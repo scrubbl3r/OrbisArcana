@@ -852,8 +852,23 @@
     const sUD = (aRawN.mag > 1e-6) ? vDot(aRawN, gHat) : 0; // -1..1
 
     const aLin = s.aLin ? s.aLin : projectToHorizon(aRaw, gHat);
-    const h = vNorm(aLin);
-    if (!(h.mag > 1e-6)) return null;
+    const hA = vNorm(aLin);
+    if (!(hA.mag > 1e-6)) return null;
+
+    // blend accel direction with gyro horizon direction (tie-breaker/feel)
+    let h = hA;
+    if (s.ox != null && s.oy != null && s.oz != null){
+      const oH = projectToHorizon({ x:s.ox, y:s.oy, z:s.oz }, gHat);
+      const hO = vNorm(oH);
+      if (hO.mag > 1e-6){
+        const W_GYRO = 0.35;
+        h = vNorm({
+          x: hA.x*(1-W_GYRO) + hO.x*W_GYRO,
+          y: hA.y*(1-W_GYRO) + hO.y*W_GYRO,
+          z: hA.z*(1-W_GYRO) + hO.z*W_GYRO
+        });
+      }
+    }
 
     const UD_WIN_THR = 0.70;
 
