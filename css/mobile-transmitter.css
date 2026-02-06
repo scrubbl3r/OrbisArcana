@@ -1,0 +1,35 @@
+    :root { --green:#7dd35f; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      color: var(--green);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      transition: background-color 80ms linear;
+      touch-action: manipulation;
+    }
+
+    .app{
+      height: calc(var(--vh, 1vh) * 100);
+      display: grid;
+      place-items: center;
+    }
+
+    /* Single centered round Start button */
+    #startBtn {
+      width: min(180px, 46vw);
+      height: min(180px, 46vw);
+      border-radius: 999px;
+      border: 2px solid var(--green);
+      background: rgba(0,0,0,0.15);
+      color: var(--green);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      box-shadow: 0 0 22px rgba(125,211,95,0.18);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    #startBtn:active { transform: scale(0.98); }
+    #startBtn:disabled { opacity: 0.55; }
