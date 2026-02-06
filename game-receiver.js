@@ -732,18 +732,18 @@
     }
 
 
-    function orientTryConsumeOmegaSample(rawOmega){
+    function orientTryConsumeAccelSample(rawAccel){
     // ✅ only consume samples while we are actively sampling
     if (!ORIENT.active) return;
     if (!(ORIENT.mode === "sample1" || ORIENT.mode === "sample2")) return;
 
-    if (!rawOmega || !rawOmega.has) return;
+    if (!rawAccel || !rawAccel.has) return;
     if (!lastGravity || !lastGravity.has) return;
 
     const gHat = lastGravity; // unit
-    // horizon component of omega (gravity-removed)
-    const oH = projectToHorizon({ x: rawOmega.x, y: rawOmega.y, z: rawOmega.z }, gHat);
-    const u = vNorm(oH);
+    // horizon component of accel (gravity-removed)
+    const aH = projectToHorizon({ x: rawAccel.x, y: rawAccel.y, z: rawAccel.z }, gHat);
+    const u = vNorm(aH);
     if (!(u.mag > ORIENT.MIN_MAG)) return;
 
     // sign-correct so we learn an AXIS even if user shakes both directions:
@@ -1928,7 +1928,7 @@
       pushMotionSample(nowMs);
 
       // if calibrating, consume samples continuously from the incoming stream
-      orientTryConsumeOmegaSample(lastRawOmega);
+      orientTryConsumeAccelSample(lastRawAccel);
 
       updateEnergyBankFromPhone(energyFromPhone, nowMs);
 
