@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Groove Dynamics</title>
+  <style>
+    :root { --green:#7dd35f; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      color: var(--green);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      transition: background-color 80ms linear;
+      touch-action: manipulation;
+    }
+
+    .app{
+      height: calc(var(--vh, 1vh) * 100);
+      display: grid;
+      place-items: center;
+    }
+
+    /* Single centered round Start button */
+    #startBtn {
+      width: min(180px, 46vw);
+      height: min(180px, 46vw);
+      border-radius: 999px;
+      border: 2px solid var(--green);
+      background: rgba(0,0,0,0.15);
+      color: var(--green);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      box-shadow: 0 0 22px rgba(125,211,95,0.18);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    #startBtn:active { transform: scale(0.98); }
+    #startBtn:disabled { opacity: 0.55; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <button id="startBtn">Start</button>
+  </main>
+
+  <!-- Ably JS -->
+  <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+
+  <!-- center button on screen hack -->
+  <script>
+    (function setVhUnit(){
+      const root = document.documentElement;
+
+      const set = () => {
+        const vv = window.visualViewport;
+        const h = (vv && vv.height) ? vv.height : window.innerHeight;
+        root.style.setProperty('--vh', (h * 0.01) + 'px');
+      };
+
+      set();
+
+      window.addEventListener('resize', set, { passive: true });
+      window.addEventListener('orientationchange', set, { passive: true });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', set, { passive: true });
+        window.visualViewport.addEventListener('scroll', set, { passive: true });
+      }
+    })();
+  </script>
+
+  <script>
+  (() => {
+    // =========================================================================
+    // UI — Start/Stop only (orientation flow removed)
+    // =========================================================================
+    const startBtn = document.getElementById('startBtn');
+
+    const UI = { state: "idle" }; // "idle" | "running"
+
+    function setBtn(label){ startBtn.textContent = label; }
+
+    // =========================================================================
+    // Keep phone glow mapping (background color), driven by energy
+    // =========================================================================
+    const BG0 = { r: 0,   g: 0,  b: 0  };
+    const BG1 = { r: 255, g: 42, b: 0  };
+    function setBgFromEnergy(e01) {
+      const t = Math.max(0, Math.min(1, e01));
+      const r = Math.round(BG0.r + (BG1.r - BG0.r) * t);
+      const g = Math.round(BG0.g + (BG1.g - BG0.g) * t);
+      const b = Math.round(BG0.b + (BG1.b - BG0.b) * t);
+      document.body.style.backgroundColor = `rgb(${r},${g},${b})`;
+    }
+    setBgFromEnergy(0);
+
+    // =========================================================================
+    // RELAY (Ably via Cloudflare Worker token) — logic preserved
+    // =========================================================================
+    const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
+    const TOKEN_URL = WORKER_BASE + "/token";
+
+    function parseRoom() {
+      const u = new URL(window.location.href);
+      const raw = (u.searchParams.get("room") || "test").trim();
+      const roomCode = raw.startsWith("orb:") ? raw.slice(4) : raw;
+      const channelName = "orb:" + roomCode;
+      return { raw, roomCode, channelName };
+    }
+
+    let ably = null;
+    let ablyChannel = null;
+
+    const roomInfo = parseRoom();
+    const room = roomInfo.channelName;
+    const roomCode = roomInfo.roomCode;
+
+    async function connectRelay() {
+      try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
+      try { if (ably) ably.close(); } catch(e) {}
+      ably = null; ablyChannel = null;
+
+      const authUrl =
+        TOKEN_URL +
+        "?room=" + encodeURIComponent(roomCode) +
+        "&clientId=" + encodeURIComponent("phone-" + Math.random().toString(16).slice(2,6));
+
+      // Quick preflight (kept)
+      try {
+        const r = await fetch(authUrl, { method: "GET", cache: "no-store" });
+        const j = await r.json();
+        if (!r.ok || !j.token) return false;
+      } catch (e) {
+        return false;
+      }
+
+      ably = new Ably.Realtime({ authUrl, autoConnect: true });
+      ablyChannel = ably.channels.get(room);
+
+      // Await attach so we don’t publish into a not-yet-attached channel.
+      await new Promise((resolve) => {
+        ablyChannel.attach(() => resolve());
+      });
+
+      return true;
+    }
+
+    function disconnectRelay() {
+      try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
+      try { if (ably) ably.close(); } catch(e) {}
+      ably = null; ablyChannel = null;
+    }
+
+    // =========================================================================
+    // NETWORK THROTTLE (unchanged)
+    // =========================================================================
+    const SEND_HZ = 12;
+    const SEND_MIN_MS = 1000 / SEND_HZ;
+
+    // =========================================================================
+    // TELEMETRY SIZE SWITCH
+    // =========================================================================
+    const TELEMETRY = false;
+    const TELEMETRY_URL = (() => {
+      try {
+        const u = new URL(location.href);
+        return (u.searchParams.get("telemetry") === "1");
+      } catch { return false; }
+    })();
+    const TELEMETRY_ON = TELEMETRY || TELEMETRY_URL;
+
+    // =========================================================================
+    // 1) FALL DRAG DEFAULT (requested)
+    // =========================================================================
+    const FALL_DRAG_DEFAULT = 1.0;
+
+    // EPS for signature-gated publishing
+    const EPS = {
+      energy01:    0.006,
+      groove01:    0.008,
+      dynamics01:  0.008,
+      smooth01:    0.008,
+      speed01:     0.008,
+      shake01:     0.015,
+      hz:          0.030,
+
+      // NEW: streamed vectors (quantized) eps
+      ag:          0.15, // m/s^2-ish scale
+      rr:          2.0,  // deg/sec scale
+    };
+
+    let nextSendAtMs = 0;
+    let lastSig = null;
+
+    function roundN(x, n=4){
+      const v = Number(x);
+      if (!isFinite(v)) return 0;
+      const p = Math.pow(10, n);
+      return Math.round(v * p) / p;
+    }
+
+    function buildSigFromPayload(p){
+      // streamed vectors are intentionally quantized for size + stability
+      const ag = p.ag || [0,0,0];
+      const rr = p.rr || [0,0,0];
+
+      return {
+        energy01:    roundN(p.energy01, 4),
+        groove01:    roundN(p.groove01, 4),
+        dynamics01:  roundN(p.dynamics01, 4),
+        smooth01:    roundN(p.smooth01, 4),
+        speed01:     roundN(p.speed01, 4),
+        shake01:     roundN(p.shake01, 4),
+        locked:      !!p.locked,
+        shakeHit:    !!p.shakeHit,
+        hz:          roundN(p.hz, 3),
+
+        // NEW: streamed vectors (sig uses same quantization as payload)
+        agx: roundN(ag[0], 2),
+        agy: roundN(ag[1], 2),
+        agz: roundN(ag[2], 2),
+
+        rrx: roundN(rr[0], 1),
+        rry: roundN(rr[1], 1),
+        rrz: roundN(rr[2], 1),
+      };
+    }
+
+    function sigChanged(sig){
+      if (!lastSig) return true;
+
+      if (sig.shakeHit && !lastSig.shakeHit) return true;
+      if (sig.locked !== lastSig.locked) return true;
+
+      if (Math.abs(sig.energy01   - lastSig.energy01)   > EPS.energy01) return true;
+      if (Math.abs(sig.groove01   - lastSig.groove01)   > EPS.groove01) return true;
+      if (Math.abs(sig.dynamics01 - lastSig.dynamics01) > EPS.dynamics01) return true;
+      if (Math.abs(sig.smooth01   - lastSig.smooth01)   > EPS.smooth01) return true;
+      if (Math.abs(sig.speed01    - lastSig.speed01)    > EPS.speed01) return true;
+      if (Math.abs(sig.shake01    - lastSig.shake01)    > EPS.shake01) return true;
+      if (Math.abs(sig.hz         - lastSig.hz)         > EPS.hz) return true;
+
+      // NEW: streamed vectors gating
+      if (Math.abs(sig.agx - lastSig.agx) > EPS.ag) return true;
+      if (Math.abs(sig.agy - lastSig.agy) > EPS.ag) return true;
+      if (Math.abs(sig.agz - lastSig.agz) > EPS.ag) return true;
+
+      if (Math.abs(sig.rrx - lastSig.rrx) > EPS.rr) return true;
+      if (Math.abs(sig.rry - lastSig.rry) > EPS.rr) return true;
+      if (Math.abs(sig.rrz - lastSig.rrz) > EPS.rr) return true;
+
+      return false;
+    }
+
+    // =========================================================================
+    // publishDynamics trims payload when TELEMETRY_ON is false
+    // =========================================================================
+    function publishDynamics(payload, dt, force=false) {
+      if (!ablyChannel) return;
+
+      const now = performance.now();
+      if (!force && now < nextSendAtMs) return;
+
+      const sig = buildSigFromPayload(payload);
+      if (!force && !sigChanged(sig)) return;
+
+      lastSig = sig;
+      nextSendAtMs = now + SEND_MIN_MS;
+
+
+      const out = {
+        room: payload.room,
+        fallDrag: FALL_DRAG_DEFAULT,
+
+        energy01:   sig.energy01,
+        groove01:   sig.groove01,
+        dynamics01: sig.dynamics01,
+        smooth01:   sig.smooth01,
+        speed01:    sig.speed01,
+        shake01:    sig.shake01,
+        locked:     sig.locked,
+        shakeHit:   sig.shakeHit,
+        hz:         sig.hz,
+
+        // Compact payload (keep)
+        a: [sig.agx, sig.agy, sig.agz],  // accelIncludingGravity
+        r: [sig.rrx, sig.rry, sig.rrz],  // rotationRate
+      };
+
+
+      if (TELEMETRY_ON) {
+        out.t     = roundN(payload.t, 1);
+        out.dt    = roundN(payload.dt, 4);
+        out.wRaw  = roundN(payload.wRaw, 2);
+        out.wCap  = roundN(payload.wCap, 2);
+        out.wFilt = roundN(payload.wFilt, 2);
+        out.cap   = roundN(payload.cap, 2);
+
+        out.d_r2      = roundN(payload.d_r2, 4);
+        out.d_r3      = roundN(payload.d_r3, 4);
+        out.d_gate    = roundN(payload.d_gate, 4);
+        out.d_balance = roundN(payload.d_balance, 4);
+        out.d_couple  = roundN(payload.d_couple, 4);
+      }
+
+      ablyChannel.publish("orb", out, (err) => {
+        if (err) console.warn("[ably publish err]", err);
+      });
+    }
+
+    // =========================================================================
+    // DIAL PACK v4 — base detection (PRESERVED)
+    // =========================================================================
+    const OMEGA_LPF = 0.22;
+
+    const HUNT_WINDOW_SEC   = .80;
+    const STABLE_WINDOW_SEC = 1.60;
+
+    const MIN_WINDOW_SAMPLES = 28;
+    const MAX_WINDOW_SAMPLES = 260;
+
+    const MIN_OMEGA = 0.02;
+
+    const LOCK_ON  = 0.30;
+    const LOCK_OFF = 0.22;
+
+    const MIN_HZ = 0.55;
+    const MAX_HZ = 2.30;
+
+    const JERK_TIGHT = 220.0;
+    const JERK_LOOSE = 2600.0;
+
+    // =========================================================================
+    // DYNAMICS — v4.0 (DIRECTIONAL DIVERSITY, 1s window) — functionally same
+    // =========================================================================
+    const DYNAMICS_WINDOW_SEC = 1.00;
+    const DYNAMICS_FLOOR = 0.18;
+
+    const DYNAMICS_UI_EXP  = 1.0;
+    const DYNAMICS_UI_GAIN = 3.5;
+
+    const DYNAMICS_ACTIVITY_MIN01 = 0.06;
+    const DYNAMICS_ACTIVITY_POW   = 1.15;
+
+    const ENERGY_GAIN_LOCKED = 1.25;
+    const ENERGY_GAIN_FREE   = 0.65;
+
+    const ENERGY_DECAY       = 0.1;
+
+    const UI_SMOOTH   = 0.10;
+    const LOCK_SMOOTH = 0.14;
+
+    const GROOVE_EXP    = 0.70;
+    const SMOOTH_EXP    = 0.70;
+    const DYNAMICS_EXP  = 1.00;
+
+    const EARN_SCALE = 1.00;
+
+    const COAST_QUALITY_MIN  = 0.28;
+    const COAST_DECAY_MULT   = 0.65;
+
+    const SMOOTH_KILL_THRESH     = 0.12;
+    const SMOOTH_KILL_DECAY_MULT = 3.25;
+    const SMOOTH_KILL_UNLOCK     = true;
+
+    const GRACE_SEC = 0.75;
+
+    const RECENTER_SEC = 0.85;
+    const RECENTER_GROOVE_MAX = 0.22;
+
+    const NORM_ALPHA = 0.10;
+
+    // ============================================================================
+    // SPEED METER — tuned for “force” (rotationRate magnitude, deg/sec)
+    // ============================================================================
+    const SPEED_DEAD_DPS = 8.0;
+    const SPEED_CAP_DPS  = 360.0;
+
+    const SPEED_EMA_CUTOFF_FAST_HZ = 1.5;
+    const SPEED_EMA_CUTOFF_SLOW_HZ = .10;
+
+    const SPEED_ADAPT_START_DPS = 18.0;
+    const SPEED_ADAPT_END_DPS   = 130.0;
+
+    const SPEED_ADAPT_POW = 1.0;
+
+    const SPEED_NORM_DPS = 300.0;
+    const SPEED_MAP_POW  = 1.10;
+
+    const SPEED_ATTACK_HZ  = 5.0;
+    const SPEED_RELEASE_HZ = 8.0;
+
+    // =========================================================================
+    // DISRUPTOR v3 — SHAKE (FAST HIT + SLOW METER) + LOW-SMOOTH BOOST
+    // =========================================================================
+    const SHAKE_BASELINE_HZ = 0.75;
+    const SHAKE_HP_DEAD_G   = 0.65;
+    const SHAKE_JERK_DEAD   = 10.0;
+
+    const SHAKE_HP_WEIGHT   = 1.00;
+    const SHAKE_JERK_WEIGHT = 0.35;
+
+    const SHAKE_METER_GAIN  = 2.10;
+    const SHAKE_METER_DECAY = 2.60;
+
+    const SHAKE_SMOOTH_BOOST_START   = 0.45;
+    const SHAKE_SMOOTH_THR_DROP_MAX  = 0.60;
+
+    // =========================================================================
+    // NEW SHAKE WIN RULE:
+    // "When shake meter hits 100% twice in 500ms" => shakeHit
+    // =========================================================================
+    const SHAKE_WIN_WINDOW_SEC = 0.50;
+    const SHAKE_FULL_HI = 0.999;
+
+    // =========================================================================
+    // AUDIO MAPPING (preserved)
+    // =========================================================================
+    const AUDIO_GATE   = 0.02;
+    const AUDIO_MIN_DB = -42;
+    const AUDIO_MAX_DB = -6;
+    const AUDIO_EXP    = 1.15;
+
+    const MASTER_GAIN  = 2.2;
+
+    const TONE_BASE_HZ    = 180;
+    const TONE_MAX_ADD_HZ = 220;
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
+    const clamp01 = (x) => Math.max(0, Math.min(1, x));
+    const lerp = (a,b,t) => a + (b-a)*t;
+    const mag3 = (x,y,z) => Math.sqrt(x*x+y*y+z*z);
+    const dbToGain = (db) => Math.pow(10, db/20);
+
+    function alphaFromCutoff(dt, cutoffHz){
+      const tau = 1 / (2 * Math.PI * cutoffHz);
+      return 1 / (1 + tau / Math.max(1e-4, dt));
+    }
+
+    function median(arr) {
+      if (!arr.length) return 0;
+      const a = arr.slice().sort((x,y) => x - y);
+      const mid = (a.length - 1) / 2;
+      const lo = Math.floor(mid), hi = Math.ceil(mid);
+      return (a[lo] + a[hi]) / 2;
+    }
+
+    function energyToGain(e) {
+      if (e <= AUDIO_GATE) return 0;
+      const x = (e - AUDIO_GATE) / (1 - AUDIO_GATE);
+      const shaped = Math.pow(clamp01(x), AUDIO_EXP);
+      const db = AUDIO_MIN_DB + (AUDIO_MAX_DB - AUDIO_MIN_DB) * shaped;
+      return dbToGain(db);
+    }
+
+    function autocorrPeak(signal, dt) {
+      const n = signal.length;
+      if (n < 24) return {peak: 0, lag: 0, hz: 0};
+
+      let mean=0;
+      for (let i=0;i<n;i++) mean += signal[i];
+      mean /= n;
+
+      let varr=0;
+      for (let i=0;i<n;i++) {
+        const d = signal[i]-mean;
+        varr += d*d;
+      }
+      if (varr < 1e-9) return {peak: 0, lag: 0, hz: 0};
+
+      const minLag = Math.max(2, Math.floor(1/(MAX_HZ*dt)));
+      const maxLag = Math.min(n-3, Math.floor(1/(MIN_HZ*dt)));
+
+      let best = -1;
+      let bestLag = 0;
+
+      for (let lag=minLag; lag<=maxLag; lag++) {
+        let c=0;
+        for (let i=0;i<n-lag;i++) c += (signal[i]-mean) * (signal[i+lag]-mean);
+        const r = c / varr;
+        if (r > best) { best = r; bestLag = lag; }
+      }
+
+      const hz = bestLag > 0 ? (1/(bestLag*dt)) : 0;
+      return {peak: clamp01(best), lag: bestLag, hz};
+    }
+
+    function smoothnessFromJerk(avgJerk) {
+      const t = (JERK_LOOSE - avgJerk) / (JERK_LOOSE - JERK_TIGHT);
+      return clamp01(t);
+    }
+
+    function dynamicsActivityGate(speed01){
+      const v = clamp01(speed01 || 0);
+      const x = (v - DYNAMICS_ACTIVITY_MIN01) / (1 - DYNAMICS_ACTIVITY_MIN01);
+      return Math.pow(clamp01(x), DYNAMICS_ACTIVITY_POW);
+    }
+
+    function computeAvg(arr) {
+      if (!arr.length) return 0;
+      let s=0;
+      for (const x of arr) s+=x;
+      return s/arr.length;
+    }
+
+    function trimToWindow(dtMean, targetSec, omegaMag, omegaNorm, omegaVec, jerkBuf, dtBuf) {
+      let targetN = dtMean > 1e-4 ? Math.round(targetSec / dtMean) : MAX_WINDOW_SAMPLES;
+      targetN = Math.max(MIN_WINDOW_SAMPLES, Math.min(MAX_WINDOW_SAMPLES, targetN));
+
+      while (omegaMag.length  > targetN) omegaMag.shift();
+      while (omegaNorm.length > targetN) omegaNorm.shift();
+      while (omegaVec.length  > targetN) omegaVec.shift();
+      while (jerkBuf.length   > targetN) jerkBuf.shift();
+      while (dtBuf.length     > targetN) dtBuf.shift();
+
+      return targetN;
+    }
+
+    // =========================================================================
+    // Dynamics diversity window buffer (time-based, ~1000ms)
+    // =========================================================================
+    const dynamicsVecBuf = [];
+    const dynamicsDtBuf  = [];
+
+    function dynamicsBufPush(vec, dt){
+      const d = Math.max(1e-4, Number(dt) || 0);
+      dynamicsVecBuf.push(vec);
+      dynamicsDtBuf.push(d);
+
+      let acc = 0;
+      for (let i = dynamicsDtBuf.length - 1; i >= 0; i--){
+        acc += dynamicsDtBuf[i];
+        if (acc >= 2.5) {
+          dynamicsVecBuf.splice(0, i);
+          dynamicsDtBuf.splice(0, i);
+          break;
+        }
+      }
+    }
+
+    function dynamicsDiversityLastSec(windowSec){
+      const W = Math.max(0.2, Number(windowSec) || 1.0);
+
+      let sumW = 0;
+      let sx = 0, sy = 0, sz = 0;
+
+      for (let i = dynamicsVecBuf.length - 1; i >= 0; i--){
+        const dt = dynamicsDtBuf[i] || 0;
+        if (sumW >= W) break;
+
+        const w = Math.min(dt, W - sumW);
+        const v = dynamicsVecBuf[i];
+        if (v) {
+          sx += (v.x || 0) * w;
+          sy += (v.y || 0) * w;
+          sz += (v.z || 0) * w;
+        }
+        sumW += w;
+      }
+
+      if (sumW < 0.25) return { div01: 0, R: 1, n: dynamicsVecBuf.length };
+
+      const inv = 1 / sumW;
+      const mx = sx * inv, my = sy * inv, mz = sz * inv;
+      const R = clamp01(Math.sqrt(mx*mx + my*my + mz*mz));
+      const div01 = clamp01(1 - R);
+
+      return { div01, R, n: dynamicsVecBuf.length };
+    }
+
+    // =========================================================================
+    // Meter continuity (logic preserved; no UI)
+    // =========================================================================
+    const METER_HOLD_SEC = 0.55;
+    const METER_FADE_HZ  = 3.0;
+
+    // =========================================================================
+    // State
+    // =========================================================================
+    let running = false;
+    let lastT = null;
+
+    let ox=0, oy=0, oz=0;
+
+    const omegaMag  = [];
+    const omegaNorm = [];
+    const omegaVec  = [];
+    const jerkBuf   = [];
+    const dtBuf     = [];
+
+    let emaMean = 0;
+    let emaVar  = 1;
+
+    let lock = false;
+    let lockStrength = 0;
+    let grooveHz = 0;
+
+    let graceLeft = 0;
+    let recenterBadTime = 0;
+
+    let energy = 0;
+    let energyUI = 0;
+
+    let mSpeedEMA = 0;
+    let speedOut  = 0;
+
+    let meterHoldLeft = 0;
+    let lastGrooveUI = 0;
+    let lastDynamicsUI  = 0;
+    let lastSmoothUI = 0;
+
+    // SHAKE state
+    let shake01 = 0;
+
+    let accelBaseMag = 9.81;
+    let prevAx = 0, prevAy = 0, prevAz = 0;
+    let prevAmag = 9.81;
+
+    let shakeFullTimes = [];
+
+    let audioCtx = null, osc = null, gainNode = null;
+
+    function ensureAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      gainNode = audioCtx.createGain();
+      gainNode.gain.value = 0;
+
+      osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = TONE_BASE_HZ;
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      osc.start();
+    }
+
+    function setAudio(eUI, groove, locked) {
+      if (!audioCtx || !gainNode || !osc) return;
+
+      const gBase = energyToGain(clamp01(eUI));
+      const gGroove = locked ? (0.30 + 0.70*groove) : (0.08 + 0.22*groove);
+      const g = MASTER_GAIN * gBase * gGroove;
+
+      const f = TONE_BASE_HZ
+              + TONE_MAX_ADD_HZ * (locked ? groove : 0.30*groove)
+              + 60 * clamp01(eUI);
+
+      const now = audioCtx.currentTime;
+      gainNode.gain.cancelScheduledValues(now);
+      gainNode.gain.setTargetAtTime(g, now, 0.06);
+
+      osc.frequency.cancelScheduledValues(now);
+      osc.frequency.setTargetAtTime(f, now, 0.06);
+    }
+
+    function flushHistorySoft() {
+      const keep = Math.min(18, omegaMag.length);
+      omegaMag.splice(0, Math.max(0, omegaMag.length - keep));
+      omegaNorm.splice(0, Math.max(0, omegaNorm.length - keep));
+      omegaVec.splice(0, Math.max(0, omegaVec.length - keep));
+      jerkBuf.splice(0, Math.max(0, jerkBuf.length - keep));
+      dtBuf.splice(0, Math.max(0, dtBuf.length - keep));
+
+      dynamicsVecBuf.splice(0, Math.max(0, dynamicsVecBuf.length - keep));
+      dynamicsDtBuf.splice(0, Math.max(0, dynamicsDtBuf.length - keep));
+    }
+
+    function meterHoldOrFade(dt) {
+      if (dt > 0) meterHoldLeft = Math.max(0, meterHoldLeft - dt);
+
+      const dtFade = Math.max(1e-3, dt || computeAvg(dtBuf.slice(-50)) || 1/60);
+      const aFade = alphaFromCutoff(dtFade, METER_FADE_HZ);
+      const holding = meterHoldLeft > 0;
+
+      const grooveOut   = holding ? lastGrooveUI   : (1 - aFade) * lastGrooveUI;
+      const dynamicsOut = holding ? lastDynamicsUI : (1 - aFade) * lastDynamicsUI;
+      const smoothOut   = holding ? lastSmoothUI   : (1 - aFade) * lastSmoothUI;
+
+      lastGrooveUI   = grooveOut;
+      lastDynamicsUI = dynamicsOut;
+      lastSmoothUI   = smoothOut;
+
+      return { grooveOut, dynamicsOut, smoothOut };
+    }
+
+    function updateSpeedV0(wRawDps, dt) {
+      const dtSafe = Math.max(1e-3, dt || 1/60);
+
+      const wRaw = Math.max(0, wRawDps || 0);
+      const cap  = SPEED_CAP_DPS;
+      const wCap = Math.min(wRaw, cap);
+
+      const wDz = Math.max(0, wCap - SPEED_DEAD_DPS);
+
+      const denom = Math.max(1e-6, (SPEED_ADAPT_END_DPS - SPEED_ADAPT_START_DPS));
+      let tAdapt = (wDz - SPEED_ADAPT_START_DPS) / denom;
+      tAdapt = clamp01(tAdapt);
+      tAdapt = Math.pow(tAdapt, SPEED_ADAPT_POW);
+
+      const cutoffHz = lerp(SPEED_EMA_CUTOFF_FAST_HZ, SPEED_EMA_CUTOFF_SLOW_HZ, tAdapt);
+      const aE = alphaFromCutoff(dtSafe, cutoffHz);
+
+      mSpeedEMA = (mSpeedEMA === 0) ? wDz : ((1 - aE) * mSpeedEMA + aE * wDz);
+      const wFilt = mSpeedEMA;
+
+      const n = clamp01(wFilt / SPEED_NORM_DPS);
+      const target = Math.pow(n, SPEED_MAP_POW);
+
+      const aAtk = alphaFromCutoff(dtSafe, SPEED_ATTACK_HZ);
+      const aRel = alphaFromCutoff(dtSafe, SPEED_RELEASE_HZ);
+      const a = (target >= speedOut) ? aAtk : aRel;
+      speedOut = (1 - a) * speedOut + a * target;
+
+      return { cap, dt: dtSafe, wRaw, wCap, wDz, wFilt, speed: speedOut, cutoffHz, tAdapt };
+    }
+
+    // =========================================================================
+    // SHAKE — meter unchanged; shakeHit double 100% within 500ms
+    // =========================================================================
+    function updateShake(e, t, dt, groove01=0, locked=false, smooth01=1){
+      const acc = e.accelerationIncludingGravity || e.acceleration;
+      const dtSafe = Math.max(1e-3, dt || 1/60);
+
+      const prevShake = shake01;
+
+      if (!acc) {
+        shake01 = Math.max(0, shake01 - SHAKE_METER_DECAY * dtSafe);
+        return { shake01, shakeHit:false, spike:0, amag:0, jerk:0 };
+      }
+
+      const ax = Number(acc.x) || 0;
+      const ay = Number(acc.y) || 0;
+      const az = Number(acc.z) || 0;
+
+      const amag = mag3(ax, ay, az);
+
+      // baseline magnitude (LPF)
+      const aBase = alphaFromCutoff(dtSafe, SHAKE_BASELINE_HZ);
+      accelBaseMag = (isFinite(accelBaseMag) ? accelBaseMag : amag);
+      accelBaseMag = (1 - aBase) * accelBaseMag + aBase * amag;
+
+      // high-pass impact
+      const hp = Math.abs(amag - accelBaseMag);
+      const hpSpike = Math.max(0, hp - SHAKE_HP_DEAD_G);
+
+      // jerk (delta accel / sec)
+      const dax = ax - prevAx;
+      const day = ay - prevAy;
+      const daz = az - prevAz;
+      const jerk = mag3(dax, day, daz) / dtSafe;
+      const jerkSpike = Math.max(0, jerk - SHAKE_JERK_DEAD);
+
+      prevAx = ax; prevAy = ay; prevAz = az;
+      prevAmag = amag;
+
+      const spike = (SHAKE_HP_WEIGHT * hpSpike) + (SHAKE_JERK_WEIGHT * (jerkSpike / 80.0));
+
+      shake01 = clamp01(shake01 + SHAKE_METER_GAIN * spike * dtSafe - SHAKE_METER_DECAY * dtSafe);
+
+      // "full meter" rising edge tracking
+      const hitFull = (prevShake < SHAKE_FULL_HI) && (shake01 >= SHAKE_FULL_HI);
+      if (hitFull) {
+        shakeFullTimes.push(t);
+        const cutoff = t - SHAKE_WIN_WINDOW_SEC;
+        while (shakeFullTimes.length && shakeFullTimes[0] < cutoff) shakeFullTimes.shift();
+      } else if (shakeFullTimes.length) {
+        const cutoff = t - SHAKE_WIN_WINDOW_SEC;
+        while (shakeFullTimes.length && shakeFullTimes[0] < cutoff) shakeFullTimes.shift();
+      }
+
+      let shakeHit = false;
+      if (shakeFullTimes.length >= 2) {
+        shakeHit = true;
+        shakeFullTimes.length = 0;
+      }
+
+      return { shake01, shakeHit, spike, amag, jerk };
+    }
+
+    // =========================================================================
+    // Motion listener helpers
+    // =========================================================================
+    function addMotionListener(){
+      window.addEventListener('devicemotion', onMotion, { passive: true });
+    }
+    function removeMotionListener(){
+      window.removeEventListener('devicemotion', onMotion);
+    }
+
+    // =========================================================================
+    // iOS permission gate (UI-less)
+    // =========================================================================
+    async function requestMotionPermissionIfNeeded() {
+      const needs = (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function')
+                 || (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function');
+
+      if (!needs) return true;
+
+      const reqs = [];
+
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        reqs.push(DeviceMotionEvent.requestPermission().then(s => s === 'granted').catch(() => false));
+      }
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        reqs.push(DeviceOrientationEvent.requestPermission().then(s => s === 'granted').catch(() => false));
+      }
+
+      const results = await Promise.all(reqs);
+      return results.every(Boolean);
+    }
+
+    // =========================================================================
+    // onMotion (core processing) — unchanged except:
+    //  - we stream vectors: a=[agx,agy,agz], r=[rrx,rry,rrz]
+    //  - no orientation flow / sd / oc/od
+    // =========================================================================
+    function onMotion(e) {
+      if (!running) return;
+
+      try {
+        const t = performance.now() / 1000;
+        const dt = (lastT == null) ? 0 : (t - lastT);
+        lastT = t;
+
+        if (dt > 0) dtBuf.push(dt);
+
+        const lockedProxy = !!(lock || graceLeft > 0);
+        const grooveProxy = clamp01(lockStrength || lastGrooveUI || 0);
+        const smoothProxy = clamp01(lastSmoothUI || 0);
+
+        const sh = updateShake(e, t, dt, grooveProxy, lockedProxy, smoothProxy);
+
+        // NEW: streamed vectors (raw, then quantized in publishDynamics)
+        const acc = e.accelerationIncludingGravity || e.acceleration;
+        const agx = acc ? (Number(acc.x) || 0) : 0;
+        const agy = acc ? (Number(acc.y) || 0) : 0;
+        const agz = acc ? (Number(acc.z) || 0) : 0;
+
+        const rr = e.rotationRate;
+        // Keep same axis mapping you had (beta/gamma/alpha)
+        const rrx = rr ? (rr.beta  ?? 0) : 0;
+        const rry = rr ? (rr.gamma ?? 0) : 0;
+        const rrz = rr ? (rr.alpha ?? 0) : 0;
+
+        if (!rr) {
+          const dtMean = Math.max(1e-3, computeAvg(dtBuf.slice(-50)) || 1/60);
+          const dtForFilter = (dt > 0) ? dt : dtMean;
+          const sv = updateSpeedV0(0, dtForFilter);
+
+          if (dt > 0) {
+            energy = Math.max(0, energy - ENERGY_DECAY * dt);
+            energyUI = lerp(energyUI, energy, UI_SMOOTH);
+          }
+
+          const held = meterHoldOrFade(dt);
+
+          publishDynamics({
+            room,
+            t: performance.now(),
+            dt: sv.dt,
+            wRaw: sv.wRaw,
+            wCap: sv.wCap,
+            wFilt: sv.wFilt,
+            cap: sv.cap,
+            energy01: energyUI,
+            groove01: held.grooveOut,
+            dynamics01: held.dynamicsOut,
+            smooth01: held.smoothOut,
+            speed01: sv.speed,
+            shake01: sh.shake01,
+            shakeHit: sh.shakeHit,
+            locked: false,
+            hz: 0,
+
+            ag: [agx, agy, agz],
+            rr: [rrx, rry, rrz],
+
+            d_r2: 0, d_r3: 0, d_gate: 0, d_balance: 0, d_couple: 0
+          }, dt);
+
+          setBgFromEnergy(clamp01(energyUI));
+          setAudio(energyUI, held.grooveOut, false);
+          return;
+        }
+
+        const x = rrx;
+        const y = rry;
+        const z = rrz;
+
+        const prevOx=ox, prevOy=oy, prevOz=oz;
+
+        ox = lerp(ox, x, OMEGA_LPF);
+        oy = lerp(oy, y, OMEGA_LPF);
+        oz = lerp(oz, z, OMEGA_LPF);
+
+        const mStability = mag3(ox,oy,oz);
+        const dtMean = Math.max(1e-3, computeAvg(dtBuf.slice(-50)));
+        const dtForFilter = (dt > 0) ? dt : dtMean;
+
+        const wRaw = mag3(x, y, z);
+        const sv = updateSpeedV0(wRaw, dtForFilter);
+
+        if (dt > 0) graceLeft = Math.max(0, graceLeft - dt);
+
+        if (mStability > MIN_OMEGA) {
+          omegaMag.push(mStability);
+
+          const d0 = mStability - emaMean;
+          emaMean = emaMean + NORM_ALPHA * d0;
+
+          const d2 = (mStability - emaMean);
+          emaVar = emaVar + NORM_ALPHA * (d2*d2 - emaVar);
+
+          const rms = Math.sqrt(Math.max(1e-6, emaVar));
+          omegaNorm.push((mStability - emaMean) / rms);
+
+          const invM = 1 / Math.max(1e-6, mStability);
+          const vUnit = { x: ox*invM, y: oy*invM, z: oz*invM };
+          omegaVec.push(vUnit);
+
+          if (dtForFilter > 0) dynamicsBufPush(vUnit, dtForFilter);
+
+          if (dt > 0) {
+            const dtSafe = Math.max(dt, dtMean * 0.5, 1/120);
+            jerkBuf.push(mag3(ox-prevOx, oy-prevOy, oz-prevOz) / dtSafe);
+          }
+        } else {
+          if (omegaMag.length) omegaMag.shift();
+          if (omegaNorm.length) omegaNorm.shift();
+          if (omegaVec.length) omegaVec.shift();
+          if (jerkBuf.length)  jerkBuf.shift();
+        }
+
+        const inStableMode = lock || graceLeft > 0;
+        const windowSec = inStableMode ? STABLE_WINDOW_SEC : HUNT_WINDOW_SEC;
+        const nTarget = trimToWindow(dtMean, windowSec, omegaMag, omegaNorm, omegaVec, jerkBuf, dtBuf);
+
+        if (omegaNorm.length < Math.min(MIN_WINDOW_SAMPLES, nTarget)) {
+          if (dt > 0) {
+            energy = Math.max(0, energy - ENERGY_DECAY * dt);
+            energyUI = lerp(energyUI, energy, UI_SMOOTH);
+          }
+
+          const held = meterHoldOrFade(dt);
+
+          publishDynamics({
+            room,
+            t: performance.now(),
+            dt: sv.dt,
+            wRaw: sv.wRaw,
+            wCap: sv.wCap,
+            wFilt: sv.wFilt,
+            cap: sv.cap,
+            energy01: energyUI,
+            groove01: held.grooveOut,
+            dynamics01: held.dynamicsOut,
+            smooth01: held.smoothOut,
+            speed01: sv.speed,
+            shake01: sh.shake01,
+            shakeHit: sh.shakeHit,
+            locked: false,
+            hz: 0,
+
+            ag: [agx, agy, agz],
+            rr: [rrx, rry, rrz],
+
+            d_r2: 0, d_r3: 0, d_gate: 0, d_balance: 0, d_couple: 0
+          }, dt);
+
+          setBgFromEnergy(clamp01(energyUI));
+          setAudio(energyUI, held.grooveOut, false);
+          return;
+        }
+
+        const ac = autocorrPeak(omegaNorm, dtMean);
+        lockStrength = lerp(lockStrength, ac.peak, LOCK_SMOOTH);
+        grooveHz = ac.hz;
+
+        const jerkWindow = jerkBuf.slice(-Math.min(jerkBuf.length, 70));
+        const avgJerk = median(jerkWindow);
+        const smoothScore = smoothnessFromJerk(avgJerk);
+
+        const dDiv = dynamicsDiversityLastSec(DYNAMICS_WINDOW_SEC);
+        const actGate = dynamicsActivityGate(sv.speed);
+        const diversityGated = clamp01(dDiv.div01 * actGate);
+
+        const dynamicsBonus = DYNAMICS_FLOOR + (1 - DYNAMICS_FLOOR) * diversityGated;
+        const shapedCore = diversityGated;
+        const dynamicsUI = clamp01(DYNAMICS_UI_GAIN * Math.pow(shapedCore, DYNAMICS_UI_EXP));
+
+        meterHoldLeft = METER_HOLD_SEC;
+        lastGrooveUI   = lockStrength;
+        lastDynamicsUI = dynamicsUI;
+        lastSmoothUI   = smoothScore;
+
+        if (!lock) {
+          if (lockStrength > LOCK_ON) { lock = true; graceLeft = 0; }
+        } else {
+          if (lockStrength < LOCK_OFF) { lock = false; graceLeft = GRACE_SEC; }
+        }
+
+        const inGrace = (!lock && graceLeft > 0);
+        if (inGrace && lockStrength > LOCK_ON) { lock = true; graceLeft = 0; }
+
+        if (dt > 0) {
+          const badGroove = lockStrength <= RECENTER_GROOVE_MAX;
+          const notLockedNow = !lock;
+          if (badGroove && notLockedNow) recenterBadTime += dt;
+          else recenterBadTime = Math.max(0, recenterBadTime - 1.5*dt);
+
+          if (recenterBadTime >= RECENTER_SEC) {
+            flushHistorySoft();
+            recenterBadTime = 0;
+          }
+        }
+
+        if (dt > 0) {
+          const grooveTerm   = Math.pow(clamp01(lockStrength), GROOVE_EXP);
+          const smoothTerm   = Math.pow(clamp01(smoothScore), SMOOTH_EXP);
+          const dynamicsTerm = Math.pow(clamp01(dynamicsBonus), DYNAMICS_EXP);
+
+          const qualityTerm = grooveTerm * smoothTerm;
+          const earnBase = EARN_SCALE * grooveTerm * smoothTerm * dynamicsTerm;
+
+          const effectivelyLocked = lock || inGrace;
+          const gain = effectivelyLocked ? ENERGY_GAIN_LOCKED : ENERGY_GAIN_FREE;
+
+          const smoothKill = (smoothScore < SMOOTH_KILL_THRESH);
+          const earn = smoothKill ? 0 : (gain * earnBase);
+
+          let decay = ENERGY_DECAY;
+          if (qualityTerm >= COAST_QUALITY_MIN) decay *= COAST_DECAY_MULT;
+
+          if (smoothKill) {
+            decay *= SMOOTH_KILL_DECAY_MULT;
+            if (SMOOTH_KILL_UNLOCK) { lock = false; graceLeft = 0; }
+          }
+
+          energy = Math.max(0, energy + (earn - decay) * dt);
+          energyUI = lerp(energyUI, energy, UI_SMOOTH);
+        }
+
+        const lockedNow = !!(lock || inGrace);
+
+        publishDynamics({
+          room,
+          t: performance.now(),
+          dt: sv.dt,
+          wRaw: sv.wRaw,
+          wCap: sv.wCap,
+          wFilt: sv.wFilt,
+          cap: sv.cap,
+          energy01: energyUI,
+          groove01: lockStrength,
+          dynamics01: dynamicsUI,
+          smooth01: smoothScore,
+          speed01: sv.speed,
+          shake01: sh.shake01,
+          shakeHit: sh.shakeHit,
+          locked: lockedNow,
+          hz: grooveHz,
+
+          ag: [agx, agy, agz],
+          rr: [rrx, rry, rrz],
+
+          d_r2: dDiv.R,
+          d_r3: dDiv.div01,
+          d_gate: actGate,
+          d_balance: 0,
+          d_couple: 0
+        }, dt);
+
+        setBgFromEnergy(clamp01(energyUI));
+        setAudio(energyUI, lockStrength, lockedNow);
+
+      } catch (err) {
+        console.error("[onMotion crash]", err);
+      }
+    }
+
+    // =========================================================================
+    // Start/Stop
+    // =========================================================================
+    async function start() {
+      if (!window.isSecureContext) return;
+
+      startBtn.disabled = true;
+      try {
+        const ok = await requestMotionPermissionIfNeeded();
+        if (!ok) return;
+
+        ensureAudio();
+        try { await audioCtx.resume(); } catch(e) {}
+
+        nextSendAtMs = 0;
+        lastSig = null;
+        await connectRelay();
+
+        running = true;
+        lastT = null;
+
+        ox=oy=oz=0;
+        omegaMag.length  = 0;
+        omegaNorm.length = 0;
+        omegaVec.length  = 0;
+        jerkBuf.length   = 0;
+        dtBuf.length     = 0;
+
+        dynamicsVecBuf.length = 0;
+        dynamicsDtBuf.length  = 0;
+
+        emaMean = 0;
+        emaVar  = 1;
+
+        lock = false;
+        lockStrength = 0;
+        grooveHz = 0;
+
+        graceLeft = 0;
+        recenterBadTime = 0;
+
+        energy = 0;
+        energyUI = 0;
+
+        mSpeedEMA = 0;
+        speedOut  = 0;
+
+        meterHoldLeft = 0;
+        lastGrooveUI   = 0;
+        lastDynamicsUI = 0;
+        lastSmoothUI   = 0;
+
+        shake01 = 0;
+        accelBaseMag = 9.81;
+
+        prevAx = prevAy = prevAz = 0;
+        prevAmag = 9.81;
+
+        shakeFullTimes.length = 0;
+
+        setAudio(0,0,false);
+        setBgFromEnergy(0);
+
+        addMotionListener();
+
+        UI.state = "running";
+        setBtn("Stop");
+
+      } finally {
+        startBtn.disabled = false;
+      }
+
+      if (screen.orientation && screen.orientation.lock) {
+        try { await screen.orientation.lock('portrait-primary'); }
+        catch (e) { /* no-op */ }
+      }
+    }
+
+    function stop() {
+      running = false;
+      removeMotionListener();
+
+      if (audioCtx && gainNode) {
+        const now = audioCtx.currentTime;
+        gainNode.gain.cancelScheduledValues(now);
+        gainNode.gain.setTargetAtTime(0, now, 0.05);
+      }
+
+      disconnectRelay();
+      UI.state = "idle";
+      setBtn("Start");
+      setBgFromEnergy(0);
+    }
+
+    // =========================================================================
+    // Final: Start/Stop click logic
+    // =========================================================================
+    startBtn.onclick = () => {
+      if (UI.state === "idle") start();
+      else stop();
+    };
+
+  })();
+  </script>
+</body>
+</html>
