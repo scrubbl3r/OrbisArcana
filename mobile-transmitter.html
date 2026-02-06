@@ -103,11 +103,22 @@
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
     const TOKEN_URL = WORKER_BASE + "/token";
 
+    function normalizeRoom(input){
+      let r = String(input || "").trim();
+      if (!r) r = "orb:test";
+      if (r.indexOf(":") === -1) r = "orb:" + r;
+      return r;
+    }
+
+    function stripOrbPrefix(room){
+      return String(room || "").startsWith("orb:") ? String(room).slice(4) : String(room || "");
+    }
+
     function parseRoom() {
       const u = new URL(window.location.href);
-      const raw = (u.searchParams.get("room") || "test").trim();
-      const roomCode = raw.startsWith("orb:") ? raw.slice(4) : raw;
-      const channelName = "orb:" + roomCode;
+      const raw = (u.searchParams.get("room") || "").trim();
+      const channelName = normalizeRoom(raw);
+      const roomCode = stripOrbPrefix(channelName);
       return { raw, roomCode, channelName };
     }
 
