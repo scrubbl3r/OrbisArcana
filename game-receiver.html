@@ -1012,8 +1012,6 @@
       let r = String(input || "").trim();
       if (!r) r = "orb:test";
       if (r.indexOf(":") === -1) r = "orb:" + r;
-      const code = stripOrbPrefix(r).trim();
-      if (!code) r = "orb:test";
       return r;
     }
 
