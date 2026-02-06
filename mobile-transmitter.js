@@ -19,9 +19,26 @@
   
   (() => {
     // =========================================================================
-    // UI — Start/Stop only (orientation flow removed)
+    // UI — Start/Stop + Gesture Lab
     // =========================================================================
     const startBtn = document.getElementById('startBtn');
+    const labBtn = document.getElementById('labBtn');
+    const labModal = document.getElementById('labModal');
+    const labClose = document.getElementById('labClose');
+    const lockGravityBtn = document.getElementById('lockGravityBtn');
+    const lockGravityBar = document.getElementById('lockGravityBar');
+    const gravityReadout = document.getElementById('gravityReadout');
+    const labelGroup = document.getElementById('labelGroup');
+    const recordBtn = document.getElementById('recordBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const qualityBar = document.getElementById('qualityBar');
+    const recordStatus = document.getElementById('recordStatus');
+    const testToggle = document.getElementById('testToggle');
+    const testReadout = document.getElementById('testReadout');
+    const masterySlider = document.getElementById('masterySlider');
+    const masteryReadout = document.getElementById('masteryReadout');
+    const resetLabBtn = document.getElementById('resetLabBtn');
 
     const UI = { state: "idle" }; // "idle" | "running"
 
@@ -40,6 +57,156 @@
       document.body.style.backgroundColor = `rgb(${r},${g},${b})`;
     }
     setBgFromEnergy(0);
+
+    // =========================================================================
+    // Gesture Lab — user-taught gesture templates (mobile)
+    // =========================================================================
+    const DEBUG_GESTURE = false;
+
+    const GESTURE_BANK_KEY = "orbis_gesture_bank_v1";
+    const GRAVITY_LOCK_KEY = "orbis_gravity_lock_v1";
+
+    const MAX_REC_MS = 1200;
+    const PRE_ROLL_MS = 100;
+    const START_THR = 0.35;
+    const MIN_REC_MS = 180;
+    const RESAMPLE_N = 32;
+    const MOTION_HIST_MS = 900;
+    const HIT_WIN_MIN_MS = 180;
+    const HIT_WIN_MAX_MS = 500;
+
+    const gestureBank = {
+      templates: {},
+      mastery: 0.35
+    };
+
+    let gravityLock = null; // {x,y,z}
+
+    const lab = {
+      open: false,
+      selectedLabel: "U",
+      recording: false,
+      recordSamples: [],
+      recordStartedAtMs: 0,
+      lastCandidate: null,
+      lastQuality: 0,
+      locking: false,
+      lockBuf: [],
+      testMode: false,
+      lastMatch: null
+    };
+
+    const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+    function vDot(a,b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
+    function vCross(a,b){
+      return {
+        x: a.y*b.z - a.z*b.y,
+        y: a.z*b.x - a.x*b.z,
+        z: a.x*b.y - a.y*b.x
+      };
+    }
+    function vNorm(v){
+      const m = Math.hypot(v.x, v.y, v.z);
+      if (!(m > 1e-6)) return { x:0, y:0, z:0, mag:0 };
+      return { x:v.x/m, y:v.y/m, z:v.z/m, mag:m };
+    }
+    function vScale(v,s){ return { x:v.x*s, y:v.y*s, z:v.z*s }; }
+    function vSub(a,b){ return { x:a.x-b.x, y:a.y-b.y, z:a.z-b.z }; }
+
+
+    function loadGestureBank(){
+      try{
+        const raw = localStorage.getItem(GESTURE_BANK_KEY);
+        if (!raw) return;
+        const j = JSON.parse(raw);
+        if (j && typeof j === "object"){
+          if (j.templates && typeof j.templates === "object") gestureBank.templates = j.templates;
+          if (typeof j.mastery === "number") gestureBank.mastery = clamp01(j.mastery);
+        }
+      }catch(_){}
+    }
+
+    function saveGestureBank(){
+      try{
+        localStorage.setItem(GESTURE_BANK_KEY, JSON.stringify({
+          templates: gestureBank.templates,
+          mastery: gestureBank.mastery
+        }));
+      }catch(_){}
+    }
+
+    function loadGravityLock(){
+      try{
+        const raw = localStorage.getItem(GRAVITY_LOCK_KEY);
+        if (!raw) return;
+        const j = JSON.parse(raw);
+        if (j && isFinite(j.x) && isFinite(j.y) && isFinite(j.z)){
+          const g = vNorm({ x:j.x, y:j.y, z:j.z });
+          if (g.mag > 0.5) gravityLock = { x:g.x, y:g.y, z:g.z };
+        }
+      }catch(_){}
+    }
+
+    function saveGravityLock(){
+      if (!gravityLock) return;
+      try{
+        localStorage.setItem(GRAVITY_LOCK_KEY, JSON.stringify(gravityLock));
+      }catch(_){}
+    }
+
+    function clearGestureBank(){
+      gestureBank.templates = {};
+      saveGestureBank();
+      gravityLock = null;
+      try{
+        localStorage.removeItem(GRAVITY_LOCK_KEY);
+      }catch(_){}
+    }
+
+    function setLabOpen(on){
+      lab.open = !!on;
+      labModal.classList.toggle("on", lab.open);
+      labModal.setAttribute("aria-hidden", lab.open ? "false" : "true");
+    }
+
+    function setLabelSelection(label){
+      lab.selectedLabel = label;
+      const btns = labelGroup ? labelGroup.querySelectorAll(".labLabelBtn") : [];
+      btns.forEach((b) => b.classList.toggle("on", b.dataset.label === label));
+    }
+
+    function setProgress(el, v01){
+      if (!el) return;
+      const p = clamp01(v01) * 100;
+      el.style.width = p.toFixed(1) + "%";
+    }
+
+    function updateGravityReadout(){
+      if (!gravityReadout) return;
+      if (!gravityLock){
+        gravityReadout.textContent = "g: —";
+        return;
+      }
+      gravityReadout.textContent =
+        `g: ${gravityLock.x.toFixed(2)}, ${gravityLock.y.toFixed(2)}, ${gravityLock.z.toFixed(2)}`;
+    }
+
+    function updateMasteryUI(){
+      const m = clamp01(gestureBank.mastery);
+      if (masterySlider) masterySlider.value = String(m);
+      if (masteryReadout) masteryReadout.textContent = m.toFixed(2);
+    }
+
+    function basisFromGravity(gHat){
+      const zAxis = { x:-gHat.x, y:-gHat.y, z:-gHat.z }; // up
+      let ref = { x:0, y:1, z:0 };
+      if (Math.abs(vDot(ref, zAxis)) > 0.95) ref = { x:1, y:0, z:0 };
+      const xAxis = vNorm(vCross(ref, zAxis));
+      const yAxis = vCross(zAxis, xAxis);
+      return { xAxis, yAxis, zAxis };
+    }
+
 
     // =========================================================================
     // RELAY (Ably via Cloudflare Worker token) — logic preserved
@@ -247,6 +414,8 @@
         r: [sig.rrx, sig.rry, sig.rrz],  // rotationRate
       };
 
+      if (payload.sd) out.sd = payload.sd;
+
 
       if (TELEMETRY_ON) {
         out.t     = roundN(payload.t, 1);
@@ -389,7 +558,6 @@
     // =========================================================================
     // Helpers
     // =========================================================================
-    const clamp01 = (x) => Math.max(0, Math.min(1, x));
     const lerp = (a,b,t) => a + (b-a)*t;
     const mag3 = (x,y,z) => Math.sqrt(x*x+y*y+z*z);
     const dbToGain = (db) => Math.pow(10, db/20);
@@ -741,6 +909,296 @@
     }
 
     // =========================================================================
+    // Gesture Lab — motion history + template pipeline
+    // =========================================================================
+    const motionHist = []; // { t, ax, ay, az }
+
+    function pushMotionSample(tMs, ax, ay, az){
+      motionHist.push({ t: tMs, ax, ay, az });
+      const cutoff = tMs - MOTION_HIST_MS;
+      while (motionHist.length && motionHist[0].t < cutoff) motionHist.shift();
+    }
+
+    function trimByImpulse(samples, gHat){
+      let i0 = -1, i1 = -1;
+      for (let i = 0; i < samples.length; i++){
+        const s = samples[i];
+        const aRaw = { x:s.ax, y:s.ay, z:s.az };
+        const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
+        const mag = Math.hypot(aLin.x, aLin.y, aLin.z);
+        if (mag > START_THR){
+          if (i0 === -1) i0 = i;
+          i1 = i;
+        }
+      }
+      if (i0 === -1 || i1 === -1 || i1 <= i0) return null;
+      return { i0, i1 };
+    }
+
+    function resampleSamples(samples, t0, t1, n){
+      const out = [];
+      const dur = Math.max(1e-3, t1 - t0);
+      let i = 0;
+      for (let k = 0; k < n; k++){
+        const tk = t0 + (dur * k) / (n - 1);
+        while (i < samples.length - 1 && samples[i + 1].t < tk) i++;
+        const s0 = samples[i];
+        const s1 = samples[Math.min(i + 1, samples.length - 1)];
+        const dt = (s1.t - s0.t);
+        const u = dt > 1e-6 ? (tk - s0.t) / dt : 0;
+        out.push({
+          t: tk,
+          ax: lerp(s0.ax, s1.ax, u),
+          ay: lerp(s0.ay, s1.ay, u),
+          az: lerp(s0.az, s1.az, u)
+        });
+      }
+      return out;
+    }
+
+    function buildTemplateFromSamples(samples, gHat){
+      if (!samples || samples.length < 4) return null;
+      const trim = trimByImpulse(samples, gHat);
+      if (!trim) return null;
+
+      const s0 = samples[trim.i0];
+      const s1 = samples[trim.i1];
+      const t0 = s0.t;
+      const t1 = s1.t;
+      const dur = t1 - t0;
+      if (dur < MIN_REC_MS) return null;
+
+      const window = samples.slice(trim.i0, trim.i1 + 1);
+      const resampled = resampleSamples(window, t0, t1, RESAMPLE_N);
+      const basis = basisFromGravity(gHat);
+
+      const seq = [];
+      let peak = 0;
+      for (const s of resampled){
+        const aRaw = { x:s.ax, y:s.ay, z:s.az };
+        const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
+        const vx = vDot(aLin, basis.xAxis);
+        const vy = vDot(aLin, basis.yAxis);
+        const vz = vDot(aRaw, basis.zAxis);
+        const mag = Math.hypot(vx, vy, vz);
+        if (mag > peak) peak = mag;
+        seq.push([vx, vy, vz]);
+      }
+
+      let sumSq = 0;
+      for (const v of seq) sumSq += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+      const rms = Math.sqrt(sumSq / Math.max(1, seq.length * 3));
+      const eps = 1e-6;
+      const norm = rms + eps;
+      const shape = [];
+      for (const v of seq){
+        shape.push(v[0]/norm, v[1]/norm, v[2]/norm);
+      }
+
+      const quality = clamp01(peak / (rms * 3 + eps));
+
+      return { shape, power: peak, rms, quality, dur };
+    }
+
+    function matchTemplates(candidate){
+      if (!candidate || !candidate.shape || !candidate.shape.length) return null;
+      const cand = candidate.shape;
+      let candNorm = 0;
+      for (const v of cand) candNorm += v*v;
+      candNorm = Math.sqrt(Math.max(1e-6, candNorm));
+
+      let best = null;
+      let bestScore = -1;
+
+      const POWER_MIN_FRAC = lerp(0.50, 0.78, mastery);
+
+      for (const label of Object.keys(gestureBank.templates)){
+        const t = gestureBank.templates[label];
+        if (!t || !Array.isArray(t.shape) || !isFinite(t.power)) continue;
+        if (t.shape.length !== cand.length) continue;
+        let dot = 0;
+        let tNorm = 0;
+        for (let i = 0; i < cand.length; i++){
+          dot += cand[i] * t.shape[i];
+          tNorm += t.shape[i] * t.shape[i];
+        }
+        tNorm = Math.sqrt(Math.max(1e-6, tNorm));
+        const similarity = dot / (candNorm * tNorm);
+        const powerOk = (candidate.power >= (t.power * POWER_MIN_FRAC));
+        const powerScale = clamp01(candidate.power / (t.power + 1e-6));
+        const finalScore = similarity * powerScale;
+
+        if (finalScore > bestScore){
+          bestScore = finalScore;
+          best = { label, score: finalScore, similarity, powerOk };
+        }
+      }
+
+      if (!best) return null;
+      const mastery = clamp01(gestureBank.mastery);
+      const SCORE_THR = lerp(0.68, 0.82, mastery);
+      if (!best.powerOk || best.score < SCORE_THR) return null;
+      return best;
+    }
+
+    function recognizeGestureFromRecentBuffer(nowMs){
+      if (!gravityLock) return null;
+      const cutoff = nowMs - HIT_WIN_MAX_MS;
+      const samples = motionHist.filter(s => s.t >= cutoff);
+      if (!samples.length) return null;
+      const candidate = buildTemplateFromSamples(samples, gravityLock);
+      if (!candidate) return null;
+      const match = matchTemplates(candidate);
+      if (match) return match;
+      return null;
+    }
+
+    function setRecordStatus(msg){
+      if (recordStatus) recordStatus.textContent = msg;
+    }
+
+    function beginGravityLock(){
+      lab.locking = true;
+      lab.lockBuf.length = 0;
+      setProgress(lockGravityBar, 0);
+      setRecordStatus("Locking gravity… hold still");
+    }
+
+    function updateGravityLocking(aRaw){
+      if (!lab.locking) return;
+      const u = vNorm(aRaw);
+      if (!(u.mag > 1e-6)) return;
+      lab.lockBuf.push({ x:u.x, y:u.y, z:u.z });
+      const LOCK_SAMPLES = 24;
+      if (lab.lockBuf.length > LOCK_SAMPLES) lab.lockBuf.shift();
+
+      let sx=0, sy=0, sz=0;
+      for (const s of lab.lockBuf){ sx+=s.x; sy+=s.y; sz+=s.z; }
+      const n = lab.lockBuf.length;
+      const m = Math.hypot(sx,sy,sz);
+      const resultant = (n > 0) ? (m / n) : 0;
+      const progress = clamp01((lab.lockBuf.length / LOCK_SAMPLES) * ((resultant - 0.92) / 0.06));
+      setProgress(lockGravityBar, progress);
+
+      if (progress >= 1){
+        const g = vNorm({ x:sx, y:sy, z:sz });
+        gravityLock = { x:g.x, y:g.y, z:g.z };
+        saveGravityLock();
+        lab.locking = false;
+        updateGravityReadout();
+        setRecordStatus("Gravity locked");
+      }
+    }
+
+    function beginRecording(nowMs){
+      if (!gravityLock){
+        setRecordStatus("Lock gravity first");
+        return;
+      }
+      lab.recording = true;
+      lab.recordSamples = [];
+      lab.recordStartedAtMs = nowMs;
+      lab.lastCandidate = null;
+      setProgress(qualityBar, 0);
+      setRecordStatus(`Recording ${lab.selectedLabel}…`);
+
+      // pre-roll
+      const preCut = nowMs - PRE_ROLL_MS;
+      for (const s of motionHist){
+        if (s.t >= preCut) lab.recordSamples.push({ ...s });
+      }
+
+      recordBtn.disabled = true;
+      stopBtn.disabled = false;
+      saveBtn.disabled = true;
+    }
+
+    function endRecording(){
+      lab.recording = false;
+      stopBtn.disabled = true;
+      recordBtn.disabled = false;
+
+      if (!gravityLock){
+        setRecordStatus("Lock gravity first");
+        return;
+      }
+
+      const candidate = buildTemplateFromSamples(lab.recordSamples, gravityLock);
+      if (!candidate){
+        lab.lastCandidate = null;
+        setProgress(qualityBar, 0);
+        setRecordStatus("Too short or too still");
+        saveBtn.disabled = true;
+        return;
+      }
+
+      lab.lastCandidate = candidate;
+      lab.lastQuality = candidate.quality;
+      setProgress(qualityBar, candidate.quality);
+      setRecordStatus(`Captured ${lab.selectedLabel} (${candidate.dur.toFixed(0)}ms)`);
+      saveBtn.disabled = false;
+    }
+
+    loadGestureBank();
+    loadGravityLock();
+    updateMasteryUI();
+    updateGravityReadout();
+    setLabelSelection(lab.selectedLabel);
+
+    if (labBtn) labBtn.onclick = () => setLabOpen(true);
+    if (labClose) labClose.onclick = () => setLabOpen(false);
+
+    if (labelGroup){
+      labelGroup.addEventListener("click", (e) => {
+        const btn = e.target && e.target.closest(".labLabelBtn");
+        if (!btn) return;
+        const label = btn.dataset.label || "U";
+        setLabelSelection(label);
+      });
+    }
+
+    if (lockGravityBtn) lockGravityBtn.onclick = () => beginGravityLock();
+    if (recordBtn) recordBtn.onclick = () => beginRecording(performance.now());
+    if (stopBtn) stopBtn.onclick = () => endRecording();
+    if (saveBtn) saveBtn.onclick = () => {
+      if (!lab.lastCandidate) return;
+      gestureBank.templates[lab.selectedLabel] = {
+        shape: lab.lastCandidate.shape,
+        power: lab.lastCandidate.power
+      };
+      saveGestureBank();
+      setRecordStatus(`Saved ${lab.selectedLabel}`);
+      saveBtn.disabled = true;
+    };
+
+    if (testToggle){
+      testToggle.onchange = () => {
+        lab.testMode = !!testToggle.checked;
+        if (!lab.testMode && testReadout) testReadout.textContent = "Match: —";
+      };
+    }
+
+    if (masterySlider){
+      masterySlider.oninput = () => {
+        gestureBank.mastery = clamp01(Number(masterySlider.value));
+        updateMasteryUI();
+        saveGestureBank();
+      };
+    }
+
+    if (resetLabBtn){
+      resetLabBtn.onclick = () => {
+        clearGestureBank();
+        updateGravityReadout();
+        setProgress(qualityBar, 0);
+        setProgress(lockGravityBar, 0);
+        if (testReadout) testReadout.textContent = "Match: —";
+        setRecordStatus("Reset");
+      };
+    }
+
+
+    // =========================================================================
     // Motion listener helpers
     // =========================================================================
     function addMotionListener(){
@@ -784,6 +1242,7 @@
       try {
         const t = performance.now() / 1000;
         const dt = (lastT == null) ? 0 : (t - lastT);
+        const nowMs = t * 1000;
         lastT = t;
 
         if (dt > 0) dtBuf.push(dt);
@@ -800,11 +1259,28 @@
         const agy = acc ? (Number(acc.y) || 0) : 0;
         const agz = acc ? (Number(acc.z) || 0) : 0;
 
+        pushMotionSample(nowMs, agx, agy, agz);
+        updateGravityLocking({ x:agx, y:agy, z:agz });
+        if (lab.recording){
+          lab.recordSamples.push({ t: nowMs, ax: agx, ay: agy, az: agz });
+          if (nowMs - lab.recordStartedAtMs >= MAX_REC_MS) endRecording();
+        }
+
         const rr = e.rotationRate;
         // Keep same axis mapping you had (beta/gamma/alpha)
         const rrx = rr ? (rr.beta  ?? 0) : 0;
         const rry = rr ? (rr.gamma ?? 0) : 0;
         const rrz = rr ? (rr.alpha ?? 0) : 0;
+
+        if (lab.testMode && testReadout){
+          const live = recognizeGestureFromRecentBuffer(nowMs);
+          lab.lastMatch = live;
+          if (live) {
+            testReadout.textContent = `Match: ${live.label} (${live.score.toFixed(2)})`;
+          } else {
+            testReadout.textContent = "Match: —";
+          }
+        }
 
         if (!rr) {
           const dtMean = Math.max(1e-3, computeAvg(dtBuf.slice(-50)) || 1/60);
@@ -817,6 +1293,9 @@
           }
 
           const held = meterHoldOrFade(dt);
+
+          const match = sh.shakeHit ? recognizeGestureFromRecentBuffer(nowMs) : null;
+          const sd = match ? match.label : null;
 
           publishDynamics({
             room,
@@ -833,6 +1312,7 @@
             speed01: sv.speed,
             shake01: sh.shake01,
             shakeHit: sh.shakeHit,
+            sd,
             locked: false,
             hz: 0,
 
@@ -1006,6 +1486,9 @@
 
         const lockedNow = !!(lock || inGrace);
 
+        const match = sh.shakeHit ? recognizeGestureFromRecentBuffer(nowMs) : null;
+        const sd = match ? match.label : null;
+
         publishDynamics({
           room,
           t: performance.now(),
@@ -1021,6 +1504,7 @@
           speed01: sv.speed,
           shake01: sh.shake01,
           shakeHit: sh.shakeHit,
+          sd,
           locked: lockedNow,
           hz: grooveHz,
 
