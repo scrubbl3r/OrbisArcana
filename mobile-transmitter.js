@@ -16,9 +16,7 @@
         window.visualViewport.addEventListener('scroll', set, { passive: true });
       }
     })();
-  </script>
-
-  <script>
+  
   (() => {
     // =========================================================================
     // UI — Start/Stop only (orientation flow removed)
