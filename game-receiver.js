@@ -427,6 +427,7 @@
     // SHAKE → BEST-GUESS DIRECTION (v0: raw omega winner-take-all)
     // =========================================================================
     let lastRawOmega = { x:0, y:0, z:0, has:0 };
+    let lastRawAccel = { x:0, y:0, z:0, has:0 };
 
     function cacheRawOmegaFromMsg(d){
       // pull the raw omega vector exactly like telemetry does (supports omega / r / omegaX..)
@@ -434,6 +435,29 @@
       const has = teleHas(d, "omega");      // uses omega OR fallback r
       if (!has) return;
       lastRawOmega = { x: v.x, y: v.y, z: v.z, has: 1 };
+    }
+
+    function cacheRawAccelFromMsg(d){
+      // prefer accelIncludingGravity (d.a), fallback to d.dir; support array/object/scalars like telePickVecRaw
+      let src = null;
+      if (d && d.a != null) src = d.a;
+      else if (d && d.dir != null) src = d.dir;
+
+      let v = { x:0, y:0, z:0 };
+      if (Array.isArray(src) && src.length >= 3){
+        v = { x: Number(src[0]), y: Number(src[1]), z: Number(src[2]) };
+      } else if (src && typeof src === "object"){
+        v = { x: Number(src.x), y: Number(src.y), z: Number(src.z) };
+      } else {
+        // fall back to dirX/dirY/dirZ scalars
+        v = telePickVecRaw(d, "dir");
+      }
+
+      if (!isFinite(v.x) || !isFinite(v.y) || !isFinite(v.z)) return;
+      const has = (d && (d.a != null || d.dir != null)) ||
+        (isFinite(Number(d && d.dirX)) || isFinite(Number(d && d.dirY)) || isFinite(Number(d && d.dirZ)));
+      if (!has) return;
+      lastRawAccel = { x: v.x, y: v.y, z: v.z, has: 1 };
     }
 
     // =========================================================================
@@ -463,7 +487,7 @@
     // --- recent motion history (for better shake-direction classification) ---
     const MOTION_HIST_MS = 220;         // keep ~0.22s
     const HIT_PICK_WIN_MS = 180;        // analyze last ~0.18s on detonation
-    const motionHist = [];              // { t, ox, oy, oz, gx, gy, gz }
+    const motionHist = [];              // { t, ox, oy, oz, ax, ay, az, gx, gy, gz }
 
     let gLP = { x:0, y:0, z:1, has:0 }; // low-pass gravity estimate
 
@@ -484,12 +508,14 @@
 
     function pushMotionSample(nowMs){
     if (!lastRawOmega || !lastRawOmega.has) return;
+    if (!lastRawAccel || !lastRawAccel.has) return;
     updateGravityLP();
     if (!gLP || !gLP.has) return;
 
     motionHist.push({
         t: nowMs,
         ox: lastRawOmega.x, oy: lastRawOmega.y, oz: lastRawOmega.z,
+        ax: lastRawAccel.x, ay: lastRawAccel.y, az: lastRawAccel.z,
         gx: gLP.x, gy: gLP.y, gz: gLP.z
     });
 
@@ -510,6 +536,27 @@
         if (mag > bestMag){
         bestMag = mag;
         best = s;
+        }
+    }
+    return best;
+    }
+
+    function pickAccelForHit(nowMs){
+    // choose the peak-magnitude linear-accel sample in the last HIT_PICK_WIN_MS
+    const t0 = nowMs - HIT_PICK_WIN_MS;
+    let best = null;
+    let bestMag = -1;
+
+    for (let i = motionHist.length - 1; i >= 0; i--){
+        const s = motionHist[i];
+        if (s.t < t0) break;
+        const gHat = vNorm({ x:s.gx, y:s.gy, z:s.gz });
+        const aRaw = { x:s.ax, y:s.ay, z:s.az };
+        const aLin = projectToHorizon(aRaw, gHat);
+        const mag = Math.hypot(aLin.x, aLin.y, aLin.z);
+        if (mag > bestMag){
+        bestMag = mag;
+        best = { ...s, aLin };
         }
     }
     return best;
@@ -794,6 +841,56 @@
     flashDirLamp(code, ms);
     }
 
+    function pickShakeDirCodeFromAccelSample(s){
+    if (!s) return null;
+
+    const gHat = vNorm({ x:s.gx, y:s.gy, z:s.gz });
+    if (!(gHat.mag > 1e-6)) return null;
+
+    const aRaw = { x:s.ax, y:s.ay, z:s.az };
+    const aRawN = vNorm(aRaw);
+    const sUD = (aRawN.mag > 1e-6) ? vDot(aRawN, gHat) : 0; // -1..1
+
+    const aLin = s.aLin ? s.aLin : projectToHorizon(aRaw, gHat);
+    const h = vNorm(aLin);
+    if (!(h.mag > 1e-6)) return null;
+
+    const UD_WIN_THR = 0.70;
+
+    let sLR = 0, sFB = 0;
+    let hasTemplates = false;
+    if (ORIENT.T_lr && ORIENT.T_fb){
+      const mLR = Math.hypot(ORIENT.T_lr.x, ORIENT.T_lr.y, ORIENT.T_lr.z);
+      const mFB = Math.hypot(ORIENT.T_fb.x, ORIENT.T_fb.y, ORIENT.T_fb.z);
+      if (mLR > 0.5 && mFB > 0.5){
+        hasTemplates = true;
+        sLR = vDot(h, ORIENT.T_lr);
+        sFB = vDot(h, ORIENT.T_fb);
+      }
+    }
+
+    if (hasTemplates){
+      const aUD = Math.abs(sUD);
+      const aLR = Math.abs(sLR);
+      const aFB = Math.abs(sFB);
+
+      if (aUD >= aLR && aUD >= aFB && aUD >= UD_WIN_THR){
+        return (sUD >= 0) ? "D" : "U";
+      }
+
+      if (aLR >= aFB){
+        return (sLR >= 0) ? "R" : "L";
+      }
+      return (sFB >= 0) ? "F" : "B";
+    }
+
+    // fallback: dominant axis on horizontal linear accel
+    const ax = Math.abs(h.x), ay = Math.abs(h.y), az = Math.abs(h.z);
+    if (ax >= ay && ax >= az) return (h.x >= 0) ? "R" : "L";
+    if (ay >= ax && ay >= az) return (h.y >= 0) ? "F" : "B";
+    return (h.z >= 0) ? "D" : "U";
+    }
+
     // init persisted calibration on load
     orientLoad();
 
@@ -965,12 +1062,11 @@
           flashShakeLamp(400);
           triggerShockwave();
 
-            const s = pickOmegaForHit(nowMs);
+            const s = pickAccelForHit(nowMs);
             if (s){
             // temporarily set "lastGravity" to the smoothed gravity at that sample time
             lastGravity = { x:s.gx, y:s.gy, z:s.gz, has:1 };
-            const raw = { x:s.ox, y:s.oy, z:s.oz, has:1 };
-            const code = pickShakeDirCodeCalibrated(raw);
+            const code = pickShakeDirCodeFromAccelSample(s);
             if (code) flashDirLamp(code, 420);
             }
 
@@ -1825,9 +1921,10 @@
       const shake    = pick01NewOrOld("shake01", "shake");
       const locked   = !!d.locked;
       
-      // cache gravity + raw omega (foundation + shake)
+      // cache gravity + raw omega/accel (foundation + shake)
       cacheGravityFromMsg(d);
       cacheRawOmegaFromMsg(d);
+      cacheRawAccelFromMsg(d);
       pushMotionSample(nowMs);
 
       // if calibrating, consume samples continuously from the incoming stream
