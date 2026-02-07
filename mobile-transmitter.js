@@ -581,7 +581,7 @@
     // NEW SHAKE WIN RULE:
     // "When shake meter hits 100% twice in 500ms" => shakeHit
     // =========================================================================
-    const SHAKE_WIN_WINDOW_SEC = 0.50;
+    const SHAKE_WIN_WINDOW_SEC = 0.90;
     const SHAKE_FULL_HI = 0.70;
 
     // =========================================================================
@@ -942,7 +942,7 @@
       }
 
       let shakeHit = false;
-      if (shakeFullTimes.length >= 2) {
+      if (hitFull) {
         shakeHit = true;
         shakeFullTimes.length = 0;
       }
