@@ -165,14 +165,14 @@
     </div>
   </div>
 
-  <div id="calibOverlay" class="calibOverlay" aria-hidden="false">
+  <div id="calibOverlay" class="calibOverlay off" aria-hidden="true">
     <div class="calibCard" role="dialog" aria-label="Calibration">
       <div class="calibTitle">Calibration</div>
       <div class="calibText">Place your phone flat on the desk.</div>
       <div class="calibText">Align the top edge of the phone to point at the center of your laptop screen.</div>
       <div class="calibText">Hold still.</div>
-      <button id="calibBtn" class="calibBtn" type="button">CALIBRATE</button>
-      <div id="calibStatus" class="calibStatus">Ready</div>
+      <button id="calibBtn" class="calibBtn" type="button" disabled>CALIBRATE</button>
+      <div id="calibStatus" class="calibStatus">Waiting for phone…</div>
     </div>
   </div>
 

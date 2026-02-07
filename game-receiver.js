@@ -132,11 +132,13 @@
     // CALIBRATION OVERLAY
     // =========================================================================
     let calibInFlight = false;
+    let calibAvailable = false;
 
     function openCalibOverlay(){
       if (!els.calibOverlay) return;
       els.calibOverlay.classList.remove("off");
       els.calibOverlay.setAttribute("aria-hidden","false");
+      if (els.calibBtn) els.calibBtn.disabled = !calibAvailable;
     }
 
     function closeCalibOverlay(){
@@ -1561,6 +1563,7 @@
       if (els.calibBtn){
         els.calibBtn.onclick = () => {
           if (!channel) return;
+          if (!calibAvailable) return;
           if (calibInFlight) return;
           calibInFlight = true;
           els.calibBtn.disabled = true;
@@ -1589,6 +1592,11 @@
         if (d && d.calib === 1){
           setCalibStatus("Calibrated");
           closeCalibOverlay();
+        }
+        if (!calibAvailable){
+          calibAvailable = true;
+          setCalibStatus("Ready");
+          openCalibOverlay();
         }
 
         teleMaybeLog(d);
@@ -1619,6 +1627,5 @@
     });
 
     (async function init(){
-      openCalibOverlay();
       connect({ auto:true });
     })();
