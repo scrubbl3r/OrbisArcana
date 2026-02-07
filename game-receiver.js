@@ -1496,7 +1496,7 @@
       }
 
       // sd is only sent by the phone on shakeHit
-      if (d && d.shakeHit && typeof d.sd === "string" && d.sd.trim()) {
+      if (d && typeof d.sd === "string" && d.sd.trim()) {
         pendingSd = d.sd;
       }
 

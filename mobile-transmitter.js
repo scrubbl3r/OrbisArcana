@@ -1333,6 +1333,10 @@
       return (f >= 0) ? "F" : "B";
     }
 
+    const SD_HOLD_MS = 420;
+    let sdHoldUntil = 0;
+    let sdHoldLabel = null;
+
     // =========================================================================
     // Motion listener helpers
     // =========================================================================
@@ -1440,7 +1444,12 @@
 
           const held = meterHoldOrFade(dt);
 
-          const sd = sh.shakeHit ? classifyDirectionalShake(nowMs) : null;
+          if (sh.shakeHit) {
+            sdHoldLabel = classifyDirectionalShake(nowMs);
+            sdHoldUntil = nowMs + SD_HOLD_MS;
+          }
+          const sd = (sdHoldLabel && nowMs <= sdHoldUntil) ? sdHoldLabel : null;
+          if (!sd && nowMs > sdHoldUntil) sdHoldLabel = null;
           const calibAck = calib.ackPending ? 1 : 0;
           const forceSend = !!calibAck;
           if (calib.ackPending) calib.ackPending = false;
@@ -1635,7 +1644,12 @@
 
         const lockedNow = !!(lock || inGrace);
 
-        const sd = sh.shakeHit ? classifyDirectionalShake(nowMs) : null;
+        if (sh.shakeHit) {
+          sdHoldLabel = classifyDirectionalShake(nowMs);
+          sdHoldUntil = nowMs + SD_HOLD_MS;
+        }
+        const sd = (sdHoldLabel && nowMs <= sdHoldUntil) ? sdHoldLabel : null;
+        if (!sd && nowMs > sdHoldUntil) sdHoldLabel = null;
         const calibAck = calib.ackPending ? 1 : 0;
         const forceSend = !!calibAck;
         if (calib.ackPending) calib.ackPending = false;
