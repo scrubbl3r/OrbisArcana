@@ -565,13 +565,13 @@
     // DISRUPTOR v3 — SHAKE (FAST HIT + SLOW METER) + LOW-SMOOTH BOOST
     // =========================================================================
     const SHAKE_BASELINE_HZ = 0.75;
-    const SHAKE_HP_DEAD_G   = 0.65;
-    const SHAKE_JERK_DEAD   = 10.0;
+    const SHAKE_HP_DEAD_G   = 0.35;
+    const SHAKE_JERK_DEAD   = 6.0;
 
     const SHAKE_HP_WEIGHT   = 1.00;
     const SHAKE_JERK_WEIGHT = 0.35;
 
-    const SHAKE_METER_GAIN  = 2.10;
+    const SHAKE_METER_GAIN  = 2.60;
     const SHAKE_METER_DECAY = 2.60;
 
     const SHAKE_SMOOTH_BOOST_START   = 0.45;
@@ -582,7 +582,7 @@
     // "When shake meter hits 100% twice in 500ms" => shakeHit
     // =========================================================================
     const SHAKE_WIN_WINDOW_SEC = 0.90;
-    const SHAKE_FULL_HI = 0.70;
+    const SHAKE_FULL_HI = 0.50;
 
     // =========================================================================
     // AUDIO MAPPING (preserved)
