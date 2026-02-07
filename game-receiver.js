@@ -1582,7 +1582,8 @@
         let s = "";
         try { s = JSON.stringify(d); } catch(_) { s = String(d); }
         if (s.length > 240) s = s.slice(0, 240) + " …";
-        els.last.textContent = s;
+        const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
+        els.last.textContent = sh + s;
 
         if (els.pairModal.classList.contains("on")) closePairModal();
 
