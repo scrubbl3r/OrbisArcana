@@ -65,6 +65,7 @@
 
     const GESTURE_BANK_KEY = "orbis_gesture_bank_v1";
     const GRAVITY_LOCK_KEY = "orbis_gravity_lock_v1";
+    const CALIB_BASIS_KEY = "orbis_calib_basis_v1";
 
     const MAX_REC_MS = 1200;
     const PRE_ROLL_MS = 100;
@@ -74,6 +75,10 @@
     const MOTION_HIST_MS = 900;
     const HIT_WIN_MIN_MS = 180;
     const HIT_WIN_MAX_MS = 500;
+    const CALIB_MS = 2000;
+    const IMPULSE_WIN_MS = 220;
+    const DIR_MIN_THR = 0.6;
+    const PHONE_TOP_AXIS = { x:0, y:1, z:0 };
 
     const gestureBank = {
       templates: {},
@@ -81,6 +86,7 @@
     };
 
     let gravityLock = null; // {x,y,z}
+    let calibBasis = null; // { up, right, forward }
 
     const lab = {
       open: false,
@@ -113,6 +119,33 @@
     }
     function vScale(v,s){ return { x:v.x*s, y:v.y*s, z:v.z*s }; }
     function vSub(a,b){ return { x:a.x-b.x, y:a.y-b.y, z:a.z-b.z }; }
+
+    function loadCalibBasis(){
+      try{
+        const raw = localStorage.getItem(CALIB_BASIS_KEY);
+        if (!raw) return;
+        const j = JSON.parse(raw);
+        if (j && j.up && j.right && j.forward){
+          const up = vNorm(j.up);
+          const right = vNorm(j.right);
+          const forward = vNorm(j.forward);
+          if (up.mag > 0.5 && right.mag > 0.5 && forward.mag > 0.5){
+            calibBasis = {
+              up: {x:up.x,y:up.y,z:up.z},
+              right: {x:right.x,y:right.y,z:right.z},
+              forward: {x:forward.x,y:forward.y,z:forward.z}
+            };
+          }
+        }
+      }catch(_){}
+    }
+
+    function saveCalibBasis(){
+      if (!calibBasis) return;
+      try{
+        localStorage.setItem(CALIB_BASIS_KEY, JSON.stringify(calibBasis));
+      }catch(_){}
+    }
 
 
     function loadGestureBank(){
@@ -269,6 +302,14 @@
         ablyChannel.attach(() => resolve());
       });
 
+      try { ablyChannel.unsubscribe("ctl"); } catch(_) {}
+      ablyChannel.subscribe("ctl", (msg) => {
+        const d = (msg && msg.data) ? msg.data : {};
+        if (d && d.calibrate){
+          startCalibration();
+        }
+      });
+
       return true;
     }
 
@@ -415,6 +456,7 @@
       };
 
       if (payload.sd) out.sd = payload.sd;
+      if (payload.calib) out.calib = payload.calib;
 
 
       if (TELEMETRY_ON) {
@@ -1141,6 +1183,7 @@
 
     loadGestureBank();
     loadGravityLock();
+    loadCalibBasis();
     updateMasteryUI();
     updateGravityReadout();
     setLabelSelection(lab.selectedLabel);
@@ -1197,6 +1240,98 @@
       };
     }
 
+
+    // =========================================================================
+    // Calibration + Directional Impulse (phone-side)
+    // =========================================================================
+    const impulseHist = []; // { t, ax, ay, az }
+
+    const calib = {
+      active: false,
+      startMs: 0,
+      samples: [],
+      ackPending: false,
+      pendingReq: false
+    };
+
+    function startCalibration(){
+      if (!running){
+        calib.pendingReq = true;
+        return;
+      }
+      calib.pendingReq = false;
+      calib.active = true;
+      calib.startMs = performance.now();
+      calib.samples = [];
+    }
+
+    function finishCalibration(){
+      if (!calib.samples.length) {
+        calib.active = false;
+        return;
+      }
+      let sx=0, sy=0, sz=0;
+      for (const s of calib.samples){ sx+=s.ax; sy+=s.ay; sz+=s.az; }
+      const n = calib.samples.length || 1;
+      const gRaw = { x:sx/n, y:sy/n, z:sz/n };
+      const gHatN = vNorm(gRaw);
+      if (!(gHatN.mag > 0.5)) {
+        calib.active = false;
+        return;
+      }
+
+      const gHat = { x:gHatN.x, y:gHatN.y, z:gHatN.z };
+      const up = { x:-gHat.x, y:-gHat.y, z:-gHat.z };
+
+      // forward from phone top axis projected into desk plane
+      let f = vSub(PHONE_TOP_AXIS, vScale(gHat, vDot(PHONE_TOP_AXIS, gHat)));
+      let fN = vNorm(f);
+      if (!(fN.mag > 1e-6)){
+        const alt = { x:1, y:0, z:0 };
+        f = vSub(alt, vScale(gHat, vDot(alt, gHat)));
+        fN = vNorm(f);
+      }
+      const forward = { x:fN.x, y:fN.y, z:fN.z };
+      const rightN = vNorm(vCross(forward, up));
+      const right = { x:rightN.x, y:rightN.y, z:rightN.z };
+
+      calibBasis = { up, right, forward };
+      saveCalibBasis();
+
+      calib.active = false;
+      calib.ackPending = true;
+    }
+
+    function classifyDirectionalShake(nowMs){
+      if (!calibBasis) return null;
+      const t0 = nowMs - IMPULSE_WIN_MS;
+      let sumUp = 0, sumRight = 0, sumForward = 0, n = 0;
+      const gHat = { x:-calibBasis.up.x, y:-calibBasis.up.y, z:-calibBasis.up.z };
+
+      for (let i = impulseHist.length - 1; i >= 0; i--){
+        const s = impulseHist[i];
+        if (s.t < t0) break;
+        const aRaw = { x:s.ax, y:s.ay, z:s.az };
+        const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
+        sumUp += vDot(aRaw, calibBasis.up);
+        sumRight += vDot(aLin, calibBasis.right);
+        sumForward += vDot(aLin, calibBasis.forward);
+        n++;
+      }
+      if (!n) return null;
+
+      const u = sumUp / n;
+      const r = sumRight / n;
+      const f = sumForward / n;
+
+      const au = Math.abs(u), ar = Math.abs(r), af = Math.abs(f);
+      const maxAbs = Math.max(au, ar, af);
+      if (maxAbs < DIR_MIN_THR) return null;
+
+      if (maxAbs === au) return (u >= 0) ? "U" : "D";
+      if (maxAbs === ar) return (r >= 0) ? "R" : "L";
+      return (f >= 0) ? "F" : "B";
+    }
 
     // =========================================================================
     // Motion listener helpers
@@ -1266,6 +1401,17 @@
           if (nowMs - lab.recordStartedAtMs >= MAX_REC_MS) endRecording();
         }
 
+        impulseHist.push({ t: nowMs, ax: agx, ay: agy, az: agz });
+        const impCutoff = nowMs - HIT_WIN_MAX_MS;
+        while (impulseHist.length && impulseHist[0].t < impCutoff) impulseHist.shift();
+
+        if (calib.active){
+          calib.samples.push({ ax: agx, ay: agy, az: agz });
+          if ((nowMs - calib.startMs) >= CALIB_MS){
+            finishCalibration();
+          }
+        }
+
         const rr = e.rotationRate;
         // Keep same axis mapping you had (beta/gamma/alpha)
         const rrx = rr ? (rr.beta  ?? 0) : 0;
@@ -1294,8 +1440,10 @@
 
           const held = meterHoldOrFade(dt);
 
-          const match = sh.shakeHit ? recognizeGestureFromRecentBuffer(nowMs) : null;
-          const sd = match ? match.label : null;
+          const sd = sh.shakeHit ? classifyDirectionalShake(nowMs) : null;
+          const calibAck = calib.ackPending ? 1 : 0;
+          const forceSend = !!calibAck;
+          if (calib.ackPending) calib.ackPending = false;
 
           publishDynamics({
             room,
@@ -1313,6 +1461,7 @@
             shake01: sh.shake01,
             shakeHit: sh.shakeHit,
             sd,
+            calib: calibAck,
             locked: false,
             hz: 0,
 
@@ -1320,7 +1469,7 @@
             rr: [rrx, rry, rrz],
 
             d_r2: 0, d_r3: 0, d_gate: 0, d_balance: 0, d_couple: 0
-          }, dt);
+          }, dt, forceSend);
 
           setBgFromEnergy(clamp01(energyUI));
           setAudio(energyUI, held.grooveOut, false);
@@ -1486,8 +1635,10 @@
 
         const lockedNow = !!(lock || inGrace);
 
-        const match = sh.shakeHit ? recognizeGestureFromRecentBuffer(nowMs) : null;
-        const sd = match ? match.label : null;
+        const sd = sh.shakeHit ? classifyDirectionalShake(nowMs) : null;
+        const calibAck = calib.ackPending ? 1 : 0;
+        const forceSend = !!calibAck;
+        if (calib.ackPending) calib.ackPending = false;
 
         publishDynamics({
           room,
@@ -1505,6 +1656,7 @@
           shake01: sh.shake01,
           shakeHit: sh.shakeHit,
           sd,
+          calib: calibAck,
           locked: lockedNow,
           hz: grooveHz,
 
@@ -1516,7 +1668,7 @@
           d_gate: actGate,
           d_balance: 0,
           d_couple: 0
-        }, dt);
+        }, dt, forceSend);
 
         setBgFromEnergy(clamp01(energyUI));
         setAudio(energyUI, lockStrength, lockedNow);
@@ -1594,6 +1746,8 @@
         UI.state = "running";
         setBtn("Stop");
 
+        if (calib.pendingReq) startCalibration();
+
       } finally {
         startBtn.disabled = false;
       }
@@ -1606,6 +1760,7 @@
 
     function stop() {
       running = false;
+      calib.active = false;
       removeMotionListener();
 
       if (audioCtx && gainNode) {

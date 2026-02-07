@@ -70,6 +70,9 @@
       teleRecBtn: $("teleRecBtn"),
       teleOut: $("teleOut"),
 
+      calibOverlay: $("calibOverlay"),
+      calibBtn: $("calibBtn"),
+      calibStatus: $("calibStatus"),
     };
 
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
@@ -123,6 +126,29 @@
     function setStatus(html, cls){
       els.status.className = cls || "dim";
       els.status.innerHTML = html;
+    }
+
+    // =========================================================================
+    // CALIBRATION OVERLAY
+    // =========================================================================
+    let calibInFlight = false;
+
+    function openCalibOverlay(){
+      if (!els.calibOverlay) return;
+      els.calibOverlay.classList.remove("off");
+      els.calibOverlay.setAttribute("aria-hidden","false");
+    }
+
+    function closeCalibOverlay(){
+      if (!els.calibOverlay) return;
+      els.calibOverlay.classList.add("off");
+      els.calibOverlay.setAttribute("aria-hidden","true");
+      if (els.calibBtn) els.calibBtn.disabled = false;
+      calibInFlight = false;
+    }
+
+    function setCalibStatus(msg){
+      if (els.calibStatus) els.calibStatus.textContent = msg;
     }
 
     // =========================================================================
@@ -480,6 +506,12 @@
       }, ms);
     }
 
+    function flashDirLampSingle(code, ms=380){
+      clearDirLampTimers();
+      allDirLampOff();
+      flashDirLamp(code, ms);
+    }
+
     // =========================================================================
     // ENERGY BANK (receiver-side battery)
     // =========================================================================
@@ -520,12 +552,14 @@
     let shakeFirstHitAt = 0;
     let shakeLastHitAt  = -1e9;
     let shakeCooldownUntil = 0;
+    let pendingSd = null;
 
     function resetShakeDetector(){
       shakeFirstHitAt = 0;
       shakeLastHitAt = -1e9;
       shakeCooldownUntil = 0;
       forceShakeLampOff();
+      pendingSd = null;
 
       // ✅ NEW: hard-clear any queued direction timers
       clearDirLampTimers();
@@ -552,6 +586,11 @@
           spendShake();
           flashShakeLamp(400);
           triggerShockwave();
+
+          if (pendingSd) {
+            flashDirLampSingle(pendingSd, 420);
+            pendingSd = null;
+          }
 
           shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
           shakeFirstHitAt = 0;
@@ -1454,9 +1493,9 @@
         }
       }
 
-      // sd is only sent by the phone on shakeHit (lean)
-      if (d && typeof d.sd === "string" && d.sd.trim()) {
-        flashDirLamp(d.sd, 420);
+      // sd is only sent by the phone on shakeHit
+      if (d && d.shakeHit && typeof d.sd === "string" && d.sd.trim()) {
+        pendingSd = d.sd;
       }
 
       stabilityVisualGate =
@@ -1519,6 +1558,17 @@
         idleStartTimers();
       });
 
+      if (els.calibBtn){
+        els.calibBtn.onclick = () => {
+          if (!channel) return;
+          if (calibInFlight) return;
+          calibInFlight = true;
+          els.calibBtn.disabled = true;
+          setCalibStatus("Calibrating… (2s)");
+          channel.publish("ctl", { calibrate: 1, ts: Date.now() });
+        };
+      }
+
       channel.subscribe("orb", (msg) => {
         idleMarkActivity();
 
@@ -1534,6 +1584,11 @@
         // If the start screen is still up for some reason, drop it on first msg.
         if (els.startScreen && !els.startScreen.classList.contains("off")) {
           els.startScreen.classList.add("off");
+        }
+
+        if (d && d.calib === 1){
+          setCalibStatus("Calibrated");
+          closeCalibOverlay();
         }
 
         teleMaybeLog(d);
@@ -1564,5 +1619,6 @@
     });
 
     (async function init(){
+      openCalibOverlay();
       connect({ auto:true });
     })();

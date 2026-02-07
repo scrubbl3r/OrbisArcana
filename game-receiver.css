@@ -319,6 +319,78 @@
     }
 
     /* ======================================================================
+       CALIBRATION OVERLAY
+       ====================================================================== */
+    .calibOverlay{
+      position:fixed;
+      inset:0;
+      z-index: 999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(6px);
+      pointer-events:auto;
+    }
+    .calibOverlay.off{
+      display:none;
+    }
+    .calibCard{
+      width:min(520px, 90vw);
+      padding:16px;
+      border-radius:16px;
+      border:1px solid rgba(50,255,117,.28);
+      background: rgba(0,0,0,.70);
+      text-align:center;
+      box-shadow: 0 22px 90px rgba(0,0,0,.65);
+    }
+    .calibTitle{
+      font-weight:1000;
+      letter-spacing:.10em;
+      text-transform: uppercase;
+      margin-bottom:8px;
+    }
+    .calibText{
+      font-size:12px;
+      opacity:.86;
+      line-height:1.35;
+      margin-top:6px;
+    }
+    .calibBtn{
+      margin-top:12px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(50,255,117,.40);
+      background: rgba(0,0,0,.55);
+      color: var(--g);
+      font-weight: 1000;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,.35) inset,
+        0 0 22px rgba(50,255,117,.10);
+    }
+    .calibBtn:hover{
+      border-color: rgba(50,255,117,.60);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,.35) inset,
+        0 0 30px rgba(50,255,117,.14);
+    }
+    .calibBtn:active{
+      transform: translateY(1px);
+    }
+    .calibBtn:disabled{
+      opacity: .55;
+      cursor: default;
+    }
+    .calibStatus{
+      margin-top:10px;
+      font-size:12px;
+      opacity:.8;
+    }
+
+    /* ======================================================================
        [VFX] ORB DOM STACK (ONE TRUE ORIGIN inside orbWrap)
        ====================================================================== */
     .orbWrap{
