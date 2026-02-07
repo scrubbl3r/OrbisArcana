@@ -77,7 +77,7 @@
     const HIT_WIN_MAX_MS = 500;
     const CALIB_MS = 2000;
     const IMPULSE_WIN_MS = 220;
-    const DIR_MIN_THR = 0.6;
+    const DIR_MIN_THR = 0.0;
     const PHONE_TOP_AXIS = { x:0, y:1, z:0 };
 
     const gestureBank = {
@@ -1326,7 +1326,7 @@
 
       const au = Math.abs(u), ar = Math.abs(r), af = Math.abs(f);
       const maxAbs = Math.max(au, ar, af);
-      if (maxAbs < DIR_MIN_THR) return null;
+      if (maxAbs < 1e-6) return "F";
 
       if (maxAbs === au) return (u >= 0) ? "U" : "D";
       if (maxAbs === ar) return (r >= 0) ? "R" : "L";
