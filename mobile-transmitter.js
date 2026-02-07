@@ -1460,7 +1460,7 @@
           const sd = (sdHoldLabel && nowMs <= sdHoldUntil) ? sdHoldLabel : null;
           if (!sd && nowMs > sdHoldUntil) sdHoldLabel = null;
           const calibAck = calib.ackPending ? 1 : 0;
-          const forceSend = !!calibAck;
+          const forceSend = !!calibAck || !!sh.shakeHit;
           if (calib.ackPending) calib.ackPending = false;
 
           publishDynamics({
@@ -1660,7 +1660,7 @@
         const sd = (sdHoldLabel && nowMs <= sdHoldUntil) ? sdHoldLabel : null;
         if (!sd && nowMs > sdHoldUntil) sdHoldLabel = null;
         const calibAck = calib.ackPending ? 1 : 0;
-        const forceSend = !!calibAck;
+        const forceSend = !!calibAck || !!sh.shakeHit;
         if (calib.ackPending) calib.ackPending = false;
 
         publishDynamics({
