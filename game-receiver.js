@@ -1510,7 +1510,9 @@
       updateStability(dynamics, nowMs);
       updateVariability(dynamics, nowMs);
 
-      processShakeDoubleBang(shake, nowMs);
+      if (d && d.shakeHit) {
+        registerShakeHit(nowMs);
+      }
 
       setAudio(energyUI01, groove, locked);
     }
