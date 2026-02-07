@@ -1308,17 +1308,26 @@
       let sumUp = 0, sumRight = 0, sumForward = 0, n = 0;
       const gHat = { x:-calibBasis.up.x, y:-calibBasis.up.y, z:-calibBasis.up.z };
 
+      let meanUp = 0;
+      for (let i = impulseHist.length - 1; i >= 0; i--){
+        const s = impulseHist[i];
+        if (s.t < t0) break;
+        const aRaw = { x:s.ax, y:s.ay, z:s.az };
+        meanUp += vDot(aRaw, calibBasis.up);
+        n++;
+      }
+      if (!n) return null;
+      meanUp = meanUp / n;
+
       for (let i = impulseHist.length - 1; i >= 0; i--){
         const s = impulseHist[i];
         if (s.t < t0) break;
         const aRaw = { x:s.ax, y:s.ay, z:s.az };
         const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
-        sumUp += vDot(aRaw, calibBasis.up);
+        sumUp += (vDot(aRaw, calibBasis.up) - meanUp);
         sumRight += vDot(aLin, calibBasis.right);
         sumForward += vDot(aLin, calibBasis.forward);
-        n++;
       }
-      if (!n) return null;
 
       const u = sumUp / n;
       const r = sumRight / n;
