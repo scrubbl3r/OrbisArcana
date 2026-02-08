@@ -1327,9 +1327,9 @@
         if (s.t < t0) break;
         const aRaw = { x:s.ax, y:s.ay, z:s.az };
         const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
-        const u = vDot(aRaw, calibBasis.up) - meanUp;
-        const r = vDot(aLin, calibBasis.right);
-        const f = vDot(aLin, calibBasis.forward);
+        const u = (vDot(aRaw, calibBasis.up) - meanUp) * FLIP_U;
+        const r = vDot(aLin, calibBasis.right) * FLIP_R;
+        const f = vDot(aLin, calibBasis.forward) * FLIP_F;
         sumUp += u;
         sumRight += r;
         sumForward += f;
@@ -1374,6 +1374,9 @@
     }
 
     const SD_SLOP_GATE = 0.18;
+    const FLIP_U = 1;
+    const FLIP_R = 1;
+    const FLIP_F = 1;
 
     // =========================================================================
     // Motion listener helpers
