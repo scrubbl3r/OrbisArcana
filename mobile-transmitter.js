@@ -87,6 +87,7 @@
 
     let gravityLock = null; // {x,y,z}
     let calibBasis = null; // { up, right, forward }
+    let calibR = null;     // 3x3 rotation at calibration time
 
     const lab = {
       open: false,
@@ -104,6 +105,8 @@
 
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
+    let orientState = { alpha:0, beta:0, gamma:0, has:false, R:null };
+
     function vDot(a,b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
     function vCross(a,b){
       return {
@@ -119,6 +122,67 @@
     }
     function vScale(v,s){ return { x:v.x*s, y:v.y*s, z:v.z*s }; }
     function vSub(a,b){ return { x:a.x-b.x, y:a.y-b.y, z:a.z-b.z }; }
+    function matMul(a,b){
+      return [
+        [
+          a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0],
+          a[0][0]*b[0][1] + a[0][1]*b[1][1] + a[0][2]*b[2][1],
+          a[0][0]*b[0][2] + a[0][1]*b[1][2] + a[0][2]*b[2][2],
+        ],
+        [
+          a[1][0]*b[0][0] + a[1][1]*b[1][0] + a[1][2]*b[2][0],
+          a[1][0]*b[0][1] + a[1][1]*b[1][1] + a[1][2]*b[2][1],
+          a[1][0]*b[0][2] + a[1][1]*b[1][2] + a[1][2]*b[2][2],
+        ],
+        [
+          a[2][0]*b[0][0] + a[2][1]*b[1][0] + a[2][2]*b[2][0],
+          a[2][0]*b[0][1] + a[2][1]*b[1][1] + a[2][2]*b[2][1],
+          a[2][0]*b[0][2] + a[2][1]*b[1][2] + a[2][2]*b[2][2],
+        ],
+      ];
+    }
+    function matT(m){
+      return [
+        [m[0][0], m[1][0], m[2][0]],
+        [m[0][1], m[1][1], m[2][1]],
+        [m[0][2], m[1][2], m[2][2]],
+      ];
+    }
+    function matVec(m,v){
+      return {
+        x: m[0][0]*v.x + m[0][1]*v.y + m[0][2]*v.z,
+        y: m[1][0]*v.x + m[1][1]*v.y + m[1][2]*v.z,
+        z: m[2][0]*v.x + m[2][1]*v.y + m[2][2]*v.z,
+      };
+    }
+
+    function rotFromEuler(alpha, beta, gamma){
+      // Z (alpha), X (beta), Y (gamma) intrinsic rotation
+      const _x = (beta || 0)  * Math.PI / 180;
+      const _y = (gamma || 0) * Math.PI / 180;
+      const _z = (alpha || 0) * Math.PI / 180;
+
+      const cX = Math.cos(_x), sX = Math.sin(_x);
+      const cY = Math.cos(_y), sY = Math.sin(_y);
+      const cZ = Math.cos(_z), sZ = Math.sin(_z);
+
+      const Rz = [
+        [ cZ, -sZ, 0 ],
+        [ sZ,  cZ, 0 ],
+        [  0,   0, 1 ],
+      ];
+      const Rx = [
+        [ 1,  0,   0 ],
+        [ 0, cX, -sX ],
+        [ 0, sX,  cX ],
+      ];
+      const Ry = [
+        [ cY, 0, sY ],
+        [  0, 1,  0 ],
+        [ -sY,0, cY ],
+      ];
+      return matMul(matMul(Rz, Rx), Ry);
+    }
 
     function loadCalibBasis(){
       try{
@@ -137,13 +201,21 @@
             };
           }
         }
+        if (j && j.r && Array.isArray(j.r) && j.r.length === 3){
+          calibR = j.r;
+        }
       }catch(_){}
     }
 
     function saveCalibBasis(){
       if (!calibBasis) return;
       try{
-        localStorage.setItem(CALIB_BASIS_KEY, JSON.stringify(calibBasis));
+        localStorage.setItem(CALIB_BASIS_KEY, JSON.stringify({
+          up: calibBasis.up,
+          right: calibBasis.right,
+          forward: calibBasis.forward,
+          r: calibR
+        }));
       }catch(_){}
     }
 
@@ -1296,6 +1368,7 @@
       const right = { x:rightN.x, y:rightN.y, z:rightN.z };
 
       calibBasis = { up, right, forward };
+      calibR = orientState && orientState.R ? orientState.R : calibR;
       saveCalibBasis();
 
       calib.active = false;
@@ -1305,15 +1378,25 @@
     function classifyDirectionalShake(nowMs){
       if (!calibBasis) return null;
       const t0 = nowMs - IMPULSE_WIN_MS;
+      let basis = calibBasis;
+      if (calibR && orientState && orientState.R){
+        // rotate calibration basis into current phone frame
+        const rel = matMul(matT(orientState.R), calibR);
+        basis = {
+          up: matVec(rel, calibBasis.up),
+          right: matVec(rel, calibBasis.right),
+          forward: matVec(rel, calibBasis.forward)
+        };
+      }
       let sumUp = 0, sumRight = 0, sumForward = 0, n = 0;
-      const gHat = { x:-calibBasis.up.x, y:-calibBasis.up.y, z:-calibBasis.up.z };
+      const gHat = { x:-basis.up.x, y:-basis.up.y, z:-basis.up.z };
 
       let meanUp = 0;
       for (let i = impulseHist.length - 1; i >= 0; i--){
         const s = impulseHist[i];
         if (s.t < t0) break;
         const aRaw = { x:s.ax, y:s.ay, z:s.az };
-        meanUp += vDot(aRaw, calibBasis.up);
+        meanUp += vDot(aRaw, basis.up);
         n++;
       }
       if (!n) return null;
@@ -1327,9 +1410,9 @@
         if (s.t < t0) break;
         const aRaw = { x:s.ax, y:s.ay, z:s.az };
         const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
-        const u = (vDot(aRaw, calibBasis.up) - meanUp) * FLIP_U;
-        const r = vDot(aLin, calibBasis.right) * FLIP_R;
-        const f = vDot(aLin, calibBasis.forward) * FLIP_F;
+        const u = (vDot(aRaw, basis.up) - meanUp) * FLIP_U;
+        const r = vDot(aLin, basis.right) * FLIP_R;
+        const f = vDot(aLin, basis.forward) * FLIP_F;
         sumUp += u;
         sumRight += r;
         sumForward += f;
@@ -1383,9 +1466,11 @@
     // =========================================================================
     function addMotionListener(){
       window.addEventListener('devicemotion', onMotion, { passive: true });
+      window.addEventListener('deviceorientation', onOrient, { passive: true });
     }
     function removeMotionListener(){
       window.removeEventListener('devicemotion', onMotion);
+      window.removeEventListener('deviceorientation', onOrient);
     }
 
     // =========================================================================
@@ -1409,6 +1494,17 @@
 
       const results = await Promise.all(reqs);
       return results.every(Boolean);
+    }
+
+    function onOrient(e){
+      const alpha = (e && e.alpha != null) ? Number(e.alpha) : 0;
+      const beta  = (e && e.beta  != null) ? Number(e.beta)  : 0;
+      const gamma = (e && e.gamma != null) ? Number(e.gamma) : 0;
+      orientState.alpha = isFinite(alpha) ? alpha : 0;
+      orientState.beta = isFinite(beta) ? beta : 0;
+      orientState.gamma = isFinite(gamma) ? gamma : 0;
+      orientState.R = rotFromEuler(orientState.alpha, orientState.beta, orientState.gamma);
+      orientState.has = true;
     }
 
     // =========================================================================
