@@ -1357,15 +1357,22 @@
         return;
       }
 
-      const gHat = { x:gHatN.x, y:gHatN.y, z:gHatN.z };
-      const up = { x:-gHat.x, y:-gHat.y, z:-gHat.z };
+      if (!orientState || !orientState.R) {
+        calib.active = false;
+        return;
+      }
 
-      // forward from phone top axis projected into desk plane
-      let f = vSub(PHONE_TOP_AXIS, vScale(gHat, vDot(PHONE_TOP_AXIS, gHat)));
+      const gHat = { x:gHatN.x, y:gHatN.y, z:gHatN.z };
+      const gHatWorld = matVec(orientState.R, gHat);
+      const up = { x:-gHatWorld.x, y:-gHatWorld.y, z:-gHatWorld.z };
+
+      // forward from phone top axis projected into desk plane (world frame)
+      const topWorld = matVec(orientState.R, PHONE_TOP_AXIS);
+      let f = vSub(topWorld, vScale(up, vDot(topWorld, up)));
       let fN = vNorm(f);
       if (!(fN.mag > 1e-6)){
         const alt = { x:1, y:0, z:0 };
-        f = vSub(alt, vScale(gHat, vDot(alt, gHat)));
+        f = vSub(alt, vScale(up, vDot(alt, up)));
         fN = vNorm(f);
       }
       const forward = { x:fN.x, y:fN.y, z:fN.z };
@@ -1373,7 +1380,7 @@
       const right = { x:rightN.x, y:rightN.y, z:rightN.z };
 
       calibBasis = { up, right, forward };
-      calibR = orientState && orientState.R ? orientState.R : calibR;
+      calibR = orientState.R;
       calibAlpha0 = orientState && isFinite(orientState.alpha) ? orientState.alpha : calibAlpha0;
       saveCalibBasis();
 
@@ -1383,22 +1390,9 @@
 
     function classifyDirectionalShake(nowMs){
       if (!calibBasis) return null;
+      if (!orientState || !orientState.R) return null;
       const t0 = nowMs - IMPULSE_WIN_MS;
-      let basis = calibBasis;
-      if (calibR && orientState && orientState.R){
-        // rotate calibration basis into current phone frame
-        let rel = matMul(matT(orientState.R), calibR);
-        if (calibAlpha0 != null && orientState && isFinite(orientState.alpha)){
-          const dYaw = orientState.alpha - calibAlpha0;
-          const yawR = rotFromEuler(dYaw, 0, 0);
-          rel = matMul(yawR, rel);
-        }
-        basis = {
-          up: matVec(rel, calibBasis.up),
-          right: matVec(rel, calibBasis.right),
-          forward: matVec(rel, calibBasis.forward)
-        };
-      }
+      const basis = calibBasis;
       let sumUp = 0, sumRight = 0, sumForward = 0, n = 0;
       const gHat = { x:-basis.up.x, y:-basis.up.y, z:-basis.up.z };
 
@@ -1406,7 +1400,7 @@
       for (let i = impulseHist.length - 1; i >= 0; i--){
         const s = impulseHist[i];
         if (s.t < t0) break;
-        const aRaw = { x:s.ax, y:s.ay, z:s.az };
+        const aRaw = matVec(orientState.R, { x:s.ax, y:s.ay, z:s.az });
         meanUp += vDot(aRaw, basis.up);
         n++;
       }
@@ -1419,7 +1413,7 @@
       for (let i = impulseHist.length - 1; i >= 0; i--){
         const s = impulseHist[i];
         if (s.t < t0) break;
-        const aRaw = { x:s.ax, y:s.ay, z:s.az };
+        const aRaw = matVec(orientState.R, { x:s.ax, y:s.ay, z:s.az });
         const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
         const u = (vDot(aRaw, basis.up) - meanUp) * FLIP_U;
         const r = vDot(aLin, basis.right) * FLIP_R;
