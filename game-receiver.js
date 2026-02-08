@@ -543,25 +543,21 @@
     function spendShake(){ energyBankPts = clamp(energyBankPts - ENERGY_SHAKE_COST, 0, ENERGY_BANK_CAP); }
 
     // =========================================================================
-    // SHAKE DOUBLE-BANG + energy-gated detonation
+    // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
-    const DOUBLEBANG_MS    = 300;
-    const SHAKE_COOLDOWN_MS = 2000;
+    const SHAKE_COOLDOWN_MS = 300;
+    const SHAKE_LAMP_THR = 0.35;
+    const SD_RECENT_MS = 400;
 
-    const SHAKE_HIT_THR = 0.998;
-    const SHAKE_HIT_DEBOUNCE_MS = 130;
-
-    let shakeFirstHitAt = 0;
-    let shakeLastHitAt  = -1e9;
     let shakeCooldownUntil = 0;
     let pendingSd = null;
+    let pendingSdAt = 0;
 
     function resetShakeDetector(){
-      shakeFirstHitAt = 0;
-      shakeLastHitAt = -1e9;
       shakeCooldownUntil = 0;
       forceShakeLampOff();
       pendingSd = null;
+      pendingSdAt = 0;
 
       // ✅ NEW: hard-clear any queued direction timers
       clearDirLampTimers();
@@ -572,36 +568,22 @@
       if (nowMs < shakeCooldownUntil) return;
 
       if (isDiversityLampLit()){
-        shakeFirstHitAt = 0;
         return;
       }
 
-      if (!shakeFirstHitAt){
-        shakeFirstHitAt = nowMs;
-        return;
+      if (!canSpendShake()) return;
+
+      spendShake();
+      flashShakeLamp(400);
+      triggerShockwave();
+
+      if (pendingSd && (nowMs - pendingSdAt) <= SD_RECENT_MS) {
+        flashDirLampSingle(pendingSd, 420);
       }
+      pendingSd = null;
+      pendingSdAt = 0;
 
-      const dt = nowMs - shakeFirstHitAt;
-
-      if (dt <= DOUBLEBANG_MS){
-        if (canSpendShake()){
-          spendShake();
-          flashShakeLamp(400);
-          triggerShockwave();
-
-          if (pendingSd) {
-            flashDirLampSingle(pendingSd, 420);
-            pendingSd = null;
-          }
-
-          shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
-          shakeFirstHitAt = 0;
-        } else {
-          shakeFirstHitAt = 0;
-        }
-      } else {
-        shakeFirstHitAt = nowMs;
-      }
+      shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
     }
 
     function processShakeDoubleBang(shakeVal01, nowMs){
@@ -609,11 +591,7 @@
       if (!isFinite(v)) return;
 
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
-      if (v < SHAKE_HIT_THR) return;
-
-      if ((nowMs - shakeLastHitAt) < SHAKE_HIT_DEBOUNCE_MS) return;
-
-      shakeLastHitAt = nowMs;
+      if (v < SHAKE_LAMP_THR) return;
       registerShakeHit(nowMs);
     }
 
@@ -1498,6 +1476,7 @@
       // sd is only sent by the phone on shakeHit
       if (d && typeof d.sd === "string" && d.sd.trim()) {
         pendingSd = d.sd;
+        pendingSdAt = nowMs;
       }
 
       stabilityVisualGate =
