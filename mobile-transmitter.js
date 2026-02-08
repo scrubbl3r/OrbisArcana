@@ -88,6 +88,7 @@
     let gravityLock = null; // {x,y,z}
     let calibBasis = null; // { up, right, forward }
     let calibR = null;     // 3x3 rotation at calibration time
+    let calibAlpha0 = null;
 
     const lab = {
       open: false,
@@ -204,6 +205,9 @@
         if (j && j.r && Array.isArray(j.r) && j.r.length === 3){
           calibR = j.r;
         }
+        if (j && typeof j.alpha0 === "number"){
+          calibAlpha0 = j.alpha0;
+        }
       }catch(_){}
     }
 
@@ -214,7 +218,8 @@
           up: calibBasis.up,
           right: calibBasis.right,
           forward: calibBasis.forward,
-          r: calibR
+          r: calibR,
+          alpha0: calibAlpha0
         }));
       }catch(_){}
     }
@@ -1369,6 +1374,7 @@
 
       calibBasis = { up, right, forward };
       calibR = orientState && orientState.R ? orientState.R : calibR;
+      calibAlpha0 = orientState && isFinite(orientState.alpha) ? orientState.alpha : calibAlpha0;
       saveCalibBasis();
 
       calib.active = false;
@@ -1381,7 +1387,12 @@
       let basis = calibBasis;
       if (calibR && orientState && orientState.R){
         // rotate calibration basis into current phone frame
-        const rel = matMul(matT(orientState.R), calibR);
+        let rel = matMul(matT(orientState.R), calibR);
+        if (calibAlpha0 != null && orientState && isFinite(orientState.alpha)){
+          const dYaw = orientState.alpha - calibAlpha0;
+          const yawR = rotFromEuler(dYaw, 0, 0);
+          rel = matMul(yawR, rel);
+        }
         basis = {
           up: matVec(rel, calibBasis.up),
           right: matVec(rel, calibBasis.right),
@@ -1497,7 +1508,7 @@
     }
 
     function onOrient(e){
-      const alpha = 0; // ignore yaw to avoid drift
+      const alpha = (e && e.alpha != null) ? Number(e.alpha) : 0;
       const beta  = (e && e.beta  != null) ? Number(e.beta)  : 0;
       const gamma = (e && e.gamma != null) ? Number(e.gamma) : 0;
       orientState.alpha = isFinite(alpha) ? alpha : 0;
