@@ -1342,9 +1342,7 @@
       return (f >= 0) ? "F" : "B";
     }
 
-    const SD_HOLD_MS = 420;
-    let sdHoldUntil = 0;
-    let sdHoldLabel = null;
+    const SD_SLOP_GATE = 0.06;
 
     // =========================================================================
     // Motion listener helpers
@@ -1453,12 +1451,7 @@
 
           const held = meterHoldOrFade(dt);
 
-          if (sh.shakeHit) {
-            sdHoldLabel = classifyDirectionalShake(nowMs);
-            sdHoldUntil = nowMs + SD_HOLD_MS;
-          }
-          const sd = (sdHoldLabel && nowMs <= sdHoldUntil) ? sdHoldLabel : null;
-          if (!sd && nowMs > sdHoldUntil) sdHoldLabel = null;
+          const sd = (sh.shake01 > SD_SLOP_GATE) ? classifyDirectionalShake(nowMs) : null;
           const calibAck = calib.ackPending ? 1 : 0;
           const forceSend = !!calibAck || !!sh.shakeHit;
           if (calib.ackPending) calib.ackPending = false;
@@ -1653,12 +1646,7 @@
 
         const lockedNow = !!(lock || inGrace);
 
-        if (sh.shakeHit) {
-          sdHoldLabel = classifyDirectionalShake(nowMs);
-          sdHoldUntil = nowMs + SD_HOLD_MS;
-        }
-        const sd = (sdHoldLabel && nowMs <= sdHoldUntil) ? sdHoldLabel : null;
-        if (!sd && nowMs > sdHoldUntil) sdHoldLabel = null;
+        const sd = (sh.shake01 > SD_SLOP_GATE) ? classifyDirectionalShake(nowMs) : null;
         const calibAck = calib.ackPending ? 1 : 0;
         const forceSend = !!calibAck || !!sh.shakeHit;
         if (calib.ackPending) calib.ackPending = false;
