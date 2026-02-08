@@ -1497,7 +1497,7 @@
     }
 
     function onOrient(e){
-      const alpha = (e && e.alpha != null) ? Number(e.alpha) : 0;
+      const alpha = 0; // ignore yaw to avoid drift
       const beta  = (e && e.beta  != null) ? Number(e.beta)  : 0;
       const gamma = (e && e.gamma != null) ? Number(e.gamma) : 0;
       orientState.alpha = isFinite(alpha) ? alpha : 0;
