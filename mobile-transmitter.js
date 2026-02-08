@@ -1319,7 +1319,9 @@
       if (!n) return null;
       meanUp = meanUp / n;
 
-      let maxU = 0, maxR = 0, maxF = 0;
+      let upPos = { v:0, t:0 }, upNeg = { v:0, t:0 };
+      let rPos = { v:0, t:0 }, rNeg = { v:0, t:0 };
+      let fPos = { v:0, t:0 }, fNeg = { v:0, t:0 };
       for (let i = impulseHist.length - 1; i >= 0; i--){
         const s = impulseHist[i];
         if (s.t < t0) break;
@@ -1331,22 +1333,44 @@
         sumUp += u;
         sumRight += r;
         sumForward += f;
-        const au = Math.abs(u), ar = Math.abs(r), af = Math.abs(f);
-        if (au > maxU) maxU = au;
-        if (ar > maxR) maxR = ar;
-        if (af > maxF) maxF = af;
+        if (u >= 0 && u > upPos.v) upPos = { v:u, t:s.t };
+        if (u < 0 && -u > upNeg.v) upNeg = { v:-u, t:s.t };
+        if (r >= 0 && r > rPos.v) rPos = { v:r, t:s.t };
+        if (r < 0 && -r > rNeg.v) rNeg = { v:-r, t:s.t };
+        if (f >= 0 && f > fPos.v) fPos = { v:f, t:s.t };
+        if (f < 0 && -f > fNeg.v) fNeg = { v:-f, t:s.t };
       }
 
       const u = sumUp / n;
       const r = sumRight / n;
       const f = sumForward / n;
 
+      const maxU = Math.max(upPos.v, upNeg.v);
+      const maxR = Math.max(rPos.v, rNeg.v);
+      const maxF = Math.max(fPos.v, fNeg.v);
       const maxAbs = Math.max(maxU, maxR, maxF);
       if (maxAbs < DIR_MIN_THR) return null;
 
-      if (maxAbs === maxU) return (u >= 0) ? "U" : "D";
-      if (maxAbs === maxR) return (r >= 0) ? "R" : "L";
-      return (f >= 0) ? "F" : "B";
+      function pickSign(pos, neg){
+        if (pos.v > 0 && neg.v > 0){
+          // use earlier peak (drive) if opposite peak exists later
+          return (pos.t < neg.t) ? 1 : -1;
+        }
+        if (pos.v > 0) return 1;
+        if (neg.v > 0) return -1;
+        return 0;
+      }
+
+      if (maxAbs === maxU) {
+        const s = pickSign(upPos, upNeg);
+        return (s >= 0) ? "U" : "D";
+      }
+      if (maxAbs === maxR) {
+        const s = pickSign(rPos, rNeg);
+        return (s >= 0) ? "R" : "L";
+      }
+      const s = pickSign(fPos, fNeg);
+      return (s >= 0) ? "F" : "B";
     }
 
     const SD_SLOP_GATE = 0.18;
