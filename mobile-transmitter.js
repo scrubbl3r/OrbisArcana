@@ -76,8 +76,8 @@
     const HIT_WIN_MIN_MS = 180;
     const HIT_WIN_MAX_MS = 500;
     const CALIB_MS = 2000;
-    const IMPULSE_WIN_MS = 220;
-    const DIR_MIN_THR = 0.0;
+    const IMPULSE_WIN_MS = 360;
+    const DIR_MIN_THR = 0.35;
     const PHONE_TOP_AXIS = { x:0, y:1, z:0 };
 
     const gestureBank = {
@@ -1342,14 +1342,14 @@
       const f = sumForward / n;
 
       const maxAbs = Math.max(maxU, maxR, maxF);
-      if (maxAbs < 1e-6) return "F";
+      if (maxAbs < DIR_MIN_THR) return null;
 
       if (maxAbs === maxU) return (u >= 0) ? "U" : "D";
       if (maxAbs === maxR) return (r >= 0) ? "R" : "L";
       return (f >= 0) ? "F" : "B";
     }
 
-    const SD_SLOP_GATE = 0.06;
+    const SD_SLOP_GATE = 0.18;
 
     // =========================================================================
     // Motion listener helpers
