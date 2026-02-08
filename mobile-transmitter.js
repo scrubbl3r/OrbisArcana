@@ -1319,26 +1319,33 @@
       if (!n) return null;
       meanUp = meanUp / n;
 
+      let maxU = 0, maxR = 0, maxF = 0;
       for (let i = impulseHist.length - 1; i >= 0; i--){
         const s = impulseHist[i];
         if (s.t < t0) break;
         const aRaw = { x:s.ax, y:s.ay, z:s.az };
         const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
-        sumUp += (vDot(aRaw, calibBasis.up) - meanUp);
-        sumRight += vDot(aLin, calibBasis.right);
-        sumForward += vDot(aLin, calibBasis.forward);
+        const u = vDot(aRaw, calibBasis.up) - meanUp;
+        const r = vDot(aLin, calibBasis.right);
+        const f = vDot(aLin, calibBasis.forward);
+        sumUp += u;
+        sumRight += r;
+        sumForward += f;
+        const au = Math.abs(u), ar = Math.abs(r), af = Math.abs(f);
+        if (au > maxU) maxU = au;
+        if (ar > maxR) maxR = ar;
+        if (af > maxF) maxF = af;
       }
 
       const u = sumUp / n;
       const r = sumRight / n;
       const f = sumForward / n;
 
-      const au = Math.abs(u), ar = Math.abs(r), af = Math.abs(f);
-      const maxAbs = Math.max(au, ar, af);
+      const maxAbs = Math.max(maxU, maxR, maxF);
       if (maxAbs < 1e-6) return "F";
 
-      if (maxAbs === au) return (u >= 0) ? "U" : "D";
-      if (maxAbs === ar) return (r >= 0) ? "R" : "L";
+      if (maxAbs === maxU) return (u >= 0) ? "U" : "D";
+      if (maxAbs === maxR) return (r >= 0) ? "R" : "L";
       return (f >= 0) ? "F" : "B";
     }
 
