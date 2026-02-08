@@ -1375,8 +1375,8 @@
 
     const SD_SLOP_GATE = 0.18;
     const FLIP_U = 1;
-    const FLIP_R = 1;
-    const FLIP_F = 1;
+    const FLIP_R = -1;
+    const FLIP_F = -1;
 
     // =========================================================================
     // Motion listener helpers
