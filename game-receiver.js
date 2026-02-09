@@ -546,7 +546,7 @@
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 300;
-    const SHAKE_LAMP_THR = 0.60;
+    const SHAKE_LAMP_THR = 0.75;
     const SD_RECENT_MS = 400;
 
     let shakeCooldownUntil = 0;
