@@ -517,7 +517,7 @@
     // =========================================================================
     // ENERGY BANK (receiver-side battery)
     // =========================================================================
-    const ENERGY_BANK_CAP = 200;
+    const ENERGY_BANK_CAP = 1000;
     const ENERGY_SHAKE_COST = 100;
     const ENERGY_CHARGE_RATE_PPS = 160;
 
@@ -1435,7 +1435,7 @@
       
       updateEnergyBankFromPhone(energyFromPhone, nowMs);
 
-      const energyUI01 = energyBankPts / 100;
+      const energyUI01 = energyBankPts / ENERGY_BANK_CAP;
       const lift = computeLift01(groove, smooth, speed);
 
       physState.lift01 = lift;
@@ -1460,7 +1460,7 @@
       els.vSmooth.textContent   = `${sP}%`;
       els.vSpeed.textContent    = `${sp}%`;
       els.vDynamics.textContent = `${dP}%`;
-      els.vEnergy.textContent   = `${ePts}%`;
+      els.vEnergy.textContent   = `${ePts}`;
       els.vShake.textContent    = `${Math.max(0, sh).toFixed(2)}`;
 
       setBar(els.bLift,  lift);
