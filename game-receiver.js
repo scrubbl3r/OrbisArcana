@@ -546,10 +546,12 @@
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 750;
+    const SHAKE_REARM_THR = 0.20;
     const SHAKE_LAMP_THR = 0.98;
     const SD_RECENT_MS = 400;
 
     let shakeCooldownUntil = 0;
+    let shakeArmed = true;
     let pendingSd = null;
     let pendingSdAt = 0;
 
@@ -593,8 +595,14 @@
       if (Number(groove01) > 0.15) return;
 
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
+      // Rearm gate: only allow new hits after shake drops below rearm threshold
+      if (!shakeArmed) {
+        if (v < SHAKE_REARM_THR) shakeArmed = true;
+        else return;
+      }
       if (v < SHAKE_LAMP_THR) return;
       registerShakeHit(nowMs);
+      shakeArmed = false;
     }
 
     // =========================================================================
