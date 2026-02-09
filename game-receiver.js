@@ -547,7 +547,7 @@
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 750;
     const SHAKE_REARM_THR = 0.20;
-    const SHAKE_LAMP_THR = 0.98;
+    const SHAKE_LAMP_THR = 0.75;
     const SD_RECENT_MS = 400;
 
     let shakeCooldownUntil = 0;
