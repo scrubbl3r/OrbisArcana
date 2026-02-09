@@ -586,9 +586,11 @@
       shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
     }
 
-    function processShakeDoubleBang(shakeVal01, nowMs){
+    function processShakeDoubleBang(shakeVal01, nowMs, groove01){
       const v = Number(shakeVal01);
       if (!isFinite(v)) return;
+      // Hard gate: only allow shake when groove <= 25%
+      if (Number(groove01) > 0.25) return;
 
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
       if (v < SHAKE_LAMP_THR) return;
@@ -1492,9 +1494,7 @@
       updateStability(dynamics, nowMs);
       updateVariability(dynamics, nowMs);
 
-      if (d && d.shakeHit) {
-        registerShakeHit(nowMs);
-      }
+      processShakeDoubleBang(shake, nowMs, groove);
 
       setAudio(energyUI01, groove, locked);
     }
