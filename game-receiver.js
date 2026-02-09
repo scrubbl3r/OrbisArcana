@@ -547,6 +547,7 @@
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 750;
     const SHAKE_REARM_THR = 0.20;
+    const GROOVE_SHAKE_GATE = 0.25;
     const SHAKE_LAMP_THR = 0.75;
     const SD_RECENT_MS = 400;
 
@@ -591,8 +592,8 @@
     function processShakeDoubleBang(shakeVal01, nowMs, groove01){
       const v = Number(shakeVal01);
       if (!isFinite(v)) return;
-      // Hard gate: only allow shake when groove <= 25%
-      if (Number(groove01) > 0.15) return;
+      // Hard gate: only allow shake when groove <= GROOVE_SHAKE_GATE
+      if (Number(groove01) > GROOVE_SHAKE_GATE) return;
 
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
       // Rearm gate: only allow new hits after shake drops below rearm threshold
