@@ -546,7 +546,7 @@
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 300;
-    const SHAKE_LAMP_THR = 0.35;
+    const SHAKE_LAMP_THR = 0.60;
     const SD_RECENT_MS = 400;
 
     let shakeCooldownUntil = 0;
@@ -1438,7 +1438,10 @@
       const sP = Math.round(clamp01(smooth) * 100);
       const sp = Math.round(clamp01(speed) * 100);
       const dP = Math.round(clamp01(dynamics) * 100);
-      const sh = Math.round(Math.max(0, Number(shake) || 0) * 100);
+      const shakeMeter = (SHAKE_LAMP_THR > 1e-6)
+        ? clamp01((Number(shake) || 0) / SHAKE_LAMP_THR)
+        : 0;
+      const sh = (Number(shakeMeter) * SHAKE_LAMP_THR);
       const ePts = Math.round(energyBankPts);
 
       els.vLift.textContent     = `${liftP}%`;
@@ -1447,7 +1450,7 @@
       els.vSpeed.textContent    = `${sp}%`;
       els.vDynamics.textContent = `${dP}%`;
       els.vEnergy.textContent   = `${ePts}%`;
-      els.vShake.textContent    = `${Math.max(0, sh)}%`;
+      els.vShake.textContent    = `${Math.max(0, sh).toFixed(2)}`;
 
       setBar(els.bLift,  lift);
       setBar(els.bGroove, groove);
@@ -1455,7 +1458,7 @@
       setBar(els.bSpeed,  speed);
       setBar(els.bDynamics, dynamics);
       setBar(els.bEnergy, energyUI01);
-      setBar(els.bShake,  shake);
+      setBar(els.bShake,  shakeMeter);
 
       const over = (energyUI01 > 1);
       els.vEnergy.classList.toggle("over", over);
