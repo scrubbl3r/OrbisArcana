@@ -545,7 +545,7 @@
     // =========================================================================
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
-    const SHAKE_COOLDOWN_MS = 300;
+    const SHAKE_COOLDOWN_MS = 750;
     const SHAKE_LAMP_THR = 0.98;
     const SD_RECENT_MS = 400;
 
@@ -590,7 +590,7 @@
       const v = Number(shakeVal01);
       if (!isFinite(v)) return;
       // Hard gate: only allow shake when groove <= 25%
-      if (Number(groove01) > 0.25) return;
+      if (Number(groove01) > 0.15) return;
 
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
       if (v < SHAKE_LAMP_THR) return;
