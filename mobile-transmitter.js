@@ -588,6 +588,10 @@
 
       if (payload.sd) out.sd = payload.sd;
       if (payload.calib) out.calib = payload.calib;
+      if (payload.shieldRGB) out.shieldRGB = payload.shieldRGB;
+      if (payload.calibOK != null) out.calibOK = payload.calibOK;
+      if (payload.omegaOK != null) out.omegaOK = payload.omegaOK;
+      if (payload.dbgTag) out.dbgTag = payload.dbgTag;
 
 
       if (TELEMETRY_ON) {
