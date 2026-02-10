@@ -1600,7 +1600,10 @@
         const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
           ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
           : "shieldRGB:— ";
-        els.last.textContent = rgb + sh + s;
+        const dbg = (d && (d.calibOK != null || d.omegaOK != null))
+          ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
+          : "calibOK:— omegaOK:— ";
+        els.last.textContent = rgb + dbg + sh + s;
 
         if (els.pairModal.classList.contains("on")) closePairModal();
 

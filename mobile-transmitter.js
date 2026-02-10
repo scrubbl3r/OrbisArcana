@@ -80,6 +80,7 @@
     const DIR_MIN_THR = 0.35;
     const PHONE_TOP_AXIS = { x:0, y:1, z:0 };
     const SHIELD_AXIS_WIN_MS = 1500;
+    const DEBUG_SHIELD = true;
 
     const gestureBank = {
       templates: {},
@@ -1648,6 +1649,7 @@
             locked: false,
             hz: 0,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
             ag: [agx, agy, agz],
             rr: [rrx, rry, rrz],
@@ -1739,6 +1741,7 @@
             locked: false,
             hz: 0,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
             ag: [agx, agy, agz],
             rr: [rrx, rry, rrz],
@@ -1846,6 +1849,7 @@
           locked: lockedNow,
           hz: grooveHz,
           shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+          ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
           ag: [agx, agy, agz],
           rr: [rrx, rry, rrz],
