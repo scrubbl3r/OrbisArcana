@@ -233,8 +233,8 @@
       if (!(a.mag > 1e-6)) return;
 
       shieldRGB = {
-        r: clamp01(a.x),
-        g: clamp01(a.y),
+        r: clamp01(a.y),
+        g: clamp01(a.x),
         b: clamp01(a.z)
       };
     }
