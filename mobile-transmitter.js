@@ -79,6 +79,7 @@
     const IMPULSE_WIN_MS = 360;
     const DIR_MIN_THR = 0.35;
     const PHONE_TOP_AXIS = { x:0, y:1, z:0 };
+    const SHIELD_AXIS_WIN_MS = 1500;
 
     const gestureBank = {
       templates: {},
@@ -105,8 +106,11 @@
     };
 
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
     let orientState = { alpha:0, beta:0, gamma:0, has:false, R:null };
+    const shieldAxisHist = []; // {t, x, y, z} in calibrated frame
+    let shieldRGB = null;
 
     function vDot(a,b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
     function vCross(a,b){
@@ -183,6 +187,38 @@
         [ -sY,0, cY ],
       ];
       return matMul(matMul(Rz, Rx), Ry);
+    }
+
+    function updateShieldAxis(nowMs, omegaUnit){
+      if (!orientState || !orientState.R) return;
+      if (!calibBasis) return;
+      if (!omegaUnit) return;
+
+      const wWorld = matVec(orientState.R, omegaUnit);
+      const x = vDot(wWorld, calibBasis.right);
+      const y = vDot(wWorld, calibBasis.forward);
+      const z = vDot(wWorld, calibBasis.up);
+      const v = vNorm({ x, y, z });
+      if (!(v.mag > 1e-6)) return;
+
+      shieldAxisHist.push({ t: nowMs, x: v.x, y: v.y, z: v.z });
+      const cutoff = nowMs - SHIELD_AXIS_WIN_MS;
+      while (shieldAxisHist.length && shieldAxisHist[0].t < cutoff) shieldAxisHist.shift();
+
+      let sx = 0, sy = 0, sz = 0;
+      for (const s of shieldAxisHist){
+        sx += Math.abs(s.x);
+        sy += Math.abs(s.y);
+        sz += Math.abs(s.z);
+      }
+      const a = vNorm({ x: sx, y: sy, z: sz });
+      if (!(a.mag > 1e-6)) return;
+
+      shieldRGB = {
+        r: clamp01(a.x),
+        g: clamp01(a.y),
+        b: clamp01(a.z)
+      };
     }
 
     function loadCalibBasis(){
@@ -1611,6 +1647,7 @@
             calib: calibAck,
             locked: false,
             hz: 0,
+            shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
 
             ag: [agx, agy, agz],
             rr: [rrx, rry, rrz],
@@ -1657,6 +1694,7 @@
           const invM = 1 / Math.max(1e-6, mStability);
           const vUnit = { x: ox*invM, y: oy*invM, z: oz*invM };
           omegaVec.push(vUnit);
+          updateShieldAxis(nowMs, vUnit);
 
           if (dtForFilter > 0) dynamicsBufPush(vUnit, dtForFilter);
 
@@ -1700,6 +1738,7 @@
             shakeHit: sh.shakeHit,
             locked: false,
             hz: 0,
+            shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
 
             ag: [agx, agy, agz],
             rr: [rrx, rry, rrz],
@@ -1806,6 +1845,7 @@
           calib: calibAck,
           locked: lockedNow,
           hz: grooveHz,
+          shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
 
           ag: [agx, agy, agz],
           rr: [rrx, rry, rrz],

@@ -79,6 +79,7 @@
 
     function clamp01(x){ x = Number(x); return Math.max(0, Math.min(1, isFinite(x) ? x : 0)); }
     function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+    const lerp = (a,b,t) => a + (b-a)*t;
 
     function setBar(el, v01){
       const p = clamp01(v01) * 100;
@@ -207,6 +208,18 @@
       VFX_DEFAULTS.shock.stroke = stroke;
       setVar("--shock-stroke", stroke + "px");
     })();
+
+    const SHIELD_COLOR_SMOOTH = 0.12;
+    let shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
+
+    function setShieldColor01(c){
+      const r = Math.round(clamp01(c.r) * 255);
+      const g = Math.round(clamp01(c.g) * 255);
+      const b = Math.round(clamp01(c.b) * 255);
+      setVar("--shield-r", String(r));
+      setVar("--shield-g", String(g));
+      setVar("--shield-b", String(b));
+    }
 
     function evenStroke(n, min = 2, max = 20){
       n = Math.round(Number(n) || min);
@@ -1462,6 +1475,16 @@
       els.vDynamics.textContent = `${dP}%`;
       els.vEnergy.textContent   = `${ePts}`;
       els.vShake.textContent    = `${Math.max(0, sh).toFixed(2)}`;
+
+      if (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3){
+        const tr = clamp01(d.shieldRGB[0]);
+        const tg = clamp01(d.shieldRGB[1]);
+        const tb = clamp01(d.shieldRGB[2]);
+        shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
+        shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
+        shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
+        setShieldColor01(shieldColor01);
+      }
 
       setBar(els.bLift,  lift);
       setBar(els.bGroove, groove);
