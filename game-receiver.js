@@ -228,7 +228,7 @@
       return n;
     }
 
-    const SHIELD_DECAY_MS = 400;
+    const SHIELD_DECAY_MS = 2000;
     let shieldDecayTO = null;
 
     function cancelShieldDecay(){
