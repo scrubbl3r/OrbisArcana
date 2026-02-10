@@ -234,10 +234,11 @@
       if (!(a.mag > 1e-6)) return;
 
       shieldAxis01 = { x: a.x, y: a.y, z: a.z };
+      // Pure axis mapping: X->R, Y->G, Z->B
       shieldRGB = {
-        r: clamp01(a.z),
+        r: clamp01(a.x),
         g: clamp01(a.y),
-        b: clamp01(a.x)
+        b: clamp01(a.z)
       };
     }
 
