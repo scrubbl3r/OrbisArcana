@@ -39,7 +39,7 @@
 
       /* Shield */
       --shield-d: 124px;          /* orb(100) + pad(12*2) */
-      --shield-stroke: 2px;
+      --shield-stroke: 4px;
       --shield-alpha: 1.00;
 
       /* Pulse controls (active only while shield is ON) */

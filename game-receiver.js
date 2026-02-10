@@ -185,7 +185,7 @@
         durationMs: 1170,
         alpha: 1.00,
         pulseMs: 80,
-        pulseMin: 0.09,
+        pulseMin: 0.30,
         pulseMax: 1.00
       },
       shock: {
