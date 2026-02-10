@@ -561,7 +561,7 @@
     const SHAKE_COOLDOWN_MS = 750;
     const SHAKE_REARM_THR = 0.30;
     const GROOVE_SHAKE_GATE = 0.35;
-    const SHAKE_LAMP_THR = 0.75;
+    const SHAKE_LAMP_THR = 0.85;
     const SD_RECENT_MS = 400;
 
     let shakeCooldownUntil = 0;
