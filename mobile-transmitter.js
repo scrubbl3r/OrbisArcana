@@ -235,9 +235,9 @@
 
       shieldAxis01 = { x: a.x, y: a.y, z: a.z };
       shieldRGB = {
-        r: clamp01(a.y),
-        g: clamp01(a.x),
-        b: clamp01(a.z)
+        r: clamp01(a.z),
+        g: clamp01(a.y),
+        b: clamp01(a.x)
       };
     }
 
