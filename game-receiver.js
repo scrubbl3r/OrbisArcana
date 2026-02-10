@@ -228,8 +228,20 @@
       return n;
     }
 
+    const SHIELD_DECAY_MS = 400;
+    let shieldDecayTO = null;
+
+    function cancelShieldDecay(){
+      if (shieldDecayTO) {
+        clearTimeout(shieldDecayTO);
+        shieldDecayTO = null;
+      }
+      if (els.shield) els.shield.style.opacity = "";
+    }
+
     function shieldOffNow(){
       if (!els.shield) return;
+      cancelShieldDecay();
       els.shield.classList.remove("on");
       els.shield.style.opacity = "";
       els.shield.style.animation = "";
@@ -237,6 +249,7 @@
 
     function shieldOnNow(){
       if (!els.shield) return;
+      cancelShieldDecay();
 
       const a  = clamp(VFX_DEFAULTS.shield.alpha, 0, 1);
       const pMax = Math.min(clamp(VFX_DEFAULTS.shield.pulseMax, 0, 1), a);
@@ -253,6 +266,19 @@
       shieldOffNow();
       void els.shield.offsetWidth;
       els.shield.classList.add("on");
+    }
+
+    function shieldDecay(){
+      if (!els.shield) return;
+      if (shieldDecayTO) return;
+      els.shield.style.animation = "none";
+      els.shield.style.transition = `opacity ${SHIELD_DECAY_MS}ms linear`;
+      els.shield.style.opacity = "0";
+      shieldDecayTO = setTimeout(() => {
+        shieldDecayTO = null;
+        els.shield.style.transition = "";
+        shieldOffNow();
+      }, SHIELD_DECAY_MS);
     }
 
     let shockRAF = 0;
@@ -656,7 +682,7 @@
       els.dynLampVar.classList.toggle("on", showVar);
 
       if (showStable) shieldOnNow();
-      else shieldOffNow();
+      else shieldDecay();
 
       prevStableVisual = showStable;
     }
