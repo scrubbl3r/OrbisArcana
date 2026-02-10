@@ -1597,7 +1597,10 @@
         try { s = JSON.stringify(d); } catch(_) { s = String(d); }
         if (s.length > 240) s = s.slice(0, 240) + " …";
         const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
-        els.last.textContent = sh + s;
+        const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
+          ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
+          : "shieldRGB:— ";
+        els.last.textContent = rgb + sh + s;
 
         if (els.pairModal.classList.contains("on")) closePairModal();
 
