@@ -129,6 +129,7 @@
     let orientState = { alpha:0, beta:0, gamma:0, has:false, R:null };
     const shieldAxisHist = []; // {t, x, y, z} in calibrated frame
     let shieldRGB = null;
+    let shieldAxis01 = null;
 
     function vDot(a,b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
     function vCross(a,b){
@@ -232,6 +233,7 @@
       const a = vNorm({ x: sx, y: sy, z: sz });
       if (!(a.mag > 1e-6)) return;
 
+      shieldAxis01 = { x: a.x, y: a.y, z: a.z };
       shieldRGB = {
         r: clamp01(a.y),
         g: clamp01(a.x),
@@ -589,6 +591,7 @@
       if (payload.sd) out.sd = payload.sd;
       if (payload.calib) out.calib = payload.calib;
       if (payload.shieldRGB) out.shieldRGB = payload.shieldRGB;
+      if (payload.shieldAxis) out.shieldAxis = payload.shieldAxis;
       if (payload.calibOK != null) out.calibOK = payload.calibOK;
       if (payload.omegaOK != null) out.omegaOK = payload.omegaOK;
       if (payload.dbgTag) out.dbgTag = payload.dbgTag;
@@ -1670,6 +1673,7 @@
             locked: false,
             hz: 0,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             dbgTag: VERSION_TEXT,
             ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
@@ -1763,6 +1767,7 @@
             locked: false,
             hz: 0,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             dbgTag: VERSION_TEXT,
             ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
@@ -1872,6 +1877,7 @@
           locked: lockedNow,
           hz: grooveHz,
           shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+          shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
           dbgTag: VERSION_TEXT,
           ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
