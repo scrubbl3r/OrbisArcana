@@ -21,6 +21,8 @@
     // =========================================================================
     // UI — Start/Stop + Gesture Lab
     // =========================================================================
+    const VERSION_TAG = true;
+    const VERSION_TEXT = "vtag:shield-debug";
     const startBtn = document.getElementById('startBtn');
     const labBtn = document.getElementById('labBtn');
     const labModal = document.getElementById('labModal');
@@ -43,6 +45,21 @@
     const UI = { state: "idle" }; // "idle" | "running"
 
     function setBtn(label){ startBtn.textContent = label; }
+
+    if (VERSION_TAG) {
+      const tag = document.createElement("div");
+      tag.textContent = VERSION_TEXT;
+      tag.style.position = "fixed";
+      tag.style.left = "50%";
+      tag.style.bottom = "8px";
+      tag.style.transform = "translateX(-50%)";
+      tag.style.fontSize = "11px";
+      tag.style.opacity = "0.65";
+      tag.style.letterSpacing = "0.04em";
+      tag.style.pointerEvents = "none";
+      tag.style.color = "rgba(125,211,95,0.9)";
+      document.body.appendChild(tag);
+    }
 
     // =========================================================================
     // Keep phone glow mapping (background color), driven by energy
@@ -1649,6 +1666,7 @@
             locked: false,
             hz: 0,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            dbgTag: VERSION_TEXT,
             ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
             ag: [agx, agy, agz],
@@ -1741,6 +1759,7 @@
             locked: false,
             hz: 0,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            dbgTag: VERSION_TEXT,
             ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
             ag: [agx, agy, agz],
@@ -1849,6 +1868,7 @@
           locked: lockedNow,
           hz: grooveHz,
           shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+          dbgTag: VERSION_TEXT,
           ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
           ag: [agx, agy, agz],
