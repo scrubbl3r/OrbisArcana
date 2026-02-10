@@ -234,11 +234,14 @@
       if (!(a.mag > 1e-6)) return;
 
       shieldAxis01 = { x: a.x, y: a.y, z: a.z };
-      // Pure axis mapping: X->R, Y->G, Z->B
+      // Plane mapping: ZY->R (bicycle), XZ->G (record player), XY->B (windmill)
+      const yz = Math.hypot(a.y, a.z);
+      const xz = Math.hypot(a.x, a.z);
+      const xy = Math.hypot(a.x, a.y);
       shieldRGB = {
-        r: clamp01(a.x),
-        g: clamp01(a.y),
-        b: clamp01(a.z)
+        r: clamp01(yz),
+        g: clamp01(xz),
+        b: clamp01(xy)
       };
     }
 
