@@ -273,7 +273,9 @@
       if (shieldDecayTO) return;
       els.shield.style.animation = "none";
       els.shield.style.transition = `opacity ${SHIELD_DECAY_MS}ms linear`;
-      els.shield.style.opacity = "0";
+      requestAnimationFrame(() => {
+        els.shield.style.opacity = "0";
+      });
       shieldDecayTO = setTimeout(() => {
         shieldDecayTO = null;
         els.shield.style.transition = "";
