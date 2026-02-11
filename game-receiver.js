@@ -274,6 +274,8 @@
       if (!els.shield) return;
       if (shieldDecayTO) return;
       shieldDecayActive = 1;
+      const cur = getComputedStyle(els.shield).opacity || "1";
+      els.shield.style.opacity = cur;
       els.shield.style.animation = "none";
       els.shield.style.transition = `opacity ${SHIELD_DECAY_MS}ms linear`;
       requestAnimationFrame(() => {
