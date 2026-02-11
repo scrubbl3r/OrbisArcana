@@ -642,6 +642,15 @@
       allDirLampOff();
     }
 
+    function resetShakeCachesAfterHit(){
+      // Clear direction cache + rearm flag without killing lamp/cooldown
+      pendingSd = null;
+      pendingSdAt = 0;
+      shakeArmed = false;
+      clearDirLampTimers();
+      allDirLampOff();
+    }
+
     function registerShakeHit(nowMs){
       if (nowMs < shakeCooldownUntil) return;
 
@@ -659,8 +668,8 @@
         flashDirLampSingle(pendingSd, 420);
       }
 
-      // Reset shake-related caches after a successful hit
-      resetShakeDetector();
+      // Reset shake-related caches after a successful hit (do not kill lamp/cooldown)
+      resetShakeCachesAfterHit();
       shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
     }
 
