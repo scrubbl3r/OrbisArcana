@@ -263,11 +263,15 @@
       setVar("--shield-pulse-min", pMin.toFixed(2));
       setVar("--shield-pulse-max", pMax.toFixed(2));
 
-      if (els.shield.classList.contains("on")) return;
-
-      shieldOffNow();
-      void els.shield.offsetWidth;
-      els.shield.classList.add("on");
+      if (!els.shield.classList.contains("on")) {
+        shieldOffNow();
+        void els.shield.offsetWidth;
+        els.shield.classList.add("on");
+      }
+      // Ensure pulse resumes even if we were in decay
+      els.shield.style.transition = "";
+      els.shield.style.opacity = "";
+      els.shield.style.animation = "";
     }
 
     function shieldDecay(){
