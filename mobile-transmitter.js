@@ -124,6 +124,7 @@
     };
 
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
+    const clamp01x2 = (x) => Math.max(0, Math.min(2, x));
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
     let orientState = { alpha:0, beta:0, gamma:0, has:false, R:null };
@@ -1067,7 +1068,7 @@
 
       const spike = (SHAKE_HP_WEIGHT * hpSpike) + (SHAKE_JERK_WEIGHT * (jerkSpike / 80.0));
 
-      shake01 = clamp01(shake01 + SHAKE_METER_GAIN * spike * dtSafe - SHAKE_METER_DECAY * dtSafe);
+      shake01 = clamp01x2(shake01 + SHAKE_METER_GAIN * spike * dtSafe - SHAKE_METER_DECAY * dtSafe);
 
       // "full meter" rising edge tracking
       const hitFull = (prevShake < SHAKE_FULL_HI) && (shake01 >= SHAKE_FULL_HI);
