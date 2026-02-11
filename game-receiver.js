@@ -75,6 +75,8 @@
       calibStatus: $("calibStatus"),
     };
 
+    const LAST_MESSAGE_ON = false; // disable Last Message debug output
+
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
 
     function clamp01(x){ x = Number(x); return Math.max(0, Math.min(1, isFinite(x) ? x : 0)); }
@@ -1652,21 +1654,25 @@
 
         const d = (msg && msg.data) ? msg.data : {};
 
-        let s = "";
-        try { s = JSON.stringify(d); } catch(_) { s = String(d); }
-        if (s.length > 240) s = s.slice(0, 240) + " …";
-        const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
-        const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
-          ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
-          : "shieldRGB:— ";
-        const axis = (d && Array.isArray(d.shieldAxis) && d.shieldAxis.length >= 3)
-          ? `axis:${d.shieldAxis.map(v => Number(v).toFixed(2)).join(",")} `
-          : "axis:— ";
-        const dbg = (d && (d.calibOK != null || d.omegaOK != null))
-          ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
-          : "calibOK:— omegaOK:— ";
-        const decay = `decay:${shieldDecayActive ? 1 : 0} `;
-        els.last.textContent = rgb + decay + axis + dbg + sh + s;
+        if (LAST_MESSAGE_ON) {
+          let s = "";
+          try { s = JSON.stringify(d); } catch(_) { s = String(d); }
+          if (s.length > 240) s = s.slice(0, 240) + " …";
+          const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
+          const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
+            ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
+            : "shieldRGB:— ";
+          const axis = (d && Array.isArray(d.shieldAxis) && d.shieldAxis.length >= 3)
+            ? `axis:${d.shieldAxis.map(v => Number(v).toFixed(2)).join(",")} `
+            : "axis:— ";
+          const dbg = (d && (d.calibOK != null || d.omegaOK != null))
+            ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
+            : "calibOK:— omegaOK:— ";
+          const decay = `decay:${shieldDecayActive ? 1 : 0} `;
+          els.last.textContent = rgb + decay + axis + dbg + sh + s;
+        } else if (els.last.textContent) {
+          els.last.textContent = "";
+        }
 
         if (els.pairModal.classList.contains("on")) closePairModal();
 

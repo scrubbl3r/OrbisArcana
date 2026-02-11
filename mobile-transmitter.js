@@ -470,7 +470,7 @@
         return (u.searchParams.get("telemetry") === "1");
       } catch { return false; }
     })();
-    const TELEMETRY_ON = TELEMETRY || TELEMETRY_URL;
+    const TELEMETRY_ON = false; // force telemetry off (ignore URL flag)
 
     // =========================================================================
     // 1) FALL DRAG DEFAULT (requested)
