@@ -632,6 +632,7 @@
 
     function resetShakeDetector(){
       shakeCooldownUntil = 0;
+      shakeArmed = true;
       forceShakeLampOff();
       pendingSd = null;
       pendingSdAt = 0;
@@ -657,9 +658,9 @@
       if (pendingSd && (nowMs - pendingSdAt) <= SD_RECENT_MS) {
         flashDirLampSingle(pendingSd, 420);
       }
-      pendingSd = null;
-      pendingSdAt = 0;
 
+      // Reset shake-related caches after a successful hit
+      resetShakeDetector();
       shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
     }
 
@@ -677,7 +678,6 @@
       }
       if (v < SHAKE_LAMP_THR) return;
       registerShakeHit(nowMs);
-      shakeArmed = false;
     }
 
     // =========================================================================
