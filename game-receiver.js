@@ -230,12 +230,14 @@
 
     const SHIELD_DECAY_MS = 2000;
     let shieldDecayTO = null;
+    let shieldDecayActive = 0;
 
     function cancelShieldDecay(){
       if (shieldDecayTO) {
         clearTimeout(shieldDecayTO);
         shieldDecayTO = null;
       }
+      shieldDecayActive = 0;
       if (els.shield) els.shield.style.opacity = "";
     }
 
@@ -271,6 +273,7 @@
     function shieldDecay(){
       if (!els.shield) return;
       if (shieldDecayTO) return;
+      shieldDecayActive = 1;
       els.shield.style.animation = "none";
       els.shield.style.transition = `opacity ${SHIELD_DECAY_MS}ms linear`;
       requestAnimationFrame(() => {
@@ -278,6 +281,7 @@
       });
       shieldDecayTO = setTimeout(() => {
         shieldDecayTO = null;
+        shieldDecayActive = 0;
         els.shield.style.transition = "";
         shieldOffNow();
       }, SHIELD_DECAY_MS);
@@ -1634,7 +1638,8 @@
         const dbg = (d && (d.calibOK != null || d.omegaOK != null))
           ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
           : "calibOK:— omegaOK:— ";
-        els.last.textContent = rgb + axis + dbg + sh + s;
+        const decay = `decay:${shieldDecayActive ? 1 : 0} `;
+        els.last.textContent = rgb + decay + axis + dbg + sh + s;
 
         if (els.pairModal.classList.contains("on")) closePairModal();
 
