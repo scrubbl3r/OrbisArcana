@@ -233,6 +233,7 @@
     let shieldDecayTO = null;
     let shieldDecayActive = 0;
     let shieldFadeTO = null;
+    let shieldFadeVal = 1;
 
     function cancelShieldDecay(){
       if (shieldDecayTO) {
@@ -248,11 +249,16 @@
         shieldFadeTO = null;
       }
     }
+    function setShieldFade(v){
+      shieldFadeVal = clamp01(v);
+      if (els.shield) els.shield.style.setProperty("--shield-fade", String(shieldFadeVal));
+    }
 
     function shieldOffNow(){
       if (!els.shield) return;
       cancelShieldDecay();
       cancelShieldFade();
+      setShieldFade(1);
       els.shield.classList.remove("on");
       els.shield.style.opacity = "";
       els.shield.style.animation = "";
@@ -279,19 +285,15 @@
         els.shield.classList.add("on");
       }
 
-      // Fade in to target alpha (from current opacity if mid-decay)
-      const cur = getComputedStyle(els.shield).opacity || "0";
-      els.shield.style.opacity = cur;
-      els.shield.style.animation = "none";
-      els.shield.style.transition = `opacity ${SHIELD_FADEIN_MS}ms linear`;
+      // Fade in to target alpha (from current fade if mid-decay)
+      els.shield.style.animation = "";
+      els.shield.style.transition = `filter ${SHIELD_FADEIN_MS}ms linear`;
       requestAnimationFrame(() => {
-        els.shield.style.opacity = a.toFixed(2);
+        setShieldFade(1);
       });
       shieldFadeTO = setTimeout(() => {
         shieldFadeTO = null;
         els.shield.style.transition = "";
-        els.shield.style.opacity = "";
-        els.shield.style.animation = "";
       }, SHIELD_FADEIN_MS);
     }
 
@@ -299,12 +301,10 @@
       if (!els.shield) return;
       if (shieldDecayTO) return;
       shieldDecayActive = 1;
-      const cur = getComputedStyle(els.shield).opacity || "1";
-      els.shield.style.opacity = cur;
-      els.shield.style.animation = "none";
-      els.shield.style.transition = `opacity ${SHIELD_DECAY_MS}ms linear`;
+      els.shield.style.animation = "";
+      els.shield.style.transition = `filter ${SHIELD_DECAY_MS}ms linear`;
       requestAnimationFrame(() => {
-        els.shield.style.opacity = "0";
+        setShieldFade(0);
       });
       shieldDecayTO = setTimeout(() => {
         shieldDecayTO = null;

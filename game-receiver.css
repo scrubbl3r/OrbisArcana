@@ -41,6 +41,7 @@
       --shield-d: 124px;          /* orb(100) + pad(12*2) */
       --shield-stroke: 4px;
       --shield-alpha: 1.00;
+      --shield-fade: 1;
 
       /* Pulse controls (active only while shield is ON) */
       --shield-pulse-ms: 80ms;
@@ -441,6 +442,7 @@
       border-radius: 999px;
 
       opacity:0;
+      filter: opacity(var(--shield-fade));
       transform: translate(-50%,-50%) scale(0.96);
       transform-origin: 50% 50%;
 
