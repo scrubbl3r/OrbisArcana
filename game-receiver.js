@@ -229,8 +229,10 @@
     }
 
     const SHIELD_DECAY_MS = 2000;
+    const SHIELD_FADEIN_MS = 750;
     let shieldDecayTO = null;
     let shieldDecayActive = 0;
+    let shieldFadeTO = null;
 
     function cancelShieldDecay(){
       if (shieldDecayTO) {
@@ -240,10 +242,17 @@
       shieldDecayActive = 0;
       if (els.shield) els.shield.style.opacity = "";
     }
+    function cancelShieldFade(){
+      if (shieldFadeTO) {
+        clearTimeout(shieldFadeTO);
+        shieldFadeTO = null;
+      }
+    }
 
     function shieldOffNow(){
       if (!els.shield) return;
       cancelShieldDecay();
+      cancelShieldFade();
       els.shield.classList.remove("on");
       els.shield.style.opacity = "";
       els.shield.style.animation = "";
@@ -252,6 +261,7 @@
     function shieldOnNow(){
       if (!els.shield) return;
       cancelShieldDecay();
+      cancelShieldFade();
 
       const a  = clamp(VFX_DEFAULTS.shield.alpha, 0, 1);
       const pMax = Math.min(clamp(VFX_DEFAULTS.shield.pulseMax, 0, 1), a);
@@ -268,10 +278,21 @@
         void els.shield.offsetWidth;
         els.shield.classList.add("on");
       }
-      // Ensure pulse resumes even if we were in decay
-      els.shield.style.transition = "";
-      els.shield.style.opacity = "";
-      els.shield.style.animation = "";
+
+      // Fade in to target alpha (from current opacity if mid-decay)
+      const cur = getComputedStyle(els.shield).opacity || "0";
+      els.shield.style.opacity = cur;
+      els.shield.style.animation = "none";
+      els.shield.style.transition = `opacity ${SHIELD_FADEIN_MS}ms linear`;
+      requestAnimationFrame(() => {
+        els.shield.style.opacity = a.toFixed(2);
+      });
+      shieldFadeTO = setTimeout(() => {
+        shieldFadeTO = null;
+        els.shield.style.transition = "";
+        els.shield.style.opacity = "";
+        els.shield.style.animation = "";
+      }, SHIELD_FADEIN_MS);
     }
 
     function shieldDecay(){
@@ -598,7 +619,7 @@
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 750;
     const SHAKE_REARM_THR = 0.30;
-    const GROOVE_SHAKE_GATE = 0.35;
+    const GROOVE_SHAKE_GATE = 0.28;
     const SHAKE_LAMP_THR = 0.85;
     const SD_RECENT_MS = 400;
 
