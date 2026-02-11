@@ -434,7 +434,7 @@
     }
 
     // =========================================================================
-    // AUDIO (optional) — unchanged behavior
+    // AUDIO (optional) — unchanged behavior  
     // =========================================================================
     let audioEnabled = false;
     let audioCtx = null, osc = null, gainNode = null;
