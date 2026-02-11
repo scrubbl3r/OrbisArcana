@@ -627,12 +627,14 @@
 
     let shakeCooldownUntil = 0;
     let shakeArmed = true;
+    let shakeUiSuppress = false;
     let pendingSd = null;
     let pendingSdAt = 0;
 
     function resetShakeDetector(){
       shakeCooldownUntil = 0;
       shakeArmed = true;
+      shakeUiSuppress = false;
       forceShakeLampOff();
       pendingSd = null;
       pendingSdAt = 0;
@@ -647,8 +649,7 @@
       pendingSd = null;
       pendingSdAt = 0;
       shakeArmed = false;
-      clearDirLampTimers();
-      allDirLampOff();
+      shakeUiSuppress = true;
     }
 
     function registerShakeHit(nowMs){
@@ -682,7 +683,10 @@
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
       // Rearm gate: only allow new hits after shake drops below rearm threshold
       if (!shakeArmed) {
-        if (v < SHAKE_REARM_THR) shakeArmed = true;
+        if (v < SHAKE_REARM_THR) {
+          shakeArmed = true;
+          shakeUiSuppress = false;
+        }
         else return;
       }
       if (v < SHAKE_LAMP_THR) return;
@@ -1532,8 +1536,9 @@
       const sP = Math.round(clamp01(smooth) * 100);
       const sp = Math.round(clamp01(speed) * 100);
       const dP = Math.round(clamp01(dynamics) * 100);
+      const shakeForUI = shakeUiSuppress ? 0 : shake;
       const shakeMeter = (SHAKE_LAMP_THR > 1e-6)
-        ? clamp01((Number(shake) || 0) / SHAKE_LAMP_THR)
+        ? clamp01((Number(shakeForUI) || 0) / SHAKE_LAMP_THR)
         : 0;
       const sh = (Number(shakeMeter) * SHAKE_LAMP_THR);
       const ePts = Math.round(energyBankPts);
