@@ -1530,7 +1530,7 @@
     const FLIP_F = -1;
 
     // =========================================================================
-    // Motion listener helpers 
+    // Motion listener helpers
     // =========================================================================
     function addMotionListener(){
       window.addEventListener('devicemotion', onMotion, { passive: true });
