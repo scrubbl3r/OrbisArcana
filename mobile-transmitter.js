@@ -237,27 +237,29 @@
       if (!(a.mag > 1e-6)) return;
 
       shieldAxis01 = { x: a.x, y: a.y, z: a.z };
-      // Quantize to 6-color palette using nearest-prototype rule
+      // Quantize to 6-color palette with dominance gap (pure axis centered)
       const ax = a.x, ay = a.y, az = a.z;
-      const invS2 = 1 / Math.sqrt(2);
-      const protos = [
-        { r:1, g:0, b:0, x:1, y:0, z:0 },                 // R
-        { r:0, g:1, b:0, x:0, y:1, z:0 },                 // G
-        { r:0, g:0, b:1, x:0, y:0, z:1 },                 // B
-        { r:1, g:1, b:0, x:invS2, y:invS2, z:0 },         // RG (yellow)
-        { r:1, g:0, b:1, x:invS2, y:0, z:invS2 },         // RB (magenta)
-        { r:0, g:1, b:1, x:0, y:invS2, z:invS2 },         // GB (cyan)
-      ];
-      let best = protos[0];
-      let bestD = Infinity;
-      for (const p of protos){
-        const dx = ax - p.x;
-        const dy = ay - p.y;
-        const dz = az - p.z;
-        const d2 = dx*dx + dy*dy + dz*dz;
-        if (d2 < bestD) { bestD = d2; best = p; }
+      const DOMINANCE_GAP = 0.12;
+      const axes = [
+        { k: "x", v: ax },
+        { k: "y", v: ay },
+        { k: "z", v: az },
+      ].sort((m,n) => n.v - m.v);
+      const a1 = axes[0];
+      const a2 = axes[1];
+
+      let r = 0, g = 0, b = 0;
+      if (a1.v >= a2.v + DOMINANCE_GAP){
+        if (a1.k === "x") r = 1;
+        else if (a1.k === "y") g = 1;
+        else b = 1;
+      } else {
+        // diagonal of top two
+        if ((a1.k === "x" && a2.k === "y") || (a1.k === "y" && a2.k === "x")) { r = 1; g = 1; }
+        else if ((a1.k === "x" && a2.k === "z") || (a1.k === "z" && a2.k === "x")) { r = 1; b = 1; }
+        else { g = 1; b = 1; }
       }
-      shieldRGB = { r: best.r, g: best.g, b: best.b };
+      shieldRGB = { r, g, b };
     }
 
     function loadCalibBasis(){
