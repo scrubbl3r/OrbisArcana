@@ -96,6 +96,7 @@
     const IMPULSE_WIN_MS = 360;
     const DIR_MIN_THR = 0.35;
     const PHONE_TOP_AXIS = { x:0, y:1, z:0 };
+    const GRAV_LPF_HZ = 0.8; // Gravity vector LPF cutoff (Hz)
     const SHIELD_AXIS_WIN_MS = 1500;
     const DEBUG_SHIELD = true;
 
@@ -128,6 +129,7 @@
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
     let orientState = { alpha:0, beta:0, gamma:0, has:false, R:null };
+    let gVecLP = { x:0, y:0, z:0, has:false };
     const shieldAxisHist = []; // {t, x, y, z} in calibrated frame
     let shieldRGB = null;
     let shieldAxis01 = null;
@@ -1459,16 +1461,12 @@
       let sumUp = 0, sumRight = 0, sumForward = 0, n = 0;
       const gHat = { x:-basis.up.x, y:-basis.up.y, z:-basis.up.z };
 
-      let meanUp = 0;
       for (let i = impulseHist.length - 1; i >= 0; i--){
         const s = impulseHist[i];
         if (s.t < t0) break;
-        const aRaw = matVec(orientState.R, { x:s.ax, y:s.ay, z:s.az });
-        meanUp += vDot(aRaw, basis.up);
         n++;
       }
       if (!n) return null;
-      meanUp = meanUp / n;
 
       let upPos = { v:0, t:0 }, upNeg = { v:0, t:0 };
       let rPos = { v:0, t:0 }, rNeg = { v:0, t:0 };
@@ -1478,7 +1476,8 @@
         if (s.t < t0) break;
         const aRaw = matVec(orientState.R, { x:s.ax, y:s.ay, z:s.az });
         const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
-        const u = (vDot(aRaw, basis.up) - meanUp) * FLIP_U;
+        const gBias = (gVecLP && gVecLP.has) ? vDot(gVecLP, basis.up) : 0;
+        const u = (vDot(aRaw, basis.up) - gBias) * FLIP_U;
         const r = vDot(aLin, basis.right) * FLIP_R;
         const f = vDot(aLin, basis.forward) * FLIP_F;
         sumUp += u;
@@ -1603,6 +1602,19 @@
         const agx = acc ? (Number(acc.x) || 0) : 0;
         const agy = acc ? (Number(acc.y) || 0) : 0;
         const agz = acc ? (Number(acc.z) || 0) : 0;
+
+        // Gravity vector LPF in world frame (for U/D bias removal)
+        if (orientState && orientState.R) {
+          const gWorld = matVec(orientState.R, { x: agx, y: agy, z: agz });
+          const aG = alphaFromCutoff(Math.max(1e-3, dt || 1/60), GRAV_LPF_HZ);
+          if (!gVecLP.has) {
+            gVecLP = { x: gWorld.x, y: gWorld.y, z: gWorld.z, has: true };
+          } else {
+            gVecLP.x = (1 - aG) * gVecLP.x + aG * gWorld.x;
+            gVecLP.y = (1 - aG) * gVecLP.y + aG * gWorld.y;
+            gVecLP.z = (1 - aG) * gVecLP.z + aG * gWorld.z;
+          }
+        }
 
         pushMotionSample(nowMs, agx, agy, agz);
         updateGravityLocking({ x:agx, y:agy, z:agz });
