@@ -211,7 +211,7 @@
       setVar("--shock-stroke", stroke + "px");
     })();
 
-    const SHIELD_COLOR_SMOOTH = 0.12;
+    const SHIELD_COLOR_SMOOTH = 1.00; // snap colors (no smoothing)
     let shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
 
     function setShieldColor01(c){
