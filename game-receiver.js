@@ -677,21 +677,17 @@
     function processShakeDoubleBang(shakeVal01, nowMs, groove01){
       const v = Number(shakeVal01);
       if (!isFinite(v)) return;
-      // Allow re-arm even if groove gate blocks shake
-      if (!shakeArmed) {
-        if (v < SHAKE_REARM_THR) {
-          shakeArmed = true;
-          shakeUiSuppress = false;
-        }
+      // Time-based re-arm: allow after cooldown
+      if (!shakeArmed && nowMs >= shakeCooldownUntil) {
+        shakeArmed = true;
+        shakeUiSuppress = false;
       }
       // Hard gate: only allow shake when groove <= GROOVE_SHAKE_GATE
       if (Number(groove01) > GROOVE_SHAKE_GATE) return;
 
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
-      // Rearm gate: only allow new hits after shake drops below rearm threshold
-      if (!shakeArmed) {
-        return;
-      }
+      // Rearm gate: only allow new hits after cooldown re-arm
+      if (!shakeArmed) return;
       if (v < SHAKE_LAMP_THR) return;
       registerShakeHit(nowMs);
     }
