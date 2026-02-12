@@ -627,14 +627,12 @@
 
     let shakeCooldownUntil = 0;
     let shakeArmed = true;
-    let shakeUiZeroOnce = false;
     let pendingSd = null;
     let pendingSdAt = 0;
 
     function resetShakeDetector(){
       shakeCooldownUntil = 0;
       shakeArmed = true;
-      shakeUiZeroOnce = false;
       forceShakeLampOff();
       pendingSd = null;
       pendingSdAt = 0;
@@ -645,10 +643,9 @@
     }
 
     function resetShakeCachesAfterHit(){
-      // Clear direction cache + rearm flag without killing lamp/cooldown
+      // Clear direction cache without killing lamp/cooldown
       pendingSd = null;
       pendingSdAt = 0;
-      shakeUiZeroOnce = true;
     }
 
     function registerShakeHit(nowMs){
@@ -1529,8 +1526,7 @@
       const sP = Math.round(clamp01(smooth) * 100);
       const sp = Math.round(clamp01(speed) * 100);
       const dP = Math.round(clamp01(dynamics) * 100);
-      const shakeForUI = shakeUiZeroOnce ? 0 : shake;
-      if (shakeUiZeroOnce) shakeUiZeroOnce = false;
+      const shakeForUI = (nowMs < shakeCooldownUntil) ? 0 : shake;
       const shakeMeter = (SHAKE_LAMP_THR > 1e-6)
         ? clamp01((Number(shakeForUI) || 0) / SHAKE_LAMP_THR)
         : 0;
