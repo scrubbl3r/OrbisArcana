@@ -627,14 +627,14 @@
 
     let shakeCooldownUntil = 0;
     let shakeArmed = true;
-    let shakeUiSuppress = false;
+    let shakeUiZeroOnce = false;
     let pendingSd = null;
     let pendingSdAt = 0;
 
     function resetShakeDetector(){
       shakeCooldownUntil = 0;
       shakeArmed = true;
-      shakeUiSuppress = false;
+      shakeUiZeroOnce = false;
       forceShakeLampOff();
       pendingSd = null;
       pendingSdAt = 0;
@@ -648,8 +648,7 @@
       // Clear direction cache + rearm flag without killing lamp/cooldown
       pendingSd = null;
       pendingSdAt = 0;
-      shakeArmed = false;
-      shakeUiSuppress = true;
+      shakeUiZeroOnce = true;
     }
 
     function registerShakeHit(nowMs){
@@ -677,17 +676,12 @@
     function processShakeDoubleBang(shakeVal01, nowMs, groove01){
       const v = Number(shakeVal01);
       if (!isFinite(v)) return;
-      // Time-based re-arm: allow after cooldown
-      if (!shakeArmed && nowMs >= shakeCooldownUntil) {
-        shakeArmed = true;
-        shakeUiSuppress = false;
-      }
       // Hard gate: only allow shake when groove <= GROOVE_SHAKE_GATE
       if (Number(groove01) > GROOVE_SHAKE_GATE) return;
 
       if (nowMs < shakeCooldownUntil) forceShakeLampOff();
-      // Rearm gate: only allow new hits after cooldown re-arm
-      if (!shakeArmed) return;
+      // Cooldown gate only (meter can still rise during cooldown)
+      if (nowMs < shakeCooldownUntil) return;
       if (v < SHAKE_LAMP_THR) return;
       registerShakeHit(nowMs);
     }
@@ -1535,7 +1529,8 @@
       const sP = Math.round(clamp01(smooth) * 100);
       const sp = Math.round(clamp01(speed) * 100);
       const dP = Math.round(clamp01(dynamics) * 100);
-      const shakeForUI = shakeUiSuppress ? 0 : shake;
+      const shakeForUI = shakeUiZeroOnce ? 0 : shake;
+      if (shakeUiZeroOnce) shakeUiZeroOnce = false;
       const shakeMeter = (SHAKE_LAMP_THR > 1e-6)
         ? clamp01((Number(shakeForUI) || 0) / SHAKE_LAMP_THR)
         : 0;
