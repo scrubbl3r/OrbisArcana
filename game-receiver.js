@@ -620,6 +620,7 @@
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 2500; // Minimum time between shake lamp triggers (ms)
+    const SHAKE_MODE = 3; // 1=main only, 2=axis pairs (UD/LR/FB), 3=full 6-direction
     const SHAKE_REARM_THR = 0.10; // Shake01 must drop below this to re-arm after a hit
     const GROOVE_SHAKE_GATE = 0.25; // Hard gate: if groove01 is above this, shake is ignored
     const SHAKE_LAMP_THR = 1.25; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
@@ -648,6 +649,13 @@
       pendingSdAt = 0;
     }
 
+    function flashDirLampPair(a, b, ms=380){
+      clearDirLampTimers();
+      allDirLampOff();
+      flashDirLamp(a, ms);
+      flashDirLamp(b, ms);
+    }
+
     function registerShakeHit(nowMs){
       if (nowMs < shakeCooldownUntil) return;
 
@@ -662,7 +670,17 @@
       triggerShockwave();
 
       if (pendingSd && (nowMs - pendingSdAt) <= SD_RECENT_MS) {
-        flashDirLampSingle(pendingSd, 420);
+        const code = String(pendingSd || "").trim().toUpperCase();
+        if (SHAKE_MODE === 1) {
+          clearDirLampTimers();
+          allDirLampOff();
+        } else if (SHAKE_MODE === 2) {
+          if (code === "U" || code === "D") flashDirLampPair("U", "D", 420);
+          else if (code === "L" || code === "R") flashDirLampPair("L", "R", 420);
+          else if (code === "F" || code === "B") flashDirLampPair("F", "B", 420);
+        } else {
+          flashDirLampSingle(code, 420);
+        }
       }
 
       // Reset shake-related caches after a successful hit (do not kill lamp/cooldown)
