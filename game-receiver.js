@@ -620,7 +620,7 @@
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 2500; // Minimum time between shake lamp triggers (ms)
-    const SHAKE_MODE = 3; // 1=main only, 2=axis pairs (UD/LR/FB), 3=full 6-direction
+    const SHAKE_MODE = 2; // 1=main only, 2=axis pairs (UD/LR/FB), 3=full 6-direction
     const SHAKE_REARM_THR = 0.10; // Shake01 must drop below this to re-arm after a hit
     const GROOVE_SHAKE_GATE = 0.25; // Hard gate: if groove01 is above this, shake is ignored
     const SHAKE_LAMP_THR = 1.25; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
