@@ -237,28 +237,12 @@
       if (!(a.mag > 1e-6)) return;
 
       shieldAxis01 = { x: a.x, y: a.y, z: a.z };
-      // Quantize to 6-color palette with dominance gap (pure axis centered)
+      // Quantize to 3 primary axes (no diagonals)
       const ax = a.x, ay = a.y, az = a.z;
-      const DOMINANCE_GAP = 0.12;
-      const axes = [
-        { k: "x", v: ax },
-        { k: "y", v: ay },
-        { k: "z", v: az },
-      ].sort((m,n) => n.v - m.v);
-      const a1 = axes[0];
-      const a2 = axes[1];
-
       let r = 0, g = 0, b = 0;
-      if (a1.v >= a2.v + DOMINANCE_GAP){
-        if (a1.k === "x") r = 1;
-        else if (a1.k === "y") g = 1;
-        else b = 1;
-      } else {
-        // diagonal of top two
-        if ((a1.k === "x" && a2.k === "y") || (a1.k === "y" && a2.k === "x")) { r = 1; g = 1; }
-        else if ((a1.k === "x" && a2.k === "z") || (a1.k === "z" && a2.k === "x")) { r = 1; b = 1; }
-        else { g = 1; b = 1; }
-      }
+      if (ax >= ay && ax >= az) r = 1;
+      else if (ay >= ax && ay >= az) g = 1;
+      else b = 1;
       shieldRGB = { r, g, b };
     }
 
