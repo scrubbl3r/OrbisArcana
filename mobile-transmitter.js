@@ -724,6 +724,8 @@
         }
       });
 
+      publishLanSignal("join_hello", { code6: lanParty.code6 });
+
       return true;
     }
 

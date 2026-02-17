@@ -134,7 +134,7 @@
       return "orb:pair:" + String(roomId || "").trim();
     }
     function lanJoinUrl(roomId, token){
-      const base = "https://scrubbl3r.github.io/OrbisArcana/mobile-transmitter.html";
+      const base = mobilePageBaseUrl();
       return base + "?join=1&room=" + encodeURIComponent(roomId) + "&token=" + encodeURIComponent(token);
     }
     function nowTs(){ return Date.now(); }
@@ -154,8 +154,16 @@
       return String(room || "").startsWith("orb:") ? String(room).slice(4) : String(room || "");
     }
 
+    function mobilePageBaseUrl(){
+      try {
+        return new URL("./mobile-transmitter.html", window.location.href).toString();
+      } catch (_) {
+        return "https://scrubbl3r.github.io/OrbisArcana/mobile-transmitter.html";
+      }
+    }
+
     function phoneUrlFor(roomChannel){
-      const base = "https://scrubbl3r.github.io/OrbisArcana/mobile-transmitter.html";
+      const base = mobilePageBaseUrl();
       const roomCode = stripOrbPrefix(roomChannel);
       return base + "?room=" + encodeURIComponent(roomCode);
     }
@@ -963,6 +971,8 @@
       pc: null,
       dc: null,
       gameplayEnabled: false,
+      offerSdp: "",
+      offerRetryTO: null,
     };
 
     function setLanConnState(msg){
@@ -991,10 +1001,15 @@
     }
 
     function cleanupLanPeer(){
+      if (lanParty.offerRetryTO) {
+        clearTimeout(lanParty.offerRetryTO);
+        lanParty.offerRetryTO = null;
+      }
       try { if (lanParty.dc) lanParty.dc.close(); } catch (_) {}
       try { if (lanParty.pc) lanParty.pc.close(); } catch (_) {}
       lanParty.dc = null;
       lanParty.pc = null;
+      lanParty.offerSdp = "";
     }
 
     function resetLanParty(){
@@ -1148,6 +1163,10 @@
         const lanSafety = await detectLanSafety(pc);
         setLanSafeState(lanSafety.label);
         lanParty.gameplayEnabled = !!lanSafety.safe;
+        if (lanParty.offerRetryTO) {
+          clearTimeout(lanParty.offerRetryTO);
+          lanParty.offerRetryTO = null;
+        }
       };
       dc.onclose = () => {
         lanParty.gameplayEnabled = false;
@@ -1174,6 +1193,10 @@
       lanParty.pairChannel.subscribe("pair", async (msg) => {
         const d = msg && msg.data ? msg.data : {};
         if (!lanMsgValid(d)) return;
+        if (d.t === "join_hello" && lanParty.offerSdp) {
+          publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
+          return;
+        }
         if (d.t === "join_answer" && d.sdp && !pc.currentRemoteDescription) {
           await pc.setRemoteDescription({ type: "answer", sdp: d.sdp });
           setLanConnState("Connecting…");
@@ -1196,7 +1219,14 @@
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      publishLanSignal("host_offer", { sdp: offer.sdp });
+      lanParty.offerSdp = offer.sdp;
+      publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
+      const retryOffer = () => {
+        if (!lanParty.active || !lanParty.pc || lanParty.pc.currentRemoteDescription) return;
+        publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
+        lanParty.offerRetryTO = setTimeout(retryOffer, 1000);
+      };
+      lanParty.offerRetryTO = setTimeout(retryOffer, 1000);
       setLanConnState("Pairing…");
     }
 
