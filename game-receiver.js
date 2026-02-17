@@ -86,6 +86,7 @@
       lanCode6: $("lanCode6"),
       lanConnState: $("lanConnState"),
       lanSafeState: $("lanSafeState"),
+      lanEndBtn: $("lanEndBtn"),
       // ===== LAN PARTY (P2P) END =====
     };
 
@@ -1274,6 +1275,10 @@
 
     if (els.lanPartyBtn) {
       els.lanPartyBtn.addEventListener("click", async () => {
+        if (lanParty.active) {
+          openLanModal();
+          return;
+        }
         try {
           await startLanHostFlow();
         } catch (e) {
@@ -1283,8 +1288,15 @@
         }
       });
     }
-    if (els.lanBackdrop) els.lanBackdrop.addEventListener("click", () => { resetLanParty(); closeLanModal(); });
-    if (els.lanClose) els.lanClose.addEventListener("click", () => { resetLanParty(); closeLanModal(); });
+    if (els.lanBackdrop) els.lanBackdrop.addEventListener("click", closeLanModal);
+    if (els.lanClose) els.lanClose.addEventListener("click", closeLanModal);
+    if (els.lanEndBtn) {
+      els.lanEndBtn.addEventListener("click", () => {
+        resetLanParty();
+        closeLanModal();
+        setStatus("LAN room closed", "dim");
+      });
+    }
     // ===== LAN PARTY (P2P) END =====
 
     // =========================================================================
