@@ -520,6 +520,7 @@
       gameplayEnabled: false,
       scanStream: null,
       scanTimer: null,
+      sigState: "idle",
     };
 
     const impulseTransport = {
@@ -600,9 +601,10 @@
         "&clientId=" + encodeURIComponent("phone-lan-" + Math.random().toString(16).slice(2,6));
       lanParty.pairRealtime = new Ably.Realtime({ authUrl, autoConnect: true });
       lanParty.pairChannel = lanParty.pairRealtime.channels.get(pairRoom);
-      await new Promise((resolve) => {
-        lanParty.pairChannel.attach(() => resolve());
+      await new Promise((resolve, reject) => {
+        lanParty.pairChannel.attach((err) => err ? reject(err) : resolve());
       });
+      lanParty.sigState = "attached";
     }
 
     async function detectLanSafety(pc){
@@ -667,7 +669,14 @@
       }
 
       setJoinStatus("Pairing…");
-      await connectLanSignalChannel(lanParty.roomId);
+      try {
+        await connectLanSignalChannel(lanParty.roomId);
+      } catch (e) {
+        console.error("LAN signal attach failed:", e);
+        setJoinStatus("Signal attach failed");
+        return false;
+      }
+      setJoinStatus("Signal ready; waiting for offer…");
 
       const pc = new RTCPeerConnection({ iceServers: LAN_STUN_SERVERS });
       lanParty.pc = pc;
@@ -702,10 +711,12 @@
         const d = msg && msg.data ? msg.data : {};
         if (!lanSignalValid(d)) return;
         if (d.t === "host_offer" && d.sdp) {
+          setJoinStatus("Offer received; sending answer…");
           await pc.setRemoteDescription({ type: "offer", sdp: d.sdp });
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           publishLanSignal("join_answer", { sdp: answer.sdp });
+          setJoinStatus("Answer sent; connecting…");
           return;
         }
         if (d.t === "ice" && d.candidate) {
@@ -725,6 +736,7 @@
       });
 
       publishLanSignal("join_hello", { code6: lanParty.code6 });
+      setJoinStatus("Join hello sent");
 
       return true;
     }

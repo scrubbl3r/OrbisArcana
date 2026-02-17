@@ -957,7 +957,7 @@
     }
 
     // ===== LAN PARTY (P2P) BEGIN =====
-    const LAN_TOKEN_TTL_MS = 60 * 1000;
+    const LAN_TOKEN_TTL_MS = 3 * 60 * 1000;
     const LAN_STUN_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
     const lanParty = {
@@ -973,6 +973,7 @@
       gameplayEnabled: false,
       offerSdp: "",
       offerRetryTO: null,
+      expiryTO: null,
     };
 
     function setLanConnState(msg){
@@ -1004,6 +1005,10 @@
       if (lanParty.offerRetryTO) {
         clearTimeout(lanParty.offerRetryTO);
         lanParty.offerRetryTO = null;
+      }
+      if (lanParty.expiryTO) {
+        clearTimeout(lanParty.expiryTO);
+        lanParty.expiryTO = null;
       }
       try { if (lanParty.dc) lanParty.dc.close(); } catch (_) {}
       try { if (lanParty.pc) lanParty.pc.close(); } catch (_) {}
@@ -1063,7 +1068,10 @@
       if (!lanParty.active) return false;
       if (String(d.room || "") !== lanParty.roomId) return false;
       if (String(d.token || "") !== lanParty.token) return false;
-      if (nowTs() > lanParty.expiresAt) return false;
+      if (nowTs() > lanParty.expiresAt) {
+        setLanConnState("Pair token expired");
+        return false;
+      }
       return true;
     }
 
@@ -1152,6 +1160,7 @@
       openLanModal();
 
       await connectLanSignalChannel(lanParty.roomId);
+      setLanConnState("Signal ready");
 
       const pc = new RTCPeerConnection({ iceServers: LAN_STUN_SERVERS });
       const dc = pc.createDataChannel("orb-control", { ordered: false, maxRetransmits: 0 });
@@ -1194,6 +1203,7 @@
         const d = msg && msg.data ? msg.data : {};
         if (!lanMsgValid(d)) return;
         if (d.t === "join_hello" && lanParty.offerSdp) {
+          setLanConnState("Join hello received");
           publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
           return;
         }
@@ -1228,6 +1238,10 @@
       };
       lanParty.offerRetryTO = setTimeout(retryOffer, 1000);
       setLanConnState("Pairing…");
+      lanParty.expiryTO = setTimeout(() => {
+        if (!lanParty.active || lanParty.gameplayEnabled) return;
+        setLanConnState("Pair token expired");
+      }, LAN_TOKEN_TTL_MS + 50);
     }
 
     if (els.lanPartyBtn) {
