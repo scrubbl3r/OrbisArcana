@@ -975,6 +975,7 @@
       offerSdp: "",
       offerRetryTO: null,
       expiryTO: null,
+      helloSeen: false,
     };
 
     function setLanConnState(msg){
@@ -1016,6 +1017,7 @@
       lanParty.dc = null;
       lanParty.pc = null;
       lanParty.offerSdp = "";
+      lanParty.helloSeen = false;
     }
 
     function resetLanParty(){
@@ -1130,6 +1132,14 @@
       handleIncomingImpulse(d.payload);
     }
 
+    async function buildAndPublishLanOffer(pc){
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      lanParty.offerSdp = offer.sdp;
+      publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
+      setLanConnState("Offer sent");
+    }
+
     async function startLanHostFlow(){
       resetLanParty();
       lanParty.active = true;
@@ -1203,14 +1213,30 @@
       lanParty.pairChannel.subscribe("pair", async (msg) => {
         const d = msg && msg.data ? msg.data : {};
         if (!lanMsgValid(d)) return;
-        if (d.t === "join_hello" && lanParty.offerSdp) {
+        if (d.t === "join_hello") {
+          lanParty.helloSeen = true;
           setLanConnState("Join hello received");
-          publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
+          try {
+            if (!lanParty.offerSdp) {
+              await buildAndPublishLanOffer(pc);
+            } else {
+              publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
+              setLanConnState("Offer re-sent");
+            }
+          } catch (e) {
+            console.error("LAN offer build failed:", e);
+            setLanConnState("Offer failed");
+          }
           return;
         }
         if (d.t === "join_answer" && d.sdp && !pc.currentRemoteDescription) {
-          await pc.setRemoteDescription({ type: "answer", sdp: d.sdp });
-          setLanConnState("Connecting…");
+          try {
+            await pc.setRemoteDescription({ type: "answer", sdp: d.sdp });
+            setLanConnState("Connecting…");
+          } catch (e) {
+            console.error("LAN setRemote(answer) failed:", e);
+            setLanConnState("Answer rejected");
+          }
           return;
         }
         if (d.t === "ice" && d.candidate) {
@@ -1228,12 +1254,12 @@
         }
       });
 
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      lanParty.offerSdp = offer.sdp;
-      publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
+      await buildAndPublishLanOffer(pc);
       const retryOffer = () => {
         if (!lanParty.active || !lanParty.pc || lanParty.pc.currentRemoteDescription) return;
+        if (!lanParty.helloSeen) {
+          setLanConnState("Waiting for join hello…");
+        }
         publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
         lanParty.offerRetryTO = setTimeout(retryOffer, 1000);
       };

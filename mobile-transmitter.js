@@ -522,6 +522,8 @@
       scanStream: null,
       scanTimer: null,
       sigState: "idle",
+      helloRetryTO: null,
+      offerSeen: false,
     };
 
     const impulseTransport = {
@@ -542,6 +544,10 @@
       }
       try { if (lanParty.scanTimer) clearInterval(lanParty.scanTimer); } catch (_) {}
       lanParty.scanTimer = null;
+      if (lanParty.helloRetryTO) {
+        clearTimeout(lanParty.helloRetryTO);
+        lanParty.helloRetryTO = null;
+      }
       if (lanParty.scanStream) {
         try {
           lanParty.scanStream.getTracks().forEach((t) => t.stop());
@@ -564,6 +570,7 @@
       lanParty.dc = null;
       lanParty.gameplayEnabled = false;
       lanParty.active = false;
+      lanParty.offerSeen = false;
       setImpulseTransport({
         sendImpulse: () => false,
         onImpulse: () => {},
@@ -664,6 +671,7 @@
       lanParty.token = String(token || "").trim();
       lanParty.code6 = code6FromTokenHex(lanParty.token);
       lanParty.expiresAt = Date.now() + LAN_TOKEN_TTL_MS;
+      lanParty.offerSeen = false;
       if (code6 && String(code6).trim() && String(code6).trim() !== lanParty.code6) {
         setJoinStatus("Backup code mismatch");
         return false;
@@ -712,12 +720,22 @@
         const d = msg && msg.data ? msg.data : {};
         if (!lanSignalValid(d)) return;
         if (d.t === "host_offer" && d.sdp) {
-          setJoinStatus("Offer received; sending answer…");
-          await pc.setRemoteDescription({ type: "offer", sdp: d.sdp });
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          publishLanSignal("join_answer", { sdp: answer.sdp });
-          setJoinStatus("Answer sent; connecting…");
+          lanParty.offerSeen = true;
+          if (lanParty.helloRetryTO) {
+            clearTimeout(lanParty.helloRetryTO);
+            lanParty.helloRetryTO = null;
+          }
+          try {
+            setJoinStatus("Offer received; sending answer…");
+            await pc.setRemoteDescription({ type: "offer", sdp: d.sdp });
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            publishLanSignal("join_answer", { sdp: answer.sdp });
+            setJoinStatus("Answer sent; connecting…");
+          } catch (e) {
+            console.error("LAN offer/answer failed:", e);
+            setJoinStatus("Offer/answer failed");
+          }
           return;
         }
         if (d.t === "ice" && d.candidate) {
@@ -738,6 +756,13 @@
 
       publishLanSignal("join_hello", { code6: lanParty.code6 });
       setJoinStatus("Join hello sent");
+      const retryHello = () => {
+        if (!lanParty.active || lanParty.offerSeen || !lanParty.pairChannel) return;
+        publishLanSignal("join_hello", { code6: lanParty.code6 });
+        setJoinStatus("Join hello sent (retry)");
+        lanParty.helloRetryTO = setTimeout(retryHello, 1000);
+      };
+      lanParty.helloRetryTO = setTimeout(retryHello, 1000);
 
       return true;
     }
