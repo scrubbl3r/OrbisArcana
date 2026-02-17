@@ -794,8 +794,8 @@
     // =========================================================================
     // NETWORK THROTTLE (unchanged)
     // =========================================================================
-    const SEND_HZ = 12;
-    const SEND_MIN_MS = 1000 / SEND_HZ;
+    const SEND_HZ_RELAY = 12;
+    const SEND_HZ_LAN = 40;
 
     // =========================================================================
     // TELEMETRY SIZE SWITCH
@@ -903,7 +903,9 @@
       if (!force && !sigChanged(sig)) return;
 
       lastSig = sig;
-      nextSendAtMs = now + SEND_MIN_MS;
+      const activeHz = lanParty.active ? SEND_HZ_LAN : SEND_HZ_RELAY;
+      const sendMinMs = 1000 / Math.max(1, activeHz);
+      nextSendAtMs = now + sendMinMs;
 
 
       const out = {
