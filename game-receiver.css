@@ -235,6 +235,16 @@
 
     #newRoom{ opacity: 0.26; font-weight: 800; margin-left: auto; }
     #newRoom:hover{ opacity: 0.46; border-color: rgba(50,255,117,.24); }
+    #lanPartyBtn{
+      font-weight: 1000;
+      border-color: rgba(50,255,117,.55);
+      color: var(--g);
+      box-shadow: 0 0 18px rgba(50,255,117,.10);
+    }
+    #lanPartyBtn:hover{
+      border-color: rgba(50,255,117,.78);
+      box-shadow: 0 0 24px rgba(50,255,117,.14);
+    }
 
     .groupGap{ height:10px; }
 

@@ -5,6 +5,7 @@
       startBtn: $("startBtn"),
 
       pairBtn: $("pairBtn"),
+      lanPartyBtn: $("lanPartyBtn"),
       newRoom: $("newRoom"),
       audioBtn: $("audioBtn"),
       teleBtn: $("teleBtn"),
@@ -73,6 +74,19 @@
       calibOverlay: $("calibOverlay"),
       calibBtn: $("calibBtn"),
       calibStatus: $("calibStatus"),
+
+      // ===== LAN PARTY (P2P) BEGIN =====
+      lanModal: $("lanModal"),
+      lanBackdrop: $("lanBackdrop"),
+      lanClose: $("lanClose"),
+      lanQr: $("lanQr"),
+      lanUrlText: $("lanUrlText"),
+      lanCopyUrl: $("lanCopyUrl"),
+      lanRoomCode: $("lanRoomCode"),
+      lanCode6: $("lanCode6"),
+      lanConnState: $("lanConnState"),
+      lanSafeState: $("lanSafeState"),
+      // ===== LAN PARTY (P2P) END =====
     };
 
     const LAST_MESSAGE_ON = false; // disable Last Message debug output
@@ -101,6 +115,31 @@
       for(let i=0;i<n;i++) s += A[(Math.random()*A.length)|0];
       return s;
     }
+
+    // ===== LAN PARTY (P2P) BEGIN =====
+    function randomTokenBytes(n=16){
+      const arr = new Uint8Array(n);
+      crypto.getRandomValues(arr);
+      return arr;
+    }
+    function toHex(bytes){
+      return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    function code6FromTokenHex(tokenHex){
+      const tail = tokenHex.slice(-10);
+      const n = parseInt(tail, 16) % 1000000;
+      return String(n).padStart(6, "0");
+    }
+    function lanPairChannelFor(roomId){
+      return "orb:pair:" + String(roomId || "").trim();
+    }
+    function lanJoinUrl(roomId, token){
+      const base = "https://scrubbl3r.github.io/OrbisArcana/mobile-transmitter.html";
+      return base + "?join=1&room=" + encodeURIComponent(roomId) + "&token=" + encodeURIComponent(token);
+    }
+    function nowTs(){ return Date.now(); }
+    function nonce8(){ return toHex(randomTokenBytes(8)); }
+    // ===== LAN PARTY (P2P) END =====
 
     function normalizeRoom(input){
       let r = String(input || "").trim();
@@ -909,6 +948,273 @@
       }
     }
 
+    // ===== LAN PARTY (P2P) BEGIN =====
+    const LAN_TOKEN_TTL_MS = 60 * 1000;
+    const LAN_STUN_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+
+    const lanParty = {
+      active: false,
+      roomId: "",
+      token: "",
+      code6: "",
+      expiresAt: 0,
+      pairRealtime: null,
+      pairChannel: null,
+      pc: null,
+      dc: null,
+      gameplayEnabled: false,
+    };
+
+    function setLanConnState(msg){
+      if (els.lanConnState) els.lanConnState.textContent = "Status: " + msg;
+    }
+    function setLanSafeState(msg){
+      if (els.lanSafeState) els.lanSafeState.textContent = "LAN SAFE: " + msg;
+    }
+    function openLanModal(){
+      if (!els.lanModal) return;
+      els.lanModal.classList.add("on");
+      els.lanModal.setAttribute("aria-hidden", "false");
+    }
+    function closeLanModal(){
+      if (!els.lanModal) return;
+      els.lanModal.classList.remove("on");
+      els.lanModal.setAttribute("aria-hidden", "true");
+    }
+
+    function cleanupLanSignaling(){
+      try { if (lanParty.pairChannel) lanParty.pairChannel.unsubscribe(); } catch (_) {}
+      try { if (lanParty.pairChannel) lanParty.pairChannel.detach(); } catch (_) {}
+      try { if (lanParty.pairRealtime) lanParty.pairRealtime.close(); } catch (_) {}
+      lanParty.pairChannel = null;
+      lanParty.pairRealtime = null;
+    }
+
+    function cleanupLanPeer(){
+      try { if (lanParty.dc) lanParty.dc.close(); } catch (_) {}
+      try { if (lanParty.pc) lanParty.pc.close(); } catch (_) {}
+      lanParty.dc = null;
+      lanParty.pc = null;
+    }
+
+    function resetLanParty(){
+      if (lanParty.active && lanParty.pairChannel) {
+        publishLanSignal("abort", { reason: "host_closed" });
+      }
+      lanParty.active = false;
+      lanParty.gameplayEnabled = false;
+      cleanupLanPeer();
+      cleanupLanSignaling();
+      setLanConnState("Closed");
+      setLanSafeState("Pending…");
+    }
+
+    async function renderLanQr(url){
+      if (!els.lanQr) return;
+      els.lanQr.innerHTML = "";
+      if (typeof QRCode === "undefined" || !QRCode.toCanvas) {
+        els.lanQr.textContent = "QR unavailable";
+        return;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = 280;
+      canvas.height = 280;
+      els.lanQr.appendChild(canvas);
+      try {
+        await QRCode.toCanvas(canvas, url, {
+          width: 260,
+          margin: 2,
+          color: { dark: "#000000", light: "#ffffff" }
+        });
+      } catch (e) {
+        els.lanQr.textContent = "QR render error";
+      }
+    }
+
+    async function connectLanSignalChannel(roomId){
+      const pairRoom = lanPairChannelFor(roomId);
+      const authUrl = WORKER_BASE + "/token?room=" + encodeURIComponent(stripOrbPrefix(pairRoom)) + "&v=" + Date.now();
+      const rt = new Ably.Realtime({ authUrl, echoMessages: false });
+      const ch = rt.channels.get(pairRoom);
+      await new Promise((resolve, reject) => {
+        ch.attach((err) => err ? reject(err) : resolve());
+      });
+      lanParty.pairRealtime = rt;
+      lanParty.pairChannel = ch;
+    }
+
+    function lanMsgValid(d){
+      if (!d || typeof d !== "object") return false;
+      if (!lanParty.active) return false;
+      if (String(d.room || "") !== lanParty.roomId) return false;
+      if (String(d.token || "") !== lanParty.token) return false;
+      if (nowTs() > lanParty.expiresAt) return false;
+      return true;
+    }
+
+    function publishLanSignal(t, extra){
+      if (!lanParty.pairChannel) return;
+      const msg = Object.assign({
+        t,
+        room: lanParty.roomId,
+        token: lanParty.token,
+        nonce: nonce8(),
+        ts: nowTs(),
+      }, extra || {});
+      lanParty.pairChannel.publish("pair", msg);
+    }
+
+    async function detectLanSafety(pc){
+      try {
+        const stats = await pc.getStats();
+        let pair = null;
+        stats.forEach((r) => {
+          if (r.type === "transport" && r.selectedCandidatePairId && stats.get(r.selectedCandidatePairId)) {
+            pair = stats.get(r.selectedCandidatePairId);
+          }
+        });
+        if (!pair) {
+          stats.forEach((r) => {
+            if (!pair && r.type === "candidate-pair" && (r.selected || r.nominated) && r.state === "succeeded") {
+              pair = r;
+            }
+          });
+        }
+        if (!pair) return { safe: false, label: "NOT LAN SAFE ⚠️ (blocked)" };
+
+        const local = stats.get(pair.localCandidateId);
+        const remote = stats.get(pair.remoteCandidateId);
+        const localType = String(local && local.candidateType || "");
+        const remoteType = String(remote && remote.candidateType || "");
+        if (localType === "relay" || remoteType === "relay") {
+          return { safe: false, label: "NOT LAN SAFE ⚠️ (blocked)" };
+        }
+        if (localType === "host" && remoteType === "host") {
+          return { safe: true, label: "LAN SAFE ✅" };
+        }
+        return { safe: true, label: "LAN OK ✅" };
+      } catch (_) {
+        return { safe: false, label: "NOT LAN SAFE ⚠️ (blocked)" };
+      }
+    }
+
+    function onLanControlMessage(evt){
+      let d = null;
+      try { d = JSON.parse(String(evt.data || "")); } catch (_) { return; }
+      if (!lanParty.gameplayEnabled) return;
+      if (!d || d.t !== "impulse" || !d.payload) return;
+      handleIncomingImpulse(d.payload);
+    }
+
+    async function startLanHostFlow(){
+      resetLanParty();
+      lanParty.active = true;
+      lanParty.roomId = randCode(8);
+      lanParty.token = toHex(randomTokenBytes(16));
+      lanParty.code6 = code6FromTokenHex(lanParty.token);
+      lanParty.expiresAt = nowTs() + LAN_TOKEN_TTL_MS;
+      lanParty.gameplayEnabled = false;
+
+      setLanConnState("Waiting for phone…");
+      setLanSafeState("Pending…");
+      if (els.lanRoomCode) els.lanRoomCode.textContent = lanParty.roomId;
+      if (els.lanCode6) els.lanCode6.textContent = lanParty.code6;
+
+      const joinUrl = lanJoinUrl(lanParty.roomId, lanParty.token);
+      if (els.lanUrlText) els.lanUrlText.textContent = joinUrl;
+      if (els.lanCopyUrl) {
+        els.lanCopyUrl.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(joinUrl);
+            els.lanCopyUrl.textContent = "Copied";
+          } catch (_) {
+            els.lanCopyUrl.textContent = "Nope";
+          }
+          setTimeout(() => { if (els.lanCopyUrl) els.lanCopyUrl.textContent = "Copy"; }, 800);
+        };
+      }
+      await renderLanQr(joinUrl);
+      openLanModal();
+
+      await connectLanSignalChannel(lanParty.roomId);
+
+      const pc = new RTCPeerConnection({ iceServers: LAN_STUN_SERVERS });
+      const dc = pc.createDataChannel("orb-control", { ordered: false, maxRetransmits: 0 });
+      lanParty.pc = pc;
+      lanParty.dc = dc;
+
+      dc.onopen = async () => {
+        setLanConnState("Connected");
+        const lanSafety = await detectLanSafety(pc);
+        setLanSafeState(lanSafety.label);
+        lanParty.gameplayEnabled = !!lanSafety.safe;
+      };
+      dc.onclose = () => {
+        lanParty.gameplayEnabled = false;
+        setLanConnState("Disconnected");
+      };
+      dc.onmessage = onLanControlMessage;
+
+      pc.onicecandidate = (evt) => {
+        if (!evt.candidate) return;
+        publishLanSignal("ice", {
+          candidate: evt.candidate.candidate,
+          sdpMid: evt.candidate.sdpMid,
+          sdpMLineIndex: evt.candidate.sdpMLineIndex,
+        });
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+          lanParty.gameplayEnabled = false;
+          setLanConnState("Connection failed");
+        }
+      };
+
+      lanParty.pairChannel.subscribe("pair", async (msg) => {
+        const d = msg && msg.data ? msg.data : {};
+        if (!lanMsgValid(d)) return;
+        if (d.t === "join_answer" && d.sdp && !pc.currentRemoteDescription) {
+          await pc.setRemoteDescription({ type: "answer", sdp: d.sdp });
+          setLanConnState("Connecting…");
+          return;
+        }
+        if (d.t === "ice" && d.candidate) {
+          try {
+            await pc.addIceCandidate({
+              candidate: d.candidate,
+              sdpMid: d.sdpMid,
+              sdpMLineIndex: d.sdpMLineIndex
+            });
+          } catch (_) {}
+        }
+        if (d.t === "abort") {
+          lanParty.gameplayEnabled = false;
+          setLanConnState("Aborted");
+        }
+      });
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      publishLanSignal("host_offer", { sdp: offer.sdp });
+      setLanConnState("Pairing…");
+    }
+
+    if (els.lanPartyBtn) {
+      els.lanPartyBtn.addEventListener("click", async () => {
+        try {
+          await startLanHostFlow();
+        } catch (e) {
+          console.error("LAN PARTY host error:", e);
+          setLanConnState("Failed");
+          setLanSafeState("NOT LAN SAFE ⚠️ (blocked)");
+        }
+      });
+    }
+    if (els.lanBackdrop) els.lanBackdrop.addEventListener("click", () => { resetLanParty(); closeLanModal(); });
+    if (els.lanClose) els.lanClose.addEventListener("click", () => { resetLanParty(); closeLanModal(); });
+    // ===== LAN PARTY (P2P) END =====
+
     // =========================================================================
     // TELEMETRY MODAL — buffered writer (less GC churn) + fix double-assign typo
     // =========================================================================
@@ -1465,6 +1771,12 @@
       });
     }
 
+    function handleIncomingImpulse(data){
+      idleMarkActivity();
+      teleMaybeLog(data);
+      scheduleUIUpdate(data);
+    }
+
     function pickDirVec(d){
       // Priority:
       // 1) d.dir
@@ -1672,9 +1984,9 @@
       }
 
       channel.subscribe("orb", (msg) => {
-        idleMarkActivity();
-
         const d = (msg && msg.data) ? msg.data : {};
+
+        if (lanParty.active && lanParty.gameplayEnabled) return;
 
         if (LAST_MESSAGE_ON) {
           let s = "";
@@ -1713,8 +2025,7 @@
           openCalibOverlay();
         }
 
-        teleMaybeLog(d);
-        scheduleUIUpdate(d);
+        handleIncomingImpulse(d);
       });
 
       connecting = false;
@@ -1735,9 +2046,10 @@
       // This click is a user gesture → allowed to start AudioContext
       if (!audioEnabled) await enableAudio();
 
-      // Hide immediately (visual intent), then run exact same behavior as Pair Phone.
+      // Hide immediately (visual intent), then default to LAN PARTY mode.
       els.startScreen.classList.add("off");
-      els.pairBtn.click();
+      if (els.lanPartyBtn) els.lanPartyBtn.click();
+      else els.pairBtn.click();
     });
 
     (async function init(){

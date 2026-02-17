@@ -9,7 +9,35 @@
 <body>
   <main class="app">
     <button id="startBtn">Start</button>
+    <button id="joinLanBtn" class="joinBtn" type="button">JOIN LAN PARTY</button>
   </main>
+
+  <!-- ===== LAN PARTY (P2P) BEGIN ===== -->
+  <div id="joinModal" class="joinModal" aria-hidden="true">
+    <div class="joinCard" role="dialog" aria-label="Join LAN party">
+      <div class="joinTitle">JOIN LAN PARTY</div>
+      <div class="joinRow">
+        <label for="joinRoom">Room</label>
+        <input id="joinRoom" type="text" autocomplete="off" placeholder="room id">
+      </div>
+      <div class="joinRow">
+        <label for="joinToken">Token</label>
+        <input id="joinToken" type="text" autocomplete="off" placeholder="pair token">
+      </div>
+      <div class="joinRow">
+        <label for="joinCode6">Backup code</label>
+        <input id="joinCode6" type="text" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="123456">
+      </div>
+      <div class="joinBtns">
+        <button id="scanQrBtn" type="button">Scan Sigil</button>
+        <button id="joinNowBtn" type="button">Join</button>
+        <button id="joinCloseBtn" type="button">Close</button>
+      </div>
+      <div id="joinStatus" class="joinStatus">Status: Idle</div>
+    </div>
+    <video id="scanVideo" class="scanVideo" playsinline muted></video>
+  </div>
+  <!-- ===== LAN PARTY (P2P) END ===== -->
 
   <!-- Ably JS -->
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>

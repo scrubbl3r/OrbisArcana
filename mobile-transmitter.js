@@ -24,6 +24,16 @@
     const VERSION_TAG = true;
     const VERSION_TEXT = "vtag:shield-debug";
     const startBtn = document.getElementById('startBtn');
+    const joinLanBtn = document.getElementById('joinLanBtn');
+    const joinModal = document.getElementById('joinModal');
+    const joinRoomInput = document.getElementById('joinRoom');
+    const joinTokenInput = document.getElementById('joinToken');
+    const joinCode6Input = document.getElementById('joinCode6');
+    const joinNowBtn = document.getElementById('joinNowBtn');
+    const joinCloseBtn = document.getElementById('joinCloseBtn');
+    const joinStatus = document.getElementById('joinStatus');
+    const scanQrBtn = document.getElementById('scanQrBtn');
+    const scanVideo = document.getElementById('scanVideo');
     const labBtn = document.getElementById('labBtn');
     const labModal = document.getElementById('labModal');
     const labClose = document.getElementById('labClose');
@@ -45,6 +55,19 @@
     const UI = { state: "idle" }; // "idle" | "running"
 
     function setBtn(label){ startBtn.textContent = label; }
+    function setJoinStatus(msg){
+      if (joinStatus) joinStatus.textContent = "Status: " + msg;
+    }
+    function openJoinModal(){
+      if (!joinModal) return;
+      joinModal.classList.add("on");
+      joinModal.setAttribute("aria-hidden", "false");
+    }
+    function closeJoinModal(){
+      if (!joinModal) return;
+      joinModal.classList.remove("on");
+      joinModal.setAttribute("aria-hidden", "true");
+    }
 
     if (VERSION_TAG) {
       const tag = document.createElement("div");
@@ -457,6 +480,315 @@
       ably = null; ablyChannel = null;
     }
 
+    // ===== LAN PARTY (P2P) BEGIN =====
+    const LAN_TOKEN_TTL_MS = 60 * 1000;
+    const LAN_STUN_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+
+    function randomHex(n=16){
+      const arr = new Uint8Array(n);
+      crypto.getRandomValues(arr);
+      return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    function code6FromTokenHex(tokenHex){
+      const tail = String(tokenHex || "").slice(-10);
+      const n = parseInt(tail || "0", 16) % 1000000;
+      return String(n).padStart(6, "0");
+    }
+    function lanPairChannelFor(roomId){
+      return "orb:pair:" + String(roomId || "").trim();
+    }
+    function parseJoinParamsFromUrl(raw){
+      try {
+        const u = new URL(raw || window.location.href);
+        const room = (u.searchParams.get("room") || "").trim();
+        const token = (u.searchParams.get("token") || "").trim();
+        if (room && token) return { room, token };
+      } catch (_) {}
+      return null;
+    }
+
+    const lanParty = {
+      active: false,
+      roomId: "",
+      token: "",
+      code6: "",
+      expiresAt: 0,
+      pairRealtime: null,
+      pairChannel: null,
+      pc: null,
+      dc: null,
+      gameplayEnabled: false,
+      scanStream: null,
+      scanTimer: null,
+    };
+
+    const impulseTransport = {
+      sendImpulse(_type, _payload){ return false; },
+      onImpulse(_handler){},
+      close(){}
+    };
+
+    function setImpulseTransport(next){
+      impulseTransport.sendImpulse = next.sendImpulse || impulseTransport.sendImpulse;
+      impulseTransport.onImpulse = next.onImpulse || impulseTransport.onImpulse;
+      impulseTransport.close = next.close || impulseTransport.close;
+    }
+
+    function disconnectLanPairing(){
+      if (lanParty.active && lanParty.pairChannel) {
+        publishLanSignal("abort", { reason: "joiner_closed" });
+      }
+      try { if (lanParty.scanTimer) clearInterval(lanParty.scanTimer); } catch (_) {}
+      lanParty.scanTimer = null;
+      if (lanParty.scanStream) {
+        try {
+          lanParty.scanStream.getTracks().forEach((t) => t.stop());
+        } catch (_) {}
+      }
+      lanParty.scanStream = null;
+      if (scanVideo) {
+        scanVideo.pause();
+        scanVideo.srcObject = null;
+        scanVideo.classList.remove("on");
+      }
+      try { if (lanParty.pairChannel) lanParty.pairChannel.unsubscribe(); } catch (_) {}
+      try { if (lanParty.pairChannel) lanParty.pairChannel.detach(); } catch (_) {}
+      try { if (lanParty.pairRealtime) lanParty.pairRealtime.close(); } catch (_) {}
+      lanParty.pairChannel = null;
+      lanParty.pairRealtime = null;
+      try { if (lanParty.dc) lanParty.dc.close(); } catch (_) {}
+      try { if (lanParty.pc) lanParty.pc.close(); } catch (_) {}
+      lanParty.pc = null;
+      lanParty.dc = null;
+      lanParty.gameplayEnabled = false;
+      lanParty.active = false;
+      setImpulseTransport({
+        sendImpulse: () => false,
+        onImpulse: () => {},
+        close: () => {}
+      });
+    }
+
+    function buildLanSignalMsg(t, extra){
+      return Object.assign({
+        t,
+        room: lanParty.roomId,
+        token: lanParty.token,
+        nonce: randomHex(8),
+        ts: Date.now(),
+      }, extra || {});
+    }
+
+    function publishLanSignal(t, extra){
+      if (!lanParty.pairChannel) return;
+      lanParty.pairChannel.publish("pair", buildLanSignalMsg(t, extra));
+    }
+
+    function lanSignalValid(d){
+      if (!d || typeof d !== "object") return false;
+      if (!lanParty.active) return false;
+      if (String(d.room || "") !== lanParty.roomId) return false;
+      if (String(d.token || "") !== lanParty.token) return false;
+      if (Date.now() > lanParty.expiresAt) return false;
+      return true;
+    }
+
+    async function connectLanSignalChannel(roomId){
+      const pairRoom = lanPairChannelFor(roomId);
+      const authUrl = TOKEN_URL +
+        "?room=" + encodeURIComponent(stripOrbPrefix(pairRoom)) +
+        "&clientId=" + encodeURIComponent("phone-lan-" + Math.random().toString(16).slice(2,6));
+      lanParty.pairRealtime = new Ably.Realtime({ authUrl, autoConnect: true });
+      lanParty.pairChannel = lanParty.pairRealtime.channels.get(pairRoom);
+      await new Promise((resolve) => {
+        lanParty.pairChannel.attach(() => resolve());
+      });
+    }
+
+    async function detectLanSafety(pc){
+      try {
+        const stats = await pc.getStats();
+        let pair = null;
+        stats.forEach((r) => {
+          if (r.type === "transport" && r.selectedCandidatePairId && stats.get(r.selectedCandidatePairId)) {
+            pair = stats.get(r.selectedCandidatePairId);
+          }
+        });
+        if (!pair) {
+          stats.forEach((r) => {
+            if (!pair && r.type === "candidate-pair" && (r.selected || r.nominated) && r.state === "succeeded") pair = r;
+          });
+        }
+        if (!pair) return { safe: false, label: "NOT LAN SAFE (blocked)" };
+        const local = stats.get(pair.localCandidateId);
+        const remote = stats.get(pair.remoteCandidateId);
+        const lt = String(local && local.candidateType || "");
+        const rt = String(remote && remote.candidateType || "");
+        if (lt === "relay" || rt === "relay") return { safe: false, label: "NOT LAN SAFE (blocked)" };
+        if (lt === "host" && rt === "host") return { safe: true, label: "LAN SAFE" };
+        return { safe: true, label: "LAN OK" };
+      } catch (_) {
+        return { safe: false, label: "NOT LAN SAFE (blocked)" };
+      }
+    }
+
+    function useWebRtcTransport(dc){
+      setImpulseTransport({
+        sendImpulse(type, payload){
+          if (!lanParty.gameplayEnabled) return false;
+          if (!dc || dc.readyState !== "open") return false;
+          try {
+            dc.send(JSON.stringify({ t: type, payload }));
+            return true;
+          } catch (_) {
+            return false;
+          }
+        },
+        onImpulse(){},
+        close(){ try { dc.close(); } catch (_) {} }
+      });
+    }
+
+    async function joinLanParty(roomId, token, code6){
+      if (!roomId || !token) {
+        setJoinStatus("Need room + token");
+        return false;
+      }
+
+      disconnectLanPairing();
+      lanParty.active = true;
+      lanParty.roomId = String(roomId || "").trim();
+      lanParty.token = String(token || "").trim();
+      lanParty.code6 = code6FromTokenHex(lanParty.token);
+      lanParty.expiresAt = Date.now() + LAN_TOKEN_TTL_MS;
+      if (code6 && String(code6).trim() && String(code6).trim() !== lanParty.code6) {
+        setJoinStatus("Backup code mismatch");
+        return false;
+      }
+
+      setJoinStatus("Pairing…");
+      await connectLanSignalChannel(lanParty.roomId);
+
+      const pc = new RTCPeerConnection({ iceServers: LAN_STUN_SERVERS });
+      lanParty.pc = pc;
+
+      pc.onicecandidate = (evt) => {
+        if (!evt.candidate) return;
+        publishLanSignal("ice", {
+          candidate: evt.candidate.candidate,
+          sdpMid: evt.candidate.sdpMid,
+          sdpMLineIndex: evt.candidate.sdpMLineIndex,
+        });
+      };
+
+      pc.ondatachannel = (evt) => {
+        lanParty.dc = evt.channel;
+        const dc = lanParty.dc;
+        dc.onopen = async () => {
+          const lanSafety = await detectLanSafety(pc);
+          lanParty.gameplayEnabled = !!lanSafety.safe;
+          useWebRtcTransport(dc);
+          setJoinStatus(lanSafety.safe ? ("Connected (" + lanSafety.label + ")") : lanSafety.label);
+          if (!lanSafety.safe) return;
+          closeJoinModal();
+        };
+        dc.onclose = () => {
+          lanParty.gameplayEnabled = false;
+          setJoinStatus("Disconnected");
+        };
+      };
+
+      lanParty.pairChannel.subscribe("pair", async (msg) => {
+        const d = msg && msg.data ? msg.data : {};
+        if (!lanSignalValid(d)) return;
+        if (d.t === "host_offer" && d.sdp) {
+          await pc.setRemoteDescription({ type: "offer", sdp: d.sdp });
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          publishLanSignal("join_answer", { sdp: answer.sdp });
+          return;
+        }
+        if (d.t === "ice" && d.candidate) {
+          try {
+            await pc.addIceCandidate({
+              candidate: d.candidate,
+              sdpMid: d.sdpMid,
+              sdpMLineIndex: d.sdpMLineIndex
+            });
+          } catch (_) {}
+          return;
+        }
+        if (d.t === "abort") {
+          lanParty.gameplayEnabled = false;
+          setJoinStatus("Aborted");
+        }
+      });
+
+      return true;
+    }
+
+    async function startQrScan(){
+      if (!scanVideo || !scanQrBtn) return;
+      if (typeof BarcodeDetector === "undefined") {
+        setJoinStatus("Scan unavailable on this browser");
+        return;
+      }
+      try {
+        const detector = new BarcodeDetector({ formats: ["qr_code"] });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        lanParty.scanStream = stream;
+        scanVideo.srcObject = stream;
+        scanVideo.classList.add("on");
+        await scanVideo.play();
+        setJoinStatus("Scanning…");
+        lanParty.scanTimer = setInterval(async () => {
+          try {
+            const codes = await detector.detect(scanVideo);
+            if (!codes || !codes.length) return;
+            const payload = parseJoinParamsFromUrl(codes[0].rawValue || "");
+            if (!payload) return;
+            if (joinRoomInput) joinRoomInput.value = payload.room;
+            if (joinTokenInput) joinTokenInput.value = payload.token;
+            setJoinStatus("Sigil captured");
+            disconnectLanPairing();
+            lanParty.active = false;
+            openJoinModal();
+          } catch (_) {}
+        }, 280);
+      } catch (_) {
+        setJoinStatus("Camera unavailable");
+      }
+    }
+
+    const joinFromUrl = parseJoinParamsFromUrl(window.location.href);
+    if (joinFromUrl) {
+      if (joinRoomInput) joinRoomInput.value = joinFromUrl.room;
+      if (joinTokenInput) joinTokenInput.value = joinFromUrl.token;
+      openJoinModal();
+      setJoinStatus("Ready to join");
+    }
+    if (joinLanBtn) joinLanBtn.onclick = () => { openJoinModal(); setJoinStatus("Enter room + token"); };
+    if (joinCloseBtn) joinCloseBtn.onclick = () => { disconnectLanPairing(); closeJoinModal(); };
+    if (scanQrBtn) scanQrBtn.onclick = () => { startQrScan(); };
+    if (joinNowBtn) {
+      joinNowBtn.onclick = async () => {
+        const roomId = joinRoomInput ? joinRoomInput.value.trim() : "";
+        const token = joinTokenInput ? joinTokenInput.value.trim() : "";
+        const code6 = joinCode6Input ? joinCode6Input.value.trim() : "";
+        try {
+          if (UI.state === "idle") {
+            lanParty.active = true;
+            await start();
+          }
+          await joinLanParty(roomId, token, code6);
+        } catch (e) {
+          console.error("LAN join failed:", e);
+          setJoinStatus("Join failed");
+        }
+      };
+    }
+    // ===== LAN PARTY (P2P) END =====
+
     // =========================================================================
     // NETWORK THROTTLE (unchanged)
     // =========================================================================
@@ -562,8 +894,6 @@
     // publishDynamics trims payload when TELEMETRY_ON is false
     // =========================================================================
     function publishDynamics(payload, dt, force=false) {
-      if (!ablyChannel) return;
-
       const now = performance.now();
       if (!force && now < nextSendAtMs) return;
 
@@ -617,6 +947,13 @@
         out.d_couple  = roundN(payload.d_couple, 4);
       }
 
+      // LAN mode: gameplay impulses are DataChannel only once connected+safe.
+      if (lanParty.active) {
+        impulseTransport.sendImpulse("impulse", out);
+        return;
+      }
+
+      if (!ablyChannel) return;
       ablyChannel.publish("orb", out, (err) => {
         if (err) console.warn("[ably publish err]", err);
       });
@@ -1930,7 +2267,9 @@
 
         nextSendAtMs = 0;
         lastSig = null;
-        await connectRelay();
+        if (!lanParty.active) {
+          await connectRelay();
+        }
 
         running = true;
         lastT = null;
@@ -2006,6 +2345,7 @@
       }
 
       disconnectRelay();
+      disconnectLanPairing();
       UI.state = "idle";
       setBtn("Start");
       setBgFromEnergy(0);
