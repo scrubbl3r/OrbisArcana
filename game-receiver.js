@@ -617,7 +617,7 @@
     function spendShake(){ energyBankPts = clamp(energyBankPts - ENERGY_SHAKE_COST, 0, ENERGY_BANK_CAP); }
 
     // =========================================================================
-    // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
+    // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate) 
     // =========================================================================
     const SHAKE_COOLDOWN_MS = 2500; // Minimum time between shake lamp triggers (ms)
     const SHAKE_MODE = 2; // 1=main only, 2=axis pairs (UD/LR/FB), 3=full 6-direction
