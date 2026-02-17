@@ -538,26 +538,28 @@
       impulseTransport.close = next.close || impulseTransport.close;
     }
 
-    function disconnectLanPairing(){
-      if (lanParty.active && lanParty.pairChannel) {
-        publishLanSignal("abort", { reason: "joiner_closed" });
-      }
+    function stopQrScanOnly(){
       try { if (lanParty.scanTimer) clearInterval(lanParty.scanTimer); } catch (_) {}
       lanParty.scanTimer = null;
-      if (lanParty.helloRetryTO) {
-        clearTimeout(lanParty.helloRetryTO);
-        lanParty.helloRetryTO = null;
-      }
       if (lanParty.scanStream) {
-        try {
-          lanParty.scanStream.getTracks().forEach((t) => t.stop());
-        } catch (_) {}
+        try { lanParty.scanStream.getTracks().forEach((t) => t.stop()); } catch (_) {}
       }
       lanParty.scanStream = null;
       if (scanVideo) {
         scanVideo.pause();
         scanVideo.srcObject = null;
         scanVideo.classList.remove("on");
+      }
+    }
+
+    function disconnectLanPairing(){
+      if (lanParty.active && lanParty.pairChannel) {
+        publishLanSignal("abort", { reason: "joiner_closed" });
+      }
+      stopQrScanOnly();
+      if (lanParty.helloRetryTO) {
+        clearTimeout(lanParty.helloRetryTO);
+        lanParty.helloRetryTO = null;
       }
       try { if (lanParty.pairChannel) lanParty.pairChannel.unsubscribe(); } catch (_) {}
       try { if (lanParty.pairChannel) lanParty.pairChannel.detach(); } catch (_) {}
@@ -576,6 +578,20 @@
         onImpulse: () => {},
         close: () => {}
       });
+    }
+
+    async function autoJoinFromPayload(payload){
+      if (!payload || !payload.room || !payload.token) return;
+      if (joinRoomInput) joinRoomInput.value = payload.room;
+      if (joinTokenInput) joinTokenInput.value = payload.token;
+      if (joinCode6Input) joinCode6Input.value = "";
+
+      setJoinStatus("Auto-joining…");
+      if (UI.state === "idle") {
+        lanParty.active = true;
+        await start();
+      }
+      await joinLanParty(payload.room, payload.token, "");
     }
 
     function buildLanSignalMsg(t, extra){
@@ -787,12 +803,9 @@
             if (!codes || !codes.length) return;
             const payload = parseJoinParamsFromUrl(codes[0].rawValue || "");
             if (!payload) return;
-            if (joinRoomInput) joinRoomInput.value = payload.room;
-            if (joinTokenInput) joinTokenInput.value = payload.token;
-            setJoinStatus("Sigil captured");
-            disconnectLanPairing();
-            lanParty.active = false;
-            openJoinModal();
+            stopQrScanOnly();
+            setJoinStatus("Sigil captured; joining…");
+            await autoJoinFromPayload(payload);
           } catch (_) {}
         }, 280);
       } catch (_) {
@@ -805,7 +818,14 @@
       if (joinRoomInput) joinRoomInput.value = joinFromUrl.room;
       if (joinTokenInput) joinTokenInput.value = joinFromUrl.token;
       openJoinModal();
-      setJoinStatus("Ready to join");
+      setJoinStatus("Ready to auto-join");
+      setTimeout(async () => {
+        try {
+          await autoJoinFromPayload(joinFromUrl);
+        } catch (_) {
+          setJoinStatus("Tap Join if auto-join is blocked");
+        }
+      }, 0);
     }
     if (joinLanBtn) joinLanBtn.onclick = () => { openJoinModal(); setJoinStatus("Enter room + token"); };
     if (joinCloseBtn) joinCloseBtn.onclick = () => { disconnectLanPairing(); closeJoinModal(); };
