@@ -14,7 +14,6 @@
       height: calc(var(--vh, 1vh) * 100);
       display: grid;
       place-items: center;
-      gap: 18px;
     }
 
     /* Single centered round Start button */
@@ -35,90 +34,28 @@
     #startBtn:active { transform: scale(0.98); }
     #startBtn:disabled { opacity: 0.55; }
 
-    .joinBtn{
-      width: min(260px, 70vw);
-      height: 54px;
-      border-radius: 12px;
-      border: 2px solid rgba(125,211,95,0.7);
-      background: rgba(0,0,0,0.4);
-      color: var(--green);
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-    }
-    .joinBtn:active { transform: scale(0.98); }
-
     /* ===== LAN PARTY (P2P) BEGIN ===== */
-    .joinModal{
+    .lanConnecting{
       position: fixed;
       inset: 0;
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.82);
+      background: rgba(0,0,0,0.45);
       z-index: 20;
-      padding: 16px;
+      pointer-events: none;
     }
-    .joinModal.on{ display: flex; }
-    .joinCard{
-      width: min(460px, 92vw);
-      border-radius: 14px;
-      border: 1px solid rgba(125,211,95,0.35);
-      background: rgba(0,0,0,0.9);
-      padding: 14px;
-      box-shadow: 0 18px 80px rgba(0,0,0,.55);
+    .lanConnecting.on{ display: flex; }
+    .lanSpinner{
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 3px solid rgba(125,211,95,0.25);
+      border-top-color: rgba(125,211,95,0.95);
+      animation: lanspin 0.8s linear infinite;
+      filter: drop-shadow(0 0 10px rgba(125,211,95,0.28));
     }
-    .joinTitle{
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      margin-bottom: 12px;
+    @keyframes lanspin{
+      to { transform: rotate(360deg); }
     }
-    .joinRow{
-      display: grid;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-    .joinRow label{
-      font-size: 12px;
-      opacity: 0.8;
-    }
-    .joinRow input{
-      border-radius: 10px;
-      border: 1px solid rgba(125,211,95,0.32);
-      background: rgba(0,0,0,0.45);
-      color: var(--green);
-      padding: 10px;
-      font-size: 14px;
-      outline: none;
-    }
-    .joinBtns{
-      display: flex;
-      gap: 10px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-    .joinBtns button{
-      border-radius: 10px;
-      border: 1px solid rgba(125,211,95,0.35);
-      background: rgba(0,0,0,0.45);
-      color: var(--green);
-      padding: 9px 12px;
-      font-weight: 800;
-    }
-    .joinStatus{
-      margin-top: 10px;
-      font-size: 12px;
-      opacity: 0.86;
-      min-height: 16px;
-    }
-    .scanVideo{
-      display: none;
-      width: min(420px, 92vw);
-      border-radius: 12px;
-      border: 1px solid rgba(125,211,95,0.35);
-      margin-top: 12px;
-      background: #000;
-    }
-    .scanVideo.on{ display: block; }
     /* ===== LAN PARTY (P2P) END ===== */

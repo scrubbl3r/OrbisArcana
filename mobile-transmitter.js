@@ -24,16 +24,7 @@
     const VERSION_TAG = true;
     const VERSION_TEXT = "vtag:shield-debug";
     const startBtn = document.getElementById('startBtn');
-    const joinLanBtn = document.getElementById('joinLanBtn');
-    const joinModal = document.getElementById('joinModal');
-    const joinRoomInput = document.getElementById('joinRoom');
-    const joinTokenInput = document.getElementById('joinToken');
-    const joinCode6Input = document.getElementById('joinCode6');
-    const joinNowBtn = document.getElementById('joinNowBtn');
-    const joinCloseBtn = document.getElementById('joinCloseBtn');
-    const joinStatus = document.getElementById('joinStatus');
-    const scanQrBtn = document.getElementById('scanQrBtn');
-    const scanVideo = document.getElementById('scanVideo');
+    const lanConnecting = document.getElementById('lanConnecting');
     const labBtn = document.getElementById('labBtn');
     const labModal = document.getElementById('labModal');
     const labClose = document.getElementById('labClose');
@@ -55,18 +46,18 @@
     const UI = { state: "idle" }; // "idle" | "running"
 
     function setBtn(label){ startBtn.textContent = label; }
-    function setJoinStatus(msg){
-      if (joinStatus) joinStatus.textContent = "Status: " + msg;
+    function setJoinStatus(_msg){
+      // Intentionally silent in production mobile UI.
     }
-    function openJoinModal(){
-      if (!joinModal) return;
-      joinModal.classList.add("on");
-      joinModal.setAttribute("aria-hidden", "false");
+    function showLanConnecting(){
+      if (!lanConnecting) return;
+      lanConnecting.classList.add("on");
+      lanConnecting.setAttribute("aria-hidden", "false");
     }
-    function closeJoinModal(){
-      if (!joinModal) return;
-      joinModal.classList.remove("on");
-      joinModal.setAttribute("aria-hidden", "true");
+    function hideLanConnecting(){
+      if (!lanConnecting) return;
+      lanConnecting.classList.remove("on");
+      lanConnecting.setAttribute("aria-hidden", "true");
     }
 
     if (VERSION_TAG) {
@@ -519,8 +510,6 @@
       pc: null,
       dc: null,
       gameplayEnabled: false,
-      scanStream: null,
-      scanTimer: null,
       sigState: "idle",
       helloRetryTO: null,
       offerSeen: false,
@@ -538,25 +527,10 @@
       impulseTransport.close = next.close || impulseTransport.close;
     }
 
-    function stopQrScanOnly(){
-      try { if (lanParty.scanTimer) clearInterval(lanParty.scanTimer); } catch (_) {}
-      lanParty.scanTimer = null;
-      if (lanParty.scanStream) {
-        try { lanParty.scanStream.getTracks().forEach((t) => t.stop()); } catch (_) {}
-      }
-      lanParty.scanStream = null;
-      if (scanVideo) {
-        scanVideo.pause();
-        scanVideo.srcObject = null;
-        scanVideo.classList.remove("on");
-      }
-    }
-
     function disconnectLanPairing(){
       if (lanParty.active && lanParty.pairChannel) {
         publishLanSignal("abort", { reason: "joiner_closed" });
       }
-      stopQrScanOnly();
       if (lanParty.helloRetryTO) {
         clearTimeout(lanParty.helloRetryTO);
         lanParty.helloRetryTO = null;
@@ -573,6 +547,7 @@
       lanParty.gameplayEnabled = false;
       lanParty.active = false;
       lanParty.offerSeen = false;
+      hideLanConnecting();
       setImpulseTransport({
         sendImpulse: () => false,
         onImpulse: () => {},
@@ -582,10 +557,7 @@
 
     async function autoJoinFromPayload(payload){
       if (!payload || !payload.room || !payload.token) return;
-      if (joinRoomInput) joinRoomInput.value = payload.room;
-      if (joinTokenInput) joinTokenInput.value = payload.token;
-      if (joinCode6Input) joinCode6Input.value = "";
-
+      showLanConnecting();
       setJoinStatus("Auto-joining…");
       // Join signaling/P2P first; motion permission can be granted later by Start.
       await joinLanParty(payload.room, payload.token, "");
@@ -696,6 +668,7 @@
       } catch (e) {
         console.error("LAN signal attach failed:", e);
         setJoinStatus("Signal attach failed");
+        hideLanConnecting();
         return false;
       }
       setJoinStatus("Signal ready; waiting for offer… (" + lanParty.roomId + ")");
@@ -720,11 +693,11 @@
           lanParty.gameplayEnabled = !!lanSafety.safe;
           useWebRtcTransport(dc);
           setJoinStatus(lanSafety.safe ? ("Connected (" + lanSafety.label + ")") : lanSafety.label);
-          if (!lanSafety.safe) return;
-          closeJoinModal();
+          hideLanConnecting();
         };
         dc.onclose = () => {
           lanParty.gameplayEnabled = false;
+          hideLanConnecting();
           setJoinStatus("Disconnected");
         };
       };
@@ -748,6 +721,7 @@
           } catch (e) {
             console.error("LAN offer/answer failed:", e);
             setJoinStatus("Offer/answer failed");
+            hideLanConnecting();
           }
           return;
         }
@@ -763,6 +737,7 @@
         }
         if (d.t === "abort") {
           lanParty.gameplayEnabled = false;
+          hideLanConnecting();
           setJoinStatus("Aborted");
         }
       });
@@ -780,65 +755,17 @@
       return true;
     }
 
-    async function startQrScan(){
-      if (!scanVideo || !scanQrBtn) return;
-      if (typeof BarcodeDetector === "undefined") {
-        setJoinStatus("Scan unavailable on this browser");
-        return;
-      }
-      try {
-        const detector = new BarcodeDetector({ formats: ["qr_code"] });
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-        lanParty.scanStream = stream;
-        scanVideo.srcObject = stream;
-        scanVideo.classList.add("on");
-        await scanVideo.play();
-        setJoinStatus("Scanning…");
-        lanParty.scanTimer = setInterval(async () => {
-          try {
-            const codes = await detector.detect(scanVideo);
-            if (!codes || !codes.length) return;
-            const payload = parseJoinParamsFromUrl(codes[0].rawValue || "");
-            if (!payload) return;
-            stopQrScanOnly();
-            setJoinStatus("Sigil captured; joining…");
-            await autoJoinFromPayload(payload);
-          } catch (_) {}
-        }, 280);
-      } catch (_) {
-        setJoinStatus("Camera unavailable");
-      }
-    }
-
     const joinFromUrl = parseJoinParamsFromUrl(window.location.href);
     if (joinFromUrl) {
-      if (joinRoomInput) joinRoomInput.value = joinFromUrl.room;
-      if (joinTokenInput) joinTokenInput.value = joinFromUrl.token;
-      openJoinModal();
-      setJoinStatus("Ready to auto-join");
+      showLanConnecting();
       setTimeout(async () => {
         try {
           await autoJoinFromPayload(joinFromUrl);
         } catch (_) {
-          setJoinStatus("Tap Join if auto-join is blocked");
+          hideLanConnecting();
+          setJoinStatus("Auto-join failed");
         }
       }, 0);
-    }
-    if (joinLanBtn) joinLanBtn.onclick = () => { openJoinModal(); setJoinStatus("Enter room + token"); };
-    if (joinCloseBtn) joinCloseBtn.onclick = () => { disconnectLanPairing(); closeJoinModal(); };
-    if (scanQrBtn) scanQrBtn.onclick = () => { startQrScan(); };
-    if (joinNowBtn) {
-      joinNowBtn.onclick = async () => {
-        const roomId = joinRoomInput ? joinRoomInput.value.trim() : "";
-        const token = joinTokenInput ? joinTokenInput.value.trim() : "";
-        const code6 = joinCode6Input ? joinCode6Input.value.trim() : "";
-        try {
-          await joinLanParty(roomId, token, code6);
-        } catch (e) {
-          console.error("LAN join failed:", e);
-          setJoinStatus("Join failed");
-        }
-      };
     }
     // ===== LAN PARTY (P2P) END =====
 
