@@ -587,10 +587,7 @@
       if (joinCode6Input) joinCode6Input.value = "";
 
       setJoinStatus("Auto-joining…");
-      if (UI.state === "idle") {
-        lanParty.active = true;
-        await start();
-      }
+      // Join signaling/P2P first; motion permission can be granted later by Start.
       await joinLanParty(payload.room, payload.token, "");
     }
 
@@ -836,10 +833,6 @@
         const token = joinTokenInput ? joinTokenInput.value.trim() : "";
         const code6 = joinCode6Input ? joinCode6Input.value.trim() : "";
         try {
-          if (UI.state === "idle") {
-            lanParty.active = true;
-            await start();
-          }
           await joinLanParty(roomId, token, code6);
         } catch (e) {
           console.error("LAN join failed:", e);
