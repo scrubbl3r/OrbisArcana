@@ -580,6 +580,13 @@
       cursor:pointer;
       font-weight: 900;
     }
+    .qrOnlyCard{
+      width: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
 
     .teleCard{ width: min(760px, 94vw); }
     .teleTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
