@@ -495,7 +495,8 @@
       return String(n).padStart(6, "0");
     }
     function lanPairChannelFor(roomId){
-      return "orb:pair:" + String(roomId || "").trim();
+      const code = String(roomId || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "") || "TEST";
+      return "orb:" + code;
     }
     function parseJoinParamsFromUrl(raw){
       try {
@@ -659,7 +660,7 @@
 
       disconnectLanPairing();
       lanParty.active = true;
-      lanParty.roomId = String(roomId || "").trim();
+      lanParty.roomId = String(roomId || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
       lanParty.token = String(token || "").trim();
       lanParty.code6 = code6FromTokenHex(lanParty.token);
       lanParty.expiresAt = Date.now() + LAN_TOKEN_TTL_MS;
@@ -676,7 +677,7 @@
         setJoinStatus("Signal attach failed");
         return false;
       }
-      setJoinStatus("Signal ready; waiting for offer…");
+      setJoinStatus("Signal ready; waiting for offer… (" + lanParty.roomId + ")");
 
       const pc = new RTCPeerConnection({ iceServers: LAN_STUN_SERVERS });
       lanParty.pc = pc;

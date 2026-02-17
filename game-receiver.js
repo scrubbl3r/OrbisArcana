@@ -131,7 +131,8 @@
       return String(n).padStart(6, "0");
     }
     function lanPairChannelFor(roomId){
-      return "orb:pair:" + String(roomId || "").trim();
+      const code = String(roomId || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "") || "TEST";
+      return "orb:" + code;
     }
     function lanJoinUrl(roomId, token){
       const base = mobilePageBaseUrl();
@@ -1242,6 +1243,7 @@
         if (!lanParty.active || lanParty.gameplayEnabled) return;
         setLanConnState("Pair token expired");
       }, LAN_TOKEN_TTL_MS + 50);
+      setStatus(`LAN host ready <span class="dim">(orb:${lanParty.roomId})</span>`, "ok");
     }
 
     if (els.lanPartyBtn) {
