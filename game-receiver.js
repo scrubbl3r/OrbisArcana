@@ -1181,12 +1181,10 @@
 
       dc.onopen = async () => {
         setLanConnState("Connected");
+        closeLanModal();
         const lanSafety = await detectLanSafety(pc);
         setLanSafeState(lanSafety.label);
         lanParty.gameplayEnabled = !!lanSafety.safe;
-        if (lanParty.gameplayEnabled) {
-          closeLanModal();
-        }
         if (lanParty.offerRetryTO) {
           clearTimeout(lanParty.offerRetryTO);
           lanParty.offerRetryTO = null;
