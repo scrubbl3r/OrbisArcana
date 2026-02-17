@@ -795,7 +795,7 @@
     // NETWORK THROTTLE (unchanged)
     // =========================================================================
     const SEND_HZ_RELAY = 12;
-    const SEND_HZ_LAN = 40;
+    const SEND_HZ_LAN = 60;
 
     // =========================================================================
     // TELEMETRY SIZE SWITCH
