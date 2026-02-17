@@ -908,13 +908,9 @@
     }
 
     els.pairBtn.addEventListener("click", async () => {
-      currentRoomChannel = "orb:" + randCode(6);
-      await connect({ auto:false });
-      resetShakeDetector();
-      resetStability();
-      resetVariability();
-      resetEnergyBank();
-      openPairModal();
+      if (els.lanPartyBtn) {
+        els.lanPartyBtn.click();
+      }
     });
 
     els.pairBackdrop.addEventListener("click", closePairModal);
@@ -1128,6 +1124,13 @@
     function onLanControlMessage(evt){
       let d = null;
       try { d = JSON.parse(String(evt.data || "")); } catch (_) { return; }
+      if (d && d.t === "control" && d.name === "phone_started") {
+        closeLanModal();
+        calibAvailable = true;
+        setCalibStatus("Ready");
+        openCalibOverlay();
+        return;
+      }
       if (!lanParty.gameplayEnabled) return;
       if (!d || d.t !== "impulse" || !d.payload) return;
       handleIncomingImpulse(d.payload);
@@ -1181,7 +1184,6 @@
 
       dc.onopen = async () => {
         setLanConnState("Connected");
-        closeLanModal();
         const lanSafety = await detectLanSafety(pc);
         setLanSafeState(lanSafety.label);
         lanParty.gameplayEnabled = !!lanSafety.safe;
@@ -1858,8 +1860,30 @@
 
     function handleIncomingImpulse(data){
       idleMarkActivity();
+      if (data && data.calib === 1){
+        setCalibStatus("Calibrated");
+        closeCalibOverlay();
+      }
+      if (!calibAvailable){
+        calibAvailable = true;
+        setCalibStatus("Ready");
+      }
       teleMaybeLog(data);
       scheduleUIUpdate(data);
+    }
+
+    function sendCalibrationTrigger(){
+      if (lanParty.active && lanParty.dc && lanParty.dc.readyState === "open") {
+        try {
+          lanParty.dc.send(JSON.stringify({ t: "control", name: "calibrate", ts: Date.now() }));
+          return true;
+        } catch (_) {}
+      }
+      if (channel) {
+        channel.publish("ctl", { calibrate: 1, ts: Date.now() });
+        return true;
+      }
+      return false;
     }
 
     function pickDirVec(d){
@@ -2058,13 +2082,13 @@
 
       if (els.calibBtn){
         els.calibBtn.onclick = () => {
-          if (!channel) return;
           if (!calibAvailable) return;
           if (calibInFlight) return;
+          const ok = sendCalibrationTrigger();
+          if (!ok) return;
           calibInFlight = true;
           els.calibBtn.disabled = true;
           setCalibStatus("Calibrating… (2s)");
-          channel.publish("ctl", { calibrate: 1, ts: Date.now() });
         };
       }
 
@@ -2133,8 +2157,7 @@
 
       // Hide immediately (visual intent), then default to LAN PARTY mode.
       els.startScreen.classList.add("off");
-      if (els.lanPartyBtn) els.lanPartyBtn.click();
-      else els.pairBtn.click();
+      els.pairBtn.click();
     });
 
     (async function init(){

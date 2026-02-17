@@ -644,6 +644,20 @@
       });
     }
 
+    function sendLanControl(name, extra){
+      if (!lanParty.dc || lanParty.dc.readyState !== "open") return false;
+      try {
+        lanParty.dc.send(JSON.stringify(Object.assign({
+          t: "control",
+          name,
+          ts: Date.now()
+        }, extra || {})));
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
     async function joinLanParty(roomId, token, code6){
       if (!roomId || !token) {
         setJoinStatus("Need room + token");
@@ -699,6 +713,14 @@
           lanParty.gameplayEnabled = false;
           hideLanConnecting();
           setJoinStatus("Disconnected");
+        };
+        dc.onmessage = (evtMsg) => {
+          let d = null;
+          try { d = JSON.parse(String(evtMsg.data || "")); } catch (_) { return; }
+          if (!d || d.t !== "control") return;
+          if (d.name === "calibrate") {
+            startCalibration();
+          }
         };
       };
 
@@ -2300,6 +2322,10 @@
 
         UI.state = "running";
         setBtn("Stop");
+
+        if (lanParty.active) {
+          sendLanControl("phone_started");
+        }
 
         if (calib.pendingReq) startCalibration();
 
