@@ -1299,7 +1299,6 @@
     if (els.lanPartyBtn) {
       els.lanPartyBtn.addEventListener("click", launchLanPairingFlow);
     }
-    if (els.lanBackdrop) els.lanBackdrop.addEventListener("click", closeLanModal);
     if (els.lanClose) els.lanClose.addEventListener("click", closeLanModal);
     if (els.lanEndBtn) {
       els.lanEndBtn.addEventListener("click", () => {

@@ -115,6 +115,12 @@
     button:disabled{ opacity:.55; cursor:default; }
 
     .stat{margin-top:10px; font-size:13px; line-height:1.5;}
+    .statusLine{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
     .dim{opacity:.78}
     .bad{color:var(--bad); font-weight:900;}
     .ok{color:#7dffab; font-weight:900;}
@@ -220,7 +226,7 @@
       text-shadow: none;
     }
 
-    #teleBtn{ opacity: 0.68; font-weight: 800; }
+    #teleBtn{ opacity: 0.68; font-weight: 800; margin-left:auto; }
     #teleBtn:hover{ opacity: 0.86; border-color: rgba(50,255,117,.30); }
 
     #pairBtn{
