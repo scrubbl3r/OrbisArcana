@@ -513,6 +513,8 @@
       sigState: "idle",
       helloRetryTO: null,
       offerSeen: false,
+      phoneStartedPending: false,
+      phoneStartedSent: false,
     };
 
     const impulseTransport = {
@@ -547,6 +549,8 @@
       lanParty.gameplayEnabled = false;
       lanParty.active = false;
       lanParty.offerSeen = false;
+      lanParty.phoneStartedPending = false;
+      lanParty.phoneStartedSent = false;
       hideLanConnecting();
       setImpulseTransport({
         sendImpulse: () => false,
@@ -671,6 +675,8 @@
       lanParty.code6 = code6FromTokenHex(lanParty.token);
       lanParty.expiresAt = Date.now() + LAN_TOKEN_TTL_MS;
       lanParty.offerSeen = false;
+      lanParty.phoneStartedPending = false;
+      lanParty.phoneStartedSent = false;
       if (code6 && String(code6).trim() && String(code6).trim() !== lanParty.code6) {
         setJoinStatus("Backup code mismatch");
         return false;
@@ -706,6 +712,20 @@
           const lanSafety = await detectLanSafety(pc);
           lanParty.gameplayEnabled = !!lanSafety.safe;
           useWebRtcTransport(dc);
+          if (UI.state === "running" && !lanParty.phoneStartedSent) {
+            if (sendLanControl("phone_started")) {
+              lanParty.phoneStartedSent = true;
+              lanParty.phoneStartedPending = false;
+            } else {
+              lanParty.phoneStartedPending = true;
+            }
+          }
+          if (lanParty.phoneStartedPending && !lanParty.phoneStartedSent) {
+            if (sendLanControl("phone_started")) {
+              lanParty.phoneStartedSent = true;
+              lanParty.phoneStartedPending = false;
+            }
+          }
           setJoinStatus(lanSafety.safe ? ("Connected (" + lanSafety.label + ")") : lanSafety.label);
           hideLanConnecting();
         };
@@ -2326,7 +2346,13 @@
         setBtn("Stop");
 
         if (lanParty.active) {
-          sendLanControl("phone_started");
+          if (sendLanControl("phone_started")) {
+            lanParty.phoneStartedSent = true;
+            lanParty.phoneStartedPending = false;
+          } else {
+            lanParty.phoneStartedPending = true;
+            lanParty.phoneStartedSent = false;
+          }
         }
 
         if (calib.pendingReq) startCalibration();
