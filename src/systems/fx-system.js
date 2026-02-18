@@ -110,6 +110,14 @@ export function createFxSystem({ eventBus }) {
       : `${bx},${by}|${ax},${ay}`;
   }
 
+  function pointKey(p) {
+    return `${Number(p.x).toFixed(3)},${Number(p.y).toFixed(3)}`;
+  }
+
+  function pointRadius(p) {
+    return Math.hypot(Number(p.x) || 0, Number(p.y) || 0);
+  }
+
   function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount = 16) {
     const rng = createRng(seed);
     const bound = circlePoly(50, 30);
@@ -156,66 +164,57 @@ export function createFxSystem({ eventBus }) {
     }
     for (const e of edges) e.boundary = e.cells.length === 1;
 
-    const cellById = new Map(cells.map((c) => [c.id, c]));
-    const adjacency = new Map();
-    for (const c of cells) adjacency.set(c.id, []);
+    const edgeById = new Map(edges.map((e) => [e.id, e]));
+    const vertexEdges = new Map();
     for (const e of edges) {
-      if (e.cells.length === 2) {
-        const [c1, c2] = e.cells;
-        adjacency.get(c1).push({ to: c2, edgeId: e.id });
-        adjacency.get(c2).push({ to: c1, edgeId: e.id });
-      }
-    }
-
-    let startCell = cells[0] || null;
-    let maxR = -1;
-    for (const c of cells) {
-      const r = Math.hypot(c.center.x, c.center.y);
-      if (r > maxR) { maxR = r; startCell = c; }
+      const ka = pointKey(e.a);
+      const kb = pointKey(e.b);
+      if (!vertexEdges.has(ka)) vertexEdges.set(ka, []);
+      if (!vertexEdges.has(kb)) vertexEdges.set(kb, []);
+      vertexEdges.get(ka).push(e.id);
+      vertexEdges.get(kb).push(e.id);
     }
 
     const crackOrder = [];
     const seenEdges = new Set();
 
-    if (startCell) {
-      // Start crack on a boundary edge of the outer cell.
-      const boundaryEdges = edges.filter((e) => e.boundary && e.cells[0] === startCell.id);
-      if (boundaryEdges.length) {
-        const be = boundaryEdges[Math.floor(rand(rng, 0, boundaryEdges.length))];
-        crackOrder.push(be.id);
-        seenEdges.add(be.id);
+    const boundaryEdges = edges.filter((e) => e.boundary);
+    if (boundaryEdges.length) {
+      let startEdge = boundaryEdges[0];
+      let bestR = -1;
+      for (const e of boundaryEdges) {
+        const mr = pointRadius({ x: (e.a.x + e.b.x) * 0.5, y: (e.a.y + e.b.y) * 0.5 });
+        if (mr > bestR) { bestR = mr; startEdge = e; }
       }
+      crackOrder.push(startEdge.id);
+      seenEdges.add(startEdge.id);
 
-      // Build inward branch via BFS tree.
-      const q = [startCell.id];
-      const visited = new Set([startCell.id]);
-      while (q.length) {
-        const cId = q.shift();
-        const nbrs = (adjacency.get(cId) || []).slice().sort((a, b) => a.to - b.to);
-        for (const n of nbrs) {
-          if (visited.has(n.to)) continue;
-          visited.add(n.to);
-          q.push(n.to);
-          if (!seenEdges.has(n.edgeId)) {
-            crackOrder.push(n.edgeId);
-            seenEdges.add(n.edgeId);
+      let cursor = pointRadius(startEdge.a) < pointRadius(startEdge.b) ? startEdge.a : startEdge.b;
+      const maxLen = Math.min(28, edges.length);
+      for (let step = 0; step < maxLen; step++) {
+        const key = pointKey(cursor);
+        const ids = (vertexEdges.get(key) || []).filter((id) => !seenEdges.has(id));
+        if (!ids.length) break;
+
+        let best = null;
+        let bestScore = -Infinity;
+        for (const id of ids) {
+          const e = edgeById.get(id);
+          if (!e) continue;
+          const other = (pointKey(e.a) === key) ? e.b : e.a;
+          const inward = pointRadius(cursor) - pointRadius(other);
+          const boundaryPenalty = e.boundary ? -0.35 : 0;
+          const jitter = rand(rng, -0.08, 0.08);
+          const score = inward + boundaryPenalty + jitter;
+          if (score > bestScore) {
+            bestScore = score;
+            best = { edge: e, other };
           }
         }
-      }
-
-      // Add a few local branch edges around the first ring.
-      const firstRing = (adjacency.get(startCell.id) || []).slice(0, 5);
-      for (const n of firstRing) {
-        const cell = cellById.get(n.to);
-        if (!cell) continue;
-        for (const e of edges) {
-          if (e.cells.includes(cell.id) && !seenEdges.has(e.id)) {
-            crackOrder.push(e.id);
-            seenEdges.add(e.id);
-            if (crackOrder.length >= 18) break;
-          }
-        }
-        if (crackOrder.length >= 18) break;
+        if (!best) break;
+        crackOrder.push(best.edge.id);
+        seenEdges.add(best.edge.id);
+        cursor = best.other;
       }
     }
 
@@ -225,7 +224,7 @@ export function createFxSystem({ eventBus }) {
   function getRevealedSegments(layout, hitsTaken) {
     if (!layout || !Array.isArray(layout.edges)) return [];
     if (hitsTaken <= 0) return [];
-    const revealCount = hitsTaken >= 2 ? 14 : 6;
+    const revealCount = hitsTaken >= 2 ? 12 : 5;
     const ids = layout.crackOrder.slice(0, revealCount);
     const set = new Set(ids);
     return layout.edges.filter((e) => set.has(e.id)).map((e) => ({ a: e.a, b: e.b }));
@@ -257,8 +256,8 @@ export function createFxSystem({ eventBus }) {
         id: cell.id,
         points: cell.poly,
         center: cell.center,
-        vx: nx * rand(rng, 90, 260) + rand(rng, -30, 30),
-        vy: ny * rand(rng, 90, 220) + rand(rng, -220, -70),
+        vx: nx * rand(rng, 150, 320) + rand(rng, -45, 45),
+        vy: ny * rand(rng, 120, 280) + rand(rng, -260, -90),
         angVel: rand(rng, -7, 7),
         ttlMs: Math.floor(rand(rng, 250, 750)),
       };
@@ -301,6 +300,7 @@ export function createFxSystem({ eventBus }) {
 
     unsub.push(eventBus.on('orb.shatter_started', (payload = {}) => {
       state.visualState = 'shattered';
+      state.crackSegments = [];
       startShatter(payload);
     }));
 

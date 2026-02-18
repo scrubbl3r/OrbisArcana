@@ -1596,10 +1596,12 @@
     function renderOrbDamageVisuals(){
       if (!mvp || !els.orb || !els.orbCracks) return;
       const fx = mvp.fxSystem.getState();
-      els.orb.classList.toggle("shattered", fx.visualState === "shattered");
+      const shattered = (fx.visualState === "shattered");
+      els.orb.classList.toggle("shattered", shattered);
+      els.orb.style.opacity = shattered ? "0" : "";
 
       const paths = [];
-      if (Array.isArray(fx.crackSegments)) {
+      if (!shattered && Array.isArray(fx.crackSegments)) {
         for (const seg of fx.crackSegments) {
           const d = lineToPath(seg);
           if (d) paths.push(`<path d="${d}" />`);
@@ -1656,13 +1658,16 @@
       el.setAttribute("transform", "translate(0 0)");
       els.orbShards.appendChild(el);
       const center = p.center || { x: 0, y: 0 };
+      const cMag = Math.hypot(Number(center.x) || 0, Number(center.y) || 0) || 1;
+      const jx = ((Number(center.x) || 0) / cMag) * 3.0;
+      const jy = ((Number(center.y) || 0) / cMag) * 3.0;
       const s = {
         id: p.pieceId,
         el,
         cx: Number(center.x) || 0,
         cy: Number(center.y) || 0,
-        x: 0,
-        y: 0,
+        x: jx,
+        y: jy,
         vx: Number(p.vx) || 0,
         vy: Number(p.vy) || 0,
         a: 0,
