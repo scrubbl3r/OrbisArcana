@@ -1871,9 +1871,10 @@
     const pickupState = {
       test: {
         id: "globe_mid_01",
-        xNorm: 0.5,          // centered horizontally in game window
-        yPx: 500,            // requested screen-space Y anchor for test globe
-        screenSpace: true,   // test placement mode (not world-camera tracked)
+        xNorm: 0.5,          // centered horizontally in world/stage
+        yW: 1000,            // world-space Y (fixed in space)
+        yPx: 0,
+        screenSpace: false,  // world-camera tracked mode
         r: 25,
         active: true,
         spawnedAtMs: 0,
