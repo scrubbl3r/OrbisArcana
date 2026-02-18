@@ -3,6 +3,7 @@
     const els = {
       startScreen: $("startScreen"),
       startBtn: $("startBtn"),
+      startQr: $("startQr"),
 
       pairBtn: $("pairBtn"),
       lanPartyBtn: $("lanPartyBtn"),
@@ -1070,26 +1071,35 @@
       setLanSafeState("Pending…");
     }
 
-    async function renderLanQr(url){
-      if (!els.lanQr) return;
-      els.lanQr.innerHTML = "";
+    async function renderQrInto(el, url, size){
+      if (!el) return;
+      el.innerHTML = "";
       if (typeof QRCode === "undefined" || !QRCode.toCanvas) {
-        els.lanQr.textContent = "QR unavailable";
+        el.textContent = "QR unavailable";
         return;
       }
       const canvas = document.createElement("canvas");
-      canvas.width = 280;
-      canvas.height = 280;
-      els.lanQr.appendChild(canvas);
+      canvas.width = size;
+      canvas.height = size;
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      el.appendChild(canvas);
       try {
         await QRCode.toCanvas(canvas, url, {
-          width: 260,
+          width: Math.max(120, size - 20),
           margin: 2,
           color: { dark: "#000000", light: "#ffffff" }
         });
       } catch (e) {
-        els.lanQr.textContent = "QR render error";
+        el.textContent = "QR render error";
       }
+    }
+
+    async function renderLanQr(url){
+      await Promise.all([
+        renderQrInto(els.lanQr, url, 280),
+        renderQrInto(els.startQr, url, 500),
+      ]);
     }
 
     async function connectLanSignalChannel(roomId){
@@ -1167,6 +1177,7 @@
       try { d = JSON.parse(String(evt.data || "")); } catch (_) { return; }
       if (d && d.t === "control" && d.name === "phone_started") {
         closeLanModal();
+        if (els.startScreen) els.startScreen.classList.add("off");
         calibAvailable = true;
         setCalibStatus("Ready");
         openCalibOverlay();
@@ -1213,7 +1224,6 @@
         };
       }
       await renderLanQr(joinUrl);
-      openLanModal();
 
       await connectLanSignalChannel(lanParty.roomId);
       setLanConnState("Signal ready");
@@ -1317,11 +1327,8 @@
       setStatus(`LAN host ready <span class="dim">(orb:${lanParty.roomId})</span>`, "ok");
     }
 
-    async function launchLanPairingFlow(){
-      if (lanParty.active) {
-        openLanModal();
-        return;
-      }
+    async function launchLanPairingFlow(forceNew = false){
+      if (lanParty.active && !forceNew) return;
       try {
         await startLanHostFlow();
       } catch (e) {
@@ -2410,12 +2417,7 @@
     }
 
     els.startBtn.addEventListener("click", async () => {
-      // This click is a user gesture → allowed to start AudioContext
-      if (!audioEnabled) await enableAudio();
-
-      // Hide immediately (visual intent), then default to LAN PARTY mode.
-      els.startScreen.classList.add("off");
-      await launchLanPairingFlow();
+      await launchLanPairingFlow(true);
     });
 
     if (els.tryAgainBtn) {
@@ -2437,4 +2439,5 @@
     (async function init(){
       initMvpSystems();
       connect({ auto:true });
+      launchLanPairingFlow();
     })();

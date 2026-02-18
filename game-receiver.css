@@ -700,14 +700,23 @@
       padding: 24px 16px;
       z-index: 998; /* below modals (999), above app */
       pointer-events:auto;
+      background: rgba(0,0,0,0.80);
     }
     #startScreen.off{ display:none; }
 
+    .startPairCard{
+      width: min(500px, 92vw);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:16px;
+    }
+
     #startBtn{
       width: 100%;
-      height: 100%;
+      height: 92px;
       border-radius: 18px;
-      border: 0px solid var(--g);
+      border: 1px solid rgba(50,255,117,.28);
       background: #000;
       color: var(--g);
       font-weight: 1000;
@@ -734,6 +743,16 @@
       transform: translateY(1px);
     }
     #startBtn span{
-      font-size: clamp(28px, 5.2vw, 64px);
+      font-size: clamp(28px, 4.2vw, 48px);
       line-height: 1;
+    }
+
+    .startQrBox{
+      width: min(500px, 92vw);
+      height: min(500px, 92vw);
+      border-radius: 18px;
+      border: 1px solid rgba(50,255,117,.22);
+      box-shadow:
+        0 0 0 1px rgba(50,255,117,.10) inset,
+        0 0 28px rgba(50,255,117,.10);
     }
