@@ -1884,8 +1884,12 @@
         r: 25,
         active: true,
         spawnedAtMs: 0,
+        attracting: false,
+        lastStepTs: 0,
       }
     };
+    const PICKUP_ATTRACT_START_EDGE_GAP_PX = 120;
+    const PICKUP_CONSUME_EDGE_GAP_PX = 15;
 
     function pickupScreenY(yW){
       const h = stageRect().height;
@@ -1932,6 +1936,8 @@
     function resetPickups(){
       pickupState.test.active = true;
       pickupState.test.spawnedAtMs = performance.now();
+      pickupState.test.attracting = false;
+      pickupState.test.lastStepTs = 0;
       renderPickups();
     }
 
@@ -1950,15 +1956,40 @@
     function checkPickupCollisions(nowMs){
       const p = pickupState.test;
       if (!p || !p.active) return;
-      const orbCenterX = (stageRect().width || 0) * 0.5;
-      const orbCenterY = orbScreenY();
-      const globeX = ((Number(p.xNorm) || 0.5) * (stageRect().width || 0));
-      const globeY = pickupScreenY(p.yW);
-      const dx = orbCenterX - globeX;
-      const dy = orbCenterY - globeY;
-      const centerDist = Math.hypot(dx, dy);
-      const edgeGapPx = centerDist - (PHYS.orbRadiusPx + p.r);
-      if (edgeGapPx <= 5) {
+      const stageW = stageRect().width || 0;
+      const orbXNorm = 0.5;
+      const orbYW = Number(physState.yW) || 0;
+      const dxPx = ((orbXNorm - p.xNorm) * stageW);
+      const dyPx = (orbYW - p.yW);
+      let centerDist = Math.hypot(dxPx, dyPx);
+      let edgeGapPx = centerDist - (PHYS.orbRadiusPx + p.r);
+
+      if (edgeGapPx <= PICKUP_ATTRACT_START_EDGE_GAP_PX) {
+        p.attracting = true;
+      }
+
+      if (p.attracting) {
+        if (!p.lastStepTs) p.lastStepTs = Number(nowMs) || performance.now();
+        const dt = clamp(((Number(nowMs) || performance.now()) - p.lastStepTs) / 1000, 0, 0.05);
+        p.lastStepTs = Number(nowMs) || performance.now();
+
+        // Exponential magnetic pull: gentle at range, stronger close in.
+        const prox01 = clamp01(1 - (edgeGapPx / Math.max(1, PICKUP_ATTRACT_START_EDGE_GAP_PX)));
+        const k = 2 + (10 * prox01 * prox01);
+        const alpha = 1 - Math.exp(-k * dt);
+
+        p.xNorm += (orbXNorm - p.xNorm) * alpha;
+        p.yW += (orbYW - p.yW) * alpha;
+
+        const dx2 = ((orbXNorm - p.xNorm) * stageW);
+        const dy2 = (orbYW - p.yW);
+        centerDist = Math.hypot(dx2, dy2);
+        edgeGapPx = centerDist - (PHYS.orbRadiusPx + p.r);
+      } else {
+        p.lastStepTs = Number(nowMs) || performance.now();
+      }
+
+      if (edgeGapPx <= PICKUP_CONSUME_EDGE_GAP_PX) {
         collectPickup(p, nowMs);
       }
     }
