@@ -1920,6 +1920,8 @@
     }
 
     function checkPickupCollisions(nowMs){
+      // Debug mode: disable collection to verify pickup render/placement first.
+      return;
       const p = pickupState.test;
       if (!p || !p.active) return;
       const graceMs = 1500;
