@@ -1642,7 +1642,8 @@
         const disp = globeEl ? (globeEl.style.display || "block") : "missing";
         const left = globeEl ? globeEl.style.left || "—" : "—";
         const top = globeEl ? globeEl.style.top || "—" : "—";
-        txt += ` | GLOBE act:${p.active ? 1 : 0} mode:${p.screenSpace ? "screen" : "world"} yPx:${Math.round(Number(p.yPx) || 0)} left:${left} top:${top} disp:${disp}`;
+        const sy = pickupScreenY(Number(p.yW) || 0);
+        txt += ` | GLOBE act:${p.active ? 1 : 0} mode:world yW:${Math.round(Number(p.yW) || 0)} sy:${Math.round(sy)} left:${left} top:${top} disp:${disp}`;
       }
       els.dirReadout.textContent = txt;
     }
@@ -1871,10 +1872,8 @@
     const pickupState = {
       test: {
         id: "globe_mid_01",
-        xNorm: 0.5,          // centered horizontally in world/stage
-        yW: 1000,            // world-space Y (fixed in space)
-        yPx: 0,
-        screenSpace: false,  // world-camera tracked mode
+        xNorm: 0.5,                          // centered horizontally in world/stage
+        yW: groundCenterWorld() - 1000,      // 1000px above ground, world-space fixed
         r: 25,
         active: true,
         spawnedAtMs: 0,
@@ -1908,10 +1907,7 @@
         return;
       }
       const stage = stageRect();
-      const stageH = Number(stage.height) || 0;
-      const y = p.screenSpace
-        ? clamp(Number(p.yPx) || 0, p.r, Math.max(p.r, stageH - p.r))
-        : pickupScreenY(p.yW);
+      const y = pickupScreenY(p.yW);
       const top = y - p.r;
       const d = p.r * 2;
       globeEl.style.display = "block";
@@ -1949,14 +1945,10 @@
       return;
       const p = pickupState.test;
       if (!p || !p.active) return;
-      const graceMs = 1500;
-      if ((Number(nowMs) || 0) < ((Number(p.spawnedAtMs) || 0) + graceMs)) return;
       const orbCenterX = (stageRect().width || 0) * 0.5;
       const orbCenterY = orbScreenY();
       const globeX = ((Number(p.xNorm) || 0.5) * (stageRect().width || 0));
-      const globeY = p.screenSpace
-        ? clamp(Number(p.yPx) || 0, p.r, Math.max(p.r, (stageRect().height || 0) - p.r))
-        : pickupScreenY(p.yW);
+      const globeY = pickupScreenY(p.yW);
       const dx = orbCenterX - globeX;
       const dy = orbCenterY - globeY;
       const collectDistPx = 80;
