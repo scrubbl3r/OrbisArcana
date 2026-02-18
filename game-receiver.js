@@ -1868,6 +1868,7 @@
         screenSpace: true,   // test placement mode (not world-camera tracked)
         r: 25,
         active: true,
+        spawnedAtMs: 0,
       }
     };
 
@@ -1902,6 +1903,7 @@
 
     function resetPickups(){
       pickupState.test.active = true;
+      pickupState.test.spawnedAtMs = performance.now();
       renderPickups();
     }
 
@@ -1920,6 +1922,8 @@
     function checkPickupCollisions(nowMs){
       const p = pickupState.test;
       if (!p || !p.active) return;
+      const graceMs = 1500;
+      if ((Number(nowMs) || 0) < ((Number(p.spawnedAtMs) || 0) + graceMs)) return;
       const orbCenterX = (stageRect().width || 0) * 0.5;
       const orbCenterY = orbScreenY();
       const globeX = ((Number(p.xNorm) || 0.5) * (stageRect().width || 0));
