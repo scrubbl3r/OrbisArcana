@@ -1928,7 +1928,8 @@
         : pickupScreenY(p.yW);
       const dx = orbCenterX - globeX;
       const dy = orbCenterY - globeY;
-      if ((dx * dx + dy * dy) <= Math.pow(PHYS.orbRadiusPx + p.r, 2)) {
+      const collectDistPx = 80;
+      if ((dx * dx + dy * dy) <= (collectDistPx * collectDistPx)) {
         collectPickup(p, nowMs);
       }
     }
