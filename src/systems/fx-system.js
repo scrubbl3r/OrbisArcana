@@ -5,18 +5,19 @@ export function createFxSystem({ eventBus }) {
 
   const unsub = [];
   const pieceTimers = new Set();
+
   const state = {
     visualState: 'pristine',
-    crack: null,
+    crackSegments: [],
     shatterActive: false,
     shards: [],
+    layout: null,
   };
 
   function rand(rng, a, b) {
     return a + (b - a) * rng();
   }
 
-  // Mulberry32 for deterministic generation.
   function createRng(seed) {
     let t = (seed >>> 0) || 1;
     return function next() {
@@ -28,42 +29,7 @@ export function createFxSystem({ eventBus }) {
     };
   }
 
-  function makeCrackPattern(level, seed) {
-    const rng = createRng(seed);
-    const segCount = (level === 1) ? 3 : 5;
-    const main = [];
-
-    let r = 1.0;
-    let theta = rand(rng, -Math.PI, Math.PI);
-    for (let i = 0; i < segCount; i++) {
-      const inward = rand(rng, level === 1 ? 0.16 : 0.12, level === 1 ? 0.24 : 0.22);
-      r = Math.max(level === 1 ? 0.32 : 0.20, r - inward);
-      theta += rand(rng, -Math.PI / 3.6, Math.PI / 3.6); // slightly more jagged than before
-      main.push({ r, theta });
-    }
-
-    const branch = [];
-    if (level >= 2) {
-      const anchor = main[Math.max(1, Math.floor(main.length * 0.45))];
-      let br = anchor.r;
-      let bt = anchor.theta + rand(rng, -Math.PI / 6, Math.PI / 6);
-      const bSeg = 3;
-      for (let i = 0; i < bSeg; i++) {
-        br = Math.max(0.18, br - rand(rng, 0.08, 0.16));
-        bt += rand(rng, -Math.PI / 3.6, Math.PI / 3.6);
-        branch.push({ r: br, theta: bt });
-      }
-    }
-
-    return { seed, level, main, branch };
-  }
-
-  function clearPieceTimers() {
-    for (const t of pieceTimers) clearTimeout(t);
-    pieceTimers.clear();
-  }
-
-  function circlePoly(radius = 50, steps = 24) {
+  function circlePoly(radius = 50, steps = 28) {
     const pts = [];
     for (let i = 0; i < steps; i++) {
       const t = (Math.PI * 2 * i) / steps;
@@ -73,7 +39,6 @@ export function createFxSystem({ eventBus }) {
   }
 
   function clipPolyHalfPlane(poly, a, b, c) {
-    // keep points where a*x + b*y + c <= 0
     if (!poly.length) return [];
     const out = [];
     const eps = 1e-6;
@@ -96,7 +61,6 @@ export function createFxSystem({ eventBus }) {
 
     let prev = poly[poly.length - 1];
     let prevIn = inside(prev);
-
     for (const curr of poly) {
       const currIn = inside(curr);
       if (currIn) {
@@ -108,8 +72,17 @@ export function createFxSystem({ eventBus }) {
       prev = curr;
       prevIn = currIn;
     }
-
     return out;
+  }
+
+  function polyArea(poly) {
+    let s = 0;
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i];
+      const q = poly[(i + 1) % poly.length];
+      s += (p.x * q.y - q.x * p.y);
+    }
+    return Math.abs(s) * 0.5;
   }
 
   function centroid(poly) {
@@ -129,19 +102,17 @@ export function createFxSystem({ eventBus }) {
     return { x: cx / (3 * area2), y: cy / (3 * area2) };
   }
 
-  function polyArea(poly) {
-    let s = 0;
-    for (let i = 0; i < poly.length; i++) {
-      const p = poly[i];
-      const q = poly[(i + 1) % poly.length];
-      s += (p.x * q.y - q.x * p.y);
-    }
-    return Math.abs(s) * 0.5;
+  function edgeKey(a, b) {
+    const ax = Number(a.x).toFixed(3), ay = Number(a.y).toFixed(3);
+    const bx = Number(b.x).toFixed(3), by = Number(b.y).toFixed(3);
+    return (ax < bx || (ax === bx && ay <= by))
+      ? `${ax},${ay}|${bx},${by}`
+      : `${bx},${by}|${ax},${ay}`;
   }
 
-  function makeVoronoiFragments(pieceCount, seed) {
+  function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount = 16) {
     const rng = createRng(seed);
-    const bound = circlePoly(50, 28);
+    const bound = circlePoly(50, 30);
 
     const seeds = [];
     for (let i = 0; i < pieceCount; i++) {
@@ -154,26 +125,119 @@ export function createFxSystem({ eventBus }) {
     for (let i = 0; i < seeds.length; i++) {
       const si = seeds[i];
       let poly = bound.slice();
-
       for (let j = 0; j < seeds.length; j++) {
         if (i === j || poly.length === 0) continue;
         const sj = seeds[j];
-
-        // Half-plane closer to si than sj:
-        // (x - si)^2 <= (x - sj)^2  -> 2*(sj-si).x * x + 2*(sj-si).y * y + (|si|^2 - |sj|^2) <= 0
         const a = 2 * (sj.x - si.x);
         const b = 2 * (sj.y - si.y);
         const c = (si.x * si.x + si.y * si.y) - (sj.x * sj.x + sj.y * sj.y);
         poly = clipPolyHalfPlane(poly, a, b, c);
       }
-
-      if (poly.length >= 3 && polyArea(poly) > 6) {
-        const center = centroid(poly);
-        cells.push({ id: i, poly, center });
+      if (poly.length >= 3 && polyArea(poly) > 8) {
+        cells.push({ id: i, poly, center: centroid(poly) });
       }
     }
 
-    return cells;
+    const edges = [];
+    const edgeMap = new Map();
+    for (const cell of cells) {
+      for (let i = 0; i < cell.poly.length; i++) {
+        const a = cell.poly[i];
+        const b = cell.poly[(i + 1) % cell.poly.length];
+        const k = edgeKey(a, b);
+        let e = edgeMap.get(k);
+        if (!e) {
+          e = { id: edges.length, a: { x: a.x, y: a.y }, b: { x: b.x, y: b.y }, cells: [] };
+          edges.push(e);
+          edgeMap.set(k, e);
+        }
+        if (!e.cells.includes(cell.id)) e.cells.push(cell.id);
+      }
+    }
+    for (const e of edges) e.boundary = e.cells.length === 1;
+
+    const cellById = new Map(cells.map((c) => [c.id, c]));
+    const adjacency = new Map();
+    for (const c of cells) adjacency.set(c.id, []);
+    for (const e of edges) {
+      if (e.cells.length === 2) {
+        const [c1, c2] = e.cells;
+        adjacency.get(c1).push({ to: c2, edgeId: e.id });
+        adjacency.get(c2).push({ to: c1, edgeId: e.id });
+      }
+    }
+
+    let startCell = cells[0] || null;
+    let maxR = -1;
+    for (const c of cells) {
+      const r = Math.hypot(c.center.x, c.center.y);
+      if (r > maxR) { maxR = r; startCell = c; }
+    }
+
+    const crackOrder = [];
+    const seenEdges = new Set();
+
+    if (startCell) {
+      // Start crack on a boundary edge of the outer cell.
+      const boundaryEdges = edges.filter((e) => e.boundary && e.cells[0] === startCell.id);
+      if (boundaryEdges.length) {
+        const be = boundaryEdges[Math.floor(rand(rng, 0, boundaryEdges.length))];
+        crackOrder.push(be.id);
+        seenEdges.add(be.id);
+      }
+
+      // Build inward branch via BFS tree.
+      const q = [startCell.id];
+      const visited = new Set([startCell.id]);
+      while (q.length) {
+        const cId = q.shift();
+        const nbrs = (adjacency.get(cId) || []).slice().sort((a, b) => a.to - b.to);
+        for (const n of nbrs) {
+          if (visited.has(n.to)) continue;
+          visited.add(n.to);
+          q.push(n.to);
+          if (!seenEdges.has(n.edgeId)) {
+            crackOrder.push(n.edgeId);
+            seenEdges.add(n.edgeId);
+          }
+        }
+      }
+
+      // Add a few local branch edges around the first ring.
+      const firstRing = (adjacency.get(startCell.id) || []).slice(0, 5);
+      for (const n of firstRing) {
+        const cell = cellById.get(n.to);
+        if (!cell) continue;
+        for (const e of edges) {
+          if (e.cells.includes(cell.id) && !seenEdges.has(e.id)) {
+            crackOrder.push(e.id);
+            seenEdges.add(e.id);
+            if (crackOrder.length >= 18) break;
+          }
+        }
+        if (crackOrder.length >= 18) break;
+      }
+    }
+
+    return { seed, cells, edges, crackOrder };
+  }
+
+  function getRevealedSegments(layout, hitsTaken) {
+    if (!layout || !Array.isArray(layout.edges)) return [];
+    if (hitsTaken <= 0) return [];
+    const revealCount = hitsTaken >= 2 ? 14 : 6;
+    const ids = layout.crackOrder.slice(0, revealCount);
+    const set = new Set(ids);
+    return layout.edges.filter((e) => set.has(e.id)).map((e) => ({ a: e.a, b: e.b }));
+  }
+
+  function clearPieceTimers() {
+    for (const t of pieceTimers) clearTimeout(t);
+    pieceTimers.clear();
+  }
+
+  function rebuildLayout(seed) {
+    state.layout = makeVoronoiLayout(seed);
   }
 
   function startShatter(payload = {}) {
@@ -181,14 +245,10 @@ export function createFxSystem({ eventBus }) {
     state.shatterActive = true;
     state.shards = [];
 
-    const atMs = Number(payload.atMs) || Date.now();
-    const pieceCount = Math.max(8, Math.floor(Number(payload.pieceCount) || 14));
-    const seed = Number.isFinite(payload.seed) ? Number(payload.seed) : ((Math.random() * 1e9) | 0);
+    if (!state.layout) rebuildLayout(payload.seed);
+    const rng = createRng((state.layout.seed || 1) ^ 0x9e3779b9);
 
-    const cells = makeVoronoiFragments(pieceCount, seed);
-    const rng = createRng(seed ^ 0x9e3779b9);
-
-    for (const cell of cells) {
+    for (const cell of state.layout.cells) {
       const dirLen = Math.hypot(cell.center.x, cell.center.y) || 1;
       const nx = cell.center.x / dirLen;
       const ny = cell.center.y / dirLen;
@@ -197,9 +257,9 @@ export function createFxSystem({ eventBus }) {
         id: cell.id,
         points: cell.poly,
         center: cell.center,
-        vx: nx * rand(rng, 120, 280) + rand(rng, -35, 35),
-        vy: ny * rand(rng, 120, 260) + rand(rng, -220, -70),
-        angVel: rand(rng, -9, 9),
+        vx: nx * rand(rng, 90, 260) + rand(rng, -30, 30),
+        vy: ny * rand(rng, 90, 220) + rand(rng, -220, -70),
+        angVel: rand(rng, -7, 7),
         ttlMs: Math.floor(rand(rng, 250, 750)),
       };
 
@@ -227,22 +287,30 @@ export function createFxSystem({ eventBus }) {
   }
 
   function start() {
+    rebuildLayout();
+
+    unsub.push(eventBus.on('orb.damage_applied', (payload = {}) => {
+      const hits = Number(payload.hitsTaken) || 0;
+      state.crackSegments = getRevealedSegments(state.layout, hits);
+    }));
+
     unsub.push(eventBus.on('orb.visual_state_changed', (payload = {}) => {
-      const to = String(payload.to || 'pristine');
-      state.visualState = to;
-      if (to === 'crack_1') {
-        state.crack = makeCrackPattern(1, Date.now() ^ 0xA11CE);
-      } else if (to === 'crack_2') {
-        state.crack = makeCrackPattern(2, Date.now() ^ 0xC0FFEE);
-      } else {
-        state.crack = null;
-      }
+      state.visualState = String(payload.to || 'pristine');
+      if (state.visualState === 'pristine') state.crackSegments = [];
     }));
 
     unsub.push(eventBus.on('orb.shatter_started', (payload = {}) => {
       state.visualState = 'shattered';
-      state.crack = null;
       startShatter(payload);
+    }));
+
+    unsub.push(eventBus.on('orb.revived', () => {
+      clearPieceTimers();
+      state.shatterActive = false;
+      state.shards = [];
+      state.visualState = 'pristine';
+      state.crackSegments = [];
+      rebuildLayout(); // new orb, new fixed Voronoi map
     }));
   }
 
@@ -259,14 +327,10 @@ export function createFxSystem({ eventBus }) {
   function getState() {
     return {
       visualState: state.visualState,
-      crack: state.crack ? {
-        seed: state.crack.seed,
-        level: state.crack.level,
-        main: state.crack.main.slice(),
-        branch: state.crack.branch.slice(),
-      } : null,
+      crackSegments: state.crackSegments.slice(),
       shatterActive: state.shatterActive,
       shards: state.shards.slice(),
+      layoutSeed: state.layout ? state.layout.seed : null,
     };
   }
 

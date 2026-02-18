@@ -76,6 +76,8 @@
       calibOverlay: $("calibOverlay"),
       calibBtn: $("calibBtn"),
       calibStatus: $("calibStatus"),
+      deathOverlay: $("deathOverlay"),
+      tryAgainBtn: $("tryAgainBtn"),
 
       // ===== LAN PARTY (P2P) BEGIN =====
       lanModal: $("lanModal"),
@@ -205,6 +207,18 @@
 
     function setCalibStatus(msg){
       if (els.calibStatus) els.calibStatus.textContent = msg;
+    }
+
+    function openDeathOverlay(){
+      if (!els.deathOverlay) return;
+      els.deathOverlay.classList.remove("off");
+      els.deathOverlay.setAttribute("aria-hidden","false");
+    }
+
+    function closeDeathOverlay(){
+      if (!els.deathOverlay) return;
+      els.deathOverlay.classList.add("off");
+      els.deathOverlay.setAttribute("aria-hidden","true");
     }
 
     // =========================================================================
@@ -1574,33 +1588,9 @@
       els.dirReadout.textContent = txt;
     }
 
-    function polarToXY(rNorm, theta){
-      const r = clamp(Number(rNorm) || 0, 0, 1) * 50;
-      return { x: r * Math.cos(theta), y: r * Math.sin(theta) };
-    }
-
-    function buildMainCrackPath(crack){
-      if (!crack || !Array.isArray(crack.main) || !crack.main.length) return "";
-      const startTheta = Number(crack.main[0].theta) || 0;
-      const start = { x: 50 * Math.cos(startTheta), y: 50 * Math.sin(startTheta) };
-      let d = `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} `;
-      for (const p of crack.main){
-        const v = polarToXY(p.r, p.theta);
-        d += `L ${v.x.toFixed(2)} ${v.y.toFixed(2)} `;
-      }
-      return d;
-    }
-
-    function buildBranchCrackPath(crack){
-      if (!crack || !Array.isArray(crack.branch) || !crack.branch.length || !Array.isArray(crack.main) || crack.main.length < 2) return "";
-      const anchorP = crack.main[1];
-      const anchor = polarToXY(anchorP.r, anchorP.theta);
-      let d = `M ${anchor.x.toFixed(2)} ${anchor.y.toFixed(2)} `;
-      for (const p of crack.branch){
-        const v = polarToXY(p.r, p.theta);
-        d += `L ${v.x.toFixed(2)} ${v.y.toFixed(2)} `;
-      }
-      return d;
+    function lineToPath(seg){
+      if (!seg || !seg.a || !seg.b) return "";
+      return `M ${Number(seg.a.x).toFixed(2)} ${Number(seg.a.y).toFixed(2)} L ${Number(seg.b.x).toFixed(2)} ${Number(seg.b.y).toFixed(2)}`;
     }
 
     function renderOrbDamageVisuals(){
@@ -1609,10 +1599,12 @@
       els.orb.classList.toggle("shattered", fx.visualState === "shattered");
 
       const paths = [];
-      const mainD = buildMainCrackPath(fx.crack);
-      if (mainD) paths.push(`<path d="${mainD}" />`);
-      const branchD = buildBranchCrackPath(fx.crack);
-      if (branchD) paths.push(`<path d="${branchD}" />`);
+      if (Array.isArray(fx.crackSegments)) {
+        for (const seg of fx.crackSegments) {
+          const d = lineToPath(seg);
+          if (d) paths.push(`<path d="${d}" />`);
+        }
+      }
       els.orbCracks.innerHTML = paths.join("");
     }
 
@@ -1714,6 +1706,15 @@
 
         eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
+        eventBus.on("orb.died", () => {
+          openDeathOverlay();
+          updateDebugReadout();
+        });
+        eventBus.on("orb.revived", () => {
+          closeDeathOverlay();
+          renderOrbDamageVisuals();
+          updateDebugReadout();
+        });
         eventBus.on("orb.shatter_complete", () => {
           mvpShards = [];
           if (els.orbShards) els.orbShards.innerHTML = "";
@@ -2369,6 +2370,21 @@
       els.startScreen.classList.add("off");
       await launchLanPairingFlow();
     });
+
+    if (els.tryAgainBtn) {
+      els.tryAgainBtn.addEventListener("click", () => {
+        if (!mvp || !mvp.orbSystem || !mvp.gameState) return;
+        mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
+        mvp.lastImpact = null;
+        mvpShards = [];
+        if (els.orbShards) els.orbShards.innerHTML = "";
+        stopShardSim();
+        resetOrbToGround();
+        closeDeathOverlay();
+        renderOrbDamageVisuals();
+        updateDebugReadout();
+      });
+    }
 
     (async function init(){
       initMvpSystems();
