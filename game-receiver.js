@@ -1673,9 +1673,16 @@
       const d = pointsToPath(p.points);
       if (!d) return;
       const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      el.className = "orbShard";
+      el.setAttribute("class", "orbShard");
       el.setAttribute("d", d);
       el.setAttribute("transform", "translate(0 0)");
+      // Force shard look at element level so browser SVG class quirks can't fallback to black fill.
+      el.setAttribute("fill", "none");
+      el.setAttribute("stroke", "rgba(50,255,117,0.95)");
+      el.setAttribute("stroke-width", "1.2");
+      el.setAttribute("stroke-linejoin", "round");
+      el.setAttribute("stroke-linecap", "round");
+      el.setAttribute("vector-effect", "non-scaling-stroke");
       els.orbShards.appendChild(el);
       const center = p.center || { x: 0, y: 0 };
       const cMag = Math.hypot(Number(center.x) || 0, Number(center.y) || 0) || 1;
