@@ -2478,12 +2478,22 @@
     }
 
     els.startBtn.addEventListener("click", async () => {
+      // User gesture: ensure receiver audio is enabled on first run.
+      if (!audioEnabled) await enableAudio();
+      else if (audioCtx) {
+        try { await audioCtx.resume(); } catch (_) {}
+      }
       await launchLanPairingFlow(true);
     });
 
     if (els.tryAgainBtn) {
-      els.tryAgainBtn.addEventListener("click", () => {
+      els.tryAgainBtn.addEventListener("click", async () => {
         if (!mvp || !mvp.orbSystem || !mvp.gameState) return;
+        // User gesture: keep audio alive across death/reset.
+        if (!audioEnabled) await enableAudio();
+        else if (audioCtx) {
+          try { await audioCtx.resume(); } catch (_) {}
+        }
         clearDeathOverlaySchedule();
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
