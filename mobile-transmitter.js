@@ -1023,7 +1023,7 @@
     const ENERGY_DECAY       = 0.1;
 
     const UI_SMOOTH   = 0.10;
-    const LOCK_SMOOTH = 0.14;
+    const LOCK_SMOOTH = 0.05;
 
     const GROOVE_EXP    = 0.70;
     const SMOOTH_EXP    = 0.70;

@@ -1998,7 +1998,7 @@
 
     function spawnInnerGlobe(){
       const r = innerGlobeDiameterPx() * 0.5;
-      const speed = 120 + (Math.random() * 90);
+      const speed = 360 + (Math.random() * 270); // ~3x faster than previous range
       const a = Math.random() * Math.PI * 2;
       innerGlobeState.particles.push({
         id: innerGlobeState.nextId++,
@@ -2016,6 +2016,16 @@
       if (!innerGlobeState.particles.length) return;
       const maxDistBase = PHYS.orbRadiusPx;
       for (const p of innerGlobeState.particles){
+        // Add small random acceleration so motion stays lively/less predictable.
+        p.vx += (Math.random() - 0.5) * 120 * dt;
+        p.vy += (Math.random() - 0.5) * 120 * dt;
+        const vMag = Math.hypot(p.vx, p.vy);
+        const vCap = 900;
+        if (vMag > vCap) {
+          const s = vCap / (vMag || 1);
+          p.vx *= s;
+          p.vy *= s;
+        }
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         const dist = Math.hypot(p.x, p.y);
@@ -2029,6 +2039,12 @@
           if (vn > 0) {
             p.vx = p.vx - (2 * vn * nx);
             p.vy = p.vy - (2 * vn * ny);
+            // Tiny tangential kick on bounce to avoid repetitive paths.
+            const tx = -ny;
+            const ty = nx;
+            const kick = (Math.random() - 0.5) * 120;
+            p.vx += tx * kick;
+            p.vy += ty * kick;
           }
         }
       }
