@@ -1596,7 +1596,7 @@
       thrustMax: 3000,
 
       upDrag:   2.6,
-      downDrag: 1.0,
+      downDrag: -0.83,
 
       bounce: 0.35,
       maxUpSpeed: 2200,
@@ -1844,7 +1844,7 @@
       yW: 0,
       v:  0,
       lastTs: null,
-      gravityMul: 0.40,
+      gravityMul: 0.33,
 
       lift01: 0,
       energy01: 0,
