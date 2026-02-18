@@ -177,6 +177,7 @@ export function createFxSystem({ eventBus }) {
 
     const crackOrder = [];
     const seenEdges = new Set();
+    const visitedVertices = new Set();
 
     const boundaryEdges = edges.filter((e) => e.boundary);
     if (boundaryEdges.length) {
@@ -188,33 +189,40 @@ export function createFxSystem({ eventBus }) {
       }
       crackOrder.push(startEdge.id);
       seenEdges.add(startEdge.id);
-
-      let cursor = pointRadius(startEdge.a) < pointRadius(startEdge.b) ? startEdge.a : startEdge.b;
+      visitedVertices.add(pointKey(startEdge.a));
+      visitedVertices.add(pointKey(startEdge.b));
       const maxLen = Math.min(28, edges.length);
-      for (let step = 0; step < maxLen; step++) {
-        const key = pointKey(cursor);
-        const ids = (vertexEdges.get(key) || []).filter((id) => !seenEdges.has(id));
-        if (!ids.length) break;
-
+      for (let step = 1; step < maxLen; step++) {
         let best = null;
         let bestScore = -Infinity;
-        for (const id of ids) {
-          const e = edgeById.get(id);
-          if (!e) continue;
-          const other = (pointKey(e.a) === key) ? e.b : e.a;
-          const inward = pointRadius(cursor) - pointRadius(other);
-          const boundaryPenalty = e.boundary ? -0.35 : 0;
-          const jitter = rand(rng, -0.08, 0.08);
-          const score = inward + boundaryPenalty + jitter;
-          if (score > bestScore) {
-            bestScore = score;
-            best = { edge: e, other };
+        for (const key of visitedVertices) {
+          const ids = (vertexEdges.get(key) || []).filter((id) => !seenEdges.has(id));
+          for (const id of ids) {
+            const e = edgeById.get(id);
+            if (!e) continue;
+            const aKey = pointKey(e.a);
+            const bKey = pointKey(e.b);
+            const aVisited = visitedVertices.has(aKey);
+            const bVisited = visitedVertices.has(bKey);
+            // Tree-growth rule: contiguous + acyclic. Exactly one endpoint must be new.
+            if ((aVisited && bVisited) || (!aVisited && !bVisited)) continue;
+            const from = (aVisited ? e.a : e.b);
+            const to = (aVisited ? e.b : e.a);
+            const inward = pointRadius(from) - pointRadius(to);
+            const boundaryPenalty = e.boundary ? -0.35 : 0;
+            const branchBias = (vertexEdges.get(key) || []).length > 2 ? 0.06 : 0;
+            const jitter = rand(rng, -0.08, 0.08);
+            const score = inward + boundaryPenalty + branchBias + jitter;
+            if (score > bestScore) {
+              bestScore = score;
+              best = { edge: e, newVertexKey: aVisited ? bKey : aKey };
+            }
           }
         }
         if (!best) break;
         crackOrder.push(best.edge.id);
         seenEdges.add(best.edge.id);
-        cursor = best.other;
+        visitedVertices.add(best.newVertexKey);
       }
     }
 
