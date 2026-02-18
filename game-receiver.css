@@ -450,6 +450,44 @@
       background: rgba(var(--bg-r), var(--bg-g), var(--bg-b), 0.30);
       box-shadow: none;
     }
+    .orb.shattered{
+      opacity: 0.12;
+      transition: opacity 120ms linear;
+    }
+    .orbCracks{
+      width: var(--orb-d);
+      height: var(--orb-d);
+      overflow: visible;
+      pointer-events: none;
+      z-index: 6;
+    }
+    .orbCracks path{
+      fill: none;
+      stroke: rgba(180, 245, 255, 0.9);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 3px rgba(180,245,255,0.22));
+    }
+    .orbShards{
+      width: 1px;
+      height: 1px;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 7;
+    }
+    .orbShard{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 10px;
+      height: 6px;
+      border-radius: 2px;
+      border: 1px solid rgba(50,255,117,0.55);
+      background: rgba(var(--bg-r), var(--bg-g), var(--bg-b), 0.55);
+      transform-origin: 50% 50%;
+      box-shadow: 0 0 8px rgba(50,255,117,0.14);
+    }
 
     /* Shield (pulse only while ON) */
     .shield{

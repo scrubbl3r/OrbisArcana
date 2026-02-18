@@ -46,6 +46,8 @@
 
       orbWrap: $("orbWrap"),
       orb: $("orb"),
+      orbCracks: $("orbCracks"),
+      orbShards: $("orbShards"),
       shield: $("shield"),
 
       /* [VFX] */
@@ -1547,6 +1549,157 @@
       maxUpSpeed: 2200,
       maxDownSpeed: 2800,
     };
+    const COLLISION_TH = 700;
+
+    // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
+    let mvp = null;
+    let mvpShardRaf = 0;
+    let mvpShardLastTs = 0;
+    let mvpShards = [];
+
+    function polarToXY(rNorm, theta){
+      const r = clamp(Number(rNorm) || 0, 0, 1) * 50;
+      return { x: r * Math.cos(theta), y: r * Math.sin(theta) };
+    }
+
+    function buildMainCrackPath(crack){
+      if (!crack || !Array.isArray(crack.main) || !crack.main.length) return "";
+      const startTheta = Number(crack.main[0].theta) || 0;
+      const start = { x: 50 * Math.cos(startTheta), y: 50 * Math.sin(startTheta) };
+      let d = `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} `;
+      for (const p of crack.main){
+        const v = polarToXY(p.r, p.theta);
+        d += `L ${v.x.toFixed(2)} ${v.y.toFixed(2)} `;
+      }
+      return d;
+    }
+
+    function buildBranchCrackPath(crack){
+      if (!crack || !Array.isArray(crack.branch) || !crack.branch.length || !Array.isArray(crack.main) || crack.main.length < 2) return "";
+      const anchorP = crack.main[1];
+      const anchor = polarToXY(anchorP.r, anchorP.theta);
+      let d = `M ${anchor.x.toFixed(2)} ${anchor.y.toFixed(2)} `;
+      for (const p of crack.branch){
+        const v = polarToXY(p.r, p.theta);
+        d += `L ${v.x.toFixed(2)} ${v.y.toFixed(2)} `;
+      }
+      return d;
+    }
+
+    function renderOrbDamageVisuals(){
+      if (!mvp || !els.orb || !els.orbCracks) return;
+      const fx = mvp.fxSystem.getState();
+      els.orb.classList.toggle("shattered", fx.visualState === "shattered");
+
+      const paths = [];
+      const mainD = buildMainCrackPath(fx.crack);
+      if (mainD) paths.push(`<path d="${mainD}" />`);
+      const branchD = buildBranchCrackPath(fx.crack);
+      if (branchD) paths.push(`<path d="${branchD}" />`);
+      els.orbCracks.innerHTML = paths.join("");
+    }
+
+    function stopShardSim(){
+      if (mvpShardRaf) cancelAnimationFrame(mvpShardRaf);
+      mvpShardRaf = 0;
+      mvpShardLastTs = 0;
+    }
+
+    function shardSimTick(ts){
+      if (!mvpShards.length) {
+        stopShardSim();
+        return;
+      }
+      if (!mvpShardLastTs) mvpShardLastTs = ts;
+      const dt = clamp((ts - mvpShardLastTs) / 1000, 0, 0.05);
+      mvpShardLastTs = ts;
+      const g = 980;
+      for (const s of mvpShards){
+        s.vy += g * dt;
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.a += s.av * dt;
+        s.el.style.transform = `translate(${s.x.toFixed(2)}px, ${s.y.toFixed(2)}px) rotate(${s.a.toFixed(3)}rad)`;
+      }
+      mvpShardRaf = requestAnimationFrame(shardSimTick);
+    }
+
+    function spawnShardFx(p){
+      if (!els.orbShards) return;
+      const el = document.createElement("div");
+      el.className = "orbShard";
+      els.orbShards.appendChild(el);
+      const s = {
+        id: p.pieceId,
+        el,
+        x: 0,
+        y: 0,
+        vx: Number(p.vx) || 0,
+        vy: Number(p.vy) || 0,
+        a: 0,
+        av: Number(p.angVel) || 0,
+      };
+      mvpShards.push(s);
+      if (!mvpShardRaf) mvpShardRaf = requestAnimationFrame(shardSimTick);
+
+      const ttl = Math.max(50, Number(p.ttlMs) || 300);
+      setTimeout(() => {
+        mvpShards = mvpShards.filter((x) => x !== s);
+        try { s.el.remove(); } catch (_) {}
+      }, ttl);
+    }
+
+    async function initMvpSystems(){
+      try {
+        const [{ createEventBus }, { createGameState }, { createOrbSystem }, { createFxSystem }, { createAudioSystem }] = await Promise.all([
+          import("./src/events/event-bus.js"),
+          import("./src/state/game-state.js"),
+          import("./src/systems/orb-system.js"),
+          import("./src/systems/fx-system.js"),
+          import("./src/systems/audio-system.js"),
+        ]);
+
+        const eventBus = createEventBus();
+        const gameState = createGameState({
+          orb: {
+            maxHealth: 300,
+            health: 300,
+            collisionDamage: 100,
+            collisionThreshold: COLLISION_TH,
+            collisionCooldownMs: 250,
+          }
+        });
+        const orbSystem = createOrbSystem({ gameState, eventBus });
+        const fxSystem = createFxSystem({ eventBus });
+        const audioSystem = createAudioSystem({ eventBus });
+        fxSystem.start();
+        audioSystem.start();
+
+        eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
+        eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
+        eventBus.on("orb.shatter_complete", () => {
+          mvpShards = [];
+          if (els.orbShards) els.orbShards.innerHTML = "";
+          stopShardSim();
+        });
+
+        mvp = {
+          eventBus,
+          gameState,
+          orbSystem,
+          fxSystem,
+          audioSystem,
+          applyImpact(impact, source){
+            orbSystem.applyImpact({ impact, source, atMs: performance.now() });
+            renderOrbDamageVisuals();
+          },
+        };
+        renderOrbDamageVisuals();
+      } catch (e) {
+        console.warn("MVP systems init failed:", e);
+      }
+    }
+    // ===== GAME MVP SYSTEMS (ORB STATE) END =====
 
     function groundCenterWorld(){
       return WORLD_H - (PHYS.groundFromBottomPx + PHYS.groundLinePx + PHYS.orbRadiusPx);
@@ -1742,6 +1895,7 @@
       if (physState.lastTs == null) physState.lastTs = ts;
       let dt = (ts - physState.lastTs) / 1000;
       physState.lastTs = ts;
+      if (mvp && mvp.orbSystem) mvp.orbSystem.tick(performance.now());
 
       dt = clamp(dt, 0, 0.05);
 
@@ -1770,18 +1924,28 @@
 
       const yFloor = groundCenterWorld();
       const yCeil  = PHYS.orbRadiusPx;
+      let impactMag = 0;
+      let impactSrc = "";
 
       physState.onGround = false;
 
       if (physState.yW > yFloor) {
+        impactMag = Math.max(impactMag, Math.abs(physState.v));
+        impactSrc = "ground";
         physState.yW = yFloor;
         if (physState.v > 0) physState.v = 0;
         physState.onGround = true;
       }
 
       if (physState.yW < yCeil) {
+        impactMag = Math.max(impactMag, Math.abs(physState.v));
+        impactSrc = impactSrc || "ceiling";
         physState.yW = yCeil;
         if (physState.v < 0) physState.v = -physState.v * PHYS.bounce;
+      }
+
+      if (mvp && impactMag > 0) {
+        mvp.applyImpact(impactMag, impactSrc || "boundary");
       }
 
       drawStars();
@@ -2170,5 +2334,6 @@
     });
 
     (async function init(){
+      initMvpSystems();
       connect({ auto:true });
     })();
