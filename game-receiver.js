@@ -1607,8 +1607,9 @@
     const IMPACT_MODEL = {
       mass: 1.0,
       gravityExp: 0.5,
-      dragScale: 0.12,
-      minDragDen: 0.35,
+      // Symmetric around 0:
+      // +1 => softer impacts, -1 => harsher/faster impacts.
+      dragMirrorScale: 0.5,
     };
 
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
@@ -1643,11 +1644,11 @@
       const fallDrag = clamp(Number(PHYS.downDrag) || 0, -1, 1);
 
       // Energy-inspired impact metric:
-      // velocity dominates, while gravity/drag shape the severity envelope.
+      // velocity dominates; gravity + signed fall-drag shape severity symmetrically.
       const eLike = 0.5 * IMPACT_MODEL.mass * v * v;
       const gravityTerm = Math.pow(gMul, IMPACT_MODEL.gravityExp);
-      const dragDen = Math.max(IMPACT_MODEL.minDragDen, 1 + (fallDrag * IMPACT_MODEL.dragScale));
-      const metric = Math.sqrt(eLike * 2) * gravityTerm / dragDen;
+      const dragMirror = clamp(1 - (fallDrag * IMPACT_MODEL.dragMirrorScale), 0.05, 2.0);
+      const metric = Math.sqrt(eLike * 2) * gravityTerm * dragMirror;
       return metric;
     }
 
@@ -2039,7 +2040,10 @@
 
       let a = g - thrust;
 
-      const drag = (physState.v >= 0) ? PHYS.downDrag : PHYS.upDrag;
+      // Signed fall drag (downward only) mirrors around 0:
+      // positive = resist fall, negative = assist fall ("magical" acceleration).
+      const signedFallDrag = clamp(Number(PHYS.downDrag) || 0, -1, 1);
+      const drag = (physState.v >= 0) ? signedFallDrag : PHYS.upDrag;
       a += (-drag * physState.v);
 
       physState.v += a * dt;
