@@ -1563,7 +1563,8 @@
       maxUpSpeed: 2200,
       maxDownSpeed: 2800,
     };
-    const IMPACT_TH = 10;
+    const IMPACT_TH = 15;
+    const DEATH_FLOW_DELAY_MS = 3000;
 
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
     let mvp = null;
@@ -1712,7 +1713,9 @@
         eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
         eventBus.on("orb.died", () => {
-          openDeathOverlay();
+          setTimeout(() => {
+            openDeathOverlay();
+          }, DEATH_FLOW_DELAY_MS);
           updateDebugReadout();
         });
         eventBus.on("orb.revived", () => {
