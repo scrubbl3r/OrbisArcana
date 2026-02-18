@@ -2437,6 +2437,11 @@
 
       if (els.calibBtn){
         els.calibBtn.onclick = () => {
+          if (!audioEnabled) {
+            enableAudio().catch(() => {});
+          } else if (audioCtx) {
+            audioCtx.resume().catch(() => {});
+          }
           if (!calibAvailable) return;
           if (calibInFlight) return;
           const ok = sendCalibrationTrigger();
