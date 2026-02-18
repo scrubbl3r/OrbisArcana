@@ -1636,6 +1636,14 @@
         const drag = Number(mvp.lastImpact.fallDrag) || 0;
         txt += ` | IMPACT:${mvp.lastImpact.impact.toFixed(0)} TH:${IMPACT_TH.toFixed(0)} v:${rawV.toFixed(0)} g:${gMul.toFixed(2)} d:${drag.toFixed(2)} ${mvp.lastImpact.source || ""}`;
       }
+      const p = pickupState && pickupState.test ? pickupState.test : null;
+      const globeEl = els.testGlobe || document.getElementById("testGlobe");
+      if (p) {
+        const disp = globeEl ? (globeEl.style.display || "block") : "missing";
+        const left = globeEl ? globeEl.style.left || "—" : "—";
+        const top = globeEl ? globeEl.style.top || "—" : "—";
+        txt += ` | GLOBE act:${p.active ? 1 : 0} mode:${p.screenSpace ? "screen" : "world"} yPx:${Math.round(Number(p.yPx) || 0)} left:${left} top:${top} disp:${disp}`;
+      }
       els.dirReadout.textContent = txt;
     }
 
