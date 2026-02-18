@@ -1739,6 +1739,10 @@
             updateDebugReadout();
           },
         };
+        mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
+        mvp.lastImpact = null;
+        if (els.orbShards) els.orbShards.innerHTML = "";
+        closeDeathOverlay();
         renderOrbDamageVisuals();
         updateDebugReadout();
       } catch (e) {
@@ -1942,6 +1946,7 @@
       let dt = (ts - physState.lastTs) / 1000;
       physState.lastTs = ts;
       if (mvp && mvp.orbSystem) mvp.orbSystem.tick(performance.now());
+      const wasOnGround = !!physState.onGround;
 
       dt = clamp(dt, 0, 0.05);
 
@@ -1972,20 +1977,28 @@
       const yCeil  = PHYS.orbRadiusPx;
       let impactMag = 0;
       let impactSrc = "";
+      const vyPreClamp = physState.v;
+      const wasAtCeil = (physState.yW <= (yCeil + 0.25));
 
       physState.onGround = false;
 
       if (physState.yW > yFloor) {
-        impactMag = Math.max(impactMag, Math.abs(physState.v));
-        impactSrc = "ground";
+        // Register ground impact once on landing transition only.
+        if (!wasOnGround && vyPreClamp > 0) {
+          impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
+          impactSrc = "ground";
+        }
         physState.yW = yFloor;
         if (physState.v > 0) physState.v = 0;
         physState.onGround = true;
       }
 
       if (physState.yW < yCeil) {
-        impactMag = Math.max(impactMag, Math.abs(physState.v));
-        impactSrc = impactSrc || "ceiling";
+        // Register ceiling hit once on first contact while moving upward.
+        if (!wasAtCeil && vyPreClamp < 0) {
+          impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
+          impactSrc = impactSrc || "ceiling";
+        }
         physState.yW = yCeil;
         if (physState.v < 0) physState.v = -physState.v * PHYS.bounce;
       }
