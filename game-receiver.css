@@ -700,7 +700,7 @@
       padding: 24px 16px;
       z-index: 998; /* below modals (999), above app */
       pointer-events:auto;
-      background: rgba(0,0,0,0.80);
+      background: #000;
     }
     #startScreen.off{ display:none; }
 
@@ -710,13 +710,14 @@
       flex-direction:column;
       align-items:center;
       gap:16px;
+      background: #000;
     }
 
     #startBtn{
       width: 100%;
       height: 92px;
-      border-radius: 18px;
-      border: 1px solid rgba(50,255,117,.28);
+      border-radius: 0;
+      border: 0;
       background: #000;
       color: var(--g);
       font-weight: 1000;
@@ -726,18 +727,14 @@
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      box-shadow:
-        0 0 0 1px rgba(50,255,117,.10) inset,
-        0 0 28px rgba(50,255,117,.10);
+      box-shadow: none;
       text-shadow:
         0 0 16px rgba(50,255,117,.14);
       user-select:none;
       -webkit-tap-highlight-color: transparent;
     }
     #startBtn:hover{
-      box-shadow:
-        0 0 0 1px rgba(50,255,117,.16) inset,
-        0 0 40px rgba(50,255,117,.14);
+      box-shadow: none;
     }
     #startBtn:active{
       transform: translateY(1px);
