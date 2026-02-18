@@ -1582,7 +1582,7 @@
       maxUpSpeed: 2200,
       maxDownSpeed: 2800,
     };
-    const IMPACT_TH = 15;
+    const IMPACT_TH = 25;
     const DEATH_FLOW_DELAY_MS = 3000;
 
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
