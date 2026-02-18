@@ -1591,6 +1591,12 @@
     };
     const IMPACT_TH = 500;
     const DEATH_FLOW_DELAY_MS = 3000;
+    const IMPACT_MODEL = {
+      mass: 1.0,
+      gravityExp: 0.5,
+      dragScale: 0.12,
+      minDragDen: 0.35,
+    };
 
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
     let mvp = null;
@@ -1610,9 +1616,26 @@
       const state = String(orb.visualState || "pristine");
       let txt = `HP: ${hp} | Hits: ${hits} | State: ${state}`;
       if (mvp.lastImpact && Number.isFinite(mvp.lastImpact.impact)) {
-        txt += ` | IMPACT_TH: ${mvp.lastImpact.impact.toFixed(0)} ${mvp.lastImpact.source || ""}`;
+        const rawV = Number(mvp.lastImpact.rawImpact) || 0;
+        const gMul = Number(mvp.lastImpact.gravityMul) || 0;
+        const drag = Number(mvp.lastImpact.fallDrag) || 0;
+        txt += ` | IMPACT:${mvp.lastImpact.impact.toFixed(0)} TH:${IMPACT_TH.toFixed(0)} v:${rawV.toFixed(0)} g:${gMul.toFixed(2)} d:${drag.toFixed(2)} ${mvp.lastImpact.source || ""}`;
       }
       els.dirReadout.textContent = txt;
+    }
+
+    function computeImpactMetric(rawImpactV){
+      const v = Math.max(0, Number(rawImpactV) || 0);
+      const gMul = Math.max(0.05, Number(physState.gravityMul) || 0);
+      const fallDrag = Math.max(0, Number(PHYS.downDrag) || 0);
+
+      // Energy-inspired impact metric:
+      // velocity dominates, while gravity/drag shape the severity envelope.
+      const eLike = 0.5 * IMPACT_MODEL.mass * v * v;
+      const gravityTerm = Math.pow(gMul, IMPACT_MODEL.gravityExp);
+      const dragDen = Math.max(IMPACT_MODEL.minDragDen, 1 + (fallDrag * IMPACT_MODEL.dragScale));
+      const metric = Math.sqrt(eLike * 2) * gravityTerm / dragDen;
+      return metric;
     }
 
     function lineToPath(seg){
@@ -1771,10 +1794,13 @@
           fxSystem,
           audioSystem,
           lastImpact: null,
-          applyImpact(impact, source){
+          applyImpact(impact, source, meta = {}){
             this.lastImpact = {
               impact: Number(impact) || 0,
               source: source || "unknown",
+              rawImpact: Number(meta.rawImpact) || 0,
+              gravityMul: Number(meta.gravityMul) || 0,
+              fallDrag: Number(meta.fallDrag) || 0,
               atMs: performance.now(),
             };
             orbSystem.applyImpact({ impact, source, atMs: performance.now() });
@@ -2049,7 +2075,12 @@
       }
 
       if (mvp && impactMag > 0) {
-        mvp.applyImpact(impactMag, impactSrc || "boundary");
+        const impactMetric = computeImpactMetric(impactMag);
+        mvp.applyImpact(impactMetric, impactSrc || "boundary", {
+          rawImpact: impactMag,
+          gravityMul: physState.gravityMul,
+          fallDrag: PHYS.downDrag,
+        });
       }
 
       drawStars();
