@@ -221,6 +221,25 @@
       els.deathPanel.setAttribute("aria-hidden","true");
     }
 
+    let deathOverlayTO = 0;
+    function scheduleDeathOverlay(){
+      if (deathOverlayTO) {
+        clearTimeout(deathOverlayTO);
+        deathOverlayTO = 0;
+      }
+      closeDeathOverlay();
+      deathOverlayTO = setTimeout(() => {
+        deathOverlayTO = 0;
+        openDeathOverlay();
+      }, DEATH_FLOW_DELAY_MS);
+    }
+
+    function clearDeathOverlaySchedule(){
+      if (!deathOverlayTO) return;
+      clearTimeout(deathOverlayTO);
+      deathOverlayTO = 0;
+    }
+
     // =========================================================================
     // BACKGROUND (driven by receiver energy bank UI)
     // =========================================================================
@@ -1713,12 +1732,11 @@
         eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
         eventBus.on("orb.died", () => {
-          setTimeout(() => {
-            openDeathOverlay();
-          }, DEATH_FLOW_DELAY_MS);
+          scheduleDeathOverlay();
           updateDebugReadout();
         });
         eventBus.on("orb.revived", () => {
+          clearDeathOverlaySchedule();
           closeDeathOverlay();
           renderOrbDamageVisuals();
           updateDebugReadout();
@@ -1750,6 +1768,7 @@
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
         if (els.orbShards) els.orbShards.innerHTML = "";
+        clearDeathOverlaySchedule();
         closeDeathOverlay();
         renderOrbDamageVisuals();
         updateDebugReadout();
@@ -2395,6 +2414,7 @@
     if (els.tryAgainBtn) {
       els.tryAgainBtn.addEventListener("click", () => {
         if (!mvp || !mvp.orbSystem || !mvp.gameState) return;
+        clearDeathOverlaySchedule();
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
         mvpShards = [];
