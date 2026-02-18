@@ -2095,33 +2095,43 @@
       renderInnerGlobes();
     }
 
+    function fxRand01(){
+      try {
+        const a = new Uint32Array(1);
+        crypto.getRandomValues(a);
+        return a[0] / 4294967296;
+      } catch (_) {
+        return Math.random();
+      }
+    }
+
     function releaseInnerGlobesAtDeath(nowMs){
       if (!innerGlobeState.particles.length) return;
       const stage = stageRect();
       const baseX = (stage.width || 0) * 0.5;
       const baseY = orbScreenY();
       for (const p of innerGlobeState.particles){
-        const seedA = Math.random() * Math.PI * 2;
+        const seedA = fxRand01() * Math.PI * 2;
         const nx = Math.cos(seedA);
         const ny = Math.sin(seedA);
         const tx = -ny;
         const ty = nx;
-        const ttlMs = Math.round(1000 + (Math.random() * 2500)); // 1000-3500ms
+        const ttlMs = Math.round(1000 + (fxRand01() * 2500)); // 1000-3500ms
         const item = {
           id: releasedGlobeFx.nextId++,
           bornMs: Number(nowMs) || performance.now(),
           ttlMs,
           growMs: 0,
-          x0: baseX + (Number(p.x) || 0),
-          y0: baseY + (Number(p.y) || 0),
+          x0: baseX + (Number(p.x) || 0) + ((fxRand01() - 0.5) * 10),
+          y0: baseY + (Number(p.y) || 0) + ((fxRand01() - 0.5) * 10),
           nx,
           ny,
           tx,
           ty,
-          speed: 140 + (Math.random() * 320),
-          sinAmp: 10 + (Math.random() * 22),
-          sinFreq: 6 + (Math.random() * 8),
-          phase: Math.random() * Math.PI * 2,
+          speed: 140 + (fxRand01() * 320),
+          sinAmp: 10 + (fxRand01() * 22),
+          sinFreq: 6 + (fxRand01() * 8),
+          phase: fxRand01() * Math.PI * 2,
           r0: Number(p.r) || innerGlobeDiameterPx() * 0.5,
           r1: Number(p.r) || innerGlobeDiameterPx() * 0.5,
           el: null,
