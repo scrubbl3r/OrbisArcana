@@ -49,6 +49,7 @@
       orb: $("orb"),
       orbCracks: $("orbCracks"),
       orbShards: $("orbShards"),
+      testGlobe: $("testGlobe"),
       shield: $("shield"),
 
       /* [VFX] */
@@ -1792,6 +1793,7 @@
           orbInputSuppressed = false;
           clearDeathOverlaySchedule();
           closeDeathOverlay();
+          resetPickups();
           renderOrbDamageVisuals();
           updateDebugReadout();
         });
@@ -1826,6 +1828,7 @@
         mvp.lastImpact = null;
         if (els.orbShards) els.orbShards.innerHTML = "";
         orbInputSuppressed = false;
+        resetPickups();
         clearDeathOverlaySchedule();
         closeDeathOverlay();
         renderOrbDamageVisuals();
@@ -1856,6 +1859,68 @@
       shieldDescentBlocked: false,
     };
 
+    // ===== WORLD PICKUPS (MVP SLICE) BEGIN =====
+    const pickupState = {
+      test: {
+        id: "globe_mid_01",
+        xNorm: 0.5,
+        yW: WORLD_H * 0.5,
+        r: PHYS.orbRadiusPx * 0.5,
+        active: true,
+      }
+    };
+
+    function pickupScreenY(yW){
+      const h = stageRect().height;
+      const camTop = cameraTopFor(physState.yW, h);
+      return yW - camTop;
+    }
+
+    function renderPickups(){
+      const p = pickupState.test;
+      if (!els.testGlobe || !p) return;
+      if (!p.active) {
+        els.testGlobe.style.display = "none";
+        return;
+      }
+      const y = pickupScreenY(p.yW);
+      const top = y - p.r;
+      const d = p.r * 2;
+      els.testGlobe.style.display = "block";
+      els.testGlobe.style.width = `${d.toFixed(2)}px`;
+      els.testGlobe.style.height = `${d.toFixed(2)}px`;
+      els.testGlobe.style.left = `${(p.xNorm * 100).toFixed(2)}%`;
+      els.testGlobe.style.transform = `translate(-50%, ${top.toFixed(2)}px)`;
+    }
+
+    function resetPickups(){
+      pickupState.test.active = true;
+      renderPickups();
+    }
+
+    function collectPickup(p, nowMs){
+      p.active = false;
+      renderPickups();
+      if (mvp && mvp.eventBus && typeof mvp.eventBus.emit === "function") {
+        mvp.eventBus.emit("pickup.collected", {
+          id: p.id,
+          type: "energy_globe",
+          atMs: Number(nowMs) || performance.now(),
+        });
+      }
+    }
+
+    function checkPickupCollisions(nowMs){
+      const p = pickupState.test;
+      if (!p || !p.active) return;
+      const orbY = Number(physState.yW) || 0;
+      const dy = Math.abs(orbY - p.yW);
+      if (dy <= (PHYS.orbRadiusPx + p.r)) {
+        collectPickup(p, nowMs);
+      }
+    }
+    // ===== WORLD PICKUPS (MVP SLICE) END =====
+
     function stageRect(){
       return els.physStage.getBoundingClientRect();
     }
@@ -1883,6 +1948,7 @@
       physState.v = 0;
       physState.onGround = true;
       applyOrbTransform();
+      renderPickups();
     }
 
     function setGravityMul(m){
@@ -2012,12 +2078,14 @@
 
     requestAnimationFrame(() => {
       resetOrbToGround();
+      resetPickups();
       starResize(true);
       drawStars();
     });
 
     window.addEventListener("resize", () => {
       resetOrbToGround();
+      renderPickups();
       starResize(true);
       drawStars();
     });
@@ -2102,6 +2170,8 @@
 
       drawStars();
       applyOrbTransform();
+      renderPickups();
+      checkPickupCollisions(ts);
       updateDebugReadout();
       requestAnimationFrame(physicsStep);
     }
@@ -2554,6 +2624,7 @@
         if (els.orbShards) els.orbShards.innerHTML = "";
         stopShardSim();
         resetOrbToGround();
+        resetPickups();
         closeDeathOverlay();
         renderOrbDamageVisuals();
         updateDebugReadout();

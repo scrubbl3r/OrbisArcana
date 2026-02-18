@@ -485,6 +485,21 @@
       stroke-linecap: round;
       filter: drop-shadow(0 0 3px rgba(50,255,117,0.14));
     }
+    .pickupGlobe{
+      position:absolute;
+      left:50%;
+      top:0;
+      width:50px;
+      height:50px;
+      border-radius:999px;
+      border:2px solid rgba(255,214,64,0.96);
+      background: transparent;
+      transform: translate(-50%, 0);
+      box-sizing: border-box;
+      filter: drop-shadow(0 0 8px rgba(255,214,64,0.28));
+      z-index: 6;
+      pointer-events:none;
+    }
 
     /* Shield (pulse only while ON) */
     .shield{
