@@ -1889,7 +1889,7 @@
       }
     };
     const PICKUP_ATTRACT_START_EDGE_GAP_PX = 120;
-    const PICKUP_CONSUME_EDGE_GAP_PX = 15;
+    const PICKUP_CONSUME_EDGE_GAP_PX = 30;
 
     function pickupScreenY(yW){
       const h = stageRect().height;
