@@ -525,15 +525,19 @@
       ensureAudio();
       try { await audioCtx.resume(); } catch(_) {}
       audioEnabled = true;
-      els.audioBtn.textContent = "Audio: On";
-      els.audioBtn.classList.add("on");
-      els.audioBtn.classList.remove("dim");
+      if (els.audioBtn){
+        els.audioBtn.textContent = "Audio: On";
+        els.audioBtn.classList.add("on");
+        els.audioBtn.classList.remove("dim");
+      }
     }
 
     function disableAudio() {
       audioEnabled = false;
-      els.audioBtn.textContent = "Audio: Off";
-      els.audioBtn.classList.remove("on");
+      if (els.audioBtn){
+        els.audioBtn.textContent = "Audio: Off";
+        els.audioBtn.classList.remove("on");
+      }
       if (audioCtx && gainNode) {
         const now = audioCtx.currentTime;
         gainNode.gain.cancelScheduledValues(now);
@@ -562,10 +566,12 @@
     }
 
     disableAudio();
-    els.audioBtn.addEventListener("click", async () => {
-      if (!audioEnabled) await enableAudio();
-      else disableAudio();
-    });
+    if (els.audioBtn){
+      els.audioBtn.addEventListener("click", async () => {
+        if (!audioEnabled) await enableAudio();
+        else disableAudio();
+      });
+    }
 
     
     // =========================================================================
@@ -907,11 +913,11 @@
       els.pairModal.setAttribute("aria-hidden","true");
     }
 
-    els.pairBtn.addEventListener("click", async () => {
-      if (els.lanPartyBtn) {
-        els.lanPartyBtn.click();
-      }
-    });
+    if (els.pairBtn) {
+      els.pairBtn.addEventListener("click", async () => {
+        await launchLanPairingFlow();
+      });
+    }
 
     els.pairBackdrop.addEventListener("click", closePairModal);
     els.pairClose.addEventListener("click", closePairModal);
@@ -1276,20 +1282,22 @@
       setStatus(`LAN host ready <span class="dim">(orb:${lanParty.roomId})</span>`, "ok");
     }
 
+    async function launchLanPairingFlow(){
+      if (lanParty.active) {
+        openLanModal();
+        return;
+      }
+      try {
+        await startLanHostFlow();
+      } catch (e) {
+        console.error("LAN PARTY host error:", e);
+        setLanConnState("Failed");
+        setLanSafeState("NOT LAN SAFE ⚠️ (blocked)");
+      }
+    }
+
     if (els.lanPartyBtn) {
-      els.lanPartyBtn.addEventListener("click", async () => {
-        if (lanParty.active) {
-          openLanModal();
-          return;
-        }
-        try {
-          await startLanHostFlow();
-        } catch (e) {
-          console.error("LAN PARTY host error:", e);
-          setLanConnState("Failed");
-          setLanSafeState("NOT LAN SAFE ⚠️ (blocked)");
-        }
-      });
+      els.lanPartyBtn.addEventListener("click", launchLanPairingFlow);
     }
     if (els.lanBackdrop) els.lanBackdrop.addEventListener("click", closeLanModal);
     if (els.lanClose) els.lanClose.addEventListener("click", closeLanModal);
@@ -2141,15 +2149,17 @@
     }
 
     // DEV button forces room=test always + launches QR
-    els.newRoom.addEventListener("click", async () => {
-      currentRoomChannel = "orb:test";
-      resetShakeDetector();
-      resetStability();
-      resetVariability();
-      resetEnergyBank();
-      await connect({ auto:false });
-      openPairModal();
-    });
+    if (els.newRoom) {
+      els.newRoom.addEventListener("click", async () => {
+        currentRoomChannel = "orb:test";
+        resetShakeDetector();
+        resetStability();
+        resetVariability();
+        resetEnergyBank();
+        await connect({ auto:false });
+        openPairModal();
+      });
+    }
 
     els.startBtn.addEventListener("click", async () => {
       // This click is a user gesture → allowed to start AudioContext
@@ -2157,7 +2167,7 @@
 
       // Hide immediately (visual intent), then default to LAN PARTY mode.
       els.startScreen.classList.add("off");
-      els.pairBtn.click();
+      await launchLanPairingFlow();
     });
 
     (async function init(){
