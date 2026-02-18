@@ -1627,7 +1627,7 @@
     function computeImpactMetric(rawImpactV){
       const v = Math.max(0, Number(rawImpactV) || 0);
       const gMul = Math.max(0.05, Number(physState.gravityMul) || 0);
-      const fallDrag = Math.max(0, Number(PHYS.downDrag) || 0);
+      const fallDrag = clamp(Number(PHYS.downDrag) || 0, -1, 1);
 
       // Energy-inspired impact metric:
       // velocity dominates, while gravity/drag shape the severity envelope.
@@ -1879,7 +1879,7 @@
     els.gSlider.addEventListener("input", (e) => setGravityMul(e.target.value));
 
     function setDownDrag(v){
-      PHYS.downDrag = clamp(Number(v) || 0, 0, 10);
+      PHYS.downDrag = clamp(Number(v) || 0, -1, 1);
       els.dVal.textContent = PHYS.downDrag.toFixed(2);
     }
     setDownDrag(els.dSlider.value);
