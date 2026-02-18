@@ -1863,8 +1863,9 @@
     const pickupState = {
       test: {
         id: "globe_mid_01",
-        xNorm: 0.5,
-        yW: 1000,
+        xNorm: 0.5,          // centered horizontally in game window
+        yPx: 1000,           // requested screen-space Y anchor for test globe
+        screenSpace: true,   // test placement mode (not world-camera tracked)
         r: 25,
         active: true,
       }
@@ -1883,14 +1884,20 @@
         els.testGlobe.style.display = "none";
         return;
       }
-      const y = pickupScreenY(p.yW);
+      const stage = stageRect();
+      const stageH = Number(stage.height) || 0;
+      const y = p.screenSpace
+        ? clamp(Number(p.yPx) || 0, p.r, Math.max(p.r, stageH - p.r))
+        : pickupScreenY(p.yW);
       const top = y - p.r;
       const d = p.r * 2;
       els.testGlobe.style.display = "block";
       els.testGlobe.style.width = `${d.toFixed(2)}px`;
       els.testGlobe.style.height = `${d.toFixed(2)}px`;
-      els.testGlobe.style.left = `${(p.xNorm * 100).toFixed(2)}%`;
-      els.testGlobe.style.transform = `translate(-50%, ${top.toFixed(2)}px)`;
+      const left = ((Number(p.xNorm) || 0.5) * (stage.width || 0)) - p.r;
+      els.testGlobe.style.left = `${left.toFixed(2)}px`;
+      els.testGlobe.style.top = `${top.toFixed(2)}px`;
+      els.testGlobe.style.transform = "none";
     }
 
     function resetPickups(){
@@ -1913,9 +1920,15 @@
     function checkPickupCollisions(nowMs){
       const p = pickupState.test;
       if (!p || !p.active) return;
-      const orbY = Number(physState.yW) || 0;
-      const dy = Math.abs(orbY - p.yW);
-      if (dy <= (PHYS.orbRadiusPx + p.r)) {
+      const orbCenterX = (stageRect().width || 0) * 0.5;
+      const orbCenterY = orbScreenY();
+      const globeX = ((Number(p.xNorm) || 0.5) * (stageRect().width || 0));
+      const globeY = p.screenSpace
+        ? clamp(Number(p.yPx) || 0, p.r, Math.max(p.r, (stageRect().height || 0) - p.r))
+        : pickupScreenY(p.yW);
+      const dx = orbCenterX - globeX;
+      const dy = orbCenterY - globeY;
+      if ((dx * dx + dy * dy) <= Math.pow(PHYS.orbRadiusPx + p.r, 2)) {
         collectPickup(p, nowMs);
       }
     }
