@@ -1941,8 +1941,6 @@
     }
 
     function checkPickupCollisions(nowMs){
-      // Debug mode: disable collection to verify pickup render/placement first.
-      return;
       const p = pickupState.test;
       if (!p || !p.active) return;
       const orbCenterX = (stageRect().width || 0) * 0.5;
@@ -1951,8 +1949,9 @@
       const globeY = pickupScreenY(p.yW);
       const dx = orbCenterX - globeX;
       const dy = orbCenterY - globeY;
-      const collectDistPx = 80;
-      if ((dx * dx + dy * dy) <= (collectDistPx * collectDistPx)) {
+      const centerDist = Math.hypot(dx, dy);
+      const edgeGapPx = centerDist - (PHYS.orbRadiusPx + p.r);
+      if (edgeGapPx <= 5) {
         collectPickup(p, nowMs);
       }
     }
