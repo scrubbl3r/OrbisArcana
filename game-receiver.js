@@ -148,6 +148,18 @@
     function nonce8(){ return toHex(randomTokenBytes(8)); }
     // ===== LAN PARTY (P2P) END =====
 
+    function syncStartQrSizeToTitlePx(){
+      if (!els.startBtn || !els.startQr) return 0;
+      const titleEl = els.startBtn.querySelector("span");
+      if (!titleEl) return 0;
+      const titleWidthPx = Math.round(titleEl.getBoundingClientRect().width || 0);
+      if (!(titleWidthPx > 0)) return 0;
+      els.startQr.style.width = `${titleWidthPx}px`;
+      els.startQr.style.height = `${titleWidthPx}px`;
+      els.startQr.dataset.titleWidthPx = String(titleWidthPx);
+      return titleWidthPx;
+    }
+
     function normalizeRoom(input){
       let r = String(input || "").trim();
       if (!r) r = "orb:test";
@@ -1096,9 +1108,10 @@
     }
 
     async function renderLanQr(url){
+      const startSize = syncStartQrSizeToTitlePx() || 280;
       await Promise.all([
         renderQrInto(els.lanQr, url, 280),
-        renderQrInto(els.startQr, url, 500),
+        renderQrInto(els.startQr, url, startSize),
       ]);
     }
 
@@ -2546,5 +2559,10 @@
     (async function init(){
       initMvpSystems();
       connect({ auto:true });
+      syncStartQrSizeToTitlePx();
       launchLanPairingFlow();
     })();
+
+    window.addEventListener("resize", () => {
+      syncStartQrSizeToTitlePx();
+    });

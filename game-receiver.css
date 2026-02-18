@@ -748,9 +748,8 @@
     }
 
     .startQrBox{
-      width: 100%;
+      width: auto;
       height: auto;
-      aspect-ratio: 1 / 1;
       border-radius: 18px;
       border: 1px solid rgba(50,255,117,.22);
       box-shadow:
