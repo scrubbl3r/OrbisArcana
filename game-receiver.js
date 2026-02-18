@@ -47,6 +47,7 @@
 
       orbWrap: $("orbWrap"),
       orb: $("orb"),
+      orbInterior: $("orbInterior"),
       orbCracks: $("orbCracks"),
       orbShards: $("orbShards"),
       testGlobe: $("testGlobe"),
@@ -1795,6 +1796,7 @@
         eventBus.on("orb.died", () => {
           orbInputSuppressed = true;
           clearOrbRuntimeFxForDeath();
+          clearInnerGlobes();
           scheduleDeathOverlay();
           updateDebugReadout();
         });
@@ -1802,9 +1804,13 @@
           orbInputSuppressed = false;
           clearDeathOverlaySchedule();
           closeDeathOverlay();
+          clearInnerGlobes();
           resetPickups();
           renderOrbDamageVisuals();
           updateDebugReadout();
+        });
+        eventBus.on("pickup.collected", () => {
+          spawnInnerGlobe();
         });
         eventBus.on("orb.shatter_complete", () => {
           mvpShards = [];
@@ -1837,6 +1843,7 @@
         mvp.lastImpact = null;
         if (els.orbShards) els.orbShards.innerHTML = "";
         orbInputSuppressed = false;
+        clearInnerGlobes();
         resetPickups();
         clearDeathOverlaySchedule();
         closeDeathOverlay();
@@ -1956,6 +1963,78 @@
       }
     }
     // ===== WORLD PICKUPS (MVP SLICE) END =====
+
+    // ===== ORB INTERIOR GLOBES (MVP SLICE) BEGIN =====
+    const innerGlobeState = {
+      particles: [],
+      nextId: 1,
+    };
+
+    function innerGlobeDiameterPx(){
+      return PHYS.orbRadiusPx * 0.2; // 10% of orb diameter
+    }
+
+    function clearInnerGlobes(){
+      innerGlobeState.particles = [];
+      if (els.orbInterior) els.orbInterior.innerHTML = "";
+    }
+
+    function renderInnerGlobes(){
+      if (!els.orbInterior) return;
+      for (const p of innerGlobeState.particles){
+        if (!p.el) {
+          const el = document.createElement("div");
+          el.className = "innerGlobe";
+          p.el = el;
+          els.orbInterior.appendChild(el);
+        }
+        const d = p.r * 2;
+        p.el.style.width = `${d.toFixed(2)}px`;
+        p.el.style.height = `${d.toFixed(2)}px`;
+        p.el.style.left = `${(PHYS.orbRadiusPx + p.x - p.r).toFixed(2)}px`;
+        p.el.style.top = `${(PHYS.orbRadiusPx + p.y - p.r).toFixed(2)}px`;
+      }
+    }
+
+    function spawnInnerGlobe(){
+      const r = innerGlobeDiameterPx() * 0.5;
+      const speed = 120 + (Math.random() * 90);
+      const a = Math.random() * Math.PI * 2;
+      innerGlobeState.particles.push({
+        id: innerGlobeState.nextId++,
+        x: (Math.random() - 0.5) * 8,
+        y: (Math.random() - 0.5) * 8,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed,
+        r,
+        el: null,
+      });
+      renderInnerGlobes();
+    }
+
+    function tickInnerGlobes(dt){
+      if (!innerGlobeState.particles.length) return;
+      const maxDistBase = PHYS.orbRadiusPx;
+      for (const p of innerGlobeState.particles){
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        const dist = Math.hypot(p.x, p.y);
+        const maxDist = maxDistBase - p.r;
+        if (dist > maxDist && maxDist > 0) {
+          const nx = p.x / (dist || 1);
+          const ny = p.y / (dist || 1);
+          p.x = nx * maxDist;
+          p.y = ny * maxDist;
+          const vn = (p.vx * nx) + (p.vy * ny);
+          if (vn > 0) {
+            p.vx = p.vx - (2 * vn * nx);
+            p.vy = p.vy - (2 * vn * ny);
+          }
+        }
+      }
+      renderInnerGlobes();
+    }
+    // ===== ORB INTERIOR GLOBES (MVP SLICE) END =====
 
     function stageRect(){
       return els.physStage.getBoundingClientRect();
@@ -2206,6 +2285,7 @@
 
       drawStars();
       applyOrbTransform();
+      tickInnerGlobes(dt);
       renderPickups();
       checkPickupCollisions(ts);
       updateDebugReadout();
