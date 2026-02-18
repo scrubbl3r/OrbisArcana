@@ -1864,7 +1864,7 @@
       test: {
         id: "globe_mid_01",
         xNorm: 0.5,          // centered horizontally in game window
-        yPx: 1000,           // requested screen-space Y anchor for test globe
+        yPx: 500,            // requested screen-space Y anchor for test globe
         screenSpace: true,   // test placement mode (not world-camera tracked)
         r: 25,
         active: true,
