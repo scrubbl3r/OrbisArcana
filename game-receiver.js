@@ -1746,10 +1746,13 @@
         eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
         eventBus.on("orb.died", () => {
+          orbInputSuppressed = true;
+          clearOrbRuntimeFxForDeath();
           scheduleDeathOverlay();
           updateDebugReadout();
         });
         eventBus.on("orb.revived", () => {
+          orbInputSuppressed = false;
           clearDeathOverlaySchedule();
           closeDeathOverlay();
           renderOrbDamageVisuals();
@@ -1782,6 +1785,7 @@
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
         if (els.orbShards) els.orbShards.innerHTML = "";
+        orbInputSuppressed = false;
         clearDeathOverlaySchedule();
         closeDeathOverlay();
         renderOrbDamageVisuals();
@@ -2118,6 +2122,62 @@
 
     let lastData = null;
     let rafPending = false;
+    let orbInputSuppressed = false;
+
+    function zeroAudioNow(){
+      if (!audioCtx || !gainNode || !osc) return;
+      const now = audioCtx.currentTime;
+      gainNode.gain.cancelScheduledValues(now);
+      gainNode.gain.setValueAtTime(0, now);
+      osc.frequency.cancelScheduledValues(now);
+      osc.frequency.setValueAtTime(TONE_BASE_HZ, now);
+    }
+
+    function clearOrbRuntimeFxForDeath(){
+      // Stop all residual orb/VFX/audio state so death is a clean reset.
+      lastData = null;
+      rafPending = false;
+
+      forceShakeLampOff();
+      clearDirLampTimers();
+      allDirLampOff();
+
+      clearShock();
+      shieldOffNow();
+      shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
+      setShieldColor01(shieldColor01);
+
+      resetShakeDetector();
+      resetStability();
+      resetVariability();
+      resetEnergyBank();
+      pendingSd = null;
+      pendingSdAt = 0;
+
+      physState.lift01 = 0;
+      physState.energy01 = 0;
+      physState.dynamics01 = 0;
+
+      setBgFromEnergy(0);
+      setBar(els.bLift, 0);
+      setBar(els.bGroove, 0);
+      setBar(els.bSmooth, 0);
+      setBar(els.bSpeed, 0);
+      setBar(els.bDynamics, 0);
+      setBar(els.bEnergy, 0);
+      setBar(els.bShake, 0);
+      els.vLift.textContent = "0%";
+      els.vGroove.textContent = "0%";
+      els.vSmooth.textContent = "0%";
+      els.vSpeed.textContent = "0%";
+      els.vDynamics.textContent = "0%";
+      els.vEnergy.textContent = "0";
+      els.vShake.textContent = "0.00";
+      els.vEnergy.classList.remove("over");
+      els.bEnergy.classList.remove("over");
+
+      zeroAudioNow();
+    }
 
     function scheduleUIUpdate(data){
       lastData = data;
@@ -2140,6 +2200,7 @@
         calibAvailable = true;
         setCalibStatus("Ready");
       }
+      if (orbInputSuppressed) return;
       teleMaybeLog(data);
       scheduleUIUpdate(data);
     }
