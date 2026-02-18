@@ -757,7 +757,7 @@
     }
 
     // =========================================================================
-    // STABILITY + VARIABILITY — no cooldown
+    // STABILITY + VARIABILITY — no cooldown 
     // =========================================================================
     const STABILITY_AVG_MS   = 250;
     const STABILITY_ARM_MS   = 220;
