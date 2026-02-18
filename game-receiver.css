@@ -463,30 +463,27 @@
     }
     .orbCracks path{
       fill: none;
-      stroke: rgba(180, 245, 255, 0.9);
-      stroke-width: 2.2;
+      stroke: var(--g);
+      stroke-width: 1.6;
       stroke-linecap: round;
       stroke-linejoin: round;
-      filter: drop-shadow(0 0 3px rgba(180,245,255,0.22));
+      filter: drop-shadow(0 0 3px rgba(50,255,117,0.18));
     }
     .orbShards{
-      width: 1px;
-      height: 1px;
+      width: 160px;
+      height: 160px;
       overflow: visible;
       pointer-events: none;
       z-index: 7;
     }
     .orbShard{
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 10px;
-      height: 6px;
-      border-radius: 2px;
-      border: 1px solid rgba(50,255,117,0.55);
-      background: rgba(var(--bg-r), var(--bg-g), var(--bg-b), 0.55);
-      transform-origin: 50% 50%;
-      box-shadow: 0 0 8px rgba(50,255,117,0.14);
+      fill: none;
+      stroke: rgba(50,255,117,0.95);
+      stroke-width: 1.2;
+      vector-effect: non-scaling-stroke;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 3px rgba(50,255,117,0.14));
     }
 
     /* Shield (pulse only while ON) */

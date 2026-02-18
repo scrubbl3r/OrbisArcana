@@ -1549,7 +1549,7 @@
       maxUpSpeed: 2200,
       maxDownSpeed: 2800,
     };
-    const IMPACT_TH = 700;
+    const IMPACT_TH = 10;
 
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
     let mvp = null;
@@ -1636,19 +1636,39 @@
         s.x += s.vx * dt;
         s.y += s.vy * dt;
         s.a += s.av * dt;
-        s.el.style.transform = `translate(${s.x.toFixed(2)}px, ${s.y.toFixed(2)}px) rotate(${s.a.toFixed(3)}rad)`;
+        const deg = (s.a * 180 / Math.PI);
+        s.el.setAttribute("transform", `translate(${s.x.toFixed(2)} ${s.y.toFixed(2)}) rotate(${deg.toFixed(2)} ${s.cx.toFixed(2)} ${s.cy.toFixed(2)})`);
       }
       mvpShardRaf = requestAnimationFrame(shardSimTick);
     }
 
+    function pointsToPath(points){
+      if (!Array.isArray(points) || points.length < 3) return "";
+      const first = points[0];
+      let d = `M ${Number(first.x).toFixed(2)} ${Number(first.y).toFixed(2)} `;
+      for (let i = 1; i < points.length; i++) {
+        const p = points[i];
+        d += `L ${Number(p.x).toFixed(2)} ${Number(p.y).toFixed(2)} `;
+      }
+      d += "Z";
+      return d;
+    }
+
     function spawnShardFx(p){
       if (!els.orbShards) return;
-      const el = document.createElement("div");
+      const d = pointsToPath(p.points);
+      if (!d) return;
+      const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
       el.className = "orbShard";
+      el.setAttribute("d", d);
+      el.setAttribute("transform", "translate(0 0)");
       els.orbShards.appendChild(el);
+      const center = p.center || { x: 0, y: 0 };
       const s = {
         id: p.pieceId,
         el,
+        cx: Number(center.x) || 0,
+        cy: Number(center.y) || 0,
         x: 0,
         y: 0,
         vx: Number(p.vx) || 0,
