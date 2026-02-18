@@ -1549,13 +1549,30 @@
       maxUpSpeed: 2200,
       maxDownSpeed: 2800,
     };
-    const COLLISION_TH = 700;
+    const IMPACT_TH = 700;
 
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
     let mvp = null;
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
+
+    function updateDebugReadout(){
+      if (!els.dirReadout) return;
+      if (!mvp || !mvp.gameState || !mvp.gameState.orb) {
+        els.dirReadout.textContent = "HP: — | Hits: — | State: —";
+        return;
+      }
+      const orb = mvp.gameState.orb;
+      const hp = `${Math.round(Number(orb.health) || 0)}/${Math.round(Number(orb.maxHealth) || 0)}`;
+      const hits = Math.round(Number(orb.hitsTaken) || 0);
+      const state = String(orb.visualState || "pristine");
+      let txt = `HP: ${hp} | Hits: ${hits} | State: ${state}`;
+      if (mvp.lastImpact && Number.isFinite(mvp.lastImpact.impact)) {
+        txt += ` | IMPACT_TH: ${mvp.lastImpact.impact.toFixed(0)} ${mvp.lastImpact.source || ""}`;
+      }
+      els.dirReadout.textContent = txt;
+    }
 
     function polarToXY(rNorm, theta){
       const r = clamp(Number(rNorm) || 0, 0, 1) * 50;
@@ -1665,7 +1682,7 @@
             maxHealth: 300,
             health: 300,
             collisionDamage: 100,
-            collisionThreshold: COLLISION_TH,
+            collisionThreshold: IMPACT_TH,
             collisionCooldownMs: 250,
           }
         });
@@ -1689,12 +1706,20 @@
           orbSystem,
           fxSystem,
           audioSystem,
+          lastImpact: null,
           applyImpact(impact, source){
+            this.lastImpact = {
+              impact: Number(impact) || 0,
+              source: source || "unknown",
+              atMs: performance.now(),
+            };
             orbSystem.applyImpact({ impact, source, atMs: performance.now() });
             renderOrbDamageVisuals();
+            updateDebugReadout();
           },
         };
         renderOrbDamageVisuals();
+        updateDebugReadout();
       } catch (e) {
         console.warn("MVP systems init failed:", e);
       }
@@ -1950,6 +1975,7 @@
 
       drawStars();
       applyOrbTransform();
+      updateDebugReadout();
       requestAnimationFrame(physicsStep);
     }
     requestAnimationFrame(physicsStep);
@@ -2173,17 +2199,8 @@
       els.vEnergy.classList.toggle("over", over);
       els.bEnergy.classList.toggle("over", over);
 
-      // --- Direction readout (optional; does nothing if phone isn't sending it yet)
-      const dirV = pickDirVec(d);
-      if (els.dirReadout){
-        if (dirV){
-          const a = dirToYawTiltDeg(dirV);
-          const yaw = ((a.yaw % 360) + 360) % 360; // 0..360
-          els.dirReadout.textContent = `${yaw.toFixed(0)}° yaw  |  ${a.tilt.toFixed(0)}° tilt`;
-        } else {
-          els.dirReadout.textContent = "—";
-        }
-      }
+      // Repurposed row: Orb debug readout.
+      updateDebugReadout();
 
       // sd is only sent by the phone on shakeHit
       if (d && typeof d.sd === "string" && d.sd.trim()) {
