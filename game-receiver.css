@@ -493,7 +493,7 @@
       height:50px;
       border-radius:999px;
       border:2px solid rgba(255,214,64,0.96);
-      background: transparent;
+      background: rgba(255,214,64,0.42);
       transform: translate(-50%, 0);
       box-sizing: border-box;
       filter: drop-shadow(0 0 8px rgba(255,214,64,0.28));

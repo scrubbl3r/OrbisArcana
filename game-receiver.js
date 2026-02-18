@@ -1864,8 +1864,8 @@
       test: {
         id: "globe_mid_01",
         xNorm: 0.5,
-        yW: WORLD_H * 0.5,
-        r: PHYS.orbRadiusPx * 0.5,
+        yW: 1000,
+        r: 25,
         active: true,
       }
     };
