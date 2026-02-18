@@ -1878,11 +1878,24 @@
       return yW - camTop;
     }
 
+    function ensureTestGlobeEl(){
+      if (els.testGlobe) return els.testGlobe;
+      if (!els.physStage) return null;
+      const el = document.createElement("div");
+      el.id = "testGlobe";
+      el.className = "pickupGlobe";
+      el.setAttribute("aria-label", "Energy globe");
+      els.physStage.appendChild(el);
+      els.testGlobe = el;
+      return el;
+    }
+
     function renderPickups(){
       const p = pickupState.test;
-      if (!els.testGlobe || !p) return;
+      const globeEl = ensureTestGlobeEl();
+      if (!globeEl || !p) return;
       if (!p.active) {
-        els.testGlobe.style.display = "none";
+        globeEl.style.display = "none";
         return;
       }
       const stage = stageRect();
@@ -1892,13 +1905,16 @@
         : pickupScreenY(p.yW);
       const top = y - p.r;
       const d = p.r * 2;
-      els.testGlobe.style.display = "block";
-      els.testGlobe.style.width = `${d.toFixed(2)}px`;
-      els.testGlobe.style.height = `${d.toFixed(2)}px`;
+      globeEl.style.display = "block";
+      globeEl.style.width = `${d.toFixed(2)}px`;
+      globeEl.style.height = `${d.toFixed(2)}px`;
       const left = ((Number(p.xNorm) || 0.5) * (stage.width || 0)) - p.r;
-      els.testGlobe.style.left = `${left.toFixed(2)}px`;
-      els.testGlobe.style.top = `${top.toFixed(2)}px`;
-      els.testGlobe.style.transform = "none";
+      globeEl.style.left = `${left.toFixed(2)}px`;
+      globeEl.style.top = `${top.toFixed(2)}px`;
+      globeEl.style.transform = "none";
+      // Force visibility above stage layers while debugging placement.
+      globeEl.style.zIndex = "40";
+      globeEl.style.opacity = "1";
     }
 
     function resetPickups(){
