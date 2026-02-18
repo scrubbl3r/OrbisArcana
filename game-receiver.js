@@ -1795,8 +1795,8 @@
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
         eventBus.on("orb.died", () => {
           orbInputSuppressed = true;
+          releaseInnerGlobesAtDeath(performance.now());
           clearOrbRuntimeFxForDeath();
-          clearInnerGlobes();
           scheduleDeathOverlay();
           updateDebugReadout();
         });
@@ -1805,6 +1805,7 @@
           clearDeathOverlaySchedule();
           closeDeathOverlay();
           clearInnerGlobes();
+          clearReleasedGlobes();
           resetPickups();
           renderOrbDamageVisuals();
           updateDebugReadout();
@@ -1844,6 +1845,7 @@
         if (els.orbShards) els.orbShards.innerHTML = "";
         orbInputSuppressed = false;
         clearInnerGlobes();
+        clearReleasedGlobes();
         resetPickups();
         clearDeathOverlaySchedule();
         closeDeathOverlay();
@@ -2000,6 +2002,10 @@
       particles: [],
       nextId: 1,
     };
+    const releasedGlobeFx = {
+      particles: [],
+      nextId: 1,
+    };
 
     function innerGlobeDiameterPx(){
       return PHYS.orbRadiusPx * 0.2; // 10% of orb diameter
@@ -2008,6 +2014,13 @@
     function clearInnerGlobes(){
       innerGlobeState.particles = [];
       if (els.orbInterior) els.orbInterior.innerHTML = "";
+    }
+
+    function clearReleasedGlobes(){
+      for (const p of releasedGlobeFx.particles){
+        try { if (p.el) p.el.remove(); } catch (_) {}
+      }
+      releasedGlobeFx.particles = [];
     }
 
     function renderInnerGlobes(){
@@ -2080,6 +2093,77 @@
         }
       }
       renderInnerGlobes();
+    }
+
+    function releaseInnerGlobesAtDeath(nowMs){
+      if (!innerGlobeState.particles.length) return;
+      const stage = stageRect();
+      const baseX = (stage.width || 0) * 0.5;
+      const baseY = orbScreenY();
+      for (const p of innerGlobeState.particles){
+        const seedA = Math.random() * Math.PI * 2;
+        const nx = Math.cos(seedA);
+        const ny = Math.sin(seedA);
+        const tx = -ny;
+        const ty = nx;
+        const ttlMs = Math.round(1000 + (Math.random() * 2500)); // 1000-3500ms
+        const item = {
+          id: releasedGlobeFx.nextId++,
+          bornMs: Number(nowMs) || performance.now(),
+          ttlMs,
+          growMs: 1000,
+          x0: baseX + (Number(p.x) || 0),
+          y0: baseY + (Number(p.y) || 0),
+          nx,
+          ny,
+          tx,
+          ty,
+          speed: 70 + (Math.random() * 160),
+          sinAmp: 10 + (Math.random() * 22),
+          sinFreq: 6 + (Math.random() * 8),
+          phase: Math.random() * Math.PI * 2,
+          r0: Number(p.r) || innerGlobeDiameterPx() * 0.5,
+          r1: PHYS.orbRadiusPx * 0.5,
+          el: null,
+        };
+        releasedGlobeFx.particles.push(item);
+      }
+      clearInnerGlobes();
+    }
+
+    function tickReleasedGlobes(nowMs){
+      if (!releasedGlobeFx.particles.length || !els.physStage) return;
+      const now = Number(nowMs) || performance.now();
+      for (let i = releasedGlobeFx.particles.length - 1; i >= 0; i--) {
+        const p = releasedGlobeFx.particles[i];
+        if (!p.el) {
+          const el = document.createElement("div");
+          el.className = "releasedGlobe";
+          p.el = el;
+          els.physStage.appendChild(el);
+        }
+        const ageMs = now - p.bornMs;
+        const ageS = Math.max(0, ageMs / 1000);
+        const life01 = clamp01(ageMs / Math.max(1, p.ttlMs));
+        const grow01 = clamp01(ageMs / Math.max(1, p.growMs));
+        const r = p.r0 + ((p.r1 - p.r0) * grow01);
+        const baseDist = p.speed * ageS;
+        const sinOffset = Math.sin((ageS * p.sinFreq) + p.phase) * p.sinAmp;
+        const x = p.x0 + (p.nx * baseDist) + (p.tx * sinOffset);
+        const y = p.y0 + (p.ny * baseDist) + (p.ty * sinOffset);
+        const fadeStart = 0.55;
+        const fade01 = life01 <= fadeStart ? 1 : (1 - ((life01 - fadeStart) / (1 - fadeStart)));
+        p.el.style.width = `${(r * 2).toFixed(2)}px`;
+        p.el.style.height = `${(r * 2).toFixed(2)}px`;
+        p.el.style.left = `${(x - r).toFixed(2)}px`;
+        p.el.style.top = `${(y - r).toFixed(2)}px`;
+        p.el.style.opacity = clamp01(fade01).toFixed(3);
+
+        if (ageMs >= p.ttlMs) {
+          try { p.el.remove(); } catch (_) {}
+          releasedGlobeFx.particles.splice(i, 1);
+        }
+      }
     }
     // ===== ORB INTERIOR GLOBES (MVP SLICE) END =====
 
@@ -2333,6 +2417,7 @@
       drawStars();
       applyOrbTransform();
       tickInnerGlobes(dt);
+      tickReleasedGlobes(ts);
       renderPickups();
       checkPickupCollisions(ts);
       updateDebugReadout();
@@ -2788,6 +2873,7 @@
         stopShardSim();
         resetOrbToGround();
         resetPickups();
+        clearReleasedGlobes();
         closeDeathOverlay();
         renderOrbDamageVisuals();
         updateDebugReadout();
