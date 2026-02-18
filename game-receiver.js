@@ -76,7 +76,7 @@
       calibOverlay: $("calibOverlay"),
       calibBtn: $("calibBtn"),
       calibStatus: $("calibStatus"),
-      deathOverlay: $("deathOverlay"),
+      deathPanel: $("deathPanel"),
       tryAgainBtn: $("tryAgainBtn"),
 
       // ===== LAN PARTY (P2P) BEGIN =====
@@ -210,15 +210,15 @@
     }
 
     function openDeathOverlay(){
-      if (!els.deathOverlay) return;
-      els.deathOverlay.classList.remove("off");
-      els.deathOverlay.setAttribute("aria-hidden","false");
+      if (!els.deathPanel) return;
+      els.deathPanel.classList.remove("off");
+      els.deathPanel.setAttribute("aria-hidden","false");
     }
 
     function closeDeathOverlay(){
-      if (!els.deathOverlay) return;
-      els.deathOverlay.classList.add("off");
-      els.deathOverlay.setAttribute("aria-hidden","true");
+      if (!els.deathPanel) return;
+      els.deathPanel.classList.add("off");
+      els.deathPanel.setAttribute("aria-hidden","true");
     }
 
     // =========================================================================

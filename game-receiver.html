@@ -142,6 +142,13 @@
               <svg id="orbShards" class="orbShards atOrigin" viewBox="-80 -80 160 160" aria-hidden="true"></svg>
             </div>
           </div>
+
+          <div id="deathPanel" class="deathPanel off" aria-hidden="true">
+            <div class="deathCard" role="dialog" aria-label="You died">
+              <div class="deathTitle">YOU DIED</div>
+              <button id="tryAgainBtn" class="calibBtn" type="button">TRY AGAIN</button>
+            </div>
+          </div>
         </div>
 
         <div class="physControls">
@@ -170,13 +177,6 @@
       <div class="calibText">Align top edge of phone to bottom edge of laptop and press calibrate button.</div>
       <button id="calibBtn" class="calibBtn" type="button" disabled>CALIBRATE PHONE</button>
       <div id="calibStatus" class="calibStatus">Waiting for phone…</div>
-    </div>
-  </div>
-
-  <div id="deathOverlay" class="calibOverlay off" aria-hidden="true">
-    <div class="calibCard" role="dialog" aria-label="You died">
-      <div class="calibTitle">YOU DIED</div>
-      <button id="tryAgainBtn" class="calibBtn" type="button">TRY AGAIN</button>
     </div>
   </div>
 
