@@ -1,21 +1,29 @@
-// Orb state model scaffold.
-// No health/damage behavior implemented yet by design.
-
 export function createOrbState(config = {}) {
+  const maxHealth = Number.isFinite(config.maxHealth) ? Math.max(1, Math.floor(config.maxHealth)) : 300;
+  const health = Number.isFinite(config.health) ? Math.max(0, Math.min(maxHealth, Math.floor(config.health))) : maxHealth;
+  const alive = config.alive == null ? (health > 0) : !!config.alive;
+
   return {
-    // Core identity
     id: config.id || 'orb-1',
 
-    // Planned combat/lifecycle fields (inactive until behavior pass)
-    maxHealth: config.maxHealth ?? 100,
-    health: config.health ?? 100,
-    alive: config.alive ?? true,
+    maxHealth,
+    health,
+    alive,
+
+    // Core collision/damage tuning for v1.
+    collisionThreshold: Number.isFinite(config.collisionThreshold) ? Number(config.collisionThreshold) : 1.0,
+    collisionDamage: Number.isFinite(config.collisionDamage) ? Math.max(1, Math.floor(config.collisionDamage)) : 100,
+    collisionCooldownMs: Number.isFinite(config.collisionCooldownMs) ? Math.max(0, Math.floor(config.collisionCooldownMs)) : 250,
+
+    // Derived gameplay/status fields.
+    hitsTaken: Number.isFinite(config.hitsTaken) ? Math.max(0, Math.floor(config.hitsTaken)) : 0,
+    visualState: config.visualState || (health <= 0 ? 'shattered' : health <= 100 ? 'crack_2' : health <= 200 ? 'crack_1' : 'pristine'),
+
     invulnUntilMs: config.invulnUntilMs ?? 0,
     deathAtMs: config.deathAtMs ?? null,
-    lastDamageAtMs: config.lastDamageAtMs ?? null,
+    lastDamageAtMs: config.lastDamageAtMs ?? -Infinity,
     lastHealAtMs: config.lastHealAtMs ?? null,
 
-    // Extensible status map for future effects
     statuses: { ...(config.statuses || {}) },
   };
 }

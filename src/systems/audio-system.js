@@ -5,8 +5,14 @@ export function createAudioSystem({ eventBus }) {
   const unsub = [];
 
   function start() {
-    unsub.push(eventBus.on('orb.todo', () => {
-      // TODO: map concrete orb events to audio cues once mechanics are implemented.
+    unsub.push(eventBus.on('orb.damage_applied', () => {
+      // TODO: trigger hit sound cue.
+    }));
+    unsub.push(eventBus.on('orb.healed', () => {
+      // TODO: trigger heal sound cue.
+    }));
+    unsub.push(eventBus.on('orb.died', () => {
+      // TODO: trigger death sound cue.
     }));
   }
 
