@@ -10,8 +10,10 @@ export const WAKE_TOKEN_ALIASES = Object.freeze([
   "orbis",
   "orbisz",
   "orbyss",
-  "orbis.",
-  "orbis!",
+  "obis",
+  "orbizz",
+  "obess",
+  "orbess",
 ]);
 export const WAKE_TOKENS = Object.freeze([WAKE_TOKEN, ...WAKE_TOKEN_ALIASES]);
 
