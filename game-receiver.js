@@ -117,39 +117,6 @@
       return clamp01(Math.pow(Math.max(0, g*s*p), 1/3));
     }
 
-    function randCode(n=6){
-      const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let s="";
-      for(let i=0;i<n;i++) s += A[(Math.random()*A.length)|0];
-      return s;
-    }
-
-    // ===== LAN PARTY (P2P) BEGIN =====
-    function randomTokenBytes(n=16){
-      const arr = new Uint8Array(n);
-      crypto.getRandomValues(arr);
-      return arr;
-    }
-    function toHex(bytes){
-      return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-    }
-    function code6FromTokenHex(tokenHex){
-      const tail = tokenHex.slice(-10);
-      const n = parseInt(tail, 16) % 1000000;
-      return String(n).padStart(6, "0");
-    }
-    function lanPairChannelFor(roomId){
-      const code = String(roomId || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "") || "TEST";
-      return "orb:" + code;
-    }
-    function lanJoinUrl(roomId, token){
-      const base = mobilePageBaseUrl();
-      return base + "?join=1&room=" + encodeURIComponent(roomId) + "&token=" + encodeURIComponent(token);
-    }
-    function nowTs(){ return Date.now(); }
-    function nonce8(){ return toHex(randomTokenBytes(8)); }
-    // ===== LAN PARTY (P2P) END =====
-
     function syncStartQrSizeToTitlePx(){
       if (!els.startBtn || !els.startQr) return 0;
       const titleEl = els.startBtn.querySelector("span");
@@ -1011,356 +978,65 @@
     }
 
     // ===== LAN PARTY (P2P) BEGIN =====
-    const LAN_TOKEN_TTL_MS = 3 * 60 * 1000;
-    const LAN_STUN_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+    let lanSession = null;
 
-    const lanParty = {
-      active: false,
-      roomId: "",
-      token: "",
-      code6: "",
-      expiresAt: 0,
-      pairRealtime: null,
-      pairChannel: null,
-      pc: null,
-      dc: null,
-      gameplayEnabled: false,
-      offerSdp: "",
-      offerRetryTO: null,
-      expiryTO: null,
-      helloSeen: false,
-    };
-
-    function setLanConnState(msg){
-      if (els.lanConnState) els.lanConnState.textContent = "Status: " + msg;
-    }
-    function setLanSafeState(msg){
-      if (els.lanSafeState) els.lanSafeState.textContent = "LAN SAFE: " + msg;
-    }
-    function openLanModal(){
-      if (!els.lanModal) return;
-      els.lanModal.classList.add("on");
-      els.lanModal.setAttribute("aria-hidden", "false");
-    }
-    function closeLanModal(){
-      if (!els.lanModal) return;
-      els.lanModal.classList.remove("on");
-      els.lanModal.setAttribute("aria-hidden", "true");
-    }
-
-    function cleanupLanSignaling(){
-      try { if (lanParty.pairChannel) lanParty.pairChannel.unsubscribe(); } catch (_) {}
-      try { if (lanParty.pairChannel) lanParty.pairChannel.detach(); } catch (_) {}
-      try { if (lanParty.pairRealtime) lanParty.pairRealtime.close(); } catch (_) {}
-      lanParty.pairChannel = null;
-      lanParty.pairRealtime = null;
-    }
-
-    function cleanupLanPeer(){
-      if (lanParty.offerRetryTO) {
-        clearTimeout(lanParty.offerRetryTO);
-        lanParty.offerRetryTO = null;
-      }
-      if (lanParty.expiryTO) {
-        clearTimeout(lanParty.expiryTO);
-        lanParty.expiryTO = null;
-      }
-      try { if (lanParty.dc) lanParty.dc.close(); } catch (_) {}
-      try { if (lanParty.pc) lanParty.pc.close(); } catch (_) {}
-      lanParty.dc = null;
-      lanParty.pc = null;
-      lanParty.offerSdp = "";
-      lanParty.helloSeen = false;
-    }
-
-    function resetLanParty(){
-      if (lanParty.active && lanParty.pairChannel) {
-        publishLanSignal("abort", { reason: "host_closed" });
-      }
-      lanParty.active = false;
-      lanParty.gameplayEnabled = false;
-      cleanupLanPeer();
-      cleanupLanSignaling();
-      setLanConnState("Closed");
-      setLanSafeState("Pending…");
-    }
-
-    async function renderQrInto(el, url, size){
-      if (!el) return;
-      el.innerHTML = "";
-      if (typeof QRCode === "undefined" || !QRCode.toCanvas) {
-        el.textContent = "QR unavailable";
-        return;
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
-      el.appendChild(canvas);
+    async function initLanSessionSystem(){
       try {
-        await QRCode.toCanvas(canvas, url, {
-          width: Math.max(120, size - 20),
-          margin: 2,
-          color: { dark: "#000000", light: "#ffffff" }
+        const { createLanSessionSystem } = await import("./src/systems/lan-session-system.js");
+        lanSession = createLanSessionSystem({
+          AblyCtor: (typeof Ably !== "undefined" && Ably && Ably.Realtime) ? Ably.Realtime : null,
+          QRCodeLib: (typeof QRCode !== "undefined") ? QRCode : null,
+          workerBase: WORKER_BASE,
+          ui: {
+            lanModal: els.lanModal,
+            lanQr: els.lanQr,
+            startQr: els.startQr,
+            lanUrlText: els.lanUrlText,
+            lanCopyUrl: els.lanCopyUrl,
+            lanRoomCode: els.lanRoomCode,
+            lanCode6: els.lanCode6,
+            lanConnState: els.lanConnState,
+            lanSafeState: els.lanSafeState,
+          },
+          mobilePageBaseUrl,
+          syncStartQrSizeToTitlePx,
+          setStatus,
+          onImpulse: handleIncomingImpulse,
+          onPhoneStarted: () => {
+            if (els.startScreen) els.startScreen.classList.add("off");
+            calibAvailable = true;
+            setCalibStatus("Ready");
+            openCalibOverlay();
+          },
         });
       } catch (e) {
-        el.textContent = "QR render error";
+        lanSession = null;
+        console.warn("LAN session init failed:", e);
       }
-    }
-
-    async function renderLanQr(url){
-      const startSize = syncStartQrSizeToTitlePx() || 280;
-      await Promise.all([
-        renderQrInto(els.lanQr, url, 280),
-        renderQrInto(els.startQr, url, startSize),
-      ]);
-    }
-
-    async function connectLanSignalChannel(roomId){
-      const pairRoom = lanPairChannelFor(roomId);
-      const authUrl = WORKER_BASE + "/token?room=" + encodeURIComponent(stripOrbPrefix(pairRoom)) + "&v=" + Date.now();
-      const rt = new Ably.Realtime({ authUrl, echoMessages: false });
-      const ch = rt.channels.get(pairRoom);
-      await new Promise((resolve, reject) => {
-        ch.attach((err) => err ? reject(err) : resolve());
-      });
-      lanParty.pairRealtime = rt;
-      lanParty.pairChannel = ch;
-    }
-
-    function lanMsgValid(d){
-      if (!d || typeof d !== "object") return false;
-      if (!lanParty.active) return false;
-      if (String(d.room || "") !== lanParty.roomId) return false;
-      if (String(d.token || "") !== lanParty.token) return false;
-      if (nowTs() > lanParty.expiresAt) {
-        setLanConnState("Pair token expired");
-        return false;
-      }
-      return true;
-    }
-
-    function publishLanSignal(t, extra){
-      if (!lanParty.pairChannel) return;
-      const msg = Object.assign({
-        t,
-        room: lanParty.roomId,
-        token: lanParty.token,
-        nonce: nonce8(),
-        ts: nowTs(),
-      }, extra || {});
-      lanParty.pairChannel.publish("pair", msg);
-    }
-
-    async function detectLanSafety(pc){
-      try {
-        const stats = await pc.getStats();
-        let pair = null;
-        stats.forEach((r) => {
-          if (r.type === "transport" && r.selectedCandidatePairId && stats.get(r.selectedCandidatePairId)) {
-            pair = stats.get(r.selectedCandidatePairId);
-          }
-        });
-        if (!pair) {
-          stats.forEach((r) => {
-            if (!pair && r.type === "candidate-pair" && (r.selected || r.nominated) && r.state === "succeeded") {
-              pair = r;
-            }
-          });
-        }
-        if (!pair) return { safe: false, label: "NOT LAN SAFE ⚠️ (blocked)" };
-
-        const local = stats.get(pair.localCandidateId);
-        const remote = stats.get(pair.remoteCandidateId);
-        const localType = String(local && local.candidateType || "");
-        const remoteType = String(remote && remote.candidateType || "");
-        if (localType === "relay" || remoteType === "relay") {
-          return { safe: false, label: "NOT LAN SAFE ⚠️ (blocked)" };
-        }
-        if (localType === "host" && remoteType === "host") {
-          return { safe: true, label: "LAN SAFE ✅" };
-        }
-        return { safe: true, label: "LAN OK ✅" };
-      } catch (_) {
-        return { safe: false, label: "NOT LAN SAFE ⚠️ (blocked)" };
-      }
-    }
-
-    function onLanControlMessage(evt){
-      let d = null;
-      try { d = JSON.parse(String(evt.data || "")); } catch (_) { return; }
-      if (d && d.t === "control" && d.name === "phone_started") {
-        closeLanModal();
-        if (els.startScreen) els.startScreen.classList.add("off");
-        calibAvailable = true;
-        setCalibStatus("Ready");
-        openCalibOverlay();
-        return;
-      }
-      if (!lanParty.gameplayEnabled) return;
-      if (!d || d.t !== "impulse" || !d.payload) return;
-      handleIncomingImpulse(d.payload);
-    }
-
-    async function buildAndPublishLanOffer(pc){
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      lanParty.offerSdp = offer.sdp;
-      publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
-      setLanConnState("Offer sent");
-    }
-
-    async function startLanHostFlow(){
-      resetLanParty();
-      lanParty.active = true;
-      lanParty.roomId = randCode(8);
-      lanParty.token = toHex(randomTokenBytes(16));
-      lanParty.code6 = code6FromTokenHex(lanParty.token);
-      lanParty.expiresAt = nowTs() + LAN_TOKEN_TTL_MS;
-      lanParty.gameplayEnabled = false;
-
-      setLanConnState("Waiting for phone…");
-      setLanSafeState("Pending…");
-      if (els.lanRoomCode) els.lanRoomCode.textContent = lanParty.roomId;
-      if (els.lanCode6) els.lanCode6.textContent = lanParty.code6;
-
-      const joinUrl = lanJoinUrl(lanParty.roomId, lanParty.token);
-      if (els.lanUrlText) els.lanUrlText.textContent = joinUrl;
-      if (els.lanCopyUrl) {
-        els.lanCopyUrl.onclick = async () => {
-          try {
-            await navigator.clipboard.writeText(joinUrl);
-            els.lanCopyUrl.textContent = "Copied";
-          } catch (_) {
-            els.lanCopyUrl.textContent = "Nope";
-          }
-          setTimeout(() => { if (els.lanCopyUrl) els.lanCopyUrl.textContent = "Copy"; }, 800);
-        };
-      }
-      await renderLanQr(joinUrl);
-
-      await connectLanSignalChannel(lanParty.roomId);
-      setLanConnState("Signal ready");
-
-      const pc = new RTCPeerConnection({ iceServers: LAN_STUN_SERVERS });
-      const dc = pc.createDataChannel("orb-control", { ordered: false, maxRetransmits: 0 });
-      lanParty.pc = pc;
-      lanParty.dc = dc;
-
-      dc.onopen = async () => {
-        setLanConnState("Connected");
-        const lanSafety = await detectLanSafety(pc);
-        setLanSafeState(lanSafety.label);
-        lanParty.gameplayEnabled = !!lanSafety.safe;
-        if (lanParty.offerRetryTO) {
-          clearTimeout(lanParty.offerRetryTO);
-          lanParty.offerRetryTO = null;
-        }
-      };
-      dc.onclose = () => {
-        lanParty.gameplayEnabled = false;
-        setLanConnState("Disconnected");
-      };
-      dc.onmessage = onLanControlMessage;
-
-      pc.onicecandidate = (evt) => {
-        if (!evt.candidate) return;
-        publishLanSignal("ice", {
-          candidate: evt.candidate.candidate,
-          sdpMid: evt.candidate.sdpMid,
-          sdpMLineIndex: evt.candidate.sdpMLineIndex,
-        });
-      };
-
-      pc.onconnectionstatechange = () => {
-        if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-          lanParty.gameplayEnabled = false;
-          setLanConnState("Connection failed");
-        }
-      };
-
-      lanParty.pairChannel.subscribe("pair", async (msg) => {
-        const d = msg && msg.data ? msg.data : {};
-        if (!lanMsgValid(d)) return;
-        if (d.t === "join_hello") {
-          lanParty.helloSeen = true;
-          setLanConnState("Join hello received");
-          try {
-            if (!lanParty.offerSdp) {
-              await buildAndPublishLanOffer(pc);
-            } else {
-              publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
-              setLanConnState("Offer re-sent");
-            }
-          } catch (e) {
-            console.error("LAN offer build failed:", e);
-            setLanConnState("Offer failed");
-          }
-          return;
-        }
-        if (d.t === "join_answer" && d.sdp && !pc.currentRemoteDescription) {
-          try {
-            await pc.setRemoteDescription({ type: "answer", sdp: d.sdp });
-            setLanConnState("Connecting…");
-          } catch (e) {
-            console.error("LAN setRemote(answer) failed:", e);
-            setLanConnState("Answer rejected");
-          }
-          return;
-        }
-        if (d.t === "ice" && d.candidate) {
-          try {
-            await pc.addIceCandidate({
-              candidate: d.candidate,
-              sdpMid: d.sdpMid,
-              sdpMLineIndex: d.sdpMLineIndex
-            });
-          } catch (_) {}
-        }
-        if (d.t === "abort") {
-          lanParty.gameplayEnabled = false;
-          setLanConnState("Aborted");
-        }
-      });
-
-      await buildAndPublishLanOffer(pc);
-      const retryOffer = () => {
-        if (!lanParty.active || !lanParty.pc || lanParty.pc.currentRemoteDescription) return;
-        if (!lanParty.helloSeen) {
-          setLanConnState("Waiting for join hello…");
-        }
-        publishLanSignal("host_offer", { sdp: lanParty.offerSdp });
-        lanParty.offerRetryTO = setTimeout(retryOffer, 1000);
-      };
-      lanParty.offerRetryTO = setTimeout(retryOffer, 1000);
-      setLanConnState("Pairing…");
-      lanParty.expiryTO = setTimeout(() => {
-        if (!lanParty.active || lanParty.gameplayEnabled) return;
-        setLanConnState("Pair token expired");
-      }, LAN_TOKEN_TTL_MS + 50);
-      setStatus(`LAN host ready <span class="dim">(orb:${lanParty.roomId})</span>`, "ok");
     }
 
     async function launchLanPairingFlow(forceNew = false){
-      if (lanParty.active && !forceNew) return;
+      if (!lanSession) return;
       try {
-        await startLanHostFlow();
+        await lanSession.launch(forceNew);
       } catch (e) {
         console.error("LAN PARTY host error:", e);
-        setLanConnState("Failed");
-        setLanSafeState("NOT LAN SAFE ⚠️ (blocked)");
+        if (els.lanConnState) els.lanConnState.textContent = "Status: Failed";
+        if (els.lanSafeState) els.lanSafeState.textContent = "LAN SAFE: NOT LAN SAFE ⚠️ (blocked)";
       }
     }
 
     if (els.lanPartyBtn) {
-      els.lanPartyBtn.addEventListener("click", launchLanPairingFlow);
+      els.lanPartyBtn.addEventListener("click", () => launchLanPairingFlow(false));
     }
-    if (els.lanClose) els.lanClose.addEventListener("click", closeLanModal);
+    if (els.lanClose) {
+      els.lanClose.addEventListener("click", () => {
+        if (lanSession) lanSession.closeModal();
+      });
+    }
     if (els.lanEndBtn) {
       els.lanEndBtn.addEventListener("click", () => {
-        resetLanParty();
-        closeLanModal();
+        if (lanSession) lanSession.end();
         setStatus("LAN room closed", "dim");
       });
     }
@@ -2285,12 +1961,7 @@
     }
 
     function sendCalibrationTrigger(){
-      if (lanParty.active && lanParty.dc && lanParty.dc.readyState === "open") {
-        try {
-          lanParty.dc.send(JSON.stringify({ t: "control", name: "calibrate", ts: Date.now() }));
-          return true;
-        } catch (_) {}
-      }
+      if (lanSession && lanSession.sendControl("calibrate")) return true;
       if (channel) {
         channel.publish("ctl", { calibrate: 1, ts: Date.now() });
         return true;
@@ -2503,7 +2174,7 @@
       channel.subscribe("orb", (msg) => {
         const d = (msg && msg.data) ? msg.data : {};
 
-        if (lanParty.active && lanParty.gameplayEnabled) return;
+        if (lanSession && lanSession.shouldIgnoreAblyImpulses()) return;
 
         if (LAST_MESSAGE_ON) {
           let s = "";
@@ -2594,6 +2265,7 @@
     }
 
     (async function init(){
+      await initLanSessionSystem();
       initMvpSystems();
       connect({ auto:true });
       syncStartQrSizeToTitlePx();
