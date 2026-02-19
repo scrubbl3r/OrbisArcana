@@ -167,12 +167,6 @@
       els.status.innerHTML = html;
     }
 
-    function setVoiceReadout(text, cls = "dim"){
-      if (!els.voiceReadout) return;
-      els.voiceReadout.className = cls;
-      els.voiceReadout.textContent = String(text || "");
-    }
-
     // =========================================================================
     // CALIBRATION OVERLAY
     // =========================================================================
@@ -1190,8 +1184,9 @@
 
       if (e.key === "v" || e.key === "V") {
         if (!mvp || !mvp.eventBus) return;
+        const currentVoiceMode = (mvp.gameState && mvp.gameState.voice && mvp.gameState.voice.mode) || "off";
         if (e.shiftKey) {
-          const mode = (mvp.voiceMode === "wake_token_open_world") ? "off" : "wake_token_open_world";
+          const mode = (currentVoiceMode === "wake_token_open_world") ? "off" : "wake_token_open_world";
           mvp.eventBus.emit("voice.set_mode", { mode });
         } else {
           mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
@@ -1386,6 +1381,7 @@
           { createOrbFxSystem },
           { createVoiceRecognitionSystem },
           { createSpellDispatchSystem },
+          { createVoiceHudSystem },
         ] = await Promise.all([
           import("./src/events/event-bus.js"),
           import("./src/state/game-state.js"),
@@ -1396,6 +1392,7 @@
           import("./src/systems/orb-fx-system.js"),
           import("./src/systems/voice-recognition-system.js"),
           import("./src/systems/spell-dispatch-system.js"),
+          import("./src/systems/voice-hud-system.js"),
         ]);
 
         const eventBus = createEventBus();
@@ -1413,10 +1410,16 @@
         const audioSystem = createAudioSystem({ eventBus });
         const spellDispatchSystem = createSpellDispatchSystem({ eventBus });
         const voiceRecognitionSystem = createVoiceRecognitionSystem({ eventBus });
+        const voiceHudSystem = createVoiceHudSystem({
+          eventBus,
+          voiceReadoutEl: els.voiceReadout,
+          voiceState: gameState.voice,
+        });
         fxSystem.start();
         audioSystem.start();
         spellDispatchSystem.start();
         voiceRecognitionSystem.start();
+        voiceHudSystem.start();
         worldSystem = createWorldSystem({
           eventBus,
           stageEl: els.physStage,
@@ -1462,40 +1465,6 @@
           if (els.orbShards) els.orbShards.innerHTML = "";
           stopShardSim();
         });
-        eventBus.on("voice.unavailable", () => {
-          setVoiceReadout("Unavailable", "bad");
-        });
-        eventBus.on("voice.mode_changed", (p = {}) => {
-          const mode = String(p.mode || "off");
-          if (mvp) mvp.voiceMode = mode;
-          if (mode === "off") setVoiceReadout("Off", "dim");
-          else if (mode === "gated_window") setVoiceReadout("Armed (gated)", "ok");
-          else if (mode === "wake_token_open_world") setVoiceReadout("Wake: Orbis", "ok");
-          else setVoiceReadout(mode, "dim");
-        });
-        eventBus.on("voice.gate_opened", () => {
-          setVoiceReadout("Listening window…", "ok");
-        });
-        eventBus.on("voice.gate_closed", () => {
-          if (mvp && mvp.voiceMode === "gated_window") setVoiceReadout("Armed (gated)", "dim");
-        });
-        eventBus.on("voice.heard", (p = {}) => {
-          const txt = String(p.transcript || "").trim();
-          if (!txt) return;
-          setVoiceReadout(`Heard: ${txt}`, "dim");
-        });
-        eventBus.on("voice.spell_cast", (p = {}) => {
-          const spellId = String(p.spellId || "spell");
-          const conf = Number(p.confidence);
-          const confTxt = Number.isFinite(conf) ? ` ${conf.toFixed(2)}` : "";
-          setVoiceReadout(`Cast: ${spellId}${confTxt}`, "ok");
-        });
-        eventBus.on("voice.spell_rejected", (p = {}) => {
-          const reason = String(p.reason || "rejected");
-          if (reason === "no_spell_match" || reason === "no_wake_or_spell_match") return;
-          setVoiceReadout(`Rejected: ${reason}`, "dim");
-        });
-
         mvp = {
           eventBus,
           gameState,
@@ -1505,7 +1474,7 @@
           orbFxSystem,
           spellDispatchSystem,
           voiceRecognitionSystem,
-          voiceMode: "off",
+          voiceHudSystem,
           lastImpact: null,
           applyImpact(impact, source, meta = {}){
             this.lastImpact = {
@@ -1531,7 +1500,6 @@
         closeDeathOverlay();
         renderOrbDamageVisuals();
         updateDebugReadout();
-        setVoiceReadout("Off", "dim");
       } catch (e) {
         console.warn("MVP systems init failed:", e);
       }

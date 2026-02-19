@@ -1,13 +1,15 @@
 import { createOrbState } from './orb-state.js';
+import { createVoiceState } from './voice-state.js';
 
 // Top-level game state scaffold.
 // Source-of-truth composition layer for future systems.
 export function createGameState(config = {}) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     nowMs: 0,
 
     orb: createOrbState(config.orb || {}),
+    voice: createVoiceState(config.voice || {}),
 
     // Future domains (placeholders)
     world: config.world || {},
