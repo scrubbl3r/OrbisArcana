@@ -1236,6 +1236,7 @@
     };
     const IMPACT_TH = 500;
     const DEATH_FLOW_DELAY_MS = 3000;
+    const FLOAT_GRACE_DEFAULT_MS = 1000;
     const IMPACT_MODEL = {
       mass: 1.0,
       gravityExp: 0.5,
@@ -1447,12 +1448,14 @@
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
         eventBus.on("orb.died", () => {
           orbInputSuppressed = true;
+          clearFloatGrace();
           clearOrbRuntimeFxForDeath();
           scheduleDeathOverlay();
           updateDebugReadout();
         });
         eventBus.on("orb.revived", () => {
           orbInputSuppressed = false;
+          clearFloatGrace();
           clearDeathOverlaySchedule();
           closeDeathOverlay();
           if (worldSystem) worldSystem.reset(performance.now());
@@ -1465,10 +1468,18 @@
           stopShardSim();
         });
         eventBus.on("voice.spell_cast", (p = {}) => {
+          const graceMs = Number(p && p.floatGraceMs);
+          grantFloatGrace(Number.isFinite(graceMs) ? graceMs : FLOAT_GRACE_DEFAULT_MS);
           const intent = String(p.intent || "");
           if (intent === "spell.domus") {
             teleportOrbToSpawnNeutralizePhysics();
           }
+        });
+        eventBus.on("orb.float_grace_grant", (p = {}) => {
+          grantFloatGrace(p.ms);
+        });
+        eventBus.on("orb.float_grace_clear", () => {
+          clearFloatGrace();
         });
         mvp = {
           eventBus,
@@ -1480,6 +1491,7 @@
           spellDispatchSystem,
           voiceRecognitionSystem,
           voiceHudSystem,
+          grantFloatGrace,
           lastImpact: null,
           applyImpact(impact, source, meta = {}){
             this.lastImpact = {
@@ -1529,6 +1541,10 @@
 
       descendMs: 0,
       shieldDescentBlocked: false,
+      floatGraceActive: false,
+      floatGraceUntilMs: 0,
+      floatGraceAnchorY: 0,
+      floatGracePhase: 0,
     };
 
     // ===== WORLD PICKUPS (MVP SLICE) BEGIN =====
@@ -1565,6 +1581,8 @@
       physState.yW = groundCenterWorld();
       physState.v = 0;
       physState.onGround = true;
+      physState.floatGraceAnchorY = physState.yW;
+      physState.floatGracePhase = 0;
       applyOrbTransform();
       if (worldSystem) worldSystem.render(performance.now());
     }
@@ -1575,9 +1593,32 @@
       physState.onGround = true;
       physState.descendMs = 0;
       physState.shieldDescentBlocked = false;
+      physState.floatGraceAnchorY = physState.yW;
+      physState.floatGracePhase = 0;
       applyOrbTransform();
       if (worldSystem) worldSystem.render(performance.now());
       updateDebugReadout();
+    }
+
+    function clearFloatGrace(){
+      physState.floatGraceActive = false;
+      physState.floatGraceUntilMs = 0;
+    }
+
+    function grantFloatGrace(ms = FLOAT_GRACE_DEFAULT_MS){
+      const dur = Math.max(50, Number(ms) || FLOAT_GRACE_DEFAULT_MS);
+      const now = performance.now();
+      physState.floatGraceActive = true;
+      physState.floatGraceUntilMs = now + dur;
+      physState.floatGraceAnchorY = physState.yW;
+      physState.floatGracePhase = Math.random() * Math.PI * 2;
+    }
+
+    function isFloatGraceActive(nowMs){
+      if (!physState.floatGraceActive) return false;
+      if ((Number(nowMs) || 0) <= Number(physState.floatGraceUntilMs || 0)) return true;
+      clearFloatGrace();
+      return false;
     }
 
     function setGravityMul(m){
@@ -1727,7 +1768,8 @@
       if (physState.lastTs == null) physState.lastTs = ts;
       let dt = (ts - physState.lastTs) / 1000;
       physState.lastTs = ts;
-      if (mvp && mvp.orbSystem) mvp.orbSystem.tick(performance.now());
+      const nowMs = performance.now();
+      if (mvp && mvp.orbSystem) mvp.orbSystem.tick(nowMs);
       const wasOnGround = !!physState.onGround;
 
       dt = clamp(dt, 0, 0.05);
@@ -1747,6 +1789,26 @@
       physState.v = clamp(physState.v, -PHYS.maxUpSpeed, PHYS.maxDownSpeed);
 
       physState.yW += physState.v * dt;
+
+      if (isFloatGraceActive(nowMs)) {
+        // Player climb intent cancels grace immediately so upward propulsion remains natural.
+        const upwardIntent = (thrust > (g + 20)) || (physState.lift01 > 0.08) || (physState.v < -8);
+        if (upwardIntent) {
+          clearFloatGrace();
+        } else {
+          // Adaptive equilibrium bob: scales subtly with gravity and signed fall drag.
+          const dragFactor = Math.max(0, -Number(PHYS.downDrag) || 0);
+          const bobAmp = clamp(1.8 + (physState.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
+          const bobHz = clamp(0.8 + (physState.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
+          physState.floatGracePhase += (Math.PI * 2 * bobHz * dt);
+          const targetY = physState.floatGraceAnchorY + (Math.sin(physState.floatGracePhase) * bobAmp);
+
+          const holdHz = clamp(8 + (physState.gravityMul * 3) + (dragFactor * 2), 8, 18);
+          const alpha = 1 - Math.exp(-holdHz * dt);
+          physState.yW += (targetY - physState.yW) * alpha;
+          physState.v = 0;
+        }
+      }
 
       const dtMs = dt * 1000;
 
