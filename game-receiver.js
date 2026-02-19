@@ -978,7 +978,33 @@
     }
 
     // ===== LAN PARTY (P2P) BEGIN =====
+    let mobileImpulseSystem = null;
     let lanSession = null;
+
+    async function initMobileImpulseSystem(){
+      try {
+        const { createMobileImpulseSystem } = await import("./src/systems/mobile-impulse-system.js");
+        mobileImpulseSystem = createMobileImpulseSystem({
+          idleMarkActivity,
+          applyDataToUI,
+          teleMaybeLog,
+          onCalibrated: () => {
+            setCalibStatus("Calibrated");
+            closeCalibOverlay();
+          },
+          onCalibAvailable: () => {
+            if (calibAvailable) return;
+            calibAvailable = true;
+            setCalibStatus("Ready");
+            openCalibOverlay();
+          },
+          isInputSuppressed: () => !!orbInputSuppressed,
+        });
+      } catch (e) {
+        mobileImpulseSystem = null;
+        console.warn("Mobile impulse system init failed:", e);
+      }
+    }
 
     async function initLanSessionSystem(){
       try {
@@ -1004,8 +1030,11 @@
           onImpulse: handleIncomingImpulse,
           onPhoneStarted: () => {
             if (els.startScreen) els.startScreen.classList.add("off");
-            calibAvailable = true;
-            setCalibStatus("Ready");
+            if (mobileImpulseSystem) mobileImpulseSystem.markCalibAvailable();
+            else {
+              calibAvailable = true;
+              setCalibStatus("Ready");
+            }
             openCalibOverlay();
           },
         });
@@ -1875,8 +1904,6 @@
       }, IDLE.hardMaxMs);
     }
 
-    let lastData = null;
-    let rafPending = false;
     let orbInputSuppressed = false;
 
     function zeroAudioNow(){
@@ -1890,8 +1917,7 @@
 
     function clearOrbRuntimeFxForDeath(){
       // Stop all residual orb/VFX/audio state so death is a clean reset.
-      lastData = null;
-      rafPending = false;
+      if (mobileImpulseSystem) mobileImpulseSystem.resetFrameQueue();
 
       forceShakeLampOff();
       clearDirLampTimers();
@@ -1934,30 +1960,15 @@
       zeroAudioNow();
     }
 
-    function scheduleUIUpdate(data){
-      lastData = data;
-      if (rafPending) return;
-      rafPending = true;
-      requestAnimationFrame(() => {
-        rafPending = false;
-        if (!lastData) return;
-        applyDataToUI(lastData);
-      });
-    }
-
     function handleIncomingImpulse(data){
+      if (mobileImpulseSystem) {
+        mobileImpulseSystem.ingestImpulse(data);
+        return;
+      }
       idleMarkActivity();
-      if (data && data.calib === 1){
-        setCalibStatus("Calibrated");
-        closeCalibOverlay();
-      }
-      if (!calibAvailable){
-        calibAvailable = true;
-        setCalibStatus("Ready");
-      }
       if (orbInputSuppressed) return;
       teleMaybeLog(data);
-      scheduleUIUpdate(data);
+      applyDataToUI(data);
     }
 
     function sendCalibrationTrigger(){
@@ -2161,7 +2172,8 @@
           } else if (audioCtx) {
             audioCtx.resume().catch(() => {});
           }
-          if (!calibAvailable) return;
+          const canCalib = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
+          if (!canCalib) return;
           if (calibInFlight) return;
           const ok = sendCalibrationTrigger();
           if (!ok) return;
@@ -2201,16 +2213,6 @@
         // If the start screen is still up for some reason, drop it on first msg.
         if (els.startScreen && !els.startScreen.classList.contains("off")) {
           els.startScreen.classList.add("off");
-        }
-
-        if (d && d.calib === 1){
-          setCalibStatus("Calibrated");
-          closeCalibOverlay();
-        }
-        if (!calibAvailable){
-          calibAvailable = true;
-          setCalibStatus("Ready");
-          openCalibOverlay();
         }
 
         handleIncomingImpulse(d);
@@ -2265,6 +2267,7 @@
     }
 
     (async function init(){
+      await initMobileImpulseSystem();
       await initLanSessionSystem();
       initMvpSystems();
       connect({ auto:true });
