@@ -2052,7 +2052,7 @@
 
     function spawnInnerGlobe(){
       const r = innerGlobeDiameterPx() * 0.5;
-      const speed = 360 + (Math.random() * 270); // ~3x faster than previous range
+      const speed = 360 + (Math.random() * 270); // ~3x faster than previous range 
       const a = Math.random() * Math.PI * 2;
       innerGlobeState.particles.push({
         id: innerGlobeState.nextId++,

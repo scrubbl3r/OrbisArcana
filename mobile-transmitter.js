@@ -1006,7 +1006,7 @@
     const JERK_LOOSE = 2600.0;
 
     // =========================================================================
-    // DYNAMICS — v4.0 (DIRECTIONAL DIVERSITY, 1s window) — functionally same
+    // DYNAMICS — v4.0 (DIRECTIONAL DIVERSITY, 1s window) — functionally same 
     // =========================================================================
     const DYNAMICS_WINDOW_SEC = 1.00;
     const DYNAMICS_FLOOR = 0.18;
