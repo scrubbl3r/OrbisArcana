@@ -1617,6 +1617,7 @@
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
     let mvp = null;
     let worldSystem = null;
+    let orbFxSystem = null;
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -1744,13 +1745,14 @@
 
     async function initMvpSystems(){
       try {
-        const [{ createEventBus }, { createGameState }, { createOrbSystem }, { createFxSystem }, { createAudioSystem }, { createWorldSystem }] = await Promise.all([
+        const [{ createEventBus }, { createGameState }, { createOrbSystem }, { createFxSystem }, { createAudioSystem }, { createWorldSystem }, { createOrbFxSystem }] = await Promise.all([
           import("./src/events/event-bus.js"),
           import("./src/state/game-state.js"),
           import("./src/systems/orb-system.js"),
           import("./src/systems/fx-system.js"),
           import("./src/systems/audio-system.js"),
           import("./src/systems/world-system.js"),
+          import("./src/systems/orb-fx-system.js"),
         ]);
 
         const eventBus = createEventBus();
@@ -1783,12 +1785,19 @@
           getGlobeEl: () => els.testGlobe,
           setGlobeEl: (el) => { els.testGlobe = el; },
         });
+        orbFxSystem = createOrbFxSystem({
+          eventBus,
+          orbInteriorEl: els.orbInterior,
+          stageEl: els.physStage,
+          getOrbScreenY: () => orbScreenY(),
+          orbRadiusPx: PHYS.orbRadiusPx,
+        });
+        orbFxSystem.start();
 
         eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
         eventBus.on("orb.died", () => {
           orbInputSuppressed = true;
-          releaseInnerGlobesAtDeath(performance.now());
           clearOrbRuntimeFxForDeath();
           scheduleDeathOverlay();
           updateDebugReadout();
@@ -1797,14 +1806,9 @@
           orbInputSuppressed = false;
           clearDeathOverlaySchedule();
           closeDeathOverlay();
-          clearInnerGlobes();
-          clearReleasedGlobes();
           if (worldSystem) worldSystem.reset(performance.now());
           renderOrbDamageVisuals();
           updateDebugReadout();
-        });
-        eventBus.on("pickup.collected", () => {
-          spawnInnerGlobe();
         });
         eventBus.on("orb.shatter_complete", () => {
           mvpShards = [];
@@ -1818,6 +1822,7 @@
           orbSystem,
           fxSystem,
           audioSystem,
+          orbFxSystem,
           lastImpact: null,
           applyImpact(impact, source, meta = {}){
             this.lastImpact = {
@@ -1837,8 +1842,7 @@
         mvp.lastImpact = null;
         if (els.orbShards) els.orbShards.innerHTML = "";
         orbInputSuppressed = false;
-        clearInnerGlobes();
-        clearReleasedGlobes();
+        if (orbFxSystem) orbFxSystem.reset();
         if (worldSystem) worldSystem.reset(performance.now());
         clearDeathOverlaySchedule();
         closeDeathOverlay();
@@ -1877,186 +1881,6 @@
       return yW - camTop;
     }
     // ===== WORLD PICKUPS (MVP SLICE) END =====
-
-    // ===== ORB INTERIOR GLOBES (MVP SLICE) BEGIN =====
-    const innerGlobeState = {
-      particles: [],
-      nextId: 1,
-    };
-    const releasedGlobeFx = {
-      particles: [],
-      nextId: 1,
-    };
-
-    function innerGlobeDiameterPx(){
-      return PHYS.orbRadiusPx * 0.2; // 10% of orb diameter
-    }
-
-    function clearInnerGlobes(){
-      innerGlobeState.particles = [];
-      if (els.orbInterior) els.orbInterior.innerHTML = "";
-    }
-
-    function clearReleasedGlobes(){
-      for (const p of releasedGlobeFx.particles){
-        try { if (p.el) p.el.remove(); } catch (_) {}
-      }
-      releasedGlobeFx.particles = [];
-    }
-
-    function renderInnerGlobes(){
-      if (!els.orbInterior) return;
-      for (const p of innerGlobeState.particles){
-        if (!p.el) {
-          const el = document.createElement("div");
-          el.className = "innerGlobe";
-          p.el = el;
-          els.orbInterior.appendChild(el);
-        }
-        const d = p.r * 2;
-        p.el.style.width = `${d.toFixed(2)}px`;
-        p.el.style.height = `${d.toFixed(2)}px`;
-        p.el.style.left = `${(PHYS.orbRadiusPx + p.x - p.r).toFixed(2)}px`;
-        p.el.style.top = `${(PHYS.orbRadiusPx + p.y - p.r).toFixed(2)}px`;
-      }
-    }
-
-    function spawnInnerGlobe(){
-      const r = innerGlobeDiameterPx() * 0.5;
-      const speed = 360 + (Math.random() * 270); // ~3x faster than previous range 
-      const a = Math.random() * Math.PI * 2;
-      innerGlobeState.particles.push({
-        id: innerGlobeState.nextId++,
-        x: (Math.random() - 0.5) * 8,
-        y: (Math.random() - 0.5) * 8,
-        vx: Math.cos(a) * speed,
-        vy: Math.sin(a) * speed,
-        r,
-        el: null,
-      });
-      renderInnerGlobes();
-    }
-
-    function tickInnerGlobes(dt){
-      if (!innerGlobeState.particles.length) return;
-      const maxDistBase = PHYS.orbRadiusPx;
-      for (const p of innerGlobeState.particles){
-        // Add small random acceleration so motion stays lively/less predictable.
-        p.vx += (Math.random() - 0.5) * 120 * dt;
-        p.vy += (Math.random() - 0.5) * 120 * dt;
-        const vMag = Math.hypot(p.vx, p.vy);
-        const vCap = 900;
-        if (vMag > vCap) {
-          const s = vCap / (vMag || 1);
-          p.vx *= s;
-          p.vy *= s;
-        }
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        const dist = Math.hypot(p.x, p.y);
-        const maxDist = maxDistBase - p.r;
-        if (dist > maxDist && maxDist > 0) {
-          const nx = p.x / (dist || 1);
-          const ny = p.y / (dist || 1);
-          p.x = nx * maxDist;
-          p.y = ny * maxDist;
-          const vn = (p.vx * nx) + (p.vy * ny);
-          if (vn > 0) {
-            p.vx = p.vx - (2 * vn * nx);
-            p.vy = p.vy - (2 * vn * ny);
-            // Tiny tangential kick on bounce to avoid repetitive paths.
-            const tx = -ny;
-            const ty = nx;
-            const kick = (Math.random() - 0.5) * 120;
-            p.vx += tx * kick;
-            p.vy += ty * kick;
-          }
-        }
-      }
-      renderInnerGlobes();
-    }
-
-    function fxRand01(){
-      try {
-        const a = new Uint32Array(1);
-        crypto.getRandomValues(a);
-        return a[0] / 4294967296;
-      } catch (_) {
-        return Math.random();
-      }
-    }
-
-    function releaseInnerGlobesAtDeath(nowMs){
-      if (!innerGlobeState.particles.length) return;
-      const stage = stageRect();
-      const baseX = (stage.width || 0) * 0.5;
-      const baseY = orbScreenY();
-      for (const p of innerGlobeState.particles){
-        const seedA = fxRand01() * Math.PI * 2;
-        const nx = Math.cos(seedA);
-        const ny = Math.sin(seedA);
-        const tx = -ny;
-        const ty = nx;
-        const ttlMs = Math.round(1000 + (fxRand01() * 2500)); // 1000-3500ms
-        const item = {
-          id: releasedGlobeFx.nextId++,
-          bornMs: Number(nowMs) || performance.now(),
-          ttlMs,
-          growMs: 0,
-          x0: baseX + (Number(p.x) || 0) + ((fxRand01() - 0.5) * 10),
-          y0: baseY + (Number(p.y) || 0) + ((fxRand01() - 0.5) * 10),
-          nx,
-          ny,
-          tx,
-          ty,
-          speed: 140 + (fxRand01() * 320),
-          sinAmp: 10 + (fxRand01() * 22),
-          sinFreq: 6 + (fxRand01() * 8),
-          phase: fxRand01() * Math.PI * 2,
-          r0: Number(p.r) || innerGlobeDiameterPx() * 0.5,
-          r1: Number(p.r) || innerGlobeDiameterPx() * 0.5,
-          el: null,
-        };
-        releasedGlobeFx.particles.push(item);
-      }
-      clearInnerGlobes();
-    }
-
-    function tickReleasedGlobes(nowMs){
-      if (!releasedGlobeFx.particles.length || !els.physStage) return;
-      const now = Number(nowMs) || performance.now();
-      for (let i = releasedGlobeFx.particles.length - 1; i >= 0; i--) {
-        const p = releasedGlobeFx.particles[i];
-        if (!p.el) {
-          const el = document.createElement("div");
-          el.className = "releasedGlobe";
-          p.el = el;
-          els.physStage.appendChild(el);
-        }
-        const ageMs = now - p.bornMs;
-        const ageS = Math.max(0, ageMs / 1000);
-        const life01 = clamp01(ageMs / Math.max(1, p.ttlMs));
-        const grow01 = clamp01(ageMs / Math.max(1, p.growMs));
-        const r = p.r0 + ((p.r1 - p.r0) * grow01);
-        const baseDist = p.speed * ageS;
-        const sinOffset = Math.sin((ageS * p.sinFreq) + p.phase) * p.sinAmp;
-        const x = p.x0 + (p.nx * baseDist) + (p.tx * sinOffset);
-        const y = p.y0 + (p.ny * baseDist) + (p.ty * sinOffset);
-        const fadeStart = 0.55;
-        const fade01 = life01 <= fadeStart ? 1 : (1 - ((life01 - fadeStart) / (1 - fadeStart)));
-        p.el.style.width = `${(r * 2).toFixed(2)}px`;
-        p.el.style.height = `${(r * 2).toFixed(2)}px`;
-        p.el.style.left = `${(x - r).toFixed(2)}px`;
-        p.el.style.top = `${(y - r).toFixed(2)}px`;
-        p.el.style.opacity = clamp01(fade01).toFixed(3);
-
-        if (ageMs >= p.ttlMs) {
-          try { p.el.remove(); } catch (_) {}
-          releasedGlobeFx.particles.splice(i, 1);
-        }
-      }
-    }
-    // ===== ORB INTERIOR GLOBES (MVP SLICE) END =====
 
     function stageRect(){
       return els.physStage.getBoundingClientRect();
@@ -2307,8 +2131,7 @@
 
       drawStars();
       applyOrbTransform();
-      tickInnerGlobes(dt);
-      tickReleasedGlobes(ts);
+      if (orbFxSystem) orbFxSystem.tick(ts, dt);
       if (worldSystem) worldSystem.tick(ts, dt);
       updateDebugReadout();
       requestAnimationFrame(physicsStep);
@@ -2763,7 +2586,7 @@
         stopShardSim();
         resetOrbToGround();
         if (worldSystem) worldSystem.reset(performance.now());
-        clearReleasedGlobes();
+        if (orbFxSystem) orbFxSystem.reset();
         closeDeathOverlay();
         renderOrbDamageVisuals();
         updateDebugReadout();
