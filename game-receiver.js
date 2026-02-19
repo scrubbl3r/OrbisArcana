@@ -1128,202 +1128,53 @@
     // ===== LAN PARTY (P2P) END =====
 
     // =========================================================================
-    // TELEMETRY MODAL — buffered writer (less GC churn) + fix double-assign typo
+    // TELEMETRY + DEBUG SYSTEM
     // =========================================================================
-    let teleRecording = false;
-    let teleT0 = 0;
-    let teleLast = 0;
-    let teleLines = 0;
+    let telemetryDebugSystem = null;
 
-    // ✅ NEW: buffered append (reduces textContent += churn)
-    let teleBuf = [];
-    let teleBufChars = 0;
-    let teleFlushRAF = 0;
-
-    function teleFlushNow(){
-      teleFlushRAF = 0;
-      if (!teleBuf.length) return;
-      const chunk = teleBuf.join("");
-      teleBuf.length = 0;
-      teleBufChars = 0;
-      els.teleOut.textContent += chunk;
-      // keep "follow" behavior
-      if (teleLines % 40 === 0) els.teleOut.scrollTop = els.teleOut.scrollHeight;
-      // cap
-      if (els.teleOut.textContent.length > 220000) {
-        els.teleOut.textContent += "\n(TRUNCATED: output capped)\n";
-        stopTeleRecording();
+    async function initTelemetryDebugSystem(){
+      try {
+        const { createTelemetryDebugSystem } = await import("./src/systems/telemetry-debug-system.js");
+        telemetryDebugSystem = createTelemetryDebugSystem({
+          debugReadoutEl: els.dirReadout,
+          teleModalEl: els.teleModal,
+          teleBtnEl: els.teleBtn,
+          teleBackdropEl: els.teleBackdrop,
+          teleCloseEl: els.teleClose,
+          teleRecBtnEl: els.teleRecBtn,
+          teleOutEl: els.teleOut,
+          pickDirVec,
+        });
+        telemetryDebugSystem.bindUi();
+      } catch (e) {
+        telemetryDebugSystem = null;
+        console.warn("Telemetry debug system init failed:", e);
       }
     }
 
-    function teleQueue(line){
-      teleBuf.push(line);
-      teleBufChars += line.length;
-      // flush either next frame, or if buffer is getting chunky
-      if (!teleFlushRAF) teleFlushRAF = requestAnimationFrame(teleFlushNow);
-      if (teleBufChars > 8000) teleFlushNow();
-    }
-
-    function openTele(){
-      els.teleModal.classList.add("on");
-      els.teleModal.setAttribute("aria-hidden","false");
-    }
-    function stopTeleRecording(){
-      teleRecording = false;
-      els.teleRecBtn.textContent = "Record";
-      els.teleRecBtn.classList.remove("recOn");
-      if (teleFlushRAF) { cancelAnimationFrame(teleFlushRAF); teleFlushRAF = 0; }
-      teleFlushNow();
-    }
-    function closeTele(){
-      stopTeleRecording();
-      els.teleModal.classList.remove("on");
-      els.teleModal.setAttribute("aria-hidden","true");
-    }
-
-    function startTeleRecording(){
-      teleRecording = true;
-      teleT0 = performance.now();
-      teleLast = teleT0;
-      teleLines = 0;
-
-      teleBuf.length = 0;
-      teleBufChars = 0;
-      if (teleFlushRAF) { cancelAnimationFrame(teleFlushRAF); teleFlushRAF = 0; }
-
-      // ✅ FIX: remove duplicate assignment typo
-      els.teleOut.textContent =
-        "ms\tdms\tspeed01\tenergy01\tgroove01\tdynamics01\tsmooth01\tshake01\tlocked\thz\t" +
-        "dirX\tdirY\tdirZ\t" +
-        "raw_dirX\traw_dirY\traw_dirZ\t" +
-        "raw_omegaX\traw_omegaY\traw_omegaZ\t" +
-        "has_dir\thas_omega\t" +
-        "d_r2\td_r3\td_gate\td_balance\td_couple\n";
-
-      els.teleRecBtn.textContent = "Stop";
-      els.teleRecBtn.classList.add("recOn");
-    }
-
-    function toggleTeleRecord(){
-      if (!teleRecording) startTeleRecording();
-      else stopTeleRecording();
-    }
-
-    els.teleBtn.addEventListener("click", openTele);
-    els.teleBackdrop.addEventListener("click", closeTele);
-    els.teleClose.addEventListener("click", closeTele);
-    els.teleRecBtn.addEventListener("click", toggleTeleRecord);
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      if (els.teleModal.classList.contains("on")) closeTele();
-      else if (els.pairModal.classList.contains("on")) closePairModal();
-    });
-
-    function telePick01(d, newKey, oldKey){
-      if (d[newKey] != null) {
-        const n = Number(d[newKey]);
-        return isFinite(n) ? n : 0;
+    function updateDebugReadout(){
+      if (telemetryDebugSystem) {
+        telemetryDebugSystem.updateDebugReadout("—");
+        return;
       }
-      const n = Number(d[oldKey]);
-      if (!isFinite(n)) return 0;
-      return (n > 1.5) ? (n / 100) : n;
-    }
-    function telePickNum(d, key){
-      const n = Number(d && d[key]);
-      return isFinite(n) ? n : 0;
-    }
-
-    function teleHas(d, key){
-      if (!d) return 0;
-      if (d[key] != null) return 1;
-
-      // ✅ NEW fallbacks: a -> dir, r -> omega
-      if (key === "dir" && d.a != null) return 1;
-      if (key === "omega" && d.r != null) return 1;
-
-      return 0;
-    }
-
-    function telePickVecRaw(d, prefix){
-      // prefix = "dir" or "omega"
-      // Accepts:
-      //  - d.dir / d.omega (array/object)
-      //  - scalar dirX/dirY/dirZ, omegaX/omegaY/omegaZ
-      //  - ✅ NEW fallbacks: d.a (for dir), d.r (for omega)
-      const fallbackKey = (prefix === "dir") ? "a" : (prefix === "omega") ? "r" : null;
-
-      const src = (d && (d[prefix] != null ? d[prefix] : (fallbackKey ? d[fallbackKey] : null)));
-
-      let x = 0, y = 0, z = 0;
-
-      if (Array.isArray(src) && src.length >= 3){
-        x = Number(src[0]); y = Number(src[1]); z = Number(src[2]);
-      } else if (src && typeof src === "object"){
-        x = Number(src.x); y = Number(src.y); z = Number(src.z);
-      } else {
-        // scalar fields: dirX/dirY/dirZ or omegaX/omegaY/omegaZ
-        x = Number(d && d[prefix + "X"]);
-        y = Number(d && d[prefix + "Y"]);
-        z = Number(d && d[prefix + "Z"]);
-      }
-
-      if (!isFinite(x) || !isFinite(y) || !isFinite(z)){
-        return { x:0, y:0, z:0 };
-      }
-      return { x, y, z };
+      if (!els.dirReadout) return;
+      els.dirReadout.textContent = "—";
     }
 
     function teleMaybeLog(d){
-      if (!teleRecording) return;
-
-      const now = performance.now();
-      const ms  = Math.max(0, now - teleT0);
-      const dms = Math.max(0, now - teleLast);
-      teleLast = now;
-
-      const energy   = telePick01(d, "energy01", "energy");
-      const groove   = telePick01(d, "groove01", "groove");
-      const dynamics = telePick01(d, "dynamics01", "orbit01");
-      const smooth   = telePick01(d, "smooth01", "smooth");
-      const speed    = telePick01(d, "speed01", "speed");
-      const shake    = telePick01(d, "shake01", "shake");
-
-      const locked = !!d.locked;
-      const hz = (d.hz != null && isFinite(Number(d.hz))) ? Number(d.hz) : 0;
-
-      // normalized for telemetry (your existing function later in file)
-      const dirV = pickDirVec(d);
-      const dirX = dirV ? dirV.x : 0;
-      const dirY = dirV ? dirV.y : 0;
-      const dirZ = dirV ? dirV.z : 0;
-
-      const d_r2      = (d.d_r2 != null) ? telePickNum(d, "d_r2") : telePickNum(d, "o_r2");
-      const d_r3      = (d.d_r3 != null) ? telePickNum(d, "d_r3") : telePickNum(d, "o_r3");
-      const d_gate    = (d.d_gate != null) ? telePickNum(d, "d_gate") : telePickNum(d, "o_gate");
-      const d_balance = (d.d_balance != null) ? telePickNum(d, "d_balance") : telePickNum(d, "o_balance");
-      const d_couple  = (d.d_couple != null) ? telePickNum(d, "d_couple") : telePickNum(d, "o_couple");
-
-      // raw vector probes
-      const rawDir   = telePickVecRaw(d, "dir");
-      const rawOmega = telePickVecRaw(d, "omega");
-      const hasDir   = teleHas(d, "dir");
-      const hasOmega = teleHas(d, "omega");
-
-      const line =
-        `${ms.toFixed(1)}\t${dms.toFixed(1)}\t` +
-        `${speed.toFixed(4)}\t${energy.toFixed(4)}\t${groove.toFixed(4)}\t${dynamics.toFixed(4)}\t${smooth.toFixed(4)}\t${shake.toFixed(4)}\t` +
-        `${locked ? 1 : 0}\t${hz.toFixed(3)}\t` +
-        `${dirX.toFixed(4)}\t${dirY.toFixed(4)}\t${dirZ.toFixed(4)}\t` +
-        `${rawDir.x.toFixed(4)}\t${rawDir.y.toFixed(4)}\t${rawDir.z.toFixed(4)}\t` +
-        `${rawOmega.x.toFixed(4)}\t${rawOmega.y.toFixed(4)}\t${rawOmega.z.toFixed(4)}\t` +
-        `${hasDir}\t${hasOmega}\t` +
-        `${d_r2.toFixed(4)}\t${d_r3.toFixed(4)}\t${d_gate.toFixed(4)}\t${d_balance.toFixed(4)}\t${d_couple.toFixed(4)}\n`;
-
-      teleLines++;
-      // ✅ NEW: queue instead of immediate textContent +=
-      teleQueue(line);
+      if (telemetryDebugSystem) {
+        telemetryDebugSystem.teleMaybeLog(d);
+      }
     }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (telemetryDebugSystem && telemetryDebugSystem.isTeleOpen()) {
+        telemetryDebugSystem.closeTele();
+      } else if (els.pairModal.classList.contains("on")) {
+        closePairModal();
+      }
+    });
 
     // =========================================================================
     // ROOM STATE 
@@ -1382,11 +1233,6 @@
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
-
-    function updateDebugReadout(){
-      if (!els.dirReadout) return;
-      els.dirReadout.textContent = "—";
-    }
 
     function computeImpactMetric(rawImpactV){
       const v = Math.max(0, Number(rawImpactV) || 0);
@@ -2322,6 +2168,7 @@
 
     (async function init(){
       await initUiOverlaysSystem();
+      await initTelemetryDebugSystem();
       await initMobileImpulseSystem();
       await initLanSessionSystem();
       initMvpSystems();
