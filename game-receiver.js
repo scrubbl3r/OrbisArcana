@@ -1622,31 +1622,7 @@
 
     function updateDebugReadout(){
       if (!els.dirReadout) return;
-      if (!mvp || !mvp.gameState || !mvp.gameState.orb) {
-        els.dirReadout.textContent = "HP: — | Hits: — | State: —";
-        return;
-      }
-      const orb = mvp.gameState.orb;
-      const hp = `${Math.round(Number(orb.health) || 0)}/${Math.round(Number(orb.maxHealth) || 0)}`;
-      const hits = Math.round(Number(orb.hitsTaken) || 0);
-      const state = String(orb.visualState || "pristine");
-      let txt = `HP: ${hp} | Hits: ${hits} | State: ${state}`;
-      if (mvp.lastImpact && Number.isFinite(mvp.lastImpact.impact)) {
-        const rawV = Number(mvp.lastImpact.rawImpact) || 0;
-        const gMul = Number(mvp.lastImpact.gravityMul) || 0;
-        const drag = Number(mvp.lastImpact.fallDrag) || 0;
-        txt += ` | IMPACT:${mvp.lastImpact.impact.toFixed(0)} TH:${IMPACT_TH.toFixed(0)} v:${rawV.toFixed(0)} g:${gMul.toFixed(2)} d:${drag.toFixed(2)} ${mvp.lastImpact.source || ""}`;
-      }
-      const p = pickupState && pickupState.test ? pickupState.test : null;
-      const globeEl = els.testGlobe || document.getElementById("testGlobe");
-      if (p) {
-        const disp = globeEl ? (globeEl.style.display || "block") : "missing";
-        const left = globeEl ? globeEl.style.left || "—" : "—";
-        const top = globeEl ? globeEl.style.top || "—" : "—";
-        const sy = pickupScreenY(Number(p.yW) || 0);
-        txt += ` | GLOBE act:${p.active ? 1 : 0} mode:world yW:${Math.round(Number(p.yW) || 0)} sy:${Math.round(sy)} left:${left} top:${top} disp:${disp}`;
-      }
-      els.dirReadout.textContent = txt;
+      els.dirReadout.textContent = "—";
     }
 
     function computeImpactMetric(rawImpactV){
