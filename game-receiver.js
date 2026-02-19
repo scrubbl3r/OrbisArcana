@@ -14,6 +14,7 @@
       status: $("status"),
       last: $("last"),
       dirReadout: $("dirReadout"),
+      voiceReadout: $("voiceReadout"),
 
       vLift:  $("vLift"),
       vGroove: $("vGroove"),
@@ -164,6 +165,12 @@
     function setStatus(html, cls){
       els.status.className = cls || "dim";
       els.status.innerHTML = html;
+    }
+
+    function setVoiceReadout(text, cls = "dim"){
+      if (!els.voiceReadout) return;
+      els.voiceReadout.className = cls;
+      els.voiceReadout.textContent = String(text || "");
     }
 
     // =========================================================================
@@ -1047,6 +1054,10 @@
           onCalibrated: () => {
             setCalibStatus("Calibrated");
             closeCalibOverlay();
+            if (mvp && mvp.eventBus) {
+              mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
+              mvp.eventBus.emit("voice.open_gate", { reason: "post_calibration", timeoutMs: 4500 });
+            }
           },
           onCalibAvailable: () => {
             if (calibAvailable) return;
@@ -1168,11 +1179,24 @@
     }
 
     window.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      if (telemetryDebugSystem && telemetryDebugSystem.isTeleOpen()) {
-        telemetryDebugSystem.closeTele();
-      } else if (els.pairModal.classList.contains("on")) {
-        closePairModal();
+      if (e.key === "Escape") {
+        if (telemetryDebugSystem && telemetryDebugSystem.isTeleOpen()) {
+          telemetryDebugSystem.closeTele();
+        } else if (els.pairModal.classList.contains("on")) {
+          closePairModal();
+        }
+        return;
+      }
+
+      if (e.key === "v" || e.key === "V") {
+        if (!mvp || !mvp.eventBus) return;
+        if (e.shiftKey) {
+          const mode = (mvp.voiceMode === "wake_token_open_world") ? "off" : "wake_token_open_world";
+          mvp.eventBus.emit("voice.set_mode", { mode });
+        } else {
+          mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
+          mvp.eventBus.emit("voice.open_gate", { reason: "keyboard", timeoutMs: 4500 });
+        }
       }
     });
 
@@ -1352,7 +1376,17 @@
 
     async function initMvpSystems(){
       try {
-        const [{ createEventBus }, { createGameState }, { createOrbSystem }, { createFxSystem }, { createAudioSystem }, { createWorldSystem }, { createOrbFxSystem }] = await Promise.all([
+        const [
+          { createEventBus },
+          { createGameState },
+          { createOrbSystem },
+          { createFxSystem },
+          { createAudioSystem },
+          { createWorldSystem },
+          { createOrbFxSystem },
+          { createVoiceRecognitionSystem },
+          { createSpellDispatchSystem },
+        ] = await Promise.all([
           import("./src/events/event-bus.js"),
           import("./src/state/game-state.js"),
           import("./src/systems/orb-system.js"),
@@ -1360,6 +1394,8 @@
           import("./src/systems/audio-system.js"),
           import("./src/systems/world-system.js"),
           import("./src/systems/orb-fx-system.js"),
+          import("./src/systems/voice-recognition-system.js"),
+          import("./src/systems/spell-dispatch-system.js"),
         ]);
 
         const eventBus = createEventBus();
@@ -1375,8 +1411,12 @@
         const orbSystem = createOrbSystem({ gameState, eventBus });
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
+        const spellDispatchSystem = createSpellDispatchSystem({ eventBus });
+        const voiceRecognitionSystem = createVoiceRecognitionSystem({ eventBus });
         fxSystem.start();
         audioSystem.start();
+        spellDispatchSystem.start();
+        voiceRecognitionSystem.start();
         worldSystem = createWorldSystem({
           eventBus,
           stageEl: els.physStage,
@@ -1422,6 +1462,39 @@
           if (els.orbShards) els.orbShards.innerHTML = "";
           stopShardSim();
         });
+        eventBus.on("voice.unavailable", () => {
+          setVoiceReadout("Unavailable", "bad");
+        });
+        eventBus.on("voice.mode_changed", (p = {}) => {
+          const mode = String(p.mode || "off");
+          if (mvp) mvp.voiceMode = mode;
+          if (mode === "off") setVoiceReadout("Off", "dim");
+          else if (mode === "gated_window") setVoiceReadout("Armed (gated)", "ok");
+          else if (mode === "wake_token_open_world") setVoiceReadout("Wake: Orbis", "ok");
+          else setVoiceReadout(mode, "dim");
+        });
+        eventBus.on("voice.gate_opened", () => {
+          setVoiceReadout("Listening window…", "ok");
+        });
+        eventBus.on("voice.gate_closed", () => {
+          if (mvp && mvp.voiceMode === "gated_window") setVoiceReadout("Armed (gated)", "dim");
+        });
+        eventBus.on("voice.heard", (p = {}) => {
+          const txt = String(p.transcript || "").trim();
+          if (!txt) return;
+          setVoiceReadout(`Heard: ${txt}`, "dim");
+        });
+        eventBus.on("voice.spell_cast", (p = {}) => {
+          const spellId = String(p.spellId || "spell");
+          const conf = Number(p.confidence);
+          const confTxt = Number.isFinite(conf) ? ` ${conf.toFixed(2)}` : "";
+          setVoiceReadout(`Cast: ${spellId}${confTxt}`, "ok");
+        });
+        eventBus.on("voice.spell_rejected", (p = {}) => {
+          const reason = String(p.reason || "rejected");
+          if (reason === "no_spell_match" || reason === "no_wake_or_spell_match") return;
+          setVoiceReadout(`Rejected: ${reason}`, "dim");
+        });
 
         mvp = {
           eventBus,
@@ -1430,6 +1503,9 @@
           fxSystem,
           audioSystem,
           orbFxSystem,
+          spellDispatchSystem,
+          voiceRecognitionSystem,
+          voiceMode: "off",
           lastImpact: null,
           applyImpact(impact, source, meta = {}){
             this.lastImpact = {
@@ -1455,6 +1531,7 @@
         closeDeathOverlay();
         renderOrbDamageVisuals();
         updateDebugReadout();
+        setVoiceReadout("Off", "dim");
       } catch (e) {
         console.warn("MVP systems init failed:", e);
       }
