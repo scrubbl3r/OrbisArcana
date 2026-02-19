@@ -1,6 +1,6 @@
 import { VOICE_MATCH_CONFIG, VOICE_MODES } from "./voice-config.js";
 import { normalizeTranscript, stripWakeTokenPrefix } from "./normalizer.js";
-import { SPELLS, WAKE_TOKEN } from "./spellbook.js";
+import { SPELLS, WAKE_TOKEN, WAKE_TOKENS } from "./spellbook.js";
 
 function buildSpellIndex(spells) {
   const aliasToSpell = new Map();
@@ -32,6 +32,7 @@ export function matchSpellFromTranscript({
   confidence = 1,
   mode = VOICE_MODES.GATED_WINDOW,
   wakeToken = WAKE_TOKEN,
+  wakeTokenAliases = WAKE_TOKENS,
   spells = SPELLS,
 } = {}) {
   const aliasToSpell = buildSpellIndex(spells);
@@ -42,9 +43,20 @@ export function matchSpellFromTranscript({
     if (!normalized) continue;
 
     if (mode === VOICE_MODES.WAKE_TOKEN_OPEN_WORLD) {
-      const wake = stripWakeTokenPrefix(normalized, wakeToken);
-      if (!wake.hasWake) continue;
-      normalized = wake.rest;
+      const wakeCandidates = Array.isArray(wakeTokenAliases) && wakeTokenAliases.length
+        ? wakeTokenAliases
+        : [wakeToken];
+
+      let wakeMatch = { hasWake: false, rest: normalized };
+      for (const w of wakeCandidates) {
+        const attempt = stripWakeTokenPrefix(normalized, w);
+        if (attempt.hasWake) {
+          wakeMatch = attempt;
+          break;
+        }
+      }
+      if (!wakeMatch.hasWake) continue;
+      normalized = wakeMatch.rest;
       if (!normalized) continue;
     }
 

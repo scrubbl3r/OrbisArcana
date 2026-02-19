@@ -5,12 +5,21 @@ export const META_COMMANDS = Object.freeze({
 });
 
 export const WAKE_TOKEN = META_COMMANDS.WAKE_TOKEN;
+export const WAKE_TOKEN_ALIASES = Object.freeze([
+  "orbus",
+  "orbis",
+  "orbisz",
+  "orbyss",
+  "orbis.",
+  "orbis!",
+]);
+export const WAKE_TOKENS = Object.freeze([WAKE_TOKEN, ...WAKE_TOKEN_ALIASES]);
 
 export const SPELLS = [
   {
     id: "domus",
     phrase: "domus",
-    aliases: ["dohmus", "domas", "dohmas", "thomas"],
+    aliases: ["dohmus", "domas", "dohmas", "thomas", "dumbass"],
     minConfidence: 0.62,
     cooldownMs: 800,
     gateModes: [VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
