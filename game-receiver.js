@@ -1883,15 +1883,23 @@
         id: "globe_mid_01",
         xNorm: 0.5,                          // centered horizontally in world/stage
         yW: groundCenterWorld() - 1000,      // 1000px above ground, world-space fixed
+        anchorXNorm: 0.5,
+        anchorYW: groundCenterWorld() - 1000,
         r: 25,
         active: true,
         spawnedAtMs: 0,
         attracting: false,
         lastStepTs: 0,
+        driftAmpXNorm: 0.014,
+        driftAmpY: 24,
+        driftFreqXHz: 0.23,
+        driftFreqYHz: 0.31,
+        driftPhaseX: Math.random() * Math.PI * 2,
+        driftPhaseY: Math.random() * Math.PI * 2,
       }
     };
     const PICKUP_ATTRACT_START_EDGE_GAP_PX = 120;
-    const PICKUP_CONSUME_EDGE_GAP_PX = 30;
+    const PICKUP_CONSUME_EDGE_GAP_PX = 15;
 
     function pickupScreenY(yW){
       const h = stageRect().height;
@@ -1911,6 +1919,22 @@
       return el;
     }
 
+    function pickupWorldPos(p, nowMs){
+      if (!p) return { xNorm: 0.5, yW: 0 };
+      if (p.attracting) {
+        return {
+          xNorm: Number(p.xNorm) || 0.5,
+          yW: Number(p.yW) || 0,
+        };
+      }
+      const t = (Number(nowMs) || performance.now()) / 1000;
+      const xNorm = (Number(p.anchorXNorm) || 0.5) +
+        (Math.sin((t * (Number(p.driftFreqXHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseX) || 0)) * (Number(p.driftAmpXNorm) || 0));
+      const yW = (Number(p.anchorYW) || 0) +
+        (Math.sin((t * (Number(p.driftFreqYHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseY) || 0)) * (Number(p.driftAmpY) || 0));
+      return { xNorm, yW };
+    }
+
     function renderPickups(){
       const p = pickupState.test;
       const globeEl = ensureTestGlobeEl();
@@ -1919,14 +1943,15 @@
         globeEl.style.display = "none";
         return;
       }
+      const pos = pickupWorldPos(p, performance.now());
       const stage = stageRect();
-      const y = pickupScreenY(p.yW);
+      const y = pickupScreenY(pos.yW);
       const top = y - p.r;
       const d = p.r * 2;
       globeEl.style.display = "block";
       globeEl.style.width = `${d.toFixed(2)}px`;
       globeEl.style.height = `${d.toFixed(2)}px`;
-      const left = ((Number(p.xNorm) || 0.5) * (stage.width || 0)) - p.r;
+      const left = ((Number(pos.xNorm) || 0.5) * (stage.width || 0)) - p.r;
       globeEl.style.left = `${left.toFixed(2)}px`;
       globeEl.style.top = `${top.toFixed(2)}px`;
       globeEl.style.transform = "none";
@@ -1936,6 +1961,8 @@
     }
 
     function resetPickups(){
+      pickupState.test.xNorm = pickupState.test.anchorXNorm;
+      pickupState.test.yW = pickupState.test.anchorYW;
       pickupState.test.active = true;
       pickupState.test.spawnedAtMs = performance.now();
       pickupState.test.attracting = false;
@@ -1961,12 +1988,19 @@
       const stageW = stageRect().width || 0;
       const orbXNorm = 0.5;
       const orbYW = Number(physState.yW) || 0;
-      const dxPx = ((orbXNorm - p.xNorm) * stageW);
-      const dyPx = (orbYW - p.yW);
+      const now = Number(nowMs) || performance.now();
+      const pos = pickupWorldPos(p, now);
+      const dxPx = ((orbXNorm - pos.xNorm) * stageW);
+      const dyPx = (orbYW - pos.yW);
       let centerDist = Math.hypot(dxPx, dyPx);
       let edgeGapPx = centerDist - (PHYS.orbRadiusPx + p.r);
 
       if (edgeGapPx <= PICKUP_ATTRACT_START_EDGE_GAP_PX) {
+        if (!p.attracting) {
+          // Begin pull from the current drifted position.
+          p.xNorm = pos.xNorm;
+          p.yW = pos.yW;
+        }
         p.attracting = true;
       }
 
