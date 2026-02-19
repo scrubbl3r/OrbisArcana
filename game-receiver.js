@@ -1237,6 +1237,8 @@
     const IMPACT_TH = 500;
     const DEATH_FLOW_DELAY_MS = 3000;
     const FLOAT_GRACE_DEFAULT_MS = 1000;
+    const DOMUS_FLOAT_GRACE_MS = 1500;
+    const DOMUS_TELEPORT_ABOVE_GROUND_PX = 300;
     const IMPACT_MODEL = {
       mass: 1.0,
       gravityExp: 0.5,
@@ -1468,12 +1470,14 @@
           stopShardSim();
         });
         eventBus.on("voice.spell_cast", (p = {}) => {
-          const graceMs = Number(p && p.floatGraceMs);
-          grantFloatGrace(Number.isFinite(graceMs) ? graceMs : FLOAT_GRACE_DEFAULT_MS);
           const intent = String(p.intent || "");
           if (intent === "spell.domus") {
-            teleportOrbToSpawnNeutralizePhysics();
+            teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
+            grantFloatGrace(DOMUS_FLOAT_GRACE_MS);
+            return;
           }
+          const graceMs = Number(p && p.floatGraceMs);
+          grantFloatGrace(Number.isFinite(graceMs) ? graceMs : FLOAT_GRACE_DEFAULT_MS);
         });
         eventBus.on("orb.float_grace_grant", (p = {}) => {
           grantFloatGrace(p.ms);
@@ -1587,10 +1591,13 @@
       if (worldSystem) worldSystem.render(performance.now());
     }
 
-    function teleportOrbToSpawnNeutralizePhysics(){
-      physState.yW = groundCenterWorld();
+    function teleportOrbToSpawnNeutralizePhysics(aboveGroundPx = 0){
+      const yFloor = groundCenterWorld();
+      const yCeil = PHYS.orbRadiusPx;
+      const yTarget = clamp(yFloor - Math.max(0, Number(aboveGroundPx) || 0), yCeil, yFloor);
+      physState.yW = yTarget;
       physState.v = 0;
-      physState.onGround = true;
+      physState.onGround = !(yTarget < (yFloor - 0.5));
       physState.descendMs = 0;
       physState.shieldDescentBlocked = false;
       physState.floatGraceAnchorY = physState.yW;
