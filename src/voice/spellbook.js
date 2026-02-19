@@ -10,7 +10,7 @@ export const SPELLS = [
   {
     id: "domus",
     phrase: "domus",
-    aliases: ["dohmus", "domas", "dohmas"],
+    aliases: ["dohmus", "domas", "dohmas", "thomas"],
     minConfidence: 0.62,
     cooldownMs: 800,
     gateModes: [VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
