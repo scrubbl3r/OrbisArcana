@@ -169,10 +169,42 @@
     // =========================================================================
     // CALIBRATION OVERLAY
     // =========================================================================
+    let uiOverlaysSystem = null;
     let calibInFlight = false;
     let calibAvailable = false;
 
+    async function initUiOverlaysSystem(){
+      try {
+        const { createUiOverlaysSystem } = await import("./src/systems/ui-overlays-system.js");
+        uiOverlaysSystem = createUiOverlaysSystem({
+          startScreenEl: els.startScreen,
+          calibOverlayEl: els.calibOverlay,
+          calibBtnEl: els.calibBtn,
+          calibStatusEl: els.calibStatus,
+          deathPanelEl: els.deathPanel,
+          onCalibClosed: () => {
+            calibInFlight = false;
+          },
+        });
+      } catch (e) {
+        uiOverlaysSystem = null;
+        console.warn("UI overlays system init failed:", e);
+      }
+    }
+
+    function hideStartScreen(){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.hideStartScreen();
+        return;
+      }
+      if (els.startScreen) els.startScreen.classList.add("off");
+    }
+
     function openCalibOverlay(){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.openCalibOverlay(calibAvailable);
+        return;
+      }
       if (!els.calibOverlay) return;
       els.calibOverlay.classList.remove("off");
       els.calibOverlay.setAttribute("aria-hidden","false");
@@ -180,6 +212,10 @@
     }
 
     function closeCalibOverlay(){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.closeCalibOverlay();
+        return;
+      }
       if (!els.calibOverlay) return;
       els.calibOverlay.classList.add("off");
       els.calibOverlay.setAttribute("aria-hidden","true");
@@ -188,16 +224,28 @@
     }
 
     function setCalibStatus(msg){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.setCalibStatus(msg);
+        return;
+      }
       if (els.calibStatus) els.calibStatus.textContent = msg;
     }
 
     function openDeathOverlay(){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.openDeathOverlay();
+        return;
+      }
       if (!els.deathPanel) return;
       els.deathPanel.classList.remove("off");
       els.deathPanel.setAttribute("aria-hidden","false");
     }
 
     function closeDeathOverlay(){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.closeDeathOverlay();
+        return;
+      }
       if (!els.deathPanel) return;
       els.deathPanel.classList.add("off");
       els.deathPanel.setAttribute("aria-hidden","true");
@@ -205,6 +253,10 @@
 
     let deathOverlayTO = 0;
     function scheduleDeathOverlay(){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.scheduleDeathOverlay(DEATH_FLOW_DELAY_MS);
+        return;
+      }
       if (deathOverlayTO) {
         clearTimeout(deathOverlayTO);
         deathOverlayTO = 0;
@@ -217,6 +269,10 @@
     }
 
     function clearDeathOverlaySchedule(){
+      if (uiOverlaysSystem) {
+        uiOverlaysSystem.clearDeathOverlaySchedule();
+        return;
+      }
       if (!deathOverlayTO) return;
       clearTimeout(deathOverlayTO);
       deathOverlayTO = 0;
@@ -1029,7 +1085,7 @@
           setStatus,
           onImpulse: handleIncomingImpulse,
           onPhoneStarted: () => {
-            if (els.startScreen) els.startScreen.classList.add("off");
+            hideStartScreen();
             if (mobileImpulseSystem) mobileImpulseSystem.markCalibAvailable();
             else {
               calibAvailable = true;
@@ -2211,9 +2267,7 @@
         if (els.pairModal.classList.contains("on")) closePairModal();
 
         // If the start screen is still up for some reason, drop it on first msg.
-        if (els.startScreen && !els.startScreen.classList.contains("off")) {
-          els.startScreen.classList.add("off");
-        }
+        if (els.startScreen && !els.startScreen.classList.contains("off")) hideStartScreen();
 
         handleIncomingImpulse(d);
       });
@@ -2267,6 +2321,7 @@
     }
 
     (async function init(){
+      await initUiOverlaysSystem();
       await initMobileImpulseSystem();
       await initLanSessionSystem();
       initMvpSystems();
