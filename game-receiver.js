@@ -1049,8 +1049,7 @@
             setCalibStatus("Calibrated");
             closeCalibOverlay();
             if (mvp && mvp.eventBus) {
-              mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
-              mvp.eventBus.emit("voice.open_gate", { reason: "post_calibration", timeoutMs: 4500 });
+              mvp.eventBus.emit("voice.set_mode", { mode: "wake_token_open_world" });
             }
           },
           onCalibAvailable: () => {
@@ -1465,6 +1464,12 @@
           if (els.orbShards) els.orbShards.innerHTML = "";
           stopShardSim();
         });
+        eventBus.on("voice.spell_cast", (p = {}) => {
+          const intent = String(p.intent || "");
+          if (intent === "spell.domus") {
+            teleportOrbToSpawnNeutralizePhysics();
+          }
+        });
         mvp = {
           eventBus,
           gameState,
@@ -1562,6 +1567,17 @@
       physState.onGround = true;
       applyOrbTransform();
       if (worldSystem) worldSystem.render(performance.now());
+    }
+
+    function teleportOrbToSpawnNeutralizePhysics(){
+      physState.yW = groundCenterWorld();
+      physState.v = 0;
+      physState.onGround = true;
+      physState.descendMs = 0;
+      physState.shieldDescentBlocked = false;
+      applyOrbTransform();
+      if (worldSystem) worldSystem.render(performance.now());
+      updateDebugReadout();
     }
 
     function setGravityMul(m){

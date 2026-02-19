@@ -1,8 +1,21 @@
 import { VOICE_MODES } from "./voice-config.js";
 
-export const WAKE_TOKEN = "orbis";
+export const META_COMMANDS = Object.freeze({
+  WAKE_TOKEN: "orbis",
+});
+
+export const WAKE_TOKEN = META_COMMANDS.WAKE_TOKEN;
 
 export const SPELLS = [
+  {
+    id: "domus",
+    phrase: "domus",
+    aliases: ["dohmus", "domas", "dohmas"],
+    minConfidence: 0.62,
+    cooldownMs: 800,
+    gateModes: [VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
+    intent: "spell.domus",
+  },
   {
     id: "combustus",
     phrase: "combustus",
