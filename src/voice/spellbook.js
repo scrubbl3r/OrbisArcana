@@ -25,7 +25,7 @@ export const SPELLS = [
     aliases: ["dohmus", "domas", "dohmas", "thomas", "dumbass"],
     minConfidence: 0.62,
     cooldownMs: 800,
-    gateModes: [VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
+    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
     intent: "spell.domus",
   },
   {

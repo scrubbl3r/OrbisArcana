@@ -1,5 +1,7 @@
 import { VOICE_GATE_DEFAULTS, VOICE_MATCH_CONFIG, VOICE_MODES, VOICE_RECOGNITION_CONFIG } from "../voice/voice-config.js";
 import { matchSpellFromTranscript } from "../voice/spell-matcher.js";
+import { WAKE_TOKENS } from "../voice/spellbook.js";
+import { stripWakeTokenPrefix } from "../voice/normalizer.js";
 
 export function createVoiceRecognitionSystem({
   eventBus,
@@ -101,6 +103,43 @@ export function createVoiceRecognitionSystem({
       }
     };
 
+    function emitSpellDetected(match, modeForEmit, gateOpenForEmit) {
+      eventBus.emit("voice.spell_detected", {
+        spell: match.spell,
+        transcript: match.transcript,
+        confidence: Number(match.confidence) || 1,
+        mode: modeForEmit,
+        gateOpen: gateOpenForEmit,
+        atMs: Date.now(),
+      });
+    }
+
+    function emitHeard(transcript, confidence, alternatives) {
+      eventBus.emit("voice.heard", {
+        transcript,
+        confidence,
+        alternatives,
+        mode: state.mode,
+        gateOpen: state.gateOpen,
+        atMs: Date.now(),
+      });
+    }
+
+    function detectWakeAndSpellCandidate(transcript, alternatives) {
+      const inputs = [transcript].concat(Array.isArray(alternatives) ? alternatives : []);
+      let heardWake = false;
+      let spellCandidate = "";
+      for (const raw of inputs) {
+        for (const wake of WAKE_TOKENS) {
+          const r = stripWakeTokenPrefix(raw, wake);
+          if (!r.hasWake) continue;
+          heardWake = true;
+          if (!spellCandidate && r.rest) spellCandidate = r.rest;
+        }
+      }
+      return { heardWake, spellCandidate };
+    }
+
     rec.onresult = (evt) => {
       if (!evt || !evt.results) return;
       for (let i = evt.resultIndex; i < evt.results.length; i++) {
@@ -115,14 +154,62 @@ export function createVoiceRecognitionSystem({
           if (alt && alt.transcript) alternatives.push(String(alt.transcript).trim());
         }
 
-        eventBus.emit("voice.heard", {
-          transcript: primary,
-          confidence,
-          alternatives,
-          mode: state.mode,
-          gateOpen: state.gateOpen,
-          atMs: Date.now(),
-        });
+        if (state.mode === VOICE_MODES.WAKE_TOKEN_OPEN_WORLD) {
+          if (state.gateOpen) {
+            // Strict armed window: spellbook-only, ignore unknown noise/conversation.
+            const armedMatch = matchSpellFromTranscript({
+              transcript: primary,
+              alternatives,
+              confidence,
+              mode: VOICE_MODES.GATED_WINDOW,
+            });
+            if (armedMatch && armedMatch.matched) {
+              emitHeard(primary, confidence, alternatives);
+              emitSpellDetected(armedMatch, state.mode, state.gateOpen);
+            } else if (matchConfig.keepUnknownForDebug && armedMatch && armedMatch.reason === "below_confidence") {
+              emitHeard(primary, confidence, alternatives);
+              eventBus.emit("voice.spell_rejected", {
+                reason: armedMatch.reason,
+                transcript: primary,
+                confidence,
+                mode: state.mode,
+                gateOpen: state.gateOpen,
+                atMs: Date.now(),
+              });
+            }
+            continue;
+          }
+
+          // Wake-listen state: only wake token opens the spell window.
+          const wake = detectWakeAndSpellCandidate(primary, alternatives);
+          if (!wake.heardWake) continue;
+
+          emitHeard(primary, confidence, alternatives);
+          openGate({ reason: "wake_token", timeoutMs: gateDefaults.windowTimeoutMs });
+          eventBus.emit("voice.wake_detected", { transcript: primary, atMs: Date.now() });
+
+          // If user said "Orbis <spell>" in one utterance, cast immediately.
+          if (wake.spellCandidate) {
+            const inlineMatch = matchSpellFromTranscript({
+              transcript: wake.spellCandidate,
+              confidence,
+              mode: VOICE_MODES.GATED_WINDOW,
+            });
+            if (inlineMatch && inlineMatch.matched) {
+              emitSpellDetected(inlineMatch, state.mode, true);
+            } else if (matchConfig.keepUnknownForDebug && inlineMatch && inlineMatch.reason === "below_confidence") {
+              eventBus.emit("voice.spell_rejected", {
+                reason: inlineMatch.reason,
+                transcript: wake.spellCandidate,
+                confidence,
+                mode: state.mode,
+                gateOpen: true,
+                atMs: Date.now(),
+              });
+            }
+          }
+          continue;
+        }
 
         const match = matchSpellFromTranscript({
           transcript: primary,
@@ -132,15 +219,10 @@ export function createVoiceRecognitionSystem({
         });
 
         if (match && match.matched) {
-          eventBus.emit("voice.spell_detected", {
-            spell: match.spell,
-            transcript: match.transcript,
-            confidence: Number(match.confidence) || confidence,
-            mode: state.mode,
-            gateOpen: state.gateOpen,
-            atMs: Date.now(),
-          });
+          emitHeard(primary, confidence, alternatives);
+          emitSpellDetected(match, state.mode, state.gateOpen);
         } else if (matchConfig.keepUnknownForDebug) {
+          emitHeard(primary, confidence, alternatives);
           eventBus.emit("voice.spell_rejected", {
             reason: (match && match.reason) || "no_spell_match",
             transcript: primary,
@@ -242,6 +324,11 @@ export function createVoiceRecognitionSystem({
     unsub.push(eventBus.on("voice.stop_listening", () => {
       setMode(VOICE_MODES.OFF);
       closeGate({ reason: "stop_listening" });
+    }));
+    unsub.push(eventBus.on("voice.spell_cast", () => {
+      if (gateDefaults.autoStopOnCast && state.gateOpen) {
+        closeGate({ reason: "cast" });
+      }
     }));
 
     setMode(VOICE_MODES.OFF);

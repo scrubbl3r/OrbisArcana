@@ -18,6 +18,6 @@ export const VOICE_MATCH_CONFIG = {
 };
 
 export const VOICE_GATE_DEFAULTS = {
-  windowTimeoutMs: 4500,
+  windowTimeoutMs: 4000,
   autoStopOnCast: true,
 };
