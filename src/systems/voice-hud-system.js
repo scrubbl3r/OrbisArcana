@@ -76,6 +76,17 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
     write(`Cast: ${spellId}${confTxt}`, "ok");
   }
 
+  function onSpellLoaded(payload = {}) {
+    const spellId = String(payload.spellId || "spell");
+    const axis = String(payload.axis || "").toUpperCase();
+    const slot = String(payload.slot || "");
+    const where = axis && slot ? ` ${axis}:${slot}` : "";
+    voiceState.lastSpellId = spellId;
+    voiceState.lastRejectReason = "";
+    voiceState.lastEventAtMs = Date.now();
+    write(`Loaded:${where} ${spellId}`.trim(), "ok");
+  }
+
   function onSpellRejected(payload = {}) {
     const reason = String(payload.reason || "rejected");
     voiceState.lastRejectReason = reason;
@@ -100,6 +111,7 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
     unsub.push(eventBus.on("voice.listening_started", onListeningStarted));
     unsub.push(eventBus.on("voice.listening_stopped", onListeningStopped));
     unsub.push(eventBus.on("voice.heard", onHeard));
+    unsub.push(eventBus.on("voice.spell_loaded", onSpellLoaded));
     unsub.push(eventBus.on("voice.spell_cast", onSpellCast));
     unsub.push(eventBus.on("voice.spell_rejected", onSpellRejected));
     unsub.push(eventBus.on("voice.error", onError));

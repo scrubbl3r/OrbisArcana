@@ -86,6 +86,7 @@ export function matchSpellFromTranscript({
         intent: spell.intent,
         cooldownMs: Number(spell.cooldownMs) || 0,
         phrase: spell.phrase,
+        allowedAxes: Array.isArray(spell.allowedAxes) ? spell.allowedAxes.slice() : [],
       },
     };
   }

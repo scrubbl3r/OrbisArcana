@@ -756,11 +756,119 @@
     const GROOVE_SHAKE_GATE = 0.20; // Hard gate: if groove01 is above this, shake is ignored
     const SHAKE_LAMP_THR = 1.65; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
     const SD_RECENT_MS = 750; // Direction label must arrive within this window (ms) to flash lamp
+    const FLAT_SPIN_MIN_SPEED01 = 0.18;
+    const FLAT_SPIN_DOMINANCE_ON = 0.84;
+    const FLAT_SPIN_DOMINANCE_OFF = 0.74;
+    const FLAT_SPIN_ON_HOLD_MS = 260;
+    const FLAT_SPIN_OFF_HOLD_MS = 220;
+    const FLAT_SPIN_GATE_REFRESH_MS = 1100;
 
     let shakeCooldownUntil = 0;
     let shakeArmed = true;
     let pendingSd = null;
     let pendingSdAt = 0;
+    const flatSpin = {
+      active: false,
+      axis: "",
+      holdMs: 0,
+      releaseMs: 0,
+      lastTs: 0,
+      lastGateRefreshMs: 0,
+    };
+
+    function axisFromShieldAxis(shieldAxis){
+      if (!Array.isArray(shieldAxis) || shieldAxis.length < 3) return null;
+      const ax = Math.max(0, Number(shieldAxis[0]) || 0);
+      const ay = Math.max(0, Number(shieldAxis[1]) || 0);
+      const az = Math.max(0, Number(shieldAxis[2]) || 0);
+      const sum = ax + ay + az;
+      if (!(sum > 1e-6)) return null;
+      const vals = [
+        { axis: "x", v: ax / sum },
+        { axis: "y", v: ay / sum },
+        { axis: "z", v: az / sum },
+      ];
+      vals.sort((a, b) => b.v - a.v);
+      return vals[0];
+    }
+
+    function openFlatSpinWindow(axis, nowMs){
+      flatSpin.active = true;
+      flatSpin.axis = axis;
+      flatSpin.releaseMs = 0;
+      flatSpin.lastGateRefreshMs = nowMs;
+      if (!mvp || !mvp.eventBus) return;
+      mvp.eventBus.emit("spell_window.flat_spin_opened", { axis, atMs: nowMs });
+      mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
+      mvp.eventBus.emit("voice.open_gate", { reason: `flat_spin_${axis}`, timeoutMs: 4500 });
+    }
+
+    function closeFlatSpinWindow(reason, nowMs){
+      if (!flatSpin.active) return;
+      const axis = flatSpin.axis;
+      flatSpin.active = false;
+      flatSpin.axis = "";
+      flatSpin.holdMs = 0;
+      flatSpin.releaseMs = 0;
+      flatSpin.lastGateRefreshMs = 0;
+      if (!mvp || !mvp.eventBus) return;
+      mvp.eventBus.emit("spell_window.flat_spin_closed", { axis, reason, atMs: nowMs });
+      mvp.eventBus.emit("voice.close_gate", { reason: `flat_spin_${reason}` });
+      mvp.eventBus.emit("voice.set_mode", { mode: "wake_token_open_world" });
+    }
+
+    function updateFlatSpinWindow(d, speed01, nowMs){
+      const dt = flatSpin.lastTs ? clamp(nowMs - flatSpin.lastTs, 0, 120) : 0;
+      flatSpin.lastTs = nowMs;
+      const locked = !!(d && d.locked);
+      const axisInfo = axisFromShieldAxis(d && d.shieldAxis);
+      const canQualify = !!axisInfo && locked && (Number(speed01) >= FLAT_SPIN_MIN_SPEED01);
+
+      if (flatSpin.active) {
+        const sameAxis = canQualify && axisInfo.axis === flatSpin.axis && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF;
+        if (sameAxis) {
+          flatSpin.releaseMs = 0;
+          if ((nowMs - flatSpin.lastGateRefreshMs) >= FLAT_SPIN_GATE_REFRESH_MS) {
+            flatSpin.lastGateRefreshMs = nowMs;
+            if (mvp && mvp.eventBus) {
+              mvp.eventBus.emit("voice.open_gate", {
+                reason: `flat_spin_keepalive_${flatSpin.axis}`,
+                timeoutMs: 4500
+              });
+            }
+          }
+          return;
+        }
+        flatSpin.releaseMs += dt;
+        if (flatSpin.releaseMs >= FLAT_SPIN_OFF_HOLD_MS) {
+          closeFlatSpinWindow("unstable", nowMs);
+        }
+        return;
+      }
+
+      const qualify = canQualify && axisInfo.v >= FLAT_SPIN_DOMINANCE_ON;
+      if (!qualify) {
+        flatSpin.holdMs = 0;
+        return;
+      }
+
+      if (flatSpin.axis && flatSpin.axis !== axisInfo.axis) {
+        flatSpin.holdMs = 0;
+      }
+      flatSpin.axis = axisInfo.axis;
+      flatSpin.holdMs += dt;
+      if (flatSpin.holdMs >= FLAT_SPIN_ON_HOLD_MS) {
+        openFlatSpinWindow(flatSpin.axis, nowMs);
+      }
+    }
+
+    function shakeGroupFromCode(code){
+      const c = String(code || "").trim().toUpperCase();
+      if (c === "U" || c === "D") return "UD";
+      if (c === "L" || c === "R") return "LR";
+      if (c === "F" || c === "B") return "FB";
+      return "";
+    }
 
     function resetShakeDetector(){
       shakeCooldownUntil = 0;
@@ -772,6 +880,10 @@
       // ✅ NEW: hard-clear any queued direction timers
       clearDirLampTimers();
       allDirLampOff();
+      closeFlatSpinWindow("reset", performance.now());
+      flatSpin.lastTs = 0;
+      flatSpin.holdMs = 0;
+      flatSpin.releaseMs = 0;
     }
 
     function resetShakeCachesAfterHit(){
@@ -799,9 +911,11 @@
       spendShake();
       flashShakeLamp(400);
       triggerShockwave();
+      let shakeCode = "";
 
       if (pendingSd && (nowMs - pendingSdAt) <= SD_RECENT_MS) {
         const code = String(pendingSd || "").trim().toUpperCase();
+        shakeCode = code;
         if (SHAKE_MODE === 1) {
           clearDirLampTimers();
           allDirLampOff();
@@ -812,6 +926,13 @@
         } else {
           flashDirLampSingle(code, 420);
         }
+      }
+      if (mvp && mvp.eventBus) {
+        mvp.eventBus.emit("input.shake_triggered", {
+          code: shakeCode,
+          group: shakeGroupFromCode(shakeCode),
+          atMs: nowMs,
+        });
       }
 
       // Reset shake-related caches after a successful hit (do not kill lamp/cooldown)
@@ -2166,6 +2287,7 @@
       const speed    = pick01NewOrOld("speed01", "speed");
       const shake    = pick01NewOrOld("shake01", "shake");
       const locked   = !!d.locked;
+      updateFlatSpinWindow(d, speed, nowMs);
       
       updateEnergyBankFromPhone(energyFromPhone, nowMs);
 
