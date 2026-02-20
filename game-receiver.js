@@ -849,7 +849,7 @@
     }
 
     function axisFromVisibleShield(d){
-      return axisFromShieldRgb(d && d.shieldRGB) || axisFromShieldAxis(d && d.shieldAxis);
+      return axisFromShieldAxis(d && d.shieldAxis) || axisFromShieldRgb(d && d.shieldRGB);
     }
 
     function openFlatSpinWindow(axis, nowMs){
