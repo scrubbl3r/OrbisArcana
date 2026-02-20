@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OrbisArcana Labs</title>
+  <style>
+    :root {
+      --bg: #0c1116;
+      --panel: #121922;
+      --text: #e8edf3;
+      --muted: #9fb0c2;
+      --accent: #52ffa0;
+      --border: #243243;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top right, #162130, var(--bg) 45%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(900px, 100%);
+      background: color-mix(in oklab, var(--panel) 92%, black);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.6rem;
+      letter-spacing: 0.02em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    li + li { margin-top: 8px; }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>orbisarcana labs</h1>
+    <p>Independent workshop space for prototyping effects before production integration.</p>
+
+    <section class="grid" aria-label="Labs directories">
+      <article class="card">
+        <h2>vfx</h2>
+        <ul>
+          <li><a href="./vfx/orb-vfx.html">orb-vfx</a></li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>sfx</h2>
+        <p class="muted">No workshops yet.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

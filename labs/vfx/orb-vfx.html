@@ -1,0 +1,1404 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Orb VFX Tester — Electric AOE + Shield + Shockwave</title>
+  <style>
+    :root{
+      --g:#32ff75;
+      --bg:#000;
+      --panel: rgba(0,0,0,.55);
+      --border: rgba(50,255,117,.18);
+      --shield-r: 120;
+      --shield-g: 210;
+      --shield-b: 255;
+
+      /* Orb (receiver orb size) */
+      --orb-d: 100px;
+      --orb-stroke: 2px;
+      --orb-stroke-color: rgb(255,255,255);
+      --orb-fill: rgba(255,255,255,0.20);
+
+      /* Shield */
+      --shield-d: 124px;
+      --shield-stroke: 4px;
+
+      /* Shield alpha (also used to clamp pulse max) */
+      --shield-alpha: 1.00;
+      --shield-fade: 1;
+
+      /* Pulse controls (only active while shield is ON) — screenshot defaults */
+      --shield-pulse-ms: 80ms;
+      --shield-pulse-min: 0.30;
+      --shield-pulse-max: 1.00;
+
+      /* Shockwave */
+      --shock-color: rgba(255, 255, 255, 0.30);
+      --shock-stroke: 4px;
+
+      /* Flame AOE */
+      --flame-d: 200px;
+      --flame-duration: 10000ms;
+      --flame-stroke: rgba(255, 96, 24, 1);
+      --flame-fill: rgba(255, 96, 24, 0.20);
+
+      /* Electric AOE */
+      --electric-d: 240px;
+      --electric-duration: 10000ms;
+      --electric-glow: rgba(120, 215, 255, 1);
+    }
+
+    *, *::before, *::after{ box-sizing: border-box; }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      color:var(--g);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      overflow:hidden;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(1200px 700px at 50% 35%, rgba(0,0,0,.0) 0%, rgba(0,0,0,.45) 55%, rgba(0,0,0,.75) 100%);
+      opacity:0.95;
+      mix-blend-mode:multiply;
+      z-index:0;
+    }
+
+    .wrap{
+      position:relative;
+      z-index:1;
+      max-width:1080px;
+      margin:22px auto;
+      padding:0 16px;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:16px;
+      align-items:start;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px 14px 16px;
+      box-shadow: 0 18px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+
+    .title{
+      font-weight:1000;
+      letter-spacing:.3px;
+      margin-bottom:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:10px;
+    }
+    .title .dim{opacity:.7; font-weight:800; font-size:12px;}
+    .titleTools{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .titleTools label{
+      font-size:12px;
+      opacity:.8;
+      font-weight:800;
+    }
+    .effectSelect{
+      background: rgba(0,0,0,.45);
+      color: var(--g);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:6px 8px;
+      font: inherit;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .stage{
+      height:min(78vh, 740px);
+      border:1px solid rgba(50,255,117,.22);
+      border-radius:14px;
+      background:#000;
+      position:relative;
+      overflow:hidden;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
+    }
+
+    /* ONE TRUE ORIGIN */
+    .origin{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:0;
+      height:0;
+      pointer-events:none;
+    }
+
+    .atOrigin{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      pointer-events:none;
+    }
+
+    .orb{
+      width: var(--orb-d);
+      height: var(--orb-d);
+      border-radius: 999px;
+      border: var(--orb-stroke) solid var(--orb-stroke-color);
+      background: var(--orb-fill);
+      box-shadow: 0 0 3px var(--orb-stroke-color);
+    }
+
+    .shield{
+      width: var(--shield-d);
+      height: var(--shield-d);
+      border-radius: 999px;
+
+      opacity:0;
+      filter: opacity(var(--shield-fade));
+      transform: translate(-50%,-50%) scale(0.96);
+      transform-origin: 50% 50%;
+
+      border: var(--shield-stroke) solid rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.0);
+      background: radial-gradient(circle at 45% 35%,
+        rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.12) 0%,
+        rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.05) 40%,
+        rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.00) 75%);
+      transition:
+        opacity 120ms linear,
+        transform 120ms ease-out,
+        border-color 120ms linear;
+      box-shadow:none;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes shieldPulseAlpha {
+      0%   { opacity: var(--shield-pulse-min); }
+      50%  { opacity: var(--shield-pulse-max); }
+      100% { opacity: var(--shield-pulse-min); }
+    }
+
+    /* Pulse only while ON */
+    .shield.on{
+      transform: translate(-50%,-50%) scale(1.02);
+      border-color: rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.85);
+      transition: none;
+      animation: shieldPulseAlpha var(--shield-pulse-ms) linear infinite;
+    }
+
+    .shockLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:0;
+      height:0;
+      pointer-events:none;
+      overflow:visible;
+    }
+    .shockSvg{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      overflow:visible;
+      pointer-events:none;
+    }
+    .flameLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:0;
+      height:0;
+      pointer-events:none;
+      overflow:visible;
+      z-index: 3;
+      mix-blend-mode: screen;
+    }
+    .flameSvg{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      overflow:visible;
+      pointer-events:none;
+    }
+    .electricLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:0;
+      height:0;
+      pointer-events:none;
+      overflow:visible;
+      z-index: 4;
+      mix-blend-mode: screen;
+    }
+    .electricSvg{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      overflow:visible;
+      pointer-events:none;
+    }
+
+    .section{
+      border-top:1px solid rgba(50,255,117,.14);
+      padding-top:12px;
+      margin-top:12px;
+    }
+    .section:first-child{
+      border-top:none;
+      padding-top:0;
+      margin-top:0;
+    }
+    .section[hidden]{ display:none; }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    button{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.45);
+      color:var(--g);
+      cursor:pointer;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+    button:hover{border-color:rgba(50,255,117,.35)}
+    button:disabled{ opacity:.55; cursor:default; }
+
+    .sliderRow{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+      opacity:.92;
+      margin-top:10px;
+    }
+    .sliderRow strong{ font-weight: 1000; opacity:1; }
+    input[type="range"]{
+      width:100%;
+      margin-top:8px;
+      accent-color: var(--g);
+    }
+
+    .hint{
+      margin-top:10px;
+      font-size:11px;
+      opacity:.75;
+      line-height:1.35;
+    }
+
+    @media (max-width: 960px){
+      .wrap{ grid-template-columns: 1fr; }
+      .stage{ height:min(62vh, 620px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="title">
+        <span>Preview</span>
+        <span class="dim">Orb VFX tester (electric aoe + shield + shockwave + flame aoe)</span>
+      </div>
+
+      <div class="stage" id="stage" aria-label="Preview stage">
+        <div class="origin" id="origin">
+          <div class="electricLayer" id="electricLayer"></div>
+          <div class="flameLayer" id="flameLayer"></div>
+          <div class="shockLayer" id="shockLayer"></div>
+          <div class="shield atOrigin" id="shield" aria-hidden="true"></div>
+          <div class="orb atOrigin" id="orb" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="hint">
+        Includes electric aoe, bubble shield, shockwave, and flame aoe workshops.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="title">
+        <span>Controls</span>
+        <div class="titleTools">
+          <label for="effectSelect">Effect</label>
+          <select id="effectSelect" class="effectSelect" aria-label="Select effect controls">
+            <option value="electric-aoe">electric aoe</option>
+            <option value="flame-aoe">flame aoe</option>
+            <option value="bubble-shield">bubble shield</option>
+            <option value="shockwave">shockwave</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Electric AOE controls -->
+      <div class="section" data-effect="electric-aoe">
+        <div class="row">
+          <button id="playElectric">Play Electric AOE</button>
+        </div>
+
+        <div class="sliderRow">
+          <span>Diameter</span>
+          <strong><span id="vElectricD">240</span>px</strong>
+        </div>
+        <input id="electricD" type="range" min="140" max="1000" value="240" step="2" />
+
+        <div class="sliderRow">
+          <span>Bolt count</span>
+          <strong><span id="vElectricBolts">18</span></strong>
+        </div>
+        <input id="electricBolts" type="range" min="4" max="48" value="18" step="1" />
+
+        <div class="sliderRow">
+          <span>Branch chance</span>
+          <strong><span id="vElectricBranch">0.35</span></strong>
+        </div>
+        <input id="electricBranch" type="range" min="0" max="1" value="0.35" step="0.01" />
+
+        <div class="sliderRow">
+          <span>Drift speed</span>
+          <strong><span id="vElectricDrift">1.00</span>x</strong>
+        </div>
+        <input id="electricDrift" type="range" min="0.2" max="2.5" value="1.00" step="0.01" />
+
+        <div class="hint">
+          Plasma-ball style arcs with random walk jitter, variable thickness, and dynamic branching.
+        </div>
+      </div>
+
+      <!-- Shield controls -->
+      <div class="section" data-effect="bubble-shield">
+        <div class="row">
+          <button id="playShield">Play Shield</button>
+        </div>
+
+        <div class="sliderRow">
+          <span>Shield duration</span>
+          <strong><span id="vShieldMs">1170</span>ms</strong>
+        </div>
+        <input id="shieldMs" type="range" min="80" max="1200" value="1170" step="10" />
+
+        <div class="sliderRow">
+          <span>Shield opacity</span>
+          <strong><span id="vShieldAlpha">1.00</span></strong>
+        </div>
+        <input id="shieldAlpha" type="range" min="0" max="1" value="1.00" step="0.01" />
+
+        <div class="sliderRow">
+          <span>Shield size (diameter)</span>
+          <strong><span id="vShieldD">124</span>px</strong>
+        </div>
+        <input id="shieldD" type="range" min="40" max="600" value="124" step="1" />
+
+        <div class="sliderRow">
+          <span>Shield stroke width (even)</span>
+          <strong><span id="vShieldStroke">4</span>px</strong>
+        </div>
+        <input id="shieldStroke" type="range" min="2" max="20" value="4" step="1" />
+
+        <div class="sliderRow">
+          <span>Pulse rate</span>
+          <strong><span id="vPulseMs">80</span>ms</strong>
+        </div>
+        <input id="pulseMs" type="range" min="20" max="700" value="80" step="5" />
+
+        <div class="sliderRow">
+          <span>Pulse min alpha</span>
+          <strong><span id="vPulseMin">0.30</span></strong>
+        </div>
+        <input id="pulseMin" type="range" min="0" max="1" value="0.30" step="0.01" />
+
+        <div class="sliderRow">
+          <span>Pulse max alpha</span>
+          <strong><span id="vPulseMax">1.00</span></strong>
+        </div>
+        <input id="pulseMax" type="range" min="0" max="1" value="1.00" step="0.01" />
+      </div>
+
+      <!-- Shockwave controls -->
+      <div class="section" data-effect="shockwave">
+        <div class="row">
+          <button id="playShock">Play Shockwave</button>
+        </div>
+
+        <div class="sliderRow">
+          <span>Start radius</span>
+          <strong><span id="vStartR">43</span>px</strong>
+        </div>
+        <input id="startR" type="range" min="1" max="1000" value="43" step="1" />
+
+        <div class="sliderRow">
+          <span>End radius</span>
+          <strong><span id="vEndR">169</span>px</strong>
+        </div>
+        <input id="endR" type="range" min="1" max="1000" value="169" step="1" />
+
+        <div class="sliderRow">
+          <span>Rings count</span>
+          <strong><span id="vRings">2</span></strong>
+        </div>
+        <input id="rings" type="range" min="1" max="6" value="2" step="1" />
+
+        <div class="sliderRow">
+          <span>Ring spawn rate</span>
+          <strong><span id="vSpawn">105</span>ms</strong>
+        </div>
+        <input id="spawn" type="range" min="1" max="700" value="105" step="1" />
+
+        <div class="sliderRow">
+          <span>Stroke width (even)</span>
+          <strong><span id="vStroke">4</span>px</strong>
+        </div>
+        <input id="stroke" type="range" min="2" max="20" value="4" step="1" />
+
+        <div class="sliderRow">
+          <span>Decay</span>
+          <strong><span id="vDecay">150</span>ms</strong>
+        </div>
+        <input id="decay" type="range" min="40" max="2000" value="150" step="10" />
+
+        <div class="hint">
+          Spawn rate controls how often a new ring is created. Decay controls how long each ring lives (and fades).
+        </div>
+      </div>
+
+      <!-- Flame AOE controls -->
+      <div class="section" data-effect="flame-aoe">
+        <div class="row">
+          <button id="playFlame">Play Flame AOE</button>
+        </div>
+
+        <div class="sliderRow">
+          <span>Diameter</span>
+          <strong><span id="vFlameD">200</span>px</strong>
+        </div>
+        <input id="flameD" type="range" min="120" max="900" value="200" step="2" />
+        <div class="sliderRow">
+          <span>Duration</span>
+          <strong>10000ms</strong>
+        </div>
+        <div class="sliderRow">
+          <span>Fill alpha</span>
+          <strong>0.20</strong>
+        </div>
+
+        <div class="hint">
+          Solid red-orange AOE ring with vector tendrils emanating in all directions.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      shockLayer: $("shockLayer"),
+      flameLayer: $("flameLayer"),
+      electricLayer: $("electricLayer"),
+      shield: $("shield"),
+
+      playShield: $("playShield"),
+      effectSelect: $("effectSelect"),
+      shieldMs: $("shieldMs"),
+      vShieldMs: $("vShieldMs"),
+      shieldAlpha: $("shieldAlpha"),
+      vShieldAlpha: $("vShieldAlpha"),
+      shieldD: $("shieldD"),
+      vShieldD: $("vShieldD"),
+      shieldStroke: $("shieldStroke"),
+      vShieldStroke: $("vShieldStroke"),
+
+      pulseMs: $("pulseMs"),
+      vPulseMs: $("vPulseMs"),
+      pulseMin: $("pulseMin"),
+      vPulseMin: $("vPulseMin"),
+      pulseMax: $("pulseMax"),
+      vPulseMax: $("vPulseMax"),
+
+      playShock: $("playShock"),
+      startR: $("startR"),
+      vStartR: $("vStartR"),
+      endR: $("endR"),
+      vEndR: $("vEndR"),
+      rings: $("rings"),
+      vRings: $("vRings"),
+      spawn: $("spawn"),
+      vSpawn: $("vSpawn"),
+      stroke: $("stroke"),
+      vStroke: $("vStroke"),
+      decay: $("decay"),
+      vDecay: $("vDecay"),
+
+      playFlame: $("playFlame"),
+      flameD: $("flameD"),
+      vFlameD: $("vFlameD"),
+
+      playElectric: $("playElectric"),
+      electricD: $("electricD"),
+      vElectricD: $("vElectricD"),
+      electricBolts: $("electricBolts"),
+      vElectricBolts: $("vElectricBolts"),
+      electricBranch: $("electricBranch"),
+      vElectricBranch: $("vElectricBranch"),
+      electricDrift: $("electricDrift"),
+      vElectricDrift: $("vElectricDrift"),
+    };
+
+    function setVar(name, value){
+      document.documentElement.style.setProperty(name, value);
+    }
+
+    function clamp(v, lo, hi){
+      v = Number(v);
+      if (!isFinite(v)) v = lo;
+      return Math.max(lo, Math.min(hi, v));
+    }
+
+    function evenPx(n, min = 0, max = 9999){
+      n = Math.round(Number(n) || 0);
+      n = Math.max(min, Math.min(max, n));
+      if (n % 2 === 1) n += 1;
+      return n;
+    }
+
+    // =========================================================================
+    // GEOMETRY (forced even)
+    // =========================================================================
+    const GEOM = { orbD:100, orbStroke:2, shieldD:124, shieldStroke:4 };
+
+    function applyGeometryVars(){
+      GEOM.orbD = evenPx(GEOM.orbD, 2, 2000);
+      GEOM.orbStroke = evenPx(GEOM.orbStroke, 2, 40);
+      GEOM.shieldD = evenPx(GEOM.shieldD, 2, 2000);
+      GEOM.shieldStroke = evenPx(GEOM.shieldStroke, 2, 40);
+
+      setVar("--orb-d", GEOM.orbD + "px");
+      setVar("--orb-stroke", GEOM.orbStroke + "px");
+      setVar("--shield-d", GEOM.shieldD + "px");
+      setVar("--shield-stroke", GEOM.shieldStroke + "px");
+    }
+    applyGeometryVars();
+
+    function applyShieldGeometry(){
+      GEOM.shieldD = evenPx(els.shieldD.value, 2, 2000);
+      GEOM.shieldStroke = evenPx(els.shieldStroke.value, 2, 40);
+
+      els.shieldD.value = String(GEOM.shieldD);
+      els.shieldStroke.value = String(GEOM.shieldStroke);
+      els.vShieldD.textContent = String(GEOM.shieldD);
+      els.vShieldStroke.textContent = String(GEOM.shieldStroke);
+
+      setVar("--shield-d", GEOM.shieldD + "px");
+      setVar("--shield-stroke", GEOM.shieldStroke + "px");
+    }
+    applyShieldGeometry();
+
+    // =========================================================================
+    // Shield (pulse only while ON)
+    // =========================================================================
+    const SHIELD_DECAY_MS = 2000;
+    const SHIELD_FADEIN_MS = 750;
+    let shieldTO = null;
+    let shieldDecayTO = null;
+    let shieldFadeTO = null;
+
+    function cancelShieldDecay(){
+      if (shieldDecayTO) {
+        clearTimeout(shieldDecayTO);
+        shieldDecayTO = null;
+      }
+      if (els.shield) els.shield.style.opacity = "";
+    }
+
+    function cancelShieldFade(){
+      if (shieldFadeTO) {
+        clearTimeout(shieldFadeTO);
+        shieldFadeTO = null;
+      }
+    }
+
+    function setShieldFade(v){
+      const val = clamp(v, 0, 1);
+      if (els.shield) els.shield.style.setProperty("--shield-fade", String(val));
+    }
+
+    function applyShield(){
+      const ms = clamp(els.shieldMs.value, 80, 1200);
+      const a  = clamp(els.shieldAlpha.value, 0, 1);
+
+      els.vShieldMs.textContent = String(Math.round(ms));
+      els.vShieldAlpha.textContent = a.toFixed(2);
+
+      setVar("--shield-alpha", a.toFixed(2));
+      // by default, clamp pulse max to shield alpha
+      setVar("--shield-pulse-max", a.toFixed(2));
+    }
+
+    function applyPulse(){
+      const pMs = Math.round(clamp(els.pulseMs.value, 20, 700));
+      let pMin = clamp(els.pulseMin.value, 0, 1);
+      let pMax = clamp(els.pulseMax.value, 0, 1);
+
+      if (pMin > pMax){
+        const t = pMin; pMin = pMax; pMax = t;
+        els.pulseMin.value = pMin.toFixed(2);
+        els.pulseMax.value = pMax.toFixed(2);
+      }
+
+      const a = clamp(els.shieldAlpha.value, 0, 1);
+      const maxClamped = Math.min(pMax, a);
+
+      els.vPulseMs.textContent = String(pMs);
+      els.vPulseMin.textContent = pMin.toFixed(2);
+      els.vPulseMax.textContent = maxClamped.toFixed(2);
+
+      setVar("--shield-pulse-ms", pMs + "ms");
+      setVar("--shield-pulse-min", pMin.toFixed(2));
+      setVar("--shield-pulse-max", maxClamped.toFixed(2));
+    }
+
+    function shieldOffNow(){
+      cancelShieldDecay();
+      cancelShieldFade();
+      setShieldFade(1);
+      els.shield.classList.remove("on");
+      els.shield.style.opacity = "";
+      els.shield.style.animation = "";
+    }
+
+    function shieldOnNow(){
+      applyShield();
+      applyPulse();
+      cancelShieldDecay();
+      cancelShieldFade();
+
+      if (!els.shield.classList.contains("on")) {
+        shieldOffNow();
+        void els.shield.offsetWidth;
+        els.shield.classList.add("on");
+      }
+
+      els.shield.style.animation = "";
+      els.shield.style.transition = `filter ${SHIELD_FADEIN_MS}ms linear`;
+      requestAnimationFrame(() => {
+        setShieldFade(1);
+      });
+      shieldFadeTO = setTimeout(() => {
+        shieldFadeTO = null;
+        els.shield.style.transition = "";
+      }, SHIELD_FADEIN_MS);
+    }
+
+    function shieldDecay(){
+      if (shieldDecayTO) return;
+      els.shield.style.animation = "";
+      els.shield.style.transition = `filter ${SHIELD_DECAY_MS}ms linear`;
+      requestAnimationFrame(() => {
+        setShieldFade(0);
+      });
+      shieldDecayTO = setTimeout(() => {
+        shieldDecayTO = null;
+        els.shield.style.transition = "";
+        shieldOffNow();
+      }, SHIELD_DECAY_MS);
+    }
+
+    function playShield(){
+      shieldOnNow();
+
+      if (shieldTO) clearTimeout(shieldTO);
+      const ms = clamp(els.shieldMs.value, 80, 1200);
+
+      shieldTO = setTimeout(() => {
+        shieldDecay();
+        shieldTO = null;
+      }, Math.max(80, ms));
+    }
+
+    els.playShield.addEventListener("click", playShield);
+    els.shieldMs.addEventListener("input", applyShield);
+    els.shieldAlpha.addEventListener("input", () => { applyShield(); applyPulse(); });
+    els.shieldD.addEventListener("input", applyShieldGeometry);
+    els.shieldStroke.addEventListener("input", applyShieldGeometry);
+
+    els.pulseMs.addEventListener("input", applyPulse);
+    els.pulseMin.addEventListener("input", applyPulse);
+    els.pulseMax.addEventListener("input", applyPulse);
+
+    applyShield();
+    applyPulse();
+    shieldOffNow(); // OFF by default, no continuous pulse
+
+    function updateEffectSections(){
+      const effect = els.effectSelect ? els.effectSelect.value : "electric-aoe";
+      const sections = document.querySelectorAll(".section[data-effect]");
+      sections.forEach((section) => {
+        section.hidden = section.getAttribute("data-effect") !== effect;
+      });
+    }
+    if (els.effectSelect) {
+      els.effectSelect.addEventListener("change", updateEffectSections);
+      updateEffectSections();
+    }
+
+    // =========================================================================
+    // Shockwave (spawned rings; plain circles)
+    // =========================================================================
+    const SHOCK = { endRadiusPx:169, spawnRateMs:105, decayMs:150 };
+
+    let shockRAF = 0;
+    let shockSvg = null;
+    let spawnAcc = 0;
+    const activeRings = [];
+
+    function evenStroke(n, min = 2, max = 20){
+      n = Math.round(Number(n) || min);
+      n = Math.max(min, Math.min(max, n));
+      if (n % 2 === 1) n += 1;
+      return n;
+    }
+
+    function applyShock(){
+      const startR  = clamp(els.startR.value, 1, 1000);
+      const endR    = clamp(els.endR.value,   1, 1000);
+      const rings   = Math.round(clamp(els.rings.value, 1, 6));
+      const spawnMs = Math.round(clamp(els.spawn.value, 1, 700));
+      const decayMs = Math.round(clamp(els.decay.value, 40, 2000));
+
+      const stroke = evenStroke(els.stroke.value, 2, 20);
+      els.stroke.value = stroke;
+
+      els.vStartR.textContent = String(Math.round(startR));
+      els.vEndR.textContent   = String(Math.round(endR));
+      els.vRings.textContent  = String(rings);
+      els.vSpawn.textContent  = String(spawnMs);
+      els.vDecay.textContent  = String(decayMs);
+      els.vStroke.textContent = String(stroke);
+
+      SHOCK.endRadiusPx = endR;
+      SHOCK.spawnRateMs = spawnMs;
+      SHOCK.decayMs     = decayMs;
+
+      setVar("--shock-stroke", stroke + "px");
+      return { startR, endR, rings, spawnMs, decayMs, stroke };
+    }
+
+    function buildShockSVG(){
+      const maxR = 1000;
+      const size = (maxR * 2) + 40;
+      const cx = size * 0.5;
+      const cy = size * 0.5;
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "shockSvg");
+      svg.setAttribute("width", size);
+      svg.setAttribute("height", size);
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+      svg.setAttribute("shape-rendering", "geometricPrecision");
+      svg.__cx = cx;
+      svg.__cy = cy;
+      return svg;
+    }
+
+    function makeRingCircle(svg){
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", svg.__cx);
+      c.setAttribute("cy", svg.__cy);
+      c.setAttribute("r", "1");
+      c.setAttribute("fill", "none");
+      c.setAttribute("stroke", "var(--shock-color)");
+      c.setAttribute("stroke-width", "var(--shock-stroke)");
+      c.setAttribute("stroke-linecap", "round");
+      c.setAttribute("opacity", "0");
+      return c;
+    }
+
+    function clearShock(){
+      if (shockRAF) cancelAnimationFrame(shockRAF);
+      shockRAF = 0;
+      spawnAcc = 0;
+      activeRings.length = 0;
+
+      if (shockSvg && shockSvg.parentNode) shockSvg.parentNode.removeChild(shockSvg);
+      shockSvg = null;
+    }
+
+    function playShock(){
+      const cfg = applyShock();
+      clearShock();
+
+      shockSvg = buildShockSVG();
+      els.shockLayer.appendChild(shockSvg);
+
+      let last = performance.now();
+      let spawned = 0;
+
+      function tick(now){
+        const dt = Math.max(0, now - last);
+        last = now;
+
+        spawnAcc += dt;
+        while (spawned < cfg.rings && spawnAcc >= cfg.spawnMs){
+          spawnAcc -= cfg.spawnMs;
+
+          const circle = makeRingCircle(shockSvg);
+          shockSvg.appendChild(circle);
+
+          activeRings.push({ born: now, circle });
+          spawned += 1;
+        }
+
+        for (let i = activeRings.length - 1; i >= 0; i--){
+          const r0 = activeRings[i];
+          const age = now - r0.born;
+          const t01 = Math.max(0, Math.min(1, age / cfg.decayMs));
+
+          const r = cfg.startR + (cfg.endR - cfg.startR) * t01;
+          r0.circle.setAttribute("r", r.toFixed(2));
+
+          const alpha = (t01 <= 0) ? 0 : (1 - t01);
+          r0.circle.setAttribute("opacity", alpha.toFixed(3));
+
+          if (t01 >= 1){
+            if (r0.circle.parentNode) r0.circle.parentNode.removeChild(r0.circle);
+            activeRings.splice(i, 1);
+          }
+        }
+
+        const allSpawned = (spawned >= cfg.rings);
+        const noneAlive = (activeRings.length === 0);
+
+        if (allSpawned && noneAlive){
+          clearShock();
+          return;
+        }
+
+        shockRAF = requestAnimationFrame(tick);
+      }
+
+      shockRAF = requestAnimationFrame(tick);
+    }
+
+    els.playShock.addEventListener("click", playShock);
+    els.startR.addEventListener("input", applyShock);
+    els.endR.addEventListener("input", applyShock);
+    els.rings.addEventListener("input", applyShock);
+    els.spawn.addEventListener("input", applyShock);
+    els.stroke.addEventListener("input", applyShock);
+    els.decay.addEventListener("input", applyShock);
+
+    applyShock();
+
+    // =========================================================================
+    // Flame AOE (solid ring + vector tendrils)
+    // =========================================================================
+    let flameRAF = 0;
+    let flameSvg = null;
+    let flameGroup = null;
+    let flameCore = null;
+    const flameTendrils = [];
+    const FLAME_SHOW_CORE = false;
+    const FLAME_ANIMATE = true;
+
+    function polarPoint(cx, cy, angle, r){
+      return { x: cx + (Math.cos(angle) * r), y: cy + (Math.sin(angle) * r) };
+    }
+    function toWorld(base, fwd, nrm, along, lateral){
+      return {
+        x: base.x + (fwd.x * along) + (nrm.x * lateral),
+        y: base.y + (fwd.y * along) + (nrm.y * lateral)
+      };
+    }
+    function smoothQuadPath(points){
+      if (!points || points.length < 2) return "";
+      let d = `M ${points[0].x.toFixed(4)} ${points[0].y.toFixed(4)}`;
+      for (let i = 1; i < points.length - 1; i++){
+        const p = points[i];
+        const n = points[i + 1];
+        const mx = (p.x + n.x) * 0.5;
+        const my = (p.y + n.y) * 0.5;
+        d += ` Q ${p.x.toFixed(4)} ${p.y.toFixed(4)} ${mx.toFixed(4)} ${my.toFixed(4)}`;
+      }
+      const last = points[points.length - 1];
+      d += ` T ${last.x.toFixed(4)} ${last.y.toFixed(4)}`;
+      return d;
+    }
+    function clearFlame(){
+      if (flameRAF) cancelAnimationFrame(flameRAF);
+      flameRAF = 0;
+      flameTendrils.length = 0;
+      flameGroup = null;
+      flameCore = null;
+
+      if (flameSvg && flameSvg.parentNode) flameSvg.parentNode.removeChild(flameSvg);
+      flameSvg = null;
+    }
+
+    function buildFlameAOE(cfg){
+      const pad = 180;
+      const size = evenPx(cfg.diameter + pad, 2, 4096);
+      const cx = size * 0.5;
+      const cy = size * 0.5;
+      const radius = cfg.diameter * 0.5;
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "flameSvg");
+      svg.setAttribute("width", size);
+      svg.setAttribute("height", size);
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+      svg.setAttribute("shape-rendering", "geometricPrecision");
+      svg.__cx = cx;
+      svg.__cy = cy;
+      svg.__r = radius;
+
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.setAttribute("fill", "rgba(255, 96, 24, 0.30)");
+      group.setAttribute("stroke", "var(--flame-stroke)");
+      group.setAttribute("stroke-width", "2");
+      group.setAttribute("stroke-linecap", "round");
+      group.setAttribute("stroke-linejoin", "round");
+
+      const core = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      core.setAttribute("cx", String(cx));
+      core.setAttribute("cy", String(cy));
+      core.setAttribute("r", String(radius.toFixed(2)));
+      core.setAttribute("fill", "var(--flame-fill)");
+      core.setAttribute("stroke", "var(--flame-stroke)");
+      core.setAttribute("stroke-width", "6");
+      core.setAttribute("opacity", "1");
+
+      const tendrilCount = 28;
+      for (let i = 0; i < tendrilCount; i++){
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const step = (Math.PI * 2) / tendrilCount;
+        const ang = step * i;
+        const baseLen = radius * 0.20;
+        const lenJitter = radius * 0.05;
+        const baseAmp = radius * 0.11;
+        const ampJitter = radius * 0.03;
+        const baseWidth = radius * 0.23;
+        const widthJitter = radius * 0.03;
+        const lenScale = (i % 2 === 0) ? 2.25 : 1.0;
+        const lateralFlip = (i % 2 === 0) ? 1 : -1;
+        const phase = 0;
+        const phase2 = Math.PI * 0.5;
+        const phase3 = Math.PI;
+        const freq1 = 0.012;
+        const freq2 = 0.024;
+        const freq3 = 0.036;
+        const sway = 0.18;
+        const jag = 0.30;
+
+        p.setAttribute("opacity", "0.95");
+        group.appendChild(p);
+        flameTendrils.push({
+          path: p,
+          ang,
+          baseLen,
+          lenJitter,
+          baseAmp,
+          ampJitter,
+          baseWidth,
+          widthJitter,
+          lenScale,
+          lateralFlip,
+          phase,
+          phase2,
+          phase3,
+          freq1,
+          freq2,
+          freq3,
+          sway
+          ,
+          jag
+        });
+      }
+
+      if (FLAME_SHOW_CORE) svg.appendChild(core);
+      svg.appendChild(group);
+
+      flameSvg = svg;
+      flameGroup = group;
+      flameCore = core;
+    }
+
+    function playFlame(){
+      if (!els.flameLayer) return;
+      clearFlame();
+
+      const cfg = {
+        diameter: evenPx(clamp(els.flameD.value, 120, 900), 2, 2000),
+        durationMs: 10000
+      };
+      setVar("--flame-d", cfg.diameter + "px");
+      setVar("--flame-duration", cfg.durationMs + "ms");
+      buildFlameAOE(cfg);
+      els.flameLayer.appendChild(flameSvg);
+
+      const start = performance.now();
+      const cx = flameSvg.__cx;
+      const cy = flameSvg.__cy;
+      const radius = flameSvg.__r;
+
+      function renderFrame(elapsed){
+        const t01 = Math.max(0, Math.min(1, elapsed / cfg.durationMs));
+        const life = 1 - t01;
+        const innerR = radius + 2;
+
+        if (FLAME_SHOW_CORE && flameCore){
+          const coreScale = 1 + (Math.sin(elapsed * 0.0032) * 0.008);
+          flameCore.setAttribute("r", (radius * coreScale).toFixed(2));
+          flameCore.setAttribute("opacity", (0.92 + (Math.sin(elapsed * 0.0045) * 0.08) * life).toFixed(3));
+        }
+
+        for (let i = 0; i < flameTendrils.length; i++){
+          const t = flameTendrils[i];
+          const motionTime = elapsed * 6;
+          const dirBase = t.ang;
+          const len = Math.max(16, (t.baseLen * t.lenScale));
+          const amp = Math.max(4, t.baseAmp);
+          const widthBase = Math.max(10, t.baseWidth);
+          const tipWidth = Math.max(0.8, widthBase * 0.05);
+          const wigglePhase = motionTime * 0.0086;
+
+          const baseCenter = polarPoint(cx, cy, dirBase, innerR);
+          const fwd = { x: Math.cos(dirBase), y: Math.sin(dirBase) };
+          const nrm = { x: -Math.sin(dirBase), y: Math.cos(dirBase) };
+
+          const samples = 9;
+          const left = [];
+          const right = [];
+
+          for (let s = 0; s < samples; s++){
+            const u = s / (samples - 1);
+            const along = len * u;
+
+            // Animate anchor-point curvature directly for smooth snake-like motion.
+            // Two bends across the tendril body, with secondary ripple for sharpness.
+            const envelope = Math.sin(Math.PI * u); // zero at base/tip
+            const lateral = Math.sin((u * Math.PI * 2) + wigglePhase) * amp * envelope * t.lateralFlip;
+
+            // Curved taper (pucker/bloat-like): slight mid-body bloat, then tighter pinch to tip.
+            const taper = Math.pow(1 - u, 1.85);
+            const bloat = Math.sin(Math.PI * u) * (1 - (u * 0.35));
+            const width = tipWidth
+              + ((widthBase - tipWidth) * taper)
+              + (widthBase * 0.12 * bloat);
+            const c = toWorld(baseCenter, fwd, nrm, along, lateral);
+            left.push(toWorld(c, fwd, nrm, 0, width * 0.5));
+            right.push(toWorld(c, fwd, nrm, 0, -width * 0.5));
+          }
+
+          const baseHalf = widthBase * 0.5;
+          const aEdge = Math.min(0.55, Math.asin(Math.min(0.999, baseHalf / Math.max(1, innerR))));
+          const leftBase = polarPoint(cx, cy, dirBase + aEdge, innerR);
+          const rightBase = polarPoint(cx, cy, dirBase - aEdge, innerR);
+          left[0] = leftBase;
+          right[0] = rightBase;
+
+          const leftD = smoothQuadPath(left);
+          const rightBack = right.slice().reverse();
+          const rightD = smoothQuadPath(rightBack).replace(/^M [^QTLCAZ]+/, "");
+          const d = [
+            leftD,
+            rightD,
+            `A ${innerR.toFixed(4)} ${innerR.toFixed(4)} 0 0 1 ${leftBase.x.toFixed(4)} ${leftBase.y.toFixed(4)}`,
+            "Z"
+          ].join(" ");
+
+          t.path.setAttribute("d", d);
+          t.path.setAttribute("opacity", (0.70 + (0.30 * life)).toFixed(3));
+        }
+
+      }
+
+      function tick(now){
+        const elapsed = now - start;
+        renderFrame(elapsed);
+
+        if (elapsed >= cfg.durationMs){
+          clearFlame();
+          return;
+        }
+
+        flameRAF = requestAnimationFrame(tick);
+      }
+
+      if (FLAME_ANIMATE){
+        flameRAF = requestAnimationFrame(tick);
+      } else {
+        renderFrame(0);
+      }
+    }
+
+    els.playFlame.addEventListener("click", playFlame);
+    function applyFlameControls(){
+      const d = evenPx(clamp(els.flameD.value, 120, 900), 2, 2000);
+      els.flameD.value = String(d);
+      els.vFlameD.textContent = String(d);
+      setVar("--flame-d", d + "px");
+    }
+    els.flameD.addEventListener("input", applyFlameControls);
+    applyFlameControls();
+
+    // =========================================================================
+    // Electric AOE (plasma-ball style arcs with branching)
+    // =========================================================================
+    let electricRAF = 0;
+    let electricSvg = null;
+    let electricGroup = null;
+    const electricBolts = [];
+
+    function randRange(lo, hi){
+      return lo + (Math.random() * (hi - lo));
+    }
+
+    function clearElectric(){
+      if (electricRAF) cancelAnimationFrame(electricRAF);
+      electricRAF = 0;
+      electricBolts.length = 0;
+      electricGroup = null;
+      if (electricSvg && electricSvg.parentNode) electricSvg.parentNode.removeChild(electricSvg);
+      electricSvg = null;
+    }
+
+    function makeElectricPath(size){
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p.setAttribute("fill", "none");
+      p.setAttribute("stroke", "var(--electric-glow)");
+      p.setAttribute("stroke-linecap", "round");
+      p.setAttribute("stroke-linejoin", "round");
+      p.setAttribute("opacity", "0.9");
+      p.style.filter = `drop-shadow(0 0 ${Math.max(4, size * 0.02).toFixed(1)}px rgba(170, 235, 255, 0.9))`;
+      return p;
+    }
+
+    function buildElectricAOE(cfg){
+      const pad = 220;
+      const size = evenPx(cfg.diameter + pad, 2, 4096);
+      const cx = size * 0.5;
+      const cy = size * 0.5;
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "electricSvg");
+      svg.setAttribute("width", size);
+      svg.setAttribute("height", size);
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+      svg.setAttribute("shape-rendering", "geometricPrecision");
+      svg.__cx = cx;
+      svg.__cy = cy;
+      svg.__innerR = GEOM.orbD * 0.5;
+      svg.__outerR = cfg.diameter * 0.5;
+
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.setAttribute("opacity", "1");
+      svg.appendChild(group);
+
+      for (let i = 0; i < cfg.bolts; i++){
+        const boltPath = makeElectricPath(size);
+        const branchPath = makeElectricPath(size);
+        branchPath.setAttribute("opacity", "0");
+        group.appendChild(boltPath);
+        group.appendChild(branchPath);
+
+        electricBolts.push({
+          path: boltPath,
+          branchPath,
+          angle: randRange(0, Math.PI * 2),
+          drift: randRange(-0.65, 0.65),
+          thickness: randRange(1.1, 4.3),
+          pulsePhase: randRange(0, Math.PI * 2),
+          walkPhase: randRange(0, Math.PI * 2),
+          branch: null
+        });
+      }
+
+      electricSvg = svg;
+      electricGroup = group;
+    }
+
+    function polylinePath(points){
+      if (!points.length) return "";
+      let d = `M ${points[0].x.toFixed(3)} ${points[0].y.toFixed(3)}`;
+      for (let i = 1; i < points.length; i++){
+        d += ` L ${points[i].x.toFixed(3)} ${points[i].y.toFixed(3)}`;
+      }
+      return d;
+    }
+
+    function buildElectricBoltPoints(cx, cy, angle, r0, r1, walkPhase, jitterAmp){
+      const points = [];
+      const segs = 6 + Math.floor(randRange(0, 5));
+      const fwd = { x: Math.cos(angle), y: Math.sin(angle) };
+      const nrm = { x: -fwd.y, y: fwd.x };
+      for (let i = 0; i <= segs; i++){
+        const u = i / segs;
+        const r = r0 + ((r1 - r0) * u);
+        const baseX = cx + (fwd.x * r);
+        const baseY = cy + (fwd.y * r);
+        const envelope = Math.sin(Math.PI * u);
+        const walk = Math.sin((u * 11.0) + walkPhase) * jitterAmp * envelope;
+        points.push({
+          x: baseX + (nrm.x * walk),
+          y: baseY + (nrm.y * walk),
+        });
+      }
+      return points;
+    }
+
+    function applyElectricControls(){
+      const d = evenPx(clamp(els.electricD.value, 140, 1000), 2, 2000);
+      const bolts = Math.round(clamp(els.electricBolts.value, 4, 48));
+      const branch = clamp(els.electricBranch.value, 0, 1);
+      const drift = clamp(els.electricDrift.value, 0.2, 2.5);
+
+      els.electricD.value = String(d);
+      els.electricBolts.value = String(bolts);
+      els.electricBranch.value = branch.toFixed(2);
+      els.electricDrift.value = drift.toFixed(2);
+
+      els.vElectricD.textContent = String(d);
+      els.vElectricBolts.textContent = String(bolts);
+      els.vElectricBranch.textContent = branch.toFixed(2);
+      els.vElectricDrift.textContent = drift.toFixed(2);
+
+      setVar("--electric-d", `${d}px`);
+      return { diameter: d, bolts, branchChance: branch, driftSpeed: drift, durationMs: 10000 };
+    }
+
+    function playElectric(){
+      if (!els.electricLayer) return;
+      clearElectric();
+      const cfg = applyElectricControls();
+      setVar("--electric-duration", `${cfg.durationMs}ms`);
+      buildElectricAOE(cfg);
+      els.electricLayer.appendChild(electricSvg);
+
+      const start = performance.now();
+      const cx = electricSvg.__cx;
+      const cy = electricSvg.__cy;
+      const innerR = electricSvg.__innerR;
+      const outerR = electricSvg.__outerR;
+
+      function tick(now){
+        const elapsed = now - start;
+        const life01 = Math.max(0, Math.min(1, elapsed / cfg.durationMs));
+        const fade = 1 - life01;
+
+        for (let i = 0; i < electricBolts.length; i++){
+          const bolt = electricBolts[i];
+          bolt.angle += bolt.drift * 0.0075 * cfg.driftSpeed;
+          bolt.walkPhase += randRange(0.10, 0.30) * cfg.driftSpeed;
+          bolt.pulsePhase += 0.11;
+
+          const pulse = 0.65 + (0.35 * Math.sin(bolt.pulsePhase));
+          const radiusBias = 0.55 + (0.45 * Math.sin((elapsed * 0.0032) + bolt.walkPhase));
+          const targetR = innerR + ((outerR - innerR) * radiusBias);
+          const jitterAmp = Math.max(4, outerR * randRange(0.030, 0.060));
+
+          const points = buildElectricBoltPoints(cx, cy, bolt.angle, innerR, targetR, bolt.walkPhase, jitterAmp);
+          bolt.path.setAttribute("d", polylinePath(points));
+          bolt.path.setAttribute("stroke-width", (bolt.thickness * pulse).toFixed(2));
+          bolt.path.setAttribute("opacity", (0.55 + (0.40 * pulse * fade)).toFixed(3));
+
+          const shouldSpawnBranch = (!bolt.branch) && (Math.random() < (cfg.branchChance * 0.06 * cfg.driftSpeed));
+          if (shouldSpawnBranch){
+            const anchor = 2 + Math.floor(Math.random() * Math.max(1, points.length - 3));
+            bolt.branch = {
+              born: now,
+              ttl: randRange(120, 520),
+              anchor,
+              dir: bolt.angle + randRange(-1.3, 1.3),
+              len: randRange(0.20, 0.55),
+              seed: randRange(0, Math.PI * 2),
+            };
+          }
+
+          if (bolt.branch){
+            const age = now - bolt.branch.born;
+            const bt = Math.max(0, Math.min(1, age / bolt.branch.ttl));
+            if (bt >= 1){
+              bolt.branch = null;
+              bolt.branchPath.setAttribute("opacity", "0");
+            } else {
+              const anchorPoint = points[Math.min(points.length - 2, bolt.branch.anchor)];
+              const branchStartR = Math.hypot(anchorPoint.x - cx, anchorPoint.y - cy);
+              const branchEndR = branchStartR + ((outerR - innerR) * bolt.branch.len);
+              const branchPts = buildElectricBoltPoints(
+                cx,
+                cy,
+                bolt.branch.dir + (Math.sin((elapsed * 0.011) + bolt.branch.seed) * 0.18),
+                branchStartR,
+                branchEndR,
+                bolt.walkPhase + bolt.branch.seed,
+                jitterAmp * 0.65
+              );
+              branchPts[0] = anchorPoint;
+              bolt.branchPath.setAttribute("d", polylinePath(branchPts));
+              bolt.branchPath.setAttribute("stroke-width", Math.max(0.8, bolt.thickness * 0.72).toFixed(2));
+              bolt.branchPath.setAttribute("opacity", ((1 - bt) * 0.72 * fade).toFixed(3));
+            }
+          }
+        }
+
+        if (electricGroup) {
+          electricGroup.setAttribute("opacity", (0.85 + (0.15 * Math.sin(elapsed * 0.01))).toFixed(3));
+        }
+
+        if (elapsed >= cfg.durationMs){
+          clearElectric();
+          return;
+        }
+        electricRAF = requestAnimationFrame(tick);
+      }
+
+      electricRAF = requestAnimationFrame(tick);
+    }
+
+    els.playElectric.addEventListener("click", playElectric);
+    els.electricD.addEventListener("input", applyElectricControls);
+    els.electricBolts.addEventListener("input", applyElectricControls);
+    els.electricBranch.addEventListener("input", applyElectricControls);
+    els.electricDrift.addEventListener("input", applyElectricControls);
+    applyElectricControls();
+
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space"){
+        e.preventDefault();
+        playShock();
+      }
+      if (e.key.toLowerCase() === "b"){
+        playShield();
+      }
+      if (e.key.toLowerCase() === "f"){
+        playFlame();
+      }
+      if (e.key.toLowerCase() === "e"){
+        playElectric();
+      }
+    });
+  </script>
+</body>
+</html>
