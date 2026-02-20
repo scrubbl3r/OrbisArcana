@@ -96,9 +96,25 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
   function axisColor(axis) {
     const a = String(axis || "").toLowerCase();
     // Requested mapping: y=green, x=blue, z=red
-    if (a === "y") return { stroke: "rgba(50,255,117,0.98)", fill: "rgba(50,255,117,0.28)" };
-    if (a === "x") return { stroke: "rgba(80,160,255,0.98)", fill: "rgba(80,160,255,0.26)" };
-    return { stroke: "rgba(255,80,80,0.98)", fill: "rgba(255,80,80,0.24)" };
+    if (a === "y") {
+      return {
+        stroke: "rgba(50,255,117,0.98)",
+        fill: "rgba(50,255,117,0.28)",
+        glow: "0 0 12px rgba(50,255,117,0.30), inset 0 0 0 1px rgba(175,255,205,0.34)",
+      };
+    }
+    if (a === "x") {
+      return {
+        stroke: "rgba(80,160,255,0.98)",
+        fill: "rgba(80,160,255,0.28)",
+        glow: "0 0 12px rgba(80,160,255,0.30), inset 0 0 0 1px rgba(186,215,255,0.34)",
+      };
+    }
+    return {
+      stroke: "rgba(255,80,80,0.98)",
+      fill: "rgba(255,80,80,0.24)",
+      glow: "0 0 12px rgba(255,80,80,0.30), inset 0 0 0 1px rgba(255,196,196,0.30)",
+    };
   }
 
   function upsertOrbitingGlobe({ axis, slot, spellId }) {
@@ -111,6 +127,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       existing.spellId = String(spellId || "");
       existing.stroke = color.stroke;
       existing.fill = color.fill;
+      existing.glow = color.glow;
       return;
     }
     orbiting.particles.push({
@@ -124,6 +141,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       orbitR: Math.max(14, Number(orbRadiusPx) + 18),
       stroke: color.stroke,
       fill: color.fill,
+      glow: color.glow,
       tiltDeg: ((Math.random() * 10) - 5),
       tiltVelDeg: ((Math.random() * 2) - 1) * 0.65,
       tiltPhase: Math.random() * Math.PI * 2,
@@ -184,6 +202,9 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       if (!p.el) {
         const el = document.createElement("div");
         el.className = "orbitGlobe";
+        el.style.borderColor = p.stroke;
+        el.style.backgroundColor = p.fill;
+        el.style.boxShadow = p.glow;
         p.el = el;
         stageEl.appendChild(el);
       }
@@ -206,6 +227,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       p.el.style.opacity = clamp01(proj.opacity).toFixed(3);
       p.el.style.borderColor = p.stroke;
       p.el.style.backgroundColor = p.fill;
+      p.el.style.boxShadow = p.glow;
       p.el.style.transform = `rotate(${p.tiltDeg.toFixed(2)}deg) scale(${proj.scale.toFixed(3)})`;
       p.el.style.zIndex = proj.scale >= 1 ? "34" : "30";
     }
