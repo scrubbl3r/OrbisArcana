@@ -361,6 +361,7 @@
     let shieldDecayActive = 0;
     let shieldFadeTO = null;
     let shieldFadeVal = 1;
+    let sanctusShieldColorLocked = false;
 
     function cancelShieldDecay(){
       if (shieldDecayTO) {
@@ -386,6 +387,7 @@
       cancelShieldDecay();
       cancelShieldFade();
       setShieldFade(1);
+      sanctusShieldColorLocked = false;
       els.shield.classList.remove("on");
       els.shield.style.opacity = "";
       els.shield.style.animation = "";
@@ -446,6 +448,7 @@
     function activateSanctusShield(axis, durationMs = SANCTUS_SHIELD_MS){
       if (!els.shield) return;
       const c = axisToColor01(axis);
+      sanctusShieldColorLocked = true;
       shieldColor01 = { r: c.r, g: c.g, b: c.b };
       setShieldColor01(shieldColor01);
       const baseShieldD = (PHYS.orbRadiusPx * 2) + 24;
@@ -2308,6 +2311,7 @@
       }
       shieldOffNow();
       resetOrbStrokeColor(true);
+      sanctusShieldColorLocked = false;
       shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
       setShieldColor01(shieldColor01);
 
@@ -2457,7 +2461,7 @@
       els.vEnergy.textContent   = `${ePts}`;
       els.vShake.textContent    = `${Math.max(0, sh).toFixed(2)}`;
 
-      if (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3){
+      if (!sanctusShieldColorLocked && d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3){
         const tr = clamp01(d.shieldRGB[0]);
         const tg = clamp01(d.shieldRGB[1]);
         const tb = clamp01(d.shieldRGB[2]);
