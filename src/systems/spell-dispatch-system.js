@@ -14,6 +14,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
   };
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
+  let storedGlobeCount = 0;
 
   function normAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
@@ -84,6 +85,31 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
       activeFlatSpinAxis = null;
     }));
 
+    unsub.push(eventBus.on("pickup.collected", (payload = {}) => {
+      if (String(payload.type || "") !== "energy_globe") return;
+      storedGlobeCount += 1;
+      eventBus.emit("energy.globe_inventory_changed", {
+        stored: storedGlobeCount,
+        atMs: nowMs(),
+      });
+    }));
+    unsub.push(eventBus.on("orb.died", () => {
+      storedGlobeCount = 0;
+      eventBus.emit("energy.globe_inventory_changed", {
+        stored: storedGlobeCount,
+        atMs: nowMs(),
+      });
+      reset();
+    }));
+    unsub.push(eventBus.on("orb.revived", () => {
+      storedGlobeCount = 0;
+      eventBus.emit("energy.globe_inventory_changed", {
+        stored: storedGlobeCount,
+        atMs: nowMs(),
+      });
+      reset();
+    }));
+
     unsub.push(eventBus.on("voice.spell_detected", (payload = {}) => {
       const spell = payload.spell || {};
       const spellId = String(spell.id || "");
@@ -100,6 +126,15 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
       const isFlatSpinLoadWindow = !!axis;
 
       if (isFlatSpinLoadWindow) {
+        if (storedGlobeCount <= 0) {
+          eventBus.emit("voice.spell_rejected", {
+            reason: "no_stored_globes",
+            spellId,
+            axis,
+            atMs: now,
+          });
+          return;
+        }
         if (!axisAllowedForSpell(spell, axis)) {
           eventBus.emit("voice.spell_rejected", {
             reason: "spell_axis_not_allowed",
@@ -116,6 +151,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
           loadedByAxis.y.LR = null;
           loadedByAxis.y.FB = null;
         }
+        storedGlobeCount = Math.max(0, storedGlobeCount - 1);
         loadedByAxis[axis][slot] = {
           spellId,
           intent: spell.intent,
@@ -131,6 +167,18 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
+          atMs: now,
+        });
+        eventBus.emit("energy.globe_spent", {
+          reason: "spell_load",
+          spellId,
+          axis,
+          slot,
+          stored: storedGlobeCount,
+          atMs: now,
+        });
+        eventBus.emit("energy.globe_inventory_changed", {
+          stored: storedGlobeCount,
           atMs: now,
         });
         return;

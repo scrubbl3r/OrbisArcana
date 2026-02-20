@@ -12,6 +12,10 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     particles: [],
     nextId: 1,
   };
+  const orbiting = {
+    particles: [],
+    nextId: 1,
+  };
   const released = {
     particles: [],
     nextId: 1,
@@ -29,6 +33,13 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     orbInteriorEl.innerHTML = '';
   }
 
+  function clearOrbitingGlobes() {
+    for (const p of orbiting.particles) {
+      try { if (p.el) p.el.remove(); } catch (_) {}
+    }
+    orbiting.particles = [];
+  }
+
   function clearReleasedGlobes() {
     for (const p of released.particles) {
       try { if (p.el) p.el.remove(); } catch (_) {}
@@ -38,6 +49,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
 
   function reset() {
     clearInnerGlobes();
+    clearOrbitingGlobes();
     clearReleasedGlobes();
   }
 
@@ -71,6 +83,121 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       el: null,
     });
     renderInnerGlobes();
+  }
+
+  function consumeOneInnerGlobe() {
+    if (!inner.particles.length) return null;
+    const p = inner.particles.shift() || null;
+    try { if (p && p.el) p.el.remove(); } catch (_) {}
+    renderInnerGlobes();
+    return p;
+  }
+
+  function axisColor(axis) {
+    const a = String(axis || "").toLowerCase();
+    // Requested mapping: y=green, x=blue, z=red
+    if (a === "y") return { stroke: "rgba(50,255,117,0.98)", fill: "rgba(50,255,117,0.28)" };
+    if (a === "x") return { stroke: "rgba(80,160,255,0.98)", fill: "rgba(80,160,255,0.26)" };
+    return { stroke: "rgba(255,80,80,0.98)", fill: "rgba(255,80,80,0.24)" };
+  }
+
+  function upsertOrbitingGlobe({ axis, slot, spellId }) {
+    const a = String(axis || "").toLowerCase();
+    const s = String(slot || "").toUpperCase();
+    if (!a || !s) return;
+    const existing = orbiting.particles.find((p) => p.axis === a && p.slot === s);
+    const color = axisColor(a);
+    if (existing) {
+      existing.spellId = String(spellId || "");
+      existing.stroke = color.stroke;
+      existing.fill = color.fill;
+      return;
+    }
+    orbiting.particles.push({
+      id: orbiting.nextId++,
+      axis: a,
+      slot: s,
+      spellId: String(spellId || ""),
+      phase: Math.random() * Math.PI * 2,
+      speed: 1.35 + (Math.random() * 0.75),
+      radius: Math.max(3, Number(orbRadiusPx) * 0.10),
+      orbitR: Math.max(14, Number(orbRadiusPx) + 18),
+      stroke: color.stroke,
+      fill: color.fill,
+      el: null,
+    });
+  }
+
+  function consumeOrbitingGlobe({ axis, slot }) {
+    const a = String(axis || "").toLowerCase();
+    const s = String(slot || "").toUpperCase();
+    if (!a || !s) return;
+    const idx = orbiting.particles.findIndex((p) => p.axis === a && p.slot === s);
+    if (idx < 0) return;
+    const p = orbiting.particles[idx];
+    try { if (p.el) p.el.remove(); } catch (_) {}
+    orbiting.particles.splice(idx, 1);
+  }
+
+  function orbitProjection(p, tS) {
+    const r = Number(p.orbitR) || (Number(orbRadiusPx) + 18);
+    const th = (Number(p.phase) || 0) + (Number(p.speed) || 1) * tS;
+    const c = Math.cos(th);
+    const s = Math.sin(th);
+    let x = 0;
+    let y = 0;
+    let z = 0;
+    if (p.axis === "y") {
+      x = c * r;
+      y = s * (r * 0.22);
+      z = s;
+    } else if (p.axis === "x") {
+      x = s * (r * 0.22);
+      y = c * r;
+      z = s;
+    } else {
+      const u = c * r;
+      const v = s * (r * 0.42);
+      const rot = Math.PI * 0.30;
+      x = (u * Math.cos(rot)) - (v * Math.sin(rot));
+      y = (u * Math.sin(rot)) + (v * Math.cos(rot));
+      z = s;
+    }
+    const depth01 = clamp01((z + 1) * 0.5);
+    const scale = 0.72 + (0.42 * depth01);
+    const opacity = 0.48 + (0.50 * depth01);
+    return { x, y, scale, opacity };
+  }
+
+  function tickOrbitingGlobes(nowMs) {
+    if (!orbiting.particles.length) return;
+    const now = Number(nowMs) || performance.now();
+    const tS = now / 1000;
+    const stageRect = stageEl.getBoundingClientRect();
+    const cx = (stageRect.width || 0) * 0.5;
+    const cy = Number(getOrbScreenY()) || 0;
+    for (const p of orbiting.particles) {
+      if (!p.el) {
+        const el = document.createElement("div");
+        el.className = "orbitGlobe";
+        p.el = el;
+        stageEl.appendChild(el);
+      }
+      const proj = orbitProjection(p, tS);
+      const r = Math.max(2, Number(p.radius) || 4);
+      const d = r * 2;
+      const x = cx + proj.x;
+      const y = cy + proj.y;
+      p.el.style.width = `${d.toFixed(2)}px`;
+      p.el.style.height = `${d.toFixed(2)}px`;
+      p.el.style.left = `${(x - r).toFixed(2)}px`;
+      p.el.style.top = `${(y - r).toFixed(2)}px`;
+      p.el.style.opacity = clamp01(proj.opacity).toFixed(3);
+      p.el.style.borderColor = p.stroke;
+      p.el.style.backgroundColor = p.fill;
+      p.el.style.transform = `scale(${proj.scale.toFixed(3)})`;
+      p.el.style.zIndex = proj.scale >= 1 ? "34" : "30";
+    }
   }
 
   function tickInnerGlobes(dt) {
@@ -193,6 +320,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
 
   function tick(nowMs, dt) {
     tickInnerGlobes(dt);
+    tickOrbitingGlobes(nowMs);
     tickReleasedGlobes(nowMs);
   }
 
@@ -200,8 +328,28 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     unsub.push(eventBus.on('pickup.collected', () => {
       spawnInnerGlobe();
     }));
+    unsub.push(eventBus.on("voice.spell_loaded", (payload = {}) => {
+      const axis = String(payload.axis || "").toLowerCase();
+      const slot = String(payload.slot || "").toUpperCase();
+      if (!axis || !slot) return;
+      const globe = consumeOneInnerGlobe();
+      if (!globe) return;
+      upsertOrbitingGlobe({
+        axis,
+        slot,
+        spellId: String(payload.spellId || ""),
+      });
+    }));
+    unsub.push(eventBus.on("voice.spell_cast", (payload = {}) => {
+      if (String(payload.trigger || "") !== "shake_detonation") return;
+      consumeOrbitingGlobe({
+        axis: String(payload.axis || "").toLowerCase(),
+        slot: String(payload.slot || "").toUpperCase(),
+      });
+    }));
     unsub.push(eventBus.on('orb.died', () => {
       releaseInnerGlobesAtDeath(performance.now());
+      clearOrbitingGlobes();
     }));
     unsub.push(eventBus.on('orb.revived', () => {
       reset();
