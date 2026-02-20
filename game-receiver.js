@@ -1467,7 +1467,7 @@
       return { r: 253/255, g: 78/255, b: 0/255 };                   // #fd4e00
     }
 
-    const ORB_STROKE_DEFAULT = { r: 50/255, g: 1.0, b: 117/255 };
+    const ORB_STROKE_DEFAULT = { r: 1.0, g: 1.0, b: 1.0 };
     const orbStrokeColor = {
       current: { ...ORB_STROKE_DEFAULT },
       target: { ...ORB_STROKE_DEFAULT },
@@ -1479,6 +1479,7 @@
       const g = Math.round(clamp01(c.g) * 255);
       const b = Math.round(clamp01(c.b) * 255);
       document.documentElement.style.setProperty("--orb-stroke-color", `rgb(${r},${g},${b})`);
+      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},0.50)`);
     }
 
     function setOrbStrokeColor01(c){

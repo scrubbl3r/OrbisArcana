@@ -35,8 +35,8 @@
       /* Orb geometry (kept aligned with PHYS.orbRadiusPx = 50 -> diameter 100) */
       --orb-d: 100px;
       --orb-stroke: 2px;
-      --orb-stroke-color: var(--g);
-      --orb-fill: rgba(0,0,0,0.25);
+      --orb-stroke-color: rgb(255,255,255);
+      --orb-fill: rgba(255,255,255,0.50);
 
       /* Shield */
       --shield-d: 124px;          /* orb(100) + pad(12*2) */
@@ -462,7 +462,7 @@
       height: var(--orb-d);
       border-radius: 999px;
       border: 0;
-      background: rgba(var(--bg-r), var(--bg-g), var(--bg-b), 0.30);
+      background: var(--orb-fill);
       box-shadow: none;
       position: relative;
     }
