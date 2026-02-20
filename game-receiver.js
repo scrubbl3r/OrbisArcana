@@ -782,6 +782,10 @@
     const SD_RECENT_MS = 750; // Direction label must arrive within this window (ms) to flash lamp
     const FLAT_SPIN_DOMINANCE_ON = 0.72;
     const FLAT_SPIN_DOMINANCE_OFF = 0.60;
+    const FLAT_SPIN_DOMINANCE_GAP_ON = 0.14;
+    const FLAT_SPIN_DOMINANCE_GAP_OFF = 0.09;
+    const FLAT_SPIN_DOMINANCE_GAP_ON_Z = 0.22;
+    const FLAT_SPIN_DOMINANCE_GAP_OFF_Z = 0.14;
     const FLAT_SPIN_ON_HOLD_MS = 200;
     const FLAT_SPIN_OFF_HOLD_MS = 280;
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
@@ -817,7 +821,11 @@
         { axis: "z", v: gz / sum },
       ];
       vals.sort((a, b) => b.v - a.v);
-      return vals[0];
+      return {
+        axis: vals[0].axis,
+        v: vals[0].v,
+        gap: vals[0].v - vals[1].v,
+      };
     }
 
     function axisFromShieldRgb(shieldRGB){
@@ -833,7 +841,11 @@
         { axis: "z", v: r / sum }, // red -> Z
       ];
       vals.sort((a, b) => b.v - a.v);
-      return vals[0];
+      return {
+        axis: vals[0].axis,
+        v: vals[0].v,
+        gap: vals[0].v - vals[1].v,
+      };
     }
 
     function axisFromSpinPayload(d){
@@ -879,9 +891,14 @@
       const locked = !!(d && d.locked);
       const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
       const canQualify = !!axisInfo && stableEnough;
+      const gapOnReq = (axisInfo && axisInfo.axis === "z") ? FLAT_SPIN_DOMINANCE_GAP_ON_Z : FLAT_SPIN_DOMINANCE_GAP_ON;
+      const gapOffReq = (axisInfo && axisInfo.axis === "z") ? FLAT_SPIN_DOMINANCE_GAP_OFF_Z : FLAT_SPIN_DOMINANCE_GAP_OFF;
 
       if (flatSpin.active) {
-        const sameAxis = canQualify && axisInfo.axis === flatSpin.axis && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF;
+        const sameAxis = canQualify
+          && axisInfo.axis === flatSpin.axis
+          && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF
+          && (Number(axisInfo.gap) >= gapOffReq);
         if (sameAxis) {
           setOrbStrokeColor01(axisToColor01(axisInfo.axis));
           flatSpin.releaseMs = 0;
@@ -903,7 +920,9 @@
         return;
       }
 
-      const qualify = canQualify && axisInfo.v >= FLAT_SPIN_DOMINANCE_ON;
+      const qualify = canQualify
+        && axisInfo.v >= FLAT_SPIN_DOMINANCE_ON
+        && (Number(axisInfo.gap) >= gapOnReq);
       if (!qualify) {
         flatSpin.holdMs = 0;
         return;
