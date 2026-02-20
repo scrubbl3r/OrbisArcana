@@ -448,7 +448,6 @@
     function activateSanctusShield(axis, durationMs = SANCTUS_SHIELD_MS){
       if (!els.shield) return;
       const c = axisToColor01(axis);
-      sanctusShieldColorLocked = true;
       shieldColor01 = { r: c.r, g: c.g, b: c.b };
       setShieldColor01(shieldColor01);
       const baseShieldD = (PHYS.orbRadiusPx * 2) + 24;
@@ -456,6 +455,7 @@
       els.shield.style.width = `${sanctusD.toFixed(2)}px`;
       els.shield.style.height = `${sanctusD.toFixed(2)}px`;
       shieldOnNow();
+      sanctusShieldColorLocked = true;
       if (sanctusShieldTO) {
         clearTimeout(sanctusShieldTO);
         sanctusShieldTO = 0;
