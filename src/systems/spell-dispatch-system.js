@@ -1,3 +1,5 @@
+import { SPELLS_BY_ID } from "../voice/spellbook.js";
+
 export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     throw new Error("createSpellDispatchSystem requires eventBus.on/eventBus.emit");
@@ -15,6 +17,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   let storedGlobeCount = 0;
+  const selectedSchoolByAxis = { x: "", y: "", z: "" };
 
   function normAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
@@ -51,6 +54,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
   function pickSlotForLoad(spell, axis) {
     const spellId = String(spell && spell.id || "");
     const a = normAxis(axis);
+    const fixed = normGroup(spell && spell.fixedSlot);
+    if (fixed) return fixed;
     // Design rule: DOMUS on Y flat spin always locks to UD.
     if (spellId === "domus" && a === "y") return "UD";
     return reserveNextSlotForAxis(a);
@@ -73,6 +78,28 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
     if (!a) return false;
     if (!spell || !Array.isArray(spell.allowedAxes) || spell.allowedAxes.length === 0) return true;
     return spell.allowedAxes.map(normAxis).includes(a);
+  }
+
+  function resolveConcreteSpellForAxis(spell, axis) {
+    const intent = String(spell && spell.intent || "");
+    if (intent !== "spell.class_select") return spell;
+    const a = normAxis(axis);
+    const classKey = String(spell && spell.classKey || "").toLowerCase();
+    const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
+    if (!a || !classKey || !school) return null;
+    const id = `${school}_${classKey}`;
+    const base = SPELLS_BY_ID[id];
+    if (!base) return null;
+    return {
+      id: String(base.id || id),
+      intent: String(base.intent || ""),
+      cooldownMs: Math.max(0, Number(base.cooldownMs) || 0),
+      phrase: String(base.phrase || id),
+      allowedAxes: Array.isArray(base.allowedAxes) ? base.allowedAxes.slice() : [a],
+      fixedSlot: String(base.fixedSlot || "").toUpperCase(),
+      school: String(base.school || school).toLowerCase(),
+      classKey: String(base.classKey || classKey).toLowerCase(),
+    };
   }
 
   function start() {
@@ -112,7 +139,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
 
     unsub.push(eventBus.on("voice.spell_detected", (payload = {}) => {
       const spell = payload.spell || {};
-      const spellId = String(spell.id || "");
+      const rawSpellId = String(spell.id || "");
+      const spellIntent = String(spell.intent || "");
+      const spellSchool = String(spell.school || "").toLowerCase();
+      const spellClass = String(spell.classKey || "").toLowerCase();
+      const spellId = rawSpellId;
       if (!spellId) {
         eventBus.emit("voice.spell_rejected", {
           reason: "invalid_spell",
@@ -126,44 +157,93 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
       const isFlatSpinLoadWindow = !!axis;
 
       if (isFlatSpinLoadWindow) {
+        if (spellIntent === "spell.school_select") {
+          if (!axisAllowedForSpell(spell, axis)) {
+            eventBus.emit("voice.spell_rejected", {
+              reason: "spell_axis_not_allowed",
+              spellId,
+              axis,
+              allowedAxes: Array.isArray(spell.allowedAxes) ? spell.allowedAxes.slice() : [],
+              atMs: now,
+            });
+            return;
+          }
+          selectedSchoolByAxis[axis] = spellSchool;
+          eventBus.emit("voice.school_selected", {
+            axis,
+            school: spellSchool,
+            spellId,
+            atMs: now,
+          });
+          return;
+        }
+
+        let concreteSpell = spell;
+        if (spellIntent === "spell.class_select") {
+          if (!selectedSchoolByAxis[axis]) {
+            eventBus.emit("voice.spell_rejected", {
+              reason: "no_school_selected",
+              spellId,
+              classKey: spellClass,
+              axis,
+              atMs: now,
+            });
+            return;
+          }
+          concreteSpell = resolveConcreteSpellForAxis(spell, axis);
+          if (!concreteSpell || !concreteSpell.id) {
+            eventBus.emit("voice.spell_rejected", {
+              reason: "school_class_resolution_failed",
+              spellId,
+              classKey: spellClass,
+              school: selectedSchoolByAxis[axis],
+              axis,
+              atMs: now,
+            });
+            return;
+          }
+        } else if (spellSchool) {
+          selectedSchoolByAxis[axis] = spellSchool;
+        }
+
         if (storedGlobeCount <= 0) {
           eventBus.emit("voice.spell_rejected", {
             reason: "no_stored_globes",
-            spellId,
+            spellId: String(concreteSpell.id || spellId),
             axis,
             atMs: now,
           });
           return;
         }
-        if (!axisAllowedForSpell(spell, axis)) {
+        if (!axisAllowedForSpell(concreteSpell, axis)) {
           eventBus.emit("voice.spell_rejected", {
             reason: "spell_axis_not_allowed",
-            spellId,
+            spellId: String(concreteSpell.id || spellId),
             axis,
-            allowedAxes: Array.isArray(spell.allowedAxes) ? spell.allowedAxes.slice() : [],
+            allowedAxes: Array.isArray(concreteSpell.allowedAxes) ? concreteSpell.allowedAxes.slice() : [],
             atMs: now,
           });
           return;
         }
-        const slot = pickSlotForLoad(spell, axis);
-        if (spellId === "domus" && axis === "y") {
+        const slot = pickSlotForLoad(concreteSpell, axis);
+        if (String(concreteSpell.id || "") === "domus" && axis === "y") {
           // Keep Y-axis LR/FB empty for DOMUS.
           loadedByAxis.y.LR = null;
           loadedByAxis.y.FB = null;
         }
         storedGlobeCount = Math.max(0, storedGlobeCount - 1);
         loadedByAxis[axis][slot] = {
-          spellId,
-          intent: spell.intent,
-          phrase: spell.phrase,
-          cooldownMs: Math.max(0, Number(spell.cooldownMs) || 0),
+          spellId: String(concreteSpell.id || ""),
+          intent: concreteSpell.intent,
+          phrase: concreteSpell.phrase,
+          cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
         };
         eventBus.emit("voice.spell_loaded", {
-          spellId,
-          intent: spell.intent,
-          phrase: spell.phrase,
+          spellId: String(concreteSpell.id || ""),
+          intent: concreteSpell.intent,
+          phrase: concreteSpell.phrase,
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
@@ -171,7 +251,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
         });
         eventBus.emit("energy.globe_spent", {
           reason: "spell_load",
-          spellId,
+          spellId: String(concreteSpell.id || ""),
           axis,
           slot,
           stored: storedGlobeCount,
@@ -262,6 +342,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
   function reset() {
     lastCastBySpellId.clear();
     activeFlatSpinAxis = null;
+    selectedSchoolByAxis.x = "";
+    selectedSchoolByAxis.y = "";
+    selectedSchoolByAxis.z = "";
     for (const axis of AXES) {
       nextSlotIndexByAxis[axis] = 0;
       for (const slot of SLOT_ORDER) {

@@ -87,6 +87,9 @@ export function matchSpellFromTranscript({
         cooldownMs: Number(spell.cooldownMs) || 0,
         phrase: spell.phrase,
         allowedAxes: Array.isArray(spell.allowedAxes) ? spell.allowedAxes.slice() : [],
+        fixedSlot: String(spell.fixedSlot || "").toUpperCase(),
+        school: String(spell.school || "").toLowerCase(),
+        classKey: String(spell.classKey || "").toLowerCase(),
       },
     };
   }
