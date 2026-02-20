@@ -1593,9 +1593,9 @@
       el.setAttribute("class", "orbShard");
       el.setAttribute("d", d);
       el.setAttribute("transform", "translate(0 0)");
-      // Force shard look at element level so browser SVG class quirks can't fallback to black fill.
-      el.setAttribute("fill", "none");
-      el.setAttribute("stroke", "rgba(50,255,117,0.95)");
+      // Force shard look at element level and bind to live orb palette.
+      el.setAttribute("fill", "var(--orb-fill)");
+      el.setAttribute("stroke", "var(--orb-stroke-color)");
       el.setAttribute("stroke-width", "1.2");
       el.setAttribute("stroke-linejoin", "round");
       el.setAttribute("stroke-linecap", "round");

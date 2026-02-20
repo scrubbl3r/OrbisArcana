@@ -535,13 +535,13 @@
       z-index: 7;
     }
     .orbShard{
-      fill: none;
-      stroke: rgba(50,255,117,0.95);
+      fill: var(--orb-fill);
+      stroke: var(--orb-stroke-color);
       stroke-width: 1.2;
       vector-effect: non-scaling-stroke;
       stroke-linejoin: round;
       stroke-linecap: round;
-      filter: drop-shadow(0 0 3px rgba(50,255,117,0.14));
+      filter: drop-shadow(0 0 3px var(--orb-stroke-color));
     }
     .pickupGlobe{
       position:absolute;
