@@ -44,7 +44,22 @@ export const SPELLS = [
   {
     id: "school_fridgis",
     phrase: "fridgis",
-    aliases: ["fridge" , "frijuss", "fridjuss", "fridgidis", "fidgidis", "frigedis", "frijis", "frigidis"],
+    aliases: [
+      "fridge",
+      "fridges",
+      "fridges",
+      "frijuss",
+      "fridjuss",
+      "fridgidis",
+      "fidgidis",
+      "frigedis",
+      "frijis",
+      "frigidis",
+      "frigidus",
+      "firigidus",
+      "frigis",
+      "frigid"
+    ],
     minConfidence: 0.6,
     cooldownMs: 0,
     allowedAxes: ["x"],
@@ -144,11 +159,19 @@ export const SPELLS = [
     aliases: [
       "fridgis sanctus",
       "fridgis sanctum",
+      "fridges sanctus",
+      "fridges sanctum",
+      "fridges sanctus",
+      "fridges sanctum",
       "fridgidis sanctus",
       "fidgidis sanctus",
       "frigedis sanctus",
       "frigidis sanktus",
-      "frigidis sanctum"
+      "frigidis sanctum",
+      "frigidus sanctus",
+      "frigidus sanctum",
+      "firigidus sanctus",
+      "firigidus sanctum"
     ],
     minConfidence: 0.62,
     cooldownMs: 1000,
@@ -164,10 +187,14 @@ export const SPELLS = [
     phrase: "fridgis radius",
     aliases: [
       "fridgis radius",
+      "fridges radius",
+      "fridges radius",
       "fridgidis radius",
       "fidgidis radius",
       "frigedis radius",
-      "frigidis radyus"
+      "frigidis radyus",
+      "frigidus radius",
+      "firigidus radius"
     ],
     minConfidence: 0.62,
     cooldownMs: 1000,
@@ -181,7 +208,17 @@ export const SPELLS = [
   {
     id: "fridgis_rota",
     phrase: "fridgis rota",
-    aliases: ["fridgis rota", "fridgidis rota", "fidgidis rota", "frigedis rota", "frigidis rohta"],
+    aliases: [
+      "fridgis rota",
+      "fridges rota",
+      "fridges rota",
+      "fridgidis rota",
+      "fidgidis rota",
+      "frigedis rota",
+      "frigidis rohta",
+      "frigidus rota",
+      "firigidus rota"
+    ],
     minConfidence: 0.64,
     cooldownMs: 1100,
     allowedAxes: ["x"],
