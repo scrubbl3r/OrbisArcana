@@ -138,12 +138,13 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       phase: Math.random() * Math.PI * 2,
       speed: (1.35 + (Math.random() * 0.75)) * 4.0,
       radius: Math.max(3, Number(orbRadiusPx) * 0.10),
-      orbitR: Math.max(14, Number(orbRadiusPx) + 18),
+      orbitR: Math.max(14, (Number(orbRadiusPx) + 18) * 1.10),
       stroke: color.stroke,
       fill: color.fill,
       glow: color.glow,
       tiltDeg: ((Math.random() * 20) - 10),
-      tiltVelDeg: ((Math.random() * 2) - 1) * 1.15,
+      tiltTargetDeg: ((Math.random() * 24) - 12),
+      tiltTargetMs: 800 + (Math.random() * 1400),
       tiltPhase: Math.random() * Math.PI * 2,
       driftPhase: Math.random() * Math.PI * 2,
       driftHz: 0.35 + (Math.random() * 0.45),
@@ -215,10 +216,15 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       const proj = orbitProjection(p, tS);
       const dt = p.lastMs ? clamp((now - p.lastMs) / 1000, 0, 0.05) : 0.016;
       p.lastMs = now;
-      p.tiltVelDeg += ((Math.random() - 0.5) * 1.35) * dt;
-      p.tiltVelDeg = clamp(p.tiltVelDeg, -3.2, 3.2);
-      p.tiltDeg += p.tiltVelDeg * dt * 34;
-      p.tiltDeg += Math.sin((tS * 0.95) + p.tiltPhase) * 0.08;
+      p.tiltTargetMs = (Number(p.tiltTargetMs) || 0) - (dt * 1000);
+      if (p.tiltTargetMs <= 0) {
+        p.tiltTargetDeg = ((Math.random() * 24) - 12);
+        p.tiltTargetMs = 700 + (Math.random() * 1900);
+      }
+      const wobbleHz = 0.55;
+      const alpha = 1 - Math.exp(-(wobbleHz * dt));
+      p.tiltDeg += ((Number(p.tiltTargetDeg) || 0) - p.tiltDeg) * alpha;
+      p.tiltDeg += Math.sin((tS * 0.75) + p.tiltPhase) * 0.12;
       p.tiltDeg = clamp(p.tiltDeg, -15, 15);
       const r = Math.max(2, Number(p.radius) || 4);
       const d = r * 2;
