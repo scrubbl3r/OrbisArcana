@@ -780,12 +780,12 @@
     const GROOVE_SHAKE_GATE = 0.20; // Hard gate: if groove01 is above this, shake is ignored
     const SHAKE_LAMP_THR = 1.65; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
     const SD_RECENT_MS = 750; // Direction label must arrive within this window (ms) to flash lamp
-    const FLAT_SPIN_DOMINANCE_ON = 0.78;
-    const FLAT_SPIN_DOMINANCE_OFF = 0.66;
-    const FLAT_SPIN_ON_HOLD_MS = 260;
-    const FLAT_SPIN_OFF_HOLD_MS = 260;
+    const FLAT_SPIN_DOMINANCE_ON = 0.72;
+    const FLAT_SPIN_DOMINANCE_OFF = 0.60;
+    const FLAT_SPIN_ON_HOLD_MS = 200;
+    const FLAT_SPIN_OFF_HOLD_MS = 280;
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
-    const FLAT_SPIN_MIN_SPEED01 = 0.16;
+    const FLAT_SPIN_MIN_SPEED01 = 0.02;
 
     let shakeCooldownUntil = 0;
     let shakeArmed = true;
@@ -877,7 +877,8 @@
       const axisInfo = axisFromVisibleShield(d);
       const speed01 = clamp01(Number(d && (d.speed01 != null ? d.speed01 : d.speed)) || 0);
       const locked = !!(d && d.locked);
-      const canQualify = !!axisInfo && !!stabilityOn && !!stabilityVisualGate && locked && (speed01 >= FLAT_SPIN_MIN_SPEED01);
+      const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
+      const canQualify = !!axisInfo && stableEnough;
 
       if (flatSpin.active) {
         const sameAxis = canQualify && axisInfo.axis === flatSpin.axis && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF;
