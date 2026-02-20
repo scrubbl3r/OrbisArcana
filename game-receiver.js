@@ -756,11 +756,11 @@
     const GROOVE_SHAKE_GATE = 0.20; // Hard gate: if groove01 is above this, shake is ignored
     const SHAKE_LAMP_THR = 1.65; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
     const SD_RECENT_MS = 750; // Direction label must arrive within this window (ms) to flash lamp
-    const FLAT_SPIN_MIN_SPEED01 = 0.18;
-    const FLAT_SPIN_DOMINANCE_ON = 0.84;
-    const FLAT_SPIN_DOMINANCE_OFF = 0.74;
-    const FLAT_SPIN_ON_HOLD_MS = 260;
-    const FLAT_SPIN_OFF_HOLD_MS = 220;
+    const FLAT_SPIN_MIN_SPEED01 = 0.14;
+    const FLAT_SPIN_DOMINANCE_ON = 0.70;
+    const FLAT_SPIN_DOMINANCE_OFF = 0.58;
+    const FLAT_SPIN_ON_HOLD_MS = 180;
+    const FLAT_SPIN_OFF_HOLD_MS = 260;
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
 
     let shakeCooldownUntil = 0;
@@ -792,6 +792,26 @@
       return vals[0];
     }
 
+    function axisFromShieldRgb(shieldRGB){
+      if (!Array.isArray(shieldRGB) || shieldRGB.length < 3) return null;
+      const rx = Math.max(0, Number(shieldRGB[0]) || 0);
+      const gy = Math.max(0, Number(shieldRGB[1]) || 0);
+      const bz = Math.max(0, Number(shieldRGB[2]) || 0);
+      const sum = rx + gy + bz;
+      if (!(sum > 1e-6)) return null;
+      const vals = [
+        { axis: "x", v: rx / sum }, // red
+        { axis: "y", v: gy / sum }, // green
+        { axis: "z", v: bz / sum }, // blue
+      ];
+      vals.sort((a, b) => b.v - a.v);
+      return vals[0];
+    }
+
+    function axisFromSpinPayload(d){
+      return axisFromShieldAxis(d && d.shieldAxis) || axisFromShieldRgb(d && d.shieldRGB);
+    }
+
     function openFlatSpinWindow(axis, nowMs){
       flatSpin.active = true;
       flatSpin.axis = axis;
@@ -820,9 +840,8 @@
     function updateFlatSpinWindow(d, speed01, nowMs){
       const dt = flatSpin.lastTs ? clamp(nowMs - flatSpin.lastTs, 0, 120) : 0;
       flatSpin.lastTs = nowMs;
-      const locked = !!(d && d.locked);
-      const axisInfo = axisFromShieldAxis(d && d.shieldAxis);
-      const canQualify = !!axisInfo && locked && (Number(speed01) >= FLAT_SPIN_MIN_SPEED01);
+      const axisInfo = axisFromSpinPayload(d);
+      const canQualify = !!axisInfo && (Number(speed01) >= FLAT_SPIN_MIN_SPEED01);
 
       if (flatSpin.active) {
         const sameAxis = canQualify && axisInfo.axis === flatSpin.axis && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF;
