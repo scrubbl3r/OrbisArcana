@@ -1407,7 +1407,7 @@
     let currentRoomChannel = normalizeRoom(readUrlRoomOrNull() || "orb:test");
 
     // =========================================================================
-    // PHYSICS + STARFIELD — unchanged (with tiny grounded flag)
+    // PHYSICS + STARFIELD — unchanged (with tiny grounded flag) 
     // =========================================================================
     const WORLD_H = 5000;
 
