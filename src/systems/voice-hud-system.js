@@ -8,10 +8,22 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
 
   const unsub = [];
 
-  function write(text, cls = "dim") {
+  function write(text, cls = "dim", asHtml = false) {
     if (!voiceReadoutEl) return;
     voiceReadoutEl.className = cls;
-    voiceReadoutEl.textContent = String(text || "");
+    if (asHtml) {
+      voiceReadoutEl.innerHTML = String(text || "");
+    } else {
+      voiceReadoutEl.textContent = String(text || "");
+    }
+  }
+
+  function writeWakeLabel(wakeHot) {
+    if (wakeHot) {
+      write(`<span class="voiceWakeHot">Wake</span>: Orbis`, "ok", true);
+      return;
+    }
+    write("Wake: Orbis", "ok");
   }
 
   function modeLabel(mode) {
@@ -32,6 +44,10 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
     const mode = String(payload.mode || VOICE_MODES.OFF);
     voiceState.mode = mode;
     voiceState.lastEventAtMs = Date.now();
+    if (mode === VOICE_MODES.WAKE_TOKEN_OPEN_WORLD) {
+      writeWakeLabel(!!voiceState.gateOpen);
+      return;
+    }
     const label = modeLabel(mode);
     write(label.text, label.cls);
   }
@@ -39,12 +55,16 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
   function onGateOpened() {
     voiceState.gateOpen = true;
     voiceState.lastEventAtMs = Date.now();
-    write("Listening window…", "ok");
+    writeWakeLabel(true);
   }
 
   function onGateClosed() {
     voiceState.gateOpen = false;
     voiceState.lastEventAtMs = Date.now();
+    if (voiceState.mode === VOICE_MODES.WAKE_TOKEN_OPEN_WORLD) {
+      writeWakeLabel(false);
+      return;
+    }
     if (voiceState.mode === VOICE_MODES.GATED_WINDOW) write("Armed (gated)", "dim");
   }
 

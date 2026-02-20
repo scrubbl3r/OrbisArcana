@@ -124,6 +124,11 @@
     .dim{opacity:.78}
     .bad{color:var(--bad); font-weight:900;}
     .ok{color:#7dffab; font-weight:900;}
+    .voiceWakeHot{
+      color: var(--over);
+      font-weight: 900;
+      text-shadow: 0 0 10px rgba(255,212,0,0.28);
+    }
 
     .over{ color: var(--over) !important; }
     .fill.over{ background: var(--over) !important; }
