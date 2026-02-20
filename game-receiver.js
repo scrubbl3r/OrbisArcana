@@ -356,11 +356,13 @@
     }
 
     const SHIELD_DECAY_MS = 2000;
+    const SHIELD_STABLE_TIMEOUT_MS = 6000;
     const SHIELD_FADEIN_MS = 750;
     let shieldDecayTO = null;
     let shieldDecayActive = 0;
     let shieldFadeTO = null;
     let shieldFadeVal = 1;
+    let shieldStableUntilMs = 0;
 
     function cancelShieldDecay(){
       if (shieldDecayTO) {
@@ -778,11 +780,12 @@
     const GROOVE_SHAKE_GATE = 0.20; // Hard gate: if groove01 is above this, shake is ignored
     const SHAKE_LAMP_THR = 1.65; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
     const SD_RECENT_MS = 750; // Direction label must arrive within this window (ms) to flash lamp
-    const FLAT_SPIN_DOMINANCE_ON = 0.55;
-    const FLAT_SPIN_DOMINANCE_OFF = 0.45;
-    const FLAT_SPIN_ON_HOLD_MS = 180;
-    const FLAT_SPIN_OFF_HOLD_MS = 320;
+    const FLAT_SPIN_DOMINANCE_ON = 0.78;
+    const FLAT_SPIN_DOMINANCE_OFF = 0.66;
+    const FLAT_SPIN_ON_HOLD_MS = 260;
+    const FLAT_SPIN_OFF_HOLD_MS = 260;
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
+    const FLAT_SPIN_MIN_SPEED01 = 0.16;
 
     let shakeCooldownUntil = 0;
     let shakeArmed = true;
@@ -846,11 +849,6 @@
       flatSpin.axis = axis;
       flatSpin.releaseMs = 0;
       flatSpin.lastGateRefreshMs = nowMs;
-      if (sanctusShieldTO) {
-        clearTimeout(sanctusShieldTO);
-        sanctusShieldTO = 0;
-      }
-      shieldOffNow();
       setOrbStrokeColor01(axisToColor01(axis));
       if (!mvp || !mvp.eventBus) return;
       mvp.eventBus.emit("spell_window.flat_spin_opened", { axis, atMs: nowMs });
@@ -877,7 +875,9 @@
       const dt = flatSpin.lastTs ? clamp(nowMs - flatSpin.lastTs, 0, 120) : 0;
       flatSpin.lastTs = nowMs;
       const axisInfo = axisFromVisibleShield(d);
-      const canQualify = !!axisInfo;
+      const speed01 = clamp01(Number(d && (d.speed01 != null ? d.speed01 : d.speed)) || 0);
+      const locked = !!(d && d.locked);
+      const canQualify = !!axisInfo && !!stabilityOn && !!stabilityVisualGate && locked && (speed01 >= FLAT_SPIN_MIN_SPEED01);
 
       if (flatSpin.active) {
         const sameAxis = canQualify && axisInfo.axis === flatSpin.axis && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF;
@@ -1041,9 +1041,24 @@
     function applyStabilityVisuals(){
       const showStable = !!stabilityOn && !!stabilityVisualGate;
       const showVar = !!variabilityOn && !!stabilityVisualGate;
+      const now = performance.now();
 
       els.dynLampStable.classList.toggle("on", showStable);
       els.dynLampVar.classList.toggle("on", showVar);
+
+      if (showStable) {
+        if (!prevStableVisual) {
+          shieldStableUntilMs = now + SHIELD_STABLE_TIMEOUT_MS;
+        }
+        if (now <= shieldStableUntilMs) {
+          shieldOnNow();
+        } else {
+          shieldDecay();
+        }
+      } else {
+        shieldStableUntilMs = 0;
+        shieldDecay();
+      }
 
       prevStableVisual = showStable;
     }
@@ -1067,6 +1082,7 @@
       stabilityHoldMs = 0;
       stabilityLastMs = 0;
       prevStableVisual = false;
+      shieldStableUntilMs = 0;
       setStability(false);
       shieldOffNow();
     }
@@ -1441,15 +1457,47 @@
       return { r: 50/255, g: 1.0, b: 117/255 };                 // green
     }
 
-    function setOrbStrokeColor01(c){
+    const ORB_STROKE_DEFAULT = { r: 50/255, g: 1.0, b: 117/255 };
+    const orbStrokeColor = {
+      current: { ...ORB_STROKE_DEFAULT },
+      target: { ...ORB_STROKE_DEFAULT },
+      initialized: false,
+    };
+
+    function applyOrbStrokeColor01(c){
       const r = Math.round(clamp01(c.r) * 255);
       const g = Math.round(clamp01(c.g) * 255);
       const b = Math.round(clamp01(c.b) * 255);
       document.documentElement.style.setProperty("--orb-stroke-color", `rgb(${r},${g},${b})`);
     }
 
-    function resetOrbStrokeColor(){
-      document.documentElement.style.setProperty("--orb-stroke-color", "var(--g)");
+    function setOrbStrokeColor01(c){
+      const nx = clamp01(c.r);
+      const ny = clamp01(c.g);
+      const nz = clamp01(c.b);
+      orbStrokeColor.target = { r: nx, g: ny, b: nz };
+      if (!orbStrokeColor.initialized) {
+        orbStrokeColor.current = { r: nx, g: ny, b: nz };
+        orbStrokeColor.initialized = true;
+        applyOrbStrokeColor01(orbStrokeColor.current);
+      }
+    }
+
+    function updateOrbStrokeColor(dt){
+      const a = 1 - Math.exp(-7 * clamp(dt, 0, 0.05));
+      orbStrokeColor.current.r += (orbStrokeColor.target.r - orbStrokeColor.current.r) * a;
+      orbStrokeColor.current.g += (orbStrokeColor.target.g - orbStrokeColor.current.g) * a;
+      orbStrokeColor.current.b += (orbStrokeColor.target.b - orbStrokeColor.current.b) * a;
+      applyOrbStrokeColor01(orbStrokeColor.current);
+    }
+
+    function resetOrbStrokeColor(immediate = false){
+      orbStrokeColor.target = { ...ORB_STROKE_DEFAULT };
+      if (immediate || !orbStrokeColor.initialized) {
+        orbStrokeColor.current = { ...ORB_STROKE_DEFAULT };
+        orbStrokeColor.initialized = true;
+        applyOrbStrokeColor01(orbStrokeColor.current);
+      }
     }
 
     function computeImpactMetric(rawImpactV){
@@ -1658,7 +1706,7 @@
           clearDeathOverlaySchedule();
           closeDeathOverlay();
           if (worldSystem) worldSystem.reset(performance.now());
-          resetOrbStrokeColor();
+          resetOrbStrokeColor(true);
           renderOrbDamageVisuals();
           updateDebugReadout();
         });
@@ -2159,6 +2207,7 @@
 
       drawStars();
       drawWorldBackdrop();
+      updateOrbStrokeColor(dt);
       applyOrbTransform();
       if (orbFxSystem) orbFxSystem.tick(ts, dt);
       if (worldSystem) worldSystem.tick(ts, dt);
@@ -2252,8 +2301,9 @@
         clearTimeout(sanctusShieldTO);
         sanctusShieldTO = 0;
       }
+      shieldStableUntilMs = 0;
       shieldOffNow();
-      resetOrbStrokeColor();
+      resetOrbStrokeColor(true);
       shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
       setShieldColor01(shieldColor01);
 
