@@ -756,11 +756,10 @@
     const GROOVE_SHAKE_GATE = 0.20; // Hard gate: if groove01 is above this, shake is ignored
     const SHAKE_LAMP_THR = 1.65; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
     const SD_RECENT_MS = 750; // Direction label must arrive within this window (ms) to flash lamp
-    const FLAT_SPIN_MIN_SPEED01 = 0.14;
-    const FLAT_SPIN_DOMINANCE_ON = 0.70;
-    const FLAT_SPIN_DOMINANCE_OFF = 0.58;
+    const FLAT_SPIN_DOMINANCE_ON = 0.55;
+    const FLAT_SPIN_DOMINANCE_OFF = 0.45;
     const FLAT_SPIN_ON_HOLD_MS = 180;
-    const FLAT_SPIN_OFF_HOLD_MS = 260;
+    const FLAT_SPIN_OFF_HOLD_MS = 320;
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
 
     let shakeCooldownUntil = 0;
@@ -812,6 +811,11 @@
       return axisFromShieldAxis(d && d.shieldAxis) || axisFromShieldRgb(d && d.shieldRGB);
     }
 
+    function axisFromVisibleShield(d){
+      if (!els.shield || !els.shield.classList.contains("on")) return null;
+      return axisFromShieldRgb(d && d.shieldRGB) || axisFromShieldAxis(d && d.shieldAxis);
+    }
+
     function openFlatSpinWindow(axis, nowMs){
       flatSpin.active = true;
       flatSpin.axis = axis;
@@ -837,11 +841,11 @@
       mvp.eventBus.emit("voice.set_mode", { mode: "wake_token_open_world" });
     }
 
-    function updateFlatSpinWindow(d, speed01, nowMs){
+    function updateFlatSpinWindow(d, nowMs){
       const dt = flatSpin.lastTs ? clamp(nowMs - flatSpin.lastTs, 0, 120) : 0;
       flatSpin.lastTs = nowMs;
-      const axisInfo = axisFromSpinPayload(d);
-      const canQualify = !!axisInfo && (Number(speed01) >= FLAT_SPIN_MIN_SPEED01);
+      const axisInfo = axisFromVisibleShield(d);
+      const canQualify = !!axisInfo;
 
       if (flatSpin.active) {
         const sameAxis = canQualify && axisInfo.axis === flatSpin.axis && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF;
@@ -2306,7 +2310,6 @@
       const speed    = pick01NewOrOld("speed01", "speed");
       const shake    = pick01NewOrOld("shake01", "shake");
       const locked   = !!d.locked;
-      updateFlatSpinWindow(d, speed, nowMs);
       
       updateEnergyBankFromPhone(energyFromPhone, nowMs);
 
@@ -2376,6 +2379,7 @@
         (!physState.shieldDescentBlocked);
 
       applyStabilityVisuals();
+      updateFlatSpinWindow(d, nowMs);
 
       updateStability(dynamics, nowMs);
       updateVariability(dynamics, nowMs);
