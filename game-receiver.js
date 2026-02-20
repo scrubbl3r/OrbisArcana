@@ -1479,7 +1479,7 @@
       const g = Math.round(clamp01(c.g) * 255);
       const b = Math.round(clamp01(c.b) * 255);
       document.documentElement.style.setProperty("--orb-stroke-color", `rgb(${r},${g},${b})`);
-      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},0.30)`);
+      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},0.20)`);
     }
 
     function setOrbStrokeColor01(c){

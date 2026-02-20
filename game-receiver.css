@@ -36,7 +36,7 @@
       --orb-d: 100px;
       --orb-stroke: 2px;
       --orb-stroke-color: rgb(255,255,255);
-      --orb-fill: rgba(255,255,255,0.30);
+      --orb-fill: rgba(255,255,255,0.20);
 
       /* Shield */
       --shield-d: 124px;          /* orb(100) + pad(12*2) */
@@ -50,7 +50,7 @@
       --shield-pulse-max: 1.00;
 
       /* Shockwave (rings) */
-      --shock-color: rgba(255, 64, 64, 0.95);
+      --shock-color: rgba(255, 255, 255, 0.30);
       --shock-stroke: 4px;
     }
 
