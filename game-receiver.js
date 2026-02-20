@@ -777,15 +777,19 @@
 
     function axisFromShieldAxis(shieldAxis){
       if (!Array.isArray(shieldAxis) || shieldAxis.length < 3) return null;
-      const ax = Math.max(0, Number(shieldAxis[0]) || 0);
-      const ay = Math.max(0, Number(shieldAxis[1]) || 0);
-      const az = Math.max(0, Number(shieldAxis[2]) || 0);
-      const sum = ax + ay + az;
+      // Gameplay axis mapping:
+      // X school = blue, Y school = green, Z school = red.
+      // Incoming shieldAxis is [x,y,z], so remap as:
+      // gameplayX <- z, gameplayY <- y, gameplayZ <- x
+      const gx = Math.max(0, Number(shieldAxis[2]) || 0);
+      const gy = Math.max(0, Number(shieldAxis[1]) || 0);
+      const gz = Math.max(0, Number(shieldAxis[0]) || 0);
+      const sum = gx + gy + gz;
       if (!(sum > 1e-6)) return null;
       const vals = [
-        { axis: "x", v: ax / sum },
-        { axis: "y", v: ay / sum },
-        { axis: "z", v: az / sum },
+        { axis: "x", v: gx / sum },
+        { axis: "y", v: gy / sum },
+        { axis: "z", v: gz / sum },
       ];
       vals.sort((a, b) => b.v - a.v);
       return vals[0];
@@ -793,15 +797,15 @@
 
     function axisFromShieldRgb(shieldRGB){
       if (!Array.isArray(shieldRGB) || shieldRGB.length < 3) return null;
-      const rx = Math.max(0, Number(shieldRGB[0]) || 0);
-      const gy = Math.max(0, Number(shieldRGB[1]) || 0);
-      const bz = Math.max(0, Number(shieldRGB[2]) || 0);
-      const sum = rx + gy + bz;
+      const r = Math.max(0, Number(shieldRGB[0]) || 0);
+      const g = Math.max(0, Number(shieldRGB[1]) || 0);
+      const b = Math.max(0, Number(shieldRGB[2]) || 0);
+      const sum = r + g + b;
       if (!(sum > 1e-6)) return null;
       const vals = [
-        { axis: "x", v: rx / sum }, // red
-        { axis: "y", v: gy / sum }, // green
-        { axis: "z", v: bz / sum }, // blue
+        { axis: "x", v: b / sum }, // blue -> X
+        { axis: "y", v: g / sum }, // green -> Y
+        { axis: "z", v: r / sum }, // red -> Z
       ];
       vals.sort((a, b) => b.v - a.v);
       return vals[0];

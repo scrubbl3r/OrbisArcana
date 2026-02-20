@@ -50,7 +50,7 @@ export const SPELLS = [
     allowedAxes: ["x"],
     gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
     intent: "spell.school_select",
-    school: "fridgis",
+    school: "frigidis",
   },
   {
     id: "school_electrum",
@@ -66,7 +66,7 @@ export const SPELLS = [
   {
     id: "class_sanctus",
     phrase: "sanctus",
-    aliases: ["sanktus", "sanctas"],
+    aliases: ["sanktus", "sanctas", "sanctum", "sanktum"],
     minConfidence: 0.6,
     cooldownMs: 0,
     allowedAxes: ["x", "y", "z"],
@@ -102,7 +102,7 @@ export const SPELLS = [
   {
     id: "ignis_sanctus",
     phrase: "ignis sanctus",
-    aliases: ["ingnis sanctus", "ignis sanctus", "ignis sanktus", "ignis sanctas"],
+    aliases: ["ingnis sanctus", "ignis sanctus", "ignis sanktus", "ignis sanctas", "ignis sanctum", "ignis sanktum"],
     minConfidence: 0.62,
     cooldownMs: 1000,
     allowedAxes: ["y"],
@@ -145,7 +145,10 @@ export const SPELLS = [
       "fridgidis sanctus",
       "fidgidis sanctus",
       "frigedis sanctus",
-      "frigidis sanktus"
+      "frigidis sanktus",
+      "fridgis sanctus",
+      "fridgis sanctum",
+      "frigidis sanctum"
     ],
     minConfidence: 0.64,
     cooldownMs: 1000,
@@ -163,7 +166,8 @@ export const SPELLS = [
       "fridgidis radius",
       "fidgidis radius",
       "frigedis radius",
-      "frigidis radyus"
+      "frigidis radyus",
+      "fridgis radius"
     ],
     minConfidence: 0.66,
     cooldownMs: 1000,
@@ -177,7 +181,7 @@ export const SPELLS = [
   {
     id: "frigidis_rota",
     phrase: "frigidis rota",
-    aliases: ["fridgidis rota", "fidgidis rota", "frigedis rota", "frigidis rohta"],
+    aliases: ["fridgidis rota", "fidgidis rota", "frigedis rota", "frigidis rohta", "fridgis rota"],
     minConfidence: 0.66,
     cooldownMs: 1100,
     allowedAxes: ["x"],
@@ -190,7 +194,7 @@ export const SPELLS = [
   {
     id: "electrum_sanctus",
     phrase: "electrum sanctus",
-    aliases: ["elektrum sanctus", "electrum sanktus", "electrum sanctas"],
+    aliases: ["elektrum sanctus", "electrum sanktus", "electrum sanctas", "electrum sanctum", "elektrum sanctum"],
     minConfidence: 0.64,
     cooldownMs: 1000,
     allowedAxes: ["z"],
