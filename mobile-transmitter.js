@@ -44,8 +44,16 @@
     const resetLabBtn = document.getElementById('resetLabBtn');
 
     const UI = { state: "idle" }; // "idle" | "running"
+    let appReady = false;
+    let startInFlight = false;
 
     function setBtn(label){ startBtn.textContent = label; }
+    function setStartReady(ready){
+      appReady = !!ready;
+      if (!startBtn) return;
+      startBtn.style.visibility = appReady ? "visible" : "hidden";
+      startBtn.disabled = !appReady;
+    }
     function setJoinStatus(_msg){
       // Intentionally silent in production mobile UI.
     }
@@ -59,6 +67,7 @@
       lanConnecting.classList.remove("on");
       lanConnecting.setAttribute("aria-hidden", "true");
     }
+    setStartReady(false);
 
     if (VERSION_TAG) {
       const tag = document.createElement("div");
@@ -515,6 +524,9 @@
       offerSeen: false,
       phoneStartedPending: false,
       phoneStartedSent: false,
+      phoneStartedAcked: false,
+      phoneStartedRetryTO: null,
+      phoneStartedDeadlineTO: null,
     };
 
     const impulseTransport = {
@@ -537,6 +549,14 @@
         clearTimeout(lanParty.helloRetryTO);
         lanParty.helloRetryTO = null;
       }
+      if (lanParty.phoneStartedRetryTO) {
+        clearTimeout(lanParty.phoneStartedRetryTO);
+        lanParty.phoneStartedRetryTO = null;
+      }
+      if (lanParty.phoneStartedDeadlineTO) {
+        clearTimeout(lanParty.phoneStartedDeadlineTO);
+        lanParty.phoneStartedDeadlineTO = null;
+      }
       try { if (lanParty.pairChannel) lanParty.pairChannel.unsubscribe(); } catch (_) {}
       try { if (lanParty.pairChannel) lanParty.pairChannel.detach(); } catch (_) {}
       try { if (lanParty.pairRealtime) lanParty.pairRealtime.close(); } catch (_) {}
@@ -551,6 +571,7 @@
       lanParty.offerSeen = false;
       lanParty.phoneStartedPending = false;
       lanParty.phoneStartedSent = false;
+      lanParty.phoneStartedAcked = false;
       hideLanConnecting();
       setImpulseTransport({
         sendImpulse: () => false,
@@ -662,6 +683,47 @@
       }
     }
 
+    function clearPhoneStartedRetry(){
+      if (lanParty.phoneStartedRetryTO) {
+        clearTimeout(lanParty.phoneStartedRetryTO);
+        lanParty.phoneStartedRetryTO = null;
+      }
+      if (lanParty.phoneStartedDeadlineTO) {
+        clearTimeout(lanParty.phoneStartedDeadlineTO);
+        lanParty.phoneStartedDeadlineTO = null;
+      }
+    }
+
+    function armPhoneStartedHandshake(){
+      if (!lanParty.active || UI.state !== "running") return;
+      lanParty.phoneStartedPending = true;
+      lanParty.phoneStartedSent = false;
+      lanParty.phoneStartedAcked = false;
+      clearPhoneStartedRetry();
+
+      const tick = () => {
+        if (!lanParty.active || UI.state !== "running") {
+          clearPhoneStartedRetry();
+          return;
+        }
+        if (lanParty.phoneStartedAcked) {
+          lanParty.phoneStartedPending = false;
+          clearPhoneStartedRetry();
+          return;
+        }
+        if (sendLanControl("phone_started")) {
+          lanParty.phoneStartedSent = true;
+        }
+        lanParty.phoneStartedRetryTO = setTimeout(tick, 250);
+      };
+
+      tick();
+      lanParty.phoneStartedDeadlineTO = setTimeout(() => {
+        lanParty.phoneStartedPending = false;
+        clearPhoneStartedRetry();
+      }, 8000);
+    }
+
     async function joinLanParty(roomId, token, code6){
       if (!roomId || !token) {
         setJoinStatus("Need room + token");
@@ -677,6 +739,7 @@
       lanParty.offerSeen = false;
       lanParty.phoneStartedPending = false;
       lanParty.phoneStartedSent = false;
+      lanParty.phoneStartedAcked = false;
       if (code6 && String(code6).trim() && String(code6).trim() !== lanParty.code6) {
         setJoinStatus("Backup code mismatch");
         return false;
@@ -712,19 +775,8 @@
           const lanSafety = await detectLanSafety(pc);
           lanParty.gameplayEnabled = !!lanSafety.safe;
           useWebRtcTransport(dc);
-          if (UI.state === "running" && !lanParty.phoneStartedSent) {
-            if (sendLanControl("phone_started")) {
-              lanParty.phoneStartedSent = true;
-              lanParty.phoneStartedPending = false;
-            } else {
-              lanParty.phoneStartedPending = true;
-            }
-          }
-          if (lanParty.phoneStartedPending && !lanParty.phoneStartedSent) {
-            if (sendLanControl("phone_started")) {
-              lanParty.phoneStartedSent = true;
-              lanParty.phoneStartedPending = false;
-            }
+          if (UI.state === "running" && !lanParty.phoneStartedAcked) {
+            armPhoneStartedHandshake();
           }
           setJoinStatus(lanSafety.safe ? ("Connected (" + lanSafety.label + ")") : lanSafety.label);
           hideLanConnecting();
@@ -740,6 +792,10 @@
           if (!d || d.t !== "control") return;
           if (d.name === "calibrate") {
             startCalibration();
+          } else if (d.name === "phone_started_ack") {
+            lanParty.phoneStartedAcked = true;
+            lanParty.phoneStartedPending = false;
+            clearPhoneStartedRetry();
           }
         };
       };
@@ -797,18 +853,19 @@
       return true;
     }
 
-    const joinFromUrl = parseJoinParamsFromUrl(window.location.href);
-    if (joinFromUrl) {
-      showLanConnecting();
-      setTimeout(async () => {
+    (async () => {
+      const joinFromUrl = parseJoinParamsFromUrl(window.location.href);
+      if (joinFromUrl) {
+        showLanConnecting();
         try {
           await autoJoinFromPayload(joinFromUrl);
         } catch (_) {
           hideLanConnecting();
           setJoinStatus("Auto-join failed");
         }
-      }, 0);
-    }
+      }
+      setStartReady(true);
+    })();
     // ===== LAN PARTY (P2P) END =====
 
     // =========================================================================
@@ -2279,8 +2336,9 @@
     // Start/Stop
     // =========================================================================
     async function start() {
-      if (!window.isSecureContext) return;
+      if (!window.isSecureContext || !appReady || startInFlight) return;
 
+      startInFlight = true;
       startBtn.disabled = true;
       try {
         const ok = await requestMotionPermissionIfNeeded();
@@ -2346,18 +2404,13 @@
         setBtn("Stop");
 
         if (lanParty.active) {
-          if (sendLanControl("phone_started")) {
-            lanParty.phoneStartedSent = true;
-            lanParty.phoneStartedPending = false;
-          } else {
-            lanParty.phoneStartedPending = true;
-            lanParty.phoneStartedSent = false;
-          }
+          armPhoneStartedHandshake();
         }
 
         if (calib.pendingReq) startCalibration();
 
       } finally {
+        startInFlight = false;
         startBtn.disabled = false;
       }
 

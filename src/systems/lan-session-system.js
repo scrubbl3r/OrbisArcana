@@ -250,6 +250,7 @@ export function createLanSessionSystem({
     let d = null;
     try { d = JSON.parse(String(evt.data || "")); } catch (_) { return; }
     if (d && d.t === "control" && d.name === "phone_started") {
+      sendControl("phone_started_ack");
       closeModal();
       if (typeof onPhoneStarted === "function") onPhoneStarted(d);
       return;
