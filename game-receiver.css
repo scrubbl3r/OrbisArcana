@@ -36,7 +36,7 @@
       --orb-d: 100px;
       --orb-stroke: 2px;
       --orb-stroke-color: rgb(255,255,255);
-      --orb-fill: rgba(255,255,255,0.50);
+      --orb-fill: rgba(255,255,255,0.30);
 
       /* Shield */
       --shield-d: 124px;          /* orb(100) + pad(12*2) */
@@ -521,11 +521,11 @@
     }
     .orbCracks path{
       fill: none;
-      stroke: var(--g);
+      stroke: var(--orb-stroke-color);
       stroke-width: 1.6;
       stroke-linecap: round;
       stroke-linejoin: round;
-      filter: drop-shadow(0 0 3px rgba(50,255,117,0.18));
+      filter: drop-shadow(0 0 3px var(--orb-stroke-color));
     }
     .orbShards{
       width: 160px;
