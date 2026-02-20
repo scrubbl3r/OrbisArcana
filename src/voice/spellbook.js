@@ -44,7 +44,7 @@ export const SPELLS = [
   {
     id: "school_fridgis",
     phrase: "fridgis",
-    aliases: ["fridgidis", "fidgidis", "frigedis", "frijis", "frigidis"],
+    aliases: ["fridge" , "frijuss", "fridjuss", "fridgidis", "fidgidis", "frigedis", "frijis", "frigidis"],
     minConfidence: 0.6,
     cooldownMs: 0,
     allowedAxes: ["x"],
