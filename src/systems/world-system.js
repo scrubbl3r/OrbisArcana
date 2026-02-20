@@ -20,6 +20,7 @@ export function createWorldSystem({
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
+  const clockNowMs = () => performance.now();
 
   const PICKUP_ATTRACT_START_EDGE_GAP_PX = 120;
   const PICKUP_CONSUME_EDGE_GAP_PX = 15;
@@ -98,8 +99,9 @@ export function createWorldSystem({
     globeEl.style.top = `${top.toFixed(2)}px`;
     globeEl.style.transform = 'none';
     globeEl.style.zIndex = '40';
+    const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
     if ((Number(p.fadeInMs) || 0) > 0) {
-      const age = Math.max(0, (Number(nowMs) || performance.now()) - (Number(p.fadeInStartMs) || 0));
+      const age = Math.max(0, tNow - (Number(p.fadeInStartMs) || 0));
       const alpha = clamp01(age / Math.max(1, Number(p.fadeInMs) || 1));
       globeEl.style.opacity = alpha.toFixed(3);
     } else {
@@ -176,35 +178,39 @@ export function createWorldSystem({
 
   function reset(nowMs) {
     const p = state.pickup;
+    const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
     p.xNorm = p.anchorXNorm;
     p.yW = p.anchorYW;
+    p.r = Number(spawn && spawn.r) || 25;
     p.active = true;
-    p.spawnedAtMs = Number(nowMs) || performance.now();
+    p.spawnedAtMs = tNow;
     p.attracting = false;
     p.lastStepTs = 0;
     p.fadeInMs = 0;
     p.fadeInStartMs = 0;
-    render(nowMs);
+    render(tNow);
   }
 
   function respawnAtAnchorWithFade(nowMs, fadeMs = PICKUP_RESPAWN_FADE_MS) {
     const p = state.pickup;
+    const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
     p.xNorm = p.anchorXNorm;
     p.yW = p.anchorYW;
+    p.r = Number(spawn && spawn.r) || 25;
     p.active = true;
-    p.spawnedAtMs = Number(nowMs) || performance.now();
+    p.spawnedAtMs = tNow;
     p.attracting = false;
     p.lastStepTs = 0;
     p.fadeInMs = Math.max(0, Number(fadeMs) || 0);
-    p.fadeInStartMs = Number(nowMs) || performance.now();
-    render(nowMs);
+    p.fadeInStartMs = tNow;
+    render(tNow);
   }
 
   if (eventBus && typeof eventBus.on === 'function') {
     eventBus.on('voice.spell_cast', (payload = {}) => {
       if (String(payload.trigger || '') !== 'shake_detonation') return;
       if (state.pickup && state.pickup.active) return;
-      respawnAtAnchorWithFade(Number(payload.atMs) || performance.now(), PICKUP_RESPAWN_FADE_MS);
+      respawnAtAnchorWithFade(clockNowMs(), PICKUP_RESPAWN_FADE_MS);
     });
   }
 
