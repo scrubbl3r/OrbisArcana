@@ -1439,8 +1439,8 @@
     const FLOAT_GRACE_DEFAULT_MS = 1000;
     const DOMUS_FLOAT_GRACE_MS = 5000;
     const DOMUS_TELEPORT_ABOVE_GROUND_PX = 300;
-    const SANCTUS_SHIELD_MS = 2800;
-    const SANCTUS_SHIELD_SCALE = 1.2;
+    const SANCTUS_SHIELD_MS = 8000;
+    const SANCTUS_SHIELD_SCALE = 1.25;
     const IMPACT_MODEL = {
       mass: 1.0,
       gravityExp: 0.5,
@@ -1460,9 +1460,9 @@
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
-      if (a === "x") return { r: 80/255, g: 160/255, b: 1.0 }; // blue
-      if (a === "z") return { r: 1.0, g: 80/255, b: 80/255 };  // red
-      return { r: 50/255, g: 1.0, b: 117/255 };                 // green
+      if (a === "x") return { r: 0/255, g: 100/255, b: 253/255 };   // #0064fd
+      if (a === "z") return { r: 253/255, g: 241/255, b: 0/255 };   // #fdf100
+      return { r: 253/255, g: 78/255, b: 0/255 };                   // #fd4e00
     }
 
     const ORB_STROKE_DEFAULT = { r: 50/255, g: 1.0, b: 117/255 };
