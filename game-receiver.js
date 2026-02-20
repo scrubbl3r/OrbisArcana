@@ -1696,34 +1696,21 @@
         points.push({ x, yOff });
       }
       return {
-        fill: cfg.fill || "rgba(18,58,36,0.45)",
-        stroke: cfg.stroke || "rgba(50,255,117,0.22)",
-        lineW: Math.max(1, Number(cfg.lineW) || 1),
+        stroke: cfg.stroke || "rgba(50,255,117,0.95)",
+        lineW: Math.max(1, Number(cfg.lineW) || 2),
         points,
       };
     }
 
     function regenMountains(w){
-      mountainLayers = [
-        buildMountainLayer(w, {
-          step: 34,
-          minOff: 52,
-          maxOff: 132,
-          jitter: 20,
-          fill: "rgba(12,46,30,0.52)",
-          stroke: "rgba(50,255,117,0.16)",
-          lineW: 1.2,
-        }),
-        buildMountainLayer(w, {
-          step: 46,
-          minOff: 92,
-          maxOff: 210,
-          jitter: 26,
-          fill: "rgba(8,28,18,0.58)",
-          stroke: "rgba(50,255,117,0.10)",
-          lineW: 1.0,
-        }),
-      ];
+      mountainLayers = [buildMountainLayer(w, {
+        step: 34,
+        minOff: 56,
+        maxOff: 186,
+        jitter: 28,
+        stroke: "rgba(50,255,117,0.95)",
+        lineW: 2,
+      })];
     }
 
     function pickStarRGB(layerIndex){
@@ -1842,17 +1829,18 @@
         const pts = Array.isArray(layer.points) ? layer.points : [];
         if (pts.length < 2) continue;
         ctx.beginPath();
-        ctx.moveTo(pts[0].x, groundY);
+        ctx.moveTo(pts[0].x, groundY - pts[0].yOff);
         for (const p of pts) {
           ctx.lineTo(p.x, groundY - p.yOff);
         }
-        ctx.lineTo(pts[pts.length - 1].x, groundY);
-        ctx.closePath();
-        ctx.fillStyle = layer.fill;
-        ctx.fill();
         ctx.strokeStyle = layer.stroke;
         ctx.lineWidth = layer.lineW;
+        ctx.lineJoin = "miter";
+        ctx.lineCap = "round";
+        ctx.shadowColor = "rgba(50,255,117,0.28)";
+        ctx.shadowBlur = 8;
         ctx.stroke();
+        ctx.shadowBlur = 0;
       }
     }
 
