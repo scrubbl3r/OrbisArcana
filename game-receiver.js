@@ -389,6 +389,8 @@
       els.shield.classList.remove("on");
       els.shield.style.opacity = "";
       els.shield.style.animation = "";
+      els.shield.style.width = "";
+      els.shield.style.height = "";
     }
 
     function shieldOnNow(){
@@ -439,6 +441,26 @@
         els.shield.style.transition = "";
         shieldOffNow();
       }, SHIELD_DECAY_MS);
+    }
+
+    function activateSanctusShield(axis, durationMs = SANCTUS_SHIELD_MS){
+      if (!els.shield) return;
+      const c = axisToColor01(axis);
+      shieldColor01 = { r: c.r, g: c.g, b: c.b };
+      setShieldColor01(shieldColor01);
+      const baseShieldD = (PHYS.orbRadiusPx * 2) + 24;
+      const sanctusD = Math.max(10, baseShieldD * SANCTUS_SHIELD_SCALE);
+      els.shield.style.width = `${sanctusD.toFixed(2)}px`;
+      els.shield.style.height = `${sanctusD.toFixed(2)}px`;
+      shieldOnNow();
+      if (sanctusShieldTO) {
+        clearTimeout(sanctusShieldTO);
+        sanctusShieldTO = 0;
+      }
+      sanctusShieldTO = setTimeout(() => {
+        sanctusShieldTO = 0;
+        shieldDecay();
+      }, Math.max(150, Number(durationMs) || SANCTUS_SHIELD_MS));
     }
 
     let shockRAF = 0;
@@ -816,7 +838,6 @@
     }
 
     function axisFromVisibleShield(d){
-      if (!els.shield || !els.shield.classList.contains("on")) return null;
       return axisFromShieldRgb(d && d.shieldRGB) || axisFromShieldAxis(d && d.shieldAxis);
     }
 
@@ -825,6 +846,12 @@
       flatSpin.axis = axis;
       flatSpin.releaseMs = 0;
       flatSpin.lastGateRefreshMs = nowMs;
+      if (sanctusShieldTO) {
+        clearTimeout(sanctusShieldTO);
+        sanctusShieldTO = 0;
+      }
+      shieldOffNow();
+      setOrbStrokeColor01(axisToColor01(axis));
       if (!mvp || !mvp.eventBus) return;
       mvp.eventBus.emit("spell_window.flat_spin_opened", { axis, atMs: nowMs });
       mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
@@ -839,6 +866,7 @@
       flatSpin.holdMs = 0;
       flatSpin.releaseMs = 0;
       flatSpin.lastGateRefreshMs = 0;
+      resetOrbStrokeColor();
       if (!mvp || !mvp.eventBus) return;
       mvp.eventBus.emit("spell_window.flat_spin_closed", { axis, reason, atMs: nowMs });
       mvp.eventBus.emit("voice.close_gate", { reason: `flat_spin_${reason}` });
@@ -854,6 +882,7 @@
       if (flatSpin.active) {
         const sameAxis = canQualify && axisInfo.axis === flatSpin.axis && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF;
         if (sameAxis) {
+          setOrbStrokeColor01(axisToColor01(axisInfo.axis));
           flatSpin.releaseMs = 0;
           if ((nowMs - flatSpin.lastGateRefreshMs) >= FLAT_SPIN_GATE_REFRESH_MS) {
             flatSpin.lastGateRefreshMs = nowMs;
@@ -1015,9 +1044,6 @@
 
       els.dynLampStable.classList.toggle("on", showStable);
       els.dynLampVar.classList.toggle("on", showVar);
-
-      if (showStable) shieldOnNow();
-      else shieldDecay();
 
       prevStableVisual = showStable;
     }
@@ -1389,6 +1415,8 @@
     const FLOAT_GRACE_DEFAULT_MS = 1000;
     const DOMUS_FLOAT_GRACE_MS = 5000;
     const DOMUS_TELEPORT_ABOVE_GROUND_PX = 300;
+    const SANCTUS_SHIELD_MS = 2800;
+    const SANCTUS_SHIELD_SCALE = 1.2;
     const IMPACT_MODEL = {
       mass: 1.0,
       gravityExp: 0.5,
@@ -1404,6 +1432,25 @@
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
+    let sanctusShieldTO = 0;
+
+    function axisToColor01(axis){
+      const a = String(axis || "").toLowerCase();
+      if (a === "x") return { r: 80/255, g: 160/255, b: 1.0 }; // blue
+      if (a === "z") return { r: 1.0, g: 80/255, b: 80/255 };  // red
+      return { r: 50/255, g: 1.0, b: 117/255 };                 // green
+    }
+
+    function setOrbStrokeColor01(c){
+      const r = Math.round(clamp01(c.r) * 255);
+      const g = Math.round(clamp01(c.g) * 255);
+      const b = Math.round(clamp01(c.b) * 255);
+      document.documentElement.style.setProperty("--orb-stroke-color", `rgb(${r},${g},${b})`);
+    }
+
+    function resetOrbStrokeColor(){
+      document.documentElement.style.setProperty("--orb-stroke-color", "var(--g)");
+    }
 
     function computeImpactMetric(rawImpactV){
       const v = Math.max(0, Number(rawImpactV) || 0);
@@ -1611,6 +1658,7 @@
           clearDeathOverlaySchedule();
           closeDeathOverlay();
           if (worldSystem) worldSystem.reset(performance.now());
+          resetOrbStrokeColor();
           renderOrbDamageVisuals();
           updateDebugReadout();
         });
@@ -1621,6 +1669,10 @@
         });
         eventBus.on("voice.spell_cast", (p = {}) => {
           const intent = String(p.intent || "");
+          if (intent === "spell.school_shield") {
+            activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
+            return;
+          }
           if (intent === "spell.domus") {
             teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
             grantFloatGrace(DOMUS_FLOAT_GRACE_MS);
@@ -2196,7 +2248,12 @@
       allDirLampOff();
 
       clearShock();
+      if (sanctusShieldTO) {
+        clearTimeout(sanctusShieldTO);
+        sanctusShieldTO = 0;
+      }
       shieldOffNow();
+      resetOrbStrokeColor();
       shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
       setShieldColor01(shieldColor01);
 

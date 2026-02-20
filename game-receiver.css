@@ -35,6 +35,7 @@
       /* Orb geometry (kept aligned with PHYS.orbRadiusPx = 50 -> diameter 100) */
       --orb-d: 100px;
       --orb-stroke: 2px;
+      --orb-stroke-color: var(--g);
       --orb-fill: rgba(0,0,0,0.25);
 
       /* Shield */
@@ -470,7 +471,7 @@
       position:absolute;
       inset: calc(-1 * var(--orb-stroke));
       border-radius: 999px;
-      border: var(--orb-stroke) solid var(--g);
+      border: var(--orb-stroke) solid var(--orb-stroke-color);
       pointer-events:none;
     }
     .orb.shattered{
