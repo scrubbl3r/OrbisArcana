@@ -1969,7 +1969,8 @@
         points.push({ x, yOff });
       }
       return {
-        stroke: cfg.stroke || "rgba(0,0,0,1.0)",
+        stroke: cfg.stroke || "rgba(50,255,117,0.95)",
+        fill: cfg.fill || "rgba(0,0,0,1.0)",
         lineW: Math.max(1, Number(cfg.lineW) || 2),
         points,
       };
@@ -1981,7 +1982,8 @@
         minOff: 56,
         maxOff: 186,
         jitter: 28,
-        stroke: "rgba(0,0,0,1.0)",
+        stroke: "rgba(50,255,117,0.95)",
+        fill: "rgba(0,0,0,1.0)",
         lineW: 2,
       })];
     }
@@ -2101,6 +2103,20 @@
       for (const layer of mountainLayers) {
         const pts = Array.isArray(layer.points) ? layer.points : [];
         if (pts.length < 2) continue;
+
+        // Fill mountain body to ground with opaque black.
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, groundY - pts[0].yOff);
+        for (const p of pts) {
+          ctx.lineTo(p.x, groundY - p.yOff);
+        }
+        ctx.lineTo(pts[pts.length - 1].x, groundY);
+        ctx.lineTo(pts[0].x, groundY);
+        ctx.closePath();
+        ctx.fillStyle = layer.fill || "rgba(0,0,0,1.0)";
+        ctx.fill();
+
+        // Draw the classic green jagged ridgeline.
         ctx.beginPath();
         ctx.moveTo(pts[0].x, groundY - pts[0].yOff);
         for (const p of pts) {
@@ -2110,8 +2126,8 @@
         ctx.lineWidth = layer.lineW;
         ctx.lineJoin = "miter";
         ctx.lineCap = "round";
-        ctx.shadowColor = "rgba(0,0,0,0)";
-        ctx.shadowBlur = 0;
+        ctx.shadowColor = "rgba(50,255,117,0.28)";
+        ctx.shadowBlur = 8;
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
