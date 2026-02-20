@@ -59,6 +59,8 @@
 
       physStage: $("physStage"),
       stars: $("stars"),
+      terrain: $("terrain"),
+      groundLine: $("groundLine"),
       gSlider: $("gSlider"),
       gVal: $("gVal"),
       dSlider: $("dSlider"),
@@ -1665,6 +1667,9 @@
     let starCtx = null;
     let starW = 0, starH = 0;
     let starLayers = [];
+    let terrainCtx = null;
+    let terrainW = 0, terrainH = 0;
+    let mountainLayers = [];
 
     function r01(){ return Math.random(); }
     function rIn(a,b){ return a + (b-a) * r01(); }
@@ -1672,6 +1677,53 @@
     function wrap(v, size){
       v = v % size;
       return (v < 0) ? (v + size) : v;
+    }
+
+    function groundLineWorldY(){
+      return groundCenterWorld() + PHYS.orbRadiusPx + (PHYS.groundLinePx * 0.5);
+    }
+
+    function buildMountainLayer(w, cfg){
+      const points = [];
+      const step = Math.max(18, Number(cfg.step) || 28);
+      const minOff = Math.max(20, Number(cfg.minOff) || 70);
+      const maxOff = Math.max(minOff + 20, Number(cfg.maxOff) || 180);
+      const jitter = Math.max(2, Number(cfg.jitter) || 18);
+      let yOff = rIn(minOff, maxOff);
+      for (let x = -80; x <= (w + 80); x += step){
+        yOff += rIn(-jitter, jitter);
+        yOff = clamp(yOff, minOff, maxOff);
+        points.push({ x, yOff });
+      }
+      return {
+        fill: cfg.fill || "rgba(18,58,36,0.45)",
+        stroke: cfg.stroke || "rgba(50,255,117,0.22)",
+        lineW: Math.max(1, Number(cfg.lineW) || 1),
+        points,
+      };
+    }
+
+    function regenMountains(w){
+      mountainLayers = [
+        buildMountainLayer(w, {
+          step: 34,
+          minOff: 52,
+          maxOff: 132,
+          jitter: 20,
+          fill: "rgba(12,46,30,0.52)",
+          stroke: "rgba(50,255,117,0.16)",
+          lineW: 1.2,
+        }),
+        buildMountainLayer(w, {
+          step: 46,
+          minOff: 92,
+          maxOff: 210,
+          jitter: 26,
+          fill: "rgba(8,28,18,0.58)",
+          stroke: "rgba(50,255,117,0.10)",
+          lineW: 1.0,
+        }),
+      ];
     }
 
     function pickStarRGB(layerIndex){
@@ -1689,6 +1741,7 @@
     function starResize(regen=false){
       const c = els.stars;
       if (!c) return;
+      const t = els.terrain;
 
       const rect = stageRect();
       const w = Math.max(1, Math.floor(rect.width));
@@ -1696,7 +1749,8 @@
 
       const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
 
-      if (!regen && w === starW && h === starH && c.width === Math.floor(w*dpr) && c.height === Math.floor(h*dpr)) return;
+      const sameSize = (w === starW && h === starH && c.width === Math.floor(w*dpr) && c.height === Math.floor(h*dpr));
+      if (!regen && sameSize) return;
 
       starW = w; starH = h;
 
@@ -1707,6 +1761,19 @@
 
       starCtx = c.getContext("2d", { alpha: false });
       if (starCtx) starCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      if (t) {
+        terrainW = w;
+        terrainH = h;
+        t.width = Math.floor(w * dpr);
+        t.height = Math.floor(h * dpr);
+        t.style.width = w + "px";
+        t.style.height = h + "px";
+        terrainCtx = t.getContext("2d", { alpha: true });
+        if (terrainCtx) terrainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      } else {
+        terrainCtx = null;
+      }
 
       starLayers = STAR.layers.map((L, layerIndex) => {
         const arr = [];
@@ -1722,6 +1789,8 @@
         }
         return { cfg: L, stars: arr };
       });
+
+      regenMountains(w);
     }
 
     function drawStars(){
@@ -1751,6 +1820,40 @@
       vg.addColorStop(1, "rgba(0,0,0,0.55)");
       ctx.fillStyle = vg;
       ctx.fillRect(0,0,w,h);
+    }
+
+    function drawWorldBackdrop(){
+      const h = stageRect().height;
+      const camTop = cameraTopFor(physState.yW, h);
+      const groundY = groundLineWorldY() - camTop;
+
+      if (els.groundLine) {
+        const top = groundY - (PHYS.groundLinePx * 0.5);
+        els.groundLine.style.top = `${top.toFixed(2)}px`;
+      }
+
+      if (!terrainCtx) return;
+      const ctx = terrainCtx;
+      const w = terrainW;
+      const th = terrainH;
+      ctx.clearRect(0, 0, w, th);
+
+      for (const layer of mountainLayers) {
+        const pts = Array.isArray(layer.points) ? layer.points : [];
+        if (pts.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, groundY);
+        for (const p of pts) {
+          ctx.lineTo(p.x, groundY - p.yOff);
+        }
+        ctx.lineTo(pts[pts.length - 1].x, groundY);
+        ctx.closePath();
+        ctx.fillStyle = layer.fill;
+        ctx.fill();
+        ctx.strokeStyle = layer.stroke;
+        ctx.lineWidth = layer.lineW;
+        ctx.stroke();
+      }
     }
 
     requestAnimationFrame(() => {
@@ -1867,6 +1970,7 @@
       }
 
       drawStars();
+      drawWorldBackdrop();
       applyOrbTransform();
       if (orbFxSystem) orbFxSystem.tick(ts, dt);
       if (worldSystem) worldSystem.tick(ts, dt);

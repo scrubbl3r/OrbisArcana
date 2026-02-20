@@ -326,13 +326,22 @@
       pointer-events:none;
     }
 
+    .terrainCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:1;
+      pointer-events:none;
+    }
+
     .groundLine{
       position:absolute;
       left:16px;
       right:16px;
       height:2px;
       background: var(--g);
-      bottom: 15px;
+      top: 0;
       opacity: 0.95;
       box-shadow: 0 0 18px rgba(50,255,117,.12);
       z-index:2;
