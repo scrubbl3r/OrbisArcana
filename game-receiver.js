@@ -784,8 +784,6 @@
     const FLAT_SPIN_DOMINANCE_OFF = 0.60;
     const FLAT_SPIN_DOMINANCE_GAP_ON = 0.14;
     const FLAT_SPIN_DOMINANCE_GAP_OFF = 0.09;
-    const FLAT_SPIN_DOMINANCE_GAP_ON_Z = 0.22;
-    const FLAT_SPIN_DOMINANCE_GAP_OFF_Z = 0.14;
     const FLAT_SPIN_ON_HOLD_MS = 200;
     const FLAT_SPIN_OFF_HOLD_MS = 280;
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
@@ -889,13 +887,10 @@
       const axisInfo = axisFromVisibleShield(d);
       const speed01 = clamp01(Number(d && (d.speed01 != null ? d.speed01 : d.speed)) || 0);
       const locked = !!(d && d.locked);
-      const shieldActiveNow = (!!stabilityOn && !!stabilityVisualGate) && (nowMs <= shieldStableUntilMs);
-      const stableEnoughXY = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
-      const stableEnoughZ = shieldActiveNow;
-      const stableEnough = (axisInfo && axisInfo.axis === "z") ? stableEnoughZ : stableEnoughXY;
+      const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
       const canQualify = !!axisInfo && stableEnough;
-      const gapOnReq = (axisInfo && axisInfo.axis === "z") ? FLAT_SPIN_DOMINANCE_GAP_ON_Z : FLAT_SPIN_DOMINANCE_GAP_ON;
-      const gapOffReq = (axisInfo && axisInfo.axis === "z") ? FLAT_SPIN_DOMINANCE_GAP_OFF_Z : FLAT_SPIN_DOMINANCE_GAP_OFF;
+      const gapOnReq = FLAT_SPIN_DOMINANCE_GAP_ON;
+      const gapOffReq = FLAT_SPIN_DOMINANCE_GAP_OFF;
 
       if (flatSpin.active) {
         const sameAxis = canQualify
