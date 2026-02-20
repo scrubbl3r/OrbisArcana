@@ -23,6 +23,7 @@ export function createWorldSystem({
 
   const PICKUP_ATTRACT_START_EDGE_GAP_PX = 120;
   const PICKUP_CONSUME_EDGE_GAP_PX = 15;
+  const PICKUP_RESPAWN_FADE_MS = 2000;
 
   const state = {
     pickup: {
@@ -42,6 +43,8 @@ export function createWorldSystem({
       driftFreqYHz: 0.31,
       driftPhaseX: Math.random() * Math.PI * 2,
       driftPhaseY: Math.random() * Math.PI * 2,
+      fadeInMs: 0,
+      fadeInStartMs: 0,
     },
   };
 
@@ -95,12 +98,20 @@ export function createWorldSystem({
     globeEl.style.top = `${top.toFixed(2)}px`;
     globeEl.style.transform = 'none';
     globeEl.style.zIndex = '40';
-    globeEl.style.opacity = '1';
+    if ((Number(p.fadeInMs) || 0) > 0) {
+      const age = Math.max(0, (Number(nowMs) || performance.now()) - (Number(p.fadeInStartMs) || 0));
+      const alpha = clamp01(age / Math.max(1, Number(p.fadeInMs) || 1));
+      globeEl.style.opacity = alpha.toFixed(3);
+    } else {
+      globeEl.style.opacity = '1';
+    }
   }
 
   function collectPickup(nowMs) {
     const p = state.pickup;
     p.active = false;
+    p.fadeInMs = 0;
+    p.fadeInStartMs = 0;
     render(nowMs);
     eventBus.emit('pickup.collected', {
       id: p.id,
@@ -171,7 +182,30 @@ export function createWorldSystem({
     p.spawnedAtMs = Number(nowMs) || performance.now();
     p.attracting = false;
     p.lastStepTs = 0;
+    p.fadeInMs = 0;
+    p.fadeInStartMs = 0;
     render(nowMs);
+  }
+
+  function respawnAtAnchorWithFade(nowMs, fadeMs = PICKUP_RESPAWN_FADE_MS) {
+    const p = state.pickup;
+    p.xNorm = p.anchorXNorm;
+    p.yW = p.anchorYW;
+    p.active = true;
+    p.spawnedAtMs = Number(nowMs) || performance.now();
+    p.attracting = false;
+    p.lastStepTs = 0;
+    p.fadeInMs = Math.max(0, Number(fadeMs) || 0);
+    p.fadeInStartMs = Number(nowMs) || performance.now();
+    render(nowMs);
+  }
+
+  if (eventBus && typeof eventBus.on === 'function') {
+    eventBus.on('voice.spell_cast', (payload = {}) => {
+      if (String(payload.trigger || '') !== 'shake_detonation') return;
+      if (state.pickup && state.pickup.active) return;
+      respawnAtAnchorWithFade(Number(payload.atMs) || performance.now(), PICKUP_RESPAWN_FADE_MS);
+    });
   }
 
   function getState() {

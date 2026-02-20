@@ -119,11 +119,15 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       slot: s,
       spellId: String(spellId || ""),
       phase: Math.random() * Math.PI * 2,
-      speed: 1.35 + (Math.random() * 0.75),
+      speed: (1.35 + (Math.random() * 0.75)) * 4.0,
       radius: Math.max(3, Number(orbRadiusPx) * 0.10),
       orbitR: Math.max(14, Number(orbRadiusPx) + 18),
       stroke: color.stroke,
       fill: color.fill,
+      tiltDeg: ((Math.random() * 10) - 5),
+      tiltVelDeg: ((Math.random() * 2) - 1) * 0.65,
+      tiltPhase: Math.random() * Math.PI * 2,
+      lastMs: 0,
       el: null,
     });
   }
@@ -184,6 +188,13 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
         stageEl.appendChild(el);
       }
       const proj = orbitProjection(p, tS);
+      const dt = p.lastMs ? clamp((now - p.lastMs) / 1000, 0, 0.05) : 0.016;
+      p.lastMs = now;
+      p.tiltVelDeg += ((Math.random() - 0.5) * 0.75) * dt;
+      p.tiltVelDeg = clamp(p.tiltVelDeg, -1.6, 1.6);
+      p.tiltDeg += p.tiltVelDeg * dt * 24;
+      p.tiltDeg += Math.sin((tS * 0.55) + p.tiltPhase) * 0.035;
+      p.tiltDeg = clamp(p.tiltDeg, -5, 5);
       const r = Math.max(2, Number(p.radius) || 4);
       const d = r * 2;
       const x = cx + proj.x;
@@ -195,7 +206,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       p.el.style.opacity = clamp01(proj.opacity).toFixed(3);
       p.el.style.borderColor = p.stroke;
       p.el.style.backgroundColor = p.fill;
-      p.el.style.transform = `scale(${proj.scale.toFixed(3)})`;
+      p.el.style.transform = `rotate(${p.tiltDeg.toFixed(2)}deg) scale(${proj.scale.toFixed(3)})`;
       p.el.style.zIndex = proj.scale >= 1 ? "34" : "30";
     }
   }
