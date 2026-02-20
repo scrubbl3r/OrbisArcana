@@ -889,7 +889,10 @@
       const axisInfo = axisFromVisibleShield(d);
       const speed01 = clamp01(Number(d && (d.speed01 != null ? d.speed01 : d.speed)) || 0);
       const locked = !!(d && d.locked);
-      const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
+      const shieldActiveNow = (!!stabilityOn && !!stabilityVisualGate) && (nowMs <= shieldStableUntilMs);
+      const stableEnoughXY = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
+      const stableEnoughZ = shieldActiveNow;
+      const stableEnough = (axisInfo && axisInfo.axis === "z") ? stableEnoughZ : stableEnoughXY;
       const canQualify = !!axisInfo && stableEnough;
       const gapOnReq = (axisInfo && axisInfo.axis === "z") ? FLAT_SPIN_DOMINANCE_GAP_ON_Z : FLAT_SPIN_DOMINANCE_GAP_ON;
       const gapOffReq = (axisInfo && axisInfo.axis === "z") ? FLAT_SPIN_DOMINANCE_GAP_OFF_Z : FLAT_SPIN_DOMINANCE_GAP_OFF;
