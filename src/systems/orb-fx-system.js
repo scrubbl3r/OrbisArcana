@@ -23,6 +23,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
+  const TILT_MAX_DEG = 10;
   const axisColorProvider = (typeof getAxisColor01 === "function")
     ? getAxisColor01
     : ((axis) => {
@@ -146,9 +147,12 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       stroke: color.stroke,
       fill: color.fill,
       glow: color.glow,
-      tiltDeg: ((Math.random() * 20) - 10),
-      tiltTargetDeg: ((Math.random() * 24) - 12),
-      tiltTargetMs: 800 + (Math.random() * 1400),
+      tiltA: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
+      tiltB: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
+      tiltTargetA: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
+      tiltTargetB: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
+      tiltTargetMsA: 1000 + (Math.random() * 2200),
+      tiltTargetMsB: 1200 + (Math.random() * 2400),
       tiltPhase: Math.random() * Math.PI * 2,
       driftPhase: Math.random() * Math.PI * 2,
       driftHz: 0.35 + (Math.random() * 0.45),
@@ -194,7 +198,40 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       y = s * rw;
       z = 0;
     }
-    const depth01 = clamp01((z + 1) * 0.5);
+    const toRad = Math.PI / 180;
+    const a = (Number(p.tiltA) || 0) * toRad;
+    const b = (Number(p.tiltB) || 0) * toRad;
+
+    // Apply dual-axis tilt drift per orbit axis:
+    // x-axis orbit -> tilt on y/z
+    // y-axis orbit -> tilt on x/z
+    // z-axis orbit -> tilt on x/y
+    const sinA = Math.sin(a), cosA = Math.cos(a);
+    const sinB = Math.sin(b), cosB = Math.cos(b);
+    if (p.axis === "x") {
+      // rotate around Y (a), then around Z (b)
+      const x1 = (x * cosA) + (z * sinA);
+      const z1 = (-x * sinA) + (z * cosA);
+      const x2 = (x1 * cosB) - (y * sinB);
+      const y2 = (x1 * sinB) + (y * cosB);
+      x = x2; y = y2; z = z1;
+    } else if (p.axis === "y") {
+      // rotate around X (a), then around Z (b)
+      const y1 = (y * cosA) - (z * sinA);
+      const z1 = (y * sinA) + (z * cosA);
+      const x2 = (x * cosB) - (y1 * sinB);
+      const y2 = (x * sinB) + (y1 * cosB);
+      x = x2; y = y2; z = z1;
+    } else {
+      // rotate around X (a), then around Y (b)
+      const y1 = (y * cosA) - (z * sinA);
+      const z1 = (y * sinA) + (z * cosA);
+      const x2 = (x * cosB) + (z1 * sinB);
+      const z2 = (-x * sinB) + (z1 * cosB);
+      x = x2; y = y1; z = z2;
+    }
+
+    const depth01 = clamp01(((z / Math.max(1, rw)) + 1) * 0.5);
     const scale = 0.72 + (0.42 * depth01);
     const opacity = 0.48 + (0.50 * depth01);
     return { x, y, scale, opacity };
@@ -224,16 +261,24 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       const proj = orbitProjection(p, tS);
       const dt = p.lastMs ? clamp((now - p.lastMs) / 1000, 0, 0.05) : 0.016;
       p.lastMs = now;
-      p.tiltTargetMs = (Number(p.tiltTargetMs) || 0) - (dt * 1000);
-      if (p.tiltTargetMs <= 0) {
-        p.tiltTargetDeg = ((Math.random() * 24) - 12);
-        p.tiltTargetMs = 700 + (Math.random() * 1900);
+      p.tiltTargetMsA = (Number(p.tiltTargetMsA) || 0) - (dt * 1000);
+      p.tiltTargetMsB = (Number(p.tiltTargetMsB) || 0) - (dt * 1000);
+      if (p.tiltTargetMsA <= 0) {
+        p.tiltTargetA = ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG);
+        p.tiltTargetMsA = 900 + (Math.random() * 2600);
       }
-      const wobbleHz = 0.55;
+      if (p.tiltTargetMsB <= 0) {
+        p.tiltTargetB = ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG);
+        p.tiltTargetMsB = 1100 + (Math.random() * 2800);
+      }
+      const wobbleHz = 0.35;
       const alpha = 1 - Math.exp(-(wobbleHz * dt));
-      p.tiltDeg += ((Number(p.tiltTargetDeg) || 0) - p.tiltDeg) * alpha;
-      p.tiltDeg += Math.sin((tS * 0.75) + p.tiltPhase) * 0.12;
-      p.tiltDeg = clamp(p.tiltDeg, -15, 15);
+      p.tiltA += ((Number(p.tiltTargetA) || 0) - (Number(p.tiltA) || 0)) * alpha;
+      p.tiltB += ((Number(p.tiltTargetB) || 0) - (Number(p.tiltB) || 0)) * alpha;
+      p.tiltA += Math.sin((tS * 0.43) + p.tiltPhase) * 0.08;
+      p.tiltB += Math.sin((tS * 0.37) + p.tiltPhase + 1.1) * 0.08;
+      p.tiltA = clamp(p.tiltA, -TILT_MAX_DEG, TILT_MAX_DEG);
+      p.tiltB = clamp(p.tiltB, -TILT_MAX_DEG, TILT_MAX_DEG);
       const r = Math.max(2, Number(p.radius) || 4);
       const d = r * 2;
       const x = cx + proj.x;
@@ -246,7 +291,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       p.el.style.borderColor = p.stroke;
       p.el.style.backgroundColor = p.fill;
       p.el.style.boxShadow = p.glow;
-      p.el.style.transform = `rotate(${p.tiltDeg.toFixed(2)}deg) scale(${proj.scale.toFixed(3)})`;
+      p.el.style.transform = `scale(${proj.scale.toFixed(3)})`;
       p.el.style.zIndex = proj.scale >= 1 ? "34" : "30";
     }
   }
