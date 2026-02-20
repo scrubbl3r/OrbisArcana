@@ -821,6 +821,7 @@
         axis: vals[0].axis,
         v: vals[0].v,
         gap: vals[0].v - vals[1].v,
+        source: "axis",
       };
     }
 
@@ -841,6 +842,7 @@
         axis: vals[0].axis,
         v: vals[0].v,
         gap: vals[0].v - vals[1].v,
+        source: "rgb",
       };
     }
 
@@ -887,13 +889,16 @@
       const locked = !!(d && d.locked);
       const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
       const canQualify = !!axisInfo && stableEnough;
-      const gapOnReq = FLAT_SPIN_DOMINANCE_GAP_ON;
-      const gapOffReq = FLAT_SPIN_DOMINANCE_GAP_OFF;
+      const isAxisSignal = !!(axisInfo && axisInfo.source === "axis");
+      const domOnReq = isAxisSignal ? 0.56 : FLAT_SPIN_DOMINANCE_ON;
+      const domOffReq = isAxisSignal ? 0.48 : FLAT_SPIN_DOMINANCE_OFF;
+      const gapOnReq = isAxisSignal ? 0.06 : FLAT_SPIN_DOMINANCE_GAP_ON;
+      const gapOffReq = isAxisSignal ? 0.03 : FLAT_SPIN_DOMINANCE_GAP_OFF;
 
       if (flatSpin.active) {
         const sameAxis = canQualify
           && axisInfo.axis === flatSpin.axis
-          && axisInfo.v >= FLAT_SPIN_DOMINANCE_OFF
+          && axisInfo.v >= domOffReq
           && (Number(axisInfo.gap) >= gapOffReq);
         if (sameAxis) {
           setOrbStrokeColor01(axisToColor01(axisInfo.axis));
@@ -917,7 +922,7 @@
       }
 
       const qualify = canQualify
-        && axisInfo.v >= FLAT_SPIN_DOMINANCE_ON
+        && axisInfo.v >= domOnReq
         && (Number(axisInfo.gap) >= gapOnReq);
       if (!qualify) {
         flatSpin.holdMs = 0;
