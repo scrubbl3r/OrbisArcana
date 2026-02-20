@@ -1458,6 +1458,7 @@
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
+    let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
 
     function axisToColor01(axis){
@@ -1585,21 +1586,31 @@
       return d;
     }
 
+    function captureCurrentOrbPalette(){
+      const cs = getComputedStyle(document.documentElement);
+      const stroke = (cs.getPropertyValue("--orb-stroke-color") || "").trim() || "rgb(255,255,255)";
+      const fill = (cs.getPropertyValue("--orb-fill") || "").trim() || "rgba(255,255,255,0.20)";
+      return { stroke, fill };
+    }
+
     function spawnShardFx(p){
       if (!els.orbShards) return;
       const d = pointsToPath(p.points);
       if (!d) return;
+      const palette = shardPaletteSnapshot || captureCurrentOrbPalette();
       const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
       el.setAttribute("class", "orbShard");
       el.setAttribute("d", d);
       el.setAttribute("transform", "translate(0 0)");
-      // Force shard look at element level and bind to live orb palette.
-      el.setAttribute("fill", "var(--orb-fill)");
-      el.setAttribute("stroke", "var(--orb-stroke-color)");
+      // Freeze shard palette to orb palette at death-time.
+      el.setAttribute("fill", palette.fill);
+      el.setAttribute("stroke", palette.stroke);
       el.setAttribute("stroke-width", "1.2");
       el.setAttribute("stroke-linejoin", "round");
       el.setAttribute("stroke-linecap", "round");
       el.setAttribute("vector-effect", "non-scaling-stroke");
+      el.style.fill = palette.fill;
+      el.style.stroke = palette.stroke;
       els.orbShards.appendChild(el);
       const center = p.center || { x: 0, y: 0 };
       const cMag = Math.hypot(Number(center.x) || 0, Number(center.y) || 0) || 1;
@@ -1706,6 +1717,7 @@
         eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
         eventBus.on("orb.died", () => {
+          shardPaletteSnapshot = captureCurrentOrbPalette();
           orbInputSuppressed = true;
           clearFloatGrace();
           clearOrbRuntimeFxForDeath();
@@ -1713,6 +1725,7 @@
           updateDebugReadout();
         });
         eventBus.on("orb.revived", () => {
+          shardPaletteSnapshot = null;
           orbInputSuppressed = false;
           clearFloatGrace();
           clearDeathOverlaySchedule();
@@ -1956,7 +1969,7 @@
         points.push({ x, yOff });
       }
       return {
-        stroke: cfg.stroke || "rgba(50,255,117,0.95)",
+        stroke: cfg.stroke || "rgba(0,0,0,1.0)",
         lineW: Math.max(1, Number(cfg.lineW) || 2),
         points,
       };
@@ -1968,7 +1981,7 @@
         minOff: 56,
         maxOff: 186,
         jitter: 28,
-        stroke: "rgba(50,255,117,0.95)",
+        stroke: "rgba(0,0,0,1.0)",
         lineW: 2,
       })];
     }
@@ -2097,8 +2110,8 @@
         ctx.lineWidth = layer.lineW;
         ctx.lineJoin = "miter";
         ctx.lineCap = "round";
-        ctx.shadowColor = "rgba(50,255,117,0.28)";
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(0,0,0,0)";
+        ctx.shadowBlur = 0;
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
