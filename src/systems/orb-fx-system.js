@@ -142,9 +142,12 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       stroke: color.stroke,
       fill: color.fill,
       glow: color.glow,
-      tiltDeg: ((Math.random() * 10) - 5),
-      tiltVelDeg: ((Math.random() * 2) - 1) * 0.65,
+      tiltDeg: ((Math.random() * 20) - 10),
+      tiltVelDeg: ((Math.random() * 2) - 1) * 1.15,
       tiltPhase: Math.random() * Math.PI * 2,
+      driftPhase: Math.random() * Math.PI * 2,
+      driftHz: 0.35 + (Math.random() * 0.45),
+      driftAmp: 3 + (Math.random() * 7),
       lastMs: 0,
       el: null,
     });
@@ -163,6 +166,9 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
 
   function orbitProjection(p, tS) {
     const r = Number(p.orbitR) || (Number(orbRadiusPx) + 18);
+    const drift = Math.sin((tS * (Number(p.driftHz) || 0.5) * Math.PI * 2) + (Number(p.driftPhase) || 0))
+      * (Number(p.driftAmp) || 0);
+    const rw = r + drift;
     const th = (Number(p.phase) || 0) + (Number(p.speed) || 1) * tS;
     const c = Math.cos(th);
     const s = Math.sin(th);
@@ -170,17 +176,17 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     let y = 0;
     let z = 0;
     if (p.axis === "y") {
-      x = c * r;
-      y = s * (r * 0.22);
+      x = c * rw;
+      y = s * (rw * 0.26);
       z = s;
     } else if (p.axis === "x") {
-      x = s * (r * 0.22);
-      y = c * r;
+      x = s * (rw * 0.26);
+      y = c * rw;
       z = s;
     } else {
       // True Z-axis orbit: circle in the screen XY plane (no diagonal tilt).
-      x = c * (r * 0.86);
-      y = s * (r * 0.86);
+      x = c * rw;
+      y = s * rw;
       z = 0;
     }
     const depth01 = clamp01((z + 1) * 0.5);
@@ -209,11 +215,11 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       const proj = orbitProjection(p, tS);
       const dt = p.lastMs ? clamp((now - p.lastMs) / 1000, 0, 0.05) : 0.016;
       p.lastMs = now;
-      p.tiltVelDeg += ((Math.random() - 0.5) * 0.75) * dt;
-      p.tiltVelDeg = clamp(p.tiltVelDeg, -1.6, 1.6);
-      p.tiltDeg += p.tiltVelDeg * dt * 24;
-      p.tiltDeg += Math.sin((tS * 0.55) + p.tiltPhase) * 0.035;
-      p.tiltDeg = clamp(p.tiltDeg, -5, 5);
+      p.tiltVelDeg += ((Math.random() - 0.5) * 1.35) * dt;
+      p.tiltVelDeg = clamp(p.tiltVelDeg, -3.2, 3.2);
+      p.tiltDeg += p.tiltVelDeg * dt * 34;
+      p.tiltDeg += Math.sin((tS * 0.95) + p.tiltPhase) * 0.08;
+      p.tiltDeg = clamp(p.tiltDeg, -15, 15);
       const r = Math.max(2, Number(p.radius) || 4);
       const d = r * 2;
       const x = cx + proj.x;
