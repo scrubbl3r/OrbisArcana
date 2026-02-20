@@ -178,12 +178,10 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       y = c * r;
       z = s;
     } else {
-      const u = c * r;
-      const v = s * (r * 0.42);
-      const rot = Math.PI * 0.30;
-      x = (u * Math.cos(rot)) - (v * Math.sin(rot));
-      y = (u * Math.sin(rot)) + (v * Math.cos(rot));
-      z = s;
+      // True Z-axis orbit: circle in the screen XY plane (no diagonal tilt).
+      x = c * (r * 0.86);
+      y = s * (r * 0.86);
+      z = 0;
     }
     const depth01 = clamp01((z + 1) * 0.5);
     const scale = 0.72 + (0.42 * depth01);
