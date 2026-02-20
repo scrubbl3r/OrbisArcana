@@ -1,4 +1,4 @@
-export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScreenY, orbRadiusPx }) {
+export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScreenY, orbRadiusPx, getAxisColor01 }) {
   if (!eventBus || typeof eventBus.on !== 'function') {
     throw new Error('createOrbFxSystem requires eventBus.on');
   }
@@ -23,6 +23,21 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
+  const axisColorProvider = (typeof getAxisColor01 === "function")
+    ? getAxisColor01
+    : ((axis) => {
+      const a = String(axis || "").toLowerCase();
+      if (a === "x") return { r: 0/255, g: 100/255, b: 253/255 };
+      if (a === "z") return { r: 253/255, g: 241/255, b: 0/255 };
+      return { r: 253/255, g: 78/255, b: 0/255 };
+    });
+
+  function color01ToRgba(c, a) {
+    const r = Math.round(clamp01(c && c.r) * 255);
+    const g = Math.round(clamp01(c && c.g) * 255);
+    const b = Math.round(clamp01(c && c.b) * 255);
+    return `rgba(${r},${g},${b},${clamp01(a).toFixed(3)})`;
+  }
 
   function innerGlobeDiameterPx() {
     return Number(orbRadiusPx) * 0.2; // 10% of orb diameter
@@ -94,26 +109,15 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
   }
 
   function axisColor(axis) {
-    const a = String(axis || "").toLowerCase();
-    // Requested mapping: y=green, x=blue, z=red
-    if (a === "y") {
-      return {
-        stroke: "rgba(50,255,117,0.98)",
-        fill: "rgba(50,255,117,0.28)",
-        glow: "0 0 12px rgba(50,255,117,0.30), inset 0 0 0 1px rgba(175,255,205,0.34)",
-      };
-    }
-    if (a === "x") {
-      return {
-        stroke: "rgba(80,160,255,0.98)",
-        fill: "rgba(80,160,255,0.28)",
-        glow: "0 0 12px rgba(80,160,255,0.30), inset 0 0 0 1px rgba(186,215,255,0.34)",
-      };
-    }
+    const c = axisColorProvider(axis);
+    const stroke = color01ToRgba(c, 0.98);
+    const fill = color01ToRgba(c, 0.28);
+    const glowOuter = color01ToRgba(c, 0.30);
+    const glowInner = color01ToRgba(c, 0.34);
     return {
-      stroke: "rgba(255,80,80,0.98)",
-      fill: "rgba(255,80,80,0.24)",
-      glow: "0 0 12px rgba(255,80,80,0.30), inset 0 0 0 1px rgba(255,196,196,0.30)",
+      stroke,
+      fill,
+      glow: `0 0 12px ${glowOuter}, inset 0 0 0 1px ${glowInner}`,
     };
   }
 
@@ -204,6 +208,10 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     const cx = (stageRect.width || 0) * 0.5;
     const cy = Number(getOrbScreenY()) || 0;
     for (const p of orbiting.particles) {
+      const liveColor = axisColor(p.axis);
+      p.stroke = liveColor.stroke;
+      p.fill = liveColor.fill;
+      p.glow = liveColor.glow;
       if (!p.el) {
         const el = document.createElement("div");
         el.className = "orbitGlobe";

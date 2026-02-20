@@ -452,9 +452,11 @@
       setShieldColor01(shieldColor01);
       const baseShieldD = (PHYS.orbRadiusPx * 2) + 24;
       const sanctusD = Math.max(10, baseShieldD * SANCTUS_SHIELD_SCALE);
+      shieldOnNow();
+      // Apply custom Sanctus size after shieldOnNow; first activation path
+      // calls shieldOffNow() internally, which clears width/height.
       els.shield.style.width = `${sanctusD.toFixed(2)}px`;
       els.shield.style.height = `${sanctusD.toFixed(2)}px`;
-      shieldOnNow();
       sanctusShieldColorLocked = true;
       if (sanctusShieldTO) {
         clearTimeout(sanctusShieldTO);
@@ -1696,6 +1698,7 @@
           stageEl: els.physStage,
           getOrbScreenY: () => orbScreenY(),
           orbRadiusPx: PHYS.orbRadiusPx,
+          getAxisColor01: (axis) => axisToColor01(axis),
         });
         orbFxSystem.start();
 
