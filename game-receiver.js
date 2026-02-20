@@ -1468,6 +1468,7 @@
       return { r: 253/255, g: 78/255, b: 0/255 };                   // #fd4e00
     }
 
+    const ORB_FILL_ALPHA = 0.20;
     const ORB_STROKE_DEFAULT = { r: 1.0, g: 1.0, b: 1.0 };
     const orbStrokeColor = {
       current: { ...ORB_STROKE_DEFAULT },
@@ -1480,7 +1481,7 @@
       const g = Math.round(clamp01(c.g) * 255);
       const b = Math.round(clamp01(c.b) * 255);
       document.documentElement.style.setProperty("--orb-stroke-color", `rgb(${r},${g},${b})`);
-      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},0.20)`);
+      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},${ORB_FILL_ALPHA.toFixed(2)})`);
     }
 
     function setOrbStrokeColor01(c){
@@ -1587,10 +1588,14 @@
     }
 
     function captureCurrentOrbPalette(){
-      const cs = getComputedStyle(document.documentElement);
-      const stroke = (cs.getPropertyValue("--orb-stroke-color") || "").trim() || "rgb(255,255,255)";
-      const fill = (cs.getPropertyValue("--orb-fill") || "").trim() || "rgba(255,255,255,0.20)";
-      return { stroke, fill };
+      const r = Math.round(clamp01(orbStrokeColor.current.r) * 255);
+      const g = Math.round(clamp01(orbStrokeColor.current.g) * 255);
+      const b = Math.round(clamp01(orbStrokeColor.current.b) * 255);
+      return {
+        strokeRgb: `rgb(${r},${g},${b})`,
+        fillRgb: `rgb(${r},${g},${b})`,
+        fillAlpha: ORB_FILL_ALPHA,
+      };
     }
 
     function spawnShardFx(p){
@@ -1603,14 +1608,16 @@
       el.setAttribute("d", d);
       el.setAttribute("transform", "translate(0 0)");
       // Freeze shard palette to orb palette at death-time.
-      el.setAttribute("fill", palette.fill);
-      el.setAttribute("stroke", palette.stroke);
+      el.setAttribute("fill", palette.fillRgb);
+      el.setAttribute("fill-opacity", String(Number(palette.fillAlpha).toFixed(3)));
+      el.setAttribute("stroke", palette.strokeRgb);
       el.setAttribute("stroke-width", "1.2");
       el.setAttribute("stroke-linejoin", "round");
       el.setAttribute("stroke-linecap", "round");
       el.setAttribute("vector-effect", "non-scaling-stroke");
-      el.style.fill = palette.fill;
-      el.style.stroke = palette.stroke;
+      el.style.fill = palette.fillRgb;
+      el.style.fillOpacity = String(Number(palette.fillAlpha).toFixed(3));
+      el.style.stroke = palette.strokeRgb;
       els.orbShards.appendChild(el);
       const center = p.center || { x: 0, y: 0 };
       const cMag = Math.hypot(Number(center.x) || 0, Number(center.y) || 0) || 1;
