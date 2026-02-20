@@ -356,13 +356,11 @@
     }
 
     const SHIELD_DECAY_MS = 2000;
-    const SHIELD_STABLE_TIMEOUT_MS = 6000;
     const SHIELD_FADEIN_MS = 750;
     let shieldDecayTO = null;
     let shieldDecayActive = 0;
     let shieldFadeTO = null;
     let shieldFadeVal = 1;
-    let shieldStableUntilMs = 0;
 
     function cancelShieldDecay(){
       if (shieldDecayTO) {
@@ -1059,24 +1057,9 @@
     function applyStabilityVisuals(){
       const showStable = !!stabilityOn && !!stabilityVisualGate;
       const showVar = !!variabilityOn && !!stabilityVisualGate;
-      const now = performance.now();
 
       els.dynLampStable.classList.toggle("on", showStable);
       els.dynLampVar.classList.toggle("on", showVar);
-
-      if (showStable) {
-        if (!prevStableVisual) {
-          shieldStableUntilMs = now + SHIELD_STABLE_TIMEOUT_MS;
-        }
-        if (now <= shieldStableUntilMs) {
-          shieldOnNow();
-        } else {
-          shieldDecay();
-        }
-      } else {
-        shieldStableUntilMs = 0;
-        shieldDecay();
-      }
 
       prevStableVisual = showStable;
     }
@@ -1100,7 +1083,6 @@
       stabilityHoldMs = 0;
       stabilityLastMs = 0;
       prevStableVisual = false;
-      shieldStableUntilMs = 0;
       setStability(false);
       shieldOffNow();
     }
@@ -2319,7 +2301,6 @@
         clearTimeout(sanctusShieldTO);
         sanctusShieldTO = 0;
       }
-      shieldStableUntilMs = 0;
       shieldOffNow();
       resetOrbStrokeColor(true);
       shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
