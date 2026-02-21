@@ -1369,17 +1369,6 @@
       ctx.closePath();
 
       ctx.shadowBlur = 0;
-      ctx.beginPath();
-      ctx.arc(cfg.cx, cfg.cy, cfg.startR, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(180, 245, 255, 0.40)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(cfg.cx, cfg.cy, cfg.endR, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(120, 215, 255, 0.25)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
     }
 
     function tickElectric(now){
