@@ -34,7 +34,7 @@
       --shield-pulse-max: 1.00;
 
       /* Shockwave */
-      --shock-color: rgba(255, 255, 255, 0.30);
+      --shock-color: rgba(255, 255, 255, 0.50);
       --shock-stroke: 4px;
 
       /* Flame AOE */
@@ -346,8 +346,9 @@
           <select id="effectSelect" class="effectSelect" aria-label="Select effect controls">
             <option value="electric-aoe">electric aoe</option>
             <option value="flame-aoe">flame aoe</option>
-            <option value="bubble-shield">bubble shield</option>
+            <option value="bubble-shield" selected>bubble shield</option>
             <option value="shockwave">shockwave</option>
+            
           </select>
         </div>
       </div>
@@ -391,9 +392,9 @@
 
         <div class="sliderRow">
           <span>Shield size (diameter)</span>
-          <strong><span id="vShieldD">124</span>px</strong>
+          <strong><span id="vShieldD">186</span>px</strong>
         </div>
-        <input id="shieldD" type="range" min="40" max="600" value="124" step="1" />
+        <input id="shieldD" type="range" min="40" max="600" value="186" step="1" />
 
         <div class="sliderRow">
           <span>Shield stroke width (even)</span>
@@ -566,7 +567,7 @@
     // =========================================================================
     // GEOMETRY (forced even)
     // =========================================================================
-    const GEOM = { orbD:100, orbStroke:2, shieldD:124, shieldStroke:4 };
+    const GEOM = { orbD:100, orbStroke:2, shieldD:186, shieldStroke:4 };
 
     function applyGeometryVars(){
       GEOM.orbD = evenPx(GEOM.orbD, 2, 2000);
@@ -732,7 +733,7 @@
     shieldOffNow(); // OFF by default, no continuous pulse
 
     function updateEffectSections(){
-      const effect = els.effectSelect ? els.effectSelect.value : "electric-aoe";
+      const effect = els.effectSelect ? els.effectSelect.value : "bubble-shield";
       const sections = document.querySelectorAll(".section[data-effect]");
       sections.forEach((section) => {
         section.hidden = section.getAttribute("data-effect") !== effect;
