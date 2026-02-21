@@ -14,7 +14,7 @@
       --shield-g: 210;
       --shield-b: 255;
 
-      /* Orb (receiver orb size) */
+      /* Orb (receiver orb size) */ 
       --orb-d: 100px;
       --orb-stroke: 2px;
       --orb-stroke-color: rgb(255,255,255);
@@ -1154,6 +1154,7 @@
     let electricConfig = null;
     let electricLastNow = 0;
     let electricEndAt = 0;
+    const ELECTRIC_START_JITTER_PX = 5;
 
     function rand(min, max){
       return min + (Math.random() * (max - min));
@@ -1254,11 +1255,15 @@
       electricNodes = [];
       for (let i = 0; i < cfg.nodeCount; i++){
         const angle = rand(0, Math.PI * 2);
+        const startJitterPx = rand(-ELECTRIC_START_JITTER_PX, ELECTRIC_START_JITTER_PX);
+        const emitR = clamp(cfg.startR + startJitterPx, 2, cfg.endR - 2);
         electricNodes.push({
           angle,
           spin: rand(-0.06, 0.06),
-          x: cfg.cx + (Math.cos(angle) * cfg.startR),
-          y: cfg.cy + (Math.sin(angle) * cfg.startR)
+          startJitterPx,
+          emitR,
+          x: cfg.cx + (Math.cos(angle) * emitR),
+          y: cfg.cy + (Math.sin(angle) * emitR)
         });
       }
     }
@@ -1267,8 +1272,9 @@
       const cfg = electricConfig;
       for (let i = 0; i < electricNodes.length; i++){
         const n = electricNodes[i];
-        n.x = cfg.cx + (Math.cos(n.angle) * cfg.startR);
-        n.y = cfg.cy + (Math.sin(n.angle) * cfg.startR);
+        n.emitR = clamp(cfg.startR + n.startJitterPx, 2, cfg.endR - 2);
+        n.x = cfg.cx + (Math.cos(n.angle) * n.emitR);
+        n.y = cfg.cy + (Math.sin(n.angle) * n.emitR);
         n.angle += n.spin;
         n.spin += rand(-0.004, 0.004);
         n.spin = clamp(n.spin, -0.1, 0.1);
@@ -1304,7 +1310,7 @@
       let py = node.y;
       let oldPx = px;
       let oldPy = py;
-      let lastEdgeDist = cfg.startR;
+      let lastEdgeDist = node.emitR;
 
       for (let hops = 0; hops < 18; hops++){
         let found = false;
