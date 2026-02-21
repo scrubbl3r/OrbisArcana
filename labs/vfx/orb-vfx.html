@@ -356,35 +356,50 @@
       <div class="section" data-effect="electric-aoe">
         <div class="row">
           <button id="playElectric">Play Electric AOE</button>
+          <button id="randomizeElectric">Randomize</button>
         </div>
 
         <div class="sliderRow">
-          <span>Diameter</span>
-          <strong><span id="vElectricD">240</span>px</strong>
+          <span>Start distance</span>
+          <strong><span id="vElectricStartDist">70</span>px</strong>
         </div>
-        <input id="electricD" type="range" min="140" max="1000" value="240" step="2" />
+        <input id="electricStartDist" type="range" min="0" max="500" value="70" step="1" />
 
         <div class="sliderRow">
-          <span>Bolt count</span>
-          <strong><span id="vElectricBolts">18</span></strong>
+          <span>End distance</span>
+          <strong><span id="vElectricEndDist">190</span>px</strong>
         </div>
-        <input id="electricBolts" type="range" min="4" max="48" value="18" step="1" />
+        <input id="electricEndDist" type="range" min="10" max="800" value="190" step="1" />
 
         <div class="sliderRow">
-          <span>Branch chance</span>
-          <strong><span id="vElectricBranch">0.35</span></strong>
+          <span>Branch budget</span>
+          <strong><span id="vElectricBranchBudget">3</span></strong>
         </div>
-        <input id="electricBranch" type="range" min="0" max="1" value="0.35" step="0.01" />
+        <input id="electricBranchBudget" type="range" min="3" max="10" value="3" step="1" />
 
         <div class="sliderRow">
-          <span>Drift speed</span>
-          <strong><span id="vElectricDrift">1.00</span>x</strong>
+          <span>Branch max depth</span>
+          <strong><span id="vElectricBranchDepth">1</span></strong>
         </div>
-        <input id="electricDrift" type="range" min="0.2" max="2.5" value="1.00" step="0.01" />
+        <input id="electricBranchDepth" type="range" min="1" max="5" value="1" step="1" />
 
-        <div class="hint">
-          Plasma-ball style arcs with random walk jitter, variable thickness, and dynamic branching.
+        <div class="sliderRow">
+          <span>Branch chance per step</span>
+          <strong><span id="vElectricBranchChance">0.09</span></strong>
         </div>
+        <input id="electricBranchChance" type="range" min="0" max="1" value="0.09" step="0.01" />
+
+        <div class="sliderRow">
+          <span>Fork delay</span>
+          <strong><span id="vElectricForkDelay">0.20</span></strong>
+        </div>
+        <input id="electricForkDelay" type="range" min="0" max="1" value="0.20" step="0.01" />
+
+        <div class="sliderRow">
+          <span>Branches per fork</span>
+          <strong><span id="vElectricBranchesPerFork">2</span></strong>
+        </div>
+        <input id="electricBranchesPerFork" type="range" min="1" max="4" value="2" step="1" />
       </div>
 
       <!-- Shield controls -->
@@ -556,14 +571,21 @@
       vFlameD: $("vFlameD"),
 
       playElectric: $("playElectric"),
-      electricD: $("electricD"),
-      vElectricD: $("vElectricD"),
-      electricBolts: $("electricBolts"),
-      vElectricBolts: $("vElectricBolts"),
-      electricBranch: $("electricBranch"),
-      vElectricBranch: $("vElectricBranch"),
-      electricDrift: $("electricDrift"),
-      vElectricDrift: $("vElectricDrift"),
+      randomizeElectric: $("randomizeElectric"),
+      electricStartDist: $("electricStartDist"),
+      vElectricStartDist: $("vElectricStartDist"),
+      electricEndDist: $("electricEndDist"),
+      vElectricEndDist: $("vElectricEndDist"),
+      electricBranchBudget: $("electricBranchBudget"),
+      vElectricBranchBudget: $("vElectricBranchBudget"),
+      electricBranchDepth: $("electricBranchDepth"),
+      vElectricBranchDepth: $("vElectricBranchDepth"),
+      electricBranchChance: $("electricBranchChance"),
+      vElectricBranchChance: $("vElectricBranchChance"),
+      electricForkDelay: $("electricForkDelay"),
+      vElectricForkDelay: $("vElectricForkDelay"),
+      electricBranchesPerFork: $("electricBranchesPerFork"),
+      vElectricBranchesPerFork: $("vElectricBranchesPerFork"),
     };
 
     function setVar(name, value){
@@ -1164,79 +1186,79 @@
     applyFlameControls();
 
     // =========================================================================
-    // Electric AOE (plasma-ball style arcs with branching)
+    // Electric AOE (static snapshot, noise-advection with capped branching)
     // =========================================================================
-    let electricRAF = 0;
     let electricSvg = null;
-    let electricGroup = null;
-    const electricBolts = [];
+    const ELECTRIC_BOLT_COUNT = 5;
+    const ELECTRIC_MAX_ACTIVE_TIPS = 10;
+    const ELECTRIC_YELLOW = { r: 253, g: 241, b: 0 };
+    let electricSeed = Math.random() * 10000;
 
     function randRange(lo, hi){
       return lo + (Math.random() * (hi - lo));
     }
 
     function clearElectric(){
-      if (electricRAF) cancelAnimationFrame(electricRAF);
-      electricRAF = 0;
-      electricBolts.length = 0;
-      electricGroup = null;
       if (electricSvg && electricSvg.parentNode) electricSvg.parentNode.removeChild(electricSvg);
       electricSvg = null;
     }
 
-    function makeElectricPath(size){
-      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      p.setAttribute("fill", "none");
-      p.setAttribute("stroke", "var(--electric-glow)");
-      p.setAttribute("stroke-linecap", "round");
-      p.setAttribute("stroke-linejoin", "round");
-      p.setAttribute("opacity", "0.9");
-      p.style.filter = `drop-shadow(0 0 ${Math.max(4, size * 0.02).toFixed(1)}px rgba(170, 235, 255, 0.9))`;
-      return p;
+    function v2(x, y){ return { x, y }; }
+    function vAdd(a, b){ return { x: a.x + b.x, y: a.y + b.y }; }
+    function vSub(a, b){ return { x: a.x - b.x, y: a.y - b.y }; }
+    function vMul(a, s){ return { x: a.x * s, y: a.y * s }; }
+    function vLen(a){ return Math.hypot(a.x, a.y); }
+    function vNorm(a){
+      const l = vLen(a);
+      if (!(l > 1e-6)) return { x: 0, y: 0 };
+      return { x: a.x / l, y: a.y / l };
+    }
+    function vRot(a, rad){
+      const c = Math.cos(rad), s = Math.sin(rad);
+      return { x: (a.x * c) - (a.y * s), y: (a.x * s) + (a.y * c) };
     }
 
-    function buildElectricAOE(cfg){
-      const pad = 220;
-      const size = evenPx(cfg.diameter + pad, 2, 4096);
-      const cx = size * 0.5;
-      const cy = size * 0.5;
-
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("class", "electricSvg");
-      svg.setAttribute("width", size);
-      svg.setAttribute("height", size);
-      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
-      svg.setAttribute("shape-rendering", "geometricPrecision");
-      svg.__cx = cx;
-      svg.__cy = cy;
-      svg.__innerR = GEOM.orbD * 0.5;
-      svg.__outerR = cfg.diameter * 0.5;
-
-      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      group.setAttribute("opacity", "1");
-      svg.appendChild(group);
-
-      for (let i = 0; i < cfg.bolts; i++){
-        const boltPath = makeElectricPath(size);
-        const branchPath = makeElectricPath(size);
-        branchPath.setAttribute("opacity", "0");
-        group.appendChild(boltPath);
-        group.appendChild(branchPath);
-
-        electricBolts.push({
-          path: boltPath,
-          branchPath,
-          angle: randRange(0, Math.PI * 2),
-          drift: randRange(-0.65, 0.65),
-          thickness: randRange(1.1, 4.3),
-          pulsePhase: randRange(0, Math.PI * 2),
-          walkPhase: randRange(0, Math.PI * 2),
-          branch: null
-        });
+    function hash2(x, y, seed){
+      const n = Math.sin((x * 127.1) + (y * 311.7) + (seed * 74.7)) * 43758.5453123;
+      return n - Math.floor(n);
+    }
+    function smooth01(t){ return t * t * (3 - (2 * t)); }
+    function lerp(a, b, t){ return a + ((b - a) * t); }
+    function valueNoise2(x, y, seed){
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi;
+      const h00 = hash2(xi, yi, seed);
+      const h10 = hash2(xi + 1, yi, seed);
+      const h01 = hash2(xi, yi + 1, seed);
+      const h11 = hash2(xi + 1, yi + 1, seed);
+      const u = smooth01(xf);
+      const v = smooth01(yf);
+      const x0 = lerp(h00, h10, u);
+      const x1 = lerp(h01, h11, u);
+      return lerp(x0, x1, v);
+    }
+    function fbm2(x, y, seed){
+      let a = 0.5;
+      let f = 1;
+      let sum = 0;
+      let norm = 0;
+      for (let i = 0; i < 3; i++){
+        sum += valueNoise2(x * f, y * f, seed + (i * 17.31)) * a;
+        norm += a;
+        a *= 0.5;
+        f *= 2;
       }
-
-      electricSvg = svg;
-      electricGroup = group;
+      return sum / Math.max(1e-6, norm);
+    }
+    function curlField(px, py, seed){
+      const e = 0.075;
+      const n1 = fbm2(px + e, py, seed);
+      const n2 = fbm2(px - e, py, seed);
+      const n3 = fbm2(px, py + e, seed);
+      const n4 = fbm2(px, py - e, seed);
+      const dx = (n1 - n2) / (2 * e);
+      const dy = (n3 - n4) / (2 * e);
+      return vNorm(v2(dy, -dx)); // rotated gradient
     }
 
     function polylinePath(points){
@@ -1248,140 +1270,209 @@
       return d;
     }
 
-    function buildElectricBoltPoints(cx, cy, angle, r0, r1, walkPhase, jitterAmp){
-      const points = [];
-      const segs = 6 + Math.floor(randRange(0, 5));
-      const fwd = { x: Math.cos(angle), y: Math.sin(angle) };
-      const nrm = { x: -fwd.y, y: fwd.x };
-      for (let i = 0; i <= segs; i++){
-        const u = i / segs;
-        const r = r0 + ((r1 - r0) * u);
-        const baseX = cx + (fwd.x * r);
-        const baseY = cy + (fwd.y * r);
-        const envelope = Math.sin(Math.PI * u);
-        const walk = Math.sin((u * 11.0) + walkPhase) * jitterAmp * envelope;
-        points.push({
-          x: baseX + (nrm.x * walk),
-          y: baseY + (nrm.y * walk),
+    function makeElectricPath(size, width){
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p.setAttribute("fill", "none");
+      p.setAttribute("stroke", `rgb(${ELECTRIC_YELLOW.r}, ${ELECTRIC_YELLOW.g}, ${ELECTRIC_YELLOW.b})`);
+      p.setAttribute("stroke-width", String(width.toFixed(2)));
+      p.setAttribute("stroke-linecap", "round");
+      p.setAttribute("stroke-linejoin", "round");
+      p.setAttribute("opacity", "1");
+      p.style.filter = `drop-shadow(0 0 ${Math.max(3, size * 0.012).toFixed(1)}px rgba(${ELECTRIC_YELLOW.r}, ${ELECTRIC_YELLOW.g}, ${ELECTRIC_YELLOW.b}, 0.85))`;
+      return p;
+    }
+
+    function buildElectricAOE(cfg){
+      const pad = 220;
+      const size = evenPx((cfg.endDistance * 2) + pad, 2, 4096);
+      const cx = size * 0.5;
+      const cy = size * 0.5;
+      const center = v2(cx, cy);
+      const fieldScale = 0.018; // sweet spot: avoids over-swirling
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "electricSvg");
+      svg.setAttribute("width", size);
+      svg.setAttribute("height", size);
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+      svg.setAttribute("shape-rendering", "geometricPrecision");
+
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      svg.appendChild(group);
+
+      let branchBudget = cfg.branchBudget;
+      const tips = [];
+      const segmentsOut = [];
+
+      for (let i = 0; i < ELECTRIC_BOLT_COUNT; i++){
+        const angle = ((Math.PI * 2) / ELECTRIC_BOLT_COUNT) * i + randRange(-0.14, 0.14);
+        const start = v2(cx + (Math.cos(angle) * cfg.startDistance), cy + (Math.sin(angle) * cfg.startDistance));
+        tips.push({
+          depth: 0,
+          width: 4.2,
+          len: 0,
+          maxLen: Math.max(8, cfg.endDistance - cfg.startDistance),
+          dir: vNorm(vSub(start, center)),
+          points: [start],
+          radialAngle: angle,
+          seed: electricSeed + (i * 13.1),
         });
       }
-      return points;
+
+      let guard = 0;
+      while (tips.length && guard < 1000){
+        guard += 1;
+        if (tips.length > ELECTRIC_MAX_ACTIVE_TIPS) tips.length = ELECTRIC_MAX_ACTIVE_TIPS;
+
+        const tip = tips.shift();
+        if (!tip) break;
+
+        const target = v2(
+          cx + (Math.cos(tip.radialAngle) * cfg.endDistance),
+          cy + (Math.sin(tip.radialAngle) * cfg.endDistance)
+        );
+        const maxSteps = Math.max(4, Math.ceil(tip.maxLen / 6));
+        let steps = 0;
+
+        while (steps < maxSteps && tip.len < tip.maxLen){
+          steps += 1;
+          const cur = tip.points[tip.points.length - 1];
+          const toTarget = vNorm(vSub(target, cur));
+          const outward = vNorm(vSub(cur, center));
+          const field = curlField(cur.x * fieldScale, cur.y * fieldScale, tip.seed + (steps * 0.021));
+
+          // Keep movement mostly radial/targeted; field influence is intentionally moderate.
+          let dir = vAdd(vMul(toTarget, 0.92), vMul(outward, 0.55));
+          dir = vAdd(dir, vMul(field, 0.28));
+          dir = vAdd(dir, vMul(tip.dir, 0.42));
+          dir = vNorm(dir);
+          if (!(vLen(dir) > 0)) dir = toTarget;
+
+          const stepLen = Math.max(4, tip.maxLen / 12);
+          let next = vAdd(cur, vMul(dir, stepLen));
+          const nextR = vLen(vSub(next, center));
+          if (nextR >= cfg.endDistance){
+            const edgeDir = vNorm(vSub(next, center));
+            next = vAdd(center, vMul(edgeDir, cfg.endDistance));
+            tip.points.push(next);
+            tip.len = tip.maxLen;
+            break;
+          }
+
+          tip.points.push(next);
+          tip.len += stepLen;
+          tip.dir = dir;
+          const tipProgress01 = steps / Math.max(1, maxSteps);
+
+          const canBranch = (
+            branchBudget > 0 &&
+            tip.depth < cfg.branchDepthMax &&
+            tips.length < ELECTRIC_MAX_ACTIVE_TIPS &&
+            steps >= 2 &&
+            tipProgress01 >= cfg.forkDelay &&
+            (Math.random() < cfg.branchChancePerStep)
+          );
+          if (canBranch){
+            const spawnCount = Math.min(
+              Math.max(1, Math.round(cfg.branchesPerFork)),
+              branchBudget,
+              Math.max(0, ELECTRIC_MAX_ACTIVE_TIPS - tips.length)
+            );
+            for (let bi = 0; bi < spawnCount; bi++){
+              const side = (bi % 2 === 0) ? -1 : 1;
+              const spreadBias = (bi === 0) ? 0.45 : randRange(0.28, 0.82);
+              const branchDir = vNorm(vRot(dir, side * spreadBias));
+              const remaining = Math.max(6, cfg.endDistance - vLen(vSub(next, center)));
+              tips.push({
+                depth: tip.depth + 1,
+                width: Math.max(1.0, tip.width * 0.62), // taper only child branches
+                len: 0,
+                maxLen: remaining * randRange(0.35, 0.60),
+                dir: branchDir,
+                points: [next],
+                radialAngle: Math.atan2(branchDir.y, branchDir.x),
+                seed: tip.seed + randRange(1, 99),
+              });
+              branchBudget -= 1;
+              if (branchBudget <= 0) break;
+            }
+          }
+        }
+
+        if (tip.points.length >= 2){
+          segmentsOut.push(tip);
+        }
+      }
+
+      for (const tip of segmentsOut){
+        const path = makeElectricPath(size, tip.width);
+        path.setAttribute("d", polylinePath(tip.points));
+        group.appendChild(path);
+      }
+
+      electricSvg = svg;
     }
 
     function applyElectricControls(){
-      const d = evenPx(clamp(els.electricD.value, 140, 1000), 2, 2000);
-      const bolts = Math.round(clamp(els.electricBolts.value, 4, 48));
-      const branch = clamp(els.electricBranch.value, 0, 1);
-      const drift = clamp(els.electricDrift.value, 0.2, 2.5);
-
-      els.electricD.value = String(d);
-      els.electricBolts.value = String(bolts);
-      els.electricBranch.value = branch.toFixed(2);
-      els.electricDrift.value = drift.toFixed(2);
-
-      els.vElectricD.textContent = String(d);
-      els.vElectricBolts.textContent = String(bolts);
-      els.vElectricBranch.textContent = branch.toFixed(2);
-      els.vElectricDrift.textContent = drift.toFixed(2);
-
-      setVar("--electric-d", `${d}px`);
-      return { diameter: d, bolts, branchChance: branch, driftSpeed: drift, durationMs: 10000 };
+      let startDistance = clamp(els.electricStartDist.value, 0, 500);
+      let endDistance = clamp(els.electricEndDist.value, 10, 800);
+      const branchBudget = Math.round(clamp(els.electricBranchBudget.value, 3, 10));
+      const branchDepthMax = Math.round(clamp(els.electricBranchDepth.value, 1, 5));
+      const branchChancePerStep = clamp(els.electricBranchChance.value, 0, 1);
+      const forkDelay = clamp(els.electricForkDelay.value, 0, 1);
+      const branchesPerFork = Math.round(clamp(els.electricBranchesPerFork.value, 1, 4));
+      if (startDistance > endDistance){
+        const t = startDistance;
+        startDistance = endDistance;
+        endDistance = t;
+      }
+      els.electricStartDist.value = String(Math.round(startDistance));
+      els.electricEndDist.value = String(Math.round(endDistance));
+      els.electricBranchBudget.value = String(branchBudget);
+      els.electricBranchDepth.value = String(branchDepthMax);
+      els.electricBranchChance.value = branchChancePerStep.toFixed(2);
+      els.electricForkDelay.value = forkDelay.toFixed(2);
+      els.electricBranchesPerFork.value = String(branchesPerFork);
+      els.vElectricStartDist.textContent = String(Math.round(startDistance));
+      els.vElectricEndDist.textContent = String(Math.round(endDistance));
+      els.vElectricBranchBudget.textContent = String(branchBudget);
+      els.vElectricBranchDepth.textContent = String(branchDepthMax);
+      els.vElectricBranchChance.textContent = branchChancePerStep.toFixed(2);
+      els.vElectricForkDelay.textContent = forkDelay.toFixed(2);
+      els.vElectricBranchesPerFork.textContent = String(branchesPerFork);
+      return {
+        startDistance,
+        endDistance,
+        branchBudget,
+        branchDepthMax,
+        branchChancePerStep,
+        forkDelay,
+        branchesPerFork
+      };
     }
 
     function playElectric(){
       if (!els.electricLayer) return;
       clearElectric();
       const cfg = applyElectricControls();
-      setVar("--electric-duration", `${cfg.durationMs}ms`);
       buildElectricAOE(cfg);
       els.electricLayer.appendChild(electricSvg);
+    }
 
-      const start = performance.now();
-      const cx = electricSvg.__cx;
-      const cy = electricSvg.__cy;
-      const innerR = electricSvg.__innerR;
-      const outerR = electricSvg.__outerR;
-
-      function tick(now){
-        const elapsed = now - start;
-        const life01 = Math.max(0, Math.min(1, elapsed / cfg.durationMs));
-        const fade = 1 - life01;
-
-        for (let i = 0; i < electricBolts.length; i++){
-          const bolt = electricBolts[i];
-          bolt.angle += bolt.drift * 0.0075 * cfg.driftSpeed;
-          bolt.walkPhase += randRange(0.10, 0.30) * cfg.driftSpeed;
-          bolt.pulsePhase += 0.11;
-
-          const pulse = 0.65 + (0.35 * Math.sin(bolt.pulsePhase));
-          const radiusBias = 0.55 + (0.45 * Math.sin((elapsed * 0.0032) + bolt.walkPhase));
-          const targetR = innerR + ((outerR - innerR) * radiusBias);
-          const jitterAmp = Math.max(4, outerR * randRange(0.030, 0.060));
-
-          const points = buildElectricBoltPoints(cx, cy, bolt.angle, innerR, targetR, bolt.walkPhase, jitterAmp);
-          bolt.path.setAttribute("d", polylinePath(points));
-          bolt.path.setAttribute("stroke-width", (bolt.thickness * pulse).toFixed(2));
-          bolt.path.setAttribute("opacity", (0.55 + (0.40 * pulse * fade)).toFixed(3));
-
-          const shouldSpawnBranch = (!bolt.branch) && (Math.random() < (cfg.branchChance * 0.06 * cfg.driftSpeed));
-          if (shouldSpawnBranch){
-            const anchor = 2 + Math.floor(Math.random() * Math.max(1, points.length - 3));
-            bolt.branch = {
-              born: now,
-              ttl: randRange(120, 520),
-              anchor,
-              dir: bolt.angle + randRange(-1.3, 1.3),
-              len: randRange(0.20, 0.55),
-              seed: randRange(0, Math.PI * 2),
-            };
-          }
-
-          if (bolt.branch){
-            const age = now - bolt.branch.born;
-            const bt = Math.max(0, Math.min(1, age / bolt.branch.ttl));
-            if (bt >= 1){
-              bolt.branch = null;
-              bolt.branchPath.setAttribute("opacity", "0");
-            } else {
-              const anchorPoint = points[Math.min(points.length - 2, bolt.branch.anchor)];
-              const branchStartR = Math.hypot(anchorPoint.x - cx, anchorPoint.y - cy);
-              const branchEndR = branchStartR + ((outerR - innerR) * bolt.branch.len);
-              const branchPts = buildElectricBoltPoints(
-                cx,
-                cy,
-                bolt.branch.dir + (Math.sin((elapsed * 0.011) + bolt.branch.seed) * 0.18),
-                branchStartR,
-                branchEndR,
-                bolt.walkPhase + bolt.branch.seed,
-                jitterAmp * 0.65
-              );
-              branchPts[0] = anchorPoint;
-              bolt.branchPath.setAttribute("d", polylinePath(branchPts));
-              bolt.branchPath.setAttribute("stroke-width", Math.max(0.8, bolt.thickness * 0.72).toFixed(2));
-              bolt.branchPath.setAttribute("opacity", ((1 - bt) * 0.72 * fade).toFixed(3));
-            }
-          }
-        }
-
-        if (electricGroup) {
-          electricGroup.setAttribute("opacity", (0.85 + (0.15 * Math.sin(elapsed * 0.01))).toFixed(3));
-        }
-
-        if (elapsed >= cfg.durationMs){
-          clearElectric();
-          return;
-        }
-        electricRAF = requestAnimationFrame(tick);
-      }
-
-      electricRAF = requestAnimationFrame(tick);
+    function randomizeElectric(){
+      electricSeed = Math.random() * 100000;
+      playElectric();
     }
 
     els.playElectric.addEventListener("click", playElectric);
-    els.electricD.addEventListener("input", applyElectricControls);
-    els.electricBolts.addEventListener("input", applyElectricControls);
-    els.electricBranch.addEventListener("input", applyElectricControls);
-    els.electricDrift.addEventListener("input", applyElectricControls);
+    els.randomizeElectric.addEventListener("click", randomizeElectric);
+    els.electricStartDist.addEventListener("input", applyElectricControls);
+    els.electricEndDist.addEventListener("input", applyElectricControls);
+    els.electricBranchBudget.addEventListener("input", applyElectricControls);
+    els.electricBranchDepth.addEventListener("input", applyElectricControls);
+    els.electricBranchChance.addEventListener("input", applyElectricControls);
+    els.electricForkDelay.addEventListener("input", applyElectricControls);
+    els.electricBranchesPerFork.addEventListener("input", applyElectricControls);
     applyElectricControls();
 
     window.addEventListener("keydown", (e) => {
