@@ -1224,7 +1224,7 @@
         durationMs: 10000,
         maxBoltJumpSq: 1200,
         particleCount: 340,
-        nodeCount: 10,
+        nodeCount: 13,
         particleSpeed: 0.62
       };
     }
@@ -1351,13 +1351,13 @@
       ctx.clearRect(0, 0, cfg.size, cfg.size);
 
       const ring = ctx.createRadialGradient(cfg.cx, cfg.cy, cfg.startR, cfg.cx, cfg.cy, cfg.endR);
-      ring.addColorStop(0, "rgba(170, 245, 255, 0.75)");
-      ring.addColorStop(0.6, "rgba(120, 215, 255, 0.50)");
-      ring.addColorStop(1, "rgba(120, 215, 255, 0.10)");
+      ring.addColorStop(0, "rgba(255, 250, 180, 0.82)");
+      ring.addColorStop(0.6, "rgba(255, 235, 95, 0.55)");
+      ring.addColorStop(1, "rgba(255, 220, 64, 0.12)");
       ctx.strokeStyle = ring;
       ctx.lineWidth = 2;
-      ctx.shadowColor = "rgba(120, 215, 255, 1)";
-      ctx.shadowBlur = 28;
+      ctx.shadowColor = "rgba(255, 225, 90, 1)";
+      ctx.shadowBlur = 30;
 
       ctx.beginPath();
       for (let i = 0; i < electricNodes.length; i++){
