@@ -2190,6 +2190,18 @@
           worldToScreenY: (yW) => pickupScreenY(yW),
           getOrbWorldPosition: () => ({ xNorm: 0.5, yW: physState.yW }),
           orbRadiusPx: PHYS.orbRadiusPx,
+          spawns: [
+            {
+              xNorm: 0.5,
+              yW: groundCenterWorld() - 1000,
+              r: 25,
+            },
+            {
+              xNorm: 0.5,
+              yW: 2000,
+              r: 25,
+            },
+          ],
           spawn: {
             xNorm: 0.5,
             yW: groundCenterWorld() - 1000,

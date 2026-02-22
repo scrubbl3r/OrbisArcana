@@ -6,17 +6,18 @@ export function createWorldSystem({
   getOrbWorldPosition,
   orbRadiusPx,
   spawn,
+  spawns,
   getGlobeEl,
   setGlobeEl,
 }) {
-  if (!eventBus || typeof eventBus.emit !== 'function') {
-    throw new Error('createWorldSystem requires eventBus.emit');
+  if (!eventBus || typeof eventBus.emit !== "function") {
+    throw new Error("createWorldSystem requires eventBus.emit");
   }
-  if (!stageEl) throw new Error('createWorldSystem requires stageEl');
-  if (typeof getStageRect !== 'function') throw new Error('createWorldSystem requires getStageRect');
-  if (typeof worldToScreenY !== 'function') throw new Error('createWorldSystem requires worldToScreenY');
-  if (typeof getOrbWorldPosition !== 'function') throw new Error('createWorldSystem requires getOrbWorldPosition');
-  if (typeof orbRadiusPx !== 'number' || !(orbRadiusPx > 0)) throw new Error('createWorldSystem requires orbRadiusPx');
+  if (!stageEl) throw new Error("createWorldSystem requires stageEl");
+  if (typeof getStageRect !== "function") throw new Error("createWorldSystem requires getStageRect");
+  if (typeof worldToScreenY !== "function") throw new Error("createWorldSystem requires worldToScreenY");
+  if (typeof getOrbWorldPosition !== "function") throw new Error("createWorldSystem requires getOrbWorldPosition");
+  if (typeof orbRadiusPx !== "number" || !(orbRadiusPx > 0)) throw new Error("createWorldSystem requires orbRadiusPx");
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
@@ -26,14 +27,17 @@ export function createWorldSystem({
   const PICKUP_CONSUME_EDGE_GAP_PX = 15;
   const PICKUP_RESPAWN_FADE_MS = 2000;
 
-  const state = {
-    pickup: {
-      id: 'globe_mid_01',
-      xNorm: Number(spawn && spawn.xNorm) || 0.5,
-      yW: Number(spawn && spawn.yW) || 0,
-      anchorXNorm: Number(spawn && spawn.xNorm) || 0.5,
-      anchorYW: Number(spawn && spawn.yW) || 0,
-      r: Number(spawn && spawn.r) || 25,
+  function buildPickupFromSpawn(s, index) {
+    const xNorm = Number(s && s.xNorm) || 0.5;
+    const yW = Number(s && s.yW) || 0;
+    const r = Number(s && s.r) || 25;
+    return {
+      id: String((s && s.id) || `globe_mid_${String(index + 1).padStart(2, "0")}`),
+      xNorm,
+      yW,
+      anchorXNorm: xNorm,
+      anchorYW: yW,
+      r,
       active: true,
       spawnedAtMs: 0,
       attracting: false,
@@ -46,18 +50,34 @@ export function createWorldSystem({
       driftPhaseY: Math.random() * Math.PI * 2,
       fadeInMs: 0,
       fadeInStartMs: 0,
-    },
+      el: null,
+    };
+  }
+
+  const spawnList = (Array.isArray(spawns) && spawns.length) ? spawns : [spawn];
+  const state = {
+    pickups: spawnList.map((s, i) => buildPickupFromSpawn(s, i)),
   };
 
-  function ensureGlobeEl() {
-    const existing = (typeof getGlobeEl === 'function') ? getGlobeEl() : null;
-    if (existing) return existing;
-    const el = document.createElement('div');
-    el.id = 'testGlobe';
-    el.className = 'pickupGlobe';
-    el.setAttribute('aria-label', 'Energy globe');
+  function ensureGlobeEl(pickup, index) {
+    if (pickup && pickup.el && pickup.el.isConnected) return pickup.el;
+
+    if (index === 0 && typeof getGlobeEl === "function") {
+      const existing = getGlobeEl();
+      if (existing) {
+        pickup.el = existing;
+        return existing;
+      }
+    }
+
+    const el = document.createElement("div");
+    el.id = (index === 0) ? "testGlobe" : `testGlobe${index + 1}`;
+    el.className = "pickupGlobe";
+    el.setAttribute("aria-label", "Energy globe");
     stageEl.appendChild(el);
-    if (typeof setGlobeEl === 'function') setGlobeEl(el);
+
+    if (index === 0 && typeof setGlobeEl === "function") setGlobeEl(el);
+    pickup.el = el;
     return el;
   }
 
@@ -77,12 +97,11 @@ export function createWorldSystem({
     return { xNorm, yW };
   }
 
-  function render(nowMs) {
-    const p = state.pickup;
-    const globeEl = ensureGlobeEl();
+  function renderPickup(p, idx, nowMs) {
+    const globeEl = ensureGlobeEl(p, idx);
     if (!globeEl || !p) return;
     if (!p.active) {
-      globeEl.style.display = 'none';
+      globeEl.style.display = "none";
       return;
     }
 
@@ -91,134 +110,141 @@ export function createWorldSystem({
     const y = worldToScreenY(pos.yW);
     const top = y - p.r;
     const d = p.r * 2;
-    globeEl.style.display = 'block';
+    globeEl.style.display = "block";
     globeEl.style.width = `${d.toFixed(2)}px`;
     globeEl.style.height = `${d.toFixed(2)}px`;
     const left = ((Number(pos.xNorm) || 0.5) * (rect.width || 0)) - p.r;
     globeEl.style.left = `${left.toFixed(2)}px`;
     globeEl.style.top = `${top.toFixed(2)}px`;
-    globeEl.style.transform = 'none';
-    globeEl.style.zIndex = '40';
+    globeEl.style.transform = "none";
+    globeEl.style.zIndex = "40";
     const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
     if ((Number(p.fadeInMs) || 0) > 0) {
       const age = Math.max(0, tNow - (Number(p.fadeInStartMs) || 0));
       const alpha = clamp01(age / Math.max(1, Number(p.fadeInMs) || 1));
       globeEl.style.opacity = alpha.toFixed(3);
     } else {
-      globeEl.style.opacity = '1';
+      globeEl.style.opacity = "1";
     }
   }
 
-  function collectPickup(nowMs) {
-    const p = state.pickup;
+  function render(nowMs) {
+    for (let i = 0; i < state.pickups.length; i++) {
+      renderPickup(state.pickups[i], i, nowMs);
+    }
+  }
+
+  function collectPickup(p, nowMs) {
     p.active = false;
     p.fadeInMs = 0;
     p.fadeInStartMs = 0;
     render(nowMs);
-    eventBus.emit('pickup.collected', {
+    eventBus.emit("pickup.collected", {
       id: p.id,
-      type: 'energy_globe',
+      type: "energy_globe",
       atMs: Number(nowMs) || performance.now(),
     });
   }
 
   function tick(nowMs, _dt) {
-    const p = state.pickup;
-    if (!p || !p.active) {
-      render(nowMs);
-      return;
-    }
-
     const stageW = getStageRect().width || 0;
     const orb = getOrbWorldPosition();
     const orbXNorm = Number(orb && orb.xNorm) || 0.5;
     const orbYW = Number(orb && orb.yW) || 0;
 
-    const pos = pickupWorldPos(p, nowMs);
-    const dxPx = ((orbXNorm - pos.xNorm) * stageW);
-    const dyPx = (orbYW - pos.yW);
-    let centerDist = Math.hypot(dxPx, dyPx);
-    let edgeGapPx = centerDist - (orbRadiusPx + p.r);
+    for (let i = 0; i < state.pickups.length; i++) {
+      const p = state.pickups[i];
+      if (!p || !p.active) continue;
 
-    if (edgeGapPx <= PICKUP_ATTRACT_START_EDGE_GAP_PX) {
-      if (!p.attracting) {
-        p.xNorm = pos.xNorm;
-        p.yW = pos.yW;
+      const pos = pickupWorldPos(p, nowMs);
+      const dxPx = ((orbXNorm - pos.xNorm) * stageW);
+      const dyPx = (orbYW - pos.yW);
+      let centerDist = Math.hypot(dxPx, dyPx);
+      let edgeGapPx = centerDist - (orbRadiusPx + p.r);
+
+      if (edgeGapPx <= PICKUP_ATTRACT_START_EDGE_GAP_PX) {
+        if (!p.attracting) {
+          p.xNorm = pos.xNorm;
+          p.yW = pos.yW;
+        }
+        p.attracting = true;
       }
-      p.attracting = true;
-    }
 
-    if (p.attracting) {
-      if (!p.lastStepTs) p.lastStepTs = Number(nowMs) || performance.now();
-      const dt = clamp(((Number(nowMs) || performance.now()) - p.lastStepTs) / 1000, 0, 0.05);
-      p.lastStepTs = Number(nowMs) || performance.now();
+      if (p.attracting) {
+        if (!p.lastStepTs) p.lastStepTs = Number(nowMs) || performance.now();
+        const dt = clamp(((Number(nowMs) || performance.now()) - p.lastStepTs) / 1000, 0, 0.05);
+        p.lastStepTs = Number(nowMs) || performance.now();
 
-      const prox01 = clamp01(1 - (edgeGapPx / Math.max(1, PICKUP_ATTRACT_START_EDGE_GAP_PX)));
-      const k = 2 + (10 * prox01 * prox01);
-      const alpha = 1 - Math.exp(-k * dt);
+        const prox01 = clamp01(1 - (edgeGapPx / Math.max(1, PICKUP_ATTRACT_START_EDGE_GAP_PX)));
+        const k = 2 + (10 * prox01 * prox01);
+        const alpha = 1 - Math.exp(-k * dt);
 
-      p.xNorm += (orbXNorm - p.xNorm) * alpha;
-      p.yW += (orbYW - p.yW) * alpha;
+        p.xNorm += (orbXNorm - p.xNorm) * alpha;
+        p.yW += (orbYW - p.yW) * alpha;
 
-      const dx2 = ((orbXNorm - p.xNorm) * stageW);
-      const dy2 = (orbYW - p.yW);
-      centerDist = Math.hypot(dx2, dy2);
-      edgeGapPx = centerDist - (orbRadiusPx + p.r);
-    } else {
-      p.lastStepTs = Number(nowMs) || performance.now();
-    }
+        const dx2 = ((orbXNorm - p.xNorm) * stageW);
+        const dy2 = (orbYW - p.yW);
+        centerDist = Math.hypot(dx2, dy2);
+        edgeGapPx = centerDist - (orbRadiusPx + p.r);
+      } else {
+        p.lastStepTs = Number(nowMs) || performance.now();
+      }
 
-    if (edgeGapPx <= PICKUP_CONSUME_EDGE_GAP_PX) {
-      collectPickup(nowMs);
-      return;
+      if (edgeGapPx <= PICKUP_CONSUME_EDGE_GAP_PX) {
+        collectPickup(p, nowMs);
+      }
     }
 
     render(nowMs);
   }
 
   function reset(nowMs) {
-    const p = state.pickup;
     const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
-    p.xNorm = p.anchorXNorm;
-    p.yW = p.anchorYW;
-    p.r = Number(spawn && spawn.r) || 25;
-    p.active = true;
-    p.spawnedAtMs = tNow;
-    p.attracting = false;
-    p.lastStepTs = 0;
-    p.fadeInMs = 0;
-    p.fadeInStartMs = 0;
+    for (let i = 0; i < state.pickups.length; i++) {
+      const p = state.pickups[i];
+      p.xNorm = p.anchorXNorm;
+      p.yW = p.anchorYW;
+      p.active = true;
+      p.spawnedAtMs = tNow;
+      p.attracting = false;
+      p.lastStepTs = 0;
+      p.fadeInMs = 0;
+      p.fadeInStartMs = 0;
+    }
     render(tNow);
   }
 
-  function respawnAtAnchorWithFade(nowMs, fadeMs = PICKUP_RESPAWN_FADE_MS) {
-    const p = state.pickup;
+  function respawnInactiveWithFade(nowMs, fadeMs = PICKUP_RESPAWN_FADE_MS) {
     const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
-    p.xNorm = p.anchorXNorm;
-    p.yW = p.anchorYW;
-    p.r = Number(spawn && spawn.r) || 25;
-    p.active = true;
-    p.spawnedAtMs = tNow;
-    p.attracting = false;
-    p.lastStepTs = 0;
-    p.fadeInMs = Math.max(0, Number(fadeMs) || 0);
-    p.fadeInStartMs = tNow;
-    render(tNow);
+    let changed = false;
+    for (let i = 0; i < state.pickups.length; i++) {
+      const p = state.pickups[i];
+      if (p.active) continue;
+      p.xNorm = p.anchorXNorm;
+      p.yW = p.anchorYW;
+      p.active = true;
+      p.spawnedAtMs = tNow;
+      p.attracting = false;
+      p.lastStepTs = 0;
+      p.fadeInMs = Math.max(0, Number(fadeMs) || 0);
+      p.fadeInStartMs = tNow;
+      changed = true;
+    }
+    if (changed) render(tNow);
   }
 
-  if (eventBus && typeof eventBus.on === 'function') {
-    eventBus.on('voice.spell_cast', (payload = {}) => {
-      if (String(payload.trigger || '') !== 'shake_detonation') return;
-      if (state.pickup && state.pickup.active) return;
-      respawnAtAnchorWithFade(clockNowMs(), PICKUP_RESPAWN_FADE_MS);
+  if (eventBus && typeof eventBus.on === "function") {
+    eventBus.on("voice.spell_cast", (payload = {}) => {
+      if (String(payload.trigger || "") !== "shake_detonation") return;
+      respawnInactiveWithFade(clockNowMs(), PICKUP_RESPAWN_FADE_MS);
     });
   }
 
   function getState() {
+    const pickups = state.pickups.map((p) => ({ ...p, el: undefined }));
     return {
-      pickup: {
-        ...state.pickup,
-      },
+      pickup: pickups[0] ? { ...pickups[0] } : null,
+      pickups,
     };
   }
 
