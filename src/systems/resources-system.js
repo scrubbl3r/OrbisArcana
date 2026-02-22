@@ -98,6 +98,23 @@ export function createResourcesSystem({
     return state.storedGlobes;
   }
 
+  function snapshot() {
+    return {
+      energy: {
+        bankPts: state.energyBankPts,
+        capPts: energyBankCap,
+        lastUpdatedAtMs: state.energyBankLastMs,
+      },
+      globes: {
+        storedCount: state.storedGlobes,
+      },
+      config: {
+        energyShakeCostPts: energyShakeCost,
+        energyChargeRatePps,
+      },
+    };
+  }
+
   function addStoredGlobe(payload = {}) {
     const atMs = Number(payload.atMs) || nowMs();
     state.storedGlobes += 1;
@@ -154,5 +171,6 @@ export function createResourcesSystem({
     spendShake,
     getStoredGlobeCount,
     consumeStoredGlobe,
+    snapshot,
   };
 }

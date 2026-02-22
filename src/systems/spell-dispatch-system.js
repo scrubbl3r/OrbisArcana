@@ -1,5 +1,9 @@
 import { SPELLS_BY_ID } from "../voice/spellbook.js";
 
+// `resources` is an optional injected domain API.
+// Expected methods (subset used here):
+// - getStoredGlobeCount(): number
+// - consumeStoredGlobe(payload): { ok: boolean, stored: number }
 export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), resources = null }) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     throw new Error("createSpellDispatchSystem requires eventBus.on/eventBus.emit");
