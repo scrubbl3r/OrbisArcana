@@ -1917,6 +1917,7 @@
     let mvp = null;
     let worldSystem = null;
     let orbFxSystem = null;
+    let runtimeSpellIndex = Object.create(null);
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -2049,6 +2050,30 @@
       return d;
     }
 
+    function normalizeWorldItemSpawn(item){
+      if (!item || String(item.kind || "") !== "energy_globe") return null;
+      const s = item.spawn || {};
+      const xNorm = clamp(Number(s.xNorm), 0, 1);
+      const r = Math.max(1, Number(s.r) || 25);
+      const yMode = String(s.yMode || "absolute");
+      const yValue = Number(s.yValue) || 0;
+      const yW = (yMode === "ground_center_offset")
+        ? (groundCenterWorld() + yValue)
+        : yValue;
+      return {
+        id: String(item.id || ""),
+        xNorm: isFinite(xNorm) ? xNorm : 0.5,
+        yW,
+        r,
+      };
+    }
+
+    function castActionForSpellId(spellId){
+      const id = String(spellId || "").toLowerCase();
+      const def = runtimeSpellIndex[id];
+      return def ? String(def.castActionId || "") : "";
+    }
+
     function parseRgbLike(colorText){
       const text = String(colorText || "").trim();
       // Supports rgb(...) and rgba(...) values used by orb CSS vars.
@@ -2145,6 +2170,8 @@
           { createVoiceRecognitionSystem },
           { createSpellDispatchSystem },
           { createVoiceHudSystem },
+          { RUNTIME_SPELLS_BY_ID },
+          { WORLD_ITEMS_V1 },
         ] = await Promise.all([
           import("./src/events/event-bus.js"),
           import("./src/state/game-state.js"),
@@ -2156,7 +2183,10 @@
           import("./src/systems/voice-recognition-system.js"),
           import("./src/systems/spell-dispatch-system.js"),
           import("./src/systems/voice-hud-system.js"),
+          import("./src/content/spells/runtime-spells.js"),
+          import("./src/content/world-items/default-world-items.js"),
         ]);
+        runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
 
         const eventBus = createEventBus();
         const gameState = createGameState({
@@ -2183,6 +2213,17 @@
         spellDispatchSystem.start();
         voiceRecognitionSystem.start();
         voiceHudSystem.start();
+        const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
+          .map(normalizeWorldItemSpawn)
+          .filter(Boolean);
+        const fallbackSpawn = {
+          id: "globe_mid_01",
+          xNorm: 0.5,
+          yW: groundCenterWorld() - 1000,
+          r: 25,
+        };
+        const resolvedGlobeSpawns = globeSpawns.length ? globeSpawns : [fallbackSpawn];
+
         worldSystem = createWorldSystem({
           eventBus,
           stageEl: els.physStage,
@@ -2190,18 +2231,7 @@
           worldToScreenY: (yW) => pickupScreenY(yW),
           getOrbWorldPosition: () => ({ xNorm: 0.5, yW: physState.yW }),
           orbRadiusPx: PHYS.orbRadiusPx,
-          spawns: [
-            {
-              xNorm: 0.5,
-              yW: groundCenterWorld() - 1000,
-              r: 25,
-            },
-            {
-              xNorm: 0.5,
-              yW: 2000,
-              r: 25,
-            },
-          ],
+          spawns: resolvedGlobeSpawns,
           spawn: {
             xNorm: 0.5,
             yW: groundCenterWorld() - 1000,
@@ -2249,6 +2279,7 @@
         eventBus.on("voice.spell_cast", (p = {}) => {
           const intent = String(p.intent || "");
           const spellId = String(p.spellId || "").toLowerCase();
+          const castActionId = castActionForSpellId(spellId);
           if (intent === "spell.school_shield") {
             activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
             return;
@@ -2259,8 +2290,8 @@
             return;
           }
           if (intent === "spell.school_aoe") {
-            if (spellId === "electrum_rota") playElectricAoe();
-            if (spellId === "ignis_rota") playFlameAoe();
+            if (castActionId === "aoe_electric") playElectricAoe();
+            if (castActionId === "aoe_flame") playFlameAoe();
           }
           const graceMs = Number(p && p.floatGraceMs);
           grantFloatGrace(Number.isFinite(graceMs) ? graceMs : FLOAT_GRACE_DEFAULT_MS);
