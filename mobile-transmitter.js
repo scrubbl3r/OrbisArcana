@@ -1053,8 +1053,8 @@
 
     const MIN_OMEGA = 0.02;
 
-    const LOCK_ON  = 0.25;
-    const LOCK_OFF = 0.20;
+    const LOCK_ON  = 0.10;
+    const LOCK_OFF = 0.05;
 
     const MIN_HZ = 0.55;
     const MAX_HZ = 2.30;
