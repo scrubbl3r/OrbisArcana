@@ -2969,9 +2969,6 @@
       }
       idleMarkActivity();
       if (orbInputSuppressed) return;
-      if (inputSystem && typeof inputSystem.ingest === "function") {
-        inputSystem.ingest(data, performance.now());
-      }
       teleMaybeLog(data);
       applyDataToUI(data);
     }
@@ -3039,6 +3036,9 @@
       }
 
       const nowMs = performance.now();
+      if (inputSystem && typeof inputSystem.ingest === "function") {
+        inputSystem.ingest(d, nowMs);
+      }
       const frame = (inputSystem && typeof inputSystem.getLatest === "function")
         ? inputSystem.getLatest()
         : null;
