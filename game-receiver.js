@@ -2282,7 +2282,7 @@
           { createVoiceHudSystem },
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
-          { SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
+          { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
           { RUNTIME_SPELLS_BY_ID },
           { WORLD_ITEMS_V1 },
         ] = await Promise.all([
@@ -2310,6 +2310,7 @@
         }
         if (typeof hydrateReceiverVfxDefaults === "function") {
           hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
+            bubbleShield: BUBBLE_SHIELD_PRESET_DEFAULT,
             shockwave: SHOCKWAVE_PRESET_DEFAULT,
             flameAoe: FLAME_AOE_PRESET_DEFAULT,
             electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,

@@ -499,6 +499,7 @@
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
     import {
+      BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
       FLAME_AOE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT
@@ -587,6 +588,13 @@
         if (els.pulseMs && theme.shield.pulseMs != null) els.pulseMs.value = String(Math.round(clamp(theme.shield.pulseMs, 20, 700)));
         if (els.pulseMin && theme.shield.pulseMin != null) els.pulseMin.value = String(clamp(theme.shield.pulseMin, 0, 1).toFixed(2));
         if (els.pulseMax && theme.shield.pulseMax != null) els.pulseMax.value = String(clamp(theme.shield.pulseMax, 0, 1).toFixed(2));
+      }
+      if (BUBBLE_SHIELD_PRESET_DEFAULT) {
+        if (els.shieldMs) els.shieldMs.value = String(Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT.durationMs, 80, 1200)));
+        if (els.shieldAlpha) els.shieldAlpha.value = String(clamp(BUBBLE_SHIELD_PRESET_DEFAULT.alpha, 0, 1).toFixed(2));
+        if (els.pulseMs) els.pulseMs.value = String(Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT.pulseMs, 20, 700)));
+        if (els.pulseMin) els.pulseMin.value = String(clamp(BUBBLE_SHIELD_PRESET_DEFAULT.pulseMin, 0, 1).toFixed(2));
+        if (els.pulseMax) els.pulseMax.value = String(clamp(BUBBLE_SHIELD_PRESET_DEFAULT.pulseMax, 0, 1).toFixed(2));
       }
       if (theme.shockwave && els.stroke && theme.shockwave.strokeWidthPx != null) {
         els.stroke.value = String(evenPx(theme.shockwave.strokeWidthPx, 2, 20));
