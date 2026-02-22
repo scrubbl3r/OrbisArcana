@@ -286,8 +286,63 @@
     // =========================================================================
     // BACKGROUND (driven by receiver energy bank UI)
     // =========================================================================
-    const BG0 = { r: 0,   g: 0,  b: 0  };
-    const BG1 = { r: 255, g: 42, b: 0  };
+    let activeGameTheme = null;
+    let BG0 = { r: 0,   g: 0,  b: 0  };
+    let BG1 = { r: 255, g: 42, b: 0  };
+
+    function rgb255To01(c){
+      return {
+        r: clamp01((c && c.r) / 255),
+        g: clamp01((c && c.g) / 255),
+        b: clamp01((c && c.b) / 255),
+      };
+    }
+
+    function applyRuntimeTheme(theme){
+      if (!theme || typeof theme !== "object") return;
+      activeGameTheme = theme;
+      const bg = theme.world && theme.world.energyBackground;
+      if (bg && bg.startRgb && bg.endRgb) {
+        BG0 = {
+          r: clamp(Math.round(Number(bg.startRgb.r) || 0), 0, 255),
+          g: clamp(Math.round(Number(bg.startRgb.g) || 0), 0, 255),
+          b: clamp(Math.round(Number(bg.startRgb.b) || 0), 0, 255),
+        };
+        BG1 = {
+          r: clamp(Math.round(Number(bg.endRgb.r) || 0), 0, 255),
+          g: clamp(Math.round(Number(bg.endRgb.g) || 0), 0, 255),
+          b: clamp(Math.round(Number(bg.endRgb.b) || 0), 0, 255),
+        };
+      }
+      if (theme.orb) {
+        ORB_FILL_ALPHA = clamp01(theme.orb.fillAlpha);
+        if (theme.orb.strokeDefaultRgb) {
+          ORB_STROKE_DEFAULT = rgb255To01(theme.orb.strokeDefaultRgb);
+        }
+      }
+      if (theme.shield && typeof VFX_DEFAULTS === "object" && VFX_DEFAULTS.shield) {
+        if (Number.isFinite(Number(theme.shield.alpha))) VFX_DEFAULTS.shield.alpha = clamp01(theme.shield.alpha);
+        if (Number.isFinite(Number(theme.shield.pulseMs))) VFX_DEFAULTS.shield.pulseMs = Math.max(0, Number(theme.shield.pulseMs));
+        if (Number.isFinite(Number(theme.shield.pulseMin))) VFX_DEFAULTS.shield.pulseMin = clamp01(theme.shield.pulseMin);
+        if (Number.isFinite(Number(theme.shield.pulseMax))) VFX_DEFAULTS.shield.pulseMax = clamp01(theme.shield.pulseMax);
+        setVar("--shield-alpha", String(VFX_DEFAULTS.shield.alpha.toFixed(2)));
+        setVar("--shield-pulse-ms", String(Math.round(VFX_DEFAULTS.shield.pulseMs)) + "ms");
+        setVar("--shield-pulse-min", String(VFX_DEFAULTS.shield.pulseMin.toFixed(2)));
+        setVar("--shield-pulse-max", String(Math.min(VFX_DEFAULTS.shield.pulseMax, VFX_DEFAULTS.shield.alpha).toFixed(2)));
+      }
+      if (theme.shockwave && typeof VFX_DEFAULTS === "object" && VFX_DEFAULTS.shock) {
+        if (Number.isFinite(Number(theme.shockwave.strokeWidthPx))) {
+          VFX_DEFAULTS.shock.stroke = evenStroke(theme.shockwave.strokeWidthPx, 2, 20);
+          setVar("--shock-stroke", VFX_DEFAULTS.shock.stroke + "px");
+        }
+      }
+      if (theme.shield && theme.shield.colorRgb) {
+        shieldColor01 = rgb255To01(theme.shield.colorRgb);
+        setShieldColor01(shieldColor01);
+      }
+      resetOrbStrokeColor(true);
+      setBgFromEnergy(0);
+    }
     function setBgFromEnergy(e01) {
       const t = clamp01(e01);
       const r = Math.round(BG0.r + (BG1.r - BG0.r) * t);
@@ -1946,13 +2001,15 @@
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
+      const axisColors = activeGameTheme && activeGameTheme.axisColors;
+      if (axisColors && axisColors[a]) return rgb255To01(axisColors[a]);
       if (a === "x") return { r: 0/255, g: 100/255, b: 253/255 };   // #0064fd
       if (a === "z") return { r: 253/255, g: 241/255, b: 0/255 };   // #fdf100
       return { r: 253/255, g: 78/255, b: 0/255 };                   // #fd4e00
     }
 
-    const ORB_FILL_ALPHA = 0.20;
-    const ORB_STROKE_DEFAULT = { r: 1.0, g: 1.0, b: 1.0 };
+    let ORB_FILL_ALPHA = 0.20;
+    let ORB_STROKE_DEFAULT = { r: 1.0, g: 1.0, b: 1.0 };
     const orbStrokeColor = {
       current: { ...ORB_STROKE_DEFAULT },
       target: { ...ORB_STROKE_DEFAULT },
@@ -2223,6 +2280,8 @@
           { createVoiceRecognitionSystem },
           { createSpellDispatchSystem },
           { createVoiceHudSystem },
+          { GAME_THEME_DEFAULT },
+          { applyThemeCssVars },
           { RUNTIME_SPELLS_BY_ID },
           { WORLD_ITEMS_V1 },
         ] = await Promise.all([
@@ -2238,9 +2297,15 @@
           import("./src/systems/voice-recognition-system.js"),
           import("./src/systems/spell-dispatch-system.js"),
           import("./src/systems/voice-hud-system.js"),
+          import("./src/content/theme/game-theme-default.js"),
+          import("./src/ui/apply-theme-css-vars.js"),
           import("./src/content/spells/runtime-spells.js"),
           import("./src/content/world-items/default-world-items.js"),
         ]);
+        if (GAME_THEME_DEFAULT) {
+          applyThemeCssVars(GAME_THEME_DEFAULT);
+          applyRuntimeTheme(GAME_THEME_DEFAULT);
+        }
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
 
         const eventBus = createEventBus();
