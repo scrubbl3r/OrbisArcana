@@ -1327,154 +1327,6 @@
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
     const FLAT_SPIN_MIN_SPEED01 = 0.02;
 
-    const flatSpin = {
-      active: false,
-      axis: "",
-      holdMs: 0,
-      releaseMs: 0,
-      lastTs: 0,
-      lastGateRefreshMs: 0,
-    };
-
-    function axisFromShieldAxis(shieldAxis){
-      if (!Array.isArray(shieldAxis) || shieldAxis.length < 3) return null;
-      // Gameplay axis mapping:
-      // X school = blue, Y school = green, Z school = red.
-      // Incoming shieldAxis is [x,y,z], so remap as:
-      // gameplayX <- z, gameplayY <- y, gameplayZ <- x
-      const gx = Math.max(0, Number(shieldAxis[2]) || 0);
-      const gy = Math.max(0, Number(shieldAxis[1]) || 0);
-      const gz = Math.max(0, Number(shieldAxis[0]) || 0);
-      const sum = gx + gy + gz;
-      if (!(sum > 1e-6)) return null;
-      const vals = [
-        { axis: "x", v: gx / sum },
-        { axis: "y", v: gy / sum },
-        { axis: "z", v: gz / sum },
-      ];
-      vals.sort((a, b) => b.v - a.v);
-      return {
-        axis: vals[0].axis,
-        v: vals[0].v,
-        gap: vals[0].v - vals[1].v,
-        source: "axis",
-      };
-    }
-
-    function axisFromShieldRgb(shieldRGB){
-      if (!Array.isArray(shieldRGB) || shieldRGB.length < 3) return null;
-      const r = Math.max(0, Number(shieldRGB[0]) || 0);
-      const g = Math.max(0, Number(shieldRGB[1]) || 0);
-      const b = Math.max(0, Number(shieldRGB[2]) || 0);
-      const sum = r + g + b;
-      if (!(sum > 1e-6)) return null;
-      const vals = [
-        { axis: "x", v: b / sum }, // blue -> X
-        { axis: "y", v: g / sum }, // green -> Y
-        { axis: "z", v: r / sum }, // red -> Z
-      ];
-      vals.sort((a, b) => b.v - a.v);
-      return {
-        axis: vals[0].axis,
-        v: vals[0].v,
-        gap: vals[0].v - vals[1].v,
-        source: "rgb",
-      };
-    }
-
-    function axisFromSpinPayload(d){
-      return axisFromShieldAxis(d && d.shieldAxis) || axisFromShieldRgb(d && d.shieldRGB);
-    }
-
-    function axisFromVisibleShield(d){
-      return axisFromShieldAxis(d && d.shieldAxis) || axisFromShieldRgb(d && d.shieldRGB);
-    }
-
-    function openFlatSpinWindow(axis, nowMs){
-      flatSpin.active = true;
-      flatSpin.axis = axis;
-      flatSpin.releaseMs = 0;
-      flatSpin.lastGateRefreshMs = nowMs;
-      setOrbStrokeColor01(axisToColor01(axis));
-      if (!mvp || !mvp.eventBus) return;
-      mvp.eventBus.emit("spell_window.flat_spin_opened", { axis, atMs: nowMs });
-      mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
-      mvp.eventBus.emit("voice.open_gate", { reason: `flat_spin_${axis}`, timeoutMs: 4500 });
-    }
-
-    function closeFlatSpinWindow(reason, nowMs){
-      if (!flatSpin.active) return;
-      const axis = flatSpin.axis;
-      flatSpin.active = false;
-      flatSpin.axis = "";
-      flatSpin.holdMs = 0;
-      flatSpin.releaseMs = 0;
-      flatSpin.lastGateRefreshMs = 0;
-      resetOrbStrokeColor();
-      if (!mvp || !mvp.eventBus) return;
-      mvp.eventBus.emit("spell_window.flat_spin_closed", { axis, reason, atMs: nowMs });
-      mvp.eventBus.emit("voice.close_gate", { reason: `flat_spin_${reason}` });
-      mvp.eventBus.emit("voice.set_mode", { mode: "wake_token_open_world" });
-    }
-
-    function updateFlatSpinWindow(d, nowMs){
-      const dt = flatSpin.lastTs ? clamp(nowMs - flatSpin.lastTs, 0, 120) : 0;
-      flatSpin.lastTs = nowMs;
-      const axisInfo = axisFromVisibleShield(d);
-      const speed01 = clamp01(Number(d && (d.speed01 != null ? d.speed01 : d.speed)) || 0);
-      const locked = !!(d && d.locked);
-      const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= FLAT_SPIN_MIN_SPEED01));
-      const canQualify = !!axisInfo && stableEnough;
-      const isAxisSignal = !!(axisInfo && axisInfo.source === "axis");
-      const domOnReq = isAxisSignal ? 0.56 : FLAT_SPIN_DOMINANCE_ON;
-      const domOffReq = isAxisSignal ? 0.48 : FLAT_SPIN_DOMINANCE_OFF;
-      const gapOnReq = isAxisSignal ? 0.06 : FLAT_SPIN_DOMINANCE_GAP_ON;
-      const gapOffReq = isAxisSignal ? 0.03 : FLAT_SPIN_DOMINANCE_GAP_OFF;
-
-      if (flatSpin.active) {
-        const sameAxis = canQualify
-          && axisInfo.axis === flatSpin.axis
-          && axisInfo.v >= domOffReq
-          && (Number(axisInfo.gap) >= gapOffReq);
-        if (sameAxis) {
-          setOrbStrokeColor01(axisToColor01(axisInfo.axis));
-          flatSpin.releaseMs = 0;
-          if ((nowMs - flatSpin.lastGateRefreshMs) >= FLAT_SPIN_GATE_REFRESH_MS) {
-            flatSpin.lastGateRefreshMs = nowMs;
-            if (mvp && mvp.eventBus) {
-              mvp.eventBus.emit("voice.open_gate", {
-                reason: `flat_spin_keepalive_${flatSpin.axis}`,
-                timeoutMs: 4500
-              });
-            }
-          }
-          return;
-        }
-        flatSpin.releaseMs += dt;
-        if (flatSpin.releaseMs >= FLAT_SPIN_OFF_HOLD_MS) {
-          closeFlatSpinWindow("unstable", nowMs);
-        }
-        return;
-      }
-
-      const qualify = canQualify
-        && axisInfo.v >= domOnReq
-        && (Number(axisInfo.gap) >= gapOnReq);
-      if (!qualify) {
-        flatSpin.holdMs = 0;
-        return;
-      }
-
-      if (flatSpin.axis && flatSpin.axis !== axisInfo.axis) {
-        flatSpin.holdMs = 0;
-      }
-      flatSpin.axis = axisInfo.axis;
-      flatSpin.holdMs += dt;
-      if (flatSpin.holdMs >= FLAT_SPIN_ON_HOLD_MS) {
-        openFlatSpinWindow(flatSpin.axis, nowMs);
-      }
-    }
-
     function resetShakeDetector(){
       if (inputGestureSystem && typeof inputGestureSystem.reset === "function") {
         inputGestureSystem.reset(performance.now());
@@ -1483,10 +1335,6 @@
         clearDirLampTimers();
         allDirLampOff();
       }
-      closeFlatSpinWindow("reset", performance.now());
-      flatSpin.lastTs = 0;
-      flatSpin.holdMs = 0;
-      flatSpin.releaseMs = 0;
     }
 
     function flashDirLampPair(a, b, ms=380){
@@ -2308,6 +2156,14 @@
             grooveShakeGate: GROOVE_SHAKE_GATE,
             shakeLampThr: SHAKE_LAMP_THR,
             sdRecentMs: SD_RECENT_MS,
+            flatSpinDominanceOn: FLAT_SPIN_DOMINANCE_ON,
+            flatSpinDominanceOff: FLAT_SPIN_DOMINANCE_OFF,
+            flatSpinDominanceGapOn: FLAT_SPIN_DOMINANCE_GAP_ON,
+            flatSpinDominanceGapOff: FLAT_SPIN_DOMINANCE_GAP_OFF,
+            flatSpinOnHoldMs: FLAT_SPIN_ON_HOLD_MS,
+            flatSpinOffHoldMs: FLAT_SPIN_OFF_HOLD_MS,
+            flatSpinGateRefreshMs: FLAT_SPIN_GATE_REFRESH_MS,
+            flatSpinMinSpeed01: FLAT_SPIN_MIN_SPEED01,
           },
           hooks: {
             canSpendShake,
@@ -2320,6 +2176,12 @@
             allDirLampOff,
             flashDirLampPair,
             flashDirLampSingle,
+            setOrbStrokeColorByAxis(axis) {
+              setOrbStrokeColor01(axisToColor01(axis));
+            },
+            resetOrbStrokeColor: () => {
+              resetOrbStrokeColor();
+            },
           },
         });
         resourcesSystem = createResourcesSystem({
@@ -3208,7 +3070,14 @@
         (!physState.shieldDescentBlocked);
 
       applyStabilityVisuals();
-      updateFlatSpinWindow(d, nowMs);
+      if (inputGestureSystem && typeof inputGestureSystem.processFlatSpinFrame === "function") {
+        inputGestureSystem.processFlatSpinFrame({
+          raw: d,
+          atMs: nowMs,
+          stabilityOn,
+          stabilityVisualGate,
+        });
+      }
 
       updateStability(dynamics, nowMs);
       updateVariability(dynamics, nowMs);

@@ -10,13 +10,39 @@ export function createInputGestureSystem({
     grooveShakeGate: Number.isFinite(Number(config.grooveShakeGate)) ? Number(config.grooveShakeGate) : 0.20,
     shakeLampThr: Number.isFinite(Number(config.shakeLampThr)) ? Number(config.shakeLampThr) : 1.65,
     sdRecentMs: Math.max(0, Number(config.sdRecentMs) || 750),
+    flatSpinDominanceOn: Number.isFinite(Number(config.flatSpinDominanceOn)) ? Number(config.flatSpinDominanceOn) : 0.72,
+    flatSpinDominanceOff: Number.isFinite(Number(config.flatSpinDominanceOff)) ? Number(config.flatSpinDominanceOff) : 0.60,
+    flatSpinDominanceGapOn: Number.isFinite(Number(config.flatSpinDominanceGapOn)) ? Number(config.flatSpinDominanceGapOn) : 0.14,
+    flatSpinDominanceGapOff: Number.isFinite(Number(config.flatSpinDominanceGapOff)) ? Number(config.flatSpinDominanceGapOff) : 0.09,
+    flatSpinOnHoldMs: Math.max(0, Number(config.flatSpinOnHoldMs) || 200),
+    flatSpinOffHoldMs: Math.max(0, Number(config.flatSpinOffHoldMs) || 280),
+    flatSpinGateRefreshMs: Math.max(0, Number(config.flatSpinGateRefreshMs) || 1100),
+    flatSpinMinSpeed01: Number.isFinite(Number(config.flatSpinMinSpeed01)) ? Number(config.flatSpinMinSpeed01) : 0.02,
   };
 
   const state = {
     shakeCooldownUntil: 0,
     pendingSd: null,
     pendingSdAt: 0,
+    flatSpin: {
+      active: false,
+      axis: "",
+      holdMs: 0,
+      releaseMs: 0,
+      lastTs: 0,
+      lastGateRefreshMs: 0,
+    },
   };
+
+  function clamp(v, lo, hi) {
+    const n = Number(v);
+    const x = Number.isFinite(n) ? n : lo;
+    return Math.max(lo, Math.min(hi, x));
+  }
+
+  function clamp01(v) {
+    return clamp(v, 0, 1);
+  }
 
   function shakeGroupFromCode(code) {
     const c = String(code || "").trim().toUpperCase();
@@ -46,6 +72,10 @@ export function createInputGestureSystem({
     state.shakeCooldownUntil = 0;
     state.pendingSd = null;
     state.pendingSdAt = 0;
+    closeFlatSpinWindow("reset", Number(atMs) || nowMs());
+    state.flatSpin.lastTs = 0;
+    state.flatSpin.holdMs = 0;
+    state.flatSpin.releaseMs = 0;
 
     if (typeof hooks.forceShakeLampOff === "function") hooks.forceShakeLampOff();
     if (typeof hooks.clearDirLampTimers === "function") hooks.clearDirLampTimers();
@@ -105,6 +135,137 @@ export function createInputGestureSystem({
     return true;
   }
 
+  function axisFromShieldAxis(shieldAxis) {
+    if (!Array.isArray(shieldAxis) || shieldAxis.length < 3) return null;
+    const gx = Math.max(0, Number(shieldAxis[2]) || 0);
+    const gy = Math.max(0, Number(shieldAxis[1]) || 0);
+    const gz = Math.max(0, Number(shieldAxis[0]) || 0);
+    const sum = gx + gy + gz;
+    if (!(sum > 1e-6)) return null;
+    const vals = [
+      { axis: "x", v: gx / sum },
+      { axis: "y", v: gy / sum },
+      { axis: "z", v: gz / sum },
+    ];
+    vals.sort((a, b) => b.v - a.v);
+    return { axis: vals[0].axis, v: vals[0].v, gap: vals[0].v - vals[1].v, source: "axis" };
+  }
+
+  function axisFromShieldRgb(shieldRGB) {
+    if (!Array.isArray(shieldRGB) || shieldRGB.length < 3) return null;
+    const r = Math.max(0, Number(shieldRGB[0]) || 0);
+    const g = Math.max(0, Number(shieldRGB[1]) || 0);
+    const b = Math.max(0, Number(shieldRGB[2]) || 0);
+    const sum = r + g + b;
+    if (!(sum > 1e-6)) return null;
+    const vals = [
+      { axis: "x", v: b / sum },
+      { axis: "y", v: g / sum },
+      { axis: "z", v: r / sum },
+    ];
+    vals.sort((a, b) => b.v - a.v);
+    return { axis: vals[0].axis, v: vals[0].v, gap: vals[0].v - vals[1].v, source: "rgb" };
+  }
+
+  function axisFromVisibleShield(raw) {
+    return axisFromShieldAxis(raw && raw.shieldAxis) || axisFromShieldRgb(raw && raw.shieldRGB);
+  }
+
+  function openFlatSpinWindow(axis, atMs) {
+    const fs = state.flatSpin;
+    fs.active = true;
+    fs.axis = axis;
+    fs.releaseMs = 0;
+    fs.lastGateRefreshMs = atMs;
+    if (typeof hooks.setOrbStrokeColorByAxis === "function") hooks.setOrbStrokeColorByAxis(axis);
+    if (eventBus && typeof eventBus.emit === "function") {
+      eventBus.emit("spell_window.flat_spin_opened", { axis, atMs });
+      eventBus.emit("voice.set_mode", { mode: "gated_window" });
+      eventBus.emit("voice.open_gate", { reason: `flat_spin_${axis}`, timeoutMs: 4500 });
+    }
+  }
+
+  function closeFlatSpinWindow(reason, atMs) {
+    const fs = state.flatSpin;
+    if (!fs.active) return;
+    const axis = fs.axis;
+    fs.active = false;
+    fs.axis = "";
+    fs.holdMs = 0;
+    fs.releaseMs = 0;
+    fs.lastGateRefreshMs = 0;
+    if (typeof hooks.resetOrbStrokeColor === "function") hooks.resetOrbStrokeColor();
+    if (eventBus && typeof eventBus.emit === "function") {
+      eventBus.emit("spell_window.flat_spin_closed", { axis, reason, atMs });
+      eventBus.emit("voice.close_gate", { reason: `flat_spin_${reason}` });
+      eventBus.emit("voice.set_mode", { mode: "wake_token_open_world" });
+    }
+  }
+
+  function processFlatSpinFrame({
+    raw = null,
+    atMs = nowMs(),
+    stabilityOn = false,
+    stabilityVisualGate = false,
+  } = {}) {
+    const now = Number(atMs) || nowMs();
+    const fs = state.flatSpin;
+    const dt = fs.lastTs ? clamp(now - fs.lastTs, 0, 120) : 0;
+    fs.lastTs = now;
+
+    const axisInfo = axisFromVisibleShield(raw);
+    const speed01 = clamp01(Number(raw && (raw.speed01 != null ? raw.speed01 : raw.speed)) || 0);
+    const locked = !!(raw && raw.locked);
+    const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= cfg.flatSpinMinSpeed01));
+    const canQualify = !!axisInfo && stableEnough;
+    const isAxisSignal = !!(axisInfo && axisInfo.source === "axis");
+    const domOnReq = isAxisSignal ? 0.56 : cfg.flatSpinDominanceOn;
+    const domOffReq = isAxisSignal ? 0.48 : cfg.flatSpinDominanceOff;
+    const gapOnReq = isAxisSignal ? 0.06 : cfg.flatSpinDominanceGapOn;
+    const gapOffReq = isAxisSignal ? 0.03 : cfg.flatSpinDominanceGapOff;
+
+    if (fs.active) {
+      const sameAxis = canQualify
+        && axisInfo.axis === fs.axis
+        && axisInfo.v >= domOffReq
+        && (Number(axisInfo.gap) >= gapOffReq);
+      if (sameAxis) {
+        if (typeof hooks.setOrbStrokeColorByAxis === "function") hooks.setOrbStrokeColorByAxis(axisInfo.axis);
+        fs.releaseMs = 0;
+        if ((now - fs.lastGateRefreshMs) >= cfg.flatSpinGateRefreshMs) {
+          fs.lastGateRefreshMs = now;
+          if (eventBus && typeof eventBus.emit === "function") {
+            eventBus.emit("voice.open_gate", {
+              reason: `flat_spin_keepalive_${fs.axis}`,
+              timeoutMs: 4500,
+            });
+          }
+        }
+        return;
+      }
+      fs.releaseMs += dt;
+      if (fs.releaseMs >= cfg.flatSpinOffHoldMs) {
+        closeFlatSpinWindow("unstable", now);
+      }
+      return;
+    }
+
+    const qualify = canQualify && axisInfo.v >= domOnReq && (Number(axisInfo.gap) >= gapOnReq);
+    if (!qualify) {
+      fs.holdMs = 0;
+      return;
+    }
+
+    if (fs.axis && fs.axis !== axisInfo.axis) {
+      fs.holdMs = 0;
+    }
+    fs.axis = axisInfo.axis;
+    fs.holdMs += dt;
+    if (fs.holdMs >= cfg.flatSpinOnHoldMs) {
+      openFlatSpinWindow(fs.axis, now);
+    }
+  }
+
   function start() {}
   function stop() {}
 
@@ -113,6 +274,7 @@ export function createInputGestureSystem({
     stop,
     reset,
     processShakeSample,
+    processFlatSpinFrame,
     setPendingDirection,
     getShakeCooldownUntil,
   };
