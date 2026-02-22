@@ -12,27 +12,27 @@ export const RUNTIME_SPELLS = Object.freeze([
     castActionId: "teleport_domus",
   },
   {
-    id: "ignis_sanctus",
+    id: "ignis_sanctum",
     school: "ignis",
-    classKey: "sanctus",
+    classKey: "sanctum",
     slot: "UD",
     intent: "spell.school_shield",
     cooldownMs: 1000,
     castActionId: "shield_sanctus",
   },
   {
-    id: "fridgis_sanctus",
+    id: "fridgis_sanctum",
     school: "fridgis",
-    classKey: "sanctus",
+    classKey: "sanctum",
     slot: "UD",
     intent: "spell.school_shield",
     cooldownMs: 1000,
     castActionId: "shield_sanctus",
   },
   {
-    id: "electrum_sanctus",
+    id: "electrum_sanctum",
     school: "electrum",
-    classKey: "sanctus",
+    classKey: "sanctum",
     slot: "UD",
     intent: "spell.school_shield",
     cooldownMs: 1000,
@@ -77,4 +77,3 @@ export const RUNTIME_SPELLS_BY_ID = Object.freeze(
 export function getRuntimeSpellById(spellId) {
   return RUNTIME_SPELLS_BY_ID[String(spellId || "").toLowerCase()] || null;
 }
-
