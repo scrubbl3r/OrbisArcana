@@ -2969,6 +2969,9 @@
       }
       idleMarkActivity();
       if (orbInputSuppressed) return;
+      if (inputSystem && typeof inputSystem.ingest === "function") {
+        inputSystem.ingest(data, performance.now());
+      }
       teleMaybeLog(data);
       applyDataToUI(data);
     }
@@ -3036,10 +3039,9 @@
       }
 
       const nowMs = performance.now();
-      let frame = null;
-      if (inputSystem && typeof inputSystem.ingest === "function") {
-        frame = inputSystem.ingest(d, nowMs);
-      }
+      const frame = (inputSystem && typeof inputSystem.getLatest === "function")
+        ? inputSystem.getLatest()
+        : null;
       const energyFromPhone = frame ? frame.energy01 : pick01NewOrOld("energy01", "energy");
       const groove = frame ? frame.groove01 : pick01NewOrOld("groove01", "groove");
       const dynamics = frame ? frame.dynamics01 : pick01NewOrOld("dynamics01", "orbit01");
