@@ -50,7 +50,7 @@
       --shield-pulse-max: 1.00;
 
       /* Shockwave (rings) */
-      --shock-color: rgba(255, 255, 255, 0.30);
+      --shock-color: rgba(255, 255, 255, 0.65);
       --shock-stroke: 4px;
     }
 
