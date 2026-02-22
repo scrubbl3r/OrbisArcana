@@ -1209,32 +1209,50 @@
     }
 
     // =========================================================================
-    // ENERGY BANK (receiver-side battery)
+    // ENERGY BANK (resources-system-backed)
     // =========================================================================
     const ENERGY_BANK_CAP = 1000;
     const ENERGY_SHAKE_COST = 100;
     const ENERGY_CHARGE_RATE_PPS = 160;
 
-    let energyBankPts = 0;
-    let energyBankLastMs = 0;
-
     function resetEnergyBank(){
-      energyBankPts = 0;
-      energyBankLastMs = 0;
+      if (resourcesSystem && typeof resourcesSystem.resetEnergyBank === "function") {
+        resourcesSystem.resetEnergyBank(performance.now());
+      }
     }
 
     function updateEnergyBankFromPhone(energyFromPhone01, nowMs){
-      const e = Math.max(0, Number(energyFromPhone01) || 0);
-      if (!energyBankLastMs) energyBankLastMs = nowMs;
-      let dt = (nowMs - energyBankLastMs) / 1000;
-      energyBankLastMs = nowMs;
-      dt = clamp(dt, 0, 0.25);
-
-      energyBankPts = clamp(energyBankPts + (e * ENERGY_CHARGE_RATE_PPS * dt), 0, ENERGY_BANK_CAP);
+      if (resourcesSystem && typeof resourcesSystem.updateEnergyBankFromPhone === "function") {
+        resourcesSystem.updateEnergyBankFromPhone(energyFromPhone01, nowMs);
+      }
     }
 
-    function canSpendShake(){ return energyBankPts >= ENERGY_SHAKE_COST; }
-    function spendShake(){ energyBankPts = clamp(energyBankPts - ENERGY_SHAKE_COST, 0, ENERGY_BANK_CAP); }
+    function getEnergyBankPts(){
+      if (resourcesSystem && typeof resourcesSystem.getEnergyBankPts === "function") {
+        return Number(resourcesSystem.getEnergyBankPts()) || 0;
+      }
+      return 0;
+    }
+
+    function getEnergyBankCap(){
+      if (resourcesSystem && typeof resourcesSystem.getEnergyBankCap === "function") {
+        return Math.max(1, Number(resourcesSystem.getEnergyBankCap()) || ENERGY_BANK_CAP);
+      }
+      return ENERGY_BANK_CAP;
+    }
+
+    function canSpendShake(){
+      if (resourcesSystem && typeof resourcesSystem.canSpendShake === "function") {
+        return !!resourcesSystem.canSpendShake();
+      }
+      return false;
+    }
+
+    function spendShake(){
+      if (resourcesSystem && typeof resourcesSystem.spendShake === "function") {
+        resourcesSystem.spendShake(performance.now());
+      }
+    }
 
     // =========================================================================
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
@@ -1917,6 +1935,7 @@
     let mvp = null;
     let worldSystem = null;
     let orbFxSystem = null;
+    let resourcesSystem = null;
     let runtimeSpellIndex = Object.create(null);
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
@@ -2166,6 +2185,7 @@
           { createFxSystem },
           { createAudioSystem },
           { createWorldSystem },
+          { createResourcesSystem },
           { createOrbFxSystem },
           { createVoiceRecognitionSystem },
           { createSpellDispatchSystem },
@@ -2179,6 +2199,7 @@
           import("./src/systems/fx-system.js"),
           import("./src/systems/audio-system.js"),
           import("./src/systems/world-system.js"),
+          import("./src/systems/resources-system.js"),
           import("./src/systems/orb-fx-system.js"),
           import("./src/systems/voice-recognition-system.js"),
           import("./src/systems/spell-dispatch-system.js"),
@@ -2201,7 +2222,15 @@
         const orbSystem = createOrbSystem({ gameState, eventBus });
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
-        const spellDispatchSystem = createSpellDispatchSystem({ eventBus });
+        resourcesSystem = createResourcesSystem({
+          eventBus,
+          config: {
+            energyBankCap: ENERGY_BANK_CAP,
+            energyShakeCost: ENERGY_SHAKE_COST,
+            energyChargeRatePps: ENERGY_CHARGE_RATE_PPS,
+          },
+        });
+        const spellDispatchSystem = createSpellDispatchSystem({ eventBus, resources: resourcesSystem });
         const voiceRecognitionSystem = createVoiceRecognitionSystem({ eventBus });
         const voiceHudSystem = createVoiceHudSystem({
           eventBus,
@@ -2210,6 +2239,7 @@
         });
         fxSystem.start();
         audioSystem.start();
+        resourcesSystem.start();
         spellDispatchSystem.start();
         voiceRecognitionSystem.start();
         voiceHudSystem.start();
@@ -2308,6 +2338,7 @@
           orbSystem,
           fxSystem,
           audioSystem,
+          resourcesSystem,
           orbFxSystem,
           spellDispatchSystem,
           voiceRecognitionSystem,
@@ -3009,7 +3040,8 @@
       
       updateEnergyBankFromPhone(energyFromPhone, nowMs);
 
-      const energyUI01 = energyBankPts / ENERGY_BANK_CAP;
+      const energyBankPts = getEnergyBankPts();
+      const energyUI01 = energyBankPts / getEnergyBankCap();
       const lift = computeLift01(groove, smooth, speed);
 
       physState.lift01 = lift;

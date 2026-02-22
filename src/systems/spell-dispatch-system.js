@@ -1,6 +1,6 @@
 import { SPELLS_BY_ID } from "../voice/spellbook.js";
 
-export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }) {
+export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), resources = null }) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     throw new Error("createSpellDispatchSystem requires eventBus.on/eventBus.emit");
   }
@@ -16,8 +16,21 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
   };
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
-  let storedGlobeCount = 0;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
+
+  function getStoredGlobeCount() {
+    if (resources && typeof resources.getStoredGlobeCount === "function") {
+      return Math.max(0, Number(resources.getStoredGlobeCount()) || 0);
+    }
+    return 0;
+  }
+
+  function consumeStoredGlobe(payload = {}) {
+    if (resources && typeof resources.consumeStoredGlobe === "function") {
+      return resources.consumeStoredGlobe(payload);
+    }
+    return { ok: false, stored: getStoredGlobeCount() };
+  }
 
   function normAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
@@ -112,28 +125,10 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
       activeFlatSpinAxis = null;
     }));
 
-    unsub.push(eventBus.on("pickup.collected", (payload = {}) => {
-      if (String(payload.type || "") !== "energy_globe") return;
-      storedGlobeCount += 1;
-      eventBus.emit("energy.globe_inventory_changed", {
-        stored: storedGlobeCount,
-        atMs: nowMs(),
-      });
-    }));
     unsub.push(eventBus.on("orb.died", () => {
-      storedGlobeCount = 0;
-      eventBus.emit("energy.globe_inventory_changed", {
-        stored: storedGlobeCount,
-        atMs: nowMs(),
-      });
       reset();
     }));
     unsub.push(eventBus.on("orb.revived", () => {
-      storedGlobeCount = 0;
-      eventBus.emit("energy.globe_inventory_changed", {
-        stored: storedGlobeCount,
-        atMs: nowMs(),
-      });
       reset();
     }));
 
@@ -206,7 +201,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
           selectedSchoolByAxis[axis] = spellSchool;
         }
 
-        if (storedGlobeCount <= 0) {
+        const storedGlobes = getStoredGlobeCount();
+        if (storedGlobes <= 0) {
           eventBus.emit("voice.spell_rejected", {
             reason: "no_stored_globes",
             spellId: String(concreteSpell.id || spellId),
@@ -231,7 +227,22 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
           loadedByAxis.y.LR = null;
           loadedByAxis.y.FB = null;
         }
-        storedGlobeCount = Math.max(0, storedGlobeCount - 1);
+        const spendResult = consumeStoredGlobe({
+          reason: "spell_load",
+          spellId: String(concreteSpell.id || ""),
+          axis,
+          slot,
+          atMs: now,
+        });
+        if (!spendResult || spendResult.ok !== true) {
+          eventBus.emit("voice.spell_rejected", {
+            reason: "no_stored_globes",
+            spellId: String(concreteSpell.id || spellId),
+            axis,
+            atMs: now,
+          });
+          return;
+        }
         loadedByAxis[axis][slot] = {
           spellId: String(concreteSpell.id || ""),
           intent: concreteSpell.intent,
@@ -247,18 +258,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now() }
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
-          atMs: now,
-        });
-        eventBus.emit("energy.globe_spent", {
-          reason: "spell_load",
-          spellId: String(concreteSpell.id || ""),
-          axis,
-          slot,
-          stored: storedGlobeCount,
-          atMs: now,
-        });
-        eventBus.emit("energy.globe_inventory_changed", {
-          stored: storedGlobeCount,
           atMs: now,
         });
         return;

@@ -1,0 +1,417 @@
+ORBIS ARCANA ARCHITECTURE SCHEMA (WORKING DRAFT v0.2)
+
+Purpose
+
+This document captures the new, amended, and proposed schema decisions for Orbis Arcana so we can iterate on the architecture before doing larger refactors.
+
+This is a planning document, not a final implementation spec.
+
+1. CORE DIRECTION (APPROVED)
+
+We are moving from a prototype structure where game-receiver.js does many jobs, toward a clearer architecture where responsibilities are split by domain.
+
+Core direction:
+- Receiver is a composition shell and input adapter.
+- Systems own gameplay logic and authoritative state transitions.
+- Content files define data (spells, world items, etc.).
+- Effects (VFX/SFX) are shared runtime modules (target state for both game and labs).
+- Labs are preview/dev harnesses, not gameplay authority.
+
+2. WHAT HAS ALREADY BEEN DONE (IMPORTANT CONTEXT)
+
+Implemented foundation:
+- Runtime spell content schema separated into content.
+- World item content schema separated into content.
+- World system supports multiple globes (multiple pickups).
+- Receiver consumes spell and world-item content schema.
+- Spell AOE routing has started using castActionId (data-driven action routing).
+- Orb shatter pieces snapshot live orb palette at death (correct runtime visual snapshot behavior).
+- Spell naming updates completed:
+  - sanctus -> sanctum (sanctus kept as alias)
+  - rahta added as alias to all rota spells
+
+3. SYSTEM ROLE SPLIT (APPROVED)
+
+Receiver (game-receiver.js)
+- Receives/translates transmitter data.
+- Normalizes inputs into gameplay-usable values.
+- Composes systems and wires event flow.
+- Renders HUD/UI shell and debug readouts.
+- Should not be long-term owner of gameplay state.
+
+Content (src/content/*)
+- Defines what exists.
+- Contains data only.
+- No gameplay logic.
+- Uses IDs and configuration values.
+
+Systems (src/systems/*)
+- Own gameplay state transitions.
+- Consume events and state.
+- Emit events for other systems and UI.
+- Should become authoritative owners of domain state.
+
+Effects (future shared modules under src/vfx and src/sfx)
+- Own visual/audio playback runtime.
+- Track presentation instance handles (RAF, DOM refs, timers, audio handles).
+- Can be used by both game and labs.
+
+Labs (labs/vfx, later sfx labs)
+- Preview and tune visual/audio effects.
+- Share effect code and visual defaults with game.
+- Not gameplay authority.
+
+4. TOP-LEVEL STATE MODEL (APPROVED)
+
+Target slices:
+- input
+- orb
+- world
+- spells
+- resources
+- session
+- ui (optional later)
+
+5. PHYSICS OWNERSHIP DECISION (QUESTION 1 ANSWERED)
+
+Decision:
+- Keep orb motion/physics state inside the orb slice for now.
+- Physics remains a system (behavior), not a separate top-level state slice yet.
+- World owns environment physics context (gravity, drag, future zones/mutators).
+
+Why this is correct right now:
+- The orb is currently the only primary physically simulated actor.
+- Orb motion is mostly self-contained.
+- Environmental effects are simple modifiers.
+- There is not yet a broad multi-actor interaction simulation requiring a shared physics runtime state.
+
+When to reconsider later:
+- Wind affecting multiple actors.
+- Enemy swarms influencing orb motion.
+- Black holes / vortex fields.
+- Projectiles / debris / enemies sharing force fields and collision rules.
+
+Approved framing:
+- input/control = what the transmitter/device is telling the game
+- orb = what the orb is doing / what is happening to the orb
+- world = what the environment is doing
+- physics system = how input + orb + world combine
+
+6. ORB SLICE (PROPOSED v1 SHAPE)
+
+Purpose:
+The orb slice represents the orb as a gameplay entity.
+
+Orb should contain (v1):
+- Health and life state
+- Shattered/alive state
+- Motion state (position, velocity) for now
+- Orb-specific status flags (shielded, float grace, etc.)
+- Orb gameplay-relevant visual state (if gameplay depends on it)
+
+Orb should not contain:
+- Raw transmitter metrics (groove, smooth, axis, lock)
+- Global/environment physics (gravity, drag, zones)
+- Spell loadout and cooldowns
+- Resource counts (energy bank, globes)
+
+7. RESOURCES OWNERSHIP DECISION (QUESTION 2 ANSWERED)
+
+Decision (approved):
+Resources contains both:
+- energyBank
+- storedGlobes
+
+World owns pickup entities only before collection.
+UI derives meters/counters from resources.
+This is the cleanest split right now.
+
+Important reasoning:
+Globe inventory is not purely visual if it gates gameplay (spell loading). In the current game it does gate gameplay, so it belongs in resources.
+
+8. RESOURCES SLICE (PROPOSED v1 SHAPE)
+
+Purpose:
+The resources slice is the orb economy state and should be authoritative for gameplay resource values.
+
+Resources should contain (v1):
+- energy bank value and cap
+- stored globe count
+- cost values used by gameplay (if not moved to config)
+- optional resource stats for debugging/telemetry
+
+Resources should not contain:
+- Pickup entity positions/respawn state (world owns that)
+- UI labels/percentages
+- Spell cooldowns/loadouts
+
+Current mismatch to fix later:
+- storedGlobeCount currently lives in spell-dispatch-system
+- target owner should be resources
+
+9. INPUT STATE DECISION (QUESTION 3 ANSWERED)
+
+Decision (approved):
+- Use a persistent input state slice.
+- Also keep event-driven transitions for discrete actions.
+- Store the latest normalized frame as SSOT for control signals.
+
+Why this is the right choice:
+This game uses continuous control signals, not only button-like events. Multiple systems need the same normalized values. A persistent input slice prevents duplicated normalization and makes debugging far easier.
+
+10. INPUT SLICE (PROPOSED v1 SHAPE)
+
+Purpose:
+The input slice is the authoritative control frame SSOT (latest normalized transmitter-derived values).
+
+Input should contain (authoritative):
+- latest normalized values (groove, smooth, speed, shake, dynamics)
+- lock state
+- shieldAxis
+- shieldRGB
+- timestamps and optional frame counter
+- optional debug raw payload snapshot
+
+Input should not contain:
+- Orb motion outcome values (position/velocity/lift result)
+- Energy/resources
+- Spell loadouts/cooldowns
+- HUD display formatting values
+
+What stays event-driven:
+Discrete transitions should still be events, for example:
+- lock entered/exited
+- shake triggered
+- direction changes
+- spell window open/close
+
+11. AUTHORITATIVE VS RECOMPUTED INPUT VALUES (QUESTION 4 ANSWERED)
+
+Decision (approved):
+Store authoritative normalized control signals in input.
+Recompute local UI/display values where needed.
+
+Store in input (authoritative examples):
+- groove01
+- smooth01
+- speed01
+- shake01
+- dynamics01
+- locked
+- shieldAxis
+- shieldRGB
+- atMs / timestamps
+
+Recompute locally (derived examples):
+- HUD percentages
+- meter widths
+- formatted strings like "(locked)"
+- local interpolation values for rendering only
+
+Rule of thumb (approved):
+Store values that are shared, timing-sensitive, and used in gameplay decisions.
+Recompute values that are cheap, local, and presentation-only.
+
+12. ACTIVE SPELL EFFECTS VS EFFECTS RUNTIME (QUESTION 5 ANSWERED)
+
+Decision (approved):
+Split gameplay effect state and presentation runtime state.
+
+Spells slice should track:
+- gameplay-relevant active effects (only when gameplay duration/state matters)
+- loaded spells
+- cooldowns
+- spell cast/load state
+
+Effects runtime should track:
+- visual/audio playback instances
+- RAF IDs
+- DOM/SVG/canvas refs
+- timeouts
+- cleanup handles
+
+Key rule (approved):
+If rendering was disabled and the state still matters to gameplay, it belongs in gameplay state (spells or another gameplay slice).
+If it only matters to presentation playback, it belongs in effects runtime.
+
+13. SPELL EXECUTION ROUTING VIA castActionId (QUESTION 6 ANSWERED)
+
+Decision (approved):
+- Migrate progressively, not all at once.
+- End state remains: all spell execution paths route through castActionId.
+
+Why progressive is correct:
+- Lower risk
+- Easier debugging
+- Allows schema to stabilize while refactoring
+- Avoids large all-at-once breakage
+
+Current direction:
+- AOE spells already demonstrate castActionId-driven execution
+- Future path is to migrate shield/domus/radius similarly
+
+14. WORLD-ITEMS BUCKET STRATEGY (QUESTION 7 ANSWERED)
+
+Decision (approved):
+Keep world-items as a generic bucket for now.
+
+Why this is correct:
+- We are still discovering categories through actual development.
+- Premature taxonomy creates rework.
+- One bucket keeps momentum while schema stabilizes.
+
+Split trigger (future):
+Split world-items only when real examples force meaningful divergence, such as:
+- different runtime systems and behavior patterns
+- repeated special-casing
+- file readability becoming poor
+- clear natural categories emerging (enemies, hazards, platforms, etc.)
+
+15. LEVEL SCHEMA STRATEGY (QUESTION 8 ANSWERED)
+
+Decision (approved):
+Defer for now.
+When first prototype level is built, create a generic level bucket.
+
+Proposed future path:
+- Start with a generic level content bucket
+- Split later only when patterns emerge (geometry, zones, scripted events, runtime state)
+
+16. THEME / SSOT DECISION (QUESTION 9 ANSWERED)
+
+Decision (approved):
+Use a shared visual SSOT with layered responsibility:
+- Theme tokens = global/shared visual language
+- Effect presets = spell/effect-specific visual tuning
+- Runtime overrides = context-sensitive changes (optional)
+
+Theme tokens should cover:
+- default orb style (stroke/fill/alpha)
+- axis colors
+- globe baseline styles
+- UI styles
+- world baseline styles
+- common shared visual defaults
+
+Effect presets should cover:
+- spell-specific tuning and personality
+- particle counts
+- jitter ratios
+- bolt jump tuning
+- tendril counts/lengths
+- effect-specific timing and geometry
+
+Approved framing:
+- Theme = house style
+- Effect preset = spell personality
+- Effects inherit from theme and override only what they uniquely need
+
+17. LABS VS GAME RELATIONSHIP (CLARIFIED, APPROVED)
+
+Decision (approved framing):
+- Labs are not gameplay authority.
+- Labs and game should share visual SSOT/presets.
+- Gameplay spell authority remains in game systems/content.
+- Labs are preview/dev tools for effect behavior and look.
+
+Important nuance:
+"Spell behavior" includes two layers:
+- gameplay behavior (cooldowns, slots, resource costs, actions)
+- presentation behavior (look, timing, animation)
+
+Labs mostly care about presentation behavior.
+Game systems care about gameplay behavior.
+Both can share effect presets and visual tokens.
+
+18. MIGRATION STRATEGY STATUS (QUESTION 11 DEFERRED)
+
+Decision:
+Question 11 is intentionally deferred until schema and ownership framing is clearer.
+
+This is the correct sequencing.
+
+We will decide migration priority after finalizing:
+- input slice schema
+- resources slice schema
+- ownership boundaries
+
+19. STATE OWNERSHIP INVENTORY (QUESTION 12 APPROVED AND STARTED)
+
+Decision (approved):
+Yes, we want a written state ownership inventory before major refactors.
+
+Why this matters:
+It prevents:
+- moving the wrong state first
+- duplicated state across receiver and systems
+- confusion about authoritative vs derived values
+- hidden dependencies surviving in receiver.js
+
+First-pass inventory status:
+A first-pass ownership inventory has been created (variable/cluster map), covering:
+- receiver-local state clusters
+- spell dispatch runtime state
+- world pickup runtime state
+- effects runtime handles
+- known ownership mismatches (especially storedGlobeCount)
+
+Key immediate ownership insight:
+The biggest current ownership mismatch is:
+- storedGlobeCount lives in spell-dispatch-system
+- but conceptually belongs in resources
+
+20. IMPLEMENTED CONTENT SCHEMA (CURRENT STATE)
+
+Spells content (runtime gameplay mapping):
+- Runtime spell definitions are in content.
+- Spell execution is increasingly mapped via castActionId.
+- Naming updates applied:
+  - sanctum is canonical
+  - sanctus retained as alias
+  - rahta added to rota aliases
+
+World-items content:
+- World items are now content-driven.
+- Current examples include two energy globes.
+- World system supports multiple pickups.
+
+21. CURRENT OPEN QUESTIONS (UPDATED)
+
+Resolved / approved so far:
+- Q1 physics ownership
+- Q2 resources ownership
+- Q3 persistent input slice + events
+- Q4 authoritative input values vs recompute
+- Q5 gameplay active effects vs effects runtime
+- Q6 progressive castActionId migration
+- Q7 generic world-items bucket
+- Q8 defer level bucket until prototype level
+- Q9 theme tokens vs effect presets
+- Q12 state ownership inventory before refactors
+- Q11 deferred intentionally
+
+Still open (next iterations):
+- Exact input slice field set and retention policy (for example raw payload debug retention)
+- Exact resources system API and event contract
+- End-state spell action executor shape (where executeSpellCastAction lives)
+- Effects runtime system shape (single orchestrator vs per-effect managers)
+- Theme SSOT implementation details:
+  - file structure
+  - theme -> CSS variables adapter
+  - theme -> effect preset adapter
+  - lab override policy
+- Migration order (Question 11), after the above is clearer
+
+22. RECOMMENDED NEXT STEPS (FOR DOC ITERATION, NOT CODE YET)
+
+Recommended order:
+1. Lock exact input slice schema.
+2. Lock exact resources slice schema.
+3. Define resources <-> spells interaction contract.
+4. Define spell action execution dispatcher shape (castActionId execution path).
+5. Finalize theme SSOT structure and adapters.
+6. Then choose migration priority (Question 11).
+
+23. SUMMARY (ONE-PARAGRAPH VERSION)
+
+We are transitioning to a cleaner architecture where the receiver becomes a composition shell and input adapter, while systems own gameplay state and content files define spells and world items. We have already started this with content-driven spells and world items, multi-globe world pickups, and castActionId routing for AOE spells. The approved state model uses slices (input, orb, world, spells, resources, session), with orb motion staying in orb for now, resources owning both energy and stored globes, input becoming a persistent normalized-frame SSOT plus event transitions, and effects runtime separated from gameplay spell state. Theme tokens and effect presets will form a shared visual SSOT for both game and labs. We will continue to refine the schema on paper and then refactor progressively, slice by slice.
