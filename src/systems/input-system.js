@@ -22,11 +22,11 @@ export function createInputSystem({ eventBus } = {}) {
   function pick01NewOrOld(raw, newKey, oldKey) {
     if (raw && raw[newKey] != null) {
       const n = Number(raw[newKey]);
-      return Number.isFinite(n) ? clamp01(n) : 0;
+      return Number.isFinite(n) ? n : 0;
     }
     const n = Number(raw && raw[oldKey]);
     if (!Number.isFinite(n)) return 0;
-    return clamp01(n > 1.5 ? (n / 100) : n);
+    return (n > 1.5) ? (n / 100) : n;
   }
 
   function normVec3(v) {
