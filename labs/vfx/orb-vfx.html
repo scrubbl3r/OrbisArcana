@@ -498,6 +498,7 @@
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
+    import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js";
     import { ELECTRIC_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-default.js";
 
     const $ = (id) => document.getElementById(id);
@@ -589,6 +590,9 @@
       }
       if (theme.flameAoe && theme.flameAoe.stroke && theme.flameAoe.fill) {
         // CSS variables are applied via applyThemeCssVars(theme); no lab controls for these yet.
+      }
+      if (els.flameD && FLAME_AOE_PRESET_DEFAULT) {
+        els.flameD.value = String(evenPx(clamp(FLAME_AOE_PRESET_DEFAULT.diameter, 120, 900), 2, 2000));
       }
       if (els.electricStartR && ELECTRIC_AOE_PRESET_DEFAULT) {
         els.electricStartR.value = String(Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT.startR, 2, 500)));
@@ -1066,7 +1070,7 @@
 
       const cfg = {
         diameter: evenPx(clamp(els.flameD.value, 120, 900), 2, 2000),
-        durationMs: 10000
+        durationMs: Math.max(200, Number(FLAME_AOE_PRESET_DEFAULT.durationMs) || 10000)
       };
       setVar("--flame-d", cfg.diameter + "px");
       setVar("--flame-duration", cfg.durationMs + "ms");
