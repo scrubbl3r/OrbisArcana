@@ -55,6 +55,8 @@
       shield: $("shield"),
 
       /* [VFX] */
+      electricLayer: $("electricLayer"),
+      flameLayer: $("flameLayer"),
       shockLayer: $("shockLayer"),
 
       physStage: $("physStage"),
@@ -322,6 +324,20 @@
         spawnMs: 105,
         stroke: 4,
         decayMs: 150
+      },
+      flame: {
+        diameter: 200,
+        durationMs: 10000,
+      },
+      electric: {
+        startR: 80,
+        endR: 200,
+        durationMs: 10000,
+        nodeCount: 13,
+        particleCount: 340,
+        particleSpeed: 0.62,
+        maxBoltJumpSq: 1200,
+        startJitterRatio: 0.30,
       }
     };
 
@@ -583,6 +599,452 @@
 
     function triggerShockwave(){
       playShock();
+    }
+
+    // =========================================================================
+    // Flame AOE (ported from VFX lab)
+    // =========================================================================
+    let flameRAF = 0;
+    let flameSvg = null;
+    let flameCore = null;
+    const flameTendrils = [];
+    const FLAME_SHOW_CORE = false;
+
+    function evenPx(n, min = 2, max = 4096){
+      n = Math.round(Number(n) || 0);
+      n = Math.max(min, Math.min(max, n));
+      if (n % 2 === 1) n += 1;
+      return n;
+    }
+
+    function rand(min, max){
+      return min + (Math.random() * (max - min));
+    }
+
+    function polarPoint(cx, cy, angle, r){
+      return { x: cx + (Math.cos(angle) * r), y: cy + (Math.sin(angle) * r) };
+    }
+
+    function toWorld(base, fwd, nrm, along, lateral){
+      return {
+        x: base.x + (fwd.x * along) + (nrm.x * lateral),
+        y: base.y + (fwd.y * along) + (nrm.y * lateral),
+      };
+    }
+
+    function smoothQuadPath(points){
+      if (!points || points.length < 2) return "";
+      let d = `M ${points[0].x.toFixed(4)} ${points[0].y.toFixed(4)}`;
+      for (let i = 1; i < points.length - 1; i++){
+        const p = points[i];
+        const n = points[i + 1];
+        const mx = (p.x + n.x) * 0.5;
+        const my = (p.y + n.y) * 0.5;
+        d += ` Q ${p.x.toFixed(4)} ${p.y.toFixed(4)} ${mx.toFixed(4)} ${my.toFixed(4)}`;
+      }
+      const last = points[points.length - 1];
+      d += ` T ${last.x.toFixed(4)} ${last.y.toFixed(4)}`;
+      return d;
+    }
+
+    function clearFlame(){
+      if (flameRAF) cancelAnimationFrame(flameRAF);
+      flameRAF = 0;
+      flameTendrils.length = 0;
+      flameCore = null;
+      if (flameSvg && flameSvg.parentNode) flameSvg.parentNode.removeChild(flameSvg);
+      flameSvg = null;
+    }
+
+    function buildFlameAOE(cfg){
+      const pad = 180;
+      const size = evenPx(cfg.diameter + pad, 2, 4096);
+      const cx = size * 0.5;
+      const cy = size * 0.5;
+      const radius = cfg.diameter * 0.5;
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "flameSvg");
+      svg.setAttribute("width", size);
+      svg.setAttribute("height", size);
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+      svg.setAttribute("shape-rendering", "geometricPrecision");
+      svg.__cx = cx;
+      svg.__cy = cy;
+      svg.__r = radius;
+
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.setAttribute("fill", "rgba(255, 96, 24, 0.30)");
+      group.setAttribute("stroke", "var(--flame-stroke)");
+      group.setAttribute("stroke-width", "2");
+      group.setAttribute("stroke-linecap", "round");
+      group.setAttribute("stroke-linejoin", "round");
+
+      const core = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      core.setAttribute("cx", String(cx));
+      core.setAttribute("cy", String(cy));
+      core.setAttribute("r", String(radius.toFixed(2)));
+      core.setAttribute("fill", "var(--flame-fill)");
+      core.setAttribute("stroke", "var(--flame-stroke)");
+      core.setAttribute("stroke-width", "6");
+      core.setAttribute("opacity", "1");
+
+      const tendrilCount = 28;
+      for (let i = 0; i < tendrilCount; i++){
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const step = (Math.PI * 2) / tendrilCount;
+        const ang = step * i;
+        const baseLen = radius * 0.20;
+        const baseAmp = radius * 0.11;
+        const baseWidth = radius * 0.23;
+        const lenScale = (i % 2 === 0) ? 2.25 : 1.0;
+        const lateralFlip = (i % 2 === 0) ? 1 : -1;
+        p.setAttribute("opacity", "0.95");
+        group.appendChild(p);
+        flameTendrils.push({
+          path: p,
+          ang,
+          baseLen,
+          baseAmp,
+          baseWidth,
+          lenScale,
+          lateralFlip,
+        });
+      }
+
+      if (FLAME_SHOW_CORE) svg.appendChild(core);
+      svg.appendChild(group);
+      flameSvg = svg;
+      flameCore = core;
+    }
+
+    function playFlameAoe(){
+      if (!els.flameLayer) return;
+      clearFlame();
+
+      const cfg = {
+        diameter: evenPx(clamp(VFX_DEFAULTS.flame.diameter, 120, 900), 2, 2000),
+        durationMs: Math.max(200, Number(VFX_DEFAULTS.flame.durationMs) || 10000),
+      };
+      buildFlameAOE(cfg);
+      els.flameLayer.appendChild(flameSvg);
+
+      const start = performance.now();
+      const cx = flameSvg.__cx;
+      const cy = flameSvg.__cy;
+      const radius = flameSvg.__r;
+
+      function renderFrame(elapsed){
+        const t01 = Math.max(0, Math.min(1, elapsed / cfg.durationMs));
+        const life = 1 - t01;
+        const innerR = radius + 2;
+
+        if (FLAME_SHOW_CORE && flameCore){
+          const coreScale = 1 + (Math.sin(elapsed * 0.0032) * 0.008);
+          flameCore.setAttribute("r", (radius * coreScale).toFixed(2));
+          flameCore.setAttribute("opacity", (0.92 + (Math.sin(elapsed * 0.0045) * 0.08) * life).toFixed(3));
+        }
+
+        for (let i = 0; i < flameTendrils.length; i++){
+          const t = flameTendrils[i];
+          const motionTime = elapsed * 6;
+          const dirBase = t.ang;
+          const len = Math.max(16, (t.baseLen * t.lenScale));
+          const amp = Math.max(4, t.baseAmp);
+          const widthBase = Math.max(10, t.baseWidth);
+          const tipWidth = Math.max(0.8, widthBase * 0.05);
+          const wigglePhase = motionTime * 0.0086;
+
+          const baseCenter = polarPoint(cx, cy, dirBase, innerR);
+          const fwd = { x: Math.cos(dirBase), y: Math.sin(dirBase) };
+          const nrm = { x: -Math.sin(dirBase), y: Math.cos(dirBase) };
+
+          const samples = 9;
+          const left = [];
+          const right = [];
+
+          for (let s = 0; s < samples; s++){
+            const u = s / (samples - 1);
+            const along = len * u;
+            const envelope = Math.sin(Math.PI * u);
+            const lateral = Math.sin((u * Math.PI * 2) + wigglePhase) * amp * envelope * t.lateralFlip;
+            const taper = Math.pow(1 - u, 1.85);
+            const bloat = Math.sin(Math.PI * u) * (1 - (u * 0.35));
+            const width = tipWidth
+              + ((widthBase - tipWidth) * taper)
+              + (widthBase * 0.12 * bloat);
+            const c = toWorld(baseCenter, fwd, nrm, along, lateral);
+            left.push(toWorld(c, fwd, nrm, 0, width * 0.5));
+            right.push(toWorld(c, fwd, nrm, 0, -width * 0.5));
+          }
+
+          const baseHalf = widthBase * 0.5;
+          const aEdge = Math.min(0.55, Math.asin(Math.min(0.999, baseHalf / Math.max(1, innerR))));
+          const leftBase = polarPoint(cx, cy, dirBase + aEdge, innerR);
+          const rightBase = polarPoint(cx, cy, dirBase - aEdge, innerR);
+          left[0] = leftBase;
+          right[0] = rightBase;
+
+          const leftD = smoothQuadPath(left);
+          const rightBack = right.slice().reverse();
+          const rightD = smoothQuadPath(rightBack).replace(/^M [^QTLCAZ]+/, "");
+          const d = [
+            leftD,
+            rightD,
+            `A ${innerR.toFixed(4)} ${innerR.toFixed(4)} 0 0 1 ${leftBase.x.toFixed(4)} ${leftBase.y.toFixed(4)}`,
+            "Z",
+          ].join(" ");
+
+          t.path.setAttribute("d", d);
+          t.path.setAttribute("opacity", (0.70 + (0.30 * life)).toFixed(3));
+        }
+      }
+
+      function tick(now){
+        const elapsed = now - start;
+        renderFrame(elapsed);
+        if (elapsed >= cfg.durationMs){
+          clearFlame();
+          return;
+        }
+        flameRAF = requestAnimationFrame(tick);
+      }
+
+      flameRAF = requestAnimationFrame(tick);
+    }
+
+    // =========================================================================
+    // Electric AOE (ported from VFX lab)
+    // =========================================================================
+    let electricRAF = 0;
+    let electricCanvas = null;
+    let electricCtx = null;
+    let electricParticles = [];
+    let electricNodes = [];
+    let electricConfig = null;
+    let electricEndAt = 0;
+
+    function electricDistSq(x1, y1, x2, y2){
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      return (dx * dx) + (dy * dy);
+    }
+
+    function clearElectric(){
+      if (electricRAF) cancelAnimationFrame(electricRAF);
+      electricRAF = 0;
+      electricParticles = [];
+      electricNodes = [];
+      electricConfig = null;
+      electricEndAt = 0;
+      electricCtx = null;
+      if (electricCanvas && electricCanvas.parentNode){
+        electricCanvas.parentNode.removeChild(electricCanvas);
+      }
+      electricCanvas = null;
+    }
+
+    function buildElectricCanvas(cfg){
+      const size = evenPx((cfg.endR * 2) + 24, 2, 4096);
+      const canvas = document.createElement("canvas");
+      canvas.className = "electricCanvas";
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      electricCanvas = canvas;
+      electricCtx = ctx;
+      electricConfig = {
+        size,
+        cx: size * 0.5,
+        cy: size * 0.5,
+        startR: cfg.startR,
+        endR: cfg.endR,
+        durationMs: cfg.durationMs,
+        maxBoltJumpSq: cfg.maxBoltJumpSq,
+        particleCount: cfg.particleCount,
+        nodeCount: cfg.nodeCount,
+        particleSpeed: cfg.particleSpeed,
+        startJitterRatio: cfg.startJitterRatio,
+      };
+    }
+
+    function initElectricParticles(){
+      const cfg = electricConfig;
+      electricParticles = [];
+      for (let i = 0; i < cfg.particleCount; i++){
+        const a = rand(0, Math.PI * 2);
+        const u = Math.random();
+        const r = Math.sqrt((u * ((cfg.endR * cfg.endR) - (cfg.startR * cfg.startR))) + (cfg.startR * cfg.startR));
+        const x = cfg.cx + (Math.cos(a) * r);
+        const y = cfg.cy + (Math.sin(a) * r);
+        const vA = rand(0, Math.PI * 2);
+        electricParticles.push({
+          x, y,
+          vx: Math.cos(vA) * cfg.particleSpeed,
+          vy: Math.sin(vA) * cfg.particleSpeed,
+        });
+      }
+    }
+
+    function initElectricNodes(){
+      const cfg = electricConfig;
+      electricNodes = [];
+      for (let i = 0; i < cfg.nodeCount; i++){
+        const angle = rand(0, Math.PI * 2);
+        const startJitterPx = rand(-(cfg.startR * cfg.startJitterRatio), (cfg.startR * cfg.startJitterRatio));
+        const emitR = clamp(cfg.startR + startJitterPx, 2, cfg.endR - 2);
+        electricNodes.push({
+          angle,
+          spin: rand(-0.06, 0.06),
+          startJitterPx,
+          emitR,
+          x: cfg.cx + (Math.cos(angle) * emitR),
+          y: cfg.cy + (Math.sin(angle) * emitR),
+        });
+      }
+    }
+
+    function updateElectricNodes(){
+      const cfg = electricConfig;
+      for (let i = 0; i < electricNodes.length; i++){
+        const n = electricNodes[i];
+        n.emitR = clamp(cfg.startR + n.startJitterPx, 2, cfg.endR - 2);
+        n.x = cfg.cx + (Math.cos(n.angle) * n.emitR);
+        n.y = cfg.cy + (Math.sin(n.angle) * n.emitR);
+        n.angle += n.spin;
+        n.spin += rand(-0.004, 0.004);
+        n.spin = clamp(n.spin, -0.1, 0.1);
+      }
+    }
+
+    function updateElectricParticles(){
+      const cfg = electricConfig;
+      for (let i = 0; i < electricParticles.length; i++){
+        const p = electricParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        const dx = p.x - cfg.cx;
+        const dy = p.y - cfg.cy;
+        const d = Math.sqrt((dx * dx) + (dy * dy)) || 1;
+        if (d > cfg.endR || d < cfg.startR){
+          p.vx *= -1;
+          p.vy *= -1;
+          const clampedR = clamp(d, cfg.startR + 0.5, cfg.endR - 0.5);
+          p.x = cfg.cx + ((dx / d) * clampedR);
+          p.y = cfg.cy + ((dy / d) * clampedR);
+        }
+      }
+    }
+
+    function drawElectricBolt(node){
+      const cfg = electricConfig;
+      const ctx = electricCtx;
+      let px = node.x;
+      let py = node.y;
+      let oldPx = px;
+      let oldPy = py;
+      let lastEdgeDist = node.emitR;
+
+      for (let hops = 0; hops < 18; hops++){
+        let found = false;
+        let lowestDistSq = Number.POSITIVE_INFINITY;
+        let next = null;
+        let nextEdgeDist = 0;
+
+        for (let i = 0; i < electricParticles.length; i++){
+          const p = electricParticles[i];
+          const distSq = electricDistSq(px, py, p.x, p.y);
+          if (distSq >= lowestDistSq) continue;
+          if (distSq > cfg.maxBoltJumpSq || distSq < 20) continue;
+
+          const cdx = p.x - cfg.cx;
+          const cdy = p.y - cfg.cy;
+          const edgeDist = Math.sqrt((cdx * cdx) + (cdy * cdy));
+          if (edgeDist <= lastEdgeDist) continue;
+          if (edgeDist > cfg.endR) continue;
+
+          lowestDistSq = distSq;
+          next = p;
+          nextEdgeDist = edgeDist;
+          found = true;
+        }
+
+        if (!found || !next) break;
+        px = next.x;
+        py = next.y;
+        lastEdgeDist = nextEdgeDist;
+
+        const xc = (oldPx + px) * 0.5;
+        const yc = (oldPy + py) * 0.5;
+        ctx.quadraticCurveTo(oldPx, oldPy, xc, yc);
+        oldPx = px;
+        oldPy = py;
+      }
+    }
+
+    function drawElectricFrame(){
+      const cfg = electricConfig;
+      const ctx = electricCtx;
+      ctx.clearRect(0, 0, cfg.size, cfg.size);
+
+      const ring = ctx.createRadialGradient(cfg.cx, cfg.cy, cfg.startR, cfg.cx, cfg.cy, cfg.endR);
+      ring.addColorStop(0, "rgba(255, 250, 180, 0.82)");
+      ring.addColorStop(0.6, "rgba(255, 235, 95, 0.55)");
+      ring.addColorStop(1, "rgba(255, 220, 64, 0.12)");
+      ctx.strokeStyle = ring;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "rgba(255, 225, 90, 1)";
+      ctx.shadowBlur = 30;
+
+      ctx.beginPath();
+      for (let i = 0; i < electricNodes.length; i++){
+        const n = electricNodes[i];
+        ctx.moveTo(n.x, n.y);
+        drawElectricBolt(n);
+      }
+      ctx.stroke();
+      ctx.closePath();
+      ctx.shadowBlur = 0;
+    }
+
+    function tickElectric(now){
+      updateElectricNodes();
+      updateElectricParticles();
+      drawElectricFrame();
+      if (now >= electricEndAt){
+        clearElectric();
+        return;
+      }
+      electricRAF = requestAnimationFrame(tickElectric);
+    }
+
+    function playElectricAoe(){
+      if (!els.electricLayer) return;
+      clearElectric();
+
+      const cfg = {
+        startR: Math.round(clamp(VFX_DEFAULTS.electric.startR, 2, 500)),
+        endR: Math.round(clamp(VFX_DEFAULTS.electric.endR, 8, 1000)),
+        durationMs: Math.max(200, Number(VFX_DEFAULTS.electric.durationMs) || 10000),
+        nodeCount: Math.max(1, Math.round(Number(VFX_DEFAULTS.electric.nodeCount) || 13)),
+        particleCount: Math.max(50, Math.round(Number(VFX_DEFAULTS.electric.particleCount) || 340)),
+        particleSpeed: Math.max(0.05, Number(VFX_DEFAULTS.electric.particleSpeed) || 0.62),
+        maxBoltJumpSq: Math.max(100, Number(VFX_DEFAULTS.electric.maxBoltJumpSq) || 1200),
+        startJitterRatio: clamp(Number(VFX_DEFAULTS.electric.startJitterRatio) || 0.30, 0, 1),
+      };
+      if (cfg.endR <= cfg.startR + 4) cfg.endR = cfg.startR + 4;
+
+      buildElectricCanvas(cfg);
+      initElectricParticles();
+      initElectricNodes();
+      els.electricLayer.appendChild(electricCanvas);
+
+      electricEndAt = performance.now() + electricConfig.durationMs;
+      electricRAF = requestAnimationFrame(tickElectric);
     }
 
     // =========================================================================
@@ -1749,6 +2211,7 @@
         });
         eventBus.on("voice.spell_cast", (p = {}) => {
           const intent = String(p.intent || "");
+          const spellId = String(p.spellId || "").toLowerCase();
           if (intent === "spell.school_shield") {
             activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
             return;
@@ -1757,6 +2220,10 @@
             teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
             grantFloatGrace(DOMUS_FLOAT_GRACE_MS);
             return;
+          }
+          if (intent === "spell.school_aoe") {
+            if (spellId === "electrum_rota") playElectricAoe();
+            if (spellId === "ignis_rota") playFlameAoe();
           }
           const graceMs = Number(p && p.floatGraceMs);
           grantFloatGrace(Number.isFinite(graceMs) ? graceMs : FLOAT_GRACE_DEFAULT_MS);
@@ -2345,6 +2812,8 @@
       allDirLampOff();
 
       clearShock();
+      clearFlame();
+      clearElectric();
       if (sanctusShieldTO) {
         clearTimeout(sanctusShieldTO);
         sanctusShieldTO = 0;
