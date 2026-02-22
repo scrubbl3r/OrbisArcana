@@ -498,8 +498,11 @@
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
-    import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js";
-    import { ELECTRIC_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-default.js";
+    import {
+      SHOCKWAVE_PRESET_DEFAULT,
+      FLAME_AOE_PRESET_DEFAULT,
+      ELECTRIC_AOE_PRESET_DEFAULT
+    } from "../../src/vfx/presets/index.js";
 
     const $ = (id) => document.getElementById(id);
 
@@ -587,6 +590,14 @@
       }
       if (theme.shockwave && els.stroke && theme.shockwave.strokeWidthPx != null) {
         els.stroke.value = String(evenPx(theme.shockwave.strokeWidthPx, 2, 20));
+      }
+      if (SHOCKWAVE_PRESET_DEFAULT) {
+        if (els.startR) els.startR.value = String(Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT.startR, 1, 1000)));
+        if (els.endR) els.endR.value = String(Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT.endR, 1, 1000)));
+        if (els.rings) els.rings.value = String(Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT.rings, 1, 6)));
+        if (els.spawn) els.spawn.value = String(Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT.spawnMs, 1, 700)));
+        if (els.decay) els.decay.value = String(Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT.decayMs, 40, 2000)));
+        if (els.stroke) els.stroke.value = String(evenPx(SHOCKWAVE_PRESET_DEFAULT.stroke, 2, 20));
       }
       if (theme.flameAoe && theme.flameAoe.stroke && theme.flameAoe.fill) {
         // CSS variables are applied via applyThemeCssVars(theme); no lab controls for these yet.
@@ -786,7 +797,11 @@
     // =========================================================================
     // Shockwave (spawned rings; plain circles)
     // =========================================================================
-    const SHOCK = { endRadiusPx:169, spawnRateMs:105, decayMs:150 };
+    const SHOCK = {
+      endRadiusPx: Number(SHOCKWAVE_PRESET_DEFAULT.endR) || 169,
+      spawnRateMs: Number(SHOCKWAVE_PRESET_DEFAULT.spawnMs) || 105,
+      decayMs: Number(SHOCKWAVE_PRESET_DEFAULT.decayMs) || 150
+    };
 
     let shockRAF = 0;
     let shockSvg = null;
