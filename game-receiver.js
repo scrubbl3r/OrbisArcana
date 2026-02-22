@@ -1936,6 +1936,7 @@
     let worldSystem = null;
     let orbFxSystem = null;
     let resourcesSystem = null;
+    let inputSystem = null;
     let runtimeSpellIndex = Object.create(null);
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
@@ -2184,6 +2185,7 @@
           { createOrbSystem },
           { createFxSystem },
           { createAudioSystem },
+          { createInputSystem },
           { createWorldSystem },
           { createResourcesSystem },
           { createOrbFxSystem },
@@ -2198,6 +2200,7 @@
           import("./src/systems/orb-system.js"),
           import("./src/systems/fx-system.js"),
           import("./src/systems/audio-system.js"),
+          import("./src/systems/input-system.js"),
           import("./src/systems/world-system.js"),
           import("./src/systems/resources-system.js"),
           import("./src/systems/orb-fx-system.js"),
@@ -2222,6 +2225,7 @@
         const orbSystem = createOrbSystem({ gameState, eventBus });
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
+        inputSystem = createInputSystem({ eventBus });
         resourcesSystem = createResourcesSystem({
           eventBus,
           config: {
@@ -2239,6 +2243,7 @@
         });
         fxSystem.start();
         audioSystem.start();
+        inputSystem.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
         voiceRecognitionSystem.start();
@@ -2338,6 +2343,7 @@
           orbSystem,
           fxSystem,
           audioSystem,
+          inputSystem,
           resourcesSystem,
           orbFxSystem,
           spellDispatchSystem,
@@ -2926,6 +2932,7 @@
       resetShakeDetector();
       resetStability();
       resetVariability();
+      if (inputSystem && typeof inputSystem.reset === "function") inputSystem.reset(performance.now());
       resetEnergyBank();
       pendingSd = null;
       pendingSdAt = 0;
@@ -3029,14 +3036,17 @@
       }
 
       const nowMs = performance.now();
-
-      const energyFromPhone   = pick01NewOrOld("energy01", "energy");
-      const groove   = pick01NewOrOld("groove01", "groove");
-      const dynamics = pick01NewOrOld("dynamics01", "orbit01");
-      const smooth   = pick01NewOrOld("smooth01", "smooth");
-      const speed    = pick01NewOrOld("speed01", "speed");
-      const shake    = pick01NewOrOld("shake01", "shake");
-      const locked   = !!d.locked;
+      let frame = null;
+      if (inputSystem && typeof inputSystem.ingest === "function") {
+        frame = inputSystem.ingest(d, nowMs);
+      }
+      const energyFromPhone = frame ? frame.energy01 : pick01NewOrOld("energy01", "energy");
+      const groove = frame ? frame.groove01 : pick01NewOrOld("groove01", "groove");
+      const dynamics = frame ? frame.dynamics01 : pick01NewOrOld("dynamics01", "orbit01");
+      const smooth = frame ? frame.smooth01 : pick01NewOrOld("smooth01", "smooth");
+      const speed = frame ? frame.speed01 : pick01NewOrOld("speed01", "speed");
+      const shake = frame ? frame.shake01 : pick01NewOrOld("shake01", "shake");
+      const locked = frame ? !!frame.locked : !!d.locked;
       
       updateEnergyBankFromPhone(energyFromPhone, nowMs);
 
@@ -3070,10 +3080,13 @@
       els.vEnergy.textContent   = `${ePts}`;
       els.vShake.textContent    = `${Math.max(0, sh).toFixed(2)}`;
 
-      if (!sanctusShieldColorLocked && d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3){
-        const tr = clamp01(d.shieldRGB[0]);
-        const tg = clamp01(d.shieldRGB[1]);
-        const tb = clamp01(d.shieldRGB[2]);
+      const shieldRgb01 = (frame && Array.isArray(frame.shieldRGB) && frame.shieldRGB.length >= 3)
+        ? frame.shieldRGB
+        : (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3 ? d.shieldRGB : null);
+      if (!sanctusShieldColorLocked && shieldRgb01){
+        const tr = clamp01(shieldRgb01[0]);
+        const tg = clamp01(shieldRgb01[1]);
+        const tb = clamp01(shieldRgb01[2]);
         shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
         shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
         shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
@@ -3223,6 +3236,7 @@
         resetShakeDetector();
         resetStability();
         resetVariability();
+        if (inputSystem && typeof inputSystem.reset === "function") inputSystem.reset(performance.now());
         resetEnergyBank();
         await connect({ auto:false });
         openPairModal();
