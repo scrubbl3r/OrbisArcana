@@ -2049,14 +2049,39 @@
       return d;
     }
 
+    function parseRgbLike(colorText){
+      const text = String(colorText || "").trim();
+      // Supports rgb(...) and rgba(...) values used by orb CSS vars.
+      const m = text.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i);
+      if (!m) return null;
+      const r = clamp(Math.round(Number(m[1]) || 0), 0, 255);
+      const g = clamp(Math.round(Number(m[2]) || 0), 0, 255);
+      const b = clamp(Math.round(Number(m[3]) || 0), 0, 255);
+      const a = clamp01(m[4] == null ? 1 : Number(m[4]));
+      return { r, g, b, a };
+    }
+
     function captureCurrentOrbPalette(){
-      const r = Math.round(clamp01(orbStrokeColor.current.r) * 255);
-      const g = Math.round(clamp01(orbStrokeColor.current.g) * 255);
-      const b = Math.round(clamp01(orbStrokeColor.current.b) * 255);
+      const rootStyle = getComputedStyle(document.documentElement);
+      const orbStyle = els.orb ? getComputedStyle(els.orb) : null;
+
+      // Prefer live CSS vars actually being rendered.
+      const strokeFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-stroke-color"));
+      const fillFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-fill"));
+
+      const fallbackR = Math.round(clamp01(orbStrokeColor.current.r) * 255);
+      const fallbackG = Math.round(clamp01(orbStrokeColor.current.g) * 255);
+      const fallbackB = Math.round(clamp01(orbStrokeColor.current.b) * 255);
+      const stroke = strokeFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: 1 };
+      const fill = fillFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: ORB_FILL_ALPHA };
+
+      // If orb opacity is modulated at runtime, preserve that in shard fill alpha snapshot.
+      const orbOpacity = orbStyle ? clamp01(Number(orbStyle.opacity) || 1) : 1;
+
       return {
-        strokeRgb: `rgb(${r},${g},${b})`,
-        fillRgb: `rgb(${r},${g},${b})`,
-        fillAlpha: ORB_FILL_ALPHA,
+        strokeRgb: `rgb(${stroke.r},${stroke.g},${stroke.b})`,
+        fillRgb: `rgb(${fill.r},${fill.g},${fill.b})`,
+        fillAlpha: clamp01(fill.a * orbOpacity),
       };
     }
 
