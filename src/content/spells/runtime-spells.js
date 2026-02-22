@@ -9,7 +9,7 @@ export const RUNTIME_SPELLS = Object.freeze([
     slot: "UD",
     intent: "spell.domus",
     cooldownMs: 800,
-    castActionId: "teleport_domus",
+    castActionId: "domus_teleport",
   },
   {
     id: "ignis_sanctum",
@@ -18,7 +18,7 @@ export const RUNTIME_SPELLS = Object.freeze([
     slot: "UD",
     intent: "spell.school_shield",
     cooldownMs: 1000,
-    castActionId: "shield_sanctus",
+    castActionId: "sanctum_shield",
   },
   {
     id: "fridgis_sanctum",
@@ -27,7 +27,7 @@ export const RUNTIME_SPELLS = Object.freeze([
     slot: "UD",
     intent: "spell.school_shield",
     cooldownMs: 1000,
-    castActionId: "shield_sanctus",
+    castActionId: "sanctum_shield",
   },
   {
     id: "electrum_sanctum",
@@ -36,7 +36,7 @@ export const RUNTIME_SPELLS = Object.freeze([
     slot: "UD",
     intent: "spell.school_shield",
     cooldownMs: 1000,
-    castActionId: "shield_sanctus",
+    castActionId: "sanctum_shield",
   },
   {
     id: "ignis_rota",

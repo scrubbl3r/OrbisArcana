@@ -2097,7 +2097,6 @@
     function executeSpellCastAction(castActionId, context = {}){
       const actionId = String(castActionId || "").toLowerCase();
       const p = context.payload || {};
-      const intent = String(context.intent || p.intent || "");
       let handled = false;
       let grantGrace = true;
       let floatGraceMs = Number(p && p.floatGraceMs);
@@ -2108,21 +2107,11 @@
       } else if (actionId === "aoe_flame") {
         playFlameAoe();
         handled = true;
-      } else if (actionId === "teleport_domus" || actionId === "domus_teleport") {
+      } else if (actionId === "domus_teleport") {
         teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
         floatGraceMs = DOMUS_FLOAT_GRACE_MS;
         handled = true;
-      } else if (actionId === "shield_sanctum" || actionId === "shield_sanctus" || actionId === "sanctum_shield" || actionId === "sanctus_shield") {
-        activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
-        handled = true;
-        grantGrace = false;
-      } else if (!actionId && intent === "spell.domus") {
-        // Temporary compatibility fallback while older runtime spell mappings are phased out.
-        teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
-        floatGraceMs = DOMUS_FLOAT_GRACE_MS;
-        handled = true;
-      } else if (!actionId && intent === "spell.school_shield") {
-        // Temporary compatibility fallback while older runtime spell mappings are phased out.
+      } else if (actionId === "sanctum_shield") {
         activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
         handled = true;
         grantGrace = false;
