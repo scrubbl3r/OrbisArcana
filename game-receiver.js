@@ -1993,6 +1993,7 @@
     let resourcesSystem = null;
     let inputSystem = null;
     let runtimeSpellIndex = Object.create(null);
+    let castActionRegistryIndex = Object.create(null);
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -2151,27 +2152,39 @@
       return def ? String(def.castActionId || "") : "";
     }
 
+    function castActionMetaForId(castActionId){
+      const id = String(castActionId || "").toLowerCase();
+      return castActionRegistryIndex[id] || null;
+    }
+
     function executeSpellCastAction(castActionId, context = {}){
       const actionId = String(castActionId || "").toLowerCase();
       const p = context.payload || {};
+      const meta = castActionMetaForId(actionId);
+      const handlerKey = String(meta && meta.handlerKey || "");
+      const floatGracePolicy = String(meta && meta.floatGracePolicy || "default");
       let handled = false;
       let grantGrace = true;
       let floatGraceMs = Number(p && p.floatGraceMs);
 
-      if (actionId === "aoe_electric") {
+      if (handlerKey === "play_electric_aoe") {
         playElectricAoe();
         handled = true;
-      } else if (actionId === "aoe_flame") {
+      } else if (handlerKey === "play_flame_aoe") {
         playFlameAoe();
         handled = true;
-      } else if (actionId === "domus_teleport") {
+      } else if (handlerKey === "domus_teleport_orb") {
         teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
-        floatGraceMs = DOMUS_FLOAT_GRACE_MS;
         handled = true;
-      } else if (actionId === "sanctum_shield") {
+      } else if (handlerKey === "activate_sanctum_shield") {
         activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
         handled = true;
+      }
+
+      if (floatGracePolicy === "none") {
         grantGrace = false;
+      } else if (floatGracePolicy === "domus") {
+        floatGraceMs = DOMUS_FLOAT_GRACE_MS;
       }
 
       if (grantGrace) {
@@ -2283,6 +2296,7 @@
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
           { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
+          { CAST_ACTION_REGISTRY_BY_ID },
           { RUNTIME_SPELLS_BY_ID },
           { WORLD_ITEMS_V1 },
         ] = await Promise.all([
@@ -2301,6 +2315,7 @@
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
           import("./src/vfx/presets/index.js"),
+          import("./src/content/spells/cast-action-registry.js"),
           import("./src/content/spells/runtime-spells.js"),
           import("./src/content/world-items/default-world-items.js"),
         ]);
@@ -2317,6 +2332,7 @@
           });
         }
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
+        castActionRegistryIndex = CAST_ACTION_REGISTRY_BY_ID || Object.create(null);
 
         const eventBus = createEventBus();
         const gameState = createGameState({
