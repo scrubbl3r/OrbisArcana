@@ -498,6 +498,7 @@
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
+    import { ELECTRIC_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-default.js";
 
     const $ = (id) => document.getElementById(id);
 
@@ -588,6 +589,12 @@
       }
       if (theme.flameAoe && theme.flameAoe.stroke && theme.flameAoe.fill) {
         // CSS variables are applied via applyThemeCssVars(theme); no lab controls for these yet.
+      }
+      if (els.electricStartR && ELECTRIC_AOE_PRESET_DEFAULT) {
+        els.electricStartR.value = String(Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT.startR, 2, 500)));
+      }
+      if (els.electricEndR && ELECTRIC_AOE_PRESET_DEFAULT) {
+        els.electricEndR.value = String(Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT.endR, 8, 1000)));
       }
     }
 
@@ -1183,7 +1190,7 @@
     let electricConfig = null;
     let electricLastNow = 0;
     let electricEndAt = 0;
-    const ELECTRIC_START_JITTER_RATIO = 0.30;
+    const ELECTRIC_START_JITTER_RATIO = Number(ELECTRIC_AOE_PRESET_DEFAULT.startJitterRatio) || 0.30;
 
     function rand(min, max){
       return min + (Math.random() * (max - min));
@@ -1251,11 +1258,11 @@
         cy: size * 0.5,
         startR: cfg.startR,
         endR: cfg.endR,
-        durationMs: 10000,
-        maxBoltJumpSq: 1200,
-        particleCount: 340,
-        nodeCount: 13,
-        particleSpeed: 0.62
+        durationMs: Math.max(200, Number(ELECTRIC_AOE_PRESET_DEFAULT.durationMs) || 10000),
+        maxBoltJumpSq: Math.max(100, Number(ELECTRIC_AOE_PRESET_DEFAULT.maxBoltJumpSq) || 1200),
+        particleCount: Math.max(50, Math.round(Number(ELECTRIC_AOE_PRESET_DEFAULT.particleCount) || 340)),
+        nodeCount: Math.max(1, Math.round(Number(ELECTRIC_AOE_PRESET_DEFAULT.nodeCount) || 13)),
+        particleSpeed: Math.max(0.05, Number(ELECTRIC_AOE_PRESET_DEFAULT.particleSpeed) || 0.62)
       };
     }
 

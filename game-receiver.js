@@ -2282,6 +2282,7 @@
           { createVoiceHudSystem },
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
+          { ELECTRIC_AOE_PRESET_DEFAULT },
           { RUNTIME_SPELLS_BY_ID },
           { WORLD_ITEMS_V1 },
         ] = await Promise.all([
@@ -2299,12 +2300,16 @@
           import("./src/systems/voice-hud-system.js"),
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
+          import("./src/vfx/presets/electric-aoe-default.js"),
           import("./src/content/spells/runtime-spells.js"),
           import("./src/content/world-items/default-world-items.js"),
         ]);
         if (GAME_THEME_DEFAULT) {
           applyThemeCssVars(GAME_THEME_DEFAULT);
           applyRuntimeTheme(GAME_THEME_DEFAULT);
+        }
+        if (ELECTRIC_AOE_PRESET_DEFAULT && VFX_DEFAULTS && VFX_DEFAULTS.electric) {
+          Object.assign(VFX_DEFAULTS.electric, ELECTRIC_AOE_PRESET_DEFAULT);
         }
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
 
