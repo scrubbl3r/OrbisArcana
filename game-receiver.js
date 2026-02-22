@@ -1994,6 +1994,7 @@
     let inputSystem = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
+    let spellActionHandlers = Object.create(null);
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -2157,27 +2158,39 @@
       return castActionRegistryIndex[id] || null;
     }
 
+    function initSpellActionHandlers(){
+      spellActionHandlers = {
+        play_electric_aoe(payload = {}) {
+          void payload;
+          playElectricAoe();
+        },
+        play_flame_aoe(payload = {}) {
+          void payload;
+          playFlameAoe();
+        },
+        domus_teleport_orb(payload = {}) {
+          void payload;
+          teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
+        },
+        activate_sanctum_shield(payload = {}) {
+          activateSanctusShield(payload.axis || "y", SANCTUS_SHIELD_MS);
+        },
+      };
+    }
+
     function executeSpellCastAction(castActionId, context = {}){
       const actionId = String(castActionId || "").toLowerCase();
       const p = context.payload || {};
       const meta = castActionMetaForId(actionId);
       const handlerKey = String(meta && meta.handlerKey || "");
       const floatGracePolicy = String(meta && meta.floatGracePolicy || "default");
+      const handler = spellActionHandlers[handlerKey];
       let handled = false;
       let grantGrace = true;
       let floatGraceMs = Number(p && p.floatGraceMs);
 
-      if (handlerKey === "play_electric_aoe") {
-        playElectricAoe();
-        handled = true;
-      } else if (handlerKey === "play_flame_aoe") {
-        playFlameAoe();
-        handled = true;
-      } else if (handlerKey === "domus_teleport_orb") {
-        teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
-        handled = true;
-      } else if (handlerKey === "activate_sanctum_shield") {
-        activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
+      if (typeof handler === "function") {
+        handler(p);
         handled = true;
       }
 
@@ -2333,6 +2346,7 @@
         }
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
         castActionRegistryIndex = CAST_ACTION_REGISTRY_BY_ID || Object.create(null);
+        initSpellActionHandlers();
 
         const eventBus = createEventBus();
         const gameState = createGameState({
