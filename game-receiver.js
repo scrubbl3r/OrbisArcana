@@ -1327,10 +1327,6 @@
     const FLAT_SPIN_GATE_REFRESH_MS = 1100;
     const FLAT_SPIN_MIN_SPEED01 = 0.02;
 
-    let shakeCooldownUntil = 0;
-    let shakeArmed = true;
-    let pendingSd = null;
-    let pendingSdAt = 0;
     const flatSpin = {
       active: false,
       axis: "",
@@ -1479,34 +1475,18 @@
       }
     }
 
-    function shakeGroupFromCode(code){
-      const c = String(code || "").trim().toUpperCase();
-      if (c === "U" || c === "D") return "UD";
-      if (c === "L" || c === "R") return "LR";
-      if (c === "F" || c === "B") return "FB";
-      return "";
-    }
-
     function resetShakeDetector(){
-      shakeCooldownUntil = 0;
-      shakeArmed = true;
-      forceShakeLampOff();
-      pendingSd = null;
-      pendingSdAt = 0;
-
-      // ✅ NEW: hard-clear any queued direction timers
-      clearDirLampTimers();
-      allDirLampOff();
+      if (inputGestureSystem && typeof inputGestureSystem.reset === "function") {
+        inputGestureSystem.reset(performance.now());
+      } else {
+        forceShakeLampOff();
+        clearDirLampTimers();
+        allDirLampOff();
+      }
       closeFlatSpinWindow("reset", performance.now());
       flatSpin.lastTs = 0;
       flatSpin.holdMs = 0;
       flatSpin.releaseMs = 0;
-    }
-
-    function resetShakeCachesAfterHit(){
-      // Clear direction cache without killing lamp/cooldown
-      pendingSd = null;
-      pendingSdAt = 0;
     }
 
     function flashDirLampPair(a, b, ms=380){
@@ -1516,58 +1496,13 @@
       flashDirLamp(b, ms);
     }
 
-    function registerShakeHit(nowMs){
-      if (nowMs < shakeCooldownUntil) return;
-
-      if (isDiversityLampLit()){
-        return;
-      }
-
-      if (!canSpendShake()) return;
-
-      spendShake();
-      flashShakeLamp(400);
-      triggerShockwave();
-      let shakeCode = "";
-
-      if (pendingSd && (nowMs - pendingSdAt) <= SD_RECENT_MS) {
-        const code = String(pendingSd || "").trim().toUpperCase();
-        shakeCode = code;
-        if (SHAKE_MODE === 1) {
-          clearDirLampTimers();
-          allDirLampOff();
-        } else if (SHAKE_MODE === 2) {
-          if (code === "U" || code === "D") flashDirLampPair("U", "D", 420);
-          else if (code === "L" || code === "R") flashDirLampPair("L", "R", 420);
-          else if (code === "F" || code === "B") flashDirLampPair("F", "B", 420);
-        } else {
-          flashDirLampSingle(code, 420);
-        }
-      }
-      if (mvp && mvp.eventBus) {
-        mvp.eventBus.emit("input.shake_triggered", {
-          code: shakeCode,
-          group: shakeGroupFromCode(shakeCode),
-          atMs: nowMs,
-        });
-      }
-
-      // Reset shake-related caches after a successful hit (do not kill lamp/cooldown)
-      resetShakeCachesAfterHit();
-      shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
-    }
-
     function processShakeDoubleBang(shakeVal01, nowMs, groove01){
-      const v = Number(shakeVal01);
-      if (!isFinite(v)) return;
-      // Hard gate: only allow shake when groove <= GROOVE_SHAKE_GATE
-      if (Number(groove01) > GROOVE_SHAKE_GATE) return;
-
-      if (nowMs < shakeCooldownUntil) forceShakeLampOff();
-      // Cooldown gate only (meter can still rise during cooldown)
-      if (nowMs < shakeCooldownUntil) return;
-      if (v < SHAKE_LAMP_THR) return;
-      registerShakeHit(nowMs);
+      if (!inputGestureSystem || typeof inputGestureSystem.processShakeSample !== "function") return;
+      inputGestureSystem.processShakeSample({
+        shakeVal01,
+        groove01,
+        atMs: nowMs,
+      });
     }
 
     // =========================================================================
@@ -1992,6 +1927,7 @@
     let orbFxSystem = null;
     let resourcesSystem = null;
     let inputSystem = null;
+    let inputGestureSystem = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
     let spellActionHandlers = Object.create(null);
@@ -2300,6 +2236,7 @@
           { createFxSystem },
           { createAudioSystem },
           { createInputSystem },
+          { createInputGestureSystem },
           { createWorldSystem },
           { createResourcesSystem },
           { createOrbFxSystem },
@@ -2319,6 +2256,7 @@
           import("./src/systems/fx-system.js"),
           import("./src/systems/audio-system.js"),
           import("./src/systems/input-system.js"),
+          import("./src/systems/input-gesture-system.js"),
           import("./src/systems/world-system.js"),
           import("./src/systems/resources-system.js"),
           import("./src/systems/orb-fx-system.js"),
@@ -2362,6 +2300,28 @@
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
         inputSystem = createInputSystem({ eventBus });
+        inputGestureSystem = createInputGestureSystem({
+          eventBus,
+          config: {
+            shakeCooldownMs: SHAKE_COOLDOWN_MS,
+            shakeMode: SHAKE_MODE,
+            grooveShakeGate: GROOVE_SHAKE_GATE,
+            shakeLampThr: SHAKE_LAMP_THR,
+            sdRecentMs: SD_RECENT_MS,
+          },
+          hooks: {
+            canSpendShake,
+            spendShake,
+            isDiversityLampLit,
+            flashShakeLamp,
+            triggerShockwave,
+            forceShakeLampOff,
+            clearDirLampTimers,
+            allDirLampOff,
+            flashDirLampPair,
+            flashDirLampSingle,
+          },
+        });
         resourcesSystem = createResourcesSystem({
           eventBus,
           config: {
@@ -2380,6 +2340,7 @@
         fxSystem.start();
         audioSystem.start();
         inputSystem.start();
+        inputGestureSystem.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
         voiceRecognitionSystem.start();
@@ -2466,6 +2427,7 @@
           fxSystem,
           audioSystem,
           inputSystem,
+          inputGestureSystem,
           resourcesSystem,
           orbFxSystem,
           spellDispatchSystem,
@@ -3056,8 +3018,6 @@
       resetVariability();
       if (inputSystem && typeof inputSystem.reset === "function") inputSystem.reset(performance.now());
       resetEnergyBank();
-      pendingSd = null;
-      pendingSdAt = 0;
 
       physState.lift01 = 0;
       physState.energy01 = 0;
@@ -3189,6 +3149,9 @@
       const sP = Math.round(clamp01(smooth) * 100);
       const sp = Math.round(clamp01(speed) * 100);
       const dP = Math.round(clamp01(dynamics) * 100);
+      const shakeCooldownUntil = (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
+        ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
+        : 0;
       const shakeForUI = (nowMs < shakeCooldownUntil) ? 0 : shake;
       const shakeMeter = (SHAKE_LAMP_THR > 1e-6)
         ? clamp01((Number(shakeForUI) || 0) / SHAKE_LAMP_THR)
@@ -3234,8 +3197,9 @@
 
       // sd is only sent by the phone on shakeHit
       if (d && typeof d.sd === "string" && d.sd.trim()) {
-        pendingSd = d.sd;
-        pendingSdAt = nowMs;
+        if (inputGestureSystem && typeof inputGestureSystem.setPendingDirection === "function") {
+          inputGestureSystem.setPendingDirection(d.sd, nowMs);
+        }
       }
 
       stabilityVisualGate =
