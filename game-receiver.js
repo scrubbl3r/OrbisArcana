@@ -2094,6 +2094,38 @@
       return def ? String(def.castActionId || "") : "";
     }
 
+    function executeSpellCastAction(castActionId, context = {}){
+      const actionId = String(castActionId || "").toLowerCase();
+      const p = context.payload || {};
+      const intent = String(context.intent || p.intent || "");
+      let handled = false;
+      let grantGrace = true;
+      let floatGraceMs = Number(p && p.floatGraceMs);
+
+      if (actionId === "aoe_electric") {
+        playElectricAoe();
+        handled = true;
+      } else if (actionId === "aoe_flame") {
+        playFlameAoe();
+        handled = true;
+      } else if (actionId === "domus_teleport" || intent === "spell.domus") {
+        teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
+        floatGraceMs = DOMUS_FLOAT_GRACE_MS;
+        handled = true;
+      } else if (actionId === "sanctum_shield" || actionId === "sanctus_shield" || intent === "spell.school_shield") {
+        activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
+        handled = true;
+        grantGrace = false;
+      }
+
+      if (grantGrace) {
+        if (!Number.isFinite(floatGraceMs)) floatGraceMs = FLOAT_GRACE_DEFAULT_MS;
+        grantFloatGrace(floatGraceMs);
+      }
+
+      return { handled, floatGraceMs, grantGrace };
+    }
+
     function parseRgbLike(colorText){
       const text = String(colorText || "").trim();
       // Supports rgb(...) and rgba(...) values used by orb CSS vars.
@@ -2315,21 +2347,7 @@
           const intent = String(p.intent || "");
           const spellId = String(p.spellId || "").toLowerCase();
           const castActionId = castActionForSpellId(spellId);
-          if (intent === "spell.school_shield") {
-            activateSanctusShield(p.axis || "y", SANCTUS_SHIELD_MS);
-            return;
-          }
-          if (intent === "spell.domus") {
-            teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
-            grantFloatGrace(DOMUS_FLOAT_GRACE_MS);
-            return;
-          }
-          if (intent === "spell.school_aoe") {
-            if (castActionId === "aoe_electric") playElectricAoe();
-            if (castActionId === "aoe_flame") playFlameAoe();
-          }
-          const graceMs = Number(p && p.floatGraceMs);
-          grantFloatGrace(Number.isFinite(graceMs) ? graceMs : FLOAT_GRACE_DEFAULT_MS);
+          executeSpellCastAction(castActionId, { payload: p, intent });
         });
         eventBus.on("orb.float_grace_grant", (p = {}) => {
           grantFloatGrace(p.ms);
