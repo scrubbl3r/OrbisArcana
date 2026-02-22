@@ -2282,7 +2282,7 @@
           { createVoiceHudSystem },
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
-          { SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT },
+          { SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
           { RUNTIME_SPELLS_BY_ID },
           { WORLD_ITEMS_V1 },
         ] = await Promise.all([
@@ -2308,14 +2308,12 @@
           applyThemeCssVars(GAME_THEME_DEFAULT);
           applyRuntimeTheme(GAME_THEME_DEFAULT);
         }
-        if (SHOCKWAVE_PRESET_DEFAULT && VFX_DEFAULTS && VFX_DEFAULTS.shock) {
-          Object.assign(VFX_DEFAULTS.shock, SHOCKWAVE_PRESET_DEFAULT);
-        }
-        if (FLAME_AOE_PRESET_DEFAULT && VFX_DEFAULTS && VFX_DEFAULTS.flame) {
-          Object.assign(VFX_DEFAULTS.flame, FLAME_AOE_PRESET_DEFAULT);
-        }
-        if (ELECTRIC_AOE_PRESET_DEFAULT && VFX_DEFAULTS && VFX_DEFAULTS.electric) {
-          Object.assign(VFX_DEFAULTS.electric, ELECTRIC_AOE_PRESET_DEFAULT);
+        if (typeof hydrateReceiverVfxDefaults === "function") {
+          hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
+            shockwave: SHOCKWAVE_PRESET_DEFAULT,
+            flameAoe: FLAME_AOE_PRESET_DEFAULT,
+            electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
+          });
         }
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
 
