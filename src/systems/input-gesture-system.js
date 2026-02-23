@@ -1,3 +1,12 @@
+import {
+  EVT_INPUT_SHAKE_TRIGGERED,
+  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
+  EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
+  EVT_VOICE_SET_MODE,
+  EVT_VOICE_OPEN_GATE,
+  EVT_VOICE_CLOSE_GATE,
+} from "../contracts/events.js";
+
 export function createInputGestureSystem({
   eventBus,
   nowMs = () => Date.now(),
@@ -123,7 +132,7 @@ export function createInputGestureSystem({
     }
 
     if (eventBus && typeof eventBus.emit === "function") {
-      eventBus.emit("input.shake_triggered", {
+      eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, {
         code: shakeCode,
         group: shakeGroupFromCode(shakeCode),
         atMs: now,
@@ -179,9 +188,9 @@ export function createInputGestureSystem({
     fs.lastGateRefreshMs = atMs;
     if (typeof hooks.setOrbStrokeColorByAxis === "function") hooks.setOrbStrokeColorByAxis(axis);
     if (eventBus && typeof eventBus.emit === "function") {
-      eventBus.emit("spell_window.flat_spin_opened", { axis, atMs });
-      eventBus.emit("voice.set_mode", { mode: "gated_window" });
-      eventBus.emit("voice.open_gate", { reason: `flat_spin_${axis}`, timeoutMs: 4500 });
+      eventBus.emit(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, { axis, atMs });
+      eventBus.emit(EVT_VOICE_SET_MODE, { mode: "gated_window" });
+      eventBus.emit(EVT_VOICE_OPEN_GATE, { reason: `flat_spin_${axis}`, timeoutMs: 4500 });
     }
   }
 
@@ -196,9 +205,9 @@ export function createInputGestureSystem({
     fs.lastGateRefreshMs = 0;
     if (typeof hooks.resetOrbStrokeColor === "function") hooks.resetOrbStrokeColor();
     if (eventBus && typeof eventBus.emit === "function") {
-      eventBus.emit("spell_window.flat_spin_closed", { axis, reason, atMs });
-      eventBus.emit("voice.close_gate", { reason: `flat_spin_${reason}` });
-      eventBus.emit("voice.set_mode", { mode: "wake_token_open_world" });
+      eventBus.emit(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, { axis, reason, atMs });
+      eventBus.emit(EVT_VOICE_CLOSE_GATE, { reason: `flat_spin_${reason}` });
+      eventBus.emit(EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
     }
   }
 
@@ -235,7 +244,7 @@ export function createInputGestureSystem({
         if ((now - fs.lastGateRefreshMs) >= cfg.flatSpinGateRefreshMs) {
           fs.lastGateRefreshMs = now;
           if (eventBus && typeof eventBus.emit === "function") {
-            eventBus.emit("voice.open_gate", {
+            eventBus.emit(EVT_VOICE_OPEN_GATE, {
               reason: `flat_spin_keepalive_${fs.axis}`,
               timeoutMs: 4500,
             });

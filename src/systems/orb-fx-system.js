@@ -1,3 +1,11 @@
+import {
+  EVT_PICKUP_COLLECTED,
+  EVT_VOICE_SPELL_LOADED,
+  EVT_VOICE_SPELL_CAST,
+  EVT_ORB_DIED,
+  EVT_ORB_REVIVED,
+} from "../contracts/events.js";
+
 export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScreenY, orbRadiusPx, getAxisColor01 }) {
   if (!eventBus || typeof eventBus.on !== 'function') {
     throw new Error('createOrbFxSystem requires eventBus.on');
@@ -421,10 +429,10 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
   }
 
   function start() {
-    unsub.push(eventBus.on('pickup.collected', () => {
+    unsub.push(eventBus.on(EVT_PICKUP_COLLECTED, () => {
       spawnInnerGlobe();
     }));
-    unsub.push(eventBus.on("voice.spell_loaded", (payload = {}) => {
+    unsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       const axis = String(payload.axis || "").toLowerCase();
       const slot = String(payload.slot || "").toUpperCase();
       if (!axis || !slot) return;
@@ -436,18 +444,18 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
         spellId: String(payload.spellId || ""),
       });
     }));
-    unsub.push(eventBus.on("voice.spell_cast", (payload = {}) => {
+    unsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
       if (String(payload.trigger || "") !== "shake_detonation") return;
       consumeOrbitingGlobe({
         axis: String(payload.axis || "").toLowerCase(),
         slot: String(payload.slot || "").toUpperCase(),
       });
     }));
-    unsub.push(eventBus.on('orb.died', () => {
+    unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       releaseInnerGlobesAtDeath(performance.now());
       clearOrbitingGlobes();
     }));
-    unsub.push(eventBus.on('orb.revived', () => {
+    unsub.push(eventBus.on(EVT_ORB_REVIVED, () => {
       reset();
     }));
   }

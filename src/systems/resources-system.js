@@ -1,3 +1,13 @@
+import {
+  EVT_RESOURCES_ENERGY_BANK_CHANGED,
+  EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
+  EVT_RESOURCES_SHAKE_SPENT,
+  EVT_RESOURCES_GLOBE_SPENT,
+  EVT_PICKUP_COLLECTED,
+  EVT_ORB_DIED,
+  EVT_ORB_REVIVED,
+} from "../contracts/events.js";
+
 export function createResourcesSystem({
   eventBus,
   nowMs = () => Date.now(),
@@ -23,7 +33,7 @@ export function createResourcesSystem({
   }
 
   function emitEnergyChanged(atMs) {
-    eventBus.emit("energy.bank_changed", {
+    eventBus.emit(EVT_RESOURCES_ENERGY_BANK_CHANGED, {
       bankPts: state.energyBankPts,
       capPts: energyBankCap,
       atMs: Number(atMs) || nowMs(),
@@ -31,7 +41,7 @@ export function createResourcesSystem({
   }
 
   function emitGlobeInventoryChanged(atMs) {
-    eventBus.emit("energy.globe_inventory_changed", {
+    eventBus.emit(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, {
       stored: state.storedGlobes,
       atMs: Number(atMs) || nowMs(),
     });
@@ -85,7 +95,7 @@ export function createResourcesSystem({
     const now = Number(atMs) || nowMs();
     state.energyBankPts = clamp(state.energyBankPts - energyShakeCost, 0, energyBankCap);
     emitEnergyChanged(now);
-    eventBus.emit("energy.shake_spent", {
+    eventBus.emit(EVT_RESOURCES_SHAKE_SPENT, {
       costPts: energyShakeCost,
       bankPts: state.energyBankPts,
       capPts: energyBankCap,
@@ -126,7 +136,7 @@ export function createResourcesSystem({
     if (state.storedGlobes <= 0) return { ok: false, stored: 0 };
     const atMs = Number(payload.atMs) || nowMs();
     state.storedGlobes = Math.max(0, state.storedGlobes - 1);
-    eventBus.emit("energy.globe_spent", {
+    eventBus.emit(EVT_RESOURCES_GLOBE_SPENT, {
       reason: String(payload.reason || "unknown"),
       spellId: payload.spellId ? String(payload.spellId) : undefined,
       axis: payload.axis ? String(payload.axis) : undefined,
@@ -139,14 +149,14 @@ export function createResourcesSystem({
   }
 
   function start() {
-    unsub.push(eventBus.on("pickup.collected", (payload = {}) => {
+    unsub.push(eventBus.on(EVT_PICKUP_COLLECTED, (payload = {}) => {
       if (String(payload.type || "") !== "energy_globe") return;
       addStoredGlobe({ atMs: payload.atMs });
     }));
-    unsub.push(eventBus.on("orb.died", () => {
+    unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       resetGlobes();
     }));
-    unsub.push(eventBus.on("orb.revived", () => {
+    unsub.push(eventBus.on(EVT_ORB_REVIVED, () => {
       resetGlobes();
     }));
   }

@@ -1,3 +1,8 @@
+import {
+  EVT_PICKUP_COLLECTED,
+  EVT_VOICE_SPELL_CAST,
+} from "../contracts/events.js";
+
 export function createWorldSystem({
   eventBus,
   stageEl,
@@ -139,7 +144,7 @@ export function createWorldSystem({
     p.fadeInMs = 0;
     p.fadeInStartMs = 0;
     render(nowMs);
-    eventBus.emit("pickup.collected", {
+    eventBus.emit(EVT_PICKUP_COLLECTED, {
       id: p.id,
       type: "energy_globe",
       atMs: Number(nowMs) || performance.now(),
@@ -234,7 +239,7 @@ export function createWorldSystem({
   }
 
   if (eventBus && typeof eventBus.on === "function") {
-    eventBus.on("voice.spell_cast", (payload = {}) => {
+    eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
       if (String(payload.trigger || "") !== "shake_detonation") return;
       respawnInactiveWithFade(clockNowMs(), PICKUP_RESPAWN_FADE_MS);
     });

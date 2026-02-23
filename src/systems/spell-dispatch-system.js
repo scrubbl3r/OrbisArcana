@@ -1,4 +1,16 @@
 import { SPELLS_BY_ID } from "../voice/spellbook.js";
+import {
+  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
+  EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
+  EVT_ORB_DIED,
+  EVT_ORB_REVIVED,
+  EVT_VOICE_SPELL_DETECTED,
+  EVT_VOICE_SPELL_REJECTED,
+  EVT_VOICE_SCHOOL_SELECTED,
+  EVT_VOICE_SPELL_LOADED,
+  EVT_VOICE_SPELL_CAST,
+  EVT_INPUT_SHAKE_TRIGGERED,
+} from "../contracts/events.js";
 
 // `resources` is an optional injected domain API.
 // Expected methods (subset used here):
@@ -120,23 +132,23 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   }
 
   function start() {
-    unsub.push(eventBus.on("spell_window.flat_spin_opened", (payload = {}) => {
+    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (payload = {}) => {
       const axis = normAxis(payload.axis);
       activeFlatSpinAxis = axis || null;
     }));
 
-    unsub.push(eventBus.on("spell_window.flat_spin_closed", () => {
+    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
       activeFlatSpinAxis = null;
     }));
 
-    unsub.push(eventBus.on("orb.died", () => {
+    unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       reset();
     }));
-    unsub.push(eventBus.on("orb.revived", () => {
+    unsub.push(eventBus.on(EVT_ORB_REVIVED, () => {
       reset();
     }));
 
-    unsub.push(eventBus.on("voice.spell_detected", (payload = {}) => {
+    unsub.push(eventBus.on(EVT_VOICE_SPELL_DETECTED, (payload = {}) => {
       const spell = payload.spell || {};
       const rawSpellId = String(spell.id || "");
       const spellIntent = String(spell.intent || "");
@@ -144,7 +156,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const spellClass = String(spell.classKey || "").toLowerCase();
       const spellId = rawSpellId;
       if (!spellId) {
-        eventBus.emit("voice.spell_rejected", {
+        eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "invalid_spell",
           atMs: nowMs(),
         });
@@ -158,7 +170,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       if (isFlatSpinLoadWindow) {
         if (spellIntent === "spell.school_select") {
           if (!axisAllowedForSpell(spell, axis)) {
-            eventBus.emit("voice.spell_rejected", {
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "spell_axis_not_allowed",
               spellId,
               axis,
@@ -168,7 +180,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             return;
           }
           selectedSchoolByAxis[axis] = spellSchool;
-          eventBus.emit("voice.school_selected", {
+          eventBus.emit(EVT_VOICE_SCHOOL_SELECTED, {
             axis,
             school: spellSchool,
             spellId,
@@ -180,7 +192,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         let concreteSpell = spell;
         if (spellIntent === "spell.class_select") {
           if (!selectedSchoolByAxis[axis]) {
-            eventBus.emit("voice.spell_rejected", {
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "no_school_selected",
               spellId,
               classKey: spellClass,
@@ -191,7 +203,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           }
           concreteSpell = resolveConcreteSpellForAxis(spell, axis);
           if (!concreteSpell || !concreteSpell.id) {
-            eventBus.emit("voice.spell_rejected", {
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "school_class_resolution_failed",
               spellId,
               classKey: spellClass,
@@ -207,7 +219,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
 
         const storedGlobes = getStoredGlobeCount();
         if (storedGlobes <= 0) {
-          eventBus.emit("voice.spell_rejected", {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "no_stored_globes",
             spellId: String(concreteSpell.id || spellId),
             axis,
@@ -216,7 +228,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           return;
         }
         if (!axisAllowedForSpell(concreteSpell, axis)) {
-          eventBus.emit("voice.spell_rejected", {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "spell_axis_not_allowed",
             spellId: String(concreteSpell.id || spellId),
             axis,
@@ -239,7 +251,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           atMs: now,
         });
         if (!spendResult || spendResult.ok !== true) {
-          eventBus.emit("voice.spell_rejected", {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "no_stored_globes",
             spellId: String(concreteSpell.id || spellId),
             axis,
@@ -255,7 +267,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
         };
-        eventBus.emit("voice.spell_loaded", {
+        eventBus.emit(EVT_VOICE_SPELL_LOADED, {
           spellId: String(concreteSpell.id || ""),
           intent: concreteSpell.intent,
           phrase: concreteSpell.phrase,
@@ -269,7 +281,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
 
       const castCheck = canCastSpellNow(spell, now);
       if (!castCheck.ok) {
-        eventBus.emit("voice.spell_rejected", {
+        eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "cooldown",
           spellId,
           cooldownMs: castCheck.cooldownMs,
@@ -279,7 +291,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         return;
       }
       lastCastBySpellId.set(spellId, now);
-      eventBus.emit("voice.spell_cast", {
+      eventBus.emit(EVT_VOICE_SPELL_CAST, {
         spellId,
         intent: spell.intent,
         phrase: spell.phrase,
@@ -289,7 +301,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       });
     }));
 
-    unsub.push(eventBus.on("input.shake_triggered", (payload = {}) => {
+    unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
       const group = normGroup(payload.group);
       if (!group) return;
       const now = nowMs();
@@ -309,7 +321,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       };
       const castCheck = canCastSpellNow(spell, now);
       if (!castCheck.ok) {
-        eventBus.emit("voice.spell_rejected", {
+        eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "cooldown",
           spellId: loaded.spellId,
           cooldownMs: castCheck.cooldownMs,
@@ -321,7 +333,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
 
       loadedByAxis[loaded.axis][loaded.slot] = null;
       lastCastBySpellId.set(loaded.spellId, now);
-      eventBus.emit("voice.spell_cast", {
+      eventBus.emit(EVT_VOICE_SPELL_CAST, {
         spellId: loaded.spellId,
         intent: loaded.intent,
         phrase: loaded.phrase,

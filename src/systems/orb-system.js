@@ -1,3 +1,16 @@
+import {
+  EVT_ORB_VISUAL_STATE_CHANGED,
+  EVT_ORB_IMPACT_DETECTED,
+  EVT_ORB_DAMAGE_BLOCKED,
+  EVT_ORB_DAMAGE_APPLIED,
+  EVT_ORB_HEALTH_CHANGED,
+  EVT_ORB_DIED,
+  EVT_ORB_SHATTER_STARTED,
+  EVT_ORB_HEAL_BLOCKED,
+  EVT_ORB_HEALED,
+  EVT_ORB_REVIVED,
+} from "../contracts/events.js";
+
 export function createOrbSystem({ gameState, eventBus }) {
   if (!gameState || !gameState.orb) throw new Error('createOrbSystem requires gameState.orb');
   if (!eventBus || typeof eventBus.emit !== 'function') throw new Error('createOrbSystem requires eventBus.emit');
@@ -25,7 +38,7 @@ export function createOrbSystem({ gameState, eventBus }) {
     const next = visualFromHealth(orb.health);
     if (prev === next) return;
     orb.visualState = next;
-    eventBus.emit('orb.visual_state_changed', {
+    eventBus.emit(EVT_ORB_VISUAL_STATE_CHANGED, {
       from: prev,
       to: next,
       health: orb.health,
@@ -58,20 +71,20 @@ export function createOrbSystem({ gameState, eventBus }) {
     const threshold = resolveThreshold(command);
     const source = command.source || 'unknown';
 
-    eventBus.emit('orb.impact_detected', { impact, threshold, source, atMs });
+    eventBus.emit(EVT_ORB_IMPACT_DETECTED, { impact, threshold, source, atMs });
 
     if (!orb.alive) {
-      eventBus.emit('orb.damage_blocked', { reason: 'dead', impact, source, atMs });
+      eventBus.emit(EVT_ORB_DAMAGE_BLOCKED, { reason: 'dead', impact, source, atMs });
       return { applied: false, reason: 'dead' };
     }
 
     if ((atMs - Number(orb.lastDamageAtMs || -Infinity)) < Number(orb.collisionCooldownMs || 0)) {
-      eventBus.emit('orb.damage_blocked', { reason: 'cooldown', impact, source, atMs });
+      eventBus.emit(EVT_ORB_DAMAGE_BLOCKED, { reason: 'cooldown', impact, source, atMs });
       return { applied: false, reason: 'cooldown' };
     }
 
     if (impact < threshold) {
-      eventBus.emit('orb.damage_blocked', { reason: 'below_threshold', impact, source, atMs });
+      eventBus.emit(EVT_ORB_DAMAGE_BLOCKED, { reason: 'below_threshold', impact, source, atMs });
       return { applied: false, reason: 'below_threshold' };
     }
 
@@ -91,12 +104,12 @@ export function createOrbSystem({ gameState, eventBus }) {
     const source = command.source || 'unknown';
 
     if (!orb.alive) {
-      eventBus.emit('orb.damage_blocked', { reason: 'dead', amount, source, atMs });
+      eventBus.emit(EVT_ORB_DAMAGE_BLOCKED, { reason: 'dead', amount, source, atMs });
       return { applied: false, reason: 'dead' };
     }
 
     if (amount <= 0) {
-      eventBus.emit('orb.damage_blocked', { reason: 'invalid', amount, source, atMs });
+      eventBus.emit(EVT_ORB_DAMAGE_BLOCKED, { reason: 'invalid', amount, source, atMs });
       return { applied: false, reason: 'invalid' };
     }
 
@@ -106,7 +119,7 @@ export function createOrbSystem({ gameState, eventBus }) {
     orb.lastDamageAtMs = atMs;
     orb.invulnUntilMs = atMs + Number(orb.collisionCooldownMs || 0);
 
-    eventBus.emit('orb.damage_applied', {
+    eventBus.emit(EVT_ORB_DAMAGE_APPLIED, {
       amount,
       healthBefore,
       healthAfter: orb.health,
@@ -117,7 +130,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       atMs,
     });
 
-    eventBus.emit('orb.health_changed', {
+    eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
       from: healthBefore,
       to: orb.health,
       max: orb.maxHealth,
@@ -129,12 +142,12 @@ export function createOrbSystem({ gameState, eventBus }) {
     if (orb.health === 0) {
       orb.alive = false;
       orb.deathAtMs = atMs;
-      eventBus.emit('orb.died', {
+      eventBus.emit(EVT_ORB_DIED, {
         atMs,
         cause: command.cause || 'generic',
         hitsTaken: orb.hitsTaken,
       });
-      eventBus.emit('orb.shatter_started', {
+      eventBus.emit(EVT_ORB_SHATTER_STARTED, {
         atMs,
         pieceCount: command.pieceCount || 12,
         seed: command.seed || ((Math.random() * 1e9) | 0),
@@ -151,12 +164,12 @@ export function createOrbSystem({ gameState, eventBus }) {
     const source = command.source || 'unknown';
 
     if (!orb.alive) {
-      eventBus.emit('orb.heal_blocked', { reason: 'dead', amount, source, atMs });
+      eventBus.emit(EVT_ORB_HEAL_BLOCKED, { reason: 'dead', amount, source, atMs });
       return { applied: false, reason: 'dead' };
     }
 
     if (amount <= 0) {
-      eventBus.emit('orb.heal_blocked', { reason: 'invalid', amount, source, atMs });
+      eventBus.emit(EVT_ORB_HEAL_BLOCKED, { reason: 'invalid', amount, source, atMs });
       return { applied: false, reason: 'invalid' };
     }
 
@@ -166,11 +179,11 @@ export function createOrbSystem({ gameState, eventBus }) {
     const appliedAmount = orb.health - before;
 
     if (appliedAmount <= 0) {
-      eventBus.emit('orb.heal_blocked', { reason: 'full', amount, source, atMs });
+      eventBus.emit(EVT_ORB_HEAL_BLOCKED, { reason: 'full', amount, source, atMs });
       return { applied: false, reason: 'full' };
     }
 
-    eventBus.emit('orb.healed', {
+    eventBus.emit(EVT_ORB_HEALED, {
       amountApplied: appliedAmount,
       healthBefore: before,
       healthAfter: orb.health,
@@ -178,7 +191,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       atMs,
     });
 
-    eventBus.emit('orb.health_changed', {
+    eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
       from: before,
       to: orb.health,
       max: orb.maxHealth,
@@ -202,8 +215,8 @@ export function createOrbSystem({ gameState, eventBus }) {
     orb.invulnUntilMs = 0;
     orb.hitsTaken = 0;
 
-    eventBus.emit('orb.revived', { health: orb.health, atMs });
-    eventBus.emit('orb.health_changed', {
+    eventBus.emit(EVT_ORB_REVIVED, { health: orb.health, atMs });
+    eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
       from: before,
       to: orb.health,
       max: orb.maxHealth,
