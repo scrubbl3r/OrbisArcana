@@ -2908,7 +2908,78 @@
       return { yaw, tilt };
     }
 
-    function applyDataToUI(d){
+    function renderInputHud(vm){
+      if (!vm) return;
+
+      els.vLift.textContent     = `${vm.liftP}%`;
+      els.vGroove.textContent   = `${vm.gP}%${vm.locked ? " (locked)" : ""}`;
+      els.vSmooth.textContent   = `${vm.sP}%`;
+      els.vSpeed.textContent    = `${vm.sp}%`;
+      els.vDynamics.textContent = `${vm.dP}%`;
+      els.vEnergy.textContent   = `${vm.ePts}`;
+      els.vShake.textContent    = `${Math.max(0, vm.sh).toFixed(2)}`;
+
+      if (!sanctusShieldColorLocked && vm.shieldRgb01){
+        const tr = clamp01(vm.shieldRgb01[0]);
+        const tg = clamp01(vm.shieldRgb01[1]);
+        const tb = clamp01(vm.shieldRgb01[2]);
+        shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
+        shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
+        shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
+        setShieldColor01(shieldColor01);
+      }
+
+      setBar(els.bLift,  vm.lift);
+      setBar(els.bGroove, vm.groove);
+      setBar(els.bSmooth, vm.smooth);
+      setBar(els.bSpeed,  vm.speed);
+      setBar(els.bDynamics, vm.dynamics);
+      setBar(els.bEnergy, vm.energyUI01);
+      setBar(els.bShake,  vm.shakeMeter);
+
+      els.vEnergy.classList.toggle("over", vm.over);
+      els.bEnergy.classList.toggle("over", vm.over);
+
+      // Repurposed row: Orb debug readout.
+      updateDebugReadout();
+    }
+
+    function buildInputHudViewModel(processed){
+      if (!processed) return null;
+
+      const shakeCooldownUntil = (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
+        ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
+        : 0;
+      const shakeForUI = (processed.nowMs < shakeCooldownUntil) ? 0 : processed.shake;
+      const shakeLampThr = Number(INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold) || 1.65;
+      const shakeMeter = (shakeLampThr > 1e-6)
+        ? clamp01((Number(shakeForUI) || 0) / shakeLampThr)
+        : 0;
+
+      return {
+        nowMs: processed.nowMs,
+        lift: processed.lift,
+        groove: processed.groove,
+        smooth: processed.smooth,
+        speed: processed.speed,
+        dynamics: processed.dynamics,
+        shake: processed.shake,
+        locked: processed.locked,
+        energyUI01: processed.energyUI01,
+        liftP: Math.round(clamp01(processed.lift) * 100),
+        gP: Math.round(clamp01(processed.groove) * 100),
+        sP: Math.round(clamp01(processed.smooth) * 100),
+        sp: Math.round(clamp01(processed.speed) * 100),
+        dP: Math.round(clamp01(processed.dynamics) * 100),
+        shakeMeter,
+        sh: (Number(shakeMeter) * shakeLampThr),
+        ePts: Math.round(Number(processed.energyBankPts) || 0),
+        over: (processed.energyUI01 > 1),
+        shieldRgb01: processed.shieldRgb01,
+      };
+    }
+
+    function processInputFrame(d, nowMs){
       function pick01NewOrOld(newKey, oldKey){
         if (d[newKey] != null) {
           const n = Number(d[newKey]);
@@ -2919,7 +2990,6 @@
         return (n > 1.5) ? (n / 100) : n;
       }
 
-      const nowMs = performance.now();
       if (inputSystem && typeof inputSystem.ingest === "function") {
         inputSystem.ingest(d, nowMs);
       }
@@ -2946,57 +3016,9 @@
 
       setBgFromEnergy(energyUI01);
 
-      const liftP = Math.round(clamp01(lift) * 100);
-      const gP = Math.round(clamp01(groove) * 100);
-      const sP = Math.round(clamp01(smooth) * 100);
-      const sp = Math.round(clamp01(speed) * 100);
-      const dP = Math.round(clamp01(dynamics) * 100);
-      const shakeCooldownUntil = (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
-        ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
-        : 0;
-      const shakeForUI = (nowMs < shakeCooldownUntil) ? 0 : shake;
-      const shakeLampThr = Number(INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold) || 1.65;
-      const shakeMeter = (shakeLampThr > 1e-6)
-        ? clamp01((Number(shakeForUI) || 0) / shakeLampThr)
-        : 0;
-      const sh = (Number(shakeMeter) * shakeLampThr);
-      const ePts = Math.round(energyBankPts);
-
-      els.vLift.textContent     = `${liftP}%`;
-      els.vGroove.textContent   = `${gP}%${locked ? " (locked)" : ""}`;
-      els.vSmooth.textContent   = `${sP}%`;
-      els.vSpeed.textContent    = `${sp}%`;
-      els.vDynamics.textContent = `${dP}%`;
-      els.vEnergy.textContent   = `${ePts}`;
-      els.vShake.textContent    = `${Math.max(0, sh).toFixed(2)}`;
-
       const shieldRgb01 = (frame && Array.isArray(frame.shieldRGB) && frame.shieldRGB.length >= 3)
         ? frame.shieldRGB
         : (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3 ? d.shieldRGB : null);
-      if (!sanctusShieldColorLocked && shieldRgb01){
-        const tr = clamp01(shieldRgb01[0]);
-        const tg = clamp01(shieldRgb01[1]);
-        const tb = clamp01(shieldRgb01[2]);
-        shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
-        shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
-        shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
-        setShieldColor01(shieldColor01);
-      }
-
-      setBar(els.bLift,  lift);
-      setBar(els.bGroove, groove);
-      setBar(els.bSmooth, smooth);
-      setBar(els.bSpeed,  speed);
-      setBar(els.bDynamics, dynamics);
-      setBar(els.bEnergy, energyUI01);
-      setBar(els.bShake,  shakeMeter);
-
-      const over = (energyUI01 > 1);
-      els.vEnergy.classList.toggle("over", over);
-      els.bEnergy.classList.toggle("over", over);
-
-      // Repurposed row: Orb debug readout.
-      updateDebugReadout();
 
       // sd is only sent by the phone on shakeHit
       if (d && typeof d.sd === "string" && d.sd.trim()) {
@@ -3031,6 +3053,27 @@
       processShakeDoubleBang(shake, nowMs, groove);
 
       setAudio(energyUI01, groove, locked);
+
+      return {
+        nowMs,
+        lift,
+        groove,
+        smooth,
+        speed,
+        dynamics,
+        shake,
+        locked,
+        energyUI01,
+        energyBankPts,
+        shieldRgb01,
+      };
+    }
+
+    function applyDataToUI(d){
+      const nowMs = performance.now();
+      const processed = processInputFrame(d, nowMs);
+      const vm = buildInputHudViewModel(processed);
+      renderInputHud(vm);
     }
 
     let connecting = false;
