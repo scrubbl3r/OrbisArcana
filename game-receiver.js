@@ -1362,7 +1362,21 @@
     // =========================================================================
     // STABILITY + VARIABILITY — no cooldown 
     // =========================================================================
-    const STABILITY_SPEED_MIN = 0.02;
+    let INPUT_DYNAMICS_CFG = {
+      stability: {
+        avgMs: 250,
+        armMs: 220,
+        onThreshold: 0.08,
+        offThreshold: 0.10,
+        speedMin01: 0.02,
+      },
+      variability: {
+        avgMs: 250,
+        armMs: 220,
+        onThreshold: 0.80,
+        offThreshold: 0.78,
+      },
+    };
     let stabilityVisualGate = true;
     let inputDynamicsSystem = null;
 
@@ -2000,6 +2014,7 @@
           { applyThemeCssVars },
           { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
           { INPUT_GESTURE_CONFIG_DEFAULT },
+          { INPUT_DYNAMICS_CONFIG_DEFAULT },
           { CAST_ACTION_REGISTRY_BY_ID },
           { RUNTIME_SPELLS_BY_ID },
           { WORLD_ITEMS_V1 },
@@ -2022,6 +2037,7 @@
           import("./src/ui/apply-theme-css-vars.js"),
           import("./src/vfx/presets/index.js"),
           import("./src/content/input/gesture-config-default.js"),
+          import("./src/content/input/dynamics-config-default.js"),
           import("./src/content/spells/cast-action-registry.js"),
           import("./src/content/spells/runtime-spells.js"),
           import("./src/content/world-items/default-world-items.js"),
@@ -2041,6 +2057,9 @@
         if (INPUT_GESTURE_CONFIG_DEFAULT && typeof INPUT_GESTURE_CONFIG_DEFAULT === "object") {
           INPUT_GESTURE_CFG = INPUT_GESTURE_CONFIG_DEFAULT;
         }
+        if (INPUT_DYNAMICS_CONFIG_DEFAULT && typeof INPUT_DYNAMICS_CONFIG_DEFAULT === "object") {
+          INPUT_DYNAMICS_CFG = INPUT_DYNAMICS_CONFIG_DEFAULT;
+        }
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
         castActionRegistryIndex = CAST_ACTION_REGISTRY_BY_ID || Object.create(null);
         initSpellActionHandlers();
@@ -2059,7 +2078,18 @@
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
         inputSystem = createInputSystem({ eventBus });
-        inputDynamicsSystem = createInputDynamicsSystem();
+        inputDynamicsSystem = createInputDynamicsSystem({
+          config: {
+            stabilityAvgMs: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.avgMs,
+            stabilityArmMs: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.armMs,
+            stabilityOnThr: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.onThreshold,
+            stabilityOffThr: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.offThreshold,
+            variabilityAvgMs: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.avgMs,
+            variabilityArmMs: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.armMs,
+            variabilityOnThr: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.onThreshold,
+            variabilityOffThr: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.offThreshold,
+          },
+        });
         inputGestureSystem = createInputGestureSystem({
           eventBus,
           config: {
@@ -2981,7 +3011,7 @@
 
       stabilityVisualGate =
         (!physState.onGround) &&
-        (clamp01(speed) >= STABILITY_SPEED_MIN) &&
+        (clamp01(speed) >= (Number(INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.speedMin01) || 0.02)) &&
         (!physState.shieldDescentBlocked);
 
       const dynStateBefore = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
