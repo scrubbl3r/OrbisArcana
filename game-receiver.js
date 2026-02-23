@@ -1691,6 +1691,7 @@
     let mvp = null;
     let worldSystem = null;
     let orbFxSystem = null;
+    let orbSystemsBundle = null;
     let resourcesSystem = null;
     let inputSystem = null;
     let inputGestureSystem = null;
@@ -2026,6 +2027,7 @@
           { createInputSystemsBundle },
           { createWorldSystem },
           { createResourcesSystem },
+          { createOrbSystemsBundle },
           { createOrbFxSystem },
           { createVoiceRecognitionSystem },
           { createSpellDispatchSystem },
@@ -2053,6 +2055,7 @@
           import("./src/systems/input-systems-bundle.js"),
           import("./src/systems/world-system.js"),
           import("./src/systems/resources-system.js"),
+          import("./src/systems/orb-systems-bundle.js"),
           import("./src/systems/orb-fx-system.js"),
           import("./src/systems/voice-recognition-system.js"),
           import("./src/systems/spell-dispatch-system.js"),
@@ -2142,7 +2145,6 @@
             collisionCooldownMs: 250,
           }
         });
-        const orbSystem = createOrbSystem({ gameState, eventBus });
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
         inputSystemsBundle = createInputSystemsBundle({
@@ -2243,15 +2245,24 @@
           getGlobeEl: () => els.testGlobe,
           setGlobeEl: (el) => { els.testGlobe = el; },
         });
-        orbFxSystem = createOrbFxSystem({
+        orbSystemsBundle = createOrbSystemsBundle({
+          createOrbSystem,
+          createOrbFxSystem,
+          gameState,
           eventBus,
-          orbInteriorEl: els.orbInterior,
-          stageEl: els.physStage,
-          getOrbScreenY: () => orbScreenY(),
-          orbRadiusPx: PHYS.orbRadiusPx,
-          getAxisColor01: (axis) => axisToColor01(axis),
+          orbFxOptions: {
+            orbInteriorEl: els.orbInterior,
+            stageEl: els.physStage,
+            getOrbScreenY: () => orbScreenY(),
+            orbRadiusPx: PHYS.orbRadiusPx,
+            getAxisColor01: (axis) => axisToColor01(axis),
+          },
         });
-        orbFxSystem.start();
+        const orbSystem = orbSystemsBundle && orbSystemsBundle.orbSystem;
+        orbFxSystem = orbSystemsBundle && orbSystemsBundle.orbFxSystem;
+        if (orbSystemsBundle && typeof orbSystemsBundle.start === "function") {
+          orbSystemsBundle.start();
+        }
 
         eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
         eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
@@ -2303,6 +2314,7 @@
           inputGestureSystem,
           resourcesSystem,
           orbFxSystem,
+          orbSystemsBundle,
           spellDispatchSystem,
           voiceRecognitionSystem,
           voiceHudSystem,
