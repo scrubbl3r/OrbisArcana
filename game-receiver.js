@@ -1704,6 +1704,7 @@
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
+    let receiverModulesReady = false;
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -1877,6 +1878,7 @@
     }
 
     function executeSpellCastAction(castActionId, context = {}){
+      if (!receiverModulesReady) return { handled: false, skipped: "not_ready" };
       if (!spellCastExecutor || typeof spellCastExecutor.execute !== "function") {
         throw new Error("spell-cast-executor unavailable");
       }
@@ -1968,6 +1970,7 @@
 
     async function initMvpSystems(){
       try {
+        receiverModulesReady = false;
         const [
           { createEventBus },
           { createGameState },
@@ -2084,6 +2087,7 @@
             floatGraceDomusMs: DOMUS_FLOAT_GRACE_MS,
           });
         }
+        receiverModulesReady = true;
 
         const eventBus = createEventBus();
         const gameState = createGameState({
@@ -2295,6 +2299,7 @@
         renderOrbDamageVisuals();
         updateDebugReadout();
       } catch (e) {
+        receiverModulesReady = false;
         console.warn("MVP systems init failed:", e);
       }
     }
@@ -2994,6 +2999,7 @@
     }
 
     function applyDataToUI(d){
+      if (!receiverModulesReady) return;
       const nowMs = performance.now();
       const processed = processInputFrame(d, nowMs);
       const vm = buildInputHudViewModel(processed);
