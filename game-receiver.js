@@ -1694,6 +1694,7 @@
     let resourcesSystem = null;
     let inputSystem = null;
     let inputGestureSystem = null;
+    let inputSystemsBundle = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
     let spellActionHandlers = Object.create(null);
@@ -2001,9 +2002,7 @@
           { createOrbSystem },
           { createFxSystem },
           { createAudioSystem },
-          { createInputSystem },
-          { createInputDynamicsSystem },
-          { createInputGestureSystem },
+          { createInputSystemsBundle },
           { createWorldSystem },
           { createResourcesSystem },
           { createOrbFxSystem },
@@ -2024,9 +2023,7 @@
           import("./src/systems/orb-system.js"),
           import("./src/systems/fx-system.js"),
           import("./src/systems/audio-system.js"),
-          import("./src/systems/input-system.js"),
-          import("./src/systems/input-dynamics-system.js"),
-          import("./src/systems/input-gesture-system.js"),
+          import("./src/systems/input-systems-bundle.js"),
           import("./src/systems/world-system.js"),
           import("./src/systems/resources-system.js"),
           import("./src/systems/orb-fx-system.js"),
@@ -2077,9 +2074,9 @@
         const orbSystem = createOrbSystem({ gameState, eventBus });
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
-        inputSystem = createInputSystem({ eventBus });
-        inputDynamicsSystem = createInputDynamicsSystem({
-          config: {
+        inputSystemsBundle = createInputSystemsBundle({
+          eventBus,
+          dynamicsConfig: {
             stabilityAvgMs: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.avgMs,
             stabilityArmMs: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.armMs,
             stabilityOnThr: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.onThreshold,
@@ -2089,10 +2086,7 @@
             variabilityOnThr: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.onThreshold,
             variabilityOffThr: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.offThreshold,
           },
-        });
-        inputGestureSystem = createInputGestureSystem({
-          eventBus,
-          config: {
+          gestureConfig: {
             shakeCooldownMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.cooldownMs,
             shakeMode: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.mode,
             grooveShakeGate: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.grooveGate,
@@ -2107,7 +2101,7 @@
             flatSpinGateRefreshMs: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.gateRefreshMs,
             flatSpinMinSpeed01: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.minSpeed01,
           },
-          hooks: {
+          gestureHooks: {
             canSpendShake,
             spendShake,
             isDiversityLampLit,
@@ -2126,6 +2120,9 @@
             },
           },
         });
+        inputSystem = inputSystemsBundle.inputSystem;
+        inputDynamicsSystem = inputSystemsBundle.inputDynamicsSystem;
+        inputGestureSystem = inputSystemsBundle.inputGestureSystem;
         resourcesSystem = createResourcesSystem({
           eventBus,
           config: {
@@ -2143,9 +2140,7 @@
         });
         fxSystem.start();
         audioSystem.start();
-        inputSystem.start();
-        inputDynamicsSystem.start();
-        inputGestureSystem.start();
+        inputSystemsBundle.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
         voiceRecognitionSystem.start();
@@ -2231,6 +2226,7 @@
           orbSystem,
           fxSystem,
           audioSystem,
+          inputSystemsBundle,
           inputSystem,
           inputDynamicsSystem,
           inputGestureSystem,
