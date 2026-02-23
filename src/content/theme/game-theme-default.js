@@ -6,7 +6,7 @@ export const GAME_THEME_DEFAULT = Object.freeze({
   },
   axisColors: Object.freeze({
     x: Object.freeze({ r: 0, g: 100, b: 253 }),
-    y: Object.freeze({ r: 253, g: 78, b: 0 }),
+    y: Object.freeze({ r: 253, g: 178, b: 0 }),
     z: Object.freeze({ r: 253, g: 241, b: 0 }),
   }),
   world: {
