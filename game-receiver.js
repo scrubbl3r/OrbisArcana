@@ -1699,6 +1699,7 @@
     let castActionRegistryIndex = Object.create(null);
     let spellActionHandlers = Object.create(null);
     let buildInputHudViewModelModule = null;
+    let runInputFramePipelineModule = null;
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -2013,6 +2014,7 @@
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
           { buildInputHudViewModel: buildInputHudViewModelImported },
+          { runInputFramePipeline: runInputFramePipelineImported },
           { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
           { INPUT_GESTURE_CONFIG_DEFAULT },
           { INPUT_DYNAMICS_CONFIG_DEFAULT },
@@ -2035,6 +2037,7 @@
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
           import("./src/ui/build-input-hud-view-model.js"),
+          import("./src/systems/input-frame-pipeline.js"),
           import("./src/vfx/presets/index.js"),
           import("./src/content/input/gesture-config-default.js"),
           import("./src/content/input/dynamics-config-default.js"),
@@ -2048,6 +2051,9 @@
         }
         if (typeof buildInputHudViewModelImported === "function") {
           buildInputHudViewModelModule = buildInputHudViewModelImported;
+        }
+        if (typeof runInputFramePipelineImported === "function") {
+          runInputFramePipelineModule = runInputFramePipelineImported;
         }
         if (typeof hydrateReceiverVfxDefaults === "function") {
           hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
@@ -3015,35 +3021,65 @@
       const speed = frame ? frame.speed01 : pick01NewOrOld("speed01", "speed");
       const shake = frame ? frame.shake01 : pick01NewOrOld("shake01", "shake");
       const locked = frame ? !!frame.locked : !!d.locked;
-      
-      updateEnergyBankFromPhone(energyFromPhone, nowMs);
 
+      if (typeof runInputFramePipelineModule === "function") {
+        return runInputFramePipelineModule({
+          d,
+          frame,
+          nowMs,
+          values: {
+            energyFromPhone,
+            groove,
+            dynamics,
+            smooth,
+            speed,
+            shake,
+            locked,
+          },
+          systems: {
+            inputGestureSystem,
+            inputDynamicsSystem,
+          },
+          runtime: {
+            physState,
+          },
+          configs: {
+            inputDynamics: INPUT_DYNAMICS_CFG,
+          },
+          hooks: {
+            updateEnergyBankFromPhone,
+            getEnergyBankPts,
+            getEnergyBankCap,
+            computeLift01,
+            setBgFromEnergy,
+            setStabilityVisualGate: (v) => { stabilityVisualGate = !!v; },
+            applyStabilityVisuals,
+            processShakeDoubleBang,
+            setAudio,
+          },
+        });
+      }
+
+      updateEnergyBankFromPhone(energyFromPhone, nowMs);
       const energyBankPts = getEnergyBankPts();
       const energyUI01 = energyBankPts / getEnergyBankCap();
       const lift = computeLift01(groove, smooth, speed);
-
       physState.lift01 = lift;
       physState.energy01 = Math.max(0, Number(energyUI01) || 0);
       physState.dynamics01 = dynamics;
-
       setBgFromEnergy(energyUI01);
-
       const shieldRgb01 = (frame && Array.isArray(frame.shieldRGB) && frame.shieldRGB.length >= 3)
         ? frame.shieldRGB
         : (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3 ? d.shieldRGB : null);
-
-      // sd is only sent by the phone on shakeHit
       if (d && typeof d.sd === "string" && d.sd.trim()) {
         if (inputGestureSystem && typeof inputGestureSystem.setPendingDirection === "function") {
           inputGestureSystem.setPendingDirection(d.sd, nowMs);
         }
       }
-
       stabilityVisualGate =
         (!physState.onGround) &&
         (clamp01(speed) >= (Number(INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.speedMin01) || 0.02)) &&
         (!physState.shieldDescentBlocked);
-
       const dynStateBefore = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
         ? inputDynamicsSystem.getState()
         : { stabilityOn: false, variabilityOn: false };
@@ -3056,29 +3092,13 @@
           stabilityVisualGate,
         });
       }
-
       if (inputDynamicsSystem && typeof inputDynamicsSystem.processFrame === "function") {
         inputDynamicsSystem.processFrame({ dynamics01: dynamics, atMs: nowMs });
       }
       applyStabilityVisuals();
-
       processShakeDoubleBang(shake, nowMs, groove);
-
       setAudio(energyUI01, groove, locked);
-
-      return {
-        nowMs,
-        lift,
-        groove,
-        smooth,
-        speed,
-        dynamics,
-        shake,
-        locked,
-        energyUI01,
-        energyBankPts,
-        shieldRgb01,
-      };
+      return { nowMs, lift, groove, smooth, speed, dynamics, shake, locked, energyUI01, energyBankPts, shieldRgb01 };
     }
 
     function applyDataToUI(d){
