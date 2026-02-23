@@ -1699,8 +1699,10 @@
     let castActionRegistryIndex = Object.create(null);
     let spellActionHandlers = Object.create(null);
     let spellCastExecutor = null;
+    let createSpellActionHandlersModule = null;
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
+    let runOrbRuntimePipelineModule = null;
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -1865,6 +1867,18 @@
     }
 
     function initSpellActionHandlers(){
+      if (typeof createSpellActionHandlersModule === "function") {
+        spellActionHandlers = createSpellActionHandlersModule({
+          playElectricAoe,
+          playFlameAoe,
+          teleportOrbToSpawnNeutralizePhysics,
+          activateSanctusShield,
+          domusTeleportAboveGroundPx: DOMUS_TELEPORT_ABOVE_GROUND_PX,
+          sanctusShieldMs: SANCTUS_SHIELD_MS,
+        });
+        return;
+      }
+
       spellActionHandlers = {
         play_electric_aoe(payload = {}) {
           void payload;
@@ -2016,7 +2030,9 @@
           { createVoiceRecognitionSystem },
           { createSpellDispatchSystem },
           { createVoiceHudSystem },
+          { createSpellActionHandlers: createSpellActionHandlersImported },
           { createSpellCastExecutor },
+          { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
           { buildInputHudViewModel: buildInputHudViewModelImported },
@@ -2040,7 +2056,9 @@
           import("./src/systems/voice-recognition-system.js"),
           import("./src/systems/spell-dispatch-system.js"),
           import("./src/systems/voice-hud-system.js"),
+          import("./src/systems/spell-action-handlers.js"),
           import("./src/systems/spell-cast-executor.js"),
+          import("./src/systems/orb-runtime-pipeline.js"),
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
           import("./src/ui/build-input-hud-view-model.js"),
@@ -2059,8 +2077,14 @@
         if (typeof buildInputHudViewModelImported === "function") {
           buildInputHudViewModelModule = buildInputHudViewModelImported;
         }
+        if (typeof createSpellActionHandlersImported === "function") {
+          createSpellActionHandlersModule = createSpellActionHandlersImported;
+        }
         if (typeof runInputFramePipelineImported === "function") {
           runInputFramePipelineModule = runInputFramePipelineImported;
+        }
+        if (typeof runOrbRuntimePipelineImported === "function") {
+          runOrbRuntimePipelineModule = runOrbRuntimePipelineImported;
         }
         if (typeof hydrateReceiverVfxDefaults === "function") {
           hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
@@ -2649,10 +2673,41 @@
       let dt = (ts - physState.lastTs) / 1000;
       physState.lastTs = ts;
       const nowMs = performance.now();
-      if (mvp && mvp.orbSystem) mvp.orbSystem.tick(nowMs);
       const wasOnGround = !!physState.onGround;
 
       dt = clamp(dt, 0, 0.05);
+
+      if (typeof runOrbRuntimePipelineModule === "function") {
+        runOrbRuntimePipelineModule({
+          ts,
+          dt,
+          nowMs,
+          wasOnGround,
+          physState,
+          phys: PHYS,
+          shieldDescent: SHIELD_DESCENT,
+          mvp,
+          orbFxSystem,
+          worldSystem,
+          hooks: {
+            clamp,
+            liftToThrustAccel,
+            isFloatGraceActive,
+            clearFloatGrace,
+            groundCenterWorld,
+            computeImpactMetric,
+            drawStars,
+            drawWorldBackdrop,
+            updateOrbStrokeColor,
+            applyOrbTransform,
+            updateDebugReadout,
+          },
+        });
+        requestAnimationFrame(physicsStep);
+        return;
+      }
+
+      if (mvp && mvp.orbSystem) mvp.orbSystem.tick(nowMs);
 
       const g = PHYS.gBase * physState.gravityMul;
       const thrust = liftToThrustAccel(physState.lift01);
