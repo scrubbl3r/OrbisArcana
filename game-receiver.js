@@ -1652,12 +1652,12 @@
     // =========================================================================
     const WORLD_H = 5000;
 
-    const SHIELD_DESCENT = {
+    let SHIELD_DESCENT = {
       vDownThr: 60,
       graceMs: 260
     };
 
-    const PHYS = {
+    let PHYS = {
       groundFromBottomPx: 17,
       groundLinePx: 2,
       orbRadiusPx: 50,
@@ -1672,14 +1672,14 @@
       maxUpSpeed: 2200,
       maxDownSpeed: 2800,
     };
-    const IMPACT_TH = 500;
+    let IMPACT_TH = 500;
     const DEATH_FLOW_DELAY_MS = 3000;
     const FLOAT_GRACE_DEFAULT_MS = 1000;
     const DOMUS_FLOAT_GRACE_MS = 5000;
     const DOMUS_TELEPORT_ABOVE_GROUND_PX = 300;
     const SANCTUS_SHIELD_MS = 8000;
     const SANCTUS_SHIELD_SCALE = 1.25;
-    const IMPACT_MODEL = {
+    let IMPACT_MODEL = {
       mass: 1.0,
       gravityExp: 0.5,
       // Symmetric around 0:
@@ -2033,6 +2033,7 @@
           { createSpellActionHandlers: createSpellActionHandlersImported },
           { createSpellCastExecutor },
           { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
+          { ORB_RUNTIME_CONFIG_DEFAULT },
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
           { buildInputHudViewModel: buildInputHudViewModelImported },
@@ -2059,6 +2060,7 @@
           import("./src/systems/spell-action-handlers.js"),
           import("./src/systems/spell-cast-executor.js"),
           import("./src/systems/orb-runtime-pipeline.js"),
+          import("./src/content/orb/orb-runtime-config-default.js"),
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
           import("./src/ui/build-input-hud-view-model.js"),
@@ -2085,6 +2087,23 @@
         }
         if (typeof runOrbRuntimePipelineImported === "function") {
           runOrbRuntimePipelineModule = runOrbRuntimePipelineImported;
+        }
+        if (ORB_RUNTIME_CONFIG_DEFAULT && typeof ORB_RUNTIME_CONFIG_DEFAULT === "object") {
+          const cfg = ORB_RUNTIME_CONFIG_DEFAULT;
+          if (cfg.physics && typeof cfg.physics === "object") {
+            PHYS = { ...PHYS, ...cfg.physics };
+          }
+          if (cfg.shieldDescent && typeof cfg.shieldDescent === "object") {
+            SHIELD_DESCENT = { ...SHIELD_DESCENT, ...cfg.shieldDescent };
+          }
+          if (cfg.impact && typeof cfg.impact === "object") {
+            if (cfg.impact.model && typeof cfg.impact.model === "object") {
+              IMPACT_MODEL = { ...IMPACT_MODEL, ...cfg.impact.model };
+            }
+            if (Number.isFinite(Number(cfg.impact.threshold))) {
+              IMPACT_TH = Number(cfg.impact.threshold);
+            }
+          }
         }
         if (typeof hydrateReceiverVfxDefaults === "function") {
           hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
