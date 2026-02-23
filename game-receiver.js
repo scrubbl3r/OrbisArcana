@@ -1968,126 +1968,203 @@
       }, ttl);
     }
 
+    async function loadReceiverInitModules(){
+      const [
+        { createEventBus },
+        { createGameState },
+        { createOrbSystem },
+        { createFxSystem },
+        { createAudioSystem },
+        { createInputSystemsBundle },
+        { createWorldSystem },
+        { createResourcesSystem },
+        { createOrbSystemsBundle },
+        { createOrbFxSystem },
+        { createVoiceRecognitionSystem },
+        { createSpellDispatchSystem },
+        { createVoiceHudSystem },
+        { createSpellActionHandlers: createSpellActionHandlersImported },
+        { createSpellCastExecutor },
+        { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
+        { ORB_RUNTIME_CONFIG_DEFAULT },
+        { GAME_THEME_DEFAULT },
+        { applyThemeCssVars },
+        { buildInputHudViewModel: buildInputHudViewModelImported },
+        { runInputFramePipeline: runInputFramePipelineImported },
+        { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
+        { INPUT_GESTURE_CONFIG_DEFAULT },
+        { INPUT_DYNAMICS_CONFIG_DEFAULT },
+        { CAST_ACTION_REGISTRY_BY_ID },
+        { RUNTIME_SPELLS_BY_ID },
+        { WORLD_ITEMS_V1 },
+      ] = await Promise.all([
+        import("./src/events/event-bus.js"),
+        import("./src/state/game-state.js"),
+        import("./src/systems/orb-system.js"),
+        import("./src/systems/fx-system.js"),
+        import("./src/systems/audio-system.js"),
+        import("./src/systems/input-systems-bundle.js"),
+        import("./src/systems/world-system.js"),
+        import("./src/systems/resources-system.js"),
+        import("./src/systems/orb-systems-bundle.js"),
+        import("./src/systems/orb-fx-system.js"),
+        import("./src/systems/voice-recognition-system.js"),
+        import("./src/systems/spell-dispatch-system.js"),
+        import("./src/systems/voice-hud-system.js"),
+        import("./src/systems/spell-action-handlers.js"),
+        import("./src/systems/spell-cast-executor.js"),
+        import("./src/systems/orb-runtime-pipeline.js"),
+        import("./src/content/orb/orb-runtime-config-default.js"),
+        import("./src/content/theme/game-theme-default.js"),
+        import("./src/ui/apply-theme-css-vars.js"),
+        import("./src/ui/build-input-hud-view-model.js"),
+        import("./src/systems/input-frame-pipeline.js"),
+        import("./src/vfx/presets/index.js"),
+        import("./src/content/input/gesture-config-default.js"),
+        import("./src/content/input/dynamics-config-default.js"),
+        import("./src/content/spells/cast-action-registry.js"),
+        import("./src/content/spells/runtime-spells.js"),
+        import("./src/content/world-items/default-world-items.js"),
+      ]);
+      return {
+        createEventBus,
+        createGameState,
+        createOrbSystem,
+        createFxSystem,
+        createAudioSystem,
+        createInputSystemsBundle,
+        createWorldSystem,
+        createResourcesSystem,
+        createOrbSystemsBundle,
+        createOrbFxSystem,
+        createVoiceRecognitionSystem,
+        createSpellDispatchSystem,
+        createVoiceHudSystem,
+        createSpellActionHandlersImported,
+        createSpellCastExecutor,
+        runOrbRuntimePipelineImported,
+        ORB_RUNTIME_CONFIG_DEFAULT,
+        GAME_THEME_DEFAULT,
+        applyThemeCssVars,
+        buildInputHudViewModelImported,
+        runInputFramePipelineImported,
+        BUBBLE_SHIELD_PRESET_DEFAULT,
+        SHOCKWAVE_PRESET_DEFAULT,
+        FLAME_AOE_PRESET_DEFAULT,
+        ELECTRIC_AOE_PRESET_DEFAULT,
+        hydrateReceiverVfxDefaults,
+        INPUT_GESTURE_CONFIG_DEFAULT,
+        INPUT_DYNAMICS_CONFIG_DEFAULT,
+        CAST_ACTION_REGISTRY_BY_ID,
+        RUNTIME_SPELLS_BY_ID,
+        WORLD_ITEMS_V1,
+      };
+    }
+
+    function hydrateReceiverBootstrapState(mods){
+      const {
+        GAME_THEME_DEFAULT,
+        applyThemeCssVars,
+        buildInputHudViewModelImported,
+        createSpellActionHandlersImported,
+        runInputFramePipelineImported,
+        runOrbRuntimePipelineImported,
+        ORB_RUNTIME_CONFIG_DEFAULT,
+        hydrateReceiverVfxDefaults,
+        BUBBLE_SHIELD_PRESET_DEFAULT,
+        SHOCKWAVE_PRESET_DEFAULT,
+        FLAME_AOE_PRESET_DEFAULT,
+        ELECTRIC_AOE_PRESET_DEFAULT,
+        INPUT_GESTURE_CONFIG_DEFAULT,
+        INPUT_DYNAMICS_CONFIG_DEFAULT,
+        CAST_ACTION_REGISTRY_BY_ID,
+        RUNTIME_SPELLS_BY_ID,
+        createSpellCastExecutor,
+      } = mods || {};
+
+      if (GAME_THEME_DEFAULT) {
+        applyThemeCssVars(GAME_THEME_DEFAULT);
+        applyRuntimeTheme(GAME_THEME_DEFAULT);
+      }
+      if (typeof buildInputHudViewModelImported === "function") {
+        buildInputHudViewModelModule = buildInputHudViewModelImported;
+      }
+      if (typeof createSpellActionHandlersImported === "function") {
+        createSpellActionHandlersModule = createSpellActionHandlersImported;
+      }
+      if (typeof runInputFramePipelineImported === "function") {
+        runInputFramePipelineModule = runInputFramePipelineImported;
+      }
+      if (typeof runOrbRuntimePipelineImported === "function") {
+        runOrbRuntimePipelineModule = runOrbRuntimePipelineImported;
+      }
+      if (ORB_RUNTIME_CONFIG_DEFAULT && typeof ORB_RUNTIME_CONFIG_DEFAULT === "object") {
+        const cfg = ORB_RUNTIME_CONFIG_DEFAULT;
+        if (cfg.physics && typeof cfg.physics === "object") {
+          PHYS = { ...PHYS, ...cfg.physics };
+        }
+        if (cfg.shieldDescent && typeof cfg.shieldDescent === "object") {
+          SHIELD_DESCENT = { ...SHIELD_DESCENT, ...cfg.shieldDescent };
+        }
+        if (cfg.impact && typeof cfg.impact === "object") {
+          if (cfg.impact.model && typeof cfg.impact.model === "object") {
+            IMPACT_MODEL = { ...IMPACT_MODEL, ...cfg.impact.model };
+          }
+          if (Number.isFinite(Number(cfg.impact.threshold))) {
+            IMPACT_TH = Number(cfg.impact.threshold);
+          }
+        }
+      }
+      if (typeof hydrateReceiverVfxDefaults === "function") {
+        hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
+          bubbleShield: BUBBLE_SHIELD_PRESET_DEFAULT,
+          shockwave: SHOCKWAVE_PRESET_DEFAULT,
+          flameAoe: FLAME_AOE_PRESET_DEFAULT,
+          electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
+        });
+      }
+      if (INPUT_GESTURE_CONFIG_DEFAULT && typeof INPUT_GESTURE_CONFIG_DEFAULT === "object") {
+        INPUT_GESTURE_CFG = INPUT_GESTURE_CONFIG_DEFAULT;
+      }
+      if (INPUT_DYNAMICS_CONFIG_DEFAULT && typeof INPUT_DYNAMICS_CONFIG_DEFAULT === "object") {
+        INPUT_DYNAMICS_CFG = INPUT_DYNAMICS_CONFIG_DEFAULT;
+      }
+      runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
+      castActionRegistryIndex = CAST_ACTION_REGISTRY_BY_ID || Object.create(null);
+      initSpellActionHandlers();
+      if (typeof createSpellCastExecutor === "function") {
+        spellCastExecutor = createSpellCastExecutor({
+          castActionRegistryById: castActionRegistryIndex,
+          handlers: spellActionHandlers,
+          grantFloatGrace,
+          floatGraceDefaultMs: FLOAT_GRACE_DEFAULT_MS,
+          floatGraceDomusMs: DOMUS_FLOAT_GRACE_MS,
+        });
+      }
+      receiverModulesReady = true;
+    }
+
     async function initMvpSystems(){
       try {
         receiverModulesReady = false;
-        const [
-          { createEventBus },
-          { createGameState },
-          { createOrbSystem },
-          { createFxSystem },
-          { createAudioSystem },
-          { createInputSystemsBundle },
-          { createWorldSystem },
-          { createResourcesSystem },
-          { createOrbSystemsBundle },
-          { createOrbFxSystem },
-          { createVoiceRecognitionSystem },
-          { createSpellDispatchSystem },
-          { createVoiceHudSystem },
-          { createSpellActionHandlers: createSpellActionHandlersImported },
-          { createSpellCastExecutor },
-          { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
-          { ORB_RUNTIME_CONFIG_DEFAULT },
-          { GAME_THEME_DEFAULT },
-          { applyThemeCssVars },
-          { buildInputHudViewModel: buildInputHudViewModelImported },
-          { runInputFramePipeline: runInputFramePipelineImported },
-          { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
-          { INPUT_GESTURE_CONFIG_DEFAULT },
-          { INPUT_DYNAMICS_CONFIG_DEFAULT },
-          { CAST_ACTION_REGISTRY_BY_ID },
-          { RUNTIME_SPELLS_BY_ID },
-          { WORLD_ITEMS_V1 },
-        ] = await Promise.all([
-          import("./src/events/event-bus.js"),
-          import("./src/state/game-state.js"),
-          import("./src/systems/orb-system.js"),
-          import("./src/systems/fx-system.js"),
-          import("./src/systems/audio-system.js"),
-          import("./src/systems/input-systems-bundle.js"),
-          import("./src/systems/world-system.js"),
-          import("./src/systems/resources-system.js"),
-          import("./src/systems/orb-systems-bundle.js"),
-          import("./src/systems/orb-fx-system.js"),
-          import("./src/systems/voice-recognition-system.js"),
-          import("./src/systems/spell-dispatch-system.js"),
-          import("./src/systems/voice-hud-system.js"),
-          import("./src/systems/spell-action-handlers.js"),
-          import("./src/systems/spell-cast-executor.js"),
-          import("./src/systems/orb-runtime-pipeline.js"),
-          import("./src/content/orb/orb-runtime-config-default.js"),
-          import("./src/content/theme/game-theme-default.js"),
-          import("./src/ui/apply-theme-css-vars.js"),
-          import("./src/ui/build-input-hud-view-model.js"),
-          import("./src/systems/input-frame-pipeline.js"),
-          import("./src/vfx/presets/index.js"),
-          import("./src/content/input/gesture-config-default.js"),
-          import("./src/content/input/dynamics-config-default.js"),
-          import("./src/content/spells/cast-action-registry.js"),
-          import("./src/content/spells/runtime-spells.js"),
-          import("./src/content/world-items/default-world-items.js"),
-        ]);
-        if (GAME_THEME_DEFAULT) {
-          applyThemeCssVars(GAME_THEME_DEFAULT);
-          applyRuntimeTheme(GAME_THEME_DEFAULT);
-        }
-        if (typeof buildInputHudViewModelImported === "function") {
-          buildInputHudViewModelModule = buildInputHudViewModelImported;
-        }
-        if (typeof createSpellActionHandlersImported === "function") {
-          createSpellActionHandlersModule = createSpellActionHandlersImported;
-        }
-        if (typeof runInputFramePipelineImported === "function") {
-          runInputFramePipelineModule = runInputFramePipelineImported;
-        }
-        if (typeof runOrbRuntimePipelineImported === "function") {
-          runOrbRuntimePipelineModule = runOrbRuntimePipelineImported;
-        }
-        if (ORB_RUNTIME_CONFIG_DEFAULT && typeof ORB_RUNTIME_CONFIG_DEFAULT === "object") {
-          const cfg = ORB_RUNTIME_CONFIG_DEFAULT;
-          if (cfg.physics && typeof cfg.physics === "object") {
-            PHYS = { ...PHYS, ...cfg.physics };
-          }
-          if (cfg.shieldDescent && typeof cfg.shieldDescent === "object") {
-            SHIELD_DESCENT = { ...SHIELD_DESCENT, ...cfg.shieldDescent };
-          }
-          if (cfg.impact && typeof cfg.impact === "object") {
-            if (cfg.impact.model && typeof cfg.impact.model === "object") {
-              IMPACT_MODEL = { ...IMPACT_MODEL, ...cfg.impact.model };
-            }
-            if (Number.isFinite(Number(cfg.impact.threshold))) {
-              IMPACT_TH = Number(cfg.impact.threshold);
-            }
-          }
-        }
-        if (typeof hydrateReceiverVfxDefaults === "function") {
-          hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
-            bubbleShield: BUBBLE_SHIELD_PRESET_DEFAULT,
-            shockwave: SHOCKWAVE_PRESET_DEFAULT,
-            flameAoe: FLAME_AOE_PRESET_DEFAULT,
-            electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
-          });
-        }
-        if (INPUT_GESTURE_CONFIG_DEFAULT && typeof INPUT_GESTURE_CONFIG_DEFAULT === "object") {
-          INPUT_GESTURE_CFG = INPUT_GESTURE_CONFIG_DEFAULT;
-        }
-        if (INPUT_DYNAMICS_CONFIG_DEFAULT && typeof INPUT_DYNAMICS_CONFIG_DEFAULT === "object") {
-          INPUT_DYNAMICS_CFG = INPUT_DYNAMICS_CONFIG_DEFAULT;
-        }
-        runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
-        castActionRegistryIndex = CAST_ACTION_REGISTRY_BY_ID || Object.create(null);
-        initSpellActionHandlers();
-        if (typeof createSpellCastExecutor === "function") {
-          spellCastExecutor = createSpellCastExecutor({
-            castActionRegistryById: castActionRegistryIndex,
-            handlers: spellActionHandlers,
-            grantFloatGrace,
-            floatGraceDefaultMs: FLOAT_GRACE_DEFAULT_MS,
-            floatGraceDomusMs: DOMUS_FLOAT_GRACE_MS,
-          });
-        }
-        receiverModulesReady = true;
+        const mods = await loadReceiverInitModules();
+        hydrateReceiverBootstrapState(mods);
+        const {
+          createEventBus,
+          createGameState,
+          createOrbSystem,
+          createFxSystem,
+          createAudioSystem,
+          createInputSystemsBundle,
+          createWorldSystem,
+          createResourcesSystem,
+          createOrbSystemsBundle,
+          createOrbFxSystem,
+          createVoiceRecognitionSystem,
+          createSpellDispatchSystem,
+          createVoiceHudSystem,
+          WORLD_ITEMS_V1,
+        } = mods;
 
         const eventBus = createEventBus();
         const gameState = createGameState({
