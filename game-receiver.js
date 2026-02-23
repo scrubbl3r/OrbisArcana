@@ -2659,7 +2659,8 @@
       dt = clamp(dt, 0, 0.05);
 
       if (typeof runOrbRuntimePipelineModule !== "function") {
-        throw new Error("orb-runtime-pipeline module unavailable");
+        requestAnimationFrame(physicsStep);
+        return;
       }
       runOrbRuntimePipelineModule({
         ts,
