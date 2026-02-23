@@ -1698,6 +1698,7 @@
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
     let spellActionHandlers = Object.create(null);
+    let buildInputHudViewModelModule = null;
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
     let mvpShards = [];
@@ -2011,6 +2012,7 @@
           { createVoiceHudSystem },
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
+          { buildInputHudViewModel: buildInputHudViewModelImported },
           { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
           { INPUT_GESTURE_CONFIG_DEFAULT },
           { INPUT_DYNAMICS_CONFIG_DEFAULT },
@@ -2032,6 +2034,7 @@
           import("./src/systems/voice-hud-system.js"),
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
+          import("./src/ui/build-input-hud-view-model.js"),
           import("./src/vfx/presets/index.js"),
           import("./src/content/input/gesture-config-default.js"),
           import("./src/content/input/dynamics-config-default.js"),
@@ -2042,6 +2045,9 @@
         if (GAME_THEME_DEFAULT) {
           applyThemeCssVars(GAME_THEME_DEFAULT);
           applyRuntimeTheme(GAME_THEME_DEFAULT);
+        }
+        if (typeof buildInputHudViewModelImported === "function") {
+          buildInputHudViewModelModule = buildInputHudViewModelImported;
         }
         if (typeof hydrateReceiverVfxDefaults === "function") {
           hydrateReceiverVfxDefaults(VFX_DEFAULTS, {
@@ -2945,17 +2951,23 @@
     }
 
     function buildInputHudViewModel(processed){
-      if (!processed) return null;
-
       const shakeCooldownUntil = (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
         ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
         : 0;
-      const shakeForUI = (processed.nowMs < shakeCooldownUntil) ? 0 : processed.shake;
       const shakeLampThr = Number(INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold) || 1.65;
+      if (typeof buildInputHudViewModelModule === "function") {
+        return buildInputHudViewModelModule({
+          processed,
+          shakeCooldownUntil,
+          shakeLampThreshold: shakeLampThr,
+        });
+      }
+
+      if (!processed) return null;
+      const shakeForUI = (processed.nowMs < shakeCooldownUntil) ? 0 : processed.shake;
       const shakeMeter = (shakeLampThr > 1e-6)
         ? clamp01((Number(shakeForUI) || 0) / shakeLampThr)
         : 0;
-
       return {
         nowMs: processed.nowMs,
         lift: processed.lift,
