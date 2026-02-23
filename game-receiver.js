@@ -1487,7 +1487,7 @@
             setCalibStatus("Calibrated");
             closeCalibOverlay();
             if (mvp && mvp.eventBus) {
-              mvp.eventBus.emit("voice.set_mode", { mode: "wake_token_open_world" });
+              mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
             }
           },
           onCalibAvailable: () => {
@@ -1624,10 +1624,10 @@
         const currentVoiceMode = (mvp.gameState && mvp.gameState.voice && mvp.gameState.voice.mode) || "off";
         if (e.shiftKey) {
           const mode = (currentVoiceMode === "wake_token_open_world") ? "off" : "wake_token_open_world";
-          mvp.eventBus.emit("voice.set_mode", { mode });
+          mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
         } else {
-          mvp.eventBus.emit("voice.set_mode", { mode: "gated_window" });
-          mvp.eventBus.emit("voice.open_gate", { reason: "keyboard", timeoutMs: 4500 });
+          mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "gated_window" });
+          mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "keyboard", timeoutMs: 4500 });
         }
       }
     });
@@ -1698,6 +1698,18 @@
     let inputSystemsBundle = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
+    let RECEIVER_EVENTS = {
+      EVT_VOICE_SET_MODE: "voice.set_mode",
+      EVT_VOICE_OPEN_GATE: "voice.open_gate",
+      EVT_VOICE_SPELL_CAST: "voice.spell_cast",
+      EVT_ORB_VISUAL_STATE_CHANGED: "orb.visual_state_changed",
+      EVT_ORB_SHATTER_PIECE_SPAWNED: "orb.shatter_piece_spawned",
+      EVT_ORB_DIED: "orb.died",
+      EVT_ORB_REVIVED: "orb.revived",
+      EVT_ORB_SHATTER_COMPLETE: "orb.shatter_complete",
+      EVT_ORB_FLOAT_GRACE_GRANT: "orb.float_grace_grant",
+      EVT_ORB_FLOAT_GRACE_CLEAR: "orb.float_grace_clear",
+    };
     let spellActionHandlers = Object.create(null);
     let spellCastExecutor = null;
     let createSpellActionHandlersModule = null;
@@ -1971,10 +1983,16 @@
     async function initMvpSystems(){
       try {
         receiverModulesReady = false;
-        const {
-          loadReceiverInitModules,
-          hydrateReceiverBootstrapState,
-        } = await import("./src/runtime/receiver-bootstrap.js");
+        const [
+          { loadReceiverInitModules, hydrateReceiverBootstrapState },
+          receiverEventContracts,
+        ] = await Promise.all([
+          import("./src/runtime/receiver-bootstrap.js"),
+          import("./src/contracts/events.js"),
+        ]);
+        if (receiverEventContracts && typeof receiverEventContracts === "object") {
+          RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
+        }
         const mods = await loadReceiverInitModules();
         hydrateReceiverBootstrapState(mods, {
           applyRuntimeTheme,
@@ -2156,9 +2174,9 @@
           orbSystemsBundle.start();
         }
 
-        eventBus.on("orb.visual_state_changed", renderOrbDamageVisuals);
-        eventBus.on("orb.shatter_piece_spawned", spawnShardFx);
-        eventBus.on("orb.died", () => {
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbDamageVisuals);
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnShardFx);
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
           shardPaletteSnapshot = captureCurrentOrbPalette();
           orbInputSuppressed = true;
           clearFloatGrace();
@@ -2166,7 +2184,7 @@
           scheduleDeathOverlay();
           updateDebugReadout();
         });
-        eventBus.on("orb.revived", () => {
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_REVIVED, () => {
           shardPaletteSnapshot = null;
           orbInputSuppressed = false;
           clearFloatGrace();
@@ -2177,21 +2195,21 @@
           renderOrbDamageVisuals();
           updateDebugReadout();
         });
-        eventBus.on("orb.shatter_complete", () => {
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
           mvpShards = [];
           if (els.orbShards) els.orbShards.innerHTML = "";
           stopShardSim();
         });
-        eventBus.on("voice.spell_cast", (p = {}) => {
+        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
           const intent = String(p.intent || "");
           const spellId = String(p.spellId || "").toLowerCase();
           const castActionId = castActionForSpellId(spellId);
           executeSpellCastAction(castActionId, { payload: p, intent });
         });
-        eventBus.on("orb.float_grace_grant", (p = {}) => {
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_GRANT, (p = {}) => {
           grantFloatGrace(p.ms);
         });
-        eventBus.on("orb.float_grace_clear", () => {
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_CLEAR, () => {
           clearFloatGrace();
         });
         mvp = {
