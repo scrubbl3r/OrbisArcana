@@ -1698,6 +1698,7 @@
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
     let spellActionHandlers = Object.create(null);
+    let spellCastExecutor = null;
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let mvpShardRaf = 0;
@@ -1884,6 +1885,10 @@
     }
 
     function executeSpellCastAction(castActionId, context = {}){
+      if (spellCastExecutor && typeof spellCastExecutor.execute === "function") {
+        return spellCastExecutor.execute(castActionId, context);
+      }
+
       const actionId = String(castActionId || "").toLowerCase();
       const p = context.payload || {};
       const meta = castActionMetaForId(actionId);
@@ -2011,6 +2016,7 @@
           { createVoiceRecognitionSystem },
           { createSpellDispatchSystem },
           { createVoiceHudSystem },
+          { createSpellCastExecutor },
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
           { buildInputHudViewModel: buildInputHudViewModelImported },
@@ -2034,6 +2040,7 @@
           import("./src/systems/voice-recognition-system.js"),
           import("./src/systems/spell-dispatch-system.js"),
           import("./src/systems/voice-hud-system.js"),
+          import("./src/systems/spell-cast-executor.js"),
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
           import("./src/ui/build-input-hud-view-model.js"),
@@ -2072,6 +2079,15 @@
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
         castActionRegistryIndex = CAST_ACTION_REGISTRY_BY_ID || Object.create(null);
         initSpellActionHandlers();
+        if (typeof createSpellCastExecutor === "function") {
+          spellCastExecutor = createSpellCastExecutor({
+            castActionRegistryById: castActionRegistryIndex,
+            handlers: spellActionHandlers,
+            grantFloatGrace,
+            floatGraceDefaultMs: FLOAT_GRACE_DEFAULT_MS,
+            floatGraceDomusMs: DOMUS_FLOAT_GRACE_MS,
+          });
+        }
 
         const eventBus = createEventBus();
         const gameState = createGameState({
