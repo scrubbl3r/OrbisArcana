@@ -1312,20 +1312,26 @@
     // =========================================================================
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
     // =========================================================================
-    const SHAKE_COOLDOWN_MS = 2500; // Minimum time between shake lamp triggers (ms)
-    const SHAKE_MODE = 2; // 1=main only, 2=axis pairs (UD/LR/FB), 3=full 6-direction
-    const SHAKE_REARM_THR = 0.10; // Shake01 must drop below this to re-arm after a hit
-    const GROOVE_SHAKE_GATE = 0.20; // Hard gate: if groove01 is above this, shake is ignored
-    const SHAKE_LAMP_THR = 1.65; // Receiver shake01 threshold to trigger shake lamp (0–2 scale)
-    const SD_RECENT_MS = 750; // Direction label must arrive within this window (ms) to flash lamp
-    const FLAT_SPIN_DOMINANCE_ON = 0.72;
-    const FLAT_SPIN_DOMINANCE_OFF = 0.60;
-    const FLAT_SPIN_DOMINANCE_GAP_ON = 0.14;
-    const FLAT_SPIN_DOMINANCE_GAP_OFF = 0.09;
-    const FLAT_SPIN_ON_HOLD_MS = 200;
-    const FLAT_SPIN_OFF_HOLD_MS = 280;
-    const FLAT_SPIN_GATE_REFRESH_MS = 1100;
-    const FLAT_SPIN_MIN_SPEED01 = 0.02;
+    let INPUT_GESTURE_CFG = {
+      shake: {
+        cooldownMs: 2500,
+        mode: 2,
+        grooveGate: 0.20,
+        lampThreshold: 1.65,
+        directionRecentMs: 750,
+        rearmThreshold: 0.10,
+      },
+      flatSpin: {
+        dominanceOn: 0.72,
+        dominanceOff: 0.60,
+        dominanceGapOn: 0.14,
+        dominanceGapOff: 0.09,
+        onHoldMs: 200,
+        offHoldMs: 280,
+        gateRefreshMs: 1100,
+        minSpeed01: 0.02,
+      },
+    };
 
     function resetShakeDetector(){
       if (inputGestureSystem && typeof inputGestureSystem.reset === "function") {
@@ -2094,6 +2100,7 @@
           { GAME_THEME_DEFAULT },
           { applyThemeCssVars },
           { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
+          { INPUT_GESTURE_CONFIG_DEFAULT },
           { CAST_ACTION_REGISTRY_BY_ID },
           { RUNTIME_SPELLS_BY_ID },
           { WORLD_ITEMS_V1 },
@@ -2114,6 +2121,7 @@
           import("./src/content/theme/game-theme-default.js"),
           import("./src/ui/apply-theme-css-vars.js"),
           import("./src/vfx/presets/index.js"),
+          import("./src/content/input/gesture-config-default.js"),
           import("./src/content/spells/cast-action-registry.js"),
           import("./src/content/spells/runtime-spells.js"),
           import("./src/content/world-items/default-world-items.js"),
@@ -2129,6 +2137,9 @@
             flameAoe: FLAME_AOE_PRESET_DEFAULT,
             electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
           });
+        }
+        if (INPUT_GESTURE_CONFIG_DEFAULT && typeof INPUT_GESTURE_CONFIG_DEFAULT === "object") {
+          INPUT_GESTURE_CFG = INPUT_GESTURE_CONFIG_DEFAULT;
         }
         runtimeSpellIndex = RUNTIME_SPELLS_BY_ID || Object.create(null);
         castActionRegistryIndex = CAST_ACTION_REGISTRY_BY_ID || Object.create(null);
@@ -2151,19 +2162,19 @@
         inputGestureSystem = createInputGestureSystem({
           eventBus,
           config: {
-            shakeCooldownMs: SHAKE_COOLDOWN_MS,
-            shakeMode: SHAKE_MODE,
-            grooveShakeGate: GROOVE_SHAKE_GATE,
-            shakeLampThr: SHAKE_LAMP_THR,
-            sdRecentMs: SD_RECENT_MS,
-            flatSpinDominanceOn: FLAT_SPIN_DOMINANCE_ON,
-            flatSpinDominanceOff: FLAT_SPIN_DOMINANCE_OFF,
-            flatSpinDominanceGapOn: FLAT_SPIN_DOMINANCE_GAP_ON,
-            flatSpinDominanceGapOff: FLAT_SPIN_DOMINANCE_GAP_OFF,
-            flatSpinOnHoldMs: FLAT_SPIN_ON_HOLD_MS,
-            flatSpinOffHoldMs: FLAT_SPIN_OFF_HOLD_MS,
-            flatSpinGateRefreshMs: FLAT_SPIN_GATE_REFRESH_MS,
-            flatSpinMinSpeed01: FLAT_SPIN_MIN_SPEED01,
+            shakeCooldownMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.cooldownMs,
+            shakeMode: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.mode,
+            grooveShakeGate: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.grooveGate,
+            shakeLampThr: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold,
+            sdRecentMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.directionRecentMs,
+            flatSpinDominanceOn: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceOn,
+            flatSpinDominanceOff: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceOff,
+            flatSpinDominanceGapOn: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceGapOn,
+            flatSpinDominanceGapOff: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceGapOff,
+            flatSpinOnHoldMs: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.onHoldMs,
+            flatSpinOffHoldMs: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.offHoldMs,
+            flatSpinGateRefreshMs: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.gateRefreshMs,
+            flatSpinMinSpeed01: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.minSpeed01,
           },
           hooks: {
             canSpendShake,
@@ -3015,10 +3026,11 @@
         ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
         : 0;
       const shakeForUI = (nowMs < shakeCooldownUntil) ? 0 : shake;
-      const shakeMeter = (SHAKE_LAMP_THR > 1e-6)
-        ? clamp01((Number(shakeForUI) || 0) / SHAKE_LAMP_THR)
+      const shakeLampThr = Number(INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold) || 1.65;
+      const shakeMeter = (shakeLampThr > 1e-6)
+        ? clamp01((Number(shakeForUI) || 0) / shakeLampThr)
         : 0;
-      const sh = (Number(shakeMeter) * SHAKE_LAMP_THR);
+      const sh = (Number(shakeMeter) * shakeLampThr);
       const ePts = Math.round(energyBankPts);
 
       els.vLift.textContent     = `${liftP}%`;
