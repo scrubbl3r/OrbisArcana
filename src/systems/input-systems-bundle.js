@@ -2,6 +2,32 @@ import { createInputSystem } from "./input-system.js";
 import { createInputDynamicsSystem } from "./input-dynamics-system.js";
 import { createInputGestureSystem } from "./input-gesture-system.js";
 
+/**
+ * @typedef {Object} InputSystemsBundle
+ * @property {Object} inputSystem Normalized latest-frame input SSOT owner.
+ * @property {Object} inputDynamicsSystem Stability/variability detector runtime.
+ * @property {Object} inputGestureSystem Shake/flat-spin gesture runtime.
+ * @property {() => void} start Starts underlying input systems.
+ * @property {() => void} stop Stops underlying input systems.
+ * @property {(atMs?: number) => void} resetAll Resets all input system runtime state.
+ */
+
+/**
+ * @typedef {Object} CreateInputSystemsBundleOptions
+ * @property {Object} eventBus Event bus with `emit`/`on`.
+ * @property {Object} [gestureConfig] Gesture tuning values for input-gesture-system.
+ * @property {Object} [dynamicsConfig] Stability/variability tuning for input-dynamics-system.
+ * @property {Object} [gestureHooks] Receiver-provided hooks for gesture side effects (lamps, shockwave, etc).
+ */
+
+/**
+ * Compose the input domain runtime systems used by the receiver shell.
+ *
+ * Returns a small bundle so the receiver can treat input concerns as one subsystem.
+ *
+ * @param {CreateInputSystemsBundleOptions} [options]
+ * @returns {InputSystemsBundle}
+ */
 export function createInputSystemsBundle({
   eventBus,
   gestureConfig = {},

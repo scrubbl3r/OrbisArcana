@@ -8,6 +8,47 @@ import {
   EVT_ORB_REVIVED,
 } from "../contracts/events.js";
 
+/**
+ * @typedef {Object} ResourcesSnapshot
+ * @property {{bankPts:number, capPts:number, lastUpdatedAtMs:number}} energy
+ * @property {{storedCount:number}} globes
+ * @property {{energyShakeCostPts:number, energyChargeRatePps:number}} config
+ */
+
+/**
+ * @typedef {Object} ResourcesSystem
+ * @property {() => void} start Registers event subscriptions.
+ * @property {() => void} stop Removes event subscriptions.
+ * @property {(atMs?: number) => void} resetEnergyBank
+ * @property {(atMs?: number) => void} resetGlobes
+ * @property {(atMs?: number) => void} resetAll
+ * @property {(energyFromPhone01:number, atMs?: number) => number} updateEnergyBankFromPhone
+ * @property {() => number} getEnergyBankPts
+ * @property {() => number} getEnergyBankCap
+ * @property {() => boolean} canSpendShake
+ * @property {(atMs?: number) => number} spendShake
+ * @property {() => number} getStoredGlobeCount
+ * @property {(payload?: Object) => {ok:boolean, stored:number}} consumeStoredGlobe
+ * @property {() => ResourcesSnapshot} snapshot
+ */
+
+/**
+ * @typedef {Object} CreateResourcesSystemOptions
+ * @property {Object} eventBus Event bus with `emit` and `on`.
+ * @property {() => number} [nowMs] Clock function.
+ * @property {{energyBankCap?:number, energyShakeCost?:number, energyChargeRatePps?:number}} [config]
+ */
+
+/**
+ * Authoritative resource domain state for orb energy + stored globes.
+ *
+ * Side effects:
+ * - Emits resource events on state changes
+ * - Listens to pickup and orb lifecycle events
+ *
+ * @param {CreateResourcesSystemOptions} [options]
+ * @returns {ResourcesSystem}
+ */
 export function createResourcesSystem({
   eventBus,
   nowMs = () => Date.now(),
