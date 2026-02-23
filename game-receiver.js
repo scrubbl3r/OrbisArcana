@@ -1862,75 +1862,25 @@
       return def ? String(def.castActionId || "") : "";
     }
 
-    function castActionMetaForId(castActionId){
-      const id = String(castActionId || "").toLowerCase();
-      return castActionRegistryIndex[id] || null;
-    }
-
     function initSpellActionHandlers(){
-      if (typeof createSpellActionHandlersModule === "function") {
-        spellActionHandlers = createSpellActionHandlersModule({
-          playElectricAoe,
-          playFlameAoe,
-          teleportOrbToSpawnNeutralizePhysics,
-          activateSanctusShield,
-          domusTeleportAboveGroundPx: DOMUS_TELEPORT_ABOVE_GROUND_PX,
-          sanctusShieldMs: SANCTUS_SHIELD_MS,
-        });
-        return;
+      if (typeof createSpellActionHandlersModule !== "function") {
+        throw new Error("spell-action-handlers module unavailable");
       }
-
-      spellActionHandlers = {
-        play_electric_aoe(payload = {}) {
-          void payload;
-          playElectricAoe();
-        },
-        play_flame_aoe(payload = {}) {
-          void payload;
-          playFlameAoe();
-        },
-        domus_teleport_orb(payload = {}) {
-          void payload;
-          teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
-        },
-        activate_sanctum_shield(payload = {}) {
-          activateSanctusShield(payload.axis || "y", SANCTUS_SHIELD_MS);
-        },
-      };
+      spellActionHandlers = createSpellActionHandlersModule({
+        playElectricAoe,
+        playFlameAoe,
+        teleportOrbToSpawnNeutralizePhysics,
+        activateSanctusShield,
+        domusTeleportAboveGroundPx: DOMUS_TELEPORT_ABOVE_GROUND_PX,
+        sanctusShieldMs: SANCTUS_SHIELD_MS,
+      });
     }
 
     function executeSpellCastAction(castActionId, context = {}){
-      if (spellCastExecutor && typeof spellCastExecutor.execute === "function") {
-        return spellCastExecutor.execute(castActionId, context);
+      if (!spellCastExecutor || typeof spellCastExecutor.execute !== "function") {
+        throw new Error("spell-cast-executor unavailable");
       }
-
-      const actionId = String(castActionId || "").toLowerCase();
-      const p = context.payload || {};
-      const meta = castActionMetaForId(actionId);
-      const handlerKey = String(meta && meta.handlerKey || "");
-      const floatGracePolicy = String(meta && meta.floatGracePolicy || "default");
-      const handler = spellActionHandlers[handlerKey];
-      let handled = false;
-      let grantGrace = true;
-      let floatGraceMs = Number(p && p.floatGraceMs);
-
-      if (typeof handler === "function") {
-        handler(p);
-        handled = true;
-      }
-
-      if (floatGracePolicy === "none") {
-        grantGrace = false;
-      } else if (floatGracePolicy === "domus") {
-        floatGraceMs = DOMUS_FLOAT_GRACE_MS;
-      }
-
-      if (grantGrace) {
-        if (!Number.isFinite(floatGraceMs)) floatGraceMs = FLOAT_GRACE_DEFAULT_MS;
-        grantFloatGrace(floatGraceMs);
-      }
-
-      return { handled, floatGraceMs, grantGrace };
+      return spellCastExecutor.execute(castActionId, context);
     }
 
     function parseRgbLike(colorText){
@@ -2708,130 +2658,34 @@
 
       dt = clamp(dt, 0, 0.05);
 
-      if (typeof runOrbRuntimePipelineModule === "function") {
-        runOrbRuntimePipelineModule({
-          ts,
-          dt,
-          nowMs,
-          wasOnGround,
-          physState,
-          phys: PHYS,
-          shieldDescent: SHIELD_DESCENT,
-          mvp,
-          orbFxSystem,
-          worldSystem,
-          hooks: {
-            clamp,
-            liftToThrustAccel,
-            isFloatGraceActive,
-            clearFloatGrace,
-            groundCenterWorld,
-            computeImpactMetric,
-            drawStars,
-            drawWorldBackdrop,
-            updateOrbStrokeColor,
-            applyOrbTransform,
-            updateDebugReadout,
-          },
-        });
-        requestAnimationFrame(physicsStep);
-        return;
+      if (typeof runOrbRuntimePipelineModule !== "function") {
+        throw new Error("orb-runtime-pipeline module unavailable");
       }
-
-      if (mvp && mvp.orbSystem) mvp.orbSystem.tick(nowMs);
-
-      const g = PHYS.gBase * physState.gravityMul;
-      const thrust = liftToThrustAccel(physState.lift01);
-
-      let a = g - thrust;
-
-      // Signed fall drag (downward only) mirrors around 0:
-      // positive = resist fall, negative = assist fall ("magical" acceleration).
-      const signedFallDrag = clamp(Number(PHYS.downDrag) || 0, -1, 1);
-      const drag = (physState.v >= 0) ? signedFallDrag : PHYS.upDrag;
-      a += (-drag * physState.v);
-
-      physState.v += a * dt;
-      physState.v = clamp(physState.v, -PHYS.maxUpSpeed, PHYS.maxDownSpeed);
-
-      physState.yW += physState.v * dt;
-
-      if (isFloatGraceActive(nowMs)) {
-        // Player climb intent cancels grace immediately so upward propulsion remains natural.
-        const upwardIntent = (thrust > (g + 180)) || (physState.v < -22);
-        if (upwardIntent) {
-          clearFloatGrace();
-        } else {
-          // Adaptive equilibrium bob: scales subtly with gravity and signed fall drag.
-          const dragFactor = Math.max(0, -Number(PHYS.downDrag) || 0);
-          const bobAmp = clamp(1.8 + (physState.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
-          const bobHz = clamp(0.8 + (physState.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
-          physState.floatGracePhase += (Math.PI * 2 * bobHz * dt);
-          const targetY = physState.floatGraceAnchorY + (Math.sin(physState.floatGracePhase) * bobAmp);
-
-          const holdHz = clamp(8 + (physState.gravityMul * 3) + (dragFactor * 2), 8, 18);
-          const alpha = 1 - Math.exp(-holdHz * dt);
-          physState.yW += (targetY - physState.yW) * alpha;
-          physState.v = 0;
-        }
-      }
-
-      const dtMs = dt * 1000;
-
-      if (physState.v > SHIELD_DESCENT.vDownThr) {
-        physState.descendMs = Math.min(SHIELD_DESCENT.graceMs * 2, physState.descendMs + dtMs);
-      } else {
-        physState.descendMs = 0;
-      }
-
-      physState.shieldDescentBlocked = (physState.descendMs >= SHIELD_DESCENT.graceMs);
-
-      const yFloor = groundCenterWorld();
-      const yCeil  = PHYS.orbRadiusPx;
-      let impactMag = 0;
-      let impactSrc = "";
-      const vyPreClamp = physState.v;
-      const wasAtCeil = (physState.yW <= (yCeil + 0.25));
-
-      physState.onGround = false;
-
-      if (physState.yW > yFloor) {
-        // Register ground impact once on landing transition only.
-        if (!wasOnGround && vyPreClamp > 0) {
-          impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
-          impactSrc = "ground";
-        }
-        physState.yW = yFloor;
-        if (physState.v > 0) physState.v = 0;
-        physState.onGround = true;
-      }
-
-      if (physState.yW < yCeil) {
-        // Register ceiling hit once on first contact while moving upward.
-        if (!wasAtCeil && vyPreClamp < 0) {
-          impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
-          impactSrc = impactSrc || "ceiling";
-        }
-        physState.yW = yCeil;
-        if (physState.v < 0) physState.v = -physState.v * PHYS.bounce;
-      }
-
-      if (mvp && impactMag > 0) {
-        const impactMetric = computeImpactMetric(impactMag);
-        mvp.applyImpact(impactMetric, impactSrc || "boundary", {
-          rawImpact: impactMag,
-          gravityMul: physState.gravityMul,
-          fallDrag: PHYS.downDrag,
-        });
-      }
-
-      drawStars();
-      drawWorldBackdrop();
-      updateOrbStrokeColor(dt);
-      applyOrbTransform();
-      if (orbFxSystem) orbFxSystem.tick(ts, dt);
-      if (worldSystem) worldSystem.tick(ts, dt);
-      updateDebugReadout();
+      runOrbRuntimePipelineModule({
+        ts,
+        dt,
+        nowMs,
+        wasOnGround,
+        physState,
+        phys: PHYS,
+        shieldDescent: SHIELD_DESCENT,
+        mvp,
+        orbFxSystem,
+        worldSystem,
+        hooks: {
+          clamp,
+          liftToThrustAccel,
+          isFloatGraceActive,
+          clearFloatGrace,
+          groundCenterWorld,
+          computeImpactMetric,
+          drawStars,
+          drawWorldBackdrop,
+          updateOrbStrokeColor,
+          applyOrbTransform,
+          updateDebugReadout,
+        },
+      });
       requestAnimationFrame(physicsStep);
     }
     requestAnimationFrame(physicsStep);
@@ -3059,44 +2913,18 @@
     }
 
     function buildInputHudViewModel(processed){
+      if (typeof buildInputHudViewModelModule !== "function") {
+        throw new Error("build-input-hud-view-model module unavailable");
+      }
       const shakeCooldownUntil = (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
         ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
         : 0;
       const shakeLampThr = Number(INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold) || 1.65;
-      if (typeof buildInputHudViewModelModule === "function") {
-        return buildInputHudViewModelModule({
-          processed,
-          shakeCooldownUntil,
-          shakeLampThreshold: shakeLampThr,
-        });
-      }
-
-      if (!processed) return null;
-      const shakeForUI = (processed.nowMs < shakeCooldownUntil) ? 0 : processed.shake;
-      const shakeMeter = (shakeLampThr > 1e-6)
-        ? clamp01((Number(shakeForUI) || 0) / shakeLampThr)
-        : 0;
-      return {
-        nowMs: processed.nowMs,
-        lift: processed.lift,
-        groove: processed.groove,
-        smooth: processed.smooth,
-        speed: processed.speed,
-        dynamics: processed.dynamics,
-        shake: processed.shake,
-        locked: processed.locked,
-        energyUI01: processed.energyUI01,
-        liftP: Math.round(clamp01(processed.lift) * 100),
-        gP: Math.round(clamp01(processed.groove) * 100),
-        sP: Math.round(clamp01(processed.smooth) * 100),
-        sp: Math.round(clamp01(processed.speed) * 100),
-        dP: Math.round(clamp01(processed.dynamics) * 100),
-        shakeMeter,
-        sh: (Number(shakeMeter) * shakeLampThr),
-        ePts: Math.round(Number(processed.energyBankPts) || 0),
-        over: (processed.energyUI01 > 1),
-        shieldRgb01: processed.shieldRgb01,
-      };
+      return buildInputHudViewModelModule({
+        processed,
+        shakeCooldownUntil,
+        shakeLampThreshold: shakeLampThr,
+      });
     }
 
     function processInputFrame(d, nowMs){
@@ -3124,83 +2952,44 @@
       const shake = frame ? frame.shake01 : pick01NewOrOld("shake01", "shake");
       const locked = frame ? !!frame.locked : !!d.locked;
 
-      if (typeof runInputFramePipelineModule === "function") {
-        return runInputFramePipelineModule({
-          d,
-          frame,
-          nowMs,
-          values: {
-            energyFromPhone,
-            groove,
-            dynamics,
-            smooth,
-            speed,
-            shake,
-            locked,
-          },
-          systems: {
-            inputGestureSystem,
-            inputDynamicsSystem,
-          },
-          runtime: {
-            physState,
-          },
-          configs: {
-            inputDynamics: INPUT_DYNAMICS_CFG,
-          },
-          hooks: {
-            updateEnergyBankFromPhone,
-            getEnergyBankPts,
-            getEnergyBankCap,
-            computeLift01,
-            setBgFromEnergy,
-            setStabilityVisualGate: (v) => { stabilityVisualGate = !!v; },
-            applyStabilityVisuals,
-            processShakeDoubleBang,
-            setAudio,
-          },
-        });
+      if (typeof runInputFramePipelineModule !== "function") {
+        throw new Error("input-frame-pipeline module unavailable");
       }
-
-      updateEnergyBankFromPhone(energyFromPhone, nowMs);
-      const energyBankPts = getEnergyBankPts();
-      const energyUI01 = energyBankPts / getEnergyBankCap();
-      const lift = computeLift01(groove, smooth, speed);
-      physState.lift01 = lift;
-      physState.energy01 = Math.max(0, Number(energyUI01) || 0);
-      physState.dynamics01 = dynamics;
-      setBgFromEnergy(energyUI01);
-      const shieldRgb01 = (frame && Array.isArray(frame.shieldRGB) && frame.shieldRGB.length >= 3)
-        ? frame.shieldRGB
-        : (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3 ? d.shieldRGB : null);
-      if (d && typeof d.sd === "string" && d.sd.trim()) {
-        if (inputGestureSystem && typeof inputGestureSystem.setPendingDirection === "function") {
-          inputGestureSystem.setPendingDirection(d.sd, nowMs);
-        }
-      }
-      stabilityVisualGate =
-        (!physState.onGround) &&
-        (clamp01(speed) >= (Number(INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.speedMin01) || 0.02)) &&
-        (!physState.shieldDescentBlocked);
-      const dynStateBefore = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
-        ? inputDynamicsSystem.getState()
-        : { stabilityOn: false, variabilityOn: false };
-      applyStabilityVisuals();
-      if (inputGestureSystem && typeof inputGestureSystem.processFlatSpinFrame === "function") {
-        inputGestureSystem.processFlatSpinFrame({
-          raw: d,
-          atMs: nowMs,
-          stabilityOn: !!dynStateBefore.stabilityOn,
-          stabilityVisualGate,
-        });
-      }
-      if (inputDynamicsSystem && typeof inputDynamicsSystem.processFrame === "function") {
-        inputDynamicsSystem.processFrame({ dynamics01: dynamics, atMs: nowMs });
-      }
-      applyStabilityVisuals();
-      processShakeDoubleBang(shake, nowMs, groove);
-      setAudio(energyUI01, groove, locked);
-      return { nowMs, lift, groove, smooth, speed, dynamics, shake, locked, energyUI01, energyBankPts, shieldRgb01 };
+      return runInputFramePipelineModule({
+        d,
+        frame,
+        nowMs,
+        values: {
+          energyFromPhone,
+          groove,
+          dynamics,
+          smooth,
+          speed,
+          shake,
+          locked,
+        },
+        systems: {
+          inputGestureSystem,
+          inputDynamicsSystem,
+        },
+        runtime: {
+          physState,
+        },
+        configs: {
+          inputDynamics: INPUT_DYNAMICS_CFG,
+        },
+        hooks: {
+          updateEnergyBankFromPhone,
+          getEnergyBankPts,
+          getEnergyBankCap,
+          computeLift01,
+          setBgFromEnergy,
+          setStabilityVisualGate: (v) => { stabilityVisualGate = !!v; },
+          applyStabilityVisuals,
+          processShakeDoubleBang,
+          setAudio,
+        },
+      });
     }
 
     function applyDataToUI(d){
