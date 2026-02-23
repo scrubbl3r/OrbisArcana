@@ -1362,142 +1362,40 @@
     // =========================================================================
     // STABILITY + VARIABILITY — no cooldown 
     // =========================================================================
-    const STABILITY_AVG_MS   = 250;
-    const STABILITY_ARM_MS   = 220;
-
-    const STABILITY_ON_THR   = 0.08;
-    const STABILITY_OFF_THR  = 0.10;
-
-    const VARIABILITY_ON_THR  = 0.80;
-    const VARIABILITY_OFF_THR = 0.78;
-    const VARIABILITY_ARM_MS  = 220;
-    const VARIABILITY_AVG_MS  = 250;
-
-    let dynSamples = [];
-    let stabilityOn = false;
-    let stabilityHoldMs = 0;
-    let stabilityLastMs = 0;
-
-    let varSamples = [];
-    let variabilityOn = false;
-    let variabilityHoldMs = 0;
-    let variabilityLastMs = 0;
-
     const STABILITY_SPEED_MIN = 0.02;
     let stabilityVisualGate = true;
-
-    let prevStableVisual = false;
+    let inputDynamicsSystem = null;
 
     function applyStabilityVisuals(){
-      const showStable = !!stabilityOn && !!stabilityVisualGate;
-      const showVar = !!variabilityOn && !!stabilityVisualGate;
+      const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
+        ? inputDynamicsSystem.getState()
+        : { stabilityOn: false, variabilityOn: false };
+      const showStable = !!dynState.stabilityOn && !!stabilityVisualGate;
+      const showVar = !!dynState.variabilityOn && !!stabilityVisualGate;
 
       els.dynLampStable.classList.toggle("on", showStable);
       els.dynLampVar.classList.toggle("on", showVar);
-
-      prevStableVisual = showStable;
     }
 
     function isDiversityLampLit(){
-      return !!variabilityOn && !!stabilityVisualGate;
-    }
-
-    function setStability(on){
-      stabilityOn = !!on;
-      applyStabilityVisuals();
-    }
-    function setVariability(on){
-      variabilityOn = !!on;
-      applyStabilityVisuals();
+      const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
+        ? inputDynamicsSystem.getState()
+        : { variabilityOn: false };
+      return !!dynState.variabilityOn && !!stabilityVisualGate;
     }
 
     function resetStability(){
-      dynSamples = [];
-      stabilityOn = false;
-      stabilityHoldMs = 0;
-      stabilityLastMs = 0;
-      prevStableVisual = false;
-      setStability(false);
+      if (inputDynamicsSystem && typeof inputDynamicsSystem.reset === "function") {
+        inputDynamicsSystem.reset();
+      }
+      applyStabilityVisuals();
       shieldOffNow();
     }
     function resetVariability(){
-      varSamples = [];
-      variabilityOn = false;
-      variabilityHoldMs = 0;
-      variabilityLastMs = 0;
-      setVariability(false);
-    }
-
-    function updateStability(dyn01, nowMs){
-      const v = clamp01(dyn01);
-
-      if (!stabilityLastMs) stabilityLastMs = nowMs;
-      let dt = nowMs - stabilityLastMs;
-      stabilityLastMs = nowMs;
-      dt = clamp(dt, 0, 80);
-
-      dynSamples.push({ t: nowMs, v });
-      const cutoff = nowMs - STABILITY_AVG_MS;
-      while (dynSamples.length && dynSamples[0].t < cutoff) dynSamples.shift();
-
-      if (!dynSamples.length){
-        stabilityHoldMs = 0;
-        if (stabilityOn) setStability(false);
-        return;
+      if (inputDynamicsSystem && typeof inputDynamicsSystem.reset === "function") {
+        inputDynamicsSystem.reset();
       }
-
-      let sum = 0;
-      for (const s of dynSamples) sum += s.v;
-      const avg = sum / dynSamples.length;
-
-      const thr = stabilityOn ? STABILITY_OFF_THR : STABILITY_ON_THR;
-
-      if (avg <= thr){
-        stabilityHoldMs += dt;
-
-        if (!stabilityOn && stabilityHoldMs >= STABILITY_ARM_MS){
-          setStability(true);
-        }
-      } else {
-        stabilityHoldMs = 0;
-        if (stabilityOn) setStability(false);
-      }
-    }
-
-    function updateVariability(dyn01, nowMs){
-      const v = clamp01(dyn01);
-
-      if (!variabilityLastMs) variabilityLastMs = nowMs;
-      let dt = nowMs - variabilityLastMs;
-      variabilityLastMs = nowMs;
-      dt = clamp(dt, 0, 80);
-
-      varSamples.push({ t: nowMs, v });
-      const cutoff = nowMs - VARIABILITY_AVG_MS;
-      while (varSamples.length && varSamples[0].t < cutoff) varSamples.shift();
-
-      if (!varSamples.length){
-        variabilityHoldMs = 0;
-        if (variabilityOn) setVariability(false);
-        return;
-      }
-
-      let sum = 0;
-      for (const s of varSamples) sum += s.v;
-      const avg = sum / varSamples.length;
-
-      const thr = variabilityOn ? VARIABILITY_OFF_THR : VARIABILITY_ON_THR;
-
-      if (avg >= thr){
-        variabilityHoldMs += dt;
-
-        if (!variabilityOn && variabilityHoldMs >= VARIABILITY_ARM_MS){
-          setVariability(true);
-        }
-      } else {
-        variabilityHoldMs = 0;
-        if (variabilityOn) setVariability(false);
-      }
+      applyStabilityVisuals();
     }
 
     // =========================================================================
@@ -2090,6 +1988,7 @@
           { createFxSystem },
           { createAudioSystem },
           { createInputSystem },
+          { createInputDynamicsSystem },
           { createInputGestureSystem },
           { createWorldSystem },
           { createResourcesSystem },
@@ -2111,6 +2010,7 @@
           import("./src/systems/fx-system.js"),
           import("./src/systems/audio-system.js"),
           import("./src/systems/input-system.js"),
+          import("./src/systems/input-dynamics-system.js"),
           import("./src/systems/input-gesture-system.js"),
           import("./src/systems/world-system.js"),
           import("./src/systems/resources-system.js"),
@@ -2159,6 +2059,7 @@
         const fxSystem = createFxSystem({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
         inputSystem = createInputSystem({ eventBus });
+        inputDynamicsSystem = createInputDynamicsSystem();
         inputGestureSystem = createInputGestureSystem({
           eventBus,
           config: {
@@ -2213,6 +2114,7 @@
         fxSystem.start();
         audioSystem.start();
         inputSystem.start();
+        inputDynamicsSystem.start();
         inputGestureSystem.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
@@ -2300,6 +2202,7 @@
           fxSystem,
           audioSystem,
           inputSystem,
+          inputDynamicsSystem,
           inputGestureSystem,
           resourcesSystem,
           orbFxSystem,
@@ -3081,18 +2984,23 @@
         (clamp01(speed) >= STABILITY_SPEED_MIN) &&
         (!physState.shieldDescentBlocked);
 
+      const dynStateBefore = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
+        ? inputDynamicsSystem.getState()
+        : { stabilityOn: false, variabilityOn: false };
       applyStabilityVisuals();
       if (inputGestureSystem && typeof inputGestureSystem.processFlatSpinFrame === "function") {
         inputGestureSystem.processFlatSpinFrame({
           raw: d,
           atMs: nowMs,
-          stabilityOn,
+          stabilityOn: !!dynStateBefore.stabilityOn,
           stabilityVisualGate,
         });
       }
 
-      updateStability(dynamics, nowMs);
-      updateVariability(dynamics, nowMs);
+      if (inputDynamicsSystem && typeof inputDynamicsSystem.processFrame === "function") {
+        inputDynamicsSystem.processFrame({ dynamics01: dynamics, atMs: nowMs });
+      }
+      applyStabilityVisuals();
 
       processShakeDoubleBang(shake, nowMs, groove);
 
