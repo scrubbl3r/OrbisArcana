@@ -6,6 +6,27 @@ function clamp01(n){
   return n;
 }
 
+/**
+ * @typedef {Object} RunInputFramePipelineOptions
+ * @property {Object} [d] Raw incoming payload from receiver/transmitter path.
+ * @property {Object|null} [frame] Normalized latest frame from input-system.
+ * @property {number} [nowMs]
+ * @property {{energyFromPhone?:number, groove?:number, dynamics?:number, smooth?:number, speed?:number, shake?:number, locked?:boolean}} [values]
+ * @property {{inputGestureSystem?:Object, inputDynamicsSystem?:Object}} [systems]
+ * @property {{physState?:Object}} [runtime]
+ * @property {{inputDynamics?:Object}} [configs]
+ * @property {Object} [hooks] Receiver-provided hooks for resource updates, visuals, audio, and shake processing.
+ */
+
+/**
+ * Run the receiver input-frame orchestration in the correct order (behavior-preserving extraction).
+ *
+ * Side effects are performed via injected hooks/systems; this function returns the processed
+ * values needed by the HUD view-model builder.
+ *
+ * @param {RunInputFramePipelineOptions} [options]
+ * @returns {{nowMs:number, lift:number, groove:number, smooth:number, speed:number, dynamics:number, shake:number, locked:boolean, energyUI01:number, energyBankPts:number, shieldRgb01:(number[]|null)}}
+ */
 export function runInputFramePipeline({
   d,
   frame,
@@ -125,4 +146,3 @@ export function runInputFramePipeline({
     shieldRgb01,
   };
 }
-

@@ -1,3 +1,16 @@
+/**
+ * @typedef {Object} ReceiverInitModules
+ * Named module exports loaded by `loadReceiverInitModules()`.
+ * This is intentionally broad; the receiver picks only what it needs from the returned object.
+ */
+
+/**
+ * Dynamically import the receiver runtime dependencies used by `game-receiver.js` startup.
+ *
+ * This keeps the shell bootstrap loading logic centralized and versionable.
+ *
+ * @returns {Promise<ReceiverInitModules>}
+ */
 export async function loadReceiverInitModules() {
   const [
     { createEventBus },
@@ -92,6 +105,34 @@ export async function loadReceiverInitModules() {
   };
 }
 
+/**
+ * @typedef {Object} ReceiverBootstrapContext
+ * @property {(theme:Object) => void} [applyRuntimeTheme]
+ * @property {(fn:Function) => void} [setBuildInputHudViewModelModule]
+ * @property {(fn:Function) => void} [setCreateSpellActionHandlersModule]
+ * @property {(fn:Function) => void} [setRunInputFramePipelineModule]
+ * @property {(fn:Function) => void} [setRunOrbRuntimePipelineModule]
+ * @property {() => {PHYS:Object, SHIELD_DESCENT:Object, IMPACT_MODEL:Object, IMPACT_TH:number}} [getOrbRuntimeConfig]
+ * @property {(next:{PHYS?:Object, SHIELD_DESCENT?:Object, IMPACT_MODEL?:Object, IMPACT_TH?:number}) => void} [setOrbRuntimeConfig]
+ * @property {Object} [vfxDefaults] Receiver VFX defaults object mutated by preset hydration.
+ * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
+ * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
+ * @property {(next:{runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeSpellIndexes]
+ * @property {() => void} [initSpellActionHandlers]
+ * @property {() => Object} [createSpellCastExecutorContext]
+ * @property {(executor:Object) => void} [setSpellCastExecutor]
+ * @property {(ready:boolean) => void} [setReceiverModulesReady]
+ */
+
+/**
+ * Apply imported module defaults/configs/presets into the receiver shell through injected setters/hooks.
+ *
+ * This function performs bootstrap-time hydration only; it does not create gameplay systems.
+ *
+ * @param {ReceiverInitModules} mods
+ * @param {ReceiverBootstrapContext} [ctx]
+ * @returns {void}
+ */
 export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const {
     GAME_THEME_DEFAULT,
@@ -206,4 +247,3 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setReceiverModulesReady(true);
   }
 }
-

@@ -6,6 +6,30 @@ function clamp01(n){
   return n;
 }
 
+/**
+ * @typedef {Object} RunOrbRuntimePipelineOptions
+ * @property {number} ts Frame timestamp (RAF time)
+ * @property {number} dt Delta time in seconds (already clamped by caller)
+ * @property {number} nowMs Receiver/performance clock time
+ * @property {boolean} wasOnGround Previous frame grounded state
+ * @property {Object} physState Receiver-owned orb runtime motion state (mutated in place)
+ * @property {Object} phys Orb runtime physics config
+ * @property {{vDownThr:number, graceMs:number}} shieldDescent Shield descent gate tuning
+ * @property {Object} [mvp] Receiver MVP container (used for orb tick + impact application)
+ * @property {Object} [orbFxSystem] Orb FX runtime system
+ * @property {Object} [worldSystem] World runtime system
+ * @property {Object} hooks Receiver-provided functions for math/helpers/render calls
+ */
+
+/**
+ * Run one orb runtime simulation/render orchestration step.
+ *
+ * Mutates `physState` in place and invokes receiver-provided hooks for rendering and impact handling.
+ * This function intentionally does not schedule RAF; the receiver owns frame scheduling.
+ *
+ * @param {RunOrbRuntimePipelineOptions} [options]
+ * @returns {void}
+ */
 export function runOrbRuntimePipeline({
   ts,
   dt,
@@ -123,4 +147,3 @@ export function runOrbRuntimePipeline({
   if (worldSystem && typeof worldSystem.tick === "function") worldSystem.tick(ts, dt);
   if (typeof updateDebugReadout === "function") updateDebugReadout();
 }
-

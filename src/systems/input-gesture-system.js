@@ -7,6 +7,35 @@ import {
   EVT_VOICE_CLOSE_GATE,
 } from "../contracts/events.js";
 
+/**
+ * @typedef {Object} InputGestureSystem
+ * @property {() => void} start
+ * @property {() => void} stop
+ * @property {(atMs?: number) => void} reset Clears shake + flat-spin runtime state and invokes reset hooks.
+ * @property {(sample?: {shakeVal01?:number, groove01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
+ * @property {(frame?: {raw?:Object, atMs?:number, stabilityOn?:boolean, stabilityVisualGate?:boolean}) => void} processFlatSpinFrame
+ * @property {(code:string, atMs?:number) => void} setPendingDirection
+ * @property {() => number} getShakeCooldownUntil
+ */
+
+/**
+ * @typedef {Object} CreateInputGestureSystemOptions
+ * @property {Object} eventBus Event bus with `emit` (and typically `on` for symmetry).
+ * @property {() => number} [nowMs] Clock function.
+ * @property {Object} [config] Gesture tuning values (shake + flat-spin thresholds/timings).
+ * @property {Object} [hooks] Receiver-provided side-effect hooks (lamps, shockwave, orb color, etc).
+ */
+
+/**
+ * Gesture runtime system for:
+ * - shake detection / cooldown / direction cache
+ * - flat-spin window detection and gate events
+ *
+ * Emits events defined in `src/contracts/events.js`.
+ *
+ * @param {CreateInputGestureSystemOptions} [options]
+ * @returns {InputGestureSystem}
+ */
 export function createInputGestureSystem({
   eventBus,
   nowMs = () => Date.now(),

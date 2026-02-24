@@ -1,3 +1,29 @@
+/**
+ * @typedef {Object} InputDynamicsState
+ * @property {boolean} stabilityOn
+ * @property {boolean} variabilityOn
+ */
+
+/**
+ * @typedef {Object} InputDynamicsSystem
+ * @property {() => void} start
+ * @property {() => void} stop
+ * @property {() => void} reset
+ * @property {(frame?: {dynamics01?:number, atMs?:number}) => void} processFrame
+ * @property {() => InputDynamicsState} getState
+ */
+
+/**
+ * @typedef {Object} CreateInputDynamicsSystemOptions
+ * @property {Object} [config] Threshold/timing configuration for stability and variability detectors.
+ */
+
+/**
+ * Rolling-window detector runtime for input stability and variability signals.
+ *
+ * @param {CreateInputDynamicsSystemOptions} [options]
+ * @returns {InputDynamicsSystem}
+ */
 export function createInputDynamicsSystem({ config = {} } = {}) {
   const cfg = {
     stabilityAvgMs: Math.max(1, Number(config.stabilityAvgMs) || 250),
