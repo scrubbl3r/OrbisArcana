@@ -20,6 +20,7 @@
       kwsLog: $("kwsLog"),
       kwsTokenInput: $("kwsTokenInput"),
       kwsTokenSendBtn: $("kwsTokenSendBtn"),
+      kwsMicBtn: $("kwsMicBtn"),
       kwsTokIgnisBtn: $("kwsTokIgnisBtn"),
       kwsTokRotaBtn: $("kwsTokRotaBtn"),
       kwsTokElectrumBtn: $("kwsTokElectrumBtn"),
@@ -1061,6 +1062,10 @@
       const parts = [String(kwsDebugState.mode || "stt")];
       if (kwsDebugState.lastToken) parts.push(`tok:${kwsDebugState.lastToken}`);
       if (kwsDebugState.lastCandidate) parts.push(`cand:${kwsDebugState.lastCandidate}`);
+      if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
+        const s = kwsVoiceProvider.getStatus();
+        parts.push(`mic:${s && s.micRunning ? "on" : "off"}`);
+      }
       els.kwsReadout.textContent = parts.join(" | ");
     }
     updateKwsReadout();
@@ -1170,6 +1175,37 @@
     if (els.kwsTokIgnisBtn) els.kwsTokIgnisBtn.addEventListener("click", () => sendKwsDebugToken("ignis"));
     if (els.kwsTokRotaBtn) els.kwsTokRotaBtn.addEventListener("click", () => sendKwsDebugToken("rota"));
     if (els.kwsTokElectrumBtn) els.kwsTokElectrumBtn.addEventListener("click", () => sendKwsDebugToken("electrum"));
+    async function toggleKwsMicFromUi(){
+      if (!mvp || typeof mvp.setKwsMicEnabled !== "function") return;
+      const status = mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.getStatus === "function"
+        ? mvp.kwsVoiceProvider.getStatus()
+        : null;
+      const next = !(status && status.micRunning);
+      const ok = await mvp.setKwsMicEnabled(next);
+      if (!ok && next) {
+        const s = mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.getStatus === "function"
+          ? mvp.kwsVoiceProvider.getStatus()
+          : null;
+        const reason = s && s.micError ? ` (${s.micError})` : "";
+        window.alert(`KWS mic could not start${reason}.`);
+      }
+      refreshKwsMicBtn();
+      updateKwsReadout();
+    }
+    function refreshKwsMicBtn(){
+      if (!els.kwsMicBtn) return;
+      const s = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
+        ? kwsVoiceProvider.getStatus()
+        : null;
+      const micOn = !!(s && s.micRunning);
+      const hasBackend = !!(s && s.hasAudioBackendFactory);
+      els.kwsMicBtn.textContent = micOn ? "KWS Mic On" : "KWS Mic Off";
+      els.kwsMicBtn.disabled = !hasBackend;
+      els.kwsMicBtn.title = hasBackend
+        ? "Toggle real audio KWS backend microphone"
+        : "No KWS audio backend is connected (set window.OrbisKwsBackendFactory)";
+    }
+    if (els.kwsMicBtn) els.kwsMicBtn.addEventListener("click", () => { void toggleKwsMicFromUi(); });
     function applyKwsParserTuneFromUi(){
       if (!mvp || typeof mvp.setKwsParserConfig !== "function") return;
       const status = mvp.setKwsParserConfig({
@@ -1761,9 +1797,13 @@
           });
         }
         if (typeof createKwsProvider === "function") {
+          const audioBackendFactory = (typeof window !== "undefined" && typeof window.OrbisKwsBackendFactory === "function")
+            ? window.OrbisKwsBackendFactory
+            : null;
           kwsVoiceProvider = createKwsProvider({
             eventBus,
             shadow: true,
+            audioBackendFactory,
           });
         }
         if (typeof createVoiceProviderManager === "function") {
@@ -1791,6 +1831,7 @@
           if (typeof kwsVoiceProvider.start === "function") kwsVoiceProvider.start();
           if (typeof kwsVoiceProvider.setEnabled === "function") kwsVoiceProvider.setEnabled(true);
           if (typeof kwsVoiceProvider.getStatus === "function") syncKwsTuneUiFromStatus(kwsVoiceProvider.getStatus());
+          refreshKwsMicBtn();
         }
         voiceHudSystem.start();
         const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
@@ -1953,6 +1994,13 @@
           setKwsParserConfig(next = {}){
             if (!kwsVoiceProvider || typeof kwsVoiceProvider.setParserConfig !== "function") return null;
             return kwsVoiceProvider.setParserConfig(next);
+          },
+          async setKwsMicEnabled(next){
+            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setMicEnabled !== "function") return false;
+            const ok = await kwsVoiceProvider.setMicEnabled(!!next);
+            refreshKwsMicBtn();
+            updateKwsReadout();
+            return !!ok;
           },
           grantFloatGrace,
           grantSuperGrace,

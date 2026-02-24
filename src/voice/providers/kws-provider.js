@@ -12,6 +12,7 @@ import { createKwsTokenParser } from "../kws/kws-token-parser.js";
  *   parser?: ReturnType<typeof createKwsTokenParser>,
  *   shadow?: boolean,
  *   parserConfig?: object,
+ *   audioBackendFactory?: Function,
  * }} [opts]
  */
 export function createKwsProvider(opts = {}) {
@@ -25,6 +26,11 @@ export function createKwsProvider(opts = {}) {
   let enabled = false;
   let started = false;
   let mode = "shadow";
+  let micEnabled = false;
+  let micRunning = false;
+  let micError = "";
+  let micStream = null;
+  let audioBackend = null;
 
   function start() {
     started = true;
@@ -37,6 +43,7 @@ export function createKwsProvider(opts = {}) {
   function destroy() {
     started = false;
     enabled = false;
+    void stopMic();
     parser.reset();
   }
 
@@ -48,6 +55,71 @@ export function createKwsProvider(opts = {}) {
   function setMode(nextMode) {
     mode = String(nextMode || "shadow");
     parser.setMode(mode === "kws" || mode === "active" ? "active" : "shadow");
+  }
+
+  async function startMic() {
+    if (micRunning) return true;
+    micError = "";
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+      micError = "getUserMedia_unavailable";
+      return false;
+    }
+    if (typeof opts.audioBackendFactory !== "function") {
+      micError = "no_audio_backend_factory";
+      return false;
+    }
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+        video: false,
+      });
+      const maybeBackend = await opts.audioBackendFactory({
+        stream: micStream,
+        onToken: (hit) => ingestTokenHit(hit),
+        onError: (err) => {
+          micError = err && err.message ? String(err.message) : "audio_backend_error";
+        },
+      });
+      audioBackend = maybeBackend || null;
+      if (audioBackend && typeof audioBackend.start === "function") {
+        await audioBackend.start();
+      }
+      micRunning = true;
+      micEnabled = true;
+      return true;
+    } catch (err) {
+      micError = err && err.name ? String(err.name) : "mic_start_failed";
+      if (micStream) {
+        try { micStream.getTracks().forEach((t) => t.stop()); } catch {}
+      }
+      micStream = null;
+      audioBackend = null;
+      micRunning = false;
+      return false;
+    }
+  }
+
+  async function stopMic() {
+    micEnabled = false;
+    micRunning = false;
+    if (audioBackend && typeof audioBackend.stop === "function") {
+      try { await audioBackend.stop(); } catch {}
+    }
+    audioBackend = null;
+    if (micStream) {
+      try { micStream.getTracks().forEach((t) => t.stop()); } catch {}
+    }
+    micStream = null;
+    return true;
+  }
+
+  async function setMicEnabled(next) {
+    if (next) return startMic();
+    return stopMic();
   }
 
   /**
@@ -68,6 +140,11 @@ export function createKwsProvider(opts = {}) {
       enabled,
       started,
       mode,
+      micEnabled,
+      micRunning,
+      micError,
+      hasAudioBackendFactory: typeof opts.audioBackendFactory === "function",
+      audioBackendStatus: audioBackend && typeof audioBackend.getStatus === "function" ? audioBackend.getStatus() : null,
       parser: parser.getStatus(),
     };
   }
@@ -87,6 +164,9 @@ export function createKwsProvider(opts = {}) {
     setEnabled,
     setMode,
     setParserConfig,
+    startMic,
+    stopMic,
+    setMicEnabled,
     getStatus,
     ingestTokenHit,
     parser,
