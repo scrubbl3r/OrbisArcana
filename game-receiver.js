@@ -1065,6 +1065,9 @@
       if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
         const s = kwsVoiceProvider.getStatus();
         parts.push(`mic:${s && s.micRunning ? "on" : "off"}`);
+        parts.push(`backend:${s && s.hasAudioBackendFactory ? "ready" : "none"}`);
+      } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
+        parts.push(`backend:${porcupineKwsInitStatus.installed ? "ready" : "none"}`);
       }
       els.kwsReadout.textContent = parts.join(" | ");
     }
@@ -1283,6 +1286,7 @@
     let voiceProviderManager = null;
     let sttVoiceProvider = null;
     let kwsVoiceProvider = null;
+    let porcupineKwsInitStatus = { attempted: false, installed: false, reason: "not_attempted" };
     let inputSystem = null;
     let inputGestureSystem = null;
     let inputSystemsBundle = null;
@@ -1522,6 +1526,20 @@
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
+        }
+        try {
+          const porcupineInitMod = await import("./src/voice/kws/porcupine-init.js");
+          if (porcupineInitMod && typeof porcupineInitMod.initLocalPorcupineKwsBackend === "function") {
+            const res = await porcupineInitMod.initLocalPorcupineKwsBackend();
+            if (res && res.status) porcupineKwsInitStatus = res.status;
+          }
+        } catch (e) {
+          porcupineKwsInitStatus = {
+            attempted: true,
+            installed: false,
+            reason: e && e.message ? String(e.message) : "import_failed",
+          };
+          console.warn("Local Porcupine KWS init skipped:", e);
         }
         const mods = await loadReceiverInitModules();
         hydrateReceiverBootstrapState(mods, {
@@ -1954,6 +1972,7 @@
           voiceProviderManager,
           sttVoiceProvider,
           kwsVoiceProvider,
+          porcupineKwsInitStatus,
           voiceHudSystem,
           setVoiceEngine(mode = "stt"){
             const m = String(mode || "stt").toLowerCase();
