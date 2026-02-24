@@ -1114,9 +1114,9 @@
     };
     let IMPACT_TH = 500;
     const DEATH_FLOW_DELAY_MS = 3000;
-    const FLOAT_GRACE_DEFAULT_MS = 1000;
-    const DOMUS_FLOAT_GRACE_MS = 5000;
-    const SUPER_GRACE_DEFAULT_MS = 2500;
+    let FLOAT_GRACE_DEFAULT_MS = 1000;
+    let DOMUS_FLOAT_GRACE_MS = 5000;
+    let SUPER_GRACE_DEFAULT_MS = 2500;
     const DOMUS_TELEPORT_ABOVE_GROUND_PX = 300;
     const SANCTUS_SHIELD_MS = 8000;
     const SANCTUS_SHIELD_SCALE = 1.25;
@@ -1386,6 +1386,12 @@
             if (next.SHIELD_DESCENT) SHIELD_DESCENT = next.SHIELD_DESCENT;
             if (next.IMPACT_MODEL) IMPACT_MODEL = next.IMPACT_MODEL;
             if (Number.isFinite(Number(next.IMPACT_TH))) IMPACT_TH = Number(next.IMPACT_TH);
+          },
+          getOrbStatusConfig: () => ({ FLOAT_GRACE_DEFAULT_MS, DOMUS_FLOAT_GRACE_MS, SUPER_GRACE_DEFAULT_MS }),
+          setOrbStatusConfig: (next = {}) => {
+            if (Number.isFinite(Number(next.FLOAT_GRACE_DEFAULT_MS))) FLOAT_GRACE_DEFAULT_MS = Number(next.FLOAT_GRACE_DEFAULT_MS);
+            if (Number.isFinite(Number(next.DOMUS_FLOAT_GRACE_MS))) DOMUS_FLOAT_GRACE_MS = Number(next.DOMUS_FLOAT_GRACE_MS);
+            if (Number.isFinite(Number(next.SUPER_GRACE_DEFAULT_MS))) SUPER_GRACE_DEFAULT_MS = Number(next.SUPER_GRACE_DEFAULT_MS);
           },
           vfxDefaults: VFX_DEFAULTS,
           getInputConfigs: () => ({ INPUT_GESTURE_CFG, INPUT_DYNAMICS_CFG }),

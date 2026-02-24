@@ -30,6 +30,7 @@ export async function loadReceiverInitModules() {
     { createSpellCastExecutor },
     { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
     { ORB_RUNTIME_CONFIG_DEFAULT },
+    { ORB_STATUS_CONFIG_DEFAULT },
     { GAME_THEME_DEFAULT },
     { applyThemeCssVars },
     { buildInputHudViewModel: buildInputHudViewModelImported },
@@ -58,6 +59,7 @@ export async function loadReceiverInitModules() {
     import("../systems/spell-cast-executor.js"),
     import("../systems/orb-runtime-pipeline.js"),
     import("../content/orb/orb-runtime-config-default.js"),
+    import("../content/orb/orb-status-config-default.js"),
     import("../content/theme/game-theme-default.js"),
     import("../ui/apply-theme-css-vars.js"),
     import("../ui/build-input-hud-view-model.js"),
@@ -88,6 +90,7 @@ export async function loadReceiverInitModules() {
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
     ORB_RUNTIME_CONFIG_DEFAULT,
+    ORB_STATUS_CONFIG_DEFAULT,
     GAME_THEME_DEFAULT,
     applyThemeCssVars,
     buildInputHudViewModelImported,
@@ -114,6 +117,8 @@ export async function loadReceiverInitModules() {
  * @property {(fn:Function) => void} [setRunOrbRuntimePipelineModule]
  * @property {() => {PHYS:Object, SHIELD_DESCENT:Object, IMPACT_MODEL:Object, IMPACT_TH:number}} [getOrbRuntimeConfig]
  * @property {(next:{PHYS?:Object, SHIELD_DESCENT?:Object, IMPACT_MODEL?:Object, IMPACT_TH?:number}) => void} [setOrbRuntimeConfig]
+ * @property {() => {FLOAT_GRACE_DEFAULT_MS:number, DOMUS_FLOAT_GRACE_MS:number, SUPER_GRACE_DEFAULT_MS:number}} [getOrbStatusConfig]
+ * @property {(next:{FLOAT_GRACE_DEFAULT_MS?:number, DOMUS_FLOAT_GRACE_MS?:number, SUPER_GRACE_DEFAULT_MS?:number}) => void} [setOrbStatusConfig]
  * @property {Object} [vfxDefaults] Receiver VFX defaults object mutated by preset hydration.
  * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
  * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
@@ -142,6 +147,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     runInputFramePipelineImported,
     runOrbRuntimePipelineImported,
     ORB_RUNTIME_CONFIG_DEFAULT,
+    ORB_STATUS_CONFIG_DEFAULT,
     hydrateReceiverVfxDefaults,
     BUBBLE_SHIELD_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
@@ -162,6 +168,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setRunOrbRuntimePipelineModule,
     getOrbRuntimeConfig,
     setOrbRuntimeConfig,
+    getOrbStatusConfig,
+    setOrbStatusConfig,
     vfxDefaults,
     getInputConfigs,
     setInputConfigs,
@@ -199,6 +207,25 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       SHIELD_DESCENT: (cfg.shieldDescent && typeof cfg.shieldDescent === "object") ? { ...(current.SHIELD_DESCENT || {}), ...cfg.shieldDescent } : current.SHIELD_DESCENT,
       IMPACT_MODEL: (cfg.impact && cfg.impact.model && typeof cfg.impact.model === "object") ? { ...(current.IMPACT_MODEL || {}), ...cfg.impact.model } : current.IMPACT_MODEL,
       IMPACT_TH: (cfg.impact && Number.isFinite(Number(cfg.impact.threshold))) ? Number(cfg.impact.threshold) : current.IMPACT_TH,
+    });
+  }
+
+  if (ORB_STATUS_CONFIG_DEFAULT && typeof ORB_STATUS_CONFIG_DEFAULT === "object" &&
+      typeof getOrbStatusConfig === "function" && typeof setOrbStatusConfig === "function") {
+    const current = getOrbStatusConfig() || {};
+    const fg = (ORB_STATUS_CONFIG_DEFAULT.floatGrace && typeof ORB_STATUS_CONFIG_DEFAULT.floatGrace === "object")
+      ? ORB_STATUS_CONFIG_DEFAULT.floatGrace
+      : {};
+    setOrbStatusConfig({
+      FLOAT_GRACE_DEFAULT_MS: Number.isFinite(Number(fg.defaultMs))
+        ? Number(fg.defaultMs)
+        : current.FLOAT_GRACE_DEFAULT_MS,
+      DOMUS_FLOAT_GRACE_MS: Number.isFinite(Number(fg.domusMs))
+        ? Number(fg.domusMs)
+        : current.DOMUS_FLOAT_GRACE_MS,
+      SUPER_GRACE_DEFAULT_MS: Number.isFinite(Number(fg.superGraceMs))
+        ? Number(fg.superGraceMs)
+        : current.SUPER_GRACE_DEFAULT_MS,
     });
   }
 
