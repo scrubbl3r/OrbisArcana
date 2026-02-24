@@ -56,6 +56,28 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
 export const EVT_VOICE_SET_MODE = "voice.set_mode";
 export const EVT_VOICE_OPEN_GATE = "voice.open_gate";
 export const EVT_VOICE_CLOSE_GATE = "voice.close_gate";
+/**
+ * @typedef {Object} VoiceTokenDetectedPayload
+ * @property {string} token Normalized detected keyword token
+ * @property {number} confidence 0..1 confidence estimate
+ * @property {number} atMs
+ * @property {string} providerId Usually `kws`
+ * @property {string} source Usually `kws`
+ */
+export const EVT_VOICE_TOKEN_DETECTED = "voice.token_detected";
+/**
+ * @typedef {Object} VoiceKwsSpellCandidatePayload
+ * @property {string|null} spellId
+ * @property {boolean} matched
+ * @property {string[]} tokens
+ * @property {string} phrase
+ * @property {number} confidence
+ * @property {boolean} [suppressed]
+ * @property {number} atMs
+ * @property {string} providerId Usually `kws`
+ * @property {string} source Usually `kws`
+ */
+export const EVT_VOICE_KWS_SPELL_CANDIDATE = "voice.kws_spell_candidate";
 export const EVT_VOICE_SPELL_DETECTED = "voice.spell_detected";
 export const EVT_VOICE_SPELL_REJECTED = "voice.spell_rejected";
 export const EVT_VOICE_SCHOOL_SELECTED = "voice.school_selected";
