@@ -1068,7 +1068,7 @@
 
       // Debug-only "nirvana" test: enhanced grace + input processing reset.
       if ((e.key === "n" || e.key === "N") && e.shiftKey) {
-        grantSuperGrace();
+        executeSpellCastAction("orb_super_grace", { payload: { ms: SUPER_GRACE_DEFAULT_MS } });
       }
     });
 
@@ -1298,6 +1298,7 @@
         playFlameAoe,
         teleportOrbToSpawnNeutralizePhysics,
         activateSanctusShield,
+        grantSuperGrace,
         domusTeleportAboveGroundPx: DOMUS_TELEPORT_ABOVE_GROUND_PX,
         sanctusShieldMs: SANCTUS_SHIELD_MS,
       });

@@ -22,6 +22,11 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     handlerKey: "activate_sanctum_shield",
     floatGracePolicy: "none",
   }),
+  Object.freeze({
+    id: "orb_super_grace",
+    handlerKey: "grant_orb_super_grace",
+    floatGracePolicy: "none",
+  }),
 ]);
 
 export const CAST_ACTION_REGISTRY_BY_ID = Object.freeze(

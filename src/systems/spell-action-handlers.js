@@ -3,6 +3,7 @@ export function createSpellActionHandlers({
   playFlameAoe,
   teleportOrbToSpawnNeutralizePhysics,
   activateSanctusShield,
+  grantSuperGrace,
   domusTeleportAboveGroundPx = 300,
   sanctusShieldMs = 8000,
 } = {}){
@@ -26,6 +27,11 @@ export function createSpellActionHandlers({
         activateSanctusShield((payload && payload.axis) || "y", sanctusShieldMs);
       }
     },
+    grant_orb_super_grace(payload = {}) {
+      const ms = Number(payload && payload.ms);
+      if (typeof grantSuperGrace === "function") {
+        grantSuperGrace(Number.isFinite(ms) ? ms : undefined);
+      }
+    },
   };
 }
-
