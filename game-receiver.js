@@ -539,120 +539,23 @@
       }, Math.max(150, Number(durationMs) || SANCTUS_SHIELD_MS));
     }
 
-    let shockRAF = 0;
-    let shockSvg = null;
-    let spawnAcc = 0;
-    const activeRings = [];
-
-    function buildShockSVG(){
-      const maxR = 1000;
-      const size = (maxR * 2) + 40;
-      const cx = size * 0.5;
-      const cy = size * 0.5;
-
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("class", "shockSvg");
-      svg.setAttribute("width", size);
-      svg.setAttribute("height", size);
-      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
-      svg.setAttribute("shape-rendering", "geometricPrecision");
-      svg.__cx = cx;
-      svg.__cy = cy;
-      return svg;
-    }
-
-    function makeRingCircle(svg){
-      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      c.setAttribute("cx", svg.__cx);
-      c.setAttribute("cy", svg.__cy);
-      c.setAttribute("r", "1");
-      c.setAttribute("fill", "none");
-      c.setAttribute("stroke", "var(--shock-color)");
-      c.setAttribute("stroke-width", "var(--shock-stroke)");
-      c.setAttribute("stroke-linecap", "round");
-      c.setAttribute("opacity", "0");
-      return c;
-    }
-
     function clearShock(){
-      if (shockRAF) cancelAnimationFrame(shockRAF);
-      shockRAF = 0;
-      spawnAcc = 0;
-      activeRings.length = 0;
-
-      if (shockSvg && shockSvg.parentNode) shockSvg.parentNode.removeChild(shockSvg);
-      shockSvg = null;
+      if (shockwaveRuntime && typeof shockwaveRuntime.clear === "function") {
+        shockwaveRuntime.clear();
+      }
     }
 
     function playShock(){
-      if (!els.shockLayer) return;
-
-      const stroke = evenStroke(VFX_DEFAULTS.shock.stroke, 2, 20);
-      setVar("--shock-stroke", stroke + "px");
-
-      const cfg = {
-        startR: clamp(VFX_DEFAULTS.shock.startR, 1, 1000),
-        endR: clamp(VFX_DEFAULTS.shock.endR, 1, 1000),
-        rings: Math.round(clamp(VFX_DEFAULTS.shock.rings, 1, 6)),
-        spawnMs: Math.round(clamp(VFX_DEFAULTS.shock.spawnMs, 1, 700)),
-        decayMs: Math.round(clamp(VFX_DEFAULTS.shock.decayMs, 40, 2000)),
-      };
-
-      clearShock();
-
-      shockSvg = buildShockSVG();
-      els.shockLayer.appendChild(shockSvg);
-
-      let last = performance.now();
-      let spawned = 0;
-
-      function tick(now){
-        const dt = Math.max(0, now - last);
-        last = now;
-
-        spawnAcc += dt;
-        while (spawned < cfg.rings && spawnAcc >= cfg.spawnMs){
-          spawnAcc -= cfg.spawnMs;
-
-          const circle = makeRingCircle(shockSvg);
-          shockSvg.appendChild(circle);
-
-          activeRings.push({ born: now, circle });
-          spawned += 1;
-        }
-
-        for (let i = activeRings.length - 1; i >= 0; i--){
-          const r0 = activeRings[i];
-          const age = now - r0.born;
-          const t01 = Math.max(0, Math.min(1, age / cfg.decayMs));
-
-          const r = cfg.startR + (cfg.endR - cfg.startR) * t01;
-          r0.circle.setAttribute("r", r.toFixed(2));
-
-          const alpha = (t01 <= 0) ? 0 : (1 - t01);
-          r0.circle.setAttribute("opacity", alpha.toFixed(3));
-
-          if (t01 >= 1){
-            if (r0.circle.parentNode) r0.circle.parentNode.removeChild(r0.circle);
-            activeRings.splice(i, 1);
-          }
-        }
-
-        const allSpawned = (spawned >= cfg.rings);
-        const noneAlive = (activeRings.length === 0);
-
-        if (allSpawned && noneAlive){
-          clearShock();
-          return;
-        }
-
-        shockRAF = requestAnimationFrame(tick);
+      if (shockwaveRuntime && typeof shockwaveRuntime.play === "function") {
+        shockwaveRuntime.play();
       }
-
-      shockRAF = requestAnimationFrame(tick);
     }
 
     function triggerShockwave(){
+      if (shockwaveRuntime && typeof shockwaveRuntime.trigger === "function") {
+        shockwaveRuntime.trigger();
+        return;
+      }
       playShock();
     }
 
@@ -1716,6 +1619,7 @@
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
+    let shockwaveRuntime = null;
     let receiverModulesReady = false;
     let mvpShardRaf = 0;
     let mvpShardLastTs = 0;
@@ -1986,9 +1890,11 @@
         const [
           { loadReceiverInitModules, hydrateReceiverBootstrapState },
           receiverEventContracts,
+          { createShockwaveRuntime },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/contracts/events.js"),
+          import("./src/vfx/effects/shockwave-runtime.js"),
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
@@ -2028,6 +1934,22 @@
           setSpellCastExecutor: (executor) => { spellCastExecutor = executor; },
           setReceiverModulesReady: (v) => { receiverModulesReady = !!v; },
         });
+        if (typeof createShockwaveRuntime === "function") {
+          shockwaveRuntime = createShockwaveRuntime({
+            layerEl: els.shockLayer,
+            getConfig: () => ({
+              startR: VFX_DEFAULTS.shock.startR,
+              endR: VFX_DEFAULTS.shock.endR,
+              rings: VFX_DEFAULTS.shock.rings,
+              spawnMs: VFX_DEFAULTS.shock.spawnMs,
+              decayMs: VFX_DEFAULTS.shock.decayMs,
+              stroke: VFX_DEFAULTS.shock.stroke,
+            }),
+            setShockStrokeCssVar: (strokePx) => setVar("--shock-stroke", `${strokePx}px`),
+            clamp,
+            normalizeStroke: evenStroke,
+          });
+        }
         const {
           createEventBus,
           createGameState,
