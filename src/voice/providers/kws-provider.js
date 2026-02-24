@@ -13,6 +13,8 @@ import { createKwsTokenParser } from "../kws/kws-token-parser.js";
  *   shadow?: boolean,
  *   parserConfig?: object,
  *   audioBackendFactory?: Function,
+ *   backendFactory?: Function,
+ *   backendConfig?: { requiresMic?: boolean, label?: string },
  * }} [opts]
  */
 export function createKwsProvider(opts = {}) {
@@ -31,6 +33,13 @@ export function createKwsProvider(opts = {}) {
   let micError = "";
   let micStream = null;
   let audioBackend = null;
+  let backendFactory = (typeof opts.backendFactory === "function")
+    ? opts.backendFactory
+    : (typeof opts.audioBackendFactory === "function" ? opts.audioBackendFactory : null);
+  let backendRequiresMic = !!(opts.backendConfig && opts.backendConfig.requiresMic != null
+    ? opts.backendConfig.requiresMic
+    : true);
+  let backendLabel = String(opts.backendConfig && opts.backendConfig.label || "kws-backend");
 
   function start() {
     started = true;
@@ -60,24 +69,28 @@ export function createKwsProvider(opts = {}) {
   async function startMic() {
     if (micRunning) return true;
     micError = "";
-    if (typeof navigator === "undefined" || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
-      micError = "getUserMedia_unavailable";
-      return false;
-    }
-    if (typeof opts.audioBackendFactory !== "function") {
+    if (typeof backendFactory !== "function") {
       micError = "no_audio_backend_factory";
       return false;
     }
     try {
-      micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-        },
-        video: false,
-      });
-      const maybeBackend = await opts.audioBackendFactory({
+      if (backendRequiresMic) {
+        if (typeof navigator === "undefined" || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+          micError = "getUserMedia_unavailable";
+          return false;
+        }
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+          },
+          video: false,
+        });
+      } else {
+        micStream = null;
+      }
+      const maybeBackend = await backendFactory({
         stream: micStream,
         onToken: (hit) => ingestTokenHit(hit),
         onError: (err) => {
@@ -144,6 +157,9 @@ export function createKwsProvider(opts = {}) {
       micRunning,
       micError,
       hasAudioBackendFactory: typeof opts.audioBackendFactory === "function",
+      hasBackendFactory: typeof backendFactory === "function",
+      backendRequiresMic,
+      backendLabel,
       audioBackendStatus: audioBackend && typeof audioBackend.getStatus === "function" ? audioBackend.getStatus() : null,
       parser: parser.getStatus(),
     };
@@ -156,6 +172,26 @@ export function createKwsProvider(opts = {}) {
     return getStatus();
   }
 
+  async function setBackend(nextFactory, nextConfig = {}) {
+    const wasMicRunning = !!micRunning;
+    const shouldResume = wasMicRunning || !!micEnabled;
+    if (wasMicRunning) {
+      try { await stopMic(); } catch {}
+    }
+    backendFactory = (typeof nextFactory === "function") ? nextFactory : null;
+    if (Object.prototype.hasOwnProperty.call(nextConfig, "requiresMic")) {
+      backendRequiresMic = !!nextConfig.requiresMic;
+    }
+    if (Object.prototype.hasOwnProperty.call(nextConfig, "label")) {
+      backendLabel = String(nextConfig.label || backendLabel || "kws-backend");
+    }
+    micError = "";
+    if (shouldResume && typeof backendFactory === "function") {
+      return startMic();
+    }
+    return true;
+  }
+
   return Object.freeze({
     id: "kws",
     start,
@@ -164,6 +200,7 @@ export function createKwsProvider(opts = {}) {
     setEnabled,
     setMode,
     setParserConfig,
+    setBackend,
     startMic,
     stopMic,
     setMicEnabled,

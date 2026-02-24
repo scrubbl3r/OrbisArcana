@@ -4,7 +4,7 @@
  * Update these values when you add the real local SDK/runtime/model assets.
  */
 
-export const PORCUPINE_LOCAL_SDK_VERSION = "0.0.0-local";
+export const PORCUPINE_LOCAL_SDK_VERSION = "4.0.0";
 
 export const PORCUPINE_LOCAL_VENDOR_BASE = `/vendor/porcupine/${PORCUPINE_LOCAL_SDK_VERSION}/`;
 export const PORCUPINE_LOCAL_KEYWORDS_BASE = "/assets/kws/keywords/";

@@ -42,6 +42,13 @@
               <option value="kws">KWS</option>
             </select>
           </div>
+          <div class="dim">
+            KWS Backend:
+            <select id="kwsBackendSelect" class="dim" aria-label="KWS backend">
+              <option value="porcupine_local" selected>Porcupine Local</option>
+              <option value="openwakeword_sidecar">openWakeWord Sidecar</option>
+            </select>
+          </div>
           <div class="dim">KWS: <span id="kwsReadout" class="dim">idle</span></div>
           <div class="kwsInjectRow" aria-label="KWS token test controls">
             <input id="kwsTokenInput" type="text" placeholder="token" autocomplete="off" spellcheck="false" />

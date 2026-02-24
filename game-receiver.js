@@ -16,6 +16,7 @@
       dirReadout: $("dirReadout"),
       voiceReadout: $("voiceReadout"),
       voiceEngineSelect: $("voiceEngineSelect"),
+      kwsBackendSelect: $("kwsBackendSelect"),
       kwsReadout: $("kwsReadout"),
       kwsLog: $("kwsLog"),
       kwsTokenInput: $("kwsTokenInput"),
@@ -1052,6 +1053,7 @@
 
     const kwsDebugState = {
       mode: "stt",
+      backend: "porcupine_local",
       lastToken: "",
       lastCandidate: "",
     };
@@ -1060,6 +1062,7 @@
     function updateKwsReadout(){
       if (!els.kwsReadout) return;
       const parts = [String(kwsDebugState.mode || "stt")];
+      if (kwsDebugState.backend) parts.push(`kwsb:${kwsDebugState.backend}`);
       if (kwsDebugState.lastToken) parts.push(`tok:${kwsDebugState.lastToken}`);
       if (kwsDebugState.lastCandidate) parts.push(`cand:${kwsDebugState.lastCandidate}`);
       if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
@@ -1196,7 +1199,8 @@
           ? mvp.kwsVoiceProvider.getStatus()
           : null;
         const reason = s && s.micError ? ` (${s.micError})` : "";
-        window.alert(`KWS mic could not start${reason}.`);
+        const kind = (s && s.backendRequiresMic === false) ? "link" : "mic";
+        window.alert(`KWS ${kind} could not start${reason}.`);
       }
       refreshKwsMicBtn();
       updateKwsReadout();
@@ -1207,14 +1211,27 @@
         ? kwsVoiceProvider.getStatus()
         : null;
       const micOn = !!(s && s.micRunning);
-      const hasBackend = !!(s && s.hasAudioBackendFactory);
-      els.kwsMicBtn.textContent = micOn ? "KWS Mic On" : "KWS Mic Off";
+      const hasBackend = !!(s && (s.hasBackendFactory || s.hasAudioBackendFactory));
+      const requiresMic = !(s && s.backendRequiresMic === false);
+      els.kwsMicBtn.textContent = micOn
+        ? (requiresMic ? "KWS Mic On" : "KWS Link On")
+        : (requiresMic ? "KWS Mic Off" : "KWS Link Off");
       els.kwsMicBtn.disabled = !hasBackend;
       els.kwsMicBtn.title = hasBackend
-        ? "Toggle real audio KWS backend microphone"
-        : "No KWS audio backend is connected (set window.OrbisKwsBackendFactory)";
+        ? (requiresMic ? "Toggle KWS backend microphone" : "Toggle local openWakeWord sidecar connection")
+        : "No KWS backend is connected";
     }
     if (els.kwsMicBtn) els.kwsMicBtn.addEventListener("click", () => { void toggleKwsMicFromUi(); });
+    if (els.kwsBackendSelect) {
+      els.kwsBackendSelect.addEventListener("change", () => {
+        const key = String(els.kwsBackendSelect.value || "porcupine_local");
+        kwsDebugState.backend = key;
+        updateKwsReadout();
+        if (mvp && typeof mvp.setKwsBackend === "function") {
+          void mvp.setKwsBackend(key);
+        }
+      });
+    }
     function applyKwsParserTuneFromUi(){
       if (!mvp || typeof mvp.setKwsParserConfig !== "function") return;
       const status = mvp.setKwsParserConfig({
@@ -1292,6 +1309,8 @@
     let voiceProviderManager = null;
     let sttVoiceProvider = null;
     let kwsVoiceProvider = null;
+    let kwsBackendFactories = Object.create(null);
+    let kwsBackendKey = "porcupine_local";
     let porcupineKwsInitStatus = { attempted: false, installed: false, reason: "not_attempted" };
     let inputSystem = null;
     let inputGestureSystem = null;
@@ -1712,6 +1731,7 @@
           createVoiceProviderManager,
           createSttProvider,
           createKwsProvider,
+          createOpenWakeWordSidecarBackendFactory,
           createSpellDispatchSystem,
           createVoiceHudSystem,
           WORLD_ITEMS_V1,
@@ -1821,13 +1841,39 @@
           });
         }
         if (typeof createKwsProvider === "function") {
-          const audioBackendFactory = (typeof window !== "undefined" && typeof window.OrbisKwsBackendFactory === "function")
+          const porcupineBackendFactory = (typeof window !== "undefined" && typeof window.OrbisKwsBackendFactory === "function")
             ? window.OrbisKwsBackendFactory
             : null;
+          const openWakeWordSidecarBackendFactory =
+            (typeof createOpenWakeWordSidecarBackendFactory === "function")
+              ? createOpenWakeWordSidecarBackendFactory()
+              : null;
+          kwsBackendFactories = {
+            porcupine_local: {
+              factory: porcupineBackendFactory,
+              requiresMic: true,
+              label: "porcupine-local",
+            },
+            openwakeword_sidecar: {
+              factory: openWakeWordSidecarBackendFactory,
+              requiresMic: false,
+              label: "openwakeword-sidecar",
+            },
+          };
+          kwsBackendKey = (els.kwsBackendSelect && els.kwsBackendSelect.value)
+            ? String(els.kwsBackendSelect.value)
+            : "porcupine_local";
+          const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.porcupine_local || null;
           kwsVoiceProvider = createKwsProvider({
             eventBus,
             shadow: true,
-            audioBackendFactory,
+            backendFactory: selectedBackend && typeof selectedBackend.factory === "function"
+              ? selectedBackend.factory
+              : null,
+            backendConfig: {
+              requiresMic: !(selectedBackend && selectedBackend.requiresMic === false),
+              label: selectedBackend && selectedBackend.label ? selectedBackend.label : "kws-backend",
+            },
           });
         }
         if (typeof createVoiceProviderManager === "function") {
@@ -2008,6 +2054,27 @@
             }
             return voiceProviderManager.setActive && voiceProviderManager.setActive("stt");
           },
+          async setKwsBackend(key = "porcupine_local"){
+            const nextKey = String(key || "porcupine_local");
+            kwsBackendKey = nextKey;
+            kwsDebugState.backend = nextKey;
+            if (els.kwsBackendSelect && els.kwsBackendSelect.value !== nextKey) {
+              els.kwsBackendSelect.value = nextKey;
+            }
+            const spec = kwsBackendFactories[nextKey] || null;
+            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setBackend !== "function") {
+              refreshKwsMicBtn();
+              updateKwsReadout();
+              return false;
+            }
+            await kwsVoiceProvider.setBackend(spec && typeof spec.factory === "function" ? spec.factory : null, {
+              requiresMic: !(spec && spec.requiresMic === false),
+              label: spec && spec.label ? spec.label : nextKey,
+            });
+            refreshKwsMicBtn();
+            updateKwsReadout();
+            return true;
+          },
           kwsToken(token, confidence = 0.95){
             if (!kwsVoiceProvider || typeof kwsVoiceProvider.ingestTokenHit !== "function") return null;
             return kwsVoiceProvider.ingestTokenHit({
@@ -2046,6 +2113,9 @@
         };
         if (els.voiceEngineSelect) {
           els.voiceEngineSelect.value = "stt";
+        }
+        if (els.kwsBackendSelect) {
+          els.kwsBackendSelect.value = kwsBackendKey;
         }
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
