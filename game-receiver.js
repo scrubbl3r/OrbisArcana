@@ -1155,6 +1155,7 @@
     let orbShatterRuntime = null;
     let flameAoeRuntime = null;
     let electricAoeRuntime = null;
+    let vfxRuntimesBundle = null;
     let receiverModulesReady = false;
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
@@ -1349,19 +1350,11 @@
         const [
           { loadReceiverInitModules, hydrateReceiverBootstrapState },
           receiverEventContracts,
-          { createBubbleShieldRuntime },
-          { createShockwaveRuntime },
-          { createOrbShatterRuntime },
-          { createFlameAoeRuntime },
-          { createElectricAoeRuntime },
+          { createVfxRuntimesBundle },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/contracts/events.js"),
-          import("./src/vfx/effects/bubble-shield-runtime.js"),
-          import("./src/vfx/effects/shockwave-runtime.js"),
-          import("./src/vfx/effects/orb-shatter-runtime.js"),
-          import("./src/vfx/effects/flame-aoe-runtime.js"),
-          import("./src/vfx/effects/electric-aoe-runtime.js"),
+          import("./src/vfx/effects/vfx-runtimes-bundle.js"),
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
@@ -1401,74 +1394,73 @@
           setSpellCastExecutor: (executor) => { spellCastExecutor = executor; },
           setReceiverModulesReady: (v) => { receiverModulesReady = !!v; },
         });
-        if (typeof createBubbleShieldRuntime === "function") {
-          bubbleShieldRuntime = createBubbleShieldRuntime({
-            shieldEl: els.shield,
-            getConfig: () => ({
-              alpha: VFX_DEFAULTS.shield.alpha,
-              pulseMs: VFX_DEFAULTS.shield.pulseMs,
-              pulseMin: VFX_DEFAULTS.shield.pulseMin,
-              pulseMax: VFX_DEFAULTS.shield.pulseMax,
-            }),
-            setCssVar: (name, value) => setVar(name, value),
-            clamp,
-            clamp01,
-            fadeInMs: SHIELD_FADEIN_MS,
-            decayMs: SHIELD_DECAY_MS,
-            onDecayActiveChange: (active) => { shieldDecayActive = active ? 1 : 0; },
+        if (typeof createVfxRuntimesBundle === "function") {
+          vfxRuntimesBundle = createVfxRuntimesBundle({
+            bubbleShield: {
+              shieldEl: els.shield,
+              getConfig: () => ({
+                alpha: VFX_DEFAULTS.shield.alpha,
+                pulseMs: VFX_DEFAULTS.shield.pulseMs,
+                pulseMin: VFX_DEFAULTS.shield.pulseMin,
+                pulseMax: VFX_DEFAULTS.shield.pulseMax,
+              }),
+              setCssVar: (name, value) => setVar(name, value),
+              clamp,
+              clamp01,
+              fadeInMs: SHIELD_FADEIN_MS,
+              decayMs: SHIELD_DECAY_MS,
+              onDecayActiveChange: (active) => { shieldDecayActive = active ? 1 : 0; },
+            },
+            shockwave: {
+              layerEl: els.shockLayer,
+              getConfig: () => ({
+                startR: VFX_DEFAULTS.shock.startR,
+                endR: VFX_DEFAULTS.shock.endR,
+                rings: VFX_DEFAULTS.shock.rings,
+                spawnMs: VFX_DEFAULTS.shock.spawnMs,
+                decayMs: VFX_DEFAULTS.shock.decayMs,
+                stroke: VFX_DEFAULTS.shock.stroke,
+              }),
+              setShockStrokeCssVar: (strokePx) => setVar("--shock-stroke", `${strokePx}px`),
+              clamp,
+              normalizeStroke: evenStroke,
+            },
+            orbShatter: {
+              layerEl: els.orbShards,
+              clamp,
+            },
+            flameAoe: {
+              layerEl: els.flameLayer,
+              getConfig: () => ({
+                diameter: VFX_DEFAULTS.flame.diameter,
+                durationMs: VFX_DEFAULTS.flame.durationMs,
+              }),
+              clamp,
+              evenPx,
+              showCore: FLAME_SHOW_CORE,
+            },
+            electricAoe: {
+              layerEl: els.electricLayer,
+              getConfig: () => ({
+                startR: VFX_DEFAULTS.electric.startR,
+                endR: VFX_DEFAULTS.electric.endR,
+                durationMs: VFX_DEFAULTS.electric.durationMs,
+                nodeCount: VFX_DEFAULTS.electric.nodeCount,
+                particleCount: VFX_DEFAULTS.electric.particleCount,
+                particleSpeed: VFX_DEFAULTS.electric.particleSpeed,
+                maxBoltJumpSq: VFX_DEFAULTS.electric.maxBoltJumpSq,
+                startJitterRatio: VFX_DEFAULTS.electric.startJitterRatio,
+              }),
+              clamp,
+              evenPx,
+              rand,
+            },
           });
-        }
-        if (typeof createShockwaveRuntime === "function") {
-          shockwaveRuntime = createShockwaveRuntime({
-            layerEl: els.shockLayer,
-            getConfig: () => ({
-              startR: VFX_DEFAULTS.shock.startR,
-              endR: VFX_DEFAULTS.shock.endR,
-              rings: VFX_DEFAULTS.shock.rings,
-              spawnMs: VFX_DEFAULTS.shock.spawnMs,
-              decayMs: VFX_DEFAULTS.shock.decayMs,
-              stroke: VFX_DEFAULTS.shock.stroke,
-            }),
-            setShockStrokeCssVar: (strokePx) => setVar("--shock-stroke", `${strokePx}px`),
-            clamp,
-            normalizeStroke: evenStroke,
-          });
-        }
-        if (typeof createOrbShatterRuntime === "function") {
-          orbShatterRuntime = createOrbShatterRuntime({
-            layerEl: els.orbShards,
-            clamp,
-          });
-        }
-        if (typeof createFlameAoeRuntime === "function") {
-          flameAoeRuntime = createFlameAoeRuntime({
-            layerEl: els.flameLayer,
-            getConfig: () => ({
-              diameter: VFX_DEFAULTS.flame.diameter,
-              durationMs: VFX_DEFAULTS.flame.durationMs,
-            }),
-            clamp,
-            evenPx,
-            showCore: FLAME_SHOW_CORE,
-          });
-        }
-        if (typeof createElectricAoeRuntime === "function") {
-          electricAoeRuntime = createElectricAoeRuntime({
-            layerEl: els.electricLayer,
-            getConfig: () => ({
-              startR: VFX_DEFAULTS.electric.startR,
-              endR: VFX_DEFAULTS.electric.endR,
-              durationMs: VFX_DEFAULTS.electric.durationMs,
-              nodeCount: VFX_DEFAULTS.electric.nodeCount,
-              particleCount: VFX_DEFAULTS.electric.particleCount,
-              particleSpeed: VFX_DEFAULTS.electric.particleSpeed,
-              maxBoltJumpSq: VFX_DEFAULTS.electric.maxBoltJumpSq,
-              startJitterRatio: VFX_DEFAULTS.electric.startJitterRatio,
-            }),
-            clamp,
-            evenPx,
-            rand,
-          });
+          bubbleShieldRuntime = vfxRuntimesBundle.bubbleShieldRuntime;
+          shockwaveRuntime = vfxRuntimesBundle.shockwaveRuntime;
+          orbShatterRuntime = vfxRuntimesBundle.orbShatterRuntime;
+          flameAoeRuntime = vfxRuntimesBundle.flameAoeRuntime;
+          electricAoeRuntime = vfxRuntimesBundle.electricAoeRuntime;
         }
         const {
           createEventBus,
