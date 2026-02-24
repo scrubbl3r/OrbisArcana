@@ -17,6 +17,7 @@
       voiceReadout: $("voiceReadout"),
       voiceEngineSelect: $("voiceEngineSelect"),
       kwsReadout: $("kwsReadout"),
+      kwsLog: $("kwsLog"),
       kwsTokenInput: $("kwsTokenInput"),
       kwsTokenSendBtn: $("kwsTokenSendBtn"),
       kwsTokIgnisBtn: $("kwsTokIgnisBtn"),
@@ -1053,6 +1054,8 @@
       lastToken: "",
       lastCandidate: "",
     };
+    const kwsEventLog = [];
+    const KWS_EVENT_LOG_MAX = 5;
     function updateKwsReadout(){
       if (!els.kwsReadout) return;
       const parts = [String(kwsDebugState.mode || "stt")];
@@ -1061,6 +1064,29 @@
       els.kwsReadout.textContent = parts.join(" | ");
     }
     updateKwsReadout();
+    function pushKwsLogLine(text, kind = ""){
+      const line = String(text || "").trim();
+      if (!line) return;
+      kwsEventLog.unshift({ text: line, kind: String(kind || "") });
+      if (kwsEventLog.length > KWS_EVENT_LOG_MAX) kwsEventLog.length = KWS_EVENT_LOG_MAX;
+      renderKwsLog();
+    }
+    function renderKwsLog(){
+      if (!els.kwsLog) return;
+      if (!kwsEventLog.length) {
+        els.kwsLog.innerHTML = '<div class="kwsLogLine muted">no kws events yet</div>';
+        return;
+      }
+      els.kwsLog.innerHTML = kwsEventLog.map((row) => {
+        const safe = String(row && row.text || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        const cls = `kwsLogLine${row && row.kind ? ` ${row.kind}` : ""}`;
+        return `<div class="${cls}">${safe}</div>`;
+      }).join("");
+    }
+    renderKwsLog();
 
     function syncKwsTuneUiFromStatus(status){
       const parser = status && status.parser ? status.parser : status;
@@ -1709,6 +1735,7 @@
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
           kwsDebugState.lastToken = String(p.token || "");
+          pushKwsLogLine(`tok ${String(p.token || "")} (${Number(p.confidence || 0).toFixed(2)})`, "muted");
           updateKwsReadout();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
@@ -1716,6 +1743,12 @@
           const spellId = String(p.spellId || "");
           const phrase = String(p.phrase || "");
           kwsDebugState.lastCandidate = matched ? (spellId || phrase || "match") : (phrase || "no-match");
+          if (matched) {
+            const sup = p.suppressed ? " [sup]" : "";
+            pushKwsLogLine(`match ${spellId || phrase}${sup} (${Number(p.confidence || 0).toFixed(2)})`);
+          } else {
+            pushKwsLogLine(`cand ${phrase || "no-match"}`, "muted");
+          }
           updateKwsReadout();
         });
         if (typeof createSttProvider === "function") {
