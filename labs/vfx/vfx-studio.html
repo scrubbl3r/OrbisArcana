@@ -83,6 +83,30 @@
       gap:16px;
       align-items:start;
     }
+    .studioBar{
+      grid-column:1 / -1;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:10px 12px;
+      box-shadow: 0 18px 80px rgba(0,0,0,.45);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .studioBarGroup{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .studioBarLabel{
+      font-size:12px;
+      opacity:.8;
+      font-weight:800;
+    }
 
     .card{
       background:var(--panel);
@@ -135,31 +159,118 @@
       cursor:pointer;
     }
     .toolBtn:hover{ border-color: rgba(50,255,117,.45); }
-    .effectMeta{
-      margin: 8px 0 10px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      font-size:11px;
-      font-weight:800;
-      color: rgba(50,255,117,.9);
+    .toolBtn.secondary{
+      opacity:.9;
     }
-    .chip{
+    .toolBtn[disabled]{
+      opacity:.38;
+      cursor:not-allowed;
+    }
+    .lockBtn{
+      min-width:44px;
+      min-height:34px;
+      padding:4px 8px;
+      font-size:0;
+      line-height:1;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-left:4px;
+      position:relative;
+      overflow:visible;
+      color: var(--g);
+      text-shadow: 0 0 10px rgba(50,255,117,.35);
+    }
+    .lockBtn::before{
+      content:"";
+      position:absolute;
+      width:14px;
+      height:10px;
+      left:50%;
+      top:58%;
+      transform:translate(-50%,-50%);
+      border:2px solid currentColor;
+      border-radius:3px;
+      box-shadow: inset 0 0 8px rgba(50,255,117,.10);
+      background: rgba(50,255,117,.03);
+      z-index:2;
+    }
+    .lockBtn::after{
+      content:"";
+      position:absolute;
+      width:12px;
+      height:9px;
+      left:50%;
+      top:22%;
+      border:2px solid currentColor;
+      border-bottom:none;
+      border-radius:10px 10px 0 0;
+      transform:translateX(-50%);
+      transform-origin: 2px 100%;
+      z-index:1;
+    }
+    .lockBtn.unlocked::after{
+      transform:translateX(-58%) rotate(-42deg);
+    }
+    .lockBtn.locked::after{
+      transform:translateX(-50%) rotate(0deg);
+    }
+    .numField{
+      width:120px;
+      background: rgba(0,0,0,.45);
+      color: var(--g);
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:6px 8px;
+      font: inherit;
+      font-size:12px;
+      font-weight:800;
+    }
+    .inlineField{
       display:inline-flex;
       align-items:center;
       gap:6px;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid rgba(50,255,117,.22);
-      background: rgba(0,0,0,.35);
     }
-    .chip .dim{ opacity:.7; }
-    .bindingPanel{
+    .bindingDetails{
       margin: 0 0 12px;
-      padding: 10px 12px;
       border-radius: 12px;
       border: 1px solid rgba(50,255,117,.18);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .bindingSummary{
+      list-style:none;
+      cursor:pointer;
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.04em;
+      color: rgba(50,255,117,.92);
+      user-select:none;
+    }
+    .bindingSummary::-webkit-details-marker{ display:none; }
+    .bindingSummary::after{
+      content:"+";
+      font-size:14px;
+      opacity:.85;
+    }
+    .bindingDetails[open] .bindingSummary::after{
+      content:"-";
+    }
+    .bindingSummary .dim{
+      font-size:11px;
+      font-weight:800;
+      opacity:.65;
+      letter-spacing:0;
+    }
+    .bindingPanel{
+      margin: 0;
+      padding: 10px 12px;
+      border-top: 1px solid rgba(50,255,117,.14);
       background: rgba(0,0,0,.25);
       display:grid;
       gap:8px;
@@ -369,18 +480,40 @@
 
     @media (max-width: 960px){
       .wrap{ grid-template-columns: 1fr; }
+      .studioBar{
+        align-items:stretch;
+      }
+      .studioBarGroup{
+        width:100%;
+      }
+      .effectSelect{
+        flex:1;
+        min-width:180px;
+      }
       .stage{ height:min(62vh, 620px); }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="title">
-        <span>Preview</span>
-        <span class="dim">VFX Studio (spells, orb, and future world/enemy effects)</span>
+    <div class="studioBar" role="toolbar" aria-label="VFX studio effect library and profile actions">
+      <div class="studioBarGroup">
+        <label class="studioBarLabel" for="effectSelect">Effect</label>
+        <select id="effectSelect" class="effectSelect" aria-label="Select effect controls"></select>
       </div>
+      <div class="studioBarGroup">
+        <button id="newEffectBtn" class="toolBtn" type="button">New</button>
+        <button id="renameEffectBtn" class="toolBtn" type="button">Rename</button>
+        <button id="duplicateEffectBtn" class="toolBtn" type="button">Duplicate</button>
+        <button id="deleteEffectBtn" class="toolBtn" type="button">Delete</button>
+        <button id="saveDraftBtn" class="toolBtn secondary" type="button">Save</button>
+        <button id="publishPresetBtn" class="toolBtn secondary" type="button">Publish Preset</button>
+        <button id="publishProjectBtn" class="toolBtn secondary" type="button">Publish to Project</button>
+        <button id="lockEffectBtn" class="toolBtn lockBtn unlocked" type="button" aria-label="Lock effect profile" title="Lock effect profile"></button>
+      </div>
+    </div>
 
+    <div class="card">
       <div class="stage" id="stage" aria-label="Preview stage">
         <div class="origin" id="origin">
           <div class="electricLayer" id="electricLayer"></div>
@@ -390,37 +523,31 @@
           <div class="orb atOrigin" id="orb" aria-hidden="true"></div>
         </div>
       </div>
-
-      <div class="hint">
-        Includes electric aoe, bubble shield, shockwave, and flame aoe workshops.
-      </div>
     </div>
 
     <div class="card">
-      <div class="title">
-        <span>Controls</span>
-        <div class="titleTools">
-          <label for="effectSelect">Effect</label>
-          <select id="effectSelect" class="effectSelect" aria-label="Select effect controls"></select>
-          <button id="newEffectBtn" class="toolBtn" type="button">New</button>
-          <button id="renameEffectBtn" class="toolBtn" type="button">Rename</button>
-          <button id="deleteEffectBtn" class="toolBtn" type="button">Delete</button>
+      <details class="bindingDetails">
+        <summary class="bindingSummary">
+          <span>Bindings</span>
+          <span class="dim">View current schema binding info</span>
+        </summary>
+        <div class="bindingPanel" id="bindingPanel" aria-live="polite">
+          <h3>Current Binding</h3>
+          <div class="bindingGrid" id="bindingGrid"></div>
         </div>
-      </div>
-      <div class="effectMeta" aria-live="polite">
-        <span class="chip"><span class="dim">Profile</span><span id="effectProfileName">bubble shield</span></span>
-        <span class="chip"><span class="dim">Base type</span><span id="effectBaseType">bubble-shield</span></span>
-        <span class="chip"><span class="dim">Publish</span><span>preset (binding later)</span></span>
-      </div>
-      <div class="bindingPanel" id="bindingPanel" aria-live="polite">
-        <h3>Current Binding</h3>
-        <div class="bindingGrid" id="bindingGrid"></div>
-      </div>
+      </details>
 
       <!-- Electric AOE controls -->
       <div class="section" data-effect="electric-aoe">
         <div class="row">
           <button id="playElectric">Play Electric AOE</button>
+        </div>
+        <div class="sliderRow">
+          <span>Duration</span>
+          <span class="inlineField">
+            <input id="electricMs" class="numField" type="number" min="200" max="60000" step="10" value="10000" />
+            <strong>ms</strong>
+          </span>
         </div>
 
         <div class="sliderRow">
@@ -444,9 +571,11 @@
 
         <div class="sliderRow">
           <span>Shield duration</span>
-          <strong><span id="vShieldMs">1170</span>ms</strong>
+          <span class="inlineField">
+            <input id="shieldMs" class="numField" type="number" min="80" max="120000" step="10" value="1170" />
+            <strong>ms</strong>
+          </span>
         </div>
-        <input id="shieldMs" type="range" min="80" max="1200" value="1170" step="10" />
 
         <div class="sliderRow">
           <span>Shield opacity</span>
@@ -545,7 +674,10 @@
         <input id="flameD" type="range" min="120" max="900" value="200" step="2" />
         <div class="sliderRow">
           <span>Duration</span>
-          <strong>10000ms</strong>
+          <span class="inlineField">
+            <input id="flameMs" class="numField" type="number" min="200" max="60000" step="10" value="10000" />
+            <strong>ms</strong>
+          </span>
         </div>
         <div class="sliderRow">
           <span>Fill alpha</span>
@@ -585,8 +717,15 @@
       globe: "Globes",
       "world-item": "World Items",
       enemy: "Enemies",
-      custom: "Custom Profiles",
     });
+    const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
+    const draftStore = {
+      profilesByValue: Object.create(null),
+      activeValue: "",
+    };
+    let draftHydrationDone = false;
+    let suspendDraftApply = false;
+    let lastSelectedEffectValue = "";
 
     const els = {
       shockLayer: $("shockLayer"),
@@ -597,14 +736,16 @@
       playShield: $("playShield"),
       effectSelect: $("effectSelect"),
       newEffectBtn: $("newEffectBtn"),
+      saveDraftBtn: $("saveDraftBtn"),
+      publishPresetBtn: $("publishPresetBtn"),
+      publishProjectBtn: $("publishProjectBtn"),
+      lockEffectBtn: $("lockEffectBtn"),
       renameEffectBtn: $("renameEffectBtn"),
+      duplicateEffectBtn: $("duplicateEffectBtn"),
       deleteEffectBtn: $("deleteEffectBtn"),
-      effectProfileName: $("effectProfileName"),
-      effectBaseType: $("effectBaseType"),
       bindingPanel: $("bindingPanel"),
       bindingGrid: $("bindingGrid"),
       shieldMs: $("shieldMs"),
-      vShieldMs: $("vShieldMs"),
       shieldAlpha: $("shieldAlpha"),
       vShieldAlpha: $("vShieldAlpha"),
       shieldD: $("shieldD"),
@@ -636,8 +777,10 @@
       playFlame: $("playFlame"),
       flameD: $("flameD"),
       vFlameD: $("vFlameD"),
+      flameMs: $("flameMs"),
 
       playElectric: $("playElectric"),
+      electricMs: $("electricMs"),
       electricStartR: $("electricStartR"),
       vElectricStartR: $("vElectricStartR"),
       electricEndR: $("electricEndR"),
@@ -652,6 +795,53 @@
       if (!els.effectSelect) return null;
       const idx = els.effectSelect.selectedIndex;
       return idx >= 0 ? els.effectSelect.options[idx] : null;
+    }
+
+    function listEffectOptions(){
+      return els.effectSelect ? Array.from(els.effectSelect.options) : [];
+    }
+
+    function findEffectOptionByValue(value){
+      return listEffectOptions().find((o) => o.value === value) || null;
+    }
+
+    function loadDraftStore(){
+      let parsed = null;
+      try {
+        parsed = JSON.parse(window.localStorage.getItem(DRAFT_STORAGE_KEY) || "null");
+      } catch (_err) {
+        parsed = null;
+      }
+      const profiles = parsed && typeof parsed === "object" && parsed.profilesByValue && typeof parsed.profilesByValue === "object"
+        ? parsed.profilesByValue
+        : {};
+      for (const [value, profile] of Object.entries(profiles)) {
+        if (!profile || typeof profile !== "object") continue;
+        draftStore.profilesByValue[value] = {
+          value: String(profile.value || value),
+          label: String(profile.label || value),
+          baseEffect: String(profile.baseEffect || "bubble-shield"),
+          category: String(profile.category || "spell"),
+          registryId: String(profile.registryId || ""),
+          locked: !!profile.locked,
+          settingsByBaseEffect: profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
+            ? profile.settingsByBaseEffect
+            : {},
+          savedAtMs: Number(profile.savedAtMs) || Date.now(),
+        };
+      }
+      draftStore.activeValue = parsed && typeof parsed.activeValue === "string" ? parsed.activeValue : "";
+    }
+
+    function persistDraftStore(){
+      try {
+        window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+          profilesByValue: draftStore.profilesByValue,
+          activeValue: draftStore.activeValue || "",
+        }));
+      } catch (_err) {
+        // Ignore localStorage write failures (private mode/quota). Draft button remains non-fatal.
+      }
     }
 
     function setBindingRows(rows){
@@ -677,7 +867,7 @@
 
       if (isCustom) {
         setBindingRows([
-          { k: "Scope", v: "Custom profile (local session)" },
+          { k: "Scope", v: `Custom profile (local ${selectedEffectCategory()})` },
           { k: "Base", v: String(opt.dataset.baseEffect || "unknown") },
           { k: "Binding", v: "Not published yet" },
         ]);
@@ -726,21 +916,44 @@
       ]);
     }
 
-    function ensureCustomProfilesGroup(){
+    function ensureCategoryGroup(category){
       if (!els.effectSelect) return null;
-      let group = els.effectSelect.querySelector('optgroup[data-kind="custom"]');
+      const key = String(category || "spell");
+      let group = els.effectSelect.querySelector(`optgroup[data-category="${key}"]`);
       if (group) return group;
       group = document.createElement("optgroup");
-      group.label = CATEGORY_LABELS.custom;
-      group.dataset.kind = "custom";
+      group.label = CATEGORY_LABELS[key] || key;
+      group.dataset.kind = "builtin";
+      group.dataset.category = key;
       els.effectSelect.appendChild(group);
       return group;
     }
 
+    function restoreDraftProfilesIntoSelect(){
+      if (!els.effectSelect) return;
+      for (const profile of Object.values(draftStore.profilesByValue)) {
+        if (!profile || typeof profile !== "object") continue;
+        const value = String(profile.value || "");
+        if (!value || !value.startsWith("custom:")) continue;
+        if (findEffectOptionByValue(value)) continue;
+        const category = String(profile.category || "spell");
+        const targetGroup = ensureCategoryGroup(category);
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = String(profile.label || value);
+        opt.dataset.baseEffect = String(profile.baseEffect || "bubble-shield");
+        opt.dataset.category = category;
+        opt.dataset.custom = "true";
+        opt.dataset.locked = profile.locked ? "true" : "false";
+        if (profile.registryId) opt.dataset.registryId = String(profile.registryId);
+        targetGroup.appendChild(opt);
+      }
+    }
+
     function buildEffectLibraryOptionsFromRegistry(){
       if (!els.effectSelect) return;
-      const previousValue = els.effectSelect.value;
-      const customOptions = Array.from(els.effectSelect.querySelectorAll('optgroup[data-kind="custom"] > option'))
+      const previousValue = draftStore.activeValue || els.effectSelect.value;
+      const customOptions = Array.from(els.effectSelect.querySelectorAll('option[data-custom="true"]'))
         .map((o) => o.cloneNode(true));
       els.effectSelect.innerHTML = "";
 
@@ -762,7 +975,10 @@
         opt.textContent = String(entry.label || effectId || "effect");
         opt.dataset.registryId = effectId;
         opt.dataset.baseEffect = baseEffect;
-        opt.dataset.locked = "true";
+        opt.dataset.category = category;
+        const savedProfile = draftStore.profilesByValue[String(opt.value || "")];
+        const savedLocked = savedProfile && typeof savedProfile === "object" ? !!savedProfile.locked : null;
+        opt.dataset.locked = (savedLocked == null ? true : savedLocked) ? "true" : "false";
         if (!baseEffect) {
           opt.disabled = true;
           opt.textContent = `${opt.textContent} (coming soon)`;
@@ -775,8 +991,11 @@
         if (group && group.children.length) els.effectSelect.appendChild(group);
       }
 
-      const customGroup = ensureCustomProfilesGroup();
-      for (const opt of customOptions) customGroup.appendChild(opt);
+      for (const opt of customOptions) {
+        const category = String(opt.dataset.category || "spell");
+        ensureCategoryGroup(category).appendChild(opt);
+      }
+      restoreDraftProfilesIntoSelect();
 
       const hasValue = (value) => Array.from(els.effectSelect.options).some((o) => o.value === value && !o.disabled);
       if (previousValue && hasValue(previousValue)) {
@@ -793,6 +1012,70 @@
       const opt = selectedEffectOption();
       if (!opt) return "bubble-shield";
       return String(opt.dataset.baseEffect || opt.value || "bubble-shield");
+    }
+
+    function selectedEffectCategory(){
+      const opt = selectedEffectOption();
+      if (!opt) return "spell";
+      if (opt.dataset.category) return String(opt.dataset.category);
+      const parent = opt.parentElement;
+      if (parent && parent.tagName === "OPTGROUP" && parent.dataset.category) {
+        return String(parent.dataset.category);
+      }
+      return "spell";
+    }
+
+    function isSelectedEffectLocked(){
+      const opt = selectedEffectOption();
+      if (!opt) return false;
+      return String(opt.dataset.locked || "") === "true";
+    }
+
+    function isCustomEffectOption(opt){
+      if (!opt) return false;
+      return String(opt.dataset.custom || "") === "true" || String(opt.value || "").startsWith("custom:");
+    }
+
+    function isCoreEffectOption(opt){
+      return !!opt && !isCustomEffectOption(opt);
+    }
+
+    function refreshLockUi(){
+      if (!els.lockEffectBtn) return;
+      const opt = selectedEffectOption();
+      const locked = isSelectedEffectLocked();
+      const isCore = isCoreEffectOption(opt);
+      els.lockEffectBtn.classList.toggle("locked", locked);
+      els.lockEffectBtn.classList.toggle("unlocked", !locked);
+      els.lockEffectBtn.setAttribute("aria-label", locked ? "Unlock effect profile" : "Lock effect profile");
+      els.lockEffectBtn.title = locked ? "Unlock effect profile" : "Lock effect profile";
+      els.lockEffectBtn.disabled = !opt || !!(opt && opt.disabled);
+
+      const blockSave = locked;
+      if (els.saveDraftBtn) els.saveDraftBtn.disabled = blockSave;
+      if (els.publishPresetBtn) els.publishPresetBtn.disabled = blockSave;
+      if (els.publishProjectBtn) els.publishProjectBtn.disabled = blockSave;
+      if (els.deleteEffectBtn) els.deleteEffectBtn.disabled = blockSave || !!(opt && opt.disabled);
+    }
+
+    function toggleSelectedEffectLock(){
+      const opt = selectedEffectOption();
+      if (!opt) return;
+      if (opt.disabled) {
+        refreshLockUi();
+        return;
+      }
+      const nextLocked = !(String(opt.dataset.locked || "") === "true");
+      opt.dataset.locked = nextLocked ? "true" : "false";
+      const record = buildPresetDraftRecordFromSelection();
+      if (record) {
+        record.locked = nextLocked;
+        draftStore.profilesByValue[String(record.value || "")] = record;
+        draftStore.activeValue = String(record.value || "");
+        persistDraftStore();
+      }
+      refreshLockUi();
+      refreshBindingPanel();
     }
 
     function slugifyEffectName(text){
@@ -817,29 +1100,371 @@
       return value;
     }
 
-    function refreshEffectMeta(){
+    function buildPresetDraftRecordFromSelection(){
+      const opt = selectedEffectOption();
+      if (!opt) return null;
+      const value = String(opt.value || "");
+      if (!value) return null;
+      const baseEffect = selectedBaseEffect();
+      const prev = draftStore.profilesByValue[value] || {};
+      return {
+        value,
+        label: String(opt.textContent || value),
+        baseEffect,
+        category: selectedEffectCategory(),
+        registryId: String(opt.dataset.registryId || prev.registryId || ""),
+        locked: String(opt.dataset.locked || "") === "true",
+        settingsByBaseEffect: {
+          ...(prev.settingsByBaseEffect && typeof prev.settingsByBaseEffect === "object" ? prev.settingsByBaseEffect : {}),
+          [baseEffect]: captureCurrentEffectSettings(baseEffect),
+        },
+        savedAtMs: Date.now(),
+      };
+    }
+
+    function upsertCurrentDraftProfile(){
+      const record = buildPresetDraftRecordFromSelection();
+      if (!record) return null;
+      draftStore.profilesByValue[record.value] = record;
+      draftStore.activeValue = record.value;
+      persistDraftStore();
+      return record;
+    }
+
+    function sanitizePresetIdPart(text, fallback = "preset"){
+      const slug = slugifyEffectName(text);
+      return slug || fallback;
+    }
+
+    function defaultSettingsForBaseEffect(baseEffect){
+      switch (String(baseEffect || "")) {
+        case "bubble-shield":
+          return {
+            shieldMs: Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.durationMs, 80, 1200)),
+            shieldAlpha: Number(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.alpha, 0, 1).toFixed(2)),
+            shieldD: GEOM.shieldD,
+            shieldStroke: GEOM.shieldStroke,
+            pulseMs: Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.pulseMs, 20, 700)),
+            pulseMin: Number(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.pulseMin, 0, 1).toFixed(2)),
+            pulseMax: Number(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.pulseMax, 0, 1).toFixed(2)),
+          };
+        case "shockwave":
+          return {
+            startR: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.startR, 1, 1000)),
+            endR: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.endR, 1, 1000)),
+            rings: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.rings, 1, 6)),
+            spawn: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.spawnMs, 1, 700)),
+            stroke: evenPx(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.stroke, 2, 20),
+            decay: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.decayMs, 40, 2000)),
+          };
+        case "flame-aoe":
+          return {
+            flameD: evenPx(clamp(FLAME_AOE_PRESET_DEFAULT && FLAME_AOE_PRESET_DEFAULT.diameter, 120, 900), 2, 2000),
+            flameMs: Math.round(clamp(FLAME_AOE_PRESET_DEFAULT && FLAME_AOE_PRESET_DEFAULT.durationMs, 200, 60000)),
+          };
+        case "electric-aoe":
+          return {
+            electricMs: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.durationMs, 200, 60000)),
+            electricStartR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.startR, 2, 500)),
+            electricEndR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.endR, 8, 1000)),
+          };
+        default:
+          return {};
+      }
+    }
+
+    function downloadTextFile(filename, text){
+      const blob = new Blob([String(text || "")], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+
+    function buildPublishedPresetPayload(){
+      const opt = selectedEffectOption();
+      if (!opt) return null;
+      const record = upsertCurrentDraftProfile();
+      if (!record) return null;
+
+      const profileName = String(record.label || record.value || "effect");
+      const baseEffect = String(record.baseEffect || selectedBaseEffect() || "unknown");
+      const registryId = String(record.registryId || "");
+      const settings = record.settingsByBaseEffect && record.settingsByBaseEffect[baseEffect]
+        ? record.settingsByBaseEffect[baseEffect]
+        : captureCurrentEffectSettings(baseEffect);
+      const registryEntry = (Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : [])
+        .find((e) => String(e && e.id || "") === registryId) || null;
+      const generatedPresetId = registryId
+        ? `preset.${sanitizePresetIdPart(registryId.replace(/\./g, "-"), "effect")}.${sanitizePresetIdPart(profileName, "custom")}`
+        : `preset.${sanitizePresetIdPart(baseEffect, "effect")}.${sanitizePresetIdPart(profileName, "custom")}`;
+
+      return {
+        filename: `${sanitizePresetIdPart(baseEffect, "effect")}--${sanitizePresetIdPart(profileName, "preset")}.preset.json`,
+        payload: {
+          kind: "orbis-arcana.vfx-preset-draft",
+          version: 1,
+          profileName,
+          profileValue: String(record.value || ""),
+          effectId: registryId || null,
+          baseEffect,
+          presetId: generatedPresetId,
+          params: settings || {},
+          source: {
+            studio: "vfx-studio.html",
+            selectionLabel: String(opt.textContent || profileName),
+            registryDefaultPresetId: registryEntry ? String(registryEntry.defaultPresetId || "") : "",
+          },
+          savedAtMs: Number(record.savedAtMs) || Date.now(),
+          exportedAtMs: Date.now(),
+        },
+      };
+    }
+
+    async function saveTextToProjectFile(filename, text){
+      if (!window.showSaveFilePicker) {
+        window.alert("Direct project publish is not supported in this browser. Use Publish Preset (download) instead.");
+        return false;
+      }
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{
+          description: "JSON preset draft",
+          accept: { "application/json": [".json"] },
+        }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(String(text || ""));
+      await writable.close();
+      return true;
+    }
+
+    function publishPreset(){
+      if (isSelectedEffectLocked()) {
+        window.alert("This effect profile is locked. Unlock it to publish a preset.");
+        return;
+      }
+      const built = buildPublishedPresetPayload();
+      if (!built) return;
+      downloadTextFile(built.filename, JSON.stringify(built.payload, null, 2));
+    }
+
+    async function publishPresetToProject(){
+      if (isSelectedEffectLocked()) {
+        window.alert("This effect profile is locked. Unlock it to publish to project.");
+        return;
+      }
+      const built = buildPublishedPresetPayload();
+      if (!built) return;
+      try {
+        const ok = await saveTextToProjectFile(built.filename, JSON.stringify(built.payload, null, 2));
+        if (ok) window.alert(`Preset written. Save it into your repo (for example labs/vfx/published/ or src/vfx/presets/drafts/) and commit when ready.`);
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+        window.alert(`Publish to Project failed: ${err && err.message ? err.message : err}`);
+      }
+    }
+
+    function captureCurrentEffectSettings(baseEffect){
+      switch (String(baseEffect || "")) {
+        case "bubble-shield":
+          return {
+            shieldMs: Number(els.shieldMs && els.shieldMs.value),
+            shieldAlpha: Number(els.shieldAlpha && els.shieldAlpha.value),
+            shieldD: Number(els.shieldD && els.shieldD.value),
+            shieldStroke: Number(els.shieldStroke && els.shieldStroke.value),
+            pulseMs: Number(els.pulseMs && els.pulseMs.value),
+            pulseMin: Number(els.pulseMin && els.pulseMin.value),
+            pulseMax: Number(els.pulseMax && els.pulseMax.value),
+          };
+        case "shockwave":
+          return {
+            startR: Number(els.startR && els.startR.value),
+            endR: Number(els.endR && els.endR.value),
+            rings: Number(els.rings && els.rings.value),
+            spawn: Number(els.spawn && els.spawn.value),
+            stroke: Number(els.stroke && els.stroke.value),
+            decay: Number(els.decay && els.decay.value),
+          };
+        case "flame-aoe":
+          return {
+            flameD: Number(els.flameD && els.flameD.value),
+            flameMs: Number(els.flameMs && els.flameMs.value),
+          };
+        case "electric-aoe":
+          return {
+            electricMs: Number(els.electricMs && els.electricMs.value),
+            electricStartR: Number(els.electricStartR && els.electricStartR.value),
+            electricEndR: Number(els.electricEndR && els.electricEndR.value),
+          };
+        default:
+          return {};
+      }
+    }
+
+    function applyCurrentEffectSettings(baseEffect, settings){
+      if (!settings || typeof settings !== "object") return;
+      suspendDraftApply = true;
+      try {
+        switch (String(baseEffect || "")) {
+          case "bubble-shield":
+            if (els.shieldMs && settings.shieldMs != null) els.shieldMs.value = String(settings.shieldMs);
+            if (els.shieldAlpha && settings.shieldAlpha != null) els.shieldAlpha.value = String(settings.shieldAlpha);
+            if (els.shieldD && settings.shieldD != null) els.shieldD.value = String(settings.shieldD);
+            if (els.shieldStroke && settings.shieldStroke != null) els.shieldStroke.value = String(settings.shieldStroke);
+            if (els.pulseMs && settings.pulseMs != null) els.pulseMs.value = String(settings.pulseMs);
+            if (els.pulseMin && settings.pulseMin != null) els.pulseMin.value = String(settings.pulseMin);
+            if (els.pulseMax && settings.pulseMax != null) els.pulseMax.value = String(settings.pulseMax);
+            applyShieldGeometry();
+            applyShield();
+            applyPulse();
+            break;
+          case "shockwave":
+            if (els.startR && settings.startR != null) els.startR.value = String(settings.startR);
+            if (els.endR && settings.endR != null) els.endR.value = String(settings.endR);
+            if (els.rings && settings.rings != null) els.rings.value = String(settings.rings);
+            if (els.spawn && settings.spawn != null) els.spawn.value = String(settings.spawn);
+            if (els.stroke && settings.stroke != null) els.stroke.value = String(settings.stroke);
+            if (els.decay && settings.decay != null) els.decay.value = String(settings.decay);
+            applyShock();
+            break;
+          case "flame-aoe":
+            if (els.flameD && settings.flameD != null) els.flameD.value = String(settings.flameD);
+            if (els.flameMs && settings.flameMs != null) els.flameMs.value = String(settings.flameMs);
+            applyFlameControls();
+            break;
+          case "electric-aoe":
+            if (els.electricMs && settings.electricMs != null) els.electricMs.value = String(settings.electricMs);
+            if (els.electricStartR && settings.electricStartR != null) els.electricStartR.value = String(settings.electricStartR);
+            if (els.electricEndR && settings.electricEndR != null) els.electricEndR.value = String(settings.electricEndR);
+            applyElectricControls();
+            break;
+          default:
+            break;
+        }
+      } finally {
+        suspendDraftApply = false;
+      }
+    }
+
+    function applyDraftToSelectedProfile(){
+      if (!draftHydrationDone || suspendDraftApply) return;
       const opt = selectedEffectOption();
       if (!opt) return;
-      if (els.effectProfileName) els.effectProfileName.textContent = String(opt.textContent || opt.value || "");
-      if (els.effectBaseType) els.effectBaseType.textContent = String(opt.dataset.baseEffect || opt.value || "");
+      const profile = draftStore.profilesByValue[String(opt.value || "")];
+      if (!profile) return;
+      const baseEffect = String(opt.dataset.baseEffect || profile.baseEffect || "");
+      const settingsByBase = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
+        ? profile.settingsByBaseEffect
+        : null;
+      if (!settingsByBase) return;
+      const settings = settingsByBase[baseEffect];
+      if (settings) applyCurrentEffectSettings(baseEffect, settings);
+    }
+
+    function saveDraft(){
+      if (isSelectedEffectLocked()) {
+        window.alert("This effect profile is locked. Unlock it to save changes.");
+        return;
+      }
+      const record = upsertCurrentDraftProfile();
+      if (!record) return;
       refreshBindingPanel();
+      window.alert(`Draft saved: ${record.label}`);
+    }
+
+    function refreshEffectMeta(){
+      refreshBindingPanel();
+      refreshLockUi();
     }
 
     function createCustomEffectProfile(){
       if (!els.effectSelect) return;
       const baseEffect = selectedBaseEffect();
       const baseLabel = (selectedEffectOption() && selectedEffectOption().textContent) || baseEffect;
-      const name = window.prompt("New effect profile name", `${baseLabel} variant`);
+      const name = window.prompt("New effect profile name", `${baseLabel} new`);
       if (!name) return;
       const trimmed = String(name).trim();
       if (!trimmed) return;
 
       const opt = document.createElement("option");
-      opt.value = nextCustomEffectValue(baseEffect, trimmed);
+      const newValue = nextCustomEffectValue(baseEffect, trimmed);
+      opt.value = newValue;
       opt.dataset.baseEffect = baseEffect;
+      const category = selectedEffectCategory();
+      opt.dataset.category = category;
+      opt.dataset.custom = "true";
+      const srcOpt = selectedEffectOption();
+      if (srcOpt && srcOpt.dataset.registryId) opt.dataset.registryId = String(srcOpt.dataset.registryId);
       opt.textContent = trimmed;
-      ensureCustomProfilesGroup()?.appendChild(opt);
+      ensureCategoryGroup(category)?.appendChild(opt);
+
+      // "New" starts from clean defaults for the chosen base effect, not the current live sliders.
+      draftStore.profilesByValue[newValue] = {
+        value: newValue,
+        label: trimmed,
+        baseEffect,
+        category,
+        registryId: String((srcOpt && srcOpt.dataset.registryId) || ""),
+        locked: false,
+        settingsByBaseEffect: {
+          [baseEffect]: defaultSettingsForBaseEffect(baseEffect),
+        },
+        savedAtMs: Date.now(),
+      };
+      draftStore.activeValue = newValue;
+      persistDraftStore();
       els.effectSelect.value = opt.value;
+      updateEffectSections();
+    }
+
+    function duplicateEffectProfile(){
+      if (!els.effectSelect) return;
+      const srcOpt = selectedEffectOption();
+      if (!srcOpt) return;
+      const baseEffect = selectedBaseEffect();
+      const category = selectedEffectCategory();
+      const srcLabel = String(srcOpt.textContent || baseEffect || "effect");
+      const name = window.prompt("Duplicate effect profile as", `${srcLabel} copy`);
+      if (!name) return;
+      const trimmed = String(name).trim();
+      if (!trimmed) return;
+
+      const newValue = nextCustomEffectValue(baseEffect, trimmed);
+      const opt = document.createElement("option");
+      opt.value = newValue;
+      opt.dataset.baseEffect = baseEffect;
+      opt.dataset.category = category;
+      opt.dataset.custom = "true";
+      if (srcOpt.dataset.registryId) opt.dataset.registryId = String(srcOpt.dataset.registryId);
+      opt.textContent = trimmed;
+      ensureCategoryGroup(category)?.appendChild(opt);
+
+      const srcValue = String(srcOpt.value || "");
+      const srcDraft = draftStore.profilesByValue[srcValue];
+      const srcSettingsByBase = srcDraft && srcDraft.settingsByBaseEffect && typeof srcDraft.settingsByBaseEffect === "object"
+        ? srcDraft.settingsByBaseEffect
+        : null;
+      draftStore.profilesByValue[newValue] = {
+        value: newValue,
+        label: trimmed,
+        baseEffect,
+        category,
+        registryId: String(srcOpt.dataset.registryId || ""),
+        locked: false,
+        settingsByBaseEffect: srcSettingsByBase
+          ? JSON.parse(JSON.stringify(srcSettingsByBase))
+          : { [baseEffect]: captureCurrentEffectSettings(baseEffect) },
+        savedAtMs: Date.now(),
+      };
+      draftStore.activeValue = newValue;
+      persistDraftStore();
+
+      els.effectSelect.value = newValue;
       updateEffectSections();
     }
 
@@ -851,6 +1476,11 @@
       const trimmed = String(next).trim();
       if (!trimmed) return;
       opt.textContent = trimmed;
+      const profile = draftStore.profilesByValue[String(opt.value || "")];
+      if (profile) {
+        profile.label = trimmed;
+        persistDraftStore();
+      }
       refreshEffectMeta();
     }
 
@@ -858,14 +1488,17 @@
       const opt = selectedEffectOption();
       if (!opt || !els.effectSelect) return;
       if (String(opt.dataset.locked || "") === "true") {
-        window.alert("Core studio effects can't be deleted. Create a custom profile and delete that instead.");
+        window.alert("This effect profile is locked. Unlock it to delete.");
         return;
       }
       const label = String(opt.textContent || opt.value || "this effect");
       if (!window.confirm(`Delete effect profile \"${label}\"?`)) return;
+      delete draftStore.profilesByValue[String(opt.value || "")];
       const fallback = Array.from(els.effectSelect.options).find((o) => String(o.dataset.locked || "") === "true") || els.effectSelect.options[0];
       opt.remove();
       if (fallback) els.effectSelect.value = fallback.value;
+      draftStore.activeValue = String((fallback && fallback.value) || "");
+      persistDraftStore();
       updateEffectSections();
     }
 
@@ -921,6 +1554,12 @@
       }
       if (els.flameD && FLAME_AOE_PRESET_DEFAULT) {
         els.flameD.value = String(evenPx(clamp(FLAME_AOE_PRESET_DEFAULT.diameter, 120, 900), 2, 2000));
+      }
+      if (els.flameMs && FLAME_AOE_PRESET_DEFAULT) {
+        els.flameMs.value = String(Math.round(clamp(FLAME_AOE_PRESET_DEFAULT.durationMs, 200, 60000)));
+      }
+      if (els.electricMs && ELECTRIC_AOE_PRESET_DEFAULT) {
+        els.electricMs.value = String(Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT.durationMs, 200, 60000)));
       }
       if (els.electricStartR && ELECTRIC_AOE_PRESET_DEFAULT) {
         els.electricStartR.value = String(Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT.startR, 2, 500)));
@@ -995,8 +1634,7 @@
     function applyShield(){
       const ms = clamp(els.shieldMs.value, 80, 1200);
       const a  = clamp(els.shieldAlpha.value, 0, 1);
-
-      els.vShieldMs.textContent = String(Math.round(ms));
+      els.shieldMs.value = String(Math.round(ms));
       els.vShieldAlpha.textContent = a.toFixed(2);
 
       setVar("--shield-alpha", a.toFixed(2));
@@ -1085,6 +1723,13 @@
       }, Math.max(80, ms));
     }
 
+    function stopAllStudioEffects(){
+      shieldOffNow();
+      clearShock();
+      clearFlame();
+      clearElectric();
+    }
+
     els.playShield.addEventListener("click", playShield);
     els.shieldMs.addEventListener("input", applyShield);
     els.shieldAlpha.addEventListener("input", () => { applyShield(); applyPulse(); });
@@ -1100,21 +1745,38 @@
     shieldOffNow(); // OFF by default, no continuous pulse
 
     function updateEffectSections(){
+      const opt = selectedEffectOption();
+      const selectedValue = String((opt && opt.value) || "");
+      if (lastSelectedEffectValue && selectedValue && selectedValue !== lastSelectedEffectValue) {
+        stopAllStudioEffects();
+      }
+      lastSelectedEffectValue = selectedValue;
+
       const effect = selectedBaseEffect();
       const sections = document.querySelectorAll(".section[data-effect]");
       sections.forEach((section) => {
         section.hidden = section.getAttribute("data-effect") !== effect;
       });
+      draftStore.activeValue = String((opt && opt.value) || "");
+      applyDraftToSelectedProfile();
+      persistDraftStore();
       refreshEffectMeta();
     }
     if (els.effectSelect) {
+      loadDraftStore();
       buildEffectLibraryOptionsFromRegistry();
+      draftHydrationDone = true;
       els.effectSelect.addEventListener("change", updateEffectSections);
       updateEffectSections();
     }
     if (els.newEffectBtn) els.newEffectBtn.addEventListener("click", createCustomEffectProfile);
+    if (els.saveDraftBtn) els.saveDraftBtn.addEventListener("click", saveDraft);
+    if (els.publishPresetBtn) els.publishPresetBtn.addEventListener("click", publishPreset);
+    if (els.publishProjectBtn) els.publishProjectBtn.addEventListener("click", () => { void publishPresetToProject(); });
     if (els.renameEffectBtn) els.renameEffectBtn.addEventListener("click", renameEffectProfile);
+    if (els.duplicateEffectBtn) els.duplicateEffectBtn.addEventListener("click", duplicateEffectProfile);
     if (els.deleteEffectBtn) els.deleteEffectBtn.addEventListener("click", deleteEffectProfile);
+    if (els.lockEffectBtn) els.lockEffectBtn.addEventListener("click", toggleSelectedEffectLock);
 
     // =========================================================================
     // Shockwave (spawned rings; plain circles)
@@ -1404,10 +2066,11 @@
     function playFlame(){
       if (!els.flameLayer) return;
       clearFlame();
+      const flameCtl = applyFlameControls();
 
       const cfg = {
         diameter: evenPx(clamp(els.flameD.value, 120, 900), 2, 2000),
-        durationMs: Math.max(200, Number(FLAME_AOE_PRESET_DEFAULT.durationMs) || 10000)
+        durationMs: Math.max(200, Number(flameCtl && flameCtl.durationMs) || Number(FLAME_AOE_PRESET_DEFAULT.durationMs) || 10000)
       };
       setVar("--flame-d", cfg.diameter + "px");
       setVar("--flame-duration", cfg.durationMs + "ms");
@@ -1513,11 +2176,15 @@
     els.playFlame.addEventListener("click", playFlame);
     function applyFlameControls(){
       const d = evenPx(clamp(els.flameD.value, 120, 900), 2, 2000);
+      const ms = Math.round(clamp(els.flameMs && els.flameMs.value, 200, 60000));
       els.flameD.value = String(d);
+      if (els.flameMs) els.flameMs.value = String(ms);
       els.vFlameD.textContent = String(d);
       setVar("--flame-d", d + "px");
+      return { diameter: d, durationMs: ms };
     }
     els.flameD.addEventListener("input", applyFlameControls);
+    if (els.flameMs) els.flameMs.addEventListener("input", applyFlameControls);
     applyFlameControls();
 
     // =========================================================================
@@ -1544,19 +2211,21 @@
     }
 
     function applyElectricControls(){
+      const durationMs = Math.round(clamp(els.electricMs && els.electricMs.value, 200, 60000));
       let startR = Math.round(clamp(els.electricStartR.value, 2, 500));
       let endR = Math.round(clamp(els.electricEndR.value, 8, 1000));
       if (endR <= startR + 4){
         endR = startR + 4;
       }
 
+      if (els.electricMs) els.electricMs.value = String(durationMs);
       els.electricStartR.value = String(startR);
       els.electricEndR.value = String(endR);
       els.vElectricStartR.textContent = String(startR);
       els.vElectricEndR.textContent = String(endR);
 
       setVar("--electric-d", (endR * 2) + "px");
-      return { startR, endR };
+      return { startR, endR, durationMs };
     }
 
     function clearElectric(){
@@ -1599,7 +2268,7 @@
         cy: size * 0.5,
         startR: cfg.startR,
         endR: cfg.endR,
-        durationMs: Math.max(200, Number(ELECTRIC_AOE_PRESET_DEFAULT.durationMs) || 10000),
+        durationMs: Math.max(200, Number(cfg.durationMs) || Number(ELECTRIC_AOE_PRESET_DEFAULT.durationMs) || 10000),
         maxBoltJumpSq: Math.max(100, Number(ELECTRIC_AOE_PRESET_DEFAULT.maxBoltJumpSq) || 1200),
         particleCount: Math.max(50, Math.round(Number(ELECTRIC_AOE_PRESET_DEFAULT.particleCount) || 340)),
         nodeCount: Math.max(1, Math.round(Number(ELECTRIC_AOE_PRESET_DEFAULT.nodeCount) || 13)),
@@ -1788,6 +2457,7 @@
     }
 
     els.playElectric.addEventListener("click", playElectric);
+    if (els.electricMs) els.electricMs.addEventListener("input", applyElectricControls);
     els.electricStartR.addEventListener("input", applyElectricControls);
     els.electricEndR.addEventListener("input", applyElectricControls);
     applyElectricControls();
