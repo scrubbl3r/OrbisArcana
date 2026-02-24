@@ -524,235 +524,16 @@
     // =========================================================================
     // Electric AOE (ported from VFX lab)
     // =========================================================================
-    let electricRAF = 0;
-    let electricCanvas = null;
-    let electricCtx = null;
-    let electricParticles = [];
-    let electricNodes = [];
-    let electricConfig = null;
-    let electricEndAt = 0;
-
-    function electricDistSq(x1, y1, x2, y2){
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      return (dx * dx) + (dy * dy);
-    }
-
     function clearElectric(){
-      if (electricRAF) cancelAnimationFrame(electricRAF);
-      electricRAF = 0;
-      electricParticles = [];
-      electricNodes = [];
-      electricConfig = null;
-      electricEndAt = 0;
-      electricCtx = null;
-      if (electricCanvas && electricCanvas.parentNode){
-        electricCanvas.parentNode.removeChild(electricCanvas);
+      if (electricAoeRuntime && typeof electricAoeRuntime.clear === "function") {
+        electricAoeRuntime.clear();
       }
-      electricCanvas = null;
-    }
-
-    function buildElectricCanvas(cfg){
-      const size = evenPx((cfg.endR * 2) + 24, 2, 4096);
-      const canvas = document.createElement("canvas");
-      canvas.className = "electricCanvas";
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      electricCanvas = canvas;
-      electricCtx = ctx;
-      electricConfig = {
-        size,
-        cx: size * 0.5,
-        cy: size * 0.5,
-        startR: cfg.startR,
-        endR: cfg.endR,
-        durationMs: cfg.durationMs,
-        maxBoltJumpSq: cfg.maxBoltJumpSq,
-        particleCount: cfg.particleCount,
-        nodeCount: cfg.nodeCount,
-        particleSpeed: cfg.particleSpeed,
-        startJitterRatio: cfg.startJitterRatio,
-      };
-    }
-
-    function initElectricParticles(){
-      const cfg = electricConfig;
-      electricParticles = [];
-      for (let i = 0; i < cfg.particleCount; i++){
-        const a = rand(0, Math.PI * 2);
-        const u = Math.random();
-        const r = Math.sqrt((u * ((cfg.endR * cfg.endR) - (cfg.startR * cfg.startR))) + (cfg.startR * cfg.startR));
-        const x = cfg.cx + (Math.cos(a) * r);
-        const y = cfg.cy + (Math.sin(a) * r);
-        const vA = rand(0, Math.PI * 2);
-        electricParticles.push({
-          x, y,
-          vx: Math.cos(vA) * cfg.particleSpeed,
-          vy: Math.sin(vA) * cfg.particleSpeed,
-        });
-      }
-    }
-
-    function initElectricNodes(){
-      const cfg = electricConfig;
-      electricNodes = [];
-      for (let i = 0; i < cfg.nodeCount; i++){
-        const angle = rand(0, Math.PI * 2);
-        const startJitterPx = rand(-(cfg.startR * cfg.startJitterRatio), (cfg.startR * cfg.startJitterRatio));
-        const emitR = clamp(cfg.startR + startJitterPx, 2, cfg.endR - 2);
-        electricNodes.push({
-          angle,
-          spin: rand(-0.06, 0.06),
-          startJitterPx,
-          emitR,
-          x: cfg.cx + (Math.cos(angle) * emitR),
-          y: cfg.cy + (Math.sin(angle) * emitR),
-        });
-      }
-    }
-
-    function updateElectricNodes(){
-      const cfg = electricConfig;
-      for (let i = 0; i < electricNodes.length; i++){
-        const n = electricNodes[i];
-        n.emitR = clamp(cfg.startR + n.startJitterPx, 2, cfg.endR - 2);
-        n.x = cfg.cx + (Math.cos(n.angle) * n.emitR);
-        n.y = cfg.cy + (Math.sin(n.angle) * n.emitR);
-        n.angle += n.spin;
-        n.spin += rand(-0.004, 0.004);
-        n.spin = clamp(n.spin, -0.1, 0.1);
-      }
-    }
-
-    function updateElectricParticles(){
-      const cfg = electricConfig;
-      for (let i = 0; i < electricParticles.length; i++){
-        const p = electricParticles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-
-        const dx = p.x - cfg.cx;
-        const dy = p.y - cfg.cy;
-        const d = Math.sqrt((dx * dx) + (dy * dy)) || 1;
-        if (d > cfg.endR || d < cfg.startR){
-          p.vx *= -1;
-          p.vy *= -1;
-          const clampedR = clamp(d, cfg.startR + 0.5, cfg.endR - 0.5);
-          p.x = cfg.cx + ((dx / d) * clampedR);
-          p.y = cfg.cy + ((dy / d) * clampedR);
-        }
-      }
-    }
-
-    function drawElectricBolt(node){
-      const cfg = electricConfig;
-      const ctx = electricCtx;
-      let px = node.x;
-      let py = node.y;
-      let oldPx = px;
-      let oldPy = py;
-      let lastEdgeDist = node.emitR;
-
-      for (let hops = 0; hops < 18; hops++){
-        let found = false;
-        let lowestDistSq = Number.POSITIVE_INFINITY;
-        let next = null;
-        let nextEdgeDist = 0;
-
-        for (let i = 0; i < electricParticles.length; i++){
-          const p = electricParticles[i];
-          const distSq = electricDistSq(px, py, p.x, p.y);
-          if (distSq >= lowestDistSq) continue;
-          if (distSq > cfg.maxBoltJumpSq || distSq < 20) continue;
-
-          const cdx = p.x - cfg.cx;
-          const cdy = p.y - cfg.cy;
-          const edgeDist = Math.sqrt((cdx * cdx) + (cdy * cdy));
-          if (edgeDist <= lastEdgeDist) continue;
-          if (edgeDist > cfg.endR) continue;
-
-          lowestDistSq = distSq;
-          next = p;
-          nextEdgeDist = edgeDist;
-          found = true;
-        }
-
-        if (!found || !next) break;
-        px = next.x;
-        py = next.y;
-        lastEdgeDist = nextEdgeDist;
-
-        const xc = (oldPx + px) * 0.5;
-        const yc = (oldPy + py) * 0.5;
-        ctx.quadraticCurveTo(oldPx, oldPy, xc, yc);
-        oldPx = px;
-        oldPy = py;
-      }
-    }
-
-    function drawElectricFrame(){
-      const cfg = electricConfig;
-      const ctx = electricCtx;
-      ctx.clearRect(0, 0, cfg.size, cfg.size);
-
-      const ring = ctx.createRadialGradient(cfg.cx, cfg.cy, cfg.startR, cfg.cx, cfg.cy, cfg.endR);
-      ring.addColorStop(0, "rgba(255, 250, 180, 0.82)");
-      ring.addColorStop(0.6, "rgba(255, 235, 95, 0.55)");
-      ring.addColorStop(1, "rgba(255, 220, 64, 0.12)");
-      ctx.strokeStyle = ring;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = "rgba(255, 225, 90, 1)";
-      ctx.shadowBlur = 30;
-
-      ctx.beginPath();
-      for (let i = 0; i < electricNodes.length; i++){
-        const n = electricNodes[i];
-        ctx.moveTo(n.x, n.y);
-        drawElectricBolt(n);
-      }
-      ctx.stroke();
-      ctx.closePath();
-      ctx.shadowBlur = 0;
-    }
-
-    function tickElectric(now){
-      updateElectricNodes();
-      updateElectricParticles();
-      drawElectricFrame();
-      if (now >= electricEndAt){
-        clearElectric();
-        return;
-      }
-      electricRAF = requestAnimationFrame(tickElectric);
     }
 
     function playElectricAoe(){
-      if (!els.electricLayer) return;
-      clearElectric();
-
-      const cfg = {
-        startR: Math.round(clamp(VFX_DEFAULTS.electric.startR, 2, 500)),
-        endR: Math.round(clamp(VFX_DEFAULTS.electric.endR, 8, 1000)),
-        durationMs: Math.max(200, Number(VFX_DEFAULTS.electric.durationMs) || 10000),
-        nodeCount: Math.max(1, Math.round(Number(VFX_DEFAULTS.electric.nodeCount) || 13)),
-        particleCount: Math.max(50, Math.round(Number(VFX_DEFAULTS.electric.particleCount) || 340)),
-        particleSpeed: Math.max(0.05, Number(VFX_DEFAULTS.electric.particleSpeed) || 0.62),
-        maxBoltJumpSq: Math.max(100, Number(VFX_DEFAULTS.electric.maxBoltJumpSq) || 1200),
-        startJitterRatio: clamp(Number(VFX_DEFAULTS.electric.startJitterRatio) || 0.30, 0, 1),
-      };
-      if (cfg.endR <= cfg.startR + 4) cfg.endR = cfg.startR + 4;
-
-      buildElectricCanvas(cfg);
-      initElectricParticles();
-      initElectricNodes();
-      els.electricLayer.appendChild(electricCanvas);
-
-      electricEndAt = performance.now() + electricConfig.durationMs;
-      electricRAF = requestAnimationFrame(tickElectric);
+      if (electricAoeRuntime && typeof electricAoeRuntime.play === "function") {
+        electricAoeRuntime.play();
+      }
     }
 
     // =========================================================================
@@ -1373,6 +1154,7 @@
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
     let flameAoeRuntime = null;
+    let electricAoeRuntime = null;
     let receiverModulesReady = false;
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
@@ -1571,6 +1353,7 @@
           { createShockwaveRuntime },
           { createOrbShatterRuntime },
           { createFlameAoeRuntime },
+          { createElectricAoeRuntime },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/contracts/events.js"),
@@ -1578,6 +1361,7 @@
           import("./src/vfx/effects/shockwave-runtime.js"),
           import("./src/vfx/effects/orb-shatter-runtime.js"),
           import("./src/vfx/effects/flame-aoe-runtime.js"),
+          import("./src/vfx/effects/electric-aoe-runtime.js"),
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
@@ -1666,6 +1450,24 @@
             clamp,
             evenPx,
             showCore: FLAME_SHOW_CORE,
+          });
+        }
+        if (typeof createElectricAoeRuntime === "function") {
+          electricAoeRuntime = createElectricAoeRuntime({
+            layerEl: els.electricLayer,
+            getConfig: () => ({
+              startR: VFX_DEFAULTS.electric.startR,
+              endR: VFX_DEFAULTS.electric.endR,
+              durationMs: VFX_DEFAULTS.electric.durationMs,
+              nodeCount: VFX_DEFAULTS.electric.nodeCount,
+              particleCount: VFX_DEFAULTS.electric.particleCount,
+              particleSpeed: VFX_DEFAULTS.electric.particleSpeed,
+              maxBoltJumpSq: VFX_DEFAULTS.electric.maxBoltJumpSq,
+              startJitterRatio: VFX_DEFAULTS.electric.startJitterRatio,
+            }),
+            clamp,
+            evenPx,
+            rand,
           });
         }
         const {
