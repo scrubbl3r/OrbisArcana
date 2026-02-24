@@ -1135,6 +1135,9 @@
     let orbSystemsBundle = null;
     let orbRuntimeLoop = null;
     let resourcesSystem = null;
+    let voiceProviderManager = null;
+    let sttVoiceProvider = null;
+    let kwsVoiceProvider = null;
     let inputSystem = null;
     let inputGestureSystem = null;
     let inputSystemsBundle = null;
@@ -1535,6 +1538,9 @@
           createOrbSystemsBundle,
           createOrbFxSystem,
           createVoiceRecognitionSystem,
+          createVoiceProviderManager,
+          createSttProvider,
+          createKwsProvider,
           createSpellDispatchSystem,
           createVoiceHudSystem,
           WORLD_ITEMS_V1,
@@ -1616,12 +1622,46 @@
           voiceReadoutEl: els.voiceReadout,
           voiceState: gameState.voice,
         });
+        if (typeof createSttProvider === "function") {
+          sttVoiceProvider = createSttProvider({
+            start: () => { if (voiceRecognitionSystem && typeof voiceRecognitionSystem.start === "function") voiceRecognitionSystem.start(); },
+            stop: () => { if (voiceRecognitionSystem && typeof voiceRecognitionSystem.stop === "function") voiceRecognitionSystem.stop(); },
+            setMode: (mode) => {
+              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
+            },
+          });
+        }
+        if (typeof createKwsProvider === "function") {
+          kwsVoiceProvider = createKwsProvider({
+            eventBus,
+            shadow: true,
+          });
+        }
+        if (typeof createVoiceProviderManager === "function") {
+          voiceProviderManager = createVoiceProviderManager({
+            providers: {
+              ...(sttVoiceProvider ? { stt: sttVoiceProvider } : {}),
+              ...(kwsVoiceProvider ? { kws: kwsVoiceProvider } : {}),
+            },
+            activeId: sttVoiceProvider ? "stt" : (kwsVoiceProvider ? "kws" : ""),
+          });
+        }
         fxSystem.start();
         audioSystem.start();
         inputSystemsBundle.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
-        voiceRecognitionSystem.start();
+        if (voiceProviderManager && typeof voiceProviderManager.start === "function") {
+          voiceProviderManager.start();
+        } else {
+          voiceRecognitionSystem.start();
+        }
+        // Sidecar KWS shadow mode: enabled for parser/event testing while STT remains active.
+        if (kwsVoiceProvider) {
+          if (typeof kwsVoiceProvider.setMode === "function") kwsVoiceProvider.setMode("shadow");
+          if (typeof kwsVoiceProvider.start === "function") kwsVoiceProvider.start();
+          if (typeof kwsVoiceProvider.setEnabled === "function") kwsVoiceProvider.setEnabled(true);
+        }
         voiceHudSystem.start();
         const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
           .map(normalizeWorldItemSpawn)
@@ -1740,7 +1780,44 @@
           orbRuntimeLoop,
           spellDispatchSystem,
           voiceRecognitionSystem,
+          voiceProviderManager,
+          sttVoiceProvider,
+          kwsVoiceProvider,
           voiceHudSystem,
+          setVoiceEngine(mode = "stt"){
+            const m = String(mode || "stt").toLowerCase();
+            if (!voiceProviderManager) return false;
+            if (m === "kws_shadow") {
+              if (typeof voiceProviderManager.setActive === "function") voiceProviderManager.setActive("stt");
+              if (kwsVoiceProvider) {
+                kwsVoiceProvider.setMode("shadow");
+                kwsVoiceProvider.start && kwsVoiceProvider.start();
+                kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
+              }
+              return true;
+            }
+            if (m === "kws") {
+              if (kwsVoiceProvider) {
+                kwsVoiceProvider.setMode("active");
+                kwsVoiceProvider.start && kwsVoiceProvider.start();
+              }
+              return voiceProviderManager.setActive && voiceProviderManager.setActive("kws");
+            }
+            if (kwsVoiceProvider) {
+              kwsVoiceProvider.setMode("shadow");
+              kwsVoiceProvider.start && kwsVoiceProvider.start();
+              kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
+            }
+            return voiceProviderManager.setActive && voiceProviderManager.setActive("stt");
+          },
+          kwsToken(token, confidence = 0.95){
+            if (!kwsVoiceProvider || typeof kwsVoiceProvider.ingestTokenHit !== "function") return null;
+            return kwsVoiceProvider.ingestTokenHit({
+              token,
+              confidence,
+              atMs: performance.now(),
+            });
+          },
           grantFloatGrace,
           grantSuperGrace,
           lastImpact: null,
