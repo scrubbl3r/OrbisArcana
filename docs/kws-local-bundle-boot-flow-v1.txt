@@ -38,8 +38,15 @@ What you need to add for real KWS
 3. SDK session wrapper on window
    - `window.OrbisCreatePorcupineSdkSession = async ({ stream, keywords, onDetection, onError }) => ...`
    - skeleton file provided in `porcupine-sdk-session-global.js`
+   - wrapper can consume vendor hooks from `window.OrbisPorcupineSdkHooks`
 
-4. Update manifest in `src/voice/kws/porcupine-init.js`
+4. Optional local vendor bridge (recommended)
+   - `window.OrbisPorcupineSdkBridge = { createSession(...) }`
+   - local hooks installer file:
+     `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-sdk-hooks-local.js`
+   - local boot will auto-attempt to install hooks after SDK script load
+
+5. Update manifest in `src/voice/kws/porcupine-init.js`
    - set real version
    - set script/wasm/worker paths
    - set real keyword model paths

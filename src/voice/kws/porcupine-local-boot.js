@@ -120,6 +120,14 @@ export async function bootLocalPorcupineKws(opts = {}) {
       try {
         await ensureScriptOnce(scriptPath);
         bootState.loadedScript = true;
+        if (typeof window !== "undefined" && typeof window.OrbisPorcupineSdkHooks !== "function" && (!window.OrbisPorcupineSdkHooks || typeof window.OrbisPorcupineSdkHooks !== "object")) {
+          try {
+            const hooksLocalMod = await import("./porcupine-sdk-hooks-local.js");
+            if (hooksLocalMod && typeof hooksLocalMod.installOrbisPorcupineSdkHooksLocal === "function") {
+              hooksLocalMod.installOrbisPorcupineSdkHooksLocal();
+            }
+          } catch (_ignored) {}
+        }
         if (typeof window !== "undefined" && typeof window.OrbisCreatePorcupineSdkSession !== "function") {
           try {
             const sessionGlobalMod = await import("./porcupine-sdk-session-global.js");
