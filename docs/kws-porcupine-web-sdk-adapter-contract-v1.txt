@@ -1,0 +1,84 @@
+PORCUPINE WEB SDK ADAPTER CONTRACT (v1)
+
+Purpose
+
+This document defines the project-local adapter contract for plugging a real
+Porcupine Web SDK implementation into Orbis Arcana's KWS provider path.
+
+Adapter file
+
+  /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-web-sdk-adapter.js
+
+What the receiver expects (already implemented)
+
+The receiver looks for:
+
+  window.OrbisKwsBackendFactory
+
+The KWS provider uses this to process live microphone audio and emit tokens.
+
+What the project-local adapter exposes
+
+`installOrbisPorcupineWebAdapter({ createSdkSession, keywords? })`
+
+You provide `createSdkSession(...)` to bridge the real SDK.
+
+Required `createSdkSession(...)` contract
+
+Input:
+- `stream` (MediaStream)
+- `keywords` (array of keyword configs)
+- `onDetection({ token|keyword, confidence|score, atMs })`
+- `onError(err)`
+
+Return:
+- `start()`
+- `stop()`
+- `destroy()` (optional but recommended)
+- `getStatus()` (optional but recommended)
+
+Suggested implementation shape (pseudo)
+
+  async function createSdkSession({ stream, keywords, onDetection, onError }) {
+    // 1. Initialize Porcupine SDK / worker / models
+    // 2. Connect it to the provided MediaStream
+    // 3. Map detections -> onDetection(...)
+    // 4. Return lifecycle wrapper
+
+    const detector = await initPorcupineDetector({ stream, keywords, onDetection, onError });
+
+    return {
+      start: () => detector.start(),
+      stop: () => detector.stop(),
+      destroy: () => detector.destroy && detector.destroy(),
+      getStatus: () => detector.getStatus ? detector.getStatus() : { ok: true },
+    };
+  }
+
+Keyword token mapping rule (important)
+
+Normalize all detections to the parser token set:
+- ignis
+- fridgis
+- electrum
+- sanctum
+- sanctus
+- radius
+- rota
+- rahta
+- domus
+
+The parser uses spellbook aliases as SSOT, so alias tokens are allowed.
+
+Recommended rollout
+
+1. Install adapter in local dev boot code:
+   `installOrbisPorcupineWebAdapter({ createSdkSession })`
+
+2. Start receiver
+3. Voice Engine = KWS Shadow
+4. KWS Mic On
+5. Validate detections in KWS log/readout
+6. Tune parser settings (Win/Thr/CD)
+7. Switch Voice Engine = KWS for live casting
+
