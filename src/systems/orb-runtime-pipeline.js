@@ -12,7 +12,8 @@ function clamp01(n){
  * @property {number} dt Delta time in seconds (already clamped by caller)
  * @property {number} nowMs Receiver/performance clock time
  * @property {boolean} wasOnGround Previous frame grounded state
- * @property {Object} physState Receiver-owned orb runtime motion state (mutated in place)
+ * @property {Object} [physState] Legacy direct orb runtime motion state (mutated in place)
+ * @property {{get?:() => Object}} [orbRuntimeState] Orb runtime state owner API (preferred)
  * @property {Object} phys Orb runtime physics config
  * @property {{vDownThr:number, graceMs:number}} shieldDescent Shield descent gate tuning
  * @property {Object} [mvp] Receiver MVP container (used for orb tick + impact application)
@@ -36,6 +37,7 @@ export function runOrbRuntimePipeline({
   nowMs,
   wasOnGround,
   physState,
+  orbRuntimeState,
   phys,
   shieldDescent,
   mvp,
@@ -43,7 +45,10 @@ export function runOrbRuntimePipeline({
   worldSystem,
   hooks,
 } = {}){
-  if (!physState || !phys || !hooks) return;
+  const state = (orbRuntimeState && typeof orbRuntimeState.get === "function")
+    ? orbRuntimeState.get()
+    : physState;
+  if (!state || !phys || !hooks) return;
 
   const clamp = typeof hooks.clamp === "function" ? hooks.clamp : ((n, a, b) => Math.min(b, Math.max(a, n)));
   const liftToThrustAccel = hooks.liftToThrustAccel;
@@ -61,80 +66,80 @@ export function runOrbRuntimePipeline({
     mvp.orbSystem.tick(nowMs);
   }
 
-  const g = phys.gBase * physState.gravityMul;
+  const g = phys.gBase * state.gravityMul;
   const thrust = (typeof liftToThrustAccel === "function")
-    ? Number(liftToThrustAccel(physState.lift01)) || 0
-    : (Number(phys.thrustMax) || 0) * clamp01(physState.lift01);
+    ? Number(liftToThrustAccel(state.lift01)) || 0
+    : (Number(phys.thrustMax) || 0) * clamp01(state.lift01);
 
   let a = g - thrust;
 
   const signedFallDrag = clamp(Number(phys.downDrag) || 0, -1, 1);
-  const drag = (physState.v >= 0) ? signedFallDrag : phys.upDrag;
-  a += (-drag * physState.v);
+  const drag = (state.v >= 0) ? signedFallDrag : phys.upDrag;
+  a += (-drag * state.v);
 
-  physState.v += a * dt;
-  physState.v = clamp(physState.v, -phys.maxUpSpeed, phys.maxDownSpeed);
-  physState.yW += physState.v * dt;
+  state.v += a * dt;
+  state.v = clamp(state.v, -phys.maxUpSpeed, phys.maxDownSpeed);
+  state.yW += state.v * dt;
 
   if (typeof isFloatGraceActive === "function" && isFloatGraceActive(nowMs)) {
-    const upwardIntent = (thrust > (g + 180)) || (physState.v < -22);
+    const upwardIntent = (thrust > (g + 180)) || (state.v < -22);
     if (upwardIntent) {
       if (typeof clearFloatGrace === "function") clearFloatGrace();
     } else {
       const dragFactor = Math.max(0, -Number(phys.downDrag) || 0);
-      const bobAmp = clamp(1.8 + (physState.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
-      const bobHz = clamp(0.8 + (physState.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
-      physState.floatGracePhase += (Math.PI * 2 * bobHz * dt);
-      const targetY = physState.floatGraceAnchorY + (Math.sin(physState.floatGracePhase) * bobAmp);
+      const bobAmp = clamp(1.8 + (state.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
+      const bobHz = clamp(0.8 + (state.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
+      state.floatGracePhase += (Math.PI * 2 * bobHz * dt);
+      const targetY = state.floatGraceAnchorY + (Math.sin(state.floatGracePhase) * bobAmp);
 
-      const holdHz = clamp(8 + (physState.gravityMul * 3) + (dragFactor * 2), 8, 18);
+      const holdHz = clamp(8 + (state.gravityMul * 3) + (dragFactor * 2), 8, 18);
       const alpha = 1 - Math.exp(-holdHz * dt);
-      physState.yW += (targetY - physState.yW) * alpha;
-      physState.v = 0;
+      state.yW += (targetY - state.yW) * alpha;
+      state.v = 0;
     }
   }
 
   const dtMs = dt * 1000;
-  if (physState.v > shieldDescent.vDownThr) {
-    physState.descendMs = Math.min(shieldDescent.graceMs * 2, physState.descendMs + dtMs);
+  if (state.v > shieldDescent.vDownThr) {
+    state.descendMs = Math.min(shieldDescent.graceMs * 2, state.descendMs + dtMs);
   } else {
-    physState.descendMs = 0;
+    state.descendMs = 0;
   }
-  physState.shieldDescentBlocked = (physState.descendMs >= shieldDescent.graceMs);
+  state.shieldDescentBlocked = (state.descendMs >= shieldDescent.graceMs);
 
   const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;
   const yCeil  = Number(phys.orbRadiusPx) || 0;
   let impactMag = 0;
   let impactSrc = "";
-  const vyPreClamp = physState.v;
-  const wasAtCeil = (physState.yW <= (yCeil + 0.25));
+  const vyPreClamp = state.v;
+  const wasAtCeil = (state.yW <= (yCeil + 0.25));
 
-  physState.onGround = false;
+  state.onGround = false;
 
-  if (physState.yW > yFloor) {
+  if (state.yW > yFloor) {
     if (!wasOnGround && vyPreClamp > 0) {
       impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
       impactSrc = "ground";
     }
-    physState.yW = yFloor;
-    if (physState.v > 0) physState.v = 0;
-    physState.onGround = true;
+    state.yW = yFloor;
+    if (state.v > 0) state.v = 0;
+    state.onGround = true;
   }
 
-  if (physState.yW < yCeil) {
+  if (state.yW < yCeil) {
     if (!wasAtCeil && vyPreClamp < 0) {
       impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
       impactSrc = impactSrc || "ceiling";
     }
-    physState.yW = yCeil;
-    if (physState.v < 0) physState.v = -physState.v * phys.bounce;
+    state.yW = yCeil;
+    if (state.v < 0) state.v = -state.v * phys.bounce;
   }
 
   if (mvp && impactMag > 0 && typeof computeImpactMetric === "function" && typeof mvp.applyImpact === "function") {
     const impactMetric = computeImpactMetric(impactMag);
     mvp.applyImpact(impactMetric, impactSrc || "boundary", {
       rawImpact: impactMag,
-      gravityMul: physState.gravityMul,
+      gravityMul: state.gravityMul,
       fallDrag: phys.downDrag,
     });
   }

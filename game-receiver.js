@@ -2115,6 +2115,7 @@
         dt,
         nowMs,
         wasOnGround,
+        orbRuntimeState,
         physState,
         phys: PHYS,
         shieldDescent: SHIELD_DESCENT,
