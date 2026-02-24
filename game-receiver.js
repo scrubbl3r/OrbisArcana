@@ -428,92 +428,26 @@
 
     const SHIELD_DECAY_MS = 2000;
     const SHIELD_FADEIN_MS = 750;
-    let shieldDecayTO = null;
     let shieldDecayActive = 0;
-    let shieldFadeTO = null;
-    let shieldFadeVal = 1;
     let sanctusShieldColorLocked = false;
 
-    function cancelShieldDecay(){
-      if (shieldDecayTO) {
-        clearTimeout(shieldDecayTO);
-        shieldDecayTO = null;
-      }
-      shieldDecayActive = 0;
-      if (els.shield) els.shield.style.opacity = "";
-    }
-    function cancelShieldFade(){
-      if (shieldFadeTO) {
-        clearTimeout(shieldFadeTO);
-        shieldFadeTO = null;
-      }
-    }
-    function setShieldFade(v){
-      shieldFadeVal = clamp01(v);
-      if (els.shield) els.shield.style.setProperty("--shield-fade", String(shieldFadeVal));
-    }
-
     function shieldOffNow(){
-      if (!els.shield) return;
-      cancelShieldDecay();
-      cancelShieldFade();
-      setShieldFade(1);
       sanctusShieldColorLocked = false;
-      els.shield.classList.remove("on");
-      els.shield.style.opacity = "";
-      els.shield.style.animation = "";
-      els.shield.style.width = "";
-      els.shield.style.height = "";
+      if (bubbleShieldRuntime && typeof bubbleShieldRuntime.off === "function") {
+        bubbleShieldRuntime.off();
+      }
     }
 
     function shieldOnNow(){
-      if (!els.shield) return;
-      cancelShieldDecay();
-      cancelShieldFade();
-
-      const a  = clamp(VFX_DEFAULTS.shield.alpha, 0, 1);
-      const pMax = Math.min(clamp(VFX_DEFAULTS.shield.pulseMax, 0, 1), a);
-      const pMin = clamp(VFX_DEFAULTS.shield.pulseMin, 0, 1);
-      const pMs  = Math.round(clamp(VFX_DEFAULTS.shield.pulseMs, 20, 700));
-
-      setVar("--shield-alpha", a.toFixed(2));
-      setVar("--shield-pulse-ms", pMs + "ms");
-      setVar("--shield-pulse-min", pMin.toFixed(2));
-      setVar("--shield-pulse-max", pMax.toFixed(2));
-
-      if (!els.shield.classList.contains("on")) {
-        shieldOffNow();
-        void els.shield.offsetWidth;
-        els.shield.classList.add("on");
+      if (bubbleShieldRuntime && typeof bubbleShieldRuntime.on === "function") {
+        bubbleShieldRuntime.on();
       }
-
-      // Fade in to target alpha (from current fade if mid-decay)
-      els.shield.style.animation = "";
-      els.shield.style.transition = `filter ${SHIELD_FADEIN_MS}ms linear`;
-      requestAnimationFrame(() => {
-        setShieldFade(1);
-      });
-      shieldFadeTO = setTimeout(() => {
-        shieldFadeTO = null;
-        els.shield.style.transition = "";
-      }, SHIELD_FADEIN_MS);
     }
 
     function shieldDecay(){
-      if (!els.shield) return;
-      if (shieldDecayTO) return;
-      shieldDecayActive = 1;
-      els.shield.style.animation = "";
-      els.shield.style.transition = `filter ${SHIELD_DECAY_MS}ms linear`;
-      requestAnimationFrame(() => {
-        setShieldFade(0);
-      });
-      shieldDecayTO = setTimeout(() => {
-        shieldDecayTO = null;
-        shieldDecayActive = 0;
-        els.shield.style.transition = "";
-        shieldOffNow();
-      }, SHIELD_DECAY_MS);
+      if (bubbleShieldRuntime && typeof bubbleShieldRuntime.decay === "function") {
+        bubbleShieldRuntime.decay();
+      }
     }
 
     function activateSanctusShield(axis, durationMs = SANCTUS_SHIELD_MS){
@@ -1619,6 +1553,7 @@
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
+    let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let receiverModulesReady = false;
     let mvpShardRaf = 0;
@@ -1890,10 +1825,12 @@
         const [
           { loadReceiverInitModules, hydrateReceiverBootstrapState },
           receiverEventContracts,
+          { createBubbleShieldRuntime },
           { createShockwaveRuntime },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/contracts/events.js"),
+          import("./src/vfx/effects/bubble-shield-runtime.js"),
           import("./src/vfx/effects/shockwave-runtime.js"),
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
@@ -1934,6 +1871,23 @@
           setSpellCastExecutor: (executor) => { spellCastExecutor = executor; },
           setReceiverModulesReady: (v) => { receiverModulesReady = !!v; },
         });
+        if (typeof createBubbleShieldRuntime === "function") {
+          bubbleShieldRuntime = createBubbleShieldRuntime({
+            shieldEl: els.shield,
+            getConfig: () => ({
+              alpha: VFX_DEFAULTS.shield.alpha,
+              pulseMs: VFX_DEFAULTS.shield.pulseMs,
+              pulseMin: VFX_DEFAULTS.shield.pulseMin,
+              pulseMax: VFX_DEFAULTS.shield.pulseMax,
+            }),
+            setCssVar: (name, value) => setVar(name, value),
+            clamp,
+            clamp01,
+            fadeInMs: SHIELD_FADEIN_MS,
+            decayMs: SHIELD_DECAY_MS,
+            onDecayActiveChange: (active) => { shieldDecayActive = active ? 1 : 0; },
+          });
+        }
         if (typeof createShockwaveRuntime === "function") {
           shockwaveRuntime = createShockwaveRuntime({
             layerEl: els.shockLayer,
