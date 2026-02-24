@@ -13,6 +13,7 @@ export const PORCUPINE_LOCAL_SDK_ASSETS = Object.freeze({
   version: PORCUPINE_LOCAL_SDK_VERSION,
   basePath: PORCUPINE_LOCAL_VENDOR_BASE,
   scriptPath: `${PORCUPINE_LOCAL_VENDOR_BASE}porcupine.js`,
+  bridgeScriptPath: `${PORCUPINE_LOCAL_VENDOR_BASE}bridge-example.js`,
   wasmPath: `${PORCUPINE_LOCAL_VENDOR_BASE}porcupine.wasm`,
   workerPath: `${PORCUPINE_LOCAL_VENDOR_BASE}porcupine-worker.js`,
 });

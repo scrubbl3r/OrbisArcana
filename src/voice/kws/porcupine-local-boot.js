@@ -116,10 +116,22 @@ export async function bootLocalPorcupineKws(opts = {}) {
     }
 
     const scriptPath = manifest && manifest.sdk ? manifest.sdk.scriptPath : "";
+    const bridgeScriptPath = manifest && manifest.sdk ? manifest.sdk.bridgeScriptPath : "";
     if (scriptPath) {
       try {
         await ensureScriptOnce(scriptPath);
         bootState.loadedScript = true;
+        if (
+          bridgeScriptPath
+          && typeof window !== "undefined"
+          && (!window.OrbisPorcupineSdkBridge || typeof window.OrbisPorcupineSdkBridge !== "object")
+        ) {
+          try {
+            await ensureScriptOnce(bridgeScriptPath);
+          } catch (_ignoredBridgeLoadError) {
+            // Bridge script is optional during early local integration stages.
+          }
+        }
         if (typeof window !== "undefined" && typeof window.OrbisPorcupineSdkHooks !== "function" && (!window.OrbisPorcupineSdkHooks || typeof window.OrbisPorcupineSdkHooks !== "object")) {
           try {
             const hooksLocalMod = await import("./porcupine-sdk-hooks-local.js");
