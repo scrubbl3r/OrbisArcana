@@ -1693,9 +1693,21 @@
           const spellDef = runtimeSpellIndex[spellId] || null;
           const castActionId = spellDef ? String(spellDef.castActionId || "") : castActionForSpellId(spellId);
           const result = executeSpellCastAction(castActionId, { payload: p, intent });
-          if (result && result.handled && spellDef && Array.isArray(spellDef.postCastActionIds)) {
-            for (const actionId of spellDef.postCastActionIds) {
-              executeSpellCastAction(String(actionId || ""), { payload: p, intent });
+          if (result && result.handled && spellDef) {
+            const postCastActions = Array.isArray(spellDef.postCastActions) ? spellDef.postCastActions : null;
+            if (postCastActions) {
+              for (const action of postCastActions) {
+                const actionId = String(action && action.id || "");
+                if (!actionId) continue;
+                const payload = (action && typeof action.payload === "object" && action.payload)
+                  ? { ...p, ...action.payload }
+                  : p;
+                executeSpellCastAction(actionId, { payload, intent });
+              }
+            } else if (Array.isArray(spellDef.postCastActionIds)) {
+              for (const actionId of spellDef.postCastActionIds) {
+                executeSpellCastAction(String(actionId || ""), { payload: p, intent });
+              }
             }
           }
         });

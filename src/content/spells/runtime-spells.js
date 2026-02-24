@@ -46,7 +46,9 @@ export const RUNTIME_SPELLS = Object.freeze([
     intent: "spell.school_aoe",
     cooldownMs: 1100,
     castActionId: "aoe_flame",
-    postCastActionIds: ["orb_super_grace"],
+    postCastActions: [
+      { id: "orb_super_grace", payload: { ms: 2500 } },
+    ],
   },
   {
     id: "fridgis_rota",
