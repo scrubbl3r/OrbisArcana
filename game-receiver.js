@@ -22,6 +22,10 @@
       kwsTokIgnisBtn: $("kwsTokIgnisBtn"),
       kwsTokRotaBtn: $("kwsTokRotaBtn"),
       kwsTokElectrumBtn: $("kwsTokElectrumBtn"),
+      kwsWindowMsInput: $("kwsWindowMsInput"),
+      kwsTokenThrInput: $("kwsTokenThrInput"),
+      kwsCooldownMsInput: $("kwsCooldownMsInput"),
+      kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
 
       vLift:  $("vLift"),
       vGroove: $("vGroove"),
@@ -1058,6 +1062,20 @@
     }
     updateKwsReadout();
 
+    function syncKwsTuneUiFromStatus(status){
+      const parser = status && status.parser ? status.parser : status;
+      if (!parser || typeof parser !== "object") return;
+      if (els.kwsWindowMsInput && Number.isFinite(Number(parser.windowMs))) {
+        els.kwsWindowMsInput.value = String(Math.round(Number(parser.windowMs)));
+      }
+      if (els.kwsTokenThrInput && Number.isFinite(Number(parser.tokenThreshold))) {
+        els.kwsTokenThrInput.value = Number(parser.tokenThreshold).toFixed(2);
+      }
+      if (els.kwsCooldownMsInput && Number.isFinite(Number(parser.spellCooldownMs))) {
+        els.kwsCooldownMsInput.value = String(Math.round(Number(parser.spellCooldownMs)));
+      }
+    }
+
     function teleMaybeLog(d){
       if (telemetryDebugSystem) {
         telemetryDebugSystem.teleMaybeLog(d);
@@ -1126,6 +1144,16 @@
     if (els.kwsTokIgnisBtn) els.kwsTokIgnisBtn.addEventListener("click", () => sendKwsDebugToken("ignis"));
     if (els.kwsTokRotaBtn) els.kwsTokRotaBtn.addEventListener("click", () => sendKwsDebugToken("rota"));
     if (els.kwsTokElectrumBtn) els.kwsTokElectrumBtn.addEventListener("click", () => sendKwsDebugToken("electrum"));
+    function applyKwsParserTuneFromUi(){
+      if (!mvp || typeof mvp.setKwsParserConfig !== "function") return;
+      const status = mvp.setKwsParserConfig({
+        windowMs: Number(els.kwsWindowMsInput && els.kwsWindowMsInput.value),
+        tokenThreshold: Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value),
+        spellCooldownMs: Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value),
+      });
+      syncKwsTuneUiFromStatus(status && status.parser ? status.parser : status);
+    }
+    if (els.kwsApplyTuneBtn) els.kwsApplyTuneBtn.addEventListener("click", applyKwsParserTuneFromUi);
 
     // =========================================================================
     // ROOM STATE 
@@ -1729,6 +1757,7 @@
           if (typeof kwsVoiceProvider.setMode === "function") kwsVoiceProvider.setMode("shadow");
           if (typeof kwsVoiceProvider.start === "function") kwsVoiceProvider.start();
           if (typeof kwsVoiceProvider.setEnabled === "function") kwsVoiceProvider.setEnabled(true);
+          if (typeof kwsVoiceProvider.getStatus === "function") syncKwsTuneUiFromStatus(kwsVoiceProvider.getStatus());
         }
         voiceHudSystem.start();
         const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
@@ -1887,6 +1916,10 @@
               confidence,
               atMs: performance.now(),
             });
+          },
+          setKwsParserConfig(next = {}){
+            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setParserConfig !== "function") return null;
+            return kwsVoiceProvider.setParserConfig(next);
           },
           grantFloatGrace,
           grantSuperGrace,

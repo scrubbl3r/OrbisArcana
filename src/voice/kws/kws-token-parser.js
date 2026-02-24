@@ -91,6 +91,16 @@ export function createKwsTokenParser(opts = {}) {
     shadow = String(mode || "").toLowerCase() !== "active";
   }
 
+  function setConfig(next = {}) {
+    if (!next || typeof next !== "object") return getStatus();
+    if (Number.isFinite(Number(next.windowMs))) cfg.windowMs = Math.max(100, Math.round(Number(next.windowMs)));
+    if (Number.isFinite(Number(next.maxTokensInBuffer))) cfg.maxTokensInBuffer = Math.max(1, Math.round(Number(next.maxTokensInBuffer)));
+    if (Number.isFinite(Number(next.tokenThreshold))) cfg.tokenThreshold = clamp01(next.tokenThreshold);
+    if (Number.isFinite(Number(next.spellCooldownMs))) cfg.spellCooldownMs = Math.max(0, Math.round(Number(next.spellCooldownMs)));
+    if (typeof next.clearBufferOnMatch === "boolean") cfg.clearBufferOnMatch = !!next.clearBufferOnMatch;
+    return getStatus();
+  }
+
   function prune(nowMs) {
     const cutoff = Number(nowMs) - cfg.windowMs;
     tokenBuffer = tokenBuffer.filter((t) => Number(t.atMs) >= cutoff);
@@ -221,6 +231,9 @@ export function createKwsTokenParser(opts = {}) {
       bufferSize: tokenBuffer.length,
       windowMs: cfg.windowMs,
       tokenThreshold: cfg.tokenThreshold,
+      spellCooldownMs: cfg.spellCooldownMs,
+      maxTokensInBuffer: cfg.maxTokensInBuffer,
+      clearBufferOnMatch: cfg.clearBufferOnMatch,
     };
   }
 
@@ -229,8 +242,8 @@ export function createKwsTokenParser(opts = {}) {
     reset,
     setEnabled,
     setMode,
+    setConfig,
     getStatus,
     getAliasIndex: () => aliasIndex,
   });
 }
-

@@ -72,6 +72,13 @@ export function createKwsProvider(opts = {}) {
     };
   }
 
+  function setParserConfig(next = {}) {
+    if (parser && typeof parser.setConfig === "function") {
+      return parser.setConfig(next);
+    }
+    return getStatus();
+  }
+
   return Object.freeze({
     id: "kws",
     start,
@@ -79,9 +86,9 @@ export function createKwsProvider(opts = {}) {
     destroy,
     setEnabled,
     setMode,
+    setParserConfig,
     getStatus,
     ingestTokenHit,
     parser,
   });
 }
-

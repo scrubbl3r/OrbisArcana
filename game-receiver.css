@@ -151,6 +151,36 @@
       font-size:12px;
       line-height:1;
     }
+    .kwsTuneRow{
+      display:flex;
+      gap:6px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:4px;
+      font-size:12px;
+    }
+    .kwsTuneRow label{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      opacity:.9;
+    }
+    .kwsTuneRow input{
+      width:64px;
+      height:24px;
+      padding:0 6px;
+      border-radius:7px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.45);
+      color:var(--g);
+      font:inherit;
+    }
+    .kwsTuneRow button{
+      padding:5px 9px;
+      border-radius:8px;
+      font-size:12px;
+      line-height:1;
+    }
     .bad{color:var(--bad); font-weight:900;}
     .ok{color:#7dffab; font-weight:900;}
     .voiceWakeHot{
