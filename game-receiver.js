@@ -1777,6 +1777,14 @@
       return physState;
     }
 
+    function patchOrbRuntime(next = {}){
+      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
+        return orbRuntimeState.patch(next);
+      }
+      Object.assign(physState, next || {});
+      return physState;
+    }
+
     // ===== WORLD PICKUPS (MVP SLICE) BEGIN =====
     function pickupScreenY(yW){
       const orbRt = getOrbRuntime();
@@ -1811,21 +1819,13 @@
 
     function resetOrbToGround(){
       const yW = groundCenterWorld();
-      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
-        orbRuntimeState.patch({
-          yW,
-          v: 0,
-          onGround: true,
-          floatGraceAnchorY: yW,
-          floatGracePhase: 0,
-        });
-      } else {
-        physState.yW = yW;
-        physState.v = 0;
-        physState.onGround = true;
-        physState.floatGraceAnchorY = physState.yW;
-        physState.floatGracePhase = 0;
-      }
+      patchOrbRuntime({
+        yW,
+        v: 0,
+        onGround: true,
+        floatGraceAnchorY: yW,
+        floatGracePhase: 0,
+      });
       applyOrbTransform();
       if (worldSystem) worldSystem.render(performance.now());
     }
@@ -1835,58 +1835,36 @@
       const yCeil = PHYS.orbRadiusPx;
       const yTarget = clamp(yFloor - Math.max(0, Number(aboveGroundPx) || 0), yCeil, yFloor);
       const onGround = !(yTarget < (yFloor - 0.5));
-      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
-        orbRuntimeState.patch({
-          yW: yTarget,
-          v: 0,
-          onGround,
-          descendMs: 0,
-          shieldDescentBlocked: false,
-          floatGraceAnchorY: yTarget,
-          floatGracePhase: 0,
-        });
-      } else {
-        physState.yW = yTarget;
-        physState.v = 0;
-        physState.onGround = onGround;
-        physState.descendMs = 0;
-        physState.shieldDescentBlocked = false;
-        physState.floatGraceAnchorY = physState.yW;
-        physState.floatGracePhase = 0;
-      }
+      patchOrbRuntime({
+        yW: yTarget,
+        v: 0,
+        onGround,
+        descendMs: 0,
+        shieldDescentBlocked: false,
+        floatGraceAnchorY: yTarget,
+        floatGracePhase: 0,
+      });
       applyOrbTransform();
       if (worldSystem) worldSystem.render(performance.now());
       updateDebugReadout();
     }
 
     function clearFloatGrace(){
-      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
-        orbRuntimeState.patch({
-          floatGraceActive: false,
-          floatGraceUntilMs: 0,
-        });
-      } else {
-        physState.floatGraceActive = false;
-        physState.floatGraceUntilMs = 0;
-      }
+      patchOrbRuntime({
+        floatGraceActive: false,
+        floatGraceUntilMs: 0,
+      });
     }
 
     function grantFloatGrace(ms = FLOAT_GRACE_DEFAULT_MS){
       const dur = Math.max(50, Number(ms) || FLOAT_GRACE_DEFAULT_MS);
       const now = performance.now();
-      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
-        orbRuntimeState.patch({
-          floatGraceActive: true,
-          floatGraceUntilMs: now + dur,
-          floatGraceAnchorY: physState.yW,
-          floatGracePhase: Math.random() * Math.PI * 2,
-        });
-      } else {
-        physState.floatGraceActive = true;
-        physState.floatGraceUntilMs = now + dur;
-        physState.floatGraceAnchorY = physState.yW;
-        physState.floatGracePhase = Math.random() * Math.PI * 2;
-      }
+      patchOrbRuntime({
+        floatGraceActive: true,
+        floatGraceUntilMs: now + dur,
+        floatGraceAnchorY: getOrbRuntime().yW,
+        floatGracePhase: Math.random() * Math.PI * 2,
+      });
     }
 
     function isFloatGraceActive(nowMs){
@@ -1899,11 +1877,7 @@
 
     function setGravityMul(m){
       const gravityMul = clamp(Number(m) || 0, 0, 3);
-      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
-        orbRuntimeState.patch({ gravityMul });
-      } else {
-        physState.gravityMul = gravityMul;
-      }
+      patchOrbRuntime({ gravityMul });
       els.gVal.textContent = getOrbRuntime().gravityMul.toFixed(2);
     }
     setGravityMul(els.gSlider.value);
@@ -2249,9 +2223,11 @@
       if (inputSystem && typeof inputSystem.reset === "function") inputSystem.reset(performance.now());
       resetEnergyBank();
 
-      physState.lift01 = 0;
-      physState.energy01 = 0;
-      physState.dynamics01 = 0;
+      patchOrbRuntime({
+        lift01: 0,
+        energy01: 0,
+        dynamics01: 0,
+      });
 
       setBgFromEnergy(0);
       setBar(els.bLift, 0);
