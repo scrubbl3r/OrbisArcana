@@ -1,0 +1,150 @@
+VFX LAB PUBLISH FLOW (DRAFT v1)
+
+Goal
+
+Make the VFX lab a place to:
+- build new effects
+- tune effects with sliders
+- preview in context
+- publish presets/bindings as SSOT for game + lab
+
+Keep concerns separate:
+- runtime effect implementation
+- effect preset/tuning
+- domain binding (spell/globe/world-item/enemy)
+
+--------------------------------------------------
+1. SSOT LAYERS (APPROVED DIRECTION)
+--------------------------------------------------
+
+1) Effect Runtime (how it works)
+- reusable runtime module in `src/vfx/effects/*`
+- examples:
+  - `flame-aoe-runtime`
+  - `electric-aoe-runtime`
+  - `orb-shatter-runtime`
+
+2) Effect Preset (how it looks/tunes)
+- slider-editable parameters
+- shared by game + lab
+- current examples already exist for:
+  - shield
+  - shockwave
+  - flame aoe
+  - electric aoe
+
+3) Domain Binding (where it is used)
+- maps a spell/world-item/enemy/orb event to an effect + preset
+- can also define post-cast effect actions
+
+--------------------------------------------------
+2. NEW FOUNDATION (IMPLEMENTED)
+--------------------------------------------------
+
+Effect registry SSOT
+- `src/content/vfx/effect-registry.js`
+- names effect ids + categories + runtime ids + default preset ids
+
+Spell effect bindings SSOT
+- `src/content/vfx/spell-effect-bindings-v1.js`
+- maps spell ids to VFX effect/preset bindings
+- supports post-cast action metadata for spell-linked visuals/mechanics
+
+Resolver helper
+- `src/vfx/resolve-spell-vfx-binding.js`
+- lets lab/game query spell -> VFX binding from one place
+
+Notes
+- This is a schema foundation pass only.
+- Gameplay execution still uses runtime spell content + cast actions.
+- Lab publish workflow will layer onto this.
+
+--------------------------------------------------
+3. RECOMMENDED LAB UX (v1)
+--------------------------------------------------
+
+Use separate actions, not one "Publish" button.
+
+Buttons
+- Save Draft
+- Publish Preset
+- Publish Binding (optional / context-specific)
+
+Why split?
+- prevents accidental live gameplay changes while tuning
+- allows iteration on visuals without rebinding a spell/item each time
+
+--------------------------------------------------
+4. RECOMMENDED AUTHORING FLOW (SPELL EXAMPLE)
+--------------------------------------------------
+
+Example: "Make a new effect for fridgis rota"
+
+1. Open lab
+2. Choose domain:
+- Spell
+3. Choose target:
+- `fridgis_rota`
+4. Lab resolves current binding:
+- effect id
+- preset id
+5. Tweak sliders / preview
+6. Save Draft (local draft state/file)
+7. Publish Preset (update shared preset SSOT)
+8. Publish Binding (if switching effect or preset assignment)
+
+Result
+- game + lab both use the same preset/binding source
+
+--------------------------------------------------
+5. ORB SHATTER IN LAB (RECOMMENDED NEXT CANDIDATE)
+--------------------------------------------------
+
+Why it is a strong next candidate
+- runtime extraction already completed
+- visually complex and worth tuning
+- clear preview scene ("orb death / shatter")
+
+Lab scene plan
+- dropdown item: `Orb Shatter (Voronoi)`
+- preview inputs:
+  - shard geometry sample set
+  - palette snapshot sample
+  - gravity/ttl/spin params (preset-driven)
+
+Receiver/game remains responsible for
+- actual death-time palette capture
+- gameplay event orchestration
+
+--------------------------------------------------
+6. IMPLEMENTATION STAGING (PRAGMATIC)
+--------------------------------------------------
+
+Stage 1 (current)
+- create schema foundation (registry + bindings + resolver)
+
+Stage 2
+- lab reads effect registry and shows grouped dropdowns by category
+- lab reads spell VFX bindings and opens current effect/preset
+
+Stage 3
+- add Save Draft / Publish Preset buttons
+- start with preset publishing only
+
+Stage 4
+- add Publish Binding (spell domain first)
+- then expand to globes/world-items/enemies
+
+--------------------------------------------------
+7. GUARDRAIL
+--------------------------------------------------
+
+Lab should be a harness, not a source of one-off runtime code blobs.
+
+Runtime code lives in:
+- `src/vfx/effects/*`
+
+Lab primarily edits and publishes:
+- presets
+- bindings
+
