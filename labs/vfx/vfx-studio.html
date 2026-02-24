@@ -155,6 +155,32 @@
       background: rgba(0,0,0,.35);
     }
     .chip .dim{ opacity:.7; }
+    .bindingPanel{
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(50,255,117,.18);
+      background: rgba(0,0,0,.25);
+      display:grid;
+      gap:8px;
+    }
+    .bindingPanel h3{
+      margin:0;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.06em;
+      color: rgba(50,255,117,.92);
+      text-transform:uppercase;
+    }
+    .bindingGrid{
+      display:grid;
+      grid-template-columns: 118px 1fr;
+      gap:6px 8px;
+      font-size:12px;
+      line-height:1.35;
+    }
+    .bindingGrid .k{ color: rgba(50,255,117,.62); font-weight:800; }
+    .bindingGrid .v{ color: rgba(50,255,117,.95); word-break: break-word; }
 
     .stage{
       height:min(78vh, 740px);
@@ -375,12 +401,7 @@
         <span>Controls</span>
         <div class="titleTools">
           <label for="effectSelect">Effect</label>
-          <select id="effectSelect" class="effectSelect" aria-label="Select effect controls">
-            <option value="electric-aoe" data-base-effect="electric-aoe" data-locked="true">electric aoe</option>
-            <option value="flame-aoe" data-base-effect="flame-aoe" data-locked="true">flame aoe</option>
-            <option value="bubble-shield" data-base-effect="bubble-shield" data-locked="true" selected>bubble shield</option>
-            <option value="shockwave" data-base-effect="shockwave" data-locked="true">shockwave</option>
-          </select>
+          <select id="effectSelect" class="effectSelect" aria-label="Select effect controls"></select>
           <button id="newEffectBtn" class="toolBtn" type="button">New</button>
           <button id="renameEffectBtn" class="toolBtn" type="button">Rename</button>
           <button id="deleteEffectBtn" class="toolBtn" type="button">Delete</button>
@@ -390,6 +411,10 @@
         <span class="chip"><span class="dim">Profile</span><span id="effectProfileName">bubble shield</span></span>
         <span class="chip"><span class="dim">Base type</span><span id="effectBaseType">bubble-shield</span></span>
         <span class="chip"><span class="dim">Publish</span><span>preset (binding later)</span></span>
+      </div>
+      <div class="bindingPanel" id="bindingPanel" aria-live="polite">
+        <h3>Current Binding</h3>
+        <div class="bindingGrid" id="bindingGrid"></div>
       </div>
 
       <!-- Electric AOE controls -->
@@ -536,6 +561,9 @@
 
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
+    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js";
+    import { SPELL_VFX_BINDINGS_V1 } from "../../src/content/vfx/spell-effect-bindings-v1.js";
+    import { resolveSpellVfxBinding } from "../../src/vfx/resolve-spell-vfx-binding.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
@@ -545,6 +573,20 @@
     } from "../../src/vfx/presets/index.js";
 
     const $ = (id) => document.getElementById(id);
+    const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze({
+      "spell.aoe_electric": "electric-aoe",
+      "spell.aoe_flame": "flame-aoe",
+      "spell.shield_bubble": "bubble-shield",
+      "spell.shockwave_ring": "shockwave",
+    });
+    const CATEGORY_LABELS = Object.freeze({
+      spell: "Spells",
+      orb: "Orb",
+      globe: "Globes",
+      "world-item": "World Items",
+      enemy: "Enemies",
+      custom: "Custom Profiles",
+    });
 
     const els = {
       shockLayer: $("shockLayer"),
@@ -559,6 +601,8 @@
       deleteEffectBtn: $("deleteEffectBtn"),
       effectProfileName: $("effectProfileName"),
       effectBaseType: $("effectBaseType"),
+      bindingPanel: $("bindingPanel"),
+      bindingGrid: $("bindingGrid"),
       shieldMs: $("shieldMs"),
       vShieldMs: $("vShieldMs"),
       shieldAlpha: $("shieldAlpha"),
@@ -610,6 +654,141 @@
       return idx >= 0 ? els.effectSelect.options[idx] : null;
     }
 
+    function setBindingRows(rows){
+      if (!els.bindingGrid) return;
+      els.bindingGrid.innerHTML = "";
+      for (const row of (Array.isArray(rows) ? rows : [])) {
+        const k = document.createElement("div");
+        k.className = "k";
+        k.textContent = String((row && row.k) || "");
+        const v = document.createElement("div");
+        v.className = "v";
+        v.textContent = String((row && row.v) || "");
+        els.bindingGrid.appendChild(k);
+        els.bindingGrid.appendChild(v);
+      }
+    }
+
+    function refreshBindingPanel(){
+      const opt = selectedEffectOption();
+      if (!opt) return;
+      const registryId = String(opt.dataset.registryId || "");
+      const isCustom = String(opt.value || "").startsWith("custom:");
+
+      if (isCustom) {
+        setBindingRows([
+          { k: "Scope", v: "Custom profile (local session)" },
+          { k: "Base", v: String(opt.dataset.baseEffect || "unknown") },
+          { k: "Binding", v: "Not published yet" },
+        ]);
+        return;
+      }
+
+      if (!registryId) {
+        setBindingRows([
+          { k: "Binding", v: "No registry effect selected" },
+        ]);
+        return;
+      }
+
+      const matches = (Array.isArray(SPELL_VFX_BINDINGS_V1) ? SPELL_VFX_BINDINGS_V1 : [])
+        .filter((b) => b && b.primary && String(b.primary.effectId || "") === registryId)
+        .map((b) => resolveSpellVfxBinding(String(b.spellId || "")))
+        .filter(Boolean);
+
+      if (!matches.length) {
+        setBindingRows([
+          { k: "Effect ID", v: registryId },
+          { k: "Bindings", v: "No spell binding yet (or non-spell effect)" },
+          { k: "Status", v: opt.disabled ? "Preview scene coming soon" : "Preset-only / unbound" },
+        ]);
+        return;
+      }
+
+      const first = matches[0];
+      const primary = first && first.primary ? first.primary : null;
+      const effect = primary && primary.effect ? primary.effect : null;
+      const postCast = Array.isArray(first.postCastActions) ? first.postCastActions : [];
+      const postCastText = postCast.length
+        ? postCast.map((a) => {
+            const ms = a && a.payload && a.payload.ms != null ? ` (${a.payload.ms}ms)` : "";
+            return `${String(a && a.id || "action")}${ms}`;
+          }).join(", ")
+        : "none";
+
+      setBindingRows([
+        { k: "Effect ID", v: registryId },
+        { k: "Bound spells", v: matches.map((m) => m.spellId).join(", ") },
+        { k: "Preset", v: String((primary && primary.presetId) || "unknown") },
+        { k: "Cast action", v: String((primary && primary.castActionId) || "unknown") },
+        { k: "Publish", v: effect && Array.isArray(effect.publishTargets) ? effect.publishTargets.join(", ") : "preset" },
+        { k: "Post-cast", v: postCastText },
+      ]);
+    }
+
+    function ensureCustomProfilesGroup(){
+      if (!els.effectSelect) return null;
+      let group = els.effectSelect.querySelector('optgroup[data-kind="custom"]');
+      if (group) return group;
+      group = document.createElement("optgroup");
+      group.label = CATEGORY_LABELS.custom;
+      group.dataset.kind = "custom";
+      els.effectSelect.appendChild(group);
+      return group;
+    }
+
+    function buildEffectLibraryOptionsFromRegistry(){
+      if (!els.effectSelect) return;
+      const previousValue = els.effectSelect.value;
+      const customOptions = Array.from(els.effectSelect.querySelectorAll('optgroup[data-kind="custom"] > option'))
+        .map((o) => o.cloneNode(true));
+      els.effectSelect.innerHTML = "";
+
+      const groups = new Map();
+      for (const entry of Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : []) {
+        if (!entry) continue;
+        const category = String(entry.category || "spell");
+        if (!groups.has(category)) {
+          const optgroup = document.createElement("optgroup");
+          optgroup.label = CATEGORY_LABELS[category] || category;
+          optgroup.dataset.kind = "builtin";
+          optgroup.dataset.category = category;
+          groups.set(category, optgroup);
+        }
+        const opt = document.createElement("option");
+        const effectId = String(entry.id || "");
+        const baseEffect = STUDIO_BASE_EFFECT_BY_REGISTRY_ID[effectId] || "";
+        opt.value = baseEffect || `registry:${effectId}`;
+        opt.textContent = String(entry.label || effectId || "effect");
+        opt.dataset.registryId = effectId;
+        opt.dataset.baseEffect = baseEffect;
+        opt.dataset.locked = "true";
+        if (!baseEffect) {
+          opt.disabled = true;
+          opt.textContent = `${opt.textContent} (coming soon)`;
+        }
+        groups.get(category).appendChild(opt);
+      }
+
+      for (const category of ["spell", "orb", "globe", "world-item", "enemy"]) {
+        const group = groups.get(category);
+        if (group && group.children.length) els.effectSelect.appendChild(group);
+      }
+
+      const customGroup = ensureCustomProfilesGroup();
+      for (const opt of customOptions) customGroup.appendChild(opt);
+
+      const hasValue = (value) => Array.from(els.effectSelect.options).some((o) => o.value === value && !o.disabled);
+      if (previousValue && hasValue(previousValue)) {
+        els.effectSelect.value = previousValue;
+      } else if (hasValue("bubble-shield")) {
+        els.effectSelect.value = "bubble-shield";
+      } else {
+        const firstEnabled = Array.from(els.effectSelect.options).find((o) => !o.disabled);
+        if (firstEnabled) els.effectSelect.value = firstEnabled.value;
+      }
+    }
+
     function selectedBaseEffect(){
       const opt = selectedEffectOption();
       if (!opt) return "bubble-shield";
@@ -643,6 +822,7 @@
       if (!opt) return;
       if (els.effectProfileName) els.effectProfileName.textContent = String(opt.textContent || opt.value || "");
       if (els.effectBaseType) els.effectBaseType.textContent = String(opt.dataset.baseEffect || opt.value || "");
+      refreshBindingPanel();
     }
 
     function createCustomEffectProfile(){
@@ -658,7 +838,7 @@
       opt.value = nextCustomEffectValue(baseEffect, trimmed);
       opt.dataset.baseEffect = baseEffect;
       opt.textContent = trimmed;
-      els.effectSelect.appendChild(opt);
+      ensureCustomProfilesGroup()?.appendChild(opt);
       els.effectSelect.value = opt.value;
       updateEffectSections();
     }
@@ -928,6 +1108,7 @@
       refreshEffectMeta();
     }
     if (els.effectSelect) {
+      buildEffectLibraryOptionsFromRegistry();
       els.effectSelect.addEventListener("change", updateEffectSections);
       updateEffectSections();
     }
