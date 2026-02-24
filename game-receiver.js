@@ -1071,7 +1071,6 @@
       }
       els.kwsReadout.textContent = parts.join(" | ");
     }
-    updateKwsReadout();
     function pushKwsLogLine(text, kind = ""){
       const line = String(text || "").trim();
       if (!line) return;
@@ -1094,7 +1093,6 @@
         return `<div class="${cls}">${safe}</div>`;
       }).join("");
     }
-    renderKwsLog();
 
     function syncKwsTuneUiFromStatus(status){
       const parser = status && status.parser ? status.parser : status;
