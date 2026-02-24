@@ -1126,6 +1126,7 @@
     let worldSystem = null;
     let orbFxSystem = null;
     let orbSystemsBundle = null;
+    let orbRuntimeLoop = null;
     let resourcesSystem = null;
     let inputSystem = null;
     let inputGestureSystem = null;
@@ -1353,11 +1354,13 @@
           receiverEventContracts,
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
+          { createOrbRuntimeLoop },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/contracts/events.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
+          import("./src/systems/orb-runtime-loop.js"),
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
@@ -1470,6 +1473,45 @@
           if (orbRuntimeState && typeof orbRuntimeState.get === "function") {
             physState = orbRuntimeState.get();
           }
+        }
+        if (typeof createOrbRuntimeLoop === "function") {
+          if (orbRuntimeLoop && typeof orbRuntimeLoop.stop === "function") {
+            orbRuntimeLoop.stop();
+          }
+          orbRuntimeLoop = createOrbRuntimeLoop({
+            getState: () => (orbRuntimeState && typeof orbRuntimeState.get === "function") ? orbRuntimeState.get() : physState,
+            isReady: () => (typeof runOrbRuntimePipelineModule === "function"),
+            clamp,
+            runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
+              runOrbRuntimePipelineModule({
+                ts,
+                dt,
+                nowMs,
+                wasOnGround,
+                orbRuntimeState,
+                physState,
+                phys: PHYS,
+                shieldDescent: SHIELD_DESCENT,
+                mvp,
+                orbFxSystem,
+                worldSystem,
+                hooks: {
+                  clamp,
+                  liftToThrustAccel,
+                  isFloatGraceActive,
+                  clearFloatGrace,
+                  groundCenterWorld,
+                  computeImpactMetric,
+                  drawStars,
+                  drawWorldBackdrop,
+                  updateOrbStrokeColor,
+                  applyOrbTransform,
+                  updateDebugReadout,
+                },
+              });
+            },
+          });
+          orbRuntimeLoop.start();
         }
         const {
           createEventBus,
@@ -1667,6 +1709,7 @@
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,
+          orbRuntimeLoop,
           spellDispatchSystem,
           voiceRecognitionSystem,
           voiceHudSystem,
@@ -2096,49 +2139,6 @@
     function liftToThrustAccel(l01){
       return PHYS.thrustMax * clamp01(l01);
     }
-
-    function physicsStep(ts){
-      if (physState.lastTs == null) physState.lastTs = ts;
-      let dt = (ts - physState.lastTs) / 1000;
-      physState.lastTs = ts;
-      const nowMs = performance.now();
-      const wasOnGround = !!physState.onGround;
-
-      dt = clamp(dt, 0, 0.05);
-
-      if (typeof runOrbRuntimePipelineModule !== "function") {
-        requestAnimationFrame(physicsStep);
-        return;
-      }
-      runOrbRuntimePipelineModule({
-        ts,
-        dt,
-        nowMs,
-        wasOnGround,
-        orbRuntimeState,
-        physState,
-        phys: PHYS,
-        shieldDescent: SHIELD_DESCENT,
-        mvp,
-        orbFxSystem,
-        worldSystem,
-        hooks: {
-          clamp,
-          liftToThrustAccel,
-          isFloatGraceActive,
-          clearFloatGrace,
-          groundCenterWorld,
-          computeImpactMetric,
-          drawStars,
-          drawWorldBackdrop,
-          updateOrbStrokeColor,
-          applyOrbTransform,
-          updateDebugReadout,
-        },
-      });
-      requestAnimationFrame(physicsStep);
-    }
-    requestAnimationFrame(physicsStep);
 
     // =========================================================================
     // ABLY RECEIVER — unchanged plumbing
