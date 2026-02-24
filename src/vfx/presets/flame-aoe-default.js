@@ -1,4 +1,4 @@
 export const FLAME_AOE_PRESET_DEFAULT = Object.freeze({
-  diameter: 132,
+  diameter: 200,
   durationMs: 10000,
 });
