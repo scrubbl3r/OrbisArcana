@@ -1130,6 +1130,7 @@
     let inputSystem = null;
     let inputGestureSystem = null;
     let inputSystemsBundle = null;
+    let orbRuntimeState = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
     let RECEIVER_EVENTS = {
@@ -1351,10 +1352,12 @@
           { loadReceiverInitModules, hydrateReceiverBootstrapState },
           receiverEventContracts,
           { createVfxRuntimesBundle },
+          { createOrbRuntimeState },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/contracts/events.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
+          import("./src/systems/orb-runtime-state.js"),
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
@@ -1461,6 +1464,12 @@
           orbShatterRuntime = vfxRuntimesBundle.orbShatterRuntime;
           flameAoeRuntime = vfxRuntimesBundle.flameAoeRuntime;
           electricAoeRuntime = vfxRuntimesBundle.electricAoeRuntime;
+        }
+        if (typeof createOrbRuntimeState === "function") {
+          orbRuntimeState = createOrbRuntimeState({ initialState: physState });
+          if (orbRuntimeState && typeof orbRuntimeState.get === "function") {
+            physState = orbRuntimeState.get();
+          }
         }
         const {
           createEventBus,
@@ -1654,6 +1663,7 @@
           inputSystem,
           inputDynamicsSystem,
           inputGestureSystem,
+          orbRuntimeState,
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,
