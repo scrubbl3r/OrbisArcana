@@ -8,6 +8,11 @@ import { installOrbisCreatePorcupineSdkSessionGlobal } from "./porcupine-sdk-ses
 let bootState = {
   attempted: false,
   loadedScript: false,
+  loadedBridgeScript: false,
+  hasBridge: false,
+  hasHooks: false,
+  hasFactory: false,
+  simulated: false,
   installed: false,
   reason: "not_attempted",
 };
@@ -71,6 +76,11 @@ export async function bootLocalPorcupineKws(opts = {}) {
   bootState = {
     attempted: true,
     loadedScript: false,
+    loadedBridgeScript: false,
+    hasBridge: false,
+    hasHooks: false,
+    hasFactory: false,
+    simulated: false,
     installed: false,
     reason: "starting",
   };
@@ -92,6 +102,10 @@ export async function bootLocalPorcupineKws(opts = {}) {
     });
     bootState.installed = !!(res && res.installed);
     bootState.reason = bootState.installed ? reason : "init_failed";
+    bootState.hasFactory = typeof resolveCreateSdkSession(factoryName) === "function";
+    bootState.hasBridge = typeof window !== "undefined" && !!window.OrbisPorcupineSdkBridge;
+    bootState.hasHooks = typeof window !== "undefined" && !!window.OrbisPorcupineSdkHooks;
+    bootState.simulated = /simulated/.test(String(reason || ""));
     return {
       installed: bootState.installed,
       status: { ...bootState, init: (res && res.status) ? res.status : getPorcupineInitStatus() },
@@ -128,6 +142,7 @@ export async function bootLocalPorcupineKws(opts = {}) {
         ) {
           try {
             await ensureScriptOnce(bridgeScriptPath);
+            bootState.loadedBridgeScript = true;
           } catch (_ignoredBridgeLoadError) {
             // Bridge script is optional during early local integration stages.
           }
@@ -147,6 +162,11 @@ export async function bootLocalPorcupineKws(opts = {}) {
               sessionGlobalMod.autoInstallOrbisPorcupineSdkSessionGlobal();
             }
           } catch (_ignored) {}
+        }
+        if (typeof window !== "undefined") {
+          bootState.hasBridge = !!window.OrbisPorcupineSdkBridge;
+          bootState.hasHooks = !!window.OrbisPorcupineSdkHooks;
+          bootState.hasFactory = typeof window[factoryName] === "function";
         }
       } catch (err) {
         if (!allowSimulation) throw err;

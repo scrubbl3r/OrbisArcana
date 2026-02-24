@@ -1072,6 +1072,10 @@
         }
       } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
         parts.push(`backend:${porcupineKwsInitStatus.installed ? "ready" : "none"}`);
+        if (porcupineKwsInitStatus.simulated) parts.push("mode:sim");
+        if (porcupineKwsInitStatus.reason && porcupineKwsInitStatus.reason !== "installed") {
+          parts.push(`why:${String(porcupineKwsInitStatus.reason).replace(/_/g, "-")}`);
+        }
       }
       els.kwsReadout.textContent = parts.join(" | ");
     }
