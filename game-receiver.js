@@ -1758,11 +1758,22 @@
     }
 
     function resetOrbToGround(){
-      physState.yW = groundCenterWorld();
-      physState.v = 0;
-      physState.onGround = true;
-      physState.floatGraceAnchorY = physState.yW;
-      physState.floatGracePhase = 0;
+      const yW = groundCenterWorld();
+      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
+        orbRuntimeState.patch({
+          yW,
+          v: 0,
+          onGround: true,
+          floatGraceAnchorY: yW,
+          floatGracePhase: 0,
+        });
+      } else {
+        physState.yW = yW;
+        physState.v = 0;
+        physState.onGround = true;
+        physState.floatGraceAnchorY = physState.yW;
+        physState.floatGracePhase = 0;
+      }
       applyOrbTransform();
       if (worldSystem) worldSystem.render(performance.now());
     }
@@ -1771,30 +1782,59 @@
       const yFloor = groundCenterWorld();
       const yCeil = PHYS.orbRadiusPx;
       const yTarget = clamp(yFloor - Math.max(0, Number(aboveGroundPx) || 0), yCeil, yFloor);
-      physState.yW = yTarget;
-      physState.v = 0;
-      physState.onGround = !(yTarget < (yFloor - 0.5));
-      physState.descendMs = 0;
-      physState.shieldDescentBlocked = false;
-      physState.floatGraceAnchorY = physState.yW;
-      physState.floatGracePhase = 0;
+      const onGround = !(yTarget < (yFloor - 0.5));
+      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
+        orbRuntimeState.patch({
+          yW: yTarget,
+          v: 0,
+          onGround,
+          descendMs: 0,
+          shieldDescentBlocked: false,
+          floatGraceAnchorY: yTarget,
+          floatGracePhase: 0,
+        });
+      } else {
+        physState.yW = yTarget;
+        physState.v = 0;
+        physState.onGround = onGround;
+        physState.descendMs = 0;
+        physState.shieldDescentBlocked = false;
+        physState.floatGraceAnchorY = physState.yW;
+        physState.floatGracePhase = 0;
+      }
       applyOrbTransform();
       if (worldSystem) worldSystem.render(performance.now());
       updateDebugReadout();
     }
 
     function clearFloatGrace(){
-      physState.floatGraceActive = false;
-      physState.floatGraceUntilMs = 0;
+      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
+        orbRuntimeState.patch({
+          floatGraceActive: false,
+          floatGraceUntilMs: 0,
+        });
+      } else {
+        physState.floatGraceActive = false;
+        physState.floatGraceUntilMs = 0;
+      }
     }
 
     function grantFloatGrace(ms = FLOAT_GRACE_DEFAULT_MS){
       const dur = Math.max(50, Number(ms) || FLOAT_GRACE_DEFAULT_MS);
       const now = performance.now();
-      physState.floatGraceActive = true;
-      physState.floatGraceUntilMs = now + dur;
-      physState.floatGraceAnchorY = physState.yW;
-      physState.floatGracePhase = Math.random() * Math.PI * 2;
+      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
+        orbRuntimeState.patch({
+          floatGraceActive: true,
+          floatGraceUntilMs: now + dur,
+          floatGraceAnchorY: physState.yW,
+          floatGracePhase: Math.random() * Math.PI * 2,
+        });
+      } else {
+        physState.floatGraceActive = true;
+        physState.floatGraceUntilMs = now + dur;
+        physState.floatGraceAnchorY = physState.yW;
+        physState.floatGracePhase = Math.random() * Math.PI * 2;
+      }
     }
 
     function isFloatGraceActive(nowMs){
@@ -1805,7 +1845,12 @@
     }
 
     function setGravityMul(m){
-      physState.gravityMul = clamp(Number(m) || 0, 0, 3);
+      const gravityMul = clamp(Number(m) || 0, 0, 3);
+      if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
+        orbRuntimeState.patch({ gravityMul });
+      } else {
+        physState.gravityMul = gravityMul;
+      }
       els.gVal.textContent = physState.gravityMul.toFixed(2);
     }
     setGravityMul(els.gSlider.value);
