@@ -144,11 +144,13 @@ export function createWorldSystem({
     p.fadeInMs = 0;
     p.fadeInStartMs = 0;
     render(nowMs);
-    eventBus.emit(EVT_PICKUP_COLLECTED, {
+    /** @type {import("../contracts/events.js").PickupCollectedPayload} */
+    const payload = {
       id: p.id,
       type: "energy_globe",
       atMs: Number(nowMs) || performance.now(),
-    });
+    };
+    eventBus.emit(EVT_PICKUP_COLLECTED, payload);
   }
 
   function tick(nowMs, _dt) {

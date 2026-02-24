@@ -8,10 +8,8 @@
 /**
  * @typedef {Object} InputShakeTriggeredPayload
  * @property {number} atMs
- * @property {string} [sd] Raw directional code (`U`,`D`,`L`,`R`,`F`,`B`) when available.
+ * @property {string} [code] Raw directional code (`U`,`D`,`L`,`R`,`F`,`B`) when available.
  * @property {string} [group] Direction group (`UD`,`LR`,`FB`) when available.
- * @property {number} [shake]
- * @property {number} [groove]
  */
 export const EVT_INPUT_SHAKE_TRIGGERED = "input.shake_triggered";
 
@@ -33,6 +31,9 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
  * @property {number} [atMs]
  * @property {number} [floatGraceMs] Optional explicit grace override
  * @property {string} [trigger] Trigger source (for example `shake_detonation`)
+ * @property {string} [phrase] Recognized phrase/display text
+ * @property {number} [confidence] Recognition confidence (0..1)
+ * @property {string} [directionGroup] Direction group (`UD`,`LR`,`FB`) for shake detonation casts
  */
 
 /**
@@ -76,13 +77,15 @@ export const EVT_PICKUP_COLLECTED = "pickup.collected";
  * @property {number} bankPts
  * @property {number} capPts
  * @property {number} atMs
+ * Legacy event id currently used: `energy.bank_changed`.
  */
 export const EVT_RESOURCES_ENERGY_BANK_CHANGED = "energy.bank_changed";
 
 /**
  * @typedef {Object} ResourcesGlobeInventoryChangedPayload
- * @property {number} stored
+ * @property {number} stored Stored globe count
  * @property {number} atMs
+ * Legacy event id currently used: `energy.globe_inventory_changed`.
  */
 export const EVT_RESOURCES_GLOBE_INVENTORY_CHANGED = "energy.globe_inventory_changed";
 export const EVT_RESOURCES_SHAKE_SPENT = "energy.shake_spent";

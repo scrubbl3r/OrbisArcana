@@ -161,11 +161,13 @@ export function createInputGestureSystem({
     }
 
     if (eventBus && typeof eventBus.emit === "function") {
-      eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, {
+      /** @type {import("../contracts/events.js").InputShakeTriggeredPayload} */
+      const payload = {
         code: shakeCode,
         group: shakeGroupFromCode(shakeCode),
         atMs: now,
-      });
+      };
+      eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, payload);
     }
 
     resetShakeCachesAfterHit();

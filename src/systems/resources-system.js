@@ -74,18 +74,22 @@ export function createResourcesSystem({
   }
 
   function emitEnergyChanged(atMs) {
-    eventBus.emit(EVT_RESOURCES_ENERGY_BANK_CHANGED, {
+    /** @type {import("../contracts/events.js").ResourcesEnergyBankChangedPayload} */
+    const payload = {
       bankPts: state.energyBankPts,
       capPts: energyBankCap,
       atMs: Number(atMs) || nowMs(),
-    });
+    };
+    eventBus.emit(EVT_RESOURCES_ENERGY_BANK_CHANGED, payload);
   }
 
   function emitGlobeInventoryChanged(atMs) {
-    eventBus.emit(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, {
+    /** @type {import("../contracts/events.js").ResourcesGlobeInventoryChangedPayload} */
+    const payload = {
       stored: state.storedGlobes,
       atMs: Number(atMs) || nowMs(),
-    });
+    };
+    eventBus.emit(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, payload);
   }
 
   function resetEnergyBank(atMs) {

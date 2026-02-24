@@ -291,14 +291,16 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         return;
       }
       lastCastBySpellId.set(spellId, now);
-      eventBus.emit(EVT_VOICE_SPELL_CAST, {
+      /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
+      const castPayload = {
         spellId,
         intent: spell.intent,
         phrase: spell.phrase,
         confidence: Number(payload.confidence) || 0,
         trigger: "voice_immediate",
         atMs: now,
-      });
+      };
+      eventBus.emit(EVT_VOICE_SPELL_CAST, castPayload);
     }));
 
     unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
@@ -333,7 +335,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
 
       loadedByAxis[loaded.axis][loaded.slot] = null;
       lastCastBySpellId.set(loaded.spellId, now);
-      eventBus.emit(EVT_VOICE_SPELL_CAST, {
+      /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
+      const castPayload = {
         spellId: loaded.spellId,
         intent: loaded.intent,
         phrase: loaded.phrase,
@@ -343,7 +346,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         slot: loaded.slot,
         directionGroup: group,
         atMs: now,
-      });
+      };
+      eventBus.emit(EVT_VOICE_SPELL_CAST, castPayload);
     }));
   }
 
