@@ -1,0 +1,358 @@
+ORBIS ARCANA STATE OWNERSHIP INVENTORY (v2)
+
+Purpose
+
+This is an implementation-facing snapshot of runtime state ownership after the recent refactor pass.
+It distinguishes:
+
+- Intentional receiver-owned state (acceptable shell/composition ownership)
+- Delegated system-owned state (good)
+- Remaining receiver-owned migration targets (future)
+
+Use this as a refactor priority map, not a final spec.
+
+Date context
+
+- Generated after:
+  - input system / gesture / dynamics extraction
+  - resources system extraction
+  - spell cast executor + handler registry extraction
+  - orb runtime pipeline extraction
+  - theme + VFX preset SSOT setup
+  - event contracts v1
+  - receiver bootstrap extraction
+
+--------------------------------------------------
+1. STATUS LEGEND
+--------------------------------------------------
+
+Status meanings
+
+- OK (Shell): reasonable to keep in receiver for now
+- OK (System): already lives in the right domain/system
+- WATCH: acceptable for now, but likely to need formalization
+- MOVE NEXT: high-value migration target
+- MOVE LATER: future extraction target, lower urgency
+
+Authority meanings
+
+- Authoritative: source of truth for gameplay/runtime behavior
+- Derived: computed/render-only state
+- Runtime Handle: DOM/RAF/timer/audio handles (presentation/runtime plumbing)
+
+--------------------------------------------------
+2. TOP-LEVEL OWNERSHIP SUMMARY (CURRENT REALITY)
+--------------------------------------------------
+
+Input
+- Mostly delegated (good)
+- Receiver still owns UI rendering and some input-entry orchestration
+
+Orb
+- Mixed
+- Orb runtime frame logic delegated to pipeline, but receiver still owns `physState`
+
+World
+- Mostly delegated for pickups
+- Receiver still owns some world render orchestration and camera helpers
+
+Spells
+- Mostly delegated
+- Receiver still provides local spell action implementation hooks
+
+Resources
+- Delegated (good)
+
+Session/UI
+- Mostly receiver-owned (acceptable shell/UI role)
+
+Effects/VFX runtime
+- Defaults/presets delegated (good)
+- Runtime implementations still largely in receiver (planned later move)
+
+--------------------------------------------------
+3. INTENTIONAL RECEIVER-OWNED STATE (KEEP FOR NOW)
+--------------------------------------------------
+
+These are in the receiver by design or are acceptable shell/UI responsibilities.
+
+1. Transport / connection / channel runtime
+- Current owner: game-receiver.js
+- Type: session / shell / transport
+- Authority: authoritative for connection shell state
+- Status: OK (Shell)
+- Notes:
+  - Ably realtime/channel lifecycle
+  - connect/disconnect UI statuses
+  - room/channel selection
+
+2. DOM element registry (`els`)
+- Current owner: game-receiver.js
+- Type: UI shell
+- Authority: runtime handle
+- Status: OK (Shell)
+- Notes:
+  - Centralized DOM refs are appropriate in the shell
+
+3. Start/death/calibration overlays and UI flow
+- Current owner: game-receiver.js
+- Type: session/ui
+- Authority: authoritative for UI flow
+- Status: OK (Shell)
+- Notes:
+  - Could later move to a UI subsystem, but not necessary now
+
+4. Top-level composition and lifecycle wiring (`initMvpSystems`, event subscriptions)
+- Current owner: game-receiver.js
+- Type: composition shell
+- Authority: authoritative for app wiring
+- Status: OK (Shell)
+- Notes:
+  - Bootstrap helpers moved to `src/runtime/receiver-bootstrap.js`
+  - Remaining composition in receiver is expected
+
+5. Receiver module readiness gate (`receiverModulesReady`)
+- Current owner: game-receiver.js
+- Type: shell lifecycle
+- Authority: authoritative shell runtime flag
+- Status: OK (Shell)
+- Notes:
+  - Prevents async startup races after fallback removal
+
+6. HUD rendering functions (render-only)
+- Current owner: game-receiver.js
+- Type: UI rendering
+- Authority: derived
+- Status: OK (Shell)
+- Notes:
+  - `buildInputHudViewModel` already extracted
+  - `renderInputHud` remains local because it touches receiver-local UI/runtime hooks
+
+--------------------------------------------------
+4. DELEGATED SYSTEM-OWNED STATE (GOOD / KEEP)
+--------------------------------------------------
+
+These are already in the right place under the current schema.
+
+1. Normalized latest input frame
+- Current owner: `src/systems/input-system.js`
+- Type: input
+- Authority: authoritative
+- Status: OK (System)
+- Notes:
+  - `input.latest` SSOT for normalized control frame
+
+2. Shake + flat-spin gesture runtime state
+- Current owner: `src/systems/input-gesture-system.js`
+- Type: input/gesture
+- Authority: authoritative
+- Status: OK (System)
+- Notes:
+  - cooldown, pending direction, flat-spin state machine
+
+3. Stability / variability detector runtime
+- Current owner: `src/systems/input-dynamics-system.js`
+- Type: input/dynamics
+- Authority: authoritative
+- Status: OK (System)
+- Notes:
+  - sampling windows and derived state
+
+4. Resource economy state (energy + stored globes)
+- Current owner: `src/systems/resources-system.js`
+- Type: resources
+- Authority: authoritative
+- Status: OK (System)
+- Notes:
+  - major ownership mismatch resolved
+
+5. Spell loadout / cooldown dispatch state
+- Current owner: `src/systems/spell-dispatch-system.js`
+- Type: spells
+- Authority: authoritative
+- Status: OK (System)
+- Notes:
+  - now consumes resources API instead of owning globes
+
+6. World pickup runtime entities
+- Current owner: `src/systems/world-system.js`
+- Type: world
+- Authority: authoritative
+- Status: OK (System)
+- Notes:
+  - multi-pickup support in place
+
+7. Orb health / damage / revive gameplay state
+- Current owner: `src/systems/orb-system.js` + `src/state/game-state.js`
+- Type: orb
+- Authority: authoritative
+- Status: OK (System)
+- Notes:
+  - receiver applies impacts via orchestration hook, orb-system owns health state
+
+--------------------------------------------------
+5. RECEIVER-OWNED BUT ACCEPTABLE FOR NOW (WATCH)
+--------------------------------------------------
+
+These are not urgent problems, but they should be tracked.
+
+1. `physState` (orb motion runtime state)
+- Current owner: game-receiver.js
+- Type: orb runtime / physics-adjacent
+- Authority: authoritative
+- Status: WATCH
+- Why still here:
+  - orb runtime pipeline was extracted first (logic)
+  - state object remains local to reduce risk to flight feel
+- Future target:
+  - orb runtime state/system or orb slice-backed runtime adapter
+
+2. `physicsStep()` RAF scheduling shell
+- Current owner: game-receiver.js
+- Type: runtime loop orchestration
+- Authority: authoritative loop scheduling
+- Status: WATCH
+- Why still here:
+  - scheduling shell + startup gating are app-level concerns
+- Future target:
+  - optional runtime loop coordinator module
+
+3. Camera/world render helper functions (`cameraTopFor`, `orbScreenY`, etc.)
+- Current owner: game-receiver.js
+- Type: world/ui rendering glue
+- Authority: derived/runtime helper
+- Status: WATCH
+- Why still here:
+  - tied to current DOM/canvas stage layout
+- Future target:
+  - world/orb render helper module if layout grows complex
+
+4. Receiver event wiring payload assumptions
+- Current owner: game-receiver.js
+- Type: shell/composition contracts
+- Authority: mixed
+- Status: WATCH
+- Notes:
+  - improved by `src/contracts/events.js`
+  - next hardening step is payload docs / JSDoc for event payloads
+
+--------------------------------------------------
+6. RECEIVER-OWNED MIGRATION TARGETS (MOVE LATER)
+--------------------------------------------------
+
+These are the biggest remaining receiver burdens by line count / concern density.
+
+1. VFX runtime implementations (shield, shockwave, flame AOE, electric AOE, shatter)
+- Current owner: game-receiver.js
+- Type: effects runtime
+- Authority: runtime handle + presentation logic
+- Status: MOVE LATER
+- Why not immediate:
+  - presets/theme SSOT already solved
+  - behavior is stable and high-risk to move quickly
+- Future target:
+  - `src/vfx/effects/*` runtime modules shared by game + lab
+
+2. Shatter runtime handles and lifecycle (`mvpShards`, `mvpShardRaf`, shard sim)
+- Current owner: game-receiver.js
+- Type: effects runtime
+- Authority: runtime handle
+- Status: MOVE LATER
+- Future target:
+  - orb shatter effect module/runtime
+
+3. Some orb visual interpolation state (`orbStrokeColor`, related helpers)
+- Current owner: game-receiver.js
+- Type: orb visual runtime
+- Authority: mixed (visual, gameplay-adjacent feedback)
+- Status: MOVE LATER
+- Future target:
+  - orb visual runtime module or orb FX system extension
+
+--------------------------------------------------
+7. HIGH-VALUE CONTRACTS TO HARDEN NEXT (NO BIG EXTRACTIONS)
+--------------------------------------------------
+
+These are the best next schema-hardening targets after the event constants pass.
+
+1. Event payload contracts (JSDoc comments / typedefs)
+- Status: MOVE NEXT
+- Why:
+  - Event IDs are now centralized, but payload shapes can still drift
+- Suggested target:
+  - `src/contracts/events.js` (payload comments near constants)
+  - or `src/contracts/event-payloads.js`
+
+2. System/bundle JSDoc interfaces
+- Status: IN PROGRESS (started)
+- Why:
+  - Protect injected hook/API shapes
+- Current progress:
+  - input bundle, orb bundle, resources system, spell cast executor documented
+- Next candidates:
+  - `input-gesture-system`
+  - `input-dynamics-system`
+  - `input-frame-pipeline`
+  - `orb-runtime-pipeline`
+  - `receiver-bootstrap`
+
+3. Receiver shell composition contracts
+- Status: MOVE NEXT
+- Why:
+  - `receiver-bootstrap` currently uses many injected setters/hooks
+- Target:
+  - document `hydrateReceiverBootstrapState(mods, ctx)` context shape via JSDoc
+
+--------------------------------------------------
+8. FUTURE FEATURE READINESS CHECK (SUPER GRACE EXAMPLE)
+--------------------------------------------------
+
+Current architecture can support a cross-slice mechanic like "Super Grace" cleanly.
+
+Why
+- Orb buoyancy/grace behavior is already orchestrated separately
+- Input gesture/dynamics state is in dedicated systems (resettable)
+- Spell action execution is modularized
+- Resources/spells/world are not trapped in receiver locals
+
+Likely implementation path later (conceptual)
+- Trigger action (spell/item/debug) -> spell/action executor
+- Apply orb super-grace status / float grace
+- Reset input processing state (gesture + dynamics and maybe input runtime caches)
+- Optional VFX/UI feedback
+
+This is a sign the schema refactor is working.
+
+--------------------------------------------------
+9. CURRENT REFACTOR POSITION (PRACTICAL ASSESSMENT)
+--------------------------------------------------
+
+Receiver burden removed (qualitative)
+- Input logic/state: largely delegated
+- Spell action semantics/execution: largely delegated
+- Resources ownership: delegated
+- VFX defaults/theme/presets: delegated
+- Bootstrap import/hydration: delegated
+
+Receiver burden remaining (mainly)
+- VFX runtime implementations
+- Orb runtime state object (`physState`)
+- UI shell rendering and flow (mostly acceptable)
+
+Practical assessment
+- Receiver is now much closer to its rightful role:
+  - shell/composer/transport/UI orchestrator
+- Remaining work is more about contract hardening and selective runtime module extraction
+  than discovering architecture.
+
+--------------------------------------------------
+10. RECOMMENDED NEXT STEPS (ORDERED)
+--------------------------------------------------
+
+1. Add event payload docs (JSDoc typedefs/comments) for the top 10 events
+2. Add JSDoc contracts for `input-gesture-system`, `input-dynamics-system`, `input-frame-pipeline`, `orb-runtime-pipeline`
+3. Add JSDoc contract for `receiver-bootstrap` context object (reduce setter-sprawl ambiguity)
+4. Revisit VFX runtime extraction only after contract hardening is stable
+
+End of document.
+
