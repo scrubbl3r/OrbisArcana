@@ -4,7 +4,7 @@
  * Update these values when you add the real local SDK/runtime/model assets.
  */
 
-export const PORCUPINE_LOCAL_SDK_VERSION = "UNSET";
+export const PORCUPINE_LOCAL_SDK_VERSION = "0.0.0-local";
 
 export const PORCUPINE_LOCAL_VENDOR_BASE = `/vendor/porcupine/${PORCUPINE_LOCAL_SDK_VERSION}/`;
 export const PORCUPINE_LOCAL_KEYWORDS_BASE = "/assets/kws/keywords/";
@@ -28,4 +28,3 @@ export const PORCUPINE_LOCAL_KEYWORD_MODEL_PATHS = Object.freeze({
   rahta: `${PORCUPINE_LOCAL_KEYWORDS_BASE}rahta.ppn`,
   domus: `${PORCUPINE_LOCAL_KEYWORDS_BASE}domus.ppn`,
 });
-
