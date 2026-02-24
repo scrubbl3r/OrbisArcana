@@ -28,6 +28,27 @@
 export function installOrbisCreatePorcupineSdkSessionGlobal() {
   if (typeof window === "undefined") return null;
 
+  function buildKeywordLookup(keywordList) {
+    const byToken = new Map();
+    const byLabel = new Map();
+    for (const k of Array.isArray(keywordList) ? keywordList : []) {
+      if (!k) continue;
+      const token = String(k.token || "").trim().toLowerCase();
+      if (!token) continue;
+      const label = String(k.label || token).trim().toLowerCase();
+      const modelPath = k.modelPath ? String(k.modelPath) : undefined;
+      const entry = { token, label: String(k.label || token), modelPath };
+      byToken.set(token, entry);
+      byLabel.set(label, entry);
+      if (modelPath) {
+        const file = modelPath.split("/").pop() || "";
+        const stem = file.replace(/\.[^.]+$/, "").toLowerCase();
+        if (stem) byLabel.set(stem, entry);
+      }
+    }
+    return { byToken, byLabel };
+  }
+
   /**
    * @param {OrbisCreatePorcupineSdkSessionArgs} args
    */
@@ -45,6 +66,7 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
     if (typeof onDetection !== "function") {
       throw new Error("OrbisCreatePorcupineSdkSession requires onDetection(...)");
     }
+    const keywordLookup = buildKeywordLookup(keywords);
 
     let started = false;
     let destroyed = false;
@@ -72,6 +94,7 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
       //
       // Typical responsibilities:
       // 1. Create/initialize Porcupine detector with keyword models.
+      //    `keywords` entries include `modelPath` from local manifest.
       // 2. Create an AudioContext (or reuse one if SDK expects it).
       // 3. Attach MediaStream source -> processing node/worklet.
       // 4. Forward detections to `onDetection(...)`.
@@ -83,7 +106,7 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
       //     atMs: Date.now(),
       //   });
       //
-      // If your SDK returns a keyword index/name, map it using `keywords`.
+      // If your SDK returns a keyword index/name, map it using `keywordLookup`.
       // =====================================================================
 
       throw new Error("Porcupine SDK session wrapper is not implemented yet");
@@ -151,6 +174,9 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
           started,
           destroyed,
           keywordCount: Array.isArray(keywords) ? keywords.length : 0,
+          keywords: Array.isArray(keywords)
+            ? keywords.map((k) => ({ token: k.token, modelPath: k.modelPath || null }))
+            : [],
           lastDetection,
           errorCount,
           lastError,
@@ -158,7 +184,9 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
       },
       // Optional helper for SDK callback mapping while integrating.
       _emitDetectionForDebug(keywordOrToken, confidence = 1) {
-        const token = String(keywordOrToken || "").trim().toLowerCase();
+        const raw = String(keywordOrToken || "").trim().toLowerCase();
+        const mapped = keywordLookup.byLabel.get(raw) || keywordLookup.byToken.get(raw);
+        const token = mapped ? mapped.token : raw;
         if (!token) return;
         lastDetection = {
           token,
@@ -183,4 +211,3 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
 export function autoInstallOrbisPorcupineSdkSessionGlobal() {
   return installOrbisCreatePorcupineSdkSessionGlobal();
 }
-
