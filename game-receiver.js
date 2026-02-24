@@ -1063,6 +1063,12 @@
           mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "gated_window" });
           mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "keyboard", timeoutMs: 4500 });
         }
+        return;
+      }
+
+      // Debug-only "nirvana" test: enhanced grace + input processing reset.
+      if ((e.key === "n" || e.key === "N") && e.shiftKey) {
+        grantSuperGrace();
       }
     });
 
@@ -1110,6 +1116,7 @@
     const DEATH_FLOW_DELAY_MS = 3000;
     const FLOAT_GRACE_DEFAULT_MS = 1000;
     const DOMUS_FLOAT_GRACE_MS = 5000;
+    const SUPER_GRACE_DEFAULT_MS = 2500;
     const DOMUS_TELEPORT_ABOVE_GROUND_PX = 300;
     const SANCTUS_SHIELD_MS = 8000;
     const SANCTUS_SHIELD_SCALE = 1.25;
@@ -1710,6 +1717,7 @@
           voiceRecognitionSystem,
           voiceHudSystem,
           grantFloatGrace,
+          grantSuperGrace,
           lastImpact: null,
           applyImpact(impact, source, meta = {}){
             this.lastImpact = {
@@ -1861,6 +1869,22 @@
         floatGraceAnchorY: getOrbRuntime().yW,
         floatGracePhase: Math.random() * Math.PI * 2,
       });
+    }
+
+    function resetInputProcessingState(atMs = performance.now()){
+      if (inputSystemsBundle && typeof inputSystemsBundle.resetProcessingState === "function") {
+        inputSystemsBundle.resetProcessingState(atMs);
+        return;
+      }
+      if (inputSystem && typeof inputSystem.reset === "function") inputSystem.reset(atMs);
+      if (inputDynamicsSystem && typeof inputDynamicsSystem.reset === "function") inputDynamicsSystem.reset(atMs);
+      if (inputGestureSystem && typeof inputGestureSystem.reset === "function") inputGestureSystem.reset(atMs);
+    }
+
+    function grantSuperGrace(ms = SUPER_GRACE_DEFAULT_MS){
+      const now = performance.now();
+      resetInputProcessingState(now);
+      grantFloatGrace(ms);
     }
 
     function isFloatGraceActive(nowMs){

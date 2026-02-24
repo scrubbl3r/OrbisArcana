@@ -10,6 +10,7 @@ import { createInputGestureSystem } from "./input-gesture-system.js";
  * @property {() => void} start Starts underlying input systems.
  * @property {() => void} stop Stops underlying input systems.
  * @property {(atMs?: number) => void} resetAll Resets all input system runtime state.
+ * @property {(atMs?: number) => void} resetProcessingState Explicit alias for gameplay-driven input detector resets.
  */
 
 /**
@@ -67,5 +68,6 @@ export function createInputSystemsBundle({
     start,
     stop,
     resetAll,
+    resetProcessingState: resetAll,
   };
 }
