@@ -1,0 +1,102 @@
+KWS PORCUPINE BACKEND INTEGRATION (v1)
+
+Purpose
+
+Hook a real browser keyword detector (Porcupine-style) into the new KWS provider
+without changing receiver/gameplay code.
+
+Receiver contract (already implemented)
+
+The receiver looks for:
+
+  window.OrbisKwsBackendFactory
+
+If present, the KWS provider will use it for live microphone keyword detection.
+
+Where to install the backend hook
+
+Use:
+  /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-browser-backend.js
+
+Exports
+
+- createPorcupineBrowserBackendFactory(...)
+- installPorcupineKwsBackendGlobal(...)
+- installExamplePorcupineLikeBackend(...)
+
+What your real backend must do
+
+Input from provider:
+- stream (MediaStream mic input)
+- onToken({ token, confidence, atMs })
+- onError(err)
+
+Return object:
+- start()
+- stop()
+- getStatus()    (optional but recommended)
+- destroy()      (optional but recommended)
+
+Minimal install pattern (example)
+
+1. Load your Porcupine Web SDK + keyword models
+2. Create a small wrapper that emits normalized token hits
+3. Install the global factory before receiver initializes KWS
+
+Pseudo example
+
+  import { installPorcupineKwsBackendGlobal } from "/src/voice/kws/porcupine-browser-backend.js";
+
+  installPorcupineKwsBackendGlobal({
+    label: "porcupine",
+    async createDetectorSession({ stream, onToken, onError }) {
+      // TODO: build actual Porcupine session using SDK
+      // Call onToken({ token: "ignis", confidence: 0.9, atMs: Date.now() }) on detections
+
+      const session = await createYourPorcupineSession({ stream, onToken, onError });
+
+      return {
+        start: () => session.start(),
+        stop: () => session.stop(),
+        destroy: () => session.destroy && session.destroy(),
+        getStatus: () => session.getStatus ? session.getStatus() : { ok: true },
+      };
+    },
+  });
+
+Suggested keyword set for v1
+
+Schools
+- ignis
+- fridgis
+- electrum
+
+Classes
+- sanctum
+- sanctus (alias)
+- radius
+- rota
+- rahta (alias)
+
+Optional later
+- domus
+- meta/wake tokens if you want KWS wake mode
+
+Testing flow
+
+1. Start receiver
+2. Set Voice Engine = KWS Shadow
+3. Toggle KWS Mic On
+4. Speak keywords
+5. Watch:
+   - KWS readout
+   - KWS event log
+6. Tune parser (Win / Thr / CD)
+7. Switch Voice Engine = KWS to activate spell casting
+
+Safety notes
+
+- Keep STT as default during early testing
+- Use KWS Shadow for tuning before enabling active mode
+- Keep the token injection buttons as fallback when audio backend is unavailable
+
