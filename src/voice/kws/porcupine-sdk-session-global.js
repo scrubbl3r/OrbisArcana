@@ -25,8 +25,13 @@
  * - installs a valid function shape
  * - throws explicit "not implemented" errors until SDK wiring is filled in
  */
-export function installOrbisCreatePorcupineSdkSessionGlobal() {
+export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
   if (typeof window === "undefined") return null;
+  const simulate = !!opts.simulate;
+  const simulationIntervalMs = Math.max(200, Math.round(Number(opts.simulationIntervalMs) || 1200));
+  const simulationTokens = Array.isArray(opts.simulationTokens) && opts.simulationTokens.length
+    ? opts.simulationTokens.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean)
+    : ["ignis", "rota", "electrum", "sanctum"];
 
   function buildKeywordLookup(keywordList) {
     const byToken = new Map();
@@ -79,6 +84,8 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
     let sourceNode = null;
     let workletNode = null;
     let detector = null;
+    let simTimer = 0;
+    let simIndex = 0;
 
     function reportError(err) {
       errorCount += 1;
@@ -88,6 +95,11 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
 
     async function initSdkAndGraphIfNeeded() {
       if (detector || workletNode || audioCtx) return;
+
+      if (simulate) {
+        detector = { simulated: true };
+        return;
+      }
 
       // =====================================================================
       // TODO: PORCUPINE WEB SDK INTEGRATION GOES HERE
@@ -121,6 +133,19 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
         // TODO: Start detector/audio processing here (SDK-specific)
         // Example:
         // await detector.start?.();
+        if (simulate) {
+          simTimer = window.setInterval(() => {
+            const token = simulationTokens[simIndex % simulationTokens.length];
+            simIndex += 1;
+            if (!token) return;
+            lastDetection = {
+              token,
+              confidence: 0.95,
+              atMs: Date.now(),
+            };
+            onDetection(lastDetection);
+          }, simulationIntervalMs);
+        }
 
         started = true;
       } catch (err) {
@@ -132,6 +157,10 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
     async function stop() {
       if (!started) return;
       try {
+        if (simTimer) {
+          clearInterval(simTimer);
+          simTimer = 0;
+        }
         // TODO: Stop detector/audio processing here (SDK-specific)
         // Example:
         // await detector.stop?.();
@@ -157,6 +186,10 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
         reportError(err);
       } finally {
         detector = null;
+        if (simTimer) {
+          clearInterval(simTimer);
+          simTimer = 0;
+        }
         workletNode = null;
         sourceNode = null;
         audioCtx = null;
@@ -174,6 +207,8 @@ export function installOrbisCreatePorcupineSdkSessionGlobal() {
           started,
           destroyed,
           keywordCount: Array.isArray(keywords) ? keywords.length : 0,
+          simulated: simulate,
+          simulationIntervalMs: simulate ? simulationIntervalMs : null,
           keywords: Array.isArray(keywords)
             ? keywords.map((k) => ({ token: k.token, modelPath: k.modelPath || null }))
             : [],

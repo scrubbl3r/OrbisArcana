@@ -3,6 +3,7 @@ import {
   getPorcupineInitStatus,
   initLocalPorcupineKwsBackend,
 } from "./porcupine-init.js";
+import { installOrbisCreatePorcupineSdkSessionGlobal } from "./porcupine-sdk-session-global.js";
 
 let bootState = {
   attempted: false,
@@ -13,7 +14,9 @@ let bootState = {
 
 function isPlaceholderManifest(manifest = PORCUPINE_LOCAL_ASSET_MANIFEST) {
   const sdk = manifest && manifest.sdk ? manifest.sdk : {};
-  return String(sdk.version || "").toUpperCase() === "UNSET"
+  const version = String(sdk.version || "");
+  return version.toUpperCase() === "UNSET"
+    || version.endsWith("-local")
     || String(sdk.scriptPath || "").includes("/UNSET/");
 }
 
@@ -74,9 +77,37 @@ export async function bootLocalPorcupineKws(opts = {}) {
 
   const manifest = opts.manifest || PORCUPINE_LOCAL_ASSET_MANIFEST;
   const factoryName = String(opts.globalFactoryName || "OrbisCreatePorcupineSdkSession");
+  const allowSimulation = opts.allowSimulation == null ? true : !!opts.allowSimulation;
+
+  async function installWithFactory(createSdkSession, reason = "installed") {
+    const keywordEntries = Object.entries((manifest && manifest.keywords) || {}).map(([token, modelPath]) => ({
+      token,
+      label: token,
+      modelPath,
+    }));
+    const res = await initLocalPorcupineKwsBackend({
+      label: "porcupine-web-local",
+      createSdkSession,
+      keywords: keywordEntries,
+    });
+    bootState.installed = !!(res && res.installed);
+    bootState.reason = bootState.installed ? reason : "init_failed";
+    return {
+      installed: bootState.installed,
+      status: { ...bootState, init: (res && res.status) ? res.status : getPorcupineInitStatus() },
+      error: res && res.error ? res.error : null,
+    };
+  }
 
   try {
     if (isPlaceholderManifest(manifest)) {
+      if (allowSimulation) {
+        const simFactory = installOrbisCreatePorcupineSdkSessionGlobal({
+          simulate: true,
+          simulationIntervalMs: Number(opts.simulationIntervalMs) || 1200,
+        });
+        return installWithFactory(simFactory, "installed_simulated");
+      }
       bootState.reason = "manifest_unset";
       return {
         installed: false,
@@ -86,38 +117,37 @@ export async function bootLocalPorcupineKws(opts = {}) {
 
     const scriptPath = manifest && manifest.sdk ? manifest.sdk.scriptPath : "";
     if (scriptPath) {
-      await ensureScriptOnce(scriptPath);
-      bootState.loadedScript = true;
+      try {
+        await ensureScriptOnce(scriptPath);
+        bootState.loadedScript = true;
+      } catch (err) {
+        if (!allowSimulation) throw err;
+        const simFactory = installOrbisCreatePorcupineSdkSessionGlobal({
+          simulate: true,
+          simulationIntervalMs: Number(opts.simulationIntervalMs) || 1200,
+        });
+        bootState.reason = "sdk_script_missing_simulated";
+        return installWithFactory(simFactory, "installed_simulated");
+      }
     }
 
     const createSdkSession = resolveCreateSdkSession(factoryName);
     if (!createSdkSession) {
+      if (allowSimulation) {
+        const simFactory = installOrbisCreatePorcupineSdkSessionGlobal({
+          simulate: true,
+          simulationIntervalMs: Number(opts.simulationIntervalMs) || 1200,
+        });
+        bootState.reason = "sdk_factory_missing_simulated";
+        return installWithFactory(simFactory, "installed_simulated");
+      }
       bootState.reason = "sdk_factory_missing";
       return {
         installed: false,
         status: { ...bootState, init: getPorcupineInitStatus() },
       };
     }
-
-    const keywordEntries = Object.entries((manifest && manifest.keywords) || {}).map(([token, modelPath]) => ({
-      token,
-      label: token,
-      modelPath,
-    }));
-
-    const res = await initLocalPorcupineKwsBackend({
-      label: "porcupine-web-local",
-      createSdkSession,
-      keywords: keywordEntries,
-    });
-
-    bootState.installed = !!(res && res.installed);
-    bootState.reason = bootState.installed ? "installed" : "init_failed";
-    return {
-      installed: bootState.installed,
-      status: { ...bootState, init: (res && res.status) ? res.status : getPorcupineInitStatus() },
-      error: res && res.error ? res.error : null,
-    };
+    return installWithFactory(createSdkSession, "installed");
   } catch (err) {
     bootState.reason = err && err.message ? String(err.message) : "boot_failed";
     return {
@@ -131,4 +161,3 @@ export async function bootLocalPorcupineKws(opts = {}) {
 export function getLocalPorcupineBootStatus() {
   return { ...bootState, init: getPorcupineInitStatus() };
 }
-
