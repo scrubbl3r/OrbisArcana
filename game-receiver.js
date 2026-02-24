@@ -1690,8 +1690,14 @@
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
           const intent = String(p.intent || "");
           const spellId = String(p.spellId || "").toLowerCase();
-          const castActionId = castActionForSpellId(spellId);
-          executeSpellCastAction(castActionId, { payload: p, intent });
+          const spellDef = runtimeSpellIndex[spellId] || null;
+          const castActionId = spellDef ? String(spellDef.castActionId || "") : castActionForSpellId(spellId);
+          const result = executeSpellCastAction(castActionId, { payload: p, intent });
+          if (result && result.handled && spellDef && Array.isArray(spellDef.postCastActionIds)) {
+            for (const actionId of spellDef.postCastActionIds) {
+              executeSpellCastAction(String(actionId || ""), { payload: p, intent });
+            }
+          }
         });
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_GRANT, (p = {}) => {
           grantFloatGrace(p.ms);
