@@ -9,6 +9,16 @@ Adapter file
 
   /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-web-sdk-adapter.js
 
+Optional vendor-hook template (project-local)
+
+  /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-sdk-hooks-template.js
+
+The global session wrapper can call:
+
+  window.OrbisPorcupineSdkHooks.createSession(...)
+
+This gives you a cleaner place to isolate vendor-specific SDK calls.
+
 What the receiver expects (already implemented)
 
 The receiver looks for:
@@ -81,4 +91,3 @@ Recommended rollout
 5. Validate detections in KWS log/readout
 6. Tune parser settings (Win/Thr/CD)
 7. Switch Voice Engine = KWS for live casting
-

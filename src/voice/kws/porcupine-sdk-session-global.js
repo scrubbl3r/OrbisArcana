@@ -33,6 +33,13 @@ export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
     ? opts.simulationTokens.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean)
     : ["ignis", "rota", "electrum", "sanctum"];
 
+  function resolveSdkHooks() {
+    if (typeof window === "undefined") return null;
+    const hooks = window.OrbisPorcupineSdkHooks;
+    if (!hooks || typeof hooks !== "object") return null;
+    return hooks;
+  }
+
   function buildKeywordLookup(keywordList) {
     const byToken = new Map();
     const byLabel = new Map();
@@ -84,6 +91,7 @@ export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
     let sourceNode = null;
     let workletNode = null;
     let detector = null;
+    let sdkSession = null;
     let simTimer = 0;
     let simIndex = 0;
 
@@ -94,10 +102,24 @@ export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
     }
 
     async function initSdkAndGraphIfNeeded() {
-      if (detector || workletNode || audioCtx) return;
+      if (detector || workletNode || audioCtx || sdkSession) return;
 
       if (simulate) {
         detector = { simulated: true };
+        return;
+      }
+
+      const sdkHooks = resolveSdkHooks();
+      if (sdkHooks && typeof sdkHooks.createSession === "function") {
+        sdkSession = await sdkHooks.createSession({
+          stream,
+          keywords,
+          onDetection,
+          onError,
+          context: {
+            keywordLookup,
+          },
+        });
         return;
       }
 
@@ -146,6 +168,9 @@ export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
             onDetection(lastDetection);
           }, simulationIntervalMs);
         }
+        if (sdkSession && typeof sdkSession.start === "function") {
+          await sdkSession.start();
+        }
 
         started = true;
       } catch (err) {
@@ -160,6 +185,9 @@ export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
         if (simTimer) {
           clearInterval(simTimer);
           simTimer = 0;
+        }
+        if (sdkSession && typeof sdkSession.stop === "function") {
+          await sdkSession.stop();
         }
         // TODO: Stop detector/audio processing here (SDK-specific)
         // Example:
@@ -190,6 +218,10 @@ export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
           clearInterval(simTimer);
           simTimer = 0;
         }
+        if (sdkSession && typeof sdkSession.destroy === "function") {
+          await sdkSession.destroy();
+        }
+        sdkSession = null;
         workletNode = null;
         sourceNode = null;
         audioCtx = null;
@@ -209,6 +241,8 @@ export function installOrbisCreatePorcupineSdkSessionGlobal(opts = {}) {
           keywordCount: Array.isArray(keywords) ? keywords.length : 0,
           simulated: simulate,
           simulationIntervalMs: simulate ? simulationIntervalMs : null,
+          sdkHooksInstalled: !!resolveSdkHooks(),
+          sdkSessionStatus: sdkSession && typeof sdkSession.getStatus === "function" ? sdkSession.getStatus() : null,
           keywords: Array.isArray(keywords)
             ? keywords.map((k) => ({ token: k.token, modelPath: k.modelPath || null }))
             : [],

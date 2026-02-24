@@ -120,6 +120,14 @@ export async function bootLocalPorcupineKws(opts = {}) {
       try {
         await ensureScriptOnce(scriptPath);
         bootState.loadedScript = true;
+        if (typeof window !== "undefined" && typeof window.OrbisCreatePorcupineSdkSession !== "function") {
+          try {
+            const sessionGlobalMod = await import("./porcupine-sdk-session-global.js");
+            if (sessionGlobalMod && typeof sessionGlobalMod.autoInstallOrbisPorcupineSdkSessionGlobal === "function") {
+              sessionGlobalMod.autoInstallOrbisPorcupineSdkSessionGlobal();
+            }
+          } catch (_ignored) {}
+        }
       } catch (err) {
         if (!allowSimulation) throw err;
         const simFactory = installOrbisCreatePorcupineSdkSessionGlobal({
