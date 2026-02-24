@@ -1555,10 +1555,8 @@
     let runOrbRuntimePipelineModule = null;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
+    let orbShatterRuntime = null;
     let receiverModulesReady = false;
-    let mvpShardRaf = 0;
-    let mvpShardLastTs = 0;
-    let mvpShards = [];
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
 
@@ -1653,41 +1651,9 @@
     }
 
     function stopShardSim(){
-      if (mvpShardRaf) cancelAnimationFrame(mvpShardRaf);
-      mvpShardRaf = 0;
-      mvpShardLastTs = 0;
-    }
-
-    function shardSimTick(ts){
-      if (!mvpShards.length) {
-        stopShardSim();
-        return;
+      if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") {
+        orbShatterRuntime.clear();
       }
-      if (!mvpShardLastTs) mvpShardLastTs = ts;
-      const dt = clamp((ts - mvpShardLastTs) / 1000, 0, 0.05);
-      mvpShardLastTs = ts;
-      const g = 980;
-      for (const s of mvpShards){
-        s.vy += g * dt;
-        s.x += s.vx * dt;
-        s.y += s.vy * dt;
-        s.a += s.av * dt;
-        const deg = (s.a * 180 / Math.PI);
-        s.el.setAttribute("transform", `translate(${s.x.toFixed(2)} ${s.y.toFixed(2)}) rotate(${deg.toFixed(2)} ${s.cx.toFixed(2)} ${s.cy.toFixed(2)})`);
-      }
-      mvpShardRaf = requestAnimationFrame(shardSimTick);
-    }
-
-    function pointsToPath(points){
-      if (!Array.isArray(points) || points.length < 3) return "";
-      const first = points[0];
-      let d = `M ${Number(first.x).toFixed(2)} ${Number(first.y).toFixed(2)} `;
-      for (let i = 1; i < points.length; i++) {
-        const p = points[i];
-        d += `L ${Number(p.x).toFixed(2)} ${Number(p.y).toFixed(2)} `;
-      }
-      d += "Z";
-      return d;
     }
 
     function normalizeWorldItemSpawn(item){
@@ -1773,50 +1739,9 @@
     }
 
     function spawnShardFx(p){
-      if (!els.orbShards) return;
-      const d = pointsToPath(p.points);
-      if (!d) return;
       const palette = shardPaletteSnapshot || captureCurrentOrbPalette();
-      const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      el.setAttribute("class", "orbShard");
-      el.setAttribute("d", d);
-      el.setAttribute("transform", "translate(0 0)");
-      // Freeze shard palette to orb palette at death-time.
-      el.setAttribute("fill", palette.fillRgb);
-      el.setAttribute("fill-opacity", String(Number(palette.fillAlpha).toFixed(3)));
-      el.setAttribute("stroke", palette.strokeRgb);
-      el.setAttribute("stroke-width", "1.2");
-      el.setAttribute("stroke-linejoin", "round");
-      el.setAttribute("stroke-linecap", "round");
-      el.setAttribute("vector-effect", "non-scaling-stroke");
-      el.style.fill = palette.fillRgb;
-      el.style.fillOpacity = String(Number(palette.fillAlpha).toFixed(3));
-      el.style.stroke = palette.strokeRgb;
-      els.orbShards.appendChild(el);
-      const center = p.center || { x: 0, y: 0 };
-      const cMag = Math.hypot(Number(center.x) || 0, Number(center.y) || 0) || 1;
-      const jx = ((Number(center.x) || 0) / cMag) * 3.0;
-      const jy = ((Number(center.y) || 0) / cMag) * 3.0;
-      const s = {
-        id: p.pieceId,
-        el,
-        cx: Number(center.x) || 0,
-        cy: Number(center.y) || 0,
-        x: jx,
-        y: jy,
-        vx: Number(p.vx) || 0,
-        vy: Number(p.vy) || 0,
-        a: 0,
-        av: Number(p.angVel) || 0,
-      };
-      mvpShards.push(s);
-      if (!mvpShardRaf) mvpShardRaf = requestAnimationFrame(shardSimTick);
-
-      const ttl = Math.max(50, Number(p.ttlMs) || 300);
-      setTimeout(() => {
-        mvpShards = mvpShards.filter((x) => x !== s);
-        try { s.el.remove(); } catch (_) {}
-      }, ttl);
+      if (!orbShatterRuntime || typeof orbShatterRuntime.spawnPiece !== "function") return;
+      orbShatterRuntime.spawnPiece(p, palette);
     }
 
     async function initMvpSystems(){
@@ -1827,11 +1752,13 @@
           receiverEventContracts,
           { createBubbleShieldRuntime },
           { createShockwaveRuntime },
+          { createOrbShatterRuntime },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/contracts/events.js"),
           import("./src/vfx/effects/bubble-shield-runtime.js"),
           import("./src/vfx/effects/shockwave-runtime.js"),
+          import("./src/vfx/effects/orb-shatter-runtime.js"),
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
@@ -1902,6 +1829,12 @@
             setShockStrokeCssVar: (strokePx) => setVar("--shock-stroke", `${strokePx}px`),
             clamp,
             normalizeStroke: evenStroke,
+          });
+        }
+        if (typeof createOrbShatterRuntime === "function") {
+          orbShatterRuntime = createOrbShatterRuntime({
+            layerEl: els.orbShards,
+            clamp,
           });
         }
         const {
@@ -2072,8 +2005,6 @@
           updateDebugReadout();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
-          mvpShards = [];
-          if (els.orbShards) els.orbShards.innerHTML = "";
           stopShardSim();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
@@ -2122,7 +2053,7 @@
         };
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
-        if (els.orbShards) els.orbShards.innerHTML = "";
+        if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") orbShatterRuntime.clear();
         orbInputSuppressed = false;
         if (orbFxSystem) orbFxSystem.reset();
         if (worldSystem) worldSystem.reset(performance.now());
@@ -2971,8 +2902,6 @@
         clearDeathOverlaySchedule();
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
-        mvpShards = [];
-        if (els.orbShards) els.orbShards.innerHTML = "";
         stopShardSim();
         resetOrbToGround();
         if (worldSystem) worldSystem.reset(performance.now());
