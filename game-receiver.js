@@ -1528,9 +1528,9 @@
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
         }
         try {
-          const porcupineInitMod = await import("./src/voice/kws/porcupine-init.js");
-          if (porcupineInitMod && typeof porcupineInitMod.initLocalPorcupineKwsBackend === "function") {
-            const res = await porcupineInitMod.initLocalPorcupineKwsBackend();
+          const porcupineBootMod = await import("./src/voice/kws/porcupine-local-boot.js");
+          if (porcupineBootMod && typeof porcupineBootMod.bootLocalPorcupineKws === "function") {
+            const res = await porcupineBootMod.bootLocalPorcupineKws();
             if (res && res.status) porcupineKwsInitStatus = res.status;
           }
         } catch (e) {
