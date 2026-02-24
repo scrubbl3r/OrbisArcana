@@ -123,6 +123,38 @@
       font-size:12px;
       font-weight:800;
     }
+    .toolBtn{
+      background: rgba(0,0,0,.45);
+      color: var(--g);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:6px 8px;
+      font: inherit;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .toolBtn:hover{ border-color: rgba(50,255,117,.45); }
+    .effectMeta{
+      margin: 8px 0 10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size:11px;
+      font-weight:800;
+      color: rgba(50,255,117,.9);
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(50,255,117,.22);
+      background: rgba(0,0,0,.35);
+    }
+    .chip .dim{ opacity:.7; }
 
     .stage{
       height:min(78vh, 740px);
@@ -320,7 +352,7 @@
     <div class="card">
       <div class="title">
         <span>Preview</span>
-        <span class="dim">Orb VFX tester (electric aoe + shield + shockwave + flame aoe)</span>
+        <span class="dim">VFX Studio (spells, orb, and future world/enemy effects)</span>
       </div>
 
       <div class="stage" id="stage" aria-label="Preview stage">
@@ -344,13 +376,20 @@
         <div class="titleTools">
           <label for="effectSelect">Effect</label>
           <select id="effectSelect" class="effectSelect" aria-label="Select effect controls">
-            <option value="electric-aoe">electric aoe</option>
-            <option value="flame-aoe">flame aoe</option>
-            <option value="bubble-shield" selected>bubble shield</option>
-            <option value="shockwave">shockwave</option>
-            
+            <option value="electric-aoe" data-base-effect="electric-aoe" data-locked="true">electric aoe</option>
+            <option value="flame-aoe" data-base-effect="flame-aoe" data-locked="true">flame aoe</option>
+            <option value="bubble-shield" data-base-effect="bubble-shield" data-locked="true" selected>bubble shield</option>
+            <option value="shockwave" data-base-effect="shockwave" data-locked="true">shockwave</option>
           </select>
+          <button id="newEffectBtn" class="toolBtn" type="button">New</button>
+          <button id="renameEffectBtn" class="toolBtn" type="button">Rename</button>
+          <button id="deleteEffectBtn" class="toolBtn" type="button">Delete</button>
         </div>
+      </div>
+      <div class="effectMeta" aria-live="polite">
+        <span class="chip"><span class="dim">Profile</span><span id="effectProfileName">bubble shield</span></span>
+        <span class="chip"><span class="dim">Base type</span><span id="effectBaseType">bubble-shield</span></span>
+        <span class="chip"><span class="dim">Publish</span><span>preset (binding later)</span></span>
       </div>
 
       <!-- Electric AOE controls -->
@@ -515,6 +554,11 @@
 
       playShield: $("playShield"),
       effectSelect: $("effectSelect"),
+      newEffectBtn: $("newEffectBtn"),
+      renameEffectBtn: $("renameEffectBtn"),
+      deleteEffectBtn: $("deleteEffectBtn"),
+      effectProfileName: $("effectProfileName"),
+      effectBaseType: $("effectBaseType"),
       shieldMs: $("shieldMs"),
       vShieldMs: $("vShieldMs"),
       shieldAlpha: $("shieldAlpha"),
@@ -558,6 +602,91 @@
 
     function setVar(name, value){
       document.documentElement.style.setProperty(name, value);
+    }
+
+    function selectedEffectOption(){
+      if (!els.effectSelect) return null;
+      const idx = els.effectSelect.selectedIndex;
+      return idx >= 0 ? els.effectSelect.options[idx] : null;
+    }
+
+    function selectedBaseEffect(){
+      const opt = selectedEffectOption();
+      if (!opt) return "bubble-shield";
+      return String(opt.dataset.baseEffect || opt.value || "bubble-shield");
+    }
+
+    function slugifyEffectName(text){
+      return String(text || "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function nextCustomEffectValue(baseEffect, name){
+      const base = slugifyEffectName(baseEffect) || "effect";
+      const slug = slugifyEffectName(name) || "custom";
+      let i = 1;
+      let value = `custom:${base}:${slug}`;
+      if (!els.effectSelect) return value;
+      const exists = () => Array.from(els.effectSelect.options).some((o) => o.value === value);
+      while (exists()) {
+        i += 1;
+        value = `custom:${base}:${slug}-${i}`;
+      }
+      return value;
+    }
+
+    function refreshEffectMeta(){
+      const opt = selectedEffectOption();
+      if (!opt) return;
+      if (els.effectProfileName) els.effectProfileName.textContent = String(opt.textContent || opt.value || "");
+      if (els.effectBaseType) els.effectBaseType.textContent = String(opt.dataset.baseEffect || opt.value || "");
+    }
+
+    function createCustomEffectProfile(){
+      if (!els.effectSelect) return;
+      const baseEffect = selectedBaseEffect();
+      const baseLabel = (selectedEffectOption() && selectedEffectOption().textContent) || baseEffect;
+      const name = window.prompt("New effect profile name", `${baseLabel} variant`);
+      if (!name) return;
+      const trimmed = String(name).trim();
+      if (!trimmed) return;
+
+      const opt = document.createElement("option");
+      opt.value = nextCustomEffectValue(baseEffect, trimmed);
+      opt.dataset.baseEffect = baseEffect;
+      opt.textContent = trimmed;
+      els.effectSelect.appendChild(opt);
+      els.effectSelect.value = opt.value;
+      updateEffectSections();
+    }
+
+    function renameEffectProfile(){
+      const opt = selectedEffectOption();
+      if (!opt) return;
+      const next = window.prompt("Rename effect profile", String(opt.textContent || ""));
+      if (!next) return;
+      const trimmed = String(next).trim();
+      if (!trimmed) return;
+      opt.textContent = trimmed;
+      refreshEffectMeta();
+    }
+
+    function deleteEffectProfile(){
+      const opt = selectedEffectOption();
+      if (!opt || !els.effectSelect) return;
+      if (String(opt.dataset.locked || "") === "true") {
+        window.alert("Core studio effects can't be deleted. Create a custom profile and delete that instead.");
+        return;
+      }
+      const label = String(opt.textContent || opt.value || "this effect");
+      if (!window.confirm(`Delete effect profile \"${label}\"?`)) return;
+      const fallback = Array.from(els.effectSelect.options).find((o) => String(o.dataset.locked || "") === "true") || els.effectSelect.options[0];
+      opt.remove();
+      if (fallback) els.effectSelect.value = fallback.value;
+      updateEffectSections();
     }
 
     function clamp(v, lo, hi){
@@ -791,16 +920,20 @@
     shieldOffNow(); // OFF by default, no continuous pulse
 
     function updateEffectSections(){
-      const effect = els.effectSelect ? els.effectSelect.value : "bubble-shield";
+      const effect = selectedBaseEffect();
       const sections = document.querySelectorAll(".section[data-effect]");
       sections.forEach((section) => {
         section.hidden = section.getAttribute("data-effect") !== effect;
       });
+      refreshEffectMeta();
     }
     if (els.effectSelect) {
       els.effectSelect.addEventListener("change", updateEffectSections);
       updateEffectSections();
     }
+    if (els.newEffectBtn) els.newEffectBtn.addEventListener("click", createCustomEffectProfile);
+    if (els.renameEffectBtn) els.renameEffectBtn.addEventListener("click", renameEffectProfile);
+    if (els.deleteEffectBtn) els.deleteEffectBtn.addEventListener("click", deleteEffectProfile);
 
     // =========================================================================
     // Shockwave (spawned rings; plain circles)
