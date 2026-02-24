@@ -17,6 +17,7 @@ Files involved
 - /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-local-boot.js
 - /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-init.js
 - /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-web-sdk-adapter.js
+- /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/voice/kws/porcupine-sdk-session-global.js
 
 How local boot works
 
@@ -36,6 +37,7 @@ What you need to add for real KWS
 
 3. SDK session wrapper on window
    - `window.OrbisCreatePorcupineSdkSession = async ({ stream, keywords, onDetection, onError }) => ...`
+   - skeleton file provided in `porcupine-sdk-session-global.js`
 
 4. Update manifest in `src/voice/kws/porcupine-init.js`
    - set real version
@@ -52,4 +54,3 @@ After SDK is wired correctly:
 - KWS readout shows `backend:ready`
 - KWS Mic button enabled
 - KWS Shadow + Mic On shows token/candidate events in HUD log
-
