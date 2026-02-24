@@ -1,0 +1,464 @@
+ORBIS ARCANA ARCHITECTURE SCHEMA (WORKING DRAFT v0.3)
+
+Purpose
+
+This document captures the current architecture schema after the recent refactor wave.
+It updates v0.2 by marking what is now implemented, what has been hardened, and what remains.
+
+This is still a working architecture document, not a final implementation spec.
+
+--------------------------------------------------
+1. CORE DIRECTION (APPROVED, NOW PARTIALLY REALIZED)
+--------------------------------------------------
+
+We moved from a prototype structure where `game-receiver.js` did most jobs into a clearer domain split.
+
+Core direction (still approved):
+- Receiver is a composition shell and input adapter.
+- Systems own gameplay logic and authoritative state transitions.
+- Content files define data (spells, world items, configs, themes).
+- Effects (VFX/SFX) should become shared runtime modules (game + labs).
+- Labs are preview/dev harnesses, not gameplay authority.
+
+Current reality:
+- This is no longer just a plan.
+- The receiver has been substantially unburdened and many concerns are now delegated.
+
+--------------------------------------------------
+2. WHAT IS NOW IMPLEMENTED (MAJOR PROGRESS SINCE v0.2)
+--------------------------------------------------
+
+Content and runtime foundations
+- Runtime spell content schema separated into content.
+- World item content schema separated into content.
+- World system supports multiple globes.
+- Receiver consumes spell and world-item content schema.
+
+Spell architecture
+- `castActionId` routing is implemented and centralized in practice.
+- Shared cast action registry exists.
+- Spell cast execution policy is modularized (`spell-cast-executor`).
+- Spell action handler table construction is modularized (`spell-action-handlers`).
+- Canonical spell action IDs normalized (for example `domus_teleport`, `sanctum_shield`).
+- `sanctum` is canonical (`sanctus` alias retained).
+- `rahta` alias added to all `rota` spells.
+
+Resources ownership
+- `resources-system` now owns:
+  - energy bank
+  - stored globes
+- `spell-dispatch-system` no longer owns globe inventory.
+- Receiver no longer owns energy bank state directly.
+
+Input architecture
+- `input-system` stores normalized latest frame (SSOT).
+- `input-gesture-system` owns shake + flat-spin runtime state.
+- `input-dynamics-system` owns stability/variability detector state.
+- `input-systems-bundle` composes the input systems.
+- `input-frame-pipeline` owns ordered per-frame input orchestration.
+- `build-input-hud-view-model` owns HUD formatting transform.
+
+Orb runtime architecture (partial)
+- `orb-runtime-pipeline` owns per-frame orb runtime orchestration (logic).
+- Orb runtime tuning moved to shared content config (`orb-runtime-config-default`).
+- `orb-systems-bundle` composes orb gameplay + orb FX systems.
+- `physState` is still receiver-owned (intentional for now).
+
+Theme / visual SSOT
+- Shared theme token SSOT implemented (`game-theme-default`).
+- Shared CSS var adapter implemented (`apply-theme-css-vars`).
+- Receiver applies theme on startup.
+- VFX lab consumes the same theme SSOT.
+
+Shared VFX preset SSOT (game + lab)
+- Shared presets implemented for:
+  - bubble shield
+  - shockwave
+  - flame aoe
+  - electric aoe
+- Receiver hydrates VFX defaults from shared presets.
+- Lab seeds defaults from the same presets.
+
+Bootstrap / composition
+- Receiver bootstrap logic split into `src/runtime/receiver-bootstrap.js`:
+  - module loading helper
+  - bootstrap hydration helper
+- Receiver retains orchestration role and injects shell-specific callbacks/state setters.
+
+Contracts / schema hardening
+- Event name SSOT added (`src/contracts/events.js`)
+- Core systems now consume shared event constants.
+- Receiver shell also consumes shared event constants (via runtime hydration map).
+- JSDoc interface contracts added for key modules:
+  - input-systems-bundle
+  - orb-systems-bundle
+  - resources-system
+  - spell-cast-executor
+
+Orb shatter correctness (previous v0.2 item, still in place)
+- Orb shard palette snapshots live computed orb styles at death.
+
+--------------------------------------------------
+3. SYSTEM ROLE SPLIT (APPROVED, IMPLEMENTED IN PART)
+--------------------------------------------------
+
+Receiver (`game-receiver.js`)
+- Receives/translates transmitter data.
+- Composes systems and runtime bundles.
+- Wires event flow.
+- Renders HUD/UI shell and debug readouts.
+- Owns shell lifecycle and transport concerns.
+- No longer owns many core gameplay/runtime domains it used to own.
+
+Content (`src/content/*`)
+- Defines data/config/tuning.
+- No gameplay logic.
+- Now includes:
+  - spells
+  - world-items
+  - input configs
+  - orb runtime tuning
+  - theme tokens
+
+Systems (`src/systems/*`)
+- Own gameplay state transitions and runtime logic.
+- Consume events/state and emit events.
+- Now includes dedicated systems/pipelines for input, resources, spell execution, orb runtime orchestration.
+
+Effects (target direction still valid)
+- Presets/defaults are already shared.
+- Runtime effect implementations still mostly live in receiver and remain a future extraction target.
+
+Labs
+- VFX lab now consumes shared theme + effect presets.
+- Still acts as preview/dev harness, not gameplay authority.
+
+--------------------------------------------------
+4. TOP-LEVEL STATE MODEL (APPROVED, MOSTLY ALIGNED)
+--------------------------------------------------
+
+Target slices:
+- input
+- orb
+- world
+- spells
+- resources
+- session
+- ui (optional later)
+
+Current alignment status
+- input: largely aligned (SSOT + gesture/dynamics systems)
+- resources: aligned
+- spells: largely aligned
+- world: aligned for pickups
+- orb: partially aligned (health in orb-system; motion runtime state still local `physState`)
+- session/ui: mostly receiver-owned shell/UI state (acceptable)
+
+--------------------------------------------------
+5. PHYSICS OWNERSHIP DECISION (STILL VALID)
+--------------------------------------------------
+
+Decision remains correct:
+- Orb motion/physics state stays conceptually within orb for now.
+- Physics is behavior/system logic, not a top-level state slice yet.
+- World owns environmental physics context.
+
+What changed since v0.2
+- Orb runtime per-frame logic has been extracted into `orb-runtime-pipeline`.
+- Orb runtime tuning moved to content SSOT.
+- The remaining major piece in receiver is the `physState` object itself and RAF shell.
+
+--------------------------------------------------
+6. ORB SLICE STATUS (UPDATED)
+--------------------------------------------------
+
+Orb gameplay state (health, damage, revive, shatter events)
+- Implemented in `orb-system` + `game-state` (good)
+
+Orb motion runtime state
+- Still receiver-owned (`physState`) for stability/feel reasons (acceptable for now)
+- Orchestration logic extracted to `orb-runtime-pipeline`
+
+Orb visual/gameplay-linked feedback
+- Mixed ownership
+- Some visual interpolation remains in receiver (future cleanup target)
+
+--------------------------------------------------
+7. RESOURCES OWNERSHIP DECISION (IMPLEMENTED)
+--------------------------------------------------
+
+Decision (approved in v0.2) is now implemented:
+- Resources contains both:
+  - energyBank
+  - storedGlobes
+- World owns pickup entities before collection
+- UI derives meters/counters from resources
+
+Status:
+- Implemented via `resources-system`
+- `storedGlobeCount` ownership mismatch fixed
+
+--------------------------------------------------
+8. RESOURCES SLICE STATUS (UPDATED)
+--------------------------------------------------
+
+Implemented capabilities in `resources-system`
+- energy bank charge/update from phone input
+- shake spend gating/spend
+- stored globe add/consume
+- reset on orb lifecycle events
+- `snapshot()` read API
+- resource event emissions
+
+Remaining hardening work
+- Add explicit payload/JSDoc contracts for resource events (next-phase schema hardening)
+
+--------------------------------------------------
+9. INPUT STATE DECISION (IMPLEMENTED DIRECTION)
+--------------------------------------------------
+
+Decision from v0.2 (persistent input slice + event transitions) has been implemented in structure:
+
+- Persistent normalized latest frame SSOT:
+  - `input-system`
+- Event-driven transitions and gesture windows:
+  - `input-gesture-system`
+- Additional derived runtime detectors:
+  - `input-dynamics-system`
+
+--------------------------------------------------
+10. INPUT SLICE STATUS (UPDATED)
+--------------------------------------------------
+
+Implemented (practical form)
+- normalized frame ownership in `input-system`
+- gesture runtime state in `input-gesture-system`
+- dynamics detector runtime in `input-dynamics-system`
+- input pipeline orchestration in `input-frame-pipeline`
+- input bundle composition in `input-systems-bundle`
+
+Receiver now does
+- input entry from transport
+- calls pipeline + view-model builder + render
+- shell/UI orchestration
+
+Remaining hardening work
+- JSDoc contracts for:
+  - input-gesture-system
+  - input-dynamics-system
+  - input-frame-pipeline
+
+--------------------------------------------------
+11. AUTHORITATIVE VS RECOMPUTED INPUT VALUES (STILL VALID, NOW ENFORCED BETTER)
+--------------------------------------------------
+
+The v0.2 rule remains correct and is now better reflected in code:
+
+Authoritative
+- normalized input frame values in `input-system`
+
+Derived
+- HUD formatting in `build-input-hud-view-model`
+- rendering/UI interpolation in receiver render path
+
+This separation is now explicit in code structure.
+
+--------------------------------------------------
+12. ACTIVE SPELL EFFECTS VS EFFECTS RUNTIME (CONCEPT STILL VALID)
+--------------------------------------------------
+
+Decision remains correct:
+- gameplay spell state vs presentation runtime should remain split
+
+Current status
+- Spell execution semantics/policy are now modularized.
+- Effect presets/defaults are shared.
+- Actual VFX runtime implementations are still receiver-local.
+
+What remains
+- Extract effect runtime implementations into `src/vfx/effects/*`
+
+--------------------------------------------------
+13. SPELL EXECUTION ROUTING VIA castActionId (SUBSTANTIALLY IMPLEMENTED)
+--------------------------------------------------
+
+v0.2 decision:
+- progressive migration to `castActionId`
+
+Current status:
+- Implemented and hardened significantly
+- Receiver execution path now uses:
+  - runtime spell content (`castActionId`)
+  - cast action registry metadata
+  - spell action handler factory
+  - spell cast executor module
+
+Remaining work
+- Continue using the pattern for future spell types
+- Possibly add event payload contracts for spell events
+
+--------------------------------------------------
+14. WORLD-ITEMS BUCKET STRATEGY (STILL VALID)
+--------------------------------------------------
+
+Decision remains unchanged and still correct:
+- Keep `world-items` as a generic bucket for now
+- Split only when real subtype patterns force it
+
+Current status
+- Implemented and working for multi-globe pickups
+
+--------------------------------------------------
+15. LEVEL SCHEMA STRATEGY (STILL DEFERRED, STILL CORRECT)
+--------------------------------------------------
+
+No change.
+- Defer until first prototype level
+- Start generic, split by real patterns later
+
+--------------------------------------------------
+16. THEME / SSOT DECISION (IMPLEMENTED FOUNDATION)
+--------------------------------------------------
+
+v0.2 decision:
+- Theme tokens + effect presets + runtime overrides
+
+Current status:
+- Implemented foundation and actively used
+
+Implemented:
+- Theme token SSOT (`game-theme-default`)
+- CSS var adapter (`apply-theme-css-vars`)
+- Shared VFX preset registry and per-effect defaults
+- Receiver + VFX lab consuming shared theme/presets
+
+Remaining work
+- Runtime effect module extraction (to use shared presets more directly in code)
+- Optional theme variants / lab override policy formalization
+
+--------------------------------------------------
+17. LABS VS GAME RELATIONSHIP (IMPLEMENTATION PROGRESS)
+--------------------------------------------------
+
+v0.2 framing remains correct and has real implementation backing now.
+
+Implemented:
+- Labs and game share:
+  - theme tokens
+  - core orb VFX presets (shield/shock/flame/electric)
+
+Not yet implemented:
+- shared runtime effect modules (logic) for game + lab
+
+--------------------------------------------------
+18. MIGRATION STRATEGY STATUS (Q11) (NOW ANSWERED BY EXECUTION)
+--------------------------------------------------
+
+In v0.2 this was deferred.
+
+It is now effectively answered by the refactor sequence you executed:
+
+Actual migration order used (good order)
+1. resources ownership
+2. input boundary
+3. spell action routing/execution modularization
+4. theme + VFX preset SSOT
+5. input gesture/dynamics extraction
+6. input/orb runtime pipeline extraction
+7. bundle composition extraction
+8. bootstrap extraction
+9. event contract hardening
+10. JSDoc interface hardening (started)
+
+This sequence worked well and should be preserved as the pattern for future refactors:
+- move ownership first
+- then extract logic
+- then harden contracts
+
+--------------------------------------------------
+19. STATE OWNERSHIP INVENTORY (UPDATED)
+--------------------------------------------------
+
+v0.2 status:
+- first-pass inventory approved and started
+
+Current status:
+- Implementation-facing inventory v2 created:
+  - `docs/state-ownership-inventory-v2.txt`
+
+This should now be treated as the live ownership checkpoint doc.
+
+--------------------------------------------------
+20. IMPLEMENTED CONTENT SCHEMA (UPDATED)
+--------------------------------------------------
+
+Spells content
+- Runtime spell definitions in content
+- Canonical naming updates applied
+- `castActionId` routing in active use
+- Cast action registry introduced and used
+
+World-items content
+- Content-driven globe spawns
+- Multi-pickup world support active
+
+Additional content/config SSOTs added since v0.2
+- input gesture config
+- input dynamics config
+- orb runtime config
+- theme tokens
+- VFX presets
+
+--------------------------------------------------
+21. OPEN QUESTIONS / ACTIVE NEXT-PHASE ITEMS (UPDATED)
+--------------------------------------------------
+
+Items effectively resolved since v0.2
+- Resources system API / ownership (implemented)
+- Spell action executor shape (implemented)
+- Theme SSOT structure + adapters (implemented foundation)
+- Migration order (answered by execution)
+
+Still open / next-phase focus
+
+1. Event payload contracts (high priority)
+- Event IDs are centralized now
+- Payload schemas still need formal documentation (JSDoc typedefs/comments)
+
+2. Remaining system/pipeline interface docs
+- input-gesture-system
+- input-dynamics-system
+- input-frame-pipeline
+- orb-runtime-pipeline
+- receiver-bootstrap context contract
+
+3. Effects runtime system shape (still open)
+- single orchestrator vs per-effect modules
+- extraction strategy for current receiver-local VFX runtime implementations
+
+4. Orb runtime state ownership (`physState`) (still open)
+- leave in receiver for now vs move into dedicated orb runtime system/state
+
+5. Theme/lab override policy formalization (optional, later)
+
+--------------------------------------------------
+22. RECOMMENDED NEXT STEPS (UPDATED FOR CURRENT STAGE)
+--------------------------------------------------
+
+We are now in a "schema hardening + selective extraction" phase.
+
+Recommended order (next phase)
+1. Add event payload contracts (JSDoc typedefs/comments) for high-traffic events
+2. Finish JSDoc interface docs for remaining systems/pipelines
+3. Document `receiver-bootstrap` context contract (reduce setter-sprawl ambiguity)
+4. Revisit VFX runtime extraction (shared effect modules)
+5. Revisit orb runtime state ownership (`physState`) only after the above is stable
+
+--------------------------------------------------
+23. SUMMARY (UPDATED)
+--------------------------------------------------
+
+The architecture has progressed significantly beyond the v0.2 planning state. The receiver is now much closer to a true composition shell: input ownership is split across dedicated systems and pipelines, resources ownership has moved into a resources system, spell execution is data-driven and modularized around castActionId, theme and VFX presets are shared SSOTs across game and lab, orb runtime logic is extracted into a pipeline with shared config, and receiver bootstrap/hydration is modularized. Event names are now centralized via a contracts module and key module interfaces have JSDoc contracts. The main remaining work is contract hardening (especially event payload schemas) and selective extraction of remaining large runtime chunks, especially VFX runtime implementations and eventually orb motion state ownership (`physState`).
+
+End of document.
+
