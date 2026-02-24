@@ -13,7 +13,7 @@ function clamp01(n){
  * @property {number} [nowMs]
  * @property {{energyFromPhone?:number, groove?:number, dynamics?:number, smooth?:number, speed?:number, shake?:number, locked?:boolean}} [values]
  * @property {{inputGestureSystem?:Object, inputDynamicsSystem?:Object}} [systems]
- * @property {{physState?:Object}} [runtime]
+ * @property {{physState?:Object, orbRuntimeState?:{get?:() => Object}}} [runtime]
  * @property {{inputDynamics?:Object}} [configs]
  * @property {Object} [hooks] Receiver-provided hooks for resource updates, visuals, audio, and shake processing.
  */
@@ -45,7 +45,9 @@ export function runInputFramePipeline({
   const shake = Number(values && values.shake) || 0;
   const locked = !!(values && values.locked);
 
-  const physState = runtime && runtime.physState;
+  const physState = (runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function")
+    ? runtime.orbRuntimeState.get()
+    : (runtime && runtime.physState);
   const inputGestureSystem = systems && systems.inputGestureSystem;
   const inputDynamicsSystem = systems && systems.inputDynamicsSystem;
   const inputDynamicsCfg = (configs && configs.inputDynamics) || {};

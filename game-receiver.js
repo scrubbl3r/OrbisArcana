@@ -1469,17 +1469,14 @@
           electricAoeRuntime = vfxRuntimesBundle.electricAoeRuntime;
         }
         if (typeof createOrbRuntimeState === "function") {
-          orbRuntimeState = createOrbRuntimeState({ initialState: physState });
-          if (orbRuntimeState && typeof orbRuntimeState.get === "function") {
-            physState = orbRuntimeState.get();
-          }
+          orbRuntimeState = createOrbRuntimeState({ initialState: orbRuntimeFallbackState });
         }
         if (typeof createOrbRuntimeLoop === "function") {
           if (orbRuntimeLoop && typeof orbRuntimeLoop.stop === "function") {
             orbRuntimeLoop.stop();
           }
           orbRuntimeLoop = createOrbRuntimeLoop({
-            getState: () => (orbRuntimeState && typeof orbRuntimeState.get === "function") ? orbRuntimeState.get() : physState,
+            getState: () => getOrbRuntime(),
             isReady: () => (typeof runOrbRuntimePipelineModule === "function"),
             clamp,
             runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
@@ -1489,7 +1486,6 @@
                 nowMs,
                 wasOnGround,
                 orbRuntimeState,
-                physState,
                 phys: PHYS,
                 shieldDescent: SHIELD_DESCENT,
                 mvp,
@@ -1750,7 +1746,7 @@
       return WORLD_H - (PHYS.groundFromBottomPx + PHYS.groundLinePx + PHYS.orbRadiusPx);
     }
 
-    let physState = {
+    let orbRuntimeFallbackState = {
       yW: 0,
       v:  0,
       lastTs: null,
@@ -1774,15 +1770,15 @@
       if (orbRuntimeState && typeof orbRuntimeState.get === "function") {
         return orbRuntimeState.get();
       }
-      return physState;
+      return orbRuntimeFallbackState;
     }
 
     function patchOrbRuntime(next = {}){
       if (orbRuntimeState && typeof orbRuntimeState.patch === "function") {
         return orbRuntimeState.patch(next);
       }
-      Object.assign(physState, next || {});
-      return physState;
+      Object.assign(orbRuntimeFallbackState, next || {});
+      return orbRuntimeFallbackState;
     }
 
     // ===== WORLD PICKUPS (MVP SLICE) BEGIN =====
@@ -2409,7 +2405,7 @@
           inputDynamicsSystem,
         },
         runtime: {
-          physState,
+          orbRuntimeState,
         },
         configs: {
           inputDynamics: INPUT_DYNAMICS_CFG,
