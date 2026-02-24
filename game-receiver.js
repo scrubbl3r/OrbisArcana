@@ -1218,7 +1218,7 @@
 
     function computeImpactMetric(rawImpactV){
       const v = Math.max(0, Number(rawImpactV) || 0);
-      const gMul = Math.max(0.05, Number(physState.gravityMul) || 0);
+      const gMul = Math.max(0.05, Number(getOrbRuntime().gravityMul) || 0);
       const fallDrag = clamp(Number(PHYS.downDrag) || 0, -1, 1);
 
       // Energy-inspired impact metric:
@@ -1629,7 +1629,7 @@
           stageEl: els.physStage,
           getStageRect: () => stageRect(),
           worldToScreenY: (yW) => pickupScreenY(yW),
-          getOrbWorldPosition: () => ({ xNorm: 0.5, yW: physState.yW }),
+          getOrbWorldPosition: () => ({ xNorm: 0.5, yW: getOrbRuntime().yW }),
           orbRadiusPx: PHYS.orbRadiusPx,
           spawns: resolvedGlobeSpawns,
           spawn: {
@@ -1770,10 +1770,18 @@
       floatGracePhase: 0,
     };
 
+    function getOrbRuntime(){
+      if (orbRuntimeState && typeof orbRuntimeState.get === "function") {
+        return orbRuntimeState.get();
+      }
+      return physState;
+    }
+
     // ===== WORLD PICKUPS (MVP SLICE) BEGIN =====
     function pickupScreenY(yW){
+      const orbRt = getOrbRuntime();
       const h = stageRect().height;
-      const camTop = cameraTopFor(physState.yW, h);
+      const camTop = cameraTopFor(orbRt.yW, h);
       return yW - camTop;
     }
     // ===== WORLD PICKUPS (MVP SLICE) END =====
@@ -1789,9 +1797,10 @@
     }
 
     function orbScreenY(){
+      const orbRt = getOrbRuntime();
       const h = stageRect().height;
-      const camTop = cameraTopFor(physState.yW, h);
-      return physState.yW - camTop;
+      const camTop = cameraTopFor(orbRt.yW, h);
+      return orbRt.yW - camTop;
     }
 
     function applyOrbTransform(){
@@ -1881,8 +1890,9 @@
     }
 
     function isFloatGraceActive(nowMs){
-      if (!physState.floatGraceActive) return false;
-      if ((Number(nowMs) || 0) <= Number(physState.floatGraceUntilMs || 0)) return true;
+      const orbRt = getOrbRuntime();
+      if (!orbRt.floatGraceActive) return false;
+      if ((Number(nowMs) || 0) <= Number(orbRt.floatGraceUntilMs || 0)) return true;
       clearFloatGrace();
       return false;
     }
@@ -1894,7 +1904,7 @@
       } else {
         physState.gravityMul = gravityMul;
       }
-      els.gVal.textContent = physState.gravityMul.toFixed(2);
+      els.gVal.textContent = getOrbRuntime().gravityMul.toFixed(2);
     }
     setGravityMul(els.gSlider.value);
     els.gSlider.addEventListener("input", (e) => setGravityMul(e.target.value));
@@ -2052,7 +2062,7 @@
       ctx.fillStyle = "#000";
       ctx.fillRect(0,0,w,h);
 
-      const camTop = cameraTopFor(physState.yW, h);
+      const camTop = cameraTopFor(getOrbRuntime().yW, h);
 
       for (const layer of starLayers){
         for (const s of layer.stars){
@@ -2075,7 +2085,7 @@
 
     function drawWorldBackdrop(){
       const h = stageRect().height;
-      const camTop = cameraTopFor(physState.yW, h);
+      const camTop = cameraTopFor(getOrbRuntime().yW, h);
       const groundY = groundLineWorldY() - camTop;
 
       if (els.groundLine) {
