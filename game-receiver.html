@@ -34,6 +34,15 @@
           </div>
           <div class="dim">Dir: <span id="dirReadout" class="dim">—</span></div>
           <div class="dim">Voice: <span id="voiceReadout" class="dim">Off</span></div>
+          <div class="dim">
+            Voice Engine:
+            <select id="voiceEngineSelect" class="dim" aria-label="Voice engine">
+              <option value="stt" selected>STT</option>
+              <option value="kws_shadow">KWS Shadow</option>
+              <option value="kws">KWS</option>
+            </select>
+          </div>
+          <div class="dim">KWS: <span id="kwsReadout" class="dim">idle</span></div>
         </div>
 
         <div class="logLine" aria-label="Last message">

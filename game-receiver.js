@@ -15,6 +15,8 @@
       last: $("last"),
       dirReadout: $("dirReadout"),
       voiceReadout: $("voiceReadout"),
+      voiceEngineSelect: $("voiceEngineSelect"),
+      kwsReadout: $("kwsReadout"),
 
       vLift:  $("vLift"),
       vGroove: $("vGroove"),
@@ -1037,6 +1039,20 @@
       els.dirReadout.textContent = "—";
     }
 
+    const kwsDebugState = {
+      mode: "stt",
+      lastToken: "",
+      lastCandidate: "",
+    };
+    function updateKwsReadout(){
+      if (!els.kwsReadout) return;
+      const parts = [String(kwsDebugState.mode || "stt")];
+      if (kwsDebugState.lastToken) parts.push(`tok:${kwsDebugState.lastToken}`);
+      if (kwsDebugState.lastCandidate) parts.push(`cand:${kwsDebugState.lastCandidate}`);
+      els.kwsReadout.textContent = parts.join(" | ");
+    }
+    updateKwsReadout();
+
     function teleMaybeLog(d){
       if (telemetryDebugSystem) {
         telemetryDebugSystem.teleMaybeLog(d);
@@ -1071,6 +1087,17 @@
         executeSpellCastAction("orb_super_grace", { payload: { ms: SUPER_GRACE_DEFAULT_MS } });
       }
     });
+
+    if (els.voiceEngineSelect) {
+      els.voiceEngineSelect.addEventListener("change", () => {
+        const mode = String(els.voiceEngineSelect.value || "stt");
+        kwsDebugState.mode = mode;
+        updateKwsReadout();
+        if (mvp && typeof mvp.setVoiceEngine === "function") {
+          mvp.setVoiceEngine(mode);
+        }
+      });
+    }
 
     // =========================================================================
     // ROOM STATE 
@@ -1147,6 +1174,8 @@
     let RECEIVER_EVENTS = {
       EVT_VOICE_SET_MODE: "voice.set_mode",
       EVT_VOICE_OPEN_GATE: "voice.open_gate",
+      EVT_VOICE_TOKEN_DETECTED: "voice.token_detected",
+      EVT_VOICE_KWS_SPELL_CANDIDATE: "voice.kws_spell_candidate",
       EVT_VOICE_SPELL_CAST: "voice.spell_cast",
       EVT_ORB_VISUAL_STATE_CHANGED: "orb.visual_state_changed",
       EVT_ORB_SHATTER_PIECE_SPAWNED: "orb.shatter_piece_spawned",
@@ -1622,6 +1651,17 @@
           voiceReadoutEl: els.voiceReadout,
           voiceState: gameState.voice,
         });
+        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
+          kwsDebugState.lastToken = String(p.token || "");
+          updateKwsReadout();
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
+          const matched = !!p.matched;
+          const spellId = String(p.spellId || "");
+          const phrase = String(p.phrase || "");
+          kwsDebugState.lastCandidate = matched ? (spellId || phrase || "match") : (phrase || "no-match");
+          updateKwsReadout();
+        });
         if (typeof createSttProvider === "function") {
           sttVoiceProvider = createSttProvider({
             start: () => { if (voiceRecognitionSystem && typeof voiceRecognitionSystem.start === "function") voiceRecognitionSystem.start(); },
@@ -1786,6 +1826,8 @@
           voiceHudSystem,
           setVoiceEngine(mode = "stt"){
             const m = String(mode || "stt").toLowerCase();
+            kwsDebugState.mode = m;
+            updateKwsReadout();
             if (!voiceProviderManager) return false;
             if (m === "kws_shadow") {
               if (typeof voiceProviderManager.setActive === "function") voiceProviderManager.setActive("stt");
@@ -1835,6 +1877,9 @@
             updateDebugReadout();
           },
         };
+        if (els.voiceEngineSelect) {
+          els.voiceEngineSelect.value = "stt";
+        }
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
         if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") orbShatterRuntime.clear();
