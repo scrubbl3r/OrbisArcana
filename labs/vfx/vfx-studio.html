@@ -507,8 +507,9 @@
         <button id="duplicateEffectBtn" class="toolBtn" type="button">Duplicate</button>
         <button id="deleteEffectBtn" class="toolBtn" type="button">Delete</button>
         <button id="saveDraftBtn" class="toolBtn secondary" type="button">Save</button>
-        <button id="publishPresetBtn" class="toolBtn secondary" type="button">Publish Preset</button>
-        <button id="publishProjectBtn" class="toolBtn secondary" type="button">Publish to Project</button>
+        <button id="connectProjectBtn" class="toolBtn secondary" type="button">Connect Project</button>
+        <button id="publishPresetBtn" class="toolBtn secondary" type="button">Publish</button>
+        <button id="bindBtn" class="toolBtn secondary" type="button">Bind</button>
         <button id="lockEffectBtn" class="toolBtn lockBtn unlocked" type="button" aria-label="Lock effect profile" title="Lock effect profile"></button>
       </div>
     </div>
@@ -726,6 +727,26 @@
     let draftHydrationDone = false;
     let suspendDraftApply = false;
     let lastSelectedEffectValue = "";
+    let projectRootDirHandle = null;
+    const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
+    const LIVE_PRESET_MODULES_BY_BASE_EFFECT = Object.freeze({
+      "shockwave": {
+        path: ["src", "vfx", "presets", "shockwave-default.js"],
+        exportName: "SHOCKWAVE_PRESET_DEFAULT",
+      },
+      "bubble-shield": {
+        path: ["src", "vfx", "presets", "bubble-shield-default.js"],
+        exportName: "BUBBLE_SHIELD_PRESET_DEFAULT",
+      },
+      "flame-aoe": {
+        path: ["src", "vfx", "presets", "flame-aoe-default.js"],
+        exportName: "FLAME_AOE_PRESET_DEFAULT",
+      },
+      "electric-aoe": {
+        path: ["src", "vfx", "presets", "electric-aoe-default.js"],
+        exportName: "ELECTRIC_AOE_PRESET_DEFAULT",
+      },
+    });
 
     const els = {
       shockLayer: $("shockLayer"),
@@ -737,8 +758,9 @@
       effectSelect: $("effectSelect"),
       newEffectBtn: $("newEffectBtn"),
       saveDraftBtn: $("saveDraftBtn"),
+      connectProjectBtn: $("connectProjectBtn"),
       publishPresetBtn: $("publishPresetBtn"),
-      publishProjectBtn: $("publishProjectBtn"),
+      bindBtn: $("bindBtn"),
       lockEffectBtn: $("lockEffectBtn"),
       renameEffectBtn: $("renameEffectBtn"),
       duplicateEffectBtn: $("duplicateEffectBtn"),
@@ -944,7 +966,8 @@
         opt.dataset.baseEffect = String(profile.baseEffect || "bubble-shield");
         opt.dataset.category = category;
         opt.dataset.custom = "true";
-        opt.dataset.locked = profile.locked ? "true" : "false";
+        // Always start locked on page load, regardless of saved prior lock state.
+        opt.dataset.locked = "true";
         if (profile.registryId) opt.dataset.registryId = String(profile.registryId);
         targetGroup.appendChild(opt);
       }
@@ -976,9 +999,8 @@
         opt.dataset.registryId = effectId;
         opt.dataset.baseEffect = baseEffect;
         opt.dataset.category = category;
-        const savedProfile = draftStore.profilesByValue[String(opt.value || "")];
-        const savedLocked = savedProfile && typeof savedProfile === "object" ? !!savedProfile.locked : null;
-        opt.dataset.locked = (savedLocked == null ? true : savedLocked) ? "true" : "false";
+        // Always start locked on page load, regardless of saved prior lock state.
+        opt.dataset.locked = "true";
         if (!baseEffect) {
           opt.disabled = true;
           opt.textContent = `${opt.textContent} (coming soon)`;
@@ -1054,7 +1076,7 @@
       const blockSave = locked;
       if (els.saveDraftBtn) els.saveDraftBtn.disabled = blockSave;
       if (els.publishPresetBtn) els.publishPresetBtn.disabled = blockSave;
-      if (els.publishProjectBtn) els.publishProjectBtn.disabled = blockSave;
+      if (els.bindBtn) els.bindBtn.disabled = blockSave;
       if (els.deleteEffectBtn) els.deleteEffectBtn.disabled = blockSave || !!(opt && opt.disabled);
     }
 
@@ -1185,6 +1207,124 @@
       setTimeout(() => URL.revokeObjectURL(url), 0);
     }
 
+    function refreshProjectConnectUi(){
+      if (!els.connectProjectBtn) return;
+      const connected = !!projectRootDirHandle;
+      els.connectProjectBtn.textContent = connected ? "Project Connected" : "Connect Project";
+      els.connectProjectBtn.title = connected
+        ? "Connected. Publish writes to src/vfx/presets/drafts/"
+        : "Connect repo root for one-click publish";
+    }
+
+    async function connectProjectFolder(){
+      if (!window.showDirectoryPicker) {
+        window.alert("This browser does not support project-folder connect. Publish will fall back to file save/download.");
+        return false;
+      }
+      try {
+        const dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+        if (!dirHandle) return false;
+        projectRootDirHandle = dirHandle;
+        refreshProjectConnectUi();
+        return true;
+      } catch (err) {
+        if (err && err.name === "AbortError") return false;
+        console.error(err);
+        window.alert("Could not connect the project folder.");
+        return false;
+      }
+    }
+
+    async function getOrCreateSubdir(parentHandle, name){
+      return parentHandle.getDirectoryHandle(String(name || ""), { create: true });
+    }
+
+    async function saveTextToConnectedProjectDrafts(filename, text){
+      if (!projectRootDirHandle) return false;
+      let dir = projectRootDirHandle;
+      for (const part of VFX_PRESET_DRAFTS_PATH) {
+        dir = await getOrCreateSubdir(dir, part);
+      }
+      const fileHandle = await dir.getFileHandle(String(filename || "preset.json"), { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(String(text || ""));
+      await writable.close();
+      return true;
+    }
+
+    async function saveTextToConnectedProjectPath(pathParts, text){
+      if (!projectRootDirHandle || !Array.isArray(pathParts) || !pathParts.length) return false;
+      let dir = projectRootDirHandle;
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        dir = await getOrCreateSubdir(dir, pathParts[i]);
+      }
+      const fileName = String(pathParts[pathParts.length - 1] || "");
+      if (!fileName) return false;
+      const fileHandle = await dir.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(String(text || ""));
+      await writable.close();
+      return true;
+    }
+
+    function toNum(v, fallback = 0){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function buildLivePresetModuleForBaseEffect(baseEffect, params){
+      const p = params && typeof params === "object" ? params : {};
+      switch (String(baseEffect || "")) {
+        case "shockwave":
+          return [
+            "export const SHOCKWAVE_PRESET_DEFAULT = Object.freeze({",
+            `  startR: ${Math.round(toNum(p.startR, 43))},`,
+            `  endR: ${Math.round(toNum(p.endR, 169))},`,
+            `  rings: ${Math.round(toNum(p.rings, 2))},`,
+            `  spawnMs: ${Math.round(toNum(p.spawn, 105))},`,
+            `  stroke: ${Math.round(toNum(p.stroke, 4))},`,
+            `  decayMs: ${Math.round(toNum(p.decay, 150))},`,
+            "});",
+            "",
+          ].join("\n");
+        case "bubble-shield":
+          return [
+            "export const BUBBLE_SHIELD_PRESET_DEFAULT = Object.freeze({",
+            `  durationMs: ${Math.round(toNum(p.shieldMs, 1170))},`,
+            `  alpha: ${toNum(p.shieldAlpha, 1).toFixed(2)},`,
+            `  pulseMs: ${Math.round(toNum(p.pulseMs, 80))},`,
+            `  pulseMin: ${toNum(p.pulseMin, 0.3).toFixed(2)},`,
+            `  pulseMax: ${toNum(p.pulseMax, 1).toFixed(2)},`,
+            "});",
+            "",
+          ].join("\n");
+        case "flame-aoe":
+          return [
+            "export const FLAME_AOE_PRESET_DEFAULT = Object.freeze({",
+            `  diameter: ${Math.round(toNum(p.flameD, 200))},`,
+            `  durationMs: ${Math.round(toNum(p.flameMs, 10000))},`,
+            "});",
+            "",
+          ].join("\n");
+        case "electric-aoe":
+          return [
+            "export const ELECTRIC_AOE_PRESET_DEFAULT = Object.freeze({",
+            `  startR: ${Math.round(toNum(p.electricStartR, 80))},`,
+            `  endR: ${Math.round(toNum(p.electricEndR, 200))},`,
+            `  durationMs: ${Math.round(toNum(p.electricMs, 10000))},`,
+            `  nodeCount: ${Math.round(toNum(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.nodeCount, 13))},`,
+            `  particleCount: ${Math.round(toNum(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.particleCount, 340))},`,
+            `  particleSpeed: ${toNum(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.particleSpeed, 0.62).toFixed(2)},`,
+            `  maxBoltJumpSq: ${Math.round(toNum(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.maxBoltJumpSq, 1200))},`,
+            `  startJitterRatio: ${toNum(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.startJitterRatio, 0.30).toFixed(2)},`,
+            "});",
+            "",
+          ].join("\n");
+        default:
+          return "";
+      }
+    }
+
     function buildPublishedPresetPayload(){
       const opt = selectedEffectOption();
       if (!opt) return null;
@@ -1227,7 +1367,6 @@
 
     async function saveTextToProjectFile(filename, text){
       if (!window.showSaveFilePicker) {
-        window.alert("Direct project publish is not supported in this browser. Use Publish Preset (download) instead.");
         return false;
       }
       const handle = await window.showSaveFilePicker({
@@ -1248,25 +1387,55 @@
         window.alert("This effect profile is locked. Unlock it to publish a preset.");
         return;
       }
-      const built = buildPublishedPresetPayload();
-      if (!built) return;
-      downloadTextFile(built.filename, JSON.stringify(built.payload, null, 2));
-    }
-
-    async function publishPresetToProject(){
-      if (isSelectedEffectLocked()) {
-        window.alert("This effect profile is locked. Unlock it to publish to project.");
-        return;
-      }
+      void (async () => {
       const built = buildPublishedPresetPayload();
       if (!built) return;
       try {
-        const ok = await saveTextToProjectFile(built.filename, JSON.stringify(built.payload, null, 2));
-        if (ok) window.alert(`Preset written. Save it into your repo (for example labs/vfx/published/ or src/vfx/presets/drafts/) and commit when ready.`);
+        const payloadText = JSON.stringify(built.payload, null, 2);
+        let ok = false;
+        if (!projectRootDirHandle && window.showDirectoryPicker) {
+          const connected = await connectProjectFolder();
+          if (!connected) {
+            return;
+          }
+        }
+        if (projectRootDirHandle) {
+          const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
+          if (liveTarget) {
+            const moduleText = buildLivePresetModuleForBaseEffect(built.payload.baseEffect, built.payload.params);
+            if (moduleText) {
+              ok = await saveTextToConnectedProjectPath(liveTarget.path, moduleText);
+              if (ok) {
+                window.alert(`Published live preset to ${liveTarget.path.join("/")}`);
+                return;
+              }
+            }
+          }
+          ok = await saveTextToConnectedProjectDrafts(built.filename, payloadText);
+          if (ok) {
+            window.alert(`Published draft to ${VFX_PRESET_DRAFTS_PATH.join("/")}/${built.filename}`);
+            return;
+          }
+        }
+        ok = await saveTextToProjectFile(built.filename, payloadText);
+        if (ok) {
+          window.alert("Preset written.");
+          return;
+        }
+        downloadTextFile(built.filename, payloadText);
       } catch (err) {
         if (err && err.name === "AbortError") return;
-        window.alert(`Publish to Project failed: ${err && err.message ? err.message : err}`);
+        downloadTextFile(built.filename, JSON.stringify(built.payload, null, 2));
       }
+      })();
+    }
+
+    function publishBinding(){
+      if (isSelectedEffectLocked()) {
+        window.alert("This effect profile is locked. Unlock it to publish a binding.");
+        return;
+      }
+      window.alert("Bind is next: spell/world-item binding publish UI is not implemented yet.");
     }
 
     function captureCurrentEffectSettings(baseEffect){
@@ -1378,7 +1547,11 @@
     }
 
     function refreshEffectMeta(){
-      refreshBindingPanel();
+      try {
+        refreshBindingPanel();
+      } catch (err) {
+        console.error("refreshBindingPanel failed", err);
+      }
       refreshLockUi();
     }
 
@@ -1767,16 +1940,23 @@
       buildEffectLibraryOptionsFromRegistry();
       draftHydrationDone = true;
       els.effectSelect.addEventListener("change", updateEffectSections);
-      updateEffectSections();
+      try {
+        updateEffectSections();
+      } catch (err) {
+        console.error("updateEffectSections init failed", err);
+      }
     }
     if (els.newEffectBtn) els.newEffectBtn.addEventListener("click", createCustomEffectProfile);
     if (els.saveDraftBtn) els.saveDraftBtn.addEventListener("click", saveDraft);
+    if (els.connectProjectBtn) els.connectProjectBtn.addEventListener("click", () => { void connectProjectFolder(); });
     if (els.publishPresetBtn) els.publishPresetBtn.addEventListener("click", publishPreset);
-    if (els.publishProjectBtn) els.publishProjectBtn.addEventListener("click", () => { void publishPresetToProject(); });
+    if (els.bindBtn) els.bindBtn.addEventListener("click", publishBinding);
     if (els.renameEffectBtn) els.renameEffectBtn.addEventListener("click", renameEffectProfile);
     if (els.duplicateEffectBtn) els.duplicateEffectBtn.addEventListener("click", duplicateEffectProfile);
     if (els.deleteEffectBtn) els.deleteEffectBtn.addEventListener("click", deleteEffectProfile);
     if (els.lockEffectBtn) els.lockEffectBtn.addEventListener("click", toggleSelectedEffectLock);
+    refreshProjectConnectUi();
+    refreshLockUi();
 
     // =========================================================================
     // Shockwave (spawned rings; plain circles)
