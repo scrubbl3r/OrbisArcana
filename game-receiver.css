@@ -127,6 +127,30 @@
       gap:10px;
     }
     .dim{opacity:.78}
+    .kwsInjectRow{
+      display:flex;
+      gap:6px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+    .kwsInjectRow input{
+      min-width:88px;
+      max-width:120px;
+      height:28px;
+      padding:0 8px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.45);
+      color:var(--g);
+      font:inherit;
+    }
+    .kwsInjectRow button{
+      padding:5px 9px;
+      border-radius:8px;
+      font-size:12px;
+      line-height:1;
+    }
     .bad{color:var(--bad); font-weight:900;}
     .ok{color:#7dffab; font-weight:900;}
     .voiceWakeHot{

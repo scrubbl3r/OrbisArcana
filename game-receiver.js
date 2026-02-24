@@ -17,6 +17,11 @@
       voiceReadout: $("voiceReadout"),
       voiceEngineSelect: $("voiceEngineSelect"),
       kwsReadout: $("kwsReadout"),
+      kwsTokenInput: $("kwsTokenInput"),
+      kwsTokenSendBtn: $("kwsTokenSendBtn"),
+      kwsTokIgnisBtn: $("kwsTokIgnisBtn"),
+      kwsTokRotaBtn: $("kwsTokRotaBtn"),
+      kwsTokElectrumBtn: $("kwsTokElectrumBtn"),
 
       vLift:  $("vLift"),
       vGroove: $("vGroove"),
@@ -1098,6 +1103,29 @@
         }
       });
     }
+
+    function sendKwsDebugToken(token){
+      const t = String(token || "").trim().toLowerCase();
+      if (!t) return;
+      if (mvp && typeof mvp.kwsToken === "function") {
+        mvp.kwsToken(t);
+      }
+      if (els.kwsTokenInput) els.kwsTokenInput.value = "";
+    }
+    if (els.kwsTokenSendBtn) {
+      els.kwsTokenSendBtn.addEventListener("click", () => sendKwsDebugToken(els.kwsTokenInput && els.kwsTokenInput.value));
+    }
+    if (els.kwsTokenInput) {
+      els.kwsTokenInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          sendKwsDebugToken(els.kwsTokenInput.value);
+        }
+      });
+    }
+    if (els.kwsTokIgnisBtn) els.kwsTokIgnisBtn.addEventListener("click", () => sendKwsDebugToken("ignis"));
+    if (els.kwsTokRotaBtn) els.kwsTokRotaBtn.addEventListener("click", () => sendKwsDebugToken("rota"));
+    if (els.kwsTokElectrumBtn) els.kwsTokElectrumBtn.addEventListener("click", () => sendKwsDebugToken("electrum"));
 
     // =========================================================================
     // ROOM STATE 
