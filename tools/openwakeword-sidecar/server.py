@@ -19,7 +19,7 @@ import json
 import random
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 import websockets
 
@@ -34,8 +34,18 @@ class SidecarState:
     running: bool = False
     backend: str = "openwakeword"
     simulate: bool = True
+    threshold: float = 0.5
+    cooldown_ms: int = 500
     clients: Set[Any] = field(default_factory=set)
     sim_task: Optional[asyncio.Task] = None
+    infer_task: Optional[asyncio.Task] = None
+    audio_queue: Optional[asyncio.Queue] = None
+    audio_stream: Any = None
+    oww_model: Any = None
+    loop: Optional[asyncio.AbstractEventLoop] = None
+    model_paths: List[str] = field(default_factory=list)
+    label_map: Dict[str, str] = field(default_factory=dict)
+    last_emit_at_ms: Dict[str, int] = field(default_factory=dict)
     last_error: str = ""
 
 
@@ -66,6 +76,8 @@ async def broadcast_status(state: SidecarState) -> None:
             "running": state.running,
             "backend": state.backend,
             "simulate": state.simulate,
+            "threshold": state.threshold,
+            "cooldownMs": state.cooldown_ms,
             "atMs": now_ms(),
         },
     )
@@ -92,13 +104,147 @@ async def simulation_loop(state: SidecarState, interval_ms: int = 1200) -> None:
         await broadcast_json(state, {"type": "error", "message": state.last_error, "atMs": now_ms()})
 
 
+def _normalize_label(label: str, label_map: Dict[str, str]) -> str:
+    raw = str(label or "").strip()
+    if not raw:
+        return ""
+    if raw in label_map:
+        return str(label_map[raw]).strip().lower()
+    # Common custom-model label fallback: filename stem-like labels
+    token = raw.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
+    token = token.rsplit(".", 1)[0]
+    return token.strip().lower().replace(" ", "_")
+
+
+async def _openwakeword_infer_loop(state: SidecarState) -> None:
+    assert state.audio_queue is not None
+    try:
+        while state.running and not state.simulate:
+            chunk = await state.audio_queue.get()
+            if chunk is None:
+                break
+            try:
+                prediction = state.oww_model.predict(chunk)
+            except Exception as exc:
+                state.last_error = f"oww_predict_failed:{exc}"
+                await broadcast_json(state, {"type": "error", "message": state.last_error, "atMs": now_ms()})
+                continue
+
+            if not isinstance(prediction, dict):
+                continue
+            t_ms = now_ms()
+            for raw_label, score in prediction.items():
+                try:
+                    conf = float(score)
+                except Exception:
+                    continue
+                if conf < float(state.threshold):
+                    continue
+                token = _normalize_label(str(raw_label), state.label_map)
+                if not token:
+                    continue
+                last = int(state.last_emit_at_ms.get(token, 0))
+                if (t_ms - last) < int(state.cooldown_ms):
+                    continue
+                state.last_emit_at_ms[token] = t_ms
+                await broadcast_json(
+                    state,
+                    {
+                        "type": "token_detected",
+                        "token": token,
+                        "confidence": round(conf, 4),
+                        "atMs": t_ms,
+                        "label": str(raw_label),
+                    },
+                )
+    except asyncio.CancelledError:
+        pass
+    except Exception as exc:
+        state.last_error = f"oww_infer_loop_failed:{exc}"
+        await broadcast_json(state, {"type": "error", "message": state.last_error, "atMs": now_ms()})
+
+
+def _start_audio_stream_for_oww(state: SidecarState, sample_rate: int, blocksize: int) -> None:
+    import numpy as np  # type: ignore
+    import sounddevice as sd  # type: ignore
+
+    if state.loop is None:
+        raise RuntimeError("asyncio loop unavailable")
+    if state.audio_queue is None:
+        state.audio_queue = asyncio.Queue(maxsize=8)
+
+    def _audio_callback(indata, frames, _time_info, status):
+        if status:
+            # keep non-fatal; surfaced via last_error on next loop tick if needed
+            state.last_error = f"sounddevice_status:{status}"
+        try:
+            # sounddevice gives float32 when dtype not specified; enforce int16 stream below.
+            audio = np.asarray(indata).reshape(-1).astype(np.int16, copy=False)
+            state.loop.call_soon_threadsafe(_queue_audio_chunk, audio.copy())
+        except Exception as exc:  # pragma: no cover (best effort callback)
+            state.last_error = f"audio_callback_failed:{exc}"
+
+    def _queue_audio_chunk(audio):
+        if state.audio_queue is None:
+            return
+        try:
+            state.audio_queue.put_nowait(audio)
+        except asyncio.QueueFull:
+            # Drop oldest-ish behavior: clear one and retry once
+            try:
+                _ = state.audio_queue.get_nowait()
+            except Exception:
+                pass
+            try:
+                state.audio_queue.put_nowait(audio)
+            except Exception:
+                pass
+
+    state.audio_stream = sd.InputStream(
+        samplerate=int(sample_rate),
+        channels=1,
+        dtype="int16",
+        blocksize=int(blocksize),
+        callback=_audio_callback,
+    )
+    state.audio_stream.start()
+
+
+def _create_openwakeword_model(model_paths: List[str]):
+    import openwakeword  # noqa: F401  # type: ignore
+    from openwakeword.model import Model  # type: ignore
+
+    kwargs: Dict[str, Any] = {}
+    if model_paths:
+        kwargs["wakeword_models"] = model_paths
+    return Model(**kwargs)
+
+
 async def ensure_started(state: SidecarState) -> None:
     if state.running:
         return
     state.running = True
-    # TODO(openwakeword-real): initialize microphone + openWakeWord model(s) and start inference loop.
     if state.simulate:
         state.sim_task = asyncio.create_task(simulation_loop(state))
+    else:
+        state.audio_queue = asyncio.Queue(maxsize=8)
+        try:
+            state.oww_model = _create_openwakeword_model(state.model_paths)
+        except Exception as exc:
+            state.running = False
+            state.last_error = f"oww_model_init_failed:{exc}"
+            await broadcast_json(state, {"type": "error", "message": state.last_error, "atMs": now_ms()})
+            await broadcast_status(state)
+            return
+        try:
+            _start_audio_stream_for_oww(state, sample_rate=16000, blocksize=1280)
+        except Exception as exc:
+            state.running = False
+            state.last_error = f"oww_audio_start_failed:{exc}"
+            await broadcast_json(state, {"type": "error", "message": state.last_error, "atMs": now_ms()})
+            await broadcast_status(state)
+            return
+        state.infer_task = asyncio.create_task(_openwakeword_infer_loop(state))
     await broadcast_status(state)
 
 
@@ -111,7 +257,30 @@ async def ensure_stopped(state: SidecarState) -> None:
         except Exception:
             pass
         state.sim_task = None
-    # TODO(openwakeword-real): stop microphone stream and inference worker.
+    if state.audio_queue:
+        try:
+            state.audio_queue.put_nowait(None)
+        except Exception:
+            pass
+    if state.infer_task:
+        state.infer_task.cancel()
+        try:
+            await state.infer_task
+        except Exception:
+            pass
+        state.infer_task = None
+    if state.audio_stream is not None:
+        try:
+            state.audio_stream.stop()
+        except Exception:
+            pass
+        try:
+            state.audio_stream.close()
+        except Exception:
+            pass
+        state.audio_stream = None
+    state.audio_queue = None
+    state.oww_model = None
     await broadcast_status(state)
 
 
@@ -132,7 +301,16 @@ async def handle_message(state: SidecarState, ws, raw: str) -> None:
         await ensure_stopped(state)
         return
     if msg_type == "set_config":
-        # Reserved for future detector tuning.
+        if "threshold" in msg:
+            try:
+                state.threshold = max(0.0, min(1.0, float(msg["threshold"])))
+            except Exception:
+                pass
+        if "cooldownMs" in msg:
+            try:
+                state.cooldown_ms = max(0, int(msg["cooldownMs"]))
+            except Exception:
+                pass
         await send_json(ws, {"type": "status", "running": state.running, "backend": state.backend, "simulate": state.simulate, "atMs": now_ms()})
         return
     await send_json(ws, {"type": "error", "message": f"unknown_message_type:{msg_type or 'empty'}", "atMs": now_ms()})
@@ -149,7 +327,14 @@ async def ws_handler(ws, state: SidecarState):
 
 
 async def main_async(args):
-    state = SidecarState(simulate=bool(args.simulate))
+    state = SidecarState(
+        simulate=bool(args.simulate),
+        threshold=float(args.threshold),
+        cooldown_ms=int(args.cooldown_ms),
+        model_paths=list(args.model or []),
+        label_map=_parse_label_map_arg(args.label_map or []),
+    )
+    state.loop = asyncio.get_running_loop()
     print(f"[oww-sidecar] listening on ws://{args.host}:{args.port} (simulate={state.simulate})")
     async with websockets.serve(lambda ws: ws_handler(ws, state), args.host, args.port, ping_interval=20, ping_timeout=20):
         try:
@@ -163,7 +348,31 @@ def parse_args():
     p.add_argument("--host", default=DEFAULT_HOST)
     p.add_argument("--port", type=int, default=DEFAULT_PORT)
     p.add_argument("--simulate", action="store_true", help="emit simulated token detections")
+    p.add_argument("--model", action="append", default=[], help="Path to openWakeWord model file (.tflite/.onnx), repeatable")
+    p.add_argument("--threshold", type=float, default=0.5, help="Detection threshold (0..1)")
+    p.add_argument("--cooldown-ms", type=int, default=500, help="Per-token duplicate suppression in ms")
+    p.add_argument(
+        "--label-map",
+        action="append",
+        default=[],
+        help="Map model label to parser token, format LABEL=token (repeatable)",
+    )
     return p.parse_args()
+
+
+def _parse_label_map_arg(items: List[str]) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    for item in items or []:
+        raw = str(item or "")
+        if "=" not in raw:
+            continue
+        k, v = raw.split("=", 1)
+        k = k.strip()
+        v = v.strip()
+        if not k or not v:
+            continue
+        out[k] = v
+    return out
 
 
 if __name__ == "__main__":
@@ -171,4 +380,3 @@ if __name__ == "__main__":
         asyncio.run(main_async(parse_args()))
     except KeyboardInterrupt:
         pass
-
