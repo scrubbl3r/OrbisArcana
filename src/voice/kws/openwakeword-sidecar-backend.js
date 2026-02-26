@@ -98,6 +98,11 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
         lastStatusMsg = msg;
         return;
       }
+      if (type === "error") {
+        const message = String(msg.message || "oww_sidecar_error");
+        emitError(new Error(message));
+        return;
+      }
       if (type === "token_detected") {
         const token = normalizeToken(msg.token, tokenMap);
         if (!token) return;
@@ -210,4 +215,3 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
     });
   };
 }
-

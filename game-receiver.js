@@ -1099,8 +1099,15 @@
         parts.push(`mic:${s && s.micRunning ? "on" : "off"}`);
         parts.push(`backend:${s && (s.hasBackendFactory || s.hasAudioBackendFactory) ? "ready" : "none"}`);
         const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
+        const sidecarStatus = backendStatus && backendStatus.lastStatusMsg ? backendStatus.lastStatusMsg : null;
+        if (sidecarStatus && Object.prototype.hasOwnProperty.call(sidecarStatus, "running")) {
+          parts.push(`run:${sidecarStatus.running ? "on" : "off"}`);
+        }
         if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "simulated")) {
           parts.push(`mode:${backendStatus.simulated ? "sim" : "real"}`);
+        }
+        if (backendStatus && backendStatus.lastError) {
+          parts.push(`err:${String(backendStatus.lastError).slice(0, 40)}`);
         }
       } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
         parts.push(`backend:${porcupineKwsInitStatus.installed ? "ready" : "none"}`);
