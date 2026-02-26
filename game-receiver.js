@@ -2044,6 +2044,7 @@
               if (kwsVoiceProvider) {
                 kwsVoiceProvider.setMode("active");
                 kwsVoiceProvider.start && kwsVoiceProvider.start();
+                kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
               }
               return voiceProviderManager.setActive && voiceProviderManager.setActive("kws");
             }
@@ -2116,6 +2117,12 @@
         }
         if (els.kwsBackendSelect) {
           els.kwsBackendSelect.value = kwsBackendKey;
+        }
+        if (mvp && typeof mvp.setKwsMicEnabled === "function") {
+          // Auto-connect the selected KWS backend on boot (sidecar link or browser mic backend).
+          Promise.resolve()
+            .then(() => mvp.setKwsMicEnabled(true))
+            .catch(() => {});
         }
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
