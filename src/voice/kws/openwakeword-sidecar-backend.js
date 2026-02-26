@@ -115,7 +115,7 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
     }
 
     async function handleMessageEvent(ev) {
-      const data = ev && Object.prototype.hasOwnProperty.call(ev, "data") ? ev.data : ev;
+      const data = ev && typeof ev === "object" && ("data" in ev) ? ev.data : ev;
       try {
         if (typeof data === "string") {
           handleMessage(data);
