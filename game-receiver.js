@@ -1051,9 +1051,12 @@
       els.dirReadout.textContent = "—";
     }
 
+    const DEFAULT_VOICE_ENGINE = "kws";
+    const DEFAULT_KWS_BACKEND_KEY = "openwakeword_sidecar";
+    const DEFAULT_KWS_GATE_TIMEOUT_MS = 4000;
     const kwsDebugState = {
-      mode: "stt",
-      backend: "porcupine_local",
+      mode: DEFAULT_VOICE_ENGINE,
+      backend: DEFAULT_KWS_BACKEND_KEY,
       lastToken: "",
       lastCandidate: "",
     };
@@ -1065,8 +1068,8 @@
       clearTimeout(kwsWakeHudGateTO);
       kwsWakeHudGateTO = 0;
     }
-    function openKwsWakeHudGate(timeoutMs = 4000) {
-      const t = Math.max(250, Number(timeoutMs) || 4000);
+    function openKwsWakeHudGate(timeoutMs = DEFAULT_KWS_GATE_TIMEOUT_MS) {
+      const t = Math.max(250, Number(timeoutMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
       clearKwsWakeHudGateTimer();
       if (mvp && mvp.eventBus) {
         mvp.eventBus.emit("voice.gate_opened", {
@@ -1336,7 +1339,7 @@
     let sttVoiceProvider = null;
     let kwsVoiceProvider = null;
     let kwsBackendFactories = Object.create(null);
-    let kwsBackendKey = "porcupine_local";
+    let kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
     let porcupineKwsInitStatus = { attempted: false, installed: false, reason: "not_attempted" };
     let inputSystem = null;
     let inputGestureSystem = null;
@@ -1846,7 +1849,7 @@
           const kwsEngineMode = String(kwsDebugState.mode || "").toLowerCase();
           if ((kwsEngineMode === "kws" || kwsEngineMode === "kws_shadow") && token === "orbis") {
             eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-            openKwsWakeHudGate(4000);
+            openKwsWakeHudGate(DEFAULT_KWS_GATE_TIMEOUT_MS);
           }
           updateKwsReadout();
         });
@@ -1894,7 +1897,7 @@
           };
           kwsBackendKey = (els.kwsBackendSelect && els.kwsBackendSelect.value)
             ? String(els.kwsBackendSelect.value)
-            : "openwakeword_sidecar";
+            : DEFAULT_KWS_BACKEND_KEY;
           const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.porcupine_local || null;
           kwsVoiceProvider = createKwsProvider({
             eventBus,
@@ -1914,7 +1917,7 @@
               ...(sttVoiceProvider ? { stt: sttVoiceProvider } : {}),
               ...(kwsVoiceProvider ? { kws: kwsVoiceProvider } : {}),
             },
-            activeId: sttVoiceProvider ? "stt" : (kwsVoiceProvider ? "kws" : ""),
+            activeId: kwsVoiceProvider ? "kws" : (sttVoiceProvider ? "stt" : ""),
           });
         }
         fxSystem.start();
@@ -1927,9 +1930,11 @@
         } else {
           voiceRecognitionSystem.start();
         }
-        // Sidecar KWS shadow mode: enabled for parser/event testing while STT remains active.
+        // Initialize KWS provider eagerly; default engine may be live KWS.
         if (kwsVoiceProvider) {
-          if (typeof kwsVoiceProvider.setMode === "function") kwsVoiceProvider.setMode("shadow");
+          if (typeof kwsVoiceProvider.setMode === "function") {
+            kwsVoiceProvider.setMode(DEFAULT_VOICE_ENGINE === "kws" ? "active" : "shadow");
+          }
           if (typeof kwsVoiceProvider.start === "function") kwsVoiceProvider.start();
           if (typeof kwsVoiceProvider.setEnabled === "function") kwsVoiceProvider.setEnabled(true);
           if (typeof kwsVoiceProvider.getStatus === "function") syncKwsTuneUiFromStatus(kwsVoiceProvider.getStatus());
@@ -2058,18 +2063,18 @@
           kwsVoiceProvider,
           porcupineKwsInitStatus,
           voiceHudSystem,
-          setVoiceEngine(mode = "stt"){
-            const m = String(mode || "stt").toLowerCase();
+          setVoiceEngine(mode = DEFAULT_VOICE_ENGINE){
+            const m = String(mode || DEFAULT_VOICE_ENGINE).toLowerCase();
             kwsDebugState.mode = m;
             updateKwsReadout();
             if (!voiceProviderManager) return false;
             if (m === "kws_shadow") {
-              if (typeof voiceProviderManager.setActive === "function") voiceProviderManager.setActive("stt");
               if (kwsVoiceProvider) {
                 kwsVoiceProvider.setMode("shadow");
                 kwsVoiceProvider.start && kwsVoiceProvider.start();
                 kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
               }
+              if (typeof voiceProviderManager.setActive === "function") voiceProviderManager.setActive("kws");
               if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               return true;
             }
@@ -2088,7 +2093,7 @@
               }
               if (eventBus) {
                 eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "kws_boot", timeoutMs: 4000 });
+                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "kws_boot", timeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS });
               }
               return ok;
             }
@@ -2099,8 +2104,8 @@
             }
             return voiceProviderManager.setActive && voiceProviderManager.setActive("stt");
           },
-          async setKwsBackend(key = "porcupine_local"){
-            const nextKey = String(key || "porcupine_local");
+          async setKwsBackend(key = DEFAULT_KWS_BACKEND_KEY){
+            const nextKey = String(key || DEFAULT_KWS_BACKEND_KEY);
             kwsBackendKey = nextKey;
             kwsDebugState.backend = nextKey;
             if (els.kwsBackendSelect && els.kwsBackendSelect.value !== nextKey) {
@@ -2157,16 +2162,17 @@
           },
         };
         if (els.voiceEngineSelect) {
-          els.voiceEngineSelect.value = "kws";
+          els.voiceEngineSelect.value = DEFAULT_VOICE_ENGINE;
         }
         if (els.kwsBackendSelect) {
-          els.kwsBackendSelect.value = "openwakeword_sidecar";
+          els.kwsBackendSelect.value = DEFAULT_KWS_BACKEND_KEY;
         }
         if (mvp) {
           // Boot into live KWS with the openWakeWord sidecar and connect immediately.
+          pushKwsLogLine("boot init: kws/openwakeword", "muted");
           Promise.resolve()
-            .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend("openwakeword_sidecar") : true))
-            .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine("kws") : true))
+            .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY) : true))
+            .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine(DEFAULT_VOICE_ENGINE) : true))
             .then(() => (typeof mvp.setKwsMicEnabled === "function" ? mvp.setKwsMicEnabled(true) : true))
             .then(() => {
               if (mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.setEnabled === "function") {
@@ -2178,10 +2184,12 @@
               if (mvp.eventBus) {
                 mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               }
+              pushKwsLogLine("boot ready: kws active + sidecar linked", "");
               updateKwsReadout();
               refreshKwsMicBtn();
             })
             .catch((err) => {
+              pushKwsLogLine(`boot failed: ${err && err.message ? err.message : String(err)}`, "bad");
               console.warn("KWS boot auto-init failed:", err);
             });
         }
