@@ -1,4 +1,5 @@
 import { SPELLS_BY_ID } from "../voice/spellbook.js";
+import { normalizeSpellClassTokenForRuntime } from "../voice/spell-decision-tree.js";
 import {
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
   EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
@@ -113,7 +114,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     const intent = String(spell && spell.intent || "");
     if (intent !== "spell.class_select") return spell;
     const a = normAxis(axis);
-    const classKey = String(spell && spell.classKey || "").toLowerCase();
+    const classKeyRaw = String(spell && spell.classKey || "").toLowerCase();
+    const classKey = normalizeSpellClassTokenForRuntime(classKeyRaw);
     const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
     if (!a || !classKey || !school) return null;
     const id = `${school}_${classKey}`;
