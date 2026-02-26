@@ -27,6 +27,24 @@ Run (simulation mode)
 python3 server.py --simulate
 ```
 
+Run (Orbis Arcana manifest: auto-load your spell `.onnx` files)
+
+1. Copy exported models into:
+   - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/assets/kws/openwakeword-models/`
+2. Use the launcher (loads manifest + defaults):
+
+```bash
+cd /Users/garthwilliams/Desktop/__DEV__/OrbisArcana/tools/openwakeword-sidecar
+./run_orbis_arcana_kws.sh
+```
+
+Notes
+
+- Current dev manifest file:
+  - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json`
+- `rota.onnx` is loaded directly (replaces earlier `rots` typo).
+- `vectus.onnx` is mapped to parser token `radius` in the manifest so current runtime spell parsing still works while STT phrases can use `vectus`.
+
 Browser usage
 
 - In the receiver UI:
@@ -51,4 +69,3 @@ Next steps (real inference)
 1. Fill in the openWakeWord model loading + audio callback in `server.py`
 2. Map openWakeWord labels to parser tokens (`ignis`, `rota`, etc.)
 3. Run in `KWS Shadow` and tune parser timings in the receiver
-

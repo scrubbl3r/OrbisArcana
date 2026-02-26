@@ -92,8 +92,8 @@ export const SPELLS = [
   },
   {
     id: "class_radius",
-    phrase: "radius",
-    aliases: ["radyus", "radiuz", "raydus"],
+    phrase: "vectus",
+    aliases: ["vektus", "vectors", "vectis", "radius", "radyus", "radiuz", "raydus"],
     minConfidence: 0.6,
     cooldownMs: 0,
     allowedAxes: ["x", "y", "z"],
@@ -129,8 +129,17 @@ export const SPELLS = [
   },
   {
     id: "ignis_radius",
-    phrase: "ignis radius",
-    aliases: ["ingnis radius", "ignis radyus", "ignis radiuz", "ignis raydus"],
+    phrase: "ignis vectus",
+    aliases: [
+      "ingnis vectus",
+      "ignis vektus",
+      "ignis vectis",
+      "ignis radius",
+      "ingnis radius",
+      "ignis radyus",
+      "ignis radiuz",
+      "ignis raydus"
+    ],
     minConfidence: 0.62,
     cooldownMs: 1000,
     allowedAxes: ["y"],
@@ -184,10 +193,14 @@ export const SPELLS = [
   },
   {
     id: "fridgis_radius",
-    phrase: "fridgis radius",
+    phrase: "fridgis vectus",
     aliases: [
+      "fridgis vectus",
+      "fridges vectus",
+      "fridgidis vectus",
+      "fidgidis vectus",
+      "frigedis vectus",
       "fridgis radius",
-      "fridges radius",
       "fridges radius",
       "fridgidis radius",
       "fidgidis radius",
@@ -246,8 +259,8 @@ export const SPELLS = [
   },
   {
     id: "electrum_radius",
-    phrase: "electrum radius",
-    aliases: ["elektrum radius", "electrum radyus", "electrum radiuz"],
+    phrase: "electrum vectus",
+    aliases: ["elektrum vectus", "electrum vektus", "electrum radius", "elektrum radius", "electrum radyus", "electrum radiuz"],
     minConfidence: 0.64,
     cooldownMs: 1000,
     allowedAxes: ["z"],

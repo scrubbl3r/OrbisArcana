@@ -1,0 +1,27 @@
+{
+  "models": [
+    {
+      "path": "../../../assets/kws/openwakeword-models/orbis.onnx"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/fridgis.onnx"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/ignis.onnx"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/domus.onnx"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/rota.onnx"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/sanctum.onnx"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/vectus.onnx",
+      "label": "vectus",
+      "token": "radius"
+    }
+  ]
+}

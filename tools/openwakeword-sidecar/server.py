@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import random
 import time
 from dataclasses import dataclass, field
@@ -113,7 +114,10 @@ def _normalize_label(label: str, label_map: Dict[str, str]) -> str:
     # Common custom-model label fallback: filename stem-like labels
     token = raw.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
     token = token.rsplit(".", 1)[0]
-    return token.strip().lower().replace(" ", "_")
+    token = token.strip().lower().replace(" ", "_")
+    if token in label_map:
+        return str(label_map[token]).strip().lower()
+    return token
 
 
 async def _openwakeword_infer_loop(state: SidecarState) -> None:
@@ -218,6 +222,53 @@ def _create_openwakeword_model(model_paths: List[str]):
     if model_paths:
         kwargs["wakeword_models"] = model_paths
     return Model(**kwargs)
+
+
+def _resolve_manifest_path(base_dir: str, raw_path: str) -> str:
+    p = str(raw_path or "").strip()
+    if not p:
+        return ""
+    if os.path.isabs(p):
+        return os.path.normpath(p)
+    return os.path.normpath(os.path.join(base_dir, p))
+
+
+def _load_manifest(path: str) -> Dict[str, Any]:
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("manifest_root_not_object")
+    base_dir = os.path.dirname(os.path.abspath(path))
+    out_models: List[str] = []
+    out_label_map: Dict[str, str] = {}
+
+    for item in data.get("models", []) or []:
+        if isinstance(item, str):
+            model_path = _resolve_manifest_path(base_dir, item)
+            if model_path:
+                out_models.append(model_path)
+            continue
+        if not isinstance(item, dict):
+            continue
+        model_path = _resolve_manifest_path(base_dir, str(item.get("path", "")))
+        if not model_path:
+            continue
+        out_models.append(model_path)
+        raw_label = str(item.get("label", "") or "").strip()
+        mapped_token = str(item.get("token", "") or "").strip()
+        if raw_label and mapped_token:
+            out_label_map[raw_label] = mapped_token
+
+    # Optional top-level label_map for convenience.
+    top_label_map = data.get("label_map", {})
+    if isinstance(top_label_map, dict):
+        for k, v in top_label_map.items():
+            ks = str(k or "").strip()
+            vs = str(v or "").strip()
+            if ks and vs:
+                out_label_map[ks] = vs
+
+    return {"models": out_models, "label_map": out_label_map}
 
 
 async def ensure_started(state: SidecarState) -> None:
@@ -327,12 +378,23 @@ async def ws_handler(ws, state: SidecarState):
 
 
 async def main_async(args):
+    manifest_models: List[str] = []
+    manifest_label_map: Dict[str, str] = {}
+    if args.manifest:
+        loaded = _load_manifest(str(args.manifest))
+        manifest_models = list(loaded.get("models", []) or [])
+        manifest_label_map = dict(loaded.get("label_map", {}) or {})
+
+    cli_models = list(args.model or [])
+    cli_label_map = _parse_label_map_arg(args.label_map or [])
+    model_paths = manifest_models + cli_models
+    label_map = {**manifest_label_map, **cli_label_map}
     state = SidecarState(
         simulate=bool(args.simulate),
         threshold=float(args.threshold),
         cooldown_ms=int(args.cooldown_ms),
-        model_paths=list(args.model or []),
-        label_map=_parse_label_map_arg(args.label_map or []),
+        model_paths=model_paths,
+        label_map=label_map,
     )
     state.loop = asyncio.get_running_loop()
     print(f"[oww-sidecar] listening on ws://{args.host}:{args.port} (simulate={state.simulate})")
@@ -348,6 +410,7 @@ def parse_args():
     p.add_argument("--host", default=DEFAULT_HOST)
     p.add_argument("--port", type=int, default=DEFAULT_PORT)
     p.add_argument("--simulate", action="store_true", help="emit simulated token detections")
+    p.add_argument("--manifest", default="", help="Path to JSON manifest listing models and optional label mappings")
     p.add_argument("--model", action="append", default=[], help="Path to openWakeWord model file (.tflite/.onnx), repeatable")
     p.add_argument("--threshold", type=float, default=0.5, help="Detection threshold (0..1)")
     p.add_argument("--cooldown-ms", type=int, default=500, help="Per-token duplicate suppression in ms")
