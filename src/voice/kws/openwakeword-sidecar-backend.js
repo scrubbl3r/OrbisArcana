@@ -148,8 +148,16 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
         emitError(new Error("websocket_unavailable"));
         return false;
       }
+      const wsUrl = String(config.wsUrl || OPENWAKEWORD_SIDECAR_CONFIG_DEFAULT.wsUrl);
+      const pageProtocol = (typeof window !== "undefined" && window.location)
+        ? String(window.location.protocol || "").toLowerCase()
+        : "";
+      if (pageProtocol === "https:" && /^ws:\/\//i.test(wsUrl)) {
+        emitError(new Error("oww_sidecar_requires_wss_on_https"));
+        return false;
+      }
       try {
-        ws = new WebSocket(String(config.wsUrl || OPENWAKEWORD_SIDECAR_CONFIG_DEFAULT.wsUrl));
+        ws = new WebSocket(wsUrl);
       } catch (err) {
         emitError(err);
         scheduleReconnect();

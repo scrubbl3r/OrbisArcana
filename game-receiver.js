@@ -1061,6 +1061,8 @@
       lastCandidate: "",
     };
     let kwsWakeHudGateTO = 0;
+    let kwsSidecarLinkedLogged = false;
+    let kwsLastBackendErrorLogged = "";
     const kwsEventLog = [];
     const KWS_EVENT_LOG_MAX = 5;
     function clearKwsWakeHudGateTimer() {
@@ -1100,6 +1102,7 @@
         parts.push(`backend:${s && (s.hasBackendFactory || s.hasAudioBackendFactory) ? "ready" : "none"}`);
         const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
         const sidecarStatus = backendStatus && backendStatus.lastStatusMsg ? backendStatus.lastStatusMsg : null;
+        const sidecarConnected = !!(backendStatus && backendStatus.connected);
         if (sidecarStatus && Object.prototype.hasOwnProperty.call(sidecarStatus, "running")) {
           parts.push(`run:${sidecarStatus.running ? "on" : "off"}`);
         }
@@ -1107,7 +1110,27 @@
           parts.push(`mode:${backendStatus.simulated ? "sim" : "real"}`);
         }
         if (backendStatus && backendStatus.lastError) {
-          parts.push(`err:${String(backendStatus.lastError).slice(0, 40)}`);
+          const errText = String(backendStatus.lastError);
+          parts.push(`err:${errText.slice(0, 40)}`);
+          if (errText && errText !== kwsLastBackendErrorLogged) {
+            kwsLastBackendErrorLogged = errText;
+            const hint = errText === "oww_sidecar_requires_wss_on_https"
+              ? " (HTTPS page requires wss:// sidecar URL or use http:// page)"
+              : "";
+            pushKwsLogLine(`sidecar error: ${errText}${hint}`, "bad");
+          }
+        } else {
+          kwsLastBackendErrorLogged = "";
+        }
+        if (sidecarConnected && sidecarStatus && !kwsSidecarLinkedLogged) {
+          kwsSidecarLinkedLogged = true;
+          const running = Object.prototype.hasOwnProperty.call(sidecarStatus, "running")
+            ? ` run:${sidecarStatus.running ? "on" : "off"}`
+            : "";
+          pushKwsLogLine(`sidecar linked (status received)${running}`);
+        } else if ((!sidecarConnected || !sidecarStatus) && kwsSidecarLinkedLogged) {
+          kwsSidecarLinkedLogged = false;
+          pushKwsLogLine("sidecar disconnected", "muted");
         }
       } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
         parts.push(`backend:${porcupineKwsInitStatus.installed ? "ready" : "none"}`);
@@ -2191,7 +2214,7 @@
               if (mvp.eventBus) {
                 mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               }
-              pushKwsLogLine("boot ready: kws active + sidecar linked", "");
+              pushKwsLogLine("boot ready: kws active (awaiting sidecar status)", "");
               updateKwsReadout();
               refreshKwsMicBtn();
             })
