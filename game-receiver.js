@@ -1057,8 +1057,34 @@
       lastToken: "",
       lastCandidate: "",
     };
+    let kwsWakeHudGateTO = 0;
     const kwsEventLog = [];
     const KWS_EVENT_LOG_MAX = 5;
+    function clearKwsWakeHudGateTimer() {
+      if (!kwsWakeHudGateTO) return;
+      clearTimeout(kwsWakeHudGateTO);
+      kwsWakeHudGateTO = 0;
+    }
+    function openKwsWakeHudGate(timeoutMs = 4000) {
+      const t = Math.max(250, Number(timeoutMs) || 4000);
+      clearKwsWakeHudGateTimer();
+      if (mvp && mvp.eventBus) {
+        mvp.eventBus.emit("voice.gate_opened", {
+          reason: "kws_wake_token",
+          timeoutMs: t,
+          atMs: Date.now(),
+        });
+      }
+      kwsWakeHudGateTO = setTimeout(() => {
+        kwsWakeHudGateTO = 0;
+        if (mvp && mvp.eventBus) {
+          mvp.eventBus.emit("voice.gate_closed", {
+            reason: "kws_timeout",
+            atMs: Date.now(),
+          });
+        }
+      }, t);
+    }
     function updateKwsReadout(){
       if (!els.kwsReadout) return;
       const parts = [String(kwsDebugState.mode || "stt")];
@@ -1816,6 +1842,12 @@
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
           kwsDebugState.lastToken = String(p.token || "");
           pushKwsLogLine(`tok ${String(p.token || "")} (${Number(p.confidence || 0).toFixed(2)})`, "muted");
+          const token = String(p.token || "").trim().toLowerCase();
+          const kwsEngineMode = String(kwsDebugState.mode || "").toLowerCase();
+          if ((kwsEngineMode === "kws" || kwsEngineMode === "kws_shadow") && token === "orbis") {
+            eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+            openKwsWakeHudGate(4000);
+          }
           updateKwsReadout();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
