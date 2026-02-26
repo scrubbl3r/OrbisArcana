@@ -1862,7 +1862,7 @@
           };
           kwsBackendKey = (els.kwsBackendSelect && els.kwsBackendSelect.value)
             ? String(els.kwsBackendSelect.value)
-            : "porcupine_local";
+            : "openwakeword_sidecar";
           const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.porcupine_local || null;
           kwsVoiceProvider = createKwsProvider({
             eventBus,
@@ -2113,15 +2113,17 @@
           },
         };
         if (els.voiceEngineSelect) {
-          els.voiceEngineSelect.value = "stt";
+          els.voiceEngineSelect.value = "kws";
         }
         if (els.kwsBackendSelect) {
-          els.kwsBackendSelect.value = kwsBackendKey;
+          els.kwsBackendSelect.value = "openwakeword_sidecar";
         }
-        if (mvp && typeof mvp.setKwsMicEnabled === "function") {
-          // Auto-connect the selected KWS backend on boot (sidecar link or browser mic backend).
+        if (mvp) {
+          // Boot into live KWS with the openWakeWord sidecar and connect immediately.
           Promise.resolve()
-            .then(() => mvp.setKwsMicEnabled(true))
+            .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend("openwakeword_sidecar") : true))
+            .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine("kws") : true))
+            .then(() => (typeof mvp.setKwsMicEnabled === "function" ? mvp.setKwsMicEnabled(true) : true))
             .catch(() => {});
         }
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
