@@ -126,6 +126,8 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
     write(label.text, label.cls);
     unsub.push(eventBus.on("voice.unavailable", onUnavailable));
     unsub.push(eventBus.on("voice.mode_changed", onModeChanged));
+    // KWS engine switches can set mode without the STT recognition system running.
+    unsub.push(eventBus.on("voice.set_mode", onModeChanged));
     unsub.push(eventBus.on("voice.gate_opened", onGateOpened));
     unsub.push(eventBus.on("voice.gate_closed", onGateClosed));
     unsub.push(eventBus.on("voice.listening_started", onListeningStarted));

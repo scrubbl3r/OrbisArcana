@@ -1068,7 +1068,7 @@
       if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
         const s = kwsVoiceProvider.getStatus();
         parts.push(`mic:${s && s.micRunning ? "on" : "off"}`);
-        parts.push(`backend:${s && s.hasAudioBackendFactory ? "ready" : "none"}`);
+        parts.push(`backend:${s && (s.hasBackendFactory || s.hasAudioBackendFactory) ? "ready" : "none"}`);
         const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
         if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "simulated")) {
           parts.push(`mode:${backendStatus.simulated ? "sim" : "real"}`);
