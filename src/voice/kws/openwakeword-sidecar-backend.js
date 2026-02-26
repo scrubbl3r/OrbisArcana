@@ -114,6 +114,31 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
       }
     }
 
+    async function handleMessageEvent(ev) {
+      const data = ev && Object.prototype.hasOwnProperty.call(ev, "data") ? ev.data : ev;
+      try {
+        if (typeof data === "string") {
+          handleMessage(data);
+          return;
+        }
+        if (typeof Blob !== "undefined" && data instanceof Blob) {
+          handleMessage(await data.text());
+          return;
+        }
+        if (typeof ArrayBuffer !== "undefined" && data instanceof ArrayBuffer) {
+          handleMessage(new TextDecoder().decode(data));
+          return;
+        }
+        if (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(data)) {
+          handleMessage(new TextDecoder().decode(data));
+          return;
+        }
+        handleMessage(data);
+      } catch (err) {
+        emitError(err instanceof Error ? err : new Error("oww_sidecar_message_decode_failed"));
+      }
+    }
+
     async function connect() {
       if (closedByClient) return true;
       if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
@@ -146,7 +171,7 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
           finish(true);
         }, { once: true });
         ws.addEventListener("message", (ev) => {
-          handleMessage(ev && "data" in ev ? ev.data : ev);
+          void handleMessageEvent(ev);
         });
         ws.addEventListener("error", () => {
           emitError(new Error("oww_sidecar_socket_error"));
