@@ -1100,6 +1100,9 @@
         const s = kwsVoiceProvider.getStatus();
         parts.push(`mic:${s && s.micRunning ? "on" : "off"}`);
         parts.push(`backend:${s && (s.hasBackendFactory || s.hasAudioBackendFactory) ? "ready" : "none"}`);
+        if (s && s.micError) {
+          parts.push(`micerr:${String(s.micError).slice(0, 40)}`);
+        }
         const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
         const sidecarStatus = backendStatus && backendStatus.lastStatusMsg ? backendStatus.lastStatusMsg : null;
         const sidecarConnected = !!(backendStatus && backendStatus.connected);
@@ -2207,7 +2210,14 @@
             .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY) : true))
             .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine(DEFAULT_VOICE_ENGINE) : true))
             .then(() => (typeof mvp.setKwsMicEnabled === "function" ? mvp.setKwsMicEnabled(true) : true))
-            .then(() => {
+            .then((micOk) => {
+              if (micOk === false) {
+                const s = mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.getStatus === "function"
+                  ? mvp.kwsVoiceProvider.getStatus()
+                  : null;
+                const reason = s && s.micError ? String(s.micError) : "kws_link_start_failed";
+                throw new Error(reason);
+              }
               if (mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.setEnabled === "function") {
                 mvp.kwsVoiceProvider.setEnabled(true);
               }
