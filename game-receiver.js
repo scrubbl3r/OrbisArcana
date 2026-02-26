@@ -2032,23 +2032,33 @@
             updateKwsReadout();
             if (!voiceProviderManager) return false;
             if (m === "kws_shadow") {
-              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               if (typeof voiceProviderManager.setActive === "function") voiceProviderManager.setActive("stt");
               if (kwsVoiceProvider) {
                 kwsVoiceProvider.setMode("shadow");
                 kwsVoiceProvider.start && kwsVoiceProvider.start();
                 kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
               }
+              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               return true;
             }
             if (m === "kws") {
-              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               if (kwsVoiceProvider) {
                 kwsVoiceProvider.setMode("active");
                 kwsVoiceProvider.start && kwsVoiceProvider.start();
                 kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
               }
-              return voiceProviderManager.setActive && voiceProviderManager.setActive("kws");
+              const ok = !!(voiceProviderManager.setActive && voiceProviderManager.setActive("kws"));
+              if (kwsVoiceProvider) {
+                // Re-assert in case provider-manager transitions changed state.
+                kwsVoiceProvider.setMode && kwsVoiceProvider.setMode("active");
+                kwsVoiceProvider.start && kwsVoiceProvider.start();
+                kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
+              }
+              if (eventBus) {
+                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "kws_boot", timeoutMs: 4000 });
+              }
+              return ok;
             }
             if (kwsVoiceProvider) {
               kwsVoiceProvider.setMode("shadow");
@@ -2126,7 +2136,22 @@
             .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend("openwakeword_sidecar") : true))
             .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine("kws") : true))
             .then(() => (typeof mvp.setKwsMicEnabled === "function" ? mvp.setKwsMicEnabled(true) : true))
-            .catch(() => {});
+            .then(() => {
+              if (mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.setEnabled === "function") {
+                mvp.kwsVoiceProvider.setEnabled(true);
+              }
+              if (mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.setMode === "function") {
+                mvp.kwsVoiceProvider.setMode("active");
+              }
+              if (mvp.eventBus) {
+                mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+              }
+              updateKwsReadout();
+              refreshKwsMicBtn();
+            })
+            .catch((err) => {
+              console.warn("KWS boot auto-init failed:", err);
+            });
         }
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
