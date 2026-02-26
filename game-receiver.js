@@ -2032,6 +2032,7 @@
             updateKwsReadout();
             if (!voiceProviderManager) return false;
             if (m === "kws_shadow") {
+              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               if (typeof voiceProviderManager.setActive === "function") voiceProviderManager.setActive("stt");
               if (kwsVoiceProvider) {
                 kwsVoiceProvider.setMode("shadow");
@@ -2041,6 +2042,7 @@
               return true;
             }
             if (m === "kws") {
+              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               if (kwsVoiceProvider) {
                 kwsVoiceProvider.setMode("active");
                 kwsVoiceProvider.start && kwsVoiceProvider.start();
