@@ -192,7 +192,12 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
           }
         });
         // Safety timeout for initial connect
-        setTimeout(() => finish(connected), 2500);
+        setTimeout(() => {
+          if (!connected && !lastError) {
+            emitError(new Error("oww_sidecar_connect_timeout"));
+          }
+          finish(connected);
+        }, 2500);
       });
     }
 

@@ -99,13 +99,17 @@ export function createKwsProvider(opts = {}) {
       });
       audioBackend = maybeBackend || null;
       if (audioBackend && typeof audioBackend.start === "function") {
-        await audioBackend.start();
+        const startOk = await audioBackend.start();
+        if (startOk === false) {
+          micError = micError || "audio_backend_start_failed";
+          throw new Error("audio_backend_start_failed");
+        }
       }
       micRunning = true;
       micEnabled = true;
       return true;
     } catch (err) {
-      micError = err && err.name ? String(err.name) : "mic_start_failed";
+      micError = micError || (err && err.message ? String(err.message) : (err && err.name ? String(err.name) : "mic_start_failed"));
       if (micStream) {
         try { micStream.getTracks().forEach((t) => t.stop()); } catch {}
       }

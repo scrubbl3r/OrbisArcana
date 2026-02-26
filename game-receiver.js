@@ -1103,6 +1103,9 @@
         const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
         const sidecarStatus = backendStatus && backendStatus.lastStatusMsg ? backendStatus.lastStatusMsg : null;
         const sidecarConnected = !!(backendStatus && backendStatus.connected);
+        if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "connected")) {
+          parts.push(`conn:${sidecarConnected ? "on" : "off"}`);
+        }
         if (sidecarStatus && Object.prototype.hasOwnProperty.call(sidecarStatus, "running")) {
           parts.push(`run:${sidecarStatus.running ? "on" : "off"}`);
         }
