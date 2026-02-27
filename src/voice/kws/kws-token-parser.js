@@ -4,12 +4,15 @@ import {
   EVT_VOICE_TOKEN_DETECTED,
 } from "../../contracts/events.js";
 import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
+import { WAKE_TOKENS } from "../spellbook.js";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1500,
   maxTokensInBuffer: 6,
   tokenThreshold: 0.6,
   spellCooldownMs: 400,
+  wakeArmMs: 1000,
+  wakeArmedMinConfidence: 0.55,
   clearBufferOnMatch: true,
   shadow: true,
 });
@@ -60,8 +63,17 @@ export function createKwsTokenParser(opts = {}) {
     maxTokensInBuffer: Number(opts.maxTokensInBuffer) || DEFAULTS.maxTokensInBuffer,
     tokenThreshold: Number.isFinite(Number(opts.tokenThreshold)) ? Number(opts.tokenThreshold) : DEFAULTS.tokenThreshold,
     spellCooldownMs: Number(opts.spellCooldownMs) || DEFAULTS.spellCooldownMs,
+    wakeArmMs: Number(opts.wakeArmMs) || DEFAULTS.wakeArmMs,
+    wakeArmedMinConfidence: Number.isFinite(Number(opts.wakeArmedMinConfidence))
+      ? clamp01(Number(opts.wakeArmedMinConfidence))
+      : DEFAULTS.wakeArmedMinConfidence,
     clearBufferOnMatch: opts.clearBufferOnMatch == null ? DEFAULTS.clearBufferOnMatch : !!opts.clearBufferOnMatch,
   };
+  const wakeTokenSet = new Set(
+    (Array.isArray(opts.wakeTokens) && opts.wakeTokens.length ? opts.wakeTokens : WAKE_TOKENS)
+      .map((t) => normToken(t))
+      .filter(Boolean),
+  );
 
   const aliasIndex = buildKwsSpellAliasIndex(opts.spells);
   let enabled = true;
@@ -70,6 +82,8 @@ export function createKwsTokenParser(opts = {}) {
   let tokenBuffer = [];
   let lastMatchAtMs = 0;
   let lastMatchedSpellId = "";
+  let wakeArmedUntilMs = 0;
+  let lastSeenAtMs = 0;
 
   function emit(name, payload) {
     if (eventBus && typeof eventBus.emit === "function") {
@@ -81,6 +95,8 @@ export function createKwsTokenParser(opts = {}) {
     tokenBuffer = [];
     lastMatchAtMs = 0;
     lastMatchedSpellId = "";
+    wakeArmedUntilMs = 0;
+    lastSeenAtMs = 0;
   }
 
   function setEnabled(next) {
@@ -97,6 +113,8 @@ export function createKwsTokenParser(opts = {}) {
     if (Number.isFinite(Number(next.maxTokensInBuffer))) cfg.maxTokensInBuffer = Math.max(1, Math.round(Number(next.maxTokensInBuffer)));
     if (Number.isFinite(Number(next.tokenThreshold))) cfg.tokenThreshold = clamp01(next.tokenThreshold);
     if (Number.isFinite(Number(next.spellCooldownMs))) cfg.spellCooldownMs = Math.max(0, Math.round(Number(next.spellCooldownMs)));
+    if (Number.isFinite(Number(next.wakeArmMs))) cfg.wakeArmMs = Math.max(0, Math.round(Number(next.wakeArmMs)));
+    if (Number.isFinite(Number(next.wakeArmedMinConfidence))) cfg.wakeArmedMinConfidence = clamp01(next.wakeArmedMinConfidence);
     if (typeof next.clearBufferOnMatch === "boolean") cfg.clearBufferOnMatch = !!next.clearBufferOnMatch;
     return getStatus();
   }
@@ -110,6 +128,7 @@ export function createKwsTokenParser(opts = {}) {
   }
 
   function tryMatchSuffix(nowMs) {
+    const wakeArmed = Number(nowMs) <= wakeArmedUntilMs;
     const maxLen = Math.min(tokenBuffer.length, cfg.maxTokensInBuffer);
     for (let len = maxLen; len >= 1; len--) {
       const suffix = tokenBuffer.slice(-len);
@@ -125,7 +144,10 @@ export function createKwsTokenParser(opts = {}) {
         }
         if (!ok) continue;
         const conf = minConfidence(suffix);
-        const matched = conf >= Number(entry.minConfidence || cfg.tokenThreshold);
+        const requiredConfidence = wakeArmed
+          ? Math.min(Number(entry.minConfidence || cfg.tokenThreshold), Number(cfg.wakeArmedMinConfidence))
+          : Number(entry.minConfidence || cfg.tokenThreshold);
+        const matched = conf >= requiredConfidence;
         let suppressed = false;
         if (matched && lastMatchedSpellId === entry.spellId && (Number(nowMs) - lastMatchAtMs) < cfg.spellCooldownMs) {
           suppressed = true;
@@ -154,6 +176,7 @@ export function createKwsTokenParser(opts = {}) {
     const confidence = clamp01(hit.confidence == null ? 1 : hit.confidence);
     const atMs = Number(hit.atMs) || Date.now();
     const providerId = String(hit.providerId || "kws");
+    lastSeenAtMs = atMs;
 
     emit(EVT_VOICE_TOKEN_DETECTED, {
       token,
@@ -165,6 +188,24 @@ export function createKwsTokenParser(opts = {}) {
 
     if (confidence < cfg.tokenThreshold) {
       return { matched: false, reason: "below_token_threshold", token, confidence };
+    }
+
+    if (wakeTokenSet.has(token)) {
+      wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);
+      // Wake token should arm immediate follow-up parsing, not pollute spell phrase matching.
+      tokenBuffer = [];
+      emit(EVT_VOICE_KWS_SPELL_CANDIDATE, {
+        spellId: null,
+        matched: false,
+        tokens: [token],
+        phrase: token,
+        confidence,
+        suppressed: false,
+        atMs,
+        providerId,
+        source: "kws",
+      });
+      return { matched: false, reason: "wake_token_armed", token, confidence, wakeArmedUntilMs };
     }
 
     tokenBuffer.push({ token, confidence, atMs });
@@ -232,6 +273,9 @@ export function createKwsTokenParser(opts = {}) {
       windowMs: cfg.windowMs,
       tokenThreshold: cfg.tokenThreshold,
       spellCooldownMs: cfg.spellCooldownMs,
+      wakeArmMs: cfg.wakeArmMs,
+      wakeArmedMinConfidence: cfg.wakeArmedMinConfidence,
+      wakeArmed: wakeArmedUntilMs > lastSeenAtMs,
       maxTokensInBuffer: cfg.maxTokensInBuffer,
       clearBufferOnMatch: cfg.clearBufferOnMatch,
     };

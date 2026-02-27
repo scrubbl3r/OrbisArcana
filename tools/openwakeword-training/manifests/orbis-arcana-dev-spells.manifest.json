@@ -1,7 +1,9 @@
 {
   "models": [
     {
-      "path": "../../../assets/kws/openwakeword-models/orbus.onnx"
+      "path": "../../../assets/kws/openwakeword-models/orbus.onnx",
+      "label": "orbus",
+      "token": "orbis"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/domus.onnx"
