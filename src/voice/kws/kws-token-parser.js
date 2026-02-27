@@ -10,6 +10,7 @@ const DEFAULTS = Object.freeze({
   windowMs: 900,
   maxTokensInBuffer: 6,
   tokenThreshold: 0.5,
+  wakeTokenThreshold: 0.35,
   spellCooldownMs: 150,
   wakeArmMs: 1000,
   wakeArmedMinConfidence: 0.45,
@@ -62,6 +63,9 @@ export function createKwsTokenParser(opts = {}) {
     windowMs: Number(opts.windowMs) || DEFAULTS.windowMs,
     maxTokensInBuffer: Number(opts.maxTokensInBuffer) || DEFAULTS.maxTokensInBuffer,
     tokenThreshold: Number.isFinite(Number(opts.tokenThreshold)) ? Number(opts.tokenThreshold) : DEFAULTS.tokenThreshold,
+    wakeTokenThreshold: Number.isFinite(Number(opts.wakeTokenThreshold))
+      ? clamp01(Number(opts.wakeTokenThreshold))
+      : DEFAULTS.wakeTokenThreshold,
     spellCooldownMs: Number(opts.spellCooldownMs) || DEFAULTS.spellCooldownMs,
     wakeArmMs: Number(opts.wakeArmMs) || DEFAULTS.wakeArmMs,
     wakeArmedMinConfidence: Number.isFinite(Number(opts.wakeArmedMinConfidence))
@@ -72,6 +76,13 @@ export function createKwsTokenParser(opts = {}) {
   const wakeTokenSet = new Set(
     (Array.isArray(opts.wakeTokens) && opts.wakeTokens.length ? opts.wakeTokens : WAKE_TOKENS)
       .map((t) => normToken(t))
+      .filter(Boolean),
+  );
+  const requireWakeForSpellIds = new Set(
+    (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
+      ? opts.requireWakeForSpellIds
+      : ["domus"])
+      .map((s) => String(s || "").trim().toLowerCase())
       .filter(Boolean),
   );
 
@@ -112,6 +123,7 @@ export function createKwsTokenParser(opts = {}) {
     if (Number.isFinite(Number(next.windowMs))) cfg.windowMs = Math.max(100, Math.round(Number(next.windowMs)));
     if (Number.isFinite(Number(next.maxTokensInBuffer))) cfg.maxTokensInBuffer = Math.max(1, Math.round(Number(next.maxTokensInBuffer)));
     if (Number.isFinite(Number(next.tokenThreshold))) cfg.tokenThreshold = clamp01(next.tokenThreshold);
+    if (Number.isFinite(Number(next.wakeTokenThreshold))) cfg.wakeTokenThreshold = clamp01(next.wakeTokenThreshold);
     if (Number.isFinite(Number(next.spellCooldownMs))) cfg.spellCooldownMs = Math.max(0, Math.round(Number(next.spellCooldownMs)));
     if (Number.isFinite(Number(next.wakeArmMs))) cfg.wakeArmMs = Math.max(0, Math.round(Number(next.wakeArmMs)));
     if (Number.isFinite(Number(next.wakeArmedMinConfidence))) cfg.wakeArmedMinConfidence = clamp01(next.wakeArmedMinConfidence);
@@ -178,6 +190,7 @@ export function createKwsTokenParser(opts = {}) {
     const providerId = String(hit.providerId || "kws");
     lastSeenAtMs = atMs;
     const wakeArmed = atMs <= wakeArmedUntilMs;
+    const isWakeToken = wakeTokenSet.has(token);
 
     emit(EVT_VOICE_TOKEN_DETECTED, {
       token,
@@ -187,14 +200,16 @@ export function createKwsTokenParser(opts = {}) {
       source: "kws",
     });
 
-    const tokenThreshold = wakeArmed
+    const tokenThreshold = isWakeToken
+      ? Number(cfg.wakeTokenThreshold) || 0
+      : (wakeArmed
       ? Math.min(Number(cfg.tokenThreshold) || 0, Number(cfg.wakeArmedMinConfidence) || 0)
-      : Number(cfg.tokenThreshold) || 0;
+      : Number(cfg.tokenThreshold) || 0);
     if (confidence < tokenThreshold) {
       return { matched: false, reason: "below_token_threshold", token, confidence };
     }
 
-    if (wakeTokenSet.has(token)) {
+    if (isWakeToken) {
       wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);
       // Wake token should arm immediate follow-up parsing, not pollute spell phrase matching.
       tokenBuffer = [];
@@ -216,7 +231,12 @@ export function createKwsTokenParser(opts = {}) {
     prune(atMs);
 
     const result = tryMatchSuffix(atMs);
-    const candidate = result || {
+    const requiresWake = !!(result && requireWakeForSpellIds.has(String(result.spellId || "").toLowerCase()));
+    const blockedByWake = !!(result && requiresWake && !wakeArmed);
+    const finalResult = blockedByWake
+      ? { ...result, matched: false, suppressed: false }
+      : result;
+    const candidate = finalResult || {
       matched: false,
       spellId: null,
       tokens: tokenBuffer.map((t) => t.token),
@@ -238,32 +258,35 @@ export function createKwsTokenParser(opts = {}) {
       source: "kws",
     });
 
-    if (!result || !result.matched || result.suppressed) {
-      return result || { matched: false, reason: "no_spell_match" };
+    if (!finalResult || !finalResult.matched || finalResult.suppressed) {
+      if (blockedByWake) {
+        return { matched: false, reason: "wake_required", spellId: result && result.spellId ? result.spellId : null };
+      }
+      return finalResult || { matched: false, reason: "no_spell_match" };
     }
 
     if (!shadow) {
       emit(EVT_VOICE_SPELL_CAST, {
-        spellId: result.spellId,
-        phrase: result.alias || result.tokens.join(" "),
-        confidence: result.confidence,
-        tokens: result.tokens.slice(),
+        spellId: finalResult.spellId,
+        phrase: finalResult.alias || finalResult.tokens.join(" "),
+        confidence: finalResult.confidence,
+        tokens: finalResult.tokens.slice(),
         source: "kws",
         providerId,
         atMs,
       });
     }
 
-    lastMatchedSpellId = String(result.spellId || "");
+    lastMatchedSpellId = String(finalResult.spellId || "");
     lastMatchAtMs = atMs;
     if (cfg.clearBufferOnMatch) tokenBuffer = [];
-    else tokenBuffer = tokenBuffer.slice(0, Math.max(0, tokenBuffer.length - result.consumedCount));
+    else tokenBuffer = tokenBuffer.slice(0, Math.max(0, tokenBuffer.length - finalResult.consumedCount));
 
     return {
       matched: true,
-      spellId: result.spellId,
-      confidence: result.confidence,
-      tokens: result.tokens.slice(),
+      spellId: finalResult.spellId,
+      confidence: finalResult.confidence,
+      tokens: finalResult.tokens.slice(),
       suppressed: false,
     };
   }
@@ -276,6 +299,7 @@ export function createKwsTokenParser(opts = {}) {
       bufferSize: tokenBuffer.length,
       windowMs: cfg.windowMs,
       tokenThreshold: cfg.tokenThreshold,
+      wakeTokenThreshold: cfg.wakeTokenThreshold,
       spellCooldownMs: cfg.spellCooldownMs,
       wakeArmMs: cfg.wakeArmMs,
       wakeArmedMinConfidence: cfg.wakeArmedMinConfidence,
