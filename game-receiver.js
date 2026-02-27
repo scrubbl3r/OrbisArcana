@@ -1053,7 +1053,7 @@
 
     const DEFAULT_VOICE_ENGINE = "kws";
     const DEFAULT_KWS_BACKEND_KEY = "openwakeword_sidecar";
-    const DEFAULT_KWS_GATE_TIMEOUT_MS = 2500;
+    const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     const kwsDebugState = {
       mode: DEFAULT_VOICE_ENGINE,
       backend: DEFAULT_KWS_BACKEND_KEY,

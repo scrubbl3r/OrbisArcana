@@ -1,4 +1,5 @@
 import { VOICE_MODES } from "../voice/voice-config.js";
+import { WAKE_TOKENS } from "../voice/spellbook.js";
 
 export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
   if (!eventBus || typeof eventBus.on !== "function") {
@@ -20,16 +21,16 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
 
   function writeWakeLabel(wakeHot) {
     if (wakeHot) {
-      write(`<span class="voiceWakeHot">Wake</span>: Orbis`, "ok", true);
+      write(`Orbis: <span class="voiceWakeHot">End</span>`, "ok", true);
       return;
     }
-    write("Wake: Orbis", "ok");
+    write("Orbis: End", "ok");
   }
 
   function modeLabel(mode) {
     if (mode === VOICE_MODES.OFF) return { text: "Off", cls: "dim" };
     if (mode === VOICE_MODES.GATED_WINDOW) return { text: "Armed (gated)", cls: "ok" };
-    if (mode === VOICE_MODES.WAKE_TOKEN_OPEN_WORLD) return { text: "Wake: Orbis", cls: "ok" };
+    if (mode === VOICE_MODES.WAKE_TOKEN_OPEN_WORLD) return { text: "Orbis: End", cls: "ok" };
     return { text: String(mode || "Off"), cls: "dim" };
   }
 
@@ -121,6 +122,15 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
     write(`Error: ${voiceState.lastError}`, "bad");
   }
 
+  function onTokenDetected(payload = {}) {
+    if (voiceState.mode !== VOICE_MODES.WAKE_TOKEN_OPEN_WORLD) return;
+    const token = String(payload.token || "").trim().toLowerCase();
+    if (!token || !WAKE_TOKENS.includes(token)) return;
+    voiceState.gateOpen = true;
+    voiceState.lastEventAtMs = Date.now();
+    writeWakeLabel(true);
+  }
+
   function start() {
     const label = modeLabel(voiceState.mode);
     write(label.text, label.cls);
@@ -136,6 +146,7 @@ export function createVoiceHudSystem({ eventBus, voiceReadoutEl, voiceState }) {
     unsub.push(eventBus.on("voice.spell_loaded", onSpellLoaded));
     unsub.push(eventBus.on("voice.spell_cast", onSpellCast));
     unsub.push(eventBus.on("voice.spell_rejected", onSpellRejected));
+    unsub.push(eventBus.on("voice.token_detected", onTokenDetected));
     unsub.push(eventBus.on("voice.error", onError));
   }
 
