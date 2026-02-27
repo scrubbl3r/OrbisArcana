@@ -7,10 +7,10 @@ import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
 import { WAKE_TOKENS } from "../spellbook.js";
 
 const DEFAULTS = Object.freeze({
-  windowMs: 1500,
+  windowMs: 900,
   maxTokensInBuffer: 6,
-  tokenThreshold: 0.6,
-  spellCooldownMs: 250,
+  tokenThreshold: 0.5,
+  spellCooldownMs: 150,
   wakeArmMs: 1000,
   wakeArmedMinConfidence: 0.45,
   clearBufferOnMatch: true,
