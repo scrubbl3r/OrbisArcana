@@ -10,9 +10,9 @@ const DEFAULTS = Object.freeze({
   windowMs: 1500,
   maxTokensInBuffer: 6,
   tokenThreshold: 0.6,
-  spellCooldownMs: 400,
+  spellCooldownMs: 250,
   wakeArmMs: 1000,
-  wakeArmedMinConfidence: 0.55,
+  wakeArmedMinConfidence: 0.45,
   clearBufferOnMatch: true,
   shadow: true,
 });
@@ -177,6 +177,7 @@ export function createKwsTokenParser(opts = {}) {
     const atMs = Number(hit.atMs) || Date.now();
     const providerId = String(hit.providerId || "kws");
     lastSeenAtMs = atMs;
+    const wakeArmed = atMs <= wakeArmedUntilMs;
 
     emit(EVT_VOICE_TOKEN_DETECTED, {
       token,
@@ -186,7 +187,10 @@ export function createKwsTokenParser(opts = {}) {
       source: "kws",
     });
 
-    if (confidence < cfg.tokenThreshold) {
+    const tokenThreshold = wakeArmed
+      ? Math.min(Number(cfg.tokenThreshold) || 0, Number(cfg.wakeArmedMinConfidence) || 0)
+      : Number(cfg.tokenThreshold) || 0;
+    if (confidence < tokenThreshold) {
       return { matched: false, reason: "below_token_threshold", token, confidence };
     }
 
