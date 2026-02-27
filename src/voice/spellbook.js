@@ -24,7 +24,7 @@ export const SPELLS = [
     phrase: "domus",
     aliases: ["dohmus", "domas", "dohmas", "thomas", "dumbass"],
     minConfidence: 0.62,
-    cooldownMs: 800,
+    cooldownMs: 250,
     allowedAxes: ["y"],
     fixedSlot: "UD",
     gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],

@@ -8,7 +8,7 @@ export const RUNTIME_SPELLS = Object.freeze([
     classKey: null,
     slot: "UD",
     intent: "spell.domus",
-    cooldownMs: 800,
+    cooldownMs: 250,
     castActionId: "domus_teleport",
   },
   {
