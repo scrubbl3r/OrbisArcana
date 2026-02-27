@@ -7,13 +7,14 @@ import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
 import { WAKE_TOKENS } from "../spellbook.js";
 
 const DEFAULTS = Object.freeze({
-  windowMs: 900,
+  windowMs: 1200,
   maxTokensInBuffer: 6,
-  tokenThreshold: 0.5,
-  wakeTokenThreshold: 0.35,
-  spellCooldownMs: 150,
-  wakeArmMs: 1000,
-  wakeArmedMinConfidence: 0.45,
+  tokenThreshold: 0.35,
+  wakeTokenThreshold: 0.2,
+  spellMatchThreshold: 0.4,
+  spellCooldownMs: 100,
+  wakeArmMs: 2500,
+  wakeArmedMinConfidence: 0.3,
   clearBufferOnMatch: true,
   shadow: true,
 });
@@ -66,6 +67,9 @@ export function createKwsTokenParser(opts = {}) {
     wakeTokenThreshold: Number.isFinite(Number(opts.wakeTokenThreshold))
       ? clamp01(Number(opts.wakeTokenThreshold))
       : DEFAULTS.wakeTokenThreshold,
+    spellMatchThreshold: Number.isFinite(Number(opts.spellMatchThreshold))
+      ? clamp01(Number(opts.spellMatchThreshold))
+      : DEFAULTS.spellMatchThreshold,
     spellCooldownMs: Number(opts.spellCooldownMs) || DEFAULTS.spellCooldownMs,
     wakeArmMs: Number(opts.wakeArmMs) || DEFAULTS.wakeArmMs,
     wakeArmedMinConfidence: Number.isFinite(Number(opts.wakeArmedMinConfidence))
@@ -124,6 +128,7 @@ export function createKwsTokenParser(opts = {}) {
     if (Number.isFinite(Number(next.maxTokensInBuffer))) cfg.maxTokensInBuffer = Math.max(1, Math.round(Number(next.maxTokensInBuffer)));
     if (Number.isFinite(Number(next.tokenThreshold))) cfg.tokenThreshold = clamp01(next.tokenThreshold);
     if (Number.isFinite(Number(next.wakeTokenThreshold))) cfg.wakeTokenThreshold = clamp01(next.wakeTokenThreshold);
+    if (Number.isFinite(Number(next.spellMatchThreshold))) cfg.spellMatchThreshold = clamp01(next.spellMatchThreshold);
     if (Number.isFinite(Number(next.spellCooldownMs))) cfg.spellCooldownMs = Math.max(0, Math.round(Number(next.spellCooldownMs)));
     if (Number.isFinite(Number(next.wakeArmMs))) cfg.wakeArmMs = Math.max(0, Math.round(Number(next.wakeArmMs)));
     if (Number.isFinite(Number(next.wakeArmedMinConfidence))) cfg.wakeArmedMinConfidence = clamp01(next.wakeArmedMinConfidence);
@@ -156,9 +161,13 @@ export function createKwsTokenParser(opts = {}) {
         }
         if (!ok) continue;
         const conf = minConfidence(suffix);
+        const baseSpellReq = Math.min(
+          Number(entry.minConfidence || 1),
+          Number(cfg.spellMatchThreshold || 1),
+        );
         const requiredConfidence = wakeArmed
-          ? Math.min(Number(entry.minConfidence || cfg.tokenThreshold), Number(cfg.wakeArmedMinConfidence))
-          : Number(entry.minConfidence || cfg.tokenThreshold);
+          ? Math.min(baseSpellReq, Number(cfg.wakeArmedMinConfidence || 1))
+          : baseSpellReq;
         const matched = conf >= requiredConfidence;
         let suppressed = false;
         if (matched && lastMatchedSpellId === entry.spellId && (Number(nowMs) - lastMatchAtMs) < cfg.spellCooldownMs) {
@@ -300,6 +309,7 @@ export function createKwsTokenParser(opts = {}) {
       windowMs: cfg.windowMs,
       tokenThreshold: cfg.tokenThreshold,
       wakeTokenThreshold: cfg.wakeTokenThreshold,
+      spellMatchThreshold: cfg.spellMatchThreshold,
       spellCooldownMs: cfg.spellCooldownMs,
       wakeArmMs: cfg.wakeArmMs,
       wakeArmedMinConfidence: cfg.wakeArmedMinConfidence,
