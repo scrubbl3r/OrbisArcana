@@ -49,12 +49,27 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
     let lastError = "";
     let lastStatusMsg = null;
     let lastToken = "";
+    let lastMessageType = "";
+    let statusSeenAtMs = 0;
     let reconnectAttempts = 0;
+    let statusProbeTimer = null;
+    let statusProbeDeadlineTimer = null;
 
     function clearReconnectTimer() {
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
+      }
+    }
+
+    function clearStatusProbeTimers() {
+      if (statusProbeTimer) {
+        clearInterval(statusProbeTimer);
+        statusProbeTimer = null;
+      }
+      if (statusProbeDeadlineTimer) {
+        clearTimeout(statusProbeDeadlineTimer);
+        statusProbeDeadlineTimer = null;
       }
     }
 
@@ -94,8 +109,10 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
       }
       if (!msg || typeof msg !== "object") return;
       const type = String(msg.type || "");
+      lastMessageType = type;
       if (type === "status") {
         lastStatusMsg = msg;
+        statusSeenAtMs = nowMs();
         return;
       }
       if (type === "error") {
@@ -175,7 +192,21 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
           connected = true;
           reconnectAttempts = 0;
           lastError = "";
+          clearStatusProbeTimers();
           if (config.requestStartOnConnect) sendJson({ type: "start" });
+          sendJson({ type: "ping" });
+          // Keep probing until we see a status message from the sidecar.
+          statusProbeTimer = setInterval(() => {
+            if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+            if (lastStatusMsg) return;
+            sendJson({ type: "ping" });
+          }, 1000);
+          statusProbeDeadlineTimer = setTimeout(() => {
+            statusProbeDeadlineTimer = null;
+            if (connected && !lastStatusMsg && !lastError) {
+              emitError(new Error("oww_sidecar_no_status_after_connect"));
+            }
+          }, 3000);
           finish(true);
         }, { once: true });
         ws.addEventListener("message", (ev) => {
@@ -186,6 +217,7 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
         });
         ws.addEventListener("close", () => {
           connected = false;
+          clearStatusProbeTimers();
           if (!closedByClient) {
             reconnectAttempts += 1;
             scheduleReconnect();
@@ -212,6 +244,7 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
     async function stop() {
       started = false;
       clearReconnectTimer();
+      clearStatusProbeTimers();
       if (connected) sendJson({ type: "stop" });
       return true;
     }
@@ -220,6 +253,7 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
       started = false;
       closedByClient = true;
       clearReconnectTimer();
+      clearStatusProbeTimers();
       if (ws) {
         try { ws.close(); } catch {}
       }
@@ -240,6 +274,8 @@ export function createOpenWakeWordSidecarBackendFactory(cfg = {}) {
         reconnectAttempts,
         lastError,
         lastToken,
+        lastMessageType,
+        statusSeenAtMs,
         lastStatusMsg,
       };
     }

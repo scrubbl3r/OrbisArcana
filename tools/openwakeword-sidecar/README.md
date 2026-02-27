@@ -27,7 +27,7 @@ Run (simulation mode)
 python3 server.py --simulate
 ```
 
-Run (Orbis Arcana manifest: auto-load your spell `.onnx` files)
+Run (Orbis Arcana manifest: auto-load your spell `.tflite`/`.onnx` files)
 
 1. Copy exported models into:
    - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/assets/kws/openwakeword-models/`
@@ -42,8 +42,8 @@ Notes
 
 - Current dev manifest file:
   - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json`
-- `rota.onnx` is loaded directly (replaces earlier `rots` typo).
-- `vectus.onnx` is mapped to parser token `radius` in the manifest so current runtime spell parsing still works while STT phrases can use `vectus`.
+- Update the manifest model list to match the files you currently have in `/assets/kws/openwakeword-models/`.
+- On desktop sidecar environments without `tflite-runtime`, prefer `.onnx` spell models for live inference.
 
 Browser usage
 

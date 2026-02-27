@@ -13,7 +13,7 @@ fi
 
 echo "[oww-sidecar] models dir: ${MODELS_DIR}"
 echo "[oww-sidecar] manifest: ${MANIFEST_PATH}"
-echo "[oww-sidecar] put your .onnx files in ${MODELS_DIR} before starting"
+echo "[oww-sidecar] put your spell model files (.tflite/.onnx) in ${MODELS_DIR} before starting"
 
 python3 "${SCRIPT_DIR}/server.py" \
   --manifest "${MANIFEST_PATH}" \
