@@ -17,6 +17,6 @@ echo "[oww-sidecar] put your spell model files (.tflite/.onnx) in ${MODELS_DIR} 
 
 python3 "${SCRIPT_DIR}/server.py" \
   --manifest "${MANIFEST_PATH}" \
-  --threshold 0.30 \
-  --cooldown-ms 100 \
+  --threshold 0.12 \
+  --cooldown-ms 0 \
   "$@"

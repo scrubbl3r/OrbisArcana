@@ -9,12 +9,12 @@ import { WAKE_TOKENS } from "../spellbook.js";
 const DEFAULTS = Object.freeze({
   windowMs: 1200,
   maxTokensInBuffer: 6,
-  tokenThreshold: 0.35,
-  wakeTokenThreshold: 0.2,
-  spellMatchThreshold: 0.4,
-  spellCooldownMs: 100,
+  tokenThreshold: 0.2,
+  wakeTokenThreshold: 0.1,
+  spellMatchThreshold: 0.25,
+  spellCooldownMs: 0,
   wakeArmMs: 1500,
-  wakeArmedMinConfidence: 0.3,
+  wakeArmedMinConfidence: 0.1,
   clearBufferOnMatch: true,
   shadow: true,
 });
