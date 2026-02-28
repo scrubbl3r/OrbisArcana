@@ -36,6 +36,7 @@ class SidecarState:
     backend: str = "openwakeword"
     simulate: bool = True
     threshold: float = 0.5
+    threshold_by_token: Dict[str, float] = field(default_factory=dict)
     cooldown_ms: int = 500
     clients: Set[Any] = field(default_factory=set)
     sim_task: Optional[asyncio.Task] = None
@@ -120,6 +121,13 @@ def _normalize_label(label: str, label_map: Dict[str, str]) -> str:
     return token
 
 
+def _threshold_for_token(state: SidecarState, token: str) -> float:
+    t = str(token or "").strip().lower()
+    if t and t in state.threshold_by_token:
+        return max(0.0, min(1.0, float(state.threshold_by_token[t])))
+    return max(0.0, min(1.0, float(state.threshold)))
+
+
 async def _openwakeword_infer_loop(state: SidecarState) -> None:
     assert state.audio_queue is not None
     try:
@@ -142,10 +150,10 @@ async def _openwakeword_infer_loop(state: SidecarState) -> None:
                     conf = float(score)
                 except Exception:
                     continue
-                if conf < float(state.threshold):
-                    continue
                 token = _normalize_label(str(raw_label), state.label_map)
                 if not token:
+                    continue
+                if conf < _threshold_for_token(state, token):
                     continue
                 last = int(state.last_emit_at_ms.get(token, 0))
                 if (t_ms - last) < int(state.cooldown_ms):
@@ -241,6 +249,7 @@ def _load_manifest(path: str) -> Dict[str, Any]:
     base_dir = os.path.dirname(os.path.abspath(path))
     out_models: List[str] = []
     out_label_map: Dict[str, str] = {}
+    out_threshold_map: Dict[str, float] = {}
 
     for item in data.get("models", []) or []:
         if isinstance(item, str):
@@ -258,6 +267,15 @@ def _load_manifest(path: str) -> Dict[str, Any]:
         mapped_token = str(item.get("token", "") or "").strip()
         if raw_label and mapped_token:
             out_label_map[raw_label] = mapped_token
+        raw_threshold = item.get("threshold", None)
+        if raw_threshold is not None:
+            key = str(mapped_token or raw_label or "").strip().lower()
+            try:
+                thr = float(raw_threshold)
+                if key:
+                    out_threshold_map[key] = max(0.0, min(1.0, thr))
+            except Exception:
+                pass
 
     # Optional top-level label_map for convenience.
     top_label_map = data.get("label_map", {})
@@ -268,7 +286,19 @@ def _load_manifest(path: str) -> Dict[str, Any]:
             if ks and vs:
                 out_label_map[ks] = vs
 
-    return {"models": out_models, "label_map": out_label_map}
+    top_threshold_map = data.get("threshold_map", {})
+    if isinstance(top_threshold_map, dict):
+        for k, v in top_threshold_map.items():
+            key = str(k or "").strip().lower()
+            if not key:
+                continue
+            try:
+                thr = float(v)
+            except Exception:
+                continue
+            out_threshold_map[key] = max(0.0, min(1.0, thr))
+
+    return {"models": out_models, "label_map": out_label_map, "threshold_map": out_threshold_map}
 
 
 async def ensure_started(state: SidecarState) -> None:
@@ -380,18 +410,23 @@ async def ws_handler(ws, state: SidecarState):
 async def main_async(args):
     manifest_models: List[str] = []
     manifest_label_map: Dict[str, str] = {}
+    manifest_threshold_map: Dict[str, float] = {}
     if args.manifest:
         loaded = _load_manifest(str(args.manifest))
         manifest_models = list(loaded.get("models", []) or [])
         manifest_label_map = dict(loaded.get("label_map", {}) or {})
+        manifest_threshold_map = dict(loaded.get("threshold_map", {}) or {})
 
     cli_models = list(args.model or [])
     cli_label_map = _parse_label_map_arg(args.label_map or [])
+    cli_threshold_map = _parse_threshold_map_arg(args.token_threshold or [])
     model_paths = manifest_models + cli_models
     label_map = {**manifest_label_map, **cli_label_map}
+    threshold_by_token = {**manifest_threshold_map, **cli_threshold_map}
     state = SidecarState(
         simulate=bool(args.simulate),
         threshold=float(args.threshold),
+        threshold_by_token=threshold_by_token,
         cooldown_ms=int(args.cooldown_ms),
         model_paths=model_paths,
         label_map=label_map,
@@ -420,6 +455,12 @@ def parse_args():
         default=[],
         help="Map model label to parser token, format LABEL=token (repeatable)",
     )
+    p.add_argument(
+        "--token-threshold",
+        action="append",
+        default=[],
+        help="Per-token threshold override, format token=0.35 (repeatable)",
+    )
     return p.parse_args()
 
 
@@ -435,6 +476,24 @@ def _parse_label_map_arg(items: List[str]) -> Dict[str, str]:
         if not k or not v:
             continue
         out[k] = v
+    return out
+
+
+def _parse_threshold_map_arg(items: List[str]) -> Dict[str, float]:
+    out: Dict[str, float] = {}
+    for item in items or []:
+        raw = str(item or "")
+        if "=" not in raw:
+            continue
+        k, v = raw.split("=", 1)
+        key = k.strip().lower()
+        if not key:
+            continue
+        try:
+            thr = float(v.strip())
+        except Exception:
+            continue
+        out[key] = max(0.0, min(1.0, thr))
     return out
 
 
