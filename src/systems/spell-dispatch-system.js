@@ -194,8 +194,16 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           return;
         }
 
-        // In flat-spin mode, only school->class progression can arm spells.
-        if (spellIntent !== "spell.class_select") {
+        const isClassSelect = spellIntent === "spell.class_select";
+        const isDirectSchoolClass =
+          spellIntent === "spell.school_shield"
+          || spellIntent === "spell.school_ray"
+          || spellIntent === "spell.school_aoe";
+
+        // In flat-spin mode, accept either:
+        // 1) school -> class progression, or
+        // 2) direct school+class spell tokens (e.g., "electrum sanctum").
+        if (!isClassSelect && !isDirectSchoolClass) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "flat_spin_requires_school_or_class",
             spellId,
@@ -206,39 +214,55 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         }
 
         let concreteSpell = spell;
-        if (!selectedSchoolByAxis[axis]) {
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "no_school_selected",
-            spellId,
-            classKey: spellClass,
-            axis,
-            atMs: now,
-          });
-          return;
-        }
-        if (now > Number(schoolWindowUntilByAxis[axis] || 0)) {
-          selectedSchoolByAxis[axis] = "";
-          schoolWindowUntilByAxis[axis] = 0;
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "school_window_expired",
-            spellId,
-            classKey: spellClass,
-            axis,
-            atMs: now,
-          });
-          return;
-        }
-        concreteSpell = resolveConcreteSpellForAxis(spell, axis);
-        if (!concreteSpell || !concreteSpell.id) {
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "school_class_resolution_failed",
-            spellId,
-            classKey: spellClass,
-            school: selectedSchoolByAxis[axis],
-            axis,
-            atMs: now,
-          });
-          return;
+        if (isClassSelect) {
+          if (!selectedSchoolByAxis[axis]) {
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+              reason: "no_school_selected",
+              spellId,
+              classKey: spellClass,
+              axis,
+              atMs: now,
+            });
+            return;
+          }
+          if (now > Number(schoolWindowUntilByAxis[axis] || 0)) {
+            selectedSchoolByAxis[axis] = "";
+            schoolWindowUntilByAxis[axis] = 0;
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+              reason: "school_window_expired",
+              spellId,
+              classKey: spellClass,
+              axis,
+              atMs: now,
+            });
+            return;
+          }
+          concreteSpell = resolveConcreteSpellForAxis(spell, axis);
+          if (!concreteSpell || !concreteSpell.id) {
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+              reason: "school_class_resolution_failed",
+              spellId,
+              classKey: spellClass,
+              school: selectedSchoolByAxis[axis],
+              axis,
+              atMs: now,
+            });
+            return;
+          }
+        } else if (isDirectSchoolClass) {
+          const axisSchool = axis === "x" ? "fridgis" : axis === "y" ? "ignis" : axis === "z" ? "electrum" : "";
+          const tokenSchool = String(concreteSpell.school || "").toLowerCase();
+          if (axisSchool && tokenSchool && tokenSchool !== axisSchool) {
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+              reason: "spell_school_not_allowed_for_axis",
+              spellId: String(concreteSpell.id || spellId),
+              axis,
+              school: tokenSchool,
+              requiredSchool: axisSchool,
+              atMs: now,
+            });
+            return;
+          }
         }
 
         const storedGlobes = getStoredGlobeCount();
