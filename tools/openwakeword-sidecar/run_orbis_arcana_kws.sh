@@ -26,5 +26,5 @@ python3 "${SCRIPT_DIR}/server.py" \
   --token-threshold rota=0.10 \
   --token-threshold vectus=0.00 \
   --token-threshold domus=0.12 \
-  --cooldown-ms 0 \
+  --cooldown-ms 300 \
   "$@"

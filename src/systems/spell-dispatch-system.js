@@ -26,11 +26,13 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const lastCastBySpellId = new Map();
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
+  const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
   const loadedByAxis = {
     x: { UD: null, LR: null, FB: null },
     y: { UD: null, LR: null, FB: null },
     z: { UD: null, LR: null, FB: null },
   };
+  const lastFlatSpinLoadAtByAxisSpell = new Map();
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
@@ -257,6 +259,18 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             return;
           }
         }
+        const concreteSpellId = String(concreteSpell && concreteSpell.id || "");
+        const dedupeKey = `${axis}:${concreteSpellId}`;
+        const prevLoadAt = Number(lastFlatSpinLoadAtByAxisSpell.get(dedupeKey) || 0);
+        if (concreteSpellId && (now - prevLoadAt) < FLAT_SPIN_DUPLICATE_SUPPRESS_MS) {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+            reason: "duplicate_spell_token",
+            spellId: concreteSpellId,
+            axis,
+            atMs: now,
+          });
+          return;
+        }
 
         const storedGlobes = getStoredGlobeCount();
         if (storedGlobes <= 0) {
@@ -308,6 +322,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
         };
+        if (concreteSpellId) {
+          lastFlatSpinLoadAtByAxisSpell.set(dedupeKey, now);
+        }
         eventBus.emit(EVT_VOICE_SPELL_LOADED, {
           spellId: String(concreteSpell.id || ""),
           intent: concreteSpell.intent,
@@ -401,6 +418,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
 
   function reset() {
     lastCastBySpellId.clear();
+    lastFlatSpinLoadAtByAxisSpell.clear();
     activeFlatSpinAxis = null;
     selectedSchoolByAxis.x = "";
     selectedSchoolByAxis.y = "";

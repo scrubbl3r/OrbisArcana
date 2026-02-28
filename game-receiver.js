@@ -1056,6 +1056,7 @@
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     const KWS_ROW_TOP = ["orbis", "domus"];
     const KWS_ROW_BOTTOM = ["electrum", "rota", "sanctum", "vectus"];
+    const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
     const kwsDebugState = {
       mode: DEFAULT_VOICE_ENGINE,
       backend: DEFAULT_KWS_BACKEND_KEY,
@@ -1065,6 +1066,11 @@
     const kwsTokenUiState = {
       flatSpinAxis: "",
       selectedSchoolByAxis: { x: "", y: "", z: "" },
+      heardClassTokensByAxis: {
+        x: Object.create(null),
+        y: Object.create(null),
+        z: Object.create(null),
+      },
       flashUntilMs: Object.create(null),
       flashTOByToken: Object.create(null),
       orbisWindowUntilMs: 0,
@@ -1083,6 +1089,19 @@
       return kwsTokenUiState.flatSpinAxis === "z"
         && String(kwsTokenUiState.selectedSchoolByAxis.z || "").toLowerCase() === "electrum";
     }
+    function resetHeardClassTokensForAxis(axis) {
+      const a = String(axis || "").trim().toLowerCase();
+      if (!(a === "x" || a === "y" || a === "z")) return;
+      const bucket = Object.create(null);
+      for (const token of KWS_CLASS_TOKENS) bucket[token] = false;
+      kwsTokenUiState.heardClassTokensByAxis[a] = bucket;
+    }
+    function resetHeardClassTokensAllAxes() {
+      resetHeardClassTokensForAxis("x");
+      resetHeardClassTokensForAxis("y");
+      resetHeardClassTokensForAxis("z");
+    }
+    resetHeardClassTokensAllAxes();
     function flashKwsToken(token, ms = 360) {
       const t = String(token || "").trim().toLowerCase();
       if (!t) return;
@@ -1137,7 +1156,8 @@
         return tokenChipHtml(token, lit, flash);
       }).join(" ");
       const lineBottom = KWS_ROW_BOTTOM.map((token) => {
-        const lit = token === "electrum" ? electrumOpen : false;
+        const heardOnAxisZ = !!(kwsTokenUiState.heardClassTokensByAxis.z && kwsTokenUiState.heardClassTokensByAxis.z[token]);
+        const lit = token === "electrum" ? electrumOpen : (electrumOpen && heardOnAxisZ);
         const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
         return tokenChipHtml(token, lit, flash);
       }).join(" ");
@@ -1933,6 +1953,7 @@
             flashKwsToken(token);
           }
           if (isElectrumSchoolWindowActive() && (token === "rota" || token === "sanctum" || token === "vectus")) {
+            kwsTokenUiState.heardClassTokensByAxis.z[token] = true;
             flashKwsToken(token);
           }
           const kwsEngineMode = String(kwsDebugState.mode || "").toLowerCase();
@@ -1947,6 +1968,7 @@
           kwsTokenUiState.flatSpinAxis = (axis === "x" || axis === "y" || axis === "z") ? axis : "";
           if (kwsTokenUiState.flatSpinAxis) {
             kwsTokenUiState.selectedSchoolByAxis[kwsTokenUiState.flatSpinAxis] = "";
+            resetHeardClassTokensForAxis(kwsTokenUiState.flatSpinAxis);
           }
           updateKwsReadout();
         });
@@ -1955,6 +1977,7 @@
           kwsTokenUiState.selectedSchoolByAxis.x = "";
           kwsTokenUiState.selectedSchoolByAxis.y = "";
           kwsTokenUiState.selectedSchoolByAxis.z = "";
+          resetHeardClassTokensAllAxes();
           updateKwsReadout();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SCHOOL_SELECTED, (p = {}) => {
@@ -1962,6 +1985,7 @@
           const school = String(p.school || "").trim().toLowerCase();
           if (axis === "x" || axis === "y" || axis === "z") {
             kwsTokenUiState.selectedSchoolByAxis[axis] = school;
+            resetHeardClassTokensForAxis(axis);
             if (school === "electrum") flashKwsToken("electrum", 520);
           }
           updateKwsReadout();

@@ -12,7 +12,7 @@ const DEFAULTS = Object.freeze({
   tokenThreshold: 0.0,
   wakeTokenThreshold: 0.0,
   spellMatchThreshold: 0.05,
-  spellCooldownMs: 0,
+  spellCooldownMs: 300,
   wakeArmMs: 1500,
   wakeArmedMinConfidence: 0.1,
   clearBufferOnMatch: true,
