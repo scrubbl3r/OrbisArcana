@@ -1902,6 +1902,13 @@
           }
           updateKwsReadout();
         });
+        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_REJECTED, (p = {}) => {
+          const reason = String(p.reason || "rejected");
+          const spellId = String(p.spellId || "");
+          const axis = String(p.axis || "");
+          const rem = Number.isFinite(Number(p.remainingMs)) ? ` rem:${Math.round(Number(p.remainingMs))}` : "";
+          pushKwsLogLine(`rej ${reason}${spellId ? ` ${spellId}` : ""}${axis ? ` axis:${axis}` : ""}${rem}`, "bad");
+        });
         if (typeof createSttProvider === "function") {
           sttVoiceProvider = createSttProvider({
             start: () => { if (voiceRecognitionSystem && typeof voiceRecognitionSystem.start === "function") voiceRecognitionSystem.start(); },

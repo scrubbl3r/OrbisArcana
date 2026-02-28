@@ -35,7 +35,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   let activeFlatSpinAxis = null;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
   const schoolWindowUntilByAxis = { x: 0, y: 0, z: 0 };
-  const SCHOOL_CLASS_WINDOW_MS = 1500;
+  const SCHOOL_CLASS_WINDOW_MS = 5000;
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {

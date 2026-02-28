@@ -9,9 +9,9 @@ import { SPELLS_BY_ID, WAKE_TOKENS } from "../spellbook.js";
 const DEFAULTS = Object.freeze({
   windowMs: 1200,
   maxTokensInBuffer: 6,
-  tokenThreshold: 0.2,
+  tokenThreshold: 0.05,
   wakeTokenThreshold: 0.0,
-  spellMatchThreshold: 0.25,
+  spellMatchThreshold: 0.1,
   spellCooldownMs: 0,
   wakeArmMs: 1500,
   wakeArmedMinConfidence: 0.1,
