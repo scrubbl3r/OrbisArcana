@@ -34,6 +34,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
+  const schoolWindowUntilByAxis = { x: 0, y: 0, z: 0 };
+  const SCHOOL_CLASS_WINDOW_MS = 1500;
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -182,6 +184,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             return;
           }
           selectedSchoolByAxis[axis] = spellSchool;
+          schoolWindowUntilByAxis[axis] = now + SCHOOL_CLASS_WINDOW_MS;
           eventBus.emit(EVT_VOICE_SCHOOL_SELECTED, {
             axis,
             school: spellSchool,
@@ -191,32 +194,51 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           return;
         }
 
+        // In flat-spin mode, only school->class progression can arm spells.
+        if (spellIntent !== "spell.class_select") {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+            reason: "flat_spin_requires_school_or_class",
+            spellId,
+            axis,
+            atMs: now,
+          });
+          return;
+        }
+
         let concreteSpell = spell;
-        if (spellIntent === "spell.class_select") {
-          if (!selectedSchoolByAxis[axis]) {
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "no_school_selected",
-              spellId,
-              classKey: spellClass,
-              axis,
-              atMs: now,
-            });
-            return;
-          }
-          concreteSpell = resolveConcreteSpellForAxis(spell, axis);
-          if (!concreteSpell || !concreteSpell.id) {
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "school_class_resolution_failed",
-              spellId,
-              classKey: spellClass,
-              school: selectedSchoolByAxis[axis],
-              axis,
-              atMs: now,
-            });
-            return;
-          }
-        } else if (spellSchool) {
-          selectedSchoolByAxis[axis] = spellSchool;
+        if (!selectedSchoolByAxis[axis]) {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+            reason: "no_school_selected",
+            spellId,
+            classKey: spellClass,
+            axis,
+            atMs: now,
+          });
+          return;
+        }
+        if (now > Number(schoolWindowUntilByAxis[axis] || 0)) {
+          selectedSchoolByAxis[axis] = "";
+          schoolWindowUntilByAxis[axis] = 0;
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+            reason: "school_window_expired",
+            spellId,
+            classKey: spellClass,
+            axis,
+            atMs: now,
+          });
+          return;
+        }
+        concreteSpell = resolveConcreteSpellForAxis(spell, axis);
+        if (!concreteSpell || !concreteSpell.id) {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+            reason: "school_class_resolution_failed",
+            spellId,
+            classKey: spellClass,
+            school: selectedSchoolByAxis[axis],
+            axis,
+            atMs: now,
+          });
+          return;
         }
 
         const storedGlobes = getStoredGlobeCount();
@@ -278,6 +300,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           slot,
           atMs: now,
         });
+        // Class accepted -> close this axis school window; next arm requires new school wake.
+        selectedSchoolByAxis[axis] = "";
+        schoolWindowUntilByAxis[axis] = 0;
         return;
       }
 
@@ -366,6 +391,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     selectedSchoolByAxis.x = "";
     selectedSchoolByAxis.y = "";
     selectedSchoolByAxis.z = "";
+    schoolWindowUntilByAxis.x = 0;
+    schoolWindowUntilByAxis.y = 0;
+    schoolWindowUntilByAxis.z = 0;
     for (const axis of AXES) {
       nextSlotIndexByAxis[axis] = 0;
       for (const slot of SLOT_ORDER) {

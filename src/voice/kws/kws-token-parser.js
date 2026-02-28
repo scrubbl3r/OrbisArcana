@@ -10,7 +10,7 @@ const DEFAULTS = Object.freeze({
   windowMs: 1200,
   maxTokensInBuffer: 6,
   tokenThreshold: 0.2,
-  wakeTokenThreshold: 0.1,
+  wakeTokenThreshold: 0.0,
   spellMatchThreshold: 0.25,
   spellCooldownMs: 0,
   wakeArmMs: 1500,
@@ -201,6 +201,31 @@ export function createKwsTokenParser(opts = {}) {
     const wakeArmed = atMs <= wakeArmedUntilMs;
     const isWakeToken = wakeTokenSet.has(token);
 
+    if (isWakeToken) {
+      wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);
+      // Wake token from sidecar should arm immediately.
+      tokenBuffer = [];
+      emit(EVT_VOICE_TOKEN_DETECTED, {
+        token,
+        confidence,
+        atMs,
+        providerId,
+        source: "kws",
+      });
+      emit(EVT_VOICE_KWS_SPELL_CANDIDATE, {
+        spellId: null,
+        matched: false,
+        tokens: [token],
+        phrase: token,
+        confidence,
+        suppressed: false,
+        atMs,
+        providerId,
+        source: "kws",
+      });
+      return { matched: false, reason: "wake_token_armed", token, confidence, wakeArmedUntilMs };
+    }
+
     const tokenThreshold = isWakeToken
       ? Number(cfg.wakeTokenThreshold) || 0
       : (wakeArmed
@@ -218,24 +243,6 @@ export function createKwsTokenParser(opts = {}) {
       providerId,
       source: "kws",
     });
-
-    if (isWakeToken) {
-      wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);
-      // Wake token should arm immediate follow-up parsing, not pollute spell phrase matching.
-      tokenBuffer = [];
-      emit(EVT_VOICE_KWS_SPELL_CANDIDATE, {
-        spellId: null,
-        matched: false,
-        tokens: [token],
-        phrase: token,
-        confidence,
-        suppressed: false,
-        atMs,
-        providerId,
-        source: "kws",
-      });
-      return { matched: false, reason: "wake_token_armed", token, confidence, wakeArmedUntilMs };
-    }
 
     tokenBuffer.push({ token, confidence, atMs });
     prune(atMs);
