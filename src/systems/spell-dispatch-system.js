@@ -34,8 +34,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
-  const schoolWindowUntilByAxis = { x: 0, y: 0, z: 0 };
-  const SCHOOL_CLASS_WINDOW_MS = 5000;
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -139,10 +137,18 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (payload = {}) => {
       const axis = normAxis(payload.axis);
       activeFlatSpinAxis = axis || null;
+      if (axis) {
+        // New flat-spin activation requires re-speaking school wake for that axis.
+        selectedSchoolByAxis[axis] = "";
+      }
     }));
 
     unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
       activeFlatSpinAxis = null;
+      // Breaking flat-spin closes school window(s); user must re-speak school token.
+      selectedSchoolByAxis.x = "";
+      selectedSchoolByAxis.y = "";
+      selectedSchoolByAxis.z = "";
     }));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
@@ -184,7 +190,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             return;
           }
           selectedSchoolByAxis[axis] = spellSchool;
-          schoolWindowUntilByAxis[axis] = now + SCHOOL_CLASS_WINDOW_MS;
           eventBus.emit(EVT_VOICE_SCHOOL_SELECTED, {
             axis,
             school: spellSchool,
@@ -218,18 +223,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           if (!selectedSchoolByAxis[axis]) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "no_school_selected",
-              spellId,
-              classKey: spellClass,
-              axis,
-              atMs: now,
-            });
-            return;
-          }
-          if (now > Number(schoolWindowUntilByAxis[axis] || 0)) {
-            selectedSchoolByAxis[axis] = "";
-            schoolWindowUntilByAxis[axis] = 0;
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "school_window_expired",
               spellId,
               classKey: spellClass,
               axis,
@@ -324,9 +317,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           slot,
           atMs: now,
         });
-        // Class accepted -> close this axis school window; next arm requires new school wake.
-        selectedSchoolByAxis[axis] = "";
-        schoolWindowUntilByAxis[axis] = 0;
         return;
       }
 
@@ -415,9 +405,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     selectedSchoolByAxis.x = "";
     selectedSchoolByAxis.y = "";
     selectedSchoolByAxis.z = "";
-    schoolWindowUntilByAxis.x = 0;
-    schoolWindowUntilByAxis.y = 0;
-    schoolWindowUntilByAxis.z = 0;
     for (const axis of AXES) {
       nextSlotIndexByAxis[axis] = 0;
       for (const slot of SLOT_ORDER) {

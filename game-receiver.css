@@ -212,6 +212,45 @@
       font-weight: 900;
       text-shadow: 0 0 10px rgba(255,212,0,0.28);
     }
+    .kwsTokenRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+      margin:2px 0;
+    }
+    .kwsTokenChip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:72px;
+      padding:2px 8px;
+      border-radius:8px;
+      border:1px solid rgba(50,255,117,.25);
+      background:rgba(0,0,0,.35);
+      color:rgba(50,255,117,.78);
+      font-weight:800;
+      line-height:1.2;
+      transition: all 90ms linear;
+    }
+    .kwsTokenChip.on{
+      color: rgba(0,0,0,.92);
+      background: rgba(50,255,117,.88);
+      border-color: rgba(50,255,117,.88);
+      box-shadow: 0 0 0 1px rgba(50,255,117,.25), 0 0 12px rgba(50,255,117,.35);
+    }
+    .kwsTokenChip.flash{
+      color: #001d0a;
+      background: rgba(253,241,0,.92);
+      border-color: rgba(253,241,0,.92);
+      box-shadow: 0 0 0 1px rgba(253,241,0,.25), 0 0 12px rgba(253,241,0,.35);
+    }
+    .kwsTokenMeta{
+      display:block;
+      margin-top:2px;
+      font-size:11px;
+      opacity:.68;
+    }
 
     .over{ color: var(--over) !important; }
     .fill.over{ background: var(--over) !important; }

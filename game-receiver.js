@@ -1054,11 +1054,20 @@
     const DEFAULT_VOICE_ENGINE = "kws";
     const DEFAULT_KWS_BACKEND_KEY = "openwakeword_sidecar";
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
+    const KWS_ROW_TOP = ["orbis", "domus"];
+    const KWS_ROW_BOTTOM = ["electrum", "rota", "sanctum", "vectus"];
     const kwsDebugState = {
       mode: DEFAULT_VOICE_ENGINE,
       backend: DEFAULT_KWS_BACKEND_KEY,
       lastToken: "",
       lastCandidate: "",
+    };
+    const kwsTokenUiState = {
+      flatSpinAxis: "",
+      selectedSchoolByAxis: { x: "", y: "", z: "" },
+      flashUntilMs: Object.create(null),
+      flashTOByToken: Object.create(null),
+      orbisWindowUntilMs: 0,
     };
     let kwsWakeHudGateTO = 0;
     let kwsSidecarLinkedLogged = false;
@@ -1070,9 +1079,33 @@
       clearTimeout(kwsWakeHudGateTO);
       kwsWakeHudGateTO = 0;
     }
+    function isElectrumSchoolWindowActive() {
+      return kwsTokenUiState.flatSpinAxis === "z"
+        && String(kwsTokenUiState.selectedSchoolByAxis.z || "").toLowerCase() === "electrum";
+    }
+    function flashKwsToken(token, ms = 360) {
+      const t = String(token || "").trim().toLowerCase();
+      if (!t) return;
+      const until = Date.now() + Math.max(60, Number(ms) || 360);
+      kwsTokenUiState.flashUntilMs[t] = until;
+      const existing = kwsTokenUiState.flashTOByToken[t];
+      if (existing) clearTimeout(existing);
+      kwsTokenUiState.flashTOByToken[t] = setTimeout(() => {
+        delete kwsTokenUiState.flashTOByToken[t];
+        if (Number(kwsTokenUiState.flashUntilMs[t] || 0) <= Date.now()) {
+          kwsTokenUiState.flashUntilMs[t] = 0;
+        }
+        updateKwsReadout();
+      }, Math.max(80, until - Date.now()));
+    }
+    function tokenChipHtml(token, lit, flash) {
+      const cls = `kwsTokenChip${lit ? " on" : ""}${flash ? " flash" : ""}`;
+      return `<span class="${cls}">${String(token)}</span>`;
+    }
     function openKwsWakeHudGate(timeoutMs = DEFAULT_KWS_GATE_TIMEOUT_MS) {
       const t = Math.max(250, Number(timeoutMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
       clearKwsWakeHudGateTimer();
+      kwsTokenUiState.orbisWindowUntilMs = Date.now() + t;
       if (mvp && mvp.eventBus) {
         mvp.eventBus.emit("voice.gate_opened", {
           reason: "kws_wake_token",
@@ -1082,24 +1115,35 @@
       }
       kwsWakeHudGateTO = setTimeout(() => {
         kwsWakeHudGateTO = 0;
+        kwsTokenUiState.orbisWindowUntilMs = 0;
         if (mvp && mvp.eventBus) {
           mvp.eventBus.emit("voice.gate_closed", {
             reason: "kws_timeout",
             atMs: Date.now(),
           });
         }
+        updateKwsReadout();
       }, t);
+      updateKwsReadout();
     }
     function updateKwsReadout(){
       if (!els.kwsReadout) return;
-      const parts = [String(kwsDebugState.mode || "stt")];
-      if (kwsDebugState.backend) parts.push(`kwsb:${kwsDebugState.backend}`);
-      if (kwsDebugState.lastToken) parts.push(`tok:${kwsDebugState.lastToken}`);
-      if (kwsDebugState.lastCandidate) parts.push(`cand:${kwsDebugState.lastCandidate}`);
+      const now = Date.now();
+      const orbisOpen = now < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
+      const electrumOpen = isElectrumSchoolWindowActive();
+      const lineTop = KWS_ROW_TOP.map((token) => {
+        const lit = token === "orbis" ? orbisOpen : false;
+        const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
+        return tokenChipHtml(token, lit, flash);
+      }).join(" ");
+      const lineBottom = KWS_ROW_BOTTOM.map((token) => {
+        const lit = token === "electrum" ? electrumOpen : false;
+        const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
+        return tokenChipHtml(token, lit, flash);
+      }).join(" ");
+      const parts = [];
       if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
         const s = kwsVoiceProvider.getStatus();
-        parts.push(`mic:${s && s.micRunning ? "on" : "off"}`);
-        parts.push(`backend:${s && (s.hasBackendFactory || s.hasAudioBackendFactory) ? "ready" : "none"}`);
         if (s && s.micError) {
           parts.push(`micerr:${String(s.micError).slice(0, 40)}`);
         }
@@ -1139,13 +1183,12 @@
           pushKwsLogLine("sidecar disconnected", "muted");
         }
       } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
-        parts.push(`backend:${porcupineKwsInitStatus.installed ? "ready" : "none"}`);
-        if (porcupineKwsInitStatus.simulated) parts.push("mode:sim");
         if (porcupineKwsInitStatus.reason && porcupineKwsInitStatus.reason !== "installed") {
           parts.push(`why:${String(porcupineKwsInitStatus.reason).replace(/_/g, "-")}`);
         }
       }
-      els.kwsReadout.textContent = parts.join(" | ");
+      const meta = parts.length ? `<span class="kwsTokenMeta">${parts.join(" | ")}</span>` : "";
+      els.kwsReadout.innerHTML = `<div class="kwsTokenRow">${lineTop}</div><div class="kwsTokenRow">${lineBottom}</div>${meta}`;
     }
     function pushKwsLogLine(text, kind = ""){
       const line = String(text || "").trim();
@@ -1388,7 +1431,11 @@
       EVT_VOICE_OPEN_GATE: "voice.open_gate",
       EVT_VOICE_TOKEN_DETECTED: "voice.token_detected",
       EVT_VOICE_KWS_SPELL_CANDIDATE: "voice.kws_spell_candidate",
+      EVT_VOICE_SPELL_REJECTED: "voice.spell_rejected",
+      EVT_VOICE_SCHOOL_SELECTED: "voice.school_selected",
       EVT_VOICE_SPELL_CAST: "voice.spell_cast",
+      EVT_SPELL_WINDOW_FLAT_SPIN_OPENED: "spell_window.flat_spin_opened",
+      EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED: "spell_window.flat_spin_closed",
       EVT_ORB_VISUAL_STATE_CHANGED: "orb.visual_state_changed",
       EVT_ORB_SHATTER_PIECE_SPAWNED: "orb.shatter_piece_spawned",
       EVT_ORB_DIED: "orb.died",
@@ -1882,10 +1929,40 @@
           kwsDebugState.lastToken = String(p.token || "");
           pushKwsLogLine(`tok ${String(p.token || "")} (${Number(p.confidence || 0).toFixed(2)})`, "muted");
           const token = String(p.token || "").trim().toLowerCase();
+          if (token === "orbis" || token === "domus" || token === "electrum") {
+            flashKwsToken(token);
+          }
+          if (isElectrumSchoolWindowActive() && (token === "rota" || token === "sanctum" || token === "vectus")) {
+            flashKwsToken(token);
+          }
           const kwsEngineMode = String(kwsDebugState.mode || "").toLowerCase();
           if ((kwsEngineMode === "kws" || kwsEngineMode === "kws_shadow") && token === "orbis") {
             eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
             openKwsWakeHudGate(DEFAULT_KWS_GATE_TIMEOUT_MS);
+          }
+          updateKwsReadout();
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
+          const axis = String(p.axis || "").trim().toLowerCase();
+          kwsTokenUiState.flatSpinAxis = (axis === "x" || axis === "y" || axis === "z") ? axis : "";
+          if (kwsTokenUiState.flatSpinAxis) {
+            kwsTokenUiState.selectedSchoolByAxis[kwsTokenUiState.flatSpinAxis] = "";
+          }
+          updateKwsReadout();
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
+          kwsTokenUiState.flatSpinAxis = "";
+          kwsTokenUiState.selectedSchoolByAxis.x = "";
+          kwsTokenUiState.selectedSchoolByAxis.y = "";
+          kwsTokenUiState.selectedSchoolByAxis.z = "";
+          updateKwsReadout();
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SCHOOL_SELECTED, (p = {}) => {
+          const axis = String(p.axis || "").trim().toLowerCase();
+          const school = String(p.school || "").trim().toLowerCase();
+          if (axis === "x" || axis === "y" || axis === "z") {
+            kwsTokenUiState.selectedSchoolByAxis[axis] = school;
+            if (school === "electrum") flashKwsToken("electrum", 520);
           }
           updateKwsReadout();
         });
