@@ -1,10 +1,10 @@
 import {
   EVT_VOICE_KWS_SPELL_CANDIDATE,
-  EVT_VOICE_SPELL_CAST,
+  EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_TOKEN_DETECTED,
 } from "../../contracts/events.js";
 import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
-import { WAKE_TOKENS } from "../spellbook.js";
+import { SPELLS_BY_ID, WAKE_TOKENS } from "../spellbook.js";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1200,
@@ -276,11 +276,14 @@ export function createKwsTokenParser(opts = {}) {
     }
 
     if (!shadow) {
-      emit(EVT_VOICE_SPELL_CAST, {
-        spellId: finalResult.spellId,
-        phrase: finalResult.alias || finalResult.tokens.join(" "),
+      const spellId = String(finalResult.spellId || "");
+      const spell = SPELLS_BY_ID[spellId]
+        ? { ...SPELLS_BY_ID[spellId] }
+        : { id: spellId, phrase: finalResult.alias || finalResult.tokens.join(" ") };
+      emit(EVT_VOICE_SPELL_DETECTED, {
+        spell,
+        transcript: finalResult.alias || finalResult.tokens.join(" "),
         confidence: finalResult.confidence,
-        tokens: finalResult.tokens.slice(),
         source: "kws",
         providerId,
         atMs,
