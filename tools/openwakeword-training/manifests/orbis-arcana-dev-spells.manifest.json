@@ -1,28 +1,44 @@
 {
   "models": [
     {
-      "path": "../../../assets/kws/openwakeword-models/orbis.onnx"
+      "path": "../../../assets/kws/openwakeword-models/orbis.onnx",
+      "label": "orbis",
+      "token": "orbis"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/domus.onnx"
+      "path": "../../../assets/kws/openwakeword-models/domus.onnx",
+      "label": "domus",
+      "token": "domus"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/ignis.onnx"
+      "path": "../../../assets/kws/openwakeword-models/ignis.onnx",
+      "label": "ignis",
+      "token": "ignis"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/fridgis.onnx"
+      "path": "../../../assets/kws/openwakeword-models/fridgis.onnx",
+      "label": "fridgis",
+      "token": "fridgis"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/electrum.onnx"
+      "path": "../../../assets/kws/openwakeword-models/electrum.onnx",
+      "label": "electrum",
+      "token": "electrum"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/sanctum.onnx"
+      "path": "../../../assets/kws/openwakeword-models/sanctum.onnx",
+      "label": "sanctum",
+      "token": "sanctum"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/rota.onnx"
+      "path": "../../../assets/kws/openwakeword-models/rota.onnx",
+      "label": "rota",
+      "token": "rota"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/vectus.onnx"
+      "path": "../../../assets/kws/openwakeword-models/vectus.onnx",
+      "label": "vectus",
+      "token": "vectus"
     }
   ]
 }

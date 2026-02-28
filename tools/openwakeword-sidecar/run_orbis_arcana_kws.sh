@@ -22,9 +22,9 @@ python3 "${SCRIPT_DIR}/server.py" \
   --token-threshold ignis=0.10 \
   --token-threshold fridgis=0.10 \
   --token-threshold electrum=0.10 \
-  --token-threshold sanctum=0.03 \
+  --token-threshold sanctum=0.00 \
   --token-threshold rota=0.10 \
-  --token-threshold vectus=0.05 \
+  --token-threshold vectus=0.00 \
   --token-threshold domus=0.12 \
   --cooldown-ms 0 \
   "$@"
