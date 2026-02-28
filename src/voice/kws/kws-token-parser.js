@@ -201,14 +201,6 @@ export function createKwsTokenParser(opts = {}) {
     const wakeArmed = atMs <= wakeArmedUntilMs;
     const isWakeToken = wakeTokenSet.has(token);
 
-    emit(EVT_VOICE_TOKEN_DETECTED, {
-      token,
-      confidence,
-      atMs,
-      providerId,
-      source: "kws",
-    });
-
     const tokenThreshold = isWakeToken
       ? Number(cfg.wakeTokenThreshold) || 0
       : (wakeArmed
@@ -217,6 +209,15 @@ export function createKwsTokenParser(opts = {}) {
     if (confidence < tokenThreshold) {
       return { matched: false, reason: "below_token_threshold", token, confidence };
     }
+
+    // Emit only after threshold acceptance so UI/logic reflects a real accepted token.
+    emit(EVT_VOICE_TOKEN_DETECTED, {
+      token,
+      confidence,
+      atMs,
+      providerId,
+      source: "kws",
+    });
 
     if (isWakeToken) {
       wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);
