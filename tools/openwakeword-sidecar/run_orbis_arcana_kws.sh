@@ -17,7 +17,6 @@ echo "[oww-sidecar] put your spell model files (.tflite/.onnx) in ${MODELS_DIR} 
 
 python3 "${SCRIPT_DIR}/server.py" \
   --manifest "${MANIFEST_PATH}" \
-  --require-onnx-data \
   --threshold 0.10 \
   --token-threshold orbis=0.35 \
   --token-threshold ignis=0.10 \
