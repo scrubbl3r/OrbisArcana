@@ -1947,7 +1947,6 @@
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
           kwsDebugState.lastToken = String(p.token || "");
-          pushKwsLogLine(`tok ${String(p.token || "")} (${Number(p.confidence || 0).toFixed(2)})`, "muted");
           const token = String(p.token || "").trim().toLowerCase();
           if (token === "orbis" || token === "domus" || token === "electrum") {
             flashKwsToken(token);
@@ -1995,20 +1994,10 @@
           const spellId = String(p.spellId || "");
           const phrase = String(p.phrase || "");
           kwsDebugState.lastCandidate = matched ? (spellId || phrase || "match") : (phrase || "no-match");
-          if (matched) {
-            const sup = p.suppressed ? " [sup]" : "";
-            pushKwsLogLine(`match ${spellId || phrase}${sup} (${Number(p.confidence || 0).toFixed(2)})`);
-          } else {
-            pushKwsLogLine(`cand ${phrase || "no-match"}`, "muted");
-          }
           updateKwsReadout();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_REJECTED, (p = {}) => {
-          const reason = String(p.reason || "rejected");
-          const spellId = String(p.spellId || "");
-          const axis = String(p.axis || "");
-          const rem = Number.isFinite(Number(p.remainingMs)) ? ` rem:${Math.round(Number(p.remainingMs))}` : "";
-          pushKwsLogLine(`rej ${reason}${spellId ? ` ${spellId}` : ""}${axis ? ` axis:${axis}` : ""}${rem}`, "bad");
+          void p;
         });
         if (typeof createSttProvider === "function") {
           sttVoiceProvider = createSttProvider({

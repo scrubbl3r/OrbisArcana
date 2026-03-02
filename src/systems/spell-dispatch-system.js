@@ -27,6 +27,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
+  const CLASS_SELECT_ARM_DELAY_MS = 220;
   const loadedByAxis = {
     x: { UD: null, LR: null, FB: null },
     y: { UD: null, LR: null, FB: null },
@@ -36,6 +37,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
+  const selectedSchoolAtByAxis = { x: 0, y: 0, z: 0 };
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -142,6 +144,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       if (axis) {
         // New flat-spin activation requires re-speaking school wake for that axis.
         selectedSchoolByAxis[axis] = "";
+        selectedSchoolAtByAxis[axis] = 0;
       }
     }));
 
@@ -151,6 +154,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       selectedSchoolByAxis.x = "";
       selectedSchoolByAxis.y = "";
       selectedSchoolByAxis.z = "";
+      selectedSchoolAtByAxis.x = 0;
+      selectedSchoolAtByAxis.y = 0;
+      selectedSchoolAtByAxis.z = 0;
     }));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
@@ -192,6 +198,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             return;
           }
           selectedSchoolByAxis[axis] = spellSchool;
+          selectedSchoolAtByAxis[axis] = now;
           eventBus.emit(EVT_VOICE_SCHOOL_SELECTED, {
             axis,
             school: spellSchool,
@@ -225,6 +232,17 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           if (!selectedSchoolByAxis[axis]) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "no_school_selected",
+              spellId,
+              classKey: spellClass,
+              axis,
+              atMs: now,
+            });
+            return;
+          }
+          const selectedAt = Number(selectedSchoolAtByAxis[axis] || 0);
+          if (selectedAt > 0 && (now - selectedAt) < CLASS_SELECT_ARM_DELAY_MS) {
+            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+              reason: "school_settle",
               spellId,
               classKey: spellClass,
               axis,
@@ -423,6 +441,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     selectedSchoolByAxis.x = "";
     selectedSchoolByAxis.y = "";
     selectedSchoolByAxis.z = "";
+    selectedSchoolAtByAxis.x = 0;
+    selectedSchoolAtByAxis.y = 0;
+    selectedSchoolAtByAxis.z = 0;
     for (const axis of AXES) {
       nextSlotIndexByAxis[axis] = 0;
       for (const slot of SLOT_ORDER) {
