@@ -92,7 +92,7 @@ export const SPELLS = [
     classKey: "sanctum",
   },
   {
-    id: "class_radius",
+    id: "class_vectus",
     phrase: "vectus",
     aliases: ["vektus", "vectors", "vectis", "radius", "radyus", "radiuz", "raydus"],
     minConfidence: 0.6,
@@ -101,7 +101,7 @@ export const SPELLS = [
     fixedSlot: "LR",
     gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
     intent: "spell.class_select",
-    classKey: "radius",
+    classKey: "vectus",
   },
   {
     id: "class_rota",
@@ -129,7 +129,7 @@ export const SPELLS = [
     classKey: "sanctum",
   },
   {
-    id: "ignis_radius",
+    id: "ignis_vectus",
     phrase: "ignis vectus",
     aliases: [
       "ingnis vectus",
@@ -150,7 +150,7 @@ export const SPELLS = [
     gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
     intent: "spell.school_ray",
     school: "ignis",
-    classKey: "radius",
+    classKey: "vectus",
   },
   {
     id: "ignis_rota",
@@ -197,7 +197,7 @@ export const SPELLS = [
     classKey: "sanctum",
   },
   {
-    id: "fridgis_radius",
+    id: "fridgis_vectus",
     phrase: "fridgis vectus",
     aliases: [
       "firdgis vectus",
@@ -223,7 +223,7 @@ export const SPELLS = [
     gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
     intent: "spell.school_ray",
     school: "fridgis",
-    classKey: "radius",
+    classKey: "vectus",
   },
   {
     id: "fridgis_rota",
@@ -267,7 +267,7 @@ export const SPELLS = [
     classKey: "sanctum",
   },
   {
-    id: "electrum_radius",
+    id: "electrum_vectus",
     phrase: "electrum vectus",
     aliases: ["elektrum vectus", "electrum vektus", "electrum radius", "elektrum radius", "electrum radyus", "electrum radiuz"],
     minConfidence: 0.64,
@@ -277,7 +277,7 @@ export const SPELLS = [
     gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
     intent: "spell.school_ray",
     school: "electrum",
-    classKey: "radius",
+    classKey: "vectus",
   },
   {
     id: "electrum_rota",
