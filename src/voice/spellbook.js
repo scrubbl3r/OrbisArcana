@@ -33,7 +33,7 @@ export const SPELLS = [
   {
     id: "school_ignis",
     phrase: "ignis",
-    aliases: ["ingnis", "ingis", "ignis"],
+    aliases: ["ingnis", "ingis", "igins", "ignuss", "ignus", "ignis"],
     minConfidence: 0.6,
     cooldownMs: 0,
     allowedAxes: ["y"],

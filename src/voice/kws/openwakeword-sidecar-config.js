@@ -53,6 +53,9 @@ export const OPENWAKEWORD_SIDECAR_CONFIG_DEFAULT = Object.freeze({
   tokenMap: Object.freeze({
     // Canonicalize likely custom-model label variants.
     ingis: "ignis",
+    igins: "ignis",
+    ignuss: "ignis",
+    ignus: "ignis",
     firdgis: "fridgis",
   }),
 });
