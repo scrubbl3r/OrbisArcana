@@ -254,9 +254,10 @@ export function createInputGestureSystem({
     fs.lastTs = now;
 
     const axisInfo = axisFromVisibleShield(raw);
-    const speed01 = clamp01(Number(raw && (raw.speed01 != null ? raw.speed01 : raw.speed)) || 0);
-    const locked = !!(raw && raw.locked);
-    const stableEnough = (!!stabilityOn && !!stabilityVisualGate) || (locked && (speed01 >= cfg.flatSpinMinSpeed01));
+    void stabilityOn;
+    // Preserve the older "always responsive" spin feel by qualifying from the visual
+    // spin gate + axis signal, without requiring dynamics stability to be armed.
+    const stableEnough = !!stabilityVisualGate;
     const canQualify = !!axisInfo && stableEnough;
     const isAxisSignal = !!(axisInfo && axisInfo.source === "axis");
     const domOnReq = isAxisSignal ? 0.56 : cfg.flatSpinDominanceOn;
