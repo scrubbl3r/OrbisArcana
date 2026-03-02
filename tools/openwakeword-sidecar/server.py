@@ -18,6 +18,7 @@ import asyncio
 import json
 import os
 import random
+import sys
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
@@ -301,6 +302,32 @@ def _load_manifest(path: str) -> Dict[str, Any]:
     return {"models": out_models, "label_map": out_label_map, "threshold_map": out_threshold_map}
 
 
+def _validate_model_paths(model_paths: List[str], require_onnx_data: bool = False) -> None:
+    errors: List[str] = []
+    warnings: List[str] = []
+    for raw_path in model_paths or []:
+        model_path = os.path.normpath(str(raw_path or "").strip())
+        if not model_path:
+            continue
+        if not os.path.isfile(model_path):
+            errors.append(f"missing_model_file:{model_path}")
+            continue
+
+        if model_path.lower().endswith(".onnx"):
+            data_path = f"{model_path}.data"
+            if not os.path.isfile(data_path):
+                msg = f"missing_onnx_data_pair:{model_path} (expected {data_path})"
+                if require_onnx_data:
+                    errors.append(msg)
+                else:
+                    warnings.append(msg)
+
+    for msg in warnings:
+        print(f"[oww-sidecar] warning: {msg}", file=sys.stderr)
+    if errors:
+        raise ValueError("; ".join(errors))
+
+
 async def ensure_started(state: SidecarState) -> None:
     if state.running:
         return
@@ -421,6 +448,7 @@ async def main_async(args):
     cli_label_map = _parse_label_map_arg(args.label_map or [])
     cli_threshold_map = _parse_threshold_map_arg(args.token_threshold or [])
     model_paths = manifest_models + cli_models
+    _validate_model_paths(model_paths, require_onnx_data=bool(args.require_onnx_data))
     label_map = {**manifest_label_map, **cli_label_map}
     threshold_by_token = {**manifest_threshold_map, **cli_threshold_map}
     state = SidecarState(
@@ -447,6 +475,11 @@ def parse_args():
     p.add_argument("--simulate", action="store_true", help="emit simulated token detections")
     p.add_argument("--manifest", default="", help="Path to JSON manifest listing models and optional label mappings")
     p.add_argument("--model", action="append", default=[], help="Path to openWakeWord model file (.tflite/.onnx), repeatable")
+    p.add_argument(
+        "--require-onnx-data",
+        action="store_true",
+        help="Fail startup if any referenced .onnx model is missing a sibling .onnx.data file",
+    )
     p.add_argument("--threshold", type=float, default=0.5, help="Detection threshold (0..1)")
     p.add_argument("--cooldown-ms", type=int, default=500, help="Per-token duplicate suppression in ms")
     p.add_argument(
