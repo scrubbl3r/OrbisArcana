@@ -1058,6 +1058,7 @@
     const KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
     const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
     const KWS_LOG_TOKENS = new Set(["orbis", "domus", "ignis", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
+    const TEMP_UNGATED_KWS_TOKENS = new Set(["ignis", "rota"]);
     const KWS_TOKEN_CANONICAL_MAP = Object.freeze({
       ingis: "ignis",
       ingnis: "ignis",
@@ -1119,6 +1120,7 @@
     function shouldLogHeardWakeword(rawToken) {
       const token = canonicalKwsToken(rawToken);
       if (!KWS_LOG_TOKENS.has(token)) return false;
+      if (TEMP_UNGATED_KWS_TOKENS.has(token)) return true;
       if (token === "orbis") return true;
       if (token === "domus") {
         return Date.now() < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
@@ -1985,6 +1987,9 @@
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
           const token = canonicalKwsToken(p.token);
           kwsDebugState.lastToken = token;
+          if (TEMP_UNGATED_KWS_TOKENS.has(token)) {
+            flashKwsToken(token);
+          }
           if (token === "orbis" || token === "domus" || token === "electrum" || token === "ignis" || token === "fridgis") {
             flashKwsToken(token);
           }

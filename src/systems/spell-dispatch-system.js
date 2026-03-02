@@ -27,6 +27,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
+  // Temporary diagnostic bypass: allow selected tokens to cast without flat-spin
+  // so we can isolate KWS model quality from dispatch gating behavior.
+  const TEMP_UNGATED_SPELL_IDS = new Set(["school_ignis", "class_rota"]);
   const loadedByAxis = {
     x: { UD: null, LR: null, FB: null },
     y: { UD: null, LR: null, FB: null },
@@ -190,7 +193,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       // Strict spell-tree enforcement:
       // - school/class tokens are only valid during an active flat-spin window.
       // - direct school+class tokens are not accepted (must follow school -> class).
-      if (!isFlatSpinLoadWindow && (isSchoolSelect || isClassSelect || isDirectSchoolClass)) {
+      const bypassFlatSpinGate = TEMP_UNGATED_SPELL_IDS.has(spellId);
+      if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isSchoolSelect || isClassSelect || isDirectSchoolClass)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "spell_window_required",
           spellId,
