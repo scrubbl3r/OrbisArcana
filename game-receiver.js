@@ -1058,7 +1058,7 @@
     const KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
     const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
     const KWS_LOG_TOKENS = new Set(["orbis", "domus", "ignis", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
-    const TEMP_UNGATED_KWS_TOKENS = new Set(["ignis", "rota"]);
+    const TEMP_UNGATED_KWS_TOKENS = new Set(["orbis", "domus", "ignis", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
     const KWS_TOKEN_CANONICAL_MAP = Object.freeze({
       ingis: "ignis",
       ingnis: "ignis",

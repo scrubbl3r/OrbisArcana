@@ -29,7 +29,14 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
   // Temporary diagnostic bypass: allow selected tokens to cast without flat-spin
   // so we can isolate KWS model quality from dispatch gating behavior.
-  const TEMP_UNGATED_SPELL_IDS = new Set(["school_ignis", "class_rota"]);
+  const TEMP_UNGATED_SPELL_IDS = new Set([
+    "school_ignis",
+    "school_fridgis",
+    "school_electrum",
+    "class_rota",
+    "class_sanctum",
+    "class_vectus",
+  ]);
   const loadedByAxis = {
     x: { UD: null, LR: null, FB: null },
     y: { UD: null, LR: null, FB: null },
