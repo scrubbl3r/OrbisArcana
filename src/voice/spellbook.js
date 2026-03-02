@@ -33,7 +33,7 @@ export const SPELLS = [
   {
     id: "school_ignis",
     phrase: "ignis",
-    aliases: ["ingnis", "ignis"],
+    aliases: ["ingnis", "ingis", "ignis"],
     minConfidence: 0.6,
     cooldownMs: 0,
     allowedAxes: ["y"],
@@ -45,6 +45,7 @@ export const SPELLS = [
     id: "school_fridgis",
     phrase: "fridgis",
     aliases: [
+      "firdgis",
       "fridge",
       "fridges",
       "fridges",
@@ -117,7 +118,7 @@ export const SPELLS = [
   {
     id: "ignis_sanctum",
     phrase: "ignis sanctum",
-    aliases: ["ingnis sanctum", "ignis sanctus", "ingnis sanctus", "ignis sanktus", "ignis sanctas", "ignis sanktum"],
+    aliases: ["ingnis sanctum", "ingis sanctum", "ignis sanctus", "ingnis sanctus", "ingis sanctus", "ignis sanktus", "ignis sanctas", "ignis sanktum"],
     minConfidence: 0.62,
     cooldownMs: 1000,
     allowedAxes: ["y"],
@@ -132,10 +133,12 @@ export const SPELLS = [
     phrase: "ignis vectus",
     aliases: [
       "ingnis vectus",
+      "ingis vectus",
       "ignis vektus",
       "ignis vectis",
       "ignis radius",
       "ingnis radius",
+      "ingis radius",
       "ignis radyus",
       "ignis radiuz",
       "ignis raydus"
@@ -152,7 +155,7 @@ export const SPELLS = [
   {
     id: "ignis_rota",
     phrase: "ignis rota",
-    aliases: ["ingnis rota", "ignis rotah", "ignis rohta", "ignis rahta"],
+    aliases: ["ingnis rota", "ingis rota", "ignis rotah", "ignis rohta", "ignis rahta"],
     minConfidence: 0.64,
     cooldownMs: 1100,
     allowedAxes: ["y"],
@@ -166,6 +169,8 @@ export const SPELLS = [
     id: "fridgis_sanctum",
     phrase: "fridgis sanctum",
     aliases: [
+      "firdgis sanctum",
+      "firdgis sanctus",
       "fridgis sanctum",
       "fridgis sanctus",
       "fridges sanctus",
@@ -195,6 +200,8 @@ export const SPELLS = [
     id: "fridgis_radius",
     phrase: "fridgis vectus",
     aliases: [
+      "firdgis vectus",
+      "firdgis radius",
       "fridgis vectus",
       "fridges vectus",
       "fridgidis vectus",
@@ -222,6 +229,8 @@ export const SPELLS = [
     id: "fridgis_rota",
     phrase: "fridgis rota",
     aliases: [
+      "firdgis rota",
+      "firdgis rahta",
       "fridgis rota",
       "fridges rota",
       "fridges rota",

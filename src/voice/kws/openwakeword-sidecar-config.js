@@ -51,6 +51,8 @@ export const OPENWAKEWORD_SIDECAR_CONFIG_DEFAULT = Object.freeze({
   requestStartOnConnect: true,
   // Optional token label normalization if the sidecar emits labels that differ from parser tokens.
   tokenMap: Object.freeze({
-    // "IgnisWake": "ignis",
+    // Canonicalize likely custom-model label variants.
+    ingis: "ignis",
+    firdgis: "fridgis",
   }),
 });
