@@ -1057,6 +1057,7 @@
     const KWS_ROW_TOP = ["orbis", "domus"];
     const KWS_ROW_BOTTOM = ["electrum", "rota", "sanctum", "vectus"];
     const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
+    const KWS_LOG_TOKENS = new Set(["orbis", "domus", "ignis", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
     const kwsDebugState = {
       mode: DEFAULT_VOICE_ENGINE,
       backend: DEFAULT_KWS_BACKEND_KEY,
@@ -1088,6 +1089,35 @@
     function isElectrumSchoolWindowActive() {
       return kwsTokenUiState.flatSpinAxis === "z"
         && String(kwsTokenUiState.selectedSchoolByAxis.z || "").toLowerCase() === "electrum";
+    }
+    function expectedSchoolForAxis(axis) {
+      const a = String(axis || "").trim().toLowerCase();
+      if (a === "x") return "fridgis";
+      if (a === "y") return "ignis";
+      if (a === "z") return "electrum";
+      return "";
+    }
+    function isClassWindowActive() {
+      const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
+      if (!(axis === "x" || axis === "y" || axis === "z")) return false;
+      const selectedSchool = String(kwsTokenUiState.selectedSchoolByAxis[axis] || "").toLowerCase();
+      return selectedSchool === "ignis" || selectedSchool === "fridgis" || selectedSchool === "electrum";
+    }
+    function shouldLogHeardWakeword(rawToken) {
+      const token = String(rawToken || "").trim().toLowerCase();
+      if (!KWS_LOG_TOKENS.has(token)) return false;
+      if (token === "orbis") return true;
+      if (token === "domus") {
+        return Date.now() < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
+      }
+      if (token === "ignis" || token === "fridgis" || token === "electrum") {
+        const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
+        return !!axis && token === expectedSchoolForAxis(axis);
+      }
+      if (token === "rota" || token === "sanctum" || token === "vectus") {
+        return isClassWindowActive();
+      }
+      return false;
     }
     function resetHeardClassTokensForAxis(axis) {
       const a = String(axis || "").trim().toLowerCase();
@@ -1182,25 +1212,14 @@
         if (backendStatus && backendStatus.lastError) {
           const errText = String(backendStatus.lastError);
           parts.push(`err:${errText.slice(0, 40)}`);
-          if (errText && errText !== kwsLastBackendErrorLogged) {
-            kwsLastBackendErrorLogged = errText;
-            const hint = errText === "oww_sidecar_requires_wss_on_https"
-              ? " (HTTPS page requires wss:// sidecar URL or use http:// page)"
-              : "";
-            pushKwsLogLine(`sidecar error: ${errText}${hint}`, "bad");
-          }
+          if (errText && errText !== kwsLastBackendErrorLogged) kwsLastBackendErrorLogged = errText;
         } else {
           kwsLastBackendErrorLogged = "";
         }
         if (sidecarConnected && sidecarStatus && !kwsSidecarLinkedLogged) {
           kwsSidecarLinkedLogged = true;
-          const running = Object.prototype.hasOwnProperty.call(sidecarStatus, "running")
-            ? ` run:${sidecarStatus.running ? "on" : "off"}`
-            : "";
-          pushKwsLogLine(`sidecar linked (status received)${running}`);
         } else if ((!sidecarConnected || !sidecarStatus) && kwsSidecarLinkedLogged) {
           kwsSidecarLinkedLogged = false;
-          pushKwsLogLine("sidecar disconnected", "muted");
         }
       } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
         if (porcupineKwsInitStatus.reason && porcupineKwsInitStatus.reason !== "installed") {
@@ -1948,17 +1967,23 @@
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
           kwsDebugState.lastToken = String(p.token || "");
           const token = String(p.token || "").trim().toLowerCase();
-          if (token === "orbis" || token === "domus" || token === "electrum") {
+          if (token === "orbis" || token === "domus" || token === "electrum" || token === "ignis" || token === "fridgis") {
             flashKwsToken(token);
           }
-          if (isElectrumSchoolWindowActive() && (token === "rota" || token === "sanctum" || token === "vectus")) {
-            kwsTokenUiState.heardClassTokensByAxis.z[token] = true;
+          if (isClassWindowActive() && (token === "rota" || token === "sanctum" || token === "vectus")) {
+            const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
+            if (axis === "x" || axis === "y" || axis === "z") {
+              kwsTokenUiState.heardClassTokensByAxis[axis][token] = true;
+            }
             flashKwsToken(token);
           }
           const kwsEngineMode = String(kwsDebugState.mode || "").toLowerCase();
           if ((kwsEngineMode === "kws" || kwsEngineMode === "kws_shadow") && token === "orbis") {
             eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
             openKwsWakeHudGate(DEFAULT_KWS_GATE_TIMEOUT_MS);
+          }
+          if (shouldLogHeardWakeword(token)) {
+            pushKwsLogLine(token);
           }
           updateKwsReadout();
         });
@@ -2302,7 +2327,6 @@
         }
         if (mvp) {
           // Boot into live KWS with the openWakeWord sidecar and connect immediately.
-          pushKwsLogLine("boot init: kws/openwakeword", "muted");
           Promise.resolve()
             .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY) : true))
             .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine(DEFAULT_VOICE_ENGINE) : true))
@@ -2324,12 +2348,10 @@
               if (mvp.eventBus) {
                 mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
               }
-              pushKwsLogLine("boot ready: kws active (awaiting sidecar status)", "");
               updateKwsReadout();
               refreshKwsMicBtn();
             })
             .catch((err) => {
-              pushKwsLogLine(`boot failed: ${err && err.message ? err.message : String(err)}`, "bad");
               console.warn("KWS boot auto-init failed:", err);
             });
         }

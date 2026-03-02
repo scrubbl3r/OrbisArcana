@@ -27,7 +27,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
-  const CLASS_SELECT_ARM_DELAY_MS = 220;
   const loadedByAxis = {
     x: { UD: null, LR: null, FB: null },
     y: { UD: null, LR: null, FB: null },
@@ -37,7 +36,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
-  const selectedSchoolAtByAxis = { x: 0, y: 0, z: 0 };
+
+  function isSchoolClassIntent(intent) {
+    const i = String(intent || "");
+    return i === "spell.school_shield" || i === "spell.school_ray" || i === "spell.school_aoe";
+  }
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -144,7 +147,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       if (axis) {
         // New flat-spin activation requires re-speaking school wake for that axis.
         selectedSchoolByAxis[axis] = "";
-        selectedSchoolAtByAxis[axis] = 0;
       }
     }));
 
@@ -154,9 +156,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       selectedSchoolByAxis.x = "";
       selectedSchoolByAxis.y = "";
       selectedSchoolByAxis.z = "";
-      selectedSchoolAtByAxis.x = 0;
-      selectedSchoolAtByAxis.y = 0;
-      selectedSchoolAtByAxis.z = 0;
     }));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
@@ -184,9 +183,24 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const now = nowMs();
       const axis = normAxis(activeFlatSpinAxis);
       const isFlatSpinLoadWindow = !!axis;
+      const isClassSelect = spellIntent === "spell.class_select";
+      const isSchoolSelect = spellIntent === "spell.school_select";
+      const isDirectSchoolClass = isSchoolClassIntent(spellIntent);
+
+      // Strict spell-tree enforcement:
+      // - school/class tokens are only valid during an active flat-spin window.
+      // - direct school+class tokens are not accepted (must follow school -> class).
+      if (!isFlatSpinLoadWindow && (isSchoolSelect || isClassSelect || isDirectSchoolClass)) {
+        eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+          reason: "spell_window_required",
+          spellId,
+          atMs: now,
+        });
+        return;
+      }
 
       if (isFlatSpinLoadWindow) {
-        if (spellIntent === "spell.school_select") {
+        if (isSchoolSelect) {
           if (!axisAllowedForSpell(spell, axis)) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "spell_axis_not_allowed",
@@ -198,7 +212,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             return;
           }
           selectedSchoolByAxis[axis] = spellSchool;
-          selectedSchoolAtByAxis[axis] = now;
           eventBus.emit(EVT_VOICE_SCHOOL_SELECTED, {
             axis,
             school: spellSchool,
@@ -208,18 +221,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           return;
         }
 
-        const isClassSelect = spellIntent === "spell.class_select";
-        const isDirectSchoolClass =
-          spellIntent === "spell.school_shield"
-          || spellIntent === "spell.school_ray"
-          || spellIntent === "spell.school_aoe";
-
-        // In flat-spin mode, accept either:
-        // 1) school -> class progression, or
-        // 2) direct school+class spell tokens (e.g., "electrum sanctum").
-        if (!isClassSelect && !isDirectSchoolClass) {
+        // Strict tree inside flat-spin mode:
+        // only class-select is accepted after school-select.
+        if (!isClassSelect) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "flat_spin_requires_school_or_class",
+            reason: "flat_spin_requires_class_token",
             spellId,
             axis,
             atMs: now,
@@ -239,17 +245,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             });
             return;
           }
-          const selectedAt = Number(selectedSchoolAtByAxis[axis] || 0);
-          if (selectedAt > 0 && (now - selectedAt) < CLASS_SELECT_ARM_DELAY_MS) {
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "school_settle",
-              spellId,
-              classKey: spellClass,
-              axis,
-              atMs: now,
-            });
-            return;
-          }
           concreteSpell = resolveConcreteSpellForAxis(spell, axis);
           if (!concreteSpell || !concreteSpell.id) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
@@ -258,20 +253,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
               classKey: spellClass,
               school: selectedSchoolByAxis[axis],
               axis,
-              atMs: now,
-            });
-            return;
-          }
-        } else if (isDirectSchoolClass) {
-          const axisSchool = axis === "x" ? "fridgis" : axis === "y" ? "ignis" : axis === "z" ? "electrum" : "";
-          const tokenSchool = String(concreteSpell.school || "").toLowerCase();
-          if (axisSchool && tokenSchool && tokenSchool !== axisSchool) {
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "spell_school_not_allowed_for_axis",
-              spellId: String(concreteSpell.id || spellId),
-              axis,
-              school: tokenSchool,
-              requiredSchool: axisSchool,
               atMs: now,
             });
             return;
@@ -441,9 +422,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     selectedSchoolByAxis.x = "";
     selectedSchoolByAxis.y = "";
     selectedSchoolByAxis.z = "";
-    selectedSchoolAtByAxis.x = 0;
-    selectedSchoolAtByAxis.y = 0;
-    selectedSchoolAtByAxis.z = 0;
     for (const axis of AXES) {
       nextSlotIndexByAxis[axis] = 0;
       for (const slot of SLOT_ORDER) {
