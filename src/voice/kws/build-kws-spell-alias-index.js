@@ -26,9 +26,18 @@ export function buildKwsSpellAliasIndex(spells = SPELLS) {
   const byTokenCount = new Map();
   const all = [];
   const seen = new Set();
+  const EXCLUDED_KWS_INTENTS = new Set([
+    "spell.school_shield",
+    "spell.school_ray",
+    "spell.school_aoe",
+  ]);
 
   for (const spell of Array.isArray(spells) ? spells : []) {
     if (!spell || !spell.id) continue;
+    const intent = String(spell.intent || "").trim().toLowerCase();
+    // KWS should match atomic tokens (school/class/wake) and let dispatch resolve
+    // school+class combinations. This avoids noisy duplicate compound matches.
+    if (EXCLUDED_KWS_INTENTS.has(intent)) continue;
     const minConfidence = Number.isFinite(Number(spell.minConfidence))
       ? Number(spell.minConfidence)
       : 0.62;
@@ -55,4 +64,3 @@ export function buildKwsSpellAliasIndex(spells = SPELLS) {
 
   return { byTokenCount, all };
 }
-
