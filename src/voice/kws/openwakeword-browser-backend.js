@@ -153,6 +153,12 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let loadedModelCount = 0;
     let totalModelBytes = 0;
     let loadedModels = [];
+    let melModelUrlResolved = "";
+    let embeddingModelUrlResolved = "";
+    let melModelBytes = 0;
+    let embeddingModelBytes = 0;
+    let melModelBuffer = null;
+    let embeddingModelBuffer = null;
     let loadAbortController = null;
     let audioWorker = null;
     let audioContext = null;
@@ -239,6 +245,12 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       manifestLoadAtMs = 0;
       modelCount = 0;
       manifestUrlResolved = manifestUrl;
+      melModelUrlResolved = "";
+      embeddingModelUrlResolved = "";
+      melModelBytes = 0;
+      embeddingModelBytes = 0;
+      melModelBuffer = null;
+      embeddingModelBuffer = null;
       const t0 = nowMs();
 
       try {
@@ -280,6 +292,20 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
             threshold: m.threshold,
           });
         }
+
+        const melUrl = safeUrl(config.melModelUrl || "");
+        const embUrl = safeUrl(config.embeddingModelUrl || "");
+        if (!melUrl) throw new Error("oww_browser_mel_model_url_invalid");
+        if (!embUrl) throw new Error("oww_browser_embedding_model_url_invalid");
+        const melBlob = await fetchBuffer(melUrl, controller.signal);
+        const embBlob = await fetchBuffer(embUrl, controller.signal);
+        melModelUrlResolved = melUrl;
+        embeddingModelUrlResolved = embUrl;
+        melModelBytes = melBlob.bytes;
+        embeddingModelBytes = embBlob.bytes;
+        melModelBuffer = melBlob.buffer;
+        embeddingModelBuffer = embBlob.buffer;
+        totalModelBytes += melModelBytes + embeddingModelBytes;
 
         loadedModels = nextLoaded;
         modelAssetsLoaded = true;
@@ -641,6 +667,10 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           type: "init",
           ortModuleUrl: inferOrtModuleUrl,
           wasmRootUrl: inferWasmRootUrl || "",
+          melModelUrl: melModelUrlResolved || String(config.melModelUrl || ""),
+          embeddingModelUrl: embeddingModelUrlResolved || String(config.embeddingModelUrl || ""),
+          melModelBuffer,
+          embeddingModelBuffer,
           modelUrl: inferModelUrl,
           modelBuffer: chosen && chosen.modelBuffer ? chosen.modelBuffer : null,
           externalData,
@@ -899,6 +929,10 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         audioWorkerLastStatsAtMs,
         audioWorkerLastChunkAtMs,
         audioWorkerError,
+        melModelUrl: melModelUrlResolved || String(config.melModelUrl || ""),
+        embeddingModelUrl: embeddingModelUrlResolved || String(config.embeddingModelUrl || ""),
+        melModelBytes,
+        embeddingModelBytes,
         inferReady,
         inferLoading,
         inferError,

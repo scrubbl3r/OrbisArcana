@@ -28,6 +28,8 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   simulate: readBooleanParam("owwBrowserSim", false),
   simulationIntervalMs: 1400,
   manifestUrl: readStringParam("owwBrowserManifest", "./tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json"),
+  melModelUrl: readStringParam("owwBrowserMelModel", "./assets/kws/openwakeword-base-models/melspectrogram.onnx"),
+  embeddingModelUrl: readStringParam("owwBrowserEmbeddingModel", "./assets/kws/openwakeword-base-models/embedding_model.onnx"),
   requireOnnxDataPair: readBooleanParam("owwBrowserRequireOnnxData", true),
   ortModuleUrl: readStringParam("owwBrowserOrtModule", "./vendor/onnxruntime/1.22.0/ort.wasm.min.mjs"),
   ortWasmRootUrl: readStringParam("owwBrowserOrtWasmRoot", "./vendor/onnxruntime/1.22.0/"),

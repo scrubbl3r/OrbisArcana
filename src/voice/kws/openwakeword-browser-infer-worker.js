@@ -1,16 +1,37 @@
 let ortRef = null;
-let session = null;
-let inputName = "";
-let outputName = "";
+let melSession = null;
+let embeddingSession = null;
+let classifierSession = null;
+
+let melInputName = "";
+let melOutputName = "";
+let embeddingInputName = "";
+let embeddingOutputName = "";
+let classifierInputName = "";
+let classifierOutputName = "";
+
 let modelToken = "";
 let threshold = 0.85;
 let initialized = false;
+let processing = false;
+
 let framesSeen = 0;
 let inferences = 0;
 let lastScore = 0;
 let lastInferAtMs = 0;
 let inputShape = [];
 let lastError = "";
+let initStep = "";
+
+const PCM_WINDOW_SAMPLES = 12640; // yields mel output [1,1,76,32]
+const EMBEDDING_HISTORY = 16;
+const EMBEDDING_DIMS = 96;
+
+let pcmRing = new Float32Array(PCM_WINDOW_SAMPLES);
+let pcmWrite = 0;
+let pcmFilled = 0;
+const frameQueue = [];
+const embeddingQueue = [];
 
 function nowMs() {
   return Date.now();
@@ -21,6 +42,11 @@ function toFiniteNumber(v, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function setInitStep(step) {
+  initStep = String(step || "").trim().toLowerCase();
+  postMessage({ type: "init_progress", atMs: nowMs(), step: initStep });
+}
+
 async function loadOrtModule(url) {
   const mod = await import(String(url || ""));
   if (mod && mod.ort) return mod.ort;
@@ -28,54 +54,6 @@ async function loadOrtModule(url) {
   if (mod && mod.InferenceSession) return mod;
   if (typeof self !== "undefined" && self.ort && self.ort.InferenceSession) return self.ort;
   throw new Error("oww_browser_infer_ort_unavailable");
-}
-
-function resolveDims(dimensions, frameSize) {
-  const dims = Array.isArray(dimensions) ? dimensions.slice() : [1, 1, frameSize];
-  const out = [];
-  for (let i = 0; i < dims.length; i += 1) {
-    const d = dims[i];
-    if (typeof d === "number" && Number.isFinite(d) && d > 0) {
-      out.push(Math.floor(d));
-      continue;
-    }
-    if (i === dims.length - 1) {
-      out.push(frameSize);
-      continue;
-    }
-    out.push(1);
-  }
-  if (!out.length) return [1, 1, frameSize];
-  // openWakeWord exports typically expect rank-3 inputs; if metadata is missing
-  // or collapsed, promote to rank-3 fallback for compatibility.
-  if (out.length === 1) return [1, 1, Math.max(1, out[0] || frameSize)];
-  if (out.length === 2) return [Math.max(1, out[0] || 1), 1, Math.max(1, out[1] || frameSize)];
-  return out;
-}
-
-function product(arr) {
-  let p = 1;
-  for (const n of arr) p *= Math.max(1, Math.floor(Number(n) || 1));
-  return p;
-}
-
-function buildInputTensor(frameI16) {
-  const frame = frameI16 instanceof Int16Array ? frameI16 : new Int16Array(0);
-  const frameSize = frame.length || 1280;
-  const md = session && session.inputMetadata && inputName ? session.inputMetadata[inputName] : null;
-  const dims = resolveDims(md && md.dimensions, frameSize);
-  const expectedRank = Array.isArray(md && md.dimensions) ? md.dimensions.length : 0;
-  const finalDims = (expectedRank === 3 && dims.length !== 3)
-    ? [1, 1, Math.max(1, frameSize)]
-    : (dims.length === 3 ? dims : [1, 1, Math.max(1, frameSize)]);
-  const needed = product(finalDims);
-  const data = new Float32Array(needed);
-  const copyN = Math.min(needed, frame.length);
-  for (let i = 0; i < copyN; i += 1) {
-    data[i] = Math.max(-1, Math.min(1, frame[i] / 32768));
-  }
-  inputShape = finalDims;
-  return new ortRef.Tensor("float32", data, finalDims);
 }
 
 function extractScore(output) {
@@ -92,16 +70,148 @@ function extractScore(output) {
   return maxScore;
 }
 
+function extractEmbedding(output) {
+  if (!output || typeof output !== "object") return null;
+  const t = embeddingOutputName && output[embeddingOutputName] ? output[embeddingOutputName] : Object.values(output)[0];
+  const data = t && t.data ? t.data : null;
+  if (!data || data.length < EMBEDDING_DIMS) return null;
+  const out = new Float32Array(EMBEDDING_DIMS);
+  out.set(data.slice(0, EMBEDDING_DIMS));
+  return out;
+}
+
+function resetState() {
+  pcmRing = new Float32Array(PCM_WINDOW_SAMPLES);
+  pcmWrite = 0;
+  pcmFilled = 0;
+  frameQueue.length = 0;
+  embeddingQueue.length = 0;
+  framesSeen = 0;
+  inferences = 0;
+  lastScore = 0;
+  lastInferAtMs = 0;
+  inputShape = [];
+}
+
+function appendPcmFrame(frameI16) {
+  const frame = frameI16 instanceof Int16Array ? frameI16 : new Int16Array(0);
+  for (let i = 0; i < frame.length; i += 1) {
+    pcmRing[pcmWrite] = Math.max(-1, Math.min(1, frame[i] / 32768));
+    pcmWrite = (pcmWrite + 1) % PCM_WINDOW_SAMPLES;
+  }
+  pcmFilled = Math.min(PCM_WINDOW_SAMPLES, pcmFilled + frame.length);
+}
+
+function readPcmWindow() {
+  const out = new Float32Array(PCM_WINDOW_SAMPLES);
+  out.set(pcmRing.subarray(pcmWrite));
+  out.set(pcmRing.subarray(0, pcmWrite), PCM_WINDOW_SAMPLES - pcmWrite);
+  return out;
+}
+
+function enqueueFrame(frameI16) {
+  frameQueue.push(frameI16);
+  if (frameQueue.length > 4) frameQueue.shift(); // keep newest, drop backlog
+}
+
+async function runPipelineForFrame(frameI16) {
+  framesSeen += 1;
+  appendPcmFrame(frameI16);
+  if (pcmFilled < PCM_WINDOW_SAMPLES) return;
+
+  const t0 = nowMs();
+  const pcm = readPcmWindow();
+  const melInput = new ortRef.Tensor("float32", pcm, [1, PCM_WINDOW_SAMPLES]);
+  const melOut = await melSession.run({ [melInputName]: melInput });
+  const melTensor = melOut[melOutputName];
+  const melData = melTensor && melTensor.data ? melTensor.data : null;
+  const melDims = melTensor && melTensor.dims ? melTensor.dims : [];
+  if (!melData) {
+    throw new Error("oww_browser_infer_mel_output_missing");
+  }
+  if (melData.length !== (76 * 32)) {
+    throw new Error(`oww_browser_infer_mel_unexpected_shape:${String(melDims)};len=${melData.length}`);
+  }
+
+  const embInput = new ortRef.Tensor("float32", melData, [1, 76, 32, 1]);
+  const embOut = await embeddingSession.run({ [embeddingInputName]: embInput });
+  const embVec = extractEmbedding(embOut);
+  if (!embVec) {
+    throw new Error("oww_browser_infer_embedding_output_missing");
+  }
+  embeddingQueue.push(embVec);
+  if (embeddingQueue.length > EMBEDDING_HISTORY) embeddingQueue.shift();
+  if (embeddingQueue.length < EMBEDDING_HISTORY) return;
+
+  const clsData = new Float32Array(EMBEDDING_HISTORY * EMBEDDING_DIMS);
+  for (let i = 0; i < EMBEDDING_HISTORY; i += 1) {
+    clsData.set(embeddingQueue[i], i * EMBEDDING_DIMS);
+  }
+  inputShape = [1, EMBEDDING_HISTORY, EMBEDDING_DIMS];
+  const clsInput = new ortRef.Tensor("float32", clsData, inputShape);
+  let clsOut;
+  try {
+    clsOut = await classifierSession.run({ [classifierInputName]: clsInput });
+  } catch (err) {
+    const em = err && err.message ? String(err.message) : String(err || "unknown");
+    throw new Error(`oww_browser_infer_run_failed:${em};input=${classifierInputName};shape=[${inputShape.join(",")}]`);
+  }
+
+  inferences += 1;
+  lastInferAtMs = nowMs();
+  lastScore = extractScore(clsOut);
+  postMessage({
+    type: "infer_stats",
+    atMs: lastInferAtMs,
+    inferMs: Math.max(0, lastInferAtMs - t0),
+    framesSeen,
+    inferences,
+    lastScore,
+    inputShape,
+    initStep,
+  });
+
+  if (lastScore >= threshold && modelToken) {
+    postMessage({
+      type: "token_detected",
+      atMs: lastInferAtMs,
+      token: modelToken,
+      confidence: lastScore,
+    });
+  }
+}
+
+async function processQueue() {
+  if (processing || !initialized) return;
+  processing = true;
+  try {
+    while (frameQueue.length && initialized) {
+      const frame = frameQueue.shift();
+      await runPipelineForFrame(frame);
+    }
+  } finally {
+    processing = false;
+  }
+}
+
 async function onInit(msg) {
   const ortModuleUrl = String(msg && msg.ortModuleUrl || "").trim();
   const wasmRootUrl = String(msg && msg.wasmRootUrl || "").trim();
-  const modelUrl = String(msg && msg.modelUrl || "").trim();
-  const modelBuffer = msg && msg.modelBuffer instanceof ArrayBuffer ? msg.modelBuffer : null;
+  const melModelUrl = String(msg && msg.melModelUrl || "").trim();
+  const embeddingModelUrl = String(msg && msg.embeddingModelUrl || "").trim();
+  const classifierModelUrl = String(msg && msg.modelUrl || "").trim();
+  const melModelBuffer = msg && msg.melModelBuffer instanceof ArrayBuffer ? msg.melModelBuffer : null;
+  const embeddingModelBuffer = msg && msg.embeddingModelBuffer instanceof ArrayBuffer ? msg.embeddingModelBuffer : null;
+  const classifierModelBuffer = msg && msg.modelBuffer instanceof ArrayBuffer ? msg.modelBuffer : null;
   const externalData = Array.isArray(msg && msg.externalData) ? msg.externalData : [];
   modelToken = String(msg && msg.token || "").trim().toLowerCase();
   threshold = toFiniteNumber(msg && msg.threshold, 0.85);
+
   if (!ortModuleUrl) throw new Error("oww_browser_infer_missing_ort_module_url");
-  if (!modelUrl && !modelBuffer) throw new Error("oww_browser_infer_missing_model_source");
+  if (!melModelUrl && !melModelBuffer) throw new Error("oww_browser_infer_missing_mel_model");
+  if (!embeddingModelUrl && !embeddingModelBuffer) throw new Error("oww_browser_infer_missing_embedding_model");
+  if (!classifierModelUrl && !classifierModelBuffer) throw new Error("oww_browser_infer_missing_classifier_model");
+
   ortRef = await loadOrtModule(ortModuleUrl);
   if (ortRef && ortRef.env && ortRef.env.wasm) {
     ortRef.env.wasm.numThreads = 1;
@@ -111,65 +221,52 @@ async function onInit(msg) {
       ortRef.env.wasm.wasmPaths = root;
     }
   }
-  postMessage({ type: "init_progress", atMs: nowMs(), step: "ort_loaded" });
-  try {
-    session = await ortRef.InferenceSession.create(modelBuffer || modelUrl, {
-      executionProviders: ["wasm"],
-      graphOptimizationLevel: "all",
-      ...(externalData.length ? { externalData } : {}),
-    });
-  } catch (err) {
-    const e = err && err.message ? String(err.message) : String(err || "unknown");
-    throw new Error(`oww_browser_infer_session_create_failed:${e};model=${modelUrl};wasmRoot=${wasmRootUrl || "auto"};externalData=${externalData.length}`);
+  setInitStep("ort_loaded");
+
+  melSession = await ortRef.InferenceSession.create(melModelBuffer || melModelUrl, {
+    executionProviders: ["wasm"],
+    graphOptimizationLevel: "all",
+  });
+  melInputName = String((melSession.inputNames && melSession.inputNames[0]) || "");
+  melOutputName = String((melSession.outputNames && melSession.outputNames[0]) || "");
+  setInitStep("mel_ready");
+
+  embeddingSession = await ortRef.InferenceSession.create(embeddingModelBuffer || embeddingModelUrl, {
+    executionProviders: ["wasm"],
+    graphOptimizationLevel: "all",
+  });
+  embeddingInputName = String((embeddingSession.inputNames && embeddingSession.inputNames[0]) || "");
+  embeddingOutputName = String((embeddingSession.outputNames && embeddingSession.outputNames[0]) || "");
+  setInitStep("embedding_ready");
+
+  classifierSession = await ortRef.InferenceSession.create(classifierModelBuffer || classifierModelUrl, {
+    executionProviders: ["wasm"],
+    graphOptimizationLevel: "all",
+    ...(externalData.length ? { externalData } : {}),
+  });
+  classifierInputName = String((classifierSession.inputNames && classifierSession.inputNames[0]) || "");
+  classifierOutputName = String((classifierSession.outputNames && classifierSession.outputNames[0]) || "");
+  setInitStep("classifier_ready");
+
+  if (!melInputName || !melOutputName || !embeddingInputName || !embeddingOutputName || !classifierInputName) {
+    throw new Error("oww_browser_infer_missing_model_io_name");
   }
-  postMessage({ type: "init_progress", atMs: nowMs(), step: "session_created" });
-  inputName = session && Array.isArray(session.inputNames) ? String(session.inputNames[0] || "") : "";
-  outputName = session && Array.isArray(session.outputNames) ? String(session.outputNames[0] || "") : "";
-  if (!inputName) throw new Error("oww_browser_infer_missing_input_name");
+
+  resetState();
   initialized = true;
+  setInitStep("ready");
   postMessage({
     type: "ready",
     atMs: nowMs(),
     token: modelToken,
-    inputName,
-    outputName,
+    melInputName,
+    melOutputName,
+    embeddingInputName,
+    embeddingOutputName,
+    classifierInputName,
+    classifierOutputName,
     wasmRootUrl,
   });
-}
-
-async function onFrame(msg) {
-  if (!initialized || !session || !ortRef) return;
-  const frame = msg && msg.frame instanceof ArrayBuffer ? new Int16Array(msg.frame) : new Int16Array(0);
-  framesSeen += 1;
-  const t0 = nowMs();
-  const tensor = buildInputTensor(frame);
-  let output;
-  try {
-    output = await session.run({ [inputName]: tensor });
-  } catch (err) {
-    const em = err && err.message ? String(err.message) : String(err || "unknown");
-    throw new Error(`oww_browser_infer_run_failed:${em};input=${inputName};shape=[${inputShape.join(",")}]`);
-  }
-  inferences += 1;
-  lastInferAtMs = nowMs();
-  lastScore = extractScore(output);
-  postMessage({
-    type: "infer_stats",
-    atMs: lastInferAtMs,
-    inferMs: Math.max(0, lastInferAtMs - t0),
-    framesSeen,
-    inferences,
-    lastScore,
-    inputShape,
-  });
-  if (lastScore >= threshold && modelToken) {
-    postMessage({
-      type: "token_detected",
-      atMs: lastInferAtMs,
-      token: modelToken,
-      confidence: lastScore,
-    });
-  }
 }
 
 function reportError(err) {
@@ -190,15 +287,29 @@ self.onmessage = (ev) => {
     return;
   }
   if (type === "frame") {
-    onFrame(msg).catch(reportError);
+    const frame = msg && msg.frame instanceof ArrayBuffer ? new Int16Array(msg.frame) : null;
+    if (frame && frame.length) {
+      enqueueFrame(frame);
+      void processQueue().catch(reportError);
+    }
     return;
   }
   if (type === "stop") {
     initialized = false;
-    session = null;
+    processing = false;
+    frameQueue.length = 0;
+    embeddingQueue.length = 0;
+    melSession = null;
+    embeddingSession = null;
+    classifierSession = null;
     ortRef = null;
-    inputName = "";
-    outputName = "";
+    melInputName = "";
+    melOutputName = "";
+    embeddingInputName = "";
+    embeddingOutputName = "";
+    classifierInputName = "";
+    classifierOutputName = "";
+    initStep = "";
     return;
   }
 };
