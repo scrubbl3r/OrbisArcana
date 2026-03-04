@@ -149,6 +149,18 @@ self.onmessage = (ev) => {
       postMessage({ type: "frame_count", atMs: nowMs(), queueDepth: state.frameQueue.length });
       return;
     }
+    if (type === "pull_frame") {
+      const next = state.frameQueue.length ? state.frameQueue.shift() : null;
+      if (!next) {
+        postMessage({ type: "frame", atMs: nowMs(), queueDepth: state.frameQueue.length, hasFrame: false });
+        return;
+      }
+      postMessage(
+        { type: "frame", atMs: nowMs(), queueDepth: state.frameQueue.length, hasFrame: true, frame: next.buffer },
+        [next.buffer]
+      );
+      return;
+    }
     if (type === "stop") {
       state.configured = false;
       stopStatsTimer();

@@ -1260,6 +1260,15 @@
           parts.push(`q:${q}`);
           if (d > 0) parts.push(`drop:${d}`);
         }
+        if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "inferInferences")) {
+          const inf = Number(backendStatus.inferInferences) || 0;
+          const score = Number(backendStatus.inferLastScore);
+          const infReady = !!backendStatus.inferReady;
+          parts.push(`inf:${infReady ? "on" : "off"}/${inf}`);
+          if (Number.isFinite(score) && inf > 0) {
+            parts.push(`scr:${score.toFixed(3)}`);
+          }
+        }
         if (backendStatus && backendStatus.lastError) {
           const errText = String(backendStatus.lastError);
           parts.push(`err:${errText.slice(0, 40)}`);

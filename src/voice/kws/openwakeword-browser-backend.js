@@ -102,6 +102,14 @@ function buildWorkerUrl() {
   }
 }
 
+function buildInferWorkerUrl() {
+  try {
+    return new URL("./openwakeword-browser-infer-worker.js", import.meta.url);
+  } catch {
+    return null;
+  }
+}
+
 export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
   const config = {
     ...OPENWAKEWORD_BROWSER_CONFIG_DEFAULT,
@@ -154,6 +162,24 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let audioInputSampleRate = 0;
     let audioResumeTimer = null;
     let audioResumeHandlersBound = false;
+    let inferWorker = null;
+    let inferReady = false;
+    let inferLoading = false;
+    let inferError = "";
+    let inferModelUrl = "";
+    let inferToken = "";
+    let inferThreshold = normalizeThreshold(config.inferThreshold, 0.85);
+    let inferPollMs = Math.max(16, Number(config.inferPollMs) || 33);
+    let inferCooldownMs = Math.max(0, Number(config.inferCooldownMs) || 600);
+    let inferLastScore = 0;
+    let inferLastMs = 0;
+    let inferLastInferMs = 0;
+    let inferFramesSent = 0;
+    let inferInferences = 0;
+    let inferInputShape = [];
+    let inferPumpTimer = null;
+    let inferFramePullInFlight = false;
+    let inferLastEmitAtMs = 0;
 
     function emitError(message) {
       lastError = String(message || "oww_browser_error");
@@ -267,6 +293,19 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       audioWorker = null;
     }
 
+    function clearInferPumpTimer() {
+      if (!inferPumpTimer) return;
+      clearInterval(inferPumpTimer);
+      inferPumpTimer = null;
+    }
+
+    function terminateInferWorker() {
+      if (!inferWorker) return;
+      try { inferWorker.postMessage({ type: "stop" }); } catch {}
+      try { inferWorker.terminate(); } catch {}
+      inferWorker = null;
+    }
+
     function clearAudioResumeTimer() {
       if (!audioResumeTimer) return;
       clearInterval(audioResumeTimer);
@@ -335,6 +374,138 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       return true;
     }
 
+    function pickInferModel() {
+      const desired = String(config.inferToken || "").trim().toLowerCase();
+      const byToken = loadedModels.find((m) => String(m && m.token || "").toLowerCase() === desired);
+      if (byToken) return byToken;
+      const byLabel = loadedModels.find((m) => String(m && m.label || "").toLowerCase() === desired);
+      if (byLabel) return byLabel;
+      return loadedModels[0] || null;
+    }
+
+    async function stopInferPipeline() {
+      clearInferPumpTimer();
+      inferFramePullInFlight = false;
+      terminateInferWorker();
+      inferReady = false;
+      inferLoading = false;
+      inferModelUrl = "";
+      inferToken = "";
+      inferLastScore = 0;
+      inferLastMs = 0;
+      inferLastInferMs = 0;
+      inferFramesSent = 0;
+      inferInferences = 0;
+      inferInputShape = [];
+      return true;
+    }
+
+    function startInferPump() {
+      clearInferPumpTimer();
+      inferFramePullInFlight = false;
+      inferPumpTimer = setInterval(() => {
+        if (!started || !running) return;
+        if (!audioWorker || !audioPipelineReady) return;
+        if (!inferWorker || !inferReady) return;
+        if (inferFramePullInFlight) return;
+        inferFramePullInFlight = true;
+        try {
+          audioWorker.postMessage({ type: "pull_frame" });
+        } catch {
+          inferFramePullInFlight = false;
+        }
+      }, inferPollMs);
+    }
+
+    async function startInferPipeline() {
+      if (simulated) return true;
+      if (inferWorker && inferReady) return true;
+      if (typeof Worker !== "function") {
+        throw new Error("oww_browser_infer_worker_unavailable");
+      }
+      const chosen = pickInferModel();
+      if (!chosen || !chosen.modelUrl) {
+        throw new Error("oww_browser_infer_model_missing");
+      }
+      const inferWorkerUrl = buildInferWorkerUrl();
+      if (!inferWorkerUrl) {
+        throw new Error("oww_browser_infer_worker_url_invalid");
+      }
+      await stopInferPipeline();
+      inferLoading = true;
+      inferError = "";
+      inferModelUrl = String(chosen.modelUrl || "");
+      inferToken = normalizeToken(chosen.token || chosen.label || config.inferToken || "", tokenMap);
+
+      const worker = new Worker(inferWorkerUrl, { type: "module" });
+      inferWorker = worker;
+
+      worker.addEventListener("message", (ev) => {
+        const msg = ev && ev.data ? ev.data : {};
+        const type = String(msg.type || "");
+        if (type === "ready") {
+          inferReady = true;
+          inferLoading = false;
+          return;
+        }
+        if (type === "infer_stats") {
+          inferLastMs = Number(msg.atMs) || nowMs();
+          inferLastInferMs = Number(msg.inferMs) || 0;
+          inferInferences = Number(msg.inferences) || inferInferences;
+          inferLastScore = Number(msg.lastScore) || 0;
+          inferInputShape = Array.isArray(msg.inputShape) ? msg.inputShape.slice() : [];
+          return;
+        }
+        if (type === "token_detected") {
+          const token = normalizeToken(msg.token || inferToken, tokenMap);
+          const atMs = Number(msg.atMs) || nowMs();
+          const confidence = Number(msg.confidence);
+          if (!token) return;
+          if ((atMs - inferLastEmitAtMs) < inferCooldownMs) return;
+          inferLastEmitAtMs = atMs;
+          emitToken(token, Number.isFinite(confidence) ? confidence : 0.9);
+          return;
+        }
+        if (type === "error") {
+          inferError = String(msg.message || "oww_browser_infer_worker_error");
+          inferLoading = false;
+          inferReady = false;
+          emitError(inferError);
+        }
+      });
+
+      let readyResolved = false;
+      await new Promise((resolve, reject) => {
+        const t = setTimeout(() => {
+          if (readyResolved) return;
+          readyResolved = true;
+          reject(new Error("oww_browser_infer_ready_timeout"));
+        }, 12000);
+        const onMessage = (ev) => {
+          const msg = ev && ev.data ? ev.data : {};
+          if (String(msg.type || "") !== "ready") return;
+          if (readyResolved) return;
+          readyResolved = true;
+          clearTimeout(t);
+          worker.removeEventListener("message", onMessage);
+          resolve(true);
+        };
+        worker.addEventListener("message", onMessage);
+        worker.postMessage({
+          type: "init",
+          ortModuleUrl: String(config.ortModuleUrl || ""),
+          modelUrl: inferModelUrl,
+          token: inferToken || "ignis",
+          threshold: inferThreshold,
+        });
+      });
+
+      inferReady = true;
+      inferLoading = false;
+      startInferPump();
+      return true;
+    }
+
     async function startAudioPipeline() {
       if (audioPipelineReady && audioWorker && audioContext) return true;
       if (!stream || typeof stream.getTracks !== "function") {
@@ -374,6 +545,20 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           audioWorkerFramesDropped = Number(msg.framesDropped) || 0;
           audioWorkerLastChunkAtMs = Number(msg.lastChunkAtMs) || 0;
           audioWorkerConfigured = !!msg.configured;
+          return;
+        }
+        if (type === "frame") {
+          inferFramePullInFlight = false;
+          audioWorkerQueueDepth = Number(msg.queueDepth) || 0;
+          if (!msg.hasFrame) return;
+          if (!inferWorker || !inferReady) return;
+          try {
+            inferFramesSent += 1;
+            inferWorker.postMessage({ type: "frame", frame: msg.frame }, [msg.frame]);
+          } catch (err) {
+            inferError = err && err.message ? String(err.message) : "oww_browser_infer_frame_post_failed";
+            emitError(inferError);
+          }
           return;
         }
         if (type === "error") {
@@ -479,6 +664,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       try {
         await loadManifestAndAssets();
         await startAudioPipeline();
+        await startInferPipeline();
         running = true;
         connected = true;
         return true;
@@ -496,6 +682,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       connected = false;
       clearSimulationTimer();
       abortLoading();
+      await stopInferPipeline();
       await stopAudioPipeline();
       return true;
     }
@@ -553,6 +740,20 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         audioWorkerLastStatsAtMs,
         audioWorkerLastChunkAtMs,
         audioWorkerError,
+        inferReady,
+        inferLoading,
+        inferError,
+        inferModelUrl,
+        inferToken,
+        inferThreshold,
+        inferPollMs,
+        inferCooldownMs,
+        inferFramesSent,
+        inferInferences,
+        inferLastScore,
+        inferLastMs,
+        inferLastInferMs,
+        inferInputShape,
       };
     }
 
