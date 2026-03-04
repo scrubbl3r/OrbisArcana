@@ -110,6 +110,18 @@ function buildInferWorkerUrl() {
   }
 }
 
+function basenameFromUrl(raw) {
+  try {
+    const u = new URL(String(raw || ""));
+    const p = String(u.pathname || "");
+    return p.split("/").filter(Boolean).pop() || "";
+  } catch {
+    const s = String(raw || "");
+    const parts = s.split(/[\\/]/g).filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : "";
+  }
+}
+
 export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
   const config = {
     ...OPENWAKEWORD_BROWSER_CONFIG_DEFAULT,
@@ -240,11 +252,13 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
           let dataUrl = "";
           let dataBytes = 0;
+          let dataBuffer = null;
           if (/\.onnx$/i.test(m.url)) {
             dataUrl = `${m.url}.data`;
             if (requireOnnxDataPair) {
               const dataBlob = await fetchBuffer(dataUrl, controller.signal);
               dataBytes = dataBlob.bytes;
+              dataBuffer = dataBlob.buffer;
               totalModelBytes += dataBytes;
             }
           }
@@ -254,6 +268,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
             dataUrl,
             modelBytes: modelBlob.bytes,
             dataBytes,
+            modelBuffer: modelBlob.buffer,
+            dataBuffer,
             label: m.label || "",
             token: m.token || "",
             threshold: m.threshold,
@@ -458,6 +474,21 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       const worker = new Worker(inferWorkerUrl, { type: "module" });
       inferWorker = worker;
 
+      const externalData = [];
+      if (chosen && chosen.dataBuffer) {
+        const names = new Set();
+        const base = basenameFromUrl(chosen.dataUrl || `${chosen.modelUrl}.data`);
+        if (base) {
+          names.add(base);
+          names.add(`"${base}"`);
+          names.add(`'${base}'`);
+        }
+        if (chosen.dataUrl) names.add(String(chosen.dataUrl));
+        for (const p of names) {
+          externalData.push({ path: p, data: chosen.dataBuffer });
+        }
+      }
+
       worker.addEventListener("message", (ev) => {
         const msg = ev && ev.data ? ev.data : {};
         const type = String(msg.type || "");
@@ -563,6 +594,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           ortModuleUrl: inferOrtModuleUrl,
           wasmRootUrl: inferWasmRootUrl || "",
           modelUrl: inferModelUrl,
+          modelBuffer: chosen && chosen.modelBuffer ? chosen.modelBuffer : null,
+          externalData,
           token: inferToken || "ignis",
           threshold: inferThreshold,
         });
@@ -792,7 +825,15 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         totalModelBytes,
         modelLoadDurationMs,
         manifestLoadAtMs,
-        loadedModels,
+        loadedModels: loadedModels.map((m) => ({
+          modelUrl: m.modelUrl,
+          dataUrl: m.dataUrl,
+          modelBytes: m.modelBytes,
+          dataBytes: m.dataBytes,
+          label: m.label,
+          token: m.token,
+          threshold: m.threshold,
+        })),
         audioPipelineReady,
         audioContextState: audioContext ? String(audioContext.state || "") : "",
         audioStartAtMs,

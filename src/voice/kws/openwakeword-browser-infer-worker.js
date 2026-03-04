@@ -87,10 +87,12 @@ async function onInit(msg) {
   const ortModuleUrl = String(msg && msg.ortModuleUrl || "").trim();
   const wasmRootUrl = String(msg && msg.wasmRootUrl || "").trim();
   const modelUrl = String(msg && msg.modelUrl || "").trim();
+  const modelBuffer = msg && msg.modelBuffer instanceof ArrayBuffer ? msg.modelBuffer : null;
+  const externalData = Array.isArray(msg && msg.externalData) ? msg.externalData : [];
   modelToken = String(msg && msg.token || "").trim().toLowerCase();
   threshold = toFiniteNumber(msg && msg.threshold, 0.85);
   if (!ortModuleUrl) throw new Error("oww_browser_infer_missing_ort_module_url");
-  if (!modelUrl) throw new Error("oww_browser_infer_missing_model_url");
+  if (!modelUrl && !modelBuffer) throw new Error("oww_browser_infer_missing_model_source");
   ortRef = await loadOrtModule(ortModuleUrl);
   if (ortRef && ortRef.env && ortRef.env.wasm) {
     ortRef.env.wasm.numThreads = 1;
@@ -102,13 +104,14 @@ async function onInit(msg) {
   }
   postMessage({ type: "init_progress", atMs: nowMs(), step: "ort_loaded" });
   try {
-    session = await ortRef.InferenceSession.create(modelUrl, {
+    session = await ortRef.InferenceSession.create(modelBuffer || modelUrl, {
       executionProviders: ["wasm"],
       graphOptimizationLevel: "all",
+      ...(externalData.length ? { externalData } : {}),
     });
   } catch (err) {
     const e = err && err.message ? String(err.message) : String(err || "unknown");
-    throw new Error(`oww_browser_infer_session_create_failed:${e};model=${modelUrl};wasmRoot=${wasmRootUrl || "auto"}`);
+    throw new Error(`oww_browser_infer_session_create_failed:${e};model=${modelUrl};wasmRoot=${wasmRootUrl || "auto"};externalData=${externalData.length}`);
   }
   postMessage({ type: "init_progress", atMs: nowMs(), step: "session_created" });
   inputName = session && Array.isArray(session.inputNames) ? String(session.inputNames[0] || "") : "";
