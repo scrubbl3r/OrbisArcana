@@ -249,7 +249,8 @@
       display:block;
       margin-top:2px;
       font-size:11px;
-      opacity:.68;
+      color: var(--g);
+      opacity:.95;
     }
 
     .over{ color: var(--over) !important; }

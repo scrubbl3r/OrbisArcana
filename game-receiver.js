@@ -1055,12 +1055,12 @@
       try {
         const params = new URLSearchParams(String(window.location.search || ""));
         const fromUrl = String(params.get("kwsBackend") || "").trim().toLowerCase();
-        if (!fromUrl) return "openwakeword_sidecar";
+        if (!fromUrl) return "openwakeword_browser";
         if (fromUrl === "porcupine_local" || fromUrl === "openwakeword_sidecar" || fromUrl === "openwakeword_browser") {
           return fromUrl;
         }
       } catch {}
-      return "openwakeword_sidecar";
+      return "openwakeword_browser";
     }
 
     const DEFAULT_VOICE_ENGINE = "kws";

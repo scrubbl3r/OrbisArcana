@@ -138,7 +138,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let audioContext = null;
     let sourceNode = null;
     let processorNode = null;
-    let muteGainNode = null;
     let audioPipelineReady = false;
     let audioStartAtMs = 0;
     let audioTargetSampleRate = 16000;
@@ -322,12 +321,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       if (sourceNode) {
         try { sourceNode.disconnect(); } catch {}
       }
-      if (muteGainNode) {
-        try { muteGainNode.disconnect(); } catch {}
-      }
       processorNode = null;
       sourceNode = null;
-      muteGainNode = null;
 
       if (audioContext) {
         try { await audioContext.close(); } catch {}
@@ -428,14 +423,16 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
       sourceNode = ctx.createMediaStreamSource(stream);
       processorNode = ctx.createScriptProcessor(4096, 1, 1);
-      muteGainNode = ctx.createGain();
-      muteGainNode.gain.value = 0;
 
       processorNode.onaudioprocess = (ev) => {
         if (!audioWorker) return;
         try {
           const ch0 = ev.inputBuffer.getChannelData(0);
           if (!ch0 || !ch0.length) return;
+          const out0 = ev.outputBuffer && ev.outputBuffer.numberOfChannels > 0
+            ? ev.outputBuffer.getChannelData(0)
+            : null;
+          if (out0 && out0.length) out0.fill(0);
           const copy = new Float32Array(ch0.length);
           copy.set(ch0);
           audioChunksSent += 1;
@@ -447,8 +444,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       };
 
       sourceNode.connect(processorNode);
-      processorNode.connect(muteGainNode);
-      muteGainNode.connect(ctx.destination);
+      processorNode.connect(ctx.destination);
 
       if (ctx.state !== "running") {
         try { await ctx.resume(); } catch {}
