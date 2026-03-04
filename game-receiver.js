@@ -1051,8 +1051,20 @@
       els.dirReadout.textContent = "—";
     }
 
+    function resolveDefaultKwsBackendKey() {
+      try {
+        const params = new URLSearchParams(String(window.location.search || ""));
+        const fromUrl = String(params.get("kwsBackend") || "").trim().toLowerCase();
+        if (!fromUrl) return "openwakeword_sidecar";
+        if (fromUrl === "porcupine_local" || fromUrl === "openwakeword_sidecar" || fromUrl === "openwakeword_browser") {
+          return fromUrl;
+        }
+      } catch {}
+      return "openwakeword_sidecar";
+    }
+
     const DEFAULT_VOICE_ENGINE = "kws";
-    const DEFAULT_KWS_BACKEND_KEY = "openwakeword_sidecar";
+    const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     const KWS_ROW_TOP = ["orbis", "domus", "ignis", "fridgis", "electrum"];
     const KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
@@ -1905,6 +1917,7 @@
           createSttProvider,
           createKwsProvider,
           createOpenWakeWordSidecarBackendFactory,
+          createOpenWakeWordBrowserBackendFactory,
           createSpellDispatchSystem,
           createVoiceHudSystem,
           WORLD_ITEMS_V1,
@@ -2066,6 +2079,10 @@
             (typeof createOpenWakeWordSidecarBackendFactory === "function")
               ? createOpenWakeWordSidecarBackendFactory()
               : null;
+          const openWakeWordBrowserBackendFactory =
+            (typeof createOpenWakeWordBrowserBackendFactory === "function")
+              ? createOpenWakeWordBrowserBackendFactory()
+              : null;
           kwsBackendFactories = {
             porcupine_local: {
               factory: porcupineBackendFactory,
@@ -2076,6 +2093,11 @@
               factory: openWakeWordSidecarBackendFactory,
               requiresMic: false,
               label: "openwakeword-sidecar",
+            },
+            openwakeword_browser: {
+              factory: openWakeWordBrowserBackendFactory,
+              requiresMic: true,
+              label: "openwakeword-browser",
             },
           };
           kwsBackendKey = (els.kwsBackendSelect && els.kwsBackendSelect.value)
