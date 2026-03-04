@@ -15,12 +15,20 @@ function readBooleanParam(name, fallback = false) {
   return !!fallback;
 }
 
+function readStringParam(name, fallback = "") {
+  const params = readUrlParams();
+  const raw = String(params && params.get(name) || "").trim();
+  return raw || String(fallback || "");
+}
+
 export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   enabled: true,
   label: "openwakeword-browser",
   // Slice 1 only: optional simulated token emit loop for backend contract testing.
   simulate: readBooleanParam("owwBrowserSim", false),
   simulationIntervalMs: 1400,
+  manifestUrl: readStringParam("owwBrowserManifest", "./tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json"),
+  requireOnnxDataPair: readBooleanParam("owwBrowserRequireOnnxData", true),
   tokenMap: Object.freeze({
     ingis: "ignis",
     igins: "ignis",
