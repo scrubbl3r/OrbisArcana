@@ -1229,7 +1229,7 @@
       if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
         const s = kwsVoiceProvider.getStatus();
         if (s && s.micError) {
-          parts.push(`micerr:${String(s.micError).slice(0, 40)}`);
+          parts.push(`micerr:${String(s.micError).slice(0, 220)}`);
         }
         const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
         const sidecarStatus = backendStatus && backendStatus.lastStatusMsg ? backendStatus.lastStatusMsg : null;
