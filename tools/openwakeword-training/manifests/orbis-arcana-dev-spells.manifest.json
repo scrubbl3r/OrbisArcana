@@ -13,7 +13,7 @@
     {
       "path": "../../../assets/kws/openwakeword-models/tempus.onnx",
       "label": "tempus",
-      "token": "ignis"
+      "token": "tempus"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/fridgis.onnx",

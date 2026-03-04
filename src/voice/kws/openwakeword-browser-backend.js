@@ -1,6 +1,6 @@
 import { OPENWAKEWORD_BROWSER_CONFIG_DEFAULT } from "./openwakeword-browser-config.js";
 
-const SIM_TOKENS = Object.freeze(["ignis", "rota", "electrum", "sanctum", "domus"]);
+const SIM_TOKENS = Object.freeze(["tempus", "rota", "electrum", "sanctum", "domus"]);
 
 function nowMs() {
   return (typeof performance !== "undefined" && typeof performance.now === "function")
@@ -596,7 +596,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           modelUrl: inferModelUrl,
           modelBuffer: chosen && chosen.modelBuffer ? chosen.modelBuffer : null,
           externalData,
-          token: inferToken || "ignis",
+          token: inferToken || "tempus",
           threshold: inferThreshold,
         });
       });

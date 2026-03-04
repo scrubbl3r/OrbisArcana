@@ -52,10 +52,10 @@ export const OPENWAKEWORD_SIDECAR_CONFIG_DEFAULT = Object.freeze({
   // Optional token label normalization if the sidecar emits labels that differ from parser tokens.
   tokenMap: Object.freeze({
     // Canonicalize likely custom-model label variants.
-    ingis: "ignis",
-    igins: "ignis",
-    ignuss: "ignis",
-    ignus: "ignis",
+    ingis: "tempus",
+    igins: "tempus",
+    ignuss: "tempus",
+    ignus: "tempus",
     firdgis: "fridgis",
   }),
 });

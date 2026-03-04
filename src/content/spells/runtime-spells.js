@@ -12,8 +12,8 @@ export const RUNTIME_SPELLS = Object.freeze([
     castActionId: "domus_teleport",
   },
   {
-    id: "ignis_sanctum",
-    school: "ignis",
+    id: "tempus_sanctum",
+    school: "tempus",
     classKey: "sanctum",
     slot: "UD",
     intent: "spell.school_shield",
@@ -39,8 +39,8 @@ export const RUNTIME_SPELLS = Object.freeze([
     castActionId: "sanctum_shield",
   },
   {
-    id: "ignis_rota",
-    school: "ignis",
+    id: "tempus_rota",
+    school: "tempus",
     classKey: "rota",
     slot: "FB",
     intent: "spell.school_aoe",

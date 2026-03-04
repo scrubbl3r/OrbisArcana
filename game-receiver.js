@@ -1066,17 +1066,17 @@
     const DEFAULT_VOICE_ENGINE = "kws";
     const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
-    const KWS_ROW_TOP = ["orbis", "domus", "ignis", "fridgis", "electrum"];
+    const KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
     const KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
     const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
-    const KWS_LOG_TOKENS = new Set(["orbis", "domus", "ignis", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
-    const TEMP_UNGATED_KWS_TOKENS = new Set(["orbis", "domus", "ignis", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
+    const KWS_LOG_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
+    const TEMP_UNGATED_KWS_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
     const KWS_TOKEN_CANONICAL_MAP = Object.freeze({
-      ingis: "ignis",
-      ingnis: "ignis",
-      igins: "ignis",
-      ignuss: "ignis",
-      ignus: "ignis",
+      ingis: "tempus",
+      ingnis: "tempus",
+      igins: "tempus",
+      ignuss: "tempus",
+      ignus: "tempus",
       firdgis: "fridgis",
     });
     const kwsDebugState = {
@@ -1114,7 +1114,7 @@
     function expectedSchoolForAxis(axis) {
       const a = String(axis || "").trim().toLowerCase();
       if (a === "x") return "fridgis";
-      if (a === "y") return "ignis";
+      if (a === "y") return "tempus";
       if (a === "z") return "electrum";
       return "";
     }
@@ -1127,7 +1127,7 @@
       const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
       if (!(axis === "x" || axis === "y" || axis === "z")) return false;
       const selectedSchool = String(kwsTokenUiState.selectedSchoolByAxis[axis] || "").toLowerCase();
-      return selectedSchool === "ignis" || selectedSchool === "fridgis" || selectedSchool === "electrum";
+      return selectedSchool === "tempus" || selectedSchool === "fridgis" || selectedSchool === "electrum";
     }
     function shouldLogHeardWakeword(rawToken) {
       const token = canonicalKwsToken(rawToken);
@@ -1137,7 +1137,7 @@
       if (token === "domus") {
         return Date.now() < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
       }
-      if (token === "ignis" || token === "fridgis" || token === "electrum") {
+      if (token === "tempus" || token === "fridgis" || token === "electrum") {
         const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
         return !!axis && token === expectedSchoolForAxis(axis);
       }
@@ -1177,7 +1177,7 @@
     function tokenChipHtml(token, lit, flash) {
       const cls = `kwsTokenChip${lit ? " on" : ""}${flash ? " flash" : ""}`;
       const t = String(token || "");
-      const label = (t === "ignis") ? "tempus" : t;
+      const label = (t === "tempus") ? "tempus" : t;
       return `<span class="${cls}">${label}</span>`;
     }
     function openKwsWakeHudGate(timeoutMs = DEFAULT_KWS_GATE_TIMEOUT_MS) {
@@ -1215,7 +1215,7 @@
         let lit = false;
         if (token === "orbis") lit = orbisOpen;
         else if (token === "domus") lit = orbisOpen;
-        else if (token === "ignis" || token === "fridgis" || token === "electrum") lit = (token === expectedSchool);
+        else if (token === "tempus" || token === "fridgis" || token === "electrum") lit = (token === expectedSchool);
         const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
         return tokenChipHtml(token, lit, flash);
       }).join(" ");
@@ -1393,7 +1393,7 @@
         }
       });
     }
-    if (els.kwsTokIgnisBtn) els.kwsTokIgnisBtn.addEventListener("click", () => sendKwsDebugToken("ignis"));
+    if (els.kwsTokIgnisBtn) els.kwsTokIgnisBtn.addEventListener("click", () => sendKwsDebugToken("tempus"));
     if (els.kwsTokRotaBtn) els.kwsTokRotaBtn.addEventListener("click", () => sendKwsDebugToken("rota"));
     if (els.kwsTokElectrumBtn) els.kwsTokElectrumBtn.addEventListener("click", () => sendKwsDebugToken("electrum"));
     async function toggleKwsMicFromUi(){
@@ -2033,7 +2033,7 @@
           if (TEMP_UNGATED_KWS_TOKENS.has(token)) {
             flashKwsToken(token);
           }
-          if (token === "orbis" || token === "domus" || token === "electrum" || token === "ignis" || token === "fridgis") {
+          if (token === "orbis" || token === "domus" || token === "electrum" || token === "tempus" || token === "fridgis") {
             flashKwsToken(token);
           }
           if (isClassWindowActive() && (token === "rota" || token === "sanctum" || token === "vectus")) {

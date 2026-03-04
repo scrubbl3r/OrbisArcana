@@ -26,7 +26,7 @@
 /** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */
 export const SPELL_VFX_BINDINGS_V1 = Object.freeze([
   Object.freeze({
-    spellId: "ignis_rota",
+    spellId: "tempus_rota",
     primary: Object.freeze({
       castActionId: "aoe_flame",
       effectId: "spell.aoe_flame",
@@ -48,7 +48,7 @@ export const SPELL_VFX_BINDINGS_V1 = Object.freeze([
     }),
   }),
   Object.freeze({
-    spellId: "ignis_sanctum",
+    spellId: "tempus_sanctum",
     primary: Object.freeze({
       castActionId: "sanctum_shield",
       effectId: "spell.shield_bubble",

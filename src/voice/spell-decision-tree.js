@@ -2,7 +2,7 @@
 //
 // Design intent:
 // - `orbis` is a voice wake branch (voice-only open window)
-// - elemental schools (`ignis`, `fridgis`, `electrum`) are selected inside a
+// - elemental schools (`tempus`, `fridgis`, `electrum`) are selected inside a
 //   flat-spin axis gesture window
 // - class tokens are shared across schools; `vectus` is the canonical class
 //   token (`radius` remains a compatibility alias)
@@ -24,7 +24,7 @@ export const SPELL_DECISION_TREE = Object.freeze({
     id: "root",
     kind: "root",
     opener: null,
-    children: Object.freeze(["orbis", "ignis", "fridgis", "electrum"]),
+    children: Object.freeze(["orbis", "tempus", "fridgis", "electrum"]),
   }),
   orbis: Object.freeze({
     id: "orbis",
@@ -32,8 +32,8 @@ export const SPELL_DECISION_TREE = Object.freeze({
     opener: SPELL_WINDOW_OPENERS.VOICE_WAKE,
     children: Object.freeze(["domus"]),
   }),
-  ignis: Object.freeze({
-    id: "ignis",
+  tempus: Object.freeze({
+    id: "tempus",
     kind: "school",
     opener: SPELL_WINDOW_OPENERS.FLAT_SPIN_AXIS,
     children: Object.freeze(["rota", "sanctum", "vectus"]),
