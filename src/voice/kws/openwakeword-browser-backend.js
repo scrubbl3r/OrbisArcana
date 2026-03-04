@@ -193,6 +193,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferInputShape = [];
     let inferPumpTimer = null;
     let inferFramePullInFlight = false;
+    let inferFramePullSentAtMs = 0;
+    let inferFramePullTimeoutMs = 1200;
     let inferLastEmitAtMs = 0;
     let inferInitStep = "";
 
@@ -405,6 +407,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     async function stopInferPipeline() {
       clearInferPumpTimer();
       inferFramePullInFlight = false;
+      inferFramePullSentAtMs = 0;
       terminateInferWorker();
       inferReady = false;
       inferLoading = false;
@@ -425,16 +428,25 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     function startInferPump() {
       clearInferPumpTimer();
       inferFramePullInFlight = false;
+      inferFramePullSentAtMs = 0;
       inferPumpTimer = setInterval(() => {
         if (!started || !running) return;
         if (!audioWorker || !audioPipelineReady) return;
         if (!inferWorker || !inferReady) return;
-        if (inferFramePullInFlight) return;
+        if (inferFramePullInFlight) {
+          const elapsed = Math.max(0, nowMs() - Number(inferFramePullSentAtMs || 0));
+          if (elapsed < inferFramePullTimeoutMs) return;
+          // Recover from a lost/ignored pull response instead of stalling forever.
+          inferFramePullInFlight = false;
+          inferFramePullSentAtMs = 0;
+        }
         inferFramePullInFlight = true;
+        inferFramePullSentAtMs = nowMs();
         try {
           audioWorker.postMessage({ type: "pull_frame" });
         } catch {
           inferFramePullInFlight = false;
+          inferFramePullSentAtMs = 0;
         }
       }, inferPollMs);
     }
@@ -650,6 +662,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         }
         if (type === "frame") {
           inferFramePullInFlight = false;
+          inferFramePullSentAtMs = 0;
           audioWorkerQueueDepth = Number(msg.queueDepth) || 0;
           if (!msg.hasFrame) return;
           if (!inferWorker || !inferReady) return;
