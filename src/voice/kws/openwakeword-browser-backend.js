@@ -166,6 +166,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferReady = false;
     let inferLoading = false;
     let inferError = "";
+    let inferOrtModuleUrl = "";
     let inferModelUrl = "";
     let inferWasmRootUrl = "";
     let inferToken = "";
@@ -391,6 +392,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       inferReady = false;
       inferLoading = false;
       inferModelUrl = "";
+      inferOrtModuleUrl = "";
       inferWasmRootUrl = "";
       inferToken = "";
       inferLastScore = 0;
@@ -436,14 +438,17 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       await stopInferPipeline();
       inferLoading = true;
       inferError = "";
+      inferOrtModuleUrl = safeUrl(config.ortModuleUrl || "");
+      if (!inferOrtModuleUrl) {
+        throw new Error("oww_browser_infer_ort_module_url_invalid");
+      }
       inferModelUrl = String(chosen.modelUrl || "");
       inferToken = normalizeToken(chosen.token || chosen.label || config.inferToken || "", tokenMap);
       inferWasmRootUrl = safeUrl(config.ortWasmRootUrl || "");
       if (!inferWasmRootUrl) {
-        const moduleUrl = safeUrl(config.ortModuleUrl || "");
-        if (moduleUrl) {
+        if (inferOrtModuleUrl) {
           try {
-            inferWasmRootUrl = new URL(".", moduleUrl).toString();
+            inferWasmRootUrl = new URL(".", inferOrtModuleUrl).toString();
           } catch {}
         }
       }
@@ -500,24 +505,55 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
       let readyResolved = false;
       await new Promise((resolve, reject) => {
-        const t = setTimeout(() => {
-          if (readyResolved) return;
-          readyResolved = true;
-          reject(new Error("oww_browser_infer_ready_timeout"));
-        }, 12000);
-        const onMessage = (ev) => {
-          const msg = ev && ev.data ? ev.data : {};
-          if (String(msg.type || "") !== "ready") return;
+        const rejectOnce = (err) => {
           if (readyResolved) return;
           readyResolved = true;
           clearTimeout(t);
           worker.removeEventListener("message", onMessage);
+          worker.removeEventListener("error", onWorkerError);
+          worker.removeEventListener("messageerror", onWorkerMessageError);
+          reject(err instanceof Error ? err : new Error(String(err || "oww_browser_infer_init_failed")));
+        };
+        const resolveOnce = () => {
+          if (readyResolved) return;
+          readyResolved = true;
+          clearTimeout(t);
+          worker.removeEventListener("message", onMessage);
+          worker.removeEventListener("error", onWorkerError);
+          worker.removeEventListener("messageerror", onWorkerMessageError);
           resolve(true);
         };
+        const t = setTimeout(() => {
+          rejectOnce(new Error(inferError || "oww_browser_infer_ready_timeout"));
+        }, 12000);
+        const onMessage = (ev) => {
+          const msg = ev && ev.data ? ev.data : {};
+          const type = String(msg.type || "");
+          if (type === "ready") {
+            resolveOnce();
+            return;
+          }
+          if (type === "error") {
+            const m = String(msg.message || "oww_browser_infer_init_error");
+            inferError = m;
+            rejectOnce(new Error(m));
+          }
+        };
+        const onWorkerError = (ev) => {
+          const m = (ev && ev.message) ? String(ev.message) : "oww_browser_infer_worker_script_error";
+          inferError = m;
+          rejectOnce(new Error(m));
+        };
+        const onWorkerMessageError = () => {
+          inferError = "oww_browser_infer_worker_messageerror";
+          rejectOnce(new Error(inferError));
+        };
         worker.addEventListener("message", onMessage);
+        worker.addEventListener("error", onWorkerError);
+        worker.addEventListener("messageerror", onWorkerMessageError);
         worker.postMessage({
           type: "init",
-          ortModuleUrl: String(config.ortModuleUrl || ""),
+          ortModuleUrl: inferOrtModuleUrl,
           wasmRootUrl: inferWasmRootUrl || "",
           modelUrl: inferModelUrl,
           token: inferToken || "ignis",
@@ -768,6 +804,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         inferReady,
         inferLoading,
         inferError,
+        inferOrtModuleUrl,
         inferModelUrl,
         inferWasmRootUrl,
         inferToken,
