@@ -1164,7 +1164,9 @@
     }
     function tokenChipHtml(token, lit, flash) {
       const cls = `kwsTokenChip${lit ? " on" : ""}${flash ? " flash" : ""}`;
-      return `<span class="${cls}">${String(token)}</span>`;
+      const t = String(token || "");
+      const label = (t === "ignis") ? "tempus" : t;
+      return `<span class="${cls}">${label}</span>`;
     }
     function openKwsWakeHudGate(timeoutMs = DEFAULT_KWS_GATE_TIMEOUT_MS) {
       const t = Math.max(250, Number(timeoutMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);

@@ -11,8 +11,8 @@
       "token": "domus"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/ignis.onnx",
-      "label": "ignis",
+      "path": "../../../assets/kws/openwakeword-models/tempus.onnx",
+      "label": "tempus",
       "token": "ignis"
     },
     {
