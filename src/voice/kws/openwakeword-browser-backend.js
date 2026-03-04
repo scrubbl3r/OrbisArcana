@@ -94,6 +94,14 @@ async function fetchBuffer(url, signal) {
   return { buffer: buf, bytes: buf.byteLength >>> 0 };
 }
 
+function buildWorkerUrl() {
+  try {
+    return new URL("./openwakeword-browser-audio-worker.js", import.meta.url);
+  } catch {
+    return null;
+  }
+}
+
 export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
   const config = {
     ...OPENWAKEWORD_BROWSER_CONFIG_DEFAULT,
@@ -104,6 +112,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
   return async function openWakeWordBrowserBackendFactory(ctx = {}) {
     const onToken = typeof ctx.onToken === "function" ? ctx.onToken : () => {};
     const onError = typeof ctx.onError === "function" ? ctx.onError : () => {};
+    const stream = (ctx && ctx.stream) || null;
 
     let started = false;
     let running = false;
@@ -125,6 +134,25 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let totalModelBytes = 0;
     let loadedModels = [];
     let loadAbortController = null;
+    let audioWorker = null;
+    let audioContext = null;
+    let sourceNode = null;
+    let processorNode = null;
+    let muteGainNode = null;
+    let audioPipelineReady = false;
+    let audioStartAtMs = 0;
+    let audioTargetSampleRate = 16000;
+    let audioFrameSamples = 1280;
+    let audioMaxQueuedFrames = 24;
+    let audioChunksSent = 0;
+    let audioWorkerQueueDepth = 0;
+    let audioWorkerFramesProduced = 0;
+    let audioWorkerFramesDropped = 0;
+    let audioWorkerLastStatsAtMs = 0;
+    let audioWorkerLastChunkAtMs = 0;
+    let audioWorkerError = "";
+    let audioWorkerConfigured = false;
+    let audioInputSampleRate = 0;
 
     function emitError(message) {
       lastError = String(message || "oww_browser_error");
@@ -218,6 +246,167 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       loadAbortController = null;
     }
 
+    function resetAudioStats() {
+      audioChunksSent = 0;
+      audioWorkerQueueDepth = 0;
+      audioWorkerFramesProduced = 0;
+      audioWorkerFramesDropped = 0;
+      audioWorkerLastStatsAtMs = 0;
+      audioWorkerLastChunkAtMs = 0;
+      audioWorkerError = "";
+      audioWorkerConfigured = false;
+      audioStartAtMs = 0;
+      audioInputSampleRate = 0;
+    }
+
+    function terminateAudioWorker() {
+      if (!audioWorker) return;
+      try { audioWorker.postMessage({ type: "stop" }); } catch {}
+      try { audioWorker.terminate(); } catch {}
+      audioWorker = null;
+    }
+
+    async function stopAudioPipeline() {
+      if (processorNode) {
+        try { processorNode.disconnect(); } catch {}
+      }
+      if (sourceNode) {
+        try { sourceNode.disconnect(); } catch {}
+      }
+      if (muteGainNode) {
+        try { muteGainNode.disconnect(); } catch {}
+      }
+      processorNode = null;
+      sourceNode = null;
+      muteGainNode = null;
+
+      if (audioContext) {
+        try { await audioContext.close(); } catch {}
+      }
+      audioContext = null;
+      terminateAudioWorker();
+      audioPipelineReady = false;
+      return true;
+    }
+
+    async function startAudioPipeline() {
+      if (audioPipelineReady && audioWorker && audioContext) return true;
+      if (!stream || typeof stream.getTracks !== "function") {
+        throw new Error("oww_browser_stream_missing");
+      }
+      if (typeof Worker !== "function") {
+        throw new Error("oww_browser_worker_unavailable");
+      }
+      const AudioContextCtor = (typeof window !== "undefined")
+        ? (window.AudioContext || window.webkitAudioContext)
+        : null;
+      if (typeof AudioContextCtor !== "function") {
+        throw new Error("oww_browser_audio_context_unavailable");
+      }
+
+      await stopAudioPipeline();
+      resetAudioStats();
+
+      const workerUrl = buildWorkerUrl();
+      if (!workerUrl) {
+        throw new Error("oww_browser_audio_worker_url_invalid");
+      }
+      const worker = new Worker(workerUrl, { type: "module" });
+      audioWorker = worker;
+
+      worker.addEventListener("message", (ev) => {
+        const msg = ev && ev.data ? ev.data : {};
+        const type = String(msg.type || "");
+        if (type === "ready") {
+          audioWorkerConfigured = true;
+          return;
+        }
+        if (type === "stats") {
+          audioWorkerLastStatsAtMs = Number(msg.atMs) || nowMs();
+          audioWorkerQueueDepth = Number(msg.queueDepth) || 0;
+          audioWorkerFramesProduced = Number(msg.framesProduced) || 0;
+          audioWorkerFramesDropped = Number(msg.framesDropped) || 0;
+          audioWorkerLastChunkAtMs = Number(msg.lastChunkAtMs) || 0;
+          audioWorkerConfigured = !!msg.configured;
+          return;
+        }
+        if (type === "error") {
+          audioWorkerError = String(msg.message || "oww_browser_audio_worker_error");
+          emitError(audioWorkerError);
+        }
+      });
+
+      let readyResolved = false;
+      await new Promise((resolve, reject) => {
+        const t = setTimeout(() => {
+          if (readyResolved) return;
+          readyResolved = true;
+          reject(new Error("oww_browser_audio_worker_ready_timeout"));
+        }, 3000);
+        const onMessage = (ev) => {
+          const msg = ev && ev.data ? ev.data : {};
+          if (String(msg.type || "") !== "ready") return;
+          if (readyResolved) return;
+          readyResolved = true;
+          clearTimeout(t);
+          worker.removeEventListener("message", onMessage);
+          resolve(true);
+        };
+        worker.addEventListener("message", onMessage);
+        worker.postMessage({
+          type: "init",
+          inputSampleRate: 48000, // temporary; replaced once AudioContext is ready
+          targetSampleRate: audioTargetSampleRate,
+          frameSamples: audioFrameSamples,
+          maxQueuedFrames: audioMaxQueuedFrames,
+        });
+      });
+
+      const ctx = new AudioContextCtor();
+      audioContext = ctx;
+      audioInputSampleRate = Number(ctx.sampleRate) || 0;
+
+      // Re-init worker with true device sample rate now that AudioContext is known.
+      worker.postMessage({
+        type: "init",
+        inputSampleRate: audioInputSampleRate || 48000,
+        targetSampleRate: audioTargetSampleRate,
+        frameSamples: audioFrameSamples,
+        maxQueuedFrames: audioMaxQueuedFrames,
+      });
+
+      sourceNode = ctx.createMediaStreamSource(stream);
+      processorNode = ctx.createScriptProcessor(4096, 1, 1);
+      muteGainNode = ctx.createGain();
+      muteGainNode.gain.value = 0;
+
+      processorNode.onaudioprocess = (ev) => {
+        if (!audioWorker) return;
+        try {
+          const ch0 = ev.inputBuffer.getChannelData(0);
+          if (!ch0 || !ch0.length) return;
+          const copy = new Float32Array(ch0.length);
+          copy.set(ch0);
+          audioChunksSent += 1;
+          audioWorker.postMessage({ type: "audio", samples: copy }, [copy.buffer]);
+        } catch (err) {
+          audioWorkerError = err && err.message ? String(err.message) : "oww_browser_audio_chunk_send_failed";
+          emitError(audioWorkerError);
+        }
+      };
+
+      sourceNode.connect(processorNode);
+      processorNode.connect(muteGainNode);
+      muteGainNode.connect(ctx.destination);
+
+      if (ctx.state !== "running") {
+        try { await ctx.resume(); } catch {}
+      }
+      audioStartAtMs = nowMs();
+      audioPipelineReady = true;
+      return true;
+    }
+
     async function start() {
       started = true;
       lastError = "";
@@ -236,6 +425,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
       try {
         await loadManifestAndAssets();
+        await startAudioPipeline();
         running = true;
         connected = true;
         return true;
@@ -253,6 +443,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       connected = false;
       clearSimulationTimer();
       abortLoading();
+      await stopAudioPipeline();
       return true;
     }
 
@@ -267,6 +458,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       manifestLoadAtMs = 0;
       modelCount = 0;
       manifestUrlResolved = "";
+      resetAudioStats();
       return true;
     }
 
@@ -293,6 +485,21 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         modelLoadDurationMs,
         manifestLoadAtMs,
         loadedModels,
+        audioPipelineReady,
+        audioContextState: audioContext ? String(audioContext.state || "") : "",
+        audioStartAtMs,
+        audioInputSampleRate,
+        audioTargetSampleRate,
+        audioFrameSamples,
+        audioMaxQueuedFrames,
+        audioChunksSent,
+        audioWorkerConfigured,
+        audioWorkerQueueDepth,
+        audioWorkerFramesProduced,
+        audioWorkerFramesDropped,
+        audioWorkerLastStatsAtMs,
+        audioWorkerLastChunkAtMs,
+        audioWorkerError,
       };
     }
 

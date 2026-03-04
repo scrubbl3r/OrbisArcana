@@ -1243,6 +1243,17 @@
         if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "simulated")) {
           parts.push(`mode:${backendStatus.simulated ? "sim" : "real"}`);
         }
+        if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "modelAssetsLoaded")) {
+          const loaded = Number(backendStatus.loadedModelCount) || 0;
+          const total = Number(backendStatus.modelCount) || 0;
+          parts.push(`mdl:${loaded}/${total}`);
+        }
+        if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "audioWorkerFramesProduced")) {
+          const f = Number(backendStatus.audioWorkerFramesProduced) || 0;
+          const d = Number(backendStatus.audioWorkerFramesDropped) || 0;
+          parts.push(`frm:${f}`);
+          if (d > 0) parts.push(`drop:${d}`);
+        }
         if (backendStatus && backendStatus.lastError) {
           const errText = String(backendStatus.lastError);
           parts.push(`err:${errText.slice(0, 40)}`);
