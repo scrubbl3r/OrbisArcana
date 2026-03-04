@@ -85,12 +85,21 @@ function extractScore(output) {
 
 async function onInit(msg) {
   const ortModuleUrl = String(msg && msg.ortModuleUrl || "").trim();
+  const wasmRootUrl = String(msg && msg.wasmRootUrl || "").trim();
   const modelUrl = String(msg && msg.modelUrl || "").trim();
   modelToken = String(msg && msg.token || "").trim().toLowerCase();
   threshold = toFiniteNumber(msg && msg.threshold, 0.85);
   if (!ortModuleUrl) throw new Error("oww_browser_infer_missing_ort_module_url");
   if (!modelUrl) throw new Error("oww_browser_infer_missing_model_url");
   ortRef = await loadOrtModule(ortModuleUrl);
+  if (ortRef && ortRef.env && ortRef.env.wasm) {
+    ortRef.env.wasm.numThreads = 1;
+    ortRef.env.wasm.proxy = false;
+    if (wasmRootUrl) {
+      const root = wasmRootUrl.endsWith("/") ? wasmRootUrl : `${wasmRootUrl}/`;
+      ortRef.env.wasm.wasmPaths = root;
+    }
+  }
   session = await ortRef.InferenceSession.create(modelUrl, {
     executionProviders: ["wasm"],
     graphOptimizationLevel: "all",
@@ -105,6 +114,7 @@ async function onInit(msg) {
     token: modelToken,
     inputName,
     outputName,
+    wasmRootUrl,
   });
 }
 

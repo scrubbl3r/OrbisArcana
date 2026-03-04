@@ -167,6 +167,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferLoading = false;
     let inferError = "";
     let inferModelUrl = "";
+    let inferWasmRootUrl = "";
     let inferToken = "";
     let inferThreshold = normalizeThreshold(config.inferThreshold, 0.85);
     let inferPollMs = Math.max(16, Number(config.inferPollMs) || 33);
@@ -390,6 +391,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       inferReady = false;
       inferLoading = false;
       inferModelUrl = "";
+      inferWasmRootUrl = "";
       inferToken = "";
       inferLastScore = 0;
       inferLastMs = 0;
@@ -436,6 +438,15 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       inferError = "";
       inferModelUrl = String(chosen.modelUrl || "");
       inferToken = normalizeToken(chosen.token || chosen.label || config.inferToken || "", tokenMap);
+      inferWasmRootUrl = safeUrl(config.ortWasmRootUrl || "");
+      if (!inferWasmRootUrl) {
+        const moduleUrl = safeUrl(config.ortModuleUrl || "");
+        if (moduleUrl) {
+          try {
+            inferWasmRootUrl = new URL(".", moduleUrl).toString();
+          } catch {}
+        }
+      }
 
       const worker = new Worker(inferWorkerUrl, { type: "module" });
       inferWorker = worker;
@@ -473,6 +484,19 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           emitError(inferError);
         }
       });
+      worker.addEventListener("error", (ev) => {
+        const msg = ev && ev.message ? String(ev.message) : "oww_browser_infer_worker_script_error";
+        inferError = msg;
+        inferLoading = false;
+        inferReady = false;
+        emitError(inferError);
+      });
+      worker.addEventListener("messageerror", () => {
+        inferError = "oww_browser_infer_worker_messageerror";
+        inferLoading = false;
+        inferReady = false;
+        emitError(inferError);
+      });
 
       let readyResolved = false;
       await new Promise((resolve, reject) => {
@@ -494,6 +518,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         worker.postMessage({
           type: "init",
           ortModuleUrl: String(config.ortModuleUrl || ""),
+          wasmRootUrl: inferWasmRootUrl || "",
           modelUrl: inferModelUrl,
           token: inferToken || "ignis",
           threshold: inferThreshold,
@@ -744,6 +769,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         inferLoading,
         inferError,
         inferModelUrl,
+        inferWasmRootUrl,
         inferToken,
         inferThreshold,
         inferPollMs,
