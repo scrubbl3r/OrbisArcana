@@ -197,6 +197,9 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferFramePullTimeoutMs = 1200;
     let inferLastEmitAtMs = 0;
     let inferInitStep = "";
+    let audioWatchdogTimer = null;
+    let audioWatchdogRestartCount = 0;
+    let audioWatchdogLastRestartAtMs = 0;
 
     function emitError(message) {
       lastError = String(message || "oww_browser_error");
@@ -305,6 +308,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       audioWorkerConfigured = false;
       audioStartAtMs = 0;
       audioInputSampleRate = 0;
+      audioWatchdogRestartCount = 0;
+      audioWatchdogLastRestartAtMs = 0;
     }
 
     function terminateAudioWorker() {
@@ -318,6 +323,12 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       if (!inferPumpTimer) return;
       clearInterval(inferPumpTimer);
       inferPumpTimer = null;
+    }
+
+    function clearAudioWatchdog() {
+      if (!audioWatchdogTimer) return;
+      clearInterval(audioWatchdogTimer);
+      audioWatchdogTimer = null;
     }
 
     function terminateInferWorker() {
@@ -390,9 +401,34 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       audioContext = null;
       clearAudioResumeTimer();
       removeResumeHandlers();
+      clearAudioWatchdog();
       terminateAudioWorker();
       audioPipelineReady = false;
       return true;
+    }
+
+    function startAudioWatchdog() {
+      clearAudioWatchdog();
+      audioWatchdogTimer = setInterval(() => {
+        if (!started || !running || simulated) return;
+        if (!audioPipelineReady || !audioContext) return;
+        if (String(audioContext.state || "").toLowerCase() !== "running") return;
+        const ageMs = Math.max(0, nowMs() - Number(audioStartAtMs || 0));
+        if (ageMs < 2500) return;
+        if (audioChunksSent > 0) return;
+        if (audioWatchdogRestartCount >= 3) return;
+        const sinceLast = Math.max(0, nowMs() - Number(audioWatchdogLastRestartAtMs || 0));
+        if (sinceLast < 1500) return;
+        audioWatchdogRestartCount += 1;
+        audioWatchdogLastRestartAtMs = nowMs();
+        Promise.resolve()
+          .then(() => startAudioPipeline())
+          .catch((err) => {
+            const m = err && err.message ? String(err.message) : "oww_browser_audio_watchdog_restart_failed";
+            audioWorkerError = m;
+            emitError(m);
+          });
+      }, 700);
     }
 
     function pickInferModel() {
@@ -756,6 +792,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       }
       audioStartAtMs = nowMs();
       audioPipelineReady = true;
+      startAudioWatchdog();
       return true;
     }
 
