@@ -101,10 +101,15 @@ async function onInit(msg) {
     }
   }
   postMessage({ type: "init_progress", atMs: nowMs(), step: "ort_loaded" });
-  session = await ortRef.InferenceSession.create(modelUrl, {
-    executionProviders: ["wasm"],
-    graphOptimizationLevel: "all",
-  });
+  try {
+    session = await ortRef.InferenceSession.create(modelUrl, {
+      executionProviders: ["wasm"],
+      graphOptimizationLevel: "all",
+    });
+  } catch (err) {
+    const e = err && err.message ? String(err.message) : String(err || "unknown");
+    throw new Error(`oww_browser_infer_session_create_failed:${e};model=${modelUrl};wasmRoot=${wasmRootUrl || "auto"}`);
+  }
   postMessage({ type: "init_progress", atMs: nowMs(), step: "session_created" });
   inputName = session && Array.isArray(session.inputNames) ? String(session.inputNames[0] || "") : "";
   outputName = session && Array.isArray(session.outputNames) ? String(session.outputNames[0] || "") : "";
@@ -150,7 +155,12 @@ async function onFrame(msg) {
 }
 
 function reportError(err) {
-  lastError = err && err.message ? String(err.message) : "oww_browser_infer_worker_error";
+  const msg = err && err.message ? String(err.message) : "oww_browser_infer_worker_error";
+  const name = err && err.name ? String(err.name) : "";
+  const stack = err && err.stack ? String(err.stack) : "";
+  lastError = [msg, name ? `name=${name}` : "", stack ? `stack=${stack}` : ""]
+    .filter(Boolean)
+    .join(" | ");
   postMessage({ type: "error", atMs: nowMs(), message: lastError });
 }
 

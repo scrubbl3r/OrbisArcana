@@ -1273,7 +1273,7 @@
         }
         if (backendStatus && backendStatus.lastError) {
           const errText = String(backendStatus.lastError);
-          parts.push(`err:${errText.slice(0, 40)}`);
+          parts.push(`err:${errText.slice(0, 180)}`);
           if (errText && errText !== kwsLastBackendErrorLogged) kwsLastBackendErrorLogged = errText;
         } else {
           kwsLastBackendErrorLogged = "";
