@@ -64,14 +64,18 @@ function buildInputTensor(frameI16) {
   const frameSize = frame.length || 1280;
   const md = session && session.inputMetadata && inputName ? session.inputMetadata[inputName] : null;
   const dims = resolveDims(md && md.dimensions, frameSize);
-  const needed = product(dims);
+  const expectedRank = Array.isArray(md && md.dimensions) ? md.dimensions.length : 0;
+  const finalDims = (expectedRank === 3 && dims.length !== 3)
+    ? [1, 1, Math.max(1, frameSize)]
+    : (dims.length === 3 ? dims : [1, 1, Math.max(1, frameSize)]);
+  const needed = product(finalDims);
   const data = new Float32Array(needed);
   const copyN = Math.min(needed, frame.length);
   for (let i = 0; i < copyN; i += 1) {
     data[i] = Math.max(-1, Math.min(1, frame[i] / 32768));
   }
-  inputShape = dims;
-  return new ortRef.Tensor("float32", data, dims);
+  inputShape = finalDims;
+  return new ortRef.Tensor("float32", data, finalDims);
 }
 
 function extractScore(output) {
@@ -139,7 +143,13 @@ async function onFrame(msg) {
   framesSeen += 1;
   const t0 = nowMs();
   const tensor = buildInputTensor(frame);
-  const output = await session.run({ [inputName]: tensor });
+  let output;
+  try {
+    output = await session.run({ [inputName]: tensor });
+  } catch (err) {
+    const em = err && err.message ? String(err.message) : String(err || "unknown");
+    throw new Error(`oww_browser_infer_run_failed:${em};input=${inputName};shape=[${inputShape.join(",")}]`);
+  }
   inferences += 1;
   lastInferAtMs = nowMs();
   lastScore = extractScore(output);
