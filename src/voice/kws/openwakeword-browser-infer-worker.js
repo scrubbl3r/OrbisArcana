@@ -31,7 +31,7 @@ async function loadOrtModule(url) {
 }
 
 function resolveDims(dimensions, frameSize) {
-  const dims = Array.isArray(dimensions) ? dimensions.slice() : [1, frameSize];
+  const dims = Array.isArray(dimensions) ? dimensions.slice() : [1, 1, frameSize];
   const out = [];
   for (let i = 0; i < dims.length; i += 1) {
     const d = dims[i];
@@ -45,7 +45,12 @@ function resolveDims(dimensions, frameSize) {
     }
     out.push(1);
   }
-  return out.length ? out : [1, frameSize];
+  if (!out.length) return [1, 1, frameSize];
+  // openWakeWord exports typically expect rank-3 inputs; if metadata is missing
+  // or collapsed, promote to rank-3 fallback for compatibility.
+  if (out.length === 1) return [1, 1, Math.max(1, out[0] || frameSize)];
+  if (out.length === 2) return [Math.max(1, out[0] || 1), 1, Math.max(1, out[1] || frameSize)];
+  return out;
 }
 
 function product(arr) {
