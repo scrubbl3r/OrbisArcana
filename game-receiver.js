@@ -1264,7 +1264,9 @@
           const inf = Number(backendStatus.inferInferences) || 0;
           const score = Number(backendStatus.inferLastScore);
           const infReady = !!backendStatus.inferReady;
+          const initStep = String(backendStatus.inferInitStep || "").trim().toLowerCase();
           parts.push(`inf:${infReady ? "on" : "off"}/${inf}`);
+          if (!infReady && initStep) parts.push(`init:${initStep}`);
           if (Number.isFinite(score) && inf > 0) {
             parts.push(`scr:${score.toFixed(3)}`);
           }

@@ -29,7 +29,7 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   simulationIntervalMs: 1400,
   manifestUrl: readStringParam("owwBrowserManifest", "./tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json"),
   requireOnnxDataPair: readBooleanParam("owwBrowserRequireOnnxData", true),
-  ortModuleUrl: readStringParam("owwBrowserOrtModule", "./vendor/onnxruntime/1.22.0/ort.all.min.mjs"),
+  ortModuleUrl: readStringParam("owwBrowserOrtModule", "./vendor/onnxruntime/1.22.0/ort.wasm.min.mjs"),
   ortWasmRootUrl: readStringParam("owwBrowserOrtWasmRoot", "./vendor/onnxruntime/1.22.0/"),
   inferToken: readStringParam("owwBrowserToken", "ignis").toLowerCase(),
   inferThreshold: 0.85,

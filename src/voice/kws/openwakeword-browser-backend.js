@@ -182,6 +182,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferPumpTimer = null;
     let inferFramePullInFlight = false;
     let inferLastEmitAtMs = 0;
+    let inferInitStep = "";
 
     function emitError(message) {
       lastError = String(message || "oww_browser_error");
@@ -401,6 +402,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       inferFramesSent = 0;
       inferInferences = 0;
       inferInputShape = [];
+      inferInitStep = "";
       return true;
     }
 
@@ -462,6 +464,11 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         if (type === "ready") {
           inferReady = true;
           inferLoading = false;
+          inferInitStep = "ready";
+          return;
+        }
+        if (type === "init_progress") {
+          inferInitStep = String(msg.step || "").trim().toLowerCase();
           return;
         }
         if (type === "infer_stats") {
@@ -525,7 +532,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         };
         const t = setTimeout(() => {
           rejectOnce(new Error(inferError || "oww_browser_infer_ready_timeout"));
-        }, 12000);
+        }, 60000);
         const onMessage = (ev) => {
           const msg = ev && ev.data ? ev.data : {};
           const type = String(msg.type || "");
@@ -817,6 +824,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         inferLastMs,
         inferLastInferMs,
         inferInputShape,
+        inferInitStep,
       };
     }
 

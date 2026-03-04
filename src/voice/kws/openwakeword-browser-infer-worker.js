@@ -100,10 +100,12 @@ async function onInit(msg) {
       ortRef.env.wasm.wasmPaths = root;
     }
   }
+  postMessage({ type: "init_progress", atMs: nowMs(), step: "ort_loaded" });
   session = await ortRef.InferenceSession.create(modelUrl, {
     executionProviders: ["wasm"],
     graphOptimizationLevel: "all",
   });
+  postMessage({ type: "init_progress", atMs: nowMs(), step: "session_created" });
   inputName = session && Array.isArray(session.inputNames) ? String(session.inputNames[0] || "") : "";
   outputName = session && Array.isArray(session.outputNames) ? String(session.outputNames[0] || "") : "";
   if (!inputName) throw new Error("oww_browser_infer_missing_input_name");
