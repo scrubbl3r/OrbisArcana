@@ -1251,7 +1251,13 @@
         if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "audioWorkerFramesProduced")) {
           const f = Number(backendStatus.audioWorkerFramesProduced) || 0;
           const d = Number(backendStatus.audioWorkerFramesDropped) || 0;
+          const ch = Number(backendStatus.audioChunksSent) || 0;
+          const q = Number(backendStatus.audioWorkerQueueDepth) || 0;
+          const ctxState = String(backendStatus.audioContextState || "").trim().toLowerCase();
+          if (ctxState) parts.push(`ctx:${ctxState}`);
+          parts.push(`aud:${ch}`);
           parts.push(`frm:${f}`);
+          parts.push(`q:${q}`);
           if (d > 0) parts.push(`drop:${d}`);
         }
         if (backendStatus && backendStatus.lastError) {
@@ -2337,6 +2343,9 @@
               requiresMic: !(spec && spec.requiresMic === false),
               label: spec && spec.label ? spec.label : nextKey,
             });
+            if (spec && typeof spec.factory === "function" && typeof kwsVoiceProvider.setMicEnabled === "function") {
+              await kwsVoiceProvider.setMicEnabled(true);
+            }
             refreshKwsMicBtn();
             updateKwsReadout();
             return true;

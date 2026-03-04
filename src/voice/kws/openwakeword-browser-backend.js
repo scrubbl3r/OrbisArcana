@@ -153,6 +153,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let audioWorkerError = "";
     let audioWorkerConfigured = false;
     let audioInputSampleRate = 0;
+    let audioResumeTimer = null;
+    let audioResumeHandlersBound = false;
 
     function emitError(message) {
       lastError = String(message || "oww_browser_error");
@@ -266,6 +268,53 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       audioWorker = null;
     }
 
+    function clearAudioResumeTimer() {
+      if (!audioResumeTimer) return;
+      clearInterval(audioResumeTimer);
+      audioResumeTimer = null;
+    }
+
+    function removeResumeHandlers() {
+      if (!audioResumeHandlersBound) return;
+      if (typeof window !== "undefined" && window && window.removeEventListener) {
+        try { window.removeEventListener("pointerdown", handleResumeGesture, true); } catch {}
+        try { window.removeEventListener("keydown", handleResumeGesture, true); } catch {}
+      }
+      audioResumeHandlersBound = false;
+    }
+
+    async function tryResumeAudioContext() {
+      if (!audioContext) return false;
+      if (audioContext.state === "running") return true;
+      try {
+        await audioContext.resume();
+      } catch {}
+      return audioContext.state === "running";
+    }
+
+    function handleResumeGesture() {
+      void tryResumeAudioContext();
+    }
+
+    function armAudioResumeGuards() {
+      clearAudioResumeTimer();
+      removeResumeHandlers();
+      audioResumeTimer = setInterval(() => {
+        if (!audioContext) return;
+        if (audioContext.state === "running") {
+          clearAudioResumeTimer();
+          removeResumeHandlers();
+          return;
+        }
+        void tryResumeAudioContext();
+      }, 1000);
+      if (typeof window !== "undefined" && window && window.addEventListener) {
+        try { window.addEventListener("pointerdown", handleResumeGesture, true); } catch {}
+        try { window.addEventListener("keydown", handleResumeGesture, true); } catch {}
+        audioResumeHandlersBound = true;
+      }
+    }
+
     async function stopAudioPipeline() {
       if (processorNode) {
         try { processorNode.disconnect(); } catch {}
@@ -284,6 +333,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         try { await audioContext.close(); } catch {}
       }
       audioContext = null;
+      clearAudioResumeTimer();
+      removeResumeHandlers();
       terminateAudioWorker();
       audioPipelineReady = false;
       return true;
@@ -401,6 +452,12 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
       if (ctx.state !== "running") {
         try { await ctx.resume(); } catch {}
+      }
+      if (ctx.state !== "running") {
+        armAudioResumeGuards();
+      } else {
+        clearAudioResumeTimer();
+        removeResumeHandlers();
       }
       audioStartAtMs = nowMs();
       audioPipelineReady = true;
