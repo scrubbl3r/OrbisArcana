@@ -13,11 +13,5 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   inferThreshold: 0.15,
   inferCooldownMs: 600,
   inferPollMs: 33,
-  tokenMap: Object.freeze({
-    ingis: "tempus",
-    igins: "tempus",
-    ignuss: "tempus",
-    ignus: "tempus",
-    firdgis: "fridgis",
-  }),
+  tokenMap: Object.freeze({}),
 });

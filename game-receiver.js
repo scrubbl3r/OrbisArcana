@@ -1067,14 +1067,7 @@
     const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
     const KWS_LOG_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
     const TEMP_UNGATED_KWS_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
-    const KWS_TOKEN_CANONICAL_MAP = Object.freeze({
-      ingis: "tempus",
-      ingnis: "tempus",
-      igins: "tempus",
-      ignuss: "tempus",
-      ignus: "tempus",
-      firdgis: "fridgis",
-    });
+    const KWS_TOKEN_CANONICAL_MAP = Object.freeze({});
     const kwsDebugState = {
       mode: DEFAULT_VOICE_ENGINE,
       backend: DEFAULT_KWS_BACKEND_KEY,

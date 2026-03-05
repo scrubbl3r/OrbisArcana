@@ -27,15 +27,13 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
-  // Temporary diagnostic bypass: allow selected tokens to cast without flat-spin
-  // so we can isolate KWS model quality from dispatch gating behavior.
   const TEMP_UNGATED_SPELL_IDS = new Set([
-    "school_tempus",
-    "school_fridgis",
-    "school_electrum",
-    "class_rota",
-    "class_sanctum",
-    "class_vectus",
+    "tempus",
+    "fridgis",
+    "electrum",
+    "rota",
+    "sanctum",
+    "vectus",
   ]);
   const loadedByAxis = {
     x: { UD: null, LR: null, FB: null },
@@ -46,11 +44,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   const selectedSchoolByAxis = { x: "", y: "", z: "" };
-
-  function isSchoolClassIntent(intent) {
-    const i = String(intent || "");
-    return i === "spell.school_shield" || i === "spell.school_ray" || i === "spell.school_aoe";
-  }
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -135,7 +128,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     const classKey = normalizeSpellClassTokenForRuntime(classKeyRaw);
     const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
     if (!a || !classKey || !school) return null;
-    const id = `${school}_${classKey}`;
+    const id = classKey;
     const base = SPELLS_BY_ID[id];
     if (!base) return null;
     return {
@@ -145,7 +138,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       phrase: String(base.phrase || id),
       allowedAxes: Array.isArray(base.allowedAxes) ? base.allowedAxes.slice() : [a],
       fixedSlot: String(base.fixedSlot || "").toUpperCase(),
-      school: String(base.school || school).toLowerCase(),
+      school,
       classKey: String(base.classKey || classKey).toLowerCase(),
     };
   }
@@ -195,13 +188,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const isFlatSpinLoadWindow = !!axis;
       const isClassSelect = spellIntent === "spell.class_select";
       const isSchoolSelect = spellIntent === "spell.school_select";
-      const isDirectSchoolClass = isSchoolClassIntent(spellIntent);
 
       // Strict spell-tree enforcement:
       // - school/class tokens are only valid during an active flat-spin window.
-      // - direct school+class tokens are not accepted (must follow school -> class).
       const bypassFlatSpinGate = TEMP_UNGATED_SPELL_IDS.has(spellId);
-      if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isSchoolSelect || isClassSelect || isDirectSchoolClass)) {
+      if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isSchoolSelect || isClassSelect)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "spell_window_required",
           spellId,
@@ -331,6 +322,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
+          school: String(concreteSpell.school || "").toLowerCase(),
+          classKey: String(concreteSpell.classKey || "").toLowerCase(),
         };
         if (concreteSpellId) {
           lastFlatSpinLoadAtByAxisSpell.set(dedupeKey, now);
@@ -342,6 +335,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
+          school: String(concreteSpell.school || "").toLowerCase(),
+          classKey: String(concreteSpell.classKey || "").toLowerCase(),
           atMs: now,
         });
         return;
@@ -412,6 +407,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         trigger: "shake_detonation",
         axis: loaded.axis,
         slot: loaded.slot,
+        school: String(loaded.school || "").toLowerCase(),
+        classKey: String(loaded.classKey || "").toLowerCase(),
         directionGroup: group,
         atMs: now,
       };

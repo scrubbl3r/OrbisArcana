@@ -26,6 +26,26 @@ export function createSpellActionHandlers({
       // Backward-compatible fallback until dedicated frost VFX runtime is wired.
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
+    play_school_aoe(payload = {}) {
+      const school = String(payload && payload.school || "").trim().toLowerCase();
+      if (school === "fridgis") {
+        if (typeof playFrostAoe === "function") {
+          playFrostAoe();
+          return;
+        }
+        if (typeof playFlameAoe === "function") playFlameAoe();
+        return;
+      }
+      if (school === "electrum") {
+        if (typeof playElectricAoe === "function") {
+          playElectricAoe();
+          return;
+        }
+        if (typeof playFlameAoe === "function") playFlameAoe();
+        return;
+      }
+      if (typeof playFlameAoe === "function") playFlameAoe();
+    },
     domus_teleport_orb(payload = {}) {
       void payload;
       if (typeof teleportOrbToSpawnNeutralizePhysics === "function") {

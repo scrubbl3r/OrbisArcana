@@ -4,8 +4,7 @@
 // - `orbis` is a voice wake branch (voice-only open window)
 // - elemental schools (`tempus`, `fridgis`, `electrum`) are selected inside a
 //   flat-spin axis gesture window
-// - class tokens are shared across schools; `vectus` is the canonical class
-//   token (`radius` remains a compatibility alias)
+// - class tokens are shared across schools (`sanctum`, `rota`, `vectus`)
 
 export const SPELL_WINDOW_OPENERS = Object.freeze({
   VOICE_WAKE: "voice_wake",
@@ -16,7 +15,6 @@ export const SPELL_TREE_CLASS_RUNTIME_KEY_BY_TOKEN = Object.freeze({
   sanctum: "sanctum",
   rota: "rota",
   vectus: "vectus",
-  radius: "vectus", // compatibility alias
 });
 
 export const SPELL_DECISION_TREE = Object.freeze({

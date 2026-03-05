@@ -26,9 +26,9 @@
 /** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */
 export const SPELL_VFX_BINDINGS_V1 = Object.freeze([
   Object.freeze({
-    spellId: "tempus_rota",
+    spellId: "rota",
     primary: Object.freeze({
-      castActionId: "aoe_flame",
+      castActionId: "aoe_school",
       effectId: "spell.aoe_flame",
       presetId: "preset.flame_aoe.default",
     }),
@@ -40,7 +40,7 @@ export const SPELL_VFX_BINDINGS_V1 = Object.freeze([
     ]),
   }),
   Object.freeze({
-    spellId: "electrum_rota",
+    spellId: "vectus",
     primary: Object.freeze({
       castActionId: "aoe_electric",
       effectId: "spell.aoe_electric",
@@ -48,23 +48,7 @@ export const SPELL_VFX_BINDINGS_V1 = Object.freeze([
     }),
   }),
   Object.freeze({
-    spellId: "tempus_sanctum",
-    primary: Object.freeze({
-      castActionId: "sanctum_shield",
-      effectId: "spell.shield_bubble",
-      presetId: "preset.bubble_shield.default",
-    }),
-  }),
-  Object.freeze({
-    spellId: "fridgis_sanctum",
-    primary: Object.freeze({
-      castActionId: "sanctum_shield",
-      effectId: "spell.shield_bubble",
-      presetId: "preset.bubble_shield.default",
-    }),
-  }),
-  Object.freeze({
-    spellId: "electrum_sanctum",
+    spellId: "sanctum",
     primary: Object.freeze({
       castActionId: "sanctum_shield",
       effectId: "spell.shield_bubble",
@@ -85,4 +69,3 @@ export const SPELL_VFX_BINDINGS_BY_SPELL_ID = Object.freeze(
 export function getSpellVfxBinding(spellId) {
   return SPELL_VFX_BINDINGS_BY_SPELL_ID[String(spellId || "").toLowerCase()] || null;
 }
-
