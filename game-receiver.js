@@ -1056,8 +1056,6 @@
 
     const DEFAULT_VOICE_ENGINE = "kws";
     const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
-    const DEFAULT_OWW_BROWSER_INFER_TH = 0.15;
-    const DEFAULT_OWW_BROWSER_INFER_CD_MS = 600;
     const DEFAULT_KWS_AUTOSTART_RETRY_MS = 2000;
     const DEFAULT_KWS_AUTOSTART_MAX_MS = 120000;
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
@@ -1429,6 +1427,13 @@
       }
       if (els.kwsTokenInput) els.kwsTokenInput.value = "";
     }
+    function readNumberInputOrNull(el) {
+      if (!el) return null;
+      const raw = String(el.value == null ? "" : el.value).trim();
+      if (!raw) return null;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    }
     if (els.kwsTokenSendBtn) {
       els.kwsTokenSendBtn.addEventListener("click", () => sendKwsDebugToken(els.kwsTokenInput && els.kwsTokenInput.value));
     }
@@ -1490,9 +1495,11 @@
     }
     function applyKwsParserTuneFromUi(){
       if (!mvp || typeof mvp.setKwsBackendConfig !== "function") return;
+      const inferThreshold = readNumberInputOrNull(els.kwsTokenThrInput);
+      const inferCooldownMs = readNumberInputOrNull(els.kwsCooldownMsInput);
       const status = mvp.setKwsBackendConfig({
-        inferThreshold: Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value),
-        inferCooldownMs: Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value),
+        ...(inferThreshold == null ? {} : { inferThreshold }),
+        ...(inferCooldownMs == null ? {} : { inferCooldownMs }),
       });
       syncKwsTuneUiFromStatus(status && status.audioBackendStatus ? status.audioBackendStatus : status);
     }
@@ -2368,11 +2375,21 @@
               label: spec && spec.label ? spec.label : nextKey,
             });
             if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
-              const thFromUi = Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value);
-              const cdFromUi = Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value);
+              const backendStatusNow = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
+                ? kwsVoiceProvider.getStatus()
+                : null;
+              const backendNow = backendStatusNow && backendStatusNow.audioBackendStatus ? backendStatusNow.audioBackendStatus : backendStatusNow;
+              const thFromUi = readNumberInputOrNull(els.kwsTokenThrInput);
+              const cdFromUi = readNumberInputOrNull(els.kwsCooldownMsInput);
+              const thFromBackend = Number(backendNow && backendNow.inferThreshold);
+              const cdFromBackend = Number(backendNow && backendNow.inferCooldownMs);
               const statusAfterApply = kwsVoiceProvider.setBackendConfig({
-                inferThreshold: Number.isFinite(thFromUi) ? thFromUi : DEFAULT_OWW_BROWSER_INFER_TH,
-                inferCooldownMs: Number.isFinite(cdFromUi) ? cdFromUi : DEFAULT_OWW_BROWSER_INFER_CD_MS,
+                ...(thFromUi != null
+                  ? { inferThreshold: thFromUi }
+                  : (Number.isFinite(thFromBackend) ? { inferThreshold: thFromBackend } : {})),
+                ...(cdFromUi != null
+                  ? { inferCooldownMs: cdFromUi }
+                  : (Number.isFinite(cdFromBackend) ? { inferCooldownMs: cdFromBackend } : {})),
               });
               syncKwsTuneUiFromStatus(statusAfterApply && statusAfterApply.audioBackendStatus ? statusAfterApply.audioBackendStatus : statusAfterApply);
             }
@@ -2381,11 +2398,21 @@
             }
             if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
               // Re-apply after mic/backend startup to mirror explicit "Apply" behavior.
-              const thFromUi = Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value);
-              const cdFromUi = Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value);
+              const backendStatusNow = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
+                ? kwsVoiceProvider.getStatus()
+                : null;
+              const backendNow = backendStatusNow && backendStatusNow.audioBackendStatus ? backendStatusNow.audioBackendStatus : backendStatusNow;
+              const thFromUi = readNumberInputOrNull(els.kwsTokenThrInput);
+              const cdFromUi = readNumberInputOrNull(els.kwsCooldownMsInput);
+              const thFromBackend = Number(backendNow && backendNow.inferThreshold);
+              const cdFromBackend = Number(backendNow && backendNow.inferCooldownMs);
               const statusAfterStartApply = kwsVoiceProvider.setBackendConfig({
-                inferThreshold: Number.isFinite(thFromUi) ? thFromUi : DEFAULT_OWW_BROWSER_INFER_TH,
-                inferCooldownMs: Number.isFinite(cdFromUi) ? cdFromUi : DEFAULT_OWW_BROWSER_INFER_CD_MS,
+                ...(thFromUi != null
+                  ? { inferThreshold: thFromUi }
+                  : (Number.isFinite(thFromBackend) ? { inferThreshold: thFromBackend } : {})),
+                ...(cdFromUi != null
+                  ? { inferCooldownMs: cdFromUi }
+                  : (Number.isFinite(cdFromBackend) ? { inferCooldownMs: cdFromBackend } : {})),
               });
               syncKwsTuneUiFromStatus(statusAfterStartApply && statusAfterStartApply.audioBackendStatus ? statusAfterStartApply.audioBackendStatus : statusAfterStartApply);
             }
