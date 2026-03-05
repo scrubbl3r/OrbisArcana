@@ -1,5 +1,0 @@
-openwakeword
-websockets
-sounddevice
-numpy
-

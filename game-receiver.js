@@ -1337,10 +1337,6 @@
         } else {
           kwsLastBackendErrorLogged = "";
         }
-      } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
-        if (porcupineKwsInitStatus.reason && porcupineKwsInitStatus.reason !== "installed") {
-          parts.push(`why:${String(porcupineKwsInitStatus.reason).replace(/_/g, "-")}`);
-        }
       }
       const meta = parts.length ? `<span class="kwsTokenMeta">${parts.join(" | ")}</span>` : "";
       els.kwsReadout.innerHTML = `<div class="kwsTokenRow">${lineTop}</div><div class="kwsTokenRow">${lineBottom}</div>${meta}`;
@@ -1484,7 +1480,7 @@
     if (els.kwsMicBtn) els.kwsMicBtn.addEventListener("click", () => { void toggleKwsMicFromUi(); });
     if (els.kwsBackendSelect) {
       els.kwsBackendSelect.addEventListener("change", () => {
-        const key = String(els.kwsBackendSelect.value || "porcupine_local");
+        const key = String(els.kwsBackendSelect.value || "openwakeword_browser");
         kwsDebugState.backend = key;
         updateKwsReadout();
         if (mvp && typeof mvp.setKwsBackend === "function") {
@@ -1571,7 +1567,6 @@
     let kwsVoiceProvider = null;
     let kwsBackendFactories = Object.create(null);
     let kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
-    let porcupineKwsInitStatus = { attempted: false, installed: false, reason: "not_attempted" };
     let inputSystem = null;
     let inputGestureSystem = null;
     let inputSystemsBundle = null;
@@ -1815,20 +1810,6 @@
         ]);
         if (receiverEventContracts && typeof receiverEventContracts === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
-        }
-        try {
-          const porcupineBootMod = await import("./src/voice/kws/porcupine-local-boot.js");
-          if (porcupineBootMod && typeof porcupineBootMod.bootLocalPorcupineKws === "function") {
-            const res = await porcupineBootMod.bootLocalPorcupineKws();
-            if (res && res.status) porcupineKwsInitStatus = res.status;
-          }
-        } catch (e) {
-          porcupineKwsInitStatus = {
-            attempted: true,
-            installed: false,
-            reason: e && e.message ? String(e.message) : "import_failed",
-          };
-          console.warn("Local Porcupine KWS init skipped:", e);
         }
         const mods = await loadReceiverInitModules();
         hydrateReceiverBootstrapState(mods, {
@@ -2150,19 +2131,11 @@
           });
         }
         if (typeof createKwsProvider === "function") {
-          const porcupineBackendFactory = (typeof window !== "undefined" && typeof window.OrbisKwsBackendFactory === "function")
-            ? window.OrbisKwsBackendFactory
-            : null;
           const openWakeWordBrowserBackendFactory =
             (typeof createOpenWakeWordBrowserBackendFactory === "function")
               ? createOpenWakeWordBrowserBackendFactory()
               : null;
           kwsBackendFactories = {
-            porcupine_local: {
-              factory: porcupineBackendFactory,
-              requiresMic: true,
-              label: "porcupine-local",
-            },
             openwakeword_browser: {
               factory: openWakeWordBrowserBackendFactory,
               requiresMic: true,
@@ -2172,7 +2145,7 @@
           kwsBackendKey = (els.kwsBackendSelect && els.kwsBackendSelect.value)
             ? String(els.kwsBackendSelect.value)
             : DEFAULT_KWS_BACKEND_KEY;
-          const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.porcupine_local || null;
+          const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.openwakeword_browser || null;
           kwsVoiceProvider = createKwsProvider({
             eventBus,
             shadow: true,
@@ -2335,7 +2308,6 @@
           voiceProviderManager,
           sttVoiceProvider,
           kwsVoiceProvider,
-          porcupineKwsInitStatus,
           voiceHudSystem,
           setVoiceEngine(mode = DEFAULT_VOICE_ENGINE){
             const m = String(mode || DEFAULT_VOICE_ENGINE).toLowerCase();
