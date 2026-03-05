@@ -20,7 +20,7 @@ python3 "${SCRIPT_DIR}/server.py" \
   --require-onnx-data \
   --threshold 0.10 \
   --token-threshold orbis=0.35 \
-  --token-threshold ignis=0.10 \
+  --token-threshold tempus=0.10 \
   --token-threshold fridgis=0.10 \
   --token-threshold electrum=0.10 \
   --token-threshold sanctum=0.35 \

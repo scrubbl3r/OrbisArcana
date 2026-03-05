@@ -22,7 +22,7 @@
       kwsTokenInput: $("kwsTokenInput"),
       kwsTokenSendBtn: $("kwsTokenSendBtn"),
       kwsMicBtn: $("kwsMicBtn"),
-      kwsTokIgnisBtn: $("kwsTokIgnisBtn"),
+      kwsTokTempusBtn: $("kwsTokTempusBtn"),
       kwsTokRotaBtn: $("kwsTokRotaBtn"),
       kwsTokElectrumBtn: $("kwsTokElectrumBtn"),
       kwsTokenThrInput: $("kwsTokenThrInput"),
@@ -1454,7 +1454,7 @@
         }
       });
     }
-    if (els.kwsTokIgnisBtn) els.kwsTokIgnisBtn.addEventListener("click", () => sendKwsDebugToken("tempus"));
+    if (els.kwsTokTempusBtn) els.kwsTokTempusBtn.addEventListener("click", () => sendKwsDebugToken("tempus"));
     if (els.kwsTokRotaBtn) els.kwsTokRotaBtn.addEventListener("click", () => sendKwsDebugToken("rota"));
     if (els.kwsTokElectrumBtn) els.kwsTokElectrumBtn.addEventListener("click", () => sendKwsDebugToken("electrum"));
     async function toggleKwsMicFromUi(){

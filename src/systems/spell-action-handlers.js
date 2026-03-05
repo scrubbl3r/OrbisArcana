@@ -1,6 +1,7 @@
 export function createSpellActionHandlers({
   playElectricAoe,
   playFlameAoe,
+  playFrostAoe,
   teleportOrbToSpawnNeutralizePhysics,
   activateSanctusShield,
   grantSuperGrace,
@@ -14,6 +15,15 @@ export function createSpellActionHandlers({
     },
     play_flame_aoe(payload = {}) {
       void payload;
+      if (typeof playFlameAoe === "function") playFlameAoe();
+    },
+    play_frost_aoe(payload = {}) {
+      void payload;
+      if (typeof playFrostAoe === "function") {
+        playFrostAoe();
+        return;
+      }
+      // Backward-compatible fallback until dedicated frost VFX runtime is wired.
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
     domus_teleport_orb(payload = {}) {

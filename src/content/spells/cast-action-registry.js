@@ -13,6 +13,11 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     floatGracePolicy: "default",
   }),
   Object.freeze({
+    id: "aoe_frost",
+    handlerKey: "play_frost_aoe",
+    floatGracePolicy: "default",
+  }),
+  Object.freeze({
     id: "domus_teleport",
     handlerKey: "domus_teleport_orb",
     floatGracePolicy: "domus",

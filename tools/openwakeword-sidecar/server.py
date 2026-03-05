@@ -28,7 +28,7 @@ import websockets
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
-SIM_TOKENS = ("ignis", "rota", "electrum", "sanctum", "domus")
+SIM_TOKENS = ("tempus", "rota", "electrum", "sanctum", "domus")
 
 
 @dataclass
