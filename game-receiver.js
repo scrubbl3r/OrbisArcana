@@ -1058,6 +1058,8 @@
     const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
     const DEFAULT_OWW_BROWSER_INFER_TH = 0.15;
     const DEFAULT_OWW_BROWSER_INFER_CD_MS = 600;
+    const DEFAULT_KWS_AUTOSTART_RETRY_MS = 2000;
+    const DEFAULT_KWS_AUTOSTART_MAX_MS = 120000;
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     const KWS_READOUT_TICK_MS = 250;
     const KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
@@ -1095,6 +1097,9 @@
     let kwsReadoutTickTO = 0;
     let kwsSidecarLinkedLogged = false;
     let kwsLastBackendErrorLogged = "";
+    let kwsAutostartTimer = 0;
+    let kwsAutostartInFlight = false;
+    let kwsAutostartStartedAtMs = 0;
     const kwsEventLog = [];
     const KWS_EVENT_LOG_MAX = 5;
     function clearKwsWakeHudGateTimer() {
@@ -1107,6 +1112,62 @@
       kwsReadoutTickTO = setInterval(() => {
         updateKwsReadout();
       }, KWS_READOUT_TICK_MS);
+    }
+    function clearKwsAutostartWatchdog() {
+      if (!kwsAutostartTimer) return;
+      clearInterval(kwsAutostartTimer);
+      kwsAutostartTimer = 0;
+      kwsAutostartInFlight = false;
+    }
+    function hasKwsAudioFlow(status) {
+      const s = status && typeof status === "object" ? status : null;
+      if (!s) return false;
+      const b = s.audioBackendStatus && typeof s.audioBackendStatus === "object" ? s.audioBackendStatus : null;
+      const chunks = Number((b && b.audioChunksSent) || 0);
+      const produced = Number((b && b.audioWorkerFramesProduced) || 0);
+      const infer = Number((b && b.inferInferences) || 0);
+      return chunks > 0 || produced > 0 || infer > 0;
+    }
+    function startKwsAutostartWatchdog() {
+      if (!mvp || !mvp.kwsVoiceProvider || typeof mvp.kwsVoiceProvider.getStatus !== "function") return;
+      clearKwsAutostartWatchdog();
+      kwsAutostartStartedAtMs = performance.now();
+      kwsAutostartTimer = setInterval(async () => {
+        if (kwsAutostartInFlight) return;
+        const elapsed = Math.max(0, performance.now() - Number(kwsAutostartStartedAtMs || 0));
+        if (elapsed > DEFAULT_KWS_AUTOSTART_MAX_MS) {
+          clearKwsAutostartWatchdog();
+          return;
+        }
+        const s = mvp.kwsVoiceProvider.getStatus();
+        const err = String(s && s.micError || "").toLowerCase();
+        if (err.includes("notallowederror") || err.includes("permission")) {
+          clearKwsAutostartWatchdog();
+          return;
+        }
+        if (s && s.micRunning && hasKwsAudioFlow(s)) {
+          clearKwsAutostartWatchdog();
+          return;
+        }
+        kwsAutostartInFlight = true;
+        try {
+          if (typeof mvp.setKwsBackend === "function") {
+            await mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY);
+          }
+          if (typeof mvp.setVoiceEngine === "function") {
+            mvp.setVoiceEngine(DEFAULT_VOICE_ENGINE);
+          }
+          if (typeof mvp.setKwsMicEnabled === "function") {
+            await mvp.setKwsMicEnabled(true);
+          }
+          refreshKwsMicBtn();
+          updateKwsReadout();
+        } catch (_) {
+          // Continue retry loop until startup succeeds or timeout/permission-stop triggers.
+        } finally {
+          kwsAutostartInFlight = false;
+        }
+      }, DEFAULT_KWS_AUTOSTART_RETRY_MS);
     }
     function isElectrumSchoolWindowActive() {
       return kwsTokenUiState.flatSpinAxis === "z"
@@ -2455,6 +2516,7 @@
             .catch((err) => {
               console.warn("KWS boot auto-init failed:", err);
             });
+          startKwsAutostartWatchdog();
         }
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
