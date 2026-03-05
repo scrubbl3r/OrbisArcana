@@ -1066,6 +1066,7 @@
     const DEFAULT_VOICE_ENGINE = "kws";
     const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
+    const KWS_READOUT_TICK_MS = 250;
     const KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
     const KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
     const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
@@ -1098,6 +1099,7 @@
       orbisWindowUntilMs: 0,
     };
     let kwsWakeHudGateTO = 0;
+    let kwsReadoutTickTO = 0;
     let kwsSidecarLinkedLogged = false;
     let kwsLastBackendErrorLogged = "";
     const kwsEventLog = [];
@@ -1106,6 +1108,12 @@
       if (!kwsWakeHudGateTO) return;
       clearTimeout(kwsWakeHudGateTO);
       kwsWakeHudGateTO = 0;
+    }
+    function startKwsReadoutTick() {
+      if (kwsReadoutTickTO) return;
+      kwsReadoutTickTO = setInterval(() => {
+        updateKwsReadout();
+      }, KWS_READOUT_TICK_MS);
     }
     function isElectrumSchoolWindowActive() {
       return kwsTokenUiState.flatSpinAxis === "z"
@@ -1453,6 +1461,7 @@
       syncKwsTuneUiFromStatus(status && status.parser ? status.parser : status);
     }
     if (els.kwsApplyTuneBtn) els.kwsApplyTuneBtn.addEventListener("click", applyKwsParserTuneFromUi);
+    startKwsReadoutTick();
 
     // =========================================================================
     // ROOM STATE 
