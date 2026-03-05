@@ -1429,11 +1429,10 @@
 
     if (els.voiceEngineSelect) {
       els.voiceEngineSelect.addEventListener("change", () => {
-        const mode = String(els.voiceEngineSelect.value || "stt");
-        kwsDebugState.mode = mode;
+        kwsDebugState.mode = "kws";
         updateKwsReadout();
         if (mvp && typeof mvp.setVoiceEngine === "function") {
-          mvp.setVoiceEngine(mode);
+          mvp.setVoiceEngine("kws");
         }
       });
     }
@@ -1589,7 +1588,6 @@
     let orbRuntimeLoop = null;
     let resourcesSystem = null;
     let voiceProviderManager = null;
-    let sttVoiceProvider = null;
     let kwsVoiceProvider = null;
     let kwsBackendFactories = Object.create(null);
     let kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
@@ -1998,9 +1996,7 @@
           createResourcesSystem,
           createOrbSystemsBundle,
           createOrbFxSystem,
-          createVoiceRecognitionSystem,
           createVoiceProviderManager,
-          createSttProvider,
           createKwsProvider,
           createOpenWakeWordBrowserBackendFactory,
           createSpellDispatchSystem,
@@ -2078,7 +2074,6 @@
           },
         });
         const spellDispatchSystem = createSpellDispatchSystem({ eventBus, resources: resourcesSystem });
-        const voiceRecognitionSystem = createVoiceRecognitionSystem({ eventBus });
         const voiceHudSystem = createVoiceHudSystem({
           eventBus,
           voiceReadoutEl: els.voiceReadout,
@@ -2101,7 +2096,7 @@
             flashKwsToken(token);
           }
           const kwsEngineMode = String(kwsDebugState.mode || "").toLowerCase();
-          if ((kwsEngineMode === "kws" || kwsEngineMode === "kws_shadow") && token === "orbis") {
+          if (kwsEngineMode === "kws" && token === "orbis") {
             eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
             openKwsWakeHudGate(DEFAULT_KWS_GATE_TIMEOUT_MS);
           }
@@ -2147,15 +2142,6 @@
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_REJECTED, (p = {}) => {
           void p;
         });
-        if (typeof createSttProvider === "function") {
-          sttVoiceProvider = createSttProvider({
-            start: () => { if (voiceRecognitionSystem && typeof voiceRecognitionSystem.start === "function") voiceRecognitionSystem.start(); },
-            stop: () => { if (voiceRecognitionSystem && typeof voiceRecognitionSystem.stop === "function") voiceRecognitionSystem.stop(); },
-            setMode: (mode) => {
-              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
-            },
-          });
-        }
         if (typeof createKwsProvider === "function") {
           const openWakeWordBrowserBackendFactory =
             (typeof createOpenWakeWordBrowserBackendFactory === "function")
@@ -2187,10 +2173,9 @@
         if (typeof createVoiceProviderManager === "function") {
           voiceProviderManager = createVoiceProviderManager({
             providers: {
-              ...(sttVoiceProvider ? { stt: sttVoiceProvider } : {}),
               ...(kwsVoiceProvider ? { kws: kwsVoiceProvider } : {}),
             },
-            activeId: kwsVoiceProvider ? "kws" : (sttVoiceProvider ? "stt" : ""),
+            activeId: kwsVoiceProvider ? "kws" : "",
           });
         }
         fxSystem.start();
@@ -2200,8 +2185,6 @@
         spellDispatchSystem.start();
         if (voiceProviderManager && typeof voiceProviderManager.start === "function") {
           voiceProviderManager.start();
-        } else {
-          voiceRecognitionSystem.start();
         }
         // Initialize KWS provider eagerly; default engine may be live KWS.
         if (kwsVoiceProvider) {
@@ -2330,51 +2313,24 @@
           orbSystemsBundle,
           orbRuntimeLoop,
           spellDispatchSystem,
-          voiceRecognitionSystem,
           voiceProviderManager,
-          sttVoiceProvider,
           kwsVoiceProvider,
           voiceHudSystem,
-          setVoiceEngine(mode = DEFAULT_VOICE_ENGINE){
-            const m = String(mode || DEFAULT_VOICE_ENGINE).toLowerCase();
-            kwsDebugState.mode = m;
+          setVoiceEngine(){
+            kwsDebugState.mode = "kws";
             updateKwsReadout();
             if (!voiceProviderManager) return false;
-            if (m === "kws_shadow") {
-              if (kwsVoiceProvider) {
-                kwsVoiceProvider.setMode("shadow");
-                kwsVoiceProvider.start && kwsVoiceProvider.start();
-                kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
-              }
-              if (typeof voiceProviderManager.setActive === "function") voiceProviderManager.setActive("kws");
-              if (eventBus) eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-              return true;
-            }
-            if (m === "kws") {
-              if (kwsVoiceProvider) {
-                kwsVoiceProvider.setMode("active");
-                kwsVoiceProvider.start && kwsVoiceProvider.start();
-                kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
-              }
-              const ok = !!(voiceProviderManager.setActive && voiceProviderManager.setActive("kws"));
-              if (kwsVoiceProvider) {
-                // Re-assert in case provider-manager transitions changed state.
-                kwsVoiceProvider.setMode && kwsVoiceProvider.setMode("active");
-                kwsVoiceProvider.start && kwsVoiceProvider.start();
-                kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
-              }
-              if (eventBus) {
-                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "kws_boot", timeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS });
-              }
-              return ok;
-            }
             if (kwsVoiceProvider) {
-              kwsVoiceProvider.setMode("shadow");
+              kwsVoiceProvider.setMode("active");
               kwsVoiceProvider.start && kwsVoiceProvider.start();
               kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
             }
-            return voiceProviderManager.setActive && voiceProviderManager.setActive("stt");
+            const ok = !!(voiceProviderManager.setActive && voiceProviderManager.setActive("kws"));
+            if (eventBus) {
+              eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+              eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "kws_boot", timeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS });
+            }
+            return ok;
           },
           async setKwsBackend(key = DEFAULT_KWS_BACKEND_KEY){
             const nextKey = String(key || DEFAULT_KWS_BACKEND_KEY);
