@@ -1058,6 +1058,8 @@
     const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
     const DEFAULT_KWS_AUTOSTART_RETRY_MS = 2000;
     const DEFAULT_KWS_AUTOSTART_MAX_MS = 120000;
+    const DEFAULT_KWS_AUTOSTART_REKICK_MS = 5000;
+    const DEFAULT_KWS_START_STALL_MS = 8000;
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     const KWS_READOUT_TICK_MS = 250;
     const KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
@@ -1097,6 +1099,7 @@
     let kwsAutostartTimer = 0;
     let kwsAutostartInFlight = false;
     let kwsAutostartStartedAtMs = 0;
+    let kwsAutostartLastKickAtMs = 0;
     const kwsEventLog = [];
     const KWS_EVENT_LOG_MAX = 5;
     function clearKwsWakeHudGateTimer() {
@@ -1115,6 +1118,7 @@
       clearInterval(kwsAutostartTimer);
       kwsAutostartTimer = 0;
       kwsAutostartInFlight = false;
+      kwsAutostartLastKickAtMs = 0;
     }
     function hasKwsAudioFlow(status) {
       const s = status && typeof status === "object" ? status : null;
@@ -1146,9 +1150,13 @@
           clearKwsAutostartWatchdog();
           return;
         }
+        const nowPerf = performance.now();
+        if ((nowPerf - Number(kwsAutostartLastKickAtMs || 0)) < DEFAULT_KWS_AUTOSTART_REKICK_MS) return;
         kwsAutostartInFlight = true;
         try {
-          if (typeof mvp.setKwsBackend === "function") {
+          const backendLabel = String(s && s.backendLabel || "").toLowerCase();
+          const backendLooksBrowser = backendLabel.includes("openwakeword-browser");
+          if (!backendLooksBrowser && typeof mvp.setKwsBackend === "function") {
             await mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY);
           }
           if (typeof mvp.setVoiceEngine === "function") {
@@ -1157,6 +1165,7 @@
           if (typeof mvp.setKwsMicEnabled === "function") {
             await mvp.setKwsMicEnabled(true);
           }
+          kwsAutostartLastKickAtMs = nowPerf;
           refreshKwsMicBtn();
           updateKwsReadout();
         } catch (_) {
@@ -1308,12 +1317,17 @@
           const d = Number(backendStatus.audioWorkerFramesDropped) || 0;
           const ch = Number(backendStatus.audioChunksSent) || 0;
           const q = Number(backendStatus.audioWorkerQueueDepth) || 0;
+          const startAt = Number(backendStatus.audioStartAtMs) || 0;
           const ctxState = String(backendStatus.audioContextState || "").trim().toLowerCase();
           if (ctxState) parts.push(`ctx:${ctxState}`);
           parts.push(`aud:${ch}`);
           parts.push(`frm:${f}`);
           parts.push(`q:${q}`);
           if (d > 0) parts.push(`drop:${d}`);
+          if (ctxState === "running" && ch === 0 && startAt > 0) {
+            const ageMs = Math.max(0, performance.now() - startAt);
+            if (ageMs >= DEFAULT_KWS_START_STALL_MS) parts.push("start:stalled");
+          }
         }
         if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "inferInferences")) {
           const inf = Number(backendStatus.inferInferences) || 0;
