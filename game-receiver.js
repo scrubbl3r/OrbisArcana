@@ -1095,7 +1095,6 @@
     };
     let kwsWakeHudGateTO = 0;
     let kwsReadoutTickTO = 0;
-    let kwsSidecarLinkedLogged = false;
     let kwsLastBackendErrorLogged = "";
     let kwsAutostartTimer = 0;
     let kwsAutostartInFlight = false;
@@ -1294,13 +1293,9 @@
           parts.push(`micerr:${String(s.micError).slice(0, 220)}`);
         }
         const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
-        const sidecarStatus = backendStatus && backendStatus.lastStatusMsg ? backendStatus.lastStatusMsg : null;
-        const sidecarConnected = !!(backendStatus && backendStatus.connected);
+        const backendConnected = !!(backendStatus && backendStatus.connected);
         if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "connected")) {
-          parts.push(`conn:${sidecarConnected ? "on" : "off"}`);
-        }
-        if (sidecarStatus && Object.prototype.hasOwnProperty.call(sidecarStatus, "running")) {
-          parts.push(`run:${sidecarStatus.running ? "on" : "off"}`);
+          parts.push(`conn:${backendConnected ? "on" : "off"}`);
         }
         if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "simulated")) {
           parts.push(`mode:${backendStatus.simulated ? "sim" : "real"}`);
@@ -1341,11 +1336,6 @@
           if (errText && errText !== kwsLastBackendErrorLogged) kwsLastBackendErrorLogged = errText;
         } else {
           kwsLastBackendErrorLogged = "";
-        }
-        if (sidecarConnected && sidecarStatus && !kwsSidecarLinkedLogged) {
-          kwsSidecarLinkedLogged = true;
-        } else if ((!sidecarConnected || !sidecarStatus) && kwsSidecarLinkedLogged) {
-          kwsSidecarLinkedLogged = false;
         }
       } else if (porcupineKwsInitStatus && porcupineKwsInitStatus.attempted) {
         if (porcupineKwsInitStatus.reason && porcupineKwsInitStatus.reason !== "installed") {
@@ -1488,7 +1478,7 @@
         : (requiresMic ? "KWS Mic Off" : "KWS Link Off");
       els.kwsMicBtn.disabled = !hasBackend;
       els.kwsMicBtn.title = hasBackend
-        ? (requiresMic ? "Toggle KWS backend microphone" : "Toggle local openWakeWord sidecar connection")
+        ? (requiresMic ? "Toggle KWS backend microphone" : "Toggle KWS backend connection")
         : "No KWS backend is connected";
     }
     if (els.kwsMicBtn) els.kwsMicBtn.addEventListener("click", () => { void toggleKwsMicFromUi(); });
@@ -2005,7 +1995,6 @@
           createVoiceProviderManager,
           createSttProvider,
           createKwsProvider,
-          createOpenWakeWordSidecarBackendFactory,
           createOpenWakeWordBrowserBackendFactory,
           createSpellDispatchSystem,
           createVoiceHudSystem,
@@ -2164,10 +2153,6 @@
           const porcupineBackendFactory = (typeof window !== "undefined" && typeof window.OrbisKwsBackendFactory === "function")
             ? window.OrbisKwsBackendFactory
             : null;
-          const openWakeWordSidecarBackendFactory =
-            (typeof createOpenWakeWordSidecarBackendFactory === "function")
-              ? createOpenWakeWordSidecarBackendFactory()
-              : null;
           const openWakeWordBrowserBackendFactory =
             (typeof createOpenWakeWordBrowserBackendFactory === "function")
               ? createOpenWakeWordBrowserBackendFactory()
@@ -2177,11 +2162,6 @@
               factory: porcupineBackendFactory,
               requiresMic: true,
               label: "porcupine-local",
-            },
-            openwakeword_sidecar: {
-              factory: openWakeWordSidecarBackendFactory,
-              requiresMic: false,
-              label: "openwakeword-sidecar",
             },
             openwakeword_browser: {
               factory: openWakeWordBrowserBackendFactory,
@@ -2488,7 +2468,7 @@
           els.kwsBackendSelect.value = DEFAULT_KWS_BACKEND_KEY;
         }
         if (mvp) {
-          // Boot into live KWS with the openWakeWord sidecar and connect immediately.
+          // Boot into live KWS with the browser openWakeWord backend and connect immediately.
           Promise.resolve()
             .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY) : true))
             .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine(DEFAULT_VOICE_ENGINE) : true))
