@@ -21,6 +21,13 @@ function readStringParam(name, fallback = "") {
   return raw || String(fallback || "");
 }
 
+function readNumberParam(name, fallback = 0) {
+  const params = readUrlParams();
+  const raw = String(params && params.get(name) || "").trim();
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : Number(fallback);
+}
+
 export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   enabled: true,
   label: "openwakeword-browser",
@@ -34,7 +41,7 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   ortModuleUrl: readStringParam("owwBrowserOrtModule", "./vendor/onnxruntime/1.22.0/ort.wasm.min.mjs"),
   ortWasmRootUrl: readStringParam("owwBrowserOrtWasmRoot", "./vendor/onnxruntime/1.22.0/"),
   inferToken: readStringParam("owwBrowserToken", "tempus").toLowerCase(),
-  inferThreshold: 0.85,
+  inferThreshold: readNumberParam("owwBrowserInferThreshold", 0.05),
   inferCooldownMs: 600,
   inferPollMs: 33,
   tokenMap: Object.freeze({
