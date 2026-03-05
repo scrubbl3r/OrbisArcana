@@ -2357,13 +2357,24 @@
             if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
               const thFromUi = Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value);
               const cdFromUi = Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value);
-              kwsVoiceProvider.setBackendConfig({
+              const statusAfterApply = kwsVoiceProvider.setBackendConfig({
                 inferThreshold: Number.isFinite(thFromUi) ? thFromUi : DEFAULT_OWW_BROWSER_INFER_TH,
                 inferCooldownMs: Number.isFinite(cdFromUi) ? cdFromUi : DEFAULT_OWW_BROWSER_INFER_CD_MS,
               });
+              syncKwsTuneUiFromStatus(statusAfterApply && statusAfterApply.audioBackendStatus ? statusAfterApply.audioBackendStatus : statusAfterApply);
             }
             if (spec && typeof spec.factory === "function" && typeof kwsVoiceProvider.setMicEnabled === "function") {
               await kwsVoiceProvider.setMicEnabled(true);
+            }
+            if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
+              // Re-apply after mic/backend startup to mirror explicit "Apply" behavior.
+              const thFromUi = Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value);
+              const cdFromUi = Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value);
+              const statusAfterStartApply = kwsVoiceProvider.setBackendConfig({
+                inferThreshold: Number.isFinite(thFromUi) ? thFromUi : DEFAULT_OWW_BROWSER_INFER_TH,
+                inferCooldownMs: Number.isFinite(cdFromUi) ? cdFromUi : DEFAULT_OWW_BROWSER_INFER_CD_MS,
+              });
+              syncKwsTuneUiFromStatus(statusAfterStartApply && statusAfterStartApply.audioBackendStatus ? statusAfterStartApply.audioBackendStatus : statusAfterStartApply);
             }
             refreshKwsMicBtn();
             updateKwsReadout();
