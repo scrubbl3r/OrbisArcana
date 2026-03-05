@@ -1056,6 +1056,8 @@
 
     const DEFAULT_VOICE_ENGINE = "kws";
     const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
+    const DEFAULT_OWW_BROWSER_INFER_TH = 0.15;
+    const DEFAULT_OWW_BROWSER_INFER_CD_MS = 600;
     const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     const KWS_READOUT_TICK_MS = 250;
     const KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
@@ -2352,6 +2354,14 @@
               requiresMic: !(spec && spec.requiresMic === false),
               label: spec && spec.label ? spec.label : nextKey,
             });
+            if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
+              const thFromUi = Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value);
+              const cdFromUi = Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value);
+              kwsVoiceProvider.setBackendConfig({
+                inferThreshold: Number.isFinite(thFromUi) ? thFromUi : DEFAULT_OWW_BROWSER_INFER_TH,
+                inferCooldownMs: Number.isFinite(cdFromUi) ? cdFromUi : DEFAULT_OWW_BROWSER_INFER_CD_MS,
+              });
+            }
             if (spec && typeof spec.factory === "function" && typeof kwsVoiceProvider.setMicEnabled === "function") {
               await kwsVoiceProvider.setMicEnabled(true);
             }
