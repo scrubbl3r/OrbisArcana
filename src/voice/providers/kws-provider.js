@@ -176,6 +176,17 @@ export function createKwsProvider(opts = {}) {
     return getStatus();
   }
 
+  function setBackendConfig(next = {}) {
+    if (audioBackend && typeof audioBackend.setConfig === "function") {
+      try {
+        audioBackend.setConfig(next);
+      } catch (err) {
+        micError = err && err.message ? String(err.message) : "audio_backend_set_config_failed";
+      }
+    }
+    return getStatus();
+  }
+
   async function setBackend(nextFactory, nextConfig = {}) {
     const wasMicRunning = !!micRunning;
     const shouldResume = wasMicRunning || !!micEnabled;
@@ -204,6 +215,7 @@ export function createKwsProvider(opts = {}) {
     setEnabled,
     setMode,
     setParserConfig,
+    setBackendConfig,
     setBackend,
     startMic,
     stopMic,

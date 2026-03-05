@@ -312,4 +312,9 @@ self.onmessage = (ev) => {
     initStep = "";
     return;
   }
+  if (type === "set_config") {
+    const n = toFiniteNumber(msg && msg.threshold, threshold);
+    threshold = Math.max(0, Math.min(1, n));
+    return;
+  }
 };

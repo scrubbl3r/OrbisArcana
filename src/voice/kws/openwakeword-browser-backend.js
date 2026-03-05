@@ -883,6 +883,31 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       return true;
     }
 
+    function setConfig(next = {}) {
+      if (!next || typeof next !== "object") return getStatus();
+      if (Object.prototype.hasOwnProperty.call(next, "inferThreshold")) {
+        const n = Number(next.inferThreshold);
+        if (Number.isFinite(n)) inferThreshold = normalizeThreshold(n, inferThreshold);
+      }
+      if (Object.prototype.hasOwnProperty.call(next, "inferCooldownMs")) {
+        const n = Number(next.inferCooldownMs);
+        if (Number.isFinite(n)) inferCooldownMs = Math.max(0, Math.round(n));
+      }
+      if (Object.prototype.hasOwnProperty.call(next, "inferPollMs")) {
+        const n = Number(next.inferPollMs);
+        if (Number.isFinite(n)) inferPollMs = Math.max(16, Math.round(n));
+      }
+      if (inferWorker) {
+        try {
+          inferWorker.postMessage({
+            type: "set_config",
+            threshold: inferThreshold,
+          });
+        } catch {}
+      }
+      return getStatus();
+    }
+
     function getStatus() {
       return {
         backend: "openwakeword-browser",
@@ -957,6 +982,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       start,
       stop,
       destroy,
+      setConfig,
       getStatus,
     });
   };

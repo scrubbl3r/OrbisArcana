@@ -25,7 +25,6 @@
       kwsTokIgnisBtn: $("kwsTokIgnisBtn"),
       kwsTokRotaBtn: $("kwsTokRotaBtn"),
       kwsTokElectrumBtn: $("kwsTokElectrumBtn"),
-      kwsWindowMsInput: $("kwsWindowMsInput"),
       kwsTokenThrInput: $("kwsTokenThrInput"),
       kwsCooldownMsInput: $("kwsCooldownMsInput"),
       kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
@@ -1325,16 +1324,13 @@
     }
 
     function syncKwsTuneUiFromStatus(status){
-      const parser = status && status.parser ? status.parser : status;
-      if (!parser || typeof parser !== "object") return;
-      if (els.kwsWindowMsInput && Number.isFinite(Number(parser.windowMs))) {
-        els.kwsWindowMsInput.value = String(Math.round(Number(parser.windowMs)));
+      const backend = status && status.audioBackendStatus ? status.audioBackendStatus : status;
+      if (!backend || typeof backend !== "object") return;
+      if (els.kwsTokenThrInput && Number.isFinite(Number(backend.inferThreshold))) {
+        els.kwsTokenThrInput.value = Number(backend.inferThreshold).toFixed(3);
       }
-      if (els.kwsTokenThrInput && Number.isFinite(Number(parser.tokenThreshold))) {
-        els.kwsTokenThrInput.value = Number(parser.tokenThreshold).toFixed(2);
-      }
-      if (els.kwsCooldownMsInput && Number.isFinite(Number(parser.spellCooldownMs))) {
-        els.kwsCooldownMsInput.value = String(Math.round(Number(parser.spellCooldownMs)));
+      if (els.kwsCooldownMsInput && Number.isFinite(Number(backend.inferCooldownMs))) {
+        els.kwsCooldownMsInput.value = String(Math.round(Number(backend.inferCooldownMs)));
       }
     }
 
@@ -1452,13 +1448,12 @@
       });
     }
     function applyKwsParserTuneFromUi(){
-      if (!mvp || typeof mvp.setKwsParserConfig !== "function") return;
-      const status = mvp.setKwsParserConfig({
-        windowMs: Number(els.kwsWindowMsInput && els.kwsWindowMsInput.value),
-        tokenThreshold: Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value),
-        spellCooldownMs: Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value),
+      if (!mvp || typeof mvp.setKwsBackendConfig !== "function") return;
+      const status = mvp.setKwsBackendConfig({
+        inferThreshold: Number(els.kwsTokenThrInput && els.kwsTokenThrInput.value),
+        inferCooldownMs: Number(els.kwsCooldownMsInput && els.kwsCooldownMsInput.value),
       });
-      syncKwsTuneUiFromStatus(status && status.parser ? status.parser : status);
+      syncKwsTuneUiFromStatus(status && status.audioBackendStatus ? status.audioBackendStatus : status);
     }
     if (els.kwsApplyTuneBtn) els.kwsApplyTuneBtn.addEventListener("click", applyKwsParserTuneFromUi);
     startKwsReadoutTick();
@@ -2383,6 +2378,10 @@
           setKwsParserConfig(next = {}){
             if (!kwsVoiceProvider || typeof kwsVoiceProvider.setParserConfig !== "function") return null;
             return kwsVoiceProvider.setParserConfig(next);
+          },
+          setKwsBackendConfig(next = {}){
+            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setBackendConfig !== "function") return null;
+            return kwsVoiceProvider.setBackendConfig(next);
           },
           async setKwsMicEnabled(next){
             if (!kwsVoiceProvider || typeof kwsVoiceProvider.setMicEnabled !== "function") return false;
