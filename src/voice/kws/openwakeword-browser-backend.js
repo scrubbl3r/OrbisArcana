@@ -188,9 +188,17 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferModelUrl = "";
     let inferWasmRootUrl = "";
     let inferToken = "";
-    let inferThreshold = normalizeThreshold(config.inferThreshold, 0.85);
+    let inferThreshold = normalizeThreshold(
+      config.inferThreshold,
+      normalizeThreshold(OPENWAKEWORD_BROWSER_CONFIG_DEFAULT.inferThreshold, 0.15),
+    );
     let inferPollMs = Math.max(16, Number(config.inferPollMs) || 33);
-    let inferCooldownMs = Math.max(0, Number(config.inferCooldownMs) || 600);
+    let inferCooldownMs = Math.max(
+      0,
+      Number(config.inferCooldownMs)
+        || Number(OPENWAKEWORD_BROWSER_CONFIG_DEFAULT.inferCooldownMs)
+        || 600,
+    );
     let inferLastScore = 0;
     let inferLastMs = 0;
     let inferLastInferMs = 0;

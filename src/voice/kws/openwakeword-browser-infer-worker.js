@@ -7,7 +7,7 @@ let melInputName = "";
 let melOutputName = "";
 let embeddingInputName = "";
 let embeddingOutputName = "";
-let threshold = 0.85;
+let threshold = 0.15;
 let initialized = false;
 let processing = false;
 
@@ -208,7 +208,7 @@ async function onInit(msg) {
   const embeddingModelUrl = String(msg && msg.embeddingModelUrl || "").trim();
   const melModelBuffer = msg && msg.melModelBuffer instanceof ArrayBuffer ? msg.melModelBuffer : null;
   const embeddingModelBuffer = msg && msg.embeddingModelBuffer instanceof ArrayBuffer ? msg.embeddingModelBuffer : null;
-  threshold = toFiniteNumber(msg && msg.threshold, 0.85);
+  threshold = toFiniteNumber(msg && msg.threshold, 0.15);
   const rawClassifiers = Array.isArray(msg && msg.classifiers) ? msg.classifiers : [];
 
   if (!ortModuleUrl) throw new Error("oww_browser_infer_missing_ort_module_url");
