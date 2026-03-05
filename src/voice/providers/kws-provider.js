@@ -12,6 +12,7 @@ import { createKwsTokenParser } from "../kws/kws-token-parser.js";
  *   parser?: ReturnType<typeof createKwsTokenParser>,
  *   shadow?: boolean,
  *   parserConfig?: object,
+ *   tokenDedupMs?: number,
  *   audioBackendFactory?: Function,
  *   backendFactory?: Function,
  *   backendConfig?: { requiresMic?: boolean, label?: string },
@@ -40,6 +41,29 @@ export function createKwsProvider(opts = {}) {
     ? opts.backendConfig.requiresMic
     : true);
   let backendLabel = String(opts.backendConfig && opts.backendConfig.label || "kws-backend");
+  const configuredTokenDedupMs = Number.isFinite(Number(opts.tokenDedupMs))
+    ? Math.max(0, Math.round(Number(opts.tokenDedupMs)))
+    : null;
+  const lastAcceptedTokenAtMsByToken = Object.create(null);
+  let dedupDrops = 0;
+
+  function clearTokenDedupState() {
+    for (const k of Object.keys(lastAcceptedTokenAtMsByToken)) delete lastAcceptedTokenAtMsByToken[k];
+    dedupDrops = 0;
+  }
+
+  function normalizeToken(raw) {
+    return String(raw || "").trim().toLowerCase();
+  }
+
+  function resolveTokenDedupMs() {
+    if (configuredTokenDedupMs != null) return configuredTokenDedupMs;
+    const backendStatus = audioBackend && typeof audioBackend.getStatus === "function"
+      ? audioBackend.getStatus()
+      : null;
+    const cooldown = Number(backendStatus && backendStatus.inferCooldownMs);
+    return Number.isFinite(cooldown) ? Math.max(0, Math.round(cooldown)) : 0;
+  }
 
   function start() {
     started = true;
@@ -47,12 +71,14 @@ export function createKwsProvider(opts = {}) {
 
   function stop() {
     started = false;
+    clearTokenDedupState();
   }
 
   function destroy() {
     started = false;
     enabled = false;
     void stopMic();
+    clearTokenDedupState();
     parser.reset();
   }
 
@@ -131,6 +157,7 @@ export function createKwsProvider(opts = {}) {
       try { micStream.getTracks().forEach((t) => t.stop()); } catch {}
     }
     micStream = null;
+    clearTokenDedupState();
     return true;
   }
 
@@ -145,10 +172,28 @@ export function createKwsProvider(opts = {}) {
    */
   function ingestTokenHit(hit) {
     if (!enabled || !started) return { matched: false, reason: "provider_inactive" };
-    return parser.ingestToken({
+    const token = normalizeToken(hit && hit.token);
+    const atMs = Number(hit && hit.atMs) || Date.now();
+    const dedupMs = resolveTokenDedupMs();
+    if (token && dedupMs > 0) {
+      const lastAt = Number(lastAcceptedTokenAtMsByToken[token] || 0);
+      if ((atMs - lastAt) < dedupMs) {
+        dedupDrops += 1;
+        return { matched: false, reason: "provider_token_dedup", token, atMs, dedupMs };
+      }
+    }
+    const result = parser.ingestToken({
       ...hit,
+      token,
+      atMs,
       providerId: "kws",
     });
+    if (token && dedupMs > 0) {
+      const reason = String(result && result.reason || "");
+      const accepted = reason !== "below_token_threshold" && reason !== "empty" && reason !== "disabled";
+      if (accepted) lastAcceptedTokenAtMsByToken[token] = atMs;
+    }
+    return result;
   }
 
   function getStatus() {
@@ -164,6 +209,8 @@ export function createKwsProvider(opts = {}) {
       hasBackendFactory: typeof backendFactory === "function",
       backendRequiresMic,
       backendLabel,
+      tokenDedupMs: resolveTokenDedupMs(),
+      tokenDedupDrops: dedupDrops,
       audioBackendStatus: audioBackend && typeof audioBackend.getStatus === "function" ? audioBackend.getStatus() : null,
       parser: parser.getStatus(),
     };
