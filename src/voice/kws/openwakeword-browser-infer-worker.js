@@ -1,16 +1,12 @@
 let ortRef = null;
 let melSession = null;
 let embeddingSession = null;
-let classifierSession = null;
+const classifierEntries = [];
 
 let melInputName = "";
 let melOutputName = "";
 let embeddingInputName = "";
 let embeddingOutputName = "";
-let classifierInputName = "";
-let classifierOutputName = "";
-
-let modelToken = "";
 let threshold = 0.85;
 let initialized = false;
 let processing = false;
@@ -154,37 +150,42 @@ async function runPipelineForFrame(frameI16) {
   }
   inputShape = [1, EMBEDDING_HISTORY, EMBEDDING_DIMS];
   const clsInput = new ortRef.Tensor("float32", clsData, inputShape);
-  let clsOut;
-  try {
-    clsOut = await classifierSession.run({ [classifierInputName]: clsInput });
-  } catch (err) {
-    const em = err && err.message ? String(err.message) : String(err || "unknown");
-    throw new Error(`oww_browser_infer_run_failed:${em};input=${classifierInputName};shape=[${inputShape.join(",")}]`);
-  }
-
   inferences += 1;
   lastInferAtMs = nowMs();
-  lastScore = extractScore(clsOut);
-  const effectiveScore = inferences <= 5 ? 0 : lastScore; // mirror warmup suppression in openWakeWord
+  let frameMaxScore = 0;
+  const warmupSuppressed = inferences <= 5; // mirror warmup suppression in openWakeWord
+  for (const c of classifierEntries) {
+    let clsOut;
+    try {
+      clsOut = await c.session.run({ [c.inputName]: clsInput });
+    } catch (err) {
+      const em = err && err.message ? String(err.message) : String(err || "unknown");
+      throw new Error(`oww_browser_infer_run_failed:${em};token=${c.token};input=${c.inputName};shape=[${inputShape.join(",")}]`);
+    }
+    const score = extractScore(clsOut);
+    if (score > frameMaxScore) frameMaxScore = score;
+    const effectiveScore = warmupSuppressed ? 0 : score;
+    if (!warmupSuppressed && effectiveScore >= c.threshold && c.token) {
+      postMessage({
+        type: "token_detected",
+        atMs: lastInferAtMs,
+        token: c.token,
+        confidence: effectiveScore,
+      });
+    }
+  }
+  lastScore = frameMaxScore;
+  const effectiveMaxScore = warmupSuppressed ? 0 : frameMaxScore;
   postMessage({
     type: "infer_stats",
     atMs: lastInferAtMs,
     inferMs: Math.max(0, lastInferAtMs - t0),
     framesSeen,
     inferences,
-    lastScore: effectiveScore,
+    lastScore: effectiveMaxScore,
     inputShape,
     initStep,
   });
-
-  if (effectiveScore >= threshold && modelToken) {
-    postMessage({
-      type: "token_detected",
-      atMs: lastInferAtMs,
-      token: modelToken,
-      confidence: effectiveScore,
-    });
-  }
 }
 
 async function processQueue() {
@@ -205,18 +206,15 @@ async function onInit(msg) {
   const wasmRootUrl = String(msg && msg.wasmRootUrl || "").trim();
   const melModelUrl = String(msg && msg.melModelUrl || "").trim();
   const embeddingModelUrl = String(msg && msg.embeddingModelUrl || "").trim();
-  const classifierModelUrl = String(msg && msg.modelUrl || "").trim();
   const melModelBuffer = msg && msg.melModelBuffer instanceof ArrayBuffer ? msg.melModelBuffer : null;
   const embeddingModelBuffer = msg && msg.embeddingModelBuffer instanceof ArrayBuffer ? msg.embeddingModelBuffer : null;
-  const classifierModelBuffer = msg && msg.modelBuffer instanceof ArrayBuffer ? msg.modelBuffer : null;
-  const externalData = Array.isArray(msg && msg.externalData) ? msg.externalData : [];
-  modelToken = String(msg && msg.token || "").trim().toLowerCase();
   threshold = toFiniteNumber(msg && msg.threshold, 0.85);
+  const rawClassifiers = Array.isArray(msg && msg.classifiers) ? msg.classifiers : [];
 
   if (!ortModuleUrl) throw new Error("oww_browser_infer_missing_ort_module_url");
   if (!melModelUrl && !melModelBuffer) throw new Error("oww_browser_infer_missing_mel_model");
   if (!embeddingModelUrl && !embeddingModelBuffer) throw new Error("oww_browser_infer_missing_embedding_model");
-  if (!classifierModelUrl && !classifierModelBuffer) throw new Error("oww_browser_infer_missing_classifier_model");
+  if (!rawClassifiers.length) throw new Error("oww_browser_infer_missing_classifier_models");
 
   ortRef = await loadOrtModule(ortModuleUrl);
   if (ortRef && ortRef.env && ortRef.env.wasm) {
@@ -245,16 +243,38 @@ async function onInit(msg) {
   embeddingOutputName = String((embeddingSession.outputNames && embeddingSession.outputNames[0]) || "");
   setInitStep("embedding_ready");
 
-  classifierSession = await ortRef.InferenceSession.create(classifierModelBuffer || classifierModelUrl, {
-    executionProviders: ["wasm"],
-    graphOptimizationLevel: "all",
-    ...(externalData.length ? { externalData } : {}),
-  });
-  classifierInputName = String((classifierSession.inputNames && classifierSession.inputNames[0]) || "");
-  classifierOutputName = String((classifierSession.outputNames && classifierSession.outputNames[0]) || "");
+  classifierEntries.length = 0;
+  for (const item of rawClassifiers) {
+    const classifierModelUrl = String(item && item.modelUrl || "").trim();
+    const classifierModelBuffer = item && item.modelBuffer instanceof ArrayBuffer ? item.modelBuffer : null;
+    const externalData = Array.isArray(item && item.externalData) ? item.externalData : [];
+    const token = String(item && item.token || "").trim().toLowerCase();
+    const perClassifierThreshold = Math.max(0, Math.min(1, toFiniteNumber(item && item.threshold, threshold)));
+    if (!classifierModelUrl && !classifierModelBuffer) continue;
+    const session = await ortRef.InferenceSession.create(classifierModelBuffer || classifierModelUrl, {
+      executionProviders: ["wasm"],
+      graphOptimizationLevel: "all",
+      ...(externalData.length ? { externalData } : {}),
+    });
+    const inputName = String((session.inputNames && session.inputNames[0]) || "");
+    const outputName = String((session.outputNames && session.outputNames[0]) || "");
+    if (!inputName) {
+      throw new Error(`oww_browser_infer_missing_classifier_input_name:${token || classifierModelUrl}`);
+    }
+    classifierEntries.push({
+      token: token || String(classifierModelUrl),
+      threshold: perClassifierThreshold,
+      session,
+      inputName,
+      outputName,
+    });
+  }
+  if (!classifierEntries.length) {
+    throw new Error("oww_browser_infer_no_classifier_session");
+  }
   setInitStep("classifier_ready");
 
-  if (!melInputName || !melOutputName || !embeddingInputName || !embeddingOutputName || !classifierInputName) {
+  if (!melInputName || !melOutputName || !embeddingInputName || !embeddingOutputName) {
     throw new Error("oww_browser_infer_missing_model_io_name");
   }
 
@@ -264,13 +284,11 @@ async function onInit(msg) {
   postMessage({
     type: "ready",
     atMs: nowMs(),
-    token: modelToken,
+    classifierCount: classifierEntries.length,
     melInputName,
     melOutputName,
     embeddingInputName,
     embeddingOutputName,
-    classifierInputName,
-    classifierOutputName,
     wasmRootUrl,
   });
 }
@@ -307,20 +325,21 @@ self.onmessage = (ev) => {
     embeddingQueue.length = 0;
     melSession = null;
     embeddingSession = null;
-    classifierSession = null;
+    classifierEntries.length = 0;
     ortRef = null;
     melInputName = "";
     melOutputName = "";
     embeddingInputName = "";
     embeddingOutputName = "";
-    classifierInputName = "";
-    classifierOutputName = "";
     initStep = "";
     return;
   }
   if (type === "set_config") {
     const n = toFiniteNumber(msg && msg.threshold, threshold);
     threshold = Math.max(0, Math.min(1, n));
+    for (const c of classifierEntries) {
+      c.threshold = threshold;
+    }
     return;
   }
 };

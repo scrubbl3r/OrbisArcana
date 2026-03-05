@@ -201,7 +201,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferFramePullInFlight = false;
     let inferFramePullSentAtMs = 0;
     let inferFramePullTimeoutMs = 1200;
-    let inferLastEmitAtMs = 0;
+    const inferLastEmitAtMsByToken = Object.create(null);
     let inferInitStep = "";
     let audioWatchdogTimer = null;
     let audioWatchdogRestartCount = 0;
@@ -280,6 +280,16 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
             }
           }
 
+          const mToken = normalizeToken(m.token || m.label || "", tokenMap);
+          const mLabel = String(m.label || "").trim();
+          let effectiveThreshold = normalizeThreshold(m.threshold, null);
+          if (effectiveThreshold == null && mToken && Object.prototype.hasOwnProperty.call(parsed.thresholdMap, mToken)) {
+            effectiveThreshold = normalizeThreshold(parsed.thresholdMap[mToken], null);
+          }
+          if (effectiveThreshold == null && mLabel && Object.prototype.hasOwnProperty.call(parsed.thresholdMap, mLabel.toLowerCase())) {
+            effectiveThreshold = normalizeThreshold(parsed.thresholdMap[mLabel.toLowerCase()], null);
+          }
+
           nextLoaded.push({
             modelUrl: m.url,
             dataUrl,
@@ -289,7 +299,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
             dataBuffer,
             label: m.label || "",
             token: m.token || "",
-            threshold: m.threshold,
+            threshold: effectiveThreshold,
           });
         }
 
@@ -457,20 +467,14 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       }, 700);
     }
 
-    function pickInferModel() {
-      const desired = String(config.inferToken || "").trim().toLowerCase();
-      const byToken = loadedModels.find((m) => String(m && m.token || "").toLowerCase() === desired);
-      if (byToken) return byToken;
-      const byLabel = loadedModels.find((m) => String(m && m.label || "").toLowerCase() === desired);
-      if (byLabel) return byLabel;
-      return loadedModels[0] || null;
-    }
-
     async function stopInferPipeline() {
       clearInferPumpTimer();
       inferFramePullInFlight = false;
       inferFramePullSentAtMs = 0;
       terminateInferWorker();
+      for (const k of Object.keys(inferLastEmitAtMsByToken)) {
+        delete inferLastEmitAtMsByToken[k];
+      }
       inferReady = false;
       inferLoading = false;
       inferModelUrl = "";
@@ -519,8 +523,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       if (typeof Worker !== "function") {
         throw new Error("oww_browser_infer_worker_unavailable");
       }
-      const chosen = pickInferModel();
-      if (!chosen || !chosen.modelUrl) {
+      const activeModels = loadedModels.filter((m) => !!(m && m.modelUrl));
+      if (!activeModels.length) {
         throw new Error("oww_browser_infer_model_missing");
       }
       const inferWorkerUrl = buildInferWorkerUrl();
@@ -534,8 +538,10 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       if (!inferOrtModuleUrl) {
         throw new Error("oww_browser_infer_ort_module_url_invalid");
       }
-      inferModelUrl = String(chosen.modelUrl || "");
-      inferToken = normalizeToken(chosen.token || chosen.label || config.inferToken || "", tokenMap);
+      inferModelUrl = activeModels.length === 1
+        ? String(activeModels[0].modelUrl || "")
+        : `multi:${activeModels.length}`;
+      inferToken = "multi";
       inferWasmRootUrl = safeUrl(config.ortWasmRootUrl || "");
       if (!inferWasmRootUrl) {
         if (inferOrtModuleUrl) {
@@ -548,20 +554,32 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       const worker = new Worker(inferWorkerUrl, { type: "module" });
       inferWorker = worker;
 
-      const externalData = [];
-      if (chosen && chosen.dataBuffer) {
-        const names = new Set();
-        const base = basenameFromUrl(chosen.dataUrl || `${chosen.modelUrl}.data`);
-        if (base) {
-          names.add(base);
-          names.add(`"${base}"`);
-          names.add(`'${base}'`);
+      const classifiers = activeModels.map((m) => {
+        const modelUrl = String(m.modelUrl || "");
+        const modelToken = normalizeToken(m.token || m.label || "", tokenMap);
+        const modelThreshold = normalizeThreshold(m.threshold, inferThreshold);
+        const externalData = [];
+        if (m && m.dataBuffer) {
+          const names = new Set();
+          const base = basenameFromUrl(m.dataUrl || `${m.modelUrl}.data`);
+          if (base) {
+            names.add(base);
+            names.add(`"${base}"`);
+            names.add(`'${base}'`);
+          }
+          if (m.dataUrl) names.add(String(m.dataUrl));
+          for (const p of names) {
+            externalData.push({ path: p, data: m.dataBuffer });
+          }
         }
-        if (chosen.dataUrl) names.add(String(chosen.dataUrl));
-        for (const p of names) {
-          externalData.push({ path: p, data: chosen.dataBuffer });
-        }
-      }
+        return {
+          modelUrl,
+          modelBuffer: m && m.modelBuffer ? m.modelBuffer : null,
+          token: modelToken || modelUrl,
+          threshold: modelThreshold == null ? inferThreshold : modelThreshold,
+          externalData,
+        };
+      }).filter((m) => !!m.modelUrl);
 
       worker.addEventListener("message", (ev) => {
         const msg = ev && ev.data ? ev.data : {};
@@ -589,8 +607,9 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           const atMs = Number(msg.atMs) || nowMs();
           const confidence = Number(msg.confidence);
           if (!token) return;
-          if ((atMs - inferLastEmitAtMs) < inferCooldownMs) return;
-          inferLastEmitAtMs = atMs;
+          const lastEmit = Number(inferLastEmitAtMsByToken[token] || 0);
+          if ((atMs - lastEmit) < inferCooldownMs) return;
+          inferLastEmitAtMsByToken[token] = atMs;
           emitToken(token, Number.isFinite(confidence) ? confidence : 0.9);
           return;
         }
@@ -671,10 +690,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           embeddingModelUrl: embeddingModelUrlResolved || String(config.embeddingModelUrl || ""),
           melModelBuffer,
           embeddingModelBuffer,
-          modelUrl: inferModelUrl,
-          modelBuffer: chosen && chosen.modelBuffer ? chosen.modelBuffer : null,
-          externalData,
-          token: inferToken || "tempus",
+          classifiers,
           threshold: inferThreshold,
         });
       });
