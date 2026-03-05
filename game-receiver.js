@@ -1102,6 +1102,9 @@
     let kwsAutostartLastKickAtMs = 0;
     const kwsEventLog = [];
     const KWS_EVENT_LOG_MAX = 5;
+    const KWS_LOG_DEDUP_MS = 450;
+    let kwsLastLogText = "";
+    let kwsLastLogAtMs = 0;
     function clearKwsWakeHudGateTimer() {
       if (!kwsWakeHudGateTO) return;
       clearTimeout(kwsWakeHudGateTO);
@@ -1356,6 +1359,15 @@
     function pushKwsLogLine(text, kind = ""){
       const line = String(text || "").trim();
       if (!line) return;
+      const nowMs = Date.now();
+      if (
+        line === kwsLastLogText
+        && (nowMs - Number(kwsLastLogAtMs || 0)) <= KWS_LOG_DEDUP_MS
+      ) {
+        return;
+      }
+      kwsLastLogText = line;
+      kwsLastLogAtMs = nowMs;
       kwsEventLog.unshift({ text: line, kind: String(kind || "") });
       if (kwsEventLog.length > KWS_EVENT_LOG_MAX) kwsEventLog.length = KWS_EVENT_LOG_MAX;
       renderKwsLog();
