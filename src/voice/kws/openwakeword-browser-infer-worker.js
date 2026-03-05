@@ -96,7 +96,8 @@ function resetState() {
 function appendPcmFrame(frameI16) {
   const frame = frameI16 instanceof Int16Array ? frameI16 : new Int16Array(0);
   for (let i = 0; i < frame.length; i += 1) {
-    pcmRing[pcmWrite] = Math.max(-1, Math.min(1, frame[i] / 32768));
+    // openWakeWord expects 16-bit PCM amplitude scale (int16 range), cast to float32.
+    pcmRing[pcmWrite] = Number(frame[i]) || 0;
     pcmWrite = (pcmWrite + 1) % PCM_WINDOW_SAMPLES;
   }
   pcmFilled = Math.min(PCM_WINDOW_SAMPLES, pcmFilled + frame.length);
@@ -132,6 +133,10 @@ async function runPipelineForFrame(frameI16) {
   if (melData.length !== (76 * 32)) {
     throw new Error(`oww_browser_infer_mel_unexpected_shape:${String(melDims)};len=${melData.length}`);
   }
+  // Match openWakeWord AudioFeatures default melspec transform.
+  for (let i = 0; i < melData.length; i += 1) {
+    melData[i] = (Number(melData[i]) || 0) / 10 + 2;
+  }
 
   const embInput = new ortRef.Tensor("float32", melData, [1, 76, 32, 1]);
   const embOut = await embeddingSession.run({ [embeddingInputName]: embInput });
@@ -160,23 +165,24 @@ async function runPipelineForFrame(frameI16) {
   inferences += 1;
   lastInferAtMs = nowMs();
   lastScore = extractScore(clsOut);
+  const effectiveScore = inferences <= 5 ? 0 : lastScore; // mirror warmup suppression in openWakeWord
   postMessage({
     type: "infer_stats",
     atMs: lastInferAtMs,
     inferMs: Math.max(0, lastInferAtMs - t0),
     framesSeen,
     inferences,
-    lastScore,
+    lastScore: effectiveScore,
     inputShape,
     initStep,
   });
 
-  if (lastScore >= threshold && modelToken) {
+  if (effectiveScore >= threshold && modelToken) {
     postMessage({
       type: "token_detected",
       atMs: lastInferAtMs,
       token: modelToken,
-      confidence: lastScore,
+      confidence: effectiveScore,
     });
   }
 }
