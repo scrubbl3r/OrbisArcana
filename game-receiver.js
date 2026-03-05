@@ -13,18 +13,8 @@
 
       status: $("status"),
       last: $("last"),
-      dirReadout: $("dirReadout"),
-      voiceReadout: $("voiceReadout"),
-      voiceEngineSelect: $("voiceEngineSelect"),
-      kwsBackendSelect: $("kwsBackendSelect"),
       kwsReadout: $("kwsReadout"),
       kwsLog: $("kwsLog"),
-      kwsTokenInput: $("kwsTokenInput"),
-      kwsTokenSendBtn: $("kwsTokenSendBtn"),
-      kwsMicBtn: $("kwsMicBtn"),
-      kwsTokTempusBtn: $("kwsTokTempusBtn"),
-      kwsTokRotaBtn: $("kwsTokRotaBtn"),
-      kwsTokElectrumBtn: $("kwsTokElectrumBtn"),
       kwsTokenThrInput: $("kwsTokenThrInput"),
       kwsCooldownMsInput: $("kwsCooldownMsInput"),
       kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
@@ -1427,24 +1417,6 @@
       }
     });
 
-    if (els.voiceEngineSelect) {
-      els.voiceEngineSelect.addEventListener("change", () => {
-        kwsDebugState.mode = "kws";
-        updateKwsReadout();
-        if (mvp && typeof mvp.setVoiceEngine === "function") {
-          mvp.setVoiceEngine("kws");
-        }
-      });
-    }
-
-    function sendKwsDebugToken(token){
-      const t = String(token || "").trim().toLowerCase();
-      if (!t) return;
-      if (mvp && typeof mvp.kwsToken === "function") {
-        mvp.kwsToken(t);
-      }
-      if (els.kwsTokenInput) els.kwsTokenInput.value = "";
-    }
     function readNumberInputOrNull(el) {
       if (!el) return null;
       const raw = String(el.value == null ? "" : el.value).trim();
@@ -1452,65 +1424,7 @@
       const n = Number(raw);
       return Number.isFinite(n) ? n : null;
     }
-    if (els.kwsTokenSendBtn) {
-      els.kwsTokenSendBtn.addEventListener("click", () => sendKwsDebugToken(els.kwsTokenInput && els.kwsTokenInput.value));
-    }
-    if (els.kwsTokenInput) {
-      els.kwsTokenInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          sendKwsDebugToken(els.kwsTokenInput.value);
-        }
-      });
-    }
-    if (els.kwsTokTempusBtn) els.kwsTokTempusBtn.addEventListener("click", () => sendKwsDebugToken("tempus"));
-    if (els.kwsTokRotaBtn) els.kwsTokRotaBtn.addEventListener("click", () => sendKwsDebugToken("rota"));
-    if (els.kwsTokElectrumBtn) els.kwsTokElectrumBtn.addEventListener("click", () => sendKwsDebugToken("electrum"));
-    async function toggleKwsMicFromUi(){
-      if (!mvp || typeof mvp.setKwsMicEnabled !== "function") return;
-      const status = mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.getStatus === "function"
-        ? mvp.kwsVoiceProvider.getStatus()
-        : null;
-      const next = !(status && status.micRunning);
-      const ok = await mvp.setKwsMicEnabled(next);
-      if (!ok && next) {
-        const s = mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.getStatus === "function"
-          ? mvp.kwsVoiceProvider.getStatus()
-          : null;
-        const reason = s && s.micError ? ` (${s.micError})` : "";
-        const kind = (s && s.backendRequiresMic === false) ? "link" : "mic";
-        window.alert(`KWS ${kind} could not start${reason}.`);
-      }
-      refreshKwsMicBtn();
-      updateKwsReadout();
-    }
-    function refreshKwsMicBtn(){
-      if (!els.kwsMicBtn) return;
-      const s = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
-        ? kwsVoiceProvider.getStatus()
-        : null;
-      const micOn = !!(s && s.micRunning);
-      const hasBackend = !!(s && (s.hasBackendFactory || s.hasAudioBackendFactory));
-      const requiresMic = !(s && s.backendRequiresMic === false);
-      els.kwsMicBtn.textContent = micOn
-        ? (requiresMic ? "KWS Mic On" : "KWS Link On")
-        : (requiresMic ? "KWS Mic Off" : "KWS Link Off");
-      els.kwsMicBtn.disabled = !hasBackend;
-      els.kwsMicBtn.title = hasBackend
-        ? (requiresMic ? "Toggle KWS backend microphone" : "Toggle KWS backend connection")
-        : "No KWS backend is connected";
-    }
-    if (els.kwsMicBtn) els.kwsMicBtn.addEventListener("click", () => { void toggleKwsMicFromUi(); });
-    if (els.kwsBackendSelect) {
-      els.kwsBackendSelect.addEventListener("change", () => {
-        const key = String(els.kwsBackendSelect.value || "openwakeword_browser");
-        kwsDebugState.backend = key;
-        updateKwsReadout();
-        if (mvp && typeof mvp.setKwsBackend === "function") {
-          void mvp.setKwsBackend(key);
-        }
-      });
-    }
+    function refreshKwsMicBtn() {}
     function applyKwsParserTuneFromUi(){
       if (!mvp || typeof mvp.setKwsBackendConfig !== "function") return;
       const inferThreshold = readNumberInputOrNull(els.kwsTokenThrInput);
@@ -2154,9 +2068,7 @@
               label: "openwakeword-browser",
             },
           };
-          kwsBackendKey = (els.kwsBackendSelect && els.kwsBackendSelect.value)
-            ? String(els.kwsBackendSelect.value)
-            : DEFAULT_KWS_BACKEND_KEY;
+          kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
           const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.openwakeword_browser || null;
           kwsVoiceProvider = createKwsProvider({
             eventBus,
@@ -2336,9 +2248,6 @@
             const nextKey = String(key || DEFAULT_KWS_BACKEND_KEY);
             kwsBackendKey = nextKey;
             kwsDebugState.backend = nextKey;
-            if (els.kwsBackendSelect && els.kwsBackendSelect.value !== nextKey) {
-              els.kwsBackendSelect.value = nextKey;
-            }
             const spec = kwsBackendFactories[nextKey] || null;
             if (!kwsVoiceProvider || typeof kwsVoiceProvider.setBackend !== "function") {
               refreshKwsMicBtn();
@@ -2435,12 +2344,6 @@
             updateDebugReadout();
           },
         };
-        if (els.voiceEngineSelect) {
-          els.voiceEngineSelect.value = DEFAULT_VOICE_ENGINE;
-        }
-        if (els.kwsBackendSelect) {
-          els.kwsBackendSelect.value = DEFAULT_KWS_BACKEND_KEY;
-        }
         if (mvp) {
           // Boot into live KWS with the browser openWakeWord backend and connect immediately.
           Promise.resolve()
