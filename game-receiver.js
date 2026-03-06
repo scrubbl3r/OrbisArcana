@@ -1445,6 +1445,7 @@
           { bindKwsEventHandlers },
           { bootstrapKwsVoiceRuntime },
           { createKwsRuntimeConfig },
+          { createKwsMvpCommands },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1457,6 +1458,7 @@
           import("./src/voice/kws/kws-event-bindings.js"),
           import("./src/voice/kws/kws-provider-bootstrap.js"),
           import("./src/voice/kws/kws-config.js"),
+          import("./src/voice/kws/kws-mvp-commands.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
@@ -1969,6 +1971,12 @@
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_CLEAR, () => {
           clearFloatGrace();
         });
+        const kwsMvpCommands = createKwsMvpCommands({
+          kwsRuntimeController,
+          defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
+          getCurrentBackendKey: () => kwsBackendKey,
+          setCurrentBackendKey: (next) => { kwsBackendKey = String(next || DEFAULT_KWS_BACKEND_KEY); },
+        });
         mvp = {
           eventBus,
           gameState,
@@ -1987,28 +1995,7 @@
           spellDispatchSystem,
           voiceProviderManager,
           kwsVoiceProvider,
-          setVoiceEngine(){
-            if (!kwsRuntimeController || typeof kwsRuntimeController.setVoiceEngine !== "function") return false;
-            return kwsRuntimeController.setVoiceEngine();
-          },
-          async setKwsBackend(key = DEFAULT_KWS_BACKEND_KEY){
-            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsBackend !== "function") return false;
-            const ok = await kwsRuntimeController.setKwsBackend(key);
-            kwsBackendKey = kwsRuntimeController.getBackendKey ? kwsRuntimeController.getBackendKey() : kwsBackendKey;
-            return ok;
-          },
-          setKwsParserConfig(next = {}){
-            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsParserConfig !== "function") return null;
-            return kwsRuntimeController.setKwsParserConfig(next);
-          },
-          setKwsBackendConfig(next = {}){
-            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsBackendConfig !== "function") return null;
-            return kwsRuntimeController.setKwsBackendConfig(next);
-          },
-          async setKwsMicEnabled(next){
-            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsMicEnabled !== "function") return false;
-            return kwsRuntimeController.setKwsMicEnabled(next);
-          },
+          ...kwsMvpCommands,
           grantFloatGrace,
           grantSuperGrace,
           lastImpact: null,
