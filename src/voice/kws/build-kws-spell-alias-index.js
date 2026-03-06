@@ -1,4 +1,4 @@
-import { SPELLS } from "../spellbook.js";
+import { ACTIVE_SPELLS } from "../spellbook.js";
 import { normalizeTranscript } from "../normalizer.js";
 
 /**
@@ -22,13 +22,14 @@ function tokenizeAliasText(text) {
  * @param {Array<Object>} [spells]
  * @returns {{ byTokenCount: Map<number, KwsAliasEntry[]>, all: KwsAliasEntry[] }}
  */
-export function buildKwsSpellAliasIndex(spells = SPELLS) {
+export function buildKwsSpellAliasIndex(spells = ACTIVE_SPELLS) {
   const byTokenCount = new Map();
   const all = [];
   const seen = new Set();
 
   for (const spell of Array.isArray(spells) ? spells : []) {
     if (!spell || !spell.id) continue;
+    if (spell.active === false) continue;
     const minConfidence = Number.isFinite(Number(spell.minConfidence))
       ? Number(spell.minConfidence)
       : 0.62;

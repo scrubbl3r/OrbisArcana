@@ -1,4 +1,4 @@
-import { SPELLS_BY_ID } from "../voice/spellbook.js";
+import { ACTIVE_SPELLS_BY_ID } from "../voice/spellbook.js";
 import { normalizeSpellClassTokenForRuntime } from "../voice/spell-decision-tree.js";
 import {
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
@@ -129,7 +129,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
     if (!a || !classKey || !school) return null;
     const id = classKey;
-    const base = SPELLS_BY_ID[id];
+    const base = ACTIVE_SPELLS_BY_ID[id];
     if (!base) return null;
     return {
       id: String(base.id || id),
@@ -182,8 +182,15 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         });
         return;
       }
-
       const now = nowMs();
+      if (!ACTIVE_SPELLS_BY_ID[String(spellId || "").toLowerCase()]) {
+        eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+          reason: "spell_inactive",
+          spellId,
+          atMs: now,
+        });
+        return;
+      }
       const axis = normAxis(activeFlatSpinAxis);
       const isFlatSpinLoadWindow = !!axis;
       const isClassSelect = spellIntent === "spell.class_select";

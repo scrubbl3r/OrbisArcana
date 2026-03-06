@@ -10,6 +10,7 @@ export const WAKE_TOKENS = Object.freeze([WAKE_TOKEN]);
 
 export const SPELLS = [
   {
+    active: true,
     id: "domus",
     phrase: "domus",
     minConfidence: 0.62,
@@ -20,6 +21,7 @@ export const SPELLS = [
     intent: "spell.domus",
   },
   {
+    active: true,
     id: "tempus",
     phrase: "tempus",
     minConfidence: 0.6,
@@ -30,6 +32,7 @@ export const SPELLS = [
     school: "tempus",
   },
   {
+    active: true,
     id: "fridgis",
     phrase: "fridgis",
     minConfidence: 0.6,
@@ -40,6 +43,7 @@ export const SPELLS = [
     school: "fridgis",
   },
   {
+    active: true,
     id: "electrum",
     phrase: "electrum",
     minConfidence: 0.6,
@@ -50,6 +54,7 @@ export const SPELLS = [
     school: "electrum",
   },
   {
+    active: true,
     id: "sanctum",
     phrase: "sanctum",
     minConfidence: 0.6,
@@ -61,6 +66,7 @@ export const SPELLS = [
     classKey: "sanctum",
   },
   {
+    active: true,
     id: "vectus",
     phrase: "vectus",
     minConfidence: 0.6,
@@ -72,6 +78,7 @@ export const SPELLS = [
     classKey: "vectus",
   },
   {
+    active: true,
     id: "rota",
     phrase: "rota",
     minConfidence: 0.6,
@@ -86,6 +93,19 @@ export const SPELLS = [
 
 export const SPELLS_BY_ID = Object.freeze(
   SPELLS.reduce((acc, s) => {
+    const id = String(s && s.id || "").toLowerCase();
+    if (!id) return acc;
+    acc[id] = s;
+    return acc;
+  }, {})
+);
+
+export const ACTIVE_SPELLS = Object.freeze(
+  SPELLS.filter((s) => s && s.active !== false)
+);
+
+export const ACTIVE_SPELLS_BY_ID = Object.freeze(
+  ACTIVE_SPELLS.reduce((acc, s) => {
     const id = String(s && s.id || "").toLowerCase();
     if (!id) return acc;
     acc[id] = s;
