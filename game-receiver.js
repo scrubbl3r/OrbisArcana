@@ -1036,24 +1036,20 @@
       }
     }
 
-    function resolveDefaultKwsBackendKey() {
-      return "openwakeword_browser";
-    }
-
-    const DEFAULT_VOICE_ENGINE = "kws";
-    const DEFAULT_KWS_BACKEND_KEY = resolveDefaultKwsBackendKey();
-    const DEFAULT_KWS_AUTOSTART_RETRY_MS = 2000;
-    const DEFAULT_KWS_AUTOSTART_MAX_MS = 120000;
-    const DEFAULT_KWS_AUTOSTART_REKICK_MS = 5000;
-    const DEFAULT_KWS_START_STALL_MS = 8000;
-    const DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
-    const KWS_READOUT_TICK_MS = 250;
-    const KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
-    const KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
-    const KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
-    const KWS_LOG_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
-    const TEMP_UNGATED_KWS_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
-    const KWS_TOKEN_CANONICAL_MAP = Object.freeze({});
+    let DEFAULT_VOICE_ENGINE = "kws";
+    let DEFAULT_KWS_BACKEND_KEY = "openwakeword_browser";
+    let DEFAULT_KWS_AUTOSTART_RETRY_MS = 2000;
+    let DEFAULT_KWS_AUTOSTART_MAX_MS = 120000;
+    let DEFAULT_KWS_AUTOSTART_REKICK_MS = 5000;
+    let DEFAULT_KWS_START_STALL_MS = 8000;
+    let DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
+    let KWS_READOUT_TICK_MS = 250;
+    let KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
+    let KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
+    let KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
+    let KWS_LOG_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
+    let TEMP_UNGATED_KWS_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
+    let KWS_TOKEN_CANONICAL_MAP = Object.freeze({});
     const kwsDebugState = {
       mode: DEFAULT_VOICE_ENGINE,
       backend: DEFAULT_KWS_BACKEND_KEY,
@@ -1448,6 +1444,7 @@
           { createKwsBootOrchestrator },
           { bindKwsEventHandlers },
           { bootstrapKwsVoiceRuntime },
+          { createKwsRuntimeConfig },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1459,12 +1456,36 @@
           import("./src/voice/kws/kws-boot-orchestrator.js"),
           import("./src/voice/kws/kws-event-bindings.js"),
           import("./src/voice/kws/kws-provider-bootstrap.js"),
+          import("./src/voice/kws/kws-config.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
         ]);
         if (receiverEventsModule && receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventsModule.RECEIVER_EVENTS };
+        }
+        if (typeof createKwsRuntimeConfig === "function") {
+          const kwsConfig = createKwsRuntimeConfig();
+          if (kwsConfig && typeof kwsConfig === "object") {
+            DEFAULT_VOICE_ENGINE = String(kwsConfig.defaultVoiceEngine || DEFAULT_VOICE_ENGINE);
+            DEFAULT_KWS_BACKEND_KEY = String(kwsConfig.defaultBackendKey || DEFAULT_KWS_BACKEND_KEY);
+            DEFAULT_KWS_AUTOSTART_RETRY_MS = Math.max(250, Number(kwsConfig.autostartRetryMs) || DEFAULT_KWS_AUTOSTART_RETRY_MS);
+            DEFAULT_KWS_AUTOSTART_MAX_MS = Math.max(1000, Number(kwsConfig.autostartMaxMs) || DEFAULT_KWS_AUTOSTART_MAX_MS);
+            DEFAULT_KWS_AUTOSTART_REKICK_MS = Math.max(250, Number(kwsConfig.autostartRekickMs) || DEFAULT_KWS_AUTOSTART_REKICK_MS);
+            DEFAULT_KWS_START_STALL_MS = Math.max(1000, Number(kwsConfig.startStallMs) || DEFAULT_KWS_START_STALL_MS);
+            DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(100, Number(kwsConfig.gateTimeoutMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
+            KWS_READOUT_TICK_MS = Math.max(100, Number(kwsConfig.readoutTickMs) || KWS_READOUT_TICK_MS);
+            KWS_ROW_TOP = Array.isArray(kwsConfig.rowTop) ? kwsConfig.rowTop.slice() : KWS_ROW_TOP;
+            KWS_ROW_BOTTOM = Array.isArray(kwsConfig.rowBottom) ? kwsConfig.rowBottom.slice() : KWS_ROW_BOTTOM;
+            KWS_CLASS_TOKENS = Array.isArray(kwsConfig.classTokens) ? kwsConfig.classTokens.slice() : KWS_CLASS_TOKENS;
+            KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
+            TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
+            KWS_TOKEN_CANONICAL_MAP = (kwsConfig.tokenCanonicalMap && typeof kwsConfig.tokenCanonicalMap === "object")
+              ? kwsConfig.tokenCanonicalMap
+              : KWS_TOKEN_CANONICAL_MAP;
+            kwsDebugState.mode = DEFAULT_VOICE_ENGINE;
+            kwsDebugState.backend = DEFAULT_KWS_BACKEND_KEY;
+          }
         }
         kwsPanelController = createKwsPanelController({
           els,
