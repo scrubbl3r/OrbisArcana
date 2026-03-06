@@ -58,6 +58,16 @@ export function createKwsRuntimeController({
     return chunks > 0 || produced > 0 || infer > 0;
   }
 
+  function hasKwsInferFlow(status) {
+    const s = status && typeof status === "object" ? status : null;
+    if (!s) return false;
+    const b = s.audioBackendStatus && typeof s.audioBackendStatus === "object" ? s.audioBackendStatus : null;
+    if (!b) return false;
+    const inferReady = !!b.inferReady;
+    const infer = Number(b.inferInferences || 0);
+    return inferReady || infer > 0;
+  }
+
   function clearAutostartWatchdog() {
     if (!kwsAutostartTimer) return;
     clearInterval(kwsAutostartTimer);
@@ -195,7 +205,7 @@ export function createKwsRuntimeController({
         clearAutostartWatchdog();
         return;
       }
-      if (s && s.micRunning && hasKwsAudioFlow(s)) {
+      if (s && s.micRunning && hasKwsAudioFlow(s) && hasKwsInferFlow(s)) {
         clearAutostartWatchdog();
         return;
       }
@@ -205,7 +215,11 @@ export function createKwsRuntimeController({
       try {
         const backendLabel = String(s && s.backendLabel || "").toLowerCase();
         const backendLooksBrowser = backendLabel.includes("openwakeword-browser");
-        if (!backendLooksBrowser) {
+        const backendStatus = s && s.audioBackendStatus && typeof s.audioBackendStatus === "object"
+          ? s.audioBackendStatus
+          : null;
+        const inferReady = !!(backendStatus && backendStatus.inferReady);
+        if (!backendLooksBrowser || !inferReady) {
           await setKwsBackend(DEFAULT_KWS_BACKEND_KEY);
         }
         setVoiceEngine();
