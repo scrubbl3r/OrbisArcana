@@ -363,12 +363,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       audioWorker = null;
     }
 
-    function clearAudioWorkerQueue() {
-      if (!audioWorker) return;
-      try { audioWorker.postMessage({ type: "clear_queue" }); } catch {}
-      audioWorkerQueueDepth = 0;
-    }
-
     function clearInferPumpTimer() {
       if (!inferPumpTimer) return;
       clearInterval(inferPumpTimer);
@@ -602,7 +596,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           inferReady = true;
           inferLoading = false;
           inferInitStep = "ready";
-          clearAudioWorkerQueue();
           return;
         }
         if (type === "init_progress") {
@@ -712,7 +705,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
       inferReady = true;
       inferLoading = false;
-      clearAudioWorkerQueue();
       startInferPump();
       return true;
     }
