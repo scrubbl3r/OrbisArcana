@@ -1061,11 +1061,8 @@
       lastCandidate: "",
     };
     let kwsPanelController = null;
+    let kwsRuntimeController = null;
     let kwsTokenUiState = null;
-    let kwsAutostartTimer = 0;
-    let kwsAutostartInFlight = false;
-    let kwsAutostartStartedAtMs = 0;
-    let kwsAutostartLastKickAtMs = 0;
     function clearKwsWakeHudGateTimer() {
       if (!kwsPanelController || typeof kwsPanelController.clearKwsWakeHudGateTimer !== "function") return;
       kwsPanelController.clearKwsWakeHudGateTimer();
@@ -1075,66 +1072,12 @@
       kwsPanelController.startKwsReadoutTick();
     }
     function clearKwsAutostartWatchdog() {
-      if (!kwsAutostartTimer) return;
-      clearInterval(kwsAutostartTimer);
-      kwsAutostartTimer = 0;
-      kwsAutostartInFlight = false;
-      kwsAutostartLastKickAtMs = 0;
-    }
-    function hasKwsAudioFlow(status) {
-      const s = status && typeof status === "object" ? status : null;
-      if (!s) return false;
-      const b = s.audioBackendStatus && typeof s.audioBackendStatus === "object" ? s.audioBackendStatus : null;
-      const chunks = Number((b && b.audioChunksSent) || 0);
-      const produced = Number((b && b.audioWorkerFramesProduced) || 0);
-      const infer = Number((b && b.inferInferences) || 0);
-      return chunks > 0 || produced > 0 || infer > 0;
+      if (!kwsRuntimeController || typeof kwsRuntimeController.clearAutostartWatchdog !== "function") return;
+      kwsRuntimeController.clearAutostartWatchdog();
     }
     function startKwsAutostartWatchdog() {
-      if (!mvp || !mvp.kwsVoiceProvider || typeof mvp.kwsVoiceProvider.getStatus !== "function") return;
-      clearKwsAutostartWatchdog();
-      kwsAutostartStartedAtMs = performance.now();
-      kwsAutostartTimer = setInterval(async () => {
-        if (kwsAutostartInFlight) return;
-        const elapsed = Math.max(0, performance.now() - Number(kwsAutostartStartedAtMs || 0));
-        if (elapsed > DEFAULT_KWS_AUTOSTART_MAX_MS) {
-          clearKwsAutostartWatchdog();
-          return;
-        }
-        const s = mvp.kwsVoiceProvider.getStatus();
-        const err = String(s && s.micError || "").toLowerCase();
-        if (err.includes("notallowederror") || err.includes("permission")) {
-          clearKwsAutostartWatchdog();
-          return;
-        }
-        if (s && s.micRunning && hasKwsAudioFlow(s)) {
-          clearKwsAutostartWatchdog();
-          return;
-        }
-        const nowPerf = performance.now();
-        if ((nowPerf - Number(kwsAutostartLastKickAtMs || 0)) < DEFAULT_KWS_AUTOSTART_REKICK_MS) return;
-        kwsAutostartInFlight = true;
-        try {
-          const backendLabel = String(s && s.backendLabel || "").toLowerCase();
-          const backendLooksBrowser = backendLabel.includes("openwakeword-browser");
-          if (!backendLooksBrowser && typeof mvp.setKwsBackend === "function") {
-            await mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY);
-          }
-          if (typeof mvp.setVoiceEngine === "function") {
-            mvp.setVoiceEngine(DEFAULT_VOICE_ENGINE);
-          }
-          if (typeof mvp.setKwsMicEnabled === "function") {
-            await mvp.setKwsMicEnabled(true);
-          }
-          kwsAutostartLastKickAtMs = nowPerf;
-          refreshKwsMicBtn();
-          updateKwsReadout();
-        } catch (_) {
-          // Continue retry loop until startup succeeds or timeout/permission-stop triggers.
-        } finally {
-          kwsAutostartInFlight = false;
-        }
-      }, DEFAULT_KWS_AUTOSTART_RETRY_MS);
+      if (!kwsRuntimeController || typeof kwsRuntimeController.startAutostartWatchdog !== "function") return;
+      kwsRuntimeController.startAutostartWatchdog();
     }
     function isElectrumSchoolWindowActive() {
       return kwsTokenUiState.flatSpinAxis === "z"
@@ -1525,6 +1468,7 @@
           { loadReceiverInitModules, hydrateReceiverBootstrapState },
           receiverEventsModule,
           { createKwsPanelController },
+          { createKwsRuntimeController },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1532,6 +1476,7 @@
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/runtime/receiver-events.js"),
           import("./src/ui/kws-panel-controller.js"),
+          import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
@@ -1572,6 +1517,31 @@
           kwsPanelController.bindTuneApplyButton();
         }
         startKwsReadoutTick();
+        kwsRuntimeController = createKwsRuntimeController({
+          constants: {
+            defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
+            defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
+            autostartRetryMs: DEFAULT_KWS_AUTOSTART_RETRY_MS,
+            autostartMaxMs: DEFAULT_KWS_AUTOSTART_MAX_MS,
+            autostartRekickMs: DEFAULT_KWS_AUTOSTART_REKICK_MS,
+          },
+          callbacks: {
+            readTuneFromUi: () => ({
+              inferThreshold: readNumberInputOrNull(els.kwsTokenThrInput),
+              inferCooldownMs: readNumberInputOrNull(els.kwsCooldownMsInput),
+            }),
+            syncTuneUiFromStatus,
+            refreshMicBtn: refreshKwsMicBtn,
+            updateReadout: updateKwsReadout,
+            setDebugMode: (mode) => { kwsDebugState.mode = String(mode || "kws"); },
+            setDebugBackend: (key) => { kwsDebugState.backend = String(key || DEFAULT_KWS_BACKEND_KEY); },
+            emitVoiceSetMode: (mode) => {
+              if (eventBus && typeof eventBus.emit === "function") {
+                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
+              }
+            },
+          },
+        });
         const mods = await loadReceiverInitModules();
         hydrateReceiverBootstrapState(mods, {
           applyRuntimeTheme,
@@ -1904,6 +1874,12 @@
               label: selectedBackend && selectedBackend.label ? selectedBackend.label : "kws-backend",
             },
           });
+          if (kwsRuntimeController && typeof kwsRuntimeController.setBackendFactories === "function") {
+            kwsRuntimeController.setBackendFactories(kwsBackendFactories, kwsBackendKey);
+          }
+          if (kwsRuntimeController && typeof kwsRuntimeController.setKwsVoiceProvider === "function") {
+            kwsRuntimeController.setKwsVoiceProvider(kwsVoiceProvider);
+          }
         }
         if (typeof createVoiceProviderManager === "function") {
           voiceProviderManager = createVoiceProviderManager({
@@ -1912,6 +1888,9 @@
             },
             activeId: kwsVoiceProvider ? "kws" : "",
           });
+          if (kwsRuntimeController && typeof kwsRuntimeController.setVoiceProviderManager === "function") {
+            kwsRuntimeController.setVoiceProviderManager(voiceProviderManager);
+          }
         }
         fxSystem.start();
         audioSystem.start();
@@ -2050,94 +2029,26 @@
           voiceProviderManager,
           kwsVoiceProvider,
           setVoiceEngine(){
-            kwsDebugState.mode = "kws";
-            updateKwsReadout();
-            if (!voiceProviderManager) return false;
-            if (kwsVoiceProvider) {
-              kwsVoiceProvider.setMode("active");
-              kwsVoiceProvider.start && kwsVoiceProvider.start();
-              kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
-            }
-            const ok = !!(voiceProviderManager.setActive && voiceProviderManager.setActive("kws"));
-            if (eventBus) {
-              eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-            }
-            return ok;
+            if (!kwsRuntimeController || typeof kwsRuntimeController.setVoiceEngine !== "function") return false;
+            return kwsRuntimeController.setVoiceEngine();
           },
           async setKwsBackend(key = DEFAULT_KWS_BACKEND_KEY){
-            const nextKey = String(key || DEFAULT_KWS_BACKEND_KEY);
-            kwsBackendKey = nextKey;
-            kwsDebugState.backend = nextKey;
-            const spec = kwsBackendFactories[nextKey] || null;
-            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setBackend !== "function") {
-              refreshKwsMicBtn();
-              updateKwsReadout();
-              return false;
-            }
-            await kwsVoiceProvider.setBackend(spec && typeof spec.factory === "function" ? spec.factory : null, {
-              requiresMic: !(spec && spec.requiresMic === false),
-              label: spec && spec.label ? spec.label : nextKey,
-            });
-            if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
-              const backendStatusNow = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
-                ? kwsVoiceProvider.getStatus()
-                : null;
-              const backendNow = backendStatusNow && backendStatusNow.audioBackendStatus ? backendStatusNow.audioBackendStatus : backendStatusNow;
-              const thFromUi = readNumberInputOrNull(els.kwsTokenThrInput);
-              const cdFromUi = readNumberInputOrNull(els.kwsCooldownMsInput);
-              const thFromBackend = Number(backendNow && backendNow.inferThreshold);
-              const cdFromBackend = Number(backendNow && backendNow.inferCooldownMs);
-              const statusAfterApply = kwsVoiceProvider.setBackendConfig({
-                ...(thFromUi != null
-                  ? { inferThreshold: thFromUi }
-                  : (Number.isFinite(thFromBackend) ? { inferThreshold: thFromBackend } : {})),
-                ...(cdFromUi != null
-                  ? { inferCooldownMs: cdFromUi }
-                  : (Number.isFinite(cdFromBackend) ? { inferCooldownMs: cdFromBackend } : {})),
-              });
-              syncKwsTuneUiFromStatus(statusAfterApply && statusAfterApply.audioBackendStatus ? statusAfterApply.audioBackendStatus : statusAfterApply);
-            }
-            if (spec && typeof spec.factory === "function" && typeof kwsVoiceProvider.setMicEnabled === "function") {
-              await kwsVoiceProvider.setMicEnabled(true);
-            }
-            if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
-              // Re-apply after mic/backend startup to mirror explicit "Apply" behavior.
-              const backendStatusNow = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
-                ? kwsVoiceProvider.getStatus()
-                : null;
-              const backendNow = backendStatusNow && backendStatusNow.audioBackendStatus ? backendStatusNow.audioBackendStatus : backendStatusNow;
-              const thFromUi = readNumberInputOrNull(els.kwsTokenThrInput);
-              const cdFromUi = readNumberInputOrNull(els.kwsCooldownMsInput);
-              const thFromBackend = Number(backendNow && backendNow.inferThreshold);
-              const cdFromBackend = Number(backendNow && backendNow.inferCooldownMs);
-              const statusAfterStartApply = kwsVoiceProvider.setBackendConfig({
-                ...(thFromUi != null
-                  ? { inferThreshold: thFromUi }
-                  : (Number.isFinite(thFromBackend) ? { inferThreshold: thFromBackend } : {})),
-                ...(cdFromUi != null
-                  ? { inferCooldownMs: cdFromUi }
-                  : (Number.isFinite(cdFromBackend) ? { inferCooldownMs: cdFromBackend } : {})),
-              });
-              syncKwsTuneUiFromStatus(statusAfterStartApply && statusAfterStartApply.audioBackendStatus ? statusAfterStartApply.audioBackendStatus : statusAfterStartApply);
-            }
-            refreshKwsMicBtn();
-            updateKwsReadout();
-            return true;
+            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsBackend !== "function") return false;
+            const ok = await kwsRuntimeController.setKwsBackend(key);
+            kwsBackendKey = kwsRuntimeController.getBackendKey ? kwsRuntimeController.getBackendKey() : kwsBackendKey;
+            return ok;
           },
           setKwsParserConfig(next = {}){
-            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setParserConfig !== "function") return null;
-            return kwsVoiceProvider.setParserConfig(next);
+            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsParserConfig !== "function") return null;
+            return kwsRuntimeController.setKwsParserConfig(next);
           },
           setKwsBackendConfig(next = {}){
-            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setBackendConfig !== "function") return null;
-            return kwsVoiceProvider.setBackendConfig(next);
+            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsBackendConfig !== "function") return null;
+            return kwsRuntimeController.setKwsBackendConfig(next);
           },
           async setKwsMicEnabled(next){
-            if (!kwsVoiceProvider || typeof kwsVoiceProvider.setMicEnabled !== "function") return false;
-            const ok = await kwsVoiceProvider.setMicEnabled(!!next);
-            refreshKwsMicBtn();
-            updateKwsReadout();
-            return !!ok;
+            if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsMicEnabled !== "function") return false;
+            return kwsRuntimeController.setKwsMicEnabled(next);
           },
           grantFloatGrace,
           grantSuperGrace,
