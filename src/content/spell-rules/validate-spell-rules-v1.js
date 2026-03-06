@@ -18,6 +18,19 @@ function isFiniteNonNegativeNumber(v) {
 export function validateSpellRulesV1(rules = []) {
   const errors = [];
   const seenRuleIds = new Set();
+  for (const signalId of Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID)) {
+    const signal = SIGNAL_DEFINITIONS_V1_BY_ID[signalId] || null;
+    const sourceEvent = String(signal && signal.sourceEvent || "").trim();
+    if (!sourceEvent) {
+      errors.push(`signal ${signalId} missing sourceEvent`);
+    }
+    const where = signal && signal.where;
+    if (where && typeof where === "object") {
+      if (!String(where.path || "").trim()) {
+        errors.push(`signal ${signalId} where.path is required when where is present`);
+      }
+    }
+  }
 
   for (const rule of Array.isArray(rules) ? rules : []) {
     const ruleId = asId(rule && rule.id);

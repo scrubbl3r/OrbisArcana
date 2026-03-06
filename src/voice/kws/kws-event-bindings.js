@@ -1,3 +1,5 @@
+import { WAKE_TOKENS } from "../spellbook.js";
+
 export function bindKwsEventHandlers({
   eventBus,
   events,
@@ -27,6 +29,11 @@ export function bindKwsEventHandlers({
   const setSelectedSchool = typeof deps.setSelectedSchool === "function" ? deps.setSelectedSchool : null;
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
+  const wakeTokenSet = new Set(
+    (Array.isArray(WAKE_TOKENS) ? WAKE_TOKENS : [])
+      .map((t) => String(t || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
 
   const unsub = [];
 
@@ -45,7 +52,7 @@ export function bindKwsEventHandlers({
       flashKwsToken(token);
     }
     const kwsEngineMode = String(getKwsMode() || "").toLowerCase();
-    if (kwsEngineMode === "kws" && token === "orbis") {
+    if (kwsEngineMode === "kws" && wakeTokenSet.has(token)) {
       eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
       openKwsWakeHudGate(gateTimeoutMs);
     }

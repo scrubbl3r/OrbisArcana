@@ -12,3 +12,4 @@ export {
 } from "./event-definitions-v1.js";
 export { SPELL_RULES_V1 } from "./spell-rules-v1.js";
 export { validateSpellRulesV1 } from "./validate-spell-rules-v1.js";
+export { buildRuleEngineV1PreviewRuntime } from "./build-rule-engine-v1-preview-runtime.js";

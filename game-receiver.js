@@ -1209,6 +1209,7 @@
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
     let ruleSchemaV1 = null;
+    let ruleEngineV1PreviewSystem = null;
     // Early fallback used before runtime modules finish loading.
     let RECEIVER_EVENTS = { EVT_VOICE_SET_MODE: "voice.set_mode" };
     let spellActionHandlers = Object.create(null);
@@ -1734,6 +1735,7 @@
           createKwsProvider,
           createOpenWakeWordBrowserBackendFactory,
           createSpellDispatchSystem,
+          createRuleEngineV1PreviewSystem,
           WORLD_ITEMS_V1,
         } = mods;
 
@@ -1807,6 +1809,12 @@
           },
         });
         const spellDispatchSystem = createSpellDispatchSystem({ eventBus, resources: resourcesSystem });
+        if (typeof createRuleEngineV1PreviewSystem === "function" && ruleSchemaV1) {
+          ruleEngineV1PreviewSystem = createRuleEngineV1PreviewSystem({
+            eventBus,
+            schema: ruleSchemaV1,
+          });
+        }
         if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
           kwsEventBindings.dispose();
         }
@@ -1871,6 +1879,9 @@
         inputSystemsBundle.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
+        if (ruleEngineV1PreviewSystem && typeof ruleEngineV1PreviewSystem.start === "function") {
+          ruleEngineV1PreviewSystem.start();
+        }
         const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
           .map(normalizeWorldItemSpawn)
           .filter(Boolean);
@@ -1989,6 +2000,7 @@
           inputGestureSystem,
           orbRuntimeState,
           ruleSchemaV1,
+          ruleEngineV1PreviewSystem,
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,
