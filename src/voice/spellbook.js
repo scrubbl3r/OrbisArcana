@@ -2,7 +2,7 @@ import { VOICE_MODES } from "./voice-config.js";
 
 export const SPELLS = [
   {
-    active: true,
+    active: false,
     id: "orbis",
     phrase: "orbis",
     minConfidence: 0.6,

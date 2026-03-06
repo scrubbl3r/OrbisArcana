@@ -41,6 +41,13 @@ export async function loadReceiverInitModules() {
     { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
     { RUNTIME_SPELLS_BY_ID },
+    {
+      SIGNAL_DEFINITIONS_V1,
+      WINDOW_DEFINITIONS_V1,
+      EVENT_DEFINITIONS_V1,
+      SPELL_RULES_V1,
+      validateSpellRulesV1,
+    },
     { WORLD_ITEMS_V1 },
   ] = await Promise.all([
     import("../events/event-bus.js"),
@@ -71,6 +78,7 @@ export async function loadReceiverInitModules() {
     import("../content/input/dynamics-config-default.js"),
     import("../content/spells/cast-action-registry.js"),
     import("../content/spells/runtime-spells.js"),
+    import("../content/spell-rules/index.js"),
     import("../content/world-items/default-world-items.js"),
   ]);
 
@@ -107,6 +115,11 @@ export async function loadReceiverInitModules() {
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
+    SIGNAL_DEFINITIONS_V1,
+    WINDOW_DEFINITIONS_V1,
+    EVENT_DEFINITIONS_V1,
+    SPELL_RULES_V1,
+    validateSpellRulesV1,
     WORLD_ITEMS_V1,
   };
 }
@@ -126,6 +139,7 @@ export async function loadReceiverInitModules() {
  * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
  * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
  * @property {(next:{runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeSpellIndexes]
+ * @property {(next:{signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[]}) => void} [setRuleSchemaV1]
  * @property {() => void} [initSpellActionHandlers]
  * @property {() => Object} [createSpellCastExecutorContext]
  * @property {(executor:Object) => void} [setSpellCastExecutor]
@@ -160,6 +174,11 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
+    SIGNAL_DEFINITIONS_V1,
+    WINDOW_DEFINITIONS_V1,
+    EVENT_DEFINITIONS_V1,
+    SPELL_RULES_V1,
+    validateSpellRulesV1,
     createSpellCastExecutor,
   } = mods || {};
 
@@ -177,6 +196,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     getInputConfigs,
     setInputConfigs,
     setRuntimeSpellIndexes,
+    setRuleSchemaV1,
     initSpellActionHandlers,
     createSpellCastExecutorContext,
     setSpellCastExecutor,
@@ -260,6 +280,21 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setRuntimeSpellIndexes({
       runtimeSpellIndex: RUNTIME_SPELLS_BY_ID || Object.create(null),
       castActionRegistryIndex: CAST_ACTION_REGISTRY_BY_ID || Object.create(null),
+    });
+  }
+
+  if (typeof validateSpellRulesV1 === "function") {
+    const errors = validateSpellRulesV1(SPELL_RULES_V1 || []);
+    if (errors.length) {
+      throw new Error(`Rule Engine v1 schema validation failed: ${errors.join(" | ")}`);
+    }
+  }
+  if (typeof setRuleSchemaV1 === "function") {
+    setRuleSchemaV1({
+      signals: Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1.slice() : [],
+      windows: Array.isArray(WINDOW_DEFINITIONS_V1) ? WINDOW_DEFINITIONS_V1.slice() : [],
+      events: Array.isArray(EVENT_DEFINITIONS_V1) ? EVENT_DEFINITIONS_V1.slice() : [],
+      rules: Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1.slice() : [],
     });
   }
 

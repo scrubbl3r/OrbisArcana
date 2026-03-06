@@ -1208,6 +1208,7 @@
     let orbRuntimeState = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
+    let ruleSchemaV1 = null;
     // Early fallback used before runtime modules finish loading.
     let RECEIVER_EVENTS = { EVT_VOICE_SET_MODE: "voice.set_mode" };
     let spellActionHandlers = Object.create(null);
@@ -1589,6 +1590,14 @@
           setRuntimeSpellIndexes: (next = {}) => {
             runtimeSpellIndex = next.runtimeSpellIndex || Object.create(null);
             castActionRegistryIndex = next.castActionRegistryIndex || Object.create(null);
+          },
+          setRuleSchemaV1: (next = {}) => {
+            ruleSchemaV1 = {
+              signals: Array.isArray(next.signals) ? next.signals.slice() : [],
+              windows: Array.isArray(next.windows) ? next.windows.slice() : [],
+              events: Array.isArray(next.events) ? next.events.slice() : [],
+              rules: Array.isArray(next.rules) ? next.rules.slice() : [],
+            };
           },
           initSpellActionHandlers,
           createSpellCastExecutorContext: () => ({
@@ -1979,6 +1988,7 @@
           inputDynamicsSystem,
           inputGestureSystem,
           orbRuntimeState,
+          ruleSchemaV1,
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,
