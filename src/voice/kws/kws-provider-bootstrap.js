@@ -79,7 +79,6 @@ export function bootstrapKwsVoiceRuntime({
   return {
     kwsVoiceProvider,
     voiceProviderManager,
-    kwsBackendFactories,
     kwsBackendKey,
   };
 }

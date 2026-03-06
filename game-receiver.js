@@ -1201,7 +1201,6 @@
     let resourcesSystem = null;
     let voiceProviderManager = null;
     let kwsVoiceProvider = null;
-    let kwsBackendFactories = Object.create(null);
     let kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
     let inputSystem = null;
     let inputGestureSystem = null;
@@ -1858,7 +1857,6 @@
         });
         kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider;
         voiceProviderManager = kwsVoiceRuntime.voiceProviderManager;
-        kwsBackendFactories = kwsVoiceRuntime.kwsBackendFactories;
         kwsBackendKey = kwsVoiceRuntime.kwsBackendKey;
         fxSystem.start();
         audioSystem.start();
