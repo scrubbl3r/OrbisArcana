@@ -1469,6 +1469,7 @@
           receiverEventsModule,
           { createKwsPanelController },
           { createKwsRuntimeController },
+          { createKwsBootOrchestrator },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1477,6 +1478,7 @@
           import("./src/runtime/receiver-events.js"),
           import("./src/ui/kws-panel-controller.js"),
           import("./src/voice/kws/kws-runtime-controller.js"),
+          import("./src/voice/kws/kws-boot-orchestrator.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
@@ -1540,6 +1542,29 @@
               if (bus && typeof bus.emit === "function") {
                 bus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
               }
+            },
+          },
+        });
+        const kwsBootOrchestrator = createKwsBootOrchestrator({
+          constants: {
+            defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
+            defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
+          },
+          callbacks: {
+            emitWakeMode: (instance) => {
+              if (instance && instance.eventBus) {
+                instance.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+              }
+            },
+            onBootSuccess: () => {
+              updateKwsReadout();
+              refreshKwsMicBtn();
+            },
+            onBootFailed: (err) => {
+              console.warn("KWS boot auto-init failed:", err);
+            },
+            startAutostartWatchdog: () => {
+              startKwsAutostartWatchdog();
             },
           },
         });
@@ -2068,37 +2093,7 @@
             updateDebugReadout();
           },
         };
-        if (mvp) {
-          // Boot into live KWS with the browser openWakeWord backend and connect immediately.
-          Promise.resolve()
-            .then(() => (typeof mvp.setKwsBackend === "function" ? mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY) : true))
-            .then(() => (typeof mvp.setVoiceEngine === "function" ? mvp.setVoiceEngine(DEFAULT_VOICE_ENGINE) : true))
-            .then(() => (typeof mvp.setKwsMicEnabled === "function" ? mvp.setKwsMicEnabled(true) : true))
-            .then((micOk) => {
-              if (micOk === false) {
-                const s = mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.getStatus === "function"
-                  ? mvp.kwsVoiceProvider.getStatus()
-                  : null;
-                const reason = s && s.micError ? String(s.micError) : "kws_link_start_failed";
-                throw new Error(reason);
-              }
-              if (mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.setEnabled === "function") {
-                mvp.kwsVoiceProvider.setEnabled(true);
-              }
-              if (mvp.kwsVoiceProvider && typeof mvp.kwsVoiceProvider.setMode === "function") {
-                mvp.kwsVoiceProvider.setMode("active");
-              }
-              if (mvp.eventBus) {
-                mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-              }
-              updateKwsReadout();
-              refreshKwsMicBtn();
-            })
-            .catch((err) => {
-              console.warn("KWS boot auto-init failed:", err);
-            });
-          startKwsAutostartWatchdog();
-        }
+        if (mvp) kwsBootOrchestrator.bootAndAutostart(mvp);
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
         if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") orbShatterRuntime.clear();
