@@ -110,6 +110,16 @@ export function createRuleEngineV1PreviewSystem({
           args,
           atMs: Number(triggerMeta.atMs) || nowMs(),
         });
+        continue;
+      }
+      if (id === "electric_aoe") {
+        eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+          ruleId: String(rule && rule.id || ""),
+          actionType: "event",
+          actionId: id,
+          args,
+          atMs: Number(triggerMeta.atMs) || nowMs(),
+        });
       }
     }
   }

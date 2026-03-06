@@ -1984,6 +1984,22 @@
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_CLEAR, () => {
           clearFloatGrace();
         });
+        eventBus.on("rule_engine.v1.action_executed", (p = {}) => {
+          const actionType = String(p.actionType || "").toLowerCase();
+          const actionId = String(p.actionId || "").toLowerCase();
+          if (actionType !== "event" || actionId !== "electric_aoe") return;
+          const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
+          executeSpellCastAction("aoe_electric", {
+            intent: "rule_engine.event",
+            payload: {
+              trigger: "rule_engine_v1",
+              actionId,
+              ruleId: String(p.ruleId || ""),
+              atMs: Number(p.atMs) || performance.now(),
+              ...args,
+            },
+          });
+        });
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
