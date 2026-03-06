@@ -1060,75 +1060,30 @@
     let kwsRuntimeController = null;
     let kwsTokenUiState = null;
     let teardownKwsRuntimeForReinit = null;
-    function startKwsReadoutTick() {
-      if (!kwsPanelController || typeof kwsPanelController.startKwsReadoutTick !== "function") return;
-      kwsPanelController.startKwsReadoutTick();
-    }
-    function stopKwsReadoutTick() {
-      if (!kwsPanelController || typeof kwsPanelController.stopKwsReadoutTick !== "function") return;
-      kwsPanelController.stopKwsReadoutTick();
-    }
-    function clearKwsAutostartWatchdog() {
-      if (!kwsRuntimeController || typeof kwsRuntimeController.clearAutostartWatchdog !== "function") return;
-      kwsRuntimeController.clearAutostartWatchdog();
-    }
-    function startKwsAutostartWatchdog() {
-      if (!kwsRuntimeController || typeof kwsRuntimeController.startAutostartWatchdog !== "function") return;
-      kwsRuntimeController.startAutostartWatchdog();
-    }
-    function canonicalKwsToken(rawToken) {
-      if (!kwsPanelController || typeof kwsPanelController.canonicalKwsToken !== "function") return "";
-      return kwsPanelController.canonicalKwsToken(rawToken);
-    }
-    function isClassWindowActive() {
-      if (!kwsPanelController || typeof kwsPanelController.isClassWindowActive !== "function") return false;
-      return kwsPanelController.isClassWindowActive();
-    }
-    function shouldLogHeardWakeword(rawToken) {
-      if (!kwsPanelController || typeof kwsPanelController.shouldLogHeardWakeword !== "function") return false;
-      return kwsPanelController.shouldLogHeardWakeword(rawToken);
-    }
-    function resetHeardClassTokensForAxis(axis) {
-      if (!kwsPanelController || typeof kwsPanelController.resetHeardClassTokensForAxis !== "function") return;
-      kwsPanelController.resetHeardClassTokensForAxis(axis);
-    }
-    function resetHeardClassTokensAllAxes() {
-      if (!kwsPanelController || typeof kwsPanelController.resetHeardClassTokensAllAxes !== "function") return;
-      kwsPanelController.resetHeardClassTokensAllAxes();
-    }
-    resetHeardClassTokensAllAxes();
-    function flashKwsToken(token, ms = 360) {
-      if (!kwsPanelController || typeof kwsPanelController.flashKwsToken !== "function") return;
-      kwsPanelController.flashKwsToken(token, ms);
-    }
-    function openKwsWakeHudGate(timeoutMs = DEFAULT_KWS_GATE_TIMEOUT_MS) {
-      if (!kwsPanelController || typeof kwsPanelController.openKwsWakeHudGate !== "function") return;
-      kwsPanelController.openKwsWakeHudGate(timeoutMs);
-    }
-    function updateKwsReadout(){
-      if (!kwsPanelController || typeof kwsPanelController.updateKwsReadout !== "function") return;
-      kwsPanelController.updateKwsReadout();
-    }
-    function pushKwsLogLine(text, kind = ""){
-      if (!kwsPanelController || typeof kwsPanelController.pushKwsLogLine !== "function") return;
-      kwsPanelController.pushKwsLogLine(text, kind);
-    }
-
-    function syncKwsTuneUiFromStatus(status){
-      if (!kwsPanelController || typeof kwsPanelController.syncKwsTuneUiFromStatus !== "function") return;
-      kwsPanelController.syncKwsTuneUiFromStatus(status);
-    }
+    let kwsBridge = {
+      startReadoutTick() {},
+      stopReadoutTick() {},
+      clearWakeHudGateTimer() {},
+      clearAutostartWatchdog() {},
+      startAutostartWatchdog() {},
+      canonicalToken() { return ""; },
+      isClassWindowActive() { return false; },
+      shouldLogHeardWakeword() { return false; },
+      resetHeardClassTokensForAxis() {},
+      resetHeardClassTokensAllAxes() {},
+      flashToken() {},
+      openWakeHudGate() {},
+      updateReadout() {},
+      pushLogLine() {},
+      syncTuneUiFromStatus() {},
+    };
 
     async function teardownKwsForReinit() {
       if (typeof teardownKwsRuntimeForReinit !== "function") return;
       await teardownKwsRuntimeForReinit({
-        clearAutostartWatchdog: clearKwsAutostartWatchdog,
-        stopReadoutTick: stopKwsReadoutTick,
-        clearWakeHudGateTimer: () => {
-          if (kwsPanelController && typeof kwsPanelController.clearKwsWakeHudGateTimer === "function") {
-            kwsPanelController.clearKwsWakeHudGateTimer();
-          }
-        },
+        clearAutostartWatchdog: () => kwsBridge.clearAutostartWatchdog(),
+        stopReadoutTick: () => kwsBridge.stopReadoutTick(),
+        clearWakeHudGateTimer: () => kwsBridge.clearWakeHudGateTimer(),
         eventBindings: kwsEventBindings,
         setEventBindings: (next) => { kwsEventBindings = next; },
         voiceProviderManager,
@@ -1473,6 +1428,7 @@
           { createKwsRuntimeConfig },
           { createKwsMvpCommands },
           { teardownKwsRuntimeForReinit: importedTeardownKwsRuntimeForReinit },
+          { createKwsReceiverBridge },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1487,6 +1443,7 @@
           import("./src/voice/kws/kws-config.js"),
           import("./src/voice/kws/kws-mvp-commands.js"),
           import("./src/voice/kws/kws-reinit-teardown.js"),
+          import("./src/voice/kws/kws-receiver-bridge.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
@@ -1518,6 +1475,11 @@
             kwsDebugState.backend = DEFAULT_KWS_BACKEND_KEY;
           }
         }
+        kwsBridge = createKwsReceiverBridge({
+          getPanelController: () => kwsPanelController,
+          getRuntimeController: () => kwsRuntimeController,
+          defaultGateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
+        });
         kwsPanelController = createKwsPanelController({
           els,
           constants: {
@@ -1550,7 +1512,7 @@
         if (kwsPanelController && typeof kwsPanelController.bindTuneApplyButton === "function") {
           kwsPanelController.bindTuneApplyButton();
         }
-        startKwsReadoutTick();
+        kwsBridge.startReadoutTick();
         kwsRuntimeController = createKwsRuntimeController({
           constants: {
             defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
@@ -1564,9 +1526,9 @@
               inferThreshold: readNumberInputOrNull(els.kwsTokenThrInput),
               inferCooldownMs: readNumberInputOrNull(els.kwsCooldownMsInput),
             }),
-            syncTuneUiFromStatus: syncKwsTuneUiFromStatus,
+            syncTuneUiFromStatus: (status) => kwsBridge.syncTuneUiFromStatus(status),
             refreshMicBtn: refreshKwsMicBtn,
-            updateReadout: updateKwsReadout,
+            updateReadout: () => kwsBridge.updateReadout(),
             setDebugMode: (mode) => { kwsDebugState.mode = String(mode || "kws"); },
             setDebugBackend: (key) => { kwsDebugState.backend = String(key || DEFAULT_KWS_BACKEND_KEY); },
             emitVoiceSetMode: (mode) => {
@@ -1589,14 +1551,14 @@
               }
             },
             onBootSuccess: () => {
-              updateKwsReadout();
+              kwsBridge.updateReadout();
               refreshKwsMicBtn();
             },
             onBootFailed: (err) => {
               console.warn("KWS boot auto-init failed:", err);
             },
             startAutostartWatchdog: () => {
-              startKwsAutostartWatchdog();
+              kwsBridge.startAutostartWatchdog();
             },
           },
         });
@@ -1846,19 +1808,19 @@
           events: RECEIVER_EVENTS,
           state: kwsDebugState,
           deps: {
-            canonicalKwsToken,
-            flashKwsToken,
-            isClassWindowActive,
+            canonicalKwsToken: (rawToken) => kwsBridge.canonicalToken(rawToken),
+            flashKwsToken: (token, ms) => kwsBridge.flashToken(token, ms),
+            isClassWindowActive: () => kwsBridge.isClassWindowActive(),
             markHeardClassToken: (axis, token) => {
               if (kwsPanelController && typeof kwsPanelController.markHeardClassToken === "function") {
                 kwsPanelController.markHeardClassToken(axis, token);
               }
             },
             getFlatSpinAxis: () => (kwsTokenUiState ? String(kwsTokenUiState.flatSpinAxis || "") : ""),
-            openKwsWakeHudGate,
-            shouldLogHeardWakeword,
-            pushKwsLogLine,
-            updateKwsReadout,
+            openKwsWakeHudGate: (timeoutMs) => kwsBridge.openWakeHudGate(timeoutMs),
+            shouldLogHeardWakeword: (rawToken) => kwsBridge.shouldLogHeardWakeword(rawToken),
+            pushKwsLogLine: (text, kind) => kwsBridge.pushLogLine(text, kind),
+            updateKwsReadout: () => kwsBridge.updateReadout(),
             isUngatedToken: (token) => TEMP_UNGATED_KWS_TOKENS.has(token),
             setFlatSpinAxis: (axis) => {
               if (kwsPanelController && typeof kwsPanelController.setFlatSpinAxis === "function") {
@@ -1869,11 +1831,11 @@
               if (kwsPanelController && typeof kwsPanelController.clearFlatSpinState === "function") {
                 kwsPanelController.clearFlatSpinState();
               } else {
-                resetHeardClassTokensAllAxes();
+                kwsBridge.resetHeardClassTokensAllAxes();
               }
             },
-            resetHeardClassTokensForAxis,
-            resetHeardClassTokensAllAxes,
+            resetHeardClassTokensForAxis: (axis) => kwsBridge.resetHeardClassTokensForAxis(axis),
+            resetHeardClassTokensAllAxes: () => kwsBridge.resetHeardClassTokensAllAxes(),
             setSelectedSchool: (axis, school) => {
               if (kwsPanelController && typeof kwsPanelController.setSelectedSchool === "function") {
                 kwsPanelController.setSelectedSchool(axis, school);
@@ -1891,7 +1853,7 @@
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
           defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
-          syncKwsTuneUiFromStatus,
+          syncKwsTuneUiFromStatus: (status) => kwsBridge.syncTuneUiFromStatus(status),
           refreshKwsMicBtn,
         });
         kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider;
