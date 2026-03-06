@@ -203,7 +203,7 @@ export function createKwsTokenParser(opts = {}) {
 
     if (isWakeToken) {
       wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);
-      // Wake token from sidecar should arm immediately.
+      // Wake token from KWS input should arm immediately.
       tokenBuffer = [];
       emit(EVT_VOICE_TOKEN_DETECTED, {
         token,
