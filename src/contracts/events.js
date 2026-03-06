@@ -54,8 +54,6 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
  * @property {number} [remainingMs]
  */
 export const EVT_VOICE_SET_MODE = "voice.set_mode";
-export const EVT_VOICE_OPEN_GATE = "voice.open_gate";
-export const EVT_VOICE_CLOSE_GATE = "voice.close_gate";
 /**
  * @typedef {Object} VoiceTokenDetectedPayload
  * @property {string} token Normalized detected keyword token

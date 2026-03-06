@@ -1015,7 +1015,6 @@
       try {
         const { createTelemetryDebugSystem } = await import("./src/systems/telemetry-debug-system.js");
         telemetryDebugSystem = createTelemetryDebugSystem({
-          debugReadoutEl: els.dirReadout,
           teleModalEl: els.teleModal,
           teleBtnEl: els.teleBtn,
           teleBackdropEl: els.teleBackdrop,
@@ -1034,10 +1033,7 @@
     function updateDebugReadout(){
       if (telemetryDebugSystem) {
         telemetryDebugSystem.updateDebugReadout("—");
-        return;
       }
-      if (!els.dirReadout) return;
-      els.dirReadout.textContent = "—";
     }
 
     function resolveDefaultKwsBackendKey() {
@@ -1406,7 +1402,6 @@
           mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
         } else {
           mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "gated_window" });
-          mvp.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "keyboard", timeoutMs: 4500 });
         }
         return;
       }
@@ -1513,7 +1508,6 @@
     let castActionRegistryIndex = Object.create(null);
     let RECEIVER_EVENTS = {
       EVT_VOICE_SET_MODE: "voice.set_mode",
-      EVT_VOICE_OPEN_GATE: "voice.open_gate",
       EVT_VOICE_TOKEN_DETECTED: "voice.token_detected",
       EVT_VOICE_KWS_SPELL_CANDIDATE: "voice.kws_spell_candidate",
       EVT_VOICE_SPELL_REJECTED: "voice.spell_rejected",
@@ -1914,7 +1908,6 @@
           createKwsProvider,
           createOpenWakeWordBrowserBackendFactory,
           createSpellDispatchSystem,
-          createVoiceHudSystem,
           WORLD_ITEMS_V1,
         } = mods;
 
@@ -1988,11 +1981,6 @@
           },
         });
         const spellDispatchSystem = createSpellDispatchSystem({ eventBus, resources: resourcesSystem });
-        const voiceHudSystem = createVoiceHudSystem({
-          eventBus,
-          voiceReadoutEl: els.voiceReadout,
-          voiceState: gameState.voice,
-        });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
           const token = canonicalKwsToken(p.token);
           kwsDebugState.lastToken = token;
@@ -2108,7 +2096,6 @@
           if (typeof kwsVoiceProvider.getStatus === "function") syncKwsTuneUiFromStatus(kwsVoiceProvider.getStatus());
           refreshKwsMicBtn();
         }
-        voiceHudSystem.start();
         const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
           .map(normalizeWorldItemSpawn)
           .filter(Boolean);
@@ -2227,7 +2214,6 @@
           spellDispatchSystem,
           voiceProviderManager,
           kwsVoiceProvider,
-          voiceHudSystem,
           setVoiceEngine(){
             kwsDebugState.mode = "kws";
             updateKwsReadout();
@@ -2240,7 +2226,6 @@
             const ok = !!(voiceProviderManager.setActive && voiceProviderManager.setActive("kws"));
             if (eventBus) {
               eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-              eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_OPEN_GATE, { reason: "kws_boot", timeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS });
             }
             return ok;
           },
@@ -2303,14 +2288,6 @@
             refreshKwsMicBtn();
             updateKwsReadout();
             return true;
-          },
-          kwsToken(token, confidence = 0.95){
-            if (!kwsVoiceProvider || typeof kwsVoiceProvider.ingestTokenHit !== "function") return null;
-            return kwsVoiceProvider.ingestTokenHit({
-              token,
-              confidence,
-              atMs: performance.now(),
-            });
           },
           setKwsParserConfig(next = {}){
             if (!kwsVoiceProvider || typeof kwsVoiceProvider.setParserConfig !== "function") return null;
