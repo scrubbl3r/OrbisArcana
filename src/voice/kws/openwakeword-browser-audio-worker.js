@@ -133,6 +133,11 @@ function handleInit(msg) {
   postMessage({ type: "ready", atMs: nowMs() });
 }
 
+function clearQueuedFrames() {
+  state.frameQueue = [];
+  state.framesDropped = 0;
+}
+
 self.onmessage = (ev) => {
   const msg = ev && ev.data ? ev.data : {};
   const type = String(msg && msg.type || "");
@@ -159,6 +164,11 @@ self.onmessage = (ev) => {
         { type: "frame", atMs: nowMs(), queueDepth: state.frameQueue.length, hasFrame: true, frame: next.buffer },
         [next.buffer]
       );
+      return;
+    }
+    if (type === "clear_queue") {
+      clearQueuedFrames();
+      postMessage({ type: "frame_count", atMs: nowMs(), queueDepth: state.frameQueue.length });
       return;
     }
     if (type === "stop") {
