@@ -1530,14 +1530,15 @@
               inferThreshold: readNumberInputOrNull(els.kwsTokenThrInput),
               inferCooldownMs: readNumberInputOrNull(els.kwsCooldownMsInput),
             }),
-            syncTuneUiFromStatus,
+            syncTuneUiFromStatus: syncKwsTuneUiFromStatus,
             refreshMicBtn: refreshKwsMicBtn,
             updateReadout: updateKwsReadout,
             setDebugMode: (mode) => { kwsDebugState.mode = String(mode || "kws"); },
             setDebugBackend: (key) => { kwsDebugState.backend = String(key || DEFAULT_KWS_BACKEND_KEY); },
             emitVoiceSetMode: (mode) => {
-              if (eventBus && typeof eventBus.emit === "function") {
-                eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
+              const bus = mvp && mvp.eventBus;
+              if (bus && typeof bus.emit === "function") {
+                bus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
               }
             },
           },
