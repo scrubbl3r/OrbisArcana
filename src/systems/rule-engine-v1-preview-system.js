@@ -1,6 +1,8 @@
 import { buildRuleEngineV1PreviewRuntime } from "../content/spell-rules/index.js";
 
 const EVT_RULE_ENGINE_V1_PREVIEW_MATCHED = "rule_engine.v1.preview_matched";
+const EVT_RULE_ENGINE_V1_ACTION_EXECUTED = "rule_engine.v1.action_executed";
+const EVT_ORB_FLOAT_GRACE_GRANT = "orb.float_grace_grant";
 
 function getByPath(obj, path) {
   const parts = String(path || "").split(".").filter(Boolean);
@@ -60,6 +62,7 @@ function ruleMatches(runtimeRule, lastSeenAtBySignalId, now) {
 export function createRuleEngineV1PreviewSystem({
   eventBus,
   schema = null,
+  executeActions = false,
   nowMs = () => Date.now(),
 } = {}) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
@@ -67,11 +70,49 @@ export function createRuleEngineV1PreviewSystem({
   }
   const runtime = buildRuleEngineV1PreviewRuntime({
     signals: schema && Array.isArray(schema.signals) ? schema.signals : [],
+    events: schema && Array.isArray(schema.events) ? schema.events : [],
     rules: schema && Array.isArray(schema.rules) ? schema.rules : [],
   });
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
+
+  function resolveEventArgs(eventId, overrides = null) {
+    const base = runtime.eventById[String(eventId || "").trim().toLowerCase()];
+    const defaultArgs = (base && typeof base.defaultArgs === "object" && base.defaultArgs)
+      ? base.defaultArgs
+      : {};
+    const patch = (overrides && typeof overrides === "object") ? overrides : {};
+    return { ...defaultArgs, ...patch };
+  }
+
+  function executeRuleActions(rule, triggerMeta = {}) {
+    if (!executeActions) return;
+    const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
+    for (const action of actions) {
+      const type = String(action && action.type || "").trim().toLowerCase();
+      const id = String(action && action.id || "").trim().toLowerCase();
+      if (type !== "event") continue;
+      const args = resolveEventArgs(id, action && action.overrides);
+      if (id === "grace") {
+        const ms = Number(args && args.ms);
+        eventBus.emit(EVT_ORB_FLOAT_GRACE_GRANT, {
+          ms: Number.isFinite(ms) ? ms : undefined,
+          source: "rule_engine_v1",
+          ruleId: String(rule && rule.id || ""),
+          triggerSignalId: String(triggerMeta.signalId || ""),
+          atMs: Number(triggerMeta.atMs) || nowMs(),
+        });
+        eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+          ruleId: String(rule && rule.id || ""),
+          actionType: "event",
+          actionId: id,
+          args,
+          atMs: Number(triggerMeta.atMs) || nowMs(),
+        });
+      }
+    }
+  }
 
   function onSignalHit(signalId, sourceEvent, payload = {}) {
     const now = Number(payload && payload.atMs) || nowMs();
@@ -87,6 +128,11 @@ export function createRuleEngineV1PreviewSystem({
         ruleId: rule.id,
         signalId,
         sourceEvent: String(sourceEvent || ""),
+        atMs: now,
+      });
+      executeRuleActions(rule, {
+        signalId,
+        sourceEvent,
         atMs: now,
       });
     }

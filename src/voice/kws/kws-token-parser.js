@@ -91,6 +91,15 @@ export function createKwsTokenParser(opts = {}) {
   );
 
   const aliasIndex = buildKwsSpellAliasIndex(opts.spells);
+  const activeTokenVocabulary = new Set();
+  for (const entry of aliasIndex.all || []) {
+    const tokens = Array.isArray(entry && entry.tokens) ? entry.tokens : [];
+    for (const t of tokens) {
+      const tok = normToken(t);
+      if (tok) activeTokenVocabulary.add(tok);
+    }
+  }
+  for (const t of wakeTokenSet) activeTokenVocabulary.add(normToken(t));
   let enabled = true;
   let shadow = !!cfg.shadow;
   /** @type {Array<{token:string, confidence:number, atMs:number}>} */
@@ -200,6 +209,9 @@ export function createKwsTokenParser(opts = {}) {
     lastSeenAtMs = atMs;
     const wakeArmed = atMs <= wakeArmedUntilMs;
     const isWakeToken = wakeTokenSet.has(token);
+    if (!activeTokenVocabulary.has(token)) {
+      return { matched: false, reason: "inactive_or_unknown_token", token, confidence };
+    }
 
     if (isWakeToken) {
       wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);

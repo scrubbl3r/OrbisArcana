@@ -1218,6 +1218,7 @@
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
+    const RULE_ENGINE_V1_EXECUTE_ACTIONS = false;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
@@ -1813,6 +1814,7 @@
           ruleEngineV1PreviewSystem = createRuleEngineV1PreviewSystem({
             eventBus,
             schema: ruleSchemaV1,
+            executeActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
           });
         }
         if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
@@ -2001,6 +2003,7 @@
           orbRuntimeState,
           ruleSchemaV1,
           ruleEngineV1PreviewSystem,
+          ruleEngineV1ExecuteActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,

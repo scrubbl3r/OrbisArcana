@@ -8,12 +8,26 @@ function asEventName(v) {
 
 export function buildRuleEngineV1PreviewRuntime({
   signals = [],
+  events = [],
   rules = [],
 } = {}) {
   const signalById = Object.create(null);
   const signalsBySourceEvent = Object.create(null);
+  const eventById = Object.create(null);
   const rulesBySignalId = Object.create(null);
   const normalizedRules = [];
+
+  for (const eventDef of Array.isArray(events) ? events : []) {
+    const id = asId(eventDef && eventDef.id);
+    if (!id) continue;
+    eventById[id] = {
+      id,
+      type: asId(eventDef && eventDef.type),
+      defaultArgs: (eventDef && typeof eventDef.defaultArgs === "object" && eventDef.defaultArgs)
+        ? { ...eventDef.defaultArgs }
+        : {},
+    };
+  }
 
   for (const signal of Array.isArray(signals) ? signals : []) {
     const id = asId(signal && signal.id);
@@ -50,6 +64,14 @@ export function buildRuleEngineV1PreviewRuntime({
       .map((c) => asId(c && c.id))
       .filter(Boolean);
     const signalIds = Array.from(new Set(allSignalIds.concat(anySignalIds)));
+    const actions = Array.isArray(rule && rule.then)
+      ? rule.then.map((a) => ({
+          type: asId(a && a.type),
+          id: asId(a && a.id),
+          spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
+          overrides: (a && typeof a.overrides === "object" && a.overrides) ? { ...a.overrides } : {},
+        }))
+      : [];
     const normalizedRule = {
       id,
       signalIds,
@@ -57,6 +79,7 @@ export function buildRuleEngineV1PreviewRuntime({
       anySignalIds,
       cooldownMs: Math.max(0, Number(rule && rule.cooldownMs) || 0),
       matchWindowMs: Math.max(100, Number(rule && rule.matchWindowMs) || 2000),
+      actions,
     };
     normalizedRules.push(normalizedRule);
     for (const signalId of signalIds) {
@@ -67,6 +90,7 @@ export function buildRuleEngineV1PreviewRuntime({
 
   return {
     signalById,
+    eventById,
     signalsBySourceEvent,
     rulesBySignalId,
     rules: normalizedRules,
