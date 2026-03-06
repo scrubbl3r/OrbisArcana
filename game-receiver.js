@@ -1506,23 +1506,8 @@
     let orbRuntimeState = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
-    let RECEIVER_EVENTS = {
-      EVT_VOICE_SET_MODE: "voice.set_mode",
-      EVT_VOICE_TOKEN_DETECTED: "voice.token_detected",
-      EVT_VOICE_KWS_SPELL_CANDIDATE: "voice.kws_spell_candidate",
-      EVT_VOICE_SPELL_REJECTED: "voice.spell_rejected",
-      EVT_VOICE_SCHOOL_SELECTED: "voice.school_selected",
-      EVT_VOICE_SPELL_CAST: "voice.spell_cast",
-      EVT_SPELL_WINDOW_FLAT_SPIN_OPENED: "spell_window.flat_spin_opened",
-      EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED: "spell_window.flat_spin_closed",
-      EVT_ORB_VISUAL_STATE_CHANGED: "orb.visual_state_changed",
-      EVT_ORB_SHATTER_PIECE_SPAWNED: "orb.shatter_piece_spawned",
-      EVT_ORB_DIED: "orb.died",
-      EVT_ORB_REVIVED: "orb.revived",
-      EVT_ORB_SHATTER_COMPLETE: "orb.shatter_complete",
-      EVT_ORB_FLOAT_GRACE_GRANT: "orb.float_grace_grant",
-      EVT_ORB_FLOAT_GRACE_CLEAR: "orb.float_grace_clear",
-    };
+    // Early fallback used before runtime modules finish loading.
+    let RECEIVER_EVENTS = { EVT_VOICE_SET_MODE: "voice.set_mode" };
     let spellActionHandlers = Object.create(null);
     let spellCastExecutor = null;
     let createSpellActionHandlersModule = null;
@@ -1729,19 +1714,19 @@
         receiverModulesReady = false;
         const [
           { loadReceiverInitModules, hydrateReceiverBootstrapState },
-          receiverEventContracts,
+          receiverEventsModule,
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
-          import("./src/contracts/events.js"),
+          import("./src/runtime/receiver-events.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
         ]);
-        if (receiverEventContracts && typeof receiverEventContracts === "object") {
-          RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventContracts };
+        if (receiverEventsModule && receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object") {
+          RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventsModule.RECEIVER_EVENTS };
         }
         const mods = await loadReceiverInitModules();
         hydrateReceiverBootstrapState(mods, {

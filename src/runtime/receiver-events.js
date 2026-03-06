@@ -1,0 +1,17 @@
+export const RECEIVER_EVENTS = Object.freeze({
+  EVT_VOICE_SET_MODE: "voice.set_mode",
+  EVT_VOICE_TOKEN_DETECTED: "voice.token_detected",
+  EVT_VOICE_KWS_SPELL_CANDIDATE: "voice.kws_spell_candidate",
+  EVT_VOICE_SPELL_REJECTED: "voice.spell_rejected",
+  EVT_VOICE_SCHOOL_SELECTED: "voice.school_selected",
+  EVT_VOICE_SPELL_CAST: "voice.spell_cast",
+  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED: "spell_window.flat_spin_opened",
+  EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED: "spell_window.flat_spin_closed",
+  EVT_ORB_VISUAL_STATE_CHANGED: "orb.visual_state_changed",
+  EVT_ORB_SHATTER_PIECE_SPAWNED: "orb.shatter_piece_spawned",
+  EVT_ORB_DIED: "orb.died",
+  EVT_ORB_REVIVED: "orb.revived",
+  EVT_ORB_SHATTER_COMPLETE: "orb.shatter_complete",
+  EVT_ORB_FLOAT_GRACE_GRANT: "orb.float_grace_grant",
+  EVT_ORB_FLOAT_GRACE_CLEAR: "orb.float_grace_clear",
+});
