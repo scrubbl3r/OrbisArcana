@@ -1063,6 +1063,10 @@
       if (!kwsPanelController || typeof kwsPanelController.startKwsReadoutTick !== "function") return;
       kwsPanelController.startKwsReadoutTick();
     }
+    function stopKwsReadoutTick() {
+      if (!kwsPanelController || typeof kwsPanelController.stopKwsReadoutTick !== "function") return;
+      kwsPanelController.stopKwsReadoutTick();
+    }
     function clearKwsAutostartWatchdog() {
       if (!kwsRuntimeController || typeof kwsRuntimeController.clearAutostartWatchdog !== "function") return;
       kwsRuntimeController.clearAutostartWatchdog();
@@ -1112,6 +1116,43 @@
     function syncKwsTuneUiFromStatus(status){
       if (!kwsPanelController || typeof kwsPanelController.syncKwsTuneUiFromStatus !== "function") return;
       kwsPanelController.syncKwsTuneUiFromStatus(status);
+    }
+
+    async function teardownKwsForReinit() {
+      clearKwsAutostartWatchdog();
+      stopKwsReadoutTick();
+      if (kwsPanelController && typeof kwsPanelController.clearKwsWakeHudGateTimer === "function") {
+        kwsPanelController.clearKwsWakeHudGateTimer();
+      }
+      if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
+        kwsEventBindings.dispose();
+      }
+      kwsEventBindings = null;
+      const manager = voiceProviderManager;
+      const provider = kwsVoiceProvider;
+      try {
+        if (manager && typeof manager.stop === "function") await Promise.resolve(manager.stop());
+      } catch (_) {}
+      let destroyedByManager = false;
+      try {
+        if (manager && typeof manager.destroy === "function") {
+          await Promise.resolve(manager.destroy());
+          destroyedByManager = true;
+        }
+      } catch (_) {}
+      if (!destroyedByManager && provider) {
+        try {
+          if (typeof provider.setEnabled === "function") provider.setEnabled(false);
+        } catch (_) {}
+        try {
+          if (typeof provider.stop === "function") await Promise.resolve(provider.stop());
+        } catch (_) {}
+        try {
+          if (typeof provider.destroy === "function") await Promise.resolve(provider.destroy());
+        } catch (_) {}
+      }
+      voiceProviderManager = null;
+      kwsVoiceProvider = null;
     }
 
     function teleMaybeLog(d){
@@ -1437,6 +1478,7 @@
     async function initMvpSystems(){
       try {
         receiverModulesReady = false;
+        await teardownKwsForReinit();
         const [
           { loadReceiverInitModules, hydrateReceiverBootstrapState },
           receiverEventsModule,
