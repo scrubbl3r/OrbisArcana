@@ -1063,10 +1063,6 @@
     let kwsPanelController = null;
     let kwsRuntimeController = null;
     let kwsTokenUiState = null;
-    function clearKwsWakeHudGateTimer() {
-      if (!kwsPanelController || typeof kwsPanelController.clearKwsWakeHudGateTimer !== "function") return;
-      kwsPanelController.clearKwsWakeHudGateTimer();
-    }
     function startKwsReadoutTick() {
       if (!kwsPanelController || typeof kwsPanelController.startKwsReadoutTick !== "function") return;
       kwsPanelController.startKwsReadoutTick();
@@ -1078,14 +1074,6 @@
     function startKwsAutostartWatchdog() {
       if (!kwsRuntimeController || typeof kwsRuntimeController.startAutostartWatchdog !== "function") return;
       kwsRuntimeController.startAutostartWatchdog();
-    }
-    function isElectrumSchoolWindowActive() {
-      return kwsTokenUiState.flatSpinAxis === "z"
-        && String(kwsTokenUiState.selectedSchoolByAxis.z || "").toLowerCase() === "electrum";
-    }
-    function expectedSchoolForAxis(axis) {
-      if (!kwsPanelController || typeof kwsPanelController.expectedSchoolForAxis !== "function") return "";
-      return kwsPanelController.expectedSchoolForAxis(axis);
     }
     function canonicalKwsToken(rawToken) {
       if (!kwsPanelController || typeof kwsPanelController.canonicalKwsToken !== "function") return "";
@@ -1112,10 +1100,6 @@
       if (!kwsPanelController || typeof kwsPanelController.flashKwsToken !== "function") return;
       kwsPanelController.flashKwsToken(token, ms);
     }
-    function tokenChipHtml(token, lit, flash) {
-      if (!kwsPanelController || typeof kwsPanelController.tokenChipHtml !== "function") return "";
-      return kwsPanelController.tokenChipHtml(token, lit, flash);
-    }
     function openKwsWakeHudGate(timeoutMs = DEFAULT_KWS_GATE_TIMEOUT_MS) {
       if (!kwsPanelController || typeof kwsPanelController.openKwsWakeHudGate !== "function") return;
       kwsPanelController.openKwsWakeHudGate(timeoutMs);
@@ -1127,10 +1111,6 @@
     function pushKwsLogLine(text, kind = ""){
       if (!kwsPanelController || typeof kwsPanelController.pushKwsLogLine !== "function") return;
       kwsPanelController.pushKwsLogLine(text, kind);
-    }
-    function renderKwsLog(){
-      if (!kwsPanelController || typeof kwsPanelController.renderKwsLog !== "function") return;
-      kwsPanelController.renderKwsLog();
     }
 
     function syncKwsTuneUiFromStatus(status){
@@ -1180,10 +1160,6 @@
       return Number.isFinite(n) ? n : null;
     }
     function refreshKwsMicBtn() {}
-    function applyKwsParserTuneFromUi(){
-      if (!kwsPanelController || typeof kwsPanelController.applyKwsParserTuneFromUi !== "function") return;
-      kwsPanelController.applyKwsParserTuneFromUi();
-    }
 
     // =========================================================================
     // ROOM STATE 
