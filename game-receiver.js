@@ -1493,7 +1493,6 @@
             tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,
           },
           getKwsVoiceProvider: () => kwsVoiceProvider,
-          getKwsDebugState: () => kwsDebugState,
           onGateOpened: (payload = {}) => {
             if (mvp && mvp.eventBus) mvp.eventBus.emit("voice.gate_opened", payload);
           },
