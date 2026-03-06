@@ -1470,6 +1470,7 @@
           { createKwsPanelController },
           { createKwsRuntimeController },
           { createKwsBootOrchestrator },
+          { bindKwsEventHandlers },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1479,6 +1480,7 @@
           import("./src/ui/kws-panel-controller.js"),
           import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/voice/kws/kws-boot-orchestrator.js"),
+          import("./src/voice/kws/kws-event-bindings.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
@@ -1806,74 +1808,47 @@
           },
         });
         const spellDispatchSystem = createSpellDispatchSystem({ eventBus, resources: resourcesSystem });
-        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
-          const token = canonicalKwsToken(p.token);
-          kwsDebugState.lastToken = token;
-          if (TEMP_UNGATED_KWS_TOKENS.has(token)) {
-            flashKwsToken(token);
-          }
-          if (token === "orbis" || token === "domus" || token === "electrum" || token === "tempus" || token === "fridgis") {
-            flashKwsToken(token);
-          }
-          if (isClassWindowActive() && (token === "rota" || token === "sanctum" || token === "vectus")) {
-            const axis = kwsTokenUiState ? String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase() : "";
-            if ((axis === "x" || axis === "y" || axis === "z") && kwsPanelController && typeof kwsPanelController.markHeardClassToken === "function") {
-              kwsPanelController.markHeardClassToken(axis, token);
-            }
-            flashKwsToken(token);
-          }
-          const kwsEngineMode = String(kwsDebugState.mode || "").toLowerCase();
-          if (kwsEngineMode === "kws" && token === "orbis") {
-            eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-            openKwsWakeHudGate(DEFAULT_KWS_GATE_TIMEOUT_MS);
-          }
-          if (shouldLogHeardWakeword(token)) {
-            pushKwsLogLine(token);
-          }
-          updateKwsReadout();
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
-          const axis = String(p.axis || "").trim().toLowerCase();
-          if (kwsPanelController && typeof kwsPanelController.setFlatSpinAxis === "function") {
-            kwsPanelController.setFlatSpinAxis(axis);
-          }
-          if (kwsTokenUiState && kwsTokenUiState.flatSpinAxis) {
-            if (kwsPanelController && typeof kwsPanelController.setSelectedSchool === "function") {
-              kwsPanelController.setSelectedSchool(kwsTokenUiState.flatSpinAxis, "");
-            }
-            resetHeardClassTokensForAxis(kwsTokenUiState.flatSpinAxis);
-          }
-          updateKwsReadout();
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
-          if (kwsPanelController && typeof kwsPanelController.clearFlatSpinState === "function") {
-            kwsPanelController.clearFlatSpinState();
-          } else {
-            resetHeardClassTokensAllAxes();
-          }
-          updateKwsReadout();
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SCHOOL_SELECTED, (p = {}) => {
-          const axis = String(p.axis || "").trim().toLowerCase();
-          const school = String(p.school || "").trim().toLowerCase();
-          if (axis === "x" || axis === "y" || axis === "z") {
-            if (kwsPanelController && typeof kwsPanelController.setSelectedSchool === "function") {
-              kwsPanelController.setSelectedSchool(axis, school);
-            }
-            resetHeardClassTokensForAxis(axis);
-            if (school === "electrum") flashKwsToken("electrum", 520);
-          }
-          updateKwsReadout();
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
-          const matched = !!p.matched;
-          const spellId = String(p.spellId || "");
-          const phrase = String(p.phrase || "");
-          kwsDebugState.lastCandidate = matched ? (spellId || phrase || "match") : (phrase || "no-match");
-          updateKwsReadout();
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_REJECTED, (p = {}) => {
-          void p;
+        bindKwsEventHandlers({
+          eventBus,
+          events: RECEIVER_EVENTS,
+          state: kwsDebugState,
+          deps: {
+            canonicalKwsToken,
+            flashKwsToken,
+            isClassWindowActive,
+            markHeardClassToken: (axis, token) => {
+              if (kwsPanelController && typeof kwsPanelController.markHeardClassToken === "function") {
+                kwsPanelController.markHeardClassToken(axis, token);
+              }
+            },
+            getFlatSpinAxis: () => (kwsTokenUiState ? String(kwsTokenUiState.flatSpinAxis || "") : ""),
+            openKwsWakeHudGate,
+            shouldLogHeardWakeword,
+            pushKwsLogLine,
+            updateKwsReadout,
+            isUngatedToken: (token) => TEMP_UNGATED_KWS_TOKENS.has(token),
+            setFlatSpinAxis: (axis) => {
+              if (kwsPanelController && typeof kwsPanelController.setFlatSpinAxis === "function") {
+                kwsPanelController.setFlatSpinAxis(axis);
+              }
+            },
+            clearFlatSpinState: () => {
+              if (kwsPanelController && typeof kwsPanelController.clearFlatSpinState === "function") {
+                kwsPanelController.clearFlatSpinState();
+              } else {
+                resetHeardClassTokensAllAxes();
+              }
+            },
+            resetHeardClassTokensForAxis,
+            resetHeardClassTokensAllAxes,
+            setSelectedSchool: (axis, school) => {
+              if (kwsPanelController && typeof kwsPanelController.setSelectedSchool === "function") {
+                kwsPanelController.setSelectedSchool(axis, school);
+              }
+            },
+            getKwsMode: () => String(kwsDebugState.mode || ""),
+            gateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
+          },
         });
         if (typeof createKwsProvider === "function") {
           const openWakeWordBrowserBackendFactory =
