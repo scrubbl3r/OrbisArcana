@@ -1471,6 +1471,7 @@
           { createKwsRuntimeController },
           { createKwsBootOrchestrator },
           { bindKwsEventHandlers },
+          { bootstrapKwsVoiceRuntime },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1481,6 +1482,7 @@
           import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/voice/kws/kws-boot-orchestrator.js"),
           import("./src/voice/kws/kws-event-bindings.js"),
+          import("./src/voice/kws/kws-provider-bootstrap.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
@@ -1850,67 +1852,26 @@
             gateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
           },
         });
-        if (typeof createKwsProvider === "function") {
-          const openWakeWordBrowserBackendFactory =
-            (typeof createOpenWakeWordBrowserBackendFactory === "function")
-              ? createOpenWakeWordBrowserBackendFactory()
-              : null;
-          kwsBackendFactories = {
-            openwakeword_browser: {
-              factory: openWakeWordBrowserBackendFactory,
-              requiresMic: true,
-              label: "openwakeword-browser",
-            },
-          };
-          kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
-          const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.openwakeword_browser || null;
-          kwsVoiceProvider = createKwsProvider({
-            eventBus,
-            shadow: true,
-            backendFactory: selectedBackend && typeof selectedBackend.factory === "function"
-              ? selectedBackend.factory
-              : null,
-            backendConfig: {
-              requiresMic: !(selectedBackend && selectedBackend.requiresMic === false),
-              label: selectedBackend && selectedBackend.label ? selectedBackend.label : "kws-backend",
-            },
-          });
-          if (kwsRuntimeController && typeof kwsRuntimeController.setBackendFactories === "function") {
-            kwsRuntimeController.setBackendFactories(kwsBackendFactories, kwsBackendKey);
-          }
-          if (kwsRuntimeController && typeof kwsRuntimeController.setKwsVoiceProvider === "function") {
-            kwsRuntimeController.setKwsVoiceProvider(kwsVoiceProvider);
-          }
-        }
-        if (typeof createVoiceProviderManager === "function") {
-          voiceProviderManager = createVoiceProviderManager({
-            providers: {
-              ...(kwsVoiceProvider ? { kws: kwsVoiceProvider } : {}),
-            },
-            activeId: kwsVoiceProvider ? "kws" : "",
-          });
-          if (kwsRuntimeController && typeof kwsRuntimeController.setVoiceProviderManager === "function") {
-            kwsRuntimeController.setVoiceProviderManager(voiceProviderManager);
-          }
-        }
+        const kwsVoiceRuntime = bootstrapKwsVoiceRuntime({
+          eventBus,
+          createKwsProvider,
+          createVoiceProviderManager,
+          createOpenWakeWordBrowserBackendFactory,
+          kwsRuntimeController,
+          defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
+          defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
+          syncKwsTuneUiFromStatus,
+          refreshKwsMicBtn,
+        });
+        kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider;
+        voiceProviderManager = kwsVoiceRuntime.voiceProviderManager;
+        kwsBackendFactories = kwsVoiceRuntime.kwsBackendFactories;
+        kwsBackendKey = kwsVoiceRuntime.kwsBackendKey;
         fxSystem.start();
         audioSystem.start();
         inputSystemsBundle.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
-        if (voiceProviderManager && typeof voiceProviderManager.start === "function") {
-          voiceProviderManager.start();
-        }
-        // Initialize KWS provider eagerly; default engine may be live KWS.
-        if (kwsVoiceProvider) {
-          if (typeof kwsVoiceProvider.setMode === "function") {
-            kwsVoiceProvider.setMode(DEFAULT_VOICE_ENGINE === "kws" ? "active" : "shadow");
-          }
-          if (typeof kwsVoiceProvider.start === "function") kwsVoiceProvider.start();
-          if (typeof kwsVoiceProvider.setEnabled === "function") kwsVoiceProvider.setEnabled(true);
-          if (typeof kwsVoiceProvider.getStatus === "function") syncKwsTuneUiFromStatus(kwsVoiceProvider.getStatus());
-          refreshKwsMicBtn();
-        }
         const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
           .map(normalizeWorldItemSpawn)
           .filter(Boolean);
