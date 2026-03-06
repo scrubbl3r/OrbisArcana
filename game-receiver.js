@@ -1247,6 +1247,7 @@
     let receiverModulesReady = false;
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
+    let kwsEventBindings = null;
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1809,7 +1810,10 @@
           },
         });
         const spellDispatchSystem = createSpellDispatchSystem({ eventBus, resources: resourcesSystem });
-        bindKwsEventHandlers({
+        if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
+          kwsEventBindings.dispose();
+        }
+        kwsEventBindings = bindKwsEventHandlers({
           eventBus,
           events: RECEIVER_EVENTS,
           state: kwsDebugState,
