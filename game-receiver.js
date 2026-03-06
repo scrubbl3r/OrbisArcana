@@ -1059,6 +1059,7 @@
     let kwsPanelController = null;
     let kwsRuntimeController = null;
     let kwsTokenUiState = null;
+    let teardownKwsRuntimeForReinit = null;
     function startKwsReadoutTick() {
       if (!kwsPanelController || typeof kwsPanelController.startKwsReadoutTick !== "function") return;
       kwsPanelController.startKwsReadoutTick();
@@ -1119,40 +1120,22 @@
     }
 
     async function teardownKwsForReinit() {
-      clearKwsAutostartWatchdog();
-      stopKwsReadoutTick();
-      if (kwsPanelController && typeof kwsPanelController.clearKwsWakeHudGateTimer === "function") {
-        kwsPanelController.clearKwsWakeHudGateTimer();
-      }
-      if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
-        kwsEventBindings.dispose();
-      }
-      kwsEventBindings = null;
-      const manager = voiceProviderManager;
-      const provider = kwsVoiceProvider;
-      try {
-        if (manager && typeof manager.stop === "function") await Promise.resolve(manager.stop());
-      } catch (_) {}
-      let destroyedByManager = false;
-      try {
-        if (manager && typeof manager.destroy === "function") {
-          await Promise.resolve(manager.destroy());
-          destroyedByManager = true;
-        }
-      } catch (_) {}
-      if (!destroyedByManager && provider) {
-        try {
-          if (typeof provider.setEnabled === "function") provider.setEnabled(false);
-        } catch (_) {}
-        try {
-          if (typeof provider.stop === "function") await Promise.resolve(provider.stop());
-        } catch (_) {}
-        try {
-          if (typeof provider.destroy === "function") await Promise.resolve(provider.destroy());
-        } catch (_) {}
-      }
-      voiceProviderManager = null;
-      kwsVoiceProvider = null;
+      if (typeof teardownKwsRuntimeForReinit !== "function") return;
+      await teardownKwsRuntimeForReinit({
+        clearAutostartWatchdog: clearKwsAutostartWatchdog,
+        stopReadoutTick: stopKwsReadoutTick,
+        clearWakeHudGateTimer: () => {
+          if (kwsPanelController && typeof kwsPanelController.clearKwsWakeHudGateTimer === "function") {
+            kwsPanelController.clearKwsWakeHudGateTimer();
+          }
+        },
+        eventBindings: kwsEventBindings,
+        setEventBindings: (next) => { kwsEventBindings = next; },
+        voiceProviderManager,
+        kwsVoiceProvider,
+        setVoiceProviderManager: (next) => { voiceProviderManager = next; },
+        setKwsVoiceProvider: (next) => { kwsVoiceProvider = next; },
+      });
     }
 
     function teleMaybeLog(d){
@@ -1489,6 +1472,7 @@
           { bootstrapKwsVoiceRuntime },
           { createKwsRuntimeConfig },
           { createKwsMvpCommands },
+          { teardownKwsRuntimeForReinit: importedTeardownKwsRuntimeForReinit },
           { createVfxRuntimesBundle },
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
@@ -1502,10 +1486,12 @@
           import("./src/voice/kws/kws-provider-bootstrap.js"),
           import("./src/voice/kws/kws-config.js"),
           import("./src/voice/kws/kws-mvp-commands.js"),
+          import("./src/voice/kws/kws-reinit-teardown.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
         ]);
+        teardownKwsRuntimeForReinit = importedTeardownKwsRuntimeForReinit;
         if (receiverEventsModule && receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventsModule.RECEIVER_EVENTS };
         }
