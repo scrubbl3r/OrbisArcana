@@ -2019,6 +2019,9 @@
         renderOrbDamageVisuals();
         updateDebugReadout();
       } catch (e) {
+        try {
+          await teardownKwsForReinit();
+        } catch (_) {}
         receiverModulesReady = false;
         console.warn("MVP systems init failed:", e);
       }
