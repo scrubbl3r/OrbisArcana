@@ -46,6 +46,7 @@ export async function loadReceiverInitModules() {
       SIGNAL_DEFINITIONS_V1,
       WINDOW_DEFINITIONS_V1,
       EVENT_DEFINITIONS_V1,
+      EVENT_RUNTIME_BINDINGS_V1_BY_ID,
       SPELL_RULES_V1,
       validateSpellRulesV1,
     },
@@ -121,6 +122,7 @@ export async function loadReceiverInitModules() {
     SIGNAL_DEFINITIONS_V1,
     WINDOW_DEFINITIONS_V1,
     EVENT_DEFINITIONS_V1,
+    EVENT_RUNTIME_BINDINGS_V1_BY_ID,
     SPELL_RULES_V1,
     validateSpellRulesV1,
     WORLD_ITEMS_V1,
@@ -142,7 +144,7 @@ export async function loadReceiverInitModules() {
  * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
  * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
  * @property {(next:{runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeSpellIndexes]
- * @property {(next:{signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[]}) => void} [setRuleSchemaV1]
+ * @property {(next:{signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[], eventRuntimeBindings?:Object}) => void} [setRuleSchemaV1]
  * @property {() => void} [initSpellActionHandlers]
  * @property {() => Object} [createSpellCastExecutorContext]
  * @property {(executor:Object) => void} [setSpellCastExecutor]
@@ -180,6 +182,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     SIGNAL_DEFINITIONS_V1,
     WINDOW_DEFINITIONS_V1,
     EVENT_DEFINITIONS_V1,
+    EVENT_RUNTIME_BINDINGS_V1_BY_ID,
     SPELL_RULES_V1,
     validateSpellRulesV1,
     createSpellCastExecutor,
@@ -298,6 +301,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       windows: Array.isArray(WINDOW_DEFINITIONS_V1) ? WINDOW_DEFINITIONS_V1.slice() : [],
       events: Array.isArray(EVENT_DEFINITIONS_V1) ? EVENT_DEFINITIONS_V1.slice() : [],
       rules: Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1.slice() : [],
+      eventRuntimeBindings: (EVENT_RUNTIME_BINDINGS_V1_BY_ID && typeof EVENT_RUNTIME_BINDINGS_V1_BY_ID === "object")
+        ? { ...EVENT_RUNTIME_BINDINGS_V1_BY_ID }
+        : Object.create(null),
     });
   }
 

@@ -1613,6 +1613,9 @@
               windows: Array.isArray(next.windows) ? next.windows.slice() : [],
               events: Array.isArray(next.events) ? next.events.slice() : [],
               rules: Array.isArray(next.rules) ? next.rules.slice() : [],
+              eventRuntimeBindings: (next.eventRuntimeBindings && typeof next.eventRuntimeBindings === "object")
+                ? { ...next.eventRuntimeBindings }
+                : Object.create(null),
             };
           },
           initSpellActionHandlers,
@@ -2014,18 +2017,42 @@
             });
             return;
           }
-          if (actionType !== "event" || actionId !== "electric_aoe") return;
+          if (actionType !== "event") return;
           const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
-          executeSpellCastAction("aoe_electric", {
-            intent: "rule_engine.event",
-            payload: {
+          const bindings = (ruleSchemaV1 && ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
+            ? ruleSchemaV1.eventRuntimeBindings
+            : Object.create(null);
+          const binding = bindings[actionId] || null;
+          const runtime = binding && binding.runtime && typeof binding.runtime === "object"
+            ? binding.runtime
+            : null;
+          const kind = String(runtime && runtime.kind || "").toLowerCase();
+          if (kind === "cast_action") {
+            const castActionId = String(runtime && runtime.castActionId || "");
+            if (!castActionId) return;
+            executeSpellCastAction(castActionId, {
+              intent: "rule_engine.event",
+              payload: {
+                trigger: "rule_engine_v1",
+                actionId,
+                ruleId: String(p.ruleId || ""),
+                atMs: Number(p.atMs) || performance.now(),
+                ...args,
+              },
+            });
+            return;
+          }
+          if (kind === "orb_event") {
+            const eventId = String(runtime && runtime.event || "");
+            if (!eventId) return;
+            eventBus.emit(eventId, {
               trigger: "rule_engine_v1",
               actionId,
               ruleId: String(p.ruleId || ""),
               atMs: Number(p.atMs) || performance.now(),
               ...args,
-            },
-          });
+            });
+          }
         });
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,

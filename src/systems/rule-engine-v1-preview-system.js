@@ -2,7 +2,6 @@ import { buildRuleEngineV1PreviewRuntime } from "../content/spell-rules/index.js
 
 const EVT_RULE_ENGINE_V1_PREVIEW_MATCHED = "rule_engine.v1.preview_matched";
 const EVT_RULE_ENGINE_V1_ACTION_EXECUTED = "rule_engine.v1.action_executed";
-const EVT_ORB_FLOAT_GRACE_GRANT = "orb.float_grace_grant";
 
 function getByPath(obj, path) {
   const parts = String(path || "").split(".").filter(Boolean);
@@ -116,33 +115,13 @@ export function createRuleEngineV1PreviewSystem({
       }
       if (type !== "event") continue;
       const args = resolveEventArgs(id, action && action.overrides);
-      if (id === "grace") {
-        const ms = Number(args && args.ms);
-        eventBus.emit(EVT_ORB_FLOAT_GRACE_GRANT, {
-          ms: Number.isFinite(ms) ? ms : undefined,
-          source: "rule_engine_v1",
-          ruleId: String(rule && rule.id || ""),
-          triggerSignalId: String(triggerMeta.signalId || ""),
-          atMs: Number(triggerMeta.atMs) || nowMs(),
-        });
-        eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
-          ruleId: String(rule && rule.id || ""),
-          actionType: "event",
-          actionId: id,
-          args,
-          atMs: Number(triggerMeta.atMs) || nowMs(),
-        });
-        continue;
-      }
-      if (id === "electric_aoe") {
-        eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
-          ruleId: String(rule && rule.id || ""),
-          actionType: "event",
-          actionId: id,
-          args,
-          atMs: Number(triggerMeta.atMs) || nowMs(),
-        });
-      }
+      eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+        ruleId: String(rule && rule.id || ""),
+        actionType: "event",
+        actionId: id,
+        args,
+        atMs: Number(triggerMeta.atMs) || nowMs(),
+      });
     }
   }
 
