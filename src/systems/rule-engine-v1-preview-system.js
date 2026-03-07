@@ -184,6 +184,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleEmitPreviewMatchedOverrides = (schema && schema.ruleEmitPreviewMatchedOverrides && typeof schema.ruleEmitPreviewMatchedOverrides === "object")
     ? schema.ruleEmitPreviewMatchedOverrides
     : Object.create(null);
+  const ruleExecuteActionsOverrides = (schema && schema.ruleExecuteActionsOverrides && typeof schema.ruleExecuteActionsOverrides === "object")
+    ? schema.ruleExecuteActionsOverrides
+    : Object.create(null);
   const unsub = [];
   const lastSourceEventAtById = new Map();
   const lastSeenAtBySignalId = new Map();
@@ -209,8 +212,10 @@ export function createRuleEngineV1PreviewSystem({
 
   function executeRuleActions(rule, triggerMeta = {}) {
     if (!executeActions || !executionAllowsActions) return;
-    const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
     const ruleId = String(rule && rule.id || "");
+    const hasRuleExecuteOverride = Object.prototype.hasOwnProperty.call(ruleExecuteActionsOverrides, ruleId);
+    if (hasRuleExecuteOverride && !ruleExecuteActionsOverrides[ruleId]) return;
+    const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
     const ruleActionLimitOverrideRaw = Number(ruleActionLimitOverrides[ruleId]);
     const effectiveMaxActionsPerRuleMatch = Number.isFinite(ruleActionLimitOverrideRaw)
       ? Math.max(0, Math.floor(ruleActionLimitOverrideRaw))

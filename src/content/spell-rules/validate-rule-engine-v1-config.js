@@ -91,6 +91,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleCooldownScaleOverrides = asObj(cfg.ruleCooldownScaleOverrides);
   const ruleMatchWindowScaleOverrides = asObj(cfg.ruleMatchWindowScaleOverrides);
   const ruleEmitPreviewMatchedOverrides = asObj(cfg.ruleEmitPreviewMatchedOverrides);
+  const ruleExecuteActionsOverrides = asObj(cfg.ruleExecuteActionsOverrides);
   const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
   const signalDebounceOverrides = asObj(cfg.signalDebounceOverrides);
   const signalMaxMatchesOverrides = asObj(cfg.signalMaxMatchesOverrides);
@@ -284,6 +285,17 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [ruleId, value] of Object.entries(ruleEmitPreviewMatchedOverrides)) {
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitPreviewMatchedOverrides[${ruleId}] must be boolean`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleExecuteActionsOverrides")) {
+    if (!cfg.ruleExecuteActionsOverrides || typeof cfg.ruleExecuteActionsOverrides !== "object" || Array.isArray(cfg.ruleExecuteActionsOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleExecuteActionsOverrides must be an object when present");
+    } else {
+      for (const [ruleId, value] of Object.entries(ruleExecuteActionsOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleExecuteActionsOverrides[${ruleId}] must be boolean`);
         }
       }
     }
@@ -650,6 +662,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitPreviewMatchedOverrides references unknown rule id: ${id}`);
+  }
+  for (const ruleId of Object.keys(ruleExecuteActionsOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleExecuteActionsOverrides references unknown rule id: ${id}`);
   }
   for (const ruleId of Object.keys(rulePriorityOverrides)) {
     const id = String(ruleId || "").trim();

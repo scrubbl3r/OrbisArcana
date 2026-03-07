@@ -134,6 +134,11 @@ const RULE_EMIT_PREVIEW_MATCHED_OVERRIDES = Object.freeze({
   // r_rota_yspin_charged: false,
 });
 
+const RULE_EXECUTE_ACTIONS_OVERRIDES = Object.freeze({
+  // Example:
+  // r_rota_yspin_charged: false,
+});
+
 function applyRuleEnabledOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -366,6 +371,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   ruleCooldownScaleOverrides: RULE_COOLDOWN_SCALE_OVERRIDES,
   ruleMatchWindowScaleOverrides: RULE_MATCH_WINDOW_SCALE_OVERRIDES,
   ruleEmitPreviewMatchedOverrides: RULE_EMIT_PREVIEW_MATCHED_OVERRIDES,
+  ruleExecuteActionsOverrides: RULE_EXECUTE_ACTIONS_OVERRIDES,
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
   signalMaxMatchesOverrides: SIGNAL_MAX_MATCHES_OVERRIDES,

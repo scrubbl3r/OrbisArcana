@@ -22,6 +22,7 @@ Top-Level Shape
   ruleCooldownScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   ruleMatchWindowScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   ruleEmitPreviewMatchedOverrides: { ... }, // optional { [ruleId]: boolean }
+  ruleExecuteActionsOverrides: { ... }, // optional { [ruleId]: boolean }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalMaxMatchesOverrides: { ... }, // optional { [signalId]: integer>=0 }
@@ -129,6 +130,9 @@ Authoring Notes
 - Rule telemetry controls:
   - `ruleEmitPreviewMatchedOverrides` can centrally force preview telemetry on/off per rule.
   - Precedence: `ruleEmitPreviewMatchedOverrides` -> `sourceEventEmitPreviewMatchedOverrides` -> `execution.emitPreviewMatchedEvents`.
+- Rule action execution controls:
+  - `ruleExecuteActionsOverrides` can centrally force action execution on/off per rule.
+  - Precedence: `ruleExecuteActionsOverrides` -> `execution.executeActions`.
 - Execution controls:
   - `execution.stopOnFirstMatch`:
     - `false` (default): all matched candidate rules can fire.
