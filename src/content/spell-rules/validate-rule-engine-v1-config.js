@@ -141,6 +141,11 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.emitPreviewMatchedEvents must be boolean when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "executeActions")) {
+      if (typeof execution.executeActions !== "boolean") {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.executeActions must be boolean when present");
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(execution, "cooldownScale")) {
       const n = Number(execution.cooldownScale);
       if (!Number.isFinite(n) || n < 0) {

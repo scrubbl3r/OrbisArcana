@@ -123,6 +123,9 @@ export function createRuleEngineV1PreviewSystem({
   const emitPreviewMatchedEvents = (Object.prototype.hasOwnProperty.call(execution, "emitPreviewMatchedEvents"))
     ? !!execution.emitPreviewMatchedEvents
     : true;
+  const executionAllowsActions = (Object.prototype.hasOwnProperty.call(execution, "executeActions"))
+    ? !!execution.executeActions
+    : true;
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
@@ -172,7 +175,7 @@ export function createRuleEngineV1PreviewSystem({
   }
 
   function executeRuleActions(rule, triggerMeta = {}) {
-    if (!executeActions) return;
+    if (!executeActions || !executionAllowsActions) return;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
     let executedActionCount = 0;
     for (let i = 0; i < actions.length; i += 1) {

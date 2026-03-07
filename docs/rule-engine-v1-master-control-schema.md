@@ -130,6 +130,9 @@ Authoring Notes
     - boolean; default `true`.
     - controls emission of `rule_engine.v1.preview_matched` telemetry events only.
     - does not affect action execution (`rule_engine.v1.action_executed`).
+  - `execution.executeActions`:
+    - boolean; default `true`.
+    - when `false`, matched rules do not execute actions (`wake_win`/`event`) in preview runtime.
   - `execution.cooldownScale`:
     - finite number `>= 0`; default `1`.
     - multiplies all effective rule cooldowns at runtime.
