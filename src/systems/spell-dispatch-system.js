@@ -1,6 +1,9 @@
 import { ACTIVE_SPELLS_BY_ID } from "../voice/spellbook.js";
 import { normalizeSpellClassTokenForRuntime } from "../voice/spell-decision-tree.js";
-import { SPELL_RUNTIME_ROUTING_BY_ID } from "../content/spells/spell-runtime-routing-v1.js";
+import {
+  SPELL_RUNTIME_ROUTING_BY_ID,
+  SPELL_WINDOW_BYPASS_SPELL_IDS,
+} from "../content/spells/spell-runtime-routing-v1.js";
 import {
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
   EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
@@ -28,14 +31,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
-  const TEMP_UNGATED_SPELL_IDS = new Set([
-    "tempus",
-    "fridgis",
-    "electrum",
-    "rota",
-    "sanctum",
-    "vectus",
-  ]);
+  const TEMP_UNGATED_SPELL_IDS = new Set(
+    (Array.isArray(SPELL_WINDOW_BYPASS_SPELL_IDS) ? SPELL_WINDOW_BYPASS_SPELL_IDS : [])
+      .map((id) => String(id || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
   const loadedByAxis = {
     x: { UD: null, LR: null, FB: null },
     y: { UD: null, LR: null, FB: null },

@@ -9,6 +9,15 @@ export const WAKE_REQUIRED_SPELL_IDS = Object.freeze([
   "domus",
 ]);
 
+export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
+  "tempus",
+  "fridgis",
+  "electrum",
+  "rota",
+  "sanctum",
+  "vectus",
+]);
+
 export const SCHOOL_SPELL_IDS = Object.freeze([
   "tempus",
   "fridgis",
