@@ -11,9 +11,9 @@ export const SPELL_RULES_V1 = Object.freeze([
     id: "r_rota_yspin_charged",
     on: Object.freeze({
       all: Object.freeze([
-        Object.freeze({ type: "signal", id: "spell.rota" }),
-        Object.freeze({ type: "signal", id: "gesture.y_spin" }),
-        Object.freeze({ type: "signal", id: "orb_state.charged" }),
+        Object.freeze({ type: "spell", id: "rota" }),
+        Object.freeze({ type: "gesture", id: "y_spin" }),
+        Object.freeze({ type: "orb_state", id: "charged" }),
       ]),
     }),
     then: Object.freeze([
@@ -21,6 +21,7 @@ export const SPELL_RULES_V1 = Object.freeze([
         type: "wake_win",
         id: "wake_win",
         spells: DEFAULT_WAKE_WIN_SPELLS,
+        ttlMs: 2000,
       }),
       Object.freeze({
         type: "event",
@@ -29,7 +30,7 @@ export const SPELL_RULES_V1 = Object.freeze([
       Object.freeze({
         type: "event",
         id: "grace",
-        overrides: Object.freeze({ ms: 500 }),
+        ms: 500,
       }),
     ]),
   }),

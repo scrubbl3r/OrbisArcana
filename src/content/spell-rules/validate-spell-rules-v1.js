@@ -11,6 +11,28 @@ function isFiniteNonNegativeNumber(v) {
   return Number.isFinite(n) && n >= 0;
 }
 
+function resolveSignalConditionId(cond) {
+  const type = asId(cond && cond.type);
+  const id = asId(cond && cond.id);
+  if (!id) return "";
+  if (type === "signal") return id;
+  if (type === "spell" || type === "gesture" || type === "orb_state") {
+    if (id.includes(".")) return id;
+    return `${type}.${id}`;
+  }
+  return null;
+}
+
+function mergeActionOverrides(action) {
+  const base = (action && typeof action.overrides === "object" && action.overrides)
+    ? { ...action.overrides }
+    : {};
+  if (action && Object.prototype.hasOwnProperty.call(action, "ttlMs")) base.ttlMs = action.ttlMs;
+  if (action && Object.prototype.hasOwnProperty.call(action, "ms")) base.ms = action.ms;
+  if (action && Object.prototype.hasOwnProperty.call(action, "state")) base.state = action.state;
+  return base;
+}
+
 /**
  * Lightweight schema validation for Rule Engine v1 data files.
  * Returns errors only; caller decides whether to throw or log.
@@ -65,13 +87,14 @@ export function validateSpellRulesV1(rules = []) {
 
     for (const cond of all.concat(any)) {
       const type = asId(cond && cond.type);
-      const id = asId(cond && cond.id);
-      if (type !== "signal") {
+      const signalId = resolveSignalConditionId(cond);
+      if (signalId === null) {
         errors.push(`rule ${ruleId} has unsupported condition type: ${type || "(empty)"}`);
         continue;
       }
-      if (!id || !SIGNAL_DEFINITIONS_V1_BY_ID[id]) {
-        errors.push(`rule ${ruleId} references unknown signal: ${id || "(empty)"}`);
+      if (!signalId || !SIGNAL_DEFINITIONS_V1_BY_ID[signalId]) {
+        const rawId = asId(cond && cond.id) || "(empty)";
+        errors.push(`rule ${ruleId} references unknown signal: ${rawId} (resolved: ${signalId || "(empty)"})`);
       }
     }
 
@@ -92,7 +115,7 @@ export function validateSpellRulesV1(rules = []) {
         if (!spells.length) {
           errors.push(`rule ${ruleId} wake_win action requires non-empty spells[]`);
         }
-        const overrides = (action && action.overrides) || null;
+        const overrides = mergeActionOverrides(action);
         if (overrides && Object.prototype.hasOwnProperty.call(overrides, "ms")) {
           errors.push(`rule ${ruleId} wake_win should use ttlMs, not ms`);
         }
@@ -108,10 +131,10 @@ export function validateSpellRulesV1(rules = []) {
           errors.push(`rule ${ruleId} references unknown event: ${id || "(empty)"}`);
           continue;
         }
-        const overrides = (action && action.overrides) || null;
+        const overrides = mergeActionOverrides(action);
         if (overrides && Object.keys(overrides).length > 0) {
           const keys = Object.keys(overrides);
-          const unknown = keys.filter((k) => k !== "ms");
+          const unknown = keys.filter((k) => k !== "ms" && k !== "state");
           if (unknown.length) {
             errors.push(`rule ${ruleId} event ${id} has unsupported override keys: ${unknown.join(",")}`);
           }

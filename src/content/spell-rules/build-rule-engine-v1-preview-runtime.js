@@ -6,6 +6,28 @@ function asEventName(v) {
   return String(v || "").trim();
 }
 
+function resolveSignalConditionId(cond) {
+  const type = asId(cond && cond.type);
+  const id = asId(cond && cond.id);
+  if (!id) return "";
+  if (type === "signal") return id;
+  if (type === "spell" || type === "gesture" || type === "orb_state") {
+    if (id.includes(".")) return id;
+    return `${type}.${id}`;
+  }
+  return "";
+}
+
+function mergeActionOverrides(action) {
+  const base = (action && typeof action.overrides === "object" && action.overrides)
+    ? { ...action.overrides }
+    : {};
+  if (action && Object.prototype.hasOwnProperty.call(action, "ttlMs")) base.ttlMs = action.ttlMs;
+  if (action && Object.prototype.hasOwnProperty.call(action, "ms")) base.ms = action.ms;
+  if (action && Object.prototype.hasOwnProperty.call(action, "state")) base.state = action.state;
+  return base;
+}
+
 export function buildRuleEngineV1PreviewRuntime({
   signals = [],
   windows = [],
@@ -68,21 +90,15 @@ export function buildRuleEngineV1PreviewRuntime({
     const on = (rule && typeof rule.on === "object" && rule.on) ? rule.on : {};
     const all = Array.isArray(on.all) ? on.all : [];
     const any = Array.isArray(on.any) ? on.any : [];
-    const allSignalIds = all
-      .filter((c) => asId(c && c.type) === "signal")
-      .map((c) => asId(c && c.id))
-      .filter(Boolean);
-    const anySignalIds = any
-      .filter((c) => asId(c && c.type) === "signal")
-      .map((c) => asId(c && c.id))
-      .filter(Boolean);
+    const allSignalIds = all.map((c) => resolveSignalConditionId(c)).filter(Boolean);
+    const anySignalIds = any.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const signalIds = Array.from(new Set(allSignalIds.concat(anySignalIds)));
     const actions = Array.isArray(rule && rule.then)
       ? rule.then.map((a) => ({
           type: asId(a && a.type),
           id: asId(a && a.id),
           spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
-          overrides: (a && typeof a.overrides === "object" && a.overrides) ? { ...a.overrides } : {},
+          overrides: mergeActionOverrides(a),
         }))
       : [];
     const normalizedRule = {
