@@ -17,6 +17,30 @@ function norm(v) {
   return String(v || "").trim().toLowerCase();
 }
 
+function asActionType(v) {
+  return String(v || "").trim().toLowerCase();
+}
+
+function asActionId(v) {
+  return String(v || "").trim().toLowerCase();
+}
+
+function resolveActionArgOverride(ruleId, action, index, overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  const type = asActionType(action && action.type);
+  const id = asActionId(action && action.id);
+  const keys = [];
+  if (ruleId && type && id) keys.push(`${ruleId}.${type}.${id}`);
+  if (ruleId && type) keys.push(`${ruleId}.${type}.${index}`);
+  if (ruleId) keys.push(`${ruleId}.${index}`);
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(map, key)) continue;
+    const value = map[key];
+    if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  }
+  return null;
+}
+
 function signalMatchesPayload(signal, payload = {}) {
   const where = signal && signal.where;
   if (!where || typeof where !== "object") return true;
@@ -100,6 +124,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalDebounceOverrides = (schema && schema.signalDebounceOverrides && typeof schema.signalDebounceOverrides === "object")
     ? schema.signalDebounceOverrides
     : Object.create(null);
+  const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
+    ? schema.actionArgOverrides
+    : Object.create(null);
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
@@ -125,13 +152,19 @@ export function createRuleEngineV1PreviewSystem({
   function executeRuleActions(rule, triggerMeta = {}) {
     if (!executeActions) return;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
-    for (const action of actions) {
+    for (let i = 0; i < actions.length; i += 1) {
+      const action = actions[i];
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
+      const ruleId = String(rule && rule.id || "");
+      const argOverride = resolveActionArgOverride(ruleId, action, i, actionArgOverrides);
+      const mergedOverrides = (argOverride && typeof argOverride === "object")
+        ? { ...(action && action.overrides || {}), ...argOverride }
+        : (action && action.overrides);
       if (type === "wake_win") {
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
-        const args = resolveWindowArgs(id, action && action.overrides);
+        const args = resolveWindowArgs(id, mergedOverrides);
         eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),
           actionType: "wake_win",
@@ -145,7 +178,7 @@ export function createRuleEngineV1PreviewSystem({
       if (type !== "event") continue;
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;
-      const args = resolveEventArgs(id, action && action.overrides);
+      const args = resolveEventArgs(id, mergedOverrides);
       eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
         ruleId: String(rule && rule.id || ""),
         actionType: "event",

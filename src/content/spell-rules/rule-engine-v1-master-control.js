@@ -30,6 +30,12 @@ const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // "r_rota_yspin_charged.3": false, // by action index
 });
 
+const ACTION_ARG_OVERRIDES = Object.freeze({
+  // Examples:
+  // "r_rota_yspin_charged.event.grace": { ms: 650 },
+  // "r_rota_yspin_charged.wake_win.0": { ttlMs: 1800 },
+});
+
 const EVENT_DEFAULT_OVERRIDES = Object.freeze({
   // Examples:
   // grace: { ms: 600 },
@@ -257,6 +263,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
+  actionArgOverrides: ACTION_ARG_OVERRIDES,
   eventEnabledOverrides: EVENT_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
   windowEnabledOverrides: WINDOW_ENABLED_OVERRIDES,

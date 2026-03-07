@@ -337,6 +337,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
         ? { ...ruleSchemaV1.signalDebounceOverrides }
         : Object.create(null),
+      actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
+        ? { ...ruleSchemaV1.actionArgOverrides }
+        : Object.create(null),
     });
     if (integrityErrors.length) {
       throw new Error(`Spell schema integrity validation failed: ${integrityErrors.join(" | ")}`);

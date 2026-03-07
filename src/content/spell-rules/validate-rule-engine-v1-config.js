@@ -28,6 +28,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
+  const actionArgOverrides = asObj(cfg.actionArgOverrides);
   const eventEnabledOverrides = asObj(cfg.eventEnabledOverrides);
   const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
   const windowEnabledOverrides = asObj(cfg.windowEnabledOverrides);
@@ -186,6 +187,17 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "actionArgOverrides")) {
+    if (!cfg.actionArgOverrides || typeof cfg.actionArgOverrides !== "object" || Array.isArray(cfg.actionArgOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides must be an object when present");
+    } else {
+      for (const [actionKey, value] of Object.entries(actionArgOverrides)) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides[${actionKey}] must be an object`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "eventEnabledOverrides")) {
     if (!cfg.eventEnabledOverrides || typeof cfg.eventEnabledOverrides !== "object" || Array.isArray(cfg.eventEnabledOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides must be an object when present");
@@ -281,6 +293,14 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides references unknown rule id: ${id}`);
+  }
+  for (const actionKey of Object.keys(actionArgOverrides)) {
+    const key = String(actionKey || "").trim();
+    if (!key) continue;
+    const firstDot = key.indexOf(".");
+    const ruleId = firstDot > 0 ? key.slice(0, firstDot) : key;
+    if (!ruleId || ruleIds.has(ruleId)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides references unknown rule id: ${ruleId}`);
   }
 
   for (const eventDef of events) {

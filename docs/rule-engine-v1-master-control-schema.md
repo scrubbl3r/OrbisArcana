@@ -23,6 +23,7 @@ Top-Level Shape
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
+  actionArgOverrides: { ... }, // optional { [actionKey]: object }
   eventEnabledOverrides: { ... }, // optional { [eventId]: boolean }
   eventDefaultOverrides: { ... }, // optional { [eventId]: object }
   windowEnabledOverrides: { ... }, // optional { [windowId]: boolean }
@@ -76,6 +77,12 @@ Authoring Notes
 - Action inline args are generic:
   - Any non-structural key is treated as action args.
   - Structural keys: `type`, `id`, `spells`, `overrides`, `enabled`.
+  - `actionArgOverrides` can centrally patch action args by key at runtime.
+    - key formats:
+      - `${ruleId}.${type}.${actionId}` (preferred)
+      - `${ruleId}.${type}.${index}`
+      - `${ruleId}.${index}`
+    - precedence: action inline/default args -> `actionArgOverrides`.
 - Default arg controls:
   - `eventEnabledOverrides` can centrally force specific event definitions on/off by event id.
     - disabled events remain defined, but runtime skips dispatching those event actions.

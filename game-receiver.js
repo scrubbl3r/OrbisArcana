@@ -1622,6 +1622,9 @@
               signalDebounceOverrides: (next.signalDebounceOverrides && typeof next.signalDebounceOverrides === "object")
                 ? { ...next.signalDebounceOverrides }
                 : Object.create(null),
+              actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
+                ? { ...next.actionArgOverrides }
+                : Object.create(null),
             };
           },
           initSpellActionHandlers,
