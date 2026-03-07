@@ -59,6 +59,13 @@ function getRuleConditions(rule) {
   return { all: [], any: [] };
 }
 
+function getRuleActions(rule) {
+  const then = rule && rule.then;
+  if (Array.isArray(then)) return then;
+  if (then && typeof then === "object") return [then];
+  return [];
+}
+
 function indexDefsById(defs = []) {
   return (Array.isArray(defs) ? defs : []).reduce((acc, item) => {
     const id = asId(item && item.id);
@@ -155,7 +162,7 @@ export function validateSpellRulesV1(rules = [], options = {}) {
       }
     }
 
-    const actions = Array.isArray(rule && rule.then) ? rule.then : [];
+    const actions = getRuleActions(rule);
     if (!actions.length) {
       errors.push(`rule ${ruleId} has no actions`);
       continue;

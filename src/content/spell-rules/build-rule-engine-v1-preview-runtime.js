@@ -53,6 +53,13 @@ function getRuleConditions(rule) {
   return { all: [], any: [] };
 }
 
+function getRuleActions(rule) {
+  const then = rule && rule.then;
+  if (Array.isArray(then)) return then;
+  if (then && typeof then === "object") return [then];
+  return [];
+}
+
 export function buildRuleEngineV1PreviewRuntime({
   signals = [],
   windows = [],
@@ -116,16 +123,14 @@ export function buildRuleEngineV1PreviewRuntime({
     const allSignalIds = all.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const anySignalIds = any.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const signalIds = Array.from(new Set(allSignalIds.concat(anySignalIds)));
-    const actions = Array.isArray(rule && rule.then)
-      ? rule.then.map((a) => ({
-          type: asId(a && a.type),
-          id: (asId(a && a.type) === "wake_win")
-            ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
-            : asId(a && a.id),
-          spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
-          overrides: resolveActionArgs(a),
-        }))
-      : [];
+    const actions = getRuleActions(rule).map((a) => ({
+      type: asId(a && a.type),
+      id: (asId(a && a.type) === "wake_win")
+        ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
+        : asId(a && a.id),
+      spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
+      overrides: resolveActionArgs(a),
+    }));
     const normalizedRule = {
       id,
       signalIds,
