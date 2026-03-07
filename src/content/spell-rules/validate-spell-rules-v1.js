@@ -35,6 +35,26 @@ function mergeActionOverrides(action) {
   return base;
 }
 
+function getRuleConditions(rule) {
+  const on = rule && rule.on;
+  if (Array.isArray(on)) {
+    return { all: on, any: [] };
+  }
+  if (on && typeof on === "object") {
+    if (Array.isArray(on.all) || Array.isArray(on.any)) {
+      return {
+        all: Array.isArray(on.all) ? on.all : [],
+        any: Array.isArray(on.any) ? on.any : [],
+      };
+    }
+    // Treat single condition object as `all: [condition]`.
+    if (Object.keys(on).length > 0) {
+      return { all: [on], any: [] };
+    }
+  }
+  return { all: [], any: [] };
+}
+
 /**
  * Lightweight schema validation for Rule Engine v1 data files.
  * Returns errors only; caller decides whether to throw or log.
@@ -80,9 +100,7 @@ export function validateSpellRulesV1(rules = []) {
     }
     seenRuleIds.add(ruleId);
 
-    const on = rule && rule.on;
-    const all = Array.isArray(on && on.all) ? on.all : [];
-    const any = Array.isArray(on && on.any) ? on.any : [];
+    const { all, any } = getRuleConditions(rule);
     if (!all.length && !any.length) {
       errors.push(`rule ${ruleId} has no triggers (on.all/on.any)`);
     }

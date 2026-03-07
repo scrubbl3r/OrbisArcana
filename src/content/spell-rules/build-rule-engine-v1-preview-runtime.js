@@ -30,6 +30,25 @@ function mergeActionOverrides(action) {
   return base;
 }
 
+function getRuleConditions(rule) {
+  const on = rule && rule.on;
+  if (Array.isArray(on)) {
+    return { all: on, any: [] };
+  }
+  if (on && typeof on === "object") {
+    if (Array.isArray(on.all) || Array.isArray(on.any)) {
+      return {
+        all: Array.isArray(on.all) ? on.all : [],
+        any: Array.isArray(on.any) ? on.any : [],
+      };
+    }
+    if (Object.keys(on).length > 0) {
+      return { all: [on], any: [] };
+    }
+  }
+  return { all: [], any: [] };
+}
+
 export function buildRuleEngineV1PreviewRuntime({
   signals = [],
   windows = [],
@@ -89,9 +108,7 @@ export function buildRuleEngineV1PreviewRuntime({
   for (const rule of Array.isArray(rules) ? rules : []) {
     const id = asId(rule && rule.id);
     if (!id) continue;
-    const on = (rule && typeof rule.on === "object" && rule.on) ? rule.on : {};
-    const all = Array.isArray(on.all) ? on.all : [];
-    const any = Array.isArray(on.any) ? on.any : [];
+    const { all, any } = getRuleConditions(rule);
     const allSignalIds = all.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const anySignalIds = any.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const signalIds = Array.from(new Set(allSignalIds.concat(anySignalIds)));
