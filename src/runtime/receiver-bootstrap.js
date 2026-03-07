@@ -46,13 +46,7 @@ export async function loadReceiverInitModules() {
     { validateSpellSchemaIntegrityV1 },
     {
       RULE_ENGINE_V1_CONFIG,
-      SIGNAL_DEFINITIONS_V1,
-      WINDOW_DEFINITIONS_V1,
-      EVENT_DEFINITIONS_V1,
-      EVENT_RUNTIME_BINDINGS_V1_BY_ID,
-      SPELL_RULES_V1,
       validateRuleEngineV1Config,
-      validateSpellRulesV1,
     },
     { WORLD_ITEMS_V1 },
   ] = await Promise.all([
@@ -127,14 +121,8 @@ export async function loadReceiverInitModules() {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
-    SIGNAL_DEFINITIONS_V1,
-    WINDOW_DEFINITIONS_V1,
-    EVENT_DEFINITIONS_V1,
-    EVENT_RUNTIME_BINDINGS_V1_BY_ID,
-    SPELL_RULES_V1,
     RULE_ENGINE_V1_CONFIG,
     validateRuleEngineV1Config,
-    validateSpellRulesV1,
     WORLD_ITEMS_V1,
   };
 }
@@ -191,14 +179,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
-    SIGNAL_DEFINITIONS_V1,
-    WINDOW_DEFINITIONS_V1,
-    EVENT_DEFINITIONS_V1,
-    EVENT_RUNTIME_BINDINGS_V1_BY_ID,
-    SPELL_RULES_V1,
     RULE_ENGINE_V1_CONFIG,
     validateRuleEngineV1Config,
-    validateSpellRulesV1,
     createSpellCastExecutor,
   } = mods || {};
 
@@ -225,15 +207,14 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
 
   const ruleSchemaV1 = (RULE_ENGINE_V1_CONFIG && typeof RULE_ENGINE_V1_CONFIG === "object")
     ? RULE_ENGINE_V1_CONFIG
-    : {
-        signals: Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1.slice() : [],
-        windows: Array.isArray(WINDOW_DEFINITIONS_V1) ? WINDOW_DEFINITIONS_V1.slice() : [],
-        events: Array.isArray(EVENT_DEFINITIONS_V1) ? EVENT_DEFINITIONS_V1.slice() : [],
-        rules: Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1.slice() : [],
-        eventRuntimeBindings: (EVENT_RUNTIME_BINDINGS_V1_BY_ID && typeof EVENT_RUNTIME_BINDINGS_V1_BY_ID === "object")
-          ? { ...EVENT_RUNTIME_BINDINGS_V1_BY_ID }
-          : Object.create(null),
-      };
+    : Object.freeze({
+        version: "v1",
+        signals: [],
+        windows: [],
+        events: [],
+        rules: [],
+        eventRuntimeBindings: Object.create(null),
+      });
   const ruleSignalsV1 = Array.isArray(ruleSchemaV1.signals) ? ruleSchemaV1.signals.slice() : [];
   const ruleWindowsV1 = Array.isArray(ruleSchemaV1.windows) ? ruleSchemaV1.windows.slice() : [];
   const ruleEventsV1 = Array.isArray(ruleSchemaV1.events) ? ruleSchemaV1.events.slice() : [];
@@ -333,11 +314,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     const errors = validateRuleEngineV1Config(ruleSchemaV1);
     if (errors.length) {
       throw new Error(`Rule Engine v1 config validation failed: ${errors.join(" | ")}`);
-    }
-  } else if (typeof validateSpellRulesV1 === "function") {
-    const errors = validateSpellRulesV1(ruleRulesV1);
-    if (errors.length) {
-      throw new Error(`Rule Engine v1 schema validation failed: ${errors.join(" | ")}`);
     }
   }
   if (typeof validateSpellSchemaIntegrityV1 === "function") {
