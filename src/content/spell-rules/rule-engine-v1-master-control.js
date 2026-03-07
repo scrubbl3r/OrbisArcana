@@ -32,6 +32,11 @@ const RULE_DEFAULTS = Object.freeze({
   // matchWindowMs: 2000,
 });
 
+const RULE_PRIORITY_OVERRIDES = Object.freeze({
+  // Example:
+  // r_rota_yspin_charged: 50,
+});
+
 function applyRuleEnabledOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -107,6 +112,20 @@ function applyRuleDefaults(rules = [], defaults = {}) {
   });
 }
 
+function applyRulePriorityOverrides(rules = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(rules) ? rules : []).map((rule) => {
+    const id = String(rule && rule.id || "").trim();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return rule;
+    const override = map[id];
+    if (!Number.isFinite(Number(override))) return rule;
+    return Object.freeze({
+      ...(rule || {}),
+      priority: Number(override),
+    });
+  });
+}
+
 function applyDefinitionDefaultArgOverrides(defs = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(defs) ? defs : []).map((def) => {
@@ -133,6 +152,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   version: "v1",
   enabled: true,
   ruleDefaults: RULE_DEFAULTS,
+  rulePriorityOverrides: RULE_PRIORITY_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
@@ -142,7 +162,10 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   events: applyDefinitionDefaultArgOverrides(EVENT_DEFINITIONS_V1, EVENT_DEFAULT_OVERRIDES),
   rules: applyActionEnabledOverrides(
     applyRuleEnabledOverrides(
-      applyRuleDefaults(SPELL_RULES_V1, RULE_DEFAULTS),
+      applyRulePriorityOverrides(
+        applyRuleDefaults(SPELL_RULES_V1, RULE_DEFAULTS),
+        RULE_PRIORITY_OVERRIDES
+      ),
       RULE_ENABLED_OVERRIDES
     ),
     ACTION_ENABLED_OVERRIDES
