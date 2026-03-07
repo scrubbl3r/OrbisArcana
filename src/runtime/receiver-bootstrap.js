@@ -45,7 +45,7 @@ export async function loadReceiverInitModules() {
     { validateSpellRuntimeRoutingV1 },
     { validateSpellSchemaIntegrityV1 },
     {
-      RULE_ENGINE_V1_MASTER_CONFIG,
+      RULE_ENGINE_V1_MASTER_CONTROL,
       validateRuleEngineV1Config,
     },
     { WORLD_ITEMS_V1 },
@@ -121,7 +121,7 @@ export async function loadReceiverInitModules() {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
-    RULE_ENGINE_V1_MASTER_CONFIG,
+    RULE_ENGINE_V1_MASTER_CONTROL,
     validateRuleEngineV1Config,
     WORLD_ITEMS_V1,
   };
@@ -179,7 +179,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
-    RULE_ENGINE_V1_MASTER_CONFIG,
+    RULE_ENGINE_V1_MASTER_CONTROL,
     validateRuleEngineV1Config,
     createSpellCastExecutor,
   } = mods || {};
@@ -205,8 +205,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setReceiverModulesReady,
   } = ctx;
 
-  const ruleSchemaV1 = (RULE_ENGINE_V1_MASTER_CONFIG && typeof RULE_ENGINE_V1_MASTER_CONFIG === "object")
-    ? RULE_ENGINE_V1_MASTER_CONFIG
+  const ruleSchemaV1 = (RULE_ENGINE_V1_MASTER_CONTROL && typeof RULE_ENGINE_V1_MASTER_CONTROL === "object")
+    ? RULE_ENGINE_V1_MASTER_CONTROL
     : Object.freeze({
         version: "v1",
         signals: [],
