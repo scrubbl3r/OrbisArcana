@@ -1,5 +1,5 @@
 import { EVENT_DEFINITIONS_V1_BY_ID } from "./event-definitions-v1.js";
-import { SIGNAL_DEFINITIONS_V1_BY_ID } from "./signal-definitions-v1.js";
+import { SIGNAL_DEFINITIONS_V1, SIGNAL_DEFINITIONS_V1_BY_ID } from "./signal-definitions-v1.js";
 import { WINDOW_DEFINITIONS_V1_BY_ID } from "./window-definitions-v1.js";
 
 function asId(v) {
@@ -18,6 +18,19 @@ function isFiniteNonNegativeNumber(v) {
 export function validateSpellRulesV1(rules = []) {
   const errors = [];
   const seenRuleIds = new Set();
+  const seenSignalIds = new Set();
+  for (const signal of Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1 : []) {
+    const signalId = asId(signal && signal.id);
+    if (!signalId) {
+      errors.push("signal has missing id");
+      continue;
+    }
+    if (seenSignalIds.has(signalId)) {
+      errors.push(`duplicate signal id: ${signalId}`);
+      continue;
+    }
+    seenSignalIds.add(signalId);
+  }
   for (const signalId of Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID)) {
     const signal = SIGNAL_DEFINITIONS_V1_BY_ID[signalId] || null;
     const sourceEvent = String(signal && signal.sourceEvent || "").trim();

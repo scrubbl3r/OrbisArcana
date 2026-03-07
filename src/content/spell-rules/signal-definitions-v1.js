@@ -1,31 +1,39 @@
 // Data-only signal catalog for Rule Engine v1 scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
+import { ACTIVE_SPELLS_BY_ID } from "../../voice/spellbook.js";
+import { CLASS_SPELL_IDS, WAKE_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
+
+function buildClassSpellSignals() {
+  return (Array.isArray(CLASS_SPELL_IDS) ? CLASS_SPELL_IDS : [])
+    .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
+    .filter(Boolean)
+    .map((spellId) => Object.freeze({
+      id: `spell.${spellId}`,
+      type: "spell",
+      sourceEvent: "voice.spell_detected",
+      where: Object.freeze({ path: "spell.id", eq: spellId }),
+    }));
+}
+
+function buildWakeSpellSignals() {
+  return (Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : [])
+    .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
+    .filter(Boolean)
+    .map((spellId) => {
+      const active = ACTIVE_SPELLS_BY_ID[spellId] || null;
+      const phrase = String((active && (active.phrase || active.id)) || spellId).trim().toLowerCase();
+      return Object.freeze({
+        id: `spell.${spellId}`,
+        type: "spell",
+        sourceEvent: "voice.token_detected",
+        where: Object.freeze({ path: "token", eq: phrase }),
+      });
+    });
+}
 
 export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
-  Object.freeze({
-    id: "spell.rota",
-    type: "spell",
-    sourceEvent: "voice.spell_detected",
-    where: Object.freeze({ path: "spell.id", eq: "rota" }),
-  }),
-  Object.freeze({
-    id: "spell.sanctum",
-    type: "spell",
-    sourceEvent: "voice.spell_detected",
-    where: Object.freeze({ path: "spell.id", eq: "sanctum" }),
-  }),
-  Object.freeze({
-    id: "spell.vectus",
-    type: "spell",
-    sourceEvent: "voice.spell_detected",
-    where: Object.freeze({ path: "spell.id", eq: "vectus" }),
-  }),
-  Object.freeze({
-    id: "spell.orbis",
-    type: "spell",
-    sourceEvent: "voice.token_detected",
-    where: Object.freeze({ path: "token", eq: "orbis" }),
-  }),
+  ...buildClassSpellSignals(),
+  ...buildWakeSpellSignals(),
   Object.freeze({
     id: "gesture.y_spin",
     type: "gesture",
