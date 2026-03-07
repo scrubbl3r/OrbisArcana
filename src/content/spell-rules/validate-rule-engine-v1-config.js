@@ -9,6 +9,10 @@ function asText(v) {
   return String(v || "").trim();
 }
 
+function isFiniteNumber(v) {
+  return Number.isFinite(Number(v));
+}
+
 function asActionType(v) {
   return String(v || "").trim().toLowerCase();
 }
@@ -298,6 +302,26 @@ export function validateRuleEngineV1Config(config = null) {
         }
         if (Object.prototype.hasOwnProperty.call(value, "path") && !asText(value.path)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].path must be non-empty when present`);
+        }
+        const hasEq = Object.prototype.hasOwnProperty.call(value, "eq");
+        const hasGt = Object.prototype.hasOwnProperty.call(value, "gt");
+        const hasGte = Object.prototype.hasOwnProperty.call(value, "gte");
+        const hasLt = Object.prototype.hasOwnProperty.call(value, "lt");
+        const hasLte = Object.prototype.hasOwnProperty.call(value, "lte");
+        if (hasEq && (hasGt || hasGte || hasLt || hasLte)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] cannot combine eq with numeric comparators`);
+        }
+        if (hasGt && !isFiniteNumber(value.gt)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].gt must be a finite number`);
+        }
+        if (hasGte && !isFiniteNumber(value.gte)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].gte must be a finite number`);
+        }
+        if (hasLt && !isFiniteNumber(value.lt)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].lt must be a finite number`);
+        }
+        if (hasLte && !isFiniteNumber(value.lte)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].lte must be a finite number`);
         }
       }
     }

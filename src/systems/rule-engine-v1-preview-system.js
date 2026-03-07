@@ -48,8 +48,17 @@ function signalMatchesPayload(signal, payload = {}) {
   if (Object.prototype.hasOwnProperty.call(where, "eq")) {
     return norm(value) === norm(where.eq);
   }
+  if (Object.prototype.hasOwnProperty.call(where, "gt")) {
+    return Number(value) > Number(where.gt);
+  }
   if (Object.prototype.hasOwnProperty.call(where, "gte")) {
     return Number(value) >= Number(where.gte);
+  }
+  if (Object.prototype.hasOwnProperty.call(where, "lt")) {
+    return Number(value) < Number(where.lt);
+  }
+  if (Object.prototype.hasOwnProperty.call(where, "lte")) {
+    return Number(value) <= Number(where.lte);
   }
   return true;
 }

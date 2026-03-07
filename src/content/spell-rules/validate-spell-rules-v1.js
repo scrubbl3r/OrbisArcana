@@ -17,6 +17,36 @@ function isFiniteNumber(v) {
   return Number.isFinite(Number(v));
 }
 
+function validateWhereClause(where, label, errors) {
+  if (!where || typeof where !== "object") return;
+  if (!String(where.path || "").trim()) {
+    errors.push(`${label} where.path is required when where is present`);
+  }
+  const hasEq = Object.prototype.hasOwnProperty.call(where, "eq");
+  const hasGt = Object.prototype.hasOwnProperty.call(where, "gt");
+  const hasGte = Object.prototype.hasOwnProperty.call(where, "gte");
+  const hasLt = Object.prototype.hasOwnProperty.call(where, "lt");
+  const hasLte = Object.prototype.hasOwnProperty.call(where, "lte");
+  if (!hasEq && !hasGt && !hasGte && !hasLt && !hasLte) {
+    errors.push(`${label} where requires at least one comparator (eq|gt|gte|lt|lte)`);
+  }
+  if (hasEq && (hasGt || hasGte || hasLt || hasLte)) {
+    errors.push(`${label} where.eq cannot be combined with numeric comparators`);
+  }
+  if (hasGt && !isFiniteNumber(where.gt)) {
+    errors.push(`${label} where.gt must be a finite number`);
+  }
+  if (hasGte && !isFiniteNumber(where.gte)) {
+    errors.push(`${label} where.gte must be a finite number`);
+  }
+  if (hasLt && !isFiniteNumber(where.lt)) {
+    errors.push(`${label} where.lt must be a finite number`);
+  }
+  if (hasLte && !isFiniteNumber(where.lte)) {
+    errors.push(`${label} where.lte must be a finite number`);
+  }
+}
+
 function resolveSignalConditionId(cond) {
   const type = asId(cond && cond.type);
   const id = asId(cond && cond.id);
@@ -131,9 +161,7 @@ export function validateSpellRulesV1(rules = [], options = {}) {
     }
     const where = signal && signal.where;
     if (where && typeof where === "object") {
-      if (!String(where.path || "").trim()) {
-        errors.push(`signal ${signalId} where.path is required when where is present`);
-      }
+      validateWhereClause(where, `signal ${signalId}`, errors);
     }
   }
 
