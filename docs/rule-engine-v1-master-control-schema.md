@@ -21,6 +21,7 @@ Top-Level Shape
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
+  eventEnabledOverrides: { ... }, // optional { [eventId]: boolean }
   eventDefaultOverrides: { ... }, // optional { [eventId]: object }
   windowDefaultOverrides: { ... }, // optional { [windowId]: object }
   signals: [ ... ],
@@ -73,6 +74,8 @@ Authoring Notes
   - Any non-structural key is treated as action args.
   - Structural keys: `type`, `id`, `spells`, `overrides`, `enabled`.
 - Default arg controls:
+  - `eventEnabledOverrides` can centrally force specific event definitions on/off by event id.
+    - disabled events remain defined, but runtime skips dispatching those event actions.
   - `eventDefaultOverrides` patches event `defaultArgs` globally by event id.
   - `windowDefaultOverrides` patches window `defaultArgs` globally by window id.
   - Precedence: definition defaults -> master-control default overrides -> per-action inline args.

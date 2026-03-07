@@ -26,6 +26,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
+  const eventEnabledOverrides = asObj(cfg.eventEnabledOverrides);
   const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
   const windowDefaultOverrides = asObj(cfg.windowDefaultOverrides);
 
@@ -136,6 +137,17 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "eventEnabledOverrides")) {
+    if (!cfg.eventEnabledOverrides || typeof cfg.eventEnabledOverrides !== "object" || Array.isArray(cfg.eventEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides must be an object when present");
+    } else {
+      for (const [eventId, value] of Object.entries(eventEnabledOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides[${eventId}] must be boolean`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "eventDefaultOverrides")) {
     if (!cfg.eventDefaultOverrides || typeof cfg.eventDefaultOverrides !== "object" || Array.isArray(cfg.eventDefaultOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides must be an object when present");
@@ -167,6 +179,11 @@ export function validateRuleEngineV1Config(config = null) {
   errors.push(...ruleErrors);
 
   const eventIds = new Set(events.map((e) => String(e && e.id || "").trim().toLowerCase()).filter(Boolean));
+  for (const eventId of Object.keys(eventEnabledOverrides)) {
+    const id = String(eventId || "").trim().toLowerCase();
+    if (!id || eventIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides references unknown event id: ${id}`);
+  }
   for (const eventId of Object.keys(eventDefaultOverrides)) {
     const id = String(eventId || "").trim().toLowerCase();
     if (!id || eventIds.has(id)) continue;

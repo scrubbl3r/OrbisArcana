@@ -77,9 +77,11 @@ export function buildRuleEngineV1PreviewRuntime({
   for (const eventDef of Array.isArray(events) ? events : []) {
     const id = asId(eventDef && eventDef.id);
     if (!id) continue;
+    const enabled = !(eventDef && eventDef.enabled === false);
     eventById[id] = {
       id,
       type: asId(eventDef && eventDef.type),
+      enabled,
       defaultArgs: (eventDef && typeof eventDef.defaultArgs === "object" && eventDef.defaultArgs)
         ? { ...eventDef.defaultArgs }
         : {},

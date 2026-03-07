@@ -122,6 +122,8 @@ export function createRuleEngineV1PreviewSystem({
         continue;
       }
       if (type !== "event") continue;
+      const eventDef = runtime.eventById[id];
+      if (eventDef && eventDef.enabled === false) continue;
       const args = resolveEventArgs(id, action && action.overrides);
       eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
         ruleId: String(rule && rule.id || ""),

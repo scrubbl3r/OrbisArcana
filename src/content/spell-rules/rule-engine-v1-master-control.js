@@ -26,6 +26,11 @@ const EVENT_DEFAULT_OVERRIDES = Object.freeze({
   // electric_aoe: { ms: 1000, range: 16 },
 });
 
+const EVENT_ENABLED_OVERRIDES = Object.freeze({
+  // Example:
+  // grace: false,
+});
+
 const WINDOW_DEFAULT_OVERRIDES = Object.freeze({
   // Example:
   // wake_win: { ttlMs: 1800 },
@@ -188,6 +193,20 @@ function applyDefinitionDefaultArgOverrides(defs = [], overrides = {}) {
   });
 }
 
+function applyDefinitionEnabledOverrides(defs = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(defs) ? defs : []).map((def) => {
+    const id = String(def && def.id || "").trim().toLowerCase();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return def;
+    const enabled = map[id];
+    if (typeof enabled !== "boolean") return def;
+    return Object.freeze({
+      ...(def || {}),
+      enabled,
+    });
+  });
+}
+
 // Canonical SSOT for authoring Rule Engine V1 content.
 export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   id: "rule_engine_v1",
@@ -203,11 +222,15 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
+  eventEnabledOverrides: EVENT_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
   signals: applySignalEnabledOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_ENABLED_OVERRIDES),
   windows: applyDefinitionDefaultArgOverrides(WINDOW_DEFINITIONS_V1, WINDOW_DEFAULT_OVERRIDES),
-  events: applyDefinitionDefaultArgOverrides(EVENT_DEFINITIONS_V1, EVENT_DEFAULT_OVERRIDES),
+  events: applyDefinitionDefaultArgOverrides(
+    applyDefinitionEnabledOverrides(EVENT_DEFINITIONS_V1, EVENT_ENABLED_OVERRIDES),
+    EVENT_DEFAULT_OVERRIDES
+  ),
   rules: applyActionEnabledOverrides(
     applyRuleEnabledOverrides(
       applyRulePriorityOverrides(
