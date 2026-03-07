@@ -24,7 +24,7 @@ function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
     ? { ...action.overrides }
     : {};
-  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides"]);
+  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides", "enabled"]);
   if (action && typeof action === "object") {
     for (const [k, v] of Object.entries(action)) {
       if (RESERVED_KEYS.has(k)) continue;
@@ -124,14 +124,16 @@ export function buildRuleEngineV1PreviewRuntime({
     const allSignalIds = all.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const anySignalIds = any.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const signalIds = Array.from(new Set(allSignalIds.concat(anySignalIds)));
-    const actions = getRuleActions(rule).map((a) => ({
-      type: asId(a && a.type),
-      id: (asId(a && a.type) === "wake_win")
-        ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
-        : asId(a && a.id),
-      spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
-      overrides: resolveActionArgs(a),
-    }));
+    const actions = getRuleActions(rule)
+      .filter((a) => !(a && a.enabled === false))
+      .map((a) => ({
+        type: asId(a && a.type),
+        id: (asId(a && a.type) === "wake_win")
+          ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
+          : asId(a && a.id),
+        spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
+        overrides: resolveActionArgs(a),
+      }));
     const normalizedRule = {
       id,
       signalIds,

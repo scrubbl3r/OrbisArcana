@@ -29,7 +29,7 @@ function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
     ? { ...action.overrides }
     : {};
-  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides"]);
+  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides", "enabled"]);
   if (action && typeof action === "object") {
     for (const [k, v] of Object.entries(action)) {
       if (RESERVED_KEYS.has(k)) continue;
@@ -174,6 +174,13 @@ export function validateSpellRulesV1(rules = [], options = {}) {
     }
 
     for (const action of actions) {
+      if (Object.prototype.hasOwnProperty.call(action || {}, "enabled")) {
+        if (typeof action.enabled !== "boolean") {
+          errors.push(`rule ${ruleId} action enabled must be boolean when present`);
+          continue;
+        }
+        if (action.enabled === false) continue;
+      }
       const type = asId(action && action.type);
       const id = asId(action && action.id);
       if (type === "wake_win") {
