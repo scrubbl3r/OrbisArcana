@@ -8,6 +8,7 @@ import { WINDOW_DEFINITIONS_V1 } from "./window-definitions-v1.js";
 export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   id: "rule_engine_v1",
   version: "v1",
+  enabled: false,
   signals: Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1.slice() : [],
   windows: Array.isArray(WINDOW_DEFINITIONS_V1) ? WINDOW_DEFINITIONS_V1.slice() : [],
   events: Array.isArray(EVENT_DEFINITIONS_V1) ? EVENT_DEFINITIONS_V1.slice() : [],

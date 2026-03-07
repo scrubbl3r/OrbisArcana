@@ -13,6 +13,7 @@ Top-Level Shape
 {
   id: "rule_engine_v1",
   version: "v1",
+  enabled: true, // optional, default true
   signals: [ ... ],
   windows: [ ... ],
   events: [ ... ],

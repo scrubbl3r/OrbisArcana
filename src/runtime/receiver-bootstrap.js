@@ -215,11 +215,23 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         rules: [],
         eventRuntimeBindings: Object.create(null),
       });
-  const ruleSignalsV1 = Array.isArray(ruleSchemaV1.signals) ? ruleSchemaV1.signals.slice() : [];
-  const ruleWindowsV1 = Array.isArray(ruleSchemaV1.windows) ? ruleSchemaV1.windows.slice() : [];
-  const ruleEventsV1 = Array.isArray(ruleSchemaV1.events) ? ruleSchemaV1.events.slice() : [];
-  const ruleRulesV1 = Array.isArray(ruleSchemaV1.rules) ? ruleSchemaV1.rules.slice() : [];
-  const ruleEventRuntimeBindingsV1 = (ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
+  const ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
+    ? ruleSchemaV1.enabled !== false
+    : true;
+  const ruleSignalsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.signals)
+    ? ruleSchemaV1.signals.slice()
+    : [];
+  const ruleWindowsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.windows)
+    ? ruleSchemaV1.windows.slice()
+    : [];
+  const ruleEventsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.events)
+    ? ruleSchemaV1.events.slice()
+    : [];
+  const ruleRulesV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.rules)
+    ? ruleSchemaV1.rules.slice()
+    : [];
+  const ruleEventRuntimeBindingsV1 = ruleEngineEnabled &&
+    (ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
     ? { ...ruleSchemaV1.eventRuntimeBindings }
     : Object.create(null);
 
