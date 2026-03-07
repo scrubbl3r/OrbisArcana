@@ -96,7 +96,8 @@ Authoring Notes
 - Rule default controls:
   - `ruleDefaults.cooldownMs` applies when a rule omits `cooldownMs`.
   - `ruleDefaults.matchWindowMs` applies when a rule omits `matchWindowMs`.
-  - Precedence: `ruleDefaults` -> per-rule explicit fields.
+  - `ruleDefaults.priority` applies when a rule omits `priority`.
+  - Precedence: `ruleDefaults` -> per-rule explicit fields -> `rulePriorityOverrides`.
 - Rule ordering controls:
   - `rulePriorityOverrides` can centrally force per-rule `priority` by rule id.
   - Precedence: `rulePriorityOverrides` -> per-rule explicit/inherited priority.

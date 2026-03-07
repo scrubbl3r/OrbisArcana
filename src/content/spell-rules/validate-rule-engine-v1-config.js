@@ -160,6 +160,12 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleDefaults.matchWindowMs must be a finite number >= 100");
         }
       }
+      if (Object.prototype.hasOwnProperty.call(ruleDefaults, "priority")) {
+        const n = Number(ruleDefaults.priority);
+        if (!Number.isFinite(n)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleDefaults.priority must be a finite number");
+        }
+      }
     }
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "rulePriorityOverrides")) {

@@ -61,6 +61,7 @@ const RULE_DEFAULTS = Object.freeze({
   // Examples:
   // cooldownMs: 0,
   // matchWindowMs: 2000,
+  // priority: 0,
 });
 
 const RULE_PRIORITY_OVERRIDES = Object.freeze({
@@ -163,7 +164,8 @@ function applyRuleDefaults(rules = [], defaults = {}) {
   const d = (defaults && typeof defaults === "object") ? defaults : Object.create(null);
   const hasCooldown = Object.prototype.hasOwnProperty.call(d, "cooldownMs");
   const hasMatchWindow = Object.prototype.hasOwnProperty.call(d, "matchWindowMs");
-  if (!hasCooldown && !hasMatchWindow) return Array.isArray(rules) ? rules : [];
+  const hasPriority = Object.prototype.hasOwnProperty.call(d, "priority");
+  if (!hasCooldown && !hasMatchWindow && !hasPriority) return Array.isArray(rules) ? rules : [];
   return (Array.isArray(rules) ? rules : []).map((rule) => {
     const next = { ...(rule || {}) };
     if (hasCooldown && !Object.prototype.hasOwnProperty.call(next, "cooldownMs")) {
@@ -171,6 +173,9 @@ function applyRuleDefaults(rules = [], defaults = {}) {
     }
     if (hasMatchWindow && !Object.prototype.hasOwnProperty.call(next, "matchWindowMs")) {
       next.matchWindowMs = d.matchWindowMs;
+    }
+    if (hasPriority && !Object.prototype.hasOwnProperty.call(next, "priority")) {
+      next.priority = d.priority;
     }
     return Object.freeze(next);
   });
