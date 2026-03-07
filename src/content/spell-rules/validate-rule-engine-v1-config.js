@@ -86,6 +86,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
   const signalDebounceOverrides = asObj(cfg.signalDebounceOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
+  const signalSourceEventOverrides = asObj(cfg.signalSourceEventOverrides);
   const signalWhereOverrides = asObj(cfg.signalWhereOverrides);
   const sourceEventEnabledOverrides = asObj(cfg.sourceEventEnabledOverrides);
   const sourceEventDebounceOverrides = asObj(cfg.sourceEventDebounceOverrides);
@@ -253,6 +254,17 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [signalId, value] of Object.entries(signalPriorityOverrides)) {
         if (!Number.isFinite(Number(value))) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides[${signalId}] must be a finite number`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalSourceEventOverrides")) {
+    if (!cfg.signalSourceEventOverrides || typeof cfg.signalSourceEventOverrides !== "object" || Array.isArray(cfg.signalSourceEventOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalSourceEventOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalSourceEventOverrides)) {
+        if (!asText(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalSourceEventOverrides[${signalId}] must be a non-empty source event string`);
         }
       }
     }
@@ -426,6 +438,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalSourceEventOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalSourceEventOverrides references unknown signal id: ${id}`);
   }
   for (const signalId of Object.keys(signalWhereOverrides)) {
     const id = String(signalId || "").trim().toLowerCase();

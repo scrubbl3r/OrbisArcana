@@ -29,6 +29,11 @@ const SIGNAL_WHERE_OVERRIDES = Object.freeze({
   // "orb_state.charged": { path: "ms", gte: 100 },
 });
 
+const SIGNAL_SOURCE_EVENT_OVERRIDES = Object.freeze({
+  // Example:
+  // "spell.rota": "voice.spell_recognized",
+});
+
 const SOURCE_EVENT_ENABLED_OVERRIDES = Object.freeze({
   // Example:
   // "voice.spell_detected": false,
@@ -147,6 +152,20 @@ function applySignalWhereOverrides(signals = [], overrides = {}) {
         ...baseWhere,
         ...patch,
       }),
+    });
+  });
+}
+
+function applySignalSourceEventOverrides(signals = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(signals) ? signals : []).map((signal) => {
+    const id = String(signal && signal.id || "").trim().toLowerCase();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return signal;
+    const sourceEvent = String(map[id] || "").trim();
+    if (!sourceEvent) return signal;
+    return Object.freeze({
+      ...(signal || {}),
+      sourceEvent,
     });
   });
 }
@@ -305,6 +324,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
+  signalSourceEventOverrides: SIGNAL_SOURCE_EVENT_OVERRIDES,
   signalWhereOverrides: SIGNAL_WHERE_OVERRIDES,
   sourceEventEnabledOverrides: SOURCE_EVENT_ENABLED_OVERRIDES,
   sourceEventDebounceOverrides: SOURCE_EVENT_DEBOUNCE_OVERRIDES,
@@ -317,7 +337,10 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
   signals: applySignalEnabledOverrides(
     applySignalWhereOverrides(
-      applySignalPriorityOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_PRIORITY_OVERRIDES),
+      applySignalPriorityOverrides(
+        applySignalSourceEventOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_SOURCE_EVENT_OVERRIDES),
+        SIGNAL_PRIORITY_OVERRIDES
+      ),
       SIGNAL_WHERE_OVERRIDES
     ),
     SIGNAL_ENABLED_OVERRIDES

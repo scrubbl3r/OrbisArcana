@@ -21,6 +21,7 @@ Top-Level Shape
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
+  signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
   signalWhereOverrides: { ... }, // optional { [signalId]: partial where object }
   sourceEventEnabledOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
@@ -151,6 +152,9 @@ Authoring Notes
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.
     - ties fall back to original source definition order.
+  - `signalSourceEventOverrides`:
+    - per-signal source-event remap (`{ [signalId]: string }`).
+    - allows re-wiring signal source event streams centrally.
   - `signalWhereOverrides`:
     - per-signal patch map for `where` clauses (`{ [signalId]: object }`).
     - merges into the signal's existing `where` at config build time.
