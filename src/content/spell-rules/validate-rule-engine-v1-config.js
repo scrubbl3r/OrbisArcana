@@ -5,6 +5,10 @@ function asObj(v) {
   return (v && typeof v === "object") ? v : Object.create(null);
 }
 
+function asText(v) {
+  return String(v || "").trim();
+}
+
 export function validateRuleEngineV1Config(config = null) {
   const source = (config && typeof config === "object")
     ? config
@@ -17,6 +21,8 @@ export function validateRuleEngineV1Config(config = null) {
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
 
   const errors = [];
+  if (!asText(cfg.id)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.id is required");
+  if (!asText(cfg.version)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.version is required");
   if (!Array.isArray(cfg.signals)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signals must be an array");
   if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windows must be an array");
   if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.events must be an array");
