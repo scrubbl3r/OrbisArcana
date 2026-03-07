@@ -72,6 +72,7 @@ export function buildRuleEngineV1PreviewRuntime({
   const eventById = Object.create(null);
   const rulesBySignalId = Object.create(null);
   const normalizedRules = [];
+  const collectedRules = [];
 
   for (const eventDef of Array.isArray(events) ? events : []) {
     const id = asId(eventDef && eventDef.id);
@@ -139,12 +140,28 @@ export function buildRuleEngineV1PreviewRuntime({
       signalIds,
       allSignalIds,
       anySignalIds,
+      priority: Number.isFinite(Number(rule && rule.priority)) ? Number(rule.priority) : 0,
       cooldownMs: Math.max(0, Number(rule && rule.cooldownMs) || 0),
       matchWindowMs: Math.max(100, Number(rule && rule.matchWindowMs) || 2000),
       actions,
     };
+    collectedRules.push({
+      sourceOrder: collectedRules.length,
+      rule: normalizedRule,
+    });
+  }
+
+  collectedRules.sort((a, b) => {
+    const pa = Number(a && a.rule && a.rule.priority) || 0;
+    const pb = Number(b && b.rule && b.rule.priority) || 0;
+    if (pb !== pa) return pb - pa;
+    return Number(a && a.sourceOrder) - Number(b && b.sourceOrder);
+  });
+
+  for (const entry of collectedRules) {
+    const normalizedRule = entry.rule;
     normalizedRules.push(normalizedRule);
-    for (const signalId of signalIds) {
+    for (const signalId of normalizedRule.signalIds) {
       if (!rulesBySignalId[signalId]) rulesBySignalId[signalId] = [];
       rulesBySignalId[signalId].push(normalizedRule);
     }

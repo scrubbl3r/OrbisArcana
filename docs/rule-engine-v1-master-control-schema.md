@@ -26,6 +26,7 @@ Rule Shape (authoring)
 {
   id: "r_example",
   enabled: true, // optional, default true
+  priority: 10, // optional, default 0; higher runs first
 
   // `on` supports 3 forms:
   // 1) array shorthand => all conditions
@@ -67,6 +68,9 @@ Authoring Notes
 - Toggles:
   - Rule-level `enabled:false` disables whole rule.
   - Action-level `enabled:false` disables only that action.
+- Priority:
+  - Higher `priority` rules are evaluated first when multiple rules are candidates.
+  - Equal `priority` preserves source order.
 
 Current Example Chain
 ```js

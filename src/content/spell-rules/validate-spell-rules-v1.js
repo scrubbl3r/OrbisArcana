@@ -13,6 +13,10 @@ function isFiniteNonNegativeNumber(v) {
   return Number.isFinite(n) && n >= 0;
 }
 
+function isFiniteNumber(v) {
+  return Number.isFinite(Number(v));
+}
+
 function resolveSignalConditionId(cond) {
   const type = asId(cond && cond.type);
   const id = asId(cond && cond.id);
@@ -146,6 +150,11 @@ export function validateSpellRulesV1(rules = [], options = {}) {
     if (Object.prototype.hasOwnProperty.call(rule || {}, "enabled")) {
       if (typeof rule.enabled !== "boolean") {
         errors.push(`rule ${ruleId} enabled must be boolean when present`);
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(rule || {}, "priority")) {
+      if (!isFiniteNumber(rule.priority)) {
+        errors.push(`rule ${ruleId} priority must be a finite number when present`);
       }
     }
 
