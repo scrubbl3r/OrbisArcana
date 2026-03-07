@@ -9,6 +9,11 @@ const RULE_ENABLED_OVERRIDES = Object.freeze({
   // r_rota_yspin_charged: false,
 });
 
+const SIGNAL_ENABLED_OVERRIDES = Object.freeze({
+  // Example:
+  // "gesture.y_spin": false,
+});
+
 const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // Examples:
   // "r_rota_yspin_charged.event.orb_state": false,
@@ -51,6 +56,20 @@ function applyRuleEnabledOverrides(rules = [], overrides = {}) {
     if (typeof override !== "boolean") return rule;
     return Object.freeze({
       ...rule,
+      enabled: override,
+    });
+  });
+}
+
+function applySignalEnabledOverrides(signals = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(signals) ? signals : []).map((signal) => {
+    const id = String(signal && signal.id || "").trim().toLowerCase();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return signal;
+    const override = map[id];
+    if (typeof override !== "boolean") return signal;
+    return Object.freeze({
+      ...(signal || {}),
       enabled: override,
     });
   });
@@ -181,11 +200,12 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   ruleDefaults: RULE_DEFAULTS,
   rulePriorityOverrides: RULE_PRIORITY_OVERRIDES,
   ruleTimingOverrides: RULE_TIMING_OVERRIDES,
+  signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
-  signals: Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1.slice() : [],
+  signals: applySignalEnabledOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_ENABLED_OVERRIDES),
   windows: applyDefinitionDefaultArgOverrides(WINDOW_DEFINITIONS_V1, WINDOW_DEFAULT_OVERRIDES),
   events: applyDefinitionDefaultArgOverrides(EVENT_DEFINITIONS_V1, EVENT_DEFAULT_OVERRIDES),
   rules: applyActionEnabledOverrides(

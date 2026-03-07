@@ -23,6 +23,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleDefaults = asObj(cfg.ruleDefaults);
   const rulePriorityOverrides = asObj(cfg.rulePriorityOverrides);
   const ruleTimingOverrides = asObj(cfg.ruleTimingOverrides);
+  const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
@@ -102,6 +103,17 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalEnabledOverrides")) {
+    if (!cfg.signalEnabledOverrides || typeof cfg.signalEnabledOverrides !== "object" || Array.isArray(cfg.signalEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalEnabledOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalEnabledOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEnabledOverrides[${signalId}] must be boolean`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleEnabledOverrides")) {
     if (!cfg.ruleEnabledOverrides || typeof cfg.ruleEnabledOverrides !== "object" || Array.isArray(cfg.ruleEnabledOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides must be an object when present");
@@ -167,6 +179,12 @@ export function validateRuleEngineV1Config(config = null) {
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides references unknown window id: ${id}`);
   }
   const ruleIds = new Set(rules.map((r) => String(r && r.id || "").trim()).filter(Boolean));
+  const signalIds = new Set(signals.map((s) => String(s && s.id || "").trim().toLowerCase()).filter(Boolean));
+  for (const signalId of Object.keys(signalEnabledOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEnabledOverrides references unknown signal id: ${id}`);
+  }
   for (const ruleId of Object.keys(ruleTimingOverrides)) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;

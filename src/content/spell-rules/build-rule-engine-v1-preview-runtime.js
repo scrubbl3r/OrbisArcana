@@ -101,6 +101,7 @@ export function buildRuleEngineV1PreviewRuntime({
     const id = asId(signal && signal.id);
     if (!id) continue;
     const sourceEvent = asEventName(signal && signal.sourceEvent);
+    const enabled = !(signal && signal.enabled === false);
     const where = (signal && typeof signal.where === "object" && signal.where)
       ? { ...signal.where }
       : null;
@@ -108,10 +109,11 @@ export function buildRuleEngineV1PreviewRuntime({
       id,
       type: asId(signal && signal.type),
       sourceEvent,
+      enabled,
       where,
     };
     signalById[id] = normalized;
-    if (sourceEvent) {
+    if (enabled && sourceEvent) {
       if (!signalsBySourceEvent[sourceEvent]) signalsBySourceEvent[sourceEvent] = [];
       signalsBySourceEvent[sourceEvent].push(normalized);
     }

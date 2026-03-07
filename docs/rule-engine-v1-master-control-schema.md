@@ -18,6 +18,7 @@ Top-Level Shape
   ruleDefaults: { ... }, // optional global defaults for rules
   rulePriorityOverrides: { ... }, // optional { [ruleId]: number }
   ruleTimingOverrides: { ... }, // optional { [ruleId]: { cooldownMs?, matchWindowMs? } }
+  signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   eventDefaultOverrides: { ... }, // optional { [eventId]: object }
@@ -98,6 +99,8 @@ Authoring Notes
   - `ms` on `wake_win` is rejected by validation.
 - Toggles:
   - Top-level `enabled:false` disables the whole rule engine schema.
+  - `signalEnabledOverrides` can centrally force specific signals on/off by `id`.
+    - disabled signals remain defined but do not emit runtime signal hits.
   - Rule-level `enabled:false` disables whole rule.
   - Action-level `enabled:false` disables only that action.
   - `ruleEnabledOverrides` can centrally force specific rules on/off by `id`.
