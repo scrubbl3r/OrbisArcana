@@ -43,6 +43,7 @@ export async function loadReceiverInitModules() {
     { CAST_ACTION_REGISTRY_BY_ID },
     { RUNTIME_SPELLS_BY_ID },
     { validateSpellRuntimeRoutingV1 },
+    { validateSpellSchemaIntegrityV1 },
     {
       SIGNAL_DEFINITIONS_V1,
       WINDOW_DEFINITIONS_V1,
@@ -83,6 +84,7 @@ export async function loadReceiverInitModules() {
     import("../content/spells/cast-action-registry.js"),
     import("../content/spells/runtime-spells.js"),
     import("../content/spells/validate-spell-runtime-routing-v1.js"),
+    import("../content/spells/validate-spell-schema-integrity-v1.js"),
     import("../content/spell-rules/index.js"),
     import("../content/world-items/default-world-items.js"),
   ]);
@@ -122,6 +124,7 @@ export async function loadReceiverInitModules() {
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
+    validateSpellSchemaIntegrityV1,
     SIGNAL_DEFINITIONS_V1,
     WINDOW_DEFINITIONS_V1,
     EVENT_DEFINITIONS_V1,
@@ -183,6 +186,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
+    validateSpellSchemaIntegrityV1,
     SIGNAL_DEFINITIONS_V1,
     WINDOW_DEFINITIONS_V1,
     EVENT_DEFINITIONS_V1,
@@ -304,6 +308,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     const errors = validateSpellRulesV1(SPELL_RULES_V1 || []);
     if (errors.length) {
       throw new Error(`Rule Engine v1 schema validation failed: ${errors.join(" | ")}`);
+    }
+  }
+  if (typeof validateSpellSchemaIntegrityV1 === "function") {
+    const integrityErrors = validateSpellSchemaIntegrityV1();
+    if (integrityErrors.length) {
+      throw new Error(`Spell schema integrity validation failed: ${integrityErrors.join(" | ")}`);
     }
   }
   if (typeof setRuleSchemaV1 === "function") {

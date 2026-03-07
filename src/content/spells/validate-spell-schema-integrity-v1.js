@@ -1,0 +1,94 @@
+import { SPELLS_BY_ID } from "../../voice/spellbook.js";
+import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
+import { EVENT_DEFINITIONS_V1_BY_ID } from "../spell-rules/event-definitions-v1.js";
+import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "../spell-rules/event-runtime-bindings-v1.js";
+import { SPELL_RULES_V1 } from "../spell-rules/spell-rules-v1.js";
+import {
+  CLASS_SPELL_IDS,
+  SPELL_RUNTIME_ROUTING_BY_ID,
+  WAKE_REQUIRED_SPELL_IDS,
+  WAKE_SPELL_IDS,
+} from "./spell-runtime-routing-v1.js";
+
+function asId(v) {
+  return String(v || "").trim().toLowerCase();
+}
+
+export function validateSpellSchemaIntegrityV1() {
+  const errors = [];
+
+  // Every spellbook spell should have routing metadata during refactor.
+  for (const spellId of Object.keys(SPELLS_BY_ID || {})) {
+    if (!SPELL_RUNTIME_ROUTING_BY_ID[spellId]) {
+      errors.push(`missing routing entry for spellbook spell: ${spellId}`);
+    }
+  }
+
+  // Wake/class list entries should exist in spellbook.
+  for (const idRaw of Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : []) {
+    const id = asId(idRaw);
+    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_SPELL_IDS references unknown spell id: ${id}`);
+  }
+  for (const idRaw of Array.isArray(WAKE_REQUIRED_SPELL_IDS) ? WAKE_REQUIRED_SPELL_IDS : []) {
+    const id = asId(idRaw);
+    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_REQUIRED_SPELL_IDS references unknown spell id: ${id}`);
+  }
+  for (const idRaw of Array.isArray(CLASS_SPELL_IDS) ? CLASS_SPELL_IDS : []) {
+    const id = asId(idRaw);
+    if (!SPELLS_BY_ID[id]) errors.push(`CLASS_SPELL_IDS references unknown spell id: ${id}`);
+  }
+
+  // Every rule event action should have both definition and runtime binding.
+  for (const rule of Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1 : []) {
+    const ruleId = asId(rule && rule.id) || "(unnamed)";
+    const actions = Array.isArray(rule && rule.then) ? rule.then : [];
+    for (const action of actions) {
+      const type = asId(action && action.type);
+      const id = asId(action && action.id);
+      if (type === "wake_win") {
+        const spells = Array.isArray(action && action.spells) ? action.spells : [];
+        for (const spellIdRaw of spells) {
+          const spellId = asId(spellIdRaw);
+          if (!SPELLS_BY_ID[spellId]) {
+            errors.push(`rule ${ruleId} wake_win references unknown spell id: ${spellId}`);
+          }
+        }
+        continue;
+      }
+      if (type !== "event") continue;
+      if (!EVENT_DEFINITIONS_V1_BY_ID[id]) {
+        errors.push(`rule ${ruleId} event action missing event definition: ${id}`);
+        continue;
+      }
+      const binding = EVENT_RUNTIME_BINDINGS_V1_BY_ID[id];
+      if (!binding || typeof binding !== "object") {
+        errors.push(`rule ${ruleId} event action missing runtime binding: ${id}`);
+        continue;
+      }
+      const runtime = (binding.runtime && typeof binding.runtime === "object") ? binding.runtime : null;
+      const kind = asId(runtime && runtime.kind);
+      if (kind !== "cast_action" && kind !== "orb_event") {
+        errors.push(`event runtime binding ${id} has unsupported kind: ${kind || "(empty)"}`);
+        continue;
+      }
+      if (kind === "cast_action") {
+        const castActionId = asId(runtime && runtime.castActionId);
+        if (!castActionId) {
+          errors.push(`event runtime binding ${id} missing castActionId`);
+          continue;
+        }
+        if (!CAST_ACTION_REGISTRY_BY_ID[castActionId]) {
+          errors.push(`event runtime binding ${id} references unknown castActionId: ${castActionId}`);
+        }
+      }
+      if (kind === "orb_event") {
+        const eventName = String(runtime && runtime.event || "").trim();
+        if (!eventName) {
+          errors.push(`event runtime binding ${id} missing orb event name`);
+        }
+      }
+    }
+  }
+
+  return errors;
+}
