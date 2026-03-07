@@ -99,6 +99,7 @@ export function validateRuleEngineV1Config(config = null) {
   const sourceEventEnabledOverrides = asObj(cfg.sourceEventEnabledOverrides);
   const sourceEventDebounceOverrides = asObj(cfg.sourceEventDebounceOverrides);
   const sourceEventMaxSignalsOverrides = asObj(cfg.sourceEventMaxSignalsOverrides);
+  const sourceEventStopOnFirstSignalMatchOverrides = asObj(cfg.sourceEventStopOnFirstSignalMatchOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const actionArgOverrides = asObj(cfg.actionArgOverrides);
@@ -413,6 +414,21 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventStopOnFirstSignalMatchOverrides")) {
+    if (!cfg.sourceEventStopOnFirstSignalMatchOverrides || typeof cfg.sourceEventStopOnFirstSignalMatchOverrides !== "object" || Array.isArray(cfg.sourceEventStopOnFirstSignalMatchOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstSignalMatchOverrides must be an object when present");
+    } else {
+      for (const [sourceEvent, value] of Object.entries(sourceEventStopOnFirstSignalMatchOverrides)) {
+        if (!asText(sourceEvent)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstSignalMatchOverrides contains empty source event key");
+          continue;
+        }
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstSignalMatchOverrides[${sourceEvent}] must be boolean`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleEnabledOverrides")) {
     if (!cfg.ruleEnabledOverrides || typeof cfg.ruleEnabledOverrides !== "object" || Array.isArray(cfg.ruleEnabledOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides must be an object when present");
@@ -571,6 +587,11 @@ export function validateRuleEngineV1Config(config = null) {
     const evt = String(sourceEvent || "").trim();
     if (!evt || sourceEvents.has(evt)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxSignalsOverrides references unknown source event: ${evt}`);
+  }
+  for (const sourceEvent of Object.keys(sourceEventStopOnFirstSignalMatchOverrides)) {
+    const evt = String(sourceEvent || "").trim();
+    if (!evt || sourceEvents.has(evt)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstSignalMatchOverrides references unknown source event: ${evt}`);
   }
   for (const ruleId of Object.keys(ruleTimingOverrides)) {
     const id = String(ruleId || "").trim();

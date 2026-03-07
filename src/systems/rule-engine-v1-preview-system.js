@@ -163,6 +163,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventMaxSignalsOverrides = (schema && schema.sourceEventMaxSignalsOverrides && typeof schema.sourceEventMaxSignalsOverrides === "object")
     ? schema.sourceEventMaxSignalsOverrides
     : Object.create(null);
+  const sourceEventStopOnFirstSignalMatchOverrides = (schema && schema.sourceEventStopOnFirstSignalMatchOverrides && typeof schema.sourceEventStopOnFirstSignalMatchOverrides === "object")
+    ? schema.sourceEventStopOnFirstSignalMatchOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -314,6 +317,10 @@ export function createRuleEngineV1PreviewSystem({
         const effectiveMaxSignalsPerEvent = Number.isFinite(sourceEventMaxSignalsOverrideRaw)
           ? Math.max(0, Math.floor(sourceEventMaxSignalsOverrideRaw))
           : maxSignalsPerEvent;
+        const hasSourceEventFirstMatchOverride = Object.prototype.hasOwnProperty.call(sourceEventStopOnFirstSignalMatchOverrides, sourceEvent);
+        const effectiveStopOnFirstSignalMatchPerEvent = hasSourceEventFirstMatchOverride
+          ? !!sourceEventStopOnFirstSignalMatchOverrides[sourceEvent]
+          : stopOnFirstSignalMatchPerEvent;
         const lastAt = Number(lastSourceEventAtById.get(sourceEvent) || 0);
         if (effectiveSourceEventDebounceMs > 0 && lastAt > 0 && (now - lastAt) < effectiveSourceEventDebounceMs) {
           return;
@@ -324,7 +331,7 @@ export function createRuleEngineV1PreviewSystem({
           if (!signalMatchesPayload(signal, payload)) continue;
           onSignalHit(signal.id, sourceEvent, payload);
           matchedSignalCount += 1;
-          if (stopOnFirstSignalMatchPerEvent) break;
+          if (effectiveStopOnFirstSignalMatchPerEvent) break;
           if (effectiveMaxSignalsPerEvent > 0 && matchedSignalCount >= effectiveMaxSignalsPerEvent) break;
         }
       }));

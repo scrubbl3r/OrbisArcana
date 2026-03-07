@@ -1643,6 +1643,9 @@
               sourceEventMaxSignalsOverrides: (next.sourceEventMaxSignalsOverrides && typeof next.sourceEventMaxSignalsOverrides === "object")
                 ? { ...next.sourceEventMaxSignalsOverrides }
                 : Object.create(null),
+              sourceEventStopOnFirstSignalMatchOverrides: (next.sourceEventStopOnFirstSignalMatchOverrides && typeof next.sourceEventStopOnFirstSignalMatchOverrides === "object")
+                ? { ...next.sourceEventStopOnFirstSignalMatchOverrides }
+                : Object.create(null),
               actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),
