@@ -349,6 +349,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       ruleCooldownScaleOverrides: (ruleSchemaV1.ruleCooldownScaleOverrides && typeof ruleSchemaV1.ruleCooldownScaleOverrides === "object")
         ? { ...ruleSchemaV1.ruleCooldownScaleOverrides }
         : Object.create(null),
+      ruleMatchWindowScaleOverrides: (ruleSchemaV1.ruleMatchWindowScaleOverrides && typeof ruleSchemaV1.ruleMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchemaV1.ruleMatchWindowScaleOverrides }
+        : Object.create(null),
       actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
         ? { ...ruleSchemaV1.actionArgOverrides }
         : Object.create(null),
@@ -370,6 +373,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       ruleCooldownScaleOverrides: (ruleSchemaV1.ruleCooldownScaleOverrides && typeof ruleSchemaV1.ruleCooldownScaleOverrides === "object")
         ? { ...ruleSchemaV1.ruleCooldownScaleOverrides }
+        : Object.create(null),
+      ruleMatchWindowScaleOverrides: (ruleSchemaV1.ruleMatchWindowScaleOverrides && typeof ruleSchemaV1.ruleMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchemaV1.ruleMatchWindowScaleOverrides }
         : Object.create(null),
       signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
         ? { ...ruleSchemaV1.signalDebounceOverrides }

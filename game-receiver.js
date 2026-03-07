@@ -1625,6 +1625,9 @@
               ruleCooldownScaleOverrides: (next.ruleCooldownScaleOverrides && typeof next.ruleCooldownScaleOverrides === "object")
                 ? { ...next.ruleCooldownScaleOverrides }
                 : Object.create(null),
+              ruleMatchWindowScaleOverrides: (next.ruleMatchWindowScaleOverrides && typeof next.ruleMatchWindowScaleOverrides === "object")
+                ? { ...next.ruleMatchWindowScaleOverrides }
+                : Object.create(null),
               signalDebounceOverrides: (next.signalDebounceOverrides && typeof next.signalDebounceOverrides === "object")
                 ? { ...next.signalDebounceOverrides }
                 : Object.create(null),

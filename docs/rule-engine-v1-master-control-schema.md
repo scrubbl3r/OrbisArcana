@@ -20,6 +20,7 @@ Top-Level Shape
   ruleTimingOverrides: { ... }, // optional { [ruleId]: { cooldownMs?, matchWindowMs? } }
   ruleActionLimitOverrides: { ... }, // optional { [ruleId]: integer>=0 }
   ruleCooldownScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
+  ruleMatchWindowScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
@@ -117,6 +118,9 @@ Authoring Notes
 - Rule cooldown scaling controls:
   - `ruleCooldownScaleOverrides` can centrally scale cooldown pacing for specific rules.
   - Precedence: `ruleCooldownScaleOverrides` -> `execution.cooldownScale`.
+- Rule match-window scaling controls:
+  - `ruleMatchWindowScaleOverrides` can centrally scale match-window strictness for specific rules.
+  - Precedence: `ruleMatchWindowScaleOverrides` -> `execution.matchWindowScale`.
 - Execution controls:
   - `execution.stopOnFirstMatch`:
     - `false` (default): all matched candidate rules can fire.

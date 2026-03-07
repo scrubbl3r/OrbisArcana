@@ -89,6 +89,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleTimingOverrides = asObj(cfg.ruleTimingOverrides);
   const ruleActionLimitOverrides = asObj(cfg.ruleActionLimitOverrides);
   const ruleCooldownScaleOverrides = asObj(cfg.ruleCooldownScaleOverrides);
+  const ruleMatchWindowScaleOverrides = asObj(cfg.ruleMatchWindowScaleOverrides);
   const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
   const signalDebounceOverrides = asObj(cfg.signalDebounceOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
@@ -255,6 +256,18 @@ export function validateRuleEngineV1Config(config = null) {
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleCooldownScaleOverrides[${ruleId}] must be a finite number >= 0`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleMatchWindowScaleOverrides")) {
+    if (!cfg.ruleMatchWindowScaleOverrides || typeof cfg.ruleMatchWindowScaleOverrides !== "object" || Array.isArray(cfg.ruleMatchWindowScaleOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleMatchWindowScaleOverrides must be an object when present");
+    } else {
+      for (const [ruleId, value] of Object.entries(ruleMatchWindowScaleOverrides)) {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleMatchWindowScaleOverrides[${ruleId}] must be a finite number >= 0`);
         }
       }
     }
@@ -533,6 +546,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleCooldownScaleOverrides references unknown rule id: ${id}`);
+  }
+  for (const ruleId of Object.keys(ruleMatchWindowScaleOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleMatchWindowScaleOverrides references unknown rule id: ${id}`);
   }
   for (const ruleId of Object.keys(rulePriorityOverrides)) {
     const id = String(ruleId || "").trim();
