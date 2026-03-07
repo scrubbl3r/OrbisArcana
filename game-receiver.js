@@ -1631,6 +1631,9 @@
               signalDebounceOverrides: (next.signalDebounceOverrides && typeof next.signalDebounceOverrides === "object")
                 ? { ...next.signalDebounceOverrides }
                 : Object.create(null),
+              signalMaxMatchesOverrides: (next.signalMaxMatchesOverrides && typeof next.signalMaxMatchesOverrides === "object")
+                ? { ...next.signalMaxMatchesOverrides }
+                : Object.create(null),
               sourceEventEnabledOverrides: (next.sourceEventEnabledOverrides && typeof next.sourceEventEnabledOverrides === "object")
                 ? { ...next.sourceEventEnabledOverrides }
                 : Object.create(null),

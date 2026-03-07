@@ -19,6 +19,11 @@ const SIGNAL_DEBOUNCE_OVERRIDES = Object.freeze({
   // "gesture.y_spin": 250,
 });
 
+const SIGNAL_MAX_MATCHES_OVERRIDES = Object.freeze({
+  // Example:
+  // "spell.rota": 1,
+});
+
 const SIGNAL_PRIORITY_OVERRIDES = Object.freeze({
   // Example:
   // "gesture.y_spin": 30,
@@ -347,6 +352,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   ruleMatchWindowScaleOverrides: RULE_MATCH_WINDOW_SCALE_OVERRIDES,
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
+  signalMaxMatchesOverrides: SIGNAL_MAX_MATCHES_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   signalSourceEventOverrides: SIGNAL_SOURCE_EVENT_OVERRIDES,
   signalWhereOverrides: SIGNAL_WHERE_OVERRIDES,

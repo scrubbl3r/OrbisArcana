@@ -151,6 +151,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalDebounceOverrides = (schema && schema.signalDebounceOverrides && typeof schema.signalDebounceOverrides === "object")
     ? schema.signalDebounceOverrides
     : Object.create(null);
+  const signalMaxMatchesOverrides = (schema && schema.signalMaxMatchesOverrides && typeof schema.signalMaxMatchesOverrides === "object")
+    ? schema.signalMaxMatchesOverrides
+    : Object.create(null);
   const sourceEventEnabledOverrides = (schema && schema.sourceEventEnabledOverrides && typeof schema.sourceEventEnabledOverrides === "object")
     ? schema.sourceEventEnabledOverrides
     : Object.create(null);
@@ -255,6 +258,10 @@ export function createRuleEngineV1PreviewSystem({
     }
     lastSeenAtBySignalId.set(signalId, now);
     const candidates = runtime.rulesBySignalId[signalId] || [];
+    const signalMaxMatchesOverrideRaw = Number(signalMaxMatchesOverrides[signalId]);
+    const effectiveMaxMatchesPerSignal = Number.isFinite(signalMaxMatchesOverrideRaw)
+      ? Math.max(0, Math.floor(signalMaxMatchesOverrideRaw))
+      : maxMatchesPerSignal;
     let matchedCount = 0;
     for (const rule of candidates) {
       const ruleId = String(rule && rule.id || "");
@@ -286,7 +293,7 @@ export function createRuleEngineV1PreviewSystem({
       });
       matchedCount += 1;
       if (stopOnFirstMatch) break;
-      if (maxMatchesPerSignal > 0 && matchedCount >= maxMatchesPerSignal) break;
+      if (effectiveMaxMatchesPerSignal > 0 && matchedCount >= effectiveMaxMatchesPerSignal) break;
     }
   }
 

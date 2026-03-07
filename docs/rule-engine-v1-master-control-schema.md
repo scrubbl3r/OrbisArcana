@@ -23,6 +23,7 @@ Top-Level Shape
   ruleMatchWindowScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
+  signalMaxMatchesOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
   signalWhereOverrides: { ... }, // optional { [signalId]: partial where object }
@@ -164,6 +165,9 @@ Authoring Notes
   - `signalDebounceOverrides`:
     - per-signal debounce ms map (`{ [signalId]: number >= 0 }`).
     - precedence: per-signal override -> `execution.signalDebounceMs`.
+  - `signalMaxMatchesOverrides`:
+    - per-signal matched-rule cap map (`{ [signalId]: integer >= 0 }`).
+    - precedence: per-signal override -> `execution.maxMatchesPerSignal`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.

@@ -337,6 +337,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
         ? { ...ruleSchemaV1.signalDebounceOverrides }
         : Object.create(null),
+      signalMaxMatchesOverrides: (ruleSchemaV1.signalMaxMatchesOverrides && typeof ruleSchemaV1.signalMaxMatchesOverrides === "object")
+        ? { ...ruleSchemaV1.signalMaxMatchesOverrides }
+        : Object.create(null),
       sourceEventEnabledOverrides: (ruleSchemaV1.sourceEventEnabledOverrides && typeof ruleSchemaV1.sourceEventEnabledOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventEnabledOverrides }
         : Object.create(null),
@@ -382,6 +385,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
         ? { ...ruleSchemaV1.signalDebounceOverrides }
+        : Object.create(null),
+      signalMaxMatchesOverrides: (ruleSchemaV1.signalMaxMatchesOverrides && typeof ruleSchemaV1.signalMaxMatchesOverrides === "object")
+        ? { ...ruleSchemaV1.signalMaxMatchesOverrides }
         : Object.create(null),
       sourceEventEnabledOverrides: (ruleSchemaV1.sourceEventEnabledOverrides && typeof ruleSchemaV1.sourceEventEnabledOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventEnabledOverrides }
