@@ -36,8 +36,11 @@ function isSignalRecent(lastSeenAtBySignalId, signalId, now, maxAgeMs) {
   return (now - at) <= maxAgeMs;
 }
 
-function ruleMatches(runtimeRule, lastSeenAtBySignalId, now) {
-  const maxAgeMs = Math.max(100, Number(runtimeRule && runtimeRule.matchWindowMs) || 2000);
+function ruleMatches(runtimeRule, lastSeenAtBySignalId, now, matchWindowScale = 1) {
+  const scale = Number.isFinite(Number(matchWindowScale))
+    ? Math.max(0, Number(matchWindowScale))
+    : 1;
+  const maxAgeMs = Math.max(100, (Math.max(100, Number(runtimeRule && runtimeRule.matchWindowMs) || 2000) * scale));
   const all = Array.isArray(runtimeRule && runtimeRule.allSignalIds) ? runtimeRule.allSignalIds : [];
   const any = Array.isArray(runtimeRule && runtimeRule.anySignalIds) ? runtimeRule.anySignalIds : [];
   if (all.length) {
@@ -84,6 +87,10 @@ export function createRuleEngineV1PreviewSystem({
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
+    : 1;
+  const matchWindowScaleRaw = Number(execution.matchWindowScale);
+  const matchWindowScale = Number.isFinite(matchWindowScaleRaw)
+    ? Math.max(0, matchWindowScaleRaw)
     : 1;
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
@@ -147,7 +154,7 @@ export function createRuleEngineV1PreviewSystem({
     const candidates = runtime.rulesBySignalId[signalId] || [];
     let matchedCount = 0;
     for (const rule of candidates) {
-      if (!ruleMatches(rule, lastSeenAtBySignalId, now)) continue;
+      if (!ruleMatches(rule, lastSeenAtBySignalId, now, matchWindowScale)) continue;
       const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0) * cooldownScale;
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;

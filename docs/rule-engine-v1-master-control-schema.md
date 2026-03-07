@@ -104,6 +104,10 @@ Authoring Notes
     - finite number `>= 0`; default `1`.
     - multiplies all effective rule cooldowns at runtime.
     - `0` disables cooldown waiting globally; `2` doubles cooldown durations.
+  - `execution.matchWindowScale`:
+    - finite number `>= 0`; default `1`.
+    - multiplies all effective rule match windows at runtime.
+    - lower values tighten multi-signal timing; higher values loosen it.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
