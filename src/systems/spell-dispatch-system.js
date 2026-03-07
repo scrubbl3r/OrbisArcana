@@ -11,6 +11,7 @@ import {
   EVT_ORB_REVIVED,
   EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_REJECTED,
+  EVT_VOICE_AXIS_SELECTED,
   EVT_VOICE_SCHOOL_SELECTED,
   EVT_VOICE_SPELL_LOADED,
   EVT_VOICE_SPELL_CAST,
@@ -267,8 +268,16 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             return;
           }
           selectedSchoolByAxis[axis] = spellSchool;
+          eventBus.emit(EVT_VOICE_AXIS_SELECTED, {
+            axis,
+            axisSpell: spellSchool,
+            school: spellSchool,
+            spellId,
+            atMs: now,
+          });
           eventBus.emit(EVT_VOICE_SCHOOL_SELECTED, {
             axis,
+            axisSpell: spellSchool,
             school: spellSchool,
             spellId,
             atMs: now,

@@ -98,16 +98,22 @@ export function bindKwsEventHandlers({
     updateKwsReadout();
   }));
 
-  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SCHOOL_SELECTED, (p = {}) => {
+  function onAxisSelected(p = {}) {
     const axis = String(p.axis || "").trim().toLowerCase();
-    const school = String(p.school || "").trim().toLowerCase();
+    const school = String((p.axisSpell || p.school) || "").trim().toLowerCase();
     if (axis === "x" || axis === "y" || axis === "z") {
       if (typeof setSelectedSchool === "function") setSelectedSchool(axis, school);
       resetHeardClassTokensForAxis(axis);
       if (school === "electrum") flashKwsToken("electrum", 520);
     }
     updateKwsReadout();
-  }));
+  }
+
+  if (RECEIVER_EVENTS.EVT_VOICE_AXIS_SELECTED) {
+    unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_AXIS_SELECTED, onAxisSelected));
+  } else {
+    unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SCHOOL_SELECTED, onAxisSelected));
+  }
 
   unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
     const matched = !!p.matched;
