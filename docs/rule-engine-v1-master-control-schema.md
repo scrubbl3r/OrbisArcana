@@ -21,6 +21,7 @@ Top-Level Shape
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
+  sourceEventEnabledOverrides: { ... }, // optional { [sourceEvent]: boolean }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   actionArgOverrides: { ... }, // optional { [actionKey]: object }
@@ -138,6 +139,9 @@ Authoring Notes
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.
     - ties fall back to original source definition order.
+  - `sourceEventEnabledOverrides`:
+    - centrally enable/disable processing per signal source event (`{ [sourceEvent]: boolean }`).
+    - when `false`, that source event is not subscribed by rule-engine preview runtime.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

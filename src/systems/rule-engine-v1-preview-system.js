@@ -128,6 +128,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalDebounceOverrides = (schema && schema.signalDebounceOverrides && typeof schema.signalDebounceOverrides === "object")
     ? schema.signalDebounceOverrides
     : Object.create(null);
+  const sourceEventEnabledOverrides = (schema && schema.sourceEventEnabledOverrides && typeof schema.sourceEventEnabledOverrides === "object")
+    ? schema.sourceEventEnabledOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -231,6 +234,9 @@ export function createRuleEngineV1PreviewSystem({
 
   function start() {
     for (const sourceEvent of Object.keys(runtime.signalsBySourceEvent)) {
+      if (Object.prototype.hasOwnProperty.call(sourceEventEnabledOverrides, sourceEvent)) {
+        if (sourceEventEnabledOverrides[sourceEvent] === false) continue;
+      }
       const signals = runtime.signalsBySourceEvent[sourceEvent] || [];
       if (!signals.length) continue;
       unsub.push(eventBus.on(sourceEvent, (payload = {}) => {
