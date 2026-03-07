@@ -19,6 +19,7 @@ export function validateRuleEngineV1Config(config = null) {
   const events = Array.isArray(cfg.events) ? cfg.events : [];
   const rules = Array.isArray(cfg.rules) ? cfg.rules : [];
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
+  const execution = asObj(cfg.execution);
   const ruleDefaults = asObj(cfg.ruleDefaults);
   const rulePriorityOverrides = asObj(cfg.rulePriorityOverrides);
   const ruleTimingOverrides = asObj(cfg.ruleTimingOverrides);
@@ -32,6 +33,15 @@ export function validateRuleEngineV1Config(config = null) {
   if (!asText(cfg.version)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.version is required");
   if (Object.prototype.hasOwnProperty.call(cfg, "enabled") && typeof cfg.enabled !== "boolean") {
     errors.push("RULE_ENGINE_V1_MASTER_CONTROL.enabled must be boolean when present");
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "execution")) {
+    if (!cfg.execution || typeof cfg.execution !== "object" || Array.isArray(cfg.execution)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution must be an object when present");
+    } else if (Object.prototype.hasOwnProperty.call(execution, "stopOnFirstMatch")) {
+      if (typeof execution.stopOnFirstMatch !== "boolean") {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.stopOnFirstMatch must be boolean when present");
+      }
+    }
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleDefaults")) {
     if (!cfg.ruleDefaults || typeof cfg.ruleDefaults !== "object" || Array.isArray(cfg.ruleDefaults)) {

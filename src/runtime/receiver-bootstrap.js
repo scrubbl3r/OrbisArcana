@@ -333,6 +333,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       rules: ruleRulesV1,
       events: ruleEventsV1,
       eventRuntimeBindings: ruleEventRuntimeBindingsV1,
+      execution: (ruleSchemaV1.execution && typeof ruleSchemaV1.execution === "object") ? { ...ruleSchemaV1.execution } : Object.create(null),
     });
     if (integrityErrors.length) {
       throw new Error(`Spell schema integrity validation failed: ${integrityErrors.join(" | ")}`);

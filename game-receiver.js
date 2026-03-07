@@ -1616,6 +1616,9 @@
               eventRuntimeBindings: (next.eventRuntimeBindings && typeof next.eventRuntimeBindings === "object")
                 ? { ...next.eventRuntimeBindings }
                 : Object.create(null),
+              execution: (next.execution && typeof next.execution === "object")
+                ? { ...next.execution }
+                : Object.create(null),
             };
           },
           initSpellActionHandlers,

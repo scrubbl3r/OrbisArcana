@@ -14,6 +14,7 @@ Top-Level Shape
   id: "rule_engine_v1",
   version: "v1",
   enabled: true, // optional, default true
+  execution: { ... }, // optional runtime policy flags
   ruleDefaults: { ... }, // optional global defaults for rules
   rulePriorityOverrides: { ... }, // optional { [ruleId]: number }
   ruleTimingOverrides: { ... }, // optional { [ruleId]: { cooldownMs?, matchWindowMs? } }
@@ -84,6 +85,10 @@ Authoring Notes
 - Rule timing controls:
   - `ruleTimingOverrides` can centrally force per-rule `cooldownMs` and `matchWindowMs` by rule id.
   - Precedence: `ruleTimingOverrides` -> per-rule explicit/inherited timing.
+- Execution controls:
+  - `execution.stopOnFirstMatch`:
+    - `false` (default): all matched candidate rules can fire.
+    - `true`: stop after first matched rule for a signal hit.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

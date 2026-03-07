@@ -73,6 +73,10 @@ export function createRuleEngineV1PreviewSystem({
     events: schema && Array.isArray(schema.events) ? schema.events : [],
     rules: schema && Array.isArray(schema.rules) ? schema.rules : [],
   });
+  const execution = (schema && schema.execution && typeof schema.execution === "object")
+    ? schema.execution
+    : Object.create(null);
+  const stopOnFirstMatch = !!execution.stopOnFirstMatch;
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
@@ -146,6 +150,7 @@ export function createRuleEngineV1PreviewSystem({
         sourceEvent,
         atMs: now,
       });
+      if (stopOnFirstMatch) break;
     }
   }
 
