@@ -317,7 +317,11 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     }
   }
   if (typeof validateSpellSchemaIntegrityV1 === "function") {
-    const integrityErrors = validateSpellSchemaIntegrityV1();
+    const integrityErrors = validateSpellSchemaIntegrityV1({
+      rules: ruleRulesV1,
+      events: ruleEventsV1,
+      eventRuntimeBindings: ruleEventRuntimeBindingsV1,
+    });
     if (integrityErrors.length) {
       throw new Error(`Spell schema integrity validation failed: ${integrityErrors.join(" | ")}`);
     }

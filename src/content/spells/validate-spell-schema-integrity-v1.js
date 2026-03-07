@@ -16,7 +16,31 @@ function asId(v) {
   return String(v || "").trim().toLowerCase();
 }
 
-export function validateSpellSchemaIntegrityV1() {
+function indexDefsById(defs = []) {
+  return (Array.isArray(defs) ? defs : []).reduce((acc, item) => {
+    const id = asId(item && item.id);
+    if (!id) return acc;
+    acc[id] = item;
+    return acc;
+  }, Object.create(null));
+}
+
+export function validateSpellSchemaIntegrityV1(options = {}) {
+  const rules = Array.isArray(options && options.rules) ? options.rules : SPELL_RULES_V1;
+  const eventDefinitionsById = (options && options.eventById && typeof options.eventById === "object")
+    ? options.eventById
+    : (
+      Array.isArray(options && options.events)
+        ? indexDefsById(options.events)
+        : EVENT_DEFINITIONS_V1_BY_ID
+    );
+  const eventRuntimeBindingsById = (options && options.eventRuntimeBindingsById && typeof options.eventRuntimeBindingsById === "object")
+    ? options.eventRuntimeBindingsById
+    : (
+      options && options.eventRuntimeBindings && typeof options.eventRuntimeBindings === "object"
+        ? options.eventRuntimeBindings
+        : EVENT_RUNTIME_BINDINGS_V1_BY_ID
+    );
   const errors = [];
 
   // Every spellbook spell should have routing metadata during refactor.
@@ -50,7 +74,7 @@ export function validateSpellSchemaIntegrityV1() {
   }
 
   // Every rule event action should have both definition and runtime binding.
-  for (const rule of Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1 : []) {
+  for (const rule of Array.isArray(rules) ? rules : []) {
     const ruleId = asId(rule && rule.id) || "(unnamed)";
     const actions = Array.isArray(rule && rule.then) ? rule.then : [];
     for (const action of actions) {
@@ -67,11 +91,11 @@ export function validateSpellSchemaIntegrityV1() {
         continue;
       }
       if (type !== "event") continue;
-      if (!EVENT_DEFINITIONS_V1_BY_ID[id]) {
+      if (!eventDefinitionsById[id]) {
         errors.push(`rule ${ruleId} event action missing event definition: ${id}`);
         continue;
       }
-      const binding = EVENT_RUNTIME_BINDINGS_V1_BY_ID[id];
+      const binding = eventRuntimeBindingsById[id];
       if (!binding || typeof binding !== "object") {
         errors.push(`rule ${ruleId} event action missing runtime binding: ${id}`);
         continue;
