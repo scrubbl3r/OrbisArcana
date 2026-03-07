@@ -268,6 +268,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     maxSignalsPerEvent: 0,
     maxActionsPerRuleMatch: 0,
     sourceEventDebounceMs: 0,
+    emitPreviewMatchedEvents: true,
     cooldownScale: 1,
     matchWindowScale: 1,
     signalDebounceMs: 0,

@@ -120,6 +120,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventDebounceMs = Number.isFinite(sourceEventDebounceMsRaw)
     ? Math.max(0, sourceEventDebounceMsRaw)
     : 0;
+  const emitPreviewMatchedEvents = (Object.prototype.hasOwnProperty.call(execution, "emitPreviewMatchedEvents"))
+    ? !!execution.emitPreviewMatchedEvents
+    : true;
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
@@ -231,12 +234,14 @@ export function createRuleEngineV1PreviewSystem({
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;
       lastMatchAtByRuleId.set(rule.id, now);
-      eventBus.emit(EVT_RULE_ENGINE_V1_PREVIEW_MATCHED, {
-        ruleId: rule.id,
-        signalId,
-        sourceEvent: String(sourceEvent || ""),
-        atMs: now,
-      });
+      if (emitPreviewMatchedEvents) {
+        eventBus.emit(EVT_RULE_ENGINE_V1_PREVIEW_MATCHED, {
+          ruleId: rule.id,
+          signalId,
+          sourceEvent: String(sourceEvent || ""),
+          atMs: now,
+        });
+      }
       executeRuleActions(rule, {
         signalId,
         sourceEvent,

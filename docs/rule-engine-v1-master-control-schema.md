@@ -124,6 +124,10 @@ Authoring Notes
   - `execution.sourceEventDebounceMs`:
     - finite number `>= 0`; default `0` (disabled).
     - ignores repeated payloads from the same source event within the debounce interval.
+  - `execution.emitPreviewMatchedEvents`:
+    - boolean; default `true`.
+    - controls emission of `rule_engine.v1.preview_matched` telemetry events only.
+    - does not affect action execution (`rule_engine.v1.action_executed`).
   - `execution.cooldownScale`:
     - finite number `>= 0`; default `1`.
     - multiplies all effective rule cooldowns at runtime.
