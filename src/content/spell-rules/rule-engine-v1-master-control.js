@@ -19,6 +19,11 @@ const SIGNAL_DEBOUNCE_OVERRIDES = Object.freeze({
   // "gesture.y_spin": 250,
 });
 
+const SIGNAL_PRIORITY_OVERRIDES = Object.freeze({
+  // Example:
+  // "gesture.y_spin": 30,
+});
+
 const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // Examples:
   // "r_rota_yspin_charged.event.orb_state": false,
@@ -86,6 +91,20 @@ function applySignalEnabledOverrides(signals = [], overrides = {}) {
     return Object.freeze({
       ...(signal || {}),
       enabled: override,
+    });
+  });
+}
+
+function applySignalPriorityOverrides(signals = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(signals) ? signals : []).map((signal) => {
+    const id = String(signal && signal.id || "").trim().toLowerCase();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return signal;
+    const override = map[id];
+    if (!Number.isFinite(Number(override))) return signal;
+    return Object.freeze({
+      ...(signal || {}),
+      priority: Number(override),
     });
   });
 }
@@ -234,13 +253,17 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   ruleTimingOverrides: RULE_TIMING_OVERRIDES,
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
+  signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   eventEnabledOverrides: EVENT_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
   windowEnabledOverrides: WINDOW_ENABLED_OVERRIDES,
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
-  signals: applySignalEnabledOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_ENABLED_OVERRIDES),
+  signals: applySignalEnabledOverrides(
+    applySignalPriorityOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_PRIORITY_OVERRIDES),
+    SIGNAL_ENABLED_OVERRIDES
+  ),
   windows: applyDefinitionDefaultArgOverrides(
     applyDefinitionEnabledOverrides(WINDOW_DEFINITIONS_V1, WINDOW_ENABLED_OVERRIDES),
     WINDOW_DEFAULT_OVERRIDES

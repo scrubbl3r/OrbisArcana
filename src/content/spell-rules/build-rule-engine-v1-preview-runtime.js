@@ -106,6 +106,7 @@ export function buildRuleEngineV1PreviewRuntime({
     if (!id) continue;
     const sourceEvent = asEventName(signal && signal.sourceEvent);
     const enabled = !(signal && signal.enabled === false);
+    const priority = Number.isFinite(Number(signal && signal.priority)) ? Number(signal.priority) : 0;
     const where = (signal && typeof signal.where === "object" && signal.where)
       ? { ...signal.where }
       : null;
@@ -114,6 +115,7 @@ export function buildRuleEngineV1PreviewRuntime({
       type: asId(signal && signal.type),
       sourceEvent,
       enabled,
+      priority,
       where,
     };
     signalById[id] = normalized;
@@ -121,6 +123,16 @@ export function buildRuleEngineV1PreviewRuntime({
       if (!signalsBySourceEvent[sourceEvent]) signalsBySourceEvent[sourceEvent] = [];
       signalsBySourceEvent[sourceEvent].push(normalized);
     }
+  }
+  for (const sourceEvent of Object.keys(signalsBySourceEvent)) {
+    const items = signalsBySourceEvent[sourceEvent];
+    if (!Array.isArray(items) || items.length < 2) continue;
+    items.sort((a, b) => {
+      const pa = Number(a && a.priority) || 0;
+      const pb = Number(b && b.priority) || 0;
+      if (pb !== pa) return pb - pa;
+      return 0;
+    });
   }
 
   for (const rule of Array.isArray(rules) ? rules : []) {

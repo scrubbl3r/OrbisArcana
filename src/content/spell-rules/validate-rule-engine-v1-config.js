@@ -25,6 +25,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleTimingOverrides = asObj(cfg.ruleTimingOverrides);
   const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
   const signalDebounceOverrides = asObj(cfg.signalDebounceOverrides);
+  const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const eventEnabledOverrides = asObj(cfg.eventEnabledOverrides);
@@ -147,6 +148,17 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalPriorityOverrides")) {
+    if (!cfg.signalPriorityOverrides || typeof cfg.signalPriorityOverrides !== "object" || Array.isArray(cfg.signalPriorityOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalPriorityOverrides)) {
+        if (!Number.isFinite(Number(value))) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides[${signalId}] must be a finite number`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleEnabledOverrides")) {
     if (!cfg.ruleEnabledOverrides || typeof cfg.ruleEnabledOverrides !== "object" || Array.isArray(cfg.ruleEnabledOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides must be an object when present");
@@ -254,6 +266,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalDebounceOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalPriorityOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides references unknown signal id: ${id}`);
   }
   for (const ruleId of Object.keys(ruleTimingOverrides)) {
     const id = String(ruleId || "").trim();
