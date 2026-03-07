@@ -9,6 +9,40 @@ export const WAKE_REQUIRED_SPELL_IDS = Object.freeze([
   "domus",
 ]);
 
+export const SCHOOL_SPELL_IDS = Object.freeze([
+  "tempus",
+  "fridgis",
+  "electrum",
+]);
+
+export const CLASS_SPELL_IDS = Object.freeze([
+  "rota",
+  "sanctum",
+  "vectus",
+]);
+
+export const KWS_FLASH_TOKEN_SPELL_IDS = Object.freeze([
+  "orbis",
+  "domus",
+  "tempus",
+  "fridgis",
+  "electrum",
+]);
+
+export const KWS_ROW_TOP_SPELL_IDS = Object.freeze([
+  "orbis",
+  "domus",
+  "tempus",
+  "fridgis",
+  "electrum",
+]);
+
+export const KWS_ROW_BOTTOM_SPELL_IDS = Object.freeze([
+  "rota",
+  "sanctum",
+  "vectus",
+]);
+
 export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "orbis",
