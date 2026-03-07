@@ -135,6 +135,9 @@ export function createRuleEngineV1PreviewSystem({
   const executionAllowsActions = (Object.prototype.hasOwnProperty.call(execution, "executeActions"))
     ? !!execution.executeActions
     : true;
+  const actionTypeEnabled = (execution && execution.actionTypeEnabled && typeof execution.actionTypeEnabled === "object")
+    ? execution.actionTypeEnabled
+    : Object.create(null);
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
@@ -226,6 +229,9 @@ export function createRuleEngineV1PreviewSystem({
       const action = actions[i];
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(actionTypeEnabled, type) && !actionTypeEnabled[type]) {
+        continue;
+      }
       const argOverride = resolveActionArgOverride(ruleId, action, i, actionArgOverrides);
       const mergedOverrides = (argOverride && typeof argOverride === "object")
         ? { ...(action && action.overrides || {}), ...argOverride }

@@ -157,6 +157,9 @@ Authoring Notes
   - `execution.executeActions`:
     - boolean; default `true`.
     - when `false`, matched rules do not execute actions (`wake_win`/`event`) in preview runtime.
+  - `execution.actionTypeEnabled`:
+    - optional action-type gate map, keys: `wake_win`, `event`.
+    - when a key is set to `false`, that action type is skipped globally at runtime.
   - `execution.cooldownScale`:
     - finite number `>= 0`; default `1`.
     - multiplies all effective rule cooldowns at runtime.

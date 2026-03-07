@@ -359,6 +359,10 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     sourceEventDebounceMs: 0,
     emitPreviewMatchedEvents: true,
     executeActions: true,
+    actionTypeEnabled: Object.freeze({
+      wake_win: true,
+      event: true,
+    }),
     cooldownScale: 1,
     matchWindowScale: 1,
     signalDebounceMs: 0,

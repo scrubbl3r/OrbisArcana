@@ -159,6 +159,23 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.executeActions must be boolean when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "actionTypeEnabled")) {
+      const actionTypeEnabled = execution.actionTypeEnabled;
+      if (!actionTypeEnabled || typeof actionTypeEnabled !== "object" || Array.isArray(actionTypeEnabled)) {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.actionTypeEnabled must be an object when present");
+      } else {
+        const allowed = new Set(["wake_win", "event"]);
+        for (const [k, v] of Object.entries(actionTypeEnabled)) {
+          if (!allowed.has(String(k || "").trim().toLowerCase())) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionTypeEnabled has unsupported key: ${k}`);
+            continue;
+          }
+          if (typeof v !== "boolean") {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionTypeEnabled[${k}] must be boolean`);
+          }
+        }
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(execution, "cooldownScale")) {
       const n = Number(execution.cooldownScale);
       if (!Number.isFinite(n) || n < 0) {
