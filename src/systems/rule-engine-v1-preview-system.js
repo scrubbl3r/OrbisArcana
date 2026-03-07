@@ -166,6 +166,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventStopOnFirstSignalMatchOverrides = (schema && schema.sourceEventStopOnFirstSignalMatchOverrides && typeof schema.sourceEventStopOnFirstSignalMatchOverrides === "object")
     ? schema.sourceEventStopOnFirstSignalMatchOverrides
     : Object.create(null);
+  const sourceEventEmitPreviewMatchedOverrides = (schema && schema.sourceEventEmitPreviewMatchedOverrides && typeof schema.sourceEventEmitPreviewMatchedOverrides === "object")
+    ? schema.sourceEventEmitPreviewMatchedOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -265,6 +268,10 @@ export function createRuleEngineV1PreviewSystem({
     const effectiveMaxMatchesPerSignal = Number.isFinite(signalMaxMatchesOverrideRaw)
       ? Math.max(0, Math.floor(signalMaxMatchesOverrideRaw))
       : maxMatchesPerSignal;
+    const hasSourceEventEmitOverride = Object.prototype.hasOwnProperty.call(sourceEventEmitPreviewMatchedOverrides, String(sourceEvent || ""));
+    const effectiveEmitPreviewMatchedEvents = hasSourceEventEmitOverride
+      ? !!sourceEventEmitPreviewMatchedOverrides[String(sourceEvent || "")]
+      : emitPreviewMatchedEvents;
     let matchedCount = 0;
     for (const rule of candidates) {
       const ruleId = String(rule && rule.id || "");
@@ -281,7 +288,7 @@ export function createRuleEngineV1PreviewSystem({
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;
       lastMatchAtByRuleId.set(rule.id, now);
-      if (emitPreviewMatchedEvents) {
+      if (effectiveEmitPreviewMatchedEvents) {
         eventBus.emit(EVT_RULE_ENGINE_V1_PREVIEW_MATCHED, {
           ruleId: rule.id,
           signalId,

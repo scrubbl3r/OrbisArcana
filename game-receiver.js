@@ -1646,6 +1646,9 @@
               sourceEventStopOnFirstSignalMatchOverrides: (next.sourceEventStopOnFirstSignalMatchOverrides && typeof next.sourceEventStopOnFirstSignalMatchOverrides === "object")
                 ? { ...next.sourceEventStopOnFirstSignalMatchOverrides }
                 : Object.create(null),
+              sourceEventEmitPreviewMatchedOverrides: (next.sourceEventEmitPreviewMatchedOverrides && typeof next.sourceEventEmitPreviewMatchedOverrides === "object")
+                ? { ...next.sourceEventEmitPreviewMatchedOverrides }
+                : Object.create(null),
               actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),

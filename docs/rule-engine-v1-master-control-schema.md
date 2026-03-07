@@ -31,6 +31,7 @@ Top-Level Shape
   sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
   sourceEventMaxSignalsOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventStopOnFirstSignalMatchOverrides: { ... }, // optional { [sourceEvent]: boolean }
+  sourceEventEmitPreviewMatchedOverrides: { ... }, // optional { [sourceEvent]: boolean }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   actionArgOverrides: { ... }, // optional { [actionKey]: object }
@@ -193,6 +194,9 @@ Authoring Notes
   - `sourceEventStopOnFirstSignalMatchOverrides`:
     - per-source-event first-match short-circuit map (`{ [sourceEvent]: boolean }`).
     - precedence: per-source-event override -> `execution.stopOnFirstSignalMatchPerEvent`.
+  - `sourceEventEmitPreviewMatchedOverrides`:
+    - per-source-event preview telemetry map (`{ [sourceEvent]: boolean }`).
+    - precedence: per-source-event override -> `execution.emitPreviewMatchedEvents`.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
