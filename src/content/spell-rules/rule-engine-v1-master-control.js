@@ -15,6 +15,17 @@ const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // "r_rota_yspin_charged.3": false, // by action index
 });
 
+const EVENT_DEFAULT_OVERRIDES = Object.freeze({
+  // Examples:
+  // grace: { ms: 600 },
+  // electric_aoe: { ms: 1000, range: 16 },
+});
+
+const WINDOW_DEFAULT_OVERRIDES = Object.freeze({
+  // Example:
+  // wake_win: { ttlMs: 1800 },
+});
+
 function applyRuleEnabledOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -73,6 +84,26 @@ function applyActionEnabledOverrides(rules = [], overrides = {}) {
   });
 }
 
+function applyDefinitionDefaultArgOverrides(defs = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(defs) ? defs : []).map((def) => {
+    const id = String(def && def.id || "").trim().toLowerCase();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return def;
+    const patch = map[id];
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) return def;
+    const baseArgs = (def && typeof def.defaultArgs === "object" && def.defaultArgs)
+      ? def.defaultArgs
+      : {};
+    return Object.freeze({
+      ...(def || {}),
+      defaultArgs: Object.freeze({
+        ...baseArgs,
+        ...patch,
+      }),
+    });
+  });
+}
+
 // Canonical SSOT for authoring Rule Engine V1 content.
 export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   id: "rule_engine_v1",
@@ -80,9 +111,11 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   enabled: true,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
+  eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
+  windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
   signals: Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1.slice() : [],
-  windows: Array.isArray(WINDOW_DEFINITIONS_V1) ? WINDOW_DEFINITIONS_V1.slice() : [],
-  events: Array.isArray(EVENT_DEFINITIONS_V1) ? EVENT_DEFINITIONS_V1.slice() : [],
+  windows: applyDefinitionDefaultArgOverrides(WINDOW_DEFINITIONS_V1, WINDOW_DEFAULT_OVERRIDES),
+  events: applyDefinitionDefaultArgOverrides(EVENT_DEFINITIONS_V1, EVENT_DEFAULT_OVERRIDES),
   rules: applyActionEnabledOverrides(
     applyRuleEnabledOverrides(SPELL_RULES_V1, RULE_ENABLED_OVERRIDES),
     ACTION_ENABLED_OVERRIDES

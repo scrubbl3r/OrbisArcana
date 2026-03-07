@@ -21,6 +21,8 @@ export function validateRuleEngineV1Config(config = null) {
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
+  const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
+  const windowDefaultOverrides = asObj(cfg.windowDefaultOverrides);
 
   const errors = [];
   if (!asText(cfg.id)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.id is required");
@@ -50,6 +52,28 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "eventDefaultOverrides")) {
+    if (!cfg.eventDefaultOverrides || typeof cfg.eventDefaultOverrides !== "object" || Array.isArray(cfg.eventDefaultOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides must be an object when present");
+    } else {
+      for (const [eventId, value] of Object.entries(eventDefaultOverrides)) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides[${eventId}] must be an object`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "windowDefaultOverrides")) {
+    if (!cfg.windowDefaultOverrides || typeof cfg.windowDefaultOverrides !== "object" || Array.isArray(cfg.windowDefaultOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides must be an object when present");
+    } else {
+      for (const [windowId, value] of Object.entries(windowDefaultOverrides)) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides[${windowId}] must be an object`);
+        }
+      }
+    }
+  }
   if (!Array.isArray(cfg.signals)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signals must be an array");
   if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windows must be an array");
   if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.events must be an array");
@@ -57,6 +81,19 @@ export function validateRuleEngineV1Config(config = null) {
 
   const ruleErrors = validateSpellRulesV1(rules, { signals, windows, events });
   errors.push(...ruleErrors);
+
+  const eventIds = new Set(events.map((e) => String(e && e.id || "").trim().toLowerCase()).filter(Boolean));
+  for (const eventId of Object.keys(eventDefaultOverrides)) {
+    const id = String(eventId || "").trim().toLowerCase();
+    if (!id || eventIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides references unknown event id: ${id}`);
+  }
+  const windowIds = new Set(windows.map((w) => String(w && w.id || "").trim().toLowerCase()).filter(Boolean));
+  for (const windowId of Object.keys(windowDefaultOverrides)) {
+    const id = String(windowId || "").trim().toLowerCase();
+    if (!id || windowIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides references unknown window id: ${id}`);
+  }
 
   for (const eventDef of events) {
     const id = String(eventDef && eventDef.id || "").trim().toLowerCase();

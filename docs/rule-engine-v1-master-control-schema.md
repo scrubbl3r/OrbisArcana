@@ -16,6 +16,8 @@ Top-Level Shape
   enabled: true, // optional, default true
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
+  eventDefaultOverrides: { ... }, // optional { [eventId]: object }
+  windowDefaultOverrides: { ... }, // optional { [windowId]: object }
   signals: [ ... ],
   windows: [ ... ],
   events: [ ... ],
@@ -65,6 +67,10 @@ Authoring Notes
 - Action inline args are generic:
   - Any non-structural key is treated as action args.
   - Structural keys: `type`, `id`, `spells`, `overrides`, `enabled`.
+- Default arg controls:
+  - `eventDefaultOverrides` patches event `defaultArgs` globally by event id.
+  - `windowDefaultOverrides` patches window `defaultArgs` globally by window id.
+  - Precedence: definition defaults -> master-control default overrides -> per-action inline args.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
