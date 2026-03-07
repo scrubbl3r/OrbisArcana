@@ -100,6 +100,10 @@ Authoring Notes
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matched rules can fire for one signal hit.
     - applies after candidate ordering (priority/source order).
+  - `execution.cooldownScale`:
+    - finite number `>= 0`; default `1`.
+    - multiplies all effective rule cooldowns at runtime.
+    - `0` disables cooldown waiting globally; `2` doubles cooldown durations.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

@@ -81,6 +81,10 @@ export function createRuleEngineV1PreviewSystem({
   const maxMatchesPerSignal = Number.isFinite(maxMatchesPerSignalRaw)
     ? Math.max(0, Math.floor(maxMatchesPerSignalRaw))
     : 0;
+  const cooldownScaleRaw = Number(execution.cooldownScale);
+  const cooldownScale = Number.isFinite(cooldownScaleRaw)
+    ? Math.max(0, cooldownScaleRaw)
+    : 1;
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
@@ -144,7 +148,7 @@ export function createRuleEngineV1PreviewSystem({
     let matchedCount = 0;
     for (const rule of candidates) {
       if (!ruleMatches(rule, lastSeenAtBySignalId, now)) continue;
-      const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0);
+      const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0) * cooldownScale;
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;
       lastMatchAtByRuleId.set(rule.id, now);
