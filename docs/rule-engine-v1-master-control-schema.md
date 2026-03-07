@@ -112,6 +112,9 @@ Authoring Notes
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matched rules can fire for one signal hit.
     - applies after candidate ordering (priority/source order).
+  - `execution.maxSignalsPerEvent`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps how many matching signals are processed per source-event payload.
   - `execution.cooldownScale`:
     - finite number `>= 0`; default `1`.
     - multiplies all effective rule cooldowns at runtime.

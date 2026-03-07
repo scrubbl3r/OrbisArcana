@@ -108,6 +108,10 @@ export function createRuleEngineV1PreviewSystem({
   const maxMatchesPerSignal = Number.isFinite(maxMatchesPerSignalRaw)
     ? Math.max(0, Math.floor(maxMatchesPerSignalRaw))
     : 0;
+  const maxSignalsPerEventRaw = Number(execution.maxSignalsPerEvent);
+  const maxSignalsPerEvent = Number.isFinite(maxSignalsPerEventRaw)
+    ? Math.max(0, Math.floor(maxSignalsPerEventRaw))
+    : 0;
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
@@ -230,10 +234,13 @@ export function createRuleEngineV1PreviewSystem({
       const signals = runtime.signalsBySourceEvent[sourceEvent] || [];
       if (!signals.length) continue;
       unsub.push(eventBus.on(sourceEvent, (payload = {}) => {
+        let matchedSignalCount = 0;
         for (const signal of signals) {
           if (!signalMatchesPayload(signal, payload)) continue;
           onSignalHit(signal.id, sourceEvent, payload);
+          matchedSignalCount += 1;
           if (stopOnFirstSignalMatchPerEvent) break;
+          if (maxSignalsPerEvent > 0 && matchedSignalCount >= maxSignalsPerEvent) break;
         }
       }));
     }
