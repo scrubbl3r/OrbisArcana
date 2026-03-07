@@ -1,6 +1,6 @@
 import { ACTIVE_SPELLS_BY_ID } from "../voice/spellbook.js";
-import { normalizeSpellClassTokenForRuntime } from "../voice/spell-decision-tree.js";
 import {
+  CLASS_RUNTIME_KEY_BY_TOKEN,
   SPELL_RUNTIME_ROUTING_BY_ID,
   SPELL_WINDOW_BYPASS_SPELL_IDS,
 } from "../content/spells/spell-runtime-routing-v1.js";
@@ -149,13 +149,19 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     };
   }
 
+  function normalizeClassTokenForRuntime(classToken) {
+    const token = String(classToken || "").trim().toLowerCase();
+    if (!token) return "";
+    return String(CLASS_RUNTIME_KEY_BY_TOKEN[token] || token).trim().toLowerCase();
+  }
+
   function resolveConcreteSpellForAxis(spell, axis) {
     const routed = withRuntimeRouting(spell || {});
     const intent = String(routed && routed.intent || "");
     if (intent !== "spell.class_select") return routed;
     const a = normAxis(axis);
     const classKeyRaw = String(routed && routed.classKey || "").toLowerCase();
-    const classKey = normalizeSpellClassTokenForRuntime(classKeyRaw);
+    const classKey = normalizeClassTokenForRuntime(classKeyRaw);
     const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
     if (!a || !classKey || !school) return null;
     const id = classKey;

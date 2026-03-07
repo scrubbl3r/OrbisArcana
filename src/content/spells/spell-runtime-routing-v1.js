@@ -30,6 +30,12 @@ export const CLASS_SPELL_IDS = Object.freeze([
   "vectus",
 ]);
 
+export const CLASS_RUNTIME_KEY_BY_TOKEN = Object.freeze({
+  rota: "rota",
+  sanctum: "sanctum",
+  vectus: "vectus",
+});
+
 export const KWS_FLASH_TOKEN_SPELL_IDS = Object.freeze([
   "orbis",
   "domus",
