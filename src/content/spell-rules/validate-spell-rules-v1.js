@@ -55,15 +55,48 @@ function getRuleConditions(rule) {
   return { all: [], any: [] };
 }
 
+function indexDefsById(defs = []) {
+  return (Array.isArray(defs) ? defs : []).reduce((acc, item) => {
+    const id = asId(item && item.id);
+    if (!id) return acc;
+    acc[id] = item;
+    return acc;
+  }, Object.create(null));
+}
+
 /**
  * Lightweight schema validation for Rule Engine v1 data files.
  * Returns errors only; caller decides whether to throw or log.
  */
-export function validateSpellRulesV1(rules = []) {
+export function validateSpellRulesV1(rules = [], options = {}) {
+  const signalDefs = Array.isArray(options && options.signals)
+    ? options.signals
+    : SIGNAL_DEFINITIONS_V1;
+  const signalById = (options && options.signalById && typeof options.signalById === "object")
+    ? options.signalById
+    : (
+      Array.isArray(options && options.signals)
+        ? indexDefsById(signalDefs)
+        : SIGNAL_DEFINITIONS_V1_BY_ID
+    );
+  const windowById = (options && options.windowById && typeof options.windowById === "object")
+    ? options.windowById
+    : (
+      Array.isArray(options && options.windows)
+        ? indexDefsById(options.windows)
+        : WINDOW_DEFINITIONS_V1_BY_ID
+    );
+  const eventById = (options && options.eventById && typeof options.eventById === "object")
+    ? options.eventById
+    : (
+      Array.isArray(options && options.events)
+        ? indexDefsById(options.events)
+        : EVENT_DEFINITIONS_V1_BY_ID
+    );
   const errors = [];
   const seenRuleIds = new Set();
   const seenSignalIds = new Set();
-  for (const signal of Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1 : []) {
+  for (const signal of Array.isArray(signalDefs) ? signalDefs : []) {
     const signalId = asId(signal && signal.id);
     if (!signalId) {
       errors.push("signal has missing id");
@@ -75,8 +108,8 @@ export function validateSpellRulesV1(rules = []) {
     }
     seenSignalIds.add(signalId);
   }
-  for (const signalId of Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID)) {
-    const signal = SIGNAL_DEFINITIONS_V1_BY_ID[signalId] || null;
+  for (const signalId of Object.keys(signalById)) {
+    const signal = signalById[signalId] || null;
     const sourceEvent = String(signal && signal.sourceEvent || "").trim();
     if (!sourceEvent) {
       errors.push(`signal ${signalId} missing sourceEvent`);
@@ -112,7 +145,7 @@ export function validateSpellRulesV1(rules = []) {
         errors.push(`rule ${ruleId} has unsupported condition type: ${type || "(empty)"}`);
         continue;
       }
-      if (!signalId || !SIGNAL_DEFINITIONS_V1_BY_ID[signalId]) {
+      if (!signalId || !signalById[signalId]) {
         const rawId = asId(cond && cond.id) || "(empty)";
         errors.push(`rule ${ruleId} references unknown signal: ${rawId} (resolved: ${signalId || "(empty)"})`);
       }
@@ -129,7 +162,7 @@ export function validateSpellRulesV1(rules = []) {
       const id = asId(action && action.id);
       if (type === "wake_win") {
         const wakeWindowId = asId(id || DEFAULT_WAKE_WINDOW_ID);
-        if (!wakeWindowId || !WINDOW_DEFINITIONS_V1_BY_ID[wakeWindowId]) {
+        if (!wakeWindowId || !windowById[wakeWindowId]) {
           errors.push(`rule ${ruleId} references unknown wake window: ${wakeWindowId || "(empty)"}`);
         }
         const spells = Array.isArray(action && action.spells) ? action.spells : [];
@@ -148,7 +181,7 @@ export function validateSpellRulesV1(rules = []) {
         continue;
       }
       if (type === "event") {
-        if (!id || !EVENT_DEFINITIONS_V1_BY_ID[id]) {
+        if (!id || !eventById[id]) {
           errors.push(`rule ${ruleId} references unknown event: ${id || "(empty)"}`);
           continue;
         }

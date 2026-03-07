@@ -51,6 +51,7 @@ export async function loadReceiverInitModules() {
       EVENT_DEFINITIONS_V1,
       EVENT_RUNTIME_BINDINGS_V1_BY_ID,
       SPELL_RULES_V1,
+      validateRuleEngineV1Config,
       validateSpellRulesV1,
     },
     { WORLD_ITEMS_V1 },
@@ -132,6 +133,7 @@ export async function loadReceiverInitModules() {
     EVENT_RUNTIME_BINDINGS_V1_BY_ID,
     SPELL_RULES_V1,
     RULE_ENGINE_V1_CONFIG,
+    validateRuleEngineV1Config,
     validateSpellRulesV1,
     WORLD_ITEMS_V1,
   };
@@ -195,6 +197,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     EVENT_RUNTIME_BINDINGS_V1_BY_ID,
     SPELL_RULES_V1,
     RULE_ENGINE_V1_CONFIG,
+    validateRuleEngineV1Config,
     validateSpellRulesV1,
     createSpellCastExecutor,
   } = mods || {};
@@ -326,7 +329,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     }
   }
 
-  if (typeof validateSpellRulesV1 === "function") {
+  if (typeof validateRuleEngineV1Config === "function") {
+    const errors = validateRuleEngineV1Config(ruleSchemaV1);
+    if (errors.length) {
+      throw new Error(`Rule Engine v1 config validation failed: ${errors.join(" | ")}`);
+    }
+  } else if (typeof validateSpellRulesV1 === "function") {
     const errors = validateSpellRulesV1(ruleRulesV1);
     if (errors.length) {
       throw new Error(`Rule Engine v1 schema validation failed: ${errors.join(" | ")}`);
