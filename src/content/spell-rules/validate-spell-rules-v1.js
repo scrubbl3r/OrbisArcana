@@ -25,13 +25,17 @@ function resolveSignalConditionId(cond) {
   return null;
 }
 
-function mergeActionOverrides(action) {
+function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
     ? { ...action.overrides }
     : {};
-  if (action && Object.prototype.hasOwnProperty.call(action, "ttlMs")) base.ttlMs = action.ttlMs;
-  if (action && Object.prototype.hasOwnProperty.call(action, "ms")) base.ms = action.ms;
-  if (action && Object.prototype.hasOwnProperty.call(action, "state")) base.state = action.state;
+  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides"]);
+  if (action && typeof action === "object") {
+    for (const [k, v] of Object.entries(action)) {
+      if (RESERVED_KEYS.has(k)) continue;
+      base[k] = v;
+    }
+  }
   return base;
 }
 
@@ -169,7 +173,7 @@ export function validateSpellRulesV1(rules = [], options = {}) {
         if (!spells.length) {
           errors.push(`rule ${ruleId} wake_win action requires non-empty spells[]`);
         }
-        const overrides = mergeActionOverrides(action);
+        const overrides = resolveActionArgs(action);
         if (overrides && Object.prototype.hasOwnProperty.call(overrides, "ms")) {
           errors.push(`rule ${ruleId} wake_win should use ttlMs, not ms`);
         }
@@ -185,13 +189,8 @@ export function validateSpellRulesV1(rules = [], options = {}) {
           errors.push(`rule ${ruleId} references unknown event: ${id || "(empty)"}`);
           continue;
         }
-        const overrides = mergeActionOverrides(action);
+        const overrides = resolveActionArgs(action);
         if (overrides && Object.keys(overrides).length > 0) {
-          const keys = Object.keys(overrides);
-          const unknown = keys.filter((k) => k !== "ms" && k !== "state");
-          if (unknown.length) {
-            errors.push(`rule ${ruleId} event ${id} has unsupported override keys: ${unknown.join(",")}`);
-          }
           if (Object.prototype.hasOwnProperty.call(overrides, "ms")) {
             if (!isFiniteNonNegativeNumber(overrides.ms)) {
               errors.push(`rule ${ruleId} event ${id} ms override must be >= 0`);

@@ -23,6 +23,7 @@ export const SPELL_RULES_V1 = Object.freeze([
       Object.freeze({
         type: "event",
         id: "electric_aoe",
+        range: 14,
       }),
       Object.freeze({
         type: "event",

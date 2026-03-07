@@ -20,13 +20,17 @@ function resolveSignalConditionId(cond) {
   return "";
 }
 
-function mergeActionOverrides(action) {
+function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
     ? { ...action.overrides }
     : {};
-  if (action && Object.prototype.hasOwnProperty.call(action, "ttlMs")) base.ttlMs = action.ttlMs;
-  if (action && Object.prototype.hasOwnProperty.call(action, "ms")) base.ms = action.ms;
-  if (action && Object.prototype.hasOwnProperty.call(action, "state")) base.state = action.state;
+  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides"]);
+  if (action && typeof action === "object") {
+    for (const [k, v] of Object.entries(action)) {
+      if (RESERVED_KEYS.has(k)) continue;
+      base[k] = v;
+    }
+  }
   return base;
 }
 
@@ -119,7 +123,7 @@ export function buildRuleEngineV1PreviewRuntime({
             ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
             : asId(a && a.id),
           spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
-          overrides: mergeActionOverrides(a),
+          overrides: resolveActionArgs(a),
         }))
       : [];
     const normalizedRule = {
