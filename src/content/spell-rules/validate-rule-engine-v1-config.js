@@ -63,6 +63,12 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.matchWindowScale must be a finite number >= 0 when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "signalDebounceMs")) {
+      const n = Number(execution.signalDebounceMs);
+      if (!Number.isFinite(n) || n < 0) {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.signalDebounceMs must be a finite number >= 0 when present");
+      }
+    }
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleDefaults")) {
     if (!cfg.ruleDefaults || typeof cfg.ruleDefaults !== "object" || Array.isArray(cfg.ruleDefaults)) {

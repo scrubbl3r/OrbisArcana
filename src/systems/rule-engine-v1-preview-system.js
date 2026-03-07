@@ -92,6 +92,10 @@ export function createRuleEngineV1PreviewSystem({
   const matchWindowScale = Number.isFinite(matchWindowScaleRaw)
     ? Math.max(0, matchWindowScaleRaw)
     : 1;
+  const signalDebounceMsRaw = Number(execution.signalDebounceMs);
+  const signalDebounceMs = Number.isFinite(signalDebounceMsRaw)
+    ? Math.max(0, signalDebounceMsRaw)
+    : 0;
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
@@ -150,6 +154,10 @@ export function createRuleEngineV1PreviewSystem({
 
   function onSignalHit(signalId, sourceEvent, payload = {}) {
     const now = Number(payload && payload.atMs) || nowMs();
+    const previousSeenAt = Number(lastSeenAtBySignalId.get(signalId) || 0);
+    if (signalDebounceMs > 0 && previousSeenAt > 0 && (now - previousSeenAt) < signalDebounceMs) {
+      return;
+    }
     lastSeenAtBySignalId.set(signalId, now);
     const candidates = runtime.rulesBySignalId[signalId] || [];
     let matchedCount = 0;
