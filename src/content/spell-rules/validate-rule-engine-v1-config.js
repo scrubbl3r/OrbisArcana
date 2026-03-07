@@ -19,6 +19,7 @@ export function validateRuleEngineV1Config(config = null) {
   const events = Array.isArray(cfg.events) ? cfg.events : [];
   const rules = Array.isArray(cfg.rules) ? cfg.rules : [];
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
+  const ruleDefaults = asObj(cfg.ruleDefaults);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
@@ -29,6 +30,24 @@ export function validateRuleEngineV1Config(config = null) {
   if (!asText(cfg.version)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.version is required");
   if (Object.prototype.hasOwnProperty.call(cfg, "enabled") && typeof cfg.enabled !== "boolean") {
     errors.push("RULE_ENGINE_V1_MASTER_CONTROL.enabled must be boolean when present");
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleDefaults")) {
+    if (!cfg.ruleDefaults || typeof cfg.ruleDefaults !== "object" || Array.isArray(cfg.ruleDefaults)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleDefaults must be an object when present");
+    } else {
+      if (Object.prototype.hasOwnProperty.call(ruleDefaults, "cooldownMs")) {
+        const n = Number(ruleDefaults.cooldownMs);
+        if (!Number.isFinite(n) || n < 0) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleDefaults.cooldownMs must be a finite number >= 0");
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(ruleDefaults, "matchWindowMs")) {
+        const n = Number(ruleDefaults.matchWindowMs);
+        if (!Number.isFinite(n) || n < 100) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleDefaults.matchWindowMs must be a finite number >= 100");
+        }
+      }
+    }
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleEnabledOverrides")) {
     if (!cfg.ruleEnabledOverrides || typeof cfg.ruleEnabledOverrides !== "object" || Array.isArray(cfg.ruleEnabledOverrides)) {

@@ -26,6 +26,12 @@ const WINDOW_DEFAULT_OVERRIDES = Object.freeze({
   // wake_win: { ttlMs: 1800 },
 });
 
+const RULE_DEFAULTS = Object.freeze({
+  // Examples:
+  // cooldownMs: 0,
+  // matchWindowMs: 2000,
+});
+
 function applyRuleEnabledOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -84,6 +90,23 @@ function applyActionEnabledOverrides(rules = [], overrides = {}) {
   });
 }
 
+function applyRuleDefaults(rules = [], defaults = {}) {
+  const d = (defaults && typeof defaults === "object") ? defaults : Object.create(null);
+  const hasCooldown = Object.prototype.hasOwnProperty.call(d, "cooldownMs");
+  const hasMatchWindow = Object.prototype.hasOwnProperty.call(d, "matchWindowMs");
+  if (!hasCooldown && !hasMatchWindow) return Array.isArray(rules) ? rules : [];
+  return (Array.isArray(rules) ? rules : []).map((rule) => {
+    const next = { ...(rule || {}) };
+    if (hasCooldown && !Object.prototype.hasOwnProperty.call(next, "cooldownMs")) {
+      next.cooldownMs = d.cooldownMs;
+    }
+    if (hasMatchWindow && !Object.prototype.hasOwnProperty.call(next, "matchWindowMs")) {
+      next.matchWindowMs = d.matchWindowMs;
+    }
+    return Object.freeze(next);
+  });
+}
+
 function applyDefinitionDefaultArgOverrides(defs = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(defs) ? defs : []).map((def) => {
@@ -109,6 +132,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   id: "rule_engine_v1",
   version: "v1",
   enabled: true,
+  ruleDefaults: RULE_DEFAULTS,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
@@ -117,7 +141,10 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   windows: applyDefinitionDefaultArgOverrides(WINDOW_DEFINITIONS_V1, WINDOW_DEFAULT_OVERRIDES),
   events: applyDefinitionDefaultArgOverrides(EVENT_DEFINITIONS_V1, EVENT_DEFAULT_OVERRIDES),
   rules: applyActionEnabledOverrides(
-    applyRuleEnabledOverrides(SPELL_RULES_V1, RULE_ENABLED_OVERRIDES),
+    applyRuleEnabledOverrides(
+      applyRuleDefaults(SPELL_RULES_V1, RULE_DEFAULTS),
+      RULE_ENABLED_OVERRIDES
+    ),
     ACTION_ENABLED_OVERRIDES
   ),
   eventRuntimeBindings: (EVENT_RUNTIME_BINDINGS_V1_BY_ID && typeof EVENT_RUNTIME_BINDINGS_V1_BY_ID === "object")

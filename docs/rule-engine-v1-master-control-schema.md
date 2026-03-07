@@ -14,6 +14,7 @@ Top-Level Shape
   id: "rule_engine_v1",
   version: "v1",
   enabled: true, // optional, default true
+  ruleDefaults: { ... }, // optional global defaults for rules
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   eventDefaultOverrides: { ... }, // optional { [eventId]: object }
@@ -71,6 +72,10 @@ Authoring Notes
   - `eventDefaultOverrides` patches event `defaultArgs` globally by event id.
   - `windowDefaultOverrides` patches window `defaultArgs` globally by window id.
   - Precedence: definition defaults -> master-control default overrides -> per-action inline args.
+- Rule default controls:
+  - `ruleDefaults.cooldownMs` applies when a rule omits `cooldownMs`.
+  - `ruleDefaults.matchWindowMs` applies when a rule omits `matchWindowMs`.
+  - Precedence: `ruleDefaults` -> per-rule explicit fields.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
