@@ -28,6 +28,7 @@ export function validateRuleEngineV1Config(config = null) {
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const eventEnabledOverrides = asObj(cfg.eventEnabledOverrides);
   const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
+  const windowEnabledOverrides = asObj(cfg.windowEnabledOverrides);
   const windowDefaultOverrides = asObj(cfg.windowDefaultOverrides);
 
   const errors = [];
@@ -159,6 +160,17 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "windowEnabledOverrides")) {
+    if (!cfg.windowEnabledOverrides || typeof cfg.windowEnabledOverrides !== "object" || Array.isArray(cfg.windowEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides must be an object when present");
+    } else {
+      for (const [windowId, value] of Object.entries(windowEnabledOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides[${windowId}] must be boolean`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "windowDefaultOverrides")) {
     if (!cfg.windowDefaultOverrides || typeof cfg.windowDefaultOverrides !== "object" || Array.isArray(cfg.windowDefaultOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides must be an object when present");
@@ -190,6 +202,11 @@ export function validateRuleEngineV1Config(config = null) {
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides references unknown event id: ${id}`);
   }
   const windowIds = new Set(windows.map((w) => String(w && w.id || "").trim().toLowerCase()).filter(Boolean));
+  for (const windowId of Object.keys(windowEnabledOverrides)) {
+    const id = String(windowId || "").trim().toLowerCase();
+    if (!id || windowIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides references unknown window id: ${id}`);
+  }
   for (const windowId of Object.keys(windowDefaultOverrides)) {
     const id = String(windowId || "").trim().toLowerCase();
     if (!id || windowIds.has(id)) continue;

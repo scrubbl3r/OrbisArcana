@@ -90,9 +90,11 @@ export function buildRuleEngineV1PreviewRuntime({
   for (const windowDef of Array.isArray(windows) ? windows : []) {
     const id = asId(windowDef && windowDef.id);
     if (!id) continue;
+    const enabled = !(windowDef && windowDef.enabled === false);
     windowById[id] = {
       id,
       type: asId(windowDef && windowDef.type),
+      enabled,
       defaultArgs: (windowDef && typeof windowDef.defaultArgs === "object" && windowDef.defaultArgs)
         ? { ...windowDef.defaultArgs }
         : {},

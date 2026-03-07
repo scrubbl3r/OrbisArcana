@@ -110,6 +110,8 @@ export function createRuleEngineV1PreviewSystem({
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
       if (type === "wake_win") {
+        const windowDef = runtime.windowById[id];
+        if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, action && action.overrides);
         eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),

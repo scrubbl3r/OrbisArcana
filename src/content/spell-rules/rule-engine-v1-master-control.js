@@ -36,6 +36,11 @@ const WINDOW_DEFAULT_OVERRIDES = Object.freeze({
   // wake_win: { ttlMs: 1800 },
 });
 
+const WINDOW_ENABLED_OVERRIDES = Object.freeze({
+  // Example:
+  // wake_win: false,
+});
+
 const RULE_DEFAULTS = Object.freeze({
   // Examples:
   // cooldownMs: 0,
@@ -224,9 +229,13 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   eventEnabledOverrides: EVENT_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
+  windowEnabledOverrides: WINDOW_ENABLED_OVERRIDES,
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
   signals: applySignalEnabledOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_ENABLED_OVERRIDES),
-  windows: applyDefinitionDefaultArgOverrides(WINDOW_DEFINITIONS_V1, WINDOW_DEFAULT_OVERRIDES),
+  windows: applyDefinitionDefaultArgOverrides(
+    applyDefinitionEnabledOverrides(WINDOW_DEFINITIONS_V1, WINDOW_ENABLED_OVERRIDES),
+    WINDOW_DEFAULT_OVERRIDES
+  ),
   events: applyDefinitionDefaultArgOverrides(
     applyDefinitionEnabledOverrides(EVENT_DEFINITIONS_V1, EVENT_ENABLED_OVERRIDES),
     EVENT_DEFAULT_OVERRIDES

@@ -23,6 +23,7 @@ Top-Level Shape
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   eventEnabledOverrides: { ... }, // optional { [eventId]: boolean }
   eventDefaultOverrides: { ... }, // optional { [eventId]: object }
+  windowEnabledOverrides: { ... }, // optional { [windowId]: boolean }
   windowDefaultOverrides: { ... }, // optional { [windowId]: object }
   signals: [ ... ],
   windows: [ ... ],
@@ -76,6 +77,8 @@ Authoring Notes
 - Default arg controls:
   - `eventEnabledOverrides` can centrally force specific event definitions on/off by event id.
     - disabled events remain defined, but runtime skips dispatching those event actions.
+  - `windowEnabledOverrides` can centrally force specific window definitions on/off by window id.
+    - disabled windows remain defined, but runtime skips wake-window dispatch for those ids.
   - `eventDefaultOverrides` patches event `defaultArgs` globally by event id.
   - `windowDefaultOverrides` patches window `defaultArgs` globally by window id.
   - Precedence: definition defaults -> master-control default overrides -> per-action inline args.
