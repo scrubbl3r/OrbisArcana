@@ -4,8 +4,10 @@ import { EVENT_DEFINITIONS_V1_BY_ID } from "../spell-rules/event-definitions-v1.
 import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "../spell-rules/event-runtime-bindings-v1.js";
 import { SPELL_RULES_V1 } from "../spell-rules/spell-rules-v1.js";
 import {
+  AXIS_SPELL_IDS,
   CLASS_SPELL_IDS,
   SPELL_RUNTIME_ROUTING_BY_ID,
+  WAKE_WINDOW_SPELL_IDS,
   WAKE_REQUIRED_SPELL_IDS,
   WAKE_SPELL_IDS,
 } from "./spell-runtime-routing-v1.js";
@@ -33,6 +35,15 @@ export function validateSpellSchemaIntegrityV1() {
     const id = asId(idRaw);
     if (!SPELLS_BY_ID[id]) errors.push(`WAKE_REQUIRED_SPELL_IDS references unknown spell id: ${id}`);
   }
+  for (const idRaw of Array.isArray(AXIS_SPELL_IDS) ? AXIS_SPELL_IDS : []) {
+    const id = asId(idRaw);
+    if (!SPELLS_BY_ID[id]) errors.push(`AXIS_SPELL_IDS references unknown spell id: ${id}`);
+  }
+  for (const idRaw of Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : []) {
+    const id = asId(idRaw);
+    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_WINDOW_SPELL_IDS references unknown spell id: ${id}`);
+  }
+  // Legacy alias check during migration.
   for (const idRaw of Array.isArray(CLASS_SPELL_IDS) ? CLASS_SPELL_IDS : []) {
     const id = asId(idRaw);
     if (!SPELLS_BY_ID[id]) errors.push(`CLASS_SPELL_IDS references unknown spell id: ${id}`);

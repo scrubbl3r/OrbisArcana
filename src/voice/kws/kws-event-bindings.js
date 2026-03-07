@@ -1,7 +1,7 @@
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
-  CLASS_SPELL_IDS,
   KWS_FLASH_TOKEN_SPELL_IDS,
+  WAKE_WINDOW_SPELL_IDS,
   WAKE_SPELL_IDS,
 } from "../../content/spells/spell-runtime-routing-v1.js";
 
@@ -48,8 +48,8 @@ export function bindKwsEventHandlers({
       .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
       .filter(Boolean)
   );
-  const classTokenSet = new Set(
-    (Array.isArray(CLASS_SPELL_IDS) ? CLASS_SPELL_IDS : [])
+  const wakeWindowTokenSet = new Set(
+    (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
       .map((spellId) => ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()])
       .filter(Boolean)
       .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
@@ -65,7 +65,7 @@ export function bindKwsEventHandlers({
     if (flashTokenSet.has(token)) {
       flashKwsToken(token);
     }
-    if (isClassWindowActive() && classTokenSet.has(token)) {
+    if (isClassWindowActive() && wakeWindowTokenSet.has(token)) {
       const axis = String(getFlatSpinAxis() || "").trim().toLowerCase();
       if ((axis === "x" || axis === "y" || axis === "z") && typeof markHeardClassToken === "function") {
         markHeardClassToken(axis, token);

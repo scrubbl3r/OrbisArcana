@@ -18,23 +18,28 @@ export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
   "vectus",
 ]);
 
-export const SCHOOL_SPELL_IDS = Object.freeze([
+export const AXIS_SPELL_IDS = Object.freeze([
   "tempus",
   "fridgis",
   "electrum",
 ]);
 
-export const CLASS_SPELL_IDS = Object.freeze([
+export const WAKE_WINDOW_SPELL_IDS = Object.freeze([
   "rota",
   "sanctum",
   "vectus",
 ]);
 
-export const CLASS_RUNTIME_KEY_BY_TOKEN = Object.freeze({
+export const WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN = Object.freeze({
   rota: "rota",
   sanctum: "sanctum",
   vectus: "vectus",
 });
+
+// Legacy aliases kept during staged refactor migration.
+export const SCHOOL_SPELL_IDS = AXIS_SPELL_IDS;
+export const CLASS_SPELL_IDS = WAKE_WINDOW_SPELL_IDS;
+export const CLASS_RUNTIME_KEY_BY_TOKEN = WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN;
 
 export const KWS_FLASH_TOKEN_SPELL_IDS = Object.freeze([
   "orbis",

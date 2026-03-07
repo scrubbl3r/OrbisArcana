@@ -1,10 +1,10 @@
 // Data-only signal catalog for Rule Engine v1 scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
 import { ACTIVE_SPELLS_BY_ID } from "../../voice/spellbook.js";
-import { CLASS_SPELL_IDS, WAKE_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
+import { WAKE_SPELL_IDS, WAKE_WINDOW_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
 
-function buildClassSpellSignals() {
-  return (Array.isArray(CLASS_SPELL_IDS) ? CLASS_SPELL_IDS : [])
+function buildWakeWindowSpellSignals() {
+  return (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
     .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
     .map((spellId) => Object.freeze({
@@ -32,7 +32,7 @@ function buildWakeSpellSignals() {
 }
 
 export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
-  ...buildClassSpellSignals(),
+  ...buildWakeWindowSpellSignals(),
   ...buildWakeSpellSignals(),
   Object.freeze({
     id: "gesture.y_spin",

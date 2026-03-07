@@ -1,9 +1,9 @@
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
-  CLASS_SPELL_IDS,
-  SCHOOL_SPELL_IDS,
+  AXIS_SPELL_IDS,
   KWS_ROW_BOTTOM_SPELL_IDS,
   KWS_ROW_TOP_SPELL_IDS,
+  WAKE_WINDOW_SPELL_IDS,
   WAKE_REQUIRED_SPELL_IDS,
   WAKE_SPELL_IDS,
   SPELL_RUNTIME_ROUTING_BY_ID,
@@ -20,12 +20,12 @@ function resolveActivePhrasesByIds(ids = []) {
 export function createKwsRuntimeConfig() {
   const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_SPELL_IDS);
   const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_SPELL_IDS);
-  const classTokens = resolveActivePhrasesByIds(CLASS_SPELL_IDS);
-  const schoolTokens = resolveActivePhrasesByIds(SCHOOL_SPELL_IDS);
+  const wakeWindowTokens = resolveActivePhrasesByIds(WAKE_WINDOW_SPELL_IDS);
+  const axisTokens = resolveActivePhrasesByIds(AXIS_SPELL_IDS);
   const wakeTokens = resolveActivePhrasesByIds(WAKE_SPELL_IDS);
   const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_SPELL_IDS);
   const axisSchoolByAxis = Object.create(null);
-  for (const spellId of SCHOOL_SPELL_IDS) {
+  for (const spellId of AXIS_SPELL_IDS) {
     const id = String(spellId || "").trim().toLowerCase();
     const routing = SPELL_RUNTIME_ROUTING_BY_ID[id] || null;
     const active = ACTIVE_SPELLS_BY_ID[id] || null;
@@ -48,8 +48,11 @@ export function createKwsRuntimeConfig() {
     readoutTickMs: 250,
     rowTop,
     rowBottom,
-    classTokens,
-    schoolTokens,
+    wakeWindowTokens,
+    axisTokens,
+    // Legacy aliases for in-flight consumers.
+    classTokens: wakeWindowTokens.slice(),
+    schoolTokens: axisTokens.slice(),
     wakeTokens,
     wakeRequiredTokens,
     axisSchoolByAxis: Object.freeze({ ...axisSchoolByAxis }),

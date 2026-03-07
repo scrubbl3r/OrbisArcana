@@ -1,9 +1,9 @@
 // Rule Engine v1 scaffold.
 // Not wired into gameplay runtime yet; this file defines target schema shape.
-import { CLASS_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
+import { WAKE_WINDOW_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
 
-const DEFAULT_WAKE_WIN_CLASS_SPELLS = Object.freeze(
-  Array.isArray(CLASS_SPELL_IDS) ? CLASS_SPELL_IDS.slice() : []
+const DEFAULT_WAKE_WIN_SPELLS = Object.freeze(
+  Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS.slice() : []
 );
 
 export const SPELL_RULES_V1 = Object.freeze([
@@ -20,7 +20,7 @@ export const SPELL_RULES_V1 = Object.freeze([
       Object.freeze({
         type: "wake_win",
         id: "wake_win",
-        spells: DEFAULT_WAKE_WIN_CLASS_SPELLS,
+        spells: DEFAULT_WAKE_WIN_SPELLS,
       }),
       Object.freeze({
         type: "event",
