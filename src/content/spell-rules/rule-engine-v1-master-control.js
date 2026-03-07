@@ -24,6 +24,11 @@ const SIGNAL_PRIORITY_OVERRIDES = Object.freeze({
   // "gesture.y_spin": 30,
 });
 
+const SIGNAL_WHERE_OVERRIDES = Object.freeze({
+  // Example:
+  // "orb_state.charged": { path: "ms", gte: 100 },
+});
+
 const SOURCE_EVENT_ENABLED_OVERRIDES = Object.freeze({
   // Example:
   // "voice.spell_detected": false,
@@ -122,6 +127,26 @@ function applySignalPriorityOverrides(signals = [], overrides = {}) {
     return Object.freeze({
       ...(signal || {}),
       priority: Number(override),
+    });
+  });
+}
+
+function applySignalWhereOverrides(signals = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(signals) ? signals : []).map((signal) => {
+    const id = String(signal && signal.id || "").trim().toLowerCase();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return signal;
+    const patch = map[id];
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) return signal;
+    const baseWhere = (signal && signal.where && typeof signal.where === "object")
+      ? signal.where
+      : Object.create(null);
+    return Object.freeze({
+      ...(signal || {}),
+      where: Object.freeze({
+        ...baseWhere,
+        ...patch,
+      }),
     });
   });
 }
@@ -280,6 +305,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
+  signalWhereOverrides: SIGNAL_WHERE_OVERRIDES,
   sourceEventEnabledOverrides: SOURCE_EVENT_ENABLED_OVERRIDES,
   sourceEventDebounceOverrides: SOURCE_EVENT_DEBOUNCE_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
@@ -290,7 +316,10 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   windowEnabledOverrides: WINDOW_ENABLED_OVERRIDES,
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
   signals: applySignalEnabledOverrides(
-    applySignalPriorityOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_PRIORITY_OVERRIDES),
+    applySignalWhereOverrides(
+      applySignalPriorityOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_PRIORITY_OVERRIDES),
+      SIGNAL_WHERE_OVERRIDES
+    ),
     SIGNAL_ENABLED_OVERRIDES
   ),
   windows: applyDefinitionDefaultArgOverrides(
