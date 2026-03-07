@@ -6,7 +6,7 @@ import { WINDOW_DEFINITIONS_V1 } from "./window-definitions-v1.js";
 
 const RULE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
-  // r_rota_yspin_charged: false,
+  r_rota_yspin_charged: false,
 });
 
 function applyRuleEnabledOverrides(rules = [], overrides = {}) {
