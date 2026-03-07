@@ -101,7 +101,8 @@ export function buildRuleEngineV1PreviewRuntime({
     };
   }
 
-  for (const signal of Array.isArray(signals) ? signals : []) {
+  for (let signalIndex = 0; signalIndex < (Array.isArray(signals) ? signals.length : 0); signalIndex += 1) {
+    const signal = signals[signalIndex];
     const id = asId(signal && signal.id);
     if (!id) continue;
     const sourceEvent = asEventName(signal && signal.sourceEvent);
@@ -116,6 +117,7 @@ export function buildRuleEngineV1PreviewRuntime({
       sourceEvent,
       enabled,
       priority,
+      sourceOrder: signalIndex,
       where,
     };
     signalById[id] = normalized;
@@ -131,7 +133,9 @@ export function buildRuleEngineV1PreviewRuntime({
       const pa = Number(a && a.priority) || 0;
       const pb = Number(b && b.priority) || 0;
       if (pb !== pa) return pb - pa;
-      return 0;
+      const oa = Number(a && a.sourceOrder) || 0;
+      const ob = Number(b && b.sourceOrder) || 0;
+      return oa - ob;
     });
   }
 
