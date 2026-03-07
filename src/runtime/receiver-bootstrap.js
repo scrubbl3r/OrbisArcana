@@ -45,6 +45,7 @@ export async function loadReceiverInitModules() {
     { validateSpellRuntimeRoutingV1 },
     { validateSpellSchemaIntegrityV1 },
     {
+      RULE_ENGINE_V1_CONFIG,
       SIGNAL_DEFINITIONS_V1,
       WINDOW_DEFINITIONS_V1,
       EVENT_DEFINITIONS_V1,
@@ -130,6 +131,7 @@ export async function loadReceiverInitModules() {
     EVENT_DEFINITIONS_V1,
     EVENT_RUNTIME_BINDINGS_V1_BY_ID,
     SPELL_RULES_V1,
+    RULE_ENGINE_V1_CONFIG,
     validateSpellRulesV1,
     WORLD_ITEMS_V1,
   };
@@ -192,6 +194,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     EVENT_DEFINITIONS_V1,
     EVENT_RUNTIME_BINDINGS_V1_BY_ID,
     SPELL_RULES_V1,
+    RULE_ENGINE_V1_CONFIG,
     validateSpellRulesV1,
     createSpellCastExecutor,
   } = mods || {};
@@ -216,6 +219,25 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setSpellCastExecutor,
     setReceiverModulesReady,
   } = ctx;
+
+  const ruleSchemaV1 = (RULE_ENGINE_V1_CONFIG && typeof RULE_ENGINE_V1_CONFIG === "object")
+    ? RULE_ENGINE_V1_CONFIG
+    : {
+        signals: Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1.slice() : [],
+        windows: Array.isArray(WINDOW_DEFINITIONS_V1) ? WINDOW_DEFINITIONS_V1.slice() : [],
+        events: Array.isArray(EVENT_DEFINITIONS_V1) ? EVENT_DEFINITIONS_V1.slice() : [],
+        rules: Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1.slice() : [],
+        eventRuntimeBindings: (EVENT_RUNTIME_BINDINGS_V1_BY_ID && typeof EVENT_RUNTIME_BINDINGS_V1_BY_ID === "object")
+          ? { ...EVENT_RUNTIME_BINDINGS_V1_BY_ID }
+          : Object.create(null),
+      };
+  const ruleSignalsV1 = Array.isArray(ruleSchemaV1.signals) ? ruleSchemaV1.signals.slice() : [];
+  const ruleWindowsV1 = Array.isArray(ruleSchemaV1.windows) ? ruleSchemaV1.windows.slice() : [];
+  const ruleEventsV1 = Array.isArray(ruleSchemaV1.events) ? ruleSchemaV1.events.slice() : [];
+  const ruleRulesV1 = Array.isArray(ruleSchemaV1.rules) ? ruleSchemaV1.rules.slice() : [];
+  const ruleEventRuntimeBindingsV1 = (ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
+    ? { ...ruleSchemaV1.eventRuntimeBindings }
+    : Object.create(null);
 
   if (GAME_THEME_DEFAULT) {
     if (typeof applyThemeCssVars === "function") applyThemeCssVars(GAME_THEME_DEFAULT);
@@ -305,7 +327,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
 
   if (typeof validateSpellRulesV1 === "function") {
-    const errors = validateSpellRulesV1(SPELL_RULES_V1 || []);
+    const errors = validateSpellRulesV1(ruleRulesV1);
     if (errors.length) {
       throw new Error(`Rule Engine v1 schema validation failed: ${errors.join(" | ")}`);
     }
@@ -318,13 +340,11 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
   if (typeof setRuleSchemaV1 === "function") {
     setRuleSchemaV1({
-      signals: Array.isArray(SIGNAL_DEFINITIONS_V1) ? SIGNAL_DEFINITIONS_V1.slice() : [],
-      windows: Array.isArray(WINDOW_DEFINITIONS_V1) ? WINDOW_DEFINITIONS_V1.slice() : [],
-      events: Array.isArray(EVENT_DEFINITIONS_V1) ? EVENT_DEFINITIONS_V1.slice() : [],
-      rules: Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1.slice() : [],
-      eventRuntimeBindings: (EVENT_RUNTIME_BINDINGS_V1_BY_ID && typeof EVENT_RUNTIME_BINDINGS_V1_BY_ID === "object")
-        ? { ...EVENT_RUNTIME_BINDINGS_V1_BY_ID }
-        : Object.create(null),
+      signals: ruleSignalsV1,
+      windows: ruleWindowsV1,
+      events: ruleEventsV1,
+      rules: ruleRulesV1,
+      eventRuntimeBindings: ruleEventRuntimeBindingsV1,
     });
   }
 
