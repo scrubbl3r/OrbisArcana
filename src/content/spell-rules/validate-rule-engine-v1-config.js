@@ -71,6 +71,11 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.signalDebounceMs must be a finite number >= 0 when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "stopOnFirstSignalMatchPerEvent")) {
+      if (typeof execution.stopOnFirstSignalMatchPerEvent !== "boolean") {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.stopOnFirstSignalMatchPerEvent must be boolean when present");
+      }
+    }
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleDefaults")) {
     if (!cfg.ruleDefaults || typeof cfg.ruleDefaults !== "object" || Array.isArray(cfg.ruleDefaults)) {

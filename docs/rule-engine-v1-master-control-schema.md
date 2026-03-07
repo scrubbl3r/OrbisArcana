@@ -113,6 +113,10 @@ Authoring Notes
   - `execution.signalDebounceMs`:
     - finite number `>= 0`; default `0` (disabled).
     - ignores repeated hits of the same signal id within the debounce interval.
+  - `execution.stopOnFirstSignalMatchPerEvent`:
+    - boolean; default `false`.
+    - when `true`, for a single `sourceEvent` payload only the first matching signal is processed
+      (based on source-event signal ordering/priority).
   - `signalDebounceOverrides`:
     - per-signal debounce ms map (`{ [signalId]: number >= 0 }`).
     - precedence: per-signal override -> `execution.signalDebounceMs`.

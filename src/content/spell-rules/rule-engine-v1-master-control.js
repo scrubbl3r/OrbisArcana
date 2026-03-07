@@ -247,6 +247,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     cooldownScale: 1,
     matchWindowScale: 1,
     signalDebounceMs: 0,
+    stopOnFirstSignalMatchPerEvent: false,
   }),
   ruleDefaults: RULE_DEFAULTS,
   rulePriorityOverrides: RULE_PRIORITY_OVERRIDES,

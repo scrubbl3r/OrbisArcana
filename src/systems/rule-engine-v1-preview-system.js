@@ -96,6 +96,7 @@ export function createRuleEngineV1PreviewSystem({
   const signalDebounceMs = Number.isFinite(signalDebounceMsRaw)
     ? Math.max(0, signalDebounceMsRaw)
     : 0;
+  const stopOnFirstSignalMatchPerEvent = !!execution.stopOnFirstSignalMatchPerEvent;
   const signalDebounceOverrides = (schema && schema.signalDebounceOverrides && typeof schema.signalDebounceOverrides === "object")
     ? schema.signalDebounceOverrides
     : Object.create(null);
@@ -199,6 +200,7 @@ export function createRuleEngineV1PreviewSystem({
         for (const signal of signals) {
           if (!signalMatchesPayload(signal, payload)) continue;
           onSignalHit(signal.id, sourceEvent, payload);
+          if (stopOnFirstSignalMatchPerEvent) break;
         }
       }));
     }
