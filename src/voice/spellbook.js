@@ -1,102 +1,67 @@
-import { VOICE_MODES } from "./voice-config.js";
-
 export const SPELLS = [
   {
     active: false,
     id: "orbis",
     phrase: "orbis",
+    onnxModel: "orbis",
     minConfidence: 0.6,
     cooldownMs: 0,
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.wake",
-    roles: ["wake"],
   },
   {
     active: true,
     id: "domus",
     phrase: "domus",
+    onnxModel: "domus",
     minConfidence: 0.62,
     cooldownMs: 250,
-    allowedAxes: ["y"],
-    fixedSlot: "UD",
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.domus",
-    roles: ["cast"],
   },
   {
     active: true,
     id: "tempus",
     phrase: "tempus",
+    onnxModel: "tempus",
     minConfidence: 0.6,
     cooldownMs: 0,
-    allowedAxes: ["y"],
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.school_select",
-    school: "tempus",
-    roles: ["cast"],
   },
   {
     active: true,
     id: "fridgis",
     phrase: "fridgis",
+    onnxModel: "fridgis",
     minConfidence: 0.6,
     cooldownMs: 0,
-    allowedAxes: ["x"],
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.school_select",
-    school: "fridgis",
-    roles: ["cast"],
   },
   {
     active: true,
     id: "electrum",
     phrase: "electrum",
+    onnxModel: "electrum",
     minConfidence: 0.6,
     cooldownMs: 0,
-    allowedAxes: ["z"],
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.school_select",
-    school: "electrum",
-    roles: ["cast"],
   },
   {
     active: true,
     id: "sanctum",
     phrase: "sanctum",
+    onnxModel: "sanctum",
     minConfidence: 0.6,
     cooldownMs: 0,
-    allowedAxes: ["x", "y", "z"],
-    fixedSlot: "UD",
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.class_select",
-    classKey: "sanctum",
-    roles: ["cast"],
   },
   {
     active: true,
     id: "vectus",
     phrase: "vectus",
+    onnxModel: "vectus",
     minConfidence: 0.6,
     cooldownMs: 0,
-    allowedAxes: ["x", "y", "z"],
-    fixedSlot: "LR",
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.class_select",
-    classKey: "vectus",
-    roles: ["cast"],
   },
   {
     active: true,
     id: "rota",
     phrase: "rota",
+    onnxModel: "rota",
     minConfidence: 0.6,
     cooldownMs: 0,
-    allowedAxes: ["x", "y", "z"],
-    fixedSlot: "FB",
-    gateModes: [VOICE_MODES.GATED_WINDOW, VOICE_MODES.WAKE_TOKEN_OPEN_WORLD],
-    intent: "spell.class_select",
-    classKey: "rota",
-    roles: ["cast"],
   },
 ];
 
@@ -120,19 +85,4 @@ export const ACTIVE_SPELLS_BY_ID = Object.freeze(
     acc[id] = s;
     return acc;
   }, {})
-);
-
-function hasRole(spell, role) {
-  const want = String(role || "").trim().toLowerCase();
-  if (!want) return false;
-  const roles = Array.isArray(spell && spell.roles) ? spell.roles : [];
-  return roles.some((r) => String(r || "").trim().toLowerCase() === want);
-}
-
-export const WAKE_SPELLS = Object.freeze(
-  ACTIVE_SPELLS.filter((s) => hasRole(s, "wake"))
-);
-
-export const WAKE_TOKENS = Object.freeze(
-  WAKE_SPELLS.map((s) => String(s && s.phrase || s && s.id || "").trim().toLowerCase()).filter(Boolean)
 );

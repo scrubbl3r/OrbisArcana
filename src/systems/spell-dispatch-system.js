@@ -1,5 +1,6 @@
 import { ACTIVE_SPELLS_BY_ID } from "../voice/spellbook.js";
 import { normalizeSpellClassTokenForRuntime } from "../voice/spell-decision-tree.js";
+import { SPELL_RUNTIME_ROUTING_BY_ID } from "../content/spells/spell-runtime-routing-v1.js";
 import {
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
   EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
@@ -120,17 +121,28 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     return spell.allowedAxes.map(normAxis).includes(a);
   }
 
+  function withRuntimeRouting(spell = {}) {
+    const id = String(spell && spell.id || "").toLowerCase();
+    const routing = SPELL_RUNTIME_ROUTING_BY_ID[id] || null;
+    if (!routing) return spell;
+    return {
+      ...spell,
+      ...routing,
+    };
+  }
+
   function resolveConcreteSpellForAxis(spell, axis) {
-    const intent = String(spell && spell.intent || "");
-    if (intent !== "spell.class_select") return spell;
+    const routed = withRuntimeRouting(spell || {});
+    const intent = String(routed && routed.intent || "");
+    if (intent !== "spell.class_select") return routed;
     const a = normAxis(axis);
-    const classKeyRaw = String(spell && spell.classKey || "").toLowerCase();
+    const classKeyRaw = String(routed && routed.classKey || "").toLowerCase();
     const classKey = normalizeSpellClassTokenForRuntime(classKeyRaw);
     const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
     if (!a || !classKey || !school) return null;
     const id = classKey;
-    const base = ACTIVE_SPELLS_BY_ID[id];
-    if (!base) return null;
+    const base = withRuntimeRouting(ACTIVE_SPELLS_BY_ID[id] || { id });
+    if (!base || !base.id) return null;
     return {
       id: String(base.id || id),
       intent: String(base.intent || ""),
@@ -169,7 +181,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     }));
 
     unsub.push(eventBus.on(EVT_VOICE_SPELL_DETECTED, (payload = {}) => {
-      const spell = payload.spell || {};
+      const spell = withRuntimeRouting(payload.spell || {});
       const rawSpellId = String(spell.id || "");
       const spellIntent = String(spell.intent || "");
       const spellSchool = String(spell.school || "").toLowerCase();

@@ -4,7 +4,8 @@ import {
   EVT_VOICE_TOKEN_DETECTED,
 } from "../../contracts/events.js";
 import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
-import { ACTIVE_SPELLS_BY_ID, WAKE_TOKENS } from "../spellbook.js";
+import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
+import { SPELL_RUNTIME_ROUTING_BY_ID, WAKE_SPELL_IDS } from "../../content/spells/spell-runtime-routing-v1.js";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1200,
@@ -77,8 +78,15 @@ export function createKwsTokenParser(opts = {}) {
       : DEFAULTS.wakeArmedMinConfidence,
     clearBufferOnMatch: opts.clearBufferOnMatch == null ? DEFAULTS.clearBufferOnMatch : !!opts.clearBufferOnMatch,
   };
+  const defaultWakeTokens = WAKE_SPELL_IDS
+    .map((spellId) => {
+      const active = ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()];
+      if (!active) return "";
+      return String(active.phrase || active.id || "").trim().toLowerCase();
+    })
+    .filter(Boolean);
   const wakeTokenSet = new Set(
-    (Array.isArray(opts.wakeTokens) && opts.wakeTokens.length ? opts.wakeTokens : WAKE_TOKENS)
+    (Array.isArray(opts.wakeTokens) && opts.wakeTokens.length ? opts.wakeTokens : defaultWakeTokens)
       .map((t) => normToken(t))
       .filter(Boolean),
   );
@@ -297,7 +305,7 @@ export function createKwsTokenParser(opts = {}) {
     if (!shadow) {
       const spellId = String(finalResult.spellId || "");
       const spell = ACTIVE_SPELLS_BY_ID[spellId]
-        ? { ...ACTIVE_SPELLS_BY_ID[spellId] }
+        ? { ...ACTIVE_SPELLS_BY_ID[spellId], ...(SPELL_RUNTIME_ROUTING_BY_ID[spellId] || {}) }
         : { id: spellId, phrase: finalResult.alias || finalResult.tokens.join(" ") };
       emit(EVT_VOICE_SPELL_DETECTED, {
         spell,
