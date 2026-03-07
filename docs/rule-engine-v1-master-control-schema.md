@@ -120,6 +120,9 @@ Authoring Notes
   - `execution.maxActionsPerRuleMatch`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many actions execute from a matched rule.
+  - `execution.sourceEventDebounceMs`:
+    - finite number `>= 0`; default `0` (disabled).
+    - ignores repeated payloads from the same source event within the debounce interval.
   - `execution.cooldownScale`:
     - finite number `>= 0`; default `1`.
     - multiplies all effective rule cooldowns at runtime.

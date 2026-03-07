@@ -116,6 +116,10 @@ export function createRuleEngineV1PreviewSystem({
   const maxActionsPerRuleMatch = Number.isFinite(maxActionsPerRuleMatchRaw)
     ? Math.max(0, Math.floor(maxActionsPerRuleMatchRaw))
     : 0;
+  const sourceEventDebounceMsRaw = Number(execution.sourceEventDebounceMs);
+  const sourceEventDebounceMs = Number.isFinite(sourceEventDebounceMsRaw)
+    ? Math.max(0, sourceEventDebounceMsRaw)
+    : 0;
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
@@ -139,6 +143,7 @@ export function createRuleEngineV1PreviewSystem({
     ? schema.actionArgOverrides
     : Object.create(null);
   const unsub = [];
+  const lastSourceEventAtById = new Map();
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
 
@@ -248,6 +253,12 @@ export function createRuleEngineV1PreviewSystem({
       const signals = runtime.signalsBySourceEvent[sourceEvent] || [];
       if (!signals.length) continue;
       unsub.push(eventBus.on(sourceEvent, (payload = {}) => {
+        const now = Number(payload && payload.atMs) || nowMs();
+        const lastAt = Number(lastSourceEventAtById.get(sourceEvent) || 0);
+        if (sourceEventDebounceMs > 0 && lastAt > 0 && (now - lastAt) < sourceEventDebounceMs) {
+          return;
+        }
+        lastSourceEventAtById.set(sourceEvent, now);
         let matchedSignalCount = 0;
         for (const signal of signals) {
           if (!signalMatchesPayload(signal, payload)) continue;
