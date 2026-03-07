@@ -364,6 +364,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       ruleMatchWindowScaleOverrides: (ruleSchemaV1.ruleMatchWindowScaleOverrides && typeof ruleSchemaV1.ruleMatchWindowScaleOverrides === "object")
         ? { ...ruleSchemaV1.ruleMatchWindowScaleOverrides }
         : Object.create(null),
+      ruleEmitPreviewMatchedOverrides: (ruleSchemaV1.ruleEmitPreviewMatchedOverrides && typeof ruleSchemaV1.ruleEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchemaV1.ruleEmitPreviewMatchedOverrides }
+        : Object.create(null),
       actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
         ? { ...ruleSchemaV1.actionArgOverrides }
         : Object.create(null),
@@ -388,6 +391,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       ruleMatchWindowScaleOverrides: (ruleSchemaV1.ruleMatchWindowScaleOverrides && typeof ruleSchemaV1.ruleMatchWindowScaleOverrides === "object")
         ? { ...ruleSchemaV1.ruleMatchWindowScaleOverrides }
+        : Object.create(null),
+      ruleEmitPreviewMatchedOverrides: (ruleSchemaV1.ruleEmitPreviewMatchedOverrides && typeof ruleSchemaV1.ruleEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchemaV1.ruleEmitPreviewMatchedOverrides }
         : Object.create(null),
       signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
         ? { ...ruleSchemaV1.signalDebounceOverrides }

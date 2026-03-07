@@ -181,6 +181,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleMatchWindowScaleOverrides = (schema && schema.ruleMatchWindowScaleOverrides && typeof schema.ruleMatchWindowScaleOverrides === "object")
     ? schema.ruleMatchWindowScaleOverrides
     : Object.create(null);
+  const ruleEmitPreviewMatchedOverrides = (schema && schema.ruleEmitPreviewMatchedOverrides && typeof schema.ruleEmitPreviewMatchedOverrides === "object")
+    ? schema.ruleEmitPreviewMatchedOverrides
+    : Object.create(null);
   const unsub = [];
   const lastSourceEventAtById = new Map();
   const lastSeenAtBySignalId = new Map();
@@ -288,7 +291,11 @@ export function createRuleEngineV1PreviewSystem({
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;
       lastMatchAtByRuleId.set(rule.id, now);
-      if (effectiveEmitPreviewMatchedEvents) {
+      const hasRuleEmitOverride = Object.prototype.hasOwnProperty.call(ruleEmitPreviewMatchedOverrides, ruleId);
+      const effectiveRuleEmitPreviewMatched = hasRuleEmitOverride
+        ? !!ruleEmitPreviewMatchedOverrides[ruleId]
+        : effectiveEmitPreviewMatchedEvents;
+      if (effectiveRuleEmitPreviewMatched) {
         eventBus.emit(EVT_RULE_ENGINE_V1_PREVIEW_MATCHED, {
           ruleId: rule.id,
           signalId,

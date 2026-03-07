@@ -1628,6 +1628,9 @@
               ruleMatchWindowScaleOverrides: (next.ruleMatchWindowScaleOverrides && typeof next.ruleMatchWindowScaleOverrides === "object")
                 ? { ...next.ruleMatchWindowScaleOverrides }
                 : Object.create(null),
+              ruleEmitPreviewMatchedOverrides: (next.ruleEmitPreviewMatchedOverrides && typeof next.ruleEmitPreviewMatchedOverrides === "object")
+                ? { ...next.ruleEmitPreviewMatchedOverrides }
+                : Object.create(null),
               signalDebounceOverrides: (next.signalDebounceOverrides && typeof next.signalDebounceOverrides === "object")
                 ? { ...next.signalDebounceOverrides }
                 : Object.create(null),

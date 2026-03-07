@@ -21,6 +21,7 @@ Top-Level Shape
   ruleActionLimitOverrides: { ... }, // optional { [ruleId]: integer>=0 }
   ruleCooldownScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   ruleMatchWindowScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
+  ruleEmitPreviewMatchedOverrides: { ... }, // optional { [ruleId]: boolean }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalMaxMatchesOverrides: { ... }, // optional { [signalId]: integer>=0 }
@@ -125,6 +126,9 @@ Authoring Notes
 - Rule match-window scaling controls:
   - `ruleMatchWindowScaleOverrides` can centrally scale match-window strictness for specific rules.
   - Precedence: `ruleMatchWindowScaleOverrides` -> `execution.matchWindowScale`.
+- Rule telemetry controls:
+  - `ruleEmitPreviewMatchedOverrides` can centrally force preview telemetry on/off per rule.
+  - Precedence: `ruleEmitPreviewMatchedOverrides` -> `sourceEventEmitPreviewMatchedOverrides` -> `execution.emitPreviewMatchedEvents`.
 - Execution controls:
   - `execution.stopOnFirstMatch`:
     - `false` (default): all matched candidate rules can fire.
