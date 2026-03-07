@@ -1044,11 +1044,15 @@
     let DEFAULT_KWS_START_STALL_MS = 8000;
     let DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     let KWS_READOUT_TICK_MS = 250;
-    let KWS_ROW_TOP = ["orbis", "domus", "tempus", "fridgis", "electrum"];
-    let KWS_ROW_BOTTOM = ["rota", "sanctum", "vectus"];
-    let KWS_CLASS_TOKENS = ["rota", "sanctum", "vectus"];
-    let KWS_LOG_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
-    let TEMP_UNGATED_KWS_TOKENS = new Set(["orbis", "domus", "tempus", "fridgis", "electrum", "rota", "sanctum", "vectus"]);
+    let KWS_ROW_TOP = [];
+    let KWS_ROW_BOTTOM = [];
+    let KWS_CLASS_TOKENS = [];
+    let KWS_SCHOOL_TOKENS = [];
+    let KWS_WAKE_TOKENS = [];
+    let KWS_WAKE_REQUIRED_TOKENS = [];
+    let KWS_AXIS_SCHOOL_BY_AXIS = Object.freeze({});
+    let KWS_LOG_TOKENS = new Set();
+    let TEMP_UNGATED_KWS_TOKENS = new Set();
     let KWS_TOKEN_CANONICAL_MAP = Object.freeze({});
     const kwsDebugState = {
       mode: DEFAULT_VOICE_ENGINE,
@@ -1468,6 +1472,12 @@
             KWS_ROW_TOP = Array.isArray(kwsConfig.rowTop) ? kwsConfig.rowTop.slice() : KWS_ROW_TOP;
             KWS_ROW_BOTTOM = Array.isArray(kwsConfig.rowBottom) ? kwsConfig.rowBottom.slice() : KWS_ROW_BOTTOM;
             KWS_CLASS_TOKENS = Array.isArray(kwsConfig.classTokens) ? kwsConfig.classTokens.slice() : KWS_CLASS_TOKENS;
+            KWS_SCHOOL_TOKENS = Array.isArray(kwsConfig.schoolTokens) ? kwsConfig.schoolTokens.slice() : KWS_SCHOOL_TOKENS;
+            KWS_WAKE_TOKENS = Array.isArray(kwsConfig.wakeTokens) ? kwsConfig.wakeTokens.slice() : KWS_WAKE_TOKENS;
+            KWS_WAKE_REQUIRED_TOKENS = Array.isArray(kwsConfig.wakeRequiredTokens) ? kwsConfig.wakeRequiredTokens.slice() : KWS_WAKE_REQUIRED_TOKENS;
+            KWS_AXIS_SCHOOL_BY_AXIS = (kwsConfig.axisSchoolByAxis && typeof kwsConfig.axisSchoolByAxis === "object")
+              ? Object.freeze({ ...kwsConfig.axisSchoolByAxis })
+              : KWS_AXIS_SCHOOL_BY_AXIS;
             KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
             TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
             KWS_TOKEN_CANONICAL_MAP = (kwsConfig.tokenCanonicalMap && typeof kwsConfig.tokenCanonicalMap === "object")
@@ -1491,6 +1501,10 @@
             rowTop: KWS_ROW_TOP,
             rowBottom: KWS_ROW_BOTTOM,
             classTokens: KWS_CLASS_TOKENS,
+            schoolTokens: KWS_SCHOOL_TOKENS,
+            wakeTokens: KWS_WAKE_TOKENS,
+            wakeRequiredTokens: KWS_WAKE_REQUIRED_TOKENS,
+            axisSchoolByAxis: KWS_AXIS_SCHOOL_BY_AXIS,
             logTokens: Array.from(KWS_LOG_TOKENS),
             tempUngatedTokens: Array.from(TEMP_UNGATED_KWS_TOKENS),
             tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,

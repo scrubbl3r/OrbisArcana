@@ -14,11 +14,21 @@ export function createKwsPanelController({
   const KWS_ROW_TOP = Array.isArray(constants.rowTop) ? constants.rowTop.slice() : [];
   const KWS_ROW_BOTTOM = Array.isArray(constants.rowBottom) ? constants.rowBottom.slice() : [];
   const KWS_CLASS_TOKENS = Array.isArray(constants.classTokens) ? constants.classTokens.slice() : [];
+  const KWS_SCHOOL_TOKENS = Array.isArray(constants.schoolTokens) ? constants.schoolTokens.slice() : [];
+  const KWS_WAKE_TOKENS = Array.isArray(constants.wakeTokens) ? constants.wakeTokens.slice() : [];
+  const KWS_WAKE_REQUIRED_TOKENS = Array.isArray(constants.wakeRequiredTokens) ? constants.wakeRequiredTokens.slice() : [];
+  const KWS_AXIS_SCHOOL_BY_AXIS = (constants.axisSchoolByAxis && typeof constants.axisSchoolByAxis === "object")
+    ? { ...constants.axisSchoolByAxis }
+    : Object.create(null);
   const KWS_LOG_TOKENS = new Set(Array.isArray(constants.logTokens) ? constants.logTokens : []);
   const TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(constants.tempUngatedTokens) ? constants.tempUngatedTokens : []);
   const KWS_TOKEN_CANONICAL_MAP = (constants.tokenCanonicalMap && typeof constants.tokenCanonicalMap === "object")
     ? constants.tokenCanonicalMap
     : Object.freeze({});
+  const KWS_CLASS_TOKEN_SET = new Set(KWS_CLASS_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
+  const KWS_SCHOOL_TOKEN_SET = new Set(KWS_SCHOOL_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
+  const KWS_WAKE_TOKEN_SET = new Set(KWS_WAKE_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
+  const KWS_WAKE_REQUIRED_TOKEN_SET = new Set(KWS_WAKE_REQUIRED_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
 
   const kwsTokenUiState = {
     flatSpinAxis: "",
@@ -50,10 +60,7 @@ export function createKwsPanelController({
 
   function expectedSchoolForAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
-    if (a === "x") return "fridgis";
-    if (a === "y") return "tempus";
-    if (a === "z") return "electrum";
-    return "";
+    return String(KWS_AXIS_SCHOOL_BY_AXIS[a] || "").trim().toLowerCase();
   }
 
   function canonicalKwsToken(rawToken) {
@@ -66,22 +73,22 @@ export function createKwsPanelController({
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
     if (!(axis === "x" || axis === "y" || axis === "z")) return false;
     const selectedSchool = String(kwsTokenUiState.selectedSchoolByAxis[axis] || "").toLowerCase();
-    return selectedSchool === "tempus" || selectedSchool === "fridgis" || selectedSchool === "electrum";
+    return KWS_SCHOOL_TOKEN_SET.has(selectedSchool);
   }
 
   function shouldLogHeardWakeword(rawToken) {
     const token = canonicalKwsToken(rawToken);
     if (!KWS_LOG_TOKENS.has(token)) return false;
     if (TEMP_UNGATED_KWS_TOKENS.has(token)) return true;
-    if (token === "orbis") return true;
-    if (token === "domus") {
+    if (KWS_WAKE_TOKEN_SET.has(token)) return true;
+    if (KWS_WAKE_REQUIRED_TOKEN_SET.has(token)) {
       return Date.now() < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
     }
-    if (token === "tempus" || token === "fridgis" || token === "electrum") {
+    if (KWS_SCHOOL_TOKEN_SET.has(token)) {
       const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
       return !!axis && token === expectedSchoolForAxis(axis);
     }
-    if (token === "rota" || token === "sanctum" || token === "vectus") {
+    if (KWS_CLASS_TOKEN_SET.has(token)) {
       return isClassWindowActive();
     }
     return false;
@@ -196,9 +203,10 @@ export function createKwsPanelController({
     const expectedSchool = expectedSchoolForAxis(axis);
     const classWindowActive = isClassWindowActive();
     const lineTop = KWS_ROW_TOP.map((token) => {
+      const t = String(token || "").trim().toLowerCase();
       let lit = false;
-      if (token === "orbis" || token === "domus") lit = orbisOpen;
-      else if (token === "tempus" || token === "fridgis" || token === "electrum") lit = token === expectedSchool;
+      if (KWS_WAKE_TOKEN_SET.has(t) || KWS_WAKE_REQUIRED_TOKEN_SET.has(t)) lit = orbisOpen;
+      else if (KWS_SCHOOL_TOKEN_SET.has(t)) lit = t === expectedSchool;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
       return tokenChipHtml(token, lit, flash);
     }).join(" ");

@@ -1,8 +1,12 @@
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
   CLASS_SPELL_IDS,
+  SCHOOL_SPELL_IDS,
   KWS_ROW_BOTTOM_SPELL_IDS,
   KWS_ROW_TOP_SPELL_IDS,
+  WAKE_REQUIRED_SPELL_IDS,
+  WAKE_SPELL_IDS,
+  SPELL_RUNTIME_ROUTING_BY_ID,
 } from "../../content/spells/spell-runtime-routing-v1.js";
 
 function resolveActivePhrasesByIds(ids = []) {
@@ -17,6 +21,21 @@ export function createKwsRuntimeConfig() {
   const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_SPELL_IDS);
   const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_SPELL_IDS);
   const classTokens = resolveActivePhrasesByIds(CLASS_SPELL_IDS);
+  const schoolTokens = resolveActivePhrasesByIds(SCHOOL_SPELL_IDS);
+  const wakeTokens = resolveActivePhrasesByIds(WAKE_SPELL_IDS);
+  const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_SPELL_IDS);
+  const axisSchoolByAxis = Object.create(null);
+  for (const spellId of SCHOOL_SPELL_IDS) {
+    const id = String(spellId || "").trim().toLowerCase();
+    const routing = SPELL_RUNTIME_ROUTING_BY_ID[id] || null;
+    const active = ACTIVE_SPELLS_BY_ID[id] || null;
+    const schoolToken = String((active && active.phrase) || id || "").trim().toLowerCase();
+    const axes = Array.isArray(routing && routing.allowedAxes) ? routing.allowedAxes : [];
+    for (const axis of axes) {
+      const a = String(axis || "").trim().toLowerCase();
+      if (a === "x" || a === "y" || a === "z") axisSchoolByAxis[a] = schoolToken;
+    }
+  }
   const tokenList = Array.from(new Set(rowTop.concat(rowBottom)));
   return {
     defaultVoiceEngine: "kws",
@@ -30,6 +49,10 @@ export function createKwsRuntimeConfig() {
     rowTop,
     rowBottom,
     classTokens,
+    schoolTokens,
+    wakeTokens,
+    wakeRequiredTokens,
+    axisSchoolByAxis: Object.freeze({ ...axisSchoolByAxis }),
     logTokens: tokenList.slice(),
     tempUngatedTokens: tokenList.slice(),
     tokenCanonicalMap: Object.freeze({}),
