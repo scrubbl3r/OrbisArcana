@@ -42,6 +42,7 @@ export async function loadReceiverInitModules() {
     { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
     { RUNTIME_SPELLS_BY_ID },
+    { validateSpellRuntimeRoutingV1 },
     {
       SIGNAL_DEFINITIONS_V1,
       WINDOW_DEFINITIONS_V1,
@@ -81,6 +82,7 @@ export async function loadReceiverInitModules() {
     import("../content/input/dynamics-config-default.js"),
     import("../content/spells/cast-action-registry.js"),
     import("../content/spells/runtime-spells.js"),
+    import("../content/spells/validate-spell-runtime-routing-v1.js"),
     import("../content/spell-rules/index.js"),
     import("../content/world-items/default-world-items.js"),
   ]);
@@ -119,6 +121,7 @@ export async function loadReceiverInitModules() {
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
+    validateSpellRuntimeRoutingV1,
     SIGNAL_DEFINITIONS_V1,
     WINDOW_DEFINITIONS_V1,
     EVENT_DEFINITIONS_V1,
@@ -179,6 +182,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
+    validateSpellRuntimeRoutingV1,
     SIGNAL_DEFINITIONS_V1,
     WINDOW_DEFINITIONS_V1,
     EVENT_DEFINITIONS_V1,
@@ -287,6 +291,13 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       runtimeSpellIndex: RUNTIME_SPELLS_BY_ID || Object.create(null),
       castActionRegistryIndex: CAST_ACTION_REGISTRY_BY_ID || Object.create(null),
     });
+  }
+
+  if (typeof validateSpellRuntimeRoutingV1 === "function") {
+    const routingErrors = validateSpellRuntimeRoutingV1();
+    if (routingErrors.length) {
+      throw new Error(`Spell runtime routing validation failed: ${routingErrors.join(" | ")}`);
+    }
   }
 
   if (typeof validateSpellRulesV1 === "function") {
