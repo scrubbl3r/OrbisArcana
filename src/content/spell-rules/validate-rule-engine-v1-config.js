@@ -354,6 +354,16 @@ export function validateRuleEngineV1Config(config = null) {
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides references unknown rule id: ${id}`);
   }
+  for (const ruleId of Object.keys(rulePriorityOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides references unknown rule id: ${id}`);
+  }
+  for (const ruleId of Object.keys(ruleEnabledOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides references unknown rule id: ${id}`);
+  }
   for (const actionKey of Object.keys(actionArgOverrides)) {
     const key = String(actionKey || "").trim();
     if (!key) continue;
@@ -374,7 +384,10 @@ export function validateRuleEngineV1Config(config = null) {
       continue;
     }
     const rule = ruleById[parsed.ruleId];
-    if (!rule) continue;
+    if (!rule) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides references unknown rule id: ${parsed.ruleId}`);
+      continue;
+    }
     if (!actionOverrideKeyTargetsExistingAction(rule, parsed)) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides references unknown action key: ${actionKey}`);
     }

@@ -100,6 +100,7 @@ Authoring Notes
 - Rule ordering controls:
   - `rulePriorityOverrides` can centrally force per-rule `priority` by rule id.
   - Precedence: `rulePriorityOverrides` -> per-rule explicit/inherited priority.
+  - Unknown rule ids in `rulePriorityOverrides` fail fast in validation.
 - Rule timing controls:
   - `ruleTimingOverrides` can centrally force per-rule `cooldownMs` and `matchWindowMs` by rule id.
   - Precedence: `ruleTimingOverrides` -> per-rule explicit/inherited timing.
@@ -142,11 +143,13 @@ Authoring Notes
   - Rule-level `enabled:false` disables whole rule.
   - Action-level `enabled:false` disables only that action.
   - `ruleEnabledOverrides` can centrally force specific rules on/off by `id`.
+    - unknown rule ids fail fast in validation.
   - `actionEnabledOverrides` can centrally force specific actions on/off by key.
     - key formats:
       - `${ruleId}.${type}.${actionId}` (preferred)
       - `${ruleId}.${type}.${index}`
       - `${ruleId}.${index}`
+    - unknown rule ids fail fast in validation.
 - Priority:
   - Higher `priority` rules are evaluated first when multiple rules are candidates.
   - Equal `priority` preserves source order.
