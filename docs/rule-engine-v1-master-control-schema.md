@@ -117,6 +117,9 @@ Authoring Notes
   - `execution.maxSignalsPerEvent`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matching signals are processed per source-event payload.
+  - `execution.maxActionsPerRuleMatch`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps how many actions execute from a matched rule.
   - `execution.cooldownScale`:
     - finite number `>= 0`; default `1`.
     - multiplies all effective rule cooldowns at runtime.

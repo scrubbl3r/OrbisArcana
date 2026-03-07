@@ -121,6 +121,12 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxSignalsPerEvent must be an integer >= 0 when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "maxActionsPerRuleMatch")) {
+      const n = Number(execution.maxActionsPerRuleMatch);
+      if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxActionsPerRuleMatch must be an integer >= 0 when present");
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(execution, "cooldownScale")) {
       const n = Number(execution.cooldownScale);
       if (!Number.isFinite(n) || n < 0) {

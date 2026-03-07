@@ -112,6 +112,10 @@ export function createRuleEngineV1PreviewSystem({
   const maxSignalsPerEvent = Number.isFinite(maxSignalsPerEventRaw)
     ? Math.max(0, Math.floor(maxSignalsPerEventRaw))
     : 0;
+  const maxActionsPerRuleMatchRaw = Number(execution.maxActionsPerRuleMatch);
+  const maxActionsPerRuleMatch = Number.isFinite(maxActionsPerRuleMatchRaw)
+    ? Math.max(0, Math.floor(maxActionsPerRuleMatchRaw))
+    : 0;
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
@@ -159,7 +163,9 @@ export function createRuleEngineV1PreviewSystem({
   function executeRuleActions(rule, triggerMeta = {}) {
     if (!executeActions) return;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
+    let executedActionCount = 0;
     for (let i = 0; i < actions.length; i += 1) {
+      if (maxActionsPerRuleMatch > 0 && executedActionCount >= maxActionsPerRuleMatch) break;
       const action = actions[i];
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
@@ -180,6 +186,7 @@ export function createRuleEngineV1PreviewSystem({
           spells: Array.isArray(action && action.spells) ? action.spells.slice() : [],
           atMs: Number(triggerMeta.atMs) || nowMs(),
         });
+        executedActionCount += 1;
         continue;
       }
       if (type !== "event") continue;
@@ -193,6 +200,7 @@ export function createRuleEngineV1PreviewSystem({
         args,
         atMs: Number(triggerMeta.atMs) || nowMs(),
       });
+      executedActionCount += 1;
     }
   }
 
