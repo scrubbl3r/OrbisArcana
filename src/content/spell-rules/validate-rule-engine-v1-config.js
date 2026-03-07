@@ -1,11 +1,15 @@
 import { validateSpellRulesV1 } from "./validate-spell-rules-v1.js";
+import { RULE_ENGINE_V1_MASTER_CONTROL } from "./rule-engine-v1-master-control.js";
 
 function asObj(v) {
   return (v && typeof v === "object") ? v : Object.create(null);
 }
 
-export function validateRuleEngineV1Config(config = {}) {
-  const cfg = asObj(config);
+export function validateRuleEngineV1Config(config = null) {
+  const source = (config && typeof config === "object")
+    ? config
+    : RULE_ENGINE_V1_MASTER_CONTROL;
+  const cfg = asObj(source);
   const signals = Array.isArray(cfg.signals) ? cfg.signals : [];
   const windows = Array.isArray(cfg.windows) ? cfg.windows : [];
   const events = Array.isArray(cfg.events) ? cfg.events : [];
@@ -13,10 +17,10 @@ export function validateRuleEngineV1Config(config = {}) {
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
 
   const errors = [];
-  if (!Array.isArray(cfg.signals)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.signals must be an array");
-  if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.windows must be an array");
-  if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.events must be an array");
-  if (!Array.isArray(cfg.rules)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.rules must be an array");
+  if (!Array.isArray(cfg.signals)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signals must be an array");
+  if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windows must be an array");
+  if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.events must be an array");
+  if (!Array.isArray(cfg.rules)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.rules must be an array");
 
   const ruleErrors = validateSpellRulesV1(rules, { signals, windows, events });
   errors.push(...ruleErrors);
@@ -25,7 +29,7 @@ export function validateRuleEngineV1Config(config = {}) {
     const id = String(eventDef && eventDef.id || "").trim().toLowerCase();
     if (!id) continue;
     if (!eventRuntimeBindings[id]) {
-      errors.push(`RULE_ENGINE_V1_MASTER_CONFIG.eventRuntimeBindings missing id: ${id}`);
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings missing id: ${id}`);
     }
   }
 
