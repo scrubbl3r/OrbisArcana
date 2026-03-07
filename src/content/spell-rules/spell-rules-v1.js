@@ -19,7 +19,6 @@ export const SPELL_RULES_V1 = Object.freeze([
     then: Object.freeze([
       Object.freeze({
         type: "wake_win",
-        id: "wake_win",
         spells: DEFAULT_WAKE_WIN_SPELLS,
         ttlMs: 2000,
       }),

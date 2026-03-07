@@ -2,6 +2,8 @@ import { EVENT_DEFINITIONS_V1_BY_ID } from "./event-definitions-v1.js";
 import { SIGNAL_DEFINITIONS_V1, SIGNAL_DEFINITIONS_V1_BY_ID } from "./signal-definitions-v1.js";
 import { WINDOW_DEFINITIONS_V1_BY_ID } from "./window-definitions-v1.js";
 
+const DEFAULT_WAKE_WINDOW_ID = "wake_win";
+
 function asId(v) {
   return String(v || "").trim().toLowerCase();
 }
@@ -108,8 +110,9 @@ export function validateSpellRulesV1(rules = []) {
       const type = asId(action && action.type);
       const id = asId(action && action.id);
       if (type === "wake_win") {
-        if (!id || !WINDOW_DEFINITIONS_V1_BY_ID[id]) {
-          errors.push(`rule ${ruleId} references unknown wake window: ${id || "(empty)"}`);
+        const wakeWindowId = asId(id || DEFAULT_WAKE_WINDOW_ID);
+        if (!wakeWindowId || !WINDOW_DEFINITIONS_V1_BY_ID[wakeWindowId]) {
+          errors.push(`rule ${ruleId} references unknown wake window: ${wakeWindowId || "(empty)"}`);
         }
         const spells = Array.isArray(action && action.spells) ? action.spells : [];
         if (!spells.length) {

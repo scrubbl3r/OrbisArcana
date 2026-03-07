@@ -6,6 +6,8 @@ function asEventName(v) {
   return String(v || "").trim();
 }
 
+const DEFAULT_WAKE_WINDOW_ID = "wake_win";
+
 function resolveSignalConditionId(cond) {
   const type = asId(cond && cond.type);
   const id = asId(cond && cond.id);
@@ -96,7 +98,9 @@ export function buildRuleEngineV1PreviewRuntime({
     const actions = Array.isArray(rule && rule.then)
       ? rule.then.map((a) => ({
           type: asId(a && a.type),
-          id: asId(a && a.id),
+          id: (asId(a && a.type) === "wake_win")
+            ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
+            : asId(a && a.id),
           spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
           overrides: mergeActionOverrides(a),
         }))
