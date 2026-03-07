@@ -4,6 +4,9 @@
 export const RUNTIME_SPELLS = Object.freeze([
   {
     id: "domus",
+    axisSpell: null,
+    wakeWindowSpell: null,
+    // Legacy aliases during migration.
     school: null,
     classKey: null,
     slot: "UD",
@@ -13,6 +16,9 @@ export const RUNTIME_SPELLS = Object.freeze([
   },
   {
     id: "sanctum",
+    axisSpell: null,
+    wakeWindowSpell: "sanctum",
+    // Legacy aliases during migration.
     school: null,
     classKey: "sanctum",
     slot: "UD",
@@ -22,6 +28,9 @@ export const RUNTIME_SPELLS = Object.freeze([
   },
   {
     id: "rota",
+    axisSpell: null,
+    wakeWindowSpell: "rota",
+    // Legacy aliases during migration.
     school: null,
     classKey: "rota",
     slot: "FB",
@@ -34,6 +43,9 @@ export const RUNTIME_SPELLS = Object.freeze([
   },
   {
     id: "vectus",
+    axisSpell: null,
+    wakeWindowSpell: "vectus",
+    // Legacy aliases during migration.
     school: null,
     classKey: "vectus",
     slot: "LR",

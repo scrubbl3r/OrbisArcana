@@ -171,7 +171,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     const intent = String(routed && routed.intent || "");
     if (!isWakeWindowSelectIntent(intent)) return routed;
     const a = normAxis(axis);
-    const classKeyRaw = String(routed && routed.classKey || "").toLowerCase();
+    const classKeyRaw = String((routed && (routed.wakeWindowSpell || routed.classKey)) || "").toLowerCase();
     const classKey = normalizeClassTokenForRuntime(classKeyRaw);
     const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
     if (!a || !classKey || !school) return null;
@@ -185,8 +185,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       phrase: String(base.phrase || id),
       allowedAxes: Array.isArray(base.allowedAxes) ? base.allowedAxes.slice() : [a],
       fixedSlot: String(base.fixedSlot || "").toUpperCase(),
+      axisSpell: school,
+      wakeWindowSpell: String((base.wakeWindowSpell || base.classKey || classKey)).toLowerCase(),
+      // Legacy aliases maintained during staged de-legacy.
       school,
-      classKey: String(base.classKey || classKey).toLowerCase(),
+      classKey: String((base.classKey || base.wakeWindowSpell || classKey)).toLowerCase(),
     };
   }
 
@@ -219,8 +222,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const spell = withRuntimeRouting(payload.spell || {});
       const rawSpellId = String(spell.id || "");
       const spellIntent = String(spell.intent || "");
-      const spellSchool = String(spell.school || "").toLowerCase();
-      const spellClass = String(spell.classKey || "").toLowerCase();
+      const spellSchool = String((spell.axisSpell || spell.school) || "").toLowerCase();
+      const spellClass = String((spell.wakeWindowSpell || spell.classKey) || "").toLowerCase();
       const spellId = rawSpellId;
       if (!spellId) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
@@ -380,8 +383,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
-          school: String(concreteSpell.school || "").toLowerCase(),
-          classKey: String(concreteSpell.classKey || "").toLowerCase(),
+          axisSpell: String((concreteSpell.axisSpell || concreteSpell.school) || "").toLowerCase(),
+          wakeWindowSpell: String((concreteSpell.wakeWindowSpell || concreteSpell.classKey) || "").toLowerCase(),
+          // Legacy aliases maintained during staged de-legacy.
+          school: String((concreteSpell.school || concreteSpell.axisSpell) || "").toLowerCase(),
+          classKey: String((concreteSpell.classKey || concreteSpell.wakeWindowSpell) || "").toLowerCase(),
         };
         if (concreteSpellId) {
           lastFlatSpinLoadAtByAxisSpell.set(dedupeKey, now);
@@ -393,8 +399,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
-          school: String(concreteSpell.school || "").toLowerCase(),
-          classKey: String(concreteSpell.classKey || "").toLowerCase(),
+          axisSpell: String((concreteSpell.axisSpell || concreteSpell.school) || "").toLowerCase(),
+          wakeWindowSpell: String((concreteSpell.wakeWindowSpell || concreteSpell.classKey) || "").toLowerCase(),
+          // Legacy aliases maintained during staged de-legacy.
+          school: String((concreteSpell.school || concreteSpell.axisSpell) || "").toLowerCase(),
+          classKey: String((concreteSpell.classKey || concreteSpell.wakeWindowSpell) || "").toLowerCase(),
           atMs: now,
         });
         return;
@@ -465,6 +474,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         trigger: "shake_detonation",
         axis: loaded.axis,
         slot: loaded.slot,
+        axisSpell: String((loaded.axisSpell || loaded.school) || "").toLowerCase(),
+        wakeWindowSpell: String((loaded.wakeWindowSpell || loaded.classKey) || "").toLowerCase(),
+        // Legacy aliases maintained during staged de-legacy.
         school: String(loaded.school || "").toLowerCase(),
         classKey: String(loaded.classKey || "").toLowerCase(),
         directionGroup: group,

@@ -89,24 +89,32 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "tempus",
     intent: "spell.axis_select",
+    axisSpell: "tempus",
+    // Legacy alias during migration.
     school: "tempus",
     allowedAxes: Object.freeze(["y"]),
   }),
   Object.freeze({
     id: "fridgis",
     intent: "spell.axis_select",
+    axisSpell: "fridgis",
+    // Legacy alias during migration.
     school: "fridgis",
     allowedAxes: Object.freeze(["x"]),
   }),
   Object.freeze({
     id: "electrum",
     intent: "spell.axis_select",
+    axisSpell: "electrum",
+    // Legacy alias during migration.
     school: "electrum",
     allowedAxes: Object.freeze(["z"]),
   }),
   Object.freeze({
     id: "sanctum",
     intent: "spell.wake_window_select",
+    wakeWindowSpell: "sanctum",
+    // Legacy alias during migration.
     classKey: "sanctum",
     fixedSlot: "UD",
     allowedAxes: Object.freeze(["x", "y", "z"]),
@@ -114,6 +122,8 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "vectus",
     intent: "spell.wake_window_select",
+    wakeWindowSpell: "vectus",
+    // Legacy alias during migration.
     classKey: "vectus",
     fixedSlot: "LR",
     allowedAxes: Object.freeze(["x", "y", "z"]),
@@ -121,6 +131,8 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "rota",
     intent: "spell.wake_window_select",
+    wakeWindowSpell: "rota",
+    // Legacy alias during migration.
     classKey: "rota",
     fixedSlot: "FB",
     allowedAxes: Object.freeze(["x", "y", "z"]),
