@@ -340,6 +340,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       sourceEventEnabledOverrides: (ruleSchemaV1.sourceEventEnabledOverrides && typeof ruleSchemaV1.sourceEventEnabledOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventEnabledOverrides }
         : Object.create(null),
+      sourceEventDebounceOverrides: (ruleSchemaV1.sourceEventDebounceOverrides && typeof ruleSchemaV1.sourceEventDebounceOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventDebounceOverrides }
+        : Object.create(null),
       actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
         ? { ...ruleSchemaV1.actionArgOverrides }
         : Object.create(null),

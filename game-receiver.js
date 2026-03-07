@@ -1625,6 +1625,9 @@
               sourceEventEnabledOverrides: (next.sourceEventEnabledOverrides && typeof next.sourceEventEnabledOverrides === "object")
                 ? { ...next.sourceEventEnabledOverrides }
                 : Object.create(null),
+              sourceEventDebounceOverrides: (next.sourceEventDebounceOverrides && typeof next.sourceEventDebounceOverrides === "object")
+                ? { ...next.sourceEventDebounceOverrides }
+                : Object.create(null),
               actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),

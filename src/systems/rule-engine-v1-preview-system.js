@@ -139,6 +139,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventEnabledOverrides = (schema && schema.sourceEventEnabledOverrides && typeof schema.sourceEventEnabledOverrides === "object")
     ? schema.sourceEventEnabledOverrides
     : Object.create(null);
+  const sourceEventDebounceOverrides = (schema && schema.sourceEventDebounceOverrides && typeof schema.sourceEventDebounceOverrides === "object")
+    ? schema.sourceEventDebounceOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -254,8 +257,12 @@ export function createRuleEngineV1PreviewSystem({
       if (!signals.length) continue;
       unsub.push(eventBus.on(sourceEvent, (payload = {}) => {
         const now = Number(payload && payload.atMs) || nowMs();
+        const sourceEventDebounceOverrideRaw = Number(sourceEventDebounceOverrides[sourceEvent]);
+        const effectiveSourceEventDebounceMs = Number.isFinite(sourceEventDebounceOverrideRaw)
+          ? Math.max(0, sourceEventDebounceOverrideRaw)
+          : sourceEventDebounceMs;
         const lastAt = Number(lastSourceEventAtById.get(sourceEvent) || 0);
-        if (sourceEventDebounceMs > 0 && lastAt > 0 && (now - lastAt) < sourceEventDebounceMs) {
+        if (effectiveSourceEventDebounceMs > 0 && lastAt > 0 && (now - lastAt) < effectiveSourceEventDebounceMs) {
           return;
         }
         lastSourceEventAtById.set(sourceEvent, now);

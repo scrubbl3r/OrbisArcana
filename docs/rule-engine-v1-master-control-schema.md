@@ -22,6 +22,7 @@ Top-Level Shape
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   sourceEventEnabledOverrides: { ... }, // optional { [sourceEvent]: boolean }
+  sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   actionArgOverrides: { ... }, // optional { [actionKey]: object }
@@ -148,6 +149,9 @@ Authoring Notes
   - `sourceEventEnabledOverrides`:
     - centrally enable/disable processing per signal source event (`{ [sourceEvent]: boolean }`).
     - when `false`, that source event is not subscribed by rule-engine preview runtime.
+  - `sourceEventDebounceOverrides`:
+    - per-source-event debounce ms map (`{ [sourceEvent]: number >= 0 }`).
+    - precedence: per-source-event override -> `execution.sourceEventDebounceMs`.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

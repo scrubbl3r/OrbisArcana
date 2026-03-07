@@ -87,6 +87,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalDebounceOverrides = asObj(cfg.signalDebounceOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const sourceEventEnabledOverrides = asObj(cfg.sourceEventEnabledOverrides);
+  const sourceEventDebounceOverrides = asObj(cfg.sourceEventDebounceOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const actionArgOverrides = asObj(cfg.actionArgOverrides);
@@ -265,6 +266,22 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventDebounceOverrides")) {
+    if (!cfg.sourceEventDebounceOverrides || typeof cfg.sourceEventDebounceOverrides !== "object" || Array.isArray(cfg.sourceEventDebounceOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventDebounceOverrides must be an object when present");
+    } else {
+      for (const [sourceEvent, value] of Object.entries(sourceEventDebounceOverrides)) {
+        if (!asText(sourceEvent)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventDebounceOverrides contains empty source event key");
+          continue;
+        }
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventDebounceOverrides[${sourceEvent}] must be a finite number >= 0`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleEnabledOverrides")) {
     if (!cfg.ruleEnabledOverrides || typeof cfg.ruleEnabledOverrides !== "object" || Array.isArray(cfg.ruleEnabledOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides must be an object when present");
@@ -398,6 +415,11 @@ export function validateRuleEngineV1Config(config = null) {
     const evt = String(sourceEvent || "").trim();
     if (!evt || sourceEvents.has(evt)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEnabledOverrides references unknown source event: ${evt}`);
+  }
+  for (const sourceEvent of Object.keys(sourceEventDebounceOverrides)) {
+    const evt = String(sourceEvent || "").trim();
+    if (!evt || sourceEvents.has(evt)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventDebounceOverrides references unknown source event: ${evt}`);
   }
   for (const ruleId of Object.keys(ruleTimingOverrides)) {
     const id = String(ruleId || "").trim();

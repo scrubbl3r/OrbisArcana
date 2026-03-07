@@ -29,6 +29,11 @@ const SOURCE_EVENT_ENABLED_OVERRIDES = Object.freeze({
   // "voice.spell_detected": false,
 });
 
+const SOURCE_EVENT_DEBOUNCE_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": 150,
+});
+
 const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // Examples:
   // "r_rota_yspin_charged.event.orb_state": false,
@@ -275,6 +280,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   sourceEventEnabledOverrides: SOURCE_EVENT_ENABLED_OVERRIDES,
+  sourceEventDebounceOverrides: SOURCE_EVENT_DEBOUNCE_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   actionArgOverrides: ACTION_ARG_OVERRIDES,
