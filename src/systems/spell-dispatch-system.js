@@ -1,6 +1,6 @@
 import { ACTIVE_SPELLS_BY_ID } from "../voice/spellbook.js";
 import {
-  CLASS_RUNTIME_KEY_BY_TOKEN,
+  WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN,
   SPELL_RUNTIME_ROUTING_BY_ID,
   SPELL_WINDOW_BYPASS_SPELL_IDS,
 } from "../content/spells/spell-runtime-routing-v1.js";
@@ -152,13 +152,23 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   function normalizeClassTokenForRuntime(classToken) {
     const token = String(classToken || "").trim().toLowerCase();
     if (!token) return "";
-    return String(CLASS_RUNTIME_KEY_BY_TOKEN[token] || token).trim().toLowerCase();
+    return String(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN[token] || token).trim().toLowerCase();
+  }
+
+  function isWakeWindowSelectIntent(intent) {
+    const value = String(intent || "").trim().toLowerCase();
+    return value === "spell.wake_window_select" || value === "spell.class_select";
+  }
+
+  function isAxisSelectIntent(intent) {
+    const value = String(intent || "").trim().toLowerCase();
+    return value === "spell.axis_select" || value === "spell.school_select";
   }
 
   function resolveConcreteSpellForAxis(spell, axis) {
     const routed = withRuntimeRouting(spell || {});
     const intent = String(routed && routed.intent || "");
-    if (intent !== "spell.class_select") return routed;
+    if (!isWakeWindowSelectIntent(intent)) return routed;
     const a = normAxis(axis);
     const classKeyRaw = String(routed && routed.classKey || "").toLowerCase();
     const classKey = normalizeClassTokenForRuntime(classKeyRaw);
@@ -229,8 +239,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       }
       const axis = normAxis(activeFlatSpinAxis);
       const isFlatSpinLoadWindow = !!axis;
-      const isClassSelect = spellIntent === "spell.class_select";
-      const isSchoolSelect = spellIntent === "spell.school_select";
+      const isClassSelect = isWakeWindowSelectIntent(spellIntent);
+      const isSchoolSelect = isAxisSelectIntent(spellIntent);
 
       // Strict spell-tree enforcement:
       // - school/class tokens are only valid during an active flat-spin window.
