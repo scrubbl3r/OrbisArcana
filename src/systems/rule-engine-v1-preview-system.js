@@ -96,6 +96,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalDebounceMs = Number.isFinite(signalDebounceMsRaw)
     ? Math.max(0, signalDebounceMsRaw)
     : 0;
+  const signalDebounceOverrides = (schema && schema.signalDebounceOverrides && typeof schema.signalDebounceOverrides === "object")
+    ? schema.signalDebounceOverrides
+    : Object.create(null);
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
@@ -154,8 +157,12 @@ export function createRuleEngineV1PreviewSystem({
 
   function onSignalHit(signalId, sourceEvent, payload = {}) {
     const now = Number(payload && payload.atMs) || nowMs();
+    const overrideDebounceMsRaw = Number(signalDebounceOverrides[signalId]);
+    const effectiveSignalDebounceMs = Number.isFinite(overrideDebounceMsRaw)
+      ? Math.max(0, overrideDebounceMsRaw)
+      : signalDebounceMs;
     const previousSeenAt = Number(lastSeenAtBySignalId.get(signalId) || 0);
-    if (signalDebounceMs > 0 && previousSeenAt > 0 && (now - previousSeenAt) < signalDebounceMs) {
+    if (effectiveSignalDebounceMs > 0 && previousSeenAt > 0 && (now - previousSeenAt) < effectiveSignalDebounceMs) {
       return;
     }
     lastSeenAtBySignalId.set(signalId, now);

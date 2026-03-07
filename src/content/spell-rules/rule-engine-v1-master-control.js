@@ -14,6 +14,11 @@ const SIGNAL_ENABLED_OVERRIDES = Object.freeze({
   // "gesture.y_spin": false,
 });
 
+const SIGNAL_DEBOUNCE_OVERRIDES = Object.freeze({
+  // Example:
+  // "gesture.y_spin": 250,
+});
+
 const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // Examples:
   // "r_rota_yspin_charged.event.orb_state": false,
@@ -228,6 +233,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   rulePriorityOverrides: RULE_PRIORITY_OVERRIDES,
   ruleTimingOverrides: RULE_TIMING_OVERRIDES,
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
+  signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   eventEnabledOverrides: EVENT_ENABLED_OVERRIDES,

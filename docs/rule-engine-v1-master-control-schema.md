@@ -19,6 +19,7 @@ Top-Level Shape
   rulePriorityOverrides: { ... }, // optional { [ruleId]: number }
   ruleTimingOverrides: { ... }, // optional { [ruleId]: { cooldownMs?, matchWindowMs? } }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
+  signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   eventEnabledOverrides: { ... }, // optional { [eventId]: boolean }
@@ -111,6 +112,9 @@ Authoring Notes
   - `execution.signalDebounceMs`:
     - finite number `>= 0`; default `0` (disabled).
     - ignores repeated hits of the same signal id within the debounce interval.
+  - `signalDebounceOverrides`:
+    - per-signal debounce ms map (`{ [signalId]: number >= 0 }`).
+    - precedence: per-signal override -> `execution.signalDebounceMs`.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
