@@ -1987,6 +1987,19 @@
         eventBus.on("rule_engine.v1.action_executed", (p = {}) => {
           const actionType = String(p.actionType || "").toLowerCase();
           const actionId = String(p.actionId || "").toLowerCase();
+          if (actionType === "wake_win") {
+            const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
+            const ttlMs = Math.max(0, Number(args.ttlMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
+            eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+            eventBus.emit("rule_engine.v1.wake_win_opened", {
+              ruleId: String(p.ruleId || ""),
+              actionId,
+              spells: Array.isArray(p.spells) ? p.spells.slice() : [],
+              ttlMs,
+              atMs: Number(p.atMs) || performance.now(),
+            });
+            return;
+          }
           if (actionType !== "event" || actionId !== "electric_aoe") return;
           const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
           executeSpellCastAction("aoe_electric", {

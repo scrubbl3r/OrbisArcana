@@ -8,11 +8,13 @@ function asEventName(v) {
 
 export function buildRuleEngineV1PreviewRuntime({
   signals = [],
+  windows = [],
   events = [],
   rules = [],
 } = {}) {
   const signalById = Object.create(null);
   const signalsBySourceEvent = Object.create(null);
+  const windowById = Object.create(null);
   const eventById = Object.create(null);
   const rulesBySignalId = Object.create(null);
   const normalizedRules = [];
@@ -25,6 +27,17 @@ export function buildRuleEngineV1PreviewRuntime({
       type: asId(eventDef && eventDef.type),
       defaultArgs: (eventDef && typeof eventDef.defaultArgs === "object" && eventDef.defaultArgs)
         ? { ...eventDef.defaultArgs }
+        : {},
+    };
+  }
+  for (const windowDef of Array.isArray(windows) ? windows : []) {
+    const id = asId(windowDef && windowDef.id);
+    if (!id) continue;
+    windowById[id] = {
+      id,
+      type: asId(windowDef && windowDef.type),
+      defaultArgs: (windowDef && typeof windowDef.defaultArgs === "object" && windowDef.defaultArgs)
+        ? { ...windowDef.defaultArgs }
         : {},
     };
   }
@@ -90,6 +103,7 @@ export function buildRuleEngineV1PreviewRuntime({
 
   return {
     signalById,
+    windowById,
     eventById,
     signalsBySourceEvent,
     rulesBySignalId,

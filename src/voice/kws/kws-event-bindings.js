@@ -103,6 +103,12 @@ export function bindKwsEventHandlers({
     void p;
   }));
 
+  unsub.push(eventBus.on("rule_engine.v1.wake_win_opened", (p = {}) => {
+    const ttlMs = Math.max(0, Number(p.ttlMs) || gateTimeoutMs);
+    openKwsWakeHudGate(ttlMs);
+    updateKwsReadout();
+  }));
+
   return {
     dispose() {
       for (const off of unsub) {

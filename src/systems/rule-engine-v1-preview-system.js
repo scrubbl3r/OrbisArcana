@@ -70,6 +70,7 @@ export function createRuleEngineV1PreviewSystem({
   }
   const runtime = buildRuleEngineV1PreviewRuntime({
     signals: schema && Array.isArray(schema.signals) ? schema.signals : [],
+    windows: schema && Array.isArray(schema.windows) ? schema.windows : [],
     events: schema && Array.isArray(schema.events) ? schema.events : [],
     rules: schema && Array.isArray(schema.rules) ? schema.rules : [],
   });
@@ -86,12 +87,33 @@ export function createRuleEngineV1PreviewSystem({
     return { ...defaultArgs, ...patch };
   }
 
+  function resolveWindowArgs(windowId, overrides = null) {
+    const base = runtime.windowById[String(windowId || "").trim().toLowerCase()];
+    const defaultArgs = (base && typeof base.defaultArgs === "object" && base.defaultArgs)
+      ? base.defaultArgs
+      : {};
+    const patch = (overrides && typeof overrides === "object") ? overrides : {};
+    return { ...defaultArgs, ...patch };
+  }
+
   function executeRuleActions(rule, triggerMeta = {}) {
     if (!executeActions) return;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
     for (const action of actions) {
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
+      if (type === "wake_win") {
+        const args = resolveWindowArgs(id, action && action.overrides);
+        eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+          ruleId: String(rule && rule.id || ""),
+          actionType: "wake_win",
+          actionId: id,
+          args,
+          spells: Array.isArray(action && action.spells) ? action.spells.slice() : [],
+          atMs: Number(triggerMeta.atMs) || nowMs(),
+        });
+        continue;
+      }
       if (type !== "event") continue;
       const args = resolveEventArgs(id, action && action.overrides);
       if (id === "grace") {
