@@ -37,6 +37,11 @@ const RULE_PRIORITY_OVERRIDES = Object.freeze({
   // r_rota_yspin_charged: 50,
 });
 
+const RULE_TIMING_OVERRIDES = Object.freeze({
+  // Example:
+  // r_rota_yspin_charged: { cooldownMs: 100, matchWindowMs: 2500 },
+});
+
 function applyRuleEnabledOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -126,6 +131,24 @@ function applyRulePriorityOverrides(rules = [], overrides = {}) {
   });
 }
 
+function applyRuleTimingOverrides(rules = [], overrides = {}) {
+  const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
+  return (Array.isArray(rules) ? rules : []).map((rule) => {
+    const id = String(rule && rule.id || "").trim();
+    if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return rule;
+    const patch = map[id];
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) return rule;
+    const next = { ...(rule || {}) };
+    if (Object.prototype.hasOwnProperty.call(patch, "cooldownMs") && Number.isFinite(Number(patch.cooldownMs))) {
+      next.cooldownMs = Number(patch.cooldownMs);
+    }
+    if (Object.prototype.hasOwnProperty.call(patch, "matchWindowMs") && Number.isFinite(Number(patch.matchWindowMs))) {
+      next.matchWindowMs = Number(patch.matchWindowMs);
+    }
+    return Object.freeze(next);
+  });
+}
+
 function applyDefinitionDefaultArgOverrides(defs = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(defs) ? defs : []).map((def) => {
@@ -153,6 +176,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   enabled: true,
   ruleDefaults: RULE_DEFAULTS,
   rulePriorityOverrides: RULE_PRIORITY_OVERRIDES,
+  ruleTimingOverrides: RULE_TIMING_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
@@ -163,7 +187,10 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   rules: applyActionEnabledOverrides(
     applyRuleEnabledOverrides(
       applyRulePriorityOverrides(
-        applyRuleDefaults(SPELL_RULES_V1, RULE_DEFAULTS),
+        applyRuleTimingOverrides(
+          applyRuleDefaults(SPELL_RULES_V1, RULE_DEFAULTS),
+          RULE_TIMING_OVERRIDES
+        ),
         RULE_PRIORITY_OVERRIDES
       ),
       RULE_ENABLED_OVERRIDES

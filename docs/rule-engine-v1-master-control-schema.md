@@ -16,6 +16,7 @@ Top-Level Shape
   enabled: true, // optional, default true
   ruleDefaults: { ... }, // optional global defaults for rules
   rulePriorityOverrides: { ... }, // optional { [ruleId]: number }
+  ruleTimingOverrides: { ... }, // optional { [ruleId]: { cooldownMs?, matchWindowMs? } }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   eventDefaultOverrides: { ... }, // optional { [eventId]: object }
@@ -80,6 +81,9 @@ Authoring Notes
 - Rule ordering controls:
   - `rulePriorityOverrides` can centrally force per-rule `priority` by rule id.
   - Precedence: `rulePriorityOverrides` -> per-rule explicit/inherited priority.
+- Rule timing controls:
+  - `ruleTimingOverrides` can centrally force per-rule `cooldownMs` and `matchWindowMs` by rule id.
+  - Precedence: `ruleTimingOverrides` -> per-rule explicit/inherited timing.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

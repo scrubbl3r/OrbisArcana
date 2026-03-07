@@ -21,6 +21,7 @@ export function validateRuleEngineV1Config(config = null) {
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
   const ruleDefaults = asObj(cfg.ruleDefaults);
   const rulePriorityOverrides = asObj(cfg.rulePriorityOverrides);
+  const ruleTimingOverrides = asObj(cfg.ruleTimingOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
@@ -57,6 +58,30 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [ruleId, value] of Object.entries(rulePriorityOverrides)) {
         if (!Number.isFinite(Number(value))) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides[${ruleId}] must be a finite number`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleTimingOverrides")) {
+    if (!cfg.ruleTimingOverrides || typeof cfg.ruleTimingOverrides !== "object" || Array.isArray(cfg.ruleTimingOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides must be an object when present");
+    } else {
+      for (const [ruleId, value] of Object.entries(ruleTimingOverrides)) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides[${ruleId}] must be an object`);
+          continue;
+        }
+        if (Object.prototype.hasOwnProperty.call(value, "cooldownMs")) {
+          const n = Number(value.cooldownMs);
+          if (!Number.isFinite(n) || n < 0) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides[${ruleId}].cooldownMs must be a finite number >= 0`);
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(value, "matchWindowMs")) {
+          const n = Number(value.matchWindowMs);
+          if (!Number.isFinite(n) || n < 100) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides[${ruleId}].matchWindowMs must be a finite number >= 100`);
+          }
         }
       }
     }
@@ -124,6 +149,12 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(windowId || "").trim().toLowerCase();
     if (!id || windowIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides references unknown window id: ${id}`);
+  }
+  const ruleIds = new Set(rules.map((r) => String(r && r.id || "").trim()).filter(Boolean));
+  for (const ruleId of Object.keys(ruleTimingOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides references unknown rule id: ${id}`);
   }
 
   for (const eventDef of events) {
