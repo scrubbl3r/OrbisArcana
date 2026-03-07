@@ -42,6 +42,12 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.stopOnFirstMatch must be boolean when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "maxMatchesPerSignal")) {
+      const n = Number(execution.maxMatchesPerSignal);
+      if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxMatchesPerSignal must be an integer >= 0 when present");
+      }
+    }
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleDefaults")) {
     if (!cfg.ruleDefaults || typeof cfg.ruleDefaults !== "object" || Array.isArray(cfg.ruleDefaults)) {

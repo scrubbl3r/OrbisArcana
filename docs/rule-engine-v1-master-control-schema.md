@@ -89,6 +89,10 @@ Authoring Notes
   - `execution.stopOnFirstMatch`:
     - `false` (default): all matched candidate rules can fire.
     - `true`: stop after first matched rule for a signal hit.
+  - `execution.maxMatchesPerSignal`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps how many matched rules can fire for one signal hit.
+    - applies after candidate ordering (priority/source order).
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

@@ -77,6 +77,10 @@ export function createRuleEngineV1PreviewSystem({
     ? schema.execution
     : Object.create(null);
   const stopOnFirstMatch = !!execution.stopOnFirstMatch;
+  const maxMatchesPerSignalRaw = Number(execution.maxMatchesPerSignal);
+  const maxMatchesPerSignal = Number.isFinite(maxMatchesPerSignalRaw)
+    ? Math.max(0, Math.floor(maxMatchesPerSignalRaw))
+    : 0;
   const unsub = [];
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
@@ -133,6 +137,7 @@ export function createRuleEngineV1PreviewSystem({
     const now = Number(payload && payload.atMs) || nowMs();
     lastSeenAtBySignalId.set(signalId, now);
     const candidates = runtime.rulesBySignalId[signalId] || [];
+    let matchedCount = 0;
     for (const rule of candidates) {
       if (!ruleMatches(rule, lastSeenAtBySignalId, now)) continue;
       const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0);
@@ -150,7 +155,9 @@ export function createRuleEngineV1PreviewSystem({
         sourceEvent,
         atMs: now,
       });
+      matchedCount += 1;
       if (stopOnFirstMatch) break;
+      if (maxMatchesPerSignal > 0 && matchedCount >= maxMatchesPerSignal) break;
     }
   }
 

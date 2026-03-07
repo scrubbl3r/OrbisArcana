@@ -174,7 +174,10 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   id: "rule_engine_v1",
   version: "v1",
   enabled: true,
-  execution: Object.freeze({ stopOnFirstMatch: false }),
+  execution: Object.freeze({
+    stopOnFirstMatch: false,
+    maxMatchesPerSignal: 0,
+  }),
   ruleDefaults: RULE_DEFAULTS,
   rulePriorityOverrides: RULE_PRIORITY_OVERRIDES,
   ruleTimingOverrides: RULE_TIMING_OVERRIDES,
