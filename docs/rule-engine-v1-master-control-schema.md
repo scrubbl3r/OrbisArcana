@@ -18,6 +18,7 @@ Top-Level Shape
   ruleDefaults: { ... }, // optional global defaults for rules
   rulePriorityOverrides: { ... }, // optional { [ruleId]: number }
   ruleTimingOverrides: { ... }, // optional { [ruleId]: { cooldownMs?, matchWindowMs? } }
+  ruleActionLimitOverrides: { ... }, // optional { [ruleId]: integer>=0 }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
@@ -109,6 +110,9 @@ Authoring Notes
 - Rule timing controls:
   - `ruleTimingOverrides` can centrally force per-rule `cooldownMs` and `matchWindowMs` by rule id.
   - Precedence: `ruleTimingOverrides` -> per-rule explicit/inherited timing.
+- Rule action fanout controls:
+  - `ruleActionLimitOverrides` can centrally cap max executed actions for specific rules.
+  - Precedence: `ruleActionLimitOverrides` -> `execution.maxActionsPerRuleMatch`.
 - Execution controls:
   - `execution.stopOnFirstMatch`:
     - `false` (default): all matched candidate rules can fire.

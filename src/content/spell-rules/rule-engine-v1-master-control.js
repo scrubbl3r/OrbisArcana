@@ -94,6 +94,11 @@ const RULE_TIMING_OVERRIDES = Object.freeze({
   // r_rota_yspin_charged: { cooldownMs: 100, matchWindowMs: 2500 },
 });
 
+const RULE_ACTION_LIMIT_OVERRIDES = Object.freeze({
+  // Example:
+  // r_rota_yspin_charged: 2,
+});
+
 function applyRuleEnabledOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -322,6 +327,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   ruleDefaults: RULE_DEFAULTS,
   rulePriorityOverrides: RULE_PRIORITY_OVERRIDES,
   ruleTimingOverrides: RULE_TIMING_OVERRIDES,
+  ruleActionLimitOverrides: RULE_ACTION_LIMIT_OVERRIDES,
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,
   signalDebounceOverrides: SIGNAL_DEBOUNCE_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,

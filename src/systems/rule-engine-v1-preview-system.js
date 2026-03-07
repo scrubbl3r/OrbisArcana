@@ -151,6 +151,9 @@ export function createRuleEngineV1PreviewSystem({
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
+  const ruleActionLimitOverrides = (schema && schema.ruleActionLimitOverrides && typeof schema.ruleActionLimitOverrides === "object")
+    ? schema.ruleActionLimitOverrides
+    : Object.create(null);
   const unsub = [];
   const lastSourceEventAtById = new Map();
   const lastSeenAtBySignalId = new Map();
@@ -177,13 +180,17 @@ export function createRuleEngineV1PreviewSystem({
   function executeRuleActions(rule, triggerMeta = {}) {
     if (!executeActions || !executionAllowsActions) return;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
+    const ruleId = String(rule && rule.id || "");
+    const ruleActionLimitOverrideRaw = Number(ruleActionLimitOverrides[ruleId]);
+    const effectiveMaxActionsPerRuleMatch = Number.isFinite(ruleActionLimitOverrideRaw)
+      ? Math.max(0, Math.floor(ruleActionLimitOverrideRaw))
+      : maxActionsPerRuleMatch;
     let executedActionCount = 0;
     for (let i = 0; i < actions.length; i += 1) {
-      if (maxActionsPerRuleMatch > 0 && executedActionCount >= maxActionsPerRuleMatch) break;
+      if (effectiveMaxActionsPerRuleMatch > 0 && executedActionCount >= effectiveMaxActionsPerRuleMatch) break;
       const action = actions[i];
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
-      const ruleId = String(rule && rule.id || "");
       const argOverride = resolveActionArgOverride(ruleId, action, i, actionArgOverrides);
       const mergedOverrides = (argOverride && typeof argOverride === "object")
         ? { ...(action && action.overrides || {}), ...argOverride }

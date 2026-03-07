@@ -343,6 +343,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       sourceEventDebounceOverrides: (ruleSchemaV1.sourceEventDebounceOverrides && typeof ruleSchemaV1.sourceEventDebounceOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventDebounceOverrides }
         : Object.create(null),
+      ruleActionLimitOverrides: (ruleSchemaV1.ruleActionLimitOverrides && typeof ruleSchemaV1.ruleActionLimitOverrides === "object")
+        ? { ...ruleSchemaV1.ruleActionLimitOverrides }
+        : Object.create(null),
       actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
         ? { ...ruleSchemaV1.actionArgOverrides }
         : Object.create(null),
@@ -358,6 +361,22 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       events: ruleEventsV1,
       rules: ruleRulesV1,
       eventRuntimeBindings: ruleEventRuntimeBindingsV1,
+      execution: (ruleSchemaV1.execution && typeof ruleSchemaV1.execution === "object") ? { ...ruleSchemaV1.execution } : Object.create(null),
+      ruleActionLimitOverrides: (ruleSchemaV1.ruleActionLimitOverrides && typeof ruleSchemaV1.ruleActionLimitOverrides === "object")
+        ? { ...ruleSchemaV1.ruleActionLimitOverrides }
+        : Object.create(null),
+      signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
+        ? { ...ruleSchemaV1.signalDebounceOverrides }
+        : Object.create(null),
+      sourceEventEnabledOverrides: (ruleSchemaV1.sourceEventEnabledOverrides && typeof ruleSchemaV1.sourceEventEnabledOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventEnabledOverrides }
+        : Object.create(null),
+      sourceEventDebounceOverrides: (ruleSchemaV1.sourceEventDebounceOverrides && typeof ruleSchemaV1.sourceEventDebounceOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventDebounceOverrides }
+        : Object.create(null),
+      actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
+        ? { ...ruleSchemaV1.actionArgOverrides }
+        : Object.create(null),
     });
   }
 

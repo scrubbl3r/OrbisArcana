@@ -83,6 +83,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleDefaults = asObj(cfg.ruleDefaults);
   const rulePriorityOverrides = asObj(cfg.rulePriorityOverrides);
   const ruleTimingOverrides = asObj(cfg.ruleTimingOverrides);
+  const ruleActionLimitOverrides = asObj(cfg.ruleActionLimitOverrides);
   const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
   const signalDebounceOverrides = asObj(cfg.signalDebounceOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
@@ -225,6 +226,18 @@ export function validateRuleEngineV1Config(config = null) {
           if (!Number.isFinite(n) || n < 100) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides[${ruleId}].matchWindowMs must be a finite number >= 100`);
           }
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleActionLimitOverrides")) {
+    if (!cfg.ruleActionLimitOverrides || typeof cfg.ruleActionLimitOverrides !== "object" || Array.isArray(cfg.ruleActionLimitOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides must be an object when present");
+    } else {
+      for (const [ruleId, value] of Object.entries(ruleActionLimitOverrides)) {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides[${ruleId}] must be an integer >= 0`);
         }
       }
     }
@@ -473,6 +486,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides references unknown rule id: ${id}`);
+  }
+  for (const ruleId of Object.keys(ruleActionLimitOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides references unknown rule id: ${id}`);
   }
   for (const ruleId of Object.keys(rulePriorityOverrides)) {
     const id = String(ruleId || "").trim();

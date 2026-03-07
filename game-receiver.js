@@ -1619,6 +1619,9 @@
               execution: (next.execution && typeof next.execution === "object")
                 ? { ...next.execution }
                 : Object.create(null),
+              ruleActionLimitOverrides: (next.ruleActionLimitOverrides && typeof next.ruleActionLimitOverrides === "object")
+                ? { ...next.ruleActionLimitOverrides }
+                : Object.create(null),
               signalDebounceOverrides: (next.signalDebounceOverrides && typeof next.signalDebounceOverrides === "object")
                 ? { ...next.signalDebounceOverrides }
                 : Object.create(null),
