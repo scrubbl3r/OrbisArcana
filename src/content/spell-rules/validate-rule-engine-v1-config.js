@@ -20,6 +20,7 @@ export function validateRuleEngineV1Config(config = null) {
   const rules = Array.isArray(cfg.rules) ? cfg.rules : [];
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
+  const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
 
   const errors = [];
   if (!asText(cfg.id)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.id is required");
@@ -34,6 +35,17 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [ruleId, value] of Object.entries(ruleEnabledOverrides)) {
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides[${ruleId}] must be boolean`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "actionEnabledOverrides")) {
+    if (!cfg.actionEnabledOverrides || typeof cfg.actionEnabledOverrides !== "object" || Array.isArray(cfg.actionEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides must be an object when present");
+    } else {
+      for (const [actionKey, value] of Object.entries(actionEnabledOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides[${actionKey}] must be boolean`);
         }
       }
     }

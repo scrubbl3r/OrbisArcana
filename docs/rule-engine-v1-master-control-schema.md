@@ -15,6 +15,7 @@ Top-Level Shape
   version: "v1",
   enabled: true, // optional, default true
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
+  actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   signals: [ ... ],
   windows: [ ... ],
   events: [ ... ],
@@ -72,6 +73,11 @@ Authoring Notes
   - Rule-level `enabled:false` disables whole rule.
   - Action-level `enabled:false` disables only that action.
   - `ruleEnabledOverrides` can centrally force specific rules on/off by `id`.
+  - `actionEnabledOverrides` can centrally force specific actions on/off by key.
+    - key formats:
+      - `${ruleId}.${type}.${actionId}` (preferred)
+      - `${ruleId}.${type}.${index}`
+      - `${ruleId}.${index}`
 - Priority:
   - Higher `priority` rules are evaluated first when multiple rules are candidates.
   - Equal `priority` preserves source order.
