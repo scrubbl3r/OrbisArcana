@@ -83,6 +83,8 @@ Authoring Notes
       - `${ruleId}.${type}.${index}`
       - `${ruleId}.${index}`
     - precedence: action inline/default args -> `actionArgOverrides`.
+  - Override-key validation:
+    - `actionEnabledOverrides` and `actionArgOverrides` keys fail fast if they do not target an existing action on the referenced rule.
 - Default arg controls:
   - `eventEnabledOverrides` can centrally force specific event definitions on/off by event id.
     - disabled events remain defined, but runtime skips dispatching those event actions.

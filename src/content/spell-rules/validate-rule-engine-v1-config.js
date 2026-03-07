@@ -9,6 +9,66 @@ function asText(v) {
   return String(v || "").trim();
 }
 
+function asActionType(v) {
+  return String(v || "").trim().toLowerCase();
+}
+
+function asActionId(v, type = "") {
+  const id = String(v || "").trim().toLowerCase();
+  if (id) return id;
+  return (type === "wake_win") ? "wake_win" : "";
+}
+
+function getRuleActions(rule) {
+  const then = rule && rule.then;
+  if (Array.isArray(then)) return then;
+  if (then && typeof then === "object") return [then];
+  return [];
+}
+
+function parseActionOverrideKey(rawKey) {
+  const key = String(rawKey || "").trim();
+  if (!key) return null;
+  const parts = key.split(".");
+  if (parts.length === 2) {
+    const [ruleId, indexRaw] = parts;
+    const index = Number(indexRaw);
+    if (!ruleId || !Number.isInteger(index) || index < 0) return null;
+    return { ruleId, type: "", selector: "", index };
+  }
+  if (parts.length === 3) {
+    const [ruleId, typeRaw, selectorRaw] = parts;
+    if (!ruleId || !typeRaw || !selectorRaw) return null;
+    const type = asActionType(typeRaw);
+    const index = Number(selectorRaw);
+    if (Number.isInteger(index) && index >= 0) {
+      return { ruleId, type, selector: "", index };
+    }
+    return { ruleId, type, selector: String(selectorRaw || "").trim().toLowerCase(), index: -1 };
+  }
+  return null;
+}
+
+function actionOverrideKeyTargetsExistingAction(rule, parsed) {
+  if (!rule || !parsed) return false;
+  const actions = getRuleActions(rule);
+  if (!actions.length) return false;
+  if (Number.isInteger(parsed.index) && parsed.index >= 0) {
+    const action = actions[parsed.index];
+    if (!action) return false;
+    if (!parsed.type) return true;
+    return asActionType(action && action.type) === parsed.type;
+  }
+  if (!parsed.type || !parsed.selector) return false;
+  for (const action of actions) {
+    const type = asActionType(action && action.type);
+    if (type !== parsed.type) continue;
+    const id = asActionId(action && action.id, type);
+    if (id === parsed.selector) return true;
+  }
+  return false;
+}
+
 export function validateRuleEngineV1Config(config = null) {
   const source = (config && typeof config === "object")
     ? config
@@ -301,6 +361,35 @@ export function validateRuleEngineV1Config(config = null) {
     const ruleId = firstDot > 0 ? key.slice(0, firstDot) : key;
     if (!ruleId || ruleIds.has(ruleId)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides references unknown rule id: ${ruleId}`);
+  }
+  const ruleById = rules.reduce((acc, rule) => {
+    const id = String(rule && rule.id || "").trim();
+    if (id) acc[id] = rule;
+    return acc;
+  }, Object.create(null));
+  for (const actionKey of Object.keys(actionEnabledOverrides)) {
+    const parsed = parseActionOverrideKey(actionKey);
+    if (!parsed) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides has invalid key format: ${actionKey}`);
+      continue;
+    }
+    const rule = ruleById[parsed.ruleId];
+    if (!rule) continue;
+    if (!actionOverrideKeyTargetsExistingAction(rule, parsed)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides references unknown action key: ${actionKey}`);
+    }
+  }
+  for (const actionKey of Object.keys(actionArgOverrides)) {
+    const parsed = parseActionOverrideKey(actionKey);
+    if (!parsed) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides has invalid key format: ${actionKey}`);
+      continue;
+    }
+    const rule = ruleById[parsed.ruleId];
+    if (!rule) continue;
+    if (!actionOverrideKeyTargetsExistingAction(rule, parsed)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides references unknown action key: ${actionKey}`);
+    }
   }
 
   for (const eventDef of events) {
