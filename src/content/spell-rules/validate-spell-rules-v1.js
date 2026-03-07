@@ -143,6 +143,11 @@ export function validateSpellRulesV1(rules = [], options = {}) {
       errors.push(`duplicate rule id: ${ruleId}`);
     }
     seenRuleIds.add(ruleId);
+    if (Object.prototype.hasOwnProperty.call(rule || {}, "enabled")) {
+      if (typeof rule.enabled !== "boolean") {
+        errors.push(`rule ${ruleId} enabled must be boolean when present`);
+      }
+    }
 
     const { all, any } = getRuleConditions(rule);
     if (!all.length && !any.length) {

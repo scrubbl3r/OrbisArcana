@@ -119,6 +119,7 @@ export function buildRuleEngineV1PreviewRuntime({
   for (const rule of Array.isArray(rules) ? rules : []) {
     const id = asId(rule && rule.id);
     if (!id) continue;
+    if (rule && rule.enabled === false) continue;
     const { all, any } = getRuleConditions(rule);
     const allSignalIds = all.map((c) => resolveSignalConditionId(c)).filter(Boolean);
     const anySignalIds = any.map((c) => resolveSignalConditionId(c)).filter(Boolean);
