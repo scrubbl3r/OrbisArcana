@@ -1,6 +1,7 @@
-import { OPENWAKEWORD_BROWSER_CONFIG_DEFAULT } from "./openwakeword-browser-config.js";
-
-const SIM_TOKENS = Object.freeze(["tempus", "rota", "electrum", "sanctum", "domus"]);
+import {
+  OPENWAKEWORD_BROWSER_CONFIG_DEFAULT,
+  OPENWAKEWORD_BROWSER_SIM_TOKENS,
+} from "./openwakeword-browser-config.js";
 
 function nowMs() {
   return (typeof performance !== "undefined" && typeof performance.now === "function")
@@ -860,7 +861,10 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         clearSimulationTimer();
         const intervalMs = Math.max(200, Number(config.simulationIntervalMs) || 1400);
         simulationTimer = setInterval(() => {
-          const token = SIM_TOKENS[Math.floor(Math.random() * SIM_TOKENS.length)];
+          const simTokens = Array.isArray(OPENWAKEWORD_BROWSER_SIM_TOKENS) && OPENWAKEWORD_BROWSER_SIM_TOKENS.length
+            ? OPENWAKEWORD_BROWSER_SIM_TOKENS
+            : ["tempus"];
+          const token = simTokens[Math.floor(Math.random() * simTokens.length)];
           emitToken(token, 0.85);
         }, intervalMs);
         return true;

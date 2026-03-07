@@ -1,3 +1,22 @@
+import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
+import {
+  KWS_INFER_DEFAULT_SPELL_ID,
+  KWS_SIM_SPELL_IDS,
+} from "../../content/spells/spell-runtime-routing-v1.js";
+
+function resolveActivePhraseById(id, fallback = "") {
+  const spell = ACTIVE_SPELLS_BY_ID[String(id || "").trim().toLowerCase()];
+  return String((spell && (spell.phrase || spell.id)) || fallback || "").trim().toLowerCase();
+}
+
+export const OPENWAKEWORD_BROWSER_SIM_TOKENS = Object.freeze(
+  (Array.isArray(KWS_SIM_SPELL_IDS) ? KWS_SIM_SPELL_IDS : [])
+    .map((id) => resolveActivePhraseById(id, String(id || "").trim().toLowerCase()))
+    .filter(Boolean)
+);
+
+const DEFAULT_INFER_TOKEN = resolveActivePhraseById(KWS_INFER_DEFAULT_SPELL_ID, "tempus");
+
 export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   enabled: true,
   label: "openwakeword-browser",
@@ -9,7 +28,7 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   requireOnnxDataPair: true,
   ortModuleUrl: "./vendor/onnxruntime/1.22.0/ort.wasm.min.mjs",
   ortWasmRootUrl: "./vendor/onnxruntime/1.22.0/",
-  inferToken: "tempus",
+  inferToken: DEFAULT_INFER_TOKEN || "tempus",
   inferThreshold: 0.15,
   inferCooldownMs: 600,
   inferPollMs: 33,

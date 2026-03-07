@@ -58,6 +58,16 @@ export const KWS_ROW_BOTTOM_SPELL_IDS = Object.freeze([
   "vectus",
 ]);
 
+export const KWS_SIM_SPELL_IDS = Object.freeze([
+  "tempus",
+  "rota",
+  "electrum",
+  "sanctum",
+  "domus",
+]);
+
+export const KWS_INFER_DEFAULT_SPELL_ID = "tempus";
+
 export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "orbis",
