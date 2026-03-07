@@ -14,6 +14,7 @@ Top-Level Shape
   id: "rule_engine_v1",
   version: "v1",
   enabled: true, // optional, default true
+  ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   signals: [ ... ],
   windows: [ ... ],
   events: [ ... ],
@@ -67,8 +68,10 @@ Authoring Notes
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
 - Toggles:
+  - Top-level `enabled:false` disables the whole rule engine schema.
   - Rule-level `enabled:false` disables whole rule.
   - Action-level `enabled:false` disables only that action.
+  - `ruleEnabledOverrides` can centrally force specific rules on/off by `id`.
 - Priority:
   - Higher `priority` rules are evaluated first when multiple rules are candidates.
   - Equal `priority` preserves source order.
