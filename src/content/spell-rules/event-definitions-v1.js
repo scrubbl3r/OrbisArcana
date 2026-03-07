@@ -1,5 +1,5 @@
 // Data-only event defaults for Rule Engine v1 scaffolding.
-// Per request: keep event args minimal for now (`ms` only).
+// Defaults are intentionally minimal and can be extended per event over time.
 
 export const EVENT_DEFINITIONS_V1 = Object.freeze([
   Object.freeze({
@@ -11,6 +11,11 @@ export const EVENT_DEFINITIONS_V1 = Object.freeze([
     id: "grace",
     type: "event",
     defaultArgs: Object.freeze({ ms: 500 }),
+  }),
+  Object.freeze({
+    id: "orb_state",
+    type: "event",
+    defaultArgs: Object.freeze({ state: "normal" }),
   }),
 ]);
 

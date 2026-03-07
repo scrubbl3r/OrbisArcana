@@ -16,6 +16,13 @@ export const EVENT_RUNTIME_BINDINGS_V1 = Object.freeze([
       castActionId: "aoe_electric",
     }),
   }),
+  Object.freeze({
+    id: "orb_state",
+    runtime: Object.freeze({
+      kind: "orb_event",
+      event: "orb.state_set",
+    }),
+  }),
 ]);
 
 export const EVENT_RUNTIME_BINDINGS_V1_BY_ID = Object.freeze(

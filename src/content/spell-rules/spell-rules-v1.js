@@ -30,6 +30,11 @@ export const SPELL_RULES_V1 = Object.freeze([
         id: "grace",
         ms: 500,
       }),
+      Object.freeze({
+        type: "event",
+        id: "orb_state",
+        state: "superheated",
+      }),
     ]),
   }),
 ]);
