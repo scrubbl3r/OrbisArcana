@@ -163,6 +163,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleActionLimitOverrides = (schema && schema.ruleActionLimitOverrides && typeof schema.ruleActionLimitOverrides === "object")
     ? schema.ruleActionLimitOverrides
     : Object.create(null);
+  const ruleCooldownScaleOverrides = (schema && schema.ruleCooldownScaleOverrides && typeof schema.ruleCooldownScaleOverrides === "object")
+    ? schema.ruleCooldownScaleOverrides
+    : Object.create(null);
   const unsub = [];
   const lastSourceEventAtById = new Map();
   const lastSeenAtBySignalId = new Map();
@@ -249,7 +252,12 @@ export function createRuleEngineV1PreviewSystem({
     let matchedCount = 0;
     for (const rule of candidates) {
       if (!ruleMatches(rule, lastSeenAtBySignalId, now, matchWindowScale)) continue;
-      const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0) * cooldownScale;
+      const ruleId = String(rule && rule.id || "");
+      const ruleCooldownScaleRaw = Number(ruleCooldownScaleOverrides[ruleId]);
+      const effectiveCooldownScale = Number.isFinite(ruleCooldownScaleRaw)
+        ? Math.max(0, ruleCooldownScaleRaw)
+        : cooldownScale;
+      const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0) * effectiveCooldownScale;
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;
       lastMatchAtByRuleId.set(rule.id, now);

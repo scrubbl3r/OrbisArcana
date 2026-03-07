@@ -1622,6 +1622,9 @@
               ruleActionLimitOverrides: (next.ruleActionLimitOverrides && typeof next.ruleActionLimitOverrides === "object")
                 ? { ...next.ruleActionLimitOverrides }
                 : Object.create(null),
+              ruleCooldownScaleOverrides: (next.ruleCooldownScaleOverrides && typeof next.ruleCooldownScaleOverrides === "object")
+                ? { ...next.ruleCooldownScaleOverrides }
+                : Object.create(null),
               signalDebounceOverrides: (next.signalDebounceOverrides && typeof next.signalDebounceOverrides === "object")
                 ? { ...next.signalDebounceOverrides }
                 : Object.create(null),
