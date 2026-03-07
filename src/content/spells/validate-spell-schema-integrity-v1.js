@@ -1,8 +1,6 @@
 import { SPELLS_BY_ID } from "../../voice/spellbook.js";
 import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
-import { EVENT_DEFINITIONS_V1_BY_ID } from "../spell-rules/event-definitions-v1.js";
-import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "../spell-rules/event-runtime-bindings-v1.js";
-import { SPELL_RULES_V1 } from "../spell-rules/spell-rules-v1.js";
+import { RULE_ENGINE_V1_MASTER_CONFIG } from "../spell-rules/rule-engine-v1-master-config.js";
 import {
   AXIS_SPELL_IDS,
   CLASS_SPELL_IDS,
@@ -26,20 +24,27 @@ function indexDefsById(defs = []) {
 }
 
 export function validateSpellSchemaIntegrityV1(options = {}) {
-  const rules = Array.isArray(options && options.rules) ? options.rules : SPELL_RULES_V1;
+  const master = (RULE_ENGINE_V1_MASTER_CONFIG && typeof RULE_ENGINE_V1_MASTER_CONFIG === "object")
+    ? RULE_ENGINE_V1_MASTER_CONFIG
+    : Object.create(null);
+  const rules = Array.isArray(options && options.rules)
+    ? options.rules
+    : (Array.isArray(master.rules) ? master.rules : []);
   const eventDefinitionsById = (options && options.eventById && typeof options.eventById === "object")
     ? options.eventById
     : (
       Array.isArray(options && options.events)
         ? indexDefsById(options.events)
-        : EVENT_DEFINITIONS_V1_BY_ID
+        : indexDefsById(Array.isArray(master.events) ? master.events : [])
     );
   const eventRuntimeBindingsById = (options && options.eventRuntimeBindingsById && typeof options.eventRuntimeBindingsById === "object")
     ? options.eventRuntimeBindingsById
     : (
       options && options.eventRuntimeBindings && typeof options.eventRuntimeBindings === "object"
         ? options.eventRuntimeBindings
-        : EVENT_RUNTIME_BINDINGS_V1_BY_ID
+        : (master.eventRuntimeBindings && typeof master.eventRuntimeBindings === "object"
+          ? master.eventRuntimeBindings
+          : Object.create(null))
     );
   const errors = [];
 
