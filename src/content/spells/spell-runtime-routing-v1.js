@@ -5,6 +5,10 @@ export const WAKE_SPELL_IDS = Object.freeze([
   "orbis",
 ]);
 
+export const WAKE_REQUIRED_SPELL_IDS = Object.freeze([
+  "domus",
+]);
+
 export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "orbis",

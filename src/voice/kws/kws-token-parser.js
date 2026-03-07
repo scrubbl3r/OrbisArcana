@@ -5,7 +5,11 @@ import {
 } from "../../contracts/events.js";
 import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
-import { SPELL_RUNTIME_ROUTING_BY_ID, WAKE_SPELL_IDS } from "../../content/spells/spell-runtime-routing-v1.js";
+import {
+  SPELL_RUNTIME_ROUTING_BY_ID,
+  WAKE_SPELL_IDS,
+  WAKE_REQUIRED_SPELL_IDS,
+} from "../../content/spells/spell-runtime-routing-v1.js";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1200,
@@ -93,7 +97,7 @@ export function createKwsTokenParser(opts = {}) {
   const requireWakeForSpellIds = new Set(
     (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
       ? opts.requireWakeForSpellIds
-      : ["domus"])
+      : WAKE_REQUIRED_SPELL_IDS)
       .map((s) => String(s || "").trim().toLowerCase())
       .filter(Boolean),
   );
