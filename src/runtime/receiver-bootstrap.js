@@ -46,7 +46,6 @@ export async function loadReceiverInitModules() {
     { validateSpellSchemaIntegrityV1 },
     {
       RULE_ENGINE_V1_MASTER_CONFIG,
-      RULE_ENGINE_V1_CONFIG,
       validateRuleEngineV1Config,
     },
     { WORLD_ITEMS_V1 },
@@ -123,7 +122,6 @@ export async function loadReceiverInitModules() {
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
     RULE_ENGINE_V1_MASTER_CONFIG,
-    RULE_ENGINE_V1_CONFIG,
     validateRuleEngineV1Config,
     WORLD_ITEMS_V1,
   };
@@ -182,7 +180,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
     RULE_ENGINE_V1_MASTER_CONFIG,
-    RULE_ENGINE_V1_CONFIG,
     validateRuleEngineV1Config,
     createSpellCastExecutor,
   } = mods || {};
@@ -208,11 +205,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setReceiverModulesReady,
   } = ctx;
 
-  const preferredRuleConfig = (RULE_ENGINE_V1_MASTER_CONFIG && typeof RULE_ENGINE_V1_MASTER_CONFIG === "object")
+  const ruleSchemaV1 = (RULE_ENGINE_V1_MASTER_CONFIG && typeof RULE_ENGINE_V1_MASTER_CONFIG === "object")
     ? RULE_ENGINE_V1_MASTER_CONFIG
-    : RULE_ENGINE_V1_CONFIG;
-  const ruleSchemaV1 = (preferredRuleConfig && typeof preferredRuleConfig === "object")
-    ? preferredRuleConfig
     : Object.freeze({
         version: "v1",
         signals: [],

@@ -13,10 +13,10 @@ export function validateRuleEngineV1Config(config = {}) {
   const eventRuntimeBindings = asObj(cfg.eventRuntimeBindings);
 
   const errors = [];
-  if (!Array.isArray(cfg.signals)) errors.push("RULE_ENGINE_V1_CONFIG.signals must be an array");
-  if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_V1_CONFIG.windows must be an array");
-  if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_V1_CONFIG.events must be an array");
-  if (!Array.isArray(cfg.rules)) errors.push("RULE_ENGINE_V1_CONFIG.rules must be an array");
+  if (!Array.isArray(cfg.signals)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.signals must be an array");
+  if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.windows must be an array");
+  if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.events must be an array");
+  if (!Array.isArray(cfg.rules)) errors.push("RULE_ENGINE_V1_MASTER_CONFIG.rules must be an array");
 
   const ruleErrors = validateSpellRulesV1(rules, { signals, windows, events });
   errors.push(...ruleErrors);
@@ -25,7 +25,7 @@ export function validateRuleEngineV1Config(config = {}) {
     const id = String(eventDef && eventDef.id || "").trim().toLowerCase();
     if (!id) continue;
     if (!eventRuntimeBindings[id]) {
-      errors.push(`RULE_ENGINE_V1_CONFIG.eventRuntimeBindings missing id: ${id}`);
+      errors.push(`RULE_ENGINE_V1_MASTER_CONFIG.eventRuntimeBindings missing id: ${id}`);
     }
   }
 
