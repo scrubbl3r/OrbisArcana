@@ -13,8 +13,8 @@ export function createKwsPanelController({
   const KWS_LOG_DEDUP_MS = Math.max(0, Number(constants.logDedupMs) || 450);
   const KWS_ROW_TOP = Array.isArray(constants.rowTop) ? constants.rowTop.slice() : [];
   const KWS_ROW_BOTTOM = Array.isArray(constants.rowBottom) ? constants.rowBottom.slice() : [];
-  const KWS_CLASS_TOKENS = Array.isArray(constants.classTokens) ? constants.classTokens.slice() : [];
-  const KWS_SCHOOL_TOKENS = Array.isArray(constants.schoolTokens) ? constants.schoolTokens.slice() : [];
+  const KWS_WAKE_WINDOW_TOKENS = Array.isArray(constants.wakeWindowTokens) ? constants.wakeWindowTokens.slice() : [];
+  const KWS_AXIS_TOKENS = Array.isArray(constants.axisTokens) ? constants.axisTokens.slice() : [];
   const KWS_WAKE_TOKENS = Array.isArray(constants.wakeTokens) ? constants.wakeTokens.slice() : [];
   const KWS_WAKE_REQUIRED_TOKENS = Array.isArray(constants.wakeRequiredTokens) ? constants.wakeRequiredTokens.slice() : [];
   const KWS_AXIS_SCHOOL_BY_AXIS = (constants.axisSchoolByAxis && typeof constants.axisSchoolByAxis === "object")
@@ -25,8 +25,8 @@ export function createKwsPanelController({
   const KWS_TOKEN_CANONICAL_MAP = (constants.tokenCanonicalMap && typeof constants.tokenCanonicalMap === "object")
     ? constants.tokenCanonicalMap
     : Object.freeze({});
-  const KWS_CLASS_TOKEN_SET = new Set(KWS_CLASS_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
-  const KWS_SCHOOL_TOKEN_SET = new Set(KWS_SCHOOL_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
+  const KWS_WAKE_WINDOW_TOKEN_SET = new Set(KWS_WAKE_WINDOW_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
+  const KWS_AXIS_TOKEN_SET = new Set(KWS_AXIS_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
   const KWS_WAKE_TOKEN_SET = new Set(KWS_WAKE_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
   const KWS_WAKE_REQUIRED_TOKEN_SET = new Set(KWS_WAKE_REQUIRED_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
 
@@ -73,7 +73,7 @@ export function createKwsPanelController({
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
     if (!(axis === "x" || axis === "y" || axis === "z")) return false;
     const selectedSchool = String(kwsTokenUiState.selectedSchoolByAxis[axis] || "").toLowerCase();
-    return KWS_SCHOOL_TOKEN_SET.has(selectedSchool);
+    return KWS_AXIS_TOKEN_SET.has(selectedSchool);
   }
 
   function shouldLogHeardWakeword(rawToken) {
@@ -84,11 +84,11 @@ export function createKwsPanelController({
     if (KWS_WAKE_REQUIRED_TOKEN_SET.has(token)) {
       return Date.now() < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
     }
-    if (KWS_SCHOOL_TOKEN_SET.has(token)) {
+    if (KWS_AXIS_TOKEN_SET.has(token)) {
       const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
       return !!axis && token === expectedSchoolForAxis(axis);
     }
-    if (KWS_CLASS_TOKEN_SET.has(token)) {
+    if (KWS_WAKE_WINDOW_TOKEN_SET.has(token)) {
       return isClassWindowActive();
     }
     return false;
@@ -98,7 +98,7 @@ export function createKwsPanelController({
     const a = String(axis || "").trim().toLowerCase();
     if (!(a === "x" || a === "y" || a === "z")) return;
     const bucket = Object.create(null);
-    for (const token of KWS_CLASS_TOKENS) bucket[token] = false;
+    for (const token of KWS_WAKE_WINDOW_TOKENS) bucket[token] = false;
     kwsTokenUiState.heardClassTokensByAxis[a] = bucket;
   }
 
@@ -206,7 +206,7 @@ export function createKwsPanelController({
       const t = String(token || "").trim().toLowerCase();
       let lit = false;
       if (KWS_WAKE_TOKEN_SET.has(t) || KWS_WAKE_REQUIRED_TOKEN_SET.has(t)) lit = orbisOpen;
-      else if (KWS_SCHOOL_TOKEN_SET.has(t)) lit = t === expectedSchool;
+      else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedSchool;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
       return tokenChipHtml(token, lit, flash);
     }).join(" ");

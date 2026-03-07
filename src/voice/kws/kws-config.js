@@ -50,9 +50,6 @@ export function createKwsRuntimeConfig() {
     rowBottom,
     wakeWindowTokens,
     axisTokens,
-    // Legacy aliases for in-flight consumers.
-    classTokens: wakeWindowTokens.slice(),
-    schoolTokens: axisTokens.slice(),
     wakeTokens,
     wakeRequiredTokens,
     axisSchoolByAxis: Object.freeze({ ...axisSchoolByAxis }),
