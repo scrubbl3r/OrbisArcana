@@ -93,13 +93,31 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   }
 
   function pickSlotForLoad(spell, axis) {
-    const spellId = String(spell && spell.id || "");
     const a = normAxis(axis);
+    const slotByAxis = (spell && typeof spell.slotByAxis === "object" && spell.slotByAxis)
+      ? spell.slotByAxis
+      : null;
+    if (slotByAxis && a) {
+      const axisSlot = normGroup(slotByAxis[a]);
+      if (axisSlot) return axisSlot;
+    }
     const fixed = normGroup(spell && spell.fixedSlot);
     if (fixed) return fixed;
-    // Design rule: DOMUS on Y flat spin always locks to UD.
-    if (spellId === "domus" && a === "y") return "UD";
     return reserveNextSlotForAxis(a);
+  }
+
+  function applyAxisSlotClearPolicy(spell, axis) {
+    const a = normAxis(axis);
+    if (!a) return;
+    const clearSlotsOnAxis = (spell && typeof spell.clearSlotsOnAxis === "object" && spell.clearSlotsOnAxis)
+      ? spell.clearSlotsOnAxis
+      : null;
+    const slots = Array.isArray(clearSlotsOnAxis && clearSlotsOnAxis[a]) ? clearSlotsOnAxis[a] : [];
+    for (const slotRaw of slots) {
+      const slot = normGroup(slotRaw);
+      if (!slot) continue;
+      loadedByAxis[a][slot] = null;
+    }
   }
 
   function mostRecentLoadedForGroup(group) {
@@ -313,11 +331,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           return;
         }
         const slot = pickSlotForLoad(concreteSpell, axis);
-        if (String(concreteSpell.id || "") === "domus" && axis === "y") {
-          // Keep Y-axis LR/FB empty for DOMUS.
-          loadedByAxis.y.LR = null;
-          loadedByAxis.y.FB = null;
-        }
+        applyAxisSlotClearPolicy(concreteSpell, axis);
         const spendResult = consumeStoredGlobe({
           reason: "spell_load",
           spellId: String(concreteSpell.id || ""),

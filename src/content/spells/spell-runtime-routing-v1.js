@@ -62,6 +62,8 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
     intent: "spell.domus",
     allowedAxes: Object.freeze(["y"]),
     fixedSlot: "UD",
+    slotByAxis: Object.freeze({ y: "UD" }),
+    clearSlotsOnAxis: Object.freeze({ y: Object.freeze(["LR", "FB"]) }),
   }),
   Object.freeze({
     id: "tempus",
