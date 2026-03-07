@@ -28,6 +28,7 @@ Top-Level Shape
   signalWhereOverrides: { ... }, // optional { [signalId]: partial where object }
   sourceEventEnabledOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
+  sourceEventMaxSignalsOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   actionArgOverrides: { ... }, // optional { [actionKey]: object }
@@ -181,6 +182,9 @@ Authoring Notes
   - `sourceEventDebounceOverrides`:
     - per-source-event debounce ms map (`{ [sourceEvent]: number >= 0 }`).
     - precedence: per-source-event override -> `execution.sourceEventDebounceMs`.
+  - `sourceEventMaxSignalsOverrides`:
+    - per-source-event matched-signal cap map (`{ [sourceEvent]: integer >= 0 }`).
+    - precedence: per-source-event override -> `execution.maxSignalsPerEvent`.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
