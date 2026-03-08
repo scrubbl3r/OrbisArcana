@@ -172,6 +172,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalCooldownScaleOverrides = (schema && schema.signalCooldownScaleOverrides && typeof schema.signalCooldownScaleOverrides === "object")
     ? schema.signalCooldownScaleOverrides
     : Object.create(null);
+  const signalMaxActionsPerRuleMatchOverrides = (schema && schema.signalMaxActionsPerRuleMatchOverrides && typeof schema.signalMaxActionsPerRuleMatchOverrides === "object")
+    ? schema.signalMaxActionsPerRuleMatchOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -276,10 +279,14 @@ export function createRuleEngineV1PreviewSystem({
     const sourceEventActionLimit = Number.isFinite(sourceEventActionLimitRaw)
       ? Math.max(0, Math.floor(sourceEventActionLimitRaw))
       : maxActionsPerRuleMatch;
+    const signalActionLimitRaw = Number(signalMaxActionsPerRuleMatchOverrides[signalId]);
+    const signalActionLimit = Number.isFinite(signalActionLimitRaw)
+      ? Math.max(0, Math.floor(signalActionLimitRaw))
+      : sourceEventActionLimit;
     const ruleActionLimitOverrideRaw = Number(ruleActionLimitOverrides[ruleId]);
     const effectiveMaxActionsPerRuleMatch = Number.isFinite(ruleActionLimitOverrideRaw)
       ? Math.max(0, Math.floor(ruleActionLimitOverrideRaw))
-      : sourceEventActionLimit;
+      : signalActionLimit;
     let executedActionCount = 0;
     for (let i = 0; i < actions.length; i += 1) {
       if (effectiveMaxActionsPerRuleMatch > 0 && executedActionCount >= effectiveMaxActionsPerRuleMatch) break;

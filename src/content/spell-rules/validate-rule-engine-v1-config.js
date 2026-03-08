@@ -102,6 +102,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalActionTypeEnabledOverrides = asObj(cfg.signalActionTypeEnabledOverrides);
   const signalMatchWindowScaleOverrides = asObj(cfg.signalMatchWindowScaleOverrides);
   const signalCooldownScaleOverrides = asObj(cfg.signalCooldownScaleOverrides);
+  const signalMaxActionsPerRuleMatchOverrides = asObj(cfg.signalMaxActionsPerRuleMatchOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const signalSourceEventOverrides = asObj(cfg.signalSourceEventOverrides);
   const signalWhereOverrides = asObj(cfg.signalWhereOverrides);
@@ -465,6 +466,18 @@ export function validateRuleEngineV1Config(config = null) {
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides[${signalId}] must be a finite number >= 0`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalMaxActionsPerRuleMatchOverrides")) {
+    if (!cfg.signalMaxActionsPerRuleMatchOverrides || typeof cfg.signalMaxActionsPerRuleMatchOverrides !== "object" || Array.isArray(cfg.signalMaxActionsPerRuleMatchOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalMaxActionsPerRuleMatchOverrides)) {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides[${signalId}] must be an integer >= 0`);
         }
       }
     }
@@ -877,6 +890,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalMaxActionsPerRuleMatchOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides references unknown signal id: ${id}`);
   }
   for (const signalId of Object.keys(signalPriorityOverrides)) {
     const id = String(signalId || "").trim().toLowerCase();

@@ -1658,6 +1658,9 @@
               signalCooldownScaleOverrides: (next.signalCooldownScaleOverrides && typeof next.signalCooldownScaleOverrides === "object")
                 ? { ...next.signalCooldownScaleOverrides }
                 : Object.create(null),
+              signalMaxActionsPerRuleMatchOverrides: (next.signalMaxActionsPerRuleMatchOverrides && typeof next.signalMaxActionsPerRuleMatchOverrides === "object")
+                ? { ...next.signalMaxActionsPerRuleMatchOverrides }
+                : Object.create(null),
               signalStopOnFirstMatchOverrides: (next.signalStopOnFirstMatchOverrides && typeof next.signalStopOnFirstMatchOverrides === "object")
                 ? { ...next.signalStopOnFirstMatchOverrides }
                 : Object.create(null),
