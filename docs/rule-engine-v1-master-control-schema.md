@@ -27,6 +27,7 @@ Top-Level Shape
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalMaxMatchesOverrides: { ... }, // optional { [signalId]: integer>=0 }
+  signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
   signalWhereOverrides: { ... }, // optional { [signalId]: partial where object }
@@ -191,6 +192,9 @@ Authoring Notes
   - `signalMaxMatchesOverrides`:
     - per-signal matched-rule cap map (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `execution.maxMatchesPerSignal`.
+  - `signalStopOnFirstMatchOverrides`:
+    - per-signal matched-rule short-circuit map (`{ [signalId]: boolean }`).
+    - precedence: per-signal override -> `sourceEventStopOnFirstMatchOverrides` -> `execution.stopOnFirstMatch`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.

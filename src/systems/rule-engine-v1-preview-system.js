@@ -157,6 +157,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalMaxMatchesOverrides = (schema && schema.signalMaxMatchesOverrides && typeof schema.signalMaxMatchesOverrides === "object")
     ? schema.signalMaxMatchesOverrides
     : Object.create(null);
+  const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
+    ? schema.signalStopOnFirstMatchOverrides
+    : Object.create(null);
   const sourceEventEnabledOverrides = (schema && schema.sourceEventEnabledOverrides && typeof schema.sourceEventEnabledOverrides === "object")
     ? schema.sourceEventEnabledOverrides
     : Object.create(null);
@@ -341,9 +344,16 @@ export function createRuleEngineV1PreviewSystem({
       sourceEventStopOnFirstMatchOverrides,
       String(sourceEvent || "")
     );
-    const effectiveStopOnFirstMatch = hasSourceEventStopOnFirstMatchOverride
+    const sourceEventStopOnFirstMatch = hasSourceEventStopOnFirstMatchOverride
       ? !!sourceEventStopOnFirstMatchOverrides[String(sourceEvent || "")]
       : stopOnFirstMatch;
+    const hasSignalStopOnFirstMatchOverride = Object.prototype.hasOwnProperty.call(
+      signalStopOnFirstMatchOverrides,
+      String(signalId || "")
+    );
+    const effectiveStopOnFirstMatch = hasSignalStopOnFirstMatchOverride
+      ? !!signalStopOnFirstMatchOverrides[String(signalId || "")]
+      : sourceEventStopOnFirstMatch;
     const hasSourceEventEmitOverride = Object.prototype.hasOwnProperty.call(sourceEventEmitPreviewMatchedOverrides, String(sourceEvent || ""));
     const effectiveEmitPreviewMatchedEvents = hasSourceEventEmitOverride
       ? !!sourceEventEmitPreviewMatchedOverrides[String(sourceEvent || "")]
