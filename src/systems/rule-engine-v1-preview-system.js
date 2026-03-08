@@ -148,6 +148,9 @@ export function createRuleEngineV1PreviewSystem({
   const emitPreviewMatchedEvents = (Object.prototype.hasOwnProperty.call(execution, "emitPreviewMatchedEvents"))
     ? !!execution.emitPreviewMatchedEvents
     : true;
+  const emitActionExecutedEvents = (Object.prototype.hasOwnProperty.call(execution, "emitActionExecutedEvents"))
+    ? !!execution.emitActionExecutedEvents
+    : true;
   const executionAllowsActions = (Object.prototype.hasOwnProperty.call(execution, "executeActions"))
     ? !!execution.executeActions
     : true;
@@ -377,14 +380,16 @@ export function createRuleEngineV1PreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
-        eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
-          ruleId: String(rule && rule.id || ""),
-          actionType: "wake_win",
-          actionId: id,
-          args,
-          spells: Array.isArray(action && action.spells) ? action.spells.slice() : [],
-          atMs: Number(triggerMeta.atMs) || nowMs(),
-        });
+        if (emitActionExecutedEvents) {
+          eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+            ruleId: String(rule && rule.id || ""),
+            actionType: "wake_win",
+            actionId: id,
+            args,
+            spells: Array.isArray(action && action.spells) ? action.spells.slice() : [],
+            atMs: Number(triggerMeta.atMs) || nowMs(),
+          });
+        }
         executedActionCount += 1;
         continue;
       }
@@ -392,13 +397,15 @@ export function createRuleEngineV1PreviewSystem({
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;
       const args = resolveEventArgs(id, mergedOverrides);
-      eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
-        ruleId: String(rule && rule.id || ""),
-        actionType: "event",
-        actionId: id,
-        args,
-        atMs: Number(triggerMeta.atMs) || nowMs(),
-      });
+      if (emitActionExecutedEvents) {
+        eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+          ruleId: String(rule && rule.id || ""),
+          actionType: "event",
+          actionId: id,
+          args,
+          atMs: Number(triggerMeta.atMs) || nowMs(),
+        });
+      }
       executedActionCount += 1;
     }
     return executedActionCount;
