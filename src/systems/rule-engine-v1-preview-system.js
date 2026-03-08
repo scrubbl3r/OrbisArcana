@@ -193,6 +193,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleExecuteActionsOverrides = (schema && schema.ruleExecuteActionsOverrides && typeof schema.ruleExecuteActionsOverrides === "object")
     ? schema.ruleExecuteActionsOverrides
     : Object.create(null);
+  const ruleActionTypeEnabledOverrides = (schema && schema.ruleActionTypeEnabledOverrides && typeof schema.ruleActionTypeEnabledOverrides === "object")
+    ? schema.ruleActionTypeEnabledOverrides
+    : Object.create(null);
   const unsub = [];
   const lastSourceEventAtById = new Map();
   const lastSeenAtBySignalId = new Map();
@@ -233,16 +236,24 @@ export function createRuleEngineV1PreviewSystem({
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
       const sourceEvent = String(triggerMeta && triggerMeta.sourceEvent || "");
+      const ruleTypeGate = (ruleId && ruleActionTypeEnabledOverrides[ruleId] && typeof ruleActionTypeEnabledOverrides[ruleId] === "object")
+        ? ruleActionTypeEnabledOverrides[ruleId]
+        : null;
+      const hasRuleTypeGate = !!(ruleTypeGate && Object.prototype.hasOwnProperty.call(ruleTypeGate, type));
       const sourceEventTypeGate = (sourceEvent && sourceEventActionTypeEnabledOverrides[sourceEvent] && typeof sourceEventActionTypeEnabledOverrides[sourceEvent] === "object")
         ? sourceEventActionTypeEnabledOverrides[sourceEvent]
         : null;
       const hasSourceEventTypeGate = !!(sourceEventTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTypeGate, type));
-      const typeEnabled = hasSourceEventTypeGate
-        ? !!sourceEventTypeGate[type]
+      const typeEnabled = hasRuleTypeGate
+        ? !!ruleTypeGate[type]
         : (
-          Object.prototype.hasOwnProperty.call(actionTypeEnabled, type)
-            ? !!actionTypeEnabled[type]
-            : true
+          hasSourceEventTypeGate
+            ? !!sourceEventTypeGate[type]
+            : (
+              Object.prototype.hasOwnProperty.call(actionTypeEnabled, type)
+                ? !!actionTypeEnabled[type]
+                : true
+            )
         );
       if (!typeEnabled) {
         continue;

@@ -23,6 +23,7 @@ Top-Level Shape
   ruleMatchWindowScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   ruleEmitPreviewMatchedOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleExecuteActionsOverrides: { ... }, // optional { [ruleId]: boolean }
+  ruleActionTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
   signalDebounceOverrides: { ... }, // optional { [signalId]: number(ms) }
   signalMaxMatchesOverrides: { ... }, // optional { [signalId]: integer>=0 }
@@ -134,6 +135,8 @@ Authoring Notes
 - Rule action execution controls:
   - `ruleExecuteActionsOverrides` can centrally force action execution on/off per rule.
   - Precedence: `ruleExecuteActionsOverrides` -> `execution.executeActions`.
+  - `ruleActionTypeEnabledOverrides` can centrally gate action types per rule.
+  - Precedence: `ruleActionTypeEnabledOverrides` -> `sourceEventActionTypeEnabledOverrides` -> `execution.actionTypeEnabled`.
 - Execution controls:
   - `execution.stopOnFirstMatch`:
     - `false` (default): all matched candidate rules can fire.

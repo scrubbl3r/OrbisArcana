@@ -373,6 +373,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       ruleExecuteActionsOverrides: (ruleSchemaV1.ruleExecuteActionsOverrides && typeof ruleSchemaV1.ruleExecuteActionsOverrides === "object")
         ? { ...ruleSchemaV1.ruleExecuteActionsOverrides }
         : Object.create(null),
+      ruleActionTypeEnabledOverrides: (ruleSchemaV1.ruleActionTypeEnabledOverrides && typeof ruleSchemaV1.ruleActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchemaV1.ruleActionTypeEnabledOverrides }
+        : Object.create(null),
       actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
         ? { ...ruleSchemaV1.actionArgOverrides }
         : Object.create(null),
@@ -403,6 +406,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       ruleExecuteActionsOverrides: (ruleSchemaV1.ruleExecuteActionsOverrides && typeof ruleSchemaV1.ruleExecuteActionsOverrides === "object")
         ? { ...ruleSchemaV1.ruleExecuteActionsOverrides }
+        : Object.create(null),
+      ruleActionTypeEnabledOverrides: (ruleSchemaV1.ruleActionTypeEnabledOverrides && typeof ruleSchemaV1.ruleActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchemaV1.ruleActionTypeEnabledOverrides }
         : Object.create(null),
       signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
         ? { ...ruleSchemaV1.signalDebounceOverrides }

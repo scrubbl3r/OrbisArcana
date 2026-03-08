@@ -1634,6 +1634,9 @@
               ruleExecuteActionsOverrides: (next.ruleExecuteActionsOverrides && typeof next.ruleExecuteActionsOverrides === "object")
                 ? { ...next.ruleExecuteActionsOverrides }
                 : Object.create(null),
+              ruleActionTypeEnabledOverrides: (next.ruleActionTypeEnabledOverrides && typeof next.ruleActionTypeEnabledOverrides === "object")
+                ? { ...next.ruleActionTypeEnabledOverrides }
+                : Object.create(null),
               signalDebounceOverrides: (next.signalDebounceOverrides && typeof next.signalDebounceOverrides === "object")
                 ? { ...next.signalDebounceOverrides }
                 : Object.create(null),
