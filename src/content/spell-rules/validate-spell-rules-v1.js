@@ -19,6 +19,11 @@ function isFiniteNumber(v) {
 
 function validateWhereClause(where, label, errors) {
   if (!where || typeof where !== "object") return;
+  const allowedWhereKeys = new Set(["path", "eq", "gt", "gte", "lt", "lte"]);
+  for (const key of Object.keys(where)) {
+    if (allowedWhereKeys.has(String(key || ""))) continue;
+    errors.push(`${label} where has unsupported key: ${key}`);
+  }
   if (!String(where.path || "").trim()) {
     errors.push(`${label} where.path is required when where is present`);
   }
