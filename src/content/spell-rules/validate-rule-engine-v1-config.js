@@ -1484,6 +1484,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides must be an object when present");
     } else {
       for (const [eventId, value] of Object.entries(eventEnabledOverrides)) {
+        if (!asText(eventId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides contains empty event id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides[${eventId}] must be boolean`);
         }
