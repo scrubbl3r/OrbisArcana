@@ -504,6 +504,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides must be an object when present");
     } else {
       for (const [ruleId, value] of Object.entries(ruleSummaryIncludeSignalAndRuleIdsOverrides)) {
+        if (!asText(ruleId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides contains empty rule id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides[${ruleId}] must be boolean`);
         }
