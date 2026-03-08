@@ -1514,6 +1514,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides must be an object when present");
     } else {
       for (const [windowId, value] of Object.entries(windowEnabledOverrides)) {
+        if (!asText(windowId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides contains empty window id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides[${windowId}] must be boolean`);
         }
