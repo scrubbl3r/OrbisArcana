@@ -179,6 +179,7 @@ Authoring Notes
   - map keys must be non-empty rule ids.
   - Precedence: `ruleMatchWindowScaleOverrides` -> `execution.matchWindowScale`.
 - Rule telemetry controls:
+  - telemetry override maps use non-empty rule ids as keys.
   - `ruleEmitPreviewMatchedOverrides` can centrally force preview telemetry on/off per rule.
   - Precedence: `ruleEmitPreviewMatchedOverrides` -> `sourceEventEmitPreviewMatchedOverrides` -> `execution.emitPreviewMatchedEvents`.
   - `ruleEmitActionExecutedOverrides` can centrally force action telemetry on/off per rule.
