@@ -287,6 +287,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventEmitSourceEventSummaryOverrides = (schema && schema.sourceEventEmitSourceEventSummaryOverrides && typeof schema.sourceEventEmitSourceEventSummaryOverrides === "object")
     ? schema.sourceEventEmitSourceEventSummaryOverrides
     : Object.create(null);
+  const sourceEventSummaryIncludeSignalAndRuleIdsOverrides = (schema && schema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides && typeof schema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides === "object")
+    ? schema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides
+    : Object.create(null);
   const sourceEventActionTypeEnabledOverrides = (schema && schema.sourceEventActionTypeEnabledOverrides && typeof schema.sourceEventActionTypeEnabledOverrides === "object")
     ? schema.sourceEventActionTypeEnabledOverrides
     : Object.create(null);
@@ -833,7 +836,14 @@ export function createRuleEngineV1PreviewSystem({
             matchedRuleCount,
             actionCount,
           };
-          if (sourceEventSummaryIncludeSignalAndRuleIds) {
+          const hasSourceEventSummaryIncludeIdsOverride = Object.prototype.hasOwnProperty.call(
+            sourceEventSummaryIncludeSignalAndRuleIdsOverrides,
+            sourceEvent
+          );
+          const effectiveSourceEventSummaryIncludeIds = hasSourceEventSummaryIncludeIdsOverride
+            ? !!sourceEventSummaryIncludeSignalAndRuleIdsOverrides[sourceEvent]
+            : sourceEventSummaryIncludeSignalAndRuleIds;
+          if (effectiveSourceEventSummaryIncludeIds) {
             summaryPayload.signalId = String(summarySignalId || "");
             summaryPayload.ruleId = String(summaryRuleId || "");
           }
