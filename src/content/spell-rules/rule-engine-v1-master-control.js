@@ -339,6 +339,11 @@ const RULE_SUMMARY_INCLUDE_SIGNAL_AND_RULE_IDS_OVERRIDES = Object.freeze({
   // r_rota_yspin_charged: true,
 });
 
+const RULE_SUMMARY_INCLUDE_BUDGET_CAPS_OVERRIDES = Object.freeze({
+  // Example:
+  // r_rota_yspin_charged: true,
+});
+
 const RULE_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
   // r_rota_yspin_charged: { wake_win: false, event: true },
@@ -607,6 +612,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   ruleEmitActionExecutedOverrides: RULE_EMIT_ACTION_EXECUTED_OVERRIDES,
   ruleEmitSourceEventSummaryOverrides: RULE_EMIT_SOURCE_EVENT_SUMMARY_OVERRIDES,
   ruleSummaryIncludeSignalAndRuleIdsOverrides: RULE_SUMMARY_INCLUDE_SIGNAL_AND_RULE_IDS_OVERRIDES,
+  ruleSummaryIncludeBudgetCapsOverrides: RULE_SUMMARY_INCLUDE_BUDGET_CAPS_OVERRIDES,
   ruleActionExecutedEventTypeEnabledOverrides: RULE_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES,
   ruleExecuteActionsOverrides: RULE_EXECUTE_ACTIONS_OVERRIDES,
   ruleActionTypeEnabledOverrides: RULE_ACTION_TYPE_ENABLED_OVERRIDES,

@@ -25,6 +25,7 @@ Top-Level Shape
   ruleEmitActionExecutedOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleEmitSourceEventSummaryOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleSummaryIncludeSignalAndRuleIdsOverrides: { ... }, // optional { [ruleId]: boolean }
+  ruleSummaryIncludeBudgetCapsOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
   ruleExecuteActionsOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleActionTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
@@ -179,6 +180,8 @@ Authoring Notes
   - Precedence: `ruleEmitSourceEventSummaryOverrides` -> `signalEmitSourceEventSummaryOverrides` -> `sourceEventEmitSourceEventSummaryOverrides` -> `execution.emitSourceEventSummaryEvents`.
   - `ruleSummaryIncludeSignalAndRuleIdsOverrides` can centrally force summary payload detail on/off per rule.
   - Precedence: `ruleSummaryIncludeSignalAndRuleIdsOverrides` -> `signalSummaryIncludeSignalAndRuleIdsOverrides` -> `sourceEventSummaryIncludeSignalAndRuleIdsOverrides` -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
+  - `ruleSummaryIncludeBudgetCapsOverrides` can centrally force summary budget-cap detail on/off per rule.
+  - Precedence: `ruleSummaryIncludeBudgetCapsOverrides` -> `signalSummaryIncludeBudgetCapsOverrides` -> `sourceEventSummaryIncludeBudgetCapsOverrides` -> `execution.sourceEventSummaryIncludeBudgetCaps`.
   - `ruleActionExecutedEventTypeEnabledOverrides` can centrally force action-telemetry type gates per rule.
   - Precedence: `ruleActionExecutedEventTypeEnabledOverrides` -> `signalActionExecutedEventTypeEnabledOverrides` -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.
 - Rule action execution controls:
@@ -311,7 +314,7 @@ Authoring Notes
     - precedence: `ruleSummaryIncludeSignalAndRuleIdsOverrides` -> `signalSummaryIncludeSignalAndRuleIdsOverrides` -> `sourceEventSummaryIncludeSignalAndRuleIdsOverrides` -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
   - `signalSummaryIncludeBudgetCapsOverrides`:
     - per-signal summary budget-cap detail map (`{ [signalId]: boolean }`).
-    - precedence: per-signal override -> `sourceEventSummaryIncludeBudgetCapsOverrides` -> `execution.sourceEventSummaryIncludeBudgetCaps`.
+    - precedence: per-signal override (unless `ruleSummaryIncludeBudgetCapsOverrides` is present) -> `sourceEventSummaryIncludeBudgetCapsOverrides` -> `execution.sourceEventSummaryIncludeBudgetCaps`.
   - `signalActionExecutedEventTypeEnabledOverrides`:
     - per-signal action-telemetry type gates (`{ [signalId]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-signal override -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.
@@ -386,7 +389,7 @@ Authoring Notes
     - precedence: per-source-event override -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
   - `sourceEventSummaryIncludeBudgetCapsOverrides`:
     - per-source-event summary budget-cap detail map (`{ [sourceEvent]: boolean }`).
-    - precedence: per-source-event override (unless `signalSummaryIncludeBudgetCapsOverrides` is present) -> `execution.sourceEventSummaryIncludeBudgetCaps`.
+    - precedence: per-source-event override (unless `signalSummaryIncludeBudgetCapsOverrides` or `ruleSummaryIncludeBudgetCapsOverrides` is present) -> `execution.sourceEventSummaryIncludeBudgetCaps`.
   - `sourceEventActionExecutedEventTypeEnabledOverrides`:
     - per-source-event action-telemetry type gates (`{ [sourceEvent]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-source-event override -> `execution.actionExecutedEventTypeEnabled`.

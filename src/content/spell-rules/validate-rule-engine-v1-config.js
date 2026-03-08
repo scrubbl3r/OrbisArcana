@@ -94,6 +94,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleEmitActionExecutedOverrides = asObj(cfg.ruleEmitActionExecutedOverrides);
   const ruleEmitSourceEventSummaryOverrides = asObj(cfg.ruleEmitSourceEventSummaryOverrides);
   const ruleSummaryIncludeSignalAndRuleIdsOverrides = asObj(cfg.ruleSummaryIncludeSignalAndRuleIdsOverrides);
+  const ruleSummaryIncludeBudgetCapsOverrides = asObj(cfg.ruleSummaryIncludeBudgetCapsOverrides);
   const ruleActionExecutedEventTypeEnabledOverrides = asObj(cfg.ruleActionExecutedEventTypeEnabledOverrides);
   const ruleExecuteActionsOverrides = asObj(cfg.ruleExecuteActionsOverrides);
   const ruleActionTypeEnabledOverrides = asObj(cfg.ruleActionTypeEnabledOverrides);
@@ -451,6 +452,17 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [ruleId, value] of Object.entries(ruleSummaryIncludeSignalAndRuleIdsOverrides)) {
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides[${ruleId}] must be boolean`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleSummaryIncludeBudgetCapsOverrides")) {
+    if (!cfg.ruleSummaryIncludeBudgetCapsOverrides || typeof cfg.ruleSummaryIncludeBudgetCapsOverrides !== "object" || Array.isArray(cfg.ruleSummaryIncludeBudgetCapsOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides must be an object when present");
+    } else {
+      for (const [ruleId, value] of Object.entries(ruleSummaryIncludeBudgetCapsOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides[${ruleId}] must be boolean`);
         }
       }
     }
@@ -1637,6 +1649,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides references unknown rule id: ${id}`);
+  }
+  for (const ruleId of Object.keys(ruleSummaryIncludeBudgetCapsOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides references unknown rule id: ${id}`);
   }
   for (const ruleId of Object.keys(ruleActionExecutedEventTypeEnabledOverrides)) {
     const id = String(ruleId || "").trim();

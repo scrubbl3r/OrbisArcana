@@ -350,6 +350,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleSummaryIncludeSignalAndRuleIdsOverrides = (schema && schema.ruleSummaryIncludeSignalAndRuleIdsOverrides && typeof schema.ruleSummaryIncludeSignalAndRuleIdsOverrides === "object")
     ? schema.ruleSummaryIncludeSignalAndRuleIdsOverrides
     : Object.create(null);
+  const ruleSummaryIncludeBudgetCapsOverrides = (schema && schema.ruleSummaryIncludeBudgetCapsOverrides && typeof schema.ruleSummaryIncludeBudgetCapsOverrides === "object")
+    ? schema.ruleSummaryIncludeBudgetCapsOverrides
+    : Object.create(null);
   const ruleActionExecutedEventTypeEnabledOverrides = (schema && schema.ruleActionExecutedEventTypeEnabledOverrides && typeof schema.ruleActionExecutedEventTypeEnabledOverrides === "object")
     ? schema.ruleActionExecutedEventTypeEnabledOverrides
     : Object.create(null);
@@ -890,7 +893,14 @@ export function createRuleEngineV1PreviewSystem({
           const effectiveSummaryIncludeBudgetCaps = hasSignalSummaryIncludeBudgetCapsOverride
             ? !!signalSummaryIncludeBudgetCapsOverrides[String(summarySignalId || "")]
             : effectiveSourceEventSummaryIncludeBudgetCaps;
-          if (effectiveSummaryIncludeBudgetCaps) {
+          const hasRuleSummaryIncludeBudgetCapsOverride = Object.prototype.hasOwnProperty.call(
+            ruleSummaryIncludeBudgetCapsOverrides,
+            String(summaryRuleId || "")
+          );
+          const effectiveRuleSummaryIncludeBudgetCaps = hasRuleSummaryIncludeBudgetCapsOverride
+            ? !!ruleSummaryIncludeBudgetCapsOverrides[String(summaryRuleId || "")]
+            : effectiveSummaryIncludeBudgetCaps;
+          if (effectiveRuleSummaryIncludeBudgetCaps) {
             summaryPayload.maxSignalsEvaluatedPerEvent = effectiveMaxSignalsEvaluatedPerEvent;
             summaryPayload.maxSignalsPerEvent = effectiveMaxSignalsPerEvent;
             summaryPayload.maxRulesEvaluatedPerEvent = effectiveMaxRulesEvaluatedPerEvent;

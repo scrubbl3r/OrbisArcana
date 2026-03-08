@@ -1640,6 +1640,9 @@
               ruleSummaryIncludeSignalAndRuleIdsOverrides: (next.ruleSummaryIncludeSignalAndRuleIdsOverrides && typeof next.ruleSummaryIncludeSignalAndRuleIdsOverrides === "object")
                 ? { ...next.ruleSummaryIncludeSignalAndRuleIdsOverrides }
                 : Object.create(null),
+              ruleSummaryIncludeBudgetCapsOverrides: (next.ruleSummaryIncludeBudgetCapsOverrides && typeof next.ruleSummaryIncludeBudgetCapsOverrides === "object")
+                ? { ...next.ruleSummaryIncludeBudgetCapsOverrides }
+                : Object.create(null),
               ruleActionExecutedEventTypeEnabledOverrides: (next.ruleActionExecutedEventTypeEnabledOverrides && typeof next.ruleActionExecutedEventTypeEnabledOverrides === "object")
                 ? { ...next.ruleActionExecutedEventTypeEnabledOverrides }
                 : Object.create(null),
