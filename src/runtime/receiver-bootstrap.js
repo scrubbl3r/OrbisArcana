@@ -409,6 +409,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       sourceEventActionTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionTypeEnabledOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventActionTypeEnabledOverrides }
         : Object.create(null),
+      sourceEventActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides }
+        : Object.create(null),
       sourceEventExecuteActionsOverrides: (ruleSchemaV1.sourceEventExecuteActionsOverrides && typeof ruleSchemaV1.sourceEventExecuteActionsOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventExecuteActionsOverrides }
         : Object.create(null),
@@ -559,6 +562,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       sourceEventActionTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionTypeEnabledOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventActionTypeEnabledOverrides }
+        : Object.create(null),
+      sourceEventActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
       sourceEventExecuteActionsOverrides: (ruleSchemaV1.sourceEventExecuteActionsOverrides && typeof ruleSchemaV1.sourceEventExecuteActionsOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventExecuteActionsOverrides }

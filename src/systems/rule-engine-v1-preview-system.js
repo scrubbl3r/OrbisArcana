@@ -248,6 +248,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventActionTypeEnabledOverrides = (schema && schema.sourceEventActionTypeEnabledOverrides && typeof schema.sourceEventActionTypeEnabledOverrides === "object")
     ? schema.sourceEventActionTypeEnabledOverrides
     : Object.create(null);
+  const sourceEventActionExecutedEventTypeEnabledOverrides = (schema && schema.sourceEventActionExecutedEventTypeEnabledOverrides && typeof schema.sourceEventActionExecutedEventTypeEnabledOverrides === "object")
+    ? schema.sourceEventActionExecutedEventTypeEnabledOverrides
+    : Object.create(null);
   const sourceEventExecuteActionsOverrides = (schema && schema.sourceEventExecuteActionsOverrides && typeof schema.sourceEventExecuteActionsOverrides === "object")
     ? schema.sourceEventExecuteActionsOverrides
     : Object.create(null);
@@ -330,6 +333,9 @@ export function createRuleEngineV1PreviewSystem({
     const effectiveEmitActionExecutedEvents = hasRuleEmitActionExecutedOverride
       ? !!ruleEmitActionExecutedOverrides[ruleId]
       : signalEmitActionExecuted;
+    const sourceEventTelemetryTypeGate = (sourceEvent && sourceEventActionExecutedEventTypeEnabledOverrides[sourceEvent] && typeof sourceEventActionExecutedEventTypeEnabledOverrides[sourceEvent] === "object")
+      ? sourceEventActionExecutedEventTypeEnabledOverrides[sourceEvent]
+      : null;
     let effectiveExecuteActions = true;
     if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
       effectiveExecuteActions = !!sourceEventExecuteActionsOverrides[sourceEvent];
@@ -404,9 +410,13 @@ export function createRuleEngineV1PreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
-        const emitTypeEnabled = Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "wake_win")
-          ? !!actionExecutedEventTypeEnabled.wake_win
-          : true;
+        const emitTypeEnabled = sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "wake_win")
+          ? !!sourceEventTelemetryTypeGate.wake_win
+          : (
+            Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "wake_win")
+              ? !!actionExecutedEventTypeEnabled.wake_win
+              : true
+          );
         if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
           eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
             ruleId: String(rule && rule.id || ""),
@@ -424,9 +434,13 @@ export function createRuleEngineV1PreviewSystem({
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;
       const args = resolveEventArgs(id, mergedOverrides);
-      const emitTypeEnabled = Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "event")
-        ? !!actionExecutedEventTypeEnabled.event
-        : true;
+      const emitTypeEnabled = sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "event")
+        ? !!sourceEventTelemetryTypeGate.event
+        : (
+          Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "event")
+            ? !!actionExecutedEventTypeEnabled.event
+            : true
+        );
       if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
         eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),

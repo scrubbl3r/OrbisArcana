@@ -123,6 +123,7 @@ export function validateRuleEngineV1Config(config = null) {
   const sourceEventEmitPreviewMatchedOverrides = asObj(cfg.sourceEventEmitPreviewMatchedOverrides);
   const sourceEventEmitActionExecutedOverrides = asObj(cfg.sourceEventEmitActionExecutedOverrides);
   const sourceEventActionTypeEnabledOverrides = asObj(cfg.sourceEventActionTypeEnabledOverrides);
+  const sourceEventActionExecutedEventTypeEnabledOverrides = asObj(cfg.sourceEventActionExecutedEventTypeEnabledOverrides);
   const sourceEventExecuteActionsOverrides = asObj(cfg.sourceEventExecuteActionsOverrides);
   const sourceEventCooldownScaleOverrides = asObj(cfg.sourceEventCooldownScaleOverrides);
   const sourceEventMatchWindowScaleOverrides = asObj(cfg.sourceEventMatchWindowScaleOverrides);
@@ -849,6 +850,33 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventActionExecutedEventTypeEnabledOverrides")) {
+    if (!cfg.sourceEventActionExecutedEventTypeEnabledOverrides || typeof cfg.sourceEventActionExecutedEventTypeEnabledOverrides !== "object" || Array.isArray(cfg.sourceEventActionExecutedEventTypeEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides must be an object when present");
+    } else {
+      const allowed = new Set(["wake_win", "event"]);
+      for (const [sourceEvent, value] of Object.entries(sourceEventActionExecutedEventTypeEnabledOverrides)) {
+        if (!asText(sourceEvent)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides contains empty source event key");
+          continue;
+        }
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] must be an object`);
+          continue;
+        }
+        for (const [actionType, enabled] of Object.entries(value)) {
+          const key = String(actionType || "").trim().toLowerCase();
+          if (!allowed.has(key)) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] has unsupported key: ${actionType}`);
+            continue;
+          }
+          if (typeof enabled !== "boolean") {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}][${actionType}] must be boolean`);
+          }
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventExecuteActionsOverrides")) {
     if (!cfg.sourceEventExecuteActionsOverrides || typeof cfg.sourceEventExecuteActionsOverrides !== "object" || Array.isArray(cfg.sourceEventExecuteActionsOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventExecuteActionsOverrides must be an object when present");
@@ -1201,6 +1229,11 @@ export function validateRuleEngineV1Config(config = null) {
     const evt = String(sourceEvent || "").trim();
     if (!evt || sourceEvents.has(evt)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides references unknown source event: ${evt}`);
+  }
+  for (const sourceEvent of Object.keys(sourceEventActionExecutedEventTypeEnabledOverrides)) {
+    const evt = String(sourceEvent || "").trim();
+    if (!evt || sourceEvents.has(evt)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides references unknown source event: ${evt}`);
   }
   for (const sourceEvent of Object.keys(sourceEventExecuteActionsOverrides)) {
     const evt = String(sourceEvent || "").trim();
