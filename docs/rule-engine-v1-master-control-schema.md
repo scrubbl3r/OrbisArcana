@@ -44,6 +44,7 @@ Top-Level Shape
   sourceEventEnabledOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
   sourceEventMaxSignalsOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
+  sourceEventMaxActionsPerSignalOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxRulesEvaluatedOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxMatchesPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxActionsPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
@@ -246,7 +247,7 @@ Authoring Notes
     - precedence: per-signal override -> `sourceEventMaxActionsPerEventOverrides` -> `execution.maxActionsPerEvent`.
   - `signalMaxActionsPerSignalOverrides`:
     - per-signal action cap for one signal hit (`{ [signalId]: integer >= 0 }`).
-    - precedence: per-signal override -> `execution.maxActionsPerSignal`.
+    - precedence: per-signal override -> `sourceEventMaxActionsPerSignalOverrides` -> `execution.maxActionsPerSignal`.
   - `signalMaxMatchesPerEventOverrides`:
     - per-signal matched-rule cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `sourceEventMaxMatchesPerEventOverrides` -> `execution.maxMatchesPerEvent`.
@@ -271,6 +272,9 @@ Authoring Notes
   - `sourceEventMaxSignalsOverrides`:
     - per-source-event matched-signal cap map (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxSignalsPerEvent`.
+  - `sourceEventMaxActionsPerSignalOverrides`:
+    - per-source-event action cap for one signal hit (`{ [sourceEvent]: integer >= 0 }`).
+    - precedence: per-source-event override -> `execution.maxActionsPerSignal`.
   - `sourceEventMaxRulesEvaluatedOverrides`:
     - per-source-event candidate evaluation cap map (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxRulesEvaluatedPerSignal`.

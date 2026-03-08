@@ -215,6 +215,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventMaxSignalsOverrides = (schema && schema.sourceEventMaxSignalsOverrides && typeof schema.sourceEventMaxSignalsOverrides === "object")
     ? schema.sourceEventMaxSignalsOverrides
     : Object.create(null);
+  const sourceEventMaxActionsPerSignalOverrides = (schema && schema.sourceEventMaxActionsPerSignalOverrides && typeof schema.sourceEventMaxActionsPerSignalOverrides === "object")
+    ? schema.sourceEventMaxActionsPerSignalOverrides
+    : Object.create(null);
   const sourceEventMaxMatchesPerEventOverrides = (schema && schema.sourceEventMaxMatchesPerEventOverrides && typeof schema.sourceEventMaxMatchesPerEventOverrides === "object")
     ? schema.sourceEventMaxMatchesPerEventOverrides
     : Object.create(null);
@@ -428,9 +431,13 @@ export function createRuleEngineV1PreviewSystem({
       ? Math.min(baseMaxMatchesPerSignal, budgetCap)
       : (budgetCap > 0 ? budgetCap : baseMaxMatchesPerSignal);
     const signalMaxActionsPerSignalOverrideRaw = Number(signalMaxActionsPerSignalOverrides[String(signalId || "")]);
+    const sourceEventMaxActionsPerSignalOverrideRaw = Number(sourceEventMaxActionsPerSignalOverrides[String(sourceEvent || "")]);
+    const sourceEventMaxActionsPerSignal = Number.isFinite(sourceEventMaxActionsPerSignalOverrideRaw)
+      ? Math.max(0, Math.floor(sourceEventMaxActionsPerSignalOverrideRaw))
+      : maxActionsPerSignal;
     const effectiveMaxActionsPerSignal = Number.isFinite(signalMaxActionsPerSignalOverrideRaw)
       ? Math.max(0, Math.floor(signalMaxActionsPerSignalOverrideRaw))
-      : maxActionsPerSignal;
+      : sourceEventMaxActionsPerSignal;
     const sourceEventMaxRulesEvaluatedOverrideRaw = Number(sourceEventMaxRulesEvaluatedOverrides[String(sourceEvent || "")]);
     const sourceEventMaxRulesEvaluatedPerSignal = Number.isFinite(sourceEventMaxRulesEvaluatedOverrideRaw)
       ? Math.max(0, Math.floor(sourceEventMaxRulesEvaluatedOverrideRaw))
