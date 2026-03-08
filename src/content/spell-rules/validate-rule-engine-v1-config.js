@@ -100,6 +100,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalStopOnFirstMatchOverrides = asObj(cfg.signalStopOnFirstMatchOverrides);
   const signalExecuteActionsOverrides = asObj(cfg.signalExecuteActionsOverrides);
   const signalActionTypeEnabledOverrides = asObj(cfg.signalActionTypeEnabledOverrides);
+  const signalMatchWindowScaleOverrides = asObj(cfg.signalMatchWindowScaleOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const signalSourceEventOverrides = asObj(cfg.signalSourceEventOverrides);
   const signalWhereOverrides = asObj(cfg.signalWhereOverrides);
@@ -439,6 +440,18 @@ export function validateRuleEngineV1Config(config = null) {
           if (typeof enabled !== "boolean") {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}][${actionType}] must be boolean`);
           }
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalMatchWindowScaleOverrides")) {
+    if (!cfg.signalMatchWindowScaleOverrides || typeof cfg.signalMatchWindowScaleOverrides !== "object" || Array.isArray(cfg.signalMatchWindowScaleOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalMatchWindowScaleOverrides)) {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides[${signalId}] must be a finite number >= 0`);
         }
       }
     }
@@ -841,6 +854,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalMatchWindowScaleOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides references unknown signal id: ${id}`);
   }
   for (const signalId of Object.keys(signalPriorityOverrides)) {
     const id = String(signalId || "").trim().toLowerCase();

@@ -30,6 +30,7 @@ Top-Level Shape
   signalEmitPreviewMatchedOverrides: { ... }, // optional { [signalId]: boolean }
   signalExecuteActionsOverrides: { ... }, // optional { [signalId]: boolean }
   signalActionTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
+  signalMatchWindowScaleOverrides: { ... }, // optional { [signalId]: number>=0 }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
@@ -207,6 +208,9 @@ Authoring Notes
   - `signalActionTypeEnabledOverrides`:
     - per-signal action-type gate map (`{ [signalId]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: `ruleActionTypeEnabledOverrides` -> `signalActionTypeEnabledOverrides` -> `sourceEventActionTypeEnabledOverrides` -> `execution.actionTypeEnabled`.
+  - `signalMatchWindowScaleOverrides`:
+    - per-signal match-window scale map (`{ [signalId]: number >= 0 }`).
+    - precedence: `ruleMatchWindowScaleOverrides` -> `signalMatchWindowScaleOverrides` -> `sourceEventMatchWindowScaleOverrides` -> `execution.matchWindowScale`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.
