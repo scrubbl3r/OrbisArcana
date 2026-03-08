@@ -352,6 +352,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       signalMatchWindowScaleOverrides: (ruleSchemaV1.signalMatchWindowScaleOverrides && typeof ruleSchemaV1.signalMatchWindowScaleOverrides === "object")
         ? { ...ruleSchemaV1.signalMatchWindowScaleOverrides }
         : Object.create(null),
+      signalCooldownScaleOverrides: (ruleSchemaV1.signalCooldownScaleOverrides && typeof ruleSchemaV1.signalCooldownScaleOverrides === "object")
+        ? { ...ruleSchemaV1.signalCooldownScaleOverrides }
+        : Object.create(null),
       signalStopOnFirstMatchOverrides: (ruleSchemaV1.signalStopOnFirstMatchOverrides && typeof ruleSchemaV1.signalStopOnFirstMatchOverrides === "object")
         ? { ...ruleSchemaV1.signalStopOnFirstMatchOverrides }
         : Object.create(null),
@@ -460,6 +463,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       signalMatchWindowScaleOverrides: (ruleSchemaV1.signalMatchWindowScaleOverrides && typeof ruleSchemaV1.signalMatchWindowScaleOverrides === "object")
         ? { ...ruleSchemaV1.signalMatchWindowScaleOverrides }
+        : Object.create(null),
+      signalCooldownScaleOverrides: (ruleSchemaV1.signalCooldownScaleOverrides && typeof ruleSchemaV1.signalCooldownScaleOverrides === "object")
+        ? { ...ruleSchemaV1.signalCooldownScaleOverrides }
         : Object.create(null),
       signalStopOnFirstMatchOverrides: (ruleSchemaV1.signalStopOnFirstMatchOverrides && typeof ruleSchemaV1.signalStopOnFirstMatchOverrides === "object")
         ? { ...ruleSchemaV1.signalStopOnFirstMatchOverrides }

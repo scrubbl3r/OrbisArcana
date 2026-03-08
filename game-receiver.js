@@ -1655,6 +1655,9 @@
               signalMatchWindowScaleOverrides: (next.signalMatchWindowScaleOverrides && typeof next.signalMatchWindowScaleOverrides === "object")
                 ? { ...next.signalMatchWindowScaleOverrides }
                 : Object.create(null),
+              signalCooldownScaleOverrides: (next.signalCooldownScaleOverrides && typeof next.signalCooldownScaleOverrides === "object")
+                ? { ...next.signalCooldownScaleOverrides }
+                : Object.create(null),
               signalStopOnFirstMatchOverrides: (next.signalStopOnFirstMatchOverrides && typeof next.signalStopOnFirstMatchOverrides === "object")
                 ? { ...next.signalStopOnFirstMatchOverrides }
                 : Object.create(null),

@@ -101,6 +101,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalExecuteActionsOverrides = asObj(cfg.signalExecuteActionsOverrides);
   const signalActionTypeEnabledOverrides = asObj(cfg.signalActionTypeEnabledOverrides);
   const signalMatchWindowScaleOverrides = asObj(cfg.signalMatchWindowScaleOverrides);
+  const signalCooldownScaleOverrides = asObj(cfg.signalCooldownScaleOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const signalSourceEventOverrides = asObj(cfg.signalSourceEventOverrides);
   const signalWhereOverrides = asObj(cfg.signalWhereOverrides);
@@ -452,6 +453,18 @@ export function validateRuleEngineV1Config(config = null) {
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides[${signalId}] must be a finite number >= 0`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalCooldownScaleOverrides")) {
+    if (!cfg.signalCooldownScaleOverrides || typeof cfg.signalCooldownScaleOverrides !== "object" || Array.isArray(cfg.signalCooldownScaleOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalCooldownScaleOverrides)) {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides[${signalId}] must be a finite number >= 0`);
         }
       }
     }
@@ -859,6 +872,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalCooldownScaleOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides references unknown signal id: ${id}`);
   }
   for (const signalId of Object.keys(signalPriorityOverrides)) {
     const id = String(signalId || "").trim().toLowerCase();

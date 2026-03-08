@@ -31,6 +31,7 @@ Top-Level Shape
   signalExecuteActionsOverrides: { ... }, // optional { [signalId]: boolean }
   signalActionTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
   signalMatchWindowScaleOverrides: { ... }, // optional { [signalId]: number>=0 }
+  signalCooldownScaleOverrides: { ... }, // optional { [signalId]: number>=0 }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
@@ -211,6 +212,9 @@ Authoring Notes
   - `signalMatchWindowScaleOverrides`:
     - per-signal match-window scale map (`{ [signalId]: number >= 0 }`).
     - precedence: `ruleMatchWindowScaleOverrides` -> `signalMatchWindowScaleOverrides` -> `sourceEventMatchWindowScaleOverrides` -> `execution.matchWindowScale`.
+  - `signalCooldownScaleOverrides`:
+    - per-signal cooldown scale map (`{ [signalId]: number >= 0 }`).
+    - precedence: `ruleCooldownScaleOverrides` -> `signalCooldownScaleOverrides` -> `sourceEventCooldownScaleOverrides` -> `execution.cooldownScale`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.

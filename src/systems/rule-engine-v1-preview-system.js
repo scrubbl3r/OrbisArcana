@@ -169,6 +169,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalMatchWindowScaleOverrides = (schema && schema.signalMatchWindowScaleOverrides && typeof schema.signalMatchWindowScaleOverrides === "object")
     ? schema.signalMatchWindowScaleOverrides
     : Object.create(null);
+  const signalCooldownScaleOverrides = (schema && schema.signalCooldownScaleOverrides && typeof schema.signalCooldownScaleOverrides === "object")
+    ? schema.signalCooldownScaleOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -412,10 +415,14 @@ export function createRuleEngineV1PreviewSystem({
       const sourceEventCooldownScale = Number.isFinite(sourceEventCooldownScaleRaw)
         ? Math.max(0, sourceEventCooldownScaleRaw)
         : cooldownScale;
+      const signalCooldownScaleRaw = Number(signalCooldownScaleOverrides[String(signalId || "")]);
+      const signalCooldownScale = Number.isFinite(signalCooldownScaleRaw)
+        ? Math.max(0, signalCooldownScaleRaw)
+        : sourceEventCooldownScale;
       const ruleCooldownScaleRaw = Number(ruleCooldownScaleOverrides[ruleId]);
       const effectiveCooldownScale = Number.isFinite(ruleCooldownScaleRaw)
         ? Math.max(0, ruleCooldownScaleRaw)
-        : sourceEventCooldownScale;
+        : signalCooldownScale;
       const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0) * effectiveCooldownScale;
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;
