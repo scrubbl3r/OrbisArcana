@@ -1439,6 +1439,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides must be an object when present");
     } else {
       for (const [ruleId, value] of Object.entries(ruleEnabledOverrides)) {
+        if (!asText(ruleId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides contains empty rule id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides[${ruleId}] must be boolean`);
         }
