@@ -489,6 +489,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides must be an object when present");
     } else {
       for (const [ruleId, value] of Object.entries(ruleEmitSourceEventSummaryOverrides)) {
+        if (!asText(ruleId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides contains empty rule id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides[${ruleId}] must be boolean`);
         }
