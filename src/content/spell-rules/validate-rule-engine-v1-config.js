@@ -1062,6 +1062,15 @@ export function validateRuleEngineV1Config(config = null) {
         if (hasLte && !isFiniteNumber(value.lte)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].lte must be a finite number`);
         }
+        const lower = hasGt
+          ? Number(value.gt)
+          : (hasGte ? Number(value.gte) : null);
+        const upper = hasLt
+          ? Number(value.lt)
+          : (hasLte ? Number(value.lte) : null);
+        if (lower !== null && upper !== null && Number.isFinite(lower) && Number.isFinite(upper) && lower > upper) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] lower bound cannot be greater than upper bound`);
+        }
       }
     }
   }
