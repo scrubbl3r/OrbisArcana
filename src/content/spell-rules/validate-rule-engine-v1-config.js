@@ -111,6 +111,7 @@ export function validateRuleEngineV1Config(config = null) {
   const sourceEventDebounceOverrides = asObj(cfg.sourceEventDebounceOverrides);
   const sourceEventMaxSignalsOverrides = asObj(cfg.sourceEventMaxSignalsOverrides);
   const sourceEventMaxRulesEvaluatedOverrides = asObj(cfg.sourceEventMaxRulesEvaluatedOverrides);
+  const sourceEventMaxMatchesPerEventOverrides = asObj(cfg.sourceEventMaxMatchesPerEventOverrides);
   const sourceEventStopOnFirstSignalMatchOverrides = asObj(cfg.sourceEventStopOnFirstSignalMatchOverrides);
   const sourceEventEmitPreviewMatchedOverrides = asObj(cfg.sourceEventEmitPreviewMatchedOverrides);
   const sourceEventActionTypeEnabledOverrides = asObj(cfg.sourceEventActionTypeEnabledOverrides);
@@ -158,6 +159,12 @@ export function validateRuleEngineV1Config(config = null) {
       const n = Number(execution.maxSignalsPerEvent);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxSignalsPerEvent must be an integer >= 0 when present");
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(execution, "maxMatchesPerEvent")) {
+      const n = Number(execution.maxMatchesPerEvent);
+      if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxMatchesPerEvent must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxActionsPerRuleMatch")) {
@@ -622,6 +629,22 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventMaxMatchesPerEventOverrides")) {
+    if (!cfg.sourceEventMaxMatchesPerEventOverrides || typeof cfg.sourceEventMaxMatchesPerEventOverrides !== "object" || Array.isArray(cfg.sourceEventMaxMatchesPerEventOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerEventOverrides must be an object when present");
+    } else {
+      for (const [sourceEvent, value] of Object.entries(sourceEventMaxMatchesPerEventOverrides)) {
+        if (!asText(sourceEvent)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerEventOverrides contains empty source event key");
+          continue;
+        }
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerEventOverrides[${sourceEvent}] must be an integer >= 0`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventStopOnFirstSignalMatchOverrides")) {
     if (!cfg.sourceEventStopOnFirstSignalMatchOverrides || typeof cfg.sourceEventStopOnFirstSignalMatchOverrides !== "object" || Array.isArray(cfg.sourceEventStopOnFirstSignalMatchOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstSignalMatchOverrides must be an object when present");
@@ -976,6 +999,11 @@ export function validateRuleEngineV1Config(config = null) {
     const evt = String(sourceEvent || "").trim();
     if (!evt || sourceEvents.has(evt)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxRulesEvaluatedOverrides references unknown source event: ${evt}`);
+  }
+  for (const sourceEvent of Object.keys(sourceEventMaxMatchesPerEventOverrides)) {
+    const evt = String(sourceEvent || "").trim();
+    if (!evt || sourceEvents.has(evt)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerEventOverrides references unknown source event: ${evt}`);
   }
   for (const sourceEvent of Object.keys(sourceEventStopOnFirstSignalMatchOverrides)) {
     const evt = String(sourceEvent || "").trim();

@@ -1679,6 +1679,9 @@
               sourceEventMaxRulesEvaluatedOverrides: (next.sourceEventMaxRulesEvaluatedOverrides && typeof next.sourceEventMaxRulesEvaluatedOverrides === "object")
                 ? { ...next.sourceEventMaxRulesEvaluatedOverrides }
                 : Object.create(null),
+              sourceEventMaxMatchesPerEventOverrides: (next.sourceEventMaxMatchesPerEventOverrides && typeof next.sourceEventMaxMatchesPerEventOverrides === "object")
+                ? { ...next.sourceEventMaxMatchesPerEventOverrides }
+                : Object.create(null),
               sourceEventStopOnFirstSignalMatchOverrides: (next.sourceEventStopOnFirstSignalMatchOverrides && typeof next.sourceEventStopOnFirstSignalMatchOverrides === "object")
                 ? { ...next.sourceEventStopOnFirstSignalMatchOverrides }
                 : Object.create(null),

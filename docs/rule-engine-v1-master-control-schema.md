@@ -42,6 +42,7 @@ Top-Level Shape
   sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
   sourceEventMaxSignalsOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxRulesEvaluatedOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
+  sourceEventMaxMatchesPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventStopOnFirstSignalMatchOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventEmitPreviewMatchedOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventActionTypeEnabledOverrides: { ... }, // optional { [sourceEvent]: { wake_win?, event? } }
@@ -163,6 +164,9 @@ Authoring Notes
   - `execution.maxRulesEvaluatedPerSignal`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many candidate rules are evaluated per signal hit.
+  - `execution.maxMatchesPerEvent`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps total matched rules emitted/executed for one source-event payload.
   - `execution.maxSignalsPerEvent`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matching signals are processed per source-event payload.
@@ -251,6 +255,9 @@ Authoring Notes
   - `sourceEventMaxRulesEvaluatedOverrides`:
     - per-source-event candidate evaluation cap map (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxRulesEvaluatedPerSignal`.
+  - `sourceEventMaxMatchesPerEventOverrides`:
+    - per-source-event rule-match cap map (`{ [sourceEvent]: integer >= 0 }`).
+    - precedence: per-source-event override -> `execution.maxMatchesPerEvent`.
   - `sourceEventStopOnFirstSignalMatchOverrides`:
     - per-source-event first-match short-circuit map (`{ [sourceEvent]: boolean }`).
     - precedence: per-source-event override -> `execution.stopOnFirstSignalMatchPerEvent`.
