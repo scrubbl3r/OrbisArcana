@@ -346,6 +346,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       signalExecuteActionsOverrides: (ruleSchemaV1.signalExecuteActionsOverrides && typeof ruleSchemaV1.signalExecuteActionsOverrides === "object")
         ? { ...ruleSchemaV1.signalExecuteActionsOverrides }
         : Object.create(null),
+      signalActionTypeEnabledOverrides: (ruleSchemaV1.signalActionTypeEnabledOverrides && typeof ruleSchemaV1.signalActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchemaV1.signalActionTypeEnabledOverrides }
+        : Object.create(null),
       signalStopOnFirstMatchOverrides: (ruleSchemaV1.signalStopOnFirstMatchOverrides && typeof ruleSchemaV1.signalStopOnFirstMatchOverrides === "object")
         ? { ...ruleSchemaV1.signalStopOnFirstMatchOverrides }
         : Object.create(null),
@@ -448,6 +451,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       signalExecuteActionsOverrides: (ruleSchemaV1.signalExecuteActionsOverrides && typeof ruleSchemaV1.signalExecuteActionsOverrides === "object")
         ? { ...ruleSchemaV1.signalExecuteActionsOverrides }
+        : Object.create(null),
+      signalActionTypeEnabledOverrides: (ruleSchemaV1.signalActionTypeEnabledOverrides && typeof ruleSchemaV1.signalActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchemaV1.signalActionTypeEnabledOverrides }
         : Object.create(null),
       signalStopOnFirstMatchOverrides: (ruleSchemaV1.signalStopOnFirstMatchOverrides && typeof ruleSchemaV1.signalStopOnFirstMatchOverrides === "object")
         ? { ...ruleSchemaV1.signalStopOnFirstMatchOverrides }

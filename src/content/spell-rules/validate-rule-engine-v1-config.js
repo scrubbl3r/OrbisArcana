@@ -99,6 +99,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalEmitPreviewMatchedOverrides = asObj(cfg.signalEmitPreviewMatchedOverrides);
   const signalStopOnFirstMatchOverrides = asObj(cfg.signalStopOnFirstMatchOverrides);
   const signalExecuteActionsOverrides = asObj(cfg.signalExecuteActionsOverrides);
+  const signalActionTypeEnabledOverrides = asObj(cfg.signalActionTypeEnabledOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const signalSourceEventOverrides = asObj(cfg.signalSourceEventOverrides);
   const signalWhereOverrides = asObj(cfg.signalWhereOverrides);
@@ -415,6 +416,29 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [signalId, value] of Object.entries(signalExecuteActionsOverrides)) {
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalExecuteActionsOverrides[${signalId}] must be boolean`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalActionTypeEnabledOverrides")) {
+    if (!cfg.signalActionTypeEnabledOverrides || typeof cfg.signalActionTypeEnabledOverrides !== "object" || Array.isArray(cfg.signalActionTypeEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides must be an object when present");
+    } else {
+      const allowed = new Set(["wake_win", "event"]);
+      for (const [signalId, value] of Object.entries(signalActionTypeEnabledOverrides)) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] must be an object`);
+          continue;
+        }
+        for (const [actionType, enabled] of Object.entries(value)) {
+          const key = String(actionType || "").trim().toLowerCase();
+          if (!allowed.has(key)) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] has unsupported key: ${actionType}`);
+            continue;
+          }
+          if (typeof enabled !== "boolean") {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}][${actionType}] must be boolean`);
+          }
         }
       }
     }
@@ -812,6 +836,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalExecuteActionsOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalActionTypeEnabledOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides references unknown signal id: ${id}`);
   }
   for (const signalId of Object.keys(signalPriorityOverrides)) {
     const id = String(signalId || "").trim().toLowerCase();

@@ -163,6 +163,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalExecuteActionsOverrides = (schema && schema.signalExecuteActionsOverrides && typeof schema.signalExecuteActionsOverrides === "object")
     ? schema.signalExecuteActionsOverrides
     : Object.create(null);
+  const signalActionTypeEnabledOverrides = (schema && schema.signalActionTypeEnabledOverrides && typeof schema.signalActionTypeEnabledOverrides === "object")
+    ? schema.signalActionTypeEnabledOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -285,15 +288,23 @@ export function createRuleEngineV1PreviewSystem({
         ? sourceEventActionTypeEnabledOverrides[sourceEvent]
         : null;
       const hasSourceEventTypeGate = !!(sourceEventTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTypeGate, type));
+      const signalTypeGate = (signalId && signalActionTypeEnabledOverrides[signalId] && typeof signalActionTypeEnabledOverrides[signalId] === "object")
+        ? signalActionTypeEnabledOverrides[signalId]
+        : null;
+      const hasSignalTypeGate = !!(signalTypeGate && Object.prototype.hasOwnProperty.call(signalTypeGate, type));
       const typeEnabled = hasRuleTypeGate
         ? !!ruleTypeGate[type]
         : (
-          hasSourceEventTypeGate
-            ? !!sourceEventTypeGate[type]
+          hasSignalTypeGate
+            ? !!signalTypeGate[type]
             : (
-              Object.prototype.hasOwnProperty.call(actionTypeEnabled, type)
-                ? !!actionTypeEnabled[type]
-                : true
+              hasSourceEventTypeGate
+                ? !!sourceEventTypeGate[type]
+                : (
+                  Object.prototype.hasOwnProperty.call(actionTypeEnabled, type)
+                    ? !!actionTypeEnabled[type]
+                    : true
+                )
             )
         );
       if (!typeEnabled) {

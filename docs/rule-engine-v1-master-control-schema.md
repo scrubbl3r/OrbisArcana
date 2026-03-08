@@ -29,6 +29,7 @@ Top-Level Shape
   signalMaxMatchesOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalEmitPreviewMatchedOverrides: { ... }, // optional { [signalId]: boolean }
   signalExecuteActionsOverrides: { ... }, // optional { [signalId]: boolean }
+  signalActionTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
@@ -203,6 +204,9 @@ Authoring Notes
   - `signalExecuteActionsOverrides`:
     - per-signal action execution map (`{ [signalId]: boolean }`).
     - precedence: `ruleExecuteActionsOverrides` -> `signalExecuteActionsOverrides` -> `sourceEventExecuteActionsOverrides` -> `execution.executeActions`.
+  - `signalActionTypeEnabledOverrides`:
+    - per-signal action-type gate map (`{ [signalId]: { wake_win?:boolean, event?:boolean } }`).
+    - precedence: `ruleActionTypeEnabledOverrides` -> `signalActionTypeEnabledOverrides` -> `sourceEventActionTypeEnabledOverrides` -> `execution.actionTypeEnabled`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.
