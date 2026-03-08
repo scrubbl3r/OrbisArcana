@@ -226,6 +226,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalMaxRulesEvaluatedPerEventOverrides = (schema && schema.signalMaxRulesEvaluatedPerEventOverrides && typeof schema.signalMaxRulesEvaluatedPerEventOverrides === "object")
     ? schema.signalMaxRulesEvaluatedPerEventOverrides
     : Object.create(null);
+  const signalMaxSignalsPerEventOverrides = (schema && schema.signalMaxSignalsPerEventOverrides && typeof schema.signalMaxSignalsPerEventOverrides === "object")
+    ? schema.signalMaxSignalsPerEventOverrides
+    : Object.create(null);
   const signalStopOnFirstSignalMatchPerEventOverrides = (schema && schema.signalStopOnFirstSignalMatchPerEventOverrides && typeof schema.signalStopOnFirstSignalMatchPerEventOverrides === "object")
     ? schema.signalStopOnFirstSignalMatchPerEventOverrides
     : Object.create(null);
@@ -694,6 +697,19 @@ export function createRuleEngineV1PreviewSystem({
           evaluatedSignalCount += 1;
           if (effectiveMaxSignalsEvaluatedPerEvent > 0 && evaluatedSignalCount > effectiveMaxSignalsEvaluatedPerEvent) break;
           if (!signalMatchesPayload(signal, payload)) continue;
+          const remainingMatchedSignalBudget = (effectiveMaxSignalsPerEvent > 0)
+            ? Math.max(0, effectiveMaxSignalsPerEvent - matchedSignalCount)
+            : 0;
+          const signalMatchedSignalsEventCapRaw = Number(signalMaxSignalsPerEventOverrides[String(signal.id || "")]);
+          const signalMatchedSignalsEventCap = Number.isFinite(signalMatchedSignalsEventCapRaw)
+            ? Math.max(0, Math.floor(signalMatchedSignalsEventCapRaw))
+            : 0;
+          const effectiveRemainingMatchedSignalBudget = (signalMatchedSignalsEventCap > 0 && remainingMatchedSignalBudget > 0)
+            ? Math.min(signalMatchedSignalsEventCap, remainingMatchedSignalBudget)
+            : (signalMatchedSignalsEventCap > 0 ? signalMatchedSignalsEventCap : remainingMatchedSignalBudget);
+          if (effectiveRemainingMatchedSignalBudget === 0 && (signalMatchedSignalsEventCap > 0 || remainingMatchedSignalBudget > 0)) {
+            break;
+          }
           const remainingMatchBudget = (effectiveMaxMatchesPerEvent > 0)
             ? Math.max(0, effectiveMaxMatchesPerEvent - matchedRuleCount)
             : 0;
@@ -736,6 +752,9 @@ export function createRuleEngineV1PreviewSystem({
           actionCount += Number(hit && hit.actionCount || 0);
           evaluatedRuleCount += Number(hit && hit.evaluatedCount || 0);
           matchedSignalCount += 1;
+          const effectiveMaxSignalsPerEventForCurrentSignal = (signalMatchedSignalsEventCap > 0 && effectiveMaxSignalsPerEvent > 0)
+            ? Math.min(signalMatchedSignalsEventCap, effectiveMaxSignalsPerEvent)
+            : (signalMatchedSignalsEventCap > 0 ? signalMatchedSignalsEventCap : effectiveMaxSignalsPerEvent);
           const hasSignalFirstSignalMatchOverride = Object.prototype.hasOwnProperty.call(
             signalStopOnFirstSignalMatchPerEventOverrides,
             String(signal.id || "")
@@ -747,7 +766,7 @@ export function createRuleEngineV1PreviewSystem({
           if (effectiveMaxActionsPerEvent > 0 && actionCount >= effectiveMaxActionsPerEvent) break;
           if (effectiveMaxRulesEvaluatedPerEvent > 0 && evaluatedRuleCount >= effectiveMaxRulesEvaluatedPerEvent) break;
           if (effectiveStopOnFirstSignalForCurrentSignal) break;
-          if (effectiveMaxSignalsPerEvent > 0 && matchedSignalCount >= effectiveMaxSignalsPerEvent) break;
+          if (effectiveMaxSignalsPerEventForCurrentSignal > 0 && matchedSignalCount >= effectiveMaxSignalsPerEventForCurrentSignal) break;
         }
       }));
     }

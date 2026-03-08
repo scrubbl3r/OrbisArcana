@@ -1685,6 +1685,9 @@
               signalMaxMatchesPerEventOverrides: (next.signalMaxMatchesPerEventOverrides && typeof next.signalMaxMatchesPerEventOverrides === "object")
                 ? { ...next.signalMaxMatchesPerEventOverrides }
                 : Object.create(null),
+              signalMaxSignalsPerEventOverrides: (next.signalMaxSignalsPerEventOverrides && typeof next.signalMaxSignalsPerEventOverrides === "object")
+                ? { ...next.signalMaxSignalsPerEventOverrides }
+                : Object.create(null),
               signalMaxRulesEvaluatedPerEventOverrides: (next.signalMaxRulesEvaluatedPerEventOverrides && typeof next.signalMaxRulesEvaluatedPerEventOverrides === "object")
                 ? { ...next.signalMaxRulesEvaluatedPerEventOverrides }
                 : Object.create(null),
