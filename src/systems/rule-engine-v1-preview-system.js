@@ -2,6 +2,7 @@ import { buildRuleEngineV1PreviewRuntime } from "../content/spell-rules/index.js
 
 const EVT_RULE_ENGINE_V1_PREVIEW_MATCHED = "rule_engine.v1.preview_matched";
 const EVT_RULE_ENGINE_V1_ACTION_EXECUTED = "rule_engine.v1.action_executed";
+const EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY = "rule_engine.v1.source_event_summary";
 
 function getByPath(obj, path) {
   const parts = String(path || "").split(".").filter(Boolean);
@@ -159,6 +160,9 @@ export function createRuleEngineV1PreviewSystem({
   const emitActionExecutedEvents = (Object.prototype.hasOwnProperty.call(execution, "emitActionExecutedEvents"))
     ? !!execution.emitActionExecutedEvents
     : true;
+  const emitSourceEventSummaryEvents = (Object.prototype.hasOwnProperty.call(execution, "emitSourceEventSummaryEvents"))
+    ? !!execution.emitSourceEventSummaryEvents
+    : false;
   const executionAllowsActions = (Object.prototype.hasOwnProperty.call(execution, "executeActions"))
     ? !!execution.executeActions
     : true;
@@ -785,6 +789,17 @@ export function createRuleEngineV1PreviewSystem({
           if (shouldStopAfterCurrentSignalEvaluation) break;
           if (effectiveStopOnFirstSignalForCurrentSignal) break;
           if (effectiveMaxSignalsPerEventForCurrentSignal > 0 && matchedSignalCount >= effectiveMaxSignalsPerEventForCurrentSignal) break;
+        }
+        if (emitSourceEventSummaryEvents) {
+          eventBus.emit(EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY, {
+            sourceEvent,
+            atMs: now,
+            evaluatedSignalCount,
+            matchedSignalCount,
+            evaluatedRuleCount,
+            matchedRuleCount,
+            actionCount,
+          });
         }
       }));
     }

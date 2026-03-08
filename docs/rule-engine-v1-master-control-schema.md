@@ -217,6 +217,9 @@ Authoring Notes
     - boolean; default `true`.
     - controls emission of `rule_engine.v1.action_executed` telemetry events only.
     - does not affect whether actions execute.
+  - `execution.emitSourceEventSummaryEvents`:
+    - boolean; default `false`.
+    - controls emission of `rule_engine.v1.source_event_summary` telemetry events (one per source-event payload handled).
   - `execution.actionExecutedEventTypeEnabled`:
     - optional telemetry action-type gate map, keys: `wake_win`, `event`.
     - when a key is set to `false`, `rule_engine.v1.action_executed` telemetry for that action type is suppressed.
