@@ -184,6 +184,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventMatchWindowScaleOverrides = (schema && schema.sourceEventMatchWindowScaleOverrides && typeof schema.sourceEventMatchWindowScaleOverrides === "object")
     ? schema.sourceEventMatchWindowScaleOverrides
     : Object.create(null);
+  const sourceEventMaxActionsPerRuleMatchOverrides = (schema && schema.sourceEventMaxActionsPerRuleMatchOverrides && typeof schema.sourceEventMaxActionsPerRuleMatchOverrides === "object")
+    ? schema.sourceEventMaxActionsPerRuleMatchOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -238,10 +241,14 @@ export function createRuleEngineV1PreviewSystem({
     const hasRuleExecuteOverride = Object.prototype.hasOwnProperty.call(ruleExecuteActionsOverrides, ruleId);
     if (hasRuleExecuteOverride && !ruleExecuteActionsOverrides[ruleId]) return;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
+    const sourceEventActionLimitRaw = Number(sourceEventMaxActionsPerRuleMatchOverrides[sourceEvent]);
+    const sourceEventActionLimit = Number.isFinite(sourceEventActionLimitRaw)
+      ? Math.max(0, Math.floor(sourceEventActionLimitRaw))
+      : maxActionsPerRuleMatch;
     const ruleActionLimitOverrideRaw = Number(ruleActionLimitOverrides[ruleId]);
     const effectiveMaxActionsPerRuleMatch = Number.isFinite(ruleActionLimitOverrideRaw)
       ? Math.max(0, Math.floor(ruleActionLimitOverrideRaw))
-      : maxActionsPerRuleMatch;
+      : sourceEventActionLimit;
     let executedActionCount = 0;
     for (let i = 0; i < actions.length; i += 1) {
       if (effectiveMaxActionsPerRuleMatch > 0 && executedActionCount >= effectiveMaxActionsPerRuleMatch) break;

@@ -1670,6 +1670,9 @@
               sourceEventMatchWindowScaleOverrides: (next.sourceEventMatchWindowScaleOverrides && typeof next.sourceEventMatchWindowScaleOverrides === "object")
                 ? { ...next.sourceEventMatchWindowScaleOverrides }
                 : Object.create(null),
+              sourceEventMaxActionsPerRuleMatchOverrides: (next.sourceEventMaxActionsPerRuleMatchOverrides && typeof next.sourceEventMaxActionsPerRuleMatchOverrides === "object")
+                ? { ...next.sourceEventMaxActionsPerRuleMatchOverrides }
+                : Object.create(null),
               actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),
