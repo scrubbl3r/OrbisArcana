@@ -158,6 +158,7 @@ Authoring Notes
   - Precedence: `ruleDefaults` -> per-rule explicit fields -> `rulePriorityOverrides`.
 - Rule ordering controls:
   - `rulePriorityOverrides` can centrally force per-rule `priority` by rule id.
+  - map keys must be non-empty rule ids.
   - Precedence: `rulePriorityOverrides` -> per-rule explicit/inherited priority.
   - Unknown rule ids in `rulePriorityOverrides` fail fast in validation.
 - Rule timing controls:

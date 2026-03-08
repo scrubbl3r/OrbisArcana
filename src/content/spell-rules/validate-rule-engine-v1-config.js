@@ -363,6 +363,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides must be an object when present");
     } else {
       for (const [ruleId, value] of Object.entries(rulePriorityOverrides)) {
+        if (!asText(ruleId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides contains empty rule id key");
+          continue;
+        }
         if (!Number.isFinite(Number(value))) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides[${ruleId}] must be a finite number`);
         }
