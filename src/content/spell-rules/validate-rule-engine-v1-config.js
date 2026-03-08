@@ -863,6 +863,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalSummaryIncludeBudgetCapsOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalSummaryIncludeBudgetCapsOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalSummaryIncludeBudgetCapsOverrides contains empty signal id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalSummaryIncludeBudgetCapsOverrides[${signalId}] must be boolean`);
         }
