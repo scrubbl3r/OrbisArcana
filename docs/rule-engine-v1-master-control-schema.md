@@ -349,6 +349,7 @@ Authoring Notes
     - per-signal patch map for `where` clauses (`{ [signalId]: object }`).
     - merges into the signal's existing `where` at config build time.
     - supported comparators: `eq`, `gt`, `gte`, `lt`, `lte`.
+    - supported keys: `path`, `eq`, `gt`, `gte`, `lt`, `lte` (unknown keys fail fast in validation).
     - `eq` is exclusive (cannot be combined with numeric comparators).
   - `sourceEventEnabledOverrides`:
     - centrally enable/disable processing per signal source event (`{ [sourceEvent]: boolean }`).

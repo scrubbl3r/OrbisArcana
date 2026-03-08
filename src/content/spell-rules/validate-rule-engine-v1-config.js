@@ -866,6 +866,11 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] must be an object`);
           continue;
         }
+        const allowedWhereKeys = new Set(["path", "eq", "gt", "gte", "lt", "lte"]);
+        for (const key of Object.keys(value)) {
+          if (allowedWhereKeys.has(String(key || ""))) continue;
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] contains unknown key: ${key}`);
+        }
         if (Object.prototype.hasOwnProperty.call(value, "path") && !asText(value.path)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].path must be non-empty when present`);
         }
