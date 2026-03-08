@@ -1988,6 +1988,10 @@ export function validateRuleEngineV1Config(config = null) {
     if (Object.prototype.hasOwnProperty.call(runtime, "kind") && typeof runtime.kind !== "string") {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.kind must be a string when present`);
     }
+    if (!asText(runtime.kind)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.kind is required`);
+      continue;
+    }
     const kind = String(runtime.kind || "").trim().toLowerCase();
     if (kind !== "orb_event" && kind !== "cast_action") {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.kind must be one of: orb_event, cast_action`);
