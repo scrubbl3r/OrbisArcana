@@ -349,6 +349,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       signalEmitActionExecutedOverrides: (ruleSchemaV1.signalEmitActionExecutedOverrides && typeof ruleSchemaV1.signalEmitActionExecutedOverrides === "object")
         ? { ...ruleSchemaV1.signalEmitActionExecutedOverrides }
         : Object.create(null),
+      signalEmitSourceEventSummaryOverrides: (ruleSchemaV1.signalEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.signalEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchemaV1.signalEmitSourceEventSummaryOverrides }
+        : Object.create(null),
       signalActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides === "object")
         ? { ...ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
@@ -532,6 +535,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       signalEmitActionExecutedOverrides: (ruleSchemaV1.signalEmitActionExecutedOverrides && typeof ruleSchemaV1.signalEmitActionExecutedOverrides === "object")
         ? { ...ruleSchemaV1.signalEmitActionExecutedOverrides }
+        : Object.create(null),
+      signalEmitSourceEventSummaryOverrides: (ruleSchemaV1.signalEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.signalEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchemaV1.signalEmitSourceEventSummaryOverrides }
         : Object.create(null),
       signalActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides === "object")
         ? { ...ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides }

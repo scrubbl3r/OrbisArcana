@@ -200,6 +200,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalEmitActionExecutedOverrides = (schema && schema.signalEmitActionExecutedOverrides && typeof schema.signalEmitActionExecutedOverrides === "object")
     ? schema.signalEmitActionExecutedOverrides
     : Object.create(null);
+  const signalEmitSourceEventSummaryOverrides = (schema && schema.signalEmitSourceEventSummaryOverrides && typeof schema.signalEmitSourceEventSummaryOverrides === "object")
+    ? schema.signalEmitSourceEventSummaryOverrides
+    : Object.create(null);
   const signalActionExecutedEventTypeEnabledOverrides = (schema && schema.signalActionExecutedEventTypeEnabledOverrides && typeof schema.signalActionExecutedEventTypeEnabledOverrides === "object")
     ? schema.signalActionExecutedEventTypeEnabledOverrides
     : Object.create(null);
@@ -699,6 +702,7 @@ export function createRuleEngineV1PreviewSystem({
         }
         lastSourceEventAtById.set(sourceEvent, now);
         let matchedSignalCount = 0;
+        let summarySignalId = "";
         let evaluatedSignalCount = 0;
         let matchedRuleCount = 0;
         let actionCount = 0;
@@ -721,6 +725,7 @@ export function createRuleEngineV1PreviewSystem({
             if (shouldStopAfterCurrentSignalEvaluation) break;
             continue;
           }
+          if (!summarySignalId) summarySignalId = String(signal.id || "");
           const remainingMatchedSignalBudget = (effectiveMaxSignalsPerEvent > 0)
             ? Math.max(0, effectiveMaxSignalsPerEvent - matchedSignalCount)
             : 0;
@@ -794,9 +799,13 @@ export function createRuleEngineV1PreviewSystem({
           if (effectiveMaxSignalsPerEventForCurrentSignal > 0 && matchedSignalCount >= effectiveMaxSignalsPerEventForCurrentSignal) break;
         }
         const hasSourceEventSummaryEmitOverride = Object.prototype.hasOwnProperty.call(sourceEventEmitSourceEventSummaryOverrides, sourceEvent);
-        const effectiveEmitSourceEventSummaryEvents = hasSourceEventSummaryEmitOverride
+        const sourceEventSummaryEmit = hasSourceEventSummaryEmitOverride
           ? !!sourceEventEmitSourceEventSummaryOverrides[sourceEvent]
           : emitSourceEventSummaryEvents;
+        const hasSignalSummaryEmitOverride = Object.prototype.hasOwnProperty.call(signalEmitSourceEventSummaryOverrides, String(summarySignalId || ""));
+        const effectiveEmitSourceEventSummaryEvents = hasSignalSummaryEmitOverride
+          ? !!signalEmitSourceEventSummaryOverrides[String(summarySignalId || "")]
+          : sourceEventSummaryEmit;
         if (effectiveEmitSourceEventSummaryEvents) {
           eventBus.emit(EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY, {
             sourceEvent,
