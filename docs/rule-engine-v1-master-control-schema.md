@@ -97,6 +97,7 @@ Event Runtime Bindings
 - `eventRuntimeBindings` must be an object when present.
 - `eventRuntimeBindings` keys must be non-empty event ids and match declared `events`.
 - each binding must be an object with `runtime` object.
+- binding object supports keys: `id`, `runtime` (unknown keys fail fast).
 - each binding `id` must be non-empty and match its map key.
 - `runtime.kind` must be `orb_event` or `cast_action`.
 - `runtime` supports keys: `kind`, `event`, `castActionId` (unknown keys fail fast).

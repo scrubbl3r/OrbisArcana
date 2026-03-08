@@ -1959,6 +1959,11 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}] must be an object`);
       continue;
     }
+    const allowedBindingKeys = new Set(["id", "runtime"]);
+    for (const key of Object.keys(binding)) {
+      if (allowedBindingKeys.has(String(key || ""))) continue;
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}] contains unknown key: ${key}`);
+    }
     const bindingInnerId = String(binding.id || "").trim().toLowerCase();
     if (!bindingInnerId) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].id must be non-empty`);
