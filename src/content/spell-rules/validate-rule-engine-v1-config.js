@@ -984,6 +984,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalPriorityOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides contains empty signal id key");
+          continue;
+        }
         if (!Number.isFinite(Number(value))) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides[${signalId}] must be a finite number`);
         }
