@@ -1939,6 +1939,16 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings missing id: ${id}`);
     }
   }
+  for (const bindingId of Object.keys(eventRuntimeBindings)) {
+    const id = String(bindingId || "").trim().toLowerCase();
+    if (!id) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings contains empty event id key");
+      continue;
+    }
+    if (!eventIds.has(id)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings references unknown event id: ${id}`);
+    }
+  }
 
   return errors;
 }
