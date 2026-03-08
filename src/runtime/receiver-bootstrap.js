@@ -379,6 +379,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       signalMaxSignalsPerEventOverrides: (ruleSchemaV1.signalMaxSignalsPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsPerEventOverrides === "object")
         ? { ...ruleSchemaV1.signalMaxSignalsPerEventOverrides }
         : Object.create(null),
+      signalMaxSignalsEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides }
+        : Object.create(null),
       signalMaxRulesEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides === "object")
         ? { ...ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides }
         : Object.create(null),
@@ -556,6 +559,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       signalMaxSignalsPerEventOverrides: (ruleSchemaV1.signalMaxSignalsPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsPerEventOverrides === "object")
         ? { ...ruleSchemaV1.signalMaxSignalsPerEventOverrides }
+        : Object.create(null),
+      signalMaxSignalsEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides }
         : Object.create(null),
       signalMaxRulesEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides === "object")
         ? { ...ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides }
