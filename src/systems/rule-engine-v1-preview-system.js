@@ -290,6 +290,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleEmitActionExecutedOverrides = (schema && schema.ruleEmitActionExecutedOverrides && typeof schema.ruleEmitActionExecutedOverrides === "object")
     ? schema.ruleEmitActionExecutedOverrides
     : Object.create(null);
+  const ruleActionExecutedEventTypeEnabledOverrides = (schema && schema.ruleActionExecutedEventTypeEnabledOverrides && typeof schema.ruleActionExecutedEventTypeEnabledOverrides === "object")
+    ? schema.ruleActionExecutedEventTypeEnabledOverrides
+    : Object.create(null);
   const ruleExecuteActionsOverrides = (schema && schema.ruleExecuteActionsOverrides && typeof schema.ruleExecuteActionsOverrides === "object")
     ? schema.ruleExecuteActionsOverrides
     : Object.create(null);
@@ -341,6 +344,9 @@ export function createRuleEngineV1PreviewSystem({
       : null;
     const signalTelemetryTypeGate = (signalId && signalActionExecutedEventTypeEnabledOverrides[signalId] && typeof signalActionExecutedEventTypeEnabledOverrides[signalId] === "object")
       ? signalActionExecutedEventTypeEnabledOverrides[signalId]
+      : null;
+    const ruleTelemetryTypeGate = (ruleId && ruleActionExecutedEventTypeEnabledOverrides[ruleId] && typeof ruleActionExecutedEventTypeEnabledOverrides[ruleId] === "object")
+      ? ruleActionExecutedEventTypeEnabledOverrides[ruleId]
       : null;
     let effectiveExecuteActions = true;
     if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
@@ -416,7 +422,9 @@ export function createRuleEngineV1PreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
-        const emitTypeEnabled = signalTelemetryTypeGate && Object.prototype.hasOwnProperty.call(signalTelemetryTypeGate, "wake_win")
+        const emitTypeEnabled = ruleTelemetryTypeGate && Object.prototype.hasOwnProperty.call(ruleTelemetryTypeGate, "wake_win")
+          ? !!ruleTelemetryTypeGate.wake_win
+          : (signalTelemetryTypeGate && Object.prototype.hasOwnProperty.call(signalTelemetryTypeGate, "wake_win")
           ? !!signalTelemetryTypeGate.wake_win
           : (sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "wake_win")
           ? !!sourceEventTelemetryTypeGate.wake_win
@@ -424,7 +432,7 @@ export function createRuleEngineV1PreviewSystem({
             Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "wake_win")
               ? !!actionExecutedEventTypeEnabled.wake_win
               : true
-          ));
+          )));
         if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
           eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
             ruleId: String(rule && rule.id || ""),
@@ -442,7 +450,9 @@ export function createRuleEngineV1PreviewSystem({
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;
       const args = resolveEventArgs(id, mergedOverrides);
-      const emitTypeEnabled = signalTelemetryTypeGate && Object.prototype.hasOwnProperty.call(signalTelemetryTypeGate, "event")
+      const emitTypeEnabled = ruleTelemetryTypeGate && Object.prototype.hasOwnProperty.call(ruleTelemetryTypeGate, "event")
+        ? !!ruleTelemetryTypeGate.event
+        : (signalTelemetryTypeGate && Object.prototype.hasOwnProperty.call(signalTelemetryTypeGate, "event")
         ? !!signalTelemetryTypeGate.event
         : (sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "event")
         ? !!sourceEventTelemetryTypeGate.event
@@ -450,7 +460,7 @@ export function createRuleEngineV1PreviewSystem({
           Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "event")
             ? !!actionExecutedEventTypeEnabled.event
             : true
-        ));
+        )));
       if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
         eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),

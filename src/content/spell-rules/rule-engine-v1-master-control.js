@@ -269,6 +269,11 @@ const RULE_EMIT_ACTION_EXECUTED_OVERRIDES = Object.freeze({
   // r_rota_yspin_charged: false,
 });
 
+const RULE_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES = Object.freeze({
+  // Example:
+  // r_rota_yspin_charged: { wake_win: false, event: true },
+});
+
 const RULE_EXECUTE_ACTIONS_OVERRIDES = Object.freeze({
   // Example:
   // r_rota_yspin_charged: false,
@@ -525,6 +530,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   ruleMatchWindowScaleOverrides: RULE_MATCH_WINDOW_SCALE_OVERRIDES,
   ruleEmitPreviewMatchedOverrides: RULE_EMIT_PREVIEW_MATCHED_OVERRIDES,
   ruleEmitActionExecutedOverrides: RULE_EMIT_ACTION_EXECUTED_OVERRIDES,
+  ruleActionExecutedEventTypeEnabledOverrides: RULE_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES,
   ruleExecuteActionsOverrides: RULE_EXECUTE_ACTIONS_OVERRIDES,
   ruleActionTypeEnabledOverrides: RULE_ACTION_TYPE_ENABLED_OVERRIDES,
   signalEnabledOverrides: SIGNAL_ENABLED_OVERRIDES,

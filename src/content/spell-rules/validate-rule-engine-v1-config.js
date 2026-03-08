@@ -92,6 +92,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleMatchWindowScaleOverrides = asObj(cfg.ruleMatchWindowScaleOverrides);
   const ruleEmitPreviewMatchedOverrides = asObj(cfg.ruleEmitPreviewMatchedOverrides);
   const ruleEmitActionExecutedOverrides = asObj(cfg.ruleEmitActionExecutedOverrides);
+  const ruleActionExecutedEventTypeEnabledOverrides = asObj(cfg.ruleActionExecutedEventTypeEnabledOverrides);
   const ruleExecuteActionsOverrides = asObj(cfg.ruleExecuteActionsOverrides);
   const ruleActionTypeEnabledOverrides = asObj(cfg.ruleActionTypeEnabledOverrides);
   const signalEnabledOverrides = asObj(cfg.signalEnabledOverrides);
@@ -387,6 +388,29 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [ruleId, value] of Object.entries(ruleEmitActionExecutedOverrides)) {
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitActionExecutedOverrides[${ruleId}] must be boolean`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleActionExecutedEventTypeEnabledOverrides")) {
+    if (!cfg.ruleActionExecutedEventTypeEnabledOverrides || typeof cfg.ruleActionExecutedEventTypeEnabledOverrides !== "object" || Array.isArray(cfg.ruleActionExecutedEventTypeEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides must be an object when present");
+    } else {
+      const allowed = new Set(["wake_win", "event"]);
+      for (const [ruleId, value] of Object.entries(ruleActionExecutedEventTypeEnabledOverrides)) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] must be an object`);
+          continue;
+        }
+        for (const [actionType, enabled] of Object.entries(value)) {
+          const key = String(actionType || "").trim().toLowerCase();
+          if (!allowed.has(key)) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] has unsupported key: ${actionType}`);
+            continue;
+          }
+          if (typeof enabled !== "boolean") {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}][${actionType}] must be boolean`);
+          }
         }
       }
     }
@@ -1323,6 +1347,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitActionExecutedOverrides references unknown rule id: ${id}`);
+  }
+  for (const ruleId of Object.keys(ruleActionExecutedEventTypeEnabledOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides references unknown rule id: ${id}`);
   }
   for (const ruleId of Object.keys(ruleExecuteActionsOverrides)) {
     const id = String(ruleId || "").trim();

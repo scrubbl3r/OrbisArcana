@@ -23,6 +23,7 @@ Top-Level Shape
   ruleMatchWindowScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   ruleEmitPreviewMatchedOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleEmitActionExecutedOverrides: { ... }, // optional { [ruleId]: boolean }
+  ruleActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
   ruleExecuteActionsOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleActionTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
@@ -160,6 +161,8 @@ Authoring Notes
   - Precedence: `ruleEmitPreviewMatchedOverrides` -> `sourceEventEmitPreviewMatchedOverrides` -> `execution.emitPreviewMatchedEvents`.
   - `ruleEmitActionExecutedOverrides` can centrally force action telemetry on/off per rule.
   - Precedence: `ruleEmitActionExecutedOverrides` -> `signalEmitActionExecutedOverrides` -> `sourceEventEmitActionExecutedOverrides` -> `execution.emitActionExecutedEvents`.
+  - `ruleActionExecutedEventTypeEnabledOverrides` can centrally force action-telemetry type gates per rule.
+  - Precedence: `ruleActionExecutedEventTypeEnabledOverrides` -> `signalActionExecutedEventTypeEnabledOverrides` -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.
 - Rule action execution controls:
   - `ruleExecuteActionsOverrides` can centrally force action execution on/off per rule.
   - Precedence: `ruleExecuteActionsOverrides` -> `execution.executeActions`.
