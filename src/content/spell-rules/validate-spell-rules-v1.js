@@ -66,6 +66,15 @@ function validateWhereClause(where, label, errors) {
   if (hasLte && !isFiniteNumber(where.lte)) {
     errors.push(`${label} where.lte must be a finite number`);
   }
+  const lower = hasGt
+    ? Number(where.gt)
+    : (hasGte ? Number(where.gte) : null);
+  const upper = hasLt
+    ? Number(where.lt)
+    : (hasLte ? Number(where.lte) : null);
+  if (lower !== null && upper !== null && Number.isFinite(lower) && Number.isFinite(upper) && lower > upper) {
+    errors.push(`${label} where lower bound cannot be greater than upper bound`);
+  }
 }
 
 function resolveSignalConditionId(cond) {
