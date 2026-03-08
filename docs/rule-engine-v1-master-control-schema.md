@@ -168,6 +168,7 @@ Authoring Notes
   - Precedence: `ruleTimingOverrides` -> per-rule explicit/inherited timing.
 - Rule action fanout controls:
   - `ruleActionLimitOverrides` can centrally cap max executed actions for specific rules.
+  - map keys must be non-empty rule ids.
   - Precedence: `ruleActionLimitOverrides` -> `execution.maxActionsPerRuleMatch`.
 - Rule cooldown scaling controls:
   - `ruleCooldownScaleOverrides` can centrally scale cooldown pacing for specific rules.

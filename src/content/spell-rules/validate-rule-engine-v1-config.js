@@ -411,6 +411,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides must be an object when present");
     } else {
       for (const [ruleId, value] of Object.entries(ruleActionLimitOverrides)) {
+        if (!asText(ruleId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides contains empty rule id key");
+          continue;
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides[${ruleId}] must be an integer >= 0`);
