@@ -172,6 +172,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventEmitPreviewMatchedOverrides = (schema && schema.sourceEventEmitPreviewMatchedOverrides && typeof schema.sourceEventEmitPreviewMatchedOverrides === "object")
     ? schema.sourceEventEmitPreviewMatchedOverrides
     : Object.create(null);
+  const sourceEventActionTypeEnabledOverrides = (schema && schema.sourceEventActionTypeEnabledOverrides && typeof schema.sourceEventActionTypeEnabledOverrides === "object")
+    ? schema.sourceEventActionTypeEnabledOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -229,7 +232,19 @@ export function createRuleEngineV1PreviewSystem({
       const action = actions[i];
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
-      if (Object.prototype.hasOwnProperty.call(actionTypeEnabled, type) && !actionTypeEnabled[type]) {
+      const sourceEvent = String(triggerMeta && triggerMeta.sourceEvent || "");
+      const sourceEventTypeGate = (sourceEvent && sourceEventActionTypeEnabledOverrides[sourceEvent] && typeof sourceEventActionTypeEnabledOverrides[sourceEvent] === "object")
+        ? sourceEventActionTypeEnabledOverrides[sourceEvent]
+        : null;
+      const hasSourceEventTypeGate = !!(sourceEventTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTypeGate, type));
+      const typeEnabled = hasSourceEventTypeGate
+        ? !!sourceEventTypeGate[type]
+        : (
+          Object.prototype.hasOwnProperty.call(actionTypeEnabled, type)
+            ? !!actionTypeEnabled[type]
+            : true
+        );
+      if (!typeEnabled) {
         continue;
       }
       const argOverride = resolveActionArgOverride(ruleId, action, i, actionArgOverrides);

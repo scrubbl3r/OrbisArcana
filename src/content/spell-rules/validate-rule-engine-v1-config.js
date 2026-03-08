@@ -103,6 +103,7 @@ export function validateRuleEngineV1Config(config = null) {
   const sourceEventMaxSignalsOverrides = asObj(cfg.sourceEventMaxSignalsOverrides);
   const sourceEventStopOnFirstSignalMatchOverrides = asObj(cfg.sourceEventStopOnFirstSignalMatchOverrides);
   const sourceEventEmitPreviewMatchedOverrides = asObj(cfg.sourceEventEmitPreviewMatchedOverrides);
+  const sourceEventActionTypeEnabledOverrides = asObj(cfg.sourceEventActionTypeEnabledOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const actionArgOverrides = asObj(cfg.actionArgOverrides);
@@ -486,6 +487,33 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventActionTypeEnabledOverrides")) {
+    if (!cfg.sourceEventActionTypeEnabledOverrides || typeof cfg.sourceEventActionTypeEnabledOverrides !== "object" || Array.isArray(cfg.sourceEventActionTypeEnabledOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides must be an object when present");
+    } else {
+      const allowed = new Set(["wake_win", "event"]);
+      for (const [sourceEvent, value] of Object.entries(sourceEventActionTypeEnabledOverrides)) {
+        if (!asText(sourceEvent)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides contains empty source event key");
+          continue;
+        }
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] must be an object`);
+          continue;
+        }
+        for (const [actionType, enabled] of Object.entries(value)) {
+          const key = String(actionType || "").trim().toLowerCase();
+          if (!allowed.has(key)) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] has unsupported key: ${actionType}`);
+            continue;
+          }
+          if (typeof enabled !== "boolean") {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}][${actionType}] must be boolean`);
+          }
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleEnabledOverrides")) {
     if (!cfg.ruleEnabledOverrides || typeof cfg.ruleEnabledOverrides !== "object" || Array.isArray(cfg.ruleEnabledOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides must be an object when present");
@@ -654,6 +682,11 @@ export function validateRuleEngineV1Config(config = null) {
     const evt = String(sourceEvent || "").trim();
     if (!evt || sourceEvents.has(evt)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitPreviewMatchedOverrides references unknown source event: ${evt}`);
+  }
+  for (const sourceEvent of Object.keys(sourceEventActionTypeEnabledOverrides)) {
+    const evt = String(sourceEvent || "").trim();
+    if (!evt || sourceEvents.has(evt)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides references unknown source event: ${evt}`);
   }
   for (const ruleId of Object.keys(ruleTimingOverrides)) {
     const id = String(ruleId || "").trim();
