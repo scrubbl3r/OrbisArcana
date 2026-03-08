@@ -1044,6 +1044,12 @@ export function validateRuleEngineV1Config(config = null) {
         if (hasEq && (hasGt || hasGte || hasLt || hasLte)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] cannot combine eq with numeric comparators`);
         }
+        if (hasGt && hasGte) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] cannot combine gt and gte`);
+        }
+        if (hasLt && hasLte) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] cannot combine lt and lte`);
+        }
         if (hasGt && !isFiniteNumber(value.gt)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].gt must be a finite number`);
         }
