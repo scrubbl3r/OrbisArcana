@@ -106,7 +106,7 @@ Event Runtime Bindings
 - binding `id` must be a string when present.
 - `runtime.kind` must be `orb_event` or `cast_action`.
 - `runtime` supports keys: `kind`, `event`, `castActionId` (unknown keys fail fast).
-- `runtime.event` / `runtime.castActionId` must be strings when present.
+- `runtime.kind` / `runtime.event` / `runtime.castActionId` must be strings when present.
 - if `runtime.kind` is `orb_event`, `runtime.event` must be non-empty.
 - if `runtime.kind` is `orb_event`, `runtime.castActionId` must be omitted.
 - if `runtime.kind` is `cast_action`, `runtime.castActionId` must be non-empty.

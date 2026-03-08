@@ -1985,6 +1985,9 @@ export function validateRuleEngineV1Config(config = null) {
       if (allowedRuntimeKeys.has(String(key || ""))) continue;
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime contains unknown key: ${key}`);
     }
+    if (Object.prototype.hasOwnProperty.call(runtime, "kind") && typeof runtime.kind !== "string") {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.kind must be a string when present`);
+    }
     const kind = String(runtime.kind || "").trim().toLowerCase();
     if (kind !== "orb_event" && kind !== "cast_action") {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.kind must be one of: orb_event, cast_action`);
