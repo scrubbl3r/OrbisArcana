@@ -24,6 +24,7 @@ Top-Level Shape
   ruleEmitPreviewMatchedOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleEmitActionExecutedOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleEmitSourceEventSummaryOverrides: { ... }, // optional { [ruleId]: boolean }
+  ruleSummaryIncludeSignalAndRuleIdsOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
   ruleExecuteActionsOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleActionTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
@@ -174,6 +175,8 @@ Authoring Notes
   - Precedence: `ruleEmitActionExecutedOverrides` -> `signalEmitActionExecutedOverrides` -> `sourceEventEmitActionExecutedOverrides` -> `execution.emitActionExecutedEvents`.
   - `ruleEmitSourceEventSummaryOverrides` can centrally force source-event summary telemetry on/off per rule.
   - Precedence: `ruleEmitSourceEventSummaryOverrides` -> `signalEmitSourceEventSummaryOverrides` -> `sourceEventEmitSourceEventSummaryOverrides` -> `execution.emitSourceEventSummaryEvents`.
+  - `ruleSummaryIncludeSignalAndRuleIdsOverrides` can centrally force summary payload detail on/off per rule.
+  - Precedence: `ruleSummaryIncludeSignalAndRuleIdsOverrides` -> `signalSummaryIncludeSignalAndRuleIdsOverrides` -> `sourceEventSummaryIncludeSignalAndRuleIdsOverrides` -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
   - `ruleActionExecutedEventTypeEnabledOverrides` can centrally force action-telemetry type gates per rule.
   - Precedence: `ruleActionExecutedEventTypeEnabledOverrides` -> `signalActionExecutedEventTypeEnabledOverrides` -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.
 - Rule action execution controls:
@@ -299,7 +302,7 @@ Authoring Notes
     - precedence: `ruleEmitSourceEventSummaryOverrides` -> `signalEmitSourceEventSummaryOverrides` -> `sourceEventEmitSourceEventSummaryOverrides` -> `execution.emitSourceEventSummaryEvents`.
   - `signalSummaryIncludeSignalAndRuleIdsOverrides`:
     - per-signal summary payload detail map (`{ [signalId]: boolean }`).
-    - precedence: per-signal override -> `sourceEventSummaryIncludeSignalAndRuleIdsOverrides` -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
+    - precedence: `ruleSummaryIncludeSignalAndRuleIdsOverrides` -> `signalSummaryIncludeSignalAndRuleIdsOverrides` -> `sourceEventSummaryIncludeSignalAndRuleIdsOverrides` -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
   - `signalActionExecutedEventTypeEnabledOverrides`:
     - per-signal action-telemetry type gates (`{ [signalId]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-signal override -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.

@@ -338,6 +338,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleEmitSourceEventSummaryOverrides = (schema && schema.ruleEmitSourceEventSummaryOverrides && typeof schema.ruleEmitSourceEventSummaryOverrides === "object")
     ? schema.ruleEmitSourceEventSummaryOverrides
     : Object.create(null);
+  const ruleSummaryIncludeSignalAndRuleIdsOverrides = (schema && schema.ruleSummaryIncludeSignalAndRuleIdsOverrides && typeof schema.ruleSummaryIncludeSignalAndRuleIdsOverrides === "object")
+    ? schema.ruleSummaryIncludeSignalAndRuleIdsOverrides
+    : Object.create(null);
   const ruleActionExecutedEventTypeEnabledOverrides = (schema && schema.ruleActionExecutedEventTypeEnabledOverrides && typeof schema.ruleActionExecutedEventTypeEnabledOverrides === "object")
     ? schema.ruleActionExecutedEventTypeEnabledOverrides
     : Object.create(null);
@@ -850,9 +853,16 @@ export function createRuleEngineV1PreviewSystem({
             signalSummaryIncludeSignalAndRuleIdsOverrides,
             String(summarySignalId || "")
           );
-          const effectiveSummaryIncludeIds = hasSignalSummaryIncludeIdsOverride
+          const signalSummaryIncludeIds = hasSignalSummaryIncludeIdsOverride
             ? !!signalSummaryIncludeSignalAndRuleIdsOverrides[String(summarySignalId || "")]
             : effectiveSourceEventSummaryIncludeIds;
+          const hasRuleSummaryIncludeIdsOverride = Object.prototype.hasOwnProperty.call(
+            ruleSummaryIncludeSignalAndRuleIdsOverrides,
+            String(summaryRuleId || "")
+          );
+          const effectiveSummaryIncludeIds = hasRuleSummaryIncludeIdsOverride
+            ? !!ruleSummaryIncludeSignalAndRuleIdsOverrides[String(summaryRuleId || "")]
+            : signalSummaryIncludeIds;
           if (effectiveSummaryIncludeIds) {
             summaryPayload.signalId = String(summarySignalId || "");
             summaryPayload.ruleId = String(summaryRuleId || "");
