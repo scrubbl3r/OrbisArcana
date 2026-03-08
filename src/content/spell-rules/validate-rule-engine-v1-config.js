@@ -1038,6 +1038,9 @@ export function validateRuleEngineV1Config(config = null) {
         const hasGte = Object.prototype.hasOwnProperty.call(value, "gte");
         const hasLt = Object.prototype.hasOwnProperty.call(value, "lt");
         const hasLte = Object.prototype.hasOwnProperty.call(value, "lte");
+        if (!hasEq && !hasGt && !hasGte && !hasLt && !hasLte) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] must include at least one comparator (eq|gt|gte|lt|lte)`);
+        }
         if (hasEq && (hasGt || hasGte || hasLt || hasLte)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] cannot combine eq with numeric comparators`);
         }
