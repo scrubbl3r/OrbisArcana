@@ -1643,6 +1643,9 @@
               signalMaxMatchesOverrides: (next.signalMaxMatchesOverrides && typeof next.signalMaxMatchesOverrides === "object")
                 ? { ...next.signalMaxMatchesOverrides }
                 : Object.create(null),
+              signalEmitPreviewMatchedOverrides: (next.signalEmitPreviewMatchedOverrides && typeof next.signalEmitPreviewMatchedOverrides === "object")
+                ? { ...next.signalEmitPreviewMatchedOverrides }
+                : Object.create(null),
               signalStopOnFirstMatchOverrides: (next.signalStopOnFirstMatchOverrides && typeof next.signalStopOnFirstMatchOverrides === "object")
                 ? { ...next.signalStopOnFirstMatchOverrides }
                 : Object.create(null),

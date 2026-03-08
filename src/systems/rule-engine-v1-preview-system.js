@@ -157,6 +157,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalMaxMatchesOverrides = (schema && schema.signalMaxMatchesOverrides && typeof schema.signalMaxMatchesOverrides === "object")
     ? schema.signalMaxMatchesOverrides
     : Object.create(null);
+  const signalEmitPreviewMatchedOverrides = (schema && schema.signalEmitPreviewMatchedOverrides && typeof schema.signalEmitPreviewMatchedOverrides === "object")
+    ? schema.signalEmitPreviewMatchedOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -355,9 +358,16 @@ export function createRuleEngineV1PreviewSystem({
       ? !!signalStopOnFirstMatchOverrides[String(signalId || "")]
       : sourceEventStopOnFirstMatch;
     const hasSourceEventEmitOverride = Object.prototype.hasOwnProperty.call(sourceEventEmitPreviewMatchedOverrides, String(sourceEvent || ""));
-    const effectiveEmitPreviewMatchedEvents = hasSourceEventEmitOverride
+    const sourceEventEmitPreviewMatched = hasSourceEventEmitOverride
       ? !!sourceEventEmitPreviewMatchedOverrides[String(sourceEvent || "")]
       : emitPreviewMatchedEvents;
+    const hasSignalEmitOverride = Object.prototype.hasOwnProperty.call(
+      signalEmitPreviewMatchedOverrides,
+      String(signalId || "")
+    );
+    const effectiveEmitPreviewMatchedEvents = hasSignalEmitOverride
+      ? !!signalEmitPreviewMatchedOverrides[String(signalId || "")]
+      : sourceEventEmitPreviewMatched;
     let matchedCount = 0;
     for (const rule of candidates) {
       const ruleId = String(rule && rule.id || "");
