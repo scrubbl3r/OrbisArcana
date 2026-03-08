@@ -99,7 +99,9 @@ Event Runtime Bindings
 - `runtime.kind` must be `orb_event` or `cast_action`.
 - `runtime` supports keys: `kind`, `event`, `castActionId` (unknown keys fail fast).
 - if `runtime.kind` is `orb_event`, `runtime.event` must be non-empty.
+- if `runtime.kind` is `orb_event`, `runtime.castActionId` must be omitted.
 - if `runtime.kind` is `cast_action`, `runtime.castActionId` must be non-empty.
+- if `runtime.kind` is `cast_action`, `runtime.event` must be omitted.
 
 Rule Shape (authoring)
 ```js

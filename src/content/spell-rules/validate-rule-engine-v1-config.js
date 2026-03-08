@@ -1974,8 +1974,14 @@ export function validateRuleEngineV1Config(config = null) {
     if (kind === "orb_event" && !asText(runtime.event)) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.event must be non-empty for kind orb_event`);
     }
+    if (kind === "orb_event" && Object.prototype.hasOwnProperty.call(runtime, "castActionId") && asText(runtime.castActionId)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.castActionId must be omitted for kind orb_event`);
+    }
     if (kind === "cast_action" && !asText(runtime.castActionId)) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.castActionId must be non-empty for kind cast_action`);
+    }
+    if (kind === "cast_action" && Object.prototype.hasOwnProperty.call(runtime, "event") && asText(runtime.event)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.event must be omitted for kind cast_action`);
     }
   }
 
