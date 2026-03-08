@@ -1027,6 +1027,9 @@ export function validateRuleEngineV1Config(config = null) {
           if (allowedWhereKeys.has(String(key || ""))) continue;
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] contains unknown key: ${key}`);
         }
+        if (Object.prototype.hasOwnProperty.call(value, "path") && typeof value.path !== "string") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].path must be a string when present`);
+        }
         if (Object.prototype.hasOwnProperty.call(value, "path") && !asText(value.path)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].path must be non-empty when present`);
         }
