@@ -96,6 +96,7 @@ Top-Level Shape
 Event Runtime Bindings
 - `eventRuntimeBindings` keys must be non-empty event ids and match declared `events`.
 - each binding must be an object with `runtime` object.
+- each binding `id` must be non-empty and match its map key.
 - `runtime.kind` must be `orb_event` or `cast_action`.
 - `runtime` supports keys: `kind`, `event`, `castActionId` (unknown keys fail fast).
 - if `runtime.kind` is `orb_event`, `runtime.event` must be non-empty.

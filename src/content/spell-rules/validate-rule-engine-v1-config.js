@@ -1954,6 +1954,12 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}] must be an object`);
       continue;
     }
+    const bindingInnerId = String(binding.id || "").trim().toLowerCase();
+    if (!bindingInnerId) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].id must be non-empty`);
+    } else if (bindingInnerId !== id) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].id must match key (${id})`);
+    }
     const runtime = (binding.runtime && typeof binding.runtime === "object" && !Array.isArray(binding.runtime))
       ? binding.runtime
       : null;
