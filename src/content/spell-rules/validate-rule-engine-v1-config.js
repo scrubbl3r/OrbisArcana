@@ -1499,6 +1499,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides must be an object when present");
     } else {
       for (const [eventId, value] of Object.entries(eventDefaultOverrides)) {
+        if (!asText(eventId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides contains empty event id key");
+          continue;
+        }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides[${eventId}] must be an object`);
         }
