@@ -722,6 +722,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalMatchWindowScaleOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides contains empty signal id key");
+          continue;
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMatchWindowScaleOverrides[${signalId}] must be a finite number >= 0`);
