@@ -1664,6 +1664,9 @@
               sourceEventExecuteActionsOverrides: (next.sourceEventExecuteActionsOverrides && typeof next.sourceEventExecuteActionsOverrides === "object")
                 ? { ...next.sourceEventExecuteActionsOverrides }
                 : Object.create(null),
+              sourceEventCooldownScaleOverrides: (next.sourceEventCooldownScaleOverrides && typeof next.sourceEventCooldownScaleOverrides === "object")
+                ? { ...next.sourceEventCooldownScaleOverrides }
+                : Object.create(null),
               actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),

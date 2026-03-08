@@ -178,6 +178,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventExecuteActionsOverrides = (schema && schema.sourceEventExecuteActionsOverrides && typeof schema.sourceEventExecuteActionsOverrides === "object")
     ? schema.sourceEventExecuteActionsOverrides
     : Object.create(null);
+  const sourceEventCooldownScaleOverrides = (schema && schema.sourceEventCooldownScaleOverrides && typeof schema.sourceEventCooldownScaleOverrides === "object")
+    ? schema.sourceEventCooldownScaleOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -326,10 +329,14 @@ export function createRuleEngineV1PreviewSystem({
         ? Math.max(0, ruleMatchWindowScaleRaw)
         : matchWindowScale;
       if (!ruleMatches(rule, lastSeenAtBySignalId, now, effectiveMatchWindowScale)) continue;
+      const sourceEventCooldownScaleRaw = Number(sourceEventCooldownScaleOverrides[String(sourceEvent || "")]);
+      const sourceEventCooldownScale = Number.isFinite(sourceEventCooldownScaleRaw)
+        ? Math.max(0, sourceEventCooldownScaleRaw)
+        : cooldownScale;
       const ruleCooldownScaleRaw = Number(ruleCooldownScaleOverrides[ruleId]);
       const effectiveCooldownScale = Number.isFinite(ruleCooldownScaleRaw)
         ? Math.max(0, ruleCooldownScaleRaw)
-        : cooldownScale;
+        : sourceEventCooldownScale;
       const cooldownMs = Math.max(0, Number(rule.cooldownMs) || 0) * effectiveCooldownScale;
       const lastMatchedAt = Number(lastMatchAtByRuleId.get(rule.id) || 0);
       if (cooldownMs > 0 && (now - lastMatchedAt) < cooldownMs) continue;
