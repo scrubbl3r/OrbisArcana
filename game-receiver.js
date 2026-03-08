@@ -1661,6 +1661,9 @@
               sourceEventActionTypeEnabledOverrides: (next.sourceEventActionTypeEnabledOverrides && typeof next.sourceEventActionTypeEnabledOverrides === "object")
                 ? { ...next.sourceEventActionTypeEnabledOverrides }
                 : Object.create(null),
+              sourceEventExecuteActionsOverrides: (next.sourceEventExecuteActionsOverrides && typeof next.sourceEventExecuteActionsOverrides === "object")
+                ? { ...next.sourceEventExecuteActionsOverrides }
+                : Object.create(null),
               actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),

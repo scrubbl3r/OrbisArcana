@@ -36,6 +36,7 @@ Top-Level Shape
   sourceEventStopOnFirstSignalMatchOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventEmitPreviewMatchedOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventActionTypeEnabledOverrides: { ... }, // optional { [sourceEvent]: { wake_win?, event? } }
+  sourceEventExecuteActionsOverrides: { ... }, // optional { [sourceEvent]: boolean }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   actionArgOverrides: { ... }, // optional { [actionKey]: object }
@@ -215,6 +216,9 @@ Authoring Notes
   - `sourceEventActionTypeEnabledOverrides`:
     - per-source-event action-type gates (`{ [sourceEvent]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-source-event override -> `execution.actionTypeEnabled`.
+  - `sourceEventExecuteActionsOverrides`:
+    - per-source-event action execution gate (`{ [sourceEvent]: boolean }`).
+    - precedence: `execution.executeActions` must be true; then this per-source-event gate can disable execution.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

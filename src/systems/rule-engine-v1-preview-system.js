@@ -175,6 +175,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventActionTypeEnabledOverrides = (schema && schema.sourceEventActionTypeEnabledOverrides && typeof schema.sourceEventActionTypeEnabledOverrides === "object")
     ? schema.sourceEventActionTypeEnabledOverrides
     : Object.create(null);
+  const sourceEventExecuteActionsOverrides = (schema && schema.sourceEventExecuteActionsOverrides && typeof schema.sourceEventExecuteActionsOverrides === "object")
+    ? schema.sourceEventExecuteActionsOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -221,6 +224,10 @@ export function createRuleEngineV1PreviewSystem({
 
   function executeRuleActions(rule, triggerMeta = {}) {
     if (!executeActions || !executionAllowsActions) return;
+    const sourceEvent = String(triggerMeta && triggerMeta.sourceEvent || "");
+    if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
+      if (!sourceEventExecuteActionsOverrides[sourceEvent]) return;
+    }
     const ruleId = String(rule && rule.id || "");
     const hasRuleExecuteOverride = Object.prototype.hasOwnProperty.call(ruleExecuteActionsOverrides, ruleId);
     if (hasRuleExecuteOverride && !ruleExecuteActionsOverrides[ruleId]) return;
@@ -235,7 +242,6 @@ export function createRuleEngineV1PreviewSystem({
       const action = actions[i];
       const type = String(action && action.type || "").trim().toLowerCase();
       const id = String(action && action.id || "").trim().toLowerCase();
-      const sourceEvent = String(triggerMeta && triggerMeta.sourceEvent || "");
       const ruleTypeGate = (ruleId && ruleActionTypeEnabledOverrides[ruleId] && typeof ruleActionTypeEnabledOverrides[ruleId] === "object")
         ? ruleActionTypeEnabledOverrides[ruleId]
         : null;

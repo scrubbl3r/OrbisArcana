@@ -69,6 +69,11 @@ const SOURCE_EVENT_ACTION_TYPE_ENABLED_OVERRIDES = Object.freeze({
   // "voice.spell_detected": { wake_win: false, event: true },
 });
 
+const SOURCE_EVENT_EXECUTE_ACTIONS_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": false,
+});
+
 const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // Examples:
   // "r_rota_yspin_charged.event.orb_state": false,
@@ -399,6 +404,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   sourceEventStopOnFirstSignalMatchOverrides: SOURCE_EVENT_STOP_ON_FIRST_SIGNAL_MATCH_OVERRIDES,
   sourceEventEmitPreviewMatchedOverrides: SOURCE_EVENT_EMIT_PREVIEW_MATCHED_OVERRIDES,
   sourceEventActionTypeEnabledOverrides: SOURCE_EVENT_ACTION_TYPE_ENABLED_OVERRIDES,
+  sourceEventExecuteActionsOverrides: SOURCE_EVENT_EXECUTE_ACTIONS_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   actionArgOverrides: ACTION_ARG_OVERRIDES,
