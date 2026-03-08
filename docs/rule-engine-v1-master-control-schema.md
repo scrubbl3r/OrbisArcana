@@ -172,6 +172,7 @@ Authoring Notes
   - Precedence: `ruleActionLimitOverrides` -> `execution.maxActionsPerRuleMatch`.
 - Rule cooldown scaling controls:
   - `ruleCooldownScaleOverrides` can centrally scale cooldown pacing for specific rules.
+  - map keys must be non-empty rule ids.
   - Precedence: `ruleCooldownScaleOverrides` -> `execution.cooldownScale`.
 - Rule match-window scaling controls:
   - `ruleMatchWindowScaleOverrides` can centrally scale match-window strictness for specific rules.
