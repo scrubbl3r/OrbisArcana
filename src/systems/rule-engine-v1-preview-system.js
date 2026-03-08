@@ -166,6 +166,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventSummaryIncludeSignalAndRuleIds = (Object.prototype.hasOwnProperty.call(execution, "sourceEventSummaryIncludeSignalAndRuleIds"))
     ? !!execution.sourceEventSummaryIncludeSignalAndRuleIds
     : false;
+  const sourceEventSummaryIncludeBudgetCaps = (Object.prototype.hasOwnProperty.call(execution, "sourceEventSummaryIncludeBudgetCaps"))
+    ? !!execution.sourceEventSummaryIncludeBudgetCaps
+    : false;
   const executionAllowsActions = (Object.prototype.hasOwnProperty.call(execution, "executeActions"))
     ? !!execution.executeActions
     : true;
@@ -866,6 +869,13 @@ export function createRuleEngineV1PreviewSystem({
           if (effectiveSummaryIncludeIds) {
             summaryPayload.signalId = String(summarySignalId || "");
             summaryPayload.ruleId = String(summaryRuleId || "");
+          }
+          if (sourceEventSummaryIncludeBudgetCaps) {
+            summaryPayload.maxSignalsEvaluatedPerEvent = effectiveMaxSignalsEvaluatedPerEvent;
+            summaryPayload.maxSignalsPerEvent = effectiveMaxSignalsPerEvent;
+            summaryPayload.maxRulesEvaluatedPerEvent = effectiveMaxRulesEvaluatedPerEvent;
+            summaryPayload.maxMatchesPerEvent = effectiveMaxMatchesPerEvent;
+            summaryPayload.maxActionsPerEvent = effectiveMaxActionsPerEvent;
           }
           eventBus.emit(EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY, summaryPayload);
         }

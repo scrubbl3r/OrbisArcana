@@ -246,6 +246,11 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.sourceEventSummaryIncludeSignalAndRuleIds must be boolean when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "sourceEventSummaryIncludeBudgetCaps")) {
+      if (typeof execution.sourceEventSummaryIncludeBudgetCaps !== "boolean") {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.sourceEventSummaryIncludeBudgetCaps must be boolean when present");
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(execution, "actionExecutedEventTypeEnabled")) {
       const actionExecutedEventTypeEnabled = execution.actionExecutedEventTypeEnabled;
       if (!actionExecutedEventTypeEnabled || typeof actionExecutedEventTypeEnabled !== "object" || Array.isArray(actionExecutedEventTypeEnabled)) {

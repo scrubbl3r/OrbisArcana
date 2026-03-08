@@ -572,6 +572,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     emitActionExecutedEvents: true,
     emitSourceEventSummaryEvents: false,
     sourceEventSummaryIncludeSignalAndRuleIds: false,
+    sourceEventSummaryIncludeBudgetCaps: false,
     executeActions: true,
     actionExecutedEventTypeEnabled: Object.freeze({
       wake_win: true,

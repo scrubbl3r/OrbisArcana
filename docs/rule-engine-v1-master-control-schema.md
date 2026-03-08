@@ -233,6 +233,10 @@ Authoring Notes
   - `execution.sourceEventSummaryIncludeSignalAndRuleIds`:
     - boolean; default `false`.
     - when `true`, source-event summary payload includes `signalId` and `ruleId` (first matched signal/rule for that payload).
+  - `execution.sourceEventSummaryIncludeBudgetCaps`:
+    - boolean; default `false`.
+    - when `true`, source-event summary payload includes effective event-level caps:
+      `maxSignalsEvaluatedPerEvent`, `maxSignalsPerEvent`, `maxRulesEvaluatedPerEvent`, `maxMatchesPerEvent`, `maxActionsPerEvent`.
   - `execution.actionExecutedEventTypeEnabled`:
     - optional telemetry action-type gate map, keys: `wake_win`, `event`.
     - when a key is set to `false`, `rule_engine.v1.action_executed` telemetry for that action type is suppressed.
