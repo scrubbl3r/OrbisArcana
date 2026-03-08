@@ -40,6 +40,8 @@ Top-Level Shape
   sourceEventCooldownScaleOverrides: { ... }, // optional { [sourceEvent]: number>=0 }
   sourceEventMatchWindowScaleOverrides: { ... }, // optional { [sourceEvent]: number>=0 }
   sourceEventMaxActionsPerRuleMatchOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
+  sourceEventStopOnFirstMatchOverrides: { ... }, // optional { [sourceEvent]: boolean }
+  sourceEventMaxMatchesPerSignalOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   actionArgOverrides: { ... }, // optional { [actionKey]: object }
@@ -231,6 +233,12 @@ Authoring Notes
   - `sourceEventMaxActionsPerRuleMatchOverrides`:
     - per-source-event action fanout cap (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: `ruleActionLimitOverrides` -> `sourceEventMaxActionsPerRuleMatchOverrides` -> `execution.maxActionsPerRuleMatch`.
+  - `sourceEventStopOnFirstMatchOverrides`:
+    - per-source-event rule short-circuit toggle (`{ [sourceEvent]: boolean }`).
+    - precedence: per-source-event override -> `execution.stopOnFirstMatch`.
+  - `sourceEventMaxMatchesPerSignalOverrides`:
+    - per-source-event rule-match cap (`{ [sourceEvent]: integer >= 0 }`).
+    - precedence: `signalMaxMatchesOverrides` -> `sourceEventMaxMatchesPerSignalOverrides` -> `execution.maxMatchesPerSignal`.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.

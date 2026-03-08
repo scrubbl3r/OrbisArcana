@@ -187,6 +187,12 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventMaxActionsPerRuleMatchOverrides = (schema && schema.sourceEventMaxActionsPerRuleMatchOverrides && typeof schema.sourceEventMaxActionsPerRuleMatchOverrides === "object")
     ? schema.sourceEventMaxActionsPerRuleMatchOverrides
     : Object.create(null);
+  const sourceEventStopOnFirstMatchOverrides = (schema && schema.sourceEventStopOnFirstMatchOverrides && typeof schema.sourceEventStopOnFirstMatchOverrides === "object")
+    ? schema.sourceEventStopOnFirstMatchOverrides
+    : Object.create(null);
+  const sourceEventMaxMatchesPerSignalOverrides = (schema && schema.sourceEventMaxMatchesPerSignalOverrides && typeof schema.sourceEventMaxMatchesPerSignalOverrides === "object")
+    ? schema.sourceEventMaxMatchesPerSignalOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -323,10 +329,21 @@ export function createRuleEngineV1PreviewSystem({
     }
     lastSeenAtBySignalId.set(signalId, now);
     const candidates = runtime.rulesBySignalId[signalId] || [];
+    const sourceEventMaxMatchesOverrideRaw = Number(sourceEventMaxMatchesPerSignalOverrides[String(sourceEvent || "")]);
+    const sourceEventMaxMatchesPerSignal = Number.isFinite(sourceEventMaxMatchesOverrideRaw)
+      ? Math.max(0, Math.floor(sourceEventMaxMatchesOverrideRaw))
+      : maxMatchesPerSignal;
     const signalMaxMatchesOverrideRaw = Number(signalMaxMatchesOverrides[signalId]);
     const effectiveMaxMatchesPerSignal = Number.isFinite(signalMaxMatchesOverrideRaw)
       ? Math.max(0, Math.floor(signalMaxMatchesOverrideRaw))
-      : maxMatchesPerSignal;
+      : sourceEventMaxMatchesPerSignal;
+    const hasSourceEventStopOnFirstMatchOverride = Object.prototype.hasOwnProperty.call(
+      sourceEventStopOnFirstMatchOverrides,
+      String(sourceEvent || "")
+    );
+    const effectiveStopOnFirstMatch = hasSourceEventStopOnFirstMatchOverride
+      ? !!sourceEventStopOnFirstMatchOverrides[String(sourceEvent || "")]
+      : stopOnFirstMatch;
     const hasSourceEventEmitOverride = Object.prototype.hasOwnProperty.call(sourceEventEmitPreviewMatchedOverrides, String(sourceEvent || ""));
     const effectiveEmitPreviewMatchedEvents = hasSourceEventEmitOverride
       ? !!sourceEventEmitPreviewMatchedOverrides[String(sourceEvent || "")]
@@ -373,7 +390,7 @@ export function createRuleEngineV1PreviewSystem({
         atMs: now,
       });
       matchedCount += 1;
-      if (stopOnFirstMatch) break;
+      if (effectiveStopOnFirstMatch) break;
       if (effectiveMaxMatchesPerSignal > 0 && matchedCount >= effectiveMaxMatchesPerSignal) break;
     }
   }

@@ -109,6 +109,8 @@ export function validateRuleEngineV1Config(config = null) {
   const sourceEventCooldownScaleOverrides = asObj(cfg.sourceEventCooldownScaleOverrides);
   const sourceEventMatchWindowScaleOverrides = asObj(cfg.sourceEventMatchWindowScaleOverrides);
   const sourceEventMaxActionsPerRuleMatchOverrides = asObj(cfg.sourceEventMaxActionsPerRuleMatchOverrides);
+  const sourceEventStopOnFirstMatchOverrides = asObj(cfg.sourceEventStopOnFirstMatchOverrides);
+  const sourceEventMaxMatchesPerSignalOverrides = asObj(cfg.sourceEventMaxMatchesPerSignalOverrides);
   const ruleEnabledOverrides = asObj(cfg.ruleEnabledOverrides);
   const actionEnabledOverrides = asObj(cfg.actionEnabledOverrides);
   const actionArgOverrides = asObj(cfg.actionArgOverrides);
@@ -605,6 +607,37 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventStopOnFirstMatchOverrides")) {
+    if (!cfg.sourceEventStopOnFirstMatchOverrides || typeof cfg.sourceEventStopOnFirstMatchOverrides !== "object" || Array.isArray(cfg.sourceEventStopOnFirstMatchOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstMatchOverrides must be an object when present");
+    } else {
+      for (const [sourceEvent, value] of Object.entries(sourceEventStopOnFirstMatchOverrides)) {
+        if (!asText(sourceEvent)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstMatchOverrides contains empty source event key");
+          continue;
+        }
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstMatchOverrides[${sourceEvent}] must be boolean`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "sourceEventMaxMatchesPerSignalOverrides")) {
+    if (!cfg.sourceEventMaxMatchesPerSignalOverrides || typeof cfg.sourceEventMaxMatchesPerSignalOverrides !== "object" || Array.isArray(cfg.sourceEventMaxMatchesPerSignalOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerSignalOverrides must be an object when present");
+    } else {
+      for (const [sourceEvent, value] of Object.entries(sourceEventMaxMatchesPerSignalOverrides)) {
+        if (!asText(sourceEvent)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerSignalOverrides contains empty source event key");
+          continue;
+        }
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerSignalOverrides[${sourceEvent}] must be an integer >= 0`);
+        }
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(cfg, "ruleEnabledOverrides")) {
     if (!cfg.ruleEnabledOverrides || typeof cfg.ruleEnabledOverrides !== "object" || Array.isArray(cfg.ruleEnabledOverrides)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides must be an object when present");
@@ -798,6 +831,16 @@ export function validateRuleEngineV1Config(config = null) {
     const evt = String(sourceEvent || "").trim();
     if (!evt || sourceEvents.has(evt)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxActionsPerRuleMatchOverrides references unknown source event: ${evt}`);
+  }
+  for (const sourceEvent of Object.keys(sourceEventStopOnFirstMatchOverrides)) {
+    const evt = String(sourceEvent || "").trim();
+    if (!evt || sourceEvents.has(evt)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstMatchOverrides references unknown source event: ${evt}`);
+  }
+  for (const sourceEvent of Object.keys(sourceEventMaxMatchesPerSignalOverrides)) {
+    const evt = String(sourceEvent || "").trim();
+    if (!evt || sourceEvents.has(evt)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerSignalOverrides references unknown source event: ${evt}`);
   }
   for (const ruleId of Object.keys(ruleTimingOverrides)) {
     const id = String(ruleId || "").trim();

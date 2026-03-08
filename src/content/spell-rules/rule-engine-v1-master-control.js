@@ -89,6 +89,16 @@ const SOURCE_EVENT_MAX_ACTIONS_PER_RULE_MATCH_OVERRIDES = Object.freeze({
   // "voice.spell_detected": 1,
 });
 
+const SOURCE_EVENT_STOP_ON_FIRST_MATCH_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": true,
+});
+
+const SOURCE_EVENT_MAX_MATCHES_PER_SIGNAL_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": 1,
+});
+
 const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // Examples:
   // "r_rota_yspin_charged.event.orb_state": false,
@@ -423,6 +433,8 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   sourceEventCooldownScaleOverrides: SOURCE_EVENT_COOLDOWN_SCALE_OVERRIDES,
   sourceEventMatchWindowScaleOverrides: SOURCE_EVENT_MATCH_WINDOW_SCALE_OVERRIDES,
   sourceEventMaxActionsPerRuleMatchOverrides: SOURCE_EVENT_MAX_ACTIONS_PER_RULE_MATCH_OVERRIDES,
+  sourceEventStopOnFirstMatchOverrides: SOURCE_EVENT_STOP_ON_FIRST_MATCH_OVERRIDES,
+  sourceEventMaxMatchesPerSignalOverrides: SOURCE_EVENT_MAX_MATCHES_PER_SIGNAL_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   actionArgOverrides: ACTION_ARG_OVERRIDES,
