@@ -969,6 +969,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalStopOnFirstSignalMatchPerEventOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalStopOnFirstSignalMatchPerEventOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalStopOnFirstSignalMatchPerEventOverrides contains empty signal id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalStopOnFirstSignalMatchPerEventOverrides[${signalId}] must be boolean`);
         }
