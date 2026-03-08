@@ -344,6 +344,7 @@ Authoring Notes
     - ties fall back to original source definition order.
   - `signalSourceEventOverrides`:
     - per-signal source-event remap (`{ [signalId]: string }`).
+    - map keys must be non-empty signal ids.
     - allows re-wiring signal source event streams centrally.
   - `signalWhereOverrides`:
     - per-signal patch map for `where` clauses (`{ [signalId]: object }`).
