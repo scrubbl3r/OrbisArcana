@@ -160,6 +160,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalEmitPreviewMatchedOverrides = (schema && schema.signalEmitPreviewMatchedOverrides && typeof schema.signalEmitPreviewMatchedOverrides === "object")
     ? schema.signalEmitPreviewMatchedOverrides
     : Object.create(null);
+  const signalExecuteActionsOverrides = (schema && schema.signalExecuteActionsOverrides && typeof schema.signalExecuteActionsOverrides === "object")
+    ? schema.signalExecuteActionsOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -246,12 +249,19 @@ export function createRuleEngineV1PreviewSystem({
   function executeRuleActions(rule, triggerMeta = {}) {
     if (!executeActions || !executionAllowsActions) return;
     const sourceEvent = String(triggerMeta && triggerMeta.sourceEvent || "");
-    if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
-      if (!sourceEventExecuteActionsOverrides[sourceEvent]) return;
-    }
+    const signalId = String(triggerMeta && triggerMeta.signalId || "");
     const ruleId = String(rule && rule.id || "");
-    const hasRuleExecuteOverride = Object.prototype.hasOwnProperty.call(ruleExecuteActionsOverrides, ruleId);
-    if (hasRuleExecuteOverride && !ruleExecuteActionsOverrides[ruleId]) return;
+    let effectiveExecuteActions = true;
+    if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
+      effectiveExecuteActions = !!sourceEventExecuteActionsOverrides[sourceEvent];
+    }
+    if (signalId && Object.prototype.hasOwnProperty.call(signalExecuteActionsOverrides, signalId)) {
+      effectiveExecuteActions = !!signalExecuteActionsOverrides[signalId];
+    }
+    if (ruleId && Object.prototype.hasOwnProperty.call(ruleExecuteActionsOverrides, ruleId)) {
+      effectiveExecuteActions = !!ruleExecuteActionsOverrides[ruleId];
+    }
+    if (!effectiveExecuteActions) return;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
     const sourceEventActionLimitRaw = Number(sourceEventMaxActionsPerRuleMatchOverrides[sourceEvent]);
     const sourceEventActionLimit = Number.isFinite(sourceEventActionLimitRaw)

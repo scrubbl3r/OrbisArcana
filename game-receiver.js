@@ -1646,6 +1646,9 @@
               signalEmitPreviewMatchedOverrides: (next.signalEmitPreviewMatchedOverrides && typeof next.signalEmitPreviewMatchedOverrides === "object")
                 ? { ...next.signalEmitPreviewMatchedOverrides }
                 : Object.create(null),
+              signalExecuteActionsOverrides: (next.signalExecuteActionsOverrides && typeof next.signalExecuteActionsOverrides === "object")
+                ? { ...next.signalExecuteActionsOverrides }
+                : Object.create(null),
               signalStopOnFirstMatchOverrides: (next.signalStopOnFirstMatchOverrides && typeof next.signalStopOnFirstMatchOverrides === "object")
                 ? { ...next.signalStopOnFirstMatchOverrides }
                 : Object.create(null),

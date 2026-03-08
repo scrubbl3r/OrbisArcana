@@ -34,6 +34,11 @@ const SIGNAL_STOP_ON_FIRST_MATCH_OVERRIDES = Object.freeze({
   // "spell.rota": true,
 });
 
+const SIGNAL_EXECUTE_ACTIONS_OVERRIDES = Object.freeze({
+  // Example:
+  // "spell.rota": false,
+});
+
 const SIGNAL_PRIORITY_OVERRIDES = Object.freeze({
   // Example:
   // "gesture.y_spin": 30,
@@ -432,6 +437,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalMaxMatchesOverrides: SIGNAL_MAX_MATCHES_OVERRIDES,
   signalEmitPreviewMatchedOverrides: SIGNAL_EMIT_PREVIEW_MATCHED_OVERRIDES,
   signalStopOnFirstMatchOverrides: SIGNAL_STOP_ON_FIRST_MATCH_OVERRIDES,
+  signalExecuteActionsOverrides: SIGNAL_EXECUTE_ACTIONS_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   signalSourceEventOverrides: SIGNAL_SOURCE_EVENT_OVERRIDES,
   signalWhereOverrides: SIGNAL_WHERE_OVERRIDES,
