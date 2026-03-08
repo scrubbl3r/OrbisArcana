@@ -41,6 +41,7 @@ Top-Level Shape
   sourceEventEnabledOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
   sourceEventMaxSignalsOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
+  sourceEventMaxRulesEvaluatedOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventStopOnFirstSignalMatchOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventEmitPreviewMatchedOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventActionTypeEnabledOverrides: { ... }, // optional { [sourceEvent]: { wake_win?, event? } }
@@ -225,7 +226,7 @@ Authoring Notes
     - precedence: `ruleActionLimitOverrides` -> `signalMaxActionsPerRuleMatchOverrides` -> `sourceEventMaxActionsPerRuleMatchOverrides` -> `execution.maxActionsPerRuleMatch`.
   - `signalMaxRulesEvaluatedOverrides`:
     - per-signal candidate evaluation cap (`{ [signalId]: integer >= 0 }`).
-    - precedence: per-signal override -> `execution.maxRulesEvaluatedPerSignal`.
+    - precedence: per-signal override -> `sourceEventMaxRulesEvaluatedOverrides` -> `execution.maxRulesEvaluatedPerSignal`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.
@@ -247,6 +248,9 @@ Authoring Notes
   - `sourceEventMaxSignalsOverrides`:
     - per-source-event matched-signal cap map (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxSignalsPerEvent`.
+  - `sourceEventMaxRulesEvaluatedOverrides`:
+    - per-source-event candidate evaluation cap map (`{ [sourceEvent]: integer >= 0 }`).
+    - precedence: per-source-event override -> `execution.maxRulesEvaluatedPerSignal`.
   - `sourceEventStopOnFirstSignalMatchOverrides`:
     - per-source-event first-match short-circuit map (`{ [sourceEvent]: boolean }`).
     - precedence: per-source-event override -> `execution.stopOnFirstSignalMatchPerEvent`.

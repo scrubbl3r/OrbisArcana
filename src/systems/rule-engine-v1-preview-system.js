@@ -194,6 +194,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventMaxSignalsOverrides = (schema && schema.sourceEventMaxSignalsOverrides && typeof schema.sourceEventMaxSignalsOverrides === "object")
     ? schema.sourceEventMaxSignalsOverrides
     : Object.create(null);
+  const sourceEventMaxRulesEvaluatedOverrides = (schema && schema.sourceEventMaxRulesEvaluatedOverrides && typeof schema.sourceEventMaxRulesEvaluatedOverrides === "object")
+    ? schema.sourceEventMaxRulesEvaluatedOverrides
+    : Object.create(null);
   const sourceEventStopOnFirstSignalMatchOverrides = (schema && schema.sourceEventStopOnFirstSignalMatchOverrides && typeof schema.sourceEventStopOnFirstSignalMatchOverrides === "object")
     ? schema.sourceEventStopOnFirstSignalMatchOverrides
     : Object.create(null);
@@ -384,10 +387,14 @@ export function createRuleEngineV1PreviewSystem({
     const effectiveMaxMatchesPerSignal = Number.isFinite(signalMaxMatchesOverrideRaw)
       ? Math.max(0, Math.floor(signalMaxMatchesOverrideRaw))
       : sourceEventMaxMatchesPerSignal;
+    const sourceEventMaxRulesEvaluatedOverrideRaw = Number(sourceEventMaxRulesEvaluatedOverrides[String(sourceEvent || "")]);
+    const sourceEventMaxRulesEvaluatedPerSignal = Number.isFinite(sourceEventMaxRulesEvaluatedOverrideRaw)
+      ? Math.max(0, Math.floor(sourceEventMaxRulesEvaluatedOverrideRaw))
+      : maxRulesEvaluatedPerSignal;
     const signalMaxRulesEvaluatedOverrideRaw = Number(signalMaxRulesEvaluatedOverrides[signalId]);
     const effectiveMaxRulesEvaluatedPerSignal = Number.isFinite(signalMaxRulesEvaluatedOverrideRaw)
       ? Math.max(0, Math.floor(signalMaxRulesEvaluatedOverrideRaw))
-      : maxRulesEvaluatedPerSignal;
+      : sourceEventMaxRulesEvaluatedPerSignal;
     const hasSourceEventStopOnFirstMatchOverride = Object.prototype.hasOwnProperty.call(
       sourceEventStopOnFirstMatchOverrides,
       String(sourceEvent || "")

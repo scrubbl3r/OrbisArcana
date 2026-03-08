@@ -373,6 +373,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       sourceEventMaxSignalsOverrides: (ruleSchemaV1.sourceEventMaxSignalsOverrides && typeof ruleSchemaV1.sourceEventMaxSignalsOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventMaxSignalsOverrides }
         : Object.create(null),
+      sourceEventMaxRulesEvaluatedOverrides: (ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides && typeof ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides }
+        : Object.create(null),
       sourceEventStopOnFirstSignalMatchOverrides: (ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides && typeof ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides }
         : Object.create(null),
@@ -490,6 +493,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       sourceEventMaxSignalsOverrides: (ruleSchemaV1.sourceEventMaxSignalsOverrides && typeof ruleSchemaV1.sourceEventMaxSignalsOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventMaxSignalsOverrides }
+        : Object.create(null),
+      sourceEventMaxRulesEvaluatedOverrides: (ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides && typeof ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides }
         : Object.create(null),
       sourceEventStopOnFirstSignalMatchOverrides: (ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides && typeof ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides }
