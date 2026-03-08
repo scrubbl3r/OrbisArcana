@@ -176,6 +176,7 @@ Authoring Notes
   - Precedence: `ruleCooldownScaleOverrides` -> `execution.cooldownScale`.
 - Rule match-window scaling controls:
   - `ruleMatchWindowScaleOverrides` can centrally scale match-window strictness for specific rules.
+  - map keys must be non-empty rule ids.
   - Precedence: `ruleMatchWindowScaleOverrides` -> `execution.matchWindowScale`.
 - Rule telemetry controls:
   - `ruleEmitPreviewMatchedOverrides` can centrally force preview telemetry on/off per rule.
