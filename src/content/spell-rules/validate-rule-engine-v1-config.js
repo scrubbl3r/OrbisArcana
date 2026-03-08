@@ -1044,6 +1044,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (hasEq && (hasGt || hasGte || hasLt || hasLte)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] cannot combine eq with numeric comparators`);
         }
+        if (hasEq && value.eq === undefined) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}].eq must not be undefined`);
+        }
         if (hasGt && hasGte) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] cannot combine gt and gte`);
         }
