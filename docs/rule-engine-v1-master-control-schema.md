@@ -89,9 +89,16 @@ Top-Level Shape
   windows: [ ... ],
   events: [ ... ],
   rules: [ ... ],
-  eventRuntimeBindings: { ... }
+  eventRuntimeBindings: { ... } // required bindings by event id
 }
 ```
+
+Event Runtime Bindings
+- `eventRuntimeBindings` keys must be non-empty event ids and match declared `events`.
+- each binding must be an object with `runtime` object.
+- `runtime.kind` must be `orb_event` or `cast_action`.
+- if `runtime.kind` is `orb_event`, `runtime.event` must be non-empty.
+- if `runtime.kind` is `cast_action`, `runtime.castActionId` must be non-empty.
 
 Rule Shape (authoring)
 ```js

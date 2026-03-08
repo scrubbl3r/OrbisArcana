@@ -1941,12 +1941,36 @@ export function validateRuleEngineV1Config(config = null) {
   }
   for (const bindingId of Object.keys(eventRuntimeBindings)) {
     const id = String(bindingId || "").trim().toLowerCase();
+    const binding = eventRuntimeBindings[bindingId];
     if (!id) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings contains empty event id key");
       continue;
     }
     if (!eventIds.has(id)) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings references unknown event id: ${id}`);
+      continue;
+    }
+    if (!binding || typeof binding !== "object" || Array.isArray(binding)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}] must be an object`);
+      continue;
+    }
+    const runtime = (binding.runtime && typeof binding.runtime === "object" && !Array.isArray(binding.runtime))
+      ? binding.runtime
+      : null;
+    if (!runtime) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime must be an object`);
+      continue;
+    }
+    const kind = String(runtime.kind || "").trim().toLowerCase();
+    if (kind !== "orb_event" && kind !== "cast_action") {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.kind must be one of: orb_event, cast_action`);
+      continue;
+    }
+    if (kind === "orb_event" && !asText(runtime.event)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.event must be non-empty for kind orb_event`);
+    }
+    if (kind === "cast_action" && !asText(runtime.castActionId)) {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.castActionId must be non-empty for kind cast_action`);
     }
   }
 
