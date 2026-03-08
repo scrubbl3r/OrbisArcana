@@ -157,6 +157,9 @@ export function createRuleEngineV1PreviewSystem({
   const actionTypeEnabled = (execution && execution.actionTypeEnabled && typeof execution.actionTypeEnabled === "object")
     ? execution.actionTypeEnabled
     : Object.create(null);
+  const actionExecutedEventTypeEnabled = (execution && execution.actionExecutedEventTypeEnabled && typeof execution.actionExecutedEventTypeEnabled === "object")
+    ? execution.actionExecutedEventTypeEnabled
+    : Object.create(null);
   const cooldownScaleRaw = Number(execution.cooldownScale);
   const cooldownScale = Number.isFinite(cooldownScaleRaw)
     ? Math.max(0, cooldownScaleRaw)
@@ -401,7 +404,10 @@ export function createRuleEngineV1PreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
-        if (effectiveEmitActionExecutedEvents) {
+        const emitTypeEnabled = Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "wake_win")
+          ? !!actionExecutedEventTypeEnabled.wake_win
+          : true;
+        if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
           eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
             ruleId: String(rule && rule.id || ""),
             actionType: "wake_win",
@@ -418,7 +424,10 @@ export function createRuleEngineV1PreviewSystem({
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;
       const args = resolveEventArgs(id, mergedOverrides);
-      if (effectiveEmitActionExecutedEvents) {
+      const emitTypeEnabled = Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "event")
+        ? !!actionExecutedEventTypeEnabled.event
+        : true;
+      if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
         eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),
           actionType: "event",

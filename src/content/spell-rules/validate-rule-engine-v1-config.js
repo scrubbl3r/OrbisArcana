@@ -209,6 +209,23 @@ export function validateRuleEngineV1Config(config = null) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.emitActionExecutedEvents must be boolean when present");
       }
     }
+    if (Object.prototype.hasOwnProperty.call(execution, "actionExecutedEventTypeEnabled")) {
+      const actionExecutedEventTypeEnabled = execution.actionExecutedEventTypeEnabled;
+      if (!actionExecutedEventTypeEnabled || typeof actionExecutedEventTypeEnabled !== "object" || Array.isArray(actionExecutedEventTypeEnabled)) {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled must be an object when present");
+      } else {
+        const allowed = new Set(["wake_win", "event"]);
+        for (const [k, v] of Object.entries(actionExecutedEventTypeEnabled)) {
+          if (!allowed.has(String(k || "").trim().toLowerCase())) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled has unsupported key: ${k}`);
+            continue;
+          }
+          if (typeof v !== "boolean") {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled[${k}] must be boolean`);
+          }
+        }
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(execution, "executeActions")) {
       if (typeof execution.executeActions !== "boolean") {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.executeActions must be boolean when present");
