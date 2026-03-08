@@ -35,6 +35,7 @@ Top-Level Shape
   signalMaxActionsPerRuleMatchOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalMaxRulesEvaluatedOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalMaxActionsPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
+  signalMaxActionsPerSignalOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalMaxMatchesPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
@@ -164,6 +165,9 @@ Authoring Notes
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matched rules can fire for one signal hit.
     - applies after candidate ordering (priority/source order).
+  - `execution.maxActionsPerSignal`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps how many actions can execute for one signal hit.
   - `execution.maxRulesEvaluatedPerSignal`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many candidate rules are evaluated per signal hit.
@@ -240,6 +244,9 @@ Authoring Notes
   - `signalMaxActionsPerEventOverrides`:
     - per-signal action cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `sourceEventMaxActionsPerEventOverrides` -> `execution.maxActionsPerEvent`.
+  - `signalMaxActionsPerSignalOverrides`:
+    - per-signal action cap for one signal hit (`{ [signalId]: integer >= 0 }`).
+    - precedence: per-signal override -> `execution.maxActionsPerSignal`.
   - `signalMaxMatchesPerEventOverrides`:
     - per-signal matched-rule cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `sourceEventMaxMatchesPerEventOverrides` -> `execution.maxMatchesPerEvent`.
