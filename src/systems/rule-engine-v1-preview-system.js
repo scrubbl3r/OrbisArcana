@@ -163,6 +163,9 @@ export function createRuleEngineV1PreviewSystem({
   const emitSourceEventSummaryEvents = (Object.prototype.hasOwnProperty.call(execution, "emitSourceEventSummaryEvents"))
     ? !!execution.emitSourceEventSummaryEvents
     : false;
+  const sourceEventSummaryIncludeSignalAndRuleIds = (Object.prototype.hasOwnProperty.call(execution, "sourceEventSummaryIncludeSignalAndRuleIds"))
+    ? !!execution.sourceEventSummaryIncludeSignalAndRuleIds
+    : false;
   const executionAllowsActions = (Object.prototype.hasOwnProperty.call(execution, "executeActions"))
     ? !!execution.executeActions
     : true;
@@ -821,7 +824,7 @@ export function createRuleEngineV1PreviewSystem({
           ? !!ruleEmitSourceEventSummaryOverrides[String(summaryRuleId || "")]
           : signalSummaryEmit;
         if (effectiveEmitSourceEventSummaryEvents) {
-          eventBus.emit(EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY, {
+          const summaryPayload = {
             sourceEvent,
             atMs: now,
             evaluatedSignalCount,
@@ -829,7 +832,12 @@ export function createRuleEngineV1PreviewSystem({
             evaluatedRuleCount,
             matchedRuleCount,
             actionCount,
-          });
+          };
+          if (sourceEventSummaryIncludeSignalAndRuleIds) {
+            summaryPayload.signalId = String(summarySignalId || "");
+            summaryPayload.ruleId = String(summaryRuleId || "");
+          }
+          eventBus.emit(EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY, summaryPayload);
         }
       }));
     }

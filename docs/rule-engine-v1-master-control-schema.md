@@ -225,6 +225,9 @@ Authoring Notes
   - `execution.emitSourceEventSummaryEvents`:
     - boolean; default `false`.
     - controls emission of `rule_engine.v1.source_event_summary` telemetry events (one per source-event payload handled).
+  - `execution.sourceEventSummaryIncludeSignalAndRuleIds`:
+    - boolean; default `false`.
+    - when `true`, source-event summary payload includes `signalId` and `ruleId` (first matched signal/rule for that payload).
   - `execution.actionExecutedEventTypeEnabled`:
     - optional telemetry action-type gate map, keys: `wake_win`, `event`.
     - when a key is set to `false`, `rule_engine.v1.action_executed` telemetry for that action type is suppressed.
