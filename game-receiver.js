@@ -1754,6 +1754,9 @@
               sourceEventSummaryIncludeSignalAndRuleIdsOverrides: (next.sourceEventSummaryIncludeSignalAndRuleIdsOverrides && typeof next.sourceEventSummaryIncludeSignalAndRuleIdsOverrides === "object")
                 ? { ...next.sourceEventSummaryIncludeSignalAndRuleIdsOverrides }
                 : Object.create(null),
+              sourceEventSummaryIncludeBudgetCapsOverrides: (next.sourceEventSummaryIncludeBudgetCapsOverrides && typeof next.sourceEventSummaryIncludeBudgetCapsOverrides === "object")
+                ? { ...next.sourceEventSummaryIncludeBudgetCapsOverrides }
+                : Object.create(null),
               sourceEventActionTypeEnabledOverrides: (next.sourceEventActionTypeEnabledOverrides && typeof next.sourceEventActionTypeEnabledOverrides === "object")
                 ? { ...next.sourceEventActionTypeEnabledOverrides }
                 : Object.create(null),

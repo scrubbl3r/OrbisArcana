@@ -296,6 +296,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventSummaryIncludeSignalAndRuleIdsOverrides = (schema && schema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides && typeof schema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides === "object")
     ? schema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides
     : Object.create(null);
+  const sourceEventSummaryIncludeBudgetCapsOverrides = (schema && schema.sourceEventSummaryIncludeBudgetCapsOverrides && typeof schema.sourceEventSummaryIncludeBudgetCapsOverrides === "object")
+    ? schema.sourceEventSummaryIncludeBudgetCapsOverrides
+    : Object.create(null);
   const sourceEventActionTypeEnabledOverrides = (schema && schema.sourceEventActionTypeEnabledOverrides && typeof schema.sourceEventActionTypeEnabledOverrides === "object")
     ? schema.sourceEventActionTypeEnabledOverrides
     : Object.create(null);
@@ -870,7 +873,14 @@ export function createRuleEngineV1PreviewSystem({
             summaryPayload.signalId = String(summarySignalId || "");
             summaryPayload.ruleId = String(summaryRuleId || "");
           }
-          if (sourceEventSummaryIncludeBudgetCaps) {
+          const hasSourceEventSummaryIncludeBudgetCapsOverride = Object.prototype.hasOwnProperty.call(
+            sourceEventSummaryIncludeBudgetCapsOverrides,
+            sourceEvent
+          );
+          const effectiveSummaryIncludeBudgetCaps = hasSourceEventSummaryIncludeBudgetCapsOverride
+            ? !!sourceEventSummaryIncludeBudgetCapsOverrides[sourceEvent]
+            : sourceEventSummaryIncludeBudgetCaps;
+          if (effectiveSummaryIncludeBudgetCaps) {
             summaryPayload.maxSignalsEvaluatedPerEvent = effectiveMaxSignalsEvaluatedPerEvent;
             summaryPayload.maxSignalsPerEvent = effectiveMaxSignalsPerEvent;
             summaryPayload.maxRulesEvaluatedPerEvent = effectiveMaxRulesEvaluatedPerEvent;
