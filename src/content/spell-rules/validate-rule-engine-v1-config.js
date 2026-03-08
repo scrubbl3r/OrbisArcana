@@ -1539,6 +1539,11 @@ export function validateRuleEngineV1Config(config = null) {
       }
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, "eventRuntimeBindings")) {
+    if (!cfg.eventRuntimeBindings || typeof cfg.eventRuntimeBindings !== "object" || Array.isArray(cfg.eventRuntimeBindings)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings must be an object when present");
+    }
+  }
   if (!Array.isArray(cfg.signals)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signals must be an array");
   if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windows must be an array");
   if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.events must be an array");

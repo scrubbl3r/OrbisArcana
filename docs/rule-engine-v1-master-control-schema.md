@@ -94,6 +94,7 @@ Top-Level Shape
 ```
 
 Event Runtime Bindings
+- `eventRuntimeBindings` must be an object when present.
 - `eventRuntimeBindings` keys must be non-empty event ids and match declared `events`.
 - each binding must be an object with `runtime` object.
 - each binding `id` must be non-empty and match its map key.
