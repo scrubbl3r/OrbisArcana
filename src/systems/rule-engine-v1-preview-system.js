@@ -190,6 +190,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalMaxRulesEvaluatedOverrides = (schema && schema.signalMaxRulesEvaluatedOverrides && typeof schema.signalMaxRulesEvaluatedOverrides === "object")
     ? schema.signalMaxRulesEvaluatedOverrides
     : Object.create(null);
+  const signalMaxActionsPerEventOverrides = (schema && schema.signalMaxActionsPerEventOverrides && typeof schema.signalMaxActionsPerEventOverrides === "object")
+    ? schema.signalMaxActionsPerEventOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -556,9 +559,16 @@ export function createRuleEngineV1PreviewSystem({
           const remainingMatchBudget = (effectiveMaxMatchesPerEvent > 0)
             ? Math.max(0, effectiveMaxMatchesPerEvent - matchedRuleCount)
             : 0;
-          const remainingActionBudget = (effectiveMaxActionsPerEvent > 0)
+          const signalEventActionCapRaw = Number(signalMaxActionsPerEventOverrides[String(signal.id || "")]);
+          const signalEventActionCap = Number.isFinite(signalEventActionCapRaw)
+            ? Math.max(0, Math.floor(signalEventActionCapRaw))
+            : 0;
+          const remainingActionBudgetFromEvent = (effectiveMaxActionsPerEvent > 0)
             ? Math.max(0, effectiveMaxActionsPerEvent - actionCount)
             : 0;
+          const remainingActionBudget = (signalEventActionCap > 0 && remainingActionBudgetFromEvent > 0)
+            ? Math.min(signalEventActionCap, remainingActionBudgetFromEvent)
+            : (signalEventActionCap > 0 ? signalEventActionCap : remainingActionBudgetFromEvent);
           const hit = onSignalHit(signal.id, sourceEvent, payload, remainingMatchBudget, remainingActionBudget);
           matchedRuleCount += Number(hit && hit.matchedCount || 0);
           actionCount += Number(hit && hit.actionCount || 0);
