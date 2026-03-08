@@ -139,6 +139,11 @@ const SOURCE_EVENT_EMIT_PREVIEW_MATCHED_OVERRIDES = Object.freeze({
   // "voice.spell_detected": false,
 });
 
+const SOURCE_EVENT_EMIT_ACTION_EXECUTED_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": false,
+});
+
 const SOURCE_EVENT_ACTION_TYPE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
   // "voice.spell_detected": { wake_win: false, event: true },
@@ -523,6 +528,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   sourceEventMaxActionsPerEventOverrides: SOURCE_EVENT_MAX_ACTIONS_PER_EVENT_OVERRIDES,
   sourceEventStopOnFirstSignalMatchOverrides: SOURCE_EVENT_STOP_ON_FIRST_SIGNAL_MATCH_OVERRIDES,
   sourceEventEmitPreviewMatchedOverrides: SOURCE_EVENT_EMIT_PREVIEW_MATCHED_OVERRIDES,
+  sourceEventEmitActionExecutedOverrides: SOURCE_EVENT_EMIT_ACTION_EXECUTED_OVERRIDES,
   sourceEventActionTypeEnabledOverrides: SOURCE_EVENT_ACTION_TYPE_ENABLED_OVERRIDES,
   sourceEventExecuteActionsOverrides: SOURCE_EVENT_EXECUTE_ACTIONS_OVERRIDES,
   sourceEventCooldownScaleOverrides: SOURCE_EVENT_COOLDOWN_SCALE_OVERRIDES,

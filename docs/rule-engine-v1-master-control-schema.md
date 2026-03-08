@@ -50,6 +50,7 @@ Top-Level Shape
   sourceEventMaxActionsPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventStopOnFirstSignalMatchOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventEmitPreviewMatchedOverrides: { ... }, // optional { [sourceEvent]: boolean }
+  sourceEventEmitActionExecutedOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventActionTypeEnabledOverrides: { ... }, // optional { [sourceEvent]: { wake_win?, event? } }
   sourceEventExecuteActionsOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventCooldownScaleOverrides: { ... }, // optional { [sourceEvent]: number>=0 }
@@ -294,6 +295,9 @@ Authoring Notes
   - `sourceEventEmitPreviewMatchedOverrides`:
     - per-source-event preview telemetry map (`{ [sourceEvent]: boolean }`).
     - precedence: per-source-event override -> `execution.emitPreviewMatchedEvents`.
+  - `sourceEventEmitActionExecutedOverrides`:
+    - per-source-event action telemetry map (`{ [sourceEvent]: boolean }`).
+    - precedence: per-source-event override -> `execution.emitActionExecutedEvents`.
   - `sourceEventActionTypeEnabledOverrides`:
     - per-source-event action-type gates (`{ [sourceEvent]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-source-event override -> `execution.actionTypeEnabled`.

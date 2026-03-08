@@ -1703,6 +1703,9 @@
               sourceEventEmitPreviewMatchedOverrides: (next.sourceEventEmitPreviewMatchedOverrides && typeof next.sourceEventEmitPreviewMatchedOverrides === "object")
                 ? { ...next.sourceEventEmitPreviewMatchedOverrides }
                 : Object.create(null),
+              sourceEventEmitActionExecutedOverrides: (next.sourceEventEmitActionExecutedOverrides && typeof next.sourceEventEmitActionExecutedOverrides === "object")
+                ? { ...next.sourceEventEmitActionExecutedOverrides }
+                : Object.create(null),
               sourceEventActionTypeEnabledOverrides: (next.sourceEventActionTypeEnabledOverrides && typeof next.sourceEventActionTypeEnabledOverrides === "object")
                 ? { ...next.sourceEventActionTypeEnabledOverrides }
                 : Object.create(null),

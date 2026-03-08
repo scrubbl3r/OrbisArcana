@@ -236,6 +236,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventEmitPreviewMatchedOverrides = (schema && schema.sourceEventEmitPreviewMatchedOverrides && typeof schema.sourceEventEmitPreviewMatchedOverrides === "object")
     ? schema.sourceEventEmitPreviewMatchedOverrides
     : Object.create(null);
+  const sourceEventEmitActionExecutedOverrides = (schema && schema.sourceEventEmitActionExecutedOverrides && typeof schema.sourceEventEmitActionExecutedOverrides === "object")
+    ? schema.sourceEventEmitActionExecutedOverrides
+    : Object.create(null);
   const sourceEventActionTypeEnabledOverrides = (schema && schema.sourceEventActionTypeEnabledOverrides && typeof schema.sourceEventActionTypeEnabledOverrides === "object")
     ? schema.sourceEventActionTypeEnabledOverrides
     : Object.create(null);
@@ -306,6 +309,10 @@ export function createRuleEngineV1PreviewSystem({
     const sourceEvent = String(triggerMeta && triggerMeta.sourceEvent || "");
     const signalId = String(triggerMeta && triggerMeta.signalId || "");
     const ruleId = String(rule && rule.id || "");
+    const hasSourceEventEmitActionExecutedOverride = Object.prototype.hasOwnProperty.call(sourceEventEmitActionExecutedOverrides, sourceEvent);
+    const effectiveEmitActionExecutedEvents = hasSourceEventEmitActionExecutedOverride
+      ? !!sourceEventEmitActionExecutedOverrides[sourceEvent]
+      : emitActionExecutedEvents;
     let effectiveExecuteActions = true;
     if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
       effectiveExecuteActions = !!sourceEventExecuteActionsOverrides[sourceEvent];
@@ -380,7 +387,7 @@ export function createRuleEngineV1PreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
-        if (emitActionExecutedEvents) {
+        if (effectiveEmitActionExecutedEvents) {
           eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
             ruleId: String(rule && rule.id || ""),
             actionType: "wake_win",
@@ -397,7 +404,7 @@ export function createRuleEngineV1PreviewSystem({
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;
       const args = resolveEventArgs(id, mergedOverrides);
-      if (emitActionExecutedEvents) {
+      if (effectiveEmitActionExecutedEvents) {
         eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),
           actionType: "event",
