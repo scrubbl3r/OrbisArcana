@@ -212,6 +212,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalSummaryIncludeSignalAndRuleIdsOverrides = (schema && schema.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof schema.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
     ? schema.signalSummaryIncludeSignalAndRuleIdsOverrides
     : Object.create(null);
+  const signalSummaryIncludeBudgetCapsOverrides = (schema && schema.signalSummaryIncludeBudgetCapsOverrides && typeof schema.signalSummaryIncludeBudgetCapsOverrides === "object")
+    ? schema.signalSummaryIncludeBudgetCapsOverrides
+    : Object.create(null);
   const signalActionExecutedEventTypeEnabledOverrides = (schema && schema.signalActionExecutedEventTypeEnabledOverrides && typeof schema.signalActionExecutedEventTypeEnabledOverrides === "object")
     ? schema.signalActionExecutedEventTypeEnabledOverrides
     : Object.create(null);
@@ -877,9 +880,16 @@ export function createRuleEngineV1PreviewSystem({
             sourceEventSummaryIncludeBudgetCapsOverrides,
             sourceEvent
           );
-          const effectiveSummaryIncludeBudgetCaps = hasSourceEventSummaryIncludeBudgetCapsOverride
+          const effectiveSourceEventSummaryIncludeBudgetCaps = hasSourceEventSummaryIncludeBudgetCapsOverride
             ? !!sourceEventSummaryIncludeBudgetCapsOverrides[sourceEvent]
             : sourceEventSummaryIncludeBudgetCaps;
+          const hasSignalSummaryIncludeBudgetCapsOverride = Object.prototype.hasOwnProperty.call(
+            signalSummaryIncludeBudgetCapsOverrides,
+            String(summarySignalId || "")
+          );
+          const effectiveSummaryIncludeBudgetCaps = hasSignalSummaryIncludeBudgetCapsOverride
+            ? !!signalSummaryIncludeBudgetCapsOverrides[String(summarySignalId || "")]
+            : effectiveSourceEventSummaryIncludeBudgetCaps;
           if (effectiveSummaryIncludeBudgetCaps) {
             summaryPayload.maxSignalsEvaluatedPerEvent = effectiveMaxSignalsEvaluatedPerEvent;
             summaryPayload.maxSignalsPerEvent = effectiveMaxSignalsPerEvent;

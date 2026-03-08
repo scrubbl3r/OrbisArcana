@@ -89,6 +89,11 @@ const SIGNAL_SUMMARY_INCLUDE_SIGNAL_AND_RULE_IDS_OVERRIDES = Object.freeze({
   // "spell.rota": true,
 });
 
+const SIGNAL_SUMMARY_INCLUDE_BUDGET_CAPS_OVERRIDES = Object.freeze({
+  // Example:
+  // "spell.rota": true,
+});
+
 const SIGNAL_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
   // "spell.rota": { wake_win: false, event: true },
@@ -621,6 +626,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalEmitActionExecutedOverrides: SIGNAL_EMIT_ACTION_EXECUTED_OVERRIDES,
   signalEmitSourceEventSummaryOverrides: SIGNAL_EMIT_SOURCE_EVENT_SUMMARY_OVERRIDES,
   signalSummaryIncludeSignalAndRuleIdsOverrides: SIGNAL_SUMMARY_INCLUDE_SIGNAL_AND_RULE_IDS_OVERRIDES,
+  signalSummaryIncludeBudgetCapsOverrides: SIGNAL_SUMMARY_INCLUDE_BUDGET_CAPS_OVERRIDES,
   signalActionExecutedEventTypeEnabledOverrides: SIGNAL_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES,
   signalMaxMatchesPerEventOverrides: SIGNAL_MAX_MATCHES_PER_EVENT_OVERRIDES,
   signalMaxSignalsPerEventOverrides: SIGNAL_MAX_SIGNALS_PER_EVENT_OVERRIDES,

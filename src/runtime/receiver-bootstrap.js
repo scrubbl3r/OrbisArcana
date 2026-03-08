@@ -355,6 +355,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       signalSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
         ? { ...ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides }
         : Object.create(null),
+      signalSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides }
+        : Object.create(null),
       signalActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides === "object")
         ? { ...ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
@@ -562,6 +565,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       signalSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
         ? { ...ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides }
+        : Object.create(null),
+      signalSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides }
         : Object.create(null),
       signalActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides === "object")
         ? { ...ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides }

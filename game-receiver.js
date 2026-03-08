@@ -1670,6 +1670,9 @@
               signalSummaryIncludeSignalAndRuleIdsOverrides: (next.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof next.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
                 ? { ...next.signalSummaryIncludeSignalAndRuleIdsOverrides }
                 : Object.create(null),
+              signalSummaryIncludeBudgetCapsOverrides: (next.signalSummaryIncludeBudgetCapsOverrides && typeof next.signalSummaryIncludeBudgetCapsOverrides === "object")
+                ? { ...next.signalSummaryIncludeBudgetCapsOverrides }
+                : Object.create(null),
               signalActionExecutedEventTypeEnabledOverrides: (next.signalActionExecutedEventTypeEnabledOverrides && typeof next.signalActionExecutedEventTypeEnabledOverrides === "object")
                 ? { ...next.signalActionExecutedEventTypeEnabledOverrides }
                 : Object.create(null),

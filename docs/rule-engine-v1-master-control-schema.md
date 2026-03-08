@@ -43,6 +43,7 @@ Top-Level Shape
   signalEmitActionExecutedOverrides: { ... }, // optional { [signalId]: boolean }
   signalEmitSourceEventSummaryOverrides: { ... }, // optional { [signalId]: boolean }
   signalSummaryIncludeSignalAndRuleIdsOverrides: { ... }, // optional { [signalId]: boolean }
+  signalSummaryIncludeBudgetCapsOverrides: { ... }, // optional { [signalId]: boolean }
   signalActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
   signalMaxMatchesPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalMaxSignalsPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
@@ -308,6 +309,9 @@ Authoring Notes
   - `signalSummaryIncludeSignalAndRuleIdsOverrides`:
     - per-signal summary payload detail map (`{ [signalId]: boolean }`).
     - precedence: `ruleSummaryIncludeSignalAndRuleIdsOverrides` -> `signalSummaryIncludeSignalAndRuleIdsOverrides` -> `sourceEventSummaryIncludeSignalAndRuleIdsOverrides` -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
+  - `signalSummaryIncludeBudgetCapsOverrides`:
+    - per-signal summary budget-cap detail map (`{ [signalId]: boolean }`).
+    - precedence: per-signal override -> `sourceEventSummaryIncludeBudgetCapsOverrides` -> `execution.sourceEventSummaryIncludeBudgetCaps`.
   - `signalActionExecutedEventTypeEnabledOverrides`:
     - per-signal action-telemetry type gates (`{ [signalId]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-signal override -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.
@@ -382,7 +386,7 @@ Authoring Notes
     - precedence: per-source-event override -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
   - `sourceEventSummaryIncludeBudgetCapsOverrides`:
     - per-source-event summary budget-cap detail map (`{ [sourceEvent]: boolean }`).
-    - precedence: per-source-event override -> `execution.sourceEventSummaryIncludeBudgetCaps`.
+    - precedence: per-source-event override (unless `signalSummaryIncludeBudgetCapsOverrides` is present) -> `execution.sourceEventSummaryIncludeBudgetCaps`.
   - `sourceEventActionExecutedEventTypeEnabledOverrides`:
     - per-source-event action-telemetry type gates (`{ [sourceEvent]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-source-event override -> `execution.actionExecutedEventTypeEnabled`.
