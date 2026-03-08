@@ -921,6 +921,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxSignalsPerEventOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalMaxSignalsPerEventOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxSignalsPerEventOverrides contains empty signal id key");
+          continue;
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxSignalsPerEventOverrides[${signalId}] must be an integer >= 0`);
