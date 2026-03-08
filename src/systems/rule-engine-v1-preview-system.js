@@ -226,6 +226,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalMaxRulesEvaluatedPerEventOverrides = (schema && schema.signalMaxRulesEvaluatedPerEventOverrides && typeof schema.signalMaxRulesEvaluatedPerEventOverrides === "object")
     ? schema.signalMaxRulesEvaluatedPerEventOverrides
     : Object.create(null);
+  const signalStopOnFirstSignalMatchPerEventOverrides = (schema && schema.signalStopOnFirstSignalMatchPerEventOverrides && typeof schema.signalStopOnFirstSignalMatchPerEventOverrides === "object")
+    ? schema.signalStopOnFirstSignalMatchPerEventOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -733,10 +736,17 @@ export function createRuleEngineV1PreviewSystem({
           actionCount += Number(hit && hit.actionCount || 0);
           evaluatedRuleCount += Number(hit && hit.evaluatedCount || 0);
           matchedSignalCount += 1;
+          const hasSignalFirstSignalMatchOverride = Object.prototype.hasOwnProperty.call(
+            signalStopOnFirstSignalMatchPerEventOverrides,
+            String(signal.id || "")
+          );
+          const effectiveStopOnFirstSignalForCurrentSignal = hasSignalFirstSignalMatchOverride
+            ? !!signalStopOnFirstSignalMatchPerEventOverrides[String(signal.id || "")]
+            : effectiveStopOnFirstSignalMatchPerEvent;
           if (effectiveMaxMatchesPerEvent > 0 && matchedRuleCount >= effectiveMaxMatchesPerEvent) break;
           if (effectiveMaxActionsPerEvent > 0 && actionCount >= effectiveMaxActionsPerEvent) break;
           if (effectiveMaxRulesEvaluatedPerEvent > 0 && evaluatedRuleCount >= effectiveMaxRulesEvaluatedPerEvent) break;
-          if (effectiveStopOnFirstSignalMatchPerEvent) break;
+          if (effectiveStopOnFirstSignalForCurrentSignal) break;
           if (effectiveMaxSignalsPerEvent > 0 && matchedSignalCount >= effectiveMaxSignalsPerEvent) break;
         }
       }));

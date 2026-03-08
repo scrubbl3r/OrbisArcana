@@ -42,6 +42,7 @@ Top-Level Shape
   signalActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
   signalMaxMatchesPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalMaxRulesEvaluatedPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
+  signalStopOnFirstSignalMatchPerEventOverrides: { ... }, // optional { [signalId]: boolean }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
@@ -287,6 +288,9 @@ Authoring Notes
   - `signalMaxRulesEvaluatedPerEventOverrides`:
     - per-signal candidate evaluation cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `sourceEventMaxRulesEvaluatedPerEventOverrides` -> `execution.maxRulesEvaluatedPerEvent`.
+  - `signalStopOnFirstSignalMatchPerEventOverrides`:
+    - per-signal first-matching-signal short-circuit map for source-event payloads (`{ [signalId]: boolean }`).
+    - precedence: per-signal override -> `sourceEventStopOnFirstSignalMatchOverrides` -> `execution.stopOnFirstSignalMatchPerEvent`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.
