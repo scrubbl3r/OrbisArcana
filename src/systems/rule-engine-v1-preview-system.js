@@ -278,6 +278,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventEmitActionExecutedOverrides = (schema && schema.sourceEventEmitActionExecutedOverrides && typeof schema.sourceEventEmitActionExecutedOverrides === "object")
     ? schema.sourceEventEmitActionExecutedOverrides
     : Object.create(null);
+  const sourceEventEmitSourceEventSummaryOverrides = (schema && schema.sourceEventEmitSourceEventSummaryOverrides && typeof schema.sourceEventEmitSourceEventSummaryOverrides === "object")
+    ? schema.sourceEventEmitSourceEventSummaryOverrides
+    : Object.create(null);
   const sourceEventActionTypeEnabledOverrides = (schema && schema.sourceEventActionTypeEnabledOverrides && typeof schema.sourceEventActionTypeEnabledOverrides === "object")
     ? schema.sourceEventActionTypeEnabledOverrides
     : Object.create(null);
@@ -790,7 +793,11 @@ export function createRuleEngineV1PreviewSystem({
           if (effectiveStopOnFirstSignalForCurrentSignal) break;
           if (effectiveMaxSignalsPerEventForCurrentSignal > 0 && matchedSignalCount >= effectiveMaxSignalsPerEventForCurrentSignal) break;
         }
-        if (emitSourceEventSummaryEvents) {
+        const hasSourceEventSummaryEmitOverride = Object.prototype.hasOwnProperty.call(sourceEventEmitSourceEventSummaryOverrides, sourceEvent);
+        const effectiveEmitSourceEventSummaryEvents = hasSourceEventSummaryEmitOverride
+          ? !!sourceEventEmitSourceEventSummaryOverrides[sourceEvent]
+          : emitSourceEventSummaryEvents;
+        if (effectiveEmitSourceEventSummaryEvents) {
           eventBus.emit(EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY, {
             sourceEvent,
             atMs: now,
