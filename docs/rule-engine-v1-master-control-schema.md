@@ -347,6 +347,7 @@ Authoring Notes
     - allows re-wiring signal source event streams centrally.
   - `signalWhereOverrides`:
     - per-signal patch map for `where` clauses (`{ [signalId]: object }`).
+    - map keys must be non-empty signal ids.
     - merges into the signal's existing `where` at config build time.
     - supported comparators: `eq`, `gt`, `gte`, `lt`, `lte`.
     - supported keys: `path`, `eq`, `gt`, `gte`, `lt`, `lte` (unknown keys fail fast in validation).

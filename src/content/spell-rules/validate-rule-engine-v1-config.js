@@ -862,6 +862,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalWhereOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides contains empty signal id key");
+          continue;
+        }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[${signalId}] must be an object`);
           continue;
