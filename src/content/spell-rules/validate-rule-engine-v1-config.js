@@ -1940,7 +1940,7 @@ export function validateRuleEngineV1Config(config = null) {
   for (const eventDef of events) {
     const id = String(eventDef && eventDef.id || "").trim().toLowerCase();
     if (!id) continue;
-    if (!eventRuntimeBindings[id]) {
+    if (!Object.prototype.hasOwnProperty.call(eventRuntimeBindings, id)) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings missing id: ${id}`);
     }
   }
