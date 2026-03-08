@@ -193,6 +193,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalMaxActionsPerEventOverrides = (schema && schema.signalMaxActionsPerEventOverrides && typeof schema.signalMaxActionsPerEventOverrides === "object")
     ? schema.signalMaxActionsPerEventOverrides
     : Object.create(null);
+  const signalMaxMatchesPerEventOverrides = (schema && schema.signalMaxMatchesPerEventOverrides && typeof schema.signalMaxMatchesPerEventOverrides === "object")
+    ? schema.signalMaxMatchesPerEventOverrides
+    : Object.create(null);
   const signalStopOnFirstMatchOverrides = (schema && schema.signalStopOnFirstMatchOverrides && typeof schema.signalStopOnFirstMatchOverrides === "object")
     ? schema.signalStopOnFirstMatchOverrides
     : Object.create(null);
@@ -559,6 +562,13 @@ export function createRuleEngineV1PreviewSystem({
           const remainingMatchBudget = (effectiveMaxMatchesPerEvent > 0)
             ? Math.max(0, effectiveMaxMatchesPerEvent - matchedRuleCount)
             : 0;
+          const signalEventMatchCapRaw = Number(signalMaxMatchesPerEventOverrides[String(signal.id || "")]);
+          const signalEventMatchCap = Number.isFinite(signalEventMatchCapRaw)
+            ? Math.max(0, Math.floor(signalEventMatchCapRaw))
+            : 0;
+          const effectiveRemainingMatchBudget = (signalEventMatchCap > 0 && remainingMatchBudget > 0)
+            ? Math.min(signalEventMatchCap, remainingMatchBudget)
+            : (signalEventMatchCap > 0 ? signalEventMatchCap : remainingMatchBudget);
           const signalEventActionCapRaw = Number(signalMaxActionsPerEventOverrides[String(signal.id || "")]);
           const signalEventActionCap = Number.isFinite(signalEventActionCapRaw)
             ? Math.max(0, Math.floor(signalEventActionCapRaw))
@@ -569,7 +579,7 @@ export function createRuleEngineV1PreviewSystem({
           const remainingActionBudget = (signalEventActionCap > 0 && remainingActionBudgetFromEvent > 0)
             ? Math.min(signalEventActionCap, remainingActionBudgetFromEvent)
             : (signalEventActionCap > 0 ? signalEventActionCap : remainingActionBudgetFromEvent);
-          const hit = onSignalHit(signal.id, sourceEvent, payload, remainingMatchBudget, remainingActionBudget);
+          const hit = onSignalHit(signal.id, sourceEvent, payload, effectiveRemainingMatchBudget, remainingActionBudget);
           matchedRuleCount += Number(hit && hit.matchedCount || 0);
           actionCount += Number(hit && hit.actionCount || 0);
           matchedSignalCount += 1;
