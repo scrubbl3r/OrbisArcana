@@ -41,6 +41,7 @@ Top-Level Shape
   signalMaxActionsPerSignalOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalEmitActionExecutedOverrides: { ... }, // optional { [signalId]: boolean }
   signalEmitSourceEventSummaryOverrides: { ... }, // optional { [signalId]: boolean }
+  signalSummaryIncludeSignalAndRuleIdsOverrides: { ... }, // optional { [signalId]: boolean }
   signalActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
   signalMaxMatchesPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalMaxSignalsPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
@@ -296,6 +297,9 @@ Authoring Notes
   - `signalEmitSourceEventSummaryOverrides`:
     - per-signal source-event summary telemetry map (`{ [signalId]: boolean }`).
     - precedence: `ruleEmitSourceEventSummaryOverrides` -> `signalEmitSourceEventSummaryOverrides` -> `sourceEventEmitSourceEventSummaryOverrides` -> `execution.emitSourceEventSummaryEvents`.
+  - `signalSummaryIncludeSignalAndRuleIdsOverrides`:
+    - per-signal summary payload detail map (`{ [signalId]: boolean }`).
+    - precedence: per-signal override -> `sourceEventSummaryIncludeSignalAndRuleIdsOverrides` -> `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
   - `signalActionExecutedEventTypeEnabledOverrides`:
     - per-signal action-telemetry type gates (`{ [signalId]: { wake_win?:boolean, event?:boolean } }`).
     - precedence: per-signal override -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.
