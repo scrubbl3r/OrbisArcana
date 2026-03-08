@@ -696,6 +696,10 @@ export function validateRuleEngineV1Config(config = null) {
     } else {
       const allowed = new Set(["wake_win", "event"]);
       for (const [signalId, value] of Object.entries(signalActionTypeEnabledOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides contains empty signal id key");
+          continue;
+        }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] must be an object`);
           continue;
