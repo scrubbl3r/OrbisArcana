@@ -106,6 +106,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalMaxRulesEvaluatedOverrides = asObj(cfg.signalMaxRulesEvaluatedOverrides);
   const signalMaxActionsPerEventOverrides = asObj(cfg.signalMaxActionsPerEventOverrides);
   const signalMaxActionsPerSignalOverrides = asObj(cfg.signalMaxActionsPerSignalOverrides);
+  const signalEmitActionExecutedOverrides = asObj(cfg.signalEmitActionExecutedOverrides);
   const signalMaxMatchesPerEventOverrides = asObj(cfg.signalMaxMatchesPerEventOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const signalSourceEventOverrides = asObj(cfg.signalSourceEventOverrides);
@@ -552,6 +553,17 @@ export function validateRuleEngineV1Config(config = null) {
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerSignalOverrides[${signalId}] must be an integer >= 0`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalEmitActionExecutedOverrides")) {
+    if (!cfg.signalEmitActionExecutedOverrides || typeof cfg.signalEmitActionExecutedOverrides !== "object" || Array.isArray(cfg.signalEmitActionExecutedOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalEmitActionExecutedOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalEmitActionExecutedOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEmitActionExecutedOverrides[${signalId}] must be boolean`);
         }
       }
     }
@@ -1075,6 +1087,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerSignalOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalEmitActionExecutedOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEmitActionExecutedOverrides references unknown signal id: ${id}`);
   }
   for (const signalId of Object.keys(signalMaxMatchesPerEventOverrides)) {
     const id = String(signalId || "").trim().toLowerCase();

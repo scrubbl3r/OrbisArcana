@@ -74,6 +74,11 @@ const SIGNAL_MAX_ACTIONS_PER_SIGNAL_OVERRIDES = Object.freeze({
   // "spell.rota": 2,
 });
 
+const SIGNAL_EMIT_ACTION_EXECUTED_OVERRIDES = Object.freeze({
+  // Example:
+  // "spell.rota": false,
+});
+
 const SIGNAL_MAX_MATCHES_PER_EVENT_OVERRIDES = Object.freeze({
   // Example:
   // "spell.rota": 1,
@@ -515,6 +520,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalMaxRulesEvaluatedOverrides: SIGNAL_MAX_RULES_EVALUATED_OVERRIDES,
   signalMaxActionsPerEventOverrides: SIGNAL_MAX_ACTIONS_PER_EVENT_OVERRIDES,
   signalMaxActionsPerSignalOverrides: SIGNAL_MAX_ACTIONS_PER_SIGNAL_OVERRIDES,
+  signalEmitActionExecutedOverrides: SIGNAL_EMIT_ACTION_EXECUTED_OVERRIDES,
   signalMaxMatchesPerEventOverrides: SIGNAL_MAX_MATCHES_PER_EVENT_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   signalSourceEventOverrides: SIGNAL_SOURCE_EVENT_OVERRIDES,
