@@ -754,6 +754,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalMaxActionsPerRuleMatchOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides contains empty signal id key");
+          continue;
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides[${signalId}] must be an integer >= 0`);
@@ -766,6 +770,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides must be an object when present");
     } else {
       for (const [signalId, value] of Object.entries(signalMaxRulesEvaluatedOverrides)) {
+        if (!asText(signalId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides contains empty signal id key");
+          continue;
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides[${signalId}] must be an integer >= 0`);
