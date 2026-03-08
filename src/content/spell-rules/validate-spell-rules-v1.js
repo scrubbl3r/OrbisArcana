@@ -45,6 +45,9 @@ function validateWhereClause(where, label, errors) {
   if (hasEq && (hasGt || hasGte || hasLt || hasLte)) {
     errors.push(`${label} where.eq cannot be combined with numeric comparators`);
   }
+  if (hasEq && where.eq === undefined) {
+    errors.push(`${label} where.eq must not be undefined`);
+  }
   if (hasGt && hasGte) {
     errors.push(`${label} where.gt and where.gte cannot be combined`);
   }
