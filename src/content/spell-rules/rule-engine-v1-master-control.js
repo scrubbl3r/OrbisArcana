@@ -104,6 +104,11 @@ const SOURCE_EVENT_MAX_MATCHES_PER_EVENT_OVERRIDES = Object.freeze({
   // "voice.spell_detected": 2,
 });
 
+const SOURCE_EVENT_MAX_ACTIONS_PER_EVENT_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": 3,
+});
+
 const SOURCE_EVENT_STOP_ON_FIRST_SIGNAL_MATCH_OVERRIDES = Object.freeze({
   // Example:
   // "voice.spell_detected": true,
@@ -446,6 +451,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     maxRulesEvaluatedPerSignal: 0,
     maxMatchesPerSignal: 0,
     maxMatchesPerEvent: 0,
+    maxActionsPerEvent: 0,
     maxSignalsPerEvent: 0,
     maxActionsPerRuleMatch: 0,
     sourceEventDebounceMs: 0,
@@ -488,6 +494,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   sourceEventMaxSignalsOverrides: SOURCE_EVENT_MAX_SIGNALS_OVERRIDES,
   sourceEventMaxRulesEvaluatedOverrides: SOURCE_EVENT_MAX_RULES_EVALUATED_OVERRIDES,
   sourceEventMaxMatchesPerEventOverrides: SOURCE_EVENT_MAX_MATCHES_PER_EVENT_OVERRIDES,
+  sourceEventMaxActionsPerEventOverrides: SOURCE_EVENT_MAX_ACTIONS_PER_EVENT_OVERRIDES,
   sourceEventStopOnFirstSignalMatchOverrides: SOURCE_EVENT_STOP_ON_FIRST_SIGNAL_MATCH_OVERRIDES,
   sourceEventEmitPreviewMatchedOverrides: SOURCE_EVENT_EMIT_PREVIEW_MATCHED_OVERRIDES,
   sourceEventActionTypeEnabledOverrides: SOURCE_EVENT_ACTION_TYPE_ENABLED_OVERRIDES,

@@ -129,6 +129,10 @@ export function createRuleEngineV1PreviewSystem({
   const maxMatchesPerEvent = Number.isFinite(maxMatchesPerEventRaw)
     ? Math.max(0, Math.floor(maxMatchesPerEventRaw))
     : 0;
+  const maxActionsPerEventRaw = Number(execution.maxActionsPerEvent);
+  const maxActionsPerEvent = Number.isFinite(maxActionsPerEventRaw)
+    ? Math.max(0, Math.floor(maxActionsPerEventRaw))
+    : 0;
   const maxActionsPerRuleMatchRaw = Number(execution.maxActionsPerRuleMatch);
   const maxActionsPerRuleMatch = Number.isFinite(maxActionsPerRuleMatchRaw)
     ? Math.max(0, Math.floor(maxActionsPerRuleMatchRaw))
@@ -200,6 +204,9 @@ export function createRuleEngineV1PreviewSystem({
     : Object.create(null);
   const sourceEventMaxMatchesPerEventOverrides = (schema && schema.sourceEventMaxMatchesPerEventOverrides && typeof schema.sourceEventMaxMatchesPerEventOverrides === "object")
     ? schema.sourceEventMaxMatchesPerEventOverrides
+    : Object.create(null);
+  const sourceEventMaxActionsPerEventOverrides = (schema && schema.sourceEventMaxActionsPerEventOverrides && typeof schema.sourceEventMaxActionsPerEventOverrides === "object")
+    ? schema.sourceEventMaxActionsPerEventOverrides
     : Object.create(null);
   const sourceEventMaxRulesEvaluatedOverrides = (schema && schema.sourceEventMaxRulesEvaluatedOverrides && typeof schema.sourceEventMaxRulesEvaluatedOverrides === "object")
     ? schema.sourceEventMaxRulesEvaluatedOverrides
@@ -275,8 +282,8 @@ export function createRuleEngineV1PreviewSystem({
     return { ...defaultArgs, ...patch };
   }
 
-  function executeRuleActions(rule, triggerMeta = {}) {
-    if (!executeActions || !executionAllowsActions) return;
+  function executeRuleActions(rule, triggerMeta = {}, maxActionsBudget = 0) {
+    if (!executeActions || !executionAllowsActions) return 0;
     const sourceEvent = String(triggerMeta && triggerMeta.sourceEvent || "");
     const signalId = String(triggerMeta && triggerMeta.signalId || "");
     const ruleId = String(rule && rule.id || "");
@@ -290,7 +297,7 @@ export function createRuleEngineV1PreviewSystem({
     if (ruleId && Object.prototype.hasOwnProperty.call(ruleExecuteActionsOverrides, ruleId)) {
       effectiveExecuteActions = !!ruleExecuteActionsOverrides[ruleId];
     }
-    if (!effectiveExecuteActions) return;
+    if (!effectiveExecuteActions) return 0;
     const actions = Array.isArray(rule && rule.actions) ? rule.actions : [];
     const sourceEventActionLimitRaw = Number(sourceEventMaxActionsPerRuleMatchOverrides[sourceEvent]);
     const sourceEventActionLimit = Number.isFinite(sourceEventActionLimitRaw)
@@ -301,9 +308,15 @@ export function createRuleEngineV1PreviewSystem({
       ? Math.max(0, Math.floor(signalActionLimitRaw))
       : sourceEventActionLimit;
     const ruleActionLimitOverrideRaw = Number(ruleActionLimitOverrides[ruleId]);
-    const effectiveMaxActionsPerRuleMatch = Number.isFinite(ruleActionLimitOverrideRaw)
+    const baseMaxActionsPerRuleMatch = Number.isFinite(ruleActionLimitOverrideRaw)
       ? Math.max(0, Math.floor(ruleActionLimitOverrideRaw))
       : signalActionLimit;
+    const budgetCap = Number.isFinite(Number(maxActionsBudget))
+      ? Math.max(0, Math.floor(Number(maxActionsBudget)))
+      : 0;
+    const effectiveMaxActionsPerRuleMatch = (budgetCap > 0 && baseMaxActionsPerRuleMatch > 0)
+      ? Math.min(baseMaxActionsPerRuleMatch, budgetCap)
+      : (budgetCap > 0 ? budgetCap : baseMaxActionsPerRuleMatch);
     let executedActionCount = 0;
     for (let i = 0; i < actions.length; i += 1) {
       if (effectiveMaxActionsPerRuleMatch > 0 && executedActionCount >= effectiveMaxActionsPerRuleMatch) break;
@@ -372,9 +385,10 @@ export function createRuleEngineV1PreviewSystem({
       });
       executedActionCount += 1;
     }
+    return executedActionCount;
   }
 
-  function onSignalHit(signalId, sourceEvent, payload = {}, maxMatchesBudget = 0) {
+  function onSignalHit(signalId, sourceEvent, payload = {}, maxMatchesBudget = 0, maxActionsBudget = 0) {
     const now = Number(payload && payload.atMs) || nowMs();
     const overrideDebounceMsRaw = Number(signalDebounceOverrides[signalId]);
     const effectiveSignalDebounceMs = Number.isFinite(overrideDebounceMsRaw)
@@ -434,6 +448,7 @@ export function createRuleEngineV1PreviewSystem({
       ? !!signalEmitPreviewMatchedOverrides[String(signalId || "")]
       : sourceEventEmitPreviewMatched;
     let matchedCount = 0;
+    let actionCount = 0;
     let evaluatedCount = 0;
     for (const rule of candidates) {
       evaluatedCount += 1;
@@ -480,16 +495,23 @@ export function createRuleEngineV1PreviewSystem({
           atMs: now,
         });
       }
-      executeRuleActions(rule, {
+      const remainingActionBudget = (maxActionsBudget > 0)
+        ? Math.max(0, maxActionsBudget - actionCount)
+        : 0;
+      actionCount += executeRuleActions(rule, {
         signalId,
         sourceEvent,
         atMs: now,
-      });
+      }, remainingActionBudget);
       matchedCount += 1;
       if (effectiveStopOnFirstMatch) break;
       if (effectiveMaxMatchesPerSignal > 0 && matchedCount >= effectiveMaxMatchesPerSignal) break;
+      if (maxActionsBudget > 0 && actionCount >= maxActionsBudget) break;
     }
-    return matchedCount;
+    return {
+      matchedCount,
+      actionCount,
+    };
   }
 
   function start() {
@@ -513,6 +535,10 @@ export function createRuleEngineV1PreviewSystem({
         const effectiveMaxMatchesPerEvent = Number.isFinite(sourceEventMaxMatchesPerEventOverrideRaw)
           ? Math.max(0, Math.floor(sourceEventMaxMatchesPerEventOverrideRaw))
           : maxMatchesPerEvent;
+        const sourceEventMaxActionsPerEventOverrideRaw = Number(sourceEventMaxActionsPerEventOverrides[sourceEvent]);
+        const effectiveMaxActionsPerEvent = Number.isFinite(sourceEventMaxActionsPerEventOverrideRaw)
+          ? Math.max(0, Math.floor(sourceEventMaxActionsPerEventOverrideRaw))
+          : maxActionsPerEvent;
         const hasSourceEventFirstMatchOverride = Object.prototype.hasOwnProperty.call(sourceEventStopOnFirstSignalMatchOverrides, sourceEvent);
         const effectiveStopOnFirstSignalMatchPerEvent = hasSourceEventFirstMatchOverride
           ? !!sourceEventStopOnFirstSignalMatchOverrides[sourceEvent]
@@ -524,14 +550,21 @@ export function createRuleEngineV1PreviewSystem({
         lastSourceEventAtById.set(sourceEvent, now);
         let matchedSignalCount = 0;
         let matchedRuleCount = 0;
+        let actionCount = 0;
         for (const signal of signals) {
           if (!signalMatchesPayload(signal, payload)) continue;
           const remainingMatchBudget = (effectiveMaxMatchesPerEvent > 0)
             ? Math.max(0, effectiveMaxMatchesPerEvent - matchedRuleCount)
             : 0;
-          matchedRuleCount += onSignalHit(signal.id, sourceEvent, payload, remainingMatchBudget);
+          const remainingActionBudget = (effectiveMaxActionsPerEvent > 0)
+            ? Math.max(0, effectiveMaxActionsPerEvent - actionCount)
+            : 0;
+          const hit = onSignalHit(signal.id, sourceEvent, payload, remainingMatchBudget, remainingActionBudget);
+          matchedRuleCount += Number(hit && hit.matchedCount || 0);
+          actionCount += Number(hit && hit.actionCount || 0);
           matchedSignalCount += 1;
           if (effectiveMaxMatchesPerEvent > 0 && matchedRuleCount >= effectiveMaxMatchesPerEvent) break;
+          if (effectiveMaxActionsPerEvent > 0 && actionCount >= effectiveMaxActionsPerEvent) break;
           if (effectiveStopOnFirstSignalMatchPerEvent) break;
           if (effectiveMaxSignalsPerEvent > 0 && matchedSignalCount >= effectiveMaxSignalsPerEvent) break;
         }
