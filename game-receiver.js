@@ -1667,6 +1667,9 @@
               sourceEventCooldownScaleOverrides: (next.sourceEventCooldownScaleOverrides && typeof next.sourceEventCooldownScaleOverrides === "object")
                 ? { ...next.sourceEventCooldownScaleOverrides }
                 : Object.create(null),
+              sourceEventMatchWindowScaleOverrides: (next.sourceEventMatchWindowScaleOverrides && typeof next.sourceEventMatchWindowScaleOverrides === "object")
+                ? { ...next.sourceEventMatchWindowScaleOverrides }
+                : Object.create(null),
               actionArgOverrides: (next.actionArgOverrides && typeof next.actionArgOverrides === "object")
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),

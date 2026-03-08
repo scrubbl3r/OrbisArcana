@@ -181,6 +181,9 @@ export function createRuleEngineV1PreviewSystem({
   const sourceEventCooldownScaleOverrides = (schema && schema.sourceEventCooldownScaleOverrides && typeof schema.sourceEventCooldownScaleOverrides === "object")
     ? schema.sourceEventCooldownScaleOverrides
     : Object.create(null);
+  const sourceEventMatchWindowScaleOverrides = (schema && schema.sourceEventMatchWindowScaleOverrides && typeof schema.sourceEventMatchWindowScaleOverrides === "object")
+    ? schema.sourceEventMatchWindowScaleOverrides
+    : Object.create(null);
   const actionArgOverrides = (schema && schema.actionArgOverrides && typeof schema.actionArgOverrides === "object")
     ? schema.actionArgOverrides
     : Object.create(null);
@@ -324,10 +327,14 @@ export function createRuleEngineV1PreviewSystem({
     let matchedCount = 0;
     for (const rule of candidates) {
       const ruleId = String(rule && rule.id || "");
+      const sourceEventMatchWindowScaleRaw = Number(sourceEventMatchWindowScaleOverrides[String(sourceEvent || "")]);
+      const sourceEventMatchWindowScale = Number.isFinite(sourceEventMatchWindowScaleRaw)
+        ? Math.max(0, sourceEventMatchWindowScaleRaw)
+        : matchWindowScale;
       const ruleMatchWindowScaleRaw = Number(ruleMatchWindowScaleOverrides[ruleId]);
       const effectiveMatchWindowScale = Number.isFinite(ruleMatchWindowScaleRaw)
         ? Math.max(0, ruleMatchWindowScaleRaw)
-        : matchWindowScale;
+        : sourceEventMatchWindowScale;
       if (!ruleMatches(rule, lastSeenAtBySignalId, now, effectiveMatchWindowScale)) continue;
       const sourceEventCooldownScaleRaw = Number(sourceEventCooldownScaleOverrides[String(sourceEvent || "")]);
       const sourceEventCooldownScale = Number.isFinite(sourceEventCooldownScaleRaw)

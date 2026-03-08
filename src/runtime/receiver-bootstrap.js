@@ -364,6 +364,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       sourceEventCooldownScaleOverrides: (ruleSchemaV1.sourceEventCooldownScaleOverrides && typeof ruleSchemaV1.sourceEventCooldownScaleOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventCooldownScaleOverrides }
         : Object.create(null),
+      sourceEventMatchWindowScaleOverrides: (ruleSchemaV1.sourceEventMatchWindowScaleOverrides && typeof ruleSchemaV1.sourceEventMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventMatchWindowScaleOverrides }
+        : Object.create(null),
       ruleActionLimitOverrides: (ruleSchemaV1.ruleActionLimitOverrides && typeof ruleSchemaV1.ruleActionLimitOverrides === "object")
         ? { ...ruleSchemaV1.ruleActionLimitOverrides }
         : Object.create(null),
@@ -445,6 +448,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
       sourceEventCooldownScaleOverrides: (ruleSchemaV1.sourceEventCooldownScaleOverrides && typeof ruleSchemaV1.sourceEventCooldownScaleOverrides === "object")
         ? { ...ruleSchemaV1.sourceEventCooldownScaleOverrides }
+        : Object.create(null),
+      sourceEventMatchWindowScaleOverrides: (ruleSchemaV1.sourceEventMatchWindowScaleOverrides && typeof ruleSchemaV1.sourceEventMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchemaV1.sourceEventMatchWindowScaleOverrides }
         : Object.create(null),
       actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
         ? { ...ruleSchemaV1.actionArgOverrides }

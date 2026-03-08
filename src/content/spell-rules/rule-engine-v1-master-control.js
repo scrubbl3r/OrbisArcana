@@ -79,6 +79,11 @@ const SOURCE_EVENT_COOLDOWN_SCALE_OVERRIDES = Object.freeze({
   // "voice.spell_detected": 0.75,
 });
 
+const SOURCE_EVENT_MATCH_WINDOW_SCALE_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": 1.25,
+});
+
 const ACTION_ENABLED_OVERRIDES = Object.freeze({
   // Examples:
   // "r_rota_yspin_charged.event.orb_state": false,
@@ -411,6 +416,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   sourceEventActionTypeEnabledOverrides: SOURCE_EVENT_ACTION_TYPE_ENABLED_OVERRIDES,
   sourceEventExecuteActionsOverrides: SOURCE_EVENT_EXECUTE_ACTIONS_OVERRIDES,
   sourceEventCooldownScaleOverrides: SOURCE_EVENT_COOLDOWN_SCALE_OVERRIDES,
+  sourceEventMatchWindowScaleOverrides: SOURCE_EVENT_MATCH_WINDOW_SCALE_OVERRIDES,
   ruleEnabledOverrides: RULE_ENABLED_OVERRIDES,
   actionEnabledOverrides: ACTION_ENABLED_OVERRIDES,
   actionArgOverrides: ACTION_ARG_OVERRIDES,

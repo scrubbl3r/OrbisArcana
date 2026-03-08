@@ -38,6 +38,7 @@ Top-Level Shape
   sourceEventActionTypeEnabledOverrides: { ... }, // optional { [sourceEvent]: { wake_win?, event? } }
   sourceEventExecuteActionsOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventCooldownScaleOverrides: { ... }, // optional { [sourceEvent]: number>=0 }
+  sourceEventMatchWindowScaleOverrides: { ... }, // optional { [sourceEvent]: number>=0 }
   ruleEnabledOverrides: { ... }, // optional { [ruleId]: boolean }
   actionEnabledOverrides: { ... }, // optional { [actionKey]: boolean }
   actionArgOverrides: { ... }, // optional { [actionKey]: object }
@@ -223,6 +224,9 @@ Authoring Notes
   - `sourceEventCooldownScaleOverrides`:
     - per-source-event cooldown scale map (`{ [sourceEvent]: number >= 0 }`).
     - precedence: `ruleCooldownScaleOverrides` -> `sourceEventCooldownScaleOverrides` -> `execution.cooldownScale`.
+  - `sourceEventMatchWindowScaleOverrides`:
+    - per-source-event match-window scale map (`{ [sourceEvent]: number >= 0 }`).
+    - precedence: `ruleMatchWindowScaleOverrides` -> `sourceEventMatchWindowScaleOverrides` -> `execution.matchWindowScale`.
 - `wake_win` guardrail:
   - Use `ttlMs` for wake window timing.
   - `ms` on `wake_win` is rejected by validation.
