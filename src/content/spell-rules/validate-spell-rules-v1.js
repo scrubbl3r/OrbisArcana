@@ -117,6 +117,12 @@ export function validateSpellRulesV1(rules = [], options = {}) {
   const signalDefs = Array.isArray(options && options.signals)
     ? options.signals
     : SIGNAL_DEFINITIONS_V1;
+  const windowDefs = Array.isArray(options && options.windows)
+    ? options.windows
+    : Object.values(WINDOW_DEFINITIONS_V1_BY_ID);
+  const eventDefs = Array.isArray(options && options.events)
+    ? options.events
+    : Object.values(EVENT_DEFINITIONS_V1_BY_ID);
   const signalById = (options && options.signalById && typeof options.signalById === "object")
     ? options.signalById
     : (
@@ -141,6 +147,8 @@ export function validateSpellRulesV1(rules = [], options = {}) {
   const errors = [];
   const seenRuleIds = new Set();
   const seenSignalIds = new Set();
+  const seenWindowIds = new Set();
+  const seenEventIds = new Set();
   for (const signal of Array.isArray(signalDefs) ? signalDefs : []) {
     const signalId = asId(signal && signal.id);
     if (!signalId) {
@@ -152,6 +160,30 @@ export function validateSpellRulesV1(rules = [], options = {}) {
       continue;
     }
     seenSignalIds.add(signalId);
+  }
+  for (const windowDef of Array.isArray(windowDefs) ? windowDefs : []) {
+    const windowId = asId(windowDef && windowDef.id);
+    if (!windowId) {
+      errors.push("window has missing id");
+      continue;
+    }
+    if (seenWindowIds.has(windowId)) {
+      errors.push(`duplicate window id: ${windowId}`);
+      continue;
+    }
+    seenWindowIds.add(windowId);
+  }
+  for (const eventDef of Array.isArray(eventDefs) ? eventDefs : []) {
+    const eventId = asId(eventDef && eventDef.id);
+    if (!eventId) {
+      errors.push("event has missing id");
+      continue;
+    }
+    if (seenEventIds.has(eventId)) {
+      errors.push(`duplicate event id: ${eventId}`);
+      continue;
+    }
+    seenEventIds.add(eventId);
   }
   for (const signalId of Object.keys(signalById)) {
     const signal = signalById[signalId] || null;

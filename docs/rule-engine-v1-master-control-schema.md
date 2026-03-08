@@ -93,6 +93,10 @@ Top-Level Shape
 }
 ```
 
+Definition Arrays
+- `signals`, `windows`, and `events` entries must have non-empty ids.
+- ids must be unique within each array.
+
 Event Runtime Bindings
 - `eventRuntimeBindings` must be an object when present.
 - `eventRuntimeBindings` keys must be non-empty event ids and match declared `events`.
