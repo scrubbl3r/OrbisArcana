@@ -1003,6 +1003,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalSourceEventOverrides contains empty signal id key");
           continue;
         }
+        if (typeof value !== "string") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalSourceEventOverrides[${signalId}] must be a string`);
+        }
         if (!asText(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalSourceEventOverrides[${signalId}] must be a non-empty source event string`);
         }
