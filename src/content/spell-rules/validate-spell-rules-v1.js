@@ -45,6 +45,12 @@ function validateWhereClause(where, label, errors) {
   if (hasEq && (hasGt || hasGte || hasLt || hasLte)) {
     errors.push(`${label} where.eq cannot be combined with numeric comparators`);
   }
+  if (hasGt && hasGte) {
+    errors.push(`${label} where.gt and where.gte cannot be combined`);
+  }
+  if (hasLt && hasLte) {
+    errors.push(`${label} where.lt and where.lte cannot be combined`);
+  }
   if (hasGt && !isFiniteNumber(where.gt)) {
     errors.push(`${label} where.gt must be a finite number`);
   }
