@@ -33,6 +33,7 @@ Top-Level Shape
   signalMatchWindowScaleOverrides: { ... }, // optional { [signalId]: number>=0 }
   signalCooldownScaleOverrides: { ... }, // optional { [signalId]: number>=0 }
   signalMaxActionsPerRuleMatchOverrides: { ... }, // optional { [signalId]: integer>=0 }
+  signalMaxRulesEvaluatedOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
@@ -158,6 +159,9 @@ Authoring Notes
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matched rules can fire for one signal hit.
     - applies after candidate ordering (priority/source order).
+  - `execution.maxRulesEvaluatedPerSignal`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps how many candidate rules are evaluated per signal hit.
   - `execution.maxSignalsPerEvent`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matching signals are processed per source-event payload.
@@ -219,6 +223,9 @@ Authoring Notes
   - `signalMaxActionsPerRuleMatchOverrides`:
     - per-signal action fanout cap (`{ [signalId]: integer >= 0 }`).
     - precedence: `ruleActionLimitOverrides` -> `signalMaxActionsPerRuleMatchOverrides` -> `sourceEventMaxActionsPerRuleMatchOverrides` -> `execution.maxActionsPerRuleMatch`.
+  - `signalMaxRulesEvaluatedOverrides`:
+    - per-signal candidate evaluation cap (`{ [signalId]: integer >= 0 }`).
+    - precedence: per-signal override -> `execution.maxRulesEvaluatedPerSignal`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.

@@ -103,6 +103,7 @@ export function validateRuleEngineV1Config(config = null) {
   const signalMatchWindowScaleOverrides = asObj(cfg.signalMatchWindowScaleOverrides);
   const signalCooldownScaleOverrides = asObj(cfg.signalCooldownScaleOverrides);
   const signalMaxActionsPerRuleMatchOverrides = asObj(cfg.signalMaxActionsPerRuleMatchOverrides);
+  const signalMaxRulesEvaluatedOverrides = asObj(cfg.signalMaxRulesEvaluatedOverrides);
   const signalPriorityOverrides = asObj(cfg.signalPriorityOverrides);
   const signalSourceEventOverrides = asObj(cfg.signalSourceEventOverrides);
   const signalWhereOverrides = asObj(cfg.signalWhereOverrides);
@@ -144,6 +145,12 @@ export function validateRuleEngineV1Config(config = null) {
       const n = Number(execution.maxMatchesPerSignal);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
         errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxMatchesPerSignal must be an integer >= 0 when present");
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(execution, "maxRulesEvaluatedPerSignal")) {
+      const n = Number(execution.maxRulesEvaluatedPerSignal);
+      if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxRulesEvaluatedPerSignal must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxSignalsPerEvent")) {
@@ -478,6 +485,18 @@ export function validateRuleEngineV1Config(config = null) {
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides[${signalId}] must be an integer >= 0`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "signalMaxRulesEvaluatedOverrides")) {
+    if (!cfg.signalMaxRulesEvaluatedOverrides || typeof cfg.signalMaxRulesEvaluatedOverrides !== "object" || Array.isArray(cfg.signalMaxRulesEvaluatedOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides must be an object when present");
+    } else {
+      for (const [signalId, value] of Object.entries(signalMaxRulesEvaluatedOverrides)) {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides[${signalId}] must be an integer >= 0`);
         }
       }
     }
@@ -895,6 +914,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(signalId || "").trim().toLowerCase();
     if (!id || signalIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides references unknown signal id: ${id}`);
+  }
+  for (const signalId of Object.keys(signalMaxRulesEvaluatedOverrides)) {
+    const id = String(signalId || "").trim().toLowerCase();
+    if (!id || signalIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides references unknown signal id: ${id}`);
   }
   for (const signalId of Object.keys(signalPriorityOverrides)) {
     const id = String(signalId || "").trim().toLowerCase();

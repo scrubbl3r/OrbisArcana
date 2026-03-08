@@ -59,6 +59,11 @@ const SIGNAL_MAX_ACTIONS_PER_RULE_MATCH_OVERRIDES = Object.freeze({
   // "spell.rota": 1,
 });
 
+const SIGNAL_MAX_RULES_EVALUATED_OVERRIDES = Object.freeze({
+  // Example:
+  // "spell.rota": 8,
+});
+
 const SIGNAL_PRIORITY_OVERRIDES = Object.freeze({
   // Example:
   // "gesture.y_spin": 30,
@@ -428,6 +433,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   enabled: true,
   execution: Object.freeze({
     stopOnFirstMatch: false,
+    maxRulesEvaluatedPerSignal: 0,
     maxMatchesPerSignal: 0,
     maxSignalsPerEvent: 0,
     maxActionsPerRuleMatch: 0,
@@ -462,6 +468,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalMatchWindowScaleOverrides: SIGNAL_MATCH_WINDOW_SCALE_OVERRIDES,
   signalCooldownScaleOverrides: SIGNAL_COOLDOWN_SCALE_OVERRIDES,
   signalMaxActionsPerRuleMatchOverrides: SIGNAL_MAX_ACTIONS_PER_RULE_MATCH_OVERRIDES,
+  signalMaxRulesEvaluatedOverrides: SIGNAL_MAX_RULES_EVALUATED_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   signalSourceEventOverrides: SIGNAL_SOURCE_EVENT_OVERRIDES,
   signalWhereOverrides: SIGNAL_WHERE_OVERRIDES,
