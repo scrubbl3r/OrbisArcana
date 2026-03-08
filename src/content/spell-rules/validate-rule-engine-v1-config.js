@@ -1961,6 +1961,11 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime must be an object`);
       continue;
     }
+    const allowedRuntimeKeys = new Set(["kind", "event", "castActionId"]);
+    for (const key of Object.keys(runtime)) {
+      if (allowedRuntimeKeys.has(String(key || ""))) continue;
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime contains unknown key: ${key}`);
+    }
     const kind = String(runtime.kind || "").trim().toLowerCase();
     if (kind !== "orb_event" && kind !== "cast_action") {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.kind must be one of: orb_event, cast_action`);
