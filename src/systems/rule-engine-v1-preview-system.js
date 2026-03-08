@@ -188,6 +188,9 @@ export function createRuleEngineV1PreviewSystem({
   const signalEmitActionExecutedOverrides = (schema && schema.signalEmitActionExecutedOverrides && typeof schema.signalEmitActionExecutedOverrides === "object")
     ? schema.signalEmitActionExecutedOverrides
     : Object.create(null);
+  const signalActionExecutedEventTypeEnabledOverrides = (schema && schema.signalActionExecutedEventTypeEnabledOverrides && typeof schema.signalActionExecutedEventTypeEnabledOverrides === "object")
+    ? schema.signalActionExecutedEventTypeEnabledOverrides
+    : Object.create(null);
   const signalActionTypeEnabledOverrides = (schema && schema.signalActionTypeEnabledOverrides && typeof schema.signalActionTypeEnabledOverrides === "object")
     ? schema.signalActionTypeEnabledOverrides
     : Object.create(null);
@@ -336,6 +339,9 @@ export function createRuleEngineV1PreviewSystem({
     const sourceEventTelemetryTypeGate = (sourceEvent && sourceEventActionExecutedEventTypeEnabledOverrides[sourceEvent] && typeof sourceEventActionExecutedEventTypeEnabledOverrides[sourceEvent] === "object")
       ? sourceEventActionExecutedEventTypeEnabledOverrides[sourceEvent]
       : null;
+    const signalTelemetryTypeGate = (signalId && signalActionExecutedEventTypeEnabledOverrides[signalId] && typeof signalActionExecutedEventTypeEnabledOverrides[signalId] === "object")
+      ? signalActionExecutedEventTypeEnabledOverrides[signalId]
+      : null;
     let effectiveExecuteActions = true;
     if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
       effectiveExecuteActions = !!sourceEventExecuteActionsOverrides[sourceEvent];
@@ -410,13 +416,15 @@ export function createRuleEngineV1PreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
-        const emitTypeEnabled = sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "wake_win")
+        const emitTypeEnabled = signalTelemetryTypeGate && Object.prototype.hasOwnProperty.call(signalTelemetryTypeGate, "wake_win")
+          ? !!signalTelemetryTypeGate.wake_win
+          : (sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "wake_win")
           ? !!sourceEventTelemetryTypeGate.wake_win
           : (
             Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "wake_win")
               ? !!actionExecutedEventTypeEnabled.wake_win
               : true
-          );
+          ));
         if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
           eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
             ruleId: String(rule && rule.id || ""),
@@ -434,13 +442,15 @@ export function createRuleEngineV1PreviewSystem({
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;
       const args = resolveEventArgs(id, mergedOverrides);
-      const emitTypeEnabled = sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "event")
+      const emitTypeEnabled = signalTelemetryTypeGate && Object.prototype.hasOwnProperty.call(signalTelemetryTypeGate, "event")
+        ? !!signalTelemetryTypeGate.event
+        : (sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "event")
         ? !!sourceEventTelemetryTypeGate.event
         : (
           Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "event")
             ? !!actionExecutedEventTypeEnabled.event
             : true
-        );
+        ));
       if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
         eventBus.emit(EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),

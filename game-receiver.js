@@ -1655,6 +1655,9 @@
               signalEmitActionExecutedOverrides: (next.signalEmitActionExecutedOverrides && typeof next.signalEmitActionExecutedOverrides === "object")
                 ? { ...next.signalEmitActionExecutedOverrides }
                 : Object.create(null),
+              signalActionExecutedEventTypeEnabledOverrides: (next.signalActionExecutedEventTypeEnabledOverrides && typeof next.signalActionExecutedEventTypeEnabledOverrides === "object")
+                ? { ...next.signalActionExecutedEventTypeEnabledOverrides }
+                : Object.create(null),
               signalActionTypeEnabledOverrides: (next.signalActionTypeEnabledOverrides && typeof next.signalActionTypeEnabledOverrides === "object")
                 ? { ...next.signalActionTypeEnabledOverrides }
                 : Object.create(null),

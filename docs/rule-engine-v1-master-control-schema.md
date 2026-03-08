@@ -38,6 +38,7 @@ Top-Level Shape
   signalMaxActionsPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalMaxActionsPerSignalOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalEmitActionExecutedOverrides: { ... }, // optional { [signalId]: boolean }
+  signalActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
   signalMaxMatchesPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
@@ -265,6 +266,9 @@ Authoring Notes
   - `signalEmitActionExecutedOverrides`:
     - per-signal action telemetry map (`{ [signalId]: boolean }`).
     - precedence: `ruleEmitActionExecutedOverrides` -> `signalEmitActionExecutedOverrides` -> `sourceEventEmitActionExecutedOverrides` -> `execution.emitActionExecutedEvents`.
+  - `signalActionExecutedEventTypeEnabledOverrides`:
+    - per-signal action-telemetry type gates (`{ [signalId]: { wake_win?:boolean, event?:boolean } }`).
+    - precedence: per-signal override -> `sourceEventActionExecutedEventTypeEnabledOverrides` -> `execution.actionExecutedEventTypeEnabled`.
   - `signalMaxMatchesPerEventOverrides`:
     - per-signal matched-rule cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `sourceEventMaxMatchesPerEventOverrides` -> `execution.maxMatchesPerEvent`.
