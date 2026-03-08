@@ -326,6 +326,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleEmitActionExecutedOverrides = (schema && schema.ruleEmitActionExecutedOverrides && typeof schema.ruleEmitActionExecutedOverrides === "object")
     ? schema.ruleEmitActionExecutedOverrides
     : Object.create(null);
+  const ruleEmitSourceEventSummaryOverrides = (schema && schema.ruleEmitSourceEventSummaryOverrides && typeof schema.ruleEmitSourceEventSummaryOverrides === "object")
+    ? schema.ruleEmitSourceEventSummaryOverrides
+    : Object.create(null);
   const ruleActionExecutedEventTypeEnabledOverrides = (schema && schema.ruleActionExecutedEventTypeEnabledOverrides && typeof schema.ruleActionExecutedEventTypeEnabledOverrides === "object")
     ? schema.ruleActionExecutedEventTypeEnabledOverrides
     : Object.create(null);
@@ -587,6 +590,7 @@ export function createRuleEngineV1PreviewSystem({
     let matchedCount = 0;
     let actionCount = 0;
     let evaluatedCount = 0;
+    let firstMatchedRuleId = "";
     for (const rule of candidates) {
       evaluatedCount += 1;
       if (effectiveMaxRulesEvaluatedPerSignal > 0 && evaluatedCount > effectiveMaxRulesEvaluatedPerSignal) break;
@@ -604,6 +608,7 @@ export function createRuleEngineV1PreviewSystem({
         ? Math.max(0, ruleMatchWindowScaleRaw)
         : signalMatchWindowScale;
       if (!ruleMatches(rule, lastSeenAtBySignalId, now, effectiveMatchWindowScale)) continue;
+      if (!firstMatchedRuleId) firstMatchedRuleId = String(ruleId || "");
       const sourceEventCooldownScaleRaw = Number(sourceEventCooldownScaleOverrides[String(sourceEvent || "")]);
       const sourceEventCooldownScale = Number.isFinite(sourceEventCooldownScaleRaw)
         ? Math.max(0, sourceEventCooldownScaleRaw)
@@ -656,6 +661,7 @@ export function createRuleEngineV1PreviewSystem({
       matchedCount,
       actionCount,
       evaluatedCount,
+      firstMatchedRuleId,
     };
   }
 
@@ -703,6 +709,7 @@ export function createRuleEngineV1PreviewSystem({
         lastSourceEventAtById.set(sourceEvent, now);
         let matchedSignalCount = 0;
         let summarySignalId = "";
+        let summaryRuleId = "";
         let evaluatedSignalCount = 0;
         let matchedRuleCount = 0;
         let actionCount = 0;
@@ -780,6 +787,9 @@ export function createRuleEngineV1PreviewSystem({
           matchedRuleCount += Number(hit && hit.matchedCount || 0);
           actionCount += Number(hit && hit.actionCount || 0);
           evaluatedRuleCount += Number(hit && hit.evaluatedCount || 0);
+          if (!summaryRuleId && hit && hit.firstMatchedRuleId) {
+            summaryRuleId = String(hit.firstMatchedRuleId || "");
+          }
           matchedSignalCount += 1;
           const effectiveMaxSignalsPerEventForCurrentSignal = (signalMatchedSignalsEventCap > 0 && effectiveMaxSignalsPerEvent > 0)
             ? Math.min(signalMatchedSignalsEventCap, effectiveMaxSignalsPerEvent)
@@ -803,9 +813,13 @@ export function createRuleEngineV1PreviewSystem({
           ? !!sourceEventEmitSourceEventSummaryOverrides[sourceEvent]
           : emitSourceEventSummaryEvents;
         const hasSignalSummaryEmitOverride = Object.prototype.hasOwnProperty.call(signalEmitSourceEventSummaryOverrides, String(summarySignalId || ""));
-        const effectiveEmitSourceEventSummaryEvents = hasSignalSummaryEmitOverride
+        const signalSummaryEmit = hasSignalSummaryEmitOverride
           ? !!signalEmitSourceEventSummaryOverrides[String(summarySignalId || "")]
           : sourceEventSummaryEmit;
+        const hasRuleSummaryEmitOverride = Object.prototype.hasOwnProperty.call(ruleEmitSourceEventSummaryOverrides, String(summaryRuleId || ""));
+        const effectiveEmitSourceEventSummaryEvents = hasRuleSummaryEmitOverride
+          ? !!ruleEmitSourceEventSummaryOverrides[String(summaryRuleId || "")]
+          : signalSummaryEmit;
         if (effectiveEmitSourceEventSummaryEvents) {
           eventBus.emit(EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY, {
             sourceEvent,

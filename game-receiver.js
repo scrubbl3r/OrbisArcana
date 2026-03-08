@@ -1634,6 +1634,9 @@
               ruleEmitActionExecutedOverrides: (next.ruleEmitActionExecutedOverrides && typeof next.ruleEmitActionExecutedOverrides === "object")
                 ? { ...next.ruleEmitActionExecutedOverrides }
                 : Object.create(null),
+              ruleEmitSourceEventSummaryOverrides: (next.ruleEmitSourceEventSummaryOverrides && typeof next.ruleEmitSourceEventSummaryOverrides === "object")
+                ? { ...next.ruleEmitSourceEventSummaryOverrides }
+                : Object.create(null),
               ruleActionExecutedEventTypeEnabledOverrides: (next.ruleActionExecutedEventTypeEnabledOverrides && typeof next.ruleActionExecutedEventTypeEnabledOverrides === "object")
                 ? { ...next.ruleActionExecutedEventTypeEnabledOverrides }
                 : Object.create(null),

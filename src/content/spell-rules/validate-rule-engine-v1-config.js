@@ -92,6 +92,7 @@ export function validateRuleEngineV1Config(config = null) {
   const ruleMatchWindowScaleOverrides = asObj(cfg.ruleMatchWindowScaleOverrides);
   const ruleEmitPreviewMatchedOverrides = asObj(cfg.ruleEmitPreviewMatchedOverrides);
   const ruleEmitActionExecutedOverrides = asObj(cfg.ruleEmitActionExecutedOverrides);
+  const ruleEmitSourceEventSummaryOverrides = asObj(cfg.ruleEmitSourceEventSummaryOverrides);
   const ruleActionExecutedEventTypeEnabledOverrides = asObj(cfg.ruleActionExecutedEventTypeEnabledOverrides);
   const ruleExecuteActionsOverrides = asObj(cfg.ruleExecuteActionsOverrides);
   const ruleActionTypeEnabledOverrides = asObj(cfg.ruleActionTypeEnabledOverrides);
@@ -413,6 +414,17 @@ export function validateRuleEngineV1Config(config = null) {
       for (const [ruleId, value] of Object.entries(ruleEmitActionExecutedOverrides)) {
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitActionExecutedOverrides[${ruleId}] must be boolean`);
+        }
+      }
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "ruleEmitSourceEventSummaryOverrides")) {
+    if (!cfg.ruleEmitSourceEventSummaryOverrides || typeof cfg.ruleEmitSourceEventSummaryOverrides !== "object" || Array.isArray(cfg.ruleEmitSourceEventSummaryOverrides)) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides must be an object when present");
+    } else {
+      for (const [ruleId, value] of Object.entries(ruleEmitSourceEventSummaryOverrides)) {
+        if (typeof value !== "boolean") {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides[${ruleId}] must be boolean`);
         }
       }
     }
@@ -1517,6 +1529,11 @@ export function validateRuleEngineV1Config(config = null) {
     const id = String(ruleId || "").trim();
     if (!id || ruleIds.has(id)) continue;
     errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitActionExecutedOverrides references unknown rule id: ${id}`);
+  }
+  for (const ruleId of Object.keys(ruleEmitSourceEventSummaryOverrides)) {
+    const id = String(ruleId || "").trim();
+    if (!id || ruleIds.has(id)) continue;
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides references unknown rule id: ${id}`);
   }
   for (const ruleId of Object.keys(ruleActionExecutedEventTypeEnabledOverrides)) {
     const id = String(ruleId || "").trim();
