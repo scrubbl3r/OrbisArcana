@@ -154,6 +154,7 @@ Authoring Notes
   - `ruleDefaults.cooldownMs` applies when a rule omits `cooldownMs`.
   - `ruleDefaults.matchWindowMs` applies when a rule omits `matchWindowMs`.
   - `ruleDefaults.priority` applies when a rule omits `priority`.
+  - unknown keys in `ruleDefaults` fail fast in validation.
   - Precedence: `ruleDefaults` -> per-rule explicit fields -> `rulePriorityOverrides`.
 - Rule ordering controls:
   - `rulePriorityOverrides` can centrally force per-rule `priority` by rule id.

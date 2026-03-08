@@ -333,6 +333,11 @@ export function validateRuleEngineV1Config(config = null) {
     if (!cfg.ruleDefaults || typeof cfg.ruleDefaults !== "object" || Array.isArray(cfg.ruleDefaults)) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleDefaults must be an object when present");
     } else {
+      const allowedRuleDefaultKeys = new Set(["cooldownMs", "matchWindowMs", "priority"]);
+      for (const key of Object.keys(ruleDefaults)) {
+        if (allowedRuleDefaultKeys.has(String(key || ""))) continue;
+        errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleDefaults contains unknown key: ${key}`);
+      }
       if (Object.prototype.hasOwnProperty.call(ruleDefaults, "cooldownMs")) {
         const n = Number(ruleDefaults.cooldownMs);
         if (!Number.isFinite(n) || n < 0) {
