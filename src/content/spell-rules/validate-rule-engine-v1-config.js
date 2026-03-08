@@ -519,6 +519,10 @@ export function validateRuleEngineV1Config(config = null) {
       errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides must be an object when present");
     } else {
       for (const [ruleId, value] of Object.entries(ruleSummaryIncludeBudgetCapsOverrides)) {
+        if (!asText(ruleId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides contains empty rule id key");
+          continue;
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides[${ruleId}] must be boolean`);
         }
