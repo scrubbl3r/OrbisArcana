@@ -577,6 +577,10 @@ export function validateRuleEngineV1Config(config = null) {
     } else {
       const allowed = new Set(["wake_win", "event"]);
       for (const [ruleId, value] of Object.entries(ruleActionTypeEnabledOverrides)) {
+        if (!asText(ruleId)) {
+          errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides contains empty rule id key");
+          continue;
+        }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] must be an object`);
           continue;
