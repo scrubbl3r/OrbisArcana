@@ -378,6 +378,11 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides[${ruleId}] must be an object`);
           continue;
         }
+        const allowedTimingKeys = new Set(["cooldownMs", "matchWindowMs"]);
+        for (const key of Object.keys(value)) {
+          if (allowedTimingKeys.has(String(key || ""))) continue;
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides[${ruleId}] contains unknown key: ${key}`);
+        }
         if (Object.prototype.hasOwnProperty.call(value, "cooldownMs")) {
           const n = Number(value.cooldownMs);
           if (!Number.isFinite(n) || n < 0) {

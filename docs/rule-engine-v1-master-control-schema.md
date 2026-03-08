@@ -162,6 +162,7 @@ Authoring Notes
   - Unknown rule ids in `rulePriorityOverrides` fail fast in validation.
 - Rule timing controls:
   - `ruleTimingOverrides` can centrally force per-rule `cooldownMs` and `matchWindowMs` by rule id.
+  - unknown keys inside each `ruleTimingOverrides[ruleId]` object fail fast in validation.
   - Precedence: `ruleTimingOverrides` -> per-rule explicit/inherited timing.
 - Rule action fanout controls:
   - `ruleActionLimitOverrides` can centrally cap max executed actions for specific rules.
