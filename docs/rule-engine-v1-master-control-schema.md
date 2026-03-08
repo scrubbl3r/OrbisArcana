@@ -22,6 +22,7 @@ Top-Level Shape
   ruleCooldownScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   ruleMatchWindowScaleOverrides: { ... }, // optional { [ruleId]: number>=0 }
   ruleEmitPreviewMatchedOverrides: { ... }, // optional { [ruleId]: boolean }
+  ruleEmitActionExecutedOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleExecuteActionsOverrides: { ... }, // optional { [ruleId]: boolean }
   ruleActionTypeEnabledOverrides: { ... }, // optional { [ruleId]: { wake_win?, event? } }
   signalEnabledOverrides: { ... }, // optional { [signalId]: boolean }
@@ -155,6 +156,8 @@ Authoring Notes
 - Rule telemetry controls:
   - `ruleEmitPreviewMatchedOverrides` can centrally force preview telemetry on/off per rule.
   - Precedence: `ruleEmitPreviewMatchedOverrides` -> `sourceEventEmitPreviewMatchedOverrides` -> `execution.emitPreviewMatchedEvents`.
+  - `ruleEmitActionExecutedOverrides` can centrally force action telemetry on/off per rule.
+  - Precedence: `ruleEmitActionExecutedOverrides` -> `signalEmitActionExecutedOverrides` -> `sourceEventEmitActionExecutedOverrides` -> `execution.emitActionExecutedEvents`.
 - Rule action execution controls:
   - `ruleExecuteActionsOverrides` can centrally force action execution on/off per rule.
   - Precedence: `ruleExecuteActionsOverrides` -> `execution.executeActions`.
@@ -256,7 +259,7 @@ Authoring Notes
     - precedence: per-signal override -> `sourceEventMaxActionsPerSignalOverrides` -> `execution.maxActionsPerSignal`.
   - `signalEmitActionExecutedOverrides`:
     - per-signal action telemetry map (`{ [signalId]: boolean }`).
-    - precedence: per-signal override -> `sourceEventEmitActionExecutedOverrides` -> `execution.emitActionExecutedEvents`.
+    - precedence: `ruleEmitActionExecutedOverrides` -> `signalEmitActionExecutedOverrides` -> `sourceEventEmitActionExecutedOverrides` -> `execution.emitActionExecutedEvents`.
   - `signalMaxMatchesPerEventOverrides`:
     - per-signal matched-rule cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `sourceEventMaxMatchesPerEventOverrides` -> `execution.maxMatchesPerEvent`.

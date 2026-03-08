@@ -1631,6 +1631,9 @@
               ruleEmitPreviewMatchedOverrides: (next.ruleEmitPreviewMatchedOverrides && typeof next.ruleEmitPreviewMatchedOverrides === "object")
                 ? { ...next.ruleEmitPreviewMatchedOverrides }
                 : Object.create(null),
+              ruleEmitActionExecutedOverrides: (next.ruleEmitActionExecutedOverrides && typeof next.ruleEmitActionExecutedOverrides === "object")
+                ? { ...next.ruleEmitActionExecutedOverrides }
+                : Object.create(null),
               ruleExecuteActionsOverrides: (next.ruleExecuteActionsOverrides && typeof next.ruleExecuteActionsOverrides === "object")
                 ? { ...next.ruleExecuteActionsOverrides }
                 : Object.create(null),

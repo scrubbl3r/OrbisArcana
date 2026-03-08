@@ -278,6 +278,9 @@ export function createRuleEngineV1PreviewSystem({
   const ruleEmitPreviewMatchedOverrides = (schema && schema.ruleEmitPreviewMatchedOverrides && typeof schema.ruleEmitPreviewMatchedOverrides === "object")
     ? schema.ruleEmitPreviewMatchedOverrides
     : Object.create(null);
+  const ruleEmitActionExecutedOverrides = (schema && schema.ruleEmitActionExecutedOverrides && typeof schema.ruleEmitActionExecutedOverrides === "object")
+    ? schema.ruleEmitActionExecutedOverrides
+    : Object.create(null);
   const ruleExecuteActionsOverrides = (schema && schema.ruleExecuteActionsOverrides && typeof schema.ruleExecuteActionsOverrides === "object")
     ? schema.ruleExecuteActionsOverrides
     : Object.create(null);
@@ -317,9 +320,13 @@ export function createRuleEngineV1PreviewSystem({
       ? !!sourceEventEmitActionExecutedOverrides[sourceEvent]
       : emitActionExecutedEvents;
     const hasSignalEmitActionExecutedOverride = Object.prototype.hasOwnProperty.call(signalEmitActionExecutedOverrides, signalId);
-    const effectiveEmitActionExecutedEvents = hasSignalEmitActionExecutedOverride
+    const signalEmitActionExecuted = hasSignalEmitActionExecutedOverride
       ? !!signalEmitActionExecutedOverrides[signalId]
       : sourceEventEmitActionExecuted;
+    const hasRuleEmitActionExecutedOverride = Object.prototype.hasOwnProperty.call(ruleEmitActionExecutedOverrides, ruleId);
+    const effectiveEmitActionExecutedEvents = hasRuleEmitActionExecutedOverride
+      ? !!ruleEmitActionExecutedOverrides[ruleId]
+      : signalEmitActionExecuted;
     let effectiveExecuteActions = true;
     if (sourceEvent && Object.prototype.hasOwnProperty.call(sourceEventExecuteActionsOverrides, sourceEvent)) {
       effectiveExecuteActions = !!sourceEventExecuteActionsOverrides[sourceEvent];
