@@ -41,6 +41,7 @@ Top-Level Shape
   signalEmitActionExecutedOverrides: { ... }, // optional { [signalId]: boolean }
   signalActionExecutedEventTypeEnabledOverrides: { ... }, // optional { [signalId]: { wake_win?, event? } }
   signalMaxMatchesPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
+  signalMaxRulesEvaluatedPerEventOverrides: { ... }, // optional { [signalId]: integer>=0 }
   signalStopOnFirstMatchOverrides: { ... }, // optional { [signalId]: boolean }
   signalPriorityOverrides: { ... }, // optional { [signalId]: number }
   signalSourceEventOverrides: { ... }, // optional { [signalId]: sourceEvent }
@@ -48,8 +49,10 @@ Top-Level Shape
   sourceEventEnabledOverrides: { ... }, // optional { [sourceEvent]: boolean }
   sourceEventDebounceOverrides: { ... }, // optional { [sourceEvent]: number(ms) }
   sourceEventMaxSignalsOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
+  sourceEventMaxSignalsEvaluatedPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxActionsPerSignalOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxRulesEvaluatedOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
+  sourceEventMaxRulesEvaluatedPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxMatchesPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventMaxActionsPerEventOverrides: { ... }, // optional { [sourceEvent]: integer>=0 }
   sourceEventStopOnFirstSignalMatchOverrides: { ... }, // optional { [sourceEvent]: boolean }
@@ -182,6 +185,9 @@ Authoring Notes
   - `execution.maxRulesEvaluatedPerSignal`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many candidate rules are evaluated per signal hit.
+  - `execution.maxRulesEvaluatedPerEvent`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps total candidate rule evaluations for one source-event payload.
   - `execution.maxMatchesPerEvent`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps total matched rules emitted/executed for one source-event payload.
@@ -191,6 +197,9 @@ Authoring Notes
   - `execution.maxSignalsPerEvent`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many matching signals are processed per source-event payload.
+  - `execution.maxSignalsEvaluatedPerEvent`:
+    - integer `>= 0`; default `0` (unlimited).
+    - when `> 0`, caps how many candidate signals are evaluated per source-event payload.
   - `execution.maxActionsPerRuleMatch`:
     - integer `>= 0`; default `0` (unlimited).
     - when `> 0`, caps how many actions execute from a matched rule.
@@ -275,6 +284,9 @@ Authoring Notes
   - `signalMaxMatchesPerEventOverrides`:
     - per-signal matched-rule cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
     - precedence: per-signal override -> `sourceEventMaxMatchesPerEventOverrides` -> `execution.maxMatchesPerEvent`.
+  - `signalMaxRulesEvaluatedPerEventOverrides`:
+    - per-signal candidate evaluation cap for one source-event payload (`{ [signalId]: integer >= 0 }`).
+    - precedence: per-signal override -> `sourceEventMaxRulesEvaluatedPerEventOverrides` -> `execution.maxRulesEvaluatedPerEvent`.
   - `signalPriorityOverrides`:
     - per-signal numeric priority map (`{ [signalId]: number }`).
     - higher priority signals are evaluated first within the same `sourceEvent`.
@@ -296,12 +308,18 @@ Authoring Notes
   - `sourceEventMaxSignalsOverrides`:
     - per-source-event matched-signal cap map (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxSignalsPerEvent`.
+  - `sourceEventMaxSignalsEvaluatedPerEventOverrides`:
+    - per-source-event candidate signal evaluation cap map (`{ [sourceEvent]: integer >= 0 }`).
+    - precedence: per-source-event override -> `execution.maxSignalsEvaluatedPerEvent`.
   - `sourceEventMaxActionsPerSignalOverrides`:
     - per-source-event action cap for one signal hit (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxActionsPerSignal`.
   - `sourceEventMaxRulesEvaluatedOverrides`:
     - per-source-event candidate evaluation cap map (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxRulesEvaluatedPerSignal`.
+  - `sourceEventMaxRulesEvaluatedPerEventOverrides`:
+    - per-source-event candidate evaluation cap for one payload (`{ [sourceEvent]: integer >= 0 }`).
+    - precedence: per-source-event override -> `execution.maxRulesEvaluatedPerEvent`.
   - `sourceEventMaxMatchesPerEventOverrides`:
     - per-source-event rule-match cap map (`{ [sourceEvent]: integer >= 0 }`).
     - precedence: per-source-event override -> `execution.maxMatchesPerEvent`.

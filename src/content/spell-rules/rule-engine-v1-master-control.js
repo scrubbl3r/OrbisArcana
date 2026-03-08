@@ -89,6 +89,11 @@ const SIGNAL_MAX_MATCHES_PER_EVENT_OVERRIDES = Object.freeze({
   // "spell.rota": 1,
 });
 
+const SIGNAL_MAX_RULES_EVALUATED_PER_EVENT_OVERRIDES = Object.freeze({
+  // Example:
+  // "spell.rota": 4,
+});
+
 const SIGNAL_PRIORITY_OVERRIDES = Object.freeze({
   // Example:
   // "gesture.y_spin": 30,
@@ -119,6 +124,11 @@ const SOURCE_EVENT_MAX_SIGNALS_OVERRIDES = Object.freeze({
   // "voice.spell_detected": 1,
 });
 
+const SOURCE_EVENT_MAX_SIGNALS_EVALUATED_PER_EVENT_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": 3,
+});
+
 const SOURCE_EVENT_MAX_ACTIONS_PER_SIGNAL_OVERRIDES = Object.freeze({
   // Example:
   // "voice.spell_detected": 2,
@@ -127,6 +137,11 @@ const SOURCE_EVENT_MAX_ACTIONS_PER_SIGNAL_OVERRIDES = Object.freeze({
 const SOURCE_EVENT_MAX_RULES_EVALUATED_OVERRIDES = Object.freeze({
   // Example:
   // "voice.spell_detected": 8,
+});
+
+const SOURCE_EVENT_MAX_RULES_EVALUATED_PER_EVENT_OVERRIDES = Object.freeze({
+  // Example:
+  // "voice.spell_detected": 12,
 });
 
 const SOURCE_EVENT_MAX_MATCHES_PER_EVENT_OVERRIDES = Object.freeze({
@@ -499,11 +514,13 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   execution: Object.freeze({
     stopOnFirstMatch: false,
     maxRulesEvaluatedPerSignal: 0,
+    maxRulesEvaluatedPerEvent: 0,
     maxMatchesPerSignal: 0,
     maxActionsPerSignal: 0,
     maxMatchesPerEvent: 0,
     maxActionsPerEvent: 0,
     maxSignalsPerEvent: 0,
+    maxSignalsEvaluatedPerEvent: 0,
     maxActionsPerRuleMatch: 0,
     sourceEventDebounceMs: 0,
     emitPreviewMatchedEvents: true,
@@ -549,14 +566,17 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   signalEmitActionExecutedOverrides: SIGNAL_EMIT_ACTION_EXECUTED_OVERRIDES,
   signalActionExecutedEventTypeEnabledOverrides: SIGNAL_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES,
   signalMaxMatchesPerEventOverrides: SIGNAL_MAX_MATCHES_PER_EVENT_OVERRIDES,
+  signalMaxRulesEvaluatedPerEventOverrides: SIGNAL_MAX_RULES_EVALUATED_PER_EVENT_OVERRIDES,
   signalPriorityOverrides: SIGNAL_PRIORITY_OVERRIDES,
   signalSourceEventOverrides: SIGNAL_SOURCE_EVENT_OVERRIDES,
   signalWhereOverrides: SIGNAL_WHERE_OVERRIDES,
   sourceEventEnabledOverrides: SOURCE_EVENT_ENABLED_OVERRIDES,
   sourceEventDebounceOverrides: SOURCE_EVENT_DEBOUNCE_OVERRIDES,
   sourceEventMaxSignalsOverrides: SOURCE_EVENT_MAX_SIGNALS_OVERRIDES,
+  sourceEventMaxSignalsEvaluatedPerEventOverrides: SOURCE_EVENT_MAX_SIGNALS_EVALUATED_PER_EVENT_OVERRIDES,
   sourceEventMaxActionsPerSignalOverrides: SOURCE_EVENT_MAX_ACTIONS_PER_SIGNAL_OVERRIDES,
   sourceEventMaxRulesEvaluatedOverrides: SOURCE_EVENT_MAX_RULES_EVALUATED_OVERRIDES,
+  sourceEventMaxRulesEvaluatedPerEventOverrides: SOURCE_EVENT_MAX_RULES_EVALUATED_PER_EVENT_OVERRIDES,
   sourceEventMaxMatchesPerEventOverrides: SOURCE_EVENT_MAX_MATCHES_PER_EVENT_OVERRIDES,
   sourceEventMaxActionsPerEventOverrides: SOURCE_EVENT_MAX_ACTIONS_PER_EVENT_OVERRIDES,
   sourceEventStopOnFirstSignalMatchOverrides: SOURCE_EVENT_STOP_ON_FIRST_SIGNAL_MATCH_OVERRIDES,

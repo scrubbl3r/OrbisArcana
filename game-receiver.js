@@ -1685,6 +1685,9 @@
               signalMaxMatchesPerEventOverrides: (next.signalMaxMatchesPerEventOverrides && typeof next.signalMaxMatchesPerEventOverrides === "object")
                 ? { ...next.signalMaxMatchesPerEventOverrides }
                 : Object.create(null),
+              signalMaxRulesEvaluatedPerEventOverrides: (next.signalMaxRulesEvaluatedPerEventOverrides && typeof next.signalMaxRulesEvaluatedPerEventOverrides === "object")
+                ? { ...next.signalMaxRulesEvaluatedPerEventOverrides }
+                : Object.create(null),
               signalStopOnFirstMatchOverrides: (next.signalStopOnFirstMatchOverrides && typeof next.signalStopOnFirstMatchOverrides === "object")
                 ? { ...next.signalStopOnFirstMatchOverrides }
                 : Object.create(null),
@@ -1697,11 +1700,17 @@
               sourceEventMaxSignalsOverrides: (next.sourceEventMaxSignalsOverrides && typeof next.sourceEventMaxSignalsOverrides === "object")
                 ? { ...next.sourceEventMaxSignalsOverrides }
                 : Object.create(null),
+              sourceEventMaxSignalsEvaluatedPerEventOverrides: (next.sourceEventMaxSignalsEvaluatedPerEventOverrides && typeof next.sourceEventMaxSignalsEvaluatedPerEventOverrides === "object")
+                ? { ...next.sourceEventMaxSignalsEvaluatedPerEventOverrides }
+                : Object.create(null),
               sourceEventMaxActionsPerSignalOverrides: (next.sourceEventMaxActionsPerSignalOverrides && typeof next.sourceEventMaxActionsPerSignalOverrides === "object")
                 ? { ...next.sourceEventMaxActionsPerSignalOverrides }
                 : Object.create(null),
               sourceEventMaxRulesEvaluatedOverrides: (next.sourceEventMaxRulesEvaluatedOverrides && typeof next.sourceEventMaxRulesEvaluatedOverrides === "object")
                 ? { ...next.sourceEventMaxRulesEvaluatedOverrides }
+                : Object.create(null),
+              sourceEventMaxRulesEvaluatedPerEventOverrides: (next.sourceEventMaxRulesEvaluatedPerEventOverrides && typeof next.sourceEventMaxRulesEvaluatedPerEventOverrides === "object")
+                ? { ...next.sourceEventMaxRulesEvaluatedPerEventOverrides }
                 : Object.create(null),
               sourceEventMaxMatchesPerEventOverrides: (next.sourceEventMaxMatchesPerEventOverrides && typeof next.sourceEventMaxMatchesPerEventOverrides === "object")
                 ? { ...next.sourceEventMaxMatchesPerEventOverrides }
