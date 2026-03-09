@@ -46,10 +46,10 @@ export function createKwsReceiverBridge({
     return panel.canonicalKwsToken(rawToken);
   }
 
-  function isClassWindowActive() {
+  function isWakeWindowActive() {
     const panel = getPanel();
-    if (!panel || typeof panel.isClassWindowActive !== "function") return false;
-    return panel.isClassWindowActive();
+    if (!panel || typeof panel.isWakeWindowActive !== "function") return false;
+    return panel.isWakeWindowActive();
   }
 
   function shouldLogHeardWakeword(rawToken) {
@@ -58,16 +58,28 @@ export function createKwsReceiverBridge({
     return panel.shouldLogHeardWakeword(rawToken);
   }
 
-  function resetHeardClassTokensForAxis(axis) {
+  function resetHeardWakeWindowTokensForAxis(axis) {
     const panel = getPanel();
-    if (!panel || typeof panel.resetHeardClassTokensForAxis !== "function") return;
-    panel.resetHeardClassTokensForAxis(axis);
+    if (!panel || typeof panel.resetHeardWakeWindowTokensForAxis !== "function") return;
+    panel.resetHeardWakeWindowTokensForAxis(axis);
   }
 
-  function resetHeardClassTokensAllAxes() {
+  function resetHeardWakeWindowTokensAllAxes() {
     const panel = getPanel();
-    if (!panel || typeof panel.resetHeardClassTokensAllAxes !== "function") return;
-    panel.resetHeardClassTokensAllAxes();
+    if (!panel || typeof panel.resetHeardWakeWindowTokensAllAxes !== "function") return;
+    panel.resetHeardWakeWindowTokensAllAxes();
+  }
+
+  function markHeardWakeWindowToken(axis, token) {
+    const panel = getPanel();
+    if (!panel || typeof panel.markHeardWakeWindowToken !== "function") return;
+    panel.markHeardWakeWindowToken(axis, token);
+  }
+
+  function setSelectedAxisSpell(axis, axisSpell) {
+    const panel = getPanel();
+    if (!panel || typeof panel.setSelectedAxisSpell !== "function") return;
+    panel.setSelectedAxisSpell(axis, axisSpell);
   }
 
   function flashToken(token, ms = 360) {
@@ -107,10 +119,12 @@ export function createKwsReceiverBridge({
     clearAutostartWatchdog,
     startAutostartWatchdog,
     canonicalToken,
-    isClassWindowActive,
+    isWakeWindowActive,
     shouldLogHeardWakeword,
-    resetHeardClassTokensForAxis,
-    resetHeardClassTokensAllAxes,
+    resetHeardWakeWindowTokensForAxis,
+    resetHeardWakeWindowTokensAllAxes,
+    markHeardWakeWindowToken,
+    setSelectedAxisSpell,
     flashToken,
     openWakeHudGate,
     updateReadout,

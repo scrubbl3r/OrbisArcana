@@ -32,8 +32,8 @@ export function createKwsPanelController({
 
   const kwsTokenUiState = {
     flatSpinAxis: "",
-    selectedSchoolByAxis: { x: "", y: "", z: "" },
-    heardClassTokensByAxis: {
+    selectedAxisSpellByAxis: { x: "", y: "", z: "" },
+    heardWakeWindowTokensByAxis: {
       x: Object.create(null),
       y: Object.create(null),
       z: Object.create(null),
@@ -58,7 +58,7 @@ export function createKwsPanelController({
     return Number.isFinite(n) ? n : null;
   }
 
-  function expectedSchoolForAxis(axis) {
+  function expectedAxisSpellForAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
     return String(KWS_AXIS_SCHOOL_BY_AXIS[a] || "").trim().toLowerCase();
   }
@@ -69,11 +69,11 @@ export function createKwsPanelController({
     return String(KWS_TOKEN_CANONICAL_MAP[token] || token);
   }
 
-  function isClassWindowActive() {
+  function isWakeWindowActive() {
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
     if (!(axis === "x" || axis === "y" || axis === "z")) return false;
-    const selectedSchool = String(kwsTokenUiState.selectedSchoolByAxis[axis] || "").toLowerCase();
-    return KWS_AXIS_TOKEN_SET.has(selectedSchool);
+    const selectedAxisSpell = String(kwsTokenUiState.selectedAxisSpellByAxis[axis] || "").toLowerCase();
+    return KWS_AXIS_TOKEN_SET.has(selectedAxisSpell);
   }
 
   function shouldLogHeardWakeword(rawToken) {
@@ -86,35 +86,35 @@ export function createKwsPanelController({
     }
     if (KWS_AXIS_TOKEN_SET.has(token)) {
       const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
-      return !!axis && token === expectedSchoolForAxis(axis);
+      return !!axis && token === expectedAxisSpellForAxis(axis);
     }
     if (KWS_WAKE_WINDOW_TOKEN_SET.has(token)) {
-      return isClassWindowActive();
+      return isWakeWindowActive();
     }
     return false;
   }
 
-  function resetHeardClassTokensForAxis(axis) {
+  function resetHeardWakeWindowTokensForAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
     if (!(a === "x" || a === "y" || a === "z")) return;
     const bucket = Object.create(null);
     for (const token of KWS_WAKE_WINDOW_TOKENS) bucket[token] = false;
-    kwsTokenUiState.heardClassTokensByAxis[a] = bucket;
+    kwsTokenUiState.heardWakeWindowTokensByAxis[a] = bucket;
   }
 
-  function resetHeardClassTokensAllAxes() {
-    resetHeardClassTokensForAxis("x");
-    resetHeardClassTokensForAxis("y");
-    resetHeardClassTokensForAxis("z");
+  function resetHeardWakeWindowTokensAllAxes() {
+    resetHeardWakeWindowTokensForAxis("x");
+    resetHeardWakeWindowTokensForAxis("y");
+    resetHeardWakeWindowTokensForAxis("z");
   }
 
-  function markHeardClassToken(axis, token) {
+  function markHeardWakeWindowToken(axis, token) {
     const a = String(axis || "").trim().toLowerCase();
     const t = String(token || "").trim().toLowerCase();
     if (!(a === "x" || a === "y" || a === "z")) return;
     if (!t) return;
-    if (!kwsTokenUiState.heardClassTokensByAxis[a]) resetHeardClassTokensForAxis(a);
-    kwsTokenUiState.heardClassTokensByAxis[a][t] = true;
+    if (!kwsTokenUiState.heardWakeWindowTokensByAxis[a]) resetHeardWakeWindowTokensForAxis(a);
+    kwsTokenUiState.heardWakeWindowTokensByAxis[a][t] = true;
   }
 
   function setFlatSpinAxis(axis) {
@@ -124,16 +124,16 @@ export function createKwsPanelController({
 
   function clearFlatSpinState() {
     kwsTokenUiState.flatSpinAxis = "";
-    kwsTokenUiState.selectedSchoolByAxis.x = "";
-    kwsTokenUiState.selectedSchoolByAxis.y = "";
-    kwsTokenUiState.selectedSchoolByAxis.z = "";
-    resetHeardClassTokensAllAxes();
+    kwsTokenUiState.selectedAxisSpellByAxis.x = "";
+    kwsTokenUiState.selectedAxisSpellByAxis.y = "";
+    kwsTokenUiState.selectedAxisSpellByAxis.z = "";
+    resetHeardWakeWindowTokensAllAxes();
   }
 
-  function setSelectedSchool(axis, school) {
+  function setSelectedAxisSpell(axis, axisSpell) {
     const a = String(axis || "").trim().toLowerCase();
     if (!(a === "x" || a === "y" || a === "z")) return;
-    kwsTokenUiState.selectedSchoolByAxis[a] = String(school || "").trim().toLowerCase();
+    kwsTokenUiState.selectedAxisSpellByAxis[a] = String(axisSpell || "").trim().toLowerCase();
   }
 
   function clearKwsWakeHudGateTimer() {
@@ -200,19 +200,19 @@ export function createKwsPanelController({
     const now = Date.now();
     const orbisOpen = now < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
-    const expectedSchool = expectedSchoolForAxis(axis);
-    const classWindowActive = isClassWindowActive();
+    const expectedAxisSpell = expectedAxisSpellForAxis(axis);
+    const wakeWindowActive = isWakeWindowActive();
     const lineTop = KWS_ROW_TOP.map((token) => {
       const t = String(token || "").trim().toLowerCase();
       let lit = false;
       if (KWS_WAKE_TOKEN_SET.has(t) || KWS_WAKE_REQUIRED_TOKEN_SET.has(t)) lit = orbisOpen;
-      else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedSchool;
+      else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedAxisSpell;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
       return tokenChipHtml(token, lit, flash);
     }).join(" ");
     const lineBottom = KWS_ROW_BOTTOM.map((token) => {
-      const heardOnAxis = !!(axis && kwsTokenUiState.heardClassTokensByAxis[axis] && kwsTokenUiState.heardClassTokensByAxis[axis][token]);
-      const lit = classWindowActive && heardOnAxis;
+      const heardOnAxis = !!(axis && kwsTokenUiState.heardWakeWindowTokensByAxis[axis] && kwsTokenUiState.heardWakeWindowTokensByAxis[axis][token]);
+      const lit = wakeWindowActive && heardOnAxis;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
       return tokenChipHtml(token, lit, flash);
     }).join(" ");
@@ -332,21 +332,21 @@ export function createKwsPanelController({
     }
   }
 
-  resetHeardClassTokensAllAxes();
+  resetHeardWakeWindowTokensAllAxes();
 
   return {
     startKwsReadoutTick,
     stopKwsReadoutTick,
     clearKwsWakeHudGateTimer,
     canonicalKwsToken,
-    isClassWindowActive,
+    isWakeWindowActive,
     shouldLogHeardWakeword,
-    resetHeardClassTokensForAxis,
-    resetHeardClassTokensAllAxes,
-    markHeardClassToken,
+    resetHeardWakeWindowTokensForAxis,
+    resetHeardWakeWindowTokensAllAxes,
+    markHeardWakeWindowToken,
     setFlatSpinAxis,
     clearFlatSpinState,
-    setSelectedSchool,
+    setSelectedAxisSpell,
     flashKwsToken,
     openKwsWakeHudGate,
     updateKwsReadout,
