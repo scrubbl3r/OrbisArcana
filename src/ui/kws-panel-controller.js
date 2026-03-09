@@ -6,6 +6,9 @@ export function createKwsPanelController({
   onGateClosed = null,
   onApplyTune = null,
 } = {}) {
+  if (constants && Object.prototype.hasOwnProperty.call(constants, "axisSpellByAxis")) {
+    throw new Error("kws_panel_legacy_config_key:axisSpellByAxis");
+  }
   const DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(250, Number(constants.defaultGateTimeoutMs) || 1500);
   const DEFAULT_KWS_START_STALL_MS = Math.max(0, Number(constants.startStallMs) || 8000);
   const KWS_READOUT_TICK_MS = Math.max(100, Number(constants.readoutTickMs) || 250);
