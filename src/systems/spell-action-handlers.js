@@ -27,7 +27,7 @@ export function createSpellActionHandlers({
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
     play_school_aoe(payload = {}) {
-      const axisSpell = String((payload && (payload.axisSpell || payload.school)) || "").trim().toLowerCase();
+      const axisSpell = String((payload && payload.axisSpell) || "").trim().toLowerCase();
       if (axisSpell === "fridgis") {
         if (typeof playFrostAoe === "function") {
           playFrostAoe();
