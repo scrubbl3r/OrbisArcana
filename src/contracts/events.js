@@ -30,8 +30,6 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
  * @property {string} [slot] Slot/group (`UD`,`LR`,`FB`)
  * @property {string} [axisSpell] Selected axis spell token id for wake-window casts
  * @property {string} [wakeWindowSpell] Selected wake-window token id
- * @property {string} [school] Legacy alias for `axisSpell`
- * @property {string} [classKey] Legacy alias for `wakeWindowSpell`
  * @property {number} [atMs]
  * @property {number} [floatGraceMs] Optional explicit grace override
  * @property {string} [trigger] Trigger source (for example `shake_detonation`)
@@ -47,8 +45,6 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
  * @property {string} slot Slot/group (`UD`,`LR`,`FB`)
  * @property {string} [axisSpell] Selected axis spell token id for wake-window loads
  * @property {string} [wakeWindowSpell] Selected wake-window token id
- * @property {string} [school] Legacy alias for `axisSpell`
- * @property {string} [classKey] Legacy alias for `wakeWindowSpell`
  * @property {number} [atMs]
  */
 

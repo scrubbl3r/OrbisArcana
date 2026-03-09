@@ -170,11 +170,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     const intent = String(routed && routed.intent || "");
     if (!isWakeWindowSelectIntent(intent)) return routed;
     const a = normAxis(axis);
-    const classKeyRaw = String((routed && (routed.wakeWindowSpell || routed.classKey)) || "").toLowerCase();
-    const classKey = normalizeClassTokenForRuntime(classKeyRaw);
-    const school = String(selectedSchoolByAxis[a] || "").toLowerCase();
-    if (!a || !classKey || !school) return null;
-    const id = classKey;
+    const wakeWindowSpellRaw = String((routed && routed.wakeWindowSpell) || "").toLowerCase();
+    const wakeWindowSpell = normalizeClassTokenForRuntime(wakeWindowSpellRaw);
+    const axisSpell = String(selectedSchoolByAxis[a] || "").toLowerCase();
+    if (!a || !wakeWindowSpell || !axisSpell) return null;
+    const id = wakeWindowSpell;
     const base = withRuntimeRouting(ACTIVE_SPELLS_BY_ID[id] || { id });
     if (!base || !base.id) return null;
     return {
@@ -184,11 +184,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       phrase: String(base.phrase || id),
       allowedAxes: Array.isArray(base.allowedAxes) ? base.allowedAxes.slice() : [a],
       fixedSlot: String(base.fixedSlot || "").toUpperCase(),
-      axisSpell: school,
-      wakeWindowSpell: String((base.wakeWindowSpell || base.classKey || classKey)).toLowerCase(),
-      // Legacy aliases maintained during staged de-legacy.
-      school,
-      classKey: String((base.classKey || base.wakeWindowSpell || classKey)).toLowerCase(),
+      axisSpell,
+      wakeWindowSpell: String((base.wakeWindowSpell || wakeWindowSpell)).toLowerCase(),
     };
   }
 
@@ -197,7 +194,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const axis = normAxis(payload.axis);
       activeFlatSpinAxis = axis || null;
       if (axis) {
-        // New flat-spin activation requires re-speaking school wake for that axis.
+        // Flat-spin activation requires re-speaking axis token for that axis.
         selectedSchoolByAxis[axis] = "";
       }
     }));
@@ -221,8 +218,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const spell = withRuntimeRouting(payload.spell || {});
       const rawSpellId = String(spell.id || "");
       const spellIntent = String(spell.intent || "");
-      const spellSchool = String((spell.axisSpell || spell.school) || "").toLowerCase();
-      const spellClass = String((spell.wakeWindowSpell || spell.classKey) || "").toLowerCase();
+      const spellAxis = String((spell.axisSpell) || "").toLowerCase();
+      const spellWakeWindow = String((spell.wakeWindowSpell) || "").toLowerCase();
       const spellId = rawSpellId;
       if (!spellId) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
@@ -246,7 +243,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const isSchoolSelect = isAxisSelectIntent(spellIntent);
 
       // Strict spell-tree enforcement:
-      // - axis/wake-window tokens are only valid during an active flat-spin window.
+      // - axis/wake-window tokens are valid only during an active flat-spin window.
       const bypassFlatSpinGate = TEMP_UNGATED_SPELL_IDS.has(spellId);
       if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isSchoolSelect || isClassSelect)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
@@ -269,10 +266,10 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             });
             return;
           }
-          selectedSchoolByAxis[axis] = spellSchool;
+          selectedSchoolByAxis[axis] = spellAxis;
           eventBus.emit(EVT_VOICE_AXIS_SELECTED, {
             axis,
-            axisSpell: spellSchool,
+            axisSpell: spellAxis,
             spellId,
             atMs: now,
           });
@@ -297,7 +294,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "no_school_selected",
               spellId,
-              classKey: spellClass,
+              wakeWindowSpell: spellWakeWindow,
               axis,
               atMs: now,
             });
@@ -308,8 +305,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "school_class_resolution_failed",
               spellId,
-              classKey: spellClass,
-              school: selectedSchoolByAxis[axis],
+              wakeWindowSpell: spellWakeWindow,
+              axisSpell: selectedSchoolByAxis[axis],
               axis,
               atMs: now,
             });
@@ -374,11 +371,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
-          axisSpell: String((concreteSpell.axisSpell || concreteSpell.school) || "").toLowerCase(),
-          wakeWindowSpell: String((concreteSpell.wakeWindowSpell || concreteSpell.classKey) || "").toLowerCase(),
-          // Legacy aliases maintained during staged de-legacy.
-          school: String((concreteSpell.school || concreteSpell.axisSpell) || "").toLowerCase(),
-          classKey: String((concreteSpell.classKey || concreteSpell.wakeWindowSpell) || "").toLowerCase(),
+          axisSpell: String((concreteSpell.axisSpell) || "").toLowerCase(),
+          wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
         };
         if (concreteSpellId) {
           lastFlatSpinLoadAtByAxisSpell.set(dedupeKey, now);
@@ -390,11 +384,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
-          axisSpell: String((concreteSpell.axisSpell || concreteSpell.school) || "").toLowerCase(),
-          wakeWindowSpell: String((concreteSpell.wakeWindowSpell || concreteSpell.classKey) || "").toLowerCase(),
-          // Legacy aliases maintained during staged de-legacy.
-          school: String((concreteSpell.school || concreteSpell.axisSpell) || "").toLowerCase(),
-          classKey: String((concreteSpell.classKey || concreteSpell.wakeWindowSpell) || "").toLowerCase(),
+          axisSpell: String((concreteSpell.axisSpell) || "").toLowerCase(),
+          wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
           atMs: now,
         });
         return;
@@ -465,11 +456,8 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         trigger: "shake_detonation",
         axis: loaded.axis,
         slot: loaded.slot,
-        axisSpell: String((loaded.axisSpell || loaded.school) || "").toLowerCase(),
-        wakeWindowSpell: String((loaded.wakeWindowSpell || loaded.classKey) || "").toLowerCase(),
-        // Legacy aliases maintained during staged de-legacy.
-        school: String(loaded.school || "").toLowerCase(),
-        classKey: String(loaded.classKey || "").toLowerCase(),
+        axisSpell: String((loaded.axisSpell) || "").toLowerCase(),
+        wakeWindowSpell: String((loaded.wakeWindowSpell) || "").toLowerCase(),
         directionGroup: group,
         atMs: now,
       };
