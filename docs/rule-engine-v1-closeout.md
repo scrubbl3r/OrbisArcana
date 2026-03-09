@@ -2,7 +2,7 @@
 
 ## Status
 - Refactor target achieved: trigger/action behavior is authored from the master control schema and runtime-neutral contracts.
-- Active spellbook role is narrowed to spell availability/recognition metadata.
+- Active spellbook role is narrowed to token availability/recognition metadata.
 - Runtime rejects legacy school/class payload/intent aliases.
 
 ## Canonical Contract (Now)
@@ -72,7 +72,7 @@ Use this pattern to author bespoke chains without adding hard wiring:
 ## Authoring Guidance
 - Keep defaults in definitions; override only when behavior must diverge.
 - Prefer adding/changing rules over adding branch logic in systems.
-- Treat spells/gestures/orb states as composable entities feeding `on` conditions.
+- Treat spell tokens/gestures/orb states as composable entities feeding `on` conditions.
 
 ## Final Gate
 Run before major content edits:

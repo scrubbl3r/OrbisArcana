@@ -22,7 +22,7 @@ This document captures the runtime invariants that should not be changed casuall
 - Any queue/pump optimization must be A/B smoke tested against this checklist:
   - [KWS Regression Checklist](./kws-regression-checklist.md)
 - If a change touches worker message protocol (`audio worker <-> backend <-> infer worker`),
-  run full spell smoke before merge.
+  run full token-chain smoke before merge.
 
 ## Rollback Rule
 - If a KWS change regresses `conn`/`inf` readiness, revert immediately to last known-good commit,

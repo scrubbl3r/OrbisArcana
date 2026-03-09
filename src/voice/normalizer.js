@@ -1,7 +1,7 @@
 const NON_ALNUM_RE = /[^a-z0-9\s]/g;
 const MULTISPACE_RE = /\s+/g;
 
-// Conservative canonicalization focused on closed-vocab spell matching.
+// Conservative canonicalization focused on closed-vocab token matching.
 const PHONETIC_SUBS = Object.freeze([
   ["ph", "f"],
   ["ck", "k"],
