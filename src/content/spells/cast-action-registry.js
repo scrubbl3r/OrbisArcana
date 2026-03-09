@@ -13,8 +13,13 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     floatGracePolicy: "default",
   }),
   Object.freeze({
+    id: "aoe_axis",
+    handlerKey: "play_axis_aoe",
+    floatGracePolicy: "default",
+  }),
+  Object.freeze({
     id: "aoe_school",
-    handlerKey: "play_school_aoe",
+    handlerKey: "play_axis_aoe",
     floatGracePolicy: "default",
   }),
   Object.freeze({

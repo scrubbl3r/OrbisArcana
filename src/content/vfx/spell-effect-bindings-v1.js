@@ -28,7 +28,7 @@ export const SPELL_VFX_BINDINGS_V1 = Object.freeze([
   Object.freeze({
     spellId: "rota",
     primary: Object.freeze({
-      castActionId: "aoe_school",
+      castActionId: "aoe_axis",
       effectId: "spell.aoe_flame",
       presetId: "preset.flame_aoe.default",
     }),

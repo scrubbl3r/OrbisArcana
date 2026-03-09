@@ -54,7 +54,7 @@ export function validateSpellSchemaIntegrityV1(options = {}) {
     }
   }
 
-  // Wake/class list entries should exist in spellbook.
+  // Wake/axis/wake-window list entries should exist in spellbook.
   for (const idRaw of Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : []) {
     const id = asId(idRaw);
     if (!SPELLS_BY_ID[id]) errors.push(`WAKE_SPELL_IDS references unknown spell id: ${id}`);

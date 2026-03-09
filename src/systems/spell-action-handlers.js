@@ -26,7 +26,7 @@ export function createSpellActionHandlers({
       // Backward-compatible fallback until dedicated frost VFX runtime is wired.
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
-    play_school_aoe(payload = {}) {
+    play_axis_aoe(payload = {}) {
       const axisSpell = String((payload && payload.axisSpell) || "").trim().toLowerCase();
       if (axisSpell === "fridgis") {
         if (typeof playFrostAoe === "function") {
@@ -45,6 +45,9 @@ export function createSpellActionHandlers({
         return;
       }
       if (typeof playFlameAoe === "function") playFlameAoe();
+    },
+    play_school_aoe(payload = {}) {
+      return this.play_axis_aoe(payload);
     },
     domus_teleport_orb(payload = {}) {
       void payload;

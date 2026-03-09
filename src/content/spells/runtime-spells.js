@@ -27,7 +27,7 @@ export const RUNTIME_SPELLS = Object.freeze([
     slot: "FB",
     intent: "spell.wake_window_select",
     cooldownMs: 1100,
-    castActionId: "aoe_school",
+    castActionId: "aoe_axis",
     postCastActions: [
       { id: "orb_super_grace", payload: { ms: 2500 } },
     ],
