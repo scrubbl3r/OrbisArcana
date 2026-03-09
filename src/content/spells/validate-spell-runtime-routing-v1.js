@@ -1,14 +1,11 @@
 import { SPELLS_BY_ID } from "../../voice/spellbook.js";
 import {
   AXIS_SPELL_IDS,
-  CLASS_RUNTIME_KEY_BY_TOKEN,
-  CLASS_SPELL_IDS,
   KWS_FLASH_TOKEN_SPELL_IDS,
   KWS_INFER_DEFAULT_SPELL_ID,
   KWS_ROW_BOTTOM_SPELL_IDS,
   KWS_ROW_TOP_SPELL_IDS,
   KWS_SIM_SPELL_IDS,
-  SCHOOL_SPELL_IDS,
   SPELL_RUNTIME_ROUTING,
   WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN,
   WAKE_WINDOW_SPELL_IDS,
@@ -51,9 +48,6 @@ export function validateSpellRuntimeRoutingV1() {
   checkSpellIdList(errors, "WAKE_REQUIRED_SPELL_IDS", WAKE_REQUIRED_SPELL_IDS);
   checkSpellIdList(errors, "AXIS_SPELL_IDS", AXIS_SPELL_IDS);
   checkSpellIdList(errors, "WAKE_WINDOW_SPELL_IDS", WAKE_WINDOW_SPELL_IDS);
-  // Legacy aliases during migration.
-  checkSpellIdList(errors, "SCHOOL_SPELL_IDS", SCHOOL_SPELL_IDS);
-  checkSpellIdList(errors, "CLASS_SPELL_IDS", CLASS_SPELL_IDS);
   checkSpellIdList(errors, "KWS_FLASH_TOKEN_SPELL_IDS", KWS_FLASH_TOKEN_SPELL_IDS);
   checkSpellIdList(errors, "KWS_ROW_TOP_SPELL_IDS", KWS_ROW_TOP_SPELL_IDS);
   checkSpellIdList(errors, "KWS_ROW_BOTTOM_SPELL_IDS", KWS_ROW_BOTTOM_SPELL_IDS);
@@ -63,16 +57,6 @@ export function validateSpellRuntimeRoutingV1() {
   if (!inferId) errors.push("KWS_INFER_DEFAULT_SPELL_ID is empty");
   else if (!SPELLS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_SPELL_ID references unknown spell id: ${inferId}`);
 
-  for (const [token, runtimeIdRaw] of Object.entries(CLASS_RUNTIME_KEY_BY_TOKEN || {})) {
-    const runtimeId = asId(runtimeIdRaw);
-    if (!runtimeId) {
-      errors.push(`CLASS_RUNTIME_KEY_BY_TOKEN[${token}] has empty runtime id`);
-      continue;
-    }
-    if (!SPELLS_BY_ID[runtimeId]) {
-      errors.push(`CLASS_RUNTIME_KEY_BY_TOKEN[${token}] references unknown spell id: ${runtimeId}`);
-    }
-  }
   for (const [token, runtimeIdRaw] of Object.entries(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN || {})) {
     const runtimeId = asId(runtimeIdRaw);
     if (!runtimeId) {

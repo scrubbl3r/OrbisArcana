@@ -3,7 +3,6 @@ import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
 import { RULE_ENGINE_V1_MASTER_CONTROL } from "../spell-rules/rule-engine-v1-master-control.js";
 import {
   AXIS_SPELL_IDS,
-  CLASS_SPELL_IDS,
   SPELL_RUNTIME_ROUTING_BY_ID,
   WAKE_WINDOW_SPELL_IDS,
   WAKE_REQUIRED_SPELL_IDS,
@@ -72,12 +71,6 @@ export function validateSpellSchemaIntegrityV1(options = {}) {
     const id = asId(idRaw);
     if (!SPELLS_BY_ID[id]) errors.push(`WAKE_WINDOW_SPELL_IDS references unknown spell id: ${id}`);
   }
-  // Legacy alias check during migration.
-  for (const idRaw of Array.isArray(CLASS_SPELL_IDS) ? CLASS_SPELL_IDS : []) {
-    const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`CLASS_SPELL_IDS references unknown spell id: ${id}`);
-  }
-
   // Every rule event action should have both definition and runtime binding.
   for (const rule of Array.isArray(rules) ? rules : []) {
     const ruleId = asId(rule && rule.id) || "(unnamed)";

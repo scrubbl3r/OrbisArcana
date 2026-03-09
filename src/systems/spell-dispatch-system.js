@@ -149,20 +149,20 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     };
   }
 
-  function normalizeClassTokenForRuntime(classToken) {
-    const token = String(classToken || "").trim().toLowerCase();
+  function normalizeWakeWindowTokenForRuntime(wakeWindowToken) {
+    const token = String(wakeWindowToken || "").trim().toLowerCase();
     if (!token) return "";
     return String(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN[token] || token).trim().toLowerCase();
   }
 
   function isWakeWindowSelectIntent(intent) {
     const value = String(intent || "").trim().toLowerCase();
-    return value === "spell.wake_window_select" || value === "spell.class_select";
+    return value === "spell.wake_window_select";
   }
 
   function isAxisSelectIntent(intent) {
     const value = String(intent || "").trim().toLowerCase();
-    return value === "spell.axis_select" || value === "spell.school_select";
+    return value === "spell.axis_select";
   }
 
   function resolveConcreteSpellForAxis(spell, axis) {
@@ -171,7 +171,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     if (!isWakeWindowSelectIntent(intent)) return routed;
     const a = normAxis(axis);
     const wakeWindowSpellRaw = String((routed && routed.wakeWindowSpell) || "").toLowerCase();
-    const wakeWindowSpell = normalizeClassTokenForRuntime(wakeWindowSpellRaw);
+    const wakeWindowSpell = normalizeWakeWindowTokenForRuntime(wakeWindowSpellRaw);
     const axisSpell = String(selectedSchoolByAxis[a] || "").toLowerCase();
     if (!a || !wakeWindowSpell || !axisSpell) return null;
     const id = wakeWindowSpell;
@@ -292,7 +292,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         if (isClassSelect) {
           if (!selectedSchoolByAxis[axis]) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "no_school_selected",
+              reason: "no_axis_selected",
               spellId,
               wakeWindowSpell: spellWakeWindow,
               axis,
@@ -303,7 +303,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           concreteSpell = resolveConcreteSpellForAxis(spell, axis);
           if (!concreteSpell || !concreteSpell.id) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "school_class_resolution_failed",
+              reason: "axis_wake_window_resolution_failed",
               spellId,
               wakeWindowSpell: spellWakeWindow,
               axisSpell: selectedSchoolByAxis[axis],

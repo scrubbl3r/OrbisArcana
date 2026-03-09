@@ -36,11 +36,6 @@ export const WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN = Object.freeze({
   vectus: "vectus",
 });
 
-// Legacy aliases kept during staged refactor migration.
-export const SCHOOL_SPELL_IDS = AXIS_SPELL_IDS;
-export const CLASS_SPELL_IDS = WAKE_WINDOW_SPELL_IDS;
-export const CLASS_RUNTIME_KEY_BY_TOKEN = WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN;
-
 export const KWS_FLASH_TOKEN_SPELL_IDS = Object.freeze([
   "orbis",
   "domus",
@@ -90,32 +85,24 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
     id: "tempus",
     intent: "spell.axis_select",
     axisSpell: "tempus",
-    // Legacy alias during migration.
-    school: "tempus",
     allowedAxes: Object.freeze(["y"]),
   }),
   Object.freeze({
     id: "fridgis",
     intent: "spell.axis_select",
     axisSpell: "fridgis",
-    // Legacy alias during migration.
-    school: "fridgis",
     allowedAxes: Object.freeze(["x"]),
   }),
   Object.freeze({
     id: "electrum",
     intent: "spell.axis_select",
     axisSpell: "electrum",
-    // Legacy alias during migration.
-    school: "electrum",
     allowedAxes: Object.freeze(["z"]),
   }),
   Object.freeze({
     id: "sanctum",
     intent: "spell.wake_window_select",
     wakeWindowSpell: "sanctum",
-    // Legacy alias during migration.
-    classKey: "sanctum",
     fixedSlot: "UD",
     allowedAxes: Object.freeze(["x", "y", "z"]),
   }),
@@ -123,8 +110,6 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
     id: "vectus",
     intent: "spell.wake_window_select",
     wakeWindowSpell: "vectus",
-    // Legacy alias during migration.
-    classKey: "vectus",
     fixedSlot: "LR",
     allowedAxes: Object.freeze(["x", "y", "z"]),
   }),
@@ -132,8 +117,6 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
     id: "rota",
     intent: "spell.wake_window_select",
     wakeWindowSpell: "rota",
-    // Legacy alias during migration.
-    classKey: "rota",
     fixedSlot: "FB",
     allowedAxes: Object.freeze(["x", "y", "z"]),
   }),
