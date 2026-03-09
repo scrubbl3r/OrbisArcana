@@ -10,6 +10,7 @@ export function createLanSessionSystem({
   onPhoneStarted,
   tokenTtlMs = 3 * 60 * 1000,
   stunServers = [{ urls: "stun:stun.l.google.com:19302" }],
+  lanImpulseFreshMs = 1500,
 }) {
   if (!AblyCtor) throw new Error("createLanSessionSystem requires AblyCtor");
   if (!workerBase) throw new Error("createLanSessionSystem requires workerBase");
@@ -35,6 +36,7 @@ export function createLanSessionSystem({
     offerRetryTO: null,
     expiryTO: null,
     helloSeen: false,
+    lastLanImpulseTs: 0,
   };
 
   function nowTs() {
@@ -130,6 +132,7 @@ export function createLanSessionSystem({
     state.pc = null;
     state.offerSdp = "";
     state.helloSeen = false;
+    state.lastLanImpulseTs = 0;
   }
 
   function publishSignal(t, extra) {
@@ -257,6 +260,7 @@ export function createLanSessionSystem({
     }
     if (!state.gameplayEnabled) return;
     if (!d || d.t !== "impulse" || !d.payload) return;
+    state.lastLanImpulseTs = nowTs();
     if (typeof onImpulse === "function") onImpulse(d.payload);
   }
 
@@ -310,6 +314,7 @@ export function createLanSessionSystem({
       const lanSafety = await detectLanSafety(pc);
       setLanSafeState(lanSafety.label);
       state.gameplayEnabled = !!lanSafety.safe;
+      state.lastLanImpulseTs = 0;
       if (state.offerRetryTO) {
         clearTimeout(state.offerRetryTO);
         state.offerRetryTO = null;
@@ -317,6 +322,7 @@ export function createLanSessionSystem({
     };
     dc.onclose = () => {
       state.gameplayEnabled = false;
+      state.lastLanImpulseTs = 0;
       setLanConnState("Disconnected");
     };
     dc.onmessage = onDcMessage;
@@ -333,6 +339,7 @@ export function createLanSessionSystem({
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
         state.gameplayEnabled = false;
+        state.lastLanImpulseTs = 0;
         setLanConnState("Connection failed");
       }
     };
@@ -377,6 +384,7 @@ export function createLanSessionSystem({
       }
       if (d.t === "abort") {
         state.gameplayEnabled = false;
+        state.lastLanImpulseTs = 0;
         setLanConnState("Aborted");
       }
     });
@@ -408,7 +416,9 @@ export function createLanSessionSystem({
   }
 
   function shouldIgnoreAblyImpulses() {
-    return !!(state.active && state.gameplayEnabled);
+    if (!(state.active && state.gameplayEnabled)) return false;
+    if (!state.lastLanImpulseTs) return false;
+    return (nowTs() - state.lastLanImpulseTs) <= lanImpulseFreshMs;
   }
 
   function sendControl(name, extra = {}) {

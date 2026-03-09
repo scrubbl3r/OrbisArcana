@@ -742,6 +742,7 @@
       lanParty.phoneStartedAcked = false;
       if (code6 && String(code6).trim() && String(code6).trim() !== lanParty.code6) {
         setJoinStatus("Backup code mismatch");
+        disconnectLanPairing();
         return false;
       }
 
@@ -751,6 +752,7 @@
       } catch (e) {
         console.error("LAN signal attach failed:", e);
         setJoinStatus("Signal attach failed");
+        disconnectLanPairing();
         hideLanConnecting();
         return false;
       }
@@ -2349,7 +2351,8 @@
 
         nextSendAtMs = 0;
         lastSig = null;
-        if (!lanParty.active) {
+        // Keep relay available as a hard fallback even when LAN mode is active.
+        if (!ablyChannel) {
           await connectRelay();
         }
 
