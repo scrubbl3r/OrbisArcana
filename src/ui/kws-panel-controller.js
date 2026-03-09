@@ -35,7 +35,7 @@ export function createKwsPanelController({
 
   const kwsTokenUiState = {
     flatSpinAxis: "",
-    selectedAxisSpellByAxis: { x: "", y: "", z: "" },
+    selectedAxisTokenByAxis: { x: "", y: "", z: "" },
     heardWakeWindowTokensByAxis: {
       x: Object.create(null),
       y: Object.create(null),
@@ -75,8 +75,8 @@ export function createKwsPanelController({
   function isWakeWindowActive() {
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
     if (!(axis === "x" || axis === "y" || axis === "z")) return false;
-    const selectedAxisSpell = String(kwsTokenUiState.selectedAxisSpellByAxis[axis] || "").toLowerCase();
-    return KWS_AXIS_TOKEN_SET.has(selectedAxisSpell);
+    const selectedAxisToken = String(kwsTokenUiState.selectedAxisTokenByAxis[axis] || "").toLowerCase();
+    return KWS_AXIS_TOKEN_SET.has(selectedAxisToken);
   }
 
   function shouldLogHeardWakeword(rawToken) {
@@ -127,16 +127,16 @@ export function createKwsPanelController({
 
   function clearFlatSpinState() {
     kwsTokenUiState.flatSpinAxis = "";
-    kwsTokenUiState.selectedAxisSpellByAxis.x = "";
-    kwsTokenUiState.selectedAxisSpellByAxis.y = "";
-    kwsTokenUiState.selectedAxisSpellByAxis.z = "";
+    kwsTokenUiState.selectedAxisTokenByAxis.x = "";
+    kwsTokenUiState.selectedAxisTokenByAxis.y = "";
+    kwsTokenUiState.selectedAxisTokenByAxis.z = "";
     resetHeardWakeWindowTokensAllAxes();
   }
 
-  function setSelectedAxisSpell(axis, axisSpell) {
+  function setSelectedAxisToken(axis, axisToken) {
     const a = String(axis || "").trim().toLowerCase();
     if (!(a === "x" || a === "y" || a === "z")) return;
-    kwsTokenUiState.selectedAxisSpellByAxis[a] = String(axisSpell || "").trim().toLowerCase();
+    kwsTokenUiState.selectedAxisTokenByAxis[a] = String(axisToken || "").trim().toLowerCase();
   }
 
   function clearKwsWakeHudGateTimer() {
@@ -349,7 +349,8 @@ export function createKwsPanelController({
     markHeardWakeWindowToken,
     setFlatSpinAxis,
     clearFlatSpinState,
-    setSelectedAxisSpell,
+    setSelectedAxisToken,
+    setSelectedAxisSpell: setSelectedAxisToken,
     flashKwsToken,
     openKwsWakeHudGate,
     updateKwsReadout,

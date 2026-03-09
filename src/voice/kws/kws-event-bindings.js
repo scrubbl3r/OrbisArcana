@@ -31,7 +31,9 @@ export function bindKwsEventHandlers({
   const clearFlatSpinState = typeof deps.clearFlatSpinState === "function" ? deps.clearFlatSpinState : null;
   const resetHeardWakeWindowTokensForAxis = typeof deps.resetHeardWakeWindowTokensForAxis === "function" ? deps.resetHeardWakeWindowTokensForAxis : () => {};
   const resetHeardWakeWindowTokensAllAxes = typeof deps.resetHeardWakeWindowTokensAllAxes === "function" ? deps.resetHeardWakeWindowTokensAllAxes : () => {};
-  const setSelectedAxisSpell = typeof deps.setSelectedAxisSpell === "function" ? deps.setSelectedAxisSpell : null;
+  const setSelectedAxisToken = typeof deps.setSelectedAxisToken === "function"
+    ? deps.setSelectedAxisToken
+    : (typeof deps.setSelectedAxisSpell === "function" ? deps.setSelectedAxisSpell : null);
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
   const wakeTokenSet = new Set(
@@ -86,7 +88,7 @@ export function bindKwsEventHandlers({
     if (typeof setFlatSpinAxis === "function") setFlatSpinAxis(axis);
     const prevAxis = String(getFlatSpinAxis() || "").trim().toLowerCase();
     if (prevAxis) {
-      if (typeof setSelectedAxisSpell === "function") setSelectedAxisSpell(prevAxis, "");
+      if (typeof setSelectedAxisToken === "function") setSelectedAxisToken(prevAxis, "");
       resetHeardWakeWindowTokensForAxis(prevAxis);
     }
     updateKwsReadout();
@@ -102,7 +104,7 @@ export function bindKwsEventHandlers({
     const axis = String(p.axis || "").trim().toLowerCase();
     const axisSpell = String((p.axisSpell) || "").trim().toLowerCase();
     if (axis === "x" || axis === "y" || axis === "z") {
-      if (typeof setSelectedAxisSpell === "function") setSelectedAxisSpell(axis, axisSpell);
+      if (typeof setSelectedAxisToken === "function") setSelectedAxisToken(axis, axisSpell);
       resetHeardWakeWindowTokensForAxis(axis);
       if (axisSpell === "electrum") flashKwsToken("electrum", 520);
     }

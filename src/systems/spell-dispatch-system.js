@@ -44,7 +44,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const lastFlatSpinLoadAtByAxisSpell = new Map();
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
-  const selectedAxisSpellByAxis = { x: "", y: "", z: "" };
+  const selectedAxisTokenByAxis = { x: "", y: "", z: "" };
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -172,7 +172,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     const a = normAxis(axis);
     const wakeWindowSpellRaw = String((routed && routed.wakeWindowSpell) || "").toLowerCase();
     const wakeWindowSpell = normalizeWakeWindowTokenForRuntime(wakeWindowSpellRaw);
-    const axisSpell = String(selectedAxisSpellByAxis[a] || "").toLowerCase();
+    const axisSpell = String(selectedAxisTokenByAxis[a] || "").toLowerCase();
     if (!a || !wakeWindowSpell || !axisSpell) return null;
     const id = wakeWindowSpell;
     const base = withRuntimeRouting(ACTIVE_SPELLS_BY_ID[id] || { id });
@@ -195,16 +195,16 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       activeFlatSpinAxis = axis || null;
       if (axis) {
         // Flat-spin activation requires re-speaking axis token for that axis.
-        selectedAxisSpellByAxis[axis] = "";
+        selectedAxisTokenByAxis[axis] = "";
       }
     }));
 
     unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
       activeFlatSpinAxis = null;
       // Breaking flat-spin closes axis windows; user must re-speak axis token.
-      selectedAxisSpellByAxis.x = "";
-      selectedAxisSpellByAxis.y = "";
-      selectedAxisSpellByAxis.z = "";
+      selectedAxisTokenByAxis.x = "";
+      selectedAxisTokenByAxis.y = "";
+      selectedAxisTokenByAxis.z = "";
     }));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
@@ -266,7 +266,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
             });
             return;
           }
-          selectedAxisSpellByAxis[axis] = spellAxis;
+          selectedAxisTokenByAxis[axis] = spellAxis;
           eventBus.emit(EVT_VOICE_AXIS_SELECTED, {
             axis,
             axisSpell: spellAxis,
@@ -290,7 +290,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
 
         let concreteSpell = spell;
         if (isWakeWindowSelect) {
-          if (!selectedAxisSpellByAxis[axis]) {
+          if (!selectedAxisTokenByAxis[axis]) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "no_axis_selected",
               spellId,
@@ -306,7 +306,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
               reason: "axis_wake_window_resolution_failed",
               spellId,
               wakeWindowSpell: spellWakeWindow,
-              axisSpell: selectedAxisSpellByAxis[axis],
+              axisSpell: selectedAxisTokenByAxis[axis],
               axis,
               atMs: now,
             });
@@ -476,9 +476,9 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
     lastCastBySpellId.clear();
     lastFlatSpinLoadAtByAxisSpell.clear();
     activeFlatSpinAxis = null;
-    selectedAxisSpellByAxis.x = "";
-    selectedAxisSpellByAxis.y = "";
-    selectedAxisSpellByAxis.z = "";
+    selectedAxisTokenByAxis.x = "";
+    selectedAxisTokenByAxis.y = "";
+    selectedAxisTokenByAxis.z = "";
     for (const axis of AXES) {
       nextSlotIndexByAxis[axis] = 0;
       for (const slot of SLOT_ORDER) {
