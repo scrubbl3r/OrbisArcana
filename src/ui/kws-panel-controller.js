@@ -17,14 +17,9 @@ export function createKwsPanelController({
   const KWS_AXIS_TOKENS = Array.isArray(constants.axisTokens) ? constants.axisTokens.slice() : [];
   const KWS_WAKE_TOKENS = Array.isArray(constants.wakeTokens) ? constants.wakeTokens.slice() : [];
   const KWS_WAKE_REQUIRED_TOKENS = Array.isArray(constants.wakeRequiredTokens) ? constants.wakeRequiredTokens.slice() : [];
-  const LEGACY_AXIS_TOKEN_BY_AXIS = (constants.axisSpellByAxis && typeof constants.axisSpellByAxis === "object")
-    ? constants.axisSpellByAxis
-    : null;
   const KWS_EXPECTED_AXIS_TOKEN_BY_AXIS = (constants.expectedAxisTokenByAxis && typeof constants.expectedAxisTokenByAxis === "object")
     ? { ...constants.expectedAxisTokenByAxis }
-    : (LEGACY_AXIS_TOKEN_BY_AXIS
-      ? { ...LEGACY_AXIS_TOKEN_BY_AXIS }
-      : Object.create(null));
+    : Object.create(null);
   const KWS_LOG_TOKENS = new Set(Array.isArray(constants.logTokens) ? constants.logTokens : []);
   const TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(constants.tempUngatedTokens) ? constants.tempUngatedTokens : []);
   const KWS_TOKEN_CANONICAL_MAP = (constants.tokenCanonicalMap && typeof constants.tokenCanonicalMap === "object")
