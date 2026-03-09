@@ -1517,6 +1517,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxActionsPerRuleMatchOverrides contains empty source event key");
           continue;
         }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxActionsPerRuleMatchOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxActionsPerRuleMatchOverrides[${sourceEvent}] must be an integer >= 0`);
@@ -1533,6 +1536,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstMatchOverrides contains empty source event key");
           continue;
         }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstMatchOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventStopOnFirstMatchOverrides[${sourceEvent}] must be boolean`);
         }
@@ -1547,6 +1553,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerSignalOverrides contains empty source event key");
           continue;
+        }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMaxMatchesPerSignalOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
         }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
@@ -1564,6 +1573,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEnabledOverrides[${ruleId}] must be boolean`);
         }
@@ -1578,6 +1590,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(actionKey)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides contains empty action key");
           continue;
+        }
+        if (actionKey !== String(actionKey).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides key must not include leading/trailing whitespace: ${actionKey}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionEnabledOverrides[${actionKey}] must be boolean`);
@@ -1594,6 +1609,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides contains empty action key");
           continue;
         }
+        if (actionKey !== String(actionKey).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides key must not include leading/trailing whitespace: ${actionKey}`);
+        }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.actionArgOverrides[${actionKey}] must be an object`);
         }
@@ -1608,6 +1626,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(eventId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides contains empty event id key");
           continue;
+        }
+        if (eventId !== String(eventId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides key must not include leading/trailing whitespace: ${eventId}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventEnabledOverrides[${eventId}] must be boolean`);
@@ -1624,6 +1645,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides contains empty event id key");
           continue;
         }
+        if (eventId !== String(eventId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides key must not include leading/trailing whitespace: ${eventId}`);
+        }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventDefaultOverrides[${eventId}] must be an object`);
         }
@@ -1639,6 +1663,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides contains empty window id key");
           continue;
         }
+        if (windowId !== String(windowId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides key must not include leading/trailing whitespace: ${windowId}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowEnabledOverrides[${windowId}] must be boolean`);
         }
@@ -1653,6 +1680,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(windowId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides contains empty window id key");
           continue;
+        }
+        if (windowId !== String(windowId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides key must not include leading/trailing whitespace: ${windowId}`);
         }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.windowDefaultOverrides[${windowId}] must be an object`);
