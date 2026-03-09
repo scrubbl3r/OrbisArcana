@@ -577,6 +577,10 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (!String(actionType || "").trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] contains empty action type key`);
+            continue;
+          }
           if (actionType !== String(actionType).trim()) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
@@ -628,6 +632,10 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (!String(actionType || "").trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] contains empty action type key`);
+            continue;
+          }
           if (actionType !== String(actionType).trim()) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
@@ -771,6 +779,10 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (!String(actionType || "").trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] contains empty action type key`);
+            continue;
+          }
           if (actionType !== String(actionType).trim()) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
@@ -990,6 +1002,10 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (!String(actionType || "").trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionExecutedEventTypeEnabledOverrides[${signalId}] contains empty action type key`);
+            continue;
+          }
           if (actionType !== String(actionType).trim()) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionExecutedEventTypeEnabledOverrides[${signalId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
@@ -1455,6 +1471,10 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (!String(actionType || "").trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] contains empty action type key`);
+            continue;
+          }
           if (actionType !== String(actionType).trim()) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] key must not include leading/trailing whitespace: ${actionType}`);
           }
@@ -1542,6 +1562,10 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (!String(actionType || "").trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] contains empty action type key`);
+            continue;
+          }
           if (actionType !== String(actionType).trim()) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] key must not include leading/trailing whitespace: ${actionType}`);
           }
