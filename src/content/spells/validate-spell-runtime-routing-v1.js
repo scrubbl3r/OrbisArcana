@@ -80,6 +80,18 @@ export function validateSpellRuntimeRoutingV1() {
 
     if (!SPELLS_BY_ID[id]) errors.push(`SPELL_RUNTIME_ROUTING entry references unknown spell id: ${id}`);
 
+    const intent = asId(item && item.intent);
+    if (intent === "spell.school_select" || intent === "spell.class_select") {
+      errors.push(`SPELL_RUNTIME_ROUTING[${id}] uses legacy intent: ${intent}`);
+    }
+
+    if (item && Object.prototype.hasOwnProperty.call(item, "school")) {
+      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains legacy key: school`);
+    }
+    if (item && Object.prototype.hasOwnProperty.call(item, "classKey")) {
+      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains legacy key: classKey`);
+    }
+
     const allowedAxes = Array.isArray(item && item.allowedAxes) ? item.allowedAxes : [];
     for (const axis of allowedAxes) {
       if (!isAxis(axis)) errors.push(`SPELL_RUNTIME_ROUTING[${id}] has invalid allowed axis: ${axis}`);
