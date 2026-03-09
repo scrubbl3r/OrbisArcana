@@ -24,7 +24,7 @@ export function createKwsRuntimeConfig() {
   const axisTokens = resolveActivePhrasesByIds(AXIS_SPELL_IDS);
   const wakeTokens = resolveActivePhrasesByIds(WAKE_SPELL_IDS);
   const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_SPELL_IDS);
-  const axisSpellByAxis = Object.create(null);
+  const expectedAxisTokenByAxis = Object.create(null);
   for (const spellId of AXIS_SPELL_IDS) {
     const id = String(spellId || "").trim().toLowerCase();
     const routing = SPELL_RUNTIME_ROUTING_BY_ID[id] || null;
@@ -33,7 +33,7 @@ export function createKwsRuntimeConfig() {
     const axes = Array.isArray(routing && routing.allowedAxes) ? routing.allowedAxes : [];
     for (const axis of axes) {
       const a = String(axis || "").trim().toLowerCase();
-      if (a === "x" || a === "y" || a === "z") axisSpellByAxis[a] = axisSpellToken;
+      if (a === "x" || a === "y" || a === "z") expectedAxisTokenByAxis[a] = axisSpellToken;
     }
   }
   const tokenList = Array.from(new Set(rowTop.concat(rowBottom)));
@@ -52,7 +52,7 @@ export function createKwsRuntimeConfig() {
     axisTokens,
     wakeTokens,
     wakeRequiredTokens,
-    axisSpellByAxis: Object.freeze({ ...axisSpellByAxis }),
+    expectedAxisTokenByAxis: Object.freeze({ ...expectedAxisTokenByAxis }),
     logTokens: tokenList.slice(),
     tempUngatedTokens: tokenList.slice(),
     tokenCanonicalMap: Object.freeze({}),

@@ -17,9 +17,14 @@ export function createKwsPanelController({
   const KWS_AXIS_TOKENS = Array.isArray(constants.axisTokens) ? constants.axisTokens.slice() : [];
   const KWS_WAKE_TOKENS = Array.isArray(constants.wakeTokens) ? constants.wakeTokens.slice() : [];
   const KWS_WAKE_REQUIRED_TOKENS = Array.isArray(constants.wakeRequiredTokens) ? constants.wakeRequiredTokens.slice() : [];
-  const KWS_AXIS_SPELL_BY_AXIS = (constants.axisSpellByAxis && typeof constants.axisSpellByAxis === "object")
-    ? { ...constants.axisSpellByAxis }
-    : Object.create(null);
+  const LEGACY_AXIS_TOKEN_BY_AXIS = (constants.axisSpellByAxis && typeof constants.axisSpellByAxis === "object")
+    ? constants.axisSpellByAxis
+    : null;
+  const KWS_EXPECTED_AXIS_TOKEN_BY_AXIS = (constants.expectedAxisTokenByAxis && typeof constants.expectedAxisTokenByAxis === "object")
+    ? { ...constants.expectedAxisTokenByAxis }
+    : (LEGACY_AXIS_TOKEN_BY_AXIS
+      ? { ...LEGACY_AXIS_TOKEN_BY_AXIS }
+      : Object.create(null));
   const KWS_LOG_TOKENS = new Set(Array.isArray(constants.logTokens) ? constants.logTokens : []);
   const TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(constants.tempUngatedTokens) ? constants.tempUngatedTokens : []);
   const KWS_TOKEN_CANONICAL_MAP = (constants.tokenCanonicalMap && typeof constants.tokenCanonicalMap === "object")
@@ -58,9 +63,9 @@ export function createKwsPanelController({
     return Number.isFinite(n) ? n : null;
   }
 
-  function expectedAxisSpellForAxis(axis) {
+  function expectedAxisTokenForAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
-    return String(KWS_AXIS_SPELL_BY_AXIS[a] || "").trim().toLowerCase();
+    return String(KWS_EXPECTED_AXIS_TOKEN_BY_AXIS[a] || "").trim().toLowerCase();
   }
 
   function canonicalKwsToken(rawToken) {
@@ -86,7 +91,7 @@ export function createKwsPanelController({
     }
     if (KWS_AXIS_TOKEN_SET.has(token)) {
       const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
-      return !!axis && token === expectedAxisSpellForAxis(axis);
+      return !!axis && token === expectedAxisTokenForAxis(axis);
     }
     if (KWS_WAKE_WINDOW_TOKEN_SET.has(token)) {
       return isWakeWindowActive();
@@ -200,13 +205,13 @@ export function createKwsPanelController({
     const now = Date.now();
     const orbisOpen = now < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
-    const expectedAxisSpell = expectedAxisSpellForAxis(axis);
+    const expectedAxisToken = expectedAxisTokenForAxis(axis);
     const wakeWindowActive = isWakeWindowActive();
     const lineTop = KWS_ROW_TOP.map((token) => {
       const t = String(token || "").trim().toLowerCase();
       let lit = false;
       if (KWS_WAKE_TOKEN_SET.has(t) || KWS_WAKE_REQUIRED_TOKEN_SET.has(t)) lit = orbisOpen;
-      else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedAxisSpell;
+      else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedAxisToken;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
       return tokenChipHtml(token, lit, flash);
     }).join(" ");
