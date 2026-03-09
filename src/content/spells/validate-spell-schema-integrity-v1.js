@@ -1,5 +1,5 @@
 import { SPELLS_BY_ID } from "../../voice/spellbook.js";
-import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
+import { CAST_ACTION_REGISTRY, CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
 import { RULE_ENGINE_V1_MASTER_CONTROL } from "../spell-rules/rule-engine-v1-master-control.js";
 import {
   AXIS_SPELL_IDS,
@@ -46,6 +46,21 @@ export function validateSpellSchemaIntegrityV1(options = {}) {
           : Object.create(null))
     );
   const errors = [];
+
+  // Prevent accidental reintroduction of legacy cast-action naming.
+  if (CAST_ACTION_REGISTRY_BY_ID["aoe_school"]) {
+    errors.push("CAST_ACTION_REGISTRY contains legacy castActionId: aoe_school");
+  }
+  for (const action of Array.isArray(CAST_ACTION_REGISTRY) ? CAST_ACTION_REGISTRY : []) {
+    const id = asId(action && action.id);
+    const handlerKey = asId(action && action.handlerKey);
+    if (id === "aoe_school") {
+      errors.push("CAST_ACTION_REGISTRY contains legacy castActionId: aoe_school");
+    }
+    if (handlerKey === "play_school_aoe") {
+      errors.push("CAST_ACTION_REGISTRY contains legacy handlerKey: play_school_aoe");
+    }
+  }
 
   // Every spellbook spell should have routing metadata during refactor.
   for (const spellId of Object.keys(SPELLS_BY_ID || {})) {
