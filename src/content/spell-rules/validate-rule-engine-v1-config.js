@@ -577,6 +577,9 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (actionType !== String(actionType).trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] key must not include leading/trailing whitespace: ${actionType}`);
+          }
           const key = String(actionType || "").trim().toLowerCase();
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] has unsupported key: ${actionType}`);
@@ -625,6 +628,9 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (actionType !== String(actionType).trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] key must not include leading/trailing whitespace: ${actionType}`);
+          }
           const key = String(actionType || "").trim().toLowerCase();
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] has unsupported key: ${actionType}`);
@@ -765,6 +771,9 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (actionType !== String(actionType).trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] key must not include leading/trailing whitespace: ${actionType}`);
+          }
           const key = String(actionType || "").trim().toLowerCase();
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] has unsupported key: ${actionType}`);
@@ -981,6 +990,9 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (actionType !== String(actionType).trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionExecutedEventTypeEnabledOverrides[${signalId}] key must not include leading/trailing whitespace: ${actionType}`);
+          }
           const key = String(actionType || "").trim().toLowerCase();
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionExecutedEventTypeEnabledOverrides[${signalId}] has unsupported key: ${actionType}`);
@@ -1443,6 +1455,9 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (actionType !== String(actionType).trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] key must not include leading/trailing whitespace: ${actionType}`);
+          }
           const key = String(actionType || "").trim().toLowerCase();
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] has unsupported key: ${actionType}`);
@@ -1527,6 +1542,9 @@ export function validateRuleEngineV1Config(config = null) {
           continue;
         }
         for (const [actionType, enabled] of Object.entries(value)) {
+          if (actionType !== String(actionType).trim()) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] key must not include leading/trailing whitespace: ${actionType}`);
+          }
           const key = String(actionType || "").trim().toLowerCase();
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] has unsupported key: ${actionType}`);
