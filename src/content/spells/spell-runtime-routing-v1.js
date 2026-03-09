@@ -2,7 +2,7 @@
 // This file owns behavior-oriented spell metadata during refactor slices.
 
 export const WAKE_SPELL_IDS = Object.freeze([
-  "rota",
+  "orbis",
 ]);
 
 export const WAKE_REQUIRED_SPELL_IDS = Object.freeze([
