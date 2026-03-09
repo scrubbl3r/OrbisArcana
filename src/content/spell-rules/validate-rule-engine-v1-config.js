@@ -367,6 +367,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         if (!Number.isFinite(Number(value))) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.rulePriorityOverrides[${ruleId}] must be a finite number`);
         }
@@ -381,6 +384,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(ruleId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides contains empty rule id key");
           continue;
+        }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides key must not include leading/trailing whitespace: ${ruleId}`);
         }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleTimingOverrides[${ruleId}] must be an object`);
@@ -415,6 +421,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionLimitOverrides[${ruleId}] must be an integer >= 0`);
@@ -430,6 +439,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(ruleId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleCooldownScaleOverrides contains empty rule id key");
           continue;
+        }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleCooldownScaleOverrides key must not include leading/trailing whitespace: ${ruleId}`);
         }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
@@ -447,6 +459,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleMatchWindowScaleOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleMatchWindowScaleOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleMatchWindowScaleOverrides[${ruleId}] must be a finite number >= 0`);
@@ -463,6 +478,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitPreviewMatchedOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitPreviewMatchedOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitPreviewMatchedOverrides[${ruleId}] must be boolean`);
         }
@@ -477,6 +495,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(ruleId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitActionExecutedOverrides contains empty rule id key");
           continue;
+        }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitActionExecutedOverrides key must not include leading/trailing whitespace: ${ruleId}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitActionExecutedOverrides[${ruleId}] must be boolean`);
@@ -493,6 +514,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleEmitSourceEventSummaryOverrides[${ruleId}] must be boolean`);
         }
@@ -508,6 +532,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeSignalAndRuleIdsOverrides[${ruleId}] must be boolean`);
         }
@@ -522,6 +549,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(ruleId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides contains empty rule id key");
           continue;
+        }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides key must not include leading/trailing whitespace: ${ruleId}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleSummaryIncludeBudgetCapsOverrides[${ruleId}] must be boolean`);
