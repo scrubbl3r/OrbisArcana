@@ -569,6 +569,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] must be an object`);
           continue;
@@ -595,6 +598,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleExecuteActionsOverrides contains empty rule id key");
           continue;
         }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleExecuteActionsOverrides key must not include leading/trailing whitespace: ${ruleId}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleExecuteActionsOverrides[${ruleId}] must be boolean`);
         }
@@ -610,6 +616,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(ruleId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides contains empty rule id key");
           continue;
+        }
+        if (ruleId !== String(ruleId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides key must not include leading/trailing whitespace: ${ruleId}`);
         }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] must be an object`);
@@ -636,6 +645,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(signalId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalEnabledOverrides contains empty signal id key");
           continue;
+        }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEnabledOverrides key must not include leading/trailing whitespace: ${signalId}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEnabledOverrides[${signalId}] must be boolean`);
@@ -793,6 +805,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides contains empty signal id key");
           continue;
         }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides key must not include leading/trailing whitespace: ${signalId}`);
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalCooldownScaleOverrides[${signalId}] must be a finite number >= 0`);
@@ -808,6 +823,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(signalId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides contains empty signal id key");
           continue;
+        }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerRuleMatchOverrides key must not include leading/trailing whitespace: ${signalId}`);
         }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
@@ -825,6 +843,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides contains empty signal id key");
           continue;
         }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides key must not include leading/trailing whitespace: ${signalId}`);
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxRulesEvaluatedOverrides[${signalId}] must be an integer >= 0`);
@@ -840,6 +861,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(signalId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerEventOverrides contains empty signal id key");
           continue;
+        }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerEventOverrides key must not include leading/trailing whitespace: ${signalId}`);
         }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
@@ -857,6 +881,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerSignalOverrides contains empty signal id key");
           continue;
         }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerSignalOverrides key must not include leading/trailing whitespace: ${signalId}`);
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalMaxActionsPerSignalOverrides[${signalId}] must be an integer >= 0`);
@@ -872,6 +899,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(signalId)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalEmitActionExecutedOverrides contains empty signal id key");
           continue;
+        }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEmitActionExecutedOverrides key must not include leading/trailing whitespace: ${signalId}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalEmitActionExecutedOverrides[${signalId}] must be boolean`);
