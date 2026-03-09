@@ -622,6 +622,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalDebounceOverrides contains empty signal id key");
           continue;
         }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalDebounceOverrides key must not include leading/trailing whitespace: ${signalId}`);
+        }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalDebounceOverrides[${signalId}] must be a finite number >= 0`);
