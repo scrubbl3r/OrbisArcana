@@ -17,8 +17,8 @@ export function createKwsPanelController({
   const KWS_AXIS_TOKENS = Array.isArray(constants.axisTokens) ? constants.axisTokens.slice() : [];
   const KWS_WAKE_TOKENS = Array.isArray(constants.wakeTokens) ? constants.wakeTokens.slice() : [];
   const KWS_WAKE_REQUIRED_TOKENS = Array.isArray(constants.wakeRequiredTokens) ? constants.wakeRequiredTokens.slice() : [];
-  const KWS_AXIS_SCHOOL_BY_AXIS = (constants.axisSchoolByAxis && typeof constants.axisSchoolByAxis === "object")
-    ? { ...constants.axisSchoolByAxis }
+  const KWS_AXIS_SPELL_BY_AXIS = (constants.axisSpellByAxis && typeof constants.axisSpellByAxis === "object")
+    ? { ...constants.axisSpellByAxis }
     : Object.create(null);
   const KWS_LOG_TOKENS = new Set(Array.isArray(constants.logTokens) ? constants.logTokens : []);
   const TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(constants.tempUngatedTokens) ? constants.tempUngatedTokens : []);
@@ -60,7 +60,7 @@ export function createKwsPanelController({
 
   function expectedAxisSpellForAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
-    return String(KWS_AXIS_SCHOOL_BY_AXIS[a] || "").trim().toLowerCase();
+    return String(KWS_AXIS_SPELL_BY_AXIS[a] || "").trim().toLowerCase();
   }
 
   function canonicalKwsToken(rawToken) {

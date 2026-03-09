@@ -24,16 +24,16 @@ export function createKwsRuntimeConfig() {
   const axisTokens = resolveActivePhrasesByIds(AXIS_SPELL_IDS);
   const wakeTokens = resolveActivePhrasesByIds(WAKE_SPELL_IDS);
   const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_SPELL_IDS);
-  const axisSchoolByAxis = Object.create(null);
+  const axisSpellByAxis = Object.create(null);
   for (const spellId of AXIS_SPELL_IDS) {
     const id = String(spellId || "").trim().toLowerCase();
     const routing = SPELL_RUNTIME_ROUTING_BY_ID[id] || null;
     const active = ACTIVE_SPELLS_BY_ID[id] || null;
-    const schoolToken = String((active && active.phrase) || id || "").trim().toLowerCase();
+    const axisSpellToken = String((active && active.phrase) || id || "").trim().toLowerCase();
     const axes = Array.isArray(routing && routing.allowedAxes) ? routing.allowedAxes : [];
     for (const axis of axes) {
       const a = String(axis || "").trim().toLowerCase();
-      if (a === "x" || a === "y" || a === "z") axisSchoolByAxis[a] = schoolToken;
+      if (a === "x" || a === "y" || a === "z") axisSpellByAxis[a] = axisSpellToken;
     }
   }
   const tokenList = Array.from(new Set(rowTop.concat(rowBottom)));
@@ -52,7 +52,7 @@ export function createKwsRuntimeConfig() {
     axisTokens,
     wakeTokens,
     wakeRequiredTokens,
-    axisSchoolByAxis: Object.freeze({ ...axisSchoolByAxis }),
+    axisSpellByAxis: Object.freeze({ ...axisSpellByAxis }),
     logTokens: tokenList.slice(),
     tempUngatedTokens: tokenList.slice(),
     tokenCanonicalMap: Object.freeze({}),
