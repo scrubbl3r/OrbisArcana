@@ -8,6 +8,27 @@ Canonical Source
 - `src/content/spell-rules/rule-engine-v1-master-control.js`
 - symbol: `RULE_ENGINE_V1_MASTER_CONTROL`
 
+Current Neutral Contract (Implemented)
+- Intent names:
+  - axis select: `spell.axis_select`
+  - wake-window select: `spell.wake_window_select`
+- Action/event payload fields:
+  - use `axisSpell` and `wakeWindowSpell`
+  - legacy aliases are removed from runtime payloads (`school`, `classKey`)
+- KWS runtime config:
+  - uses `axisSpellByAxis` map for expected axis token routing
+- Dispatch reject reasons (current):
+  - `spell_window_required`
+  - `flat_spin_requires_wake_window_token`
+  - `no_axis_selected`
+  - `axis_wake_window_resolution_failed`
+  - `spell_axis_not_allowed`
+  - `duplicate_spell_token`
+  - `no_stored_globes`
+  - `cooldown`
+  - `spell_inactive`
+  - `invalid_spell`
+
 Top-Level Shape
 ```js
 {
