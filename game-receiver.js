@@ -1046,11 +1046,11 @@
     let KWS_READOUT_TICK_MS = 250;
     let KWS_ROW_TOP = [];
     let KWS_ROW_BOTTOM = [];
-    let KWS_CLASS_TOKENS = [];
-    let KWS_SCHOOL_TOKENS = [];
+    let KWS_WAKE_WINDOW_TOKENS = [];
+    let KWS_AXIS_TOKENS = [];
     let KWS_WAKE_TOKENS = [];
     let KWS_WAKE_REQUIRED_TOKENS = [];
-    let KWS_AXIS_SCHOOL_BY_AXIS = Object.freeze({});
+    let KWS_EXPECTED_AXIS_TOKEN_BY_AXIS = Object.freeze({});
     let KWS_LOG_TOKENS = new Set();
     let TEMP_UNGATED_KWS_TOKENS = new Set();
     let KWS_TOKEN_CANONICAL_MAP = Object.freeze({});
@@ -1471,13 +1471,13 @@
             KWS_READOUT_TICK_MS = Math.max(100, Number(kwsConfig.readoutTickMs) || KWS_READOUT_TICK_MS);
             KWS_ROW_TOP = Array.isArray(kwsConfig.rowTop) ? kwsConfig.rowTop.slice() : KWS_ROW_TOP;
             KWS_ROW_BOTTOM = Array.isArray(kwsConfig.rowBottom) ? kwsConfig.rowBottom.slice() : KWS_ROW_BOTTOM;
-            KWS_CLASS_TOKENS = Array.isArray(kwsConfig.classTokens) ? kwsConfig.classTokens.slice() : KWS_CLASS_TOKENS;
-            KWS_SCHOOL_TOKENS = Array.isArray(kwsConfig.schoolTokens) ? kwsConfig.schoolTokens.slice() : KWS_SCHOOL_TOKENS;
+            KWS_WAKE_WINDOW_TOKENS = Array.isArray(kwsConfig.wakeWindowTokens) ? kwsConfig.wakeWindowTokens.slice() : KWS_WAKE_WINDOW_TOKENS;
+            KWS_AXIS_TOKENS = Array.isArray(kwsConfig.axisTokens) ? kwsConfig.axisTokens.slice() : KWS_AXIS_TOKENS;
             KWS_WAKE_TOKENS = Array.isArray(kwsConfig.wakeTokens) ? kwsConfig.wakeTokens.slice() : KWS_WAKE_TOKENS;
             KWS_WAKE_REQUIRED_TOKENS = Array.isArray(kwsConfig.wakeRequiredTokens) ? kwsConfig.wakeRequiredTokens.slice() : KWS_WAKE_REQUIRED_TOKENS;
-            KWS_AXIS_SCHOOL_BY_AXIS = (kwsConfig.axisSchoolByAxis && typeof kwsConfig.axisSchoolByAxis === "object")
-              ? Object.freeze({ ...kwsConfig.axisSchoolByAxis })
-              : KWS_AXIS_SCHOOL_BY_AXIS;
+            KWS_EXPECTED_AXIS_TOKEN_BY_AXIS = (kwsConfig.expectedAxisTokenByAxis && typeof kwsConfig.expectedAxisTokenByAxis === "object")
+              ? Object.freeze({ ...kwsConfig.expectedAxisTokenByAxis })
+              : KWS_EXPECTED_AXIS_TOKEN_BY_AXIS;
             KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
             TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
             KWS_TOKEN_CANONICAL_MAP = (kwsConfig.tokenCanonicalMap && typeof kwsConfig.tokenCanonicalMap === "object")
@@ -1500,11 +1500,11 @@
             readoutTickMs: KWS_READOUT_TICK_MS,
             rowTop: KWS_ROW_TOP,
             rowBottom: KWS_ROW_BOTTOM,
-            classTokens: KWS_CLASS_TOKENS,
-            schoolTokens: KWS_SCHOOL_TOKENS,
+            wakeWindowTokens: KWS_WAKE_WINDOW_TOKENS,
+            axisTokens: KWS_AXIS_TOKENS,
             wakeTokens: KWS_WAKE_TOKENS,
             wakeRequiredTokens: KWS_WAKE_REQUIRED_TOKENS,
-            axisSchoolByAxis: KWS_AXIS_SCHOOL_BY_AXIS,
+            expectedAxisTokenByAxis: KWS_EXPECTED_AXIS_TOKEN_BY_AXIS,
             logTokens: Array.from(KWS_LOG_TOKENS),
             tempUngatedTokens: Array.from(TEMP_UNGATED_KWS_TOKENS),
             tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,
