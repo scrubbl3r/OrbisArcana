@@ -12,7 +12,6 @@ import {
   EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_REJECTED,
   EVT_VOICE_AXIS_SELECTED,
-  EVT_VOICE_SCHOOL_SELECTED,
   EVT_VOICE_SPELL_LOADED,
   EVT_VOICE_SPELL_CAST,
   EVT_INPUT_SHAKE_TRIGGERED,
@@ -205,7 +204,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
 
     unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
       activeFlatSpinAxis = null;
-      // Breaking flat-spin closes school window(s); user must re-speak school token.
+      // Breaking flat-spin closes axis windows; user must re-speak axis token.
       selectedSchoolByAxis.x = "";
       selectedSchoolByAxis.y = "";
       selectedSchoolByAxis.z = "";
@@ -247,7 +246,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
       const isSchoolSelect = isAxisSelectIntent(spellIntent);
 
       // Strict spell-tree enforcement:
-      // - school/class tokens are only valid during an active flat-spin window.
+      // - axis/wake-window tokens are only valid during an active flat-spin window.
       const bypassFlatSpinGate = TEMP_UNGATED_SPELL_IDS.has(spellId);
       if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isSchoolSelect || isClassSelect)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
@@ -274,14 +273,6 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           eventBus.emit(EVT_VOICE_AXIS_SELECTED, {
             axis,
             axisSpell: spellSchool,
-            school: spellSchool,
-            spellId,
-            atMs: now,
-          });
-          eventBus.emit(EVT_VOICE_SCHOOL_SELECTED, {
-            axis,
-            axisSpell: spellSchool,
-            school: spellSchool,
             spellId,
             atMs: now,
           });
@@ -289,7 +280,7 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
         }
 
         // Strict tree inside flat-spin mode:
-        // only class-select is accepted after school-select.
+        // only wake-window-select is accepted after axis-select.
         if (!isClassSelect) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "flat_spin_requires_class_token",
