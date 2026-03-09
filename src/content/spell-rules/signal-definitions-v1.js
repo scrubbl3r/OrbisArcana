@@ -41,6 +41,42 @@ export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
     where: Object.freeze({ path: "axis", eq: "y" }),
   }),
   Object.freeze({
+    id: "gesture.fspin_x",
+    type: "gesture",
+    sourceEvent: "spell_window.flat_spin_opened",
+    where: Object.freeze({ path: "axis", eq: "x" }),
+  }),
+  Object.freeze({
+    id: "gesture.fspin_y",
+    type: "gesture",
+    sourceEvent: "spell_window.flat_spin_opened",
+    where: Object.freeze({ path: "axis", eq: "y" }),
+  }),
+  Object.freeze({
+    id: "gesture.fspin_z",
+    type: "gesture",
+    sourceEvent: "spell_window.flat_spin_opened",
+    where: Object.freeze({ path: "axis", eq: "z" }),
+  }),
+  Object.freeze({
+    id: "gesture.ud_shake",
+    type: "gesture",
+    sourceEvent: "input.shake_triggered",
+    where: Object.freeze({ path: "group", eq: "UD" }),
+  }),
+  Object.freeze({
+    id: "gesture.lr_shake",
+    type: "gesture",
+    sourceEvent: "input.shake_triggered",
+    where: Object.freeze({ path: "group", eq: "LR" }),
+  }),
+  Object.freeze({
+    id: "gesture.fb_shake",
+    type: "gesture",
+    sourceEvent: "input.shake_triggered",
+    where: Object.freeze({ path: "group", eq: "FB" }),
+  }),
+  Object.freeze({
     id: "orb_state.charged",
     type: "orb_state",
     sourceEvent: "orb.float_grace_grant",

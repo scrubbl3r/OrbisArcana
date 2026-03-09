@@ -146,28 +146,34 @@ Rule Shape (authoring)
   // 2) { all:[...], any:[...] }
   // 3) single object => all:[single]
   on: [
-    { type: "spell", id: "rota" },
-    { type: "gesture", id: "y_spin" },
-    { type: "orb_state", id: "charged" }
+    { type: "SPELL", id: "ROTA" },
+    { type: "GESTURE", id: "Y_SPIN" },
+    { type: "ORB_STATE", id: "CHARGED" }
   ],
 
   // `then` supports array or single action object.
   then: [
     {
-      type: "wake_win",
+      type: "WAKE_WIN",
       // id optional; defaults to "wake_win"
       spells: ["sanctum", "vectus"],
       ttlMs: 2000,
       enabled: true // optional, default true
     },
-    { type: "event", id: "electric_aoe", range: 14 },
-    { type: "event", id: "grace", ms: 500 },
-    { type: "event", id: "orb_state", state: "superheated" }
+    { type: "EVENT", id: "ELECTRIC_AOE", range: 14 },
+    { type: "EVENT", id: "GRACE", ms: 500 },
+    { type: "EVENT", id: "ORB_STATE", state: "superheated" }
   ]
 }
 ```
 
 Authoring Notes
+- Nugget handles (recommended authoring surface):
+  - condition types: `SPELL`, `GESTURE`, `ORB_STATE`
+  - action types: `WAKE_WIN`, `EVENT`
+  - gesture ids: `Y_SPIN`, `FSPIN_X`, `FSPIN_Y`, `FSPIN_Z`, `UD_SHAKE`, `LR_SHAKE`, `FB_SHAKE`
+  - event ids: `ELECTRIC_AOE`, `GRACE`, `ORB_STATE`
+  - handles normalize to canonical runtime ids during build/validation.
 - Condition type normalization:
   - `{ type:"spell", id:"rota" }` resolves to signal `spell.rota`
   - `{ type:"gesture", id:"y_spin" }` resolves to `gesture.y_spin`

@@ -41,26 +41,26 @@ Use this pattern to author bespoke chains without adding hard wiring:
       id: "r_rota_y_spin_charged",
       on: {
         all: [
-          { type: "spell", id: "rota" },
-          { type: "gesture", id: "y_spin" },
-          { type: "orb_state", id: "charged" }
+          { type: "SPELL", id: "ROTA" },
+          { type: "GESTURE", id: "Y_SPIN" },
+          { type: "ORB_STATE", id: "CHARGED" }
         ]
       },
       then: [
         {
-          type: "wake_win",
+          type: "WAKE_WIN",
           spells: ["sanctum", "vectus", "domus"],
           ttlMs: 2000
         },
         {
-          type: "event",
-          id: "electric_aoe"
+          type: "EVENT",
+          id: "ELECTRIC_AOE"
           // optional per-instance overrides merge over defaults:
           // overrides: { ms: 900 }
         },
         {
-          type: "event",
-          id: "grace",
+          type: "EVENT",
+          id: "GRACE",
           ms: 500
         }
       ]

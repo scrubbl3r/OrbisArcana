@@ -1,3 +1,10 @@
+import {
+  normalizeActionType,
+  normalizeEventActionId,
+  normalizeSignalConditionId,
+  normalizeWindowActionId,
+} from "./nugget-handles-v1.js";
+
 function asId(v) {
   return String(v || "").trim().toLowerCase();
 }
@@ -7,18 +14,6 @@ function asEventName(v) {
 }
 
 const DEFAULT_WAKE_WINDOW_ID = "wake_win";
-
-function resolveSignalConditionId(cond) {
-  const type = asId(cond && cond.type);
-  const id = asId(cond && cond.id);
-  if (!id) return "";
-  if (type === "signal") return id;
-  if (type === "spell" || type === "gesture" || type === "orb_state") {
-    if (id.includes(".")) return id;
-    return `${type}.${id}`;
-  }
-  return "";
-}
 
 function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
@@ -150,10 +145,10 @@ export function buildRuleEngineV1PreviewRuntime({
     const actions = getRuleActions(rule)
       .filter((a) => !(a && a.enabled === false))
       .map((a) => ({
-        type: asId(a && a.type),
-        id: (asId(a && a.type) === "wake_win")
-          ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
-          : asId(a && a.id),
+        type: normalizeActionType(a && a.type),
+        id: (normalizeActionType(a && a.type) === "wake_win")
+          ? normalizeWindowActionId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
+          : normalizeEventActionId(a && a.id),
         spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
         overrides: resolveActionArgs(a),
       }));

@@ -1,4 +1,10 @@
 import { EVENT_DEFINITIONS_V1_BY_ID } from "./event-definitions-v1.js";
+import {
+  normalizeActionType,
+  normalizeEventActionId,
+  normalizeSignalConditionId,
+  normalizeWindowActionId,
+} from "./nugget-handles-v1.js";
 import { SIGNAL_DEFINITIONS_V1, SIGNAL_DEFINITIONS_V1_BY_ID } from "./signal-definitions-v1.js";
 import { WINDOW_DEFINITIONS_V1_BY_ID } from "./window-definitions-v1.js";
 
@@ -75,18 +81,6 @@ function validateWhereClause(where, label, errors) {
   if (lower !== null && upper !== null && Number.isFinite(lower) && Number.isFinite(upper) && lower > upper) {
     errors.push(`${label} where lower bound cannot be greater than upper bound`);
   }
-}
-
-function resolveSignalConditionId(cond) {
-  const type = asId(cond && cond.type);
-  const id = asId(cond && cond.id);
-  if (!id) return "";
-  if (type === "signal") return id;
-  if (type === "spell" || type === "gesture" || type === "orb_state") {
-    if (id.includes(".")) return id;
-    return `${type}.${id}`;
-  }
-  return null;
 }
 
 function resolveActionArgs(action) {
@@ -255,7 +249,7 @@ export function validateSpellRulesV1(rules = [], options = {}) {
 
     for (const cond of all.concat(any)) {
       const type = asId(cond && cond.type);
-      const signalId = resolveSignalConditionId(cond);
+      const signalId = normalizeSignalConditionId(cond);
       if (signalId === null) {
         errors.push(`rule ${ruleId} has unsupported condition type: ${type || "(empty)"}`);
         continue;
@@ -280,10 +274,12 @@ export function validateSpellRulesV1(rules = [], options = {}) {
         }
         if (action.enabled === false) continue;
       }
-      const type = asId(action && action.type);
-      const id = asId(action && action.id);
+      const type = normalizeActionType(action && action.type);
+      const id = (type === "wake_win")
+        ? normalizeWindowActionId(action && action.id)
+        : normalizeEventActionId(action && action.id);
       if (type === "wake_win") {
-        const wakeWindowId = asId(id || DEFAULT_WAKE_WINDOW_ID);
+        const wakeWindowId = normalizeWindowActionId(id || DEFAULT_WAKE_WINDOW_ID);
         if (!wakeWindowId || !windowById[wakeWindowId]) {
           errors.push(`rule ${ruleId} references unknown wake window: ${wakeWindowId || "(empty)"}`);
         }
