@@ -1028,10 +1028,13 @@
         out.d_couple  = roundN(payload.d_couple, 4);
       }
 
-      // LAN mode: gameplay impulses are DataChannel only once connected+safe.
+      // LAN mode: prefer DataChannel when connected+safe.
+      // If LAN transport is unavailable (pairing drift/disconnect), fall back to
+      // Ably relay so receiver input does not go dark.
       if (lanParty.active) {
-        impulseTransport.sendImpulse("impulse", out);
-        return;
+        const sentViaLan = !!(impulseTransport && typeof impulseTransport.sendImpulse === "function"
+          && impulseTransport.sendImpulse("impulse", out));
+        if (sentViaLan) return;
       }
 
       if (!ablyChannel) return;
