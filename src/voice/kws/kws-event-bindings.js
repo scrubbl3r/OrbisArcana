@@ -100,11 +100,11 @@ export function bindKwsEventHandlers({
 
   function onAxisSelected(p = {}) {
     const axis = String(p.axis || "").trim().toLowerCase();
-    const school = String((p.axisSpell || p.school) || "").trim().toLowerCase();
+    const axisSpell = String((p.axisSpell) || "").trim().toLowerCase();
     if (axis === "x" || axis === "y" || axis === "z") {
-      if (typeof setSelectedSchool === "function") setSelectedSchool(axis, school);
+      if (typeof setSelectedSchool === "function") setSelectedSchool(axis, axisSpell);
       resetHeardClassTokensForAxis(axis);
-      if (school === "electrum") flashKwsToken("electrum", 520);
+      if (axisSpell === "electrum") flashKwsToken("electrum", 520);
     }
     updateKwsReadout();
   }
