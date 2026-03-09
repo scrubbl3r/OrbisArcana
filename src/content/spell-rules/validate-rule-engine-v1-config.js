@@ -2262,6 +2262,10 @@ export function validateRuleEngineV1Config(config = null) {
     }
     const allowedBindingKeys = new Set(["id", "runtime"]);
     for (const key of Object.keys(binding)) {
+      if (!String(key || "").trim()) {
+        errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}] contains empty key`);
+        continue;
+      }
       if (allowedBindingKeys.has(String(key || ""))) continue;
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}] contains unknown key: ${key}`);
     }
@@ -2283,6 +2287,10 @@ export function validateRuleEngineV1Config(config = null) {
     }
     const allowedRuntimeKeys = new Set(["kind", "event", "castActionId"]);
     for (const key of Object.keys(runtime)) {
+      if (!String(key || "").trim()) {
+        errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime contains empty key`);
+        continue;
+      }
       if (allowedRuntimeKeys.has(String(key || ""))) continue;
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime contains unknown key: ${key}`);
     }
