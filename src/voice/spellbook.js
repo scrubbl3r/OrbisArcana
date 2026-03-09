@@ -1,6 +1,6 @@
 export const SPELLS = [
   {
-    active: true,
+    active: false,
     id: "orbis",
     phrase: "orbis",
     onnxModel: "orbis",

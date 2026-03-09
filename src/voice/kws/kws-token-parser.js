@@ -112,6 +112,9 @@ export function createKwsTokenParser(opts = {}) {
     }
   }
   for (const t of wakeTokenSet) activeTokenVocabulary.add(normToken(t));
+  const singleTokenAliasEntries = Array.isArray(aliasIndex.byTokenCount.get(1))
+    ? aliasIndex.byTokenCount.get(1)
+    : [];
   let enabled = true;
   let shadow = !!cfg.shadow;
   /** @type {Array<{token:string, confidence:number, atMs:number}>} */
@@ -208,6 +211,19 @@ export function createKwsTokenParser(opts = {}) {
     return null;
   }
 
+  function wakeTokenCanAlsoMatchSpell(token) {
+    const t = normToken(token);
+    if (!t) return false;
+    for (const entry of singleTokenAliasEntries) {
+      const entryToken = Array.isArray(entry && entry.tokens) ? normToken(entry.tokens[0]) : "";
+      if (!entryToken || entryToken !== t) continue;
+      const spellId = String(entry && entry.spellId || "").trim().toLowerCase();
+      const intent = String((SPELL_RUNTIME_ROUTING_BY_ID[spellId] && SPELL_RUNTIME_ROUTING_BY_ID[spellId].intent) || "").trim().toLowerCase();
+      if (intent && intent !== "spell.wake") return true;
+    }
+    return false;
+  }
+
   /**
    * @param {{token:string, confidence?:number, atMs?:number, providerId?:string}} hit
    */
@@ -229,25 +245,29 @@ export function createKwsTokenParser(opts = {}) {
       wakeArmedUntilMs = atMs + Math.max(0, Number(cfg.wakeArmMs) || 0);
       // Wake token from KWS input should arm immediately.
       tokenBuffer = [];
-      emit(EVT_VOICE_TOKEN_DETECTED, {
-        token,
-        confidence,
-        atMs,
-        providerId,
-        source: "kws",
-      });
-      emit(EVT_VOICE_KWS_SPELL_CANDIDATE, {
-        spellId: null,
-        matched: false,
-        tokens: [token],
-        phrase: token,
-        confidence,
-        suppressed: false,
-        atMs,
-        providerId,
-        source: "kws",
-      });
-      return { matched: false, reason: "wake_token_armed", token, confidence, wakeArmedUntilMs };
+      // If wake token is also a non-wake spell token (for example rota), allow
+      // it to continue through normal matching so one token can arm + match.
+      if (!wakeTokenCanAlsoMatchSpell(token)) {
+        emit(EVT_VOICE_TOKEN_DETECTED, {
+          token,
+          confidence,
+          atMs,
+          providerId,
+          source: "kws",
+        });
+        emit(EVT_VOICE_KWS_SPELL_CANDIDATE, {
+          spellId: null,
+          matched: false,
+          tokens: [token],
+          phrase: token,
+          confidence,
+          suppressed: false,
+          atMs,
+          providerId,
+          source: "kws",
+        });
+        return { matched: false, reason: "wake_token_armed", token, confidence, wakeArmedUntilMs };
+      }
     }
 
     const tokenThreshold = isWakeToken

@@ -16,9 +16,15 @@ function buildWakeWindowSpellSignals() {
 }
 
 function buildWakeSpellSignals() {
+  const wakeWindowSpellIds = new Set(
+    (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
+      .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
   return (Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : [])
     .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
+    .filter((spellId) => !wakeWindowSpellIds.has(spellId))
     .map((spellId) => {
       const active = ACTIVE_SPELLS_BY_ID[spellId] || null;
       const phrase = String((active && (active.phrase || active.id)) || spellId).trim().toLowerCase();
