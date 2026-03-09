@@ -46,9 +46,6 @@ export function createSpellActionHandlers({
       }
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
-    play_school_aoe(payload = {}) {
-      return this.play_axis_aoe(payload);
-    },
     domus_teleport_orb(payload = {}) {
       void payload;
       if (typeof teleportOrbToSpawnNeutralizePhysics === "function") {
