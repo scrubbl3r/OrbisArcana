@@ -585,6 +585,9 @@ export function validateRuleEngineV1Config(config = null) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
           const key = String(actionType || "").trim().toLowerCase();
+          if (String(actionType) !== key) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] action type key must be canonical lowercase: ${actionType}`);
+          }
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides[${ruleId}] has unsupported key: ${actionType}`);
             continue;
@@ -640,6 +643,9 @@ export function validateRuleEngineV1Config(config = null) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
           const key = String(actionType || "").trim().toLowerCase();
+          if (String(actionType) !== key) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] action type key must be canonical lowercase: ${actionType}`);
+          }
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.ruleActionTypeEnabledOverrides[${ruleId}] has unsupported key: ${actionType}`);
             continue;
@@ -787,6 +793,9 @@ export function validateRuleEngineV1Config(config = null) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
           const key = String(actionType || "").trim().toLowerCase();
+          if (String(actionType) !== key) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] action type key must be canonical lowercase: ${actionType}`);
+          }
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionTypeEnabledOverrides[${signalId}] has unsupported key: ${actionType}`);
             continue;
@@ -1010,6 +1019,9 @@ export function validateRuleEngineV1Config(config = null) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionExecutedEventTypeEnabledOverrides[${signalId}] key must not include leading/trailing whitespace: ${actionType}`);
           }
           const key = String(actionType || "").trim().toLowerCase();
+          if (String(actionType) !== key) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionExecutedEventTypeEnabledOverrides[${signalId}] action type key must be canonical lowercase: ${actionType}`);
+          }
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalActionExecutedEventTypeEnabledOverrides[${signalId}] has unsupported key: ${actionType}`);
             continue;
@@ -1479,6 +1491,9 @@ export function validateRuleEngineV1Config(config = null) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] key must not include leading/trailing whitespace: ${actionType}`);
           }
           const key = String(actionType || "").trim().toLowerCase();
+          if (String(actionType) !== key) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] action type key must be canonical lowercase: ${actionType}`);
+          }
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] has unsupported key: ${actionType}`);
             continue;
@@ -1570,6 +1585,9 @@ export function validateRuleEngineV1Config(config = null) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] key must not include leading/trailing whitespace: ${actionType}`);
           }
           const key = String(actionType || "").trim().toLowerCase();
+          if (String(actionType) !== key) {
+            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] action type key must be canonical lowercase: ${actionType}`);
+          }
           if (!allowed.has(key)) {
             errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] has unsupported key: ${actionType}`);
             continue;
