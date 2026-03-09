@@ -2312,6 +2312,9 @@ export function validateRuleEngineV1Config(config = null) {
     if (Object.prototype.hasOwnProperty.call(runtime, "castActionId") && typeof runtime.castActionId !== "string") {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.castActionId must be a string when present`);
     }
+    if (kind === "cast_action" && asText(runtime.castActionId).toLowerCase() === "aoe_school") {
+      errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.castActionId uses legacy id: aoe_school`);
+    }
     if (kind === "orb_event" && !asText(runtime.event)) {
       errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[${id}].runtime.event must be non-empty for kind orb_event`);
     }
