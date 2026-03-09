@@ -10,7 +10,7 @@ Checks
 - Shake cast flow from loaded slot:
   - Confirm cast emits `voice.spell_cast` with `axisSpell` + `wakeWindowSpell`.
 - Reject path check:
-  - Trigger wake-window token before axis token and confirm reject reason remains (`no_school_selected`) but payload uses neutral field `wakeWindowSpell`.
+  - Trigger wake-window token before axis token and confirm reject reason remains (`no_axis_selected`) with neutral fields.
 
 Cleanup
 - None.
