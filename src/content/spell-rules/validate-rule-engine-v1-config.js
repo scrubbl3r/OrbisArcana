@@ -1311,6 +1311,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitPreviewMatchedOverrides contains empty source event key");
           continue;
         }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitPreviewMatchedOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitPreviewMatchedOverrides[${sourceEvent}] must be boolean`);
         }
@@ -1325,6 +1328,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitActionExecutedOverrides contains empty source event key");
           continue;
+        }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitActionExecutedOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitActionExecutedOverrides[${sourceEvent}] must be boolean`);
@@ -1341,6 +1347,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides contains empty source event key");
           continue;
+        }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
         }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionTypeEnabledOverrides[${sourceEvent}] must be an object`);
@@ -1368,6 +1377,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitSourceEventSummaryOverrides contains empty source event key");
           continue;
         }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitSourceEventSummaryOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventEmitSourceEventSummaryOverrides[${sourceEvent}] must be boolean`);
         }
@@ -1382,6 +1394,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventSummaryIncludeSignalAndRuleIdsOverrides contains empty source event key");
           continue;
+        }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventSummaryIncludeSignalAndRuleIdsOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
         }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventSummaryIncludeSignalAndRuleIdsOverrides[${sourceEvent}] must be boolean`);
@@ -1398,6 +1413,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventSummaryIncludeBudgetCapsOverrides contains empty source event key");
           continue;
         }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventSummaryIncludeBudgetCapsOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventSummaryIncludeBudgetCapsOverrides[${sourceEvent}] must be boolean`);
         }
@@ -1413,6 +1431,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides contains empty source event key");
           continue;
+        }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
         }
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides[${sourceEvent}] must be an object`);
@@ -1440,6 +1461,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventExecuteActionsOverrides contains empty source event key");
           continue;
         }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventExecuteActionsOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
+        }
         if (typeof value !== "boolean") {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventExecuteActionsOverrides[${sourceEvent}] must be boolean`);
         }
@@ -1454,6 +1478,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventCooldownScaleOverrides contains empty source event key");
           continue;
+        }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventCooldownScaleOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
         }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
@@ -1470,6 +1497,9 @@ export function validateRuleEngineV1Config(config = null) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMatchWindowScaleOverrides contains empty source event key");
           continue;
+        }
+        if (sourceEvent !== String(sourceEvent).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.sourceEventMatchWindowScaleOverrides key must not include leading/trailing whitespace: ${sourceEvent}`);
         }
         const n = Number(value);
         if (!Number.isFinite(n) || n < 0) {
