@@ -4,7 +4,6 @@ export const RECEIVER_EVENTS = Object.freeze({
   EVT_VOICE_KWS_SPELL_CANDIDATE: "voice.kws_spell_candidate",
   EVT_VOICE_SPELL_REJECTED: "voice.spell_rejected",
   EVT_VOICE_AXIS_SELECTED: "voice.axis_selected",
-  EVT_VOICE_SCHOOL_SELECTED: "voice.school_selected",
   EVT_VOICE_SPELL_CAST: "voice.spell_cast",
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED: "spell_window.flat_spin_opened",
   EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED: "spell_window.flat_spin_closed",

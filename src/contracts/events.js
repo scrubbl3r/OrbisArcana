@@ -87,7 +87,6 @@ export const EVT_VOICE_KWS_SPELL_CANDIDATE = "voice.kws_spell_candidate";
 export const EVT_VOICE_SPELL_DETECTED = "voice.spell_detected";
 export const EVT_VOICE_SPELL_REJECTED = "voice.spell_rejected";
 export const EVT_VOICE_AXIS_SELECTED = "voice.axis_selected";
-export const EVT_VOICE_SCHOOL_SELECTED = "voice.school_selected";
 export const EVT_VOICE_SPELL_LOADED = "voice.spell_loaded";
 export const EVT_VOICE_SPELL_CAST = "voice.spell_cast";
 

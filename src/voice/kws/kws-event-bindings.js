@@ -109,11 +109,7 @@ export function bindKwsEventHandlers({
     updateKwsReadout();
   }
 
-  if (RECEIVER_EVENTS.EVT_VOICE_AXIS_SELECTED) {
-    unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_AXIS_SELECTED, onAxisSelected));
-  } else {
-    unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SCHOOL_SELECTED, onAxisSelected));
-  }
+  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_AXIS_SELECTED, onAxisSelected));
 
   unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
     const matched = !!p.matched;
