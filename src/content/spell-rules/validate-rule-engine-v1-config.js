@@ -988,6 +988,9 @@ export function validateRuleEngineV1Config(config = null) {
           errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides contains empty signal id key");
           continue;
         }
+        if (signalId !== String(signalId).trim()) {
+          errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides key must not include leading/trailing whitespace: ${signalId}`);
+        }
         if (!Number.isFinite(Number(value))) {
           errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalPriorityOverrides[${signalId}] must be a finite number`);
         }
