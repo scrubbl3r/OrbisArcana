@@ -41,27 +41,19 @@ export const WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN = Object.freeze({
   vectus: "vectus",
 });
 
-export const KWS_FLASH_TOKEN_SPELL_IDS = Object.freeze([
-  "orbis",
-  "domus",
-  "pyro",
-  "fridgis",
-  "electrum",
+const KWS_TOP_SPELL_IDS = Object.freeze([
+  ...new Set([
+    ...WAKE_SPELL_IDS,
+    ...WAKE_REQUIRED_SPELL_IDS,
+    ...AXIS_SPELL_IDS,
+  ].map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)),
 ]);
 
-export const KWS_ROW_TOP_SPELL_IDS = Object.freeze([
-  "orbis",
-  "domus",
-  "pyro",
-  "fridgis",
-  "electrum",
-]);
+export const KWS_FLASH_TOKEN_SPELL_IDS = KWS_TOP_SPELL_IDS;
 
-export const KWS_ROW_BOTTOM_SPELL_IDS = Object.freeze([
-  "rota",
-  "sanctum",
-  "vectus",
-]);
+export const KWS_ROW_TOP_SPELL_IDS = KWS_TOP_SPELL_IDS;
+
+export const KWS_ROW_BOTTOM_SPELL_IDS = WAKE_WINDOW_SPELL_IDS;
 
 export const KWS_SIM_SPELL_IDS = Object.freeze([
   "pyro",
