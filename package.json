@@ -5,6 +5,7 @@
     "check:shake-regression:v2": "node tools/rule-engine-v2/check-shake-detonation-regression-v2.mjs",
     "check:wake-load-regression:v2": "node tools/rule-engine-v2/check-wake-window-load-regression-v2.mjs",
     "check:immediate-ownership:v2": "node tools/rule-engine-v2/check-immediate-dispatch-ownership-v2.mjs",
+    "check:flat-spin-gating:v2": "node tools/rule-engine-v2/check-flat-spin-gating-regression-v2.mjs",
     "sync:kws-manifest:v2": "node tools/rule-engine-v2/sync-kws-manifest-v2.mjs",
     "report-drift:v2": "node tools/rule-engine-v2/report-v1-v2-rule-drift.mjs",
     "doctor:v2": "node tools/rule-engine-v2/doctor-v2.mjs",

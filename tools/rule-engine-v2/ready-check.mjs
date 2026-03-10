@@ -19,6 +19,9 @@ if (wakeLoadRegression.status !== 0) process.exit(wakeLoadRegression.status || 1
 const immediateOwnershipRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-immediate-dispatch-ownership-v2.mjs"], { stdio: "inherit" });
 if (immediateOwnershipRegression.status !== 0) process.exit(immediateOwnershipRegression.status || 1);
 
+const flatSpinGatingRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-flat-spin-gating-regression-v2.mjs"], { stdio: "inherit" });
+if (flatSpinGatingRegression.status !== 0) process.exit(flatSpinGatingRegression.status || 1);
+
 const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
 const health = JSON.parse(readFileSync(healthPath, "utf8"));
 
