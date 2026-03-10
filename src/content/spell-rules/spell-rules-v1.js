@@ -1,5 +1,8 @@
-// Rule Engine v1 scaffold.
-// Not wired into gameplay runtime yet; this file defines target schema shape.
+// LEGACY V1 RULE VIEW
+// Authoring SSOT is interactions-v2.
+// This module exposes a V1-compatible rule list for compatibility:
+// - preferred path: projected from interactions-v2
+// - fallback path: static V1 snapshot in this file
 import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions-v2/index.js";
 
 export const SPELL_RULES_V1_LEGACY_BRIDGE = Object.freeze({

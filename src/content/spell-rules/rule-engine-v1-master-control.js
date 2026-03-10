@@ -1,3 +1,9 @@
+// LEGACY AGGREGATION LAYER
+// Authoring SSOT for interaction behavior is now:
+// - src/content/interactions-v2/interactions-v2.js
+// - src/content/interactions-v2/spellbook-v2.js
+// Keep edits here limited to compatibility plumbing only.
+
 import { EVENT_DEFINITIONS_V1 } from "./event-definitions-v1.js";
 import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "./event-runtime-bindings-v1.js";
 import { SIGNAL_DEFINITIONS_V1 } from "./signal-definitions-v1.js";

@@ -1,4 +1,8 @@
-// v1 runtime spell schema (game-side content) 
+// LEGACY RUNTIME SPELL ROUTING LAYER
+// This file remains for runtime compatibility (slot/cast routing).
+// Interaction-chain authoring SSOT lives in:
+// - src/content/interactions-v2/interactions-v2.js
+// - src/content/interactions-v2/spellbook-v2.js
 // Keeps gameplay-facing spell metadata separate from voice recognition config.
 
 export const RUNTIME_SPELLS = Object.freeze([
