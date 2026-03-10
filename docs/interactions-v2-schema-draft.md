@@ -75,6 +75,12 @@
   - qualified form: `spell.rota`, `gesture.y_spin`, `orb_state.charged`
 - Runtime normalization strips matching type prefix automatically.
 
+### Wake Window Spell ID Forms
+- `wake_win.spells[]` supports either:
+  - bare form: `rota`
+  - qualified form: `spell.rota`
+- Runtime normalization strips `spell.` prefix automatically.
+
 ## Override Rules
 - If `overrides` exists on an action, those values win.
 - If no `overrides`, use `defaults`.

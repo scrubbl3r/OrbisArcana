@@ -50,7 +50,10 @@ function mapActionToV1(action, defaults) {
   const type = asId(a.type);
   if (type === "wake_win") {
     const spells = Array.isArray(a.spells)
-      ? a.spells.map((s) => asId(s)).filter(Boolean)
+      ? a.spells.map((s) => {
+          const raw = asId(s);
+          return raw.startsWith("spell.") ? raw.slice("spell.".length) : raw;
+        }).filter(Boolean)
       : [];
     const ttlMs = finiteNonNegativeOrUndef(
       Object.prototype.hasOwnProperty.call(a, "ttlMs")

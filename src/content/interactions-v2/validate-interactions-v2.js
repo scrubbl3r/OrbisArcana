@@ -28,6 +28,12 @@ function normalizeConditionId(type, idRaw) {
   return id.startsWith(pref) ? id.slice(pref.length) : id;
 }
 
+function normalizeSpellId(spellIdRaw) {
+  const id = asText(spellIdRaw).toLowerCase();
+  if (!id) return "";
+  return id.startsWith("spell.") ? id.slice("spell.".length) : id;
+}
+
 const KNOWN_GESTURE_IDS = new Set(
   Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID || {})
     .filter((signalId) => String(signalId || "").startsWith("gesture."))
@@ -169,16 +175,22 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
             const seenWakeWinSpells = new Set();
             for (const spellId of action.spells) {
               const id = asText(spellId);
+              const normalizedSpellId = normalizeSpellId(id);
               if (!isEntityIdLike(id)) {
-                errors.push(`rule ${ruleId} wake_win spell has invalid id shape: ${id}`);
+                if (!isEntityIdLike(normalizedSpellId)) {
+                  errors.push(`rule ${ruleId} wake_win spell has invalid id shape: ${id}`);
+                  continue;
+                }
+              }
+              if (!normalizedSpellId) {
+                errors.push(`rule ${ruleId} wake_win spell id is empty`);
                 continue;
               }
-              const lcId = id.toLowerCase();
-              if (seenWakeWinSpells.has(lcId)) {
+              if (seenWakeWinSpells.has(normalizedSpellId)) {
                 errors.push(`rule ${ruleId} wake_win contains duplicate spell id: ${id}`);
               }
-              seenWakeWinSpells.add(lcId);
-              if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id.toLowerCase())) {
+              seenWakeWinSpells.add(normalizedSpellId);
+              if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedSpellId)) {
                 errors.push(`rule ${ruleId} wake_win references inactive or unknown spell id: ${id}`);
               }
             }
