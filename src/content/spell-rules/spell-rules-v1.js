@@ -1,17 +1,12 @@
 // Rule Engine v1 scaffold.
 // Not wired into gameplay runtime yet; this file defines target schema shape.
 import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions-v2/index.js";
-import { WAKE_WINDOW_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
 
 export const SPELL_RULES_V1_LEGACY_BRIDGE = Object.freeze({
   // Enabled by default now that projected V2 rules match static legacy rules.
   // Static rules remain as safe fallback if projection fails.
   useInteractionsV2Rules: true,
 });
-
-const DEFAULT_WAKE_WIN_SPELLS = Object.freeze(
-  Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS.slice() : []
-);
 
 export const SPELL_RULES_V1_STATIC = Object.freeze([
   Object.freeze({
@@ -24,7 +19,7 @@ export const SPELL_RULES_V1_STATIC = Object.freeze([
     then: Object.freeze([
       Object.freeze({
         type: "wake_win",
-        spells: DEFAULT_WAKE_WIN_SPELLS,
+        spells: Object.freeze(["rota", "sanctum", "vectus"]),
         ttlMs: 2000,
       }),
       Object.freeze({
