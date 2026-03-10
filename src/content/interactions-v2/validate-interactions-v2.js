@@ -42,6 +42,10 @@ function getQualifiedPrefix(idRaw) {
   return id.slice(0, dot);
 }
 
+function isBareNamespaceId(idRaw) {
+  return /^[a-z_]+\.$/.test(asText(idRaw).toLowerCase());
+}
+
 function normalizeSpellId(spellIdRaw) {
   const id = asText(spellIdRaw).toLowerCase();
   if (!id) return "";
@@ -169,7 +173,11 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
           );
         }
         if (id && !isEntityIdLike(normalizedId)) {
-          errors.push(`rule ${ruleId} has invalid on.all id shape (use letters/numbers/_): ${id}`);
+          if (isBareNamespaceId(id)) {
+            errors.push(`rule ${ruleId} has incomplete on.all id: ${id} (missing value after prefix)`);
+          } else {
+            errors.push(`rule ${ruleId} has invalid on.all id shape (use letters/numbers/_): ${id}`);
+          }
         }
         if (type === "spell" && id && !Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedId)) {
           errors.push(`rule ${ruleId} references inactive or unknown spell id: ${id}`);
@@ -226,7 +234,11 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
                 }
               }
               if (!normalizedSpellId) {
-                errors.push(`rule ${ruleId} wake_win spell id is empty`);
+                if (isBareNamespaceId(id)) {
+                  errors.push(`rule ${ruleId} wake_win spell id is incomplete: ${id} (missing value after prefix)`);
+                } else {
+                  errors.push(`rule ${ruleId} wake_win spell id is empty`);
+                }
                 continue;
               }
               if (seenWakeWinSpells.has(normalizedSpellId)) {
@@ -253,7 +265,11 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
               `rule ${ruleId} event id prefix mismatch: ${eventId} (expected event.* or unqualified id)`
             );
           } else if (!isEntityIdLike(normalizedEventId)) {
-            errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
+            if (isBareNamespaceId(eventId)) {
+              errors.push(`rule ${ruleId} event action id is incomplete: ${eventId} (missing value after prefix)`);
+            } else {
+              errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
+            }
           } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, normalizedEventId)) {
             errors.push(`rule ${ruleId} event action references unknown event id: ${eventId}`);
           }
