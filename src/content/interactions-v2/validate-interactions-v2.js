@@ -106,8 +106,17 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
       const seenDefaultEventIds = new Set();
       for (const [eventId, eventArgs] of Object.entries(eventDefaults)) {
         const normalizedEventId = normalizeEventId(eventId);
-        if (!isEntityIdLike(normalizedEventId)) {
-          errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
+        const eventQualifiedPrefix = getQualifiedPrefix(eventId);
+        if (eventQualifiedPrefix && eventQualifiedPrefix !== "event") {
+          errors.push(
+            `INTERACTIONS_V2.defaults.event key prefix mismatch: ${eventId} (expected event.* or unqualified id)`
+          );
+        } else if (!isEntityIdLike(normalizedEventId)) {
+          if (isBareNamespaceId(eventId)) {
+            errors.push(`INTERACTIONS_V2.defaults.event key is incomplete: ${eventId} (missing value after prefix)`);
+          } else {
+            errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
+          }
         } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, normalizedEventId)) {
           errors.push(`INTERACTIONS_V2.defaults.event references unknown event id: ${eventId}`);
         } else if (seenDefaultEventIds.has(normalizedEventId)) {
