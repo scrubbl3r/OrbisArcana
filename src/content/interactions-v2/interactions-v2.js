@@ -2,8 +2,8 @@
 // This file is the canonical place for composing trigger/action chains.
 
 export const INTERACTIONS_V2_BOOTSTRAP = Object.freeze({
-  // Guarded by default: V2 authoring does not affect gameplay until enabled.
-  useInReceiverBootstrap: false,
+  // V2 adapter runtime cutover.
+  useInReceiverBootstrap: true,
 });
 
 export const INTERACTIONS_V2 = Object.freeze({
