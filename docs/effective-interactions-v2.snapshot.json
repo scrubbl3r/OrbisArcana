@@ -1,12 +1,9 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T02:19:02.486Z",
+  "generatedAt": "2026-03-10T02:22:53.479Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": false
-    },
-    "spellRulesV1LegacyBridge": {
-      "useInteractionsV2Rules": false
     }
   },
   "validation": {
@@ -22,7 +19,6 @@
   "counts": {
     "spellbookV2Spells": 8,
     "interactionsV2Rules": 1,
-    "spellRulesV1Current": 1,
     "projectedRuleEngineV1Rules": 1
   },
   "spellbookV2": {
@@ -155,244 +151,7 @@
       }
     ]
   },
-  "spellRulesV1Current": [
-    {
-      "id": "r_rota_yspin_charged",
-      "on": [
-        {
-          "type": "spell",
-          "id": "rota"
-        },
-        {
-          "type": "gesture",
-          "id": "y_spin"
-        },
-        {
-          "type": "orb_state",
-          "id": "charged"
-        }
-      ],
-      "then": [
-        {
-          "type": "wake_win",
-          "spells": [
-            "rota",
-            "sanctum",
-            "vectus"
-          ],
-          "ttlMs": 2000
-        },
-        {
-          "type": "event",
-          "id": "electric_aoe",
-          "range": 14
-        },
-        {
-          "type": "event",
-          "id": "grace",
-          "ms": 500
-        },
-        {
-          "type": "event",
-          "id": "orb_state",
-          "state": "superheated"
-        }
-      ]
-    }
-  ],
   "projectedRuleEngineV1": {
-    "id": "rule_engine_v1",
-    "version": "v1",
-    "enabled": true,
-    "execution": {
-      "stopOnFirstMatch": false,
-      "maxRulesEvaluatedPerSignal": 0,
-      "maxRulesEvaluatedPerEvent": 0,
-      "maxMatchesPerSignal": 0,
-      "maxActionsPerSignal": 0,
-      "maxMatchesPerEvent": 0,
-      "maxActionsPerEvent": 0,
-      "maxSignalsPerEvent": 0,
-      "maxSignalsEvaluatedPerEvent": 0,
-      "maxActionsPerRuleMatch": 0,
-      "sourceEventDebounceMs": 0,
-      "emitPreviewMatchedEvents": true,
-      "emitActionExecutedEvents": true,
-      "emitSourceEventSummaryEvents": false,
-      "sourceEventSummaryIncludeSignalAndRuleIds": false,
-      "sourceEventSummaryIncludeBudgetCaps": false,
-      "executeActions": true,
-      "actionExecutedEventTypeEnabled": {
-        "wake_win": true,
-        "event": true
-      },
-      "actionTypeEnabled": {
-        "wake_win": true,
-        "event": true
-      },
-      "cooldownScale": 1,
-      "matchWindowScale": 1,
-      "signalDebounceMs": 0,
-      "stopOnFirstSignalMatchPerEvent": false
-    },
-    "ruleDefaults": {},
-    "rulePriorityOverrides": {},
-    "ruleTimingOverrides": {},
-    "ruleActionLimitOverrides": {},
-    "ruleCooldownScaleOverrides": {},
-    "ruleMatchWindowScaleOverrides": {},
-    "ruleEmitPreviewMatchedOverrides": {},
-    "ruleEmitActionExecutedOverrides": {},
-    "ruleEmitSourceEventSummaryOverrides": {},
-    "ruleSummaryIncludeSignalAndRuleIdsOverrides": {},
-    "ruleSummaryIncludeBudgetCapsOverrides": {},
-    "ruleActionExecutedEventTypeEnabledOverrides": {},
-    "ruleExecuteActionsOverrides": {},
-    "ruleActionTypeEnabledOverrides": {},
-    "signalEnabledOverrides": {},
-    "signalDebounceOverrides": {},
-    "signalMaxMatchesOverrides": {},
-    "signalEmitPreviewMatchedOverrides": {},
-    "signalStopOnFirstMatchOverrides": {},
-    "signalExecuteActionsOverrides": {},
-    "signalActionTypeEnabledOverrides": {},
-    "signalMatchWindowScaleOverrides": {},
-    "signalCooldownScaleOverrides": {},
-    "signalMaxActionsPerRuleMatchOverrides": {},
-    "signalMaxRulesEvaluatedOverrides": {},
-    "signalMaxActionsPerEventOverrides": {},
-    "signalMaxActionsPerSignalOverrides": {},
-    "signalEmitActionExecutedOverrides": {},
-    "signalEmitSourceEventSummaryOverrides": {},
-    "signalSummaryIncludeSignalAndRuleIdsOverrides": {},
-    "signalSummaryIncludeBudgetCapsOverrides": {},
-    "signalActionExecutedEventTypeEnabledOverrides": {},
-    "signalMaxMatchesPerEventOverrides": {},
-    "signalMaxSignalsPerEventOverrides": {},
-    "signalMaxSignalsEvaluatedPerEventOverrides": {},
-    "signalMaxRulesEvaluatedPerEventOverrides": {},
-    "signalStopOnFirstSignalMatchPerEventOverrides": {},
-    "signalPriorityOverrides": {},
-    "signalSourceEventOverrides": {},
-    "signalWhereOverrides": {},
-    "sourceEventEnabledOverrides": {},
-    "sourceEventDebounceOverrides": {},
-    "sourceEventMaxSignalsOverrides": {},
-    "sourceEventMaxSignalsEvaluatedPerEventOverrides": {},
-    "sourceEventMaxActionsPerSignalOverrides": {},
-    "sourceEventMaxRulesEvaluatedOverrides": {},
-    "sourceEventMaxRulesEvaluatedPerEventOverrides": {},
-    "sourceEventMaxMatchesPerEventOverrides": {},
-    "sourceEventMaxActionsPerEventOverrides": {},
-    "sourceEventStopOnFirstSignalMatchOverrides": {},
-    "sourceEventEmitPreviewMatchedOverrides": {},
-    "sourceEventEmitActionExecutedOverrides": {},
-    "sourceEventEmitSourceEventSummaryOverrides": {},
-    "sourceEventSummaryIncludeSignalAndRuleIdsOverrides": {},
-    "sourceEventSummaryIncludeBudgetCapsOverrides": {},
-    "sourceEventActionTypeEnabledOverrides": {},
-    "sourceEventActionExecutedEventTypeEnabledOverrides": {},
-    "sourceEventExecuteActionsOverrides": {},
-    "sourceEventCooldownScaleOverrides": {},
-    "sourceEventMatchWindowScaleOverrides": {},
-    "sourceEventMaxActionsPerRuleMatchOverrides": {},
-    "sourceEventStopOnFirstMatchOverrides": {},
-    "sourceEventMaxMatchesPerSignalOverrides": {},
-    "ruleEnabledOverrides": {},
-    "actionEnabledOverrides": {},
-    "actionArgOverrides": {},
-    "eventEnabledOverrides": {},
-    "eventDefaultOverrides": {},
-    "windowEnabledOverrides": {},
-    "windowDefaultOverrides": {},
-    "signals": [
-      {
-        "id": "spell.rota",
-        "type": "spell",
-        "sourceEvent": "voice.spell_detected",
-        "where": {
-          "path": "spell.id",
-          "eq": "rota"
-        }
-      },
-      {
-        "id": "spell.sanctum",
-        "type": "spell",
-        "sourceEvent": "voice.spell_detected",
-        "where": {
-          "path": "spell.id",
-          "eq": "sanctum"
-        }
-      },
-      {
-        "id": "spell.vectus",
-        "type": "spell",
-        "sourceEvent": "voice.spell_detected",
-        "where": {
-          "path": "spell.id",
-          "eq": "vectus"
-        }
-      },
-      {
-        "id": "spell.orbis",
-        "type": "spell",
-        "sourceEvent": "voice.token_detected",
-        "where": {
-          "path": "token",
-          "eq": "orbis"
-        }
-      },
-      {
-        "id": "gesture.y_spin",
-        "type": "gesture",
-        "sourceEvent": "spell_window.flat_spin_opened",
-        "where": {
-          "path": "axis",
-          "eq": "y"
-        }
-      },
-      {
-        "id": "orb_state.charged",
-        "type": "orb_state",
-        "sourceEvent": "orb.float_grace_grant",
-        "where": {
-          "path": "ms",
-          "gte": 1
-        }
-      }
-    ],
-    "windows": [
-      {
-        "id": "wake_win",
-        "type": "wake_win",
-        "defaultArgs": {
-          "ttlMs": 1500
-        }
-      }
-    ],
-    "events": [
-      {
-        "id": "electric_aoe",
-        "type": "event",
-        "defaultArgs": {
-          "ms": 900
-        }
-      },
-      {
-        "id": "grace",
-        "type": "event",
-        "defaultArgs": {
-          "ms": 500
-        }
-      },
-      {
-        "id": "orb_state",
-        "type": "event",
-        "defaultArgs": {
-          "state": "normal"
-        }
-      }
-    ],
     "rules": [
       {
         "id": "r_rota_yspin_charged",
@@ -438,28 +197,6 @@
         "priority": 50
       }
     ],
-    "eventRuntimeBindings": {
-      "grace": {
-        "id": "grace",
-        "runtime": {
-          "kind": "orb_event",
-          "event": "orb.float_grace_grant"
-        }
-      },
-      "electric_aoe": {
-        "id": "electric_aoe",
-        "runtime": {
-          "kind": "cast_action",
-          "castActionId": "aoe_electric"
-        }
-      },
-      "orb_state": {
-        "id": "orb_state",
-        "runtime": {
-          "kind": "orb_event",
-          "event": "orb.state_set"
-        }
-      }
-    }
+    "enabled": true
   }
 }

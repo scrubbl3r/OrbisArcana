@@ -8,11 +8,6 @@ import {
   validateInteractionsV2,
   buildRuleEngineV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
-import {
-  SPELL_RULES_V1,
-  SPELL_RULES_V1_LEGACY_BRIDGE,
-} from "../../src/content/spell-rules/spell-rules-v1.js";
-import { RULE_ENGINE_V1_MASTER_CONTROL } from "../../src/content/spell-rules/index.js";
 
 function stableClone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -23,7 +18,7 @@ function buildSnapshot() {
   const interactionsValidation = validateInteractionsV2(INTERACTIONS_V2);
   const projectedRuleEngineV1 = buildRuleEngineV1FromInteractionsV2({
     interactionsV2: INTERACTIONS_V2,
-    baseRuleEngineV1: RULE_ENGINE_V1_MASTER_CONTROL,
+    baseRuleEngineV1: null,
   });
 
   return {
@@ -31,7 +26,6 @@ function buildSnapshot() {
     generatedAt: new Date().toISOString(),
     flags: {
       interactionsV2Bootstrap: stableClone(INTERACTIONS_V2_BOOTSTRAP),
-      spellRulesV1LegacyBridge: stableClone(SPELL_RULES_V1_LEGACY_BRIDGE),
     },
     validation: {
       spellbookV2: {
@@ -46,12 +40,10 @@ function buildSnapshot() {
     counts: {
       spellbookV2Spells: Array.isArray(SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells.length : 0,
       interactionsV2Rules: Array.isArray(INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules.length : 0,
-      spellRulesV1Current: Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1.length : 0,
       projectedRuleEngineV1Rules: Array.isArray(projectedRuleEngineV1.rules) ? projectedRuleEngineV1.rules.length : 0,
     },
     spellbookV2: stableClone(SPELLBOOK_V2),
     interactionsV2: stableClone(INTERACTIONS_V2),
-    spellRulesV1Current: stableClone(SPELL_RULES_V1),
     projectedRuleEngineV1: stableClone(projectedRuleEngineV1),
   };
 }
