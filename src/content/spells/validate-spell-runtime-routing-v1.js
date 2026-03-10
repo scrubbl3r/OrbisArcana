@@ -1,5 +1,8 @@
 import { SPELLS_BY_ID } from "../../voice/spellbook.js";
-import { INTERACTIONS_V2 } from "../interactions-v2/interactions-v2.js";
+import {
+  collectImmediateEventSpellIdsFromInteractionsV2,
+  INTERACTIONS_V2,
+} from "../interactions-v2/interactions-v2.js";
 import {
   AXIS_SPELL_IDS,
   KWS_FLASH_TOKEN_SPELL_IDS,
@@ -43,32 +46,6 @@ function isSlot(v) {
   return SLOTS.has(String(v || "").trim().toUpperCase());
 }
 
-function collectImmediateSpellRuleIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
-  const out = new Set();
-  const rules = Array.isArray(cfg && cfg.rules) ? cfg.rules : [];
-  for (const rule of rules) {
-    if (!rule || typeof rule !== "object") continue;
-    const onAll = Array.isArray(rule.on && rule.on.all) ? rule.on.all : [];
-    if (onAll.length !== 1) continue;
-    const cond = onAll[0];
-    const condType = String(cond && cond.type || "").trim().toLowerCase();
-    const condIdRaw = String(cond && cond.id || "").trim().toLowerCase();
-    if (condType !== "spell" || !condIdRaw) continue;
-    const condId = condIdRaw.startsWith("spell.") ? condIdRaw.slice("spell.".length) : condIdRaw;
-    if (!condId) continue;
-
-    const actions = Array.isArray(rule.then) ? rule.then : [];
-    if (!actions.length) continue;
-    const hasWakeWin = actions.some((a) => String(a && a.type || "").trim().toLowerCase() === "wake_win");
-    if (hasWakeWin) continue;
-    const hasEvent = actions.some((a) => String(a && a.type || "").trim().toLowerCase() === "event");
-    if (!hasEvent) continue;
-
-    out.add(condId);
-  }
-  return out;
-}
-
 export function validateSpellRuntimeRoutingV1() {
   const errors = [];
 
@@ -85,7 +62,7 @@ export function validateSpellRuntimeRoutingV1() {
   if (!inferId) errors.push("KWS_INFER_DEFAULT_SPELL_ID is empty");
   else if (!SPELLS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_SPELL_ID references unknown spell id: ${inferId}`);
 
-  const expectedOwnedImmediate = collectImmediateSpellRuleIdsFromInteractionsV2();
+  const expectedOwnedImmediate = new Set(collectImmediateEventSpellIdsFromInteractionsV2(INTERACTIONS_V2));
   const declaredOwnedImmediate = new Set(
     (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS : [])
       .map((id) => asId(id))

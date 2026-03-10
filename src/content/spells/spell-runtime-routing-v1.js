@@ -1,5 +1,6 @@
 // Runtime routing metadata intentionally separated from recognition spellbook.
 // This file owns behavior-oriented spell metadata during refactor slices.
+import { collectImmediateEventSpellIdsFromInteractionsV2 } from "../interactions-v2/interactions-v2.js";
 
 export const WAKE_SPELL_IDS = Object.freeze([
   "orbis",
@@ -20,12 +21,7 @@ export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
 
 // Immediate voice spells that are owned by the rule engine path.
 // Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
-export const RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS = Object.freeze([
-  "domus",
-  "electrum",
-  "fridgis",
-  "pyro",
-]);
+export const RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS = collectImmediateEventSpellIdsFromInteractionsV2();
 
 export const AXIS_SPELL_IDS = Object.freeze([
   "pyro",

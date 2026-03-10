@@ -93,3 +93,32 @@ export const INTERACTIONS_V2 = Object.freeze({
     }),
   ]),
 });
+
+export function collectImmediateEventSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
+  const out = [];
+  const seen = new Set();
+  const rules = Array.isArray(cfg && cfg.rules) ? cfg.rules : [];
+  for (const rule of rules) {
+    const onAll = Array.isArray(rule && rule.on && rule.on.all) ? rule.on.all : [];
+    if (onAll.length !== 1) continue;
+    const cond = onAll[0];
+    const condType = String(cond && cond.type || "").trim().toLowerCase();
+    const condIdRaw = String(cond && cond.id || "").trim().toLowerCase();
+    if (condType !== "spell" || !condIdRaw) continue;
+    const condId = condIdRaw.startsWith("spell.") ? condIdRaw.slice("spell.".length) : condIdRaw;
+    if (!condId) continue;
+
+    const actions = Array.isArray(rule && rule.then) ? rule.then : [];
+    if (!actions.length) continue;
+    const hasWakeWin = actions.some((a) => String(a && a.type || "").trim().toLowerCase() === "wake_win");
+    if (hasWakeWin) continue;
+    const hasEvent = actions.some((a) => String(a && a.type || "").trim().toLowerCase() === "event");
+    if (!hasEvent) continue;
+
+    if (!seen.has(condId)) {
+      seen.add(condId);
+      out.push(condId);
+    }
+  }
+  return Object.freeze(out);
+}
