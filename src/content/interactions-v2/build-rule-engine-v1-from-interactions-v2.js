@@ -20,6 +20,22 @@ function finiteNonNegativeOrUndef(v) {
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 }
 
+function normalizeEventId(eventIdRaw) {
+  const id = asId(eventIdRaw);
+  if (!id) return "";
+  return id.startsWith("event.") ? id.slice("event.".length) : id;
+}
+
+function normalizeEventDefaultsMap(defaultsEventRaw) {
+  const out = {};
+  for (const [rawEventId, args] of Object.entries(asObj(defaultsEventRaw))) {
+    const normalizedEventId = normalizeEventId(rawEventId);
+    if (!normalizedEventId) continue;
+    out[normalizedEventId] = asObj(args);
+  }
+  return out;
+}
+
 function collectEventArgs(action, defaultsForEvent) {
   const out = {
     ...(asObj(defaultsForEvent)),
@@ -45,7 +61,7 @@ function mapConditionToV1(cond) {
   return Object.freeze({ type, id });
 }
 
-function mapActionToV1(action, defaults) {
+function mapActionToV1(action, defaults, defaultsEventById) {
   const a = asObj(action);
   const type = asId(a.type);
   if (type === "wake_win") {
@@ -66,10 +82,9 @@ function mapActionToV1(action, defaults) {
     return Object.freeze(out);
   }
   if (type === "event") {
-    const rawId = asId(a.id);
-    const id = rawId.startsWith("event.") ? rawId.slice("event.".length) : rawId;
+    const id = normalizeEventId(a.id);
     if (!id) return null;
-    const out = { type: "event", id, ...collectEventArgs(a, asObj(asObj(defaults.event)[id])) };
+    const out = { type: "event", id, ...collectEventArgs(a, asObj(defaultsEventById[id])) };
     if (Object.prototype.hasOwnProperty.call(a, "enabled") && typeof a.enabled === "boolean") out.enabled = a.enabled;
     return Object.freeze(out);
   }
@@ -82,7 +97,10 @@ function mapRuleToV1(rule, defaults) {
   if (!id) return null;
   const onAll = Array.isArray(asObj(r.on).all) ? asObj(r.on).all : [];
   const conditions = onAll.map(mapConditionToV1).filter(Boolean);
-  const actions = (Array.isArray(r.then) ? r.then : []).map((a) => mapActionToV1(a, defaults)).filter(Boolean);
+  const defaultsEventById = normalizeEventDefaultsMap(asObj(defaults.event));
+  const actions = (Array.isArray(r.then) ? r.then : [])
+    .map((a) => mapActionToV1(a, defaults, defaultsEventById))
+    .filter(Boolean);
   const out = { id, on: Object.freeze(conditions), then: Object.freeze(actions) };
   if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled === "boolean") out.enabled = r.enabled;
   if (Number.isFinite(Number(r.priority))) out.priority = Number(r.priority);
