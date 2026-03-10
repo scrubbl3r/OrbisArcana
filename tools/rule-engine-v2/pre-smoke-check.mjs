@@ -13,8 +13,11 @@ import {
   SPELL_RULES_V1_STATIC,
   SPELL_RULES_V1_LEGACY_BRIDGE,
 } from "../../src/content/spell-rules/spell-rules-v1.js";
-
-const OWW_MANIFEST_PATH = "tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json";
+import {
+  KWS_MANIFEST_REL_PATH,
+  buildKwsManifestFromSpellbookV2,
+  normalizeKwsManifest,
+} from "./kws-manifest-from-spellbook-v2.mjs";
 
 function fail(message, details = []) {
   console.error(`[pre-smoke] FAIL: ${message}`);
@@ -32,9 +35,17 @@ function loadJson(path) {
 }
 
 function verifyKwsManifestCoverage() {
-  const manifestAbs = resolve(process.cwd(), OWW_MANIFEST_PATH);
-  const manifest = loadJson(manifestAbs);
-  const models = Array.isArray(manifest && manifest.models) ? manifest.models : [];
+  const manifestAbs = resolve(process.cwd(), KWS_MANIFEST_REL_PATH);
+  const manifestRaw = loadJson(manifestAbs);
+  const manifest = normalizeKwsManifest(manifestRaw);
+  const expectedManifest = normalizeKwsManifest(buildKwsManifestFromSpellbookV2(SPELLBOOK_V2));
+  if (JSON.stringify(manifest) !== JSON.stringify(expectedManifest)) {
+    fail("kws manifest drift: regenerate from spellbook-v2", [
+      `manifest: ${KWS_MANIFEST_REL_PATH}`,
+      "run: npm run sync:kws-manifest:v2",
+    ]);
+  }
+  const models = Array.isArray(manifest.models) ? manifest.models : [];
   const modelBaseByName = Object.create(null);
   const missingFiles = [];
   for (const entry of models) {
