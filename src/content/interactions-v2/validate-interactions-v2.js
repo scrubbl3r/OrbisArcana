@@ -52,6 +52,11 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
     const defaults = asObj(cfg.defaults);
     if (Object.prototype.hasOwnProperty.call(defaults, "wakeWin")) {
       const wakeWin = asObj(defaults.wakeWin);
+      for (const key of Object.keys(wakeWin)) {
+        if (key !== "ttlMs") {
+          errors.push(`INTERACTIONS_V2.defaults.wakeWin contains unsupported key: ${key}`);
+        }
+      }
       if (Object.prototype.hasOwnProperty.call(wakeWin, "ttlMs") && !isFiniteNonNegative(wakeWin.ttlMs)) {
         errors.push("INTERACTIONS_V2.defaults.wakeWin.ttlMs must be a finite number >= 0 when present");
       }
@@ -61,6 +66,8 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
       for (const [eventId, eventArgs] of Object.entries(eventDefaults)) {
         if (!isEntityIdLike(eventId)) {
           errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
+        } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, eventId.toLowerCase())) {
+          errors.push(`INTERACTIONS_V2.defaults.event references unknown event id: ${eventId}`);
         }
         if (!eventArgs || typeof eventArgs !== "object" || Array.isArray(eventArgs)) {
           errors.push(`INTERACTIONS_V2.defaults.event[${eventId}] must be an object`);
