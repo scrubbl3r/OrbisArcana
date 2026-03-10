@@ -37,7 +37,7 @@ function assert(condition, message) {
   }
 }
 
-function runScenario({ wakeWindowToken, expectedSpellId }) {
+function runScenario({ wakeWindowToken, expectedSpellId, shakeGroup = "" }) {
   const eventBus = createEventBus();
   const casts = [];
   let stored = 1;
@@ -68,20 +68,23 @@ function runScenario({ wakeWindowToken, expectedSpellId }) {
       atMs: nowRef.value,
     });
     nowRef.value += 10;
-    eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, { code: "", group: "", atMs: nowRef.value });
+    eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, { code: "", group: shakeGroup, atMs: nowRef.value });
   } finally {
     system.stop();
   }
 
-  assert(casts.length === 1, `[shake-regression] expected 1 cast for ${wakeWindowToken}, got ${casts.length}`);
+  const mode = shakeGroup ? `group:${shakeGroup}` : "group:(fallback)";
+  assert(casts.length === 1, `[shake-regression] expected 1 cast for ${wakeWindowToken} (${mode}), got ${casts.length}`);
   assert(String(casts[0].spellId || "") === expectedSpellId, `[shake-regression] expected spellId=${expectedSpellId}, got ${casts[0].spellId || ""}`);
   assert(String(casts[0].trigger || "") === "shake_detonation", `[shake-regression] expected trigger=shake_detonation for ${wakeWindowToken}`);
 }
 
 function main() {
-  runScenario({ wakeWindowToken: "sanctum", expectedSpellId: "sanctum" });
-  runScenario({ wakeWindowToken: "rota", expectedSpellId: "rota" });
-  console.log("[shake-regression:v2] PASS: directionless shake detonates loaded spell");
+  runScenario({ wakeWindowToken: "sanctum", expectedSpellId: "sanctum", shakeGroup: "" });
+  runScenario({ wakeWindowToken: "rota", expectedSpellId: "rota", shakeGroup: "" });
+  runScenario({ wakeWindowToken: "sanctum", expectedSpellId: "sanctum", shakeGroup: "UD" });
+  runScenario({ wakeWindowToken: "rota", expectedSpellId: "rota", shakeGroup: "FB" });
+  console.log("[shake-regression:v2] PASS: shake detonation works for fallback and grouped modes");
 }
 
 main();
