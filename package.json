@@ -3,7 +3,8 @@
     "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs",
     "report-drift:v2": "node tools/rule-engine-v2/report-v1-v2-rule-drift.mjs",
     "doctor:v2": "node tools/rule-engine-v2/doctor-v2.mjs",
-    "ready:v2": "node tools/rule-engine-v2/ready-check.mjs"
+    "ready:v2": "node tools/rule-engine-v2/ready-check.mjs",
+    "smoke:batch:v2": "node tools/rule-engine-v2/smoke-batch-v2.mjs"
   },
   "dependencies": {
     "onnxruntime-web": "1.22.0"
