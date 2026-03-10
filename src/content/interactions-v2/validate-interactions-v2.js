@@ -213,6 +213,12 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
             for (const spellId of action.spells) {
               const id = asText(spellId);
               const normalizedSpellId = normalizeSpellId(id);
+              const spellQualifiedPrefix = getQualifiedPrefix(id);
+              if (spellQualifiedPrefix && spellQualifiedPrefix !== "spell") {
+                errors.push(
+                  `rule ${ruleId} wake_win spell prefix mismatch: ${id} (expected spell.* or unqualified id)`
+                );
+              }
               if (!isEntityIdLike(id)) {
                 if (!isEntityIdLike(normalizedSpellId)) {
                   errors.push(`rule ${ruleId} wake_win spell has invalid id shape: ${id}`);
@@ -239,8 +245,13 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
         if (type === "event") {
           const eventId = asText(action.id);
           const normalizedEventId = normalizeEventId(eventId);
+          const eventQualifiedPrefix = getQualifiedPrefix(eventId);
           if (!eventId) {
             errors.push(`rule ${ruleId} event action requires id`);
+          } else if (eventQualifiedPrefix && eventQualifiedPrefix !== "event") {
+            errors.push(
+              `rule ${ruleId} event id prefix mismatch: ${eventId} (expected event.* or unqualified id)`
+            );
           } else if (!isEntityIdLike(normalizedEventId)) {
             errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
           } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, normalizedEventId)) {
