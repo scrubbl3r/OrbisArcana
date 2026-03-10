@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs",
     "check:shake-regression:v2": "node tools/rule-engine-v2/check-shake-detonation-regression-v2.mjs",
