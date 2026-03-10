@@ -32,3 +32,11 @@
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.
 - If you are enabling/disabling words, edit `spellbook-v2.js`.
 - Avoid editing legacy bridge files unless doing migration plumbing.
+
+## Quick Health Commands
+- `npm run pre-smoke:v2`
+  - Validates V2 config and regenerates effective snapshot.
+- `npm run report-drift:v2`
+  - Prints differences between legacy static V1 fallback rules and V2 projection.
+- `npm run doctor:v2`
+  - Runs pre-smoke and prints concise SSOT health summary.
