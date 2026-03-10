@@ -49,9 +49,14 @@ function buildWakeRequiredSpellSignals() {
 }
 
 function buildRuleEngineOwnedImmediateSpellSignals() {
+  const excluded = new Set([
+    ...(Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : []),
+    ...(Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : []),
+    ...(Array.isArray(WAKE_REQUIRED_SPELL_IDS) ? WAKE_REQUIRED_SPELL_IDS : []),
+  ].map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase()).filter(Boolean));
   return (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS : [])
     .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
-    .filter(Boolean)
+    .filter((spellId) => !!spellId && !excluded.has(spellId))
     .map((spellId) => Object.freeze({
       id: `spell.${spellId}`,
       type: "spell",
