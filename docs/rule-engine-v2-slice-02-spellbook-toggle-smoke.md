@@ -34,6 +34,16 @@
    - Startup fails with `Spellbook v2 validation failed: ... active must be boolean`.
 4. Revert and confirm startup is clean.
 
+## Test D: Canonical shape/range guard
+1. Temporarily set invalid values on one spell:
+   - `id: "Rota"` (uppercase),
+   - `confidence: 1.5` (out of range),
+   - or `onnx: "rota-model"` (invalid shape).
+2. Reload receiver.
+3. Expected:
+   - Startup fails with `Spellbook v2 validation failed: ...`.
+4. Revert and confirm startup is clean.
+
 ## Pass Criteria
 - A and B prove toggle wiring.
 - C proves fail-fast schema protection.
