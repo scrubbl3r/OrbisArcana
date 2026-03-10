@@ -2017,7 +2017,7 @@
         const spellDispatchSystem = createSpellDispatchSystem({
           eventBus,
           resources: resourcesSystem,
-          ruleEngineEnabled: !ruleSchemaV1 || ruleSchemaV1.enabled !== false,
+          ruleEngineEnabled: (!ruleSchemaV1 || ruleSchemaV1.enabled !== false) && RULE_ENGINE_V1_EXECUTE_ACTIONS === true,
         });
         if (typeof createRuleEngineV1PreviewSystem === "function" && ruleSchemaV1) {
           ruleEngineV1PreviewSystem = createRuleEngineV1PreviewSystem({
