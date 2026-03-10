@@ -10,19 +10,6 @@ export const WAKE_REQUIRED_SPELL_IDS = Object.freeze([
   "domus",
 ]);
 
-export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
-  "pyro",
-  "fridgis",
-  "electrum",
-  "rota",
-  "sanctum",
-  "vectus",
-]);
-
-// Immediate voice spells that are owned by the rule engine path.
-// Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
-export const RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS = collectImmediateEventSpellIdsFromInteractionsV2();
-
 export const AXIS_SPELL_IDS = Object.freeze([
   "pyro",
   "fridgis",
@@ -35,10 +22,21 @@ export const WAKE_WINDOW_SPELL_IDS = Object.freeze([
   "vectus",
 ]);
 
+export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
+  ...new Set([...AXIS_SPELL_IDS, ...WAKE_WINDOW_SPELL_IDS]),
+]);
+
+// Immediate voice spells that are owned by the rule engine path.
+// Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
+export const RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS = collectImmediateEventSpellIdsFromInteractionsV2();
+
 export const WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN = Object.freeze({
-  rota: "rota",
-  sanctum: "sanctum",
-  vectus: "vectus",
+  ...WAKE_WINDOW_SPELL_IDS.reduce((acc, id) => {
+    const token = String(id || "").trim().toLowerCase();
+    if (!token) return acc;
+    acc[token] = token;
+    return acc;
+  }, {}),
 });
 
 const KWS_TOP_SPELL_IDS = Object.freeze([
