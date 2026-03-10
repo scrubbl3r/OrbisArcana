@@ -10,7 +10,7 @@ export const WAKE_REQUIRED_SPELL_IDS = Object.freeze([
 ]);
 
 export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
-  "tempus",
+  "pyro",
   "fridgis",
   "electrum",
   "rota",
@@ -19,7 +19,7 @@ export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
 ]);
 
 export const AXIS_SPELL_IDS = Object.freeze([
-  "tempus",
+  "pyro",
   "fridgis",
   "electrum",
 ]);
@@ -39,7 +39,7 @@ export const WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN = Object.freeze({
 export const KWS_FLASH_TOKEN_SPELL_IDS = Object.freeze([
   "orbis",
   "domus",
-  "tempus",
+  "pyro",
   "fridgis",
   "electrum",
 ]);
@@ -47,7 +47,7 @@ export const KWS_FLASH_TOKEN_SPELL_IDS = Object.freeze([
 export const KWS_ROW_TOP_SPELL_IDS = Object.freeze([
   "orbis",
   "domus",
-  "tempus",
+  "pyro",
   "fridgis",
   "electrum",
 ]);
@@ -59,14 +59,14 @@ export const KWS_ROW_BOTTOM_SPELL_IDS = Object.freeze([
 ]);
 
 export const KWS_SIM_SPELL_IDS = Object.freeze([
-  "tempus",
+  "pyro",
   "rota",
   "electrum",
   "sanctum",
   "domus",
 ]);
 
-export const KWS_INFER_DEFAULT_SPELL_ID = "tempus";
+export const KWS_INFER_DEFAULT_SPELL_ID = "pyro";
 
 export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
@@ -82,9 +82,9 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
     clearSlotsOnAxis: Object.freeze({ y: Object.freeze(["LR", "FB"]) }),
   }),
   Object.freeze({
-    id: "tempus",
+    id: "pyro",
     intent: "spell.axis_select",
-    axisSpell: "tempus",
+    axisSpell: "pyro",
     allowedAxes: Object.freeze(["y"]),
   }),
   Object.freeze({

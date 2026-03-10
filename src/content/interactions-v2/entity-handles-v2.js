@@ -5,7 +5,8 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
   // Spells
   ORBIS: "spell.orbis",
   DOMUS: "spell.domus",
-  TEMPUS: "spell.tempus",
+  PYRO: "spell.pyro",
+  TEMPUS: "spell.pyro", // legacy alias during swap window
   FRIDGIS: "spell.fridgis",
   ELECTRUM: "spell.electrum",
   SANCTUM: "spell.sanctum",
@@ -38,4 +39,3 @@ export const EVENT_HANDLES_V2 = Object.freeze({
   GRACE: "grace",
   ORB_STATE: "orb_state",
 });
-

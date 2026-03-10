@@ -6,7 +6,7 @@ export const SPELLBOOK_V2 = Object.freeze({
   spells: Object.freeze([
     Object.freeze({ id: "orbis", phrase: "orbis", active: true, onnx: "orbis", confidence: 0.6, cooldownMs: 0 }),
     Object.freeze({ id: "domus", phrase: "domus", active: true, onnx: "domus", confidence: 0.62, cooldownMs: 250 }),
-    Object.freeze({ id: "tempus", phrase: "tempus", active: true, onnx: "tempus", confidence: 0.6, cooldownMs: 0 }),
+    Object.freeze({ id: "pyro", phrase: "pyro", active: true, onnx: "pyro", confidence: 0.6, cooldownMs: 0 }),
     Object.freeze({ id: "fridgis", phrase: "fridgis", active: true, onnx: "fridgis", confidence: 0.6, cooldownMs: 0 }),
     Object.freeze({ id: "electrum", phrase: "electrum", active: true, onnx: "electrum", confidence: 0.6, cooldownMs: 0 }),
     Object.freeze({ id: "sanctum", phrase: "sanctum", active: true, onnx: "sanctum", confidence: 0.6, cooldownMs: 0 }),
@@ -40,4 +40,3 @@ export const SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID = Object.freeze(
     return acc;
   }, {})
 );
-

@@ -11,9 +11,9 @@
       "token": "domus"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/tempus.onnx",
-      "label": "tempus",
-      "token": "tempus"
+      "path": "../../../assets/kws/openwakeword-models/pyro.onnx",
+      "label": "pyro",
+      "token": "pyro"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/fridgis.onnx",

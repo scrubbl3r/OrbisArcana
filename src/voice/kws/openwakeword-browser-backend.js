@@ -863,7 +863,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         simulationTimer = setInterval(() => {
           const simTokens = Array.isArray(OPENWAKEWORD_BROWSER_SIM_TOKENS) && OPENWAKEWORD_BROWSER_SIM_TOKENS.length
             ? OPENWAKEWORD_BROWSER_SIM_TOKENS
-            : ["tempus"];
+            : ["pyro"];
           const token = simTokens[Math.floor(Math.random() * simTokens.length)];
           emitToken(token, 0.85);
         }, intervalMs);

@@ -15,7 +15,7 @@ export const OPENWAKEWORD_BROWSER_SIM_TOKENS = Object.freeze(
     .filter(Boolean)
 );
 
-const DEFAULT_INFER_TOKEN = resolveActivePhraseById(KWS_INFER_DEFAULT_SPELL_ID, "tempus");
+const DEFAULT_INFER_TOKEN = resolveActivePhraseById(KWS_INFER_DEFAULT_SPELL_ID, "pyro");
 
 export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   enabled: true,
@@ -28,7 +28,7 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   requireOnnxDataPair: true,
   ortModuleUrl: "./vendor/onnxruntime/1.22.0/ort.wasm.min.mjs",
   ortWasmRootUrl: "./vendor/onnxruntime/1.22.0/",
-  inferToken: DEFAULT_INFER_TOKEN || "tempus",
+  inferToken: DEFAULT_INFER_TOKEN || "pyro",
   inferThreshold: 0.15,
   inferCooldownMs: 600,
   inferPollMs: 33,

@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T16:56:54.779Z",
+  "generatedAt": "2026-03-10T17:23:41.512Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -41,10 +41,10 @@
         "cooldownMs": 250
       },
       {
-        "id": "tempus",
-        "phrase": "tempus",
+        "id": "pyro",
+        "phrase": "pyro",
         "active": true,
-        "onnx": "tempus",
+        "onnx": "pyro",
         "confidence": 0.6,
         "cooldownMs": 0
       },
