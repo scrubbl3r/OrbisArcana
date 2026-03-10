@@ -18,8 +18,6 @@ export const INTERACTIONS_V2 = Object.freeze({
   rules: Object.freeze([
     Object.freeze({
       id: "r_rota_yspin_charged",
-      enabled: true,
-      priority: 50,
       on: Object.freeze({
         all: Object.freeze([
           Object.freeze({ type: "spell", id: "rota" }),
@@ -28,8 +26,8 @@ export const INTERACTIONS_V2 = Object.freeze({
         ]),
       }),
       then: Object.freeze([
-        Object.freeze({ type: "wake_win", spells: Object.freeze(["sanctum", "vectus"]) }),
-        Object.freeze({ type: "event", id: "electric_aoe" }),
+        Object.freeze({ type: "wake_win", spells: Object.freeze(["rota", "sanctum", "vectus"]) }),
+        Object.freeze({ type: "event", id: "electric_aoe", range: 14 }),
         Object.freeze({ type: "event", id: "grace" }),
         Object.freeze({ type: "event", id: "orb_state", overrides: Object.freeze({ state: "superheated" }) }),
       ]),
