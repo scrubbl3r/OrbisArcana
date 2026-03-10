@@ -233,12 +233,20 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const useInteractionsV2 = !!(INTERACTIONS_V2_BOOTSTRAP &&
     typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
-  const ruleSchemaV1 = useInteractionsV2 && typeof buildRuleEngineV1FromInteractionsV2 === "function"
-    ? buildRuleEngineV1FromInteractionsV2({
+  let ruleSchemaV1 = fallbackRuleSchemaV1;
+  if (useInteractionsV2 && typeof buildRuleEngineV1FromInteractionsV2 === "function") {
+    try {
+      ruleSchemaV1 = buildRuleEngineV1FromInteractionsV2({
         interactionsV2: INTERACTIONS_V2,
         baseRuleEngineV1: fallbackRuleSchemaV1,
-      })
-    : fallbackRuleSchemaV1;
+      });
+    } catch (err) {
+      try {
+        console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to RULE_ENGINE_V1_MASTER_CONTROL", err);
+      } catch (_) {}
+      ruleSchemaV1 = fallbackRuleSchemaV1;
+    }
+  }
   try {
     console.info(
       `[receiver-bootstrap] rule source: ${useInteractionsV2 ? "INTERACTIONS_V2(adapter)" : "RULE_ENGINE_V1_MASTER_CONTROL"}`
