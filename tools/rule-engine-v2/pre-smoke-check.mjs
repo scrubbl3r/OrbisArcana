@@ -132,4 +132,13 @@ if (snapshotRun.status !== 0) {
   fail("effective snapshot generation failed");
 }
 
+const masterDocRun = spawnSync(
+  process.execPath,
+  ["tools/rule-engine-v2/write-master-control-doc-v2.mjs"],
+  { stdio: "inherit" }
+);
+if (masterDocRun.status !== 0) {
+  fail("master control doc generation failed");
+}
+
 console.log("[pre-smoke] OK: validators passed + effective snapshot refreshed");
