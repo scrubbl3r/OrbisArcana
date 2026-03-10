@@ -23,6 +23,7 @@ export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
 export const RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS = Object.freeze([
   "domus",
   "electrum",
+  "fridgis",
   "pyro",
 ]);
 
