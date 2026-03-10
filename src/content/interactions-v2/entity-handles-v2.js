@@ -6,7 +6,6 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
   ORBIS: "spell.orbis",
   DOMUS: "spell.domus",
   PYRO: "spell.pyro",
-  TEMPUS: "spell.pyro", // legacy alias during swap window
   FRIDGIS: "spell.fridgis",
   ELECTRUM: "spell.electrum",
   SANCTUM: "spell.sanctum",
