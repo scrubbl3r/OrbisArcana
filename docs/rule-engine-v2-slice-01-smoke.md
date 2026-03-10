@@ -18,8 +18,10 @@
 2. Reload receiver.
 3. Confirm console contains:
    - `[receiver-bootstrap] rule source: RULE_ENGINE_V1_MASTER_CONTROL`
-4. Run normal gameplay smoke (KWS + spell cast + orb response).
-5. Expected:
+4. Confirm on-screen readout shows:
+   - `Rules: V1 master`
+5. Run normal gameplay smoke (KWS + spell cast + orb response).
+6. Expected:
    - Behavior matches current baseline (no functional drift from V1 path).
 
 ## Test B: V2 adapter path active (flag ON)
@@ -28,9 +30,11 @@
 2. Reload receiver.
 3. Confirm console contains:
    - `[receiver-bootstrap] rule source: INTERACTIONS_V2(adapter)`
-4. Trigger the sample V2 rule chain condition:
+4. Confirm on-screen readout shows:
+   - `Rules: V2 adapter`
+5. Trigger the sample V2 rule chain condition:
    - spell `rota` + `Y_SPIN` + `orb_state charged`
-5. Expected:
+6. Expected:
    - No startup schema errors.
    - Rule engine remains operational through adapted V2 rules.
 

@@ -14,6 +14,7 @@
       status: $("status"),
       last: $("last"),
       kwsReadout: $("kwsReadout"),
+      rulesReadout: $("rulesReadout"),
       kwsLog: $("kwsLog"),
       kwsTokenThrInput: $("kwsTokenThrInput"),
       kwsCooldownMsInput: $("kwsCooldownMsInput"),
@@ -1792,6 +1793,16 @@
                 ? { ...next.actionArgOverrides }
                 : Object.create(null),
             };
+            if (els.rulesReadout) {
+              const source = String(ruleSchemaV1.source || "unknown");
+              if (source === "interactions_v2_adapter") {
+                els.rulesReadout.textContent = "V2 adapter";
+              } else if (source === "rule_engine_v1_master_control") {
+                els.rulesReadout.textContent = "V1 master";
+              } else {
+                els.rulesReadout.textContent = source || "unknown";
+              }
+            }
           },
           initSpellActionHandlers,
           createSpellCastExecutorContext: () => ({
