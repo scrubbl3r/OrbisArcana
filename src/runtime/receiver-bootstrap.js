@@ -239,6 +239,11 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         baseRuleEngineV1: fallbackRuleSchemaV1,
       })
     : fallbackRuleSchemaV1;
+  try {
+    console.info(
+      `[receiver-bootstrap] rule source: ${useInteractionsV2 ? "INTERACTIONS_V2(adapter)" : "RULE_ENGINE_V1_MASTER_CONTROL"}`
+    );
+  } catch (_) {}
   const ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
     ? ruleSchemaV1.enabled !== false
     : true;
