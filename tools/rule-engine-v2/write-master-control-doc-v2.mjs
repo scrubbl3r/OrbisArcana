@@ -1,7 +1,10 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  ACTION_HANDLES_V2,
+  EVENT_HANDLES_V2,
   INTERACTIONS_V2,
+  SIGNAL_HANDLES_V2,
   SPELLBOOK_V2,
 } from "../../src/content/interactions-v2/index.js";
 
@@ -49,6 +52,26 @@ function buildDoc() {
   lines.push(toJson(rules));
   lines.push("```");
   lines.push("");
+  lines.push("## Canonical Handles (Nuggets)");
+  lines.push("");
+  lines.push("### Signals");
+  lines.push("");
+  lines.push("```json");
+  lines.push(toJson(SIGNAL_HANDLES_V2));
+  lines.push("```");
+  lines.push("");
+  lines.push("### Actions");
+  lines.push("");
+  lines.push("```json");
+  lines.push(toJson(ACTION_HANDLES_V2));
+  lines.push("```");
+  lines.push("");
+  lines.push("### Events");
+  lines.push("");
+  lines.push("```json");
+  lines.push(toJson(EVENT_HANDLES_V2));
+  lines.push("```");
+  lines.push("");
   lines.push("## Authoring Notes");
   lines.push("");
   lines.push("- Add/remove/toggle spells in `spellbook-v2.js`.");
@@ -73,6 +96,11 @@ function buildMasterControlJson() {
         ? INTERACTIONS_V2.defaults
         : {},
       rules: Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules : [],
+    },
+    handles: {
+      signals: SIGNAL_HANDLES_V2,
+      actions: ACTION_HANDLES_V2,
+      events: EVENT_HANDLES_V2,
     },
   };
 }

@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-10T23:19:32.565Z",
+  "generatedAt": "2026-03-10T23:22:35.117Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -198,5 +198,38 @@
         ]
       }
     ]
+  },
+  "handles": {
+    "signals": {
+      "ORBIS": "spell.orbis",
+      "DOMUS": "spell.domus",
+      "PYRO": "spell.pyro",
+      "FRIDGIS": "spell.fridgis",
+      "ELECTRUM": "spell.electrum",
+      "SANCTUM": "spell.sanctum",
+      "VECTUS": "spell.vectus",
+      "ROTA": "spell.rota",
+      "FSPIN_X": "gesture.x_spin",
+      "FSPIN_Y": "gesture.y_spin",
+      "FSPIN_Z": "gesture.z_spin",
+      "Y_SPIN": "gesture.y_spin",
+      "FB_SHAKE": "gesture.shake_fb",
+      "LR_SHAKE": "gesture.shake_lr",
+      "UD_SHAKE": "gesture.shake_ud",
+      "ORB_CHARGED": "orb_state.charged",
+      "ORB_SUPERHEATED": "orb_state.superheated"
+    },
+    "actions": {
+      "WAKE_WIN": "wake_win",
+      "EVENT": "event"
+    },
+    "events": {
+      "DOMUS_TELEPORT": "domus_teleport",
+      "FLAME_AOE": "flame_aoe",
+      "FROST_AOE": "frost_aoe",
+      "ELECTRIC_AOE": "electric_aoe",
+      "GRACE": "grace",
+      "ORB_STATE": "orb_state"
+    }
   }
 }

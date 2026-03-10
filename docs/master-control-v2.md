@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-10T23:19:32.562Z
+Generated: 2026-03-10T23:22:35.113Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -217,6 +217,54 @@ This document is generated from SSOT:
     ]
   }
 ]
+```
+
+## Canonical Handles (Nuggets)
+
+### Signals
+
+```json
+{
+  "ORBIS": "spell.orbis",
+  "DOMUS": "spell.domus",
+  "PYRO": "spell.pyro",
+  "FRIDGIS": "spell.fridgis",
+  "ELECTRUM": "spell.electrum",
+  "SANCTUM": "spell.sanctum",
+  "VECTUS": "spell.vectus",
+  "ROTA": "spell.rota",
+  "FSPIN_X": "gesture.x_spin",
+  "FSPIN_Y": "gesture.y_spin",
+  "FSPIN_Z": "gesture.z_spin",
+  "Y_SPIN": "gesture.y_spin",
+  "FB_SHAKE": "gesture.shake_fb",
+  "LR_SHAKE": "gesture.shake_lr",
+  "UD_SHAKE": "gesture.shake_ud",
+  "ORB_CHARGED": "orb_state.charged",
+  "ORB_SUPERHEATED": "orb_state.superheated"
+}
+```
+
+### Actions
+
+```json
+{
+  "WAKE_WIN": "wake_win",
+  "EVENT": "event"
+}
+```
+
+### Events
+
+```json
+{
+  "DOMUS_TELEPORT": "domus_teleport",
+  "FLAME_AOE": "flame_aoe",
+  "FROST_AOE": "frost_aoe",
+  "ELECTRIC_AOE": "electric_aoe",
+  "GRACE": "grace",
+  "ORB_STATE": "orb_state"
+}
 ```
 
 ## Authoring Notes
