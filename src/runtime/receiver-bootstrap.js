@@ -220,6 +220,20 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setReceiverModulesReady,
   } = ctx;
 
+  function buildSafeDisabledRuleSchema() {
+    return Object.freeze({
+      id: "rule_engine_v1_safe_disabled",
+      version: "v1",
+      enabled: false,
+      signals: Object.freeze([]),
+      windows: Object.freeze([]),
+      events: Object.freeze([]),
+      rules: Object.freeze([]),
+      eventRuntimeBindings: Object.freeze({}),
+      execution: Object.freeze({}),
+    });
+  }
+
   const fallbackRuleSchemaV1 = (RULE_ENGINE_V1_MASTER_CONTROL && typeof RULE_ENGINE_V1_MASTER_CONTROL === "object")
     ? RULE_ENGINE_V1_MASTER_CONTROL
     : Object.freeze({
@@ -249,31 +263,47 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       ruleSchemaV1 = fallbackRuleSchemaV1;
     }
   }
-  const resolvedRuleSource = useInteractionsV2
-    ? (adapterFallbackUsed ? "interactions_v2_adapter_fallback_v1" : "interactions_v2_adapter")
-    : "rule_engine_v1_master_control";
-  try {
-    console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
-  } catch (_) {}
-  const ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
+  let ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
     ? ruleSchemaV1.enabled !== false
     : true;
-  const ruleSignalsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.signals)
+  let ruleSignalsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.signals)
     ? ruleSchemaV1.signals.slice()
     : [];
-  const ruleWindowsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.windows)
+  let ruleWindowsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.windows)
     ? ruleSchemaV1.windows.slice()
     : [];
-  const ruleEventsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.events)
+  let ruleEventsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.events)
     ? ruleSchemaV1.events.slice()
     : [];
-  const ruleRulesV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.rules)
+  let ruleRulesV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.rules)
     ? ruleSchemaV1.rules.slice()
     : [];
-  const ruleEventRuntimeBindingsV1 = ruleEngineEnabled &&
+  let ruleEventRuntimeBindingsV1 = ruleEngineEnabled &&
     (ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
     ? { ...ruleSchemaV1.eventRuntimeBindings }
     : Object.create(null);
+
+  function refreshRuleSchemaDerived() {
+    ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
+      ? ruleSchemaV1.enabled !== false
+      : true;
+    ruleSignalsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.signals)
+      ? ruleSchemaV1.signals.slice()
+      : [];
+    ruleWindowsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.windows)
+      ? ruleSchemaV1.windows.slice()
+      : [];
+    ruleEventsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.events)
+      ? ruleSchemaV1.events.slice()
+      : [];
+    ruleRulesV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.rules)
+      ? ruleSchemaV1.rules.slice()
+      : [];
+    ruleEventRuntimeBindingsV1 = ruleEngineEnabled &&
+      (ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
+      ? { ...ruleSchemaV1.eventRuntimeBindings }
+      : Object.create(null);
+  }
 
   if (GAME_THEME_DEFAULT) {
     if (typeof applyThemeCssVars === "function") applyThemeCssVars(GAME_THEME_DEFAULT);
@@ -371,7 +401,14 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   if (typeof validateRuleEngineV1Config === "function") {
     const errors = validateRuleEngineV1Config(ruleSchemaV1);
     if (errors.length) {
-      throw new Error(`Rule Engine v1 config validation failed: ${errors.join(" | ")}`);
+      try {
+        console.warn(
+          `[receiver-bootstrap] rule schema invalid; using safe disabled fallback (${errors.length} errors)`
+        );
+      } catch (_) {}
+      adapterFallbackUsed = true;
+      ruleSchemaV1 = buildSafeDisabledRuleSchema();
+      refreshRuleSchemaDerived();
     }
   }
   if (typeof validateSpellSchemaIntegrityV1 === "function") {
@@ -553,9 +590,22 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         : Object.create(null),
     });
     if (integrityErrors.length) {
-      throw new Error(`Spell schema integrity validation failed: ${integrityErrors.join(" | ")}`);
+      try {
+        console.warn(
+          `[receiver-bootstrap] rule schema integrity invalid; using safe disabled fallback (${integrityErrors.length} errors)`
+        );
+      } catch (_) {}
+      adapterFallbackUsed = true;
+      ruleSchemaV1 = buildSafeDisabledRuleSchema();
+      refreshRuleSchemaDerived();
     }
   }
+  const resolvedRuleSource = useInteractionsV2
+    ? (adapterFallbackUsed ? "interactions_v2_adapter_fallback_v1" : "interactions_v2_adapter")
+    : "rule_engine_v1_master_control";
+  try {
+    console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
+  } catch (_) {}
   if (typeof setRuleSchemaV1 === "function") {
     setRuleSchemaV1({
       source: resolvedRuleSource,
