@@ -10,6 +10,9 @@ function fail(msg) {
 const doctor = spawnSync(process.execPath, ["tools/rule-engine-v2/doctor-v2.mjs"], { stdio: "inherit" });
 if (doctor.status !== 0) process.exit(doctor.status || 1);
 
+const shakeRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-shake-detonation-regression-v2.mjs"], { stdio: "inherit" });
+if (shakeRegression.status !== 0) process.exit(shakeRegression.status || 1);
+
 const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
 const health = JSON.parse(readFileSync(healthPath, "utf8"));
 
