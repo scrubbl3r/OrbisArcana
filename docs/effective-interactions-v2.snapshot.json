@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T19:41:51.207Z",
+  "generatedAt": "2026-03-10T19:48:10.435Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -110,7 +110,7 @@
           "all": [
             {
               "type": "spell",
-              "id": "fridgis"
+              "id": "spell.fridgis"
             }
           ]
         },
@@ -127,7 +127,7 @@
           "all": [
             {
               "type": "spell",
-              "id": "electrum"
+              "id": "spell.electrum"
             }
           ]
         },
@@ -144,7 +144,7 @@
           "all": [
             {
               "type": "spell",
-              "id": "pyro"
+              "id": "spell.pyro"
             }
           ]
         },
@@ -161,7 +161,7 @@
           "all": [
             {
               "type": "spell",
-              "id": "domus"
+              "id": "spell.domus"
             }
           ]
         },
@@ -178,15 +178,15 @@
           "all": [
             {
               "type": "spell",
-              "id": "rota"
+              "id": "spell.rota"
             },
             {
               "type": "gesture",
-              "id": "Y_SPIN"
+              "id": "gesture.y_spin"
             },
             {
               "type": "orb_state",
-              "id": "charged"
+              "id": "orb_state.charged"
             }
           ]
         },
@@ -194,9 +194,9 @@
           {
             "type": "wake_win",
             "spells": [
-              "rota",
-              "sanctum",
-              "vectus"
+              "spell.rota",
+              "spell.sanctum",
+              "spell.vectus"
             ]
           },
           {
