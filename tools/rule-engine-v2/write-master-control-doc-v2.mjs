@@ -58,6 +58,28 @@ function buildDoc() {
   return lines.join("\n");
 }
 
+function buildMasterControlJson() {
+  return {
+    schema: "orbis.master_control_v2",
+    generatedAt: new Date().toISOString(),
+    spellbook: {
+      version: SPELLBOOK_V2 && SPELLBOOK_V2.version,
+      spells: Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [],
+    },
+    interactions: {
+      version: INTERACTIONS_V2 && INTERACTIONS_V2.version,
+      enabled: !!(INTERACTIONS_V2 && INTERACTIONS_V2.enabled !== false),
+      defaults: (INTERACTIONS_V2 && INTERACTIONS_V2.defaults && typeof INTERACTIONS_V2.defaults === "object")
+        ? INTERACTIONS_V2.defaults
+        : {},
+      rules: Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules : [],
+    },
+  };
+}
+
 const outPath = resolve(process.cwd(), "docs/master-control-v2.md");
 writeFileSync(outPath, buildDoc(), "utf8");
 console.log(`[master-control-doc:v2] wrote ${outPath}`);
+const outJsonPath = resolve(process.cwd(), "docs/master-control-v2.json");
+writeFileSync(outJsonPath, JSON.stringify(buildMasterControlJson(), null, 2) + "\n", "utf8");
+console.log(`[master-control-doc:v2] wrote ${outJsonPath}`);

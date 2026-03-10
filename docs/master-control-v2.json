@@ -1,27 +1,7 @@
 {
-  "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T23:19:32.508Z",
-  "flags": {
-    "interactionsV2Bootstrap": {
-      "useInReceiverBootstrap": true
-    }
-  },
-  "validation": {
-    "spellbookV2": {
-      "ok": true,
-      "errors": []
-    },
-    "interactionsV2": {
-      "ok": true,
-      "errors": []
-    }
-  },
-  "counts": {
-    "spellbookV2Spells": 8,
-    "interactionsV2Rules": 5,
-    "projectedRuleEngineV1Rules": 5
-  },
-  "spellbookV2": {
+  "schema": "orbis.master_control_v2",
+  "generatedAt": "2026-03-10T23:19:32.565Z",
+  "spellbook": {
     "version": "2",
     "spells": [
       {
@@ -90,7 +70,7 @@
       }
     ]
   },
-  "interactionsV2": {
+  "interactions": {
     "version": "2",
     "enabled": true,
     "defaults": {
@@ -218,113 +198,5 @@
         ]
       }
     ]
-  },
-  "projectedRuleEngineV1": {
-    "rules": [
-      {
-        "id": "r_fridgis_immediate",
-        "on": [
-          {
-            "type": "spell",
-            "id": "fridgis"
-          }
-        ],
-        "then": [
-          {
-            "type": "event",
-            "id": "frost_aoe"
-          }
-        ]
-      },
-      {
-        "id": "r_electrum_immediate",
-        "on": [
-          {
-            "type": "spell",
-            "id": "electrum"
-          }
-        ],
-        "then": [
-          {
-            "type": "event",
-            "id": "electric_aoe"
-          }
-        ]
-      },
-      {
-        "id": "r_pyro_immediate",
-        "on": [
-          {
-            "type": "spell",
-            "id": "pyro"
-          }
-        ],
-        "then": [
-          {
-            "type": "event",
-            "id": "flame_aoe"
-          }
-        ]
-      },
-      {
-        "id": "r_domus_immediate",
-        "on": [
-          {
-            "type": "spell",
-            "id": "domus"
-          }
-        ],
-        "then": [
-          {
-            "type": "event",
-            "id": "domus_teleport"
-          }
-        ]
-      },
-      {
-        "id": "r_rota_yspin_charged",
-        "on": [
-          {
-            "type": "spell",
-            "id": "rota"
-          },
-          {
-            "type": "gesture",
-            "id": "y_spin"
-          },
-          {
-            "type": "orb_state",
-            "id": "charged"
-          }
-        ],
-        "then": [
-          {
-            "type": "wake_win",
-            "spells": [
-              "rota",
-              "sanctum",
-              "vectus"
-            ],
-            "ttlMs": 2000
-          },
-          {
-            "type": "event",
-            "id": "electric_aoe",
-            "range": 14
-          },
-          {
-            "type": "event",
-            "id": "grace",
-            "ms": 500
-          },
-          {
-            "type": "event",
-            "id": "orb_state",
-            "state": "superheated"
-          }
-        ]
-      }
-    ],
-    "enabled": true
   }
 }
