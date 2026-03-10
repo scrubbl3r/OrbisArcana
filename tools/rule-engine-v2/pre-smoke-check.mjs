@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import {
   SPELLBOOK_V2,
   INTERACTIONS_V2,
+  INTERACTIONS_V2_BOOTSTRAP,
   validateSpellbookV2,
   validateInteractionsV2,
   buildRulesV1FromInteractionsV2,
@@ -25,6 +26,17 @@ if (spellbookErrors.length) {
 const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
 if (!interactionsResult.ok) {
   fail("interactions-v2 validation failed", Array.isArray(interactionsResult.errors) ? interactionsResult.errors : []);
+}
+
+if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap !== true) {
+  fail("runtime cutover guard failed", [
+    "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap must be true",
+  ]);
+}
+if (!SPELL_RULES_V1_LEGACY_BRIDGE || SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules !== true) {
+  fail("legacy bridge guard failed", [
+    "SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules must be true",
+  ]);
 }
 
 const projectedRules = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);

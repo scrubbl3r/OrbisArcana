@@ -22,11 +22,11 @@
 ## Current Mode Switches
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/interactions-v2.js`
-  - Purpose: Switch runtime rule source between V1 master and V2 adapter.
+  - Purpose: Runtime rule source cutover (must remain `true`).
 
 - `SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules`
   - Location: `src/content/spell-rules/spell-rules-v1.js`
-  - Purpose: Optional V2 projection for legacy V1 rule sample list.
+  - Purpose: Keep legacy V1 sample view sourced from V2 projection (must remain `true`).
 
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.

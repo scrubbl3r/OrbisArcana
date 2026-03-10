@@ -17,6 +17,9 @@
    - `node tools/rule-engine-v2/pre-smoke-check.mjs`
 2. Expected:
    - Spellbook + interactions validators pass.
+   - Runtime cutover guard passes:
+     - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true`
+     - `SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules === true`
    - If legacy bridge is enabled, V1 static fallback and V2 projection must have zero drift.
    - Effective snapshot regenerates.
    - Final line:
