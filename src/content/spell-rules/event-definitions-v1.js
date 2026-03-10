@@ -13,11 +13,6 @@ export const EVENT_DEFINITIONS_V1 = Object.freeze([
     defaultArgs: Object.freeze({ ms: 900 }),
   }),
   Object.freeze({
-    id: "frost_aoe",
-    type: "event",
-    defaultArgs: Object.freeze({ ms: 900 }),
-  }),
-  Object.freeze({
     id: "grace",
     type: "event",
     defaultArgs: Object.freeze({ ms: 500 }),

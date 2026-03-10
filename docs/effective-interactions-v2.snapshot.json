@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T18:40:22.416Z",
+  "generatedAt": "2026-03-10T18:52:09.433Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -18,8 +18,8 @@
   },
   "counts": {
     "spellbookV2Spells": 8,
-    "interactionsV2Rules": 5,
-    "projectedRuleEngineV1Rules": 5
+    "interactionsV2Rules": 3,
+    "projectedRuleEngineV1Rules": 3
   },
   "spellbookV2": {
     "version": "2",
@@ -105,40 +105,6 @@
     },
     "rules": [
       {
-        "id": "r_electrum_immediate",
-        "on": {
-          "all": [
-            {
-              "type": "spell",
-              "id": "electrum"
-            }
-          ]
-        },
-        "then": [
-          {
-            "type": "event",
-            "id": "electric_aoe"
-          }
-        ]
-      },
-      {
-        "id": "r_fridgis_immediate",
-        "on": {
-          "all": [
-            {
-              "type": "spell",
-              "id": "fridgis"
-            }
-          ]
-        },
-        "then": [
-          {
-            "type": "event",
-            "id": "frost_aoe"
-          }
-        ]
-      },
-      {
         "id": "r_pyro_immediate",
         "on": {
           "all": [
@@ -221,36 +187,6 @@
   },
   "projectedRuleEngineV1": {
     "rules": [
-      {
-        "id": "r_electrum_immediate",
-        "on": [
-          {
-            "type": "spell",
-            "id": "electrum"
-          }
-        ],
-        "then": [
-          {
-            "type": "event",
-            "id": "electric_aoe"
-          }
-        ]
-      },
-      {
-        "id": "r_fridgis_immediate",
-        "on": [
-          {
-            "type": "spell",
-            "id": "fridgis"
-          }
-        ],
-        "then": [
-          {
-            "type": "event",
-            "id": "frost_aoe"
-          }
-        ]
-      },
       {
         "id": "r_pyro_immediate",
         "on": [

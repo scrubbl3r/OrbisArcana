@@ -13,30 +13,6 @@ export const SPELL_RULES_V1_LEGACY_BRIDGE = Object.freeze({
 
 export const SPELL_RULES_V1_STATIC = Object.freeze([
   Object.freeze({
-    id: "r_electrum_immediate",
-    on: Object.freeze([
-      Object.freeze({ type: "spell", id: "electrum" }),
-    ]),
-    then: Object.freeze([
-      Object.freeze({
-        type: "event",
-        id: "electric_aoe",
-      }),
-    ]),
-  }),
-  Object.freeze({
-    id: "r_fridgis_immediate",
-    on: Object.freeze([
-      Object.freeze({ type: "spell", id: "fridgis" }),
-    ]),
-    then: Object.freeze([
-      Object.freeze({
-        type: "event",
-        id: "frost_aoe",
-      }),
-    ]),
-  }),
-  Object.freeze({
     id: "r_pyro_immediate",
     on: Object.freeze([
       Object.freeze({ type: "spell", id: "pyro" }),
