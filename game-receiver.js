@@ -1797,6 +1797,8 @@
               const source = String(ruleSchemaV1.source || "unknown");
               if (source === "interactions_v2_adapter") {
                 els.rulesReadout.textContent = "V2 adapter";
+              } else if (source === "interactions_v2_adapter_fallback_v1") {
+                els.rulesReadout.textContent = "V2 adapter (fallback)";
               } else if (source === "rule_engine_v1_master_control") {
                 els.rulesReadout.textContent = "V1 master";
               } else {

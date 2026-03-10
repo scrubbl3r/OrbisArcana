@@ -233,6 +233,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const useInteractionsV2 = !!(INTERACTIONS_V2_BOOTSTRAP &&
     typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
+  let adapterFallbackUsed = false;
   let ruleSchemaV1 = fallbackRuleSchemaV1;
   if (useInteractionsV2 && typeof buildRuleEngineV1FromInteractionsV2 === "function") {
     try {
@@ -244,13 +245,15 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       try {
         console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to RULE_ENGINE_V1_MASTER_CONTROL", err);
       } catch (_) {}
+      adapterFallbackUsed = true;
       ruleSchemaV1 = fallbackRuleSchemaV1;
     }
   }
+  const resolvedRuleSource = useInteractionsV2
+    ? (adapterFallbackUsed ? "interactions_v2_adapter_fallback_v1" : "interactions_v2_adapter")
+    : "rule_engine_v1_master_control";
   try {
-    console.info(
-      `[receiver-bootstrap] rule source: ${useInteractionsV2 ? "INTERACTIONS_V2(adapter)" : "RULE_ENGINE_V1_MASTER_CONTROL"}`
-    );
+    console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}
   const ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
     ? ruleSchemaV1.enabled !== false
@@ -555,7 +558,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
   if (typeof setRuleSchemaV1 === "function") {
     setRuleSchemaV1({
-      source: useInteractionsV2 ? "interactions_v2_adapter" : "rule_engine_v1_master_control",
+      source: resolvedRuleSource,
       signals: ruleSignalsV1,
       windows: ruleWindowsV1,
       events: ruleEventsV1,
