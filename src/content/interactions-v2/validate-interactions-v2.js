@@ -93,12 +93,20 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
     if (!Array.isArray(on.all) || !on.all.length) {
       errors.push(`rule ${ruleId} must define on.all[]`);
     } else {
+      const seenConditions = new Set();
       for (const c of on.all) {
         const cond = asObj(c);
         const type = asText(cond.type).toLowerCase();
         const id = asText(cond.id);
         if (!type) errors.push(`rule ${ruleId} has on.all condition missing type`);
         if (!id) errors.push(`rule ${ruleId} has on.all condition missing id`);
+        const condKey = `${type}:${id.toLowerCase()}`;
+        if (type && id) {
+          if (seenConditions.has(condKey)) {
+            errors.push(`rule ${ruleId} contains duplicate on.all condition: ${type}.${id}`);
+          }
+          seenConditions.add(condKey);
+        }
         if (type && type !== "spell" && type !== "gesture" && type !== "orb_state") {
           errors.push(`rule ${ruleId} has unsupported on.all condition type: ${type}`);
         }
@@ -131,12 +139,18 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
           if (!Array.isArray(action.spells) || !action.spells.length) {
             errors.push(`rule ${ruleId} wake_win action requires spells[]`);
           } else {
+            const seenWakeWinSpells = new Set();
             for (const spellId of action.spells) {
               const id = asText(spellId);
               if (!isEntityIdLike(id)) {
                 errors.push(`rule ${ruleId} wake_win spell has invalid id shape: ${id}`);
                 continue;
               }
+              const lcId = id.toLowerCase();
+              if (seenWakeWinSpells.has(lcId)) {
+                errors.push(`rule ${ruleId} wake_win contains duplicate spell id: ${id}`);
+              }
+              seenWakeWinSpells.add(lcId);
               if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id.toLowerCase())) {
                 errors.push(`rule ${ruleId} wake_win references inactive or unknown spell id: ${id}`);
               }
