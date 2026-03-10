@@ -1,6 +1,7 @@
 import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
 import { EVENT_DEFINITIONS_V1_BY_ID } from "../spell-rules/event-definitions-v1.js";
+import { SIGNAL_DEFINITIONS_V1_BY_ID } from "../spell-rules/signal-definitions-v1.js";
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -18,6 +19,20 @@ function isFiniteNonNegative(v) {
 function isEntityIdLike(v) {
   return /^[A-Za-z0-9_]+$/.test(String(v || ""));
 }
+
+const KNOWN_GESTURE_IDS = new Set(
+  Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID || {})
+    .filter((signalId) => String(signalId || "").startsWith("gesture."))
+    .map((signalId) => String(signalId || "").slice("gesture.".length))
+    .filter(Boolean)
+);
+
+const KNOWN_ORB_STATE_IDS = new Set(
+  Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID || {})
+    .filter((signalId) => String(signalId || "").startsWith("orb_state."))
+    .map((signalId) => String(signalId || "").slice("orb_state.".length))
+    .filter(Boolean)
+);
 
 export function validateInteractionsV2(input = INTERACTIONS_V2) {
   const errors = [];
@@ -85,6 +100,12 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
         }
         if (type === "spell" && id && !Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id.toLowerCase())) {
           errors.push(`rule ${ruleId} references inactive or unknown spell id: ${id}`);
+        }
+        if (type === "gesture" && id && !KNOWN_GESTURE_IDS.has(id.toLowerCase())) {
+          errors.push(`rule ${ruleId} references unknown gesture id: ${id}`);
+        }
+        if (type === "orb_state" && id && !KNOWN_ORB_STATE_IDS.has(id.toLowerCase())) {
+          errors.push(`rule ${ruleId} references unknown orb_state id: ${id}`);
         }
       }
     }
