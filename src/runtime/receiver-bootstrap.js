@@ -52,6 +52,7 @@ export async function loadReceiverInitModules() {
       INTERACTIONS_V2,
       INTERACTIONS_V2_BOOTSTRAP,
       buildRuleEngineV1FromInteractionsV2,
+      validateSpellbookV2,
     },
     { WORLD_ITEMS_V1 },
   ] = await Promise.all([
@@ -132,6 +133,7 @@ export async function loadReceiverInitModules() {
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineV1FromInteractionsV2,
+    validateSpellbookV2,
     WORLD_ITEMS_V1,
   };
 }
@@ -193,6 +195,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineV1FromInteractionsV2,
+    validateSpellbookV2,
     createSpellCastExecutor,
   } = mods || {};
 
@@ -337,6 +340,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
 
   if (typeof validateSpellRuntimeRoutingV1 === "function") {
+    if (typeof validateSpellbookV2 === "function") {
+      const spellbookErrors = validateSpellbookV2();
+      if (spellbookErrors.length) {
+        throw new Error(`Spellbook v2 validation failed: ${spellbookErrors.join(" | ")}`);
+      }
+    }
     const routingErrors = validateSpellRuntimeRoutingV1();
     if (routingErrors.length) {
       throw new Error(`Spell runtime routing validation failed: ${routingErrors.join(" | ")}`);
