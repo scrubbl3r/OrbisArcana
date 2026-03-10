@@ -60,11 +60,25 @@ function buildRuleEngineOwnedImmediateSpellSignals() {
     }));
 }
 
+function dedupeSignalsById(defs = []) {
+  const seen = new Set();
+  const out = [];
+  for (const def of (Array.isArray(defs) ? defs : [])) {
+    const id = String(def && def.id || "").trim().toLowerCase();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(def);
+  }
+  return out;
+}
+
 export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
-  ...buildWakeWindowSpellSignals(),
-  ...buildWakeSpellSignals(),
-  ...buildWakeRequiredSpellSignals(),
-  ...buildRuleEngineOwnedImmediateSpellSignals(),
+  ...dedupeSignalsById([
+    ...buildWakeWindowSpellSignals(),
+    ...buildWakeSpellSignals(),
+    ...buildWakeRequiredSpellSignals(),
+    ...buildRuleEngineOwnedImmediateSpellSignals(),
+  ]),
   Object.freeze({
     id: "gesture.y_spin",
     type: "gesture",
