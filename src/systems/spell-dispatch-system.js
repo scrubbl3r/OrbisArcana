@@ -143,6 +143,20 @@ export function createSpellDispatchSystem({
     return best;
   }
 
+  function mostRecentLoadedAny() {
+    let best = null;
+    for (const axis of AXES) {
+      for (const slot of SLOT_ORDER) {
+        const entry = loadedByAxis[axis][slot];
+        if (!entry) continue;
+        if (!best || Number(entry.loadedAtMs) > Number(best.loadedAtMs)) {
+          best = Object.assign({ axis, slot }, entry);
+        }
+      }
+    }
+    return best;
+  }
+
   function axisAllowedForSpell(spell, axis) {
     const a = normAxis(axis);
     if (!a) return false;
@@ -436,15 +450,19 @@ export function createSpellDispatchSystem({
 
     unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
       const group = normGroup(payload.group);
-      if (!group) return;
       const now = nowMs();
 
       let loaded = null;
-      const axis = normAxis(activeFlatSpinAxis);
-      if (axis && loadedByAxis[axis][group]) {
-        loaded = Object.assign({ axis, slot: group }, loadedByAxis[axis][group]);
+      if (group) {
+        const axis = normAxis(activeFlatSpinAxis);
+        if (axis && loadedByAxis[axis][group]) {
+          loaded = Object.assign({ axis, slot: group }, loadedByAxis[axis][group]);
+        } else {
+          loaded = mostRecentLoadedForGroup(group);
+        }
       } else {
-        loaded = mostRecentLoadedForGroup(group);
+        // Directionless shake fallback: detonate the most recently loaded slot.
+        loaded = mostRecentLoadedAny();
       }
       if (!loaded) return;
 
@@ -477,7 +495,7 @@ export function createSpellDispatchSystem({
         slot: loaded.slot,
         axisSpell: String((loaded.axisSpell) || "").toLowerCase(),
         wakeWindowSpell: String((loaded.wakeWindowSpell) || "").toLowerCase(),
-        directionGroup: group,
+        directionGroup: group || String(loaded.slot || ""),
         atMs: now,
       };
       eventBus.emit(EVT_VOICE_SPELL_CAST, castPayload);
