@@ -1,69 +1,17 @@
-export const SPELLS = [
-  {
-    active: true,
-    id: "orbis",
-    phrase: "orbis",
-    onnxModel: "orbis",
-    minConfidence: 0.6,
-    cooldownMs: 0,
-  },
-  {
-    active: true,
-    id: "domus",
-    phrase: "domus",
-    onnxModel: "domus",
-    minConfidence: 0.62,
-    cooldownMs: 250,
-  },
-  {
-    active: true,
-    id: "tempus",
-    phrase: "tempus",
-    onnxModel: "tempus",
-    minConfidence: 0.6,
-    cooldownMs: 0,
-  },
-  {
-    active: true,
-    id: "fridgis",
-    phrase: "fridgis",
-    onnxModel: "fridgis",
-    minConfidence: 0.6,
-    cooldownMs: 0,
-  },
-  {
-    active: true,
-    id: "electrum",
-    phrase: "electrum",
-    onnxModel: "electrum",
-    minConfidence: 0.6,
-    cooldownMs: 0,
-  },
-  {
-    active: true,
-    id: "sanctum",
-    phrase: "sanctum",
-    onnxModel: "sanctum",
-    minConfidence: 0.6,
-    cooldownMs: 0,
-  },
-  {
-    active: true,
-    id: "vectus",
-    phrase: "vectus",
-    onnxModel: "vectus",
-    minConfidence: 0.6,
-    cooldownMs: 0,
-  },
-  {
-    active: true,
-    id: "rota",
-    phrase: "rota",
-    onnxModel: "rota",
-    minConfidence: 0.6,
-    cooldownMs: 0,
-  },
-];
+import { SPELLBOOK_V2_SPELLS } from "../content/interactions-v2/spellbook-v2.js";
+
+// Backward-compatible view for existing runtime consumers.
+// Authoring SSOT now lives in content/interactions-v2/spellbook-v2.js.
+export const SPELLS = Object.freeze(
+  (Array.isArray(SPELLBOOK_V2_SPELLS) ? SPELLBOOK_V2_SPELLS : []).map((s) => Object.freeze({
+    active: s.active !== false,
+    id: String(s.id || "").trim().toLowerCase(),
+    phrase: String(s.phrase || "").trim().toLowerCase(),
+    onnxModel: String(s.onnx || "").trim().toLowerCase(),
+    minConfidence: Number.isFinite(Number(s.confidence)) ? Number(s.confidence) : 0.6,
+    cooldownMs: Number.isFinite(Number(s.cooldownMs)) ? Number(s.cooldownMs) : 0,
+  }))
+);
 
 export const SPELLS_BY_ID = Object.freeze(
   SPELLS.reduce((acc, s) => {
