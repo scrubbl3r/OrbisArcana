@@ -4,9 +4,9 @@ import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions
 import { WAKE_WINDOW_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
 
 export const SPELL_RULES_V1_LEGACY_BRIDGE = Object.freeze({
-  // Keep false until you intentionally migrate V1 sample rules to V2 projection.
-  // This avoids silent behavior shifts while the two samples are still diverged.
-  useInteractionsV2Rules: false,
+  // Enabled by default now that projected V2 rules match static legacy rules.
+  // Static rules remain as safe fallback if projection fails.
+  useInteractionsV2Rules: true,
 });
 
 const DEFAULT_WAKE_WIN_SPELLS = Object.freeze(

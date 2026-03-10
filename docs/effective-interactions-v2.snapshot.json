@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T02:22:53.479Z",
+  "generatedAt": "2026-03-10T02:35:50.876Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": false
@@ -106,8 +106,6 @@
     "rules": [
       {
         "id": "r_rota_yspin_charged",
-        "enabled": true,
-        "priority": 50,
         "on": {
           "all": [
             {
@@ -128,13 +126,15 @@
           {
             "type": "wake_win",
             "spells": [
+              "rota",
               "sanctum",
               "vectus"
             ]
           },
           {
             "type": "event",
-            "id": "electric_aoe"
+            "id": "electric_aoe",
+            "range": 14
           },
           {
             "type": "event",
@@ -173,6 +173,7 @@
           {
             "type": "wake_win",
             "spells": [
+              "rota",
               "sanctum",
               "vectus"
             ],
@@ -180,7 +181,8 @@
           },
           {
             "type": "event",
-            "id": "electric_aoe"
+            "id": "electric_aoe",
+            "range": 14
           },
           {
             "type": "event",
@@ -192,9 +194,7 @@
             "id": "orb_state",
             "state": "superheated"
           }
-        ],
-        "enabled": true,
-        "priority": 50
+        ]
       }
     ],
     "enabled": true
