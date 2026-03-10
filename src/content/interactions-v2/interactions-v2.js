@@ -9,7 +9,6 @@ export const INTERACTIONS_V2_BOOTSTRAP = Object.freeze({
 export const INTERACTIONS_V2 = Object.freeze({
   version: "2",
   enabled: true,
-  debug: true,
   defaults: Object.freeze({
     wakeWin: Object.freeze({ ttlMs: 2000 }),
     event: Object.freeze({
