@@ -13,7 +13,7 @@ const DEFAULT_WAKE_WIN_SPELLS = Object.freeze(
   Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS.slice() : []
 );
 
-const SPELL_RULES_V1_STATIC = Object.freeze([
+export const SPELL_RULES_V1_STATIC = Object.freeze([
   Object.freeze({
     id: "r_rota_yspin_charged",
     on: Object.freeze([

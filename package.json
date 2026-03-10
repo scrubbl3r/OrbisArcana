@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs"
+    "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs",
+    "report-drift:v2": "node tools/rule-engine-v2/report-v1-v2-rule-drift.mjs"
   },
   "dependencies": {
     "onnxruntime-web": "1.22.0"
