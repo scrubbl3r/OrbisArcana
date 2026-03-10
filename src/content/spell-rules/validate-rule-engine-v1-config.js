@@ -154,6 +154,9 @@ export function validateRuleEngineV1Config(config = null) {
   const eventDefaultOverrides = asObj(cfg.eventDefaultOverrides);
   const windowEnabledOverrides = asObj(cfg.windowEnabledOverrides);
   const windowDefaultOverrides = asObj(cfg.windowDefaultOverrides);
+  const signalDefinitionCollisions = Array.isArray(cfg.signalDefinitionCollisions)
+    ? cfg.signalDefinitionCollisions
+    : [];
   const knownTopLevelKeys = new Set(Object.keys(asObj(RULE_ENGINE_V1_MASTER_CONTROL)));
   const knownExecutionKeys = new Set(Object.keys(asObj(RULE_ENGINE_V1_MASTER_CONTROL && RULE_ENGINE_V1_MASTER_CONTROL.execution)));
 
@@ -166,6 +169,14 @@ export function validateRuleEngineV1Config(config = null) {
   if (!asText(cfg.version)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.version is required");
   if (Object.prototype.hasOwnProperty.call(cfg, "enabled") && typeof cfg.enabled !== "boolean") {
     errors.push("RULE_ENGINE_V1_MASTER_CONTROL.enabled must be boolean when present");
+  }
+  for (const rawId of signalDefinitionCollisions) {
+    const id = asText(rawId).toLowerCase();
+    if (!id) {
+      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalDefinitionCollisions contains empty signal id");
+      continue;
+    }
+    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalDefinitionCollisions duplicate signal id: ${id}`);
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "execution")) {
     if (!cfg.execution || typeof cfg.execution !== "object" || Array.isArray(cfg.execution)) {

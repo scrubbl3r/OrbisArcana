@@ -1,4 +1,5 @@
 export {
+  SIGNAL_DEFINITION_COLLISIONS_V1,
   SIGNAL_DEFINITIONS_V1,
   SIGNAL_DEFINITIONS_V1_BY_ID,
 } from "./signal-definitions-v1.js";

@@ -72,13 +72,31 @@ function dedupeSignalsById(defs = []) {
   return out;
 }
 
+function buildDuplicateSignalIds(defs = []) {
+  const seen = new Set();
+  const dups = new Set();
+  for (const def of (Array.isArray(defs) ? defs : [])) {
+    const id = String(def && def.id || "").trim().toLowerCase();
+    if (!id) continue;
+    if (seen.has(id)) dups.add(id);
+    else seen.add(id);
+  }
+  return Array.from(dups).sort();
+}
+
+const GENERATED_SPELL_SIGNALS_V1 = Object.freeze([
+  ...buildWakeWindowSpellSignals(),
+  ...buildWakeSpellSignals(),
+  ...buildWakeRequiredSpellSignals(),
+  ...buildRuleEngineOwnedImmediateSpellSignals(),
+]);
+
+export const SIGNAL_DEFINITION_COLLISIONS_V1 = Object.freeze(
+  buildDuplicateSignalIds(GENERATED_SPELL_SIGNALS_V1)
+);
+
 export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
-  ...dedupeSignalsById([
-    ...buildWakeWindowSpellSignals(),
-    ...buildWakeSpellSignals(),
-    ...buildWakeRequiredSpellSignals(),
-    ...buildRuleEngineOwnedImmediateSpellSignals(),
-  ]),
+  ...dedupeSignalsById(GENERATED_SPELL_SIGNALS_V1),
   Object.freeze({
     id: "gesture.y_spin",
     type: "gesture",
