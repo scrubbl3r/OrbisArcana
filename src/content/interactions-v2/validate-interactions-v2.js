@@ -136,6 +136,15 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
           continue;
         }
         if (type === "wake_win") {
+          if (Object.prototype.hasOwnProperty.call(action, "ms")) {
+            errors.push(`rule ${ruleId} wake_win should use ttlMs, not ms`);
+          }
+          for (const key of Object.keys(action)) {
+            const allowed = new Set(["type", "spells", "ttlMs", "enabled"]);
+            if (!allowed.has(key)) {
+              errors.push(`rule ${ruleId} wake_win contains unsupported key: ${key}`);
+            }
+          }
           if (!Array.isArray(action.spells) || !action.spells.length) {
             errors.push(`rule ${ruleId} wake_win action requires spells[]`);
           } else {
