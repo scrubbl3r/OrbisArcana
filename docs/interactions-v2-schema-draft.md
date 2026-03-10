@@ -69,6 +69,12 @@
 - Trigger types (`on`): `spell`, `gesture`, `orb_state`
 - Action types (`then`): `wake_win`, `event`
 
+### Condition ID Forms
+- Condition `id` supports either:
+  - bare form: `rota`, `y_spin`, `charged`
+  - qualified form: `spell.rota`, `gesture.y_spin`, `orb_state.charged`
+- Runtime normalization strips matching type prefix automatically.
+
 ## Override Rules
 - If `overrides` exists on an action, those values win.
 - If no `overrides`, use `defaults`.

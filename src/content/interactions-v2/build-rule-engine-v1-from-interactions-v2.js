@@ -36,8 +36,12 @@ function collectEventArgs(action, defaultsForEvent) {
 function mapConditionToV1(cond) {
   const c = asObj(cond);
   const type = asId(c.type);
-  const id = asId(c.id);
-  if (!type || !id) return null;
+  const rawId = asId(c.id);
+  if (!type || !rawId) return null;
+  let id = rawId;
+  const pref = `${type}.`;
+  if (id.startsWith(pref)) id = id.slice(pref.length);
+  if (!id) return null;
   return Object.freeze({ type, id });
 }
 

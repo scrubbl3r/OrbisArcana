@@ -20,6 +20,14 @@ function isEntityIdLike(v) {
   return /^[A-Za-z0-9_]+$/.test(String(v || ""));
 }
 
+function normalizeConditionId(type, idRaw) {
+  const id = asText(idRaw).toLowerCase();
+  const t = asText(type).toLowerCase();
+  if (!id || !t) return "";
+  const pref = `${t}.`;
+  return id.startsWith(pref) ? id.slice(pref.length) : id;
+}
+
 const KNOWN_GESTURE_IDS = new Set(
   Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID || {})
     .filter((signalId) => String(signalId || "").startsWith("gesture."))
@@ -104,9 +112,10 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
         const cond = asObj(c);
         const type = asText(cond.type).toLowerCase();
         const id = asText(cond.id);
+        const normalizedId = normalizeConditionId(type, id);
         if (!type) errors.push(`rule ${ruleId} has on.all condition missing type`);
         if (!id) errors.push(`rule ${ruleId} has on.all condition missing id`);
-        const condKey = `${type}:${id.toLowerCase()}`;
+        const condKey = `${type}:${normalizedId}`;
         if (type && id) {
           if (seenConditions.has(condKey)) {
             errors.push(`rule ${ruleId} contains duplicate on.all condition: ${type}.${id}`);
@@ -116,16 +125,16 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
         if (type && type !== "spell" && type !== "gesture" && type !== "orb_state") {
           errors.push(`rule ${ruleId} has unsupported on.all condition type: ${type}`);
         }
-        if (id && !isEntityIdLike(id)) {
+        if (id && !isEntityIdLike(normalizedId)) {
           errors.push(`rule ${ruleId} has invalid on.all id shape (use letters/numbers/_): ${id}`);
         }
-        if (type === "spell" && id && !Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id.toLowerCase())) {
+        if (type === "spell" && id && !Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedId)) {
           errors.push(`rule ${ruleId} references inactive or unknown spell id: ${id}`);
         }
-        if (type === "gesture" && id && !KNOWN_GESTURE_IDS.has(id.toLowerCase())) {
+        if (type === "gesture" && id && !KNOWN_GESTURE_IDS.has(normalizedId)) {
           errors.push(`rule ${ruleId} references unknown gesture id: ${id}`);
         }
-        if (type === "orb_state" && id && !KNOWN_ORB_STATE_IDS.has(id.toLowerCase())) {
+        if (type === "orb_state" && id && !KNOWN_ORB_STATE_IDS.has(normalizedId)) {
           errors.push(`rule ${ruleId} references unknown orb_state id: ${id}`);
         }
       }
