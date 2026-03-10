@@ -35,6 +35,13 @@ function normalizeConditionId(type, idRaw) {
   return id.startsWith(pref) ? id.slice(pref.length) : id;
 }
 
+function getQualifiedPrefix(idRaw) {
+  const id = asText(idRaw).toLowerCase();
+  const dot = id.indexOf(".");
+  if (dot <= 0) return "";
+  return id.slice(0, dot);
+}
+
 function normalizeSpellId(spellIdRaw) {
   const id = asText(spellIdRaw).toLowerCase();
   if (!id) return "";
@@ -154,6 +161,12 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
         }
         if (type && type !== "spell" && type !== "gesture" && type !== "orb_state") {
           errors.push(`rule ${ruleId} has unsupported on.all condition type: ${type}`);
+        }
+        const qualifiedPrefix = getQualifiedPrefix(id);
+        if (type && qualifiedPrefix && qualifiedPrefix !== type) {
+          errors.push(
+            `rule ${ruleId} condition type/id prefix mismatch: type=${type} id=${id} (expected ${type}.* or unqualified id)`
+          );
         }
         if (id && !isEntityIdLike(normalizedId)) {
           errors.push(`rule ${ruleId} has invalid on.all id shape (use letters/numbers/_): ${id}`);
