@@ -34,6 +34,12 @@ function normalizeSpellId(spellIdRaw) {
   return id.startsWith("spell.") ? id.slice("spell.".length) : id;
 }
 
+function normalizeEventId(eventIdRaw) {
+  const id = asText(eventIdRaw).toLowerCase();
+  if (!id) return "";
+  return id.startsWith("event.") ? id.slice("event.".length) : id;
+}
+
 const KNOWN_GESTURE_IDS = new Set(
   Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID || {})
     .filter((signalId) => String(signalId || "").startsWith("gesture."))
@@ -77,11 +83,17 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
     }
     if (Object.prototype.hasOwnProperty.call(defaults, "event")) {
       const eventDefaults = asObj(defaults.event);
+      const seenDefaultEventIds = new Set();
       for (const [eventId, eventArgs] of Object.entries(eventDefaults)) {
-        if (!isEntityIdLike(eventId)) {
+        const normalizedEventId = normalizeEventId(eventId);
+        if (!isEntityIdLike(normalizedEventId)) {
           errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
-        } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, eventId.toLowerCase())) {
+        } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, normalizedEventId)) {
           errors.push(`INTERACTIONS_V2.defaults.event references unknown event id: ${eventId}`);
+        } else if (seenDefaultEventIds.has(normalizedEventId)) {
+          errors.push(`INTERACTIONS_V2.defaults.event contains duplicate normalized key: ${eventId}`);
+        } else {
+          seenDefaultEventIds.add(normalizedEventId);
         }
         if (!eventArgs || typeof eventArgs !== "object" || Array.isArray(eventArgs)) {
           errors.push(`INTERACTIONS_V2.defaults.event[${eventId}] must be an object`);
@@ -201,11 +213,12 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
         }
         if (type === "event") {
           const eventId = asText(action.id);
+          const normalizedEventId = normalizeEventId(eventId);
           if (!eventId) {
             errors.push(`rule ${ruleId} event action requires id`);
-          } else if (!isEntityIdLike(eventId)) {
+          } else if (!isEntityIdLike(normalizedEventId)) {
             errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
-          } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, eventId.toLowerCase())) {
+          } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, normalizedEventId)) {
             errors.push(`rule ${ruleId} event action references unknown event id: ${eventId}`);
           }
           if (Object.prototype.hasOwnProperty.call(action, "overrides")) {

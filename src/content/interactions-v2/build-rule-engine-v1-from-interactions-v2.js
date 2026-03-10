@@ -66,7 +66,8 @@ function mapActionToV1(action, defaults) {
     return Object.freeze(out);
   }
   if (type === "event") {
-    const id = asId(a.id);
+    const rawId = asId(a.id);
+    const id = rawId.startsWith("event.") ? rawId.slice("event.".length) : rawId;
     if (!id) return null;
     const out = { type: "event", id, ...collectEventArgs(a, asObj(asObj(defaults.event)[id])) };
     if (Object.prototype.hasOwnProperty.call(a, "enabled") && typeof a.enabled === "boolean") out.enabled = a.enabled;
