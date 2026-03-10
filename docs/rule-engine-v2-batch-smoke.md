@@ -8,6 +8,17 @@ Use this to avoid manual per-slice config edits.
 npm run smoke:batch:v2
 ```
 
+## Milestone Command (Recommended Every ~5 Slices)
+
+```bash
+npm run smoke:milestone:v2
+```
+
+This runs:
+
+1. `ready:v2` (cutover health + guards)
+2. `smoke:batch:v2` (multi-case validator/projection suite)
+
 ## What it covers
 
 - baseline validate/build pass
@@ -23,4 +34,4 @@ npm run smoke:batch:v2
 ## Recommended cadence
 
 - Every slice: `npm run ready:v2`
-- Every 5 slices (or before push): `npm run smoke:batch:v2`
+- Every 5 slices (or before push): `npm run smoke:milestone:v2`
