@@ -1,5 +1,6 @@
 import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
+import { EVENT_DEFINITIONS_V1_BY_ID } from "../spell-rules/event-definitions-v1.js";
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -123,6 +124,8 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
             errors.push(`rule ${ruleId} event action requires id`);
           } else if (!isEntityIdLike(eventId)) {
             errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
+          } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, eventId.toLowerCase())) {
+            errors.push(`rule ${ruleId} event action references unknown event id: ${eventId}`);
           }
         }
       }
