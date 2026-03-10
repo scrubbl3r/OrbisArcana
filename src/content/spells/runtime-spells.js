@@ -1,4 +1,4 @@
-// v1 runtime spell schema (game-side content)
+// v1 runtime spell schema (game-side content) 
 // Keeps gameplay-facing spell metadata separate from voice recognition config.
 
 export const RUNTIME_SPELLS = Object.freeze([
