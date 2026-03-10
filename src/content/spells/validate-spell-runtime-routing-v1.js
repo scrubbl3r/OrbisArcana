@@ -111,6 +111,20 @@ export function validateSpellRuntimeRoutingV1() {
     errors.push(`WAKE_WINDOW_SPELL_IDS has ids not present in interactions-v2 wake_win actions: ${extraWakeWindowSpellIds.join(", ")}`);
   }
 
+  const runtimeKeyTokens = new Set(
+    Object.keys(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN || {})
+      .map((token) => asId(token))
+      .filter(Boolean)
+  );
+  const missingRuntimeKeyTokens = Array.from(declaredWakeWindowSpellIds).filter((id) => !runtimeKeyTokens.has(id)).sort();
+  const extraRuntimeKeyTokens = Array.from(runtimeKeyTokens).filter((id) => !declaredWakeWindowSpellIds.has(id)).sort();
+  if (missingRuntimeKeyTokens.length) {
+    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN missing token keys for wake window spells: ${missingRuntimeKeyTokens.join(", ")}`);
+  }
+  if (extraRuntimeKeyTokens.length) {
+    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN has token keys not present in WAKE_WINDOW_SPELL_IDS: ${extraRuntimeKeyTokens.join(", ")}`);
+  }
+
   for (const [token, runtimeIdRaw] of Object.entries(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN || {})) {
     const runtimeId = asId(runtimeIdRaw);
     if (!runtimeId) {
