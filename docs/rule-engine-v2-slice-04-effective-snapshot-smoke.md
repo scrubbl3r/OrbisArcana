@@ -7,8 +7,19 @@
 ## Generator
 - Script:
   - `tools/rule-engine-v2/write-effective-snapshot.mjs`
+- Pre-smoke helper:
+  - `tools/rule-engine-v2/pre-smoke-check.mjs`
 - Output:
   - `docs/effective-interactions-v2.snapshot.json`
+
+## One-Command Pre-Smoke
+1. Run:
+   - `node tools/rule-engine-v2/pre-smoke-check.mjs`
+2. Expected:
+   - Spellbook + interactions validators pass.
+   - Effective snapshot regenerates.
+   - Final line:
+     - `[pre-smoke] OK: validators passed + effective snapshot refreshed`
 
 ## Test A: Generate baseline
 1. Run:
