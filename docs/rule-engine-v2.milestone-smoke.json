@@ -1,7 +1,7 @@
 {
   "schema": "orbis.rule_engine_v2.milestone",
-  "generatedAt": "2026-03-10T16:52:07.960Z",
-  "gitRef": "0a537bc",
+  "generatedAt": "2026-03-10T16:54:47.351Z",
+  "gitRef": "1fd09b6",
   "steps": {
     "ready": {
       "ok": true,
@@ -15,7 +15,7 @@
   },
   "health": {
     "schema": "orbis.rule_engine_v2.health",
-    "generatedAt": "2026-03-10T16:52:07.902Z",
+    "generatedAt": "2026-03-10T16:54:47.291Z",
     "spellbookOk": true,
     "interactionsOk": true,
     "bootstrapUsesV2Adapter": true,

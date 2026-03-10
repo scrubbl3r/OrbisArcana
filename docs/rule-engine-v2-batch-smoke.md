@@ -22,6 +22,8 @@ This runs:
 It also writes a checkpoint report:
 
 - `/docs/rule-engine-v2.milestone-smoke.json`
+- and appends run history:
+- `/docs/rule-engine-v2.milestone-history.jsonl`
 
 ## What it covers
 

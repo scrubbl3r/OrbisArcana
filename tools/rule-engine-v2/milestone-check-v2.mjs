@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -48,6 +48,10 @@ const report = {
 const outPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-smoke.json");
 writeFileSync(outPath, JSON.stringify(report, null, 2) + "\n", "utf8");
 console.log(`[milestone:v2] wrote report: ${outPath}`);
+
+const historyPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-history.jsonl");
+appendFileSync(historyPath, JSON.stringify(report) + "\n", "utf8");
+console.log(`[milestone:v2] appended history: ${historyPath}`);
 
 if (!report.pass) {
   console.error("[milestone:v2] FAIL");
