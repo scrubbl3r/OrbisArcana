@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs"
+  },
   "dependencies": {
     "onnxruntime-web": "1.22.0"
   }
