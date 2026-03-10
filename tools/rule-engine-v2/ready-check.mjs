@@ -16,6 +16,9 @@ if (shakeRegression.status !== 0) process.exit(shakeRegression.status || 1);
 const wakeLoadRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-wake-window-load-regression-v2.mjs"], { stdio: "inherit" });
 if (wakeLoadRegression.status !== 0) process.exit(wakeLoadRegression.status || 1);
 
+const immediateOwnershipRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-immediate-dispatch-ownership-v2.mjs"], { stdio: "inherit" });
+if (immediateOwnershipRegression.status !== 0) process.exit(immediateOwnershipRegression.status || 1);
+
 const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
 const health = JSON.parse(readFileSync(healthPath, "utf8"));
 
