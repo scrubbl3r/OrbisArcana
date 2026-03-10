@@ -48,6 +48,11 @@ export async function loadReceiverInitModules() {
       RULE_ENGINE_V1_MASTER_CONTROL,
       validateRuleEngineV1Config,
     },
+    {
+      INTERACTIONS_V2,
+      INTERACTIONS_V2_BOOTSTRAP,
+      buildRuleEngineV1FromInteractionsV2,
+    },
     { WORLD_ITEMS_V1 },
   ] = await Promise.all([
     import("../events/event-bus.js"),
@@ -82,6 +87,7 @@ export async function loadReceiverInitModules() {
     import("../content/spells/validate-spell-runtime-routing-v1.js"),
     import("../content/spells/validate-spell-schema-integrity-v1.js"),
     import("../content/spell-rules/index.js"),
+    import("../content/interactions-v2/index.js"),
     import("../content/world-items/default-world-items.js"),
   ]);
 
@@ -123,6 +129,9 @@ export async function loadReceiverInitModules() {
     validateSpellSchemaIntegrityV1,
     RULE_ENGINE_V1_MASTER_CONTROL,
     validateRuleEngineV1Config,
+    INTERACTIONS_V2,
+    INTERACTIONS_V2_BOOTSTRAP,
+    buildRuleEngineV1FromInteractionsV2,
     WORLD_ITEMS_V1,
   };
 }
@@ -181,6 +190,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     validateSpellSchemaIntegrityV1,
     RULE_ENGINE_V1_MASTER_CONTROL,
     validateRuleEngineV1Config,
+    INTERACTIONS_V2,
+    INTERACTIONS_V2_BOOTSTRAP,
+    buildRuleEngineV1FromInteractionsV2,
     createSpellCastExecutor,
   } = mods || {};
 
@@ -205,7 +217,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setReceiverModulesReady,
   } = ctx;
 
-  const ruleSchemaV1 = (RULE_ENGINE_V1_MASTER_CONTROL && typeof RULE_ENGINE_V1_MASTER_CONTROL === "object")
+  const fallbackRuleSchemaV1 = (RULE_ENGINE_V1_MASTER_CONTROL && typeof RULE_ENGINE_V1_MASTER_CONTROL === "object")
     ? RULE_ENGINE_V1_MASTER_CONTROL
     : Object.freeze({
         version: "v1",
@@ -215,6 +227,15 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         rules: [],
         eventRuntimeBindings: Object.create(null),
       });
+  const useInteractionsV2 = !!(INTERACTIONS_V2_BOOTSTRAP &&
+    typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
+    INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
+  const ruleSchemaV1 = useInteractionsV2 && typeof buildRuleEngineV1FromInteractionsV2 === "function"
+    ? buildRuleEngineV1FromInteractionsV2({
+        interactionsV2: INTERACTIONS_V2,
+        baseRuleEngineV1: fallbackRuleSchemaV1,
+      })
+    : fallbackRuleSchemaV1;
   const ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
     ? ruleSchemaV1.enabled !== false
     : true;

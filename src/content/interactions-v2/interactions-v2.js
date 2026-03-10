@@ -1,6 +1,11 @@
 // V2 central interaction authoring SSOT.
 // This file is the canonical place for composing trigger/action chains.
 
+export const INTERACTIONS_V2_BOOTSTRAP = Object.freeze({
+  // Guarded by default: V2 authoring does not affect gameplay until enabled.
+  useInReceiverBootstrap: false,
+});
+
 export const INTERACTIONS_V2 = Object.freeze({
   version: "2",
   enabled: true,
@@ -31,4 +36,3 @@ export const INTERACTIONS_V2 = Object.freeze({
     }),
   ]),
 });
-
