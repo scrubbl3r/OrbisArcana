@@ -46,6 +46,25 @@ function isSlot(v) {
   return SLOTS.has(String(v || "").trim().toUpperCase());
 }
 
+function collectWakeWinSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
+  const out = new Set();
+  const rules = Array.isArray(cfg && cfg.rules) ? cfg.rules : [];
+  for (const rule of rules) {
+    const actions = Array.isArray(rule && rule.then) ? rule.then : [];
+    for (const action of actions) {
+      const actionType = String(action && action.type || "").trim().toLowerCase();
+      if (actionType !== "wake_win") continue;
+      const spells = Array.isArray(action && action.spells) ? action.spells : [];
+      for (const rawSpellId of spells) {
+        const spellId = asId(rawSpellId).replace(/^spell\./, "");
+        if (!spellId) continue;
+        out.add(spellId);
+      }
+    }
+  }
+  return out;
+}
+
 export function validateSpellRuntimeRoutingV1() {
   const errors = [];
 
@@ -75,6 +94,21 @@ export function validateSpellRuntimeRoutingV1() {
   }
   if (extraOwnedImmediate.length) {
     errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS has ids not present as interactions-v2 immediate spell rules: ${extraOwnedImmediate.join(", ")}`);
+  }
+
+  const expectedWakeWindowSpellIds = collectWakeWinSpellIdsFromInteractionsV2(INTERACTIONS_V2);
+  const declaredWakeWindowSpellIds = new Set(
+    (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
+      .map((id) => asId(id))
+      .filter(Boolean)
+  );
+  const missingWakeWindowSpellIds = Array.from(expectedWakeWindowSpellIds).filter((id) => !declaredWakeWindowSpellIds.has(id)).sort();
+  const extraWakeWindowSpellIds = Array.from(declaredWakeWindowSpellIds).filter((id) => !expectedWakeWindowSpellIds.has(id)).sort();
+  if (missingWakeWindowSpellIds.length) {
+    errors.push(`WAKE_WINDOW_SPELL_IDS missing interactions-v2 wake_win spell ids: ${missingWakeWindowSpellIds.join(", ")}`);
+  }
+  if (extraWakeWindowSpellIds.length) {
+    errors.push(`WAKE_WINDOW_SPELL_IDS has ids not present in interactions-v2 wake_win actions: ${extraWakeWindowSpellIds.join(", ")}`);
   }
 
   for (const [token, runtimeIdRaw] of Object.entries(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN || {})) {
