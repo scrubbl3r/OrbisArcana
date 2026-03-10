@@ -2307,6 +2307,16 @@
           await teardownKwsForReinit();
         } catch (_) {}
         receiverModulesReady = false;
+        try {
+          const detail = String((e && (e.stack || e.message)) || e || "unknown init error");
+          const oneLine = detail.split("\n")[0].slice(0, 220);
+          if (els.rulesReadout) els.rulesReadout.textContent = "init_failed";
+          if (els.kwsReadout) els.kwsReadout.textContent = `init failed: ${oneLine}`;
+          if (els.kwsLog) {
+            els.kwsLog.innerHTML = `<div class="kwsLogLine bad">init_err:${oneLine}</div>`;
+          }
+          setStatus(`INIT FAILED <span class="dim">(${oneLine})</span>`, "bad");
+        } catch (_) {}
         console.warn("MVP systems init failed:", e);
       }
     }
