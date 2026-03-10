@@ -88,6 +88,12 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
       errors.push(`INTERACTIONS_V2.rules contains duplicate id: ${ruleId}`);
     }
     ids.add(ruleId);
+    if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled !== "boolean") {
+      errors.push(`rule ${ruleId} enabled must be boolean when present`);
+    }
+    if (Object.prototype.hasOwnProperty.call(r, "priority") && !Number.isFinite(Number(r.priority))) {
+      errors.push(`rule ${ruleId} priority must be a finite number when present`);
+    }
 
     const on = asObj(r.on);
     if (!Array.isArray(on.all) || !on.all.length) {
@@ -131,6 +137,9 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
       for (const a of r.then) {
         const action = asObj(a);
         const type = asText(action.type).toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(action, "enabled") && typeof action.enabled !== "boolean") {
+          errors.push(`rule ${ruleId} action enabled must be boolean when present`);
+        }
         if (type !== "wake_win" && type !== "event") {
           errors.push(`rule ${ruleId} has unsupported action type: ${type || "(empty)"}`);
           continue;
@@ -177,6 +186,19 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
             errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
           } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, eventId.toLowerCase())) {
             errors.push(`rule ${ruleId} event action references unknown event id: ${eventId}`);
+          }
+          if (Object.prototype.hasOwnProperty.call(action, "overrides")) {
+            const overrides = action.overrides;
+            if (!overrides || typeof overrides !== "object" || Array.isArray(overrides)) {
+              errors.push(`rule ${ruleId} event action overrides must be an object when present`);
+            } else {
+              for (const key of Object.keys(overrides)) {
+                if (!key) errors.push(`rule ${ruleId} event action overrides contains empty key`);
+                if (Object.prototype.hasOwnProperty.call(action, key)) {
+                  errors.push(`rule ${ruleId} event action has duplicate key in root and overrides: ${key}`);
+                }
+              }
+            }
           }
         }
       }
