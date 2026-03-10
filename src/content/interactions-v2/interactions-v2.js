@@ -12,7 +12,7 @@ export const INTERACTIONS_V2 = Object.freeze({
   defaults: Object.freeze({
     wakeWin: Object.freeze({ ttlMs: 2000 }),
     event: Object.freeze({
-      "event.grace": Object.freeze({ ms: 5000 }),
+      grace: Object.freeze({ ms: 500 }),
     }),
   }),
   rules: Object.freeze([

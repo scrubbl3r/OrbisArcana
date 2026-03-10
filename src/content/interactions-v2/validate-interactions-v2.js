@@ -20,6 +20,13 @@ function isEntityIdLike(v) {
   return /^[A-Za-z0-9_]+$/.test(String(v || ""));
 }
 
+function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
+  const allowed = new Set(allowedKeys);
+  for (const key of Object.keys(asObj(obj))) {
+    if (!allowed.has(key)) errors.push(`${context} contains unsupported key: ${key}`);
+  }
+}
+
 function normalizeConditionId(type, idRaw) {
   const id = asText(idRaw).toLowerCase();
   const t = asText(type).toLowerCase();
@@ -57,6 +64,7 @@ const KNOWN_ORB_STATE_IDS = new Set(
 export function validateInteractionsV2(input = INTERACTIONS_V2) {
   const errors = [];
   const cfg = asObj(input);
+  pushUnsupportedKeys(errors, "INTERACTIONS_V2", cfg, ["version", "enabled", "defaults", "rules"]);
 
   if (asText(cfg.version) !== "2") {
     errors.push("INTERACTIONS_V2.version must be \"2\"");
@@ -70,6 +78,7 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "defaults")) {
     const defaults = asObj(cfg.defaults);
+    pushUnsupportedKeys(errors, "INTERACTIONS_V2.defaults", defaults, ["wakeWin", "event"]);
     if (Object.prototype.hasOwnProperty.call(defaults, "wakeWin")) {
       const wakeWin = asObj(defaults.wakeWin);
       for (const key of Object.keys(wakeWin)) {
@@ -114,6 +123,7 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
       errors.push(`INTERACTIONS_V2.rules contains duplicate id: ${ruleId}`);
     }
     ids.add(ruleId);
+    pushUnsupportedKeys(errors, `rule ${ruleId}`, r, ["id", "on", "then", "enabled", "priority"]);
     if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled !== "boolean") {
       errors.push(`rule ${ruleId} enabled must be boolean when present`);
     }
@@ -122,12 +132,14 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
     }
 
     const on = asObj(r.on);
+    pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["all"]);
     if (!Array.isArray(on.all) || !on.all.length) {
       errors.push(`rule ${ruleId} must define on.all[]`);
     } else {
       const seenConditions = new Set();
       for (const c of on.all) {
         const cond = asObj(c);
+        pushUnsupportedKeys(errors, `rule ${ruleId} condition`, cond, ["type", "id"]);
         const type = asText(cond.type).toLowerCase();
         const id = asText(cond.id);
         const normalizedId = normalizeConditionId(type, id);
