@@ -1,0 +1,28 @@
+{
+  "schema": "orbis.rule_engine_v2.milestone",
+  "generatedAt": "2026-03-10T16:52:07.960Z",
+  "gitRef": "0a537bc",
+  "steps": {
+    "ready": {
+      "ok": true,
+      "status": 0
+    },
+    "batch": {
+      "ok": true,
+      "status": 0,
+      "skipped": false
+    }
+  },
+  "health": {
+    "schema": "orbis.rule_engine_v2.health",
+    "generatedAt": "2026-03-10T16:52:07.902Z",
+    "spellbookOk": true,
+    "interactionsOk": true,
+    "bootstrapUsesV2Adapter": true,
+    "legacyBridgeUsesV2Rules": true,
+    "interactionsRuleCount": 1,
+    "projectedRuleCount": 1,
+    "driftRuleIds": []
+  },
+  "pass": true
+}

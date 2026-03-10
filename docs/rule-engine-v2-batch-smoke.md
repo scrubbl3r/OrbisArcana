@@ -19,6 +19,10 @@ This runs:
 1. `ready:v2` (cutover health + guards)
 2. `smoke:batch:v2` (multi-case validator/projection suite)
 
+It also writes a checkpoint report:
+
+- `/docs/rule-engine-v2.milestone-smoke.json`
+
 ## What it covers
 
 - baseline validate/build pass

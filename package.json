@@ -5,7 +5,7 @@
     "doctor:v2": "node tools/rule-engine-v2/doctor-v2.mjs",
     "ready:v2": "node tools/rule-engine-v2/ready-check.mjs",
     "smoke:batch:v2": "node tools/rule-engine-v2/smoke-batch-v2.mjs",
-    "smoke:milestone:v2": "npm run ready:v2 && npm run smoke:batch:v2"
+    "smoke:milestone:v2": "node tools/rule-engine-v2/milestone-check-v2.mjs"
   },
   "dependencies": {
     "onnxruntime-web": "1.22.0"
