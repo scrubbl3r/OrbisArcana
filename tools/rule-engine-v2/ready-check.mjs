@@ -13,6 +13,9 @@ if (doctor.status !== 0) process.exit(doctor.status || 1);
 const shakeRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-shake-detonation-regression-v2.mjs"], { stdio: "inherit" });
 if (shakeRegression.status !== 0) process.exit(shakeRegression.status || 1);
 
+const wakeLoadRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-wake-window-load-regression-v2.mjs"], { stdio: "inherit" });
+if (wakeLoadRegression.status !== 0) process.exit(wakeLoadRegression.status || 1);
+
 const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
 const health = JSON.parse(readFileSync(healthPath, "utf8"));
 
