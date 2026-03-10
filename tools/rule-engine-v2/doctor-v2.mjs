@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { buildRulesV1FromInteractionsV2, INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
@@ -32,6 +32,19 @@ runPreSmoke();
 
 const driftIds = computeDrift();
 const snapshot = loadSnapshot();
+const health = {
+  schema: "orbis.rule_engine_v2.health",
+  generatedAt: new Date().toISOString(),
+  spellbookOk: snapshot?.validation?.spellbookV2?.ok === true,
+  interactionsOk: snapshot?.validation?.interactionsV2?.ok === true,
+  bootstrapUsesV2Adapter: snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap === true,
+  legacyBridgeUsesV2Rules: SPELL_RULES_V1_LEGACY_BRIDGE?.useInteractionsV2Rules === true,
+  interactionsRuleCount: Number(snapshot?.counts?.interactionsV2Rules || 0),
+  projectedRuleCount: Number(snapshot?.counts?.projectedRuleEngineV1Rules || 0),
+  driftRuleIds: driftIds,
+};
+const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
+writeFileSync(healthPath, JSON.stringify(health, null, 2) + "\n", "utf8");
 
 console.log("[doctor:v2] ----");
 console.log(`[doctor:v2] spellbook ok: ${snapshot?.validation?.spellbookV2?.ok === true}`);
@@ -41,4 +54,5 @@ console.log(`[doctor:v2] legacy bridge uses v2 rules: ${SPELL_RULES_V1_LEGACY_BR
 console.log(`[doctor:v2] rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules || 0}/${snapshot?.counts?.projectedRuleEngineV1Rules || 0}`);
 console.log(`[doctor:v2] legacy-projection drift ids: ${driftIds.length}`);
 if (driftIds.length) console.log(`[doctor:v2] drift: ${driftIds.join(", ")}`);
+console.log(`[doctor:v2] wrote health: ${healthPath}`);
 console.log("[doctor:v2] ----");

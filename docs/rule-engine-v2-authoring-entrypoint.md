@@ -40,3 +40,4 @@
   - Prints differences between legacy static V1 fallback rules and V2 projection.
 - `npm run doctor:v2`
   - Runs pre-smoke and prints concise SSOT health summary.
+  - Also writes `docs/rule-engine-v2.health.json`.
