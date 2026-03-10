@@ -9,6 +9,15 @@ function asText(v) {
   return String(v == null ? "" : v).trim();
 }
 
+function isFiniteNonNegative(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0;
+}
+
+function isEntityIdLike(v) {
+  return /^[A-Za-z0-9_]+$/.test(String(v || ""));
+}
+
 export function validateInteractionsV2(input = INTERACTIONS_V2) {
   const errors = [];
   const cfg = asObj(input);
@@ -22,6 +31,26 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
   if (!Array.isArray(cfg.rules)) {
     errors.push("INTERACTIONS_V2.rules must be an array");
     return { ok: false, errors };
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, "defaults")) {
+    const defaults = asObj(cfg.defaults);
+    if (Object.prototype.hasOwnProperty.call(defaults, "wakeWin")) {
+      const wakeWin = asObj(defaults.wakeWin);
+      if (Object.prototype.hasOwnProperty.call(wakeWin, "ttlMs") && !isFiniteNonNegative(wakeWin.ttlMs)) {
+        errors.push("INTERACTIONS_V2.defaults.wakeWin.ttlMs must be a finite number >= 0 when present");
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(defaults, "event")) {
+      const eventDefaults = asObj(defaults.event);
+      for (const [eventId, eventArgs] of Object.entries(eventDefaults)) {
+        if (!isEntityIdLike(eventId)) {
+          errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
+        }
+        if (!eventArgs || typeof eventArgs !== "object" || Array.isArray(eventArgs)) {
+          errors.push(`INTERACTIONS_V2.defaults.event[${eventId}] must be an object`);
+        }
+      }
+    }
   }
 
   const ids = new Set();
@@ -43,10 +72,16 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
     } else {
       for (const c of on.all) {
         const cond = asObj(c);
-        const type = asText(cond.type);
+        const type = asText(cond.type).toLowerCase();
         const id = asText(cond.id);
         if (!type) errors.push(`rule ${ruleId} has on.all condition missing type`);
         if (!id) errors.push(`rule ${ruleId} has on.all condition missing id`);
+        if (type && type !== "spell" && type !== "gesture" && type !== "orb_state") {
+          errors.push(`rule ${ruleId} has unsupported on.all condition type: ${type}`);
+        }
+        if (id && !isEntityIdLike(id)) {
+          errors.push(`rule ${ruleId} has invalid on.all id shape (use letters/numbers/_): ${id}`);
+        }
         if (type === "spell" && id && !Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id.toLowerCase())) {
           errors.push(`rule ${ruleId} references inactive or unknown spell id: ${id}`);
         }
@@ -58,7 +93,7 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
     } else {
       for (const a of r.then) {
         const action = asObj(a);
-        const type = asText(action.type);
+        const type = asText(action.type).toLowerCase();
         if (type !== "wake_win" && type !== "event") {
           errors.push(`rule ${ruleId} has unsupported action type: ${type || "(empty)"}`);
           continue;
@@ -66,10 +101,29 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
         if (type === "wake_win") {
           if (!Array.isArray(action.spells) || !action.spells.length) {
             errors.push(`rule ${ruleId} wake_win action requires spells[]`);
+          } else {
+            for (const spellId of action.spells) {
+              const id = asText(spellId);
+              if (!isEntityIdLike(id)) {
+                errors.push(`rule ${ruleId} wake_win spell has invalid id shape: ${id}`);
+                continue;
+              }
+              if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id.toLowerCase())) {
+                errors.push(`rule ${ruleId} wake_win references inactive or unknown spell id: ${id}`);
+              }
+            }
+          }
+          if (Object.prototype.hasOwnProperty.call(action, "ttlMs") && !isFiniteNonNegative(action.ttlMs)) {
+            errors.push(`rule ${ruleId} wake_win ttlMs must be a finite number >= 0 when present`);
           }
         }
-        if (type === "event" && !asText(action.id)) {
-          errors.push(`rule ${ruleId} event action requires id`);
+        if (type === "event") {
+          const eventId = asText(action.id);
+          if (!eventId) {
+            errors.push(`rule ${ruleId} event action requires id`);
+          } else if (!isEntityIdLike(eventId)) {
+            errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
+          }
         }
       }
     }
@@ -77,4 +131,3 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
 
   return { ok: errors.length === 0, errors };
 }
-
