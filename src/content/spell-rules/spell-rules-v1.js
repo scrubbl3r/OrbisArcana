@@ -1,12 +1,19 @@
 // Rule Engine v1 scaffold.
 // Not wired into gameplay runtime yet; this file defines target schema shape.
+import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions-v2/index.js";
 import { WAKE_WINDOW_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
+
+export const SPELL_RULES_V1_LEGACY_BRIDGE = Object.freeze({
+  // Keep false until you intentionally migrate V1 sample rules to V2 projection.
+  // This avoids silent behavior shifts while the two samples are still diverged.
+  useInteractionsV2Rules: false,
+});
 
 const DEFAULT_WAKE_WIN_SPELLS = Object.freeze(
   Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS.slice() : []
 );
 
-export const SPELL_RULES_V1 = Object.freeze([
+const SPELL_RULES_V1_STATIC = Object.freeze([
   Object.freeze({
     id: "r_rota_yspin_charged",
     on: Object.freeze([
@@ -38,3 +45,17 @@ export const SPELL_RULES_V1 = Object.freeze([
     ]),
   }),
 ]);
+
+function resolveSpellRulesV1() {
+  if (!SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules) {
+    return SPELL_RULES_V1_STATIC;
+  }
+  try {
+    return buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
+  } catch (err) {
+    console.warn("SPELL_RULES_V1 legacy bridge failed; falling back to static rules:", err);
+    return SPELL_RULES_V1_STATIC;
+  }
+}
+
+export const SPELL_RULES_V1 = resolveSpellRulesV1();

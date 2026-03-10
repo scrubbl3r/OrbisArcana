@@ -100,3 +100,14 @@ export function buildRuleEngineV1FromInteractionsV2({
   });
 }
 
+export function buildRulesV1FromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
+  const validation = validateInteractionsV2(interactionsV2);
+  if (!validation.ok) {
+    throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
+  }
+  return Object.freeze(
+    (Array.isArray(interactionsV2.rules) ? interactionsV2.rules : [])
+      .map((r) => mapRuleToV1(r, asObj(interactionsV2.defaults)))
+      .filter(Boolean)
+  );
+}
