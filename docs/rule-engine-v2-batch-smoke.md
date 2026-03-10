@@ -44,3 +44,4 @@ It also writes a checkpoint report:
 - Every slice: `npm run ready:v2`
 - Every 5 slices (or before push): `npm run smoke:milestone:v2`
 - Optional trend-only refresh: `npm run trend:milestone:v2`
+- Quick summary view: `npm run status:v2`

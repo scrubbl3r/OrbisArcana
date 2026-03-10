@@ -6,7 +6,8 @@
     "ready:v2": "node tools/rule-engine-v2/ready-check.mjs",
     "smoke:batch:v2": "node tools/rule-engine-v2/smoke-batch-v2.mjs",
     "smoke:milestone:v2": "node tools/rule-engine-v2/milestone-check-v2.mjs",
-    "trend:milestone:v2": "node tools/rule-engine-v2/milestone-trend-v2.mjs"
+    "trend:milestone:v2": "node tools/rule-engine-v2/milestone-trend-v2.mjs",
+    "status:v2": "node tools/rule-engine-v2/status-v2.mjs"
   },
   "dependencies": {
     "onnxruntime-web": "1.22.0"
