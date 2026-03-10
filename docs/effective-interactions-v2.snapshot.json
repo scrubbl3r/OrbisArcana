@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T23:22:35.055Z",
+  "generatedAt": "2026-03-10T23:25:48.573Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true

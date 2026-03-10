@@ -105,9 +105,40 @@ function buildMasterControlJson() {
   };
 }
 
+function buildMasterControlAuthoringJson() {
+  const spells = Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [];
+  const activeSpells = spells
+    .filter((s) => s && s.active !== false)
+    .map((s) => ({
+      id: String(s.id || "").trim().toLowerCase(),
+      phrase: String(s.phrase || "").trim().toLowerCase(),
+      onnx: String(s.onnx || "").trim().toLowerCase(),
+      confidence: Number.isFinite(Number(s.confidence)) ? Number(s.confidence) : 0.6,
+      cooldownMs: Number.isFinite(Number(s.cooldownMs)) ? Number(s.cooldownMs) : 0,
+    }));
+  const defaults = (INTERACTIONS_V2 && INTERACTIONS_V2.defaults && typeof INTERACTIONS_V2.defaults === "object")
+    ? INTERACTIONS_V2.defaults
+    : {};
+  const rules = Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules)
+    ? INTERACTIONS_V2.rules
+    : [];
+
+  return {
+    schema: "orbis.master_control_v2.authoring",
+    generatedAt: new Date().toISOString(),
+    enabled: !!(INTERACTIONS_V2 && INTERACTIONS_V2.enabled !== false),
+    defaults,
+    spells: activeSpells,
+    rules,
+  };
+}
+
 const outPath = resolve(process.cwd(), "docs/master-control-v2.md");
 writeFileSync(outPath, buildDoc(), "utf8");
 console.log(`[master-control-doc:v2] wrote ${outPath}`);
 const outJsonPath = resolve(process.cwd(), "docs/master-control-v2.json");
 writeFileSync(outJsonPath, JSON.stringify(buildMasterControlJson(), null, 2) + "\n", "utf8");
 console.log(`[master-control-doc:v2] wrote ${outJsonPath}`);
+const outAuthoringJsonPath = resolve(process.cwd(), "docs/master-control-v2.authoring.json");
+writeFileSync(outAuthoringJsonPath, JSON.stringify(buildMasterControlAuthoringJson(), null, 2) + "\n", "utf8");
+console.log(`[master-control-doc:v2] wrote ${outAuthoringJsonPath}`);
