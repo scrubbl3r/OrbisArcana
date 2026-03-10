@@ -1,4 +1,6 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 import {
   SPELLBOOK_V2,
   INTERACTIONS_V2,
@@ -12,10 +14,65 @@ import {
   SPELL_RULES_V1_LEGACY_BRIDGE,
 } from "../../src/content/spell-rules/spell-rules-v1.js";
 
+const OWW_MANIFEST_PATH = "tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json";
+
 function fail(message, details = []) {
   console.error(`[pre-smoke] FAIL: ${message}`);
   for (const line of details) console.error(`  - ${line}`);
   process.exit(1);
+}
+
+function loadJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch (err) {
+    fail("json load failed", [`${path}: ${err && err.message ? err.message : String(err)}`]);
+  }
+  return null;
+}
+
+function verifyKwsManifestCoverage() {
+  const manifestAbs = resolve(process.cwd(), OWW_MANIFEST_PATH);
+  const manifest = loadJson(manifestAbs);
+  const models = Array.isArray(manifest && manifest.models) ? manifest.models : [];
+  const modelBaseByName = Object.create(null);
+  const missingFiles = [];
+  for (const entry of models) {
+    const modelPath = String(entry && (entry.path || entry.url) || "").trim();
+    if (!modelPath) continue;
+    const absPath = resolve(dirname(manifestAbs), modelPath);
+    const base = basename(absPath).toLowerCase();
+    modelBaseByName[base] = absPath;
+    if (!existsSync(absPath)) {
+      missingFiles.push(`manifest model missing file: ${base} -> ${absPath}`);
+      continue;
+    }
+    const dataPath = `${absPath}.data`;
+    if (!existsSync(dataPath)) {
+      missingFiles.push(`manifest model missing data pair: ${base} -> ${dataPath}`);
+    }
+  }
+  if (missingFiles.length) {
+    fail("kws manifest model files invalid", missingFiles);
+  }
+
+  const activeSpells = (Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [])
+    .filter((s) => s && s.active !== false)
+    .map((s) => ({
+      id: String(s.id || "").trim().toLowerCase(),
+      onnx: String(s.onnx || "").trim().toLowerCase(),
+    }));
+  const coverageErrors = [];
+  for (const spell of activeSpells) {
+    if (!spell.id || !spell.onnx) continue;
+    const expectedBase = `${spell.onnx}.onnx`;
+    if (!modelBaseByName[expectedBase]) {
+      coverageErrors.push(`active spell missing manifest model: spell=${spell.id} expected=${expectedBase}`);
+    }
+  }
+  if (coverageErrors.length) {
+    fail("kws manifest does not cover active spellbook", coverageErrors);
+  }
 }
 
 const spellbookErrors = validateSpellbookV2(SPELLBOOK_V2);
@@ -27,6 +84,8 @@ const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
 if (!interactionsResult.ok) {
   fail("interactions-v2 validation failed", Array.isArray(interactionsResult.errors) ? interactionsResult.errors : []);
 }
+
+verifyKwsManifestCoverage();
 
 if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap !== true) {
   fail("runtime cutover guard failed", [
