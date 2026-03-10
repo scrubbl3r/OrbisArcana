@@ -13,6 +13,11 @@ export const EVENT_DEFINITIONS_V1 = Object.freeze([
     defaultArgs: Object.freeze({ ms: 500 }),
   }),
   Object.freeze({
+    id: "domus_teleport",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
     id: "orb_state",
     type: "event",
     defaultArgs: Object.freeze({ state: "normal" }),

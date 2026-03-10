@@ -18,6 +18,12 @@ export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
   "vectus",
 ]);
 
+// Immediate voice spells that are owned by the rule engine path.
+// Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
+export const RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS = Object.freeze([
+  "domus",
+]);
+
 export const AXIS_SPELL_IDS = Object.freeze([
   "pyro",
   "fridgis",

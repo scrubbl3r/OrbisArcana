@@ -13,6 +13,18 @@ export const SPELL_RULES_V1_LEGACY_BRIDGE = Object.freeze({
 
 export const SPELL_RULES_V1_STATIC = Object.freeze([
   Object.freeze({
+    id: "r_domus_immediate",
+    on: Object.freeze([
+      Object.freeze({ type: "spell", id: "domus" }),
+    ]),
+    then: Object.freeze([
+      Object.freeze({
+        type: "event",
+        id: "domus_teleport",
+      }),
+    ]),
+  }),
+  Object.freeze({
     id: "r_rota_yspin_charged",
     on: Object.freeze([
       Object.freeze({ type: "spell", id: "rota" }),

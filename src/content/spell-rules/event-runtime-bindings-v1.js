@@ -17,6 +17,13 @@ export const EVENT_RUNTIME_BINDINGS_V1 = Object.freeze([
     }),
   }),
   Object.freeze({
+    id: "domus_teleport",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "domus_teleport",
+    }),
+  }),
+  Object.freeze({
     id: "orb_state",
     runtime: Object.freeze({
       kind: "orb_event",

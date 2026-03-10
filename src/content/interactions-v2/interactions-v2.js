@@ -17,6 +17,17 @@ export const INTERACTIONS_V2 = Object.freeze({
   }),
   rules: Object.freeze([
     Object.freeze({
+      id: "r_domus_immediate",
+      on: Object.freeze({
+        all: Object.freeze([
+          Object.freeze({ type: "spell", id: "domus" }),
+        ]),
+      }),
+      then: Object.freeze([
+        Object.freeze({ type: "event", id: "domus_teleport" }),
+      ]),
+    }),
+    Object.freeze({
       id: "r_rota_yspin_charged",
       on: Object.freeze({
         all: Object.freeze([

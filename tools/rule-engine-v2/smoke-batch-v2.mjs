@@ -13,9 +13,10 @@ function fail(message) {
   process.exit(1);
 }
 
-function firstRule(cfg) {
-  const r = Array.isArray(cfg.rules) ? cfg.rules[0] : null;
-  if (!r || typeof r !== "object") fail("missing first rule in INTERACTIONS_V2");
+function ruleById(cfg, ruleId) {
+  const list = Array.isArray(cfg.rules) ? cfg.rules : [];
+  const r = list.find((item) => item && String(item.id || "").trim() === String(ruleId || "").trim());
+  if (!r || typeof r !== "object") fail(`missing rule in INTERACTIONS_V2: ${ruleId}`);
   return r;
 }
 
@@ -65,14 +66,14 @@ function run() {
 
   {
     const cfg = clone(INTERACTIONS_V2);
-    const rule = firstRule(cfg);
+    const rule = ruleById(cfg, "r_rota_yspin_charged");
     rule.on.all[0] = { type: "spell", id: "gesture.y_spin" };
     expectValidationFail("condition.prefix_mismatch", cfg, "condition type/id prefix mismatch");
   }
 
   {
     const cfg = clone(INTERACTIONS_V2);
-    const rule = firstRule(cfg);
+    const rule = ruleById(cfg, "r_rota_yspin_charged");
     const wakeWin = findFirstAction(rule, "wake_win");
     if (!wakeWin || !Array.isArray(wakeWin.spells) || !wakeWin.spells.length) fail("wake_win action missing");
     wakeWin.spells[0] = "gesture.y_spin";
@@ -81,7 +82,7 @@ function run() {
 
   {
     const cfg = clone(INTERACTIONS_V2);
-    const rule = firstRule(cfg);
+    const rule = ruleById(cfg, "r_rota_yspin_charged");
     const evt = findFirstAction(rule, "event");
     if (!evt) fail("event action missing");
     evt.id = "spell.rota";
@@ -90,7 +91,7 @@ function run() {
 
   {
     const cfg = clone(INTERACTIONS_V2);
-    const rule = firstRule(cfg);
+    const rule = ruleById(cfg, "r_rota_yspin_charged");
     rule.on.all[0] = { type: "spell", id: "spell." };
     expectValidationFail("condition.incomplete_qualified_id", cfg, "incomplete on.all id");
   }
@@ -111,7 +112,7 @@ function run() {
 
   {
     const cfg = clone(INTERACTIONS_V2);
-    const rule = firstRule(cfg);
+    const rule = ruleById(cfg, "r_rota_yspin_charged");
     rule.on.all = [
       { type: "spell", id: "spell.rota" },
       { type: "gesture", id: "gesture.y_spin" },
@@ -131,8 +132,10 @@ function run() {
     cfg.defaults.event = { "event.grace": { ms: 500 } };
     expectValidationPass("qualified_forms.validate", cfg);
     expectBuildPass("qualified_forms.build_normalization", cfg, (projected) => {
-      const projectedRule = Array.isArray(projected.rules) ? projected.rules[0] : null;
-      if (!projectedRule) fail("qualified_forms: projected first rule missing");
+      const projectedRule = Array.isArray(projected.rules)
+        ? projected.rules.find((r) => r && String(r.id || "") === "r_rota_yspin_charged")
+        : null;
+      if (!projectedRule) fail("qualified_forms: projected rota rule missing");
       const projectedGrace = (Array.isArray(projectedRule.then) ? projectedRule.then : []).find((a) =>
         a && a.type === "event" && a.id === "grace"
       );

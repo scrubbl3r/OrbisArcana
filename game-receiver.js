@@ -2014,7 +2014,11 @@
             energyChargeRatePps: ENERGY_CHARGE_RATE_PPS,
           },
         });
-        const spellDispatchSystem = createSpellDispatchSystem({ eventBus, resources: resourcesSystem });
+        const spellDispatchSystem = createSpellDispatchSystem({
+          eventBus,
+          resources: resourcesSystem,
+          ruleEngineEnabled: !ruleSchemaV1 || ruleSchemaV1.enabled !== false,
+        });
         if (typeof createRuleEngineV1PreviewSystem === "function" && ruleSchemaV1) {
           ruleEngineV1PreviewSystem = createRuleEngineV1PreviewSystem({
             eventBus,

@@ -3,6 +3,7 @@ import {
   WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN,
   SPELL_RUNTIME_ROUTING_BY_ID,
   SPELL_WINDOW_BYPASS_SPELL_IDS,
+  RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS,
 } from "../content/spells/spell-runtime-routing-v1.js";
 import {
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
@@ -21,7 +22,12 @@ import {
 // Expected methods (subset used here):
 // - getStoredGlobeCount(): number
 // - consumeStoredGlobe(payload): { ok: boolean, stored: number }
-export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), resources = null }) {
+export function createSpellDispatchSystem({
+  eventBus,
+  nowMs = () => Date.now(),
+  resources = null,
+  ruleEngineEnabled = true,
+} = {}) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     throw new Error("createSpellDispatchSystem requires eventBus.on/eventBus.emit");
   }
@@ -33,6 +39,11 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
   const TEMP_UNGATED_SPELL_IDS = new Set(
     (Array.isArray(SPELL_WINDOW_BYPASS_SPELL_IDS) ? SPELL_WINDOW_BYPASS_SPELL_IDS : [])
+      .map((id) => String(id || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
+  const RULE_ENGINE_OWNED_IMMEDIATE_IDS = new Set(
+    (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS : [])
       .map((id) => String(id || "").trim().toLowerCase())
       .filter(Boolean)
   );
@@ -398,6 +409,14 @@ export function createSpellDispatchSystem({ eventBus, nowMs = () => Date.now(), 
           spellId,
           cooldownMs: castCheck.cooldownMs,
           remainingMs: castCheck.remainingMs,
+          atMs: now,
+        });
+        return;
+      }
+      if (ruleEngineEnabled && RULE_ENGINE_OWNED_IMMEDIATE_IDS.has(spellId)) {
+        eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+          reason: "rule_engine_owned_immediate_spell",
+          spellId,
           atMs: now,
         });
         return;
