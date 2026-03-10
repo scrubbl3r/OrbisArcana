@@ -1,11 +1,11 @@
 {
   "schema": "orbis.rule_engine_v2.health",
-  "generatedAt": "2026-03-10T18:27:57.100Z",
+  "generatedAt": "2026-03-10T18:40:22.425Z",
   "spellbookOk": true,
   "interactionsOk": true,
   "bootstrapUsesV2Adapter": true,
   "legacyBridgeUsesV2Rules": true,
-  "interactionsRuleCount": 2,
-  "projectedRuleCount": 2,
+  "interactionsRuleCount": 5,
+  "projectedRuleCount": 5,
   "driftRuleIds": []
 }

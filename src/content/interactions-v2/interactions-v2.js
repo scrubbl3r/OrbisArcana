@@ -17,6 +17,39 @@ export const INTERACTIONS_V2 = Object.freeze({
   }),
   rules: Object.freeze([
     Object.freeze({
+      id: "r_electrum_immediate",
+      on: Object.freeze({
+        all: Object.freeze([
+          Object.freeze({ type: "spell", id: "electrum" }),
+        ]),
+      }),
+      then: Object.freeze([
+        Object.freeze({ type: "event", id: "electric_aoe" }),
+      ]),
+    }),
+    Object.freeze({
+      id: "r_fridgis_immediate",
+      on: Object.freeze({
+        all: Object.freeze([
+          Object.freeze({ type: "spell", id: "fridgis" }),
+        ]),
+      }),
+      then: Object.freeze([
+        Object.freeze({ type: "event", id: "frost_aoe" }),
+      ]),
+    }),
+    Object.freeze({
+      id: "r_pyro_immediate",
+      on: Object.freeze({
+        all: Object.freeze([
+          Object.freeze({ type: "spell", id: "pyro" }),
+        ]),
+      }),
+      then: Object.freeze([
+        Object.freeze({ type: "event", id: "flame_aoe" }),
+      ]),
+    }),
+    Object.freeze({
       id: "r_domus_immediate",
       on: Object.freeze({
         all: Object.freeze([

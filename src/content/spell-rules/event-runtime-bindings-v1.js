@@ -17,6 +17,20 @@ export const EVENT_RUNTIME_BINDINGS_V1 = Object.freeze([
     }),
   }),
   Object.freeze({
+    id: "flame_aoe",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "aoe_flame",
+    }),
+  }),
+  Object.freeze({
+    id: "frost_aoe",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "aoe_frost",
+    }),
+  }),
+  Object.freeze({
     id: "domus_teleport",
     runtime: Object.freeze({
       kind: "cast_action",

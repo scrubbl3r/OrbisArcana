@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-10T18:27:57.091Z",
+  "generatedAt": "2026-03-10T18:40:22.416Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -18,8 +18,8 @@
   },
   "counts": {
     "spellbookV2Spells": 8,
-    "interactionsV2Rules": 2,
-    "projectedRuleEngineV1Rules": 2
+    "interactionsV2Rules": 5,
+    "projectedRuleEngineV1Rules": 5
   },
   "spellbookV2": {
     "version": "2",
@@ -105,6 +105,57 @@
     },
     "rules": [
       {
+        "id": "r_electrum_immediate",
+        "on": {
+          "all": [
+            {
+              "type": "spell",
+              "id": "electrum"
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "event",
+            "id": "electric_aoe"
+          }
+        ]
+      },
+      {
+        "id": "r_fridgis_immediate",
+        "on": {
+          "all": [
+            {
+              "type": "spell",
+              "id": "fridgis"
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "event",
+            "id": "frost_aoe"
+          }
+        ]
+      },
+      {
+        "id": "r_pyro_immediate",
+        "on": {
+          "all": [
+            {
+              "type": "spell",
+              "id": "pyro"
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "event",
+            "id": "flame_aoe"
+          }
+        ]
+      },
+      {
         "id": "r_domus_immediate",
         "on": {
           "all": [
@@ -170,6 +221,51 @@
   },
   "projectedRuleEngineV1": {
     "rules": [
+      {
+        "id": "r_electrum_immediate",
+        "on": [
+          {
+            "type": "spell",
+            "id": "electrum"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "electric_aoe"
+          }
+        ]
+      },
+      {
+        "id": "r_fridgis_immediate",
+        "on": [
+          {
+            "type": "spell",
+            "id": "fridgis"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "frost_aoe"
+          }
+        ]
+      },
+      {
+        "id": "r_pyro_immediate",
+        "on": [
+          {
+            "type": "spell",
+            "id": "pyro"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "flame_aoe"
+          }
+        ]
+      },
       {
         "id": "r_domus_immediate",
         "on": [

@@ -1,7 +1,12 @@
 // Data-only signal catalog for Rule Engine v1 scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
 import { ACTIVE_SPELLS_BY_ID } from "../../voice/spellbook.js";
-import { WAKE_SPELL_IDS, WAKE_REQUIRED_SPELL_IDS, WAKE_WINDOW_SPELL_IDS } from "../spells/spell-runtime-routing-v1.js";
+import {
+  RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS,
+  WAKE_SPELL_IDS,
+  WAKE_REQUIRED_SPELL_IDS,
+  WAKE_WINDOW_SPELL_IDS,
+} from "../spells/spell-runtime-routing-v1.js";
 
 function buildWakeWindowSpellSignals() {
   return (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
@@ -43,10 +48,23 @@ function buildWakeRequiredSpellSignals() {
     }));
 }
 
+function buildRuleEngineOwnedImmediateSpellSignals() {
+  return (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS : [])
+    .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
+    .filter(Boolean)
+    .map((spellId) => Object.freeze({
+      id: `spell.${spellId}`,
+      type: "spell",
+      sourceEvent: "voice.spell_detected",
+      where: Object.freeze({ path: "spell.id", eq: spellId }),
+    }));
+}
+
 export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
   ...buildWakeWindowSpellSignals(),
   ...buildWakeSpellSignals(),
   ...buildWakeRequiredSpellSignals(),
+  ...buildRuleEngineOwnedImmediateSpellSignals(),
   Object.freeze({
     id: "gesture.y_spin",
     type: "gesture",
