@@ -22,6 +22,9 @@ if (immediateOwnershipRegression.status !== 0) process.exit(immediateOwnershipRe
 const flatSpinGatingRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-flat-spin-gating-regression-v2.mjs"], { stdio: "inherit" });
 if (flatSpinGatingRegression.status !== 0) process.exit(flatSpinGatingRegression.status || 1);
 
+const wakeWindowAxisPrereqRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-wake-window-axis-prereq-regression-v2.mjs"], { stdio: "inherit" });
+if (wakeWindowAxisPrereqRegression.status !== 0) process.exit(wakeWindowAxisPrereqRegression.status || 1);
+
 const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
 const health = JSON.parse(readFileSync(healthPath, "utf8"));
 
