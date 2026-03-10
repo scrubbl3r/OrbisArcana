@@ -1609,6 +1609,7 @@
           },
           setRuleSchemaV1: (next = {}) => {
             ruleSchemaV1 = {
+              source: String(next.source || "").trim().toLowerCase() || "unknown",
               signals: Array.isArray(next.signals) ? next.signals.slice() : [],
               windows: Array.isArray(next.windows) ? next.windows.slice() : [],
               events: Array.isArray(next.events) ? next.events.slice() : [],
