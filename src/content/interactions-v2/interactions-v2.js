@@ -28,7 +28,7 @@ export const INTERACTIONS_V2 = Object.freeze({
       then: Object.freeze([
         Object.freeze({ type: "wake_win", spells: Object.freeze(["rota", "sanctum", "vectus"]) }),
         Object.freeze({ type: "event", id: "electric_aoe", range: 14 }),
-        Object.freeze({ type: "event", id: "grace" }),
+        Object.freeze({ type: "event", id: "event.grace" }),
         Object.freeze({ type: "event", id: "orb_state", overrides: Object.freeze({ state: "superheated" }) }),
       ]),
     }),
