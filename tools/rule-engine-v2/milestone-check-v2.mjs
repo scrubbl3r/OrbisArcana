@@ -53,6 +53,16 @@ const historyPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-histor
 appendFileSync(historyPath, JSON.stringify(report) + "\n", "utf8");
 console.log(`[milestone:v2] appended history: ${historyPath}`);
 
+const trendRun = spawnSync(process.execPath, ["tools/rule-engine-v2/milestone-trend-v2.mjs"], { stdio: "inherit" });
+if (trendRun.status !== 0) {
+  console.error("[milestone:v2] FAIL: milestone trend generation failed");
+  process.exit(trendRun.status || 1);
+}
+const trendPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json");
+report.trend = safeReadJson(trendPath);
+writeFileSync(outPath, JSON.stringify(report, null, 2) + "\n", "utf8");
+console.log(`[milestone:v2] refreshed report with trend: ${outPath}`);
+
 if (!report.pass) {
   console.error("[milestone:v2] FAIL");
   process.exit(1);
