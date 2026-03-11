@@ -37,7 +37,7 @@ export function createSpellDispatchSystem({
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
-  const TEMP_UNGATED_SPELL_IDS = new Set(
+  const TEMP_UNGATED_WORD_IDS = new Set(
     (Array.isArray(SPELL_WINDOW_BYPASS_WORD_IDS) ? SPELL_WINDOW_BYPASS_WORD_IDS : [])
       .map((id) => String(id || "").trim().toLowerCase())
       .filter(Boolean)
@@ -269,7 +269,7 @@ export function createSpellDispatchSystem({
 
       // Strict spell-tree enforcement:
       // - axis/wake-window tokens are valid only during an active flat-spin window.
-      const bypassFlatSpinGate = TEMP_UNGATED_SPELL_IDS.has(spellId);
+      const bypassFlatSpinGate = TEMP_UNGATED_WORD_IDS.has(spellId);
       if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isAxisSelect || isWakeWindowSelect)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "spell_window_required",

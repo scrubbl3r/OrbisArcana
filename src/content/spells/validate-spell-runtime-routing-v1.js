@@ -4,18 +4,18 @@ import {
   INTERACTIONS_V2,
 } from "../interactions-v2/interactions-v2.js";
 import {
-  AXIS_SPELL_IDS,
-  KWS_FLASH_TOKEN_SPELL_IDS,
-  KWS_INFER_DEFAULT_SPELL_ID,
-  KWS_ROW_BOTTOM_SPELL_IDS,
-  KWS_ROW_TOP_SPELL_IDS,
-  KWS_SIM_SPELL_IDS,
-  RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS,
+  AXIS_WORD_IDS,
+  KWS_FLASH_TOKEN_WORD_IDS,
+  KWS_INFER_DEFAULT_WORD_ID,
+  KWS_ROW_BOTTOM_WORD_IDS,
+  KWS_ROW_TOP_WORD_IDS,
+  KWS_SIM_WORD_IDS,
+  RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
   SPELL_RUNTIME_ROUTING,
-  WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN,
-  WAKE_WINDOW_SPELL_IDS,
-  WAKE_REQUIRED_SPELL_IDS,
-  WAKE_SPELL_IDS,
+  WAKE_WINDOW_RUNTIME_KEY_BY_WORD,
+  WAKE_WINDOW_WORD_IDS,
+  WAKE_REQUIRED_WORD_IDS,
+  WAKE_WORD_IDS,
 } from "./spell-runtime-routing-v1.js";
 
 const AXES = new Set(["x", "y", "z"]);
@@ -68,71 +68,71 @@ function collectWakeWinSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
 export function validateSpellRuntimeRoutingV1() {
   const errors = [];
 
-  checkSpellIdList(errors, "WAKE_SPELL_IDS", WAKE_SPELL_IDS);
-  checkSpellIdList(errors, "WAKE_REQUIRED_SPELL_IDS", WAKE_REQUIRED_SPELL_IDS);
-  checkSpellIdList(errors, "AXIS_SPELL_IDS", AXIS_SPELL_IDS);
-  checkSpellIdList(errors, "WAKE_WINDOW_SPELL_IDS", WAKE_WINDOW_SPELL_IDS);
-  checkSpellIdList(errors, "KWS_FLASH_TOKEN_SPELL_IDS", KWS_FLASH_TOKEN_SPELL_IDS);
-  checkSpellIdList(errors, "KWS_ROW_TOP_SPELL_IDS", KWS_ROW_TOP_SPELL_IDS);
-  checkSpellIdList(errors, "KWS_ROW_BOTTOM_SPELL_IDS", KWS_ROW_BOTTOM_SPELL_IDS);
-  checkSpellIdList(errors, "KWS_SIM_SPELL_IDS", KWS_SIM_SPELL_IDS);
+  checkSpellIdList(errors, "WAKE_WORD_IDS", WAKE_WORD_IDS);
+  checkSpellIdList(errors, "WAKE_REQUIRED_WORD_IDS", WAKE_REQUIRED_WORD_IDS);
+  checkSpellIdList(errors, "AXIS_WORD_IDS", AXIS_WORD_IDS);
+  checkSpellIdList(errors, "WAKE_WINDOW_WORD_IDS", WAKE_WINDOW_WORD_IDS);
+  checkSpellIdList(errors, "KWS_FLASH_TOKEN_WORD_IDS", KWS_FLASH_TOKEN_WORD_IDS);
+  checkSpellIdList(errors, "KWS_ROW_TOP_WORD_IDS", KWS_ROW_TOP_WORD_IDS);
+  checkSpellIdList(errors, "KWS_ROW_BOTTOM_WORD_IDS", KWS_ROW_BOTTOM_WORD_IDS);
+  checkSpellIdList(errors, "KWS_SIM_WORD_IDS", KWS_SIM_WORD_IDS);
 
-  const inferId = asId(KWS_INFER_DEFAULT_SPELL_ID);
-  if (!inferId) errors.push("KWS_INFER_DEFAULT_SPELL_ID is empty");
-  else if (!SPELLS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_SPELL_ID references unknown spell id: ${inferId}`);
+  const inferId = asId(KWS_INFER_DEFAULT_WORD_ID);
+  if (!inferId) errors.push("KWS_INFER_DEFAULT_WORD_ID is empty");
+  else if (!SPELLS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_WORD_ID references unknown spell id: ${inferId}`);
 
   const expectedOwnedImmediate = new Set(collectImmediateEventSpellIdsFromInteractionsV2(INTERACTIONS_V2));
   const declaredOwnedImmediate = new Set(
-    (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS : [])
+    (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
       .map((id) => asId(id))
       .filter(Boolean)
   );
   const missingOwnedImmediate = Array.from(expectedOwnedImmediate).filter((id) => !declaredOwnedImmediate.has(id)).sort();
   const extraOwnedImmediate = Array.from(declaredOwnedImmediate).filter((id) => !expectedOwnedImmediate.has(id)).sort();
   if (missingOwnedImmediate.length) {
-    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS missing interactions-v2 immediate spell ids: ${missingOwnedImmediate.join(", ")}`);
+    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS missing interactions-v2 immediate spell ids: ${missingOwnedImmediate.join(", ")}`);
   }
   if (extraOwnedImmediate.length) {
-    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS has ids not present as interactions-v2 immediate spell rules: ${extraOwnedImmediate.join(", ")}`);
+    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS has ids not present as interactions-v2 immediate spell rules: ${extraOwnedImmediate.join(", ")}`);
   }
 
   const expectedWakeWindowSpellIds = collectWakeWinSpellIdsFromInteractionsV2(INTERACTIONS_V2);
   const declaredWakeWindowSpellIds = new Set(
-    (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
+    (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
       .map((id) => asId(id))
       .filter(Boolean)
   );
   const missingWakeWindowSpellIds = Array.from(expectedWakeWindowSpellIds).filter((id) => !declaredWakeWindowSpellIds.has(id)).sort();
   const extraWakeWindowSpellIds = Array.from(declaredWakeWindowSpellIds).filter((id) => !expectedWakeWindowSpellIds.has(id)).sort();
   if (missingWakeWindowSpellIds.length) {
-    errors.push(`WAKE_WINDOW_SPELL_IDS missing interactions-v2 wake_win spell ids: ${missingWakeWindowSpellIds.join(", ")}`);
+    errors.push(`WAKE_WINDOW_WORD_IDS missing interactions-v2 wake_win spell ids: ${missingWakeWindowSpellIds.join(", ")}`);
   }
   if (extraWakeWindowSpellIds.length) {
-    errors.push(`WAKE_WINDOW_SPELL_IDS has ids not present in interactions-v2 wake_win actions: ${extraWakeWindowSpellIds.join(", ")}`);
+    errors.push(`WAKE_WINDOW_WORD_IDS has ids not present in interactions-v2 wake_win actions: ${extraWakeWindowSpellIds.join(", ")}`);
   }
 
   const runtimeKeyTokens = new Set(
-    Object.keys(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN || {})
+    Object.keys(WAKE_WINDOW_RUNTIME_KEY_BY_WORD || {})
       .map((token) => asId(token))
       .filter(Boolean)
   );
   const missingRuntimeKeyTokens = Array.from(declaredWakeWindowSpellIds).filter((id) => !runtimeKeyTokens.has(id)).sort();
   const extraRuntimeKeyTokens = Array.from(runtimeKeyTokens).filter((id) => !declaredWakeWindowSpellIds.has(id)).sort();
   if (missingRuntimeKeyTokens.length) {
-    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN missing token keys for wake window spells: ${missingRuntimeKeyTokens.join(", ")}`);
+    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD missing token keys for wake window spells: ${missingRuntimeKeyTokens.join(", ")}`);
   }
   if (extraRuntimeKeyTokens.length) {
-    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN has token keys not present in WAKE_WINDOW_SPELL_IDS: ${extraRuntimeKeyTokens.join(", ")}`);
+    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD has token keys not present in WAKE_WINDOW_WORD_IDS: ${extraRuntimeKeyTokens.join(", ")}`);
   }
 
-  for (const [token, runtimeIdRaw] of Object.entries(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN || {})) {
+  for (const [token, runtimeIdRaw] of Object.entries(WAKE_WINDOW_RUNTIME_KEY_BY_WORD || {})) {
     const runtimeId = asId(runtimeIdRaw);
     if (!runtimeId) {
-      errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN[${token}] has empty runtime id`);
+      errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD[${token}] has empty runtime id`);
       continue;
     }
     if (!SPELLS_BY_ID[runtimeId]) {
-      errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN[${token}] references unknown spell id: ${runtimeId}`);
+      errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD[${token}] references unknown spell id: ${runtimeId}`);
     }
   }
 

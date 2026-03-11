@@ -2,11 +2,11 @@ import { SPELLS_BY_ID } from "../../voice/spellbook.js";
 import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
 import { RULE_ENGINE_V1_MASTER_CONTROL } from "../spell-rules/rule-engine-v1-master-control.js";
 import {
-  AXIS_SPELL_IDS,
-  SPELL_RUNTIME_ROUTING_BY_ID,
-  WAKE_WINDOW_SPELL_IDS,
-  WAKE_REQUIRED_SPELL_IDS,
-  WAKE_SPELL_IDS,
+  AXIS_WORD_IDS,
+  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
+  WAKE_WINDOW_WORD_IDS,
+  WAKE_REQUIRED_WORD_IDS,
+  WAKE_WORD_IDS,
 } from "./spell-runtime-routing-v1.js";
 
 function asId(v) {
@@ -49,27 +49,27 @@ export function validateSpellSchemaIntegrityV1(options = {}) {
 
   // Every spellbook spell should have routing metadata during refactor.
   for (const spellId of Object.keys(SPELLS_BY_ID || {})) {
-    if (!SPELL_RUNTIME_ROUTING_BY_ID[spellId]) {
+    if (!SPELL_RUNTIME_ROUTING_BY_WORD_ID[spellId]) {
       errors.push(`missing routing entry for spellbook spell: ${spellId}`);
     }
   }
 
-  // Wake/class list entries should exist in spellbook.
-  for (const idRaw of Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : []) {
+  // Word lists should exist in spellbook.
+  for (const idRaw of Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_SPELL_IDS references unknown spell id: ${id}`);
+    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_WORD_IDS references unknown spell id: ${id}`);
   }
-  for (const idRaw of Array.isArray(WAKE_REQUIRED_SPELL_IDS) ? WAKE_REQUIRED_SPELL_IDS : []) {
+  for (const idRaw of Array.isArray(WAKE_REQUIRED_WORD_IDS) ? WAKE_REQUIRED_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_REQUIRED_SPELL_IDS references unknown spell id: ${id}`);
+    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_REQUIRED_WORD_IDS references unknown spell id: ${id}`);
   }
-  for (const idRaw of Array.isArray(AXIS_SPELL_IDS) ? AXIS_SPELL_IDS : []) {
+  for (const idRaw of Array.isArray(AXIS_WORD_IDS) ? AXIS_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`AXIS_SPELL_IDS references unknown spell id: ${id}`);
+    if (!SPELLS_BY_ID[id]) errors.push(`AXIS_WORD_IDS references unknown spell id: ${id}`);
   }
-  for (const idRaw of Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : []) {
+  for (const idRaw of Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_WINDOW_SPELL_IDS references unknown spell id: ${id}`);
+    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_WINDOW_WORD_IDS references unknown spell id: ${id}`);
   }
   // Every rule event action should have both definition and runtime binding.
   for (const rule of Array.isArray(rules) ? rules : []) {

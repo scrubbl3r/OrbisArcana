@@ -2,14 +2,14 @@
 // Runtime cutover will consume these IDs in a later slice.
 import { ACTIVE_SPELLS_BY_ID } from "../../voice/spellbook.js";
 import {
-  RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS,
-  WAKE_SPELL_IDS,
-  WAKE_REQUIRED_SPELL_IDS,
-  WAKE_WINDOW_SPELL_IDS,
+  RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
+  WAKE_WORD_IDS,
+  WAKE_REQUIRED_WORD_IDS,
+  WAKE_WINDOW_WORD_IDS,
 } from "../spells/spell-runtime-routing-v1.js";
 
 function buildWakeWindowSpellSignals() {
-  return (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
+  return (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
     .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
     .map((spellId) => Object.freeze({
@@ -21,7 +21,7 @@ function buildWakeWindowSpellSignals() {
 }
 
 function buildWakeSpellSignals() {
-  return (Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : [])
+  return (Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : [])
     .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
     .map((spellId) => {
@@ -37,7 +37,7 @@ function buildWakeSpellSignals() {
 }
 
 function buildWakeRequiredSpellSignals() {
-  return (Array.isArray(WAKE_REQUIRED_SPELL_IDS) ? WAKE_REQUIRED_SPELL_IDS : [])
+  return (Array.isArray(WAKE_REQUIRED_WORD_IDS) ? WAKE_REQUIRED_WORD_IDS : [])
     .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
     .map((spellId) => Object.freeze({
@@ -50,11 +50,11 @@ function buildWakeRequiredSpellSignals() {
 
 function buildRuleEngineOwnedImmediateSpellSignals() {
   const excluded = new Set([
-    ...(Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : []),
-    ...(Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : []),
-    ...(Array.isArray(WAKE_REQUIRED_SPELL_IDS) ? WAKE_REQUIRED_SPELL_IDS : []),
+    ...(Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : []),
+    ...(Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : []),
+    ...(Array.isArray(WAKE_REQUIRED_WORD_IDS) ? WAKE_REQUIRED_WORD_IDS : []),
   ].map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase()).filter(Boolean));
-  return (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS : [])
+  return (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
     .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
     .filter((spellId) => !!spellId && !excluded.has(spellId))
     .map((spellId) => Object.freeze({
