@@ -384,7 +384,7 @@ v0.2 status:
 
 Current status:
 - Implementation-facing inventory v2 created:
-  - `docs/state-ownership-inventory-v2.txt`
+  - `docs/state-ownership-inventory.txt`
 
 This should now be treated as the live ownership checkpoint doc.
 
@@ -461,4 +461,3 @@ Recommended order (next phase)
 The architecture has progressed significantly beyond the v0.2 planning state. The receiver is now much closer to a true composition shell: input ownership is split across dedicated systems and pipelines, resources ownership has moved into a resources system, spell execution is data-driven and modularized around castActionId, theme and VFX presets are shared SSOTs across game and lab, orb runtime logic is extracted into a pipeline with shared config, and receiver bootstrap/hydration is modularized. Event names are now centralized via a contracts module and key module interfaces have JSDoc contracts. The main remaining work is contract hardening (especially event payload schemas) and selective extraction of remaining large runtime chunks, especially VFX runtime implementations and eventually orb motion state ownership (`physState`).
 
 End of document.
-

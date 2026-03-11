@@ -1,4 +1,4 @@
-ORBIS ARCANA STATE OWNERSHIP INVENTORY (v2)
+ORBIS ARCANA STATE OWNERSHIP INVENTORY
 
 Purpose
 
@@ -19,7 +19,7 @@ Date context
   - spell cast executor + handler registry extraction
   - orb runtime pipeline extraction
   - theme + VFX preset SSOT setup
-  - event contracts v1
+  - event contracts consolidation
   - receiver bootstrap extraction
 
 --------------------------------------------------
@@ -355,4 +355,3 @@ Practical assessment
 4. Revisit VFX runtime extraction only after contract hardening is stable
 
 End of document.
-
