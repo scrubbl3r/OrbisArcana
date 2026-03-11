@@ -1,7 +1,7 @@
 # openWakeWord JS/WASM Migration Plan
 
 Date: 2026-03-05  
-Branch: `JS-WSAM-refactor`
+Branch: `JS-WASM-refactor`
 
 ## Outcome
 Migration completed: browser-native openWakeWord JS/WASM is the active KWS runtime.

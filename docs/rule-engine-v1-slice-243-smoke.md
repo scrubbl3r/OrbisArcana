@@ -4,7 +4,7 @@ Goal
 - Lock master schema doc to the implemented neutral contract.
 
 Checks
-- Open `docs/rule-engine-master-control-schema.md` and confirm the "Current Neutral Contract (Implemented)" section includes:
+- Open `docs/master-control-schema.md` and confirm the "Current Neutral Contract (Implemented)" section includes:
   - neutral intents only (`spell.axis_select`, `spell.wake_window_select`)
   - neutral payload fields only (`axisSpell`, `wakeWindowSpell`)
   - `axisSpellByAxis` KWS config naming

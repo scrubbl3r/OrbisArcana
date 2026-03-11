@@ -60,7 +60,7 @@ Schema validation feature implemented
 Spell chaining schema (new)
 - Runtime spells now support chained follow-up actions:
   - `postCastActions: [{ id, payload }]` (new)
-  - `postCastActionIds: []` (legacy compatibility still supported)
+  - `postCastActionIds: []` (compat alias still supported)
 - `ignis_rota` now uses:
   - `aoe_flame`
   - then `orb_super_grace` with payload `{ ms: 2500 }`
@@ -77,8 +77,8 @@ Event payload contract hardening (new pass)
   - `voice.spell_cast`
   - `input.shake_triggered`
   - `pickup.collected`
-  - `resources.energy_changed` (legacy id: `energy.bank_changed`)
-  - `resources.globes_changed` (legacy id: `energy.globe_inventory_changed`)
+  - `resources.energy_changed` (compat alias: `energy.bank_changed`)
+  - `resources.globes_changed` (compat alias: `energy.globe_inventory_changed`)
 - Added typed payload annotations at key emit sites in:
   - `world-system`
   - `input-gesture-system`
@@ -230,4 +230,3 @@ Current tuning sources
 This refactor wave successfully moved the project from “prototype with architecture intent” to a genuinely modular runtime with delegated systems, shared content-driven tuning, shared VFX presets, and schema-validated cross-slice mechanics.
 
 The next phase should emphasize contract hardening and targeted feature work rather than broad extraction.
-

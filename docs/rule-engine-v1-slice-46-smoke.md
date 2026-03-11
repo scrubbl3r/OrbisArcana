@@ -16,4 +16,4 @@ Quick Smoke (manual)
 - Revert and confirm recovery.
 
 4) Documentation sanity
-- Review `docs/rule-engine-master-control-schema.md` and confirm it matches current supported syntax.
+- Review `docs/master-control-schema.md` and confirm it matches current supported syntax.
