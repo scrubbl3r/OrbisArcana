@@ -11,8 +11,3 @@ export {
   buildRuleEngineFromInteractionsV2,
   buildRulesFromInteractionsV2,
 } from "./build-rule-engine-from-interactions-v2.js";
-// Legacy alias exports kept for compatibility during migration.
-export {
-  buildRuleEngineV1FromInteractionsV2,
-  buildRulesV1FromInteractionsV2,
-} from "./build-rule-engine-from-interactions-v2.js";
