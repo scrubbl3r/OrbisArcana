@@ -1,5 +1,6 @@
 // Canonical, human-friendly handles for interaction authoring.
 // These are aliases/reference constants only (no runtime behavior by themselves).
+// Docs index: docs/rule-engine-v2-docs-index.md
 
 export const SIGNAL_HANDLES_V2 = Object.freeze({
   // Spells

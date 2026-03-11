@@ -1,5 +1,8 @@
 # Rule Engine Compatibility
 
+Related index:
+- `docs/rule-engine-v2-docs-index.md`
+
 ## Purpose
 - Prevent config edits from drifting into bridge files.
 - Keep daily authoring in SSOT sources only.

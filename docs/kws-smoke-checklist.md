@@ -1,5 +1,8 @@
 # KWS Smoke Checklist (openWakeWord Browser / WASM)
 
+Related index:
+- `docs/rule-engine-v2-docs-index.md`
+
 Use this after any KWS/runtime refactor.
 
 ## 1) Boot + Auto Start

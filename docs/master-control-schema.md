@@ -1,5 +1,8 @@
 # Rule Engine Master Control Schema
 
+Related index:
+- `docs/rule-engine-v2-docs-index.md`
+
 ## Purpose
 - Single authoring SSOT for rule-engine behavior.
 - Define trigger chains (`on`) and outcomes (`then`) with optional per-rule/per-action toggles.

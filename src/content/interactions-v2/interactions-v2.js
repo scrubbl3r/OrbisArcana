@@ -1,5 +1,6 @@
 // V2 central interaction authoring SSOT.
 // This file is the canonical place for composing trigger/action chains.
+// Docs index: docs/rule-engine-v2-docs-index.md
 import {
   EVENT_HANDLES_V2,
   SIGNAL_HANDLES_V2,

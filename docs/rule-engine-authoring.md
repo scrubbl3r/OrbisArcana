@@ -1,5 +1,8 @@
 # Rule Engine Authoring
 
+Related index:
+- `docs/rule-engine-v2-docs-index.md`
+
 ## Daily Authoring Files (Primary)
 - `src/content/interactions-v2/interactions-v2.js`
   - Edit trigger/action chains here (`rules`).

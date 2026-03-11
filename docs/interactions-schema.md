@@ -1,5 +1,8 @@
 # Interactions Schema
 
+Related index:
+- `docs/rule-engine-v2-docs-index.md`
+
 ## Goal
 - One central behavior config for chaining spells, gestures, orb states, wake windows, and events.
 - One separate spell inventory file for wake-word availability (`active` true/false).

@@ -1,5 +1,8 @@
 # Rule Engine Smoke
 
+Related index:
+- `docs/rule-engine-v2-docs-index.md`
+
 Use this to reduce per-slice manual config edits.
 
 ## Primary Command

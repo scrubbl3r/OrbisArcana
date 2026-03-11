@@ -1,5 +1,8 @@
 # KWS Guardrails
 
+Related index:
+- `docs/rule-engine-v2-docs-index.md`
+
 This document captures runtime guardrails that should not be changed casually.
 
 ## Core Guardrails
