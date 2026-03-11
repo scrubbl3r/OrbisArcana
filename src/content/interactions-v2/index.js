@@ -9,7 +9,10 @@ export { validateInteractionsV2 } from "./validate-interactions-v2.js";
 export { validateSpellbookV2 } from "./validate-spellbook-v2.js";
 export {
   buildRuleEngineFromInteractionsV2,
-  buildRuleEngineV1FromInteractionsV2,
   buildRulesFromInteractionsV2,
+} from "./build-rule-engine-from-interactions-v2.js";
+// Legacy alias exports kept for compatibility during migration.
+export {
+  buildRuleEngineV1FromInteractionsV2,
   buildRulesV1FromInteractionsV2,
 } from "./build-rule-engine-from-interactions-v2.js";
