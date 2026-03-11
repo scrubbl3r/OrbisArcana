@@ -1223,8 +1223,8 @@
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
-    const RULE_ENGINE_V1_EXECUTE_ACTIONS = false;
-    const RULE_ENGINE_EXECUTE_ACTIONS = RULE_ENGINE_V1_EXECUTE_ACTIONS;
+    const RULE_ENGINE_EXECUTE_ACTIONS = false;
+    const RULE_ENGINE_V1_EXECUTE_ACTIONS = RULE_ENGINE_EXECUTE_ACTIONS;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
@@ -2246,7 +2246,8 @@
             executeSpellCastAction(castActionId, {
               intent: "rule_engine.event",
               payload: {
-                trigger: "rule_engine_v1",
+                trigger: "rule_engine",
+                triggerLegacy: "rule_engine_v1",
                 actionId,
                 ruleId: String(p.ruleId || ""),
                 atMs: Number(p.atMs) || performance.now(),
@@ -2259,7 +2260,8 @@
             const eventId = String(runtime && runtime.event || "");
             if (!eventId) return;
             eventBus.emit(eventId, {
-              trigger: "rule_engine_v1",
+              trigger: "rule_engine",
+              triggerLegacy: "rule_engine_v1",
               actionId,
               ruleId: String(p.ruleId || ""),
               atMs: Number(p.atMs) || performance.now(),
@@ -2286,8 +2288,11 @@
           inputDynamicsSystem,
           inputGestureSystem,
           orbRuntimeState,
+          ruleSchema,
           ruleSchemaV1: ruleSchema,
+          ruleEnginePreviewSystem,
           ruleEngineV1PreviewSystem: ruleEnginePreviewSystem,
+          ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
           ruleEngineV1ExecuteActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
           resourcesSystem,
           orbFxSystem,
