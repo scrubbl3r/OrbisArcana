@@ -252,7 +252,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   function buildSafeDisabledRuleSchema() {
     return Object.freeze({
       id: "rule_engine_safe_disabled",
-      version: "1",
+      version: "2",
       enabled: false,
       signals: Object.freeze([]),
       windows: Object.freeze([]),
@@ -281,7 +281,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const fallbackRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
     ? ruleEngineMasterControl
     : Object.freeze({
-        version: "1",
+        version: "2",
         signals: [],
         windows: [],
         events: [],
