@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
-  RULE_ENGINE_V1_MASTER_CONTROL,
+  RULE_ENGINE_MASTER_CONTROL,
 } from "../../src/content/spell-rules/index.js";
 import {
   SPELLBOOK_V2,
@@ -104,8 +104,8 @@ if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstr
 }
 const projectedRules = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
 const projectedById = new Map((Array.isArray(projectedRules) ? projectedRules : []).map((r) => [String(r && r.id || ""), r]));
-const runtimeRules = Array.isArray(RULE_ENGINE_V1_MASTER_CONTROL?.rules)
-  ? RULE_ENGINE_V1_MASTER_CONTROL.rules
+const runtimeRules = Array.isArray(RULE_ENGINE_MASTER_CONTROL?.rules)
+  ? RULE_ENGINE_MASTER_CONTROL.rules
   : [];
 const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));
 const allIds = new Set([...projectedById.keys(), ...runtimeById.keys()].filter(Boolean));
@@ -116,7 +116,7 @@ for (const id of allIds) {
   if (a !== b) driftIds.push(id);
 }
 if (driftIds.length) {
-  fail("projected V1 runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
+  fail("projected runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
 }
 
 const snapshotRun = spawnSync(

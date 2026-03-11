@@ -1,5 +1,5 @@
 import { buildRulesV1FromInteractionsV2, INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
-import { RULE_ENGINE_V1_MASTER_CONTROL } from "../../src/content/spell-rules/index.js";
+import { RULE_ENGINE_MASTER_CONTROL } from "../../src/content/spell-rules/index.js";
 
 function stable(v) {
   return JSON.stringify(v, null, 2);
@@ -16,8 +16,8 @@ function byId(arr) {
 }
 
 const projected = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
-const runtime = Array.isArray(RULE_ENGINE_V1_MASTER_CONTROL?.rules)
-  ? RULE_ENGINE_V1_MASTER_CONTROL.rules
+const runtime = Array.isArray(RULE_ENGINE_MASTER_CONTROL?.rules)
+  ? RULE_ENGINE_MASTER_CONTROL.rules
   : [];
 
 const projectedById = byId(projected);
