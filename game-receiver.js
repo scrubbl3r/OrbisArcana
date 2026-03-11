@@ -1247,7 +1247,7 @@
       TRIGGER: "rule_engine",
       TRIGGER_LEGACY_ALIAS: "rule_engine_v1",
     });
-    const RULE_ENGINE_COMPAT_KEYS = Object.freeze({
+    const RULE_ENGINE_LEGACY_KEYS = Object.freeze({
       SET_RULE_SCHEMA_LEGACY_ALIAS: "setRuleSchemaV1",
       TRIGGER_LEGACY_FIELD: "triggerLegacy",
       MVP_SCHEMA_LEGACY_ALIAS: "ruleSchemaV1",
@@ -1843,9 +1843,9 @@
         };
         if (
           typeof receiverBootstrapCtx.setRuleSchema === "function" &&
-          typeof receiverBootstrapCtx[RULE_ENGINE_COMPAT_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] !== "function"
+          typeof receiverBootstrapCtx[RULE_ENGINE_LEGACY_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] !== "function"
         ) {
-          receiverBootstrapCtx[RULE_ENGINE_COMPAT_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] = receiverBootstrapCtx.setRuleSchema;
+          receiverBootstrapCtx[RULE_ENGINE_LEGACY_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] = receiverBootstrapCtx.setRuleSchema;
         }
         hydrateReceiverBootstrapState(mods, receiverBootstrapCtx);
         if (typeof createVfxRuntimesBundle === "function") {
@@ -2270,7 +2270,7 @@
               intent: "rule_engine.event",
               payload: {
                 trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-                [RULE_ENGINE_COMPAT_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
+                [RULE_ENGINE_LEGACY_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
                 actionId,
                 ruleId: String(p.ruleId || ""),
                 atMs: Number(p.atMs) || performance.now(),
@@ -2284,7 +2284,7 @@
             if (!eventId) return;
             eventBus.emit(eventId, {
               trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-              [RULE_ENGINE_COMPAT_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
+              [RULE_ENGINE_LEGACY_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
               actionId,
               ruleId: String(p.ruleId || ""),
               atMs: Number(p.atMs) || performance.now(),
@@ -2306,9 +2306,9 @@
           ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
         };
         // Legacy MVP surface kept for compatibility during migration.
-        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_SCHEMA_LEGACY_ALIAS] = ruleEngineMvpState.ruleSchema;
-        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_PREVIEW_LEGACY_ALIAS] = ruleEngineMvpState.ruleEnginePreviewSystem;
-        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_EXECUTE_LEGACY_ALIAS] = RULE_ENGINE_EXECUTE_ACTIONS_ALIAS;
+        ruleEngineMvpState[RULE_ENGINE_LEGACY_KEYS.MVP_SCHEMA_LEGACY_ALIAS] = ruleEngineMvpState.ruleSchema;
+        ruleEngineMvpState[RULE_ENGINE_LEGACY_KEYS.MVP_PREVIEW_LEGACY_ALIAS] = ruleEngineMvpState.ruleEnginePreviewSystem;
+        ruleEngineMvpState[RULE_ENGINE_LEGACY_KEYS.MVP_EXECUTE_LEGACY_ALIAS] = RULE_ENGINE_EXECUTE_ACTIONS_ALIAS;
         mvp = {
           eventBus,
           gameState,

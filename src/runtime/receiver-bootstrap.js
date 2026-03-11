@@ -11,7 +11,7 @@
  *
  * @returns {Promise<ReceiverInitModules>}
  */
-const RECEIVER_BOOTSTRAP_COMPAT_KEYS = Object.freeze({
+const RECEIVER_BOOTSTRAP_LEGACY_KEYS = Object.freeze({
   CREATE_RULE_ENGINE_PREVIEW_SYSTEM_LEGACY_ALIAS: "createRuleEngineV1PreviewSystem",
   RULE_ENGINE_MASTER_CONTROL_LEGACY_ALIAS: "RULE_ENGINE_V1_MASTER_CONTROL",
   VALIDATE_RULE_ENGINE_CONFIG_LEGACY_ALIAS: "validateRuleEngineV1Config",
@@ -109,14 +109,14 @@ export async function loadReceiverInitModules() {
     buildRuleEngineFromInteractionsV2,
   };
   const ruleEngineLegacyAliasExports = {
-    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.CREATE_RULE_ENGINE_PREVIEW_SYSTEM_LEGACY_ALIAS]: ruleEngineExports.createRuleEnginePreviewSystem,
-    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.RULE_ENGINE_MASTER_CONTROL_LEGACY_ALIAS]: ruleEngineExports.RULE_ENGINE_MASTER_CONTROL,
-    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.VALIDATE_RULE_ENGINE_CONFIG_LEGACY_ALIAS]: ruleEngineExports.validateRuleEngineConfig,
-    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.BUILD_RULE_ENGINE_FROM_INTERACTIONS_LEGACY_ALIAS]: ruleEngineExports.buildRuleEngineFromInteractionsV2,
+    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.CREATE_RULE_ENGINE_PREVIEW_SYSTEM_LEGACY_ALIAS]: ruleEngineExports.createRuleEnginePreviewSystem,
+    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.RULE_ENGINE_MASTER_CONTROL_LEGACY_ALIAS]: ruleEngineExports.RULE_ENGINE_MASTER_CONTROL,
+    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.VALIDATE_RULE_ENGINE_CONFIG_LEGACY_ALIAS]: ruleEngineExports.validateRuleEngineConfig,
+    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.BUILD_RULE_ENGINE_FROM_INTERACTIONS_LEGACY_ALIAS]: ruleEngineExports.buildRuleEngineFromInteractionsV2,
   };
   const worldItemExports = {
     WORLD_ITEMS: worldItemsResolved,
-    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.WORLD_ITEMS_LEGACY_ALIAS]: worldItemsResolved,
+    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.WORLD_ITEMS_LEGACY_ALIAS]: worldItemsResolved,
   };
 
   return {
@@ -246,7 +246,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setReceiverModulesReady,
   } = ctx;
   const setRuleSchemaAlias = ctx && typeof ctx === "object"
-    ? ctx[RECEIVER_BOOTSTRAP_COMPAT_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS]
+    ? ctx[RECEIVER_BOOTSTRAP_LEGACY_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS]
     : undefined;
 
   function buildSafeDisabledRuleSchema() {
