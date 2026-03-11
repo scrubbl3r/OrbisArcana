@@ -15,7 +15,9 @@ export {
 export {
   EVENT_DEFINITIONS_V1,
   EVENT_DEFINITIONS_V1_BY_ID,
-} from "./event-definitions-v1.js";
+  EVENT_DEFINITIONS,
+  EVENT_DEFINITIONS_BY_ID,
+} from "./event-definitions.js";
 export {
   EVENT_RUNTIME_BINDINGS_V1,
   EVENT_RUNTIME_BINDINGS_V1_BY_ID,
