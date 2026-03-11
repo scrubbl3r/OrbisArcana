@@ -18,7 +18,6 @@ export {
 export { RULE_ENGINE_V1_MASTER_CONTROL } from "./rule-engine-v1-master-control.js";
 export { RULE_ENGINE_V1_MASTER_CONTROL as RULE_ENGINE_MASTER_CONTROL } from "./rule-engine-v1-master-control.js";
 export { validateSpellRulesV1 } from "./validate-spell-rules-v1.js";
-export { validateRuleEngineV1Config } from "./validate-rule-engine-v1-config.js";
-export { validateRuleEngineV1Config as validateRuleEngineConfig } from "./validate-rule-engine-v1-config.js";
+export { validateRuleEngineV1Config, validateRuleEngineConfig } from "./validate-rule-engine-config.js";
 export { buildRuleEngineV1PreviewRuntime } from "./build-rule-engine-v1-preview-runtime.js";
 export { buildRuleEngineV1PreviewRuntime as buildRuleEnginePreviewRuntime } from "./build-rule-engine-v1-preview-runtime.js";
