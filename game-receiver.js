@@ -1947,12 +1947,9 @@
           createOpenWakeWordBrowserBackendFactory,
           createSpellDispatchSystem,
           createRuleEnginePreviewSystem,
-          createRuleEngineV1PreviewSystem: createRuleEnginePreviewSystemLegacy,
           WORLD_ITEMS,
         } = mods;
-        const createRuleEnginePreviewSystemFactory = (typeof createRuleEnginePreviewSystem === "function")
-          ? createRuleEnginePreviewSystem
-          : createRuleEnginePreviewSystemLegacy;
+        const createRuleEnginePreviewSystemFactory = createRuleEnginePreviewSystem;
         const worldItemSpawns = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [];
 
         const eventBus = createEventBus();

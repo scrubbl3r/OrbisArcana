@@ -120,7 +120,7 @@ export async function loadReceiverInitModules() {
     createOpenWakeWordBrowserBackendFactory,
     createSpellDispatchSystem,
     createRuleEnginePreviewSystem: createRuleEnginePreviewSystemResolved,
-    createRuleEngineV1PreviewSystem: createRuleEnginePreviewSystemLegacy,
+    createRuleEngineV1PreviewSystem: createRuleEnginePreviewSystemResolved,
     createSpellActionHandlersImported,
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
