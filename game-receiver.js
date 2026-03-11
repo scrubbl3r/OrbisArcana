@@ -1235,14 +1235,10 @@
     });
     const RULE_ENGINE_CHANNELS = Object.freeze({
       ACTION_EXECUTED: "rule_engine.action_executed",
-      ACTION_EXECUTED_LEGACY_ALIAS: "rule_engine.v1.action_executed",
       WAKE_WIN_OPENED: "rule_engine.wake_win_opened",
-      WAKE_WIN_OPENED_LEGACY_ALIAS: "rule_engine.v1.wake_win_opened",
       TRIGGER: "rule_engine",
-      TRIGGER_LEGACY_ALIAS: "rule_engine_v1",
     });
     const RULE_ENGINE_LEGACY_KEYS = Object.freeze({
-      TRIGGER_LEGACY_FIELD: "triggerLegacy",
       MVP_SCHEMA_LEGACY_ALIAS: "ruleSchemaV1",
       MVP_PREVIEW_LEGACY_ALIAS: "ruleEngineV1PreviewSystem",
       MVP_EXECUTE_LEGACY_ALIAS: "ruleEngineV1ExecuteActions",
@@ -2236,7 +2232,6 @@
               atMs: Number(p.atMs) || performance.now(),
             };
             eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED, wakeWinPayload);
-            eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED_LEGACY_ALIAS, wakeWinPayload);
             return;
           }
           if (actionType !== "event") return;
@@ -2256,7 +2251,6 @@
               intent: "rule_engine.event",
               payload: {
                 trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-                [RULE_ENGINE_LEGACY_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
                 actionId,
                 ruleId: String(p.ruleId || ""),
                 atMs: Number(p.atMs) || performance.now(),
@@ -2270,7 +2264,6 @@
             if (!eventId) return;
             eventBus.emit(eventId, {
               trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-              [RULE_ENGINE_LEGACY_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
               actionId,
               ruleId: String(p.ruleId || ""),
               atMs: Number(p.atMs) || performance.now(),
@@ -2279,7 +2272,6 @@
           }
         };
         eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED, onRuleEngineActionExecuted);
-        eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED_LEGACY_ALIAS, onRuleEngineActionExecuted);
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
