@@ -35,6 +35,11 @@ runPreSmoke();
 
 const driftIds = computeDrift();
 const snapshot = loadSnapshot();
+const projectedRuleCount = Number(
+  snapshot?.counts?.projectedRuleEngineRules
+  ?? snapshot?.counts?.projectedRuleEngineV1Rules
+  ?? 0
+);
 const health = {
   schema: "orbis.rule_engine_v2.health",
   generatedAt: new Date().toISOString(),
@@ -45,7 +50,7 @@ const health = {
   // Legacy compatibility key retained for downstream checks/readers.
   v1RulesProjectionOnly: true,
   interactionsRuleCount: Number(snapshot?.counts?.interactionsV2Rules || 0),
-  projectedRuleCount: Number(snapshot?.counts?.projectedRuleEngineV1Rules || 0),
+  projectedRuleCount,
   driftRuleIds: driftIds,
 };
 const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
@@ -56,7 +61,7 @@ console.log(`[doctor:v2] spellbook ok: ${snapshot?.validation?.spellbookV2?.ok =
 console.log(`[doctor:v2] interactions ok: ${snapshot?.validation?.interactionsV2?.ok === true}`);
 console.log(`[doctor:v2] bootstrap uses v2 adapter: ${snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap === true}`);
 console.log("[doctor:v2] rules mode: projection_only");
-console.log(`[doctor:v2] rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules || 0}/${snapshot?.counts?.projectedRuleEngineV1Rules || 0}`);
+console.log(`[doctor:v2] rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules || 0}/${projectedRuleCount}`);
 console.log(`[doctor:v2] runtime-projection drift ids: ${driftIds.length}`);
 if (driftIds.length) console.log(`[doctor:v2] drift: ${driftIds.join(", ")}`);
 console.log(`[doctor:v2] wrote health: ${healthPath}`);
