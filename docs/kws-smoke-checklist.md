@@ -1,4 +1,4 @@
-# KWS Regression Checklist (openWakeWord Browser / WASM)
+# KWS Smoke Checklist (openWakeWord Browser / WASM)
 
 Use this after any KWS/runtime refactor.
 

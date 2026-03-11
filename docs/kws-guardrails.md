@@ -1,6 +1,6 @@
-# KWS Stability Guardrails
+# KWS Guardrails
 
-This document captures the runtime invariants that should not be changed casually.
+This document captures runtime guardrails that should not be changed casually.
 
 ## Core Guardrails
 - `openwakeword_browser` is the default and only active KWS backend.
@@ -20,7 +20,7 @@ This document captures the runtime invariants that should not be changed casuall
 ## Change Policy
 - Prefer extraction/refactor over behavioral changes in the audio/infer data path.
 - Any queue/pump optimization must be A/B smoke tested against this checklist:
-  - [KWS Regression Checklist](./kws-regression-checklist.md)
+  - [KWS Smoke Checklist](./kws-smoke-checklist.md)
 - If a change touches worker message protocol (`audio worker <-> backend <-> infer worker`),
   run full spell smoke before merge.
 

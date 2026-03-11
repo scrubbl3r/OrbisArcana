@@ -2,7 +2,7 @@ ORBIS ARCANA ARCHITECTURE SCHEMA (CURRENT SNAPSHOT)
 
 Purpose
 
-This document is a checkpoint after a major refactor wave.
+This document is a snapshot after a major refactor wave.
 It updates v0.3 with what is now fully implemented, what has been hardened, and what remains.
 
 This is a working architecture document, not a final implementation spec.

@@ -25,7 +25,7 @@ Implemented foundation:
 - World system supports multiple globes (multiple pickups).
 - Receiver consumes spell and world-item content schema.
 - Spell AOE routing has started using castActionId (data-driven action routing).
-- Orb shatter pieces snapshot live orb palette at death (correct runtime visual snapshot behavior).
+- Orb shatter pieces capture live orb palette at death (correct runtime visual snapshot behavior).
 - Spell naming updates completed:
   - sanctus -> sanctum (sanctus kept as alias)
   - rahta added as alias to all rota spells
