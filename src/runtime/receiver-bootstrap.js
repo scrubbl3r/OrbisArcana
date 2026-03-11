@@ -45,6 +45,8 @@ export async function loadReceiverInitModules() {
     { validateSpellRuntimeRoutingV1 },
     { validateSpellSchemaIntegrityV1 },
     {
+      RULE_ENGINE_MASTER_CONTROL,
+      validateRuleEngineConfig,
       RULE_ENGINE_V1_MASTER_CONTROL,
       validateRuleEngineV1Config,
     },
@@ -128,6 +130,8 @@ export async function loadReceiverInitModules() {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
+    RULE_ENGINE_MASTER_CONTROL,
+    validateRuleEngineConfig,
     RULE_ENGINE_V1_MASTER_CONTROL,
     validateRuleEngineV1Config,
     INTERACTIONS_V2,
@@ -190,6 +194,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrityV1,
+    RULE_ENGINE_MASTER_CONTROL,
+    validateRuleEngineConfig,
     RULE_ENGINE_V1_MASTER_CONTROL,
     validateRuleEngineV1Config,
     INTERACTIONS_V2,
@@ -234,8 +240,15 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     });
   }
 
-  const fallbackRuleSchemaV1 = (RULE_ENGINE_V1_MASTER_CONTROL && typeof RULE_ENGINE_V1_MASTER_CONTROL === "object")
-    ? RULE_ENGINE_V1_MASTER_CONTROL
+  const ruleEngineMasterControl = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
+    ? RULE_ENGINE_MASTER_CONTROL
+    : RULE_ENGINE_V1_MASTER_CONTROL;
+  const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
+    ? validateRuleEngineConfig
+    : validateRuleEngineV1Config;
+
+  const fallbackRuleSchemaV1 = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
+    ? ruleEngineMasterControl
     : Object.freeze({
         version: "v1",
         signals: [],
@@ -257,7 +270,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       });
     } catch (err) {
       try {
-        console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to RULE_ENGINE_V1_MASTER_CONTROL", err);
+        console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to RULE_ENGINE_MASTER_CONTROL", err);
       } catch (_) {}
       adapterFallbackUsed = true;
       ruleSchemaV1 = fallbackRuleSchemaV1;
@@ -398,8 +411,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     }
   }
 
-  if (typeof validateRuleEngineV1Config === "function") {
-    const errors = validateRuleEngineV1Config(ruleSchemaV1);
+  if (typeof validateRuleEngine === "function") {
+    const errors = validateRuleEngine(ruleSchemaV1);
     if (errors.length) {
       try {
         console.warn(
