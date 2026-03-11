@@ -1,4 +1,4 @@
-import { validateSpellRulesV1 } from "./validate-spell-rules-v1.js";
+import { validateSpellRulesV1 } from "./validate-spell-rules.js";
 import { RULE_ENGINE_MASTER_CONTROL } from "./index.js";
 
 const DEFAULT_MASTER_CONTROL = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
