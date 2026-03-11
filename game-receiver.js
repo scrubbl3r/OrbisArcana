@@ -1213,7 +1213,7 @@
     let orbRuntimeState = null;
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
-    let ruleSchemaV1 = null;
+    let ruleSchema = null;
     let ruleEnginePreviewSystem = null;
     // Early fallback used before runtime modules finish loading.
     let RECEIVER_EVENTS = { EVT_VOICE_SET_MODE: "voice.set_mode" };
@@ -1610,7 +1610,7 @@
             castActionRegistryIndex = next.castActionRegistryIndex || Object.create(null);
           },
           setRuleSchemaV1: (next = {}) => {
-            ruleSchemaV1 = {
+            ruleSchema = {
               source: String(next.source || "").trim().toLowerCase() || "unknown",
               signals: Array.isArray(next.signals) ? next.signals.slice() : [],
               windows: Array.isArray(next.windows) ? next.windows.slice() : [],
@@ -1795,7 +1795,7 @@
                 : Object.create(null),
             };
             if (els.rulesReadout) {
-              const source = String(ruleSchemaV1.source || "unknown");
+              const source = String(ruleSchema.source || "unknown");
               if (source === "interactions_v2_adapter") {
                 els.rulesReadout.textContent = "V2 adapter";
               } else if (source === "interactions_v2_adapter_fallback_v1") {
@@ -2026,12 +2026,12 @@
         const spellDispatchSystem = createSpellDispatchSystem({
           eventBus,
           resources: resourcesSystem,
-          ruleEngineEnabled: (!ruleSchemaV1 || ruleSchemaV1.enabled !== false) && RULE_ENGINE_EXECUTE_ACTIONS === true,
+          ruleEngineEnabled: (!ruleSchema || ruleSchema.enabled !== false) && RULE_ENGINE_EXECUTE_ACTIONS === true,
         });
-        if (typeof createRuleEnginePreviewSystemFactory === "function" && ruleSchemaV1) {
+        if (typeof createRuleEnginePreviewSystemFactory === "function" && ruleSchema) {
           ruleEnginePreviewSystem = createRuleEnginePreviewSystemFactory({
             eventBus,
-            schema: ruleSchemaV1,
+            schema: ruleSchema,
             executeActions: RULE_ENGINE_EXECUTE_ACTIONS,
           });
         }
@@ -2220,8 +2220,8 @@
           }
           if (actionType !== "event") return;
           const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
-          const bindings = (ruleSchemaV1 && ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
-            ? ruleSchemaV1.eventRuntimeBindings
+          const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
+            ? ruleSchema.eventRuntimeBindings
             : Object.create(null);
           const binding = bindings[actionId] || null;
           const runtime = binding && binding.runtime && typeof binding.runtime === "object"
@@ -2272,7 +2272,7 @@
           inputDynamicsSystem,
           inputGestureSystem,
           orbRuntimeState,
-          ruleSchemaV1,
+          ruleSchemaV1: ruleSchema,
           ruleEngineV1PreviewSystem: ruleEnginePreviewSystem,
           ruleEngineV1ExecuteActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
           resourcesSystem,
