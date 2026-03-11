@@ -1948,11 +1948,13 @@
           createSpellDispatchSystem,
           createRuleEnginePreviewSystem,
           createRuleEngineV1PreviewSystem,
+          WORLD_ITEMS,
           WORLD_ITEMS_V1,
         } = mods;
         const createRuleEnginePreviewSystemFactory = (typeof createRuleEnginePreviewSystem === "function")
           ? createRuleEnginePreviewSystem
           : createRuleEngineV1PreviewSystem;
+        const worldItemSpawns = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : WORLD_ITEMS_V1;
 
         const eventBus = createEventBus();
         const gameState = createGameState({
@@ -2102,7 +2104,7 @@
         if (ruleEnginePreviewSystem && typeof ruleEnginePreviewSystem.start === "function") {
           ruleEnginePreviewSystem.start();
         }
-        const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
+        const globeSpawns = (Array.isArray(worldItemSpawns) ? worldItemSpawns : [])
           .map(normalizeWorldItemSpawn)
           .filter(Boolean);
         const fallbackSpawn = {
