@@ -1231,6 +1231,14 @@
       MASTER_CONTROL: "rule_engine_master_control",
       MASTER_CONTROL_ALIAS: "rule_engine_v1_master_control",
     });
+    const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
+      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER]: "V2 adapter",
+      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_ALIAS]: "V2 adapter",
+      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK]: "V2 adapter (fallback)",
+      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK_ALIAS]: "V2 adapter (fallback)",
+      [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL]: "Master control",
+      [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL_ALIAS]: "Master control",
+    });
     const RULE_ENGINE_CHANNELS = Object.freeze({
       ACTION_EXECUTED: "rule_engine.action_executed",
       ACTION_EXECUTED_ALIAS: "rule_engine.v1.action_executed",
@@ -1812,15 +1820,7 @@
             };
             if (els.rulesReadout) {
               const source = String(ruleSchema.source || "unknown");
-              if (source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER || source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_ALIAS) {
-                els.rulesReadout.textContent = "V2 adapter";
-              } else if (source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK || source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK_ALIAS) {
-                els.rulesReadout.textContent = "V2 adapter (fallback)";
-              } else if (source === RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL || source === RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL_ALIAS) {
-                els.rulesReadout.textContent = "Master control";
-              } else {
-                els.rulesReadout.textContent = source || "unknown";
-              }
+              els.rulesReadout.textContent = RULE_ENGINE_SOURCE_READOUT[source] || source || "unknown";
             }
           },
           initSpellActionHandlers,
