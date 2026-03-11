@@ -27,4 +27,8 @@ export const CONTRACT_CHECKS_V2 = Object.freeze([
     id: "import_boundary",
     script: "tools/rule-engine-v2/check-master-control-import-boundary-v2.mjs",
   }),
+  Object.freeze({
+    id: "health_contract",
+    script: "tools/rule-engine-v2/check-health-contract-v2.mjs",
+  }),
 ]);
