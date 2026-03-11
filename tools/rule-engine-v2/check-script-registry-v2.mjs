@@ -3,23 +3,19 @@ import { resolve } from "node:path";
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
-
-function fail(msg) {
-  console.error(`[script-registry:v2] FAIL: ${msg}`);
-  process.exit(1);
-}
+import { failCheck } from "./check-fail-v2.mjs";
 
 function loadPackageJson() {
   try {
     return JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf8"));
   } catch (err) {
-    fail(`unable to read package.json (${err?.message || err})`);
+    failCheck("script-registry:v2", `unable to read package.json (${err?.message || err})`);
   }
 }
 
 const pkg = loadPackageJson();
 const scripts = (pkg && typeof pkg.scripts === "object" && pkg.scripts) ? pkg.scripts : null;
-if (!scripts) fail("package.json scripts object missing");
+if (!scripts) failCheck("script-registry:v2", "package.json scripts object missing");
 
 const checks = [
   ...READY_PHASES_V2,
@@ -55,7 +51,7 @@ for (const check of checks) {
   }
 }
 
-if (missing.length) fail(`missing package scripts: ${missing.join(", ")}`);
-if (mismatched.length) fail(`mismatched package scripts: ${mismatched.join("; ")}`);
+if (missing.length) failCheck("script-registry:v2", `missing package scripts: ${missing.join(", ")}`);
+if (mismatched.length) failCheck("script-registry:v2", `mismatched package scripts: ${mismatched.join("; ")}`);
 
 console.log("[script-registry:v2] PASS: package scripts cover manifest-referenced checks");

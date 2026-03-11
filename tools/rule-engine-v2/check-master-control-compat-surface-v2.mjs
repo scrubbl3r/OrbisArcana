@@ -1,11 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
-
-function fail(msg) {
-  console.error(`[master-control-compat-surface:v2] FAIL: ${msg}`);
-  process.exit(1);
-}
+import { failCheck } from "./check-fail-v2.mjs";
 
 function listFiles() {
   const out = execSync("rg --files src tools docs", {
@@ -39,7 +35,7 @@ for (const rel of listFiles()) {
 }
 
 if (offenders.length) {
-  fail(`unexpected ${token} usage in: ${offenders.join(", ")}`);
+  failCheck("master-control-compat-surface:v2", `unexpected ${token} usage in: ${offenders.join(", ")}`);
 }
 
 console.log("[master-control-compat-surface:v2] PASS: compatibility surface is constrained");

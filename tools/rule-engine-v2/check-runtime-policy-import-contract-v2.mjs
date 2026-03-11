@@ -1,10 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-
-function fail(msg) {
-  console.error(`[runtime-policy-import-contract:v2] FAIL: ${msg}`);
-  process.exit(1);
-}
+import { failCheck } from "./check-fail-v2.mjs";
 
 const root = process.cwd();
 const targets = [
@@ -18,10 +14,10 @@ for (const rel of targets) {
   const abs = resolve(root, rel);
   const text = readFileSync(abs, "utf8");
   if (text.includes(forbidden)) {
-    fail(`${rel} must not reference ${forbidden}`);
+    failCheck("runtime-policy-import-contract:v2", `${rel} must not reference ${forbidden}`);
   }
   if (!text.includes(required)) {
-    fail(`${rel} must reference ${required}`);
+    failCheck("runtime-policy-import-contract:v2", `${rel} must reference ${required}`);
   }
 }
 
