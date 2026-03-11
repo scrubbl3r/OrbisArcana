@@ -16,7 +16,7 @@ function stableClone(value) {
 function buildSnapshot() {
   const spellbookErrors = validateSpellbookV2(SPELLBOOK_V2);
   const interactionsValidation = validateInteractionsV2(INTERACTIONS_V2);
-  const projectedRuleEngineV1 = buildRuleEngineFromInteractionsV2({
+  const projectedRuleEngine = buildRuleEngineFromInteractionsV2({
     interactionsV2: INTERACTIONS_V2,
     baseRuleEngine: null,
   });
@@ -40,13 +40,11 @@ function buildSnapshot() {
     counts: {
       spellbookV2Spells: Array.isArray(SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells.length : 0,
       interactionsV2Rules: Array.isArray(INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules.length : 0,
-      projectedRuleEngineRules: Array.isArray(projectedRuleEngineV1.rules) ? projectedRuleEngineV1.rules.length : 0,
-      projectedRuleEngineV1Rules: Array.isArray(projectedRuleEngineV1.rules) ? projectedRuleEngineV1.rules.length : 0,
+      projectedRuleEngineRules: Array.isArray(projectedRuleEngine.rules) ? projectedRuleEngine.rules.length : 0,
     },
     spellbookV2: stableClone(SPELLBOOK_V2),
     interactionsV2: stableClone(INTERACTIONS_V2),
-    projectedRuleEngine: stableClone(projectedRuleEngineV1),
-    projectedRuleEngineV1: stableClone(projectedRuleEngineV1),
+    projectedRuleEngine: stableClone(projectedRuleEngine),
   };
 }
 

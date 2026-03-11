@@ -35,11 +35,7 @@ runPreSmoke();
 
 const driftIds = computeDrift();
 const snapshot = loadSnapshot();
-const projectedRuleCount = Number(
-  snapshot?.counts?.projectedRuleEngineRules
-  ?? snapshot?.counts?.projectedRuleEngineV1Rules
-  ?? 0
-);
+const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 0);
 const health = {
   schema: "orbis.rule_engine_v2.health",
   generatedAt: new Date().toISOString(),
@@ -47,8 +43,6 @@ const health = {
   interactionsOk: snapshot?.validation?.interactionsV2?.ok === true,
   bootstrapUsesV2Adapter: snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap === true,
   projectionRulesOnly: true,
-  // Legacy compatibility key retained for downstream checks/readers.
-  v1RulesProjectionOnly: true,
   interactionsRuleCount: Number(snapshot?.counts?.interactionsV2Rules || 0),
   projectedRuleCount,
   driftRuleIds: driftIds,
