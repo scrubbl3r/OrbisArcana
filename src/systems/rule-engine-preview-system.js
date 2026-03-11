@@ -96,14 +96,14 @@ function ruleMatches(runtimeRule, lastSeenAtBySignalId, now, matchWindowScale = 
   return true;
 }
 
-export function createRuleEngineV1PreviewSystem({
+export function createRuleEnginePreviewSystem({
   eventBus,
   schema = null,
   executeActions = false,
   nowMs = () => Date.now(),
 } = {}) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
-    throw new Error("createRuleEngineV1PreviewSystem requires eventBus.on/eventBus.emit");
+    throw new Error("createRuleEnginePreviewSystem requires eventBus.on/eventBus.emit");
   }
   const runtime = buildRuleEnginePreviewRuntime({
     signals: schema && Array.isArray(schema.signals) ? schema.signals : [],
@@ -942,4 +942,4 @@ export function createRuleEngineV1PreviewSystem({
   };
 }
 
-export const createRuleEnginePreviewSystem = createRuleEngineV1PreviewSystem;
+export const createRuleEngineV1PreviewSystem = createRuleEnginePreviewSystem;

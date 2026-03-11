@@ -1,5 +1,5 @@
 // Compatibility shim: keep legacy module path stable during filename migration.
 export {
-  createRuleEngineV1PreviewSystem,
   createRuleEnginePreviewSystem,
+  createRuleEngineV1PreviewSystem,
 } from "./rule-engine-preview-system.js";
