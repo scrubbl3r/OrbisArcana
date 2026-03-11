@@ -265,6 +265,20 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         rules: [],
         eventRuntimeBindings: Object.create(null),
       });
+  const adapterBaseRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
+    ? Object.freeze({
+        ...ruleEngineMasterControl,
+        // V2 adapter owns rule projection; keep base schema policy/definitions only.
+        rules: Object.freeze([]),
+      })
+    : Object.freeze({
+        version: "2",
+        signals: [],
+        windows: [],
+        events: [],
+        rules: [],
+        eventRuntimeBindings: Object.create(null),
+      });
   const useInteractionsV2 = !!(INTERACTIONS_V2_BOOTSTRAP &&
     typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
@@ -274,14 +288,14 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     try {
       ruleSchema = buildRuleEngineFromInteractions({
         interactionsV2: INTERACTIONS_V2,
-        baseRuleEngine: fallbackRuleSchema,
+        baseRuleEngine: adapterBaseRuleSchema,
       });
     } catch (err) {
       try {
-        console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to RULE_ENGINE_MASTER_CONTROL", err);
+        console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to adapter base schema", err);
       } catch (_) {}
       adapterFallbackUsed = true;
-      ruleSchema = fallbackRuleSchema;
+      ruleSchema = adapterBaseRuleSchema;
     }
   }
   let ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchema, "enabled"))
