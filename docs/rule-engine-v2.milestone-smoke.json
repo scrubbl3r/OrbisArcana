@@ -1,7 +1,7 @@
 {
   "schema": "orbis.rule_engine_v2.milestone",
-  "generatedAt": "2026-03-11T02:57:22.110Z",
-  "gitRef": "eb7da6a",
+  "generatedAt": "2026-03-11T03:01:43.931Z",
+  "gitRef": "e7ca85c",
   "steps": {
     "ready": {
       "ok": true,
@@ -15,7 +15,7 @@
   },
   "health": {
     "schema": "orbis.rule_engine_v2.health",
-    "generatedAt": "2026-03-11T02:57:21.730Z",
+    "generatedAt": "2026-03-11T03:01:43.553Z",
     "spellbookOk": true,
     "interactionsOk": true,
     "bootstrapUsesV2Adapter": true,
@@ -28,14 +28,14 @@
   "pass": true,
   "trend": {
     "schema": "orbis.rule_engine_v2.milestone_trend",
-    "generatedAt": "2026-03-11T02:57:22.165Z",
+    "generatedAt": "2026-03-11T03:01:43.988Z",
     "historyPath": "/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/docs/rule-engine-v2.milestone-history.jsonl",
-    "totalRuns": 71,
+    "totalRuns": 72,
     "recentWindow": 10,
     "passRateAllPct": 98.6,
     "passRateRecentPct": 100,
     "latestPass": true,
-    "latestGeneratedAt": "2026-03-11T02:57:22.110Z",
-    "latestGitRef": "eb7da6a"
+    "latestGeneratedAt": "2026-03-11T03:01:43.931Z",
+    "latestGitRef": "e7ca85c"
   }
 }

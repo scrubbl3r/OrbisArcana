@@ -10,7 +10,7 @@ import {
   INTERACTIONS_V2_BOOTSTRAP,
   validateSpellbookV2,
   validateInteractionsV2,
-  buildRulesV1FromInteractionsV2,
+  buildRulesFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 import {
   KWS_MANIFEST_REL_PATH,
@@ -102,7 +102,7 @@ if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstr
     "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap must be true",
   ]);
 }
-const projectedRules = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
+const projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
 const projectedById = new Map((Array.isArray(projectedRules) ? projectedRules : []).map((r) => [String(r && r.id || ""), r]));
 const runtimeRules = Array.isArray(RULE_ENGINE_MASTER_CONTROL?.rules)
   ? RULE_ENGINE_MASTER_CONTROL.rules

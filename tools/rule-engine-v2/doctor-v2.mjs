@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { buildRulesV1FromInteractionsV2, INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
+import { buildRulesFromInteractionsV2, INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_MASTER_CONTROL } from "../../src/content/spell-rules/index.js";
 
 function runPreSmoke() {
@@ -10,7 +10,7 @@ function runPreSmoke() {
 }
 
 function computeDrift() {
-  const projected = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
+  const projected = buildRulesFromInteractionsV2(INTERACTIONS_V2);
   const projectedById = new Map((Array.isArray(projected) ? projected : []).map((r) => [String(r && r.id || ""), r]));
   const runtimeRules = Array.isArray(RULE_ENGINE_MASTER_CONTROL?.rules)
     ? RULE_ENGINE_MASTER_CONTROL.rules

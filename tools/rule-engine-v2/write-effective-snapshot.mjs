@@ -6,7 +6,7 @@ import {
   INTERACTIONS_V2_BOOTSTRAP,
   validateSpellbookV2,
   validateInteractionsV2,
-  buildRuleEngineV1FromInteractionsV2,
+  buildRuleEngineFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 
 function stableClone(value) {
@@ -16,7 +16,7 @@ function stableClone(value) {
 function buildSnapshot() {
   const spellbookErrors = validateSpellbookV2(SPELLBOOK_V2);
   const interactionsValidation = validateInteractionsV2(INTERACTIONS_V2);
-  const projectedRuleEngineV1 = buildRuleEngineV1FromInteractionsV2({
+  const projectedRuleEngineV1 = buildRuleEngineFromInteractionsV2({
     interactionsV2: INTERACTIONS_V2,
     baseRuleEngineV1: null,
   });

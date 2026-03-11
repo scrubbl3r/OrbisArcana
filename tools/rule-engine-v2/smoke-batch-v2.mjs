@@ -1,7 +1,7 @@
 import {
   INTERACTIONS_V2,
   validateInteractionsV2,
-  buildRuleEngineV1FromInteractionsV2,
+  buildRuleEngineFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 
 function clone(v) {
@@ -43,7 +43,7 @@ function expectValidationPass(caseName, cfg) {
 function expectBuildPass(caseName, cfg, assertFn = null) {
   let projected = null;
   try {
-    projected = buildRuleEngineV1FromInteractionsV2({ interactionsV2: cfg, baseRuleEngineV1: { rules: [] } });
+    projected = buildRuleEngineFromInteractionsV2({ interactionsV2: cfg, baseRuleEngineV1: { rules: [] } });
   } catch (err) {
     fail(`${caseName}: expected build pass, got ${err && err.message ? err.message : String(err)}`);
   }

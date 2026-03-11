@@ -7,4 +7,9 @@ export {
 export { SIGNAL_HANDLES_V2, ACTION_HANDLES_V2, EVENT_HANDLES_V2 } from "./entity-handles-v2.js";
 export { validateInteractionsV2 } from "./validate-interactions-v2.js";
 export { validateSpellbookV2 } from "./validate-spellbook-v2.js";
-export { buildRuleEngineV1FromInteractionsV2, buildRulesV1FromInteractionsV2 } from "./build-rule-engine-v1-from-interactions-v2.js";
+export {
+  buildRuleEngineV1FromInteractionsV2,
+  buildRuleEngineV1FromInteractionsV2 as buildRuleEngineFromInteractionsV2,
+  buildRulesV1FromInteractionsV2,
+  buildRulesV1FromInteractionsV2 as buildRulesFromInteractionsV2,
+} from "./build-rule-engine-v1-from-interactions-v2.js";
