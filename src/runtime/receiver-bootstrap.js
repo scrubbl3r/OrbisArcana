@@ -290,7 +290,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     try {
       ruleSchema = buildRuleEngineFromInteractions({
         interactionsV2: INTERACTIONS_V2,
-        baseRuleEngineV1: fallbackRuleSchema,
+        baseRuleEngine: fallbackRuleSchema,
       });
     } catch (err) {
       try {

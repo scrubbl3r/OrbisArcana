@@ -109,13 +109,14 @@ function mapRuleToV1(rule, defaults) {
 
 export function buildRuleEngineFromInteractionsV2({
   interactionsV2 = INTERACTIONS_V2,
+  baseRuleEngine = null,
   baseRuleEngineV1 = null,
 } = {}) {
   const validation = validateInteractionsV2(interactionsV2);
   if (!validation.ok) {
     throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
   }
-  const base = asObj(baseRuleEngineV1);
+  const base = asObj(baseRuleEngine || baseRuleEngineV1);
   const rules = Array.isArray(interactionsV2.rules)
     ? interactionsV2.rules.map((r) => mapRuleToV1(r, asObj(interactionsV2.defaults))).filter(Boolean)
     : [];

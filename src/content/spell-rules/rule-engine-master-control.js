@@ -6,7 +6,7 @@
 
 import { EVENT_DEFINITIONS_V1 } from "./event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "./event-runtime-bindings.js";
-import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions-v2/index.js";
+import { INTERACTIONS_V2, buildRulesFromInteractionsV2 } from "../interactions-v2/index.js";
 import {
   SIGNAL_DEFINITION_COLLISIONS_V1,
   SIGNAL_DEFINITIONS_V1,
@@ -509,9 +509,9 @@ function applyRuleDefaults(rules = [], defaults = {}) {
   });
 }
 
-function resolveProjectedRulesV1() {
+function resolveProjectedRules() {
   try {
-    return buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
+    return buildRulesFromInteractionsV2(INTERACTIONS_V2);
   } catch (err) {
     console.warn("RULE_ENGINE_V1_MASTER_CONTROL projection failed; using empty rules:", err);
     return [];
@@ -713,7 +713,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     applyRuleEnabledOverrides(
       applyRulePriorityOverrides(
         applyRuleTimingOverrides(
-          applyRuleDefaults(resolveProjectedRulesV1(), RULE_DEFAULTS),
+          applyRuleDefaults(resolveProjectedRules(), RULE_DEFAULTS),
           RULE_TIMING_OVERRIDES
         ),
         RULE_PRIORITY_OVERRIDES
