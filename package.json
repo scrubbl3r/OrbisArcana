@@ -8,6 +8,8 @@
     "check:immediate-ownership:v2": "node tools/rule-engine-v2/check-immediate-dispatch-ownership-v2.mjs",
     "check:flat-spin-gating:v2": "node tools/rule-engine-v2/check-flat-spin-gating-regression-v2.mjs",
     "check:wake-window-axis-prereq:v2": "node tools/rule-engine-v2/check-wake-window-axis-prereq-regression-v2.mjs",
+    "check:regression-manifest:v2": "node tools/rule-engine-v2/check-regression-manifest-v2.mjs",
+    "check:contract-manifest:v2": "node tools/rule-engine-v2/check-contract-manifest-v2.mjs",
     "check:rule-source-contract:v2": "node tools/rule-engine-v2/check-rule-source-contract-v2.mjs",
     "check:policy-control-contract:v2": "node tools/rule-engine-v2/check-policy-control-contract-v2.mjs",
     "check:runtime-policy-import-contract:v2": "node tools/rule-engine-v2/check-runtime-policy-import-contract-v2.mjs",

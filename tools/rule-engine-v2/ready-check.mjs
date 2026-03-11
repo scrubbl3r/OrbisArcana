@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
+import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 
 function fail(msg) {
   console.error(`[ready:v2] FAIL: ${msg}`);
@@ -10,41 +12,21 @@ function fail(msg) {
 const doctor = spawnSync(process.execPath, ["tools/rule-engine-v2/doctor-v2.mjs"], { stdio: "inherit" });
 if (doctor.status !== 0) process.exit(doctor.status || 1);
 
-const shakeRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-shake-detonation-regression-v2.mjs"], { stdio: "inherit" });
-if (shakeRegression.status !== 0) process.exit(shakeRegression.status || 1);
+const regressionManifestCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-regression-manifest-v2.mjs"], { stdio: "inherit" });
+if (regressionManifestCheck.status !== 0) process.exit(regressionManifestCheck.status || 1);
 
-const wakeLoadRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-wake-window-load-regression-v2.mjs"], { stdio: "inherit" });
-if (wakeLoadRegression.status !== 0) process.exit(wakeLoadRegression.status || 1);
+for (const check of REGRESSION_CHECKS_V2) {
+  const res = spawnSync(process.execPath, [check.script], { stdio: "inherit" });
+  if (res.status !== 0) process.exit(res.status || 1);
+}
 
-const immediateOwnershipRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-immediate-dispatch-ownership-v2.mjs"], { stdio: "inherit" });
-if (immediateOwnershipRegression.status !== 0) process.exit(immediateOwnershipRegression.status || 1);
+const contractManifestCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-contract-manifest-v2.mjs"], { stdio: "inherit" });
+if (contractManifestCheck.status !== 0) process.exit(contractManifestCheck.status || 1);
 
-const flatSpinGatingRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-flat-spin-gating-regression-v2.mjs"], { stdio: "inherit" });
-if (flatSpinGatingRegression.status !== 0) process.exit(flatSpinGatingRegression.status || 1);
-
-const wakeWindowAxisPrereqRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-wake-window-axis-prereq-regression-v2.mjs"], { stdio: "inherit" });
-if (wakeWindowAxisPrereqRegression.status !== 0) process.exit(wakeWindowAxisPrereqRegression.status || 1);
-
-const ruleSourceContractCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-rule-source-contract-v2.mjs"], { stdio: "inherit" });
-if (ruleSourceContractCheck.status !== 0) process.exit(ruleSourceContractCheck.status || 1);
-
-const policyControlContractCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-policy-control-contract-v2.mjs"], { stdio: "inherit" });
-if (policyControlContractCheck.status !== 0) process.exit(policyControlContractCheck.status || 1);
-
-const runtimePolicyImportContractCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-runtime-policy-import-contract-v2.mjs"], { stdio: "inherit" });
-if (runtimePolicyImportContractCheck.status !== 0) process.exit(runtimePolicyImportContractCheck.status || 1);
-
-const docPolicyTerminologyCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs"], { stdio: "inherit" });
-if (docPolicyTerminologyCheck.status !== 0) process.exit(docPolicyTerminologyCheck.status || 1);
-
-const validatorPolicyTerminologyCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs"], { stdio: "inherit" });
-if (validatorPolicyTerminologyCheck.status !== 0) process.exit(validatorPolicyTerminologyCheck.status || 1);
-
-const masterControlCompatSurfaceCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs"], { stdio: "inherit" });
-if (masterControlCompatSurfaceCheck.status !== 0) process.exit(masterControlCompatSurfaceCheck.status || 1);
-
-const masterControlImportBoundaryCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-import-boundary-v2.mjs"], { stdio: "inherit" });
-if (masterControlImportBoundaryCheck.status !== 0) process.exit(masterControlImportBoundaryCheck.status || 1);
+for (const check of CONTRACT_CHECKS_V2) {
+  const res = spawnSync(process.execPath, [check.script], { stdio: "inherit" });
+  if (res.status !== 0) process.exit(res.status || 1);
+}
 
 const masterControlAuthoringCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-authoring-v2.mjs"], { stdio: "inherit" });
 if (masterControlAuthoringCheck.status !== 0) process.exit(masterControlAuthoringCheck.status || 1);

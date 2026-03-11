@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 
 function safeReadJson(path) {
   try {
@@ -21,16 +22,13 @@ function runCheck(scriptPath) {
 
 const health = safeReadJson(resolve(process.cwd(), "docs/rule-engine-v2.health.json")) || {};
 const trend = safeReadJson(resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json")) || {};
-const contractChecks = Object.freeze({
-  ruleSource: runCheck("tools/rule-engine-v2/check-rule-source-contract-v2.mjs"),
-  policyAlias: runCheck("tools/rule-engine-v2/check-policy-control-contract-v2.mjs"),
-  runtimePolicyImport: runCheck("tools/rule-engine-v2/check-runtime-policy-import-contract-v2.mjs"),
-  docPolicy: runCheck("tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs"),
-  validatorPolicy: runCheck("tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs"),
-  compatSurface: runCheck("tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs"),
-  importBoundary: runCheck("tools/rule-engine-v2/check-master-control-import-boundary-v2.mjs"),
-});
-const contractsOk = Object.values(contractChecks).every(Boolean);
+const contractChecks = Object.freeze(Object.fromEntries(
+  CONTRACT_CHECKS_V2.map((check) => [check.id, runCheck(check.script)])
+));
+const contractsOk = CONTRACT_CHECKS_V2.every((check) => contractChecks[check.id] === true);
+const contractStatusList = CONTRACT_CHECKS_V2
+  .map((check) => `${check.id}:${yn(contractChecks[check.id] === true)}`)
+  .join(" ");
 
 const lines = [
   "[status:v2] ---",
@@ -41,7 +39,7 @@ const lines = [
   `[status:v2] rules (interactions/projection): ${Number(health.interactionsRuleCount || 0)}/${Number(health.projectedRuleCount || 0)}`,
   `[status:v2] drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
   `[status:v2] contracts ok: ${yn(contractsOk)}`,
-  `[status:v2] contracts (rule_source/policy_alias/runtime_import/doc_policy/validator_policy/compat_surface/import_boundary): ${yn(contractChecks.ruleSource)}/${yn(contractChecks.policyAlias)}/${yn(contractChecks.runtimePolicyImport)}/${yn(contractChecks.docPolicy)}/${yn(contractChecks.validatorPolicy)}/${yn(contractChecks.compatSurface)}/${yn(contractChecks.importBoundary)}`,
+  `[status:v2] contracts: ${contractStatusList}`,
   `[status:v2] milestone runs: ${Number(trend.totalRuns || 0)}`,
   `[status:v2] pass rate all/recent: ${Number(trend.passRateAllPct || 0)}% / ${Number(trend.passRateRecentPct || 0)}%`,
   `[status:v2] latest milestone: ${trend.latestPass === true ? "PASS" : "FAIL"} ${String(trend.latestGitRef || "").trim()}`,
