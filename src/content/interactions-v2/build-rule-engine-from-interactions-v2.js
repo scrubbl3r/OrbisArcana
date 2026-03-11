@@ -107,7 +107,7 @@ function mapRuleToV1(rule, defaults) {
   return Object.freeze(out);
 }
 
-export function buildRuleEngineV1FromInteractionsV2({
+export function buildRuleEngineFromInteractionsV2({
   interactionsV2 = INTERACTIONS_V2,
   baseRuleEngineV1 = null,
 } = {}) {
@@ -126,7 +126,7 @@ export function buildRuleEngineV1FromInteractionsV2({
   });
 }
 
-export function buildRulesV1FromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
+export function buildRulesFromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
   const validation = validateInteractionsV2(interactionsV2);
   if (!validation.ok) {
     throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
@@ -138,5 +138,5 @@ export function buildRulesV1FromInteractionsV2(interactionsV2 = INTERACTIONS_V2)
   );
 }
 
-export const buildRuleEngineFromInteractionsV2 = buildRuleEngineV1FromInteractionsV2;
-export const buildRulesFromInteractionsV2 = buildRulesV1FromInteractionsV2;
+export const buildRuleEngineV1FromInteractionsV2 = buildRuleEngineFromInteractionsV2;
+export const buildRulesV1FromInteractionsV2 = buildRulesFromInteractionsV2;

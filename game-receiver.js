@@ -1949,12 +1949,11 @@
           createRuleEnginePreviewSystem,
           createRuleEngineV1PreviewSystem,
           WORLD_ITEMS,
-          WORLD_ITEMS_V1,
         } = mods;
         const createRuleEnginePreviewSystemFactory = (typeof createRuleEnginePreviewSystem === "function")
           ? createRuleEnginePreviewSystem
           : createRuleEngineV1PreviewSystem;
-        const worldItemSpawns = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : WORLD_ITEMS_V1;
+        const worldItemSpawns = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [];
 
         const eventBus = createEventBus();
         const gameState = createGameState({

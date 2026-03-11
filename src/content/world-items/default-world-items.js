@@ -1,6 +1,6 @@
-// v1 world-item schema (single bucket for pickups now; can split later)
+// World-item schema (single bucket for pickups now; can split later)
 
-export const WORLD_ITEMS_V1 = Object.freeze([
+export const WORLD_ITEMS = Object.freeze([
   {
     id: "globe_mid_01",
     kind: "energy_globe",
@@ -23,3 +23,4 @@ export const WORLD_ITEMS_V1 = Object.freeze([
   },
 ]);
 
+export const WORLD_ITEMS_V1 = WORLD_ITEMS;

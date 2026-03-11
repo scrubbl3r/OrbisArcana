@@ -57,7 +57,7 @@ export async function loadReceiverInitModules() {
       buildRuleEngineV1FromInteractionsV2,
       validateSpellbookV2,
     },
-    { WORLD_ITEMS_V1 },
+    { WORLD_ITEMS, WORLD_ITEMS_V1 },
   ] = await Promise.all([
     import("../events/event-bus.js"),
     import("../state/game-state.js"),
@@ -101,6 +101,8 @@ export async function loadReceiverInitModules() {
   const buildRuleEngineFromInteractionsResolved = (typeof buildRuleEngineFromInteractionsV2 === "function")
     ? buildRuleEngineFromInteractionsV2
     : buildRuleEngineV1FromInteractionsV2;
+
+  const worldItemsResolved = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : WORLD_ITEMS_V1;
 
   return {
     createEventBus,
@@ -148,7 +150,8 @@ export async function loadReceiverInitModules() {
     buildRuleEngineFromInteractionsV2: buildRuleEngineFromInteractionsResolved,
     buildRuleEngineV1FromInteractionsV2,
     validateSpellbookV2,
-    WORLD_ITEMS_V1,
+    WORLD_ITEMS: worldItemsResolved,
+    WORLD_ITEMS_V1: worldItemsResolved,
   };
 }
 
