@@ -48,7 +48,7 @@ export async function loadReceiverInitModules() {
       RULE_ENGINE_MASTER_CONTROL,
       validateRuleEngineConfig,
       RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_ALIAS,
-      validateRuleEngineV1Config: validateRuleEngineConfigLegacy,
+      validateRuleEngineV1Config: validateRuleEngineConfigAlias,
     },
     {
       INTERACTIONS_V2,
@@ -144,7 +144,7 @@ export async function loadReceiverInitModules() {
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_ALIAS,
-    validateRuleEngineV1Config: validateRuleEngineConfigLegacy,
+    validateRuleEngineV1Config: validateRuleEngineConfigAlias,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineFromInteractionsV2: buildRuleEngineFromInteractionsResolved,
@@ -211,7 +211,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     RULE_ENGINE_V1_MASTER_CONTROL: ruleEngineMasterControlAlias,
-    validateRuleEngineV1Config: validateRuleEngineAlias,
+    validateRuleEngineV1Config: validateRuleEngineConfigAlias,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineFromInteractionsV2,
@@ -261,7 +261,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     : ruleEngineMasterControlAlias;
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
     ? validateRuleEngineConfig
-    : validateRuleEngineAlias;
+    : validateRuleEngineConfigAlias;
   const validateSpellRuntimeRoutingFn = validateSpellRuntimeRouting;
   const validateSpellSchemaIntegrityFn = validateSpellSchemaIntegrity;
   const buildRuleEngineFromInteractions = (typeof buildRuleEngineFromInteractionsV2 === "function")
