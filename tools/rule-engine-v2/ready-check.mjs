@@ -34,7 +34,9 @@ const health = JSON.parse(readFileSync(healthPath, "utf8"));
 if (health.spellbookOk !== true) fail("spellbookOk must be true");
 if (health.interactionsOk !== true) fail("interactionsOk must be true");
 if (health.bootstrapUsesV2Adapter !== true) fail("bootstrapUsesV2Adapter must be true");
-if (health.v1RulesProjectionOnly !== true) fail("v1RulesProjectionOnly must be true");
+if (!(health.projectionRulesOnly === true || health.v1RulesProjectionOnly === true)) {
+  fail("projectionRulesOnly (or legacy v1RulesProjectionOnly) must be true");
+}
 if (!Array.isArray(health.driftRuleIds)) fail("driftRuleIds must be an array");
 if (health.driftRuleIds.length !== 0) fail(`driftRuleIds must be empty (got ${health.driftRuleIds.join(", ")})`);
 
