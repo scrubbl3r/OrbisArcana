@@ -1224,6 +1224,7 @@
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
     const RULE_ENGINE_V1_EXECUTE_ACTIONS = false;
+    const RULE_ENGINE_EXECUTE_ACTIONS = RULE_ENGINE_V1_EXECUTE_ACTIONS;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
@@ -2025,13 +2026,13 @@
         const spellDispatchSystem = createSpellDispatchSystem({
           eventBus,
           resources: resourcesSystem,
-          ruleEngineEnabled: (!ruleSchemaV1 || ruleSchemaV1.enabled !== false) && RULE_ENGINE_V1_EXECUTE_ACTIONS === true,
+          ruleEngineEnabled: (!ruleSchemaV1 || ruleSchemaV1.enabled !== false) && RULE_ENGINE_EXECUTE_ACTIONS === true,
         });
         if (typeof createRuleEnginePreviewSystemFactory === "function" && ruleSchemaV1) {
           ruleEngineV1PreviewSystem = createRuleEnginePreviewSystemFactory({
             eventBus,
             schema: ruleSchemaV1,
-            executeActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
+            executeActions: RULE_ENGINE_EXECUTE_ACTIONS,
           });
         }
         if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
