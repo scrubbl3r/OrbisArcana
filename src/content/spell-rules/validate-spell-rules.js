@@ -140,10 +140,10 @@ function indexDefsById(defs = []) {
 }
 
 /**
- * Lightweight schema validation for Rule Engine v1 data files.
+ * Lightweight schema validation for rule-engine data files.
  * Returns errors only; caller decides whether to throw or log.
  */
-export function validateSpellRulesV1(rules = [], options = {}) {
+export function validateSpellRules(rules = [], options = {}) {
   const signalDefs = Array.isArray(options && options.signals)
     ? options.signals
     : SIGNAL_DEFINITIONS;
@@ -324,4 +324,4 @@ export function validateSpellRulesV1(rules = [], options = {}) {
   return errors;
 }
 
-export const validateSpellRules = validateSpellRulesV1;
+export const validateSpellRulesV1 = validateSpellRules;

@@ -1,4 +1,4 @@
-import { validateSpellRulesV1 } from "./validate-spell-rules.js";
+import { validateSpellRules } from "./validate-spell-rules.js";
 import { RULE_ENGINE_MASTER_CONTROL } from "./index.js";
 
 const DEFAULT_MASTER_CONTROL = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
@@ -77,7 +77,7 @@ function actionOverrideKeyTargetsExistingAction(rule, parsed) {
   return false;
 }
 
-export function validateRuleEngineV1Config(config = null) {
+export function validateRuleEngineConfig(config = null) {
   const source = (config && typeof config === "object")
     ? config
     : DEFAULT_MASTER_CONTROL;
@@ -1862,7 +1862,7 @@ export function validateRuleEngineV1Config(config = null) {
   if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_MASTER_CONTROL.events must be an array");
   if (!Array.isArray(cfg.rules)) errors.push("RULE_ENGINE_MASTER_CONTROL.rules must be an array");
 
-  const ruleErrors = validateSpellRulesV1(rules, { signals, windows, events });
+  const ruleErrors = validateSpellRules(rules, { signals, windows, events });
   errors.push(...ruleErrors);
 
   const eventIds = new Set(events.map((e) => String(e && e.id || "").trim().toLowerCase()).filter(Boolean));
@@ -2344,4 +2344,4 @@ export function validateRuleEngineV1Config(config = null) {
   return errors;
 }
 
-export const validateRuleEngineConfig = validateRuleEngineV1Config;
+export const validateRuleEngineV1Config = validateRuleEngineConfig;
