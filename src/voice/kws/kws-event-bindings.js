@@ -123,11 +123,15 @@ export function bindKwsEventHandlers({
     void p;
   }));
 
-  unsub.push(eventBus.on("rule_engine.v1.wake_win_opened", (p = {}) => {
+  function onRuleEngineWakeWindowOpened(p = {}) {
     const ttlMs = Math.max(0, Number(p.ttlMs) || gateTimeoutMs);
     openKwsWakeHudGate(ttlMs);
     updateKwsReadout();
-  }));
+  }
+
+  // Listen to both modern and legacy event IDs during migration.
+  unsub.push(eventBus.on("rule_engine.wake_win_opened", onRuleEngineWakeWindowOpened));
+  unsub.push(eventBus.on("rule_engine.v1.wake_win_opened", onRuleEngineWakeWindowOpened));
 
   return {
     dispose() {
