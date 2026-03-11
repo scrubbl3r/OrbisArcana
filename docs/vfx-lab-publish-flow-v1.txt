@@ -46,7 +46,7 @@ Effect registry SSOT
 - names effect ids + categories + runtime ids + default preset ids
 
 Spell effect bindings SSOT
-- `src/content/vfx/spell-effect-bindings-v1.js`
+- `src/content/vfx/spell-effect-bindings.js`
 - maps spell ids to VFX effect/preset bindings
 - supports post-cast action metadata for spell-linked visuals/mechanics
 
@@ -147,4 +147,3 @@ Runtime code lives in:
 Lab primarily edits and publishes:
 - presets
 - bindings
-

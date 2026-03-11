@@ -5,8 +5,8 @@ Purpose
 - Define trigger chains (`on`) and outcomes (`then`) with optional per-rule/per-action toggles.
 
 Canonical Source
-- `src/content/spell-rules/rule-engine-v1-master-control.js`
-- symbol: `RULE_ENGINE_V1_MASTER_CONTROL`
+- `src/content/spell-rules/rule-engine-master-control.js`
+- symbol: `RULE_ENGINE_MASTER_CONTROL`
 
 Current Neutral Contract (Implemented)
 - Intent names:
@@ -32,8 +32,8 @@ Current Neutral Contract (Implemented)
 Top-Level Shape
 ```js
 {
-  id: "rule_engine_v1",
-  version: "v1",
+  id: "rule_engine_v2",
+  version: "v2",
   enabled: true, // optional, default true
   execution: { ... }, // optional runtime policy flags
   ruleDefaults: { ... }, // optional global defaults for rules
