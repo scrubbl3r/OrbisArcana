@@ -230,7 +230,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
 
   function buildSafeDisabledRuleSchema() {
     return Object.freeze({
-      id: "rule_engine_v1_safe_disabled",
+      id: "rule_engine_safe_disabled",
       version: "v1",
       enabled: false,
       signals: Object.freeze([]),
@@ -619,8 +619,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     }
   }
   const resolvedRuleSource = useInteractionsV2
-    ? (adapterFallbackUsed ? "interactions_v2_adapter_fallback_v1" : "interactions_v2_adapter")
-    : "rule_engine_v1_master_control";
+    ? (adapterFallbackUsed ? "interactions_adapter_fallback" : "interactions_adapter")
+    : "rule_engine_master_control";
   try {
     console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}
