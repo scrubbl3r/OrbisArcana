@@ -1796,12 +1796,12 @@
             };
             if (els.rulesReadout) {
               const source = String(ruleSchema.source || "unknown");
-              if (source === "interactions_v2_adapter") {
+              if (source === "interactions_adapter" || source === "interactions_v2_adapter") {
                 els.rulesReadout.textContent = "V2 adapter";
-              } else if (source === "interactions_v2_adapter_fallback_v1") {
+              } else if (source === "interactions_adapter_fallback" || source === "interactions_v2_adapter_fallback_v1") {
                 els.rulesReadout.textContent = "V2 adapter (fallback)";
-              } else if (source === "rule_engine_v1_master_control") {
-                els.rulesReadout.textContent = "V1 master";
+              } else if (source === "rule_engine_master_control" || source === "rule_engine_v1_master_control") {
+                els.rulesReadout.textContent = "Master control";
               } else {
                 els.rulesReadout.textContent = source || "unknown";
               }
@@ -2203,20 +2203,31 @@
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_CLEAR, () => {
           clearFloatGrace();
         });
-        eventBus.on("rule_engine.v1.action_executed", (p = {}) => {
+        let lastRuleEngineActionKey = "";
+        let lastRuleEngineActionAtMs = 0;
+        const onRuleEngineActionExecuted = (p = {}) => {
           const actionType = String(p.actionType || "").toLowerCase();
           const actionId = String(p.actionId || "").toLowerCase();
+          const dedupeAtMsRaw = Number(p.atMs);
+          const dedupeAtMs = Number.isFinite(dedupeAtMsRaw) ? Math.floor(dedupeAtMsRaw) : 0;
+          const dedupeKey = `${String(p.ruleId || "")}|${actionType}|${actionId}|${dedupeAtMs}`;
+          const nowMs = performance.now();
+          if (dedupeKey && dedupeKey === lastRuleEngineActionKey && (nowMs - lastRuleEngineActionAtMs) < 100) return;
+          lastRuleEngineActionKey = dedupeKey;
+          lastRuleEngineActionAtMs = nowMs;
           if (actionType === "wake_win") {
             const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
             const ttlMs = Math.max(0, Number(args.ttlMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
             eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-            eventBus.emit("rule_engine.v1.wake_win_opened", {
+            const wakeWinPayload = {
               ruleId: String(p.ruleId || ""),
               actionId,
               spells: Array.isArray(p.spells) ? p.spells.slice() : [],
               ttlMs,
               atMs: Number(p.atMs) || performance.now(),
-            });
+            };
+            eventBus.emit("rule_engine.wake_win_opened", wakeWinPayload);
+            eventBus.emit("rule_engine.v1.wake_win_opened", wakeWinPayload);
             return;
           }
           if (actionType !== "event") return;
@@ -2255,7 +2266,9 @@
               ...args,
             });
           }
-        });
+        };
+        eventBus.on("rule_engine.action_executed", onRuleEngineActionExecuted);
+        eventBus.on("rule_engine.v1.action_executed", onRuleEngineActionExecuted);
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,

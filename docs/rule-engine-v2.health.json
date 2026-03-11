@@ -1,6 +1,6 @@
 {
   "schema": "orbis.rule_engine_v2.health",
-  "generatedAt": "2026-03-11T04:33:49.944Z",
+  "generatedAt": "2026-03-11T04:40:26.699Z",
   "spellbookOk": true,
   "interactionsOk": true,
   "bootstrapUsesV2Adapter": true,
