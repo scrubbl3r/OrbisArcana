@@ -1,5 +1,5 @@
 // Compatibility shim: keep legacy module path stable during filename migration.
 export {
-  buildRuleEngineV1PreviewRuntime,
   buildRuleEnginePreviewRuntime,
+  buildRuleEngineV1PreviewRuntime,
 } from "./build-rule-engine-preview-runtime.js";
