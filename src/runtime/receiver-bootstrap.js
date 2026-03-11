@@ -4,6 +4,20 @@
  * This is intentionally broad; the receiver picks only what it needs from the returned object.
  */
 
+export const RULE_ENGINE_SOURCES = Object.freeze({
+  INTERACTIONS_ADAPTER: "interactions_adapter",
+  INTERACTIONS_ADAPTER_FALLBACK: "interactions_adapter_fallback",
+  INTERACTIONS_BOOTSTRAP_DISABLED: "interactions_bootstrap_disabled",
+  INTERACTIONS_ADAPTER_MISSING_BUILDER: "interactions_adapter_missing_builder",
+});
+
+export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
+  [RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER]: "V2 adapter",
+  [RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_FALLBACK]: "V2 adapter (safe fallback)",
+  [RULE_ENGINE_SOURCES.INTERACTIONS_BOOTSTRAP_DISABLED]: "V2 bootstrap disabled (safe disabled)",
+  [RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_MISSING_BUILDER]: "V2 adapter missing builder (safe disabled)",
+});
+
 /**
  * Dynamically import the receiver runtime dependencies used by `game-receiver.js` startup.
  *
@@ -273,17 +287,17 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
   let adapterFallbackUsed = false;
-  let ruleSource = "interactions_adapter";
+  let ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER;
   let ruleSchema = buildSafeDisabledRuleSchema();
   if (!useInteractionsV2) {
     adapterFallbackUsed = true;
-    ruleSource = "interactions_bootstrap_disabled";
+    ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_BOOTSTRAP_DISABLED;
     try {
       console.warn("[receiver-bootstrap] INTERACTIONS_V2 bootstrap disabled; using safe disabled rule schema");
     } catch (_) {}
   } else if (typeof buildRuleEngineFromInteractions !== "function") {
     adapterFallbackUsed = true;
-    ruleSource = "interactions_adapter_missing_builder";
+    ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_MISSING_BUILDER;
     try {
       console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter missing builder; using safe disabled rule schema");
     } catch (_) {}
@@ -298,7 +312,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to adapter base schema", err);
       } catch (_) {}
       adapterFallbackUsed = true;
-      ruleSource = "interactions_adapter_fallback";
+      ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_FALLBACK;
       ruleSchema = adapterBaseRuleSchema;
     }
   }
@@ -639,7 +653,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       refreshRuleSchemaDerived();
     }
   }
-  const resolvedRuleSource = adapterFallbackUsed ? ruleSource : "interactions_adapter";
+  const resolvedRuleSource = adapterFallbackUsed
+    ? ruleSource
+    : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER;
   try {
     console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}

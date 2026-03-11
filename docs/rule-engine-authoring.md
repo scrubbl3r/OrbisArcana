@@ -25,10 +25,17 @@ Related index:
 ## Current Runtime Switches
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/interactions-v2.js`
-  - Purpose: Active runtime rule source selector (must remain `true`).
+  - Purpose: Must remain `true`; otherwise runtime enters safe-disabled mode.
 - `RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`
   - Purpose: Require projected/runtime rules as the active rule source (must remain `true`).
+
+## Runtime Source IDs
+- Defined in: `src/runtime/receiver-bootstrap.js`
+- `interactions_adapter` (normal V2 path)
+- `interactions_adapter_fallback` (adapter build failed; safe fallback)
+- `interactions_bootstrap_disabled` (`useInReceiverBootstrap !== true`; safe disabled)
+- `interactions_adapter_missing_builder` (adapter export missing; safe disabled)
 
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.

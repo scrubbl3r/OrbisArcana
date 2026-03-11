@@ -1223,12 +1223,13 @@
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
-    const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
+    const DEFAULT_RULE_ENGINE_SOURCE_READOUT = Object.freeze({
       interactions_adapter: "V2 adapter",
       interactions_adapter_fallback: "V2 adapter (safe fallback)",
       interactions_bootstrap_disabled: "V2 bootstrap disabled (safe disabled)",
       interactions_adapter_missing_builder: "V2 adapter missing builder (safe disabled)",
     });
+    let ruleEngineSourceReadout = DEFAULT_RULE_ENGINE_SOURCE_READOUT;
     const RULE_ENGINE_ACTION_EXECUTED_EVENT = "rule_engine.action_executed";
     const RULE_ENGINE_WAKE_WIN_OPENED_EVENT = "rule_engine.wake_win_opened";
     const RULE_ENGINE_TRIGGER = "rule_engine";
@@ -1434,7 +1435,7 @@
         receiverModulesReady = false;
         await teardownKwsForReinit();
         const [
-          { loadReceiverInitModules, hydrateReceiverBootstrapState },
+          { loadReceiverInitModules, hydrateReceiverBootstrapState, RULE_ENGINE_SOURCE_READOUT: importedRuleEngineSourceReadout },
           receiverEventsModule,
           { createKwsPanelController },
           { createKwsRuntimeController },
@@ -1465,6 +1466,9 @@
           import("./src/systems/orb-runtime-loop.js"),
         ]);
         teardownKwsRuntimeForReinit = importedTeardownKwsRuntimeForReinit;
+        if (importedRuleEngineSourceReadout && typeof importedRuleEngineSourceReadout === "object") {
+          ruleEngineSourceReadout = importedRuleEngineSourceReadout;
+        }
         if (receiverEventsModule && receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventsModule.RECEIVER_EVENTS };
         }
@@ -1804,7 +1808,7 @@
             };
             if (els.rulesReadout) {
               const source = String(ruleSchema.source || "unknown");
-              els.rulesReadout.textContent = RULE_ENGINE_SOURCE_READOUT[source] || source || "unknown";
+              els.rulesReadout.textContent = ruleEngineSourceReadout[source] || source || "unknown";
             }
           },
           initSpellActionHandlers,
