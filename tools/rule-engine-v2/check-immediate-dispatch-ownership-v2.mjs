@@ -1,5 +1,5 @@
 import { createSpellDispatchSystem } from "../../src/systems/spell-dispatch-system.js";
-import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing-v1.js";
+import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing.js";
 import {
   EVT_VOICE_SPELL_CAST,
   EVT_VOICE_SPELL_DETECTED,

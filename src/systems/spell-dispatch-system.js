@@ -4,7 +4,7 @@ import {
   SPELL_RUNTIME_ROUTING_BY_WORD_ID,
   SPELL_WINDOW_BYPASS_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
-} from "../content/spells/spell-runtime-routing-v1.js";
+} from "../content/spells/spell-runtime-routing.js";
 import {
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
   EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,

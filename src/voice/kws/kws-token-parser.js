@@ -9,7 +9,7 @@ import {
   SPELL_RUNTIME_ROUTING_BY_WORD_ID,
   WAKE_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing-v1.js";
+} from "../../content/spells/spell-runtime-routing.js";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1200,

@@ -6,7 +6,7 @@ import {
   WAKE_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
-} from "../spells/spell-runtime-routing-v1.js";
+} from "../spells/spell-runtime-routing.js";
 
 function buildWakeWindowSpellSignals() {
   return (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])

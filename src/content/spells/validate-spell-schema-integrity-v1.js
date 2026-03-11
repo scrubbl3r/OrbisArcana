@@ -7,7 +7,7 @@ import {
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
-} from "./spell-runtime-routing-v1.js";
+} from "./spell-runtime-routing.js";
 
 function asId(v) {
   return String(v || "").trim().toLowerCase();

@@ -7,7 +7,7 @@ import {
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
   SPELL_RUNTIME_ROUTING_BY_WORD_ID,
-} from "../../content/spells/spell-runtime-routing-v1.js";
+} from "../../content/spells/spell-runtime-routing.js";
 
 function resolveActivePhrasesByIds(ids = []) {
   return (Array.isArray(ids) ? ids : [])

@@ -2,7 +2,7 @@ import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
   KWS_INFER_DEFAULT_WORD_ID,
   KWS_SIM_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing-v1.js";
+} from "../../content/spells/spell-runtime-routing.js";
 
 function resolveActivePhraseById(id, fallback = "") {
   const spell = ACTIVE_SPELLS_BY_ID[String(id || "").trim().toLowerCase()];

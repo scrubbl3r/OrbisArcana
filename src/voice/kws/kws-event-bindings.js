@@ -3,7 +3,7 @@ import {
   KWS_FLASH_TOKEN_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
   WAKE_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing-v1.js";
+} from "../../content/spells/spell-runtime-routing.js";
 
 export function bindKwsEventHandlers({
   eventBus,
