@@ -1,5 +1,9 @@
 import { validateSpellRulesV1 } from "./validate-spell-rules-v1.js";
-import { RULE_ENGINE_V1_MASTER_CONTROL } from "./rule-engine-v1-master-control.js";
+import { RULE_ENGINE_MASTER_CONTROL } from "./index.js";
+
+const DEFAULT_MASTER_CONTROL = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
+  ? RULE_ENGINE_MASTER_CONTROL
+  : Object.create(null);
 
 function asObj(v) {
   return (v && typeof v === "object") ? v : Object.create(null);
@@ -76,7 +80,7 @@ function actionOverrideKeyTargetsExistingAction(rule, parsed) {
 export function validateRuleEngineV1Config(config = null) {
   const source = (config && typeof config === "object")
     ? config
-    : RULE_ENGINE_V1_MASTER_CONTROL;
+    : DEFAULT_MASTER_CONTROL;
   const cfg = asObj(source);
   const signals = Array.isArray(cfg.signals) ? cfg.signals : [];
   const windows = Array.isArray(cfg.windows) ? cfg.windows : [];
@@ -157,8 +161,8 @@ export function validateRuleEngineV1Config(config = null) {
   const signalDefinitionCollisions = Array.isArray(cfg.signalDefinitionCollisions)
     ? cfg.signalDefinitionCollisions
     : [];
-  const knownTopLevelKeys = new Set(Object.keys(asObj(RULE_ENGINE_V1_MASTER_CONTROL)));
-  const knownExecutionKeys = new Set(Object.keys(asObj(RULE_ENGINE_V1_MASTER_CONTROL && RULE_ENGINE_V1_MASTER_CONTROL.execution)));
+  const knownTopLevelKeys = new Set(Object.keys(asObj(DEFAULT_MASTER_CONTROL)));
+  const knownExecutionKeys = new Set(Object.keys(asObj(DEFAULT_MASTER_CONTROL && DEFAULT_MASTER_CONTROL.execution)));
 
   const errors = [];
   for (const key of Object.keys(cfg)) {
