@@ -255,16 +255,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     : null;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function") ? setRuleSchema : undefined;
 
-  const fallbackRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
-    ? ruleEngineMasterControl
-    : Object.freeze({
-        version: "2",
-        signals: [],
-        windows: [],
-        events: [],
-        rules: [],
-        eventRuntimeBindings: Object.create(null),
-      });
   const adapterBaseRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
     ? Object.freeze({
         ...ruleEngineMasterControl,
@@ -283,8 +273,21 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
   let adapterFallbackUsed = false;
-  let ruleSchema = fallbackRuleSchema;
-  if (useInteractionsV2 && typeof buildRuleEngineFromInteractions === "function") {
+  let ruleSource = "interactions_adapter";
+  let ruleSchema = buildSafeDisabledRuleSchema();
+  if (!useInteractionsV2) {
+    adapterFallbackUsed = true;
+    ruleSource = "interactions_bootstrap_disabled";
+    try {
+      console.warn("[receiver-bootstrap] INTERACTIONS_V2 bootstrap disabled; using safe disabled rule schema");
+    } catch (_) {}
+  } else if (typeof buildRuleEngineFromInteractions !== "function") {
+    adapterFallbackUsed = true;
+    ruleSource = "interactions_adapter_missing_builder";
+    try {
+      console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter missing builder; using safe disabled rule schema");
+    } catch (_) {}
+  } else {
     try {
       ruleSchema = buildRuleEngineFromInteractions({
         interactionsV2: INTERACTIONS_V2,
@@ -295,6 +298,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to adapter base schema", err);
       } catch (_) {}
       adapterFallbackUsed = true;
+      ruleSource = "interactions_adapter_fallback";
       ruleSchema = adapterBaseRuleSchema;
     }
   }
@@ -635,9 +639,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       refreshRuleSchemaDerived();
     }
   }
-  const resolvedRuleSource = useInteractionsV2
-    ? (adapterFallbackUsed ? "interactions_adapter_fallback" : "interactions_adapter")
-    : "legacy_policy_fallback";
+  const resolvedRuleSource = adapterFallbackUsed ? ruleSource : "interactions_adapter";
   try {
     console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}

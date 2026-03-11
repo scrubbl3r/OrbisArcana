@@ -1226,7 +1226,8 @@
     const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
       interactions_adapter: "V2 adapter",
       interactions_adapter_fallback: "V2 adapter (safe fallback)",
-      legacy_policy_fallback: "Legacy policy fallback",
+      interactions_bootstrap_disabled: "V2 bootstrap disabled (safe disabled)",
+      interactions_adapter_missing_builder: "V2 adapter missing builder (safe disabled)",
     });
     const RULE_ENGINE_ACTION_EXECUTED_EVENT = "rule_engine.action_executed";
     const RULE_ENGINE_WAKE_WIN_OPENED_EVENT = "rule_engine.wake_win_opened";

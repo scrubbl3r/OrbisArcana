@@ -1861,6 +1861,9 @@ export function validateRuleEngineConfig(config = null) {
   if (!Array.isArray(cfg.windows)) errors.push("RULE_ENGINE_MASTER_CONTROL.windows must be an array");
   if (!Array.isArray(cfg.events)) errors.push("RULE_ENGINE_MASTER_CONTROL.events must be an array");
   if (!Array.isArray(cfg.rules)) errors.push("RULE_ENGINE_MASTER_CONTROL.rules must be an array");
+  if (Array.isArray(cfg.rules) && cfg.rules.length > 0) {
+    errors.push("RULE_ENGINE_MASTER_CONTROL.rules must remain empty; author rules in INTERACTIONS_V2");
+  }
 
   const ruleErrors = validateSpellRules(rules, { signals, windows, events });
   errors.push(...ruleErrors);
