@@ -1225,19 +1225,13 @@
     let runOrbRuntimePipelineModule = null;
     const RULE_ENGINE_SOURCE_IDS = Object.freeze({
       INTERACTIONS_ADAPTER: "interactions_adapter",
-      INTERACTIONS_ADAPTER_LEGACY_ALIAS: "interactions_v2_adapter",
       INTERACTIONS_ADAPTER_FALLBACK: "interactions_adapter_fallback",
-      INTERACTIONS_ADAPTER_FALLBACK_LEGACY_ALIAS: "interactions_v2_adapter_fallback_v1",
       MASTER_CONTROL: "rule_engine_master_control",
-      MASTER_CONTROL_LEGACY_ALIAS: "rule_engine_v1_master_control",
     });
     const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
       [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER]: "V2 adapter",
-      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_LEGACY_ALIAS]: "V2 adapter",
       [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK]: "V2 adapter (fallback)",
-      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK_LEGACY_ALIAS]: "V2 adapter (fallback)",
       [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL]: "Master control",
-      [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL_LEGACY_ALIAS]: "Master control",
     });
     const RULE_ENGINE_CHANNELS = Object.freeze({
       ACTION_EXECUTED: "rule_engine.action_executed",
