@@ -125,3 +125,5 @@ export function validateSpellSchemaIntegrityV1(options = {}) {
 
   return errors;
 }
+
+export const validateSpellSchemaIntegrity = validateSpellSchemaIntegrityV1;

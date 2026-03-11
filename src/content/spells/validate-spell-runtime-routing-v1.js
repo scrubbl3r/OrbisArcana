@@ -193,3 +193,5 @@ export function validateSpellRuntimeRoutingV1() {
 
   return errors;
 }
+
+export const validateSpellRuntimeRouting = validateSpellRuntimeRoutingV1;

@@ -22,13 +22,23 @@ export const WAKE_WINDOW_SPELL_IDS = Object.freeze([
   "vectus",
 ]);
 
+// Neutral aliases for gradual de-versioning in runtime consumers.
+export const WAKE_WORD_IDS = WAKE_SPELL_IDS;
+export const WAKE_REQUIRED_WORD_IDS = WAKE_REQUIRED_SPELL_IDS;
+export const AXIS_WORD_IDS = AXIS_SPELL_IDS;
+export const WAKE_WINDOW_WORD_IDS = WAKE_WINDOW_SPELL_IDS;
+
 export const SPELL_WINDOW_BYPASS_SPELL_IDS = Object.freeze([
   ...new Set([...AXIS_SPELL_IDS, ...WAKE_WINDOW_SPELL_IDS]),
 ]);
 
+export const SPELL_WINDOW_BYPASS_WORD_IDS = SPELL_WINDOW_BYPASS_SPELL_IDS;
+
 // Immediate voice spells that are owned by the rule engine path.
 // Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
 export const RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS = collectImmediateEventSpellIdsFromInteractionsV2();
+
+export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS;
 
 export const WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN = Object.freeze({
   ...WAKE_WINDOW_SPELL_IDS.reduce((acc, id) => {
@@ -39,6 +49,8 @@ export const WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN = Object.freeze({
   }, {}),
 });
 
+export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN;
+
 const KWS_TOP_SPELL_IDS = Object.freeze([
   ...new Set([
     ...WAKE_SPELL_IDS,
@@ -48,10 +60,13 @@ const KWS_TOP_SPELL_IDS = Object.freeze([
 ]);
 
 export const KWS_FLASH_TOKEN_SPELL_IDS = KWS_TOP_SPELL_IDS;
+export const KWS_FLASH_TOKEN_WORD_IDS = KWS_FLASH_TOKEN_SPELL_IDS;
 
 export const KWS_ROW_TOP_SPELL_IDS = KWS_TOP_SPELL_IDS;
+export const KWS_ROW_TOP_WORD_IDS = KWS_ROW_TOP_SPELL_IDS;
 
 export const KWS_ROW_BOTTOM_SPELL_IDS = WAKE_WINDOW_SPELL_IDS;
+export const KWS_ROW_BOTTOM_WORD_IDS = KWS_ROW_BOTTOM_SPELL_IDS;
 
 export const KWS_SIM_SPELL_IDS = Object.freeze([
   "pyro",
@@ -60,8 +75,10 @@ export const KWS_SIM_SPELL_IDS = Object.freeze([
   "sanctum",
   "domus",
 ]);
+export const KWS_SIM_WORD_IDS = KWS_SIM_SPELL_IDS;
 
 export const KWS_INFER_DEFAULT_SPELL_ID = "pyro";
+export const KWS_INFER_DEFAULT_WORD_ID = KWS_INFER_DEFAULT_SPELL_ID;
 
 export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
@@ -116,6 +133,7 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
     allowedAxes: Object.freeze(["x", "y", "z"]),
   }),
 ]);
+export const SPELL_RUNTIME_ROUTING_TABLE = SPELL_RUNTIME_ROUTING;
 
 export const SPELL_RUNTIME_ROUTING_BY_ID = Object.freeze(
   SPELL_RUNTIME_ROUTING.reduce((acc, item) => {
@@ -125,3 +143,4 @@ export const SPELL_RUNTIME_ROUTING_BY_ID = Object.freeze(
     return acc;
   }, {})
 );
+export const SPELL_RUNTIME_ROUTING_BY_WORD_ID = SPELL_RUNTIME_ROUTING_BY_ID;

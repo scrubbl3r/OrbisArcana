@@ -42,8 +42,8 @@ export async function loadReceiverInitModules() {
     { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
     { RUNTIME_SPELLS_BY_ID },
-    { validateSpellRuntimeRoutingV1 },
-    { validateSpellSchemaIntegrityV1 },
+    { validateSpellRuntimeRouting, validateSpellRuntimeRoutingV1 },
+    { validateSpellSchemaIntegrity, validateSpellSchemaIntegrityV1 },
     {
       RULE_ENGINE_MASTER_CONTROL,
       validateRuleEngineConfig,
@@ -128,7 +128,9 @@ export async function loadReceiverInitModules() {
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
+    validateSpellRuntimeRouting,
     validateSpellRuntimeRoutingV1,
+    validateSpellSchemaIntegrity,
     validateSpellSchemaIntegrityV1,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
@@ -193,7 +195,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
+    validateSpellRuntimeRouting,
     validateSpellRuntimeRoutingV1,
+    validateSpellSchemaIntegrity,
     validateSpellSchemaIntegrityV1,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
@@ -248,6 +252,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
     ? validateRuleEngineConfig
     : validateRuleEngineV1Config;
+  const validateSpellRuntimeRoutingFn = (typeof validateSpellRuntimeRouting === "function")
+    ? validateSpellRuntimeRouting
+    : validateSpellRuntimeRoutingV1;
+  const validateSpellSchemaIntegrityFn = (typeof validateSpellSchemaIntegrity === "function")
+    ? validateSpellSchemaIntegrity
+    : validateSpellSchemaIntegrityV1;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
     ? setRuleSchema
     : setRuleSchemaV1;
@@ -403,14 +413,14 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     });
   }
 
-  if (typeof validateSpellRuntimeRoutingV1 === "function") {
+  if (typeof validateSpellRuntimeRoutingFn === "function") {
     if (typeof validateSpellbookV2 === "function") {
       const spellbookErrors = validateSpellbookV2();
       if (spellbookErrors.length) {
         throw new Error(`Spellbook v2 validation failed: ${spellbookErrors.join(" | ")}`);
       }
     }
-    const routingErrors = validateSpellRuntimeRoutingV1();
+    const routingErrors = validateSpellRuntimeRoutingFn();
     if (routingErrors.length) {
       throw new Error(`Spell runtime routing validation failed: ${routingErrors.join(" | ")}`);
     }
@@ -429,8 +439,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       refreshRuleSchemaDerived();
     }
   }
-  if (typeof validateSpellSchemaIntegrityV1 === "function") {
-    const integrityErrors = validateSpellSchemaIntegrityV1({
+  if (typeof validateSpellSchemaIntegrityFn === "function") {
+    const integrityErrors = validateSpellSchemaIntegrityFn({
       rules: ruleRules,
       events: ruleEvents,
       eventRuntimeBindings: ruleEventRuntimeBindings,
