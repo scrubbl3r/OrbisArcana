@@ -1,5 +1,5 @@
 import { EVENT_DEFINITIONS_V1_BY_ID } from "./event-definitions-v1.js";
-import { SIGNAL_DEFINITIONS_V1, SIGNAL_DEFINITIONS_V1_BY_ID } from "./signal-definitions-v1.js";
+import { SIGNAL_DEFINITIONS_V1, SIGNAL_DEFINITIONS_V1_BY_ID } from "./signal-definitions.js";
 import { WINDOW_DEFINITIONS_V1_BY_ID } from "./window-definitions-v1.js";
 
 const DEFAULT_WAKE_WINDOW_ID = "wake_win";

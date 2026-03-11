@@ -10,7 +10,7 @@ import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions
 import {
   SIGNAL_DEFINITION_COLLISIONS_V1,
   SIGNAL_DEFINITIONS_V1,
-} from "./signal-definitions-v1.js";
+} from "./signal-definitions.js";
 import { WINDOW_DEFINITIONS_V1 } from "./window-definitions-v1.js";
 
 const RULE_ENABLED_OVERRIDES = Object.freeze({
