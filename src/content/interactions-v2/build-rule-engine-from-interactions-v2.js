@@ -2,9 +2,6 @@ import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { validateInteractionsV2 } from "./validate-interactions-v2.js";
 
 const RESERVED_ACTION_KEYS = new Set(["type", "id", "spells", "overrides", "enabled"]);
-const BUILD_RULE_ENGINE_OPTION_ALIASES = Object.freeze({
-  BASE_RULE_ENGINE_LEGACY: "baseRuleEngineV1",
-});
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -114,16 +111,12 @@ export function buildRuleEngineFromInteractionsV2(options = {}) {
   const {
     interactionsV2 = INTERACTIONS_V2,
     baseRuleEngine = null,
-    baseRuleEngineLegacy = null,
   } = options;
-  const baseRuleEngineAlias = Object.prototype.hasOwnProperty.call(options, BUILD_RULE_ENGINE_OPTION_ALIASES.BASE_RULE_ENGINE_LEGACY)
-    ? options[BUILD_RULE_ENGINE_OPTION_ALIASES.BASE_RULE_ENGINE_LEGACY]
-    : null;
   const validation = validateInteractionsV2(interactionsV2);
   if (!validation.ok) {
     throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
   }
-  const base = asObj(baseRuleEngine || baseRuleEngineLegacy || baseRuleEngineAlias);
+  const base = asObj(baseRuleEngine);
   const rules = Array.isArray(interactionsV2.rules)
     ? interactionsV2.rules.map((r) => mapRule(r, asObj(interactionsV2.defaults))).filter(Boolean)
     : [];

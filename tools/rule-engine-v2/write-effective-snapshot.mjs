@@ -18,7 +18,7 @@ function buildSnapshot() {
   const interactionsValidation = validateInteractionsV2(INTERACTIONS_V2);
   const projectedRuleEngineV1 = buildRuleEngineFromInteractionsV2({
     interactionsV2: INTERACTIONS_V2,
-    baseRuleEngineV1: null,
+    baseRuleEngine: null,
   });
 
   return {

@@ -43,7 +43,7 @@ function expectValidationPass(caseName, cfg) {
 function expectBuildPass(caseName, cfg, assertFn = null) {
   let projected = null;
   try {
-    projected = buildRuleEngineFromInteractionsV2({ interactionsV2: cfg, baseRuleEngineV1: { rules: [] } });
+    projected = buildRuleEngineFromInteractionsV2({ interactionsV2: cfg, baseRuleEngine: { rules: [] } });
   } catch (err) {
     fail(`${caseName}: expected build pass, got ${err && err.message ? err.message : String(err)}`);
   }
