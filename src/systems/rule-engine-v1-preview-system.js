@@ -9,7 +9,6 @@ const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const EVT_RULE_ENGINE_V1_PREVIEW_MATCHED = "rule_engine.v1.preview_matched";
 const EVT_RULE_ENGINE_V1_ACTION_EXECUTED = "rule_engine.v1.action_executed";
 const EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY = "rule_engine.v1.source_event_summary";
-const EVT_RULE_ENGINE_V1_WAKE_WIN_OPENED = "rule_engine.v1.wake_win_opened";
 
 function emitRuleEngineEventCompat(eventBus, modernEvent, legacyEvent, payload = {}) {
   eventBus.emit(modernEvent, payload);
@@ -499,7 +498,7 @@ export function createRuleEngineV1PreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
-        emitRuleEngineEventCompat(eventBus, EVT_RULE_ENGINE_WAKE_WIN_OPENED, EVT_RULE_ENGINE_V1_WAKE_WIN_OPENED, {
+        eventBus.emit(EVT_RULE_ENGINE_WAKE_WIN_OPENED, {
           ruleId: String(rule && rule.id || ""),
           actionId: id,
           spells: Array.isArray(action && action.spells) ? action.spells.slice() : [],
