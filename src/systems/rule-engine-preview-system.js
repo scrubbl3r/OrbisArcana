@@ -1,4 +1,4 @@
-import { buildRuleEngineV1PreviewRuntime } from "../content/spell-rules/index.js";
+import { buildRuleEnginePreviewRuntime } from "../content/spell-rules/index.js";
 
 const EVT_RULE_ENGINE_PREVIEW_MATCHED = "rule_engine.preview_matched";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
@@ -105,7 +105,7 @@ export function createRuleEngineV1PreviewSystem({
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     throw new Error("createRuleEngineV1PreviewSystem requires eventBus.on/eventBus.emit");
   }
-  const runtime = buildRuleEngineV1PreviewRuntime({
+  const runtime = buildRuleEnginePreviewRuntime({
     signals: schema && Array.isArray(schema.signals) ? schema.signals : [],
     windows: schema && Array.isArray(schema.windows) ? schema.windows : [],
     events: schema && Array.isArray(schema.events) ? schema.events : [],

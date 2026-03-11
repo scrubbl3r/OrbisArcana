@@ -1,6 +1,6 @@
-import { EVENT_DEFINITIONS_V1_BY_ID } from "./event-definitions.js";
-import { SIGNAL_DEFINITIONS_V1, SIGNAL_DEFINITIONS_V1_BY_ID } from "./signal-definitions.js";
-import { WINDOW_DEFINITIONS_V1_BY_ID } from "./window-definitions.js";
+import { EVENT_DEFINITIONS_BY_ID } from "./event-definitions.js";
+import { SIGNAL_DEFINITIONS, SIGNAL_DEFINITIONS_BY_ID } from "./signal-definitions.js";
+import { WINDOW_DEFINITIONS_BY_ID } from "./window-definitions.js";
 
 const DEFAULT_WAKE_WINDOW_ID = "wake_win";
 
@@ -146,33 +146,33 @@ function indexDefsById(defs = []) {
 export function validateSpellRulesV1(rules = [], options = {}) {
   const signalDefs = Array.isArray(options && options.signals)
     ? options.signals
-    : SIGNAL_DEFINITIONS_V1;
+    : SIGNAL_DEFINITIONS;
   const windowDefs = Array.isArray(options && options.windows)
     ? options.windows
-    : Object.values(WINDOW_DEFINITIONS_V1_BY_ID);
+    : Object.values(WINDOW_DEFINITIONS_BY_ID);
   const eventDefs = Array.isArray(options && options.events)
     ? options.events
-    : Object.values(EVENT_DEFINITIONS_V1_BY_ID);
+    : Object.values(EVENT_DEFINITIONS_BY_ID);
   const signalById = (options && options.signalById && typeof options.signalById === "object")
     ? options.signalById
     : (
       Array.isArray(options && options.signals)
         ? indexDefsById(signalDefs)
-        : SIGNAL_DEFINITIONS_V1_BY_ID
+        : SIGNAL_DEFINITIONS_BY_ID
     );
   const windowById = (options && options.windowById && typeof options.windowById === "object")
     ? options.windowById
     : (
       Array.isArray(options && options.windows)
         ? indexDefsById(options.windows)
-        : WINDOW_DEFINITIONS_V1_BY_ID
+        : WINDOW_DEFINITIONS_BY_ID
     );
   const eventById = (options && options.eventById && typeof options.eventById === "object")
     ? options.eventById
     : (
       Array.isArray(options && options.events)
         ? indexDefsById(options.events)
-        : EVENT_DEFINITIONS_V1_BY_ID
+        : EVENT_DEFINITIONS_BY_ID
     );
   const errors = [];
   const seenRuleIds = new Set();

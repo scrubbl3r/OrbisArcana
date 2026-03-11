@@ -4,14 +4,14 @@
 // - src/content/interactions-v2/spellbook-v2.js
 // Keep edits here limited to runtime wiring/plumbing only.
 
-import { EVENT_DEFINITIONS_V1 } from "./event-definitions.js";
-import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "./event-runtime-bindings.js";
+import { EVENT_DEFINITIONS } from "./event-definitions.js";
+import { EVENT_RUNTIME_BINDINGS_BY_ID } from "./event-runtime-bindings.js";
 import { INTERACTIONS_V2, buildRulesFromInteractionsV2 } from "../interactions-v2/index.js";
 import {
-  SIGNAL_DEFINITION_COLLISIONS_V1,
-  SIGNAL_DEFINITIONS_V1,
+  SIGNAL_DEFINITION_COLLISIONS,
+  SIGNAL_DEFINITIONS,
 } from "./signal-definitions.js";
-import { WINDOW_DEFINITIONS_V1 } from "./window-definitions.js";
+import { WINDOW_DEFINITIONS } from "./window-definitions.js";
 
 const RULE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
@@ -513,7 +513,7 @@ function resolveProjectedRules() {
   try {
     return buildRulesFromInteractionsV2(INTERACTIONS_V2);
   } catch (err) {
-    console.warn("RULE_ENGINE_V1_MASTER_CONTROL projection failed; using empty rules:", err);
+    console.warn("RULE_ENGINE_MASTER_CONTROL projection failed; using empty rules:", err);
     return [];
   }
 }
@@ -585,8 +585,8 @@ function applyDefinitionEnabledOverrides(defs = [], overrides = {}) {
 }
 
 // Canonical SSOT for authoring Rule Engine V1 content.
-export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
-  id: "rule_engine_v1",
+export const RULE_ENGINE_MASTER_CONTROL = Object.freeze({
+  id: "rule_engine",
   version: "v1",
   enabled: true,
   execution: Object.freeze({
@@ -690,11 +690,11 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
   windowEnabledOverrides: WINDOW_ENABLED_OVERRIDES,
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
-  signalDefinitionCollisions: SIGNAL_DEFINITION_COLLISIONS_V1,
+  signalDefinitionCollisions: SIGNAL_DEFINITION_COLLISIONS,
   signals: applySignalEnabledOverrides(
     applySignalWhereOverrides(
       applySignalPriorityOverrides(
-        applySignalSourceEventOverrides(SIGNAL_DEFINITIONS_V1, SIGNAL_SOURCE_EVENT_OVERRIDES),
+        applySignalSourceEventOverrides(SIGNAL_DEFINITIONS, SIGNAL_SOURCE_EVENT_OVERRIDES),
         SIGNAL_PRIORITY_OVERRIDES
       ),
       SIGNAL_WHERE_OVERRIDES
@@ -702,11 +702,11 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     SIGNAL_ENABLED_OVERRIDES
   ),
   windows: applyDefinitionDefaultArgOverrides(
-    applyDefinitionEnabledOverrides(WINDOW_DEFINITIONS_V1, WINDOW_ENABLED_OVERRIDES),
+    applyDefinitionEnabledOverrides(WINDOW_DEFINITIONS, WINDOW_ENABLED_OVERRIDES),
     WINDOW_DEFAULT_OVERRIDES
   ),
   events: applyDefinitionDefaultArgOverrides(
-    applyDefinitionEnabledOverrides(EVENT_DEFINITIONS_V1, EVENT_ENABLED_OVERRIDES),
+    applyDefinitionEnabledOverrides(EVENT_DEFINITIONS, EVENT_ENABLED_OVERRIDES),
     EVENT_DEFAULT_OVERRIDES
   ),
   rules: applyActionEnabledOverrides(
@@ -722,9 +722,9 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     ),
     ACTION_ENABLED_OVERRIDES
   ),
-  eventRuntimeBindings: (EVENT_RUNTIME_BINDINGS_V1_BY_ID && typeof EVENT_RUNTIME_BINDINGS_V1_BY_ID === "object")
-    ? { ...EVENT_RUNTIME_BINDINGS_V1_BY_ID }
+  eventRuntimeBindings: (EVENT_RUNTIME_BINDINGS_BY_ID && typeof EVENT_RUNTIME_BINDINGS_BY_ID === "object")
+    ? { ...EVENT_RUNTIME_BINDINGS_BY_ID }
     : Object.create(null),
 });
 
-export const RULE_ENGINE_MASTER_CONTROL = RULE_ENGINE_V1_MASTER_CONTROL;
+export const RULE_ENGINE_V1_MASTER_CONTROL = RULE_ENGINE_MASTER_CONTROL;

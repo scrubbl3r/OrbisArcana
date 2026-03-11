@@ -1,8 +1,8 @@
 import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
-import { EVENT_DEFINITIONS_V1_BY_ID } from "../spell-rules/event-definitions.js";
-import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "../spell-rules/event-runtime-bindings.js";
-import { SIGNAL_DEFINITIONS_V1_BY_ID } from "../spell-rules/signal-definitions.js";
+import { EVENT_DEFINITIONS_BY_ID } from "../spell-rules/event-definitions.js";
+import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
+import { SIGNAL_DEFINITIONS_BY_ID } from "../spell-rules/signal-definitions.js";
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -60,14 +60,14 @@ function normalizeEventId(eventIdRaw) {
 }
 
 const KNOWN_GESTURE_IDS = new Set(
-  Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID || {})
+  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
     .filter((signalId) => String(signalId || "").startsWith("gesture."))
     .map((signalId) => String(signalId || "").slice("gesture.".length))
     .filter(Boolean)
 );
 
 const KNOWN_ORB_STATE_IDS = new Set(
-  Object.keys(SIGNAL_DEFINITIONS_V1_BY_ID || {})
+  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
     .filter((signalId) => String(signalId || "").startsWith("orb_state."))
     .map((signalId) => String(signalId || "").slice("orb_state.".length))
     .filter(Boolean)
@@ -118,7 +118,7 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
           } else {
             errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
           }
-        } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, normalizedEventId)) {
+        } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_BY_ID, normalizedEventId)) {
           errors.push(`INTERACTIONS_V2.defaults.event references unknown event id: ${eventId}`);
         } else if (seenDefaultEventIds.has(normalizedEventId)) {
           errors.push(`INTERACTIONS_V2.defaults.event contains duplicate normalized key: ${eventId}`);
@@ -280,9 +280,9 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
             } else {
               errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
             }
-          } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_V1_BY_ID, normalizedEventId)) {
+          } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_BY_ID, normalizedEventId)) {
             errors.push(`rule ${ruleId} event action references unknown event id: ${eventId}`);
-          } else if (!Object.prototype.hasOwnProperty.call(EVENT_RUNTIME_BINDINGS_V1_BY_ID, normalizedEventId)) {
+          } else if (!Object.prototype.hasOwnProperty.call(EVENT_RUNTIME_BINDINGS_BY_ID, normalizedEventId)) {
             errors.push(`rule ${ruleId} event action references event without runtime binding: ${eventId}`);
           }
           if (Object.prototype.hasOwnProperty.call(action, "overrides")) {

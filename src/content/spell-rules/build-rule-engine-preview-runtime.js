@@ -60,7 +60,7 @@ function getRuleActions(rule) {
   return [];
 }
 
-export function buildRuleEngineV1PreviewRuntime({
+export function buildRuleEnginePreviewRuntime({
   signals = [],
   windows = [],
   events = [],
@@ -199,4 +199,4 @@ export function buildRuleEngineV1PreviewRuntime({
   };
 }
 
-export const buildRuleEnginePreviewRuntime = buildRuleEngineV1PreviewRuntime;
+export const buildRuleEngineV1PreviewRuntime = buildRuleEnginePreviewRuntime;
