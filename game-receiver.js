@@ -1225,8 +1225,8 @@
     let runOrbRuntimePipelineModule = null;
     const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
       interactions_adapter: "V2 adapter",
-      interactions_adapter_fallback: "V2 adapter (fallback)",
-      rule_engine_master_control: "Master control",
+      interactions_adapter_fallback: "V2 adapter (safe fallback)",
+      legacy_policy_fallback: "Legacy policy fallback",
     });
     const RULE_ENGINE_ACTION_EXECUTED_EVENT = "rule_engine.action_executed";
     const RULE_ENGINE_WAKE_WIN_OPENED_EVENT = "rule_engine.wake_win_opened";

@@ -637,7 +637,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
   const resolvedRuleSource = useInteractionsV2
     ? (adapterFallbackUsed ? "interactions_adapter_fallback" : "interactions_adapter")
-    : "rule_engine_master_control";
+    : "legacy_policy_fallback";
   try {
     console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}
