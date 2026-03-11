@@ -28,6 +28,9 @@ if (wakeWindowAxisPrereqRegression.status !== 0) process.exit(wakeWindowAxisPrer
 const ruleSourceContractCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-rule-source-contract-v2.mjs"], { stdio: "inherit" });
 if (ruleSourceContractCheck.status !== 0) process.exit(ruleSourceContractCheck.status || 1);
 
+const policyControlContractCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-policy-control-contract-v2.mjs"], { stdio: "inherit" });
+if (policyControlContractCheck.status !== 0) process.exit(policyControlContractCheck.status || 1);
+
 const masterControlAuthoringCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-authoring-v2.mjs"], { stdio: "inherit" });
 if (masterControlAuthoringCheck.status !== 0) process.exit(masterControlAuthoringCheck.status || 1);
 

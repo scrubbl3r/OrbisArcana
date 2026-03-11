@@ -1,8 +1,8 @@
 import { validateSpellRules } from "./validate-spell-rules.js";
-import { RULE_ENGINE_MASTER_CONTROL } from "./index.js";
+import { RULE_ENGINE_POLICY_CONTROL } from "./index.js";
 
-const DEFAULT_MASTER_CONTROL = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
-  ? RULE_ENGINE_MASTER_CONTROL
+const DEFAULT_MASTER_CONTROL = (RULE_ENGINE_POLICY_CONTROL && typeof RULE_ENGINE_POLICY_CONTROL === "object")
+  ? RULE_ENGINE_POLICY_CONTROL
   : Object.create(null);
 
 function asObj(v) {

@@ -60,7 +60,6 @@ export async function loadReceiverInitModules() {
     { validateSpellSchemaIntegrity },
     {
       RULE_ENGINE_POLICY_CONTROL,
-      RULE_ENGINE_MASTER_CONTROL,
       validateRuleEngineConfig,
     },
     {
@@ -111,7 +110,6 @@ export async function loadReceiverInitModules() {
   const ruleEngineExports = {
     createRuleEnginePreviewSystem,
     RULE_ENGINE_POLICY_CONTROL,
-    RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     buildRuleEngineFromInteractionsV2,
   };
@@ -215,7 +213,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     validateSpellRuntimeRouting,
     validateSpellSchemaIntegrity,
     RULE_ENGINE_POLICY_CONTROL,
-    RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
@@ -261,8 +258,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
 
   const ruleEnginePolicyControl = (RULE_ENGINE_POLICY_CONTROL && typeof RULE_ENGINE_POLICY_CONTROL === "object")
     ? RULE_ENGINE_POLICY_CONTROL
-    : (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
-      ? RULE_ENGINE_MASTER_CONTROL
     : Object.create(null);
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
     ? validateRuleEngineConfig
