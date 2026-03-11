@@ -1,6 +1,6 @@
 import { SPELLS_BY_ID } from "../../voice/spellbook.js";
 import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
-import { RULE_ENGINE_V1_MASTER_CONTROL } from "../spell-rules/rule-engine-v1-master-control.js";
+import { RULE_ENGINE_MASTER_CONTROL } from "../spell-rules/index.js";
 import {
   AXIS_WORD_IDS,
   SPELL_RUNTIME_ROUTING_BY_WORD_ID,
@@ -23,8 +23,8 @@ function indexDefsById(defs = []) {
 }
 
 export function validateSpellSchemaIntegrity(options = {}) {
-  const master = (RULE_ENGINE_V1_MASTER_CONTROL && typeof RULE_ENGINE_V1_MASTER_CONTROL === "object")
-    ? RULE_ENGINE_V1_MASTER_CONTROL
+  const master = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
+    ? RULE_ENGINE_MASTER_CONTROL
     : Object.create(null);
   const rules = Array.isArray(options && options.rules)
     ? options.rules
