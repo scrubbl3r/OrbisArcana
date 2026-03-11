@@ -1,4 +1,4 @@
-// Data-only signal catalog for Rule Engine v1 scaffolding.
+// Data-only signal catalog for rule-engine scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
 import { ACTIVE_SPELLS_BY_ID } from "../../voice/spellbook.js";
 import {
@@ -89,19 +89,19 @@ function buildDuplicateSignalIds(defs = []) {
   return Array.from(dups).sort();
 }
 
-const GENERATED_SPELL_SIGNALS_V1 = Object.freeze([
+const GENERATED_SPELL_SIGNALS = Object.freeze([
   ...buildWakeWindowSpellSignals(),
   ...buildWakeSpellSignals(),
   ...buildWakeRequiredSpellSignals(),
   ...buildRuleEngineOwnedImmediateSpellSignals(),
 ]);
 
-export const SIGNAL_DEFINITION_COLLISIONS_V1 = Object.freeze(
-  buildDuplicateSignalIds(GENERATED_SPELL_SIGNALS_V1)
+export const SIGNAL_DEFINITION_COLLISIONS = Object.freeze(
+  buildDuplicateSignalIds(GENERATED_SPELL_SIGNALS)
 );
 
-export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
-  ...dedupeSignalsById(GENERATED_SPELL_SIGNALS_V1),
+export const SIGNAL_DEFINITIONS = Object.freeze([
+  ...dedupeSignalsById(GENERATED_SPELL_SIGNALS),
   Object.freeze({
     id: "gesture.y_spin",
     type: "gesture",
@@ -116,8 +116,8 @@ export const SIGNAL_DEFINITIONS_V1 = Object.freeze([
   }),
 ]);
 
-export const SIGNAL_DEFINITIONS_V1_BY_ID = Object.freeze(
-  SIGNAL_DEFINITIONS_V1.reduce((acc, def) => {
+export const SIGNAL_DEFINITIONS_BY_ID = Object.freeze(
+  SIGNAL_DEFINITIONS.reduce((acc, def) => {
     const id = String(def && def.id || "").trim().toLowerCase();
     if (!id) return acc;
     acc[id] = def;
@@ -125,6 +125,6 @@ export const SIGNAL_DEFINITIONS_V1_BY_ID = Object.freeze(
   }, {})
 );
 
-export const SIGNAL_DEFINITION_COLLISIONS = SIGNAL_DEFINITION_COLLISIONS_V1;
-export const SIGNAL_DEFINITIONS = SIGNAL_DEFINITIONS_V1;
-export const SIGNAL_DEFINITIONS_BY_ID = SIGNAL_DEFINITIONS_V1_BY_ID;
+export const SIGNAL_DEFINITION_COLLISIONS_V1 = SIGNAL_DEFINITION_COLLISIONS;
+export const SIGNAL_DEFINITIONS_V1 = SIGNAL_DEFINITIONS;
+export const SIGNAL_DEFINITIONS_V1_BY_ID = SIGNAL_DEFINITIONS_BY_ID;

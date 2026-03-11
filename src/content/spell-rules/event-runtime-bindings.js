@@ -1,7 +1,7 @@
-// Runtime execution bindings for Rule Engine v1 event actions.
+// Runtime execution bindings for rule-engine event actions.
 // Keeps rule action ids decoupled from concrete receiver execution paths.
 
-export const EVENT_RUNTIME_BINDINGS_V1 = Object.freeze([
+export const EVENT_RUNTIME_BINDINGS = Object.freeze([
   Object.freeze({
     id: "grace",
     runtime: Object.freeze({
@@ -46,8 +46,8 @@ export const EVENT_RUNTIME_BINDINGS_V1 = Object.freeze([
   }),
 ]);
 
-export const EVENT_RUNTIME_BINDINGS_V1_BY_ID = Object.freeze(
-  EVENT_RUNTIME_BINDINGS_V1.reduce((acc, item) => {
+export const EVENT_RUNTIME_BINDINGS_BY_ID = Object.freeze(
+  EVENT_RUNTIME_BINDINGS.reduce((acc, item) => {
     const id = String(item && item.id || "").trim().toLowerCase();
     if (!id) return acc;
     acc[id] = item;
@@ -55,5 +55,5 @@ export const EVENT_RUNTIME_BINDINGS_V1_BY_ID = Object.freeze(
   }, {})
 );
 
-export const EVENT_RUNTIME_BINDINGS = EVENT_RUNTIME_BINDINGS_V1;
-export const EVENT_RUNTIME_BINDINGS_BY_ID = EVENT_RUNTIME_BINDINGS_V1_BY_ID;
+export const EVENT_RUNTIME_BINDINGS_V1 = EVENT_RUNTIME_BINDINGS;
+export const EVENT_RUNTIME_BINDINGS_V1_BY_ID = EVENT_RUNTIME_BINDINGS_BY_ID;

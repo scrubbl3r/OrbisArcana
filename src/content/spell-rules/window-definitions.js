@@ -1,7 +1,7 @@
-// Data-only window defaults for Rule Engine v1 scaffolding.
+// Data-only window defaults for rule-engine scaffolding.
 // `spells` allowed in a window are rule-instance data, not hardcoded here.
 
-export const WINDOW_DEFINITIONS_V1 = Object.freeze([
+export const WINDOW_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: "wake_win",
     type: "wake_win",
@@ -11,8 +11,8 @@ export const WINDOW_DEFINITIONS_V1 = Object.freeze([
   }),
 ]);
 
-export const WINDOW_DEFINITIONS_V1_BY_ID = Object.freeze(
-  WINDOW_DEFINITIONS_V1.reduce((acc, def) => {
+export const WINDOW_DEFINITIONS_BY_ID = Object.freeze(
+  WINDOW_DEFINITIONS.reduce((acc, def) => {
     const id = String(def && def.id || "").trim().toLowerCase();
     if (!id) return acc;
     acc[id] = def;
@@ -20,5 +20,5 @@ export const WINDOW_DEFINITIONS_V1_BY_ID = Object.freeze(
   }, {})
 );
 
-export const WINDOW_DEFINITIONS = WINDOW_DEFINITIONS_V1;
-export const WINDOW_DEFINITIONS_BY_ID = WINDOW_DEFINITIONS_V1_BY_ID;
+export const WINDOW_DEFINITIONS_V1 = WINDOW_DEFINITIONS;
+export const WINDOW_DEFINITIONS_V1_BY_ID = WINDOW_DEFINITIONS_BY_ID;

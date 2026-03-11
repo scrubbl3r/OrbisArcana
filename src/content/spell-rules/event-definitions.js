@@ -1,7 +1,7 @@
-// Data-only event defaults for Rule Engine v1 scaffolding.
+// Data-only event defaults for rule-engine scaffolding.
 // Defaults are intentionally minimal and can be extended per event over time.
 
-export const EVENT_DEFINITIONS_V1 = Object.freeze([
+export const EVENT_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: "electric_aoe",
     type: "event",
@@ -34,8 +34,8 @@ export const EVENT_DEFINITIONS_V1 = Object.freeze([
   }),
 ]);
 
-export const EVENT_DEFINITIONS_V1_BY_ID = Object.freeze(
-  EVENT_DEFINITIONS_V1.reduce((acc, def) => {
+export const EVENT_DEFINITIONS_BY_ID = Object.freeze(
+  EVENT_DEFINITIONS.reduce((acc, def) => {
     const id = String(def && def.id || "").trim().toLowerCase();
     if (!id) return acc;
     acc[id] = def;
@@ -43,5 +43,5 @@ export const EVENT_DEFINITIONS_V1_BY_ID = Object.freeze(
   }, {})
 );
 
-export const EVENT_DEFINITIONS = EVENT_DEFINITIONS_V1;
-export const EVENT_DEFINITIONS_BY_ID = EVENT_DEFINITIONS_V1_BY_ID;
+export const EVENT_DEFINITIONS_V1 = EVENT_DEFINITIONS;
+export const EVENT_DEFINITIONS_V1_BY_ID = EVENT_DEFINITIONS_BY_ID;
