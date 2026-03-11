@@ -1579,7 +1579,7 @@
           },
         });
         const mods = await loadReceiverInitModules();
-        hydrateReceiverBootstrapState(mods, {
+        const receiverBootstrapCtx = {
           applyRuntimeTheme,
           setBuildInputHudViewModelModule: (fn) => { buildInputHudViewModelModule = fn; },
           setCreateSpellActionHandlersModule: (fn) => { createSpellActionHandlersModule = fn; },
@@ -1816,7 +1816,11 @@
           }),
           setSpellCastExecutor: (executor) => { spellCastExecutor = executor; },
           setReceiverModulesReady: (v) => { receiverModulesReady = !!v; },
-        });
+        };
+        if (typeof receiverBootstrapCtx.setRuleSchemaV1 === "function") {
+          receiverBootstrapCtx.setRuleSchema = receiverBootstrapCtx.setRuleSchemaV1;
+        }
+        hydrateReceiverBootstrapState(mods, receiverBootstrapCtx);
         if (typeof createVfxRuntimesBundle === "function") {
           vfxRuntimesBundle = createVfxRuntimesBundle({
             bubbleShield: {
