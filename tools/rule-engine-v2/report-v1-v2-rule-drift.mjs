@@ -37,13 +37,13 @@ for (const id of shared) {
   if (a !== b) changed.push(id);
 }
 
-console.log("[v1-v2-drift] projected rules:", projected.length);
-console.log("[v1-v2-drift] runtime projected rules:", runtime.length);
-console.log("[v1-v2-drift] only in projected:", onlyProjected.length);
+console.log("[rules-v2-drift] projected rules:", projected.length);
+console.log("[rules-v2-drift] runtime projected rules:", runtime.length);
+console.log("[rules-v2-drift] only in projected:", onlyProjected.length);
 if (onlyProjected.length) console.log("  ", onlyProjected.join(", "));
-console.log("[v1-v2-drift] only in runtime:", onlyRuntime.length);
+console.log("[rules-v2-drift] only in runtime:", onlyRuntime.length);
 if (onlyRuntime.length) console.log("  ", onlyRuntime.join(", "));
-console.log("[v1-v2-drift] changed shared rules:", changed.length);
+console.log("[rules-v2-drift] changed shared rules:", changed.length);
 if (changed.length) console.log("  ", changed.join(", "));
 
 if (changed.length) {
