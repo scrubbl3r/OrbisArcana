@@ -93,6 +93,22 @@ export async function loadReceiverInitModules() {
   ]);
 
   const worldItemsResolved = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [];
+  const ruleEngineExports = {
+    createRuleEnginePreviewSystem,
+    RULE_ENGINE_MASTER_CONTROL,
+    validateRuleEngineConfig,
+    buildRuleEngineFromInteractionsV2,
+  };
+  const ruleEngineLegacyAliasExports = {
+    createRuleEngineV1PreviewSystem: ruleEngineExports.createRuleEnginePreviewSystem,
+    RULE_ENGINE_V1_MASTER_CONTROL: ruleEngineExports.RULE_ENGINE_MASTER_CONTROL,
+    validateRuleEngineV1Config: ruleEngineExports.validateRuleEngineConfig,
+    buildRuleEngineV1FromInteractionsV2: ruleEngineExports.buildRuleEngineFromInteractionsV2,
+  };
+  const worldItemExports = {
+    WORLD_ITEMS: worldItemsResolved,
+    WORLD_ITEMS_V1: worldItemsResolved,
+  };
 
   return {
     createEventBus,
@@ -109,8 +125,8 @@ export async function loadReceiverInitModules() {
     createKwsProvider,
     createOpenWakeWordBrowserBackendFactory,
     createSpellDispatchSystem,
-    createRuleEnginePreviewSystem,
-    createRuleEngineV1PreviewSystem: createRuleEnginePreviewSystem,
+    ...ruleEngineExports,
+    ...ruleEngineLegacyAliasExports,
     createSpellActionHandlersImported,
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
@@ -131,17 +147,10 @@ export async function loadReceiverInitModules() {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRouting,
     validateSpellSchemaIntegrity,
-    RULE_ENGINE_MASTER_CONTROL,
-    validateRuleEngineConfig,
-    RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL,
-    validateRuleEngineV1Config: validateRuleEngineConfig,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
-    buildRuleEngineFromInteractionsV2,
-    buildRuleEngineV1FromInteractionsV2: buildRuleEngineFromInteractionsV2,
     validateSpellbookV2,
-    WORLD_ITEMS: worldItemsResolved,
-    WORLD_ITEMS_V1: worldItemsResolved,
+    ...worldItemExports,
   };
 }
 
