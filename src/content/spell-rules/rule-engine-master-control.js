@@ -5,7 +5,7 @@
 // Keep edits here limited to runtime wiring/plumbing only.
 
 import { EVENT_DEFINITIONS_V1 } from "./event-definitions.js";
-import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "./event-runtime-bindings-v1.js";
+import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "./event-runtime-bindings.js";
 import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions-v2/index.js";
 import {
   SIGNAL_DEFINITION_COLLISIONS_V1,

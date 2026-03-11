@@ -1,7 +1,7 @@
 import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
 import { EVENT_DEFINITIONS_V1_BY_ID } from "../spell-rules/event-definitions.js";
-import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "../spell-rules/event-runtime-bindings-v1.js";
+import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import { SIGNAL_DEFINITIONS_V1_BY_ID } from "../spell-rules/signal-definitions.js";
 
 function asObj(v) {
