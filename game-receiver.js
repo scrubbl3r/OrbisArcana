@@ -1248,7 +1248,6 @@
       TRIGGER_LEGACY_ALIAS: "rule_engine_v1",
     });
     const RULE_ENGINE_LEGACY_KEYS = Object.freeze({
-      SET_RULE_SCHEMA_LEGACY_ALIAS: "setRuleSchemaV1",
       TRIGGER_LEGACY_FIELD: "triggerLegacy",
       MVP_SCHEMA_LEGACY_ALIAS: "ruleSchemaV1",
       MVP_PREVIEW_LEGACY_ALIAS: "ruleEngineV1PreviewSystem",
@@ -1841,12 +1840,6 @@
           setSpellCastExecutor: (executor) => { spellCastExecutor = executor; },
           setReceiverModulesReady: (v) => { receiverModulesReady = !!v; },
         };
-        if (
-          typeof receiverBootstrapCtx.setRuleSchema === "function" &&
-          typeof receiverBootstrapCtx[RULE_ENGINE_LEGACY_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] !== "function"
-        ) {
-          receiverBootstrapCtx[RULE_ENGINE_LEGACY_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] = receiverBootstrapCtx.setRuleSchema;
-        }
         hydrateReceiverBootstrapState(mods, receiverBootstrapCtx);
         if (typeof createVfxRuntimesBundle === "function") {
           vfxRuntimesBundle = createVfxRuntimesBundle({

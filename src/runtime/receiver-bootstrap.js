@@ -11,15 +11,6 @@
  *
  * @returns {Promise<ReceiverInitModules>}
  */
-const RECEIVER_BOOTSTRAP_LEGACY_KEYS = Object.freeze({
-  CREATE_RULE_ENGINE_PREVIEW_SYSTEM_LEGACY_ALIAS: "createRuleEngineV1PreviewSystem",
-  RULE_ENGINE_MASTER_CONTROL_LEGACY_ALIAS: "RULE_ENGINE_V1_MASTER_CONTROL",
-  VALIDATE_RULE_ENGINE_CONFIG_LEGACY_ALIAS: "validateRuleEngineV1Config",
-  BUILD_RULE_ENGINE_FROM_INTERACTIONS_LEGACY_ALIAS: "buildRuleEngineV1FromInteractionsV2",
-  WORLD_ITEMS_LEGACY_ALIAS: "WORLD_ITEMS_V1",
-  SET_RULE_SCHEMA_LEGACY_ALIAS: "setRuleSchemaV1",
-});
-
 export async function loadReceiverInitModules() {
   const [
     { createEventBus },
@@ -108,15 +99,8 @@ export async function loadReceiverInitModules() {
     validateRuleEngineConfig,
     buildRuleEngineFromInteractionsV2,
   };
-  const ruleEngineLegacyAliasExports = {
-    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.CREATE_RULE_ENGINE_PREVIEW_SYSTEM_LEGACY_ALIAS]: ruleEngineExports.createRuleEnginePreviewSystem,
-    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.RULE_ENGINE_MASTER_CONTROL_LEGACY_ALIAS]: ruleEngineExports.RULE_ENGINE_MASTER_CONTROL,
-    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.VALIDATE_RULE_ENGINE_CONFIG_LEGACY_ALIAS]: ruleEngineExports.validateRuleEngineConfig,
-    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.BUILD_RULE_ENGINE_FROM_INTERACTIONS_LEGACY_ALIAS]: ruleEngineExports.buildRuleEngineFromInteractionsV2,
-  };
   const worldItemExports = {
     WORLD_ITEMS: worldItemsResolved,
-    [RECEIVER_BOOTSTRAP_LEGACY_KEYS.WORLD_ITEMS_LEGACY_ALIAS]: worldItemsResolved,
   };
 
   return {
@@ -135,7 +119,6 @@ export async function loadReceiverInitModules() {
     createOpenWakeWordBrowserBackendFactory,
     createSpellDispatchSystem,
     ...ruleEngineExports,
-    ...ruleEngineLegacyAliasExports,
     createSpellActionHandlersImported,
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
@@ -179,7 +162,6 @@ export async function loadReceiverInitModules() {
  * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
  * @property {(next:{runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeSpellIndexes]
  * @property {(next:{source?:string, signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[], eventRuntimeBindings?:Object}) => void} [setRuleSchema]
- * @property {(next:{source?:string, signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[], eventRuntimeBindings?:Object}) => void} [setRuleSchemaV1] Legacy alias of setRuleSchema.
  * @property {() => void} [initSpellActionHandlers]
  * @property {() => Object} [createSpellCastExecutorContext]
  * @property {(executor:Object) => void} [setSpellCastExecutor]
@@ -245,9 +227,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setSpellCastExecutor,
     setReceiverModulesReady,
   } = ctx;
-  const setRuleSchemaLegacyAlias = ctx && typeof ctx === "object"
-    ? ctx[RECEIVER_BOOTSTRAP_LEGACY_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS]
-    : undefined;
 
   function buildSafeDisabledRuleSchema() {
     return Object.freeze({
@@ -274,9 +253,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const buildRuleEngineFromInteractions = (typeof buildRuleEngineFromInteractionsV2 === "function")
     ? buildRuleEngineFromInteractionsV2
     : null;
-  const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
-    ? setRuleSchema
-    : setRuleSchemaLegacyAlias;
+  const setRuleSchemaRuntime = (typeof setRuleSchema === "function") ? setRuleSchema : undefined;
 
   const fallbackRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
     ? ruleEngineMasterControl
