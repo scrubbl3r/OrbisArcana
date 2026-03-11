@@ -57,7 +57,7 @@ export async function loadReceiverInitModules() {
       buildRuleEngineV1FromInteractionsV2: buildRuleEngineFromInteractionsAlias,
       validateSpellbookV2,
     },
-    { WORLD_ITEMS, WORLD_ITEMS_V1: WORLD_ITEMS_ALIAS },
+    { WORLD_ITEMS },
   ] = await Promise.all([
     import("../events/event-bus.js"),
     import("../state/game-state.js"),
@@ -102,7 +102,7 @@ export async function loadReceiverInitModules() {
     ? buildRuleEngineFromInteractionsV2
     : buildRuleEngineFromInteractionsAlias;
 
-  const worldItemsResolved = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : WORLD_ITEMS_ALIAS;
+  const worldItemsResolved = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [];
 
   return {
     createEventBus,
