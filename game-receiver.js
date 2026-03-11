@@ -1231,8 +1231,8 @@
     const RULE_ENGINE_CHANNELS = Object.freeze({
       ACTION_EXECUTED: "rule_engine.action_executed",
       WAKE_WIN_OPENED: "rule_engine.wake_win_opened",
-      TRIGGER: "rule_engine",
     });
+    const RULE_ENGINE_TRIGGER = "rule_engine";
     const RULE_ENGINE_EXECUTE_ACTIONS = false;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
@@ -2240,7 +2240,7 @@
             executeSpellCastAction(castActionId, {
               intent: "rule_engine.event",
               payload: {
-                trigger: RULE_ENGINE_CHANNELS.TRIGGER,
+                trigger: RULE_ENGINE_TRIGGER,
                 actionId,
                 ruleId: String(p.ruleId || ""),
                 atMs: Number(p.atMs) || performance.now(),
@@ -2253,7 +2253,7 @@
             const eventId = String(runtime && runtime.event || "");
             if (!eventId) return;
             eventBus.emit(eventId, {
-              trigger: RULE_ENGINE_CHANNELS.TRIGGER,
+              trigger: RULE_ENGINE_TRIGGER,
               actionId,
               ruleId: String(p.ruleId || ""),
               atMs: Number(p.atMs) || performance.now(),

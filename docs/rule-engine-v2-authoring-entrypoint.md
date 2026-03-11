@@ -18,7 +18,7 @@
 - `src/content/spell-rules/rule-engine-master-control.js` (runtime rule schema + defaults/overrides)
 - `src/content/spell-rules/validate-rule-engine-config.js` (schema validator)
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + V2 flag routing)
-- `src/voice/spellbook.js` (legacy runtime view derived from `spellbook-v2`)
+- `src/voice/spellbook.js` (compatibility runtime view derived from `spellbook-v2`)
 
 ## Current Mode Switches
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
@@ -32,7 +32,7 @@
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.
 - If you are enabling/disabling words, edit `spellbook-v2.js`.
-- Avoid editing legacy bridge files unless doing migration plumbing.
+- Avoid editing bridge/compatibility files unless doing migration plumbing.
 
 ## Quick Health Commands
 - `npm run pre-smoke:v2`
