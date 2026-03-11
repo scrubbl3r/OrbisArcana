@@ -1,14 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
+import { readJsonOrFail } from "./check-json-v2.mjs";
 
-let health = null;
-try {
-  const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
-  health = JSON.parse(readFileSync(healthPath, "utf8"));
-} catch (err) {
-  failCheck("health-contract:v2", `unable to read docs/rule-engine-v2.health.json (${err?.message || err})`);
-}
+const health = readJsonOrFail("health-contract:v2", "docs/rule-engine-v2.health.json");
 
 if (health.spellbookOk !== true) failCheck("health-contract:v2", "spellbookOk must be true");
 if (health.interactionsOk !== true) failCheck("health-contract:v2", "interactionsOk must be true");

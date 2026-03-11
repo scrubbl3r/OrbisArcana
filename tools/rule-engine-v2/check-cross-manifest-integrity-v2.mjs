@@ -2,19 +2,12 @@ import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
-
-function collect(manifestName, entries) {
-  return (Array.isArray(entries) ? entries : []).map((entry) => ({
-    manifest: manifestName,
-    id: String(entry?.id || "").trim(),
-    script: String(entry?.script || "").trim(),
-  }));
-}
+import { normalizeManifestEntries } from "./manifest-collision-utils-v2.mjs";
 
 const all = [
-  ...collect("ready", READY_PHASES_V2),
-  ...collect("regression", REGRESSION_CHECKS_V2),
-  ...collect("contract", CONTRACT_CHECKS_V2),
+  ...normalizeManifestEntries("ready", READY_PHASES_V2),
+  ...normalizeManifestEntries("regression", REGRESSION_CHECKS_V2),
+  ...normalizeManifestEntries("contract", CONTRACT_CHECKS_V2),
 ];
 
 const idOwners = new Map();

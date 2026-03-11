@@ -1,19 +1,10 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
+import { readJsonOrFail } from "./check-json-v2.mjs";
 
-function loadPackageJson() {
-  try {
-    return JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf8"));
-  } catch (err) {
-    failCheck("script-registry:v2", `unable to read package.json (${err?.message || err})`);
-  }
-}
-
-const pkg = loadPackageJson();
+const pkg = readJsonOrFail("script-registry:v2", "package.json");
 const scripts = (pkg && typeof pkg.scripts === "object" && pkg.scripts) ? pkg.scripts : null;
 if (!scripts) failCheck("script-registry:v2", "package.json scripts object missing");
 
