@@ -22,5 +22,3 @@ export const WORLD_ITEMS = Object.freeze([
     },
   },
 ]);
-
-export const WORLD_ITEMS_V1 = WORLD_ITEMS;

@@ -69,5 +69,3 @@ export const SPELL_VFX_BINDINGS_BY_SPELL_ID = Object.freeze(
 export function getSpellVfxBinding(spellId) {
   return SPELL_VFX_BINDINGS_BY_SPELL_ID[String(spellId || "").toLowerCase()] || null;
 }
-
-export const SPELL_VFX_BINDINGS_V1 = SPELL_VFX_BINDINGS;

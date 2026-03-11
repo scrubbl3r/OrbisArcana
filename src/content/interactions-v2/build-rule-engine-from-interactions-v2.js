@@ -145,6 +145,3 @@ export function buildRulesFromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
       .filter(Boolean)
   );
 }
-
-export const buildRuleEngineV1FromInteractionsV2 = buildRuleEngineFromInteractionsV2;
-export const buildRulesV1FromInteractionsV2 = buildRulesFromInteractionsV2;
