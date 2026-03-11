@@ -1,12 +1,12 @@
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
-  AXIS_SPELL_IDS,
-  KWS_ROW_BOTTOM_SPELL_IDS,
-  KWS_ROW_TOP_SPELL_IDS,
-  WAKE_WINDOW_SPELL_IDS,
-  WAKE_REQUIRED_SPELL_IDS,
-  WAKE_SPELL_IDS,
-  SPELL_RUNTIME_ROUTING_BY_ID,
+  AXIS_WORD_IDS,
+  KWS_ROW_BOTTOM_WORD_IDS,
+  KWS_ROW_TOP_WORD_IDS,
+  WAKE_WINDOW_WORD_IDS,
+  WAKE_REQUIRED_WORD_IDS,
+  WAKE_WORD_IDS,
+  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
 } from "../../content/spells/spell-runtime-routing-v1.js";
 
 function resolveActivePhrasesByIds(ids = []) {
@@ -18,16 +18,16 @@ function resolveActivePhrasesByIds(ids = []) {
 }
 
 export function createKwsRuntimeConfig() {
-  const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_SPELL_IDS);
-  const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_SPELL_IDS);
-  const wakeWindowTokens = resolveActivePhrasesByIds(WAKE_WINDOW_SPELL_IDS);
-  const axisTokens = resolveActivePhrasesByIds(AXIS_SPELL_IDS);
-  const wakeTokens = resolveActivePhrasesByIds(WAKE_SPELL_IDS);
-  const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_SPELL_IDS);
+  const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_WORD_IDS);
+  const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_WORD_IDS);
+  const wakeWindowTokens = resolveActivePhrasesByIds(WAKE_WINDOW_WORD_IDS);
+  const axisTokens = resolveActivePhrasesByIds(AXIS_WORD_IDS);
+  const wakeTokens = resolveActivePhrasesByIds(WAKE_WORD_IDS);
+  const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_WORD_IDS);
   const axisSpellByAxis = Object.create(null);
-  for (const spellId of AXIS_SPELL_IDS) {
+  for (const spellId of AXIS_WORD_IDS) {
     const id = String(spellId || "").trim().toLowerCase();
-    const routing = SPELL_RUNTIME_ROUTING_BY_ID[id] || null;
+    const routing = SPELL_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
     const active = ACTIVE_SPELLS_BY_ID[id] || null;
     const axisSpellToken = String((active && active.phrase) || id || "").trim().toLowerCase();
     const axes = Array.isArray(routing && routing.allowedAxes) ? routing.allowedAxes : [];

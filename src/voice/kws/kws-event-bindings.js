@@ -1,8 +1,8 @@
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
-  KWS_FLASH_TOKEN_SPELL_IDS,
-  WAKE_WINDOW_SPELL_IDS,
-  WAKE_SPELL_IDS,
+  KWS_FLASH_TOKEN_WORD_IDS,
+  WAKE_WINDOW_WORD_IDS,
+  WAKE_WORD_IDS,
 } from "../../content/spells/spell-runtime-routing-v1.js";
 
 export function bindKwsEventHandlers({
@@ -35,21 +35,21 @@ export function bindKwsEventHandlers({
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
   const wakeTokenSet = new Set(
-    (Array.isArray(WAKE_SPELL_IDS) ? WAKE_SPELL_IDS : [])
+    (Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : [])
       .map((spellId) => ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()])
       .filter(Boolean)
       .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
       .filter(Boolean)
   );
   const flashTokenSet = new Set(
-    (Array.isArray(KWS_FLASH_TOKEN_SPELL_IDS) ? KWS_FLASH_TOKEN_SPELL_IDS : [])
+    (Array.isArray(KWS_FLASH_TOKEN_WORD_IDS) ? KWS_FLASH_TOKEN_WORD_IDS : [])
       .map((spellId) => ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()])
       .filter(Boolean)
       .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
       .filter(Boolean)
   );
   const wakeWindowTokenSet = new Set(
-    (Array.isArray(WAKE_WINDOW_SPELL_IDS) ? WAKE_WINDOW_SPELL_IDS : [])
+    (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
       .map((spellId) => ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()])
       .filter(Boolean)
       .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())

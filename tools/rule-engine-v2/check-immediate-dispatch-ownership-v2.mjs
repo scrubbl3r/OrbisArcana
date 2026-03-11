@@ -1,5 +1,5 @@
 import { createSpellDispatchSystem } from "../../src/systems/spell-dispatch-system.js";
-import { RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS } from "../../src/content/spells/spell-runtime-routing-v1.js";
+import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing-v1.js";
 import {
   EVT_VOICE_SPELL_CAST,
   EVT_VOICE_SPELL_DETECTED,
@@ -62,12 +62,12 @@ function detectSpell({ ruleEngineEnabled, spellId }) {
 }
 
 function main() {
-  const ownedImmediate = (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS)
-    ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS
+  const ownedImmediate = (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS)
+    ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS
     : [])
     .map((id) => String(id || "").trim().toLowerCase())
     .filter(Boolean);
-  assert(ownedImmediate.length > 0, "[immediate-ownership:v2] expected non-empty RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS");
+  assert(ownedImmediate.length > 0, "[immediate-ownership:v2] expected non-empty RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS");
 
   for (const spellId of ownedImmediate) {
     const withRuleEngine = detectSpell({ ruleEngineEnabled: true, spellId });

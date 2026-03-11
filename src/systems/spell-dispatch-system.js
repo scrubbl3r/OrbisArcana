@@ -1,9 +1,9 @@
 import { ACTIVE_SPELLS_BY_ID } from "../voice/spellbook.js";
 import {
-  WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN,
-  SPELL_RUNTIME_ROUTING_BY_ID,
-  SPELL_WINDOW_BYPASS_SPELL_IDS,
-  RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS,
+  WAKE_WINDOW_RUNTIME_KEY_BY_WORD,
+  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
+  SPELL_WINDOW_BYPASS_WORD_IDS,
+  RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
 } from "../content/spells/spell-runtime-routing-v1.js";
 import {
   EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
@@ -38,12 +38,12 @@ export function createSpellDispatchSystem({
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
   const TEMP_UNGATED_SPELL_IDS = new Set(
-    (Array.isArray(SPELL_WINDOW_BYPASS_SPELL_IDS) ? SPELL_WINDOW_BYPASS_SPELL_IDS : [])
+    (Array.isArray(SPELL_WINDOW_BYPASS_WORD_IDS) ? SPELL_WINDOW_BYPASS_WORD_IDS : [])
       .map((id) => String(id || "").trim().toLowerCase())
       .filter(Boolean)
   );
   const RULE_ENGINE_OWNED_IMMEDIATE_IDS = new Set(
-    (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS : [])
+    (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
       .map((id) => String(id || "").trim().toLowerCase())
       .filter(Boolean)
   );
@@ -166,7 +166,7 @@ export function createSpellDispatchSystem({
 
   function withRuntimeRouting(spell = {}) {
     const id = String(spell && spell.id || "").toLowerCase();
-    const routing = SPELL_RUNTIME_ROUTING_BY_ID[id] || null;
+    const routing = SPELL_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
     if (!routing) return spell;
     return {
       ...spell,
@@ -177,7 +177,7 @@ export function createSpellDispatchSystem({
   function normalizeWakeWindowTokenForRuntime(wakeWindowToken) {
     const token = String(wakeWindowToken || "").trim().toLowerCase();
     if (!token) return "";
-    return String(WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN[token] || token).trim().toLowerCase();
+    return String(WAKE_WINDOW_RUNTIME_KEY_BY_WORD[token] || token).trim().toLowerCase();
   }
 
   function isWakeWindowSelectIntent(intent) {

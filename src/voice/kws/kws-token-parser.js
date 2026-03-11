@@ -6,9 +6,9 @@ import {
 import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
-  SPELL_RUNTIME_ROUTING_BY_ID,
-  WAKE_SPELL_IDS,
-  WAKE_REQUIRED_SPELL_IDS,
+  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
+  WAKE_WORD_IDS,
+  WAKE_REQUIRED_WORD_IDS,
 } from "../../content/spells/spell-runtime-routing-v1.js";
 
 const DEFAULTS = Object.freeze({
@@ -82,7 +82,7 @@ export function createKwsTokenParser(opts = {}) {
       : DEFAULTS.wakeArmedMinConfidence,
     clearBufferOnMatch: opts.clearBufferOnMatch == null ? DEFAULTS.clearBufferOnMatch : !!opts.clearBufferOnMatch,
   };
-  const defaultWakeTokens = WAKE_SPELL_IDS
+  const defaultWakeTokens = WAKE_WORD_IDS
     .map((spellId) => {
       const active = ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()];
       if (!active) return "";
@@ -97,7 +97,7 @@ export function createKwsTokenParser(opts = {}) {
   const requireWakeForSpellIds = new Set(
     (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
       ? opts.requireWakeForSpellIds
-      : WAKE_REQUIRED_SPELL_IDS)
+      : WAKE_REQUIRED_WORD_IDS)
       .map((s) => String(s || "").trim().toLowerCase())
       .filter(Boolean),
   );
@@ -309,7 +309,7 @@ export function createKwsTokenParser(opts = {}) {
     if (!shadow) {
       const spellId = String(finalResult.spellId || "");
       const spell = ACTIVE_SPELLS_BY_ID[spellId]
-        ? { ...ACTIVE_SPELLS_BY_ID[spellId], ...(SPELL_RUNTIME_ROUTING_BY_ID[spellId] || {}) }
+        ? { ...ACTIVE_SPELLS_BY_ID[spellId], ...(SPELL_RUNTIME_ROUTING_BY_WORD_ID[spellId] || {}) }
         : { id: spellId, phrase: finalResult.alias || finalResult.tokens.join(" ") };
       emit(EVT_VOICE_SPELL_DETECTED, {
         spell,

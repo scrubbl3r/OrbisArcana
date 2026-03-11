@@ -1,7 +1,7 @@
 import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
 import {
-  KWS_INFER_DEFAULT_SPELL_ID,
-  KWS_SIM_SPELL_IDS,
+  KWS_INFER_DEFAULT_WORD_ID,
+  KWS_SIM_WORD_IDS,
 } from "../../content/spells/spell-runtime-routing-v1.js";
 
 function resolveActivePhraseById(id, fallback = "") {
@@ -10,12 +10,12 @@ function resolveActivePhraseById(id, fallback = "") {
 }
 
 export const OPENWAKEWORD_BROWSER_SIM_TOKENS = Object.freeze(
-  (Array.isArray(KWS_SIM_SPELL_IDS) ? KWS_SIM_SPELL_IDS : [])
+  (Array.isArray(KWS_SIM_WORD_IDS) ? KWS_SIM_WORD_IDS : [])
     .map((id) => resolveActivePhraseById(id, String(id || "").trim().toLowerCase()))
     .filter(Boolean)
 );
 
-const DEFAULT_INFER_TOKEN = resolveActivePhraseById(KWS_INFER_DEFAULT_SPELL_ID, "pyro");
+const DEFAULT_INFER_TOKEN = resolveActivePhraseById(KWS_INFER_DEFAULT_WORD_ID, "pyro");
 
 export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   enabled: true,
