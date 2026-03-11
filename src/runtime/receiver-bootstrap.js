@@ -157,6 +157,7 @@ export async function loadReceiverInitModules() {
  * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
  * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
  * @property {(next:{runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeSpellIndexes]
+ * @property {(next:{source?:string, signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[], eventRuntimeBindings?:Object}) => void} [setRuleSchema]
  * @property {(next:{source?:string, signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[], eventRuntimeBindings?:Object}) => void} [setRuleSchemaV1]
  * @property {() => void} [initSpellActionHandlers]
  * @property {() => Object} [createSpellCastExecutorContext]
@@ -219,6 +220,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     getInputConfigs,
     setInputConfigs,
     setRuntimeSpellIndexes,
+    setRuleSchema,
     setRuleSchemaV1,
     initSpellActionHandlers,
     createSpellCastExecutorContext,
@@ -246,6 +248,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
     ? validateRuleEngineConfig
     : validateRuleEngineV1Config;
+  const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
+    ? setRuleSchema
+    : setRuleSchemaV1;
 
   const fallbackRuleSchemaV1 = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
     ? ruleEngineMasterControl
@@ -619,8 +624,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   try {
     console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}
-  if (typeof setRuleSchemaV1 === "function") {
-    setRuleSchemaV1({
+  if (typeof setRuleSchemaRuntime === "function") {
+    setRuleSchemaRuntime({
       source: resolvedRuleSource,
       signals: ruleSignalsV1,
       windows: ruleWindowsV1,
