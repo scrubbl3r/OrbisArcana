@@ -1225,34 +1225,34 @@
     let runOrbRuntimePipelineModule = null;
     const RULE_ENGINE_SOURCE_IDS = Object.freeze({
       INTERACTIONS_ADAPTER: "interactions_adapter",
-      INTERACTIONS_ADAPTER_ALIAS: "interactions_v2_adapter",
+      INTERACTIONS_ADAPTER_LEGACY_ALIAS: "interactions_v2_adapter",
       INTERACTIONS_ADAPTER_FALLBACK: "interactions_adapter_fallback",
-      INTERACTIONS_ADAPTER_FALLBACK_ALIAS: "interactions_v2_adapter_fallback_v1",
+      INTERACTIONS_ADAPTER_FALLBACK_LEGACY_ALIAS: "interactions_v2_adapter_fallback_v1",
       MASTER_CONTROL: "rule_engine_master_control",
-      MASTER_CONTROL_ALIAS: "rule_engine_v1_master_control",
+      MASTER_CONTROL_LEGACY_ALIAS: "rule_engine_v1_master_control",
     });
     const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
       [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER]: "V2 adapter",
-      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_ALIAS]: "V2 adapter",
+      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_LEGACY_ALIAS]: "V2 adapter",
       [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK]: "V2 adapter (fallback)",
-      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK_ALIAS]: "V2 adapter (fallback)",
+      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK_LEGACY_ALIAS]: "V2 adapter (fallback)",
       [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL]: "Master control",
-      [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL_ALIAS]: "Master control",
+      [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL_LEGACY_ALIAS]: "Master control",
     });
     const RULE_ENGINE_CHANNELS = Object.freeze({
       ACTION_EXECUTED: "rule_engine.action_executed",
-      ACTION_EXECUTED_ALIAS: "rule_engine.v1.action_executed",
+      ACTION_EXECUTED_LEGACY_ALIAS: "rule_engine.v1.action_executed",
       WAKE_WIN_OPENED: "rule_engine.wake_win_opened",
-      WAKE_WIN_OPENED_ALIAS: "rule_engine.v1.wake_win_opened",
+      WAKE_WIN_OPENED_LEGACY_ALIAS: "rule_engine.v1.wake_win_opened",
       TRIGGER: "rule_engine",
-      TRIGGER_ALIAS: "rule_engine_v1",
+      TRIGGER_LEGACY_ALIAS: "rule_engine_v1",
     });
     const RULE_ENGINE_COMPAT_KEYS = Object.freeze({
-      SET_RULE_SCHEMA_ALIAS: "setRuleSchemaV1",
+      SET_RULE_SCHEMA_LEGACY_ALIAS: "setRuleSchemaV1",
       TRIGGER_LEGACY_FIELD: "triggerLegacy",
-      MVP_SCHEMA_ALIAS: "ruleSchemaV1",
-      MVP_PREVIEW_ALIAS: "ruleEngineV1PreviewSystem",
-      MVP_EXECUTE_ALIAS: "ruleEngineV1ExecuteActions",
+      MVP_SCHEMA_LEGACY_ALIAS: "ruleSchemaV1",
+      MVP_PREVIEW_LEGACY_ALIAS: "ruleEngineV1PreviewSystem",
+      MVP_EXECUTE_LEGACY_ALIAS: "ruleEngineV1ExecuteActions",
     });
     const RULE_ENGINE_EXECUTE_ACTIONS = false;
     const RULE_ENGINE_EXECUTE_ACTIONS_ALIAS = RULE_ENGINE_EXECUTE_ACTIONS;
@@ -1843,9 +1843,9 @@
         };
         if (
           typeof receiverBootstrapCtx.setRuleSchema === "function" &&
-          typeof receiverBootstrapCtx[RULE_ENGINE_COMPAT_KEYS.SET_RULE_SCHEMA_ALIAS] !== "function"
+          typeof receiverBootstrapCtx[RULE_ENGINE_COMPAT_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] !== "function"
         ) {
-          receiverBootstrapCtx[RULE_ENGINE_COMPAT_KEYS.SET_RULE_SCHEMA_ALIAS] = receiverBootstrapCtx.setRuleSchema;
+          receiverBootstrapCtx[RULE_ENGINE_COMPAT_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS] = receiverBootstrapCtx.setRuleSchema;
         }
         hydrateReceiverBootstrapState(mods, receiverBootstrapCtx);
         if (typeof createVfxRuntimesBundle === "function") {
@@ -2250,7 +2250,7 @@
               atMs: Number(p.atMs) || performance.now(),
             };
             eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED, wakeWinPayload);
-            eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED_ALIAS, wakeWinPayload);
+            eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED_LEGACY_ALIAS, wakeWinPayload);
             return;
           }
           if (actionType !== "event") return;
@@ -2270,7 +2270,7 @@
               intent: "rule_engine.event",
               payload: {
                 trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-                [RULE_ENGINE_COMPAT_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_ALIAS,
+                [RULE_ENGINE_COMPAT_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
                 actionId,
                 ruleId: String(p.ruleId || ""),
                 atMs: Number(p.atMs) || performance.now(),
@@ -2284,7 +2284,7 @@
             if (!eventId) return;
             eventBus.emit(eventId, {
               trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-              [RULE_ENGINE_COMPAT_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_ALIAS,
+              [RULE_ENGINE_COMPAT_KEYS.TRIGGER_LEGACY_FIELD]: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY_ALIAS,
               actionId,
               ruleId: String(p.ruleId || ""),
               atMs: Number(p.atMs) || performance.now(),
@@ -2293,7 +2293,7 @@
           }
         };
         eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED, onRuleEngineActionExecuted);
-        eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED_ALIAS, onRuleEngineActionExecuted);
+        eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED_LEGACY_ALIAS, onRuleEngineActionExecuted);
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
@@ -2306,9 +2306,9 @@
           ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
         };
         // Legacy MVP surface kept for compatibility during migration.
-        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_SCHEMA_ALIAS] = ruleEngineMvpState.ruleSchema;
-        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_PREVIEW_ALIAS] = ruleEngineMvpState.ruleEnginePreviewSystem;
-        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_EXECUTE_ALIAS] = RULE_ENGINE_EXECUTE_ACTIONS_ALIAS;
+        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_SCHEMA_LEGACY_ALIAS] = ruleEngineMvpState.ruleSchema;
+        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_PREVIEW_LEGACY_ALIAS] = ruleEngineMvpState.ruleEnginePreviewSystem;
+        ruleEngineMvpState[RULE_ENGINE_COMPAT_KEYS.MVP_EXECUTE_LEGACY_ALIAS] = RULE_ENGINE_EXECUTE_ACTIONS_ALIAS;
         mvp = {
           eventBus,
           gameState,
