@@ -129,9 +129,7 @@ export function bindKwsEventHandlers({
     updateKwsReadout();
   }
 
-  // Listen to both modern and legacy event IDs during migration.
   unsub.push(eventBus.on("rule_engine.wake_win_opened", onRuleEngineWakeWindowOpened));
-  unsub.push(eventBus.on("rule_engine.v1.wake_win_opened", onRuleEngineWakeWindowOpened));
 
   return {
     dispose() {
