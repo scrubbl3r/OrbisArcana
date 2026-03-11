@@ -42,8 +42,8 @@ export async function loadReceiverInitModules() {
     { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
     { RUNTIME_SPELLS_BY_ID },
-    { validateSpellRuntimeRouting, validateSpellRuntimeRoutingV1 },
-    { validateSpellSchemaIntegrity, validateSpellSchemaIntegrityV1 },
+    { validateSpellRuntimeRouting },
+    { validateSpellSchemaIntegrity },
     {
       RULE_ENGINE_MASTER_CONTROL,
       validateRuleEngineConfig,
@@ -129,9 +129,7 @@ export async function loadReceiverInitModules() {
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRouting,
-    validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrity,
-    validateSpellSchemaIntegrityV1,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     RULE_ENGINE_V1_MASTER_CONTROL,
@@ -196,9 +194,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRouting,
-    validateSpellRuntimeRoutingV1,
     validateSpellSchemaIntegrity,
-    validateSpellSchemaIntegrityV1,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     RULE_ENGINE_V1_MASTER_CONTROL,
@@ -252,12 +248,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
     ? validateRuleEngineConfig
     : validateRuleEngineV1Config;
-  const validateSpellRuntimeRoutingFn = (typeof validateSpellRuntimeRouting === "function")
-    ? validateSpellRuntimeRouting
-    : validateSpellRuntimeRoutingV1;
-  const validateSpellSchemaIntegrityFn = (typeof validateSpellSchemaIntegrity === "function")
-    ? validateSpellSchemaIntegrity
-    : validateSpellSchemaIntegrityV1;
+  const validateSpellRuntimeRoutingFn = validateSpellRuntimeRouting;
+  const validateSpellSchemaIntegrityFn = validateSpellSchemaIntegrity;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
     ? setRuleSchema
     : setRuleSchemaV1;

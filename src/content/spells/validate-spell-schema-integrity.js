@@ -22,7 +22,7 @@ function indexDefsById(defs = []) {
   }, Object.create(null));
 }
 
-export function validateSpellSchemaIntegrityV1(options = {}) {
+export function validateSpellSchemaIntegrity(options = {}) {
   const master = (RULE_ENGINE_V1_MASTER_CONTROL && typeof RULE_ENGINE_V1_MASTER_CONTROL === "object")
     ? RULE_ENGINE_V1_MASTER_CONTROL
     : Object.create(null);
@@ -126,4 +126,4 @@ export function validateSpellSchemaIntegrityV1(options = {}) {
   return errors;
 }
 
-export const validateSpellSchemaIntegrity = validateSpellSchemaIntegrityV1;
+export const validateSpellSchemaIntegrityV1 = validateSpellSchemaIntegrity;

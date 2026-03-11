@@ -65,7 +65,7 @@ function collectWakeWinSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
   return out;
 }
 
-export function validateSpellRuntimeRoutingV1() {
+export function validateSpellRuntimeRouting() {
   const errors = [];
 
   checkSpellIdList(errors, "WAKE_WORD_IDS", WAKE_WORD_IDS);
@@ -194,4 +194,4 @@ export function validateSpellRuntimeRoutingV1() {
   return errors;
 }
 
-export const validateSpellRuntimeRouting = validateSpellRuntimeRoutingV1;
+export const validateSpellRuntimeRoutingV1 = validateSpellRuntimeRouting;
