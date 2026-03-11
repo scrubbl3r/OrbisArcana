@@ -2290,6 +2290,15 @@
           getCurrentBackendKey: () => kwsBackendKey,
           setCurrentBackendKey: (next) => { kwsBackendKey = String(next || DEFAULT_KWS_BACKEND_KEY); },
         });
+        const ruleEngineMvpState = {
+          ruleSchema,
+          ruleEnginePreviewSystem,
+          ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
+        };
+        // Legacy MVP surface kept for compatibility during migration.
+        ruleEngineMvpState.ruleSchemaV1 = ruleEngineMvpState.ruleSchema;
+        ruleEngineMvpState.ruleEngineV1PreviewSystem = ruleEngineMvpState.ruleEnginePreviewSystem;
+        ruleEngineMvpState.ruleEngineV1ExecuteActions = RULE_ENGINE_EXECUTE_ACTIONS_ALIAS;
         mvp = {
           eventBus,
           gameState,
@@ -2301,12 +2310,7 @@
           inputDynamicsSystem,
           inputGestureSystem,
           orbRuntimeState,
-          ruleSchema,
-          ruleSchemaV1: ruleSchema,
-          ruleEnginePreviewSystem,
-          ruleEngineV1PreviewSystem: ruleEnginePreviewSystem,
-          ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
-          ruleEngineV1ExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS_ALIAS,
+          ...ruleEngineMvpState,
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,
