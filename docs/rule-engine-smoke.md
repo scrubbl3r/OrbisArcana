@@ -8,7 +8,7 @@ Use this to reduce manual per-slice config edits.
 npm run smoke:batch:v2
 ```
 
-## Milestone Command (Recommended Every ~5 Slices)
+## Milestone Run (Recommended Every ~5 Slices)
 
 ```bash
 npm run smoke:milestone:v2

@@ -14,13 +14,13 @@
 - Canonical ALLCAPS handles (human-friendly aliases).
 - Use as glossary/reference for naming consistency.
 
-## Runtime Bridge/Compatibility Files (Do Not Author Daily)
+## Runtime Bridge Files (Do Not Edit Daily)
 - `src/content/spell-rules/rule-engine-master-control.js` (runtime rule schema + defaults/overrides)
 - `src/content/spell-rules/validate-rule-engine-config.js` (schema validator)
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + adapter flag routing)
-- `src/voice/spellbook.js` (compatibility runtime view derived from `spellbook-v2`)
+- `src/voice/spellbook.js` (runtime view derived from `spellbook-v2`)
 
-## Current Mode Switches
+## Current Runtime Switches
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/interactions-v2.js`
   - Purpose: Active runtime rule source selector (must remain `true`).
@@ -32,9 +32,9 @@
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.
 - If you are enabling/disabling words, edit `spellbook-v2.js`.
-- Avoid editing bridge/compatibility files unless doing migration plumbing.
+- Avoid editing bridge files unless doing migration plumbing.
 
-## Quick Health Commands
+## Quick Health Checks
 - `npm run pre-smoke:v2`
   - Validates interactions config and regenerates effective snapshot.
 - `npm run report-drift:v2`
@@ -43,4 +43,4 @@
   - Runs pre-smoke and prints concise SSOT health summary.
   - Also writes `docs/rule-engine-v2.health.json`.
 - `npm run ready:v2`
-  - Runs doctor and fails unless all cutover health gates are green.
+  - Runs doctor and fails unless all health gates are green.

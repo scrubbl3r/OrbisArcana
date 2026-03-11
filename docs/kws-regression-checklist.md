@@ -13,7 +13,7 @@ Use this after any KWS/runtime refactor.
 - Confirm no persistent init stall state.
 - Confirm no repeated error spam in the readout.
 
-## 3) Wakeword Detection
+## 3) Wake Word Detection
 - With cast window open, trigger each canonical token at least once:
   - `orbis`
   - `domus`
@@ -31,10 +31,10 @@ Use this after any KWS/runtime refactor.
 - Confirm immediate re-triggers are blocked by cooldown.
 - Confirm trigger works again after cooldown window.
 
-## 5) Spell Window / Class Flow
-- Open flat-spin class window and test class tokens (`rota`, `sanctum`, `vectus`).
-- Confirm expected class token behavior and chip lighting.
-- Confirm closing class window resets class-token heard state.
+## 5) Spell Window / Token Flow
+- Open flat-spin token window and test token set (`rota`, `sanctum`, `vectus`).
+- Confirm expected token behavior and chip lighting.
+- Confirm closing token window resets token-heard state.
 
 ## 6) Tuning Controls
 - Change `Infer TH` and `Infer CD`, then click `Apply`.

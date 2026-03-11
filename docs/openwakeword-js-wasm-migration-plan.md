@@ -30,7 +30,7 @@ Legacy Python sidecar and Porcupine paths were decommissioned from receiver runt
 - `sanctum`
 - `vectus`
 
-## Follow-up Hardening Queue
-1. Final dead-file cleanup pass (docs/assets) after release verification.
+## Follow-up Queue
+1. Final stale-file cleanup pass (docs/assets) after release verification.
 2. Runtime SSOT consolidation for thresholds/tuning config.
 3. Startup UX polish (loading indicator + readiness states).

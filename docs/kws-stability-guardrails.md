@@ -2,7 +2,7 @@
 
 This document captures the runtime invariants that should not be changed casually.
 
-## Core Invariants
+## Core Guardrails
 - `openwakeword_browser` is the default and only active KWS backend.
 - KWS boots automatically on receiver load (no gesture gate required).
 - Watchdog success requires both:
@@ -11,7 +11,7 @@ This document captures the runtime invariants that should not be changed casuall
 - Token emit cooldown is enforced per token.
 - Runtime tuning comes from source defaults + UI apply, not URL params.
 
-## Regression Signals
+## Regression Indicators
 - `conn:off` while `ctx:running` and `aud/frm` are advancing.
 - Persistent `inf:off/0` after warmup.
 - Duplicate immediate token prints without cooldown spacing.
