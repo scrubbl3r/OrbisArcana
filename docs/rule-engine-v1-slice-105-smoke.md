@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 105 SMOKE CHECKLIST
+# Rule Engine V1 Slice 105 Smoke Checklist
 
 ## Purpose
 - Add candidate evaluation caps via:

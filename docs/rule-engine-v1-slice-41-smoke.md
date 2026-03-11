@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 41 SMOKE CHECKLIST
+# Rule Engine V1 Slice 41 Smoke Checklist
 
 ## Purpose
 - Make `validateRuleEngineV1Config()` default to `RULE_ENGINE_V1_MASTER_CONTROL` and align diagnostics to master-control naming.

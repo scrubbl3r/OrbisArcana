@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 103 SMOKE CHECKLIST
+# Rule Engine V1 Slice 103 Smoke Checklist
 
 ## Purpose
 - Add per-signal cooldown scaling via `signalCooldownScaleOverrides`.

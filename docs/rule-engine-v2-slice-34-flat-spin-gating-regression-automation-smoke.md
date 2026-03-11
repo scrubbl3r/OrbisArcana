@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 34 Smoke
+# Rule Engine v2 Slice 34 Smoke
 
 ## Goal
 automate flat-spin token gating regression coverage.

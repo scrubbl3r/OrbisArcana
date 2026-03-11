@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 31 SMOKE CHECKLIST
+# Rule Engine V1 Slice 31 Smoke Checklist
 
 ## Purpose
 - Support `on` shorthand in rules:

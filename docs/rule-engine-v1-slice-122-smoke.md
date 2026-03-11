@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 122 SMOKE CHECKLIST
+# Rule Engine V1 Slice 122 Smoke Checklist
 
 ## Purpose
 - Add event-level candidate-evaluation caps via:

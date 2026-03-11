@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 69 SMOKE CHECKLIST
+# Rule Engine V1 Slice 69 Smoke Checklist
 
 ## Purpose
 - Make same-source signal ordering deterministic when priorities tie.

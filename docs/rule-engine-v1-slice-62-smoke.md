@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 62 SMOKE CHECKLIST
+# Rule Engine V1 Slice 62 Smoke Checklist
 
 ## Purpose
 - Add global signal debounce via `execution.signalDebounceMs` in master control.

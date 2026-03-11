@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 01 SMOKE CHECKLIST
+# Rule Engine V1 Slice 01 Smoke Checklist
 
 ## Purpose
 - Establish baseline behavior while introducing data-only rule schema scaffolding.

@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 56 SMOKE CHECKLIST
+# Rule Engine V1 Slice 56 Smoke Checklist
 
 ## Purpose
 - Add centralized execution cap via `execution.maxMatchesPerSignal` in master control.

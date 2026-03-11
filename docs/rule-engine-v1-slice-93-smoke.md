@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 93 SMOKE CHECKLIST
+# Rule Engine V1 Slice 93 Smoke Checklist
 
 ## Purpose
 - Add per-source-event action execution control via `sourceEventExecuteActionsOverrides`.

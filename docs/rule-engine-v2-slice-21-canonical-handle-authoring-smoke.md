@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 21 Smoke
+# Rule Engine v2 Slice 21 Smoke
 
 ## Goal
 author `interactions-v2` rules using canonical ALLCAPS entity handles (signals/events) instead of raw string literals.

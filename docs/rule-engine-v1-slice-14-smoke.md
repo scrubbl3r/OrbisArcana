@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 14 SMOKE CHECKLIST
+# Rule Engine V1 Slice 14 Smoke Checklist
 
 ## Purpose
 - Remove remaining DOMUS-specific hardcoding from dispatch.

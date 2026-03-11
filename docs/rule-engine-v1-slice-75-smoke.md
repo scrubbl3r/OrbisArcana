@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 75 SMOKE CHECKLIST
+# Rule Engine V1 Slice 75 Smoke Checklist
 
 ## Purpose
 - Add per-source-event debounce tuning via `sourceEventDebounceOverrides`.

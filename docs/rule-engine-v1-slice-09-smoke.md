@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 09 SMOKE CHECKLIST
+# Rule Engine V1 Slice 09 Smoke Checklist
 
 ## Purpose
 - Remove hardcoded KWS token groups and derive from active spellbook + routing config.

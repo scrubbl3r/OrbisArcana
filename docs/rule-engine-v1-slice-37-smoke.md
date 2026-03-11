@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 37 SMOKE CHECKLIST
+# Rule Engine V1 Slice 37 Smoke Checklist
 
 ## Purpose
 - Remove runtime bootstrap dependence on legacy rule config alias and use only `RULE_ENGINE_V1_MASTER_CONFIG` as the active contract.

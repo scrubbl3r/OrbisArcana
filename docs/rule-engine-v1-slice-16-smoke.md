@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 16 SMOKE CHECKLIST
+# Rule Engine V1 Slice 16 Smoke Checklist
 
 ## Purpose
 - Remove hardcoded OpenWakeWord simulation/default infer tokens.

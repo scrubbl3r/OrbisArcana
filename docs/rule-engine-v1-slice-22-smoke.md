@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 22 SMOKE CHECKLIST
+# Rule Engine V1 Slice 22 Smoke Checklist
 
 ## Purpose
 - Harden derived signal schema with fail-fast duplicate signal ID validation.

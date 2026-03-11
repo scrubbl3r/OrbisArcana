@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 05 SMOKE CHECKLIST
+# Rule Engine V1 Slice 05 Smoke Checklist
 
 ## Purpose
 - Add second executable rule action path: `event: electric_aoe`.

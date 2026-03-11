@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 209 Smoke
 
-Goal
+## Goal
 - Fail fast on ambiguous numeric comparators in `signalWhereOverrides`.
 
-Checks
+## Checks
 - Add temporary invalid override:
   - `signalWhereOverrides: { "<signal_id>": { path: "ms", gt: 100, gte: 100 } }`
 - Run config validation/startup path.
@@ -15,5 +15,5 @@ Checks
 - Confirm validation includes:
   - `RULE_ENGINE_V1_MASTER_CONTROL.signalWhereOverrides[<signal_id>] cannot combine lt and lte`
 
-Cleanup
+## Cleanup
 - Keep one lower-bound comparator and one upper-bound comparator only.

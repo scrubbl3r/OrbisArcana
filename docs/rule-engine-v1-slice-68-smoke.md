@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 68 SMOKE CHECKLIST
+# Rule Engine V1 Slice 68 Smoke Checklist
 
 ## Purpose
 - Tighten override integrity: unknown rule IDs now fail fast in rule/action override maps.

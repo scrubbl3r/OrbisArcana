@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 72 SMOKE CHECKLIST
+# Rule Engine V1 Slice 72 Smoke Checklist
 
 ## Purpose
 - Add centralized source-event gating via `sourceEventEnabledOverrides`.

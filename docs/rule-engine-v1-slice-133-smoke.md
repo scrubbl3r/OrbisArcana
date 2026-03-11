@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 133 Smoke
 
-Goal
+## Goal
 - Add per-source-event summary detail control via `sourceEventSummaryIncludeSignalAndRuleIdsOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.emitSourceEventSummaryEvents: true`
   - `execution.sourceEventSummaryIncludeSignalAndRuleIds: false`

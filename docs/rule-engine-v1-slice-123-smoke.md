@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 123 Smoke
 
-Goal
+## Goal
 - Add per-signal event-level candidate evaluation cap via `signalMaxRulesEvaluatedPerEventOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.maxRulesEvaluatedPerEvent: 0`
   - `sourceEventMaxRulesEvaluatedPerEventOverrides: { "voice.spell_detected": 0 }`

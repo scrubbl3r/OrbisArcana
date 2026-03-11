@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 47 SMOKE CHECKLIST
+# Rule Engine V1 Slice 47 Smoke Checklist
 
 ## Purpose
 - Add per-rule `priority` support to control evaluation order when multiple rules match.

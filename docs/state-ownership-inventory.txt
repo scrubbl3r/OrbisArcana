@@ -1,6 +1,6 @@
-Orbis Arcana State Ownership Inventory (Current Snapshot)
+# Orbis Arcana State Ownership Inventory (Current Snapshot)
 
-Purpose
+## Purpose
 
 This is an implementation-facing snapshot of runtime state ownership after the recent refactor pass.
 It distinguishes:
@@ -11,7 +11,7 @@ It distinguishes:
 
 Use this as a refactor priority map, not a final spec.
 
-Date context
+## Date Context
 
 - Generated after:
   - input system / gesture / dynamics extraction
@@ -26,7 +26,7 @@ Date context
 1. STATUS LEGEND
 --------------------------------------------------
 
-Status meanings
+### Status Meanings
 
 - OK (Shell): reasonable to keep in receiver for now
 - OK (System): already lives in the right domain/system
@@ -34,7 +34,7 @@ Status meanings
 - MOVE NEXT: high-value migration target
 - MOVE LATER: future extraction target, lower urgency
 
-Authority meanings
+### Authority Meanings
 
 - Authoritative: source of truth for gameplay/runtime behavior
 - Derived: computed/render-only state

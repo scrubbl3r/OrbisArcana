@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 63 SMOKE CHECKLIST
+# Rule Engine V1 Slice 63 Smoke Checklist
 
 ## Purpose
 - Add per-signal debounce tuning via `signalDebounceOverrides` in master control.

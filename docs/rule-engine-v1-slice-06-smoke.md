@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 06 SMOKE CHECKLIST
+# Rule Engine V1 Slice 06 Smoke Checklist
 
 ## Purpose
 - Cut spellbook to recognition-only fields.

@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 42 SMOKE CHECKLIST
+# Rule Engine V1 Slice 42 Smoke Checklist
 
 ## Purpose
 - Add first-class `orb_state` event action support in master rule schema/bindings.

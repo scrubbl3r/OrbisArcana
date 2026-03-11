@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 116 SMOKE CHECKLIST
+# Rule Engine V1 Slice 116 Smoke Checklist
 
 ## Purpose
 - Add per-signal action telemetry overrides via `signalEmitActionExecutedOverrides`.

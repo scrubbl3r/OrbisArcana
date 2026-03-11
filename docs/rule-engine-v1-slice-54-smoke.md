@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 54 SMOKE CHECKLIST
+# Rule Engine V1 Slice 54 Smoke Checklist
 
 ## Purpose
 - Add centralized per-rule timing tuning via `ruleTimingOverrides` in master control.

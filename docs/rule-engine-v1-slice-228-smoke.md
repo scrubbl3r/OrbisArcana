@@ -1,6 +1,6 @@
 # Rule Engine V1 Slice 228 Smoke (Batch)
 
-Goal
+## Goal
 - Fail fast on padded keys across 10 remaining rule/signal override maps.
 
 Covered maps
@@ -15,11 +15,11 @@ Covered maps
 - `signalMaxActionsPerSignalOverrides`
 - `signalEmitActionExecutedOverrides`
 
-Checks
+## Checks
 - In each covered map, add one temporary key with leading/trailing spaces.
 - Run config validation/startup path.
 - Confirm each emits:
   - `... key must not include leading/trailing whitespace:  <key> `
 
-Cleanup
+## Cleanup
 - Remove key padding and confirm clean validation/startup.

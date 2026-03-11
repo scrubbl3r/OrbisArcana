@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 12 Smoke
+# Rule Engine v2 Slice 12 Smoke
 
 ## Goal
 ensure `defaults.event` keys enforce event namespace clearly.

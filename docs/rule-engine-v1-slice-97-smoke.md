@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 97 SMOKE CHECKLIST
+# Rule Engine V1 Slice 97 Smoke Checklist
 
 ## Purpose
 - Add per-source-event rule-match flow controls:

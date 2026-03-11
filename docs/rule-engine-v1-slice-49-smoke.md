@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 49 SMOKE CHECKLIST
+# Rule Engine V1 Slice 49 Smoke Checklist
 
 ## Purpose
 - Add centralized per-rule toggles via top-level `ruleEnabledOverrides` in master control.

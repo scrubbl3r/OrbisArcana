@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 55 SMOKE CHECKLIST
+# Rule Engine V1 Slice 55 Smoke Checklist
 
 ## Purpose
 - Add centralized execution policy via `execution.stopOnFirstMatch` in master control.

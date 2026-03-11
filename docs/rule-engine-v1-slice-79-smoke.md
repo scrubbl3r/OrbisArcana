@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 79 SMOKE CHECKLIST
+# Rule Engine V1 Slice 79 Smoke Checklist
 
 ## Purpose
 - Add global dry-run control via `execution.executeActions`.

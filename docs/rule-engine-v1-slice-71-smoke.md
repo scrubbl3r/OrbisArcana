@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 71 SMOKE CHECKLIST
+# Rule Engine V1 Slice 71 Smoke Checklist
 
 ## Purpose
 - Add global default rule priority via `ruleDefaults.priority`.

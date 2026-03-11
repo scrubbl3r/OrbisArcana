@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 24 SMOKE CHECKLIST
+# Rule Engine V1 Slice 24 Smoke Checklist
 
 ## Purpose
 - Remove deprecated KWS config aliases (`schoolTokens`, `classTokens`) and consume neutral keys only (`axisTokens`, `wakeWindowTokens`).

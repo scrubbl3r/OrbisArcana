@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 96 SMOKE CHECKLIST
+# Rule Engine V1 Slice 96 Smoke Checklist
 
 ## Purpose
 - Add per-source-event action fanout caps via `sourceEventMaxActionsPerRuleMatchOverrides`.

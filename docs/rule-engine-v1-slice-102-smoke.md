@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 102 SMOKE CHECKLIST
+# Rule Engine V1 Slice 102 Smoke Checklist
 
 ## Purpose
 - Add per-signal match-window scaling via `signalMatchWindowScaleOverrides`.

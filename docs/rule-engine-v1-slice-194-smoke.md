@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 194 Smoke
 
-Goal
+## Goal
 - Fail fast when `eventRuntimeBindings` inner `id` is missing or mismatched.
 
-Checks
+## Checks
 - Set missing inner id:
   - `eventRuntimeBindings: { "grace": { runtime: { kind: "orb_event", event: "orb.float_grace_grant" } } }`
 - Run config validation/startup path.
@@ -15,5 +15,5 @@ Checks
 - Confirm validation fails with:
   - `RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[grace].id must match key (grace)`
 
-Cleanup
+## Cleanup
 - Restore valid bindings and confirm normal startup/validation is clean again.

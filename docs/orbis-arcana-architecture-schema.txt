@@ -1,6 +1,6 @@
-Orbis Arcana Architecture Schema (Current Snapshot)
+# Orbis Arcana Architecture Schema (Current Snapshot)
 
-Purpose
+## Purpose
 
 This document is a snapshot after a major refactor wave.
 It updates v0.3 with what is now fully implemented, what has been hardened, and what remains.

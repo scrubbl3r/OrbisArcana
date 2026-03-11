@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 48 SMOKE CHECKLIST
+# Rule Engine V1 Slice 48 Smoke Checklist
 
 ## Purpose
 - Add top-level master-control toggle with `enabled: true|false` to enable/disable the entire rule engine schema at config level.

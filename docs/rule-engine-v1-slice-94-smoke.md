@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 94 SMOKE CHECKLIST
+# Rule Engine V1 Slice 94 Smoke Checklist
 
 ## Purpose
 - Add per-source-event cooldown scaling via `sourceEventCooldownScaleOverrides`.

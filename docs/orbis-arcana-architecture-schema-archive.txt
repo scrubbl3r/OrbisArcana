@@ -1,6 +1,6 @@
-Orbis Arcana Architecture Schema (Archive Snapshot)
+# Orbis Arcana Architecture Schema (Archive Snapshot)
 
-Purpose
+## Purpose
 
 This document captures the new, amended, and proposed schema decisions for Orbis Arcana so we can iterate on the architecture before doing larger refactors.
 

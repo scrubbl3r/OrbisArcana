@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 78 SMOKE CHECKLIST
+# Rule Engine V1 Slice 78 Smoke Checklist
 
 ## Purpose
 - Add central signal source remapping via `signalSourceEventOverrides`.

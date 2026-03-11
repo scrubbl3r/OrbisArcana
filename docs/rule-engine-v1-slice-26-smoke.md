@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 26 SMOKE CHECKLIST
+# Rule Engine V1 Slice 26 Smoke Checklist
 
 ## Purpose
 - Introduce neutral axis-selection event contract (`voice.axis_selected`) while keeping legacy `voice.school_selected` compatibility.

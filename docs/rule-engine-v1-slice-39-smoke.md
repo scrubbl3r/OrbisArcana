@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 39 SMOKE CHECKLIST
+# Rule Engine V1 Slice 39 Smoke Checklist
 
 ## Purpose
 - Make action inline args generic: any non-structural action key is treated as an override arg.

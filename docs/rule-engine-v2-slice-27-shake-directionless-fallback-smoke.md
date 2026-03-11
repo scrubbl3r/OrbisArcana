@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 27 Smoke
+# Rule Engine v2 Slice 27 Smoke
 
 ## Goal
 prevent dropped shake detonations when shake direction group is missing.

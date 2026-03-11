@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 80 SMOKE CHECKLIST
+# Rule Engine V1 Slice 80 Smoke Checklist
 
 ## Purpose
 - Add per-rule action fanout caps via `ruleActionLimitOverrides`.

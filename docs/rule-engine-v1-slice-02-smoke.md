@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 02 SMOKE CHECKLIST
+# Rule Engine V1 Slice 02 Smoke Checklist
 
 ## Purpose
 - Wire Rule Engine v1 schema loading/validation into bootstrap.

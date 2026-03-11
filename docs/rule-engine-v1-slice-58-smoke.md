@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 58 SMOKE CHECKLIST
+# Rule Engine V1 Slice 58 Smoke Checklist
 
 ## Purpose
 - Add centralized event toggles via `eventEnabledOverrides` in master control.

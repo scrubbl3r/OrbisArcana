@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 104 SMOKE CHECKLIST
+# Rule Engine V1 Slice 104 Smoke Checklist
 
 ## Purpose
 - Add per-signal action fanout caps via `signalMaxActionsPerRuleMatchOverrides`.

@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 18 SMOKE CHECKLIST
+# Rule Engine V1 Slice 18 Smoke Checklist
 
 ## Purpose
 - Add fail-fast validation for spell runtime routing config.

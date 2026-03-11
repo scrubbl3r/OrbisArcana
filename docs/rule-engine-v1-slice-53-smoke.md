@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 53 SMOKE CHECKLIST
+# Rule Engine V1 Slice 53 Smoke Checklist
 
 ## Purpose
 - Add centralized per-rule priority tuning via `rulePriorityOverrides` in master control.

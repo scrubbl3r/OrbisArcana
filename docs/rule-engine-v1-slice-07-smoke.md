@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 07 SMOKE CHECKLIST
+# Rule Engine V1 Slice 07 Smoke Checklist
 
 ## Purpose
 - Add executable `wake_win` action support (feature-flagged with existing Rule Engine execute flag).

@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 43 SMOKE CHECKLIST
+# Rule Engine V1 Slice 43 Smoke Checklist
 
 ## Purpose
 - Support `then` shorthand as a single action object (`then: { ... }`) in addition to array form.

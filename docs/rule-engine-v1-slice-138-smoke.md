@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 138 Smoke
 
-Goal
+## Goal
 - Add per-signal summary budget-cap detail control via `signalSummaryIncludeBudgetCapsOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.emitSourceEventSummaryEvents: true`
   - `execution.sourceEventSummaryIncludeBudgetCaps: false`

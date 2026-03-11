@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 14 Smoke
+# Rule Engine v2 Slice 14 Smoke
 
 ## Goal
 enforce KWS manifest as a derived artifact of `spellbook-v2` (single-source consistency).
@@ -18,7 +18,7 @@ npm run sync:kws-manifest:v2
 npm run ready:v2
 ```
 
-## Guardrail behavior
+## Guardrail Behavior
 
 - If manifest is edited manually or drifts from spellbook, pre-smoke fails with:
   - `kws manifest drift: regenerate from spellbook-v2`

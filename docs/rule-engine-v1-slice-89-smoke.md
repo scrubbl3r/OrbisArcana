@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 89 SMOKE CHECKLIST
+# Rule Engine V1 Slice 89 Smoke Checklist
 
 ## Purpose
 - Add per-rule action execution control via `ruleExecuteActionsOverrides`.

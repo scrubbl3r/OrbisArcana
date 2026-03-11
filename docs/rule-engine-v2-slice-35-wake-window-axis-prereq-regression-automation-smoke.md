@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 35 Smoke
+# Rule Engine v2 Slice 35 Smoke
 
 ## Goal
 automate wake-window axis prerequisite regression coverage.

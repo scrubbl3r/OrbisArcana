@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 10 SMOKE CHECKLIST
+# Rule Engine V1 Slice 10 Smoke Checklist
 
 ## Purpose
 - Make KWS panel semantics data-driven for wake/school/class token groups.

@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 28 Smoke
+# Rule Engine v2 Slice 28 Smoke
 
 ## Goal
 automate detection of the shake-detonation regression that was previously caught only in human smoke.

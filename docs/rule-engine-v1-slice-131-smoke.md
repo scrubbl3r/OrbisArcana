@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 131 Smoke
 
-Goal
+## Goal
 - Add rule-level source-event summary telemetry control via `ruleEmitSourceEventSummaryOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.emitSourceEventSummaryEvents: false`
   - `sourceEventEmitSourceEventSummaryOverrides: { "voice.spell_detected": false }`

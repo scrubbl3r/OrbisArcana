@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 193 Smoke
 
-Goal
+## Goal
 - Fail fast when `eventRuntimeBindings.runtime` mixes `orb_event` and `cast_action` fields.
 
-Checks
+## Checks
 - Set mixed fields for `orb_event`:
   - `eventRuntimeBindings: { "grace": { runtime: { kind: "orb_event", event: "orb.float_grace_grant", castActionId: "aoe_electric" } } }`
 - Run config validation/startup path.
@@ -15,5 +15,5 @@ Checks
 - Confirm validation fails with:
   - `RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[electric_aoe].runtime.event must be omitted for kind cast_action`
 
-Cleanup
+## Cleanup
 - Restore valid bindings and confirm normal startup/validation is clean again.

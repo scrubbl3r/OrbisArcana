@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 03 SMOKE CHECKLIST
+# Rule Engine V1 Slice 03 Smoke Checklist
 
 ## Purpose
 - Add read-only rule preview runtime.

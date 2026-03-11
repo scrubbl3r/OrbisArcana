@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 22 Smoke
+# Rule Engine v2 Slice 22 Smoke
 
 ## Goal
 keep runtime startup resilient if rule schema validation fails, by falling back to a safe disabled rule schema instead of freezing receiver boot.

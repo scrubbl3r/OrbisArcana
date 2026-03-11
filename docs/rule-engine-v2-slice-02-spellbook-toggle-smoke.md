@@ -1,8 +1,8 @@
-# Rule Engine V2 Slice 02 Smoke (Spellbook Active Toggle)
+# Rule Engine v2 Slice 02 Smoke (Spellbook Active Toggle)
 
 ## Scope
 - `src/voice/spellbook.js` is derived from `spellbook-v2`.
-- Toggling `active` in V2 spellbook changes runtime/KWS availability.
+- Toggling `active` in v2 spellbook changes runtime/KWS availability.
 
 ## Preconditions
 - Deploy includes:

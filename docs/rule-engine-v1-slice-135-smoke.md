@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 135 Smoke
 
-Goal
+## Goal
 - Add rule-level summary detail control via `ruleSummaryIncludeSignalAndRuleIdsOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.emitSourceEventSummaryEvents: true`
   - `execution.sourceEventSummaryIncludeSignalAndRuleIds: false`

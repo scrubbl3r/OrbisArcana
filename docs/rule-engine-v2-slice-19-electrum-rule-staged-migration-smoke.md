@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 19 Smoke
+# Rule Engine v2 Slice 19 Smoke
 
 ## Goal
 stage `electrum` immediate cast into `INTERACTIONS_V2.rules` with v1 static fallback parity.

@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 112 SMOKE CHECKLIST
+# Rule Engine V1 Slice 112 Smoke Checklist
 
 ## Purpose
 - Add signal-level action caps per signal hit via:

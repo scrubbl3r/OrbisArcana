@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 08 Smoke
+# Rule Engine v2 Slice 08 Smoke
 
 ## Goal
 make fallback state visible in receiver rule source readout.

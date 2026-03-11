@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 81 SMOKE CHECKLIST
+# Rule Engine V1 Slice 81 Smoke Checklist
 
 ## Purpose
 - Expand signal `where` comparator support to `gt`, `gte`, `lt`, `lte` (plus existing `eq`).

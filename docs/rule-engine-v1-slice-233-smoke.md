@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 233 Smoke
 
-Goal
+## Goal
 - Fail fast on empty keys inside `eventRuntimeBindings` objects.
 
-Checks
+## Checks
 - Add temporary invalid entries:
   - In one binding object: `{ "": 1 }`
   - In one `runtime` object: `{ "": 1 }`
@@ -12,5 +12,5 @@ Checks
   - `RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[<id>] contains empty key`
   - `RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[<id>].runtime contains empty key`
 
-Cleanup
+## Cleanup
 - Remove temporary empty keys and confirm clean validation/startup.

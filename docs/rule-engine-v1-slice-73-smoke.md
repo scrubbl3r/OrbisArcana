@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 73 SMOKE CHECKLIST
+# Rule Engine V1 Slice 73 Smoke Checklist
 
 ## Purpose
 - Add centralized action fanout cap via `execution.maxActionsPerRuleMatch`.

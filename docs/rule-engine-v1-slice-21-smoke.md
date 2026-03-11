@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 21 SMOKE CHECKLIST
+# Rule Engine V1 Slice 21 Smoke Checklist
 
 ## Purpose
 - Derive spell signal definitions from routing/spellbook config instead of hardcoded entries.

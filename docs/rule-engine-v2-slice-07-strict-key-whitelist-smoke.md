@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 07 Smoke
+# Rule Engine v2 Slice 07 Smoke
 
 ## Goal
 verify `INTERACTIONS_V2` fails fast when unsupported keys are introduced in core authoring objects.
@@ -27,4 +27,4 @@ npm run ready:v2
 
 ## Notes
 
-- This keeps V2 authoring focused and prevents hidden/legacy knobs from creeping back into SSOT.
+- This keeps v2 authoring focused and prevents hidden/legacy knobs from creeping back into SSOT.

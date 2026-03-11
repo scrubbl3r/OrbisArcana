@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 110 SMOKE CHECKLIST
+# Rule Engine V1 Slice 110 Smoke Checklist
 
 ## Purpose
 - Ensure per-signal event-action caps are fully wired end-to-end via `signalMaxActionsPerEventOverrides`.

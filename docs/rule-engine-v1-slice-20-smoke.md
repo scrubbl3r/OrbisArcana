@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 20 SMOKE CHECKLIST
+# Rule Engine V1 Slice 20 Smoke Checklist
 
 ## Purpose
 - Remove retired `spell-decision-tree` module now that runtime uses routing/rules config.

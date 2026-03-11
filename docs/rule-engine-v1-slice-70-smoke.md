@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 70 SMOKE CHECKLIST
+# Rule Engine V1 Slice 70 Smoke Checklist
 
 ## Purpose
 - Add centralized signal fanout cap via `execution.maxSignalsPerEvent`.

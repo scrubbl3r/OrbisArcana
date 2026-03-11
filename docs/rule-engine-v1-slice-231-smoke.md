@@ -1,6 +1,6 @@
 # Rule Engine V1 Slice 231 Smoke
 
-Goal
+## Goal
 - Fail fast on empty nested `actionType` keys in `...ActionTypeEnabled...` maps.
 
 Covered maps
@@ -11,11 +11,11 @@ Covered maps
 - `sourceEventActionTypeEnabledOverrides`
 - `sourceEventActionExecutedEventTypeEnabledOverrides`
 
-Checks
+## Checks
 - In each covered map, add an empty nested key (for example `{ "": true }`).
 - Run config validation/startup path.
 - Confirm each emits:
   - `... contains empty action type key`
 
-Cleanup
+## Cleanup
 - Remove empty nested keys and confirm clean validation/startup.

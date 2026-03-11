@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 66 SMOKE CHECKLIST
+# Rule Engine V1 Slice 66 Smoke Checklist
 
 ## Purpose
 - Add centralized per-action arg patching via `actionArgOverrides` in master control.

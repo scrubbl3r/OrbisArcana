@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 42 Smoke
+# Rule Engine v2 Slice 42 Smoke
 
 ## Goal
 enforce integrity of the generated minimal authoring artifact.

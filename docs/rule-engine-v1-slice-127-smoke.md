@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 127 Smoke
 
-Goal
+## Goal
 - Add per-signal evaluated-signal cap for one source-event payload via `signalMaxSignalsEvaluatedPerEventOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.maxSignalsEvaluatedPerEvent: 0`
   - `sourceEventMaxSignalsEvaluatedPerEventOverrides: { "voice.spell_detected": 0 }`

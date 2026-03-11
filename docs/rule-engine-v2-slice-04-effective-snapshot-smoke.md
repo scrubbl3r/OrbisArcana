@@ -1,7 +1,7 @@
-# Rule Engine V2 Slice 04 Smoke (Effective Snapshot)
+# Rule Engine v2 Slice 04 Smoke (Effective Snapshot)
 
 ## Scope
-- Generate one canonical snapshot of effective V2 config/projection.
+- Generate one canonical snapshot of effective v2 config/projection.
 - Diff snapshots before/after edits to verify intended changes only.
 
 ## Generator
@@ -20,7 +20,7 @@
    - Runtime cutover guard passes:
      - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true`
      - `SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules === true`
-   - If legacy bridge is enabled, V1 static fallback and V2 projection must have zero drift.
+   - If legacy bridge is enabled, V1 static fallback and v2 projection must have zero drift.
    - Effective snapshot regenerates.
    - Final line:
      - `[pre-smoke] OK: validators passed + effective snapshot refreshed`
@@ -43,7 +43,7 @@
    - Diff reflects only intended config/projection changes.
 
 ## Test C: Validation failure visibility
-1. Introduce invalid V2 data temporarily.
+1. Introduce invalid v2 data temporarily.
 2. Re-run generator.
 3. Expected:
    - Snapshot shows validation `ok: false` with detailed errors.

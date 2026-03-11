@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 26 Smoke
+# Rule Engine v2 Slice 26 Smoke
 
 ## Goal
 enforce parity between `interactions-v2` `wake_win` spell lists and `WAKE_WINDOW_SPELL_IDS`.

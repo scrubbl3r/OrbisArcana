@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 17 SMOKE CHECKLIST
+# Rule Engine V1 Slice 17 Smoke Checklist
 
 ## Purpose
 - Remove hardcoded class-spell list from `spell-rules-v1`.

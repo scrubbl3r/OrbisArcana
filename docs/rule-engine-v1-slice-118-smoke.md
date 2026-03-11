@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 118 SMOKE CHECKLIST
+# Rule Engine V1 Slice 118 Smoke Checklist
 
 ## Purpose
 - Add global action-telemetry type gates via `execution.actionExecutedEventTypeEnabled`.

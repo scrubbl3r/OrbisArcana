@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 91 SMOKE CHECKLIST
+# Rule Engine V1 Slice 91 Smoke Checklist
 
 ## Purpose
 - Add per-source-event action-type gates via `sourceEventActionTypeEnabledOverrides`.

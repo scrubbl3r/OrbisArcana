@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 60 SMOKE CHECKLIST
+# Rule Engine V1 Slice 60 Smoke Checklist
 
 ## Purpose
 - Add global cooldown scaling via `execution.cooldownScale` in master control.

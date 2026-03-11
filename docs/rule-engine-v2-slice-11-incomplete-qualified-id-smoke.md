@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 11 Smoke
+# Rule Engine v2 Slice 11 Smoke
 
 ## Goal
 verify clear validation errors for incomplete qualified IDs (`spell.`, `event.`, etc).

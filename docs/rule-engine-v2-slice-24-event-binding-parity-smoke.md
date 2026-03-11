@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 24 Smoke
+# Rule Engine v2 Slice 24 Smoke
 
 ## Goal
 enforce that every `event` action used by `interactions-v2` rules has a runtime binding.

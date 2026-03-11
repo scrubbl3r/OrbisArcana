@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 204 Smoke
 
-Goal
+## Goal
 - Fail fast on ambiguous numeric bounds in `where`.
 
-Checks
+## Checks
 - Add a temporary invalid signal `where`:
   - `where: { path: "ms", gt: 100, gte: 100 }`
 - Run config validation/startup path.
@@ -15,5 +15,5 @@ Checks
 - Confirm validation includes:
   - `signal <id> where.lt and where.lte cannot be combined`
 
-Cleanup
+## Cleanup
 - Keep only one lower bound and one upper bound comparator as needed.

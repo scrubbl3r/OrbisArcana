@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 30 SMOKE CHECKLIST
+# Rule Engine V1 Slice 30 Smoke Checklist
 
 ## Purpose
 - Allow `wake_win` actions to omit `id`; defaults to `wake_win` during validation/runtime normalization.

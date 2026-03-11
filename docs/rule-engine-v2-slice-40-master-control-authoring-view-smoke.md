@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 40 Smoke
+# Rule Engine v2 Slice 40 Smoke
 
 ## Goal
 provide a minimal authoring-focused master config artifact.

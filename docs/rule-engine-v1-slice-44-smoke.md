@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 44 SMOKE CHECKLIST
+# Rule Engine V1 Slice 44 Smoke Checklist
 
 ## Purpose
 - Add per-rule toggle support with `enabled: true|false` in master control rules.

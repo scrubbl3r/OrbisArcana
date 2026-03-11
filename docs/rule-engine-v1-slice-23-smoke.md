@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 23 SMOKE CHECKLIST
+# Rule Engine V1 Slice 23 Smoke Checklist
 
 ## Purpose
 - Introduce neutral spell-group naming (`AXIS_*`, `WAKE_WINDOW_*`) and migrate rule-engine/KWS consumers while keeping legacy aliases.

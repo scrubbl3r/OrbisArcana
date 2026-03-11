@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 19 SMOKE CHECKLIST
+# Rule Engine V1 Slice 19 Smoke Checklist
 
 ## Purpose
 - Add cross-file spell schema integrity validation at startup.

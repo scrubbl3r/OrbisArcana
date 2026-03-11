@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 33 Smoke
+# Rule Engine v2 Slice 33 Smoke
 
 ## Goal
 automate dispatch ownership regression checks for immediate spells.

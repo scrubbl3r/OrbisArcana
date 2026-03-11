@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 51 SMOKE CHECKLIST
+# Rule Engine V1 Slice 51 Smoke Checklist
 
 ## Purpose
 - Add top-level global default arg overrides:

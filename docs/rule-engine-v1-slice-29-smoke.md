@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 29 SMOKE CHECKLIST
+# Rule Engine V1 Slice 29 Smoke Checklist
 
 ## Purpose
 - Add author-facing rule shorthand support:

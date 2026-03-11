@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 65 SMOKE CHECKLIST
+# Rule Engine V1 Slice 65 Smoke Checklist
 
 ## Purpose
 - Add `execution.stopOnFirstSignalMatchPerEvent` to process only one signal per source event payload.

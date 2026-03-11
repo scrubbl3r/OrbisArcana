@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 119 SMOKE CHECKLIST
+# Rule Engine V1 Slice 119 Smoke Checklist
 
 ## Purpose
 - Add per-source-event action-telemetry type gates via `sourceEventActionExecutedEventTypeEnabledOverrides`.

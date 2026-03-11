@@ -1,11 +1,11 @@
-# Rule Engine V2 Slice 15 Smoke
+# Rule Engine v2 Slice 15 Smoke
 
 ## Goal
 migrate `domus` immediate behavior into `INTERACTIONS_V2.rules` and avoid duplicate cast execution.
 
 ## What changed
 
-1. Added V2 rule:
+1. Added v2 rule:
    - `r_domus_immediate`
    - `on: spell.domus`
    - `then: event.domus_teleport`

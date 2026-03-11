@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 130 Smoke
 
-Goal
+## Goal
 - Add per-signal source-event summary telemetry control via `signalEmitSourceEventSummaryOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.emitSourceEventSummaryEvents: false`
   - `sourceEventEmitSourceEventSummaryOverrides: { "voice.spell_detected": false }`

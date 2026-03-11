@@ -1,14 +1,14 @@
 # Rule Engine V1 Slice 156 Smoke
 
-Goal
+## Goal
 - Fail fast on empty rule-id keys in `ruleActionExecutedEventTypeEnabledOverrides`.
 
-Checks
+## Checks
 - Add a temporary empty-key entry:
   - `ruleActionExecutedEventTypeEnabledOverrides: { "": { wake_win: false } }`
 - Run config validation/startup path.
 - Confirm validation fails with:
   - `RULE_ENGINE_V1_MASTER_CONTROL.ruleActionExecutedEventTypeEnabledOverrides contains empty rule id key`
 
-Cleanup
+## Cleanup
 - Remove the empty-key entry and confirm normal startup/validation is clean again.

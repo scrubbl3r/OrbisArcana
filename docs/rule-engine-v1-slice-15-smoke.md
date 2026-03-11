@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 15 SMOKE CHECKLIST
+# Rule Engine V1 Slice 15 Smoke Checklist
 
 ## Purpose
 - Remove dispatch dependency on `spell-decision-tree` class token normalizer.

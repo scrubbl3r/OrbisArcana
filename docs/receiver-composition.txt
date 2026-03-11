@@ -1,6 +1,6 @@
-Receiver Composition
+# Receiver Composition
 
-Purpose
+## Purpose
 
 This is a practical map of what `game-receiver.js` still owns vs what is delegated.
 It is meant to help future refactors avoid re-centralizing logic into the shell.

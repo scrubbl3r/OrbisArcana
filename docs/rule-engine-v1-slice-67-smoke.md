@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 67 SMOKE CHECKLIST
+# Rule Engine V1 Slice 67 Smoke Checklist
 
 ## Purpose
 - Tighten override safety: validate `actionEnabledOverrides` and `actionArgOverrides` keys against actual rule actions.

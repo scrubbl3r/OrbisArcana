@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 11 SMOKE CHECKLIST
+# Rule Engine V1 Slice 11 Smoke Checklist
 
 ## Purpose
 - Centralize rule `event` execution through runtime binding config.

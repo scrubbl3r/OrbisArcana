@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 40 SMOKE CHECKLIST
+# Rule Engine V1 Slice 40 Smoke Checklist
 
 ## Purpose
 - Promote `RULE_ENGINE_V1_MASTER_CONTROL` naming as the active runtime contract in bootstrap and integrity validation defaults.

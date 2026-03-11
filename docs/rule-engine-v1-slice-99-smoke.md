@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 99 SMOKE CHECKLIST
+# Rule Engine V1 Slice 99 Smoke Checklist
 
 ## Purpose
 - Add per-signal preview telemetry control via `signalEmitPreviewMatchedOverrides`.

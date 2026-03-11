@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 114 SMOKE CHECKLIST
+# Rule Engine V1 Slice 114 Smoke Checklist
 
 ## Purpose
 - Add action telemetry emission toggle via `execution.emitActionExecutedEvents`.

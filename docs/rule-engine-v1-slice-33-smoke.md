@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 33 SMOKE CHECKLIST
+# Rule Engine V1 Slice 33 Smoke Checklist
 
 ## Purpose
 - Validate rule schema from the single master config object (`RULE_ENGINE_V1_CONFIG`) instead of validating split arrays only.

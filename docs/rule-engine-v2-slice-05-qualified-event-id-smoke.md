@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 05 Smoke
+# Rule Engine v2 Slice 05 Smoke
 
 ## Goal
 verify `event` IDs accept optional qualified form (`event.<id>`) in `INTERACTIONS_V2` while projecting to canonical V1 event IDs.

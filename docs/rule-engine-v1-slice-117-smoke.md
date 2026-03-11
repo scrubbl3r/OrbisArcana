@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 117 SMOKE CHECKLIST
+# Rule Engine V1 Slice 117 Smoke Checklist
 
 ## Purpose
 - Add rule-level action telemetry overrides via `ruleEmitActionExecutedOverrides`.

@@ -1,10 +1,10 @@
-# Rule Engine V2 Slice 01 Smoke
+# Rule Engine v2 Slice 01 Smoke
 
 ## Scope
-- V2 schema files exist.
-- V2 adapter exists.
+- v2 schema files exist.
+- v2 adapter exists.
 - Bootstrap can switch rule source with a feature flag.
-- Spellbook V2 validation runs fail-fast at startup.
+- Spellbook v2 validation runs fail-fast at startup.
 
 ## Preconditions
 - Deploy branch includes:
@@ -24,7 +24,7 @@
 6. Expected:
    - Behavior matches current baseline (no functional drift from V1 path).
 
-## Test B: V2 adapter path active (flag ON)
+## Test B: v2 adapter path active (flag ON)
 1. Set:
    - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`
 2. Reload receiver.
@@ -32,13 +32,13 @@
    - `[receiver-bootstrap] rule source: INTERACTIONS_V2(adapter)`
 4. Confirm on-screen readout shows:
    - `Rules: V2 adapter`
-5. Trigger the sample V2 rule chain condition:
+5. Trigger the sample v2 rule chain condition:
    - spell `rota` + `Y_SPIN` + `orb_state charged`
 6. Expected:
    - No startup schema errors.
-   - Rule engine remains operational through adapted V2 rules.
+   - Rule engine remains operational through adapted v2 rules.
 
-## Test C: Spellbook V2 fail-fast validation
+## Test C: Spellbook v2 fail-fast validation
 1. In `src/content/interactions-v2/spellbook-v2.js`, temporarily duplicate one `id` in `spells`.
 2. Reload receiver.
 3. Expected:

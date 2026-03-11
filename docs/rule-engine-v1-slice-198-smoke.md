@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 198 Smoke
 
-Goal
+## Goal
 - Fail fast on missing/duplicate ids in `windows` and `events` definitions.
 
-Checks
+## Checks
 - Add a temporary window without id in `windows`:
   - `{ enabled: true, defaultArgs: {} }`
 - Run config validation/startup path.
@@ -15,5 +15,5 @@ Checks
 - Confirm validation includes:
   - `duplicate event id: grace`
 
-Cleanup
+## Cleanup
 - Restore unique/non-empty ids and confirm normal startup/validation is clean again.

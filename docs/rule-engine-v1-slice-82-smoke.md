@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 82 SMOKE CHECKLIST
+# Rule Engine V1 Slice 82 Smoke Checklist
 
 ## Purpose
 - Add per-rule cooldown scaling via `ruleCooldownScaleOverrides`.

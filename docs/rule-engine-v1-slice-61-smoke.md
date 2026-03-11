@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 61 SMOKE CHECKLIST
+# Rule Engine V1 Slice 61 Smoke Checklist
 
 ## Purpose
 - Add global match-window scaling via `execution.matchWindowScale` in master control.

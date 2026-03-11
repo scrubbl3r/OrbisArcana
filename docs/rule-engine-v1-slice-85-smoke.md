@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 85 SMOKE CHECKLIST
+# Rule Engine V1 Slice 85 Smoke Checklist
 
 ## Purpose
 - Add per-signal rule-match caps via `signalMaxMatchesOverrides`.

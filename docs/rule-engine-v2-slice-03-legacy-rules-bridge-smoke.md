@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 03 Smoke (Legacy Rules Bridge)
+# Rule Engine v2 Slice 03 Smoke (Legacy Rules Bridge)
 
 ## Scope
 - `spell-rules-v1` can optionally project rules from `interactions-v2`.

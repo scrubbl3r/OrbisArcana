@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 08 SMOKE CHECKLIST
+# Rule Engine V1 Slice 08 Smoke Checklist
 
 ## Purpose
 - Remove hardcoded wake-required spell defaults from parser.

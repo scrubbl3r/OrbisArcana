@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 86 SMOKE CHECKLIST
+# Rule Engine V1 Slice 86 Smoke Checklist
 
 ## Purpose
 - Add per-source-event first-match control via `sourceEventStopOnFirstSignalMatchOverrides`.

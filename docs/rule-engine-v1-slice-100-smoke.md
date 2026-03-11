@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 100 SMOKE CHECKLIST
+# Rule Engine V1 Slice 100 Smoke Checklist
 
 ## Purpose
 - Add per-signal action execution control via `signalExecuteActionsOverrides`.

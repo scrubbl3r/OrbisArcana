@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 90 SMOKE CHECKLIST
+# Rule Engine V1 Slice 90 Smoke Checklist
 
 ## Purpose
 - Add global action-type execution gates via `execution.actionTypeEnabled`.

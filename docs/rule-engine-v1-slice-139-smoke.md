@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 139 Smoke
 
-Goal
+## Goal
 - Add per-rule summary budget-cap detail control via `ruleSummaryIncludeBudgetCapsOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.emitSourceEventSummaryEvents: true`
   - `execution.sourceEventSummaryIncludeBudgetCaps: false`

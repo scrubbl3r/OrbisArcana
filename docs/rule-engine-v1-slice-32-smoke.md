@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 32 SMOKE CHECKLIST
+# Rule Engine V1 Slice 32 Smoke Checklist
 
 ## Purpose
 - Introduce a single master rule-engine config object (`RULE_ENGINE_V1_CONFIG`) and hydrate receiver bootstrap from it.

@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 18 Smoke
+# Rule Engine v2 Slice 18 Smoke
 
 ## Goal
 prevent duplicate spell signal ids by construction across signal families.

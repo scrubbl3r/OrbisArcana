@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 38 SMOKE CHECKLIST
+# Rule Engine V1 Slice 38 Smoke Checklist
 
 ## Purpose
 - Make spell schema integrity validation default to `RULE_ENGINE_V1_MASTER_CONFIG` (not split rule/event modules).

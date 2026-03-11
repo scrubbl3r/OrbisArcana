@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 34 SMOKE CHECKLIST
+# Rule Engine V1 Slice 34 Smoke Checklist
 
 ## Purpose
 - Remove split rule-schema bootstrap contract usage; bootstrap now consumes only `RULE_ENGINE_V1_CONFIG` + `validateRuleEngineV1Config`.

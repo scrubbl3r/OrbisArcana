@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 52 SMOKE CHECKLIST
+# Rule Engine V1 Slice 52 Smoke Checklist
 
 ## Purpose
 - Add top-level global rule defaults via `ruleDefaults`:

@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 12 SMOKE CHECKLIST
+# Rule Engine V1 Slice 12 Smoke Checklist
 
 ## Purpose
 - Move spell-window bypass IDs from hardcoded dispatch list to routing config.

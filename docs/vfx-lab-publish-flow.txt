@@ -1,6 +1,6 @@
-VFX Lab Publish Flow
+# VFX Lab Publish Flow
 
-Goal
+## Goal
 
 Make the VFX lab a place to:
 - build new effects
@@ -54,7 +54,7 @@ Resolver helper
 - `src/vfx/resolve-spell-vfx-binding.js`
 - lets lab/game query spell -> VFX binding from one place
 
-Notes
+## Notes
 - This is a schema foundation pass only.
 - Gameplay execution still uses runtime spell content + cast actions.
 - Lab publish workflow will layer onto this.
@@ -93,7 +93,7 @@ Example: "Make a new effect for fridgis rota"
 7. Publish Preset (update shared preset SSOT)
 8. Publish Binding (if switching effect or preset assignment)
 
-Result
+## Result
 - game + lab both use the same preset/binding source
 
 --------------------------------------------------

@@ -1,11 +1,11 @@
-# Rule Engine V2 Slice 16 Smoke
+# Rule Engine v2 Slice 16 Smoke
 
 ## Goal
 stage `pyro` immediate behavior into `INTERACTIONS_V2` without changing live behavior yet.
 
 ## What was added
 
-1. New V2 rule: `r_pyro_immediate`
+1. New v2 rule: `r_pyro_immediate`
    - `on: spell.pyro`
    - `then: event.flame_aoe`
 2. New event definition + runtime binding:

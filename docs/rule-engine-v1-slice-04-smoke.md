@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 04 SMOKE CHECKLIST
+# Rule Engine V1 Slice 04 Smoke Checklist
 
 ## Purpose
 - Add first executable action path (`type: "event", id: "grace"`) behind a feature flag.

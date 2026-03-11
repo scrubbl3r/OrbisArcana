@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 38 Smoke
+# Rule Engine v2 Slice 38 Smoke
 
 ## Goal
 generate a machine-readable master control artifact alongside the markdown doc.

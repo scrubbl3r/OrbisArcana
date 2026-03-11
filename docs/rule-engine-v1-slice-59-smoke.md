@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 59 SMOKE CHECKLIST
+# Rule Engine V1 Slice 59 Smoke Checklist
 
 ## Purpose
 - Add centralized window toggles via `windowEnabledOverrides` in master control.

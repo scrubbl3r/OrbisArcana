@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 77 SMOKE CHECKLIST
+# Rule Engine V1 Slice 77 Smoke Checklist
 
 ## Purpose
 - Add centralized signal condition patching via `signalWhereOverrides`.

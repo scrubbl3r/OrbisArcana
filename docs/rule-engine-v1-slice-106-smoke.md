@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 106 SMOKE CHECKLIST
+# Rule Engine V1 Slice 106 Smoke Checklist
 
 ## Purpose
 - Add per-source-event candidate-evaluation cap via `sourceEventMaxRulesEvaluatedOverrides`.

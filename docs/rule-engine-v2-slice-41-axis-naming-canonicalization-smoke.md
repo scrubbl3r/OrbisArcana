@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 41 Smoke
+# Rule Engine v2 Slice 41 Smoke
 
 ## Goal
 canonicalize remaining legacy `school` cast-action naming to neutral `axis`.

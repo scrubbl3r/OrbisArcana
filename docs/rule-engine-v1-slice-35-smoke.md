@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 35 SMOKE CHECKLIST
+# Rule Engine V1 Slice 35 Smoke Checklist
 
 ## Purpose
 - Make spell schema integrity validation consume rule/event/binding data from the master config path (not split modules).

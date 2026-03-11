@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 36 Smoke
+# Rule Engine v2 Slice 36 Smoke
 
 ## Goal
 remove duplicated routing lists by deriving from canonical spell groups.

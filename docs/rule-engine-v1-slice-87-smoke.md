@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 87 SMOKE CHECKLIST
+# Rule Engine V1 Slice 87 Smoke Checklist
 
 ## Purpose
 - Add per-source-event preview telemetry control via `sourceEventEmitPreviewMatchedOverrides`.

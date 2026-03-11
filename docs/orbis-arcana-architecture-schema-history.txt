@@ -1,6 +1,6 @@
-Orbis Arcana Architecture Schema (Historical Snapshot)
+# Orbis Arcana Architecture Schema (Historical Snapshot)
 
-Purpose
+## Purpose
 
 This document captures the current architecture schema after the recent refactor wave.
 It updates v0.2 by marking what is now implemented, what has been hardened, and what remains.

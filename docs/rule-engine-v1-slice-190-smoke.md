@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 190 Smoke
 
-Goal
+## Goal
 - Fail fast on invalid `eventRuntimeBindings` keys (empty or unknown event ids).
 
-Checks
+## Checks
 - Add a temporary unknown binding key:
   - `eventRuntimeBindings: { ..., "event.unknown": "..." }`
 - Run config validation/startup path.
@@ -16,5 +16,5 @@ Checks
 - Confirm validation fails with:
   - `RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings contains empty event id key`
 
-Cleanup
+## Cleanup
 - Remove temporary invalid keys and confirm normal startup/validation is clean again.

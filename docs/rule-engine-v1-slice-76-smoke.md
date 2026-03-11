@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 76 SMOKE CHECKLIST
+# Rule Engine V1 Slice 76 Smoke Checklist
 
 ## Purpose
 - Add telemetry toggle via `execution.emitPreviewMatchedEvents`.

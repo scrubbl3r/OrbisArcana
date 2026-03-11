@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 30 Smoke
+# Rule Engine v2 Slice 30 Smoke
 
 ## Goal
 reduce duplicated KWS token list maintenance by deriving top/flash/bottom lists from canonical spell groups.

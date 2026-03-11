@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 23 Smoke
+# Rule Engine v2 Slice 23 Smoke
 
 ## Goal
 enforce parity between `interactions-v2` immediate spell rules and `RULE_ENGINE_OWNED_IMMEDIATE_SPELL_IDS`.

@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 17 Smoke
+# Rule Engine v2 Slice 17 Smoke
 
 ## Goal
 stage `fridgis` + `electrum` immediate casts into `INTERACTIONS_V2.rules` via event ids, while preserving compatibility.

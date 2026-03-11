@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 125 Smoke
 
-Goal
+## Goal
 - Add per-signal event-loop short-circuit control via `signalStopOnFirstSignalMatchPerEventOverrides`.
 
-Checks
+## Checks
 - Set:
   - `execution.stopOnFirstSignalMatchPerEvent: false`
   - `sourceEventStopOnFirstSignalMatchOverrides: { "voice.spell_detected": false }`

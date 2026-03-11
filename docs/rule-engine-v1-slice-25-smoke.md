@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 25 SMOKE CHECKLIST
+# Rule Engine V1 Slice 25 Smoke Checklist
 
 ## Purpose
 - Migrate routing/runtime intent names from legacy `school/class` to neutral `axis/wake_window` while keeping dispatch compatibility.

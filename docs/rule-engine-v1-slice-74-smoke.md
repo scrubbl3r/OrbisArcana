@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 74 SMOKE CHECKLIST
+# Rule Engine V1 Slice 74 Smoke Checklist
 
 ## Purpose
 - Add global source-event debounce via `execution.sourceEventDebounceMs`.

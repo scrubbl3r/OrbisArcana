@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 28 SMOKE CHECKLIST
+# Rule Engine V1 Slice 28 Smoke Checklist
 
 ## Purpose
 - Promote neutral routing fields (`axisSpell`, `wakeWindowSpell`) to primary metadata in routing/dispatch while keeping legacy aliases (`school`, `classKey`) for compatibility.

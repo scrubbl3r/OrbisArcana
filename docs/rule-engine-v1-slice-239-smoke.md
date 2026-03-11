@@ -1,11 +1,11 @@
 # Rule Engine V1 Slice 239 Smoke (Macro Intent/Schema Cutover)
 
-Goal
+## Goal
 - Remove legacy intent aliases (`spell.school_select`, `spell.class_select`).
 - Remove legacy `school/classKey` fields from runtime routing/spell content and dispatch payload plumbing.
 - Keep neutral contract only: `axisSpell`, `wakeWindowSpell`, `spell.axis_select`, `spell.wake_window_select`.
 
-Checks
+## Checks
 - Axis token in flat-spin:
   - Confirm dispatch treats only `spell.axis_select` as axis-select intent.
 - Wake-window token after axis token:
@@ -16,5 +16,5 @@ Checks
 - Reject path:
   - Trigger wake-window before axis token and confirm reject still occurs with neutral fields (`wakeWindowSpell`, `axisSpell`).
 
-Cleanup
+## Cleanup
 - None.

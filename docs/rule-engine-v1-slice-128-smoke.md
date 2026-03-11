@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 128 Smoke
 
-Goal
+## Goal
 - Add source-event summary telemetry emission toggle via `execution.emitSourceEventSummaryEvents`.
 
-Checks
+## Checks
 - Set `execution.emitSourceEventSummaryEvents: true`.
 - Trigger a known source-event payload (for example `voice.spell_detected`).
 - Confirm one `rule_engine.v1.source_event_summary` event is emitted per handled payload.

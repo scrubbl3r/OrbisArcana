@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 191 Smoke
 
-Goal
+## Goal
 - Fail fast on malformed `eventRuntimeBindings` value shape.
 
-Checks
+## Checks
 - Set a binding with missing runtime object:
   - `eventRuntimeBindings: { "grace": {} }`
 - Run config validation/startup path.
@@ -20,5 +20,5 @@ Checks
 - Confirm validation fails with:
   - `RULE_ENGINE_V1_MASTER_CONTROL.eventRuntimeBindings[grace].runtime.event must be non-empty for kind orb_event`
 
-Cleanup
+## Cleanup
 - Restore valid bindings and confirm normal startup/validation is clean again.

@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 46 SMOKE CHECKLIST
+# Rule Engine V1 Slice 46 Smoke Checklist
 
 ## Purpose
 - Tighten master-control contract (`id`, `version` required) and add canonical schema doc for authoring.

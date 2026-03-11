@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 57 SMOKE CHECKLIST
+# Rule Engine V1 Slice 57 Smoke Checklist
 
 ## Purpose
 - Add centralized signal toggles via `signalEnabledOverrides` in master control.

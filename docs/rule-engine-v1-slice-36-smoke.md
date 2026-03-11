@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 36 SMOKE CHECKLIST
+# Rule Engine V1 Slice 36 Smoke Checklist
 
 ## Purpose
 - Establish explicit single-file master config entrypoint (`RULE_ENGINE_V1_MASTER_CONFIG`) and route bootstrap to prefer it.

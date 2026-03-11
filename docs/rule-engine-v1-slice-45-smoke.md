@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 45 SMOKE CHECKLIST
+# Rule Engine V1 Slice 45 Smoke Checklist
 
 ## Purpose
 - Add per-action toggles with `enabled: true|false` in `then` actions.

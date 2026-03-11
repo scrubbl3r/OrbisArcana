@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 108 SMOKE CHECKLIST
+# Rule Engine V1 Slice 108 Smoke Checklist
 
 ## Purpose
 - Add event-level action caps via:

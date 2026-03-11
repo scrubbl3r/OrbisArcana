@@ -1,4 +1,4 @@
-# RULE ENGINE V1 - SLICE 27 SMOKE CHECKLIST
+# Rule Engine V1 Slice 27 Smoke Checklist
 
 ## Purpose
 - Introduce neutral spell payload fields (`axisSpell`, `wakeWindowSpell`) in load/cast paths while keeping legacy aliases (`school`, `classKey`).

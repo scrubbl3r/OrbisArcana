@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 201 Smoke
 
-Goal
+## Goal
 - Fail fast when `eventRuntimeBindings[...].runtime.kind` is missing/empty.
 
-Checks
+## Checks
 - Set missing runtime kind:
   - `eventRuntimeBindings: { "grace": { id: "grace", runtime: { event: "orb.float_grace_grant" } } }`
 - Run config validation/startup path.
@@ -14,5 +14,5 @@ Checks
   - `eventRuntimeBindings: { "grace": { id: "grace", runtime: { kind: "", event: "orb.float_grace_grant" } } }`
 - Confirm the same required error.
 
-Cleanup
+## Cleanup
 - Restore valid non-empty `runtime.kind` and confirm normal startup/validation is clean again.

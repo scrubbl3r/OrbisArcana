@@ -1,4 +1,4 @@
-# Rule Engine V2 Slice 20 Smoke
+# Rule Engine v2 Slice 20 Smoke
 
 ## Goal
 stage `fridgis` immediate cast into `INTERACTIONS_V2.rules` with parity fallback.

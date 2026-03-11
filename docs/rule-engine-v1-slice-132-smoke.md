@@ -1,9 +1,9 @@
 # Rule Engine V1 Slice 132 Smoke
 
-Goal
+## Goal
 - Add optional summary payload detail flag via `execution.sourceEventSummaryIncludeSignalAndRuleIds`.
 
-Checks
+## Checks
 - Set:
   - `execution.emitSourceEventSummaryEvents: true`
   - `execution.sourceEventSummaryIncludeSignalAndRuleIds: true`
