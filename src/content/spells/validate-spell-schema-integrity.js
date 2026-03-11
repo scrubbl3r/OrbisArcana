@@ -1,6 +1,11 @@
 import { SPELLS_BY_ID } from "../../voice/spellbook.js";
 import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
-import { RULE_ENGINE_MASTER_CONTROL } from "../spell-rules/index.js";
+import {
+  buildRulesFromInteractionsV2,
+  INTERACTIONS_V2,
+} from "../interactions-v2/index.js";
+import { EVENT_DEFINITIONS } from "../spell-rules/event-definitions.js";
+import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import {
   AXIS_WORD_IDS,
   SPELL_RUNTIME_ROUTING_BY_WORD_ID,
@@ -23,26 +28,31 @@ function indexDefsById(defs = []) {
 }
 
 export function validateSpellSchemaIntegrity(options = {}) {
-  const master = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
-    ? RULE_ENGINE_MASTER_CONTROL
-    : Object.create(null);
+  let projectedRules = [];
+  if (!Array.isArray(options && options.rules)) {
+    try {
+      projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
+    } catch (_) {
+      projectedRules = [];
+    }
+  }
   const rules = Array.isArray(options && options.rules)
     ? options.rules
-    : (Array.isArray(master.rules) ? master.rules : []);
+    : (Array.isArray(projectedRules) ? projectedRules : []);
   const eventDefinitionsById = (options && options.eventById && typeof options.eventById === "object")
     ? options.eventById
     : (
       Array.isArray(options && options.events)
         ? indexDefsById(options.events)
-        : indexDefsById(Array.isArray(master.events) ? master.events : [])
+        : indexDefsById(Array.isArray(EVENT_DEFINITIONS) ? EVENT_DEFINITIONS : [])
     );
   const eventRuntimeBindingsById = (options && options.eventRuntimeBindingsById && typeof options.eventRuntimeBindingsById === "object")
     ? options.eventRuntimeBindingsById
     : (
       options && options.eventRuntimeBindings && typeof options.eventRuntimeBindings === "object"
         ? options.eventRuntimeBindings
-        : (master.eventRuntimeBindings && typeof master.eventRuntimeBindings === "object"
-          ? master.eventRuntimeBindings
+        : (EVENT_RUNTIME_BINDINGS_BY_ID && typeof EVENT_RUNTIME_BINDINGS_BY_ID === "object"
+          ? EVENT_RUNTIME_BINDINGS_BY_ID
           : Object.create(null))
     );
   const errors = [];

@@ -6,7 +6,6 @@ import {
   buildRulesFromInteractionsV2,
   INTERACTIONS_V2,
 } from "../../src/content/interactions-v2/index.js";
-import { RULE_ENGINE_MASTER_CONTROL } from "../../src/content/spell-rules/index.js";
 
 function runPreSmoke() {
   const res = spawnSync(process.execPath, ["tools/rule-engine-v2/pre-smoke-check.mjs"], { stdio: "inherit" });
@@ -18,13 +17,8 @@ function computeDrift() {
   const projectedById = new Map((Array.isArray(projected) ? projected : []).map((r) => [String(r && r.id || ""), r]));
   const runtimeProjected = buildRuleEngineFromInteractionsV2({
     interactionsV2: INTERACTIONS_V2,
-    baseRuleEngine: {
-      ...(RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object"
-        ? RULE_ENGINE_MASTER_CONTROL
-        : {}),
-      // Runtime adapter owns projected rule assembly.
-      rules: [],
-    },
+    // Rule projection parity check does not require policy/override surfaces.
+    baseRuleEngine: { rules: [] },
   });
   const runtimeRules = Array.isArray(runtimeProjected?.rules) ? runtimeProjected.rules : [];
   const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));

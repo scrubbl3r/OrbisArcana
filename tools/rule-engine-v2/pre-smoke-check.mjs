@@ -2,9 +2,6 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
-  RULE_ENGINE_MASTER_CONTROL,
-} from "../../src/content/spell-rules/index.js";
-import {
   SPELLBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
@@ -107,12 +104,7 @@ const projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
 const projectedById = new Map((Array.isArray(projectedRules) ? projectedRules : []).map((r) => [String(r && r.id || ""), r]));
 const runtimeProjected = buildRuleEngineFromInteractionsV2({
   interactionsV2: INTERACTIONS_V2,
-  baseRuleEngine: {
-    ...(RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object"
-      ? RULE_ENGINE_MASTER_CONTROL
-      : {}),
-    rules: [],
-  },
+  baseRuleEngine: { rules: [] },
 });
 const runtimeRules = Array.isArray(runtimeProjected?.rules) ? runtimeProjected.rules : [];
 const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));

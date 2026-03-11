@@ -3,7 +3,6 @@ import {
   buildRulesFromInteractionsV2,
   INTERACTIONS_V2,
 } from "../../src/content/interactions-v2/index.js";
-import { RULE_ENGINE_MASTER_CONTROL } from "../../src/content/spell-rules/index.js";
 
 function stable(v) {
   return JSON.stringify(v, null, 2);
@@ -22,12 +21,7 @@ function byId(arr) {
 const projected = buildRulesFromInteractionsV2(INTERACTIONS_V2);
 const runtimeProjected = buildRuleEngineFromInteractionsV2({
   interactionsV2: INTERACTIONS_V2,
-  baseRuleEngine: {
-    ...(RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object"
-      ? RULE_ENGINE_MASTER_CONTROL
-      : {}),
-    rules: [],
-  },
+  baseRuleEngine: { rules: [] },
 });
 const runtime = Array.isArray(runtimeProjected?.rules) ? runtimeProjected.rules : [];
 
