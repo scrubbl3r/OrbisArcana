@@ -1223,15 +1223,10 @@
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
-    const RULE_ENGINE_SOURCE_IDS = Object.freeze({
-      INTERACTIONS_ADAPTER: "interactions_adapter",
-      INTERACTIONS_ADAPTER_FALLBACK: "interactions_adapter_fallback",
-      MASTER_CONTROL: "rule_engine_master_control",
-    });
     const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
-      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER]: "V2 adapter",
-      [RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK]: "V2 adapter (fallback)",
-      [RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL]: "Master control",
+      interactions_adapter: "V2 adapter",
+      interactions_adapter_fallback: "V2 adapter (fallback)",
+      rule_engine_master_control: "Master control",
     });
     const RULE_ENGINE_CHANNELS = Object.freeze({
       ACTION_EXECUTED: "rule_engine.action_executed",
