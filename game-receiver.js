@@ -1254,7 +1254,6 @@
       MVP_EXECUTE_LEGACY_ALIAS: "ruleEngineV1ExecuteActions",
     });
     const RULE_ENGINE_EXECUTE_ACTIONS = false;
-    const RULE_ENGINE_EXECUTE_ACTIONS_LEGACY_ALIAS = RULE_ENGINE_EXECUTE_ACTIONS;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
@@ -2301,7 +2300,7 @@
         // Legacy MVP surface kept for compatibility during migration.
         ruleEngineMvpState[RULE_ENGINE_LEGACY_KEYS.MVP_SCHEMA_LEGACY_ALIAS] = ruleEngineMvpState.ruleSchema;
         ruleEngineMvpState[RULE_ENGINE_LEGACY_KEYS.MVP_PREVIEW_LEGACY_ALIAS] = ruleEngineMvpState.ruleEnginePreviewSystem;
-        ruleEngineMvpState[RULE_ENGINE_LEGACY_KEYS.MVP_EXECUTE_LEGACY_ALIAS] = RULE_ENGINE_EXECUTE_ACTIONS_LEGACY_ALIAS;
+        ruleEngineMvpState[RULE_ENGINE_LEGACY_KEYS.MVP_EXECUTE_LEGACY_ALIAS] = RULE_ENGINE_EXECUTE_ACTIONS;
         mvp = {
           eventBus,
           gameState,
