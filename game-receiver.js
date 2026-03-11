@@ -1609,7 +1609,7 @@
             runtimeSpellIndex = next.runtimeSpellIndex || Object.create(null);
             castActionRegistryIndex = next.castActionRegistryIndex || Object.create(null);
           },
-          setRuleSchemaV1: (next = {}) => {
+          setRuleSchema: (next = {}) => {
             ruleSchema = {
               source: String(next.source || "").trim().toLowerCase() || "unknown",
               signals: Array.isArray(next.signals) ? next.signals.slice() : [],
@@ -1818,8 +1818,8 @@
           setSpellCastExecutor: (executor) => { spellCastExecutor = executor; },
           setReceiverModulesReady: (v) => { receiverModulesReady = !!v; },
         };
-        if (typeof receiverBootstrapCtx.setRuleSchemaV1 === "function") {
-          receiverBootstrapCtx.setRuleSchema = receiverBootstrapCtx.setRuleSchemaV1;
+        if (typeof receiverBootstrapCtx.setRuleSchema === "function" && typeof receiverBootstrapCtx.setRuleSchemaV1 !== "function") {
+          receiverBootstrapCtx.setRuleSchemaV1 = receiverBootstrapCtx.setRuleSchema;
         }
         hydrateReceiverBootstrapState(mods, receiverBootstrapCtx);
         if (typeof createVfxRuntimesBundle === "function") {
