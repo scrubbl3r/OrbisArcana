@@ -9,7 +9,9 @@ export {
 export {
   WINDOW_DEFINITIONS_V1,
   WINDOW_DEFINITIONS_V1_BY_ID,
-} from "./window-definitions-v1.js";
+  WINDOW_DEFINITIONS,
+  WINDOW_DEFINITIONS_BY_ID,
+} from "./window-definitions.js";
 export {
   EVENT_DEFINITIONS_V1,
   EVENT_DEFINITIONS_V1_BY_ID,

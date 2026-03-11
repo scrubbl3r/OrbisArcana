@@ -11,7 +11,7 @@ import {
   SIGNAL_DEFINITION_COLLISIONS_V1,
   SIGNAL_DEFINITIONS_V1,
 } from "./signal-definitions.js";
-import { WINDOW_DEFINITIONS_V1 } from "./window-definitions-v1.js";
+import { WINDOW_DEFINITIONS_V1 } from "./window-definitions.js";
 
 const RULE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
