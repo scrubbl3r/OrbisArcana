@@ -1,4 +1,4 @@
-RULE ENGINE V1 MASTER CONTROL SCHEMA
+RULE ENGINE MASTER CONTROL SCHEMA
 
 Purpose
 - Single authoring SSOT for rule-engine behavior.
@@ -14,7 +14,7 @@ Current Neutral Contract (Implemented)
   - wake-window select: `spell.wake_window_select`
 - Action/event payload fields:
   - use `axisSpell` and `wakeWindowSpell`
-  - legacy aliases are removed from runtime payloads (`school`, `classKey`)
+  - retired aliases are removed from runtime payloads (`school`, `classKey`)
 - KWS runtime config:
   - uses `axisSpellByAxis` map for expected axis token routing
 - Dispatch reject reasons (current):

@@ -1,4 +1,4 @@
-VFX LAB PUBLISH FLOW (DRAFT v1)
+VFX LAB PUBLISH FLOW (DRAFT)
 
 Goal
 
@@ -60,7 +60,7 @@ Notes
 - Lab publish workflow will layer onto this.
 
 --------------------------------------------------
-3. RECOMMENDED LAB UX (v1)
+3. RECOMMENDED LAB UX
 --------------------------------------------------
 
 Use separate actions, not one "Publish" button.
