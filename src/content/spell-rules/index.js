@@ -15,7 +15,10 @@ export {
   EVENT_RUNTIME_BINDINGS,
   EVENT_RUNTIME_BINDINGS_BY_ID,
 } from "./event-runtime-bindings.js";
-export { RULE_ENGINE_MASTER_CONTROL } from "./rule-engine-master-control.js";
+export {
+  RULE_ENGINE_MASTER_CONTROL,
+  RULE_ENGINE_POLICY_CONTROL,
+} from "./rule-engine-master-control.js";
 export { validateSpellRules } from "./validate-spell-rules.js";
 export { validateRuleEngineConfig } from "./validate-rule-engine-config.js";
 export { buildRuleEnginePreviewRuntime } from "./build-rule-engine-preview-runtime.js";

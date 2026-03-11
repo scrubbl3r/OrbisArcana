@@ -716,3 +716,6 @@ export const RULE_ENGINE_MASTER_CONTROL = Object.freeze({
     ? { ...EVENT_RUNTIME_BINDINGS_BY_ID }
     : Object.create(null),
 });
+
+// Policy-focused alias used by runtime bootstrap during v2 contraction.
+export const RULE_ENGINE_POLICY_CONTROL = RULE_ENGINE_MASTER_CONTROL;

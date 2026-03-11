@@ -59,6 +59,7 @@ export async function loadReceiverInitModules() {
     { validateSpellRuntimeRouting },
     { validateSpellSchemaIntegrity },
     {
+      RULE_ENGINE_POLICY_CONTROL,
       RULE_ENGINE_MASTER_CONTROL,
       validateRuleEngineConfig,
     },
@@ -109,6 +110,7 @@ export async function loadReceiverInitModules() {
   const worldItemsResolved = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [];
   const ruleEngineExports = {
     createRuleEnginePreviewSystem,
+    RULE_ENGINE_POLICY_CONTROL,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     buildRuleEngineFromInteractionsV2,
@@ -212,6 +214,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRouting,
     validateSpellSchemaIntegrity,
+    RULE_ENGINE_POLICY_CONTROL,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
     INTERACTIONS_V2,
@@ -256,8 +259,10 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     });
   }
 
-  const ruleEngineMasterControl = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
-    ? RULE_ENGINE_MASTER_CONTROL
+  const ruleEnginePolicyControl = (RULE_ENGINE_POLICY_CONTROL && typeof RULE_ENGINE_POLICY_CONTROL === "object")
+    ? RULE_ENGINE_POLICY_CONTROL
+    : (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
+      ? RULE_ENGINE_MASTER_CONTROL
     : Object.create(null);
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
     ? validateRuleEngineConfig
@@ -269,9 +274,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     : null;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function") ? setRuleSchema : undefined;
 
-  const adapterBaseRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
+  const adapterBaseRuleSchema = (ruleEnginePolicyControl && typeof ruleEnginePolicyControl === "object")
     ? Object.freeze({
-        ...ruleEngineMasterControl,
+        ...ruleEnginePolicyControl,
         // V2 adapter owns rule projection; keep base schema policy/definitions only.
         rules: Object.freeze([]),
       })
