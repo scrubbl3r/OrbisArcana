@@ -252,7 +252,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     ? setRuleSchema
     : setRuleSchemaV1;
 
-  const fallbackRuleSchemaV1 = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
+  const fallbackRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
     ? ruleEngineMasterControl
     : Object.freeze({
         version: "v1",
@@ -266,60 +266,60 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
   let adapterFallbackUsed = false;
-  let ruleSchemaV1 = fallbackRuleSchemaV1;
+  let ruleSchema = fallbackRuleSchema;
   if (useInteractionsV2 && typeof buildRuleEngineV1FromInteractionsV2 === "function") {
     try {
-      ruleSchemaV1 = buildRuleEngineV1FromInteractionsV2({
+      ruleSchema = buildRuleEngineV1FromInteractionsV2({
         interactionsV2: INTERACTIONS_V2,
-        baseRuleEngineV1: fallbackRuleSchemaV1,
+        baseRuleEngineV1: fallbackRuleSchema,
       });
     } catch (err) {
       try {
         console.warn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to RULE_ENGINE_MASTER_CONTROL", err);
       } catch (_) {}
       adapterFallbackUsed = true;
-      ruleSchemaV1 = fallbackRuleSchemaV1;
+      ruleSchema = fallbackRuleSchema;
     }
   }
-  let ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
-    ? ruleSchemaV1.enabled !== false
+  let ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchema, "enabled"))
+    ? ruleSchema.enabled !== false
     : true;
-  let ruleSignalsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.signals)
-    ? ruleSchemaV1.signals.slice()
+  let ruleSignals = ruleEngineEnabled && Array.isArray(ruleSchema.signals)
+    ? ruleSchema.signals.slice()
     : [];
-  let ruleWindowsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.windows)
-    ? ruleSchemaV1.windows.slice()
+  let ruleWindows = ruleEngineEnabled && Array.isArray(ruleSchema.windows)
+    ? ruleSchema.windows.slice()
     : [];
-  let ruleEventsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.events)
-    ? ruleSchemaV1.events.slice()
+  let ruleEvents = ruleEngineEnabled && Array.isArray(ruleSchema.events)
+    ? ruleSchema.events.slice()
     : [];
-  let ruleRulesV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.rules)
-    ? ruleSchemaV1.rules.slice()
+  let ruleRules = ruleEngineEnabled && Array.isArray(ruleSchema.rules)
+    ? ruleSchema.rules.slice()
     : [];
-  let ruleEventRuntimeBindingsV1 = ruleEngineEnabled &&
-    (ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
-    ? { ...ruleSchemaV1.eventRuntimeBindings }
+  let ruleEventRuntimeBindings = ruleEngineEnabled &&
+    (ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
+    ? { ...ruleSchema.eventRuntimeBindings }
     : Object.create(null);
 
   function refreshRuleSchemaDerived() {
-    ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchemaV1, "enabled"))
-      ? ruleSchemaV1.enabled !== false
+    ruleEngineEnabled = (Object.prototype.hasOwnProperty.call(ruleSchema, "enabled"))
+      ? ruleSchema.enabled !== false
       : true;
-    ruleSignalsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.signals)
-      ? ruleSchemaV1.signals.slice()
+    ruleSignals = ruleEngineEnabled && Array.isArray(ruleSchema.signals)
+      ? ruleSchema.signals.slice()
       : [];
-    ruleWindowsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.windows)
-      ? ruleSchemaV1.windows.slice()
+    ruleWindows = ruleEngineEnabled && Array.isArray(ruleSchema.windows)
+      ? ruleSchema.windows.slice()
       : [];
-    ruleEventsV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.events)
-      ? ruleSchemaV1.events.slice()
+    ruleEvents = ruleEngineEnabled && Array.isArray(ruleSchema.events)
+      ? ruleSchema.events.slice()
       : [];
-    ruleRulesV1 = ruleEngineEnabled && Array.isArray(ruleSchemaV1.rules)
-      ? ruleSchemaV1.rules.slice()
+    ruleRules = ruleEngineEnabled && Array.isArray(ruleSchema.rules)
+      ? ruleSchema.rules.slice()
       : [];
-    ruleEventRuntimeBindingsV1 = ruleEngineEnabled &&
-      (ruleSchemaV1.eventRuntimeBindings && typeof ruleSchemaV1.eventRuntimeBindings === "object")
-      ? { ...ruleSchemaV1.eventRuntimeBindings }
+    ruleEventRuntimeBindings = ruleEngineEnabled &&
+      (ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
+      ? { ...ruleSchema.eventRuntimeBindings }
       : Object.create(null);
   }
 
@@ -417,7 +417,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
 
   if (typeof validateRuleEngine === "function") {
-    const errors = validateRuleEngine(ruleSchemaV1);
+    const errors = validateRuleEngine(ruleSchema);
     if (errors.length) {
       try {
         console.warn(
@@ -425,186 +425,186 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         );
       } catch (_) {}
       adapterFallbackUsed = true;
-      ruleSchemaV1 = buildSafeDisabledRuleSchema();
+      ruleSchema = buildSafeDisabledRuleSchema();
       refreshRuleSchemaDerived();
     }
   }
   if (typeof validateSpellSchemaIntegrityV1 === "function") {
     const integrityErrors = validateSpellSchemaIntegrityV1({
-      rules: ruleRulesV1,
-      events: ruleEventsV1,
-      eventRuntimeBindings: ruleEventRuntimeBindingsV1,
-      execution: (ruleSchemaV1.execution && typeof ruleSchemaV1.execution === "object") ? { ...ruleSchemaV1.execution } : Object.create(null),
-      signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
-        ? { ...ruleSchemaV1.signalDebounceOverrides }
+      rules: ruleRules,
+      events: ruleEvents,
+      eventRuntimeBindings: ruleEventRuntimeBindings,
+      execution: (ruleSchema.execution && typeof ruleSchema.execution === "object") ? { ...ruleSchema.execution } : Object.create(null),
+      signalDebounceOverrides: (ruleSchema.signalDebounceOverrides && typeof ruleSchema.signalDebounceOverrides === "object")
+        ? { ...ruleSchema.signalDebounceOverrides }
         : Object.create(null),
-      signalMaxMatchesOverrides: (ruleSchemaV1.signalMaxMatchesOverrides && typeof ruleSchemaV1.signalMaxMatchesOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxMatchesOverrides }
+      signalMaxMatchesOverrides: (ruleSchema.signalMaxMatchesOverrides && typeof ruleSchema.signalMaxMatchesOverrides === "object")
+        ? { ...ruleSchema.signalMaxMatchesOverrides }
         : Object.create(null),
-      signalEmitPreviewMatchedOverrides: (ruleSchemaV1.signalEmitPreviewMatchedOverrides && typeof ruleSchemaV1.signalEmitPreviewMatchedOverrides === "object")
-        ? { ...ruleSchemaV1.signalEmitPreviewMatchedOverrides }
+      signalEmitPreviewMatchedOverrides: (ruleSchema.signalEmitPreviewMatchedOverrides && typeof ruleSchema.signalEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchema.signalEmitPreviewMatchedOverrides }
         : Object.create(null),
-      signalExecuteActionsOverrides: (ruleSchemaV1.signalExecuteActionsOverrides && typeof ruleSchemaV1.signalExecuteActionsOverrides === "object")
-        ? { ...ruleSchemaV1.signalExecuteActionsOverrides }
+      signalExecuteActionsOverrides: (ruleSchema.signalExecuteActionsOverrides && typeof ruleSchema.signalExecuteActionsOverrides === "object")
+        ? { ...ruleSchema.signalExecuteActionsOverrides }
         : Object.create(null),
-      signalEmitActionExecutedOverrides: (ruleSchemaV1.signalEmitActionExecutedOverrides && typeof ruleSchemaV1.signalEmitActionExecutedOverrides === "object")
-        ? { ...ruleSchemaV1.signalEmitActionExecutedOverrides }
+      signalEmitActionExecutedOverrides: (ruleSchema.signalEmitActionExecutedOverrides && typeof ruleSchema.signalEmitActionExecutedOverrides === "object")
+        ? { ...ruleSchema.signalEmitActionExecutedOverrides }
         : Object.create(null),
-      signalEmitSourceEventSummaryOverrides: (ruleSchemaV1.signalEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.signalEmitSourceEventSummaryOverrides === "object")
-        ? { ...ruleSchemaV1.signalEmitSourceEventSummaryOverrides }
+      signalEmitSourceEventSummaryOverrides: (ruleSchema.signalEmitSourceEventSummaryOverrides && typeof ruleSchema.signalEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchema.signalEmitSourceEventSummaryOverrides }
         : Object.create(null),
-      signalSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
-        ? { ...ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides }
+      signalSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchema.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchema.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
+        ? { ...ruleSchema.signalSummaryIncludeSignalAndRuleIdsOverrides }
         : Object.create(null),
-      signalSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides === "object")
-        ? { ...ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides }
+      signalSummaryIncludeBudgetCapsOverrides: (ruleSchema.signalSummaryIncludeBudgetCapsOverrides && typeof ruleSchema.signalSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchema.signalSummaryIncludeBudgetCapsOverrides }
         : Object.create(null),
-      signalActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides }
+      signalActionExecutedEventTypeEnabledOverrides: (ruleSchema.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchema.signalActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.signalActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
-      signalActionTypeEnabledOverrides: (ruleSchemaV1.signalActionTypeEnabledOverrides && typeof ruleSchemaV1.signalActionTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.signalActionTypeEnabledOverrides }
+      signalActionTypeEnabledOverrides: (ruleSchema.signalActionTypeEnabledOverrides && typeof ruleSchema.signalActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.signalActionTypeEnabledOverrides }
         : Object.create(null),
-      signalMatchWindowScaleOverrides: (ruleSchemaV1.signalMatchWindowScaleOverrides && typeof ruleSchemaV1.signalMatchWindowScaleOverrides === "object")
-        ? { ...ruleSchemaV1.signalMatchWindowScaleOverrides }
+      signalMatchWindowScaleOverrides: (ruleSchema.signalMatchWindowScaleOverrides && typeof ruleSchema.signalMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchema.signalMatchWindowScaleOverrides }
         : Object.create(null),
-      signalCooldownScaleOverrides: (ruleSchemaV1.signalCooldownScaleOverrides && typeof ruleSchemaV1.signalCooldownScaleOverrides === "object")
-        ? { ...ruleSchemaV1.signalCooldownScaleOverrides }
+      signalCooldownScaleOverrides: (ruleSchema.signalCooldownScaleOverrides && typeof ruleSchema.signalCooldownScaleOverrides === "object")
+        ? { ...ruleSchema.signalCooldownScaleOverrides }
         : Object.create(null),
-      signalMaxActionsPerRuleMatchOverrides: (ruleSchemaV1.signalMaxActionsPerRuleMatchOverrides && typeof ruleSchemaV1.signalMaxActionsPerRuleMatchOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxActionsPerRuleMatchOverrides }
+      signalMaxActionsPerRuleMatchOverrides: (ruleSchema.signalMaxActionsPerRuleMatchOverrides && typeof ruleSchema.signalMaxActionsPerRuleMatchOverrides === "object")
+        ? { ...ruleSchema.signalMaxActionsPerRuleMatchOverrides }
         : Object.create(null),
-      signalMaxRulesEvaluatedOverrides: (ruleSchemaV1.signalMaxRulesEvaluatedOverrides && typeof ruleSchemaV1.signalMaxRulesEvaluatedOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxRulesEvaluatedOverrides }
+      signalMaxRulesEvaluatedOverrides: (ruleSchema.signalMaxRulesEvaluatedOverrides && typeof ruleSchema.signalMaxRulesEvaluatedOverrides === "object")
+        ? { ...ruleSchema.signalMaxRulesEvaluatedOverrides }
         : Object.create(null),
-      signalMaxActionsPerEventOverrides: (ruleSchemaV1.signalMaxActionsPerEventOverrides && typeof ruleSchemaV1.signalMaxActionsPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxActionsPerEventOverrides }
+      signalMaxActionsPerEventOverrides: (ruleSchema.signalMaxActionsPerEventOverrides && typeof ruleSchema.signalMaxActionsPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxActionsPerEventOverrides }
         : Object.create(null),
-      signalMaxActionsPerSignalOverrides: (ruleSchemaV1.signalMaxActionsPerSignalOverrides && typeof ruleSchemaV1.signalMaxActionsPerSignalOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxActionsPerSignalOverrides }
+      signalMaxActionsPerSignalOverrides: (ruleSchema.signalMaxActionsPerSignalOverrides && typeof ruleSchema.signalMaxActionsPerSignalOverrides === "object")
+        ? { ...ruleSchema.signalMaxActionsPerSignalOverrides }
         : Object.create(null),
-      signalMaxMatchesPerEventOverrides: (ruleSchemaV1.signalMaxMatchesPerEventOverrides && typeof ruleSchemaV1.signalMaxMatchesPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxMatchesPerEventOverrides }
+      signalMaxMatchesPerEventOverrides: (ruleSchema.signalMaxMatchesPerEventOverrides && typeof ruleSchema.signalMaxMatchesPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxMatchesPerEventOverrides }
         : Object.create(null),
-      signalMaxSignalsPerEventOverrides: (ruleSchemaV1.signalMaxSignalsPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxSignalsPerEventOverrides }
+      signalMaxSignalsPerEventOverrides: (ruleSchema.signalMaxSignalsPerEventOverrides && typeof ruleSchema.signalMaxSignalsPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxSignalsPerEventOverrides }
         : Object.create(null),
-      signalMaxSignalsEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides }
+      signalMaxSignalsEvaluatedPerEventOverrides: (ruleSchema.signalMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchema.signalMaxSignalsEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxSignalsEvaluatedPerEventOverrides }
         : Object.create(null),
-      signalMaxRulesEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides }
+      signalMaxRulesEvaluatedPerEventOverrides: (ruleSchema.signalMaxRulesEvaluatedPerEventOverrides && typeof ruleSchema.signalMaxRulesEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxRulesEvaluatedPerEventOverrides }
         : Object.create(null),
-      signalStopOnFirstSignalMatchPerEventOverrides: (ruleSchemaV1.signalStopOnFirstSignalMatchPerEventOverrides && typeof ruleSchemaV1.signalStopOnFirstSignalMatchPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalStopOnFirstSignalMatchPerEventOverrides }
+      signalStopOnFirstSignalMatchPerEventOverrides: (ruleSchema.signalStopOnFirstSignalMatchPerEventOverrides && typeof ruleSchema.signalStopOnFirstSignalMatchPerEventOverrides === "object")
+        ? { ...ruleSchema.signalStopOnFirstSignalMatchPerEventOverrides }
         : Object.create(null),
-      signalStopOnFirstMatchOverrides: (ruleSchemaV1.signalStopOnFirstMatchOverrides && typeof ruleSchemaV1.signalStopOnFirstMatchOverrides === "object")
-        ? { ...ruleSchemaV1.signalStopOnFirstMatchOverrides }
+      signalStopOnFirstMatchOverrides: (ruleSchema.signalStopOnFirstMatchOverrides && typeof ruleSchema.signalStopOnFirstMatchOverrides === "object")
+        ? { ...ruleSchema.signalStopOnFirstMatchOverrides }
         : Object.create(null),
-      sourceEventEnabledOverrides: (ruleSchemaV1.sourceEventEnabledOverrides && typeof ruleSchemaV1.sourceEventEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEnabledOverrides }
+      sourceEventEnabledOverrides: (ruleSchema.sourceEventEnabledOverrides && typeof ruleSchema.sourceEventEnabledOverrides === "object")
+        ? { ...ruleSchema.sourceEventEnabledOverrides }
         : Object.create(null),
-      sourceEventDebounceOverrides: (ruleSchemaV1.sourceEventDebounceOverrides && typeof ruleSchemaV1.sourceEventDebounceOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventDebounceOverrides }
+      sourceEventDebounceOverrides: (ruleSchema.sourceEventDebounceOverrides && typeof ruleSchema.sourceEventDebounceOverrides === "object")
+        ? { ...ruleSchema.sourceEventDebounceOverrides }
         : Object.create(null),
-      sourceEventMaxSignalsOverrides: (ruleSchemaV1.sourceEventMaxSignalsOverrides && typeof ruleSchemaV1.sourceEventMaxSignalsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxSignalsOverrides }
+      sourceEventMaxSignalsOverrides: (ruleSchema.sourceEventMaxSignalsOverrides && typeof ruleSchema.sourceEventMaxSignalsOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxSignalsOverrides }
         : Object.create(null),
-      sourceEventMaxSignalsEvaluatedPerEventOverrides: (ruleSchemaV1.sourceEventMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxSignalsEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxSignalsEvaluatedPerEventOverrides }
+      sourceEventMaxSignalsEvaluatedPerEventOverrides: (ruleSchema.sourceEventMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchema.sourceEventMaxSignalsEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxSignalsEvaluatedPerEventOverrides }
         : Object.create(null),
-      sourceEventMaxActionsPerSignalOverrides: (ruleSchemaV1.sourceEventMaxActionsPerSignalOverrides && typeof ruleSchemaV1.sourceEventMaxActionsPerSignalOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxActionsPerSignalOverrides }
+      sourceEventMaxActionsPerSignalOverrides: (ruleSchema.sourceEventMaxActionsPerSignalOverrides && typeof ruleSchema.sourceEventMaxActionsPerSignalOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxActionsPerSignalOverrides }
         : Object.create(null),
-      sourceEventMaxRulesEvaluatedOverrides: (ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides && typeof ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides }
+      sourceEventMaxRulesEvaluatedOverrides: (ruleSchema.sourceEventMaxRulesEvaluatedOverrides && typeof ruleSchema.sourceEventMaxRulesEvaluatedOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxRulesEvaluatedOverrides }
         : Object.create(null),
-      sourceEventMaxRulesEvaluatedPerEventOverrides: (ruleSchemaV1.sourceEventMaxRulesEvaluatedPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxRulesEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxRulesEvaluatedPerEventOverrides }
+      sourceEventMaxRulesEvaluatedPerEventOverrides: (ruleSchema.sourceEventMaxRulesEvaluatedPerEventOverrides && typeof ruleSchema.sourceEventMaxRulesEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxRulesEvaluatedPerEventOverrides }
         : Object.create(null),
-      sourceEventMaxMatchesPerEventOverrides: (ruleSchemaV1.sourceEventMaxMatchesPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxMatchesPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxMatchesPerEventOverrides }
+      sourceEventMaxMatchesPerEventOverrides: (ruleSchema.sourceEventMaxMatchesPerEventOverrides && typeof ruleSchema.sourceEventMaxMatchesPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxMatchesPerEventOverrides }
         : Object.create(null),
-      sourceEventMaxActionsPerEventOverrides: (ruleSchemaV1.sourceEventMaxActionsPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxActionsPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxActionsPerEventOverrides }
+      sourceEventMaxActionsPerEventOverrides: (ruleSchema.sourceEventMaxActionsPerEventOverrides && typeof ruleSchema.sourceEventMaxActionsPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxActionsPerEventOverrides }
         : Object.create(null),
-      sourceEventStopOnFirstSignalMatchOverrides: (ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides && typeof ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides }
+      sourceEventStopOnFirstSignalMatchOverrides: (ruleSchema.sourceEventStopOnFirstSignalMatchOverrides && typeof ruleSchema.sourceEventStopOnFirstSignalMatchOverrides === "object")
+        ? { ...ruleSchema.sourceEventStopOnFirstSignalMatchOverrides }
         : Object.create(null),
-      sourceEventEmitPreviewMatchedOverrides: (ruleSchemaV1.sourceEventEmitPreviewMatchedOverrides && typeof ruleSchemaV1.sourceEventEmitPreviewMatchedOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEmitPreviewMatchedOverrides }
+      sourceEventEmitPreviewMatchedOverrides: (ruleSchema.sourceEventEmitPreviewMatchedOverrides && typeof ruleSchema.sourceEventEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchema.sourceEventEmitPreviewMatchedOverrides }
         : Object.create(null),
-      sourceEventEmitActionExecutedOverrides: (ruleSchemaV1.sourceEventEmitActionExecutedOverrides && typeof ruleSchemaV1.sourceEventEmitActionExecutedOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEmitActionExecutedOverrides }
+      sourceEventEmitActionExecutedOverrides: (ruleSchema.sourceEventEmitActionExecutedOverrides && typeof ruleSchema.sourceEventEmitActionExecutedOverrides === "object")
+        ? { ...ruleSchema.sourceEventEmitActionExecutedOverrides }
         : Object.create(null),
-      sourceEventEmitSourceEventSummaryOverrides: (ruleSchemaV1.sourceEventEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.sourceEventEmitSourceEventSummaryOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEmitSourceEventSummaryOverrides }
+      sourceEventEmitSourceEventSummaryOverrides: (ruleSchema.sourceEventEmitSourceEventSummaryOverrides && typeof ruleSchema.sourceEventEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchema.sourceEventEmitSourceEventSummaryOverrides }
         : Object.create(null),
-      sourceEventSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.sourceEventSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.sourceEventSummaryIncludeSignalAndRuleIdsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventSummaryIncludeSignalAndRuleIdsOverrides }
+      sourceEventSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides === "object")
+        ? { ...ruleSchema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides }
         : Object.create(null),
-      sourceEventSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.sourceEventSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.sourceEventSummaryIncludeBudgetCapsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventSummaryIncludeBudgetCapsOverrides }
+      sourceEventSummaryIncludeBudgetCapsOverrides: (ruleSchema.sourceEventSummaryIncludeBudgetCapsOverrides && typeof ruleSchema.sourceEventSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchema.sourceEventSummaryIncludeBudgetCapsOverrides }
         : Object.create(null),
-      sourceEventActionTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventActionTypeEnabledOverrides }
+      sourceEventActionTypeEnabledOverrides: (ruleSchema.sourceEventActionTypeEnabledOverrides && typeof ruleSchema.sourceEventActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.sourceEventActionTypeEnabledOverrides }
         : Object.create(null),
-      sourceEventActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides }
+      sourceEventActionExecutedEventTypeEnabledOverrides: (ruleSchema.sourceEventActionExecutedEventTypeEnabledOverrides && typeof ruleSchema.sourceEventActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.sourceEventActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
-      sourceEventExecuteActionsOverrides: (ruleSchemaV1.sourceEventExecuteActionsOverrides && typeof ruleSchemaV1.sourceEventExecuteActionsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventExecuteActionsOverrides }
+      sourceEventExecuteActionsOverrides: (ruleSchema.sourceEventExecuteActionsOverrides && typeof ruleSchema.sourceEventExecuteActionsOverrides === "object")
+        ? { ...ruleSchema.sourceEventExecuteActionsOverrides }
         : Object.create(null),
-      sourceEventCooldownScaleOverrides: (ruleSchemaV1.sourceEventCooldownScaleOverrides && typeof ruleSchemaV1.sourceEventCooldownScaleOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventCooldownScaleOverrides }
+      sourceEventCooldownScaleOverrides: (ruleSchema.sourceEventCooldownScaleOverrides && typeof ruleSchema.sourceEventCooldownScaleOverrides === "object")
+        ? { ...ruleSchema.sourceEventCooldownScaleOverrides }
         : Object.create(null),
-      sourceEventMatchWindowScaleOverrides: (ruleSchemaV1.sourceEventMatchWindowScaleOverrides && typeof ruleSchemaV1.sourceEventMatchWindowScaleOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMatchWindowScaleOverrides }
+      sourceEventMatchWindowScaleOverrides: (ruleSchema.sourceEventMatchWindowScaleOverrides && typeof ruleSchema.sourceEventMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchema.sourceEventMatchWindowScaleOverrides }
         : Object.create(null),
-      sourceEventMaxActionsPerRuleMatchOverrides: (ruleSchemaV1.sourceEventMaxActionsPerRuleMatchOverrides && typeof ruleSchemaV1.sourceEventMaxActionsPerRuleMatchOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxActionsPerRuleMatchOverrides }
+      sourceEventMaxActionsPerRuleMatchOverrides: (ruleSchema.sourceEventMaxActionsPerRuleMatchOverrides && typeof ruleSchema.sourceEventMaxActionsPerRuleMatchOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxActionsPerRuleMatchOverrides }
         : Object.create(null),
-      sourceEventStopOnFirstMatchOverrides: (ruleSchemaV1.sourceEventStopOnFirstMatchOverrides && typeof ruleSchemaV1.sourceEventStopOnFirstMatchOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventStopOnFirstMatchOverrides }
+      sourceEventStopOnFirstMatchOverrides: (ruleSchema.sourceEventStopOnFirstMatchOverrides && typeof ruleSchema.sourceEventStopOnFirstMatchOverrides === "object")
+        ? { ...ruleSchema.sourceEventStopOnFirstMatchOverrides }
         : Object.create(null),
-      sourceEventMaxMatchesPerSignalOverrides: (ruleSchemaV1.sourceEventMaxMatchesPerSignalOverrides && typeof ruleSchemaV1.sourceEventMaxMatchesPerSignalOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxMatchesPerSignalOverrides }
+      sourceEventMaxMatchesPerSignalOverrides: (ruleSchema.sourceEventMaxMatchesPerSignalOverrides && typeof ruleSchema.sourceEventMaxMatchesPerSignalOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxMatchesPerSignalOverrides }
         : Object.create(null),
-      ruleActionLimitOverrides: (ruleSchemaV1.ruleActionLimitOverrides && typeof ruleSchemaV1.ruleActionLimitOverrides === "object")
-        ? { ...ruleSchemaV1.ruleActionLimitOverrides }
+      ruleActionLimitOverrides: (ruleSchema.ruleActionLimitOverrides && typeof ruleSchema.ruleActionLimitOverrides === "object")
+        ? { ...ruleSchema.ruleActionLimitOverrides }
         : Object.create(null),
-      ruleCooldownScaleOverrides: (ruleSchemaV1.ruleCooldownScaleOverrides && typeof ruleSchemaV1.ruleCooldownScaleOverrides === "object")
-        ? { ...ruleSchemaV1.ruleCooldownScaleOverrides }
+      ruleCooldownScaleOverrides: (ruleSchema.ruleCooldownScaleOverrides && typeof ruleSchema.ruleCooldownScaleOverrides === "object")
+        ? { ...ruleSchema.ruleCooldownScaleOverrides }
         : Object.create(null),
-      ruleMatchWindowScaleOverrides: (ruleSchemaV1.ruleMatchWindowScaleOverrides && typeof ruleSchemaV1.ruleMatchWindowScaleOverrides === "object")
-        ? { ...ruleSchemaV1.ruleMatchWindowScaleOverrides }
+      ruleMatchWindowScaleOverrides: (ruleSchema.ruleMatchWindowScaleOverrides && typeof ruleSchema.ruleMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchema.ruleMatchWindowScaleOverrides }
         : Object.create(null),
-      ruleEmitPreviewMatchedOverrides: (ruleSchemaV1.ruleEmitPreviewMatchedOverrides && typeof ruleSchemaV1.ruleEmitPreviewMatchedOverrides === "object")
-        ? { ...ruleSchemaV1.ruleEmitPreviewMatchedOverrides }
+      ruleEmitPreviewMatchedOverrides: (ruleSchema.ruleEmitPreviewMatchedOverrides && typeof ruleSchema.ruleEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchema.ruleEmitPreviewMatchedOverrides }
         : Object.create(null),
-      ruleEmitActionExecutedOverrides: (ruleSchemaV1.ruleEmitActionExecutedOverrides && typeof ruleSchemaV1.ruleEmitActionExecutedOverrides === "object")
-        ? { ...ruleSchemaV1.ruleEmitActionExecutedOverrides }
+      ruleEmitActionExecutedOverrides: (ruleSchema.ruleEmitActionExecutedOverrides && typeof ruleSchema.ruleEmitActionExecutedOverrides === "object")
+        ? { ...ruleSchema.ruleEmitActionExecutedOverrides }
         : Object.create(null),
-      ruleEmitSourceEventSummaryOverrides: (ruleSchemaV1.ruleEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.ruleEmitSourceEventSummaryOverrides === "object")
-        ? { ...ruleSchemaV1.ruleEmitSourceEventSummaryOverrides }
+      ruleEmitSourceEventSummaryOverrides: (ruleSchema.ruleEmitSourceEventSummaryOverrides && typeof ruleSchema.ruleEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchema.ruleEmitSourceEventSummaryOverrides }
         : Object.create(null),
-      ruleSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.ruleSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.ruleSummaryIncludeSignalAndRuleIdsOverrides === "object")
-        ? { ...ruleSchemaV1.ruleSummaryIncludeSignalAndRuleIdsOverrides }
+      ruleSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchema.ruleSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchema.ruleSummaryIncludeSignalAndRuleIdsOverrides === "object")
+        ? { ...ruleSchema.ruleSummaryIncludeSignalAndRuleIdsOverrides }
         : Object.create(null),
-      ruleSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.ruleSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.ruleSummaryIncludeBudgetCapsOverrides === "object")
-        ? { ...ruleSchemaV1.ruleSummaryIncludeBudgetCapsOverrides }
+      ruleSummaryIncludeBudgetCapsOverrides: (ruleSchema.ruleSummaryIncludeBudgetCapsOverrides && typeof ruleSchema.ruleSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchema.ruleSummaryIncludeBudgetCapsOverrides }
         : Object.create(null),
-      ruleActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.ruleActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.ruleActionExecutedEventTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.ruleActionExecutedEventTypeEnabledOverrides }
+      ruleActionExecutedEventTypeEnabledOverrides: (ruleSchema.ruleActionExecutedEventTypeEnabledOverrides && typeof ruleSchema.ruleActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.ruleActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
-      ruleExecuteActionsOverrides: (ruleSchemaV1.ruleExecuteActionsOverrides && typeof ruleSchemaV1.ruleExecuteActionsOverrides === "object")
-        ? { ...ruleSchemaV1.ruleExecuteActionsOverrides }
+      ruleExecuteActionsOverrides: (ruleSchema.ruleExecuteActionsOverrides && typeof ruleSchema.ruleExecuteActionsOverrides === "object")
+        ? { ...ruleSchema.ruleExecuteActionsOverrides }
         : Object.create(null),
-      ruleActionTypeEnabledOverrides: (ruleSchemaV1.ruleActionTypeEnabledOverrides && typeof ruleSchemaV1.ruleActionTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.ruleActionTypeEnabledOverrides }
+      ruleActionTypeEnabledOverrides: (ruleSchema.ruleActionTypeEnabledOverrides && typeof ruleSchema.ruleActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.ruleActionTypeEnabledOverrides }
         : Object.create(null),
-      actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
-        ? { ...ruleSchemaV1.actionArgOverrides }
+      actionArgOverrides: (ruleSchema.actionArgOverrides && typeof ruleSchema.actionArgOverrides === "object")
+        ? { ...ruleSchema.actionArgOverrides }
         : Object.create(null),
     });
     if (integrityErrors.length) {
@@ -614,7 +614,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         );
       } catch (_) {}
       adapterFallbackUsed = true;
-      ruleSchemaV1 = buildSafeDisabledRuleSchema();
+      ruleSchema = buildSafeDisabledRuleSchema();
       refreshRuleSchemaDerived();
     }
   }
@@ -627,182 +627,182 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   if (typeof setRuleSchemaRuntime === "function") {
     setRuleSchemaRuntime({
       source: resolvedRuleSource,
-      signals: ruleSignalsV1,
-      windows: ruleWindowsV1,
-      events: ruleEventsV1,
-      rules: ruleRulesV1,
-      eventRuntimeBindings: ruleEventRuntimeBindingsV1,
-      execution: (ruleSchemaV1.execution && typeof ruleSchemaV1.execution === "object") ? { ...ruleSchemaV1.execution } : Object.create(null),
-      ruleActionLimitOverrides: (ruleSchemaV1.ruleActionLimitOverrides && typeof ruleSchemaV1.ruleActionLimitOverrides === "object")
-        ? { ...ruleSchemaV1.ruleActionLimitOverrides }
+      signals: ruleSignals,
+      windows: ruleWindows,
+      events: ruleEvents,
+      rules: ruleRules,
+      eventRuntimeBindings: ruleEventRuntimeBindings,
+      execution: (ruleSchema.execution && typeof ruleSchema.execution === "object") ? { ...ruleSchema.execution } : Object.create(null),
+      ruleActionLimitOverrides: (ruleSchema.ruleActionLimitOverrides && typeof ruleSchema.ruleActionLimitOverrides === "object")
+        ? { ...ruleSchema.ruleActionLimitOverrides }
         : Object.create(null),
-      ruleCooldownScaleOverrides: (ruleSchemaV1.ruleCooldownScaleOverrides && typeof ruleSchemaV1.ruleCooldownScaleOverrides === "object")
-        ? { ...ruleSchemaV1.ruleCooldownScaleOverrides }
+      ruleCooldownScaleOverrides: (ruleSchema.ruleCooldownScaleOverrides && typeof ruleSchema.ruleCooldownScaleOverrides === "object")
+        ? { ...ruleSchema.ruleCooldownScaleOverrides }
         : Object.create(null),
-      ruleMatchWindowScaleOverrides: (ruleSchemaV1.ruleMatchWindowScaleOverrides && typeof ruleSchemaV1.ruleMatchWindowScaleOverrides === "object")
-        ? { ...ruleSchemaV1.ruleMatchWindowScaleOverrides }
+      ruleMatchWindowScaleOverrides: (ruleSchema.ruleMatchWindowScaleOverrides && typeof ruleSchema.ruleMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchema.ruleMatchWindowScaleOverrides }
         : Object.create(null),
-      ruleEmitPreviewMatchedOverrides: (ruleSchemaV1.ruleEmitPreviewMatchedOverrides && typeof ruleSchemaV1.ruleEmitPreviewMatchedOverrides === "object")
-        ? { ...ruleSchemaV1.ruleEmitPreviewMatchedOverrides }
+      ruleEmitPreviewMatchedOverrides: (ruleSchema.ruleEmitPreviewMatchedOverrides && typeof ruleSchema.ruleEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchema.ruleEmitPreviewMatchedOverrides }
         : Object.create(null),
-      ruleEmitActionExecutedOverrides: (ruleSchemaV1.ruleEmitActionExecutedOverrides && typeof ruleSchemaV1.ruleEmitActionExecutedOverrides === "object")
-        ? { ...ruleSchemaV1.ruleEmitActionExecutedOverrides }
+      ruleEmitActionExecutedOverrides: (ruleSchema.ruleEmitActionExecutedOverrides && typeof ruleSchema.ruleEmitActionExecutedOverrides === "object")
+        ? { ...ruleSchema.ruleEmitActionExecutedOverrides }
         : Object.create(null),
-      ruleEmitSourceEventSummaryOverrides: (ruleSchemaV1.ruleEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.ruleEmitSourceEventSummaryOverrides === "object")
-        ? { ...ruleSchemaV1.ruleEmitSourceEventSummaryOverrides }
+      ruleEmitSourceEventSummaryOverrides: (ruleSchema.ruleEmitSourceEventSummaryOverrides && typeof ruleSchema.ruleEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchema.ruleEmitSourceEventSummaryOverrides }
         : Object.create(null),
-      ruleSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.ruleSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.ruleSummaryIncludeSignalAndRuleIdsOverrides === "object")
-        ? { ...ruleSchemaV1.ruleSummaryIncludeSignalAndRuleIdsOverrides }
+      ruleSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchema.ruleSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchema.ruleSummaryIncludeSignalAndRuleIdsOverrides === "object")
+        ? { ...ruleSchema.ruleSummaryIncludeSignalAndRuleIdsOverrides }
         : Object.create(null),
-      ruleSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.ruleSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.ruleSummaryIncludeBudgetCapsOverrides === "object")
-        ? { ...ruleSchemaV1.ruleSummaryIncludeBudgetCapsOverrides }
+      ruleSummaryIncludeBudgetCapsOverrides: (ruleSchema.ruleSummaryIncludeBudgetCapsOverrides && typeof ruleSchema.ruleSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchema.ruleSummaryIncludeBudgetCapsOverrides }
         : Object.create(null),
-      ruleActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.ruleActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.ruleActionExecutedEventTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.ruleActionExecutedEventTypeEnabledOverrides }
+      ruleActionExecutedEventTypeEnabledOverrides: (ruleSchema.ruleActionExecutedEventTypeEnabledOverrides && typeof ruleSchema.ruleActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.ruleActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
-      ruleExecuteActionsOverrides: (ruleSchemaV1.ruleExecuteActionsOverrides && typeof ruleSchemaV1.ruleExecuteActionsOverrides === "object")
-        ? { ...ruleSchemaV1.ruleExecuteActionsOverrides }
+      ruleExecuteActionsOverrides: (ruleSchema.ruleExecuteActionsOverrides && typeof ruleSchema.ruleExecuteActionsOverrides === "object")
+        ? { ...ruleSchema.ruleExecuteActionsOverrides }
         : Object.create(null),
-      ruleActionTypeEnabledOverrides: (ruleSchemaV1.ruleActionTypeEnabledOverrides && typeof ruleSchemaV1.ruleActionTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.ruleActionTypeEnabledOverrides }
+      ruleActionTypeEnabledOverrides: (ruleSchema.ruleActionTypeEnabledOverrides && typeof ruleSchema.ruleActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.ruleActionTypeEnabledOverrides }
         : Object.create(null),
-      signalDebounceOverrides: (ruleSchemaV1.signalDebounceOverrides && typeof ruleSchemaV1.signalDebounceOverrides === "object")
-        ? { ...ruleSchemaV1.signalDebounceOverrides }
+      signalDebounceOverrides: (ruleSchema.signalDebounceOverrides && typeof ruleSchema.signalDebounceOverrides === "object")
+        ? { ...ruleSchema.signalDebounceOverrides }
         : Object.create(null),
-      signalMaxMatchesOverrides: (ruleSchemaV1.signalMaxMatchesOverrides && typeof ruleSchemaV1.signalMaxMatchesOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxMatchesOverrides }
+      signalMaxMatchesOverrides: (ruleSchema.signalMaxMatchesOverrides && typeof ruleSchema.signalMaxMatchesOverrides === "object")
+        ? { ...ruleSchema.signalMaxMatchesOverrides }
         : Object.create(null),
-      signalEmitPreviewMatchedOverrides: (ruleSchemaV1.signalEmitPreviewMatchedOverrides && typeof ruleSchemaV1.signalEmitPreviewMatchedOverrides === "object")
-        ? { ...ruleSchemaV1.signalEmitPreviewMatchedOverrides }
+      signalEmitPreviewMatchedOverrides: (ruleSchema.signalEmitPreviewMatchedOverrides && typeof ruleSchema.signalEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchema.signalEmitPreviewMatchedOverrides }
         : Object.create(null),
-      signalExecuteActionsOverrides: (ruleSchemaV1.signalExecuteActionsOverrides && typeof ruleSchemaV1.signalExecuteActionsOverrides === "object")
-        ? { ...ruleSchemaV1.signalExecuteActionsOverrides }
+      signalExecuteActionsOverrides: (ruleSchema.signalExecuteActionsOverrides && typeof ruleSchema.signalExecuteActionsOverrides === "object")
+        ? { ...ruleSchema.signalExecuteActionsOverrides }
         : Object.create(null),
-      signalEmitActionExecutedOverrides: (ruleSchemaV1.signalEmitActionExecutedOverrides && typeof ruleSchemaV1.signalEmitActionExecutedOverrides === "object")
-        ? { ...ruleSchemaV1.signalEmitActionExecutedOverrides }
+      signalEmitActionExecutedOverrides: (ruleSchema.signalEmitActionExecutedOverrides && typeof ruleSchema.signalEmitActionExecutedOverrides === "object")
+        ? { ...ruleSchema.signalEmitActionExecutedOverrides }
         : Object.create(null),
-      signalEmitSourceEventSummaryOverrides: (ruleSchemaV1.signalEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.signalEmitSourceEventSummaryOverrides === "object")
-        ? { ...ruleSchemaV1.signalEmitSourceEventSummaryOverrides }
+      signalEmitSourceEventSummaryOverrides: (ruleSchema.signalEmitSourceEventSummaryOverrides && typeof ruleSchema.signalEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchema.signalEmitSourceEventSummaryOverrides }
         : Object.create(null),
-      signalSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
-        ? { ...ruleSchemaV1.signalSummaryIncludeSignalAndRuleIdsOverrides }
+      signalSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchema.signalSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchema.signalSummaryIncludeSignalAndRuleIdsOverrides === "object")
+        ? { ...ruleSchema.signalSummaryIncludeSignalAndRuleIdsOverrides }
         : Object.create(null),
-      signalSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides === "object")
-        ? { ...ruleSchemaV1.signalSummaryIncludeBudgetCapsOverrides }
+      signalSummaryIncludeBudgetCapsOverrides: (ruleSchema.signalSummaryIncludeBudgetCapsOverrides && typeof ruleSchema.signalSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchema.signalSummaryIncludeBudgetCapsOverrides }
         : Object.create(null),
-      signalActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.signalActionExecutedEventTypeEnabledOverrides }
+      signalActionExecutedEventTypeEnabledOverrides: (ruleSchema.signalActionExecutedEventTypeEnabledOverrides && typeof ruleSchema.signalActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.signalActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
-      signalActionTypeEnabledOverrides: (ruleSchemaV1.signalActionTypeEnabledOverrides && typeof ruleSchemaV1.signalActionTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.signalActionTypeEnabledOverrides }
+      signalActionTypeEnabledOverrides: (ruleSchema.signalActionTypeEnabledOverrides && typeof ruleSchema.signalActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.signalActionTypeEnabledOverrides }
         : Object.create(null),
-      signalMatchWindowScaleOverrides: (ruleSchemaV1.signalMatchWindowScaleOverrides && typeof ruleSchemaV1.signalMatchWindowScaleOverrides === "object")
-        ? { ...ruleSchemaV1.signalMatchWindowScaleOverrides }
+      signalMatchWindowScaleOverrides: (ruleSchema.signalMatchWindowScaleOverrides && typeof ruleSchema.signalMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchema.signalMatchWindowScaleOverrides }
         : Object.create(null),
-      signalCooldownScaleOverrides: (ruleSchemaV1.signalCooldownScaleOverrides && typeof ruleSchemaV1.signalCooldownScaleOverrides === "object")
-        ? { ...ruleSchemaV1.signalCooldownScaleOverrides }
+      signalCooldownScaleOverrides: (ruleSchema.signalCooldownScaleOverrides && typeof ruleSchema.signalCooldownScaleOverrides === "object")
+        ? { ...ruleSchema.signalCooldownScaleOverrides }
         : Object.create(null),
-      signalMaxActionsPerRuleMatchOverrides: (ruleSchemaV1.signalMaxActionsPerRuleMatchOverrides && typeof ruleSchemaV1.signalMaxActionsPerRuleMatchOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxActionsPerRuleMatchOverrides }
+      signalMaxActionsPerRuleMatchOverrides: (ruleSchema.signalMaxActionsPerRuleMatchOverrides && typeof ruleSchema.signalMaxActionsPerRuleMatchOverrides === "object")
+        ? { ...ruleSchema.signalMaxActionsPerRuleMatchOverrides }
         : Object.create(null),
-      signalMaxRulesEvaluatedOverrides: (ruleSchemaV1.signalMaxRulesEvaluatedOverrides && typeof ruleSchemaV1.signalMaxRulesEvaluatedOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxRulesEvaluatedOverrides }
+      signalMaxRulesEvaluatedOverrides: (ruleSchema.signalMaxRulesEvaluatedOverrides && typeof ruleSchema.signalMaxRulesEvaluatedOverrides === "object")
+        ? { ...ruleSchema.signalMaxRulesEvaluatedOverrides }
         : Object.create(null),
-      signalMaxActionsPerEventOverrides: (ruleSchemaV1.signalMaxActionsPerEventOverrides && typeof ruleSchemaV1.signalMaxActionsPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxActionsPerEventOverrides }
+      signalMaxActionsPerEventOverrides: (ruleSchema.signalMaxActionsPerEventOverrides && typeof ruleSchema.signalMaxActionsPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxActionsPerEventOverrides }
         : Object.create(null),
-      signalMaxActionsPerSignalOverrides: (ruleSchemaV1.signalMaxActionsPerSignalOverrides && typeof ruleSchemaV1.signalMaxActionsPerSignalOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxActionsPerSignalOverrides }
+      signalMaxActionsPerSignalOverrides: (ruleSchema.signalMaxActionsPerSignalOverrides && typeof ruleSchema.signalMaxActionsPerSignalOverrides === "object")
+        ? { ...ruleSchema.signalMaxActionsPerSignalOverrides }
         : Object.create(null),
-      signalMaxMatchesPerEventOverrides: (ruleSchemaV1.signalMaxMatchesPerEventOverrides && typeof ruleSchemaV1.signalMaxMatchesPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxMatchesPerEventOverrides }
+      signalMaxMatchesPerEventOverrides: (ruleSchema.signalMaxMatchesPerEventOverrides && typeof ruleSchema.signalMaxMatchesPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxMatchesPerEventOverrides }
         : Object.create(null),
-      signalMaxSignalsPerEventOverrides: (ruleSchemaV1.signalMaxSignalsPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxSignalsPerEventOverrides }
+      signalMaxSignalsPerEventOverrides: (ruleSchema.signalMaxSignalsPerEventOverrides && typeof ruleSchema.signalMaxSignalsPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxSignalsPerEventOverrides }
         : Object.create(null),
-      signalMaxSignalsEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxSignalsEvaluatedPerEventOverrides }
+      signalMaxSignalsEvaluatedPerEventOverrides: (ruleSchema.signalMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchema.signalMaxSignalsEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxSignalsEvaluatedPerEventOverrides }
         : Object.create(null),
-      signalMaxRulesEvaluatedPerEventOverrides: (ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides && typeof ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalMaxRulesEvaluatedPerEventOverrides }
+      signalMaxRulesEvaluatedPerEventOverrides: (ruleSchema.signalMaxRulesEvaluatedPerEventOverrides && typeof ruleSchema.signalMaxRulesEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.signalMaxRulesEvaluatedPerEventOverrides }
         : Object.create(null),
-      signalStopOnFirstSignalMatchPerEventOverrides: (ruleSchemaV1.signalStopOnFirstSignalMatchPerEventOverrides && typeof ruleSchemaV1.signalStopOnFirstSignalMatchPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.signalStopOnFirstSignalMatchPerEventOverrides }
+      signalStopOnFirstSignalMatchPerEventOverrides: (ruleSchema.signalStopOnFirstSignalMatchPerEventOverrides && typeof ruleSchema.signalStopOnFirstSignalMatchPerEventOverrides === "object")
+        ? { ...ruleSchema.signalStopOnFirstSignalMatchPerEventOverrides }
         : Object.create(null),
-      signalStopOnFirstMatchOverrides: (ruleSchemaV1.signalStopOnFirstMatchOverrides && typeof ruleSchemaV1.signalStopOnFirstMatchOverrides === "object")
-        ? { ...ruleSchemaV1.signalStopOnFirstMatchOverrides }
+      signalStopOnFirstMatchOverrides: (ruleSchema.signalStopOnFirstMatchOverrides && typeof ruleSchema.signalStopOnFirstMatchOverrides === "object")
+        ? { ...ruleSchema.signalStopOnFirstMatchOverrides }
         : Object.create(null),
-      sourceEventEnabledOverrides: (ruleSchemaV1.sourceEventEnabledOverrides && typeof ruleSchemaV1.sourceEventEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEnabledOverrides }
+      sourceEventEnabledOverrides: (ruleSchema.sourceEventEnabledOverrides && typeof ruleSchema.sourceEventEnabledOverrides === "object")
+        ? { ...ruleSchema.sourceEventEnabledOverrides }
         : Object.create(null),
-      sourceEventDebounceOverrides: (ruleSchemaV1.sourceEventDebounceOverrides && typeof ruleSchemaV1.sourceEventDebounceOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventDebounceOverrides }
+      sourceEventDebounceOverrides: (ruleSchema.sourceEventDebounceOverrides && typeof ruleSchema.sourceEventDebounceOverrides === "object")
+        ? { ...ruleSchema.sourceEventDebounceOverrides }
         : Object.create(null),
-      sourceEventMaxSignalsOverrides: (ruleSchemaV1.sourceEventMaxSignalsOverrides && typeof ruleSchemaV1.sourceEventMaxSignalsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxSignalsOverrides }
+      sourceEventMaxSignalsOverrides: (ruleSchema.sourceEventMaxSignalsOverrides && typeof ruleSchema.sourceEventMaxSignalsOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxSignalsOverrides }
         : Object.create(null),
-      sourceEventMaxSignalsEvaluatedPerEventOverrides: (ruleSchemaV1.sourceEventMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxSignalsEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxSignalsEvaluatedPerEventOverrides }
+      sourceEventMaxSignalsEvaluatedPerEventOverrides: (ruleSchema.sourceEventMaxSignalsEvaluatedPerEventOverrides && typeof ruleSchema.sourceEventMaxSignalsEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxSignalsEvaluatedPerEventOverrides }
         : Object.create(null),
-      sourceEventMaxActionsPerSignalOverrides: (ruleSchemaV1.sourceEventMaxActionsPerSignalOverrides && typeof ruleSchemaV1.sourceEventMaxActionsPerSignalOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxActionsPerSignalOverrides }
+      sourceEventMaxActionsPerSignalOverrides: (ruleSchema.sourceEventMaxActionsPerSignalOverrides && typeof ruleSchema.sourceEventMaxActionsPerSignalOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxActionsPerSignalOverrides }
         : Object.create(null),
-      sourceEventMaxRulesEvaluatedOverrides: (ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides && typeof ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxRulesEvaluatedOverrides }
+      sourceEventMaxRulesEvaluatedOverrides: (ruleSchema.sourceEventMaxRulesEvaluatedOverrides && typeof ruleSchema.sourceEventMaxRulesEvaluatedOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxRulesEvaluatedOverrides }
         : Object.create(null),
-      sourceEventMaxRulesEvaluatedPerEventOverrides: (ruleSchemaV1.sourceEventMaxRulesEvaluatedPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxRulesEvaluatedPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxRulesEvaluatedPerEventOverrides }
+      sourceEventMaxRulesEvaluatedPerEventOverrides: (ruleSchema.sourceEventMaxRulesEvaluatedPerEventOverrides && typeof ruleSchema.sourceEventMaxRulesEvaluatedPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxRulesEvaluatedPerEventOverrides }
         : Object.create(null),
-      sourceEventMaxMatchesPerEventOverrides: (ruleSchemaV1.sourceEventMaxMatchesPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxMatchesPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxMatchesPerEventOverrides }
+      sourceEventMaxMatchesPerEventOverrides: (ruleSchema.sourceEventMaxMatchesPerEventOverrides && typeof ruleSchema.sourceEventMaxMatchesPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxMatchesPerEventOverrides }
         : Object.create(null),
-      sourceEventMaxActionsPerEventOverrides: (ruleSchemaV1.sourceEventMaxActionsPerEventOverrides && typeof ruleSchemaV1.sourceEventMaxActionsPerEventOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxActionsPerEventOverrides }
+      sourceEventMaxActionsPerEventOverrides: (ruleSchema.sourceEventMaxActionsPerEventOverrides && typeof ruleSchema.sourceEventMaxActionsPerEventOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxActionsPerEventOverrides }
         : Object.create(null),
-      sourceEventStopOnFirstSignalMatchOverrides: (ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides && typeof ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventStopOnFirstSignalMatchOverrides }
+      sourceEventStopOnFirstSignalMatchOverrides: (ruleSchema.sourceEventStopOnFirstSignalMatchOverrides && typeof ruleSchema.sourceEventStopOnFirstSignalMatchOverrides === "object")
+        ? { ...ruleSchema.sourceEventStopOnFirstSignalMatchOverrides }
         : Object.create(null),
-      sourceEventEmitPreviewMatchedOverrides: (ruleSchemaV1.sourceEventEmitPreviewMatchedOverrides && typeof ruleSchemaV1.sourceEventEmitPreviewMatchedOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEmitPreviewMatchedOverrides }
+      sourceEventEmitPreviewMatchedOverrides: (ruleSchema.sourceEventEmitPreviewMatchedOverrides && typeof ruleSchema.sourceEventEmitPreviewMatchedOverrides === "object")
+        ? { ...ruleSchema.sourceEventEmitPreviewMatchedOverrides }
         : Object.create(null),
-      sourceEventEmitActionExecutedOverrides: (ruleSchemaV1.sourceEventEmitActionExecutedOverrides && typeof ruleSchemaV1.sourceEventEmitActionExecutedOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEmitActionExecutedOverrides }
+      sourceEventEmitActionExecutedOverrides: (ruleSchema.sourceEventEmitActionExecutedOverrides && typeof ruleSchema.sourceEventEmitActionExecutedOverrides === "object")
+        ? { ...ruleSchema.sourceEventEmitActionExecutedOverrides }
         : Object.create(null),
-      sourceEventEmitSourceEventSummaryOverrides: (ruleSchemaV1.sourceEventEmitSourceEventSummaryOverrides && typeof ruleSchemaV1.sourceEventEmitSourceEventSummaryOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventEmitSourceEventSummaryOverrides }
+      sourceEventEmitSourceEventSummaryOverrides: (ruleSchema.sourceEventEmitSourceEventSummaryOverrides && typeof ruleSchema.sourceEventEmitSourceEventSummaryOverrides === "object")
+        ? { ...ruleSchema.sourceEventEmitSourceEventSummaryOverrides }
         : Object.create(null),
-      sourceEventSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchemaV1.sourceEventSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchemaV1.sourceEventSummaryIncludeSignalAndRuleIdsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventSummaryIncludeSignalAndRuleIdsOverrides }
+      sourceEventSummaryIncludeSignalAndRuleIdsOverrides: (ruleSchema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides && typeof ruleSchema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides === "object")
+        ? { ...ruleSchema.sourceEventSummaryIncludeSignalAndRuleIdsOverrides }
         : Object.create(null),
-      sourceEventSummaryIncludeBudgetCapsOverrides: (ruleSchemaV1.sourceEventSummaryIncludeBudgetCapsOverrides && typeof ruleSchemaV1.sourceEventSummaryIncludeBudgetCapsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventSummaryIncludeBudgetCapsOverrides }
+      sourceEventSummaryIncludeBudgetCapsOverrides: (ruleSchema.sourceEventSummaryIncludeBudgetCapsOverrides && typeof ruleSchema.sourceEventSummaryIncludeBudgetCapsOverrides === "object")
+        ? { ...ruleSchema.sourceEventSummaryIncludeBudgetCapsOverrides }
         : Object.create(null),
-      sourceEventActionTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventActionTypeEnabledOverrides }
+      sourceEventActionTypeEnabledOverrides: (ruleSchema.sourceEventActionTypeEnabledOverrides && typeof ruleSchema.sourceEventActionTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.sourceEventActionTypeEnabledOverrides }
         : Object.create(null),
-      sourceEventActionExecutedEventTypeEnabledOverrides: (ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides && typeof ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventActionExecutedEventTypeEnabledOverrides }
+      sourceEventActionExecutedEventTypeEnabledOverrides: (ruleSchema.sourceEventActionExecutedEventTypeEnabledOverrides && typeof ruleSchema.sourceEventActionExecutedEventTypeEnabledOverrides === "object")
+        ? { ...ruleSchema.sourceEventActionExecutedEventTypeEnabledOverrides }
         : Object.create(null),
-      sourceEventExecuteActionsOverrides: (ruleSchemaV1.sourceEventExecuteActionsOverrides && typeof ruleSchemaV1.sourceEventExecuteActionsOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventExecuteActionsOverrides }
+      sourceEventExecuteActionsOverrides: (ruleSchema.sourceEventExecuteActionsOverrides && typeof ruleSchema.sourceEventExecuteActionsOverrides === "object")
+        ? { ...ruleSchema.sourceEventExecuteActionsOverrides }
         : Object.create(null),
-      sourceEventCooldownScaleOverrides: (ruleSchemaV1.sourceEventCooldownScaleOverrides && typeof ruleSchemaV1.sourceEventCooldownScaleOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventCooldownScaleOverrides }
+      sourceEventCooldownScaleOverrides: (ruleSchema.sourceEventCooldownScaleOverrides && typeof ruleSchema.sourceEventCooldownScaleOverrides === "object")
+        ? { ...ruleSchema.sourceEventCooldownScaleOverrides }
         : Object.create(null),
-      sourceEventMatchWindowScaleOverrides: (ruleSchemaV1.sourceEventMatchWindowScaleOverrides && typeof ruleSchemaV1.sourceEventMatchWindowScaleOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMatchWindowScaleOverrides }
+      sourceEventMatchWindowScaleOverrides: (ruleSchema.sourceEventMatchWindowScaleOverrides && typeof ruleSchema.sourceEventMatchWindowScaleOverrides === "object")
+        ? { ...ruleSchema.sourceEventMatchWindowScaleOverrides }
         : Object.create(null),
-      sourceEventMaxActionsPerRuleMatchOverrides: (ruleSchemaV1.sourceEventMaxActionsPerRuleMatchOverrides && typeof ruleSchemaV1.sourceEventMaxActionsPerRuleMatchOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxActionsPerRuleMatchOverrides }
+      sourceEventMaxActionsPerRuleMatchOverrides: (ruleSchema.sourceEventMaxActionsPerRuleMatchOverrides && typeof ruleSchema.sourceEventMaxActionsPerRuleMatchOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxActionsPerRuleMatchOverrides }
         : Object.create(null),
-      sourceEventStopOnFirstMatchOverrides: (ruleSchemaV1.sourceEventStopOnFirstMatchOverrides && typeof ruleSchemaV1.sourceEventStopOnFirstMatchOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventStopOnFirstMatchOverrides }
+      sourceEventStopOnFirstMatchOverrides: (ruleSchema.sourceEventStopOnFirstMatchOverrides && typeof ruleSchema.sourceEventStopOnFirstMatchOverrides === "object")
+        ? { ...ruleSchema.sourceEventStopOnFirstMatchOverrides }
         : Object.create(null),
-      sourceEventMaxMatchesPerSignalOverrides: (ruleSchemaV1.sourceEventMaxMatchesPerSignalOverrides && typeof ruleSchemaV1.sourceEventMaxMatchesPerSignalOverrides === "object")
-        ? { ...ruleSchemaV1.sourceEventMaxMatchesPerSignalOverrides }
+      sourceEventMaxMatchesPerSignalOverrides: (ruleSchema.sourceEventMaxMatchesPerSignalOverrides && typeof ruleSchema.sourceEventMaxMatchesPerSignalOverrides === "object")
+        ? { ...ruleSchema.sourceEventMaxMatchesPerSignalOverrides }
         : Object.create(null),
-      actionArgOverrides: (ruleSchemaV1.actionArgOverrides && typeof ruleSchemaV1.actionArgOverrides === "object")
-        ? { ...ruleSchemaV1.actionArgOverrides }
+      actionArgOverrides: (ruleSchema.actionArgOverrides && typeof ruleSchema.actionArgOverrides === "object")
+        ? { ...ruleSchema.actionArgOverrides }
         : Object.create(null),
     });
   }
