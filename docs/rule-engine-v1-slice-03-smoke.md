@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 03 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 03 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add read-only rule preview runtime.
 - Expected gameplay impact: none (no rule actions execute).
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot receiver
 - Expect normal startup.
 

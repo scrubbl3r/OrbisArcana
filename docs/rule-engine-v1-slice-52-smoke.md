@@ -1,11 +1,11 @@
-RULE ENGINE V1 - SLICE 52 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 52 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add top-level global rule defaults via `ruleDefaults`:
   - `cooldownMs`
   - `matchWindowMs`
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,4 +1,4 @@
-ORBIS ARCANA ARCHITECTURE SCHEMA (ARCHIVE SNAPSHOT)
+Orbis Arcana Architecture Schema (Archive Snapshot)
 
 Purpose
 

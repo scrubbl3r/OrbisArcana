@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 02 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 02 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Wire Rule Engine v1 schema loading/validation into bootstrap.
 - Expected gameplay impact for this slice: none.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) App boot
 - Start receiver normally.
 - Expect no init failure and normal game loop startup.

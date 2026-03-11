@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 70 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 70 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add centralized signal fanout cap via `execution.maxSignalsPerEvent`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

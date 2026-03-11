@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 14 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 14 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove remaining DOMUS-specific hardcoding from dispatch.
 - Drive slot-lock and slot-clear behavior from routing config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) DOMUS Y-axis behavior
 - Trigger DOMUS load on Y-axis flow.
 - Confirm slot selection and slot clearing behavior still matches previous gameplay.

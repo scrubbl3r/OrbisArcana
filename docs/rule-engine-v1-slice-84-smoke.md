@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 84 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 84 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-source-event signal fanout caps via `sourceEventMaxSignalsOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

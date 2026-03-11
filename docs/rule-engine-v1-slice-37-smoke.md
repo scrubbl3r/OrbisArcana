@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 37 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 37 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove runtime bootstrap dependence on legacy rule config alias and use only `RULE_ENGINE_V1_MASTER_CONFIG` as the active contract.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 27 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 27 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Introduce neutral spell payload fields (`axisSpell`, `wakeWindowSpell`) in load/cast paths while keeping legacy aliases (`school`, `classKey`).
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

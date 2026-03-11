@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 33 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 33 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Validate rule schema from the single master config object (`RULE_ENGINE_V1_CONFIG`) instead of validating split arrays only.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

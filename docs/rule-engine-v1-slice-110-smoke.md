@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 110 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 110 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Ensure per-signal event-action caps are fully wired end-to-end via `signalMaxActionsPerEventOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

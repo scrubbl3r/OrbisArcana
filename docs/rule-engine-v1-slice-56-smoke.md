@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 56 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 56 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add centralized execution cap via `execution.maxMatchesPerSignal` in master control.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

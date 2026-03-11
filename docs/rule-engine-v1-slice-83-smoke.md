@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 83 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 83 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-rule match-window scaling via `ruleMatchWindowScaleOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

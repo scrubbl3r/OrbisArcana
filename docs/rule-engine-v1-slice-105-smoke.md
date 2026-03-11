@@ -1,11 +1,11 @@
-RULE ENGINE V1 - SLICE 105 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 105 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add candidate evaluation caps via:
   - `execution.maxRulesEvaluatedPerSignal`
   - `signalMaxRulesEvaluatedOverrides`
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,11 +1,11 @@
-RULE ENGINE V1 - SLICE 107 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 107 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add event-level matched-rule caps via:
   - `execution.maxMatchesPerEvent`
   - `sourceEventMaxMatchesPerEventOverrides`
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

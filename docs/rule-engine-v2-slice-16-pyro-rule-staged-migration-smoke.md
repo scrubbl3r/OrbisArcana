@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 16 Smoke
 
-Goal: stage `pyro` immediate behavior into `INTERACTIONS_V2` without changing live behavior yet.
+## Goal
+stage `pyro` immediate behavior into `INTERACTIONS_V2` without changing live behavior yet.
 
 ## What was added
 

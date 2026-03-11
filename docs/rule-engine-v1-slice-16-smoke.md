@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 16 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 16 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove hardcoded OpenWakeWord simulation/default infer tokens.
 - Source them from active spellbook + routing constants.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Sim token source
 - Enable OpenWakeWord simulate mode.
 - Confirm emitted simulation tokens come from configured active spell IDs (`KWS_SIM_SPELL_IDS`), not a hardcoded backend list.

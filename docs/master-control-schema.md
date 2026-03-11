@@ -1,14 +1,14 @@
 # Rule Engine Master Control Schema
 
-Purpose
+## Purpose
 - Single authoring SSOT for rule-engine behavior.
 - Define trigger chains (`on`) and outcomes (`then`) with optional per-rule/per-action toggles.
 
-Canonical Source
+## Canonical Source
 - `src/content/spell-rules/rule-engine-master-control.js`
 - symbol: `RULE_ENGINE_MASTER_CONTROL`
 
-Current Neutral Contract (Implemented)
+## Current Neutral Contract
 - Intent names:
   - axis select: `spell.axis_select`
   - wake-window select: `spell.wake_window_select`
@@ -29,7 +29,7 @@ Current Neutral Contract (Implemented)
   - `spell_inactive`
   - `invalid_spell`
 
-Top-Level Shape
+## Top-Level Shape
 ```js
 {
   id: "rule_engine_v2",
@@ -114,11 +114,11 @@ Top-Level Shape
 }
 ```
 
-Definition Arrays
+## Definition Arrays
 - `signals`, `windows`, and `events` entries must have non-empty ids.
 - ids must be unique within each array.
 
-Event Runtime Bindings
+## Event Runtime Bindings
 - `eventRuntimeBindings` must be an object when present.
 - `eventRuntimeBindings` keys must be non-empty event ids and match declared `events`.
 - each binding must be an object with `runtime` object.
@@ -134,7 +134,7 @@ Event Runtime Bindings
 - if `runtime.kind` is `cast_action`, `runtime.castActionId` must be non-empty.
 - if `runtime.kind` is `cast_action`, `runtime.event` must be omitted.
 
-Rule Shape (authoring)
+## Rule Shape (Authoring)
 ```js
 {
   id: "r_example",
@@ -167,7 +167,7 @@ Rule Shape (authoring)
 }
 ```
 
-Authoring Notes
+## Authoring Notes
 - Condition type normalization:
   - `{ type:"spell", id:"rota" }` resolves to signal `spell.rota`
   - `{ type:"gesture", id:"y_spin" }` resolves to `gesture.y_spin`
@@ -490,7 +490,7 @@ Authoring Notes
   - Higher `priority` rules are evaluated first when multiple rules are candidates.
   - Equal `priority` preserves source order.
 
-Current Example Chain
+## Current Example Chain
 ```js
 {
   id: "r_rota_yspin_charged",

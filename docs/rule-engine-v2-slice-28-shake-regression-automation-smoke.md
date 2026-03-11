@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 28 Smoke
 
-Goal: automate detection of the shake-detonation regression that was previously caught only in human smoke.
+## Goal
+automate detection of the shake-detonation regression that was previously caught only in human smoke.
 
 ## Added check
 - `tools/rule-engine-v2/check-shake-detonation-regression-v2.mjs`

@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 65 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 65 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add `execution.stopOnFirstSignalMatchPerEvent` to process only one signal per source event payload.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

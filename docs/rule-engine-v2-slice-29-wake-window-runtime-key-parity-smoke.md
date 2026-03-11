@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 29 Smoke
 
-Goal: enforce parity between `WAKE_WINDOW_SPELL_IDS` and `WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN` token keys.
+## Goal
+enforce parity between `WAKE_WINDOW_SPELL_IDS` and `WAKE_WINDOW_RUNTIME_KEY_BY_TOKEN` token keys.
 
 ## Validate
 1. Run `npm run ready:v2`.

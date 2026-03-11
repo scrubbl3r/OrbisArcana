@@ -25,7 +25,7 @@
 - Define phrase/model/confidence/cooldown metadata only.
 - No behavior routing or interaction chaining.
 
-## File 2: Master Interaction SSOT
+## File 2: Master Interaction SSOT Source
 `interactions`
 
 ```js
@@ -65,7 +65,7 @@
 }
 ```
 
-## Entity Types (Current)
+## Entity Types
 - Trigger types (`on`): `spell`, `gesture`, `orb_state`
 - Action types (`then`): `wake_win`, `event`
 
@@ -98,7 +98,7 @@ Example:
 - No school/class taxonomy split.
 - All spell/gesture/orb interactions are modular and composable.
 
-## Future-Proofing (Planned Later)
+## Future-Proofing
 - Support base config + level/area overlays.
 - Support progression-based unlocks without changing schema shape.
 - Keep stable IDs so per-area/per-player overrides are easy.

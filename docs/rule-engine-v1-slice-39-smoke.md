@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 39 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 39 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Make action inline args generic: any non-structural action key is treated as an override arg.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

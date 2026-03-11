@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 104 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 104 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-signal action fanout caps via `signalMaxActionsPerRuleMatchOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

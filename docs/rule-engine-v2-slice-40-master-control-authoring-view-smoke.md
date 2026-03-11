@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 40 Smoke
 
-Goal: provide a minimal authoring-focused master config artifact.
+## Goal
+provide a minimal authoring-focused master config artifact.
 
 ## Added
 - `docs/master-control-v2.authoring.json`

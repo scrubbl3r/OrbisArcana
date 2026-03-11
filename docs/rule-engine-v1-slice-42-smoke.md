@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 42 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 42 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add first-class `orb_state` event action support in master rule schema/bindings.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 19 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 19 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add cross-file spell schema integrity validation at startup.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Normal boot
 - Start receiver with current config.
 - Confirm normal startup.

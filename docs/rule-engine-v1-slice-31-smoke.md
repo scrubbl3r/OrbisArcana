@@ -1,12 +1,12 @@
-RULE ENGINE V1 - SLICE 31 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 31 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Support `on` shorthand in rules:
   - `on: [ ...conditions ]` (treated as `all`)
   - `on: { type, id }` (single-condition shorthand)
   - Existing `on: { all, any }` remains supported.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

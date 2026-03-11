@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 95 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 95 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-source-event match-window scaling via `sourceEventMatchWindowScaleOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

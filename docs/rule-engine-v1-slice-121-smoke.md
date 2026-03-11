@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 121 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 121 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add rule-level action-telemetry type gates via `ruleActionExecutedEventTypeEnabledOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 17 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 17 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove hardcoded class-spell list from `spell-rules-v1`.
 - Source wake-window class list from routing config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Source-of-truth check
 - Open `src/content/spell-rules/spell-rules-v1.js`.
 - Confirm wake window `spells` list is derived from `CLASS_SPELL_IDS`.

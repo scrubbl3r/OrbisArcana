@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 22 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 22 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Harden derived signal schema with fail-fast duplicate signal ID validation.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver with current config.
 - Confirm normal startup.

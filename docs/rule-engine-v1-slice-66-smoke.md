@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 66 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 66 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add centralized per-action arg patching via `actionArgOverrides` in master control.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

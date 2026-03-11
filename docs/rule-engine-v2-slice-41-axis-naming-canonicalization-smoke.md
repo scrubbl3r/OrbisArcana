@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 41 Smoke
 
-Goal: canonicalize remaining legacy `school` cast-action naming to neutral `axis`.
+## Goal
+canonicalize remaining legacy `school` cast-action naming to neutral `axis`.
 
 ## Changes
 - Canonical cast action id: `aoe_axis` (replaces `aoe_school` in active config paths)

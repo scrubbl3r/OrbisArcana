@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 60 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 60 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add global cooldown scaling via `execution.cooldownScale` in master control.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

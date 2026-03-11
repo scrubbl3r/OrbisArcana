@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 09 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 09 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove hardcoded KWS token groups and derive from active spellbook + routing config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Active toggle propagation
 - Set `orbis.active = false`.
 - Restart and confirm KWS row/log/ungated token behavior no longer treats `orbis` as active.

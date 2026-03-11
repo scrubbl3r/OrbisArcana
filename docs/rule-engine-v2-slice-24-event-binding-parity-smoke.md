@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 24 Smoke
 
-Goal: enforce that every `event` action used by `interactions-v2` rules has a runtime binding.
+## Goal
+enforce that every `event` action used by `interactions-v2` rules has a runtime binding.
 
 ## Validate
 1. Run `npm run ready:v2`.

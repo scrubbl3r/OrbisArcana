@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 117 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 117 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add rule-level action telemetry overrides via `ruleEmitActionExecutedOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

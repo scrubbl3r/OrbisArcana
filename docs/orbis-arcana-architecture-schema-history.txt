@@ -1,4 +1,4 @@
-ORBIS ARCANA ARCHITECTURE SCHEMA (HISTORICAL SNAPSHOT)
+Orbis Arcana Architecture Schema (Historical Snapshot)
 
 Purpose
 

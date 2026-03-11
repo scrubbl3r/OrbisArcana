@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 10 Smoke
 
-Goal: validate clear errors for action id namespace mismatches.
+## Goal
+validate clear errors for action id namespace mismatches.
 
 ## Setup A (wake_win)
 

@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 30 Smoke
 
-Goal: reduce duplicated KWS token list maintenance by deriving top/flash/bottom lists from canonical spell groups.
+## Goal
+reduce duplicated KWS token list maintenance by deriving top/flash/bottom lists from canonical spell groups.
 
 ## Change
 - `KWS_ROW_TOP_SPELL_IDS` and `KWS_FLASH_TOKEN_SPELL_IDS` now derive from:

@@ -1,11 +1,11 @@
-RULE ENGINE V1 - SLICE 108 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 108 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add event-level action caps via:
   - `execution.maxActionsPerEvent`
   - `sourceEventMaxActionsPerEventOverrides`
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

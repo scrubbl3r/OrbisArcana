@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 23 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 23 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Introduce neutral spell-group naming (`AXIS_*`, `WAKE_WINDOW_*`) and migrate rule-engine/KWS consumers while keeping legacy aliases.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm normal startup.
 

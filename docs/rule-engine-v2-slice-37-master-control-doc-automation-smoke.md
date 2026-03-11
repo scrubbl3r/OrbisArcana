@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 37 Smoke
 
-Goal: auto-generate a single human-readable "master control" document from SSOT.
+## Goal
+auto-generate a single human-readable "master control" document from SSOT.
 
 ## Added
 - `tools/rule-engine-v2/write-master-control-doc-v2.mjs`

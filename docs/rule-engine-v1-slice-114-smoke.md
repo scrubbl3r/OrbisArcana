@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 114 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 114 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add action telemetry emission toggle via `execution.emitActionExecutedEvents`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

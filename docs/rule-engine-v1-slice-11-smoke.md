@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 11 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 11 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Centralize rule `event` execution through runtime binding config.
 - Remove special-case handling branches for individual event ids.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Flag off baseline
 - Keep `RULE_ENGINE_V1_EXECUTE_ACTIONS = false`.
 - Confirm no behavior change.

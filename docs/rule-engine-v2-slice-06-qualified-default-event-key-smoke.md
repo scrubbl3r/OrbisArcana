@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 06 Smoke
 
-Goal: verify `defaults.event` supports qualified keys (`event.<id>`) and applies those defaults at runtime/projection.
+## Goal
+verify `defaults.event` supports qualified keys (`event.<id>`) and applies those defaults at runtime/projection.
 
 ## Setup
 

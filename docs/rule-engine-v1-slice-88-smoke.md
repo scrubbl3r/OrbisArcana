@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 88 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 88 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-rule preview telemetry control via `ruleEmitPreviewMatchedOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

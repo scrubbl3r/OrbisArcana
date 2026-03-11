@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 38 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 38 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Make spell schema integrity validation default to `RULE_ENGINE_V1_MASTER_CONFIG` (not split rule/event modules).
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 07 Smoke
 
-Goal: verify `INTERACTIONS_V2` fails fast when unsupported keys are introduced in core authoring objects.
+## Goal
+verify `INTERACTIONS_V2` fails fast when unsupported keys are introduced in core authoring objects.
 
 ## Setup
 

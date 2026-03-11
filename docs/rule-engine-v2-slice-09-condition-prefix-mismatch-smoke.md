@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 09 Smoke
 
-Goal: validate clear error reporting when condition `type` and qualified `id` prefix disagree.
+## Goal
+validate clear error reporting when condition `type` and qualified `id` prefix disagree.
 
 ## Setup
 

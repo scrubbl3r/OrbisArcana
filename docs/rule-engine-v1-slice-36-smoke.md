@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 36 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 36 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Establish explicit single-file master config entrypoint (`RULE_ENGINE_V1_MASTER_CONFIG`) and route bootstrap to prefer it.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

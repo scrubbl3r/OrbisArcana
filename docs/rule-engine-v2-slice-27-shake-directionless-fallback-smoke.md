@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 27 Smoke
 
-Goal: prevent dropped shake detonations when shake direction group is missing.
+## Goal
+prevent dropped shake detonations when shake direction group is missing.
 
 ## Change
 - If `input.shake_triggered` arrives without `group` (`UD/LR/FB`), dispatch now detonates the most recently loaded spell slot as a fallback.

@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 21 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 21 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Derive spell signal definitions from routing/spellbook config instead of hardcoded entries.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm normal startup.
 

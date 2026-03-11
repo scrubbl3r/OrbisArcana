@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 79 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 79 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add global dry-run control via `execution.executeActions`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

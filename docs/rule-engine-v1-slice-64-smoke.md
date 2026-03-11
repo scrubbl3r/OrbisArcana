@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 64 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 64 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-signal ordering control via `signalPriorityOverrides` in master control.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

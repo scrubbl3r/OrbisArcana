@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 14 Smoke
 
-Goal: enforce KWS manifest as a derived artifact of `spellbook-v2` (single-source consistency).
+## Goal
+enforce KWS manifest as a derived artifact of `spellbook-v2` (single-source consistency).
 
 ## New workflow
 

@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 40 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 40 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Promote `RULE_ENGINE_V1_MASTER_CONTROL` naming as the active runtime contract in bootstrap and integrity validation defaults.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

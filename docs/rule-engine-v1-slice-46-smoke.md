@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 46 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 46 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Tighten master-control contract (`id`, `version` required) and add canonical schema doc for authoring.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

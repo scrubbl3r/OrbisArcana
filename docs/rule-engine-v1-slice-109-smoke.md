@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 109 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 109 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-signal event-action caps via `signalMaxActionsPerEventOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

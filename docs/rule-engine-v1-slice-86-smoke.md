@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 86 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 86 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-source-event first-match control via `sourceEventStopOnFirstSignalMatchOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

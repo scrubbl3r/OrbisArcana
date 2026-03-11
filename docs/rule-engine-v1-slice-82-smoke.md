@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 82 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 82 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-rule cooldown scaling via `ruleCooldownScaleOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

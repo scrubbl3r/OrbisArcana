@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 36 Smoke
 
-Goal: remove duplicated routing lists by deriving from canonical spell groups.
+## Goal
+remove duplicated routing lists by deriving from canonical spell groups.
 
 ## Change
 - `SPELL_WINDOW_BYPASS_SPELL_IDS` now derives from:

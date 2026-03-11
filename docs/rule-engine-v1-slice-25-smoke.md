@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 25 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 25 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Migrate routing/runtime intent names from legacy `school/class` to neutral `axis/wake_window` while keeping dispatch compatibility.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

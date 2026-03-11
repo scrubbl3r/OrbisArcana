@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 39 Smoke
 
-Goal: include canonical ALLCAPS handle dictionaries in generated master control artifacts.
+## Goal
+include canonical ALLCAPS handle dictionaries in generated master control artifacts.
 
 ## Updated outputs
 - `docs/master-control-v2.md` now includes:

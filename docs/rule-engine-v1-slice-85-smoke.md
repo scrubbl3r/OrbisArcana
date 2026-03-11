@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 85 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 85 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-signal rule-match caps via `signalMaxMatchesOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 08 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 08 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove hardcoded wake-required spell defaults from parser.
 - Source wake-required IDs from routing config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Config source check
 - Open `src/content/spells/spell-runtime-routing-v1.js`.
 - Confirm `WAKE_REQUIRED_SPELL_IDS` exists and includes desired IDs.

@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 22 Smoke
 
-Goal: keep runtime startup resilient if rule schema validation fails, by falling back to a safe disabled rule schema instead of freezing receiver boot.
+## Goal
+keep runtime startup resilient if rule schema validation fails, by falling back to a safe disabled rule schema instead of freezing receiver boot.
 
 ## Validate
 1. Run `npm run ready:v2`.

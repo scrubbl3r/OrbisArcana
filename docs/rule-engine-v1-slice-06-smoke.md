@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 06 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 06 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Cut spellbook to recognition-only fields.
 - Move behavior/routing metadata into `spell-runtime-routing-v1`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Spellbook sanity
 - Open `src/voice/spellbook.js`.
 - Confirm entries only include recognition fields:

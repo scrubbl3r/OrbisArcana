@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 75 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 75 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-source-event debounce tuning via `sourceEventDebounceOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

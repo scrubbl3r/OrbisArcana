@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 15 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 15 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove dispatch dependency on `spell-decision-tree` class token normalizer.
 - Source class-token runtime mapping from routing config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Class token resolution baseline
 - Trigger class-select flow (for example `rota`, `sanctum`, `vectus`).
 - Confirm class resolution behavior remains valid.

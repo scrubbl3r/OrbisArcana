@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 78 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 78 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add central signal source remapping via `signalSourceEventOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

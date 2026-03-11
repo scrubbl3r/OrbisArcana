@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 35 Smoke
 
-Goal: automate wake-window axis prerequisite regression coverage.
+## Goal
+automate wake-window axis prerequisite regression coverage.
 
 ## Added check
 - `tools/rule-engine-v2/check-wake-window-axis-prereq-regression-v2.mjs`

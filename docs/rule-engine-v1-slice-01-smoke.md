@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 01 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 01 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Establish baseline behavior while introducing data-only rule schema scaffolding.
 - Expected gameplay impact for this slice: none.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Wake + cast baseline
 - Speak `orbis`, then `domus`.
 - Expect wake behavior unchanged and `domus` cast path still works.
@@ -21,13 +21,13 @@ Quick Smoke (manual)
 - Set one spell `active: false` in `src/voice/spellbook.js`.
 - Expect that token not to match/cast and reject reason remains valid.
 
-Data Schema Files Added (not yet runtime-wired)
+## Data Schema Files Added (Not Yet Runtime-Wired)
 - `src/content/spell-rules/signal-definitions-v1.js`
 - `src/content/spell-rules/window-definitions-v1.js`
 - `src/content/spell-rules/event-definitions-v1.js` (`ms` only by design)
 - `src/content/spell-rules/spell-rules-v1.js`
 - `src/content/spell-rules/validate-spell-rules-v1.js`
 
-Notes
+## Notes
 - Event definitions intentionally only include `ms` defaults for now.
 - Additional event params can be added later using this same pattern.

@@ -1,11 +1,11 @@
-RULE ENGINE V1 - SLICE 122 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 122 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add event-level candidate-evaluation caps via:
   - `execution.maxRulesEvaluatedPerEvent`
   - `sourceEventMaxRulesEvaluatedPerEventOverrides`
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

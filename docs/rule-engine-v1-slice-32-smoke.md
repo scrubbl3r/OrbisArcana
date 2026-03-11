@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 32 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 32 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Introduce a single master rule-engine config object (`RULE_ENGINE_V1_CONFIG`) and hydrate receiver bootstrap from it.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

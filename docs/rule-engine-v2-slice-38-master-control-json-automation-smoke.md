@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 38 Smoke
 
-Goal: generate a machine-readable master control artifact alongside the markdown doc.
+## Goal
+generate a machine-readable master control artifact alongside the markdown doc.
 
 ## Added
 - `docs/master-control-v2.json` generated from SSOT

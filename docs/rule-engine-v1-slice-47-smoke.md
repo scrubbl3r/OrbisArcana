@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 47 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 47 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-rule `priority` support to control evaluation order when multiple rules match.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

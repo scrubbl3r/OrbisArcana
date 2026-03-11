@@ -1,11 +1,11 @@
-RULE ENGINE V1 - SLICE 29 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 29 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add author-facing rule shorthand support:
   - `on` condition types: `spell`, `gesture`, `orb_state` (auto-resolved to signal IDs)
   - inline action args: `ttlMs`, `ms`, `state` (merged into runtime overrides)
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

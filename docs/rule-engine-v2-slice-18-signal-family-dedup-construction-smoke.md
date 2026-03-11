@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 18 Smoke
 
-Goal: prevent duplicate spell signal ids by construction across signal families.
+## Goal
+prevent duplicate spell signal ids by construction across signal families.
 
 ## What changed
 - `rule-engine-owned immediate` spell signals now exclude ids already present in:

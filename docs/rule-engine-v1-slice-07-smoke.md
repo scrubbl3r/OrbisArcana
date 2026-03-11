@@ -1,12 +1,12 @@
-RULE ENGINE V1 - SLICE 07 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 07 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add executable `wake_win` action support (feature-flagged with existing Rule Engine execute flag).
 
 Flag
 - `RULE_ENGINE_V1_EXECUTE_ACTIONS` in `game-receiver.js` (default `false`).
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Default-off
 - Boot with flag `false`.
 - Confirm no behavior change.

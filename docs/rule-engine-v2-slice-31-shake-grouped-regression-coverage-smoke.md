@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 31 Smoke
 
-Goal: extend automated shake regression coverage to include grouped-shake detonation paths in addition to directionless fallback.
+## Goal
+extend automated shake regression coverage to include grouped-shake detonation paths in addition to directionless fallback.
 
 ## Updated automation
 - `check-shake-detonation-regression-v2` now verifies:

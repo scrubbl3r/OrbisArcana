@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 32 Smoke
 
-Goal: automate wake-window load flow regression checks.
+## Goal
+automate wake-window load flow regression checks.
 
 ## Added check
 - `tools/rule-engine-v2/check-wake-window-load-regression-v2.mjs`

@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 72 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 72 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add centralized source-event gating via `sourceEventEnabledOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 08 Smoke
 
-Goal: make fallback state visible in receiver rule source readout.
+## Goal
+make fallback state visible in receiver rule source readout.
 
 ## Expected Source Labels
 

@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 35 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 35 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Make spell schema integrity validation consume rule/event/binding data from the master config path (not split modules).
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

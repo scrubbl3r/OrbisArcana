@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 41 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 41 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Make `validateRuleEngineV1Config()` default to `RULE_ENGINE_V1_MASTER_CONTROL` and align diagnostics to master-control naming.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

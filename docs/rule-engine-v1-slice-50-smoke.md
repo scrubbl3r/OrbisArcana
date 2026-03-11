@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 50 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 50 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add centralized per-action toggles via top-level `actionEnabledOverrides` in master control.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

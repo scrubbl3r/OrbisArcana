@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 48 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 48 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add top-level master-control toggle with `enabled: true|false` to enable/disable the entire rule engine schema at config level.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

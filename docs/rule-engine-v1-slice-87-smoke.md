@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 87 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 87 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-source-event preview telemetry control via `sourceEventEmitPreviewMatchedOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

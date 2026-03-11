@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 26 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 26 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Introduce neutral axis-selection event contract (`voice.axis_selected`) while keeping legacy `voice.school_selected` compatibility.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm normal startup.
 

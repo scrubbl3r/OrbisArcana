@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 12 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 12 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Move spell-window bypass IDs from hardcoded dispatch list to routing config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Baseline behavior
 - Confirm current voice/dispatch behavior is unchanged with default config.
 

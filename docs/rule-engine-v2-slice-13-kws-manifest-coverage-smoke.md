@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 13 Smoke
 
-Goal: fail fast when active spellbook entries are not backed by KWS manifest model files.
+## Goal
+fail fast when active spellbook entries are not backed by KWS manifest model files.
 
 ## What is now enforced
 

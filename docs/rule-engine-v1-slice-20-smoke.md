@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 20 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 20 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove retired `spell-decision-tree` module now that runtime uses routing/rules config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Startup check
 - Start receiver and confirm normal boot.
 

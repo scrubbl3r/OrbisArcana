@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 67 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 67 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Tighten override safety: validate `actionEnabledOverrides` and `actionArgOverrides` keys against actual rule actions.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

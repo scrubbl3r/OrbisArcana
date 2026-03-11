@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 68 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 68 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Tighten override integrity: unknown rule IDs now fail fast in rule/action override maps.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

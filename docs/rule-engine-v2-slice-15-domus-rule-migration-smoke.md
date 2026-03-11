@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 15 Smoke
 
-Goal: migrate `domus` immediate behavior into `INTERACTIONS_V2.rules` and avoid duplicate cast execution.
+## Goal
+migrate `domus` immediate behavior into `INTERACTIONS_V2.rules` and avoid duplicate cast execution.
 
 ## What changed
 
@@ -22,7 +23,7 @@ Goal: migrate `domus` immediate behavior into `INTERACTIONS_V2.rules` and avoid 
    - no double-trigger behavior
    - no error logs for missing signal/event ids.
 
-## Regression check
+## Regression Check
 
 1. Trigger `rota + y_spin + charged` chain.
 2. Confirm existing wake window + events still function unchanged.

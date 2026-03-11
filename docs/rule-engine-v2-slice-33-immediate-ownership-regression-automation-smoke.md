@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 33 Smoke
 
-Goal: automate dispatch ownership regression checks for immediate spells.
+## Goal
+automate dispatch ownership regression checks for immediate spells.
 
 ## Added check
 - `tools/rule-engine-v2/check-immediate-dispatch-ownership-v2.mjs`

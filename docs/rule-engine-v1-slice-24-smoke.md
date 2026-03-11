@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 24 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 24 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Remove deprecated KWS config aliases (`schoolTokens`, `classTokens`) and consume neutral keys only (`axisTokens`, `wakeWindowTokens`).
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

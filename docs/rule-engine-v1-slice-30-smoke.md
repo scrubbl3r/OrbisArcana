@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 30 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 30 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Allow `wake_win` actions to omit `id`; defaults to `wake_win` during validation/runtime normalization.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

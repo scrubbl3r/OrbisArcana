@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 18 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 18 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add fail-fast validation for spell runtime routing config.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Normal boot
 - Start receiver with current config.
 - Confirm normal startup.

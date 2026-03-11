@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 19 Smoke
 
-Goal: stage `electrum` immediate cast into `INTERACTIONS_V2.rules` with v1 static fallback parity.
+## Goal
+stage `electrum` immediate cast into `INTERACTIONS_V2.rules` with v1 static fallback parity.
 
 ## Validate
 1. Run `npm run ready:v2`.

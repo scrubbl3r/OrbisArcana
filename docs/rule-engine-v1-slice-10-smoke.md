@@ -1,10 +1,10 @@
-RULE ENGINE V1 - SLICE 10 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 10 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Make KWS panel semantics data-driven for wake/school/class token groups.
 - Remove remaining token-name hardcoding from panel logic.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Wake tokens
 - Toggle wake spell activity in spellbook/routing inputs.
 - Confirm KWS panel wake behavior follows configured `wakeTokens`/`wakeRequiredTokens`.

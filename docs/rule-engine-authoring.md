@@ -1,18 +1,17 @@
 # Rule Engine Authoring
 
 ## Daily Authoring Files (Primary)
-1. `src/content/interactions-v2/interactions-v2.js`
-- Edit trigger/action chains here (`rules`).
-- This is the behavior SSOT target.
-
-2. `src/content/interactions-v2/spellbook-v2.js`
-- Edit spell inventory and `active` toggles here.
-- This is the wake-word inventory SSOT.
+- `src/content/interactions-v2/interactions-v2.js`
+  - Edit trigger/action chains here (`rules`).
+  - This is the behavior SSOT source.
+- `src/content/interactions-v2/spellbook-v2.js`
+  - Edit spell inventory and `active` toggles here.
+  - This is the wake-word inventory SSOT source.
 
 ## Reference File (Optional)
-3. `src/content/interactions-v2/entity-handles-v2.js`
-- Canonical ALLCAPS handles (human-friendly aliases).
-- Use as glossary/reference for naming consistency.
+- `src/content/interactions-v2/entity-handles-v2.js`
+  - Canonical ALLCAPS handles (human-friendly aliases).
+  - Use as glossary/reference for naming consistency.
 
 ## Runtime Bridge Files (Do Not Edit Daily)
 - `src/content/spell-rules/rule-engine-master-control.js` (runtime rule schema + defaults/overrides)
@@ -24,7 +23,6 @@
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/interactions-v2.js`
   - Purpose: Active runtime rule source selector (must remain `true`).
-
 - `RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`
   - Purpose: Require projected/runtime rules as the active rule source (must remain `true`).

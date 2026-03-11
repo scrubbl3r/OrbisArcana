@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 94 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 94 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-source-event cooldown scaling via `sourceEventCooldownScaleOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

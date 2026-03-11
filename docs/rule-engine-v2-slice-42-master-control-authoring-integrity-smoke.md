@@ -1,6 +1,7 @@
 # Rule Engine V2 Slice 42 Smoke
 
-Goal: enforce integrity of the generated minimal authoring artifact.
+## Goal
+enforce integrity of the generated minimal authoring artifact.
 
 ## Added check
 - `tools/rule-engine-v2/check-master-control-authoring-v2.mjs`

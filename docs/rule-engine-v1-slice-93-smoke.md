@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 93 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 93 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-source-event action execution control via `sourceEventExecuteActionsOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

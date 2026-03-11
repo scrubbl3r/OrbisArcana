@@ -1,9 +1,9 @@
-RULE ENGINE V1 - SLICE 89 SMOKE CHECKLIST
+# RULE ENGINE V1 - SLICE 89 SMOKE CHECKLIST
 
-Purpose
+## Purpose
 - Add per-rule action execution control via `ruleExecuteActionsOverrides`.
 
-Quick Smoke (manual)
+## Quick Smoke (Manual)
 1) Boot sanity
 - Start receiver and confirm clean startup.
 

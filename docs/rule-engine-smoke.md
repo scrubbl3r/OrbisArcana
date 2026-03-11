@@ -1,8 +1,8 @@
 # Rule Engine Smoke
 
-Use this to reduce manual per-slice config edits.
+Use this to reduce per-slice manual config edits.
 
-## Command
+## Primary Command
 
 ```bash
 npm run smoke:batch:v2
@@ -21,13 +21,11 @@ This runs:
 
 It also writes report artifacts (current filenames):
 
-- `/docs/rule-engine-v2.milestone-smoke.json`
-- and appends run history:
-- `/docs/rule-engine-v2.milestone-history.jsonl`
-- plus trend summary:
-- `/docs/rule-engine-v2.milestone-trend.json`
+- milestone report: `/docs/rule-engine-v2.milestone-smoke.json`
+- run history append-only log: `/docs/rule-engine-v2.milestone-history.jsonl`
+- trend summary: `/docs/rule-engine-v2.milestone-trend.json`
 
-## What it covers
+## What It Covers
 
 - baseline validate/build pass
 - unsupported top-level key fail-fast
@@ -39,7 +37,7 @@ It also writes report artifacts (current filenames):
 - defaults.event incomplete key
 - qualified ID normalization + defaults merge in projection
 
-## Recommended cadence
+## Recommended Cadence
 
 - Every slice: `npm run ready:v2`
 - Every 5 slices (or before push): `npm run smoke:milestone:v2`

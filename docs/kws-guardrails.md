@@ -11,7 +11,7 @@ This document captures runtime guardrails that should not be changed casually.
 - Token emit cooldown is enforced per token.
 - Runtime tuning comes from source defaults + UI apply, not URL params.
 
-## Regression Indicators
+## Regression Signals
 - `conn:off` while `ctx:running` and `aud/frm` are advancing.
 - Persistent `inf:off/0` after warmup.
 - Duplicate immediate token prints without cooldown spacing.
