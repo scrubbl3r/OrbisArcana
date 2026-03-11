@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-11T00:29:44.558Z
+Generated: 2026-03-11T00:45:51.965Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -271,4 +271,4 @@ This document is generated from SSOT:
 
 - Add/remove/toggle spells in `spellbook-v2.js`.
 - Compose trigger/action chains in `interactions-v2.js`.
-- Rule/event/signals compatibility layers are auto-validated in `ready:v2`.
+- Runtime rule/event/signal wiring is auto-validated in `ready:v2`.

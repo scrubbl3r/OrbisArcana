@@ -23,7 +23,7 @@ export function createSpellActionHandlers({
         playFrostAoe();
         return;
       }
-      // Backward-compatible fallback until dedicated frost VFX runtime is wired.
+      // Fallback until dedicated frost VFX runtime is wired.
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
     play_axis_aoe(payload = {}) {

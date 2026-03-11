@@ -76,7 +76,7 @@ function buildDoc() {
   lines.push("");
   lines.push("- Add/remove/toggle spells in `spellbook-v2.js`.");
   lines.push("- Compose trigger/action chains in `interactions-v2.js`.");
-  lines.push("- Rule/event/signals compatibility layers are auto-validated in `ready:v2`.");
+  lines.push("- Runtime rule/event/signal wiring is auto-validated in `ready:v2`.");
   lines.push("");
   return lines.join("\n");
 }

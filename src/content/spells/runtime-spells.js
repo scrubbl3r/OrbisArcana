@@ -1,5 +1,5 @@
-// LEGACY RUNTIME SPELL ROUTING LAYER
-// This file remains for runtime compatibility (slot/cast routing).
+// RUNTIME SPELL ROUTING LAYER
+// This file provides slot/cast routing metadata for gameplay runtime.
 // Interaction-chain authoring SSOT lives in:
 // - src/content/interactions-v2/interactions-v2.js
 // - src/content/interactions-v2/spellbook-v2.js
