@@ -8,5 +8,7 @@ export {
   SPELL_VFX_BINDINGS,
   SPELL_VFX_BINDINGS_BY_SPELL_ID,
   getSpellVfxBinding,
-  SPELL_VFX_BINDINGS_V1,
 } from "./spell-effect-bindings.js";
+
+// Legacy alias exports kept for compatibility during migration.
+export { SPELL_VFX_BINDINGS_V1 } from "./spell-effect-bindings.js";
