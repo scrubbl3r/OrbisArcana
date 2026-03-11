@@ -1,4 +1,4 @@
-RECEIVER COMPOSITION MAP (CHECKPOINT v1)
+RECEIVER COMPOSITION MAP (CHECKPOINT)
 
 Purpose
 
@@ -145,4 +145,3 @@ Receiver should remain:
 - composer
 - adapter
 - UI layer
-

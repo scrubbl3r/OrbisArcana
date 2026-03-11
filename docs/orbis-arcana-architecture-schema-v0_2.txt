@@ -97,12 +97,12 @@ Approved framing:
 - world = what the environment is doing
 - physics system = how input + orb + world combine
 
-6. ORB SLICE (PROPOSED v1 SHAPE)
+6. ORB SLICE (PROPOSED SHAPE)
 
 Purpose:
 The orb slice represents the orb as a gameplay entity.
 
-Orb should contain (v1):
+Orb should contain:
 - Health and life state
 - Shattered/alive state
 - Motion state (position, velocity) for now
@@ -129,12 +129,12 @@ This is the cleanest split right now.
 Important reasoning:
 Globe inventory is not purely visual if it gates gameplay (spell loading). In the current game it does gate gameplay, so it belongs in resources.
 
-8. RESOURCES SLICE (PROPOSED v1 SHAPE)
+8. RESOURCES SLICE (PROPOSED SHAPE)
 
 Purpose:
 The resources slice is the orb economy state and should be authoritative for gameplay resource values.
 
-Resources should contain (v1):
+Resources should contain:
 - energy bank value and cap
 - stored globe count
 - cost values used by gameplay (if not moved to config)
@@ -159,7 +159,7 @@ Decision (approved):
 Why this is the right choice:
 This game uses continuous control signals, not only button-like events. Multiple systems need the same normalized values. A persistent input slice prevents duplicated normalization and makes debugging far easier.
 
-10. INPUT SLICE (PROPOSED v1 SHAPE)
+10. INPUT SLICE (PROPOSED SHAPE)
 
 Purpose:
 The input slice is the authoritative control frame SSOT (latest normalized transmitter-derived values).

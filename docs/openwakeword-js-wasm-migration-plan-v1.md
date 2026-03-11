@@ -1,4 +1,4 @@
-# openWakeWord JS/WASM Migration Plan (v1)
+# openWakeWord JS/WASM Migration Plan
 
 Date: 2026-03-05  
 Branch: `JS-WSAM-refactor-v1`

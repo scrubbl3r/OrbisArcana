@@ -240,7 +240,7 @@ Authoring Notes
   - Precedence: `ruleActionTypeEnabledOverrides` -> `sourceEventActionTypeEnabledOverrides` -> `execution.actionTypeEnabled`.
 - Execution controls:
   - Validation hygiene:
-    - unknown top-level keys in `RULE_ENGINE_V1_MASTER_CONTROL` fail fast.
+    - unknown top-level keys in `RULE_ENGINE_MASTER_CONTROL` fail fast.
     - unknown keys inside `execution` fail fast.
   - `execution.stopOnFirstMatch`:
     - `false` (default): all matched candidate rules can fire.
