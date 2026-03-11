@@ -5,18 +5,6 @@ const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 const EVT_RULE_ENGINE_SOURCE_EVENT_SUMMARY = "rule_engine.source_event_summary";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 
-// Backward-compatible event IDs emitted in parallel during migration.
-const EVT_RULE_ENGINE_V1_PREVIEW_MATCHED = "rule_engine.v1.preview_matched";
-const EVT_RULE_ENGINE_V1_ACTION_EXECUTED = "rule_engine.v1.action_executed";
-const EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY = "rule_engine.v1.source_event_summary";
-
-function emitRuleEngineEventCompat(eventBus, modernEvent, legacyEvent, payload = {}) {
-  eventBus.emit(modernEvent, payload);
-  if (legacyEvent && legacyEvent !== modernEvent) {
-    eventBus.emit(legacyEvent, payload);
-  }
-}
-
 function getByPath(obj, path) {
   const parts = String(path || "").split(".").filter(Boolean);
   let cur = obj;
@@ -517,7 +505,7 @@ export function createRuleEngineV1PreviewSystem({
               : true
           )));
         if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
-          emitRuleEngineEventCompat(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED, EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+          eventBus.emit(EVT_RULE_ENGINE_ACTION_EXECUTED, {
             ruleId: String(rule && rule.id || ""),
             actionType: "wake_win",
             actionId: id,
@@ -545,7 +533,7 @@ export function createRuleEngineV1PreviewSystem({
             : true
         )));
       if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
-        emitRuleEngineEventCompat(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED, EVT_RULE_ENGINE_V1_ACTION_EXECUTED, {
+        eventBus.emit(EVT_RULE_ENGINE_ACTION_EXECUTED, {
           ruleId: String(rule && rule.id || ""),
           actionType: "event",
           actionId: id,
@@ -674,7 +662,7 @@ export function createRuleEngineV1PreviewSystem({
         ? !!ruleEmitPreviewMatchedOverrides[ruleId]
         : effectiveEmitPreviewMatchedEvents;
       if (effectiveRuleEmitPreviewMatched) {
-        emitRuleEngineEventCompat(eventBus, EVT_RULE_ENGINE_PREVIEW_MATCHED, EVT_RULE_ENGINE_V1_PREVIEW_MATCHED, {
+        eventBus.emit(EVT_RULE_ENGINE_PREVIEW_MATCHED, {
           ruleId: rule.id,
           signalId,
           sourceEvent: String(sourceEvent || ""),
@@ -927,12 +915,7 @@ export function createRuleEngineV1PreviewSystem({
             summaryPayload.maxMatchesPerEvent = effectiveMaxMatchesPerEvent;
             summaryPayload.maxActionsPerEvent = effectiveMaxActionsPerEvent;
           }
-          emitRuleEngineEventCompat(
-            eventBus,
-            EVT_RULE_ENGINE_SOURCE_EVENT_SUMMARY,
-            EVT_RULE_ENGINE_V1_SOURCE_EVENT_SUMMARY,
-            summaryPayload
-          );
+          eventBus.emit(EVT_RULE_ENGINE_SOURCE_EVENT_SUMMARY, summaryPayload);
         }
       }));
     }
