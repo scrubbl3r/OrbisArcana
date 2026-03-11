@@ -1225,19 +1225,19 @@
     let runOrbRuntimePipelineModule = null;
     const RULE_ENGINE_SOURCE_IDS = Object.freeze({
       INTERACTIONS_ADAPTER: "interactions_adapter",
-      INTERACTIONS_ADAPTER_LEGACY: "interactions_v2_adapter",
+      INTERACTIONS_ADAPTER_ALIAS: "interactions_v2_adapter",
       INTERACTIONS_ADAPTER_FALLBACK: "interactions_adapter_fallback",
-      INTERACTIONS_ADAPTER_FALLBACK_LEGACY: "interactions_v2_adapter_fallback_v1",
+      INTERACTIONS_ADAPTER_FALLBACK_ALIAS: "interactions_v2_adapter_fallback_v1",
       MASTER_CONTROL: "rule_engine_master_control",
-      MASTER_CONTROL_LEGACY: "rule_engine_v1_master_control",
+      MASTER_CONTROL_ALIAS: "rule_engine_v1_master_control",
     });
     const RULE_ENGINE_CHANNELS = Object.freeze({
       ACTION_EXECUTED: "rule_engine.action_executed",
-      ACTION_EXECUTED_LEGACY: "rule_engine.v1.action_executed",
+      ACTION_EXECUTED_ALIAS: "rule_engine.v1.action_executed",
       WAKE_WIN_OPENED: "rule_engine.wake_win_opened",
-      WAKE_WIN_OPENED_LEGACY: "rule_engine.v1.wake_win_opened",
+      WAKE_WIN_OPENED_ALIAS: "rule_engine.v1.wake_win_opened",
       TRIGGER: "rule_engine",
-      TRIGGER_LEGACY: "rule_engine_v1",
+      TRIGGER_ALIAS: "rule_engine_v1",
     });
     const RULE_ENGINE_EXECUTE_ACTIONS = false;
     const RULE_ENGINE_V1_EXECUTE_ACTIONS = RULE_ENGINE_EXECUTE_ACTIONS;
@@ -1812,11 +1812,11 @@
             };
             if (els.rulesReadout) {
               const source = String(ruleSchema.source || "unknown");
-              if (source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER || source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_LEGACY) {
+              if (source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER || source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_ALIAS) {
                 els.rulesReadout.textContent = "V2 adapter";
-              } else if (source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK || source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK_LEGACY) {
+              } else if (source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK || source === RULE_ENGINE_SOURCE_IDS.INTERACTIONS_ADAPTER_FALLBACK_ALIAS) {
                 els.rulesReadout.textContent = "V2 adapter (fallback)";
-              } else if (source === RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL || source === RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL_LEGACY) {
+              } else if (source === RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL || source === RULE_ENGINE_SOURCE_IDS.MASTER_CONTROL_ALIAS) {
                 els.rulesReadout.textContent = "Master control";
               } else {
                 els.rulesReadout.textContent = source || "unknown";
@@ -2240,7 +2240,7 @@
               atMs: Number(p.atMs) || performance.now(),
             };
             eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED, wakeWinPayload);
-            eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED_LEGACY, wakeWinPayload);
+            eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED_ALIAS, wakeWinPayload);
             return;
           }
           if (actionType !== "event") return;
@@ -2260,7 +2260,7 @@
               intent: "rule_engine.event",
               payload: {
                 trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-                triggerLegacy: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY,
+                triggerLegacy: RULE_ENGINE_CHANNELS.TRIGGER_ALIAS,
                 actionId,
                 ruleId: String(p.ruleId || ""),
                 atMs: Number(p.atMs) || performance.now(),
@@ -2274,7 +2274,7 @@
             if (!eventId) return;
             eventBus.emit(eventId, {
               trigger: RULE_ENGINE_CHANNELS.TRIGGER,
-              triggerLegacy: RULE_ENGINE_CHANNELS.TRIGGER_LEGACY,
+              triggerLegacy: RULE_ENGINE_CHANNELS.TRIGGER_ALIAS,
               actionId,
               ruleId: String(p.ruleId || ""),
               atMs: Number(p.atMs) || performance.now(),
@@ -2283,7 +2283,7 @@
           }
         };
         eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED, onRuleEngineActionExecuted);
-        eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED_LEGACY, onRuleEngineActionExecuted);
+        eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED_ALIAS, onRuleEngineActionExecuted);
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
