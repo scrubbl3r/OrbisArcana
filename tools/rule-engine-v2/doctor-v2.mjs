@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { buildRulesV1FromInteractionsV2, INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
-import { SPELL_RULES_V1 } from "../../src/content/spell-rules/spell-rules-v1.js";
+import { RULE_ENGINE_V1_MASTER_CONTROL } from "../../src/content/spell-rules/index.js";
 
 function runPreSmoke() {
   const res = spawnSync(process.execPath, ["tools/rule-engine-v2/pre-smoke-check.mjs"], { stdio: "inherit" });
@@ -12,7 +12,10 @@ function runPreSmoke() {
 function computeDrift() {
   const projected = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
   const projectedById = new Map((Array.isArray(projected) ? projected : []).map((r) => [String(r && r.id || ""), r]));
-  const runtimeById = new Map((Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1 : []).map((r) => [String(r && r.id || ""), r]));
+  const runtimeRules = Array.isArray(RULE_ENGINE_V1_MASTER_CONTROL?.rules)
+    ? RULE_ENGINE_V1_MASTER_CONTROL.rules
+    : [];
+  const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));
   const allIds = new Set([...projectedById.keys(), ...runtimeById.keys()].filter(Boolean));
   const driftIds = [];
   for (const id of allIds) {

@@ -2,6 +2,9 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
+  RULE_ENGINE_V1_MASTER_CONTROL,
+} from "../../src/content/spell-rules/index.js";
+import {
   SPELLBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
@@ -9,9 +12,6 @@ import {
   validateInteractionsV2,
   buildRulesV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
-import {
-  SPELL_RULES_V1,
-} from "../../src/content/spell-rules/spell-rules-v1.js";
 import {
   KWS_MANIFEST_REL_PATH,
   buildKwsManifestFromSpellbookV2,
@@ -104,7 +104,10 @@ if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstr
 }
 const projectedRules = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
 const projectedById = new Map((Array.isArray(projectedRules) ? projectedRules : []).map((r) => [String(r && r.id || ""), r]));
-const runtimeById = new Map((Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1 : []).map((r) => [String(r && r.id || ""), r]));
+const runtimeRules = Array.isArray(RULE_ENGINE_V1_MASTER_CONTROL?.rules)
+  ? RULE_ENGINE_V1_MASTER_CONTROL.rules
+  : [];
+const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));
 const allIds = new Set([...projectedById.keys(), ...runtimeById.keys()].filter(Boolean));
 const driftIds = [];
 for (const id of allIds) {

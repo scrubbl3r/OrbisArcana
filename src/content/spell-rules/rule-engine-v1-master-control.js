@@ -6,11 +6,11 @@
 
 import { EVENT_DEFINITIONS_V1 } from "./event-definitions-v1.js";
 import { EVENT_RUNTIME_BINDINGS_V1_BY_ID } from "./event-runtime-bindings-v1.js";
+import { INTERACTIONS_V2, buildRulesV1FromInteractionsV2 } from "../interactions-v2/index.js";
 import {
   SIGNAL_DEFINITION_COLLISIONS_V1,
   SIGNAL_DEFINITIONS_V1,
 } from "./signal-definitions-v1.js";
-import { SPELL_RULES_V1 } from "./spell-rules-v1.js";
 import { WINDOW_DEFINITIONS_V1 } from "./window-definitions-v1.js";
 
 const RULE_ENABLED_OVERRIDES = Object.freeze({
@@ -509,6 +509,15 @@ function applyRuleDefaults(rules = [], defaults = {}) {
   });
 }
 
+function resolveProjectedRulesV1() {
+  try {
+    return buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
+  } catch (err) {
+    console.warn("RULE_ENGINE_V1_MASTER_CONTROL projection failed; using empty rules:", err);
+    return [];
+  }
+}
+
 function applyRulePriorityOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -704,7 +713,7 @@ export const RULE_ENGINE_V1_MASTER_CONTROL = Object.freeze({
     applyRuleEnabledOverrides(
       applyRulePriorityOverrides(
         applyRuleTimingOverrides(
-          applyRuleDefaults(SPELL_RULES_V1, RULE_DEFAULTS),
+          applyRuleDefaults(resolveProjectedRulesV1(), RULE_DEFAULTS),
           RULE_TIMING_OVERRIDES
         ),
         RULE_PRIORITY_OVERRIDES
