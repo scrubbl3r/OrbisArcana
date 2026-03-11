@@ -12,4 +12,4 @@ export {
   buildRuleEngineV1FromInteractionsV2 as buildRuleEngineFromInteractionsV2,
   buildRulesV1FromInteractionsV2,
   buildRulesV1FromInteractionsV2 as buildRulesFromInteractionsV2,
-} from "./build-rule-engine-v1-from-interactions-v2.js";
+} from "./build-rule-engine-from-interactions-v2.js";
