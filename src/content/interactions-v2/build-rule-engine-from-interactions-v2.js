@@ -107,17 +107,20 @@ function mapRule(rule, defaults) {
   return Object.freeze(out);
 }
 
-export function buildRuleEngineFromInteractionsV2({
-  interactionsV2 = INTERACTIONS_V2,
-  baseRuleEngine = null,
-  baseRuleEngineLegacy = null,
-  baseRuleEngineV1 = null,
-} = {}) {
+export function buildRuleEngineFromInteractionsV2(options = {}) {
+  const {
+    interactionsV2 = INTERACTIONS_V2,
+    baseRuleEngine = null,
+    baseRuleEngineLegacy = null,
+  } = options;
+  const baseRuleEngineAlias = Object.prototype.hasOwnProperty.call(options, "baseRuleEngineV1")
+    ? options.baseRuleEngineV1
+    : null;
   const validation = validateInteractionsV2(interactionsV2);
   if (!validation.ok) {
     throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
   }
-  const base = asObj(baseRuleEngine || baseRuleEngineLegacy || baseRuleEngineV1);
+  const base = asObj(baseRuleEngine || baseRuleEngineLegacy || baseRuleEngineAlias);
   const rules = Array.isArray(interactionsV2.rules)
     ? interactionsV2.rules.map((r) => mapRule(r, asObj(interactionsV2.defaults))).filter(Boolean)
     : [];
