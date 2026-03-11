@@ -1,4 +1,4 @@
-# Interactions V2 Schema Draft
+# Interactions Schema Draft
 
 ## Goal
 - One central behavior config for chaining spells, gestures, orb states, wake windows, and events.
@@ -6,7 +6,7 @@
 - Keep syntax minimal and author-friendly.
 
 ## File 1: Spell Inventory (Wake Words Only)
-`spellbook.v2`
+`spellbook`
 
 ```js
 {
@@ -26,7 +26,7 @@
 - No behavior routing or interaction chaining.
 
 ## File 2: Master Interaction SSOT
-`interactions.v2`
+`interactions`
 
 ```js
 {
@@ -93,8 +93,8 @@ Example:
 ```
 
 ## Authoring Principles
-- One behavior authoring file (`interactions.v2`).
-- One spell inventory file (`spellbook.v2`).
+- One behavior authoring file (`interactions`).
+- One spell inventory file (`spellbook`).
 - No school/class split.
 - All spell/gesture/orb interactions are modular and composable.
 

@@ -16,7 +16,7 @@ Current Neutral Contract (Implemented)
   - use `axisSpell` and `wakeWindowSpell`
   - retired aliases are removed from runtime payloads (`school`, `classKey`)
 - KWS runtime config:
-  - uses `axisSpellByAxis` map for expected axis token routing
+  - uses axis-to-token routing map (runtime key currently named `axisSpellByAxis`)
 - Dispatch reject reasons (current):
   - `spell_window_required`
   - `flat_spin_requires_wake_window_token`

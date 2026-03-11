@@ -151,7 +151,7 @@ Schema hardening (first serious pass)
 - event name SSOT
 - key module JSDoc interfaces
 - first payload-shape typedef pass
-- state ownership inventory v2 (separate doc)
+- state ownership inventory (separate doc)
 
 Cross-slice feature validation
 - `Super Grace` proves:

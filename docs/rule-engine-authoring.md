@@ -1,4 +1,4 @@
-# Rule Engine V2 Authoring Entrypoint
+# Rule Engine Authoring Entrypoint
 
 ## Daily Authoring Files (Primary)
 1. `src/content/interactions-v2/interactions-v2.js`
@@ -17,7 +17,7 @@
 ## Runtime Bridge/Compatibility Files (Do Not Author Daily)
 - `src/content/spell-rules/rule-engine-master-control.js` (runtime rule schema + defaults/overrides)
 - `src/content/spell-rules/validate-rule-engine-config.js` (schema validator)
-- `src/runtime/receiver-bootstrap.js` (bootstrap wiring + V2 flag routing)
+- `src/runtime/receiver-bootstrap.js` (bootstrap wiring + adapter flag routing)
 - `src/voice/spellbook.js` (compatibility runtime view derived from `spellbook-v2`)
 
 ## Current Mode Switches
@@ -36,9 +36,9 @@
 
 ## Quick Health Commands
 - `npm run pre-smoke:v2`
-  - Validates V2 config and regenerates effective snapshot.
+  - Validates interactions config and regenerates effective snapshot.
 - `npm run report-drift:v2`
-  - Prints differences between projected runtime rules and effective V2 interactions.
+  - Prints differences between projected runtime rules and effective interactions.
 - `npm run doctor:v2`
   - Runs pre-smoke and prints concise SSOT health summary.
   - Also writes `docs/rule-engine-v2.health.json`.

@@ -383,7 +383,7 @@ v0.2 status:
 - first-pass inventory approved and started
 
 Current status:
-- Implementation-facing inventory v2 created:
+- Implementation-facing inventory created:
   - `docs/state-ownership-inventory.txt`
 
 This should now be treated as the live ownership checkpoint doc.

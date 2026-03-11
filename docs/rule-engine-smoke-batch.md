@@ -1,4 +1,4 @@
-# Rule Engine V2 Batch Smoke
+# Rule Engine Batch Smoke
 
 Use this to avoid manual per-slice config edits.
 
@@ -16,8 +16,8 @@ npm run smoke:milestone:v2
 
 This runs:
 
-1. `ready:v2` (cutover health + guards)
-2. `smoke:batch:v2` (multi-case validator/projection suite)
+1. `ready:v2` (runtime health + guard checks)
+2. `smoke:batch:v2` (multi-case validator + projection suite)
 
 It also writes a checkpoint report:
 

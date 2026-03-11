@@ -1,8 +1,8 @@
-# Rule Engine V2 Compatibility Map
+# Rule Engine Compatibility Map
 
 ## Purpose
 - Prevent config edits from drifting into compatibility files.
-- Keep daily authoring in V2 SSOT only.
+- Keep daily authoring in SSOT only.
 
 ## Edit Here (SSOT)
 1. `src/content/interactions-v2/interactions-v2.js`
@@ -22,10 +22,10 @@
 - Compatibility runtime view derived from `spellbook-v2`.
 
 3. `src/runtime/receiver-bootstrap.js`
-- Runtime bootstrap wiring for compatibility and V2 startup.
+- Runtime bootstrap wiring for compatibility and adapter startup.
 
 ## Cutover Status
-- Runtime rule source: V2 adapter (`INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`)
+- Runtime rule source: interactions adapter (`INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`)
 - Projection-only rule execution: enabled (`RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly: true`)
 - Drift gate: enforced by `npm run pre-smoke:v2`
 
