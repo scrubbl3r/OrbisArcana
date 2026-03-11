@@ -245,7 +245,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setSpellCastExecutor,
     setReceiverModulesReady,
   } = ctx;
-  const setRuleSchemaAlias = ctx && typeof ctx === "object"
+  const setRuleSchemaLegacyAlias = ctx && typeof ctx === "object"
     ? ctx[RECEIVER_BOOTSTRAP_LEGACY_KEYS.SET_RULE_SCHEMA_LEGACY_ALIAS]
     : undefined;
 
@@ -276,7 +276,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     : null;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
     ? setRuleSchema
-    : setRuleSchemaAlias;
+    : setRuleSchemaLegacyAlias;
 
   const fallbackRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
     ? ruleEngineMasterControl
