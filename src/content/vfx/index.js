@@ -5,8 +5,8 @@ export {
 } from "./effect-registry.js";
 
 export {
-  SPELL_VFX_BINDINGS_V1,
+  SPELL_VFX_BINDINGS,
   SPELL_VFX_BINDINGS_BY_SPELL_ID,
   getSpellVfxBinding,
-} from "./spell-effect-bindings-v1.js";
-
+  SPELL_VFX_BINDINGS_V1,
+} from "./spell-effect-bindings.js";
