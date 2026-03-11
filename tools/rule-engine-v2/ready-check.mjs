@@ -37,6 +37,9 @@ if (runtimePolicyImportContractCheck.status !== 0) process.exit(runtimePolicyImp
 const docPolicyTerminologyCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs"], { stdio: "inherit" });
 if (docPolicyTerminologyCheck.status !== 0) process.exit(docPolicyTerminologyCheck.status || 1);
 
+const validatorPolicyTerminologyCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs"], { stdio: "inherit" });
+if (validatorPolicyTerminologyCheck.status !== 0) process.exit(validatorPolicyTerminologyCheck.status || 1);
+
 const masterControlAuthoringCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-authoring-v2.mjs"], { stdio: "inherit" });
 if (masterControlAuthoringCheck.status !== 0) process.exit(masterControlAuthoringCheck.status || 1);
 
