@@ -278,15 +278,15 @@ Authoring Notes
     - ignores repeated payloads from the same source event within the debounce interval.
   - `execution.emitPreviewMatchedEvents`:
     - boolean; default `true`.
-    - controls emission of `rule_engine.v1.preview_matched` telemetry events only.
-    - does not affect action execution (`rule_engine.v1.action_executed`).
+    - controls emission of `rule_engine.preview_matched` telemetry events only.
+    - does not affect action execution (`rule_engine.action_executed`).
   - `execution.emitActionExecutedEvents`:
     - boolean; default `true`.
-    - controls emission of `rule_engine.v1.action_executed` telemetry events only.
+    - controls emission of `rule_engine.action_executed` telemetry events only.
     - does not affect whether actions execute.
   - `execution.emitSourceEventSummaryEvents`:
     - boolean; default `false`.
-    - controls emission of `rule_engine.v1.source_event_summary` telemetry events (one per source-event payload handled).
+    - controls emission of `rule_engine.source_event_summary` telemetry events (one per source-event payload handled).
   - `execution.sourceEventSummaryIncludeSignalAndRuleIds`:
     - boolean; default `false`.
     - when `true`, source-event summary payload includes `signalId` and `ruleId` (first matched signal/rule for that payload).
@@ -296,7 +296,7 @@ Authoring Notes
       `maxSignalsEvaluatedPerEvent`, `maxSignalsPerEvent`, `maxRulesEvaluatedPerEvent`, `maxMatchesPerEvent`, `maxActionsPerEvent`.
   - `execution.actionExecutedEventTypeEnabled`:
     - optional telemetry action-type gate map, keys: `wake_win`, `event`.
-    - when a key is set to `false`, `rule_engine.v1.action_executed` telemetry for that action type is suppressed.
+    - when a key is set to `false`, `rule_engine.action_executed` telemetry for that action type is suppressed.
     - does not affect action execution.
   - `execution.executeActions`:
     - boolean; default `true`.
