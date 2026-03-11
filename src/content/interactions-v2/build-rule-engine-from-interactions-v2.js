@@ -2,6 +2,9 @@ import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { validateInteractionsV2 } from "./validate-interactions-v2.js";
 
 const RESERVED_ACTION_KEYS = new Set(["type", "id", "spells", "overrides", "enabled"]);
+const BUILD_RULE_ENGINE_OPTION_ALIASES = Object.freeze({
+  BASE_RULE_ENGINE_V1: "baseRuleEngineV1",
+});
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -113,8 +116,8 @@ export function buildRuleEngineFromInteractionsV2(options = {}) {
     baseRuleEngine = null,
     baseRuleEngineLegacy = null,
   } = options;
-  const baseRuleEngineAlias = Object.prototype.hasOwnProperty.call(options, "baseRuleEngineV1")
-    ? options.baseRuleEngineV1
+  const baseRuleEngineAlias = Object.prototype.hasOwnProperty.call(options, BUILD_RULE_ENGINE_OPTION_ALIASES.BASE_RULE_ENGINE_V1)
+    ? options[BUILD_RULE_ENGINE_OPTION_ALIASES.BASE_RULE_ENGINE_V1]
     : null;
   const validation = validateInteractionsV2(interactionsV2);
   if (!validation.ok) {
