@@ -199,123 +199,123 @@ export function validateRuleEngineV1Config(config = null) {
     if (Object.prototype.hasOwnProperty.call(execution, "maxMatchesPerSignal")) {
       const n = Number(execution.maxMatchesPerSignal);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxMatchesPerSignal must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxMatchesPerSignal must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxActionsPerSignal")) {
       const n = Number(execution.maxActionsPerSignal);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxActionsPerSignal must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxActionsPerSignal must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxRulesEvaluatedPerSignal")) {
       const n = Number(execution.maxRulesEvaluatedPerSignal);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxRulesEvaluatedPerSignal must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxRulesEvaluatedPerSignal must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxRulesEvaluatedPerEvent")) {
       const n = Number(execution.maxRulesEvaluatedPerEvent);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxRulesEvaluatedPerEvent must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxRulesEvaluatedPerEvent must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxSignalsPerEvent")) {
       const n = Number(execution.maxSignalsPerEvent);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxSignalsPerEvent must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxSignalsPerEvent must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxSignalsEvaluatedPerEvent")) {
       const n = Number(execution.maxSignalsEvaluatedPerEvent);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxSignalsEvaluatedPerEvent must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxSignalsEvaluatedPerEvent must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxMatchesPerEvent")) {
       const n = Number(execution.maxMatchesPerEvent);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxMatchesPerEvent must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxMatchesPerEvent must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxActionsPerEvent")) {
       const n = Number(execution.maxActionsPerEvent);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxActionsPerEvent must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxActionsPerEvent must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxActionsPerRuleMatch")) {
       const n = Number(execution.maxActionsPerRuleMatch);
       if (!Number.isFinite(n) || n < 0 || Math.floor(n) !== n) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.maxActionsPerRuleMatch must be an integer >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.maxActionsPerRuleMatch must be an integer >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "sourceEventDebounceMs")) {
       const n = Number(execution.sourceEventDebounceMs);
       if (!Number.isFinite(n) || n < 0) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.sourceEventDebounceMs must be a finite number >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.sourceEventDebounceMs must be a finite number >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "emitPreviewMatchedEvents")) {
       if (typeof execution.emitPreviewMatchedEvents !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.emitPreviewMatchedEvents must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.emitPreviewMatchedEvents must be boolean when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "emitActionExecutedEvents")) {
       if (typeof execution.emitActionExecutedEvents !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.emitActionExecutedEvents must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.emitActionExecutedEvents must be boolean when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "emitSourceEventSummaryEvents")) {
       if (typeof execution.emitSourceEventSummaryEvents !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.emitSourceEventSummaryEvents must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.emitSourceEventSummaryEvents must be boolean when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "sourceEventSummaryIncludeSignalAndRuleIds")) {
       if (typeof execution.sourceEventSummaryIncludeSignalAndRuleIds !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.sourceEventSummaryIncludeSignalAndRuleIds must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.sourceEventSummaryIncludeSignalAndRuleIds must be boolean when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "sourceEventSummaryIncludeBudgetCaps")) {
       if (typeof execution.sourceEventSummaryIncludeBudgetCaps !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.sourceEventSummaryIncludeBudgetCaps must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.sourceEventSummaryIncludeBudgetCaps must be boolean when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "actionExecutedEventTypeEnabled")) {
       const actionExecutedEventTypeEnabled = execution.actionExecutedEventTypeEnabled;
       if (!actionExecutedEventTypeEnabled || typeof actionExecutedEventTypeEnabled !== "object" || Array.isArray(actionExecutedEventTypeEnabled)) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled must be an object when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled must be an object when present");
       } else {
         const allowed = new Set(["wake_win", "event"]);
         for (const [k, v] of Object.entries(actionExecutedEventTypeEnabled)) {
           if (!allowed.has(String(k || "").trim().toLowerCase())) {
-            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled has unsupported key: ${k}`);
+            errors.push(`RULE_ENGINE_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled has unsupported key: ${k}`);
             continue;
           }
           if (typeof v !== "boolean") {
-            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled[${k}] must be boolean`);
+            errors.push(`RULE_ENGINE_MASTER_CONTROL.execution.actionExecutedEventTypeEnabled[${k}] must be boolean`);
           }
         }
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "executeActions")) {
       if (typeof execution.executeActions !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.executeActions must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.executeActions must be boolean when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "actionTypeEnabled")) {
       const actionTypeEnabled = execution.actionTypeEnabled;
       if (!actionTypeEnabled || typeof actionTypeEnabled !== "object" || Array.isArray(actionTypeEnabled)) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.actionTypeEnabled must be an object when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.actionTypeEnabled must be an object when present");
       } else {
         const allowed = new Set(["wake_win", "event"]);
         for (const [k, v] of Object.entries(actionTypeEnabled)) {
           if (!allowed.has(String(k || "").trim().toLowerCase())) {
-            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionTypeEnabled has unsupported key: ${k}`);
+            errors.push(`RULE_ENGINE_MASTER_CONTROL.execution.actionTypeEnabled has unsupported key: ${k}`);
             continue;
           }
           if (typeof v !== "boolean") {
-            errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution.actionTypeEnabled[${k}] must be boolean`);
+            errors.push(`RULE_ENGINE_MASTER_CONTROL.execution.actionTypeEnabled[${k}] must be boolean`);
           }
         }
       }
@@ -323,24 +323,24 @@ export function validateRuleEngineV1Config(config = null) {
     if (Object.prototype.hasOwnProperty.call(execution, "cooldownScale")) {
       const n = Number(execution.cooldownScale);
       if (!Number.isFinite(n) || n < 0) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.cooldownScale must be a finite number >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.cooldownScale must be a finite number >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "matchWindowScale")) {
       const n = Number(execution.matchWindowScale);
       if (!Number.isFinite(n) || n < 0) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.matchWindowScale must be a finite number >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.matchWindowScale must be a finite number >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "signalDebounceMs")) {
       const n = Number(execution.signalDebounceMs);
       if (!Number.isFinite(n) || n < 0) {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.signalDebounceMs must be a finite number >= 0 when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.signalDebounceMs must be a finite number >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "stopOnFirstSignalMatchPerEvent")) {
       if (typeof execution.stopOnFirstSignalMatchPerEvent !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.stopOnFirstSignalMatchPerEvent must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.stopOnFirstSignalMatchPerEvent must be boolean when present");
       }
     }
   }
