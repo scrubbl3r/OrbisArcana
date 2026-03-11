@@ -1,4 +1,4 @@
-# Rule Engine Compatibility Map
+# Rule Engine Compatibility
 
 ## Purpose
 - Prevent config edits from drifting into compatibility files.
@@ -14,7 +14,7 @@
 3. `src/content/interactions-v2/entity-handles-v2.js`
 - Canonical ALLCAPS handles glossary.
 
-## Compatibility (Do Not Author Daily)
+## Compatibility (Do Not Edit Daily)
 1. `src/content/spells/runtime-spells.js`
 - Runtime slot/cast routing compatibility layer.
 

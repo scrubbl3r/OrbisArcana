@@ -1,4 +1,4 @@
-# Interactions Schema Draft
+# Interactions Schema
 
 ## Goal
 - One central behavior config for chaining spells, gestures, orb states, wake windows, and events.

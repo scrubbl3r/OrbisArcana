@@ -1,4 +1,4 @@
-# Rule Engine Authoring Entrypoint
+# Rule Engine Authoring
 
 ## Daily Authoring Files (Primary)
 1. `src/content/interactions-v2/interactions-v2.js`
@@ -23,7 +23,7 @@
 ## Current Mode Switches
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/interactions-v2.js`
-  - Purpose: Runtime rule source cutover (must remain `true`).
+  - Purpose: Active runtime rule source selector (must remain `true`).
 
 - `RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`

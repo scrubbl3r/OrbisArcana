@@ -1,6 +1,6 @@
-# Rule Engine Batch Smoke
+# Rule Engine Smoke
 
-Use this to avoid manual per-slice config edits.
+Use this to reduce manual per-slice config edits.
 
 ## Command
 
@@ -19,7 +19,7 @@ This runs:
 1. `ready:v2` (runtime health + guard checks)
 2. `smoke:batch:v2` (multi-case validator + projection suite)
 
-It also writes a checkpoint report:
+It also writes report artifacts:
 
 - `/docs/rule-engine-v2.milestone-smoke.json`
 - and appends run history:

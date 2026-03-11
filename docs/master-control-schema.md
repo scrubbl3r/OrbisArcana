@@ -1,4 +1,4 @@
-RULE ENGINE MASTER CONTROL SCHEMA
+# Rule Engine Master Control Schema
 
 Purpose
 - Single authoring SSOT for rule-engine behavior.
