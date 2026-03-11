@@ -198,5 +198,3 @@ export function buildRuleEnginePreviewRuntime({
     rules: normalizedRules,
   };
 }
-
-export const buildRuleEngineV1PreviewRuntime = buildRuleEnginePreviewRuntime;

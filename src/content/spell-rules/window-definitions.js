@@ -19,6 +19,3 @@ export const WINDOW_DEFINITIONS_BY_ID = Object.freeze(
     return acc;
   }, {})
 );
-
-export const WINDOW_DEFINITIONS_V1 = WINDOW_DEFINITIONS;
-export const WINDOW_DEFINITIONS_V1_BY_ID = WINDOW_DEFINITIONS_BY_ID;

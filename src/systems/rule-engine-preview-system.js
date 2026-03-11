@@ -941,5 +941,3 @@ export function createRuleEnginePreviewSystem({
     snapshot,
   };
 }
-
-export const createRuleEngineV1PreviewSystem = createRuleEnginePreviewSystem;

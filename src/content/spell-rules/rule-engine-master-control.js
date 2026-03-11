@@ -726,5 +726,3 @@ export const RULE_ENGINE_MASTER_CONTROL = Object.freeze({
     ? { ...EVENT_RUNTIME_BINDINGS_BY_ID }
     : Object.create(null),
 });
-
-export const RULE_ENGINE_V1_MASTER_CONTROL = RULE_ENGINE_MASTER_CONTROL;

@@ -54,6 +54,3 @@ export const EVENT_RUNTIME_BINDINGS_BY_ID = Object.freeze(
     return acc;
   }, {})
 );
-
-export const EVENT_RUNTIME_BINDINGS_V1 = EVENT_RUNTIME_BINDINGS;
-export const EVENT_RUNTIME_BINDINGS_V1_BY_ID = EVENT_RUNTIME_BINDINGS_BY_ID;

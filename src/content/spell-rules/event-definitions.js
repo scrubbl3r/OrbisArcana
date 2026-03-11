@@ -42,6 +42,3 @@ export const EVENT_DEFINITIONS_BY_ID = Object.freeze(
     return acc;
   }, {})
 );
-
-export const EVENT_DEFINITIONS_V1 = EVENT_DEFINITIONS;
-export const EVENT_DEFINITIONS_V1_BY_ID = EVENT_DEFINITIONS_BY_ID;

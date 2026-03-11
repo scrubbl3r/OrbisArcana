@@ -2343,5 +2343,3 @@ export function validateRuleEngineConfig(config = null) {
 
   return errors;
 }
-
-export const validateRuleEngineV1Config = validateRuleEngineConfig;

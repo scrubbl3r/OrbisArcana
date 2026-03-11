@@ -323,5 +323,3 @@ export function validateSpellRules(rules = [], options = {}) {
 
   return errors;
 }
-
-export const validateSpellRulesV1 = validateSpellRules;
