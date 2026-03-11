@@ -25,6 +25,9 @@ if (flatSpinGatingRegression.status !== 0) process.exit(flatSpinGatingRegression
 const wakeWindowAxisPrereqRegression = spawnSync(process.execPath, ["tools/rule-engine-v2/check-wake-window-axis-prereq-regression-v2.mjs"], { stdio: "inherit" });
 if (wakeWindowAxisPrereqRegression.status !== 0) process.exit(wakeWindowAxisPrereqRegression.status || 1);
 
+const ruleSourceContractCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-rule-source-contract-v2.mjs"], { stdio: "inherit" });
+if (ruleSourceContractCheck.status !== 0) process.exit(ruleSourceContractCheck.status || 1);
+
 const masterControlAuthoringCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-authoring-v2.mjs"], { stdio: "inherit" });
 if (masterControlAuthoringCheck.status !== 0) process.exit(masterControlAuthoringCheck.status || 1);
 

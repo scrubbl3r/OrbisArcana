@@ -3,7 +3,7 @@
 ## Scope
 - v2 schema files exist.
 - v2 adapter exists.
-- Bootstrap can switch rule source with a feature flag.
+- Bootstrap is v2-required (`useInReceiverBootstrap` must remain `true`).
 - Spellbook v2 validation runs fail-fast at startup.
 
 ## Preconditions
@@ -12,24 +12,24 @@
   - `src/runtime/receiver-bootstrap.js`
 - Browser DevTools console open on receiver page.
 
-## Test A: Default behavior unchanged (flag OFF)
+## Test A: Guardrail when bootstrap is disabled (temporary negative test)
 1. In `src/content/interactions-v2/interactions-v2.js`, keep:
    - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: false`
 2. Reload receiver.
 3. Confirm console contains:
-   - `[receiver-bootstrap] rule source: RULE_ENGINE_V1_MASTER_CONTROL`
+   - `[receiver-bootstrap] rule source: interactions_bootstrap_disabled`
 4. Confirm on-screen readout shows:
-   - `Rules: V1 master`
+   - `Rules: V2 bootstrap disabled (safe disabled)`
 5. Run normal gameplay smoke (KWS + spell cast + orb response).
 6. Expected:
-   - Behavior matches current baseline (no functional drift from V1 path).
+   - Rule engine stays safely disabled (no legacy rule-source fallback).
 
 ## Test B: v2 adapter path active (flag ON)
 1. Set:
    - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`
 2. Reload receiver.
 3. Confirm console contains:
-   - `[receiver-bootstrap] rule source: INTERACTIONS_V2(adapter)`
+   - `[receiver-bootstrap] rule source: interactions_adapter`
 4. Confirm on-screen readout shows:
    - `Rules: V2 adapter`
 5. Trigger the sample v2 rule chain condition:
