@@ -25,7 +25,7 @@ Related index:
 
 ## Runtime Mode Status
 - Runtime rule source: interactions adapter (`INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`)
-- Projection-only rule execution: enabled (`RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly: true`)
+- Projection-only rule execution: enabled (`RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly: true`)
 - Drift gate: enforced by `npm run pre-smoke:v2`
 - Runtime source IDs (authoritative): `src/runtime/receiver-bootstrap.js`
   - `interactions_adapter`

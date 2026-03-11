@@ -9,7 +9,8 @@ Related index:
 
 ## Canonical Source
 - `src/content/spell-rules/rule-engine-master-control.js`
-- symbol: `RULE_ENGINE_MASTER_CONTROL`
+- symbol: `RULE_ENGINE_POLICY_CONTROL` (runtime policy-facing alias)
+- compatibility alias: `RULE_ENGINE_MASTER_CONTROL`
 
 ## Current Neutral Contract
 - Intent names:

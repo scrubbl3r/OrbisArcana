@@ -26,7 +26,7 @@ Related index:
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/interactions-v2.js`
   - Purpose: Must remain `true`; otherwise runtime enters safe-disabled mode.
-- `RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly`
+- `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`
   - Purpose: Require projected/runtime rules as the active rule source (must remain `true`).
 
