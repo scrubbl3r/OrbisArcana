@@ -1,12 +1,12 @@
 {
   "schema": "orbis.rule_engine_v2.milestone_trend",
-  "generatedAt": "2026-03-11T17:57:27.718Z",
+  "generatedAt": "2026-03-11T18:00:27.644Z",
   "historyPath": "/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/docs/rule-engine-v2.milestone-history.jsonl",
-  "totalRuns": 154,
+  "totalRuns": 155,
   "recentWindow": 10,
   "passRateAllPct": 99.4,
   "passRateRecentPct": 100,
   "latestPass": true,
-  "latestGeneratedAt": "2026-03-11T17:57:27.664Z",
-  "latestGitRef": "ebeab79"
+  "latestGeneratedAt": "2026-03-11T18:00:27.588Z",
+  "latestGitRef": "b63c956"
 }

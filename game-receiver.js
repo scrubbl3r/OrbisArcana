@@ -1228,10 +1228,8 @@
       interactions_adapter_fallback: "V2 adapter (fallback)",
       rule_engine_master_control: "Master control",
     });
-    const RULE_ENGINE_CHANNELS = Object.freeze({
-      ACTION_EXECUTED: "rule_engine.action_executed",
-      WAKE_WIN_OPENED: "rule_engine.wake_win_opened",
-    });
+    const RULE_ENGINE_ACTION_EXECUTED_EVENT = "rule_engine.action_executed";
+    const RULE_ENGINE_WAKE_WIN_OPENED_EVENT = "rule_engine.wake_win_opened";
     const RULE_ENGINE_TRIGGER = "rule_engine";
     const RULE_ENGINE_EXECUTE_ACTIONS = false;
     let bubbleShieldRuntime = null;
@@ -2221,7 +2219,7 @@
               ttlMs,
               atMs: Number(p.atMs) || performance.now(),
             };
-            eventBus.emit(RULE_ENGINE_CHANNELS.WAKE_WIN_OPENED, wakeWinPayload);
+            eventBus.emit(RULE_ENGINE_WAKE_WIN_OPENED_EVENT, wakeWinPayload);
             return;
           }
           if (actionType !== "event") return;
@@ -2261,7 +2259,7 @@
             });
           }
         };
-        eventBus.on(RULE_ENGINE_CHANNELS.ACTION_EXECUTED, onRuleEngineActionExecuted);
+        eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, onRuleEngineActionExecuted);
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
