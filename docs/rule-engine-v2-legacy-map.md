@@ -15,21 +15,18 @@
 - Canonical ALLCAPS handles glossary.
 
 ## Legacy/Compatibility (Do Not Author Daily)
-1. `src/content/spell-rules/rule-engine-v1-master-control.js`
-- V1 aggregation/override compatibility layer.
-
-2. `src/content/spell-rules/spell-rules-v1.js`
-- V1-compatible rule view (projected from V2 + static fallback).
-
-3. `src/content/spells/runtime-spells.js`
+1. `src/content/spells/runtime-spells.js`
 - Runtime slot/cast routing compatibility layer.
 
-4. `src/voice/spellbook.js`
+2. `src/voice/spellbook.js`
 - Legacy runtime view derived from `spellbook-v2`.
+
+3. `src/runtime/receiver-bootstrap.js`
+- Runtime bootstrap wiring that still exposes legacy alias keys for compatibility.
 
 ## Cutover Status
 - Runtime rule source: V2 adapter (`INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`)
-- Legacy V1 rule view: projected from V2 (`SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules: true`)
+- Projection-only rule execution: enabled (`RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly: true`)
 - Drift gate: enforced by `npm run pre-smoke:v2`
 
 ## Commands

@@ -15,7 +15,8 @@
 - Use as glossary/reference for naming consistency.
 
 ## Runtime Bridge/Compatibility Files (Do Not Author Daily)
-- `src/content/spell-rules/spell-rules-v1.js` (legacy bridge/static fallback)
+- `src/content/spell-rules/rule-engine-master-control.js` (runtime rule schema + defaults/overrides)
+- `src/content/spell-rules/validate-rule-engine-config.js` (schema validator)
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + V2 flag routing)
 - `src/voice/spellbook.js` (legacy runtime view derived from `spellbook-v2`)
 
@@ -24,9 +25,9 @@
   - Location: `src/content/interactions-v2/interactions-v2.js`
   - Purpose: Runtime rule source cutover (must remain `true`).
 
-- `SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules`
-  - Location: `src/content/spell-rules/spell-rules-v1.js`
-  - Purpose: Keep legacy V1 sample view sourced from V2 projection (must remain `true`).
+- `RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly`
+  - Location: `src/content/spell-rules/rule-engine-master-control.js`
+  - Purpose: Require projected/runtime rules as the active rule source (must remain `true`).
 
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.
@@ -37,7 +38,7 @@
 - `npm run pre-smoke:v2`
   - Validates V2 config and regenerates effective snapshot.
 - `npm run report-drift:v2`
-  - Prints differences between legacy static V1 fallback rules and V2 projection.
+  - Prints differences between projected runtime rules and effective V2 interactions.
 - `npm run doctor:v2`
   - Runs pre-smoke and prints concise SSOT health summary.
   - Also writes `docs/rule-engine-v2.health.json`.
