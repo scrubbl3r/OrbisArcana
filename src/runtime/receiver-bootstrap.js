@@ -148,7 +148,7 @@ export async function loadReceiverInitModules() {
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineFromInteractionsV2: buildRuleEngineFromInteractionsResolved,
-    buildRuleEngineV1FromInteractionsV2: buildRuleEngineFromInteractionsLegacy,
+    buildRuleEngineV1FromInteractionsV2: buildRuleEngineFromInteractionsResolved,
     validateSpellbookV2,
     WORLD_ITEMS: worldItemsResolved,
     WORLD_ITEMS_V1: worldItemsResolved,
