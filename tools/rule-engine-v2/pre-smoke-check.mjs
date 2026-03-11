@@ -10,8 +10,7 @@ import {
   buildRulesV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 import {
-  SPELL_RULES_V1_STATIC,
-  SPELL_RULES_V1_LEGACY_BRIDGE,
+  SPELL_RULES_V1,
 } from "../../src/content/spell-rules/spell-rules-v1.js";
 import {
   KWS_MANIFEST_REL_PATH,
@@ -103,24 +102,18 @@ if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstr
     "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap must be true",
   ]);
 }
-if (!SPELL_RULES_V1_LEGACY_BRIDGE || SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules !== true) {
-  fail("legacy bridge guard failed", [
-    "SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules must be true",
-  ]);
-}
-
 const projectedRules = buildRulesV1FromInteractionsV2(INTERACTIONS_V2);
 const projectedById = new Map((Array.isArray(projectedRules) ? projectedRules : []).map((r) => [String(r && r.id || ""), r]));
-const legacyById = new Map((Array.isArray(SPELL_RULES_V1_STATIC) ? SPELL_RULES_V1_STATIC : []).map((r) => [String(r && r.id || ""), r]));
-const allIds = new Set([...projectedById.keys(), ...legacyById.keys()].filter(Boolean));
+const runtimeById = new Map((Array.isArray(SPELL_RULES_V1) ? SPELL_RULES_V1 : []).map((r) => [String(r && r.id || ""), r]));
+const allIds = new Set([...projectedById.keys(), ...runtimeById.keys()].filter(Boolean));
 const driftIds = [];
 for (const id of allIds) {
   const a = JSON.stringify(projectedById.get(id) || null);
-  const b = JSON.stringify(legacyById.get(id) || null);
+  const b = JSON.stringify(runtimeById.get(id) || null);
   if (a !== b) driftIds.push(id);
 }
-if (SPELL_RULES_V1_LEGACY_BRIDGE && SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules === true && driftIds.length) {
-  fail("legacy bridge is enabled but V1 static rules drift from V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
+if (driftIds.length) {
+  fail("projected V1 runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
 }
 
 const snapshotRun = spawnSync(

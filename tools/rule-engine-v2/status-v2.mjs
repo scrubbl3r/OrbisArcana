@@ -21,7 +21,7 @@ const lines = [
   `[status:v2] spellbook ok: ${yn(health.spellbookOk === true)}`,
   `[status:v2] interactions ok: ${yn(health.interactionsOk === true)}`,
   `[status:v2] bootstrap uses v2: ${yn(health.bootstrapUsesV2Adapter === true)}`,
-  `[status:v2] legacy bridge uses v2 rules: ${yn(health.legacyBridgeUsesV2Rules === true)}`,
+  `[status:v2] v1 rules projection only: ${yn(health.v1RulesProjectionOnly === true)}`,
   `[status:v2] rules (interactions/projection): ${Number(health.interactionsRuleCount || 0)}/${Number(health.projectedRuleCount || 0)}`,
   `[status:v2] drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
   `[status:v2] milestone runs: ${Number(trend.totalRuns || 0)}`,
