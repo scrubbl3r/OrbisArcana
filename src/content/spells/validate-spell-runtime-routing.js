@@ -150,14 +150,14 @@ export function validateSpellRuntimeRouting() {
 
     const intent = asId(item && item.intent);
     if (intent === "spell.school_select" || intent === "spell.class_select") {
-      errors.push(`SPELL_RUNTIME_ROUTING[${id}] uses legacy intent: ${intent}`);
+      errors.push(`SPELL_RUNTIME_ROUTING[${id}] uses retired intent: ${intent}`);
     }
 
     if (item && Object.prototype.hasOwnProperty.call(item, "school")) {
-      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains legacy key: school`);
+      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains retired key: school`);
     }
     if (item && Object.prototype.hasOwnProperty.call(item, "classKey")) {
-      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains legacy key: classKey`);
+      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains retired key: classKey`);
     }
 
     const allowedAxes = Array.isArray(item && item.allowedAxes) ? item.allowedAxes : [];
