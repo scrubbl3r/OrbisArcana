@@ -6,7 +6,6 @@
 
 import { EVENT_DEFINITIONS } from "./event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "./event-runtime-bindings.js";
-import { INTERACTIONS_V2, buildRulesFromInteractionsV2 } from "../interactions-v2/index.js";
 import {
   SIGNAL_DEFINITION_COLLISIONS,
   SIGNAL_DEFINITIONS,
@@ -509,15 +508,6 @@ function applyRuleDefaults(rules = [], defaults = {}) {
   });
 }
 
-function resolveProjectedRules() {
-  try {
-    return buildRulesFromInteractionsV2(INTERACTIONS_V2);
-  } catch (err) {
-    console.warn("RULE_ENGINE_MASTER_CONTROL projection failed; using empty rules:", err);
-    return [];
-  }
-}
-
 function applyRulePriorityOverrides(rules = [], overrides = {}) {
   const map = (overrides && typeof overrides === "object") ? overrides : Object.create(null);
   return (Array.isArray(rules) ? rules : []).map((rule) => {
@@ -713,7 +703,7 @@ export const RULE_ENGINE_MASTER_CONTROL = Object.freeze({
     applyRuleEnabledOverrides(
       applyRulePriorityOverrides(
         applyRuleTimingOverrides(
-          applyRuleDefaults(resolveProjectedRules(), RULE_DEFAULTS),
+          applyRuleDefaults([], RULE_DEFAULTS),
           RULE_TIMING_OVERRIDES
         ),
         RULE_PRIORITY_OVERRIDES

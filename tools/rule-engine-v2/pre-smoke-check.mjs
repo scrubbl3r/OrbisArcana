@@ -8,6 +8,7 @@ import {
   SPELLBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
+  buildRuleEngineFromInteractionsV2,
   validateSpellbookV2,
   validateInteractionsV2,
   buildRulesFromInteractionsV2,
@@ -104,9 +105,16 @@ if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstr
 }
 const projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
 const projectedById = new Map((Array.isArray(projectedRules) ? projectedRules : []).map((r) => [String(r && r.id || ""), r]));
-const runtimeRules = Array.isArray(RULE_ENGINE_MASTER_CONTROL?.rules)
-  ? RULE_ENGINE_MASTER_CONTROL.rules
-  : [];
+const runtimeProjected = buildRuleEngineFromInteractionsV2({
+  interactionsV2: INTERACTIONS_V2,
+  baseRuleEngine: {
+    ...(RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object"
+      ? RULE_ENGINE_MASTER_CONTROL
+      : {}),
+    rules: [],
+  },
+});
+const runtimeRules = Array.isArray(runtimeProjected?.rules) ? runtimeProjected.rules : [];
 const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));
 const allIds = new Set([...projectedById.keys(), ...runtimeById.keys()].filter(Boolean));
 const driftIds = [];
