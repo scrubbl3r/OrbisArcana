@@ -40,6 +40,12 @@ if (docPolicyTerminologyCheck.status !== 0) process.exit(docPolicyTerminologyChe
 const validatorPolicyTerminologyCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs"], { stdio: "inherit" });
 if (validatorPolicyTerminologyCheck.status !== 0) process.exit(validatorPolicyTerminologyCheck.status || 1);
 
+const masterControlCompatSurfaceCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs"], { stdio: "inherit" });
+if (masterControlCompatSurfaceCheck.status !== 0) process.exit(masterControlCompatSurfaceCheck.status || 1);
+
+const masterControlImportBoundaryCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-import-boundary-v2.mjs"], { stdio: "inherit" });
+if (masterControlImportBoundaryCheck.status !== 0) process.exit(masterControlImportBoundaryCheck.status || 1);
+
 const masterControlAuthoringCheck = spawnSync(process.execPath, ["tools/rule-engine-v2/check-master-control-authoring-v2.mjs"], { stdio: "inherit" });
 if (masterControlAuthoringCheck.status !== 0) process.exit(masterControlAuthoringCheck.status || 1);
 
