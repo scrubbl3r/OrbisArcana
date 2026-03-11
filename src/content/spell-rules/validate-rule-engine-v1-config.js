@@ -167,33 +167,33 @@ export function validateRuleEngineV1Config(config = null) {
   const errors = [];
   for (const key of Object.keys(cfg)) {
     if (knownTopLevelKeys.has(key)) continue;
-    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL contains unknown top-level key: ${key}`);
+    errors.push(`RULE_ENGINE_MASTER_CONTROL contains unknown top-level key: ${key}`);
   }
-  if (!asText(cfg.id)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.id is required");
-  if (!asText(cfg.version)) errors.push("RULE_ENGINE_V1_MASTER_CONTROL.version is required");
+  if (!asText(cfg.id)) errors.push("RULE_ENGINE_MASTER_CONTROL.id is required");
+  if (!asText(cfg.version)) errors.push("RULE_ENGINE_MASTER_CONTROL.version is required");
   if (Object.prototype.hasOwnProperty.call(cfg, "enabled") && typeof cfg.enabled !== "boolean") {
-    errors.push("RULE_ENGINE_V1_MASTER_CONTROL.enabled must be boolean when present");
+    errors.push("RULE_ENGINE_MASTER_CONTROL.enabled must be boolean when present");
   }
   for (const rawId of signalDefinitionCollisions) {
     const id = asText(rawId).toLowerCase();
     if (!id) {
-      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.signalDefinitionCollisions contains empty signal id");
+      errors.push("RULE_ENGINE_MASTER_CONTROL.signalDefinitionCollisions contains empty signal id");
       continue;
     }
-    errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.signalDefinitionCollisions duplicate signal id: ${id}`);
+    errors.push(`RULE_ENGINE_MASTER_CONTROL.signalDefinitionCollisions duplicate signal id: ${id}`);
   }
   if (Object.prototype.hasOwnProperty.call(cfg, "execution")) {
     if (!cfg.execution || typeof cfg.execution !== "object" || Array.isArray(cfg.execution)) {
-      errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution must be an object when present");
+      errors.push("RULE_ENGINE_MASTER_CONTROL.execution must be an object when present");
     } else if (Object.prototype.hasOwnProperty.call(execution, "stopOnFirstMatch")) {
       if (typeof execution.stopOnFirstMatch !== "boolean") {
-        errors.push("RULE_ENGINE_V1_MASTER_CONTROL.execution.stopOnFirstMatch must be boolean when present");
+        errors.push("RULE_ENGINE_MASTER_CONTROL.execution.stopOnFirstMatch must be boolean when present");
       }
     }
     if (cfg.execution && typeof cfg.execution === "object" && !Array.isArray(cfg.execution)) {
       for (const key of Object.keys(cfg.execution)) {
         if (knownExecutionKeys.has(key)) continue;
-        errors.push(`RULE_ENGINE_V1_MASTER_CONTROL.execution contains unknown key: ${key}`);
+        errors.push(`RULE_ENGINE_MASTER_CONTROL.execution contains unknown key: ${key}`);
       }
     }
     if (Object.prototype.hasOwnProperty.call(execution, "maxMatchesPerSignal")) {
