@@ -1,0 +1,55 @@
+{
+  "schema": "orbis.rule_engine_v2.status",
+  "generatedAt": "2026-03-11T23:46:06.537Z",
+  "health": {
+    "spellbookOk": true,
+    "interactionsOk": true,
+    "bootstrapUsesV2Adapter": true,
+    "projectionRulesOnly": true,
+    "interactionsRuleCount": 5,
+    "projectedRuleCount": 5,
+    "driftRuleIds": []
+  },
+  "manifests": {
+    "ready": true,
+    "contract": true,
+    "regression": true
+  },
+  "readyPhases": {
+    "doctor": true,
+    "regression_manifest": true,
+    "contract_manifest": true,
+    "master_control_authoring": true
+  },
+  "regressions": {
+    "shake_regression": true,
+    "wake_load_regression": true,
+    "immediate_ownership": true,
+    "flat_spin_gating": true,
+    "wake_window_axis_prereq": true
+  },
+  "contracts": {
+    "rule_source": true,
+    "policy_alias": true,
+    "runtime_import": true,
+    "doc_policy": true,
+    "validator_policy": true,
+    "compat_surface": true,
+    "import_boundary": true,
+    "health_contract": true,
+    "cross_manifest_integrity": true,
+    "script_registry": true
+  },
+  "summary": {
+    "readyPhasesOk": true,
+    "regressionsOk": true,
+    "contractsOk": true
+  },
+  "trend": {
+    "totalRuns": 295,
+    "passRateAllPct": 99,
+    "passRateRecentPct": 90,
+    "latestPass": true,
+    "latestGitRef": "35ea79c"
+  }
+}

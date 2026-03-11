@@ -35,4 +35,8 @@ export const CONTRACT_CHECKS_V2 = Object.freeze([
     id: "cross_manifest_integrity",
     script: "tools/rule-engine-v2/check-cross-manifest-integrity-v2.mjs",
   }),
+  Object.freeze({
+    id: "script_registry",
+    script: "tools/rule-engine-v2/check-script-registry-v2.mjs",
+  }),
 ]);

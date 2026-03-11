@@ -20,6 +20,7 @@
     "check:master-control-import-boundary:v2": "node tools/rule-engine-v2/check-master-control-import-boundary-v2.mjs",
     "check:health-contract:v2": "node tools/rule-engine-v2/check-health-contract-v2.mjs",
     "check:cross-manifest-integrity:v2": "node tools/rule-engine-v2/check-cross-manifest-integrity-v2.mjs",
+    "check:script-registry:v2": "node tools/rule-engine-v2/check-script-registry-v2.mjs",
     "check:master-control-authoring:v2": "node tools/rule-engine-v2/check-master-control-authoring-v2.mjs",
     "sync:kws-manifest:v2": "node tools/rule-engine-v2/sync-kws-manifest-v2.mjs",
     "report-drift:v2": "node tools/rule-engine-v2/report-rules-v2-drift.mjs",

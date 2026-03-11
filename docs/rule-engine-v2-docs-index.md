@@ -139,6 +139,7 @@
 ## Snapshot / Health Artifacts
 - [Effective Interactions Snapshot](./effective-interactions-v2.snapshot.json)
 - [Health Report](./rule-engine-v2.health.json)
+- [Status Snapshot](./rule-engine-v2.status.json)
 - [Milestone Smoke Report](./rule-engine-v2.milestone-smoke.json)
 - [Milestone Trend Summary](./rule-engine-v2.milestone-trend.json)
 
