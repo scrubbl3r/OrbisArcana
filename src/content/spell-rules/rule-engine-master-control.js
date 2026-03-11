@@ -587,7 +587,7 @@ function applyDefinitionEnabledOverrides(defs = [], overrides = {}) {
 // Canonical SSOT for authoring rule-engine content.
 export const RULE_ENGINE_MASTER_CONTROL = Object.freeze({
   id: "rule_engine",
-  version: "v1",
+  version: "v2",
   enabled: true,
   execution: Object.freeze({
     stopOnFirstMatch: false,
