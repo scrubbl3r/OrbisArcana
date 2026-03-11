@@ -95,6 +95,13 @@ export async function loadReceiverInitModules() {
     import("../content/world-items/default-world-items.js"),
   ]);
 
+  const createRuleEnginePreviewSystemResolved = (typeof createRuleEnginePreviewSystem === "function")
+    ? createRuleEnginePreviewSystem
+    : createRuleEngineV1PreviewSystem;
+  const buildRuleEngineFromInteractionsResolved = (typeof buildRuleEngineFromInteractionsV2 === "function")
+    ? buildRuleEngineFromInteractionsV2
+    : buildRuleEngineV1FromInteractionsV2;
+
   return {
     createEventBus,
     createGameState,
@@ -110,7 +117,7 @@ export async function loadReceiverInitModules() {
     createKwsProvider,
     createOpenWakeWordBrowserBackendFactory,
     createSpellDispatchSystem,
-    createRuleEnginePreviewSystem,
+    createRuleEnginePreviewSystem: createRuleEnginePreviewSystemResolved,
     createRuleEngineV1PreviewSystem,
     createSpellActionHandlersImported,
     createSpellCastExecutor,
@@ -138,7 +145,7 @@ export async function loadReceiverInitModules() {
     validateRuleEngineV1Config,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
-    buildRuleEngineFromInteractionsV2,
+    buildRuleEngineFromInteractionsV2: buildRuleEngineFromInteractionsResolved,
     buildRuleEngineV1FromInteractionsV2,
     validateSpellbookV2,
     WORLD_ITEMS_V1,

@@ -1941,9 +1941,13 @@
           createKwsProvider,
           createOpenWakeWordBrowserBackendFactory,
           createSpellDispatchSystem,
+          createRuleEnginePreviewSystem,
           createRuleEngineV1PreviewSystem,
           WORLD_ITEMS_V1,
         } = mods;
+        const createRuleEnginePreviewSystemFactory = (typeof createRuleEnginePreviewSystem === "function")
+          ? createRuleEnginePreviewSystem
+          : createRuleEngineV1PreviewSystem;
 
         const eventBus = createEventBus();
         const gameState = createGameState({
@@ -2019,8 +2023,8 @@
           resources: resourcesSystem,
           ruleEngineEnabled: (!ruleSchemaV1 || ruleSchemaV1.enabled !== false) && RULE_ENGINE_V1_EXECUTE_ACTIONS === true,
         });
-        if (typeof createRuleEngineV1PreviewSystem === "function" && ruleSchemaV1) {
-          ruleEngineV1PreviewSystem = createRuleEngineV1PreviewSystem({
+        if (typeof createRuleEnginePreviewSystemFactory === "function" && ruleSchemaV1) {
+          ruleEngineV1PreviewSystem = createRuleEnginePreviewSystemFactory({
             eventBus,
             schema: ruleSchemaV1,
             executeActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
