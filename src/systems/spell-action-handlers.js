@@ -46,10 +46,6 @@ export function createSpellActionHandlers({
       }
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
-    // Backward-compat alias for legacy cast action routes.
-    play_school_aoe(payload = {}) {
-      this.play_axis_aoe(payload);
-    },
     domus_teleport_orb(payload = {}) {
       void payload;
       if (typeof teleportOrbToSpawnNeutralizePhysics === "function") {

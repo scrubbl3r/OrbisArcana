@@ -17,12 +17,6 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     handlerKey: "play_axis_aoe",
     floatGracePolicy: "default",
   }),
-  // Backward-compatible alias while legacy IDs are phased out.
-  Object.freeze({
-    id: "aoe_school",
-    handlerKey: "play_axis_aoe",
-    floatGracePolicy: "default",
-  }),
   Object.freeze({
     id: "aoe_frost",
     handlerKey: "play_frost_aoe",
