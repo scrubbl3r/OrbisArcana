@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { spawnSync } from "node:child_process";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
+import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
+import { runCheckScript } from "./run-check-v2.mjs";
 
 function safeReadJson(path) {
   try {
@@ -16,18 +17,28 @@ function yn(v) {
 }
 
 function runCheck(scriptPath) {
-  const res = spawnSync(process.execPath, [scriptPath], { stdio: "ignore" });
-  return res.status === 0;
+  return runCheckScript(scriptPath, { stdio: "ignore" }).ok;
 }
 
 const health = safeReadJson(resolve(process.cwd(), "docs/rule-engine-v2.health.json")) || {};
 const trend = safeReadJson(resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json")) || {};
+const manifestChecks = Object.freeze({
+  contractManifest: runCheck("tools/rule-engine-v2/check-contract-manifest-v2.mjs"),
+  regressionManifest: runCheck("tools/rule-engine-v2/check-regression-manifest-v2.mjs"),
+});
 const contractChecks = Object.freeze(Object.fromEntries(
   CONTRACT_CHECKS_V2.map((check) => [check.id, runCheck(check.script)])
 ));
 const contractsOk = CONTRACT_CHECKS_V2.every((check) => contractChecks[check.id] === true);
 const contractStatusList = CONTRACT_CHECKS_V2
   .map((check) => `${check.id}:${yn(contractChecks[check.id] === true)}`)
+  .join(" ");
+const regressionChecks = Object.freeze(Object.fromEntries(
+  REGRESSION_CHECKS_V2.map((check) => [check.id, runCheck(check.script)])
+));
+const regressionsOk = REGRESSION_CHECKS_V2.every((check) => regressionChecks[check.id] === true);
+const regressionStatusList = REGRESSION_CHECKS_V2
+  .map((check) => `${check.id}:${yn(regressionChecks[check.id] === true)}`)
   .join(" ");
 
 const lines = [
@@ -38,6 +49,9 @@ const lines = [
   `[status:v2] rules projection only: ${yn(health.projectionRulesOnly === true)}`,
   `[status:v2] rules (interactions/projection): ${Number(health.interactionsRuleCount || 0)}/${Number(health.projectedRuleCount || 0)}`,
   `[status:v2] drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
+  `[status:v2] manifests (contract/regression): ${yn(manifestChecks.contractManifest)}/${yn(manifestChecks.regressionManifest)}`,
+  `[status:v2] regressions ok: ${yn(regressionsOk)}`,
+  `[status:v2] regressions: ${regressionStatusList}`,
   `[status:v2] contracts ok: ${yn(contractsOk)}`,
   `[status:v2] contracts: ${contractStatusList}`,
   `[status:v2] milestone runs: ${Number(trend.totalRuns || 0)}`,
