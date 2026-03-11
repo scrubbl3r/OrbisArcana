@@ -10,7 +10,7 @@ export function createOrbState(config = {}) {
     health,
     alive,
 
-    // Core collision/damage tuning for v1.
+    // Core collision/damage tuning.
     collisionThreshold: Number.isFinite(config.collisionThreshold) ? Number(config.collisionThreshold) : 1.0,
     collisionDamage: Number.isFinite(config.collisionDamage) ? Math.max(1, Math.floor(config.collisionDamage)) : 100,
     collisionCooldownMs: Number.isFinite(config.collisionCooldownMs) ? Math.max(0, Math.floor(config.collisionCooldownMs)) : 250,

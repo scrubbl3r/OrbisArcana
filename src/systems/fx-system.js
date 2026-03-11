@@ -48,11 +48,11 @@ export function createFxSystem({ eventBus }) {
     }
 
     function intersect(p1, p2) {
-      const v1 = a * p1.x + b * p1.y + c;
-      const v2 = a * p2.x + b * p2.y + c;
-      const den = (v1 - v2);
+      const sideEvalStart = a * p1.x + b * p1.y + c;
+      const sideEvalEnd = a * p2.x + b * p2.y + c;
+      const den = (sideEvalStart - sideEvalEnd);
       if (Math.abs(den) < 1e-9) return { x: p2.x, y: p2.y };
-      const t = v1 / den;
+      const t = sideEvalStart / den;
       return {
         x: p1.x + (p2.x - p1.x) * t,
         y: p1.y + (p2.y - p1.y) * t,
