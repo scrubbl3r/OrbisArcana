@@ -11,6 +11,15 @@
  *
  * @returns {Promise<ReceiverInitModules>}
  */
+const RECEIVER_BOOTSTRAP_COMPAT_KEYS = Object.freeze({
+  CREATE_RULE_ENGINE_PREVIEW_SYSTEM_ALIAS: "createRuleEngineV1PreviewSystem",
+  RULE_ENGINE_MASTER_CONTROL_ALIAS: "RULE_ENGINE_V1_MASTER_CONTROL",
+  VALIDATE_RULE_ENGINE_CONFIG_ALIAS: "validateRuleEngineV1Config",
+  BUILD_RULE_ENGINE_FROM_INTERACTIONS_ALIAS: "buildRuleEngineV1FromInteractionsV2",
+  WORLD_ITEMS_ALIAS: "WORLD_ITEMS_V1",
+  SET_RULE_SCHEMA_ALIAS: "setRuleSchemaV1",
+});
+
 export async function loadReceiverInitModules() {
   const [
     { createEventBus },
@@ -100,14 +109,14 @@ export async function loadReceiverInitModules() {
     buildRuleEngineFromInteractionsV2,
   };
   const ruleEngineLegacyAliasExports = {
-    createRuleEngineV1PreviewSystem: ruleEngineExports.createRuleEnginePreviewSystem,
-    RULE_ENGINE_V1_MASTER_CONTROL: ruleEngineExports.RULE_ENGINE_MASTER_CONTROL,
-    validateRuleEngineV1Config: ruleEngineExports.validateRuleEngineConfig,
-    buildRuleEngineV1FromInteractionsV2: ruleEngineExports.buildRuleEngineFromInteractionsV2,
+    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.CREATE_RULE_ENGINE_PREVIEW_SYSTEM_ALIAS]: ruleEngineExports.createRuleEnginePreviewSystem,
+    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.RULE_ENGINE_MASTER_CONTROL_ALIAS]: ruleEngineExports.RULE_ENGINE_MASTER_CONTROL,
+    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.VALIDATE_RULE_ENGINE_CONFIG_ALIAS]: ruleEngineExports.validateRuleEngineConfig,
+    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.BUILD_RULE_ENGINE_FROM_INTERACTIONS_ALIAS]: ruleEngineExports.buildRuleEngineFromInteractionsV2,
   };
   const worldItemExports = {
     WORLD_ITEMS: worldItemsResolved,
-    WORLD_ITEMS_V1: worldItemsResolved,
+    [RECEIVER_BOOTSTRAP_COMPAT_KEYS.WORLD_ITEMS_ALIAS]: worldItemsResolved,
   };
 
   return {
@@ -231,12 +240,14 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setInputConfigs,
     setRuntimeSpellIndexes,
     setRuleSchema,
-    setRuleSchemaV1: setRuleSchemaAlias,
     initSpellActionHandlers,
     createSpellCastExecutorContext,
     setSpellCastExecutor,
     setReceiverModulesReady,
   } = ctx;
+  const setRuleSchemaAlias = ctx && typeof ctx === "object"
+    ? ctx[RECEIVER_BOOTSTRAP_COMPAT_KEYS.SET_RULE_SCHEMA_ALIAS]
+    : undefined;
 
   function buildSafeDisabledRuleSchema() {
     return Object.freeze({
