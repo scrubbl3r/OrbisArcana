@@ -27,7 +27,7 @@ export async function loadReceiverInitModules() {
     { createKwsProvider },
     { createOpenWakeWordBrowserBackendFactory },
     { createSpellDispatchSystem },
-    { createRuleEngineV1PreviewSystem },
+    { createRuleEnginePreviewSystem, createRuleEngineV1PreviewSystem },
     { createSpellActionHandlers: createSpellActionHandlersImported },
     { createSpellCastExecutor },
     { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
@@ -53,6 +53,7 @@ export async function loadReceiverInitModules() {
     {
       INTERACTIONS_V2,
       INTERACTIONS_V2_BOOTSTRAP,
+      buildRuleEngineFromInteractionsV2,
       buildRuleEngineV1FromInteractionsV2,
       validateSpellbookV2,
     },
@@ -109,6 +110,7 @@ export async function loadReceiverInitModules() {
     createKwsProvider,
     createOpenWakeWordBrowserBackendFactory,
     createSpellDispatchSystem,
+    createRuleEnginePreviewSystem,
     createRuleEngineV1PreviewSystem,
     createSpellActionHandlersImported,
     createSpellCastExecutor,
@@ -136,6 +138,7 @@ export async function loadReceiverInitModules() {
     validateRuleEngineV1Config,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
+    buildRuleEngineFromInteractionsV2,
     buildRuleEngineV1FromInteractionsV2,
     validateSpellbookV2,
     WORLD_ITEMS_V1,
@@ -201,6 +204,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     validateRuleEngineV1Config,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
+    buildRuleEngineFromInteractionsV2,
     buildRuleEngineV1FromInteractionsV2,
     validateSpellbookV2,
     createSpellCastExecutor,
@@ -250,6 +254,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     : validateRuleEngineV1Config;
   const validateSpellRuntimeRoutingFn = validateSpellRuntimeRouting;
   const validateSpellSchemaIntegrityFn = validateSpellSchemaIntegrity;
+  const buildRuleEngineFromInteractions = (typeof buildRuleEngineFromInteractionsV2 === "function")
+    ? buildRuleEngineFromInteractionsV2
+    : buildRuleEngineV1FromInteractionsV2;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
     ? setRuleSchema
     : setRuleSchemaV1;
@@ -269,9 +276,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
   let adapterFallbackUsed = false;
   let ruleSchema = fallbackRuleSchema;
-  if (useInteractionsV2 && typeof buildRuleEngineV1FromInteractionsV2 === "function") {
+  if (useInteractionsV2 && typeof buildRuleEngineFromInteractions === "function") {
     try {
-      ruleSchema = buildRuleEngineV1FromInteractionsV2({
+      ruleSchema = buildRuleEngineFromInteractions({
         interactionsV2: INTERACTIONS_V2,
         baseRuleEngineV1: fallbackRuleSchema,
       });
