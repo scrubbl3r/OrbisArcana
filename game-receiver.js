@@ -1214,7 +1214,7 @@
     let runtimeSpellIndex = Object.create(null);
     let castActionRegistryIndex = Object.create(null);
     let ruleSchemaV1 = null;
-    let ruleEngineV1PreviewSystem = null;
+    let ruleEnginePreviewSystem = null;
     // Early fallback used before runtime modules finish loading.
     let RECEIVER_EVENTS = { EVT_VOICE_SET_MODE: "voice.set_mode" };
     let spellActionHandlers = Object.create(null);
@@ -2029,7 +2029,7 @@
           ruleEngineEnabled: (!ruleSchemaV1 || ruleSchemaV1.enabled !== false) && RULE_ENGINE_EXECUTE_ACTIONS === true,
         });
         if (typeof createRuleEnginePreviewSystemFactory === "function" && ruleSchemaV1) {
-          ruleEngineV1PreviewSystem = createRuleEnginePreviewSystemFactory({
+          ruleEnginePreviewSystem = createRuleEnginePreviewSystemFactory({
             eventBus,
             schema: ruleSchemaV1,
             executeActions: RULE_ENGINE_EXECUTE_ACTIONS,
@@ -2099,8 +2099,8 @@
         inputSystemsBundle.start();
         resourcesSystem.start();
         spellDispatchSystem.start();
-        if (ruleEngineV1PreviewSystem && typeof ruleEngineV1PreviewSystem.start === "function") {
-          ruleEngineV1PreviewSystem.start();
+        if (ruleEnginePreviewSystem && typeof ruleEnginePreviewSystem.start === "function") {
+          ruleEnginePreviewSystem.start();
         }
         const globeSpawns = (Array.isArray(WORLD_ITEMS_V1) ? WORLD_ITEMS_V1 : [])
           .map(normalizeWorldItemSpawn)
@@ -2273,7 +2273,7 @@
           inputGestureSystem,
           orbRuntimeState,
           ruleSchemaV1,
-          ruleEngineV1PreviewSystem,
+          ruleEngineV1PreviewSystem: ruleEnginePreviewSystem,
           ruleEngineV1ExecuteActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
           resourcesSystem,
           orbFxSystem,
