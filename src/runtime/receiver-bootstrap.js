@@ -47,7 +47,7 @@ export async function loadReceiverInitModules() {
     {
       RULE_ENGINE_MASTER_CONTROL,
       validateRuleEngineConfig,
-      RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_LEGACY,
+      RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_ALIAS,
       validateRuleEngineV1Config: validateRuleEngineConfigLegacy,
     },
     {
@@ -143,7 +143,7 @@ export async function loadReceiverInitModules() {
     validateSpellSchemaIntegrity,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
-    RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_LEGACY,
+    RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_ALIAS,
     validateRuleEngineV1Config: validateRuleEngineConfigLegacy,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
@@ -235,7 +235,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     setInputConfigs,
     setRuntimeSpellIndexes,
     setRuleSchema,
-    setRuleSchemaV1,
+    setRuleSchemaV1: setRuleSchemaAlias,
     initSpellActionHandlers,
     createSpellCastExecutorContext,
     setSpellCastExecutor,
@@ -269,7 +269,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     : buildRuleEngineFromInteractionsAlias;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
     ? setRuleSchema
-    : setRuleSchemaV1;
+    : setRuleSchemaAlias;
 
   const fallbackRuleSchema = (ruleEngineMasterControl && typeof ruleEngineMasterControl === "object")
     ? ruleEngineMasterControl
