@@ -193,5 +193,3 @@ export function validateSpellRuntimeRouting() {
 
   return errors;
 }
-
-export const validateSpellRuntimeRoutingV1 = validateSpellRuntimeRouting;
