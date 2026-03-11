@@ -49,7 +49,7 @@ function collectEventArgs(action, defaultsForEvent) {
   return out;
 }
 
-function mapConditionToV1(cond) {
+function mapCondition(cond) {
   const c = asObj(cond);
   const type = asId(c.type);
   const rawId = asId(c.id);
@@ -61,7 +61,7 @@ function mapConditionToV1(cond) {
   return Object.freeze({ type, id });
 }
 
-function mapActionToV1(action, defaults, defaultsEventById) {
+function mapAction(action, defaults, defaultsEventById) {
   const a = asObj(action);
   const type = asId(a.type);
   if (type === "wake_win") {
@@ -91,15 +91,15 @@ function mapActionToV1(action, defaults, defaultsEventById) {
   return null;
 }
 
-function mapRuleToV1(rule, defaults) {
+function mapRule(rule, defaults) {
   const r = asObj(rule);
   const id = asText(r.id);
   if (!id) return null;
   const onAll = Array.isArray(asObj(r.on).all) ? asObj(r.on).all : [];
-  const conditions = onAll.map(mapConditionToV1).filter(Boolean);
+  const conditions = onAll.map(mapCondition).filter(Boolean);
   const defaultsEventById = normalizeEventDefaultsMap(asObj(defaults.event));
   const actions = (Array.isArray(r.then) ? r.then : [])
-    .map((a) => mapActionToV1(a, defaults, defaultsEventById))
+    .map((a) => mapAction(a, defaults, defaultsEventById))
     .filter(Boolean);
   const out = { id, on: Object.freeze(conditions), then: Object.freeze(actions) };
   if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled === "boolean") out.enabled = r.enabled;
@@ -118,7 +118,7 @@ export function buildRuleEngineFromInteractionsV2({
   }
   const base = asObj(baseRuleEngine || baseRuleEngineV1);
   const rules = Array.isArray(interactionsV2.rules)
-    ? interactionsV2.rules.map((r) => mapRuleToV1(r, asObj(interactionsV2.defaults))).filter(Boolean)
+    ? interactionsV2.rules.map((r) => mapRule(r, asObj(interactionsV2.defaults))).filter(Boolean)
     : [];
   return Object.freeze({
     ...base,
@@ -134,7 +134,7 @@ export function buildRulesFromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
   }
   return Object.freeze(
     (Array.isArray(interactionsV2.rules) ? interactionsV2.rules : [])
-      .map((r) => mapRuleToV1(r, asObj(interactionsV2.defaults)))
+      .map((r) => mapRule(r, asObj(interactionsV2.defaults)))
       .filter(Boolean)
   );
 }

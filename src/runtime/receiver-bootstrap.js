@@ -27,7 +27,7 @@ export async function loadReceiverInitModules() {
     { createKwsProvider },
     { createOpenWakeWordBrowserBackendFactory },
     { createSpellDispatchSystem },
-    { createRuleEnginePreviewSystem, createRuleEngineV1PreviewSystem },
+    { createRuleEnginePreviewSystem, createRuleEngineV1PreviewSystem: createRuleEnginePreviewSystemLegacy },
     { createSpellActionHandlers: createSpellActionHandlersImported },
     { createSpellCastExecutor },
     { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
@@ -47,17 +47,17 @@ export async function loadReceiverInitModules() {
     {
       RULE_ENGINE_MASTER_CONTROL,
       validateRuleEngineConfig,
-      RULE_ENGINE_V1_MASTER_CONTROL,
-      validateRuleEngineV1Config,
+      RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_LEGACY,
+      validateRuleEngineV1Config: validateRuleEngineConfigLegacy,
     },
     {
       INTERACTIONS_V2,
       INTERACTIONS_V2_BOOTSTRAP,
       buildRuleEngineFromInteractionsV2,
-      buildRuleEngineV1FromInteractionsV2,
+      buildRuleEngineV1FromInteractionsV2: buildRuleEngineFromInteractionsLegacy,
       validateSpellbookV2,
     },
-    { WORLD_ITEMS, WORLD_ITEMS_V1 },
+    { WORLD_ITEMS, WORLD_ITEMS_V1: WORLD_ITEMS_LEGACY },
   ] = await Promise.all([
     import("../events/event-bus.js"),
     import("../state/game-state.js"),
@@ -97,12 +97,12 @@ export async function loadReceiverInitModules() {
 
   const createRuleEnginePreviewSystemResolved = (typeof createRuleEnginePreviewSystem === "function")
     ? createRuleEnginePreviewSystem
-    : createRuleEngineV1PreviewSystem;
+    : createRuleEnginePreviewSystemLegacy;
   const buildRuleEngineFromInteractionsResolved = (typeof buildRuleEngineFromInteractionsV2 === "function")
     ? buildRuleEngineFromInteractionsV2
-    : buildRuleEngineV1FromInteractionsV2;
+    : buildRuleEngineFromInteractionsLegacy;
 
-  const worldItemsResolved = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : WORLD_ITEMS_V1;
+  const worldItemsResolved = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : WORLD_ITEMS_LEGACY;
 
   return {
     createEventBus,
@@ -120,7 +120,7 @@ export async function loadReceiverInitModules() {
     createOpenWakeWordBrowserBackendFactory,
     createSpellDispatchSystem,
     createRuleEnginePreviewSystem: createRuleEnginePreviewSystemResolved,
-    createRuleEngineV1PreviewSystem,
+    createRuleEngineV1PreviewSystem: createRuleEnginePreviewSystemLegacy,
     createSpellActionHandlersImported,
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
@@ -143,12 +143,12 @@ export async function loadReceiverInitModules() {
     validateSpellSchemaIntegrity,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
-    RULE_ENGINE_V1_MASTER_CONTROL,
-    validateRuleEngineV1Config,
+    RULE_ENGINE_V1_MASTER_CONTROL: RULE_ENGINE_MASTER_CONTROL_LEGACY,
+    validateRuleEngineV1Config: validateRuleEngineConfigLegacy,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineFromInteractionsV2: buildRuleEngineFromInteractionsResolved,
-    buildRuleEngineV1FromInteractionsV2,
+    buildRuleEngineV1FromInteractionsV2: buildRuleEngineFromInteractionsLegacy,
     validateSpellbookV2,
     WORLD_ITEMS: worldItemsResolved,
     WORLD_ITEMS_V1: worldItemsResolved,
@@ -210,12 +210,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     validateSpellSchemaIntegrity,
     RULE_ENGINE_MASTER_CONTROL,
     validateRuleEngineConfig,
-    RULE_ENGINE_V1_MASTER_CONTROL,
-    validateRuleEngineV1Config,
+    RULE_ENGINE_V1_MASTER_CONTROL: ruleEngineMasterControlLegacy,
+    validateRuleEngineV1Config: validateRuleEngineLegacy,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineFromInteractionsV2,
-    buildRuleEngineV1FromInteractionsV2,
+    buildRuleEngineV1FromInteractionsV2: buildRuleEngineFromInteractionsLegacy,
     validateSpellbookV2,
     createSpellCastExecutor,
   } = mods || {};
@@ -258,15 +258,15 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
 
   const ruleEngineMasterControl = (RULE_ENGINE_MASTER_CONTROL && typeof RULE_ENGINE_MASTER_CONTROL === "object")
     ? RULE_ENGINE_MASTER_CONTROL
-    : RULE_ENGINE_V1_MASTER_CONTROL;
+    : ruleEngineMasterControlLegacy;
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
     ? validateRuleEngineConfig
-    : validateRuleEngineV1Config;
+    : validateRuleEngineLegacy;
   const validateSpellRuntimeRoutingFn = validateSpellRuntimeRouting;
   const validateSpellSchemaIntegrityFn = validateSpellSchemaIntegrity;
   const buildRuleEngineFromInteractions = (typeof buildRuleEngineFromInteractionsV2 === "function")
     ? buildRuleEngineFromInteractionsV2
-    : buildRuleEngineV1FromInteractionsV2;
+    : buildRuleEngineFromInteractionsLegacy;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function")
     ? setRuleSchema
     : setRuleSchemaV1;
