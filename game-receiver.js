@@ -1240,7 +1240,7 @@
       TRIGGER_ALIAS: "rule_engine_v1",
     });
     const RULE_ENGINE_EXECUTE_ACTIONS = false;
-    const RULE_ENGINE_V1_EXECUTE_ACTIONS = RULE_ENGINE_EXECUTE_ACTIONS;
+    const RULE_ENGINE_EXECUTE_ACTIONS_ALIAS = RULE_ENGINE_EXECUTE_ACTIONS;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
@@ -2306,7 +2306,7 @@
           ruleEnginePreviewSystem,
           ruleEngineV1PreviewSystem: ruleEnginePreviewSystem,
           ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
-          ruleEngineV1ExecuteActions: RULE_ENGINE_V1_EXECUTE_ACTIONS,
+          ruleEngineV1ExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS_ALIAS,
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,
