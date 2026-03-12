@@ -2,13 +2,14 @@ import { spawnSync } from "node:child_process";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
+import { runCheckScriptOrFailStatus } from "./run-check-fail-status-v2.mjs";
 import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { appendJsonLine } from "./write-jsonl-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { toTrimmedText } from "./value-utils-v2.mjs";
-import { failCheck, failCheckStatus } from "./check-fail-v2.mjs";
+import { failCheck } from "./check-fail-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "milestone:v2";
@@ -56,10 +57,11 @@ const historyPath = resolveRuleEngineDocPath("milestoneHistory");
 appendJsonLine(historyPath, report);
 logMilestone(`appended history: ${historyPath}`);
 
-const trendRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend, { stdio: "inherit" });
-if (!trendRun.ok) {
-  failCheckStatus(CHECK_TAG, "milestone trend generation failed", trendRun.status || 1);
-}
+runCheckScriptOrFailStatus({
+  tag: CHECK_TAG,
+  message: "milestone trend generation failed",
+  script: RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend,
+});
 const trendPath = resolveRuleEngineDocPath("milestoneTrend");
 report.trend = readJsonSafe(trendPath);
 writeJsonFile(outPath, report);

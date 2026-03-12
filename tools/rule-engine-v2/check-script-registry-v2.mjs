@@ -9,8 +9,6 @@ const pkg = readJsonOrFail(CHECK_TAG, "package.json");
 const scripts = (pkg && typeof pkg.scripts === "object" && pkg.scripts) ? pkg.scripts : null;
 if (!scripts) failCheck(CHECK_TAG, "package.json scripts object missing");
 
-const checks = ALL_MANIFEST_CHECKS_V2;
-
 const explicitScriptNames = Object.freeze({
   doctor: "doctor:v2",
   rule_source: "check:rule-source-contract:v2",
@@ -24,7 +22,7 @@ const explicitScriptNames = Object.freeze({
 
 const missing = [];
 const mismatched = [];
-for (const check of checks) {
+for (const check of ALL_MANIFEST_CHECKS_V2) {
   const id = String(check?.id || "").trim();
   const scriptPath = String(check?.script || "").trim();
   const scriptName = explicitScriptNames[id] || `check:${id.replace(/_/g, "-")}:v2`;

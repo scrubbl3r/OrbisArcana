@@ -33,6 +33,16 @@ function loadJson(path) {
   return result.value;
 }
 
+function runScriptOrFail(message, script) {
+  const res = runCheckScript(script, { stdio: "inherit" });
+  if (!res.ok) fail(message);
+}
+
+function failIfValidationErrors(message, errors) {
+  const list = Array.isArray(errors) ? errors : [];
+  if (list.length) fail(message, list);
+}
+
 function verifyKwsManifestCoverage() {
   const manifestAbs = resolve(process.cwd(), KWS_MANIFEST_REL_PATH);
   const manifestRaw = loadJson(manifestAbs);
@@ -80,15 +90,10 @@ function verifyKwsManifestCoverage() {
   }
 }
 
-const spellbookErrors = validateSpellbookV2(SPELLBOOK_V2);
-if (spellbookErrors.length) {
-  fail("spellbook-v2 validation failed", spellbookErrors);
-}
+failIfValidationErrors("spellbook-v2 validation failed", validateSpellbookV2(SPELLBOOK_V2));
 
 const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
-if (!interactionsResult.ok) {
-  fail("interactions-v2 validation failed", Array.isArray(interactionsResult.errors) ? interactionsResult.errors : []);
-}
+failIfValidationErrors("interactions-v2 validation failed", interactionsResult?.ok ? [] : interactionsResult?.errors);
 
 verifyKwsManifestCoverage();
 
@@ -103,14 +108,7 @@ if (driftIds.length) {
   fail("projected runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
 }
 
-const snapshotRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.writeEffectiveSnapshot, { stdio: "inherit" });
-if (!snapshotRun.ok) {
-  fail("effective snapshot generation failed");
-}
-
-const masterDocRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.writeMasterControlDoc, { stdio: "inherit" });
-if (!masterDocRun.ok) {
-  fail("master control doc generation failed");
-}
+runScriptOrFail("effective snapshot generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeEffectiveSnapshot);
+runScriptOrFail("master control doc generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeMasterControlDoc);
 
 logPreSmoke("OK: validators passed + effective snapshot refreshed");

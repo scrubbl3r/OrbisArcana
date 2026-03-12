@@ -1,7 +1,9 @@
-export const MANIFEST_VALIDATORS_V2 = Object.freeze([
-  Object.freeze({ name: "ready", script: "tools/rule-engine-v2/check-ready-phases-manifest-v2.mjs" }),
-  Object.freeze({ name: "contract", script: "tools/rule-engine-v2/check-contract-manifest-v2.mjs" }),
-  Object.freeze({ name: "regression", script: "tools/rule-engine-v2/check-regression-manifest-v2.mjs" }),
+import { defineCheckEntriesV2 } from "./define-check-entries-v2.mjs";
+
+export const MANIFEST_VALIDATORS_V2 = defineCheckEntriesV2([
+  { name: "ready", script: "tools/rule-engine-v2/check-ready-phases-manifest-v2.mjs" },
+  { name: "contract", script: "tools/rule-engine-v2/check-contract-manifest-v2.mjs" },
+  { name: "regression", script: "tools/rule-engine-v2/check-regression-manifest-v2.mjs" },
 ]);
 
 export const MANIFEST_VALIDATOR_NAMES_V2 = Object.freeze(

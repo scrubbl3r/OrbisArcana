@@ -1,6 +1,6 @@
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
-import { runCheckScript } from "./run-check-v2.mjs";
+import { runCheckScriptOrFailStatus } from "./run-check-fail-status-v2.mjs";
 import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
@@ -16,8 +16,11 @@ const CHECK_TAG = "doctor:v2";
 const logDoctor = createTaggedLogger(CHECK_TAG);
 
 function runPreSmoke() {
-  const res = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck, { stdio: "inherit" });
-  if (!res.ok) process.exit(res.status || 1);
+  runCheckScriptOrFailStatus({
+    tag: CHECK_TAG,
+    message: "pre-smoke failed",
+    script: RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck,
+  });
 }
 
 function computeDrift() {
