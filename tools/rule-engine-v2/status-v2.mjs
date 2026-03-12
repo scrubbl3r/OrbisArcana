@@ -16,6 +16,16 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "status:v2";
 const logStatus = createTaggedLogger(CHECK_TAG);
+const STATUS_DOC_PATHS = Object.freeze({
+  health: resolveRuleEngineDocPath("health"),
+  trend: resolveRuleEngineDocPath("milestoneTrend"),
+  status: resolveRuleEngineDocPath("status"),
+});
+const STATUS_SECTION_KEYS = Object.freeze({
+  readyPhases: "readyPhases",
+  regressions: "regressions",
+  contracts: "contracts",
+});
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -90,39 +100,66 @@ function buildNamedManifestArtifacts(entries, runCheck, yesNo) {
   return buildOrderedBooleanArtifacts(names, byName, yesNo);
 }
 
+function normalizeHealthStatus(health) {
+  return {
+    spellbookOk: isTrue(health?.spellbookOk),
+    interactionsOk: isTrue(health?.interactionsOk),
+    bootstrapUsesV2Adapter: isTrue(health?.bootstrapUsesV2Adapter),
+    projectionRulesOnly: isTrue(health?.projectionRulesOnly),
+    interactionsRuleCount: toNumberOr(health?.interactionsRuleCount),
+    projectedRuleCount: toNumberOr(health?.projectedRuleCount),
+    driftRuleIds: Array.isArray(health?.driftRuleIds) ? health.driftRuleIds.slice() : [],
+  };
+}
+
+function normalizeTrendStatus(trend) {
+  return {
+    totalRuns: toNumberOr(trend?.totalRuns),
+    passRateAllPct: toNumberOr(trend?.passRateAllPct),
+    passRateRecentPct: toNumberOr(trend?.passRateRecentPct),
+    latestPass: isTrue(trend?.latestPass),
+    latestGitRef: toTrimmedText(trend?.latestGitRef),
+  };
+}
+
 const STATUS_SECTION_DEFS = Object.freeze([
-  Object.freeze({ key: "readyPhases", entries: READY_PHASES_V2 }),
-  Object.freeze({ key: "regressions", entries: REGRESSION_CHECKS_V2 }),
-  Object.freeze({ key: "contracts", entries: CONTRACT_CHECKS_V2 }),
+  Object.freeze({ key: STATUS_SECTION_KEYS.readyPhases, entries: READY_PHASES_V2 }),
+  Object.freeze({ key: STATUS_SECTION_KEYS.regressions, entries: REGRESSION_CHECKS_V2 }),
+  Object.freeze({ key: STATUS_SECTION_KEYS.contracts, entries: CONTRACT_CHECKS_V2 }),
 ]);
 
-const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
-const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
+const health = readJsonSafe(STATUS_DOC_PATHS.health) || {};
+const healthStatus = normalizeHealthStatus(health);
+const trend = readJsonSafe(STATUS_DOC_PATHS.trend) || {};
+const trendStatus = normalizeTrendStatus(trend);
 const manifestArtifacts = buildNamedManifestArtifacts(
   MANIFEST_VALIDATORS_V2,
   runCheckScriptOk,
   yn
 );
 const statusSections = buildStatusSections(STATUS_SECTION_DEFS, runCheckScriptOk, yn);
+const readyPhases = statusSections[STATUS_SECTION_KEYS.readyPhases];
+const regressions = statusSections[STATUS_SECTION_KEYS.regressions];
+const contracts = statusSections[STATUS_SECTION_KEYS.contracts];
 
 const lines = [
   "---",
-  `spellbook ok: ${yn(isTrue(health.spellbookOk))}`,
-  `interactions ok: ${yn(isTrue(health.interactionsOk))}`,
-  `bootstrap uses v2: ${yn(isTrue(health.bootstrapUsesV2Adapter))}`,
-  `rules projection only: ${yn(isTrue(health.projectionRulesOnly))}`,
-  `rules (interactions/projection): ${toNumberOr(health.interactionsRuleCount)}/${toNumberOr(health.projectedRuleCount)}`,
-  `drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
+  `spellbook ok: ${yn(healthStatus.spellbookOk)}`,
+  `interactions ok: ${yn(healthStatus.interactionsOk)}`,
+  `bootstrap uses v2: ${yn(healthStatus.bootstrapUsesV2Adapter)}`,
+  `rules projection only: ${yn(healthStatus.projectionRulesOnly)}`,
+  `rules (interactions/projection): ${healthStatus.interactionsRuleCount}/${healthStatus.projectedRuleCount}`,
+  `drift ids: ${healthStatus.driftRuleIds.length}`,
   `manifests (ready/contract/regression): ${manifestArtifacts.summary}`,
-  `ready phases ok: ${yn(statusSections.readyPhases.results.ok)}`,
-  `ready phases: ${statusSections.readyPhases.statusList}`,
-  `regressions ok: ${yn(statusSections.regressions.results.ok)}`,
-  `regressions: ${statusSections.regressions.statusList}`,
-  `contracts ok: ${yn(statusSections.contracts.results.ok)}`,
-  `contracts: ${statusSections.contracts.statusList}`,
-  `milestone runs: ${toNumberOr(trend.totalRuns)}`,
-  `pass rate all/recent: ${toNumberOr(trend.passRateAllPct)}% / ${toNumberOr(trend.passRateRecentPct)}%`,
-  `latest milestone: ${isTrue(trend.latestPass) ? "PASS" : "FAIL"} ${toTrimmedText(trend.latestGitRef)}`,
+  `ready phases ok: ${yn(readyPhases.results.ok)}`,
+  `ready phases: ${readyPhases.statusList}`,
+  `regressions ok: ${yn(regressions.results.ok)}`,
+  `regressions: ${regressions.statusList}`,
+  `contracts ok: ${yn(contracts.results.ok)}`,
+  `contracts: ${contracts.statusList}`,
+  `milestone runs: ${trendStatus.totalRuns}`,
+  `pass rate all/recent: ${trendStatus.passRateAllPct}% / ${trendStatus.passRateRecentPct}%`,
+  `latest milestone: ${trendStatus.latestPass ? "PASS" : "FAIL"} ${trendStatus.latestGitRef}`,
   "---",
 ];
 
@@ -131,33 +168,19 @@ for (const line of lines) logStatus(line);
 const statusArtifact = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.status,
   generatedAt: nowIso(),
-  health: {
-    spellbookOk: isTrue(health.spellbookOk),
-    interactionsOk: isTrue(health.interactionsOk),
-    bootstrapUsesV2Adapter: isTrue(health.bootstrapUsesV2Adapter),
-    projectionRulesOnly: isTrue(health.projectionRulesOnly),
-    interactionsRuleCount: toNumberOr(health.interactionsRuleCount),
-    projectedRuleCount: toNumberOr(health.projectedRuleCount),
-    driftRuleIds: Array.isArray(health.driftRuleIds) ? health.driftRuleIds.slice() : [],
-  },
+  health: healthStatus,
   manifests: manifestArtifacts.booleans,
-  readyPhases: statusSections.readyPhases.booleans,
-  regressions: statusSections.regressions.booleans,
-  contracts: statusSections.contracts.booleans,
+  readyPhases: readyPhases.booleans,
+  regressions: regressions.booleans,
+  contracts: contracts.booleans,
   summary: {
-    readyPhasesOk: statusSections.readyPhases.results.ok,
-    regressionsOk: statusSections.regressions.results.ok,
-    contractsOk: statusSections.contracts.results.ok,
+    readyPhasesOk: readyPhases.results.ok,
+    regressionsOk: regressions.results.ok,
+    contractsOk: contracts.results.ok,
   },
-  trend: {
-    totalRuns: toNumberOr(trend.totalRuns),
-    passRateAllPct: toNumberOr(trend.passRateAllPct),
-    passRateRecentPct: toNumberOr(trend.passRateRecentPct),
-    latestPass: isTrue(trend.latestPass),
-    latestGitRef: toTrimmedText(trend.latestGitRef),
-  },
+  trend: trendStatus,
 };
 
-const statusPath = resolveRuleEngineDocPath("status");
+const statusPath = STATUS_DOC_PATHS.status;
 writeJsonFile(statusPath, statusArtifact);
 logStatus(`wrote status: ${statusPath}`);

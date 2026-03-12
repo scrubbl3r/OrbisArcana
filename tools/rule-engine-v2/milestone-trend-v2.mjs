@@ -8,6 +8,17 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "milestone:trend:v2";
 const logTrend = createTaggedLogger(CHECK_TAG);
+const MILESTONE_TREND_DOC_PATHS = Object.freeze({
+  history: resolveRuleEngineDocPath("milestoneHistory"),
+  trend: resolveRuleEngineDocPath("milestoneTrend"),
+});
+
+function logTrendSummary(summary) {
+  logTrend(`total runs: ${summary.totalRuns}`);
+  logTrend(`pass rate (all): ${summary.passRateAllPct}%`);
+  logTrend(`pass rate (recent ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
+  logTrend(`latest: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
+}
 
 function pct(part, total) {
   if (total <= 0) return 0;
@@ -31,8 +42,8 @@ function summarize(history, lookback = 10) {
   };
 }
 
-const historyPath = resolveRuleEngineDocPath("milestoneHistory");
-const summaryPath = resolveRuleEngineDocPath("milestoneTrend");
+const historyPath = MILESTONE_TREND_DOC_PATHS.history;
+const summaryPath = MILESTONE_TREND_DOC_PATHS.trend;
 const history = readJsonLines(historyPath);
 const summary = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.milestoneTrend,
@@ -41,9 +52,6 @@ const summary = {
   ...summarize(history, 10),
 };
 
-logTrend(`total runs: ${summary.totalRuns}`);
-logTrend(`pass rate (all): ${summary.passRateAllPct}%`);
-logTrend(`pass rate (recent ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
-logTrend(`latest: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
+logTrendSummary(summary);
 writeJsonFile(summaryPath, summary);
 logTrend(`wrote summary: ${summaryPath}`);

@@ -14,6 +14,12 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "milestone:v2";
 const logMilestone = createTaggedLogger(CHECK_TAG);
+const MILESTONE_DOC_PATHS = Object.freeze({
+  health: resolveRuleEngineDocPath("health"),
+  smoke: resolveRuleEngineDocPath("milestoneSmoke"),
+  history: resolveRuleEngineDocPath("milestoneHistory"),
+  trend: resolveRuleEngineDocPath("milestoneTrend"),
+});
 
 function runStep(label, scriptPath) {
   logMilestone(`running ${label}...`);
@@ -22,7 +28,20 @@ function runStep(label, scriptPath) {
 
 function getGitRef() {
   const res = spawnSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" });
-  return res.status === 0 ? toTrimmedText(res.stdout || "") : "";
+  return res.status === 0 ? toTrimmedText(res.stdout) : "";
+}
+
+function asStepResult(result, extras = {}) {
+  return {
+    ok: result?.ok === true,
+    status: Number(result?.status || 0),
+    ...extras,
+  };
+}
+
+function writeMilestoneReport(path, report, label = "wrote report") {
+  writeJsonFile(path, report);
+  logMilestone(`${label}: ${path}`);
 }
 
 const ready = runStep("ready:v2", RULE_ENGINE_V2_SCRIPT_PATHS.readyCheck);
@@ -35,25 +54,17 @@ const report = {
   generatedAt: nowIso(),
   gitRef: getGitRef(),
   steps: {
-    ready: {
-      ok: ready.ok,
-      status: ready.status,
-    },
-    batch: {
-      ok: batch.ok,
-      status: batch.status,
-      skipped: !ready.ok,
-    },
+    ready: asStepResult(ready),
+    batch: asStepResult(batch, { skipped: !ready.ok }),
   },
-  health: readJsonSafe(resolveRuleEngineDocPath("health")),
+  health: readJsonSafe(MILESTONE_DOC_PATHS.health),
   pass: ready.ok && batch.ok,
 };
 
-const outPath = resolveRuleEngineDocPath("milestoneSmoke");
-writeJsonFile(outPath, report);
-logMilestone(`wrote report: ${outPath}`);
+const outPath = MILESTONE_DOC_PATHS.smoke;
+writeMilestoneReport(outPath, report);
 
-const historyPath = resolveRuleEngineDocPath("milestoneHistory");
+const historyPath = MILESTONE_DOC_PATHS.history;
 appendJsonLine(historyPath, report);
 logMilestone(`appended history: ${historyPath}`);
 
@@ -62,10 +73,9 @@ runCheckScriptOrFailStatus({
   message: "milestone trend generation failed",
   script: RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend,
 });
-const trendPath = resolveRuleEngineDocPath("milestoneTrend");
+const trendPath = MILESTONE_DOC_PATHS.trend;
 report.trend = readJsonSafe(trendPath);
-writeJsonFile(outPath, report);
-logMilestone(`refreshed report with trend: ${outPath}`);
+writeMilestoneReport(outPath, report, "refreshed report with trend");
 
 if (!report.pass) {
   failCheck(CHECK_TAG, "ready and/or smoke batch failed");
