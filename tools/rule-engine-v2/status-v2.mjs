@@ -124,6 +124,10 @@ function buildSectionStatusLines(label, section, yesNo) {
   ];
 }
 
+function emitStatusLines(log, lines) {
+  for (const line of lines) log(line);
+}
+
 function normalizeHealthStatus(health) {
   return {
     spellbookOk: isTrue(health?.spellbookOk),
@@ -184,7 +188,7 @@ const lines = [
   "---",
 ];
 
-for (const line of lines) logStatus(line);
+emitStatusLines(logStatus, lines);
 
 const statusArtifact = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.status,

@@ -12,7 +12,7 @@ const MILESTONE_TREND_LOOKBACK = 10;
 const MILESTONE_TREND_LABELS = Object.freeze({
   totalRuns: "total runs",
   passRateAll: "pass rate (all)",
-  passRateRecent: "pass rate (recent",
+  passRateRecentPrefix: "pass rate (recent",
   latest: "latest",
 });
 const MILESTONE_TREND_DOC_PATHS = Object.freeze({
@@ -20,10 +20,14 @@ const MILESTONE_TREND_DOC_PATHS = Object.freeze({
   trend: resolveRuleEngineDocPath("milestoneTrend"),
 });
 
+function formatRecentPassRateLabel(windowSize) {
+  return `${MILESTONE_TREND_LABELS.passRateRecentPrefix} ${windowSize})`;
+}
+
 function logTrendSummary(summary) {
   logTrend(`${MILESTONE_TREND_LABELS.totalRuns}: ${summary.totalRuns}`);
   logTrend(`${MILESTONE_TREND_LABELS.passRateAll}: ${summary.passRateAllPct}%`);
-  logTrend(`${MILESTONE_TREND_LABELS.passRateRecent} ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
+  logTrend(`${formatRecentPassRateLabel(summary.recentWindow)}: ${summary.passRateRecentPct}%`);
   logTrend(`${MILESTONE_TREND_LABELS.latest}: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
 }
 

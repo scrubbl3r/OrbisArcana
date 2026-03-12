@@ -23,6 +23,10 @@ const MILESTONE_MESSAGES = Object.freeze({
   readyOrBatchFailed: "ready and/or smoke batch failed",
   pass: "PASS",
 });
+const MILESTONE_REPORT_LABELS = Object.freeze({
+  wroteReport: "wrote report",
+  refreshedWithTrend: "refreshed report with trend",
+});
 const MILESTONE_DOC_PATHS = Object.freeze({
   health: resolveRuleEngineDocPath("health"),
   smoke: resolveRuleEngineDocPath("milestoneSmoke"),
@@ -76,7 +80,7 @@ const report = {
 };
 
 const outPath = MILESTONE_DOC_PATHS.smoke;
-writeMilestoneReport(outPath, report);
+writeMilestoneReport(outPath, report, MILESTONE_REPORT_LABELS.wroteReport);
 
 const historyPath = MILESTONE_DOC_PATHS.history;
 appendMilestoneHistory(historyPath, report);
@@ -88,7 +92,7 @@ runCheckScriptOrFailStatus({
 });
 const trendPath = MILESTONE_DOC_PATHS.trend;
 report.trend = readJsonSafe(trendPath);
-writeMilestoneReport(outPath, report, "refreshed report with trend");
+writeMilestoneReport(outPath, report, MILESTONE_REPORT_LABELS.refreshedWithTrend);
 
 if (!report.pass) {
   failCheck(CHECK_TAG, MILESTONE_MESSAGES.readyOrBatchFailed);

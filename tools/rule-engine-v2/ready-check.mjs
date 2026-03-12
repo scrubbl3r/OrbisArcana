@@ -22,17 +22,24 @@ function runReadyCheck({ message, script }) {
   });
 }
 
+function formatReadyFailureMessage(prefix, id) {
+  return `${prefix}: ${id}`;
+}
+
 for (const validator of MANIFEST_VALIDATORS_V2) {
   runReadyCheck({
-    message: `${READY_FAILURE_PREFIX.validator}: ${validator.name}`,
+    message: formatReadyFailureMessage(READY_FAILURE_PREFIX.validator, validator.name),
     script: validator.script,
   });
 }
 
-for (const entry of flattenManifestChecksV2()) {
-  if (isManifestValidatorScriptV2(entry.script)) continue;
+const manifestChecks = flattenManifestChecksV2();
+const nonValidatorChecks = manifestChecks.filter(
+  (entry) => !isManifestValidatorScriptV2(entry.script)
+);
+for (const entry of nonValidatorChecks) {
   runReadyCheck({
-    message: `${READY_FAILURE_PREFIX.check}: ${entry.id}`,
+    message: formatReadyFailureMessage(READY_FAILURE_PREFIX.check, entry.id),
     script: entry.script,
   });
 }
