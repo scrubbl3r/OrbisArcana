@@ -1,7 +1,6 @@
 import {
-  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
-  CHECK_MANIFEST_VALIDATORS_V2,
   getCheckManifestEntriesV2,
+  getCheckManifestValidatorsByOrderV2,
 } from "./check-manifests-v2.mjs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
@@ -13,7 +12,6 @@ import {
   buildCheckBooleanMap,
   buildCheckResults,
   buildBooleanMapFromOrder,
-  buildManifestValidatorChecks,
   formatOrderedBooleanSummary,
 } from "./status-checks-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
@@ -37,17 +35,19 @@ const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
 const READY_PHASES_V2 = getCheckManifestEntriesV2("ready");
 const REGRESSION_CHECKS_V2 = getCheckManifestEntriesV2("regression");
 const CONTRACT_CHECKS_V2 = getCheckManifestEntriesV2("contract");
-const manifestChecks = buildManifestValidatorChecks(
-  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
-  CHECK_MANIFEST_VALIDATORS_V2,
-  runCheck
+const manifestValidators = getCheckManifestValidatorsByOrderV2();
+const manifestValidatorOrder = manifestValidators.map((v) => v.name);
+const manifestChecks = Object.freeze(
+  Object.fromEntries(
+    manifestValidators.map((v) => [v.name, runCheck(v.script)])
+  )
 );
 const manifestBooleans = buildBooleanMapFromOrder(
-  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
+  manifestValidatorOrder,
   manifestChecks
 );
 const manifestStatusSummary = formatOrderedBooleanSummary(
-  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
+  manifestValidatorOrder,
   manifestChecks,
   yn
 );

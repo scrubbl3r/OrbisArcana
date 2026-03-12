@@ -14,13 +14,6 @@ export function buildCheckBooleanMap(entries, checksById) {
   );
 }
 
-export function buildManifestValidatorChecks(order, validatorsByName, runCheck) {
-  const names = Array.isArray(order) ? order : [];
-  return Object.freeze(Object.fromEntries(
-    names.map((name) => [name, runCheck(validatorsByName[name])])
-  ));
-}
-
 export function buildBooleanMapFromOrder(order, valuesByName) {
   const names = Array.isArray(order) ? order : [];
   return Object.fromEntries(

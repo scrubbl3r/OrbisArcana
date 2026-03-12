@@ -48,3 +48,13 @@ export function getCheckManifestValidatorScriptsV2(order = CHECK_MANIFEST_VALIDA
     .map((name) => CHECK_MANIFEST_VALIDATORS_V2[name])
     .filter(Boolean);
 }
+
+export function getCheckManifestValidatorsByOrderV2(order = CHECK_MANIFEST_VALIDATOR_ORDER_V2) {
+  const names = Array.isArray(order) ? order : [];
+  return names
+    .map((name) => ({
+      name,
+      script: CHECK_MANIFEST_VALIDATORS_V2[name],
+    }))
+    .filter((item) => Boolean(item.script));
+}
