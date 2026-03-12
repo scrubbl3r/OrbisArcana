@@ -1,13 +1,14 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 
 const requiredToken = "RULE_ENGINE_POLICY_CONTROL";
 const forbiddenProjectionToken = "RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly";
 
 const authoringDocs = Object.freeze([
-  "docs/rule-engine-authoring.md",
-  "docs/rule-engine-compatibility.md",
+  RULE_ENGINE_V2_DOC_PATHS.ruleEngineAuthoringDoc,
+  RULE_ENGINE_V2_DOC_PATHS.ruleEngineCompatibilityDoc,
 ]);
 
 for (const rel of authoringDocs) {
@@ -24,7 +25,7 @@ for (const rel of authoringDocs) {
   }
 }
 
-const schemaDocRel = "docs/master-control-schema.md";
+const schemaDocRel = RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc;
 const schemaDocText = readFileSync(resolve(process.cwd(), schemaDocRel), "utf8");
 if (!schemaDocText.includes(requiredToken)) {
   failCheck("doc-policy-terminology:v2", `${schemaDocRel} must mention ${requiredToken}`);

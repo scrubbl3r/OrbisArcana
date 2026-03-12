@@ -1,36 +1,22 @@
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
+import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
+import { nowIso } from "./now-iso-v2.mjs";
 import {
-  buildRuleEngineFromInteractionsV2,
-  buildRulesFromInteractionsV2,
   INTERACTIONS_V2,
 } from "../../src/content/interactions-v2/index.js";
+import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 
 function runPreSmoke() {
-  const res = runCheckScript("tools/rule-engine-v2/pre-smoke-check.mjs", { stdio: "inherit" });
+  const res = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck, { stdio: "inherit" });
   if (!res.ok) process.exit(res.status || 1);
 }
 
 function computeDrift() {
-  const projected = buildRulesFromInteractionsV2(INTERACTIONS_V2);
-  const projectedById = new Map((Array.isArray(projected) ? projected : []).map((r) => [String(r && r.id || ""), r]));
-  const runtimeProjected = buildRuleEngineFromInteractionsV2({
-    interactionsV2: INTERACTIONS_V2,
-    // Rule projection parity check does not require policy/override surfaces.
-    baseRuleEngine: { rules: [] },
-  });
-  const runtimeRules = Array.isArray(runtimeProjected?.rules) ? runtimeProjected.rules : [];
-  const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));
-  const allIds = new Set([...projectedById.keys(), ...runtimeById.keys()].filter(Boolean));
-  const driftIds = [];
-  for (const id of allIds) {
-    const a = JSON.stringify(projectedById.get(id) || null);
-    const b = JSON.stringify(runtimeById.get(id) || null);
-    if (a !== b) driftIds.push(id);
-  }
-  return driftIds.sort();
+  const drift = computeProjectionDrift(INTERACTIONS_V2);
+  return Array.isArray(drift?.driftIds) ? drift.driftIds : [];
 }
 
 function loadSnapshot() {
@@ -44,7 +30,7 @@ const snapshot = loadSnapshot();
 const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 0);
 const health = {
   schema: "orbis.rule_engine_v2.health",
-  generatedAt: new Date().toISOString(),
+  generatedAt: nowIso(),
   spellbookOk: snapshot?.validation?.spellbookV2?.ok === true,
   interactionsOk: snapshot?.validation?.interactionsV2?.ok === true,
   bootstrapUsesV2Adapter: snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap === true,

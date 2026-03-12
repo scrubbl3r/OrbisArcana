@@ -1,6 +1,9 @@
 import { resolve } from "node:path";
 
 export const RULE_ENGINE_V2_DOC_PATHS = Object.freeze({
+  ruleEngineAuthoringDoc: "docs/rule-engine-authoring.md",
+  ruleEngineCompatibilityDoc: "docs/rule-engine-compatibility.md",
+  masterControlSchemaDoc: "docs/master-control-schema.md",
   effectiveSnapshot: "docs/effective-interactions-v2.snapshot.json",
   masterControlMarkdown: "docs/master-control-v2.md",
   masterControlJson: "docs/master-control-v2.json",
@@ -14,5 +17,8 @@ export const RULE_ENGINE_V2_DOC_PATHS = Object.freeze({
 
 export function resolveRuleEngineDocPath(key) {
   const rel = RULE_ENGINE_V2_DOC_PATHS[key];
+  if (!rel) {
+    throw new Error(`unknown RULE_ENGINE_V2_DOC_PATHS key: ${String(key)}`);
+  }
   return resolve(process.cwd(), rel);
 }

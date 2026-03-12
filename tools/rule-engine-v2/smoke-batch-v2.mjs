@@ -3,15 +3,11 @@ import {
   validateInteractionsV2,
   buildRuleEngineFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
+import { jsonClone } from "./json-clone-v2.mjs";
+import { failCheck } from "./check-fail-v2.mjs";
 
-function clone(v) {
-  return JSON.parse(JSON.stringify(v));
-}
-
-function fail(message) {
-  console.error(`[smoke:batch:v2] FAIL: ${message}`);
-  process.exit(1);
-}
+const FAIL_TAG = "smoke:batch:v2";
+const fail = (message) => failCheck(FAIL_TAG, message);
 
 function ruleById(cfg, ruleId) {
   const list = Array.isArray(cfg.rules) ? cfg.rules : [];
@@ -53,26 +49,26 @@ function expectBuildPass(caseName, cfg, assertFn = null) {
 
 function run() {
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     expectValidationPass("baseline.validate", cfg);
     expectBuildPass("baseline.build", cfg);
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     cfg.debug = true;
     expectValidationFail("top_level.unsupported_key", cfg, "INTERACTIONS_V2 contains unsupported key: debug");
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     const rule = ruleById(cfg, "r_rota_yspin_charged");
     rule.on.all[0] = { type: "spell", id: "gesture.y_spin" };
     expectValidationFail("condition.prefix_mismatch", cfg, "condition type/id prefix mismatch");
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     const rule = ruleById(cfg, "r_rota_yspin_charged");
     const wakeWin = findFirstAction(rule, "wake_win");
     if (!wakeWin || !Array.isArray(wakeWin.spells) || !wakeWin.spells.length) fail("wake_win action missing");
@@ -81,7 +77,7 @@ function run() {
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     const rule = ruleById(cfg, "r_rota_yspin_charged");
     const evt = findFirstAction(rule, "event");
     if (!evt) fail("event action missing");
@@ -90,28 +86,28 @@ function run() {
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     const rule = ruleById(cfg, "r_rota_yspin_charged");
     rule.on.all[0] = { type: "spell", id: "spell." };
     expectValidationFail("condition.incomplete_qualified_id", cfg, "incomplete on.all id");
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     cfg.defaults = cfg.defaults || {};
     cfg.defaults.event = { "spell.grace": { ms: 500 } };
     expectValidationFail("defaults.event.prefix_mismatch", cfg, "defaults.event key prefix mismatch");
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     cfg.defaults = cfg.defaults || {};
     cfg.defaults.event = { "event.": { ms: 500 } };
     expectValidationFail("defaults.event.incomplete", cfg, "defaults.event key is incomplete");
   }
 
   {
-    const cfg = clone(INTERACTIONS_V2);
+    const cfg = jsonClone(INTERACTIONS_V2);
     const rule = ruleById(cfg, "r_rota_yspin_charged");
     rule.on.all = [
       { type: "spell", id: "spell.rota" },

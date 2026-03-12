@@ -1,9 +1,11 @@
-import { appendFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
+import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
+import { appendJsonLine } from "./write-jsonl-v2.mjs";
+import { nowIso } from "./now-iso-v2.mjs";
 
 function runStep(label, scriptPath) {
   console.log(`[milestone:v2] running ${label}...`);
@@ -15,14 +17,14 @@ function getGitRef() {
   return res.status === 0 ? String(res.stdout || "").trim() : "";
 }
 
-const ready = runStep("ready:v2", "tools/rule-engine-v2/ready-check.mjs");
+const ready = runStep("ready:v2", RULE_ENGINE_V2_SCRIPT_PATHS.readyCheck);
 const batch = ready.ok
-  ? runStep("smoke:batch:v2", "tools/rule-engine-v2/smoke-batch-v2.mjs")
+  ? runStep("smoke:batch:v2", RULE_ENGINE_V2_SCRIPT_PATHS.smokeBatch)
   : { ok: false, status: -1 };
 
 const report = {
   schema: "orbis.rule_engine_v2.milestone",
-  generatedAt: new Date().toISOString(),
+  generatedAt: nowIso(),
   gitRef: getGitRef(),
   steps: {
     ready: {
@@ -44,10 +46,10 @@ writeJsonFile(outPath, report);
 console.log(`[milestone:v2] wrote report: ${outPath}`);
 
 const historyPath = resolveRuleEngineDocPath("milestoneHistory");
-appendFileSync(historyPath, JSON.stringify(report) + "\n", "utf8");
+appendJsonLine(historyPath, report);
 console.log(`[milestone:v2] appended history: ${historyPath}`);
 
-const trendRun = runCheckScript("tools/rule-engine-v2/milestone-trend-v2.mjs", { stdio: "inherit" });
+const trendRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend, { stdio: "inherit" });
 if (!trendRun.ok) {
   console.error("[milestone:v2] FAIL: milestone trend generation failed");
   process.exit(trendRun.status || 1);

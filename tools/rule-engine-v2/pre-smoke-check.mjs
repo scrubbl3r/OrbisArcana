@@ -1,13 +1,11 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
   SPELLBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
-  buildRuleEngineFromInteractionsV2,
   validateSpellbookV2,
   validateInteractionsV2,
-  buildRulesFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 import {
   KWS_MANIFEST_REL_PATH,
@@ -15,20 +13,20 @@ import {
   normalizeKwsManifest,
 } from "./kws-manifest-from-spellbook-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
+import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
+import { failCheckWithDetails } from "./check-fail-v2.mjs";
+import { readJsonCore } from "./read-json-core-v2.mjs";
+import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 
-function fail(message, details = []) {
-  console.error(`[pre-smoke] FAIL: ${message}`);
-  for (const line of details) console.error(`  - ${line}`);
-  process.exit(1);
-}
+const FAIL_TAG = "pre-smoke";
+const fail = (message, details = []) => failCheckWithDetails(FAIL_TAG, message, details);
 
 function loadJson(path) {
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch (err) {
-    fail("json load failed", [`${path}: ${err && err.message ? err.message : String(err)}`]);
+  const result = readJsonCore(path);
+  if (!result.ok) {
+    fail("json load failed", [`${path}: ${result.error}`]);
   }
-  return null;
+  return result.value;
 }
 
 function verifyKwsManifestCoverage() {
@@ -100,31 +98,18 @@ if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstr
     "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap must be true",
   ]);
 }
-const projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
-const projectedById = new Map((Array.isArray(projectedRules) ? projectedRules : []).map((r) => [String(r && r.id || ""), r]));
-const runtimeProjected = buildRuleEngineFromInteractionsV2({
-  interactionsV2: INTERACTIONS_V2,
-  baseRuleEngine: { rules: [] },
-});
-const runtimeRules = Array.isArray(runtimeProjected?.rules) ? runtimeProjected.rules : [];
-const runtimeById = new Map(runtimeRules.map((r) => [String(r && r.id || ""), r]));
-const allIds = new Set([...projectedById.keys(), ...runtimeById.keys()].filter(Boolean));
-const driftIds = [];
-for (const id of allIds) {
-  const a = JSON.stringify(projectedById.get(id) || null);
-  const b = JSON.stringify(runtimeById.get(id) || null);
-  if (a !== b) driftIds.push(id);
-}
+const drift = computeProjectionDrift(INTERACTIONS_V2);
+const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
 if (driftIds.length) {
   fail("projected runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
 }
 
-const snapshotRun = runCheckScript("tools/rule-engine-v2/write-effective-snapshot.mjs", { stdio: "inherit" });
+const snapshotRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.writeEffectiveSnapshot, { stdio: "inherit" });
 if (!snapshotRun.ok) {
   fail("effective snapshot generation failed");
 }
 
-const masterDocRun = runCheckScript("tools/rule-engine-v2/write-master-control-doc-v2.mjs", { stdio: "inherit" });
+const masterDocRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.writeMasterControlDoc, { stdio: "inherit" });
 if (!masterDocRun.ok) {
   fail("master control doc generation failed");
 }

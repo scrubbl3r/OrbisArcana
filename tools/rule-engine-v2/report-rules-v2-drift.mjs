@@ -1,46 +1,19 @@
-import {
-  buildRuleEngineFromInteractionsV2,
-  buildRulesFromInteractionsV2,
-  INTERACTIONS_V2,
-} from "../../src/content/interactions-v2/index.js";
+import { INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
+import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
+import { stringifyJson } from "./stringify-json-v2.mjs";
 
 function stable(v) {
-  return JSON.stringify(v, null, 2);
+  return stringifyJson(v);
 }
 
-function byId(arr) {
-  const out = Object.create(null);
-  for (const item of Array.isArray(arr) ? arr : []) {
-    const id = String(item && item.id || "").trim();
-    if (!id) continue;
-    out[id] = item;
-  }
-  return out;
-}
-
-const projected = buildRulesFromInteractionsV2(INTERACTIONS_V2);
-const runtimeProjected = buildRuleEngineFromInteractionsV2({
-  interactionsV2: INTERACTIONS_V2,
-  baseRuleEngine: { rules: [] },
-});
-const runtime = Array.isArray(runtimeProjected?.rules) ? runtimeProjected.rules : [];
-
-const projectedById = byId(projected);
-const runtimeById = byId(runtime);
-
-const projectedIds = new Set(Object.keys(projectedById));
-const runtimeIds = new Set(Object.keys(runtimeById));
-
-const onlyProjected = [...projectedIds].filter((id) => !runtimeIds.has(id)).sort();
-const onlyRuntime = [...runtimeIds].filter((id) => !projectedIds.has(id)).sort();
-const shared = [...projectedIds].filter((id) => runtimeIds.has(id)).sort();
-
-const changed = [];
-for (const id of shared) {
-  const a = stable(projectedById[id]);
-  const b = stable(runtimeById[id]);
-  if (a !== b) changed.push(id);
-}
+const drift = computeProjectionDrift(INTERACTIONS_V2);
+const projected = Array.isArray(drift?.projectedRules) ? drift.projectedRules : [];
+const runtime = Array.isArray(drift?.runtimeRules) ? drift.runtimeRules : [];
+const onlyProjected = Array.isArray(drift?.onlyProjectedIds) ? drift.onlyProjectedIds : [];
+const onlyRuntime = Array.isArray(drift?.onlyRuntimeIds) ? drift.onlyRuntimeIds : [];
+const changed = Array.isArray(drift?.changedIds) ? drift.changedIds : [];
+const projectedById = drift?.projectedById instanceof Map ? drift.projectedById : new Map();
+const runtimeById = drift?.runtimeById instanceof Map ? drift.runtimeById : new Map();
 
 console.log("[rules-v2-drift] projected rules:", projected.length);
 console.log("[rules-v2-drift] runtime projected rules:", runtime.length);
@@ -54,8 +27,8 @@ if (changed.length) console.log("  ", changed.join(", "));
 if (changed.length) {
   for (const id of changed) {
     console.log(`\n--- rule ${id} (projected) ---`);
-    console.log(stable(projectedById[id]));
+    console.log(stable(projectedById.get(id)));
     console.log(`--- rule ${id} (runtime) ---`);
-    console.log(stable(runtimeById[id]));
+    console.log(stable(runtimeById.get(id)));
   }
 }

@@ -1,4 +1,6 @@
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
+import { jsonClone } from "./json-clone-v2.mjs";
+import { nowIso } from "./now-iso-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import {
   SPELLBOOK_V2,
@@ -8,10 +10,6 @@ import {
   validateInteractionsV2,
   buildRuleEngineFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
-
-function stableClone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
 
 function buildSnapshot() {
   const spellbookErrors = validateSpellbookV2(SPELLBOOK_V2);
@@ -23,9 +21,9 @@ function buildSnapshot() {
 
   return {
     schema: "orbis.interactions_v2.effective_snapshot",
-    generatedAt: new Date().toISOString(),
+    generatedAt: nowIso(),
     flags: {
-      interactionsV2Bootstrap: stableClone(INTERACTIONS_V2_BOOTSTRAP),
+      interactionsV2Bootstrap: jsonClone(INTERACTIONS_V2_BOOTSTRAP),
     },
     validation: {
       spellbookV2: {
@@ -42,9 +40,9 @@ function buildSnapshot() {
       interactionsV2Rules: Array.isArray(INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules.length : 0,
       projectedRuleEngineRules: Array.isArray(projectedRuleEngine.rules) ? projectedRuleEngine.rules.length : 0,
     },
-    spellbookV2: stableClone(SPELLBOOK_V2),
-    interactionsV2: stableClone(INTERACTIONS_V2),
-    projectedRuleEngine: stableClone(projectedRuleEngine),
+    spellbookV2: jsonClone(SPELLBOOK_V2),
+    interactionsV2: jsonClone(INTERACTIONS_V2),
+    projectedRuleEngine: jsonClone(projectedRuleEngine),
   };
 }
 

@@ -1,29 +1,7 @@
-import { readFileSync } from "node:fs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
+import { readJsonLines } from "./read-jsonl-v2.mjs";
+import { nowIso } from "./now-iso-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
-
-function safeRead(path) {
-  try {
-    return readFileSync(path, "utf8");
-  } catch (_) {
-    return "";
-  }
-}
-
-function parseHistory(text) {
-  return String(text || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      try {
-        return JSON.parse(line);
-      } catch (_) {
-        return null;
-      }
-    })
-    .filter(Boolean);
-}
 
 function pct(part, total) {
   if (total <= 0) return 0;
@@ -49,10 +27,10 @@ function summarize(history, lookback = 10) {
 
 const historyPath = resolveRuleEngineDocPath("milestoneHistory");
 const summaryPath = resolveRuleEngineDocPath("milestoneTrend");
-const history = parseHistory(safeRead(historyPath));
+const history = readJsonLines(historyPath);
 const summary = {
   schema: "orbis.rule_engine_v2.milestone_trend",
-  generatedAt: new Date().toISOString(),
+  generatedAt: nowIso(),
   historyPath,
   ...summarize(history, 10),
 };

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 
 function listFiles() {
@@ -24,7 +25,7 @@ const allowed = new Set([
   "tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
   "tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs",
   "tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs",
-  "docs/master-control-schema.md",
+  RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc,
 ]);
 
 const offenders = [];

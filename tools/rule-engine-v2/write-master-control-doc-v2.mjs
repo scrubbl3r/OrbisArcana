@@ -1,5 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
+import { nowIso } from "./now-iso-v2.mjs";
+import { stringifyJson } from "./stringify-json-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import {
   ACTION_HANDLES_V2,
@@ -10,11 +12,11 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 
 function toJson(value) {
-  return JSON.stringify(value, null, 2);
+  return stringifyJson(value);
 }
 
 function buildDoc() {
-  const generatedAt = new Date().toISOString();
+  const generatedAt = nowIso();
   const spells = Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [];
   const rules = Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules : [];
   const defaults = (INTERACTIONS_V2 && INTERACTIONS_V2.defaults && typeof INTERACTIONS_V2.defaults === "object")
@@ -85,7 +87,7 @@ function buildDoc() {
 function buildMasterControlJson() {
   return {
     schema: "orbis.master_control_v2",
-    generatedAt: new Date().toISOString(),
+    generatedAt: nowIso(),
     spellbook: {
       version: SPELLBOOK_V2 && SPELLBOOK_V2.version,
       spells: Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [],
@@ -126,7 +128,7 @@ function buildMasterControlAuthoringJson() {
 
   return {
     schema: "orbis.master_control_v2.authoring",
-    generatedAt: new Date().toISOString(),
+    generatedAt: nowIso(),
     enabled: !!(INTERACTIONS_V2 && INTERACTIONS_V2.enabled !== false),
     defaults,
     spells: activeSpells,
