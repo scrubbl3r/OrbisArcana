@@ -1,7 +1,9 @@
 import {
-  getCheckManifestEntriesV2,
   getCheckManifestValidatorsByOrderV2,
 } from "./check-manifests-v2.mjs";
+import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
+import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
+import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
@@ -32,9 +34,6 @@ function runCheck(scriptPath) {
 
 const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
 const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
-const READY_PHASES_V2 = getCheckManifestEntriesV2("ready");
-const REGRESSION_CHECKS_V2 = getCheckManifestEntriesV2("regression");
-const CONTRACT_CHECKS_V2 = getCheckManifestEntriesV2("contract");
 const manifestValidators = getCheckManifestValidatorsByOrderV2();
 const manifestValidatorOrder = manifestValidators.map((v) => v.name);
 const manifestChecks = Object.freeze(

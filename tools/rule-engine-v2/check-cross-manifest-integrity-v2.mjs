@@ -1,13 +1,17 @@
 import { failCheck } from "./check-fail-v2.mjs";
 import { normalizeManifestEntries } from "./manifest-collision-utils-v2.mjs";
-import { CHECK_MANIFEST_SETS_V2 } from "./check-manifests-v2.mjs";
+import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
+import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
+import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "cross-manifest-integrity:v2";
 
-const all = CHECK_MANIFEST_SETS_V2.flatMap((set) =>
-  normalizeManifestEntries(set.name, set.entries)
-);
+const all = [
+  ...normalizeManifestEntries("ready", READY_PHASES_V2),
+  ...normalizeManifestEntries("regression", REGRESSION_CHECKS_V2),
+  ...normalizeManifestEntries("contract", CONTRACT_CHECKS_V2),
+];
 
 const idOwners = new Map();
 const scriptOwners = new Map();
