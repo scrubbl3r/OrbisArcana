@@ -1,6 +1,7 @@
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonLines } from "./read-jsonl-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
+import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 
 function pct(part, total) {
@@ -29,7 +30,7 @@ const historyPath = resolveRuleEngineDocPath("milestoneHistory");
 const summaryPath = resolveRuleEngineDocPath("milestoneTrend");
 const history = readJsonLines(historyPath);
 const summary = {
-  schema: "orbis.rule_engine_v2.milestone_trend",
+  schema: RULE_ENGINE_V2_SCHEMA_IDS.milestoneTrend,
   generatedAt: nowIso(),
   historyPath,
   ...summarize(history, 10),

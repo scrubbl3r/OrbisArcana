@@ -5,6 +5,7 @@ import {
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
+import { getInteractionsRules } from "./interactions-v2-utils.mjs";
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : null;
@@ -48,7 +49,7 @@ function main() {
     }
   }
 
-  const expectedRules = Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules : [];
+  const expectedRules = getInteractionsRules(INTERACTIONS_V2);
   if (root.rules.length !== expectedRules.length) {
     failCheck("master-control-authoring:v2", `rules count mismatch: doc=${root.rules.length} expected=${expectedRules.length}`);
   }

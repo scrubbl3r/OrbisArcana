@@ -4,6 +4,7 @@ import { runCheckScript } from "./run-check-v2.mjs";
 import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
+import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import {
   INTERACTIONS_V2,
 } from "../../src/content/interactions-v2/index.js";
@@ -29,7 +30,7 @@ const driftIds = computeDrift();
 const snapshot = loadSnapshot();
 const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 0);
 const health = {
-  schema: "orbis.rule_engine_v2.health",
+  schema: RULE_ENGINE_V2_SCHEMA_IDS.health,
   generatedAt: nowIso(),
   spellbookOk: snapshot?.validation?.spellbookV2?.ok === true,
   interactionsOk: snapshot?.validation?.interactionsV2?.ok === true,

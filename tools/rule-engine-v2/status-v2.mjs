@@ -16,6 +16,7 @@ import {
 } from "./status-checks-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
+import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -75,7 +76,7 @@ const lines = [
 for (const line of lines) console.log(line);
 
 const statusArtifact = {
-  schema: "orbis.rule_engine_v2.status",
+  schema: RULE_ENGINE_V2_SCHEMA_IDS.status,
   generatedAt: nowIso(),
   health: {
     spellbookOk: health.spellbookOk === true,

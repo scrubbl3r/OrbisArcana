@@ -1,8 +1,18 @@
 import { writeFileSync } from "node:fs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
+import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { stringifyJson } from "./stringify-json-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
+import {
+  getInteractionsDefaults,
+  getInteractionsRules,
+  isInteractionsEnabled,
+} from "./interactions-v2-utils.mjs";
+import {
+  listActiveSpellAuthoringRows,
+  listSpellbookSpells,
+} from "./spellbook-v2-utils.mjs";
 import {
   ACTION_HANDLES_V2,
   EVENT_HANDLES_V2,
@@ -17,12 +27,10 @@ function toJson(value) {
 
 function buildDoc() {
   const generatedAt = nowIso();
-  const spells = Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [];
-  const rules = Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules : [];
-  const defaults = (INTERACTIONS_V2 && INTERACTIONS_V2.defaults && typeof INTERACTIONS_V2.defaults === "object")
-    ? INTERACTIONS_V2.defaults
-    : {};
-  const enabled = !!(INTERACTIONS_V2 && INTERACTIONS_V2.enabled !== false);
+  const spells = listSpellbookSpells(SPELLBOOK_V2);
+  const rules = getInteractionsRules(INTERACTIONS_V2);
+  const defaults = getInteractionsDefaults(INTERACTIONS_V2);
+  const enabled = isInteractionsEnabled(INTERACTIONS_V2);
 
   const lines = [];
   lines.push("# OrbisArcana Master Control V2");
@@ -86,19 +94,17 @@ function buildDoc() {
 
 function buildMasterControlJson() {
   return {
-    schema: "orbis.master_control_v2",
+    schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControl,
     generatedAt: nowIso(),
     spellbook: {
       version: SPELLBOOK_V2 && SPELLBOOK_V2.version,
-      spells: Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [],
+      spells: listSpellbookSpells(SPELLBOOK_V2),
     },
     interactions: {
       version: INTERACTIONS_V2 && INTERACTIONS_V2.version,
-      enabled: !!(INTERACTIONS_V2 && INTERACTIONS_V2.enabled !== false),
-      defaults: (INTERACTIONS_V2 && INTERACTIONS_V2.defaults && typeof INTERACTIONS_V2.defaults === "object")
-        ? INTERACTIONS_V2.defaults
-        : {},
-      rules: Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules) ? INTERACTIONS_V2.rules : [],
+      enabled: isInteractionsEnabled(INTERACTIONS_V2),
+      defaults: getInteractionsDefaults(INTERACTIONS_V2),
+      rules: getInteractionsRules(INTERACTIONS_V2),
     },
     handles: {
       signals: SIGNAL_HANDLES_V2,
@@ -109,27 +115,14 @@ function buildMasterControlJson() {
 }
 
 function buildMasterControlAuthoringJson() {
-  const spells = Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [];
-  const activeSpells = spells
-    .filter((s) => s && s.active !== false)
-    .map((s) => ({
-      id: String(s.id || "").trim().toLowerCase(),
-      phrase: String(s.phrase || "").trim().toLowerCase(),
-      onnx: String(s.onnx || "").trim().toLowerCase(),
-      confidence: Number.isFinite(Number(s.confidence)) ? Number(s.confidence) : 0.6,
-      cooldownMs: Number.isFinite(Number(s.cooldownMs)) ? Number(s.cooldownMs) : 0,
-    }));
-  const defaults = (INTERACTIONS_V2 && INTERACTIONS_V2.defaults && typeof INTERACTIONS_V2.defaults === "object")
-    ? INTERACTIONS_V2.defaults
-    : {};
-  const rules = Array.isArray(INTERACTIONS_V2 && INTERACTIONS_V2.rules)
-    ? INTERACTIONS_V2.rules
-    : [];
+  const activeSpells = listActiveSpellAuthoringRows(SPELLBOOK_V2);
+  const defaults = getInteractionsDefaults(INTERACTIONS_V2);
+  const rules = getInteractionsRules(INTERACTIONS_V2);
 
   return {
-    schema: "orbis.master_control_v2.authoring",
+    schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControlAuthoring,
     generatedAt: nowIso(),
-    enabled: !!(INTERACTIONS_V2 && INTERACTIONS_V2.enabled !== false),
+    enabled: isInteractionsEnabled(INTERACTIONS_V2),
     defaults,
     spells: activeSpells,
     rules,

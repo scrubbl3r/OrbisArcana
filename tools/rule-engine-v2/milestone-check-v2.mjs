@@ -6,6 +6,7 @@ import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { appendJsonLine } from "./write-jsonl-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
+import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 
 function runStep(label, scriptPath) {
   console.log(`[milestone:v2] running ${label}...`);
@@ -23,7 +24,7 @@ const batch = ready.ok
   : { ok: false, status: -1 };
 
 const report = {
-  schema: "orbis.rule_engine_v2.milestone",
+  schema: RULE_ENGINE_V2_SCHEMA_IDS.milestone,
   generatedAt: nowIso(),
   gitRef: getGitRef(),
   steps: {

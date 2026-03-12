@@ -17,6 +17,7 @@ import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { failCheckWithDetails } from "./check-fail-v2.mjs";
 import { readJsonCore } from "./read-json-core-v2.mjs";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
+import { listActiveSpellModelRefs } from "./spellbook-v2-utils.mjs";
 
 const FAIL_TAG = "pre-smoke";
 const fail = (message, details = []) => failCheckWithDetails(FAIL_TAG, message, details);
@@ -62,12 +63,7 @@ function verifyKwsManifestCoverage() {
     fail("kws manifest model files invalid", missingFiles);
   }
 
-  const activeSpells = (Array.isArray(SPELLBOOK_V2 && SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells : [])
-    .filter((s) => s && s.active !== false)
-    .map((s) => ({
-      id: String(s.id || "").trim().toLowerCase(),
-      onnx: String(s.onnx || "").trim().toLowerCase(),
-    }));
+  const activeSpells = listActiveSpellModelRefs(SPELLBOOK_V2);
   const coverageErrors = [];
   for (const spell of activeSpells) {
     if (!spell.id || !spell.onnx) continue;
