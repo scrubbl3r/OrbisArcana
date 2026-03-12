@@ -8,6 +8,7 @@ import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
 import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
+import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 import { hasReason, reasonList } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
@@ -45,7 +46,7 @@ function detectInsideWindowAxisSelect() {
   });
   system.start();
   try {
-    emitFlatSpinWindowOpened(eventBus, { axis: "y", atMs: 4100 });
+    emitFlatSpinWindowOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: 4100 });
     emitDetectedSpell(eventBus, {
       id: CHECK_SPELL_IDS_V2.pyro,
       intent: CHECK_SPELL_INTENTS_V2.axisSelect,

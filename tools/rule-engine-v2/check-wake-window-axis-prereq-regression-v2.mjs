@@ -8,9 +8,11 @@ import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
 import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
+import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 import { hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { hasSpellId } from "./check-spell-event-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 
 function main() {
@@ -25,7 +27,7 @@ function main() {
 
   system.start();
   try {
-    emitFlatSpinWindowOpened(eventBus, { axis: "y", atMs: 5000 });
+    emitFlatSpinWindowOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: 5000 });
 
     // Wake-window token before axis selection must be rejected.
     emitDetectedSpell(eventBus, {
@@ -61,7 +63,7 @@ function main() {
   );
   assertCheck(loads.length >= 1, "[wake-window-axis-prereq:v2] expected wake token to load after axis selection");
   assertCheck(
-    loads.some((l) => String(l.spellId || "") === CHECK_SPELL_IDS_V2.sanctum),
+    hasSpellId(loads, CHECK_SPELL_IDS_V2.sanctum),
     "[wake-window-axis-prereq:v2] expected sanctum load after axis selection"
   );
 

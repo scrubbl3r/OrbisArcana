@@ -10,6 +10,7 @@ import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
+import { spellIdText } from "./check-spell-event-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 import { asLowerText } from "./text-utils-v2.mjs";
 
@@ -56,7 +57,7 @@ function main() {
 
     const withoutRuleEngine = detectSpell({ ruleEngineEnabled: false, spellId });
     assertCheck(withoutRuleEngine.casts.length === 1, `[immediate-ownership:v2] expected 1 cast when ruleEngineEnabled=false for ${spellId}, got ${withoutRuleEngine.casts.length}`);
-    assertCheck(String(withoutRuleEngine.casts[0].spellId || "") === spellId, `[immediate-ownership:v2] unexpected cast spellId for ${spellId}`);
+    assertCheck(spellIdText(withoutRuleEngine.casts[0]) === spellId, `[immediate-ownership:v2] unexpected cast spellId for ${spellId}`);
   }
 
   console.log("[immediate-ownership:v2] PASS: immediate spell dispatch ownership contract holds");
