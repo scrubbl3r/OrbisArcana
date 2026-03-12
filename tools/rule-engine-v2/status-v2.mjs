@@ -1,6 +1,3 @@
-import {
-  getCheckManifestValidatorsByOrderV2,
-} from "./check-manifests-v2.mjs";
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
@@ -23,6 +20,11 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "status:v2";
 const logStatus = createTaggedLogger(CHECK_TAG);
+const manifestValidators = Object.freeze([
+  Object.freeze({ name: "ready", script: "tools/rule-engine-v2/check-ready-phases-manifest-v2.mjs" }),
+  Object.freeze({ name: "contract", script: "tools/rule-engine-v2/check-contract-manifest-v2.mjs" }),
+  Object.freeze({ name: "regression", script: "tools/rule-engine-v2/check-regression-manifest-v2.mjs" }),
+]);
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -34,7 +36,6 @@ function runCheck(scriptPath) {
 
 const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
 const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
-const manifestValidators = getCheckManifestValidatorsByOrderV2();
 const manifestValidatorOrder = manifestValidators.map((v) => v.name);
 const manifestChecks = Object.freeze(
   Object.fromEntries(
