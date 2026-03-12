@@ -1,79 +1,53 @@
-import { createSpellDispatchSystem } from "../../src/systems/spell-dispatch-system.js";
 import {
-  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
-  EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_LOADED,
   EVT_VOICE_SPELL_REJECTED,
 } from "../../src/contracts/events.js";
-
-function createEventBus() {
-  const listeners = new Map();
-  return {
-    on(eventName, handler) {
-      const key = String(eventName || "");
-      const bucket = listeners.get(key) || [];
-      bucket.push(handler);
-      listeners.set(key, bucket);
-      return () => {
-        const cur = listeners.get(key) || [];
-        const idx = cur.indexOf(handler);
-        if (idx >= 0) cur.splice(idx, 1);
-        listeners.set(key, cur);
-      };
-    },
-    emit(eventName, payload = {}) {
-      const key = String(eventName || "");
-      const bucket = listeners.get(key) || [];
-      for (const fn of bucket.slice()) fn(payload);
-    },
-  };
-}
-
-function assert(condition, message) {
-  if (!condition) throw new Error(message);
-}
+import { assertCheck } from "./check-assert-v2.mjs";
+import { captureCheckEvents } from "./check-capture-v2.mjs";
+import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
+import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
+import { createCheckEventBus } from "./check-event-bus-v2.mjs";
+import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
+import { hasReason } from "./check-reason-v2.mjs";
+import { createStoredGlobeResources } from "./check-resources-v2.mjs";
+import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { createFixedNowMs } from "./check-time-v2.mjs";
 
 function main() {
-  const eventBus = createEventBus();
-  const rejects = [];
-  const loads = [];
-  let stored = 2;
-  const system = createSpellDispatchSystem({
+  const eventBus = createCheckEventBus();
+  const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
+  const loads = captureCheckEvents(eventBus, EVT_VOICE_SPELL_LOADED);
+  const system = createCheckDispatchSystem({
     eventBus,
-    nowMs: () => 5000,
-    resources: {
-      getStoredGlobeCount: () => stored,
-      consumeStoredGlobe: () => {
-        if (stored <= 0) return { ok: false, stored };
-        stored -= 1;
-        return { ok: true, stored };
-      },
-    },
-    ruleEngineEnabled: true,
+    nowMs: createFixedNowMs(5000),
+    resources: createStoredGlobeResources(2),
   });
-
-  eventBus.on(EVT_VOICE_SPELL_REJECTED, (p = {}) => rejects.push({ ...p }));
-  eventBus.on(EVT_VOICE_SPELL_LOADED, (p = {}) => loads.push({ ...p }));
 
   system.start();
   try {
-    eventBus.emit(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, { axis: "y", atMs: 5000 });
+    emitFlatSpinWindowOpened(eventBus, { axis: "y", atMs: 5000 });
 
     // Wake-window token before axis selection must be rejected.
-    eventBus.emit(EVT_VOICE_SPELL_DETECTED, {
-      spell: { id: "sanctum", intent: "spell.wake_window_select", phrase: "sanctum" },
+    emitDetectedSpell(eventBus, {
+      id: CHECK_SPELL_IDS_V2.sanctum,
+      intent: CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
+      phrase: CHECK_SPELL_IDS_V2.sanctum,
       confidence: 0.8,
       atMs: 5000,
     });
 
     // After axis selection, same wake-window token should load.
-    eventBus.emit(EVT_VOICE_SPELL_DETECTED, {
-      spell: { id: "pyro", intent: "spell.axis_select", phrase: "pyro" },
+    emitDetectedSpell(eventBus, {
+      id: CHECK_SPELL_IDS_V2.pyro,
+      intent: CHECK_SPELL_INTENTS_V2.axisSelect,
+      phrase: CHECK_SPELL_IDS_V2.pyro,
       confidence: 0.8,
       atMs: 5001,
     });
-    eventBus.emit(EVT_VOICE_SPELL_DETECTED, {
-      spell: { id: "sanctum", intent: "spell.wake_window_select", phrase: "sanctum" },
+    emitDetectedSpell(eventBus, {
+      id: CHECK_SPELL_IDS_V2.sanctum,
+      intent: CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
+      phrase: CHECK_SPELL_IDS_V2.sanctum,
       confidence: 0.8,
       atMs: 5002,
     });
@@ -81,13 +55,13 @@ function main() {
     system.stop();
   }
 
-  assert(
-    rejects.some((r) => String(r.reason || "") === "no_axis_selected"),
+  assertCheck(
+    hasReason(rejects, "no_axis_selected"),
     "[wake-window-axis-prereq:v2] expected no_axis_selected reject when wake token spoken before axis token"
   );
-  assert(loads.length >= 1, "[wake-window-axis-prereq:v2] expected wake token to load after axis selection");
-  assert(
-    loads.some((l) => String(l.spellId || "") === "sanctum"),
+  assertCheck(loads.length >= 1, "[wake-window-axis-prereq:v2] expected wake token to load after axis selection");
+  assertCheck(
+    loads.some((l) => String(l.spellId || "") === CHECK_SPELL_IDS_V2.sanctum),
     "[wake-window-axis-prereq:v2] expected sanctum load after axis selection"
   );
 

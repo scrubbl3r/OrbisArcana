@@ -8,6 +8,7 @@ import { appendJsonLine } from "./write-jsonl-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { toTrimmedText } from "./value-utils-v2.mjs";
+import { failCheck, failCheckStatus } from "./check-fail-v2.mjs";
 
 function runStep(label, scriptPath) {
   console.log(`[milestone:v2] running ${label}...`);
@@ -53,8 +54,7 @@ console.log(`[milestone:v2] appended history: ${historyPath}`);
 
 const trendRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend, { stdio: "inherit" });
 if (!trendRun.ok) {
-  console.error("[milestone:v2] FAIL: milestone trend generation failed");
-  process.exit(trendRun.status || 1);
+  failCheckStatus("milestone:v2", "milestone trend generation failed", trendRun.status || 1);
 }
 const trendPath = resolveRuleEngineDocPath("milestoneTrend");
 report.trend = readJsonSafe(trendPath);
@@ -62,7 +62,6 @@ writeJsonFile(outPath, report);
 console.log(`[milestone:v2] refreshed report with trend: ${outPath}`);
 
 if (!report.pass) {
-  console.error("[milestone:v2] FAIL");
-  process.exit(1);
+  failCheck("milestone:v2", "ready and/or smoke batch failed");
 }
 console.log("[milestone:v2] PASS");

@@ -1,102 +1,69 @@
-import { createSpellDispatchSystem } from "../../src/systems/spell-dispatch-system.js";
 import {
-  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
   EVT_VOICE_AXIS_SELECTED,
-  EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_REJECTED,
 } from "../../src/contracts/events.js";
-
-function createEventBus() {
-  const listeners = new Map();
-  return {
-    on(eventName, handler) {
-      const key = String(eventName || "");
-      const bucket = listeners.get(key) || [];
-      bucket.push(handler);
-      listeners.set(key, bucket);
-      return () => {
-        const cur = listeners.get(key) || [];
-        const idx = cur.indexOf(handler);
-        if (idx >= 0) cur.splice(idx, 1);
-        listeners.set(key, cur);
-      };
-    },
-    emit(eventName, payload = {}) {
-      const key = String(eventName || "");
-      const bucket = listeners.get(key) || [];
-      for (const fn of bucket.slice()) fn(payload);
-    },
-  };
-}
-
-function assert(condition, message) {
-  if (!condition) throw new Error(message);
-}
+import { assertCheck } from "./check-assert-v2.mjs";
+import { captureCheckEvents } from "./check-capture-v2.mjs";
+import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
+import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
+import { createCheckEventBus } from "./check-event-bus-v2.mjs";
+import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
+import { hasReason, reasonList } from "./check-reason-v2.mjs";
+import { createStoredGlobeResources } from "./check-resources-v2.mjs";
+import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { createFixedNowMs } from "./check-time-v2.mjs";
 
 function detectOutsideWindow({ spellId, intent, expectedReason }) {
-  const eventBus = createEventBus();
-  const rejects = [];
-  const system = createSpellDispatchSystem({
+  const eventBus = createCheckEventBus();
+  const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
+  const system = createCheckDispatchSystem({
     eventBus,
-    nowMs: () => 4000,
-    resources: {
-      getStoredGlobeCount: () => 1,
-      consumeStoredGlobe: () => ({ ok: true, stored: 0 }),
-    },
-    ruleEngineEnabled: true,
+    nowMs: createFixedNowMs(4000),
+    resources: createStoredGlobeResources(1),
   });
-  eventBus.on(EVT_VOICE_SPELL_REJECTED, (p = {}) => rejects.push({ ...p }));
   system.start();
   try {
-    eventBus.emit(EVT_VOICE_SPELL_DETECTED, {
-      spell: { id: spellId, intent, phrase: spellId },
-      confidence: 0.9,
-      atMs: 4000,
-    });
+    emitDetectedSpell(eventBus, { id: spellId, intent, phrase: spellId, confidence: 0.9, atMs: 4000 });
   } finally {
     system.stop();
   }
-  assert(rejects.length >= 1, `[flat-spin-gating:v2] expected reject for ${spellId} outside flat-spin window`);
-  assert(
-    rejects.some((r) => String(r.reason || "") === expectedReason),
-    `[flat-spin-gating:v2] expected reason=${expectedReason} for ${spellId}; got [${rejects.map((r) => String(r.reason || "")).join(", ")}]`
+  assertCheck(rejects.length >= 1, `[flat-spin-gating:v2] expected reject for ${spellId} outside flat-spin window`);
+  assertCheck(
+    hasReason(rejects, expectedReason),
+    `[flat-spin-gating:v2] expected reason=${expectedReason} for ${spellId}; got [${reasonList(rejects).join(", ")}]`
   );
 }
 
 function detectInsideWindowAxisSelect() {
-  const eventBus = createEventBus();
-  const axisSelected = [];
-  const rejects = [];
-  const system = createSpellDispatchSystem({
+  const eventBus = createCheckEventBus();
+  const axisSelected = captureCheckEvents(eventBus, EVT_VOICE_AXIS_SELECTED);
+  const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
+  const system = createCheckDispatchSystem({
     eventBus,
-    nowMs: () => 4100,
-    resources: {
-      getStoredGlobeCount: () => 1,
-      consumeStoredGlobe: () => ({ ok: true, stored: 0 }),
-    },
-    ruleEngineEnabled: true,
+    nowMs: createFixedNowMs(4100),
+    resources: createStoredGlobeResources(1),
   });
-  eventBus.on(EVT_VOICE_AXIS_SELECTED, (p = {}) => axisSelected.push({ ...p }));
-  eventBus.on(EVT_VOICE_SPELL_REJECTED, (p = {}) => rejects.push({ ...p }));
   system.start();
   try {
-    eventBus.emit(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, { axis: "y", atMs: 4100 });
-    eventBus.emit(EVT_VOICE_SPELL_DETECTED, {
-      spell: { id: "pyro", intent: "spell.axis_select", phrase: "pyro" },
+    emitFlatSpinWindowOpened(eventBus, { axis: "y", atMs: 4100 });
+    emitDetectedSpell(eventBus, {
+      id: CHECK_SPELL_IDS_V2.pyro,
+      intent: CHECK_SPELL_INTENTS_V2.axisSelect,
+      phrase: CHECK_SPELL_IDS_V2.pyro,
       confidence: 0.9,
       atMs: 4100,
     });
   } finally {
     system.stop();
   }
-  assert(axisSelected.length === 1, "[flat-spin-gating:v2] expected axis select event for pyro inside flat-spin window");
-  assert(rejects.length === 0, `[flat-spin-gating:v2] unexpected reject(s) for pyro inside flat-spin window: ${rejects.map((r) => r.reason).join(", ")}`);
+  assertCheck(axisSelected.length === 1, "[flat-spin-gating:v2] expected axis select event for pyro inside flat-spin window");
+  assertCheck(rejects.length === 0, `[flat-spin-gating:v2] unexpected reject(s) for pyro inside flat-spin window: ${rejects.map((r) => r.reason).join(", ")}`);
 }
 
 function main() {
   detectOutsideWindow({
-    spellId: "pyro",
-    intent: "spell.axis_select",
+    spellId: CHECK_SPELL_IDS_V2.pyro,
+    intent: CHECK_SPELL_INTENTS_V2.axisSelect,
     expectedReason: "rule_engine_owned_immediate_spell",
   });
   detectInsideWindowAxisSelect();

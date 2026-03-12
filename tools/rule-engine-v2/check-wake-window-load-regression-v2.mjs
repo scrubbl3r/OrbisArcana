@@ -1,97 +1,68 @@
-import { createSpellDispatchSystem } from "../../src/systems/spell-dispatch-system.js";
 import {
-  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
   EVT_VOICE_AXIS_SELECTED,
-  EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_LOADED,
 } from "../../src/contracts/events.js";
-
-function createEventBus() {
-  const listeners = new Map();
-  return {
-    on(eventName, handler) {
-      const key = String(eventName || "");
-      const bucket = listeners.get(key) || [];
-      bucket.push(handler);
-      listeners.set(key, bucket);
-      return () => {
-        const cur = listeners.get(key) || [];
-        const idx = cur.indexOf(handler);
-        if (idx >= 0) cur.splice(idx, 1);
-        listeners.set(key, cur);
-      };
-    },
-    emit(eventName, payload = {}) {
-      const key = String(eventName || "");
-      const bucket = listeners.get(key) || [];
-      for (const fn of bucket.slice()) fn(payload);
-    },
-  };
-}
-
-function assert(condition, message) {
-  if (!condition) throw new Error(message);
-}
+import { assertCheck } from "./check-assert-v2.mjs";
+import { captureCheckEvents } from "./check-capture-v2.mjs";
+import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
+import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
+import { createCheckEventBus } from "./check-event-bus-v2.mjs";
+import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
+import { createStoredGlobeResources } from "./check-resources-v2.mjs";
+import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { createMutableNow } from "./check-time-v2.mjs";
 
 function runScenario({ axisSpellId, wakeWindowToken, expectedLoadedSpellId, expectedSlot }) {
-  const eventBus = createEventBus();
-  const loaded = [];
-  const axisSelected = [];
-  let stored = 1;
-  const resources = {
-    getStoredGlobeCount: () => stored,
-    consumeStoredGlobe: () => {
-      if (stored <= 0) return { ok: false, stored };
-      stored -= 1;
-      return { ok: true, stored };
-    },
-  };
-  const nowRef = { value: 2000 };
-  const nowMs = () => nowRef.value;
+  const eventBus = createCheckEventBus();
+  const loaded = captureCheckEvents(eventBus, EVT_VOICE_SPELL_LOADED);
+  const axisSelected = captureCheckEvents(eventBus, EVT_VOICE_AXIS_SELECTED);
+  const resources = createStoredGlobeResources(1);
+  const { nowRef, nowMs, advance } = createMutableNow(2000);
 
-  const system = createSpellDispatchSystem({
+  const system = createCheckDispatchSystem({
     eventBus,
     nowMs,
     resources,
-    ruleEngineEnabled: true,
   });
-  eventBus.on(EVT_VOICE_AXIS_SELECTED, (p = {}) => axisSelected.push({ ...p }));
-  eventBus.on(EVT_VOICE_SPELL_LOADED, (p = {}) => loaded.push({ ...p }));
 
   system.start();
   try {
-    eventBus.emit(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, { axis: "y", atMs: nowRef.value });
-    eventBus.emit(EVT_VOICE_SPELL_DETECTED, {
-      spell: { id: axisSpellId, intent: "spell.axis_select", phrase: axisSpellId },
+    emitFlatSpinWindowOpened(eventBus, { axis: "y", atMs: nowRef.value });
+    emitDetectedSpell(eventBus, {
+      id: axisSpellId,
+      intent: CHECK_SPELL_INTENTS_V2.axisSelect,
+      phrase: axisSpellId,
       atMs: nowRef.value,
     });
-    nowRef.value += 10;
-    eventBus.emit(EVT_VOICE_SPELL_DETECTED, {
-      spell: { id: wakeWindowToken, intent: "spell.wake_window_select", phrase: wakeWindowToken },
+    advance(10);
+    emitDetectedSpell(eventBus, {
+      id: wakeWindowToken,
+      intent: CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
+      phrase: wakeWindowToken,
       atMs: nowRef.value,
     });
   } finally {
     system.stop();
   }
 
-  assert(axisSelected.length === 1, `[wake-load-regression] expected axis select for ${axisSpellId} + ${wakeWindowToken}`);
-  assert(loaded.length === 1, `[wake-load-regression] expected one loaded spell for ${axisSpellId} + ${wakeWindowToken}`);
-  assert(String(loaded[0].spellId || "") === expectedLoadedSpellId, `[wake-load-regression] expected loaded spell ${expectedLoadedSpellId}, got ${loaded[0].spellId || ""}`);
-  assert(String(loaded[0].axis || "") === "y", `[wake-load-regression] expected axis y, got ${loaded[0].axis || ""}`);
-  assert(String(loaded[0].slot || "") === expectedSlot, `[wake-load-regression] expected slot ${expectedSlot}, got ${loaded[0].slot || ""}`);
+  assertCheck(axisSelected.length === 1, `[wake-load-regression] expected axis select for ${axisSpellId} + ${wakeWindowToken}`);
+  assertCheck(loaded.length === 1, `[wake-load-regression] expected one loaded spell for ${axisSpellId} + ${wakeWindowToken}`);
+  assertCheck(String(loaded[0].spellId || "") === expectedLoadedSpellId, `[wake-load-regression] expected loaded spell ${expectedLoadedSpellId}, got ${loaded[0].spellId || ""}`);
+  assertCheck(String(loaded[0].axis || "") === "y", `[wake-load-regression] expected axis y, got ${loaded[0].axis || ""}`);
+  assertCheck(String(loaded[0].slot || "") === expectedSlot, `[wake-load-regression] expected slot ${expectedSlot}, got ${loaded[0].slot || ""}`);
 }
 
 function main() {
   runScenario({
-    axisSpellId: "pyro",
-    wakeWindowToken: "sanctum",
-    expectedLoadedSpellId: "sanctum",
+    axisSpellId: CHECK_SPELL_IDS_V2.pyro,
+    wakeWindowToken: CHECK_SPELL_IDS_V2.sanctum,
+    expectedLoadedSpellId: CHECK_SPELL_IDS_V2.sanctum,
     expectedSlot: "UD",
   });
   runScenario({
-    axisSpellId: "pyro",
-    wakeWindowToken: "rota",
-    expectedLoadedSpellId: "rota",
+    axisSpellId: CHECK_SPELL_IDS_V2.pyro,
+    wakeWindowToken: CHECK_SPELL_IDS_V2.rota,
+    expectedLoadedSpellId: CHECK_SPELL_IDS_V2.rota,
     expectedSlot: "FB",
   });
   console.log("[wake-load-regression:v2] PASS: wake-window load flow works");
