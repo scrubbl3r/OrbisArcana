@@ -4,6 +4,7 @@ import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { stringifyJson } from "./stringify-json-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
+import { createTaggedLogger } from "./log-tag-v2.mjs";
 import {
   getInteractionsDefaults,
   getInteractionsRules,
@@ -22,10 +23,7 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 
 const CHECK_TAG = "master-control-doc:v2";
-
-function logMasterControlDoc(text) {
-  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
-}
+const logMasterControlDoc = createTaggedLogger(CHECK_TAG);
 
 function toJson(value) {
   return stringifyJson(value);
