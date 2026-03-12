@@ -9,12 +9,10 @@ import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { toTrimmedText } from "./value-utils-v2.mjs";
 import { failCheck, failCheckStatus } from "./check-fail-v2.mjs";
+import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "milestone:v2";
-
-function logMilestone(text) {
-  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
-}
+const logMilestone = createTaggedLogger(CHECK_TAG);
 
 function runStep(label, scriptPath) {
   logMilestone(`running ${label}...`);

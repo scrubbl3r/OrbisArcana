@@ -10,12 +10,10 @@ import {
   INTERACTIONS_V2,
 } from "../../src/content/interactions-v2/index.js";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
+import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "doctor:v2";
-
-function logDoctor(text) {
-  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
-}
+const logDoctor = createTaggedLogger(CHECK_TAG);
 
 function runPreSmoke() {
   const res = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck, { stdio: "inherit" });

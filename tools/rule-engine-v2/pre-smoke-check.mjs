@@ -18,14 +18,12 @@ import { failCheckWithDetails } from "./check-fail-v2.mjs";
 import { readJsonCore } from "./read-json-core-v2.mjs";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 import { listActiveSpellModelRefs } from "./spellbook-v2-utils.mjs";
+import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "pre-smoke";
 const FAIL_TAG = CHECK_TAG;
 const fail = (message, details = []) => failCheckWithDetails(FAIL_TAG, message, details);
-
-function logPreSmoke(text) {
-  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
-}
+const logPreSmoke = createTaggedLogger(CHECK_TAG);
 
 function loadJson(path) {
   const result = readJsonCore(path);

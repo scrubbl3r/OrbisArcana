@@ -4,12 +4,10 @@ import { nowIso } from "./now-iso-v2.mjs";
 import { isTrue } from "./bool-utils-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
+import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "milestone:trend:v2";
-
-function logTrend(text) {
-  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
-}
+const logTrend = createTaggedLogger(CHECK_TAG);
 
 function pct(part, total) {
   if (total <= 0) return 0;

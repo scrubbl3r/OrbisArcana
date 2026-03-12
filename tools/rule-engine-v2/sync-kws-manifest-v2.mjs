@@ -6,12 +6,10 @@ import {
 } from "./kws-manifest-from-spellbook-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
+import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "sync:kws-manifest:v2";
-
-function logSync(text) {
-  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
-}
+const logSync = createTaggedLogger(CHECK_TAG);
 
 const manifestPath = resolve(process.cwd(), KWS_MANIFEST_REL_PATH);
 const nextManifest = normalizeKwsManifest(buildKwsManifestFromSpellbookV2());
