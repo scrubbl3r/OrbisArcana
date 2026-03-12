@@ -6,20 +6,18 @@ import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
 import { getInteractionsRules } from "./interactions-v2-utils.mjs";
+import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
+import { asLowerText } from "./text-utils-v2.mjs";
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : null;
-}
-
-function asId(v) {
-  return String(v || "").trim().toLowerCase();
 }
 
 function main() {
   const doc = readJsonOrFail("master-control-authoring:v2", RULE_ENGINE_V2_DOC_PATHS.masterControlAuthoringJson);
   const root = asObj(doc);
   if (!root) failCheck("master-control-authoring:v2", "root must be an object");
-  if (String(root.schema || "") !== "orbis.master_control_v2.authoring") {
+  if (String(root.schema || "") !== RULE_ENGINE_V2_SCHEMA_IDS.masterControlAuthoring) {
     failCheck("master-control-authoring:v2", `unexpected schema: ${String(root.schema || "")}`);
   }
 
@@ -40,7 +38,7 @@ function main() {
   for (const s of root.spells) {
     const spell = asObj(s);
     if (!spell) failCheck("master-control-authoring:v2", "spells[] entries must be objects");
-    const id = asId(spell.id);
+    const id = asLowerText(spell.id);
     if (!id) failCheck("master-control-authoring:v2", "spells[] entry missing id");
     if (seenSpellIds.has(id)) failCheck("master-control-authoring:v2", `duplicate spell id: ${id}`);
     seenSpellIds.add(id);

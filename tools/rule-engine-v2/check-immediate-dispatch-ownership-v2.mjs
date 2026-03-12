@@ -5,6 +5,7 @@ import {
   EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_REJECTED,
 } from "../../src/contracts/events.js";
+import { asLowerText } from "./text-utils-v2.mjs";
 
 function createEventBus() {
   const listeners = new Map();
@@ -65,7 +66,7 @@ function main() {
   const ownedImmediate = (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS)
     ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS
     : [])
-    .map((id) => String(id || "").trim().toLowerCase())
+    .map((id) => asLowerText(id))
     .filter(Boolean);
   assert(ownedImmediate.length > 0, "[immediate-ownership:v2] expected non-empty RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS");
 

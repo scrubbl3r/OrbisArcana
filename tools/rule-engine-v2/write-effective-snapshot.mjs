@@ -3,6 +3,7 @@ import { getInteractionsRules } from "./interactions-v2-utils.mjs";
 import { jsonClone } from "./json-clone-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
+import { countSpellbookSpells } from "./spellbook-v2-utils.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import {
   SPELLBOOK_V2,
@@ -39,7 +40,7 @@ function buildSnapshot() {
       },
     },
     counts: {
-      spellbookV2Spells: Array.isArray(SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells.length : 0,
+      spellbookV2Spells: countSpellbookSpells(SPELLBOOK_V2),
       interactionsV2Rules: interactionRules.length,
       projectedRuleEngineRules: Array.isArray(projectedRuleEngine.rules) ? projectedRuleEngine.rules.length : 0,
     },

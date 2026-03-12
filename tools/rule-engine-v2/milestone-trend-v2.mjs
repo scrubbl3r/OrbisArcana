@@ -1,6 +1,7 @@
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonLines } from "./read-jsonl-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
+import { isTrue } from "./bool-utils-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 
@@ -12,15 +13,15 @@ function pct(part, total) {
 function summarize(history, lookback = 10) {
   const all = Array.isArray(history) ? history : [];
   const recent = all.slice(-Math.max(1, lookback));
-  const passAll = all.filter((r) => r && r.pass === true).length;
-  const passRecent = recent.filter((r) => r && r.pass === true).length;
+  const passAll = all.filter((r) => isTrue(r && r.pass)).length;
+  const passRecent = recent.filter((r) => isTrue(r && r.pass)).length;
   const latest = all.length ? all[all.length - 1] : null;
   return {
     totalRuns: all.length,
     recentWindow: recent.length,
     passRateAllPct: pct(passAll, all.length),
     passRateRecentPct: pct(passRecent, recent.length),
-    latestPass: !!(latest && latest.pass === true),
+    latestPass: isTrue(latest && latest.pass),
     latestGeneratedAt: latest ? String(latest.generatedAt || "") : "",
     latestGitRef: latest ? String(latest.gitRef || "") : "",
   };

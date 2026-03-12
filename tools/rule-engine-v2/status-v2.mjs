@@ -6,6 +6,8 @@ import {
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
+import { isTrue } from "./bool-utils-v2.mjs";
+import { toNumberOr, toTrimmedText } from "./value-utils-v2.mjs";
 import { formatCheckStatusList } from "./status-format-v2.mjs";
 import {
   buildCheckBooleanMap,
@@ -54,11 +56,11 @@ const regressionStatusList = formatCheckStatusList(REGRESSION_CHECKS_V2, regress
 
 const lines = [
   "[status:v2] ---",
-  `[status:v2] spellbook ok: ${yn(health.spellbookOk === true)}`,
-  `[status:v2] interactions ok: ${yn(health.interactionsOk === true)}`,
-  `[status:v2] bootstrap uses v2: ${yn(health.bootstrapUsesV2Adapter === true)}`,
-  `[status:v2] rules projection only: ${yn(health.projectionRulesOnly === true)}`,
-  `[status:v2] rules (interactions/projection): ${Number(health.interactionsRuleCount || 0)}/${Number(health.projectedRuleCount || 0)}`,
+  `[status:v2] spellbook ok: ${yn(isTrue(health.spellbookOk))}`,
+  `[status:v2] interactions ok: ${yn(isTrue(health.interactionsOk))}`,
+  `[status:v2] bootstrap uses v2: ${yn(isTrue(health.bootstrapUsesV2Adapter))}`,
+  `[status:v2] rules projection only: ${yn(isTrue(health.projectionRulesOnly))}`,
+  `[status:v2] rules (interactions/projection): ${toNumberOr(health.interactionsRuleCount)}/${toNumberOr(health.projectedRuleCount)}`,
   `[status:v2] drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
   `[status:v2] manifests (ready/contract/regression): ${manifestStatusSummary}`,
   `[status:v2] ready phases ok: ${yn(readyPhaseResults.ok)}`,
@@ -67,9 +69,9 @@ const lines = [
   `[status:v2] regressions: ${regressionStatusList}`,
   `[status:v2] contracts ok: ${yn(contractResults.ok)}`,
   `[status:v2] contracts: ${contractStatusList}`,
-  `[status:v2] milestone runs: ${Number(trend.totalRuns || 0)}`,
-  `[status:v2] pass rate all/recent: ${Number(trend.passRateAllPct || 0)}% / ${Number(trend.passRateRecentPct || 0)}%`,
-  `[status:v2] latest milestone: ${trend.latestPass === true ? "PASS" : "FAIL"} ${String(trend.latestGitRef || "").trim()}`,
+  `[status:v2] milestone runs: ${toNumberOr(trend.totalRuns)}`,
+  `[status:v2] pass rate all/recent: ${toNumberOr(trend.passRateAllPct)}% / ${toNumberOr(trend.passRateRecentPct)}%`,
+  `[status:v2] latest milestone: ${isTrue(trend.latestPass) ? "PASS" : "FAIL"} ${toTrimmedText(trend.latestGitRef)}`,
   "[status:v2] ---",
 ];
 
@@ -79,12 +81,12 @@ const statusArtifact = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.status,
   generatedAt: nowIso(),
   health: {
-    spellbookOk: health.spellbookOk === true,
-    interactionsOk: health.interactionsOk === true,
-    bootstrapUsesV2Adapter: health.bootstrapUsesV2Adapter === true,
-    projectionRulesOnly: health.projectionRulesOnly === true,
-    interactionsRuleCount: Number(health.interactionsRuleCount || 0),
-    projectedRuleCount: Number(health.projectedRuleCount || 0),
+    spellbookOk: isTrue(health.spellbookOk),
+    interactionsOk: isTrue(health.interactionsOk),
+    bootstrapUsesV2Adapter: isTrue(health.bootstrapUsesV2Adapter),
+    projectionRulesOnly: isTrue(health.projectionRulesOnly),
+    interactionsRuleCount: toNumberOr(health.interactionsRuleCount),
+    projectedRuleCount: toNumberOr(health.projectedRuleCount),
     driftRuleIds: Array.isArray(health.driftRuleIds) ? health.driftRuleIds.slice() : [],
   },
   manifests: manifestBooleans,
@@ -97,11 +99,11 @@ const statusArtifact = {
     contractsOk: contractResults.ok,
   },
   trend: {
-    totalRuns: Number(trend.totalRuns || 0),
-    passRateAllPct: Number(trend.passRateAllPct || 0),
-    passRateRecentPct: Number(trend.passRateRecentPct || 0),
-    latestPass: trend.latestPass === true,
-    latestGitRef: String(trend.latestGitRef || "").trim(),
+    totalRuns: toNumberOr(trend.totalRuns),
+    passRateAllPct: toNumberOr(trend.passRateAllPct),
+    passRateRecentPct: toNumberOr(trend.passRateRecentPct),
+    latestPass: isTrue(trend.latestPass),
+    latestGitRef: toTrimmedText(trend.latestGitRef),
   },
 };
 
