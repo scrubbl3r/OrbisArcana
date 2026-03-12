@@ -12,8 +12,12 @@ import { failCheck, failCheckStatus } from "./check-fail-v2.mjs";
 
 const CHECK_TAG = "milestone:v2";
 
+function logMilestone(text) {
+  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
+}
+
 function runStep(label, scriptPath) {
-  console.log(`[${CHECK_TAG}] running ${label}...`);
+  logMilestone(`running ${label}...`);
   return runCheckScript(scriptPath, { stdio: "inherit" });
 }
 
@@ -48,11 +52,11 @@ const report = {
 
 const outPath = resolveRuleEngineDocPath("milestoneSmoke");
 writeJsonFile(outPath, report);
-console.log(`[${CHECK_TAG}] wrote report: ${outPath}`);
+logMilestone(`wrote report: ${outPath}`);
 
 const historyPath = resolveRuleEngineDocPath("milestoneHistory");
 appendJsonLine(historyPath, report);
-console.log(`[${CHECK_TAG}] appended history: ${historyPath}`);
+logMilestone(`appended history: ${historyPath}`);
 
 const trendRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend, { stdio: "inherit" });
 if (!trendRun.ok) {
@@ -61,9 +65,9 @@ if (!trendRun.ok) {
 const trendPath = resolveRuleEngineDocPath("milestoneTrend");
 report.trend = readJsonSafe(trendPath);
 writeJsonFile(outPath, report);
-console.log(`[${CHECK_TAG}] refreshed report with trend: ${outPath}`);
+logMilestone(`refreshed report with trend: ${outPath}`);
 
 if (!report.pass) {
   failCheck(CHECK_TAG, "ready and/or smoke batch failed");
 }
-console.log(`[${CHECK_TAG}] PASS`);
+logMilestone("PASS");

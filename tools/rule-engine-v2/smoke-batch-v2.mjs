@@ -6,8 +6,13 @@ import {
 import { jsonClone } from "./json-clone-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 
-const FAIL_TAG = "smoke:batch:v2";
+const CHECK_TAG = "smoke:batch:v2";
+const FAIL_TAG = CHECK_TAG;
 const fail = (message) => failCheck(FAIL_TAG, message);
+
+function logSmokePass(text) {
+  console.log(`[${CHECK_TAG}] PASS ${String(text || "")}`);
+}
 
 function ruleById(cfg, ruleId) {
   const list = Array.isArray(cfg.rules) ? cfg.rules : [];
@@ -27,13 +32,13 @@ function expectValidationFail(caseName, cfg, expectedSubstring) {
   if (!text.includes(expectedSubstring)) {
     fail(`${caseName}: expected error containing "${expectedSubstring}", got "${text}"`);
   }
-  console.log(`[smoke:batch:v2] PASS ${caseName}`);
+  logSmokePass(caseName);
 }
 
 function expectValidationPass(caseName, cfg) {
   const res = validateInteractionsV2(cfg);
   if (!res.ok) fail(`${caseName}: expected validation pass, got ${(res.errors || []).join(" | ")}`);
-  console.log(`[smoke:batch:v2] PASS ${caseName}`);
+  logSmokePass(caseName);
 }
 
 function expectBuildPass(caseName, cfg, assertFn = null) {
@@ -44,7 +49,7 @@ function expectBuildPass(caseName, cfg, assertFn = null) {
     fail(`${caseName}: expected build pass, got ${err && err.message ? err.message : String(err)}`);
   }
   if (typeof assertFn === "function") assertFn(projected);
-  console.log(`[smoke:batch:v2] PASS ${caseName}`);
+  logSmokePass(caseName);
 }
 
 function run() {
@@ -142,7 +147,7 @@ function run() {
     });
   }
 
-  console.log("[smoke:batch:v2] PASS all cases");
+  logSmokePass("all cases");
 }
 
 run();

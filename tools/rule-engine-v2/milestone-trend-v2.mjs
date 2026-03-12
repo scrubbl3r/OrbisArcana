@@ -7,6 +7,10 @@ import { writeJsonFile } from "./write-json-v2.mjs";
 
 const CHECK_TAG = "milestone:trend:v2";
 
+function logTrend(text) {
+  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
+}
+
 function pct(part, total) {
   if (total <= 0) return 0;
   return Math.round((part / total) * 1000) / 10;
@@ -39,9 +43,9 @@ const summary = {
   ...summarize(history, 10),
 };
 
-console.log(`[${CHECK_TAG}] total runs: ${summary.totalRuns}`);
-console.log(`[${CHECK_TAG}] pass rate (all): ${summary.passRateAllPct}%`);
-console.log(`[${CHECK_TAG}] pass rate (recent ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
-console.log(`[${CHECK_TAG}] latest: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
+logTrend(`total runs: ${summary.totalRuns}`);
+logTrend(`pass rate (all): ${summary.passRateAllPct}%`);
+logTrend(`pass rate (recent ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
+logTrend(`latest: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
 writeJsonFile(summaryPath, summary);
-console.log(`[${CHECK_TAG}] wrote summary: ${summaryPath}`);
+logTrend(`wrote summary: ${summaryPath}`);

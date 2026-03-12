@@ -11,6 +11,12 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 
+const CHECK_TAG = "doctor:v2";
+
+function logDoctor(text) {
+  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
+}
+
 function runPreSmoke() {
   const res = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck, { stdio: "inherit" });
   if (!res.ok) process.exit(res.status || 1);
@@ -47,13 +53,13 @@ const health = {
 const healthPath = resolveRuleEngineDocPath("health");
 writeJsonFile(healthPath, health);
 
-console.log("[doctor:v2] ----");
-console.log(`[doctor:v2] spellbook ok: ${spellbookOk}`);
-console.log(`[doctor:v2] interactions ok: ${interactionsOk}`);
-console.log(`[doctor:v2] bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
-console.log("[doctor:v2] rules mode: projection_only");
-console.log(`[doctor:v2] rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules || 0}/${projectedRuleCount}`);
-console.log(`[doctor:v2] runtime-projection drift ids: ${driftIds.length}`);
-if (driftIds.length) console.log(`[doctor:v2] drift: ${driftIds.join(", ")}`);
-console.log(`[doctor:v2] wrote health: ${healthPath}`);
-console.log("[doctor:v2] ----");
+logDoctor("----");
+logDoctor(`spellbook ok: ${spellbookOk}`);
+logDoctor(`interactions ok: ${interactionsOk}`);
+logDoctor(`bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
+logDoctor("rules mode: projection_only");
+logDoctor(`rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules || 0}/${projectedRuleCount}`);
+logDoctor(`runtime-projection drift ids: ${driftIds.length}`);
+if (driftIds.length) logDoctor(`drift: ${driftIds.join(", ")}`);
+logDoctor(`wrote health: ${healthPath}`);
+logDoctor("----");

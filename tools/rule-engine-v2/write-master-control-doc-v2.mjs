@@ -21,6 +21,12 @@ import {
   SPELLBOOK_V2,
 } from "../../src/content/interactions-v2/index.js";
 
+const CHECK_TAG = "master-control-doc:v2";
+
+function logMasterControlDoc(text) {
+  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
+}
+
 function toJson(value) {
   return stringifyJson(value);
 }
@@ -131,10 +137,10 @@ function buildMasterControlAuthoringJson() {
 
 const outPath = resolveRuleEngineDocPath("masterControlMarkdown");
 writeFileSync(outPath, buildDoc(), "utf8");
-console.log(`[master-control-doc:v2] wrote ${outPath}`);
+logMasterControlDoc(`wrote ${outPath}`);
 const outJsonPath = resolveRuleEngineDocPath("masterControlJson");
 writeJsonFile(outJsonPath, buildMasterControlJson());
-console.log(`[master-control-doc:v2] wrote ${outJsonPath}`);
+logMasterControlDoc(`wrote ${outJsonPath}`);
 const outAuthoringJsonPath = resolveRuleEngineDocPath("masterControlAuthoringJson");
 writeJsonFile(outAuthoringJsonPath, buildMasterControlAuthoringJson());
-console.log(`[master-control-doc:v2] wrote ${outAuthoringJsonPath}`);
+logMasterControlDoc(`wrote ${outAuthoringJsonPath}`);

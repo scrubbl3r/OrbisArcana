@@ -19,8 +19,13 @@ import { readJsonCore } from "./read-json-core-v2.mjs";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 import { listActiveSpellModelRefs } from "./spellbook-v2-utils.mjs";
 
-const FAIL_TAG = "pre-smoke";
+const CHECK_TAG = "pre-smoke";
+const FAIL_TAG = CHECK_TAG;
 const fail = (message, details = []) => failCheckWithDetails(FAIL_TAG, message, details);
+
+function logPreSmoke(text) {
+  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
+}
 
 function loadJson(path) {
   const result = readJsonCore(path);
@@ -110,4 +115,4 @@ if (!masterDocRun.ok) {
   fail("master control doc generation failed");
 }
 
-console.log("[pre-smoke] OK: validators passed + effective snapshot refreshed");
+logPreSmoke("OK: validators passed + effective snapshot refreshed");

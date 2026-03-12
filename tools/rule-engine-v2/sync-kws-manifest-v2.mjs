@@ -7,6 +7,12 @@ import {
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 
+const CHECK_TAG = "sync:kws-manifest:v2";
+
+function logSync(text) {
+  console.log(`[${CHECK_TAG}] ${String(text || "")}`);
+}
+
 const manifestPath = resolve(process.cwd(), KWS_MANIFEST_REL_PATH);
 const nextManifest = normalizeKwsManifest(buildKwsManifestFromSpellbookV2());
 
@@ -16,6 +22,6 @@ prev = prevRaw ? normalizeKwsManifest(prevRaw) : null;
 
 writeJsonFile(manifestPath, nextManifest);
 const changed = JSON.stringify(prev) !== JSON.stringify(nextManifest);
-console.log(`[sync:kws-manifest:v2] wrote ${manifestPath}`);
-console.log(`[sync:kws-manifest:v2] models: ${nextManifest.models.length}`);
-console.log(`[sync:kws-manifest:v2] changed: ${changed ? "yes" : "no"}`);
+logSync(`wrote ${manifestPath}`);
+logSync(`models: ${nextManifest.models.length}`);
+logSync(`changed: ${changed ? "yes" : "no"}`);
