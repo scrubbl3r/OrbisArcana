@@ -1,4 +1,6 @@
-import { ALL_MANIFEST_CHECKS_V2 } from "./manifest-check-entries-v2.mjs";
+import {
+  flattenManifestChecksV2,
+} from "./manifest-check-entries-v2.mjs";
 import {
   MANIFEST_VALIDATORS_V2,
   isManifestValidatorScriptV2,
@@ -16,7 +18,7 @@ for (const validator of MANIFEST_VALIDATORS_V2) {
   });
 }
 
-for (const entry of ALL_MANIFEST_CHECKS_V2) {
+for (const entry of flattenManifestChecksV2()) {
   if (isManifestValidatorScriptV2(entry.script)) continue;
   runCheckScriptOrFailStatus({
     tag: CHECK_TAG,

@@ -1,6 +1,8 @@
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
-import { ALL_MANIFEST_CHECKS_V2 } from "./manifest-check-entries-v2.mjs";
+import {
+  flattenManifestChecksV2,
+} from "./manifest-check-entries-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "script-registry:v2";
@@ -22,7 +24,7 @@ const explicitScriptNames = Object.freeze({
 
 const missing = [];
 const mismatched = [];
-for (const check of ALL_MANIFEST_CHECKS_V2) {
+for (const check of flattenManifestChecksV2()) {
   const id = String(check?.id || "").trim();
   const scriptPath = String(check?.script || "").trim();
   const scriptName = explicitScriptNames[id] || `check:${id.replace(/_/g, "-")}:v2`;
