@@ -1,5 +1,4 @@
-import { resolve } from "node:path";
-import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import {
   SPELLBOOK_V2,
@@ -49,7 +48,7 @@ function buildSnapshot() {
   };
 }
 
-const outputPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.effectiveSnapshot);
+const outputPath = resolveRuleEngineDocPath("effectiveSnapshot");
 const snapshot = buildSnapshot();
 writeJsonFile(outputPath, snapshot);
 console.log(`wrote ${outputPath}`);

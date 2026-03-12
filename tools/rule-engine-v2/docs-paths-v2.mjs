@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 export const RULE_ENGINE_V2_DOC_PATHS = Object.freeze({
   effectiveSnapshot: "docs/effective-interactions-v2.snapshot.json",
   masterControlMarkdown: "docs/master-control-v2.md",
@@ -9,3 +11,8 @@ export const RULE_ENGINE_V2_DOC_PATHS = Object.freeze({
   milestoneHistory: "docs/rule-engine-v2.milestone-history.jsonl",
   milestoneTrend: "docs/rule-engine-v2.milestone-trend.json",
 });
+
+export function resolveRuleEngineDocPath(key) {
+  const rel = RULE_ENGINE_V2_DOC_PATHS[key];
+  return resolve(process.cwd(), rel);
+}

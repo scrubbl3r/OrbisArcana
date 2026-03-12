@@ -1,7 +1,6 @@
 import { appendFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
@@ -36,15 +35,15 @@ const report = {
       skipped: !ready.ok,
     },
   },
-  health: readJsonSafe(resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.health)),
+  health: readJsonSafe(resolveRuleEngineDocPath("health")),
   pass: ready.ok && batch.ok,
 };
 
-const outPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.milestoneSmoke);
+const outPath = resolveRuleEngineDocPath("milestoneSmoke");
 writeJsonFile(outPath, report);
 console.log(`[milestone:v2] wrote report: ${outPath}`);
 
-const historyPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.milestoneHistory);
+const historyPath = resolveRuleEngineDocPath("milestoneHistory");
 appendFileSync(historyPath, JSON.stringify(report) + "\n", "utf8");
 console.log(`[milestone:v2] appended history: ${historyPath}`);
 
@@ -53,7 +52,7 @@ if (!trendRun.ok) {
   console.error("[milestone:v2] FAIL: milestone trend generation failed");
   process.exit(trendRun.status || 1);
 }
-const trendPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.milestoneTrend);
+const trendPath = resolveRuleEngineDocPath("milestoneTrend");
 report.trend = readJsonSafe(trendPath);
 writeJsonFile(outPath, report);
 console.log(`[milestone:v2] refreshed report with trend: ${outPath}`);

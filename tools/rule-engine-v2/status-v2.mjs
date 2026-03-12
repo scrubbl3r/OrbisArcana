@@ -1,10 +1,9 @@
-import { resolve } from "node:path";
 import {
   CHECK_MANIFEST_SETS_BY_NAME_V2,
   CHECK_MANIFEST_VALIDATOR_ORDER_V2,
   CHECK_MANIFEST_VALIDATORS_V2,
 } from "./check-manifests-v2.mjs";
-import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { formatCheckStatusList } from "./status-format-v2.mjs";
@@ -25,8 +24,8 @@ function runCheck(scriptPath) {
   return runCheckScript(scriptPath, { stdio: "ignore" }).ok;
 }
 
-const health = readJsonSafe(resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.health)) || {};
-const trend = readJsonSafe(resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.milestoneTrend)) || {};
+const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
+const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
 const READY_PHASES_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.ready || [];
 const REGRESSION_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.regression || [];
 const CONTRACT_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.contract || [];
@@ -104,6 +103,6 @@ const statusArtifact = {
   },
 };
 
-const statusPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.status);
+const statusPath = resolveRuleEngineDocPath("status");
 writeJsonFile(statusPath, statusArtifact);
 console.log(`[status:v2] wrote status: ${statusPath}`);

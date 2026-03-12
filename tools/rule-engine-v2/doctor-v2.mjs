@@ -1,5 +1,4 @@
-import { resolve } from "node:path";
-import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
@@ -35,7 +34,7 @@ function computeDrift() {
 }
 
 function loadSnapshot() {
-  return readJsonSafe(resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.effectiveSnapshot));
+  return readJsonSafe(resolveRuleEngineDocPath("effectiveSnapshot"));
 }
 
 runPreSmoke();
@@ -54,7 +53,7 @@ const health = {
   projectedRuleCount,
   driftRuleIds: driftIds,
 };
-const healthPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.health);
+const healthPath = resolveRuleEngineDocPath("health");
 writeJsonFile(healthPath, health);
 
 console.log("[doctor:v2] ----");

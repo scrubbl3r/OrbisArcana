@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 
 function safeRead(path) {
@@ -48,8 +47,8 @@ function summarize(history, lookback = 10) {
   };
 }
 
-const historyPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.milestoneHistory);
-const summaryPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.milestoneTrend);
+const historyPath = resolveRuleEngineDocPath("milestoneHistory");
+const summaryPath = resolveRuleEngineDocPath("milestoneTrend");
 const history = parseHistory(safeRead(historyPath));
 const summary = {
   schema: "orbis.rule_engine_v2.milestone_trend",

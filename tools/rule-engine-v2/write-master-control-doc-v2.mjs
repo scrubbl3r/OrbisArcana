@@ -1,6 +1,5 @@
 import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import {
   ACTION_HANDLES_V2,
@@ -135,12 +134,12 @@ function buildMasterControlAuthoringJson() {
   };
 }
 
-const outPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.masterControlMarkdown);
+const outPath = resolveRuleEngineDocPath("masterControlMarkdown");
 writeFileSync(outPath, buildDoc(), "utf8");
 console.log(`[master-control-doc:v2] wrote ${outPath}`);
-const outJsonPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.masterControlJson);
+const outJsonPath = resolveRuleEngineDocPath("masterControlJson");
 writeJsonFile(outJsonPath, buildMasterControlJson());
 console.log(`[master-control-doc:v2] wrote ${outJsonPath}`);
-const outAuthoringJsonPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.masterControlAuthoringJson);
+const outAuthoringJsonPath = resolveRuleEngineDocPath("masterControlAuthoringJson");
 writeJsonFile(outAuthoringJsonPath, buildMasterControlAuthoringJson());
 console.log(`[master-control-doc:v2] wrote ${outAuthoringJsonPath}`);
