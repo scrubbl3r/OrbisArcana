@@ -2,6 +2,7 @@ import {
   INTERACTIONS_V2,
   SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID,
 } from "../../src/content/interactions-v2/index.js";
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
 
@@ -14,7 +15,7 @@ function asId(v) {
 }
 
 function main() {
-  const doc = readJsonOrFail("master-control-authoring:v2", "docs/master-control-v2.authoring.json");
+  const doc = readJsonOrFail("master-control-authoring:v2", RULE_ENGINE_V2_DOC_PATHS.masterControlAuthoringJson);
   const root = asObj(doc);
   if (!root) failCheck("master-control-authoring:v2", "root must be an object");
   if (String(root.schema || "") !== "orbis.master_control_v2.authoring") {

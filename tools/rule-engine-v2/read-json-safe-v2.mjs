@@ -1,9 +1,6 @@
-import { readFileSync } from "node:fs";
+import { readJsonCore } from "./read-json-core-v2.mjs";
 
 export function readJsonSafe(path) {
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch (_) {
-    return null;
-  }
+  const result = readJsonCore(path);
+  return result.ok ? result.value : null;
 }

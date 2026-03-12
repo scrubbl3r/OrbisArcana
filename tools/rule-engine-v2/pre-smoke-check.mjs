@@ -1,4 +1,3 @@
-import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
@@ -15,6 +14,7 @@ import {
   buildKwsManifestFromSpellbookV2,
   normalizeKwsManifest,
 } from "./kws-manifest-from-spellbook-v2.mjs";
+import { runCheckScript } from "./run-check-v2.mjs";
 
 function fail(message, details = []) {
   console.error(`[pre-smoke] FAIL: ${message}`);
@@ -119,21 +119,13 @@ if (driftIds.length) {
   fail("projected runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
 }
 
-const snapshotRun = spawnSync(
-  process.execPath,
-  ["tools/rule-engine-v2/write-effective-snapshot.mjs"],
-  { stdio: "inherit" }
-);
-if (snapshotRun.status !== 0) {
+const snapshotRun = runCheckScript("tools/rule-engine-v2/write-effective-snapshot.mjs", { stdio: "inherit" });
+if (!snapshotRun.ok) {
   fail("effective snapshot generation failed");
 }
 
-const masterDocRun = spawnSync(
-  process.execPath,
-  ["tools/rule-engine-v2/write-master-control-doc-v2.mjs"],
-  { stdio: "inherit" }
-);
-if (masterDocRun.status !== 0) {
+const masterDocRun = runCheckScript("tools/rule-engine-v2/write-master-control-doc-v2.mjs", { stdio: "inherit" });
+if (!masterDocRun.ok) {
   fail("master control doc generation failed");
 }
 
