@@ -1,6 +1,7 @@
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
 import { ALL_CHECK_MANIFEST_ENTRIES_V2 } from "./check-manifests-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const pkg = readJsonOrFail("script-registry:v2", "package.json");
 const scripts = (pkg && typeof pkg.scripts === "object" && pkg.scripts) ? pkg.scripts : null;
@@ -39,4 +40,4 @@ for (const check of checks) {
 if (missing.length) failCheck("script-registry:v2", `missing package scripts: ${missing.join(", ")}`);
 if (mismatched.length) failCheck("script-registry:v2", `mismatched package scripts: ${mismatched.join("; ")}`);
 
-console.log("[script-registry:v2] PASS: package scripts cover manifest-referenced checks");
+reportCheckPass("script-registry:v2", "package scripts cover manifest-referenced checks");

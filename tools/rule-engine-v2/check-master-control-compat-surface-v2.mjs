@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { execSync } from "node:child_process";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 function listFiles() {
   const out = execSync("rg --files src tools docs", {
@@ -39,4 +40,4 @@ if (offenders.length) {
   failCheck("master-control-compat-surface:v2", `unexpected ${token} usage in: ${offenders.join(", ")}`);
 }
 
-console.log("[master-control-compat-surface:v2] PASS: compatibility surface is constrained");
+reportCheckPass("master-control-compat-surface:v2", "compatibility surface is constrained");

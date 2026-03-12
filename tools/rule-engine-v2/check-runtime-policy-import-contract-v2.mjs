@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const root = process.cwd();
 const targets = [
@@ -21,4 +22,4 @@ for (const rel of targets) {
   }
 }
 
-console.log("[runtime-policy-import-contract:v2] PASS: runtime imports policy control only");
+reportCheckPass("runtime-policy-import-contract:v2", "runtime imports policy control only");

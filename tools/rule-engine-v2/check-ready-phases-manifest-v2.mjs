@@ -5,6 +5,7 @@ import { failCheck } from "./check-fail-v2.mjs";
 import { findSharedScripts } from "./manifest-collision-utils-v2.mjs";
 import { runOrFail } from "./check-run-v2.mjs";
 import { getCheckManifestEntriesV2 } from "./check-manifests-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 runOrFail("ready-phases-manifest:v2", () => {
   assertManifestIdContract({
@@ -27,4 +28,4 @@ if (overlaps.length) {
   );
 }
 
-console.log("[ready-phases-manifest:v2] PASS: ready phase manifest integrity verified");
+reportCheckPass("ready-phases-manifest:v2", "ready phase manifest integrity verified");

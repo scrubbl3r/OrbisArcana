@@ -3,6 +3,7 @@ import {
   RULE_ENGINE_SOURCE_READOUT,
 } from "../../src/runtime/receiver-bootstrap.js";
 import { failCheck } from "./check-fail-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const expectedSourceIds = Object.freeze([
   "interactions_adapter",
@@ -41,4 +42,4 @@ for (const id of deprecatedIds) {
   }
 }
 
-console.log("[rule-source-contract:v2] PASS: runtime source ids/readouts are canonical");
+reportCheckPass("rule-source-contract:v2", "runtime source ids/readouts are canonical");

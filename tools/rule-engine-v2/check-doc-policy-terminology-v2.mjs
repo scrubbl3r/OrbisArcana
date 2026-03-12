@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const requiredToken = "RULE_ENGINE_POLICY_CONTROL";
 const forbiddenProjectionToken = "RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly";
@@ -41,4 +42,4 @@ if (!schemaDocText.includes("compatibility alias: `RULE_ENGINE_MASTER_CONTROL`")
   failCheck("doc-policy-terminology:v2", `${schemaDocRel} compatibility alias line missing`);
 }
 
-console.log("[doc-policy-terminology:v2] PASS: active docs use policy-first projection flag naming");
+reportCheckPass("doc-policy-terminology:v2", "active docs use policy-first projection flag naming");

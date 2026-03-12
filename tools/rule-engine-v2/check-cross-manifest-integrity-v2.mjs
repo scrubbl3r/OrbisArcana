@@ -1,6 +1,7 @@
 import { failCheck } from "./check-fail-v2.mjs";
 import { normalizeManifestEntries } from "./manifest-collision-utils-v2.mjs";
 import { CHECK_MANIFEST_SETS_V2 } from "./check-manifests-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const all = CHECK_MANIFEST_SETS_V2.flatMap((set) =>
   normalizeManifestEntries(set.name, set.entries)
@@ -33,4 +34,4 @@ for (const [script, owners] of scriptOwners.entries()) {
 }
 if (scriptConflicts.length) failCheck("cross-manifest-integrity:v2", `cross-manifest script collisions: ${scriptConflicts.join(", ")}`);
 
-console.log("[cross-manifest-integrity:v2] PASS: no cross-manifest id/script collisions");
+reportCheckPass("cross-manifest-integrity:v2", "no cross-manifest id/script collisions");

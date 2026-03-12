@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { failCheck } from "./check-fail-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 
 function listMatches() {
   let out = "";
@@ -35,4 +36,4 @@ if (offenders.length) {
   failCheck("master-control-import-boundary:v2", `direct master-control import/path usage outside boundary: ${[...new Set(offenders)].join(", ")}`);
 }
 
-console.log("[master-control-import-boundary:v2] PASS: master-control file access is boundary-limited");
+reportCheckPass("master-control-import-boundary:v2", "master-control file access is boundary-limited");

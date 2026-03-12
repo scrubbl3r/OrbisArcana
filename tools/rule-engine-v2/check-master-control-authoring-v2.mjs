@@ -5,6 +5,7 @@ import {
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 import { getInteractionsRules } from "./interactions-v2-utils.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { asLowerText } from "./text-utils-v2.mjs";
@@ -52,7 +53,7 @@ function main() {
     failCheck("master-control-authoring:v2", `rules count mismatch: doc=${root.rules.length} expected=${expectedRules.length}`);
   }
 
-  console.log("[master-control-authoring:v2] PASS: authoring artifact integrity verified");
+  reportCheckPass("master-control-authoring:v2", "authoring artifact integrity verified");
 }
 
 main();
