@@ -1,3 +1,8 @@
+export const CHECK_REASONS_V2 = Object.freeze({
+  ruleEngineOwnedImmediateSpell: "rule_engine_owned_immediate_spell",
+  noAxisSelected: "no_axis_selected",
+});
+
 export function reasonText(v) {
   return String(v && v.reason || "");
 }

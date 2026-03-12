@@ -8,9 +8,12 @@ import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
 import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
-import { hasReason } from "./check-reason-v2.mjs";
+import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
+import { CHECK_CONFIDENCE_V2 } from "./check-confidence-constants-v2.mjs";
+import { CHECK_REASONS_V2, hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { spellIdText } from "./check-spell-event-v2.mjs";
+import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 import { asLowerText } from "./text-utils-v2.mjs";
 
@@ -20,22 +23,18 @@ function detectSpell({ ruleEngineEnabled, spellId }) {
   const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
   const system = createCheckDispatchSystem({
     eventBus,
-    nowMs: createFixedNowMs(3000),
+    nowMs: createFixedNowMs(CHECK_FIXED_TIMES_V2.immediateOwnership),
     resources: createStoredGlobeResources(0),
     ruleEngineEnabled,
   });
-  system.start();
-  try {
+  runWithStartedSystem(system, () => {
     emitDetectedSpell(eventBus, {
       id: spellId,
       intent: `spell.${spellId}`,
-      phrase: spellId,
-      confidence: 0.8,
-      atMs: 3000,
+      confidence: CHECK_CONFIDENCE_V2.medium,
+      atMs: CHECK_FIXED_TIMES_V2.immediateOwnership,
     });
-  } finally {
-    system.stop();
-  }
+  });
   return { casts, rejects };
 }
 
@@ -51,8 +50,8 @@ function main() {
     const withRuleEngine = detectSpell({ ruleEngineEnabled: true, spellId });
     assertCheck(withRuleEngine.casts.length === 0, `[immediate-ownership:v2] expected 0 casts when ruleEngineEnabled=true for ${spellId}, got ${withRuleEngine.casts.length}`);
     assertCheck(
-      hasReason(withRuleEngine.rejects, "rule_engine_owned_immediate_spell"),
-      `[immediate-ownership:v2] expected rule_engine_owned_immediate_spell reject for ${spellId}`
+      hasReason(withRuleEngine.rejects, CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell),
+      `[immediate-ownership:v2] expected ${CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell} reject for ${spellId}`
     );
 
     const withoutRuleEngine = detectSpell({ ruleEngineEnabled: false, spellId });
