@@ -7,7 +7,9 @@ import { runOrFail } from "./check-run-v2.mjs";
 import { getCheckManifestEntriesV2 } from "./check-manifests-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
-runOrFail("ready-phases-manifest:v2", () => {
+const CHECK_TAG = "ready-phases-manifest:v2";
+
+runOrFail(CHECK_TAG, () => {
   assertManifestIdContract({
     entries: READY_PHASES_V2,
     requiredIds: REQUIRED_READY_PHASE_IDS_V2,
@@ -23,9 +25,9 @@ const overlaps = findSharedScripts(
 );
 if (overlaps.length) {
   failCheck(
-    "ready-phases-manifest:v2",
+    CHECK_TAG,
     `READY_PHASES_V2 must not duplicate regression/contract scripts (overlap: ${overlaps.join(", ")})`
   );
 }
 
-reportCheckPass("ready-phases-manifest:v2", "ready phase manifest integrity verified");
+reportCheckPass(CHECK_TAG, "ready phase manifest integrity verified");

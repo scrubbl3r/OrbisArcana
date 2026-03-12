@@ -4,7 +4,9 @@ import { REQUIRED_REGRESSION_CHECK_IDS_V2 } from "./manifest-contract-ids-v2.mjs
 import { runOrFail } from "./check-run-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
-runOrFail("regression-manifest:v2", () => {
+const CHECK_TAG = "regression-manifest:v2";
+
+runOrFail(CHECK_TAG, () => {
   assertManifestIdContract({
     entries: REGRESSION_CHECKS_V2,
     manifestName: "REGRESSION_CHECKS_V2",
@@ -14,4 +16,4 @@ runOrFail("regression-manifest:v2", () => {
   });
 });
 
-reportCheckPass("regression-manifest:v2", "regression manifest integrity verified");
+reportCheckPass(CHECK_TAG, "regression manifest integrity verified");

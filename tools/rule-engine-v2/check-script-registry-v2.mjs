@@ -3,9 +3,11 @@ import { readJsonOrFail } from "./check-json-v2.mjs";
 import { ALL_CHECK_MANIFEST_ENTRIES_V2 } from "./check-manifests-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
-const pkg = readJsonOrFail("script-registry:v2", "package.json");
+const CHECK_TAG = "script-registry:v2";
+
+const pkg = readJsonOrFail(CHECK_TAG, "package.json");
 const scripts = (pkg && typeof pkg.scripts === "object" && pkg.scripts) ? pkg.scripts : null;
-if (!scripts) failCheck("script-registry:v2", "package.json scripts object missing");
+if (!scripts) failCheck(CHECK_TAG, "package.json scripts object missing");
 
 const checks = ALL_CHECK_MANIFEST_ENTRIES_V2;
 
@@ -37,7 +39,7 @@ for (const check of checks) {
   }
 }
 
-if (missing.length) failCheck("script-registry:v2", `missing package scripts: ${missing.join(", ")}`);
-if (mismatched.length) failCheck("script-registry:v2", `mismatched package scripts: ${mismatched.join("; ")}`);
+if (missing.length) failCheck(CHECK_TAG, `missing package scripts: ${missing.join(", ")}`);
+if (mismatched.length) failCheck(CHECK_TAG, `mismatched package scripts: ${mismatched.join("; ")}`);
 
-reportCheckPass("script-registry:v2", "package scripts cover manifest-referenced checks");
+reportCheckPass(CHECK_TAG, "package scripts cover manifest-referenced checks");

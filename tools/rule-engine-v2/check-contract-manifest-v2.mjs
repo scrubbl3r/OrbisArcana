@@ -4,7 +4,9 @@ import { REQUIRED_CONTRACT_CHECK_IDS_V2 } from "./manifest-contract-ids-v2.mjs";
 import { runOrFail } from "./check-run-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
-runOrFail("contract-manifest:v2", () => {
+const CHECK_TAG = "contract-manifest:v2";
+
+runOrFail(CHECK_TAG, () => {
   assertManifestIdContract({
     entries: CONTRACT_CHECKS_V2,
     manifestName: "CONTRACT_CHECKS_V2",
@@ -14,4 +16,4 @@ runOrFail("contract-manifest:v2", () => {
   });
 });
 
-reportCheckPass("contract-manifest:v2", "contract manifest integrity verified");
+reportCheckPass(CHECK_TAG, "contract manifest integrity verified");

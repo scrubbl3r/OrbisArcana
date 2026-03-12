@@ -4,6 +4,8 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 import { runRgLines } from "./rg-lines-v2.mjs";
 
+const CHECK_TAG = "master-control-compat-surface:v2";
+
 function listFiles() {
   return runRgLines("rg --files src tools docs")
     .filter((p) => !/docs\/rule-engine-v[12]-slice-/.test(p));
@@ -29,7 +31,7 @@ for (const rel of listFiles()) {
 }
 
 if (offenders.length) {
-  failCheck("master-control-compat-surface:v2", `unexpected ${token} usage in: ${offenders.join(", ")}`);
+  failCheck(CHECK_TAG, `unexpected ${token} usage in: ${offenders.join(", ")}`);
 }
 
-reportCheckPass("master-control-compat-surface:v2", "compatibility surface is constrained");
+reportCheckPass(CHECK_TAG, "compatibility surface is constrained");
