@@ -1,21 +1,25 @@
+function text(v) {
+  return String(v || "").trim();
+}
+
 export function normalizeManifestEntries(manifestName, entries) {
   return (Array.isArray(entries) ? entries : []).map((entry) => ({
     manifest: manifestName,
-    id: String(entry?.id || "").trim(),
-    script: String(entry?.script || "").trim(),
+    id: text(entry?.id),
+    script: text(entry?.script),
   }));
 }
 
 export function findSharedScripts(leftEntries, rightEntries) {
   const leftScripts = new Set(
     (Array.isArray(leftEntries) ? leftEntries : [])
-      .map((entry) => String(entry?.script || "").trim())
+      .map((entry) => text(entry?.script))
       .filter(Boolean)
   );
 
   const shared = new Set();
   for (const entry of Array.isArray(rightEntries) ? rightEntries : []) {
-    const script = String(entry?.script || "").trim();
+    const script = text(entry?.script);
     if (script && leftScripts.has(script)) shared.add(script);
   }
 

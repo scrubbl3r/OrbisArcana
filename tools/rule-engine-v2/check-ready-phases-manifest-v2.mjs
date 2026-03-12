@@ -1,8 +1,8 @@
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REQUIRED_READY_PHASE_IDS_V2 } from "./manifest-contract-ids-v2.mjs";
 import {
-  MANIFEST_CHECK_GROUPS_V2,
-  flattenManifestChecksV2,
+  MANIFEST_CHECK_GROUP_NAMES_V2,
+  flattenManifestChecksExcludingV2,
 } from "./manifest-check-entries-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { findSharedScripts } from "./manifest-collision-utils-v2.mjs";
@@ -21,10 +21,10 @@ runManifestIntegrityCheckV2({
   itemLabel: "phase",
 });
 
-const nonReadyEntries = MANIFEST_CHECK_GROUPS_V2
-  .filter((group) => group.name !== "ready");
-
-const overlaps = findSharedScripts(READY_PHASES_V2, flattenManifestChecksV2(nonReadyEntries));
+const overlaps = findSharedScripts(
+  READY_PHASES_V2,
+  flattenManifestChecksExcludingV2(MANIFEST_CHECK_GROUP_NAMES_V2.ready)
+);
 if (overlaps.length) {
   failCheck(
     CHECK_TAG,

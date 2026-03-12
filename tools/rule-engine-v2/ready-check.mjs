@@ -10,9 +10,16 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "ready:v2";
 
-for (const validator of MANIFEST_VALIDATORS_V2) {
+function runReadyCheck({ message, script }) {
   runCheckScriptOrFailStatus({
     tag: CHECK_TAG,
+    message,
+    script,
+  });
+}
+
+for (const validator of MANIFEST_VALIDATORS_V2) {
+  runReadyCheck({
     message: `validator failed: ${validator.name}`,
     script: validator.script,
   });
@@ -20,8 +27,7 @@ for (const validator of MANIFEST_VALIDATORS_V2) {
 
 for (const entry of flattenManifestChecksV2()) {
   if (isManifestValidatorScriptV2(entry.script)) continue;
-  runCheckScriptOrFailStatus({
-    tag: CHECK_TAG,
+  runReadyCheck({
     message: `check failed: ${entry.id}`,
     script: entry.script,
   });

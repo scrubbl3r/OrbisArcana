@@ -15,27 +15,15 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 const CHECK_TAG = "doctor:v2";
 const logDoctor = createTaggedLogger(CHECK_TAG);
 
-function runPreSmoke() {
-  runCheckScriptOrFailStatus({
-    tag: CHECK_TAG,
-    message: "pre-smoke failed",
-    script: RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck,
-  });
-}
+runCheckScriptOrFailStatus({
+  tag: CHECK_TAG,
+  message: "pre-smoke failed",
+  script: RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck,
+});
 
-function computeDrift() {
-  const drift = computeProjectionDrift(INTERACTIONS_V2);
-  return Array.isArray(drift?.driftIds) ? drift.driftIds : [];
-}
-
-function loadSnapshot() {
-  return readJsonSafe(resolveRuleEngineDocPath("effectiveSnapshot"));
-}
-
-runPreSmoke();
-
-const driftIds = computeDrift();
-const snapshot = loadSnapshot();
+const drift = computeProjectionDrift(INTERACTIONS_V2);
+const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
+const snapshot = readJsonSafe(resolveRuleEngineDocPath("effectiveSnapshot"));
 const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 0);
 const spellbookOk = isTrue(snapshot?.validation?.spellbookV2?.ok);
 const interactionsOk = isTrue(snapshot?.validation?.interactionsV2?.ok);
