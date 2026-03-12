@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { readRelativeText } from "./read-text-v2.mjs";
 
 const requiredToken = "RULE_ENGINE_POLICY_CONTROL";
 const forbiddenProjectionToken = "RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly";
@@ -13,8 +12,7 @@ const authoringDocs = Object.freeze([
 ]);
 
 for (const rel of authoringDocs) {
-  const abs = resolve(process.cwd(), rel);
-  const text = readFileSync(abs, "utf8");
+  const text = readRelativeText(rel);
   if (!text.includes(requiredToken)) {
     failCheck("doc-policy-terminology:v2", `${rel} must mention ${requiredToken}`);
   }
@@ -27,7 +25,7 @@ for (const rel of authoringDocs) {
 }
 
 const schemaDocRel = RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc;
-const schemaDocText = readFileSync(resolve(process.cwd(), schemaDocRel), "utf8");
+const schemaDocText = readRelativeText(schemaDocRel);
 if (!schemaDocText.includes(requiredToken)) {
   failCheck("doc-policy-terminology:v2", `${schemaDocRel} must mention ${requiredToken}`);
 }

@@ -12,9 +12,12 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { spellIdText } from "./check-spell-event-v2.mjs";
+import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_MUTABLE_TIME_STARTS_V2 } from "./check-time-constants-v2.mjs";
 import { createMutableNow } from "./check-time-v2.mjs";
 import { emitWakeLoadPrelude } from "./check-wake-sequence-v2.mjs";
+
+const CHECK_TAG = CHECK_TAGS_V2.wakeLoadRegression;
 
 function runScenario({ axisSpellId, wakeWindowToken, expectedLoadedSpellId, expectedSlot }) {
   const eventBus = createCheckEventBus();
@@ -39,11 +42,11 @@ function runScenario({ axisSpellId, wakeWindowToken, expectedLoadedSpellId, expe
     });
   });
 
-  assertCheck(axisSelected.length === 1, `[wake-load-regression] expected axis select for ${axisSpellId} + ${wakeWindowToken}`);
-  assertCheck(loaded.length === 1, `[wake-load-regression] expected one loaded spell for ${axisSpellId} + ${wakeWindowToken}`);
-  assertCheck(spellIdText(loaded[0]) === expectedLoadedSpellId, `[wake-load-regression] expected loaded spell ${expectedLoadedSpellId}, got ${spellIdText(loaded[0])}`);
-  assertCheck(String(loaded[0].axis || "") === CHECK_AXES_V2.y, `[wake-load-regression] expected axis ${CHECK_AXES_V2.y}, got ${loaded[0].axis || ""}`);
-  assertCheck(String(loaded[0].slot || "") === expectedSlot, `[wake-load-regression] expected slot ${expectedSlot}, got ${loaded[0].slot || ""}`);
+  assertCheck(axisSelected.length === 1, `[${CHECK_TAG}] expected axis select for ${axisSpellId} + ${wakeWindowToken}`);
+  assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected one loaded spell for ${axisSpellId} + ${wakeWindowToken}`);
+  assertCheck(spellIdText(loaded[0]) === expectedLoadedSpellId, `[${CHECK_TAG}] expected loaded spell ${expectedLoadedSpellId}, got ${spellIdText(loaded[0])}`);
+  assertCheck(String(loaded[0].axis || "") === CHECK_AXES_V2.y, `[${CHECK_TAG}] expected axis ${CHECK_AXES_V2.y}, got ${loaded[0].axis || ""}`);
+  assertCheck(String(loaded[0].slot || "") === expectedSlot, `[${CHECK_TAG}] expected slot ${expectedSlot}, got ${loaded[0].slot || ""}`);
 }
 
 function main() {
@@ -59,7 +62,7 @@ function main() {
     expectedLoadedSpellId: CHECK_SPELL_IDS_V2.rota,
     expectedSlot: CHECK_SLOTS_V2.fb,
   });
-  reportCheckPass("wake-load-regression:v2", "wake-window load flow works");
+  reportCheckPass(CHECK_TAG, "wake-window load flow works");
 }
 
 main();

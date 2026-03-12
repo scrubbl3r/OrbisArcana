@@ -1,24 +1,11 @@
-import { execSync } from "node:child_process";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { runRgLines } from "./rg-lines-v2.mjs";
 
 function listMatches() {
-  let out = "";
-  try {
-    out = execSync(
-      "rg -n \"rule-engine-master-control\\\\.js\" src tools --glob '!**/node_modules/**'",
-      { cwd: process.cwd(), encoding: "utf8" }
-    );
-  } catch (err) {
-    if (err && typeof err.status === "number" && err.status === 1) {
-      return [];
-    }
-    throw err;
-  }
-  return out
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  return runRgLines(
+    "rg -n \"rule-engine-master-control\\\\.js\" src tools --glob '!**/node_modules/**'"
+  );
 }
 
 const allowed = new Set([

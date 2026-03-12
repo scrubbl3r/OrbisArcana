@@ -1,19 +1,11 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { execSync } from "node:child_process";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { readRelativeText } from "./read-text-v2.mjs";
+import { runRgLines } from "./rg-lines-v2.mjs";
 
 function listFiles() {
-  const out = execSync("rg --files src tools docs", {
-    cwd: process.cwd(),
-    encoding: "utf8",
-  });
-  return out
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean)
+  return runRgLines("rg --files src tools docs")
     .filter((p) => !/docs\/rule-engine-v[12]-slice-/.test(p));
 }
 
@@ -31,7 +23,7 @@ const allowed = new Set([
 
 const offenders = [];
 for (const rel of listFiles()) {
-  const text = readFileSync(resolve(process.cwd(), rel), "utf8");
+  const text = readRelativeText(rel);
   if (!text.includes(token)) continue;
   if (!allowed.has(rel)) offenders.push(rel);
 }

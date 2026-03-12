@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { readRelativeText } from "./read-text-v2.mjs";
 
 const rel = "src/content/spell-rules/validate-rule-engine-config.js";
-const text = readFileSync(resolve(process.cwd(), rel), "utf8");
+const text = readRelativeText(rel);
 
 if (!text.includes("RULE_ENGINE_POLICY_CONTROL")) {
   failCheck("validator-policy-terminology:v2", `${rel} must reference RULE_ENGINE_POLICY_CONTROL in diagnostics`);

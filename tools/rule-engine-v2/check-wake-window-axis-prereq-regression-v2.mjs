@@ -16,9 +16,12 @@ import { CHECK_REASONS_V2, hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
 import { hasSpellId } from "./check-spell-event-v2.mjs";
+import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 import { emitAxisThenWakeSelection } from "./check-wake-sequence-v2.mjs";
+
+const CHECK_TAG = CHECK_TAGS_V2.wakeWindowAxisPrereq;
 
 function main() {
   const eventBus = createCheckEventBus();
@@ -54,15 +57,15 @@ function main() {
 
   assertCheck(
     hasReason(rejects, CHECK_REASONS_V2.noAxisSelected),
-    `[wake-window-axis-prereq:v2] expected ${CHECK_REASONS_V2.noAxisSelected} reject when wake token spoken before axis token`
+    `[${CHECK_TAG}] expected ${CHECK_REASONS_V2.noAxisSelected} reject when wake token spoken before axis token`
   );
-  assertCheck(loads.length >= 1, "[wake-window-axis-prereq:v2] expected wake token to load after axis selection");
+  assertCheck(loads.length >= 1, `[${CHECK_TAG}] expected wake token to load after axis selection`);
   assertCheck(
     hasSpellId(loads, CHECK_SPELL_IDS_V2.sanctum),
-    "[wake-window-axis-prereq:v2] expected sanctum load after axis selection"
+    `[${CHECK_TAG}] expected sanctum load after axis selection`
   );
 
-  reportCheckPass("wake-window-axis-prereq:v2", "wake-window axis prerequisite contract holds");
+  reportCheckPass(CHECK_TAG, "wake-window axis prerequisite contract holds");
 }
 
 main();

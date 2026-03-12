@@ -14,9 +14,12 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_REASONS_V2, hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { spellIdText } from "./check-spell-event-v2.mjs";
+import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 import { asLowerText } from "./text-utils-v2.mjs";
+
+const CHECK_TAG = CHECK_TAGS_V2.immediateOwnership;
 
 function detectSpell({ ruleEngineEnabled, spellId }) {
   const eventBus = createCheckEventBus();
@@ -45,22 +48,22 @@ function main() {
     : [])
     .map((id) => asLowerText(id))
     .filter(Boolean);
-  assertCheck(ownedImmediate.length > 0, "[immediate-ownership:v2] expected non-empty RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS");
+  assertCheck(ownedImmediate.length > 0, `[${CHECK_TAG}] expected non-empty RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS`);
 
   for (const spellId of ownedImmediate) {
     const withRuleEngine = detectSpell({ ruleEngineEnabled: true, spellId });
-    assertCheck(withRuleEngine.casts.length === 0, `[immediate-ownership:v2] expected 0 casts when ruleEngineEnabled=true for ${spellId}, got ${withRuleEngine.casts.length}`);
+    assertCheck(withRuleEngine.casts.length === 0, `[${CHECK_TAG}] expected 0 casts when ruleEngineEnabled=true for ${spellId}, got ${withRuleEngine.casts.length}`);
     assertCheck(
       hasReason(withRuleEngine.rejects, CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell),
-      `[immediate-ownership:v2] expected ${CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell} reject for ${spellId}`
+      `[${CHECK_TAG}] expected ${CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell} reject for ${spellId}`
     );
 
     const withoutRuleEngine = detectSpell({ ruleEngineEnabled: false, spellId });
-    assertCheck(withoutRuleEngine.casts.length === 1, `[immediate-ownership:v2] expected 1 cast when ruleEngineEnabled=false for ${spellId}, got ${withoutRuleEngine.casts.length}`);
-    assertCheck(spellIdText(withoutRuleEngine.casts[0]) === spellId, `[immediate-ownership:v2] unexpected cast spellId for ${spellId}`);
+    assertCheck(withoutRuleEngine.casts.length === 1, `[${CHECK_TAG}] expected 1 cast when ruleEngineEnabled=false for ${spellId}, got ${withoutRuleEngine.casts.length}`);
+    assertCheck(spellIdText(withoutRuleEngine.casts[0]) === spellId, `[${CHECK_TAG}] unexpected cast spellId for ${spellId}`);
   }
 
-  reportCheckPass("immediate-ownership:v2", "immediate spell dispatch ownership contract holds");
+  reportCheckPass(CHECK_TAG, "immediate spell dispatch ownership contract holds");
 }
 
 main();

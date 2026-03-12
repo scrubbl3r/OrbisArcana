@@ -15,8 +15,11 @@ import { CHECK_REASONS_V2, hasReason, reasonList } from "./check-reason-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
+
+const CHECK_TAG = CHECK_TAGS_V2.flatSpinGating;
 
 function detectOutsideWindow({ spellId, intent, expectedReason }) {
   const eventBus = createCheckEventBus();
@@ -34,10 +37,10 @@ function detectOutsideWindow({ spellId, intent, expectedReason }) {
       atMs: CHECK_FIXED_TIMES_V2.flatSpinOutside,
     });
   });
-  assertCheck(rejects.length >= 1, `[flat-spin-gating:v2] expected reject for ${spellId} outside flat-spin window`);
+  assertCheck(rejects.length >= 1, `[${CHECK_TAG}] expected reject for ${spellId} outside flat-spin window`);
   assertCheck(
     hasReason(rejects, expectedReason),
-    `[flat-spin-gating:v2] expected reason=${expectedReason} for ${spellId}; got [${reasonList(rejects).join(", ")}]`
+    `[${CHECK_TAG}] expected reason=${expectedReason} for ${spellId}; got [${reasonList(rejects).join(", ")}]`
   );
 }
 
@@ -59,8 +62,8 @@ function detectInsideWindowAxisSelect() {
       atMs: CHECK_FIXED_TIMES_V2.flatSpinInside,
     });
   });
-  assertCheck(axisSelected.length === 1, "[flat-spin-gating:v2] expected axis select event for pyro inside flat-spin window");
-  assertCheck(rejects.length === 0, `[flat-spin-gating:v2] unexpected reject(s) for pyro inside flat-spin window: ${rejects.map((r) => r.reason).join(", ")}`);
+  assertCheck(axisSelected.length === 1, `[${CHECK_TAG}] expected axis select event for pyro inside flat-spin window`);
+  assertCheck(rejects.length === 0, `[${CHECK_TAG}] unexpected reject(s) for pyro inside flat-spin window: ${rejects.map((r) => r.reason).join(", ")}`);
 }
 
 function main() {
@@ -70,7 +73,7 @@ function main() {
     expectedReason: CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell,
   });
   detectInsideWindowAxisSelect();
-  reportCheckPass("flat-spin-gating:v2", "flat-spin token gating contract holds");
+  reportCheckPass(CHECK_TAG, "flat-spin token gating contract holds");
 }
 
 main();
