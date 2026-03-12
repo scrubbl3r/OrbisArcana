@@ -8,3 +8,7 @@ export function runCheckScript(script, options = {}) {
     status: Number.isInteger(res.status) ? res.status : 1,
   });
 }
+
+export function runCheckScriptOk(script, options = {}) {
+  return runCheckScript(script, options).ok;
+}

@@ -1,6 +1,6 @@
 import { formatCheckStatusList } from "./status-format-v2.mjs";
 
-export function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
+function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
   const items = Array.isArray(entries) ? entries : [];
   const keyName = String(keyField || "").trim() || "id";
   const byKey = Object.freeze(Object.fromEntries(
@@ -10,14 +10,9 @@ export function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
   return Object.freeze({ byKey, ok });
 }
 
-export function buildCheckResults(entries, runCheck) {
+function buildCheckResultsWithStatusList(entries, runCheck, yesNo) {
   const { byKey, ok } = buildCheckResultsByKey(entries, runCheck, "id");
-  const byId = byKey;
-  return Object.freeze({ byId, ok });
-}
-
-export function buildCheckResultsWithStatusList(entries, runCheck, yesNo) {
-  const results = buildCheckResults(entries, runCheck);
+  const results = Object.freeze({ byId: byKey, ok });
   const statusList = formatCheckStatusList(entries, results.byId, yesNo);
   return Object.freeze({ results, statusList });
 }
@@ -32,14 +27,19 @@ export function buildStatusSectionV2(entries, runCheck, yesNo) {
   });
 }
 
-export function buildCheckBooleanMap(entries, checksById) {
+export function buildNamedManifestArtifactsV2(entries, order, runCheck, yesNo) {
+  const byName = buildCheckResultsByKey(entries, runCheck, "name").byKey;
+  return buildOrderedBooleanArtifacts(order, byName, yesNo);
+}
+
+function buildCheckBooleanMap(entries, checksById) {
   const items = Array.isArray(entries) ? entries : [];
   return Object.fromEntries(
     items.map((entry) => [entry.id, checksById[entry.id] === true])
   );
 }
 
-export function buildOrderedBooleanArtifacts(order, valuesByName, yesNo) {
+function buildOrderedBooleanArtifacts(order, valuesByName, yesNo) {
   const names = Array.isArray(order) ? order : [];
   const booleans = Object.fromEntries(
     names.map((name) => [name, valuesByName[name] === true])

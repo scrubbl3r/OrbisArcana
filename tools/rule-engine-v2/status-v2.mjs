@@ -6,14 +6,13 @@ import {
   MANIFEST_VALIDATOR_NAMES_V2,
 } from "./manifest-validators-v2.mjs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
-import { runCheckScript } from "./run-check-v2.mjs";
+import { runCheckScriptOk } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { isTrue } from "./bool-utils-v2.mjs";
 import { toNumberOr, toTrimmedText } from "./value-utils-v2.mjs";
 import {
-  buildCheckResultsByKey,
+  buildNamedManifestArtifactsV2,
   buildStatusSectionV2,
-  buildOrderedBooleanArtifacts,
 } from "./status-checks-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
@@ -27,22 +26,17 @@ function yn(v) {
   return v ? "yes" : "no";
 }
 
-function runCheck(scriptPath) {
-  return runCheckScript(scriptPath, { stdio: "ignore" }).ok;
-}
-
 const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
 const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
-const manifestValidatorOrder = MANIFEST_VALIDATOR_NAMES_V2;
-const manifestChecks = buildCheckResultsByKey(MANIFEST_VALIDATORS_V2, runCheck, "name").byKey;
-const manifestArtifacts = buildOrderedBooleanArtifacts(
-  manifestValidatorOrder,
-  manifestChecks,
+const manifestArtifacts = buildNamedManifestArtifactsV2(
+  MANIFEST_VALIDATORS_V2,
+  MANIFEST_VALIDATOR_NAMES_V2,
+  runCheckScriptOk,
   yn
 );
-const readyPhaseSection = buildStatusSectionV2(READY_PHASES_V2, runCheck, yn);
-const contractSection = buildStatusSectionV2(CONTRACT_CHECKS_V2, runCheck, yn);
-const regressionSection = buildStatusSectionV2(REGRESSION_CHECKS_V2, runCheck, yn);
+const readyPhaseSection = buildStatusSectionV2(READY_PHASES_V2, runCheckScriptOk, yn);
+const contractSection = buildStatusSectionV2(CONTRACT_CHECKS_V2, runCheckScriptOk, yn);
+const regressionSection = buildStatusSectionV2(REGRESSION_CHECKS_V2, runCheckScriptOk, yn);
 
 const lines = [
   "---",
