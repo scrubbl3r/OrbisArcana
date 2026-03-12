@@ -1,6 +1,8 @@
-import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { readJsonSafe } from "./read-json-safe-v2.mjs";
+import { runCheckScript } from "./run-check-v2.mjs";
+import { writeJsonFile } from "./write-json-v2.mjs";
 import {
   buildRuleEngineFromInteractionsV2,
   buildRulesFromInteractionsV2,
@@ -8,8 +10,8 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 
 function runPreSmoke() {
-  const res = spawnSync(process.execPath, ["tools/rule-engine-v2/pre-smoke-check.mjs"], { stdio: "inherit" });
-  if (res.status !== 0) process.exit(res.status || 1);
+  const res = runCheckScript("tools/rule-engine-v2/pre-smoke-check.mjs", { stdio: "inherit" });
+  if (!res.ok) process.exit(res.status || 1);
 }
 
 function computeDrift() {
@@ -33,8 +35,7 @@ function computeDrift() {
 }
 
 function loadSnapshot() {
-  const path = resolve(process.cwd(), "docs/effective-interactions-v2.snapshot.json");
-  return JSON.parse(readFileSync(path, "utf8"));
+  return readJsonSafe(resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.effectiveSnapshot));
 }
 
 runPreSmoke();
@@ -53,8 +54,8 @@ const health = {
   projectedRuleCount,
   driftRuleIds: driftIds,
 };
-const healthPath = resolve(process.cwd(), "docs/rule-engine-v2.health.json");
-writeFileSync(healthPath, JSON.stringify(health, null, 2) + "\n", "utf8");
+const healthPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.health);
+writeJsonFile(healthPath, health);
 
 console.log("[doctor:v2] ----");
 console.log(`[doctor:v2] spellbook ok: ${snapshot?.validation?.spellbookV2?.ok === true}`);

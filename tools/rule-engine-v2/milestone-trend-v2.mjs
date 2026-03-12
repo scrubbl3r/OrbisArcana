@@ -1,6 +1,7 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { writeJsonFile } from "./write-json-v2.mjs";
 
 function safeRead(path) {
   try {
@@ -61,5 +62,5 @@ console.log(`[milestone:trend:v2] total runs: ${summary.totalRuns}`);
 console.log(`[milestone:trend:v2] pass rate (all): ${summary.passRateAllPct}%`);
 console.log(`[milestone:trend:v2] pass rate (recent ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
 console.log(`[milestone:trend:v2] latest: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
-writeFileSync(summaryPath, JSON.stringify(summary, null, 2) + "\n", "utf8");
+writeJsonFile(summaryPath, summary);
 console.log(`[milestone:trend:v2] wrote summary: ${summaryPath}`);

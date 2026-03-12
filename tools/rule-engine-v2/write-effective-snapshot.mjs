@@ -1,5 +1,6 @@
-import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { writeJsonFile } from "./write-json-v2.mjs";
 import {
   SPELLBOOK_V2,
   INTERACTIONS_V2,
@@ -48,7 +49,7 @@ function buildSnapshot() {
   };
 }
 
-const outputPath = resolve(process.cwd(), "docs/effective-interactions-v2.snapshot.json");
+const outputPath = resolve(process.cwd(), RULE_ENGINE_V2_DOC_PATHS.effectiveSnapshot);
 const snapshot = buildSnapshot();
-writeFileSync(outputPath, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
+writeJsonFile(outputPath, snapshot);
 console.log(`wrote ${outputPath}`);
