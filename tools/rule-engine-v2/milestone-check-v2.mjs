@@ -1,19 +1,12 @@
-import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { readJsonSafe } from "./read-json-safe-v2.mjs";
+import { runCheckScript } from "./run-check-v2.mjs";
 
 function runStep(label, scriptPath) {
   console.log(`[milestone:v2] running ${label}...`);
-  const res = spawnSync(process.execPath, [scriptPath], { stdio: "inherit" });
-  return { ok: res.status === 0, status: Number(res.status || 0) };
-}
-
-function safeReadJson(path) {
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch (_) {
-    return null;
-  }
+  return runCheckScript(scriptPath, { stdio: "inherit" });
 }
 
 function getGitRef() {
@@ -41,7 +34,7 @@ const report = {
       skipped: !ready.ok,
     },
   },
-  health: safeReadJson(resolve(process.cwd(), "docs/rule-engine-v2.health.json")),
+  health: readJsonSafe(resolve(process.cwd(), "docs/rule-engine-v2.health.json")),
   pass: ready.ok && batch.ok,
 };
 
@@ -53,13 +46,13 @@ const historyPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-histor
 appendFileSync(historyPath, JSON.stringify(report) + "\n", "utf8");
 console.log(`[milestone:v2] appended history: ${historyPath}`);
 
-const trendRun = spawnSync(process.execPath, ["tools/rule-engine-v2/milestone-trend-v2.mjs"], { stdio: "inherit" });
-if (trendRun.status !== 0) {
+const trendRun = runCheckScript("tools/rule-engine-v2/milestone-trend-v2.mjs", { stdio: "inherit" });
+if (!trendRun.ok) {
   console.error("[milestone:v2] FAIL: milestone trend generation failed");
   process.exit(trendRun.status || 1);
 }
 const trendPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json");
-report.trend = safeReadJson(trendPath);
+report.trend = readJsonSafe(trendPath);
 writeFileSync(outPath, JSON.stringify(report, null, 2) + "\n", "utf8");
 console.log(`[milestone:v2] refreshed report with trend: ${outPath}`);
 

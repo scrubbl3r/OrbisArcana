@@ -1,17 +1,11 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
-import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
-import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
+import {
+  CHECK_MANIFEST_SETS_V2,
+  CHECK_MANIFEST_VALIDATORS_V2,
+} from "./check-manifests-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
-
-function safeReadJson(path) {
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch (_) {
-    return null;
-  }
-}
+import { readJsonSafe } from "./read-json-safe-v2.mjs";
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -21,12 +15,18 @@ function runCheck(scriptPath) {
   return runCheckScript(scriptPath, { stdio: "ignore" }).ok;
 }
 
-const health = safeReadJson(resolve(process.cwd(), "docs/rule-engine-v2.health.json")) || {};
-const trend = safeReadJson(resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json")) || {};
+const health = readJsonSafe(resolve(process.cwd(), "docs/rule-engine-v2.health.json")) || {};
+const trend = readJsonSafe(resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json")) || {};
+const CHECK_SETS_BY_NAME = Object.freeze(
+  Object.fromEntries(CHECK_MANIFEST_SETS_V2.map((set) => [set.name, set.entries]))
+);
+const READY_PHASES_V2 = CHECK_SETS_BY_NAME.ready || [];
+const REGRESSION_CHECKS_V2 = CHECK_SETS_BY_NAME.regression || [];
+const CONTRACT_CHECKS_V2 = CHECK_SETS_BY_NAME.contract || [];
 const manifestChecks = Object.freeze({
-  readyPhasesManifest: runCheck("tools/rule-engine-v2/check-ready-phases-manifest-v2.mjs"),
-  contractManifest: runCheck("tools/rule-engine-v2/check-contract-manifest-v2.mjs"),
-  regressionManifest: runCheck("tools/rule-engine-v2/check-regression-manifest-v2.mjs"),
+  readyPhasesManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.ready),
+  contractManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.contract),
+  regressionManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.regression),
 });
 const readyPhaseChecks = Object.freeze(Object.fromEntries(
   READY_PHASES_V2.map((phase) => [phase.id, runCheck(phase.script)])
