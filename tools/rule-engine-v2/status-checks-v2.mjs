@@ -6,3 +6,29 @@ export function buildCheckResults(entries, runCheck) {
   const ok = items.every((entry) => byId[entry.id] === true);
   return Object.freeze({ byId, ok });
 }
+
+export function buildCheckBooleanMap(entries, checksById) {
+  const items = Array.isArray(entries) ? entries : [];
+  return Object.fromEntries(
+    items.map((entry) => [entry.id, checksById[entry.id] === true])
+  );
+}
+
+export function buildManifestValidatorChecks(order, validatorsByName, runCheck) {
+  const names = Array.isArray(order) ? order : [];
+  return Object.freeze(Object.fromEntries(
+    names.map((name) => [name, runCheck(validatorsByName[name])])
+  ));
+}
+
+export function buildBooleanMapFromOrder(order, valuesByName) {
+  const names = Array.isArray(order) ? order : [];
+  return Object.fromEntries(
+    names.map((name) => [name, valuesByName[name] === true])
+  );
+}
+
+export function formatOrderedBooleanSummary(order, valuesByName, yesNo) {
+  const names = Array.isArray(order) ? order : [];
+  return names.map((name) => yesNo(valuesByName[name] === true)).join("/");
+}

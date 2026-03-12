@@ -1,13 +1,20 @@
-import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   CHECK_MANIFEST_SETS_BY_NAME_V2,
+  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
   CHECK_MANIFEST_VALIDATORS_V2,
 } from "./check-manifests-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { formatCheckStatusList } from "./status-format-v2.mjs";
-import { buildCheckResults } from "./status-checks-v2.mjs";
+import {
+  buildCheckBooleanMap,
+  buildCheckResults,
+  buildBooleanMapFromOrder,
+  buildManifestValidatorChecks,
+  formatOrderedBooleanSummary,
+} from "./status-checks-v2.mjs";
+import { writeJsonFile } from "./write-json-v2.mjs";
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -22,11 +29,20 @@ const trend = readJsonSafe(resolve(process.cwd(), "docs/rule-engine-v2.milestone
 const READY_PHASES_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.ready || [];
 const REGRESSION_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.regression || [];
 const CONTRACT_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.contract || [];
-const manifestChecks = Object.freeze({
-  readyPhasesManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.ready),
-  contractManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.contract),
-  regressionManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.regression),
-});
+const manifestChecks = buildManifestValidatorChecks(
+  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
+  CHECK_MANIFEST_VALIDATORS_V2,
+  runCheck
+);
+const manifestBooleans = buildBooleanMapFromOrder(
+  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
+  manifestChecks
+);
+const manifestStatusSummary = formatOrderedBooleanSummary(
+  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
+  manifestChecks,
+  yn
+);
 const readyPhaseResults = buildCheckResults(READY_PHASES_V2, runCheck);
 const readyPhaseStatusList = formatCheckStatusList(READY_PHASES_V2, readyPhaseResults.byId, yn);
 const contractResults = buildCheckResults(CONTRACT_CHECKS_V2, runCheck);
@@ -42,7 +58,7 @@ const lines = [
   `[status:v2] rules projection only: ${yn(health.projectionRulesOnly === true)}`,
   `[status:v2] rules (interactions/projection): ${Number(health.interactionsRuleCount || 0)}/${Number(health.projectedRuleCount || 0)}`,
   `[status:v2] drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
-  `[status:v2] manifests (ready/contract/regression): ${yn(manifestChecks.readyPhasesManifest)}/${yn(manifestChecks.contractManifest)}/${yn(manifestChecks.regressionManifest)}`,
+  `[status:v2] manifests (ready/contract/regression): ${manifestStatusSummary}`,
   `[status:v2] ready phases ok: ${yn(readyPhaseResults.ok)}`,
   `[status:v2] ready phases: ${readyPhaseStatusList}`,
   `[status:v2] regressions ok: ${yn(regressionResults.ok)}`,
@@ -69,20 +85,10 @@ const statusArtifact = {
     projectedRuleCount: Number(health.projectedRuleCount || 0),
     driftRuleIds: Array.isArray(health.driftRuleIds) ? health.driftRuleIds.slice() : [],
   },
-  manifests: {
-    ready: manifestChecks.readyPhasesManifest === true,
-    contract: manifestChecks.contractManifest === true,
-    regression: manifestChecks.regressionManifest === true,
-  },
-  readyPhases: Object.fromEntries(
-    READY_PHASES_V2.map((phase) => [phase.id, readyPhaseResults.byId[phase.id] === true])
-  ),
-  regressions: Object.fromEntries(
-    REGRESSION_CHECKS_V2.map((check) => [check.id, regressionResults.byId[check.id] === true])
-  ),
-  contracts: Object.fromEntries(
-    CONTRACT_CHECKS_V2.map((check) => [check.id, contractResults.byId[check.id] === true])
-  ),
+  manifests: manifestBooleans,
+  readyPhases: buildCheckBooleanMap(READY_PHASES_V2, readyPhaseResults.byId),
+  regressions: buildCheckBooleanMap(REGRESSION_CHECKS_V2, regressionResults.byId),
+  contracts: buildCheckBooleanMap(CONTRACT_CHECKS_V2, contractResults.byId),
   summary: {
     readyPhasesOk: readyPhaseResults.ok,
     regressionsOk: regressionResults.ok,
@@ -98,5 +104,5 @@ const statusArtifact = {
 };
 
 const statusPath = resolve(process.cwd(), "docs/rule-engine-v2.status.json");
-writeFileSync(statusPath, JSON.stringify(statusArtifact, null, 2) + "\n", "utf8");
+writeJsonFile(statusPath, statusArtifact);
 console.log(`[status:v2] wrote status: ${statusPath}`);

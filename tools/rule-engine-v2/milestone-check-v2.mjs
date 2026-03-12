@@ -1,8 +1,9 @@
-import { appendFileSync, writeFileSync } from "node:fs";
+import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
+import { writeJsonFile } from "./write-json-v2.mjs";
 
 function runStep(label, scriptPath) {
   console.log(`[milestone:v2] running ${label}...`);
@@ -39,7 +40,7 @@ const report = {
 };
 
 const outPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-smoke.json");
-writeFileSync(outPath, JSON.stringify(report, null, 2) + "\n", "utf8");
+writeJsonFile(outPath, report);
 console.log(`[milestone:v2] wrote report: ${outPath}`);
 
 const historyPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-history.jsonl");
@@ -53,7 +54,7 @@ if (!trendRun.ok) {
 }
 const trendPath = resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json");
 report.trend = readJsonSafe(trendPath);
-writeFileSync(outPath, JSON.stringify(report, null, 2) + "\n", "utf8");
+writeJsonFile(outPath, report);
 console.log(`[milestone:v2] refreshed report with trend: ${outPath}`);
 
 if (!report.pass) {

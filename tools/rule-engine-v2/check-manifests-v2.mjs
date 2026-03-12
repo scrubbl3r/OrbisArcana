@@ -26,6 +26,12 @@ export const CHECK_MANIFEST_VALIDATORS_V2 = Object.freeze({
   regression: "tools/rule-engine-v2/check-regression-manifest-v2.mjs",
 });
 
+export const CHECK_MANIFEST_VALIDATOR_ORDER_V2 = Object.freeze([
+  "ready",
+  "contract",
+  "regression",
+]);
+
 export function getCheckManifestEntriesV2(name) {
   const target = String(name || "").trim();
   return CHECK_MANIFEST_SETS_BY_NAME_V2[target] || [];

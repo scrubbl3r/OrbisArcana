@@ -1,16 +1,28 @@
 import {
   CHECK_MANIFEST_SETS_BY_NAME_V2,
   CHECK_MANIFEST_SET_ORDER_V2,
+  CHECK_MANIFEST_VALIDATOR_ORDER_V2,
   CHECK_MANIFEST_VALIDATORS_V2,
 } from "./check-manifests-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 
-const readyPhasesManifestCheck = runCheckScript(CHECK_MANIFEST_VALIDATORS_V2.ready, { stdio: "inherit" });
-if (!readyPhasesManifestCheck.ok) process.exit(readyPhasesManifestCheck.status);
+const validatorScripts = new Set(
+  CHECK_MANIFEST_VALIDATOR_ORDER_V2
+    .map((name) => CHECK_MANIFEST_VALIDATORS_V2[name])
+    .filter(Boolean)
+);
+
+for (const validatorName of CHECK_MANIFEST_VALIDATOR_ORDER_V2) {
+  const script = CHECK_MANIFEST_VALIDATORS_V2[validatorName];
+  if (!script) continue;
+  const res = runCheckScript(script, { stdio: "inherit" });
+  if (!res.ok) process.exit(res.status);
+}
 
 for (const setName of CHECK_MANIFEST_SET_ORDER_V2) {
   const entries = CHECK_MANIFEST_SETS_BY_NAME_V2[setName] || [];
   for (const entry of entries) {
+    if (validatorScripts.has(entry.script)) continue;
     const res = runCheckScript(entry.script, { stdio: "inherit" });
     if (!res.ok) process.exit(res.status);
   }
