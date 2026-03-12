@@ -20,8 +20,14 @@ import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 
+const CHECK_TAG = "status:v2";
+
 function yn(v) {
   return v ? "yes" : "no";
+}
+
+function formatStatusLine(text) {
+  return `[${CHECK_TAG}] ${String(text || "")}`;
 }
 
 function runCheck(scriptPath) {
@@ -55,24 +61,24 @@ const regressionResults = buildCheckResults(REGRESSION_CHECKS_V2, runCheck);
 const regressionStatusList = formatCheckStatusList(REGRESSION_CHECKS_V2, regressionResults.byId, yn);
 
 const lines = [
-  "[status:v2] ---",
-  `[status:v2] spellbook ok: ${yn(isTrue(health.spellbookOk))}`,
-  `[status:v2] interactions ok: ${yn(isTrue(health.interactionsOk))}`,
-  `[status:v2] bootstrap uses v2: ${yn(isTrue(health.bootstrapUsesV2Adapter))}`,
-  `[status:v2] rules projection only: ${yn(isTrue(health.projectionRulesOnly))}`,
-  `[status:v2] rules (interactions/projection): ${toNumberOr(health.interactionsRuleCount)}/${toNumberOr(health.projectedRuleCount)}`,
-  `[status:v2] drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
-  `[status:v2] manifests (ready/contract/regression): ${manifestStatusSummary}`,
-  `[status:v2] ready phases ok: ${yn(readyPhaseResults.ok)}`,
-  `[status:v2] ready phases: ${readyPhaseStatusList}`,
-  `[status:v2] regressions ok: ${yn(regressionResults.ok)}`,
-  `[status:v2] regressions: ${regressionStatusList}`,
-  `[status:v2] contracts ok: ${yn(contractResults.ok)}`,
-  `[status:v2] contracts: ${contractStatusList}`,
-  `[status:v2] milestone runs: ${toNumberOr(trend.totalRuns)}`,
-  `[status:v2] pass rate all/recent: ${toNumberOr(trend.passRateAllPct)}% / ${toNumberOr(trend.passRateRecentPct)}%`,
-  `[status:v2] latest milestone: ${isTrue(trend.latestPass) ? "PASS" : "FAIL"} ${toTrimmedText(trend.latestGitRef)}`,
-  "[status:v2] ---",
+  formatStatusLine("---"),
+  formatStatusLine(`spellbook ok: ${yn(isTrue(health.spellbookOk))}`),
+  formatStatusLine(`interactions ok: ${yn(isTrue(health.interactionsOk))}`),
+  formatStatusLine(`bootstrap uses v2: ${yn(isTrue(health.bootstrapUsesV2Adapter))}`),
+  formatStatusLine(`rules projection only: ${yn(isTrue(health.projectionRulesOnly))}`),
+  formatStatusLine(`rules (interactions/projection): ${toNumberOr(health.interactionsRuleCount)}/${toNumberOr(health.projectedRuleCount)}`),
+  formatStatusLine(`drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`),
+  formatStatusLine(`manifests (ready/contract/regression): ${manifestStatusSummary}`),
+  formatStatusLine(`ready phases ok: ${yn(readyPhaseResults.ok)}`),
+  formatStatusLine(`ready phases: ${readyPhaseStatusList}`),
+  formatStatusLine(`regressions ok: ${yn(regressionResults.ok)}`),
+  formatStatusLine(`regressions: ${regressionStatusList}`),
+  formatStatusLine(`contracts ok: ${yn(contractResults.ok)}`),
+  formatStatusLine(`contracts: ${contractStatusList}`),
+  formatStatusLine(`milestone runs: ${toNumberOr(trend.totalRuns)}`),
+  formatStatusLine(`pass rate all/recent: ${toNumberOr(trend.passRateAllPct)}% / ${toNumberOr(trend.passRateRecentPct)}%`),
+  formatStatusLine(`latest milestone: ${isTrue(trend.latestPass) ? "PASS" : "FAIL"} ${toTrimmedText(trend.latestGitRef)}`),
+  formatStatusLine("---"),
 ];
 
 for (const line of lines) console.log(line);
@@ -109,4 +115,4 @@ const statusArtifact = {
 
 const statusPath = resolveRuleEngineDocPath("status");
 writeJsonFile(statusPath, statusArtifact);
-console.log(`[status:v2] wrote status: ${statusPath}`);
+console.log(formatStatusLine(`wrote status: ${statusPath}`));

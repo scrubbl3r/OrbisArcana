@@ -5,6 +5,8 @@ import { isTrue } from "./bool-utils-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 
+const CHECK_TAG = "milestone:trend:v2";
+
 function pct(part, total) {
   if (total <= 0) return 0;
   return Math.round((part / total) * 1000) / 10;
@@ -37,9 +39,9 @@ const summary = {
   ...summarize(history, 10),
 };
 
-console.log(`[milestone:trend:v2] total runs: ${summary.totalRuns}`);
-console.log(`[milestone:trend:v2] pass rate (all): ${summary.passRateAllPct}%`);
-console.log(`[milestone:trend:v2] pass rate (recent ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
-console.log(`[milestone:trend:v2] latest: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
+console.log(`[${CHECK_TAG}] total runs: ${summary.totalRuns}`);
+console.log(`[${CHECK_TAG}] pass rate (all): ${summary.passRateAllPct}%`);
+console.log(`[${CHECK_TAG}] pass rate (recent ${summary.recentWindow}): ${summary.passRateRecentPct}%`);
+console.log(`[${CHECK_TAG}] latest: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
 writeJsonFile(summaryPath, summary);
-console.log(`[milestone:trend:v2] wrote summary: ${summaryPath}`);
+console.log(`[${CHECK_TAG}] wrote summary: ${summaryPath}`);

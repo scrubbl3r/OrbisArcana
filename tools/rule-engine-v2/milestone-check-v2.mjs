@@ -10,8 +10,10 @@ import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { toTrimmedText } from "./value-utils-v2.mjs";
 import { failCheck, failCheckStatus } from "./check-fail-v2.mjs";
 
+const CHECK_TAG = "milestone:v2";
+
 function runStep(label, scriptPath) {
-  console.log(`[milestone:v2] running ${label}...`);
+  console.log(`[${CHECK_TAG}] running ${label}...`);
   return runCheckScript(scriptPath, { stdio: "inherit" });
 }
 
@@ -46,22 +48,22 @@ const report = {
 
 const outPath = resolveRuleEngineDocPath("milestoneSmoke");
 writeJsonFile(outPath, report);
-console.log(`[milestone:v2] wrote report: ${outPath}`);
+console.log(`[${CHECK_TAG}] wrote report: ${outPath}`);
 
 const historyPath = resolveRuleEngineDocPath("milestoneHistory");
 appendJsonLine(historyPath, report);
-console.log(`[milestone:v2] appended history: ${historyPath}`);
+console.log(`[${CHECK_TAG}] appended history: ${historyPath}`);
 
 const trendRun = runCheckScript(RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend, { stdio: "inherit" });
 if (!trendRun.ok) {
-  failCheckStatus("milestone:v2", "milestone trend generation failed", trendRun.status || 1);
+  failCheckStatus(CHECK_TAG, "milestone trend generation failed", trendRun.status || 1);
 }
 const trendPath = resolveRuleEngineDocPath("milestoneTrend");
 report.trend = readJsonSafe(trendPath);
 writeJsonFile(outPath, report);
-console.log(`[milestone:v2] refreshed report with trend: ${outPath}`);
+console.log(`[${CHECK_TAG}] refreshed report with trend: ${outPath}`);
 
 if (!report.pass) {
-  failCheck("milestone:v2", "ready and/or smoke batch failed");
+  failCheck(CHECK_TAG, "ready and/or smoke batch failed");
 }
-console.log("[milestone:v2] PASS");
+console.log(`[${CHECK_TAG}] PASS`);
