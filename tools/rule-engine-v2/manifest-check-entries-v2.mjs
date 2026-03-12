@@ -8,12 +8,6 @@ export const MANIFEST_CHECK_GROUPS_V2 = Object.freeze([
   Object.freeze({ name: "contract", entries: CONTRACT_CHECKS_V2 }),
 ]);
 
-export const NON_READY_MANIFEST_CHECKS_V2 = Object.freeze([
-  ...MANIFEST_CHECK_GROUPS_V2
-    .filter((group) => group.name !== "ready")
-    .flatMap((group) => group.entries),
-]);
-
 export const ALL_MANIFEST_CHECKS_V2 = Object.freeze([
   ...MANIFEST_CHECK_GROUPS_V2.flatMap((group) => group.entries),
 ]);

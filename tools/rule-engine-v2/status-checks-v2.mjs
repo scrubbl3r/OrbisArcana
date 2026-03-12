@@ -17,7 +17,7 @@ function buildCheckResultsWithStatusList(entries, runCheck, yesNo) {
   return Object.freeze({ results, statusList });
 }
 
-export function buildStatusSectionV2(entries, runCheck, yesNo) {
+function buildStatusSectionV2(entries, runCheck, yesNo) {
   const check = buildCheckResultsWithStatusList(entries, runCheck, yesNo);
   const booleans = buildCheckBooleanMap(entries, check.results.byId);
   return Object.freeze({
@@ -27,9 +27,23 @@ export function buildStatusSectionV2(entries, runCheck, yesNo) {
   });
 }
 
-export function buildNamedManifestArtifactsV2(entries, order, runCheck, yesNo) {
-  const byName = buildCheckResultsByKey(entries, runCheck, "name").byKey;
-  return buildOrderedBooleanArtifacts(order, byName, yesNo);
+export function buildStatusSectionsV2(defs, runCheck, yesNo) {
+  const list = Array.isArray(defs) ? defs : [];
+  return Object.freeze(
+    Object.fromEntries(
+      list.map((def) => {
+        const key = String(def?.key || "").trim();
+        return [key, buildStatusSectionV2(def?.entries || [], runCheck, yesNo)];
+      })
+    )
+  );
+}
+
+export function buildNamedManifestArtifactsV2(entries, runCheck, yesNo) {
+  const items = Array.isArray(entries) ? entries : [];
+  const byName = buildCheckResultsByKey(items, runCheck, "name").byKey;
+  const names = items.map((entry) => entry?.name);
+  return buildOrderedBooleanArtifacts(names, byName, yesNo);
 }
 
 function buildCheckBooleanMap(entries, checksById) {
