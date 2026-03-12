@@ -5,11 +5,12 @@ import {
 } from "../../src/contracts/events.js";
 import { assertCheck } from "./check-assert-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
-import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
+import { emitDetectedSpellAt } from "./check-detected-spell-v2.mjs";
 import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
 import { CHECK_CONFIDENCE_V2 } from "./check-confidence-constants-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_REASONS_V2, hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { spellIdText } from "./check-spell-event-v2.mjs";
@@ -28,7 +29,7 @@ function detectSpell({ ruleEngineEnabled, spellId }) {
     ruleEngineEnabled,
   });
   runWithStartedSystem(system, () => {
-    emitDetectedSpell(eventBus, {
+    emitDetectedSpellAt(eventBus, {
       id: spellId,
       intent: `spell.${spellId}`,
       confidence: CHECK_CONFIDENCE_V2.medium,
@@ -59,7 +60,7 @@ function main() {
     assertCheck(spellIdText(withoutRuleEngine.casts[0]) === spellId, `[immediate-ownership:v2] unexpected cast spellId for ${spellId}`);
   }
 
-  console.log("[immediate-ownership:v2] PASS: immediate spell dispatch ownership contract holds");
+  reportCheckPass("immediate-ownership:v2", "immediate spell dispatch ownership contract holds");
 }
 
 main();

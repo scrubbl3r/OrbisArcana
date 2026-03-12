@@ -8,8 +8,9 @@ import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
 import { CHECK_AXES_V2, CHECK_SLOTS_V2 } from "./check-gesture-constants-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
-import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { spellIdText } from "./check-spell-event-v2.mjs";
 import { CHECK_MUTABLE_TIME_STARTS_V2 } from "./check-time-constants-v2.mjs";
 import { createMutableNow } from "./check-time-v2.mjs";
@@ -34,10 +35,7 @@ function runScenario({ axisSpellId, wakeWindowToken, expectedLoadedSpellId, expe
       nowRef,
       advance,
       wakeWindowToken,
-      axis: CHECK_AXES_V2.y,
       axisSpellId,
-      axisIntent: CHECK_SPELL_INTENTS_V2.axisSelect,
-      wakeIntent: CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
     });
   });
 
@@ -61,7 +59,7 @@ function main() {
     expectedLoadedSpellId: CHECK_SPELL_IDS_V2.rota,
     expectedSlot: CHECK_SLOTS_V2.fb,
   });
-  console.log("[wake-load-regression:v2] PASS: wake-window load flow works");
+  reportCheckPass("wake-load-regression:v2", "wake-window load flow works");
 }
 
 main();

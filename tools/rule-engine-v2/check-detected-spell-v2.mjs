@@ -9,3 +9,19 @@ export function emitDetectedSpell(eventBus, { id, intent, phrase, atMs, confiden
   if (Number.isFinite(Number(confidence))) payload.confidence = Number(confidence);
   eventBus.emit(EVT_VOICE_SPELL_DETECTED, payload);
 }
+
+export function emitDetectedSpellAt(eventBus, {
+  id,
+  intent,
+  atMs,
+  confidence,
+  phrase,
+}) {
+  emitDetectedSpell(eventBus, {
+    id,
+    intent,
+    phrase,
+    atMs: Number(atMs),
+    confidence,
+  });
+}

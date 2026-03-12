@@ -11,6 +11,7 @@ import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
 import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_REASONS_V2, hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
@@ -45,8 +46,6 @@ function main() {
       eventBus,
       axisSpellId: CHECK_SPELL_IDS_V2.pyro,
       wakeWindowToken: CHECK_SPELL_IDS_V2.sanctum,
-      axisIntent: CHECK_SPELL_INTENTS_V2.axisSelect,
-      wakeIntent: CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
       confidence: CHECK_CONFIDENCE_V2.medium,
       axisAtMs: 5001,
       wakeAtMs: 5002,
@@ -63,7 +62,7 @@ function main() {
     "[wake-window-axis-prereq:v2] expected sanctum load after axis selection"
   );
 
-  console.log("[wake-window-axis-prereq:v2] PASS: wake-window axis prerequisite contract holds");
+  reportCheckPass("wake-window-axis-prereq:v2", "wake-window axis prerequisite contract holds");
 }
 
 main();
