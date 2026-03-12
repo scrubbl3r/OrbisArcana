@@ -1,6 +1,6 @@
 {
   "schema": "orbis.rule_engine_v2.status",
-  "generatedAt": "2026-03-12T23:31:52.279Z",
+  "generatedAt": "2026-03-12T23:41:04.525Z",
   "health": {
     "spellbookOk": true,
     "interactionsOk": true,
@@ -46,10 +46,10 @@
     "contractsOk": true
   },
   "trend": {
-    "totalRuns": 472,
+    "totalRuns": 481,
     "passRateAllPct": 99.4,
     "passRateRecentPct": 100,
     "latestPass": true,
-    "latestGitRef": "a11077a"
+    "latestGitRef": "f3e9fe0"
   }
 }

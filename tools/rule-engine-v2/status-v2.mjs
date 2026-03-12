@@ -21,8 +21,25 @@ const STATUS_DOC_PATHS = Object.freeze({
   trend: resolveRuleEngineDocPath("milestoneTrend"),
   status: resolveRuleEngineDocPath("status"),
 });
+const STATUS_LINE_LABELS = Object.freeze({
+  spellbookOk: "spellbook ok",
+  interactionsOk: "interactions ok",
+  bootstrapUsesV2: "bootstrap uses v2",
+  rulesProjectionOnly: "rules projection only",
+  rulesCount: "rules (interactions/projection)",
+  driftIds: "drift ids",
+  manifestsSummary: "manifests (ready/contract/regression)",
+  milestoneRuns: "milestone runs",
+  passRate: "pass rate all/recent",
+  latestMilestone: "latest milestone",
+});
 const STATUS_SECTION_KEYS = Object.freeze({
   readyPhases: "readyPhases",
+  regressions: "regressions",
+  contracts: "contracts",
+});
+const STATUS_SECTION_LABELS = Object.freeze({
+  readyPhases: "ready phases",
   regressions: "regressions",
   contracts: "contracts",
 });
@@ -100,6 +117,13 @@ function buildNamedManifestArtifacts(entries, runCheck, yesNo) {
   return buildOrderedBooleanArtifacts(names, byName, yesNo);
 }
 
+function buildSectionStatusLines(label, section, yesNo) {
+  return [
+    `${label} ok: ${yesNo(section.results.ok)}`,
+    `${label}: ${section.statusList}`,
+  ];
+}
+
 function normalizeHealthStatus(health) {
   return {
     spellbookOk: isTrue(health?.spellbookOk),
@@ -144,22 +168,19 @@ const contracts = statusSections[STATUS_SECTION_KEYS.contracts];
 
 const lines = [
   "---",
-  `spellbook ok: ${yn(healthStatus.spellbookOk)}`,
-  `interactions ok: ${yn(healthStatus.interactionsOk)}`,
-  `bootstrap uses v2: ${yn(healthStatus.bootstrapUsesV2Adapter)}`,
-  `rules projection only: ${yn(healthStatus.projectionRulesOnly)}`,
-  `rules (interactions/projection): ${healthStatus.interactionsRuleCount}/${healthStatus.projectedRuleCount}`,
-  `drift ids: ${healthStatus.driftRuleIds.length}`,
-  `manifests (ready/contract/regression): ${manifestArtifacts.summary}`,
-  `ready phases ok: ${yn(readyPhases.results.ok)}`,
-  `ready phases: ${readyPhases.statusList}`,
-  `regressions ok: ${yn(regressions.results.ok)}`,
-  `regressions: ${regressions.statusList}`,
-  `contracts ok: ${yn(contracts.results.ok)}`,
-  `contracts: ${contracts.statusList}`,
-  `milestone runs: ${trendStatus.totalRuns}`,
-  `pass rate all/recent: ${trendStatus.passRateAllPct}% / ${trendStatus.passRateRecentPct}%`,
-  `latest milestone: ${trendStatus.latestPass ? "PASS" : "FAIL"} ${trendStatus.latestGitRef}`,
+  `${STATUS_LINE_LABELS.spellbookOk}: ${yn(healthStatus.spellbookOk)}`,
+  `${STATUS_LINE_LABELS.interactionsOk}: ${yn(healthStatus.interactionsOk)}`,
+  `${STATUS_LINE_LABELS.bootstrapUsesV2}: ${yn(healthStatus.bootstrapUsesV2Adapter)}`,
+  `${STATUS_LINE_LABELS.rulesProjectionOnly}: ${yn(healthStatus.projectionRulesOnly)}`,
+  `${STATUS_LINE_LABELS.rulesCount}: ${healthStatus.interactionsRuleCount}/${healthStatus.projectedRuleCount}`,
+  `${STATUS_LINE_LABELS.driftIds}: ${healthStatus.driftRuleIds.length}`,
+  `${STATUS_LINE_LABELS.manifestsSummary}: ${manifestArtifacts.summary}`,
+  ...buildSectionStatusLines(STATUS_SECTION_LABELS.readyPhases, readyPhases, yn),
+  ...buildSectionStatusLines(STATUS_SECTION_LABELS.regressions, regressions, yn),
+  ...buildSectionStatusLines(STATUS_SECTION_LABELS.contracts, contracts, yn),
+  `${STATUS_LINE_LABELS.milestoneRuns}: ${trendStatus.totalRuns}`,
+  `${STATUS_LINE_LABELS.passRate}: ${trendStatus.passRateAllPct}% / ${trendStatus.passRateRecentPct}%`,
+  `${STATUS_LINE_LABELS.latestMilestone}: ${trendStatus.latestPass ? "PASS" : "FAIL"} ${trendStatus.latestGitRef}`,
   "---",
 ];
 

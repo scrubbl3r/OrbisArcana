@@ -14,6 +14,15 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "milestone:v2";
 const logMilestone = createTaggedLogger(CHECK_TAG);
+const MILESTONE_STEP_LABELS = Object.freeze({
+  ready: "ready:v2",
+  smokeBatch: "smoke:batch:v2",
+});
+const MILESTONE_MESSAGES = Object.freeze({
+  trendGenerationFailed: "milestone trend generation failed",
+  readyOrBatchFailed: "ready and/or smoke batch failed",
+  pass: "PASS",
+});
 const MILESTONE_DOC_PATHS = Object.freeze({
   health: resolveRuleEngineDocPath("health"),
   smoke: resolveRuleEngineDocPath("milestoneSmoke"),
@@ -44,9 +53,14 @@ function writeMilestoneReport(path, report, label = "wrote report") {
   logMilestone(`${label}: ${path}`);
 }
 
-const ready = runStep("ready:v2", RULE_ENGINE_V2_SCRIPT_PATHS.readyCheck);
+function appendMilestoneHistory(path, report) {
+  appendJsonLine(path, report);
+  logMilestone(`appended history: ${path}`);
+}
+
+const ready = runStep(MILESTONE_STEP_LABELS.ready, RULE_ENGINE_V2_SCRIPT_PATHS.readyCheck);
 const batch = ready.ok
-  ? runStep("smoke:batch:v2", RULE_ENGINE_V2_SCRIPT_PATHS.smokeBatch)
+  ? runStep(MILESTONE_STEP_LABELS.smokeBatch, RULE_ENGINE_V2_SCRIPT_PATHS.smokeBatch)
   : { ok: false, status: -1 };
 
 const report = {
@@ -65,12 +79,11 @@ const outPath = MILESTONE_DOC_PATHS.smoke;
 writeMilestoneReport(outPath, report);
 
 const historyPath = MILESTONE_DOC_PATHS.history;
-appendJsonLine(historyPath, report);
-logMilestone(`appended history: ${historyPath}`);
+appendMilestoneHistory(historyPath, report);
 
 runCheckScriptOrFailStatus({
   tag: CHECK_TAG,
-  message: "milestone trend generation failed",
+  message: MILESTONE_MESSAGES.trendGenerationFailed,
   script: RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend,
 });
 const trendPath = MILESTONE_DOC_PATHS.trend;
@@ -78,6 +91,6 @@ report.trend = readJsonSafe(trendPath);
 writeMilestoneReport(outPath, report, "refreshed report with trend");
 
 if (!report.pass) {
-  failCheck(CHECK_TAG, "ready and/or smoke batch failed");
+  failCheck(CHECK_TAG, MILESTONE_MESSAGES.readyOrBatchFailed);
 }
-logMilestone("PASS");
+logMilestone(MILESTONE_MESSAGES.pass);

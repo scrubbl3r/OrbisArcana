@@ -9,6 +9,10 @@ import { runCheckScriptOrFailStatus } from "./run-check-fail-status-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "ready:v2";
+const READY_FAILURE_PREFIX = Object.freeze({
+  validator: "validator failed",
+  check: "check failed",
+});
 
 function runReadyCheck({ message, script }) {
   runCheckScriptOrFailStatus({
@@ -20,7 +24,7 @@ function runReadyCheck({ message, script }) {
 
 for (const validator of MANIFEST_VALIDATORS_V2) {
   runReadyCheck({
-    message: `validator failed: ${validator.name}`,
+    message: `${READY_FAILURE_PREFIX.validator}: ${validator.name}`,
     script: validator.script,
   });
 }
@@ -28,7 +32,7 @@ for (const validator of MANIFEST_VALIDATORS_V2) {
 for (const entry of flattenManifestChecksV2()) {
   if (isManifestValidatorScriptV2(entry.script)) continue;
   runReadyCheck({
-    message: `check failed: ${entry.id}`,
+    message: `${READY_FAILURE_PREFIX.check}: ${entry.id}`,
     script: entry.script,
   });
 }
