@@ -22,6 +22,16 @@ export function buildCheckResultsWithStatusList(entries, runCheck, yesNo) {
   return Object.freeze({ results, statusList });
 }
 
+export function buildStatusSectionV2(entries, runCheck, yesNo) {
+  const check = buildCheckResultsWithStatusList(entries, runCheck, yesNo);
+  const booleans = buildCheckBooleanMap(entries, check.results.byId);
+  return Object.freeze({
+    results: check.results,
+    statusList: check.statusList,
+    booleans,
+  });
+}
+
 export function buildCheckBooleanMap(entries, checksById) {
   const items = Array.isArray(entries) ? entries : [];
   return Object.fromEntries(

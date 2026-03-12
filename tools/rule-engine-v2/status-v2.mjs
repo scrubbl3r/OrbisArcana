@@ -11,9 +11,8 @@ import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { isTrue } from "./bool-utils-v2.mjs";
 import { toNumberOr, toTrimmedText } from "./value-utils-v2.mjs";
 import {
-  buildCheckBooleanMap,
   buildCheckResultsByKey,
-  buildCheckResultsWithStatusList,
+  buildStatusSectionV2,
   buildOrderedBooleanArtifacts,
 } from "./status-checks-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
@@ -23,7 +22,6 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "status:v2";
 const logStatus = createTaggedLogger(CHECK_TAG);
-const manifestValidators = MANIFEST_VALIDATORS_V2;
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -36,18 +34,15 @@ function runCheck(scriptPath) {
 const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
 const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
 const manifestValidatorOrder = MANIFEST_VALIDATOR_NAMES_V2;
-const manifestChecks = buildCheckResultsByKey(manifestValidators, runCheck, "name").byKey;
+const manifestChecks = buildCheckResultsByKey(MANIFEST_VALIDATORS_V2, runCheck, "name").byKey;
 const manifestArtifacts = buildOrderedBooleanArtifacts(
   manifestValidatorOrder,
   manifestChecks,
   yn
 );
-const readyPhaseCheck = buildCheckResultsWithStatusList(READY_PHASES_V2, runCheck, yn);
-const contractCheck = buildCheckResultsWithStatusList(CONTRACT_CHECKS_V2, runCheck, yn);
-const regressionCheck = buildCheckResultsWithStatusList(REGRESSION_CHECKS_V2, runCheck, yn);
-const readyPhaseResults = readyPhaseCheck.results;
-const contractResults = contractCheck.results;
-const regressionResults = regressionCheck.results;
+const readyPhaseSection = buildStatusSectionV2(READY_PHASES_V2, runCheck, yn);
+const contractSection = buildStatusSectionV2(CONTRACT_CHECKS_V2, runCheck, yn);
+const regressionSection = buildStatusSectionV2(REGRESSION_CHECKS_V2, runCheck, yn);
 
 const lines = [
   "---",
@@ -58,12 +53,12 @@ const lines = [
   `rules (interactions/projection): ${toNumberOr(health.interactionsRuleCount)}/${toNumberOr(health.projectedRuleCount)}`,
   `drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
   `manifests (ready/contract/regression): ${manifestArtifacts.summary}`,
-  `ready phases ok: ${yn(readyPhaseResults.ok)}`,
-  `ready phases: ${readyPhaseCheck.statusList}`,
-  `regressions ok: ${yn(regressionResults.ok)}`,
-  `regressions: ${regressionCheck.statusList}`,
-  `contracts ok: ${yn(contractResults.ok)}`,
-  `contracts: ${contractCheck.statusList}`,
+  `ready phases ok: ${yn(readyPhaseSection.results.ok)}`,
+  `ready phases: ${readyPhaseSection.statusList}`,
+  `regressions ok: ${yn(regressionSection.results.ok)}`,
+  `regressions: ${regressionSection.statusList}`,
+  `contracts ok: ${yn(contractSection.results.ok)}`,
+  `contracts: ${contractSection.statusList}`,
   `milestone runs: ${toNumberOr(trend.totalRuns)}`,
   `pass rate all/recent: ${toNumberOr(trend.passRateAllPct)}% / ${toNumberOr(trend.passRateRecentPct)}%`,
   `latest milestone: ${isTrue(trend.latestPass) ? "PASS" : "FAIL"} ${toTrimmedText(trend.latestGitRef)}`,
@@ -85,13 +80,13 @@ const statusArtifact = {
     driftRuleIds: Array.isArray(health.driftRuleIds) ? health.driftRuleIds.slice() : [],
   },
   manifests: manifestArtifacts.booleans,
-  readyPhases: buildCheckBooleanMap(READY_PHASES_V2, readyPhaseResults.byId),
-  regressions: buildCheckBooleanMap(REGRESSION_CHECKS_V2, regressionResults.byId),
-  contracts: buildCheckBooleanMap(CONTRACT_CHECKS_V2, contractResults.byId),
+  readyPhases: readyPhaseSection.booleans,
+  regressions: regressionSection.booleans,
+  contracts: contractSection.booleans,
   summary: {
-    readyPhasesOk: readyPhaseResults.ok,
-    regressionsOk: regressionResults.ok,
-    contractsOk: contractResults.ok,
+    readyPhasesOk: readyPhaseSection.results.ok,
+    regressionsOk: regressionSection.results.ok,
+    contractsOk: contractSection.results.ok,
   },
   trend: {
     totalRuns: toNumberOr(trend.totalRuns),
