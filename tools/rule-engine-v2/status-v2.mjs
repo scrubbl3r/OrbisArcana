@@ -1,7 +1,7 @@
 import {
-  CHECK_MANIFEST_SETS_BY_NAME_V2,
   CHECK_MANIFEST_VALIDATOR_ORDER_V2,
   CHECK_MANIFEST_VALIDATORS_V2,
+  getCheckManifestEntriesV2,
 } from "./check-manifests-v2.mjs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
@@ -30,9 +30,9 @@ function runCheck(scriptPath) {
 
 const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
 const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
-const READY_PHASES_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.ready || [];
-const REGRESSION_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.regression || [];
-const CONTRACT_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.contract || [];
+const READY_PHASES_V2 = getCheckManifestEntriesV2("ready");
+const REGRESSION_CHECKS_V2 = getCheckManifestEntriesV2("regression");
+const CONTRACT_CHECKS_V2 = getCheckManifestEntriesV2("contract");
 const manifestChecks = buildManifestValidatorChecks(
   CHECK_MANIFEST_VALIDATOR_ORDER_V2,
   CHECK_MANIFEST_VALIDATORS_V2,

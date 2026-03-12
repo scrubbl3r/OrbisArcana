@@ -2,7 +2,7 @@ import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REQUIRED_READY_PHASE_IDS_V2 } from "./manifest-contract-ids-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { findSharedScripts } from "./manifest-collision-utils-v2.mjs";
-import { getCheckManifestEntriesV2 } from "./check-manifests-v2.mjs";
+import { getCheckManifestEntriesGroupV2 } from "./check-manifests-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { runManifestIdCheck } from "./run-manifest-id-check-v2.mjs";
 
@@ -19,7 +19,7 @@ runManifestIdCheck({
 
 const overlaps = findSharedScripts(
   READY_PHASES_V2,
-  [...getCheckManifestEntriesV2("regression"), ...getCheckManifestEntriesV2("contract")]
+  getCheckManifestEntriesGroupV2(["regression", "contract"])
 );
 if (overlaps.length) {
   failCheck(

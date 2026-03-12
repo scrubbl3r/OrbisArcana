@@ -36,3 +36,15 @@ export function getCheckManifestEntriesV2(name) {
   const target = String(name || "").trim();
   return CHECK_MANIFEST_SETS_BY_NAME_V2[target] || [];
 }
+
+export function getCheckManifestEntriesGroupV2(names) {
+  const list = Array.isArray(names) ? names : [];
+  return list.flatMap((name) => getCheckManifestEntriesV2(name));
+}
+
+export function getCheckManifestValidatorScriptsV2(order = CHECK_MANIFEST_VALIDATOR_ORDER_V2) {
+  const names = Array.isArray(order) ? order : [];
+  return names
+    .map((name) => CHECK_MANIFEST_VALIDATORS_V2[name])
+    .filter(Boolean);
+}
