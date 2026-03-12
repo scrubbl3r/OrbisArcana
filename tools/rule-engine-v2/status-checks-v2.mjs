@@ -1,10 +1,25 @@
-export function buildCheckResults(entries, runCheck) {
+import { formatCheckStatusList } from "./status-format-v2.mjs";
+
+export function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
   const items = Array.isArray(entries) ? entries : [];
-  const byId = Object.freeze(Object.fromEntries(
-    items.map((entry) => [entry.id, runCheck(entry.script)])
+  const keyName = String(keyField || "").trim() || "id";
+  const byKey = Object.freeze(Object.fromEntries(
+    items.map((entry) => [entry?.[keyName], runCheck(entry?.script)])
   ));
-  const ok = items.every((entry) => byId[entry.id] === true);
+  const ok = items.every((entry) => byKey[entry?.[keyName]] === true);
+  return Object.freeze({ byKey, ok });
+}
+
+export function buildCheckResults(entries, runCheck) {
+  const { byKey, ok } = buildCheckResultsByKey(entries, runCheck, "id");
+  const byId = byKey;
   return Object.freeze({ byId, ok });
+}
+
+export function buildCheckResultsWithStatusList(entries, runCheck, yesNo) {
+  const results = buildCheckResults(entries, runCheck);
+  const statusList = formatCheckStatusList(entries, results.byId, yesNo);
+  return Object.freeze({ results, statusList });
 }
 
 export function buildCheckBooleanMap(entries, checksById) {

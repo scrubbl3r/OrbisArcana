@@ -1,5 +1,8 @@
 import { ALL_MANIFEST_CHECKS_V2 } from "./manifest-check-entries-v2.mjs";
-import { MANIFEST_VALIDATORS_V2 } from "./manifest-validators-v2.mjs";
+import {
+  MANIFEST_VALIDATORS_V2,
+  isManifestValidatorScriptV2,
+} from "./manifest-validators-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { failCheckStatus } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
@@ -7,7 +10,6 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 const CHECK_TAG = "ready:v2";
 
 const validators = MANIFEST_VALIDATORS_V2;
-const validatorScripts = new Set(validators.map((v) => v.script));
 const checks = ALL_MANIFEST_CHECKS_V2;
 
 for (const validator of validators) {
@@ -17,7 +19,7 @@ for (const validator of validators) {
 }
 
 for (const entry of checks) {
-  if (validatorScripts.has(entry.script)) continue;
+  if (isManifestValidatorScriptV2(entry.script)) continue;
   const res = runCheckScript(entry.script, { stdio: "inherit" });
   if (!res.ok) failCheckStatus(CHECK_TAG, `check failed: ${entry.id}`, res.status || 1);
 }

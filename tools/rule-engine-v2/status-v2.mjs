@@ -1,16 +1,19 @@
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
-import { MANIFEST_VALIDATORS_V2 } from "./manifest-validators-v2.mjs";
+import {
+  MANIFEST_VALIDATORS_V2,
+  MANIFEST_VALIDATOR_NAMES_V2,
+} from "./manifest-validators-v2.mjs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { isTrue } from "./bool-utils-v2.mjs";
 import { toNumberOr, toTrimmedText } from "./value-utils-v2.mjs";
-import { formatCheckStatusList } from "./status-format-v2.mjs";
 import {
   buildCheckBooleanMap,
-  buildCheckResults,
+  buildCheckResultsByKey,
+  buildCheckResultsWithStatusList,
   buildOrderedBooleanArtifacts,
 } from "./status-checks-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
@@ -32,23 +35,19 @@ function runCheck(scriptPath) {
 
 const health = readJsonSafe(resolveRuleEngineDocPath("health")) || {};
 const trend = readJsonSafe(resolveRuleEngineDocPath("milestoneTrend")) || {};
-const manifestValidatorOrder = manifestValidators.map((v) => v.name);
-const manifestChecks = Object.freeze(
-  Object.fromEntries(
-    manifestValidators.map((v) => [v.name, runCheck(v.script)])
-  )
-);
+const manifestValidatorOrder = MANIFEST_VALIDATOR_NAMES_V2;
+const manifestChecks = buildCheckResultsByKey(manifestValidators, runCheck, "name").byKey;
 const manifestArtifacts = buildOrderedBooleanArtifacts(
   manifestValidatorOrder,
   manifestChecks,
   yn
 );
-const readyPhaseResults = buildCheckResults(READY_PHASES_V2, runCheck);
-const readyPhaseStatusList = formatCheckStatusList(READY_PHASES_V2, readyPhaseResults.byId, yn);
-const contractResults = buildCheckResults(CONTRACT_CHECKS_V2, runCheck);
-const contractStatusList = formatCheckStatusList(CONTRACT_CHECKS_V2, contractResults.byId, yn);
-const regressionResults = buildCheckResults(REGRESSION_CHECKS_V2, runCheck);
-const regressionStatusList = formatCheckStatusList(REGRESSION_CHECKS_V2, regressionResults.byId, yn);
+const readyPhaseCheck = buildCheckResultsWithStatusList(READY_PHASES_V2, runCheck, yn);
+const contractCheck = buildCheckResultsWithStatusList(CONTRACT_CHECKS_V2, runCheck, yn);
+const regressionCheck = buildCheckResultsWithStatusList(REGRESSION_CHECKS_V2, runCheck, yn);
+const readyPhaseResults = readyPhaseCheck.results;
+const contractResults = contractCheck.results;
+const regressionResults = regressionCheck.results;
 
 const lines = [
   "---",
@@ -60,11 +59,11 @@ const lines = [
   `drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
   `manifests (ready/contract/regression): ${manifestArtifacts.summary}`,
   `ready phases ok: ${yn(readyPhaseResults.ok)}`,
-  `ready phases: ${readyPhaseStatusList}`,
+  `ready phases: ${readyPhaseCheck.statusList}`,
   `regressions ok: ${yn(regressionResults.ok)}`,
-  `regressions: ${regressionStatusList}`,
+  `regressions: ${regressionCheck.statusList}`,
   `contracts ok: ${yn(contractResults.ok)}`,
-  `contracts: ${contractStatusList}`,
+  `contracts: ${contractCheck.statusList}`,
   `milestone runs: ${toNumberOr(trend.totalRuns)}`,
   `pass rate all/recent: ${toNumberOr(trend.passRateAllPct)}% / ${toNumberOr(trend.passRateRecentPct)}%`,
   `latest milestone: ${isTrue(trend.latestPass) ? "PASS" : "FAIL"} ${toTrimmedText(trend.latestGitRef)}`,
