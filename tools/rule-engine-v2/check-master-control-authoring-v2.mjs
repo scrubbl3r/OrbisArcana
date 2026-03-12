@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
   INTERACTIONS_V2,
   SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID,
 } from "../../src/content/interactions-v2/index.js";
 import { failCheck } from "./check-fail-v2.mjs";
+import { readJsonOrFail } from "./check-json-v2.mjs";
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : null;
@@ -14,13 +13,8 @@ function asId(v) {
   return String(v || "").trim().toLowerCase();
 }
 
-function readAuthoringJson() {
-  const path = resolve(process.cwd(), "docs/master-control-v2.authoring.json");
-  return JSON.parse(readFileSync(path, "utf8"));
-}
-
 function main() {
-  const doc = readAuthoringJson();
+  const doc = readJsonOrFail("master-control-authoring:v2", "docs/master-control-v2.authoring.json");
   const root = asObj(doc);
   if (!root) failCheck("master-control-authoring:v2", "root must be an object");
   if (String(root.schema || "") !== "orbis.master_control_v2.authoring") {

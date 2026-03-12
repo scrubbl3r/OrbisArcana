@@ -1,18 +1,12 @@
-import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
-import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
-import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
+import { ALL_CHECK_MANIFEST_ENTRIES_V2 } from "./check-manifests-v2.mjs";
 
 const pkg = readJsonOrFail("script-registry:v2", "package.json");
 const scripts = (pkg && typeof pkg.scripts === "object" && pkg.scripts) ? pkg.scripts : null;
 if (!scripts) failCheck("script-registry:v2", "package.json scripts object missing");
 
-const checks = [
-  ...READY_PHASES_V2,
-  ...REGRESSION_CHECKS_V2,
-  ...CONTRACT_CHECKS_V2,
-];
+const checks = ALL_CHECK_MANIFEST_ENTRIES_V2;
 
 const explicitScriptNames = Object.freeze({
   doctor: "doctor:v2",

@@ -1,11 +1,10 @@
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { assertManifestIdContract } from "./assert-manifest-id-contract-v2.mjs";
-import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
-import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 import { REQUIRED_READY_PHASE_IDS_V2 } from "./manifest-contract-ids-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { findSharedScripts } from "./manifest-collision-utils-v2.mjs";
 import { runOrFail } from "./check-run-v2.mjs";
+import { getCheckManifestEntriesV2 } from "./check-manifests-v2.mjs";
 
 runOrFail("ready-phases-manifest:v2", () => {
   assertManifestIdContract({
@@ -17,7 +16,10 @@ runOrFail("ready-phases-manifest:v2", () => {
   });
 });
 
-const overlaps = findSharedScripts(READY_PHASES_V2, [...REGRESSION_CHECKS_V2, ...CONTRACT_CHECKS_V2]);
+const overlaps = findSharedScripts(
+  READY_PHASES_V2,
+  [...getCheckManifestEntriesV2("regression"), ...getCheckManifestEntriesV2("contract")]
+);
 if (overlaps.length) {
   failCheck(
     "ready-phases-manifest:v2",
