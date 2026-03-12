@@ -1,6 +1,7 @@
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
+import { MANIFEST_VALIDATORS_V2 } from "./manifest-validators-v2.mjs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
@@ -10,8 +11,7 @@ import { formatCheckStatusList } from "./status-format-v2.mjs";
 import {
   buildCheckBooleanMap,
   buildCheckResults,
-  buildBooleanMapFromOrder,
-  formatOrderedBooleanSummary,
+  buildOrderedBooleanArtifacts,
 } from "./status-checks-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
@@ -20,11 +20,7 @@ import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "status:v2";
 const logStatus = createTaggedLogger(CHECK_TAG);
-const manifestValidators = Object.freeze([
-  Object.freeze({ name: "ready", script: "tools/rule-engine-v2/check-ready-phases-manifest-v2.mjs" }),
-  Object.freeze({ name: "contract", script: "tools/rule-engine-v2/check-contract-manifest-v2.mjs" }),
-  Object.freeze({ name: "regression", script: "tools/rule-engine-v2/check-regression-manifest-v2.mjs" }),
-]);
+const manifestValidators = MANIFEST_VALIDATORS_V2;
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -42,11 +38,7 @@ const manifestChecks = Object.freeze(
     manifestValidators.map((v) => [v.name, runCheck(v.script)])
   )
 );
-const manifestBooleans = buildBooleanMapFromOrder(
-  manifestValidatorOrder,
-  manifestChecks
-);
-const manifestStatusSummary = formatOrderedBooleanSummary(
+const manifestArtifacts = buildOrderedBooleanArtifacts(
   manifestValidatorOrder,
   manifestChecks,
   yn
@@ -66,7 +58,7 @@ const lines = [
   `rules projection only: ${yn(isTrue(health.projectionRulesOnly))}`,
   `rules (interactions/projection): ${toNumberOr(health.interactionsRuleCount)}/${toNumberOr(health.projectedRuleCount)}`,
   `drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
-  `manifests (ready/contract/regression): ${manifestStatusSummary}`,
+  `manifests (ready/contract/regression): ${manifestArtifacts.summary}`,
   `ready phases ok: ${yn(readyPhaseResults.ok)}`,
   `ready phases: ${readyPhaseStatusList}`,
   `regressions ok: ${yn(regressionResults.ok)}`,
@@ -93,7 +85,7 @@ const statusArtifact = {
     projectedRuleCount: toNumberOr(health.projectedRuleCount),
     driftRuleIds: Array.isArray(health.driftRuleIds) ? health.driftRuleIds.slice() : [],
   },
-  manifests: manifestBooleans,
+  manifests: manifestArtifacts.booleans,
   readyPhases: buildCheckBooleanMap(READY_PHASES_V2, readyPhaseResults.byId),
   regressions: buildCheckBooleanMap(REGRESSION_CHECKS_V2, regressionResults.byId),
   contracts: buildCheckBooleanMap(CONTRACT_CHECKS_V2, contractResults.byId),

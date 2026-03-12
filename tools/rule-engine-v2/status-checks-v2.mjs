@@ -14,14 +14,11 @@ export function buildCheckBooleanMap(entries, checksById) {
   );
 }
 
-export function buildBooleanMapFromOrder(order, valuesByName) {
+export function buildOrderedBooleanArtifacts(order, valuesByName, yesNo) {
   const names = Array.isArray(order) ? order : [];
-  return Object.fromEntries(
+  const booleans = Object.fromEntries(
     names.map((name) => [name, valuesByName[name] === true])
   );
-}
-
-export function formatOrderedBooleanSummary(order, valuesByName, yesNo) {
-  const names = Array.isArray(order) ? order : [];
-  return names.map((name) => yesNo(valuesByName[name] === true)).join("/");
+  const summary = names.map((name) => yesNo(valuesByName[name] === true)).join("/");
+  return Object.freeze({ booleans, summary });
 }
