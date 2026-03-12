@@ -8,6 +8,14 @@ export const CHECK_MANIFEST_SETS_V2 = Object.freeze([
   Object.freeze({ name: "contract", entries: CONTRACT_CHECKS_V2 }),
 ]);
 
+export const CHECK_MANIFEST_SET_ORDER_V2 = Object.freeze(
+  CHECK_MANIFEST_SETS_V2.map((set) => set.name)
+);
+
+export const CHECK_MANIFEST_SETS_BY_NAME_V2 = Object.freeze(
+  Object.fromEntries(CHECK_MANIFEST_SETS_V2.map((set) => [set.name, set.entries]))
+);
+
 export const ALL_CHECK_MANIFEST_ENTRIES_V2 = Object.freeze(
   CHECK_MANIFEST_SETS_V2.flatMap((set) => set.entries)
 );
@@ -20,6 +28,5 @@ export const CHECK_MANIFEST_VALIDATORS_V2 = Object.freeze({
 
 export function getCheckManifestEntriesV2(name) {
   const target = String(name || "").trim();
-  const found = CHECK_MANIFEST_SETS_V2.find((set) => set.name === target);
-  return found ? found.entries : [];
+  return CHECK_MANIFEST_SETS_BY_NAME_V2[target] || [];
 }

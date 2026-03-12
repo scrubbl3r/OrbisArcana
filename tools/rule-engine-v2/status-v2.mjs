@@ -1,11 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
-  CHECK_MANIFEST_SETS_V2,
+  CHECK_MANIFEST_SETS_BY_NAME_V2,
   CHECK_MANIFEST_VALIDATORS_V2,
 } from "./check-manifests-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
+import { formatCheckStatusList } from "./status-format-v2.mjs";
+import { buildCheckResults } from "./status-checks-v2.mjs";
 
 function yn(v) {
   return v ? "yes" : "no";
@@ -17,38 +19,20 @@ function runCheck(scriptPath) {
 
 const health = readJsonSafe(resolve(process.cwd(), "docs/rule-engine-v2.health.json")) || {};
 const trend = readJsonSafe(resolve(process.cwd(), "docs/rule-engine-v2.milestone-trend.json")) || {};
-const CHECK_SETS_BY_NAME = Object.freeze(
-  Object.fromEntries(CHECK_MANIFEST_SETS_V2.map((set) => [set.name, set.entries]))
-);
-const READY_PHASES_V2 = CHECK_SETS_BY_NAME.ready || [];
-const REGRESSION_CHECKS_V2 = CHECK_SETS_BY_NAME.regression || [];
-const CONTRACT_CHECKS_V2 = CHECK_SETS_BY_NAME.contract || [];
+const READY_PHASES_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.ready || [];
+const REGRESSION_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.regression || [];
+const CONTRACT_CHECKS_V2 = CHECK_MANIFEST_SETS_BY_NAME_V2.contract || [];
 const manifestChecks = Object.freeze({
   readyPhasesManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.ready),
   contractManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.contract),
   regressionManifest: runCheck(CHECK_MANIFEST_VALIDATORS_V2.regression),
 });
-const readyPhaseChecks = Object.freeze(Object.fromEntries(
-  READY_PHASES_V2.map((phase) => [phase.id, runCheck(phase.script)])
-));
-const readyPhasesOk = READY_PHASES_V2.every((phase) => readyPhaseChecks[phase.id] === true);
-const readyPhaseStatusList = READY_PHASES_V2
-  .map((phase) => `${phase.id}:${yn(readyPhaseChecks[phase.id] === true)}`)
-  .join(" ");
-const contractChecks = Object.freeze(Object.fromEntries(
-  CONTRACT_CHECKS_V2.map((check) => [check.id, runCheck(check.script)])
-));
-const contractsOk = CONTRACT_CHECKS_V2.every((check) => contractChecks[check.id] === true);
-const contractStatusList = CONTRACT_CHECKS_V2
-  .map((check) => `${check.id}:${yn(contractChecks[check.id] === true)}`)
-  .join(" ");
-const regressionChecks = Object.freeze(Object.fromEntries(
-  REGRESSION_CHECKS_V2.map((check) => [check.id, runCheck(check.script)])
-));
-const regressionsOk = REGRESSION_CHECKS_V2.every((check) => regressionChecks[check.id] === true);
-const regressionStatusList = REGRESSION_CHECKS_V2
-  .map((check) => `${check.id}:${yn(regressionChecks[check.id] === true)}`)
-  .join(" ");
+const readyPhaseResults = buildCheckResults(READY_PHASES_V2, runCheck);
+const readyPhaseStatusList = formatCheckStatusList(READY_PHASES_V2, readyPhaseResults.byId, yn);
+const contractResults = buildCheckResults(CONTRACT_CHECKS_V2, runCheck);
+const contractStatusList = formatCheckStatusList(CONTRACT_CHECKS_V2, contractResults.byId, yn);
+const regressionResults = buildCheckResults(REGRESSION_CHECKS_V2, runCheck);
+const regressionStatusList = formatCheckStatusList(REGRESSION_CHECKS_V2, regressionResults.byId, yn);
 
 const lines = [
   "[status:v2] ---",
@@ -59,11 +43,11 @@ const lines = [
   `[status:v2] rules (interactions/projection): ${Number(health.interactionsRuleCount || 0)}/${Number(health.projectedRuleCount || 0)}`,
   `[status:v2] drift ids: ${Array.isArray(health.driftRuleIds) ? health.driftRuleIds.length : 0}`,
   `[status:v2] manifests (ready/contract/regression): ${yn(manifestChecks.readyPhasesManifest)}/${yn(manifestChecks.contractManifest)}/${yn(manifestChecks.regressionManifest)}`,
-  `[status:v2] ready phases ok: ${yn(readyPhasesOk)}`,
+  `[status:v2] ready phases ok: ${yn(readyPhaseResults.ok)}`,
   `[status:v2] ready phases: ${readyPhaseStatusList}`,
-  `[status:v2] regressions ok: ${yn(regressionsOk)}`,
+  `[status:v2] regressions ok: ${yn(regressionResults.ok)}`,
   `[status:v2] regressions: ${regressionStatusList}`,
-  `[status:v2] contracts ok: ${yn(contractsOk)}`,
+  `[status:v2] contracts ok: ${yn(contractResults.ok)}`,
   `[status:v2] contracts: ${contractStatusList}`,
   `[status:v2] milestone runs: ${Number(trend.totalRuns || 0)}`,
   `[status:v2] pass rate all/recent: ${Number(trend.passRateAllPct || 0)}% / ${Number(trend.passRateRecentPct || 0)}%`,
@@ -91,18 +75,18 @@ const statusArtifact = {
     regression: manifestChecks.regressionManifest === true,
   },
   readyPhases: Object.fromEntries(
-    READY_PHASES_V2.map((phase) => [phase.id, readyPhaseChecks[phase.id] === true])
+    READY_PHASES_V2.map((phase) => [phase.id, readyPhaseResults.byId[phase.id] === true])
   ),
   regressions: Object.fromEntries(
-    REGRESSION_CHECKS_V2.map((check) => [check.id, regressionChecks[check.id] === true])
+    REGRESSION_CHECKS_V2.map((check) => [check.id, regressionResults.byId[check.id] === true])
   ),
   contracts: Object.fromEntries(
-    CONTRACT_CHECKS_V2.map((check) => [check.id, contractChecks[check.id] === true])
+    CONTRACT_CHECKS_V2.map((check) => [check.id, contractResults.byId[check.id] === true])
   ),
   summary: {
-    readyPhasesOk,
-    regressionsOk,
-    contractsOk,
+    readyPhasesOk: readyPhaseResults.ok,
+    regressionsOk: regressionResults.ok,
+    contractsOk: contractResults.ok,
   },
   trend: {
     totalRuns: Number(trend.totalRuns || 0),
