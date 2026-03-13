@@ -3,7 +3,6 @@
 Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
-Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-index.md` under **Historical Slice Logs**; they are not active authoring runbooks.
 
 ## Daily Authoring Files (Primary)
 - `src/content/interactions-v2/interactions-v2.js`

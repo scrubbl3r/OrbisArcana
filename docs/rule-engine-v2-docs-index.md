@@ -127,8 +127,3 @@
 - [Milestone Smoke Report](./rule-engine-v2.milestone-smoke.json)
 - [Milestone History Log](./rule-engine-v2.milestone-history.jsonl)
 - [Milestone Trend Summary](./rule-engine-v2.milestone-trend.json)
-
-## Historical Slice Logs
-Archive note: these files are change-history records. Do not treat them as active operational runbooks.
-- V2 smoke slices: `docs/rule-engine-v2-slice-*-smoke.md`
-- V1 smoke slices: `docs/rule-engine-v1-slice-*-smoke.md`

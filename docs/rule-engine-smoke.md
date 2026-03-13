@@ -3,9 +3,8 @@
 Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
-Use this to reduce per-slice manual config edits.
+Use this runbook to execute repeatable v2 smoke checks with minimal per-slice setup.
 
-Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-index.md` under **Historical Slice Logs**; they are not active smoke runbooks.
 
 ## Primary Command
 
@@ -26,9 +25,9 @@ This runs:
 
 It also writes report artifacts:
 
-- milestone report: `/docs/rule-engine-v2.milestone-smoke.json`
-- run history append-only log: `/docs/rule-engine-v2.milestone-history.jsonl`
-- trend summary: `/docs/rule-engine-v2.milestone-trend.json`
+- milestone report: `docs/rule-engine-v2.milestone-smoke.json`
+- run history append-only log: `docs/rule-engine-v2.milestone-history.jsonl`
+- trend summary: `docs/rule-engine-v2.milestone-trend.json`
 
 ## What It Covers
 
