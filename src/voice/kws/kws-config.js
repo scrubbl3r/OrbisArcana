@@ -55,6 +55,8 @@ export function createKwsRuntimeConfig() {
     axisSpellByAxis: Object.freeze({ ...axisSpellByAxis }),
     logTokens: tokenList.slice(),
     tempUngatedTokens: tokenList.slice(),
-    tokenCanonicalMap: Object.freeze({}),
+    tokenCanonicalMap: Object.freeze({
+      idnis: "ignis",
+    }),
   };
 }

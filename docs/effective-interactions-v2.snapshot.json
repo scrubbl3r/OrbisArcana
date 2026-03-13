@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-13T02:44:35.590Z",
+  "generatedAt": "2026-03-13T02:54:39.374Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -45,7 +45,7 @@
         "phrase": "ignis",
         "active": true,
         "onnx": "ignis",
-        "confidence": 0.6,
+        "confidence": 0.45,
         "cooldownMs": 0
       },
       {

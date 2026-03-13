@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-13T02:44:35.647Z",
+  "generatedAt": "2026-03-13T02:54:39.434Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -25,7 +25,7 @@
         "phrase": "ignis",
         "active": true,
         "onnx": "ignis",
-        "confidence": 0.6,
+        "confidence": 0.45,
         "cooldownMs": 0
       },
       {

@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-13T02:44:35.648Z",
+  "generatedAt": "2026-03-13T02:54:39.435Z",
   "enabled": true,
   "defaults": {
     "wakeWin": {
@@ -31,7 +31,7 @@
       "id": "ignis",
       "phrase": "ignis",
       "onnx": "ignis",
-      "confidence": 0.6,
+      "confidence": 0.45,
       "cooldownMs": 0
     },
     {
