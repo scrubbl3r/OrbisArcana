@@ -98,7 +98,7 @@ Example:
 ## Authoring Principles
 - One behavior authoring file (`interactions`).
 - One spell inventory file (`spellbook`).
-- No school/class taxonomy split.
+- Neutral axis/wake-window taxonomy only.
 - All spell/gesture/orb interactions are modular and composable.
 
 ## Future-Proofing

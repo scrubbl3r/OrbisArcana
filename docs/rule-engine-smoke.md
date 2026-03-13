@@ -24,7 +24,7 @@ This runs:
 1. `ready:v2` (runtime health + guard checks)
 2. `smoke:batch:v2` (multi-case validator + projection suite)
 
-It also writes report artifacts (current filenames):
+It also writes report artifacts:
 
 - milestone report: `/docs/rule-engine-v2.milestone-smoke.json`
 - run history append-only log: `/docs/rule-engine-v2.milestone-history.jsonl`

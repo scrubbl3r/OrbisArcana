@@ -12,7 +12,7 @@ Related index:
 - symbol: `RULE_ENGINE_POLICY_CONTROL` (runtime policy-facing alias)
 - compatibility alias: `RULE_ENGINE_MASTER_CONTROL`
 
-## Current Neutral Contract
+## Neutral Contract
 - Intent names:
   - axis select: `spell.axis_select`
   - wake-window select: `spell.wake_window_select`
@@ -20,8 +20,8 @@ Related index:
   - use `axisSpell` and `wakeWindowSpell`
   - retired aliases are removed from runtime payloads (`school`, `classKey`)
 - KWS runtime config:
-  - uses axis-to-token routing map (runtime key currently named `axisSpellByAxis`)
-- Dispatch reject reasons (current):
+  - uses axis-to-token routing map (`axisSpellByAxis`)
+- Dispatch reject reasons:
   - `spell_window_required`
   - `flat_spin_requires_wake_window_token`
   - `no_axis_selected`
@@ -494,7 +494,7 @@ Related index:
   - Higher `priority` rules are evaluated first when multiple rules are candidates.
   - Equal `priority` preserves source order.
 
-## Current Example Chain
+## Example Chain
 ```js
 {
   id: "r_rota_yspin_charged",

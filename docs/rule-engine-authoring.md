@@ -24,7 +24,7 @@ Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + adapter flag routing)
 - `src/voice/spellbook.js` (runtime view derived from `spellbook-v2`)
 
-## Current Runtime Switches
+## Runtime Switches
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/interactions-v2.js`
   - Purpose: Must remain `true`; otherwise runtime enters safe-disabled mode.
@@ -48,6 +48,6 @@ Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-
   - Prints differences between projected runtime rules and effective interactions.
 - `npm run doctor:v2`
   - Runs pre-smoke and prints concise SSOT health summary.
-  - Current output file: `docs/rule-engine-v2.health.json`.
+  - Output file: `docs/rule-engine-v2.health.json`.
 - `npm run ready:v2`
   - Runs doctor and fails unless all health gates are green.

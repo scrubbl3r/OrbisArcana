@@ -67,7 +67,7 @@
 5. Confirm generated artifacts refreshed (`effective-interactions-v2.snapshot.json`, `master-control-v2.*`, milestone outputs).
 
 ## Safe Rollback Verification Workflow
-1. Create a dedicated fix/test branch from current branch tip.
+1. Create a dedicated fix/test branch from branch tip.
 2. Move that branch to a target commit SHA and push it.
 3. Validate online behavior from the fix/test branch deployment.
 4. Keep original branch untouched while testing historical SHAs.
@@ -89,8 +89,7 @@
 - Tune one event instance without global changes:
   - in an action, use `overrides` (for example `{ type: "event", id: "grace", overrides: { ms: 900 } }`).
 - Validate and smoke:
-  - run `npm run ready:v2`
-  - run `npm run smoke:milestone:v2`
+  - use the **Smoke Packs** section above.
 
 ## FAQ
 - Where do I enable/disable a spell?
@@ -102,7 +101,7 @@
 - Why did my runtime/generated docs change after checks?
   - `ready:v2` and milestone scripts regenerate snapshot/master-control/health artifacts by design.
 - What should I avoid editing directly?
-  - Generated docs/artifacts under `docs/*v2*.json`, `effective-interactions-v2.snapshot.json`, and milestone outputs.
+  - See **File Ownership Map** -> **Generated artifacts (do not hand-edit)**.
 
 ## Canonical Handle Naming
 - Prefer canonical ALLCAPS handles for shared entity IDs where available.
@@ -131,8 +130,8 @@
 - [KWS Guardrails](./kws-guardrails.md)
 
 ## Architecture Context
-- [Architecture Schema (Current Snapshot)](./orbis-arcana-architecture-schema.txt)
-- [State Ownership Inventory (Current Snapshot)](./state-ownership-inventory.txt)
+- [Architecture Schema (Snapshot)](./orbis-arcana-architecture-schema.txt)
+- [State Ownership Inventory (Snapshot)](./state-ownership-inventory.txt)
 - [Receiver Composition](./receiver-composition.txt)
 
 ## Snapshot / Health Artifacts
@@ -143,6 +142,6 @@
 - [Milestone Trend Summary](./rule-engine-v2.milestone-trend.json)
 
 ## Historical Slice Logs
-Archive note: these files are change-history records. Do not treat them as current operational runbooks.
+Archive note: these files are change-history records. Do not treat them as active operational runbooks.
 - V2 smoke slices: `docs/rule-engine-v2-slice-*.md`
 - V1 smoke slices: `docs/rule-engine-v1-slice-*.md`
