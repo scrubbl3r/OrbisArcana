@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-13T01:50:19.708Z",
+  "generatedAt": "2026-03-13T02:17:45.377Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -17,7 +17,7 @@
     }
   },
   "counts": {
-    "spellbookV2Spells": 8,
+    "spellbookV2Spells": 9,
     "interactionsV2Rules": 5,
     "projectedRuleEngineRules": 5
   },
@@ -33,12 +33,20 @@
         "cooldownMs": 0
       },
       {
+        "id": "arcana",
+        "phrase": "arcana",
+        "active": true,
+        "onnx": "arcana",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
         "id": "domus",
         "phrase": "domus",
         "active": true,
         "onnx": "domus",
-        "confidence": 0.62,
-        "cooldownMs": 250
+        "confidence": 0.6,
+        "cooldownMs": 0
       },
       {
         "id": "pyro",

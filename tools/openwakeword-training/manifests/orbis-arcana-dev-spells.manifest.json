@@ -6,6 +6,11 @@
       "token": "orbis"
     },
     {
+      "path": "../../../assets/kws/openwakeword-models/arcana.onnx",
+      "label": "arcana",
+      "token": "arcana"
+    },
+    {
       "path": "../../../assets/kws/openwakeword-models/domus.onnx",
       "label": "domus",
       "token": "domus"

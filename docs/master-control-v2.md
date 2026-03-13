@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-13T01:50:19.759Z
+Generated: 2026-03-13T02:17:45.429Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -25,12 +25,20 @@ This document is generated from SSOT:
       "cooldownMs": 0
     },
     {
+      "id": "arcana",
+      "phrase": "arcana",
+      "active": true,
+      "onnx": "arcana",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
       "id": "domus",
       "phrase": "domus",
       "active": true,
       "onnx": "domus",
-      "confidence": 0.62,
-      "cooldownMs": 250
+      "confidence": 0.6,
+      "cooldownMs": 0
     },
     {
       "id": "pyro",
