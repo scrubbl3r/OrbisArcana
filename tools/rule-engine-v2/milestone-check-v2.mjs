@@ -27,6 +27,7 @@ const MILESTONE_REPORT_LABELS = Object.freeze({
   wroteReport: "wrote report",
   refreshedWithTrend: "refreshed report with trend",
 });
+const MILESTONE_BATCH_SKIPPED_STATUS = -1;
 const MILESTONE_DOC_PATHS = Object.freeze({
   health: resolveRuleEngineDocPath("health"),
   smoke: resolveRuleEngineDocPath("milestoneSmoke"),
@@ -52,7 +53,7 @@ function asStepResult(result, extras = {}) {
   };
 }
 
-function writeMilestoneReport(path, report, label = "wrote report") {
+function writeMilestoneReport(path, report, label) {
   writeJsonFile(path, report);
   logMilestone(`${label}: ${path}`);
 }
@@ -65,7 +66,7 @@ function appendMilestoneHistory(path, report) {
 const ready = runStep(MILESTONE_STEP_LABELS.ready, RULE_ENGINE_V2_SCRIPT_PATHS.readyCheck);
 const batch = ready.ok
   ? runStep(MILESTONE_STEP_LABELS.smokeBatch, RULE_ENGINE_V2_SCRIPT_PATHS.smokeBatch)
-  : { ok: false, status: -1 };
+  : { ok: false, status: MILESTONE_BATCH_SKIPPED_STATUS };
 
 const report = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.milestone,
@@ -79,20 +80,17 @@ const report = {
   pass: ready.ok && batch.ok,
 };
 
-const outPath = MILESTONE_DOC_PATHS.smoke;
-writeMilestoneReport(outPath, report, MILESTONE_REPORT_LABELS.wroteReport);
+writeMilestoneReport(MILESTONE_DOC_PATHS.smoke, report, MILESTONE_REPORT_LABELS.wroteReport);
 
-const historyPath = MILESTONE_DOC_PATHS.history;
-appendMilestoneHistory(historyPath, report);
+appendMilestoneHistory(MILESTONE_DOC_PATHS.history, report);
 
 runCheckScriptOrFailStatus({
   tag: CHECK_TAG,
   message: MILESTONE_MESSAGES.trendGenerationFailed,
   script: RULE_ENGINE_V2_SCRIPT_PATHS.milestoneTrend,
 });
-const trendPath = MILESTONE_DOC_PATHS.trend;
-report.trend = readJsonSafe(trendPath);
-writeMilestoneReport(outPath, report, MILESTONE_REPORT_LABELS.refreshedWithTrend);
+report.trend = readJsonSafe(MILESTONE_DOC_PATHS.trend);
+writeMilestoneReport(MILESTONE_DOC_PATHS.smoke, report, MILESTONE_REPORT_LABELS.refreshedWithTrend);
 
 if (!report.pass) {
   failCheck(CHECK_TAG, MILESTONE_MESSAGES.readyOrBatchFailed);

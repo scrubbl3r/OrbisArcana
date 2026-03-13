@@ -26,22 +26,23 @@ function formatReadyFailureMessage(prefix, id) {
   return `${prefix}: ${id}`;
 }
 
-for (const validator of MANIFEST_VALIDATORS_V2) {
-  runReadyCheck({
-    message: formatReadyFailureMessage(READY_FAILURE_PREFIX.validator, validator.name),
-    script: validator.script,
-  });
+function asList(entries) {
+  return Array.isArray(entries) ? entries : [];
 }
 
-const manifestChecks = flattenManifestChecksV2();
-const nonValidatorChecks = manifestChecks.filter(
-  (entry) => !isManifestValidatorScriptV2(entry.script)
-);
-for (const entry of nonValidatorChecks) {
-  runReadyCheck({
-    message: formatReadyFailureMessage(READY_FAILURE_PREFIX.check, entry.id),
-    script: entry.script,
-  });
+function runReadyChecks(entries, failurePrefix, getId) {
+  for (const entry of asList(entries)) {
+    const id = String(getId(entry) || "").trim();
+    runReadyCheck({
+      message: formatReadyFailureMessage(failurePrefix, id),
+      script: entry?.script,
+    });
+  }
 }
+
+runReadyChecks(MANIFEST_VALIDATORS_V2, READY_FAILURE_PREFIX.validator, (entry) => entry?.name);
+
+const nonValidatorChecks = flattenManifestChecksV2().filter((entry) => !isManifestValidatorScriptV2(entry.script));
+runReadyChecks(nonValidatorChecks, READY_FAILURE_PREFIX.check, (entry) => entry?.id);
 
 reportCheckPass(CHECK_TAG, "cutover health is green");

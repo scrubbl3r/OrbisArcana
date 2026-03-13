@@ -24,11 +24,23 @@ function formatRecentPassRateLabel(windowSize) {
   return `${MILESTONE_TREND_LABELS.passRateRecentPrefix} ${windowSize})`;
 }
 
+function latestResultText(summary) {
+  return `${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`;
+}
+
+function asTrimmedText(value) {
+  return String(value || "").trim();
+}
+
+function asList(entries) {
+  return Array.isArray(entries) ? entries : [];
+}
+
 function logTrendSummary(summary) {
   logTrend(`${MILESTONE_TREND_LABELS.totalRuns}: ${summary.totalRuns}`);
   logTrend(`${MILESTONE_TREND_LABELS.passRateAll}: ${summary.passRateAllPct}%`);
   logTrend(`${formatRecentPassRateLabel(summary.recentWindow)}: ${summary.passRateRecentPct}%`);
-  logTrend(`${MILESTONE_TREND_LABELS.latest}: ${summary.latestPass ? "PASS" : "FAIL"} ${summary.latestGitRef || ""}`);
+  logTrend(`${MILESTONE_TREND_LABELS.latest}: ${latestResultText(summary)}`);
 }
 
 function pct(part, total) {
@@ -36,8 +48,8 @@ function pct(part, total) {
   return Math.round((part / total) * 1000) / 10;
 }
 
-function summarize(history, lookback = 10) {
-  const all = Array.isArray(history) ? history : [];
+function summarize(history, lookback) {
+  const all = asList(history);
   const recent = all.slice(-Math.max(1, lookback));
   const passAll = all.filter((r) => isTrue(r && r.pass)).length;
   const passRecent = recent.filter((r) => isTrue(r && r.pass)).length;
@@ -48,8 +60,8 @@ function summarize(history, lookback = 10) {
     passRateAllPct: pct(passAll, all.length),
     passRateRecentPct: pct(passRecent, recent.length),
     latestPass: isTrue(latest && latest.pass),
-    latestGeneratedAt: latest ? String(latest.generatedAt || "") : "",
-    latestGitRef: latest ? String(latest.gitRef || "") : "",
+    latestGeneratedAt: latest ? asTrimmedText(latest.generatedAt) : "",
+    latestGitRef: latest ? asTrimmedText(latest.gitRef) : "",
   };
 }
 

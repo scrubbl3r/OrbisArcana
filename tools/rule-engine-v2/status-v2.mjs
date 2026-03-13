@@ -48,15 +48,18 @@ function yn(v) {
   return v ? "yes" : "no";
 }
 
+function asList(entries) {
+  return Array.isArray(entries) ? entries : [];
+}
+
 function formatCheckStatusList(entries, checksById, yesNo) {
-  const items = Array.isArray(entries) ? entries : [];
-  return items
+  return asList(entries)
     .map((entry) => `${entry.id}:${yesNo(checksById[entry.id] === true)}`)
     .join(" ");
 }
 
 function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
-  const items = Array.isArray(entries) ? entries : [];
+  const items = asList(entries);
   const keyName = String(keyField || "").trim() || "id";
   const byKey = Object.freeze(Object.fromEntries(
     items.map((entry) => [entry?.[keyName], runCheck(entry?.script)])
@@ -66,9 +69,8 @@ function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
 }
 
 function buildCheckBooleanMap(entries, checksById) {
-  const items = Array.isArray(entries) ? entries : [];
   return Object.fromEntries(
-    items.map((entry) => [entry.id, checksById[entry.id] === true])
+    asList(entries).map((entry) => [entry.id, checksById[entry.id] === true])
   );
 }
 
@@ -90,10 +92,9 @@ function buildStatusSection(entries, runCheck, yesNo) {
 }
 
 function buildStatusSections(defs, runCheck, yesNo) {
-  const list = Array.isArray(defs) ? defs : [];
   return Object.freeze(
     Object.fromEntries(
-      list.map((def) => {
+      asList(defs).map((def) => {
         const key = String(def?.key || "").trim();
         return [key, buildStatusSection(def?.entries || [], runCheck, yesNo)];
       })
@@ -102,16 +103,15 @@ function buildStatusSections(defs, runCheck, yesNo) {
 }
 
 function buildOrderedBooleanArtifacts(order, valuesByName, yesNo) {
-  const names = Array.isArray(order) ? order : [];
   const booleans = Object.fromEntries(
-    names.map((name) => [name, valuesByName[name] === true])
+    asList(order).map((name) => [name, valuesByName[name] === true])
   );
-  const summary = names.map((name) => yesNo(valuesByName[name] === true)).join("/");
+  const summary = asList(order).map((name) => yesNo(valuesByName[name] === true)).join("/");
   return Object.freeze({ booleans, summary });
 }
 
 function buildNamedManifestArtifacts(entries, runCheck, yesNo) {
-  const items = Array.isArray(entries) ? entries : [];
+  const items = asList(entries);
   const byName = buildCheckResultsByKey(items, runCheck, "name").byKey;
   const names = items.map((entry) => entry?.name);
   return buildOrderedBooleanArtifacts(names, byName, yesNo);
@@ -156,10 +156,8 @@ const STATUS_SECTION_DEFS = Object.freeze([
   Object.freeze({ key: STATUS_SECTION_KEYS.contracts, entries: CONTRACT_CHECKS_V2 }),
 ]);
 
-const health = readJsonSafe(STATUS_DOC_PATHS.health) || {};
-const healthStatus = normalizeHealthStatus(health);
-const trend = readJsonSafe(STATUS_DOC_PATHS.trend) || {};
-const trendStatus = normalizeTrendStatus(trend);
+const healthStatus = normalizeHealthStatus(readJsonSafe(STATUS_DOC_PATHS.health) || {});
+const trendStatus = normalizeTrendStatus(readJsonSafe(STATUS_DOC_PATHS.trend) || {});
 const manifestArtifacts = buildNamedManifestArtifacts(
   MANIFEST_VALIDATORS_V2,
   runCheckScriptOk,
