@@ -3,6 +3,8 @@
 Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
+Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-index.md` under **Historical Slice Logs**; they are not active compatibility runbooks.
+
 ## Purpose
 - Prevent config edits from drifting into runtime integration files.
 - Keep daily authoring in SSOT sources only.
@@ -33,8 +35,8 @@ Related index:
   - `interactions_bootstrap_disabled`
   - `interactions_adapter_missing_builder`
 
-## Commands
-- `npm run pre-smoke:v2`
-- `npm run report-drift:v2`
-- `npm run doctor:v2`
-- `npm run ready:v2`
+## Operations
+- Primary operational runbook: `docs/rule-engine-smoke.md`
+- Supplemental diagnostics:
+  - `npm run report-drift:v2` (projection/runtime drift detail)
+  - `npm run doctor:v2` (health summary artifact refresh)

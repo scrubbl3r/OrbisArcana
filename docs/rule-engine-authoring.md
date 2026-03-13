@@ -3,6 +3,8 @@
 Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
+Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-index.md` under **Historical Slice Logs**; they are not active authoring runbooks.
+
 ## Daily Authoring Files (Primary)
 - `src/content/interactions-v2/interactions-v2.js`
   - Edit trigger/action chains here (`rules`).
@@ -32,10 +34,7 @@ Related index:
 
 ## Runtime Source IDs
 - Defined in: `src/runtime/receiver-bootstrap.js`
-- `interactions_adapter` (normal V2 path)
-- `interactions_adapter_fallback` (adapter build failed; safe fallback)
-- `interactions_bootstrap_disabled` (`useInReceiverBootstrap !== true`; safe disabled)
-- `interactions_adapter_missing_builder` (adapter export missing; safe disabled)
+- Canonical list and semantics: `docs/rule-engine-compatibility.md` (Runtime Mode Status).
 
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.

@@ -34,8 +34,7 @@
   - `docs/rule-engine-v2.milestone-smoke.json`
   - `docs/rule-engine-v2.milestone-trend.json`
 - Historical logs/reference:
-  - `docs/rule-engine-v2-slice-*.md`
-  - `docs/rule-engine-v1-slice-*.md`
+  - See **Historical Slice Logs** below (archive-only; not active runbook steps).
 
 ## Command Quick Reference
 - `npm run pre-smoke:v2`
@@ -144,5 +143,6 @@
 - [Milestone Trend Summary](./rule-engine-v2.milestone-trend.json)
 
 ## Historical Slice Logs
+Archive note: these files are change-history records. Do not treat them as current operational runbooks.
 - V2 smoke slices: `docs/rule-engine-v2-slice-*.md`
 - V1 smoke slices: `docs/rule-engine-v1-slice-*.md`

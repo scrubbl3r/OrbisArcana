@@ -1,39 +1,16 @@
 # Rule Engine v2 Slice 03 Smoke (Legacy Rules Bridge, Historical)
 
-> Historical reference only. This bridge path has been retired from active v2 operations.
-> Use `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly` and
-> `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap` as current runtime controls.
+> Historical reference only.
+> The legacy v1/v2 bridge path described in this slice is retired and not part of active v2 operations.
 
-## Scope
-- `spell-rules-v1` can optionally project rules from `interactions-v2`.
-- Projection is gated by `SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules`.
-- Default remains static V1 sample rules.
+## Archived Context
+- This slice originally validated an interim migration bridge from legacy rule definitions to interactions-v2 projection.
+- Those controls and fallback paths are now retired from active runbooks.
 
-## Preconditions
-- Deploy includes:
-  - `src/content/spell-rules/spell-rules-v1.js`
-  - `src/content/interactions-v2/build-rule-engine-v1-from-interactions-v2.js`
+## Current Controls (Active)
+- `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true`
+- `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly === true`
 
-## Test A: Bridge OFF (default)
-1. In `src/content/spell-rules/spell-rules-v1.js`, keep:
-   - `useInteractionsV2Rules: false`
-2. Reload receiver.
-3. Expected:
-   - No behavior change from current baseline.
-
-## Test B: Bridge ON
-1. Set:
-   - `useInteractionsV2Rules: true`
-2. Reload receiver.
-3. Expected:
-   - V1 rule sample list is sourced from `interactions-v2` projection.
-   - No startup validation failures.
-
-## Test C: Projection fallback safety
-1. Keep bridge ON.
-2. Temporarily make `interactions-v2` invalid (for example, remove a required `rule.id`).
-3. Reload receiver.
-4. Expected:
-   - Console warning indicates bridge fallback.
-   - Static V1 sample rules are used as fallback.
-5. Revert invalid edit and confirm clean startup.
+Use current v2 operational docs for active checks:
+- `docs/rule-engine-v2-docs-index.md`
+- `docs/rule-engine-smoke.md`

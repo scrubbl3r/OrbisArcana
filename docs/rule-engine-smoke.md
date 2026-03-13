@@ -5,6 +5,8 @@ Related index:
 
 Use this to reduce per-slice manual config edits.
 
+Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-index.md` under **Historical Slice Logs**; they are not active smoke runbooks.
+
 ## Primary Command
 
 ```bash
