@@ -21,6 +21,7 @@ Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-
 ## Runtime Integration Files (Do Not Edit Daily)
 - `src/content/spell-rules/rule-engine-master-control.js` (runtime rule schema + defaults/overrides)
 - `src/content/spell-rules/validate-rule-engine-config.js` (schema validator)
+- `src/content/spells/runtime-spells.js` (runtime slot/cast routing integration layer)
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + adapter flag routing)
 - `src/voice/spellbook.js` (runtime view derived from `spellbook-v2`)
 

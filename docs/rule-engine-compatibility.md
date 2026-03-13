@@ -18,6 +18,10 @@ Archive note: historical slice logs are documented in `docs/rule-engine-v2-docs-
   - Canonical ALLCAPS handles glossary.
 
 ## Runtime Integration Files (Do Not Edit Daily)
+- `src/content/spell-rules/rule-engine-master-control.js`
+  - Runtime rule schema + default/override control surface.
+- `src/content/spell-rules/validate-rule-engine-config.js`
+  - Runtime config validator for rule engine policy/shape checks.
 - `src/content/spells/runtime-spells.js`
   - Runtime slot/cast routing integration layer.
 - `src/voice/spellbook.js`

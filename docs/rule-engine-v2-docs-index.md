@@ -23,6 +23,8 @@
   - `src/content/interactions-v2/spellbook-v2.js`
 - Runtime integration/config surfaces (edit only for plumbing/migration):
   - `src/content/spell-rules/rule-engine-master-control.js`
+  - `src/content/spell-rules/validate-rule-engine-config.js`
+  - `src/content/spells/runtime-spells.js`
   - `src/runtime/receiver-bootstrap.js`
   - `src/voice/spellbook.js`
 - Generated artifacts (do not hand-edit):
@@ -35,8 +37,6 @@
   - `docs/rule-engine-v2.milestone-smoke.json`
   - `docs/rule-engine-v2.milestone-history.jsonl`
   - `docs/rule-engine-v2.milestone-trend.json`
-- Historical logs/reference:
-  - See **Historical Slice Logs** below (archive-only; not active runbook steps).
 
 ## Command Quick Reference
 - `npm run pre-smoke:v2`
@@ -57,15 +57,15 @@
 - Milestone pack (before push):
   1. `npm run smoke:milestone:v2`
 - Human gameplay pack (manual confidence):
-  - [KWS Smoke Checklist](./kws-smoke-checklist.md)
+  - See **Troubleshooting Quick Map**, `KWS: init failed or token detection stalls`.
   - Suggested spell checks: `orbis+domus`, `pyro+rota`, `fridgis+sanctum`
 
 ## Before Push Checklist
 1. Authoring edits only in SSOT files (`interactions-v2.js`, `spellbook-v2.js`) unless doing intentional plumbing.
 2. `npm run ready:v2` passes.
 3. `npm run smoke:milestone:v2` passes.
-4. If KWS-related changes were made, run [KWS Smoke Checklist](./kws-smoke-checklist.md).
-5. Confirm generated artifacts refreshed (see **File Ownership Map** -> **Generated artifacts (do not hand-edit)**).
+4. If KWS-related changes were made, use **Troubleshooting Quick Map**, `KWS: init failed or token detection stalls`.
+5. Confirm generated artifacts refreshed (see **File Ownership Map**, **Generated artifacts (do not hand-edit)**).
 
 ## Safe Rollback Verification Workflow
 1. Create a dedicated fix/test branch from branch tip.
@@ -93,14 +93,8 @@
   - in an action, use `overrides` (for example `{ type: "event", id: "grace", overrides: { ms: 900 } }`).
 
 ## FAQ
-- Where do I enable/disable a spell?
-  - See **Common Edit Recipes** -> `Toggle a wake word on/off`.
-- Where do I change what a spell/gesture chain does?
-  - See **Common Edit Recipes** -> `Add a new interaction chain`.
-- Where do I change default behavior for all instances of an event/window?
-  - See **Common Edit Recipes** -> `Change default behavior for all instances of an event/window`.
 - Why did my runtime/generated docs change after checks?
-  - See **Command Quick Reference** and **Smoke Packs**; those commands regenerate snapshot/master-control/health artifacts by design.
+  - See **Command Quick Reference**; those commands regenerate snapshot/master-control/health artifacts by design.
 - What should I avoid editing directly?
   - See **File Ownership Map** -> **Generated artifacts (do not hand-edit)**.
 
@@ -136,5 +130,5 @@
 
 ## Historical Slice Logs
 Archive note: these files are change-history records. Do not treat them as active operational runbooks.
-- V2 smoke slices: `docs/rule-engine-v2-slice-*.md`
-- V1 smoke slices: `docs/rule-engine-v1-slice-*.md`
+- V2 smoke slices: `docs/rule-engine-v2-slice-*-smoke.md`
+- V1 smoke slices: `docs/rule-engine-v1-slice-*-smoke.md`
