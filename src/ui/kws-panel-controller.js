@@ -202,20 +202,24 @@ export function createKwsPanelController({
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
     const expectedAxisSpell = expectedAxisSpellForAxis(axis);
     const wakeWindowActive = isWakeWindowActive();
-    const lineTop = KWS_ROW_TOP.map((token) => {
+    const topTokens = KWS_ROW_TOP.map((token) => {
       const t = String(token || "").trim().toLowerCase();
       let lit = false;
-      if (KWS_WAKE_TOKEN_SET.has(t) || KWS_WAKE_REQUIRED_TOKEN_SET.has(t)) lit = orbisOpen;
+      if (KWS_WAKE_TOKEN_SET.has(t)) lit = orbisOpen;
       else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedAxisSpell;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
-      return tokenChipHtml(token, lit, flash);
-    }).join(" ");
-    const lineBottom = KWS_ROW_BOTTOM.map((token) => {
+      return { token, lit, flash };
+    });
+    const bottomTokens = KWS_ROW_BOTTOM.map((token) => {
       const heardOnAxis = !!(axis && kwsTokenUiState.heardWakeWindowTokensByAxis[axis] && kwsTokenUiState.heardWakeWindowTokensByAxis[axis][token]);
       const lit = wakeWindowActive && heardOnAxis;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
-      return tokenChipHtml(token, lit, flash);
-    }).join(" ");
+      return { token, lit, flash };
+    });
+    const tokenLine = topTokens
+      .concat(bottomTokens)
+      .map(({ token, lit, flash }) => tokenChipHtml(token, lit, flash))
+      .join(" ");
     const parts = [];
     const kwsVoiceProvider = getKwsVoiceProvider();
     if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
@@ -270,7 +274,7 @@ export function createKwsPanelController({
       }
     }
     const meta = parts.length ? `<span class="kwsTokenMeta">${parts.join(" | ")}</span>` : "";
-    els.kwsReadout.innerHTML = `<div class="kwsTokenRow">${lineTop}</div><div class="kwsTokenRow">${lineBottom}</div>${meta}`;
+    els.kwsReadout.innerHTML = `<div class="kwsTokenRow">${tokenLine}</div>${meta}`;
   }
 
   function renderKwsLog() {
