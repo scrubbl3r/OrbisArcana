@@ -4,6 +4,9 @@ import { collectImmediateEventSpellIdsFromInteractionsV2 } from "../interactions
 
 export const WAKE_WORD_IDS = Object.freeze([
   "orbis",
+]);
+
+export const STANDALONE_WORD_IDS = Object.freeze([
   "arcana",
 ]);
 
@@ -45,6 +48,7 @@ const KWS_TOP_WORD_IDS = Object.freeze([
     ...WAKE_WORD_IDS,
     ...WAKE_REQUIRED_WORD_IDS,
     ...AXIS_WORD_IDS,
+    ...STANDALONE_WORD_IDS,
   ].map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)),
 ]);
 
@@ -71,7 +75,7 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
   }),
   Object.freeze({
     id: "arcana",
-    intent: "spell.wake",
+    intent: "spell.arcana_test",
   }),
   Object.freeze({
     id: "domus",
