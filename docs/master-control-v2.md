@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-13T02:29:14.401Z
+Generated: 2026-03-13T02:44:35.644Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -29,6 +29,14 @@ This document is generated from SSOT:
       "phrase": "arcana",
       "active": true,
       "onnx": "arcana",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "ignis",
+      "phrase": "ignis",
+      "active": true,
+      "onnx": "ignis",
       "confidence": 0.6,
       "cooldownMs": 0
     },

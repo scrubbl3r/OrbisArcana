@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-13T02:29:14.404Z",
+  "generatedAt": "2026-03-13T02:44:35.647Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -17,6 +17,14 @@
         "phrase": "arcana",
         "active": true,
         "onnx": "arcana",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "ignis",
+        "phrase": "ignis",
+        "active": true,
+        "onnx": "ignis",
         "confidence": 0.6,
         "cooldownMs": 0
       },

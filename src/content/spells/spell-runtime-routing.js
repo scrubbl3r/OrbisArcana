@@ -8,6 +8,7 @@ export const WAKE_WORD_IDS = Object.freeze([
 
 export const STANDALONE_WORD_IDS = Object.freeze([
   "arcana",
+  "ignis",
 ]);
 
 export const WAKE_REQUIRED_WORD_IDS = Object.freeze([
@@ -76,6 +77,10 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "arcana",
     intent: "spell.arcana_test",
+  }),
+  Object.freeze({
+    id: "ignis",
+    intent: "spell.ignis_test",
   }),
   Object.freeze({
     id: "domus",

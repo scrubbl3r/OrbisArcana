@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-13T02:29:14.350Z",
+  "generatedAt": "2026-03-13T02:44:35.590Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -17,7 +17,7 @@
     }
   },
   "counts": {
-    "spellbookV2Spells": 9,
+    "spellbookV2Spells": 10,
     "interactionsV2Rules": 5,
     "projectedRuleEngineRules": 5
   },
@@ -37,6 +37,14 @@
         "phrase": "arcana",
         "active": true,
         "onnx": "arcana",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "ignis",
+        "phrase": "ignis",
+        "active": true,
+        "onnx": "ignis",
         "confidence": 0.6,
         "cooldownMs": 0
       },

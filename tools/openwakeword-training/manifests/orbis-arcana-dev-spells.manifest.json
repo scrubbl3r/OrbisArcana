@@ -11,6 +11,11 @@
       "token": "arcana"
     },
     {
+      "path": "../../../assets/kws/openwakeword-models/ignis.onnx",
+      "label": "ignis",
+      "token": "ignis"
+    },
+    {
       "path": "../../../assets/kws/openwakeword-models/domus.onnx",
       "label": "domus",
       "token": "domus"
