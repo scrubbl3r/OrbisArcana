@@ -4,7 +4,7 @@ Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
 ## Purpose
-- Prevent config edits from drifting into bridge files.
+- Prevent config edits from drifting into runtime integration files.
 - Keep daily authoring in SSOT sources only.
 
 ## Authoring Sources (SSOT)
@@ -15,13 +15,13 @@ Related index:
 - `src/content/interactions-v2/entity-handles-v2.js`
   - Canonical ALLCAPS handles glossary.
 
-## Bridge Files (Do Not Edit Daily)
+## Runtime Integration Files (Do Not Edit Daily)
 - `src/content/spells/runtime-spells.js`
-  - Runtime slot/cast routing bridge layer.
+  - Runtime slot/cast routing integration layer.
 - `src/voice/spellbook.js`
   - Runtime view derived from `spellbook-v2`.
 - `src/runtime/receiver-bootstrap.js`
-  - Runtime bootstrap wiring for bridge/adaptation startup.
+  - Runtime bootstrap wiring for adapter startup.
 
 ## Runtime Mode Status
 - Runtime rule source: interactions adapter (`INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`)

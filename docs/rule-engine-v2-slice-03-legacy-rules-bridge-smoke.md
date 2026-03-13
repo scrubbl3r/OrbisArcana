@@ -1,4 +1,8 @@
-# Rule Engine v2 Slice 03 Smoke (Legacy Rules Bridge)
+# Rule Engine v2 Slice 03 Smoke (Legacy Rules Bridge, Historical)
+
+> Historical reference only. This bridge path has been retired from active v2 operations.
+> Use `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly` and
+> `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap` as current runtime controls.
 
 ## Scope
 - `spell-rules-v1` can optionally project rules from `interactions-v2`.

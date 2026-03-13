@@ -21,7 +21,7 @@
 - Authoring sources (edit directly):
   - `src/content/interactions-v2/interactions-v2.js`
   - `src/content/interactions-v2/spellbook-v2.js`
-- Runtime bridge/config surfaces (edit only for plumbing/migration):
+- Runtime integration/config surfaces (edit only for plumbing/migration):
   - `src/content/spell-rules/rule-engine-master-control.js`
   - `src/runtime/receiver-bootstrap.js`
   - `src/voice/spellbook.js`

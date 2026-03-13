@@ -16,7 +16,7 @@ Related index:
   - Canonical ALLCAPS handles (human-friendly aliases).
   - Use as glossary/reference for naming consistency.
 
-## Runtime Bridge Files (Do Not Edit Daily)
+## Runtime Integration Files (Do Not Edit Daily)
 - `src/content/spell-rules/rule-engine-master-control.js` (runtime rule schema + defaults/overrides)
 - `src/content/spell-rules/validate-rule-engine-config.js` (schema validator)
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + adapter flag routing)
@@ -40,7 +40,7 @@ Related index:
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.
 - If you are enabling/disabling words, edit `spellbook-v2.js`.
-- Avoid editing bridge files unless doing migration plumbing.
+- Avoid editing runtime integration files unless doing migration plumbing.
 
 ## Quick Health Checks
 - `npm run pre-smoke:v2`

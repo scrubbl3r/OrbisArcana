@@ -19,8 +19,9 @@
    - Spellbook + interactions validators pass.
    - Runtime cutover guard passes:
      - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true`
-     - `SPELL_RULES_V1_LEGACY_BRIDGE.useInteractionsV2Rules === true`
-   - If legacy bridge is enabled, V1 static fallback and v2 projection must have zero drift.
+     - `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly === true`
+   - Runtime source remains canonical (`interactions_adapter` in normal operation).
+   - Runtime projection and authored interactions remain drift-free.
    - Effective snapshot regenerates.
    - Final line:
      - `[pre-smoke] OK: validators passed + effective snapshot refreshed`
