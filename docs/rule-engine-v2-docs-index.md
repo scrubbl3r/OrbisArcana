@@ -4,7 +4,7 @@
 1. Edit behavior rules in `src/content/interactions-v2/interactions-v2.js`.
 2. Edit wake-word inventory in `src/content/interactions-v2/spellbook-v2.js`.
 3. Run `npm run ready:v2` for validation + health checks.
-4. Run `npm run smoke:milestone:v2` before push.
+4. Use **Before Push Checklist** below for push-time smoke requirements.
 
 ## Troubleshooting Quick Map
 - `KWS: init failed` or token detection stalls:
@@ -15,7 +15,7 @@
   - [Rule Engine Compatibility](./rule-engine-compatibility.md)
 - Validation or projection drift failures:
   - [Rule Engine Authoring](./rule-engine-authoring.md)
-  - [Effective Interactions Snapshot](./effective-interactions-v2.snapshot.json)
+  - See **Generated Artifacts Quick Links** -> `Effective Interactions Snapshot`.
 
 ## File Ownership Map
 - Authoring sources (edit directly):
@@ -31,7 +31,9 @@
   - `docs/master-control-v2.json`
   - `docs/master-control-v2.authoring.json`
   - `docs/rule-engine-v2.health.json`
+  - `docs/rule-engine-v2.status.json`
   - `docs/rule-engine-v2.milestone-smoke.json`
+  - `docs/rule-engine-v2.milestone-history.jsonl`
   - `docs/rule-engine-v2.milestone-trend.json`
 - Historical logs/reference:
   - See **Historical Slice Logs** below (archive-only; not active runbook steps).
@@ -56,7 +58,6 @@
   1. `npm run smoke:milestone:v2`
 - Human gameplay pack (manual confidence):
   - [KWS Smoke Checklist](./kws-smoke-checklist.md)
-  - [Rule Engine Smoke](./rule-engine-smoke.md)
   - Suggested spell checks: `orbis+domus`, `pyro+rota`, `fridgis+sanctum`
 
 ## Before Push Checklist
@@ -64,7 +65,7 @@
 2. `npm run ready:v2` passes.
 3. `npm run smoke:milestone:v2` passes.
 4. If KWS-related changes were made, run [KWS Smoke Checklist](./kws-smoke-checklist.md).
-5. Confirm generated artifacts refreshed (`effective-interactions-v2.snapshot.json`, `master-control-v2.*`, milestone outputs).
+5. Confirm generated artifacts refreshed (see **File Ownership Map** -> **Generated artifacts (do not hand-edit)**).
 
 ## Safe Rollback Verification Workflow
 1. Create a dedicated fix/test branch from branch tip.
@@ -86,20 +87,20 @@
   - edit `src/content/interactions-v2/spellbook-v2.js` -> set `active: true|false`.
 - Add a new interaction chain:
   - edit `src/content/interactions-v2/interactions-v2.js` -> add a `rules[]` entry with `on` + `then`.
+- Change default behavior for all instances of an event/window:
+  - edit `src/content/spell-rules/rule-engine-master-control.js` -> default/override maps.
 - Tune one event instance without global changes:
   - in an action, use `overrides` (for example `{ type: "event", id: "grace", overrides: { ms: 900 } }`).
-- Validate and smoke:
-  - use the **Smoke Packs** section above.
 
 ## FAQ
 - Where do I enable/disable a spell?
-  - `src/content/interactions-v2/spellbook-v2.js` (`active` flag).
+  - See **Common Edit Recipes** -> `Toggle a wake word on/off`.
 - Where do I change what a spell/gesture chain does?
-  - `src/content/interactions-v2/interactions-v2.js` (`rules`).
+  - See **Common Edit Recipes** -> `Add a new interaction chain`.
 - Where do I change default behavior for all instances of an event/window?
-  - `src/content/spell-rules/rule-engine-master-control.js` (default/override maps).
+  - See **Common Edit Recipes** -> `Change default behavior for all instances of an event/window`.
 - Why did my runtime/generated docs change after checks?
-  - `ready:v2` and milestone scripts regenerate snapshot/master-control/health artifacts by design.
+  - See **Command Quick Reference** and **Smoke Packs**; those commands regenerate snapshot/master-control/health artifacts by design.
 - What should I avoid editing directly?
   - See **File Ownership Map** -> **Generated artifacts (do not hand-edit)**.
 
@@ -113,32 +114,24 @@
   - windows/actions: `WAKE_WIN`
 - Keep authoring IDs stable and reuse handles to avoid string drift across rules.
 
-## Start Here
-- [Rule Engine Authoring](./rule-engine-authoring.md)
-- [Rule Engine Compatibility](./rule-engine-compatibility.md)
-- [Rule Engine Smoke](./rule-engine-smoke.md)
-
 ## Schema References
 - [Interactions Schema](./interactions-schema.md)
 - [Master Control Schema](./master-control-schema.md)
-- [Generated Master Control (Markdown)](./master-control-v2.md)
-- [Generated Master Control (JSON)](./master-control-v2.json)
-- [Generated Master Control (Authoring JSON)](./master-control-v2.authoring.json)
-
-## KWS References
-- [KWS Smoke Checklist](./kws-smoke-checklist.md)
-- [KWS Guardrails](./kws-guardrails.md)
 
 ## Architecture Context
 - [Architecture Schema (Snapshot)](./orbis-arcana-architecture-schema.txt)
 - [State Ownership Inventory (Snapshot)](./state-ownership-inventory.txt)
 - [Receiver Composition](./receiver-composition.txt)
 
-## Snapshot / Health Artifacts
+## Generated Artifacts Quick Links
 - [Effective Interactions Snapshot](./effective-interactions-v2.snapshot.json)
+- [Generated Master Control (Markdown)](./master-control-v2.md)
+- [Generated Master Control (JSON)](./master-control-v2.json)
+- [Generated Master Control (Authoring JSON)](./master-control-v2.authoring.json)
 - [Health Report](./rule-engine-v2.health.json)
 - [Status Snapshot](./rule-engine-v2.status.json)
 - [Milestone Smoke Report](./rule-engine-v2.milestone-smoke.json)
+- [Milestone History Log](./rule-engine-v2.milestone-history.jsonl)
 - [Milestone Trend Summary](./rule-engine-v2.milestone-trend.json)
 
 ## Historical Slice Logs
