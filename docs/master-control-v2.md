@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-15T02:12:51.388Z
+Generated: 2026-03-15T02:19:32.782Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -183,7 +183,7 @@ This document is generated from SSOT:
     "then": [
       {
         "type": "event",
-        "id": "domus_teleport"
+        "id": "teleport_home"
       }
     ]
   },
@@ -273,7 +273,7 @@ This document is generated from SSOT:
 
 ```json
 {
-  "DOMUS_TELEPORT": "domus_teleport",
+  "TELEPORT_HOME": "teleport_home",
   "FLAME_AOE": "flame_aoe",
   "FROST_AOE": "frost_aoe",
   "ELECTRIC_AOE": "electric_aoe",

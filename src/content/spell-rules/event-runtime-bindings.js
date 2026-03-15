@@ -31,7 +31,7 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
-    id: "domus_teleport",
+    id: "teleport_home",
     runtime: Object.freeze({
       kind: "cast_action",
       castActionId: "domus_teleport",

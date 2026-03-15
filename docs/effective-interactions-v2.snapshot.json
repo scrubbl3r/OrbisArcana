@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-15T02:12:51.335Z",
+  "generatedAt": "2026-03-15T02:19:32.731Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -184,7 +184,7 @@
         "then": [
           {
             "type": "event",
-            "id": "domus_teleport"
+            "id": "teleport_home"
           }
         ]
       },
@@ -293,7 +293,7 @@
         "then": [
           {
             "type": "event",
-            "id": "domus_teleport"
+            "id": "teleport_home"
           }
         ]
       },

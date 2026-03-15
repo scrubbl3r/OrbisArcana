@@ -23,7 +23,7 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({ ms: 500 }),
   }),
   Object.freeze({
-    id: "domus_teleport",
+    id: "teleport_home",
     type: "event",
     defaultArgs: Object.freeze({}),
   }),

@@ -62,7 +62,7 @@ export const INTERACTIONS_V2 = Object.freeze({
         ]),
       }),
       then: Object.freeze([
-        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.DOMUS_TELEPORT }),
+        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.TELEPORT_HOME }),
       ]),
     }),
     Object.freeze({

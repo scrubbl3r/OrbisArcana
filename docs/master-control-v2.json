@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-15T02:12:51.391Z",
+  "generatedAt": "2026-03-15T02:19:32.784Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -164,7 +164,7 @@
         "then": [
           {
             "type": "event",
-            "id": "domus_teleport"
+            "id": "teleport_home"
           }
         ]
       },
@@ -239,7 +239,7 @@
       "EVENT": "event"
     },
     "events": {
-      "DOMUS_TELEPORT": "domus_teleport",
+      "TELEPORT_HOME": "teleport_home",
       "FLAME_AOE": "flame_aoe",
       "FROST_AOE": "frost_aoe",
       "ELECTRIC_AOE": "electric_aoe",
