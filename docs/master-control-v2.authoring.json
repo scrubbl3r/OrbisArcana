@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-15T02:26:01.203Z",
+  "generatedAt": "2026-03-15T18:08:17.639Z",
   "enabled": true,
   "defaults": {
     "wakeWin": {
@@ -28,9 +28,9 @@
       "cooldownMs": 0
     },
     {
-      "id": "ignis",
-      "phrase": "ignis",
-      "onnx": "ignis",
+      "id": "are_kay_nah",
+      "phrase": "are kay nah",
+      "onnx": "are_kay_nah",
       "confidence": 0.6,
       "cooldownMs": 0
     },

@@ -11,9 +11,9 @@
       "token": "arcana"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/ignis.onnx",
-      "label": "ignis",
-      "token": "ignis"
+      "path": "../../../assets/kws/openwakeword-models/are_kay_nah.onnx",
+      "label": "are kay nah",
+      "token": "are kay nah"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/domus.onnx",

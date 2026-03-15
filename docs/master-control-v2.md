@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-15T02:26:01.200Z
+Generated: 2026-03-15T18:08:17.635Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -33,10 +33,10 @@ This document is generated from SSOT:
       "cooldownMs": 0
     },
     {
-      "id": "ignis",
-      "phrase": "ignis",
+      "id": "are_kay_nah",
+      "phrase": "are kay nah",
       "active": true,
-      "onnx": "ignis",
+      "onnx": "are_kay_nah",
       "confidence": 0.6,
       "cooldownMs": 0
     },

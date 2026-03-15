@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-15T02:26:01.203Z",
+  "generatedAt": "2026-03-15T18:08:17.638Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -21,10 +21,10 @@
         "cooldownMs": 0
       },
       {
-        "id": "ignis",
-        "phrase": "ignis",
+        "id": "are_kay_nah",
+        "phrase": "are kay nah",
         "active": true,
-        "onnx": "ignis",
+        "onnx": "are_kay_nah",
         "confidence": 0.6,
         "cooldownMs": 0
       },

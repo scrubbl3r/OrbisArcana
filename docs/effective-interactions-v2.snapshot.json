@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-15T02:26:01.148Z",
+  "generatedAt": "2026-03-15T18:08:17.581Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -41,10 +41,10 @@
         "cooldownMs": 0
       },
       {
-        "id": "ignis",
-        "phrase": "ignis",
+        "id": "are_kay_nah",
+        "phrase": "are kay nah",
         "active": true,
-        "onnx": "ignis",
+        "onnx": "are_kay_nah",
         "confidence": 0.6,
         "cooldownMs": 0
       },
