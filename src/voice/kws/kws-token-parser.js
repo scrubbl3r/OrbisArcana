@@ -28,6 +28,16 @@ function normToken(token) {
   return String(token || "").trim().toLowerCase();
 }
 
+function expandCompositeToken(token) {
+  const raw = normToken(token);
+  if (!raw) return [];
+  if (!raw.includes("_")) return [raw];
+  return raw
+    .split("_")
+    .map((part) => normToken(part))
+    .filter(Boolean);
+}
+
 function clamp01(n) {
   n = Number(n);
   if (!Number.isFinite(n)) return 0;
@@ -215,13 +225,16 @@ export function createKwsTokenParser(opts = {}) {
     if (!enabled || !hit) return { matched: false, reason: "disabled" };
     const token = normToken(hit.token);
     if (!token) return { matched: false, reason: "empty" };
+    const parseTokens = expandCompositeToken(token);
     const confidence = clamp01(hit.confidence == null ? 1 : hit.confidence);
     const atMs = Number(hit.atMs) || Date.now();
     const providerId = String(hit.providerId || "kws");
     lastSeenAtMs = atMs;
     const wakeArmed = atMs <= wakeArmedUntilMs;
     const isWakeToken = wakeTokenSet.has(token);
-    if (!activeTokenVocabulary.has(token)) {
+    const tokenKnownDirect = activeTokenVocabulary.has(token);
+    const tokenKnownComposite = parseTokens.length > 0 && parseTokens.every((part) => activeTokenVocabulary.has(part));
+    if (!tokenKnownDirect && !tokenKnownComposite) {
       return { matched: false, reason: "inactive_or_unknown_token", token, confidence };
     }
 
@@ -268,7 +281,10 @@ export function createKwsTokenParser(opts = {}) {
       source: "kws",
     });
 
-    tokenBuffer.push({ token, confidence, atMs });
+    const tokensToBuffer = tokenKnownComposite ? parseTokens : [token];
+    for (const part of tokensToBuffer) {
+      tokenBuffer.push({ token: part, confidence, atMs });
+    }
     prune(atMs);
 
     const result = tryMatchSuffix(atMs);
