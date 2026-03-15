@@ -6,9 +6,9 @@
       "token": "orbis"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/are_kay_nuh.onnx",
-      "label": "are_kay_nuh",
-      "token": "are_kay_nuh"
+      "path": "../../../assets/kws/openwakeword-models/arcana.onnx",
+      "label": "arcana",
+      "token": "arcana"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/ignis.onnx",
