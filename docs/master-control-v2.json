@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-15T00:39:54.133Z",
+  "generatedAt": "2026-03-15T00:49:55.343Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -13,10 +13,10 @@
         "cooldownMs": 0
       },
       {
-        "id": "arcana",
-        "phrase": "arcana",
+        "id": "are_kay_nuh",
+        "phrase": "are_kay_nuh",
         "active": true,
-        "onnx": "arcana",
+        "onnx": "are_kay_nuh",
         "confidence": 0.6,
         "cooldownMs": 0
       },

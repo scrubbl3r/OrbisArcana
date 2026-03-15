@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-15T00:39:54.134Z",
+  "generatedAt": "2026-03-15T00:49:55.343Z",
   "enabled": true,
   "defaults": {
     "wakeWin": {
@@ -21,9 +21,9 @@
       "cooldownMs": 0
     },
     {
-      "id": "arcana",
-      "phrase": "arcana",
-      "onnx": "arcana",
+      "id": "are_kay_nuh",
+      "phrase": "are_kay_nuh",
+      "onnx": "are_kay_nuh",
       "confidence": 0.6,
       "cooldownMs": 0
     },
