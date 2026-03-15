@@ -1047,11 +1047,11 @@
     let KWS_READOUT_TICK_MS = 250;
     let KWS_ROW_TOP = [];
     let KWS_ROW_BOTTOM = [];
-    let KWS_CLASS_TOKENS = [];
-    let KWS_SCHOOL_TOKENS = [];
+    let KWS_WAKE_WINDOW_TOKENS = [];
+    let KWS_AXIS_TOKENS = [];
     let KWS_WAKE_TOKENS = [];
     let KWS_WAKE_REQUIRED_TOKENS = [];
-    let KWS_AXIS_SCHOOL_BY_AXIS = Object.freeze({});
+    let KWS_AXIS_SPELL_BY_AXIS = Object.freeze({});
     let KWS_LOG_TOKENS = new Set();
     let TEMP_UNGATED_KWS_TOKENS = new Set();
     let KWS_TOKEN_CANONICAL_MAP = Object.freeze({});
@@ -1072,10 +1072,12 @@
       clearAutostartWatchdog() {},
       startAutostartWatchdog() {},
       canonicalToken() { return ""; },
-      isClassWindowActive() { return false; },
+      isWakeWindowActive() { return false; },
       shouldLogHeardWakeword() { return false; },
-      resetHeardClassTokensForAxis() {},
-      resetHeardClassTokensAllAxes() {},
+      resetHeardWakeWindowTokensForAxis() {},
+      resetHeardWakeWindowTokensAllAxes() {},
+      markHeardWakeWindowToken() {},
+      setSelectedAxisSpell() {},
       flashToken() {},
       openWakeHudGate() {},
       updateReadout() {},
@@ -1485,13 +1487,13 @@
             KWS_READOUT_TICK_MS = Math.max(100, Number(kwsConfig.readoutTickMs) || KWS_READOUT_TICK_MS);
             KWS_ROW_TOP = Array.isArray(kwsConfig.rowTop) ? kwsConfig.rowTop.slice() : KWS_ROW_TOP;
             KWS_ROW_BOTTOM = Array.isArray(kwsConfig.rowBottom) ? kwsConfig.rowBottom.slice() : KWS_ROW_BOTTOM;
-            KWS_CLASS_TOKENS = Array.isArray(kwsConfig.classTokens) ? kwsConfig.classTokens.slice() : KWS_CLASS_TOKENS;
-            KWS_SCHOOL_TOKENS = Array.isArray(kwsConfig.schoolTokens) ? kwsConfig.schoolTokens.slice() : KWS_SCHOOL_TOKENS;
+            KWS_WAKE_WINDOW_TOKENS = Array.isArray(kwsConfig.wakeWindowTokens) ? kwsConfig.wakeWindowTokens.slice() : KWS_WAKE_WINDOW_TOKENS;
+            KWS_AXIS_TOKENS = Array.isArray(kwsConfig.axisTokens) ? kwsConfig.axisTokens.slice() : KWS_AXIS_TOKENS;
             KWS_WAKE_TOKENS = Array.isArray(kwsConfig.wakeTokens) ? kwsConfig.wakeTokens.slice() : KWS_WAKE_TOKENS;
             KWS_WAKE_REQUIRED_TOKENS = Array.isArray(kwsConfig.wakeRequiredTokens) ? kwsConfig.wakeRequiredTokens.slice() : KWS_WAKE_REQUIRED_TOKENS;
-            KWS_AXIS_SCHOOL_BY_AXIS = (kwsConfig.axisSchoolByAxis && typeof kwsConfig.axisSchoolByAxis === "object")
-              ? Object.freeze({ ...kwsConfig.axisSchoolByAxis })
-              : KWS_AXIS_SCHOOL_BY_AXIS;
+            KWS_AXIS_SPELL_BY_AXIS = (kwsConfig.axisSpellByAxis && typeof kwsConfig.axisSpellByAxis === "object")
+              ? Object.freeze({ ...kwsConfig.axisSpellByAxis })
+              : KWS_AXIS_SPELL_BY_AXIS;
             KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
             TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
             KWS_TOKEN_CANONICAL_MAP = (kwsConfig.tokenCanonicalMap && typeof kwsConfig.tokenCanonicalMap === "object")
@@ -1514,11 +1516,11 @@
             readoutTickMs: KWS_READOUT_TICK_MS,
             rowTop: KWS_ROW_TOP,
             rowBottom: KWS_ROW_BOTTOM,
-            classTokens: KWS_CLASS_TOKENS,
-            schoolTokens: KWS_SCHOOL_TOKENS,
+            wakeWindowTokens: KWS_WAKE_WINDOW_TOKENS,
+            axisTokens: KWS_AXIS_TOKENS,
             wakeTokens: KWS_WAKE_TOKENS,
             wakeRequiredTokens: KWS_WAKE_REQUIRED_TOKENS,
-            axisSchoolByAxis: KWS_AXIS_SCHOOL_BY_AXIS,
+            axisSpellByAxis: KWS_AXIS_SPELL_BY_AXIS,
             logTokens: Array.from(KWS_LOG_TOKENS),
             tempUngatedTokens: Array.from(TEMP_UNGATED_KWS_TOKENS),
             tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,
@@ -2044,10 +2046,10 @@
           deps: {
             canonicalKwsToken: (rawToken) => kwsBridge.canonicalToken(rawToken),
             flashKwsToken: (token, ms) => kwsBridge.flashToken(token, ms),
-            isClassWindowActive: () => kwsBridge.isClassWindowActive(),
-            markHeardClassToken: (axis, token) => {
-              if (kwsPanelController && typeof kwsPanelController.markHeardClassToken === "function") {
-                kwsPanelController.markHeardClassToken(axis, token);
+            isWakeWindowActive: () => kwsBridge.isWakeWindowActive(),
+            markHeardWakeWindowToken: (axis, token) => {
+              if (kwsPanelController && typeof kwsPanelController.markHeardWakeWindowToken === "function") {
+                kwsPanelController.markHeardWakeWindowToken(axis, token);
               }
             },
             getFlatSpinAxis: () => (kwsTokenUiState ? String(kwsTokenUiState.flatSpinAxis || "") : ""),
@@ -2065,14 +2067,14 @@
               if (kwsPanelController && typeof kwsPanelController.clearFlatSpinState === "function") {
                 kwsPanelController.clearFlatSpinState();
               } else {
-                kwsBridge.resetHeardClassTokensAllAxes();
+                kwsBridge.resetHeardWakeWindowTokensAllAxes();
               }
             },
-            resetHeardClassTokensForAxis: (axis) => kwsBridge.resetHeardClassTokensForAxis(axis),
-            resetHeardClassTokensAllAxes: () => kwsBridge.resetHeardClassTokensAllAxes(),
-            setSelectedSchool: (axis, school) => {
-              if (kwsPanelController && typeof kwsPanelController.setSelectedSchool === "function") {
-                kwsPanelController.setSelectedSchool(axis, school);
+            resetHeardWakeWindowTokensForAxis: (axis) => kwsBridge.resetHeardWakeWindowTokensForAxis(axis),
+            resetHeardWakeWindowTokensAllAxes: () => kwsBridge.resetHeardWakeWindowTokensAllAxes(),
+            setSelectedAxisSpell: (axis, axisSpell) => {
+              if (kwsPanelController && typeof kwsPanelController.setSelectedAxisSpell === "function") {
+                kwsPanelController.setSelectedAxisSpell(axis, axisSpell);
               }
             },
             getKwsMode: () => String(kwsDebugState.mode || ""),
@@ -2715,6 +2717,7 @@
       if (worldSystem) worldSystem.reset(performance.now());
       starResize(true);
       drawStars();
+      drawWorldBackdrop();
     });
 
     window.addEventListener("resize", () => {
@@ -2722,6 +2725,7 @@
       if (worldSystem) worldSystem.render(performance.now());
       starResize(true);
       drawStars();
+      drawWorldBackdrop();
     });
 
     function liftToThrustAccel(l01){
