@@ -37,6 +37,15 @@ export function createKwsRuntimeConfig() {
     }
   }
   const tokenList = Array.from(new Set(rowTop.concat(rowBottom)));
+  const tokenCanonicalMap = Object.freeze(
+    Object.values(ACTIVE_SPELLS_BY_ID).reduce((acc, spell) => {
+      const id = String(spell && spell.id || "").trim().toLowerCase();
+      const phrase = String(spell && (spell.phrase || spell.id) || "").trim().toLowerCase();
+      if (!id || !phrase) return acc;
+      if (id !== phrase) acc[id] = phrase;
+      return acc;
+    }, {})
+  );
   return {
     defaultVoiceEngine: "kws",
     defaultBackendKey: "openwakeword_browser",
@@ -55,6 +64,6 @@ export function createKwsRuntimeConfig() {
     axisSpellByAxis: Object.freeze({ ...axisSpellByAxis }),
     logTokens: tokenList.slice(),
     tempUngatedTokens: tokenList.slice(),
-    tokenCanonicalMap: Object.freeze({}),
+    tokenCanonicalMap,
   };
 }
