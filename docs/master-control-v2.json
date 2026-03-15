@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-15T18:08:17.638Z",
+  "generatedAt": "2026-03-15T18:20:26.379Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -218,6 +218,8 @@
   "handles": {
     "signals": {
       "ORBIS": "spell.orbis",
+      "ARCANA": "spell.arcana",
+      "ARE_KAY_NAH": "spell.are_kay_nah",
       "DOMUS": "spell.domus",
       "PYRO": "spell.pyro",
       "FRIDGIS": "spell.fridgis",

@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-15T18:08:17.635Z
+Generated: 2026-03-15T18:20:26.376Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -242,6 +242,8 @@ This document is generated from SSOT:
 ```json
 {
   "ORBIS": "spell.orbis",
+  "ARCANA": "spell.arcana",
+  "ARE_KAY_NAH": "spell.are_kay_nah",
   "DOMUS": "spell.domus",
   "PYRO": "spell.pyro",
   "FRIDGIS": "spell.fridgis",

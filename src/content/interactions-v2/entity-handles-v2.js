@@ -5,6 +5,8 @@
 export const SIGNAL_HANDLES_V2 = Object.freeze({
   // Spells
   ORBIS: "spell.orbis",
+  ARCANA: "spell.arcana",
+  ARE_KAY_NAH: "spell.are_kay_nah",
   DOMUS: "spell.domus",
   PYRO: "spell.pyro",
   FRIDGIS: "spell.fridgis",
