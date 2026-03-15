@@ -19,9 +19,9 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
   SPIN_Z: "gesture.z_spin",
 
   // Shake gestures
-  FB_SHAKE: "gesture.shake_fb",
-  LR_SHAKE: "gesture.shake_lr",
-  UD_SHAKE: "gesture.shake_ud",
+  SHAKE_FB: "gesture.shake_fb",
+  SHAKE_LR: "gesture.shake_lr",
+  SHAKE_UD: "gesture.shake_ud",
 
   // Orb state signals
   ORB_CHARGED: "orb_state.charged",

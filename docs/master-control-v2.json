@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-15T02:08:41.553Z",
+  "generatedAt": "2026-03-15T02:12:51.391Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -228,9 +228,9 @@
       "SPIN_X": "gesture.x_spin",
       "SPIN_Y": "gesture.y_spin",
       "SPIN_Z": "gesture.z_spin",
-      "FB_SHAKE": "gesture.shake_fb",
-      "LR_SHAKE": "gesture.shake_lr",
-      "UD_SHAKE": "gesture.shake_ud",
+      "SHAKE_FB": "gesture.shake_fb",
+      "SHAKE_LR": "gesture.shake_lr",
+      "SHAKE_UD": "gesture.shake_ud",
       "ORB_CHARGED": "orb_state.charged",
       "ORB_SUPERHEATED": "orb_state.superheated"
     },
