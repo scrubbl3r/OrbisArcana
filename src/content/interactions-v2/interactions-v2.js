@@ -70,7 +70,7 @@ export const INTERACTIONS_V2 = Object.freeze({
       on: Object.freeze({
         all: Object.freeze([
           Object.freeze({ type: "spell", id: SIGNAL_HANDLES_V2.ROTA }),
-          Object.freeze({ type: "gesture", id: SIGNAL_HANDLES_V2.FSPIN_Y }),
+          Object.freeze({ type: "gesture", id: SIGNAL_HANDLES_V2.SPIN_Y }),
           Object.freeze({ type: "orb_state", id: SIGNAL_HANDLES_V2.ORB_CHARGED }),
         ]),
       }),

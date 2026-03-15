@@ -52,7 +52,7 @@ Related index:
       on: {
         all: [
           { type: "spell", id: "rota" },
-          { type: "gesture", id: "FSPIN_Y" },
+          { type: "gesture", id: "SPIN_Y" },
           { type: "orb_state", id: "charged" }
         ]
       },
