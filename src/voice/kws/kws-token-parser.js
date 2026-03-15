@@ -31,9 +31,9 @@ function normToken(token) {
 function expandCompositeToken(token) {
   const raw = normToken(token);
   if (!raw) return [];
-  if (!raw.includes("_")) return [raw];
+  if (!raw.includes("_") && !raw.includes(" ")) return [raw];
   return raw
-    .split("_")
+    .split(/[_\s]+/g)
     .map((part) => normToken(part))
     .filter(Boolean);
 }
