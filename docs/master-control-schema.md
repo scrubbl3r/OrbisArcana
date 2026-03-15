@@ -164,7 +164,7 @@ Related index:
       ttlMs: 2000,
       enabled: true // optional, default true
     },
-    { type: "event", id: "electric_aoe", range: 14 },
+    { type: "event", id: "aoe_electric", range: 14 },
     { type: "event", id: "grace", ms: 500 },
     { type: "event", id: "orb_state", state: "superheated" }
   ]
@@ -505,7 +505,7 @@ Related index:
   ],
   then: [
     { type: "wake_win", spells: ["rota","sanctum","vectus"], ttlMs: 2000 },
-    { type: "event", id: "electric_aoe", range: 14 },
+    { type: "event", id: "aoe_electric", range: 14 },
     { type: "event", id: "grace", ms: 500 },
     { type: "event", id: "orb_state", state: "superheated" }
   ]

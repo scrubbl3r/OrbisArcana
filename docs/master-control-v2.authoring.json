@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-15T02:19:32.785Z",
+  "generatedAt": "2026-03-15T02:26:01.203Z",
   "enabled": true,
   "defaults": {
     "wakeWin": {
@@ -98,7 +98,7 @@
       "then": [
         {
           "type": "event",
-          "id": "frost_aoe"
+          "id": "aoe_frost"
         }
       ]
     },
@@ -115,7 +115,7 @@
       "then": [
         {
           "type": "event",
-          "id": "electric_aoe"
+          "id": "aoe_electric"
         }
       ]
     },
@@ -132,7 +132,7 @@
       "then": [
         {
           "type": "event",
-          "id": "flame_aoe"
+          "id": "aoe_flame"
         }
       ]
     },
@@ -182,7 +182,7 @@
         },
         {
           "type": "event",
-          "id": "electric_aoe",
+          "id": "aoe_electric",
           "range": 14
         },
         {

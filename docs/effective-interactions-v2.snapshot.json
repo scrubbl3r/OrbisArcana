@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-15T02:19:32.731Z",
+  "generatedAt": "2026-03-15T02:26:01.148Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -133,7 +133,7 @@
         "then": [
           {
             "type": "event",
-            "id": "frost_aoe"
+            "id": "aoe_frost"
           }
         ]
       },
@@ -150,7 +150,7 @@
         "then": [
           {
             "type": "event",
-            "id": "electric_aoe"
+            "id": "aoe_electric"
           }
         ]
       },
@@ -167,7 +167,7 @@
         "then": [
           {
             "type": "event",
-            "id": "flame_aoe"
+            "id": "aoe_flame"
           }
         ]
       },
@@ -217,7 +217,7 @@
           },
           {
             "type": "event",
-            "id": "electric_aoe",
+            "id": "aoe_electric",
             "range": 14
           },
           {
@@ -248,7 +248,7 @@
         "then": [
           {
             "type": "event",
-            "id": "frost_aoe"
+            "id": "aoe_frost"
           }
         ]
       },
@@ -263,7 +263,7 @@
         "then": [
           {
             "type": "event",
-            "id": "electric_aoe"
+            "id": "aoe_electric"
           }
         ]
       },
@@ -278,7 +278,7 @@
         "then": [
           {
             "type": "event",
-            "id": "flame_aoe"
+            "id": "aoe_flame"
           }
         ]
       },
@@ -325,7 +325,7 @@
           },
           {
             "type": "event",
-            "id": "electric_aoe",
+            "id": "aoe_electric",
             "range": 14
           },
           {

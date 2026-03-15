@@ -59,7 +59,7 @@ Related index:
 
       then: [
         { type: "wake_win", spells: ["sanctum", "vectus"] },
-        { type: "event", id: "electric_aoe" },
+        { type: "event", id: "aoe_electric" },
         { type: "event", id: "grace" },
         { type: "event", id: "orb_state", overrides: { state: "superheated" } }
       ]

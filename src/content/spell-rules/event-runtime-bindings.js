@@ -10,21 +10,21 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
-    id: "electric_aoe",
+    id: "aoe_electric",
     runtime: Object.freeze({
       kind: "cast_action",
       castActionId: "aoe_electric",
     }),
   }),
   Object.freeze({
-    id: "flame_aoe",
+    id: "aoe_flame",
     runtime: Object.freeze({
       kind: "cast_action",
       castActionId: "aoe_flame",
     }),
   }),
   Object.freeze({
-    id: "frost_aoe",
+    id: "aoe_frost",
     runtime: Object.freeze({
       kind: "cast_action",
       castActionId: "aoe_frost",

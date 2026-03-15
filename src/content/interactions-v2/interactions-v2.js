@@ -29,7 +29,7 @@ export const INTERACTIONS_V2 = Object.freeze({
         ]),
       }),
       then: Object.freeze([
-        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.FROST_AOE }),
+        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.AOE_FROST }),
       ]),
     }),
     Object.freeze({
@@ -40,7 +40,7 @@ export const INTERACTIONS_V2 = Object.freeze({
         ]),
       }),
       then: Object.freeze([
-        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.ELECTRIC_AOE }),
+        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.AOE_ELECTRIC }),
       ]),
     }),
     Object.freeze({
@@ -51,7 +51,7 @@ export const INTERACTIONS_V2 = Object.freeze({
         ]),
       }),
       then: Object.freeze([
-        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.FLAME_AOE }),
+        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.AOE_FLAME }),
       ]),
     }),
     Object.freeze({
@@ -83,7 +83,7 @@ export const INTERACTIONS_V2 = Object.freeze({
             SIGNAL_HANDLES_V2.VECTUS,
           ]),
         }),
-        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.ELECTRIC_AOE, range: 14 }),
+        Object.freeze({ type: "event", id: EVENT_HANDLES_V2.AOE_ELECTRIC, range: 14 }),
         Object.freeze({ type: "event", id: EVENT_HANDLES_V2.GRACE }),
         Object.freeze({
           type: "event",

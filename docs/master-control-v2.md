@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-15T02:19:32.782Z
+Generated: 2026-03-15T02:26:01.200Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -132,7 +132,7 @@ This document is generated from SSOT:
     "then": [
       {
         "type": "event",
-        "id": "frost_aoe"
+        "id": "aoe_frost"
       }
     ]
   },
@@ -149,7 +149,7 @@ This document is generated from SSOT:
     "then": [
       {
         "type": "event",
-        "id": "electric_aoe"
+        "id": "aoe_electric"
       }
     ]
   },
@@ -166,7 +166,7 @@ This document is generated from SSOT:
     "then": [
       {
         "type": "event",
-        "id": "flame_aoe"
+        "id": "aoe_flame"
       }
     ]
   },
@@ -216,7 +216,7 @@ This document is generated from SSOT:
       },
       {
         "type": "event",
-        "id": "electric_aoe",
+        "id": "aoe_electric",
         "range": 14
       },
       {
@@ -274,9 +274,9 @@ This document is generated from SSOT:
 ```json
 {
   "TELEPORT_HOME": "teleport_home",
-  "FLAME_AOE": "flame_aoe",
-  "FROST_AOE": "frost_aoe",
-  "ELECTRIC_AOE": "electric_aoe",
+  "AOE_FLAME": "aoe_flame",
+  "AOE_FROST": "aoe_frost",
+  "AOE_ELECTRIC": "aoe_electric",
   "GRACE": "grace",
   "ORB_STATE": "orb_state"
 }

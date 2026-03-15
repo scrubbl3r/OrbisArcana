@@ -35,9 +35,9 @@ export const ACTION_HANDLES_V2 = Object.freeze({
 
 export const EVENT_HANDLES_V2 = Object.freeze({
   TELEPORT_HOME: "teleport_home",
-  FLAME_AOE: "flame_aoe",
-  FROST_AOE: "frost_aoe",
-  ELECTRIC_AOE: "electric_aoe",
+  AOE_FLAME: "aoe_flame",
+  AOE_FROST: "aoe_frost",
+  AOE_ELECTRIC: "aoe_electric",
   GRACE: "grace",
   ORB_STATE: "orb_state",
 });
