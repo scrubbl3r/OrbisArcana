@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-15T01:05:36.187Z",
+  "generatedAt": "2026-03-15T02:01:11.862Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -228,7 +228,6 @@
       "FSPIN_X": "gesture.x_spin",
       "FSPIN_Y": "gesture.y_spin",
       "FSPIN_Z": "gesture.z_spin",
-      "Y_SPIN": "gesture.y_spin",
       "FB_SHAKE": "gesture.shake_fb",
       "LR_SHAKE": "gesture.shake_lr",
       "UD_SHAKE": "gesture.shake_ud",

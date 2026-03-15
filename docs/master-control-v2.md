@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-15T01:05:36.184Z
+Generated: 2026-03-15T02:01:11.859Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -252,7 +252,6 @@ This document is generated from SSOT:
   "FSPIN_X": "gesture.x_spin",
   "FSPIN_Y": "gesture.y_spin",
   "FSPIN_Z": "gesture.z_spin",
-  "Y_SPIN": "gesture.y_spin",
   "FB_SHAKE": "gesture.shake_fb",
   "LR_SHAKE": "gesture.shake_lr",
   "UD_SHAKE": "gesture.shake_ud",

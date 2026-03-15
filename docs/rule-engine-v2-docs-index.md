@@ -103,7 +103,7 @@
 - Source of truth for handle constants:
   - `src/content/interactions-v2/entity-handles-v2.js`
 - Typical examples:
-  - gestures: `Y_SPIN`, `FSPIN_X`, `FSPIN_Y`, `FSPIN_Z`
+- gestures: `FSPIN_X`, `FSPIN_Y`, `FSPIN_Z`
   - shakes: `FB_SHAKE`, `LR_SHAKE`, `UD_SHAKE`
   - windows/actions: `WAKE_WIN`
 - Keep authoring IDs stable and reuse handles to avoid string drift across rules.

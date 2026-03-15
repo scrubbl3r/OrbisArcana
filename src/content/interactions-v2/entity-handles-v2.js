@@ -17,7 +17,6 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
   FSPIN_X: "gesture.x_spin",
   FSPIN_Y: "gesture.y_spin",
   FSPIN_Z: "gesture.z_spin",
-  Y_SPIN: "gesture.y_spin",
 
   // Shake gestures
   FB_SHAKE: "gesture.shake_fb",
