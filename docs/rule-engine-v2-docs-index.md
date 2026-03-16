@@ -32,6 +32,7 @@
   - `docs/master-control-v2.md`
   - `docs/master-control-v2.json`
   - `docs/master-control-v2.authoring.json`
+  - `docs/orchestrator-v1.projection.json`
   - `docs/rule-engine-v2.health.json`
   - `docs/rule-engine-v2.status.json`
   - `docs/rule-engine-v2.milestone-smoke.json`
