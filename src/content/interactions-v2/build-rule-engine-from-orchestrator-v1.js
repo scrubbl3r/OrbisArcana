@@ -66,6 +66,23 @@ function asSelectorList(raw) {
   return [];
 }
 
+function normalizeTriggerEntries(rawTrigger) {
+  if (Array.isArray(rawTrigger)) return rawTrigger;
+  if (typeof rawTrigger === "string") return [rawTrigger];
+  if (rawTrigger && typeof rawTrigger === "object") {
+    return Object.entries(rawTrigger).map(([eventId, spec]) => {
+      if (typeof spec === "boolean") {
+        return spec
+          ? Object.freeze({ event: eventId })
+          : Object.freeze({ event: eventId, enabled: false });
+      }
+      if (spec && typeof spec === "object" && !Array.isArray(spec)) return Object.freeze({ event: eventId, args: spec });
+      return Object.freeze({ event: eventId });
+    });
+  }
+  return [];
+}
+
 function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
   const out = {};
   for (const [eventIdRaw, args] of Object.entries(asObj(defaultsTriggerRaw))) {
@@ -154,7 +171,7 @@ function mapRule(rule, defaults) {
   const openAction = mapOpen(r.open, asObj(defaults.open));
   if (openAction) then.push(openAction);
   const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(asObj(defaults.trigger));
-  const triggerActions = (Array.isArray(r.trigger) ? r.trigger : [])
+  const triggerActions = normalizeTriggerEntries(r.trigger)
     .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
     .filter(Boolean);
   then.push(...triggerActions);

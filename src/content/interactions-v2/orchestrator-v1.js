@@ -20,7 +20,7 @@ export const ORCHESTRATOR_V1 = Object.freeze({
     //   cooldownMs: 250,
     //   matchWindowMs: 2200,
     //   open: ["domus", "electrum"],
-    //   trigger: ["teleport_home", { event: "grace", args: { ms: 700 } }],
+    //   trigger: { teleport_home: true, grace: { ms: 700 } },
     // },
   ]),
 });

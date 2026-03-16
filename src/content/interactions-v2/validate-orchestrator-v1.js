@@ -63,6 +63,23 @@ function asSelectorList(raw) {
   return [];
 }
 
+function normalizeTriggerEntries(rawTrigger) {
+  if (Array.isArray(rawTrigger)) return rawTrigger;
+  if (typeof rawTrigger === "string") return [rawTrigger];
+  if (rawTrigger && typeof rawTrigger === "object") {
+    return Object.entries(rawTrigger).map(([eventId, spec]) => {
+      if (typeof spec === "boolean") {
+        return spec
+          ? Object.freeze({ event: eventId })
+          : Object.freeze({ event: eventId, enabled: false });
+      }
+      if (spec && typeof spec === "object" && !Array.isArray(spec)) return Object.freeze({ event: eventId, args: spec });
+      return Object.freeze({ event: eventId });
+    });
+  }
+  return [];
+}
+
 function isFiniteNonNegative(v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0;
@@ -272,7 +289,8 @@ export function validateOrchestratorV1(cfg) {
       }
     }
 
-    const hasTrigger = Array.isArray(rule.trigger) && rule.trigger.length > 0;
+    const triggerEntries = normalizeTriggerEntries(rule.trigger);
+    const hasTrigger = triggerEntries.length > 0;
     const hasOpen = Object.prototype.hasOwnProperty.call(rule, "open");
     if (!hasTrigger && !hasOpen) {
       errors.push(`rule ${ruleId} must define open and/or trigger actions`);
@@ -281,7 +299,7 @@ export function validateOrchestratorV1(cfg) {
     if (!hasTrigger) {
       continue;
     }
-    for (const rawTrigger of rule.trigger) {
+    for (const rawTrigger of triggerEntries) {
       const isStringTrigger = typeof rawTrigger === "string";
       const trigger = isStringTrigger ? Object.freeze({ event: rawTrigger }) : asObj(rawTrigger);
       pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, ["event", "enabled", "args"]);

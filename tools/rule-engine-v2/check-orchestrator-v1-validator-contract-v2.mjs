@@ -42,7 +42,7 @@ const baseline = Object.freeze({
       id: "o_validator_contract",
       on: Object.freeze(["spell:rota", "gesture:spin_y", "orb_state:charged"]),
       open: Object.freeze(["sanctum", "vectus"]),
-      trigger: Object.freeze(["grace", Object.freeze({ event: "aoe_electric", enabled: true })]),
+      trigger: Object.freeze({ grace: Object.freeze({ ms: 500 }), aoe_electric: true }),
     }),
   ]),
 });
