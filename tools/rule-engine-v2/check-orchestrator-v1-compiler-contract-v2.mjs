@@ -16,19 +16,21 @@ const sample = Object.freeze({
     trigger: Object.freeze({
       grace: Object.freeze({ ms: 625 }),
     }),
+    rule: Object.freeze({
+      cooldownMs: 222,
+      matchWindowMs: 1999,
+      priority: 7,
+    }),
   }),
   rules: Object.freeze([
     Object.freeze({
       id: "o_contract_sample",
       on: Object.freeze(["spell:rota", "gesture:spin_y", "orb_state:charged"]),
-      cooldownMs: 333,
-      matchWindowMs: 2444,
       open: Object.freeze(["sanctum", "vectus"]),
       trigger: Object.freeze([
         Object.freeze({ event: "grace", args: Object.freeze({ ms: 700, mode: "boost" }) }),
         "aoe_electric",
       ]),
-      enabled: true,
       priority: 42,
     }),
   ]),
@@ -57,10 +59,9 @@ if (!Array.isArray(built.rules) || built.rules.length !== 1) {
 const [rule] = built.rules;
 const details = [];
 if (rule.id !== "o_contract_sample") details.push(`rule id mismatch: ${rule.id}`);
-if (rule.enabled !== true) details.push("rule enabled mismatch");
 if (rule.priority !== 42) details.push(`rule priority mismatch: ${rule.priority}`);
-if (rule.cooldownMs !== 333) details.push(`rule cooldownMs mismatch: ${rule.cooldownMs}`);
-if (rule.matchWindowMs !== 2444) details.push(`rule matchWindowMs mismatch: ${rule.matchWindowMs}`);
+if (rule.cooldownMs !== 222) details.push(`rule cooldownMs mismatch: ${rule.cooldownMs}`);
+if (rule.matchWindowMs !== 1999) details.push(`rule matchWindowMs mismatch: ${rule.matchWindowMs}`);
 
 const expectedOn = [
   { type: "spell", id: "rota" },

@@ -124,6 +124,7 @@ function mapRule(rule, defaults) {
   const r = asObj(rule);
   const id = asText(r.id);
   if (!id) return null;
+  const ruleDefaults = asObj(defaults.rule);
   const on = [];
   if (typeof r.on === "string") {
     const parsed = parseOnSelector(r.on);
@@ -165,14 +166,23 @@ function mapRule(rule, defaults) {
   if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled === "boolean") {
     out.enabled = r.enabled;
   }
-  if (Object.prototype.hasOwnProperty.call(r, "priority") && Number.isFinite(Number(r.priority))) {
-    out.priority = Number(r.priority);
+  const priority = Object.prototype.hasOwnProperty.call(r, "priority")
+    ? r.priority
+    : ruleDefaults.priority;
+  if (Number.isFinite(Number(priority))) {
+    out.priority = Number(priority);
   }
-  if (Object.prototype.hasOwnProperty.call(r, "cooldownMs") && Number.isFinite(Number(r.cooldownMs))) {
-    out.cooldownMs = Math.max(0, Number(r.cooldownMs));
+  const cooldownMs = Object.prototype.hasOwnProperty.call(r, "cooldownMs")
+    ? r.cooldownMs
+    : ruleDefaults.cooldownMs;
+  if (Number.isFinite(Number(cooldownMs))) {
+    out.cooldownMs = Math.max(0, Number(cooldownMs));
   }
-  if (Object.prototype.hasOwnProperty.call(r, "matchWindowMs") && Number.isFinite(Number(r.matchWindowMs))) {
-    out.matchWindowMs = Math.max(100, Number(r.matchWindowMs));
+  const matchWindowMs = Object.prototype.hasOwnProperty.call(r, "matchWindowMs")
+    ? r.matchWindowMs
+    : ruleDefaults.matchWindowMs;
+  if (Number.isFinite(Number(matchWindowMs))) {
+    out.matchWindowMs = Math.max(100, Number(matchWindowMs));
   }
   return Object.freeze(out);
 }

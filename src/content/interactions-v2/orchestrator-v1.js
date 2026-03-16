@@ -10,6 +10,7 @@ export const ORCHESTRATOR_V1 = Object.freeze({
     // Optional defaults for OPEN/TRIGGER actions.
     // open: { ttlMs: 2000 },
     // trigger: { teleport_home: { style: "orb_flash_2" } },
+    // rule: { cooldownMs: 250, matchWindowMs: 2200, priority: 10 },
   }),
   rules: Object.freeze([
     // Minimal supported shape in early slices:

@@ -106,7 +106,7 @@ export function validateOrchestratorV1(cfg) {
   }
   if (Object.prototype.hasOwnProperty.call(target, "defaults")) {
     const defaults = asObj(target.defaults);
-    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, ["open", "trigger"]);
+    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, ["open", "trigger", "rule"]);
     if (Object.prototype.hasOwnProperty.call(defaults, "open")) {
       const defaultsOpen = asObj(defaults.open);
       pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, ["ttlMs"]);
@@ -128,6 +128,22 @@ export function validateOrchestratorV1(cfg) {
         if (!args || typeof args !== "object" || Array.isArray(args)) {
           errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
         }
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(defaults, "rule")) {
+      const defaultsRule = asObj(defaults.rule);
+      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, ["cooldownMs", "matchWindowMs", "priority"]);
+      if (Object.prototype.hasOwnProperty.call(defaultsRule, "cooldownMs") && !isFiniteNonNegative(defaultsRule.cooldownMs)) {
+        errors.push("ORCHESTRATOR_V1.defaults.rule.cooldownMs must be a finite number >= 0 when present");
+      }
+      if (Object.prototype.hasOwnProperty.call(defaultsRule, "matchWindowMs")) {
+        const n = Number(defaultsRule.matchWindowMs);
+        if (!Number.isFinite(n) || n < 100) {
+          errors.push("ORCHESTRATOR_V1.defaults.rule.matchWindowMs must be a finite number >= 100 when present");
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(defaultsRule, "priority") && !Number.isFinite(Number(defaultsRule.priority))) {
+        errors.push("ORCHESTRATOR_V1.defaults.rule.priority must be a finite number when present");
       }
     }
   }
