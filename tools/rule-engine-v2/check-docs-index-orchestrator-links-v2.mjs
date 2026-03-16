@@ -1,9 +1,10 @@
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "docs-index-orchestrator-links:v2";
-const docsIndexRel = "docs/rule-engine-v2-docs-index.md";
+const docsIndexRel = RULE_ENGINE_V2_DOC_PATHS.docsIndex;
 const text = readRelativeText(docsIndexRel);
 
 const requiredTokens = Object.freeze([

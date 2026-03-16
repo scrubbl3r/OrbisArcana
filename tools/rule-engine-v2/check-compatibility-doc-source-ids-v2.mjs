@@ -1,10 +1,11 @@
 import { RULE_ENGINE_SOURCES } from "../../src/runtime/receiver-bootstrap.js";
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "compatibility-doc-source-ids:v2";
-const docRel = "docs/rule-engine-compatibility.md";
+const docRel = RULE_ENGINE_V2_DOC_PATHS.ruleEngineCompatibilityDoc;
 const text = readRelativeText(docRel);
 
 if (!text.includes("Projection-only rule execution: enabled")) {
