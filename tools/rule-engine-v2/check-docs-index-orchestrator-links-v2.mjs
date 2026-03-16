@@ -10,7 +10,7 @@ const text = readRelativeText(docsIndexRel);
 const requiredTokens = Object.freeze([
   "[Orchestrator Projection](./orchestrator-v1.projection.json)",
   "Effective Interactions Snapshot` and `Orchestrator Projection`",
-  "`docs/orchestrator-v1.projection.json`",
+  `\`${RULE_ENGINE_V2_DOC_PATHS.orchestratorProjectionJson}\``,
 ]);
 
 for (const token of requiredTokens) {
