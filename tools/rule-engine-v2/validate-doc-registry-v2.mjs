@@ -12,8 +12,15 @@ export function validateDocRegistryV2({
 }) {
   const seenPaths = new Set();
   const keysArr = Array.from(keys || []);
+  const relArr = relPaths ? Array.from(relPaths || []) : null;
+  if (relArr && relArr.length !== keysArr.length) {
+    failCheck(
+      tag,
+      `${label} key/path count mismatch: keys=${keysArr.length} relPaths=${relArr.length}`
+    );
+  }
   const pairs = relPaths
-    ? Array.from(relPaths || []).map((rel, idx) => ({ key: keysArr[idx], rel }))
+    ? relArr.map((rel, idx) => ({ key: keysArr[idx], rel }))
     : keysArr.map((key) => ({ key, rel: docPaths?.[key] }));
   for (const { key, rel } of pairs) {
     if (!rel) {
