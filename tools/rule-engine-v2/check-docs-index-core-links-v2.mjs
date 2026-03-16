@@ -1,5 +1,6 @@
 import {
-  RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS, RULE_ENGINE_V2_DOC_PATHS,
+  docRelPathsForKeysV2,
+  RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS,
 } from "./docs-paths-v2.mjs";
 import { docsIndexLinkTokensForRelPathsV2 } from "./docs-index-tokens-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
@@ -9,9 +10,9 @@ import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
 const CHECK_TAG = "docs-index-core-links:v2";
 const { rel: docsIndexRel, text } = readDocsIndexV2();
 
-const coreDocLinks = RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS
-  .filter((key) => key !== "docsIndex")
-  .map((key) => RULE_ENGINE_V2_DOC_PATHS[key]);
+const coreDocLinks = docRelPathsForKeysV2(
+  RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS.filter((key) => key !== "docsIndex")
+);
 const requiredLinkTokens = docsIndexLinkTokensForRelPathsV2(coreDocLinks);
 
 requireTextIncludesTokensV2({

@@ -48,3 +48,13 @@ export function resolveRuleEngineDocPath(key) {
   }
   return resolve(process.cwd(), rel);
 }
+
+export function docRelPathsForKeysV2(keys) {
+  return Array.from(keys || []).map((key) => {
+    const rel = RULE_ENGINE_V2_DOC_PATHS[key];
+    if (!rel) {
+      throw new Error(`unknown RULE_ENGINE_V2_DOC_PATHS key: ${String(key)}`);
+    }
+    return rel;
+  });
+}

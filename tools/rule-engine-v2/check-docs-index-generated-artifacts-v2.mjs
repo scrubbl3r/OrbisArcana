@@ -1,4 +1,5 @@
 import {
+  docRelPathsForKeysV2,
   RULE_ENGINE_V2_DOC_PATHS,
   RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS,
 } from "./docs-paths-v2.mjs";
@@ -13,9 +14,7 @@ import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
 const CHECK_TAG = "docs-index-generated-artifacts:v2";
 const { rel: indexRel, text } = readDocsIndexV2();
 
-const generatedArtifactRels = RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS.map(
-  (key) => RULE_ENGINE_V2_DOC_PATHS[key]
-);
+const generatedArtifactRels = docRelPathsForKeysV2(RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS);
 const requiredQuickLinkTokens = docsIndexLinkTokensForRelPathsV2(generatedArtifactRels);
 const requiredOwnershipTokens = docsIndexOwnershipTokensForRelPathsV2(generatedArtifactRels);
 
