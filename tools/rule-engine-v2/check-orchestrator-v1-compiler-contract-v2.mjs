@@ -25,9 +25,7 @@ const sample = Object.freeze({
         gesture: "spin_y",
         orb_state: "charged",
       }),
-      open: Object.freeze({
-        spells: Object.freeze(["sanctum", "vectus"]),
-      }),
+      open: Object.freeze(["sanctum", "vectus"]),
       trigger: Object.freeze([
         Object.freeze({ event: "grace", args: Object.freeze({ ms: 700, mode: "boost" }) }),
         "aoe_electric",

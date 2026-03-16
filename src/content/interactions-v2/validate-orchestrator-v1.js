@@ -156,8 +156,14 @@ export function validateOrchestratorV1(cfg) {
     }
 
     if (Object.prototype.hasOwnProperty.call(rule, "open")) {
-      const open = asObj(rule.open);
-      pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, ["spells", "ttlMs", "enabled"]);
+      const isStringOpen = typeof rule.open === "string";
+      const isArrayOpen = Array.isArray(rule.open);
+      const open = (isStringOpen || isArrayOpen)
+        ? Object.freeze({ spells: isStringOpen ? [rule.open] : rule.open })
+        : asObj(rule.open);
+      if (!isStringOpen && !isArrayOpen) {
+        pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, ["spells", "ttlMs", "enabled"]);
+      }
       if (!Array.isArray(open.spells) || !open.spells.length) {
         errors.push(`rule ${ruleId} open requires spells[]`);
       } else {
@@ -177,10 +183,12 @@ export function validateOrchestratorV1(cfg) {
           }
         }
       }
-      if (Object.prototype.hasOwnProperty.call(open, "enabled") && typeof open.enabled !== "boolean") {
+      if (!isStringOpen && !isArrayOpen &&
+        Object.prototype.hasOwnProperty.call(open, "enabled") && typeof open.enabled !== "boolean") {
         errors.push(`rule ${ruleId} open enabled must be boolean when present`);
       }
-      if (Object.prototype.hasOwnProperty.call(open, "ttlMs") && !isFiniteNonNegative(open.ttlMs)) {
+      if (!isStringOpen && !isArrayOpen &&
+        Object.prototype.hasOwnProperty.call(open, "ttlMs") && !isFiniteNonNegative(open.ttlMs)) {
         errors.push(`rule ${ruleId} open ttlMs must be a finite number >= 0 when present`);
       }
     }

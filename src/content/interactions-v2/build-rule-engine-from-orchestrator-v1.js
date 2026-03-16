@@ -66,7 +66,11 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
 }
 
 function mapOpen(open, defaultsOpen) {
-  const o = asObj(open);
+  const o = (typeof open === "string")
+    ? Object.freeze({ spells: [open] })
+    : (Array.isArray(open)
+      ? Object.freeze({ spells: open })
+      : asObj(open));
   const spells = Array.isArray(o.spells)
     ? o.spells.map(normalizeSpellId).filter(Boolean)
     : [];
