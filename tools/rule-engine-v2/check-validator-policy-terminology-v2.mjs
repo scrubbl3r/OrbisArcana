@@ -1,16 +1,25 @@
-import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import {
+  requireTextExcludesTokensV2,
+  requireTextIncludesTokensV2,
+} from "./check-token-assertions-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "validator-policy-terminology:v2";
 const rel = "src/content/spell-rules/validate-rule-engine-config.js";
 const text = readRelativeText(rel);
 
-if (!text.includes("RULE_ENGINE_POLICY_CONTROL")) {
-  failCheck(CHECK_TAG, `${rel} must reference RULE_ENGINE_POLICY_CONTROL in diagnostics`);
-}
-if (text.includes("RULE_ENGINE_MASTER_CONTROL")) {
-  failCheck(CHECK_TAG, `${rel} must not reference RULE_ENGINE_MASTER_CONTROL`);
-}
+requireTextIncludesTokensV2({
+  tag: CHECK_TAG,
+  text,
+  tokens: ["RULE_ENGINE_POLICY_CONTROL"],
+  missingMessage: (token) => `${rel} must reference ${token} in diagnostics`,
+});
+requireTextExcludesTokensV2({
+  tag: CHECK_TAG,
+  text,
+  tokens: ["RULE_ENGINE_MASTER_CONTROL"],
+  forbiddenMessage: (token) => `${rel} must not reference ${token}`,
+});
 
 reportCheckPass(CHECK_TAG, "validator diagnostics use policy control naming");
