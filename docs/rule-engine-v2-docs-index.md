@@ -76,7 +76,7 @@
 5. Promote only known-good commits back into active development.
 
 ## Glossary (v2)
-- `signal`: normalized trigger identity matched from source events (for example `spell.rota`, `gesture.Y_SPIN`).
+- `signal`: normalized trigger identity matched from source events (for example `spell.rota`, `gesture.spin_y`).
 - `rule`: condition/action bundle with `on` and `then`.
 - `wake_win`: action that opens a wake window and allows listed spell tokens for a TTL.
 - `event`: action that dispatches a named runtime effect/action binding.
@@ -104,7 +104,7 @@
 - Source of truth for handle constants:
   - `src/content/interactions-v2/entity-handles-v2.js`
 - Typical examples:
-- gestures: `SPIN_X`, `SPIN_Y`, `SPIN_Z`
+  - gestures: `SPIN_X`, `SPIN_Y`, `SPIN_Z`
   - shakes: `SHAKE_FB`, `SHAKE_LR`, `SHAKE_UD`
   - windows/actions: `WAKE_WIN`
 - Keep authoring IDs stable and reuse handles to avoid string drift across rules.
