@@ -1,6 +1,6 @@
 {
   "schema": "orbis.rule_engine_v2.status",
-  "generatedAt": "2026-03-16T18:50:45.458Z",
+  "generatedAt": "2026-03-16T18:52:35.701Z",
   "health": {
     "spellbookOk": true,
     "interactionsOk": true,
@@ -35,6 +35,7 @@
     "orchestrator_v1_compiler": true,
     "orchestrator_v1_validator": true,
     "orchestrator_v1_parity": true,
+    "orchestrator_v1_bootstrap_projection": true,
     "doc_policy": true,
     "validator_policy": true,
     "compat_surface": true,
