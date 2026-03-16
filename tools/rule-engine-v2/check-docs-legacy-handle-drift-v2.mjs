@@ -8,6 +8,9 @@ const CHECK_TAG = "docs-legacy-handle-drift:v2";
 
 const docFiles = Object.freeze([
   RULE_ENGINE_V2_DOC_PATHS.docsIndex,
+  RULE_ENGINE_V2_DOC_PATHS.interactionsSchemaDoc,
+  RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc,
+  RULE_ENGINE_V2_DOC_PATHS.ruleEngineSmokeDoc,
   RULE_ENGINE_V2_DOC_PATHS.ruleEngineAuthoringDoc,
   RULE_ENGINE_V2_DOC_PATHS.ruleEngineCompatibilityDoc,
 ]);

@@ -2,6 +2,8 @@ import { resolve } from "node:path";
 
 export const RULE_ENGINE_V2_DOC_PATHS = Object.freeze({
   docsIndex: "docs/rule-engine-v2-docs-index.md",
+  interactionsSchemaDoc: "docs/interactions-schema.md",
+  ruleEngineSmokeDoc: "docs/rule-engine-smoke.md",
   ruleEngineAuthoringDoc: "docs/rule-engine-authoring.md",
   ruleEngineCompatibilityDoc: "docs/rule-engine-compatibility.md",
   masterControlSchemaDoc: "docs/master-control-schema.md",
