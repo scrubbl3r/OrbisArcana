@@ -48,7 +48,9 @@ function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
 }
 
 function mapTrigger(trigger, defaultsTriggerByEvent) {
-  const t = asObj(trigger);
+  const t = (typeof trigger === "string")
+    ? Object.freeze({ event: trigger })
+    : asObj(trigger);
   const eventId = normalizeEventId(t.event);
   if (!eventId) return null;
   const out = {

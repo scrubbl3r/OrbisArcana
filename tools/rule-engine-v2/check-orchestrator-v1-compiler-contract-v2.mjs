@@ -30,7 +30,7 @@ const sample = Object.freeze({
       }),
       trigger: Object.freeze([
         Object.freeze({ event: "grace", args: Object.freeze({ ms: 700, mode: "boost" }) }),
-        Object.freeze({ event: "aoe_electric", enabled: false }),
+        "aoe_electric",
       ]),
       enabled: true,
       priority: 42,
@@ -76,7 +76,7 @@ if (asJson(rule.on) !== asJson(expectedOn)) {
 const expectedThen = [
   { type: "wake_win", spells: ["sanctum", "vectus"], ttlMs: 1750 },
   { type: "event", id: "grace", ms: 700, mode: "boost" },
-  { type: "event", id: "aoe_electric", enabled: false },
+  { type: "event", id: "aoe_electric" },
 ];
 if (asJson(rule.then) !== asJson(expectedThen)) {
   details.push(`rule.then mismatch: got ${asJson(rule.then)} expected ${asJson(expectedThen)}`);

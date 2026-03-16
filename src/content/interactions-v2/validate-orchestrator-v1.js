@@ -195,7 +195,8 @@ export function validateOrchestratorV1(cfg) {
       continue;
     }
     for (const rawTrigger of rule.trigger) {
-      const trigger = asObj(rawTrigger);
+      const isStringTrigger = typeof rawTrigger === "string";
+      const trigger = isStringTrigger ? Object.freeze({ event: rawTrigger }) : asObj(rawTrigger);
       pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, ["event", "enabled", "args"]);
       if (Object.prototype.hasOwnProperty.call(trigger, "enabled") && typeof trigger.enabled !== "boolean") {
         errors.push(`rule ${ruleId} trigger enabled must be boolean when present`);
@@ -206,7 +207,7 @@ export function validateOrchestratorV1(cfg) {
       } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_BY_ID, eventId)) {
         errors.push(`rule ${ruleId} trigger references unknown event id: ${trigger.event}`);
       }
-      if (Object.prototype.hasOwnProperty.call(trigger, "args")) {
+      if (!isStringTrigger && Object.prototype.hasOwnProperty.call(trigger, "args")) {
         const args = trigger.args;
         if (!args || typeof args !== "object" || Array.isArray(args)) {
           errors.push(`rule ${ruleId} trigger args must be an object when present`);
