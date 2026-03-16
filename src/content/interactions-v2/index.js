@@ -14,3 +14,4 @@ export {
   buildRulesFromInteractionsV2,
 } from "./build-rule-engine-from-interactions-v2.js";
 export { buildRuleEngineFromOrchestratorV1 } from "./build-rule-engine-from-orchestrator-v1.js";
+export { projectOrchestratorV1FromInteractionsV2 } from "./project-orchestrator-v1-from-interactions-v2.js";
