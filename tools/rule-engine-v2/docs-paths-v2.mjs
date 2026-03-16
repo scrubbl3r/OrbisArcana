@@ -17,6 +17,19 @@ export const RULE_ENGINE_V2_DOC_PATHS = Object.freeze({
   milestoneTrend: "docs/rule-engine-v2.milestone-trend.json",
 });
 
+export const RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS = Object.freeze([
+  "effectiveSnapshot",
+  "masterControlMarkdown",
+  "masterControlJson",
+  "masterControlAuthoringJson",
+  "orchestratorProjectionJson",
+  "health",
+  "status",
+  "milestoneSmoke",
+  "milestoneHistory",
+  "milestoneTrend",
+]);
+
 export function resolveRuleEngineDocPath(key) {
   const rel = RULE_ENGINE_V2_DOC_PATHS[key];
   if (!rel) {
