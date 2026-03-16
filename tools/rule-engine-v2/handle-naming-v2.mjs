@@ -15,3 +15,13 @@ export const RULE_ENGINE_V2_LEGACY_HANDLE_TOKENS = Object.freeze([
 export const RULE_ENGINE_V2_LEGACY_SIGNAL_EXAMPLES = Object.freeze([
   "`gesture.Y_SPIN`",
 ]);
+
+export const RULE_ENGINE_V2_CANONICAL_SIGNAL_EXAMPLES = Object.freeze([
+  "`gesture.spin_y`",
+]);
+
+export const RULE_ENGINE_V2_CANONICAL_HANDLE_EXAMPLES = Object.freeze([
+  "`SPIN_X`, `SPIN_Y`, `SPIN_Z`",
+  "`SHAKE_FB`, `SHAKE_LR`, `SHAKE_UD`",
+  "`WAKE_WIN`",
+]);
