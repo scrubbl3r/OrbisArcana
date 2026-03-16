@@ -22,7 +22,7 @@ const sample = Object.freeze({
       id: "o_contract_sample",
       on: Object.freeze({
         spell: "rota",
-        gesture: "y_spin",
+        gesture: "spin_y",
         orb_state: "charged",
       }),
       open: Object.freeze({
@@ -66,7 +66,7 @@ if (rule.priority !== 42) details.push(`rule priority mismatch: ${rule.priority}
 
 const expectedOn = [
   { type: "spell", id: "rota" },
-  { type: "gesture", id: "y_spin" },
+  { type: "gesture", id: "spin_y" },
   { type: "orb_state", id: "charged" },
 ];
 if (asJson(rule.on) !== asJson(expectedOn)) {

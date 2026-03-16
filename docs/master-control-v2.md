@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-16T18:23:17.215Z
+Generated: 2026-03-16T18:30:33.246Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -197,7 +197,7 @@ This document is generated from SSOT:
         },
         {
           "type": "gesture",
-          "id": "gesture.y_spin"
+          "id": "gesture.spin_y"
         },
         {
           "type": "orb_state",
@@ -251,9 +251,9 @@ This document is generated from SSOT:
   "SANCTUM": "spell.sanctum",
   "VECTUS": "spell.vectus",
   "ROTA": "spell.rota",
-  "SPIN_X": "gesture.x_spin",
-  "SPIN_Y": "gesture.y_spin",
-  "SPIN_Z": "gesture.z_spin",
+  "SPIN_X": "gesture.spin_x",
+  "SPIN_Y": "gesture.spin_y",
+  "SPIN_Z": "gesture.spin_z",
   "SHAKE_FB": "gesture.shake_fb",
   "SHAKE_LR": "gesture.shake_lr",
   "SHAKE_UD": "gesture.shake_ud",

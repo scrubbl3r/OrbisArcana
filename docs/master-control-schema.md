@@ -151,7 +151,7 @@ Related index:
   // 3) single object => all:[single]
   on: [
     { type: "spell", id: "rota" },
-    { type: "gesture", id: "y_spin" },
+    { type: "gesture", id: "spin_y" },
     { type: "orb_state", id: "charged" }
   ],
 
@@ -174,7 +174,7 @@ Related index:
 ## Authoring Notes
 - Condition type normalization:
   - `{ type:"spell", id:"rota" }` resolves to signal `spell.rota`
-  - `{ type:"gesture", id:"y_spin" }` resolves to `gesture.y_spin`
+  - `{ type:"gesture", id:"spin_y" }` resolves to `gesture.spin_y`
   - `{ type:"orb_state", id:"charged" }` resolves to `orb_state.charged`
 - Action inline args are generic:
   - Any non-structural key is treated as action args.
@@ -500,7 +500,7 @@ Related index:
   id: "r_rota_yspin_charged",
   on: [
     { type: "spell", id: "rota" },
-    { type: "gesture", id: "y_spin" },
+    { type: "gesture", id: "spin_y" },
     { type: "orb_state", id: "charged" }
   ],
   then: [

@@ -103,10 +103,22 @@ export const SIGNAL_DEFINITION_COLLISIONS = Object.freeze(
 export const SIGNAL_DEFINITIONS = Object.freeze([
   ...dedupeSignalsById(GENERATED_SPELL_SIGNALS),
   Object.freeze({
-    id: "gesture.y_spin",
+    id: "gesture.spin_x",
+    type: "gesture",
+    sourceEvent: "spell_window.flat_spin_opened",
+    where: Object.freeze({ path: "axis", eq: "x" }),
+  }),
+  Object.freeze({
+    id: "gesture.spin_y",
     type: "gesture",
     sourceEvent: "spell_window.flat_spin_opened",
     where: Object.freeze({ path: "axis", eq: "y" }),
+  }),
+  Object.freeze({
+    id: "gesture.spin_z",
+    type: "gesture",
+    sourceEvent: "spell_window.flat_spin_opened",
+    where: Object.freeze({ path: "axis", eq: "z" }),
   }),
   Object.freeze({
     id: "orb_state.charged",

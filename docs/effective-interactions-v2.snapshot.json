@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-16T18:23:17.163Z",
+  "generatedAt": "2026-03-16T18:30:33.193Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -198,7 +198,7 @@
             },
             {
               "type": "gesture",
-              "id": "gesture.y_spin"
+              "id": "gesture.spin_y"
             },
             {
               "type": "orb_state",
@@ -306,7 +306,7 @@
           },
           {
             "type": "gesture",
-            "id": "y_spin"
+            "id": "spin_y"
           },
           {
             "type": "orb_state",

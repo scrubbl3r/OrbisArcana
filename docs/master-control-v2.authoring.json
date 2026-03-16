@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-16T18:23:17.218Z",
+  "generatedAt": "2026-03-16T18:30:33.248Z",
   "enabled": true,
   "defaults": {
     "wakeWin": {
@@ -163,7 +163,7 @@
           },
           {
             "type": "gesture",
-            "id": "gesture.y_spin"
+            "id": "gesture.spin_y"
           },
           {
             "type": "orb_state",

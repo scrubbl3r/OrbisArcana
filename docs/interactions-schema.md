@@ -74,8 +74,8 @@ Related index:
 
 ### Condition ID Forms
 - Condition `id` supports either:
-  - bare form: `rota`, `y_spin`, `charged`
-  - qualified form: `spell.rota`, `gesture.y_spin`, `orb_state.charged`
+  - bare form: `rota`, `spin_y`, `charged`
+  - qualified form: `spell.rota`, `gesture.spin_y`, `orb_state.charged`
 - Runtime normalization strips matching type prefix automatically.
 
 ### Wake Window Spell ID Forms
