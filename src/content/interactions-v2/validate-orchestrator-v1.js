@@ -73,7 +73,22 @@ function normalizeTriggerEntries(rawTrigger) {
           ? Object.freeze({ event: eventId })
           : Object.freeze({ event: eventId, enabled: false });
       }
-      if (spec && typeof spec === "object" && !Array.isArray(spec)) return Object.freeze({ event: eventId, args: spec });
+      if (spec && typeof spec === "object" && !Array.isArray(spec)) {
+        const hasStructuredKeys = Object.prototype.hasOwnProperty.call(spec, "enabled") ||
+          Object.prototype.hasOwnProperty.call(spec, "args");
+        if (!hasStructuredKeys) return Object.freeze({ event: eventId, args: spec });
+        const out = { event: eventId };
+        if (Object.prototype.hasOwnProperty.call(spec, "enabled")) out.enabled = spec.enabled;
+        const argsFromField = (spec.args && typeof spec.args === "object" && !Array.isArray(spec.args))
+          ? { ...spec.args }
+          : {};
+        for (const [k, v] of Object.entries(spec)) {
+          if (k === "enabled" || k === "args") continue;
+          argsFromField[k] = v;
+        }
+        if (Object.keys(argsFromField).length) out.args = argsFromField;
+        return Object.freeze(out);
+      }
       return Object.freeze({ event: eventId });
     });
   }

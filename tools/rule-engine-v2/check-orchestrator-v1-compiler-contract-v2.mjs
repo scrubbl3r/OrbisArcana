@@ -28,7 +28,7 @@ const sample = Object.freeze({
       on: Object.freeze(["spell:rota", "gesture:spin_y", "orb_state:charged"]),
       open: Object.freeze(["sanctum", "vectus"]),
       trigger: Object.freeze({
-        grace: Object.freeze({ ms: 700, mode: "boost" }),
+        grace: Object.freeze({ args: Object.freeze({ ms: 700 }), mode: "boost" }),
         aoe_electric: true,
       }),
       priority: 42,
