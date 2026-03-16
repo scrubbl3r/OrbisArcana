@@ -32,6 +32,15 @@ export const RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS = Object.freeze([
   "milestoneTrend",
 ]);
 
+export const RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS = Object.freeze([
+  "docsIndex",
+  "interactionsSchemaDoc",
+  "masterControlSchemaDoc",
+  "ruleEngineSmokeDoc",
+  "ruleEngineAuthoringDoc",
+  "ruleEngineCompatibilityDoc",
+]);
+
 export function resolveRuleEngineDocPath(key) {
   const rel = RULE_ENGINE_V2_DOC_PATHS[key];
   if (!rel) {
