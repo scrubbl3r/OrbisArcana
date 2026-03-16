@@ -8,6 +8,8 @@ import { isTrue } from "./bool-utils-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import {
   INTERACTIONS_V2,
+  buildRuleEngineFromOrchestratorV1,
+  projectOrchestratorV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
@@ -28,6 +30,21 @@ const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 
 const spellbookOk = isTrue(snapshot?.validation?.spellbookV2?.ok);
 const interactionsOk = isTrue(snapshot?.validation?.interactionsV2?.ok);
 const bootstrapUsesV2Adapter = isTrue(snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap);
+let orchestratorProjectedRuleCount = 0;
+let orchestratorProjectionParityOk = false;
+try {
+  const orchestratorProjected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
+  const compiled = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: orchestratorProjected,
+    baseRuleEngine: Object.freeze({ version: "2", rules: [] }),
+  });
+  const compiledRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
+  orchestratorProjectedRuleCount = compiledRules.length;
+  orchestratorProjectionParityOk = JSON.stringify(compiledRules) === JSON.stringify(drift?.projectedRules || []);
+} catch (_) {
+  orchestratorProjectedRuleCount = 0;
+  orchestratorProjectionParityOk = false;
+}
 const health = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.health,
   generatedAt: nowIso(),
@@ -37,6 +54,8 @@ const health = {
   projectionRulesOnly: true,
   interactionsRuleCount: Number(snapshot?.counts?.interactionsV2Rules || 0),
   projectedRuleCount,
+  orchestratorProjectedRuleCount,
+  orchestratorProjectionParityOk,
   driftRuleIds: driftIds,
 };
 const healthPath = resolveRuleEngineDocPath("health");
@@ -48,6 +67,8 @@ logDoctor(`interactions ok: ${interactionsOk}`);
 logDoctor(`bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
 logDoctor("rules mode: projection_only");
 logDoctor(`rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules || 0}/${projectedRuleCount}`);
+logDoctor(`orchestrator projected rules: ${orchestratorProjectedRuleCount}`);
+logDoctor(`orchestrator projection parity: ${orchestratorProjectionParityOk}`);
 logDoctor(`runtime-projection drift ids: ${driftIds.length}`);
 if (driftIds.length) logDoctor(`drift: ${driftIds.join(", ")}`);
 logDoctor(`wrote health: ${healthPath}`);

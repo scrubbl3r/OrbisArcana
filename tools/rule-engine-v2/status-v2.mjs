@@ -13,6 +13,12 @@ import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
+import {
+  INTERACTIONS_V2,
+  buildRulesFromInteractionsV2,
+  buildRuleEngineFromOrchestratorV1,
+  projectOrchestratorV1FromInteractionsV2,
+} from "../../src/content/interactions-v2/index.js";
 
 const CHECK_TAG = "status:v2";
 const logStatus = createTaggedLogger(CHECK_TAG);
@@ -27,6 +33,8 @@ const STATUS_LINE_LABELS = Object.freeze({
   bootstrapUsesV2: "bootstrap uses v2",
   rulesProjectionOnly: "rules projection only",
   rulesCount: "rules (interactions/projection)",
+  orchestratorProjectedRuleCount: "orchestrator projected rules",
+  orchestratorProjectionParity: "orchestrator projection parity",
   driftIds: "drift ids",
   manifestsSummary: "manifests (ready/contract/regression)",
   milestoneRuns: "milestone runs",
@@ -136,8 +144,31 @@ function normalizeHealthStatus(health) {
     projectionRulesOnly: isTrue(health?.projectionRulesOnly),
     interactionsRuleCount: toNumberOr(health?.interactionsRuleCount),
     projectedRuleCount: toNumberOr(health?.projectedRuleCount),
+    orchestratorProjectedRuleCount: toNumberOr(health?.orchestratorProjectedRuleCount),
+    orchestratorProjectionParityOk: isTrue(health?.orchestratorProjectionParityOk),
     driftRuleIds: Array.isArray(health?.driftRuleIds) ? health.driftRuleIds.slice() : [],
   };
+}
+
+function computeOrchestratorTelemetryLive() {
+  try {
+    const projected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
+    const compiled = buildRuleEngineFromOrchestratorV1({
+      orchestratorV1: projected,
+      baseRuleEngine: Object.freeze({ version: "2", rules: [] }),
+    });
+    const projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
+    const orchestratorRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
+    return Object.freeze({
+      orchestratorProjectedRuleCount: orchestratorRules.length,
+      orchestratorProjectionParityOk: JSON.stringify(projectedRules) === JSON.stringify(orchestratorRules),
+    });
+  } catch (_) {
+    return Object.freeze({
+      orchestratorProjectedRuleCount: 0,
+      orchestratorProjectionParityOk: false,
+    });
+  }
 }
 
 function normalizeTrendStatus(trend) {
@@ -157,6 +188,9 @@ const STATUS_SECTION_DEFS = Object.freeze([
 ]);
 
 const healthStatus = normalizeHealthStatus(readJsonSafe(STATUS_DOC_PATHS.health) || {});
+const orchestratorTelemetryLive = computeOrchestratorTelemetryLive();
+healthStatus.orchestratorProjectedRuleCount = orchestratorTelemetryLive.orchestratorProjectedRuleCount;
+healthStatus.orchestratorProjectionParityOk = orchestratorTelemetryLive.orchestratorProjectionParityOk;
 const trendStatus = normalizeTrendStatus(readJsonSafe(STATUS_DOC_PATHS.trend) || {});
 const manifestArtifacts = buildNamedManifestArtifacts(
   MANIFEST_VALIDATORS_V2,
@@ -175,6 +209,8 @@ const lines = [
   `${STATUS_LINE_LABELS.bootstrapUsesV2}: ${yn(healthStatus.bootstrapUsesV2Adapter)}`,
   `${STATUS_LINE_LABELS.rulesProjectionOnly}: ${yn(healthStatus.projectionRulesOnly)}`,
   `${STATUS_LINE_LABELS.rulesCount}: ${healthStatus.interactionsRuleCount}/${healthStatus.projectedRuleCount}`,
+  `${STATUS_LINE_LABELS.orchestratorProjectedRuleCount}: ${healthStatus.orchestratorProjectedRuleCount}`,
+  `${STATUS_LINE_LABELS.orchestratorProjectionParity}: ${yn(healthStatus.orchestratorProjectionParityOk)}`,
   `${STATUS_LINE_LABELS.driftIds}: ${healthStatus.driftRuleIds.length}`,
   `${STATUS_LINE_LABELS.manifestsSummary}: ${manifestArtifacts.summary}`,
   ...buildSectionStatusLines(STATUS_SECTION_LABELS.readyPhases, readyPhases, yn),
