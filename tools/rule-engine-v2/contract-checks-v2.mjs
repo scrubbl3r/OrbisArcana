@@ -70,6 +70,10 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-docs-legacy-handle-drift-v2.mjs",
   },
   {
+    id: "core_doc_registry",
+    script: "tools/rule-engine-v2/check-core-doc-registry-v2.mjs",
+  },
+  {
     id: "compatibility_doc_source_ids",
     script: "tools/rule-engine-v2/check-compatibility-doc-source-ids-v2.mjs",
   },
