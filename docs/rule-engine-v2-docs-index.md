@@ -15,7 +15,7 @@
   - [Rule Engine Compatibility](./rule-engine-compatibility.md)
 - Validation or projection drift failures:
   - [Rule Engine Authoring](./rule-engine-authoring.md)
-  - See **Generated Artifacts Quick Links** -> `Effective Interactions Snapshot`.
+  - See **Generated Artifacts Quick Links** -> `Effective Interactions Snapshot` and `Orchestrator Projection`.
 
 ## File Ownership Map
 - Authoring sources (edit directly):
@@ -122,6 +122,7 @@
 - [Generated Master Control (Markdown)](./master-control-v2.md)
 - [Generated Master Control (JSON)](./master-control-v2.json)
 - [Generated Master Control (Authoring JSON)](./master-control-v2.authoring.json)
+- [Orchestrator Projection](./orchestrator-v1.projection.json)
 - [Health Report](./rule-engine-v2.health.json)
 - [Status Snapshot](./rule-engine-v2.status.json)
 - [Milestone Smoke Report](./rule-engine-v2.milestone-smoke.json)
