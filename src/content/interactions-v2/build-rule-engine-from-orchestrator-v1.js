@@ -37,13 +37,24 @@ function normalizeOrbStateId(orbStateIdRaw) {
   return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
 }
 
-function mapTrigger(trigger) {
+function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
+  const out = {};
+  for (const [eventIdRaw, args] of Object.entries(asObj(defaultsTriggerRaw))) {
+    const eventId = normalizeEventId(eventIdRaw);
+    if (!eventId) continue;
+    out[eventId] = asObj(args);
+  }
+  return out;
+}
+
+function mapTrigger(trigger, defaultsTriggerByEvent) {
   const t = asObj(trigger);
   const eventId = normalizeEventId(t.event);
   if (!eventId) return null;
   const out = {
     type: "event",
     id: eventId,
+    ...asObj(defaultsTriggerByEvent[eventId]),
     ...asObj(t.args),
   };
   if (Object.prototype.hasOwnProperty.call(t, "enabled") && typeof t.enabled === "boolean") {
@@ -52,7 +63,7 @@ function mapTrigger(trigger) {
   return Object.freeze(out);
 }
 
-function mapOpen(open) {
+function mapOpen(open, defaultsOpen) {
   const o = asObj(open);
   const spells = Array.isArray(o.spells)
     ? o.spells.map(normalizeSpellId).filter(Boolean)
@@ -65,13 +76,16 @@ function mapOpen(open) {
   if (Object.prototype.hasOwnProperty.call(o, "enabled") && typeof o.enabled === "boolean") {
     out.enabled = o.enabled;
   }
-  if (Object.prototype.hasOwnProperty.call(o, "ttlMs") && Number.isFinite(Number(o.ttlMs))) {
-    out.ttlMs = Number(o.ttlMs);
+  const ttlMs = Object.prototype.hasOwnProperty.call(o, "ttlMs")
+    ? o.ttlMs
+    : asObj(defaultsOpen).ttlMs;
+  if (Number.isFinite(Number(ttlMs)) && Number(ttlMs) >= 0) {
+    out.ttlMs = Number(ttlMs);
   }
   return Object.freeze(out);
 }
 
-function mapRule(rule) {
+function mapRule(rule, defaults) {
   const r = asObj(rule);
   const id = asText(r.id);
   if (!id) return null;
@@ -85,10 +99,11 @@ function mapRule(rule) {
   if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
   if (!on.length) return null;
   const then = [];
-  const openAction = mapOpen(r.open);
+  const openAction = mapOpen(r.open, asObj(defaults.open));
   if (openAction) then.push(openAction);
+  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(asObj(defaults.trigger));
   const triggerActions = (Array.isArray(r.trigger) ? r.trigger : [])
-    .map(mapTrigger)
+    .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
     .filter(Boolean);
   then.push(...triggerActions);
   const out = {
@@ -113,8 +128,9 @@ export function buildRuleEngineFromOrchestratorV1({
   if (errors.length) {
     throw new Error(`ORCHESTRATOR_V1 validation failed: ${errors.join(" | ")}`);
   }
+  const defaults = asObj(orchestratorV1.defaults);
   const compiledRules = Array.isArray(orchestratorV1.rules)
-    ? orchestratorV1.rules.map(mapRule).filter(Boolean)
+    ? orchestratorV1.rules.map((rule) => mapRule(rule, defaults)).filter(Boolean)
     : [];
   return Object.freeze({
     ...baseRuleEngine,

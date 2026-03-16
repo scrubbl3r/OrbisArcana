@@ -6,7 +6,11 @@ export const ORCHESTRATOR_V1_BOOTSTRAP = Object.freeze({
 export const ORCHESTRATOR_V1 = Object.freeze({
   version: "1",
   enabled: true,
-  defaults: Object.freeze({}),
+  defaults: Object.freeze({
+    // Optional defaults for OPEN/TRIGGER actions.
+    // open: { ttlMs: 2000 },
+    // trigger: { teleport_home: { style: "orb_flash_2" } },
+  }),
   rules: Object.freeze([
     // Minimal supported shape in early slices:
     // {

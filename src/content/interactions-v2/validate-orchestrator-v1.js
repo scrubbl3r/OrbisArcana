@@ -75,6 +75,33 @@ export function validateOrchestratorV1(cfg) {
     errors.push("ORCHESTRATOR_V1.rules must be an array");
     return errors;
   }
+  if (Object.prototype.hasOwnProperty.call(target, "defaults")) {
+    const defaults = asObj(target.defaults);
+    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, ["open", "trigger"]);
+    if (Object.prototype.hasOwnProperty.call(defaults, "open")) {
+      const defaultsOpen = asObj(defaults.open);
+      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, ["ttlMs"]);
+      if (Object.prototype.hasOwnProperty.call(defaultsOpen, "ttlMs") && !isFiniteNonNegative(defaultsOpen.ttlMs)) {
+        errors.push("ORCHESTRATOR_V1.defaults.open.ttlMs must be a finite number >= 0 when present");
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(defaults, "trigger")) {
+      const defaultsTrigger = asObj(defaults.trigger);
+      for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
+        const eventId = normalizeEventId(rawEventId);
+        if (!eventId) {
+          errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
+          continue;
+        }
+        if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_BY_ID, eventId)) {
+          errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
+        }
+        if (!args || typeof args !== "object" || Array.isArray(args)) {
+          errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
+        }
+      }
+    }
+  }
 
   const ids = new Set();
   for (const rawRule of target.rules) {
