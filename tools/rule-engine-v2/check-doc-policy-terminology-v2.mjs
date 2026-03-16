@@ -1,6 +1,7 @@
 import { docRelPathsForKeysV2, RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import {
+  RULE_ENGINE_MASTER_CONTROL_COMPAT_ALIAS_LINE_V2,
   RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2,
   RULE_ENGINE_MASTER_CONTROL_TOKEN_V2,
   RULE_ENGINE_POLICY_CONTROL_TOKEN_V2,
@@ -53,11 +54,14 @@ requireTextExcludesTokensV2({
   tokens: [forbiddenProjectionToken],
   forbiddenMessage: (token) => `${schemaDocRel} contains deprecated token: ${token}`,
 });
-const masterMentions = schemaDocText.match(/RULE_ENGINE_MASTER_CONTROL/g) || [];
+const masterMentions = schemaDocText.match(new RegExp(RULE_ENGINE_MASTER_CONTROL_TOKEN_V2, "g")) || [];
 if (masterMentions.length !== 1) {
-  failCheck(CHECK_TAG, `${schemaDocRel} must contain exactly one RULE_ENGINE_MASTER_CONTROL compatibility mention`);
+  failCheck(
+    CHECK_TAG,
+    `${schemaDocRel} must contain exactly one ${RULE_ENGINE_MASTER_CONTROL_TOKEN_V2} compatibility mention`
+  );
 }
-if (!schemaDocText.includes("compatibility alias: `RULE_ENGINE_MASTER_CONTROL`")) {
+if (!schemaDocText.includes(RULE_ENGINE_MASTER_CONTROL_COMPAT_ALIAS_LINE_V2)) {
   failCheck(CHECK_TAG, `${schemaDocRel} compatibility alias line missing`);
 }
 
