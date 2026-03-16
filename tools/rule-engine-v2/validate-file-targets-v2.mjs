@@ -6,12 +6,15 @@ export function validateFileTargetsV2({ tag, targets, label }) {
   if (!Array.isArray(targets) || !targets.length) {
     failCheck(tag, `${label} must be a non-empty array`);
   }
-  for (const relPath of targets) {
-    if (!String(relPath).trim()) {
-      failCheck(tag, `${label} path is empty`);
+  for (const [index, relPath] of targets.entries()) {
+    if (typeof relPath !== "string") {
+      failCheck(tag, `${label}[${index}] path must be a string`);
+    }
+    if (!relPath.trim()) {
+      failCheck(tag, `${label}[${index}] path is empty`);
     }
     if (!existsSync(resolve(process.cwd(), relPath))) {
-      failCheck(tag, `${label} file missing: ${relPath}`);
+      failCheck(tag, `${label}[${index}] file missing: ${relPath}`);
     }
   }
 }

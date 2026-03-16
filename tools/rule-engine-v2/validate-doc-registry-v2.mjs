@@ -24,23 +24,32 @@ export function validateDocRegistryV2({
       `${label} key/path count mismatch: keys=${keysArr.length} relPaths=${relArr.length}`
     );
   }
-  const pairs = relArr.map((rel, idx) => ({ key: keysArr[idx], rel }));
-  for (const { key, rel } of pairs) {
-    if (!rel) {
-      failCheck(tag, `missing doc path for key: ${key}`);
+  const pairs = relArr.map((rel, idx) => ({ index: idx, key: keysArr[idx], rel }));
+  for (const { index, key, rel } of pairs) {
+    if (typeof key !== "string") {
+      failCheck(tag, `${label}[${index}] key must be a string`);
     }
-    if (!String(rel).startsWith("docs/")) {
-      failCheck(tag, `${label} path must be under docs/: ${key} -> ${rel}`);
+    if (rel == null) {
+      failCheck(tag, `${label}[${index}] missing doc path for key: ${key}`);
     }
-    if (requireMarkdown && !String(rel).endsWith(".md")) {
-      failCheck(tag, `${label} path must be markdown: ${key} -> ${rel}`);
+    if (typeof rel !== "string") {
+      failCheck(tag, `${label}[${index}] path must be a string: ${key}`);
+    }
+    if (!rel.trim()) {
+      failCheck(tag, `${label}[${index}] path is empty: ${key}`);
+    }
+    if (!rel.startsWith("docs/")) {
+      failCheck(tag, `${label}[${index}] path must be under docs/: ${key} -> ${rel}`);
+    }
+    if (requireMarkdown && !rel.endsWith(".md")) {
+      failCheck(tag, `${label}[${index}] path must be markdown: ${key} -> ${rel}`);
     }
     if (seenPaths.has(rel)) {
-      failCheck(tag, `duplicate ${label} path mapped: ${rel}`);
+      failCheck(tag, `${label}[${index}] duplicate path mapped: ${rel}`);
     }
     seenPaths.add(rel);
     if (!existsSync(resolve(process.cwd(), rel))) {
-      failCheck(tag, `${label} file missing on disk: ${rel}`);
+      failCheck(tag, `${label}[${index}] file missing on disk: ${rel}`);
     }
   }
 }

@@ -1,4 +1,5 @@
 import { failCheck } from "./check-fail-v2.mjs";
+import { assertSingletonRegistryV2 } from "./assert-singleton-registry-v2.mjs";
 import {
   POLICY_AUTHORING_DOC_RELS_V2,
   POLICY_SCHEMA_DOC_RELS_V2,
@@ -10,39 +11,44 @@ import {
   RULE_ENGINE_POLICY_CONTROL_TOKEN_V2,
 } from "./policy-terms-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { assertPolicyTokenContractAcrossTargetsV2 } from "./check-policy-targets-token-contract-v2.mjs";
 import { assertPolicyTokenContractV2 } from "./check-policy-token-contract-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "doc-policy-terminology:v2";
-const requiredToken = RULE_ENGINE_POLICY_CONTROL_TOKEN_V2;
-const forbiddenProjectionToken = RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2;
-
-const authoringDocs = POLICY_AUTHORING_DOC_RELS_V2;
-
-for (const rel of authoringDocs) {
-  const text = readRelativeText(rel);
-  assertPolicyTokenContractV2({
-    tag: CHECK_TAG,
-    rel,
-    text,
-    requiredTokens: [requiredToken],
-    forbiddenTokens: [forbiddenProjectionToken, RULE_ENGINE_MASTER_CONTROL_TOKEN_V2],
-    missingMessage: (token) => `${rel} must mention ${token}`,
-    forbiddenMessage: (token) =>
-      token === forbiddenProjectionToken
-        ? `${rel} contains deprecated token: ${token}`
-        : `${rel} must not reference ${token}`,
-  });
+if (!POLICY_AUTHORING_DOC_RELS_V2.length) {
+  failCheck(CHECK_TAG, "policy authoring doc rel registry must be non-empty");
 }
 
-const [schemaDocRel] = POLICY_SCHEMA_DOC_RELS_V2;
+assertPolicyTokenContractAcrossTargetsV2({
+  tag: CHECK_TAG,
+  targets: POLICY_AUTHORING_DOC_RELS_V2,
+  label: "policy authoring doc",
+  requiredTokens: [RULE_ENGINE_POLICY_CONTROL_TOKEN_V2],
+  forbiddenTokens: [
+    RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2,
+    RULE_ENGINE_MASTER_CONTROL_TOKEN_V2,
+  ],
+  missingMessage: (token, rel) => `${rel} must mention ${token}`,
+  forbiddenMessage: (token, rel) =>
+    token === RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2
+      ? `${rel} contains deprecated token: ${token}`
+      : `${rel} must not reference ${token}`,
+});
+
+assertSingletonRegistryV2({
+  tag: CHECK_TAG,
+  values: POLICY_SCHEMA_DOC_RELS_V2,
+  label: "policy schema doc rel registry",
+});
+const schemaDocRel = POLICY_SCHEMA_DOC_RELS_V2[0];
 const schemaDocText = readRelativeText(schemaDocRel);
 assertPolicyTokenContractV2({
   tag: CHECK_TAG,
   rel: schemaDocRel,
   text: schemaDocText,
-  requiredTokens: [requiredToken],
-  forbiddenTokens: [forbiddenProjectionToken],
+  requiredTokens: [RULE_ENGINE_POLICY_CONTROL_TOKEN_V2],
+  forbiddenTokens: [RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2],
   missingMessage: (token) => `${schemaDocRel} must mention ${token}`,
   forbiddenMessage: (token) => `${schemaDocRel} contains deprecated token: ${token}`,
 });
