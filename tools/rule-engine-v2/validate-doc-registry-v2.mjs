@@ -6,12 +6,16 @@ export function validateDocRegistryV2({
   tag,
   keys,
   docPaths,
+  relPaths,
   label,
   requireMarkdown = false,
 }) {
   const seenPaths = new Set();
-  for (const key of keys) {
-    const rel = docPaths[key];
+  const keysArr = Array.from(keys || []);
+  const pairs = relPaths
+    ? Array.from(relPaths || []).map((rel, idx) => ({ key: keysArr[idx], rel }))
+    : keysArr.map((key) => ({ key, rel: docPaths?.[key] }));
+  for (const { key, rel } of pairs) {
     if (!rel) {
       failCheck(tag, `missing doc path for key: ${key}`);
     }

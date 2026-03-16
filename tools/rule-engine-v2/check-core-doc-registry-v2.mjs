@@ -1,6 +1,6 @@
 import {
+  docRelPathsForKeysV2,
   RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS,
-  RULE_ENGINE_V2_DOC_PATHS,
 } from "./docs-paths-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { validateDocRegistryV2 } from "./validate-doc-registry-v2.mjs";
@@ -10,7 +10,7 @@ const CHECK_TAG = "core-doc-registry:v2";
 validateDocRegistryV2({
   tag: CHECK_TAG,
   keys: RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS,
-  docPaths: RULE_ENGINE_V2_DOC_PATHS,
+  relPaths: docRelPathsForKeysV2(RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS),
   label: "core doc",
   requireMarkdown: true,
 });
