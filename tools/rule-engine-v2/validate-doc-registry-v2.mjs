@@ -12,6 +12,12 @@ export function validateDocRegistryV2({
 }) {
   const seenPaths = new Set();
   const keysArr = Array.from(keys || []);
+  if (!keysArr.length) {
+    failCheck(tag, `${label} key registry is empty`);
+  }
+  if (!relPaths && !docPaths) {
+    failCheck(tag, `${label} validation requires docPaths or relPaths`);
+  }
   const relArr = relPaths ? Array.from(relPaths || []) : null;
   if (relArr && relArr.length !== keysArr.length) {
     failCheck(
