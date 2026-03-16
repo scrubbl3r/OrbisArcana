@@ -1,3 +1,4 @@
+import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
@@ -5,9 +6,9 @@ import { readRelativeText } from "./read-text-v2.mjs";
 const CHECK_TAG = "docs-legacy-handle-drift:v2";
 
 const docFiles = Object.freeze([
-  "docs/rule-engine-v2-docs-index.md",
-  "docs/rule-engine-authoring.md",
-  "docs/rule-engine-compatibility.md",
+  RULE_ENGINE_V2_DOC_PATHS.docsIndex,
+  RULE_ENGINE_V2_DOC_PATHS.ruleEngineAuthoringDoc,
+  RULE_ENGINE_V2_DOC_PATHS.ruleEngineCompatibilityDoc,
 ]);
 
 const forbiddenTokens = Object.freeze([
