@@ -5,11 +5,10 @@ import {
 import { failCheck } from "./check-fail-v2.mjs";
 import { docsIndexLinkTokenForRelPathV2 } from "./docs-index-tokens-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import { readRelativeText } from "./read-text-v2.mjs";
+import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
 
 const CHECK_TAG = "docs-index-core-links:v2";
-const docsIndexRel = RULE_ENGINE_V2_DOC_PATHS.docsIndex;
-const text = readRelativeText(docsIndexRel);
+const { rel: docsIndexRel, text } = readDocsIndexV2();
 
 for (const key of RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS) {
   if (key === "docsIndex") continue;

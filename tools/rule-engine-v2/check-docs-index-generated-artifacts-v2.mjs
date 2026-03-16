@@ -8,11 +8,10 @@ import {
   docsIndexOwnershipTokenForRelPathV2,
 } from "./docs-index-tokens-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import { readRelativeText } from "./read-text-v2.mjs";
+import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
 
 const CHECK_TAG = "docs-index-generated-artifacts:v2";
-const indexRel = RULE_ENGINE_V2_DOC_PATHS.docsIndex;
-const text = readRelativeText(indexRel);
+const { rel: indexRel, text } = readDocsIndexV2();
 
 for (const key of RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS) {
   const rel = RULE_ENGINE_V2_DOC_PATHS[key];
