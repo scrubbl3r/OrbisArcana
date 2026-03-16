@@ -8,6 +8,10 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 const CHECK_TAG = "rule-source-contract:v2";
 
 const expectedSourceIds = Object.freeze([
+  "orchestrator_v1",
+  "orchestrator_v1_fallback",
+  "orchestrator_v1_disabled",
+  "orchestrator_v1_missing_builder",
   "interactions_adapter",
   "interactions_adapter_fallback",
   "interactions_bootstrap_disabled",
