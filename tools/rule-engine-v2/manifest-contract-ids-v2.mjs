@@ -25,6 +25,7 @@ export const REQUIRED_CONTRACT_CHECK_IDS_V2 = Object.freeze([
   "orchestrator_v1_bootstrap_defaults",
   "orchestrator_v1_bootstrap_parity",
   "orchestrator_v1_bootstrap_projection_toggle",
+  "orchestrator_projection_doc",
   "doc_policy",
   "validator_policy",
   "compat_surface",

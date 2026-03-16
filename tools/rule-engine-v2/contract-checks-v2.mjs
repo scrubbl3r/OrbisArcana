@@ -46,6 +46,10 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-orchestrator-v1-bootstrap-projection-toggle-contract-v2.mjs",
   },
   {
+    id: "orchestrator_projection_doc",
+    script: "tools/rule-engine-v2/check-orchestrator-projection-doc-contract-v2.mjs",
+  },
+  {
     id: "doc_policy",
     script: "tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
   },

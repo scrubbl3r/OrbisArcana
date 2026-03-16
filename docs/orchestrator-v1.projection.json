@@ -1,0 +1,95 @@
+{
+  "schema": "orbis.orchestrator_v1.projection",
+  "generatedAt": "2026-03-16T19:07:48.293Z",
+  "source": "projected_from_interactions_v2",
+  "projection": {
+    "version": "1",
+    "enabled": true,
+    "defaults": {},
+    "rules": [
+      {
+        "id": "r_fridgis_immediate",
+        "on": [
+          "spell:fridgis"
+        ],
+        "trigger": [
+          {
+            "event": "aoe_frost"
+          }
+        ]
+      },
+      {
+        "id": "r_electrum_immediate",
+        "on": [
+          "spell:electrum"
+        ],
+        "trigger": [
+          {
+            "event": "aoe_electric"
+          }
+        ]
+      },
+      {
+        "id": "r_pyro_immediate",
+        "on": [
+          "spell:pyro"
+        ],
+        "trigger": [
+          {
+            "event": "aoe_flame"
+          }
+        ]
+      },
+      {
+        "id": "r_domus_immediate",
+        "on": [
+          "spell:domus"
+        ],
+        "trigger": [
+          {
+            "event": "teleport_home"
+          }
+        ]
+      },
+      {
+        "id": "r_rota_yspin_charged",
+        "on": [
+          "spell:rota",
+          "gesture:spin_y",
+          "orb_state:charged"
+        ],
+        "open": {
+          "spells": [
+            "rota",
+            "sanctum",
+            "vectus"
+          ],
+          "ttlMs": 2000
+        },
+        "trigger": [
+          {
+            "event": "aoe_electric",
+            "args": {
+              "range": 14
+            }
+          },
+          {
+            "event": "grace",
+            "args": {
+              "ms": 500
+            }
+          },
+          {
+            "event": "orb_state",
+            "args": {
+              "state": "superheated"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "counts": {
+    "rules": 5
+  }
+}

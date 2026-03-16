@@ -110,5 +110,6 @@ if (driftIds.length) {
 
 runScriptOrFail("effective snapshot generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeEffectiveSnapshot);
 runScriptOrFail("master control doc generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeMasterControlDoc);
+runScriptOrFail("orchestrator projection doc generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeOrchestratorProjectionDoc);
 
 logPreSmoke("OK: validators passed + effective snapshot refreshed");

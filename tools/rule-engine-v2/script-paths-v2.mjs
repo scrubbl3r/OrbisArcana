@@ -5,4 +5,5 @@ export const RULE_ENGINE_V2_SCRIPT_PATHS = Object.freeze({
   milestoneTrend: "tools/rule-engine-v2/milestone-trend-v2.mjs",
   writeEffectiveSnapshot: "tools/rule-engine-v2/write-effective-snapshot.mjs",
   writeMasterControlDoc: "tools/rule-engine-v2/write-master-control-doc-v2.mjs",
+  writeOrchestratorProjectionDoc: "tools/rule-engine-v2/write-orchestrator-projection-doc-v2.mjs",
 });

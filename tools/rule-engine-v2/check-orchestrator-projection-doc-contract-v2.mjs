@@ -1,0 +1,53 @@
+import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
+import { readJsonCore } from "./read-json-core-v2.mjs";
+import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
+import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
+import {
+  INTERACTIONS_V2,
+  projectOrchestratorV1FromInteractionsV2,
+  validateOrchestratorV1,
+} from "../../src/content/interactions-v2/index.js";
+
+const CHECK_TAG = "orchestrator-projection-doc-contract:v2";
+
+const docPath = resolveRuleEngineDocPath("orchestratorProjectionJson");
+const loaded = readJsonCore(docPath);
+if (!loaded.ok) {
+  failCheck(CHECK_TAG, `unable to read projection doc (${loaded.error?.message || loaded.error})`);
+}
+
+const doc = loaded.value || {};
+if (String(doc.schema || "") !== RULE_ENGINE_V2_SCHEMA_IDS.orchestratorProjection) {
+  failCheck(CHECK_TAG, `unexpected schema: ${String(doc.schema || "")}`);
+}
+if (String(doc.source || "") !== "projected_from_interactions_v2") {
+  failCheck(CHECK_TAG, `unexpected source: ${String(doc.source || "")}`);
+}
+
+const projection = doc.projection;
+if (!projection || typeof projection !== "object") {
+  failCheck(CHECK_TAG, "projection payload missing");
+}
+
+const validationErrors = validateOrchestratorV1(projection);
+if (validationErrors.length) {
+  failCheckWithDetails(CHECK_TAG, "projection payload invalid", validationErrors);
+}
+
+const expected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
+const lhs = JSON.stringify(projection);
+const rhs = JSON.stringify(expected);
+if (lhs !== rhs) {
+  failCheckWithDetails(CHECK_TAG, "projection doc drift from interactions projection", [
+    `doc: ${lhs}`,
+    `expected: ${rhs}`,
+  ]);
+}
+
+const ruleCount = Array.isArray(projection.rules) ? projection.rules.length : 0;
+if (Number(doc?.counts?.rules) !== ruleCount) {
+  failCheck(CHECK_TAG, `counts.rules mismatch: doc=${doc?.counts?.rules} actual=${ruleCount}`);
+}
+
+reportCheckPass(CHECK_TAG, "orchestrator projection doc is current and valid");
