@@ -1,5 +1,10 @@
 import { docRelPathsForKeysV2, RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
+import {
+  RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2,
+  RULE_ENGINE_MASTER_CONTROL_TOKEN_V2,
+  RULE_ENGINE_POLICY_CONTROL_TOKEN_V2,
+} from "./policy-terms-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import {
   requireTextExcludesTokensV2,
@@ -8,8 +13,8 @@ import {
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "doc-policy-terminology:v2";
-const requiredToken = "RULE_ENGINE_POLICY_CONTROL";
-const forbiddenProjectionToken = "RULE_ENGINE_MASTER_CONTROL.execution.projectionRulesOnly";
+const requiredToken = RULE_ENGINE_POLICY_CONTROL_TOKEN_V2;
+const forbiddenProjectionToken = RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2;
 
 const authoringDocs = Object.freeze(
   docRelPathsForKeysV2(["ruleEngineAuthoringDoc", "ruleEngineCompatibilityDoc"])
@@ -26,7 +31,7 @@ for (const rel of authoringDocs) {
   requireTextExcludesTokensV2({
     tag: CHECK_TAG,
     text,
-    tokens: [forbiddenProjectionToken, "RULE_ENGINE_MASTER_CONTROL"],
+    tokens: [forbiddenProjectionToken, RULE_ENGINE_MASTER_CONTROL_TOKEN_V2],
     forbiddenMessage: (token) =>
       token === forbiddenProjectionToken
         ? `${rel} contains deprecated token: ${token}`

@@ -1,5 +1,9 @@
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import {
+  RULE_ENGINE_MASTER_CONTROL_TOKEN_V2,
+  RULE_ENGINE_POLICY_CONTROL_TOKEN_V2,
+} from "./policy-terms-v2.mjs";
+import {
   requireTextExcludesTokensV2,
   requireTextIncludesTokensV2,
 } from "./check-token-assertions-v2.mjs";
@@ -10,8 +14,8 @@ const targets = [
   "src/runtime/receiver-bootstrap.js",
 ];
 
-const forbidden = "RULE_ENGINE_MASTER_CONTROL";
-const required = "RULE_ENGINE_POLICY_CONTROL";
+const forbidden = RULE_ENGINE_MASTER_CONTROL_TOKEN_V2;
+const required = RULE_ENGINE_POLICY_CONTROL_TOKEN_V2;
 
 for (const rel of targets) {
   const text = readRelativeText(rel);

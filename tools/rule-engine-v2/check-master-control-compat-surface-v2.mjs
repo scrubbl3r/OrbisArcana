@@ -19,6 +19,7 @@ const allowed = new Set([
   "tools/rule-engine-v2/check-runtime-policy-import-contract-v2.mjs",
   "tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
   "tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs",
+  "tools/rule-engine-v2/policy-terms-v2.mjs",
   "tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs",
   RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc,
 ]);
