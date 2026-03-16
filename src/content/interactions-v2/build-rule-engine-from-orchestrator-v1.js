@@ -168,6 +168,12 @@ function mapRule(rule, defaults) {
   if (Object.prototype.hasOwnProperty.call(r, "priority") && Number.isFinite(Number(r.priority))) {
     out.priority = Number(r.priority);
   }
+  if (Object.prototype.hasOwnProperty.call(r, "cooldownMs") && Number.isFinite(Number(r.cooldownMs))) {
+    out.cooldownMs = Math.max(0, Number(r.cooldownMs));
+  }
+  if (Object.prototype.hasOwnProperty.call(r, "matchWindowMs") && Number.isFinite(Number(r.matchWindowMs))) {
+    out.matchWindowMs = Math.max(100, Number(r.matchWindowMs));
+  }
   return Object.freeze(out);
 }
 

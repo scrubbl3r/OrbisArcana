@@ -16,6 +16,8 @@ export const ORCHESTRATOR_V1 = Object.freeze({
     // {
     //   id: "o_example",
     //   on: { spell: ["orbis", "rota"], gesture: "spin_y", orb_state: "charged" },
+    //   cooldownMs: 250,
+    //   matchWindowMs: 2200,
     //   open: ["domus", "electrum"],
     //   trigger: ["teleport_home", { event: "grace", args: { ms: 700 } }],
     // },
