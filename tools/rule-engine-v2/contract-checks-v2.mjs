@@ -66,6 +66,10 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-docs-index-canonical-signals-v2.mjs",
   },
   {
+    id: "docs_legacy_handle_drift",
+    script: "tools/rule-engine-v2/check-docs-legacy-handle-drift-v2.mjs",
+  },
+  {
     id: "compatibility_doc_source_ids",
     script: "tools/rule-engine-v2/check-compatibility-doc-source-ids-v2.mjs",
   },
