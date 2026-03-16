@@ -28,6 +28,7 @@ export const REQUIRED_CONTRACT_CHECK_IDS_V2 = Object.freeze([
   "orchestrator_projection_doc",
   "master_control_orchestrator_section",
   "docs_index_orchestrator_links",
+  "docs_index_generated_artifacts",
   "compatibility_doc_source_ids",
   "doc_policy",
   "validator_policy",

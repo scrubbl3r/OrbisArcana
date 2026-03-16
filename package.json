@@ -26,6 +26,7 @@
     "check:orchestrator-projection-doc:v2": "node tools/rule-engine-v2/check-orchestrator-projection-doc-contract-v2.mjs",
     "check:master-control-orchestrator-section:v2": "node tools/rule-engine-v2/check-master-control-orchestrator-section-v2.mjs",
     "check:docs-index-orchestrator-links:v2": "node tools/rule-engine-v2/check-docs-index-orchestrator-links-v2.mjs",
+    "check:docs-index-generated-artifacts:v2": "node tools/rule-engine-v2/check-docs-index-generated-artifacts-v2.mjs",
     "check:compatibility-doc-source-ids:v2": "node tools/rule-engine-v2/check-compatibility-doc-source-ids-v2.mjs",
     "check:doc-policy-terminology:v2": "node tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
     "check:validator-policy-terminology:v2": "node tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs",
