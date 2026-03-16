@@ -1,25 +1,39 @@
-function text(v) {
-  return String(v || "").trim();
-}
-
 export function normalizeManifestEntries(manifestName, entries) {
-  return (Array.isArray(entries) ? entries : []).map((entry) => ({
-    manifest: manifestName,
-    id: text(entry?.id),
-    script: text(entry?.script),
-  }));
+  const manifest = typeof manifestName === "string" ? manifestName.trim() : "";
+  if (!manifest) {
+    throw new Error("normalizeManifestEntries requires non-empty manifestName");
+  }
+  if (!Array.isArray(entries)) {
+    throw new Error(`normalizeManifestEntries '${manifest}' entries must be an array`);
+  }
+  return entries.map((entry, index) => {
+    if (!entry || typeof entry !== "object") {
+      throw new Error(`normalizeManifestEntries '${manifest}' entry[${index}] must be an object`);
+    }
+    const id = typeof entry.id === "string" ? entry.id.trim() : "";
+    const script = typeof entry.script === "string" ? entry.script.trim() : "";
+    if (!id) {
+      throw new Error(`normalizeManifestEntries '${manifest}' entry[${index}] id must be non-empty`);
+    }
+    if (!script) {
+      throw new Error(`normalizeManifestEntries '${manifest}' entry[${index}] script must be non-empty`);
+    }
+    return { manifest, id, script };
+  });
 }
 
 export function findSharedScripts(leftEntries, rightEntries) {
+  const toScriptList = (values) =>
+    (Array.isArray(values) ? values : [])
+      .map((entry) => (typeof entry?.script === "string" ? entry.script.trim() : ""))
+      .filter(Boolean);
+
   const leftScripts = new Set(
-    (Array.isArray(leftEntries) ? leftEntries : [])
-      .map((entry) => text(entry?.script))
-      .filter(Boolean)
+    toScriptList(leftEntries)
   );
 
   const shared = new Set();
-  for (const entry of Array.isArray(rightEntries) ? rightEntries : []) {
-    const script = text(entry?.script);
+  for (const script of toScriptList(rightEntries)) {
     if (script && leftScripts.has(script)) shared.add(script);
   }
 

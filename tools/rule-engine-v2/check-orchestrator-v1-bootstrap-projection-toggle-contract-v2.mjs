@@ -55,11 +55,12 @@ const schema = captured.ruleSchema;
 if (!schema || typeof schema !== "object") {
   failCheck(CHECK_TAG, "setRuleSchema was not called");
 }
+const source = typeof schema.source === "string" ? schema.source : "";
 
-if (schema.source !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V1) {
+if (source !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V1) {
   failCheck(
     CHECK_TAG,
-    `expected source=${RULE_ENGINE_SOURCES.ORCHESTRATOR_V1}, got ${String(schema.source || "")}`
+    `expected source=${RULE_ENGINE_SOURCES.ORCHESTRATOR_V1}, got ${source}`
   );
 }
 

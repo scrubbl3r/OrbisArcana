@@ -12,44 +12,48 @@ import {
 } from "./policy-targets-v2.mjs";
 
 const CHECK_TAG = "policy-targets-registry:v2";
-const POLICY_SCHEMA_DOC_KEY_REGISTRY_LABEL = "policy schema doc key registry";
-const POLICY_SCHEMA_DOC_REL_REGISTRY_LABEL = "policy schema doc rel registry";
-const POLICY_VALIDATOR_TARGET_REGISTRY_LABEL = "policy validator target registry";
-const POLICY_RUNTIME_IMPORT_TARGETS_LABEL = "policy runtime import targets";
-const POLICY_VALIDATOR_TARGETS_LABEL = "policy validator targets";
+const POLICY_LABELS = Object.freeze({
+  schemaDocKeyRegistry: "policy schema doc key registry",
+  schemaDocRelRegistry: "policy schema doc rel registry",
+  validatorTargetRegistry: "policy validator target registry",
+  runtimeImportTargets: "policy runtime import targets",
+  validatorTargets: "policy validator targets",
+  authoringDocs: "policy authoring docs",
+  schemaDoc: "policy schema doc",
+});
 
 assertSingletonRegistryV2({
   tag: CHECK_TAG,
   values: POLICY_SCHEMA_DOC_KEYS_V2,
-  label: POLICY_SCHEMA_DOC_KEY_REGISTRY_LABEL,
+  label: POLICY_LABELS.schemaDocKeyRegistry,
 });
 assertSingletonRegistryV2({
   tag: CHECK_TAG,
   values: POLICY_SCHEMA_DOC_RELS_V2,
-  label: POLICY_SCHEMA_DOC_REL_REGISTRY_LABEL,
+  label: POLICY_LABELS.schemaDocRelRegistry,
 });
 assertSingletonRegistryV2({
   tag: CHECK_TAG,
   values: POLICY_VALIDATOR_TARGETS_V2,
-  label: POLICY_VALIDATOR_TARGET_REGISTRY_LABEL,
+  label: POLICY_LABELS.validatorTargetRegistry,
 });
 
 validateFileTargetsV2({
   tag: CHECK_TAG,
   targets: POLICY_RUNTIME_IMPORT_TARGETS_V2,
-  label: POLICY_RUNTIME_IMPORT_TARGETS_LABEL,
+  label: POLICY_LABELS.runtimeImportTargets,
 });
 validateFileTargetsV2({
   tag: CHECK_TAG,
   targets: POLICY_VALIDATOR_TARGETS_V2,
-  label: POLICY_VALIDATOR_TARGETS_LABEL,
+  label: POLICY_LABELS.validatorTargets,
 });
 
 validateDocRegistryV2({
   tag: CHECK_TAG,
   keys: POLICY_AUTHORING_DOC_KEYS_V2,
   relPaths: POLICY_AUTHORING_DOC_RELS_V2,
-  label: "policy authoring docs",
+  label: POLICY_LABELS.authoringDocs,
   requireMarkdown: true,
 });
 
@@ -57,7 +61,7 @@ validateDocRegistryV2({
   tag: CHECK_TAG,
   keys: POLICY_SCHEMA_DOC_KEYS_V2,
   relPaths: POLICY_SCHEMA_DOC_RELS_V2,
-  label: "policy schema doc",
+  label: POLICY_LABELS.schemaDoc,
   requireMarkdown: true,
 });
 

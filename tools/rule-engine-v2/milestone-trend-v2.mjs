@@ -29,7 +29,7 @@ function latestResultText(summary) {
 }
 
 function asTrimmedText(value) {
-  return String(value || "").trim();
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function asList(entries) {
@@ -51,15 +51,15 @@ function pct(part, total) {
 function summarize(history, lookback) {
   const all = asList(history);
   const recent = all.slice(-Math.max(1, lookback));
-  const passAll = all.filter((r) => isTrue(r && r.pass)).length;
-  const passRecent = recent.filter((r) => isTrue(r && r.pass)).length;
+  const passAll = all.filter((r) => isTrue(r?.pass)).length;
+  const passRecent = recent.filter((r) => isTrue(r?.pass)).length;
   const latest = all.length ? all[all.length - 1] : null;
   return {
     totalRuns: all.length,
     recentWindow: recent.length,
     passRateAllPct: pct(passAll, all.length),
     passRateRecentPct: pct(passRecent, recent.length),
-    latestPass: isTrue(latest && latest.pass),
+    latestPass: isTrue(latest?.pass),
     latestGeneratedAt: latest ? asTrimmedText(latest.generatedAt) : "",
     latestGitRef: latest ? asTrimmedText(latest.gitRef) : "",
   };

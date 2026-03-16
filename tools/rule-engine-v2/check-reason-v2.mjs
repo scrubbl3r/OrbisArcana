@@ -4,7 +4,7 @@ export const CHECK_REASONS_V2 = Object.freeze({
 });
 
 export function reasonText(v) {
-  return String(v && v.reason || "");
+  return typeof v?.reason === "string" ? v.reason : "";
 }
 
 export function reasonList(values) {
@@ -12,5 +12,6 @@ export function reasonList(values) {
 }
 
 export function hasReason(values, expectedReason) {
-  return reasonList(values).includes(String(expectedReason || ""));
+  const reason = typeof expectedReason === "string" ? expectedReason : "";
+  return reasonList(values).includes(reason);
 }

@@ -8,16 +8,20 @@ import { POLICY_RUNTIME_IMPORT_TARGETS_V2 } from "./policy-targets-v2.mjs";
 import { assertPolicyTokenContractAcrossTargetsV2 } from "./check-policy-targets-token-contract-v2.mjs";
 
 const CHECK_TAG = "runtime-policy-import-contract:v2";
+const LABELS = Object.freeze({
+  targetRegistry: "policy runtime import target registry",
+  target: "policy runtime import target",
+});
 assertSingletonRegistryV2({
   tag: CHECK_TAG,
   values: POLICY_RUNTIME_IMPORT_TARGETS_V2,
-  label: "policy runtime import target registry",
+  label: LABELS.targetRegistry,
 });
 
 assertPolicyTokenContractAcrossTargetsV2({
   tag: CHECK_TAG,
   targets: POLICY_RUNTIME_IMPORT_TARGETS_V2,
-  label: "policy runtime import target",
+  label: LABELS.target,
   requiredTokens: [RULE_ENGINE_POLICY_CONTROL_TOKEN_V2],
   forbiddenTokens: [RULE_ENGINE_MASTER_CONTROL_TOKEN_V2],
 });

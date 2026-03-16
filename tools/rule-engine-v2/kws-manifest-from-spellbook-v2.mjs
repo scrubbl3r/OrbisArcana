@@ -24,12 +24,12 @@ export function buildKwsManifestFromSpellbookV2(spellbook = SPELLBOOK_V2) {
 }
 
 export function normalizeKwsManifest(input) {
-  const models = Array.isArray(input && input.models) ? input.models : [];
+  const models = Array.isArray(input?.models) ? input.models : [];
   return {
     models: models.map((m) => ({
-      path: asTrimText(m && m.path || ""),
-      label: asLowerText(m && m.label || ""),
-      token: asLowerText(m && m.token || ""),
+      path: asTrimText(m?.path),
+      label: asLowerText(m?.label),
+      token: asLowerText(m?.token),
     })),
   };
 }

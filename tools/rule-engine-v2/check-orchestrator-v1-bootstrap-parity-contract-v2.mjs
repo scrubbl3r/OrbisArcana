@@ -77,16 +77,22 @@ const schemaFromProjectedOrchestrator = runScenario({
   interactionsBootstrap: { useInReceiverBootstrap: true },
 });
 
-if (schemaFromInteractions.source !== RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER) {
+const interactionsSource = typeof schemaFromInteractions.source === "string"
+  ? schemaFromInteractions.source
+  : "";
+if (interactionsSource !== RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER) {
   failCheck(
     CHECK_TAG,
-    `expected interactions source=${RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER}, got ${String(schemaFromInteractions.source || "")}`
+    `expected interactions source=${RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER}, got ${interactionsSource}`
   );
 }
-if (schemaFromProjectedOrchestrator.source !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED) {
+const projectedSource = typeof schemaFromProjectedOrchestrator.source === "string"
+  ? schemaFromProjectedOrchestrator.source
+  : "";
+if (projectedSource !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED) {
   failCheck(
     CHECK_TAG,
-    `expected projected source=${RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED}, got ${String(schemaFromProjectedOrchestrator.source || "")}`
+    `expected projected source=${RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED}, got ${projectedSource}`
   );
 }
 

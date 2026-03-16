@@ -16,15 +16,20 @@ export const MANIFEST_CHECK_GROUPS_V2 = Object.freeze([
 ]);
 
 function asManifestGroupsV2(groups = MANIFEST_CHECK_GROUPS_V2) {
-  return Array.isArray(groups) ? groups : [];
+  if (!Array.isArray(groups)) {
+    throw new Error("manifest check groups must be an array");
+  }
+  return groups;
 }
 
 function manifestGroupNameTextV2(groupName) {
-  return String(groupName || "").trim();
+  return typeof groupName === "string" ? groupName.trim() : "";
 }
 
 export function flattenManifestChecksV2(groups = MANIFEST_CHECK_GROUPS_V2) {
-  return asManifestGroupsV2(groups).flatMap((group) => group?.entries || []);
+  return asManifestGroupsV2(groups).flatMap((group) =>
+    Array.isArray(group?.entries) ? group.entries : []
+  );
 }
 
 export function flattenManifestChecksExcludingV2(excludedGroupName, groups = MANIFEST_CHECK_GROUPS_V2) {

@@ -32,7 +32,8 @@ function asList(entries) {
 
 function runReadyChecks(entries, failurePrefix, getId) {
   for (const entry of asList(entries)) {
-    const id = String(getId(entry) || "").trim();
+    const rawId = getId(entry);
+    const id = typeof rawId === "string" ? rawId.trim() : "";
     runReadyCheck({
       message: formatReadyFailureMessage(failurePrefix, id),
       script: entry?.script,

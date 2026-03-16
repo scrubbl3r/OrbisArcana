@@ -44,7 +44,8 @@ function runScenario({ wakeWindowToken, expectedSpellId, shakeGroup = "" }) {
   const mode = shakeGroup ? `group:${shakeGroup}` : "group:(fallback)";
   assertCheck(casts.length === 1, `[${CHECK_TAG}] expected 1 cast for ${wakeWindowToken} (${mode}), got ${casts.length}`);
   assertCheck(spellIdText(casts[0]) === expectedSpellId, `[${CHECK_TAG}] expected spellId=${expectedSpellId}, got ${spellIdText(casts[0])}`);
-  assertCheck(String(casts[0].trigger || "") === "shake_detonation", `[${CHECK_TAG}] expected trigger=shake_detonation for ${wakeWindowToken}`);
+  const trigger = typeof casts[0]?.trigger === "string" ? casts[0].trigger : "";
+  assertCheck(trigger === "shake_detonation", `[${CHECK_TAG}] expected trigger=shake_detonation for ${wakeWindowToken}`);
 }
 
 function main() {

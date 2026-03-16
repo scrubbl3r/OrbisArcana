@@ -8,7 +8,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 const CHECK_TAG = "script-registry:v2";
 
 function text(v) {
-  return String(v || "").trim();
+  return typeof v === "string" ? v.trim() : "";
 }
 
 function resolveScriptNameForCheck(id, overrides) {

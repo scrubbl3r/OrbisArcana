@@ -9,7 +9,7 @@ export function runManifestIdCheck({
   entryLabel = "manifest",
   itemLabel = "check",
 }) {
-  runOrFail(String(tag || ""), () => {
+  runOrFail(tag, () => {
     assertManifestIdContract({
       entries,
       requiredIds,

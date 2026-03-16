@@ -45,8 +45,10 @@ function runScenario({ axisSpellId, wakeWindowToken, expectedLoadedSpellId, expe
   assertCheck(axisSelected.length === 1, `[${CHECK_TAG}] expected axis select for ${axisSpellId} + ${wakeWindowToken}`);
   assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected one loaded spell for ${axisSpellId} + ${wakeWindowToken}`);
   assertCheck(spellIdText(loaded[0]) === expectedLoadedSpellId, `[${CHECK_TAG}] expected loaded spell ${expectedLoadedSpellId}, got ${spellIdText(loaded[0])}`);
-  assertCheck(String(loaded[0].axis || "") === CHECK_AXES_V2.y, `[${CHECK_TAG}] expected axis ${CHECK_AXES_V2.y}, got ${loaded[0].axis || ""}`);
-  assertCheck(String(loaded[0].slot || "") === expectedSlot, `[${CHECK_TAG}] expected slot ${expectedSlot}, got ${loaded[0].slot || ""}`);
+  const axis = typeof loaded[0]?.axis === "string" ? loaded[0].axis : "";
+  const slot = typeof loaded[0]?.slot === "string" ? loaded[0].slot : "";
+  assertCheck(axis === CHECK_AXES_V2.y, `[${CHECK_TAG}] expected axis ${CHECK_AXES_V2.y}, got ${axis}`);
+  assertCheck(slot === expectedSlot, `[${CHECK_TAG}] expected slot ${expectedSlot}, got ${slot}`);
 }
 
 function main() {

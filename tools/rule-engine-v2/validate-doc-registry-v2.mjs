@@ -2,6 +2,16 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
 
+function toArrayOrFailV2({ value, tag, label, field }) {
+  if (value == null) {
+    failCheck(tag, `${label} validation requires ${field}`);
+  }
+  if (typeof value[Symbol.iterator] !== "function") {
+    failCheck(tag, `${label} ${field} must be iterable`);
+  }
+  return Array.from(value);
+}
+
 export function validateDocRegistryV2({
   tag,
   keys,
@@ -9,25 +19,32 @@ export function validateDocRegistryV2({
   label,
   requireMarkdown = false,
 }) {
+  if (!tag) {
+    failCheck("validate-doc-registry:v2", "doc registry validation requires check tag");
+  }
   const seenPaths = new Set();
-  const keysArr = Array.from(keys);
+  if (!label) {
+    failCheck(tag, "doc registry validation requires label");
+  }
+  const keysArr = toArrayOrFailV2({ value: keys, tag, label, field: "keys" });
   if (!keysArr.length) {
     failCheck(tag, `${label} key registry is empty`);
   }
-  if (!relPaths) {
-    failCheck(tag, `${label} validation requires relPaths`);
-  }
-  const relArr = Array.from(relPaths);
+  const relArr = toArrayOrFailV2({ value: relPaths, tag, label, field: "relPaths" });
   if (relArr.length !== keysArr.length) {
     failCheck(
       tag,
       `${label} key/path count mismatch: keys=${keysArr.length} relPaths=${relArr.length}`
     );
   }
-  const pairs = relArr.map((rel, idx) => ({ index: idx, key: keysArr[idx], rel }));
-  for (const { index, key, rel } of pairs) {
+  for (let index = 0; index < relArr.length; index += 1) {
+    const key = keysArr[index];
+    const rel = relArr[index];
     if (typeof key !== "string") {
       failCheck(tag, `${label}[${index}] key must be a string`);
+    }
+    if (!key.trim()) {
+      failCheck(tag, `${label}[${index}] key must be a non-empty string`);
     }
     if (rel == null) {
       failCheck(tag, `${label}[${index}] missing doc path for key: ${key}`);

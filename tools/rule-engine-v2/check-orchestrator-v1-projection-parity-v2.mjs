@@ -23,10 +23,13 @@ try {
     baseRuleEngine: Object.freeze({ version: "2", rules: [] }),
   });
 } catch (err) {
-  failCheck(CHECK_TAG, `orchestrator projection build failed: ${err instanceof Error ? err.message : String(err)}`);
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `orchestrator projection build failed: ${msg}`);
 }
 
-const rebuiltRules = Array.isArray(rebuilt && rebuilt.rules) ? rebuilt.rules : [];
+const rebuiltRules = Array.isArray(rebuilt?.rules) ? rebuilt.rules : [];
 const lhs = JSON.stringify(projectedRules);
 const rhs = JSON.stringify(rebuiltRules);
 if (lhs !== rhs) {

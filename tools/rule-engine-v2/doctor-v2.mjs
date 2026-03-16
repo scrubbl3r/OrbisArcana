@@ -40,7 +40,8 @@ try {
   });
   const compiledRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
   orchestratorProjectedRuleCount = compiledRules.length;
-  orchestratorProjectionParityOk = JSON.stringify(compiledRules) === JSON.stringify(drift?.projectedRules || []);
+  const projectedRules = Array.isArray(drift?.projectedRules) ? drift.projectedRules : [];
+  orchestratorProjectionParityOk = JSON.stringify(compiledRules) === JSON.stringify(projectedRules);
 } catch (_) {
   orchestratorProjectedRuleCount = 0;
   orchestratorProjectionParityOk = false;
@@ -52,7 +53,7 @@ const health = {
   interactionsOk,
   bootstrapUsesV2Adapter,
   projectionRulesOnly: true,
-  interactionsRuleCount: Number(snapshot?.counts?.interactionsV2Rules || 0),
+  interactionsRuleCount: Number(snapshot?.counts?.interactionsV2Rules ?? 0),
   projectedRuleCount,
   orchestratorProjectedRuleCount,
   orchestratorProjectionParityOk,
@@ -66,7 +67,7 @@ logDoctor(`spellbook ok: ${spellbookOk}`);
 logDoctor(`interactions ok: ${interactionsOk}`);
 logDoctor(`bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
 logDoctor("rules mode: projection_only");
-logDoctor(`rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules || 0}/${projectedRuleCount}`);
+logDoctor(`rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules ?? 0}/${projectedRuleCount}`);
 logDoctor(`orchestrator projected rules: ${orchestratorProjectedRuleCount}`);
 logDoctor(`orchestrator projection parity: ${orchestratorProjectionParityOk}`);
 logDoctor(`runtime-projection drift ids: ${driftIds.length}`);

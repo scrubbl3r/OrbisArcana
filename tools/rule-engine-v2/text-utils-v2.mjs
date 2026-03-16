@@ -1,7 +1,7 @@
 export function asLowerText(v) {
-  return String(v == null ? "" : v).trim().toLowerCase();
+  return typeof v === "string" ? v.trim().toLowerCase() : "";
 }
 
 export function asTrimText(v) {
-  return String(v == null ? "" : v).trim();
+  return typeof v === "string" ? v.trim() : "";
 }

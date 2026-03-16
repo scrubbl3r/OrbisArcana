@@ -3,6 +3,15 @@ import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
 
 export function validateFileTargetsV2({ tag, targets, label }) {
+  if (!tag) {
+    failCheck("validate-file-targets:v2", "file target validation requires check tag");
+  }
+  if (!label) {
+    failCheck(tag, "file target validation requires label");
+  }
+  if (!targets) {
+    failCheck(tag, `${label} validation requires targets`);
+  }
   if (!Array.isArray(targets) || !targets.length) {
     failCheck(tag, `${label} must be a non-empty array`);
   }

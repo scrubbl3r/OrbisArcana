@@ -6,7 +6,7 @@ import {
 function toRuleMap(rules) {
   const out = new Map();
   for (const rule of Array.isArray(rules) ? rules : []) {
-    const id = String(rule && rule.id || "").trim();
+    const id = typeof rule?.id === "string" ? rule.id.trim() : "";
     if (!id) continue;
     out.set(id, rule);
   }

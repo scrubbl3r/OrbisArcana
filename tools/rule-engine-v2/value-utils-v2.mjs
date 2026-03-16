@@ -4,5 +4,5 @@ export function toNumberOr(v, fallback = 0) {
 }
 
 export function toTrimmedText(v) {
-  return String(v == null ? "" : v).trim();
+  return typeof v === "string" ? v.trim() : "";
 }

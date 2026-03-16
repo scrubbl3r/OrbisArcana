@@ -14,7 +14,7 @@ export function emitWakeLoadPrelude({
   wakeIntent = CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
   stepMs = 10,
 }) {
-  const startAt = Number(nowRef && nowRef.value || 0);
+  const startAt = Number(nowRef?.value ?? 0);
   emitFlatSpinWindowOpened(eventBus, { axis, atMs: startAt });
   emitDetectedSpell(eventBus, {
     id: axisSpellId,
@@ -25,7 +25,7 @@ export function emitWakeLoadPrelude({
   emitDetectedSpell(eventBus, {
     id: wakeWindowToken,
     intent: wakeIntent,
-    atMs: Number(nowRef && nowRef.value || 0),
+    atMs: Number(nowRef?.value ?? 0),
   });
 }
 

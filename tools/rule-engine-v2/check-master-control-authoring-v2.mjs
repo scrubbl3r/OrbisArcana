@@ -20,8 +20,9 @@ function main() {
   const doc = readJsonOrFail(CHECK_TAG, RULE_ENGINE_V2_DOC_PATHS.masterControlAuthoringJson);
   const root = asObj(doc);
   if (!root) failCheck(CHECK_TAG, "root must be an object");
-  if (String(root.schema || "") !== RULE_ENGINE_V2_SCHEMA_IDS.masterControlAuthoring) {
-    failCheck(CHECK_TAG, `unexpected schema: ${String(root.schema || "")}`);
+  const schema = typeof root.schema === "string" ? root.schema : "";
+  if (schema !== RULE_ENGINE_V2_SCHEMA_IDS.masterControlAuthoring) {
+    failCheck(CHECK_TAG, `unexpected schema: ${schema}`);
   }
 
   if (typeof root.enabled !== "boolean") {

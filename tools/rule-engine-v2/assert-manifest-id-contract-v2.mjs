@@ -14,7 +14,7 @@ export function assertManifestIdContract({
     entryLabel,
   });
 
-  const actualIds = entries.map((entry) => String(entry?.id || "").trim());
+  const actualIds = entries.map((entry) => (typeof entry?.id === "string" ? entry.id.trim() : ""));
   assertOrderedIds({
     actualIds,
     requiredIds,

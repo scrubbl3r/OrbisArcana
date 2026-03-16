@@ -11,18 +11,22 @@ const FAIL_TAG = CHECK_TAG;
 const fail = (message) => failCheck(FAIL_TAG, message);
 
 function logSmokePass(text) {
-  console.log(`[${CHECK_TAG}] PASS ${String(text || "")}`);
+  const safeText = typeof text === "string" ? text : "";
+  console.log(`[${CHECK_TAG}] PASS ${safeText}`);
 }
 
 function ruleById(cfg, ruleId) {
   const list = Array.isArray(cfg.rules) ? cfg.rules : [];
-  const r = list.find((item) => item && String(item.id || "").trim() === String(ruleId || "").trim());
+  const targetRuleId = typeof ruleId === "string" ? ruleId.trim() : "";
+  const r = list.find((item) => (typeof item?.id === "string" ? item.id.trim() : "") === targetRuleId);
   if (!r || typeof r !== "object") fail(`missing rule in INTERACTIONS_V2: ${ruleId}`);
   return r;
 }
 
 function findFirstAction(rule, type) {
-  return (Array.isArray(rule.then) ? rule.then : []).find((a) => a && String(a.type || "").toLowerCase() === type);
+  return (Array.isArray(rule.then) ? rule.then : []).find(
+    (a) => (typeof a?.type === "string" ? a.type.toLowerCase() : "") === type
+  );
 }
 
 function expectValidationFail(caseName, cfg, expectedSubstring) {
@@ -37,7 +41,8 @@ function expectValidationFail(caseName, cfg, expectedSubstring) {
 
 function expectValidationPass(caseName, cfg) {
   const res = validateInteractionsV2(cfg);
-  if (!res.ok) fail(`${caseName}: expected validation pass, got ${(res.errors || []).join(" | ")}`);
+  const errors = Array.isArray(res.errors) ? res.errors : [];
+  if (!res.ok) fail(`${caseName}: expected validation pass, got ${errors.join(" | ")}`);
   logSmokePass(caseName);
 }
 
@@ -46,7 +51,10 @@ function expectBuildPass(caseName, cfg, assertFn = null) {
   try {
     projected = buildRuleEngineFromInteractionsV2({ interactionsV2: cfg, baseRuleEngine: { rules: [] } });
   } catch (err) {
-    fail(`${caseName}: expected build pass, got ${err && err.message ? err.message : String(err)}`);
+    const msg = err instanceof Error && typeof err.message === "string" && err.message
+      ? err.message
+      : "unknown error";
+    fail(`${caseName}: expected build pass, got ${msg}`);
   }
   if (typeof assertFn === "function") assertFn(projected);
   logSmokePass(caseName);
@@ -123,7 +131,8 @@ function run() {
     if (!wakeWin) fail("wake_win action missing");
     wakeWin.spells = ["spell.rota", "spell.sanctum", "spell.vectus"];
     const graceEvent = (Array.isArray(rule.then) ? rule.then : []).find((a) =>
-      a && String(a.type || "").toLowerCase() === "event" && String(a.id || "").toLowerCase().includes("grace")
+      (typeof a?.type === "string" ? a.type.toLowerCase() : "") === "event"
+        && (typeof a?.id === "string" ? a.id.toLowerCase() : "").includes("grace")
     );
     if (!graceEvent) fail("grace event action missing");
     graceEvent.id = "grace";
@@ -134,7 +143,7 @@ function run() {
     expectValidationPass("qualified_forms.validate", cfg);
     expectBuildPass("qualified_forms.build_normalization", cfg, (projected) => {
       const projectedRule = Array.isArray(projected.rules)
-        ? projected.rules.find((r) => r && String(r.id || "") === "r_rota_yspin_charged")
+        ? projected.rules.find((r) => (typeof r?.id === "string" ? r.id : "") === "r_rota_yspin_charged")
         : null;
       if (!projectedRule) fail("qualified_forms: projected rota rule missing");
       const projectedGrace = (Array.isArray(projectedRule.then) ? projectedRule.then : []).find((a) =>

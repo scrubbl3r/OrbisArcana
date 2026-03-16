@@ -42,9 +42,12 @@ export const RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS = Object.freeze([
 ]);
 
 function docRelPathForKeyOrThrowV2(key) {
+  if (typeof key !== "string" || !key.trim()) {
+    throw new Error("unknown RULE_ENGINE_V2_DOC_PATHS key: <invalid>");
+  }
   const rel = RULE_ENGINE_V2_DOC_PATHS[key];
   if (!rel) {
-    throw new Error(`unknown RULE_ENGINE_V2_DOC_PATHS key: ${String(key)}`);
+    throw new Error(`unknown RULE_ENGINE_V2_DOC_PATHS key: ${key}`);
   }
   return rel;
 }
@@ -54,7 +57,18 @@ export function resolveRuleEngineDocPath(key) {
 }
 
 export function docRelPathsForKeysV2(keys) {
-  return Array.from(keys || []).map((key) => docRelPathForKeyOrThrowV2(key));
+  if (keys == null) {
+    throw new Error("docRelPathsForKeysV2 requires keys");
+  }
+  if (typeof keys[Symbol.iterator] !== "function") {
+    throw new Error("docRelPathsForKeysV2 keys must be iterable");
+  }
+  return Array.from(keys).map((key, index) => {
+    if (typeof key !== "string" || !key.trim()) {
+      throw new Error(`docRelPathsForKeysV2 key[${index}] must be a non-empty string`);
+    }
+    return docRelPathForKeyOrThrowV2(key);
+  });
 }
 
 export function docRelPathForKeyV2(key) {

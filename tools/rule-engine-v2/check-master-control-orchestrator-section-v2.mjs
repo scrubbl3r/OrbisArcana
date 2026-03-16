@@ -23,8 +23,10 @@ if (!section || typeof section !== "object") {
 const expectedProjection = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
 const expectedRules = Array.isArray(expectedProjection?.rules) ? expectedProjection.rules : [];
 const expectedInteractionsRules = getInteractionsRules(INTERACTIONS_V2);
+const sectionVersion = typeof section.version === "string" ? section.version : "";
+const expectedVersion = typeof expectedProjection?.version === "string" ? expectedProjection.version : "";
 
-if (String(section.version || "") !== String(expectedProjection?.version || "")) {
+if (sectionVersion !== expectedVersion) {
   failCheck(CHECK_TAG, `orchestratorProjection.version mismatch: ${section.version}`);
 }
 if (section.enabled !== (expectedProjection?.enabled !== false)) {

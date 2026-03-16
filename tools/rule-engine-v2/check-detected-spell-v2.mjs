@@ -1,7 +1,9 @@
 import { EVT_VOICE_SPELL_DETECTED } from "../../src/contracts/events.js";
 
 export function emitDetectedSpell(eventBus, { id, intent, phrase, atMs, confidence }) {
-  const spokenPhrase = String(phrase == null ? id : phrase);
+  const spokenPhrase = typeof phrase === "string"
+    ? phrase
+    : (typeof id === "string" ? id : "");
   const payload = {
     spell: { id, intent, phrase: spokenPhrase },
     atMs,

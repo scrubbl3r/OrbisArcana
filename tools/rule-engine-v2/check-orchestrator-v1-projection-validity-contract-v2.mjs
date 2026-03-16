@@ -25,7 +25,7 @@ if (projectedRules.length !== interactionsRules.length) {
 }
 
 for (const rule of projectedRules) {
-  const ruleId = String(rule?.id || "").trim();
+  const ruleId = typeof rule?.id === "string" ? rule.id.trim() : "";
   if (!ruleId) failCheck(CHECK_TAG, "projected rule missing id");
   if (!Array.isArray(rule?.on) || !rule.on.length) {
     failCheck(CHECK_TAG, `projected rule ${ruleId} missing on[] selectors`);

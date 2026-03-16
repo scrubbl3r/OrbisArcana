@@ -14,15 +14,20 @@ const CHECK_TAG = "orchestrator-projection-doc-contract:v2";
 const docPath = resolveRuleEngineDocPath("orchestratorProjectionJson");
 const loaded = readJsonCore(docPath);
 if (!loaded.ok) {
-  failCheck(CHECK_TAG, `unable to read projection doc (${loaded.error?.message || loaded.error})`);
+  const msg = loaded.error instanceof Error && typeof loaded.error.message === "string" && loaded.error.message
+    ? loaded.error.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `unable to read projection doc (${msg})`);
 }
 
 const doc = loaded.value || {};
-if (String(doc.schema || "") !== RULE_ENGINE_V2_SCHEMA_IDS.orchestratorProjection) {
-  failCheck(CHECK_TAG, `unexpected schema: ${String(doc.schema || "")}`);
+const schema = typeof doc.schema === "string" ? doc.schema : "";
+if (schema !== RULE_ENGINE_V2_SCHEMA_IDS.orchestratorProjection) {
+  failCheck(CHECK_TAG, `unexpected schema: ${schema}`);
 }
-if (String(doc.source || "") !== "projected_from_interactions_v2") {
-  failCheck(CHECK_TAG, `unexpected source: ${String(doc.source || "")}`);
+const source = typeof doc.source === "string" ? doc.source : "";
+if (source !== "projected_from_interactions_v2") {
+  failCheck(CHECK_TAG, `unexpected source: ${source}`);
 }
 
 const projection = doc.projection;

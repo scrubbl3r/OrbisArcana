@@ -58,7 +58,10 @@ function verifyKwsManifestCoverage() {
   const modelBaseByName = Object.create(null);
   const missingFiles = [];
   for (const entry of models) {
-    const modelPath = String(entry && (entry.path || entry.url) || "").trim();
+    const rawModelPath = typeof entry?.path === "string"
+      ? entry.path
+      : (typeof entry?.url === "string" ? entry.url : "");
+    const modelPath = rawModelPath.trim();
     if (!modelPath) continue;
     const absPath = resolve(dirname(manifestAbs), modelPath);
     const base = basename(absPath).toLowerCase();

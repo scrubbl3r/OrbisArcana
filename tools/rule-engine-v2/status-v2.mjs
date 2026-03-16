@@ -68,7 +68,7 @@ function formatCheckStatusList(entries, checksById, yesNo) {
 
 function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
   const items = asList(entries);
-  const keyName = String(keyField || "").trim() || "id";
+  const keyName = typeof keyField === "string" && keyField.trim() ? keyField.trim() : "id";
   const byKey = Object.freeze(Object.fromEntries(
     items.map((entry) => [entry?.[keyName], runCheck(entry?.script)])
   ));
@@ -103,8 +103,9 @@ function buildStatusSections(defs, runCheck, yesNo) {
   return Object.freeze(
     Object.fromEntries(
       asList(defs).map((def) => {
-        const key = String(def?.key || "").trim();
-        return [key, buildStatusSection(def?.entries || [], runCheck, yesNo)];
+        const key = typeof def?.key === "string" ? def.key.trim() : "";
+        const entries = Array.isArray(def?.entries) ? def.entries : [];
+        return [key, buildStatusSection(entries, runCheck, yesNo)];
       })
     )
   );

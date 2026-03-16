@@ -48,7 +48,7 @@ function getGitRef() {
 function asStepResult(result, extras = {}) {
   return {
     ok: result?.ok === true,
-    status: Number(result?.status || 0),
+    status: Number(result?.status ?? 0),
     ...extras,
   };
 }

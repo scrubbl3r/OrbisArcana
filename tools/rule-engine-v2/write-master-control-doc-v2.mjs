@@ -57,7 +57,7 @@ function buildDoc() {
   lines.push("## Spellbook (SSOT)");
   lines.push("");
   lines.push("```json");
-  lines.push(toJson({ version: SPELLBOOK_V2 && SPELLBOOK_V2.version, spells }));
+  lines.push(toJson({ version: SPELLBOOK_V2?.version, spells }));
   lines.push("```");
   lines.push("");
   lines.push("## Interaction Defaults (SSOT)");
@@ -122,11 +122,11 @@ function buildMasterControlJson() {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControl,
     generatedAt: nowIso(),
     spellbook: {
-      version: SPELLBOOK_V2 && SPELLBOOK_V2.version,
+      version: SPELLBOOK_V2?.version,
       spells: listSpellbookSpells(SPELLBOOK_V2),
     },
     interactions: {
-      version: INTERACTIONS_V2 && INTERACTIONS_V2.version,
+      version: INTERACTIONS_V2?.version,
       enabled: isInteractionsEnabled(INTERACTIONS_V2),
       defaults: getInteractionsDefaults(INTERACTIONS_V2),
       rules: interactionsRules,

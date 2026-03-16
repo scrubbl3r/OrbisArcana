@@ -1,14 +1,18 @@
 import { readFileSync } from "node:fs";
 
 export function readJsonLines(path) {
+  const filePath = typeof path === "string" ? path.trim() : "";
+  if (!filePath) {
+    throw new Error("readJsonLines requires a non-empty file path");
+  }
   let text = "";
   try {
-    text = readFileSync(path, "utf8");
+    text = readFileSync(filePath, "utf8");
   } catch (_) {
     return [];
   }
 
-  return String(text || "")
+  return text
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)

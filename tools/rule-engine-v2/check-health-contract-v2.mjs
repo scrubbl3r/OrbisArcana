@@ -7,9 +7,10 @@ import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 const CHECK_TAG = "health-contract:v2";
 
 const health = readJsonOrFail(CHECK_TAG, RULE_ENGINE_V2_DOC_PATHS.health);
+const schema = typeof health.schema === "string" ? health.schema : "";
 
-if (String(health.schema || "") !== RULE_ENGINE_V2_SCHEMA_IDS.health) {
-  failCheck(CHECK_TAG, `unexpected schema: ${String(health.schema || "")}`);
+if (schema !== RULE_ENGINE_V2_SCHEMA_IDS.health) {
+  failCheck(CHECK_TAG, `unexpected schema: ${schema}`);
 }
 if (health.spellbookOk !== true) failCheck(CHECK_TAG, "spellbookOk must be true");
 if (health.interactionsOk !== true) failCheck(CHECK_TAG, "interactionsOk must be true");

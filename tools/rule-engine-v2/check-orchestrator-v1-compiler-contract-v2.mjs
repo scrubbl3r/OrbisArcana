@@ -43,7 +43,10 @@ try {
     baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
   });
 } catch (err) {
-  failCheck(CHECK_TAG, `builder threw for valid sample: ${err instanceof Error ? err.message : String(err)}`);
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for valid sample: ${msg}`);
 }
 
 if (!built || typeof built !== "object") {

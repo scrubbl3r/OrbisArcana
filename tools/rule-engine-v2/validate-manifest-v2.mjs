@@ -18,8 +18,8 @@ export function validateManifestEntries({
       throw new Error(`${entryLabel} entry must be an object`);
     }
 
-    const id = String(entry.id || "").trim();
-    const script = String(entry.script || "").trim();
+    const id = typeof entry.id === "string" ? entry.id.trim() : "";
+    const script = typeof entry.script === "string" ? entry.script.trim() : "";
 
     if (!id) throw new Error(`${entryLabel} entry missing id`);
     if (!script) throw new Error(`${entryLabel} entry '${id}' missing script`);

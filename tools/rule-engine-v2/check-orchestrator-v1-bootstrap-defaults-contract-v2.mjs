@@ -20,7 +20,8 @@ if (ORCHESTRATOR_V1_BOOTSTRAP.projectFromInteractionsWhenOrchestratorEmpty !== t
 if (!ORCHESTRATOR_V1 || typeof ORCHESTRATOR_V1 !== "object") {
   failCheck(CHECK_TAG, "ORCHESTRATOR_V1 export missing");
 }
-if (String(ORCHESTRATOR_V1.version || "") !== "1") {
+const version = typeof ORCHESTRATOR_V1.version === "string" ? ORCHESTRATOR_V1.version : "";
+if (version !== "1") {
   failCheck(CHECK_TAG, "ORCHESTRATOR_V1.version must be \"1\"");
 }
 if (!Array.isArray(ORCHESTRATOR_V1.rules)) {

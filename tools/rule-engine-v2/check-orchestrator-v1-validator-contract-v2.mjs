@@ -5,7 +5,9 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 const CHECK_TAG = "orchestrator-v1-validator:v2";
 
 function hasError(errors, needle) {
-  return (Array.isArray(errors) ? errors : []).some((line) => String(line || "").includes(needle));
+  return (Array.isArray(errors) ? errors : []).some(
+    (line) => typeof line === "string" && line.includes(needle)
+  );
 }
 
 function expectValid(caseName, cfg) {

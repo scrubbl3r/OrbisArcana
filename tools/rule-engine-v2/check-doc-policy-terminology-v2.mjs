@@ -16,14 +16,15 @@ import { assertPolicyTokenContractV2 } from "./check-policy-token-contract-v2.mj
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "doc-policy-terminology:v2";
-if (!POLICY_AUTHORING_DOC_RELS_V2.length) {
-  failCheck(CHECK_TAG, "policy authoring doc rel registry must be non-empty");
-}
+const LABELS = Object.freeze({
+  authoringDoc: "policy authoring doc",
+  schemaDocRelRegistry: "policy schema doc rel registry",
+});
 
 assertPolicyTokenContractAcrossTargetsV2({
   tag: CHECK_TAG,
   targets: POLICY_AUTHORING_DOC_RELS_V2,
-  label: "policy authoring doc",
+  label: LABELS.authoringDoc,
   requiredTokens: [RULE_ENGINE_POLICY_CONTROL_TOKEN_V2],
   forbiddenTokens: [
     RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2,
@@ -39,7 +40,7 @@ assertPolicyTokenContractAcrossTargetsV2({
 assertSingletonRegistryV2({
   tag: CHECK_TAG,
   values: POLICY_SCHEMA_DOC_RELS_V2,
-  label: "policy schema doc rel registry",
+  label: LABELS.schemaDocRelRegistry,
 });
 const schemaDocRel = POLICY_SCHEMA_DOC_RELS_V2[0];
 const schemaDocText = readRelativeText(schemaDocRel);
@@ -52,7 +53,7 @@ assertPolicyTokenContractV2({
   missingMessage: (token) => `${schemaDocRel} must mention ${token}`,
   forbiddenMessage: (token) => `${schemaDocRel} contains deprecated token: ${token}`,
 });
-const masterMentions = schemaDocText.match(new RegExp(RULE_ENGINE_MASTER_CONTROL_TOKEN_V2, "g")) || [];
+const masterMentions = schemaDocText.match(new RegExp(RULE_ENGINE_MASTER_CONTROL_TOKEN_V2, "g")) ?? [];
 if (masterMentions.length !== 1) {
   failCheck(
     CHECK_TAG,

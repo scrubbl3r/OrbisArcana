@@ -11,7 +11,10 @@ export function readJsonOrFail(tag, relPath) {
     // Preserve prior detailed message behavior for callers.
     throw result.error;
   } catch (err) {
-    failCheck(tag, `unable to read ${relPath} (${err?.message || err})`);
+    const msg = err instanceof Error && typeof err.message === "string" && err.message
+      ? err.message
+      : "unknown error";
+    failCheck(tag, `unable to read ${relPath} (${msg})`);
     return null;
   }
 }

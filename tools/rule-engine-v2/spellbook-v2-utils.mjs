@@ -6,7 +6,7 @@ function toNumber(v, fallback) {
 }
 
 export function listSpellbookSpells(spellbookV2) {
-  return Array.isArray(spellbookV2 && spellbookV2.spells) ? spellbookV2.spells : [];
+  return Array.isArray(spellbookV2?.spells) ? spellbookV2.spells : [];
 }
 
 export function countSpellbookSpells(spellbookV2) {

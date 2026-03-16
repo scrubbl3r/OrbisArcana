@@ -14,5 +14,5 @@ export function getInteractionsDefaults(interactionsV2) {
 
 export function getInteractionsRules(interactionsV2) {
   const root = asObject(interactionsV2);
-  return Array.isArray(root && root.rules) ? root.rules : [];
+  return Array.isArray(root?.rules) ? root.rules : [];
 }
