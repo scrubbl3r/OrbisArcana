@@ -3,6 +3,7 @@ import {
   RULE_ENGINE_MASTER_CONTROL_TOKEN_V2,
   RULE_ENGINE_POLICY_CONTROL_TOKEN_V2,
 } from "./policy-terms-v2.mjs";
+import { POLICY_VALIDATOR_TARGET_V2 } from "./policy-targets-v2.mjs";
 import {
   requireTextExcludesTokensV2,
   requireTextIncludesTokensV2,
@@ -10,7 +11,7 @@ import {
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "validator-policy-terminology:v2";
-const rel = "src/content/spell-rules/validate-rule-engine-config.js";
+const rel = POLICY_VALIDATOR_TARGET_V2;
 const text = readRelativeText(rel);
 
 requireTextIncludesTokensV2({
