@@ -7,5 +7,13 @@ export const ORCHESTRATOR_V1 = Object.freeze({
   version: "1",
   enabled: true,
   defaults: Object.freeze({}),
-  rules: Object.freeze([]),
+  rules: Object.freeze([
+    // Minimal supported shape in early slices:
+    // {
+    //   id: "o_example",
+    //   on: { spell: "orbis" },
+    //   open: { spells: ["domus", "electrum"], ttlMs: 2000 },
+    //   trigger: [{ event: "teleport_home" }],
+    // },
+  ]),
 });

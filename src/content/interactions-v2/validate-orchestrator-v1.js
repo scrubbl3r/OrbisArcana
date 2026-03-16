@@ -21,6 +21,11 @@ function normalizeEventId(eventIdRaw) {
   return id.startsWith("event.") ? id.slice("event.".length) : id;
 }
 
+function isFiniteNonNegative(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0;
+}
+
 function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
   const allowed = new Set(allowedKeys);
   for (const key of Object.keys(asObj(obj))) {
@@ -55,7 +60,7 @@ export function validateOrchestratorV1(cfg) {
     if (ids.has(ruleId)) errors.push(`ORCHESTRATOR_V1.rules contains duplicate id: ${ruleId}`);
     ids.add(ruleId);
 
-    pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, ["id", "on", "trigger", "enabled", "priority"]);
+    pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, ["id", "on", "open", "trigger", "enabled", "priority"]);
     if (Object.prototype.hasOwnProperty.call(rule, "enabled") && typeof rule.enabled !== "boolean") {
       errors.push(`rule ${ruleId} enabled must be boolean when present`);
     }
@@ -72,8 +77,43 @@ export function validateOrchestratorV1(cfg) {
       errors.push(`rule ${ruleId} references inactive or unknown spell id: ${on.spell}`);
     }
 
-    if (!Array.isArray(rule.trigger) || !rule.trigger.length) {
-      errors.push(`rule ${ruleId} must define trigger[]`);
+    if (Object.prototype.hasOwnProperty.call(rule, "open")) {
+      const open = asObj(rule.open);
+      pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, ["spells", "ttlMs", "enabled"]);
+      if (!Array.isArray(open.spells) || !open.spells.length) {
+        errors.push(`rule ${ruleId} open requires spells[]`);
+      } else {
+        const seenOpenSpells = new Set();
+        for (const openSpellRaw of open.spells) {
+          const openSpellId = normalizeSpellId(openSpellRaw);
+          if (!openSpellId) {
+            errors.push(`rule ${ruleId} open contains empty spell id`);
+            continue;
+          }
+          if (seenOpenSpells.has(openSpellId)) {
+            errors.push(`rule ${ruleId} open contains duplicate spell id: ${openSpellRaw}`);
+          }
+          seenOpenSpells.add(openSpellId);
+          if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, openSpellId)) {
+            errors.push(`rule ${ruleId} open references inactive or unknown spell id: ${openSpellRaw}`);
+          }
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(open, "enabled") && typeof open.enabled !== "boolean") {
+        errors.push(`rule ${ruleId} open enabled must be boolean when present`);
+      }
+      if (Object.prototype.hasOwnProperty.call(open, "ttlMs") && !isFiniteNonNegative(open.ttlMs)) {
+        errors.push(`rule ${ruleId} open ttlMs must be a finite number >= 0 when present`);
+      }
+    }
+
+    const hasTrigger = Array.isArray(rule.trigger) && rule.trigger.length > 0;
+    const hasOpen = Object.prototype.hasOwnProperty.call(rule, "open");
+    if (!hasTrigger && !hasOpen) {
+      errors.push(`rule ${ruleId} must define open and/or trigger actions`);
+      continue;
+    }
+    if (!hasTrigger) {
       continue;
     }
     for (const rawTrigger of rule.trigger) {

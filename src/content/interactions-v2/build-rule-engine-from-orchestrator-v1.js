@@ -40,15 +40,38 @@ function mapTrigger(trigger) {
   return Object.freeze(out);
 }
 
+function mapOpen(open) {
+  const o = asObj(open);
+  const spells = Array.isArray(o.spells)
+    ? o.spells.map(normalizeSpellId).filter(Boolean)
+    : [];
+  if (!spells.length) return null;
+  const out = {
+    type: "wake_win",
+    spells,
+  };
+  if (Object.prototype.hasOwnProperty.call(o, "enabled") && typeof o.enabled === "boolean") {
+    out.enabled = o.enabled;
+  }
+  if (Object.prototype.hasOwnProperty.call(o, "ttlMs") && Number.isFinite(Number(o.ttlMs))) {
+    out.ttlMs = Number(o.ttlMs);
+  }
+  return Object.freeze(out);
+}
+
 function mapRule(rule) {
   const r = asObj(rule);
   const id = asText(r.id);
   if (!id) return null;
   const spellId = normalizeSpellId(asObj(r.on).spell);
   if (!spellId) return null;
-  const then = (Array.isArray(r.trigger) ? r.trigger : [])
+  const then = [];
+  const openAction = mapOpen(r.open);
+  if (openAction) then.push(openAction);
+  const triggerActions = (Array.isArray(r.trigger) ? r.trigger : [])
     .map(mapTrigger)
     .filter(Boolean);
+  then.push(...triggerActions);
   const out = {
     id,
     on: Object.freeze([
