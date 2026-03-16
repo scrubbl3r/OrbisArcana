@@ -90,6 +90,10 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-compatibility-doc-source-ids-v2.mjs",
   },
   {
+    id: "policy_targets_registry",
+    script: "tools/rule-engine-v2/check-policy-targets-registry-v2.mjs",
+  },
+  {
     id: "doc_policy",
     script: "tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
   },

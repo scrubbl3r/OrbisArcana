@@ -41,20 +41,22 @@ export const RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS = Object.freeze([
   "ruleEngineCompatibilityDoc",
 ]);
 
-export function resolveRuleEngineDocPath(key) {
+function docRelPathForKeyOrThrowV2(key) {
   const rel = RULE_ENGINE_V2_DOC_PATHS[key];
   if (!rel) {
     throw new Error(`unknown RULE_ENGINE_V2_DOC_PATHS key: ${String(key)}`);
   }
-  return resolve(process.cwd(), rel);
+  return rel;
+}
+
+export function resolveRuleEngineDocPath(key) {
+  return resolve(process.cwd(), docRelPathForKeyOrThrowV2(key));
 }
 
 export function docRelPathsForKeysV2(keys) {
-  return Array.from(keys || []).map((key) => {
-    const rel = RULE_ENGINE_V2_DOC_PATHS[key];
-    if (!rel) {
-      throw new Error(`unknown RULE_ENGINE_V2_DOC_PATHS key: ${String(key)}`);
-    }
-    return rel;
-  });
+  return Array.from(keys || []).map((key) => docRelPathForKeyOrThrowV2(key));
+}
+
+export function docRelPathForKeyV2(key) {
+  return docRelPathForKeyOrThrowV2(key);
 }

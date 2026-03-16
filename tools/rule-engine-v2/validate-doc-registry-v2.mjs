@@ -10,15 +10,15 @@ export function validateDocRegistryV2({
   requireMarkdown = false,
 }) {
   const seenPaths = new Set();
-  const keysArr = Array.from(keys || []);
+  const keysArr = Array.from(keys);
   if (!keysArr.length) {
     failCheck(tag, `${label} key registry is empty`);
   }
   if (!relPaths) {
     failCheck(tag, `${label} validation requires relPaths`);
   }
-  const relArr = relPaths ? Array.from(relPaths || []) : null;
-  if (relArr && relArr.length !== keysArr.length) {
+  const relArr = Array.from(relPaths);
+  if (relArr.length !== keysArr.length) {
     failCheck(
       tag,
       `${label} key/path count mismatch: keys=${keysArr.length} relPaths=${relArr.length}`

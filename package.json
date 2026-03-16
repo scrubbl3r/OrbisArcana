@@ -34,6 +34,7 @@
     "check:generated-artifact-registry:v2": "node tools/rule-engine-v2/check-generated-artifact-registry-v2.mjs",
     "check:doc-key-registry-integrity:v2": "node tools/rule-engine-v2/check-doc-key-registry-integrity-v2.mjs",
     "check:compatibility-doc-source-ids:v2": "node tools/rule-engine-v2/check-compatibility-doc-source-ids-v2.mjs",
+    "check:policy-targets-registry:v2": "node tools/rule-engine-v2/check-policy-targets-registry-v2.mjs",
     "check:doc-policy-terminology:v2": "node tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
     "check:validator-policy-terminology:v2": "node tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs",
     "check:master-control-compat-surface:v2": "node tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs",

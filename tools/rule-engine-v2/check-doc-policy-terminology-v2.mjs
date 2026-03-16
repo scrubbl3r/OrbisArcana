@@ -1,5 +1,9 @@
-import { docRelPathsForKeysV2, RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
+import { docRelPathForKeyV2, docRelPathsForKeysV2 } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
+import {
+  POLICY_AUTHORING_DOC_KEYS_V2,
+  POLICY_SCHEMA_DOC_KEY_V2,
+} from "./policy-targets-v2.mjs";
 import {
   RULE_ENGINE_MASTER_CONTROL_COMPAT_ALIAS_LINE_V2,
   RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2,
@@ -7,10 +11,7 @@ import {
   RULE_ENGINE_POLICY_CONTROL_TOKEN_V2,
 } from "./policy-terms-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import {
-  requireTextExcludesTokensV2,
-  requireTextIncludesTokensV2,
-} from "./check-token-assertions-v2.mjs";
+import { assertPolicyTokenContractV2 } from "./check-policy-token-contract-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 
 const CHECK_TAG = "doc-policy-terminology:v2";
@@ -18,21 +19,18 @@ const requiredToken = RULE_ENGINE_POLICY_CONTROL_TOKEN_V2;
 const forbiddenProjectionToken = RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2;
 
 const authoringDocs = Object.freeze(
-  docRelPathsForKeysV2(["ruleEngineAuthoringDoc", "ruleEngineCompatibilityDoc"])
+  docRelPathsForKeysV2(POLICY_AUTHORING_DOC_KEYS_V2)
 );
 
 for (const rel of authoringDocs) {
   const text = readRelativeText(rel);
-  requireTextIncludesTokensV2({
+  assertPolicyTokenContractV2({
     tag: CHECK_TAG,
+    rel,
     text,
-    tokens: [requiredToken],
+    requiredTokens: [requiredToken],
+    forbiddenTokens: [forbiddenProjectionToken, RULE_ENGINE_MASTER_CONTROL_TOKEN_V2],
     missingMessage: (token) => `${rel} must mention ${token}`,
-  });
-  requireTextExcludesTokensV2({
-    tag: CHECK_TAG,
-    text,
-    tokens: [forbiddenProjectionToken, RULE_ENGINE_MASTER_CONTROL_TOKEN_V2],
     forbiddenMessage: (token) =>
       token === forbiddenProjectionToken
         ? `${rel} contains deprecated token: ${token}`
@@ -40,18 +38,15 @@ for (const rel of authoringDocs) {
   });
 }
 
-const schemaDocRel = RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc;
+const schemaDocRel = docRelPathForKeyV2(POLICY_SCHEMA_DOC_KEY_V2);
 const schemaDocText = readRelativeText(schemaDocRel);
-requireTextIncludesTokensV2({
+assertPolicyTokenContractV2({
   tag: CHECK_TAG,
+  rel: schemaDocRel,
   text: schemaDocText,
-  tokens: [requiredToken],
+  requiredTokens: [requiredToken],
+  forbiddenTokens: [forbiddenProjectionToken],
   missingMessage: (token) => `${schemaDocRel} must mention ${token}`,
-});
-requireTextExcludesTokensV2({
-  tag: CHECK_TAG,
-  text: schemaDocText,
-  tokens: [forbiddenProjectionToken],
   forbiddenMessage: (token) => `${schemaDocRel} contains deprecated token: ${token}`,
 });
 const masterMentions = schemaDocText.match(new RegExp(RULE_ENGINE_MASTER_CONTROL_TOKEN_V2, "g")) || [];
