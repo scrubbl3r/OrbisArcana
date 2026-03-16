@@ -1,5 +1,6 @@
 import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
 import { EVENT_DEFINITIONS_BY_ID } from "../spell-rules/event-definitions.js";
+import { SIGNAL_DEFINITIONS_BY_ID } from "../spell-rules/signal-definitions.js";
 
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -21,6 +22,18 @@ function normalizeEventId(eventIdRaw) {
   return id.startsWith("event.") ? id.slice("event.".length) : id;
 }
 
+function normalizeGestureId(gestureIdRaw) {
+  const id = asText(gestureIdRaw).toLowerCase();
+  if (!id) return "";
+  return id.startsWith("gesture.") ? id.slice("gesture.".length) : id;
+}
+
+function normalizeOrbStateId(orbStateIdRaw) {
+  const id = asText(orbStateIdRaw).toLowerCase();
+  if (!id) return "";
+  return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
+}
+
 function isFiniteNonNegative(v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0;
@@ -32,6 +45,20 @@ function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
     if (!allowed.has(key)) errors.push(`${context} contains unsupported key: ${key}`);
   }
 }
+
+const KNOWN_GESTURE_IDS = new Set(
+  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
+    .filter((signalId) => String(signalId || "").startsWith("gesture."))
+    .map((signalId) => String(signalId || "").slice("gesture.".length))
+    .filter(Boolean)
+);
+
+const KNOWN_ORB_STATE_IDS = new Set(
+  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
+    .filter((signalId) => String(signalId || "").startsWith("orb_state."))
+    .map((signalId) => String(signalId || "").slice("orb_state.".length))
+    .filter(Boolean)
+);
 
 export function validateOrchestratorV1(cfg) {
   const errors = [];
@@ -69,12 +96,36 @@ export function validateOrchestratorV1(cfg) {
     }
 
     const on = asObj(rule.on);
-    pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell"]);
-    const spellId = normalizeSpellId(on.spell);
-    if (!spellId) {
-      errors.push(`rule ${ruleId} must define on.spell`);
-    } else if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, spellId)) {
-      errors.push(`rule ${ruleId} references inactive or unknown spell id: ${on.spell}`);
+    pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell", "gesture", "orb_state"]);
+    const hasSpell = Object.prototype.hasOwnProperty.call(on, "spell");
+    const hasGesture = Object.prototype.hasOwnProperty.call(on, "gesture");
+    const hasOrbState = Object.prototype.hasOwnProperty.call(on, "orb_state");
+    if (!hasSpell && !hasGesture && !hasOrbState) {
+      errors.push(`rule ${ruleId} must define on.spell and/or on.gesture and/or on.orb_state`);
+    }
+    if (hasSpell) {
+      const spellId = normalizeSpellId(on.spell);
+      if (!spellId) {
+        errors.push(`rule ${ruleId} has empty on.spell`);
+      } else if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, spellId)) {
+        errors.push(`rule ${ruleId} references inactive or unknown spell id: ${on.spell}`);
+      }
+    }
+    if (hasGesture) {
+      const gestureId = normalizeGestureId(on.gesture);
+      if (!gestureId) {
+        errors.push(`rule ${ruleId} has empty on.gesture`);
+      } else if (!KNOWN_GESTURE_IDS.has(gestureId)) {
+        errors.push(`rule ${ruleId} references unknown gesture id: ${on.gesture}`);
+      }
+    }
+    if (hasOrbState) {
+      const orbStateId = normalizeOrbStateId(on.orb_state);
+      if (!orbStateId) {
+        errors.push(`rule ${ruleId} has empty on.orb_state`);
+      } else if (!KNOWN_ORB_STATE_IDS.has(orbStateId)) {
+        errors.push(`rule ${ruleId} references unknown orb_state id: ${on.orb_state}`);
+      }
     }
 
     if (Object.prototype.hasOwnProperty.call(rule, "open")) {

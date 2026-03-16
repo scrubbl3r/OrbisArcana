@@ -25,6 +25,18 @@ function normalizeEventId(eventIdRaw) {
   return id.startsWith("event.") ? id.slice("event.".length) : id;
 }
 
+function normalizeGestureId(gestureIdRaw) {
+  const id = asId(gestureIdRaw);
+  if (!id) return "";
+  return id.startsWith("gesture.") ? id.slice("gesture.".length) : id;
+}
+
+function normalizeOrbStateId(orbStateIdRaw) {
+  const id = asId(orbStateIdRaw);
+  if (!id) return "";
+  return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
+}
+
 function mapTrigger(trigger) {
   const t = asObj(trigger);
   const eventId = normalizeEventId(t.event);
@@ -63,8 +75,15 @@ function mapRule(rule) {
   const r = asObj(rule);
   const id = asText(r.id);
   if (!id) return null;
-  const spellId = normalizeSpellId(asObj(r.on).spell);
-  if (!spellId) return null;
+  const onRaw = asObj(r.on);
+  const on = [];
+  const spellId = normalizeSpellId(onRaw.spell);
+  if (spellId) on.push(Object.freeze({ type: "spell", id: spellId }));
+  const gestureId = normalizeGestureId(onRaw.gesture);
+  if (gestureId) on.push(Object.freeze({ type: "gesture", id: gestureId }));
+  const orbStateId = normalizeOrbStateId(onRaw.orb_state);
+  if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
+  if (!on.length) return null;
   const then = [];
   const openAction = mapOpen(r.open);
   if (openAction) then.push(openAction);
@@ -74,9 +93,7 @@ function mapRule(rule) {
   then.push(...triggerActions);
   const out = {
     id,
-    on: Object.freeze([
-      Object.freeze({ type: "spell", id: spellId }),
-    ]),
+    on: Object.freeze(on),
     then: Object.freeze(then),
   };
   if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled === "boolean") {
