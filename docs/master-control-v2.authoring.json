@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-16T18:07:45.450Z",
+  "generatedAt": "2026-03-16T18:10:41.108Z",
   "enabled": true,
   "defaults": {
     "wakeWin": {

@@ -5,10 +5,10 @@
  */
 
 export const RULE_ENGINE_SOURCES = Object.freeze({
-  DREAM_CONFIG_V1: "dream_config_v1",
-  DREAM_CONFIG_V1_FALLBACK: "dream_config_v1_fallback",
-  DREAM_CONFIG_V1_DISABLED: "dream_config_v1_disabled",
-  DREAM_CONFIG_V1_MISSING_BUILDER: "dream_config_v1_missing_builder",
+  ORCHESTRATOR_V1: "orchestrator_v1",
+  ORCHESTRATOR_V1_FALLBACK: "orchestrator_v1_fallback",
+  ORCHESTRATOR_V1_DISABLED: "orchestrator_v1_disabled",
+  ORCHESTRATOR_V1_MISSING_BUILDER: "orchestrator_v1_missing_builder",
   INTERACTIONS_ADAPTER: "interactions_adapter",
   INTERACTIONS_ADAPTER_FALLBACK: "interactions_adapter_fallback",
   INTERACTIONS_BOOTSTRAP_DISABLED: "interactions_bootstrap_disabled",
@@ -16,10 +16,10 @@ export const RULE_ENGINE_SOURCES = Object.freeze({
 });
 
 export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
-  [RULE_ENGINE_SOURCES.DREAM_CONFIG_V1]: "Dream Config V1",
-  [RULE_ENGINE_SOURCES.DREAM_CONFIG_V1_FALLBACK]: "Dream Config V1 (safe fallback)",
-  [RULE_ENGINE_SOURCES.DREAM_CONFIG_V1_DISABLED]: "Dream Config V1 disabled",
-  [RULE_ENGINE_SOURCES.DREAM_CONFIG_V1_MISSING_BUILDER]: "Dream Config V1 missing builder (safe fallback)",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1]: "Orchestrator V1",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_FALLBACK]: "Orchestrator V1 (safe fallback)",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_DISABLED]: "Orchestrator V1 disabled",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_MISSING_BUILDER]: "Orchestrator V1 missing builder (safe fallback)",
   [RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER]: "V2 adapter",
   [RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_FALLBACK]: "V2 adapter (safe fallback)",
   [RULE_ENGINE_SOURCES.INTERACTIONS_BOOTSTRAP_DISABLED]: "V2 bootstrap disabled (safe disabled)",
@@ -71,13 +71,13 @@ export async function loadReceiverInitModules() {
       validateRuleEngineConfig,
     },
     {
-      DREAM_CONFIG_V1,
-      DREAM_CONFIG_V1_BOOTSTRAP,
+      ORCHESTRATOR_V1,
+      ORCHESTRATOR_V1_BOOTSTRAP,
       INTERACTIONS_V2,
       INTERACTIONS_V2_BOOTSTRAP,
-      buildRuleEngineFromDreamConfigV1,
+      buildRuleEngineFromOrchestratorV1,
       buildRuleEngineFromInteractionsV2,
-      validateDreamConfigV1,
+      validateOrchestratorV1,
       validateSpellbookV2,
     },
     { WORLD_ITEMS },
@@ -123,7 +123,7 @@ export async function loadReceiverInitModules() {
     createRuleEnginePreviewSystem,
     RULE_ENGINE_POLICY_CONTROL,
     validateRuleEngineConfig,
-    buildRuleEngineFromDreamConfigV1,
+    buildRuleEngineFromOrchestratorV1,
     buildRuleEngineFromInteractionsV2,
   };
   const worldItemExports = {
@@ -166,11 +166,11 @@ export async function loadReceiverInitModules() {
     RUNTIME_SPELLS_BY_ID,
     validateSpellRuntimeRouting,
     validateSpellSchemaIntegrity,
-    DREAM_CONFIG_V1,
-    DREAM_CONFIG_V1_BOOTSTRAP,
+    ORCHESTRATOR_V1,
+    ORCHESTRATOR_V1_BOOTSTRAP,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
-    validateDreamConfigV1,
+    validateOrchestratorV1,
     validateSpellbookV2,
     ...worldItemExports,
   };
@@ -230,13 +230,13 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     validateSpellSchemaIntegrity,
     RULE_ENGINE_POLICY_CONTROL,
     validateRuleEngineConfig,
-    DREAM_CONFIG_V1,
-    DREAM_CONFIG_V1_BOOTSTRAP,
+    ORCHESTRATOR_V1,
+    ORCHESTRATOR_V1_BOOTSTRAP,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
-    buildRuleEngineFromDreamConfigV1,
+    buildRuleEngineFromOrchestratorV1,
     buildRuleEngineFromInteractionsV2,
-    validateDreamConfigV1,
+    validateOrchestratorV1,
     validateSpellbookV2,
     createSpellCastExecutor,
   } = mods || {};
@@ -287,8 +287,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const buildRuleEngineFromInteractions = (typeof buildRuleEngineFromInteractionsV2 === "function")
     ? buildRuleEngineFromInteractionsV2
     : null;
-  const buildRuleEngineFromDreamConfig = (typeof buildRuleEngineFromDreamConfigV1 === "function")
-    ? buildRuleEngineFromDreamConfigV1
+  const buildRuleEngineFromOrchestrator = (typeof buildRuleEngineFromOrchestratorV1 === "function")
+    ? buildRuleEngineFromOrchestratorV1
     : null;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function") ? setRuleSchema : undefined;
 
@@ -309,39 +309,39 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const useInteractionsV2 = !!(INTERACTIONS_V2_BOOTSTRAP &&
     typeof INTERACTIONS_V2_BOOTSTRAP === "object" &&
     INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true);
-  const useDreamConfigV1 = !!(DREAM_CONFIG_V1_BOOTSTRAP &&
-    typeof DREAM_CONFIG_V1_BOOTSTRAP === "object" &&
-    DREAM_CONFIG_V1_BOOTSTRAP.useInReceiverBootstrap === true);
+  const useOrchestratorV1 = !!(ORCHESTRATOR_V1_BOOTSTRAP &&
+    typeof ORCHESTRATOR_V1_BOOTSTRAP === "object" &&
+    ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap === true);
   let adapterFallbackUsed = false;
-  let ruleSource = useDreamConfigV1
-    ? RULE_ENGINE_SOURCES.DREAM_CONFIG_V1
+  let ruleSource = useOrchestratorV1
+    ? RULE_ENGINE_SOURCES.ORCHESTRATOR_V1
     : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER;
   let ruleSchema = buildSafeDisabledRuleSchema();
-  if (useDreamConfigV1) {
-    if (typeof buildRuleEngineFromDreamConfig !== "function") {
+  if (useOrchestratorV1) {
+    if (typeof buildRuleEngineFromOrchestrator !== "function") {
       adapterFallbackUsed = true;
-      ruleSource = RULE_ENGINE_SOURCES.DREAM_CONFIG_V1_MISSING_BUILDER;
+      ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_MISSING_BUILDER;
       try {
-        console.warn("[receiver-bootstrap] DREAM_CONFIG_V1 builder missing; using safe disabled rule schema");
+        console.warn("[receiver-bootstrap] ORCHESTRATOR_V1 builder missing; using safe disabled rule schema");
       } catch (_) {}
     } else {
       try {
-        if (typeof validateDreamConfigV1 === "function") {
-          const dreamErrors = validateDreamConfigV1(DREAM_CONFIG_V1);
-          if (dreamErrors.length) {
-            throw new Error(`Dream config v1 validation failed: ${dreamErrors.join(" | ")}`);
+        if (typeof validateOrchestratorV1 === "function") {
+          const orchestratorErrors = validateOrchestratorV1(ORCHESTRATOR_V1);
+          if (orchestratorErrors.length) {
+            throw new Error(`Orchestrator v1 validation failed: ${orchestratorErrors.join(" | ")}`);
           }
         }
-        ruleSchema = buildRuleEngineFromDreamConfig({
-          dreamConfigV1: DREAM_CONFIG_V1,
+        ruleSchema = buildRuleEngineFromOrchestrator({
+          orchestratorV1: ORCHESTRATOR_V1,
           baseRuleEngine: adapterBaseRuleSchema,
         });
       } catch (err) {
         try {
-          console.warn("[receiver-bootstrap] DREAM_CONFIG_V1 build failed; using safe disabled rule schema", err);
+          console.warn("[receiver-bootstrap] ORCHESTRATOR_V1 build failed; using safe disabled rule schema", err);
         } catch (_) {}
         adapterFallbackUsed = true;
-        ruleSource = RULE_ENGINE_SOURCES.DREAM_CONFIG_V1_FALLBACK;
+        ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_FALLBACK;
         ruleSchema = buildSafeDisabledRuleSchema();
       }
     }
@@ -711,7 +711,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
   const resolvedRuleSource = adapterFallbackUsed
     ? ruleSource
-    : (useDreamConfigV1 ? RULE_ENGINE_SOURCES.DREAM_CONFIG_V1 : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER);
+    : (useOrchestratorV1 ? RULE_ENGINE_SOURCES.ORCHESTRATOR_V1 : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER);
   try {
     console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}
