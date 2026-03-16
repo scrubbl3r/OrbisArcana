@@ -1,102 +1,16 @@
 import { ORCHESTRATOR_V1 } from "./orchestrator-v1.js";
 import { validateOrchestratorV1 } from "./validate-orchestrator-v1.js";
-
-function asObj(v) {
-  return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
-}
-
-function asText(v) {
-  return String(v == null ? "" : v).trim();
-}
-
-function asId(v) {
-  return asText(v).toLowerCase();
-}
-
-function normalizeSpellId(spellIdRaw) {
-  const id = asId(spellIdRaw);
-  if (!id) return "";
-  return id.startsWith("spell.") ? id.slice("spell.".length) : id;
-}
-
-function normalizeEventId(eventIdRaw) {
-  const id = asId(eventIdRaw);
-  if (!id) return "";
-  return id.startsWith("event.") ? id.slice("event.".length) : id;
-}
-
-function normalizeGestureId(gestureIdRaw) {
-  const id = asId(gestureIdRaw);
-  if (!id) return "";
-  return id.startsWith("gesture.") ? id.slice("gesture.".length) : id;
-}
-
-function normalizeOrbStateId(orbStateIdRaw) {
-  const id = asId(orbStateIdRaw);
-  if (!id) return "";
-  return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
-}
-
-function parseOnSelector(raw) {
-  const text = asText(raw);
-  if (!text) return null;
-
-  let type = "spell";
-  let idText = text;
-
-  const colon = text.indexOf(":");
-  const dot = text.indexOf(".");
-  if (colon > 0) {
-    type = asText(text.slice(0, colon)).toLowerCase();
-    idText = asText(text.slice(colon + 1));
-  } else if (dot > 0) {
-    type = asText(text.slice(0, dot)).toLowerCase();
-    idText = text;
-  }
-
-  if (type === "spell") return Object.freeze({ type, id: normalizeSpellId(idText) });
-  if (type === "gesture") return Object.freeze({ type, id: normalizeGestureId(idText) });
-  if (type === "orb_state") return Object.freeze({ type, id: normalizeOrbStateId(idText) });
-  return null;
-}
-
-function asSelectorList(raw) {
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === "string") return [raw];
-  return [];
-}
-
-function normalizeTriggerEntries(rawTrigger) {
-  if (Array.isArray(rawTrigger)) return rawTrigger;
-  if (typeof rawTrigger === "string") return [rawTrigger];
-  if (rawTrigger && typeof rawTrigger === "object") {
-    return Object.entries(rawTrigger).map(([eventId, spec]) => {
-      if (typeof spec === "boolean") {
-        return spec
-          ? Object.freeze({ event: eventId })
-          : Object.freeze({ event: eventId, enabled: false });
-      }
-      if (spec && typeof spec === "object" && !Array.isArray(spec)) {
-        const hasStructuredKeys = Object.prototype.hasOwnProperty.call(spec, "enabled") ||
-          Object.prototype.hasOwnProperty.call(spec, "args");
-        if (!hasStructuredKeys) return Object.freeze({ event: eventId, args: spec });
-        const out = { event: eventId };
-        if (Object.prototype.hasOwnProperty.call(spec, "enabled")) out.enabled = spec.enabled;
-        const argsFromField = (spec.args && typeof spec.args === "object" && !Array.isArray(spec.args))
-          ? { ...spec.args }
-          : {};
-        for (const [k, v] of Object.entries(spec)) {
-          if (k === "enabled" || k === "args") continue;
-          argsFromField[k] = v;
-        }
-        if (Object.keys(argsFromField).length) out.args = argsFromField;
-        return Object.freeze(out);
-      }
-      return Object.freeze({ event: eventId });
-    });
-  }
-  return [];
-}
+import {
+  asObj,
+  asText,
+  normalizeSpellId,
+  normalizeEventId,
+  normalizeGestureId,
+  normalizeOrbStateId,
+  parseOnSelector,
+  asSelectorList,
+  normalizeTriggerEntries,
+} from "./orchestrator-v1-normalizers.js";
 
 function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
   const out = {};
