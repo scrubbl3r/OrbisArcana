@@ -5,7 +5,6 @@ import { failCheck } from "./check-fail-v2.mjs";
 export function validateDocRegistryV2({
   tag,
   keys,
-  docPaths,
   relPaths,
   label,
   requireMarkdown = false,
@@ -15,8 +14,8 @@ export function validateDocRegistryV2({
   if (!keysArr.length) {
     failCheck(tag, `${label} key registry is empty`);
   }
-  if (!relPaths && !docPaths) {
-    failCheck(tag, `${label} validation requires docPaths or relPaths`);
+  if (!relPaths) {
+    failCheck(tag, `${label} validation requires relPaths`);
   }
   const relArr = relPaths ? Array.from(relPaths || []) : null;
   if (relArr && relArr.length !== keysArr.length) {
@@ -25,9 +24,7 @@ export function validateDocRegistryV2({
       `${label} key/path count mismatch: keys=${keysArr.length} relPaths=${relArr.length}`
     );
   }
-  const pairs = relPaths
-    ? relArr.map((rel, idx) => ({ key: keysArr[idx], rel }))
-    : keysArr.map((key) => ({ key, rel: docPaths?.[key] }));
+  const pairs = relArr.map((rel, idx) => ({ key: keysArr[idx], rel }));
   for (const { key, rel } of pairs) {
     if (!rel) {
       failCheck(tag, `missing doc path for key: ${key}`);
