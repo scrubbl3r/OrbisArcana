@@ -17,6 +17,7 @@
     "check:orchestrator-v1-compiler:v2": "node tools/rule-engine-v2/check-orchestrator-v1-compiler-contract-v2.mjs",
     "check:orchestrator-v1-validator:v2": "node tools/rule-engine-v2/check-orchestrator-v1-validator-contract-v2.mjs",
     "check:orchestrator-v1-parity:v2": "node tools/rule-engine-v2/check-orchestrator-v1-projection-parity-v2.mjs",
+    "check:orchestrator-v1-projection-validity:v2": "node tools/rule-engine-v2/check-orchestrator-v1-projection-validity-contract-v2.mjs",
     "check:orchestrator-v1-bootstrap-projection:v2": "node tools/rule-engine-v2/check-orchestrator-v1-bootstrap-projection-contract-v2.mjs",
     "check:orchestrator-v1-bootstrap-defaults:v2": "node tools/rule-engine-v2/check-orchestrator-v1-bootstrap-defaults-contract-v2.mjs",
     "check:orchestrator-v1-bootstrap-parity:v2": "node tools/rule-engine-v2/check-orchestrator-v1-bootstrap-parity-contract-v2.mjs",
