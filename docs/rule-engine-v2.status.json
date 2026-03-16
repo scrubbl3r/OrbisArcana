@@ -1,6 +1,6 @@
 {
   "schema": "orbis.rule_engine_v2.status",
-  "generatedAt": "2026-03-16T19:57:59.412Z",
+  "generatedAt": "2026-03-16T19:59:06.614Z",
   "health": {
     "spellbookOk": true,
     "interactionsOk": true,
