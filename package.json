@@ -16,6 +16,7 @@
     "check:runtime-policy-import-contract:v2": "node tools/rule-engine-v2/check-runtime-policy-import-contract-v2.mjs",
     "check:orchestrator-v1-compiler:v2": "node tools/rule-engine-v2/check-orchestrator-v1-compiler-contract-v2.mjs",
     "check:orchestrator-v1-validator:v2": "node tools/rule-engine-v2/check-orchestrator-v1-validator-contract-v2.mjs",
+    "check:orchestrator-v1-parity:v2": "node tools/rule-engine-v2/check-orchestrator-v1-projection-parity-v2.mjs",
     "check:doc-policy-terminology:v2": "node tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
     "check:validator-policy-terminology:v2": "node tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs",
     "check:master-control-compat-surface:v2": "node tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs",
