@@ -34,6 +34,29 @@ function normalizeOrbStateId(orbStateIdRaw) {
   return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
 }
 
+function parseOnSelector(raw) {
+  const text = asText(raw);
+  if (!text) return null;
+
+  let type = "spell";
+  let idText = text;
+
+  const colon = text.indexOf(":");
+  const dot = text.indexOf(".");
+  if (colon > 0) {
+    type = asText(text.slice(0, colon)).toLowerCase();
+    idText = asText(text.slice(colon + 1));
+  } else if (dot > 0) {
+    type = asText(text.slice(0, dot)).toLowerCase();
+    idText = text;
+  }
+
+  if (type === "spell") return Object.freeze({ type, id: normalizeSpellId(idText) });
+  if (type === "gesture") return Object.freeze({ type, id: normalizeGestureId(idText) });
+  if (type === "orb_state") return Object.freeze({ type, id: normalizeOrbStateId(idText) });
+  return Object.freeze({ type: "", id: "" });
+}
+
 function isFiniteNonNegative(v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0;
@@ -122,36 +145,55 @@ export function validateOrchestratorV1(cfg) {
       errors.push(`rule ${ruleId} priority must be a finite number when present`);
     }
 
-    const on = asObj(rule.on);
-    pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell", "gesture", "orb_state"]);
-    const hasSpell = Object.prototype.hasOwnProperty.call(on, "spell");
-    const hasGesture = Object.prototype.hasOwnProperty.call(on, "gesture");
-    const hasOrbState = Object.prototype.hasOwnProperty.call(on, "orb_state");
-    if (!hasSpell && !hasGesture && !hasOrbState) {
-      errors.push(`rule ${ruleId} must define on.spell and/or on.gesture and/or on.orb_state`);
-    }
-    if (hasSpell) {
-      const spellId = normalizeSpellId(on.spell);
-      if (!spellId) {
-        errors.push(`rule ${ruleId} has empty on.spell`);
-      } else if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, spellId)) {
-        errors.push(`rule ${ruleId} references inactive or unknown spell id: ${on.spell}`);
+    const onRaw = rule.on;
+    const onEntries = [];
+    if (typeof onRaw === "string") {
+      onEntries.push(parseOnSelector(onRaw));
+    } else if (Array.isArray(onRaw)) {
+      for (const entry of onRaw) onEntries.push(parseOnSelector(entry));
+    } else {
+      const on = asObj(onRaw);
+      pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell", "gesture", "orb_state"]);
+      if (Object.prototype.hasOwnProperty.call(on, "spell")) {
+        onEntries.push(Object.freeze({ type: "spell", id: normalizeSpellId(on.spell), raw: on.spell }));
+      }
+      if (Object.prototype.hasOwnProperty.call(on, "gesture")) {
+        onEntries.push(Object.freeze({ type: "gesture", id: normalizeGestureId(on.gesture), raw: on.gesture }));
+      }
+      if (Object.prototype.hasOwnProperty.call(on, "orb_state")) {
+        onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(on.orb_state), raw: on.orb_state }));
       }
     }
-    if (hasGesture) {
-      const gestureId = normalizeGestureId(on.gesture);
-      if (!gestureId) {
-        errors.push(`rule ${ruleId} has empty on.gesture`);
-      } else if (!KNOWN_GESTURE_IDS.has(gestureId)) {
-        errors.push(`rule ${ruleId} references unknown gesture id: ${on.gesture}`);
-      }
+
+    const seenOn = new Set();
+    if (!onEntries.length) {
+      errors.push(`rule ${ruleId} must define on selectors`);
     }
-    if (hasOrbState) {
-      const orbStateId = normalizeOrbStateId(on.orb_state);
-      if (!orbStateId) {
-        errors.push(`rule ${ruleId} has empty on.orb_state`);
-      } else if (!KNOWN_ORB_STATE_IDS.has(orbStateId)) {
-        errors.push(`rule ${ruleId} references unknown orb_state id: ${on.orb_state}`);
+    for (const entry of onEntries) {
+      const type = asText(entry && entry.type).toLowerCase();
+      const id = asText(entry && entry.id).toLowerCase();
+      if (type !== "spell" && type !== "gesture" && type !== "orb_state") {
+        errors.push(`rule ${ruleId} has unsupported on selector type`);
+        continue;
+      }
+      if (!id) {
+        errors.push(`rule ${ruleId} has empty on.${type}`);
+        continue;
+      }
+      const dedupeKey = `${type}:${id}`;
+      if (seenOn.has(dedupeKey)) {
+        errors.push(`rule ${ruleId} contains duplicate on selector: ${type}.${id}`);
+        continue;
+      }
+      seenOn.add(dedupeKey);
+      if (type === "spell" && !Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id)) {
+        errors.push(`rule ${ruleId} references inactive or unknown spell id: ${entry.raw || id}`);
+      }
+      if (type === "gesture" && !KNOWN_GESTURE_IDS.has(id)) {
+        errors.push(`rule ${ruleId} references unknown gesture id: ${entry.raw || id}`);
+      }
+      if (type === "orb_state" && !KNOWN_ORB_STATE_IDS.has(id)) {
+        errors.push(`rule ${ruleId} references unknown orb_state id: ${entry.raw || id}`);
       }
     }
 

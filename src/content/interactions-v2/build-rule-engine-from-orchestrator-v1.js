@@ -37,6 +37,29 @@ function normalizeOrbStateId(orbStateIdRaw) {
   return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
 }
 
+function parseOnSelector(raw) {
+  const text = asText(raw);
+  if (!text) return null;
+
+  let type = "spell";
+  let idText = text;
+
+  const colon = text.indexOf(":");
+  const dot = text.indexOf(".");
+  if (colon > 0) {
+    type = asText(text.slice(0, colon)).toLowerCase();
+    idText = asText(text.slice(colon + 1));
+  } else if (dot > 0) {
+    type = asText(text.slice(0, dot)).toLowerCase();
+    idText = text;
+  }
+
+  if (type === "spell") return Object.freeze({ type, id: normalizeSpellId(idText) });
+  if (type === "gesture") return Object.freeze({ type, id: normalizeGestureId(idText) });
+  if (type === "orb_state") return Object.freeze({ type, id: normalizeOrbStateId(idText) });
+  return null;
+}
+
 function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
   const out = {};
   for (const [eventIdRaw, args] of Object.entries(asObj(defaultsTriggerRaw))) {
@@ -95,14 +118,24 @@ function mapRule(rule, defaults) {
   const r = asObj(rule);
   const id = asText(r.id);
   if (!id) return null;
-  const onRaw = asObj(r.on);
   const on = [];
-  const spellId = normalizeSpellId(onRaw.spell);
-  if (spellId) on.push(Object.freeze({ type: "spell", id: spellId }));
-  const gestureId = normalizeGestureId(onRaw.gesture);
-  if (gestureId) on.push(Object.freeze({ type: "gesture", id: gestureId }));
-  const orbStateId = normalizeOrbStateId(onRaw.orb_state);
-  if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
+  if (typeof r.on === "string") {
+    const parsed = parseOnSelector(r.on);
+    if (parsed && parsed.id) on.push(parsed);
+  } else if (Array.isArray(r.on)) {
+    for (const entry of r.on) {
+      const parsed = parseOnSelector(entry);
+      if (parsed && parsed.id) on.push(parsed);
+    }
+  } else {
+    const onRaw = asObj(r.on);
+    const spellId = normalizeSpellId(onRaw.spell);
+    if (spellId) on.push(Object.freeze({ type: "spell", id: spellId }));
+    const gestureId = normalizeGestureId(onRaw.gesture);
+    if (gestureId) on.push(Object.freeze({ type: "gesture", id: gestureId }));
+    const orbStateId = normalizeOrbStateId(onRaw.orb_state);
+    if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
+  }
   if (!on.length) return null;
   const then = [];
   const openAction = mapOpen(r.open, asObj(defaults.open));

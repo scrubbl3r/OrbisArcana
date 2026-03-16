@@ -20,11 +20,7 @@ const sample = Object.freeze({
   rules: Object.freeze([
     Object.freeze({
       id: "o_contract_sample",
-      on: Object.freeze({
-        spell: "rota",
-        gesture: "spin_y",
-        orb_state: "charged",
-      }),
+      on: Object.freeze(["spell:rota", "gesture:spin_y", "orb_state:charged"]),
       open: Object.freeze(["sanctum", "vectus"]),
       trigger: Object.freeze([
         Object.freeze({ event: "grace", args: Object.freeze({ ms: 700, mode: "boost" }) }),

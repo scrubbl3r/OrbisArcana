@@ -15,7 +15,7 @@ export const ORCHESTRATOR_V1 = Object.freeze({
     // Minimal supported shape in early slices:
     // {
     //   id: "o_example",
-    //   on: { spell: "orbis", gesture: "spin_y", orb_state: "charged" },
+    //   on: ["spell:orbis", "gesture:spin_y", "orb_state:charged"],
     //   open: ["domus", "electrum"],
     //   trigger: ["teleport_home", { event: "grace", args: { ms: 700 } }],
     // },
