@@ -26,13 +26,18 @@ Related index:
 - `src/voice/spellbook.js`
   - Runtime view derived from `spellbook-v2`.
 - `src/runtime/receiver-bootstrap.js`
-  - Runtime bootstrap wiring for adapter startup.
+  - Runtime bootstrap wiring for orchestrator + interactions adapter startup.
 
 ## Runtime Mode Status
-- Runtime rule source: interactions adapter (`INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap: true`)
+- Runtime rule source family: orchestrator-v1 and interactions-adapter (selected by bootstrap policy + safety fallback)
 - Projection-only rule execution: enabled (`RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly: true`)
 - Drift gate: enforced by `npm run pre-smoke:v2`
 - Runtime source IDs (authoritative): `src/runtime/receiver-bootstrap.js`
+  - `orchestrator_v1`
+  - `orchestrator_v1_projected`
+  - `orchestrator_v1_fallback`
+  - `orchestrator_v1_disabled`
+  - `orchestrator_v1_missing_builder`
   - `interactions_adapter`
   - `interactions_adapter_fallback`
   - `interactions_bootstrap_disabled`
