@@ -1,6 +1,7 @@
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { RULE_ENGINE_MASTER_CONTROL_TOKEN_V2 } from "./policy-terms-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 import { runRgLines } from "./rg-lines-v2.mjs";
 
@@ -11,7 +12,7 @@ function listFiles() {
     .filter((p) => !/docs\/rule-engine-v[12]-slice-/.test(p));
 }
 
-const token = "RULE_ENGINE_MASTER_CONTROL";
+const token = RULE_ENGINE_MASTER_CONTROL_TOKEN_V2;
 const allowed = new Set([
   "src/content/spell-rules/rule-engine-master-control.js",
   "src/content/spell-rules/index.js",
