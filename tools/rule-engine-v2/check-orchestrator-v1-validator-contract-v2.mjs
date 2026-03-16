@@ -1,0 +1,94 @@
+import { validateOrchestratorV1 } from "../../src/content/interactions-v2/validate-orchestrator-v1.js";
+import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
+import { reportCheckPass } from "./check-pass-v2.mjs";
+
+const CHECK_TAG = "orchestrator-v1-validator:v2";
+
+function hasError(errors, needle) {
+  return (Array.isArray(errors) ? errors : []).some((line) => String(line || "").includes(needle));
+}
+
+function expectValid(caseName, cfg) {
+  const errors = validateOrchestratorV1(cfg);
+  if (errors.length) {
+    failCheckWithDetails(CHECK_TAG, `${caseName} expected valid config`, errors);
+  }
+}
+
+function expectInvalid(caseName, cfg, expectedNeedle) {
+  const errors = validateOrchestratorV1(cfg);
+  if (!errors.length) {
+    failCheck(CHECK_TAG, `${caseName} expected validation failure`);
+  }
+  if (!hasError(errors, expectedNeedle)) {
+    failCheckWithDetails(
+      CHECK_TAG,
+      `${caseName} expected error containing "${expectedNeedle}"`,
+      errors
+    );
+  }
+}
+
+const baseline = Object.freeze({
+  version: "1",
+  enabled: true,
+  defaults: Object.freeze({
+    open: Object.freeze({ ttlMs: 2000 }),
+    trigger: Object.freeze({ grace: Object.freeze({ ms: 500 }) }),
+    rule: Object.freeze({ cooldownMs: 100, matchWindowMs: 1500, priority: 4 }),
+  }),
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_validator_contract",
+      on: Object.freeze(["spell:rota", "gesture:spin_y", "orb_state:charged"]),
+      open: Object.freeze(["sanctum", "vectus"]),
+      trigger: Object.freeze(["grace", Object.freeze({ event: "aoe_electric", enabled: true })]),
+    }),
+  ]),
+});
+
+expectValid("baseline_shorthand", baseline);
+
+expectInvalid(
+  "duplicate_on_selector",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_dup",
+        on: Object.freeze(["spell:rota", "spell:rota"]),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  }),
+  "contains duplicate on selector"
+);
+
+expectInvalid(
+  "invalid_rule_default_timing",
+  Object.freeze({
+    ...baseline,
+    defaults: Object.freeze({
+      ...baseline.defaults,
+      rule: Object.freeze({ cooldownMs: -1 }),
+    }),
+  }),
+  "defaults.rule.cooldownMs must be a finite number >= 0"
+);
+
+expectInvalid(
+  "invalid_open_spell",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_bad_open",
+        on: "rota",
+        open: Object.freeze(["not_a_real_spell"]),
+      }),
+    ]),
+  }),
+  "open references inactive or unknown spell id"
+);
+
+reportCheckPass(CHECK_TAG, "orchestrator validator contract holds for shorthand + defaults");
