@@ -31,6 +31,7 @@
     "check:docs-legacy-handle-drift:v2": "node tools/rule-engine-v2/check-docs-legacy-handle-drift-v2.mjs",
     "check:core-doc-registry:v2": "node tools/rule-engine-v2/check-core-doc-registry-v2.mjs",
     "check:generated-artifact-registry:v2": "node tools/rule-engine-v2/check-generated-artifact-registry-v2.mjs",
+    "check:doc-key-registry-integrity:v2": "node tools/rule-engine-v2/check-doc-key-registry-integrity-v2.mjs",
     "check:compatibility-doc-source-ids:v2": "node tools/rule-engine-v2/check-compatibility-doc-source-ids-v2.mjs",
     "check:doc-policy-terminology:v2": "node tools/rule-engine-v2/check-doc-policy-terminology-v2.mjs",
     "check:validator-policy-terminology:v2": "node tools/rule-engine-v2/check-validator-policy-terminology-v2.mjs",

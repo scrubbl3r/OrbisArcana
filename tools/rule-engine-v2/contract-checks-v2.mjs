@@ -78,6 +78,10 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-generated-artifact-registry-v2.mjs",
   },
   {
+    id: "doc_key_registry_integrity",
+    script: "tools/rule-engine-v2/check-doc-key-registry-integrity-v2.mjs",
+  },
+  {
     id: "compatibility_doc_source_ids",
     script: "tools/rule-engine-v2/check-compatibility-doc-source-ids-v2.mjs",
   },
