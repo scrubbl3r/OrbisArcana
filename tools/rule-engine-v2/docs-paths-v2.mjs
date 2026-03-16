@@ -60,3 +60,11 @@ export function docRelPathsForKeysV2(keys) {
 export function docRelPathForKeyV2(key) {
   return docRelPathForKeyOrThrowV2(key);
 }
+
+export const RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_RELS = Object.freeze(
+  docRelPathsForKeysV2(RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS)
+);
+
+export const RULE_ENGINE_V2_CORE_MARKDOWN_DOC_RELS = Object.freeze(
+  docRelPathsForKeysV2(RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS)
+);
