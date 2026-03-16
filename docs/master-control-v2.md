@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-16T19:07:48.234Z
+Generated: 2026-03-16T19:09:25.669Z
 
 This document is generated from SSOT:
 - spellbook: `src/content/interactions-v2/spellbook-v2.js`
@@ -233,6 +233,17 @@ This document is generated from SSOT:
     ]
   }
 ]
+```
+
+## Orchestrator Projection (Derived)
+
+```json
+{
+  "version": "1",
+  "enabled": true,
+  "ruleCount": 5,
+  "parityWithInteractionsRuleCount": true
+}
 ```
 
 ## Canonical Handles (Nuggets)

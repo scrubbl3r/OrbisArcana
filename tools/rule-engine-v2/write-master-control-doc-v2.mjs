@@ -18,6 +18,7 @@ import {
   ACTION_HANDLES_V2,
   EVENT_HANDLES_V2,
   INTERACTIONS_V2,
+  projectOrchestratorV1FromInteractionsV2,
   SIGNAL_HANDLES_V2,
   SPELLBOOK_V2,
 } from "../../src/content/interactions-v2/index.js";
@@ -35,6 +36,10 @@ function buildDoc() {
   const rules = getInteractionsRules(INTERACTIONS_V2);
   const defaults = getInteractionsDefaults(INTERACTIONS_V2);
   const enabled = isInteractionsEnabled(INTERACTIONS_V2);
+  const orchestratorProjection = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
+  const orchestratorProjectionRules = Array.isArray(orchestratorProjection?.rules)
+    ? orchestratorProjection.rules
+    : [];
 
   const lines = [];
   lines.push("# OrbisArcana Master Control V2");
@@ -67,6 +72,17 @@ function buildDoc() {
   lines.push(toJson(rules));
   lines.push("```");
   lines.push("");
+  lines.push("## Orchestrator Projection (Derived)");
+  lines.push("");
+  lines.push("```json");
+  lines.push(toJson({
+    version: orchestratorProjection?.version,
+    enabled: orchestratorProjection?.enabled !== false,
+    ruleCount: orchestratorProjectionRules.length,
+    parityWithInteractionsRuleCount: orchestratorProjectionRules.length === rules.length,
+  }));
+  lines.push("```");
+  lines.push("");
   lines.push("## Canonical Handles (Nuggets)");
   lines.push("");
   lines.push("### Signals");
@@ -97,6 +113,11 @@ function buildDoc() {
 }
 
 function buildMasterControlJson() {
+  const orchestratorProjection = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
+  const interactionsRules = getInteractionsRules(INTERACTIONS_V2);
+  const orchestratorProjectionRules = Array.isArray(orchestratorProjection?.rules)
+    ? orchestratorProjection.rules
+    : [];
   return {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControl,
     generatedAt: nowIso(),
@@ -108,7 +129,13 @@ function buildMasterControlJson() {
       version: INTERACTIONS_V2 && INTERACTIONS_V2.version,
       enabled: isInteractionsEnabled(INTERACTIONS_V2),
       defaults: getInteractionsDefaults(INTERACTIONS_V2),
-      rules: getInteractionsRules(INTERACTIONS_V2),
+      rules: interactionsRules,
+    },
+    orchestratorProjection: {
+      version: orchestratorProjection?.version,
+      enabled: orchestratorProjection?.enabled !== false,
+      ruleCount: orchestratorProjectionRules.length,
+      parityWithInteractionsRuleCount: orchestratorProjectionRules.length === interactionsRules.length,
     },
     handles: {
       signals: SIGNAL_HANDLES_V2,

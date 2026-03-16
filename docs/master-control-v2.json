@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-16T19:07:48.238Z",
+  "generatedAt": "2026-03-16T19:09:25.674Z",
   "spellbook": {
     "version": "2",
     "spells": [
@@ -214,6 +214,12 @@
         ]
       }
     ]
+  },
+  "orchestratorProjection": {
+    "version": "1",
+    "enabled": true,
+    "ruleCount": 5,
+    "parityWithInteractionsRuleCount": true
   },
   "handles": {
     "signals": {
