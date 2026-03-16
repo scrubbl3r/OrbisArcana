@@ -27,6 +27,7 @@
     "check:master-control-orchestrator-section:v2": "node tools/rule-engine-v2/check-master-control-orchestrator-section-v2.mjs",
     "check:docs-index-orchestrator-links:v2": "node tools/rule-engine-v2/check-docs-index-orchestrator-links-v2.mjs",
     "check:docs-index-generated-artifacts:v2": "node tools/rule-engine-v2/check-docs-index-generated-artifacts-v2.mjs",
+    "check:docs-index-core-links:v2": "node tools/rule-engine-v2/check-docs-index-core-links-v2.mjs",
     "check:docs-index-canonical-signals:v2": "node tools/rule-engine-v2/check-docs-index-canonical-signals-v2.mjs",
     "check:docs-legacy-handle-drift:v2": "node tools/rule-engine-v2/check-docs-legacy-handle-drift-v2.mjs",
     "check:core-doc-registry:v2": "node tools/rule-engine-v2/check-core-doc-registry-v2.mjs",
