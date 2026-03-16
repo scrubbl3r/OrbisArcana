@@ -6,6 +6,7 @@
 
 export const RULE_ENGINE_SOURCES = Object.freeze({
   ORCHESTRATOR_V1: "orchestrator_v1",
+  ORCHESTRATOR_V1_PROJECTED: "orchestrator_v1_projected",
   ORCHESTRATOR_V1_FALLBACK: "orchestrator_v1_fallback",
   ORCHESTRATOR_V1_DISABLED: "orchestrator_v1_disabled",
   ORCHESTRATOR_V1_MISSING_BUILDER: "orchestrator_v1_missing_builder",
@@ -17,6 +18,7 @@ export const RULE_ENGINE_SOURCES = Object.freeze({
 
 export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
   [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1]: "Orchestrator V1",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED]: "Orchestrator V1 (projected from interactions)",
   [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_FALLBACK]: "Orchestrator V1 (safe fallback)",
   [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_DISABLED]: "Orchestrator V1 disabled",
   [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_MISSING_BUILDER]: "Orchestrator V1 missing builder (safe fallback)",
@@ -77,6 +79,7 @@ export async function loadReceiverInitModules() {
       INTERACTIONS_V2_BOOTSTRAP,
       buildRuleEngineFromOrchestratorV1,
       buildRuleEngineFromInteractionsV2,
+      projectOrchestratorV1FromInteractionsV2,
       validateOrchestratorV1,
       validateSpellbookV2,
     },
@@ -125,6 +128,7 @@ export async function loadReceiverInitModules() {
     validateRuleEngineConfig,
     buildRuleEngineFromOrchestratorV1,
     buildRuleEngineFromInteractionsV2,
+    projectOrchestratorV1FromInteractionsV2,
   };
   const worldItemExports = {
     WORLD_ITEMS: worldItemsResolved,
@@ -170,6 +174,7 @@ export async function loadReceiverInitModules() {
     ORCHESTRATOR_V1_BOOTSTRAP,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
+    projectOrchestratorV1FromInteractionsV2,
     validateOrchestratorV1,
     validateSpellbookV2,
     ...worldItemExports,
@@ -236,6 +241,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INTERACTIONS_V2_BOOTSTRAP,
     buildRuleEngineFromOrchestratorV1,
     buildRuleEngineFromInteractionsV2,
+    projectOrchestratorV1FromInteractionsV2,
     validateOrchestratorV1,
     validateSpellbookV2,
     createSpellCastExecutor,
@@ -290,6 +296,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const buildRuleEngineFromOrchestrator = (typeof buildRuleEngineFromOrchestratorV1 === "function")
     ? buildRuleEngineFromOrchestratorV1
     : null;
+  const projectOrchestratorFromInteractions = (typeof projectOrchestratorV1FromInteractionsV2 === "function")
+    ? projectOrchestratorV1FromInteractionsV2
+    : null;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function") ? setRuleSchema : undefined;
 
   const adapterBaseRuleSchema = (ruleEnginePolicyControl && typeof ruleEnginePolicyControl === "object")
@@ -326,14 +335,27 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       } catch (_) {}
     } else {
       try {
+        const projectOrchestratorWhenEmpty = !(ORCHESTRATOR_V1_BOOTSTRAP &&
+          typeof ORCHESTRATOR_V1_BOOTSTRAP === "object" &&
+          ORCHESTRATOR_V1_BOOTSTRAP.projectFromInteractionsWhenOrchestratorEmpty === false);
+        const orchestratorRules = Array.isArray(ORCHESTRATOR_V1 && ORCHESTRATOR_V1.rules)
+          ? ORCHESTRATOR_V1.rules
+          : [];
+        const orchestratorInput = (projectOrchestratorWhenEmpty && !orchestratorRules.length &&
+          typeof projectOrchestratorFromInteractions === "function")
+          ? projectOrchestratorFromInteractions(INTERACTIONS_V2)
+          : ORCHESTRATOR_V1;
+        if (orchestratorInput !== ORCHESTRATOR_V1) {
+          ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED;
+        }
         if (typeof validateOrchestratorV1 === "function") {
-          const orchestratorErrors = validateOrchestratorV1(ORCHESTRATOR_V1);
+          const orchestratorErrors = validateOrchestratorV1(orchestratorInput);
           if (orchestratorErrors.length) {
             throw new Error(`Orchestrator v1 validation failed: ${orchestratorErrors.join(" | ")}`);
           }
         }
         ruleSchema = buildRuleEngineFromOrchestrator({
-          orchestratorV1: ORCHESTRATOR_V1,
+          orchestratorV1: orchestratorInput,
           baseRuleEngine: adapterBaseRuleSchema,
         });
       } catch (err) {
@@ -711,7 +733,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
   const resolvedRuleSource = adapterFallbackUsed
     ? ruleSource
-    : (useOrchestratorV1 ? RULE_ENGINE_SOURCES.ORCHESTRATOR_V1 : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER);
+    : (useOrchestratorV1 ? ruleSource : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER);
   try {
     console.info(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
   } catch (_) {}

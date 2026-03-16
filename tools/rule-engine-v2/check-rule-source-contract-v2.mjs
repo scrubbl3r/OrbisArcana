@@ -9,6 +9,7 @@ const CHECK_TAG = "rule-source-contract:v2";
 
 const expectedSourceIds = Object.freeze([
   "orchestrator_v1",
+  "orchestrator_v1_projected",
   "orchestrator_v1_fallback",
   "orchestrator_v1_disabled",
   "orchestrator_v1_missing_builder",
