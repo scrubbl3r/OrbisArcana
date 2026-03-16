@@ -3,8 +3,8 @@ import {
   RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS,
 } from "./docs-paths-v2.mjs";
 import {
-  docsIndexLinkTokenForRelPathV2,
-  docsIndexOwnershipTokenForRelPathV2,
+  docsIndexLinkTokensForRelPathsV2,
+  docsIndexOwnershipTokensForRelPathsV2,
 } from "./docs-index-tokens-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
@@ -16,8 +16,8 @@ const { rel: indexRel, text } = readDocsIndexV2();
 const generatedArtifactRels = RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS.map(
   (key) => RULE_ENGINE_V2_DOC_PATHS[key]
 );
-const requiredQuickLinkTokens = generatedArtifactRels.map((rel) => docsIndexLinkTokenForRelPathV2(rel));
-const requiredOwnershipTokens = generatedArtifactRels.map((rel) => docsIndexOwnershipTokenForRelPathV2(rel));
+const requiredQuickLinkTokens = docsIndexLinkTokensForRelPathsV2(generatedArtifactRels);
+const requiredOwnershipTokens = docsIndexOwnershipTokensForRelPathsV2(generatedArtifactRels);
 
 requireTextIncludesTokensV2({
   tag: CHECK_TAG,
