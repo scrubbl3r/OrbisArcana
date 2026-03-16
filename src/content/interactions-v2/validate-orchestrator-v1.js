@@ -57,6 +57,12 @@ function parseOnSelector(raw) {
   return Object.freeze({ type: "", id: "" });
 }
 
+function asSelectorList(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") return [raw];
+  return [];
+}
+
 function isFiniteNonNegative(v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0;
@@ -155,13 +161,19 @@ export function validateOrchestratorV1(cfg) {
       const on = asObj(onRaw);
       pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell", "gesture", "orb_state"]);
       if (Object.prototype.hasOwnProperty.call(on, "spell")) {
-        onEntries.push(Object.freeze({ type: "spell", id: normalizeSpellId(on.spell), raw: on.spell }));
+        for (const spellRaw of asSelectorList(on.spell)) {
+          onEntries.push(Object.freeze({ type: "spell", id: normalizeSpellId(spellRaw), raw: spellRaw }));
+        }
       }
       if (Object.prototype.hasOwnProperty.call(on, "gesture")) {
-        onEntries.push(Object.freeze({ type: "gesture", id: normalizeGestureId(on.gesture), raw: on.gesture }));
+        for (const gestureRaw of asSelectorList(on.gesture)) {
+          onEntries.push(Object.freeze({ type: "gesture", id: normalizeGestureId(gestureRaw), raw: gestureRaw }));
+        }
       }
       if (Object.prototype.hasOwnProperty.call(on, "orb_state")) {
-        onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(on.orb_state), raw: on.orb_state }));
+        for (const orbStateRaw of asSelectorList(on.orb_state)) {
+          onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(orbStateRaw), raw: orbStateRaw }));
+        }
       }
     }
 
