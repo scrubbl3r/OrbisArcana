@@ -43,6 +43,12 @@ const KNOWN_ORB_STATE_IDS = new Set(
   getSignalIdsByPrefix("orb_state.")
 );
 
+function pushOnEntries(onEntries, raw, type, normalizeId) {
+  for (const value of asSelectorList(raw)) {
+    onEntries.push(Object.freeze({ type, id: normalizeId(value), raw: value }));
+  }
+}
+
 export function validateOrchestratorV1(cfg) {
   const errors = [];
   const target = asObj(cfg);
@@ -198,41 +204,13 @@ export function validateOrchestratorV1(cfg) {
         "orbState",
         "orbStates",
       ]);
-      if (Object.prototype.hasOwnProperty.call(on, "spell")) {
-        for (const spellRaw of asSelectorList(on.spell)) {
-          onEntries.push(Object.freeze({ type: "spell", id: normalizeSpellId(spellRaw), raw: spellRaw }));
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(on, "spells")) {
-        for (const spellRaw of asSelectorList(on.spells)) {
-          onEntries.push(Object.freeze({ type: "spell", id: normalizeSpellId(spellRaw), raw: spellRaw }));
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(on, "gesture")) {
-        for (const gestureRaw of asSelectorList(on.gesture)) {
-          onEntries.push(Object.freeze({ type: "gesture", id: normalizeGestureId(gestureRaw), raw: gestureRaw }));
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(on, "gestures")) {
-        for (const gestureRaw of asSelectorList(on.gestures)) {
-          onEntries.push(Object.freeze({ type: "gesture", id: normalizeGestureId(gestureRaw), raw: gestureRaw }));
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(on, "orb_state")) {
-        for (const orbStateRaw of asSelectorList(on.orb_state)) {
-          onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(orbStateRaw), raw: orbStateRaw }));
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(on, "orbState")) {
-        for (const orbStateRaw of asSelectorList(on.orbState)) {
-          onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(orbStateRaw), raw: orbStateRaw }));
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(on, "orbStates")) {
-        for (const orbStateRaw of asSelectorList(on.orbStates)) {
-          onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(orbStateRaw), raw: orbStateRaw }));
-        }
-      }
+      if (Object.prototype.hasOwnProperty.call(on, "spell")) pushOnEntries(onEntries, on.spell, "spell", normalizeSpellId);
+      if (Object.prototype.hasOwnProperty.call(on, "spells")) pushOnEntries(onEntries, on.spells, "spell", normalizeSpellId);
+      if (Object.prototype.hasOwnProperty.call(on, "gesture")) pushOnEntries(onEntries, on.gesture, "gesture", normalizeGestureId);
+      if (Object.prototype.hasOwnProperty.call(on, "gestures")) pushOnEntries(onEntries, on.gestures, "gesture", normalizeGestureId);
+      if (Object.prototype.hasOwnProperty.call(on, "orb_state")) pushOnEntries(onEntries, on.orb_state, "orb_state", normalizeOrbStateId);
+      if (Object.prototype.hasOwnProperty.call(on, "orbState")) pushOnEntries(onEntries, on.orbState, "orb_state", normalizeOrbStateId);
+      if (Object.prototype.hasOwnProperty.call(on, "orbStates")) pushOnEntries(onEntries, on.orbStates, "orb_state", normalizeOrbStateId);
     }
 
     const seenOn = new Set();

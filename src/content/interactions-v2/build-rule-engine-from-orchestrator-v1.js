@@ -78,6 +78,20 @@ function mapOpen(open, defaultsOpen) {
   return Object.freeze(out);
 }
 
+function pushParsedOnSelectors(target, raw) {
+  for (const entry of asSelectorList(raw)) {
+    const parsed = parseOnSelector(entry);
+    if (parsed?.id) target.push(parsed);
+  }
+}
+
+function pushNormalizedOnEntries(target, raw, normalizeId, type) {
+  for (const value of asSelectorList(raw)) {
+    const id = normalizeId(value);
+    if (id) target.push(Object.freeze({ type, id }));
+  }
+}
+
 function mapRule(rule, defaults) {
   const r = asObj(rule);
   const defaultsRoot = asObj(defaults);
@@ -86,45 +100,18 @@ function mapRule(rule, defaults) {
   const ruleDefaults = asObj(defaultsRoot.rule);
   const on = [];
   if (typeof r.on === "string") {
-    for (const entry of asSelectorList(r.on)) {
-      const parsed = parseOnSelector(entry);
-      if (parsed?.id) on.push(parsed);
-    }
+    pushParsedOnSelectors(on, r.on);
   } else if (Array.isArray(r.on)) {
-    for (const entry of asSelectorList(r.on)) {
-      const parsed = parseOnSelector(entry);
-      if (parsed?.id) on.push(parsed);
-    }
+    pushParsedOnSelectors(on, r.on);
   } else {
     const onRaw = asObj(r.on);
-    for (const spellRaw of asSelectorList(onRaw.spell)) {
-      const spellId = normalizeSpellId(spellRaw);
-      if (spellId) on.push(Object.freeze({ type: "spell", id: spellId }));
-    }
-    for (const spellRaw of asSelectorList(onRaw.spells)) {
-      const spellId = normalizeSpellId(spellRaw);
-      if (spellId) on.push(Object.freeze({ type: "spell", id: spellId }));
-    }
-    for (const gestureRaw of asSelectorList(onRaw.gesture)) {
-      const gestureId = normalizeGestureId(gestureRaw);
-      if (gestureId) on.push(Object.freeze({ type: "gesture", id: gestureId }));
-    }
-    for (const gestureRaw of asSelectorList(onRaw.gestures)) {
-      const gestureId = normalizeGestureId(gestureRaw);
-      if (gestureId) on.push(Object.freeze({ type: "gesture", id: gestureId }));
-    }
-    for (const orbStateRaw of asSelectorList(onRaw.orb_state)) {
-      const orbStateId = normalizeOrbStateId(orbStateRaw);
-      if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
-    }
-    for (const orbStateRaw of asSelectorList(onRaw.orbState)) {
-      const orbStateId = normalizeOrbStateId(orbStateRaw);
-      if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
-    }
-    for (const orbStateRaw of asSelectorList(onRaw.orbStates)) {
-      const orbStateId = normalizeOrbStateId(orbStateRaw);
-      if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
-    }
+    pushNormalizedOnEntries(on, onRaw.spell, normalizeSpellId, "spell");
+    pushNormalizedOnEntries(on, onRaw.spells, normalizeSpellId, "spell");
+    pushNormalizedOnEntries(on, onRaw.gesture, normalizeGestureId, "gesture");
+    pushNormalizedOnEntries(on, onRaw.gestures, normalizeGestureId, "gesture");
+    pushNormalizedOnEntries(on, onRaw.orb_state, normalizeOrbStateId, "orb_state");
+    pushNormalizedOnEntries(on, onRaw.orbState, normalizeOrbStateId, "orb_state");
+    pushNormalizedOnEntries(on, onRaw.orbStates, normalizeOrbStateId, "orb_state");
   }
   if (!on.length) return null;
   const then = [];
