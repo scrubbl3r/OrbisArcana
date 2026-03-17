@@ -18,6 +18,11 @@ function isFiniteNonNegative(v) {
   return Number.isFinite(n) && n >= 0;
 }
 
+function isFiniteAtLeast(v, min) {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= min;
+}
+
 function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
   const allowed = new Set(allowedKeys);
   for (const key of Object.keys(asObj(obj))) {
@@ -128,14 +133,12 @@ export function validateOrchestratorV1(cfg) {
         errors.push("ORCHESTRATOR_V1.defaults.rule.cooldown must be a finite number >= 0 when present");
       }
       if (Object.prototype.hasOwnProperty.call(defaultsRule, "matchWindowMs")) {
-        const n = Number(defaultsRule.matchWindowMs);
-        if (!Number.isFinite(n) || n < 100) {
+        if (!isFiniteAtLeast(defaultsRule.matchWindowMs, 100)) {
           errors.push("ORCHESTRATOR_V1.defaults.rule.matchWindowMs must be a finite number >= 100 when present");
         }
       }
       if (Object.prototype.hasOwnProperty.call(defaultsRule, "matchWindow")) {
-        const n = Number(defaultsRule.matchWindow);
-        if (!Number.isFinite(n) || n < 100) {
+        if (!isFiniteAtLeast(defaultsRule.matchWindow, 100)) {
           errors.push("ORCHESTRATOR_V1.defaults.rule.matchWindow must be a finite number >= 100 when present");
         }
       }
@@ -184,14 +187,12 @@ export function validateOrchestratorV1(cfg) {
       errors.push(`rule ${ruleId} cooldown must be a finite number >= 0 when present`);
     }
     if (Object.prototype.hasOwnProperty.call(rule, "matchWindowMs")) {
-      const n = Number(rule.matchWindowMs);
-      if (!Number.isFinite(n) || n < 100) {
+      if (!isFiniteAtLeast(rule.matchWindowMs, 100)) {
         errors.push(`rule ${ruleId} matchWindowMs must be a finite number >= 100 when present`);
       }
     }
     if (Object.prototype.hasOwnProperty.call(rule, "matchWindow")) {
-      const n = Number(rule.matchWindow);
-      if (!Number.isFinite(n) || n < 100) {
+      if (!isFiniteAtLeast(rule.matchWindow, 100)) {
         errors.push(`rule ${ruleId} matchWindow must be a finite number >= 100 when present`);
       }
     }
