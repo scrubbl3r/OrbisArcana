@@ -83,6 +83,20 @@ expectValid(
 );
 
 expectValid(
+  "open_comma_shorthand",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_open_comma",
+        on: Object.freeze(["spell:rota"]),
+        open: "sanctum, vectus",
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

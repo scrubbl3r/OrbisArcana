@@ -43,13 +43,11 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
 function mapOpen(open, defaultsOpen) {
   const defaultsOpenSafe = asObj(defaultsOpen);
   const o = (typeof open === "string")
-    ? Object.freeze({ spells: [open] })
+    ? Object.freeze({ spells: asSelectorList(open) })
     : (Array.isArray(open)
-      ? Object.freeze({ spells: open })
+      ? Object.freeze({ spells: asSelectorList(open) })
       : asObj(open));
-  const spells = Array.isArray(o.spells)
-    ? o.spells.map(normalizeSpellId).filter(Boolean)
-    : [];
+  const spells = asSelectorList(o.spells).map(normalizeSpellId).filter(Boolean);
   if (!spells.length) return null;
   const out = {
     type: "wake_win",

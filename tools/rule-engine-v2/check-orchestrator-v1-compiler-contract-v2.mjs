@@ -26,7 +26,7 @@ const sample = Object.freeze({
     Object.freeze({
       id: "o_contract_sample",
       on: Object.freeze(["rota", "y_spin", "orb_state:charged"]),
-      open: Object.freeze(["sanctum", "vectus"]),
+      open: "sanctum, vectus",
       trigger: Object.freeze({
         grace: Object.freeze({ args: Object.freeze({ ms: 700 }), mode: "boost" }),
         aoe_electric: true,

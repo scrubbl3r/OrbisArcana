@@ -82,7 +82,26 @@ export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
 }
 
 export function asSelectorList(raw) {
-  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw)) {
+    const out = [];
+    for (const entry of raw) {
+      if (typeof entry !== "string") {
+        out.push(entry);
+        continue;
+      }
+      const text = entry.trim();
+      if (!text) continue;
+      if (!text.includes(",")) {
+        out.push(text);
+        continue;
+      }
+      for (const part of text.split(",")) {
+        const token = part.trim();
+        if (token) out.push(token);
+      }
+    }
+    return out;
+  }
   if (typeof raw === "string") {
     const text = raw.trim();
     if (!text) return [];

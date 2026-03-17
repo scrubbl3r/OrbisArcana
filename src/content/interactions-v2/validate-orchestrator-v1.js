@@ -195,16 +195,17 @@ export function validateOrchestratorV1(cfg) {
       const isStringOpen = typeof rule.open === "string";
       const isArrayOpen = Array.isArray(rule.open);
       const open = (isStringOpen || isArrayOpen)
-        ? Object.freeze({ spells: isStringOpen ? [rule.open] : rule.open })
+        ? Object.freeze({ spells: asSelectorList(rule.open) })
         : asObj(rule.open);
       if (!isStringOpen && !isArrayOpen) {
         pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, ["spells", "ttlMs", "enabled"]);
       }
-      if (!Array.isArray(open.spells) || !open.spells.length) {
+      const openSpells = asSelectorList(open.spells);
+      if (!openSpells.length) {
         errors.push(`rule ${ruleId} open requires spells[]`);
       } else {
         const seenOpenSpells = new Set();
-        for (const openSpellRaw of open.spells) {
+        for (const openSpellRaw of openSpells) {
           const openSpellId = normalizeSpellId(openSpellRaw);
           if (!openSpellId) {
             errors.push(`rule ${ruleId} open contains empty spell id`);
