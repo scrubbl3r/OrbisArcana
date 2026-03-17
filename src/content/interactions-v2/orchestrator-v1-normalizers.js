@@ -83,7 +83,12 @@ export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
 
 export function asSelectorList(raw) {
   if (Array.isArray(raw)) return raw;
-  if (typeof raw === "string") return [raw];
+  if (typeof raw === "string") {
+    const text = raw.trim();
+    if (!text) return [];
+    if (!text.includes(",")) return [text];
+    return text.split(",").map((part) => part.trim()).filter(Boolean);
+  }
   return [];
 }
 

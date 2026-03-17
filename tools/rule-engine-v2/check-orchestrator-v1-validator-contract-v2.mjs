@@ -69,6 +69,20 @@ expectValid(
 );
 
 expectValid(
+  "object_selector_comma_shorthand",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_object_comma",
+        on: Object.freeze({ spell: "rota, sanctum", gesture: "spin_y" }),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,
