@@ -52,6 +52,11 @@ const BARE_GESTURE_IDS = new Set([
   "shake_ud",
 ]);
 
+const BARE_ORB_STATE_IDS = new Set([
+  "charged",
+  "superheated",
+]);
+
 export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
   const text = asText(raw);
   if (!text) return invalidAsEmptyObject ? Object.freeze({ type: "", id: "" }) : null;
@@ -71,6 +76,9 @@ export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
     const bareId = asId(text);
     if (BARE_GESTURE_IDS.has(bareId)) {
       type = "gesture";
+      idText = bareId;
+    } else if (BARE_ORB_STATE_IDS.has(bareId)) {
+      type = "orb_state";
       idText = bareId;
     }
   }

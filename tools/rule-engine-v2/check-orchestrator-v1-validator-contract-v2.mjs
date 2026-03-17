@@ -111,6 +111,20 @@ expectValid(
 );
 
 expectValid(
+  "bare_orb_state_selector_shorthand",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_bare_orb_state",
+        on: Object.freeze(["charged", "spell:rota"]),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

@@ -94,7 +94,7 @@ const commaSelectorsSample = Object.freeze({
   rules: Object.freeze([
     Object.freeze({
       id: "o_comma_selectors",
-      on: Object.freeze({ spell: "rota, sanctum", gesture: "spin_y" }),
+      on: Object.freeze({ orb_state: "charged", spell: "rota, sanctum", gesture: "spin_y" }),
       trigger: "grace, aoe_electric",
     }),
   ]),
@@ -121,6 +121,7 @@ const expectedCommaOn = [
   { type: "spell", id: "rota" },
   { type: "spell", id: "sanctum" },
   { type: "gesture", id: "spin_y" },
+  { type: "orb_state", id: "charged" },
 ];
 if (asJson(commaRule.on) !== asJson(expectedCommaOn)) {
   failCheckWithDetails(
