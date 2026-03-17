@@ -135,7 +135,9 @@ export function validateOrchestratorV1(cfg) {
     const onRaw = rule.on;
     const onEntries = [];
     if (typeof onRaw === "string") {
-      onEntries.push(parseOnSelector(onRaw, { invalidAsEmptyObject: true }));
+      for (const entry of asSelectorList(onRaw)) {
+        onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
+      }
     } else if (Array.isArray(onRaw)) {
       for (const entry of onRaw) onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
     } else {

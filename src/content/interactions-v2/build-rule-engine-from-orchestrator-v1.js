@@ -74,8 +74,10 @@ function mapRule(rule, defaults) {
   const ruleDefaults = asObj(defaultsRoot.rule);
   const on = [];
   if (typeof r.on === "string") {
-    const parsed = parseOnSelector(r.on);
-    if (parsed?.id) on.push(parsed);
+    for (const entry of asSelectorList(r.on)) {
+      const parsed = parseOnSelector(entry);
+      if (parsed?.id) on.push(parsed);
+    }
   } else if (Array.isArray(r.on)) {
     for (const entry of r.on) {
       const parsed = parseOnSelector(entry);

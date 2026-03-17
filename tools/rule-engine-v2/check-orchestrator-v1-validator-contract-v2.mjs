@@ -125,6 +125,20 @@ expectValid(
 );
 
 expectValid(
+  "on_comma_string_shorthand",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_on_comma",
+        on: "rota, spin_y, charged",
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

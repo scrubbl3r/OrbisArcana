@@ -142,4 +142,46 @@ if (asJson(commaRule.then) !== asJson(expectedCommaThen)) {
   );
 }
 
+const onCommaStringSample = Object.freeze({
+  version: "1",
+  enabled: true,
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_on_comma_string",
+      on: "rota, spin_y, charged",
+      trigger: "grace",
+    }),
+  ]),
+});
+
+let builtOnCommaString;
+try {
+  builtOnCommaString = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: onCommaStringSample,
+    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for on comma-string sample: ${msg}`);
+}
+
+const [onCommaStringRule] = Array.isArray(builtOnCommaString?.rules) ? builtOnCommaString.rules : [];
+if (!onCommaStringRule) {
+  failCheck(CHECK_TAG, "on comma-string sample did not produce a compiled rule");
+}
+const expectedOnCommaStringOn = [
+  { type: "spell", id: "rota" },
+  { type: "gesture", id: "spin_y" },
+  { type: "orb_state", id: "charged" },
+];
+if (asJson(onCommaStringRule.on) !== asJson(expectedOnCommaStringOn)) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "on comma-string shorthand normalization mismatch",
+    [`got ${asJson(onCommaStringRule.on)} expected ${asJson(expectedOnCommaStringOn)}`]
+  );
+}
+
 reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");
