@@ -47,6 +47,16 @@ function resolveFirstPresentValue(primaryObj, primaryKey, aliasKey, defaultsObj)
   return defaultsSafe[aliasKey];
 }
 
+function asFiniteNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function asFiniteAtLeast(value, min) {
+  const n = asFiniteNumber(value);
+  return n == null ? null : Math.max(min, n);
+}
+
 function mapTrigger(trigger, defaultsTriggerByEvent) {
   const t = (typeof trigger === "string")
     ? Object.freeze({ event: trigger })
@@ -81,8 +91,8 @@ function mapOpen(open, defaultsOpen) {
     out.enabled = o.enabled;
   }
   const ttlMs = resolveFirstPresentValue(o, "ttlMs", "ttl", defaultsOpen);
-  const ttlMsNum = Number(ttlMs);
-  if (Number.isFinite(ttlMsNum) && ttlMsNum >= 0) {
+  const ttlMsNum = asFiniteAtLeast(ttlMs, 0);
+  if (ttlMsNum != null) {
     out.ttlMs = ttlMsNum;
   }
   return Object.freeze(out);
@@ -142,19 +152,19 @@ function mapRule(rule, defaults) {
   const priority = hasPriority
     ? r.priority
     : ruleDefaults.priority;
-  const priorityNum = Number(priority);
-  if (Number.isFinite(priorityNum)) {
+  const priorityNum = asFiniteNumber(priority);
+  if (priorityNum != null) {
     out.priority = priorityNum;
   }
   const cooldownMs = resolveFirstPresentValue(r, "cooldownMs", "cooldown", ruleDefaults);
-  const cooldownMsNum = Number(cooldownMs);
-  if (Number.isFinite(cooldownMsNum)) {
-    out.cooldownMs = Math.max(0, cooldownMsNum);
+  const cooldownMsNum = asFiniteAtLeast(cooldownMs, 0);
+  if (cooldownMsNum != null) {
+    out.cooldownMs = cooldownMsNum;
   }
   const matchWindowMs = resolveFirstPresentValue(r, "matchWindowMs", "matchWindow", ruleDefaults);
-  const matchWindowMsNum = Number(matchWindowMs);
-  if (Number.isFinite(matchWindowMsNum)) {
-    out.matchWindowMs = Math.max(100, matchWindowMsNum);
+  const matchWindowMsNum = asFiniteAtLeast(matchWindowMs, 100);
+  if (matchWindowMsNum != null) {
+    out.matchWindowMs = matchWindowMsNum;
   }
   return Object.freeze(out);
 }
