@@ -123,3 +123,19 @@ TRIGGER { gnat_swarm_burn_tick }
   - `enemy.*`
   - `orb_*` action/event IDs
 - Keep cast/VFX/SFX as separate triggerable IDs so orchestration can recombine them freely.
+
+## Authoring Shorthand Examples
+
+```txt
+# Comma ON shorthand
+ON "rota, spin_y, charged" TRIGGER "grace, aoe_electric"
+
+# Object ON aliases + OPEN/TTL alias + TRIGGERS alias
+ON { spells: "rota, sanctum", gestures: "spin_y", orbStates: "charged" }
+OPEN { spells: "vectus, sanctum", ttl: 1800 }
+TRIGGERS "grace, aoe_electric"
+
+# Type alias forms
+ON orbstate:charged TRIGGER grace
+ON orb-state:charged TRIGGER grace
+```

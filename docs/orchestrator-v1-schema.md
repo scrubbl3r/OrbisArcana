@@ -137,3 +137,30 @@ Adoption path:
 2. Author pilot rules in Orchestrator v1 DSL syntax.
 3. Compile to current runtime schema (`interactions-v2`-compatible projection).
 4. Activate once parity + tests are green.
+
+## 10) Authoring Shorthand (Implemented)
+
+The current compiler/validator accepts ergonomic aliases in addition to canonical fields:
+
+- `on`:
+  - string: `"rota, spin_y, charged"`
+  - array: `["rota, spin_y", "charged"]`
+  - object aliases:
+    - `spell` or `spells`
+    - `gesture` or `gestures`
+    - `orb_state`, `orbState`, or `orbStates`
+  - selector type aliases:
+    - `orbstate:charged`
+    - `orb-state:charged`
+- `open`:
+  - string/array comma shorthand for spell lists
+  - `ttl` alias for `ttlMs` (with `ttlMs` precedence)
+- `trigger`:
+  - comma shorthand string: `"grace, aoe_electric"`
+  - `triggers` alias for `trigger`
+  - defaults alias: `defaults.triggers` for `defaults.trigger`
+    - collision precedence: `defaults.trigger` over `defaults.triggers`
+- rule timing:
+  - `cooldown` alias for `cooldownMs`
+  - `matchWindow` alias for `matchWindowMs`
+  - `*Ms` fields take precedence when both are present
