@@ -328,4 +328,58 @@ if (!defaultWakeAction || defaultWakeAction.ttlMs !== 2100) {
   );
 }
 
+const timingAliasSample = Object.freeze({
+  version: "1",
+  enabled: true,
+  defaults: Object.freeze({ rule: Object.freeze({ cooldown: 333, matchWindow: 1666 }) }),
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_timing_alias_override",
+      on: "rota",
+      trigger: "grace",
+      cooldown: 444,
+      matchWindow: 1888,
+    }),
+    Object.freeze({
+      id: "o_timing_alias_default",
+      on: "sanctum",
+      trigger: "grace",
+    }),
+  ]),
+});
+
+let builtTimingAlias;
+try {
+  builtTimingAlias = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: timingAliasSample,
+    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for timing alias sample: ${msg}`);
+}
+
+const timingRules = Array.isArray(builtTimingAlias?.rules) ? builtTimingAlias.rules : [];
+const timingOverrideRule = timingRules.find((rule) => rule?.id === "o_timing_alias_override");
+const timingDefaultRule = timingRules.find((rule) => rule?.id === "o_timing_alias_default");
+if (!timingOverrideRule || !timingDefaultRule) {
+  failCheck(CHECK_TAG, "timing alias sample rules missing expected ids");
+}
+if (timingOverrideRule.cooldownMs !== 444 || timingOverrideRule.matchWindowMs !== 1888) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "rule timing aliases did not map to cooldownMs/matchWindowMs",
+    [`rule: ${asJson(timingOverrideRule)}`]
+  );
+}
+if (timingDefaultRule.cooldownMs !== 333 || timingDefaultRule.matchWindowMs !== 1666) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "defaults.rule timing aliases did not map to cooldownMs/matchWindowMs",
+    [`rule: ${asJson(timingDefaultRule)}`]
+  );
+}
+
 reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");

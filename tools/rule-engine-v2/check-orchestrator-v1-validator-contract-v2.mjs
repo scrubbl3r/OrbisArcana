@@ -185,6 +185,26 @@ expectValid(
 );
 
 expectValid(
+  "rule_timing_aliases",
+  Object.freeze({
+    ...baseline,
+    defaults: Object.freeze({
+      ...baseline.defaults,
+      rule: Object.freeze({ cooldown: 333, matchWindow: 1666, priority: 2 }),
+    }),
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_timing_alias",
+        on: Object.freeze(["spell:rota"]),
+        trigger: Object.freeze(["grace"]),
+        cooldown: 444,
+        matchWindow: 1888,
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

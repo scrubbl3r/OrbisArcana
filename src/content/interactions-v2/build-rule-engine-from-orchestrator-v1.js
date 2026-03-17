@@ -133,14 +133,22 @@ function mapRule(rule, defaults) {
   }
   const cooldownMs = Object.prototype.hasOwnProperty.call(r, "cooldownMs")
     ? r.cooldownMs
-    : ruleDefaults.cooldownMs;
+    : (Object.prototype.hasOwnProperty.call(r, "cooldown")
+      ? r.cooldown
+      : (Object.prototype.hasOwnProperty.call(ruleDefaults, "cooldownMs")
+        ? ruleDefaults.cooldownMs
+        : ruleDefaults.cooldown));
   const cooldownMsNum = Number(cooldownMs);
   if (Number.isFinite(cooldownMsNum)) {
     out.cooldownMs = Math.max(0, cooldownMsNum);
   }
   const matchWindowMs = Object.prototype.hasOwnProperty.call(r, "matchWindowMs")
     ? r.matchWindowMs
-    : ruleDefaults.matchWindowMs;
+    : (Object.prototype.hasOwnProperty.call(r, "matchWindow")
+      ? r.matchWindow
+      : (Object.prototype.hasOwnProperty.call(ruleDefaults, "matchWindowMs")
+        ? ruleDefaults.matchWindowMs
+        : ruleDefaults.matchWindow));
   const matchWindowMsNum = Number(matchWindowMs);
   if (Number.isFinite(matchWindowMsNum)) {
     out.matchWindowMs = Math.max(100, matchWindowMsNum);

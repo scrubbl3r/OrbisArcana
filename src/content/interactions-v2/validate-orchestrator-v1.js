@@ -89,14 +89,29 @@ export function validateOrchestratorV1(cfg) {
     }
     if (Object.prototype.hasOwnProperty.call(defaults, "rule")) {
       const defaultsRule = asObj(defaults.rule);
-      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, ["cooldownMs", "matchWindowMs", "priority"]);
+      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, [
+        "cooldownMs",
+        "cooldown",
+        "matchWindowMs",
+        "matchWindow",
+        "priority",
+      ]);
       if (Object.prototype.hasOwnProperty.call(defaultsRule, "cooldownMs") && !isFiniteNonNegative(defaultsRule.cooldownMs)) {
         errors.push("ORCHESTRATOR_V1.defaults.rule.cooldownMs must be a finite number >= 0 when present");
+      }
+      if (Object.prototype.hasOwnProperty.call(defaultsRule, "cooldown") && !isFiniteNonNegative(defaultsRule.cooldown)) {
+        errors.push("ORCHESTRATOR_V1.defaults.rule.cooldown must be a finite number >= 0 when present");
       }
       if (Object.prototype.hasOwnProperty.call(defaultsRule, "matchWindowMs")) {
         const n = Number(defaultsRule.matchWindowMs);
         if (!Number.isFinite(n) || n < 100) {
           errors.push("ORCHESTRATOR_V1.defaults.rule.matchWindowMs must be a finite number >= 100 when present");
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(defaultsRule, "matchWindow")) {
+        const n = Number(defaultsRule.matchWindow);
+        if (!Number.isFinite(n) || n < 100) {
+          errors.push("ORCHESTRATOR_V1.defaults.rule.matchWindow must be a finite number >= 100 when present");
         }
       }
       const priorityNum = Number(defaultsRule.priority);
@@ -117,7 +132,18 @@ export function validateOrchestratorV1(cfg) {
     if (ids.has(ruleId)) errors.push(`ORCHESTRATOR_V1.rules contains duplicate id: ${ruleId}`);
     ids.add(ruleId);
 
-    pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, ["id", "on", "open", "trigger", "enabled", "priority", "cooldownMs", "matchWindowMs"]);
+    pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, [
+      "id",
+      "on",
+      "open",
+      "trigger",
+      "enabled",
+      "priority",
+      "cooldownMs",
+      "cooldown",
+      "matchWindowMs",
+      "matchWindow",
+    ]);
     if (Object.prototype.hasOwnProperty.call(rule, "enabled") && typeof rule.enabled !== "boolean") {
       errors.push(`rule ${ruleId} enabled must be boolean when present`);
     }
@@ -128,10 +154,19 @@ export function validateOrchestratorV1(cfg) {
     if (Object.prototype.hasOwnProperty.call(rule, "cooldownMs") && !isFiniteNonNegative(rule.cooldownMs)) {
       errors.push(`rule ${ruleId} cooldownMs must be a finite number >= 0 when present`);
     }
+    if (Object.prototype.hasOwnProperty.call(rule, "cooldown") && !isFiniteNonNegative(rule.cooldown)) {
+      errors.push(`rule ${ruleId} cooldown must be a finite number >= 0 when present`);
+    }
     if (Object.prototype.hasOwnProperty.call(rule, "matchWindowMs")) {
       const n = Number(rule.matchWindowMs);
       if (!Number.isFinite(n) || n < 100) {
         errors.push(`rule ${ruleId} matchWindowMs must be a finite number >= 100 when present`);
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(rule, "matchWindow")) {
+      const n = Number(rule.matchWindow);
+      if (!Number.isFinite(n) || n < 100) {
+        errors.push(`rule ${ruleId} matchWindow must be a finite number >= 100 when present`);
       }
     }
 
