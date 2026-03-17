@@ -232,20 +232,6 @@ function pushOpenTimingErrors(errors, context, openObj) {
   pushFiniteNonNegativeErrorWhenPresent(errors, context, openObj, "ttl");
 }
 
-function validateStructuredOpen(errors, ruleId, openObj) {
-  pushUnsupportedKeys(errors, `rule ${ruleId} open`, openObj, OPEN_ALLOWED_KEYS);
-  pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, openObj);
-  pushOpenTimingErrors(errors, `rule ${ruleId} open`, openObj);
-}
-
-function validateRuleBaseFields(errors, ruleId, ruleObj) {
-  const context = `rule ${ruleId}`;
-  pushUnsupportedKeys(errors, context, ruleObj, RULE_ALLOWED_KEYS);
-  pushBooleanEnabledErrorWhenPresent(errors, context, ruleObj);
-  pushFiniteNumberErrorWhenPresent(errors, context, ruleObj, "priority");
-  pushRuleTimingErrors(errors, context, ruleObj);
-}
-
 function validateTriggerEntries(errors, ruleId, triggerEntries) {
   for (const rawTrigger of triggerEntries) {
     const trigger = (typeof rawTrigger === "string")
@@ -345,7 +331,11 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
   }
   seenRuleIds.add(ruleId);
 
-  validateRuleBaseFields(errors, ruleId, rule);
+  const context = `rule ${ruleId}`;
+  pushUnsupportedKeys(errors, context, rule, RULE_ALLOWED_KEYS);
+  pushBooleanEnabledErrorWhenPresent(errors, context, rule);
+  pushFiniteNumberErrorWhenPresent(errors, context, rule, "priority");
+  pushRuleTimingErrors(errors, context, rule);
 
   const onEntries = collectOnEntries(rule.on, errors, ruleId);
   validateOnSelectors(errors, ruleId, onEntries);
@@ -362,7 +352,9 @@ function validateRuleOpenSection(errors, ruleId, rule) {
     ? Object.freeze({ spells: asSelectorList(rule.open) })
     : asObj(rule.open);
   if (!openIsSelectorList) {
-    validateStructuredOpen(errors, ruleId, open);
+    pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, OPEN_ALLOWED_KEYS);
+    pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
+    pushOpenTimingErrors(errors, `rule ${ruleId} open`, open);
   }
   validateOpenSpells(errors, ruleId, open);
   return true;
