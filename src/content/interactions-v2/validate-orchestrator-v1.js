@@ -369,10 +369,9 @@ function validateRuleOpenSection(errors, ruleId, rule) {
 }
 
 function validateRuleTriggerSection(errors, ruleId, rule, hasOpen) {
-  const source = asObj(rule);
   const triggerEntries = [
-    ...normalizeTriggerEntries(source.trigger),
-    ...normalizeTriggerEntries(source.triggers),
+    ...normalizeTriggerEntries(rule.trigger),
+    ...normalizeTriggerEntries(rule.triggers),
   ];
   if (!Array.isArray(triggerEntries) || triggerEntries.length === 0) {
     if (!hasOpen) {
