@@ -40,6 +40,18 @@ export function normalizeOrbStateId(orbStateIdRaw) {
   return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
 }
 
+const BARE_GESTURE_IDS = new Set([
+  "spin_x",
+  "spin_y",
+  "spin_z",
+  "x_spin",
+  "y_spin",
+  "z_spin",
+  "shake_fb",
+  "shake_lr",
+  "shake_ud",
+]);
+
 export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
   const text = asText(raw);
   if (!text) return invalidAsEmptyObject ? Object.freeze({ type: "", id: "" }) : null;
@@ -55,6 +67,12 @@ export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
   } else if (dot > 0) {
     type = asText(text.slice(0, dot)).toLowerCase();
     idText = text;
+  } else {
+    const bareId = asId(text);
+    if (BARE_GESTURE_IDS.has(bareId)) {
+      type = "gesture";
+      idText = bareId;
+    }
   }
 
   if (type === "spell") return Object.freeze({ type, id: normalizeSpellId(idText) });

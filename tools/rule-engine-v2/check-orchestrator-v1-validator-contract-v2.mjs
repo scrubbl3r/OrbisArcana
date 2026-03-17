@@ -55,6 +55,20 @@ const baseline = Object.freeze({
 expectValid("baseline_shorthand", baseline);
 
 expectValid(
+  "bare_gesture_selector_shorthand",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_bare_gesture",
+        on: Object.freeze(["spin_y", "spell:rota"]),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,
