@@ -153,6 +153,20 @@ expectValid(
 );
 
 expectValid(
+  "on_orbstate_camelcase_alias",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_orbstate_alias",
+        on: Object.freeze({ spell: "rota", orbState: "charged" }),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

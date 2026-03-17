@@ -97,6 +97,10 @@ function mapRule(rule, defaults) {
       const orbStateId = normalizeOrbStateId(orbStateRaw);
       if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
     }
+    for (const orbStateRaw of asSelectorList(onRaw.orbState)) {
+      const orbStateId = normalizeOrbStateId(orbStateRaw);
+      if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
+    }
   }
   if (!on.length) return null;
   const then = [];

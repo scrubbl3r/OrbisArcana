@@ -144,7 +144,7 @@ export function validateOrchestratorV1(cfg) {
       }
     } else {
       const on = asObj(onRaw);
-      pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell", "gesture", "orb_state"]);
+      pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell", "gesture", "orb_state", "orbState"]);
       if (Object.prototype.hasOwnProperty.call(on, "spell")) {
         for (const spellRaw of asSelectorList(on.spell)) {
           onEntries.push(Object.freeze({ type: "spell", id: normalizeSpellId(spellRaw), raw: spellRaw }));
@@ -157,6 +157,11 @@ export function validateOrchestratorV1(cfg) {
       }
       if (Object.prototype.hasOwnProperty.call(on, "orb_state")) {
         for (const orbStateRaw of asSelectorList(on.orb_state)) {
+          onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(orbStateRaw), raw: orbStateRaw }));
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(on, "orbState")) {
+        for (const orbStateRaw of asSelectorList(on.orbState)) {
           onEntries.push(Object.freeze({ type: "orb_state", id: normalizeOrbStateId(orbStateRaw), raw: orbStateRaw }));
         }
       }
