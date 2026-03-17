@@ -471,4 +471,50 @@ if (asJson(triggersAliasRule.then) !== asJson(expectedTriggersAliasThen)) {
   );
 }
 
+const defaultsTriggersAliasSample = Object.freeze({
+  version: "1",
+  enabled: true,
+  defaults: Object.freeze({
+    trigger: Object.freeze({ grace: Object.freeze({ ms: 888 }) }),
+    triggers: Object.freeze({ grace: Object.freeze({ ms: 777 }) }),
+  }),
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_defaults_triggers_alias",
+      on: "rota",
+      trigger: "grace",
+    }),
+  ]),
+});
+
+let builtDefaultsTriggersAlias;
+try {
+  builtDefaultsTriggersAlias = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: defaultsTriggersAliasSample,
+    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for defaults.triggers alias sample: ${msg}`);
+}
+
+const [defaultsTriggersAliasRule] = Array.isArray(builtDefaultsTriggersAlias?.rules)
+  ? builtDefaultsTriggersAlias.rules
+  : [];
+if (!defaultsTriggersAliasRule) {
+  failCheck(CHECK_TAG, "defaults.triggers alias sample did not produce a compiled rule");
+}
+const expectedDefaultsTriggersAliasThen = [
+  { type: "event", id: "grace", ms: 888 },
+];
+if (asJson(defaultsTriggersAliasRule.then) !== asJson(expectedDefaultsTriggersAliasThen)) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "defaults.triggers alias merge mismatch",
+    [`got ${asJson(defaultsTriggersAliasRule.then)} expected ${asJson(expectedDefaultsTriggersAliasThen)}`]
+  );
+}
+
 reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");

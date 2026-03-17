@@ -22,6 +22,14 @@ function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
   return out;
 }
 
+function getMergedTriggerDefaults(defaultsRoot) {
+  const defaultsSafe = asObj(defaultsRoot);
+  return Object.freeze({
+    ...asObj(defaultsSafe.triggers),
+    ...asObj(defaultsSafe.trigger),
+  });
+}
+
 function mapTrigger(trigger, defaultsTriggerByEvent) {
   const t = (typeof trigger === "string")
     ? Object.freeze({ event: trigger })
@@ -122,7 +130,7 @@ function mapRule(rule, defaults) {
   const then = [];
   const openAction = mapOpen(r.open, defaultsRoot.open);
   if (openAction) then.push(openAction);
-  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(defaultsRoot.trigger);
+  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(getMergedTriggerDefaults(defaultsRoot));
   const triggerActions = [
     ...normalizeTriggerEntries(r.trigger),
     ...normalizeTriggerEntries(r.triggers),

@@ -238,6 +238,25 @@ expectValid(
 );
 
 expectValid(
+  "defaults_triggers_alias",
+  Object.freeze({
+    ...baseline,
+    defaults: Object.freeze({
+      ...baseline.defaults,
+      trigger: Object.freeze({}),
+      triggers: Object.freeze({ grace: Object.freeze({ ms: 777 }) }),
+    }),
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_defaults_triggers_alias",
+        on: Object.freeze(["spell:rota"]),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

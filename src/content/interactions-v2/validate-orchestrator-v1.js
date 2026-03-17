@@ -60,7 +60,7 @@ export function validateOrchestratorV1(cfg) {
   }
   if (Object.prototype.hasOwnProperty.call(target, "defaults")) {
     const defaults = asObj(target.defaults);
-    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, ["open", "trigger", "rule"]);
+    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, ["open", "trigger", "triggers", "rule"]);
     if (Object.prototype.hasOwnProperty.call(defaults, "open")) {
       const defaultsOpen = asObj(defaults.open);
       pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, ["ttlMs", "ttl"]);
@@ -71,8 +71,14 @@ export function validateOrchestratorV1(cfg) {
         errors.push("ORCHESTRATOR_V1.defaults.open.ttl must be a finite number >= 0 when present");
       }
     }
-    if (Object.prototype.hasOwnProperty.call(defaults, "trigger")) {
-      const defaultsTrigger = asObj(defaults.trigger);
+    if (
+      Object.prototype.hasOwnProperty.call(defaults, "trigger") ||
+      Object.prototype.hasOwnProperty.call(defaults, "triggers")
+    ) {
+      const defaultsTrigger = Object.freeze({
+        ...asObj(defaults.triggers),
+        ...asObj(defaults.trigger),
+      });
       for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
         const eventId = normalizeEventId(rawEventId);
         if (!eventId) {
