@@ -139,7 +139,9 @@ export function validateOrchestratorV1(cfg) {
         onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
       }
     } else if (Array.isArray(onRaw)) {
-      for (const entry of onRaw) onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
+      for (const entry of asSelectorList(onRaw)) {
+        onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
+      }
     } else {
       const on = asObj(onRaw);
       pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["spell", "gesture", "orb_state"]);

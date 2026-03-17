@@ -79,7 +79,7 @@ function mapRule(rule, defaults) {
       if (parsed?.id) on.push(parsed);
     }
   } else if (Array.isArray(r.on)) {
-    for (const entry of r.on) {
+    for (const entry of asSelectorList(r.on)) {
       const parsed = parseOnSelector(entry);
       if (parsed?.id) on.push(parsed);
     }
