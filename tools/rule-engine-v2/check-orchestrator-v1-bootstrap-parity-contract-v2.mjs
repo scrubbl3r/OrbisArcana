@@ -50,7 +50,7 @@ function runScenario({ orchestratorBootstrap, interactionsBootstrap }) {
     },
     {
       setRuleSchema: (next) => {
-        captured.ruleSchema = next || null;
+        captured.ruleSchema = next ?? null;
       },
     }
   );

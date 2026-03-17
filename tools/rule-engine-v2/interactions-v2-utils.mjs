@@ -1,5 +1,5 @@
 function asObject(v) {
-  return (v && typeof v === "object" && !Array.isArray(v)) ? v : null;
+  return (!!v && typeof v === "object" && !Array.isArray(v)) ? v : null;
 }
 
 export function isInteractionsEnabled(interactionsV2) {

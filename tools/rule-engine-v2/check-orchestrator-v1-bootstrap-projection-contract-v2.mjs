@@ -47,7 +47,7 @@ hydrateReceiverBootstrapState(
   },
   {
     setRuleSchema: (next) => {
-      captured.ruleSchema = next || null;
+      captured.ruleSchema = next ?? null;
     },
   }
 );

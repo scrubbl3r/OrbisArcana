@@ -3,6 +3,7 @@ import {
   docsIndexLinkTokensForRelPathsV2,
   docsIndexOwnershipTokensForRelPathsV2,
 } from "./docs-index-tokens-v2.mjs";
+import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
@@ -12,8 +13,16 @@ const { rel: docsIndexRel, text } = readDocsIndexV2();
 const projectionRel = RULE_ENGINE_V2_DOC_PATHS.orchestratorProjectionJson;
 const [projectionLinkToken] = docsIndexLinkTokensForRelPathsV2([projectionRel]);
 const [projectionOwnershipToken] = docsIndexOwnershipTokensForRelPathsV2([projectionRel]);
+if (typeof projectionLinkToken !== "string" || !projectionLinkToken.trim()) {
+  failCheck(CHECK_TAG, "projection link token generation failed");
+}
+if (typeof projectionOwnershipToken !== "string" || !projectionOwnershipToken.trim()) {
+  failCheck(CHECK_TAG, "projection ownership token generation failed");
+}
 
 const requiredTokens = Object.freeze([
+  "[Orchestrator v1 DSL Schema]",
+  "[Orchestrator v1 DSL Recipes]",
   "[Orchestrator Projection]",
   "Effective Interactions Snapshot` and `Orchestrator Projection`",
   projectionLinkToken,
@@ -27,4 +36,4 @@ requireTextIncludesTokensV2({
   missingMessage: (token) => `${docsIndexRel} missing required token: ${token}`,
 });
 
-reportCheckPass(CHECK_TAG, "docs index includes orchestrator projection links");
+reportCheckPass(CHECK_TAG, "docs index includes orchestrator projection and schema links");

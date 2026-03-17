@@ -5,6 +5,7 @@ import {
   docsIndexLinkTokensForRelPathsV2,
   docsIndexOwnershipTokensForRelPathsV2,
 } from "./docs-index-tokens-v2.mjs";
+import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
@@ -12,12 +13,25 @@ import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
 const CHECK_TAG = "docs-index-generated-artifacts:v2";
 const { rel: indexRel, text } = readDocsIndexV2();
 
+function assertTokenList(label, tokens) {
+  if (!Array.isArray(tokens) || !tokens.length) {
+    failCheck(CHECK_TAG, `${indexRel} ${label} token list is empty`);
+  }
+  for (const token of tokens) {
+    if (typeof token !== "string" || !token.trim()) {
+      failCheck(CHECK_TAG, `${indexRel} ${label} token list contains invalid token`);
+    }
+  }
+}
+
 const requiredQuickLinkTokens = docsIndexLinkTokensForRelPathsV2(
   RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_RELS
 );
 const requiredOwnershipTokens = docsIndexOwnershipTokensForRelPathsV2(
   RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_RELS
 );
+assertTokenList("generated-artifact quick link", requiredQuickLinkTokens);
+assertTokenList("generated-artifact ownership", requiredOwnershipTokens);
 
 requireTextIncludesTokensV2({
   tag: CHECK_TAG,

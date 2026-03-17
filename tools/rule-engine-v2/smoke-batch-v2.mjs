@@ -61,7 +61,7 @@ function expectBuildPass(caseName, cfg, assertFn = null) {
 }
 
 function ensureObject(value) {
-  return (value && typeof value === "object" && !Array.isArray(value)) ? value : {};
+  return (!!value && typeof value === "object" && !Array.isArray(value)) ? value : {};
 }
 
 function run() {

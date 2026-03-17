@@ -12,13 +12,13 @@ import { asLowerText } from "./text-utils-v2.mjs";
 
 const CHECK_TAG = "master-control-authoring:v2";
 
-function asObj(v) {
-  return (v && typeof v === "object" && !Array.isArray(v)) ? v : null;
+function isRecord(v) {
+  return (!!v && typeof v === "object" && !Array.isArray(v)) ? v : null;
 }
 
 function main() {
   const doc = readJsonOrFail(CHECK_TAG, RULE_ENGINE_V2_DOC_PATHS.masterControlAuthoringJson);
-  const root = asObj(doc);
+  const root = isRecord(doc);
   if (!root) failCheck(CHECK_TAG, "root must be an object");
   const schema = typeof root.schema === "string" ? root.schema : "";
   if (schema !== RULE_ENGINE_V2_SCHEMA_IDS.masterControlAuthoring) {
@@ -28,7 +28,7 @@ function main() {
   if (typeof root.enabled !== "boolean") {
     failCheck(CHECK_TAG, "enabled must be boolean");
   }
-  if (!asObj(root.defaults)) {
+  if (!isRecord(root.defaults)) {
     failCheck(CHECK_TAG, "defaults must be an object");
   }
   if (!Array.isArray(root.rules)) {
@@ -40,7 +40,7 @@ function main() {
 
   const seenSpellIds = new Set();
   for (const s of root.spells) {
-    const spell = asObj(s);
+    const spell = isRecord(s);
     if (!spell) failCheck(CHECK_TAG, "spells[] entries must be objects");
     const id = asLowerText(spell.id);
     if (!id) failCheck(CHECK_TAG, "spells[] entry missing id");

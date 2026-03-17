@@ -11,6 +11,10 @@ function text(v) {
   return typeof v === "string" ? v.trim() : "";
 }
 
+function isRecord(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
 function resolveScriptNameForCheck(id, overrides) {
   const key = text(id);
   if (Object.prototype.hasOwnProperty.call(overrides, key)) {
@@ -20,7 +24,7 @@ function resolveScriptNameForCheck(id, overrides) {
 }
 
 const pkg = readJsonOrFail(CHECK_TAG, "package.json");
-const scripts = (pkg?.scripts && typeof pkg.scripts === "object" && !Array.isArray(pkg.scripts))
+const scripts = isRecord(pkg?.scripts)
   ? pkg.scripts
   : null;
 if (!scripts) failCheck(CHECK_TAG, "package.json scripts object missing");

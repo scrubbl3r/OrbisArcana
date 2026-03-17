@@ -17,16 +17,22 @@ function buildConflictList(ownersByKey) {
 const idOwners = new Map();
 const scriptOwners = new Map();
 
+function ensureOwnerSet(map, key) {
+  const existing = map.get(key);
+  if (existing) return existing;
+  const created = new Set();
+  map.set(key, created);
+  return created;
+}
+
 for (const item of all) {
   const idKey = item.id;
   const scriptKey = item.script;
   if (!idKey || !scriptKey) continue;
 
-  if (!idOwners.has(idKey)) idOwners.set(idKey, new Set());
-  idOwners.get(idKey).add(item.manifest);
+  ensureOwnerSet(idOwners, idKey).add(item.manifest);
 
-  if (!scriptOwners.has(scriptKey)) scriptOwners.set(scriptKey, new Set());
-  scriptOwners.get(scriptKey).add(item.manifest);
+  ensureOwnerSet(scriptOwners, scriptKey).add(item.manifest);
 }
 
 const idConflicts = buildConflictList(idOwners);

@@ -9,6 +9,10 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-projection-validity:v2";
 
+function asObject(value) {
+  return (!!value && typeof value === "object" && !Array.isArray(value)) ? value : {};
+}
+
 const projected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
 const validationErrors = validateOrchestratorV1(projected);
 if (validationErrors.length) {
@@ -27,7 +31,7 @@ if (projectedRules.length !== interactionsRules.length) {
 for (const rule of projectedRules) {
   const ruleId = typeof rule?.id === "string" ? rule.id.trim() : "";
   if (!ruleId) failCheck(CHECK_TAG, "projected rule missing id");
-  const safeRule = (rule && typeof rule === "object" && !Array.isArray(rule)) ? rule : {};
+  const safeRule = asObject(rule);
   const selectors = Array.isArray(rule?.on) ? rule.on : [];
   if (!selectors.length) {
     failCheck(CHECK_TAG, `projected rule ${ruleId} missing on[] selectors`);

@@ -112,10 +112,12 @@
 ## Schema References
 - [Interactions Schema](./interactions-schema.md)
 - [Master Control Schema](./master-control-schema.md)
+- [Orchestrator v1 DSL Schema](./orchestrator-v1-schema.md)
+- [Orchestrator v1 DSL Recipes](./orchestrator-v1-recipes.md)
 
 ## Architecture Context
-- [Architecture Schema (Snapshot)](./orbis-arcana-architecture-schema.txt)
-- [State Ownership Inventory (Snapshot)](./state-ownership-inventory.txt)
+- [Architecture Schema](./orbis-arcana-architecture-schema.txt)
+- [State Ownership Inventory](./state-ownership-inventory.txt)
 - [Receiver Composition](./receiver-composition.txt)
 
 ## Generated Artifacts Quick Links

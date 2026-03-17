@@ -1,6 +1,6 @@
 # Orchestrator v1 DSL v0 Recipes
 
-Companion examples for [Orchestrator v1 DSL schema](./dream-config-schema.md).
+Companion examples for [Orchestrator v1 DSL schema](./orchestrator-v1-schema.md).
 
 Conventions:
 - Keywords are uppercase.

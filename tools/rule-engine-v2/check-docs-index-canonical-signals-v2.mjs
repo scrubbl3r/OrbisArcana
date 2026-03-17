@@ -3,6 +3,7 @@ import {
   RULE_ENGINE_V2_CANONICAL_SIGNAL_EXAMPLES,
   RULE_ENGINE_V2_LEGACY_SIGNAL_EXAMPLES,
 } from "./handle-naming-v2.mjs";
+import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
 import {
@@ -12,6 +13,21 @@ import {
 
 const CHECK_TAG = "docs-index-canonical-signals:v2";
 const { rel: docsIndexRel, text } = readDocsIndexV2();
+
+function assertTokenList(label, tokens) {
+  if (!Array.isArray(tokens) || !tokens.length) {
+    failCheck(CHECK_TAG, `${docsIndexRel} ${label} token list is empty`);
+  }
+  for (const token of tokens) {
+    if (typeof token !== "string" || !token.trim()) {
+      failCheck(CHECK_TAG, `${docsIndexRel} ${label} token list contains invalid token`);
+    }
+  }
+}
+
+assertTokenList("canonical signal", RULE_ENGINE_V2_CANONICAL_SIGNAL_EXAMPLES);
+assertTokenList("canonical handle", RULE_ENGINE_V2_CANONICAL_HANDLE_EXAMPLES);
+assertTokenList("legacy signal", RULE_ENGINE_V2_LEGACY_SIGNAL_EXAMPLES);
 
 requireTextIncludesTokensV2({
   tag: CHECK_TAG,

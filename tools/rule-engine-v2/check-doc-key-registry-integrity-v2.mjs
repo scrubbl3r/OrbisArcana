@@ -12,8 +12,14 @@ const allDefinedKeys = Object.freeze(new Set(Object.keys(RULE_ENGINE_V2_DOC_PATH
 const core = Array.from(RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS);
 const generated = Array.from(RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS);
 
-if (!core.length) failCheck(CHECK_TAG, "core markdown doc key registry is empty");
-if (!generated.length) failCheck(CHECK_TAG, "generated artifact key registry is empty");
+function assertNonEmptyList(values, label) {
+  if (!Array.isArray(values) || !values.length) {
+    failCheck(CHECK_TAG, `${label} key registry is empty`);
+  }
+}
+
+assertNonEmptyList(core, "core markdown doc");
+assertNonEmptyList(generated, "generated artifact");
 
 function validateRegistryKeys(keys, label) {
   const seen = new Set();

@@ -3,6 +3,7 @@ import {
   RULE_ENGINE_V2_DOC_PATHS,
 } from "./docs-paths-v2.mjs";
 import { docsIndexLinkTokensForRelPathsV2 } from "./docs-index-tokens-v2.mjs";
+import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 import { readDocsIndexV2 } from "./read-docs-index-v2.mjs";
@@ -14,6 +15,14 @@ const coreDocLinks = RULE_ENGINE_V2_CORE_MARKDOWN_DOC_RELS.filter(
   (rel) => rel !== RULE_ENGINE_V2_DOC_PATHS.docsIndex
 );
 const requiredLinkTokens = docsIndexLinkTokensForRelPathsV2(coreDocLinks);
+if (!Array.isArray(requiredLinkTokens) || !requiredLinkTokens.length) {
+  failCheck(CHECK_TAG, `${docsIndexRel} core doc link token list is empty`);
+}
+for (const token of requiredLinkTokens) {
+  if (typeof token !== "string" || !token.trim()) {
+    failCheck(CHECK_TAG, `${docsIndexRel} core doc link token list contains invalid token`);
+  }
+}
 
 requireTextIncludesTokensV2({
   tag: CHECK_TAG,
