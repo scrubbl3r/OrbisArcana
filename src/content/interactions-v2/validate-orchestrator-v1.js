@@ -270,49 +270,43 @@ function validateOnSelectors(errors, ruleId, onEntries) {
   }
 }
 
-function validateDefaultsOpenSection(errors, defaults) {
-  if (!Object.hasOwn(defaults, "open")) return;
-  const defaultsOpen = asObj(defaults.open);
-  pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
-  pushOpenTimingErrors(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen);
-}
-
-function validateDefaultsRuleSection(errors, defaults) {
-  if (!Object.hasOwn(defaults, "rule")) return;
-  const defaultsRule = asObj(defaults.rule);
-  pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
-  pushRuleTimingErrors(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule);
-  pushFiniteNumberErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "priority");
-}
-
-function validateDefaultsTriggerSection(errors, defaults) {
-  if (!Object.hasOwn(defaults, "trigger") && !Object.hasOwn(defaults, "triggers")) return;
-  const defaultsTrigger = Object.freeze({
-    ...asObj(defaults.triggers),
-    ...asObj(defaults.trigger),
-  });
-  for (const [rawEventId, args] of Object.entries(asObj(defaultsTrigger))) {
-    const eventId = normalizeEventId(rawEventId);
-    if (!eventId) {
-      errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
-      continue;
-    }
-    if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
-      errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
-    }
-    if (!isObjectRecord(args)) {
-      errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
-    }
-  }
-}
-
 function validateDefaultsSection(errors, target) {
   if (!Object.hasOwn(target, "defaults")) return;
   const defaults = asObj(target.defaults);
   pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, DEFAULTS_ALLOWED_KEYS);
-  validateDefaultsOpenSection(errors, defaults);
-  validateDefaultsTriggerSection(errors, defaults);
-  validateDefaultsRuleSection(errors, defaults);
+
+  if (Object.hasOwn(defaults, "open")) {
+    const defaultsOpen = asObj(defaults.open);
+    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
+    pushOpenTimingErrors(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen);
+  }
+
+  if (Object.hasOwn(defaults, "trigger") || Object.hasOwn(defaults, "triggers")) {
+    const defaultsTrigger = Object.freeze({
+      ...asObj(defaults.triggers),
+      ...asObj(defaults.trigger),
+    });
+    for (const [rawEventId, args] of Object.entries(asObj(defaultsTrigger))) {
+      const eventId = normalizeEventId(rawEventId);
+      if (!eventId) {
+        errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
+        continue;
+      }
+      if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
+        errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
+      }
+      if (!isObjectRecord(args)) {
+        errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
+      }
+    }
+  }
+
+  if (Object.hasOwn(defaults, "rule")) {
+    const defaultsRule = asObj(defaults.rule);
+    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
+    pushRuleTimingErrors(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule);
+    pushFiniteNumberErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "priority");
+  }
 }
 
 function validateRuleEntry(errors, seenRuleIds, rawRule) {
