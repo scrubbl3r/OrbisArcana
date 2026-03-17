@@ -214,19 +214,6 @@ function compileRulesFromOrchestrator(orchestratorV1, defaults, defaultsTriggerB
     .filter(Boolean);
 }
 
-function buildRuleEnginePayload(baseRuleEngine, orchestratorEnabled, compiledRules) {
-  return Object.freeze({
-    ...baseRuleEngine,
-    version: "2",
-    enabled: orchestratorEnabled !== false,
-    signals: Object.freeze([]),
-    windows: Object.freeze([]),
-    events: Object.freeze([]),
-    rules: Object.freeze(compiledRules),
-    eventRuntimeBindings: Object.freeze({}),
-  });
-}
-
 function prepareOrchestratorCompilation(orchestratorV1) {
   const errors = validateOrchestratorV1(orchestratorV1);
   if (errors.length) {
@@ -259,5 +246,14 @@ export function buildRuleEngineFromOrchestratorV1({
     prep.defaults,
     prep.defaultsTriggerByEvent
   );
-  return buildRuleEnginePayload(baseRuleEngine, orchestratorV1?.enabled, compiledRules);
+  return Object.freeze({
+    ...baseRuleEngine,
+    version: "2",
+    enabled: orchestratorV1?.enabled !== false,
+    signals: Object.freeze([]),
+    windows: Object.freeze([]),
+    events: Object.freeze([]),
+    rules: Object.freeze(compiledRules),
+    eventRuntimeBindings: Object.freeze({}),
+  });
 }
