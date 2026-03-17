@@ -16,16 +16,6 @@ const MIN_TTL_MS = 0;
 const MIN_COOLDOWN_MS = 0;
 const MIN_MATCH_WINDOW_MS = 100;
 
-function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
-  const out = {};
-  for (const [eventIdRaw, args] of Object.entries(asObj(defaultsTriggerRaw))) {
-    const eventId = normalizeEventId(eventIdRaw);
-    if (!eventId) continue;
-    out[eventId] = asObj(args);
-  }
-  return out;
-}
-
 function hasOwn(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
@@ -247,9 +237,12 @@ function prepareOrchestratorCompilation(orchestratorV1) {
     ...asObj(defaults.triggers),
     ...asObj(defaults.trigger),
   });
-  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(
-    defaultsTriggerRaw
-  );
+  const defaultsTriggerByEvent = {};
+  for (const [eventIdRaw, args] of Object.entries(asObj(defaultsTriggerRaw))) {
+    const eventId = normalizeEventId(eventIdRaw);
+    if (!eventId) continue;
+    defaultsTriggerByEvent[eventId] = asObj(args);
+  }
   return Object.freeze({
     defaults,
     defaultsTriggerByEvent,
