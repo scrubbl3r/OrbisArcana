@@ -112,8 +112,32 @@ export function asSelectorList(raw) {
 }
 
 export function normalizeTriggerEntries(rawTrigger) {
-  if (Array.isArray(rawTrigger)) return rawTrigger;
-  if (typeof rawTrigger === "string") return [rawTrigger];
+  if (Array.isArray(rawTrigger)) {
+    const out = [];
+    for (const entry of rawTrigger) {
+      if (typeof entry !== "string") {
+        out.push(entry);
+        continue;
+      }
+      const text = entry.trim();
+      if (!text) continue;
+      if (!text.includes(",")) {
+        out.push(text);
+        continue;
+      }
+      for (const part of text.split(",")) {
+        const token = part.trim();
+        if (token) out.push(token);
+      }
+    }
+    return out;
+  }
+  if (typeof rawTrigger === "string") {
+    const text = rawTrigger.trim();
+    if (!text) return [];
+    if (!text.includes(",")) return [text];
+    return text.split(",").map((part) => part.trim()).filter(Boolean);
+  }
   const triggerMap = asObj(rawTrigger);
   if (Object.keys(triggerMap).length) {
     return Object.entries(triggerMap).map(([eventId, spec]) => {

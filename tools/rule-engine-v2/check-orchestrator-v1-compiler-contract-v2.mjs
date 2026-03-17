@@ -95,7 +95,7 @@ const commaSelectorsSample = Object.freeze({
     Object.freeze({
       id: "o_comma_selectors",
       on: Object.freeze({ spell: "rota, sanctum", gesture: "spin_y" }),
-      trigger: Object.freeze(["grace"]),
+      trigger: "grace, aoe_electric",
     }),
   ]),
 });
@@ -127,6 +127,17 @@ if (asJson(commaRule.on) !== asJson(expectedCommaOn)) {
     CHECK_TAG,
     "comma selector shorthand normalization mismatch",
     [`got ${asJson(commaRule.on)} expected ${asJson(expectedCommaOn)}`]
+  );
+}
+const expectedCommaThen = [
+  { type: "event", id: "grace" },
+  { type: "event", id: "aoe_electric" },
+];
+if (asJson(commaRule.then) !== asJson(expectedCommaThen)) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "comma trigger shorthand normalization mismatch",
+    [`got ${asJson(commaRule.then)} expected ${asJson(expectedCommaThen)}`]
   );
 }
 
