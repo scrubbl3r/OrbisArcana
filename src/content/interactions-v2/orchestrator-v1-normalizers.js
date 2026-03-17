@@ -83,6 +83,10 @@ export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
     }
   }
 
+  if (type === "orbstate" || type === "orb-state") {
+    type = "orb_state";
+  }
+
   if (type === "spell") return Object.freeze({ type, id: normalizeSpellId(idText) });
   if (type === "gesture") return Object.freeze({ type, id: normalizeGestureId(idText) });
   if (type === "orb_state") return Object.freeze({ type, id: normalizeOrbStateId(idText) });

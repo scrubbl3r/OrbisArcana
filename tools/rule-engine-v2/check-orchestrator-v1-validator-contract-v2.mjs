@@ -257,6 +257,25 @@ expectValid(
 );
 
 expectValid(
+  "orb_state_type_aliases",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_orb_state_type_aliases",
+        on: Object.freeze(["orbstate:charged", "spell:rota"]),
+        trigger: Object.freeze(["grace"]),
+      }),
+      Object.freeze({
+        id: "o_orb_state_type_aliases_dash",
+        on: Object.freeze(["orb-state:charged", "spell:sanctum"]),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

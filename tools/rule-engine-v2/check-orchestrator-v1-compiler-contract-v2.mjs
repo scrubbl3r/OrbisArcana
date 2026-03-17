@@ -517,4 +517,65 @@ if (asJson(defaultsTriggersAliasRule.then) !== asJson(expectedDefaultsTriggersAl
   );
 }
 
+const orbStateTypeAliasSample = Object.freeze({
+  version: "1",
+  enabled: true,
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_orb_state_type_aliases",
+      on: Object.freeze(["orbstate:charged", "rota"]),
+      trigger: "grace",
+    }),
+    Object.freeze({
+      id: "o_orb_state_type_aliases_dash",
+      on: Object.freeze(["orb-state:charged", "sanctum"]),
+      trigger: "grace",
+    }),
+  ]),
+});
+
+let builtOrbStateTypeAlias;
+try {
+  builtOrbStateTypeAlias = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: orbStateTypeAliasSample,
+    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for orb_state type alias sample: ${msg}`);
+}
+
+const orbStateTypeAliasRules = Array.isArray(builtOrbStateTypeAlias?.rules)
+  ? builtOrbStateTypeAlias.rules
+  : [];
+const orbStateTypeAliasRule = orbStateTypeAliasRules.find((rule) => rule?.id === "o_orb_state_type_aliases");
+const orbStateTypeAliasDashRule = orbStateTypeAliasRules.find((rule) => rule?.id === "o_orb_state_type_aliases_dash");
+if (!orbStateTypeAliasRule || !orbStateTypeAliasDashRule) {
+  failCheck(CHECK_TAG, "orb_state type alias sample did not produce a compiled rule");
+}
+const expectedOrbStateTypeAliasOn = [
+  { type: "orb_state", id: "charged" },
+  { type: "spell", id: "rota" },
+];
+if (asJson(orbStateTypeAliasRule.on) !== asJson(expectedOrbStateTypeAliasOn)) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "orb_state alias normalization mismatch",
+    [`got ${asJson(orbStateTypeAliasRule.on)} expected ${asJson(expectedOrbStateTypeAliasOn)}`]
+  );
+}
+const expectedOrbStateTypeAliasDashOn = [
+  { type: "orb_state", id: "charged" },
+  { type: "spell", id: "sanctum" },
+];
+if (asJson(orbStateTypeAliasDashRule.on) !== asJson(expectedOrbStateTypeAliasDashOn)) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "orb-state alias normalization mismatch",
+    [`got ${asJson(orbStateTypeAliasDashRule.on)} expected ${asJson(expectedOrbStateTypeAliasDashOn)}`]
+  );
+}
+
 reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");
