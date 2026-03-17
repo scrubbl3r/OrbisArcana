@@ -327,6 +327,12 @@ function validateTriggerArgs(errors, ruleId, rawTrigger, trigger) {
   }
 }
 
+function validateDefaultsTriggerMap(errors, defaultsTriggerMap) {
+  for (const [rawEventId, args] of Object.entries(asObj(defaultsTriggerMap))) {
+    validateDefaultsTriggerEntry(errors, rawEventId, args);
+  }
+}
+
 function pushUnsupportedOnSelectorTypeError(errors, ruleId) {
   errors.push(`rule ${ruleId} has unsupported on selector type`);
 }
@@ -356,6 +362,18 @@ function pushUnknownOnSelectorIdError(errors, ruleId, type, rawOrId) {
   errors.push(`rule ${ruleId} references ${label}: ${rawOrId}`);
 }
 
+function pushMissingRuleIdError(errors) {
+  errors.push("ORCHESTRATOR_V1.rules[] entry is missing id");
+}
+
+function pushDuplicateRuleIdError(errors, ruleId) {
+  errors.push(`ORCHESTRATOR_V1.rules contains duplicate id: ${ruleId}`);
+}
+
+function hasAnyEntries(entries) {
+  return Array.isArray(entries) && entries.length > 0;
+}
+
 function pushRuleTimingErrors(errors, context, obj) {
   pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldownMs");
   pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldown");
@@ -368,11 +386,117 @@ function pushOpenTimingErrors(errors, context, openObj) {
   pushFiniteNonNegativeErrorWhenPresent(errors, context, openObj, "ttl");
 }
 
-export function validateOrchestratorV1(cfg) {
-  const errors = [];
-  const target = asObj(cfg);
-  pushUnsupportedKeys(errors, "ORCHESTRATOR_V1", target, ROOT_ALLOWED_KEYS);
+function validateStructuredOpen(errors, ruleId, openObj) {
+  pushUnsupportedKeys(errors, `rule ${ruleId} open`, openObj, OPEN_ALLOWED_KEYS);
+  pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, openObj);
+  pushOpenTimingErrors(errors, `rule ${ruleId} open`, openObj);
+}
 
+function validateRuleBaseFields(errors, ruleId, ruleObj) {
+  const context = `rule ${ruleId}`;
+  pushUnsupportedKeys(errors, context, ruleObj, RULE_ALLOWED_KEYS);
+  pushBooleanEnabledErrorWhenPresent(errors, context, ruleObj);
+  pushFiniteNumberErrorWhenPresent(errors, context, ruleObj, "priority");
+  pushRuleTimingErrors(errors, context, ruleObj);
+}
+
+function validateTriggerEntries(errors, ruleId, triggerEntries) {
+  for (const rawTrigger of triggerEntries) {
+    const trigger = normalizeTriggerValidationInput(rawTrigger);
+    pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, TRIGGER_ALLOWED_KEYS);
+    pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} trigger`, trigger);
+    validateTriggerEventRef(errors, ruleId, trigger);
+    validateTriggerArgs(errors, ruleId, rawTrigger, trigger);
+  }
+}
+
+function validateOnSelectors(errors, ruleId, onEntries) {
+  const seenOn = new Set();
+  if (!hasAnyEntries(onEntries)) {
+    pushMissingOnSelectorsError(errors, ruleId);
+  }
+  for (const entry of onEntries) {
+    const normalized = normalizeOnSelectorEntry(entry);
+    const type = normalized.type;
+    const id = normalized.id;
+    if (!isKnownOnSelectorType(type)) {
+      pushUnsupportedOnSelectorTypeError(errors, ruleId);
+      continue;
+    }
+    if (!id) {
+      pushEmptyOnSelectorError(errors, ruleId, type);
+      continue;
+    }
+    const dedupeKey = buildOnSelectorDedupeKey(type, id);
+    if (seenOn.has(dedupeKey)) {
+      pushDuplicateOnSelectorError(errors, ruleId, type, id);
+      continue;
+    }
+    seenOn.add(dedupeKey);
+    if (!hasKnownOnSelectorId(type, id)) {
+      pushUnknownOnSelectorIdError(errors, ruleId, type, entry.raw || id);
+    }
+  }
+}
+
+function validateDefaultsSection(errors, target) {
+  if (!hasOwn(target, "defaults")) return;
+  const defaults = getValidationDefaults(target);
+  pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, DEFAULTS_ALLOWED_KEYS);
+  if (hasDefaultsOpen(defaults)) {
+    const defaultsOpen = getDefaultsOpen(defaults);
+    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
+    pushOpenTimingErrors(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen);
+  }
+  if (hasMergedDefaultsTriggerEntries(defaults)) {
+    const defaultsTrigger = getMergedDefaultsTriggerMap(defaults);
+    validateDefaultsTriggerMap(errors, defaultsTrigger);
+  }
+  if (hasDefaultsRule(defaults)) {
+    const defaultsRule = getDefaultsRule(defaults);
+    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
+    pushRuleTimingErrors(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule);
+    pushFiniteNumberErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "priority");
+  }
+}
+
+function validateRuleEntry(errors, seenRuleIds, rawRule) {
+  const rule = asObj(rawRule);
+  const ruleId = normalizeRuleValidationId(rule);
+  if (!ruleId) {
+    pushMissingRuleIdError(errors);
+    return;
+  }
+  if (seenRuleIds.has(ruleId)) pushDuplicateRuleIdError(errors, ruleId);
+  seenRuleIds.add(ruleId);
+
+  validateRuleBaseFields(errors, ruleId, rule);
+
+  const onEntries = collectOnEntries(rule.on, errors, ruleId);
+  validateOnSelectors(errors, ruleId, onEntries);
+
+  const hasOpen = hasRuleOpen(rule);
+  if (hasOpen) {
+    const openIsSelectorList = isOpenSelectorList(rule.open);
+    const open = normalizeOpenValidationInput(rule.open);
+    if (!openIsSelectorList) {
+      validateStructuredOpen(errors, ruleId, open);
+    }
+    validateOpenSpells(errors, ruleId, open);
+  }
+
+  const triggerEntries = getRuleTriggerEntries(rule);
+  const hasTrigger = hasAnyEntries(triggerEntries);
+  if (!hasTrigger) {
+    if (!hasOpen) {
+      pushMissingActionsError(errors, ruleId);
+    }
+    return;
+  }
+  validateTriggerEntries(errors, ruleId, triggerEntries);
+}
+
+function validateRootShape(errors, target) {
   if (asText(target.version) !== "1") {
     errors.push("ORCHESTRATOR_V1.version must be \"1\"");
   }
@@ -381,104 +505,21 @@ export function validateOrchestratorV1(cfg) {
   }
   if (!Array.isArray(target.rules)) {
     errors.push("ORCHESTRATOR_V1.rules must be an array");
-    return errors;
+    return false;
   }
-  if (hasOwn(target, "defaults")) {
-    const defaults = getValidationDefaults(target);
-    pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, DEFAULTS_ALLOWED_KEYS);
-    if (hasDefaultsOpen(defaults)) {
-      const defaultsOpen = getDefaultsOpen(defaults);
-      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
-      pushOpenTimingErrors(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen);
-    }
-    if (hasMergedDefaultsTriggerEntries(defaults)) {
-      const defaultsTrigger = getMergedDefaultsTriggerMap(defaults);
-      for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
-        validateDefaultsTriggerEntry(errors, rawEventId, args);
-      }
-    }
-    if (hasDefaultsRule(defaults)) {
-      const defaultsRule = getDefaultsRule(defaults);
-      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
-      pushRuleTimingErrors(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule);
-      pushFiniteNumberErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "priority");
-    }
-  }
+  return true;
+}
+
+export function validateOrchestratorV1(cfg) {
+  const errors = [];
+  const target = asObj(cfg);
+  pushUnsupportedKeys(errors, "ORCHESTRATOR_V1", target, ROOT_ALLOWED_KEYS);
+  if (!validateRootShape(errors, target)) return errors;
+  validateDefaultsSection(errors, target);
 
   const ids = new Set();
   for (const rawRule of target.rules) {
-    const rule = asObj(rawRule);
-    const ruleId = normalizeRuleValidationId(rule);
-    if (!ruleId) {
-      errors.push("ORCHESTRATOR_V1.rules[] entry is missing id");
-      continue;
-    }
-    if (ids.has(ruleId)) errors.push(`ORCHESTRATOR_V1.rules contains duplicate id: ${ruleId}`);
-    ids.add(ruleId);
-
-    pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, RULE_ALLOWED_KEYS);
-    pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId}`, rule);
-    pushFiniteNumberErrorWhenPresent(errors, `rule ${ruleId}`, rule, "priority");
-    pushRuleTimingErrors(errors, `rule ${ruleId}`, rule);
-
-    const onEntries = collectOnEntries(rule.on, errors, ruleId);
-
-    const seenOn = new Set();
-    if (!onEntries.length) {
-      pushMissingOnSelectorsError(errors, ruleId);
-    }
-    for (const entry of onEntries) {
-      const normalized = normalizeOnSelectorEntry(entry);
-      const type = normalized.type;
-      const id = normalized.id;
-      if (!isKnownOnSelectorType(type)) {
-        pushUnsupportedOnSelectorTypeError(errors, ruleId);
-        continue;
-      }
-      if (!id) {
-        pushEmptyOnSelectorError(errors, ruleId, type);
-        continue;
-      }
-      const dedupeKey = buildOnSelectorDedupeKey(type, id);
-      if (seenOn.has(dedupeKey)) {
-        pushDuplicateOnSelectorError(errors, ruleId, type, id);
-        continue;
-      }
-      seenOn.add(dedupeKey);
-      if (!hasKnownOnSelectorId(type, id)) {
-        pushUnknownOnSelectorIdError(errors, ruleId, type, entry.raw || id);
-      }
-    }
-
-    const hasOpen = hasRuleOpen(rule);
-    if (hasOpen) {
-      const openIsSelectorList = isOpenSelectorList(rule.open);
-      const open = normalizeOpenValidationInput(rule.open);
-      if (!openIsSelectorList) {
-        pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, OPEN_ALLOWED_KEYS);
-      }
-      validateOpenSpells(errors, ruleId, open);
-      if (!openIsSelectorList) {
-        pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
-        pushOpenTimingErrors(errors, `rule ${ruleId} open`, open);
-      }
-    }
-
-    const triggerEntries = getRuleTriggerEntries(rule);
-    const hasTrigger = triggerEntries.length > 0;
-    if (!hasTrigger) {
-      if (!hasOpen) {
-        pushMissingActionsError(errors, ruleId);
-      }
-      continue;
-    }
-    for (const rawTrigger of triggerEntries) {
-      const trigger = normalizeTriggerValidationInput(rawTrigger);
-      pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, TRIGGER_ALLOWED_KEYS);
-      pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} trigger`, trigger);
-      validateTriggerEventRef(errors, ruleId, trigger);
-      validateTriggerArgs(errors, ruleId, rawTrigger, trigger);
-    }
+    validateRuleEntry(errors, ids, rawRule);
   }
   return errors;
 }

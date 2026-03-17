@@ -122,6 +122,17 @@ function applyOptionalRuleTimingFields(target, rule, defaultsRule) {
   if (matchWindowMsNum != null) out.matchWindowMs = matchWindowMsNum;
 }
 
+function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
+  const out = {
+    id,
+    on: Object.freeze(on),
+    then: Object.freeze(then),
+  };
+  copyBooleanEnabledIfPresent(out, rule);
+  applyOptionalRuleTimingFields(out, rule, defaultsRule);
+  return Object.freeze(out);
+}
+
 function asFiniteNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
@@ -238,25 +249,24 @@ function compileOnSelectors(rawOn) {
 function mapRule(rule, defaults, defaultsTriggerByEvent) {
   const r = asObj(rule);
   const defaultsRoot = asObj(defaults);
+  const defaultsOpen = getDefaultsOpen(defaultsRoot);
   const id = normalizeRuleId(r);
   if (!id) return null;
   const ruleDefaults = getRuleDefaults(defaultsRoot);
   const on = compileOnSelectors(r.on);
   if (!hasCompiledSelectors(on)) return null;
-  const then = compileRuleActions(r, defaultsRoot, defaultsTriggerByEvent);
-  const out = {
+  const then = compileRuleActions(r, defaultsOpen, defaultsTriggerByEvent);
+  return buildCompiledRule({
     id,
-    on: Object.freeze(on),
-    then: Object.freeze(then),
-  };
-  copyBooleanEnabledIfPresent(out, r);
-  applyOptionalRuleTimingFields(out, r, ruleDefaults);
-  return Object.freeze(out);
+    on,
+    then,
+    rule: r,
+    defaultsRule: ruleDefaults,
+  });
 }
 
-function compileRuleActions(rule, defaultsRoot, defaultsTriggerByEvent) {
+function compileRuleActions(rule, defaultsOpen, defaultsTriggerByEvent) {
   const source = asObj(rule);
-  const defaultsOpen = getDefaultsOpen(defaultsRoot);
   const actions = [];
   pushOpenAction(actions, source.open, defaultsOpen);
   const triggerActions = compileTriggerActions(source, defaultsTriggerByEvent);
