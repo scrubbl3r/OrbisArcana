@@ -93,7 +93,15 @@ function mapRule(rule, defaults) {
       const spellId = normalizeSpellId(spellRaw);
       if (spellId) on.push(Object.freeze({ type: "spell", id: spellId }));
     }
+    for (const spellRaw of asSelectorList(onRaw.spells)) {
+      const spellId = normalizeSpellId(spellRaw);
+      if (spellId) on.push(Object.freeze({ type: "spell", id: spellId }));
+    }
     for (const gestureRaw of asSelectorList(onRaw.gesture)) {
+      const gestureId = normalizeGestureId(gestureRaw);
+      if (gestureId) on.push(Object.freeze({ type: "gesture", id: gestureId }));
+    }
+    for (const gestureRaw of asSelectorList(onRaw.gestures)) {
       const gestureId = normalizeGestureId(gestureRaw);
       if (gestureId) on.push(Object.freeze({ type: "gesture", id: gestureId }));
     }
@@ -102,6 +110,10 @@ function mapRule(rule, defaults) {
       if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
     }
     for (const orbStateRaw of asSelectorList(onRaw.orbState)) {
+      const orbStateId = normalizeOrbStateId(orbStateRaw);
+      if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
+    }
+    for (const orbStateRaw of asSelectorList(onRaw.orbStates)) {
       const orbStateId = normalizeOrbStateId(orbStateRaw);
       if (orbStateId) on.push(Object.freeze({ type: "orb_state", id: orbStateId }));
     }

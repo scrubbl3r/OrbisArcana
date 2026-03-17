@@ -382,4 +382,51 @@ if (timingDefaultRule.cooldownMs !== 333 || timingDefaultRule.matchWindowMs !== 
   );
 }
 
+const onPluralAliasSample = Object.freeze({
+  version: "1",
+  enabled: true,
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_on_plural_aliases",
+      on: Object.freeze({
+        spells: "rota, sanctum",
+        gestures: "spin_y",
+        orbStates: "charged",
+      }),
+      trigger: "grace",
+    }),
+  ]),
+});
+
+let builtOnPluralAlias;
+try {
+  builtOnPluralAlias = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: onPluralAliasSample,
+    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for on plural alias sample: ${msg}`);
+}
+
+const [onPluralAliasRule] = Array.isArray(builtOnPluralAlias?.rules) ? builtOnPluralAlias.rules : [];
+if (!onPluralAliasRule) {
+  failCheck(CHECK_TAG, "on plural alias sample did not produce a compiled rule");
+}
+const expectedOnPluralAliasOn = [
+  { type: "spell", id: "rota" },
+  { type: "spell", id: "sanctum" },
+  { type: "gesture", id: "spin_y" },
+  { type: "orb_state", id: "charged" },
+];
+if (asJson(onPluralAliasRule.on) !== asJson(expectedOnPluralAliasOn)) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "on plural aliases normalization mismatch",
+    [`got ${asJson(onPluralAliasRule.on)} expected ${asJson(expectedOnPluralAliasOn)}`]
+  );
+}
+
 reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");

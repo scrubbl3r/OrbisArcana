@@ -205,6 +205,24 @@ expectValid(
 );
 
 expectValid(
+  "on_plural_aliases",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_on_plural_aliases",
+        on: Object.freeze({
+          spells: "rota, sanctum",
+          gestures: "spin_y",
+          orbStates: "charged",
+        }),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,
