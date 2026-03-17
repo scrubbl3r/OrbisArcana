@@ -54,6 +54,12 @@ function pushOnEntries(onEntries, raw, type, normalizeId) {
   }
 }
 
+function pushParsedOnSelectorEntries(onEntries, raw) {
+  for (const entry of asSelectorList(raw)) {
+    onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
+  }
+}
+
 function getMergedTriggerEntries(ruleLike) {
   const source = asObj(ruleLike);
   return [
@@ -200,9 +206,7 @@ export function validateOrchestratorV1(cfg) {
     const onRaw = rule.on;
     const onEntries = [];
     if (typeof onRaw === "string" || Array.isArray(onRaw)) {
-      for (const entry of asSelectorList(onRaw)) {
-        onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
-      }
+      pushParsedOnSelectorEntries(onEntries, onRaw);
     } else {
       const on = asObj(onRaw);
       pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, [
