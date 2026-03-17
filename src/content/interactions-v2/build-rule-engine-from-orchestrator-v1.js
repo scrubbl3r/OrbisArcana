@@ -30,6 +30,14 @@ function getMergedTriggerDefaults(defaultsRoot) {
   });
 }
 
+function getMergedTriggerEntries(ruleLike) {
+  const source = asObj(ruleLike);
+  return [
+    ...normalizeTriggerEntries(source.trigger),
+    ...normalizeTriggerEntries(source.triggers),
+  ];
+}
+
 function mapTrigger(trigger, defaultsTriggerByEvent) {
   const t = (typeof trigger === "string")
     ? Object.freeze({ event: trigger })
@@ -118,10 +126,7 @@ function mapRule(rule, defaults) {
   const openAction = mapOpen(r.open, defaultsRoot.open);
   if (openAction) then.push(openAction);
   const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(getMergedTriggerDefaults(defaultsRoot));
-  const triggerActions = [
-    ...normalizeTriggerEntries(r.trigger),
-    ...normalizeTriggerEntries(r.triggers),
-  ]
+  const triggerActions = getMergedTriggerEntries(r)
     .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
     .filter(Boolean);
   then.push(...triggerActions);

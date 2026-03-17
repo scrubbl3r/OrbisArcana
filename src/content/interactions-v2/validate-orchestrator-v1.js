@@ -49,6 +49,14 @@ function pushOnEntries(onEntries, raw, type, normalizeId) {
   }
 }
 
+function getMergedTriggerEntries(ruleLike) {
+  const source = asObj(ruleLike);
+  return [
+    ...normalizeTriggerEntries(source.trigger),
+    ...normalizeTriggerEntries(source.triggers),
+  ];
+}
+
 export function validateOrchestratorV1(cfg) {
   const errors = [];
   const target = asObj(cfg);
@@ -289,10 +297,7 @@ export function validateOrchestratorV1(cfg) {
       }
     }
 
-    const triggerEntries = [
-      ...normalizeTriggerEntries(rule.trigger),
-      ...normalizeTriggerEntries(rule.triggers),
-    ];
+    const triggerEntries = getMergedTriggerEntries(rule);
     const hasTrigger = triggerEntries.length > 0;
     if (!hasTrigger && !hasOpen) {
       errors.push(`rule ${ruleId} must define open and/or trigger actions`);
