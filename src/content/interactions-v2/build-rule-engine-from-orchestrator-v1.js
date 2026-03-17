@@ -12,6 +12,10 @@ import {
   normalizeTriggerEntries,
 } from "./orchestrator-v1-normalizers.js";
 
+const MIN_TTL_MS = 0;
+const MIN_COOLDOWN_MS = 0;
+const MIN_MATCH_WINDOW_MS = 100;
+
 function normalizeTriggerDefaultsByEvent(defaultsTriggerRaw) {
   const out = {};
   for (const [eventIdRaw, args] of Object.entries(asObj(defaultsTriggerRaw))) {
@@ -38,13 +42,22 @@ function getMergedTriggerEntries(ruleLike) {
   ];
 }
 
+function hasOwn(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 function resolveFirstPresentValue(primaryObj, primaryKey, aliasKey, defaultsObj) {
   const primary = asObj(primaryObj);
   const defaultsSafe = asObj(defaultsObj);
-  if (Object.prototype.hasOwnProperty.call(primary, primaryKey)) return primary[primaryKey];
-  if (Object.prototype.hasOwnProperty.call(primary, aliasKey)) return primary[aliasKey];
-  if (Object.prototype.hasOwnProperty.call(defaultsSafe, primaryKey)) return defaultsSafe[primaryKey];
+  if (hasOwn(primary, primaryKey)) return primary[primaryKey];
+  if (hasOwn(primary, aliasKey)) return primary[aliasKey];
+  if (hasOwn(defaultsSafe, primaryKey)) return defaultsSafe[primaryKey];
   return defaultsSafe[aliasKey];
+}
+
+function resolveRuleTimingValue(rule, defaultsRule, primaryKey, aliasKey, minValue) {
+  const raw = resolveFirstPresentValue(rule, primaryKey, aliasKey, defaultsRule);
+  return asFiniteAtLeast(raw, minValue);
 }
 
 function asFiniteNumber(value) {
@@ -55,6 +68,10 @@ function asFiniteNumber(value) {
 function asFiniteAtLeast(value, min) {
   const n = asFiniteNumber(value);
   return n == null ? null : Math.max(min, n);
+}
+
+function isSelectorListLike(value) {
+  return typeof value === "string" || Array.isArray(value);
 }
 
 function mapTrigger(trigger, defaultsTriggerByEvent) {
@@ -69,29 +86,26 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
     ...asObj(defaultsTriggerByEvent[eventId]),
     ...asObj(t.args),
   };
-  if (Object.prototype.hasOwnProperty.call(t, "enabled") && typeof t.enabled === "boolean") {
+  if (hasOwn(t, "enabled") && typeof t.enabled === "boolean") {
     out.enabled = t.enabled;
   }
   return Object.freeze(out);
 }
 
 function mapOpen(open, defaultsOpen) {
-  const o = (typeof open === "string")
-    ? Object.freeze({ spells: asSelectorList(open) })
-    : (Array.isArray(open)
-      ? Object.freeze({ spells: asSelectorList(open) })
-      : asObj(open));
+  const openIsSelectorList = isSelectorListLike(open);
+  const o = openIsSelectorList ? Object.freeze({ spells: open }) : asObj(open);
   const spells = asSelectorList(o.spells).map(normalizeSpellId).filter(Boolean);
   if (!spells.length) return null;
   const out = {
     type: "wake_win",
     spells,
   };
-  if (Object.prototype.hasOwnProperty.call(o, "enabled") && typeof o.enabled === "boolean") {
+  if (hasOwn(o, "enabled") && typeof o.enabled === "boolean") {
     out.enabled = o.enabled;
   }
   const ttlMs = resolveFirstPresentValue(o, "ttlMs", "ttl", defaultsOpen);
-  const ttlMsNum = asFiniteAtLeast(ttlMs, 0);
+  const ttlMsNum = asFiniteAtLeast(ttlMs, MIN_TTL_MS);
   if (ttlMsNum != null) {
     out.ttlMs = ttlMsNum;
   }
@@ -112,6 +126,16 @@ function pushNormalizedOnEntries(target, raw, normalizeId, type) {
   }
 }
 
+const ON_SELECTOR_SOURCES = Object.freeze([
+  Object.freeze({ key: "spell", type: "spell", normalize: normalizeSpellId }),
+  Object.freeze({ key: "spells", type: "spell", normalize: normalizeSpellId }),
+  Object.freeze({ key: "gesture", type: "gesture", normalize: normalizeGestureId }),
+  Object.freeze({ key: "gestures", type: "gesture", normalize: normalizeGestureId }),
+  Object.freeze({ key: "orb_state", type: "orb_state", normalize: normalizeOrbStateId }),
+  Object.freeze({ key: "orbState", type: "orb_state", normalize: normalizeOrbStateId }),
+  Object.freeze({ key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId }),
+]);
+
 function mapRule(rule, defaults) {
   const r = asObj(rule);
   const defaultsRoot = asObj(defaults);
@@ -119,17 +143,13 @@ function mapRule(rule, defaults) {
   if (!id) return null;
   const ruleDefaults = asObj(defaultsRoot.rule);
   const on = [];
-  if (typeof r.on === "string" || Array.isArray(r.on)) {
+  if (isSelectorListLike(r.on)) {
     pushParsedOnSelectors(on, r.on);
   } else {
     const onRaw = asObj(r.on);
-    pushNormalizedOnEntries(on, onRaw.spell, normalizeSpellId, "spell");
-    pushNormalizedOnEntries(on, onRaw.spells, normalizeSpellId, "spell");
-    pushNormalizedOnEntries(on, onRaw.gesture, normalizeGestureId, "gesture");
-    pushNormalizedOnEntries(on, onRaw.gestures, normalizeGestureId, "gesture");
-    pushNormalizedOnEntries(on, onRaw.orb_state, normalizeOrbStateId, "orb_state");
-    pushNormalizedOnEntries(on, onRaw.orbState, normalizeOrbStateId, "orb_state");
-    pushNormalizedOnEntries(on, onRaw.orbStates, normalizeOrbStateId, "orb_state");
+    for (const source of ON_SELECTOR_SOURCES) {
+      pushNormalizedOnEntries(on, onRaw[source.key], source.normalize, source.type);
+    }
   }
   if (!on.length) return null;
   const then = [];
@@ -145,10 +165,10 @@ function mapRule(rule, defaults) {
     on: Object.freeze(on),
     then: Object.freeze(then),
   };
-  if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled === "boolean") {
+  if (hasOwn(r, "enabled") && typeof r.enabled === "boolean") {
     out.enabled = r.enabled;
   }
-  const hasPriority = Object.prototype.hasOwnProperty.call(r, "priority");
+  const hasPriority = hasOwn(r, "priority");
   const priority = hasPriority
     ? r.priority
     : ruleDefaults.priority;
@@ -156,13 +176,23 @@ function mapRule(rule, defaults) {
   if (priorityNum != null) {
     out.priority = priorityNum;
   }
-  const cooldownMs = resolveFirstPresentValue(r, "cooldownMs", "cooldown", ruleDefaults);
-  const cooldownMsNum = asFiniteAtLeast(cooldownMs, 0);
+  const cooldownMsNum = resolveRuleTimingValue(
+    r,
+    ruleDefaults,
+    "cooldownMs",
+    "cooldown",
+    MIN_COOLDOWN_MS
+  );
   if (cooldownMsNum != null) {
     out.cooldownMs = cooldownMsNum;
   }
-  const matchWindowMs = resolveFirstPresentValue(r, "matchWindowMs", "matchWindow", ruleDefaults);
-  const matchWindowMsNum = asFiniteAtLeast(matchWindowMs, 100);
+  const matchWindowMsNum = resolveRuleTimingValue(
+    r,
+    ruleDefaults,
+    "matchWindowMs",
+    "matchWindow",
+    MIN_MATCH_WINDOW_MS
+  );
   if (matchWindowMsNum != null) {
     out.matchWindowMs = matchWindowMsNum;
   }
