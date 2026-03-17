@@ -1,5 +1,6 @@
 export function createStoredGlobeResources(initialStored = 0) {
-  let stored = Number.isFinite(Number(initialStored)) ? Number(initialStored) : 0;
+  const initialStoredNum = Number(initialStored);
+  let stored = Number.isFinite(initialStoredNum) ? initialStoredNum : 0;
   return {
     getStoredGlobeCount: () => stored,
     consumeStoredGlobe: () => {

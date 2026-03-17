@@ -3,13 +3,14 @@ function asObject(v) {
 }
 
 export function isInteractionsEnabled(interactionsV2) {
-  return !!(asObject(interactionsV2) && interactionsV2.enabled !== false);
+  const root = asObject(interactionsV2);
+  return root?.enabled !== false;
 }
 
 export function getInteractionsDefaults(interactionsV2) {
   const root = asObject(interactionsV2);
   const defaults = root ? asObject(root.defaults) : null;
-  return defaults || {};
+  return defaults ?? {};
 }
 
 export function getInteractionsRules(interactionsV2) {

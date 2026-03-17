@@ -12,6 +12,7 @@ const LABELS = Object.freeze({
   targetRegistry: "policy runtime import target registry",
   target: "policy runtime import target",
 });
+
 assertSingletonRegistryV2({
   tag: CHECK_TAG,
   values: POLICY_RUNTIME_IMPORT_TARGETS_V2,

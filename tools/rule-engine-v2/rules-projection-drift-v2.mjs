@@ -39,8 +39,8 @@ export function computeProjectionDrift(interactionsV2) {
       onlyRuntimeIds.push(id);
       continue;
     }
-    const projected = JSON.stringify(projectedById.get(id) || null);
-    const runtime = JSON.stringify(runtimeById.get(id) || null);
+    const projected = JSON.stringify(projectedById.get(id) ?? null);
+    const runtime = JSON.stringify(runtimeById.get(id) ?? null);
     if (projected !== runtime) changedIds.push(id);
   }
 

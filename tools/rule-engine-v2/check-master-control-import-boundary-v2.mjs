@@ -10,10 +10,10 @@ function listMatches() {
   );
 }
 
-const allowed = new Set([
+const allowed = Object.freeze(new Set([
   "src/content/spell-rules/index.js",
   "tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs",
-]);
+]));
 
 const offenders = [];
 for (const line of listMatches()) {

@@ -41,6 +41,7 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
 }
 
 function mapOpen(open, defaultsOpen) {
+  const defaultsOpenSafe = asObj(defaultsOpen);
   const o = (typeof open === "string")
     ? Object.freeze({ spells: [open] })
     : (Array.isArray(open)
@@ -59,26 +60,28 @@ function mapOpen(open, defaultsOpen) {
   }
   const ttlMs = Object.prototype.hasOwnProperty.call(o, "ttlMs")
     ? o.ttlMs
-    : asObj(defaultsOpen).ttlMs;
-  if (Number.isFinite(Number(ttlMs)) && Number(ttlMs) >= 0) {
-    out.ttlMs = Number(ttlMs);
+    : defaultsOpenSafe.ttlMs;
+  const ttlMsNum = Number(ttlMs);
+  if (Number.isFinite(ttlMsNum) && ttlMsNum >= 0) {
+    out.ttlMs = ttlMsNum;
   }
   return Object.freeze(out);
 }
 
 function mapRule(rule, defaults) {
   const r = asObj(rule);
+  const defaultsRoot = asObj(defaults);
   const id = asText(r.id);
   if (!id) return null;
-  const ruleDefaults = asObj(defaults.rule);
+  const ruleDefaults = asObj(defaultsRoot.rule);
   const on = [];
   if (typeof r.on === "string") {
     const parsed = parseOnSelector(r.on);
-    if (parsed && parsed.id) on.push(parsed);
+    if (parsed?.id) on.push(parsed);
   } else if (Array.isArray(r.on)) {
     for (const entry of r.on) {
       const parsed = parseOnSelector(entry);
-      if (parsed && parsed.id) on.push(parsed);
+      if (parsed?.id) on.push(parsed);
     }
   } else {
     const onRaw = asObj(r.on);
@@ -97,9 +100,9 @@ function mapRule(rule, defaults) {
   }
   if (!on.length) return null;
   const then = [];
-  const openAction = mapOpen(r.open, asObj(defaults.open));
+  const openAction = mapOpen(r.open, defaultsRoot.open);
   if (openAction) then.push(openAction);
-  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(asObj(defaults.trigger));
+  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(defaultsRoot.trigger);
   const triggerActions = normalizeTriggerEntries(r.trigger)
     .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
     .filter(Boolean);
@@ -112,23 +115,27 @@ function mapRule(rule, defaults) {
   if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled === "boolean") {
     out.enabled = r.enabled;
   }
-  const priority = Object.prototype.hasOwnProperty.call(r, "priority")
+  const hasPriority = Object.prototype.hasOwnProperty.call(r, "priority");
+  const priority = hasPriority
     ? r.priority
     : ruleDefaults.priority;
-  if (Number.isFinite(Number(priority))) {
-    out.priority = Number(priority);
+  const priorityNum = Number(priority);
+  if (Number.isFinite(priorityNum)) {
+    out.priority = priorityNum;
   }
   const cooldownMs = Object.prototype.hasOwnProperty.call(r, "cooldownMs")
     ? r.cooldownMs
     : ruleDefaults.cooldownMs;
-  if (Number.isFinite(Number(cooldownMs))) {
-    out.cooldownMs = Math.max(0, Number(cooldownMs));
+  const cooldownMsNum = Number(cooldownMs);
+  if (Number.isFinite(cooldownMsNum)) {
+    out.cooldownMs = Math.max(0, cooldownMsNum);
   }
   const matchWindowMs = Object.prototype.hasOwnProperty.call(r, "matchWindowMs")
     ? r.matchWindowMs
     : ruleDefaults.matchWindowMs;
-  if (Number.isFinite(Number(matchWindowMs))) {
-    out.matchWindowMs = Math.max(100, Number(matchWindowMs));
+  const matchWindowMsNum = Number(matchWindowMs);
+  if (Number.isFinite(matchWindowMsNum)) {
+    out.matchWindowMs = Math.max(100, matchWindowMsNum);
   }
   return Object.freeze(out);
 }
@@ -148,7 +155,7 @@ export function buildRuleEngineFromOrchestratorV1({
   return Object.freeze({
     ...baseRuleEngine,
     version: "2",
-    enabled: orchestratorV1 && orchestratorV1.enabled !== false,
+    enabled: orchestratorV1?.enabled !== false,
     signals: Object.freeze([]),
     windows: Object.freeze([]),
     events: Object.freeze([]),

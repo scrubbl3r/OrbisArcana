@@ -27,11 +27,13 @@ if (projectedRules.length !== interactionsRules.length) {
 for (const rule of projectedRules) {
   const ruleId = typeof rule?.id === "string" ? rule.id.trim() : "";
   if (!ruleId) failCheck(CHECK_TAG, "projected rule missing id");
-  if (!Array.isArray(rule?.on) || !rule.on.length) {
+  const safeRule = (rule && typeof rule === "object" && !Array.isArray(rule)) ? rule : {};
+  const selectors = Array.isArray(rule?.on) ? rule.on : [];
+  if (!selectors.length) {
     failCheck(CHECK_TAG, `projected rule ${ruleId} missing on[] selectors`);
   }
-  const hasOpen = Object.prototype.hasOwnProperty.call(rule || {}, "open");
-  const hasTrigger = Object.prototype.hasOwnProperty.call(rule || {}, "trigger");
+  const hasOpen = Object.prototype.hasOwnProperty.call(safeRule, "open");
+  const hasTrigger = Object.prototype.hasOwnProperty.call(safeRule, "trigger");
   if (!hasOpen && !hasTrigger) {
     failCheck(CHECK_TAG, `projected rule ${ruleId} has neither open nor trigger`);
   }

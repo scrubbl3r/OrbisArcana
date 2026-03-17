@@ -19,16 +19,21 @@ const expectedSourceIds = Object.freeze([
   "interactions_adapter_missing_builder",
 ]);
 
-if (!RULE_ENGINE_SOURCES || typeof RULE_ENGINE_SOURCES !== "object") {
+function isObjectRecord(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+if (!isObjectRecord(RULE_ENGINE_SOURCES)) {
   failCheck(CHECK_TAG, "RULE_ENGINE_SOURCES export missing");
 }
-if (!RULE_ENGINE_SOURCE_READOUT || typeof RULE_ENGINE_SOURCE_READOUT !== "object") {
+if (!isObjectRecord(RULE_ENGINE_SOURCE_READOUT)) {
   failCheck(CHECK_TAG, "RULE_ENGINE_SOURCE_READOUT export missing");
 }
 
 const sourceValues = Object.values(RULE_ENGINE_SOURCES);
+const sourceValueSet = new Set(sourceValues);
 for (const id of expectedSourceIds) {
-  if (!sourceValues.includes(id)) {
+  if (!sourceValueSet.has(id)) {
     failCheck(CHECK_TAG, `missing source id: ${id}`);
   }
 }
@@ -43,7 +48,7 @@ const deprecatedIds = Object.freeze([
   "legacy_policy_fallback",
 ]);
 for (const id of deprecatedIds) {
-  if (sourceValues.includes(id)) failCheck(CHECK_TAG, `deprecated source id present in RULE_ENGINE_SOURCES: ${id}`);
+  if (sourceValueSet.has(id)) failCheck(CHECK_TAG, `deprecated source id present in RULE_ENGINE_SOURCES: ${id}`);
   if (Object.prototype.hasOwnProperty.call(RULE_ENGINE_SOURCE_READOUT, id)) {
     failCheck(CHECK_TAG, `deprecated source id present in RULE_ENGINE_SOURCE_READOUT: ${id}`);
   }

@@ -1,10 +1,14 @@
 import { readFileSync } from "node:fs";
 
 export function readJsonCore(path) {
+  const filePath = typeof path === "string" ? path.trim() : "";
+  if (!filePath) {
+    throw new Error("readJsonCore requires a non-empty file path");
+  }
   try {
     return Object.freeze({
       ok: true,
-      value: JSON.parse(readFileSync(path, "utf8")),
+      value: JSON.parse(readFileSync(filePath, "utf8")),
       error: null,
     });
   } catch (error) {

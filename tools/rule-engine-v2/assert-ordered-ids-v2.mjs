@@ -4,16 +4,28 @@ export function assertOrderedIds({
   manifestName = "manifest",
   itemLabel = "item",
 }) {
-  const actual = Array.isArray(actualIds) ? actualIds : [];
-  const required = Array.isArray(requiredIds) ? requiredIds : [];
+  if (!Array.isArray(actualIds)) {
+    throw new Error(`${manifestName} actualIds must be an array`);
+  }
+  if (!Array.isArray(requiredIds)) {
+    throw new Error(`${manifestName} requiredIds must be an array`);
+  }
+  const actual = actualIds;
+  const required = requiredIds;
 
   if (actual.length !== required.length) {
     throw new Error(`${manifestName} must contain exactly ${required.length} ${itemLabel}s (got ${actual.length})`);
   }
 
   for (let i = 0; i < required.length; i += 1) {
+    if (typeof required[i] !== "string" || !required[i].trim()) {
+      throw new Error(`${manifestName} requiredIds[${i}] must be a non-empty string`);
+    }
     const expectedId = required[i];
-    const actualId = actual[i] || "(missing)";
+    const actualIdRaw = actual[i];
+    const actualId = typeof actualIdRaw === "string" && actualIdRaw.trim()
+      ? actualIdRaw
+      : "(missing)";
     if (actualId !== expectedId) {
       throw new Error(
         `${manifestName} order mismatch at index ${i}: expected '${expectedId}' got '${actualId}'`

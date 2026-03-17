@@ -46,9 +46,10 @@ function getGitRef() {
 }
 
 function asStepResult(result, extras = {}) {
+  const status = Number(result?.status ?? 0);
   return {
     ok: result?.ok === true,
-    status: Number(result?.status ?? 0),
+    status,
     ...extras,
   };
 }
@@ -64,9 +65,11 @@ function appendMilestoneHistory(path, report) {
 }
 
 const ready = runStep(MILESTONE_STEP_LABELS.ready, RULE_ENGINE_V2_SCRIPT_PATHS.readyCheck);
-const batch = ready.ok
+const readyOk = ready.ok === true;
+const batch = readyOk
   ? runStep(MILESTONE_STEP_LABELS.smokeBatch, RULE_ENGINE_V2_SCRIPT_PATHS.smokeBatch)
   : { ok: false, status: MILESTONE_BATCH_SKIPPED_STATUS };
+const batchOk = batch.ok === true;
 
 const report = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.milestone,
@@ -74,10 +77,10 @@ const report = {
   gitRef: getGitRef(),
   steps: {
     ready: asStepResult(ready),
-    batch: asStepResult(batch, { skipped: !ready.ok }),
+    batch: asStepResult(batch, { skipped: !readyOk }),
   },
   health: readJsonSafe(MILESTONE_DOC_PATHS.health),
-  pass: ready.ok && batch.ok,
+  pass: readyOk && batchOk,
 };
 
 writeMilestoneReport(MILESTONE_DOC_PATHS.smoke, report, MILESTONE_REPORT_LABELS.wroteReport);

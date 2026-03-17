@@ -1,4 +1,4 @@
-# Dream Config Schema (Draft v0)
+# Orchestrator v1 DSL Schema (v0)
 
 Purpose: define a human-first orchestration language for gameplay using a small core:
 - `ON`
@@ -15,7 +15,7 @@ This doc adds required modifiers for production behavior:
 ## 1) Core Model
 
 - `Compendium` defines canonical nuggets (signals, events, windows, etc).
-- `Dream Config` composes those nuggets into rule behavior.
+- `Orchestrator v1 DSL` composes those nuggets into rule behavior.
 - Runtime never depends on how a rule was authored, only on compiled artifacts.
 
 ## 2) Naming + Case Contract
@@ -128,13 +128,12 @@ Compiler must:
 - produce deterministic output
 - emit precise diagnostics with source rule location
 
-## 9) Migration Guidance
+## 9) Adoption Guidance
 
 Current `interactions-v2` is the active orchestration layer.
 
-Migration path:
+Adoption path:
 1. Keep compendium handles stable.
-2. Author pilot rules in dream-config syntax.
+2. Author pilot rules in Orchestrator v1 DSL syntax.
 3. Compile to current runtime schema (`interactions-v2`-compatible projection).
-4. Cut over once parity + tests are green.
-
+4. Activate once parity + tests are green.

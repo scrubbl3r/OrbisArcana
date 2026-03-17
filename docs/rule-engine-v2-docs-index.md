@@ -21,7 +21,7 @@
 - Authoring sources (edit directly):
   - `src/content/interactions-v2/interactions-v2.js`
   - `src/content/interactions-v2/spellbook-v2.js`
-- Runtime integration/config surfaces (edit only for plumbing/migration):
+- Runtime integration/config surfaces (edit only for runtime/system work):
   - `src/content/spell-rules/rule-engine-master-control.js`
   - `src/content/spell-rules/validate-rule-engine-config.js`
   - `src/content/spells/runtime-spells.js`
@@ -43,7 +43,7 @@
 - `npm run pre-smoke:v2`
   - Validates authoring inputs and refreshes effective snapshot.
 - `npm run doctor:v2`
-  - Summarizes cutover/runtime health into `docs/rule-engine-v2.health.json`.
+  - Summarizes runtime health into `docs/rule-engine-v2.health.json`.
 - `npm run ready:v2`
   - Enforces health gates and fails fast on invalid config.
 - `npm run smoke:batch:v2`
@@ -72,7 +72,7 @@
 1. Create a dedicated fix/test branch from branch tip.
 2. Move that branch to a target commit SHA and push it.
 3. Validate online behavior from the fix/test branch deployment.
-4. Keep original branch untouched while testing historical SHAs.
+4. Keep original branch untouched while validating target SHAs.
 5. Promote only known-good commits back into active development.
 
 ## Glossary (v2)

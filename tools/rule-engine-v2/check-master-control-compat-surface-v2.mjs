@@ -13,7 +13,7 @@ function listFiles() {
 }
 
 const token = RULE_ENGINE_MASTER_CONTROL_TOKEN_V2;
-const allowed = new Set([
+const allowed = Object.freeze(new Set([
   "src/content/spell-rules/rule-engine-master-control.js",
   "src/content/spell-rules/index.js",
   "tools/rule-engine-v2/check-policy-control-contract-v2.mjs",
@@ -23,7 +23,7 @@ const allowed = new Set([
   "tools/rule-engine-v2/policy-terms-v2.mjs",
   "tools/rule-engine-v2/check-master-control-compat-surface-v2.mjs",
   RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc,
-]);
+]));
 
 const offenders = [];
 for (const rel of listFiles()) {

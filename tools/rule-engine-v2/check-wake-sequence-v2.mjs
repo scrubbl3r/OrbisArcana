@@ -22,10 +22,11 @@ export function emitWakeLoadPrelude({
     atMs: startAt,
   });
   advance(stepMs);
+  const wakeAt = Number(nowRef?.value ?? 0);
   emitDetectedSpell(eventBus, {
     id: wakeWindowToken,
     intent: wakeIntent,
-    atMs: Number(nowRef?.value ?? 0),
+    atMs: wakeAt,
   });
 }
 
@@ -40,16 +41,18 @@ export function emitAxisThenWakeSelection({
   confidence,
 }) {
   const withConfidence = confidence === undefined ? {} : { confidence };
+  const axisAt = Number(axisAtMs);
+  const wakeAt = Number(wakeAtMs);
   emitDetectedSpell(eventBus, {
     id: axisSpellId,
     intent: axisIntent,
-    atMs: Number(axisAtMs),
+    atMs: axisAt,
     ...withConfidence,
   });
   emitDetectedSpell(eventBus, {
     id: wakeWindowToken,
     intent: wakeIntent,
-    atMs: Number(wakeAtMs),
+    atMs: wakeAt,
     ...withConfidence,
   });
 }

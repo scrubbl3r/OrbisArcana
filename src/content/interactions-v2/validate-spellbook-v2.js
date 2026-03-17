@@ -5,7 +5,9 @@ function asObj(v) {
 }
 
 function asText(v) {
-  return String(v == null ? "" : v).trim();
+  if (typeof v === "string") return v.trim();
+  if (v == null) return "";
+  return `${v}`.trim();
 }
 
 function isFiniteNonNegative(v) {
@@ -19,11 +21,11 @@ function isFiniteZeroToOne(v) {
 }
 
 function isEntityIdLike(v) {
-  return /^[a-z0-9_]+$/.test(String(v || ""));
+  return typeof v === "string" && /^[a-z0-9_]+$/.test(v);
 }
 
 function isPhraseLike(v) {
-  return /^[a-z0-9_ ]+$/.test(String(v || ""));
+  return typeof v === "string" && /^[a-z0-9_ ]+$/.test(v);
 }
 
 export function validateSpellbookV2(input = SPELLBOOK_V2) {
@@ -42,12 +44,12 @@ export function validateSpellbookV2(input = SPELLBOOK_V2) {
   const seenPhrases = new Set();
   for (const s of cfg.spells) {
     const spell = asObj(s);
-    const id = asText(spell.id).toLowerCase();
-    const phrase = asText(spell.phrase).toLowerCase();
-    const onnx = asText(spell.onnx).toLowerCase();
     const rawId = asText(spell.id);
     const rawPhrase = asText(spell.phrase);
     const rawOnnx = asText(spell.onnx);
+    const id = rawId.toLowerCase();
+    const phrase = rawPhrase.toLowerCase();
+    const onnx = rawOnnx.toLowerCase();
 
     if (!id) errors.push("SPELLBOOK_V2 spell entry is missing id");
     if (!phrase) errors.push(`SPELLBOOK_V2 spell ${id || "(missing-id)"} is missing phrase`);
@@ -89,7 +91,7 @@ export function validateSpellbookV2(input = SPELLBOOK_V2) {
     }
   }
 
-  const activeCount = cfg.spells.reduce((acc, spell) => acc + ((asObj(spell).active !== false) ? 1 : 0), 0);
+  const activeCount = cfg.spells.reduce((acc, spell) => acc + ((spell?.active !== false) ? 1 : 0), 0);
   if (activeCount < 1) {
     errors.push("SPELLBOOK_V2 must keep at least one active spell");
   }

@@ -40,33 +40,35 @@ export function validateDocRegistryV2({
   for (let index = 0; index < relArr.length; index += 1) {
     const key = keysArr[index];
     const rel = relArr[index];
+    const keyText = typeof key === "string" ? key.trim() : "";
+    const relText = typeof rel === "string" ? rel.trim() : "";
     if (typeof key !== "string") {
       failCheck(tag, `${label}[${index}] key must be a string`);
     }
-    if (!key.trim()) {
+    if (!keyText) {
       failCheck(tag, `${label}[${index}] key must be a non-empty string`);
     }
     if (rel == null) {
-      failCheck(tag, `${label}[${index}] missing doc path for key: ${key}`);
+      failCheck(tag, `${label}[${index}] missing doc path for key: ${keyText}`);
     }
     if (typeof rel !== "string") {
-      failCheck(tag, `${label}[${index}] path must be a string: ${key}`);
+      failCheck(tag, `${label}[${index}] path must be a string: ${keyText}`);
     }
-    if (!rel.trim()) {
-      failCheck(tag, `${label}[${index}] path is empty: ${key}`);
+    if (!relText) {
+      failCheck(tag, `${label}[${index}] path is empty: ${keyText}`);
     }
-    if (!rel.startsWith("docs/")) {
-      failCheck(tag, `${label}[${index}] path must be under docs/: ${key} -> ${rel}`);
+    if (!relText.startsWith("docs/")) {
+      failCheck(tag, `${label}[${index}] path must be under docs/: ${keyText} -> ${relText}`);
     }
-    if (requireMarkdown && !rel.endsWith(".md")) {
-      failCheck(tag, `${label}[${index}] path must be markdown: ${key} -> ${rel}`);
+    if (requireMarkdown && !relText.endsWith(".md")) {
+      failCheck(tag, `${label}[${index}] path must be markdown: ${keyText} -> ${relText}`);
     }
-    if (seenPaths.has(rel)) {
-      failCheck(tag, `${label}[${index}] duplicate path mapped: ${rel}`);
+    if (seenPaths.has(relText)) {
+      failCheck(tag, `${label}[${index}] duplicate path mapped: ${relText}`);
     }
-    seenPaths.add(rel);
-    if (!existsSync(resolve(process.cwd(), rel))) {
-      failCheck(tag, `${label}[${index}] file missing on disk: ${rel}`);
+    seenPaths.add(relText);
+    if (!existsSync(resolve(process.cwd(), relText))) {
+      failCheck(tag, `${label}[${index}] file missing on disk: ${relText}`);
     }
   }
 }

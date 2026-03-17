@@ -60,6 +60,10 @@ function expectBuildPass(caseName, cfg, assertFn = null) {
   logSmokePass(caseName);
 }
 
+function ensureObject(value) {
+  return (value && typeof value === "object" && !Array.isArray(value)) ? value : {};
+}
+
 function run() {
   {
     const cfg = jsonClone(INTERACTIONS_V2);
@@ -107,14 +111,14 @@ function run() {
 
   {
     const cfg = jsonClone(INTERACTIONS_V2);
-    cfg.defaults = cfg.defaults || {};
+    cfg.defaults = ensureObject(cfg.defaults);
     cfg.defaults.event = { "spell.grace": { ms: 500 } };
     expectValidationFail("defaults.event.prefix_mismatch", cfg, "defaults.event key prefix mismatch");
   }
 
   {
     const cfg = jsonClone(INTERACTIONS_V2);
-    cfg.defaults = cfg.defaults || {};
+    cfg.defaults = ensureObject(cfg.defaults);
     cfg.defaults.event = { "event.": { ms: 500 } };
     expectValidationFail("defaults.event.incomplete", cfg, "defaults.event key is incomplete");
   }
@@ -138,7 +142,7 @@ function run() {
     graceEvent.id = "grace";
     delete graceEvent.ms;
     delete graceEvent.overrides;
-    cfg.defaults = cfg.defaults || {};
+    cfg.defaults = ensureObject(cfg.defaults);
     cfg.defaults.event = { "event.grace": { ms: 500 } };
     expectValidationPass("qualified_forms.validate", cfg);
     expectBuildPass("qualified_forms.build_normalization", cfg, (projected) => {
@@ -147,10 +151,11 @@ function run() {
         : null;
       if (!projectedRule) fail("qualified_forms: projected rota rule missing");
       const projectedGrace = (Array.isArray(projectedRule.then) ? projectedRule.then : []).find((a) =>
-        a && a.type === "event" && a.id === "grace"
+        a?.type === "event" && a?.id === "grace"
       );
       if (!projectedGrace) fail("qualified_forms: projected grace event missing");
-      if (Number(projectedGrace.ms) !== 500) {
+      const projectedGraceMs = Number(projectedGrace.ms);
+      if (projectedGraceMs !== 500) {
         fail(`qualified_forms: expected projected grace ms=500, got ${JSON.stringify(projectedGrace)}`);
       }
     });

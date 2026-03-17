@@ -46,4 +46,4 @@ runReadyChecks(MANIFEST_VALIDATORS_V2, READY_FAILURE_PREFIX.validator, (entry) =
 const nonValidatorChecks = flattenManifestChecksV2().filter((entry) => !isManifestValidatorScriptV2(entry.script));
 runReadyChecks(nonValidatorChecks, READY_FAILURE_PREFIX.check, (entry) => entry?.id);
 
-reportCheckPass(CHECK_TAG, "cutover health is green");
+reportCheckPass(CHECK_TAG, "runtime health is green");

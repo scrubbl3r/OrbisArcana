@@ -6,14 +6,22 @@ function stable(v) {
   return stringifyJson(v);
 }
 
+function asList(values) {
+  return Array.isArray(values) ? values : [];
+}
+
+function asMap(values) {
+  return values instanceof Map ? values : new Map();
+}
+
 const drift = computeProjectionDrift(INTERACTIONS_V2);
-const projected = Array.isArray(drift?.projectedRules) ? drift.projectedRules : [];
-const runtime = Array.isArray(drift?.runtimeRules) ? drift.runtimeRules : [];
-const onlyProjected = Array.isArray(drift?.onlyProjectedIds) ? drift.onlyProjectedIds : [];
-const onlyRuntime = Array.isArray(drift?.onlyRuntimeIds) ? drift.onlyRuntimeIds : [];
-const changed = Array.isArray(drift?.changedIds) ? drift.changedIds : [];
-const projectedById = drift?.projectedById instanceof Map ? drift.projectedById : new Map();
-const runtimeById = drift?.runtimeById instanceof Map ? drift.runtimeById : new Map();
+const projected = asList(drift?.projectedRules);
+const runtime = asList(drift?.runtimeRules);
+const onlyProjected = asList(drift?.onlyProjectedIds);
+const onlyRuntime = asList(drift?.onlyRuntimeIds);
+const changed = asList(drift?.changedIds);
+const projectedById = asMap(drift?.projectedById);
+const runtimeById = asMap(drift?.runtimeById);
 
 console.log("[rules-v2-drift] projected rules:", projected.length);
 console.log("[rules-v2-drift] runtime projected rules:", runtime.length);

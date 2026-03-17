@@ -39,7 +39,7 @@ Related index:
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.
 - If you are enabling/disabling words, edit `spellbook-v2.js`.
-- Avoid editing runtime integration files unless doing migration plumbing.
+- Avoid editing runtime integration files unless you are doing intentional system/runtime wiring work.
 
 ## Quick Health Checks
 - `npm run pre-smoke:v2`

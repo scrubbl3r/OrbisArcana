@@ -14,7 +14,7 @@ export function countSpellbookSpells(spellbookV2) {
 }
 
 export function listActiveSpellbookSpells(spellbookV2) {
-  return listSpellbookSpells(spellbookV2).filter((s) => s && s.active !== false);
+  return listSpellbookSpells(spellbookV2).filter((s) => s?.active !== false);
 }
 
 export function listActiveSpellModelRefs(spellbookV2) {

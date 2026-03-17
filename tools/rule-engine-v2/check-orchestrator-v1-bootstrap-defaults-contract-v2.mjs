@@ -28,7 +28,7 @@ if (!Array.isArray(ORCHESTRATOR_V1.rules)) {
   failCheck(CHECK_TAG, "ORCHESTRATOR_V1.rules must be an array");
 }
 if (ORCHESTRATOR_V1.rules.length !== 0) {
-  failCheck(CHECK_TAG, "ORCHESTRATOR_V1.rules must remain empty until cutover activation");
+  failCheck(CHECK_TAG, "ORCHESTRATOR_V1.rules must remain empty until activation");
 }
 
-reportCheckPass(CHECK_TAG, "orchestrator bootstrap defaults remain in safe pre-cutover state");
+reportCheckPass(CHECK_TAG, "orchestrator bootstrap defaults remain in safe pre-activation state");

@@ -6,9 +6,9 @@ export const MANIFEST_VALIDATORS_V2 = defineCheckEntriesV2([
   { name: "regression", script: "tools/rule-engine-v2/check-regression-manifest-v2.mjs" },
 ]);
 
-const MANIFEST_VALIDATOR_SCRIPT_SET_V2 = new Set(
+const MANIFEST_VALIDATOR_SCRIPT_SET_V2 = Object.freeze(new Set(
   MANIFEST_VALIDATORS_V2.map((item) => item.script)
-);
+));
 
 export function isManifestValidatorScriptV2(script) {
   return MANIFEST_VALIDATOR_SCRIPT_SET_V2.has(script);

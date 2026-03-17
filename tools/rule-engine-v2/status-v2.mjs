@@ -68,7 +68,10 @@ function formatCheckStatusList(entries, checksById, yesNo) {
 
 function buildCheckResultsByKey(entries, runCheck, keyField = "id") {
   const items = asList(entries);
-  const keyName = typeof keyField === "string" && keyField.trim() ? keyField.trim() : "id";
+  const keyName = typeof keyField === "string" ? keyField.trim() : "";
+  if (!keyName) {
+    throw new Error("buildCheckResultsByKey requires non-empty keyField");
+  }
   const byKey = Object.freeze(Object.fromEntries(
     items.map((entry) => [entry?.[keyName], runCheck(entry?.script)])
   ));
@@ -100,10 +103,21 @@ function buildStatusSection(entries, runCheck, yesNo) {
 }
 
 function buildStatusSections(defs, runCheck, yesNo) {
+  const seenKeys = new Set();
   return Object.freeze(
     Object.fromEntries(
-      asList(defs).map((def) => {
+      asList(defs).map((def, index) => {
+        if (!def || typeof def !== "object") {
+          throw new Error(`status section def[${index}] must be an object`);
+        }
         const key = typeof def?.key === "string" ? def.key.trim() : "";
+        if (!key) {
+          throw new Error(`status section def[${index}] requires non-empty key`);
+        }
+        if (seenKeys.has(key)) {
+          throw new Error(`duplicate status section key: ${key}`);
+        }
+        seenKeys.add(key);
         const entries = Array.isArray(def?.entries) ? def.entries : [];
         return [key, buildStatusSection(entries, runCheck, yesNo)];
       })
@@ -188,11 +202,11 @@ const STATUS_SECTION_DEFS = Object.freeze([
   Object.freeze({ key: STATUS_SECTION_KEYS.contracts, entries: CONTRACT_CHECKS_V2 }),
 ]);
 
-const healthStatus = normalizeHealthStatus(readJsonSafe(STATUS_DOC_PATHS.health) || {});
+const healthStatus = normalizeHealthStatus(readJsonSafe(STATUS_DOC_PATHS.health) ?? {});
 const orchestratorTelemetryLive = computeOrchestratorTelemetryLive();
 healthStatus.orchestratorProjectedRuleCount = orchestratorTelemetryLive.orchestratorProjectedRuleCount;
 healthStatus.orchestratorProjectionParityOk = orchestratorTelemetryLive.orchestratorProjectionParityOk;
-const trendStatus = normalizeTrendStatus(readJsonSafe(STATUS_DOC_PATHS.trend) || {});
+const trendStatus = normalizeTrendStatus(readJsonSafe(STATUS_DOC_PATHS.trend) ?? {});
 const manifestArtifacts = buildNamedManifestArtifacts(
   MANIFEST_VALIDATORS_V2,
   runCheckScriptOk,

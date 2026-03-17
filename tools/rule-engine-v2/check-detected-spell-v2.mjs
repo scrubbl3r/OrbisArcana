@@ -4,11 +4,12 @@ export function emitDetectedSpell(eventBus, { id, intent, phrase, atMs, confiden
   const spokenPhrase = typeof phrase === "string"
     ? phrase
     : (typeof id === "string" ? id : "");
+  const confidenceNum = Number(confidence);
   const payload = {
     spell: { id, intent, phrase: spokenPhrase },
     atMs,
   };
-  if (Number.isFinite(Number(confidence))) payload.confidence = Number(confidence);
+  if (Number.isFinite(confidenceNum)) payload.confidence = confidenceNum;
   eventBus.emit(EVT_VOICE_SPELL_DETECTED, payload);
 }
 
@@ -19,11 +20,12 @@ export function emitDetectedSpellAt(eventBus, {
   confidence,
   phrase,
 }) {
+  const atMsNum = Number(atMs);
   emitDetectedSpell(eventBus, {
     id,
     intent,
     phrase,
-    atMs: Number(atMs),
+    atMs: atMsNum,
     confidence,
   });
 }

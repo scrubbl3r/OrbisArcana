@@ -21,6 +21,19 @@ const LABELS = Object.freeze({
   schemaDocRelRegistry: "policy schema doc rel registry",
 });
 
+function countLiteralOccurrences(text, token) {
+  if (typeof text !== "string" || typeof token !== "string" || !token) return 0;
+  let count = 0;
+  let index = 0;
+  while (true) {
+    const found = text.indexOf(token, index);
+    if (found < 0) break;
+    count += 1;
+    index = found + token.length;
+  }
+  return count;
+}
+
 assertPolicyTokenContractAcrossTargetsV2({
   tag: CHECK_TAG,
   targets: POLICY_AUTHORING_DOC_RELS_V2,
@@ -53,8 +66,8 @@ assertPolicyTokenContractV2({
   missingMessage: (token) => `${schemaDocRel} must mention ${token}`,
   forbiddenMessage: (token) => `${schemaDocRel} contains deprecated token: ${token}`,
 });
-const masterMentions = schemaDocText.match(new RegExp(RULE_ENGINE_MASTER_CONTROL_TOKEN_V2, "g")) ?? [];
-if (masterMentions.length !== 1) {
+const masterMentions = countLiteralOccurrences(schemaDocText, RULE_ENGINE_MASTER_CONTROL_TOKEN_V2);
+if (masterMentions !== 1) {
   failCheck(
     CHECK_TAG,
     `${schemaDocRel} must contain exactly one ${RULE_ENGINE_MASTER_CONTROL_TOKEN_V2} compatibility mention`

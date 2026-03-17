@@ -8,7 +8,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "doc-key-registry-integrity:v2";
 
-const allDefinedKeys = new Set(Object.keys(RULE_ENGINE_V2_DOC_PATHS));
+const allDefinedKeys = Object.freeze(new Set(Object.keys(RULE_ENGINE_V2_DOC_PATHS)));
 const core = Array.from(RULE_ENGINE_V2_CORE_MARKDOWN_DOC_KEYS);
 const generated = Array.from(RULE_ENGINE_V2_GENERATED_ARTIFACT_DOC_KEYS);
 

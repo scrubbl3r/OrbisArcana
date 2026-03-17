@@ -1,3 +1,7 @@
+function isRecord(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
 export function normalizeManifestEntries(manifestName, entries) {
   const manifest = typeof manifestName === "string" ? manifestName.trim() : "";
   if (!manifest) {
@@ -7,7 +11,7 @@ export function normalizeManifestEntries(manifestName, entries) {
     throw new Error(`normalizeManifestEntries '${manifest}' entries must be an array`);
   }
   return entries.map((entry, index) => {
-    if (!entry || typeof entry !== "object") {
+    if (!isRecord(entry)) {
       throw new Error(`normalizeManifestEntries '${manifest}' entry[${index}] must be an object`);
     }
     const id = typeof entry.id === "string" ? entry.id.trim() : "";
@@ -34,7 +38,7 @@ export function findSharedScripts(leftEntries, rightEntries) {
 
   const shared = new Set();
   for (const script of toScriptList(rightEntries)) {
-    if (script && leftScripts.has(script)) shared.add(script);
+    if (leftScripts.has(script)) shared.add(script);
   }
 
   return [...shared];

@@ -26,6 +26,7 @@ runCheckScriptOrFailStatus({
 const drift = computeProjectionDrift(INTERACTIONS_V2);
 const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
 const snapshot = readJsonSafe(resolveRuleEngineDocPath("effectiveSnapshot"));
+const interactionsRuleCount = Number(snapshot?.counts?.interactionsV2Rules ?? 0);
 const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 0);
 const spellbookOk = isTrue(snapshot?.validation?.spellbookV2?.ok);
 const interactionsOk = isTrue(snapshot?.validation?.interactionsV2?.ok);
@@ -53,7 +54,7 @@ const health = {
   interactionsOk,
   bootstrapUsesV2Adapter,
   projectionRulesOnly: true,
-  interactionsRuleCount: Number(snapshot?.counts?.interactionsV2Rules ?? 0),
+  interactionsRuleCount,
   projectedRuleCount,
   orchestratorProjectedRuleCount,
   orchestratorProjectionParityOk,
@@ -67,7 +68,7 @@ logDoctor(`spellbook ok: ${spellbookOk}`);
 logDoctor(`interactions ok: ${interactionsOk}`);
 logDoctor(`bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
 logDoctor("rules mode: projection_only");
-logDoctor(`rules count (interactions/projection): ${snapshot?.counts?.interactionsV2Rules ?? 0}/${projectedRuleCount}`);
+logDoctor(`rules count (interactions/projection): ${interactionsRuleCount}/${projectedRuleCount}`);
 logDoctor(`orchestrator projected rules: ${orchestratorProjectedRuleCount}`);
 logDoctor(`orchestrator projection parity: ${orchestratorProjectionParityOk}`);
 logDoctor(`runtime-projection drift ids: ${driftIds.length}`);

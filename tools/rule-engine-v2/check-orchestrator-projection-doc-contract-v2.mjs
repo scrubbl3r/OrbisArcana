@@ -20,7 +20,9 @@ if (!loaded.ok) {
   failCheck(CHECK_TAG, `unable to read projection doc (${msg})`);
 }
 
-const doc = loaded.value || {};
+const doc = (loaded.value && typeof loaded.value === "object" && !Array.isArray(loaded.value))
+  ? loaded.value
+  : {};
 const schema = typeof doc.schema === "string" ? doc.schema : "";
 if (schema !== RULE_ENGINE_V2_SCHEMA_IDS.orchestratorProjection) {
   failCheck(CHECK_TAG, `unexpected schema: ${schema}`);
@@ -51,7 +53,8 @@ if (lhs !== rhs) {
 }
 
 const ruleCount = Array.isArray(projection.rules) ? projection.rules.length : 0;
-if (Number(doc?.counts?.rules) !== ruleCount) {
+const docRuleCount = Number(doc?.counts?.rules);
+if (docRuleCount !== ruleCount) {
   failCheck(CHECK_TAG, `counts.rules mismatch: doc=${doc?.counts?.rules} actual=${ruleCount}`);
 }
 

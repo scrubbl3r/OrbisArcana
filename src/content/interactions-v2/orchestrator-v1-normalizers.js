@@ -3,7 +3,9 @@ export function asObj(v) {
 }
 
 export function asText(v) {
-  return String(v == null ? "" : v).trim();
+  if (typeof v === "string") return v.trim();
+  if (v == null) return "";
+  return `${v}`.trim();
 }
 
 export function asId(v) {
@@ -66,8 +68,9 @@ export function asSelectorList(raw) {
 export function normalizeTriggerEntries(rawTrigger) {
   if (Array.isArray(rawTrigger)) return rawTrigger;
   if (typeof rawTrigger === "string") return [rawTrigger];
-  if (rawTrigger && typeof rawTrigger === "object") {
-    return Object.entries(rawTrigger).map(([eventId, spec]) => {
+  const triggerMap = asObj(rawTrigger);
+  if (Object.keys(triggerMap).length) {
+    return Object.entries(triggerMap).map(([eventId, spec]) => {
       if (typeof spec === "boolean") {
         return spec
           ? Object.freeze({ event: eventId })
@@ -79,8 +82,9 @@ export function normalizeTriggerEntries(rawTrigger) {
         if (!hasStructuredKeys) return Object.freeze({ event: eventId, args: spec });
         const out = { event: eventId };
         if (Object.prototype.hasOwnProperty.call(spec, "enabled")) out.enabled = spec.enabled;
-        const argsFromField = (spec.args && typeof spec.args === "object" && !Array.isArray(spec.args))
-          ? { ...spec.args }
+        const argsValue = asObj(spec.args);
+        const argsFromField = Object.keys(argsValue).length
+          ? { ...argsValue }
           : {};
         for (const [k, v] of Object.entries(spec)) {
           if (k === "enabled" || k === "args") continue;

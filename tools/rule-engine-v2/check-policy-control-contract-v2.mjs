@@ -7,10 +7,14 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "policy-control-contract:v2";
 
-if (!RULE_ENGINE_POLICY_CONTROL || typeof RULE_ENGINE_POLICY_CONTROL !== "object") {
+function isObjectRecord(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+if (!isObjectRecord(RULE_ENGINE_POLICY_CONTROL)) {
   failCheck(CHECK_TAG, "RULE_ENGINE_POLICY_CONTROL export missing");
 }
-if (!RULE_ENGINE_MASTER_CONTROL || typeof RULE_ENGINE_MASTER_CONTROL !== "object") {
+if (!isObjectRecord(RULE_ENGINE_MASTER_CONTROL)) {
   failCheck(CHECK_TAG, "RULE_ENGINE_MASTER_CONTROL export missing");
 }
 if (RULE_ENGINE_POLICY_CONTROL !== RULE_ENGINE_MASTER_CONTROL) {

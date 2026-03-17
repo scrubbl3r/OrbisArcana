@@ -1,6 +1,10 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
+function isRecord(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
 export function validateManifestEntries({
   entries,
   manifestName = "manifest",
@@ -14,7 +18,7 @@ export function validateManifestEntries({
   const scriptSet = new Set();
 
   for (const entry of entries) {
-    if (!entry || typeof entry !== "object") {
+    if (!isRecord(entry)) {
       throw new Error(`${entryLabel} entry must be an object`);
     }
 

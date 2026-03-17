@@ -13,11 +13,16 @@ function text(v) {
 
 function resolveScriptNameForCheck(id, overrides) {
   const key = text(id);
-  return overrides[key] || `check:${key.replace(/_/g, "-")}:v2`;
+  if (Object.prototype.hasOwnProperty.call(overrides, key)) {
+    return text(overrides[key]);
+  }
+  return `check:${key.replace(/_/g, "-")}:v2`;
 }
 
 const pkg = readJsonOrFail(CHECK_TAG, "package.json");
-const scripts = (pkg && typeof pkg.scripts === "object" && pkg.scripts) ? pkg.scripts : null;
+const scripts = (pkg?.scripts && typeof pkg.scripts === "object" && !Array.isArray(pkg.scripts))
+  ? pkg.scripts
+  : null;
 if (!scripts) failCheck(CHECK_TAG, "package.json scripts object missing");
 
 const explicitScriptNames = Object.freeze({

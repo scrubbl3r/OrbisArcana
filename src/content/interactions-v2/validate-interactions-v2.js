@@ -4,12 +4,16 @@ import { EVENT_DEFINITIONS_BY_ID } from "../spell-rules/event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import { SIGNAL_DEFINITIONS_BY_ID } from "../spell-rules/signal-definitions.js";
 
+const WAKE_WIN_ALLOWED_KEYS = Object.freeze(new Set(["type", "spells", "ttlMs", "enabled"]));
+
 function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
 }
 
 function asText(v) {
-  return String(v == null ? "" : v).trim();
+  if (typeof v === "string") return v.trim();
+  if (v == null) return "";
+  return `${v}`.trim();
 }
 
 function isFiniteNonNegative(v) {
@@ -18,7 +22,7 @@ function isFiniteNonNegative(v) {
 }
 
 function isEntityIdLike(v) {
-  return /^[A-Za-z0-9_]+$/.test(String(v || ""));
+  return typeof v === "string" && /^[A-Za-z0-9_]+$/.test(v);
 }
 
 function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
@@ -59,18 +63,22 @@ function normalizeEventId(eventIdRaw) {
   return id.startsWith("event.") ? id.slice("event.".length) : id;
 }
 
+function getSignalIdsByPrefix(prefix) {
+  const source = (typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
+    ? SIGNAL_DEFINITIONS_BY_ID
+    : {};
+  return Object.keys(source)
+    .filter((signalId) => typeof signalId === "string" && signalId.startsWith(prefix))
+    .map((signalId) => signalId.slice(prefix.length))
+    .filter(Boolean);
+}
+
 const KNOWN_GESTURE_IDS = new Set(
-  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
-    .filter((signalId) => String(signalId || "").startsWith("gesture."))
-    .map((signalId) => String(signalId || "").slice("gesture.".length))
-    .filter(Boolean)
+  getSignalIdsByPrefix("gesture.")
 );
 
 const KNOWN_ORB_STATE_IDS = new Set(
-  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
-    .filter((signalId) => String(signalId || "").startsWith("orb_state."))
-    .map((signalId) => String(signalId || "").slice("orb_state.".length))
-    .filter(Boolean)
+  getSignalIdsByPrefix("orb_state.")
 );
 
 export function validateInteractionsV2(input = INTERACTIONS_V2) {
@@ -148,7 +156,8 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
     if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled !== "boolean") {
       errors.push(`rule ${ruleId} enabled must be boolean when present`);
     }
-    if (Object.prototype.hasOwnProperty.call(r, "priority") && !Number.isFinite(Number(r.priority))) {
+    const rulePriorityNum = Number(r.priority);
+    if (Object.prototype.hasOwnProperty.call(r, "priority") && !Number.isFinite(rulePriorityNum)) {
       errors.push(`rule ${ruleId} priority must be a finite number when present`);
     }
 
@@ -219,8 +228,7 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
             errors.push(`rule ${ruleId} wake_win should use ttlMs, not ms`);
           }
           for (const key of Object.keys(action)) {
-            const allowed = new Set(["type", "spells", "ttlMs", "enabled"]);
-            if (!allowed.has(key)) {
+            if (!WAKE_WIN_ALLOWED_KEYS.has(key)) {
               errors.push(`rule ${ruleId} wake_win contains unsupported key: ${key}`);
             }
           }

@@ -32,7 +32,8 @@ if (sectionVersion !== expectedVersion) {
 if (section.enabled !== (expectedProjection?.enabled !== false)) {
   failCheck(CHECK_TAG, `orchestratorProjection.enabled mismatch: ${section.enabled}`);
 }
-if (Number(section.ruleCount) !== expectedRules.length) {
+const sectionRuleCount = Number(section.ruleCount);
+if (sectionRuleCount !== expectedRules.length) {
   failCheck(CHECK_TAG, `orchestratorProjection.ruleCount mismatch: ${section.ruleCount}`);
 }
 const expectedParity = expectedRules.length === expectedInteractionsRules.length;

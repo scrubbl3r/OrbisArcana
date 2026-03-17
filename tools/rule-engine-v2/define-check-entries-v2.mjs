@@ -2,10 +2,11 @@ export function defineCheckEntriesV2(entries) {
   if (!Array.isArray(entries)) {
     throw new Error("defineCheckEntriesV2 entries must be an array");
   }
+  const isRecord = (value) => !!value && typeof value === "object" && !Array.isArray(value);
   const seenKeys = new Set();
   const seenScripts = new Set();
   return Object.freeze(entries.map((entry, index) => {
-    if (!entry || typeof entry !== "object") {
+    if (!isRecord(entry)) {
       throw new Error(`defineCheckEntriesV2 entry[${index}] must be an object`);
     }
     const id = typeof entry.id === "string" ? entry.id.trim() : "";

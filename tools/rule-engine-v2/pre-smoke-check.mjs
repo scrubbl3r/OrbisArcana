@@ -28,7 +28,10 @@ const logPreSmoke = createTaggedLogger(CHECK_TAG);
 function loadJson(path) {
   const result = readJsonCore(path);
   if (!result.ok) {
-    fail("json load failed", [`${path}: ${result.error}`]);
+    const msg = result.error instanceof Error && typeof result.error.message === "string" && result.error.message
+      ? result.error.message
+      : "unknown error";
+    fail("json load failed", [`${path}: ${msg}`]);
   }
   return result.value;
 }
@@ -96,12 +99,13 @@ function verifyKwsManifestCoverage() {
 failIfValidationErrors("spellbook-v2 validation failed", validateSpellbookV2(SPELLBOOK_V2));
 
 const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
-failIfValidationErrors("interactions-v2 validation failed", interactionsResult?.ok ? [] : interactionsResult?.errors);
+const interactionsErrors = interactionsResult?.ok ? [] : interactionsResult?.errors;
+failIfValidationErrors("interactions-v2 validation failed", interactionsErrors);
 
 verifyKwsManifestCoverage();
 
 if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap !== true) {
-  fail("runtime cutover guard failed", [
+  fail("runtime bootstrap guard failed", [
     "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap must be true",
   ]);
 }

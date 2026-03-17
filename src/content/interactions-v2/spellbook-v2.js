@@ -22,9 +22,13 @@ export const SPELLBOOK_V2_SPELLS = Object.freeze(
   Array.isArray(SPELLBOOK_V2.spells) ? SPELLBOOK_V2.spells.slice() : []
 );
 
+function asSpellId(spell) {
+  return typeof spell?.id === "string" ? spell.id.trim().toLowerCase() : "";
+}
+
 export const SPELLBOOK_V2_SPELLS_BY_ID = Object.freeze(
   SPELLBOOK_V2_SPELLS.reduce((acc, s) => {
-    const id = String(s && s.id || "").trim().toLowerCase();
+    const id = asSpellId(s);
     if (!id) return acc;
     acc[id] = s;
     return acc;
@@ -32,12 +36,12 @@ export const SPELLBOOK_V2_SPELLS_BY_ID = Object.freeze(
 );
 
 export const SPELLBOOK_V2_ACTIVE_SPELLS = Object.freeze(
-  SPELLBOOK_V2_SPELLS.filter((s) => s && s.active !== false)
+  SPELLBOOK_V2_SPELLS.filter((s) => s?.active !== false)
 );
 
 export const SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID = Object.freeze(
   SPELLBOOK_V2_ACTIVE_SPELLS.reduce((acc, s) => {
-    const id = String(s && s.id || "").trim().toLowerCase();
+    const id = asSpellId(s);
     if (!id) return acc;
     acc[id] = s;
     return acc;

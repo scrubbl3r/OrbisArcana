@@ -19,7 +19,19 @@ function asManifestGroupsV2(groups = MANIFEST_CHECK_GROUPS_V2) {
   if (!Array.isArray(groups)) {
     throw new Error("manifest check groups must be an array");
   }
-  return groups;
+  return groups.map((group, index) => {
+    if (!group || typeof group !== "object") {
+      throw new Error(`manifest check group[${index}] must be an object`);
+    }
+    const name = manifestGroupNameTextV2(group.name);
+    if (!name) {
+      throw new Error(`manifest check group[${index}] requires non-empty name`);
+    }
+    if (!Array.isArray(group.entries)) {
+      throw new Error(`manifest check group[${index}] '${name}' entries must be an array`);
+    }
+    return group;
+  });
 }
 
 function manifestGroupNameTextV2(groupName) {
@@ -28,7 +40,21 @@ function manifestGroupNameTextV2(groupName) {
 
 export function flattenManifestChecksV2(groups = MANIFEST_CHECK_GROUPS_V2) {
   return asManifestGroupsV2(groups).flatMap((group) =>
-    Array.isArray(group?.entries) ? group.entries : []
+    group.entries.map((entry, index) => {
+      if (!entry || typeof entry !== "object") {
+        throw new Error(`manifest check entry[${group.name}][${index}] must be an object`);
+      }
+      const id = typeof entry.id === "string" ? entry.id.trim() : "";
+      const name = typeof entry.name === "string" ? entry.name.trim() : "";
+      if (!id && !name) {
+        throw new Error(`manifest check entry[${group.name}][${index}] requires non-empty id or name`);
+      }
+      const script = typeof entry.script === "string" ? entry.script.trim() : "";
+      if (!script) {
+        throw new Error(`manifest check entry[${group.name}][${index}] requires non-empty script`);
+      }
+      return entry;
+    })
   );
 }
 
@@ -41,6 +67,6 @@ export function flattenManifestChecksExcludingV2(excludedGroupName, groups = MAN
 
 export function flattenNormalizedManifestChecksV2(groups = MANIFEST_CHECK_GROUPS_V2) {
   return asManifestGroupsV2(groups).flatMap((group) =>
-    normalizeManifestEntries(group?.name, group?.entries)
+    normalizeManifestEntries(group.name, group.entries)
   );
 }

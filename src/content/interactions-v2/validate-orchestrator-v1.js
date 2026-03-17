@@ -25,18 +25,22 @@ function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
   }
 }
 
+function getSignalIdsByPrefix(prefix) {
+  const source = (typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
+    ? SIGNAL_DEFINITIONS_BY_ID
+    : {};
+  return Object.keys(source)
+    .filter((signalId) => typeof signalId === "string" && signalId.startsWith(prefix))
+    .map((signalId) => signalId.slice(prefix.length))
+    .filter(Boolean);
+}
+
 const KNOWN_GESTURE_IDS = new Set(
-  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
-    .filter((signalId) => String(signalId || "").startsWith("gesture."))
-    .map((signalId) => String(signalId || "").slice("gesture.".length))
-    .filter(Boolean)
+  getSignalIdsByPrefix("gesture.")
 );
 
 const KNOWN_ORB_STATE_IDS = new Set(
-  Object.keys(SIGNAL_DEFINITIONS_BY_ID || {})
-    .filter((signalId) => String(signalId || "").startsWith("orb_state."))
-    .map((signalId) => String(signalId || "").slice("orb_state.".length))
-    .filter(Boolean)
+  getSignalIdsByPrefix("orb_state.")
 );
 
 export function validateOrchestratorV1(cfg) {
@@ -92,7 +96,8 @@ export function validateOrchestratorV1(cfg) {
           errors.push("ORCHESTRATOR_V1.defaults.rule.matchWindowMs must be a finite number >= 100 when present");
         }
       }
-      if (Object.prototype.hasOwnProperty.call(defaultsRule, "priority") && !Number.isFinite(Number(defaultsRule.priority))) {
+      const priorityNum = Number(defaultsRule.priority);
+      if (Object.prototype.hasOwnProperty.call(defaultsRule, "priority") && !Number.isFinite(priorityNum)) {
         errors.push("ORCHESTRATOR_V1.defaults.rule.priority must be a finite number when present");
       }
     }
@@ -113,7 +118,8 @@ export function validateOrchestratorV1(cfg) {
     if (Object.prototype.hasOwnProperty.call(rule, "enabled") && typeof rule.enabled !== "boolean") {
       errors.push(`rule ${ruleId} enabled must be boolean when present`);
     }
-    if (Object.prototype.hasOwnProperty.call(rule, "priority") && !Number.isFinite(Number(rule.priority))) {
+    const rulePriorityNum = Number(rule.priority);
+    if (Object.prototype.hasOwnProperty.call(rule, "priority") && !Number.isFinite(rulePriorityNum)) {
       errors.push(`rule ${ruleId} priority must be a finite number when present`);
     }
     if (Object.prototype.hasOwnProperty.call(rule, "cooldownMs") && !isFiniteNonNegative(rule.cooldownMs)) {
@@ -157,8 +163,8 @@ export function validateOrchestratorV1(cfg) {
       errors.push(`rule ${ruleId} must define on selectors`);
     }
     for (const entry of onEntries) {
-      const type = asText(entry && entry.type).toLowerCase();
-      const id = asText(entry && entry.id).toLowerCase();
+      const type = asText(entry?.type).toLowerCase();
+      const id = asText(entry?.id).toLowerCase();
       if (type !== "spell" && type !== "gesture" && type !== "orb_state") {
         errors.push(`rule ${ruleId} has unsupported on selector type`);
         continue;
@@ -184,7 +190,8 @@ export function validateOrchestratorV1(cfg) {
       }
     }
 
-    if (Object.prototype.hasOwnProperty.call(rule, "open")) {
+    const hasOpen = Object.prototype.hasOwnProperty.call(rule, "open");
+    if (hasOpen) {
       const isStringOpen = typeof rule.open === "string";
       const isArrayOpen = Array.isArray(rule.open);
       const open = (isStringOpen || isArrayOpen)
@@ -224,7 +231,6 @@ export function validateOrchestratorV1(cfg) {
 
     const triggerEntries = normalizeTriggerEntries(rule.trigger);
     const hasTrigger = triggerEntries.length > 0;
-    const hasOpen = Object.prototype.hasOwnProperty.call(rule, "open");
     if (!hasTrigger && !hasOpen) {
       errors.push(`rule ${ruleId} must define open and/or trigger actions`);
       continue;
