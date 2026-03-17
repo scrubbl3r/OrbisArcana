@@ -34,8 +34,7 @@ function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
     ? ruleSafe.priority
     : defaultsSafe.priority;
   const priorityNumRaw = Number(priorityRaw);
-  const priorityNum = Number.isFinite(priorityNumRaw) ? priorityNumRaw : null;
-  if (priorityNum != null) out.priority = priorityNum;
+  if (Number.isFinite(priorityNumRaw)) out.priority = priorityNumRaw;
 
   const cooldownMsRaw = Object.hasOwn(ruleSafe, "cooldownMs")
     ? ruleSafe.cooldownMs
@@ -88,13 +87,11 @@ function mapOpen(open, defaultsOpen) {
   const o = (typeof open === "string" || Array.isArray(open))
     ? { spells: open }
     : asObj(open);
-  const spells = asSelectorList(o.spells)
-    .map(normalizeSpellId)
-    .filter(Boolean);
-  if (!spells.length) return null;
+  const normalizedSpells = asSelectorList(o.spells).map(normalizeSpellId).filter(Boolean);
+  if (!normalizedSpells.length) return null;
   const out = {
     type: "wake_win",
-    spells,
+    spells: normalizedSpells,
   };
   if (Object.hasOwn(o, "enabled") && typeof o.enabled === "boolean") {
     out.enabled = o.enabled;
@@ -110,9 +107,7 @@ function mapOpen(open, defaultsOpen) {
   const ttlMsNum = Number.isFinite(ttlMsNumRaw)
     ? Math.max(0, ttlMsNumRaw)
     : null;
-  if (ttlMsNum != null) {
-    out.ttlMs = ttlMsNum;
-  }
+  if (ttlMsNum != null) out.ttlMs = ttlMsNum;
   return Object.freeze(out);
 }
 
@@ -133,28 +128,26 @@ function compileRule(rule, compileContext) {
   const on = [];
   if (typeof r.on === "string" || Array.isArray(r.on)) {
     for (const entry of asSelectorList(r.on)) {
-      const parsed = parseOnSelector(entry);
-      if (parsed?.id) on.push(parsed);
+      const selector = parseOnSelector(entry);
+      if (selector?.id) on.push(selector);
     }
   } else {
     const sourceObj = asObj(r.on);
     for (const source of ON_SELECTOR_SOURCES) {
       for (const value of asSelectorList(sourceObj[source.key])) {
-        const selectorId = source.normalize(value);
-        if (selectorId) on.push({ type: source.type, id: selectorId });
+        const id = source.normalize(value);
+        if (id) on.push({ type: source.type, id });
       }
     }
   }
   if (!on.length) return null;
   const openAction = mapOpen(r.open, compileContext.defaultsOpen);
   const then = openAction ? [openAction] : [];
-  for (const trigger of normalizeTriggerEntries(r.trigger)) {
-    const action = mapTrigger(trigger, compileContext.defaultsTriggerByEvent);
-    if (action) then.push(action);
-  }
-  for (const trigger of normalizeTriggerEntries(r.triggers)) {
-    const action = mapTrigger(trigger, compileContext.defaultsTriggerByEvent);
-    if (action) then.push(action);
+  for (const triggerSource of [r.trigger, r.triggers]) {
+    for (const trigger of normalizeTriggerEntries(triggerSource)) {
+      const action = mapTrigger(trigger, compileContext.defaultsTriggerByEvent);
+      if (action) then.push(action);
+    }
   }
   return buildCompiledRule({
     id,
@@ -189,9 +182,6 @@ export function buildRuleEngineFromOrchestratorV1({
     defaultsRule: asObj(defaults.rule),
     defaultsTriggerByEvent,
   };
-  const compiledRules = orchestratorObj.rules
-    .map((rule) => compileRule(rule, compileContext))
-    .filter(Boolean);
   return Object.freeze({
     ...baseRuleEngine,
     version: "2",
@@ -199,7 +189,11 @@ export function buildRuleEngineFromOrchestratorV1({
     signals: EMPTY_LIST,
     windows: EMPTY_LIST,
     events: EMPTY_LIST,
-    rules: Object.freeze(compiledRules),
+    rules: Object.freeze(
+      orchestratorObj.rules
+        .map((rule) => compileRule(rule, compileContext))
+        .filter(Boolean)
+    ),
     eventRuntimeBindings: EMPTY_OBJECT,
   });
 }

@@ -149,11 +149,11 @@ function validateOpenSpells(errors, ruleId, open) {
 
 function validateTriggerEntries(errors, ruleId, triggerEntries) {
   for (const rawTrigger of triggerEntries) {
-    const trigger = (typeof rawTrigger === "string")
-      ? { event: rawTrigger }
-      : asObj(rawTrigger);
-    pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, TRIGGER_ALLOWED_KEYS);
-    pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} trigger`, trigger);
+    const isTriggerString = typeof rawTrigger === "string";
+    const trigger = isTriggerString ? { event: rawTrigger } : asObj(rawTrigger);
+    const triggerContext = `rule ${ruleId} trigger`;
+    pushUnsupportedKeys(errors, triggerContext, trigger, TRIGGER_ALLOWED_KEYS);
+    pushBooleanEnabledErrorWhenPresent(errors, triggerContext, trigger);
 
     const eventId = normalizeEventId(trigger.event);
     if (!eventId) {
@@ -162,11 +162,12 @@ function validateTriggerEntries(errors, ruleId, triggerEntries) {
       errors.push(`rule ${ruleId} trigger references unknown event id: ${trigger.event}`);
     }
 
-    if (typeof rawTrigger !== "string" && Object.hasOwn(trigger, "args")) {
-      const args = trigger.args;
-      if (!args || typeof args !== "object" || Array.isArray(args)) {
-        errors.push(`rule ${ruleId} trigger args must be an object when present`);
-      }
+    if (
+      !isTriggerString &&
+      Object.hasOwn(trigger, "args") &&
+      (!trigger.args || typeof trigger.args !== "object" || Array.isArray(trigger.args))
+    ) {
+      errors.push(`rule ${ruleId} trigger args must be an object when present`);
     }
   }
 }
@@ -313,21 +314,22 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
   if (hasOpen) {
     const openIsSelectorList = typeof rule.open === "string" || Array.isArray(rule.open);
     const open = openIsSelectorList
-      ? { spells: asSelectorList(rule.open) }
+      ? { spells: rule.open }
       : asObj(rule.open);
     if (!openIsSelectorList) {
-      pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, OPEN_ALLOWED_KEYS);
-      pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
-      pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttlMs");
-      pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttl");
+      const openContext = `rule ${ruleId} open`;
+      pushUnsupportedKeys(errors, openContext, open, OPEN_ALLOWED_KEYS);
+      pushBooleanEnabledErrorWhenPresent(errors, openContext, open);
+      pushFiniteNonNegativeErrorWhenPresent(errors, openContext, open, "ttlMs");
+      pushFiniteNonNegativeErrorWhenPresent(errors, openContext, open, "ttl");
     }
     validateOpenSpells(errors, ruleId, open);
   }
 
-  const triggerEntries = [
-    ...normalizeTriggerEntries(rule.trigger),
-    ...normalizeTriggerEntries(rule.triggers),
-  ];
+  const triggerEntries = [];
+  for (const triggerSource of [rule.trigger, rule.triggers]) {
+    triggerEntries.push(...normalizeTriggerEntries(triggerSource));
+  }
   if (!triggerEntries.length) {
     if (!hasOpen) {
       errors.push(`rule ${ruleId} must define open and/or trigger actions`);
