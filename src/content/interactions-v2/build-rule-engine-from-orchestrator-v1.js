@@ -38,6 +38,15 @@ function getMergedTriggerEntries(ruleLike) {
   ];
 }
 
+function resolveFirstPresentValue(primaryObj, primaryKey, aliasKey, defaultsObj) {
+  const primary = asObj(primaryObj);
+  const defaultsSafe = asObj(defaultsObj);
+  if (Object.prototype.hasOwnProperty.call(primary, primaryKey)) return primary[primaryKey];
+  if (Object.prototype.hasOwnProperty.call(primary, aliasKey)) return primary[aliasKey];
+  if (Object.prototype.hasOwnProperty.call(defaultsSafe, primaryKey)) return defaultsSafe[primaryKey];
+  return defaultsSafe[aliasKey];
+}
+
 function mapTrigger(trigger, defaultsTriggerByEvent) {
   const t = (typeof trigger === "string")
     ? Object.freeze({ event: trigger })
@@ -57,7 +66,6 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
 }
 
 function mapOpen(open, defaultsOpen) {
-  const defaultsOpenSafe = asObj(defaultsOpen);
   const o = (typeof open === "string")
     ? Object.freeze({ spells: asSelectorList(open) })
     : (Array.isArray(open)
@@ -72,13 +80,7 @@ function mapOpen(open, defaultsOpen) {
   if (Object.prototype.hasOwnProperty.call(o, "enabled") && typeof o.enabled === "boolean") {
     out.enabled = o.enabled;
   }
-  const ttlMs = Object.prototype.hasOwnProperty.call(o, "ttlMs")
-    ? o.ttlMs
-    : (Object.prototype.hasOwnProperty.call(o, "ttl")
-      ? o.ttl
-      : (Object.prototype.hasOwnProperty.call(defaultsOpenSafe, "ttlMs")
-        ? defaultsOpenSafe.ttlMs
-        : defaultsOpenSafe.ttl));
+  const ttlMs = resolveFirstPresentValue(o, "ttlMs", "ttl", defaultsOpen);
   const ttlMsNum = Number(ttlMs);
   if (Number.isFinite(ttlMsNum) && ttlMsNum >= 0) {
     out.ttlMs = ttlMsNum;
@@ -146,24 +148,12 @@ function mapRule(rule, defaults) {
   if (Number.isFinite(priorityNum)) {
     out.priority = priorityNum;
   }
-  const cooldownMs = Object.prototype.hasOwnProperty.call(r, "cooldownMs")
-    ? r.cooldownMs
-    : (Object.prototype.hasOwnProperty.call(r, "cooldown")
-      ? r.cooldown
-      : (Object.prototype.hasOwnProperty.call(ruleDefaults, "cooldownMs")
-        ? ruleDefaults.cooldownMs
-        : ruleDefaults.cooldown));
+  const cooldownMs = resolveFirstPresentValue(r, "cooldownMs", "cooldown", ruleDefaults);
   const cooldownMsNum = Number(cooldownMs);
   if (Number.isFinite(cooldownMsNum)) {
     out.cooldownMs = Math.max(0, cooldownMsNum);
   }
-  const matchWindowMs = Object.prototype.hasOwnProperty.call(r, "matchWindowMs")
-    ? r.matchWindowMs
-    : (Object.prototype.hasOwnProperty.call(r, "matchWindow")
-      ? r.matchWindow
-      : (Object.prototype.hasOwnProperty.call(ruleDefaults, "matchWindowMs")
-        ? ruleDefaults.matchWindowMs
-        : ruleDefaults.matchWindow));
+  const matchWindowMs = resolveFirstPresentValue(r, "matchWindowMs", "matchWindow", ruleDefaults);
   const matchWindowMsNum = Number(matchWindowMs);
   if (Number.isFinite(matchWindowMsNum)) {
     out.matchWindowMs = Math.max(100, matchWindowMsNum);
