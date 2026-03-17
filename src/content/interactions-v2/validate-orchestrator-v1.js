@@ -27,10 +27,6 @@ function isFiniteNumber(v) {
   return Number.isFinite(Number(v));
 }
 
-function isSelectorListLike(v) {
-  return typeof v === "string" || Array.isArray(v);
-}
-
 function isObjectRecord(v) {
   return !!v && typeof v === "object" && !Array.isArray(v);
 }
@@ -146,34 +142,6 @@ const ON_SELECTOR_SOURCES = Object.freeze([
 
 const ON_SELECTOR_ALLOWED_KEYS = Object.freeze(ON_SELECTOR_SOURCES.map((source) => source.key));
 
-function pushOnEntries(onEntries, raw, type, normalizeId) {
-  for (const value of asSelectorList(raw)) {
-    onEntries.push(Object.freeze({ type, id: normalizeId(value), raw: value }));
-  }
-}
-
-function pushParsedOnSelectorEntries(onEntries, raw) {
-  for (const entry of asSelectorList(raw)) {
-    onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
-  }
-}
-
-function collectOnEntries(rawOn, errors, ruleId) {
-  const onEntries = [];
-  if (isSelectorListLike(rawOn)) {
-    pushParsedOnSelectorEntries(onEntries, rawOn);
-    return onEntries;
-  }
-
-  const on = asObj(rawOn);
-  pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ON_SELECTOR_ALLOWED_KEYS);
-  for (const source of ON_SELECTOR_SOURCES) {
-    if (!Object.hasOwn(on, source.key)) continue;
-    pushOnEntries(onEntries, on[source.key], source.type, source.normalize);
-  }
-  return onEntries;
-}
-
 function validateOpenSpells(errors, ruleId, open) {
   const openSpells = asSelectorList(asObj(open).spells);
   if (!openSpells.length) {
@@ -197,25 +165,6 @@ function validateOpenSpells(errors, ruleId, open) {
   }
 }
 
-function validateTriggerEventRef(errors, ruleId, trigger) {
-  const eventId = normalizeEventId(asObj(trigger).event);
-  if (!eventId) {
-    errors.push(`rule ${ruleId} trigger is missing event`);
-    return;
-  }
-  if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
-    errors.push(`rule ${ruleId} trigger references unknown event id: ${trigger.event}`);
-  }
-}
-
-function validateTriggerArgs(errors, ruleId, rawTrigger, trigger) {
-  if (typeof rawTrigger === "string" || !Object.hasOwn(trigger, "args")) return;
-  const args = trigger.args;
-  if (!isObjectRecord(args)) {
-    errors.push(`rule ${ruleId} trigger args must be an object when present`);
-  }
-}
-
 function pushRuleTimingErrors(errors, context, obj) {
   pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldownMs");
   pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldown");
@@ -235,8 +184,20 @@ function validateTriggerEntries(errors, ruleId, triggerEntries) {
       : asObj(rawTrigger);
     pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, TRIGGER_ALLOWED_KEYS);
     pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} trigger`, trigger);
-    validateTriggerEventRef(errors, ruleId, trigger);
-    validateTriggerArgs(errors, ruleId, rawTrigger, trigger);
+
+    const eventId = normalizeEventId(trigger.event);
+    if (!eventId) {
+      errors.push(`rule ${ruleId} trigger is missing event`);
+    } else if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
+      errors.push(`rule ${ruleId} trigger references unknown event id: ${trigger.event}`);
+    }
+
+    if (typeof rawTrigger !== "string" && Object.hasOwn(trigger, "args")) {
+      const args = trigger.args;
+      if (!isObjectRecord(args)) {
+        errors.push(`rule ${ruleId} trigger args must be an object when present`);
+      }
+    }
   }
 }
 
@@ -286,7 +247,7 @@ function validateDefaultsSection(errors, target) {
       ...asObj(defaults.triggers),
       ...asObj(defaults.trigger),
     });
-    for (const [rawEventId, args] of Object.entries(asObj(defaultsTrigger))) {
+    for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
       const eventId = normalizeEventId(rawEventId);
       if (!eventId) {
         errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
@@ -327,30 +288,37 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
   pushFiniteNumberErrorWhenPresent(errors, context, rule, "priority");
   pushRuleTimingErrors(errors, context, rule);
 
-  const onEntries = collectOnEntries(rule.on, errors, ruleId);
+  const onEntries = [];
+  if (typeof rule.on === "string" || Array.isArray(rule.on)) {
+    for (const entry of asSelectorList(rule.on)) {
+      onEntries.push(parseOnSelector(entry, { invalidAsEmptyObject: true }));
+    }
+  } else {
+    const on = asObj(rule.on);
+    pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ON_SELECTOR_ALLOWED_KEYS);
+    for (const source of ON_SELECTOR_SOURCES) {
+      if (!Object.hasOwn(on, source.key)) continue;
+      for (const value of asSelectorList(on[source.key])) {
+        onEntries.push(Object.freeze({ type: source.type, id: source.normalize(value), raw: value }));
+      }
+    }
+  }
   validateOnSelectors(errors, ruleId, onEntries);
 
-  const hasOpen = validateRuleOpenSection(errors, ruleId, rule);
-  validateRuleTriggerSection(errors, ruleId, rule, hasOpen);
-}
-
-function validateRuleOpenSection(errors, ruleId, rule) {
   const hasOpen = Object.hasOwn(rule, "open");
-  if (!hasOpen) return false;
-  const openIsSelectorList = isSelectorListLike(rule.open);
-  const open = openIsSelectorList
-    ? Object.freeze({ spells: asSelectorList(rule.open) })
-    : asObj(rule.open);
-  if (!openIsSelectorList) {
-    pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, OPEN_ALLOWED_KEYS);
-    pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
-    pushOpenTimingErrors(errors, `rule ${ruleId} open`, open);
+  if (hasOpen) {
+    const openIsSelectorList = typeof rule.open === "string" || Array.isArray(rule.open);
+    const open = openIsSelectorList
+      ? Object.freeze({ spells: asSelectorList(rule.open) })
+      : asObj(rule.open);
+    if (!openIsSelectorList) {
+      pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, OPEN_ALLOWED_KEYS);
+      pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
+      pushOpenTimingErrors(errors, `rule ${ruleId} open`, open);
+    }
+    validateOpenSpells(errors, ruleId, open);
   }
-  validateOpenSpells(errors, ruleId, open);
-  return true;
-}
 
-function validateRuleTriggerSection(errors, ruleId, rule, hasOpen) {
   const triggerEntries = [
     ...normalizeTriggerEntries(rule.trigger),
     ...normalizeTriggerEntries(rule.triggers),
@@ -364,7 +332,10 @@ function validateRuleTriggerSection(errors, ruleId, rule, hasOpen) {
   validateTriggerEntries(errors, ruleId, triggerEntries);
 }
 
-function validateRootShape(errors, target) {
+export function validateOrchestratorV1(cfg) {
+  const errors = [];
+  const target = asObj(cfg);
+  pushUnsupportedKeys(errors, "ORCHESTRATOR_V1", target, ROOT_ALLOWED_KEYS);
   if (asText(target.version) !== "1") {
     errors.push("ORCHESTRATOR_V1.version must be \"1\"");
   }
@@ -373,16 +344,8 @@ function validateRootShape(errors, target) {
   }
   if (!Array.isArray(target.rules)) {
     errors.push("ORCHESTRATOR_V1.rules must be an array");
-    return false;
+    return errors;
   }
-  return true;
-}
-
-export function validateOrchestratorV1(cfg) {
-  const errors = [];
-  const target = asObj(cfg);
-  pushUnsupportedKeys(errors, "ORCHESTRATOR_V1", target, ROOT_ALLOWED_KEYS);
-  if (!validateRootShape(errors, target)) return errors;
   validateDefaultsSection(errors, target);
   const ids = new Set();
   for (const rawRule of target.rules) {

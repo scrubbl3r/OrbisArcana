@@ -99,7 +99,7 @@ function mapOpen(open, defaultsOpen) {
   const o = (typeof open === "string" || Array.isArray(open))
     ? Object.freeze({ spells: open })
     : asObj(open);
-  const spells = asSelectorList(asObj(o).spells)
+  const spells = asSelectorList(o.spells)
     .map(normalizeSpellId)
     .filter(Boolean);
   if (!spells.length) return null;
@@ -146,11 +146,16 @@ function compileRule(rule, compileContext) {
     }
   }
   if (!on.length) return null;
-  const then = compileRuleActions(
-    r,
-    compileContext.defaultsOpen,
-    compileContext.defaultsTriggerByEvent
-  );
+  const then = [];
+  const openAction = mapOpen(r.open, compileContext.defaultsOpen);
+  if (openAction) then.push(openAction);
+  const triggerActions = [
+    ...normalizeTriggerEntries(r.trigger),
+    ...normalizeTriggerEntries(r.triggers),
+  ]
+    .map((trigger) => mapTrigger(trigger, compileContext.defaultsTriggerByEvent))
+    .filter(Boolean);
+  then.push(...triggerActions);
   return buildCompiledRule({
     id,
     on,
@@ -158,23 +163,6 @@ function compileRule(rule, compileContext) {
     rule: r,
     defaultsRule: compileContext.defaultsRule,
   });
-}
-
-function compileRuleActions(rule, defaultsOpen, defaultsTriggerByEvent) {
-  const source = asObj(rule);
-  const actions = [];
-  const openAction = mapOpen(source.open, defaultsOpen);
-  if (openAction) actions.push(openAction);
-  const triggerActions = [
-    ...normalizeTriggerEntries(source.trigger),
-    ...normalizeTriggerEntries(source.triggers),
-  ]
-    .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
-    .filter(Boolean);
-  actions.push(
-    ...triggerActions
-  );
-  return actions;
 }
 
 function compileRulesFromOrchestrator(orchestratorV1, defaults, defaultsTriggerByEvent) {
@@ -190,7 +178,10 @@ function compileRulesFromOrchestrator(orchestratorV1, defaults, defaultsTriggerB
     .filter(Boolean);
 }
 
-function prepareOrchestratorCompilation(orchestratorV1) {
+export function buildRuleEngineFromOrchestratorV1({
+  orchestratorV1 = ORCHESTRATOR_V1,
+  baseRuleEngine = {},
+} = {}) {
   const errors = validateOrchestratorV1(orchestratorV1);
   if (errors.length) {
     throw new Error(`ORCHESTRATOR_V1 validation failed: ${errors.join(" | ")}`);
@@ -201,26 +192,15 @@ function prepareOrchestratorCompilation(orchestratorV1) {
     ...asObj(defaults.trigger),
   });
   const defaultsTriggerByEvent = {};
-  for (const [eventIdRaw, args] of Object.entries(asObj(defaultsTriggerRaw))) {
+  for (const [eventIdRaw, args] of Object.entries(defaultsTriggerRaw)) {
     const eventId = normalizeEventId(eventIdRaw);
     if (!eventId) continue;
     defaultsTriggerByEvent[eventId] = asObj(args);
   }
-  return Object.freeze({
-    defaults,
-    defaultsTriggerByEvent,
-  });
-}
-
-export function buildRuleEngineFromOrchestratorV1({
-  orchestratorV1 = ORCHESTRATOR_V1,
-  baseRuleEngine = {},
-} = {}) {
-  const prep = prepareOrchestratorCompilation(orchestratorV1);
   const compiledRules = compileRulesFromOrchestrator(
     orchestratorV1,
-    prep.defaults,
-    prep.defaultsTriggerByEvent
+    defaults,
+    defaultsTriggerByEvent
   );
   return Object.freeze({
     ...baseRuleEngine,
