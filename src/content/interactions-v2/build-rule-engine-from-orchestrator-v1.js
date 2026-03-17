@@ -34,6 +34,10 @@ function getMergedTriggerDefaults(defaultsRoot) {
   });
 }
 
+function getNormalizedDefaultsTriggerByEvent(defaultsRoot) {
+  return normalizeTriggerDefaultsByEvent(getMergedTriggerDefaults(defaultsRoot));
+}
+
 function getMergedTriggerEntries(ruleLike) {
   const source = asObj(ruleLike);
   return [
@@ -44,6 +48,31 @@ function getMergedTriggerEntries(ruleLike) {
 
 function hasOwn(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+function normalizeRuleId(ruleLike) {
+  return asText(asObj(ruleLike).id);
+}
+
+function getRuleDefaults(defaultsLike) {
+  return asObj(asObj(defaultsLike).rule);
+}
+
+function normalizeCompilerDefaults(orchestratorLike) {
+  return asObj(asObj(orchestratorLike).defaults);
+}
+
+function getDefaultsOpen(defaultsLike) {
+  return asObj(asObj(defaultsLike).open);
+}
+
+function getOrchestratorRules(orchestratorLike) {
+  const rules = asObj(orchestratorLike).rules;
+  return Array.isArray(rules) ? rules : [];
+}
+
+function normalizeRuleEntries(orchestratorLike) {
+  return getOrchestratorRules(orchestratorLike);
 }
 
 function resolveFirstPresentValue(primaryObj, primaryKey, aliasKey, defaultsObj) {
@@ -69,6 +98,30 @@ function resolveRulePriorityValue(rule, defaultsRule) {
   return asFiniteNumber(raw);
 }
 
+function applyOptionalRuleTimingFields(target, rule, defaultsRule) {
+  const out = target;
+  const priorityNum = resolveRulePriorityValue(rule, defaultsRule);
+  if (priorityNum != null) out.priority = priorityNum;
+
+  const cooldownMsNum = resolveRuleTimingValue(
+    rule,
+    defaultsRule,
+    "cooldownMs",
+    "cooldown",
+    MIN_COOLDOWN_MS
+  );
+  if (cooldownMsNum != null) out.cooldownMs = cooldownMsNum;
+
+  const matchWindowMsNum = resolveRuleTimingValue(
+    rule,
+    defaultsRule,
+    "matchWindowMs",
+    "matchWindow",
+    MIN_MATCH_WINDOW_MS
+  );
+  if (matchWindowMsNum != null) out.matchWindowMs = matchWindowMsNum;
+}
+
 function asFiniteNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
@@ -90,10 +143,25 @@ function copyBooleanEnabledIfPresent(target, source) {
   }
 }
 
-function mapTrigger(trigger, defaultsTriggerByEvent) {
-  const t = (typeof trigger === "string")
+function normalizeTriggerInput(trigger) {
+  return (typeof trigger === "string")
     ? Object.freeze({ event: trigger })
     : asObj(trigger);
+}
+
+function resolveOpenTtlMs(open, defaultsOpen) {
+  const ttlMs = resolveFirstPresentValue(open, "ttlMs", "ttl", defaultsOpen);
+  return asFiniteAtLeast(ttlMs, MIN_TTL_MS);
+}
+
+function normalizeOpenInput(open) {
+  return isSelectorListLike(open)
+    ? Object.freeze({ spells: open })
+    : asObj(open);
+}
+
+function mapTrigger(trigger, defaultsTriggerByEvent) {
+  const t = normalizeTriggerInput(trigger);
   const eventId = normalizeEventId(t.event);
   if (!eventId) return null;
   const out = {
@@ -107,8 +175,7 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
 }
 
 function mapOpen(open, defaultsOpen) {
-  const openIsSelectorList = isSelectorListLike(open);
-  const o = openIsSelectorList ? Object.freeze({ spells: open }) : asObj(open);
+  const o = normalizeOpenInput(open);
   const spells = asSelectorList(o.spells).map(normalizeSpellId).filter(Boolean);
   if (!spells.length) return null;
   const out = {
@@ -116,8 +183,7 @@ function mapOpen(open, defaultsOpen) {
     spells,
   };
   copyBooleanEnabledIfPresent(out, o);
-  const ttlMs = resolveFirstPresentValue(o, "ttlMs", "ttl", defaultsOpen);
-  const ttlMsNum = asFiniteAtLeast(ttlMs, MIN_TTL_MS);
+  const ttlMsNum = resolveOpenTtlMs(o, defaultsOpen);
   if (ttlMsNum != null) {
     out.ttlMs = ttlMsNum;
   }
@@ -129,6 +195,10 @@ function pushParsedOnSelectors(target, raw) {
     const parsed = parseOnSelector(entry);
     if (parsed?.id) target.push(parsed);
   }
+}
+
+function hasCompiledSelectors(compiledOn) {
+  return Array.isArray(compiledOn) && compiledOn.length > 0;
 }
 
 function pushNormalizedOnEntries(target, raw, normalizeId, type) {
@@ -168,11 +238,11 @@ function compileOnSelectors(rawOn) {
 function mapRule(rule, defaults, defaultsTriggerByEvent) {
   const r = asObj(rule);
   const defaultsRoot = asObj(defaults);
-  const id = asText(r.id);
+  const id = normalizeRuleId(r);
   if (!id) return null;
-  const ruleDefaults = asObj(defaultsRoot.rule);
+  const ruleDefaults = getRuleDefaults(defaultsRoot);
   const on = compileOnSelectors(r.on);
-  if (!on.length) return null;
+  if (!hasCompiledSelectors(on)) return null;
   const then = compileRuleActions(r, defaultsRoot, defaultsTriggerByEvent);
   const out = {
     id,
@@ -180,51 +250,41 @@ function mapRule(rule, defaults, defaultsTriggerByEvent) {
     then: Object.freeze(then),
   };
   copyBooleanEnabledIfPresent(out, r);
-  const priorityNum = resolveRulePriorityValue(r, ruleDefaults);
-  if (priorityNum != null) {
-    out.priority = priorityNum;
-  }
-  const cooldownMsNum = resolveRuleTimingValue(
-    r,
-    ruleDefaults,
-    "cooldownMs",
-    "cooldown",
-    MIN_COOLDOWN_MS
-  );
-  if (cooldownMsNum != null) {
-    out.cooldownMs = cooldownMsNum;
-  }
-  const matchWindowMsNum = resolveRuleTimingValue(
-    r,
-    ruleDefaults,
-    "matchWindowMs",
-    "matchWindow",
-    MIN_MATCH_WINDOW_MS
-  );
-  if (matchWindowMsNum != null) {
-    out.matchWindowMs = matchWindowMsNum;
-  }
+  applyOptionalRuleTimingFields(out, r, ruleDefaults);
   return Object.freeze(out);
 }
 
 function compileRuleActions(rule, defaultsRoot, defaultsTriggerByEvent) {
   const source = asObj(rule);
-  const rootDefaults = asObj(defaultsRoot);
+  const defaultsOpen = getDefaultsOpen(defaultsRoot);
   const actions = [];
-  const openAction = mapOpen(source.open, rootDefaults.open);
-  if (openAction) actions.push(openAction);
-  const triggerActions = getMergedTriggerEntries(source)
-    .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
-    .filter(Boolean);
+  pushOpenAction(actions, source.open, defaultsOpen);
+  const triggerActions = compileTriggerActions(source, defaultsTriggerByEvent);
   actions.push(...triggerActions);
   return actions;
 }
 
+function pushOpenAction(target, openInput, defaultsOpen) {
+  const openAction = mapOpen(openInput, defaultsOpen);
+  if (openAction) target.push(openAction);
+}
+
+function mapActions(entries, mapper) {
+  return entries.map(mapper).filter(Boolean);
+}
+
+function compileTriggerActions(ruleLike, defaultsTriggerByEvent) {
+  return mapActions(
+    getMergedTriggerEntries(ruleLike),
+    (trigger) => mapTrigger(trigger, defaultsTriggerByEvent)
+  );
+}
+
 function compileRulesFromOrchestrator(orchestratorV1, defaults, defaultsTriggerByEvent) {
-  if (!Array.isArray(orchestratorV1?.rules)) return [];
-  return orchestratorV1.rules
-    .map((rule) => mapRule(rule, defaults, defaultsTriggerByEvent))
-    .filter(Boolean);
+  return mapActions(
+    normalizeRuleEntries(orchestratorV1),
+    (rule) => mapRule(rule, defaults, defaultsTriggerByEvent)
+  );
 }
 
 function buildRuleEnginePayload(baseRuleEngine, orchestratorEnabled, compiledRules) {
@@ -248,10 +308,8 @@ export function buildRuleEngineFromOrchestratorV1({
   if (errors.length) {
     throw new Error(`ORCHESTRATOR_V1 validation failed: ${errors.join(" | ")}`);
   }
-  const defaults = asObj(orchestratorV1.defaults);
-  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(
-    getMergedTriggerDefaults(defaults)
-  );
+  const defaults = normalizeCompilerDefaults(orchestratorV1);
+  const defaultsTriggerByEvent = getNormalizedDefaultsTriggerByEvent(defaults);
   const compiledRules = compileRulesFromOrchestrator(
     orchestratorV1,
     defaults,

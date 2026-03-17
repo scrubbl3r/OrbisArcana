@@ -170,16 +170,45 @@ function getMergedTriggerEntries(ruleLike) {
   ];
 }
 
-function hasAnyTriggerEntries(ruleLike) {
-  return getMergedTriggerEntries(ruleLike).length > 0;
-}
-
 function getMergedDefaultsTriggerMap(defaultsLike) {
   const defaults = asObj(defaultsLike);
   return Object.freeze({
     ...asObj(defaults.triggers),
     ...asObj(defaults.trigger),
   });
+}
+
+function hasMergedDefaultsTriggerEntries(defaultsLike) {
+  const defaults = asObj(defaultsLike);
+  return hasOwn(defaults, "trigger") || hasOwn(defaults, "triggers");
+}
+
+function hasDefaultsOpen(defaultsLike) {
+  return hasOwn(asObj(defaultsLike), "open");
+}
+
+function hasDefaultsRule(defaultsLike) {
+  return hasOwn(asObj(defaultsLike), "rule");
+}
+
+function getDefaultsOpen(defaultsLike) {
+  return asObj(asObj(defaultsLike).open);
+}
+
+function getDefaultsRule(defaultsLike) {
+  return asObj(asObj(defaultsLike).rule);
+}
+
+function getValidationDefaults(targetLike) {
+  return asObj(asObj(targetLike).defaults);
+}
+
+function hasRuleOpen(ruleLike) {
+  return hasOwn(asObj(ruleLike), "open");
+}
+
+function getRuleTriggerEntries(ruleLike) {
+  return getMergedTriggerEntries(ruleLike);
 }
 
 function collectOnEntries(rawOn, errors, ruleId) {
@@ -207,6 +236,138 @@ function hasKnownOnSelectorId(type, id) {
   return typeof checker === "function" ? checker(id) : false;
 }
 
+function buildOnSelectorDedupeKey(type, id) {
+  return `${type}:${id}`;
+}
+
+function normalizeTriggerValidationInput(rawTrigger) {
+  return (typeof rawTrigger === "string")
+    ? Object.freeze({ event: rawTrigger })
+    : asObj(rawTrigger);
+}
+
+function normalizeOnSelectorEntry(entry) {
+  return Object.freeze({
+    type: asText(entry?.type).toLowerCase(),
+    id: asText(entry?.id).toLowerCase(),
+  });
+}
+
+function normalizeRuleValidationId(rawRule) {
+  return asText(asObj(rawRule).id);
+}
+
+function normalizeOpenValidationInput(rawOpen) {
+  return isSelectorListLike(rawOpen)
+    ? Object.freeze({ spells: asSelectorList(rawOpen) })
+    : asObj(rawOpen);
+}
+
+function isOpenSelectorList(rawOpen) {
+  return isSelectorListLike(rawOpen);
+}
+
+function isStringTriggerEntry(rawTrigger) {
+  return typeof rawTrigger === "string";
+}
+
+function validateOpenSpells(errors, ruleId, open) {
+  const openSpells = asSelectorList(asObj(open).spells);
+  if (!openSpells.length) {
+    errors.push(`rule ${ruleId} open requires spells[]`);
+    return;
+  }
+  const seenOpenSpells = new Set();
+  for (const openSpellRaw of openSpells) {
+    const openSpellId = normalizeSpellId(openSpellRaw);
+    if (!openSpellId) {
+      errors.push(`rule ${ruleId} open contains empty spell id`);
+      continue;
+    }
+    if (seenOpenSpells.has(openSpellId)) {
+      errors.push(`rule ${ruleId} open contains duplicate spell id: ${openSpellRaw}`);
+    }
+    seenOpenSpells.add(openSpellId);
+    if (!hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, openSpellId)) {
+      errors.push(`rule ${ruleId} open references inactive or unknown spell id: ${openSpellRaw}`);
+    }
+  }
+}
+
+function validateTriggerEventRef(errors, ruleId, trigger) {
+  const eventId = normalizeEventId(asObj(trigger).event);
+  if (!eventId) {
+    errors.push(`rule ${ruleId} trigger is missing event`);
+    return;
+  }
+  if (!hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
+    errors.push(`rule ${ruleId} trigger references unknown event id: ${trigger.event}`);
+  }
+}
+
+function validateDefaultsTriggerEntry(errors, rawEventId, args) {
+  const eventId = normalizeEventId(rawEventId);
+  if (!eventId) {
+    errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
+    return;
+  }
+  if (!hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
+    errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
+  }
+  if (!isObjectRecord(args)) {
+    errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
+  }
+}
+
+function validateTriggerArgs(errors, ruleId, rawTrigger, trigger) {
+  if (isStringTriggerEntry(rawTrigger) || !hasOwn(trigger, "args")) return;
+  const args = trigger.args;
+  if (!isObjectRecord(args)) {
+    errors.push(`rule ${ruleId} trigger args must be an object when present`);
+  }
+}
+
+function pushUnsupportedOnSelectorTypeError(errors, ruleId) {
+  errors.push(`rule ${ruleId} has unsupported on selector type`);
+}
+
+function pushMissingOnSelectorsError(errors, ruleId) {
+  errors.push(`rule ${ruleId} must define on selectors`);
+}
+
+function pushMissingActionsError(errors, ruleId) {
+  errors.push(`rule ${ruleId} must define open and/or trigger actions`);
+}
+
+function pushEmptyOnSelectorError(errors, ruleId, type) {
+  errors.push(`rule ${ruleId} has empty on.${type}`);
+}
+
+function pushDuplicateOnSelectorError(errors, ruleId, type, id) {
+  errors.push(`rule ${ruleId} contains duplicate on selector: ${type}.${id}`);
+}
+
+function getOnSelectorErrorLabel(type) {
+  return ON_SELECTOR_ERROR_LABELS[type] || "unknown id";
+}
+
+function pushUnknownOnSelectorIdError(errors, ruleId, type, rawOrId) {
+  const label = getOnSelectorErrorLabel(type);
+  errors.push(`rule ${ruleId} references ${label}: ${rawOrId}`);
+}
+
+function pushRuleTimingErrors(errors, context, obj) {
+  pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldownMs");
+  pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldown");
+  pushFiniteAtLeastErrorWhenPresent(errors, context, obj, "matchWindowMs", MIN_MATCH_WINDOW_MS);
+  pushFiniteAtLeastErrorWhenPresent(errors, context, obj, "matchWindow", MIN_MATCH_WINDOW_MS);
+}
+
+function pushOpenTimingErrors(errors, context, openObj) {
+  pushFiniteNonNegativeErrorWhenPresent(errors, context, openObj, "ttlMs");
+  pushFiniteNonNegativeErrorWhenPresent(errors, context, openObj, "ttl");
+}
+
 export function validateOrchestratorV1(cfg) {
   const errors = [];
   const target = asObj(cfg);
@@ -223,40 +384,23 @@ export function validateOrchestratorV1(cfg) {
     return errors;
   }
   if (hasOwn(target, "defaults")) {
-    const defaults = asObj(target.defaults);
+    const defaults = getValidationDefaults(target);
     pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, DEFAULTS_ALLOWED_KEYS);
-    if (hasOwn(defaults, "open")) {
-      const defaultsOpen = asObj(defaults.open);
+    if (hasDefaultsOpen(defaults)) {
+      const defaultsOpen = getDefaultsOpen(defaults);
       pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
-      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, "ttlMs");
-      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, "ttl");
+      pushOpenTimingErrors(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen);
     }
-    if (
-      hasOwn(defaults, "trigger") ||
-      hasOwn(defaults, "triggers")
-    ) {
+    if (hasMergedDefaultsTriggerEntries(defaults)) {
       const defaultsTrigger = getMergedDefaultsTriggerMap(defaults);
       for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
-        const eventId = normalizeEventId(rawEventId);
-        if (!eventId) {
-          errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
-          continue;
-        }
-        if (!hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
-          errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
-        }
-        if (!isObjectRecord(args)) {
-          errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
-        }
+        validateDefaultsTriggerEntry(errors, rawEventId, args);
       }
     }
-    if (hasOwn(defaults, "rule")) {
-      const defaultsRule = asObj(defaults.rule);
+    if (hasDefaultsRule(defaults)) {
+      const defaultsRule = getDefaultsRule(defaults);
       pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
-      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "cooldownMs");
-      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "cooldown");
-      pushFiniteAtLeastErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "matchWindowMs", MIN_MATCH_WINDOW_MS);
-      pushFiniteAtLeastErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "matchWindow", MIN_MATCH_WINDOW_MS);
+      pushRuleTimingErrors(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule);
       pushFiniteNumberErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "priority");
     }
   }
@@ -264,7 +408,7 @@ export function validateOrchestratorV1(cfg) {
   const ids = new Set();
   for (const rawRule of target.rules) {
     const rule = asObj(rawRule);
-    const ruleId = asText(rule.id);
+    const ruleId = normalizeRuleValidationId(rule);
     if (!ruleId) {
       errors.push("ORCHESTRATOR_V1.rules[] entry is missing id");
       continue;
@@ -275,102 +419,65 @@ export function validateOrchestratorV1(cfg) {
     pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, RULE_ALLOWED_KEYS);
     pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId}`, rule);
     pushFiniteNumberErrorWhenPresent(errors, `rule ${ruleId}`, rule, "priority");
-    pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId}`, rule, "cooldownMs");
-    pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId}`, rule, "cooldown");
-    pushFiniteAtLeastErrorWhenPresent(errors, `rule ${ruleId}`, rule, "matchWindowMs", MIN_MATCH_WINDOW_MS);
-    pushFiniteAtLeastErrorWhenPresent(errors, `rule ${ruleId}`, rule, "matchWindow", MIN_MATCH_WINDOW_MS);
+    pushRuleTimingErrors(errors, `rule ${ruleId}`, rule);
 
     const onEntries = collectOnEntries(rule.on, errors, ruleId);
 
     const seenOn = new Set();
     if (!onEntries.length) {
-      errors.push(`rule ${ruleId} must define on selectors`);
+      pushMissingOnSelectorsError(errors, ruleId);
     }
     for (const entry of onEntries) {
-      const type = asText(entry?.type).toLowerCase();
-      const id = asText(entry?.id).toLowerCase();
+      const normalized = normalizeOnSelectorEntry(entry);
+      const type = normalized.type;
+      const id = normalized.id;
       if (!isKnownOnSelectorType(type)) {
-        errors.push(`rule ${ruleId} has unsupported on selector type`);
+        pushUnsupportedOnSelectorTypeError(errors, ruleId);
         continue;
       }
       if (!id) {
-        errors.push(`rule ${ruleId} has empty on.${type}`);
+        pushEmptyOnSelectorError(errors, ruleId, type);
         continue;
       }
-      const dedupeKey = `${type}:${id}`;
+      const dedupeKey = buildOnSelectorDedupeKey(type, id);
       if (seenOn.has(dedupeKey)) {
-        errors.push(`rule ${ruleId} contains duplicate on selector: ${type}.${id}`);
+        pushDuplicateOnSelectorError(errors, ruleId, type, id);
         continue;
       }
       seenOn.add(dedupeKey);
       if (!hasKnownOnSelectorId(type, id)) {
-        const label = ON_SELECTOR_ERROR_LABELS[type] || "unknown id";
-        errors.push(`rule ${ruleId} references ${label}: ${entry.raw || id}`);
+        pushUnknownOnSelectorIdError(errors, ruleId, type, entry.raw || id);
       }
     }
 
-    const hasOpen = hasOwn(rule, "open");
+    const hasOpen = hasRuleOpen(rule);
     if (hasOpen) {
-      const openIsSelectorList = isSelectorListLike(rule.open);
-      const open = openIsSelectorList
-        ? Object.freeze({ spells: asSelectorList(rule.open) })
-        : asObj(rule.open);
+      const openIsSelectorList = isOpenSelectorList(rule.open);
+      const open = normalizeOpenValidationInput(rule.open);
       if (!openIsSelectorList) {
         pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, OPEN_ALLOWED_KEYS);
       }
-      const openSpells = asSelectorList(open.spells);
-      if (!openSpells.length) {
-        errors.push(`rule ${ruleId} open requires spells[]`);
-      } else {
-        const seenOpenSpells = new Set();
-        for (const openSpellRaw of openSpells) {
-          const openSpellId = normalizeSpellId(openSpellRaw);
-          if (!openSpellId) {
-            errors.push(`rule ${ruleId} open contains empty spell id`);
-            continue;
-          }
-          if (seenOpenSpells.has(openSpellId)) {
-            errors.push(`rule ${ruleId} open contains duplicate spell id: ${openSpellRaw}`);
-          }
-          seenOpenSpells.add(openSpellId);
-          if (!hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, openSpellId)) {
-            errors.push(`rule ${ruleId} open references inactive or unknown spell id: ${openSpellRaw}`);
-          }
-        }
-      }
+      validateOpenSpells(errors, ruleId, open);
       if (!openIsSelectorList) {
         pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
-        pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttlMs");
-        pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttl");
+        pushOpenTimingErrors(errors, `rule ${ruleId} open`, open);
       }
     }
 
-    const hasTrigger = hasAnyTriggerEntries(rule);
-    if (!hasTrigger && !hasOpen) {
-      errors.push(`rule ${ruleId} must define open and/or trigger actions`);
-      continue;
-    }
+    const triggerEntries = getRuleTriggerEntries(rule);
+    const hasTrigger = triggerEntries.length > 0;
     if (!hasTrigger) {
+      if (!hasOpen) {
+        pushMissingActionsError(errors, ruleId);
+      }
       continue;
     }
-    const triggerEntries = getMergedTriggerEntries(rule);
     for (const rawTrigger of triggerEntries) {
-      const isStringTrigger = typeof rawTrigger === "string";
-      const trigger = isStringTrigger ? Object.freeze({ event: rawTrigger }) : asObj(rawTrigger);
+      const trigger = normalizeTriggerValidationInput(rawTrigger);
       pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, TRIGGER_ALLOWED_KEYS);
       pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} trigger`, trigger);
-      const eventId = normalizeEventId(trigger.event);
-      if (!eventId) {
-        errors.push(`rule ${ruleId} trigger is missing event`);
-      } else if (!hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
-        errors.push(`rule ${ruleId} trigger references unknown event id: ${trigger.event}`);
-      }
-      if (!isStringTrigger && hasOwn(trigger, "args")) {
-        const args = trigger.args;
-        if (!isObjectRecord(args)) {
-          errors.push(`rule ${ruleId} trigger args must be an object when present`);
-        }
-      }
+      validateTriggerEventRef(errors, ruleId, trigger);
+      validateTriggerArgs(errors, ruleId, rawTrigger, trigger);
     }
   }
   return errors;
