@@ -12,6 +12,14 @@ export function asId(v) {
   return asText(v).toLowerCase();
 }
 
+function splitCommaTokens(value) {
+  if (typeof value !== "string") return [];
+  const text = value.trim();
+  if (!text) return [];
+  if (!text.includes(",")) return [text];
+  return text.split(",").map((part) => part.trim()).filter(Boolean);
+}
+
 export function normalizeSpellId(spellIdRaw) {
   const id = asId(spellIdRaw);
   if (!id) return "";
@@ -101,25 +109,11 @@ export function asSelectorList(raw) {
         out.push(entry);
         continue;
       }
-      const text = entry.trim();
-      if (!text) continue;
-      if (!text.includes(",")) {
-        out.push(text);
-        continue;
-      }
-      for (const part of text.split(",")) {
-        const token = part.trim();
-        if (token) out.push(token);
-      }
+      out.push(...splitCommaTokens(entry));
     }
     return out;
   }
-  if (typeof raw === "string") {
-    const text = raw.trim();
-    if (!text) return [];
-    if (!text.includes(",")) return [text];
-    return text.split(",").map((part) => part.trim()).filter(Boolean);
-  }
+  if (typeof raw === "string") return splitCommaTokens(raw);
   return [];
 }
 
@@ -131,25 +125,11 @@ export function normalizeTriggerEntries(rawTrigger) {
         out.push(entry);
         continue;
       }
-      const text = entry.trim();
-      if (!text) continue;
-      if (!text.includes(",")) {
-        out.push(text);
-        continue;
-      }
-      for (const part of text.split(",")) {
-        const token = part.trim();
-        if (token) out.push(token);
-      }
+      out.push(...splitCommaTokens(entry));
     }
     return out;
   }
-  if (typeof rawTrigger === "string") {
-    const text = rawTrigger.trim();
-    if (!text) return [];
-    if (!text.includes(",")) return [text];
-    return text.split(",").map((part) => part.trim()).filter(Boolean);
-  }
+  if (typeof rawTrigger === "string") return splitCommaTokens(rawTrigger);
   const triggerMap = asObj(rawTrigger);
   if (Object.keys(triggerMap).length) {
     return Object.entries(triggerMap).map(([eventId, spec]) => {
