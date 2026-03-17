@@ -62,6 +62,17 @@ const KNOWN_GESTURE_IDS = new Set(
 const KNOWN_ORB_STATE_IDS = new Set(
   getSignalIdsByPrefix("orb_state.")
 );
+const ON_SELECTOR_TYPES = Object.freeze(new Set(["spell", "gesture", "orb_state"]));
+const ON_SELECTOR_ERROR_LABELS = Object.freeze({
+  spell: "inactive or unknown spell id",
+  gesture: "unknown gesture id",
+  orb_state: "unknown orb_state id",
+});
+const ON_SELECTOR_ID_CHECKERS = Object.freeze({
+  spell: (id) => hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id),
+  gesture: (id) => KNOWN_GESTURE_IDS.has(id),
+  orb_state: (id) => KNOWN_ORB_STATE_IDS.has(id),
+});
 
 const ROOT_ALLOWED_KEYS = Object.freeze(["version", "enabled", "defaults", "rules"]);
 const DEFAULTS_ALLOWED_KEYS = Object.freeze(["open", "trigger", "triggers", "rule"]);
@@ -127,6 +138,31 @@ function getMergedDefaultsTriggerMap(defaultsLike) {
     ...asObj(defaults.triggers),
     ...asObj(defaults.trigger),
   });
+}
+
+function collectOnEntries(rawOn, errors, ruleId) {
+  const onEntries = [];
+  if (isSelectorListLike(rawOn)) {
+    pushParsedOnSelectorEntries(onEntries, rawOn);
+    return onEntries;
+  }
+
+  const on = asObj(rawOn);
+  pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ON_SELECTOR_ALLOWED_KEYS);
+  for (const source of ON_SELECTOR_SOURCES) {
+    if (!hasOwn(on, source.key)) continue;
+    pushOnEntries(onEntries, on[source.key], source.type, source.normalize);
+  }
+  return onEntries;
+}
+
+function isKnownOnSelectorType(type) {
+  return ON_SELECTOR_TYPES.has(type);
+}
+
+function hasKnownOnSelectorId(type, id) {
+  const checker = ON_SELECTOR_ID_CHECKERS[type];
+  return typeof checker === "function" ? checker(id) : false;
 }
 
 export function validateOrchestratorV1(cfg) {
@@ -236,18 +272,7 @@ export function validateOrchestratorV1(cfg) {
       }
     }
 
-    const onRaw = rule.on;
-    const onEntries = [];
-    if (isSelectorListLike(onRaw)) {
-      pushParsedOnSelectorEntries(onEntries, onRaw);
-    } else {
-      const on = asObj(onRaw);
-      pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ON_SELECTOR_ALLOWED_KEYS);
-      for (const source of ON_SELECTOR_SOURCES) {
-        if (!hasOwn(on, source.key)) continue;
-        pushOnEntries(onEntries, on[source.key], source.type, source.normalize);
-      }
-    }
+    const onEntries = collectOnEntries(rule.on, errors, ruleId);
 
     const seenOn = new Set();
     if (!onEntries.length) {
@@ -256,7 +281,7 @@ export function validateOrchestratorV1(cfg) {
     for (const entry of onEntries) {
       const type = asText(entry?.type).toLowerCase();
       const id = asText(entry?.id).toLowerCase();
-      if (type !== "spell" && type !== "gesture" && type !== "orb_state") {
+      if (!isKnownOnSelectorType(type)) {
         errors.push(`rule ${ruleId} has unsupported on selector type`);
         continue;
       }
@@ -270,14 +295,9 @@ export function validateOrchestratorV1(cfg) {
         continue;
       }
       seenOn.add(dedupeKey);
-      if (type === "spell" && !hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id)) {
-        errors.push(`rule ${ruleId} references inactive or unknown spell id: ${entry.raw || id}`);
-      }
-      if (type === "gesture" && !KNOWN_GESTURE_IDS.has(id)) {
-        errors.push(`rule ${ruleId} references unknown gesture id: ${entry.raw || id}`);
-      }
-      if (type === "orb_state" && !KNOWN_ORB_STATE_IDS.has(id)) {
-        errors.push(`rule ${ruleId} references unknown orb_state id: ${entry.raw || id}`);
+      if (!hasKnownOnSelectorId(type, id)) {
+        const label = ON_SELECTOR_ERROR_LABELS[type] || "unknown id";
+        errors.push(`rule ${ruleId} references ${label}: ${entry.raw || id}`);
       }
     }
 

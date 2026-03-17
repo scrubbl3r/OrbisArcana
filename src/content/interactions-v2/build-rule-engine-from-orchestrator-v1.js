@@ -74,6 +74,13 @@ function isSelectorListLike(value) {
   return typeof value === "string" || Array.isArray(value);
 }
 
+function copyBooleanEnabledIfPresent(target, source) {
+  const src = asObj(source);
+  if (hasOwn(src, "enabled") && typeof src.enabled === "boolean") {
+    target.enabled = src.enabled;
+  }
+}
+
 function mapTrigger(trigger, defaultsTriggerByEvent) {
   const t = (typeof trigger === "string")
     ? Object.freeze({ event: trigger })
@@ -86,9 +93,7 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
     ...asObj(defaultsTriggerByEvent[eventId]),
     ...asObj(t.args),
   };
-  if (hasOwn(t, "enabled") && typeof t.enabled === "boolean") {
-    out.enabled = t.enabled;
-  }
+  copyBooleanEnabledIfPresent(out, t);
   return Object.freeze(out);
 }
 
@@ -101,9 +106,7 @@ function mapOpen(open, defaultsOpen) {
     type: "wake_win",
     spells,
   };
-  if (hasOwn(o, "enabled") && typeof o.enabled === "boolean") {
-    out.enabled = o.enabled;
-  }
+  copyBooleanEnabledIfPresent(out, o);
   const ttlMs = resolveFirstPresentValue(o, "ttlMs", "ttl", defaultsOpen);
   const ttlMsNum = asFiniteAtLeast(ttlMs, MIN_TTL_MS);
   if (ttlMsNum != null) {
@@ -136,21 +139,26 @@ const ON_SELECTOR_SOURCES = Object.freeze([
   Object.freeze({ key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId }),
 ]);
 
+function compileOnSelectors(rawOn) {
+  const on = [];
+  if (isSelectorListLike(rawOn)) {
+    pushParsedOnSelectors(on, rawOn);
+    return on;
+  }
+  const onRaw = asObj(rawOn);
+  for (const source of ON_SELECTOR_SOURCES) {
+    pushNormalizedOnEntries(on, onRaw[source.key], source.normalize, source.type);
+  }
+  return on;
+}
+
 function mapRule(rule, defaults) {
   const r = asObj(rule);
   const defaultsRoot = asObj(defaults);
   const id = asText(r.id);
   if (!id) return null;
   const ruleDefaults = asObj(defaultsRoot.rule);
-  const on = [];
-  if (isSelectorListLike(r.on)) {
-    pushParsedOnSelectors(on, r.on);
-  } else {
-    const onRaw = asObj(r.on);
-    for (const source of ON_SELECTOR_SOURCES) {
-      pushNormalizedOnEntries(on, onRaw[source.key], source.normalize, source.type);
-    }
-  }
+  const on = compileOnSelectors(r.on);
   if (!on.length) return null;
   const then = [];
   const openAction = mapOpen(r.open, defaultsRoot.open);
@@ -165,9 +173,7 @@ function mapRule(rule, defaults) {
     on: Object.freeze(on),
     then: Object.freeze(then),
   };
-  if (hasOwn(r, "enabled") && typeof r.enabled === "boolean") {
-    out.enabled = r.enabled;
-  }
+  copyBooleanEnabledIfPresent(out, r);
   const hasPriority = hasOwn(r, "priority");
   const priority = hasPriority
     ? r.priority
