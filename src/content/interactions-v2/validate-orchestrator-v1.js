@@ -396,19 +396,15 @@ function validateRootShape(errors, target) {
   return true;
 }
 
-function validateOrchestratorDocument(errors, target) {
+export function validateOrchestratorV1(cfg) {
+  const errors = [];
+  const target = asObj(cfg);
   pushUnsupportedKeys(errors, "ORCHESTRATOR_V1", target, ROOT_ALLOWED_KEYS);
-  if (!validateRootShape(errors, target)) return;
+  if (!validateRootShape(errors, target)) return errors;
   validateDefaultsSection(errors, target);
   const ids = new Set();
   for (const rawRule of target.rules) {
     validateRuleEntry(errors, ids, rawRule);
   }
-}
-
-export function validateOrchestratorV1(cfg) {
-  const errors = [];
-  const target = asObj(cfg);
-  validateOrchestratorDocument(errors, target);
   return errors;
 }
