@@ -13,20 +13,6 @@ import {
   normalizeTriggerEntries,
 } from "./orchestrator-v1-normalizers.js";
 
-function isFiniteNonNegative(v) {
-  const n = Number(v);
-  return Number.isFinite(n) && n >= 0;
-}
-
-function isFiniteAtLeast(v, min) {
-  const n = Number(v);
-  return Number.isFinite(n) && n >= min;
-}
-
-function isFiniteNumber(v) {
-  return Number.isFinite(Number(v));
-}
-
 function isObjectRecord(v) {
   return !!v && typeof v === "object" && !Array.isArray(v);
 }
@@ -41,23 +27,23 @@ function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
   }
 }
 
-function formatContextKeyPath(context, key) {
-  return context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
-}
-
 function pushFiniteAtLeastErrorWhenPresent(errors, context, obj, key, min) {
   const source = asObj(obj);
   if (!Object.hasOwn(source, key)) return;
-  if (!isFiniteAtLeast(source[key], min)) {
-    errors.push(`${formatContextKeyPath(context, key)} must be a finite number >= ${min} when present`);
+  const n = Number(source[key]);
+  if (!Number.isFinite(n) || n < min) {
+    const keyPath = context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
+    errors.push(`${keyPath} must be a finite number >= ${min} when present`);
   }
 }
 
 function pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, key) {
   const source = asObj(obj);
   if (!Object.hasOwn(source, key)) return;
-  if (!isFiniteNonNegative(source[key])) {
-    errors.push(`${formatContextKeyPath(context, key)} must be a finite number >= ${MIN_NONNEGATIVE} when present`);
+  const n = Number(source[key]);
+  if (!Number.isFinite(n) || n < MIN_NONNEGATIVE) {
+    const keyPath = context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
+    errors.push(`${keyPath} must be a finite number >= ${MIN_NONNEGATIVE} when present`);
   }
 }
 
@@ -70,8 +56,9 @@ function pushBooleanEnabledErrorWhenPresent(errors, context, obj) {
 
 function pushFiniteNumberErrorWhenPresent(errors, context, obj, key) {
   const source = asObj(obj);
-  if (Object.hasOwn(source, key) && !isFiniteNumber(source[key])) {
-    errors.push(`${formatContextKeyPath(context, key)} must be a finite number when present`);
+  if (Object.hasOwn(source, key) && !Number.isFinite(Number(source[key]))) {
+    const keyPath = context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
+    errors.push(`${keyPath} must be a finite number when present`);
   }
 }
 
@@ -165,22 +152,10 @@ function validateOpenSpells(errors, ruleId, open) {
   }
 }
 
-function pushRuleTimingErrors(errors, context, obj) {
-  pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldownMs");
-  pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, "cooldown");
-  pushFiniteAtLeastErrorWhenPresent(errors, context, obj, "matchWindowMs", MIN_MATCH_WINDOW_MS);
-  pushFiniteAtLeastErrorWhenPresent(errors, context, obj, "matchWindow", MIN_MATCH_WINDOW_MS);
-}
-
-function pushOpenTimingErrors(errors, context, openObj) {
-  pushFiniteNonNegativeErrorWhenPresent(errors, context, openObj, "ttlMs");
-  pushFiniteNonNegativeErrorWhenPresent(errors, context, openObj, "ttl");
-}
-
 function validateTriggerEntries(errors, ruleId, triggerEntries) {
   for (const rawTrigger of triggerEntries) {
     const trigger = (typeof rawTrigger === "string")
-      ? Object.freeze({ event: rawTrigger })
+      ? { event: rawTrigger }
       : asObj(rawTrigger);
     pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, TRIGGER_ALLOWED_KEYS);
     pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} trigger`, trigger);
@@ -203,7 +178,7 @@ function validateTriggerEntries(errors, ruleId, triggerEntries) {
 
 function validateOnSelectors(errors, ruleId, onEntries) {
   const seenOn = new Set();
-  if (!Array.isArray(onEntries) || onEntries.length === 0) {
+  if (!onEntries.length) {
     errors.push(`rule ${ruleId} must define on selectors`);
   }
   for (const entry of onEntries) {
@@ -239,14 +214,15 @@ function validateDefaultsSection(errors, target) {
   if (Object.hasOwn(defaults, "open")) {
     const defaultsOpen = asObj(defaults.open);
     pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
-    pushOpenTimingErrors(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen);
+    pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, "ttlMs");
+    pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, "ttl");
   }
 
   if (Object.hasOwn(defaults, "trigger") || Object.hasOwn(defaults, "triggers")) {
-    const defaultsTrigger = Object.freeze({
+    const defaultsTrigger = {
       ...asObj(defaults.triggers),
       ...asObj(defaults.trigger),
-    });
+    };
     for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
       const eventId = normalizeEventId(rawEventId);
       if (!eventId) {
@@ -265,7 +241,22 @@ function validateDefaultsSection(errors, target) {
   if (Object.hasOwn(defaults, "rule")) {
     const defaultsRule = asObj(defaults.rule);
     pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
-    pushRuleTimingErrors(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule);
+    pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "cooldownMs");
+    pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "cooldown");
+    pushFiniteAtLeastErrorWhenPresent(
+      errors,
+      "ORCHESTRATOR_V1.defaults.rule",
+      defaultsRule,
+      "matchWindowMs",
+      MIN_MATCH_WINDOW_MS
+    );
+    pushFiniteAtLeastErrorWhenPresent(
+      errors,
+      "ORCHESTRATOR_V1.defaults.rule",
+      defaultsRule,
+      "matchWindow",
+      MIN_MATCH_WINDOW_MS
+    );
     pushFiniteNumberErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "priority");
   }
 }
@@ -286,7 +277,10 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
   pushUnsupportedKeys(errors, context, rule, RULE_ALLOWED_KEYS);
   pushBooleanEnabledErrorWhenPresent(errors, context, rule);
   pushFiniteNumberErrorWhenPresent(errors, context, rule, "priority");
-  pushRuleTimingErrors(errors, context, rule);
+  pushFiniteNonNegativeErrorWhenPresent(errors, context, rule, "cooldownMs");
+  pushFiniteNonNegativeErrorWhenPresent(errors, context, rule, "cooldown");
+  pushFiniteAtLeastErrorWhenPresent(errors, context, rule, "matchWindowMs", MIN_MATCH_WINDOW_MS);
+  pushFiniteAtLeastErrorWhenPresent(errors, context, rule, "matchWindow", MIN_MATCH_WINDOW_MS);
 
   const onEntries = [];
   if (typeof rule.on === "string" || Array.isArray(rule.on)) {
@@ -299,7 +293,7 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
     for (const source of ON_SELECTOR_SOURCES) {
       if (!Object.hasOwn(on, source.key)) continue;
       for (const value of asSelectorList(on[source.key])) {
-        onEntries.push(Object.freeze({ type: source.type, id: source.normalize(value), raw: value }));
+        onEntries.push({ type: source.type, id: source.normalize(value), raw: value });
       }
     }
   }
@@ -309,12 +303,13 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
   if (hasOpen) {
     const openIsSelectorList = typeof rule.open === "string" || Array.isArray(rule.open);
     const open = openIsSelectorList
-      ? Object.freeze({ spells: asSelectorList(rule.open) })
+      ? { spells: asSelectorList(rule.open) }
       : asObj(rule.open);
     if (!openIsSelectorList) {
       pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, OPEN_ALLOWED_KEYS);
       pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
-      pushOpenTimingErrors(errors, `rule ${ruleId} open`, open);
+      pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttlMs");
+      pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttl");
     }
     validateOpenSpells(errors, ruleId, open);
   }
@@ -323,7 +318,7 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
     ...normalizeTriggerEntries(rule.trigger),
     ...normalizeTriggerEntries(rule.triggers),
   ];
-  if (!Array.isArray(triggerEntries) || triggerEntries.length === 0) {
+  if (!triggerEntries.length) {
     if (!hasOpen) {
       errors.push(`rule ${ruleId} must define open and/or trigger actions`);
     }
