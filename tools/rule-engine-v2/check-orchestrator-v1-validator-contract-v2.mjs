@@ -223,6 +223,21 @@ expectValid(
 );
 
 expectValid(
+  "triggers_alias",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_triggers_alias",
+        on: Object.freeze(["spell:rota"]),
+        trigger: "grace",
+        triggers: "aoe_electric",
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,

@@ -123,7 +123,10 @@ function mapRule(rule, defaults) {
   const openAction = mapOpen(r.open, defaultsRoot.open);
   if (openAction) then.push(openAction);
   const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(defaultsRoot.trigger);
-  const triggerActions = normalizeTriggerEntries(r.trigger)
+  const triggerActions = [
+    ...normalizeTriggerEntries(r.trigger),
+    ...normalizeTriggerEntries(r.triggers),
+  ]
     .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
     .filter(Boolean);
   then.push(...triggerActions);

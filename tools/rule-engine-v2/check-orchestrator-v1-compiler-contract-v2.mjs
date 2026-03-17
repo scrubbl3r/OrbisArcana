@@ -429,4 +429,46 @@ if (asJson(onPluralAliasRule.on) !== asJson(expectedOnPluralAliasOn)) {
   );
 }
 
+const triggersAliasSample = Object.freeze({
+  version: "1",
+  enabled: true,
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_triggers_alias",
+      on: "rota",
+      trigger: "grace",
+      triggers: "aoe_electric",
+    }),
+  ]),
+});
+
+let builtTriggersAlias;
+try {
+  builtTriggersAlias = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: triggersAliasSample,
+    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for triggers alias sample: ${msg}`);
+}
+
+const [triggersAliasRule] = Array.isArray(builtTriggersAlias?.rules) ? builtTriggersAlias.rules : [];
+if (!triggersAliasRule) {
+  failCheck(CHECK_TAG, "triggers alias sample did not produce a compiled rule");
+}
+const expectedTriggersAliasThen = [
+  { type: "event", id: "grace" },
+  { type: "event", id: "aoe_electric" },
+];
+if (asJson(triggersAliasRule.then) !== asJson(expectedTriggersAliasThen)) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "triggers alias normalization mismatch",
+    [`got ${asJson(triggersAliasRule.then)} expected ${asJson(expectedTriggersAliasThen)}`]
+  );
+}
+
 reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");

@@ -137,6 +137,7 @@ export function validateOrchestratorV1(cfg) {
       "on",
       "open",
       "trigger",
+      "triggers",
       "enabled",
       "priority",
       "cooldownMs",
@@ -304,7 +305,10 @@ export function validateOrchestratorV1(cfg) {
       }
     }
 
-    const triggerEntries = normalizeTriggerEntries(rule.trigger);
+    const triggerEntries = [
+      ...normalizeTriggerEntries(rule.trigger),
+      ...normalizeTriggerEntries(rule.triggers),
+    ];
     const hasTrigger = triggerEntries.length > 0;
     if (!hasTrigger && !hasOpen) {
       errors.push(`rule ${ruleId} must define open and/or trigger actions`);
