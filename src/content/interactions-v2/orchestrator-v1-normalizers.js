@@ -27,7 +27,11 @@ export function normalizeEventId(eventIdRaw) {
 export function normalizeGestureId(gestureIdRaw) {
   const id = asId(gestureIdRaw);
   if (!id) return "";
-  return id.startsWith("gesture.") ? id.slice("gesture.".length) : id;
+  const trimmed = id.startsWith("gesture.") ? id.slice("gesture.".length) : id;
+  if (trimmed === "x_spin") return "spin_x";
+  if (trimmed === "y_spin") return "spin_y";
+  if (trimmed === "z_spin") return "spin_z";
+  return trimmed;
 }
 
 export function normalizeOrbStateId(orbStateIdRaw) {

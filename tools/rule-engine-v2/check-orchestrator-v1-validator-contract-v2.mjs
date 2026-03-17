@@ -54,6 +54,20 @@ const baseline = Object.freeze({
 
 expectValid("baseline_shorthand", baseline);
 
+expectValid(
+  "legacy_gesture_alias_normalization",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_legacy_alias",
+        on: Object.freeze(["gesture:y_spin", "spell:rota"]),
+        trigger: Object.freeze(["grace"]),
+      }),
+    ]),
+  })
+);
+
 expectInvalid(
   "duplicate_on_selector",
   Object.freeze({
