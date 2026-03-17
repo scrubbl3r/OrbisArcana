@@ -16,16 +16,12 @@ const MIN_TTL_MS = 0;
 const MIN_COOLDOWN_MS = 0;
 const MIN_MATCH_WINDOW_MS = 100;
 
-function hasOwn(obj, key) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
-
 function resolveFirstPresentValue(primaryObj, primaryKey, aliasKey, defaultsObj) {
   const primary = asObj(primaryObj);
   const defaultsSafe = asObj(defaultsObj);
-  if (hasOwn(primary, primaryKey)) return primary[primaryKey];
-  if (hasOwn(primary, aliasKey)) return primary[aliasKey];
-  if (hasOwn(defaultsSafe, primaryKey)) return defaultsSafe[primaryKey];
+  if (Object.hasOwn(primary, primaryKey)) return primary[primaryKey];
+  if (Object.hasOwn(primary, aliasKey)) return primary[aliasKey];
+  if (Object.hasOwn(defaultsSafe, primaryKey)) return defaultsSafe[primaryKey];
   return defaultsSafe[aliasKey];
 }
 
@@ -39,7 +35,7 @@ function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
 
   const ruleSafe = asObj(rule);
   const defaultsSafe = asObj(defaultsRule);
-  const priorityRaw = hasOwn(ruleSafe, "priority")
+  const priorityRaw = Object.hasOwn(ruleSafe, "priority")
     ? ruleSafe.priority
     : defaultsSafe.priority;
   const priorityNum = asFiniteNumber(priorityRaw);
@@ -76,13 +72,9 @@ function asFiniteAtLeast(value, min) {
   return n == null ? null : Math.max(min, n);
 }
 
-function isSelectorListLike(value) {
-  return typeof value === "string" || Array.isArray(value);
-}
-
 function copyBooleanEnabledIfPresent(target, source) {
   const src = asObj(source);
-  if (hasOwn(src, "enabled") && typeof src.enabled === "boolean") {
+  if (Object.hasOwn(src, "enabled") && typeof src.enabled === "boolean") {
     target.enabled = src.enabled;
   }
 }
@@ -104,7 +96,7 @@ function mapTrigger(trigger, defaultsTriggerByEvent) {
 }
 
 function mapOpen(open, defaultsOpen) {
-  const o = isSelectorListLike(open)
+  const o = (typeof open === "string" || Array.isArray(open))
     ? Object.freeze({ spells: open })
     : asObj(open);
   const spells = asSelectorList(asObj(o).spells)
@@ -124,20 +116,6 @@ function mapOpen(open, defaultsOpen) {
   return Object.freeze(out);
 }
 
-function pushParsedOnSelectors(target, raw) {
-  for (const entry of asSelectorList(raw)) {
-    const parsed = parseOnSelector(entry);
-    if (parsed?.id) target.push(parsed);
-  }
-}
-
-function pushNormalizedOnEntries(target, raw, normalizeId, type) {
-  for (const value of asSelectorList(raw)) {
-    const id = normalizeId(value);
-    if (id) target.push(Object.freeze({ type, id }));
-  }
-}
-
 const ON_SELECTOR_SOURCES = Object.freeze([
   Object.freeze({ key: "spell", type: "spell", normalize: normalizeSpellId }),
   Object.freeze({ key: "spells", type: "spell", normalize: normalizeSpellId }),
@@ -148,27 +126,25 @@ const ON_SELECTOR_SOURCES = Object.freeze([
   Object.freeze({ key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId }),
 ]);
 
-function collectOnSelectorsFromObject(target, onRaw) {
-  const sourceObj = asObj(onRaw);
-  for (const source of ON_SELECTOR_SOURCES) {
-    pushNormalizedOnEntries(target, sourceObj[source.key], source.normalize, source.type);
-  }
-}
-
-function collectOnSelectors(target, rawOn) {
-  if (isSelectorListLike(rawOn)) {
-    pushParsedOnSelectors(target, rawOn);
-    return;
-  }
-  collectOnSelectorsFromObject(target, rawOn);
-}
-
 function compileRule(rule, compileContext) {
   const r = asObj(rule);
   const id = asText(r.id);
   if (!id) return null;
   const on = [];
-  collectOnSelectors(on, r.on);
+  if (typeof r.on === "string" || Array.isArray(r.on)) {
+    for (const entry of asSelectorList(r.on)) {
+      const parsed = parseOnSelector(entry);
+      if (parsed?.id) on.push(parsed);
+    }
+  } else {
+    const sourceObj = asObj(r.on);
+    for (const source of ON_SELECTOR_SOURCES) {
+      for (const value of asSelectorList(sourceObj[source.key])) {
+        const selectorId = source.normalize(value);
+        if (selectorId) on.push(Object.freeze({ type: source.type, id: selectorId }));
+      }
+    }
+  }
   if (!on.length) return null;
   const then = compileRuleActions(
     r,

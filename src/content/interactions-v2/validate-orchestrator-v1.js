@@ -35,10 +35,6 @@ function isObjectRecord(v) {
   return !!v && typeof v === "object" && !Array.isArray(v);
 }
 
-function hasOwn(obj, key) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
-
 const MIN_NONNEGATIVE = 0;
 const MIN_MATCH_WINDOW_MS = 100;
 
@@ -55,7 +51,7 @@ function formatContextKeyPath(context, key) {
 
 function pushFiniteAtLeastErrorWhenPresent(errors, context, obj, key, min) {
   const source = asObj(obj);
-  if (!hasOwn(source, key)) return;
+  if (!Object.hasOwn(source, key)) return;
   if (!isFiniteAtLeast(source[key], min)) {
     errors.push(`${formatContextKeyPath(context, key)} must be a finite number >= ${min} when present`);
   }
@@ -63,7 +59,7 @@ function pushFiniteAtLeastErrorWhenPresent(errors, context, obj, key, min) {
 
 function pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, key) {
   const source = asObj(obj);
-  if (!hasOwn(source, key)) return;
+  if (!Object.hasOwn(source, key)) return;
   if (!isFiniteNonNegative(source[key])) {
     errors.push(`${formatContextKeyPath(context, key)} must be a finite number >= ${MIN_NONNEGATIVE} when present`);
   }
@@ -71,14 +67,14 @@ function pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, key) {
 
 function pushBooleanEnabledErrorWhenPresent(errors, context, obj) {
   const source = asObj(obj);
-  if (hasOwn(source, "enabled") && typeof source.enabled !== "boolean") {
+  if (Object.hasOwn(source, "enabled") && typeof source.enabled !== "boolean") {
     errors.push(`${context} enabled must be boolean when present`);
   }
 }
 
 function pushFiniteNumberErrorWhenPresent(errors, context, obj, key) {
   const source = asObj(obj);
-  if (hasOwn(source, key) && !isFiniteNumber(source[key])) {
+  if (Object.hasOwn(source, key) && !isFiniteNumber(source[key])) {
     errors.push(`${formatContextKeyPath(context, key)} must be a finite number when present`);
   }
 }
@@ -107,7 +103,7 @@ const ON_SELECTOR_ERROR_LABELS = Object.freeze({
   orb_state: "unknown orb_state id",
 });
 const ON_SELECTOR_ID_CHECKERS = Object.freeze({
-  spell: (id) => hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id),
+  spell: (id) => Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id),
   gesture: (id) => KNOWN_GESTURE_IDS.has(id),
   orb_state: (id) => KNOWN_ORB_STATE_IDS.has(id),
 });
@@ -172,7 +168,7 @@ function collectOnEntries(rawOn, errors, ruleId) {
   const on = asObj(rawOn);
   pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ON_SELECTOR_ALLOWED_KEYS);
   for (const source of ON_SELECTOR_SOURCES) {
-    if (!hasOwn(on, source.key)) continue;
+    if (!Object.hasOwn(on, source.key)) continue;
     pushOnEntries(onEntries, on[source.key], source.type, source.normalize);
   }
   return onEntries;
@@ -195,7 +191,7 @@ function validateOpenSpells(errors, ruleId, open) {
       errors.push(`rule ${ruleId} open contains duplicate spell id: ${openSpellRaw}`);
     }
     seenOpenSpells.add(openSpellId);
-    if (!hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, openSpellId)) {
+    if (!Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, openSpellId)) {
       errors.push(`rule ${ruleId} open references inactive or unknown spell id: ${openSpellRaw}`);
     }
   }
@@ -207,13 +203,13 @@ function validateTriggerEventRef(errors, ruleId, trigger) {
     errors.push(`rule ${ruleId} trigger is missing event`);
     return;
   }
-  if (!hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
+  if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
     errors.push(`rule ${ruleId} trigger references unknown event id: ${trigger.event}`);
   }
 }
 
 function validateTriggerArgs(errors, ruleId, rawTrigger, trigger) {
-  if (typeof rawTrigger === "string" || !hasOwn(trigger, "args")) return;
+  if (typeof rawTrigger === "string" || !Object.hasOwn(trigger, "args")) return;
   const args = trigger.args;
   if (!isObjectRecord(args)) {
     errors.push(`rule ${ruleId} trigger args must be an object when present`);
@@ -275,14 +271,14 @@ function validateOnSelectors(errors, ruleId, onEntries) {
 }
 
 function validateDefaultsOpenSection(errors, defaults) {
-  if (!hasOwn(defaults, "open")) return;
+  if (!Object.hasOwn(defaults, "open")) return;
   const defaultsOpen = asObj(defaults.open);
   pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
   pushOpenTimingErrors(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen);
 }
 
 function validateDefaultsRuleSection(errors, defaults) {
-  if (!hasOwn(defaults, "rule")) return;
+  if (!Object.hasOwn(defaults, "rule")) return;
   const defaultsRule = asObj(defaults.rule);
   pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
   pushRuleTimingErrors(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule);
@@ -290,7 +286,7 @@ function validateDefaultsRuleSection(errors, defaults) {
 }
 
 function validateDefaultsTriggerSection(errors, defaults) {
-  if (!hasOwn(defaults, "trigger") && !hasOwn(defaults, "triggers")) return;
+  if (!Object.hasOwn(defaults, "trigger") && !Object.hasOwn(defaults, "triggers")) return;
   const defaultsTrigger = Object.freeze({
     ...asObj(defaults.triggers),
     ...asObj(defaults.trigger),
@@ -301,7 +297,7 @@ function validateDefaultsTriggerSection(errors, defaults) {
       errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
       continue;
     }
-    if (!hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
+    if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
       errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
     }
     if (!isObjectRecord(args)) {
@@ -311,7 +307,7 @@ function validateDefaultsTriggerSection(errors, defaults) {
 }
 
 function validateDefaultsSection(errors, target) {
-  if (!hasOwn(target, "defaults")) return;
+  if (!Object.hasOwn(target, "defaults")) return;
   const defaults = asObj(target.defaults);
   pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, DEFAULTS_ALLOWED_KEYS);
   validateDefaultsOpenSection(errors, defaults);
@@ -345,7 +341,7 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
 }
 
 function validateRuleOpenSection(errors, ruleId, rule) {
-  const hasOpen = hasOwn(rule, "open");
+  const hasOpen = Object.hasOwn(rule, "open");
   if (!hasOpen) return false;
   const openIsSelectorList = isSelectorListLike(rule.open);
   const open = openIsSelectorList
