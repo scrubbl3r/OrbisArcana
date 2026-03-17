@@ -13,17 +13,13 @@ import {
   normalizeTriggerEntries,
 } from "./orchestrator-v1-normalizers.js";
 
-function isObjectRecord(v) {
-  return !!v && typeof v === "object" && !Array.isArray(v);
-}
-
-const MIN_NONNEGATIVE = 0;
 const MIN_MATCH_WINDOW_MS = 100;
 
 function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
-  const allowed = new Set(allowedKeys);
   for (const key of Object.keys(asObj(obj))) {
-    if (!allowed.has(key)) errors.push(`${context} contains unsupported key: ${key}`);
+    if (!allowedKeys.includes(key)) {
+      errors.push(`${context} contains unsupported key: ${key}`);
+    }
   }
 }
 
@@ -32,8 +28,9 @@ function pushFiniteAtLeastErrorWhenPresent(errors, context, obj, key, min) {
   if (!Object.hasOwn(source, key)) return;
   const n = Number(source[key]);
   if (!Number.isFinite(n) || n < min) {
-    const keyPath = context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
-    errors.push(`${keyPath} must be a finite number >= ${min} when present`);
+    errors.push(
+      `${context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`} must be a finite number >= ${min} when present`
+    );
   }
 }
 
@@ -41,9 +38,10 @@ function pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, key) {
   const source = asObj(obj);
   if (!Object.hasOwn(source, key)) return;
   const n = Number(source[key]);
-  if (!Number.isFinite(n) || n < MIN_NONNEGATIVE) {
-    const keyPath = context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
-    errors.push(`${keyPath} must be a finite number >= ${MIN_NONNEGATIVE} when present`);
+  if (!Number.isFinite(n) || n < 0) {
+    errors.push(
+      `${context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`} must be a finite number >= 0 when present`
+    );
   }
 }
 
@@ -56,52 +54,51 @@ function pushBooleanEnabledErrorWhenPresent(errors, context, obj) {
 
 function pushFiniteNumberErrorWhenPresent(errors, context, obj, key) {
   const source = asObj(obj);
-  if (Object.hasOwn(source, key) && !Number.isFinite(Number(source[key]))) {
-    const keyPath = context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
-    errors.push(`${keyPath} must be a finite number when present`);
+  if (!Object.hasOwn(source, key)) return;
+  const n = Number(source[key]);
+  if (!Number.isFinite(n)) {
+    errors.push(
+      `${context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`} must be a finite number when present`
+    );
   }
 }
 
-function getSignalIdsByPrefix(prefix) {
-  const source = (typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
-    ? SIGNAL_DEFINITIONS_BY_ID
-    : {};
-  return Object.keys(source)
-    .filter((signalId) => typeof signalId === "string" && signalId.startsWith(prefix))
-    .map((signalId) => signalId.slice(prefix.length))
-    .filter(Boolean);
-}
-
+const SIGNAL_DEFINITIONS_SOURCE = (
+  typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID
+)
+  ? SIGNAL_DEFINITIONS_BY_ID
+  : {};
 const KNOWN_GESTURE_IDS = new Set(
-  getSignalIdsByPrefix("gesture.")
+  Object.keys(SIGNAL_DEFINITIONS_SOURCE)
+    .filter((signalId) => typeof signalId === "string" && signalId.startsWith("gesture."))
+    .map((signalId) => signalId.slice("gesture.".length))
+    .filter(Boolean)
 );
 
 const KNOWN_ORB_STATE_IDS = new Set(
-  getSignalIdsByPrefix("orb_state.")
+  Object.keys(SIGNAL_DEFINITIONS_SOURCE)
+    .filter((signalId) => typeof signalId === "string" && signalId.startsWith("orb_state."))
+    .map((signalId) => signalId.slice("orb_state.".length))
+    .filter(Boolean)
 );
-const ON_SELECTOR_TYPES = Object.freeze(new Set(["spell", "gesture", "orb_state"]));
-const ON_SELECTOR_ERROR_LABELS = Object.freeze({
-  spell: "inactive or unknown spell id",
-  gesture: "unknown gesture id",
-  orb_state: "unknown orb_state id",
-});
-const ON_SELECTOR_ID_CHECKERS = Object.freeze({
+const ON_SELECTOR_TYPES = new Set(["spell", "gesture", "orb_state"]);
+const ON_SELECTOR_ID_CHECKERS = {
   spell: (id) => Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id),
   gesture: (id) => KNOWN_GESTURE_IDS.has(id),
   orb_state: (id) => KNOWN_ORB_STATE_IDS.has(id),
-});
+};
 
-const ROOT_ALLOWED_KEYS = Object.freeze(["version", "enabled", "defaults", "rules"]);
-const DEFAULTS_ALLOWED_KEYS = Object.freeze(["open", "trigger", "triggers", "rule"]);
-const DEFAULTS_OPEN_ALLOWED_KEYS = Object.freeze(["ttlMs", "ttl"]);
-const DEFAULTS_RULE_ALLOWED_KEYS = Object.freeze([
+const ROOT_ALLOWED_KEYS = ["version", "enabled", "defaults", "rules"];
+const DEFAULTS_ALLOWED_KEYS = ["open", "trigger", "triggers", "rule"];
+const DEFAULTS_OPEN_ALLOWED_KEYS = ["ttlMs", "ttl"];
+const DEFAULTS_RULE_ALLOWED_KEYS = [
   "cooldownMs",
   "cooldown",
   "matchWindowMs",
   "matchWindow",
   "priority",
-]);
-const RULE_ALLOWED_KEYS = Object.freeze([
+];
+const RULE_ALLOWED_KEYS = [
   "id",
   "on",
   "open",
@@ -113,21 +110,19 @@ const RULE_ALLOWED_KEYS = Object.freeze([
   "cooldown",
   "matchWindowMs",
   "matchWindow",
-]);
-const OPEN_ALLOWED_KEYS = Object.freeze(["spells", "ttlMs", "ttl", "enabled"]);
-const TRIGGER_ALLOWED_KEYS = Object.freeze(["event", "enabled", "args"]);
+];
+const OPEN_ALLOWED_KEYS = ["spells", "ttlMs", "ttl", "enabled"];
+const TRIGGER_ALLOWED_KEYS = ["event", "enabled", "args"];
 
-const ON_SELECTOR_SOURCES = Object.freeze([
-  Object.freeze({ key: "spell", type: "spell", normalize: normalizeSpellId }),
-  Object.freeze({ key: "spells", type: "spell", normalize: normalizeSpellId }),
-  Object.freeze({ key: "gesture", type: "gesture", normalize: normalizeGestureId }),
-  Object.freeze({ key: "gestures", type: "gesture", normalize: normalizeGestureId }),
-  Object.freeze({ key: "orb_state", type: "orb_state", normalize: normalizeOrbStateId }),
-  Object.freeze({ key: "orbState", type: "orb_state", normalize: normalizeOrbStateId }),
-  Object.freeze({ key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId }),
-]);
-
-const ON_SELECTOR_ALLOWED_KEYS = Object.freeze(ON_SELECTOR_SOURCES.map((source) => source.key));
+const ON_SELECTOR_SOURCES = [
+  { key: "spell", type: "spell", normalize: normalizeSpellId },
+  { key: "spells", type: "spell", normalize: normalizeSpellId },
+  { key: "gesture", type: "gesture", normalize: normalizeGestureId },
+  { key: "gestures", type: "gesture", normalize: normalizeGestureId },
+  { key: "orb_state", type: "orb_state", normalize: normalizeOrbStateId },
+  { key: "orbState", type: "orb_state", normalize: normalizeOrbStateId },
+  { key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId },
+];
 
 function validateOpenSpells(errors, ruleId, open) {
   const openSpells = asSelectorList(asObj(open).spells);
@@ -169,7 +164,7 @@ function validateTriggerEntries(errors, ruleId, triggerEntries) {
 
     if (typeof rawTrigger !== "string" && Object.hasOwn(trigger, "args")) {
       const args = trigger.args;
-      if (!isObjectRecord(args)) {
+      if (!args || typeof args !== "object" || Array.isArray(args)) {
         errors.push(`rule ${ruleId} trigger args must be an object when present`);
       }
     }
@@ -198,10 +193,21 @@ function validateOnSelectors(errors, ruleId, onEntries) {
       continue;
     }
     seenOn.add(dedupeKey);
-    const checker = ON_SELECTOR_ID_CHECKERS[type];
-    if (typeof checker !== "function" || !checker(id)) {
-      const label = ON_SELECTOR_ERROR_LABELS[type] || "unknown id";
-      errors.push(`rule ${ruleId} references ${label}: ${entry.raw || id}`);
+    if (
+      typeof ON_SELECTOR_ID_CHECKERS[type] !== "function" ||
+      !ON_SELECTOR_ID_CHECKERS[type](id)
+    ) {
+      errors.push(
+        `rule ${ruleId} references ${
+          type === "spell"
+            ? "inactive or unknown spell id"
+            : type === "gesture"
+              ? "unknown gesture id"
+              : type === "orb_state"
+                ? "unknown orb_state id"
+                : "unknown id"
+        }: ${entry.raw || id}`
+      );
     }
   }
 }
@@ -219,11 +225,10 @@ function validateDefaultsSection(errors, target) {
   }
 
   if (Object.hasOwn(defaults, "trigger") || Object.hasOwn(defaults, "triggers")) {
-    const defaultsTrigger = {
+    for (const [rawEventId, args] of Object.entries({
       ...asObj(defaults.triggers),
       ...asObj(defaults.trigger),
-    };
-    for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
+    })) {
       const eventId = normalizeEventId(rawEventId);
       if (!eventId) {
         errors.push(`ORCHESTRATOR_V1.defaults.trigger has invalid event key: ${rawEventId}`);
@@ -232,7 +237,7 @@ function validateDefaultsSection(errors, target) {
       if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
         errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
       }
-      if (!isObjectRecord(args)) {
+      if (!args || typeof args !== "object" || Array.isArray(args)) {
         errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
       }
     }
@@ -289,7 +294,12 @@ function validateRuleEntry(errors, seenRuleIds, rawRule) {
     }
   } else {
     const on = asObj(rule.on);
-    pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ON_SELECTOR_ALLOWED_KEYS);
+    pushUnsupportedKeys(
+      errors,
+      `rule ${ruleId} on`,
+      on,
+      ON_SELECTOR_SOURCES.map((source) => source.key)
+    );
     for (const source of ON_SELECTOR_SOURCES) {
       if (!Object.hasOwn(on, source.key)) continue;
       for (const value of asSelectorList(on[source.key])) {

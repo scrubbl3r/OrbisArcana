@@ -12,9 +12,9 @@ import {
   normalizeTriggerEntries,
 } from "./orchestrator-v1-normalizers.js";
 
-const MIN_TTL_MS = 0;
-const MIN_COOLDOWN_MS = 0;
 const MIN_MATCH_WINDOW_MS = 100;
+const EMPTY_LIST = Object.freeze([]);
+const EMPTY_OBJECT = Object.freeze({});
 
 function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
   const ruleSafe = asObj(rule);
@@ -33,7 +33,8 @@ function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
   const priorityRaw = Object.hasOwn(ruleSafe, "priority")
     ? ruleSafe.priority
     : defaultsSafe.priority;
-  const priorityNum = Number.isFinite(Number(priorityRaw)) ? Number(priorityRaw) : null;
+  const priorityNumRaw = Number(priorityRaw);
+  const priorityNum = Number.isFinite(priorityNumRaw) ? priorityNumRaw : null;
   if (priorityNum != null) out.priority = priorityNum;
 
   const cooldownMsRaw = Object.hasOwn(ruleSafe, "cooldownMs")
@@ -45,7 +46,7 @@ function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
         : defaultsSafe.cooldown;
   const cooldownMsNumRaw = Number(cooldownMsRaw);
   const cooldownMsNum = Number.isFinite(cooldownMsNumRaw)
-    ? Math.max(MIN_COOLDOWN_MS, cooldownMsNumRaw)
+    ? Math.max(0, cooldownMsNumRaw)
     : null;
   if (cooldownMsNum != null) out.cooldownMs = cooldownMsNum;
 
@@ -107,7 +108,7 @@ function mapOpen(open, defaultsOpen) {
         : defaultsOpen.ttl;
   const ttlMsNumRaw = Number(ttlMs);
   const ttlMsNum = Number.isFinite(ttlMsNumRaw)
-    ? Math.max(MIN_TTL_MS, ttlMsNumRaw)
+    ? Math.max(0, ttlMsNumRaw)
     : null;
   if (ttlMsNum != null) {
     out.ttlMs = ttlMsNum;
@@ -115,15 +116,15 @@ function mapOpen(open, defaultsOpen) {
   return Object.freeze(out);
 }
 
-const ON_SELECTOR_SOURCES = Object.freeze([
-  Object.freeze({ key: "spell", type: "spell", normalize: normalizeSpellId }),
-  Object.freeze({ key: "spells", type: "spell", normalize: normalizeSpellId }),
-  Object.freeze({ key: "gesture", type: "gesture", normalize: normalizeGestureId }),
-  Object.freeze({ key: "gestures", type: "gesture", normalize: normalizeGestureId }),
-  Object.freeze({ key: "orb_state", type: "orb_state", normalize: normalizeOrbStateId }),
-  Object.freeze({ key: "orbState", type: "orb_state", normalize: normalizeOrbStateId }),
-  Object.freeze({ key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId }),
-]);
+const ON_SELECTOR_SOURCES = [
+  { key: "spell", type: "spell", normalize: normalizeSpellId },
+  { key: "spells", type: "spell", normalize: normalizeSpellId },
+  { key: "gesture", type: "gesture", normalize: normalizeGestureId },
+  { key: "gestures", type: "gesture", normalize: normalizeGestureId },
+  { key: "orb_state", type: "orb_state", normalize: normalizeOrbStateId },
+  { key: "orbState", type: "orb_state", normalize: normalizeOrbStateId },
+  { key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId },
+];
 
 function compileRule(rule, compileContext) {
   const r = asObj(rule);
@@ -145,16 +146,16 @@ function compileRule(rule, compileContext) {
     }
   }
   if (!on.length) return null;
-  const then = [];
   const openAction = mapOpen(r.open, compileContext.defaultsOpen);
-  if (openAction) then.push(openAction);
-  const triggerActions = [
-    ...normalizeTriggerEntries(r.trigger),
-    ...normalizeTriggerEntries(r.triggers),
-  ]
-    .map((trigger) => mapTrigger(trigger, compileContext.defaultsTriggerByEvent))
-    .filter(Boolean);
-  then.push(...triggerActions);
+  const then = openAction ? [openAction] : [];
+  for (const trigger of normalizeTriggerEntries(r.trigger)) {
+    const action = mapTrigger(trigger, compileContext.defaultsTriggerByEvent);
+    if (action) then.push(action);
+  }
+  for (const trigger of normalizeTriggerEntries(r.triggers)) {
+    const action = mapTrigger(trigger, compileContext.defaultsTriggerByEvent);
+    if (action) then.push(action);
+  }
   return buildCompiledRule({
     id,
     on,
@@ -174,21 +175,20 @@ export function buildRuleEngineFromOrchestratorV1({
     throw new Error(`ORCHESTRATOR_V1 validation failed: ${errors.join(" | ")}`);
   }
   const defaults = asObj(orchestratorObj.defaults);
-  const defaultsTriggerRaw = {
+  const defaultsTriggerByEvent = {};
+  for (const [eventIdRaw, args] of Object.entries({
     ...asObj(defaults.triggers),
     ...asObj(defaults.trigger),
-  };
-  const defaultsTriggerByEvent = {};
-  for (const [eventIdRaw, args] of Object.entries(defaultsTriggerRaw)) {
+  })) {
     const eventId = normalizeEventId(eventIdRaw);
     if (!eventId) continue;
     defaultsTriggerByEvent[eventId] = asObj(args);
   }
-  const compileContext = Object.freeze({
+  const compileContext = {
     defaultsOpen: asObj(defaults.open),
     defaultsRule: asObj(defaults.rule),
     defaultsTriggerByEvent,
-  });
+  };
   const compiledRules = orchestratorObj.rules
     .map((rule) => compileRule(rule, compileContext))
     .filter(Boolean);
@@ -196,10 +196,10 @@ export function buildRuleEngineFromOrchestratorV1({
     ...baseRuleEngine,
     version: "2",
     enabled: orchestratorObj.enabled !== false,
-    signals: Object.freeze([]),
-    windows: Object.freeze([]),
-    events: Object.freeze([]),
+    signals: EMPTY_LIST,
+    windows: EMPTY_LIST,
+    events: EMPTY_LIST,
     rules: Object.freeze(compiledRules),
-    eventRuntimeBindings: Object.freeze({}),
+    eventRuntimeBindings: EMPTY_OBJECT,
   });
 }
