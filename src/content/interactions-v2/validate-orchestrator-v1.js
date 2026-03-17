@@ -382,13 +382,6 @@ function validateRuleTriggerSection(errors, ruleId, rule, hasOpen) {
   validateTriggerEntries(errors, ruleId, triggerEntries);
 }
 
-function validateRuleEntries(errors, rawRules) {
-  const ids = new Set();
-  for (const rawRule of rawRules) {
-    validateRuleEntry(errors, ids, rawRule);
-  }
-}
-
 function validateRootShape(errors, target) {
   if (asText(target.version) !== "1") {
     errors.push("ORCHESTRATOR_V1.version must be \"1\"");
@@ -407,7 +400,10 @@ function validateOrchestratorDocument(errors, target) {
   pushUnsupportedKeys(errors, "ORCHESTRATOR_V1", target, ROOT_ALLOWED_KEYS);
   if (!validateRootShape(errors, target)) return;
   validateDefaultsSection(errors, target);
-  validateRuleEntries(errors, target.rules);
+  const ids = new Set();
+  for (const rawRule of target.rules) {
+    validateRuleEntry(errors, ids, rawRule);
+  }
 }
 
 export function validateOrchestratorV1(cfg) {
