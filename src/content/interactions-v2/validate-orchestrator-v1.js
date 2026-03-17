@@ -57,6 +57,14 @@ function getMergedTriggerEntries(ruleLike) {
   ];
 }
 
+function getMergedDefaultsTriggerMap(defaultsLike) {
+  const defaults = asObj(defaultsLike);
+  return Object.freeze({
+    ...asObj(defaults.triggers),
+    ...asObj(defaults.trigger),
+  });
+}
+
 export function validateOrchestratorV1(cfg) {
   const errors = [];
   const target = asObj(cfg);
@@ -89,10 +97,7 @@ export function validateOrchestratorV1(cfg) {
       Object.prototype.hasOwnProperty.call(defaults, "trigger") ||
       Object.prototype.hasOwnProperty.call(defaults, "triggers")
     ) {
-      const defaultsTrigger = Object.freeze({
-        ...asObj(defaults.triggers),
-        ...asObj(defaults.trigger),
-      });
+      const defaultsTrigger = getMergedDefaultsTriggerMap(defaults);
       for (const [rawEventId, args] of Object.entries(defaultsTrigger)) {
         const eventId = normalizeEventId(rawEventId);
         if (!eventId) {
