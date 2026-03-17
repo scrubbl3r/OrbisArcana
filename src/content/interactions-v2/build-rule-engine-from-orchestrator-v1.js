@@ -109,9 +109,7 @@ function mapRule(rule, defaults) {
   if (!id) return null;
   const ruleDefaults = asObj(defaultsRoot.rule);
   const on = [];
-  if (typeof r.on === "string") {
-    pushParsedOnSelectors(on, r.on);
-  } else if (Array.isArray(r.on)) {
+  if (typeof r.on === "string" || Array.isArray(r.on)) {
     pushParsedOnSelectors(on, r.on);
   } else {
     const onRaw = asObj(r.on);
