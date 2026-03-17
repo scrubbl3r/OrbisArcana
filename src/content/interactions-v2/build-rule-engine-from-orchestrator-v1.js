@@ -58,7 +58,11 @@ function mapOpen(open, defaultsOpen) {
   }
   const ttlMs = Object.prototype.hasOwnProperty.call(o, "ttlMs")
     ? o.ttlMs
-    : defaultsOpenSafe.ttlMs;
+    : (Object.prototype.hasOwnProperty.call(o, "ttl")
+      ? o.ttl
+      : (Object.prototype.hasOwnProperty.call(defaultsOpenSafe, "ttlMs")
+        ? defaultsOpenSafe.ttlMs
+        : defaultsOpenSafe.ttl));
   const ttlMsNum = Number(ttlMs);
   if (Number.isFinite(ttlMsNum) && ttlMsNum >= 0) {
     out.ttlMs = ttlMsNum;

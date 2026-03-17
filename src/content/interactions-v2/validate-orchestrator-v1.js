@@ -63,9 +63,12 @@ export function validateOrchestratorV1(cfg) {
     pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults", defaults, ["open", "trigger", "rule"]);
     if (Object.prototype.hasOwnProperty.call(defaults, "open")) {
       const defaultsOpen = asObj(defaults.open);
-      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, ["ttlMs"]);
+      pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, ["ttlMs", "ttl"]);
       if (Object.prototype.hasOwnProperty.call(defaultsOpen, "ttlMs") && !isFiniteNonNegative(defaultsOpen.ttlMs)) {
         errors.push("ORCHESTRATOR_V1.defaults.open.ttlMs must be a finite number >= 0 when present");
+      }
+      if (Object.prototype.hasOwnProperty.call(defaultsOpen, "ttl") && !isFiniteNonNegative(defaultsOpen.ttl)) {
+        errors.push("ORCHESTRATOR_V1.defaults.open.ttl must be a finite number >= 0 when present");
       }
     }
     if (Object.prototype.hasOwnProperty.call(defaults, "trigger")) {
@@ -207,7 +210,7 @@ export function validateOrchestratorV1(cfg) {
         ? Object.freeze({ spells: asSelectorList(rule.open) })
         : asObj(rule.open);
       if (!isStringOpen && !isArrayOpen) {
-        pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, ["spells", "ttlMs", "enabled"]);
+        pushUnsupportedKeys(errors, `rule ${ruleId} open`, open, ["spells", "ttlMs", "ttl", "enabled"]);
       }
       const openSpells = asSelectorList(open.spells);
       if (!openSpells.length) {
@@ -236,6 +239,10 @@ export function validateOrchestratorV1(cfg) {
       if (!isStringOpen && !isArrayOpen &&
         Object.prototype.hasOwnProperty.call(open, "ttlMs") && !isFiniteNonNegative(open.ttlMs)) {
         errors.push(`rule ${ruleId} open ttlMs must be a finite number >= 0 when present`);
+      }
+      if (!isStringOpen && !isArrayOpen &&
+        Object.prototype.hasOwnProperty.call(open, "ttl") && !isFiniteNonNegative(open.ttl)) {
+        errors.push(`rule ${ruleId} open ttl must be a finite number >= 0 when present`);
       }
     }
 

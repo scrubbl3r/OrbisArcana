@@ -267,4 +267,65 @@ if (asJson(orbStateAliasRule.on) !== asJson(expectedOrbStateAliasOn)) {
   );
 }
 
+const openTtlAliasSample = Object.freeze({
+  version: "1",
+  enabled: true,
+  defaults: Object.freeze({ open: Object.freeze({ ttl: 2100 }) }),
+  rules: Object.freeze([
+    Object.freeze({
+      id: "o_open_ttl_alias",
+      on: "rota",
+      open: Object.freeze({ spells: Object.freeze(["sanctum"]), ttl: 900 }),
+    }),
+    Object.freeze({
+      id: "o_open_ttl_default",
+      on: "sanctum",
+      open: Object.freeze({ spells: Object.freeze(["vectus"]) }),
+    }),
+  ]),
+});
+
+let builtOpenTtlAlias;
+try {
+  builtOpenTtlAlias = buildRuleEngineFromOrchestratorV1({
+    orchestratorV1: openTtlAliasSample,
+    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for open ttl alias sample: ${msg}`);
+}
+
+const openTtlRules = Array.isArray(builtOpenTtlAlias?.rules) ? builtOpenTtlAlias.rules : [];
+if (openTtlRules.length !== 2) {
+  failCheck(CHECK_TAG, "open ttl alias sample did not produce expected compiled rules");
+}
+const openAliasRule = openTtlRules.find((rule) => rule?.id === "o_open_ttl_alias");
+const openDefaultRule = openTtlRules.find((rule) => rule?.id === "o_open_ttl_default");
+if (!openAliasRule || !openDefaultRule) {
+  failCheck(CHECK_TAG, "open ttl alias sample rules missing expected ids");
+}
+const aliasWakeAction = Array.isArray(openAliasRule.then)
+  ? openAliasRule.then.find((action) => action?.type === "wake_win")
+  : null;
+if (!aliasWakeAction || aliasWakeAction.ttlMs !== 900) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "open ttl alias did not map to wake_win.ttlMs",
+    [`wake action: ${asJson(aliasWakeAction)}`]
+  );
+}
+const defaultWakeAction = Array.isArray(openDefaultRule.then)
+  ? openDefaultRule.then.find((action) => action?.type === "wake_win")
+  : null;
+if (!defaultWakeAction || defaultWakeAction.ttlMs !== 2100) {
+  failCheckWithDetails(
+    CHECK_TAG,
+    "defaults.open.ttl did not map to wake_win.ttlMs",
+    [`wake action: ${asJson(defaultWakeAction)}`]
+  );
+}
+
 reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");

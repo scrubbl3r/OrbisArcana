@@ -167,6 +167,24 @@ expectValid(
 );
 
 expectValid(
+  "open_ttl_alias",
+  Object.freeze({
+    ...baseline,
+    defaults: Object.freeze({
+      ...baseline.defaults,
+      open: Object.freeze({ ttl: 2100 }),
+    }),
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_open_ttl_alias",
+        on: Object.freeze(["spell:rota"]),
+        open: Object.freeze({ spells: Object.freeze(["sanctum"]), ttl: 900 }),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "legacy_gesture_alias_normalization",
   Object.freeze({
     ...baseline,
