@@ -60,6 +60,15 @@ function resolveRuleTimingValue(rule, defaultsRule, primaryKey, aliasKey, minVal
   return asFiniteAtLeast(raw, minValue);
 }
 
+function resolveRulePriorityValue(rule, defaultsRule) {
+  const ruleSafe = asObj(rule);
+  const defaultsSafe = asObj(defaultsRule);
+  const raw = hasOwn(ruleSafe, "priority")
+    ? ruleSafe.priority
+    : defaultsSafe.priority;
+  return asFiniteNumber(raw);
+}
+
 function asFiniteNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
@@ -139,20 +148,24 @@ const ON_SELECTOR_SOURCES = Object.freeze([
   Object.freeze({ key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId }),
 ]);
 
+function collectOnSelectorsFromObject(target, onRaw) {
+  const sourceObj = asObj(onRaw);
+  for (const source of ON_SELECTOR_SOURCES) {
+    pushNormalizedOnEntries(target, sourceObj[source.key], source.normalize, source.type);
+  }
+}
+
 function compileOnSelectors(rawOn) {
   const on = [];
   if (isSelectorListLike(rawOn)) {
     pushParsedOnSelectors(on, rawOn);
     return on;
   }
-  const onRaw = asObj(rawOn);
-  for (const source of ON_SELECTOR_SOURCES) {
-    pushNormalizedOnEntries(on, onRaw[source.key], source.normalize, source.type);
-  }
+  collectOnSelectorsFromObject(on, rawOn);
   return on;
 }
 
-function mapRule(rule, defaults) {
+function mapRule(rule, defaults, defaultsTriggerByEvent) {
   const r = asObj(rule);
   const defaultsRoot = asObj(defaults);
   const id = asText(r.id);
@@ -160,25 +173,14 @@ function mapRule(rule, defaults) {
   const ruleDefaults = asObj(defaultsRoot.rule);
   const on = compileOnSelectors(r.on);
   if (!on.length) return null;
-  const then = [];
-  const openAction = mapOpen(r.open, defaultsRoot.open);
-  if (openAction) then.push(openAction);
-  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(getMergedTriggerDefaults(defaultsRoot));
-  const triggerActions = getMergedTriggerEntries(r)
-    .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
-    .filter(Boolean);
-  then.push(...triggerActions);
+  const then = compileRuleActions(r, defaultsRoot, defaultsTriggerByEvent);
   const out = {
     id,
     on: Object.freeze(on),
     then: Object.freeze(then),
   };
   copyBooleanEnabledIfPresent(out, r);
-  const hasPriority = hasOwn(r, "priority");
-  const priority = hasPriority
-    ? r.priority
-    : ruleDefaults.priority;
-  const priorityNum = asFiniteNumber(priority);
+  const priorityNum = resolveRulePriorityValue(r, ruleDefaults);
   if (priorityNum != null) {
     out.priority = priorityNum;
   }
@@ -205,6 +207,39 @@ function mapRule(rule, defaults) {
   return Object.freeze(out);
 }
 
+function compileRuleActions(rule, defaultsRoot, defaultsTriggerByEvent) {
+  const source = asObj(rule);
+  const rootDefaults = asObj(defaultsRoot);
+  const actions = [];
+  const openAction = mapOpen(source.open, rootDefaults.open);
+  if (openAction) actions.push(openAction);
+  const triggerActions = getMergedTriggerEntries(source)
+    .map((trigger) => mapTrigger(trigger, defaultsTriggerByEvent))
+    .filter(Boolean);
+  actions.push(...triggerActions);
+  return actions;
+}
+
+function compileRulesFromOrchestrator(orchestratorV1, defaults, defaultsTriggerByEvent) {
+  if (!Array.isArray(orchestratorV1?.rules)) return [];
+  return orchestratorV1.rules
+    .map((rule) => mapRule(rule, defaults, defaultsTriggerByEvent))
+    .filter(Boolean);
+}
+
+function buildRuleEnginePayload(baseRuleEngine, orchestratorEnabled, compiledRules) {
+  return Object.freeze({
+    ...baseRuleEngine,
+    version: "2",
+    enabled: orchestratorEnabled !== false,
+    signals: Object.freeze([]),
+    windows: Object.freeze([]),
+    events: Object.freeze([]),
+    rules: Object.freeze(compiledRules),
+    eventRuntimeBindings: Object.freeze({}),
+  });
+}
+
 export function buildRuleEngineFromOrchestratorV1({
   orchestratorV1 = ORCHESTRATOR_V1,
   baseRuleEngine = {},
@@ -214,17 +249,13 @@ export function buildRuleEngineFromOrchestratorV1({
     throw new Error(`ORCHESTRATOR_V1 validation failed: ${errors.join(" | ")}`);
   }
   const defaults = asObj(orchestratorV1.defaults);
-  const compiledRules = Array.isArray(orchestratorV1.rules)
-    ? orchestratorV1.rules.map((rule) => mapRule(rule, defaults)).filter(Boolean)
-    : [];
-  return Object.freeze({
-    ...baseRuleEngine,
-    version: "2",
-    enabled: orchestratorV1?.enabled !== false,
-    signals: Object.freeze([]),
-    windows: Object.freeze([]),
-    events: Object.freeze([]),
-    rules: Object.freeze(compiledRules),
-    eventRuntimeBindings: Object.freeze({}),
-  });
+  const defaultsTriggerByEvent = normalizeTriggerDefaultsByEvent(
+    getMergedTriggerDefaults(defaults)
+  );
+  const compiledRules = compileRulesFromOrchestrator(
+    orchestratorV1,
+    defaults,
+    defaultsTriggerByEvent
+  );
+  return buildRuleEnginePayload(baseRuleEngine, orchestratorV1?.enabled, compiledRules);
 }

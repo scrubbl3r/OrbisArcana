@@ -31,6 +31,10 @@ function isSelectorListLike(v) {
   return typeof v === "string" || Array.isArray(v);
 }
 
+function isObjectRecord(v) {
+  return !!v && typeof v === "object" && !Array.isArray(v);
+}
+
 function hasOwn(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
@@ -42,6 +46,40 @@ function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
   const allowed = new Set(allowedKeys);
   for (const key of Object.keys(asObj(obj))) {
     if (!allowed.has(key)) errors.push(`${context} contains unsupported key: ${key}`);
+  }
+}
+
+function formatContextKeyPath(context, key) {
+  return context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
+}
+
+function pushFiniteAtLeastErrorWhenPresent(errors, context, obj, key, min) {
+  const source = asObj(obj);
+  if (!hasOwn(source, key)) return;
+  if (!isFiniteAtLeast(source[key], min)) {
+    errors.push(`${formatContextKeyPath(context, key)} must be a finite number >= ${min} when present`);
+  }
+}
+
+function pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, key) {
+  const source = asObj(obj);
+  if (!hasOwn(source, key)) return;
+  if (!isFiniteNonNegative(source[key])) {
+    errors.push(`${formatContextKeyPath(context, key)} must be a finite number >= ${MIN_NONNEGATIVE} when present`);
+  }
+}
+
+function pushBooleanEnabledErrorWhenPresent(errors, context, obj) {
+  const source = asObj(obj);
+  if (hasOwn(source, "enabled") && typeof source.enabled !== "boolean") {
+    errors.push(`${context} enabled must be boolean when present`);
+  }
+}
+
+function pushFiniteNumberErrorWhenPresent(errors, context, obj, key) {
+  const source = asObj(obj);
+  if (hasOwn(source, key) && !isFiniteNumber(source[key])) {
+    errors.push(`${formatContextKeyPath(context, key)} must be a finite number when present`);
   }
 }
 
@@ -132,6 +170,10 @@ function getMergedTriggerEntries(ruleLike) {
   ];
 }
 
+function hasAnyTriggerEntries(ruleLike) {
+  return getMergedTriggerEntries(ruleLike).length > 0;
+}
+
 function getMergedDefaultsTriggerMap(defaultsLike) {
   const defaults = asObj(defaultsLike);
   return Object.freeze({
@@ -186,12 +228,8 @@ export function validateOrchestratorV1(cfg) {
     if (hasOwn(defaults, "open")) {
       const defaultsOpen = asObj(defaults.open);
       pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, DEFAULTS_OPEN_ALLOWED_KEYS);
-      if (hasOwn(defaultsOpen, "ttlMs") && !isFiniteNonNegative(defaultsOpen.ttlMs)) {
-        errors.push(`ORCHESTRATOR_V1.defaults.open.ttlMs must be a finite number >= ${MIN_NONNEGATIVE} when present`);
-      }
-      if (hasOwn(defaultsOpen, "ttl") && !isFiniteNonNegative(defaultsOpen.ttl)) {
-        errors.push(`ORCHESTRATOR_V1.defaults.open.ttl must be a finite number >= ${MIN_NONNEGATIVE} when present`);
-      }
+      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, "ttlMs");
+      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.open", defaultsOpen, "ttl");
     }
     if (
       hasOwn(defaults, "trigger") ||
@@ -207,7 +245,7 @@ export function validateOrchestratorV1(cfg) {
         if (!hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
           errors.push(`ORCHESTRATOR_V1.defaults.trigger references unknown event id: ${rawEventId}`);
         }
-        if (!args || typeof args !== "object" || Array.isArray(args)) {
+        if (!isObjectRecord(args)) {
           errors.push(`ORCHESTRATOR_V1.defaults.trigger[${rawEventId}] must be an object`);
         }
       }
@@ -215,25 +253,11 @@ export function validateOrchestratorV1(cfg) {
     if (hasOwn(defaults, "rule")) {
       const defaultsRule = asObj(defaults.rule);
       pushUnsupportedKeys(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
-      if (hasOwn(defaultsRule, "cooldownMs") && !isFiniteNonNegative(defaultsRule.cooldownMs)) {
-        errors.push(`ORCHESTRATOR_V1.defaults.rule.cooldownMs must be a finite number >= ${MIN_NONNEGATIVE} when present`);
-      }
-      if (hasOwn(defaultsRule, "cooldown") && !isFiniteNonNegative(defaultsRule.cooldown)) {
-        errors.push(`ORCHESTRATOR_V1.defaults.rule.cooldown must be a finite number >= ${MIN_NONNEGATIVE} when present`);
-      }
-      if (hasOwn(defaultsRule, "matchWindowMs")) {
-        if (!isFiniteAtLeast(defaultsRule.matchWindowMs, MIN_MATCH_WINDOW_MS)) {
-          errors.push(`ORCHESTRATOR_V1.defaults.rule.matchWindowMs must be a finite number >= ${MIN_MATCH_WINDOW_MS} when present`);
-        }
-      }
-      if (hasOwn(defaultsRule, "matchWindow")) {
-        if (!isFiniteAtLeast(defaultsRule.matchWindow, MIN_MATCH_WINDOW_MS)) {
-          errors.push(`ORCHESTRATOR_V1.defaults.rule.matchWindow must be a finite number >= ${MIN_MATCH_WINDOW_MS} when present`);
-        }
-      }
-      if (hasOwn(defaultsRule, "priority") && !isFiniteNumber(defaultsRule.priority)) {
-        errors.push("ORCHESTRATOR_V1.defaults.rule.priority must be a finite number when present");
-      }
+      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "cooldownMs");
+      pushFiniteNonNegativeErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "cooldown");
+      pushFiniteAtLeastErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "matchWindowMs", MIN_MATCH_WINDOW_MS);
+      pushFiniteAtLeastErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "matchWindow", MIN_MATCH_WINDOW_MS);
+      pushFiniteNumberErrorWhenPresent(errors, "ORCHESTRATOR_V1.defaults.rule", defaultsRule, "priority");
     }
   }
 
@@ -249,28 +273,12 @@ export function validateOrchestratorV1(cfg) {
     ids.add(ruleId);
 
     pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, RULE_ALLOWED_KEYS);
-    if (hasOwn(rule, "enabled") && typeof rule.enabled !== "boolean") {
-      errors.push(`rule ${ruleId} enabled must be boolean when present`);
-    }
-    if (hasOwn(rule, "priority") && !isFiniteNumber(rule.priority)) {
-      errors.push(`rule ${ruleId} priority must be a finite number when present`);
-    }
-    if (hasOwn(rule, "cooldownMs") && !isFiniteNonNegative(rule.cooldownMs)) {
-      errors.push(`rule ${ruleId} cooldownMs must be a finite number >= ${MIN_NONNEGATIVE} when present`);
-    }
-    if (hasOwn(rule, "cooldown") && !isFiniteNonNegative(rule.cooldown)) {
-      errors.push(`rule ${ruleId} cooldown must be a finite number >= ${MIN_NONNEGATIVE} when present`);
-    }
-    if (hasOwn(rule, "matchWindowMs")) {
-      if (!isFiniteAtLeast(rule.matchWindowMs, MIN_MATCH_WINDOW_MS)) {
-        errors.push(`rule ${ruleId} matchWindowMs must be a finite number >= ${MIN_MATCH_WINDOW_MS} when present`);
-      }
-    }
-    if (hasOwn(rule, "matchWindow")) {
-      if (!isFiniteAtLeast(rule.matchWindow, MIN_MATCH_WINDOW_MS)) {
-        errors.push(`rule ${ruleId} matchWindow must be a finite number >= ${MIN_MATCH_WINDOW_MS} when present`);
-      }
-    }
+    pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId}`, rule);
+    pushFiniteNumberErrorWhenPresent(errors, `rule ${ruleId}`, rule, "priority");
+    pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId}`, rule, "cooldownMs");
+    pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId}`, rule, "cooldown");
+    pushFiniteAtLeastErrorWhenPresent(errors, `rule ${ruleId}`, rule, "matchWindowMs", MIN_MATCH_WINDOW_MS);
+    pushFiniteAtLeastErrorWhenPresent(errors, `rule ${ruleId}`, rule, "matchWindow", MIN_MATCH_WINDOW_MS);
 
     const onEntries = collectOnEntries(rule.on, errors, ruleId);
 
@@ -330,22 +338,14 @@ export function validateOrchestratorV1(cfg) {
           }
         }
       }
-      if (!openIsSelectorList &&
-        hasOwn(open, "enabled") && typeof open.enabled !== "boolean") {
-        errors.push(`rule ${ruleId} open enabled must be boolean when present`);
-      }
-      if (!openIsSelectorList &&
-        hasOwn(open, "ttlMs") && !isFiniteNonNegative(open.ttlMs)) {
-        errors.push(`rule ${ruleId} open ttlMs must be a finite number >= ${MIN_NONNEGATIVE} when present`);
-      }
-      if (!openIsSelectorList &&
-        hasOwn(open, "ttl") && !isFiniteNonNegative(open.ttl)) {
-        errors.push(`rule ${ruleId} open ttl must be a finite number >= ${MIN_NONNEGATIVE} when present`);
+      if (!openIsSelectorList) {
+        pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} open`, open);
+        pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttlMs");
+        pushFiniteNonNegativeErrorWhenPresent(errors, `rule ${ruleId} open`, open, "ttl");
       }
     }
 
-    const triggerEntries = getMergedTriggerEntries(rule);
-    const hasTrigger = triggerEntries.length > 0;
+    const hasTrigger = hasAnyTriggerEntries(rule);
     if (!hasTrigger && !hasOpen) {
       errors.push(`rule ${ruleId} must define open and/or trigger actions`);
       continue;
@@ -353,13 +353,12 @@ export function validateOrchestratorV1(cfg) {
     if (!hasTrigger) {
       continue;
     }
+    const triggerEntries = getMergedTriggerEntries(rule);
     for (const rawTrigger of triggerEntries) {
       const isStringTrigger = typeof rawTrigger === "string";
       const trigger = isStringTrigger ? Object.freeze({ event: rawTrigger }) : asObj(rawTrigger);
       pushUnsupportedKeys(errors, `rule ${ruleId} trigger`, trigger, TRIGGER_ALLOWED_KEYS);
-      if (hasOwn(trigger, "enabled") && typeof trigger.enabled !== "boolean") {
-        errors.push(`rule ${ruleId} trigger enabled must be boolean when present`);
-      }
+      pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId} trigger`, trigger);
       const eventId = normalizeEventId(trigger.event);
       if (!eventId) {
         errors.push(`rule ${ruleId} trigger is missing event`);
@@ -368,7 +367,7 @@ export function validateOrchestratorV1(cfg) {
       }
       if (!isStringTrigger && hasOwn(trigger, "args")) {
         const args = trigger.args;
-        if (!args || typeof args !== "object" || Array.isArray(args)) {
+        if (!isObjectRecord(args)) {
           errors.push(`rule ${ruleId} trigger args must be an object when present`);
         }
       }
