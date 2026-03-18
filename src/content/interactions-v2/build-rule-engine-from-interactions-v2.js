@@ -1,31 +1,31 @@
 import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { validateInteractionsV2 } from "./validate-interactions-v2.js";
+import {
+  asArray,
+  asId,
+  asObj,
+  asText,
+  mapDefined,
+  normalizeEventId,
+  normalizeSpellId,
+  setEnabledIfBoolean,
+} from "./orchestrator-v1-normalizers.js";
 
 const RESERVED_ACTION_KEYS = Object.freeze(new Set(["type", "id", "spells", "overrides", "enabled"]));
-
-function asObj(v) {
-  return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
-}
-
-function asText(v) {
-  if (typeof v === "string") return v.trim();
-  if (v == null) return "";
-  return `${v}`.trim();
-}
-
-function asId(v) {
-  return asText(v).toLowerCase();
-}
 
 function finiteNonNegativeOrUndef(v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 }
 
-function normalizeEventId(eventIdRaw) {
-  const id = asId(eventIdRaw);
-  if (!id) return "";
-  return id.startsWith("event.") ? id.slice("event.".length) : id;
+function resolveWakeWinTtlMs(action, defaultsRoot) {
+  const safeAction = asObj(action);
+  const safeDefaults = asObj(defaultsRoot);
+  return finiteNonNegativeOrUndef(
+    Object.hasOwn(safeAction, "ttlMs")
+      ? safeAction.ttlMs
+      : asObj(safeDefaults.wakeWin).ttlMs
+  );
 }
 
 function normalizeEventDefaultsMap(defaultsEventRaw) {
@@ -63,54 +63,113 @@ function mapCondition(cond) {
   return Object.freeze({ type, id });
 }
 
+function mapWakeWinAction(action, defaultsRoot) {
+  const a = asObj(action);
+  const spells = mapDefined(asArray(a.spells), (spellId) => normalizeSpellId(spellId));
+  const ttlMs = resolveWakeWinTtlMs(a, defaultsRoot);
+  const out = { type: "wake_win", spells };
+  if (ttlMs !== undefined) out.ttlMs = ttlMs;
+  setEnabledIfBoolean(out, a);
+  return Object.freeze(out);
+}
+
+function mapEventAction(action, defaultsEventById) {
+  const a = asObj(action);
+  const id = normalizeEventId(a.id);
+  if (!id) return null;
+  const out = { type: "event", id, ...collectEventArgs(a, asObj(defaultsEventById[id])) };
+  setEnabledIfBoolean(out, a);
+  return Object.freeze(out);
+}
+
 function mapAction(action, defaults, defaultsEventById) {
   const a = asObj(action);
-  const defaultsRoot = asObj(defaults);
   const type = asId(a.type);
-  if (type === "wake_win") {
-    const spells = Array.isArray(a.spells)
-      ? a.spells.map((s) => {
-          const raw = asId(s);
-          return raw.startsWith("spell.") ? raw.slice("spell.".length) : raw;
-        }).filter(Boolean)
-      : [];
-    const ttlMs = finiteNonNegativeOrUndef(
-      Object.prototype.hasOwnProperty.call(a, "ttlMs")
-        ? a.ttlMs
-        : asObj(defaultsRoot.wakeWin).ttlMs
-    );
-    const out = { type: "wake_win", spells };
-    if (ttlMs !== undefined) out.ttlMs = ttlMs;
-    if (Object.prototype.hasOwnProperty.call(a, "enabled") && typeof a.enabled === "boolean") out.enabled = a.enabled;
-    return Object.freeze(out);
-  }
-  if (type === "event") {
-    const id = normalizeEventId(a.id);
-    if (!id) return null;
-    const out = { type: "event", id, ...collectEventArgs(a, asObj(defaultsEventById[id])) };
-    if (Object.prototype.hasOwnProperty.call(a, "enabled") && typeof a.enabled === "boolean") out.enabled = a.enabled;
-    return Object.freeze(out);
-  }
+  if (type === "wake_win") return mapWakeWinAction(a, defaults);
+  if (type === "event") return mapEventAction(a, defaultsEventById);
   return null;
 }
 
-function mapRule(rule, defaults) {
-  const r = asObj(rule);
-  const defaultsRoot = asObj(defaults);
-  const id = asText(r.id);
-  if (!id) return null;
-  const onRoot = asObj(r.on);
-  const onAll = Array.isArray(onRoot.all) ? onRoot.all : [];
-  const conditions = onAll.map(mapCondition).filter(Boolean);
-  const defaultsEventById = normalizeEventDefaultsMap(asObj(defaultsRoot.event));
-  const actions = (Array.isArray(r.then) ? r.then : [])
-    .map((a) => mapAction(a, defaultsRoot, defaultsEventById))
-    .filter(Boolean);
-  const out = { id, on: Object.freeze(conditions), then: Object.freeze(actions) };
-  if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled === "boolean") out.enabled = r.enabled;
-  const priorityNum = Number(r.priority);
+function getRuleOnAll(rule) {
+  const safeRule = asObj(rule);
+  const onRoot = asObj(safeRule.on);
+  return asArray(onRoot.all);
+}
+
+function getRuleThenActions(rule) {
+  const safeRule = asObj(rule);
+  return asArray(safeRule.then);
+}
+
+function resolveRuleId(rule) {
+  return asText(rule.id);
+}
+
+function mapRuleConditions(rule) {
+  return mapDefined(getRuleOnAll(rule), mapCondition);
+}
+
+function mapRuleActions(rule, defaultsRoot, defaultsEventById) {
+  return mapDefined(
+    getRuleThenActions(rule),
+    (action) => mapAction(action, defaultsRoot, defaultsEventById)
+  );
+}
+
+function applyRuleMetadata(out, rule) {
+  const safeRule = asObj(rule);
+  setEnabledIfBoolean(out, safeRule);
+  const priorityNum = Number(safeRule.priority);
   if (Number.isFinite(priorityNum)) out.priority = priorityNum;
+}
+
+function mapRule(rule, defaults, defaultsEventById) {
+  const r = asObj(rule);
+  const id = resolveRuleId(r);
+  if (!id) return null;
+  const conditions = mapRuleConditions(r);
+  const actions = mapRuleActions(r, defaults, defaultsEventById);
+  const out = { id, on: Object.freeze(conditions), then: Object.freeze(actions) };
+  applyRuleMetadata(out, r);
   return Object.freeze(out);
+}
+
+function throwIfInteractionsInvalid(interactionsV2) {
+  const validation = validateInteractionsV2(interactionsV2);
+  if (!validation.ok) {
+    throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
+  }
+}
+
+function buildCompileContext(interactionsV2) {
+  const defaultsRoot = asObj(interactionsV2.defaults);
+  return {
+    defaultsRoot,
+    defaultsEventById: normalizeEventDefaultsMap(asObj(defaultsRoot.event)),
+  };
+}
+
+function unpackCompileContext(compileContext) {
+  return {
+    defaultsRoot: compileContext.defaultsRoot,
+    defaultsEventById: compileContext.defaultsEventById,
+  };
+}
+
+function mapCompiledRules(interactionsV2, compileContext) {
+  const { defaultsRoot, defaultsEventById } = unpackCompileContext(compileContext);
+  return mapDefined(
+    asArray(interactionsV2.rules),
+    (rule) => mapRule(rule, defaultsRoot, defaultsEventById)
+  );
+}
+
+function buildRuntimeEnvelope(baseRuleEngine, interactionsV2, rules) {
+  return Object.freeze({
+    ...baseRuleEngine,
+    rules: Object.freeze(rules),
+    enabled: interactionsV2.enabled !== false,
+  });
 }
 
 export function buildRuleEngineFromInteractionsV2(options = {}) {
@@ -118,31 +177,15 @@ export function buildRuleEngineFromInteractionsV2(options = {}) {
     interactionsV2 = INTERACTIONS_V2,
     baseRuleEngine = null,
   } = options;
-  const validation = validateInteractionsV2(interactionsV2);
-  if (!validation.ok) {
-    throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
-  }
+  throwIfInteractionsInvalid(interactionsV2);
   const base = asObj(baseRuleEngine);
-  const defaultsRoot = asObj(interactionsV2.defaults);
-  const rules = Array.isArray(interactionsV2.rules)
-    ? interactionsV2.rules.map((r) => mapRule(r, defaultsRoot)).filter(Boolean)
-    : [];
-  return Object.freeze({
-    ...base,
-    rules: Object.freeze(rules),
-    enabled: interactionsV2.enabled !== false,
-  });
+  const compileContext = buildCompileContext(interactionsV2);
+  const rules = mapCompiledRules(interactionsV2, compileContext);
+  return buildRuntimeEnvelope(base, interactionsV2, rules);
 }
 
 export function buildRulesFromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
-  const validation = validateInteractionsV2(interactionsV2);
-  if (!validation.ok) {
-    throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
-  }
-  const defaultsRoot = asObj(interactionsV2.defaults);
-  return Object.freeze(
-    (Array.isArray(interactionsV2.rules) ? interactionsV2.rules : [])
-      .map((r) => mapRule(r, defaultsRoot))
-      .filter(Boolean)
-  );
+  throwIfInteractionsInvalid(interactionsV2);
+  const compileContext = buildCompileContext(interactionsV2);
+  return Object.freeze(mapCompiledRules(interactionsV2, compileContext));
 }

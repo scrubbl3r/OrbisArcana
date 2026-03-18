@@ -3,18 +3,25 @@ import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
 import { EVENT_DEFINITIONS_BY_ID } from "../spell-rules/event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import { SIGNAL_DEFINITIONS_BY_ID } from "../spell-rules/signal-definitions.js";
+import {
+  asObj,
+  asText,
+  hasNonEmptyArray,
+  isPlainObject,
+  normalizeEventId,
+  normalizeSpellId,
+  pushUnsupportedKeys,
+  requireNonEmptyArray,
+} from "./orchestrator-v1-normalizers.js";
 
 const WAKE_WIN_ALLOWED_KEYS = Object.freeze(new Set(["type", "spells", "ttlMs", "enabled"]));
-
-function asObj(v) {
-  return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
-}
-
-function asText(v) {
-  if (typeof v === "string") return v.trim();
-  if (v == null) return "";
-  return `${v}`.trim();
-}
+const ROOT_ALLOWED_KEYS = Object.freeze(new Set(["version", "enabled", "defaults", "rules"]));
+const DEFAULTS_ALLOWED_KEYS = Object.freeze(new Set(["wakeWin", "event"]));
+const DEFAULTS_WAKE_WIN_ALLOWED_KEYS = Object.freeze(new Set(["ttlMs"]));
+const RULE_ALLOWED_KEYS = Object.freeze(new Set(["id", "on", "then", "enabled", "priority"]));
+const RULE_ON_ALLOWED_KEYS = Object.freeze(new Set(["all"]));
+const RULE_CONDITION_ALLOWED_KEYS = Object.freeze(new Set(["type", "id"]));
+const RULE_ACTION_TYPES = Object.freeze(new Set(["wake_win", "event"]));
 
 function isFiniteNonNegative(v) {
   const n = Number(v);
@@ -23,13 +30,6 @@ function isFiniteNonNegative(v) {
 
 function isEntityIdLike(v) {
   return typeof v === "string" && /^[A-Za-z0-9_]+$/.test(v);
-}
-
-function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
-  const allowed = new Set(allowedKeys);
-  for (const key of Object.keys(asObj(obj))) {
-    if (!allowed.has(key)) errors.push(`${context} contains unsupported key: ${key}`);
-  }
 }
 
 function normalizeConditionId(type, idRaw) {
@@ -51,18 +51,6 @@ function isBareNamespaceId(idRaw) {
   return /^[a-z_]+\.$/.test(asText(idRaw).toLowerCase());
 }
 
-function normalizeSpellId(spellIdRaw) {
-  const id = asText(spellIdRaw).toLowerCase();
-  if (!id) return "";
-  return id.startsWith("spell.") ? id.slice("spell.".length) : id;
-}
-
-function normalizeEventId(eventIdRaw) {
-  const id = asText(eventIdRaw).toLowerCase();
-  if (!id) return "";
-  return id.startsWith("event.") ? id.slice("event.".length) : id;
-}
-
 function getSignalIdsByPrefix(prefix) {
   const source = (typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
     ? SIGNAL_DEFINITIONS_BY_ID
@@ -80,12 +68,271 @@ const KNOWN_GESTURE_IDS = new Set(
 const KNOWN_ORB_STATE_IDS = new Set(
   getSignalIdsByPrefix("orb_state.")
 );
+const CONDITION_TYPE_CHECKERS = Object.freeze({
+  spell: (id) => Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id),
+  gesture: (id) => KNOWN_GESTURE_IDS.has(id),
+  orb_state: (id) => KNOWN_ORB_STATE_IDS.has(id),
+});
+const CONDITION_TYPE_UNKNOWN_MESSAGES = Object.freeze({
+  spell: "inactive or unknown spell id",
+  gesture: "unknown gesture id",
+  orb_state: "unknown orb_state id",
+});
 
-export function validateInteractionsV2(input = INTERACTIONS_V2) {
-  const errors = [];
-  const cfg = asObj(input);
-  pushUnsupportedKeys(errors, "INTERACTIONS_V2", cfg, ["version", "enabled", "defaults", "rules"]);
+function validateOptionalObjectSection(source, key, validateSectionFn) {
+  if (!Object.hasOwn(source, key)) return;
+  validateSectionFn(asObj(source[key]));
+}
 
+function pushFiniteNonNegativeWhenPresent(errors, context, obj, key) {
+  if (!Object.hasOwn(obj, key)) return;
+  if (!isFiniteNonNegative(obj[key])) {
+    errors.push(`${context}.${key} must be a finite number >= 0 when present`);
+  }
+}
+
+function pushBooleanEnabledErrorWhenPresent(errors, context, source, label = "enabled") {
+  if (Object.hasOwn(source, "enabled") && typeof source.enabled !== "boolean") {
+    errors.push(`${context} ${label} must be boolean when present`);
+  }
+}
+
+function validateWakeWinSpells(errors, ruleId, action) {
+  if (!Array.isArray(action.spells) || !action.spells.length) {
+    errors.push(`rule ${ruleId} wake_win action requires spells[]`);
+    return;
+  }
+  const seenWakeWinSpells = new Set();
+  for (const spellId of action.spells) {
+    const id = asText(spellId);
+    const normalizedSpellId = normalizeSpellId(id);
+    const spellQualifiedPrefix = getQualifiedPrefix(id);
+    if (spellQualifiedPrefix && spellQualifiedPrefix !== "spell") {
+      errors.push(
+        `rule ${ruleId} wake_win spell prefix mismatch: ${id} (expected spell.* or unqualified id)`
+      );
+    }
+    if (!isEntityIdLike(id) && !isEntityIdLike(normalizedSpellId)) {
+      errors.push(`rule ${ruleId} wake_win spell has invalid id shape: ${id}`);
+      continue;
+    }
+    if (!normalizedSpellId) {
+      if (isBareNamespaceId(id)) {
+        errors.push(`rule ${ruleId} wake_win spell id is incomplete: ${id} (missing value after prefix)`);
+      } else {
+        errors.push(`rule ${ruleId} wake_win spell id is empty`);
+      }
+      continue;
+    }
+    if (seenWakeWinSpells.has(normalizedSpellId)) {
+      errors.push(`rule ${ruleId} wake_win contains duplicate spell id: ${id}`);
+    }
+    seenWakeWinSpells.add(normalizedSpellId);
+    if (!Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedSpellId)) {
+      errors.push(`rule ${ruleId} wake_win references inactive or unknown spell id: ${id}`);
+    }
+  }
+}
+
+function validateEventActionId(errors, ruleId, action) {
+  const eventId = asText(action.id);
+  const normalizedEventId = normalizeEventId(eventId);
+  const eventQualifiedPrefix = getQualifiedPrefix(eventId);
+  if (!eventId) {
+    errors.push(`rule ${ruleId} event action requires id`);
+  } else if (eventQualifiedPrefix && eventQualifiedPrefix !== "event") {
+    errors.push(
+      `rule ${ruleId} event id prefix mismatch: ${eventId} (expected event.* or unqualified id)`
+    );
+  } else if (!isEntityIdLike(normalizedEventId)) {
+    if (isBareNamespaceId(eventId)) {
+      errors.push(`rule ${ruleId} event action id is incomplete: ${eventId} (missing value after prefix)`);
+    } else {
+      errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
+    }
+  } else if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, normalizedEventId)) {
+    errors.push(`rule ${ruleId} event action references unknown event id: ${eventId}`);
+  } else if (!Object.hasOwn(EVENT_RUNTIME_BINDINGS_BY_ID, normalizedEventId)) {
+    errors.push(`rule ${ruleId} event action references event without runtime binding: ${eventId}`);
+  }
+}
+
+function validateEventActionOverrides(errors, ruleId, action) {
+  if (!Object.hasOwn(action, "overrides")) return;
+  const overrides = action.overrides;
+  if (!isPlainObject(overrides)) {
+    errors.push(`rule ${ruleId} event action overrides must be an object when present`);
+    return;
+  }
+  for (const key of Object.keys(overrides)) {
+    if (!key) errors.push(`rule ${ruleId} event action overrides contains empty key`);
+    if (Object.hasOwn(action, key)) {
+      errors.push(`rule ${ruleId} event action has duplicate key in root and overrides: ${key}`);
+    }
+  }
+}
+
+function validateDefaultsWakeWin(errors, defaults) {
+  validateOptionalObjectSection(defaults, "wakeWin", (wakeWin) => {
+    const wakeWinContext = "INTERACTIONS_V2.defaults.wakeWin";
+    pushUnsupportedKeys(errors, wakeWinContext, wakeWin, DEFAULTS_WAKE_WIN_ALLOWED_KEYS);
+    pushFiniteNonNegativeWhenPresent(errors, wakeWinContext, wakeWin, "ttlMs");
+  });
+}
+
+function validateDefaultsEventEntry(errors, seenDefaultEventIds, eventId, eventArgs) {
+  const normalizedEventId = normalizeEventId(eventId);
+  const eventQualifiedPrefix = getQualifiedPrefix(eventId);
+  if (eventQualifiedPrefix && eventQualifiedPrefix !== "event") {
+    errors.push(
+      `INTERACTIONS_V2.defaults.event key prefix mismatch: ${eventId} (expected event.* or unqualified id)`
+    );
+  } else if (!isEntityIdLike(normalizedEventId)) {
+    if (isBareNamespaceId(eventId)) {
+      errors.push(`INTERACTIONS_V2.defaults.event key is incomplete: ${eventId} (missing value after prefix)`);
+    } else {
+      errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
+    }
+  } else if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, normalizedEventId)) {
+    errors.push(`INTERACTIONS_V2.defaults.event references unknown event id: ${eventId}`);
+  } else if (seenDefaultEventIds.has(normalizedEventId)) {
+    errors.push(`INTERACTIONS_V2.defaults.event contains duplicate normalized key: ${eventId}`);
+  } else {
+    seenDefaultEventIds.add(normalizedEventId);
+  }
+  if (!isPlainObject(eventArgs)) {
+    errors.push(`INTERACTIONS_V2.defaults.event[${eventId}] must be an object`);
+  }
+}
+
+function validateDefaultsEvent(errors, defaults) {
+  validateOptionalObjectSection(defaults, "event", (eventDefaults) => {
+    const seenDefaultEventIds = new Set();
+    for (const [eventId, eventArgs] of Object.entries(eventDefaults)) {
+      validateDefaultsEventEntry(errors, seenDefaultEventIds, eventId, eventArgs);
+    }
+  });
+}
+
+function validateRuleConditionCore(errors, ruleId, cond) {
+  pushUnsupportedKeys(errors, `rule ${ruleId} condition`, cond, RULE_CONDITION_ALLOWED_KEYS);
+  const type = asText(cond.type).toLowerCase();
+  const id = asText(cond.id);
+  const normalizedId = normalizeConditionId(type, id);
+  if (!type) errors.push(`rule ${ruleId} has on.all condition missing type`);
+  if (!id) errors.push(`rule ${ruleId} has on.all condition missing id`);
+  if (type && type !== "spell" && type !== "gesture" && type !== "orb_state") {
+    errors.push(`rule ${ruleId} has unsupported on.all condition type: ${type}`);
+  }
+  const qualifiedPrefix = getQualifiedPrefix(id);
+  if (type && qualifiedPrefix && qualifiedPrefix !== type) {
+    errors.push(
+      `rule ${ruleId} condition type/id prefix mismatch: type=${type} id=${id} (expected ${type}.* or unqualified id)`
+    );
+  }
+  if (id && !isEntityIdLike(normalizedId)) {
+    if (isBareNamespaceId(id)) {
+      errors.push(`rule ${ruleId} has incomplete on.all id: ${id} (missing value after prefix)`);
+    } else {
+      errors.push(`rule ${ruleId} has invalid on.all id shape (use letters/numbers/_): ${id}`);
+    }
+  }
+  return { type, id, normalizedId };
+}
+
+function validateRuleConditions(errors, ruleId, onAll) {
+  const seenConditions = new Set();
+  for (const c of onAll) {
+    const cond = asObj(c);
+    const { type, id, normalizedId } = validateRuleConditionCore(errors, ruleId, cond);
+    const condKey = `${type}:${normalizedId}`;
+    if (type && id) {
+      if (seenConditions.has(condKey)) {
+        errors.push(`rule ${ruleId} contains duplicate on.all condition: ${type}.${id}`);
+      }
+      seenConditions.add(condKey);
+    }
+    const isKnownForType = CONDITION_TYPE_CHECKERS[type];
+    if (id && typeof isKnownForType === "function" && !isKnownForType(normalizedId)) {
+      errors.push(`rule ${ruleId} references ${CONDITION_TYPE_UNKNOWN_MESSAGES[type]}: ${id}`);
+    }
+  }
+}
+
+function getValidatedActionType(errors, ruleId, action) {
+  pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId}`, action, "action enabled");
+  const type = asText(action.type).toLowerCase();
+  if (!RULE_ACTION_TYPES.has(type)) {
+    errors.push(`rule ${ruleId} has unsupported action type: ${type || "(empty)"}`);
+    return "";
+  }
+  return type;
+}
+
+function validateWakeWinAction(errors, ruleId, action) {
+  if (Object.hasOwn(action, "ms")) {
+    errors.push(`rule ${ruleId} wake_win should use ttlMs, not ms`);
+  }
+  const wakeWinContext = `rule ${ruleId} wake_win`;
+  pushUnsupportedKeys(errors, wakeWinContext, action, WAKE_WIN_ALLOWED_KEYS);
+  validateWakeWinSpells(errors, ruleId, action);
+  pushFiniteNonNegativeWhenPresent(errors, wakeWinContext, action, "ttlMs");
+}
+
+function validateEventAction(errors, ruleId, action) {
+  validateEventActionId(errors, ruleId, action);
+  validateEventActionOverrides(errors, ruleId, action);
+}
+
+const ACTION_VALIDATORS_BY_TYPE = Object.freeze({
+  wake_win: validateWakeWinAction,
+  event: validateEventAction,
+});
+
+function validateRuleActions(errors, ruleId, thenActions) {
+  for (const a of thenActions) {
+    const action = asObj(a);
+    const type = getValidatedActionType(errors, ruleId, action);
+    if (!type) continue;
+    ACTION_VALIDATORS_BY_TYPE[type](errors, ruleId, action);
+  }
+}
+
+function registerRuleId(errors, ids, ruleRaw) {
+  const rule = asObj(ruleRaw);
+  const ruleId = asText(rule.id);
+  if (!ruleId) {
+    errors.push("INTERACTIONS_V2.rules[] entry is missing id");
+    return null;
+  }
+  if (ids.has(ruleId)) {
+    errors.push(`INTERACTIONS_V2.rules contains duplicate id: ${ruleId}`);
+  }
+  ids.add(ruleId);
+  return { rule, ruleId };
+}
+
+function validateRulePriority(errors, ruleId, rule) {
+  const rulePriorityNum = Number(rule.priority);
+  if (Object.hasOwn(rule, "priority") && !Number.isFinite(rulePriorityNum)) {
+    errors.push(`rule ${ruleId} priority must be a finite number when present`);
+  }
+}
+
+function validateRuleOnSection(errors, ruleId, rule) {
+  const on = asObj(rule.on);
+  pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, RULE_ON_ALLOWED_KEYS);
+  if (!requireNonEmptyArray(errors, on.all, `rule ${ruleId} must define on.all[]`)) return;
+  validateRuleConditions(errors, ruleId, on.all);
+}
+
+function validateRuleThenSection(errors, ruleId, rule) {
+  if (!requireNonEmptyArray(errors, rule.then, `rule ${ruleId} must define then[] actions`)) return;
+  validateRuleActions(errors, ruleId, rule.then);
+}
+
+function validateRootShape(errors, cfg) {
+  pushUnsupportedKeys(errors, "INTERACTIONS_V2", cfg, ROOT_ALLOWED_KEYS);
   if (asText(cfg.version) !== "2") {
     errors.push("INTERACTIONS_V2.version must be \"2\"");
   }
@@ -94,222 +341,46 @@ export function validateInteractionsV2(input = INTERACTIONS_V2) {
   }
   if (!Array.isArray(cfg.rules)) {
     errors.push("INTERACTIONS_V2.rules must be an array");
-    return { ok: false, errors };
+    return false;
   }
-  if (Object.prototype.hasOwnProperty.call(cfg, "defaults")) {
-    const defaults = asObj(cfg.defaults);
-    pushUnsupportedKeys(errors, "INTERACTIONS_V2.defaults", defaults, ["wakeWin", "event"]);
-    if (Object.prototype.hasOwnProperty.call(defaults, "wakeWin")) {
-      const wakeWin = asObj(defaults.wakeWin);
-      for (const key of Object.keys(wakeWin)) {
-        if (key !== "ttlMs") {
-          errors.push(`INTERACTIONS_V2.defaults.wakeWin contains unsupported key: ${key}`);
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(wakeWin, "ttlMs") && !isFiniteNonNegative(wakeWin.ttlMs)) {
-        errors.push("INTERACTIONS_V2.defaults.wakeWin.ttlMs must be a finite number >= 0 when present");
-      }
-    }
-    if (Object.prototype.hasOwnProperty.call(defaults, "event")) {
-      const eventDefaults = asObj(defaults.event);
-      const seenDefaultEventIds = new Set();
-      for (const [eventId, eventArgs] of Object.entries(eventDefaults)) {
-        const normalizedEventId = normalizeEventId(eventId);
-        const eventQualifiedPrefix = getQualifiedPrefix(eventId);
-        if (eventQualifiedPrefix && eventQualifiedPrefix !== "event") {
-          errors.push(
-            `INTERACTIONS_V2.defaults.event key prefix mismatch: ${eventId} (expected event.* or unqualified id)`
-          );
-        } else if (!isEntityIdLike(normalizedEventId)) {
-          if (isBareNamespaceId(eventId)) {
-            errors.push(`INTERACTIONS_V2.defaults.event key is incomplete: ${eventId} (missing value after prefix)`);
-          } else {
-            errors.push(`INTERACTIONS_V2.defaults.event key has invalid id shape: ${eventId}`);
-          }
-        } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_BY_ID, normalizedEventId)) {
-          errors.push(`INTERACTIONS_V2.defaults.event references unknown event id: ${eventId}`);
-        } else if (seenDefaultEventIds.has(normalizedEventId)) {
-          errors.push(`INTERACTIONS_V2.defaults.event contains duplicate normalized key: ${eventId}`);
-        } else {
-          seenDefaultEventIds.add(normalizedEventId);
-        }
-        if (!eventArgs || typeof eventArgs !== "object" || Array.isArray(eventArgs)) {
-          errors.push(`INTERACTIONS_V2.defaults.event[${eventId}] must be an object`);
-        }
-      }
-    }
-  }
+  return true;
+}
+
+function validateDefaultsCore(errors, defaults) {
+  pushUnsupportedKeys(errors, "INTERACTIONS_V2.defaults", defaults, DEFAULTS_ALLOWED_KEYS);
+  validateDefaultsWakeWin(errors, defaults);
+  validateDefaultsEvent(errors, defaults);
+}
+
+function validateDefaultsSection(errors, cfg) {
+  validateOptionalObjectSection(cfg, "defaults", (defaults) => {
+    validateDefaultsCore(errors, defaults);
+  });
+}
+
+function validateRuleCore(errors, ruleId, rule) {
+  pushUnsupportedKeys(errors, `rule ${ruleId}`, rule, RULE_ALLOWED_KEYS);
+  pushBooleanEnabledErrorWhenPresent(errors, `rule ${ruleId}`, rule);
+  validateRulePriority(errors, ruleId, rule);
+}
+
+function validateRuleEntry(errors, ids, ruleRaw) {
+  const resolved = registerRuleId(errors, ids, ruleRaw);
+  if (!resolved) return;
+  const { rule: r, ruleId } = resolved;
+  validateRuleCore(errors, ruleId, r);
+  validateRuleOnSection(errors, ruleId, r);
+  validateRuleThenSection(errors, ruleId, r);
+}
+
+export function validateInteractionsV2(input = INTERACTIONS_V2) {
+  const errors = [];
+  const cfg = asObj(input);
+  if (!validateRootShape(errors, cfg)) return { ok: false, errors };
+  validateDefaultsSection(errors, cfg);
 
   const ids = new Set();
-  for (const rule of cfg.rules) {
-    const r = asObj(rule);
-    const ruleId = asText(r.id);
-    if (!ruleId) {
-      errors.push("INTERACTIONS_V2.rules[] entry is missing id");
-      continue;
-    }
-    if (ids.has(ruleId)) {
-      errors.push(`INTERACTIONS_V2.rules contains duplicate id: ${ruleId}`);
-    }
-    ids.add(ruleId);
-    pushUnsupportedKeys(errors, `rule ${ruleId}`, r, ["id", "on", "then", "enabled", "priority"]);
-    if (Object.prototype.hasOwnProperty.call(r, "enabled") && typeof r.enabled !== "boolean") {
-      errors.push(`rule ${ruleId} enabled must be boolean when present`);
-    }
-    const rulePriorityNum = Number(r.priority);
-    if (Object.prototype.hasOwnProperty.call(r, "priority") && !Number.isFinite(rulePriorityNum)) {
-      errors.push(`rule ${ruleId} priority must be a finite number when present`);
-    }
-
-    const on = asObj(r.on);
-    pushUnsupportedKeys(errors, `rule ${ruleId} on`, on, ["all"]);
-    if (!Array.isArray(on.all) || !on.all.length) {
-      errors.push(`rule ${ruleId} must define on.all[]`);
-    } else {
-      const seenConditions = new Set();
-      for (const c of on.all) {
-        const cond = asObj(c);
-        pushUnsupportedKeys(errors, `rule ${ruleId} condition`, cond, ["type", "id"]);
-        const type = asText(cond.type).toLowerCase();
-        const id = asText(cond.id);
-        const normalizedId = normalizeConditionId(type, id);
-        if (!type) errors.push(`rule ${ruleId} has on.all condition missing type`);
-        if (!id) errors.push(`rule ${ruleId} has on.all condition missing id`);
-        const condKey = `${type}:${normalizedId}`;
-        if (type && id) {
-          if (seenConditions.has(condKey)) {
-            errors.push(`rule ${ruleId} contains duplicate on.all condition: ${type}.${id}`);
-          }
-          seenConditions.add(condKey);
-        }
-        if (type && type !== "spell" && type !== "gesture" && type !== "orb_state") {
-          errors.push(`rule ${ruleId} has unsupported on.all condition type: ${type}`);
-        }
-        const qualifiedPrefix = getQualifiedPrefix(id);
-        if (type && qualifiedPrefix && qualifiedPrefix !== type) {
-          errors.push(
-            `rule ${ruleId} condition type/id prefix mismatch: type=${type} id=${id} (expected ${type}.* or unqualified id)`
-          );
-        }
-        if (id && !isEntityIdLike(normalizedId)) {
-          if (isBareNamespaceId(id)) {
-            errors.push(`rule ${ruleId} has incomplete on.all id: ${id} (missing value after prefix)`);
-          } else {
-            errors.push(`rule ${ruleId} has invalid on.all id shape (use letters/numbers/_): ${id}`);
-          }
-        }
-        if (type === "spell" && id && !Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedId)) {
-          errors.push(`rule ${ruleId} references inactive or unknown spell id: ${id}`);
-        }
-        if (type === "gesture" && id && !KNOWN_GESTURE_IDS.has(normalizedId)) {
-          errors.push(`rule ${ruleId} references unknown gesture id: ${id}`);
-        }
-        if (type === "orb_state" && id && !KNOWN_ORB_STATE_IDS.has(normalizedId)) {
-          errors.push(`rule ${ruleId} references unknown orb_state id: ${id}`);
-        }
-      }
-    }
-
-    if (!Array.isArray(r.then) || !r.then.length) {
-      errors.push(`rule ${ruleId} must define then[] actions`);
-    } else {
-      for (const a of r.then) {
-        const action = asObj(a);
-        const type = asText(action.type).toLowerCase();
-        if (Object.prototype.hasOwnProperty.call(action, "enabled") && typeof action.enabled !== "boolean") {
-          errors.push(`rule ${ruleId} action enabled must be boolean when present`);
-        }
-        if (type !== "wake_win" && type !== "event") {
-          errors.push(`rule ${ruleId} has unsupported action type: ${type || "(empty)"}`);
-          continue;
-        }
-        if (type === "wake_win") {
-          if (Object.prototype.hasOwnProperty.call(action, "ms")) {
-            errors.push(`rule ${ruleId} wake_win should use ttlMs, not ms`);
-          }
-          for (const key of Object.keys(action)) {
-            if (!WAKE_WIN_ALLOWED_KEYS.has(key)) {
-              errors.push(`rule ${ruleId} wake_win contains unsupported key: ${key}`);
-            }
-          }
-          if (!Array.isArray(action.spells) || !action.spells.length) {
-            errors.push(`rule ${ruleId} wake_win action requires spells[]`);
-          } else {
-            const seenWakeWinSpells = new Set();
-            for (const spellId of action.spells) {
-              const id = asText(spellId);
-              const normalizedSpellId = normalizeSpellId(id);
-              const spellQualifiedPrefix = getQualifiedPrefix(id);
-              if (spellQualifiedPrefix && spellQualifiedPrefix !== "spell") {
-                errors.push(
-                  `rule ${ruleId} wake_win spell prefix mismatch: ${id} (expected spell.* or unqualified id)`
-                );
-              }
-              if (!isEntityIdLike(id)) {
-                if (!isEntityIdLike(normalizedSpellId)) {
-                  errors.push(`rule ${ruleId} wake_win spell has invalid id shape: ${id}`);
-                  continue;
-                }
-              }
-              if (!normalizedSpellId) {
-                if (isBareNamespaceId(id)) {
-                  errors.push(`rule ${ruleId} wake_win spell id is incomplete: ${id} (missing value after prefix)`);
-                } else {
-                  errors.push(`rule ${ruleId} wake_win spell id is empty`);
-                }
-                continue;
-              }
-              if (seenWakeWinSpells.has(normalizedSpellId)) {
-                errors.push(`rule ${ruleId} wake_win contains duplicate spell id: ${id}`);
-              }
-              seenWakeWinSpells.add(normalizedSpellId);
-              if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedSpellId)) {
-                errors.push(`rule ${ruleId} wake_win references inactive or unknown spell id: ${id}`);
-              }
-            }
-          }
-          if (Object.prototype.hasOwnProperty.call(action, "ttlMs") && !isFiniteNonNegative(action.ttlMs)) {
-            errors.push(`rule ${ruleId} wake_win ttlMs must be a finite number >= 0 when present`);
-          }
-        }
-        if (type === "event") {
-          const eventId = asText(action.id);
-          const normalizedEventId = normalizeEventId(eventId);
-          const eventQualifiedPrefix = getQualifiedPrefix(eventId);
-          if (!eventId) {
-            errors.push(`rule ${ruleId} event action requires id`);
-          } else if (eventQualifiedPrefix && eventQualifiedPrefix !== "event") {
-            errors.push(
-              `rule ${ruleId} event id prefix mismatch: ${eventId} (expected event.* or unqualified id)`
-            );
-          } else if (!isEntityIdLike(normalizedEventId)) {
-            if (isBareNamespaceId(eventId)) {
-              errors.push(`rule ${ruleId} event action id is incomplete: ${eventId} (missing value after prefix)`);
-            } else {
-              errors.push(`rule ${ruleId} event action has invalid id shape: ${eventId}`);
-            }
-          } else if (!Object.prototype.hasOwnProperty.call(EVENT_DEFINITIONS_BY_ID, normalizedEventId)) {
-            errors.push(`rule ${ruleId} event action references unknown event id: ${eventId}`);
-          } else if (!Object.prototype.hasOwnProperty.call(EVENT_RUNTIME_BINDINGS_BY_ID, normalizedEventId)) {
-            errors.push(`rule ${ruleId} event action references event without runtime binding: ${eventId}`);
-          }
-          if (Object.prototype.hasOwnProperty.call(action, "overrides")) {
-            const overrides = action.overrides;
-            if (!overrides || typeof overrides !== "object" || Array.isArray(overrides)) {
-              errors.push(`rule ${ruleId} event action overrides must be an object when present`);
-            } else {
-              for (const key of Object.keys(overrides)) {
-                if (!key) errors.push(`rule ${ruleId} event action overrides contains empty key`);
-                if (Object.prototype.hasOwnProperty.call(action, key)) {
-                  errors.push(`rule ${ruleId} event action has duplicate key in root and overrides: ${key}`);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  for (const rule of cfg.rules) validateRuleEntry(errors, ids, rule);
 
   return { ok: errors.length === 0, errors };
 }

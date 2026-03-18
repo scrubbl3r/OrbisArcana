@@ -1,20 +1,114 @@
 import { ORCHESTRATOR_V1 } from "./orchestrator-v1.js";
 import { validateOrchestratorV1 } from "./validate-orchestrator-v1.js";
 import {
+  asOpenObject,
+  asTriggerObject,
   asObj,
   asText,
+  mapDefined,
+  setEnabledIfBoolean,
+  isStringOrArray,
+  ORCHESTRATOR_MIN_MATCH_WINDOW_MS,
+  OPEN_TTL_KEYS,
+  RULE_COOLDOWN_KEYS,
+  RULE_MATCH_WINDOW_KEYS,
+  RULE_PRIORITY_KEYS,
   normalizeSpellId,
   normalizeEventId,
-  normalizeGestureId,
-  normalizeOrbStateId,
-  parseOnSelector,
-  asSelectorList,
-  normalizeTriggerEntries,
+  normalizeIds,
+  parseOnSelectorList,
+  collectOnEntriesFromObjectSelectors,
+  collectRuleTriggerEntries,
+  getMergedDefaultTriggerEntries,
 } from "./orchestrator-v1-normalizers.js";
 
-const MIN_MATCH_WINDOW_MS = 100;
 const EMPTY_LIST = Object.freeze([]);
 const EMPTY_OBJECT = Object.freeze({});
+
+function toNonNegativeFiniteOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(0, n) : null;
+}
+
+function toFiniteOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function toAtLeastFiniteOrNull(value, min) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(min, n) : null;
+}
+
+function getFirstOwnValueByKeys(keys, ...objects) {
+  for (const obj of objects) {
+    for (const key of keys) {
+      if (Object.hasOwn(obj, key)) return obj[key];
+    }
+  }
+  return undefined;
+}
+
+function resolveOwnNumber(keys, normalize, ...objects) {
+  return normalize(getFirstOwnValueByKeys(keys, ...objects));
+}
+
+function resolveRulePriority(ruleSafe, defaultsSafe) {
+  return resolveOwnNumber(RULE_PRIORITY_KEYS, toFiniteOrNull, ruleSafe, defaultsSafe);
+}
+
+function resolveRuleCooldownMs(ruleSafe, defaultsSafe) {
+  return resolveOwnNumber(
+    RULE_COOLDOWN_KEYS,
+    toNonNegativeFiniteOrNull,
+    ruleSafe,
+    defaultsSafe
+  );
+}
+
+function resolveRuleMatchWindowMs(ruleSafe, defaultsSafe) {
+  return resolveOwnNumber(
+    RULE_MATCH_WINDOW_KEYS,
+    (value) => toAtLeastFiniteOrNull(value, ORCHESTRATOR_MIN_MATCH_WINDOW_MS),
+    ruleSafe,
+    defaultsSafe
+  );
+}
+
+function resolveTriggerArgs(defaultsTriggerByEvent, eventId, trigger) {
+  const defaultsArgs = asObj(defaultsTriggerByEvent[eventId]);
+  const overrideArgs = asObj(trigger.args);
+  return { ...defaultsArgs, ...overrideArgs };
+}
+
+function resolveOpenSpells(open) {
+  return normalizeIds(asObj(open).spells, normalizeSpellId);
+}
+
+function resolveOpenTtlMs(open, defaultsOpen) {
+  return resolveOwnNumber(OPEN_TTL_KEYS, toNonNegativeFiniteOrNull, open, defaultsOpen);
+}
+
+function collectDefaultsTriggerByEvent(defaults) {
+  const defaultsTriggerByEvent = {};
+  for (const [eventIdRaw, args] of getMergedDefaultTriggerEntries(defaults)) {
+    const eventId = normalizeEventId(eventIdRaw);
+    if (!eventId) continue;
+    defaultsTriggerByEvent[eventId] = asObj(args);
+  }
+  return defaultsTriggerByEvent;
+}
+
+function applyCompiledRuleNumericMetadata(out, ruleSafe, defaultsSafe) {
+  const priorityNum = resolveRulePriority(ruleSafe, defaultsSafe);
+  if (priorityNum != null) out.priority = priorityNum;
+
+  const cooldownMsNum = resolveRuleCooldownMs(ruleSafe, defaultsSafe);
+  if (cooldownMsNum != null) out.cooldownMs = cooldownMsNum;
+
+  const matchWindowMsNum = resolveRuleMatchWindowMs(ruleSafe, defaultsSafe);
+  if (matchWindowMsNum != null) out.matchWindowMs = matchWindowMsNum;
+}
 
 function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
   const ruleSafe = asObj(rule);
@@ -24,164 +118,100 @@ function buildCompiledRule({ id, on, then, rule, defaultsRule }) {
     on: Object.freeze(on),
     then: Object.freeze(then),
   };
-  if (
-    Object.hasOwn(ruleSafe, "enabled") &&
-    typeof ruleSafe.enabled === "boolean"
-  ) {
-    out.enabled = ruleSafe.enabled;
-  }
-  const priorityRaw = Object.hasOwn(ruleSafe, "priority")
-    ? ruleSafe.priority
-    : defaultsSafe.priority;
-  const priorityNumRaw = Number(priorityRaw);
-  if (Number.isFinite(priorityNumRaw)) out.priority = priorityNumRaw;
-
-  const cooldownMsRaw = Object.hasOwn(ruleSafe, "cooldownMs")
-    ? ruleSafe.cooldownMs
-    : Object.hasOwn(ruleSafe, "cooldown")
-      ? ruleSafe.cooldown
-      : Object.hasOwn(defaultsSafe, "cooldownMs")
-        ? defaultsSafe.cooldownMs
-        : defaultsSafe.cooldown;
-  const cooldownMsNumRaw = Number(cooldownMsRaw);
-  const cooldownMsNum = Number.isFinite(cooldownMsNumRaw)
-    ? Math.max(0, cooldownMsNumRaw)
-    : null;
-  if (cooldownMsNum != null) out.cooldownMs = cooldownMsNum;
-
-  const matchWindowMsRaw = Object.hasOwn(ruleSafe, "matchWindowMs")
-    ? ruleSafe.matchWindowMs
-    : Object.hasOwn(ruleSafe, "matchWindow")
-      ? ruleSafe.matchWindow
-      : Object.hasOwn(defaultsSafe, "matchWindowMs")
-        ? defaultsSafe.matchWindowMs
-        : defaultsSafe.matchWindow;
-  const matchWindowMsNumRaw = Number(matchWindowMsRaw);
-  const matchWindowMsNum = Number.isFinite(matchWindowMsNumRaw)
-    ? Math.max(MIN_MATCH_WINDOW_MS, matchWindowMsNumRaw)
-    : null;
-  if (matchWindowMsNum != null) out.matchWindowMs = matchWindowMsNum;
+  setEnabledIfBoolean(out, ruleSafe);
+  applyCompiledRuleNumericMetadata(out, ruleSafe, defaultsSafe);
 
   return Object.freeze(out);
 }
 
 function mapTrigger(trigger, defaultsTriggerByEvent) {
-  const t = (typeof trigger === "string")
-    ? { event: trigger }
-    : asObj(trigger);
+  const t = asTriggerObject(trigger);
   const eventId = normalizeEventId(t.event);
   if (!eventId) return null;
   const out = {
     type: "event",
     id: eventId,
-    ...asObj(defaultsTriggerByEvent[eventId]),
-    ...asObj(t.args),
+    ...resolveTriggerArgs(defaultsTriggerByEvent, eventId, t),
   };
-  if (Object.hasOwn(t, "enabled") && typeof t.enabled === "boolean") {
-    out.enabled = t.enabled;
-  }
+  setEnabledIfBoolean(out, t);
   return Object.freeze(out);
 }
 
 function mapOpen(open, defaultsOpen) {
-  const o = (typeof open === "string" || Array.isArray(open))
-    ? { spells: open }
-    : asObj(open);
-  const normalizedSpells = asSelectorList(o.spells).map(normalizeSpellId).filter(Boolean);
+  const o = asOpenObject(open);
+  const normalizedSpells = resolveOpenSpells(o);
   if (!normalizedSpells.length) return null;
   const out = {
     type: "wake_win",
     spells: normalizedSpells,
   };
-  if (Object.hasOwn(o, "enabled") && typeof o.enabled === "boolean") {
-    out.enabled = o.enabled;
-  }
-  const ttlMs = Object.hasOwn(o, "ttlMs")
-    ? o.ttlMs
-    : Object.hasOwn(o, "ttl")
-      ? o.ttl
-      : Object.hasOwn(defaultsOpen, "ttlMs")
-        ? defaultsOpen.ttlMs
-        : defaultsOpen.ttl;
-  const ttlMsNumRaw = Number(ttlMs);
-  const ttlMsNum = Number.isFinite(ttlMsNumRaw)
-    ? Math.max(0, ttlMsNumRaw)
-    : null;
+  setEnabledIfBoolean(out, o);
+  const ttlMsNum = resolveOpenTtlMs(o, defaultsOpen);
   if (ttlMsNum != null) out.ttlMs = ttlMsNum;
   return Object.freeze(out);
 }
 
-const ON_SELECTOR_SOURCES = [
-  { key: "spell", type: "spell", normalize: normalizeSpellId },
-  { key: "spells", type: "spell", normalize: normalizeSpellId },
-  { key: "gesture", type: "gesture", normalize: normalizeGestureId },
-  { key: "gestures", type: "gesture", normalize: normalizeGestureId },
-  { key: "orb_state", type: "orb_state", normalize: normalizeOrbStateId },
-  { key: "orbState", type: "orb_state", normalize: normalizeOrbStateId },
-  { key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId },
-];
-
-function compileRule(rule, compileContext) {
-  const r = asObj(rule);
-  const id = asText(r.id);
-  if (!id) return null;
-  const on = [];
-  if (typeof r.on === "string" || Array.isArray(r.on)) {
-    for (const entry of asSelectorList(r.on)) {
-      const selector = parseOnSelector(entry);
-      if (selector?.id) on.push(selector);
-    }
-  } else {
-    const sourceObj = asObj(r.on);
-    for (const source of ON_SELECTOR_SOURCES) {
-      for (const value of asSelectorList(sourceObj[source.key])) {
-        const id = source.normalize(value);
-        if (id) on.push({ type: source.type, id });
-      }
-    }
+function collectOnSelectors(onRaw) {
+  if (isStringOrArray(onRaw)) {
+    return mapDefined(parseOnSelectorList(onRaw), (selector) =>
+      selector?.id ? selector : null
+    );
   }
-  if (!on.length) return null;
-  const openAction = mapOpen(r.open, compileContext.defaultsOpen);
-  const then = openAction ? [openAction] : [];
-  for (const triggerSource of [r.trigger, r.triggers]) {
-    for (const trigger of normalizeTriggerEntries(triggerSource)) {
-      const action = mapTrigger(trigger, compileContext.defaultsTriggerByEvent);
-      if (action) then.push(action);
-    }
-  }
-  return buildCompiledRule({
-    id,
-    on,
-    then,
-    rule: r,
-    defaultsRule: compileContext.defaultsRule,
-  });
+  return collectOnEntriesFromObjectSelectors(onRaw);
 }
 
-export function buildRuleEngineFromOrchestratorV1({
-  orchestratorV1 = ORCHESTRATOR_V1,
-  baseRuleEngine = {},
-} = {}) {
-  const orchestratorObj = asObj(orchestratorV1);
-  const errors = validateOrchestratorV1(orchestratorObj);
-  if (errors.length) {
-    throw new Error(`ORCHESTRATOR_V1 validation failed: ${errors.join(" | ")}`);
-  }
-  const defaults = asObj(orchestratorObj.defaults);
-  const defaultsTriggerByEvent = {};
-  for (const [eventIdRaw, args] of Object.entries({
-    ...asObj(defaults.triggers),
-    ...asObj(defaults.trigger),
-  })) {
-    const eventId = normalizeEventId(eventIdRaw);
-    if (!eventId) continue;
-    defaultsTriggerByEvent[eventId] = asObj(args);
-  }
-  const compileContext = {
+function compileRules(rules, compileContext) {
+  return Object.freeze(mapDefined(rules, (rule) => compileRule(rule, compileContext)));
+}
+
+function mapTriggerActions(triggerEntries, defaultsTriggerByEvent) {
+  return mapDefined(triggerEntries, (trigger) => mapTrigger(trigger, defaultsTriggerByEvent));
+}
+
+function buildThenActions(rule, defaultsOpen, defaultsTriggerByEvent) {
+  const openAction = mapOpen(rule.open, defaultsOpen);
+  const triggerActions = mapTriggerActions(
+    collectRuleTriggerEntries(rule),
+    defaultsTriggerByEvent
+  );
+  return openAction ? [openAction, ...triggerActions] : triggerActions;
+}
+
+function buildCompileContext(defaults) {
+  return {
     defaultsOpen: asObj(defaults.open),
     defaultsRule: asObj(defaults.rule),
-    defaultsTriggerByEvent,
+    defaultsTriggerByEvent: collectDefaultsTriggerByEvent(defaults),
   };
+}
+
+function resolveRuleId(rule) {
+  return asText(rule.id);
+}
+
+function resolveRuleOnSelectors(rule) {
+  return collectOnSelectors(rule.on);
+}
+
+function unpackCompileContext(compileContext) {
+  return {
+    defaultsOpen: compileContext.defaultsOpen,
+    defaultsRule: compileContext.defaultsRule,
+    defaultsTriggerByEvent: compileContext.defaultsTriggerByEvent,
+  };
+}
+
+function throwIfOrchestratorInvalid(orchestratorObj) {
+  const errors = validateOrchestratorV1(orchestratorObj);
+  if (errors.length) throw new Error(`ORCHESTRATOR_V1 validation failed: ${errors.join(" | ")}`);
+}
+
+function compileProjectedRules(orchestratorObj) {
+  const compileContext = buildCompileContext(asObj(orchestratorObj.defaults));
+  return compileRules(orchestratorObj.rules, compileContext);
+}
+
+function buildRuntimeEnvelope(baseRuleEngine, orchestratorObj, compiledRules) {
   return Object.freeze({
     ...baseRuleEngine,
     version: "2",
@@ -189,11 +219,34 @@ export function buildRuleEngineFromOrchestratorV1({
     signals: EMPTY_LIST,
     windows: EMPTY_LIST,
     events: EMPTY_LIST,
-    rules: Object.freeze(
-      orchestratorObj.rules
-        .map((rule) => compileRule(rule, compileContext))
-        .filter(Boolean)
-    ),
+    rules: compiledRules,
     eventRuntimeBindings: EMPTY_OBJECT,
   });
+}
+
+function resolveCompiledRulePayload(rule, compileContext) {
+  const safeRule = asObj(rule);
+  const id = resolveRuleId(safeRule);
+  if (!id) return null;
+  const { defaultsOpen, defaultsRule, defaultsTriggerByEvent } = unpackCompileContext(compileContext);
+  const on = resolveRuleOnSelectors(safeRule);
+  if (!on.length) return null;
+  const then = buildThenActions(safeRule, defaultsOpen, defaultsTriggerByEvent);
+  return { id, on, then, rule: safeRule, defaultsRule };
+}
+
+function compileRule(rule, compileContext) {
+  const payload = resolveCompiledRulePayload(rule, compileContext);
+  if (!payload) return null;
+  return buildCompiledRule(payload);
+}
+
+export function buildRuleEngineFromOrchestratorV1({
+  orchestratorV1 = ORCHESTRATOR_V1,
+  baseRuleEngine = {},
+} = {}) {
+  const orchestratorObj = asObj(orchestratorV1);
+  throwIfOrchestratorInvalid(orchestratorObj);
+  const compiledRules = compileProjectedRules(orchestratorObj);
+  return buildRuntimeEnvelope(baseRuleEngine, orchestratorObj, compiledRules);
 }

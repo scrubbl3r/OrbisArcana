@@ -2,6 +2,49 @@ export function asObj(v) {
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
 }
 
+export function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+export function mapDefined(values, mapFn) {
+  return asArray(values).map(mapFn).filter(Boolean);
+}
+
+export function hasNonEmptyArray(value) {
+  return Array.isArray(value) && value.length > 0;
+}
+
+export function requireNonEmptyArray(errors, value, errorMessage) {
+  if (hasNonEmptyArray(value)) return true;
+  errors.push(errorMessage);
+  return false;
+}
+
+export function asKeySet(values) {
+  return values instanceof Set ? values : new Set(values);
+}
+
+export function pushUnsupportedKeys(errors, context, obj, allowedKeys) {
+  const allowed = asKeySet(allowedKeys);
+  for (const key of Object.keys(asObj(obj))) {
+    if (!allowed.has(key)) errors.push(`${context} contains unsupported key: ${key}`);
+  }
+}
+
+export function setEnabledIfBoolean(out, source) {
+  const safeSource = asObj(source);
+  if (Object.hasOwn(safeSource, "enabled") && typeof safeSource.enabled === "boolean") {
+    out.enabled = safeSource.enabled;
+  }
+}
+
+export function copyOwnKeys(out, source, keys) {
+  const safeSource = asObj(source);
+  for (const key of keys) {
+    if (Object.hasOwn(safeSource, key)) out[key] = safeSource[key];
+  }
+}
+
 export function asText(v) {
   if (typeof v === "string") return v.trim();
   if (v == null) return "";
@@ -20,22 +63,47 @@ function splitCommaTokens(value) {
   return text.split(",").map((part) => part.trim()).filter(Boolean);
 }
 
-export function normalizeSpellId(spellIdRaw) {
-  const id = asId(spellIdRaw);
+function expandTokenizedEntries(raw) {
+  if (Array.isArray(raw)) {
+    const out = [];
+    for (const entry of raw) {
+      if (typeof entry !== "string") {
+        out.push(entry);
+        continue;
+      }
+      out.push(...splitCommaTokens(entry));
+    }
+    return out;
+  }
+  if (typeof raw === "string") return splitCommaTokens(raw);
+  return null;
+}
+
+export function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasOwnAny(source, keys) {
+  return keys.some((key) => Object.hasOwn(source, key));
+}
+
+function normalizePrefixedId(rawValue, prefix) {
+  const id = asId(rawValue);
   if (!id) return "";
-  return id.startsWith("spell.") ? id.slice("spell.".length) : id;
+  return id.startsWith(prefix) ? id.slice(prefix.length) : id;
+}
+
+export function normalizeSpellId(spellIdRaw) {
+  return normalizePrefixedId(spellIdRaw, "spell.");
 }
 
 export function normalizeEventId(eventIdRaw) {
-  const id = asId(eventIdRaw);
-  if (!id) return "";
-  return id.startsWith("event.") ? id.slice("event.".length) : id;
+  return normalizePrefixedId(eventIdRaw, "event.");
 }
 
 export function normalizeGestureId(gestureIdRaw) {
-  const id = asId(gestureIdRaw);
-  if (!id) return "";
-  const trimmed = id.startsWith("gesture.") ? id.slice("gesture.".length) : id;
+  const trimmed = normalizePrefixedId(gestureIdRaw, "gesture.");
+  if (!trimmed) return "";
   if (trimmed === "x_spin") return "spin_x";
   if (trimmed === "y_spin") return "spin_y";
   if (trimmed === "z_spin") return "spin_z";
@@ -43,10 +111,28 @@ export function normalizeGestureId(gestureIdRaw) {
 }
 
 export function normalizeOrbStateId(orbStateIdRaw) {
-  const id = asId(orbStateIdRaw);
-  if (!id) return "";
-  return id.startsWith("orb_state.") ? id.slice("orb_state.".length) : id;
+  return normalizePrefixedId(orbStateIdRaw, "orb_state.");
 }
+
+export const ON_SELECTOR_SOURCES = Object.freeze([
+  Object.freeze({ key: "spell", type: "spell", normalize: normalizeSpellId }),
+  Object.freeze({ key: "spells", type: "spell", normalize: normalizeSpellId }),
+  Object.freeze({ key: "gesture", type: "gesture", normalize: normalizeGestureId }),
+  Object.freeze({ key: "gestures", type: "gesture", normalize: normalizeGestureId }),
+  Object.freeze({ key: "orb_state", type: "orb_state", normalize: normalizeOrbStateId }),
+  Object.freeze({ key: "orbState", type: "orb_state", normalize: normalizeOrbStateId }),
+  Object.freeze({ key: "orbStates", type: "orb_state", normalize: normalizeOrbStateId }),
+]);
+export const ON_SELECTOR_ALLOWED_KEYS = Object.freeze(
+  ON_SELECTOR_SOURCES.map((source) => source.key)
+);
+export const ORCHESTRATOR_MIN_MATCH_WINDOW_MS = 100;
+export const RULE_PRIORITY_KEY = "priority";
+export const RULE_PRIORITY_KEYS = Object.freeze([RULE_PRIORITY_KEY]);
+export const TRIGGER_SOURCE_KEYS = Object.freeze(["trigger", "triggers"]);
+export const OPEN_TTL_KEYS = Object.freeze(["ttlMs", "ttl"]);
+export const RULE_COOLDOWN_KEYS = Object.freeze(["cooldownMs", "cooldown"]);
+export const RULE_MATCH_WINDOW_KEYS = Object.freeze(["matchWindowMs", "matchWindow"]);
 
 const BARE_GESTURE_IDS = new Set([
   "spin_x",
@@ -102,34 +188,28 @@ export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
 }
 
 export function asSelectorList(raw) {
-  if (Array.isArray(raw)) {
-    const out = [];
-    for (const entry of raw) {
-      if (typeof entry !== "string") {
-        out.push(entry);
-        continue;
-      }
-      out.push(...splitCommaTokens(entry));
-    }
-    return out;
-  }
-  if (typeof raw === "string") return splitCommaTokens(raw);
-  return [];
+  return expandTokenizedEntries(raw) || [];
+}
+
+export function normalizeIds(values, normalize) {
+  return asSelectorList(values).map(normalize).filter(Boolean);
+}
+
+export function isStringOrArray(value) {
+  return typeof value === "string" || Array.isArray(value);
+}
+
+export function asTriggerObject(rawTrigger) {
+  return typeof rawTrigger === "string" ? { event: rawTrigger } : asObj(rawTrigger);
+}
+
+export function asOpenObject(rawOpen) {
+  return isStringOrArray(rawOpen) ? { spells: rawOpen } : asObj(rawOpen);
 }
 
 export function normalizeTriggerEntries(rawTrigger) {
-  if (Array.isArray(rawTrigger)) {
-    const out = [];
-    for (const entry of rawTrigger) {
-      if (typeof entry !== "string") {
-        out.push(entry);
-        continue;
-      }
-      out.push(...splitCommaTokens(entry));
-    }
-    return out;
-  }
-  if (typeof rawTrigger === "string") return splitCommaTokens(rawTrigger);
+  const tokenizedEntries = expandTokenizedEntries(rawTrigger);
+  if (tokenizedEntries) return tokenizedEntries;
   const triggerMap = asObj(rawTrigger);
   if (Object.keys(triggerMap).length) {
     return Object.entries(triggerMap).map(([eventId, spec]) => {
@@ -138,12 +218,11 @@ export function normalizeTriggerEntries(rawTrigger) {
           ? Object.freeze({ event: eventId })
           : Object.freeze({ event: eventId, enabled: false });
       }
-      if (spec && typeof spec === "object" && !Array.isArray(spec)) {
-        const hasStructuredKeys = Object.prototype.hasOwnProperty.call(spec, "enabled") ||
-          Object.prototype.hasOwnProperty.call(spec, "args");
+      if (isPlainObject(spec)) {
+        const hasStructuredKeys = hasOwnAny(spec, ["enabled", "args"]);
         if (!hasStructuredKeys) return Object.freeze({ event: eventId, args: spec });
         const out = { event: eventId };
-        if (Object.prototype.hasOwnProperty.call(spec, "enabled")) out.enabled = spec.enabled;
+        if (Object.hasOwn(spec, "enabled")) out.enabled = spec.enabled;
         const argsValue = asObj(spec.args);
         const argsFromField = Object.keys(argsValue).length
           ? { ...argsValue }
@@ -159,4 +238,40 @@ export function normalizeTriggerEntries(rawTrigger) {
     });
   }
   return [];
+}
+
+export function collectRuleTriggerEntries(rule, triggerSourceKeys = TRIGGER_SOURCE_KEYS) {
+  return triggerSourceKeys.flatMap((triggerKey) =>
+    normalizeTriggerEntries(asObj(rule)[triggerKey])
+  );
+}
+
+export function getMergedDefaultTriggerEntries(defaults) {
+  const source = asObj(defaults);
+  return Object.entries({
+    ...asObj(source.triggers),
+    ...asObj(source.trigger),
+  });
+}
+
+export function collectOnEntriesFromObjectSelectors(onRaw, { includeRaw = false } = {}) {
+  const on = asObj(onRaw);
+  const onEntries = [];
+  for (const source of ON_SELECTOR_SOURCES) {
+    if (!Object.hasOwn(on, source.key)) continue;
+    for (const value of asSelectorList(on[source.key])) {
+      for (const id of normalizeIds(value, source.normalize)) {
+        const entry = { type: source.type, id };
+        if (includeRaw) entry.raw = value;
+        onEntries.push(entry);
+      }
+    }
+  }
+  return onEntries;
+}
+
+export function parseOnSelectorList(raw, { invalidAsEmptyObject = false } = {}) {
+  return asSelectorList(raw).map((entry) =>
+    parseOnSelector(entry, { invalidAsEmptyObject })
+  );
 }

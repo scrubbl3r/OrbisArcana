@@ -1,21 +1,17 @@
 import { INTERACTIONS_V2 } from "./interactions-v2.js";
 import { buildRulesFromInteractionsV2 } from "./build-rule-engine-from-interactions-v2.js";
+import {
+  asArray,
+  asId,
+  asObj,
+  asText,
+  copyOwnKeys,
+  mapDefined,
+  setEnabledIfBoolean,
+} from "./orchestrator-v1-normalizers.js";
 
 const RESERVED_EVENT_KEYS = Object.freeze(new Set(["type", "id", "enabled"]));
-
-function asObj(v) {
-  return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
-}
-
-function asText(v) {
-  if (typeof v === "string") return v.trim();
-  if (v == null) return "";
-  return `${v}`.trim();
-}
-
-function asId(v) {
-  return asText(v).toLowerCase();
-}
+const EMPTY_DEFAULTS = Object.freeze({});
 
 function normalizeConditionSelector(cond) {
   const type = asId(cond?.type);
@@ -29,9 +25,7 @@ function mapEventActionToTrigger(action) {
   const trigger = {
     event: asId(safeAction.id),
   };
-  if (Object.prototype.hasOwnProperty.call(safeAction, "enabled") && typeof safeAction.enabled === "boolean") {
-    trigger.enabled = safeAction.enabled;
-  }
+  setEnabledIfBoolean(trigger, safeAction);
   const args = {};
   for (const [key, value] of Object.entries(safeAction)) {
     if (RESERVED_EVENT_KEYS.has(key)) continue;
@@ -41,41 +35,68 @@ function mapEventActionToTrigger(action) {
   return Object.freeze(trigger);
 }
 
+function mapRuleOnSelectors(onConditions) {
+  return mapDefined(onConditions, normalizeConditionSelector);
+}
+
+function mapOpenAction(openAction) {
+  if (!openAction) return null;
+  const open = {
+    spells: asArray(openAction.spells).slice(),
+  };
+  copyOwnKeys(open, openAction, ["ttlMs", "enabled"]);
+  return open;
+}
+
+function partitionThenActions(thenActions) {
+  return thenActions.reduce(
+    (acc, action) => {
+      const type = asId(action?.type);
+      if (type === "wake_win" && !acc.openAction) acc.openAction = action;
+      if (type === "event") acc.eventActions.push(action);
+      return acc;
+    },
+    { openAction: null, eventActions: [] }
+  );
+}
+
+function mapEventActionsToTriggers(eventActions) {
+  return mapDefined(eventActions, mapEventActionToTrigger);
+}
+
 function mapProjectedRuleToOrchestratorRule(rule) {
   const safeRule = asObj(rule);
-  const onConditions = Array.isArray(safeRule.on) ? safeRule.on : [];
-  const thenActions = Array.isArray(safeRule.then) ? safeRule.then : [];
-
-  const openAction = thenActions.find((action) => asId(action?.type) === "wake_win");
-  const eventActions = thenActions.filter((action) => asId(action?.type) === "event");
+  const onConditions = asArray(safeRule.on);
+  const thenActions = asArray(safeRule.then);
+  const { openAction, eventActions } = partitionThenActions(thenActions);
 
   const out = {
     id: asText(safeRule.id),
-    on: onConditions.map(normalizeConditionSelector).filter(Boolean),
+    on: mapRuleOnSelectors(onConditions),
   };
-  if (openAction) {
-    out.open = {
-      spells: Array.isArray(openAction.spells) ? openAction.spells.slice() : [],
-    };
-    if (Object.prototype.hasOwnProperty.call(openAction, "ttlMs")) out.open.ttlMs = openAction.ttlMs;
-    if (Object.prototype.hasOwnProperty.call(openAction, "enabled")) out.open.enabled = openAction.enabled;
-  }
+  const mappedOpen = mapOpenAction(openAction);
+  if (mappedOpen) out.open = mappedOpen;
   if (eventActions.length) {
-    out.trigger = eventActions.map(mapEventActionToTrigger);
+    out.trigger = mapEventActionsToTriggers(eventActions);
   }
-  if (Object.prototype.hasOwnProperty.call(safeRule, "enabled")) out.enabled = safeRule.enabled;
-  if (Object.prototype.hasOwnProperty.call(safeRule, "priority")) out.priority = safeRule.priority;
-  if (Object.prototype.hasOwnProperty.call(safeRule, "cooldownMs")) out.cooldownMs = safeRule.cooldownMs;
-  if (Object.prototype.hasOwnProperty.call(safeRule, "matchWindowMs")) out.matchWindowMs = safeRule.matchWindowMs;
+  copyOwnKeys(out, safeRule, ["enabled", "priority", "cooldownMs", "matchWindowMs"]);
   return Object.freeze(out);
+}
+
+function mapProjectedRules(projectedRules) {
+  return Object.freeze(mapDefined(projectedRules, mapProjectedRuleToOrchestratorRule));
+}
+
+function buildProjectedEnvelope(interactionsV2, projectedRules) {
+  return Object.freeze({
+    version: "1",
+    enabled: interactionsV2?.enabled !== false,
+    defaults: EMPTY_DEFAULTS,
+    rules: mapProjectedRules(projectedRules),
+  });
 }
 
 export function projectOrchestratorV1FromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
   const projectedRules = buildRulesFromInteractionsV2(interactionsV2);
-  return Object.freeze({
-    version: "1",
-    enabled: interactionsV2?.enabled !== false,
-    defaults: Object.freeze({}),
-    rules: Object.freeze(projectedRules.map(mapProjectedRuleToOrchestratorRule)),
-  });
+  return buildProjectedEnvelope(interactionsV2, projectedRules);
 }
