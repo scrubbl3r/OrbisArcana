@@ -12,43 +12,46 @@ import {
 } from "./orchestrator-v1-normalizers.js";
 
 const RESERVED_ACTION_KEYS = Object.freeze(new Set(["type", "id", "spells", "overrides", "enabled"]));
+const ACTION_TYPE_WAKE_WIN = "wake_win";
+const ACTION_TYPE_EVENT = "event";
 
-function finiteNonNegativeOrUndef(v) {
-  const n = Number(v);
-  return Number.isFinite(n) && n >= 0 ? n : undefined;
-}
-
-function resolveWakeWinTtlMs(action, defaultsRoot) {
-  const safeAction = asObj(action);
-  const safeDefaults = asObj(defaultsRoot);
-  return finiteNonNegativeOrUndef(
-    Object.hasOwn(safeAction, "ttlMs")
-      ? safeAction.ttlMs
-      : asObj(safeDefaults.wakeWin).ttlMs
-  );
-}
-
-function normalizeEventDefaultsMap(defaultsEventRaw) {
-  const out = {};
-  for (const [rawEventId, args] of Object.entries(asObj(defaultsEventRaw))) {
+function buildDefaultsEventById(defaultsRoot) {
+  const defaultsEventById = {};
+  for (const [rawEventId, args] of Object.entries(asObj(asObj(defaultsRoot).event))) {
     const normalizedEventId = normalizeEventId(rawEventId);
     if (!normalizedEventId) continue;
-    out[normalizedEventId] = asObj(args);
+    defaultsEventById[normalizedEventId] = asObj(args);
   }
-  return out;
+  return defaultsEventById;
 }
 
-function collectEventArgs(action, defaultsForEvent) {
-  const out = {
-    ...(asObj(defaultsForEvent)),
+function normalizeConditionId(type, rawId) {
+  const pref = `${type}.`;
+  if (!rawId.startsWith(pref)) return rawId;
+  return rawId.slice(pref.length);
+}
+
+function mergeEventArgs(defaultArgs, action) {
+  const outArgs = {
+    ...asObj(defaultArgs),
   };
   for (const [k, v] of Object.entries(asObj(action))) {
     if (RESERVED_ACTION_KEYS.has(k)) continue;
-    out[k] = v;
+    outArgs[k] = v;
   }
-  const overrides = asObj(action?.overrides);
-  for (const [k, v] of Object.entries(overrides)) out[k] = v;
-  return out;
+  const overrides = asObj(asObj(action).overrides);
+  for (const [k, v] of Object.entries(overrides)) outArgs[k] = v;
+  return outArgs;
+}
+
+function finiteOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function finiteAtLeastOrNull(value, min) {
+  const n = finiteOrNull(value);
+  return n == null ? null : Math.max(min, n);
 }
 
 function mapCondition(cond) {
@@ -56,120 +59,82 @@ function mapCondition(cond) {
   const type = asId(c.type);
   const rawId = asId(c.id);
   if (!type || !rawId) return null;
-  let id = rawId;
-  const pref = `${type}.`;
-  if (id.startsWith(pref)) id = id.slice(pref.length);
-  if (!id) return null;
-  return Object.freeze({ type, id });
+  const conditionId = normalizeConditionId(type, rawId);
+  if (!conditionId) return null;
+  return Object.freeze({ type, id: conditionId });
 }
 
-function mapWakeWinAction(action, defaultsRoot) {
-  const a = asObj(action);
-  const spells = mapDefined(asArray(a.spells), (spellId) => normalizeSpellId(spellId));
-  const ttlMs = resolveWakeWinTtlMs(a, defaultsRoot);
-  const out = { type: "wake_win", spells };
-  if (ttlMs !== undefined) out.ttlMs = ttlMs;
-  setEnabledIfBoolean(out, a);
-  return Object.freeze(out);
+function mapConditions(onAll) {
+  return mapDefined(onAll, mapCondition);
 }
 
-function mapEventAction(action, defaultsEventById) {
-  const a = asObj(action);
-  const id = normalizeEventId(a.id);
-  if (!id) return null;
-  const out = { type: "event", id, ...collectEventArgs(a, asObj(defaultsEventById[id])) };
-  setEnabledIfBoolean(out, a);
-  return Object.freeze(out);
+function resolveWakeWinTtlMs(action, defaultsSafe) {
+  if (Object.hasOwn(action, "ttlMs")) return action.ttlMs;
+  return asObj(defaultsSafe.wakeWin).ttlMs;
 }
 
-function mapAction(action, defaults, defaultsEventById) {
-  const a = asObj(action);
-  const type = asId(a.type);
-  if (type === "wake_win") return mapWakeWinAction(a, defaults);
-  if (type === "event") return mapEventAction(a, defaultsEventById);
+function mapThenAction(action, defaultsSafe, defaultsEventById) {
+  const safeAction = asObj(action);
+  const type = asId(safeAction.type);
+  if (type === ACTION_TYPE_WAKE_WIN) {
+    const spells = mapDefined(asArray(safeAction.spells), (spellId) => normalizeSpellId(spellId));
+    const ttlMsRaw = resolveWakeWinTtlMs(safeAction, defaultsSafe);
+    const out = { type: ACTION_TYPE_WAKE_WIN, spells };
+    const ttlMsNum = finiteAtLeastOrNull(ttlMsRaw, 0);
+    if (ttlMsNum != null) out.ttlMs = ttlMsNum;
+    setEnabledIfBoolean(out, safeAction);
+    return Object.freeze(out);
+  }
+  if (type === ACTION_TYPE_EVENT) {
+    const eventId = normalizeEventId(safeAction.id);
+    if (!eventId) return null;
+    const outArgs = mergeEventArgs(defaultsEventById[eventId], safeAction);
+    const out = {
+      type: ACTION_TYPE_EVENT,
+      id: eventId,
+      ...outArgs,
+    };
+    setEnabledIfBoolean(out, safeAction);
+    return Object.freeze(out);
+  }
   return null;
 }
 
-function getRuleOnAll(rule) {
-  const safeRule = asObj(rule);
-  const onRoot = asObj(safeRule.on);
-  return asArray(onRoot.all);
-}
-
-function getRuleThenActions(rule) {
-  const safeRule = asObj(rule);
-  return asArray(safeRule.then);
-}
-
-function resolveRuleId(rule) {
-  return asText(rule.id);
-}
-
-function mapRuleConditions(rule) {
-  return mapDefined(getRuleOnAll(rule), mapCondition);
-}
-
-function mapRuleActions(rule, defaultsRoot, defaultsEventById) {
-  return mapDefined(
-    getRuleThenActions(rule),
-    (action) => mapAction(action, defaultsRoot, defaultsEventById)
+function mapThenActions(thenActions, defaultsSafe, defaultsEventById) {
+  return mapDefined(thenActions, (action) =>
+    mapThenAction(action, defaultsSafe, defaultsEventById)
   );
 }
 
-function applyRuleMetadata(out, rule) {
-  const safeRule = asObj(rule);
-  setEnabledIfBoolean(out, safeRule);
-  const priorityNum = Number(safeRule.priority);
-  if (Number.isFinite(priorityNum)) out.priority = priorityNum;
+function applyCompiledRulePriority(out, rule) {
+  const priorityNum = finiteOrNull(rule.priority);
+  if (priorityNum != null) out.priority = priorityNum;
 }
 
-function mapRule(rule, defaults, defaultsEventById) {
+function compileInteractionRule(rule, defaultsSafe, defaultsEventById) {
   const r = asObj(rule);
-  const id = resolveRuleId(r);
+  const id = asText(r.id);
   if (!id) return null;
-  const conditions = mapRuleConditions(r);
-  const actions = mapRuleActions(r, defaults, defaultsEventById);
+  const onAll = asArray(asObj(r.on).all);
+  const conditions = mapConditions(onAll);
+  const thenActions = asArray(r.then);
+  const actions = mapThenActions(thenActions, defaultsSafe, defaultsEventById);
   const out = { id, on: Object.freeze(conditions), then: Object.freeze(actions) };
-  applyRuleMetadata(out, r);
+  setEnabledIfBoolean(out, r);
+  applyCompiledRulePriority(out, r);
   return Object.freeze(out);
 }
 
-function throwIfInteractionsInvalid(interactionsV2) {
+function buildCompiledRules(interactionsV2) {
   const validation = validateInteractionsV2(interactionsV2);
   if (!validation.ok) {
     throw new Error(`INTERACTIONS_V2 validation failed: ${validation.errors.join(" | ")}`);
   }
-}
-
-function buildCompileContext(interactionsV2) {
   const defaultsRoot = asObj(interactionsV2.defaults);
-  return {
-    defaultsRoot,
-    defaultsEventById: normalizeEventDefaultsMap(asObj(defaultsRoot.event)),
-  };
-}
-
-function unpackCompileContext(compileContext) {
-  return {
-    defaultsRoot: compileContext.defaultsRoot,
-    defaultsEventById: compileContext.defaultsEventById,
-  };
-}
-
-function mapCompiledRules(interactionsV2, compileContext) {
-  const { defaultsRoot, defaultsEventById } = unpackCompileContext(compileContext);
-  return mapDefined(
-    asArray(interactionsV2.rules),
-    (rule) => mapRule(rule, defaultsRoot, defaultsEventById)
+  const defaultsEventById = buildDefaultsEventById(defaultsRoot);
+  return mapDefined(asArray(interactionsV2.rules), (rule) =>
+    compileInteractionRule(rule, defaultsRoot, defaultsEventById)
   );
-}
-
-function buildRuntimeEnvelope(baseRuleEngine, interactionsV2, rules) {
-  return Object.freeze({
-    ...baseRuleEngine,
-    rules: Object.freeze(rules),
-    enabled: interactionsV2.enabled !== false,
-  });
 }
 
 export function buildRuleEngineFromInteractionsV2(options = {}) {
@@ -177,15 +142,15 @@ export function buildRuleEngineFromInteractionsV2(options = {}) {
     interactionsV2 = INTERACTIONS_V2,
     baseRuleEngine = null,
   } = options;
-  throwIfInteractionsInvalid(interactionsV2);
   const base = asObj(baseRuleEngine);
-  const compileContext = buildCompileContext(interactionsV2);
-  const rules = mapCompiledRules(interactionsV2, compileContext);
-  return buildRuntimeEnvelope(base, interactionsV2, rules);
+  const rules = buildCompiledRules(interactionsV2);
+  return Object.freeze({
+    ...base,
+    rules: Object.freeze(rules),
+    enabled: interactionsV2.enabled !== false,
+  });
 }
 
 export function buildRulesFromInteractionsV2(interactionsV2 = INTERACTIONS_V2) {
-  throwIfInteractionsInvalid(interactionsV2);
-  const compileContext = buildCompileContext(interactionsV2);
-  return Object.freeze(mapCompiledRules(interactionsV2, compileContext));
+  return Object.freeze(buildCompiledRules(interactionsV2));
 }

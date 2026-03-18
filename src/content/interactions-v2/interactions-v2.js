@@ -95,32 +95,51 @@ export const INTERACTIONS_V2 = Object.freeze({
   ]),
 });
 
+const SPELL_PREFIX = "spell.";
+
+function asLowerTrimmed(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function hasActionType(actions, expectedType) {
+  return actions.some((action) => {
+    const type = asLowerTrimmed(action?.type);
+    return type === expectedType;
+  });
+}
+
+function collectRuleActions(rule) {
+  return Array.isArray(rule?.then) ? rule.then : [];
+}
+
+function getSingleSpellConditionId(rule) {
+  const onAll = Array.isArray(rule?.on?.all) ? rule.on.all : [];
+  if (onAll.length !== 1) return "";
+  const cond = onAll[0];
+  const condType = asLowerTrimmed(cond?.type);
+  const condIdRaw = asLowerTrimmed(cond?.id);
+  if (condType !== "spell" || !condIdRaw) return "";
+  const condId = condIdRaw.startsWith(SPELL_PREFIX)
+    ? condIdRaw.slice(SPELL_PREFIX.length)
+    : condIdRaw;
+  return condId || "";
+}
+
+function hasImmediateEventActionProfile(rule) {
+  const actions = collectRuleActions(rule);
+  if (!actions.length) return false;
+  if (hasActionType(actions, "wake_win")) return false;
+  return hasActionType(actions, "event");
+}
+
 export function collectImmediateEventSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
   const out = [];
   const seen = new Set();
   const rules = Array.isArray(cfg?.rules) ? cfg.rules : [];
   for (const rule of rules) {
-    const onAll = Array.isArray(rule?.on?.all) ? rule.on.all : [];
-    if (onAll.length !== 1) continue;
-    const cond = onAll[0];
-    const condType = typeof cond?.type === "string" ? cond.type.trim().toLowerCase() : "";
-    const condIdRaw = typeof cond?.id === "string" ? cond.id.trim().toLowerCase() : "";
-    if (condType !== "spell" || !condIdRaw) continue;
-    const condId = condIdRaw.startsWith("spell.") ? condIdRaw.slice("spell.".length) : condIdRaw;
+    const condId = getSingleSpellConditionId(rule);
     if (!condId) continue;
-
-    const actions = Array.isArray(rule?.then) ? rule.then : [];
-    if (!actions.length) continue;
-    const hasWakeWin = actions.some((a) => {
-      const type = typeof a?.type === "string" ? a.type.trim().toLowerCase() : "";
-      return type === "wake_win";
-    });
-    if (hasWakeWin) continue;
-    const hasEvent = actions.some((a) => {
-      const type = typeof a?.type === "string" ? a.type.trim().toLowerCase() : "";
-      return type === "event";
-    });
-    if (!hasEvent) continue;
+    if (!hasImmediateEventActionProfile(rule)) continue;
 
     if (!seen.has(condId)) {
       seen.add(condId);

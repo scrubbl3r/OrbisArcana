@@ -7,9 +7,9 @@ It distinguishes:
 
 - Intentional receiver-owned state (acceptable shell/composition ownership)
 - Delegated system-owned state (good)
-- Remaining receiver-owned migration targets (future)
+- Receiver-owned watchlist items (future hardening candidates)
 
-Use this as a refactor priority map, not a final spec.
+Use this as a maintenance priority map, not a final spec.
 
 ## Date Context
 
@@ -31,8 +31,7 @@ Use this as a refactor priority map, not a final spec.
 - OK (Shell): reasonable to keep in receiver for now
 - OK (System): already lives in the right domain/system
 - WATCH: acceptable for now, but likely to need formalization
-- MOVE NEXT: high-value migration target
-- MOVE LATER: future extraction target, lower urgency
+- FUTURE: optional extraction candidate, lower urgency
 
 ### Authority Meanings
 
@@ -237,7 +236,7 @@ These are not urgent problems, but they should be tracked.
   - next hardening step is payload docs / JSDoc for event payloads
 
 --------------------------------------------------
-6. RECEIVER-OWNED MIGRATION TARGETS (MOVE LATER)
+6. RECEIVER-OWNED FUTURE TARGETS (OPTIONAL)
 --------------------------------------------------
 
 These are the biggest remaining receiver burdens by line count / concern density.

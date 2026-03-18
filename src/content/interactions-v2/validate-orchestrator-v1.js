@@ -22,6 +22,8 @@ import {
   parseOnSelectorList,
   asSelectorList,
   requireNonEmptyArray,
+  pushBooleanEnabledErrorWhenPresent,
+  validateOptionalObjectSection,
   collectOnEntriesFromObjectSelectors,
   collectRuleTriggerEntries,
   getMergedDefaultTriggerEntries,
@@ -32,115 +34,76 @@ const ROOT_CONTEXT = "ORCHESTRATOR_V1";
 const RULES_CONTEXT = `${ROOT_CONTEXT}.rules`;
 const DEFAULTS_CONTEXT = `${ROOT_CONTEXT}.defaults`;
 const DEFAULTS_OPEN_CONTEXT = `${DEFAULTS_CONTEXT}.open`;
-const DEFAULTS_TRIGGER_CONTEXT = `${DEFAULTS_CONTEXT}.trigger`;
 const DEFAULTS_RULE_CONTEXT = `${DEFAULTS_CONTEXT}.rule`;
+const DEFAULTS_TRIGGER_CONTEXT = `${DEFAULTS_CONTEXT}.trigger`;
 
 function formatContextKey(context, key) {
   return context.startsWith("rule ") ? `${context} ${key}` : `${context}.${key}`;
 }
 
-function getOwnNumberInfo(obj, key) {
+function pushFiniteConstraintErrorWhenPresent(
+  errors,
+  context,
+  obj,
+  key,
+  isValid,
+  errorMessage
+) {
   const source = asObj(obj);
-  if (!Object.hasOwn(source, key)) return { present: false, n: null };
-  return { present: true, n: Number(source[key]) };
+  if (!Object.hasOwn(source, key)) return;
+  const n = Number(source[key]);
+  if (!isValid(n)) {
+    const contextKey = formatContextKey(context, key);
+    errors.push(`${contextKey} ${errorMessage}`);
+  }
 }
 
-function pushFiniteAtLeastErrorWhenPresent(errors, context, obj, key, min) {
-  const { present, n } = getOwnNumberInfo(obj, key);
-  if (!present) return;
-  if (!Number.isFinite(n) || n < min) {
-    errors.push(
-      `${formatContextKey(context, key)} must be a finite number >= ${min} when present`
+function validateRuleNumericKeys(errors, context, target) {
+  pushFiniteConstraintErrorWhenPresent(
+    errors,
+    context,
+    target,
+    RULE_PRIORITY_KEY,
+    Number.isFinite,
+    "must be a finite number when present"
+  );
+  for (const key of RULE_COOLDOWN_KEYS) {
+    pushFiniteConstraintErrorWhenPresent(
+      errors,
+      context,
+      target,
+      key,
+      (n) => Number.isFinite(n) && n >= 0,
+      "must be a finite number >= 0 when present"
+    );
+  }
+  for (const key of RULE_MATCH_WINDOW_KEYS) {
+    pushFiniteConstraintErrorWhenPresent(
+      errors,
+      context,
+      target,
+      key,
+      (n) => Number.isFinite(n) && n >= ORCHESTRATOR_MIN_MATCH_WINDOW_MS,
+      `must be a finite number >= ${ORCHESTRATOR_MIN_MATCH_WINDOW_MS} when present`
     );
   }
 }
 
-function pushFiniteNonNegativeErrorWhenPresent(errors, context, obj, key) {
-  const { present, n } = getOwnNumberInfo(obj, key);
-  if (!present) return;
-  if (!Number.isFinite(n) || n < 0) {
-    errors.push(
-      `${formatContextKey(context, key)} must be a finite number >= 0 when present`
+function validateOpenTtlKeys(errors, context, target) {
+  for (const key of OPEN_TTL_KEYS) {
+    pushFiniteConstraintErrorWhenPresent(
+      errors,
+      context,
+      target,
+      key,
+      (n) => Number.isFinite(n) && n >= 0,
+      "must be a finite number >= 0 when present"
     );
   }
-}
-
-function pushBooleanEnabledErrorWhenPresent(errors, context, obj) {
-  const source = asObj(obj);
-  if (Object.hasOwn(source, "enabled") && typeof source.enabled !== "boolean") {
-    errors.push(`${context} enabled must be boolean when present`);
-  }
-}
-
-function pushFiniteNumberErrorWhenPresent(errors, context, obj, key) {
-  const { present, n } = getOwnNumberInfo(obj, key);
-  if (!present) return;
-  if (!Number.isFinite(n)) {
-    errors.push(
-      `${formatContextKey(context, key)} must be a finite number when present`
-    );
-  }
-}
-
-function pushErrorsForKeys(errors, context, obj, keys, pushErrorFn) {
-  for (const key of keys) pushErrorFn(errors, context, obj, key);
-}
-
-function validateRulePriorityConstraints(errors, context, target) {
-  pushFiniteNumberErrorWhenPresent(errors, context, target, RULE_PRIORITY_KEY);
-}
-
-function validateRuleCooldownConstraints(errors, context, target) {
-  pushErrorsForKeys(
-    errors,
-    context,
-    target,
-    RULE_COOLDOWN_KEYS,
-    pushFiniteNonNegativeErrorWhenPresent
-  );
-}
-
-function validateRuleMatchWindowConstraints(errors, context, target) {
-  pushErrorsForKeys(
-    errors,
-    context,
-    target,
-    RULE_MATCH_WINDOW_KEYS,
-    (errs, ctx, obj, key) =>
-      pushFiniteAtLeastErrorWhenPresent(
-        errs,
-        ctx,
-        obj,
-        key,
-        ORCHESTRATOR_MIN_MATCH_WINDOW_MS
-      )
-  );
-}
-
-function validateOpenTtlConstraints(errors, context, target) {
-  pushErrorsForKeys(
-    errors,
-    context,
-    target,
-    OPEN_TTL_KEYS,
-    pushFiniteNonNegativeErrorWhenPresent
-  );
 }
 
 function makeRuleContext(ruleId, section = "") {
   return section ? `rule ${ruleId} ${section}` : `rule ${ruleId}`;
-}
-
-function makeSelectorKey(type, id) {
-  return `${type}:${id}`;
-}
-
-function toTriggerValidationInput(rawTrigger) {
-  const isString = typeof rawTrigger === "string";
-  return {
-    isString,
-    trigger: asTriggerObject(rawTrigger),
-  };
 }
 
 function validateKnownEventId(errors, rawEventId, invalidMessage, unknownMessage) {
@@ -153,31 +116,26 @@ function validateKnownEventId(errors, rawEventId, invalidMessage, unknownMessage
   return eventId;
 }
 
-function isActiveSpellId(id) {
-  return Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id);
-}
-
 const SIGNAL_DEFINITIONS_SOURCE = (
   typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID
 )
   ? SIGNAL_DEFINITIONS_BY_ID
   : {};
-
-function collectKnownSignalIdsByPrefix(prefix) {
+function collectKnownSignalIds(prefix) {
   return new Set(
     Object.keys(SIGNAL_DEFINITIONS_SOURCE)
-      .filter((signalId) => typeof signalId === "string" && signalId.startsWith(`${prefix}.`))
-      .map((signalId) => signalId.slice(prefix.length + 1))
+      .filter((signalId) => typeof signalId === "string" && signalId.startsWith(prefix))
+      .map((signalId) => signalId.slice(prefix.length))
       .filter(Boolean)
   );
 }
 
-const KNOWN_GESTURE_IDS = collectKnownSignalIdsByPrefix("gesture");
-const KNOWN_ORB_STATE_IDS = collectKnownSignalIdsByPrefix("orb_state");
+const KNOWN_GESTURE_IDS = collectKnownSignalIds("gesture.");
+const KNOWN_ORB_STATE_IDS = collectKnownSignalIds("orb_state.");
 const ON_SELECTOR_CATALOG = Object.freeze({
   spell: Object.freeze({
     unknownReason: "inactive or unknown spell id",
-    isKnown: (id) => isActiveSpellId(id),
+    isKnown: (id) => Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id),
   }),
   gesture: Object.freeze({
     unknownReason: "unknown gesture id",
@@ -208,6 +166,14 @@ const RULE_ALLOWED_KEYS = Object.freeze(new Set([
 ]));
 const OPEN_ALLOWED_KEYS = Object.freeze(new Set(["spells", ...OPEN_TTL_KEYS, "enabled"]));
 const TRIGGER_ALLOWED_KEYS = Object.freeze(new Set(["event", "enabled", "args"]));
+const SUPPORTED_ON_SELECTOR_TYPES = Object.freeze(new Set(Object.keys(ON_SELECTOR_CATALOG)));
+const RULE_ID_REQUIRED_ERROR = `${RULES_CONTEXT}[] entry is missing id`;
+
+function formatRuleSelectorError(ruleContext, reason, value = "") {
+  return value
+    ? `${ruleContext} ${reason}: ${value}`
+    : `${ruleContext} ${reason}`;
+}
 
 function validateOpenSpells(errors, ruleId, open) {
   const openContext = makeRuleContext(ruleId, "open");
@@ -224,60 +190,34 @@ function validateOpenSpells(errors, ruleId, open) {
       errors.push(`${openContext} contains duplicate spell id: ${openSpellRaw}`);
     }
     seenOpenSpells.add(openSpellId);
-    if (!isActiveSpellId(openSpellId)) {
+    if (!Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, openSpellId)) {
       errors.push(`${openContext} references inactive or unknown spell id: ${openSpellRaw}`);
     }
-  }
-}
-
-function validateTriggerEntryCore(errors, triggerContext, trigger) {
-  pushUnsupportedKeys(errors, triggerContext, trigger, TRIGGER_ALLOWED_KEYS);
-  pushBooleanEnabledErrorWhenPresent(errors, triggerContext, trigger);
-  validateTriggerEntryEvent(errors, triggerContext, trigger);
-}
-
-function validateTriggerEntryEvent(errors, triggerContext, trigger) {
-  validateKnownEventId(
-    errors,
-    trigger.event,
-    `${triggerContext} is missing event`,
-    `${triggerContext} references unknown event id: ${trigger.event}`
-  );
-}
-
-function validateTriggerEntryArgs(errors, triggerContext, isTriggerString, trigger) {
-  if (
-    !isTriggerString &&
-    Object.hasOwn(trigger, "args") &&
-    !isPlainObject(trigger.args)
-  ) {
-    errors.push(`${triggerContext} args must be an object when present`);
   }
 }
 
 function validateTriggerEntries(errors, ruleId, triggerEntries) {
   const triggerContext = makeRuleContext(ruleId, "trigger");
   for (const rawTrigger of triggerEntries) {
-    const { isString: isTriggerString, trigger } = toTriggerValidationInput(rawTrigger);
-    validateTriggerEntryCore(errors, triggerContext, trigger);
-    validateTriggerEntryArgs(errors, triggerContext, isTriggerString, trigger);
+    const isTriggerString = typeof rawTrigger === "string";
+    const trigger = asTriggerObject(rawTrigger);
+    pushUnsupportedKeys(errors, triggerContext, trigger, TRIGGER_ALLOWED_KEYS);
+    pushBooleanEnabledErrorWhenPresent(errors, triggerContext, trigger);
+    const unknownEventError = `${triggerContext} references unknown event id: ${trigger.event}`;
+    validateKnownEventId(
+      errors,
+      trigger.event,
+      `${triggerContext} is missing event`,
+      unknownEventError
+    );
+    if (
+      !isTriggerString &&
+      Object.hasOwn(trigger, "args") &&
+      !isPlainObject(trigger.args)
+    ) {
+      errors.push(`${triggerContext} args must be an object when present`);
+    }
   }
-}
-
-function validateOnSelectorCore(errors, ruleContext, entry) {
-  const type = asText(entry?.type).toLowerCase();
-  const id = asText(entry?.id).toLowerCase();
-  const rawId = entry.raw || id;
-  const selectorConfig = ON_SELECTOR_CATALOG[type];
-  if (!selectorConfig) {
-    errors.push(`${ruleContext} has unsupported on selector type`);
-    return { type, id, rawId, selectorConfig: null };
-  }
-  if (!id) {
-    errors.push(`${ruleContext} has empty on.${type}`);
-    return { type, id, rawId, selectorConfig };
-  }
-  return { type, id, rawId, selectorConfig };
 }
 
 function validateOnSelectors(errors, ruleId, onEntries) {
@@ -285,155 +225,106 @@ function validateOnSelectors(errors, ruleId, onEntries) {
   const seenOn = new Set();
   if (!requireNonEmptyArray(errors, onEntries, `${ruleContext} must define on selectors`)) return;
   for (const entry of onEntries) {
-    const { type, id, rawId, selectorConfig } = validateOnSelectorCore(errors, ruleContext, entry);
-    if (!selectorConfig || !id) continue;
-    const selectorKey = makeSelectorKey(type, id);
+    const type = asText(entry?.type).toLowerCase();
+    const id = asText(entry?.id).toLowerCase();
+    const rawId = entry.raw || id;
+    if (!SUPPORTED_ON_SELECTOR_TYPES.has(type)) {
+      errors.push(formatRuleSelectorError(ruleContext, "has unsupported on selector type"));
+      continue;
+    }
+    const selectorConfig = ON_SELECTOR_CATALOG[type];
+    if (!id) {
+      errors.push(formatRuleSelectorError(ruleContext, `has empty on.${type}`));
+      continue;
+    }
+    const selectorKey = `${type}.${id}`;
     if (seenOn.has(selectorKey)) {
-      errors.push(`${ruleContext} contains duplicate on selector: ${type}.${id}`);
+      errors.push(formatRuleSelectorError(ruleContext, "contains duplicate on selector", `${type}.${id}`));
       continue;
     }
     seenOn.add(selectorKey);
     if (!selectorConfig.isKnown(id)) {
-      errors.push(`${ruleContext} references ${selectorConfig.unknownReason}: ${rawId}`);
+      errors.push(formatRuleSelectorError(ruleContext, `references ${selectorConfig.unknownReason}`, rawId));
     }
   }
 }
 
-function collectOnEntriesFromRule(rule, ruleId, errors) {
+function validateRuleOpenAction(errors, ruleId, openForValidation) {
+  if (!openForValidation) return;
+  const openContext = makeRuleContext(ruleId, "open");
+  pushUnsupportedKeys(errors, openContext, openForValidation, OPEN_ALLOWED_KEYS);
+  pushBooleanEnabledErrorWhenPresent(errors, openContext, openForValidation);
+  validateOpenTtlKeys(errors, openContext, openForValidation);
+  validateOpenSpells(errors, ruleId, openForValidation);
+}
+
+function collectRuleOnEntries(errors, rule, ruleId) {
+  const ruleOnContext = makeRuleContext(ruleId, "on");
   if (isStringOrArray(rule.on)) {
     return parseOnSelectorList(rule.on, { invalidAsEmptyObject: true });
   }
   const on = asObj(rule.on);
-  const onContext = makeRuleContext(ruleId, "on");
-  pushUnsupportedKeys(errors, onContext, on, ON_SELECTOR_ALLOWED_KEYS);
+  pushUnsupportedKeys(errors, ruleOnContext, on, ON_SELECTOR_ALLOWED_KEYS);
   return collectOnEntriesFromObjectSelectors(on, { includeRaw: true });
 }
 
-function registerRuleId(errors, seenRuleIds, rawRule) {
-  const rule = asObj(rawRule);
+function validateRuleActionPresence(errors, ruleId, ruleContext, hasOpenAction, triggerEntries) {
+  const hasTriggerActions = hasNonEmptyArray(triggerEntries);
+  const ruleActionsRequiredError = `${ruleContext} must define open and/or trigger actions`;
+  if (hasTriggerActions || hasOpenAction) {
+    validateTriggerEntries(errors, ruleId, triggerEntries);
+  } else {
+    errors.push(ruleActionsRequiredError);
+  }
+}
+
+function validateRuleIdentity(errors, seenRuleIds, rule) {
   const ruleId = asText(rule.id);
   if (!ruleId) {
-    errors.push(`${RULES_CONTEXT}[] entry is missing id`);
-    return null;
+    errors.push(RULE_ID_REQUIRED_ERROR);
+    return "";
   }
   if (seenRuleIds.has(ruleId)) errors.push(`${RULES_CONTEXT} contains duplicate id: ${ruleId}`);
   seenRuleIds.add(ruleId);
-  return { rule, ruleId };
-}
-
-function resolveOpenForValidation(errors, ruleId, rule) {
-  if (!Object.hasOwn(rule, "open")) return null;
-  const open = asOpenObject(rule.open);
-  const openContext = makeRuleContext(ruleId, "open");
-  pushUnsupportedKeys(errors, openContext, open, OPEN_ALLOWED_KEYS);
-  pushBooleanEnabledErrorWhenPresent(errors, openContext, open);
-  validateOpenTtlConstraints(errors, openContext, open);
-  return open;
-}
-
-function validateRuleNumericConstraints(errors, context, target) {
-  validateRulePriorityConstraints(errors, context, target);
-  validateRuleCooldownConstraints(errors, context, target);
-  validateRuleMatchWindowConstraints(errors, context, target);
-}
-
-function validateRuleActionsPresence(errors, context, openForValidation, triggerEntries) {
-  if (hasNonEmptyArray(triggerEntries)) return true;
-  if (openForValidation) return true;
-  errors.push(`${context} must define open and/or trigger actions`);
-  return false;
-}
-
-function validateRuleOpenSection(errors, ruleId, rule) {
-  const openForValidation = resolveOpenForValidation(errors, ruleId, rule);
-  if (openForValidation) {
-    validateOpenSpells(errors, ruleId, openForValidation);
-  }
-  return openForValidation;
-}
-
-function validateRuleTriggerSection(errors, ruleId, context, rule, openForValidation) {
-  const triggerEntries = collectRuleTriggerEntries(rule, TRIGGER_SOURCE_KEYS);
-  if (!validateRuleActionsPresence(errors, context, openForValidation, triggerEntries)) return;
-  validateTriggerEntries(errors, ruleId, triggerEntries);
-}
-
-function validateRuleCore(errors, context, rule) {
-  pushUnsupportedKeys(errors, context, rule, RULE_ALLOWED_KEYS);
-  pushBooleanEnabledErrorWhenPresent(errors, context, rule);
-  validateRuleNumericConstraints(errors, context, rule);
-}
-
-function validateRuleOnSection(errors, ruleId, rule) {
-  const onEntries = collectOnEntriesFromRule(rule, ruleId, errors);
-  validateOnSelectors(errors, ruleId, onEntries);
-}
-
-function validateDefaultsObjectSection(errors, defaults, key, validateSectionFn) {
-  if (!Object.hasOwn(defaults, key)) return;
-  validateSectionFn(errors, asObj(defaults[key]));
-}
-
-function validateDefaultsOpenCore(errors, defaultsOpen) {
-  pushUnsupportedKeys(errors, DEFAULTS_OPEN_CONTEXT, defaultsOpen, OPEN_TTL_KEYS);
-  validateOpenTtlConstraints(errors, DEFAULTS_OPEN_CONTEXT, defaultsOpen);
-}
-
-function validateDefaultsOpen(errors, defaults) {
-  validateDefaultsObjectSection(errors, defaults, "open", validateDefaultsOpenCore);
-}
-
-function validateDefaultsTriggerEntry(errors, rawEventId, args) {
-  if (!validateKnownEventId(
-    errors,
-    rawEventId,
-    `${DEFAULTS_TRIGGER_CONTEXT} has invalid event key: ${rawEventId}`,
-    `${DEFAULTS_TRIGGER_CONTEXT} references unknown event id: ${rawEventId}`
-  )) return;
-  if (!isPlainObject(args)) {
-    errors.push(`${DEFAULTS_TRIGGER_CONTEXT}[${rawEventId}] must be an object`);
-  }
-}
-
-function validateDefaultsTriggers(errors, defaults) {
-  const defaultTriggerEntries = getMergedDefaultTriggerEntries(defaults);
-  if (!defaultTriggerEntries.length) return;
-  for (const [rawEventId, args] of defaultTriggerEntries) {
-    validateDefaultsTriggerEntry(errors, rawEventId, args);
-  }
-}
-
-function validateDefaultsRule(errors, defaults) {
-  validateDefaultsObjectSection(errors, defaults, "rule", (errs, defaultsRule) => {
-    pushUnsupportedKeys(errs, DEFAULTS_RULE_CONTEXT, defaultsRule, DEFAULTS_RULE_ALLOWED_KEYS);
-    validateRuleNumericConstraints(errs, DEFAULTS_RULE_CONTEXT, defaultsRule);
-  });
-}
-
-function validateDefaultsCore(errors, defaults) {
-  pushUnsupportedKeys(errors, DEFAULTS_CONTEXT, defaults, DEFAULTS_ALLOWED_KEYS);
-  validateDefaultsOpen(errors, defaults);
-  validateDefaultsTriggers(errors, defaults);
-  validateDefaultsRule(errors, defaults);
-}
-
-function validateDefaultsSection(errors, target) {
-  validateDefaultsObjectSection(errors, target, "defaults", validateDefaultsCore);
+  return ruleId;
 }
 
 function validateRuleEntry(errors, seenRuleIds, rawRule) {
-  const resolved = registerRuleId(errors, seenRuleIds, rawRule);
-  if (!resolved) return;
-  const { rule, ruleId } = resolved;
+  const rule = asObj(rawRule);
+  const ruleId = validateRuleIdentity(errors, seenRuleIds, rule);
+  if (!ruleId) return;
 
-  const context = makeRuleContext(ruleId);
-  validateRuleCore(errors, context, rule);
-  validateRuleOnSection(errors, ruleId, rule);
-  const openForValidation = validateRuleOpenSection(errors, ruleId, rule);
-  validateRuleTriggerSection(errors, ruleId, context, rule, openForValidation);
+  const ruleContext = makeRuleContext(ruleId);
+  pushUnsupportedKeys(errors, ruleContext, rule, RULE_ALLOWED_KEYS);
+  pushBooleanEnabledErrorWhenPresent(errors, ruleContext, rule);
+  validateRuleNumericKeys(errors, ruleContext, rule);
+  const onEntries = collectRuleOnEntries(errors, rule, ruleId);
+  validateOnSelectors(errors, ruleId, onEntries);
+  const hasOpenAction = Object.hasOwn(rule, "open");
+  const openForValidation = hasOpenAction ? asOpenObject(rule.open) : null;
+  validateRuleOpenAction(errors, ruleId, openForValidation);
+  const triggerEntries = collectRuleTriggerEntries(rule, TRIGGER_SOURCE_KEYS);
+  validateRuleActionPresence(errors, ruleId, ruleContext, hasOpenAction, triggerEntries);
 }
 
-function validateRootShape(errors, target) {
+function validateDefaultTriggerEntries(errors, defaults) {
+  const defaultTriggerEntries = getMergedDefaultTriggerEntries(defaults);
+  for (const [rawEventId, args] of defaultTriggerEntries) {
+    if (!validateKnownEventId(
+      errors,
+      rawEventId,
+      `${DEFAULTS_TRIGGER_CONTEXT} has invalid event key: ${rawEventId}`,
+      `${DEFAULTS_TRIGGER_CONTEXT} references unknown event id: ${rawEventId}`
+    )) {
+      continue;
+    }
+    if (!isPlainObject(args)) {
+      errors.push(`${DEFAULTS_TRIGGER_CONTEXT}[${rawEventId}] must be an object`);
+    }
+  }
+}
+
+function validateOrchestratorRoot(errors, target) {
   pushUnsupportedKeys(errors, ROOT_CONTEXT, target, ROOT_ALLOWED_KEYS);
   if (asText(target.version) !== "1") errors.push(`${ROOT_CONTEXT}.version must be "1"`);
   if (typeof target.enabled !== "boolean") errors.push(`${ROOT_CONTEXT}.enabled must be boolean`);
@@ -444,18 +335,36 @@ function validateRootShape(errors, target) {
   return true;
 }
 
-function validateRulesSection(errors, target) {
-  const ids = new Set();
-  for (const rawRule of target.rules) {
-    validateRuleEntry(errors, ids, rawRule);
-  }
+function validateOrchestratorDefaults(errors, target) {
+  validateOptionalObjectSection(target, "defaults", (defaults) => {
+    pushUnsupportedKeys(errors, DEFAULTS_CONTEXT, defaults, DEFAULTS_ALLOWED_KEYS);
+    validateOptionalObjectSection(defaults, "open", (defaultsOpen) => {
+      pushUnsupportedKeys(errors, DEFAULTS_OPEN_CONTEXT, defaultsOpen, OPEN_TTL_KEYS);
+      validateOpenTtlKeys(errors, DEFAULTS_OPEN_CONTEXT, defaultsOpen);
+    });
+    validateDefaultTriggerEntries(errors, defaults);
+    validateOptionalObjectSection(defaults, "rule", (defaultsRule) => {
+      pushUnsupportedKeys(
+        errors,
+        DEFAULTS_RULE_CONTEXT,
+        defaultsRule,
+        DEFAULTS_RULE_ALLOWED_KEYS
+      );
+      validateRuleNumericKeys(errors, DEFAULTS_RULE_CONTEXT, defaultsRule);
+    });
+  });
 }
 
 export function validateOrchestratorV1(cfg) {
   const errors = [];
   const target = asObj(cfg);
-  if (!validateRootShape(errors, target)) return errors;
-  validateDefaultsSection(errors, target);
-  validateRulesSection(errors, target);
+  if (!validateOrchestratorRoot(errors, target)) {
+    return errors;
+  }
+  validateOrchestratorDefaults(errors, target);
+  const ids = new Set();
+  for (const rawRule of target.rules) {
+    validateRuleEntry(errors, ids, rawRule);
+  }
   return errors;
 }

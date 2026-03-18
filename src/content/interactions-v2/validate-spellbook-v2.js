@@ -1,57 +1,102 @@
 import { SPELLBOOK_V2 } from "./spellbook-v2.js";
 import { asObj, asText } from "./orchestrator-v1-normalizers.js";
 
-function isFiniteNonNegative(v) {
-  const n = Number(v);
-  return Number.isFinite(n) && n >= 0;
-}
-
-function isFiniteZeroToOne(v) {
-  const n = Number(v);
-  return Number.isFinite(n) && n >= 0 && n <= 1;
-}
+const MISSING_ID_LABEL = "(missing-id)";
+const ENTITY_ID_PATTERN = /^[a-z0-9_]+$/;
+const PHRASE_PATTERN = /^[a-z0-9_ ]+$/;
+const MIN_ACTIVE_SPELLS = 1;
+const ACTIVE_SPELLS_REQUIRED_ERROR = "SPELLBOOK_V2 must keep at least one active spell";
+const CANONICAL_SPELL_FIELD_KEYS = Object.freeze(["id", "phrase", "onnx"]);
 
 function isEntityIdLike(v) {
-  return typeof v === "string" && /^[a-z0-9_]+$/.test(v);
+  return typeof v === "string" && ENTITY_ID_PATTERN.test(v);
 }
 
-function isPhraseLike(v) {
-  return typeof v === "string" && /^[a-z0-9_ ]+$/.test(v);
+function spellLabel(id) {
+  return id || MISSING_ID_LABEL;
 }
 
-function pushRequiredFieldError(errors, fieldValue, message) {
-  if (!fieldValue) errors.push(message);
+function pushFiniteRangeErrorWhenInvalid(errors, message, value, min, max = Number.POSITIVE_INFINITY) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < min || n > max) errors.push(message);
 }
 
-function pushCanonicalLowercaseError(errors, rawValue, canonicalValue, message) {
+function pushDuplicateErrorWhenSeen(errors, seenSet, value, message) {
+  if (seenSet.has(value)) errors.push(message);
+  seenSet.add(value);
+}
+
+function pushCanonicalLowercaseErrorWhenPresent(errors, rawValue, canonicalValue, message) {
   if (rawValue && rawValue !== canonicalValue) errors.push(message);
 }
 
-function pushShapeValidationError(errors, value, isValidFn, message) {
-  if (value && !isValidFn(value)) errors.push(message);
+function pushCanonicalSpellFieldErrors(errors, fieldsByKey, idLabel) {
+  for (const key of CANONICAL_SPELL_FIELD_KEYS) {
+    const rawValue = fieldsByKey[`raw${key.charAt(0).toUpperCase()}${key.slice(1)}`];
+    const canonicalValue = fieldsByKey[key];
+    const label = key === "id" ? rawValue : idLabel;
+    pushCanonicalLowercaseErrorWhenPresent(
+      errors,
+      rawValue,
+      canonicalValue,
+      `SPELLBOOK_V2 spell ${label} ${key} must be lowercase/canonical`
+    );
+  }
 }
 
-function pushDuplicateError(errors, seen, value, message) {
-  if (!value) return;
-  if (seen.has(value)) errors.push(message);
-  seen.add(value);
+function pushMissingSpellFieldErrors(errors, id, phrase, onnx) {
+  if (!id) errors.push("SPELLBOOK_V2 spell entry is missing id");
+  if (!phrase) errors.push(`SPELLBOOK_V2 spell ${spellLabel(id)} is missing phrase`);
+  if (!onnx) errors.push(`SPELLBOOK_V2 spell ${spellLabel(id)} is missing onnx`);
 }
 
-export function validateSpellbookV2(input = SPELLBOOK_V2) {
-  const errors = [];
-  const cfg = asObj(input);
+function pushSpellShapeErrors(errors, id, phrase, onnx) {
+  if (id && !isEntityIdLike(id)) {
+    errors.push(`SPELLBOOK_V2 spell id has invalid shape (letters/numbers/_ only): ${id}`);
+  }
+  if (phrase && !PHRASE_PATTERN.test(phrase)) {
+    errors.push(
+      `SPELLBOOK_V2 spell ${spellLabel(id)} phrase has invalid shape (letters/numbers/_/space only): ${phrase}`
+    );
+  }
+  if (onnx && !isEntityIdLike(onnx)) {
+    errors.push(`SPELLBOOK_V2 spell ${spellLabel(id)} onnx has invalid shape (letters/numbers/_ only): ${onnx}`);
+  }
+}
 
+function pushSpellDuplicateErrors(errors, seenIds, seenPhrases, id, phrase) {
+  if (id) {
+    pushDuplicateErrorWhenSeen(errors, seenIds, id, `SPELLBOOK_V2 contains duplicate id: ${id}`);
+  }
+  if (phrase) {
+    pushDuplicateErrorWhenSeen(
+      errors,
+      seenPhrases,
+      phrase,
+      `SPELLBOOK_V2 contains duplicate phrase: ${phrase}`
+    );
+  }
+}
+
+function countActiveSpells(spells) {
+  return spells.reduce((acc, spell) => acc + ((spell?.active !== false) ? 1 : 0), 0);
+}
+
+function validateSpellbookRoot(errors, cfg) {
   if (asText(cfg.version) !== "2") {
     errors.push("SPELLBOOK_V2.version must be \"2\"");
   }
   if (!Array.isArray(cfg.spells)) {
     errors.push("SPELLBOOK_V2.spells must be an array");
-    return errors;
+    return false;
   }
+  return true;
+}
 
+function validateSpellbookRules(errors, spells) {
   const seenIds = new Set();
   const seenPhrases = new Set();
-  for (const s of cfg.spells) {
+  for (const s of spells) {
     const spell = asObj(s);
     const rawId = asText(spell.id);
     const rawPhrase = asText(spell.phrase);
@@ -59,36 +104,45 @@ export function validateSpellbookV2(input = SPELLBOOK_V2) {
     const id = rawId.toLowerCase();
     const phrase = rawPhrase.toLowerCase();
     const onnx = rawOnnx.toLowerCase();
+    const canonicalFields = { rawId, rawPhrase, rawOnnx, id, phrase, onnx };
 
-    pushRequiredFieldError(errors, id, "SPELLBOOK_V2 spell entry is missing id");
-    pushRequiredFieldError(errors, phrase, `SPELLBOOK_V2 spell ${id || "(missing-id)"} is missing phrase`);
-    pushRequiredFieldError(errors, onnx, `SPELLBOOK_V2 spell ${id || "(missing-id)"} is missing onnx`);
+    pushMissingSpellFieldErrors(errors, id, phrase, onnx);
+    pushCanonicalSpellFieldErrors(errors, canonicalFields, spellLabel(id));
 
-    pushCanonicalLowercaseError(errors, rawId, id, `SPELLBOOK_V2 spell ${rawId} id must be lowercase/canonical`);
-    pushCanonicalLowercaseError(errors, rawPhrase, phrase, `SPELLBOOK_V2 spell ${id || "(missing-id)"} phrase must be lowercase/canonical`);
-    pushCanonicalLowercaseError(errors, rawOnnx, onnx, `SPELLBOOK_V2 spell ${id || "(missing-id)"} onnx must be lowercase/canonical`);
-
-    pushShapeValidationError(errors, id, isEntityIdLike, `SPELLBOOK_V2 spell id has invalid shape (letters/numbers/_ only): ${id}`);
-    pushShapeValidationError(errors, phrase, isPhraseLike, `SPELLBOOK_V2 spell ${id || "(missing-id)"} phrase has invalid shape (letters/numbers/_/space only): ${phrase}`);
-    pushShapeValidationError(errors, onnx, isEntityIdLike, `SPELLBOOK_V2 spell ${id || "(missing-id)"} onnx has invalid shape (letters/numbers/_ only): ${onnx}`);
-
-    pushDuplicateError(errors, seenIds, id, `SPELLBOOK_V2 contains duplicate id: ${id}`);
-    pushDuplicateError(errors, seenPhrases, phrase, `SPELLBOOK_V2 contains duplicate phrase: ${phrase}`);
+    pushSpellShapeErrors(errors, id, phrase, onnx);
+    pushSpellDuplicateErrors(errors, seenIds, seenPhrases, id, phrase);
 
     if (Object.hasOwn(spell, "active") && typeof spell.active !== "boolean") {
-      errors.push(`SPELLBOOK_V2 spell ${id || "(missing-id)"} active must be boolean`);
+      errors.push(`SPELLBOOK_V2 spell ${spellLabel(id)} active must be boolean`);
     }
-    if (!isFiniteZeroToOne(spell.confidence)) {
-      errors.push(`SPELLBOOK_V2 spell ${id || "(missing-id)"} confidence must be a finite number in [0,1]`);
-    }
-    if (!isFiniteNonNegative(spell.cooldownMs)) {
-      errors.push(`SPELLBOOK_V2 spell ${id || "(missing-id)"} cooldownMs must be a finite number >= 0`);
-    }
+    pushFiniteRangeErrorWhenInvalid(
+      errors,
+      `SPELLBOOK_V2 spell ${spellLabel(id)} confidence must be a finite number in [0,1]`,
+      spell.confidence,
+      0,
+      1
+    );
+    pushFiniteRangeErrorWhenInvalid(
+      errors,
+      `SPELLBOOK_V2 spell ${spellLabel(id)} cooldownMs must be a finite number >= 0`,
+      spell.cooldownMs,
+      0
+    );
   }
+}
 
-  const activeCount = cfg.spells.reduce((acc, spell) => acc + ((spell?.active !== false) ? 1 : 0), 0);
-  if (activeCount < 1) {
-    errors.push("SPELLBOOK_V2 must keep at least one active spell");
+export function validateSpellbookV2(input = SPELLBOOK_V2) {
+  const errors = [];
+  const cfg = asObj(input);
+
+  if (!validateSpellbookRoot(errors, cfg)) {
+    return errors;
+  }
+  validateSpellbookRules(errors, cfg.spells);
+
+  const activeCount = countActiveSpells(cfg.spells);
+  if (activeCount < MIN_ACTIVE_SPELLS) {
+    errors.push(ACTIVE_SPELLS_REQUIRED_ERROR);
   }
 
   return errors;
