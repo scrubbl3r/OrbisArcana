@@ -52,8 +52,12 @@ function getSpellList(spellbook) {
   return Array.isArray(spellbook?.[FIELD_SPELLS]) ? spellbook[FIELD_SPELLS].slice() : [];
 }
 
+function getSpellFieldValue(spell, key) {
+  return spell?.[key];
+}
+
 function isSpellActive(spell) {
-  return spell?.[FIELD_ACTIVE] !== false;
+  return getSpellFieldValue(spell, FIELD_ACTIVE) !== false;
 }
 
 export const SPELLBOOK_V2_SPELLS = Object.freeze(

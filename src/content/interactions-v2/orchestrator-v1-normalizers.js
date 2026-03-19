@@ -236,7 +236,7 @@ function buildStructuredTriggerArgs(spec) {
 function makeEventTrigger(eventId, { enabled, args } = {}) {
   const out = { [FIELD_EVENT]: eventId };
   if (typeof enabled === "boolean") out[FIELD_ENABLED] = enabled;
-  if (isPlainObject(args) && Object.keys(args).length) out[FIELD_ARGS] = args;
+  if (isPlainObject(args) && hasObjectKeys(args)) out[FIELD_ARGS] = args;
   return Object.freeze(out);
 }
 
@@ -252,14 +252,18 @@ function buildTriggerEntry(eventId, spec) {
     const out = { [FIELD_EVENT]: eventId };
     if (Object.hasOwn(spec, FIELD_ENABLED)) out[FIELD_ENABLED] = spec[FIELD_ENABLED];
     const argsFromField = buildStructuredTriggerArgs(spec);
-    if (Object.keys(argsFromField).length) out[FIELD_ARGS] = argsFromField;
+    if (hasObjectKeys(argsFromField)) out[FIELD_ARGS] = argsFromField;
     return Object.freeze(out);
   }
   return makeEventTrigger(eventId);
 }
 
+function isAliasOfOrbState(typeRaw) {
+  return typeRaw === TYPE_ORBSTATE_ALIAS || typeRaw === TYPE_ORB_STATE_ALIAS;
+}
+
 function normalizeSelectorType(typeRaw) {
-  if (typeRaw === TYPE_ORBSTATE_ALIAS || typeRaw === TYPE_ORB_STATE_ALIAS) {
+  if (isAliasOfOrbState(typeRaw)) {
     return TYPE_ORB_STATE;
   }
   return typeRaw;
@@ -325,6 +329,10 @@ function hasObjectKeys(value) {
   return Object.keys(asObj(value)).length > 0;
 }
 
+function asTriggerMap(rawTrigger) {
+  return asObj(rawTrigger);
+}
+
 function buildTriggerEntriesFromMap(triggerMap) {
   return Object.entries(asObj(triggerMap)).map(([eventId, spec]) =>
     buildTriggerEntry(eventId, spec)
@@ -342,7 +350,7 @@ function getMergedTriggerMap(source) {
 export function normalizeTriggerEntries(rawTrigger) {
   const tokenizedEntries = expandTokenizedEntries(rawTrigger);
   if (tokenizedEntries) return tokenizedEntries;
-  const triggerMap = asObj(rawTrigger);
+  const triggerMap = asTriggerMap(rawTrigger);
   if (hasObjectKeys(triggerMap)) {
     return buildTriggerEntriesFromMap(triggerMap);
   }
