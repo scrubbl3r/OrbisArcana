@@ -41,14 +41,103 @@ const FIELD_EXECUTION = "execution";
 const ERR_PREFIX_ORCHESTRATOR_V1 = "Orchestrator v1 validation failed: ";
 const ERR_PREFIX_SPELLBOOK_V2 = "Spellbook v2 validation failed: ";
 const ERR_PREFIX_SPELL_RUNTIME_ROUTING = "Spell runtime routing validation failed: ";
+const WARN_ORCHESTRATOR_BUILDER_MISSING =
+  "[receiver-bootstrap] ORCHESTRATOR_V1 builder missing; using safe disabled rule schema";
+const WARN_ORCHESTRATOR_BUILD_FAILED =
+  "[receiver-bootstrap] ORCHESTRATOR_V1 build failed; using safe disabled rule schema";
+const WARN_INTERACTIONS_BOOTSTRAP_DISABLED =
+  "[receiver-bootstrap] INTERACTIONS_V2 bootstrap disabled; using safe disabled rule schema";
+const WARN_INTERACTIONS_BUILDER_MISSING =
+  "[receiver-bootstrap] INTERACTIONS_V2 adapter missing builder; using safe disabled rule schema";
+const WARN_INTERACTIONS_ADAPTER_FAILED =
+  "[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to adapter base schema";
+const INFO_RULE_SOURCE_PREFIX = "[receiver-bootstrap] rule source:";
+const WARN_RULE_SCHEMA_INVALID_PREFIX =
+  "[receiver-bootstrap] rule schema invalid; using safe disabled fallback";
+const WARN_RULE_SCHEMA_INTEGRITY_INVALID_PREFIX =
+  "[receiver-bootstrap] rule schema integrity invalid; using safe disabled fallback";
+const RULE_ENGINE_VERSION_V2 = "2";
+const EMPTY_FROZEN_ARRAY = Object.freeze([]);
+const ADAPTER_BASE_FALLBACK_RULE_SCHEMA = Object.freeze({
+  version: RULE_ENGINE_VERSION_V2,
+  [FIELD_SIGNALS]: EMPTY_FROZEN_ARRAY,
+  [FIELD_WINDOWS]: EMPTY_FROZEN_ARRAY,
+  [FIELD_EVENTS]: EMPTY_FROZEN_ARRAY,
+  [FIELD_RULES]: EMPTY_FROZEN_ARRAY,
+  [FIELD_EVENT_RUNTIME_BINDINGS]: Object.create(null),
+});
+const RULE_SCHEMA_OVERRIDE_FIELDS = Object.freeze([
+  FIELD_EXECUTION,
+  "ruleActionLimitOverrides",
+  "ruleCooldownScaleOverrides",
+  "ruleMatchWindowScaleOverrides",
+  "ruleEmitPreviewMatchedOverrides",
+  "ruleEmitActionExecutedOverrides",
+  "ruleEmitSourceEventSummaryOverrides",
+  "ruleSummaryIncludeSignalAndRuleIdsOverrides",
+  "ruleSummaryIncludeBudgetCapsOverrides",
+  "ruleActionExecutedEventTypeEnabledOverrides",
+  "ruleExecuteActionsOverrides",
+  "ruleActionTypeEnabledOverrides",
+  "signalDebounceOverrides",
+  "signalMaxMatchesOverrides",
+  "signalEmitPreviewMatchedOverrides",
+  "signalExecuteActionsOverrides",
+  "signalEmitActionExecutedOverrides",
+  "signalEmitSourceEventSummaryOverrides",
+  "signalSummaryIncludeSignalAndRuleIdsOverrides",
+  "signalSummaryIncludeBudgetCapsOverrides",
+  "signalActionExecutedEventTypeEnabledOverrides",
+  "signalActionTypeEnabledOverrides",
+  "signalMatchWindowScaleOverrides",
+  "signalCooldownScaleOverrides",
+  "signalMaxActionsPerRuleMatchOverrides",
+  "signalMaxRulesEvaluatedOverrides",
+  "signalMaxActionsPerEventOverrides",
+  "signalMaxActionsPerSignalOverrides",
+  "signalMaxMatchesPerEventOverrides",
+  "signalMaxSignalsPerEventOverrides",
+  "signalMaxSignalsEvaluatedPerEventOverrides",
+  "signalMaxRulesEvaluatedPerEventOverrides",
+  "signalStopOnFirstSignalMatchPerEventOverrides",
+  "signalStopOnFirstMatchOverrides",
+  "sourceEventEnabledOverrides",
+  "sourceEventDebounceOverrides",
+  "sourceEventMaxSignalsOverrides",
+  "sourceEventMaxSignalsEvaluatedPerEventOverrides",
+  "sourceEventMaxActionsPerSignalOverrides",
+  "sourceEventMaxRulesEvaluatedOverrides",
+  "sourceEventMaxRulesEvaluatedPerEventOverrides",
+  "sourceEventMaxMatchesPerEventOverrides",
+  "sourceEventMaxActionsPerEventOverrides",
+  "sourceEventStopOnFirstSignalMatchOverrides",
+  "sourceEventEmitPreviewMatchedOverrides",
+  "sourceEventEmitActionExecutedOverrides",
+  "sourceEventEmitSourceEventSummaryOverrides",
+  "sourceEventSummaryIncludeSignalAndRuleIdsOverrides",
+  "sourceEventSummaryIncludeBudgetCapsOverrides",
+  "sourceEventActionTypeEnabledOverrides",
+  "sourceEventActionExecutedEventTypeEnabledOverrides",
+  "sourceEventExecuteActionsOverrides",
+  "sourceEventCooldownScaleOverrides",
+  "sourceEventMatchWindowScaleOverrides",
+  "sourceEventMaxActionsPerRuleMatchOverrides",
+  "sourceEventStopOnFirstMatchOverrides",
+  "sourceEventMaxMatchesPerSignalOverrides",
+  "actionArgOverrides",
+]);
 
 function isBootstrapFlagEnabled(config, key) {
-  return !!(config && typeof config === "object" && config[key] === true);
+  return !!(isObjectLike(config) && config[key] === true);
 }
 
 function shouldProjectWhenOrchestratorEmpty(config) {
-  return !(config && typeof config === "object" &&
+  return !(isObjectLike(config) &&
     config[BOOTSTRAP_FLAG_PROJECT_WHEN_ORCHESTRATOR_EMPTY] === false);
+}
+
+function isObjectLike(value) {
+  return !!value && typeof value === "object";
 }
 
 function isRuleSchemaEnabled(schema) {
@@ -62,7 +151,7 @@ function cloneArrayFieldIfEnabled(schema, key, enabled) {
 }
 
 function cloneObjectFieldOrNullObject(schema, key, enabled = true) {
-  return enabled && schema[key] && typeof schema[key] === "object"
+  return enabled && isObjectLike(schema[key])
     ? { ...schema[key] }
     : Object.create(null);
 }
@@ -94,67 +183,72 @@ function setModuleIfFunction(setter, importedFn) {
   }
 }
 
+function warnWithErrorCount(prefix, count) {
+  safeConsoleWarn(`${prefix} (${count} errors)`);
+}
+
 function buildRuleSchemaOverridePayload(schema) {
+  const payload = {};
+  for (const key of RULE_SCHEMA_OVERRIDE_FIELDS) {
+    payload[key] = cloneObjectFieldOrNullObject(schema, key);
+  }
+  return payload;
+}
+
+function buildRuleSchemaIntegrityPayload(schema, rules, events, eventRuntimeBindings) {
   return {
-    [FIELD_EXECUTION]: cloneObjectFieldOrNullObject(schema, FIELD_EXECUTION),
-    ruleActionLimitOverrides: cloneObjectFieldOrNullObject(schema, "ruleActionLimitOverrides"),
-    ruleCooldownScaleOverrides: cloneObjectFieldOrNullObject(schema, "ruleCooldownScaleOverrides"),
-    ruleMatchWindowScaleOverrides: cloneObjectFieldOrNullObject(schema, "ruleMatchWindowScaleOverrides"),
-    ruleEmitPreviewMatchedOverrides: cloneObjectFieldOrNullObject(schema, "ruleEmitPreviewMatchedOverrides"),
-    ruleEmitActionExecutedOverrides: cloneObjectFieldOrNullObject(schema, "ruleEmitActionExecutedOverrides"),
-    ruleEmitSourceEventSummaryOverrides: cloneObjectFieldOrNullObject(schema, "ruleEmitSourceEventSummaryOverrides"),
-    ruleSummaryIncludeSignalAndRuleIdsOverrides: cloneObjectFieldOrNullObject(schema, "ruleSummaryIncludeSignalAndRuleIdsOverrides"),
-    ruleSummaryIncludeBudgetCapsOverrides: cloneObjectFieldOrNullObject(schema, "ruleSummaryIncludeBudgetCapsOverrides"),
-    ruleActionExecutedEventTypeEnabledOverrides: cloneObjectFieldOrNullObject(schema, "ruleActionExecutedEventTypeEnabledOverrides"),
-    ruleExecuteActionsOverrides: cloneObjectFieldOrNullObject(schema, "ruleExecuteActionsOverrides"),
-    ruleActionTypeEnabledOverrides: cloneObjectFieldOrNullObject(schema, "ruleActionTypeEnabledOverrides"),
-    signalDebounceOverrides: cloneObjectFieldOrNullObject(schema, "signalDebounceOverrides"),
-    signalMaxMatchesOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxMatchesOverrides"),
-    signalEmitPreviewMatchedOverrides: cloneObjectFieldOrNullObject(schema, "signalEmitPreviewMatchedOverrides"),
-    signalExecuteActionsOverrides: cloneObjectFieldOrNullObject(schema, "signalExecuteActionsOverrides"),
-    signalEmitActionExecutedOverrides: cloneObjectFieldOrNullObject(schema, "signalEmitActionExecutedOverrides"),
-    signalEmitSourceEventSummaryOverrides: cloneObjectFieldOrNullObject(schema, "signalEmitSourceEventSummaryOverrides"),
-    signalSummaryIncludeSignalAndRuleIdsOverrides: cloneObjectFieldOrNullObject(schema, "signalSummaryIncludeSignalAndRuleIdsOverrides"),
-    signalSummaryIncludeBudgetCapsOverrides: cloneObjectFieldOrNullObject(schema, "signalSummaryIncludeBudgetCapsOverrides"),
-    signalActionExecutedEventTypeEnabledOverrides: cloneObjectFieldOrNullObject(schema, "signalActionExecutedEventTypeEnabledOverrides"),
-    signalActionTypeEnabledOverrides: cloneObjectFieldOrNullObject(schema, "signalActionTypeEnabledOverrides"),
-    signalMatchWindowScaleOverrides: cloneObjectFieldOrNullObject(schema, "signalMatchWindowScaleOverrides"),
-    signalCooldownScaleOverrides: cloneObjectFieldOrNullObject(schema, "signalCooldownScaleOverrides"),
-    signalMaxActionsPerRuleMatchOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxActionsPerRuleMatchOverrides"),
-    signalMaxRulesEvaluatedOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxRulesEvaluatedOverrides"),
-    signalMaxActionsPerEventOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxActionsPerEventOverrides"),
-    signalMaxActionsPerSignalOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxActionsPerSignalOverrides"),
-    signalMaxMatchesPerEventOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxMatchesPerEventOverrides"),
-    signalMaxSignalsPerEventOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxSignalsPerEventOverrides"),
-    signalMaxSignalsEvaluatedPerEventOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxSignalsEvaluatedPerEventOverrides"),
-    signalMaxRulesEvaluatedPerEventOverrides: cloneObjectFieldOrNullObject(schema, "signalMaxRulesEvaluatedPerEventOverrides"),
-    signalStopOnFirstSignalMatchPerEventOverrides: cloneObjectFieldOrNullObject(schema, "signalStopOnFirstSignalMatchPerEventOverrides"),
-    signalStopOnFirstMatchOverrides: cloneObjectFieldOrNullObject(schema, "signalStopOnFirstMatchOverrides"),
-    sourceEventEnabledOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventEnabledOverrides"),
-    sourceEventDebounceOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventDebounceOverrides"),
-    sourceEventMaxSignalsOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxSignalsOverrides"),
-    sourceEventMaxSignalsEvaluatedPerEventOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxSignalsEvaluatedPerEventOverrides"),
-    sourceEventMaxActionsPerSignalOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxActionsPerSignalOverrides"),
-    sourceEventMaxRulesEvaluatedOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxRulesEvaluatedOverrides"),
-    sourceEventMaxRulesEvaluatedPerEventOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxRulesEvaluatedPerEventOverrides"),
-    sourceEventMaxMatchesPerEventOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxMatchesPerEventOverrides"),
-    sourceEventMaxActionsPerEventOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxActionsPerEventOverrides"),
-    sourceEventStopOnFirstSignalMatchOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventStopOnFirstSignalMatchOverrides"),
-    sourceEventEmitPreviewMatchedOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventEmitPreviewMatchedOverrides"),
-    sourceEventEmitActionExecutedOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventEmitActionExecutedOverrides"),
-    sourceEventEmitSourceEventSummaryOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventEmitSourceEventSummaryOverrides"),
-    sourceEventSummaryIncludeSignalAndRuleIdsOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventSummaryIncludeSignalAndRuleIdsOverrides"),
-    sourceEventSummaryIncludeBudgetCapsOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventSummaryIncludeBudgetCapsOverrides"),
-    sourceEventActionTypeEnabledOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventActionTypeEnabledOverrides"),
-    sourceEventActionExecutedEventTypeEnabledOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventActionExecutedEventTypeEnabledOverrides"),
-    sourceEventExecuteActionsOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventExecuteActionsOverrides"),
-    sourceEventCooldownScaleOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventCooldownScaleOverrides"),
-    sourceEventMatchWindowScaleOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMatchWindowScaleOverrides"),
-    sourceEventMaxActionsPerRuleMatchOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxActionsPerRuleMatchOverrides"),
-    sourceEventStopOnFirstMatchOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventStopOnFirstMatchOverrides"),
-    sourceEventMaxMatchesPerSignalOverrides: cloneObjectFieldOrNullObject(schema, "sourceEventMaxMatchesPerSignalOverrides"),
-    actionArgOverrides: cloneObjectFieldOrNullObject(schema, "actionArgOverrides"),
+    rules,
+    events,
+    eventRuntimeBindings,
+    ...buildRuleSchemaOverridePayload(schema),
   };
+}
+
+function buildRuleSchemaRuntimePayload(
+  source,
+  schema,
+  signals,
+  windows,
+  events,
+  rules,
+  eventRuntimeBindings
+) {
+  return {
+    source,
+    signals,
+    windows,
+    events,
+    rules,
+    eventRuntimeBindings,
+    ...buildRuleSchemaOverridePayload(schema),
+  };
+}
+
+function deriveRuleSchemaState(schema) {
+  const enabled = isRuleSchemaEnabled(schema);
+  return {
+    enabled,
+    signals: cloneArrayFieldIfEnabled(schema, FIELD_SIGNALS, enabled),
+    windows: cloneArrayFieldIfEnabled(schema, FIELD_WINDOWS, enabled),
+    events: cloneArrayFieldIfEnabled(schema, FIELD_EVENTS, enabled),
+    rules: cloneArrayFieldIfEnabled(schema, FIELD_RULES, enabled),
+    eventRuntimeBindings: cloneObjectFieldOrNullObject(
+      schema,
+      FIELD_EVENT_RUNTIME_BINDINGS,
+      enabled
+    ),
+  };
+}
+
+function buildAdapterBaseRuleSchema(ruleEnginePolicyControl) {
+  if (isObjectLike(ruleEnginePolicyControl)) {
+    return Object.freeze({
+      ...ruleEnginePolicyControl,
+      // V2 adapter owns rule projection; keep base schema policy/definitions only.
+      [FIELD_RULES]: EMPTY_FROZEN_ARRAY,
+    });
+  }
+  return ADAPTER_BASE_FALLBACK_RULE_SCHEMA;
 }
 
 /**
@@ -411,7 +505,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     });
   }
 
-  const ruleEnginePolicyControl = (RULE_ENGINE_POLICY_CONTROL && typeof RULE_ENGINE_POLICY_CONTROL === "object")
+  const ruleEnginePolicyControl = isObjectLike(RULE_ENGINE_POLICY_CONTROL)
     ? RULE_ENGINE_POLICY_CONTROL
     : Object.create(null);
   const validateRuleEngine = (typeof validateRuleEngineConfig === "function")
@@ -429,21 +523,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     ? projectOrchestratorV1FromInteractionsV2
     : null;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function") ? setRuleSchema : undefined;
-
-  const adapterBaseRuleSchema = (ruleEnginePolicyControl && typeof ruleEnginePolicyControl === "object")
-    ? Object.freeze({
-        ...ruleEnginePolicyControl,
-        // V2 adapter owns rule projection; keep base schema policy/definitions only.
-        [FIELD_RULES]: Object.freeze([]),
-      })
-    : Object.freeze({
-        version: "2",
-        [FIELD_SIGNALS]: [],
-        [FIELD_WINDOWS]: [],
-        [FIELD_EVENTS]: [],
-        [FIELD_RULES]: [],
-        [FIELD_EVENT_RUNTIME_BINDINGS]: Object.create(null),
-      });
+  const adapterBaseRuleSchema = buildAdapterBaseRuleSchema(ruleEnginePolicyControl);
   const useInteractionsV2 = isBootstrapFlagEnabled(
     INTERACTIONS_V2_BOOTSTRAP,
     BOOTSTRAP_FLAG_USE_IN_RECEIVER
@@ -461,7 +541,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     if (typeof buildRuleEngineFromOrchestrator !== "function") {
       adapterFallbackUsed = true;
       ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_MISSING_BUILDER;
-      safeConsoleWarn("[receiver-bootstrap] ORCHESTRATOR_V1 builder missing; using safe disabled rule schema");
+      safeConsoleWarn(WARN_ORCHESTRATOR_BUILDER_MISSING);
     } else {
       try {
         const projectOrchestratorWhenEmpty = shouldProjectWhenOrchestratorEmpty(ORCHESTRATOR_V1_BOOTSTRAP);
@@ -484,7 +564,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
           baseRuleEngine: adapterBaseRuleSchema,
         });
       } catch (err) {
-        safeConsoleWarn("[receiver-bootstrap] ORCHESTRATOR_V1 build failed; using safe disabled rule schema", err);
+        safeConsoleWarn(WARN_ORCHESTRATOR_BUILD_FAILED, err);
         adapterFallbackUsed = true;
         ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_FALLBACK;
         ruleSchema = buildSafeDisabledRuleSchema();
@@ -493,11 +573,11 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   } else if (!useInteractionsV2) {
     adapterFallbackUsed = true;
     ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_BOOTSTRAP_DISABLED;
-    safeConsoleWarn("[receiver-bootstrap] INTERACTIONS_V2 bootstrap disabled; using safe disabled rule schema");
+    safeConsoleWarn(WARN_INTERACTIONS_BOOTSTRAP_DISABLED);
   } else if (typeof buildRuleEngineFromInteractions !== "function") {
     adapterFallbackUsed = true;
     ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_MISSING_BUILDER;
-    safeConsoleWarn("[receiver-bootstrap] INTERACTIONS_V2 adapter missing builder; using safe disabled rule schema");
+    safeConsoleWarn(WARN_INTERACTIONS_BUILDER_MISSING);
   } else {
     try {
       ruleSchema = buildRuleEngineFromInteractions({
@@ -505,34 +585,30 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         baseRuleEngine: adapterBaseRuleSchema,
       });
     } catch (err) {
-      safeConsoleWarn("[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to adapter base schema", err);
+      safeConsoleWarn(WARN_INTERACTIONS_ADAPTER_FAILED, err);
       adapterFallbackUsed = true;
       ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_FALLBACK;
       ruleSchema = adapterBaseRuleSchema;
     }
   }
-  let ruleEngineEnabled = isRuleSchemaEnabled(ruleSchema);
-  let ruleSignals = cloneArrayFieldIfEnabled(ruleSchema, FIELD_SIGNALS, ruleEngineEnabled);
-  let ruleWindows = cloneArrayFieldIfEnabled(ruleSchema, FIELD_WINDOWS, ruleEngineEnabled);
-  let ruleEvents = cloneArrayFieldIfEnabled(ruleSchema, FIELD_EVENTS, ruleEngineEnabled);
-  let ruleRules = cloneArrayFieldIfEnabled(ruleSchema, FIELD_RULES, ruleEngineEnabled);
-  let ruleEventRuntimeBindings = cloneObjectFieldOrNullObject(
-    ruleSchema,
-    FIELD_EVENT_RUNTIME_BINDINGS,
-    ruleEngineEnabled
-  );
+  let {
+    enabled: ruleEngineEnabled,
+    signals: ruleSignals,
+    windows: ruleWindows,
+    events: ruleEvents,
+    rules: ruleRules,
+    eventRuntimeBindings: ruleEventRuntimeBindings,
+  } = deriveRuleSchemaState(ruleSchema);
 
   function refreshRuleSchemaDerived() {
-    ruleEngineEnabled = isRuleSchemaEnabled(ruleSchema);
-    ruleSignals = cloneArrayFieldIfEnabled(ruleSchema, FIELD_SIGNALS, ruleEngineEnabled);
-    ruleWindows = cloneArrayFieldIfEnabled(ruleSchema, FIELD_WINDOWS, ruleEngineEnabled);
-    ruleEvents = cloneArrayFieldIfEnabled(ruleSchema, FIELD_EVENTS, ruleEngineEnabled);
-    ruleRules = cloneArrayFieldIfEnabled(ruleSchema, FIELD_RULES, ruleEngineEnabled);
-    ruleEventRuntimeBindings = cloneObjectFieldOrNullObject(
-      ruleSchema,
-      FIELD_EVENT_RUNTIME_BINDINGS,
-      ruleEngineEnabled
-    );
+    ({
+      enabled: ruleEngineEnabled,
+      signals: ruleSignals,
+      windows: ruleWindows,
+      events: ruleEvents,
+      rules: ruleRules,
+      eventRuntimeBindings: ruleEventRuntimeBindings,
+    } = deriveRuleSchemaState(ruleSchema));
   }
 
   if (GAME_THEME_DEFAULT) {
@@ -545,22 +621,22 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   setModuleIfFunction(setRunInputFramePipelineModule, runInputFramePipelineImported);
   setModuleIfFunction(setRunOrbRuntimePipelineModule, runOrbRuntimePipelineImported);
 
-  if (ORB_RUNTIME_CONFIG_DEFAULT && typeof ORB_RUNTIME_CONFIG_DEFAULT === "object" &&
+  if (isObjectLike(ORB_RUNTIME_CONFIG_DEFAULT) &&
       typeof getOrbRuntimeConfig === "function" && typeof setOrbRuntimeConfig === "function") {
     const current = getOrbRuntimeConfig() || {};
     const cfg = ORB_RUNTIME_CONFIG_DEFAULT;
     setOrbRuntimeConfig({
-      PHYS: (cfg.physics && typeof cfg.physics === "object") ? { ...(current.PHYS || {}), ...cfg.physics } : current.PHYS,
-      SHIELD_DESCENT: (cfg.shieldDescent && typeof cfg.shieldDescent === "object") ? { ...(current.SHIELD_DESCENT || {}), ...cfg.shieldDescent } : current.SHIELD_DESCENT,
-      IMPACT_MODEL: (cfg.impact && cfg.impact.model && typeof cfg.impact.model === "object") ? { ...(current.IMPACT_MODEL || {}), ...cfg.impact.model } : current.IMPACT_MODEL,
+      PHYS: isObjectLike(cfg.physics) ? { ...(current.PHYS || {}), ...cfg.physics } : current.PHYS,
+      SHIELD_DESCENT: isObjectLike(cfg.shieldDescent) ? { ...(current.SHIELD_DESCENT || {}), ...cfg.shieldDescent } : current.SHIELD_DESCENT,
+      IMPACT_MODEL: isObjectLike(cfg.impact?.model) ? { ...(current.IMPACT_MODEL || {}), ...cfg.impact.model } : current.IMPACT_MODEL,
       IMPACT_TH: (cfg.impact && Number.isFinite(Number(cfg.impact.threshold))) ? Number(cfg.impact.threshold) : current.IMPACT_TH,
     });
   }
 
-  if (ORB_STATUS_CONFIG_DEFAULT && typeof ORB_STATUS_CONFIG_DEFAULT === "object" &&
+  if (isObjectLike(ORB_STATUS_CONFIG_DEFAULT) &&
       typeof getOrbStatusConfig === "function" && typeof setOrbStatusConfig === "function") {
     const current = getOrbStatusConfig() || {};
-    const fg = (ORB_STATUS_CONFIG_DEFAULT.floatGrace && typeof ORB_STATUS_CONFIG_DEFAULT.floatGrace === "object")
+    const fg = isObjectLike(ORB_STATUS_CONFIG_DEFAULT.floatGrace)
       ? ORB_STATUS_CONFIG_DEFAULT.floatGrace
       : {};
     setOrbStatusConfig({
@@ -585,15 +661,15 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     });
   }
 
-  if ((INPUT_GESTURE_CONFIG_DEFAULT && typeof INPUT_GESTURE_CONFIG_DEFAULT === "object") ||
-      (INPUT_DYNAMICS_CONFIG_DEFAULT && typeof INPUT_DYNAMICS_CONFIG_DEFAULT === "object")) {
+  if (isObjectLike(INPUT_GESTURE_CONFIG_DEFAULT) ||
+      isObjectLike(INPUT_DYNAMICS_CONFIG_DEFAULT)) {
     const currentInputCfg = (typeof getInputConfigs === "function" ? getInputConfigs() : {}) || {};
     if (typeof setInputConfigs === "function") {
       setInputConfigs({
-        INPUT_GESTURE_CFG: (INPUT_GESTURE_CONFIG_DEFAULT && typeof INPUT_GESTURE_CONFIG_DEFAULT === "object")
+        INPUT_GESTURE_CFG: isObjectLike(INPUT_GESTURE_CONFIG_DEFAULT)
           ? INPUT_GESTURE_CONFIG_DEFAULT
           : currentInputCfg.INPUT_GESTURE_CFG,
-        INPUT_DYNAMICS_CFG: (INPUT_DYNAMICS_CONFIG_DEFAULT && typeof INPUT_DYNAMICS_CONFIG_DEFAULT === "object")
+        INPUT_DYNAMICS_CFG: isObjectLike(INPUT_DYNAMICS_CONFIG_DEFAULT)
           ? INPUT_DYNAMICS_CONFIG_DEFAULT
           : currentInputCfg.INPUT_DYNAMICS_CFG,
       });
@@ -619,25 +695,23 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   if (typeof validateRuleEngine === "function") {
     const errors = validateRuleEngine(ruleSchema);
     if (errors.length) {
-      safeConsoleWarn(
-        `[receiver-bootstrap] rule schema invalid; using safe disabled fallback (${errors.length} errors)`
-      );
+      warnWithErrorCount(WARN_RULE_SCHEMA_INVALID_PREFIX, errors.length);
       adapterFallbackUsed = true;
       ruleSchema = buildSafeDisabledRuleSchema();
       refreshRuleSchemaDerived();
     }
   }
   if (typeof validateSpellSchemaIntegrityFn === "function") {
-    const integrityErrors = validateSpellSchemaIntegrityFn({
-      rules: ruleRules,
-      events: ruleEvents,
-      eventRuntimeBindings: ruleEventRuntimeBindings,
-      ...buildRuleSchemaOverridePayload(ruleSchema),
-    });
+    const integrityErrors = validateSpellSchemaIntegrityFn(
+      buildRuleSchemaIntegrityPayload(
+        ruleSchema,
+        ruleRules,
+        ruleEvents,
+        ruleEventRuntimeBindings
+      )
+    );
     if (integrityErrors.length) {
-      safeConsoleWarn(
-        `[receiver-bootstrap] rule schema integrity invalid; using safe disabled fallback (${integrityErrors.length} errors)`
-      );
+      warnWithErrorCount(WARN_RULE_SCHEMA_INTEGRITY_INVALID_PREFIX, integrityErrors.length);
       adapterFallbackUsed = true;
       ruleSchema = buildSafeDisabledRuleSchema();
       refreshRuleSchemaDerived();
@@ -646,17 +720,19 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const resolvedRuleSource = adapterFallbackUsed
     ? ruleSource
     : (useOrchestratorV1 ? ruleSource : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER);
-  safeConsoleInfo(`[receiver-bootstrap] rule source: ${resolvedRuleSource}`);
+  safeConsoleInfo(`${INFO_RULE_SOURCE_PREFIX} ${resolvedRuleSource}`);
   if (typeof setRuleSchemaRuntime === "function") {
-    setRuleSchemaRuntime({
-      source: resolvedRuleSource,
-      signals: ruleSignals,
-      windows: ruleWindows,
-      events: ruleEvents,
-      rules: ruleRules,
-      eventRuntimeBindings: ruleEventRuntimeBindings,
-      ...buildRuleSchemaOverridePayload(ruleSchema),
-    });
+    setRuleSchemaRuntime(
+      buildRuleSchemaRuntimePayload(
+        resolvedRuleSource,
+        ruleSchema,
+        ruleSignals,
+        ruleWindows,
+        ruleEvents,
+        ruleRules,
+        ruleEventRuntimeBindings
+      )
+    );
   }
 
   if (typeof initSpellActionHandlers === "function") {

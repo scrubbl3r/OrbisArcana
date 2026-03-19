@@ -219,6 +219,10 @@ const SELECTOR_ID_NORMALIZERS = Object.freeze({
 });
 const EMPTY_SELECTOR = Object.freeze({ [FIELD_TYPE]: "", [FIELD_ID]: "" });
 
+function makeFrozenSelector(type, id) {
+  return Object.freeze({ [FIELD_TYPE]: type, [FIELD_ID]: id });
+}
+
 function buildStructuredTriggerArgs(spec) {
   const argsValue = asObj(spec[FIELD_ARGS]);
   const mergedArgs = Object.keys(argsValue).length ? { ...argsValue } : {};
@@ -229,30 +233,54 @@ function buildStructuredTriggerArgs(spec) {
   return mergedArgs;
 }
 
+function makeEventTrigger(eventId, { enabled, args } = {}) {
+  const out = { [FIELD_EVENT]: eventId };
+  if (typeof enabled === "boolean") out[FIELD_ENABLED] = enabled;
+  if (isPlainObject(args) && Object.keys(args).length) out[FIELD_ARGS] = args;
+  return Object.freeze(out);
+}
+
 function buildTriggerEntry(eventId, spec) {
   if (typeof spec === "boolean") {
     return spec
-      ? Object.freeze({ [FIELD_EVENT]: eventId })
-      : Object.freeze({ [FIELD_EVENT]: eventId, [FIELD_ENABLED]: false });
+      ? makeEventTrigger(eventId)
+      : makeEventTrigger(eventId, { enabled: false });
   }
   if (isPlainObject(spec)) {
     const hasStructuredKeys = hasOwnAny(spec, [FIELD_ENABLED, FIELD_ARGS]);
-    if (!hasStructuredKeys) return Object.freeze({ [FIELD_EVENT]: eventId, [FIELD_ARGS]: spec });
+    if (!hasStructuredKeys) return makeEventTrigger(eventId, { args: spec });
     const out = { [FIELD_EVENT]: eventId };
     if (Object.hasOwn(spec, FIELD_ENABLED)) out[FIELD_ENABLED] = spec[FIELD_ENABLED];
     const argsFromField = buildStructuredTriggerArgs(spec);
     if (Object.keys(argsFromField).length) out[FIELD_ARGS] = argsFromField;
     return Object.freeze(out);
   }
-  return Object.freeze({ [FIELD_EVENT]: eventId });
+  return makeEventTrigger(eventId);
+}
+
+function normalizeSelectorType(typeRaw) {
+  if (typeRaw === TYPE_ORBSTATE_ALIAS || typeRaw === TYPE_ORB_STATE_ALIAS) {
+    return TYPE_ORB_STATE;
+  }
+  return typeRaw;
+}
+
+function resolveBareSelectorTypeAndId(text) {
+  const bareId = asId(text);
+  if (BARE_GESTURE_IDS.has(bareId)) {
+    return makeFrozenSelector(TYPE_GESTURE, bareId);
+  }
+  if (BARE_ORB_STATE_IDS.has(bareId)) {
+    return makeFrozenSelector(TYPE_ORB_STATE, bareId);
+  }
+  return makeFrozenSelector(TYPE_SPELL, text);
 }
 
 export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
   const text = asText(raw);
   if (!text) return invalidAsEmptyObject ? EMPTY_SELECTOR : null;
 
-  let type = TYPE_SPELL;
-  let idText = text;
+  let { [FIELD_TYPE]: type, [FIELD_ID]: idText } = resolveBareSelectorTypeAndId(text);
 
   const colon = text.indexOf(":");
   const dot = text.indexOf(".");
@@ -262,24 +290,13 @@ export function parseOnSelector(raw, { invalidAsEmptyObject = false } = {}) {
   } else if (dot > 0) {
     type = asText(text.slice(0, dot)).toLowerCase();
     idText = text;
-  } else {
-    const bareId = asId(text);
-    if (BARE_GESTURE_IDS.has(bareId)) {
-      type = TYPE_GESTURE;
-      idText = bareId;
-    } else if (BARE_ORB_STATE_IDS.has(bareId)) {
-      type = TYPE_ORB_STATE;
-      idText = bareId;
-    }
   }
 
-  if (type === TYPE_ORBSTATE_ALIAS || type === TYPE_ORB_STATE_ALIAS) {
-    type = TYPE_ORB_STATE;
-  }
+  type = normalizeSelectorType(type);
 
   const normalizeSelectorId = SELECTOR_ID_NORMALIZERS[type];
   if (normalizeSelectorId) {
-    return Object.freeze({ [FIELD_TYPE]: type, [FIELD_ID]: normalizeSelectorId(idText) });
+    return makeFrozenSelector(type, normalizeSelectorId(idText));
   }
   return invalidAsEmptyObject ? EMPTY_SELECTOR : null;
 }
@@ -304,14 +321,30 @@ export function asOpenObject(rawOpen) {
   return isStringOrArray(rawOpen) ? { [FIELD_SPELLS]: rawOpen } : asObj(rawOpen);
 }
 
+function hasObjectKeys(value) {
+  return Object.keys(asObj(value)).length > 0;
+}
+
+function buildTriggerEntriesFromMap(triggerMap) {
+  return Object.entries(asObj(triggerMap)).map(([eventId, spec]) =>
+    buildTriggerEntry(eventId, spec)
+  );
+}
+
+function getMergedTriggerMap(source) {
+  const safeSource = asObj(source);
+  return {
+    ...asObj(safeSource[KEY_TRIGGERS]),
+    ...asObj(safeSource[KEY_TRIGGER]),
+  };
+}
+
 export function normalizeTriggerEntries(rawTrigger) {
   const tokenizedEntries = expandTokenizedEntries(rawTrigger);
   if (tokenizedEntries) return tokenizedEntries;
   const triggerMap = asObj(rawTrigger);
-  if (Object.keys(triggerMap).length) {
-    return Object.entries(triggerMap).map(([eventId, spec]) =>
-      buildTriggerEntry(eventId, spec)
-    );
+  if (hasObjectKeys(triggerMap)) {
+    return buildTriggerEntriesFromMap(triggerMap);
   }
   return EMPTY_ARRAY;
 }
@@ -324,11 +357,7 @@ export function collectRuleTriggerEntries(rule, triggerSourceKeys = TRIGGER_SOUR
 }
 
 export function getMergedDefaultTriggerEntries(defaults) {
-  const source = asObj(defaults);
-  return Object.entries({
-    ...asObj(source[KEY_TRIGGERS]),
-    ...asObj(source[KEY_TRIGGER]),
-  });
+  return Object.entries(getMergedTriggerMap(defaults));
 }
 
 export function collectOnEntriesFromObjectSelectors(onRaw, { includeRaw = false } = {}) {

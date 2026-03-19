@@ -19,6 +19,9 @@ const ENTITY_ID_PATTERN = /^[a-z0-9_]+$/;
 const PHRASE_PATTERN = /^[a-z0-9_ ]+$/;
 const MIN_ACTIVE_SPELLS = 1;
 const ACTIVE_SPELLS_REQUIRED_ERROR = `${ROOT_CONTEXT} must keep at least one active spell`;
+const ERROR_MISSING_SPELL_ID = `${ROOT_CONTEXT} spell entry is missing id`;
+const ERROR_SHAPE_ID_SUFFIX = "has invalid shape (letters/numbers/_ only)";
+const ERROR_SHAPE_PHRASE_SUFFIX = "phrase has invalid shape (letters/numbers/_/space only)";
 const CANONICAL_SPELL_FIELD_KEYS = Object.freeze([FIELD_ID, FIELD_PHRASE, FIELD_ONNX]);
 const RAW_SPELL_FIELD_BY_KEY = Object.freeze({
   [FIELD_ID]: FIELD_RAW_ID,
@@ -34,12 +37,20 @@ function spellLabel(id) {
   return id || MISSING_ID_LABEL;
 }
 
+function spellContextLabel(id) {
+  return `${ROOT_CONTEXT} spell ${spellLabel(id)}`;
+}
+
+function spellContextMessage(id, message) {
+  return `${spellContextLabel(id)} ${message}`;
+}
+
 function pushFiniteRangeErrorWhenInvalid(errors, message, value, min, max = Number.POSITIVE_INFINITY) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < min || n > max) errors.push(message);
 }
 
-function pushDuplicateErrorWhenSeen(errors, seenSet, value, message) {
+function pushDuplicateWhenSeen(errors, seenSet, value, message) {
   if (seenSet.has(value)) errors.push(message);
   seenSet.add(value);
 }
@@ -63,31 +74,29 @@ function pushCanonicalSpellFieldErrors(errors, fieldsByKey, idLabel) {
 }
 
 function pushMissingSpellFieldErrors(errors, id, phrase, onnx) {
-  if (!id) errors.push(`${ROOT_CONTEXT} spell entry is missing id`);
-  if (!phrase) errors.push(`${ROOT_CONTEXT} spell ${spellLabel(id)} is missing phrase`);
-  if (!onnx) errors.push(`${ROOT_CONTEXT} spell ${spellLabel(id)} is missing onnx`);
+  if (!id) errors.push(ERROR_MISSING_SPELL_ID);
+  if (!phrase) errors.push(spellContextMessage(id, "is missing phrase"));
+  if (!onnx) errors.push(spellContextMessage(id, "is missing onnx"));
 }
 
 function pushSpellShapeErrors(errors, id, phrase, onnx) {
   if (id && !isEntityIdLike(id)) {
-    errors.push(`${ROOT_CONTEXT} spell id has invalid shape (letters/numbers/_ only): ${id}`);
+    errors.push(`${ROOT_CONTEXT} spell id ${ERROR_SHAPE_ID_SUFFIX}: ${id}`);
   }
   if (phrase && !PHRASE_PATTERN.test(phrase)) {
-    errors.push(
-      `${ROOT_CONTEXT} spell ${spellLabel(id)} phrase has invalid shape (letters/numbers/_/space only): ${phrase}`
-    );
+    errors.push(spellContextMessage(id, `${ERROR_SHAPE_PHRASE_SUFFIX}: ${phrase}`));
   }
   if (onnx && !isEntityIdLike(onnx)) {
-    errors.push(`${ROOT_CONTEXT} spell ${spellLabel(id)} onnx has invalid shape (letters/numbers/_ only): ${onnx}`);
+    errors.push(spellContextMessage(id, `onnx ${ERROR_SHAPE_ID_SUFFIX}: ${onnx}`));
   }
 }
 
 function pushSpellDuplicateErrors(errors, seenIds, seenPhrases, id, phrase) {
   if (id) {
-    pushDuplicateErrorWhenSeen(errors, seenIds, id, `${ROOT_CONTEXT} contains duplicate id: ${id}`);
+    pushDuplicateWhenSeen(errors, seenIds, id, `${ROOT_CONTEXT} contains duplicate id: ${id}`);
   }
   if (phrase) {
-    pushDuplicateErrorWhenSeen(
+    pushDuplicateWhenSeen(
       errors,
       seenPhrases,
       phrase,
@@ -111,12 +120,15 @@ function validateSpellbookRoot(errors, cfg) {
   return true;
 }
 
-function validateSpellEntry(errors, seenIds, seenPhrases, spellRaw) {
-  const spell = asObj(spellRaw);
-  const rawId = asText(spell[FIELD_ID]);
-  const rawPhrase = asText(spell[FIELD_PHRASE]);
-  const rawOnnx = asText(spell[FIELD_ONNX]);
-  const canonicalFields = {
+function getSpellFieldText(spell, key) {
+  return asText(spell[key]);
+}
+
+function buildCanonicalSpellFields(spell) {
+  const rawId = getSpellFieldText(spell, FIELD_ID);
+  const rawPhrase = getSpellFieldText(spell, FIELD_PHRASE);
+  const rawOnnx = getSpellFieldText(spell, FIELD_ONNX);
+  return {
     [FIELD_RAW_ID]: rawId,
     [FIELD_RAW_PHRASE]: rawPhrase,
     [FIELD_RAW_ONNX]: rawOnnx,
@@ -124,6 +136,11 @@ function validateSpellEntry(errors, seenIds, seenPhrases, spellRaw) {
     [FIELD_PHRASE]: rawPhrase.toLowerCase(),
     [FIELD_ONNX]: rawOnnx.toLowerCase(),
   };
+}
+
+function validateSpellEntry(errors, seenIds, seenPhrases, spellRaw) {
+  const spell = asObj(spellRaw);
+  const canonicalFields = buildCanonicalSpellFields(spell);
   const { id, phrase, onnx } = canonicalFields;
 
   pushMissingSpellFieldErrors(errors, id, phrase, onnx);
@@ -135,18 +152,18 @@ function validateSpellEntry(errors, seenIds, seenPhrases, spellRaw) {
 
 function validateSpellScalarFields(errors, spell, id) {
   if (Object.hasOwn(spell, FIELD_ACTIVE) && typeof spell[FIELD_ACTIVE] !== "boolean") {
-    errors.push(`${ROOT_CONTEXT} spell ${spellLabel(id)} active must be boolean`);
+    errors.push(spellContextMessage(id, "active must be boolean"));
   }
   pushFiniteRangeErrorWhenInvalid(
     errors,
-    `${ROOT_CONTEXT} spell ${spellLabel(id)} confidence must be a finite number in [0,1]`,
+    spellContextMessage(id, "confidence must be a finite number in [0,1]"),
     spell[FIELD_CONFIDENCE],
     0,
     1
   );
   pushFiniteRangeErrorWhenInvalid(
     errors,
-    `${ROOT_CONTEXT} spell ${spellLabel(id)} cooldownMs must be a finite number >= 0`,
+    spellContextMessage(id, "cooldownMs must be a finite number >= 0"),
     spell[FIELD_COOLDOWN_MS],
     0
   );
@@ -159,6 +176,20 @@ function validateMinimumActiveSpells(errors, spells) {
   }
 }
 
+function createSeenSpellTrackers() {
+  return {
+    seenIds: new Set(),
+    seenPhrases: new Set(),
+  };
+}
+
+function validateSpellEntries(errors, spells) {
+  const { seenIds, seenPhrases } = createSeenSpellTrackers();
+  for (const spell of spells) {
+    validateSpellEntry(errors, seenIds, seenPhrases, spell);
+  }
+}
+
 export function validateSpellbookV2(input = SPELLBOOK_V2) {
   const errors = [];
   const cfg = asObj(input);
@@ -166,12 +197,9 @@ export function validateSpellbookV2(input = SPELLBOOK_V2) {
   if (!validateSpellbookRoot(errors, cfg)) {
     return errors;
   }
-  const seenIds = new Set();
-  const seenPhrases = new Set();
-  for (const spell of cfg[FIELD_SPELLS]) {
-    validateSpellEntry(errors, seenIds, seenPhrases, spell);
-  }
-  validateMinimumActiveSpells(errors, cfg[FIELD_SPELLS]);
+  const spells = cfg[FIELD_SPELLS];
+  validateSpellEntries(errors, spells);
+  validateMinimumActiveSpells(errors, spells);
 
   return errors;
 }

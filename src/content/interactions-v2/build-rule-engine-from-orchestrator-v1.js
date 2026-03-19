@@ -1,6 +1,7 @@
 import { ORCHESTRATOR_V1 } from "./orchestrator-v1.js";
 import { validateOrchestratorV1 } from "./validate-orchestrator-v1.js";
 import {
+  asArray,
   asOpenObject,
   asTriggerObject,
   asObj,
@@ -56,6 +57,14 @@ const FIELD_SIGNALS = "signals";
 const FIELD_WINDOWS = "windows";
 const FIELD_EVENTS = "events";
 const FIELD_EVENT_RUNTIME_BINDINGS = "eventRuntimeBindings";
+const DEFAULT_BUILD_OPTIONS = EMPTY_OBJECT;
+const BASE_RULE_ENGINE_SCHEMA = Object.freeze({
+  [FIELD_VERSION]: RULE_ENGINE_V2_VERSION,
+  [FIELD_SIGNALS]: EMPTY_ARRAY,
+  [FIELD_WINDOWS]: EMPTY_ARRAY,
+  [FIELD_EVENTS]: EMPTY_ARRAY,
+  [FIELD_EVENT_RUNTIME_BINDINGS]: EMPTY_OBJECT,
+});
 
 function assignNumericFromSources(out, targetKey, sources, sourceKeys, min = null) {
   let rawValue;
@@ -106,60 +115,130 @@ function buildTriggerAction(trigger, defaultsTriggerByEvent) {
   return Object.freeze(out);
 }
 
-export function buildRuleEngineFromOrchestratorV1(options = {}) {
-  const safeOptions = asObj(options);
-  const orchestratorObj = asObj(safeOptions[FIELD_ORCHESTRATOR_V1] || ORCHESTRATOR_V1);
-  const validationErrorText = validateOrchestratorV1(orchestratorObj).join(VALIDATION_ERROR_DELIMITER);
-  if (validationErrorText) {
-    throw new Error(`${ORCHESTRATOR_VALIDATION_ERROR_PREFIX}${validationErrorText}`);
-  }
-  const defaultsObj = asObj(orchestratorObj[FIELD_DEFAULTS]);
-  const defaultsOpen = asObj(defaultsObj[DEFAULTS_FIELD_OPEN]);
-  const defaultsRule = asObj(defaultsObj[DEFAULTS_FIELD_RULE]);
-  const defaultsTriggerByEvent = {};
+function throwOrchestratorValidationErrorIfAny(errors) {
+  const text = asArray(errors).join(VALIDATION_ERROR_DELIMITER);
+  if (!text) return;
+  throw new Error(`${ORCHESTRATOR_VALIDATION_ERROR_PREFIX}${text}`);
+}
+
+function buildDefaultsTriggerByEvent(defaultsObj) {
+  const out = {};
   for (const [eventIdRaw, args] of getMergedDefaultTriggerEntries(defaultsObj)) {
     const eventId = normalizeEventId(eventIdRaw);
     if (!eventId) continue;
-    defaultsTriggerByEvent[eventId] = asObj(args);
+    out[eventId] = asObj(args);
   }
-  return Object.freeze({
-    ...asObj(safeOptions[FIELD_BASE_RULE_ENGINE]),
-    [FIELD_VERSION]: RULE_ENGINE_V2_VERSION,
+  return out;
+}
+
+function getDefaultsOpen(defaultsObj) {
+  return asObj(defaultsObj[DEFAULTS_FIELD_OPEN]);
+}
+
+function getDefaultsRule(defaultsObj) {
+  return asObj(defaultsObj[DEFAULTS_FIELD_RULE]);
+}
+
+function keepSelectorWithId(selector) {
+  return selector?.[FIELD_ID] ? selector : null;
+}
+
+function buildRuleOnSelectors(ruleOnValue) {
+  return isStringOrArray(ruleOnValue)
+    ? mapDefined(parseOnSelectorList(ruleOnValue), keepSelectorWithId)
+    : collectOnEntriesFromObjectSelectors(ruleOnValue);
+}
+
+function buildRuleThenActions(safeRule, defaultsOpen, defaultsTriggerByEvent) {
+  const openObj = asOpenObject(safeRule[RULE_FIELD_OPEN]);
+  const openAction = buildOpenAction(openObj, defaultsOpen);
+  const triggerActions = mapDefined(collectRuleTriggerEntries(safeRule), (trigger) =>
+    buildTriggerAction(trigger, defaultsTriggerByEvent)
+  );
+  return Object.freeze(openAction ? [openAction, ...triggerActions] : triggerActions);
+}
+
+function applyRuleOutputNumericFields(out, safeRule, defaultsRule) {
+  assignNumericFromSources(out, RULE_OUTPUT_PRIORITY, [safeRule, defaultsRule], RULE_PRIORITY_KEYS);
+  assignNumericFromSources(out, RULE_OUTPUT_COOLDOWN_MS, [safeRule, defaultsRule], RULE_COOLDOWN_KEYS, 0);
+  assignNumericFromSources(
+    out,
+    RULE_OUTPUT_MATCH_WINDOW_MS,
+    [safeRule, defaultsRule],
+    RULE_MATCH_WINDOW_KEYS,
+    ORCHESTRATOR_MIN_MATCH_WINDOW_MS
+  );
+}
+
+function resolveBuildOptions(options) {
+  return asObj(options ?? DEFAULT_BUILD_OPTIONS);
+}
+
+function resolveOrchestratorObject(optionsObj) {
+  return asObj(optionsObj[FIELD_ORCHESTRATOR_V1] || ORCHESTRATOR_V1);
+}
+
+function buildBaseRuleEngineOutput(optionsObj, orchestratorObj) {
+  return {
+    ...asObj(optionsObj[FIELD_BASE_RULE_ENGINE]),
+    ...BASE_RULE_ENGINE_SCHEMA,
     [FIELD_ENABLED]: orchestratorObj[FIELD_ENABLED] !== ENABLED_FALSE,
-    [FIELD_SIGNALS]: EMPTY_ARRAY,
-    [FIELD_WINDOWS]: EMPTY_ARRAY,
-    [FIELD_EVENTS]: EMPTY_ARRAY,
-    [FIELD_RULES]: Object.freeze(mapDefined(orchestratorObj[FIELD_RULES], (rule) => {
-      const safeRule = asObj(rule);
-      const id = asText(safeRule[FIELD_ID]) || "";
-      if (!id) return null;
-      const onValue = safeRule[FIELD_ON];
-      const on = isStringOrArray(onValue)
-        ? mapDefined(parseOnSelectorList(onValue), (selector) => (selector?.[FIELD_ID] ? selector : null))
-        : collectOnEntriesFromObjectSelectors(onValue);
-      if (!on.length) return null;
-      const openObj = asOpenObject(safeRule[RULE_FIELD_OPEN]);
-      const openAction = buildOpenAction(openObj, defaultsOpen);
-      const triggerActions = mapDefined(collectRuleTriggerEntries(safeRule), (trigger) =>
-        buildTriggerAction(trigger, defaultsTriggerByEvent)
-      );
-      const out = {
-        [FIELD_ID]: id,
-        [FIELD_ON]: Object.freeze(on),
-        [FIELD_THEN]: Object.freeze(openAction ? [openAction, ...triggerActions] : triggerActions),
-      };
-      setEnabledIfBoolean(out, safeRule);
-      assignNumericFromSources(out, RULE_OUTPUT_PRIORITY, [safeRule, defaultsRule], RULE_PRIORITY_KEYS);
-      assignNumericFromSources(out, RULE_OUTPUT_COOLDOWN_MS, [safeRule, defaultsRule], RULE_COOLDOWN_KEYS, 0);
-      assignNumericFromSources(
-        out,
-        RULE_OUTPUT_MATCH_WINDOW_MS,
-        [safeRule, defaultsRule],
-        RULE_MATCH_WINDOW_KEYS,
-        ORCHESTRATOR_MIN_MATCH_WINDOW_MS
-      );
-      return Object.freeze(out);
-    })),
-    [FIELD_EVENT_RUNTIME_BINDINGS]: EMPTY_OBJECT,
+  };
+}
+
+function getRuleIdText(rule) {
+  return asText(asObj(rule)[FIELD_ID]) || "";
+}
+
+function compileOrchestratorRule(rule, defaultsOpen, defaultsTriggerByEvent, defaultsRule) {
+  const safeRule = asObj(rule);
+  const id = getRuleIdText(safeRule);
+  if (!id) return null;
+  const on = buildRuleOnSelectors(safeRule[FIELD_ON]);
+  if (!on.length) return null;
+  const out = {
+    [FIELD_ID]: id,
+    [FIELD_ON]: Object.freeze(on),
+    [FIELD_THEN]: buildRuleThenActions(safeRule, defaultsOpen, defaultsTriggerByEvent),
+  };
+  setEnabledIfBoolean(out, safeRule);
+  applyRuleOutputNumericFields(out, safeRule, defaultsRule);
+  return Object.freeze(out);
+}
+
+function buildCompiledRules(orchestratorObj, defaultsOpen, defaultsTriggerByEvent, defaultsRule) {
+  return Object.freeze(
+    mapDefined(orchestratorObj[FIELD_RULES], (rule) =>
+      compileOrchestratorRule(rule, defaultsOpen, defaultsTriggerByEvent, defaultsRule)
+    )
+  );
+}
+
+function buildCompilationContext(orchestratorObj) {
+  const defaultsObj = asObj(orchestratorObj[FIELD_DEFAULTS]);
+  return {
+    defaultsOpen: getDefaultsOpen(defaultsObj),
+    defaultsRule: getDefaultsRule(defaultsObj),
+    defaultsTriggerByEvent: buildDefaultsTriggerByEvent(defaultsObj),
+  };
+}
+
+export function buildRuleEngineFromOrchestratorV1(options = {}) {
+  const safeOptions = resolveBuildOptions(options);
+  const orchestratorObj = resolveOrchestratorObject(safeOptions);
+  throwOrchestratorValidationErrorIfAny(validateOrchestratorV1(orchestratorObj));
+  const {
+    defaultsOpen,
+    defaultsRule,
+    defaultsTriggerByEvent,
+  } = buildCompilationContext(orchestratorObj);
+  return Object.freeze({
+    ...buildBaseRuleEngineOutput(safeOptions, orchestratorObj),
+    [FIELD_RULES]: buildCompiledRules(
+      orchestratorObj,
+      defaultsOpen,
+      defaultsTriggerByEvent,
+      defaultsRule
+    ),
   });
 }

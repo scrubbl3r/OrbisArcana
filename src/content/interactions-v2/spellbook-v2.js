@@ -48,8 +48,16 @@ export const SPELLBOOK_V2 = Object.freeze({
   ]),
 });
 
+function getSpellList(spellbook) {
+  return Array.isArray(spellbook?.[FIELD_SPELLS]) ? spellbook[FIELD_SPELLS].slice() : [];
+}
+
+function isSpellActive(spell) {
+  return spell?.[FIELD_ACTIVE] !== false;
+}
+
 export const SPELLBOOK_V2_SPELLS = Object.freeze(
-  Array.isArray(SPELLBOOK_V2[FIELD_SPELLS]) ? SPELLBOOK_V2[FIELD_SPELLS].slice() : []
+  getSpellList(SPELLBOOK_V2)
 );
 
 function asSpellId(spell) {
@@ -67,14 +75,31 @@ function buildSpellsById(spells) {
   );
 }
 
+function buildFrozenSpellList(spells, predicate = () => true) {
+  return Object.freeze(spells.filter(predicate));
+}
+
+function buildSpellCollections(spells) {
+  const all = buildFrozenSpellList(spells);
+  const active = buildFrozenSpellList(spells, isSpellActive);
+  return Object.freeze({
+    all,
+    allById: buildSpellsById(all),
+    active,
+    activeById: buildSpellsById(active),
+  });
+}
+
+const SPELL_COLLECTIONS = buildSpellCollections(SPELLBOOK_V2_SPELLS);
+
 export const SPELLBOOK_V2_SPELLS_BY_ID = Object.freeze(
-  buildSpellsById(SPELLBOOK_V2_SPELLS)
+  SPELL_COLLECTIONS.allById
 );
 
 export const SPELLBOOK_V2_ACTIVE_SPELLS = Object.freeze(
-  SPELLBOOK_V2_SPELLS.filter((s) => s?.[FIELD_ACTIVE] !== false)
+  SPELL_COLLECTIONS.active
 );
 
 export const SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID = Object.freeze(
-  buildSpellsById(SPELLBOOK_V2_ACTIVE_SPELLS)
+  SPELL_COLLECTIONS.activeById
 );

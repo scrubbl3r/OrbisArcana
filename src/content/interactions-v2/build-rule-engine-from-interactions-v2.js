@@ -34,13 +34,26 @@ const FIELD_DEFAULTS = "defaults";
 const FIELD_RULES = "rules";
 const FIELD_INTERACTIONS_V2 = "interactionsV2";
 const FIELD_BASE_RULE_ENGINE = "baseRuleEngine";
+const DEFAULT_BUILD_OPTIONS = {};
 const RESERVED_ACTION_KEYS = Object.freeze(
   new Set([FIELD_TYPE, FIELD_ID, FIELD_SPELLS, FIELD_OVERRIDES, KEY_ENABLED])
 );
 
+function getDefaultsEventSection(defaultsRoot) {
+  return asObj(asObj(defaultsRoot)[DEFAULTS_EVENT_KEY]);
+}
+
+function getActionOverrides(action) {
+  return asObj(asObj(action)[FIELD_OVERRIDES]);
+}
+
+function getRuleOnAllConditions(rule) {
+  return asArray(asObj(asObj(rule)[FIELD_ON])[FIELD_ALL]);
+}
+
 function buildDefaultsEventById(defaultsRoot) {
   const defaultsEventById = {};
-  const defaultsEvent = asObj(asObj(defaultsRoot)[DEFAULTS_EVENT_KEY]);
+  const defaultsEvent = getDefaultsEventSection(defaultsRoot);
   for (const [rawEventId, args] of Object.entries(defaultsEvent)) {
     const normalizedEventId = normalizeEventId(rawEventId);
     if (!normalizedEventId) continue;
@@ -63,7 +76,7 @@ function mergeEventArgs(defaultArgs, action) {
     if (RESERVED_ACTION_KEYS.has(k)) continue;
     outArgs[k] = v;
   }
-  const overrides = asObj(asObj(action)[FIELD_OVERRIDES]);
+  const overrides = getActionOverrides(action);
   for (const [k, v] of Object.entries(overrides)) outArgs[k] = v;
   return outArgs;
 }
@@ -103,57 +116,102 @@ function mapEventThenAction(safeAction, defaultsEventById) {
   return Object.freeze(out);
 }
 
-function compileInteractionRule(rule, defaultsSafe, defaultsEventById) {
-  const r = asObj(rule);
-  const id = asText(r[FIELD_ID]) || "";
-  if (!id) return null;
-  const conditions = mapDefined(asArray(asObj(r[FIELD_ON])[FIELD_ALL]), mapCondition);
-  const actions = mapDefined(asArray(r[FIELD_THEN]), (action) => {
-    const safeAction = asObj(action);
-    const type = asId(safeAction[FIELD_TYPE]);
-    if (type === ACTION_TYPE_WAKE_WIN) {
-      return mapWakeWinThenAction(safeAction, defaultsSafe);
-    }
-    if (type === ACTION_TYPE_EVENT) {
-      return mapEventThenAction(safeAction, defaultsEventById);
-    }
-    return null;
-  });
-  const out = {
+function mapThenAction(action, defaultsSafe, defaultsEventById) {
+  const safeAction = asObj(action);
+  const type = asId(safeAction[FIELD_TYPE]);
+  if (type === ACTION_TYPE_WAKE_WIN) {
+    return mapWakeWinThenAction(safeAction, defaultsSafe);
+  }
+  if (type === ACTION_TYPE_EVENT) {
+    return mapEventThenAction(safeAction, defaultsEventById);
+  }
+  return null;
+}
+
+function buildRuleThenActions(rule, defaultsSafe, defaultsEventById) {
+  return mapDefined(asArray(asObj(rule)[FIELD_THEN]), (action) =>
+    mapThenAction(action, defaultsSafe, defaultsEventById)
+  );
+}
+
+function applyRulePriority(out, rule) {
+  const priorityNum = finiteOrNull(asObj(rule)[FIELD_PRIORITY]);
+  if (priorityNum != null) out[FIELD_PRIORITY] = priorityNum;
+}
+
+function getRuleIdText(rule) {
+  return asText(asObj(rule)[FIELD_ID]) || "";
+}
+
+function buildCompiledRuleOutput(id, conditions, actions) {
+  return {
     [FIELD_ID]: id,
     [FIELD_ON]: Object.freeze(conditions),
     [FIELD_THEN]: Object.freeze(actions),
   };
+}
+
+function compileInteractionRule(rule, defaultsSafe, defaultsEventById) {
+  const r = asObj(rule);
+  const id = getRuleIdText(r);
+  if (!id) return null;
+  const conditions = mapDefined(getRuleOnAllConditions(r), mapCondition);
+  const actions = buildRuleThenActions(r, defaultsSafe, defaultsEventById);
+  const out = buildCompiledRuleOutput(id, conditions, actions);
   setEnabledIfBoolean(out, r);
-  const priorityNum = finiteOrNull(r[FIELD_PRIORITY]);
-  if (priorityNum != null) out[FIELD_PRIORITY] = priorityNum;
+  applyRulePriority(out, r);
   return Object.freeze(out);
 }
 
-function buildCompiledRules(interactionsV2) {
-  const validation = validateInteractionsV2(interactionsV2);
-  if (!validation.ok) {
-    throw new Error(
-      `${INTERACTIONS_VALIDATION_ERROR_PREFIX}${validation.errors.join(VALIDATION_ERROR_DELIMITER)}`
-    );
-  }
-  const defaultsRoot = asObj(interactionsV2[FIELD_DEFAULTS]);
+function throwInteractionsValidationErrorIfAny(validation) {
+  if (validation?.ok) return;
+  throw new Error(
+    `${INTERACTIONS_VALIDATION_ERROR_PREFIX}${asArray(validation?.errors).join(VALIDATION_ERROR_DELIMITER)}`
+  );
+}
+
+function buildCompiledRulesFromValidatedInteractions(interactionsV2, defaultsRoot) {
   const defaultsEventById = buildDefaultsEventById(defaultsRoot);
   return mapDefined(asArray(interactionsV2[FIELD_RULES]), (rule) =>
     compileInteractionRule(rule, defaultsRoot, defaultsEventById)
   );
 }
 
+function buildCompilationContext(interactionsV2) {
+  return {
+    defaultsRoot: asObj(interactionsV2[FIELD_DEFAULTS]),
+  };
+}
+
+function buildCompiledRules(interactionsV2) {
+  const validation = validateInteractionsV2(interactionsV2);
+  throwInteractionsValidationErrorIfAny(validation);
+  const { defaultsRoot } = buildCompilationContext(interactionsV2);
+  return buildCompiledRulesFromValidatedInteractions(interactionsV2, defaultsRoot);
+}
+
+function resolveBuildOptions(options) {
+  return asObj(options ?? DEFAULT_BUILD_OPTIONS);
+}
+
+function resolveInteractionsV2(optionsObj) {
+  return asObj(optionsObj[FIELD_INTERACTIONS_V2] || INTERACTIONS_V2);
+}
+
+function buildBaseRuleEngineOutput(optionsObj, interactionsV2) {
+  return {
+    ...asObj(optionsObj[FIELD_BASE_RULE_ENGINE]),
+    [KEY_ENABLED]: interactionsV2[KEY_ENABLED] !== ENABLED_FALSE,
+  };
+}
+
 export function buildRuleEngineFromInteractionsV2(options = {}) {
-  const safeOptions = asObj(options);
-  const interactionsV2 = safeOptions[FIELD_INTERACTIONS_V2] || INTERACTIONS_V2;
-  const baseRuleEngine = safeOptions[FIELD_BASE_RULE_ENGINE] ?? null;
-  const base = asObj(baseRuleEngine);
+  const safeOptions = resolveBuildOptions(options);
+  const interactionsV2 = resolveInteractionsV2(safeOptions);
   const rules = buildCompiledRules(interactionsV2);
   return Object.freeze({
-    ...base,
+    ...buildBaseRuleEngineOutput(safeOptions, interactionsV2),
     [FIELD_RULES]: Object.freeze(rules),
-    [KEY_ENABLED]: interactionsV2[KEY_ENABLED] !== ENABLED_FALSE,
   });
 }
 

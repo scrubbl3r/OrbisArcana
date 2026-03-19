@@ -39,6 +39,19 @@ function makeEventAction(id, extra = {}) {
   return Object.freeze({ [FIELD_TYPE]: ACTION_TYPE_EVENT, [FIELD_ID]: id, ...extra });
 }
 
+function makeWakeWinAction(spells) {
+  return Object.freeze({
+    [FIELD_TYPE]: ACTION_TYPE_WAKE_WIN,
+    [FIELD_SPELLS]: Object.freeze(spells),
+  });
+}
+
+function makeOrbStateEventAction(state) {
+  return makeEventAction(EVENT_HANDLES_V2.ORB_STATE, {
+    [FIELD_OVERRIDES]: Object.freeze({ [FIELD_STATE]: state }),
+  });
+}
+
 function makeRule(id, allConditions, thenActions) {
   return Object.freeze({
     [FIELD_ID]: id,
@@ -92,19 +105,14 @@ export const INTERACTIONS_V2 = Object.freeze({
         makeCondition(CONDITION_TYPE_ORB_STATE, SIGNAL_HANDLES_V2.ORB_CHARGED),
       ],
       [
-        Object.freeze({
-          [FIELD_TYPE]: ACTION_TYPE_WAKE_WIN,
-          [FIELD_SPELLS]: Object.freeze([
-            SIGNAL_HANDLES_V2.ROTA,
-            SIGNAL_HANDLES_V2.SANCTUM,
-            SIGNAL_HANDLES_V2.VECTUS,
-          ]),
-        }),
+        makeWakeWinAction([
+          SIGNAL_HANDLES_V2.ROTA,
+          SIGNAL_HANDLES_V2.SANCTUM,
+          SIGNAL_HANDLES_V2.VECTUS,
+        ]),
         makeEventAction(EVENT_HANDLES_V2.AOE_ELECTRIC, { range: 14 }),
         makeEventAction(EVENT_HANDLES_V2.GRACE),
-        makeEventAction(EVENT_HANDLES_V2.ORB_STATE, {
-          [FIELD_OVERRIDES]: Object.freeze({ [FIELD_STATE]: ORB_STATE_SUPERHEATED }),
-        }),
+        makeOrbStateEventAction(ORB_STATE_SUPERHEATED),
       ]
     ),
   ]),
@@ -131,8 +139,16 @@ function normalizeSpellConditionId(rawId) {
     : condIdRaw;
 }
 
+function getRuleOnAll(rule) {
+  return Array.isArray(rule?.[FIELD_ON]?.[FIELD_ALL]) ? rule[FIELD_ON][FIELD_ALL] : [];
+}
+
+function getRuleThenActions(rule) {
+  return Array.isArray(rule?.[FIELD_THEN]) ? rule[FIELD_THEN] : [];
+}
+
 function getSingleSpellConditionId(rule) {
-  const onAll = Array.isArray(rule?.[FIELD_ON]?.[FIELD_ALL]) ? rule[FIELD_ON][FIELD_ALL] : [];
+  const onAll = getRuleOnAll(rule);
   const cond = onAll.length === 1 ? (onAll[0] || null) : null;
   if (!cond) return "";
   const condType = asLowerTrimmed(cond?.[FIELD_TYPE]);
@@ -142,7 +158,7 @@ function getSingleSpellConditionId(rule) {
 }
 
 function hasImmediateEventActionProfile(rule) {
-  const actions = Array.isArray(rule?.[FIELD_THEN]) ? rule[FIELD_THEN] : [];
+  const actions = getRuleThenActions(rule);
   if (!actions.length) return false;
   if (hasActionType(actions, ACTION_TYPE_WAKE_WIN)) return false;
   return hasActionType(actions, ACTION_TYPE_EVENT);
@@ -161,13 +177,21 @@ function addUniqueImmediateSpellId(out, seen, spellId) {
   out.push(spellId);
 }
 
-export function collectImmediateEventSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
+function getInteractionRules(cfg) {
+  return Array.isArray(cfg?.[FIELD_RULES]) ? cfg[FIELD_RULES] : [];
+}
+
+function collectImmediateEventSpellIdsFromRules(rules) {
   const out = [];
   const seen = new Set();
-  const rules = Array.isArray(cfg?.[FIELD_RULES]) ? cfg[FIELD_RULES] : [];
   for (const rule of rules) {
     const condId = resolveImmediateSpellId(rule);
     addUniqueImmediateSpellId(out, seen, condId);
   }
-  return Object.freeze(out);
+  return out;
+}
+
+export function collectImmediateEventSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
+  const rules = getInteractionRules(cfg);
+  return Object.freeze(collectImmediateEventSpellIdsFromRules(rules));
 }
