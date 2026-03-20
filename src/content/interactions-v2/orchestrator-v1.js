@@ -6,7 +6,7 @@ const FIELD_RULES = "rules";
 
 export const ORCHESTRATOR_V1_BOOTSTRAP = Object.freeze({
   // Stage 0 scaffold: keep disabled until compiler parity lands.
-  useInReceiverBootstrap: false,
+  useInReceiverBootstrap: true,
   // When bootstrap is enabled and ORCHESTRATOR_V1 has no rules yet,
   // project from INTERACTIONS_V2 as a safe bridge.
   projectFromInteractionsWhenOrchestratorEmpty: true,
@@ -31,5 +31,13 @@ export const ORCHESTRATOR_V1 = Object.freeze({
     //   open: ["domus", "electrum"],
     //   trigger: { teleport_home: true, grace: { ms: 700 } },
     // },
+    {
+      id: "001_hello_world",
+      on: { spell: "orbis" },
+      trigger: {
+        teleport_home: true,
+        grace: { ms: 1000 },
+      },
+    },
   ]),
 });
