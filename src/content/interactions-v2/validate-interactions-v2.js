@@ -1,5 +1,5 @@
 import { INTERACTIONS_V2 } from "./interactions-v2.js";
-import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js";
 import { EVENT_DEFINITIONS_BY_ID } from "../spell-rules/event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import { SIGNAL_DEFINITIONS_BY_ID } from "../spell-rules/signal-definitions.js";
@@ -21,6 +21,10 @@ const DEFAULTS_WAKE_WIN_CONTEXT = `${DEFAULTS_CONTEXT}.wakeWin`;
 const DEFAULTS_EVENT_CONTEXT = `${DEFAULTS_CONTEXT}.event`;
 const ENTITY_ID_RE = /^[A-Za-z0-9_]+$/;
 const BARE_NAMESPACE_RE = /^[a-z_]+\.$/;
+const CONDITION_TYPE_WORD = "word";
+const CONDITION_TYPE_SPELL = "spell";
+const CONDITION_TYPE_GESTURE = "gesture";
+const CONDITION_TYPE_ORB_STATE = "orb_state";
 const signalDefsById = ((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
   ? SIGNAL_DEFINITIONS_BY_ID
   : {});
@@ -38,6 +42,23 @@ function getQualifiedPrefix(rawId) {
 
 function isBareNamespaceId(candidateIdRaw) {
   return BARE_NAMESPACE_RE.test(asText(candidateIdRaw).toLowerCase());
+}
+
+function normalizeConditionType(conditionTypeRaw) {
+  const conditionType = asText(conditionTypeRaw).toLowerCase();
+  if (conditionType === CONDITION_TYPE_WORD) return CONDITION_TYPE_SPELL;
+  return conditionType;
+}
+
+function normalizeConditionId(conditionIdRaw, conditionTypeRaw) {
+  const conditionType = normalizeConditionType(conditionTypeRaw);
+  const conditionId = asText(conditionIdRaw);
+  if (!conditionType || !conditionId) return "";
+  if (conditionType === CONDITION_TYPE_SPELL) return normalizeSpellId(conditionId);
+  if (conditionId.startsWith(`${conditionType}.`)) {
+    return conditionId.slice(`${conditionType}.`.length);
+  }
+  return conditionId;
 }
 
 function getKnownSignalIds(namespacePrefix) {
@@ -119,22 +140,26 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
   for (const rawCondition of onAllConditions) {
     const conditionDoc = asObj(rawCondition);
     pushUnsupportedKeys(errors, conditionRuleContext, conditionDoc, new Set(["type", "id"]));
-    const conditionType = asText(conditionDoc.type).toLowerCase();
+    const conditionTypeInput = asText(conditionDoc.type).toLowerCase();
+    const conditionType = normalizeConditionType(conditionTypeInput);
     const conditionId = asText(conditionDoc.id);
-    const normalizedConditionId = (!conditionId || !conditionType)
-      ? ""
-      : (conditionId.startsWith(`${conditionType}.`)
-        ? conditionId.slice(`${conditionType}.`.length)
-        : conditionId);
+    const normalizedConditionId = normalizeConditionId(conditionId, conditionTypeInput);
     if (!conditionType) errors.push(`${ruleContext} has on.all condition missing type`);
     if (!conditionId) errors.push(`${ruleContext} has on.all condition missing id`);
-    if (conditionType && !["spell", "gesture", "orb_state"].includes(conditionType)) {
-      errors.push(`${ruleContext} has unsupported on.all condition type: ${conditionType}`);
+    if (
+      conditionTypeInput &&
+      ![CONDITION_TYPE_WORD, CONDITION_TYPE_SPELL, CONDITION_TYPE_GESTURE, CONDITION_TYPE_ORB_STATE].includes(conditionTypeInput)
+    ) {
+      errors.push(`${ruleContext} has unsupported on.all condition type: ${conditionTypeInput}`);
     }
     const conditionIdPrefix = getQualifiedPrefix(conditionId);
-    if (conditionType && conditionIdPrefix && conditionIdPrefix !== conditionType) {
+    const isWordFamily = conditionType === CONDITION_TYPE_SPELL;
+    const conditionPrefixMismatched = isWordFamily
+      ? (conditionIdPrefix && ![CONDITION_TYPE_WORD, CONDITION_TYPE_SPELL].includes(conditionIdPrefix))
+      : (conditionType && conditionIdPrefix && conditionIdPrefix !== conditionType);
+    if (conditionPrefixMismatched) {
       errors.push(
-        `${ruleContext} condition type/id prefix mismatch: type=${conditionType} id=${conditionId} (expected ${conditionType}.* or unqualified id)`
+        `${ruleContext} condition type/id prefix mismatch: type=${conditionTypeInput} id=${conditionId} (expected ${isWordFamily ? "word.* | spell.*" : `${conditionType}.*`} or unqualified id)`
       );
     }
     if (
@@ -152,18 +177,18 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
         errors,
         seenConditionSignatures,
         `${conditionType}:${normalizedConditionId}`,
-        `${ruleContext} contains duplicate on.all condition: ${conditionType}.${conditionId}`
+        `${ruleContext} contains duplicate on.all condition: ${conditionTypeInput}.${conditionId}`
       );
     }
     if (conditionId && conditionType) {
       if (
-        conditionType === "spell" &&
-        !Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedConditionId)
+        conditionType === CONDITION_TYPE_SPELL &&
+        !Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedConditionId)
       ) {
-        errors.push(`${ruleContext} references inactive or unknown spell id: ${conditionId}`);
-      } else if (conditionType === "gesture" && !knownGestureSignalIds.has(normalizedConditionId)) {
+        errors.push(`${ruleContext} references inactive or unknown word id: ${conditionId}`);
+      } else if (conditionType === CONDITION_TYPE_GESTURE && !knownGestureSignalIds.has(normalizedConditionId)) {
         errors.push(`${ruleContext} references unknown gesture id: ${conditionId}`);
-      } else if (conditionType === "orb_state" && !knownOrbStateSignalIds.has(normalizedConditionId)) {
+      } else if (conditionType === CONDITION_TYPE_ORB_STATE && !knownOrbStateSignalIds.has(normalizedConditionId)) {
         errors.push(`${ruleContext} references unknown orb_state id: ${conditionId}`);
       }
     }
@@ -185,23 +210,33 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
       if (Object.hasOwn(action, "ms")) {
         errors.push(`${ruleContext} wake_win should use ttlMs, not ms`);
       }
+      const hasWords = Object.hasOwn(action, "words");
+      const hasSpells = Object.hasOwn(action, "spells");
+      const wakeWordRefs = hasWords ? action.words : action.spells;
       pushUnsupportedKeys(
         errors,
         wakeWinActionContext,
         action,
-        new Set(["type", "spells", "ttlMs", "enabled"])
+        new Set(["type", "words", "spells", "ttlMs", "enabled"])
       );
-      if (!Array.isArray(action.spells) || !action.spells.length) {
-        errors.push(`${wakeWinActionContext} action requires spells[]`);
+      if (hasWords && hasSpells) {
+        const lhs = JSON.stringify(Array.isArray(action.words) ? action.words : []);
+        const rhs = JSON.stringify(Array.isArray(action.spells) ? action.spells : []);
+        if (lhs !== rhs) {
+          errors.push(`${wakeWinActionContext} words and spells alias must match when both are present`);
+        }
+      }
+      if (!Array.isArray(wakeWordRefs) || !wakeWordRefs.length) {
+        errors.push(`${wakeWinActionContext} action requires non-empty words[] (or spells[] alias)`);
       } else {
         const seenWakeSpellIds = new Set();
-        for (const rawWakeSpell of action.spells) {
+        for (const rawWakeSpell of wakeWordRefs) {
           const wakeSpellId = asText(rawWakeSpell);
           const normalizedWakeSpellId = normalizeSpellId(wakeSpellId);
           const wakeSpellPrefix = getQualifiedPrefix(wakeSpellId);
-          if (wakeSpellPrefix && wakeSpellPrefix !== "spell") {
+          if (wakeSpellPrefix && wakeSpellPrefix !== "spell" && wakeSpellPrefix !== "word") {
             errors.push(
-              `${wakeWinActionContext} spell prefix mismatch: ${wakeSpellId} (expected spell.* or unqualified id)`
+              `${wakeWinActionContext} word prefix mismatch: ${wakeSpellId} (expected word.* | spell.* or unqualified id)`
             );
           }
           if (
@@ -214,10 +249,10 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
           if (!normalizedWakeSpellId) {
             if (isBareNamespaceId(wakeSpellId)) {
               errors.push(
-                `${wakeWinActionContext} spell id is incomplete: ${wakeSpellId} (missing value after prefix)`
+                `${wakeWinActionContext} word id is incomplete: ${wakeSpellId} (missing value after prefix)`
               );
             } else {
-              errors.push(`${wakeWinActionContext} spell id is empty`);
+              errors.push(`${wakeWinActionContext} word id is empty`);
             }
             continue;
           }
@@ -225,10 +260,10 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
             errors,
             seenWakeSpellIds,
             normalizedWakeSpellId,
-            `${wakeWinActionContext} contains duplicate spell id: ${wakeSpellId}`
+            `${wakeWinActionContext} contains duplicate word id: ${wakeSpellId}`
           );
-          if (!Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedWakeSpellId)) {
-            errors.push(`${wakeWinActionContext} references inactive or unknown spell id: ${wakeSpellId}`);
+          if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedWakeSpellId)) {
+            errors.push(`${wakeWinActionContext} references inactive or unknown word id: ${wakeSpellId}`);
           }
         }
       }

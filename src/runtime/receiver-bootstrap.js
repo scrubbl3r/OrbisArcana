@@ -5,6 +5,10 @@
  */
 
 export const RULE_ENGINE_SOURCES = Object.freeze({
+  ORCHESTRATOR_V2: "orchestrator_v2",
+  ORCHESTRATOR_V2_FALLBACK: "orchestrator_v2_fallback",
+  ORCHESTRATOR_V2_DISABLED: "orchestrator_v2_disabled",
+  ORCHESTRATOR_V2_MISSING_BUILDER: "orchestrator_v2_missing_builder",
   ORCHESTRATOR_V1: "orchestrator_v1",
   ORCHESTRATOR_V1_PROJECTED: "orchestrator_v1_projected",
   ORCHESTRATOR_V1_FALLBACK: "orchestrator_v1_fallback",
@@ -17,6 +21,10 @@ export const RULE_ENGINE_SOURCES = Object.freeze({
 });
 
 export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V2]: "Orchestrator V2",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V2_FALLBACK]: "Orchestrator V2 (safe fallback)",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V2_DISABLED]: "Orchestrator V2 disabled",
+  [RULE_ENGINE_SOURCES.ORCHESTRATOR_V2_MISSING_BUILDER]: "Orchestrator V2 missing builder (safe fallback)",
   [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1]: "Orchestrator V1",
   [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED]: "Orchestrator V1 (projected from interactions)",
   [RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_FALLBACK]: "Orchestrator V1 (safe fallback)",
@@ -38,9 +46,14 @@ const FIELD_EVENTS = "events";
 const FIELD_RULES = "rules";
 const FIELD_EVENT_RUNTIME_BINDINGS = "eventRuntimeBindings";
 const FIELD_EXECUTION = "execution";
+const ERR_PREFIX_ORCHESTRATOR_V2 = "Orchestrator v2 validation failed: ";
 const ERR_PREFIX_ORCHESTRATOR_V1 = "Orchestrator v1 validation failed: ";
-const ERR_PREFIX_SPELLBOOK_V2 = "Spellbook v2 validation failed: ";
+const ERR_PREFIX_WORDBOOK_V2 = "Wordbook v2 validation failed: ";
 const ERR_PREFIX_SPELL_RUNTIME_ROUTING = "Spell runtime routing validation failed: ";
+const WARN_ORCHESTRATOR_V2_BUILDER_MISSING =
+  "[receiver-bootstrap] ORCHESTRATOR_V2 builder missing; using safe disabled rule schema";
+const WARN_ORCHESTRATOR_V2_BUILD_FAILED =
+  "[receiver-bootstrap] ORCHESTRATOR_V2 build failed; using safe disabled rule schema";
 const WARN_ORCHESTRATOR_BUILDER_MISSING =
   "[receiver-bootstrap] ORCHESTRATOR_V1 builder missing; using safe disabled rule schema";
 const WARN_ORCHESTRATOR_BUILD_FAILED =
@@ -298,14 +311,19 @@ export async function loadReceiverInitModules() {
       validateRuleEngineConfig,
     },
     {
+      ORCHESTRATOR_V2,
+      ORCHESTRATOR_V2_BOOTSTRAP,
       ORCHESTRATOR_V1,
       ORCHESTRATOR_V1_BOOTSTRAP,
       INTERACTIONS_V2,
       INTERACTIONS_V2_BOOTSTRAP,
+      buildRuleEngineFromOrchestratorV2,
       buildRuleEngineFromOrchestratorV1,
       buildRuleEngineFromInteractionsV2,
       projectOrchestratorV1FromInteractionsV2,
+      validateOrchestratorV2,
       validateOrchestratorV1,
+      validateWordbookV2,
       validateSpellbookV2,
     },
     { WORLD_ITEMS },
@@ -351,6 +369,7 @@ export async function loadReceiverInitModules() {
     createRuleEnginePreviewSystem,
     RULE_ENGINE_POLICY_CONTROL,
     validateRuleEngineConfig,
+    buildRuleEngineFromOrchestratorV2,
     buildRuleEngineFromOrchestratorV1,
     buildRuleEngineFromInteractionsV2,
     projectOrchestratorV1FromInteractionsV2,
@@ -397,10 +416,15 @@ export async function loadReceiverInitModules() {
     validateSpellSchemaIntegrity,
     ORCHESTRATOR_V1,
     ORCHESTRATOR_V1_BOOTSTRAP,
+    ORCHESTRATOR_V2,
+    ORCHESTRATOR_V2_BOOTSTRAP,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
+    buildRuleEngineFromOrchestratorV2,
     projectOrchestratorV1FromInteractionsV2,
+    validateOrchestratorV2,
     validateOrchestratorV1,
+    validateWordbookV2,
     validateSpellbookV2,
     ...worldItemExports,
   };
@@ -460,14 +484,19 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     validateSpellSchemaIntegrity,
     RULE_ENGINE_POLICY_CONTROL,
     validateRuleEngineConfig,
+    ORCHESTRATOR_V2,
+    ORCHESTRATOR_V2_BOOTSTRAP,
     ORCHESTRATOR_V1,
     ORCHESTRATOR_V1_BOOTSTRAP,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP,
+    buildRuleEngineFromOrchestratorV2,
     buildRuleEngineFromOrchestratorV1,
     buildRuleEngineFromInteractionsV2,
     projectOrchestratorV1FromInteractionsV2,
+    validateOrchestratorV2,
     validateOrchestratorV1,
+    validateWordbookV2,
     validateSpellbookV2,
     createSpellCastExecutor,
   } = mods || {};
@@ -518,7 +547,10 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const buildRuleEngineFromInteractions = (typeof buildRuleEngineFromInteractionsV2 === "function")
     ? buildRuleEngineFromInteractionsV2
     : null;
-  const buildRuleEngineFromOrchestrator = (typeof buildRuleEngineFromOrchestratorV1 === "function")
+  const buildRuleEngineFromOrchestratorV2Fn = (typeof buildRuleEngineFromOrchestratorV2 === "function")
+    ? buildRuleEngineFromOrchestratorV2
+    : null;
+  const buildRuleEngineFromOrchestratorV1Fn = (typeof buildRuleEngineFromOrchestratorV1 === "function")
     ? buildRuleEngineFromOrchestratorV1
     : null;
   const projectOrchestratorFromInteractions = (typeof projectOrchestratorV1FromInteractionsV2 === "function")
@@ -530,17 +562,54 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INTERACTIONS_V2_BOOTSTRAP,
     BOOTSTRAP_FLAG_USE_IN_RECEIVER
   );
+  const useOrchestratorV2 = isBootstrapFlagEnabled(
+    ORCHESTRATOR_V2_BOOTSTRAP,
+    BOOTSTRAP_FLAG_USE_IN_RECEIVER
+  );
   const useOrchestratorV1 = isBootstrapFlagEnabled(
     ORCHESTRATOR_V1_BOOTSTRAP,
     BOOTSTRAP_FLAG_USE_IN_RECEIVER
   );
+  const selectedRuleSourceMode = useOrchestratorV2
+    ? "orchestrator_v2"
+    : (useOrchestratorV1 ? "orchestrator_v1" : "interactions_v2");
   let adapterFallbackUsed = false;
-  let ruleSource = useOrchestratorV1
-    ? RULE_ENGINE_SOURCES.ORCHESTRATOR_V1
-    : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER;
+  let ruleSource = selectedRuleSourceMode === "orchestrator_v2"
+    ? RULE_ENGINE_SOURCES.ORCHESTRATOR_V2
+    : (selectedRuleSourceMode === "orchestrator_v1"
+      ? RULE_ENGINE_SOURCES.ORCHESTRATOR_V1
+      : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER);
   let ruleSchema = buildSafeDisabledRuleSchema();
-  if (useOrchestratorV1) {
-    if (typeof buildRuleEngineFromOrchestrator !== "function") {
+  if (selectedRuleSourceMode === "orchestrator_v2") {
+    if (typeof buildRuleEngineFromOrchestratorV2Fn !== "function") {
+      adapterFallbackUsed = true;
+      ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V2_MISSING_BUILDER;
+      safeConsoleWarn(WARN_ORCHESTRATOR_V2_BUILDER_MISSING);
+    } else {
+      try {
+        const orchestratorV2Input = ORCHESTRATOR_V2;
+        if (typeof validateOrchestratorV2 === "function") {
+          const orchestratorV2Errors = validateOrchestratorV2(orchestratorV2Input);
+          const errors = Array.isArray(orchestratorV2Errors)
+            ? orchestratorV2Errors
+            : (Array.isArray(orchestratorV2Errors && orchestratorV2Errors.errors)
+              ? orchestratorV2Errors.errors
+              : []);
+          throwValidationErrorIfAny(errors, ERR_PREFIX_ORCHESTRATOR_V2);
+        }
+        ruleSchema = buildRuleEngineFromOrchestratorV2Fn({
+          orchestratorV2: orchestratorV2Input,
+          baseRuleEngine: adapterBaseRuleSchema,
+        });
+      } catch (err) {
+        safeConsoleWarn(WARN_ORCHESTRATOR_V2_BUILD_FAILED, err);
+        adapterFallbackUsed = true;
+        ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V2_FALLBACK;
+        ruleSchema = buildSafeDisabledRuleSchema();
+      }
+    }
+  } else if (selectedRuleSourceMode === "orchestrator_v1") {
+    if (typeof buildRuleEngineFromOrchestratorV1Fn !== "function") {
       adapterFallbackUsed = true;
       ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_MISSING_BUILDER;
       safeConsoleWarn(WARN_ORCHESTRATOR_BUILDER_MISSING);
@@ -561,7 +630,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
           const orchestratorErrors = validateOrchestratorV1(orchestratorInput);
           throwValidationErrorIfAny(orchestratorErrors, ERR_PREFIX_ORCHESTRATOR_V1);
         }
-        ruleSchema = buildRuleEngineFromOrchestrator({
+        ruleSchema = buildRuleEngineFromOrchestratorV1Fn({
           orchestratorV1: orchestratorInput,
           baseRuleEngine: adapterBaseRuleSchema,
         });
@@ -686,9 +755,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
 
   if (typeof validateSpellRuntimeRoutingFn === "function") {
-    if (typeof validateSpellbookV2 === "function") {
-      const spellbookErrors = validateSpellbookV2();
-      throwValidationErrorIfAny(spellbookErrors, ERR_PREFIX_SPELLBOOK_V2);
+    const validateWordInventory = (typeof validateWordbookV2 === "function")
+      ? validateWordbookV2
+      : (typeof validateSpellbookV2 === "function" ? validateSpellbookV2 : null);
+    if (typeof validateWordInventory === "function") {
+      const wordbookErrors = validateWordInventory();
+      throwValidationErrorIfAny(wordbookErrors, ERR_PREFIX_WORDBOOK_V2);
     }
     const routingErrors = validateSpellRuntimeRoutingFn();
     throwValidationErrorIfAny(routingErrors, ERR_PREFIX_SPELL_RUNTIME_ROUTING);
@@ -726,7 +798,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
   const resolvedRuleSource = adapterFallbackUsed
     ? ruleSource
-    : (useOrchestratorV1 ? ruleSource : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER);
+    : (selectedRuleSourceMode === "interactions_v2"
+      ? RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER
+      : ruleSource);
   safeConsoleInfo(`${INFO_RULE_SOURCE_PREFIX} ${resolvedRuleSource}`);
   if (typeof setRuleSchemaRuntime === "function") {
     setRuleSchemaRuntime(

@@ -3,19 +3,19 @@ import { getInteractionsRules } from "./interactions-v2-utils.mjs";
 import { jsonClone } from "./json-clone-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
-import { countSpellbookSpells } from "./spellbook-v2-utils.mjs";
+import { countWordbookWords } from "./wordbook-v2-utils.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import {
-  SPELLBOOK_V2,
+  WORDBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
-  validateSpellbookV2,
+  validateWordbookV2,
   validateInteractionsV2,
   buildRuleEngineFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 
 function buildSnapshot() {
-  const spellbookErrors = validateSpellbookV2(SPELLBOOK_V2);
+  const wordbookErrors = validateWordbookV2(WORDBOOK_V2);
   const interactionsValidation = validateInteractionsV2(INTERACTIONS_V2);
   const projectedRuleEngine = buildRuleEngineFromInteractionsV2({
     interactionsV2: INTERACTIONS_V2,
@@ -31,8 +31,8 @@ function buildSnapshot() {
     },
     validation: {
       spellbookV2: {
-        ok: spellbookErrors.length === 0,
-        errors: spellbookErrors,
+        ok: wordbookErrors.length === 0,
+        errors: wordbookErrors,
       },
       interactionsV2: {
         ok: !!interactionsValidation.ok,
@@ -40,11 +40,11 @@ function buildSnapshot() {
       },
     },
     counts: {
-      spellbookV2Spells: countSpellbookSpells(SPELLBOOK_V2),
+      spellbookV2Spells: countWordbookWords(WORDBOOK_V2),
       interactionsV2Rules: interactionRules.length,
       projectedRuleEngineRules: Array.isArray(projectedRuleEngine.rules) ? projectedRuleEngine.rules.length : 0,
     },
-    spellbookV2: jsonClone(SPELLBOOK_V2),
+    spellbookV2: jsonClone(WORDBOOK_V2),
     interactionsV2: jsonClone(INTERACTIONS_V2),
     projectedRuleEngine: jsonClone(projectedRuleEngine),
   };

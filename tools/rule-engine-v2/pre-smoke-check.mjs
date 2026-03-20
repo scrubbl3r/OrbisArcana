@@ -1,23 +1,27 @@
 import { existsSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
-  SPELLBOOK_V2,
+  WORDBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
-  validateSpellbookV2,
+  buildRulesFromInteractionsV2,
+  validateWordbookV2,
   validateInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
+import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
+import { validateSpellSchemaIntegrity } from "../../src/content/spells/validate-spell-schema-integrity.js";
+import { validateSpellRules } from "../../src/content/spell-rules/validate-spell-rules.js";
 import {
   KWS_MANIFEST_REL_PATH,
-  buildKwsManifestFromSpellbookV2,
+  buildKwsManifestFromWordbookV2,
   normalizeKwsManifest,
-} from "./kws-manifest-from-spellbook-v2.mjs";
+} from "./kws-manifest-from-wordbook-v2.mjs";
 import { runCheckScript } from "./run-check-v2.mjs";
 import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { failCheckWithDetails } from "./check-fail-v2.mjs";
 import { readJsonCore } from "./read-json-core-v2.mjs";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
-import { listActiveSpellModelRefs } from "./spellbook-v2-utils.mjs";
+import { listActiveWordModelRefs } from "./wordbook-v2-utils.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
 
 const CHECK_TAG = "pre-smoke";
@@ -50,9 +54,10 @@ function verifyKwsManifestCoverage() {
   const manifestAbs = resolve(process.cwd(), KWS_MANIFEST_REL_PATH);
   const manifestRaw = loadJson(manifestAbs);
   const manifest = normalizeKwsManifest(manifestRaw);
-  const expectedManifest = normalizeKwsManifest(buildKwsManifestFromSpellbookV2(SPELLBOOK_V2));
+  const expectedManifest = normalizeKwsManifest(buildKwsManifestFromWordbookV2(WORDBOOK_V2));
   if (JSON.stringify(manifest) !== JSON.stringify(expectedManifest)) {
-    fail("kws manifest drift: regenerate from spellbook-v2", [
+    fail("kws manifest drift: regenerate from wordbook-v2", [
+      "compatibility alias: spellbook-v2",
       `manifest: ${KWS_MANIFEST_REL_PATH}`,
       "run: npm run sync:kws-manifest:v2",
     ]);
@@ -82,25 +87,31 @@ function verifyKwsManifestCoverage() {
     fail("kws manifest model files invalid", missingFiles);
   }
 
-  const activeSpells = listActiveSpellModelRefs(SPELLBOOK_V2);
+  const activeWords = listActiveWordModelRefs(WORDBOOK_V2);
   const coverageErrors = [];
-  for (const spell of activeSpells) {
-    if (!spell.id || !spell.onnx) continue;
-    const expectedBase = `${spell.onnx}.onnx`;
+  for (const word of activeWords) {
+    if (!word.id || !word.onnx) continue;
+    const expectedBase = `${word.onnx}.onnx`;
     if (!modelBaseByName[expectedBase]) {
-      coverageErrors.push(`active spell missing manifest model: spell=${spell.id} expected=${expectedBase}`);
+      coverageErrors.push(`active word missing manifest model: word=${word.id} expected=${expectedBase}`);
     }
   }
   if (coverageErrors.length) {
-    fail("kws manifest does not cover active spellbook", coverageErrors);
+    fail("kws manifest does not cover active wordbook", coverageErrors);
   }
 }
 
-failIfValidationErrors("spellbook-v2 validation failed", validateSpellbookV2(SPELLBOOK_V2));
+failIfValidationErrors("wordbook-v2 validation failed", validateWordbookV2(WORDBOOK_V2));
 
 const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
 const interactionsErrors = interactionsResult?.ok ? [] : interactionsResult?.errors;
 failIfValidationErrors("interactions-v2 validation failed", interactionsErrors);
+failIfValidationErrors(
+  "spell-rules validation failed",
+  validateSpellRules(buildRulesFromInteractionsV2(INTERACTIONS_V2))
+);
+failIfValidationErrors("spell-runtime-routing validation failed", validateSpellRuntimeRouting(INTERACTIONS_V2));
+failIfValidationErrors("spell-schema-integrity validation failed", validateSpellSchemaIntegrity());
 
 verifyKwsManifestCoverage();
 

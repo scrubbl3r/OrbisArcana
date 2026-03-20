@@ -1,7 +1,8 @@
 // RUNTIME AGGREGATION LAYER
 // Authoring SSOT for interaction behavior is now:
 // - src/content/interactions-v2/interactions-v2.js
-// - src/content/interactions-v2/spellbook-v2.js
+// - src/content/interactions-v2/wordbook-v2.js
+//   - compatibility alias: src/content/interactions-v2/spellbook-v2.js
 // Keep edits here limited to runtime wiring/plumbing only.
 
 import { EVENT_DEFINITIONS } from "./event-definitions.js";
@@ -149,117 +150,117 @@ const SIGNAL_SOURCE_EVENT_OVERRIDES = Object.freeze({
 
 const SOURCE_EVENT_ENABLED_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": false,
+  // "voice.word_detected": false,
 });
 
 const SOURCE_EVENT_DEBOUNCE_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 150,
+  // "voice.word_detected": 150,
 });
 
 const SOURCE_EVENT_MAX_SIGNALS_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 1,
+  // "voice.word_detected": 1,
 });
 
 const SOURCE_EVENT_MAX_SIGNALS_EVALUATED_PER_EVENT_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 3,
+  // "voice.word_detected": 3,
 });
 
 const SOURCE_EVENT_MAX_ACTIONS_PER_SIGNAL_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 2,
+  // "voice.word_detected": 2,
 });
 
 const SOURCE_EVENT_MAX_RULES_EVALUATED_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 8,
+  // "voice.word_detected": 8,
 });
 
 const SOURCE_EVENT_MAX_RULES_EVALUATED_PER_EVENT_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 12,
+  // "voice.word_detected": 12,
 });
 
 const SOURCE_EVENT_MAX_MATCHES_PER_EVENT_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 2,
+  // "voice.word_detected": 2,
 });
 
 const SOURCE_EVENT_MAX_ACTIONS_PER_EVENT_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 3,
+  // "voice.word_detected": 3,
 });
 
 const SOURCE_EVENT_STOP_ON_FIRST_SIGNAL_MATCH_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": true,
+  // "voice.word_detected": true,
 });
 
 const SOURCE_EVENT_EMIT_PREVIEW_MATCHED_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": false,
+  // "voice.word_detected": false,
 });
 
 const SOURCE_EVENT_EMIT_ACTION_EXECUTED_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": false,
+  // "voice.word_detected": false,
 });
 
 const SOURCE_EVENT_EMIT_SOURCE_EVENT_SUMMARY_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": true,
+  // "voice.word_detected": true,
 });
 
 const SOURCE_EVENT_SUMMARY_INCLUDE_SIGNAL_AND_RULE_IDS_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": true,
+  // "voice.word_detected": true,
 });
 
 const SOURCE_EVENT_SUMMARY_INCLUDE_BUDGET_CAPS_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": true,
+  // "voice.word_detected": true,
 });
 
 const SOURCE_EVENT_ACTION_TYPE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": { wake_win: false, event: true },
+  // "voice.word_detected": { wake_win: false, event: true },
 });
 
 const SOURCE_EVENT_ACTION_EXECUTED_EVENT_TYPE_ENABLED_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": { wake_win: false, event: true },
+  // "voice.word_detected": { wake_win: false, event: true },
 });
 
 const SOURCE_EVENT_EXECUTE_ACTIONS_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": false,
+  // "voice.word_detected": false,
 });
 
 const SOURCE_EVENT_COOLDOWN_SCALE_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 0.75,
+  // "voice.word_detected": 0.75,
 });
 
 const SOURCE_EVENT_MATCH_WINDOW_SCALE_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 1.25,
+  // "voice.word_detected": 1.25,
 });
 
 const SOURCE_EVENT_MAX_ACTIONS_PER_RULE_MATCH_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 1,
+  // "voice.word_detected": 1,
 });
 
 const SOURCE_EVENT_STOP_ON_FIRST_MATCH_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": true,
+  // "voice.word_detected": true,
 });
 
 const SOURCE_EVENT_MAX_MATCHES_PER_SIGNAL_OVERRIDES = Object.freeze({
   // Example:
-  // "voice.spell_detected": 1,
+  // "voice.word_detected": 1,
 });
 
 const ACTION_ENABLED_OVERRIDES = Object.freeze({

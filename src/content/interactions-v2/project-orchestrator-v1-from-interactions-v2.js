@@ -17,6 +17,7 @@ const ORCHESTRATOR_V1_VERSION = "1";
 const ENABLED_FALSE = false;
 const FIELD_EVENT = "event";
 const FIELD_ARGS = "args";
+const FIELD_WORDS = "words";
 const FIELD_SPELLS = "spells";
 const FIELD_ID = "id";
 const FIELD_ON = "on";
@@ -67,8 +68,13 @@ export function projectOrchestratorV1FromInteractionsV2(interactionsV2Input = IN
           return acc;
         }, { openAction: null, eventActions: [] });
         if (openAction) {
+          const openWordsRaw = Object.hasOwn(asObj(openAction), FIELD_WORDS)
+            ? openAction?.[FIELD_WORDS]
+            : openAction?.[FIELD_SPELLS];
+          const openWords = asArray(openWordsRaw).slice();
           const open = {
-            [FIELD_SPELLS]: asArray(openAction?.[FIELD_SPELLS]).slice(),
+            [FIELD_WORDS]: openWords,
+            [FIELD_SPELLS]: openWords,
           };
           copyOwnKeys(open, openAction, OPEN_COPY_KEYS);
           out[FIELD_OPEN] = open;

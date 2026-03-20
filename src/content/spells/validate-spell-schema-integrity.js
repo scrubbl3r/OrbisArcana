@@ -1,4 +1,4 @@
-import { SPELLS_BY_ID } from "../../voice/spellbook.js";
+import { WORDS_BY_ID as SPELLS_BY_ID } from "../../voice/wordbook.js";
 import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
 import {
   buildRulesFromInteractionsV2,
@@ -89,11 +89,13 @@ export function validateSpellSchemaIntegrity(options = {}) {
       const type = asId(action && action.type);
       const id = asId(action && action.id);
       if (type === "wake_win") {
-        const spells = Array.isArray(action && action.spells) ? action.spells : [];
-        for (const spellIdRaw of spells) {
-          const spellId = asId(spellIdRaw);
-          if (!SPELLS_BY_ID[spellId]) {
-            errors.push(`rule ${ruleId} wake_win references unknown spell id: ${spellId}`);
+        const wordRefs = Array.isArray(action && action.words)
+          ? action.words
+          : (Array.isArray(action && action.spells) ? action.spells : []);
+        for (const wordIdRaw of wordRefs) {
+          const wordId = asId(wordIdRaw).replace(/^(word|spell)\./, "");
+          if (!SPELLS_BY_ID[wordId]) {
+            errors.push(`rule ${ruleId} wake_win references unknown word id: ${wordId}`);
           }
         }
         continue;

@@ -153,7 +153,9 @@ The current compiler/validator accepts ergonomic aliases in addition to canonica
     - `orbstate:charged`
     - `orb-state:charged`
 - `open`:
-  - string/array comma shorthand for spell lists
+  - string/array comma shorthand for word lists
+  - canonical key: `words`
+  - compatibility alias key: `spells`
   - `ttl` alias for `ttlMs` (with `ttlMs` precedence)
 - `trigger`:
   - comma shorthand string: `"grace, aoe_electric"`

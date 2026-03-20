@@ -1,6 +1,6 @@
 // Runtime routing metadata intentionally separated from recognition spellbook.
 // This file owns behavior-oriented spell metadata during refactor slices.
-import { collectImmediateEventSpellIdsFromInteractionsV2 } from "../interactions-v2/interactions-v2.js";
+import { collectImmediateEventWordIdsFromInteractionsV2 } from "../interactions-v2/interactions-v2.js";
 
 export const WAKE_WORD_IDS = Object.freeze([
   "orbis",
@@ -31,9 +31,9 @@ export const SPELL_WINDOW_BYPASS_WORD_IDS = Object.freeze([
   ...new Set([...AXIS_WORD_IDS, ...WAKE_WINDOW_WORD_IDS]),
 ]);
 
-// Immediate voice spells that are owned by the rule engine path.
+// Immediate voice words that are owned by the rule engine path.
 // Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
-export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = collectImmediateEventSpellIdsFromInteractionsV2();
+export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = collectImmediateEventWordIdsFromInteractionsV2();
 
 export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({
   ...WAKE_WINDOW_WORD_IDS.reduce((acc, id) => {

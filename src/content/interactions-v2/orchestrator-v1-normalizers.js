@@ -22,6 +22,7 @@ export function requireNonEmptyArray(errors, value, errorMessage) {
 
 const FIELD_ENABLED = "enabled";
 const FIELD_ARGS = "args";
+const FIELD_WORDS = "words";
 const FIELD_EVENT = "event";
 const FIELD_SPELLS = "spells";
 const FIELD_TTL_MS = "ttlMs";
@@ -144,6 +145,7 @@ function normalizePrefixedId(rawValue, prefix) {
 }
 
 const PREFIX_SPELL = "spell.";
+const PREFIX_WORD = "word.";
 const PREFIX_EVENT = "event.";
 const PREFIX_GESTURE = "gesture.";
 const PREFIX_ORB_STATE = "orb_state.";
@@ -152,7 +154,11 @@ const TYPE_GESTURE = "gesture";
 const TYPE_ORB_STATE = "orb_state";
 
 export function normalizeSpellId(spellIdRaw) {
-  return normalizePrefixedId(spellIdRaw, PREFIX_SPELL);
+  const id = asId(spellIdRaw);
+  if (!id) return "";
+  if (id.startsWith(PREFIX_SPELL)) return id.slice(PREFIX_SPELL.length);
+  if (id.startsWith(PREFIX_WORD)) return id.slice(PREFIX_WORD.length);
+  return id;
 }
 
 export function normalizeEventId(eventIdRaw) {
@@ -322,7 +328,7 @@ export function asTriggerObject(rawTrigger) {
 }
 
 export function asOpenObject(rawOpen) {
-  return isStringOrArray(rawOpen) ? { [FIELD_SPELLS]: rawOpen } : asObj(rawOpen);
+  return isStringOrArray(rawOpen) ? { [FIELD_WORDS]: rawOpen } : asObj(rawOpen);
 }
 
 function hasObjectKeys(value) {

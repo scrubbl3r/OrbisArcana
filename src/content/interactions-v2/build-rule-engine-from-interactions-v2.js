@@ -26,6 +26,7 @@ const FIELD_ON = "on";
 const FIELD_ALL = "all";
 const FIELD_THEN = "then";
 const FIELD_TTL_MS = "ttlMs";
+const FIELD_WORDS = "words";
 const FIELD_SPELLS = "spells";
 const FIELD_OVERRIDES = "overrides";
 const FIELD_PRIORITY = "priority";
@@ -35,9 +36,25 @@ const FIELD_RULES = "rules";
 const FIELD_INTERACTIONS_V2 = "interactionsV2";
 const FIELD_BASE_RULE_ENGINE = "baseRuleEngine";
 const DEFAULT_BUILD_OPTIONS = {};
+const CONDITION_TYPE_WORD = "word";
+const CONDITION_TYPE_SPELL = "spell";
 const RESERVED_ACTION_KEYS = Object.freeze(
-  new Set([FIELD_TYPE, FIELD_ID, FIELD_SPELLS, FIELD_OVERRIDES, KEY_ENABLED])
+  new Set([FIELD_TYPE, FIELD_ID, FIELD_WORDS, FIELD_SPELLS, FIELD_OVERRIDES, KEY_ENABLED])
 );
+
+function normalizeConditionType(rawType) {
+  const type = asId(rawType);
+  if (type === CONDITION_TYPE_WORD) return CONDITION_TYPE_SPELL;
+  return type;
+}
+
+function normalizeConditionId(rawId, conditionType) {
+  if (conditionType === CONDITION_TYPE_SPELL) return normalizeSpellId(rawId);
+  const id = asId(rawId);
+  if (!id) return "";
+  const pref = `${conditionType}.`;
+  return id.startsWith(pref) ? id.slice(pref.length) : id;
+}
 
 function compileInteractionRule(rule, defaultsSafe, defaultsEventById) {
   const r = asObj(rule);
@@ -45,11 +62,10 @@ function compileInteractionRule(rule, defaultsSafe, defaultsEventById) {
   if (!id) return null;
   const conditions = mapDefined(asArray(asObj(r[FIELD_ON])[FIELD_ALL]), (cond) => {
     const c = asObj(cond);
-    const type = asId(c[FIELD_TYPE]);
-    const rawId = asId(c[FIELD_ID]);
+    const type = normalizeConditionType(c[FIELD_TYPE]);
+    const rawId = c[FIELD_ID];
     if (!type || !rawId) return null;
-    const pref = `${type}.`;
-    const conditionId = rawId.startsWith(pref) ? rawId.slice(pref.length) : rawId;
+    const conditionId = normalizeConditionId(rawId, type);
     if (!conditionId) return null;
     return Object.freeze({ [FIELD_TYPE]: type, [FIELD_ID]: conditionId });
   });
@@ -57,11 +73,13 @@ function compileInteractionRule(rule, defaultsSafe, defaultsEventById) {
     const safeAction = asObj(action);
     const type = asId(safeAction[FIELD_TYPE]);
     if (type === ACTION_TYPE_WAKE_WIN) {
-      const spells = mapDefined(asArray(safeAction[FIELD_SPELLS]), (spellId) => normalizeSpellId(spellId));
+      const wordsRaw = Object.hasOwn(safeAction, FIELD_WORDS) ? safeAction[FIELD_WORDS] : safeAction[FIELD_SPELLS];
+      const words = mapDefined(asArray(wordsRaw), (spellId) => normalizeSpellId(spellId));
       const ttlMsRaw = Object.hasOwn(safeAction, FIELD_TTL_MS)
         ? safeAction[FIELD_TTL_MS]
         : asObj(defaultsSafe[DEFAULTS_WAKE_WIN_KEY])[FIELD_TTL_MS];
-      const out = { [FIELD_TYPE]: ACTION_TYPE_WAKE_WIN, [FIELD_SPELLS]: spells };
+      const out = { [FIELD_TYPE]: ACTION_TYPE_WAKE_WIN, [FIELD_SPELLS]: words };
+      out[FIELD_WORDS] = words;
       const ttlMsNum = finiteAtLeastOrNull(ttlMsRaw, 0);
       if (ttlMsNum != null) out[FIELD_TTL_MS] = ttlMsNum;
       setEnabledIfBoolean(out, safeAction);

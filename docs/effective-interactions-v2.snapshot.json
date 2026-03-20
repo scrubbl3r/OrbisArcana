@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-20T03:47:04.718Z",
+  "generatedAt": "2026-03-20T23:08:05.096Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": true
@@ -125,7 +125,7 @@
         "on": {
           "all": [
             {
-              "type": "spell",
+              "type": "word",
               "id": "spell.fridgis"
             }
           ]
@@ -142,7 +142,7 @@
         "on": {
           "all": [
             {
-              "type": "spell",
+              "type": "word",
               "id": "spell.electrum"
             }
           ]
@@ -159,7 +159,7 @@
         "on": {
           "all": [
             {
-              "type": "spell",
+              "type": "word",
               "id": "spell.pyro"
             }
           ]
@@ -176,7 +176,7 @@
         "on": {
           "all": [
             {
-              "type": "spell",
+              "type": "word",
               "id": "spell.domus"
             }
           ]
@@ -193,7 +193,7 @@
         "on": {
           "all": [
             {
-              "type": "spell",
+              "type": "word",
               "id": "spell.rota"
             },
             {
@@ -209,6 +209,11 @@
         "then": [
           {
             "type": "wake_win",
+            "words": [
+              "spell.rota",
+              "spell.sanctum",
+              "spell.vectus"
+            ],
             "spells": [
               "spell.rota",
               "spell.sanctum",
@@ -318,6 +323,11 @@
           {
             "type": "wake_win",
             "spells": [
+              "rota",
+              "sanctum",
+              "vectus"
+            ],
+            "words": [
               "rota",
               "sanctum",
               "vectus"

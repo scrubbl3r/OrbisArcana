@@ -28,7 +28,7 @@ const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
 const snapshot = readJsonSafe(resolveRuleEngineDocPath("effectiveSnapshot"));
 const interactionsRuleCount = Number(snapshot?.counts?.interactionsV2Rules ?? 0);
 const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 0);
-const spellbookOk = isTrue(snapshot?.validation?.spellbookV2?.ok);
+const wordbookOk = isTrue(snapshot?.validation?.spellbookV2?.ok);
 const interactionsOk = isTrue(snapshot?.validation?.interactionsV2?.ok);
 const bootstrapUsesV2Adapter = isTrue(snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap);
 let orchestratorProjectedRuleCount = 0;
@@ -50,7 +50,8 @@ try {
 const health = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.health,
   generatedAt: nowIso(),
-  spellbookOk,
+  wordbookOk,
+  spellbookOk: wordbookOk,
   interactionsOk,
   bootstrapUsesV2Adapter,
   projectionRulesOnly: true,
@@ -64,7 +65,8 @@ const healthPath = resolveRuleEngineDocPath("health");
 writeJsonFile(healthPath, health);
 
 logDoctor("----");
-logDoctor(`spellbook ok: ${spellbookOk}`);
+logDoctor(`wordbook ok: ${wordbookOk}`);
+logDoctor(`spellbook ok (compat): ${wordbookOk}`);
 logDoctor(`interactions ok: ${interactionsOk}`);
 logDoctor(`bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
 logDoctor("rules mode: projection_only");

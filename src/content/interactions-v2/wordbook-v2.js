@@ -1,0 +1,23 @@
+import {
+  SPELLBOOK_V2,
+  SPELLBOOK_V2_SPELLS,
+  SPELLBOOK_V2_SPELLS_BY_ID,
+  SPELLBOOK_V2_ACTIVE_SPELLS,
+  SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID,
+} from "./spellbook-v2.js";
+
+// Canonical V2 wake-word inventory naming. Spellbook exports remain as aliases.
+export const WORDBOOK_V2 = SPELLBOOK_V2;
+export const WORDBOOK_V2_WORDS = SPELLBOOK_V2_SPELLS;
+export const WORDBOOK_V2_WORDS_BY_ID = SPELLBOOK_V2_SPELLS_BY_ID;
+export const WORDBOOK_V2_ACTIVE_WORDS = SPELLBOOK_V2_ACTIVE_SPELLS;
+export const WORDBOOK_V2_ACTIVE_WORDS_BY_ID = SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID;
+
+// Backward-compatible aliases for existing imports.
+export {
+  SPELLBOOK_V2,
+  SPELLBOOK_V2_SPELLS,
+  SPELLBOOK_V2_SPELLS_BY_ID,
+  SPELLBOOK_V2_ACTIVE_SPELLS,
+  SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID,
+};

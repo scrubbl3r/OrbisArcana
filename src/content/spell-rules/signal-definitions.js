@@ -1,6 +1,6 @@
 // Data-only signal catalog for rule-engine scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
-import { ACTIVE_SPELLS_BY_ID } from "../../voice/spellbook.js";
+import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../../voice/wordbook.js";
 import {
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
   WAKE_WORD_IDS,
@@ -15,8 +15,8 @@ function buildWakeWindowSpellSignals() {
     .map((spellId) => Object.freeze({
       id: `spell.${spellId}`,
       type: "spell",
-      sourceEvent: "voice.spell_detected",
-      where: Object.freeze({ path: "spell.id", eq: spellId }),
+      sourceEvent: "voice.word_detected",
+      where: Object.freeze({ path: "word.id", eq: spellId }),
     }));
 }
 
@@ -43,8 +43,8 @@ function buildWakeRequiredSpellSignals() {
     .map((spellId) => Object.freeze({
       id: `spell.${spellId}`,
       type: "spell",
-      sourceEvent: "voice.spell_detected",
-      where: Object.freeze({ path: "spell.id", eq: spellId }),
+      sourceEvent: "voice.word_detected",
+      where: Object.freeze({ path: "word.id", eq: spellId }),
     }));
 }
 
@@ -60,8 +60,8 @@ function buildRuleEngineOwnedImmediateSpellSignals() {
     .map((spellId) => Object.freeze({
       id: `spell.${spellId}`,
       type: "spell",
-      sourceEvent: "voice.spell_detected",
-      where: Object.freeze({ path: "spell.id", eq: spellId }),
+      sourceEvent: "voice.word_detected",
+      where: Object.freeze({ path: "word.id", eq: spellId }),
     }));
 }
 

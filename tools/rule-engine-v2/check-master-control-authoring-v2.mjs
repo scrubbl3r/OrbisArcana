@@ -1,6 +1,6 @@
 import {
   INTERACTIONS_V2,
-  SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID,
+  WORDBOOK_V2_ACTIVE_WORDS_BY_ID,
 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
@@ -34,20 +34,31 @@ function main() {
   if (!Array.isArray(root.rules)) {
     failCheck(CHECK_TAG, "rules must be an array");
   }
-  if (!Array.isArray(root.spells)) {
-    failCheck(CHECK_TAG, "spells must be an array");
+  const hasWords = Array.isArray(root.words);
+  const hasSpells = Array.isArray(root.spells);
+  if (!hasWords && !hasSpells) {
+    failCheck(CHECK_TAG, "words (or compatibility alias spells) must be an array");
+  }
+
+  const authoringWords = hasWords ? root.words : root.spells;
+  if (hasWords && hasSpells) {
+    const wordsJson = JSON.stringify(root.words);
+    const spellsJson = JSON.stringify(root.spells);
+    if (wordsJson !== spellsJson) {
+      failCheck(CHECK_TAG, "words and compatibility alias spells must be identical when both are present");
+    }
   }
 
   const seenSpellIds = new Set();
-  for (const s of root.spells) {
+  for (const s of authoringWords) {
     const spell = isRecord(s);
-    if (!spell) failCheck(CHECK_TAG, "spells[] entries must be objects");
+    if (!spell) failCheck(CHECK_TAG, "words[] entries must be objects");
     const id = asLowerText(spell.id);
-    if (!id) failCheck(CHECK_TAG, "spells[] entry missing id");
+    if (!id) failCheck(CHECK_TAG, "words[] entry missing id");
     if (seenSpellIds.has(id)) failCheck(CHECK_TAG, `duplicate spell id: ${id}`);
     seenSpellIds.add(id);
-    if (!Object.prototype.hasOwnProperty.call(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, id)) {
-      failCheck(CHECK_TAG, `spells[] contains inactive/unknown spell id: ${id}`);
+    if (!Object.prototype.hasOwnProperty.call(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, id)) {
+      failCheck(CHECK_TAG, `words[] contains inactive/unknown spell id: ${id}`);
     }
   }
 

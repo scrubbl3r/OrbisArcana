@@ -97,6 +97,20 @@ expectValid(
 );
 
 expectValid(
+  "open_words_alias",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_open_words_alias",
+        on: Object.freeze(["spell:rota"]),
+        open: Object.freeze({ words: Object.freeze(["sanctum", "vectus"]) }),
+      }),
+    ]),
+  })
+);
+
+expectValid(
   "trigger_comma_shorthand",
   Object.freeze({
     ...baseline,
@@ -329,6 +343,24 @@ expectInvalid(
     ]),
   }),
   "open references inactive or unknown spell id"
+);
+
+expectInvalid(
+  "open_words_spells_mismatch",
+  Object.freeze({
+    ...baseline,
+    rules: Object.freeze([
+      Object.freeze({
+        id: "o_open_words_spells_mismatch",
+        on: "rota",
+        open: Object.freeze({
+          words: Object.freeze(["sanctum"]),
+          spells: Object.freeze(["vectus"]),
+        }),
+      }),
+    ]),
+  }),
+  "words and spells alias must match"
 );
 
 reportCheckPass(CHECK_TAG, "orchestrator validator contract holds for shorthand + defaults");

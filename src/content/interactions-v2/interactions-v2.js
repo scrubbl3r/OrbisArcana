@@ -7,6 +7,7 @@ import {
 } from "./entity-handles-v2.js";
 
 const INTERACTIONS_V2_VERSION = "2";
+const CONDITION_TYPE_WORD = "word";
 const CONDITION_TYPE_SPELL = "spell";
 const CONDITION_TYPE_GESTURE = "gesture";
 const CONDITION_TYPE_ORB_STATE = "orb_state";
@@ -25,6 +26,7 @@ const FIELD_RULES = "rules";
 const FIELD_WAKE_WIN = "wakeWin";
 const FIELD_EVENT = "event";
 const FIELD_TTL_MS = "ttlMs";
+const FIELD_WORDS = "words";
 const FIELD_SPELLS = "spells";
 const FIELD_GRACE = "grace";
 const FIELD_MS = "ms";
@@ -39,10 +41,13 @@ function makeEventAction(id, extra = {}) {
   return Object.freeze({ [FIELD_TYPE]: ACTION_TYPE_EVENT, [FIELD_ID]: id, ...extra });
 }
 
-function makeWakeWinAction(spells) {
+function makeWakeWinAction(words) {
+  const refs = Object.freeze(words);
   return Object.freeze({
     [FIELD_TYPE]: ACTION_TYPE_WAKE_WIN,
-    [FIELD_SPELLS]: Object.freeze(spells),
+    [FIELD_WORDS]: refs,
+    // Compatibility alias for legacy consumers.
+    [FIELD_SPELLS]: refs,
   });
 }
 
@@ -79,28 +84,28 @@ export const INTERACTIONS_V2 = Object.freeze({
   [FIELD_RULES]: Object.freeze([
     makeRule(
       "r_fridgis_immediate",
-      [makeCondition(CONDITION_TYPE_SPELL, SIGNAL_HANDLES_V2.FRIDGIS)],
+      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.FRIDGIS)],
       [makeEventAction(EVENT_HANDLES_V2.AOE_FROST)]
     ),
     makeRule(
       "r_electrum_immediate",
-      [makeCondition(CONDITION_TYPE_SPELL, SIGNAL_HANDLES_V2.ELECTRUM)],
+      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.ELECTRUM)],
       [makeEventAction(EVENT_HANDLES_V2.AOE_ELECTRIC)]
     ),
     makeRule(
       "r_pyro_immediate",
-      [makeCondition(CONDITION_TYPE_SPELL, SIGNAL_HANDLES_V2.PYRO)],
+      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.PYRO)],
       [makeEventAction(EVENT_HANDLES_V2.AOE_FLAME)]
     ),
     makeRule(
       "r_domus_immediate",
-      [makeCondition(CONDITION_TYPE_SPELL, SIGNAL_HANDLES_V2.DOMUS)],
+      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.DOMUS)],
       [makeEventAction(EVENT_HANDLES_V2.TELEPORT_HOME)]
     ),
     makeRule(
       "r_rota_yspin_charged",
       [
-        makeCondition(CONDITION_TYPE_SPELL, SIGNAL_HANDLES_V2.ROTA),
+        makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.ROTA),
         makeCondition(CONDITION_TYPE_GESTURE, SIGNAL_HANDLES_V2.SPIN_Y),
         makeCondition(CONDITION_TYPE_ORB_STATE, SIGNAL_HANDLES_V2.ORB_CHARGED),
       ],
@@ -134,9 +139,10 @@ function hasActionType(actions, expectedType) {
 function normalizeSpellConditionId(rawId) {
   const condIdRaw = asLowerTrimmed(rawId);
   if (!condIdRaw) return "";
-  return condIdRaw.startsWith(SPELL_PREFIX)
-    ? condIdRaw.slice(SPELL_PREFIX.length)
-    : condIdRaw;
+  if (condIdRaw.startsWith(SPELL_PREFIX)) return condIdRaw.slice(SPELL_PREFIX.length);
+  const wordPrefix = `${CONDITION_TYPE_WORD}.`;
+  if (condIdRaw.startsWith(wordPrefix)) return condIdRaw.slice(wordPrefix.length);
+  return condIdRaw;
 }
 
 function getRuleOnAll(rule) {
@@ -152,7 +158,7 @@ function getSingleSpellConditionId(rule) {
   const cond = onAll.length === 1 ? (onAll[0] || null) : null;
   if (!cond) return "";
   const condType = asLowerTrimmed(cond?.[FIELD_TYPE]);
-  if (condType !== CONDITION_TYPE_SPELL) return "";
+  if (condType !== CONDITION_TYPE_SPELL && condType !== CONDITION_TYPE_WORD) return "";
   const condId = normalizeSpellConditionId(cond?.[FIELD_ID]);
   return condId || "";
 }
@@ -181,7 +187,7 @@ function getInteractionRules(cfg) {
   return Array.isArray(cfg?.[FIELD_RULES]) ? cfg[FIELD_RULES] : [];
 }
 
-function collectImmediateEventSpellIdsFromRules(rules) {
+function collectImmediateEventWordIdsFromRules(rules) {
   const out = [];
   const seen = new Set();
   for (const rule of rules) {
@@ -191,7 +197,11 @@ function collectImmediateEventSpellIdsFromRules(rules) {
   return out;
 }
 
-export function collectImmediateEventSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
+export function collectImmediateEventWordIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
   const rules = getInteractionRules(cfg);
-  return Object.freeze(collectImmediateEventSpellIdsFromRules(rules));
+  return Object.freeze(collectImmediateEventWordIdsFromRules(rules));
 }
+
+// Compatibility alias.
+export const collectImmediateEventSpellIdsFromInteractionsV2 =
+  collectImmediateEventWordIdsFromInteractionsV2;

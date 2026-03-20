@@ -1,4 +1,4 @@
-import { ACTIVE_SPELLS_BY_ID } from "../voice/spellbook.js";
+import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../voice/wordbook.js";
 import {
   WAKE_WINDOW_RUNTIME_KEY_BY_WORD,
   SPELL_RUNTIME_ROUTING_BY_WORD_ID,
@@ -10,6 +10,7 @@ import {
   EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
   EVT_ORB_DIED,
   EVT_ORB_REVIVED,
+  EVT_VOICE_WORD_DETECTED,
   EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_REJECTED,
   EVT_VOICE_AXIS_SELECTED,
@@ -56,6 +57,8 @@ export function createSpellDispatchSystem({
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
   const selectedAxisSpellByAxis = { x: "", y: "", z: "" };
+  let lastVoiceDetectDedupeKey = "";
+  let lastVoiceDetectDedupeAtMs = 0;
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -239,8 +242,11 @@ export function createSpellDispatchSystem({
       reset();
     }));
 
-    unsub.push(eventBus.on(EVT_VOICE_SPELL_DETECTED, (payload = {}) => {
-      const spell = withRuntimeRouting(payload.spell || {});
+    function onVoiceDetected(payload = {}) {
+      const detected = (payload && typeof payload === "object")
+        ? (payload.spell || payload.word || {})
+        : {};
+      const spell = withRuntimeRouting(detected || {});
       const rawSpellId = String(spell.id || "");
       const spellIntent = String(spell.intent || "");
       const spellAxis = String((spell.axisSpell) || "").toLowerCase();
@@ -254,6 +260,21 @@ export function createSpellDispatchSystem({
         return;
       }
       const now = nowMs();
+      const atMs = Number(payload && payload.atMs);
+      const detectAtMs = Number.isFinite(atMs) ? Math.floor(atMs) : Math.floor(now);
+      const confidenceBucket = Number.isFinite(Number(payload && payload.confidence))
+        ? Math.round(Number(payload.confidence) * 1000)
+        : -1;
+      const dedupeKey = `${spellId}|${detectAtMs}|${confidenceBucket}`;
+      if (
+        dedupeKey &&
+        dedupeKey === lastVoiceDetectDedupeKey &&
+        (now - Number(lastVoiceDetectDedupeAtMs || 0)) <= 50
+      ) {
+        return;
+      }
+      lastVoiceDetectDedupeKey = dedupeKey;
+      lastVoiceDetectDedupeAtMs = now;
       if (!ACTIVE_SPELLS_BY_ID[String(spellId || "").toLowerCase()]) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "spell_inactive",
@@ -446,7 +467,9 @@ export function createSpellDispatchSystem({
         atMs: now,
       };
       eventBus.emit(EVT_VOICE_SPELL_CAST, castPayload);
-    }));
+    }
+    unsub.push(eventBus.on(EVT_VOICE_SPELL_DETECTED, onVoiceDetected));
+    unsub.push(eventBus.on(EVT_VOICE_WORD_DETECTED, onVoiceDetected));
 
     unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
       const group = normGroup(payload.group);
@@ -512,6 +535,8 @@ export function createSpellDispatchSystem({
   function reset() {
     lastCastBySpellId.clear();
     lastFlatSpinLoadAtByAxisSpell.clear();
+    lastVoiceDetectDedupeKey = "";
+    lastVoiceDetectDedupeAtMs = 0;
     activeFlatSpinAxis = null;
     selectedAxisSpellByAxis.x = "";
     selectedAxisSpellByAxis.y = "";

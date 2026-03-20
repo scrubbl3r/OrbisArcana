@@ -41,6 +41,20 @@ for (const rule of projectedRules) {
   if (!hasOpen && !hasTrigger) {
     failCheck(CHECK_TAG, `projected rule ${ruleId} has neither open nor trigger`);
   }
+  if (hasOpen) {
+    const open = asObject(safeRule.open);
+    const hasWords = Array.isArray(open.words);
+    const hasSpells = Array.isArray(open.spells);
+    if (!hasWords) {
+      failCheck(CHECK_TAG, `projected rule ${ruleId} open missing canonical words[]`);
+    }
+    if (!hasSpells) {
+      failCheck(CHECK_TAG, `projected rule ${ruleId} open missing compatibility spells[]`);
+    }
+    if (hasWords && hasSpells && JSON.stringify(open.words) !== JSON.stringify(open.spells)) {
+      failCheck(CHECK_TAG, `projected rule ${ruleId} open words/spells alias mismatch`);
+    }
+  }
 }
 
 reportCheckPass(CHECK_TAG, "projected orchestrator shape is valid and complete");

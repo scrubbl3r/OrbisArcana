@@ -1,16 +1,7 @@
-import { EVT_VOICE_SPELL_DETECTED } from "../../src/contracts/events.js";
+import { emitDetectedWord, emitDetectedWordAt } from "./check-detected-word-v2.mjs";
 
 export function emitDetectedSpell(eventBus, { id, intent, phrase, atMs, confidence }) {
-  const spokenPhrase = typeof phrase === "string"
-    ? phrase
-    : (typeof id === "string" ? id : "");
-  const confidenceNum = Number(confidence);
-  const payload = {
-    spell: { id, intent, phrase: spokenPhrase },
-    atMs,
-  };
-  if (Number.isFinite(confidenceNum)) payload.confidence = confidenceNum;
-  eventBus.emit(EVT_VOICE_SPELL_DETECTED, payload);
+  emitDetectedWord(eventBus, { id, intent, phrase, atMs, confidence });
 }
 
 export function emitDetectedSpellAt(eventBus, {
@@ -20,12 +11,11 @@ export function emitDetectedSpellAt(eventBus, {
   confidence,
   phrase,
 }) {
-  const atMsNum = Number(atMs);
-  emitDetectedSpell(eventBus, {
+  emitDetectedWordAt(eventBus, {
     id,
     intent,
     phrase,
-    atMs: atMsNum,
+    atMs,
     confidence,
   });
 }

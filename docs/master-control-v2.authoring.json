@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-20T03:47:04.782Z",
+  "generatedAt": "2026-03-20T23:08:05.157Z",
   "enabled": true,
   "defaults": {
     "wakeWin": {
@@ -12,6 +12,78 @@
       }
     }
   },
+  "words": [
+    {
+      "id": "orbis",
+      "phrase": "orbis",
+      "onnx": "orbis",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "arcana",
+      "phrase": "arcana",
+      "onnx": "arcana",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "are_kay_nah",
+      "phrase": "are kay nah",
+      "onnx": "are_kay_nah",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "domus",
+      "phrase": "domus",
+      "onnx": "domus",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "pyro",
+      "phrase": "pyro",
+      "onnx": "pyro",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "fridgis",
+      "phrase": "fridgis",
+      "onnx": "fridgis",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "electrum",
+      "phrase": "electrum",
+      "onnx": "electrum",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "sanctum",
+      "phrase": "sanctum",
+      "onnx": "sanctum",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    },
+    {
+      "id": "vectus",
+      "phrase": "vectus",
+      "onnx": "vectus",
+      "confidence": 0.4,
+      "cooldownMs": 0
+    },
+    {
+      "id": "rota",
+      "phrase": "rota",
+      "onnx": "rota",
+      "confidence": 0.6,
+      "cooldownMs": 0
+    }
+  ],
   "spells": [
     {
       "id": "orbis",
@@ -90,7 +162,7 @@
       "on": {
         "all": [
           {
-            "type": "spell",
+            "type": "word",
             "id": "spell.fridgis"
           }
         ]
@@ -107,7 +179,7 @@
       "on": {
         "all": [
           {
-            "type": "spell",
+            "type": "word",
             "id": "spell.electrum"
           }
         ]
@@ -124,7 +196,7 @@
       "on": {
         "all": [
           {
-            "type": "spell",
+            "type": "word",
             "id": "spell.pyro"
           }
         ]
@@ -141,7 +213,7 @@
       "on": {
         "all": [
           {
-            "type": "spell",
+            "type": "word",
             "id": "spell.domus"
           }
         ]
@@ -158,7 +230,7 @@
       "on": {
         "all": [
           {
-            "type": "spell",
+            "type": "word",
             "id": "spell.rota"
           },
           {
@@ -174,6 +246,11 @@
       "then": [
         {
           "type": "wake_win",
+          "words": [
+            "spell.rota",
+            "spell.sanctum",
+            "spell.vectus"
+          ],
           "spells": [
             "spell.rota",
             "spell.sanctum",

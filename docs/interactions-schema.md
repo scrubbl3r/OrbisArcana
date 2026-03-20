@@ -5,26 +5,29 @@ Related index:
 
 ## Goal
 - One central behavior config for chaining spells, gestures, orb states, wake windows, and events.
-- One separate spell inventory file for wake-word availability (`active` true/false).
+- One separate word inventory file for wake-word availability (`active` true/false).
 - Keep syntax minimal and author-friendly.
 
-## File 1: Spell Inventory (Wake Words Only)
-`spellbook`
+## File 1: Word Inventory (Wake Words Only)
+`wordbook`
+Compatibility alias: `spellbook`
 
 ```js
 {
   version: "2",
-  spells: [
+  words: [
     { id: "orbis", phrase: "orbis", active: true, onnx: "orbis", confidence: 0.62, cooldownMs: 900 },
     { id: "rota",  phrase: "rota",  active: true, onnx: "rota",  confidence: 0.60, cooldownMs: 1100 },
     { id: "domus", phrase: "domus", active: true, onnx: "domus", confidence: 0.60, cooldownMs: 1000 }
-  ]
+  ],
+  // compatibility alias:
+  // spells: [...]
 }
 ```
 
-### Spellbook Responsibilities
-- Define what spells exist.
-- Define if each spell is active.
+### Wordbook Responsibilities
+- Define what words exist.
+- Define if each word is active.
 - Define phrase/model/confidence/cooldown metadata only.
 - No behavior routing or interaction chaining.
 
@@ -51,14 +54,14 @@ Related index:
 
       on: {
         all: [
-          { type: "spell", id: "rota" },
+          { type: "word", id: "rota" }, // compatibility alias: "spell"
           { type: "gesture", id: "SPIN_Y" },
           { type: "orb_state", id: "charged" }
         ]
       },
 
       then: [
-        { type: "wake_win", spells: ["sanctum", "vectus"] },
+        { type: "wake_win", words: ["sanctum", "vectus"] }, // compatibility alias: spells
         { type: "event", id: "aoe_electric" },
         { type: "event", id: "grace" },
         { type: "event", id: "orb_state", overrides: { state: "superheated" } }
@@ -69,20 +72,21 @@ Related index:
 ```
 
 ## Entity Types
-- Trigger types (`on`): `spell`, `gesture`, `orb_state`
+- Trigger types (`on`): `word` (compatibility alias: `spell`), `gesture`, `orb_state`
 - Action types (`then`): `wake_win`, `event`
 
 ### Condition ID Forms
 - Condition `id` supports either:
   - bare form: `rota`, `spin_y`, `charged`
-  - qualified form: `spell.rota`, `gesture.spin_y`, `orb_state.charged`
-- Runtime normalization strips matching type prefix automatically.
+  - qualified form: `word.rota`, `spell.rota`, `gesture.spin_y`, `orb_state.charged`
+- Runtime normalization strips matching type prefix automatically (`word.` and `spell.` are aliases).
 
-### Wake Window Spell ID Forms
-- `wake_win.spells[]` supports either:
+### Wake Window Word ID Forms
+- `wake_win.words[]` supports either:
   - bare form: `rota`
-  - qualified form: `spell.rota`
-- Runtime normalization strips `spell.` prefix automatically.
+  - qualified form: `word.rota` (compatibility alias: `spell.rota`)
+- Runtime normalization strips `word.` and `spell.` prefixes automatically.
+- Compatibility alias: `wake_win.spells[]`.
 
 ## Override Rules
 - If `overrides` exists on an action, those values win.
@@ -97,7 +101,7 @@ Example:
 
 ## Authoring Principles
 - One behavior authoring file (`interactions`).
-- One spell inventory file (`spellbook`).
+- One word inventory file (`wordbook`; compatibility alias: `spellbook`).
 - Neutral axis/wake-window taxonomy only.
 - All spell/gesture/orb interactions are modular and composable.
 

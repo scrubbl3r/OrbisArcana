@@ -1,4 +1,4 @@
-import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
+import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../wordbook.js";
 import {
   KWS_FLASH_TOKEN_WORD_IDS,
   SPELL_RUNTIME_ROUTING,

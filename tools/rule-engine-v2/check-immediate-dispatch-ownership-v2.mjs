@@ -5,7 +5,7 @@ import {
 } from "../../src/contracts/events.js";
 import { assertCheck } from "./check-assert-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
-import { emitDetectedSpellAt } from "./check-detected-spell-v2.mjs";
+import { emitDetectedWordAt } from "./check-detected-word-v2.mjs";
 import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
@@ -32,7 +32,7 @@ function detectSpell({ ruleEngineEnabled, spellId }) {
     ruleEngineEnabled,
   });
   runWithStartedSystem(system, () => {
-    emitDetectedSpellAt(eventBus, {
+    emitDetectedWordAt(eventBus, {
       id: spellId,
       intent: `spell.${spellId}`,
       confidence: CHECK_CONFIDENCE_V2.medium,

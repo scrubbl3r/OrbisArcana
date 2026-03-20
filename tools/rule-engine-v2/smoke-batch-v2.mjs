@@ -88,9 +88,16 @@ function run() {
     const cfg = jsonClone(INTERACTIONS_V2);
     const rule = ruleById(cfg, "r_rota_yspin_charged");
     const wakeWin = findFirstAction(rule, "wake_win");
-    if (!wakeWin || !Array.isArray(wakeWin.spells) || !wakeWin.spells.length) fail("wake_win action missing");
+    if (
+      !wakeWin ||
+      !Array.isArray(wakeWin.words) ||
+      !wakeWin.words.length ||
+      !Array.isArray(wakeWin.spells) ||
+      !wakeWin.spells.length
+    ) fail("wake_win action missing");
+    wakeWin.words[0] = "gesture.spin_y";
     wakeWin.spells[0] = "gesture.spin_y";
-    expectValidationFail("wake_win.spell_prefix_mismatch", cfg, "wake_win spell prefix mismatch");
+    expectValidationFail("wake_win.word_prefix_mismatch", cfg, "wake_win word prefix mismatch");
   }
 
   {

@@ -37,6 +37,7 @@ const FIELD_VERSION = "version";
 const FIELD_TYPE = "type";
 const FIELD_EVENT = "event";
 const FIELD_ARGS = "args";
+const FIELD_WORDS = "words";
 const FIELD_SPELLS = "spells";
 const FIELD_TTL_MS = "ttlMs";
 const FIELD_ID = "id";
@@ -86,12 +87,16 @@ function compileOrchestratorRule(rule, defaultsOpen, defaultsTriggerByEvent, def
     : collectOnEntriesFromObjectSelectors(safeRule[FIELD_ON]);
   if (!hasNonEmptyArray(on)) return null;
   const openObj = asOpenObject(safeRule[RULE_FIELD_OPEN]);
-  const openSpells = normalizeIds(asObj(openObj)[FIELD_SPELLS], normalizeSpellId);
+  const openWordsRaw = Object.hasOwn(asObj(openObj), FIELD_WORDS)
+    ? asObj(openObj)[FIELD_WORDS]
+    : asObj(openObj)[FIELD_SPELLS];
+  const openSpells = normalizeIds(openWordsRaw, normalizeSpellId);
   const openAction = openSpells.length
     ? (() => {
       const out = {
         [FIELD_TYPE]: ACTION_TYPE_WAKE_WIN,
         [FIELD_SPELLS]: openSpells,
+        [FIELD_WORDS]: openSpells,
       };
       setEnabledIfBoolean(out, openObj);
       assignNumericFromSources(

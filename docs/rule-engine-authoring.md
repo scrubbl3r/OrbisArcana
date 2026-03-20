@@ -8,9 +8,10 @@ Related index:
 - `src/content/interactions-v2/interactions-v2.js`
   - Edit trigger/action chains here (`rules`).
   - This is the behavior SSOT source.
-- `src/content/interactions-v2/spellbook-v2.js`
-  - Edit spell inventory and `active` toggles here.
+- `src/content/interactions-v2/wordbook-v2.js`
+  - Edit word inventory and `active` toggles here.
   - This is the wake-word inventory SSOT source.
+  - Compatibility alias: `src/content/interactions-v2/spellbook-v2.js`
 
 ## Reference File (Optional)
 - `src/content/interactions-v2/entity-handles-v2.js`
@@ -22,7 +23,8 @@ Related index:
 - `src/content/spell-rules/validate-rule-engine-config.js` (schema validator)
 - `src/content/spells/runtime-spells.js` (runtime slot/cast routing integration layer)
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + adapter flag routing)
-- `src/voice/spellbook.js` (runtime view derived from `spellbook-v2`)
+- `src/voice/wordbook.js` (runtime view derived from `wordbook-v2`)
+- `src/voice/spellbook.js` (compatibility alias runtime view)
 
 ## Runtime Switches
 - `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
@@ -38,7 +40,7 @@ Related index:
 
 ## Authoring Rule of Thumb
 - If you are changing gameplay interaction logic, edit `interactions-v2.js`.
-- If you are enabling/disabling words, edit `spellbook-v2.js`.
+- If you are enabling/disabling words, edit `wordbook-v2.js` (compatibility alias: `spellbook-v2.js`).
 - Avoid editing runtime integration files unless you are doing intentional system/runtime wiring work.
 
 ## Quick Health Checks

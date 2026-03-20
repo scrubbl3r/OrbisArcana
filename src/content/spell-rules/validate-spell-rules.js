@@ -82,6 +82,12 @@ function resolveSignalConditionId(cond) {
   const id = asId(cond && cond.id);
   if (!id) return "";
   if (type === "signal") return id;
+  if (type === "word") {
+    if (id.startsWith("word.")) return `spell.${id.slice("word.".length)}`;
+    if (id.startsWith("spell.")) return id;
+    if (id.includes(".")) return id;
+    return `spell.${id}`;
+  }
   if (type === "spell" || type === "gesture" || type === "orb_state") {
     if (id.includes(".")) return id;
     return `${type}.${id}`;
@@ -93,7 +99,7 @@ function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
     ? { ...action.overrides }
     : {};
-  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides", "enabled"]);
+  const RESERVED_KEYS = new Set(["type", "id", "words", "spells", "overrides", "enabled"]);
   if (action && typeof action === "object") {
     for (const [k, v] of Object.entries(action)) {
       if (RESERVED_KEYS.has(k)) continue;
@@ -287,9 +293,22 @@ export function validateSpellRules(rules = [], options = {}) {
         if (!wakeWindowId || !windowById[wakeWindowId]) {
           errors.push(`rule ${ruleId} references unknown wake window: ${wakeWindowId || "(empty)"}`);
         }
-        const spells = Array.isArray(action && action.spells) ? action.spells : [];
-        if (!spells.length) {
-          errors.push(`rule ${ruleId} wake_win action requires non-empty spells[]`);
+        const words = Array.isArray(action && action.words)
+          ? action.words
+          : (Array.isArray(action && action.spells) ? action.spells : []);
+        if (!words.length) {
+          errors.push(`rule ${ruleId} wake_win action requires non-empty words[]`);
+        }
+        for (const rawWordId of words) {
+          const wordId = asId(rawWordId).replace(/^(word|spell)\./, "");
+          if (!wordId) {
+            errors.push(`rule ${ruleId} wake_win contains empty word id`);
+            continue;
+          }
+          const wordSignalId = `spell.${wordId}`;
+          if (!signalById[wordSignalId]) {
+            errors.push(`rule ${ruleId} wake_win references unknown word id: ${wordId}`);
+          }
         }
         const overrides = resolveActionArgs(action);
         if (overrides && Object.prototype.hasOwnProperty.call(overrides, "ms")) {

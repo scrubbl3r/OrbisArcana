@@ -1,21 +1,22 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-20T03:47:04.778Z
+Generated: 2026-03-20T23:08:05.153Z
 
 This document is generated from SSOT:
-- spellbook: `src/content/interactions-v2/spellbook-v2.js`
+- wordbook: `src/content/interactions-v2/wordbook-v2.js`
+  - compatibility alias: `src/content/interactions-v2/spellbook-v2.js`
 - interactions: `src/content/interactions-v2/interactions-v2.js`
 
 ## Runtime Flags
 
 - interactionsEnabled: true
 
-## Spellbook (SSOT)
+## Wordbook (SSOT)
 
 ```json
 {
   "version": "2",
-  "spells": [
+  "words": [
     {
       "id": "orbis",
       "phrase": "orbis",
@@ -124,7 +125,7 @@ This document is generated from SSOT:
     "on": {
       "all": [
         {
-          "type": "spell",
+          "type": "word",
           "id": "spell.fridgis"
         }
       ]
@@ -141,7 +142,7 @@ This document is generated from SSOT:
     "on": {
       "all": [
         {
-          "type": "spell",
+          "type": "word",
           "id": "spell.electrum"
         }
       ]
@@ -158,7 +159,7 @@ This document is generated from SSOT:
     "on": {
       "all": [
         {
-          "type": "spell",
+          "type": "word",
           "id": "spell.pyro"
         }
       ]
@@ -175,7 +176,7 @@ This document is generated from SSOT:
     "on": {
       "all": [
         {
-          "type": "spell",
+          "type": "word",
           "id": "spell.domus"
         }
       ]
@@ -192,7 +193,7 @@ This document is generated from SSOT:
     "on": {
       "all": [
         {
-          "type": "spell",
+          "type": "word",
           "id": "spell.rota"
         },
         {
@@ -208,6 +209,11 @@ This document is generated from SSOT:
     "then": [
       {
         "type": "wake_win",
+        "words": [
+          "spell.rota",
+          "spell.sanctum",
+          "spell.vectus"
+        ],
         "spells": [
           "spell.rota",
           "spell.sanctum",
@@ -297,6 +303,7 @@ This document is generated from SSOT:
 
 ## Authoring Notes
 
-- Add/remove/toggle spells in `spellbook-v2.js`.
+- Add/remove/toggle words in `wordbook-v2.js`.
+  - compatibility alias path: `spellbook-v2.js`
 - Compose trigger/action chains in `interactions-v2.js`.
 - Runtime rule/event/signal wiring is auto-validated in `ready:v2`.

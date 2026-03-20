@@ -1,4 +1,4 @@
-import { SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID } from "./spellbook-v2.js";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js";
 import { EVENT_DEFINITIONS_BY_ID } from "../spell-rules/event-definitions.js";
 import { SIGNAL_DEFINITIONS_BY_ID } from "../spell-rules/signal-definitions.js";
 import {
@@ -185,7 +185,7 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
     )) {
       continue;
     }
-    if (selectorType === "spell" && !Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, selectorValueId)) {
+    if (selectorType === "spell" && !Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, selectorValueId)) {
       errors.push(`${ruleContext} references inactive or unknown spell id: ${selectorInputId}`);
     } else if (selectorType === "gesture" && !knownGestureSignalIds.has(selectorValueId)) {
       errors.push(`${ruleContext} references unknown gesture id: ${selectorInputId}`);
@@ -201,14 +201,23 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
       errors,
       openActionContext,
       openConfig,
-      new Set(["spells", ...OPEN_TTL_KEYS, "enabled"])
+      new Set(["words", "spells", ...OPEN_TTL_KEYS, "enabled"])
     );
     pushBooleanEnabledErrorWhenPresent(errors, openActionContext, openConfig);
     validateOpenTtlKeys(errors, openActionContext, openConfig);
-    const openSpellEntries = asSelectorList(openConfig.spells);
-    if (requireNonEmptyArray(errors, openSpellEntries, `${openActionContext} requires spells[]`)) {
+    const openWordEntries = asSelectorList(
+      Object.hasOwn(openConfig, "words") ? openConfig.words : openConfig.spells
+    );
+    if (Object.hasOwn(openConfig, "words") && Object.hasOwn(openConfig, "spells")) {
+      const wordsJson = JSON.stringify(asSelectorList(openConfig.words));
+      const spellsJson = JSON.stringify(asSelectorList(openConfig.spells));
+      if (wordsJson !== spellsJson) {
+        errors.push(`${openActionContext} words and spells alias must match when both are present`);
+      }
+    }
+    if (requireNonEmptyArray(errors, openWordEntries, `${openActionContext} requires words[] (or spells[] alias)`)) {
       const seenOpenSpellIds = new Set();
-      for (const openSpellId of openSpellEntries) {
+      for (const openSpellId of openWordEntries) {
         const normalizedOpenSpell = normalizeSpellId(openSpellId);
         if (!normalizedOpenSpell) {
           errors.push(`${openActionContext} contains empty spell id`);
@@ -220,7 +229,7 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
           normalizedOpenSpell,
           `${openActionContext} contains duplicate spell id: ${openSpellId}`
         );
-        if (!Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedOpenSpell)) {
+        if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedOpenSpell)) {
           errors.push(`${openActionContext} references inactive or unknown spell id: ${openSpellId}`);
         }
       }

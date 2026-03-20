@@ -1,4 +1,4 @@
-import { ACTIVE_SPELLS } from "../spellbook.js";
+import { ACTIVE_WORDS as ACTIVE_SPELLS } from "../wordbook.js";
 import { normalizeTranscript } from "../normalizer.js";
 
 /**

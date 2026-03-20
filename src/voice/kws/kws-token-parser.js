@@ -1,10 +1,11 @@
 import {
   EVT_VOICE_KWS_SPELL_CANDIDATE,
+  EVT_VOICE_WORD_DETECTED,
   EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_TOKEN_DETECTED,
 } from "../../contracts/events.js";
 import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
-import { ACTIVE_SPELLS_BY_ID } from "../spellbook.js";
+import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../wordbook.js";
 import {
   SPELL_RUNTIME_ROUTING_BY_WORD_ID,
   WAKE_WORD_IDS,
@@ -327,13 +328,28 @@ export function createKwsTokenParser(opts = {}) {
       const spell = ACTIVE_SPELLS_BY_ID[spellId]
         ? { ...ACTIVE_SPELLS_BY_ID[spellId], ...(SPELL_RUNTIME_ROUTING_BY_WORD_ID[spellId] || {}) }
         : { id: spellId, phrase: finalResult.alias || finalResult.tokens.join(" ") };
-      emit(EVT_VOICE_SPELL_DETECTED, {
+      const detectedPayload = {
         spell,
         transcript: finalResult.alias || finalResult.tokens.join(" "),
         confidence: finalResult.confidence,
         source: "kws",
         providerId,
         atMs,
+      };
+      emit(EVT_VOICE_WORD_DETECTED, {
+        word: {
+          id: String(spell && spell.id || ""),
+          intent: String(spell && spell.intent || ""),
+          phrase: String(spell && spell.phrase || ""),
+        },
+        transcript: detectedPayload.transcript,
+        confidence: detectedPayload.confidence,
+        source: detectedPayload.source,
+        providerId: detectedPayload.providerId,
+        atMs: detectedPayload.atMs,
+      });
+      emit(EVT_VOICE_SPELL_DETECTED, {
+        ...detectedPayload,
       });
     }
 

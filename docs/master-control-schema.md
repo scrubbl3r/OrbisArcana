@@ -160,7 +160,7 @@ Related index:
     {
       type: "wake_win",
       // id optional; defaults to "wake_win"
-      spells: ["sanctum", "vectus"],
+      words: ["sanctum", "vectus"], // compatibility alias: spells
       ttlMs: 2000,
       enabled: true // optional, default true
     },
@@ -178,7 +178,8 @@ Related index:
   - `{ type:"orb_state", id:"charged" }` resolves to `orb_state.charged`
 - Action inline args are generic:
   - Any non-structural key is treated as action args.
-  - Structural keys: `type`, `id`, `spells`, `overrides`, `enabled`.
+  - Structural keys: `type`, `id`, `words`, `spells`, `overrides`, `enabled`.
+  - `wake_win.words[]` is canonical; `wake_win.spells[]` remains compatibility alias.
   - `actionArgOverrides` can centrally patch action args by key at runtime.
     - key formats:
       - `${ruleId}.${type}.${actionId}` (preferred)
@@ -504,7 +505,7 @@ Related index:
     { type: "orb_state", id: "charged" }
   ],
   then: [
-    { type: "wake_win", spells: ["rota","sanctum","vectus"], ttlMs: 2000 },
+    { type: "wake_win", words: ["rota","sanctum","vectus"], ttlMs: 2000 }, // compatibility alias: spells
     { type: "event", id: "aoe_electric", range: 14 },
     { type: "event", id: "grace", ms: 500 },
     { type: "event", id: "orb_state", state: "superheated" }

@@ -11,16 +11,16 @@ import {
   isInteractionsEnabled,
 } from "./interactions-v2-utils.mjs";
 import {
-  listActiveSpellAuthoringRows,
-  listSpellbookSpells,
-} from "./spellbook-v2-utils.mjs";
+  listActiveWordAuthoringRows,
+  listWordbookWords,
+} from "./wordbook-v2-utils.mjs";
 import {
   ACTION_HANDLES_V2,
   EVENT_HANDLES_V2,
   INTERACTIONS_V2,
   projectOrchestratorV1FromInteractionsV2,
   SIGNAL_HANDLES_V2,
-  SPELLBOOK_V2,
+  WORDBOOK_V2,
 } from "../../src/content/interactions-v2/index.js";
 
 const CHECK_TAG = "master-control-doc:v2";
@@ -32,7 +32,7 @@ function toJson(value) {
 
 function buildDoc() {
   const generatedAt = nowIso();
-  const spells = listSpellbookSpells(SPELLBOOK_V2);
+  const words = listWordbookWords(WORDBOOK_V2);
   const rules = getInteractionsRules(INTERACTIONS_V2);
   const defaults = getInteractionsDefaults(INTERACTIONS_V2);
   const enabled = isInteractionsEnabled(INTERACTIONS_V2);
@@ -47,17 +47,18 @@ function buildDoc() {
   lines.push(`Generated: ${generatedAt}`);
   lines.push("");
   lines.push("This document is generated from SSOT:");
-  lines.push("- spellbook: `src/content/interactions-v2/spellbook-v2.js`");
+  lines.push("- wordbook: `src/content/interactions-v2/wordbook-v2.js`");
+  lines.push("  - compatibility alias: `src/content/interactions-v2/spellbook-v2.js`");
   lines.push("- interactions: `src/content/interactions-v2/interactions-v2.js`");
   lines.push("");
   lines.push("## Runtime Flags");
   lines.push("");
   lines.push(`- interactionsEnabled: ${enabled}`);
   lines.push("");
-  lines.push("## Spellbook (SSOT)");
+  lines.push("## Wordbook (SSOT)");
   lines.push("");
   lines.push("```json");
-  lines.push(toJson({ version: SPELLBOOK_V2?.version, spells }));
+  lines.push(toJson({ version: WORDBOOK_V2?.version, words }));
   lines.push("```");
   lines.push("");
   lines.push("## Interaction Defaults (SSOT)");
@@ -105,7 +106,8 @@ function buildDoc() {
   lines.push("");
   lines.push("## Authoring Notes");
   lines.push("");
-  lines.push("- Add/remove/toggle spells in `spellbook-v2.js`.");
+  lines.push("- Add/remove/toggle words in `wordbook-v2.js`.");
+  lines.push("  - compatibility alias path: `spellbook-v2.js`");
   lines.push("- Compose trigger/action chains in `interactions-v2.js`.");
   lines.push("- Runtime rule/event/signal wiring is auto-validated in `ready:v2`.");
   lines.push("");
@@ -121,9 +123,13 @@ function buildMasterControlJson() {
   return {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControl,
     generatedAt: nowIso(),
+    wordbook: {
+      version: WORDBOOK_V2?.version,
+      words: listWordbookWords(WORDBOOK_V2),
+    },
     spellbook: {
-      version: SPELLBOOK_V2?.version,
-      spells: listSpellbookSpells(SPELLBOOK_V2),
+      version: WORDBOOK_V2?.version,
+      spells: listWordbookWords(WORDBOOK_V2),
     },
     interactions: {
       version: INTERACTIONS_V2?.version,
@@ -146,7 +152,7 @@ function buildMasterControlJson() {
 }
 
 function buildMasterControlAuthoringJson() {
-  const activeSpells = listActiveSpellAuthoringRows(SPELLBOOK_V2);
+  const activeWords = listActiveWordAuthoringRows(WORDBOOK_V2);
   const defaults = getInteractionsDefaults(INTERACTIONS_V2);
   const rules = getInteractionsRules(INTERACTIONS_V2);
 
@@ -155,7 +161,8 @@ function buildMasterControlAuthoringJson() {
     generatedAt: nowIso(),
     enabled: isInteractionsEnabled(INTERACTIONS_V2),
     defaults,
-    spells: activeSpells,
+    words: activeWords,
+    spells: activeWords,
     rules,
   };
 }

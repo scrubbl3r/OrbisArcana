@@ -13,6 +13,12 @@ function resolveSignalConditionId(cond) {
   const id = asId(cond && cond.id);
   if (!id) return "";
   if (type === "signal") return id;
+  if (type === "word") {
+    if (id.startsWith("word.")) return `spell.${id.slice("word.".length)}`;
+    if (id.startsWith("spell.")) return id;
+    if (id.includes(".")) return id;
+    return `spell.${id}`;
+  }
   if (type === "spell" || type === "gesture" || type === "orb_state") {
     if (id.includes(".")) return id;
     return `${type}.${id}`;
@@ -24,7 +30,7 @@ function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
     ? { ...action.overrides }
     : {};
-  const RESERVED_KEYS = new Set(["type", "id", "spells", "overrides", "enabled"]);
+  const RESERVED_KEYS = new Set(["type", "id", "words", "spells", "overrides", "enabled", "windowId"]);
   if (action && typeof action === "object") {
     for (const [k, v] of Object.entries(action)) {
       if (RESERVED_KEYS.has(k)) continue;
@@ -58,6 +64,17 @@ function getRuleActions(rule) {
   if (Array.isArray(then)) return then;
   if (then && typeof then === "object") return [then];
   return [];
+}
+
+function parseStringList(raw) {
+  if (typeof raw === "string") {
+    const token = String(raw || "").trim();
+    return token ? [token] : [];
+  }
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
 }
 
 export function buildRuleEnginePreviewRuntime({
@@ -149,14 +166,23 @@ export function buildRuleEnginePreviewRuntime({
     const signalIds = Array.from(new Set(allSignalIds.concat(anySignalIds)));
     const actions = getRuleActions(rule)
       .filter((a) => !(a && a.enabled === false))
-      .map((a) => ({
-        type: asId(a && a.type),
-        id: (asId(a && a.type) === "wake_win")
-          ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
-          : asId(a && a.id),
-        spells: Array.isArray(a && a.spells) ? a.spells.slice() : [],
-        overrides: resolveActionArgs(a),
-      }));
+      .map((a) => {
+        const words = Array.isArray(a && a.words)
+          ? a.words.slice()
+          : (Array.isArray(a && a.spells) ? a.spells.slice() : []);
+        return {
+          type: asId(a && a.type),
+          id: (asId(a && a.type) === "wake_win")
+            ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
+            : asId(a && a.id),
+          windowId: asId(a && a.windowId),
+          words,
+          spells: words.slice(),
+          overrides: resolveActionArgs(a),
+        };
+      });
+    const requiresWindowIds = parseStringList(rule && rule.requires);
+    const consumeWindowIds = parseStringList(rule && rule.consume);
     const normalizedRule = {
       id,
       signalIds,
@@ -165,6 +191,8 @@ export function buildRuleEnginePreviewRuntime({
       priority: Number.isFinite(Number(rule && rule.priority)) ? Number(rule.priority) : 0,
       cooldownMs: Math.max(0, Number(rule && rule.cooldownMs) || 0),
       matchWindowMs: Math.max(100, Number(rule && rule.matchWindowMs) || 2000),
+      requiresWindowIds,
+      consumeWindowIds,
       actions,
     };
     collectedRules.push({

@@ -76,7 +76,7 @@ if (asJson(rule.on) !== asJson(expectedOn)) {
 }
 
 const expectedThen = [
-  { type: "wake_win", spells: ["sanctum", "vectus"], ttlMs: 1750 },
+  { type: "wake_win", spells: ["sanctum", "vectus"], words: ["sanctum", "vectus"], ttlMs: 1750 },
   { type: "event", id: "grace", ms: 700, mode: "boost" },
   { type: "event", id: "aoe_electric" },
 ];

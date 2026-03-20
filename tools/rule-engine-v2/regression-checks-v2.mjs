@@ -21,4 +21,8 @@ export const REGRESSION_CHECKS_V2 = defineCheckEntriesV2([
     id: "wake_window_axis_prereq",
     script: "tools/rule-engine-v2/check-wake-window-axis-prereq-regression-v2.mjs",
   },
+  {
+    id: "wake_sequence_regression",
+    script: "tools/rule-engine-v2/check-wake-sequence-regression-v2.mjs",
+  },
 ]);

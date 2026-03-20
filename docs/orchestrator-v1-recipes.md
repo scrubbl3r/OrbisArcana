@@ -132,7 +132,7 @@ ON "rota, spin_y, charged" TRIGGER "grace, aoe_electric"
 
 # Object ON aliases + OPEN/TTL alias + TRIGGERS alias
 ON { spells: "rota, sanctum", gestures: "spin_y", orbStates: "charged" }
-OPEN { spells: "vectus, sanctum", ttl: 1800 }
+OPEN { words: "vectus, sanctum", ttl: 1800 } # compatibility alias: spells
 TRIGGERS "grace, aoe_electric"
 
 # Type alias forms

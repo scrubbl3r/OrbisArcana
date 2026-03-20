@@ -367,6 +367,7 @@ export function createRuleEnginePreviewSystem({
   const lastSourceEventAtById = new Map();
   const lastSeenAtBySignalId = new Map();
   const lastMatchAtByRuleId = new Map();
+  const openWindowUntilById = new Map();
 
   function resolveEventArgs(eventId, overrides = null) {
     const base = runtime.eventById[String(eventId || "").trim().toLowerCase()];
@@ -384,6 +385,35 @@ export function createRuleEnginePreviewSystem({
       : {};
     const patch = (overrides && typeof overrides === "object") ? overrides : {};
     return { ...defaultArgs, ...patch };
+  }
+
+  function isWindowOpen(windowId, now) {
+    const id = String(windowId || "").trim().toLowerCase();
+    if (!id) return false;
+    const until = Number(openWindowUntilById.get(id) || 0);
+    return until > Number(now || 0);
+  }
+
+  function ruleRequiresOpenWindows(rule, now) {
+    const required = Array.isArray(rule && rule.requiresWindowIds)
+      ? rule.requiresWindowIds
+      : [];
+    if (!required.length) return true;
+    for (const windowId of required) {
+      if (!isWindowOpen(windowId, now)) return false;
+    }
+    return true;
+  }
+
+  function consumeRuleWindows(rule) {
+    const consumeWindowIds = Array.isArray(rule && rule.consumeWindowIds)
+      ? rule.consumeWindowIds
+      : [];
+    for (const windowIdRaw of consumeWindowIds) {
+      const windowId = String(windowIdRaw || "").trim().toLowerCase();
+      if (!windowId) continue;
+      openWindowUntilById.delete(windowId);
+    }
   }
 
   function executeRuleActions(rule, triggerMeta = {}, maxActionsBudget = 0) {
@@ -486,11 +516,28 @@ export function createRuleEnginePreviewSystem({
         const windowDef = runtime.windowById[id];
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
+        const runtimeWindowId = String((action && action.windowId) || id || "").trim().toLowerCase();
+        const ttlMs = Math.max(0, Number(args && args.ttlMs) || 0);
+        if (runtimeWindowId) {
+          if (ttlMs > 0) {
+            openWindowUntilById.set(
+              runtimeWindowId,
+              (Number(triggerMeta.atMs) || nowMs()) + ttlMs
+            );
+          } else {
+            openWindowUntilById.delete(runtimeWindowId);
+          }
+        }
+        const words = Array.isArray(action && action.words)
+          ? action.words.slice()
+          : (Array.isArray(action && action.spells) ? action.spells.slice() : []);
         eventBus.emit(EVT_RULE_ENGINE_WAKE_WIN_OPENED, {
           ruleId: String(rule && rule.id || ""),
           actionId: id,
-          spells: Array.isArray(action && action.spells) ? action.spells.slice() : [],
-          ttlMs: Number(args && args.ttlMs) || 0,
+          windowId: runtimeWindowId,
+          words,
+          spells: words.slice(),
+          ttlMs,
           atMs: Number(triggerMeta.atMs) || nowMs(),
         });
         const emitTypeEnabled = ruleTelemetryTypeGate && Object.prototype.hasOwnProperty.call(ruleTelemetryTypeGate, "wake_win")
@@ -510,7 +557,8 @@ export function createRuleEnginePreviewSystem({
             actionType: "wake_win",
             actionId: id,
             args,
-            spells: Array.isArray(action && action.spells) ? action.spells.slice() : [],
+            words,
+            spells: words.slice(),
             atMs: Number(triggerMeta.atMs) || nowMs(),
           });
         }
@@ -640,6 +688,7 @@ export function createRuleEnginePreviewSystem({
         ? Math.max(0, ruleMatchWindowScaleRaw)
         : signalMatchWindowScale;
       if (!ruleMatches(rule, lastSeenAtBySignalId, now, effectiveMatchWindowScale)) continue;
+      if (!ruleRequiresOpenWindows(rule, now)) continue;
       if (!firstMatchedRuleId) firstMatchedRuleId = String(ruleId || "");
       const sourceEventCooldownScaleRaw = Number(sourceEventCooldownScaleOverrides[String(sourceEvent || "")]);
       const sourceEventCooldownScale = Number.isFinite(sourceEventCooldownScaleRaw)
@@ -683,6 +732,9 @@ export function createRuleEnginePreviewSystem({
         sourceEvent,
         atMs: now,
       }, effectiveRemainingActionBudget);
+      if (executeActions && executionAllowsActions) {
+        consumeRuleWindows(rule);
+      }
       matchedCount += 1;
       if (effectiveStopOnFirstMatch) break;
       if (effectiveMaxMatchesPerSignal > 0 && matchedCount >= effectiveMaxMatchesPerSignal) break;

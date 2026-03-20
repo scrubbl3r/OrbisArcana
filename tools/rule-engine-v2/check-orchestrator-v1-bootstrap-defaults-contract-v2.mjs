@@ -10,8 +10,8 @@ const CHECK_TAG = "orchestrator-v1-bootstrap-defaults:v2";
 if (!ORCHESTRATOR_V1_BOOTSTRAP || typeof ORCHESTRATOR_V1_BOOTSTRAP !== "object") {
   failCheck(CHECK_TAG, "ORCHESTRATOR_V1_BOOTSTRAP export missing");
 }
-if (ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap !== false) {
-  failCheck(CHECK_TAG, "ORCHESTRATOR_V1 bootstrap must remain disabled by default");
+if (ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap !== true) {
+  failCheck(CHECK_TAG, "ORCHESTRATOR_V1 bootstrap must remain enabled by default");
 }
 if (ORCHESTRATOR_V1_BOOTSTRAP.projectFromInteractionsWhenOrchestratorEmpty !== true) {
   failCheck(CHECK_TAG, "ORCHESTRATOR_V1 projection bridge default must remain enabled");
@@ -27,8 +27,8 @@ if (version !== "1") {
 if (!Array.isArray(ORCHESTRATOR_V1.rules)) {
   failCheck(CHECK_TAG, "ORCHESTRATOR_V1.rules must be an array");
 }
-if (ORCHESTRATOR_V1.rules.length !== 0) {
-  failCheck(CHECK_TAG, "ORCHESTRATOR_V1.rules must remain empty until activation");
+if (ORCHESTRATOR_V1.rules.length < 1) {
+  failCheck(CHECK_TAG, "ORCHESTRATOR_V1.rules must include at least one active rule");
 }
 
-reportCheckPass(CHECK_TAG, "orchestrator bootstrap defaults remain in safe pre-activation state");
+reportCheckPass(CHECK_TAG, "orchestrator v1 bootstrap defaults remain in active guarded state");

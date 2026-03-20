@@ -1,6 +1,6 @@
-import { SPELLS_BY_ID } from "../../voice/spellbook.js";
+import { WORDS_BY_ID as SPELLS_BY_ID } from "../../voice/wordbook.js";
 import {
-  collectImmediateEventSpellIdsFromInteractionsV2,
+  collectImmediateEventWordIdsFromInteractionsV2,
   INTERACTIONS_V2,
 } from "../interactions-v2/interactions-v2.js";
 import {
@@ -46,7 +46,7 @@ function isSlot(v) {
   return SLOTS.has(String(v || "").trim().toUpperCase());
 }
 
-function collectWakeWinSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
+function collectWakeWinWordIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
   const out = new Set();
   const rules = Array.isArray(cfg && cfg.rules) ? cfg.rules : [];
   for (const rule of rules) {
@@ -54,18 +54,20 @@ function collectWakeWinSpellIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
     for (const action of actions) {
       const actionType = String(action && action.type || "").trim().toLowerCase();
       if (actionType !== "wake_win") continue;
-      const spells = Array.isArray(action && action.spells) ? action.spells : [];
-      for (const rawSpellId of spells) {
-        const spellId = asId(rawSpellId).replace(/^spell\./, "");
-        if (!spellId) continue;
-        out.add(spellId);
+      const wordRefs = Array.isArray(action && action.words)
+        ? action.words
+        : (Array.isArray(action && action.spells) ? action.spells : []);
+      for (const rawWordId of wordRefs) {
+        const wordId = asId(rawWordId).replace(/^(word|spell)\./, "");
+        if (!wordId) continue;
+        out.add(wordId);
       }
     }
   }
   return out;
 }
 
-export function validateSpellRuntimeRouting() {
+export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
   const errors = [];
 
   checkSpellIdList(errors, "WAKE_WORD_IDS", WAKE_WORD_IDS);
@@ -81,7 +83,7 @@ export function validateSpellRuntimeRouting() {
   if (!inferId) errors.push("KWS_INFER_DEFAULT_WORD_ID is empty");
   else if (!SPELLS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_WORD_ID references unknown spell id: ${inferId}`);
 
-  const expectedOwnedImmediate = new Set(collectImmediateEventSpellIdsFromInteractionsV2(INTERACTIONS_V2));
+  const expectedOwnedImmediate = new Set(collectImmediateEventWordIdsFromInteractionsV2(interactions));
   const declaredOwnedImmediate = new Set(
     (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
       .map((id) => asId(id))
@@ -90,13 +92,13 @@ export function validateSpellRuntimeRouting() {
   const missingOwnedImmediate = Array.from(expectedOwnedImmediate).filter((id) => !declaredOwnedImmediate.has(id)).sort();
   const extraOwnedImmediate = Array.from(declaredOwnedImmediate).filter((id) => !expectedOwnedImmediate.has(id)).sort();
   if (missingOwnedImmediate.length) {
-    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS missing interactions-v2 immediate spell ids: ${missingOwnedImmediate.join(", ")}`);
+    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS missing interactions-v2 immediate word ids: ${missingOwnedImmediate.join(", ")}`);
   }
   if (extraOwnedImmediate.length) {
-    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS has ids not present as interactions-v2 immediate spell rules: ${extraOwnedImmediate.join(", ")}`);
+    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS has ids not present as interactions-v2 immediate word rules: ${extraOwnedImmediate.join(", ")}`);
   }
 
-  const expectedWakeWindowSpellIds = collectWakeWinSpellIdsFromInteractionsV2(INTERACTIONS_V2);
+  const expectedWakeWindowSpellIds = collectWakeWinWordIdsFromInteractionsV2(interactions);
   const declaredWakeWindowSpellIds = new Set(
     (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
       .map((id) => asId(id))
@@ -105,7 +107,7 @@ export function validateSpellRuntimeRouting() {
   const missingWakeWindowSpellIds = Array.from(expectedWakeWindowSpellIds).filter((id) => !declaredWakeWindowSpellIds.has(id)).sort();
   const extraWakeWindowSpellIds = Array.from(declaredWakeWindowSpellIds).filter((id) => !expectedWakeWindowSpellIds.has(id)).sort();
   if (missingWakeWindowSpellIds.length) {
-    errors.push(`WAKE_WINDOW_WORD_IDS missing interactions-v2 wake_win spell ids: ${missingWakeWindowSpellIds.join(", ")}`);
+    errors.push(`WAKE_WINDOW_WORD_IDS missing interactions-v2 wake_win word ids: ${missingWakeWindowSpellIds.join(", ")}`);
   }
   if (extraWakeWindowSpellIds.length) {
     errors.push(`WAKE_WINDOW_WORD_IDS has ids not present in interactions-v2 wake_win actions: ${extraWakeWindowSpellIds.join(", ")}`);

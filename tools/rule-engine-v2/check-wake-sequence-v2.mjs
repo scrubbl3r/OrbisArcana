@@ -1,4 +1,4 @@
-import { emitDetectedSpell } from "./check-detected-spell-v2.mjs";
+import { emitDetectedWord } from "./check-detected-word-v2.mjs";
 import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
@@ -16,14 +16,14 @@ export function emitWakeLoadPrelude({
 }) {
   const startAt = Number(nowRef?.value ?? 0);
   emitFlatSpinWindowOpened(eventBus, { axis, atMs: startAt });
-  emitDetectedSpell(eventBus, {
+  emitDetectedWord(eventBus, {
     id: axisSpellId,
     intent: axisIntent,
     atMs: startAt,
   });
   advance(stepMs);
   const wakeAt = Number(nowRef?.value ?? 0);
-  emitDetectedSpell(eventBus, {
+  emitDetectedWord(eventBus, {
     id: wakeWindowToken,
     intent: wakeIntent,
     atMs: wakeAt,
@@ -43,13 +43,13 @@ export function emitAxisThenWakeSelection({
   const withConfidence = confidence === undefined ? {} : { confidence };
   const axisAt = Number(axisAtMs);
   const wakeAt = Number(wakeAtMs);
-  emitDetectedSpell(eventBus, {
+  emitDetectedWord(eventBus, {
     id: axisSpellId,
     intent: axisIntent,
     atMs: axisAt,
     ...withConfidence,
   });
-  emitDetectedSpell(eventBus, {
+  emitDetectedWord(eventBus, {
     id: wakeWindowToken,
     intent: wakeIntent,
     atMs: wakeAt,

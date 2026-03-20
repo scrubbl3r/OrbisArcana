@@ -5,7 +5,7 @@ import {
 import { assertCheck } from "./check-assert-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { CHECK_CONFIDENCE_V2 } from "./check-confidence-constants-v2.mjs";
-import { emitDetectedSpellAt } from "./check-detected-spell-v2.mjs";
+import { emitDetectedWordAt } from "./check-detected-word-v2.mjs";
 import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
@@ -30,7 +30,7 @@ function detectOutsideWindow({ spellId, intent, expectedReason }) {
     resources: createStoredGlobeResources(1),
   });
   runWithStartedSystem(system, () => {
-    emitDetectedSpellAt(eventBus, {
+    emitDetectedWordAt(eventBus, {
       id: spellId,
       intent,
       confidence: CHECK_CONFIDENCE_V2.high,
@@ -55,7 +55,7 @@ function detectInsideWindowAxisSelect() {
   });
   runWithStartedSystem(system, () => {
     emitFlatSpinWindowOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.flatSpinInside });
-    emitDetectedSpellAt(eventBus, {
+    emitDetectedWordAt(eventBus, {
       id: CHECK_SPELL_IDS_V2.pyro,
       intent: CHECK_SPELL_INTENTS_V2.axisSelect,
       confidence: CHECK_CONFIDENCE_V2.high,

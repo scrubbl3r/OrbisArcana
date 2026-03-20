@@ -28,7 +28,8 @@ const STATUS_DOC_PATHS = Object.freeze({
   status: resolveRuleEngineDocPath("status"),
 });
 const STATUS_LINE_LABELS = Object.freeze({
-  spellbookOk: "spellbook ok",
+  wordbookOk: "wordbook ok",
+  spellbookOkCompat: "spellbook ok (compat)",
   interactionsOk: "interactions ok",
   bootstrapUsesV2: "bootstrap uses v2",
   rulesProjectionOnly: "rules projection only",
@@ -152,8 +153,10 @@ function emitStatusLines(log, lines) {
 }
 
 function normalizeHealthStatus(health) {
+  const canonicalWordbookOk = isTrue(health?.wordbookOk) || isTrue(health?.spellbookOk);
   return {
-    spellbookOk: isTrue(health?.spellbookOk),
+    wordbookOk: canonicalWordbookOk,
+    spellbookOk: canonicalWordbookOk,
     interactionsOk: isTrue(health?.interactionsOk),
     bootstrapUsesV2Adapter: isTrue(health?.bootstrapUsesV2Adapter),
     projectionRulesOnly: isTrue(health?.projectionRulesOnly),
@@ -219,7 +222,8 @@ const contracts = statusSections[STATUS_SECTION_KEYS.contracts];
 
 const lines = [
   "---",
-  `${STATUS_LINE_LABELS.spellbookOk}: ${yn(healthStatus.spellbookOk)}`,
+  `${STATUS_LINE_LABELS.wordbookOk}: ${yn(healthStatus.wordbookOk)}`,
+  `${STATUS_LINE_LABELS.spellbookOkCompat}: ${yn(healthStatus.spellbookOk)}`,
   `${STATUS_LINE_LABELS.interactionsOk}: ${yn(healthStatus.interactionsOk)}`,
   `${STATUS_LINE_LABELS.bootstrapUsesV2}: ${yn(healthStatus.bootstrapUsesV2Adapter)}`,
   `${STATUS_LINE_LABELS.rulesProjectionOnly}: ${yn(healthStatus.projectionRulesOnly)}`,

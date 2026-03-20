@@ -80,6 +80,11 @@ export const EVT_VOICE_TOKEN_DETECTED = "voice.token_detected";
  * @property {string} source Usually `kws`
  */
 export const EVT_VOICE_KWS_SPELL_CANDIDATE = "voice.kws_spell_candidate";
+/**
+ * Canonical word detection event.
+ * Transitional alias path: runtime also emits `voice.spell_detected`.
+ */
+export const EVT_VOICE_WORD_DETECTED = "voice.word_detected";
 export const EVT_VOICE_SPELL_DETECTED = "voice.spell_detected";
 export const EVT_VOICE_SPELL_REJECTED = "voice.spell_rejected";
 export const EVT_VOICE_AXIS_SELECTED = "voice.axis_selected";

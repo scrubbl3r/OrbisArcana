@@ -12,7 +12,14 @@ const schema = typeof health.schema === "string" ? health.schema : "";
 if (schema !== RULE_ENGINE_V2_SCHEMA_IDS.health) {
   failCheck(CHECK_TAG, `unexpected schema: ${schema}`);
 }
-if (health.spellbookOk !== true) failCheck(CHECK_TAG, "spellbookOk must be true");
+const wordbookOk = health.wordbookOk === true || health.spellbookOk === true;
+if (!wordbookOk) failCheck(CHECK_TAG, "wordbookOk (or compatibility spellbookOk) must be true");
+if (Object.hasOwn(health, "wordbookOk") && health.wordbookOk !== true) {
+  failCheck(CHECK_TAG, "wordbookOk must be true when present");
+}
+if (Object.hasOwn(health, "spellbookOk") && health.spellbookOk !== true) {
+  failCheck(CHECK_TAG, "spellbookOk must be true when present");
+}
 if (health.interactionsOk !== true) failCheck(CHECK_TAG, "interactionsOk must be true");
 if (health.bootstrapUsesV2Adapter !== true) failCheck(CHECK_TAG, "bootstrapUsesV2Adapter must be true");
 if (health.projectionRulesOnly !== true) failCheck(CHECK_TAG, "projectionRulesOnly must be true");
