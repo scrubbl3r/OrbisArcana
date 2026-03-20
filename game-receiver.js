@@ -1235,7 +1235,7 @@
     const RULE_ENGINE_ACTION_EXECUTED_EVENT = "rule_engine.action_executed";
     const RULE_ENGINE_WAKE_WIN_OPENED_EVENT = "rule_engine.wake_win_opened";
     const RULE_ENGINE_TRIGGER = "rule_engine";
-    const RULE_ENGINE_EXECUTE_ACTIONS = false;
+    const RULE_ENGINE_EXECUTE_ACTIONS = true;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
