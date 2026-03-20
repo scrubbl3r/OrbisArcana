@@ -33,10 +33,9 @@ export const ORCHESTRATOR_V1 = Object.freeze({
     // },
     {
       id: "001_hello_world",
-      on: { spell: "orbis" },
+      on: { spell: "pyro" },
       trigger: {
         teleport_home: true,
-        grace: { ms: 1000 },
       },
     },
   ]),

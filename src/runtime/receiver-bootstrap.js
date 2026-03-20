@@ -57,6 +57,8 @@ const WARN_RULE_SCHEMA_INVALID_PREFIX =
 const WARN_RULE_SCHEMA_INTEGRITY_INVALID_PREFIX =
   "[receiver-bootstrap] rule schema integrity invalid; using safe disabled fallback";
 const RULE_ENGINE_VERSION_V2 = "2";
+const POLICY_ONLY_RULES_EMPTY_ERROR =
+  "RULE_ENGINE_POLICY_CONTROL.rules must remain empty; author rules in INTERACTIONS_V2";
 const EMPTY_FROZEN_ARRAY = Object.freeze([]);
 const ADAPTER_BASE_FALLBACK_RULE_SCHEMA = Object.freeze({
   version: RULE_ENGINE_VERSION_V2,
@@ -693,7 +695,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
 
   if (typeof validateRuleEngine === "function") {
-    const errors = validateRuleEngine(ruleSchema);
+    // `validateRuleEngineConfig` includes one master-control authoring invariant
+    // (`RULE_ENGINE_POLICY_CONTROL.rules must remain empty`) that does not apply
+    // to compiled runtime rule schemas (for example orchestrator/interactions adapters).
+    const errors = validateRuleEngine(ruleSchema).filter(
+      (msg) => String(msg || "") !== POLICY_ONLY_RULES_EMPTY_ERROR
+    );
     if (errors.length) {
       warnWithErrorCount(WARN_RULE_SCHEMA_INVALID_PREFIX, errors.length);
       adapterFallbackUsed = true;

@@ -29,7 +29,6 @@ import {
 const ACTION_TYPE_WAKE_WIN = "wake_win";
 const ACTION_TYPE_EVENT = "event";
 const RULE_ENGINE_V2_VERSION = "2";
-const EMPTY_ARRAY = Object.freeze([]);
 const EMPTY_OBJECT = Object.freeze({});
 const ENABLED_FALSE = false;
 const ORCHESTRATOR_VALIDATION_ERROR_PREFIX = "ORCHESTRATOR_V1 validation failed: ";
@@ -58,13 +57,6 @@ const FIELD_SIGNALS = "signals";
 const FIELD_WINDOWS = "windows";
 const FIELD_EVENTS = "events";
 const FIELD_EVENT_RUNTIME_BINDINGS = "eventRuntimeBindings";
-const BASE_RULE_ENGINE_SCHEMA = Object.freeze({
-  [FIELD_VERSION]: RULE_ENGINE_V2_VERSION,
-  [FIELD_SIGNALS]: EMPTY_ARRAY,
-  [FIELD_WINDOWS]: EMPTY_ARRAY,
-  [FIELD_EVENTS]: EMPTY_ARRAY,
-  [FIELD_EVENT_RUNTIME_BINDINGS]: EMPTY_OBJECT,
-});
 
 function assignNumericFromSources(out, targetKey, sources, sourceKeys, min = null) {
   let rawValue;
@@ -159,9 +151,16 @@ export function buildRuleEngineFromOrchestratorV1(options = {}) {
     if (!eventId) continue;
     defaultsTriggerByEvent[eventId] = asObj(args);
   }
+  const baseRuleEngine = asObj(safeOptions[FIELD_BASE_RULE_ENGINE]);
   return Object.freeze({
-    ...asObj(safeOptions[FIELD_BASE_RULE_ENGINE]),
-    ...BASE_RULE_ENGINE_SCHEMA,
+    ...baseRuleEngine,
+    [FIELD_VERSION]: RULE_ENGINE_V2_VERSION,
+    [FIELD_SIGNALS]: Object.freeze(asArray(baseRuleEngine[FIELD_SIGNALS]).slice()),
+    [FIELD_WINDOWS]: Object.freeze(asArray(baseRuleEngine[FIELD_WINDOWS]).slice()),
+    [FIELD_EVENTS]: Object.freeze(asArray(baseRuleEngine[FIELD_EVENTS]).slice()),
+    [FIELD_EVENT_RUNTIME_BINDINGS]: Object.freeze({
+      ...asObj(baseRuleEngine[FIELD_EVENT_RUNTIME_BINDINGS]),
+    }),
     [FIELD_ENABLED]: orchestratorObj[FIELD_ENABLED] !== ENABLED_FALSE,
     [FIELD_RULES]: Object.freeze(
       mapDefined(orchestratorObj[FIELD_RULES], (rule) =>
