@@ -114,6 +114,8 @@
 - [Master Control Schema](./master-control-schema.md)
 - [Orchestrator v1 DSL Schema](./orchestrator-v1-schema.md)
 - [Orchestrator v1 DSL Recipes](./orchestrator-v1-recipes.md)
+- [Orchestrator v2 Schema (Draft)](./orchestrator-v2-schema.md)
+- [Orchestrator v2 Validator Checklist (Draft)](./orchestrator-v2-validator-checklist.md)
 
 ## Generated Artifacts Quick Links
 - [Effective Interactions Snapshot](./effective-interactions-v2.snapshot.json)
