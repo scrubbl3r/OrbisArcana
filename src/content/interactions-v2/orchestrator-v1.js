@@ -16,26 +16,50 @@ export const ORCHESTRATOR_V1 = Object.freeze({
   [FIELD_VERSION]: ORCHESTRATOR_V1_VERSION,
   [FIELD_ENABLED]: true,
   [FIELD_DEFAULTS]: Object.freeze({
-    // Optional defaults for OPEN/TRIGGER actions.
-    // open: { ttlMs: 2000 },
-    // trigger: { teleport_home: { style: "orb_flash_2" } },
-    // rule: { cooldownMs: 250, matchWindowMs: 2200, priority: 10 },
+    open: { ttlMs: 2000 },
+    trigger: { grace: { ms: 500 } },
   }),
   [FIELD_RULES]: Object.freeze([
-    // Minimal supported shape in early slices:
-    // {
-    //   id: "o_example",
-    //   on: { spell: ["orbis", "rota"], gesture: "spin_y", orb_state: "charged" },
-    //   cooldownMs: 250,
-    //   matchWindowMs: 2200,
-    //   open: ["domus", "electrum"],
-    //   trigger: { teleport_home: true, grace: { ms: 700 } },
-    // },
     {
-      id: "001_hello_world",
+      id: "r_fridgis_immediate",
+      on: { spell: "fridgis" },
+      trigger: {
+        aoe_frost: true,
+      },
+    },
+    {
+      id: "r_electrum_immediate",
+      on: { spell: "electrum" },
+      trigger: {
+        aoe_electric: true,
+      },
+    },
+    {
+      id: "r_pyro_immediate",
       on: { spell: "pyro" },
       trigger: {
+        aoe_flame: true,
+      },
+    },
+    {
+      id: "r_domus_immediate",
+      on: { spell: "domus" },
+      trigger: {
         teleport_home: true,
+      },
+    },
+    {
+      id: "r_rota_yspin_charged",
+      on: {
+        spell: "rota",
+        gesture: "spin_y",
+        orb_state: "charged",
+      },
+      open: ["rota", "sanctum", "vectus"],
+      trigger: {
+        aoe_electric: { range: 14 },
+        grace: true,
+        orb_state: { state: "superheated" },
       },
     },
   ]),
