@@ -16,254 +16,246 @@ import {
 } from "./orchestrator-v1-normalizers.js";
 
 const ROOT_CONTEXT = "INTERACTIONS_V2";
-const INTERACTIONS_VERSION = "2";
 const DEFAULTS_CONTEXT = `${ROOT_CONTEXT}.defaults`;
 const DEFAULTS_WAKE_WIN_CONTEXT = `${DEFAULTS_CONTEXT}.wakeWin`;
 const DEFAULTS_EVENT_CONTEXT = `${DEFAULTS_CONTEXT}.event`;
-const FIELD_SPELLS = "spells";
-const FIELD_TTL_MS = "ttlMs";
-const LABEL_ON_ALL = "on.all";
-const ERR_REF_UNKNOWN_OR_INACTIVE_SPELL = "references inactive or unknown spell id";
-const ERR_REF_UNKNOWN_GESTURE = "references unknown gesture id";
-const ERR_REF_UNKNOWN_ORB_STATE = "references unknown orb_state id";
-const SUPPORTED_CONDITION_TYPES = Object.freeze([
-  "spell",
-  "gesture",
-  "orb_state",
-]);
 const ENTITY_ID_RE = /^[A-Za-z0-9_]+$/;
 const BARE_NAMESPACE_RE = /^[a-z_]+\.$/;
-const SIGNAL_PREFIX_GESTURE = "gesture.";
-const SIGNAL_PREFIX_ORB_STATE = "orb_state.";
-const ROOT_ALLOWED_KEYS = new Set(["version", "enabled", "defaults", "rules"]);
-const RULE_ALLOWED_KEYS = new Set(["id", "on", "then", "enabled", "priority"]);
-const RULE_CONDITION_ALLOWED_KEYS = new Set(["type", "id"]);
-const WAKE_WIN_ALLOWED_KEYS = new Set(["type", FIELD_SPELLS, FIELD_TTL_MS, "enabled"]);
-const DEFAULTS_ALLOWED_KEYS = new Set(["wakeWin", "event"]);
+const signalDefsById = ((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
+  ? SIGNAL_DEFINITIONS_BY_ID
+  : {});
 
-function makeRuleContext(ruleId, section = "") {
-  return section ? `rule ${ruleId} ${section}` : `rule ${ruleId}`;
+function makeRuleContext(ruleId, sectionSuffix = "") {
+  return sectionSuffix ? `rule ${ruleId} ${sectionSuffix}` : `rule ${ruleId}`;
 }
 
-function getQualifiedPrefix(idRaw) {
-  const id = asText(idRaw).toLowerCase();
-  const dotIndex = id.indexOf(".");
+function getQualifiedPrefix(rawId) {
+  const normalizedId = asText(rawId).toLowerCase();
+  const dotIndex = normalizedId.indexOf(".");
   if (dotIndex <= 0) return "";
-  return id.slice(0, dotIndex);
+  return normalizedId.slice(0, dotIndex);
 }
 
-function isBareNamespaceId(idRaw) {
-  return BARE_NAMESPACE_RE.test(asText(idRaw).toLowerCase());
+function isBareNamespaceId(candidateIdRaw) {
+  return BARE_NAMESPACE_RE.test(asText(candidateIdRaw).toLowerCase());
 }
 
-const knownGestureIds = new Set(
-  Object.keys((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
-    ? SIGNAL_DEFINITIONS_BY_ID
-    : {})
-    .filter((signalId) => typeof signalId === "string" && signalId.startsWith(SIGNAL_PREFIX_GESTURE))
-    .map((signalId) => signalId.slice(SIGNAL_PREFIX_GESTURE.length))
-    .filter(Boolean)
-);
-const knownOrbStateIds = new Set(
-  Object.keys((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
-    ? SIGNAL_DEFINITIONS_BY_ID
-    : {})
-    .filter((signalId) => typeof signalId === "string" && signalId.startsWith(SIGNAL_PREFIX_ORB_STATE))
-    .map((signalId) => signalId.slice(SIGNAL_PREFIX_ORB_STATE.length))
-    .filter(Boolean)
-);
+function getKnownSignalIds(namespacePrefix) {
+  return new Set(
+    Object.keys(signalDefsById)
+      .filter((signalId) => typeof signalId === "string" && signalId.startsWith(namespacePrefix))
+      .map((signalId) => signalId.slice(namespacePrefix.length))
+      .filter(Boolean)
+  );
+}
 
-function pushFiniteNonNegativeWhenPresent(errors, context, obj, key) {
-  if (!Object.hasOwn(obj, key)) return;
-  const numericValue = Number(obj[key]);
+const knownGestureSignalIds = getKnownSignalIds("gesture.");
+const knownOrbStateSignalIds = getKnownSignalIds("orb_state.");
+
+function pushNonNegativeNumericConstraintWhenPresent(errors, errorContext, numericFields, numericFieldKey) {
+  if (!Object.hasOwn(numericFields, numericFieldKey)) return;
+  const numericValue = Number(numericFields[numericFieldKey]);
   if (!(Number.isFinite(numericValue) && numericValue >= 0)) {
-    errors.push(`${context}.${key} must be a finite number >= 0 when present`);
+    errors.push(`${errorContext}.${numericFieldKey} must be a finite number >= 0 when present`);
   }
 }
 
 function pushEventIdReferenceErrors(
   errors,
-  normalizedEventId,
-  unknownMessage,
-  missingRuntimeBindingMessage = ""
+  eventId,
+  unknownEventError,
+  missingRuntimeBindingError = ""
 ) {
-  if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, normalizedEventId)) {
-    errors.push(unknownMessage);
+  if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
+    errors.push(unknownEventError);
     return false;
   }
   if (
-    missingRuntimeBindingMessage &&
-    !Object.hasOwn(EVENT_RUNTIME_BINDINGS_BY_ID, normalizedEventId)
+    missingRuntimeBindingError &&
+    !Object.hasOwn(EVENT_RUNTIME_BINDINGS_BY_ID, eventId)
   ) {
-    errors.push(missingRuntimeBindingMessage);
+    errors.push(missingRuntimeBindingError);
   }
   return true;
 }
 
-function pushDuplicateWhenSeen(errors, seenValues, value, message) {
-  if (seenValues.has(value)) {
-    errors.push(message);
+function pushDuplicateWhenSeen(errors, seenValues, candidateValue, duplicateError) {
+  if (seenValues.has(candidateValue)) {
+    errors.push(duplicateError);
     return true;
   }
-  seenValues.add(value);
+  seenValues.add(candidateValue);
   return false;
 }
 
-function validateRuleEntry(errors, ids, ruleRaw) {
-  const r = asObj(ruleRaw);
-  const ruleId = asText(r.id);
+function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
+  const ruleDoc = asObj(ruleSourceRaw);
+  const ruleId = asText(ruleDoc.id);
   if (!ruleId) {
     errors.push(`${ROOT_CONTEXT}.rules[] entry is missing id`);
     return;
   }
   pushDuplicateWhenSeen(
     errors,
-    ids,
+    seenRuleIds,
     ruleId,
     `${ROOT_CONTEXT}.rules contains duplicate id: ${ruleId}`
   );
   const ruleContext = makeRuleContext(ruleId);
-  pushUnsupportedKeys(errors, ruleContext, r, RULE_ALLOWED_KEYS);
-  pushBooleanEnabledErrorWhenPresent(errors, ruleContext, r);
-  if (Object.hasOwn(r, "priority") && !Number.isFinite(Number(r.priority))) {
+  pushUnsupportedKeys(errors, ruleContext, ruleDoc, new Set(["id", "on", "then", "enabled", "priority"]));
+  pushBooleanEnabledErrorWhenPresent(errors, ruleContext, ruleDoc);
+  if (Object.hasOwn(ruleDoc, "priority") && !Number.isFinite(Number(ruleDoc.priority))) {
     errors.push(`${ruleContext} priority must be a finite number when present`);
   }
-  const onContext = makeRuleContext(ruleId, "on");
-  const on = asObj(r.on);
-  pushUnsupportedKeys(errors, onContext, on, new Set(["all"]));
-  const onAllConditions = on.all;
-  if (!requireNonEmptyArray(errors, onAllConditions, `${ruleContext} must define ${LABEL_ON_ALL}[]`)) {
+  const onRuleContext = makeRuleContext(ruleId, "on");
+  const onSection = asObj(ruleDoc.on);
+  pushUnsupportedKeys(errors, onRuleContext, onSection, new Set(["all"]));
+  const onAllConditions = onSection.all;
+  if (!requireNonEmptyArray(errors, onAllConditions, `${ruleContext} must define on.all[]`)) {
     return;
   }
-  const conditionContext = makeRuleContext(ruleId, "condition");
-  const seenConditions = new Set();
-  for (const conditionRaw of onAllConditions) {
-    const cond = asObj(conditionRaw);
-    pushUnsupportedKeys(errors, conditionContext, cond, RULE_CONDITION_ALLOWED_KEYS);
-    const type = asText(cond.type).toLowerCase();
-    const id = asText(cond.id);
-    const normalizedId = (!id || !type) ? "" : (id.startsWith(`${type}.`) ? id.slice(`${type}.`.length) : id);
-    if (!type) errors.push(`${ruleContext} has ${LABEL_ON_ALL} condition missing type`);
-    if (!id) errors.push(`${ruleContext} has ${LABEL_ON_ALL} condition missing id`);
-    if (type && !SUPPORTED_CONDITION_TYPES.includes(type)) {
-      errors.push(`${ruleContext} has unsupported ${LABEL_ON_ALL} condition type: ${type}`);
+  const conditionRuleContext = makeRuleContext(ruleId, "condition");
+  const seenConditionSignatures = new Set();
+  for (const rawCondition of onAllConditions) {
+    const conditionDoc = asObj(rawCondition);
+    pushUnsupportedKeys(errors, conditionRuleContext, conditionDoc, new Set(["type", "id"]));
+    const conditionType = asText(conditionDoc.type).toLowerCase();
+    const conditionId = asText(conditionDoc.id);
+    const normalizedConditionId = (!conditionId || !conditionType)
+      ? ""
+      : (conditionId.startsWith(`${conditionType}.`)
+        ? conditionId.slice(`${conditionType}.`.length)
+        : conditionId);
+    if (!conditionType) errors.push(`${ruleContext} has on.all condition missing type`);
+    if (!conditionId) errors.push(`${ruleContext} has on.all condition missing id`);
+    if (conditionType && !["spell", "gesture", "orb_state"].includes(conditionType)) {
+      errors.push(`${ruleContext} has unsupported on.all condition type: ${conditionType}`);
     }
-    const qualifiedPrefix = getQualifiedPrefix(id);
-    if (type && qualifiedPrefix && qualifiedPrefix !== type) {
+    const conditionIdPrefix = getQualifiedPrefix(conditionId);
+    if (conditionType && conditionIdPrefix && conditionIdPrefix !== conditionType) {
       errors.push(
-        `${ruleContext} condition type/id prefix mismatch: type=${type} id=${id} (expected ${type}.* or unqualified id)`
+        `${ruleContext} condition type/id prefix mismatch: type=${conditionType} id=${conditionId} (expected ${conditionType}.* or unqualified id)`
       );
     }
-    if (id && !(typeof normalizedId === "string" && ENTITY_ID_RE.test(normalizedId))) {
-      if (isBareNamespaceId(id)) {
-        errors.push(`${ruleContext} has incomplete ${LABEL_ON_ALL} id: ${id} (missing value after prefix)`);
+    if (
+      conditionId &&
+      !(typeof normalizedConditionId === "string" && ENTITY_ID_RE.test(normalizedConditionId))
+    ) {
+      if (isBareNamespaceId(conditionId)) {
+        errors.push(`${ruleContext} has incomplete on.all id: ${conditionId} (missing value after prefix)`);
       } else {
-        errors.push(`${ruleContext} has invalid ${LABEL_ON_ALL} id shape (use letters/numbers/_): ${id}`);
+        errors.push(`${ruleContext} has invalid on.all id shape (use letters/numbers/_): ${conditionId}`);
       }
     }
-    if (type && id) {
+    if (conditionType && conditionId) {
       pushDuplicateWhenSeen(
         errors,
-        seenConditions,
-        `${type}:${normalizedId}`,
-        `${ruleContext} contains duplicate ${LABEL_ON_ALL} condition: ${type}.${id}`
+        seenConditionSignatures,
+        `${conditionType}:${normalizedConditionId}`,
+        `${ruleContext} contains duplicate on.all condition: ${conditionType}.${conditionId}`
       );
     }
-    if (id && type) {
-      if (type === "spell" && !Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedId)) {
-        errors.push(`${ruleContext} ${ERR_REF_UNKNOWN_OR_INACTIVE_SPELL}: ${id}`);
-      } else if (type === "gesture" && !knownGestureIds.has(normalizedId)) {
-        errors.push(`${ruleContext} ${ERR_REF_UNKNOWN_GESTURE}: ${id}`);
-      } else if (type === "orb_state" && !knownOrbStateIds.has(normalizedId)) {
-        errors.push(`${ruleContext} ${ERR_REF_UNKNOWN_ORB_STATE}: ${id}`);
+    if (conditionId && conditionType) {
+      if (
+        conditionType === "spell" &&
+        !Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedConditionId)
+      ) {
+        errors.push(`${ruleContext} references inactive or unknown spell id: ${conditionId}`);
+      } else if (conditionType === "gesture" && !knownGestureSignalIds.has(normalizedConditionId)) {
+        errors.push(`${ruleContext} references unknown gesture id: ${conditionId}`);
+      } else if (conditionType === "orb_state" && !knownOrbStateSignalIds.has(normalizedConditionId)) {
+        errors.push(`${ruleContext} references unknown orb_state id: ${conditionId}`);
       }
     }
   }
-  const thenActions = r.then;
+  const thenActions = ruleDoc.then;
   if (!requireNonEmptyArray(errors, thenActions, `${ruleContext} must define then[] actions`)) {
     return;
   }
-  for (const actionRaw of thenActions) {
-    const action = asObj(actionRaw);
+  for (const rawAction of thenActions) {
+    const action = asObj(rawAction);
     pushBooleanEnabledErrorWhenPresent(errors, ruleContext, action, "action enabled");
-    const type = asText(action.type).toLowerCase();
-    if (!["wake_win", "event"].includes(type)) {
-      errors.push(`${ruleContext} has unsupported action type: ${type || "(empty)"}`);
+    const actionType = asText(action.type).toLowerCase();
+    if (!["wake_win", "event"].includes(actionType)) {
+      errors.push(`${ruleContext} has unsupported action type: ${actionType || "(empty)"}`);
       continue;
     }
-    if (type === "wake_win") {
-      const wakeWinContext = makeRuleContext(ruleId, "wake_win");
+    if (actionType === "wake_win") {
+      const wakeWinActionContext = makeRuleContext(ruleId, "wake_win");
       if (Object.hasOwn(action, "ms")) {
         errors.push(`${ruleContext} wake_win should use ttlMs, not ms`);
       }
       pushUnsupportedKeys(
         errors,
-        wakeWinContext,
+        wakeWinActionContext,
         action,
-        WAKE_WIN_ALLOWED_KEYS
+        new Set(["type", "spells", "ttlMs", "enabled"])
       );
-      if (!Array.isArray(action[FIELD_SPELLS]) || !action[FIELD_SPELLS].length) {
-        errors.push(`${wakeWinContext} action requires spells[]`);
+      if (!Array.isArray(action.spells) || !action.spells.length) {
+        errors.push(`${wakeWinActionContext} action requires spells[]`);
       } else {
-        const seenWakeWinSpells = new Set();
-        for (const spellId of action[FIELD_SPELLS]) {
-          const id = asText(spellId);
-          const normalizedSpellId = normalizeSpellId(id);
-          const spellQualifiedPrefix = getQualifiedPrefix(id);
-          if (spellQualifiedPrefix && spellQualifiedPrefix !== "spell") {
+        const seenWakeSpellIds = new Set();
+        for (const rawWakeSpell of action.spells) {
+          const wakeSpellId = asText(rawWakeSpell);
+          const normalizedWakeSpellId = normalizeSpellId(wakeSpellId);
+          const wakeSpellPrefix = getQualifiedPrefix(wakeSpellId);
+          if (wakeSpellPrefix && wakeSpellPrefix !== "spell") {
             errors.push(
-              `${wakeWinContext} spell prefix mismatch: ${id} (expected spell.* or unqualified id)`
+              `${wakeWinActionContext} spell prefix mismatch: ${wakeSpellId} (expected spell.* or unqualified id)`
             );
           }
           if (
-            !(typeof id === "string" && ENTITY_ID_RE.test(id)) &&
-            !(typeof normalizedSpellId === "string" && ENTITY_ID_RE.test(normalizedSpellId))
+            !(typeof wakeSpellId === "string" && ENTITY_ID_RE.test(wakeSpellId)) &&
+            !(typeof normalizedWakeSpellId === "string" && ENTITY_ID_RE.test(normalizedWakeSpellId))
           ) {
-            errors.push(`${wakeWinContext} spell has invalid id shape: ${id}`);
+            errors.push(`${wakeWinActionContext} spell has invalid id shape: ${wakeSpellId}`);
             continue;
           }
-          if (!normalizedSpellId) {
-            if (isBareNamespaceId(id)) {
+          if (!normalizedWakeSpellId) {
+            if (isBareNamespaceId(wakeSpellId)) {
               errors.push(
-                `${wakeWinContext} spell id is incomplete: ${id} (missing value after prefix)`
+                `${wakeWinActionContext} spell id is incomplete: ${wakeSpellId} (missing value after prefix)`
               );
             } else {
-              errors.push(`${wakeWinContext} spell id is empty`);
+              errors.push(`${wakeWinActionContext} spell id is empty`);
             }
             continue;
           }
           pushDuplicateWhenSeen(
             errors,
-            seenWakeWinSpells,
-            normalizedSpellId,
-            `${wakeWinContext} contains duplicate spell id: ${id}`
+            seenWakeSpellIds,
+            normalizedWakeSpellId,
+            `${wakeWinActionContext} contains duplicate spell id: ${wakeSpellId}`
           );
-          if (!Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedSpellId)) {
-            errors.push(`${wakeWinContext} ${ERR_REF_UNKNOWN_OR_INACTIVE_SPELL}: ${id}`);
+          if (!Object.hasOwn(SPELLBOOK_V2_ACTIVE_SPELLS_BY_ID, normalizedWakeSpellId)) {
+            errors.push(`${wakeWinActionContext} references inactive or unknown spell id: ${wakeSpellId}`);
           }
         }
       }
-      pushFiniteNonNegativeWhenPresent(errors, wakeWinContext, action, FIELD_TTL_MS);
+      pushNonNegativeNumericConstraintWhenPresent(errors, wakeWinActionContext, action, "ttlMs");
       continue;
     }
     const eventId = asText(action.id);
-    const normalizedEventId = normalizeEventId(eventId);
+    const normalizedActionEventId = normalizeEventId(eventId);
     const eventActionContext = `${ruleContext} event action`;
     if (!eventId) {
       errors.push(`${eventActionContext} requires id`);
       continue;
     }
-    const eventQualifiedPrefix = getQualifiedPrefix(eventId);
-    if (eventQualifiedPrefix && eventQualifiedPrefix !== "event") {
+    const eventIdPrefix = getQualifiedPrefix(eventId);
+    if (eventIdPrefix && eventIdPrefix !== "event") {
       errors.push(
         `${ruleContext} event id prefix mismatch: ${eventId} (expected event.* or unqualified id)`
       );
       continue;
     }
-    if (typeof normalizedEventId === "string" && ENTITY_ID_RE.test(normalizedEventId)) {
+    if (
+      typeof normalizedActionEventId === "string" &&
+      ENTITY_ID_RE.test(normalizedActionEventId)
+    ) {
       pushEventIdReferenceErrors(
         errors,
-        normalizedEventId,
+        normalizedActionEventId,
         `${eventActionContext} references unknown event id: ${eventId}`,
         `${eventActionContext} references event without runtime binding: ${eventId}`
       );
@@ -277,71 +269,74 @@ function validateRuleEntry(errors, ids, ruleRaw) {
       errors.push(`${eventActionContext} overrides must be an object when present`);
       continue;
     }
-    for (const key of Object.keys(action.overrides)) {
-      if (!key) errors.push(`${eventActionContext} overrides contains empty key`);
-      if (Object.hasOwn(action, key)) {
-        errors.push(`${eventActionContext} has duplicate key in root and overrides: ${key}`);
+    for (const overrideKey of Object.keys(action.overrides)) {
+      if (!overrideKey) errors.push(`${eventActionContext} overrides contains empty key`);
+      if (Object.hasOwn(action, overrideKey)) {
+        errors.push(`${eventActionContext} has duplicate key in root and overrides: ${overrideKey}`);
       }
     }
   }
 }
 
-export function validateInteractionsV2(input = INTERACTIONS_V2) {
+export function validateInteractionsV2(interactionsInput = INTERACTIONS_V2) {
   const errors = [];
-  const cfg = asObj(input);
-  pushUnsupportedKeys(errors, ROOT_CONTEXT, cfg, ROOT_ALLOWED_KEYS);
-  if (asText(cfg.version) !== INTERACTIONS_VERSION) {
-    errors.push(`${ROOT_CONTEXT}.version must be "${INTERACTIONS_VERSION}"`);
+  const interactionsDoc = asObj(interactionsInput);
+  pushUnsupportedKeys(errors, ROOT_CONTEXT, interactionsDoc, new Set(["version", "enabled", "defaults", "rules"]));
+  if (asText(interactionsDoc.version) !== "2") {
+    errors.push(`${ROOT_CONTEXT}.version must be "2"`);
   }
-  if (typeof cfg.enabled !== "boolean") {
+  if (typeof interactionsDoc.enabled !== "boolean") {
     errors.push(`${ROOT_CONTEXT}.enabled must be boolean`);
   }
-  if (!Array.isArray(cfg.rules)) {
+  if (!Array.isArray(interactionsDoc.rules)) {
     errors.push(`${ROOT_CONTEXT}.rules must be an array`);
     return { ok: false, errors };
   }
-  validateOptionalObjectSection(cfg, "defaults", (defaults) => {
-    pushUnsupportedKeys(errors, DEFAULTS_CONTEXT, defaults, DEFAULTS_ALLOWED_KEYS);
-    validateOptionalObjectSection(defaults, "wakeWin", (wakeWin) => {
-      pushUnsupportedKeys(errors, DEFAULTS_WAKE_WIN_CONTEXT, wakeWin, new Set([FIELD_TTL_MS]));
-      pushFiniteNonNegativeWhenPresent(errors, DEFAULTS_WAKE_WIN_CONTEXT, wakeWin, FIELD_TTL_MS);
+  validateOptionalObjectSection(interactionsDoc, "defaults", (defaultsSection) => {
+    pushUnsupportedKeys(errors, DEFAULTS_CONTEXT, defaultsSection, new Set(["wakeWin", "event"]));
+    validateOptionalObjectSection(defaultsSection, "wakeWin", (wakeWinDefaultsSection) => {
+      pushUnsupportedKeys(errors, DEFAULTS_WAKE_WIN_CONTEXT, wakeWinDefaultsSection, new Set(["ttlMs"]));
+      pushNonNegativeNumericConstraintWhenPresent(errors, DEFAULTS_WAKE_WIN_CONTEXT, wakeWinDefaultsSection, "ttlMs");
     });
-    validateOptionalObjectSection(defaults, "event", (eventDefaults) => {
+    validateOptionalObjectSection(defaultsSection, "event", (eventDefaultsMap) => {
       const seenDefaultEventIds = new Set();
-      for (const [eventId, eventArgs] of Object.entries(eventDefaults)) {
-        const normalizedEventId = normalizeEventId(eventId);
-        const eventDefaultPrefix = getQualifiedPrefix(eventId);
-        if (eventDefaultPrefix && eventDefaultPrefix !== "event") {
+      for (const [defaultEventId, eventDefaultOverrides] of Object.entries(eventDefaultsMap)) {
+        const normalizedDefaultEventKey = normalizeEventId(defaultEventId);
+        const defaultEventIdPrefix = getQualifiedPrefix(defaultEventId);
+        if (defaultEventIdPrefix && defaultEventIdPrefix !== "event") {
           errors.push(
-            `${DEFAULTS_EVENT_CONTEXT} key prefix mismatch: ${eventId} (expected event.* or unqualified id)`
+            `${DEFAULTS_EVENT_CONTEXT} key prefix mismatch: ${defaultEventId} (expected event.* or unqualified id)`
           );
-        } else if (typeof normalizedEventId === "string" && ENTITY_ID_RE.test(normalizedEventId)) {
+        } else if (
+          typeof normalizedDefaultEventKey === "string" &&
+          ENTITY_ID_RE.test(normalizedDefaultEventKey)
+        ) {
           if (pushEventIdReferenceErrors(
             errors,
-            normalizedEventId,
-            `${DEFAULTS_EVENT_CONTEXT} references unknown event id: ${eventId}`
+            normalizedDefaultEventKey,
+            `${DEFAULTS_EVENT_CONTEXT} references unknown event id: ${defaultEventId}`
           )) {
             pushDuplicateWhenSeen(
               errors,
               seenDefaultEventIds,
-              normalizedEventId,
-              `${DEFAULTS_EVENT_CONTEXT} contains duplicate normalized key: ${eventId}`
+              normalizedDefaultEventKey,
+              `${DEFAULTS_EVENT_CONTEXT} contains duplicate normalized key: ${defaultEventId}`
             );
           }
-        } else if (isBareNamespaceId(eventId)) {
-          errors.push(`${DEFAULTS_EVENT_CONTEXT} key is incomplete: ${eventId} (missing value after prefix)`);
+        } else if (isBareNamespaceId(defaultEventId)) {
+          errors.push(`${DEFAULTS_EVENT_CONTEXT} key is incomplete: ${defaultEventId} (missing value after prefix)`);
         } else {
-          errors.push(`${DEFAULTS_EVENT_CONTEXT} key has invalid id shape: ${eventId}`);
+          errors.push(`${DEFAULTS_EVENT_CONTEXT} key has invalid id shape: ${defaultEventId}`);
         }
-        if (!isPlainObject(eventArgs)) {
-          errors.push(`${DEFAULTS_EVENT_CONTEXT}[${eventId}] must be an object`);
+        if (!isPlainObject(eventDefaultOverrides)) {
+          errors.push(`${DEFAULTS_EVENT_CONTEXT}[${defaultEventId}] must be an object`);
         }
       }
     });
   });
-  const ids = new Set();
-  for (const rawRule of cfg.rules) {
-    validateRuleEntry(errors, ids, rawRule);
+  const seenRuleIds = new Set();
+  for (const ruleSource of interactionsDoc.rules) {
+    validateRuleEntry(errors, seenRuleIds, ruleSource);
   }
 
   return { ok: errors.length === 0, errors };
