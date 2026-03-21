@@ -191,10 +191,11 @@ try {
     orchestratorV2: sample,
     baseRuleEngine: Object.freeze({
       version: "2",
+      enabled: false,
       signals: Object.freeze([]),
       windows: Object.freeze([]),
       events: Object.freeze([]),
-      rules: Object.freeze([]),
+      rules: Object.freeze([Object.freeze({ id: "base_rule_should_be_overridden" })]),
       eventRuntimeBindings: Object.freeze({}),
     }),
   });
@@ -213,6 +214,9 @@ if (built.enabled !== true) {
 }
 if (!Array.isArray(built.rules) || built.rules.length !== 22) {
   failCheck(CHECK_TAG, "builder did not produce exactly twenty-two compiled rules");
+}
+if (built.rules.some((rule) => rule && rule.id === "base_rule_should_be_overridden")) {
+  failCheck(CHECK_TAG, "builder did not override baseRuleEngine.rules with compiled rules");
 }
 
 const wakeRule = built.rules.find((rule) => rule && rule.id === "o_v2_wake");
@@ -243,6 +247,9 @@ if (!wakeRule || !pyroRule || !precedenceRule || !aliasFallbackRule || !onSpellA
 
 const details = [];
 assertEqual(asJson(wakeRule.on), asJson([{ type: "word", id: "orbis" }]), "wakeRule.on", details);
+assertEqual(String(wakeRule.cooldownMs), "222", "wakeRule.cooldownMs(default)", details);
+assertEqual(String(wakeRule.matchWindowMs), "1999", "wakeRule.matchWindowMs(default)", details);
+assertEqual(String(wakeRule.priority), "7", "wakeRule.priority(default)", details);
 assertEqual(
   asJson(wakeRule.then),
   asJson([{
@@ -522,6 +529,43 @@ assertEqual(
 
 if (details.length) {
   failCheckWithDetails(CHECK_TAG, "compiled output contract mismatch", details);
+}
+
+let builtDisabled;
+try {
+  builtDisabled = buildRuleEngineFromOrchestratorV2({
+    orchestratorV2: Object.freeze({
+      ...sample,
+      enabled: false,
+    }),
+    baseRuleEngine: Object.freeze({
+      version: "2",
+      enabled: true,
+      signals: Object.freeze([]),
+      windows: Object.freeze([]),
+      events: Object.freeze([]),
+      rules: Object.freeze([Object.freeze({ id: "base_rule_should_be_overridden" })]),
+      eventRuntimeBindings: Object.freeze({}),
+    }),
+  });
+} catch (err) {
+  const msg = err instanceof Error && typeof err.message === "string" && err.message
+    ? err.message
+    : "unknown error";
+  failCheck(CHECK_TAG, `builder threw for enabled=false sample: ${msg}`);
+}
+
+if (!builtDisabled || typeof builtDisabled !== "object") {
+  failCheck(CHECK_TAG, "builder returned non-object for enabled=false sample");
+}
+if (builtDisabled.enabled !== false) {
+  failCheck(CHECK_TAG, "builder did not preserve top-level enabled=false");
+}
+if (!Array.isArray(builtDisabled.rules) || builtDisabled.rules.length !== built.rules.length) {
+  failCheck(CHECK_TAG, "enabled=false sample changed compiled rule count unexpectedly");
+}
+if (builtDisabled.rules.some((rule) => rule && rule.id === "base_rule_should_be_overridden")) {
+  failCheck(CHECK_TAG, "builder did not override baseRuleEngine.rules for enabled=false sample");
 }
 
 reportCheckPass(CHECK_TAG, "orchestrator v2 compiler contract holds for on/requires/open/consume/trigger + defaults");

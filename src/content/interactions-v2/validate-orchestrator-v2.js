@@ -11,6 +11,7 @@ import {
   pushBooleanEnabledErrorWhenPresent,
   pushUnsupportedKeys,
   requireNonEmptyArray,
+  isStringOrArray,
   validateOptionalObjectSection,
 } from "./orchestrator-v1-normalizers.js";
 
@@ -82,6 +83,15 @@ function normalizeWordId(raw) {
 function validateDefaults(defaultsRaw, errors) {
   const defaults = asObj(defaultsRaw);
   pushUnsupportedKeys(errors, DEFAULTS_CONTEXT, defaults, new Set(["open", "rule", "trigger"]));
+  if (Object.hasOwn(defaults, "open") && !isPlainObject(defaults.open)) {
+    errors.push(`${DEFAULTS_CONTEXT}.open must be an object when present`);
+  }
+  if (Object.hasOwn(defaults, "rule") && !isPlainObject(defaults.rule)) {
+    errors.push(`${DEFAULTS_CONTEXT}.rule must be an object when present`);
+  }
+  if (Object.hasOwn(defaults, "trigger") && !isPlainObject(defaults.trigger)) {
+    errors.push(`${DEFAULTS_CONTEXT}.trigger must be an object when present`);
+  }
 
   validateOptionalObjectSection(defaults, "open", (openDefaults) => {
     const ctx = `${DEFAULTS_CONTEXT}.open`;
@@ -127,12 +137,23 @@ function validateDefaults(defaultsRaw, errors) {
 
   validateOptionalObjectSection(defaults, "trigger", (triggerDefaults) => {
     const ctx = `${DEFAULTS_CONTEXT}.trigger`;
+    const seenEventIds = new Set();
     for (const [eventIdRaw, argsRaw] of Object.entries(triggerDefaults)) {
+      if (typeof eventIdRaw === "string" && eventIdRaw !== eventIdRaw.trim()) {
+        errors.push(`${ctx} contains event id key with leading/trailing whitespace: ${eventIdRaw}`);
+        continue;
+      }
       const eventId = normalizeEventId(eventIdRaw);
       if (!eventId) {
         errors.push(`${ctx} contains invalid event id key: ${eventIdRaw}`);
         continue;
       }
+      pushDuplicateWhenSeen(
+        errors,
+        seenEventIds,
+        eventId,
+        `${ctx} contains duplicate normalized event id: ${eventId}`
+      );
       if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
         errors.push(`${ctx} references unknown event id: ${eventIdRaw}`);
       }
@@ -159,15 +180,29 @@ function validateGroups(groupsRaw, errors) {
     if (groupNameRaw !== groupNameRaw.trim()) {
       errors.push(`${GROUPS_CONTEXT} key must not include leading/trailing whitespace: ${groupNameRaw}`);
     }
+    if (!ID_RE.test(groupName)) {
+      errors.push(`${GROUPS_CONTEXT} key has invalid shape: ${groupName}`);
+    }
     if (!Array.isArray(wordsRaw) || !wordsRaw.length) {
       errors.push(`${ctx} must be a non-empty array`);
       continue;
     }
     const seen = new Set();
     for (const wordRaw of wordsRaw) {
+      if (typeof wordRaw !== "string") {
+        errors.push(`${ctx} contains non-string word id: ${asText(wordRaw) || "(empty)"}`);
+        continue;
+      }
+      if (wordRaw !== wordRaw.trim()) {
+        errors.push(`${ctx} contains word id with leading/trailing whitespace: ${wordRaw}`);
+      }
       const normalizedWordId = normalizeWordId(wordRaw);
       if (!normalizedWordId) {
         errors.push(`${ctx} contains invalid word id: ${asText(wordRaw) || "(empty)"}`);
+        continue;
+      }
+      if (!ID_RE.test(normalizedWordId)) {
+        errors.push(`${ctx} contains invalid word id shape: ${asText(wordRaw) || "(empty)"}`);
         continue;
       }
       pushDuplicateWhenSeen(errors, seen, normalizedWordId, `${ctx} contains duplicate word id: ${normalizedWordId}`);
@@ -183,9 +218,57 @@ function validateOnSelectors(rule, ruleId, errors, warnings) {
   const onContext = `rule ${ruleId} on`;
   pushUnsupportedKeys(errors, onContext, on, new Set(["word", "spell", "gesture", "orb_state"]));
 
+  if (Object.hasOwn(on, "word") && !isStringOrArray(on.word)) {
+    errors.push(`${onContext}.word must be a string or array when present`);
+  }
+  if (Object.hasOwn(on, "spell") && !isStringOrArray(on.spell)) {
+    errors.push(`${onContext}.spell must be a string or array when present`);
+  }
+  if (Object.hasOwn(on, "gesture") && !isStringOrArray(on.gesture)) {
+    errors.push(`${onContext}.gesture must be a string or array when present`);
+  }
+  if (Object.hasOwn(on, "orb_state") && !isStringOrArray(on.orb_state)) {
+    errors.push(`${onContext}.orb_state must be a string or array when present`);
+  }
+  for (const key of ["word", "gesture", "orb_state"]) {
+    if (typeof on[key] === "string" && on[key] !== on[key].trim()) {
+      errors.push(`${onContext}.${key} contains selector id with leading/trailing whitespace: ${on[key]}`);
+    }
+    if (Array.isArray(on[key])) {
+      for (const rawEntry of on[key]) {
+        if (typeof rawEntry === "string" && rawEntry !== rawEntry.trim()) {
+          errors.push(`${onContext}.${key} contains selector id with leading/trailing whitespace: ${rawEntry}`);
+        }
+      }
+    }
+  }
+  if (Object.hasOwn(on, "spell")) {
+    if (typeof on.spell === "string" && on.spell !== on.spell.trim()) {
+      errors.push(`${onContext}.spell contains selector id with leading/trailing whitespace: ${on.spell}`);
+    }
+    for (const rawValue of asSelectorList(on.spell)) {
+      if (typeof rawValue !== "string") {
+        errors.push(`${onContext}.spell contains non-string selector id: ${asText(rawValue) || "(empty)"}`);
+      }
+    }
+    if (Array.isArray(on.spell)) {
+      for (const rawEntry of on.spell) {
+        if (typeof rawEntry === "string" && rawEntry !== rawEntry.trim()) {
+          errors.push(`${onContext}.spell contains selector id with leading/trailing whitespace: ${rawEntry}`);
+        }
+      }
+    }
+  }
+
   const selectorEntries = [];
   const parseAndPush = (kind, raw) => {
-    for (const value of parseStringOrArray(raw)) {
+    for (const rawValue of asSelectorList(raw)) {
+      if (typeof rawValue !== "string") {
+        errors.push(`${onContext}.${kind} contains non-string selector id: ${asText(rawValue) || "(empty)"}`);
+        continue;
+      }
+      const value = asText(rawValue);
+      if (!value) continue;
       selectorEntries.push({ kind, value });
     }
   };
@@ -254,13 +337,30 @@ function validateOnSelectors(rule, ruleId, errors, warnings) {
 }
 
 function expandOpenWords(wordsRaw, groups, ruleId, errors) {
-  const values = parseStringOrArray(wordsRaw);
+  const values = asSelectorList(wordsRaw);
   const out = [];
-  for (const token of values) {
-    const trimmed = asText(token);
+  for (const rawToken of values) {
+    if (typeof rawToken !== "string") {
+      errors.push(`rule ${ruleId} open contains non-string word id: ${asText(rawToken) || "(empty)"}`);
+      continue;
+    }
+    const trimmed = asText(rawToken);
     if (!trimmed) continue;
     if (trimmed.startsWith("@")) {
-      const groupName = trimmed.slice(1);
+      const groupNameRaw = trimmed.slice(1);
+      if (!groupNameRaw) {
+        errors.push(`rule ${ruleId} open.words group ref must include a name: ${trimmed}`);
+        continue;
+      }
+      if (groupNameRaw !== groupNameRaw.trim()) {
+        errors.push(`rule ${ruleId} open.words group ref must not include leading/trailing whitespace after @: ${trimmed}`);
+        continue;
+      }
+      const groupName = groupNameRaw;
+      if (!ID_RE.test(groupName)) {
+        errors.push(`rule ${ruleId} open.words group ref has invalid shape: ${trimmed}`);
+        continue;
+      }
       const groupWords = asArray(groups[groupName]);
       if (!groupWords.length) {
         errors.push(`rule ${ruleId} open.words references unknown or empty group: ${trimmed}`);
@@ -281,9 +381,14 @@ function validateOpen(rule, ruleId, groups, openWindowIds, errors, warnings) {
   pushUnsupportedKeys(errors, ctx, open, new Set(["id", "words", "spells", "ttlMs", "enabled"]));
   pushBooleanEnabledErrorWhenPresent(errors, ctx, open);
 
+  const openIdRaw = open.id;
   const openId = asText(open.id);
   if (!openId) {
     errors.push(`${ctx} requires id`);
+  } else if (typeof openIdRaw !== "string") {
+    errors.push(`${ctx}.id must be a string`);
+  } else if (typeof openIdRaw === "string" && openIdRaw !== openIdRaw.trim()) {
+    errors.push(`${ctx}.id must not include leading/trailing whitespace: ${openIdRaw}`);
   } else if (!ID_RE.test(openId)) {
     errors.push(`${ctx}.id has invalid shape: ${openId}`);
   } else if (openWindowIds.has(openId)) {
@@ -293,6 +398,42 @@ function validateOpen(rule, ruleId, groups, openWindowIds, errors, warnings) {
   }
 
   const wordsRaw = Object.hasOwn(open, "words") ? open.words : open.spells;
+  if (Object.hasOwn(open, "words") && !isStringOrArray(open.words)) {
+    errors.push(`${ctx}.words must be a string or array when present`);
+  }
+  if (typeof open.words === "string" && open.words !== open.words.trim()) {
+    errors.push(`${ctx}.words contains word id with leading/trailing whitespace: ${open.words}`);
+  }
+  if (Array.isArray(open.words)) {
+    for (const rawEntry of open.words) {
+      if (typeof rawEntry === "string" && rawEntry !== rawEntry.trim()) {
+        errors.push(`${ctx}.words contains word id with leading/trailing whitespace: ${rawEntry}`);
+      }
+    }
+  }
+  if (Object.hasOwn(open, "spells")) {
+    if (!isStringOrArray(open.spells)) {
+      errors.push(`${ctx}.spells must be a string or array when present`);
+    } else {
+      if (typeof open.spells === "string" && open.spells !== open.spells.trim()) {
+        errors.push(`${ctx}.spells contains word id with leading/trailing whitespace: ${open.spells}`);
+      }
+      if (Array.isArray(open.spells)) {
+        for (const rawEntry of open.spells) {
+          if (typeof rawEntry === "string" && rawEntry !== rawEntry.trim()) {
+            errors.push(`${ctx}.spells contains word id with leading/trailing whitespace: ${rawEntry}`);
+          }
+        }
+      }
+    }
+    if (Object.hasOwn(open, "words")) {
+      for (const rawValue of asSelectorList(open.spells)) {
+        if (typeof rawValue !== "string") {
+          errors.push(`${ctx}.spells contains non-string word id: ${asText(rawValue) || "(empty)"}`);
+        }
+      }
+    }
+  }
   if (Object.hasOwn(open, "spells") && !Object.hasOwn(open, "words")) {
     warnings.push(`rule ${ruleId} uses open.spells alias; prefer open.words`);
   }
@@ -306,6 +447,10 @@ function validateOpen(rule, ruleId, groups, openWindowIds, errors, warnings) {
       const normalizedWordId = normalizeWordId(rawWord);
       if (!normalizedWordId) {
         errors.push(`${ctx} contains invalid word id: ${rawWord}`);
+        continue;
+      }
+      if (!ID_RE.test(normalizedWordId)) {
+        errors.push(`${ctx} contains invalid word id shape: ${rawWord}`);
         continue;
       }
       pushDuplicateWhenSeen(errors, seen, normalizedWordId, `${ctx} contains duplicate word id: ${normalizedWordId}`);
@@ -328,13 +473,36 @@ function parseWindowRefs(raw) {
 
 function validateWindowRefs(rule, ruleId, key, errors, pendingRefs) {
   if (!Object.hasOwn(rule, key)) return;
-  const values = parseWindowRefs(rule[key]);
-  if (!values.length) {
+  if (!isStringOrArray(rule[key])) {
+    errors.push(`rule ${ruleId} ${key} must be a string or array when present`);
+    return;
+  }
+  if (typeof rule[key] === "string" && rule[key] !== rule[key].trim()) {
+    errors.push(`rule ${ruleId} ${key} contains window id with leading/trailing whitespace: ${rule[key]}`);
+  }
+  if (Array.isArray(rule[key])) {
+    for (const rawEntry of rule[key]) {
+      if (typeof rawEntry === "string" && rawEntry !== rawEntry.trim()) {
+        errors.push(`rule ${ruleId} ${key} contains window id with leading/trailing whitespace: ${rawEntry}`);
+      }
+    }
+  }
+  const rawValues = asSelectorList(rule[key]);
+  if (!rawValues.length) {
     errors.push(`rule ${ruleId} ${key} must be a non-empty string or array`);
     return;
   }
   const seen = new Set();
-  for (const id of values) {
+  for (const rawValue of rawValues) {
+    if (typeof rawValue !== "string") {
+      errors.push(`rule ${ruleId} ${key} contains non-string window id: ${asText(rawValue) || "(empty)"}`);
+      continue;
+    }
+    if (rawValue !== rawValue.trim()) {
+      errors.push(`rule ${ruleId} ${key} contains window id with leading/trailing whitespace: ${rawValue}`);
+      continue;
+    }
+    const id = asText(rawValue);
     if (!id) {
       errors.push(`rule ${ruleId} ${key} contains empty window id`);
       continue;
@@ -355,20 +523,47 @@ function validateTrigger(rule, ruleId, errors) {
 
   if (typeof trigger === "string" || Array.isArray(trigger)) {
     const eventIds = parseStringOrArray(trigger);
+    if (typeof trigger === "string" && trigger !== trigger.trim()) {
+      errors.push(`${ctx} shorthand contains event id with leading/trailing whitespace: ${trigger}`);
+    }
+    for (const rawEventId of asSelectorList(trigger)) {
+      if (typeof rawEventId !== "string") {
+        errors.push(`${ctx} shorthand contains non-string event id: ${asText(rawEventId) || "(empty)"}`);
+      }
+    }
+    if (Array.isArray(trigger)) {
+      for (const rawEntry of trigger) {
+        if (typeof rawEntry === "string" && rawEntry !== rawEntry.trim()) {
+          errors.push(`${ctx} shorthand contains event id with leading/trailing whitespace: ${rawEntry}`);
+        }
+      }
+    }
     if (!eventIds.length) {
       errors.push(`${ctx} shorthand must contain at least one event id`);
       return true;
     }
+    const seenEventIds = new Set();
     for (const eventIdRaw of eventIds) {
       const eventId = normalizeEventId(eventIdRaw);
       if (!eventId) {
         errors.push(`${ctx} contains invalid event id: ${eventIdRaw}`);
         continue;
       }
+      pushDuplicateWhenSeen(
+        errors,
+        seenEventIds,
+        eventId,
+        `${ctx} shorthand contains duplicate normalized event id: ${eventId}`
+      );
       if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
         errors.push(`${ctx} references unknown event id: ${eventIdRaw}`);
       }
     }
+    return true;
+  }
+
+  if (!isPlainObject(trigger)) {
+    errors.push(`${ctx} must be a string, array, or object`);
     return true;
   }
 
@@ -379,12 +574,23 @@ function validateTrigger(rule, ruleId, errors) {
     return true;
   }
 
+  const seenEventIds = new Set();
   for (const [eventIdRaw, eventArgRaw] of entries) {
+    if (typeof eventIdRaw === "string" && eventIdRaw !== eventIdRaw.trim()) {
+      errors.push(`${ctx} contains event id key with leading/trailing whitespace: ${eventIdRaw}`);
+      continue;
+    }
     const eventId = normalizeEventId(eventIdRaw);
     if (!eventId) {
       errors.push(`${ctx} contains invalid event id: ${eventIdRaw}`);
       continue;
     }
+    pushDuplicateWhenSeen(
+      errors,
+      seenEventIds,
+      eventId,
+      `${ctx} contains duplicate normalized event id: ${eventId}`
+    );
     if (!Object.hasOwn(EVENT_DEFINITIONS_BY_ID, eventId)) {
       errors.push(`${ctx} references unknown event id: ${eventIdRaw}`);
     }
@@ -401,12 +607,23 @@ function validateTrigger(rule, ruleId, errors) {
   return true;
 }
 
-function validateRule(ruleRaw, groups, seenRuleIds, openWindowIds, pendingWindowRefs, errors, warnings) {
+function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pendingWindowRefs, errors, warnings) {
+  if (!isPlainObject(ruleRaw)) {
+    errors.push(`${ROOT_CONTEXT}.rules[${ruleIndex}] must be an object`);
+    return;
+  }
   const rule = asObj(ruleRaw);
+  const ruleIdRaw = rule.id;
   const ruleId = asText(rule.id);
   if (!ruleId) {
     errors.push(`${ROOT_CONTEXT}.rules[] entry is missing id`);
     return;
+  }
+  if (typeof ruleIdRaw !== "string") {
+    errors.push(`${ROOT_CONTEXT}.rules[] id must be a string`);
+  }
+  if (typeof ruleIdRaw === "string" && ruleIdRaw !== ruleIdRaw.trim()) {
+    errors.push(`${ROOT_CONTEXT}.rules[] id must not include leading/trailing whitespace: ${ruleIdRaw}`);
   }
   if (!ID_RE.test(ruleId)) {
     errors.push(`${ROOT_CONTEXT}.rules[] id has invalid shape: ${ruleId}`);
@@ -436,13 +653,26 @@ function validateRule(ruleRaw, groups, seenRuleIds, openWindowIds, pendingWindow
     errors.push(`${ctx}.priority must be a finite number when present`);
   }
 
-  validateOnSelectors(rule, ruleId, errors, warnings);
-  const hasOpen = validateOpen(rule, ruleId, groups, openWindowIds, errors, warnings);
+  const onIsObject = isPlainObject(rule.on);
+  if (!onIsObject) {
+    errors.push(`${ctx}.on must be an object`);
+  } else {
+    validateOnSelectors(rule, ruleId, errors, warnings);
+  }
+
+  const hasOpenSection = Object.hasOwn(rule, "open");
+  const openIsObject = !hasOpenSection || isPlainObject(rule.open);
+  if (!openIsObject) {
+    errors.push(`${ctx}.open must be an object when present`);
+  }
+  const hasOpen = (hasOpenSection && openIsObject)
+    ? validateOpen(rule, ruleId, groups, openWindowIds, errors, warnings)
+    : false;
   validateWindowRefs(rule, ruleId, "requires", errors, pendingWindowRefs);
   validateWindowRefs(rule, ruleId, "consume", errors, pendingWindowRefs);
   const hasTrigger = validateTrigger(rule, ruleId, errors);
 
-  if (!hasOpen && !hasTrigger) {
+  if (!hasOpenSection && !hasTrigger) {
     errors.push(`${ctx} must define open and/or trigger`);
   }
 }
@@ -454,7 +684,10 @@ export function validateOrchestratorV2(orchestratorInput = null) {
 
   pushUnsupportedKeys(errors, ROOT_CONTEXT, cfg, new Set(["version", "enabled", "defaults", "groups", "rules"]));
 
-  if (asText(cfg.version) !== "2") {
+  if (typeof cfg.version === "string" && cfg.version !== cfg.version.trim()) {
+    errors.push(`${ROOT_CONTEXT}.version must not include leading/trailing whitespace: ${cfg.version}`);
+  }
+  if (typeof cfg.version !== "string" || cfg.version !== "2") {
     errors.push(`${ROOT_CONTEXT}.version must be "2"`);
   }
   if (typeof cfg.enabled !== "boolean") {
@@ -464,6 +697,12 @@ export function validateOrchestratorV2(orchestratorInput = null) {
     errors.push(`${ROOT_CONTEXT}.rules must be an array`);
     return { ok: false, errors, warnings };
   }
+  if (Object.hasOwn(cfg, "defaults") && !isPlainObject(cfg.defaults)) {
+    errors.push(`${ROOT_CONTEXT}.defaults must be an object when present`);
+  }
+  if (Object.hasOwn(cfg, "groups") && !isPlainObject(cfg.groups)) {
+    errors.push(`${ROOT_CONTEXT}.groups must be an object when present`);
+  }
 
   validateOptionalObjectSection(cfg, "defaults", (defaults) => validateDefaults(defaults, errors));
   validateOptionalObjectSection(cfg, "groups", (groups) => validateGroups(groups, errors));
@@ -472,8 +711,8 @@ export function validateOrchestratorV2(orchestratorInput = null) {
   const seenRuleIds = new Set();
   const openWindowIds = new Set();
   const pendingWindowRefs = [];
-  for (const ruleEntry of cfg.rules) {
-    validateRule(ruleEntry, groups, seenRuleIds, openWindowIds, pendingWindowRefs, errors, warnings);
+  for (let i = 0; i < cfg.rules.length; i += 1) {
+    validateRule(cfg.rules[i], i, groups, seenRuleIds, openWindowIds, pendingWindowRefs, errors, warnings);
   }
 
   for (const ref of pendingWindowRefs) {
