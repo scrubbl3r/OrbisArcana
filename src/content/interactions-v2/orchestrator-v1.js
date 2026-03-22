@@ -3,6 +3,7 @@ const FIELD_VERSION = "version";
 const FIELD_ENABLED = "enabled";
 const FIELD_DEFAULTS = "defaults";
 const FIELD_RULES = "rules";
+const FIELD_KWS = "kws";
 
 export const ORCHESTRATOR_V1_BOOTSTRAP = Object.freeze({
   // Active bootstrap source for orchestrator-only runtime control.
@@ -14,6 +15,20 @@ export const ORCHESTRATOR_V1_BOOTSTRAP = Object.freeze({
 export const ORCHESTRATOR_V1 = Object.freeze({
   [FIELD_VERSION]: ORCHESTRATOR_V1_VERSION,
   [FIELD_ENABLED]: true,
+  [FIELD_KWS]: Object.freeze({
+    wakeWords: Object.freeze(["orbis"]),
+    wakeRequiredWords: Object.freeze(["domus"]),
+    axisWordsByAxis: Object.freeze({
+      x: "fridgis",
+      y: "pyro",
+      z: "electrum",
+    }),
+    wakeWindowWords: Object.freeze(["rota", "sanctum", "vectus"]),
+    rowTopWords: Object.freeze(["orbis", "domus", "fridgis", "pyro", "electrum"]),
+    rowBottomWords: Object.freeze(["rota", "sanctum", "vectus"]),
+    simWords: Object.freeze(["pyro", "rota", "electrum", "sanctum", "domus"]),
+    inferDefaultWord: "pyro",
+  }),
   [FIELD_DEFAULTS]: Object.freeze({
     open: { ttlMs: 2000 },
     trigger: { grace: { ms: 500 } },

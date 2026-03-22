@@ -1,9 +1,9 @@
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
   KWS_FLASH_TOKEN_WORD_IDS,
-  WORD_RUNTIME_ROUTING,
-  WAKE_WINDOW_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js";
+  KWS_WAKE_WINDOW_WORD_IDS,
+  KWS_WAKE_WORD_IDS,
+} from "../../content/interactions-v2/orchestrator-v1-kws-profile.js";
 
 export function bindKwsEventHandlers({
   eventBus,
@@ -37,9 +37,8 @@ export function bindKwsEventHandlers({
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
   const wakeWordIds = new Set(
-    (Array.isArray(WORD_RUNTIME_ROUTING) ? WORD_RUNTIME_ROUTING : [])
-      .filter((item) => String(item && item.intent || "").trim().toLowerCase() === "spell.wake")
-      .map((item) => String(item && item.id || "").trim().toLowerCase())
+    (Array.isArray(KWS_WAKE_WORD_IDS) ? KWS_WAKE_WORD_IDS : [])
+      .map((wordId) => String(wordId || "").trim().toLowerCase())
       .filter(Boolean)
   );
   const wakeTokenSet = new Set(
@@ -57,7 +56,7 @@ export function bindKwsEventHandlers({
       .filter(Boolean)
   );
   const wakeWindowTokenSet = new Set(
-    (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
+    (Array.isArray(KWS_WAKE_WINDOW_WORD_IDS) ? KWS_WAKE_WINDOW_WORD_IDS : [])
       .map((wordId) => ACTIVE_WORDS_BY_ID[String(wordId || "").trim().toLowerCase()])
       .filter(Boolean)
       .map((word) => String(word.phrase || word.id || "").trim().toLowerCase())

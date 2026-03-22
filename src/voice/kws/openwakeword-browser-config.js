@@ -2,7 +2,7 @@ import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
   KWS_INFER_DEFAULT_WORD_ID,
   KWS_SIM_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js";
+} from "../../content/interactions-v2/orchestrator-v1-kws-profile.js";
 
 function resolveActivePhraseById(id, fallback = "") {
   const word = ACTIVE_WORDS_BY_ID[String(id || "").trim().toLowerCase()];

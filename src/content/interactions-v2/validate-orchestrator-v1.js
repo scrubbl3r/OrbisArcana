@@ -35,6 +35,7 @@ const DEFAULTS_CONTEXT = `${ROOT_CONTEXT}.defaults`;
 const DEFAULTS_OPEN_CONTEXT = `${DEFAULTS_CONTEXT}.open`;
 const DEFAULTS_TRIGGER_CONTEXT = `${DEFAULTS_CONTEXT}.trigger`;
 const DEFAULTS_RULE_CONTEXT = `${DEFAULTS_CONTEXT}.rule`;
+const KWS_CONTEXT = `${ROOT_CONTEXT}.kws`;
 const signalDefsById = ((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
   ? SIGNAL_DEFINITIONS_BY_ID
   : {});
@@ -267,10 +268,52 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
   errors.push(`${ruleContext} must define open and/or trigger actions`);
 }
 
+function validateKwsWordIdList(errors, kwsConfig, key) {
+  if (!Object.hasOwn(kwsConfig, key)) return;
+  const value = kwsConfig[key];
+  if (!Array.isArray(value)) {
+    errors.push(`${KWS_CONTEXT}.${key} must be an array when present`);
+    return;
+  }
+  for (let index = 0; index < value.length; index += 1) {
+    const rawId = asText(value[index]).toLowerCase();
+    if (!rawId) {
+      errors.push(`${KWS_CONTEXT}.${key}[${index}] must be a non-empty word id`);
+      continue;
+    }
+    if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizeSpellId(rawId))) {
+      errors.push(`${KWS_CONTEXT}.${key}[${index}] references inactive or unknown word id: ${value[index]}`);
+    }
+  }
+}
+
+function validateKwsAxisWordsByAxis(errors, kwsConfig) {
+  if (!Object.hasOwn(kwsConfig, "axisWordsByAxis")) return;
+  const axisWordsByAxis = asObj(kwsConfig.axisWordsByAxis);
+  if (!isPlainObject(kwsConfig.axisWordsByAxis)) {
+    errors.push(`${KWS_CONTEXT}.axisWordsByAxis must be an object when present`);
+    return;
+  }
+  for (const key of Object.keys(axisWordsByAxis)) {
+    if (!["x", "y", "z"].includes(key)) {
+      errors.push(`${KWS_CONTEXT}.axisWordsByAxis has unsupported axis key: ${key}`);
+      continue;
+    }
+    const axisWordId = asText(axisWordsByAxis[key]).toLowerCase();
+    if (!axisWordId) {
+      errors.push(`${KWS_CONTEXT}.axisWordsByAxis.${key} must be a non-empty word id`);
+      continue;
+    }
+    if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizeSpellId(axisWordId))) {
+      errors.push(`${KWS_CONTEXT}.axisWordsByAxis.${key} references inactive or unknown word id: ${axisWordsByAxis[key]}`);
+    }
+  }
+}
+
 export function validateOrchestratorV1(orchestratorInput) {
   const errors = [];
   const orchestratorConfig = asObj(orchestratorInput);
-  pushUnsupportedKeys(errors, ROOT_CONTEXT, orchestratorConfig, new Set(["version", "enabled", "defaults", "rules"]));
+  pushUnsupportedKeys(errors, ROOT_CONTEXT, orchestratorConfig, new Set(["version", "enabled", "kws", "defaults", "rules"]));
   if (asText(orchestratorConfig.version) !== "1") {
     errors.push(`${ROOT_CONTEXT}.version must be "1"`);
   }
@@ -281,6 +324,38 @@ export function validateOrchestratorV1(orchestratorInput) {
     errors.push(`${ROOT_CONTEXT}.rules must be an array`);
     return errors;
   }
+  validateOptionalObjectSection(orchestratorConfig, "kws", (kwsSection) => {
+    pushUnsupportedKeys(
+      errors,
+      KWS_CONTEXT,
+      kwsSection,
+      new Set([
+        "wakeWords",
+        "wakeRequiredWords",
+        "axisWordsByAxis",
+        "wakeWindowWords",
+        "rowTopWords",
+        "rowBottomWords",
+        "simWords",
+        "inferDefaultWord",
+      ])
+    );
+    validateKwsWordIdList(errors, kwsSection, "wakeWords");
+    validateKwsWordIdList(errors, kwsSection, "wakeRequiredWords");
+    validateKwsWordIdList(errors, kwsSection, "wakeWindowWords");
+    validateKwsWordIdList(errors, kwsSection, "rowTopWords");
+    validateKwsWordIdList(errors, kwsSection, "rowBottomWords");
+    validateKwsWordIdList(errors, kwsSection, "simWords");
+    validateKwsAxisWordsByAxis(errors, kwsSection);
+    if (Object.hasOwn(kwsSection, "inferDefaultWord")) {
+      const inferDefaultWord = asText(kwsSection.inferDefaultWord).toLowerCase();
+      if (!inferDefaultWord) {
+        errors.push(`${KWS_CONTEXT}.inferDefaultWord must be a non-empty word id when present`);
+      } else if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizeSpellId(inferDefaultWord))) {
+        errors.push(`${KWS_CONTEXT}.inferDefaultWord references inactive or unknown word id: ${kwsSection.inferDefaultWord}`);
+      }
+    }
+  });
   validateOptionalObjectSection(orchestratorConfig, "defaults", (defaultsSection) => {
     pushUnsupportedKeys(
       errors,

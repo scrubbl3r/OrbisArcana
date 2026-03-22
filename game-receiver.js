@@ -1251,7 +1251,7 @@
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
     let kwsEventBindings = null;
-    const MODULE_CACHE_BUST_V = "20260322c";
+    const MODULE_CACHE_BUST_V = "20260322d";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1466,9 +1466,9 @@
           import(`./src/ui/kws-panel-controller.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/voice/kws/kws-boot-orchestrator.js"),
-          import("./src/voice/kws/kws-event-bindings.js"),
+          import(`./src/voice/kws/kws-event-bindings.js?v=${MODULE_CACHE_BUST_V}`),
           import(`./src/voice/kws/kws-provider-bootstrap.js?v=${MODULE_CACHE_BUST_V}`),
-          import("./src/voice/kws/kws-config.js"),
+          import(`./src/voice/kws/kws-config.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/voice/kws/kws-mvp-commands.js"),
           import("./src/voice/kws/kws-reinit-teardown.js"),
           import("./src/voice/kws/kws-receiver-bridge.js"),

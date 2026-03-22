@@ -1,13 +1,13 @@
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
-  AXIS_WORD_IDS,
+  KWS_AXIS_WORD_BY_AXIS,
+  KWS_AXIS_WORD_IDS,
   KWS_ROW_BOTTOM_WORD_IDS,
   KWS_ROW_TOP_WORD_IDS,
-  WAKE_WINDOW_WORD_IDS,
-  WAKE_REQUIRED_WORD_IDS,
-  WAKE_WORD_IDS,
-  WORD_RUNTIME_ROUTING_BY_WORD_ID,
-} from "../../content/spells/spell-runtime-routing.js";
+  KWS_WAKE_WINDOW_WORD_IDS,
+  KWS_WAKE_REQUIRED_WORD_IDS,
+  KWS_WAKE_WORD_IDS,
+} from "../../content/interactions-v2/orchestrator-v1-kws-profile.js";
 
 function resolveActivePhrasesByIds(ids = []) {
   return (Array.isArray(ids) ? ids : [])
@@ -20,21 +20,16 @@ function resolveActivePhrasesByIds(ids = []) {
 export function createKwsRuntimeConfig() {
   const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_WORD_IDS);
   const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_WORD_IDS);
-  const wakeWindowTokens = resolveActivePhrasesByIds(WAKE_WINDOW_WORD_IDS);
-  const axisTokens = resolveActivePhrasesByIds(AXIS_WORD_IDS);
-  const wakeTokens = resolveActivePhrasesByIds(WAKE_WORD_IDS);
-  const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_WORD_IDS);
+  const wakeWindowTokens = resolveActivePhrasesByIds(KWS_WAKE_WINDOW_WORD_IDS);
+  const axisTokens = resolveActivePhrasesByIds(KWS_AXIS_WORD_IDS);
+  const wakeTokens = resolveActivePhrasesByIds(KWS_WAKE_WORD_IDS);
+  const wakeRequiredTokens = resolveActivePhrasesByIds(KWS_WAKE_REQUIRED_WORD_IDS);
   const axisWordByAxis = Object.create(null);
-  for (const wordId of AXIS_WORD_IDS) {
-    const id = String(wordId || "").trim().toLowerCase();
-    const routing = WORD_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
-    const active = ACTIVE_WORDS_BY_ID[id] || null;
-    const axisWordToken = String((active && active.phrase) || id || "").trim().toLowerCase();
-    const axes = Array.isArray(routing && routing.allowedAxes) ? routing.allowedAxes : [];
-    for (const axis of axes) {
-      const a = String(axis || "").trim().toLowerCase();
-      if (a === "x" || a === "y" || a === "z") axisWordByAxis[a] = axisWordToken;
-    }
+  for (const axis of ["x", "y", "z"]) {
+    const axisWordId = String(KWS_AXIS_WORD_BY_AXIS[axis] || "").trim().toLowerCase();
+    const active = ACTIVE_WORDS_BY_ID[axisWordId] || null;
+    const axisWordToken = String((active && active.phrase) || axisWordId || "").trim().toLowerCase();
+    if (axisWordToken) axisWordByAxis[axis] = axisWordToken;
   }
   const tokenList = Array.from(new Set(rowTop.concat(rowBottom)));
   const tokenCanonicalMap = Object.freeze(

@@ -6,11 +6,11 @@ import {
 } from "../../contracts/events.js";
 import { buildKwsWordAliasIndex } from "./build-kws-word-alias-index.js";
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
+import { WORD_RUNTIME_ROUTING_BY_WORD_ID } from "../../content/spells/spell-runtime-routing.js";
 import {
-  WORD_RUNTIME_ROUTING_BY_WORD_ID,
-  WAKE_WORD_IDS,
-  WAKE_REQUIRED_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js";
+  KWS_WAKE_WORD_IDS,
+  KWS_WAKE_REQUIRED_WORD_IDS,
+} from "../../content/interactions-v2/orchestrator-v1-kws-profile.js";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1200,
@@ -97,7 +97,7 @@ export function createKwsTokenParser(opts = {}) {
       : DEFAULTS.wakeArmedMinConfidence,
     clearBufferOnMatch: opts.clearBufferOnMatch == null ? DEFAULTS.clearBufferOnMatch : !!opts.clearBufferOnMatch,
   };
-  const defaultWakeTokens = WAKE_WORD_IDS
+  const defaultWakeTokens = KWS_WAKE_WORD_IDS
     .map((wordId) => {
       const active = ACTIVE_WORDS_BY_ID[String(wordId || "").trim().toLowerCase()];
       if (!active) return "";
@@ -115,7 +115,7 @@ export function createKwsTokenParser(opts = {}) {
         ? opts.requireWakeForWordIds
         : (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
           ? opts.requireWakeForSpellIds
-          : WAKE_REQUIRED_WORD_IDS)
+      : KWS_WAKE_REQUIRED_WORD_IDS)
     )
       .map((s) => String(s || "").trim().toLowerCase())
       .filter(Boolean),
