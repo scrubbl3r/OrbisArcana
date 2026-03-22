@@ -36,6 +36,7 @@ const DEFAULTS_OPEN_CONTEXT = `${DEFAULTS_CONTEXT}.open`;
 const DEFAULTS_TRIGGER_CONTEXT = `${DEFAULTS_CONTEXT}.trigger`;
 const DEFAULTS_RULE_CONTEXT = `${DEFAULTS_CONTEXT}.rule`;
 const KWS_CONTEXT = `${ROOT_CONTEXT}.kws`;
+const ROUTING_CONTEXT = `${ROOT_CONTEXT}.routing`;
 const signalDefsById = ((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
   ? SIGNAL_DEFINITIONS_BY_ID
   : {});
@@ -310,10 +311,101 @@ function validateKwsAxisWordsByAxis(errors, kwsConfig) {
   }
 }
 
+function isValidAxis(value) {
+  return ["x", "y", "z"].includes(asText(value).toLowerCase());
+}
+
+function isValidSlot(value) {
+  return ["UD", "LR", "FB"].includes(asText(value).toUpperCase());
+}
+
+function validateRoutingWords(errors, routingSection) {
+  if (!Object.hasOwn(routingSection, "words")) return;
+  if (!Array.isArray(routingSection.words)) {
+    errors.push(`${ROUTING_CONTEXT}.words must be an array when present`);
+    return;
+  }
+  const seenWordIds = new Set();
+  for (let index = 0; index < routingSection.words.length; index += 1) {
+    const ctx = `${ROUTING_CONTEXT}.words[${index}]`;
+    const item = asObj(routingSection.words[index]);
+    pushUnsupportedKeys(
+      errors,
+      ctx,
+      item,
+      new Set(["id", "intent", "axisWord", "axisSpell", "wakeWindowWord", "wakeWindowSpell", "allowedAxes", "fixedSlot", "slotByAxis", "clearSlotsOnAxis"])
+    );
+    const id = normalizeSpellId(item.id);
+    if (!id) {
+      errors.push(`${ctx}.id must be a non-empty word id`);
+    } else {
+      if (seenWordIds.has(id)) errors.push(`${ROUTING_CONTEXT}.words has duplicate id: ${id}`);
+      seenWordIds.add(id);
+      if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, id)) {
+        errors.push(`${ctx}.id references inactive or unknown word id: ${item.id}`);
+      }
+    }
+    if (Object.hasOwn(item, "intent") && !asText(item.intent)) {
+      errors.push(`${ctx}.intent must be a non-empty string when present`);
+    }
+    const axisWord = normalizeSpellId(Object.hasOwn(item, "axisWord") ? item.axisWord : item.axisSpell);
+    if (axisWord && !Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, axisWord)) {
+      errors.push(`${ctx} references inactive or unknown axis word id: ${item.axisWord || item.axisSpell}`);
+    }
+    const wakeWindowWord = normalizeSpellId(Object.hasOwn(item, "wakeWindowWord") ? item.wakeWindowWord : item.wakeWindowSpell);
+    if (wakeWindowWord && !Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, wakeWindowWord)) {
+      errors.push(`${ctx} references inactive or unknown wake window word id: ${item.wakeWindowWord || item.wakeWindowSpell}`);
+    }
+    if (Object.hasOwn(item, "allowedAxes")) {
+      if (!Array.isArray(item.allowedAxes)) {
+        errors.push(`${ctx}.allowedAxes must be an array when present`);
+      } else {
+        for (const axis of item.allowedAxes) {
+          if (!isValidAxis(axis)) errors.push(`${ctx}.allowedAxes includes invalid axis: ${axis}`);
+        }
+      }
+    }
+    if (Object.hasOwn(item, "fixedSlot") && !isValidSlot(item.fixedSlot)) {
+      errors.push(`${ctx}.fixedSlot must be one of UD/LR/FB when present`);
+    }
+    if (Object.hasOwn(item, "slotByAxis")) {
+      const slotByAxis = asObj(item.slotByAxis);
+      if (!isPlainObject(item.slotByAxis)) {
+        errors.push(`${ctx}.slotByAxis must be an object when present`);
+      } else {
+        for (const [axisKey, slotValue] of Object.entries(slotByAxis)) {
+          if (!isValidAxis(axisKey)) errors.push(`${ctx}.slotByAxis has unsupported axis key: ${axisKey}`);
+          if (!isValidSlot(slotValue)) errors.push(`${ctx}.slotByAxis[${axisKey}] must be one of UD/LR/FB`);
+        }
+      }
+    }
+    if (Object.hasOwn(item, "clearSlotsOnAxis")) {
+      const clearSlotsOnAxis = asObj(item.clearSlotsOnAxis);
+      if (!isPlainObject(item.clearSlotsOnAxis)) {
+        errors.push(`${ctx}.clearSlotsOnAxis must be an object when present`);
+      } else {
+        for (const [axisKey, slotsRaw] of Object.entries(clearSlotsOnAxis)) {
+          if (!isValidAxis(axisKey)) {
+            errors.push(`${ctx}.clearSlotsOnAxis has unsupported axis key: ${axisKey}`);
+            continue;
+          }
+          if (!Array.isArray(slotsRaw)) {
+            errors.push(`${ctx}.clearSlotsOnAxis[${axisKey}] must be an array`);
+            continue;
+          }
+          for (const slot of slotsRaw) {
+            if (!isValidSlot(slot)) errors.push(`${ctx}.clearSlotsOnAxis[${axisKey}] has invalid slot: ${slot}`);
+          }
+        }
+      }
+    }
+  }
+}
+
 export function validateOrchestratorV1(orchestratorInput) {
   const errors = [];
   const orchestratorConfig = asObj(orchestratorInput);
-  pushUnsupportedKeys(errors, ROOT_CONTEXT, orchestratorConfig, new Set(["version", "enabled", "kws", "defaults", "rules"]));
+  pushUnsupportedKeys(errors, ROOT_CONTEXT, orchestratorConfig, new Set(["version", "enabled", "kws", "routing", "defaults", "rules"]));
   if (asText(orchestratorConfig.version) !== "1") {
     errors.push(`${ROOT_CONTEXT}.version must be "1"`);
   }
@@ -357,6 +449,10 @@ export function validateOrchestratorV1(orchestratorInput) {
         errors.push(`${KWS_CONTEXT}.inferDefaultWord references inactive or unknown word id: ${kwsSection.inferDefaultWord}`);
       }
     }
+  });
+  validateOptionalObjectSection(orchestratorConfig, "routing", (routingSection) => {
+    pushUnsupportedKeys(errors, ROUTING_CONTEXT, routingSection, new Set(["words"]));
+    validateRoutingWords(errors, routingSection);
   });
   validateOptionalObjectSection(orchestratorConfig, "defaults", (defaultsSection) => {
     pushUnsupportedKeys(

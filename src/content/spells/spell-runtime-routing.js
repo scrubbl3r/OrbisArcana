@@ -13,6 +13,7 @@ import {
   KWS_WAKE_WORD_IDS,
   ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS,
 } from "../interactions-v2/orchestrator-v1-kws-profile.js";
+import { ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING } from "../interactions-v2/orchestrator-v1-routing-profile.js";
 
 export const WAKE_WORD_IDS = Object.freeze(
   (Array.isArray(KWS_WAKE_WORD_IDS) ? KWS_WAKE_WORD_IDS : []).slice()
@@ -72,7 +73,7 @@ export const KWS_FLASH_TOKEN_WORD_IDS = Object.freeze(
 );
 
 export const KWS_ROW_TOP_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS) ? ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS : KWS_TOP_WORD_IDS).slice()
+  (Array.isArray(ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS) ? ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS : LEGACY_KWS_TOP_WORD_IDS).slice()
 );
 
 export const KWS_ROW_BOTTOM_WORD_IDS = Object.freeze(
@@ -87,7 +88,7 @@ export const KWS_SIM_WORD_IDS = Object.freeze(
 
 export const KWS_INFER_DEFAULT_WORD_ID = ORCHESTRATOR_KWS_INFER_DEFAULT_WORD_ID || "";
 
-export const WORD_RUNTIME_ROUTING = Object.freeze([
+const LEGACY_WORD_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "orbis",
     intent: "spell.wake",
@@ -151,6 +152,12 @@ export const WORD_RUNTIME_ROUTING = Object.freeze([
     allowedAxes: Object.freeze(["x", "y", "z"]),
   }),
 ]);
+
+export const WORD_RUNTIME_ROUTING = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING) && ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING.length
+    ? ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING
+    : LEGACY_WORD_RUNTIME_ROUTING).slice()
+);
 export const WORD_RUNTIME_ROUTING_TABLE = WORD_RUNTIME_ROUTING;
 
 export const WORD_RUNTIME_ROUTING_BY_WORD_ID = Object.freeze(

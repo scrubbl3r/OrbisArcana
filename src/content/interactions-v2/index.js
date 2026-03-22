@@ -22,6 +22,10 @@ export {
   KWS_INFER_DEFAULT_WORD_ID,
   ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS,
 } from "./orchestrator-v1-kws-profile.js";
+export {
+  ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING,
+  ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING_BY_WORD_ID,
+} from "./orchestrator-v1-routing-profile.js";
 export { ORCHESTRATOR_V2, ORCHESTRATOR_V2_BOOTSTRAP } from "./orchestrator-v2.js";
 export {
   INTERACTIONS_V2,
