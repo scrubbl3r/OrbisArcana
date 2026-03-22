@@ -331,6 +331,7 @@ export function validateOrchestratorV1(orchestratorInput) {
       kwsSection,
       new Set([
         "wakeWords",
+        "standaloneWords",
         "wakeRequiredWords",
         "axisWordsByAxis",
         "wakeWindowWords",
@@ -341,6 +342,7 @@ export function validateOrchestratorV1(orchestratorInput) {
       ])
     );
     validateKwsWordIdList(errors, kwsSection, "wakeWords");
+    validateKwsWordIdList(errors, kwsSection, "standaloneWords");
     validateKwsWordIdList(errors, kwsSection, "wakeRequiredWords");
     validateKwsWordIdList(errors, kwsSection, "wakeWindowWords");
     validateKwsWordIdList(errors, kwsSection, "rowTopWords");

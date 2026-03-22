@@ -17,6 +17,7 @@ export const ORCHESTRATOR_V1 = Object.freeze({
   [FIELD_ENABLED]: true,
   [FIELD_KWS]: Object.freeze({
     wakeWords: Object.freeze(["orbis"]),
+    standaloneWords: Object.freeze(["arcana", "are_kay_nah"]),
     wakeRequiredWords: Object.freeze(["domus"]),
     axisWordsByAxis: Object.freeze({
       x: "fridgis",

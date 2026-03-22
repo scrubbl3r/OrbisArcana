@@ -3,6 +3,7 @@ import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js";
 
 const DEFAULT_PROFILE = Object.freeze({
   wakeWords: Object.freeze(["orbis"]),
+  standaloneWords: Object.freeze(["arcana", "are_kay_nah"]),
   wakeRequiredWords: Object.freeze(["domus"]),
   axisWordsByAxis: Object.freeze({
     x: "fridgis",
@@ -55,6 +56,9 @@ function resolveKwsProfile(source = ORCHESTRATOR_V1) {
   const wakeWords = unique(
     asWordIds(orchestratorKws.wakeWords).concat(asWordIds(DEFAULT_PROFILE.wakeWords))
   );
+  const standaloneWords = unique(
+    asWordIds(orchestratorKws.standaloneWords).concat(asWordIds(DEFAULT_PROFILE.standaloneWords))
+  );
   const wakeRequiredWords = unique(
     asWordIds(orchestratorKws.wakeRequiredWords).concat(asWordIds(DEFAULT_PROFILE.wakeRequiredWords))
   );
@@ -74,6 +78,7 @@ function resolveKwsProfile(source = ORCHESTRATOR_V1) {
     asWordIds(orchestratorKws.rowTopWords).concat(
       asWordIds(DEFAULT_PROFILE.rowTopWords),
       wakeWords,
+      standaloneWords,
       wakeRequiredWords,
       axisWords
     )
@@ -96,6 +101,7 @@ function resolveKwsProfile(source = ORCHESTRATOR_V1) {
     : normalizeWordId(DEFAULT_PROFILE.inferDefaultWord);
   return Object.freeze({
     wakeWords: Object.freeze(wakeWords),
+    standaloneWords: Object.freeze(standaloneWords),
     wakeRequiredWords: Object.freeze(wakeRequiredWords),
     axisWordsByAxis,
     axisWords: Object.freeze(axisWords),
@@ -108,8 +114,33 @@ function resolveKwsProfile(source = ORCHESTRATOR_V1) {
   });
 }
 
+function collectImmediateTriggerWordIds(orchestrator = ORCHESTRATOR_V1) {
+  const rules = Array.isArray(orchestrator && orchestrator.rules) ? orchestrator.rules : [];
+  const out = [];
+  const seen = new Set();
+  for (const rule of rules) {
+    const on = (rule && typeof rule.on === "object" && !Array.isArray(rule.on)) ? rule.on : null;
+    const rawWord = on && Object.prototype.hasOwnProperty.call(on, "word")
+      ? on.word
+      : (on && Object.prototype.hasOwnProperty.call(on, "spell") ? on.spell : "");
+    const wordId = normalizeWordId(rawWord).replace(/^word\./, "").replace(/^spell\./, "");
+    if (!wordId) continue;
+    if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, wordId)) continue;
+    const hasOpen = Object.prototype.hasOwnProperty.call((rule || {}), "open");
+    const hasTrigger = Object.prototype.hasOwnProperty.call((rule || {}), "trigger")
+      || Object.prototype.hasOwnProperty.call((rule || {}), "triggers");
+    if (hasOpen || !hasTrigger) continue;
+    if (seen.has(wordId)) continue;
+    seen.add(wordId);
+    out.push(wordId);
+  }
+  return Object.freeze(out);
+}
+
 export const ORCHESTRATOR_V1_KWS_PROFILE = resolveKwsProfile(ORCHESTRATOR_V1);
+export const ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS = collectImmediateTriggerWordIds(ORCHESTRATOR_V1);
 export const KWS_WAKE_WORD_IDS = ORCHESTRATOR_V1_KWS_PROFILE.wakeWords;
+export const KWS_STANDALONE_WORD_IDS = ORCHESTRATOR_V1_KWS_PROFILE.standaloneWords;
 export const KWS_WAKE_REQUIRED_WORD_IDS = ORCHESTRATOR_V1_KWS_PROFILE.wakeRequiredWords;
 export const KWS_AXIS_WORD_BY_AXIS = ORCHESTRATOR_V1_KWS_PROFILE.axisWordsByAxis;
 export const KWS_AXIS_WORD_IDS = ORCHESTRATOR_V1_KWS_PROFILE.axisWords;

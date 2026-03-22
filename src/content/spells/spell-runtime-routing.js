@@ -1,31 +1,38 @@
 // Runtime routing metadata intentionally separated from recognition spellbook.
 // This file owns behavior-oriented spell metadata during refactor slices.
-import { collectImmediateEventWordIdsFromInteractionsV2 } from "../interactions-v2/interactions-v2.js";
+import {
+  KWS_AXIS_WORD_IDS,
+  KWS_FLASH_TOKEN_WORD_IDS as ORCHESTRATOR_KWS_FLASH_TOKEN_WORD_IDS,
+  KWS_INFER_DEFAULT_WORD_ID as ORCHESTRATOR_KWS_INFER_DEFAULT_WORD_ID,
+  KWS_ROW_BOTTOM_WORD_IDS as ORCHESTRATOR_KWS_ROW_BOTTOM_WORD_IDS,
+  KWS_ROW_TOP_WORD_IDS as ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS,
+  KWS_SIM_WORD_IDS as ORCHESTRATOR_KWS_SIM_WORD_IDS,
+  KWS_STANDALONE_WORD_IDS,
+  KWS_WAKE_REQUIRED_WORD_IDS,
+  KWS_WAKE_WINDOW_WORD_IDS,
+  KWS_WAKE_WORD_IDS,
+  ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS,
+} from "../interactions-v2/orchestrator-v1-kws-profile.js";
 
-export const WAKE_WORD_IDS = Object.freeze([
-  "orbis",
-]);
+export const WAKE_WORD_IDS = Object.freeze(
+  (Array.isArray(KWS_WAKE_WORD_IDS) ? KWS_WAKE_WORD_IDS : []).slice()
+);
 
-export const STANDALONE_WORD_IDS = Object.freeze([
-  "arcana",
-  "are_kay_nah",
-]);
+export const STANDALONE_WORD_IDS = Object.freeze(
+  (Array.isArray(KWS_STANDALONE_WORD_IDS) ? KWS_STANDALONE_WORD_IDS : []).slice()
+);
 
-export const WAKE_REQUIRED_WORD_IDS = Object.freeze([
-  "domus",
-]);
+export const WAKE_REQUIRED_WORD_IDS = Object.freeze(
+  (Array.isArray(KWS_WAKE_REQUIRED_WORD_IDS) ? KWS_WAKE_REQUIRED_WORD_IDS : []).slice()
+);
 
-export const AXIS_WORD_IDS = Object.freeze([
-  "pyro",
-  "fridgis",
-  "electrum",
-]);
+export const AXIS_WORD_IDS = Object.freeze(
+  (Array.isArray(KWS_AXIS_WORD_IDS) ? KWS_AXIS_WORD_IDS : []).slice()
+);
 
-export const WAKE_WINDOW_WORD_IDS = Object.freeze([
-  "rota",
-  "sanctum",
-  "vectus",
-]);
+export const WAKE_WINDOW_WORD_IDS = Object.freeze(
+  (Array.isArray(KWS_WAKE_WINDOW_WORD_IDS) ? KWS_WAKE_WINDOW_WORD_IDS : []).slice()
+);
 
 export const WORD_WINDOW_BYPASS_WORD_IDS = Object.freeze([
   ...new Set([...AXIS_WORD_IDS, ...WAKE_WINDOW_WORD_IDS]),
@@ -34,7 +41,9 @@ export const SPELL_WINDOW_BYPASS_WORD_IDS = WORD_WINDOW_BYPASS_WORD_IDS;
 
 // Immediate voice words that are owned by the rule engine path.
 // Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
-export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = collectImmediateEventWordIdsFromInteractionsV2();
+export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS) ? ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS : []).slice()
+);
 
 export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({
   ...WAKE_WINDOW_WORD_IDS.reduce((acc, id) => {
@@ -45,30 +54,38 @@ export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({
   }, {}),
 });
 
-const KWS_TOP_WORD_IDS = Object.freeze([
+const LEGACY_KWS_TOP_WORD_IDS = Object.freeze([
   ...new Set([
     ...WAKE_WORD_IDS,
     ...WAKE_REQUIRED_WORD_IDS,
     ...AXIS_WORD_IDS,
     ...STANDALONE_WORD_IDS,
-  ].map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)),
+  ]
+    .map((id) => String(id || "").trim().toLowerCase())
+    .filter(Boolean)),
 ]);
 
-export const KWS_FLASH_TOKEN_WORD_IDS = KWS_TOP_WORD_IDS;
+export const KWS_FLASH_TOKEN_WORD_IDS = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_KWS_FLASH_TOKEN_WORD_IDS)
+    ? ORCHESTRATOR_KWS_FLASH_TOKEN_WORD_IDS
+    : LEGACY_KWS_TOP_WORD_IDS).slice()
+);
 
-export const KWS_ROW_TOP_WORD_IDS = KWS_TOP_WORD_IDS;
+export const KWS_ROW_TOP_WORD_IDS = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS) ? ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS : KWS_TOP_WORD_IDS).slice()
+);
 
-export const KWS_ROW_BOTTOM_WORD_IDS = WAKE_WINDOW_WORD_IDS;
+export const KWS_ROW_BOTTOM_WORD_IDS = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_KWS_ROW_BOTTOM_WORD_IDS) ? ORCHESTRATOR_KWS_ROW_BOTTOM_WORD_IDS : WAKE_WINDOW_WORD_IDS).slice()
+);
 
-export const KWS_SIM_WORD_IDS = Object.freeze([
-  "pyro",
-  "rota",
-  "electrum",
-  "sanctum",
-  "domus",
-]);
+export const KWS_SIM_WORD_IDS = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_KWS_SIM_WORD_IDS)
+    ? ORCHESTRATOR_KWS_SIM_WORD_IDS
+    : []).slice()
+);
 
-export const KWS_INFER_DEFAULT_WORD_ID = "pyro";
+export const KWS_INFER_DEFAULT_WORD_ID = ORCHESTRATOR_KWS_INFER_DEFAULT_WORD_ID || "";
 
 export const WORD_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
