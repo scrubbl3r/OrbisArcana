@@ -24,9 +24,9 @@ export const ORCHESTRATOR_V1 = Object.freeze({
       z: "electrum",
     }),
     wakeWindowWords: Object.freeze(["rota", "sanctum", "vectus"]),
-    rowTopWords: Object.freeze(["orbis", "domus", "fridgis", "pyro", "electrum"]),
+    rowTopWords: Object.freeze(["orbis", "arcana", "are_kay_nah", "domus", "fridgis", "pyro", "electrum"]),
     rowBottomWords: Object.freeze(["rota", "sanctum", "vectus"]),
-    simWords: Object.freeze(["pyro", "rota", "electrum", "sanctum", "domus"]),
+    simWords: Object.freeze(["arcana", "are_kay_nah", "pyro", "rota", "electrum", "sanctum", "domus"]),
     inferDefaultWord: "pyro",
   }),
   [FIELD_DEFAULTS]: Object.freeze({

@@ -10,9 +10,9 @@ const DEFAULT_PROFILE = Object.freeze({
     z: "electrum",
   }),
   wakeWindowWords: Object.freeze(["rota", "sanctum", "vectus"]),
-  rowTopWords: Object.freeze(["orbis", "domus", "fridgis", "pyro", "electrum"]),
+  rowTopWords: Object.freeze(["orbis", "arcana", "are_kay_nah", "domus", "fridgis", "pyro", "electrum"]),
   rowBottomWords: Object.freeze(["rota", "sanctum", "vectus"]),
-  simWords: Object.freeze(["pyro", "rota", "electrum", "sanctum", "domus"]),
+  simWords: Object.freeze(["arcana", "are_kay_nah", "pyro", "rota", "electrum", "sanctum", "domus"]),
   inferDefaultWord: "pyro",
 });
 
@@ -119,4 +119,3 @@ export const KWS_ROW_BOTTOM_WORD_IDS = ORCHESTRATOR_V1_KWS_PROFILE.rowBottomWord
 export const KWS_FLASH_TOKEN_WORD_IDS = ORCHESTRATOR_V1_KWS_PROFILE.flashTokenWords;
 export const KWS_SIM_WORD_IDS = ORCHESTRATOR_V1_KWS_PROFILE.simWords;
 export const KWS_INFER_DEFAULT_WORD_ID = ORCHESTRATOR_V1_KWS_PROFILE.inferDefaultWord;
-
