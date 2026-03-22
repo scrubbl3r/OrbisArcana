@@ -59,11 +59,11 @@ const WARN_ORCHESTRATOR_BUILDER_MISSING =
 const WARN_ORCHESTRATOR_BUILD_FAILED =
   "[receiver-bootstrap] ORCHESTRATOR_V1 build failed; using safe disabled rule schema";
 const WARN_INTERACTIONS_BOOTSTRAP_DISABLED =
-  "[receiver-bootstrap] INTERACTIONS_V2 bootstrap disabled; using safe disabled rule schema";
+  "[receiver-bootstrap] LEGACY INTERACTIONS_V2 bootstrap disabled; using safe disabled rule schema";
 const WARN_INTERACTIONS_BUILDER_MISSING =
-  "[receiver-bootstrap] INTERACTIONS_V2 adapter missing builder; using safe disabled rule schema";
+  "[receiver-bootstrap] LEGACY INTERACTIONS_V2 adapter missing builder; using safe disabled rule schema";
 const WARN_INTERACTIONS_ADAPTER_FAILED =
-  "[receiver-bootstrap] INTERACTIONS_V2 adapter failed; falling back to adapter base schema";
+  "[receiver-bootstrap] LEGACY INTERACTIONS_V2 adapter failed; falling back to adapter base schema";
 const INFO_RULE_SOURCE_PREFIX = "[receiver-bootstrap] rule source:";
 const WARN_RULE_SCHEMA_INVALID_PREFIX =
   "[receiver-bootstrap] rule schema invalid; using safe disabled fallback";
