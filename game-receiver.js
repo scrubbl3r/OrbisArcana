@@ -1441,7 +1441,9 @@
       try {
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:init";
         receiverModulesReady = false;
+        if (els.rulesReadout) els.rulesReadout.textContent = "boot:teardown";
         await teardownKwsForReinit();
+        if (els.rulesReadout) els.rulesReadout.textContent = "boot:imports";
         const [
           { loadReceiverInitModules, hydrateReceiverBootstrapState, RULE_ENGINE_SOURCE_READOUT: importedRuleEngineSourceReadout },
           receiverEventsModule,
@@ -1473,6 +1475,7 @@
           import("./src/systems/orb-runtime-state.js"),
           import("./src/systems/orb-runtime-loop.js"),
         ]);
+        if (els.rulesReadout) els.rulesReadout.textContent = "boot:imports_ok";
         teardownKwsRuntimeForReinit = importedTeardownKwsRuntimeForReinit;
         if (importedRuleEngineSourceReadout && typeof importedRuleEngineSourceReadout === "object") {
           ruleEngineSourceReadout = importedRuleEngineSourceReadout;
@@ -2373,7 +2376,13 @@
         console.warn("MVP systems init failed:", e);
         const detail = e && e.message ? String(e.message) : String(e || "unknown_error");
         fatal(`Launch failed: ${detail}`);
-        if (els.rulesReadout) els.rulesReadout.textContent = "boot:fail";
+        if (els.rulesReadout) {
+          const short = detail.length > 72 ? `${detail.slice(0, 72)}...` : detail;
+          els.rulesReadout.textContent = `boot:fail ${short}`;
+        }
+        if (els.kwsLog) {
+          els.kwsLog.textContent = `BOOT FAIL\n${detail}`;
+        }
       }
     }
     // ===== GAME MVP SYSTEMS (ORB STATE) END =====
