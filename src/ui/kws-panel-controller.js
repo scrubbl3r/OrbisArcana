@@ -369,6 +369,3 @@ export function createKwsPanelController({
     getUiState: () => kwsTokenUiState,
   };
 }
-  const readKwsWordProvider = (typeof getKwsWordProvider === "function")
-    ? getKwsWordProvider
-    : getKwsVoiceProvider;
