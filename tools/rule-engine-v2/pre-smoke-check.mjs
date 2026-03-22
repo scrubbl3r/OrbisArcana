@@ -107,10 +107,6 @@ function verifyKwsManifestCoverage() {
 }
 
 failIfValidationErrors("wordbook-v2 validation failed", validateWordbookV2(WORDBOOK_V2));
-
-const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
-const interactionsErrors = interactionsResult?.ok ? [] : interactionsResult?.errors;
-failIfValidationErrors("interactions-v2 validation failed", interactionsErrors);
 failIfValidationErrors(
   "spell-rules validation failed",
   validateSpellRules(buildRuleEngineFromOrchestratorV1().rules)
@@ -124,6 +120,11 @@ const interactionsBootstrapEnabled = !!(
   INTERACTIONS_V2_BOOTSTRAP &&
   INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
 );
+if (interactionsBootstrapEnabled) {
+  const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
+  const interactionsErrors = interactionsResult?.ok ? [] : interactionsResult?.errors;
+  failIfValidationErrors("interactions-v2 validation failed", interactionsErrors);
+}
 const orchestratorV1BootstrapEnabled = !!(
   ORCHESTRATOR_V1_BOOTSTRAP &&
   ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap === true
