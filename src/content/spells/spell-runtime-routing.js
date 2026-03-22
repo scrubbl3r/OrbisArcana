@@ -88,75 +88,10 @@ export const KWS_SIM_WORD_IDS = Object.freeze(
 
 export const KWS_INFER_DEFAULT_WORD_ID = ORCHESTRATOR_KWS_INFER_DEFAULT_WORD_ID || "";
 
-const LEGACY_WORD_RUNTIME_ROUTING = Object.freeze([
-  Object.freeze({
-    id: "orbis",
-    intent: "spell.wake",
-  }),
-  Object.freeze({
-    id: "arcana",
-    intent: "spell.arcana_test",
-  }),
-  Object.freeze({
-    id: "are_kay_nah",
-    intent: "spell.are_kay_nah_test",
-  }),
-  Object.freeze({
-    id: "domus",
-    intent: "spell.domus",
-    allowedAxes: Object.freeze(["y"]),
-    fixedSlot: "UD",
-    slotByAxis: Object.freeze({ y: "UD" }),
-    clearSlotsOnAxis: Object.freeze({ y: Object.freeze(["LR", "FB"]) }),
-  }),
-  Object.freeze({
-    id: "pyro",
-    intent: "spell.axis_select",
-    axisWord: "pyro",
-    axisSpell: "pyro",
-    allowedAxes: Object.freeze(["y"]),
-  }),
-  Object.freeze({
-    id: "fridgis",
-    intent: "spell.axis_select",
-    axisWord: "fridgis",
-    axisSpell: "fridgis",
-    allowedAxes: Object.freeze(["x"]),
-  }),
-  Object.freeze({
-    id: "electrum",
-    intent: "spell.axis_select",
-    axisWord: "electrum",
-    axisSpell: "electrum",
-    allowedAxes: Object.freeze(["z"]),
-  }),
-  Object.freeze({
-    id: "sanctum",
-    intent: "spell.wake_window_select",
-    wakeWindowSpell: "sanctum",
-    fixedSlot: "UD",
-    allowedAxes: Object.freeze(["x", "y", "z"]),
-  }),
-  Object.freeze({
-    id: "vectus",
-    intent: "spell.wake_window_select",
-    wakeWindowSpell: "vectus",
-    fixedSlot: "LR",
-    allowedAxes: Object.freeze(["x", "y", "z"]),
-  }),
-  Object.freeze({
-    id: "rota",
-    intent: "spell.wake_window_select",
-    wakeWindowSpell: "rota",
-    fixedSlot: "FB",
-    allowedAxes: Object.freeze(["x", "y", "z"]),
-  }),
-]);
-
 export const WORD_RUNTIME_ROUTING = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING) && ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING.length
+  (Array.isArray(ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING)
     ? ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING
-    : LEGACY_WORD_RUNTIME_ROUTING).slice()
+    : []).slice()
 );
 export const WORD_RUNTIME_ROUTING_TABLE = WORD_RUNTIME_ROUTING;
 

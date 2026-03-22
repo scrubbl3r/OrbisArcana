@@ -73,6 +73,9 @@ export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
     ? WORD_RUNTIME_ROUTING
     : [];
   const ROUTING_LABEL = "WORD_RUNTIME_ROUTING";
+  if (!routingEntries.length) {
+    errors.push(`${ROUTING_LABEL} is empty (orchestrator.routing.words[] must define runtime routing entries)`);
+  }
 
   checkSpellIdList(errors, "WAKE_WORD_IDS", WAKE_WORD_IDS);
   checkSpellIdList(errors, "WAKE_REQUIRED_WORD_IDS", WAKE_REQUIRED_WORD_IDS);
