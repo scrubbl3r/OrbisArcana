@@ -7,7 +7,7 @@ import {
   INTERACTIONS_V2_BOOTSTRAP,
   ORCHESTRATOR_V1_BOOTSTRAP,
   ORCHESTRATOR_V2_BOOTSTRAP,
-  buildRulesFromInteractionsV2,
+  buildRuleEngineFromOrchestratorV1,
   validateWordbookV2,
   validateInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
@@ -113,7 +113,7 @@ const interactionsErrors = interactionsResult?.ok ? [] : interactionsResult?.err
 failIfValidationErrors("interactions-v2 validation failed", interactionsErrors);
 failIfValidationErrors(
   "spell-rules validation failed",
-  validateSpellRules(buildRulesFromInteractionsV2(INTERACTIONS_V2))
+  validateSpellRules(buildRuleEngineFromOrchestratorV1().rules)
 );
 failIfValidationErrors("spell-runtime-routing validation failed", validateSpellRuntimeRouting());
 failIfValidationErrors("spell-schema-integrity validation failed", validateSpellSchemaIntegrity());
