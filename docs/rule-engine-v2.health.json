@@ -1,9 +1,10 @@
 {
   "schema": "orbis.rule_engine_v2.health",
-  "generatedAt": "2026-03-22T23:46:58.774Z",
+  "generatedAt": "2026-03-22T23:51:05.090Z",
   "wordbookOk": true,
   "spellbookOk": true,
   "interactionsOk": true,
+  "interactionsLegacyOptional": true,
   "bootstrapUsesV2Adapter": false,
   "projectionRulesOnly": true,
   "interactionsRuleCount": 5,

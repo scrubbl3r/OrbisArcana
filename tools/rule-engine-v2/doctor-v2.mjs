@@ -32,6 +32,7 @@ const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 
 const wordbookOk = isTrue(snapshot?.validation?.spellbookV2?.ok);
 const interactionsOk = isTrue(snapshot?.validation?.interactionsV2?.ok);
 const bootstrapUsesV2Adapter = isTrue(snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap);
+const interactionsLegacyOptional = !bootstrapUsesV2Adapter;
 let orchestratorProjectedRuleCount = 0;
 let orchestratorProjectionParityOk = false;
 try {
@@ -54,6 +55,7 @@ const health = {
   wordbookOk,
   spellbookOk: wordbookOk,
   interactionsOk,
+  interactionsLegacyOptional,
   bootstrapUsesV2Adapter,
   projectionRulesOnly: true,
   interactionsRuleCount,
@@ -68,7 +70,11 @@ writeJsonFile(healthPath, health);
 logDoctor("----");
 logDoctor(`wordbook ok: ${wordbookOk}`);
 logDoctor(`spellbook ok (compat): ${wordbookOk}`);
-logDoctor(`interactions ok: ${interactionsOk}`);
+if (interactionsLegacyOptional) {
+  logDoctor(`interactions ok (legacy optional): ${interactionsOk}`);
+} else {
+  logDoctor(`interactions ok (legacy active): ${interactionsOk}`);
+}
 logDoctor(`bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
 logDoctor("rules mode: projection_only");
 logDoctor(`rules count (interactions/projection): ${interactionsRuleCount}/${projectedRuleCount}`);
