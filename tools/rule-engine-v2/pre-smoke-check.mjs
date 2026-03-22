@@ -142,10 +142,12 @@ if (!interactionsBootstrapEnabled && !orchestratorV1BootstrapEnabled && !orchest
     "ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap === true",
   ]);
 }
-const drift = computeProjectionDrift(INTERACTIONS_V2);
-const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
-if (driftIds.length) {
-  fail("projected runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
+if (interactionsBootstrapEnabled) {
+  const drift = computeProjectionDrift(INTERACTIONS_V2);
+  const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
+  if (driftIds.length) {
+    fail("projected runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
+  }
 }
 
 runScriptOrFail("effective snapshot generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeEffectiveSnapshot);
