@@ -24,8 +24,6 @@ runCheckScriptOrFailStatus({
   script: RULE_ENGINE_V2_SCRIPT_PATHS.preSmokeCheck,
 });
 
-const drift = computeProjectionDrift(INTERACTIONS_V2);
-const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
 const snapshot = readJsonSafe(resolveRuleEngineDocPath("effectiveSnapshot"));
 const interactionsRuleCount = Number(snapshot?.counts?.interactionsV2Rules ?? 0);
 const projectedRuleCount = Number(snapshot?.counts?.projectedRuleEngineRules ?? 0);
@@ -33,21 +31,35 @@ const wordbookOk = isTrue(snapshot?.validation?.spellbookV2?.ok);
 const interactionsOk = isTrue(snapshot?.validation?.interactionsV2?.ok);
 const bootstrapUsesV2Adapter = isTrue(snapshot?.flags?.interactionsV2Bootstrap?.useInReceiverBootstrap);
 const interactionsLegacyOptional = !bootstrapUsesV2Adapter;
+const drift = bootstrapUsesV2Adapter ? computeProjectionDrift(INTERACTIONS_V2) : null;
+const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
 let orchestratorProjectedRuleCount = 0;
 let orchestratorProjectionParityOk = false;
-try {
-  const orchestratorProjected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
-  const compiled = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: orchestratorProjected,
-    baseRuleEngine: Object.freeze({ version: "2", rules: [] }),
-  });
-  const compiledRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
-  orchestratorProjectedRuleCount = compiledRules.length;
-  const projectedRules = Array.isArray(drift?.projectedRules) ? drift.projectedRules : [];
-  orchestratorProjectionParityOk = JSON.stringify(compiledRules) === JSON.stringify(projectedRules);
-} catch (_) {
-  orchestratorProjectedRuleCount = 0;
-  orchestratorProjectionParityOk = false;
+if (bootstrapUsesV2Adapter) {
+  try {
+    const orchestratorProjected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
+    const compiled = buildRuleEngineFromOrchestratorV1({
+      orchestratorV1: orchestratorProjected,
+      baseRuleEngine: Object.freeze({ version: "2", rules: [] }),
+    });
+    const compiledRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
+    orchestratorProjectedRuleCount = compiledRules.length;
+    const projectedRules = Array.isArray(drift?.projectedRules) ? drift.projectedRules : [];
+    orchestratorProjectionParityOk = JSON.stringify(compiledRules) === JSON.stringify(projectedRules);
+  } catch (_) {
+    orchestratorProjectedRuleCount = 0;
+    orchestratorProjectionParityOk = false;
+  }
+} else {
+  try {
+    const compiled = buildRuleEngineFromOrchestratorV1();
+    const compiledRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
+    orchestratorProjectedRuleCount = compiledRules.length;
+    orchestratorProjectionParityOk = true;
+  } catch (_) {
+    orchestratorProjectedRuleCount = 0;
+    orchestratorProjectionParityOk = false;
+  }
 }
 const health = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.health,
@@ -79,8 +91,13 @@ logDoctor(`bootstrap uses v2 adapter: ${bootstrapUsesV2Adapter}`);
 logDoctor("rules mode: projection_only");
 logDoctor(`rules count (interactions/projection): ${interactionsRuleCount}/${projectedRuleCount}`);
 logDoctor(`orchestrator projected rules: ${orchestratorProjectedRuleCount}`);
-logDoctor(`orchestrator projection parity: ${orchestratorProjectionParityOk}`);
-logDoctor(`runtime-projection drift ids: ${driftIds.length}`);
-if (driftIds.length) logDoctor(`drift: ${driftIds.join(", ")}`);
+if (bootstrapUsesV2Adapter) {
+  logDoctor(`orchestrator projection parity: ${orchestratorProjectionParityOk}`);
+  logDoctor(`runtime-projection drift ids: ${driftIds.length}`);
+  if (driftIds.length) logDoctor(`drift: ${driftIds.join(", ")}`);
+} else {
+  logDoctor(`orchestrator projection parity (legacy optional): ${orchestratorProjectionParityOk}`);
+  logDoctor("runtime-projection drift ids (legacy optional): skipped");
+}
 logDoctor(`wrote health: ${healthPath}`);
 logDoctor("----");

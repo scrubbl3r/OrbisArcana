@@ -155,11 +155,13 @@ function emitStatusLines(log, lines) {
 
 function normalizeHealthStatus(health) {
   const canonicalWordbookOk = isTrue(health?.wordbookOk) || isTrue(health?.spellbookOk);
+  const bootstrapUsesV2Adapter = isTrue(health?.bootstrapUsesV2Adapter);
   return {
     wordbookOk: canonicalWordbookOk,
     spellbookOk: canonicalWordbookOk,
     interactionsOk: isTrue(health?.interactionsOk),
-    bootstrapUsesV2Adapter: isTrue(health?.bootstrapUsesV2Adapter),
+    interactionsLegacyOptional: isTrue(health?.interactionsLegacyOptional) || !bootstrapUsesV2Adapter,
+    bootstrapUsesV2Adapter,
     projectionRulesOnly: isTrue(health?.projectionRulesOnly),
     interactionsRuleCount: toNumberOr(health?.interactionsRuleCount),
     projectedRuleCount: toNumberOr(health?.projectedRuleCount),
@@ -169,7 +171,22 @@ function normalizeHealthStatus(health) {
   };
 }
 
-function computeOrchestratorTelemetryLive() {
+function computeOrchestratorTelemetryLive(bootstrapUsesV2Adapter) {
+  if (!bootstrapUsesV2Adapter) {
+    try {
+      const compiled = buildRuleEngineFromOrchestratorV1();
+      const orchestratorRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
+      return Object.freeze({
+        orchestratorProjectedRuleCount: orchestratorRules.length,
+        orchestratorProjectionParityOk: true,
+      });
+    } catch (_) {
+      return Object.freeze({
+        orchestratorProjectedRuleCount: 0,
+        orchestratorProjectionParityOk: false,
+      });
+    }
+  }
   try {
     const projected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
     const compiled = buildRuleEngineFromOrchestratorV1({
@@ -207,7 +224,7 @@ const STATUS_SECTION_DEFS = Object.freeze([
 ]);
 
 const healthStatus = normalizeHealthStatus(readJsonSafe(STATUS_DOC_PATHS.health) ?? {});
-const orchestratorTelemetryLive = computeOrchestratorTelemetryLive();
+const orchestratorTelemetryLive = computeOrchestratorTelemetryLive(healthStatus.bootstrapUsesV2Adapter);
 healthStatus.orchestratorProjectedRuleCount = orchestratorTelemetryLive.orchestratorProjectedRuleCount;
 healthStatus.orchestratorProjectionParityOk = orchestratorTelemetryLive.orchestratorProjectionParityOk;
 const trendStatus = normalizeTrendStatus(readJsonSafe(STATUS_DOC_PATHS.trend) ?? {});
@@ -220,18 +237,30 @@ const statusSections = buildStatusSections(STATUS_SECTION_DEFS, runCheckScriptOk
 const readyPhases = statusSections[STATUS_SECTION_KEYS.readyPhases];
 const regressions = statusSections[STATUS_SECTION_KEYS.regressions];
 const contracts = statusSections[STATUS_SECTION_KEYS.contracts];
+const interactionsLabel = healthStatus.interactionsLegacyOptional
+  ? `${STATUS_LINE_LABELS.interactionsOk} (legacy optional)`
+  : `${STATUS_LINE_LABELS.interactionsOk} (legacy active)`;
+const projectionParityLabel = healthStatus.interactionsLegacyOptional
+  ? `${STATUS_LINE_LABELS.orchestratorProjectionParity} (legacy optional)`
+  : STATUS_LINE_LABELS.orchestratorProjectionParity;
+const driftLabel = healthStatus.interactionsLegacyOptional
+  ? `${STATUS_LINE_LABELS.driftIds} (legacy optional)`
+  : STATUS_LINE_LABELS.driftIds;
+const driftValue = healthStatus.interactionsLegacyOptional
+  ? "skipped"
+  : String(healthStatus.driftRuleIds.length);
 
 const lines = [
   "---",
   `${STATUS_LINE_LABELS.wordbookOk}: ${yn(healthStatus.wordbookOk)}`,
   `${STATUS_LINE_LABELS.spellbookOkCompat}: ${yn(healthStatus.spellbookOk)}`,
-  `${STATUS_LINE_LABELS.interactionsOk}: ${yn(healthStatus.interactionsOk)}`,
+  `${interactionsLabel}: ${yn(healthStatus.interactionsOk)}`,
   `${STATUS_LINE_LABELS.bootstrapUsesV2}: ${yn(healthStatus.bootstrapUsesV2Adapter)}`,
   `${STATUS_LINE_LABELS.rulesProjectionOnly}: ${yn(healthStatus.projectionRulesOnly)}`,
   `${STATUS_LINE_LABELS.rulesCount}: ${healthStatus.interactionsRuleCount}/${healthStatus.projectedRuleCount}`,
   `${STATUS_LINE_LABELS.orchestratorProjectedRuleCount}: ${healthStatus.orchestratorProjectedRuleCount}`,
-  `${STATUS_LINE_LABELS.orchestratorProjectionParity}: ${yn(healthStatus.orchestratorProjectionParityOk)}`,
-  `${STATUS_LINE_LABELS.driftIds}: ${healthStatus.driftRuleIds.length}`,
+  `${projectionParityLabel}: ${yn(healthStatus.orchestratorProjectionParityOk)}`,
+  `${driftLabel}: ${driftValue}`,
   `${STATUS_LINE_LABELS.manifestsSummary}: ${manifestArtifacts.summary}`,
   ...buildSectionStatusLines(STATUS_SECTION_LABELS.readyPhases, readyPhases, yn),
   ...buildSectionStatusLines(STATUS_SECTION_LABELS.regressions, regressions, yn),

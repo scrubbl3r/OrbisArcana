@@ -5,6 +5,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import {
   INTERACTIONS_V2,
+  INTERACTIONS_V2_BOOTSTRAP,
   projectOrchestratorV1FromInteractionsV2,
   validateOrchestratorV1,
 } from "../../src/content/interactions-v2/index.js";
@@ -12,6 +13,16 @@ import {
 // Validates projection artifact schema/source and parity against live interactions projection.
 const CHECK_TAG = "orchestrator-projection-doc-contract:v2";
 const PASS_MESSAGE = "orchestrator projection doc is current and valid";
+const LEGACY_OPTIONAL_PASS_MESSAGE = "orchestrator projection doc is legacy-optional when interactions bootstrap is disabled";
+
+const interactionsBootstrapEnabled = !!(
+  INTERACTIONS_V2_BOOTSTRAP &&
+  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+if (!interactionsBootstrapEnabled) {
+  reportCheckPass(CHECK_TAG, LEGACY_OPTIONAL_PASS_MESSAGE);
+  process.exit(0);
+}
 
 const docPath = resolveRuleEngineDocPath("orchestratorProjectionJson");
 const loaded = readJsonCore(docPath);
