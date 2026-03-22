@@ -8,7 +8,7 @@ import { EVENT_DEFINITIONS } from "../spell-rules/event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import {
   AXIS_WORD_IDS,
-  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
+  WORD_RUNTIME_ROUTING_BY_WORD_ID,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
@@ -56,10 +56,13 @@ export function validateSpellSchemaIntegrity(options = {}) {
           : Object.create(null))
     );
   const errors = [];
+  const routingByWordId = (WORD_RUNTIME_ROUTING_BY_WORD_ID && typeof WORD_RUNTIME_ROUTING_BY_WORD_ID === "object")
+    ? WORD_RUNTIME_ROUTING_BY_WORD_ID
+    : Object.create(null);
 
   // Every spellbook spell should have routing metadata during refactor.
   for (const spellId of Object.keys(SPELLS_BY_ID || {})) {
-    if (!SPELL_RUNTIME_ROUTING_BY_WORD_ID[spellId]) {
+    if (!routingByWordId[spellId]) {
       errors.push(`missing routing entry for spellbook spell: ${spellId}`);
     }
   }

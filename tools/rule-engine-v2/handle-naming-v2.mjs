@@ -1,3 +1,5 @@
+// Canonical/legacy handle-naming examples used by docs and drift checks.
+// Example tokens intentionally mirror documentation phrasing used by validators.
 export const RULE_ENGINE_V2_LEGACY_HANDLE_TOKENS = Object.freeze([
   "Y_SPIN",
   "FSPIN_X",

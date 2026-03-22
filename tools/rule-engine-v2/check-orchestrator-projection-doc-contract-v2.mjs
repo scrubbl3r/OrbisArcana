@@ -9,7 +9,9 @@ import {
   validateOrchestratorV1,
 } from "../../src/content/interactions-v2/index.js";
 
+// Validates projection artifact schema/source and parity against live interactions projection.
 const CHECK_TAG = "orchestrator-projection-doc-contract:v2";
+const PASS_MESSAGE = "orchestrator projection doc is current and valid";
 
 const docPath = resolveRuleEngineDocPath("orchestratorProjectionJson");
 const loaded = readJsonCore(docPath);
@@ -58,4 +60,4 @@ if (docRuleCount !== ruleCount) {
   failCheck(CHECK_TAG, `counts.rules mismatch: doc=${doc?.counts?.rules} actual=${ruleCount}`);
 }
 
-reportCheckPass(CHECK_TAG, "orchestrator projection doc is current and valid");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

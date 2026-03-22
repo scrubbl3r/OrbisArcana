@@ -1,6 +1,6 @@
 {
   "schema": "orbis.orchestrator_v1.projection",
-  "generatedAt": "2026-03-21T03:09:44.140Z",
+  "generatedAt": "2026-03-22T03:47:48.395Z",
   "source": "projected_from_interactions_v2",
   "projection": {
     "version": "1",
@@ -10,7 +10,7 @@
       {
         "id": "r_fridgis_immediate",
         "on": [
-          "spell:fridgis"
+          "word:fridgis"
         ],
         "trigger": [
           {
@@ -21,7 +21,7 @@
       {
         "id": "r_electrum_immediate",
         "on": [
-          "spell:electrum"
+          "word:electrum"
         ],
         "trigger": [
           {
@@ -32,7 +32,7 @@
       {
         "id": "r_pyro_immediate",
         "on": [
-          "spell:pyro"
+          "word:pyro"
         ],
         "trigger": [
           {
@@ -43,7 +43,7 @@
       {
         "id": "r_domus_immediate",
         "on": [
-          "spell:domus"
+          "word:domus"
         ],
         "trigger": [
           {
@@ -54,7 +54,7 @@
       {
         "id": "r_rota_yspin_charged",
         "on": [
-          "spell:rota",
+          "word:rota",
           "gesture:spin_y",
           "orb_state:charged"
         ],

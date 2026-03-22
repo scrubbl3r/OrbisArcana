@@ -1,8 +1,5 @@
-import {
-  buildRuleEngineFromInteractionsV2,
-  buildRulesFromInteractionsV2,
-} from "../../src/content/interactions-v2/index.js";
-
+// Computes ID-level drift between projected rules and runtime-compiled projection.
+import { buildRuleEngineFromInteractionsV2, buildRulesFromInteractionsV2 } from "../../src/content/interactions-v2/index.js";
 function toRuleMap(rules) {
   const out = new Map();
   for (const rule of Array.isArray(rules) ? rules : []) {

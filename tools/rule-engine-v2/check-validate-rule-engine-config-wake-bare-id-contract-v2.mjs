@@ -1,30 +1,26 @@
 import { RULE_ENGINE_POLICY_CONTROL, validateRuleEngineConfig } from "../../src/content/spell-rules/index.js";
+import { cloneJsonV2 } from "./json-clone-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { hasWakeUnknownWordErrorV2 } from "./wake-error-matchers-v2.mjs";
+import { KNOWN_WAKE_WORD_ID_V2, UNKNOWN_WAKE_WORD_ID_V2 } from "./wake-test-ids-v2.mjs";
 
 const CHECK_TAG = "validate-rule-engine-config-wake-bare-id-contract:v2";
-const UNKNOWN_WORD_ID = "__unknown_wake_word__";
-
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-function hasError(errors, token) {
-  return (Array.isArray(errors) ? errors : []).some((error) => String(error).includes(token));
-}
+const ACTION_WAKE_WIN = "wake_win";
+const PASS_MESSAGE = "validateRuleEngineConfig accepts bare wake word ids for words[]/spells[] alias and rejects unknown bare ids";
 
 function withSingleRule(rule) {
-  const cfg = clone(RULE_ENGINE_POLICY_CONTROL);
+  const cfg = cloneJsonV2(RULE_ENGINE_POLICY_CONTROL);
   cfg.rules = [rule];
   return cfg;
 }
 
 const canonicalBareKnown = validateRuleEngineConfig(withSingleRule({
   id: "t_canonical_bare_known",
-  on: { all: [{ type: "word", id: "rota" }] },
-  then: [{ type: "wake_win", words: ["rota"] }],
+  on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
+  then: [{ type: ACTION_WAKE_WIN, words: [KNOWN_WAKE_WORD_ID_V2] }],
 }));
-if (hasError(canonicalBareKnown, "wake_win references unknown word id: rota")) {
+if (hasWakeUnknownWordErrorV2(canonicalBareKnown, KNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateRuleEngineConfig should accept bare canonical wake words[] refs: ${canonicalBareKnown.join(" | ")}`
@@ -33,10 +29,10 @@ if (hasError(canonicalBareKnown, "wake_win references unknown word id: rota")) {
 
 const legacyBareKnown = validateRuleEngineConfig(withSingleRule({
   id: "t_legacy_bare_known",
-  on: { all: [{ type: "word", id: "rota" }] },
-  then: [{ type: "wake_win", spells: ["rota"] }],
+  on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
+  then: [{ type: ACTION_WAKE_WIN, spells: [KNOWN_WAKE_WORD_ID_V2] }],
 }));
-if (hasError(legacyBareKnown, "wake_win references unknown word id: rota")) {
+if (hasWakeUnknownWordErrorV2(legacyBareKnown, KNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateRuleEngineConfig should accept bare legacy wake spells[] alias refs: ${legacyBareKnown.join(" | ")}`
@@ -45,10 +41,10 @@ if (hasError(legacyBareKnown, "wake_win references unknown word id: rota")) {
 
 const canonicalBareUnknown = validateRuleEngineConfig(withSingleRule({
   id: "t_canonical_bare_unknown",
-  on: { all: [{ type: "word", id: "rota" }] },
-  then: [{ type: "wake_win", words: [UNKNOWN_WORD_ID] }],
+  on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
+  then: [{ type: ACTION_WAKE_WIN, words: [UNKNOWN_WAKE_WORD_ID_V2] }],
 }));
-if (!hasError(canonicalBareUnknown, `wake_win references unknown word id: ${UNKNOWN_WORD_ID}`)) {
+if (!hasWakeUnknownWordErrorV2(canonicalBareUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateRuleEngineConfig must reject unknown bare canonical wake words[] refs: ${canonicalBareUnknown.join(" | ")}`
@@ -57,17 +53,14 @@ if (!hasError(canonicalBareUnknown, `wake_win references unknown word id: ${UNKN
 
 const legacyBareUnknown = validateRuleEngineConfig(withSingleRule({
   id: "t_legacy_bare_unknown",
-  on: { all: [{ type: "word", id: "rota" }] },
-  then: [{ type: "wake_win", spells: [UNKNOWN_WORD_ID] }],
+  on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
+  then: [{ type: ACTION_WAKE_WIN, spells: [UNKNOWN_WAKE_WORD_ID_V2] }],
 }));
-if (!hasError(legacyBareUnknown, `wake_win references unknown word id: ${UNKNOWN_WORD_ID}`)) {
+if (!hasWakeUnknownWordErrorV2(legacyBareUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateRuleEngineConfig must reject unknown bare legacy wake spells[] refs: ${legacyBareUnknown.join(" | ")}`
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "validateRuleEngineConfig accepts bare wake word ids for words[]/spells[] alias and rejects unknown bare ids"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

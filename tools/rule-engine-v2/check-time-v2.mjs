@@ -1,3 +1,5 @@
+// Time helpers for deterministic check runtimes and mutable timeline scenarios.
+// Helpers intentionally avoid Date APIs so tests stay fully clock-controlled.
 export function createFixedNowMs(atMs = 0) {
   return () => atMs;
 }

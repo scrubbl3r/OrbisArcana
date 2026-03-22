@@ -3,8 +3,10 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
+// Enforces that pre-smoke validates compiled rules with validateSpellRules.
 const CHECK_TAG = "pre-smoke-rule-validator-surface:v2";
 const REL = "tools/rule-engine-v2/pre-smoke-check.mjs";
+const PASS_MESSAGE = "pre-smoke runs validateSpellRules against interactions-derived compiled rules";
 const text = readRelativeText(REL);
 
 requireTextIncludesTokensV2({
@@ -25,7 +27,4 @@ if (!text.includes("validateSpellRules(buildRulesFromInteractionsV2(INTERACTIONS
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "pre-smoke runs validateSpellRules against interactions-derived compiled rules"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

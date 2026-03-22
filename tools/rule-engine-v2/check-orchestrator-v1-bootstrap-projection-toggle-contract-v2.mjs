@@ -1,7 +1,4 @@
-import {
-  hydrateReceiverBootstrapState,
-  RULE_ENGINE_SOURCES,
-} from "../../src/runtime/receiver-bootstrap.js";
+import { hydrateReceiverBootstrapState, RULE_ENGINE_SOURCES } from "../../src/runtime/receiver-bootstrap.js";
 import {
   INTERACTIONS_V2,
   buildRuleEngineFromOrchestratorV1,
@@ -10,8 +7,10 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { assertSchemaSourceV2 } from "./check-schema-source-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-bootstrap-projection-toggle:v2";
+const PASS_MESSAGE = "projection toggle disables auto-projection when orchestrator is empty";
 
 const captured = {
   ruleSchema: null,
@@ -52,21 +51,15 @@ hydrateReceiverBootstrapState(
 );
 
 const schema = captured.ruleSchema;
-if (!schema || typeof schema !== "object") {
-  failCheck(CHECK_TAG, "setRuleSchema was not called");
-}
-const source = typeof schema.source === "string" ? schema.source : "";
-
-if (source !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V1) {
-  failCheck(
-    CHECK_TAG,
-    `expected source=${RULE_ENGINE_SOURCES.ORCHESTRATOR_V1}, got ${source}`
-  );
-}
+assertSchemaSourceV2({
+  tag: CHECK_TAG,
+  schema,
+  expectedSource: RULE_ENGINE_SOURCES.ORCHESTRATOR_V1,
+});
 
 const rules = Array.isArray(schema.rules) ? schema.rules : [];
 if (rules.length !== 0) {
   failCheck(CHECK_TAG, `expected zero rules with projection disabled, got ${rules.length}`);
 }
 
-reportCheckPass(CHECK_TAG, "projection toggle disables auto-projection when orchestrator is empty");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

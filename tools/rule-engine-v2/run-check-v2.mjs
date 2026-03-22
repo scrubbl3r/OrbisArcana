@@ -1,5 +1,7 @@
+// Runs a check script via Node and returns normalized `{ok,status}`.
 import { spawnSync } from "node:child_process";
-
+// Used by status/ready runners to invoke check scripts with stable result shape.
+// Status normalization ensures non-integer child status values map to failure.
 export function runCheckScript(script, options = {}) {
   const scriptPath = typeof script === "string" ? script.trim() : "";
   if (!scriptPath) {

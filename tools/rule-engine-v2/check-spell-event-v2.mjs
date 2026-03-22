@@ -1,8 +1,15 @@
-export function spellIdText(v) {
-  return typeof v?.spellId === "string" ? v.spellId : "";
+// Canonical event-id helpers: prefer wordId, fallback to legacy spellId.
+export function wordIdText(v) {
+  if (typeof v?.wordId === "string") return v.wordId;
+  if (typeof v?.spellId === "string") return v.spellId;
+  return "";
 }
 
-export function hasSpellId(values, spellId) {
-  const target = typeof spellId === "string" ? spellId : "";
-  return (Array.isArray(values) ? values : []).some((v) => spellIdText(v) === target);
+export function hasWordId(values, wordId) {
+  const target = typeof wordId === "string" ? wordId : "";
+  return (Array.isArray(values) ? values : []).some((v) => wordIdText(v) === target);
 }
+
+// Back-compat aliases for existing check names.
+export const spellIdText = wordIdText;
+export const hasSpellId = hasWordId;

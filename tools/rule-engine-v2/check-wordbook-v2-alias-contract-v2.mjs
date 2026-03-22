@@ -15,7 +15,9 @@ import {
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
+// Confirms wordbook-v2 aliases and validator outputs match legacy spellbook-v2 surface.
 const CHECK_TAG = "wordbook-v2-alias:v2";
+const PASS_MESSAGE = "wordbook aliases match spellbook exports and validator behavior";
 
 if (WORDBOOK_V2 !== SPELLBOOK_V2) {
   failCheck(CHECK_TAG, "WORDBOOK_V2 must alias SPELLBOOK_V2");
@@ -39,4 +41,4 @@ if (JSON.stringify(wordbookErrors) !== JSON.stringify(spellbookErrors)) {
   failCheck(CHECK_TAG, "validateWordbookV2 output must match validateSpellbookV2");
 }
 
-reportCheckPass(CHECK_TAG, "wordbook aliases match spellbook exports and validator behavior");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

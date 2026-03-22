@@ -5,6 +5,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "validate-rule-engine-config-wake-source-surface:v2";
 const REL = "src/content/spell-rules/validate-rule-engine-config.js";
+const PASS_MESSAGE = "validateRuleEngineConfig source delegates wake-word rule validation through validateSpellRules";
 const text = readRelativeText(REL);
 
 requireTextIncludesTokensV2({
@@ -25,7 +26,4 @@ if (!text.includes("validateSpellRules(rules, { signals, windows, events })")) {
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "validateRuleEngineConfig source delegates wake-word rule validation through validateSpellRules"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

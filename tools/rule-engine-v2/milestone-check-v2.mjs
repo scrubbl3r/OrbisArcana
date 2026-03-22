@@ -1,3 +1,4 @@
+// Runs ready+smoke milestone flow, writes milestone report/history, then refreshes trend.
 import { spawnSync } from "node:child_process";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
@@ -11,7 +12,8 @@ import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { toTrimmedText } from "./value-utils-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
-
+// Milestone flow records ready/smoke/trend state in artifacts for longer-run tracking.
+// Execution order is intentional: ready -> smoke batch -> trend refresh.
 const CHECK_TAG = "milestone:v2";
 const logMilestone = createTaggedLogger(CHECK_TAG);
 const MILESTONE_STEP_LABELS = Object.freeze({

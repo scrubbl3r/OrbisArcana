@@ -8,6 +8,8 @@ import {
   projectOrchestratorV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 
+// Generates orchestrator-v1 projection artifact derived from interactions-v2.
+// Artifact is used by docs/contract checks to detect projection drift.
 const CHECK_TAG = "orchestrator-projection-doc:v2";
 const log = createTaggedLogger(CHECK_TAG);
 

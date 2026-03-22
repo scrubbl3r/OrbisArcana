@@ -1,14 +1,12 @@
-import {
-  flattenManifestChecksV2,
-} from "./manifest-check-entries-v2.mjs";
-import {
-  MANIFEST_VALIDATORS_V2,
-  isManifestValidatorScriptV2,
-} from "./manifest-validators-v2.mjs";
+// Executes manifest validators and all non-validator checks for `ready:v2`.
+import { flattenManifestChecksV2 } from "./manifest-check-entries-v2.mjs";
+import { MANIFEST_VALIDATORS_V2, isManifestValidatorScriptV2 } from "./manifest-validators-v2.mjs";
 import { runCheckScriptOrFailStatus } from "./run-check-fail-status-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-
+// Ready runner is intentionally strict: any validator/check failure exits immediately.
+// Manifest validators run first to fail early on registry drift.
 const CHECK_TAG = "ready:v2";
+const PASS_MESSAGE = "runtime health is green";
 const READY_FAILURE_PREFIX = Object.freeze({
   validator: "validator failed",
   check: "check failed",
@@ -46,4 +44,4 @@ runReadyChecks(MANIFEST_VALIDATORS_V2, READY_FAILURE_PREFIX.validator, (entry) =
 const nonValidatorChecks = flattenManifestChecksV2().filter((entry) => !isManifestValidatorScriptV2(entry.script));
 runReadyChecks(nonValidatorChecks, READY_FAILURE_PREFIX.check, (entry) => entry?.id);
 
-reportCheckPass(CHECK_TAG, "runtime health is green");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

@@ -1,3 +1,4 @@
+// Computes rolling milestone pass-rate trend summaries from JSONL history.
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonLines } from "./read-jsonl-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
@@ -5,7 +6,7 @@ import { isTrue } from "./bool-utils-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
-
+// Trend generation is read-only except for the summary artifact write.
 const CHECK_TAG = "milestone:trend:v2";
 const logTrend = createTaggedLogger(CHECK_TAG);
 const MILESTONE_TREND_LOOKBACK = 10;

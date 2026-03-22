@@ -1,12 +1,12 @@
-import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
   KWS_INFER_DEFAULT_WORD_ID,
   KWS_SIM_WORD_IDS,
 } from "../../content/spells/spell-runtime-routing.js";
 
 function resolveActivePhraseById(id, fallback = "") {
-  const spell = ACTIVE_SPELLS_BY_ID[String(id || "").trim().toLowerCase()];
-  return String((spell && (spell.phrase || spell.id)) || fallback || "").trim().toLowerCase();
+  const word = ACTIVE_WORDS_BY_ID[String(id || "").trim().toLowerCase()];
+  return String((word && (word.phrase || word.id)) || fallback || "").trim().toLowerCase();
 }
 
 export const OPENWAKEWORD_BROWSER_SIM_TOKENS = Object.freeze(

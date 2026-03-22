@@ -5,8 +5,10 @@ export async function teardownKwsRuntimeForReinit({
   eventBindings,
   setEventBindings,
   voiceProviderManager,
+  kwsWordProvider,
   kwsVoiceProvider,
   setVoiceProviderManager,
+  setKwsWordProvider,
   setKwsVoiceProvider,
 } = {}) {
   if (typeof clearAutostartWatchdog === "function") clearAutostartWatchdog();
@@ -19,7 +21,7 @@ export async function teardownKwsRuntimeForReinit({
   if (typeof setEventBindings === "function") setEventBindings(null);
 
   const manager = voiceProviderManager || null;
-  const provider = kwsVoiceProvider || null;
+  const provider = kwsWordProvider || kwsVoiceProvider || null;
 
   try {
     if (manager && typeof manager.stop === "function") await Promise.resolve(manager.stop());
@@ -46,5 +48,6 @@ export async function teardownKwsRuntimeForReinit({
   }
 
   if (typeof setVoiceProviderManager === "function") setVoiceProviderManager(null);
+  if (typeof setKwsWordProvider === "function") setKwsWordProvider(null);
   if (typeof setKwsVoiceProvider === "function") setKwsVoiceProvider(null);
 }

@@ -40,6 +40,8 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       if (a === "z") return { r: 253/255, g: 241/255, b: 0/255 };
       return { r: 253/255, g: 78/255, b: 0/255 };
     });
+  const readWordIdFromPayload = (payload = {}) =>
+    String((payload.wordId ?? payload.spellId) || "");
 
   function color01ToRgba(c, a) {
     const r = Math.round(clamp01(c && c.r) * 255);
@@ -130,14 +132,16 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     };
   }
 
-  function upsertOrbitingGlobe({ axis, slot, spellId }) {
+  function upsertOrbitingGlobe({ axis, slot, wordId }) {
     const a = String(axis || "").toLowerCase();
     const s = String(slot || "").toUpperCase();
     if (!a || !s) return;
+    const tokenId = String(wordId || "");
     const existing = orbiting.particles.find((p) => p.axis === a && p.slot === s);
     const color = axisColor(a);
     if (existing) {
-      existing.spellId = String(spellId || "");
+      existing.wordId = tokenId;
+      existing.spellId = tokenId;
       existing.stroke = color.stroke;
       existing.fill = color.fill;
       existing.glow = color.glow;
@@ -147,7 +151,8 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       id: orbiting.nextId++,
       axis: a,
       slot: s,
-      spellId: String(spellId || ""),
+      wordId: tokenId,
+      spellId: tokenId,
       phase: Math.random() * Math.PI * 2,
       speed: (1.35 + (Math.random() * 0.75)) * 4.0,
       radius: Math.max(3, Number(orbRadiusPx) * 0.10),
@@ -438,10 +443,11 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       if (!axis || !slot) return;
       const globe = consumeOneInnerGlobe();
       if (!globe) return;
+      const wordId = readWordIdFromPayload(payload);
       upsertOrbitingGlobe({
         axis,
         slot,
-        spellId: String(payload.spellId || ""),
+        wordId,
       });
     }));
     unsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {

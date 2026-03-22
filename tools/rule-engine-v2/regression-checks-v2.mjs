@@ -1,5 +1,6 @@
+// Ordered regression check manifest used by ready:v2 regression phase.
 import { defineCheckEntriesV2 } from "./define-check-entries-v2.mjs";
-
+// Keep this list minimal and behavior-focused; contracts live in separate manifest.
 export const REGRESSION_CHECKS_V2 = defineCheckEntriesV2([
   {
     id: "shake_regression",

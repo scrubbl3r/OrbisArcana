@@ -1,3 +1,6 @@
+// Asserts two ID arrays match exactly in length and position.
+// Maintains strict deterministic ordering contract for manifest ID lists.
+// No normalization beyond required checks to avoid masking caller mistakes.
 export function assertOrderedIds({
   actualIds,
   requiredIds,

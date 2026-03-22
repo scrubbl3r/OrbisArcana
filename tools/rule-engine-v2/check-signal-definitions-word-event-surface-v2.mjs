@@ -1,31 +1,26 @@
-import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import { runRgLines } from "./rg-lines-v2.mjs";
+import { failIfAnyRgMatches } from "./check-rg-no-matches-v2.mjs";
 
+// Guards canonical signal-definition usage for word-detected event and word.id path.
 const CHECK_TAG = "signal-definitions-word-event-surface:v2";
 const TARGET = "src/content/spell-rules/signal-definitions.js";
+const CANONICAL_EVENT_TOKEN = "voice.word_detected";
+const LEGACY_EVENT_TOKEN = "voice.spell_detected";
+const CANONICAL_PATH_TOKEN = "word.id";
+const LEGACY_PATH_TOKEN = "spell.id";
+const PASS_MESSAGE = `signal definitions use canonical ${CANONICAL_EVENT_TOKEN} + ${CANONICAL_PATH_TOKEN} matching surface`;
 
-const legacyEventRefs = runRgLines(
-  `rg -n "voice\\.spell_detected" ${TARGET}`
-);
-if (legacyEventRefs.length) {
-  failCheck(
-    CHECK_TAG,
-    `signal definitions must use voice.word_detected (found legacy voice.spell_detected): ${legacyEventRefs.join(", ")}`
-  );
-}
+failIfAnyRgMatches(CHECK_TAG, [
+  {
+    rgCommand: `rg -n "${LEGACY_EVENT_TOKEN.replace(".", "\\.")}" ${TARGET}`,
+    failureMessagePrefix:
+      `signal definitions must use ${CANONICAL_EVENT_TOKEN} (found legacy ${LEGACY_EVENT_TOKEN})`,
+  },
+  {
+    rgCommand: `rg -n "path:\\s*\\\"${LEGACY_PATH_TOKEN.replace(".", "\\.")}\\\"" ${TARGET}`,
+    failureMessagePrefix:
+      `signal definitions must match on ${CANONICAL_PATH_TOKEN} (found legacy ${LEGACY_PATH_TOKEN} path)`,
+  },
+]);
 
-const legacyPathRefs = runRgLines(
-  `rg -n "path:\\s*\\\"spell\\.id\\\"" ${TARGET}`
-);
-if (legacyPathRefs.length) {
-  failCheck(
-    CHECK_TAG,
-    `signal definitions must match on word.id (found legacy spell.id path): ${legacyPathRefs.join(", ")}`
-  );
-}
-
-reportCheckPass(
-  CHECK_TAG,
-  "signal definitions use canonical voice.word_detected + word.id matching surface"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

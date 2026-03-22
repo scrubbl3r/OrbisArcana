@@ -1,25 +1,22 @@
 import { validateSpellRules } from "../../src/content/spell-rules/validate-spell-rules.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { KNOWN_WAKE_WORD_ID_V2, UNKNOWN_WAKE_WORD_ID_V2 } from "./wake-test-ids-v2.mjs";
+import { hasWakeUnknownWordErrorV2 } from "./wake-error-matchers-v2.mjs";
 
 const CHECK_TAG = "validate-spell-rules-wake-bare-id-contract:v2";
-const UNKNOWN_WORD_ID = "__unknown_wake_word__";
-
-function hasUnknownWakeWordError(errors, needle = UNKNOWN_WORD_ID) {
-  return (Array.isArray(errors) ? errors : []).some((error) =>
-    String(error).includes(`wake_win references unknown word id: ${needle}`)
-  );
-}
+const ACTION_WAKE_WIN = "wake_win";
+const PASS_MESSAGE = "validateSpellRules accepts bare wake word ids for words[]/spells[] alias and rejects unknown bare ids";
 
 const canonicalBareRules = [
   {
     id: "t_wake_words_bare_canonical",
-    on: { all: [{ type: "word", id: "rota" }] },
-    then: [{ type: "wake_win", words: ["rota"] }],
+    on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
+    then: [{ type: ACTION_WAKE_WIN, words: [KNOWN_WAKE_WORD_ID_V2] }],
   },
 ];
 const canonicalBareErrors = validateSpellRules(canonicalBareRules);
-if (hasUnknownWakeWordError(canonicalBareErrors, "rota")) {
+if (hasWakeUnknownWordErrorV2(canonicalBareErrors, KNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateSpellRules should accept bare wake_win.words[] refs: ${canonicalBareErrors.join(" | ")}`
@@ -29,12 +26,12 @@ if (hasUnknownWakeWordError(canonicalBareErrors, "rota")) {
 const legacyBareRules = [
   {
     id: "t_wake_words_bare_legacy_alias",
-    on: { all: [{ type: "word", id: "rota" }] },
-    then: [{ type: "wake_win", spells: ["rota"] }],
+    on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
+    then: [{ type: ACTION_WAKE_WIN, spells: [KNOWN_WAKE_WORD_ID_V2] }],
   },
 ];
 const legacyBareErrors = validateSpellRules(legacyBareRules);
-if (hasUnknownWakeWordError(legacyBareErrors, "rota")) {
+if (hasWakeUnknownWordErrorV2(legacyBareErrors, KNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateSpellRules should accept bare wake_win.spells[] alias refs: ${legacyBareErrors.join(" | ")}`
@@ -44,19 +41,16 @@ if (hasUnknownWakeWordError(legacyBareErrors, "rota")) {
 const unknownBareRules = [
   {
     id: "t_wake_words_unknown_bare",
-    on: { all: [{ type: "word", id: "rota" }] },
-    then: [{ type: "wake_win", words: [UNKNOWN_WORD_ID] }],
+    on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
+    then: [{ type: ACTION_WAKE_WIN, words: [UNKNOWN_WAKE_WORD_ID_V2] }],
   },
 ];
 const unknownBareErrors = validateSpellRules(unknownBareRules);
-if (!hasUnknownWakeWordError(unknownBareErrors, UNKNOWN_WORD_ID)) {
+if (!hasWakeUnknownWordErrorV2(unknownBareErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateSpellRules must reject unknown bare wake_win word refs: ${unknownBareErrors.join(" | ")}`
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "validateSpellRules accepts bare wake word ids for words[]/spells[] alias and rejects unknown bare ids"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

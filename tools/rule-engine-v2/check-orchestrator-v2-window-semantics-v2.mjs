@@ -5,37 +5,49 @@ import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-window-semantics:v2";
+const PASS_MESSAGE = "requires/consume/open.windowId semantics hold for wake chains";
 
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const EVT_VOICE_WORD_DETECTED = "voice.word_detected";
+const ACTION_WAKE_WIN = "wake_win";
+const WINDOW_WAKE_WIN = "wake_win";
+const WINDOW_WAKE_MAIN_ID = "wake.main";
+const WORD_ORBIS_ID = "orbis";
+const WORD_DOMUS_ID = "domus";
+const SIGNAL_SPELL_ORBIS = "spell.orbis";
+const SIGNAL_SPELL_DOMUS = "spell.domus";
+const CONDITION_TYPE_SPELL = "spell";
+const CONDITION_WORD_ID_PATH = "word.id";
+const EVENT_TYPE = "event";
+const EVENT_TELEPORT_HOME_ID = "teleport_home";
 
 const schema = Object.freeze({
   signals: Object.freeze([
     Object.freeze({
-      id: "spell.orbis",
-      type: "spell",
+      id: SIGNAL_SPELL_ORBIS,
+      type: CONDITION_TYPE_SPELL,
       sourceEvent: EVT_VOICE_WORD_DETECTED,
-      where: Object.freeze({ path: "word.id", eq: "orbis" }),
+      where: Object.freeze({ path: CONDITION_WORD_ID_PATH, eq: WORD_ORBIS_ID }),
     }),
     Object.freeze({
-      id: "spell.domus",
-      type: "spell",
+      id: SIGNAL_SPELL_DOMUS,
+      type: CONDITION_TYPE_SPELL,
       sourceEvent: EVT_VOICE_WORD_DETECTED,
-      where: Object.freeze({ path: "word.id", eq: "domus" }),
+      where: Object.freeze({ path: CONDITION_WORD_ID_PATH, eq: WORD_DOMUS_ID }),
     }),
   ]),
   windows: Object.freeze([
     Object.freeze({
-      id: "wake_win",
-      type: "wake_win",
+      id: WINDOW_WAKE_WIN,
+      type: ACTION_WAKE_WIN,
       defaultArgs: Object.freeze({ ttlMs: 1000 }),
     }),
   ]),
   events: Object.freeze([
     Object.freeze({
-      id: "teleport_home",
-      type: "event",
+      id: EVENT_TELEPORT_HOME_ID,
+      type: EVENT_TYPE,
       defaultArgs: Object.freeze({}),
     }),
   ]),
@@ -43,14 +55,14 @@ const schema = Object.freeze({
     Object.freeze({
       id: "master_wake",
       on: Object.freeze([
-        Object.freeze({ type: "spell", id: "orbis" }),
+        Object.freeze({ type: CONDITION_TYPE_SPELL, id: WORD_ORBIS_ID }),
       ]),
       then: Object.freeze([
         Object.freeze({
-          type: "wake_win",
-          id: "wake_win",
-          windowId: "wake.main",
-          spells: Object.freeze(["domus"]),
+          type: ACTION_WAKE_WIN,
+          id: WINDOW_WAKE_WIN,
+          windowId: WINDOW_WAKE_MAIN_ID,
+          spells: Object.freeze([WORD_DOMUS_ID]),
           ttlMs: 1000,
         }),
       ]),
@@ -58,12 +70,12 @@ const schema = Object.freeze({
     Object.freeze({
       id: "tele_home",
       on: Object.freeze([
-        Object.freeze({ type: "spell", id: "domus" }),
+        Object.freeze({ type: CONDITION_TYPE_SPELL, id: WORD_DOMUS_ID }),
       ]),
-      requires: Object.freeze(["wake.main"]),
-      consume: Object.freeze(["wake.main"]),
+      requires: Object.freeze([WINDOW_WAKE_MAIN_ID]),
+      consume: Object.freeze([WINDOW_WAKE_MAIN_ID]),
       then: Object.freeze([
-        Object.freeze({ type: "event", id: "teleport_home" }),
+        Object.freeze({ type: EVENT_TYPE, id: EVENT_TELEPORT_HOME_ID }),
       ]),
     }),
   ]),
@@ -96,43 +108,44 @@ function eventCount(actionType, actionId) {
   ).length;
 }
 
+function assertEventCount(actionType, actionId, expectedCount, failureMessage) {
+  if (eventCount(actionType, actionId) !== expectedCount) {
+    failCheck(CHECK_TAG, failureMessage);
+  }
+}
+
 system.start();
 try {
   // No wake window yet: domus should not fire teleport.
-  emitWord("domus", 1000);
-  if (eventCount("event", "teleport_home") !== 0) {
-    failCheck(CHECK_TAG, "domus fired without wake window");
-  }
+  emitWord(WORD_DOMUS_ID, 1000);
+  assertEventCount(EVENT_TYPE, EVENT_TELEPORT_HOME_ID, 0, "domus fired without wake window");
 
   // Open wake window.
-  emitWord("orbis", 1100);
-  if (eventCount("wake_win", "wake_win") !== 1) {
-    failCheck(CHECK_TAG, "wake window did not open on orbis");
-  }
-  if (!wakeOpenedEvents.length || String(wakeOpenedEvents[0]?.windowId || "") !== "wake.main") {
+  emitWord(WORD_ORBIS_ID, 1100);
+  assertEventCount(ACTION_WAKE_WIN, WINDOW_WAKE_WIN, 1, "wake window did not open on orbis");
+  if (!wakeOpenedEvents.length || String(wakeOpenedEvents[0]?.windowId || "") !== WINDOW_WAKE_MAIN_ID) {
     failCheck(CHECK_TAG, "wake window payload missing expected windowId");
   }
 
   // First domus should pass and consume wake.main.
-  emitWord("domus", 1200);
-  if (eventCount("event", "teleport_home") !== 1) {
-    failCheck(CHECK_TAG, "domus did not fire after wake window opened");
-  }
+  emitWord(WORD_DOMUS_ID, 1200);
+  assertEventCount(EVENT_TYPE, EVENT_TELEPORT_HOME_ID, 1, "domus did not fire after wake window opened");
 
   // Consumed: second domus should not fire.
-  emitWord("domus", 1300);
-  if (eventCount("event", "teleport_home") !== 1) {
-    failCheck(CHECK_TAG, "consume semantics failed; domus fired more than once per wake");
-  }
+  emitWord(WORD_DOMUS_ID, 1300);
+  assertEventCount(
+    EVENT_TYPE,
+    EVENT_TELEPORT_HOME_ID,
+    1,
+    "consume semantics failed; domus fired more than once per wake"
+  );
 
   // Re-open wake then domus again should fire once.
-  emitWord("orbis", 1400);
-  emitWord("domus", 1500);
-  if (eventCount("event", "teleport_home") !== 2) {
-    failCheck(CHECK_TAG, "re-opened wake window did not allow domus again");
-  }
+  emitWord(WORD_ORBIS_ID, 1400);
+  emitWord(WORD_DOMUS_ID, 1500);
+  assertEventCount(EVENT_TYPE, EVENT_TELEPORT_HOME_ID, 2, "re-opened wake window did not allow domus again");
 } finally {
   system.stop();
 }
 
-reportCheckPass(CHECK_TAG, "requires/consume/open.windowId semantics hold for wake chains");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

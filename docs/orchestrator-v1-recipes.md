@@ -130,10 +130,13 @@ TRIGGER { gnat_swarm_burn_tick }
 # Comma ON shorthand
 ON "rota, spin_y, charged" TRIGGER "grace, aoe_electric"
 
-# Object ON aliases + OPEN/TTL alias + TRIGGERS alias
-ON { spells: "rota, sanctum", gestures: "spin_y", orbStates: "charged" }
-OPEN { words: "vectus, sanctum", ttl: 1800 } # compatibility alias: spells
+# Canonical object keys + OPEN/TTL alias + TRIGGERS alias
+ON { words: "rota, sanctum", gestures: "spin_y", orbStates: "charged" }
+OPEN { words: "vectus, sanctum", ttl: 1800 } # legacy compatibility alias: spells
 TRIGGERS "grace, aoe_electric"
+
+# Legacy selector compatibility (accepted, prefer word:)
+ON spell:rota TRIGGER grace
 
 # Type alias forms
 ON orbstate:charged TRIGGER grace

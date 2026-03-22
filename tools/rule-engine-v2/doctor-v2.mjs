@@ -1,3 +1,4 @@
+// Pre-smoke gate + runtime/projection health-artifact writer used by ready/status flows.
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { runCheckScriptOrFailStatus } from "./run-check-fail-status-v2.mjs";
@@ -13,7 +14,7 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
-
+// Doctor writes one consolidated health artifact consumed by status/ready checks.
 const CHECK_TAG = "doctor:v2";
 const logDoctor = createTaggedLogger(CHECK_TAG);
 

@@ -9,15 +9,16 @@ export function emitWakeLoadPrelude({
   advance,
   wakeWindowToken,
   axis = CHECK_AXES_V2.y,
-  axisSpellId = CHECK_SPELL_IDS_V2.pyro,
+  axisWordId = CHECK_SPELL_IDS_V2.pyro,
   axisIntent = CHECK_SPELL_INTENTS_V2.axisSelect,
   wakeIntent = CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
   stepMs = 10,
 }) {
+  const axisTokenId = axisWordId || CHECK_SPELL_IDS_V2.pyro;
   const startAt = Number(nowRef?.value ?? 0);
   emitFlatSpinWindowOpened(eventBus, { axis, atMs: startAt });
   emitDetectedWord(eventBus, {
-    id: axisSpellId,
+    id: axisTokenId,
     intent: axisIntent,
     atMs: startAt,
   });
@@ -32,7 +33,7 @@ export function emitWakeLoadPrelude({
 
 export function emitAxisThenWakeSelection({
   eventBus,
-  axisSpellId = CHECK_SPELL_IDS_V2.pyro,
+  axisWordId = CHECK_SPELL_IDS_V2.pyro,
   wakeWindowToken,
   axisIntent = CHECK_SPELL_INTENTS_V2.axisSelect,
   wakeIntent = CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
@@ -40,11 +41,12 @@ export function emitAxisThenWakeSelection({
   wakeAtMs = 0,
   confidence,
 }) {
+  const axisTokenId = axisWordId || CHECK_SPELL_IDS_V2.pyro;
   const withConfidence = confidence === undefined ? {} : { confidence };
   const axisAt = Number(axisAtMs);
   const wakeAt = Number(wakeAtMs);
   emitDetectedWord(eventBus, {
-    id: axisSpellId,
+    id: axisTokenId,
     intent: axisIntent,
     atMs: axisAt,
     ...withConfidence,

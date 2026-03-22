@@ -1,5 +1,7 @@
+// Executes a callback and maps thrown errors to standardized check failures.
 import { failCheck } from "./check-fail-v2.mjs";
-
+// Central wrapper keeps exception-to-failure mapping consistent across checks.
+// Wrapper is synchronous by contract; async callers should fail explicitly.
 export function runOrFail(tag, fn) {
   const safeTag = typeof tag === "string" ? tag.trim() : "";
   if (!safeTag) {

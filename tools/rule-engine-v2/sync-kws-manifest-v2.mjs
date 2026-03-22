@@ -1,3 +1,4 @@
+// Syncs the on-disk KWS manifest with the normalized manifest derived from current wordbook.
 import { resolve } from "node:path";
 import {
   KWS_MANIFEST_REL_PATH,
@@ -7,7 +8,6 @@ import {
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
-
 const CHECK_TAG = "sync:kws-manifest:v2";
 const logSync = createTaggedLogger(CHECK_TAG);
 

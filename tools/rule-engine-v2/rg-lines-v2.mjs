@@ -1,5 +1,7 @@
+// Shared rg wrapper returning trimmed line matches; status code 1 maps to no matches.
 import { execSync } from "node:child_process";
-
+// Normalizes rg command execution for all surface/offender checks.
+// Any non-1 exit code is treated as a real command/runtime failure.
 export function runRgLines(command, { cwd = process.cwd() } = {}) {
   const cmd = typeof command === "string" ? command.trim() : "";
   if (!cmd) {

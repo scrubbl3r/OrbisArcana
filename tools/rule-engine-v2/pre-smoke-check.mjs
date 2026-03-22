@@ -1,3 +1,4 @@
+// Pre-flight validator + projection-drift gate used by ready/doctor flows.
 import { existsSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
@@ -24,6 +25,8 @@ import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 import { listActiveWordModelRefs } from "./wordbook-v2-utils.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
 
+// Intentionally broad pre-flight gate to fail fast before full ready/regression runs.
+// This gate owns snapshot/doc refresh side effects required by downstream checks.
 const CHECK_TAG = "pre-smoke";
 const FAIL_TAG = CHECK_TAG;
 const fail = (message, details = []) => failCheckWithDetails(FAIL_TAG, message, details);

@@ -4,6 +4,7 @@ import { readRelativeText } from "./read-text-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-open-words-precedence-source-surface:v2";
+const PASS_MESSAGE = "orchestrator-v2 compiler and validator source preserve canonical open.words precedence over open.spells alias";
 
 const COMPILER_REL = "src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
 const compilerText = readRelativeText(COMPILER_REL);
@@ -35,7 +36,4 @@ if (validatorText.includes("const wordsRaw = Object.hasOwn(open, \"spells\") ? o
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 compiler and validator source preserve canonical open.words precedence over open.spells alias"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

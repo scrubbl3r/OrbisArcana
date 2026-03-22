@@ -1,8 +1,5 @@
-import {
-  EVT_VOICE_SPELL_DETECTED,
-  EVT_VOICE_WORD_DETECTED,
-} from "../../src/contracts/events.js";
-
+// Emits canonical detected-word events with an optional legacy spell_detected bridge payload.
+import { EVT_VOICE_SPELL_DETECTED, EVT_VOICE_WORD_DETECTED } from "../../src/contracts/events.js";
 export function emitDetectedWord(eventBus, {
   id,
   intent,

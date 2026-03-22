@@ -1,7 +1,7 @@
+// Builds/normalizes KWS manifests from canonical wordbook rows (+ compat alias export).
 import { WORDBOOK_V2 } from "../../src/content/interactions-v2/index.js";
 import { listWordbookWords } from "./wordbook-v2-utils.mjs";
 import { asLowerText, asTrimText } from "./text-utils-v2.mjs";
-
 export const KWS_MANIFEST_REL_PATH = "tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json";
 export const KWS_MODEL_REL_ROOT = "../../../assets/kws/openwakeword-models";
 

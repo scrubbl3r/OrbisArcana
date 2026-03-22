@@ -2,14 +2,19 @@ import { failCheck } from "./check-fail-v2.mjs";
 import { flattenNormalizedManifestChecksV2 } from "./manifest-check-entries-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
+// Guards against duplicate IDs/scripts being owned by multiple manifests.
 const CHECK_TAG = "cross-manifest-integrity:v2";
+const CONFLICT_JOIN_TOKEN = "+";
+const ID_COLLISIONS_LABEL = "cross-manifest id collisions";
+const SCRIPT_COLLISIONS_LABEL = "cross-manifest script collisions";
+const PASS_MESSAGE = "no cross-manifest id/script collisions";
 
 const all = flattenNormalizedManifestChecksV2();
 
 function buildConflictList(ownersByKey) {
   const conflicts = [];
   for (const [key, owners] of ownersByKey.entries()) {
-    if (owners.size > 1) conflicts.push(`${key}=>${[...owners].sort().join("+")}`);
+    if (owners.size > 1) conflicts.push(`${key}=>${[...owners].sort().join(CONFLICT_JOIN_TOKEN)}`);
   }
   return conflicts;
 }
@@ -36,9 +41,9 @@ for (const item of all) {
 }
 
 const idConflicts = buildConflictList(idOwners);
-if (idConflicts.length) failCheck(CHECK_TAG, `cross-manifest id collisions: ${idConflicts.join(", ")}`);
+if (idConflicts.length) failCheck(CHECK_TAG, `${ID_COLLISIONS_LABEL}: ${idConflicts.join(", ")}`);
 
 const scriptConflicts = buildConflictList(scriptOwners);
-if (scriptConflicts.length) failCheck(CHECK_TAG, `cross-manifest script collisions: ${scriptConflicts.join(", ")}`);
+if (scriptConflicts.length) failCheck(CHECK_TAG, `${SCRIPT_COLLISIONS_LABEL}: ${scriptConflicts.join(", ")}`);
 
-reportCheckPass(CHECK_TAG, "no cross-manifest id/script collisions");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

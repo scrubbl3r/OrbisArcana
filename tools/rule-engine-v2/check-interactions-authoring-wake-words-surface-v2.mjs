@@ -2,7 +2,10 @@ import { INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
+// Enforces canonical wake_win authoring via words[] with optional matching spells[] alias.
 const CHECK_TAG = "interactions-authoring-wake-words-surface:v2";
+const ACTION_WAKE_WIN = "wake_win";
+const PASS_MESSAGE = `interactions authoring ${ACTION_WAKE_WIN} uses canonical words[] with matching optional spells[] compatibility alias`;
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -16,31 +19,28 @@ for (const rule of rules) {
   const actions = asArray(rule?.then);
   for (const action of actions) {
     const actionType = String(action?.type || "").trim().toLowerCase();
-    if (actionType !== "wake_win") continue;
+    if (actionType !== ACTION_WAKE_WIN) continue;
     sawWakeWin = true;
 
     if (!Array.isArray(action?.words) || action.words.length === 0) {
       failCheck(
         CHECK_TAG,
-        `rule ${ruleId} wake_win must declare canonical non-empty words[]`
+        `rule ${ruleId} ${ACTION_WAKE_WIN} must declare canonical non-empty words[]`
       );
     }
     if (Object.hasOwn(action || {}, "spells")) {
       if (!Array.isArray(action.spells)) {
-        failCheck(CHECK_TAG, `rule ${ruleId} wake_win compatibility spells must be an array when present`);
+        failCheck(CHECK_TAG, `rule ${ruleId} ${ACTION_WAKE_WIN} compatibility spells must be an array when present`);
       }
       if (JSON.stringify(action.words) !== JSON.stringify(action.spells)) {
-        failCheck(CHECK_TAG, `rule ${ruleId} wake_win words and spells alias must match`);
+        failCheck(CHECK_TAG, `rule ${ruleId} ${ACTION_WAKE_WIN} words and spells alias must match`);
       }
     }
   }
 }
 
 if (!sawWakeWin) {
-  failCheck(CHECK_TAG, "INTERACTIONS_V2 authoring must contain at least one wake_win action");
+  failCheck(CHECK_TAG, `INTERACTIONS_V2 authoring must contain at least one ${ACTION_WAKE_WIN} action`);
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "interactions authoring wake_win uses canonical words[] with matching optional spells[] compatibility alias"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

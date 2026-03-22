@@ -4,6 +4,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-top-level-enabled-compiler-source-surface:v2";
 const BUILDER_REL = "src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
+const PASS_MESSAGE = "orchestrator-v2 builder source preserves top-level enabled mapping into compiled rule-engine payload";
 
 const text = readRelativeText(BUILDER_REL);
 requireTextIncludesTokensV2({
@@ -16,7 +17,4 @@ requireTextIncludesTokensV2({
   missingMessage: (token) => `${BUILDER_REL} missing top-level enabled compiler token: ${token}`,
 });
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 builder source preserves top-level enabled mapping into compiled rule-engine payload"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

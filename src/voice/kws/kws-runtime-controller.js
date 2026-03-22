@@ -8,7 +8,7 @@ export function createKwsRuntimeController({
   const DEFAULT_KWS_AUTOSTART_MAX_MS = Math.max(1000, Number(constants.autostartMaxMs) || 120000);
   const DEFAULT_KWS_AUTOSTART_REKICK_MS = Math.max(250, Number(constants.autostartRekickMs) || 5000);
 
-  let kwsVoiceProvider = null;
+  let kwsWordProvider = null;
   let voiceProviderManager = null;
   let kwsBackendFactories = Object.create(null);
   let kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
@@ -76,9 +76,10 @@ export function createKwsRuntimeController({
     kwsAutostartLastKickAtMs = 0;
   }
 
-  function setKwsVoiceProvider(nextProvider) {
-    kwsVoiceProvider = nextProvider || null;
+  function setKwsWordProvider(nextProvider) {
+    kwsWordProvider = nextProvider || null;
   }
+  const setKwsVoiceProvider = setKwsWordProvider;
 
   function setVoiceProviderManager(nextManager) {
     voiceProviderManager = nextManager || null;
@@ -90,27 +91,28 @@ export function createKwsRuntimeController({
     setDebugBackend(kwsBackendKey);
   }
 
-  function getKwsVoiceProvider() {
-    return kwsVoiceProvider;
+  function getKwsWordProvider() {
+    return kwsWordProvider;
   }
+  const getKwsVoiceProvider = getKwsWordProvider;
 
   async function setKwsBackend(key = DEFAULT_KWS_BACKEND_KEY) {
     const nextKey = String(key || DEFAULT_KWS_BACKEND_KEY);
     kwsBackendKey = nextKey;
     setDebugBackend(nextKey);
     const spec = kwsBackendFactories[nextKey] || null;
-    if (!kwsVoiceProvider || typeof kwsVoiceProvider.setBackend !== "function") {
+    if (!kwsWordProvider || typeof kwsWordProvider.setBackend !== "function") {
       refreshMicBtn();
       updateReadout();
       return false;
     }
-    await kwsVoiceProvider.setBackend(spec && typeof spec.factory === "function" ? spec.factory : null, {
+    await kwsWordProvider.setBackend(spec && typeof spec.factory === "function" ? spec.factory : null, {
       requiresMic: !(spec && spec.requiresMic === false),
       label: spec && spec.label ? spec.label : nextKey,
     });
-    if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
-      const backendStatusNow = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
-        ? kwsVoiceProvider.getStatus()
+    if (nextKey === "openwakeword_browser" && typeof kwsWordProvider.setBackendConfig === "function") {
+      const backendStatusNow = kwsWordProvider && typeof kwsWordProvider.getStatus === "function"
+        ? kwsWordProvider.getStatus()
         : null;
       const backendNow = backendStatusNow && backendStatusNow.audioBackendStatus ? backendStatusNow.audioBackendStatus : backendStatusNow;
       const tune = readTuneFromUi();
@@ -118,7 +120,7 @@ export function createKwsRuntimeController({
       const cdFromUi = tune.inferCooldownMs;
       const thFromBackend = Number(backendNow && backendNow.inferThreshold);
       const cdFromBackend = Number(backendNow && backendNow.inferCooldownMs);
-      const statusAfterApply = kwsVoiceProvider.setBackendConfig({
+      const statusAfterApply = kwsWordProvider.setBackendConfig({
         ...(thFromUi != null
           ? { inferThreshold: thFromUi }
           : (Number.isFinite(thFromBackend) ? { inferThreshold: thFromBackend } : {})),
@@ -128,12 +130,12 @@ export function createKwsRuntimeController({
       });
       syncTuneUiFromStatus(statusAfterApply && statusAfterApply.audioBackendStatus ? statusAfterApply.audioBackendStatus : statusAfterApply);
     }
-    if (spec && typeof spec.factory === "function" && typeof kwsVoiceProvider.setMicEnabled === "function") {
-      await kwsVoiceProvider.setMicEnabled(true);
+    if (spec && typeof spec.factory === "function" && typeof kwsWordProvider.setMicEnabled === "function") {
+      await kwsWordProvider.setMicEnabled(true);
     }
-    if (nextKey === "openwakeword_browser" && typeof kwsVoiceProvider.setBackendConfig === "function") {
-      const backendStatusNow = kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function"
-        ? kwsVoiceProvider.getStatus()
+    if (nextKey === "openwakeword_browser" && typeof kwsWordProvider.setBackendConfig === "function") {
+      const backendStatusNow = kwsWordProvider && typeof kwsWordProvider.getStatus === "function"
+        ? kwsWordProvider.getStatus()
         : null;
       const backendNow = backendStatusNow && backendStatusNow.audioBackendStatus ? backendStatusNow.audioBackendStatus : backendStatusNow;
       const tune = readTuneFromUi();
@@ -141,7 +143,7 @@ export function createKwsRuntimeController({
       const cdFromUi = tune.inferCooldownMs;
       const thFromBackend = Number(backendNow && backendNow.inferThreshold);
       const cdFromBackend = Number(backendNow && backendNow.inferCooldownMs);
-      const statusAfterStartApply = kwsVoiceProvider.setBackendConfig({
+      const statusAfterStartApply = kwsWordProvider.setBackendConfig({
         ...(thFromUi != null
           ? { inferThreshold: thFromUi }
           : (Number.isFinite(thFromBackend) ? { inferThreshold: thFromBackend } : {})),
@@ -156,19 +158,20 @@ export function createKwsRuntimeController({
     return true;
   }
 
-  function setKwsParserConfig(next = {}) {
-    if (!kwsVoiceProvider || typeof kwsVoiceProvider.setParserConfig !== "function") return null;
-    return kwsVoiceProvider.setParserConfig(next);
+  function setKwsWordParserConfig(next = {}) {
+    if (!kwsWordProvider || typeof kwsWordProvider.setParserConfig !== "function") return null;
+    return kwsWordProvider.setParserConfig(next);
   }
+  const setKwsParserConfig = setKwsWordParserConfig;
 
   function setKwsBackendConfig(next = {}) {
-    if (!kwsVoiceProvider || typeof kwsVoiceProvider.setBackendConfig !== "function") return null;
-    return kwsVoiceProvider.setBackendConfig(next);
+    if (!kwsWordProvider || typeof kwsWordProvider.setBackendConfig !== "function") return null;
+    return kwsWordProvider.setBackendConfig(next);
   }
 
   async function setKwsMicEnabled(next) {
-    if (!kwsVoiceProvider || typeof kwsVoiceProvider.setMicEnabled !== "function") return false;
-    const ok = await kwsVoiceProvider.setMicEnabled(!!next);
+    if (!kwsWordProvider || typeof kwsWordProvider.setMicEnabled !== "function") return false;
+    const ok = await kwsWordProvider.setMicEnabled(!!next);
     refreshMicBtn();
     updateReadout();
     return !!ok;
@@ -178,10 +181,10 @@ export function createKwsRuntimeController({
     setDebugMode(DEFAULT_VOICE_ENGINE);
     updateReadout();
     if (!voiceProviderManager) return false;
-    if (kwsVoiceProvider) {
-      kwsVoiceProvider.setMode("active");
-      kwsVoiceProvider.start && kwsVoiceProvider.start();
-      kwsVoiceProvider.setEnabled && kwsVoiceProvider.setEnabled(true);
+    if (kwsWordProvider) {
+      kwsWordProvider.setMode("active");
+      kwsWordProvider.start && kwsWordProvider.start();
+      kwsWordProvider.setEnabled && kwsWordProvider.setEnabled(true);
     }
     const ok = !!(voiceProviderManager.setActive && voiceProviderManager.setActive("kws"));
     emitVoiceSetMode("wake_token_open_world");
@@ -189,7 +192,7 @@ export function createKwsRuntimeController({
   }
 
   function startAutostartWatchdog() {
-    if (!kwsVoiceProvider || typeof kwsVoiceProvider.getStatus !== "function") return;
+    if (!kwsWordProvider || typeof kwsWordProvider.getStatus !== "function") return;
     clearAutostartWatchdog();
     kwsAutostartStartedAtMs = performance.now();
     kwsAutostartTimer = setInterval(async () => {
@@ -199,7 +202,7 @@ export function createKwsRuntimeController({
         clearAutostartWatchdog();
         return;
       }
-      const s = kwsVoiceProvider.getStatus();
+      const s = kwsWordProvider.getStatus();
       const err = String(s && s.micError || "").toLowerCase();
       if (err.includes("notallowederror") || err.includes("permission")) {
         clearAutostartWatchdog();
@@ -237,13 +240,16 @@ export function createKwsRuntimeController({
 
   return {
     setKwsVoiceProvider,
+    setKwsWordProvider,
     setVoiceProviderManager,
     setBackendFactories,
     getKwsVoiceProvider,
+    getKwsWordProvider,
     clearAutostartWatchdog,
     startAutostartWatchdog,
     setVoiceEngine,
     setKwsBackend,
+    setKwsWordParserConfig,
     setKwsParserConfig,
     setKwsBackendConfig,
     setKwsMicEnabled,

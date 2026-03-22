@@ -27,9 +27,10 @@ export const WAKE_WINDOW_WORD_IDS = Object.freeze([
   "vectus",
 ]);
 
-export const SPELL_WINDOW_BYPASS_WORD_IDS = Object.freeze([
+export const WORD_WINDOW_BYPASS_WORD_IDS = Object.freeze([
   ...new Set([...AXIS_WORD_IDS, ...WAKE_WINDOW_WORD_IDS]),
 ]);
+export const SPELL_WINDOW_BYPASS_WORD_IDS = WORD_WINDOW_BYPASS_WORD_IDS;
 
 // Immediate voice words that are owned by the rule engine path.
 // Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
@@ -69,7 +70,7 @@ export const KWS_SIM_WORD_IDS = Object.freeze([
 
 export const KWS_INFER_DEFAULT_WORD_ID = "pyro";
 
-export const SPELL_RUNTIME_ROUTING = Object.freeze([
+export const WORD_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "orbis",
     intent: "spell.wake",
@@ -93,18 +94,21 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
   Object.freeze({
     id: "pyro",
     intent: "spell.axis_select",
+    axisWord: "pyro",
     axisSpell: "pyro",
     allowedAxes: Object.freeze(["y"]),
   }),
   Object.freeze({
     id: "fridgis",
     intent: "spell.axis_select",
+    axisWord: "fridgis",
     axisSpell: "fridgis",
     allowedAxes: Object.freeze(["x"]),
   }),
   Object.freeze({
     id: "electrum",
     intent: "spell.axis_select",
+    axisWord: "electrum",
     axisSpell: "electrum",
     allowedAxes: Object.freeze(["z"]),
   }),
@@ -130,10 +134,10 @@ export const SPELL_RUNTIME_ROUTING = Object.freeze([
     allowedAxes: Object.freeze(["x", "y", "z"]),
   }),
 ]);
-export const SPELL_RUNTIME_ROUTING_TABLE = SPELL_RUNTIME_ROUTING;
+export const WORD_RUNTIME_ROUTING_TABLE = WORD_RUNTIME_ROUTING;
 
-export const SPELL_RUNTIME_ROUTING_BY_WORD_ID = Object.freeze(
-  SPELL_RUNTIME_ROUTING.reduce((acc, item) => {
+export const WORD_RUNTIME_ROUTING_BY_WORD_ID = Object.freeze(
+  WORD_RUNTIME_ROUTING.reduce((acc, item) => {
     const id = String(item && item.id || "").trim().toLowerCase();
     if (!id) return acc;
     acc[id] = item;

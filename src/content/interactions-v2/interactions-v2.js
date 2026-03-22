@@ -136,7 +136,7 @@ function hasActionType(actions, expectedType) {
   });
 }
 
-function normalizeSpellConditionId(rawId) {
+function normalizeWordConditionId(rawId) {
   const condIdRaw = asLowerTrimmed(rawId);
   if (!condIdRaw) return "";
   if (condIdRaw.startsWith(SPELL_PREFIX)) return condIdRaw.slice(SPELL_PREFIX.length);
@@ -153,13 +153,13 @@ function getRuleThenActions(rule) {
   return Array.isArray(rule?.[FIELD_THEN]) ? rule[FIELD_THEN] : [];
 }
 
-function getSingleSpellConditionId(rule) {
+function getSingleWordConditionId(rule) {
   const onAll = getRuleOnAll(rule);
   const cond = onAll.length === 1 ? (onAll[0] || null) : null;
   if (!cond) return "";
   const condType = asLowerTrimmed(cond?.[FIELD_TYPE]);
   if (condType !== CONDITION_TYPE_SPELL && condType !== CONDITION_TYPE_WORD) return "";
-  const condId = normalizeSpellConditionId(cond?.[FIELD_ID]);
+  const condId = normalizeWordConditionId(cond?.[FIELD_ID]);
   return condId || "";
 }
 
@@ -170,17 +170,17 @@ function hasImmediateEventActionProfile(rule) {
   return hasActionType(actions, ACTION_TYPE_EVENT);
 }
 
-function resolveImmediateSpellId(rule) {
-  const condId = getSingleSpellConditionId(rule);
+function resolveImmediateWordId(rule) {
+  const condId = getSingleWordConditionId(rule);
   if (!condId) return "";
   if (!hasImmediateEventActionProfile(rule)) return "";
   return condId;
 }
 
-function addUniqueImmediateSpellId(out, seen, spellId) {
-  if (!spellId || seen.has(spellId)) return;
-  seen.add(spellId);
-  out.push(spellId);
+function addUniqueImmediateWordId(out, seen, wordId) {
+  if (!wordId || seen.has(wordId)) return;
+  seen.add(wordId);
+  out.push(wordId);
 }
 
 function getInteractionRules(cfg) {
@@ -191,8 +191,8 @@ function collectImmediateEventWordIdsFromRules(rules) {
   const out = [];
   const seen = new Set();
   for (const rule of rules) {
-    const condId = resolveImmediateSpellId(rule);
-    addUniqueImmediateSpellId(out, seen, condId);
+    const condId = resolveImmediateWordId(rule);
+    addUniqueImmediateWordId(out, seen, condId);
   }
   return out;
 }

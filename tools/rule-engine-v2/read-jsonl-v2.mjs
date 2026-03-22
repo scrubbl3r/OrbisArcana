@@ -1,5 +1,7 @@
+// Reads JSONL and returns only successfully parsed non-empty records.
 import { readFileSync } from "node:fs";
-
+// Used by milestone/history readers that tolerate malformed historical lines.
+// Missing files are treated as empty history for resilient check pipelines.
 export function readJsonLines(path) {
   const filePath = typeof path === "string" ? path.trim() : "";
   if (!filePath) {

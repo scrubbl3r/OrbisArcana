@@ -1,3 +1,6 @@
+// Canonical FAIL reporter and exit helpers for rule-engine-v2 checks.
+// All helpers normalize tag/message so failure output format stays stable.
+// Default tag/message values preserve predictable output under bad caller input.
 function normalizeFailureArgs(tag, msg) {
   const safeTag = typeof tag === "string" ? tag.trim() : "";
   const safeMessage = typeof msg === "string" ? msg.trim() : "";

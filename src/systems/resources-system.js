@@ -180,10 +180,12 @@ export function createResourcesSystem({
   function consumeStoredGlobe(payload = {}) {
     if (state.storedGlobes <= 0) return { ok: false, stored: 0 };
     const atMs = Number(payload.atMs) || nowMs();
+    const wordId = (payload.wordId || payload.spellId) ? String(payload.wordId || payload.spellId) : undefined;
     state.storedGlobes = Math.max(0, state.storedGlobes - 1);
     eventBus.emit(EVT_RESOURCES_GLOBE_SPENT, {
       reason: String(payload.reason || "unknown"),
-      spellId: payload.spellId ? String(payload.spellId) : undefined,
+      wordId,
+      spellId: wordId,
       axis: payload.axis ? String(payload.axis) : undefined,
       slot: payload.slot ? String(payload.slot) : undefined,
       stored: state.storedGlobes,

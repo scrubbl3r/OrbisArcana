@@ -9,7 +9,7 @@ export function bootstrapKwsVoiceRuntime({
   syncKwsTuneUiFromStatus,
   refreshKwsMicBtn,
 } = {}) {
-  let kwsVoiceProvider = null;
+  let kwsWordProvider = null;
   let voiceProviderManager = null;
   let kwsBackendFactories = Object.create(null);
   let kwsBackendKey = String(defaultBackendKey || "openwakeword_browser");
@@ -28,7 +28,7 @@ export function bootstrapKwsVoiceRuntime({
     };
     kwsBackendKey = String(defaultBackendKey || "openwakeword_browser");
     const selectedBackend = kwsBackendFactories[kwsBackendKey] || kwsBackendFactories.openwakeword_browser || null;
-    kwsVoiceProvider = createKwsProvider({
+    kwsWordProvider = createKwsProvider({
       eventBus,
       shadow: true,
       backendFactory: selectedBackend && typeof selectedBackend.factory === "function"
@@ -42,17 +42,19 @@ export function bootstrapKwsVoiceRuntime({
     if (kwsRuntimeController && typeof kwsRuntimeController.setBackendFactories === "function") {
       kwsRuntimeController.setBackendFactories(kwsBackendFactories, kwsBackendKey);
     }
-    if (kwsRuntimeController && typeof kwsRuntimeController.setKwsVoiceProvider === "function") {
-      kwsRuntimeController.setKwsVoiceProvider(kwsVoiceProvider);
+    if (kwsRuntimeController && typeof kwsRuntimeController.setKwsWordProvider === "function") {
+      kwsRuntimeController.setKwsWordProvider(kwsWordProvider);
+    } else if (kwsRuntimeController && typeof kwsRuntimeController.setKwsVoiceProvider === "function") {
+      kwsRuntimeController.setKwsVoiceProvider(kwsWordProvider);
     }
   }
 
   if (typeof createVoiceProviderManager === "function") {
     voiceProviderManager = createVoiceProviderManager({
       providers: {
-        ...(kwsVoiceProvider ? { kws: kwsVoiceProvider } : {}),
+        ...(kwsWordProvider ? { kws: kwsWordProvider } : {}),
       },
-      activeId: kwsVoiceProvider ? "kws" : "",
+      activeId: kwsWordProvider ? "kws" : "",
     });
     if (kwsRuntimeController && typeof kwsRuntimeController.setVoiceProviderManager === "function") {
       kwsRuntimeController.setVoiceProviderManager(voiceProviderManager);
@@ -64,20 +66,21 @@ export function bootstrapKwsVoiceRuntime({
   }
 
   // Initialize KWS provider eagerly; default engine may be live KWS.
-  if (kwsVoiceProvider) {
-    if (typeof kwsVoiceProvider.setMode === "function") {
-      kwsVoiceProvider.setMode(String(defaultVoiceEngine || "kws") === "kws" ? "active" : "shadow");
+  if (kwsWordProvider) {
+    if (typeof kwsWordProvider.setMode === "function") {
+      kwsWordProvider.setMode(String(defaultVoiceEngine || "kws") === "kws" ? "active" : "shadow");
     }
-    if (typeof kwsVoiceProvider.start === "function") kwsVoiceProvider.start();
-    if (typeof kwsVoiceProvider.setEnabled === "function") kwsVoiceProvider.setEnabled(true);
-    if (typeof kwsVoiceProvider.getStatus === "function" && typeof syncKwsTuneUiFromStatus === "function") {
-      syncKwsTuneUiFromStatus(kwsVoiceProvider.getStatus());
+    if (typeof kwsWordProvider.start === "function") kwsWordProvider.start();
+    if (typeof kwsWordProvider.setEnabled === "function") kwsWordProvider.setEnabled(true);
+    if (typeof kwsWordProvider.getStatus === "function" && typeof syncKwsTuneUiFromStatus === "function") {
+      syncKwsTuneUiFromStatus(kwsWordProvider.getStatus());
     }
     if (typeof refreshKwsMicBtn === "function") refreshKwsMicBtn();
   }
 
   return {
-    kwsVoiceProvider,
+    kwsWordProvider,
+    kwsVoiceProvider: kwsWordProvider,
     voiceProviderManager,
     kwsBackendKey,
   };

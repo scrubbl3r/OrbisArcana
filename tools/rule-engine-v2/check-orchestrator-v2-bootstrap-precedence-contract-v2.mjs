@@ -1,7 +1,4 @@
-import {
-  hydrateReceiverBootstrapState,
-  RULE_ENGINE_SOURCES,
-} from "../../src/runtime/receiver-bootstrap.js";
+import { hydrateReceiverBootstrapState, RULE_ENGINE_SOURCES } from "../../src/runtime/receiver-bootstrap.js";
 import {
   ORCHESTRATOR_V2,
   validateOrchestratorV2,
@@ -17,6 +14,7 @@ import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-bootstrap-precedence:v2";
+const PASS_MESSAGE = "bootstrap source precedence selects orchestrator v2 over v1/interactions";
 
 const captured = {
   ruleSchema: null,
@@ -72,4 +70,4 @@ if (source !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V2) {
   );
 }
 
-reportCheckPass(CHECK_TAG, "bootstrap source precedence selects orchestrator v2 over v1/interactions");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

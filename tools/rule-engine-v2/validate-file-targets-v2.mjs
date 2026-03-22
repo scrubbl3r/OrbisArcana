@@ -1,7 +1,8 @@
+// Validates a non-empty list of repo-relative file targets present in the repo.
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
-
+// Validation is path-existence only; content contracts are handled by caller checks.
 export function validateFileTargetsV2({ tag, targets, label }) {
   if (!tag) {
     failCheck("validate-file-targets:v2", "file target validation requires check tag");

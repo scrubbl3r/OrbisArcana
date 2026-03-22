@@ -17,10 +17,12 @@ Related index:
   - axis select: `spell.axis_select`
   - wake-window select: `spell.wake_window_select`
 - Action/event payload fields:
-  - use `axisSpell` and `wakeWindowSpell`
+  - use `axisWord` and `wakeWindowSpell`
+  - compatibility alias remains: `axisSpell` -> `axisWord`
   - retired aliases are removed from runtime payloads (`school`, `classKey`)
 - KWS runtime config:
-  - uses axis-to-token routing map (`axisSpellByAxis`)
+  - uses axis-to-token routing map (`axisWordByAxis`)
+  - compatibility alias remains: `axisSpellByAxis` -> `axisWordByAxis`
 - Dispatch reject reasons:
   - `spell_window_required`
   - `flat_spin_requires_wake_window_token`

@@ -24,11 +24,13 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
 
 /**
  * @typedef {Object} VoiceSpellCastPayload
- * @property {string} spellId Canonical spell id
+ * @property {string} wordId Canonical detected word id
+ * @property {string} [spellId] Legacy compatibility alias for `wordId`
  * @property {string} [intent] Spell intent/category
  * @property {string} [axis] Axis (`x`,`y`,`z`)
  * @property {string} [slot] Slot/group (`UD`,`LR`,`FB`)
- * @property {string} [axisSpell] Selected axis spell token id for wake-window casts
+ * @property {string} [axisWord] Selected axis word token id for wake-window casts
+ * @property {string} [axisSpell] Legacy compatibility alias for `axisWord`
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
  * @property {number} [floatGraceMs] Optional explicit grace override
@@ -40,17 +42,20 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
 
 /**
  * @typedef {Object} VoiceSpellLoadedPayload
- * @property {string} spellId Canonical spell id
+ * @property {string} wordId Canonical detected word id
+ * @property {string} [spellId] Legacy compatibility alias for `wordId`
  * @property {string} axis Axis (`x`,`y`,`z`)
  * @property {string} slot Slot/group (`UD`,`LR`,`FB`)
- * @property {string} [axisSpell] Selected axis spell token id for wake-window loads
+ * @property {string} [axisWord] Selected axis word token id for wake-window loads
+ * @property {string} [axisSpell] Legacy compatibility alias for `axisWord`
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
  */
 
 /**
  * @typedef {Object} VoiceSpellRejectedPayload
- * @property {string} [spellId]
+ * @property {string} [wordId]
+ * @property {string} [spellId] Legacy compatibility alias for `wordId`
  * @property {string} reason Rejection reason code
  * @property {number} [atMs]
  * @property {string} [axis]
@@ -68,8 +73,9 @@ export const EVT_VOICE_SET_MODE = "voice.set_mode";
  */
 export const EVT_VOICE_TOKEN_DETECTED = "voice.token_detected";
 /**
- * @typedef {Object} VoiceKwsSpellCandidatePayload
- * @property {string|null} spellId
+ * @typedef {Object} VoiceKwsWordCandidatePayload
+ * @property {string|null} wordId Canonical detected word id
+ * @property {string|null} spellId Legacy compatibility alias for `wordId`
  * @property {boolean} matched
  * @property {string[]} tokens
  * @property {string} phrase
@@ -79,6 +85,8 @@ export const EVT_VOICE_TOKEN_DETECTED = "voice.token_detected";
  * @property {string} providerId Usually `kws`
  * @property {string} source Usually `kws`
  */
+export const EVT_VOICE_KWS_WORD_CANDIDATE = "voice.kws_spell_candidate";
+/** @deprecated Use EVT_VOICE_KWS_WORD_CANDIDATE */
 export const EVT_VOICE_KWS_SPELL_CANDIDATE = "voice.kws_spell_candidate";
 /**
  * Canonical word detection event.

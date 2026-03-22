@@ -7,8 +7,12 @@ import { readRelativeText } from "./read-text-v2.mjs";
 const CHECK_TAG = "compatibility-doc-source-ids:v2";
 const docRel = RULE_ENGINE_V2_DOC_PATHS.ruleEngineCompatibilityDoc;
 const text = readRelativeText(docRel);
+const PROJECTION_ENABLED_TOKEN = "Projection-only rule execution: enabled";
+const REQUIRED_COMPAT_LABEL = "required compatibility token";
+const RUNTIME_SOURCE_IDS_LABEL = "canonical runtime source ids";
+const PASS_MESSAGE = `compatibility doc lists all ${RUNTIME_SOURCE_IDS_LABEL}`;
 const requiredTokens = Object.freeze([
-  "Projection-only rule execution: enabled",
+  PROJECTION_ENABLED_TOKEN,
   ...Object.values(RULE_ENGINE_SOURCES).map((sourceId) => `\`${sourceId}\``),
 ]);
 
@@ -16,7 +20,7 @@ requireTextIncludesTokensV2({
   tag: CHECK_TAG,
   text,
   tokens: requiredTokens,
-  missingMessage: (token) => `${docRel} missing required compatibility token: ${token}`,
+  missingMessage: (token) => `${docRel} missing ${REQUIRED_COMPAT_LABEL}: ${token}`,
 });
 
-reportCheckPass(CHECK_TAG, "compatibility doc lists all canonical runtime source ids");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

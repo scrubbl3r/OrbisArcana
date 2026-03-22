@@ -1,3 +1,4 @@
+// Shared gesture/event constants for check fixtures and helpers.
 export const CHECK_AXES_V2 = Object.freeze({
   y: "y",
 });

@@ -1,5 +1,7 @@
+// Canonical docs/artifact path registry plus key-to-path helpers for rule-engine-v2.
 import { resolve } from "node:path";
-
+// Single source for generated/core doc keys used by registry and docs-index checks.
+// Keep this registry path-only; existence and ownership are validated elsewhere.
 export const RULE_ENGINE_V2_DOC_PATHS = Object.freeze({
   docsIndex: "docs/rule-engine-v2-docs-index.md",
   interactionsSchemaDoc: "docs/interactions-schema.md",

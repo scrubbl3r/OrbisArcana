@@ -1,6 +1,6 @@
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { getInteractionsRules } from "./interactions-v2-utils.mjs";
-import { jsonClone } from "./json-clone-v2.mjs";
+import { cloneJsonV2 } from "./json-clone-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { countWordbookWords } from "./wordbook-v2-utils.mjs";
@@ -14,6 +14,8 @@ import {
   buildRuleEngineFromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 
+// Builds docs/effective-interactions-v2.snapshot.json from canonical SSOT surfaces.
+// Snapshot payload mirrors validation state and derived projection counts at generation time.
 function buildSnapshot() {
   const wordbookErrors = validateWordbookV2(WORDBOOK_V2);
   const interactionsValidation = validateInteractionsV2(INTERACTIONS_V2);
@@ -27,7 +29,7 @@ function buildSnapshot() {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.effectiveSnapshot,
     generatedAt: nowIso(),
     flags: {
-      interactionsV2Bootstrap: jsonClone(INTERACTIONS_V2_BOOTSTRAP),
+      interactionsV2Bootstrap: cloneJsonV2(INTERACTIONS_V2_BOOTSTRAP),
     },
     validation: {
       spellbookV2: {
@@ -44,9 +46,9 @@ function buildSnapshot() {
       interactionsV2Rules: interactionRules.length,
       projectedRuleEngineRules: Array.isArray(projectedRuleEngine.rules) ? projectedRuleEngine.rules.length : 0,
     },
-    spellbookV2: jsonClone(WORDBOOK_V2),
-    interactionsV2: jsonClone(INTERACTIONS_V2),
-    projectedRuleEngine: jsonClone(projectedRuleEngine),
+    spellbookV2: cloneJsonV2(WORDBOOK_V2),
+    interactionsV2: cloneJsonV2(INTERACTIONS_V2),
+    projectedRuleEngine: cloneJsonV2(projectedRuleEngine),
   };
 }
 

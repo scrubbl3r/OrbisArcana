@@ -5,6 +5,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-groups-normalization-compiler-source-surface:v2";
 const COMPILER_REL = "src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
+const PASS_MESSAGE = "orchestrator-v2 compiler source preserves normalizeSpellId-based @group expansion for wake words";
 
 const text = readRelativeText(COMPILER_REL);
 requireTextIncludesTokensV2({
@@ -26,7 +27,4 @@ if (text.includes("out.push(asText(groupWord).toLowerCase())")) {
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 compiler source preserves normalizeSpellId-based @group expansion for wake words"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

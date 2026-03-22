@@ -1,7 +1,7 @@
+// Debug reporter for printing detailed runtime-vs-projection rule drift.
 import { INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
 import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 import { stringifyJson } from "./stringify-json-v2.mjs";
-
 function stable(v) {
   return stringifyJson(v);
 }

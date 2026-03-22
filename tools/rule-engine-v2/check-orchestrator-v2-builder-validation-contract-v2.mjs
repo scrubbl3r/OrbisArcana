@@ -1,10 +1,17 @@
 import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import {
+  openUnknownInactiveWordErrorTokenV2,
+  OTHER_UNKNOWN_WAKE_WORD_ID_V2,
+  UNKNOWN_WAKE_WORD_ID_V2,
+  unknownInactiveWordErrorTokenV2,
+} from "./wake-test-ids-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-builder-validation-contract:v2";
 const ERROR_PREFIX = "ORCHESTRATOR_V2 validation failed: ";
 const ERROR_DELIMITER = " | ";
+const PASS_MESSAGE = "orchestrator-v2 builder rejects invalid configs via validation-prefixed errors";
 
 function expectBuilderValid(caseName, orchestratorV2) {
   let threw = false;
@@ -57,2271 +64,1564 @@ function expectBuilderErrorWithFragments(caseName, orchestratorV2, expectedFragm
   }
 }
 
-expectBuilderValid(
+const baseValidRule = Object.freeze({
+  id: "valid_rule",
+  on: Object.freeze({ word: "orbis" }),
+  trigger: Object.freeze({ grace: true }),
+});
+
+const baseline = Object.freeze({
+  version: "2",
+  enabled: true,
+  rules: Object.freeze([baseValidRule]),
+});
+
+function withRules(rules) {
+  return withBaselineOverride({
+    rules: Object.freeze(rules),
+  });
+}
+
+function withSingleRule(rule) {
+  return withRules([Object.freeze(rule)]);
+}
+
+function withDefaults(defaultsOverride) {
+  return withBaselineOverride({
+    defaults: Object.freeze(defaultsOverride),
+  });
+}
+
+function withGroupsAndSingleRule(groupsOverride, rule) {
+  return withBaselineOverride({
+    groups: Object.freeze(groupsOverride),
+    rules: Object.freeze([Object.freeze(rule)]),
+  });
+}
+
+function withBaselineOverride(overrides) {
+  return Object.freeze({
+    ...baseline,
+    ...overrides,
+  });
+}
+
+function withVersion(version) {
+  return withBaselineOverride({ version });
+}
+
+function expectBuilderErrorWithBaselineOverride(caseName, overrides, expectedNeedle) {
+  expectBuilderError(caseName, withBaselineOverride(overrides), expectedNeedle);
+}
+
+function expectBuilderErrorWithSingleRule(caseName, rule, expectedNeedle) {
+  expectBuilderError(caseName, withSingleRule(rule), expectedNeedle);
+}
+
+function expectBuilderErrorWithGroupsAndSingleRule(
+  caseName,
+  groupsOverride,
+  rule,
+  expectedNeedle
+) {
+  expectBuilderError(caseName, withGroupsAndSingleRule(groupsOverride, rule), expectedNeedle);
+}
+
+function expectBuilderErrorWithRules(caseName, rules, expectedNeedle) {
+  expectBuilderError(caseName, withRules(rules), expectedNeedle);
+}
+
+function expectBuilderErrorWithRuleEntries(caseName, entries, expectedNeedle) {
+  expectBuilderError(caseName, withRuleEntries(entries), expectedNeedle);
+}
+
+function expectBuilderErrorWithDefaults(caseName, defaultsOverride, expectedNeedle) {
+  expectBuilderError(caseName, withDefaults(defaultsOverride), expectedNeedle);
+}
+
+function expectBuilderErrorWithVersion(caseName, version, expectedNeedle) {
+  expectBuilderError(caseName, withVersion(version), expectedNeedle);
+}
+
+function expectBuilderValidWithSingleRule(caseName, rule) {
+  expectBuilderValid(caseName, withSingleRule(rule));
+}
+
+function expectBuilderValidWithGroupsAndSingleRule(caseName, groupsOverride, rule) {
+  expectBuilderValid(caseName, withGroupsAndSingleRule(groupsOverride, rule));
+}
+
+function expectBuilderValidWithRules(caseName, rules) {
+  expectBuilderValid(caseName, withRules(rules));
+}
+
+function expectBuilderErrorWithSingleRuleFragments(caseName, rule, expectedFragments) {
+  expectBuilderErrorWithFragments(caseName, withSingleRule(rule), expectedFragments);
+}
+
+function withDefaultsAndSingleRule(defaultsOverride, rule) {
+  return withBaselineOverride({
+    defaults: Object.freeze(defaultsOverride),
+    rules: Object.freeze([Object.freeze(rule)]),
+  });
+}
+
+function expectBuilderValidWithDefaultsAndSingleRule(caseName, defaultsOverride, rule) {
+  expectBuilderValid(caseName, withDefaultsAndSingleRule(defaultsOverride, rule));
+}
+
+function withRuleEntries(entries) {
+  return withBaselineOverride({
+    rules: Object.freeze(entries),
+  });
+}
+
+expectBuilderValidWithSingleRule(
   "baseline_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "baseline_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  })
+  {
+    id: "baseline_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: true }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "trigger_shorthand_comma_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_comma_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: "grace, teleport_home",
-      }),
-    ]),
-  })
+  {
+    id: "trigger_shorthand_comma_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: "grace, teleport_home",
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "trigger_shorthand_string_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_string_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: "grace",
-      }),
-    ]),
-  })
+  {
+    id: "trigger_shorthand_string_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: "grace",
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "trigger_shorthand_array_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_array_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze(["grace", "teleport_home"]),
-      }),
-    ]),
-  })
+  {
+    id: "trigger_shorthand_array_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze(["grace", "teleport_home"]),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "alias_surfaces_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "alias_surfaces_valid_rule",
-        on: Object.freeze({ spell: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          spells: "domus, pyro",
-          ttlMs: 1200,
-        }),
-      }),
-    ]),
-  })
+  {
+    id: "alias_surfaces_valid_rule",
+    on: Object.freeze({ spell: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      spells: "domus, pyro",
+      ttlMs: 1200,
+    }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithGroupsAndSingleRule(
   "groups_prefixed_word_ids_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      prefixed_words: Object.freeze(["word.domus", "spell.pyro"]),
+  {
+    prefixed_words: Object.freeze(["word.domus", "spell.pyro"]),
+  },
+  {
+    id: "group_prefixed_open_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@prefixed_words",
+      ttlMs: 1200,
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_prefixed_open_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@prefixed_words",
-          ttlMs: 1200,
-        }),
-      }),
-    ]),
-  })
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithRules(
   "requires_consume_comma_string_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_wake_main_for_requires_consume_valid",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus"]),
-        }),
+  [
+    Object.freeze({
+      id: "open_wake_main_for_requires_consume_valid",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({
+        id: "wake.main",
+        words: Object.freeze(["domus"]),
       }),
-      Object.freeze({
-        id: "open_pyro_school_for_requires_consume_valid",
-        on: Object.freeze({ word: "pyro" }),
-        open: Object.freeze({
-          id: "pyro.school",
-          words: Object.freeze(["rota"]),
-        }),
+    }),
+    Object.freeze({
+      id: "open_pyro_school_for_requires_consume_valid",
+      on: Object.freeze({ word: "pyro" }),
+      open: Object.freeze({
+        id: "pyro.school",
+        words: Object.freeze(["rota"]),
       }),
-      Object.freeze({
-        id: "requires_consume_comma_valid_rule",
-        on: Object.freeze({ word: "domus" }),
-        requires: "wake.main,pyro.school",
-        consume: "wake.main, pyro.school",
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  })
+    }),
+    Object.freeze({
+      id: "requires_consume_comma_valid_rule",
+      on: Object.freeze({ word: "domus" }),
+      requires: "wake.main,pyro.school",
+      consume: "wake.main, pyro.school",
+      trigger: Object.freeze({ teleport_home: true }),
+    }),
+  ]
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "trigger_boolean_false_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_boolean_false_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: false }),
-      }),
-    ]),
-  })
+  {
+    id: "trigger_boolean_false_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: false }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "trigger_object_enabled_false_with_args_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_object_enabled_false_with_args_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({
-          grace: Object.freeze({ enabled: false, ttlMs: 700 }),
-        }),
-      }),
-    ]),
-  })
+  {
+    id: "trigger_object_enabled_false_with_args_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({
+      grace: Object.freeze({ enabled: false, ttlMs: 700 }),
+    }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "trigger_object_enabled_true_with_args_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_object_enabled_true_with_args_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({
-          grace: Object.freeze({ enabled: true, ttlMs: 700 }),
-        }),
-      }),
-    ]),
-  })
+  {
+    id: "trigger_object_enabled_true_with_args_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({
+      grace: Object.freeze({ enabled: true, ttlMs: 700 }),
+    }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "on_word_comma_string_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_comma_string_valid_rule",
-        on: Object.freeze({ word: "orbis, pyro" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  })
+  {
+    id: "on_word_comma_string_valid_rule",
+    on: Object.freeze({ word: "orbis, pyro" }),
+    trigger: Object.freeze({ grace: true }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "on_word_precedence_over_spell_alias_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_precedence_over_spell_alias_valid_rule",
-        on: Object.freeze({
-          word: "orbis",
-          spell: "__unknown_wake_word__",
-        }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  })
+  {
+    id: "on_word_precedence_over_spell_alias_valid_rule",
+    on: Object.freeze({
+      word: "orbis",
+      spell: UNKNOWN_WAKE_WORD_ID_V2,
+    }),
+    trigger: Object.freeze({ grace: true }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "on_word_precedence_over_valid_spell_alias_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_precedence_over_valid_spell_alias_rule",
-        on: Object.freeze({
-          word: "orbis",
-          spell: "pyro",
-        }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  })
+  {
+    id: "on_word_precedence_over_valid_spell_alias_rule",
+    on: Object.freeze({
+      word: "orbis",
+      spell: "pyro",
+    }),
+    trigger: Object.freeze({ grace: true }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "open_words_precedence_valid_when_spells_unknown_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_precedence_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus"]),
-          spells: Object.freeze(["__unknown_wake_word__"]),
-          ttlMs: 1200,
-        }),
-      }),
-    ]),
-  })
+  {
+    id: "open_words_precedence_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze(["domus"]),
+      spells: Object.freeze([UNKNOWN_WAKE_WORD_ID_V2]),
+      ttlMs: 1200,
+    }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "open_words_comma_string_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_comma_string_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "domus, pyro",
-          ttlMs: 1200,
-        }),
-      }),
-    ]),
-  })
+  {
+    id: "open_words_comma_string_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "domus, pyro",
+      ttlMs: 1200,
+    }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithSingleRule(
   "open_words_comma_precedence_valid_when_spells_comma_unknown_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_comma_precedence_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "domus, pyro",
-          spells: "__unknown_wake_word__, __other_unknown_wake_word__",
-          ttlMs: 1200,
-        }),
-      }),
-    ]),
-  })
+  {
+    id: "open_words_comma_precedence_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "domus, pyro",
+      spells: `${UNKNOWN_WAKE_WORD_ID_V2}, ${OTHER_UNKNOWN_WAKE_WORD_ID_V2}`,
+      ttlMs: 1200,
+    }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithDefaultsAndSingleRule(
   "defaults_trigger_enabled_boolean_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        grace: Object.freeze({ enabled: false, ttlMs: 500 }),
-      }),
+  {
+    trigger: Object.freeze({
+      grace: Object.freeze({ enabled: false, ttlMs: 500 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "defaults_trigger_enabled_boolean_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  })
+  },
+  {
+    id: "defaults_trigger_enabled_boolean_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: true }),
+  }
 );
 
-expectBuilderValid(
+expectBuilderValidWithDefaultsAndSingleRule(
   "defaults_trigger_object_valid_build",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        grace: Object.freeze({ ttlMs: 500 }),
-        teleport_home: Object.freeze({ ttlMs: 900 }),
-      }),
+  {
+    trigger: Object.freeze({
+      grace: Object.freeze({ ttlMs: 500 }),
+      teleport_home: Object.freeze({ ttlMs: 900 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "defaults_trigger_object_valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  })
+  },
+  {
+    id: "defaults_trigger_object_valid_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: true }),
+  }
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "invalid_rule_id_shape",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "bad rule id",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "bad rule id",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "ORCHESTRATOR_V2.rules[] id has invalid shape: bad rule id"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "rule_id_non_string_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: 123,
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: 123,
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "ORCHESTRATOR_V2.rules[] id must be a string"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "rule_id_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: " bad_rule_id ",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: " bad_rule_id ",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "ORCHESTRATOR_V2.rules[] id must not include leading/trailing whitespace:  bad_rule_id "
 );
 
-expectBuilderError(
+expectBuilderErrorWithRuleEntries(
   "rule_entry_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      "not-an-object",
-    ]),
-  }),
+  ["not-an-object"],
   "ORCHESTRATOR_V2.rules[0] must be an object"
 );
 
-expectBuilderError(
+expectBuilderErrorWithVersion(
   "version_mismatch_invalid",
-  Object.freeze({
-    version: "1",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  "1",
   "ORCHESTRATOR_V2.version must be \"2\""
 );
 
-expectBuilderError(
+expectBuilderErrorWithVersion(
   "version_non_string_invalid",
-  Object.freeze({
-    version: 2,
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  2,
   "ORCHESTRATOR_V2.version must be \"2\""
 );
 
-expectBuilderError(
+expectBuilderErrorWithVersion(
   "version_whitespace_invalid",
-  Object.freeze({
-    version: " 2 ",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  " 2 ",
   "ORCHESTRATOR_V2.version must not include leading/trailing whitespace:  2 "
 );
 
-expectBuilderError(
+expectBuilderErrorWithBaselineOverride(
   "rules_not_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
+  {
     rules: Object.freeze({ not: "an-array" }),
-  }),
+  },
   "ORCHESTRATOR_V2.rules must be an array"
 );
 
-expectBuilderError(
+expectBuilderErrorWithBaselineOverride(
   "defaults_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
+  {
     defaults: Object.freeze(["not-an-object"]),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "ORCHESTRATOR_V2.defaults must be an object when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithBaselineOverride(
   "groups_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
+  {
     groups: Object.freeze(["not-an-object"]),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "ORCHESTRATOR_V2.groups must be an object when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_key_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      " bad_group ": Object.freeze(["domus"]),
+  {
+    " bad_group ": Object.freeze(["domus"]),
+  },
+  {
+    id: "group_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@ bad_group ",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@ bad_group ",
-        }),
-      }),
-    ]),
-  }),
+  },
   "key must not include leading/trailing whitespace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_key_shape_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      "bad group": Object.freeze(["domus"]),
+  {
+    "bad group": Object.freeze(["domus"]),
+  },
+  {
+    id: "group_shape_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@bad group",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_shape_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@bad group",
-        }),
-      }),
-    ]),
-  }),
+  },
   "key has invalid shape: bad group"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "open_group_ref_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      valid_group: Object.freeze(["domus"]),
+  {
+    valid_group: Object.freeze(["domus"]),
+  },
+  {
+    id: "open_group_ref_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@ valid_group",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_group_ref_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@ valid_group",
-        }),
-      }),
-    ]),
-  }),
+  },
   "open.words group ref must not include leading/trailing whitespace after @: @ valid_group"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "open_group_ref_shape_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      "bad.group": Object.freeze(["domus"]),
+  {
+    "bad.group": Object.freeze(["domus"]),
+  },
+  {
+    id: "open_group_ref_shape_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@bad/group",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_group_ref_shape_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@bad/group",
-        }),
-      }),
-    ]),
-  }),
+  },
   "open.words group ref has invalid shape: @bad/group"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_group_ref_empty_name_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_group_ref_empty_name_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@",
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_group_ref_empty_name_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@",
+    }),
+  },
   "open.words group ref must include a name: @"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_empty_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      empty_group: Object.freeze([]),
+  {
+    empty_group: Object.freeze([]),
+  },
+  {
+    id: "group_empty_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@empty_group",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_empty_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@empty_group",
-        }),
-      }),
-    ]),
-  }),
+  },
   "must be a non-empty array"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_unknown_word_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      bad_words: Object.freeze(["__unknown_wake_word__"]),
+  {
+    bad_words: Object.freeze([UNKNOWN_WAKE_WORD_ID_V2]),
+  },
+  {
+    id: "group_unknown_word_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@bad_words",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_unknown_word_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@bad_words",
-        }),
-      }),
-    ]),
-  }),
-  "references unknown/inactive word id: __unknown_wake_word__"
+  },
+  unknownInactiveWordErrorTokenV2(UNKNOWN_WAKE_WORD_ID_V2)
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_invalid_word_shape_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      bad_words: Object.freeze(["bad/word"]),
+  {
+    bad_words: Object.freeze(["bad/word"]),
+  },
+  {
+    id: "group_invalid_word_shape_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@bad_words",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_invalid_word_shape_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@bad_words",
-        }),
-      }),
-    ]),
-  }),
+  },
   "contains invalid word id shape: bad/word"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_non_string_word_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      bad_words: Object.freeze([42]),
+  {
+    bad_words: Object.freeze([42]),
+  },
+  {
+    id: "group_non_string_word_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@bad_words",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_non_string_word_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@bad_words",
-        }),
-      }),
-    ]),
-  }),
+  },
   "contains non-string word id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_duplicate_after_normalization_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      dup_words: Object.freeze(["word.pyro", "spell.pyro"]),
+  {
+    dup_words: Object.freeze(["word.pyro", "spell.pyro"]),
+  },
+  {
+    id: "group_duplicate_after_normalization_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@dup_words",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_duplicate_after_normalization_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@dup_words",
-        }),
-      }),
-    ]),
-  }),
+  },
   "contains duplicate word id: pyro"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "open_words_duplicate_after_normalization",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      dup_words: Object.freeze(["word.pyro"]),
+  {
+    dup_words: Object.freeze(["word.pyro"]),
+  },
+  {
+    id: "dup_norm_open",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze(["@dup_words", "spell.pyro"]),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "dup_norm_open",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["@dup_words", "spell.pyro"]),
-        }),
-      }),
-    ]),
-  }),
+  },
   "open contains duplicate word id: pyro"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_words_duplicate_after_normalization",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "dup_norm_on",
-        on: Object.freeze({
-          word: Object.freeze(["word.pyro", "spell.pyro"]),
-        }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "dup_norm_on",
+    on: Object.freeze({
+      word: Object.freeze(["word.pyro", "spell.pyro"]),
+    }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "contains duplicate on selector: word:pyro"
 );
 
-expectBuilderError(
+expectBuilderErrorWithGroupsAndSingleRule(
   "groups_word_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    groups: Object.freeze({
-      bad_words: Object.freeze([" domus "]),
+  {
+    bad_words: Object.freeze([" domus "]),
+  },
+  {
+    id: "group_word_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: "@bad_words",
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "group_word_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: "@bad_words",
-        }),
-      }),
-    ]),
-  }),
+  },
   "contains word id with leading/trailing whitespace:  domus "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "rule_unsupported_key_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "rule_unsupported_key",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-        extra: true,
-      }),
-    ]),
-  }),
+  {
+    id: "rule_unsupported_key",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: true }),
+    extra: true,
+  },
   "contains unsupported key: extra"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "rule_on_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "rule_on_non_object",
-        on: "orbis",
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "rule_on_non_object",
+    on: "orbis",
+    trigger: Object.freeze({ grace: true }),
+  },
   "rule rule_on_non_object.on must be an object"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "rule_open_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "rule_open_non_object",
-        on: Object.freeze({ word: "orbis" }),
-        open: "wake.main",
-      }),
-    ]),
-  }),
+  {
+    id: "rule_open_non_object",
+    on: Object.freeze({ word: "orbis" }),
+    open: "wake.main",
+  },
   "rule rule_open_non_object.open must be an object when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithBaselineOverride(
   "top_level_unsupported_key_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
+  {
     foo: true,
-  }),
+  },
   "ORCHESTRATOR_V2 contains unsupported key: foo"
 );
 
-expectBuilderError(
+expectBuilderErrorWithBaselineOverride(
   "top_level_enabled_non_boolean_invalid",
-  Object.freeze({
-    version: "2",
+  {
     enabled: "yes",
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "ORCHESTRATOR_V2.enabled must be boolean"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_open_ttl_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      open: Object.freeze({ ttlMs: -1 }),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    open: Object.freeze({ ttlMs: -1 }),
+  },
   "defaults.open.ttlMs must be a finite number >= 0 when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_open_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      open: Object.freeze(["bad"]),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    open: Object.freeze(["bad"]),
+  },
   "ORCHESTRATOR_V2.defaults.open must be an object when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_rule_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      rule: Object.freeze(["bad"]),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    rule: Object.freeze(["bad"]),
+  },
   "ORCHESTRATOR_V2.defaults.rule must be an object when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_non_object_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze(["bad"]),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    trigger: Object.freeze(["bad"]),
+  },
   "ORCHESTRATOR_V2.defaults.trigger must be an object when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_rule_match_window_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      rule: Object.freeze({ cooldownMs: 0, matchWindowMs: 50, priority: 10 }),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    rule: Object.freeze({ cooldownMs: 0, matchWindowMs: 50, priority: 10 }),
+  },
   "defaults.rule.matchWindowMs must be a finite number >= 100 when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_rule_cooldown_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      rule: Object.freeze({ cooldownMs: -1, matchWindowMs: 2000, priority: 10 }),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    rule: Object.freeze({ cooldownMs: -1, matchWindowMs: 2000, priority: 10 }),
+  },
   "defaults.rule.cooldownMs must be a finite number >= 0 when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_rule_priority_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      rule: Object.freeze({ cooldownMs: 0, matchWindowMs: 2000, priority: "high" }),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    rule: Object.freeze({ cooldownMs: 0, matchWindowMs: 2000, priority: "high" }),
+  },
   "defaults.rule.priority must be a finite number when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_unsupported_key_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      extra: Object.freeze({}),
-    }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    extra: Object.freeze({}),
+  },
   "ORCHESTRATOR_V2.defaults contains unsupported key: extra"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_enabled_non_boolean_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        grace: Object.freeze({ enabled: "nope", ttlMs: 500 }),
-      }),
+  {
+    trigger: Object.freeze({
+      grace: Object.freeze({ enabled: "nope", ttlMs: 500 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   ".enabled must be boolean when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_event_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        grace: Object.freeze([500]),
-      }),
+  {
+    trigger: Object.freeze({
+      grace: Object.freeze([500]),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "must be an object"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_unknown_event_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        event_does_not_exist: Object.freeze({ ttlMs: 500 }),
-      }),
+  {
+    trigger: Object.freeze({
+      event_does_not_exist: Object.freeze({ ttlMs: 500 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "references unknown event id: event_does_not_exist"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "unknown_trigger_event",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "bad_event",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ event_does_not_exist: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "bad_event",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ event_does_not_exist: true }),
+  },
   "references unknown event id: event_does_not_exist"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_event_key_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        " grace ": Object.freeze({ ttlMs: 500 }),
-      }),
+  {
+    trigger: Object.freeze({
+      " grace ": Object.freeze({ ttlMs: 500 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "contains event id key with leading/trailing whitespace:  grace "
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_duplicate_normalized_event_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        grace: Object.freeze({ ttlMs: 500 }),
-        "event.grace": Object.freeze({ ttlMs: 700 }),
-      }),
+  {
+    trigger: Object.freeze({
+      grace: Object.freeze({ ttlMs: 500 }),
+      "event.grace": Object.freeze({ ttlMs: 700 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_case_duplicate_normalized_event_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        Grace: Object.freeze({ ttlMs: 500 }),
-        grace: Object.freeze({ ttlMs: 700 }),
-      }),
+  {
+    trigger: Object.freeze({
+      Grace: Object.freeze({ ttlMs: 500 }),
+      grace: Object.freeze({ ttlMs: 700 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithDefaults(
   "defaults_trigger_prefixed_case_duplicate_normalized_event_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    defaults: Object.freeze({
-      trigger: Object.freeze({
-        "event.Grace": Object.freeze({ ttlMs: 500 }),
-        grace: Object.freeze({ ttlMs: 700 }),
-      }),
+  {
+    trigger: Object.freeze({
+      "event.Grace": Object.freeze({ ttlMs: 500 }),
+      grace: Object.freeze({ ttlMs: 700 }),
     }),
-    rules: Object.freeze([
-      Object.freeze({
-        id: "valid_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  },
   "contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_non_object_non_shorthand_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_non_object_non_shorthand_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: 123,
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_non_object_non_shorthand_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: 123,
+  },
   "trigger must be a string, array, or object"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_event_key_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_event_key_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ " grace ": true }),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_event_key_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ " grace ": true }),
+  },
   "contains event id key with leading/trailing whitespace:  grace "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_duplicate_normalized_event_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_duplicate_normalized_event_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({
-          grace: true,
-          "event.grace": Object.freeze({ ttlMs: 700 }),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_duplicate_normalized_event_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({
+      grace: true,
+      "event.grace": Object.freeze({ ttlMs: 700 }),
+    }),
+  },
   "contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithRules(
   "duplicate_open_window_id",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "dup_open_a",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
-      }),
-      Object.freeze({
-        id: "dup_open_b",
-        on: Object.freeze({ word: "pyro" }),
-        open: Object.freeze({ id: "wake.main", words: Object.freeze(["rota"]) }),
-      }),
-    ]),
-  }),
+  [
+    Object.freeze({
+      id: "dup_open_a",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
+    }),
+    Object.freeze({
+      id: "dup_open_b",
+      on: Object.freeze({ word: "pyro" }),
+      open: Object.freeze({ id: "wake.main", words: Object.freeze(["rota"]) }),
+    }),
+  ],
   "open.id duplicates previously opened window: wake.main"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_id_non_string_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_id_non_string_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: 123,
-          words: Object.freeze(["domus"]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_id_non_string_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: 123,
+      words: Object.freeze(["domus"]),
+    }),
+  },
   "open.id must be a string"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_id_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_id_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: " wake.main ",
-          words: Object.freeze(["domus"]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_id_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: " wake.main ",
+      words: Object.freeze(["domus"]),
+    }),
+  },
   "open.id must not include leading/trailing whitespace:  wake.main "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "invalid_open_window_id_shape",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "invalid_open_window_id_shape_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake bad",
-          words: Object.freeze(["domus"]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "invalid_open_window_id_shape_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake bad",
+      words: Object.freeze(["domus"]),
+    }),
+  },
   "open.id has invalid shape: wake bad"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_words_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_non_string_array_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze({ domus: true }),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_words_non_string_array_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze({ domus: true }),
+    }),
+  },
   "open.words must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_words_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_non_string_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus", 42]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_words_non_string_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze(["domus", 42]),
+    }),
+  },
   "open contains non-string word id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_invalid_word_shape_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_invalid_word_shape_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["bad/word"]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_invalid_word_shape_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze(["bad/word"]),
+    }),
+  },
   "open contains invalid word id shape: bad/word"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_words_whitespace_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_whitespace_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze([" domus "]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_words_whitespace_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze([" domus "]),
+    }),
+  },
   "open.words contains word id with leading/trailing whitespace:  domus "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_words_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_string_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: " domus ",
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_words_string_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: " domus ",
+    }),
+  },
   "open.words contains word id with leading/trailing whitespace:  domus "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_spells_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_spells_non_string_array_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          spells: Object.freeze({ domus: true }),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_spells_non_string_array_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      spells: Object.freeze({ domus: true }),
+    }),
+  },
   "open.spells must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_spells_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_spells_non_string_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          spells: Object.freeze(["domus", 42]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_spells_non_string_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      spells: Object.freeze(["domus", 42]),
+    }),
+  },
   "open contains non-string word id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_spells_whitespace_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_spells_whitespace_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          spells: Object.freeze([" domus "]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_spells_whitespace_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      spells: Object.freeze([" domus "]),
+    }),
+  },
   "open.spells contains word id with leading/trailing whitespace:  domus "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_spells_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_spells_string_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          spells: " domus ",
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_spells_string_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      spells: " domus ",
+    }),
+  },
   "open.spells contains word id with leading/trailing whitespace:  domus "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_words_precedence_spells_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_precedence_spells_non_string_array_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus"]),
-          spells: Object.freeze({ domus: true }),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_words_precedence_spells_non_string_array_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze(["domus"]),
+      spells: Object.freeze({ domus: true }),
+    }),
+  },
   "open.spells must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_words_precedence_spells_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_precedence_spells_non_string_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus"]),
-          spells: Object.freeze(["domus", 42]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_words_precedence_spells_non_string_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze(["domus"]),
+      spells: Object.freeze(["domus", 42]),
+    }),
+  },
   "open.spells contains non-string word id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_words_precedence_spells_whitespace_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_words_precedence_spells_whitespace_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus"]),
-          spells: Object.freeze([" domus "]),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "open_words_precedence_spells_whitespace_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      words: Object.freeze(["domus"]),
+      spells: Object.freeze([" domus "]),
+    }),
+  },
   "open.spells contains word id with leading/trailing whitespace:  domus "
 );
 
-expectBuilderErrorWithFragments(
+expectBuilderErrorWithSingleRuleFragments(
   "multi_error_aggregation",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "bad rule id",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({ id: "wake bad", words: Object.freeze(["domus"]) }),
-      }),
-    ]),
-  }),
+  {
+    id: "bad rule id",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({ id: "wake bad", words: Object.freeze(["domus"]) }),
+  },
   Object.freeze([
     "ORCHESTRATOR_V2.rules[] id has invalid shape: bad rule id",
     "open.id has invalid shape: wake bad",
   ])
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "open_spells_comma_unknown_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "alias_open_comma_unknown_rule",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          spells: "__unknown_wake_word__, __other_unknown_wake_word__",
-          ttlMs: 1200,
-        }),
-      }),
-    ]),
-  }),
-  "open references unknown/inactive word id: __unknown_wake_word__"
+  {
+    id: "alias_open_comma_unknown_rule",
+    on: Object.freeze({ word: "orbis" }),
+    open: Object.freeze({
+      id: "wake.main",
+      spells: `${UNKNOWN_WAKE_WORD_ID_V2}, ${OTHER_UNKNOWN_WAKE_WORD_ID_V2}`,
+      ttlMs: 1200,
+    }),
+  },
+  openUnknownInactiveWordErrorTokenV2(UNKNOWN_WAKE_WORD_ID_V2)
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_word_comma_empty_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_comma_empty_rule",
-        on: Object.freeze({ word: " , " }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_word_comma_empty_rule",
+    on: Object.freeze({ word: " , " }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "must define on selectors"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_word_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_non_string_array_rule",
-        on: Object.freeze({ word: Object.freeze({ orbis: true }) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_word_non_string_array_rule",
+    on: Object.freeze({ word: Object.freeze({ orbis: true }) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.word must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_gesture_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_gesture_non_string_array_rule",
-        on: Object.freeze({ gesture: Object.freeze({ spin_y: true }) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_gesture_non_string_array_rule",
+    on: Object.freeze({ gesture: Object.freeze({ spin_y: true }) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.gesture must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_orb_state_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_orb_state_non_string_array_rule",
-        on: Object.freeze({ orb_state: Object.freeze({ charged: true }) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_orb_state_non_string_array_rule",
+    on: Object.freeze({ orb_state: Object.freeze({ charged: true }) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.orb_state must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_spell_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_spell_non_string_array_rule",
-        on: Object.freeze({ spell: Object.freeze({ orbis: true }) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_spell_non_string_array_rule",
+    on: Object.freeze({ spell: Object.freeze({ orbis: true }) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.spell must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_word_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_non_string_entry_rule",
-        on: Object.freeze({ word: Object.freeze(["orbis", 42]) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_word_non_string_entry_rule",
+    on: Object.freeze({ word: Object.freeze(["orbis", 42]) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.word contains non-string selector id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_word_whitespace_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_whitespace_entry_rule",
-        on: Object.freeze({ word: Object.freeze([" orbis "]) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_word_whitespace_entry_rule",
+    on: Object.freeze({ word: Object.freeze([" orbis "]) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.word contains selector id with leading/trailing whitespace:  orbis "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_word_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_string_whitespace_rule",
-        on: Object.freeze({ word: " orbis " }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_word_string_whitespace_rule",
+    on: Object.freeze({ word: " orbis " }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.word contains selector id with leading/trailing whitespace:  orbis "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_spell_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_spell_non_string_entry_rule",
-        on: Object.freeze({ spell: Object.freeze(["orbis", 42]) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_spell_non_string_entry_rule",
+    on: Object.freeze({ spell: Object.freeze(["orbis", 42]) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.word contains non-string selector id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_word_precedence_with_invalid_spell_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_precedence_invalid_spell_entry_rule",
-        on: Object.freeze({
-          word: "orbis",
-          spell: Object.freeze(["domus", 42]),
-        }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_word_precedence_invalid_spell_entry_rule",
+    on: Object.freeze({
+      word: "orbis",
+      spell: Object.freeze(["domus", 42]),
+    }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.spell contains non-string selector id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_word_precedence_with_whitespace_spell_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_word_precedence_whitespace_spell_entry_rule",
-        on: Object.freeze({
-          word: "orbis",
-          spell: Object.freeze([" domus "]),
-        }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_word_precedence_whitespace_spell_entry_rule",
+    on: Object.freeze({
+      word: "orbis",
+      spell: Object.freeze([" domus "]),
+    }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.spell contains selector id with leading/trailing whitespace:  domus "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_gesture_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_gesture_non_string_entry_rule",
-        on: Object.freeze({ gesture: Object.freeze(["spin_y", 42]) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_gesture_non_string_entry_rule",
+    on: Object.freeze({ gesture: Object.freeze(["spin_y", 42]) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.gesture contains non-string selector id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_gesture_whitespace_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_gesture_whitespace_entry_rule",
-        on: Object.freeze({ gesture: Object.freeze([" spin_y "]) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_gesture_whitespace_entry_rule",
+    on: Object.freeze({ gesture: Object.freeze([" spin_y "]) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.gesture contains selector id with leading/trailing whitespace:  spin_y "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_gesture_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_gesture_string_whitespace_rule",
-        on: Object.freeze({ gesture: " spin_y " }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_gesture_string_whitespace_rule",
+    on: Object.freeze({ gesture: " spin_y " }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.gesture contains selector id with leading/trailing whitespace:  spin_y "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_orb_state_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_orb_state_non_string_entry_rule",
-        on: Object.freeze({ orb_state: Object.freeze(["charged", 42]) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_orb_state_non_string_entry_rule",
+    on: Object.freeze({ orb_state: Object.freeze(["charged", 42]) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.orb_state contains non-string selector id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_orb_state_whitespace_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_orb_state_whitespace_entry_rule",
-        on: Object.freeze({ orb_state: Object.freeze([" charged "]) }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_orb_state_whitespace_entry_rule",
+    on: Object.freeze({ orb_state: Object.freeze([" charged "]) }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.orb_state contains selector id with leading/trailing whitespace:  charged "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "on_orb_state_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "on_orb_state_string_whitespace_rule",
-        on: Object.freeze({ orb_state: " charged " }),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "on_orb_state_string_whitespace_rule",
+    on: Object.freeze({ orb_state: " charged " }),
+    trigger: Object.freeze({ grace: true }),
+  },
   "on.orb_state contains selector id with leading/trailing whitespace:  charged "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "consume_comma_duplicate_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "consume_comma_duplicate_rule",
-        on: Object.freeze({ word: "domus" }),
-        consume: "wake.main, wake.main",
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "consume_comma_duplicate_rule",
+    on: Object.freeze({ word: "domus" }),
+    consume: "wake.main, wake.main",
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "consume contains duplicate window id: wake.main"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "requires_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "requires_non_string_array_rule",
-        on: Object.freeze({ word: "domus" }),
-        requires: Object.freeze({ wake: "main" }),
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "requires_non_string_array_rule",
+    on: Object.freeze({ word: "domus" }),
+    requires: Object.freeze({ wake: "main" }),
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "requires must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "requires_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "requires_non_string_entry_rule",
-        on: Object.freeze({ word: "domus" }),
-        requires: Object.freeze(["wake.main", 42]),
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "requires_non_string_entry_rule",
+    on: Object.freeze({ word: "domus" }),
+    requires: Object.freeze(["wake.main", 42]),
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "requires contains non-string window id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "consume_non_string_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "consume_non_string_array_rule",
-        on: Object.freeze({ word: "domus" }),
-        consume: Object.freeze({ wake: "main" }),
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "consume_non_string_array_rule",
+    on: Object.freeze({ word: "domus" }),
+    consume: Object.freeze({ wake: "main" }),
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "consume must be a string or array when present"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "consume_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "consume_non_string_entry_rule",
-        on: Object.freeze({ word: "domus" }),
-        consume: Object.freeze(["wake.main", 42]),
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "consume_non_string_entry_rule",
+    on: Object.freeze({ word: "domus" }),
+    consume: Object.freeze(["wake.main", 42]),
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "consume contains non-string window id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "consume_invalid_window_shape",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "consume_invalid_shape_rule",
-        on: Object.freeze({ word: "domus" }),
-        consume: "wake main",
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "consume_invalid_shape_rule",
+    on: Object.freeze({ word: "domus" }),
+    consume: "wake main",
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "consume has invalid window id shape: wake main"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "invalid_consume_window_shape",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "invalid_consume_window_shape_rule",
-        on: Object.freeze({ word: "domus" }),
-        consume: "wake main",
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "invalid_consume_window_shape_rule",
+    on: Object.freeze({ word: "domus" }),
+    consume: "wake main",
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "consume has invalid window id shape: wake main"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "invalid_requires_window_shape",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "invalid_requires_window_shape_rule",
-        on: Object.freeze({ word: "domus" }),
-        requires: "wake main",
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  {
+    id: "invalid_requires_window_shape_rule",
+    on: Object.freeze({ word: "domus" }),
+    requires: "wake main",
+    trigger: Object.freeze({ teleport_home: true }),
+  },
   "requires has invalid window id shape: wake main"
 );
 
-expectBuilderError(
+expectBuilderErrorWithRules(
   "requires_window_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_wake_main_window",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
-      }),
-      Object.freeze({
-        id: "requires_window_whitespace_rule",
-        on: Object.freeze({ word: "domus" }),
-        requires: Object.freeze([" wake.main "]),
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  [
+    Object.freeze({
+      id: "open_wake_main_window",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
+    }),
+    Object.freeze({
+      id: "requires_window_whitespace_rule",
+      on: Object.freeze({ word: "domus" }),
+      requires: Object.freeze([" wake.main "]),
+      trigger: Object.freeze({ teleport_home: true }),
+    }),
+  ],
   "requires contains window id with leading/trailing whitespace:  wake.main "
 );
 
-expectBuilderError(
+expectBuilderErrorWithRules(
   "requires_window_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_wake_main_window",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
-      }),
-      Object.freeze({
-        id: "requires_window_string_whitespace_rule",
-        on: Object.freeze({ word: "domus" }),
-        requires: " wake.main ",
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  [
+    Object.freeze({
+      id: "open_wake_main_window",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
+    }),
+    Object.freeze({
+      id: "requires_window_string_whitespace_rule",
+      on: Object.freeze({ word: "domus" }),
+      requires: " wake.main ",
+      trigger: Object.freeze({ teleport_home: true }),
+    }),
+  ],
   "requires contains window id with leading/trailing whitespace:  wake.main "
 );
 
-expectBuilderError(
+expectBuilderErrorWithRules(
   "consume_window_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_wake_main_window",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
-      }),
-      Object.freeze({
-        id: "consume_window_whitespace_rule",
-        on: Object.freeze({ word: "domus" }),
-        consume: Object.freeze([" wake.main "]),
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  [
+    Object.freeze({
+      id: "open_wake_main_window",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
+    }),
+    Object.freeze({
+      id: "consume_window_whitespace_rule",
+      on: Object.freeze({ word: "domus" }),
+      consume: Object.freeze([" wake.main "]),
+      trigger: Object.freeze({ teleport_home: true }),
+    }),
+  ],
   "consume contains window id with leading/trailing whitespace:  wake.main "
 );
 
-expectBuilderError(
+expectBuilderErrorWithRules(
   "consume_window_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "open_wake_main_window",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
-      }),
-      Object.freeze({
-        id: "consume_window_string_whitespace_rule",
-        on: Object.freeze({ word: "domus" }),
-        consume: " wake.main ",
-        trigger: Object.freeze({ teleport_home: true }),
-      }),
-    ]),
-  }),
+  [
+    Object.freeze({
+      id: "open_wake_main_window",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({ id: "wake.main", words: Object.freeze(["domus"]) }),
+    }),
+    Object.freeze({
+      id: "consume_window_string_whitespace_rule",
+      on: Object.freeze({ word: "domus" }),
+      consume: " wake.main ",
+      trigger: Object.freeze({ teleport_home: true }),
+    }),
+  ],
   "consume contains window id with leading/trailing whitespace:  wake.main "
 );
 
-expectBuilderError(
+expectBuilderErrorWithRules(
   "unknown_requires_window",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "master_wake_01",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus", "pyro"]),
-          ttlMs: 1500,
-        }),
+  [
+    Object.freeze({
+      id: "master_wake_01",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({
+        id: "wake.main",
+        words: Object.freeze(["domus", "pyro"]),
+        ttlMs: 1500,
       }),
-      Object.freeze({
-        id: "bad_window_ref",
-        on: Object.freeze({ word: "pyro" }),
-        requires: Object.freeze(["wake.unknown"]),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+    }),
+    Object.freeze({
+      id: "bad_window_ref",
+      on: Object.freeze({ word: "pyro" }),
+      requires: Object.freeze(["wake.unknown"]),
+      trigger: Object.freeze({ grace: true }),
+    }),
+  ],
   "references unknown window id: wake.unknown"
 );
 
-expectBuilderError(
+expectBuilderErrorWithRules(
   "unknown_consume_window",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "master_wake_01",
-        on: Object.freeze({ word: "orbis" }),
-        open: Object.freeze({
-          id: "wake.main",
-          words: Object.freeze(["domus", "pyro"]),
-          ttlMs: 1500,
-        }),
+  [
+    Object.freeze({
+      id: "master_wake_01",
+      on: Object.freeze({ word: "orbis" }),
+      open: Object.freeze({
+        id: "wake.main",
+        words: Object.freeze(["domus", "pyro"]),
+        ttlMs: 1500,
       }),
-      Object.freeze({
-        id: "bad_consume_window_ref",
-        on: Object.freeze({ word: "pyro" }),
-        consume: Object.freeze(["wake.unknown"]),
-        trigger: Object.freeze({ grace: true }),
-      }),
-    ]),
-  }),
+    }),
+    Object.freeze({
+      id: "bad_consume_window_ref",
+      on: Object.freeze({ word: "pyro" }),
+      consume: Object.freeze(["wake.unknown"]),
+      trigger: Object.freeze({ grace: true }),
+    }),
+  ],
   "references unknown window id: wake.unknown"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_event_args_array_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_args_array_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({ grace: Object.freeze([500]) }),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_args_array_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({ grace: Object.freeze([500]) }),
+  },
   "must be boolean or object args"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_shorthand_non_string_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_non_string_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze(["grace", 42]),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_shorthand_non_string_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze(["grace", 42]),
+  },
   "shorthand contains non-string event id: 42"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_shorthand_whitespace_entry_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_whitespace_entry_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze([" grace "]),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_shorthand_whitespace_entry_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze([" grace "]),
+  },
   "shorthand contains event id with leading/trailing whitespace:  grace "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_shorthand_string_whitespace_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_string_whitespace_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: " grace ",
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_shorthand_string_whitespace_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: " grace ",
+  },
   "shorthand contains event id with leading/trailing whitespace:  grace "
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_shorthand_duplicate_normalized_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_duplicate_normalized_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: "grace, grace",
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_shorthand_duplicate_normalized_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: "grace, grace",
+  },
   "shorthand contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_shorthand_array_duplicate_normalized_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_array_duplicate_normalized_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze(["grace", "event.grace"]),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_shorthand_array_duplicate_normalized_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze(["grace", "event.grace"]),
+  },
   "shorthand contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_shorthand_case_duplicate_normalized_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_case_duplicate_normalized_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze(["Grace", "grace"]),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_shorthand_case_duplicate_normalized_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze(["Grace", "grace"]),
+  },
   "shorthand contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_shorthand_prefixed_case_duplicate_normalized_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_shorthand_prefixed_case_duplicate_normalized_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze(["event.Grace", "grace"]),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_shorthand_prefixed_case_duplicate_normalized_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze(["event.Grace", "grace"]),
+  },
   "shorthand contains duplicate normalized event id: grace"
 );
 
-expectBuilderError(
+expectBuilderErrorWithSingleRule(
   "trigger_object_enabled_non_boolean_invalid",
-  Object.freeze({
-    version: "2",
-    enabled: true,
-    rules: Object.freeze([
-      Object.freeze({
-        id: "trigger_object_enabled_non_boolean_rule",
-        on: Object.freeze({ word: "orbis" }),
-        trigger: Object.freeze({
-          grace: Object.freeze({ enabled: "nope", ttlMs: 700 }),
-        }),
-      }),
-    ]),
-  }),
+  {
+    id: "trigger_object_enabled_non_boolean_rule",
+    on: Object.freeze({ word: "orbis" }),
+    trigger: Object.freeze({
+      grace: Object.freeze({ enabled: "nope", ttlMs: 700 }),
+    }),
+  },
   ".enabled must be boolean when present"
 );
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 builder rejects invalid configs via validation-prefixed errors"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

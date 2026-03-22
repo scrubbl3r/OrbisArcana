@@ -1,3 +1,5 @@
+// Normalizes/freezes check-entry arrays and enforces unique ID/name+script keys.
+// Helper is shared by all manifests to keep entry semantics identical.
 export function defineCheckEntriesV2(entries) {
   if (!Array.isArray(entries)) {
     throw new Error("defineCheckEntriesV2 entries must be an array");

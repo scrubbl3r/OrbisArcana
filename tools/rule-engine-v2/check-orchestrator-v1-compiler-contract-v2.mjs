@@ -3,9 +3,65 @@ import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-compiler:v2";
+const ACTION_WAKE_WIN = "wake_win";
+const PASS_MESSAGE = "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults";
 
 function asJson(v) {
   return JSON.stringify(v);
+}
+
+function pushJsonMismatch(details, label, actual, expected) {
+  if (asJson(actual) !== asJson(expected)) {
+    details.push(`${label} mismatch: got ${asJson(actual)} expected ${asJson(expected)}`);
+  }
+}
+
+function failJsonMismatch(message, actual, expected) {
+  if (asJson(actual) !== asJson(expected)) {
+    failCheckWithDetails(CHECK_TAG, message, [`got ${asJson(actual)} expected ${asJson(expected)}`]);
+  }
+}
+
+const BASE_RULE_ENGINE = Object.freeze({
+  version: "2",
+  signals: [],
+  windows: [],
+  events: [],
+  rules: [],
+  eventRuntimeBindings: {},
+});
+
+function buildOrFail(orchestratorV1, failureContext) {
+  try {
+    return buildRuleEngineFromOrchestratorV1({
+      orchestratorV1,
+      baseRuleEngine: BASE_RULE_ENGINE,
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error && typeof err.message === "string" && err.message
+        ? err.message
+        : "unknown error";
+    failCheck(CHECK_TAG, `builder threw for ${failureContext}: ${message}`);
+  }
+}
+
+function requireFirstCompiledRule(buildResult, failureMessage) {
+  const [rule] = Array.isArray(buildResult?.rules) ? buildResult.rules : [];
+  if (!rule) {
+    failCheck(CHECK_TAG, failureMessage);
+  }
+  return rule;
+}
+
+function requireRuleById(rules, ruleId, failureMessage) {
+  const match = Array.isArray(rules)
+    ? rules.find((rule) => rule?.id === ruleId)
+    : null;
+  if (!match) {
+    failCheck(CHECK_TAG, failureMessage);
+  }
+  return match;
 }
 
 const sample = Object.freeze({
@@ -36,18 +92,7 @@ const sample = Object.freeze({
   ]),
 });
 
-let built;
-try {
-  built = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: sample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for valid sample: ${msg}`);
-}
+const built = buildOrFail(sample, "valid sample");
 
 if (!built || typeof built !== "object") {
   failCheck(CHECK_TAG, "builder returned non-object");
@@ -71,18 +116,14 @@ const expectedOn = [
   { type: "gesture", id: "spin_y" },
   { type: "orb_state", id: "charged" },
 ];
-if (asJson(rule.on) !== asJson(expectedOn)) {
-  details.push(`rule.on mismatch: got ${asJson(rule.on)} expected ${asJson(expectedOn)}`);
-}
+pushJsonMismatch(details, "rule.on", rule.on, expectedOn);
 
 const expectedThen = [
-  { type: "wake_win", spells: ["sanctum", "vectus"], words: ["sanctum", "vectus"], ttlMs: 1750 },
+  { type: ACTION_WAKE_WIN, spells: ["sanctum", "vectus"], words: ["sanctum", "vectus"], ttlMs: 1750 },
   { type: "event", id: "grace", ms: 700, mode: "boost" },
   { type: "event", id: "aoe_electric" },
 ];
-if (asJson(rule.then) !== asJson(expectedThen)) {
-  details.push(`rule.then mismatch: got ${asJson(rule.then)} expected ${asJson(expectedThen)}`);
-}
+pushJsonMismatch(details, "rule.then", rule.then, expectedThen);
 
 if (details.length) {
   failCheckWithDetails(CHECK_TAG, "compiled output contract mismatch", details);
@@ -94,53 +135,30 @@ const commaSelectorsSample = Object.freeze({
   rules: Object.freeze([
     Object.freeze({
       id: "o_comma_selectors",
-      on: Object.freeze({ orb_state: "charged", spell: "rota, sanctum", gesture: "spin_y" }),
+      on: Object.freeze({ orb_state: "charged", word: "rota, sanctum", gesture: "spin_y" }),
       trigger: "grace, aoe_electric",
     }),
   ]),
 });
 
-let builtCommaSelectors;
-try {
-  builtCommaSelectors = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: commaSelectorsSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for comma selector sample: ${msg}`);
-}
+const builtCommaSelectors = buildOrFail(commaSelectorsSample, "comma selector sample");
 
-const [commaRule] = Array.isArray(builtCommaSelectors?.rules) ? builtCommaSelectors.rules : [];
-if (!commaRule) {
-  failCheck(CHECK_TAG, "comma selector sample did not produce a compiled rule");
-}
+const commaRule = requireFirstCompiledRule(
+  builtCommaSelectors,
+  "comma selector sample did not produce a compiled rule"
+);
 const expectedCommaOn = [
   { type: "spell", id: "rota" },
   { type: "spell", id: "sanctum" },
   { type: "gesture", id: "spin_y" },
   { type: "orb_state", id: "charged" },
 ];
-if (asJson(commaRule.on) !== asJson(expectedCommaOn)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "comma selector shorthand normalization mismatch",
-    [`got ${asJson(commaRule.on)} expected ${asJson(expectedCommaOn)}`]
-  );
-}
+failJsonMismatch("comma selector shorthand normalization mismatch", commaRule.on, expectedCommaOn);
 const expectedCommaThen = [
   { type: "event", id: "grace" },
   { type: "event", id: "aoe_electric" },
 ];
-if (asJson(commaRule.then) !== asJson(expectedCommaThen)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "comma trigger shorthand normalization mismatch",
-    [`got ${asJson(commaRule.then)} expected ${asJson(expectedCommaThen)}`]
-  );
-}
+failJsonMismatch("comma trigger shorthand normalization mismatch", commaRule.then, expectedCommaThen);
 
 const onCommaStringSample = Object.freeze({
   version: "1",
@@ -154,35 +172,22 @@ const onCommaStringSample = Object.freeze({
   ]),
 });
 
-let builtOnCommaString;
-try {
-  builtOnCommaString = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: onCommaStringSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for on comma-string sample: ${msg}`);
-}
+const builtOnCommaString = buildOrFail(onCommaStringSample, "on comma-string sample");
 
-const [onCommaStringRule] = Array.isArray(builtOnCommaString?.rules) ? builtOnCommaString.rules : [];
-if (!onCommaStringRule) {
-  failCheck(CHECK_TAG, "on comma-string sample did not produce a compiled rule");
-}
+const onCommaStringRule = requireFirstCompiledRule(
+  builtOnCommaString,
+  "on comma-string sample did not produce a compiled rule"
+);
 const expectedOnCommaStringOn = [
   { type: "spell", id: "rota" },
   { type: "gesture", id: "spin_y" },
   { type: "orb_state", id: "charged" },
 ];
-if (asJson(onCommaStringRule.on) !== asJson(expectedOnCommaStringOn)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "on comma-string shorthand normalization mismatch",
-    [`got ${asJson(onCommaStringRule.on)} expected ${asJson(expectedOnCommaStringOn)}`]
-  );
-}
+failJsonMismatch(
+  "on comma-string shorthand normalization mismatch",
+  onCommaStringRule.on,
+  expectedOnCommaStringOn
+);
 
 const onArrayCommaSample = Object.freeze({
   version: "1",
@@ -196,35 +201,22 @@ const onArrayCommaSample = Object.freeze({
   ]),
 });
 
-let builtOnArrayComma;
-try {
-  builtOnArrayComma = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: onArrayCommaSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for on array comma sample: ${msg}`);
-}
+const builtOnArrayComma = buildOrFail(onArrayCommaSample, "on array comma sample");
 
-const [onArrayCommaRule] = Array.isArray(builtOnArrayComma?.rules) ? builtOnArrayComma.rules : [];
-if (!onArrayCommaRule) {
-  failCheck(CHECK_TAG, "on array comma sample did not produce a compiled rule");
-}
+const onArrayCommaRule = requireFirstCompiledRule(
+  builtOnArrayComma,
+  "on array comma sample did not produce a compiled rule"
+);
 const expectedOnArrayCommaOn = [
   { type: "spell", id: "rota" },
   { type: "gesture", id: "spin_y" },
   { type: "orb_state", id: "charged" },
 ];
-if (asJson(onArrayCommaRule.on) !== asJson(expectedOnArrayCommaOn)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "on array comma-token shorthand normalization mismatch",
-    [`got ${asJson(onArrayCommaRule.on)} expected ${asJson(expectedOnArrayCommaOn)}`]
-  );
-}
+failJsonMismatch(
+  "on array comma-token shorthand normalization mismatch",
+  onArrayCommaRule.on,
+  expectedOnArrayCommaOn
+);
 
 const orbStateAliasSample = Object.freeze({
   version: "1",
@@ -232,40 +224,23 @@ const orbStateAliasSample = Object.freeze({
   rules: Object.freeze([
     Object.freeze({
       id: "o_orbstate_alias",
-      on: Object.freeze({ spell: "rota", orbState: "charged" }),
+      on: Object.freeze({ word: "rota", orbState: "charged" }),
       trigger: "grace",
     }),
   ]),
 });
 
-let builtOrbStateAlias;
-try {
-  builtOrbStateAlias = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: orbStateAliasSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for orbState alias sample: ${msg}`);
-}
+const builtOrbStateAlias = buildOrFail(orbStateAliasSample, "orbState alias sample");
 
-const [orbStateAliasRule] = Array.isArray(builtOrbStateAlias?.rules) ? builtOrbStateAlias.rules : [];
-if (!orbStateAliasRule) {
-  failCheck(CHECK_TAG, "orbState alias sample did not produce a compiled rule");
-}
+const orbStateAliasRule = requireFirstCompiledRule(
+  builtOrbStateAlias,
+  "orbState alias sample did not produce a compiled rule"
+);
 const expectedOrbStateAliasOn = [
   { type: "spell", id: "rota" },
   { type: "orb_state", id: "charged" },
 ];
-if (asJson(orbStateAliasRule.on) !== asJson(expectedOrbStateAliasOn)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "on orbState alias normalization mismatch",
-    [`got ${asJson(orbStateAliasRule.on)} expected ${asJson(expectedOrbStateAliasOn)}`]
-  );
-}
+failJsonMismatch("on orbState alias normalization mismatch", orbStateAliasRule.on, expectedOrbStateAliasOn);
 
 const openTtlAliasSample = Object.freeze({
   version: "1",
@@ -285,45 +260,39 @@ const openTtlAliasSample = Object.freeze({
   ]),
 });
 
-let builtOpenTtlAlias;
-try {
-  builtOpenTtlAlias = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: openTtlAliasSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for open ttl alias sample: ${msg}`);
-}
+const builtOpenTtlAlias = buildOrFail(openTtlAliasSample, "open ttl alias sample");
 
 const openTtlRules = Array.isArray(builtOpenTtlAlias?.rules) ? builtOpenTtlAlias.rules : [];
 if (openTtlRules.length !== 2) {
   failCheck(CHECK_TAG, "open ttl alias sample did not produce expected compiled rules");
 }
-const openAliasRule = openTtlRules.find((rule) => rule?.id === "o_open_ttl_alias");
-const openDefaultRule = openTtlRules.find((rule) => rule?.id === "o_open_ttl_default");
-if (!openAliasRule || !openDefaultRule) {
-  failCheck(CHECK_TAG, "open ttl alias sample rules missing expected ids");
-}
+const openAliasRule = requireRuleById(
+  openTtlRules,
+  "o_open_ttl_alias",
+  "open ttl alias sample rules missing expected ids"
+);
+const openDefaultRule = requireRuleById(
+  openTtlRules,
+  "o_open_ttl_default",
+  "open ttl alias sample rules missing expected ids"
+);
 const aliasWakeAction = Array.isArray(openAliasRule.then)
-  ? openAliasRule.then.find((action) => action?.type === "wake_win")
+  ? openAliasRule.then.find((action) => action?.type === ACTION_WAKE_WIN)
   : null;
 if (!aliasWakeAction || aliasWakeAction.ttlMs !== 900) {
   failCheckWithDetails(
     CHECK_TAG,
-    "open ttl alias did not map to wake_win.ttlMs",
+    `open ttl alias did not map to ${ACTION_WAKE_WIN}.ttlMs`,
     [`wake action: ${asJson(aliasWakeAction)}`]
   );
 }
 const defaultWakeAction = Array.isArray(openDefaultRule.then)
-  ? openDefaultRule.then.find((action) => action?.type === "wake_win")
+  ? openDefaultRule.then.find((action) => action?.type === ACTION_WAKE_WIN)
   : null;
 if (!defaultWakeAction || defaultWakeAction.ttlMs !== 2100) {
   failCheckWithDetails(
     CHECK_TAG,
-    "defaults.open.ttl did not map to wake_win.ttlMs",
+    `defaults.open.ttl did not map to ${ACTION_WAKE_WIN}.ttlMs`,
     [`wake action: ${asJson(defaultWakeAction)}`]
   );
 }
@@ -348,25 +317,19 @@ const timingAliasSample = Object.freeze({
   ]),
 });
 
-let builtTimingAlias;
-try {
-  builtTimingAlias = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: timingAliasSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for timing alias sample: ${msg}`);
-}
+const builtTimingAlias = buildOrFail(timingAliasSample, "timing alias sample");
 
 const timingRules = Array.isArray(builtTimingAlias?.rules) ? builtTimingAlias.rules : [];
-const timingOverrideRule = timingRules.find((rule) => rule?.id === "o_timing_alias_override");
-const timingDefaultRule = timingRules.find((rule) => rule?.id === "o_timing_alias_default");
-if (!timingOverrideRule || !timingDefaultRule) {
-  failCheck(CHECK_TAG, "timing alias sample rules missing expected ids");
-}
+const timingOverrideRule = requireRuleById(
+  timingRules,
+  "o_timing_alias_override",
+  "timing alias sample rules missing expected ids"
+);
+const timingDefaultRule = requireRuleById(
+  timingRules,
+  "o_timing_alias_default",
+  "timing alias sample rules missing expected ids"
+);
 if (timingOverrideRule.cooldownMs !== 444 || timingOverrideRule.matchWindowMs !== 1888) {
   failCheckWithDetails(
     CHECK_TAG,
@@ -398,18 +361,7 @@ const onPluralAliasSample = Object.freeze({
   ]),
 });
 
-let builtOnPluralAlias;
-try {
-  builtOnPluralAlias = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: onPluralAliasSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for on plural alias sample: ${msg}`);
-}
+const builtOnPluralAlias = buildOrFail(onPluralAliasSample, "on plural alias sample");
 
 const [onPluralAliasRule] = Array.isArray(builtOnPluralAlias?.rules) ? builtOnPluralAlias.rules : [];
 if (!onPluralAliasRule) {
@@ -421,13 +373,7 @@ const expectedOnPluralAliasOn = [
   { type: "gesture", id: "spin_y" },
   { type: "orb_state", id: "charged" },
 ];
-if (asJson(onPluralAliasRule.on) !== asJson(expectedOnPluralAliasOn)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "on plural aliases normalization mismatch",
-    [`got ${asJson(onPluralAliasRule.on)} expected ${asJson(expectedOnPluralAliasOn)}`]
-  );
-}
+failJsonMismatch("on plural aliases normalization mismatch", onPluralAliasRule.on, expectedOnPluralAliasOn);
 
 const triggersAliasSample = Object.freeze({
   version: "1",
@@ -442,34 +388,21 @@ const triggersAliasSample = Object.freeze({
   ]),
 });
 
-let builtTriggersAlias;
-try {
-  builtTriggersAlias = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: triggersAliasSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for triggers alias sample: ${msg}`);
-}
+const builtTriggersAlias = buildOrFail(triggersAliasSample, "triggers alias sample");
 
-const [triggersAliasRule] = Array.isArray(builtTriggersAlias?.rules) ? builtTriggersAlias.rules : [];
-if (!triggersAliasRule) {
-  failCheck(CHECK_TAG, "triggers alias sample did not produce a compiled rule");
-}
+const triggersAliasRule = requireFirstCompiledRule(
+  builtTriggersAlias,
+  "triggers alias sample did not produce a compiled rule"
+);
 const expectedTriggersAliasThen = [
   { type: "event", id: "grace" },
   { type: "event", id: "aoe_electric" },
 ];
-if (asJson(triggersAliasRule.then) !== asJson(expectedTriggersAliasThen)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "triggers alias normalization mismatch",
-    [`got ${asJson(triggersAliasRule.then)} expected ${asJson(expectedTriggersAliasThen)}`]
-  );
-}
+failJsonMismatch(
+  "triggers alias normalization mismatch",
+  triggersAliasRule.then,
+  expectedTriggersAliasThen
+);
 
 const defaultsTriggersAliasSample = Object.freeze({
   version: "1",
@@ -487,35 +420,23 @@ const defaultsTriggersAliasSample = Object.freeze({
   ]),
 });
 
-let builtDefaultsTriggersAlias;
-try {
-  builtDefaultsTriggersAlias = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: defaultsTriggersAliasSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for defaults.triggers alias sample: ${msg}`);
-}
+const builtDefaultsTriggersAlias = buildOrFail(
+  defaultsTriggersAliasSample,
+  "defaults.triggers alias sample"
+);
 
-const [defaultsTriggersAliasRule] = Array.isArray(builtDefaultsTriggersAlias?.rules)
-  ? builtDefaultsTriggersAlias.rules
-  : [];
-if (!defaultsTriggersAliasRule) {
-  failCheck(CHECK_TAG, "defaults.triggers alias sample did not produce a compiled rule");
-}
+const defaultsTriggersAliasRule = requireFirstCompiledRule(
+  builtDefaultsTriggersAlias,
+  "defaults.triggers alias sample did not produce a compiled rule"
+);
 const expectedDefaultsTriggersAliasThen = [
   { type: "event", id: "grace", ms: 888 },
 ];
-if (asJson(defaultsTriggersAliasRule.then) !== asJson(expectedDefaultsTriggersAliasThen)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "defaults.triggers alias merge mismatch",
-    [`got ${asJson(defaultsTriggersAliasRule.then)} expected ${asJson(expectedDefaultsTriggersAliasThen)}`]
-  );
-}
+failJsonMismatch(
+  "defaults.triggers alias merge mismatch",
+  defaultsTriggersAliasRule.then,
+  expectedDefaultsTriggersAliasThen
+);
 
 const orbStateTypeAliasSample = Object.freeze({
   version: "1",
@@ -534,48 +455,41 @@ const orbStateTypeAliasSample = Object.freeze({
   ]),
 });
 
-let builtOrbStateTypeAlias;
-try {
-  builtOrbStateTypeAlias = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: orbStateTypeAliasSample,
-    baseRuleEngine: Object.freeze({ version: "2", signals: [], windows: [], events: [], rules: [], eventRuntimeBindings: {} }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `builder threw for orb_state type alias sample: ${msg}`);
-}
+const builtOrbStateTypeAlias = buildOrFail(
+  orbStateTypeAliasSample,
+  "orb_state type alias sample"
+);
 
 const orbStateTypeAliasRules = Array.isArray(builtOrbStateTypeAlias?.rules)
   ? builtOrbStateTypeAlias.rules
   : [];
-const orbStateTypeAliasRule = orbStateTypeAliasRules.find((rule) => rule?.id === "o_orb_state_type_aliases");
-const orbStateTypeAliasDashRule = orbStateTypeAliasRules.find((rule) => rule?.id === "o_orb_state_type_aliases_dash");
-if (!orbStateTypeAliasRule || !orbStateTypeAliasDashRule) {
-  failCheck(CHECK_TAG, "orb_state type alias sample did not produce a compiled rule");
-}
+const orbStateTypeAliasRule = requireRuleById(
+  orbStateTypeAliasRules,
+  "o_orb_state_type_aliases",
+  "orb_state type alias sample did not produce a compiled rule"
+);
+const orbStateTypeAliasDashRule = requireRuleById(
+  orbStateTypeAliasRules,
+  "o_orb_state_type_aliases_dash",
+  "orb_state type alias sample did not produce a compiled rule"
+);
 const expectedOrbStateTypeAliasOn = [
   { type: "orb_state", id: "charged" },
   { type: "spell", id: "rota" },
 ];
-if (asJson(orbStateTypeAliasRule.on) !== asJson(expectedOrbStateTypeAliasOn)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "orb_state alias normalization mismatch",
-    [`got ${asJson(orbStateTypeAliasRule.on)} expected ${asJson(expectedOrbStateTypeAliasOn)}`]
-  );
-}
+failJsonMismatch(
+  "orb_state alias normalization mismatch",
+  orbStateTypeAliasRule.on,
+  expectedOrbStateTypeAliasOn
+);
 const expectedOrbStateTypeAliasDashOn = [
   { type: "orb_state", id: "charged" },
   { type: "spell", id: "sanctum" },
 ];
-if (asJson(orbStateTypeAliasDashRule.on) !== asJson(expectedOrbStateTypeAliasDashOn)) {
-  failCheckWithDetails(
-    CHECK_TAG,
-    "orb-state alias normalization mismatch",
-    [`got ${asJson(orbStateTypeAliasDashRule.on)} expected ${asJson(expectedOrbStateTypeAliasDashOn)}`]
-  );
-}
+failJsonMismatch(
+  "orb-state alias normalization mismatch",
+  orbStateTypeAliasDashRule.on,
+  expectedOrbStateTypeAliasDashOn
+);
 
-reportCheckPass(CHECK_TAG, "orchestrator compiler contract holds for ON/OPEN/TRIGGER + defaults");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

@@ -1,4 +1,4 @@
-import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
   AXIS_WORD_IDS,
   KWS_ROW_BOTTOM_WORD_IDS,
@@ -6,14 +6,14 @@ import {
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
-  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
+  WORD_RUNTIME_ROUTING_BY_WORD_ID,
 } from "../../content/spells/spell-runtime-routing.js";
 
 function resolveActivePhrasesByIds(ids = []) {
   return (Array.isArray(ids) ? ids : [])
-    .map((id) => ACTIVE_SPELLS_BY_ID[String(id || "").trim().toLowerCase()])
+    .map((id) => ACTIVE_WORDS_BY_ID[String(id || "").trim().toLowerCase()])
     .filter(Boolean)
-    .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
+    .map((word) => String(word.phrase || word.id || "").trim().toLowerCase())
     .filter(Boolean);
 }
 
@@ -24,23 +24,23 @@ export function createKwsRuntimeConfig() {
   const axisTokens = resolveActivePhrasesByIds(AXIS_WORD_IDS);
   const wakeTokens = resolveActivePhrasesByIds(WAKE_WORD_IDS);
   const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_WORD_IDS);
-  const axisSpellByAxis = Object.create(null);
-  for (const spellId of AXIS_WORD_IDS) {
-    const id = String(spellId || "").trim().toLowerCase();
-    const routing = SPELL_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
-    const active = ACTIVE_SPELLS_BY_ID[id] || null;
-    const axisSpellToken = String((active && active.phrase) || id || "").trim().toLowerCase();
+  const axisWordByAxis = Object.create(null);
+  for (const wordId of AXIS_WORD_IDS) {
+    const id = String(wordId || "").trim().toLowerCase();
+    const routing = WORD_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
+    const active = ACTIVE_WORDS_BY_ID[id] || null;
+    const axisWordToken = String((active && active.phrase) || id || "").trim().toLowerCase();
     const axes = Array.isArray(routing && routing.allowedAxes) ? routing.allowedAxes : [];
     for (const axis of axes) {
       const a = String(axis || "").trim().toLowerCase();
-      if (a === "x" || a === "y" || a === "z") axisSpellByAxis[a] = axisSpellToken;
+      if (a === "x" || a === "y" || a === "z") axisWordByAxis[a] = axisWordToken;
     }
   }
   const tokenList = Array.from(new Set(rowTop.concat(rowBottom)));
   const tokenCanonicalMap = Object.freeze(
-    Object.values(ACTIVE_SPELLS_BY_ID).reduce((acc, spell) => {
-      const id = String(spell && spell.id || "").trim().toLowerCase();
-      const phrase = String(spell && (spell.phrase || spell.id) || "").trim().toLowerCase();
+    Object.values(ACTIVE_WORDS_BY_ID).reduce((acc, word) => {
+      const id = String(word && word.id || "").trim().toLowerCase();
+      const phrase = String(word && (word.phrase || word.id) || "").trim().toLowerCase();
       if (!id || !phrase) return acc;
       if (id !== phrase) acc[id] = phrase;
       return acc;
@@ -61,7 +61,8 @@ export function createKwsRuntimeConfig() {
     axisTokens,
     wakeTokens,
     wakeRequiredTokens,
-    axisSpellByAxis: Object.freeze({ ...axisSpellByAxis }),
+    axisWordByAxis: Object.freeze({ ...axisWordByAxis }),
+    axisSpellByAxis: Object.freeze({ ...axisWordByAxis }),
     logTokens: tokenList.slice(),
     tempUngatedTokens: tokenList.slice(),
     tokenCanonicalMap,

@@ -27,8 +27,8 @@ export function createSpellActionHandlers({
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
     play_axis_aoe(payload = {}) {
-      const axisSpell = String((payload && payload.axisSpell) || "").trim().toLowerCase();
-      if (axisSpell === "fridgis") {
+      const axisWord = String((payload && (payload.axisWord || payload.axisSpell)) || "").trim().toLowerCase();
+      if (axisWord === "fridgis") {
         if (typeof playFrostAoe === "function") {
           playFrostAoe();
           return;
@@ -36,7 +36,7 @@ export function createSpellActionHandlers({
         if (typeof playFlameAoe === "function") playFlameAoe();
         return;
       }
-      if (axisSpell === "electrum") {
+      if (axisWord === "electrum") {
         if (typeof playElectricAoe === "function") {
           playElectricAoe();
           return;

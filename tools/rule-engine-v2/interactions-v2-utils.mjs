@@ -1,3 +1,5 @@
+// Shared accessors for interactions-v2 enabled/defaults/rules surfaces.
+// Accessors intentionally coerce malformed roots into safe fallback values.
 function asObject(v) {
   return (!!v && typeof v === "object" && !Array.isArray(v)) ? v : null;
 }

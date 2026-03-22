@@ -1,13 +1,13 @@
 import {
-  EVT_VOICE_KWS_SPELL_CANDIDATE,
+  EVT_VOICE_KWS_WORD_CANDIDATE,
   EVT_VOICE_WORD_DETECTED,
   EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_TOKEN_DETECTED,
 } from "../../contracts/events.js";
-import { buildKwsSpellAliasIndex } from "./build-kws-spell-alias-index.js";
-import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../wordbook.js";
+import { buildKwsWordAliasIndex } from "./build-kws-word-alias-index.js";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
-  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
+  WORD_RUNTIME_ROUTING_BY_WORD_ID,
   WAKE_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
 } from "../../content/spells/spell-runtime-routing.js";
@@ -18,7 +18,7 @@ const DEFAULTS = Object.freeze({
   tokenThreshold: 0.0,
   wakeTokenThreshold: 0.0,
   spellMatchThreshold: 0.05,
-  spellCooldownMs: 300,
+  wordCooldownMs: 300,
   wakeArmMs: 1500,
   wakeArmedMinConfidence: 0.1,
   clearBufferOnMatch: true,
@@ -58,13 +58,17 @@ function minConfidence(tokens) {
  * @property {number} [windowMs]
  * @property {number} [maxTokensInBuffer]
  * @property {number} [tokenThreshold]
- * @property {number} [spellCooldownMs]
+ * @property {number} [wordCooldownMs]
+ * @property {number} [spellCooldownMs] Legacy compatibility alias for `wordCooldownMs`
  * @property {boolean} [clearBufferOnMatch]
- * @property {Array<Object>} [spells]
+ * @property {Array<Object>} [words]
+ * @property {Array<Object>} [spells] Legacy compatibility alias for `words`
+ * @property {string[]} [requireWakeForWordIds]
+ * @property {string[]} [requireWakeForSpellIds] Legacy compatibility alias for `requireWakeForWordIds`
  */
 
 /**
- * KWS token parser: consumes keyword token hits and emits spell candidates and
+ * KWS token parser: consumes keyword token hits and emits word candidates and
  * normalized `voice.spell_cast` events when active.
  *
  * This is intentionally parser-only. Audio keyword spotting belongs in a
@@ -86,7 +90,7 @@ export function createKwsTokenParser(opts = {}) {
     spellMatchThreshold: Number.isFinite(Number(opts.spellMatchThreshold))
       ? clamp01(Number(opts.spellMatchThreshold))
       : DEFAULTS.spellMatchThreshold,
-    spellCooldownMs: Number(opts.spellCooldownMs) || DEFAULTS.spellCooldownMs,
+    wordCooldownMs: Number(opts.wordCooldownMs ?? opts.spellCooldownMs) || DEFAULTS.wordCooldownMs,
     wakeArmMs: Number(opts.wakeArmMs) || DEFAULTS.wakeArmMs,
     wakeArmedMinConfidence: Number.isFinite(Number(opts.wakeArmedMinConfidence))
       ? clamp01(Number(opts.wakeArmedMinConfidence))
@@ -94,8 +98,8 @@ export function createKwsTokenParser(opts = {}) {
     clearBufferOnMatch: opts.clearBufferOnMatch == null ? DEFAULTS.clearBufferOnMatch : !!opts.clearBufferOnMatch,
   };
   const defaultWakeTokens = WAKE_WORD_IDS
-    .map((spellId) => {
-      const active = ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()];
+    .map((wordId) => {
+      const active = ACTIVE_WORDS_BY_ID[String(wordId || "").trim().toLowerCase()];
       if (!active) return "";
       return String(active.phrase || active.id || "").trim().toLowerCase();
     })
@@ -105,15 +109,17 @@ export function createKwsTokenParser(opts = {}) {
       .map((t) => normToken(t))
       .filter(Boolean),
   );
-  const requireWakeForSpellIds = new Set(
-    (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
+  const requireWakeForWordIds = new Set(
+    (Array.isArray(opts.requireWakeForWordIds) && opts.requireWakeForWordIds.length
+      ? opts.requireWakeForWordIds
+      : (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
       ? opts.requireWakeForSpellIds
       : WAKE_REQUIRED_WORD_IDS)
       .map((s) => String(s || "").trim().toLowerCase())
       .filter(Boolean),
   );
 
-  const aliasIndex = buildKwsSpellAliasIndex(opts.spells);
+  const aliasIndex = buildKwsWordAliasIndex(opts.words || opts.spells);
   const activeTokenVocabulary = new Set();
   for (const entry of aliasIndex.all || []) {
     const tokens = Array.isArray(entry && entry.tokens) ? entry.tokens : [];
@@ -128,7 +134,7 @@ export function createKwsTokenParser(opts = {}) {
   /** @type {Array<{token:string, confidence:number, atMs:number}>} */
   let tokenBuffer = [];
   let lastMatchAtMs = 0;
-  let lastMatchedSpellId = "";
+  let lastMatchedWordId = "";
   let wakeArmedUntilMs = 0;
   let lastSeenAtMs = 0;
 
@@ -141,7 +147,7 @@ export function createKwsTokenParser(opts = {}) {
   function reset() {
     tokenBuffer = [];
     lastMatchAtMs = 0;
-    lastMatchedSpellId = "";
+    lastMatchedWordId = "";
     wakeArmedUntilMs = 0;
     lastSeenAtMs = 0;
   }
@@ -161,7 +167,9 @@ export function createKwsTokenParser(opts = {}) {
     if (Number.isFinite(Number(next.tokenThreshold))) cfg.tokenThreshold = clamp01(next.tokenThreshold);
     if (Number.isFinite(Number(next.wakeTokenThreshold))) cfg.wakeTokenThreshold = clamp01(next.wakeTokenThreshold);
     if (Number.isFinite(Number(next.spellMatchThreshold))) cfg.spellMatchThreshold = clamp01(next.spellMatchThreshold);
-    if (Number.isFinite(Number(next.spellCooldownMs))) cfg.spellCooldownMs = Math.max(0, Math.round(Number(next.spellCooldownMs)));
+    if (Number.isFinite(Number(next.wordCooldownMs ?? next.spellCooldownMs))) {
+      cfg.wordCooldownMs = Math.max(0, Math.round(Number(next.wordCooldownMs ?? next.spellCooldownMs)));
+    }
     if (Number.isFinite(Number(next.wakeArmMs))) cfg.wakeArmMs = Math.max(0, Math.round(Number(next.wakeArmMs)));
     if (Number.isFinite(Number(next.wakeArmedMinConfidence))) cfg.wakeArmedMinConfidence = clamp01(next.wakeArmedMinConfidence);
     if (typeof next.clearBufferOnMatch === "boolean") cfg.clearBufferOnMatch = !!next.clearBufferOnMatch;
@@ -193,22 +201,23 @@ export function createKwsTokenParser(opts = {}) {
         }
         if (!ok) continue;
         const conf = minConfidence(suffix);
-        const baseSpellReq = Math.min(
+        const baseWordReq = Math.min(
           Number(entry.minConfidence || 1),
           Number(cfg.spellMatchThreshold || 1),
         );
         const requiredConfidence = wakeArmed
-          ? Math.min(baseSpellReq, Number(cfg.wakeArmedMinConfidence || 1))
-          : baseSpellReq;
+          ? Math.min(baseWordReq, Number(cfg.wakeArmedMinConfidence || 1))
+          : baseWordReq;
         const matched = conf >= requiredConfidence;
         let suppressed = false;
-        if (matched && lastMatchedSpellId === entry.spellId && (Number(nowMs) - lastMatchAtMs) < cfg.spellCooldownMs) {
+        const entryWordId = String(entry.wordId || "");
+        if (matched && lastMatchedWordId === entryWordId && (Number(nowMs) - lastMatchAtMs) < cfg.wordCooldownMs) {
           suppressed = true;
         }
         return {
           matched,
           suppressed,
-          spellId: entry.spellId,
+          wordId: entryWordId,
           tokens: phraseTokens,
           confidence: conf,
           alias: entry.alias,
@@ -250,7 +259,8 @@ export function createKwsTokenParser(opts = {}) {
         providerId,
         source: "kws",
       });
-      emit(EVT_VOICE_KWS_SPELL_CANDIDATE, {
+      emit(EVT_VOICE_KWS_WORD_CANDIDATE, {
+        wordId: null,
         spellId: null,
         matched: false,
         tokens: [token],
@@ -289,13 +299,14 @@ export function createKwsTokenParser(opts = {}) {
     prune(atMs);
 
     const result = tryMatchSuffix(atMs);
-    const requiresWake = !!(result && requireWakeForSpellIds.has(String(result.spellId || "").toLowerCase()));
+    const requiresWake = !!(result && requireWakeForWordIds.has(String(result.wordId || "").toLowerCase()));
     const blockedByWake = !!(result && requiresWake && !wakeArmed);
     const finalResult = blockedByWake
       ? { ...result, matched: false, suppressed: false }
       : result;
     const candidate = finalResult || {
       matched: false,
+      wordId: null,
       spellId: null,
       tokens: tokenBuffer.map((t) => t.token),
       confidence,
@@ -304,8 +315,9 @@ export function createKwsTokenParser(opts = {}) {
       consumedCount: 0,
     };
 
-    emit(EVT_VOICE_KWS_SPELL_CANDIDATE, {
-      spellId: candidate.spellId || null,
+    emit(EVT_VOICE_KWS_WORD_CANDIDATE, {
+      wordId: candidate.wordId || null,
+      spellId: candidate.wordId || null,
       matched: !!candidate.matched,
       tokens: Array.isArray(candidate.tokens) ? candidate.tokens.slice() : [],
       phrase: Array.isArray(candidate.tokens) ? candidate.tokens.join(" ") : "",
@@ -318,16 +330,17 @@ export function createKwsTokenParser(opts = {}) {
 
     if (!finalResult || !finalResult.matched || finalResult.suppressed) {
       if (blockedByWake) {
-        return { matched: false, reason: "wake_required", spellId: result && result.spellId ? result.spellId : null };
+        const blockedWordId = result ? (result.wordId || null) : null;
+        return { matched: false, reason: "wake_required", wordId: blockedWordId, spellId: blockedWordId };
       }
       return finalResult || { matched: false, reason: "no_spell_match" };
     }
 
     if (!shadow) {
-      const spellId = String(finalResult.spellId || "");
-      const spell = ACTIVE_SPELLS_BY_ID[spellId]
-        ? { ...ACTIVE_SPELLS_BY_ID[spellId], ...(SPELL_RUNTIME_ROUTING_BY_WORD_ID[spellId] || {}) }
-        : { id: spellId, phrase: finalResult.alias || finalResult.tokens.join(" ") };
+      const wordId = String(finalResult.wordId || "");
+      const spell = ACTIVE_WORDS_BY_ID[wordId]
+        ? { ...ACTIVE_WORDS_BY_ID[wordId], ...(WORD_RUNTIME_ROUTING_BY_WORD_ID[wordId] || {}) }
+        : { id: wordId, phrase: finalResult.alias || finalResult.tokens.join(" ") };
       const detectedPayload = {
         spell,
         transcript: finalResult.alias || finalResult.tokens.join(" "),
@@ -353,14 +366,15 @@ export function createKwsTokenParser(opts = {}) {
       });
     }
 
-    lastMatchedSpellId = String(finalResult.spellId || "");
+    lastMatchedWordId = String(finalResult.wordId || "");
     lastMatchAtMs = atMs;
     if (cfg.clearBufferOnMatch) tokenBuffer = [];
     else tokenBuffer = tokenBuffer.slice(0, Math.max(0, tokenBuffer.length - finalResult.consumedCount));
 
     return {
       matched: true,
-      spellId: finalResult.spellId,
+      wordId: finalResult.wordId,
+      spellId: finalResult.wordId,
       confidence: finalResult.confidence,
       tokens: finalResult.tokens.slice(),
       suppressed: false,
@@ -377,7 +391,8 @@ export function createKwsTokenParser(opts = {}) {
       tokenThreshold: cfg.tokenThreshold,
       wakeTokenThreshold: cfg.wakeTokenThreshold,
       spellMatchThreshold: cfg.spellMatchThreshold,
-      spellCooldownMs: cfg.spellCooldownMs,
+      wordCooldownMs: cfg.wordCooldownMs,
+      spellCooldownMs: cfg.wordCooldownMs,
       wakeArmMs: cfg.wakeArmMs,
       wakeArmedMinConfidence: cfg.wakeArmedMinConfidence,
       wakeArmed: wakeArmedUntilMs > lastSeenAtMs,

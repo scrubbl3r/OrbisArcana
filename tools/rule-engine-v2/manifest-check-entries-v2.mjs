@@ -1,8 +1,10 @@
+// Manifest-group composition and flattening helpers for ready/regression/contract sets.
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
 import { normalizeManifestEntries } from "./manifest-collision-utils-v2.mjs";
-
+// Provides canonical grouped/flattened views for manifest integrity and collision checks.
+// Group order is deliberate and reused by readiness orchestration.
 export const MANIFEST_CHECK_GROUP_NAMES_V2 = Object.freeze({
   ready: "ready",
   regression: "regression",

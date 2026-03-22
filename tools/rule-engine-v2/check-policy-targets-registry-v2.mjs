@@ -11,7 +11,9 @@ import {
   POLICY_VALIDATOR_TARGETS_V2,
 } from "./policy-targets-v2.mjs";
 
+// Validates policy registries/targets are unique and point at existing files/docs.
 const CHECK_TAG = "policy-targets-registry:v2";
+const PASS_MESSAGE = "policy target registry is valid";
 const POLICY_LABELS = Object.freeze({
   schemaDocKeyRegistry: "policy schema doc key registry",
   schemaDocRelRegistry: "policy schema doc rel registry",
@@ -65,4 +67,4 @@ validateDocRegistryV2({
   requireMarkdown: true,
 });
 
-reportCheckPass(CHECK_TAG, "policy target registry is valid");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

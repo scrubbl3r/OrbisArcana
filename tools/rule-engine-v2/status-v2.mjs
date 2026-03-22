@@ -1,9 +1,8 @@
+// Builds/writes consolidated rule-engine-v2 status artifacts and console summary lines.
 import { READY_PHASES_V2 } from "./ready-phases-v2.mjs";
 import { REGRESSION_CHECKS_V2 } from "./regression-checks-v2.mjs";
 import { CONTRACT_CHECKS_V2 } from "./contract-checks-v2.mjs";
-import {
-  MANIFEST_VALIDATORS_V2,
-} from "./manifest-validators-v2.mjs";
+import { MANIFEST_VALIDATORS_V2 } from "./manifest-validators-v2.mjs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { runCheckScriptOk } from "./run-check-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
@@ -20,6 +19,8 @@ import {
   projectOrchestratorV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 
+// Status aggregator intentionally mirrors doctor/readiness semantics for a single summary artifact.
+// This file is read-heavy by design; side effects are limited to status artifact output.
 const CHECK_TAG = "status:v2";
 const logStatus = createTaggedLogger(CHECK_TAG);
 const STATUS_DOC_PATHS = Object.freeze({

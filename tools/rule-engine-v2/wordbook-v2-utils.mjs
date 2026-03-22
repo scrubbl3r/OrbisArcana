@@ -1,5 +1,5 @@
+// Shared wordbook listing/count/model/authoring-row helpers (+ legacy spellbook aliases).
 import { asLowerText } from "./text-utils-v2.mjs";
-
 function toNumber(v, fallback) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;

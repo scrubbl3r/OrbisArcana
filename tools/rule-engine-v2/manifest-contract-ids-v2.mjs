@@ -1,3 +1,5 @@
+// Canonical required ID lists for ready/regression/contract manifest validators.
+// Lists are consumed as SSOT expectations by manifest integrity checks.
 export const REQUIRED_READY_PHASE_IDS_V2 = Object.freeze([
   "doctor",
   "regression_manifest",

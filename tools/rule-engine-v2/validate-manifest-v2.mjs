@@ -1,6 +1,7 @@
+// Validates manifest entry schema, uniqueness, and on-disk script-file presence.
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-
+// Shared validator keeps manifest-entry constraints consistent across all manifest checks.
 function isRecord(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }

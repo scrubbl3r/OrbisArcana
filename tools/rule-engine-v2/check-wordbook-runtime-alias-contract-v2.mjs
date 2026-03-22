@@ -17,7 +17,9 @@ import {
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
+// Verifies runtime wordbook exports and legacy spellbook aliases remain reference-identical.
 const CHECK_TAG = "wordbook-runtime-alias:v2";
+const PASS_MESSAGE = "runtime wordbook and legacy spellbook exports are alias-compatible";
 
 if (SPELLS !== WORDS) failCheck(CHECK_TAG, "wordbook SPELLS alias must match WORDS");
 if (SPELLS_BY_ID !== WORDS_BY_ID) failCheck(CHECK_TAG, "wordbook SPELLS_BY_ID alias must match WORDS_BY_ID");
@@ -37,4 +39,4 @@ if (LEGACY_ACTIVE_SPELLS_BY_ID !== ACTIVE_SPELLS_BY_ID) {
   failCheck(CHECK_TAG, "legacy spellbook ACTIVE_SPELLS_BY_ID must re-export runtime wordbook");
 }
 
-reportCheckPass(CHECK_TAG, "runtime wordbook and legacy spellbook exports are alias-compatible");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

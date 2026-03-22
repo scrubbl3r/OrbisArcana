@@ -6,9 +6,10 @@
 //   - compatibility alias: src/content/interactions-v2/spellbook-v2.js
 // Keeps gameplay-facing spell metadata separate from voice recognition config.
 
-export const RUNTIME_SPELLS = Object.freeze([
+export const RUNTIME_WORDS = Object.freeze([
   {
     id: "domus",
+    axisWord: null,
     axisSpell: null,
     wakeWindowSpell: null,
     slot: "UD",
@@ -18,6 +19,7 @@ export const RUNTIME_SPELLS = Object.freeze([
   },
   {
     id: "sanctum",
+    axisWord: null,
     axisSpell: null,
     wakeWindowSpell: "sanctum",
     slot: "UD",
@@ -27,6 +29,7 @@ export const RUNTIME_SPELLS = Object.freeze([
   },
   {
     id: "rota",
+    axisWord: null,
     axisSpell: null,
     wakeWindowSpell: "rota",
     slot: "FB",
@@ -39,6 +42,7 @@ export const RUNTIME_SPELLS = Object.freeze([
   },
   {
     id: "vectus",
+    axisWord: null,
     axisSpell: null,
     wakeWindowSpell: "vectus",
     slot: "LR",
@@ -48,13 +52,13 @@ export const RUNTIME_SPELLS = Object.freeze([
   },
 ]);
 
-export const RUNTIME_SPELLS_BY_ID = Object.freeze(
-  RUNTIME_SPELLS.reduce((acc, spell) => {
+export const RUNTIME_WORDS_BY_ID = Object.freeze(
+  RUNTIME_WORDS.reduce((acc, spell) => {
     acc[String(spell.id || "")] = Object.freeze({ ...spell });
     return acc;
   }, {})
 );
 
-export function getRuntimeSpellById(spellId) {
-  return RUNTIME_SPELLS_BY_ID[String(spellId || "").toLowerCase()] || null;
+export function getRuntimeWordById(wordId) {
+  return RUNTIME_WORDS_BY_ID[String(wordId || "").toLowerCase()] || null;
 }

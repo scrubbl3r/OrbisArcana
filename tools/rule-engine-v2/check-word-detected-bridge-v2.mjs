@@ -11,8 +11,15 @@ import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { wordIdText } from "./check-spell-event-v2.mjs";
 
+// Verifies canonical word-detected bridge path dedupes legacy spell-detected duplicate events.
 const CHECK_TAG = "word-detected-bridge:v2";
+const TEST_WORD_ID = "arcana";
+const TEST_WORD_INTENT = "spell.arcana_test";
+const TEST_WORD_PHRASE = "arcana";
+const LEGACY_EVENT_ALIAS_LABEL = "spell_detected";
+const PASS_MESSAGE = `${EVT_VOICE_WORD_DETECTED} bridge dispatches and dedupes legacy ${LEGACY_EVENT_ALIAS_LABEL} duplicate`;
 
 const nowRef = { value: 1000 };
 const eventBus = createCheckEventBus();
@@ -27,9 +34,9 @@ const system = createCheckDispatchSystem({
 runWithStartedSystem(system, () => {
   const payload = {
     word: {
-      id: "arcana",
-      intent: "spell.arcana_test",
-      phrase: "arcana",
+      id: TEST_WORD_ID,
+      intent: TEST_WORD_INTENT,
+      phrase: TEST_WORD_PHRASE,
     },
     confidence: 0.9,
     atMs: nowRef.value,
@@ -46,8 +53,8 @@ runWithStartedSystem(system, () => {
 if (casts.length !== 1) {
   failCheck(CHECK_TAG, `expected exactly 1 cast after bridged word+spell events, got ${casts.length}`);
 }
-if (String(casts[0]?.spellId || "") !== "arcana") {
-  failCheck(CHECK_TAG, `expected cast spellId=arcana, got ${String(casts[0]?.spellId || "")}`);
+if (wordIdText(casts[0]) !== TEST_WORD_ID) {
+  failCheck(CHECK_TAG, `expected cast wordId=${TEST_WORD_ID}, got ${wordIdText(casts[0])}`);
 }
 
-reportCheckPass(CHECK_TAG, "voice.word_detected bridge dispatches and dedupes legacy spell_detected duplicate");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

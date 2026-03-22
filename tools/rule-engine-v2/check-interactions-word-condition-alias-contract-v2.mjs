@@ -6,14 +6,13 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { cloneJsonV2 } from "./json-clone-v2.mjs";
 
+// Verifies canonical `word` conditions compile to runtime spell semantics.
 const CHECK_TAG = "interactions-word-condition-alias-contract:v2";
+const PASS_MESSAGE = "interactions condition type supports canonical word alias and compiles to runtime spell semantics";
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-const sample = clone(INTERACTIONS_V2);
+const sample = cloneJsonV2(INTERACTIONS_V2);
 const targetRule = Array.isArray(sample?.rules)
   ? sample.rules.find((rule) => rule?.id === "r_pyro_immediate")
   : null;
@@ -60,7 +59,4 @@ if (!Array.isArray(immediateWordIds) || !immediateWordIds.includes("pyro")) {
   failCheck(CHECK_TAG, "immediate event word-id collector must include aliased word condition");
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "interactions condition type supports canonical word alias and compiles to runtime spell semantics"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

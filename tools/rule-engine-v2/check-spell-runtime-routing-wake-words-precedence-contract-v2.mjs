@@ -1,43 +1,39 @@
-import {
-  INTERACTIONS_V2,
-} from "../../src/content/interactions-v2/index.js";
+import { INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
 import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
+import { cloneJsonV2 } from "./json-clone-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { KNOWN_WAKE_WORD_ID_V2, SAMPLE_WAKE_RULE_ID_V2, UNKNOWN_WAKE_WORD_ID_V2 } from "./wake-test-ids-v2.mjs";
+import { hasWakeWindowIdsMissingErrorV2 } from "./wake-error-matchers-v2.mjs";
 
 const CHECK_TAG = "spell-runtime-routing-wake-words-precedence-contract:v2";
-const UNKNOWN_WORD_ID = "__unknown_wake_word__";
+const ACTION_WAKE_WIN = "wake_win";
+const PASS_MESSAGE = "spell runtime routing gives canonical wake_win.words[] precedence over wake_win.spells[] alias when both are present";
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
+function toBareWakeWords(input) {
+  return (Array.isArray(input) ? input : []).map((id) => String(id).replace(/^(word|spell)\./, ""));
 }
 
 function withWakeActionMutator(mutateWakeAction) {
-  const sample = clone(INTERACTIONS_V2);
+  const sample = cloneJsonV2(INTERACTIONS_V2);
   const targetRule = Array.isArray(sample?.rules)
-    ? sample.rules.find((rule) => rule?.id === "r_rota_yspin_charged")
+    ? sample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
     : null;
   if (!targetRule || !Array.isArray(targetRule?.then)) {
-    failCheck(CHECK_TAG, "unable to load r_rota_yspin_charged sample rule");
+    failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
   }
-  const wakeAction = targetRule.then.find((action) => action?.type === "wake_win");
+  const wakeAction = targetRule.then.find((action) => action?.type === ACTION_WAKE_WIN);
   if (!wakeAction) {
-    failCheck(CHECK_TAG, "sample wake_win action missing");
+    failCheck(CHECK_TAG, `sample ${ACTION_WAKE_WIN} action missing`);
   }
   mutateWakeAction(wakeAction);
   return sample;
 }
 
-function hasWakeUnknownMismatch(errors = [], wordId = UNKNOWN_WORD_ID) {
-  const needle = `WAKE_WINDOW_WORD_IDS missing interactions-v2 wake_win word ids: ${wordId}`;
-  return errors.some((error) => String(error).includes(needle));
-}
-
 const canonicalWinsErrors = validateSpellRuntimeRouting(withWakeActionMutator((wakeAction) => {
-  const words = (Array.isArray(wakeAction.words) ? wakeAction.words : [])
-    .map((id) => String(id).replace(/^(word|spell)\./, ""));
+  const words = toBareWakeWords(wakeAction.words);
   wakeAction.words = words;
-  wakeAction.spells = [UNKNOWN_WORD_ID];
+  wakeAction.spells = [UNKNOWN_WAKE_WORD_ID_V2];
 }));
 if (canonicalWinsErrors.length) {
   failCheck(
@@ -47,21 +43,17 @@ if (canonicalWinsErrors.length) {
 }
 
 const canonicalUnknownErrors = validateSpellRuntimeRouting(withWakeActionMutator((wakeAction) => {
-  const words = (Array.isArray(wakeAction.words) ? wakeAction.words : [])
-    .map((id) => String(id).replace(/^(word|spell)\./, ""));
+  const words = toBareWakeWords(wakeAction.words);
   wakeAction.words = words.length
-    ? words.map((id, index) => (index === 0 ? UNKNOWN_WORD_ID : id))
-    : [UNKNOWN_WORD_ID];
-  wakeAction.spells = ["rota"];
+    ? words.map((id, index) => (index === 0 ? UNKNOWN_WAKE_WORD_ID_V2 : id))
+    : [UNKNOWN_WAKE_WORD_ID_V2];
+  wakeAction.spells = [KNOWN_WAKE_WORD_ID_V2];
 }));
-if (!hasWakeUnknownMismatch(canonicalUnknownErrors, UNKNOWN_WORD_ID)) {
+if (!hasWakeWindowIdsMissingErrorV2(canonicalUnknownErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
     `validateSpellRuntimeRouting must keep validating canonical words[] when both words[] and spells[] are present: ${canonicalUnknownErrors.join(" | ")}`
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "spell runtime routing gives canonical wake_win.words[] precedence over wake_win.spells[] alias when both are present"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

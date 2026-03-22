@@ -1,3 +1,6 @@
+// Normalization/collision helpers for comparing manifest-entry script paths.
+// Used by cross-manifest integrity checks to detect shared script ownership.
+// Error messages include manifest + index for fast diagnostics.
 function isRecord(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }

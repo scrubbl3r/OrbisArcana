@@ -74,7 +74,7 @@ function compileInteractionRule(rule, defaultsSafe, defaultsEventById) {
     const type = asId(safeAction[FIELD_TYPE]);
     if (type === ACTION_TYPE_WAKE_WIN) {
       const wordsRaw = Object.hasOwn(safeAction, FIELD_WORDS) ? safeAction[FIELD_WORDS] : safeAction[FIELD_SPELLS];
-      const words = mapDefined(asArray(wordsRaw), (spellId) => normalizeSpellId(spellId));
+      const words = mapDefined(asArray(wordsRaw), (wordId) => normalizeSpellId(wordId));
       const ttlMsRaw = Object.hasOwn(safeAction, FIELD_TTL_MS)
         ? safeAction[FIELD_TTL_MS]
         : asObj(defaultsSafe[DEFAULTS_WAKE_WIN_KEY])[FIELD_TTL_MS];

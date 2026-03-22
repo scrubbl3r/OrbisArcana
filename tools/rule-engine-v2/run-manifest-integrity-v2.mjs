@@ -1,6 +1,7 @@
+// Shared manifest-integrity wrapper used by contract/regression/phase manifest checks.
 import { runManifestIdCheck } from "./run-manifest-id-check-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-
+// Central entry point so all manifest checks share pass/fail behavior.
 export function runManifestIntegrityCheckV2({
   tag,
   entries,

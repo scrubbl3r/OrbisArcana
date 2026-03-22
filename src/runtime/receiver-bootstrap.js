@@ -49,7 +49,7 @@ const FIELD_EXECUTION = "execution";
 const ERR_PREFIX_ORCHESTRATOR_V2 = "Orchestrator v2 validation failed: ";
 const ERR_PREFIX_ORCHESTRATOR_V1 = "Orchestrator v1 validation failed: ";
 const ERR_PREFIX_WORDBOOK_V2 = "Wordbook v2 validation failed: ";
-const ERR_PREFIX_SPELL_RUNTIME_ROUTING = "Spell runtime routing validation failed: ";
+const ERR_PREFIX_WORD_RUNTIME_ROUTING = "Word runtime routing validation failed: ";
 const WARN_ORCHESTRATOR_V2_BUILDER_MISSING =
   "[receiver-bootstrap] ORCHESTRATOR_V2 builder missing; using safe disabled rule schema";
 const WARN_ORCHESTRATOR_V2_BUILD_FAILED =
@@ -303,7 +303,7 @@ export async function loadReceiverInitModules() {
     { INPUT_GESTURE_CONFIG_DEFAULT },
     { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
-    { RUNTIME_SPELLS_BY_ID },
+    { RUNTIME_WORDS_BY_ID },
     { validateSpellRuntimeRouting },
     { validateSpellSchemaIntegrity },
     {
@@ -411,7 +411,7 @@ export async function loadReceiverInitModules() {
     INPUT_GESTURE_CONFIG_DEFAULT,
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
-    RUNTIME_SPELLS_BY_ID,
+    RUNTIME_WORDS_BY_ID,
     validateSpellRuntimeRouting,
     validateSpellSchemaIntegrity,
     ORCHESTRATOR_V1,
@@ -444,9 +444,9 @@ export async function loadReceiverInitModules() {
  * @property {Object} [vfxDefaults] Receiver VFX defaults object mutated by preset hydration.
  * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
  * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
- * @property {(next:{runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeSpellIndexes]
+ * @property {(next:{runtimeWordIndex?:Object, runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeWordIndexes]
  * @property {(next:{source?:string, signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[], eventRuntimeBindings?:Object}) => void} [setRuleSchema]
- * @property {() => void} [initSpellActionHandlers]
+ * @property {() => void} [initWordActionHandlers]
  * @property {() => Object} [createSpellCastExecutorContext]
  * @property {(executor:Object) => void} [setSpellCastExecutor]
  * @property {(ready:boolean) => void} [setReceiverModulesReady]
@@ -479,7 +479,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     INPUT_GESTURE_CONFIG_DEFAULT,
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
-    RUNTIME_SPELLS_BY_ID,
+    RUNTIME_WORDS_BY_ID,
     validateSpellRuntimeRouting,
     validateSpellSchemaIntegrity,
     RULE_ENGINE_POLICY_CONTROL,
@@ -514,9 +514,9 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     vfxDefaults,
     getInputConfigs,
     setInputConfigs,
-    setRuntimeSpellIndexes,
+    setRuntimeWordIndexes,
     setRuleSchema,
-    initSpellActionHandlers,
+    initWordActionHandlers,
     createSpellCastExecutorContext,
     setSpellCastExecutor,
     setReceiverModulesReady,
@@ -747,9 +747,14 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     }
   }
 
-  if (typeof setRuntimeSpellIndexes === "function") {
-    setRuntimeSpellIndexes({
-      runtimeSpellIndex: RUNTIME_SPELLS_BY_ID || Object.create(null),
+  const runtimeWordIndex = (RUNTIME_WORDS_BY_ID && typeof RUNTIME_WORDS_BY_ID === "object")
+    ? RUNTIME_WORDS_BY_ID
+    : Object.create(null);
+
+  if (typeof setRuntimeWordIndexes === "function") {
+    setRuntimeWordIndexes({
+      runtimeWordIndex,
+      runtimeSpellIndex: runtimeWordIndex,
       castActionRegistryIndex: CAST_ACTION_REGISTRY_BY_ID || Object.create(null),
     });
   }
@@ -763,7 +768,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       throwValidationErrorIfAny(wordbookErrors, ERR_PREFIX_WORDBOOK_V2);
     }
     const routingErrors = validateSpellRuntimeRoutingFn();
-    throwValidationErrorIfAny(routingErrors, ERR_PREFIX_SPELL_RUNTIME_ROUTING);
+    throwValidationErrorIfAny(routingErrors, ERR_PREFIX_WORD_RUNTIME_ROUTING);
   }
 
   if (typeof validateRuleEngine === "function") {
@@ -816,8 +821,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     );
   }
 
-  if (typeof initSpellActionHandlers === "function") {
-    initSpellActionHandlers();
+  if (typeof initWordActionHandlers === "function") {
+    initWordActionHandlers();
   }
 
   if (typeof createSpellCastExecutor === "function" &&

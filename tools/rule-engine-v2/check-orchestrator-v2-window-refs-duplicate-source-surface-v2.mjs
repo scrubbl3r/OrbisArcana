@@ -4,6 +4,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-window-refs-duplicate-source-surface:v2";
 const VALIDATOR_REL = "src/content/interactions-v2/validate-orchestrator-v2.js";
+const PASS_MESSAGE = "orchestrator-v2 validator source preserves duplicate window-ref detection in validateWindowRefs";
 
 const text = readRelativeText(VALIDATOR_REL);
 requireTextIncludesTokensV2({
@@ -17,7 +18,4 @@ requireTextIncludesTokensV2({
   missingMessage: (token) => `${VALIDATOR_REL} missing window-ref duplicate detection token: ${token}`,
 });
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 validator source preserves duplicate window-ref detection in validateWindowRefs"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

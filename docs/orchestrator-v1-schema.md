@@ -22,7 +22,7 @@ This doc adds required modifiers for production behavior:
 
 - Keywords are uppercase: `ON`, `WHEN`, `OPEN`, `TRIGGER`, `UNTIL`, `WHILE`, `FALLBACK`.
 - Compendium IDs remain canonical machine IDs (recommended lowercase snake/camel namespaces), for example:
-  - `spell.orbis`
+  - `word.orbis`
   - `gesture.shake_ud`
   - `aoe_electric`
 - Author-facing aliases may be uppercase, but compiler resolves to canonical IDs.
@@ -140,12 +140,16 @@ Adoption path:
 
 ## 10) Authoring Shorthand (Implemented)
 
-The current compiler/validator accepts ergonomic aliases in addition to canonical fields:
+Canonical authoring uses `word`/`words`. Legacy `spell`/`spells` inputs remain compatibility-only while migration completes.
+
+The current compiler/validator accepts ergonomic shorthand:
 
 - `on`:
   - string: `"rota, spin_y, charged"`
   - array: `["rota, spin_y", "charged"]`
-  - object aliases:
+  - object canonical keys:
+    - `word` or `words`
+  - legacy compatibility aliases:
     - `spell` or `spells`
     - `gesture` or `gestures`
     - `orb_state`, `orbState`, or `orbStates`
@@ -155,7 +159,7 @@ The current compiler/validator accepts ergonomic aliases in addition to canonica
 - `open`:
   - string/array comma shorthand for word lists
   - canonical key: `words`
-  - compatibility alias key: `spells`
+  - legacy compatibility alias key: `spells`
   - `ttl` alias for `ttlMs` (with `ttlMs` precedence)
 - `trigger`:
   - comma shorthand string: `"grace, aoe_electric"`

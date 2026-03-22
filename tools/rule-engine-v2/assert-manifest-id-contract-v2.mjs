@@ -1,6 +1,8 @@
+// Validates manifest entry shape, then enforces exact ID ordering contract.
 import { validateManifestEntries } from "./validate-manifest-v2.mjs";
 import { assertOrderedIds } from "./assert-ordered-ids-v2.mjs";
-
+// Returns normalized actual IDs so callers can reuse ordered-id outputs if needed.
+// This helper intentionally composes validation + ordering into one reusable step.
 export function assertManifestIdContract({
   entries,
   requiredIds,

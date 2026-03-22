@@ -166,6 +166,7 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
   const seenOnSelectorRefs = new Set();
   for (const onEntry of onSelectorSpecs) {
     const selectorType = asText(onEntry?.type).toLowerCase();
+    const selectorTypeLabel = selectorType === "spell" ? "word" : selectorType;
     const selectorValueId = asText(onEntry?.id).toLowerCase();
     const selectorInputId = onEntry.raw || selectorValueId;
     if (!["spell", "gesture", "orb_state"].includes(selectorType)) {
@@ -173,10 +174,10 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
       continue;
     }
     if (!selectorValueId) {
-      errors.push(`${ruleContext} has empty on.${selectorType}`);
+      errors.push(`${ruleContext} has empty on.${selectorTypeLabel}`);
       continue;
     }
-    const onSelectorRefId = `${selectorType}.${selectorValueId}`;
+    const onSelectorRefId = `${selectorTypeLabel}.${selectorValueId}`;
     if (pushDuplicateWhenSeen(
       errors,
       seenOnSelectorRefs,
@@ -186,7 +187,7 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
       continue;
     }
     if (selectorType === "spell" && !Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, selectorValueId)) {
-      errors.push(`${ruleContext} references inactive or unknown spell id: ${selectorInputId}`);
+      errors.push(`${ruleContext} references inactive or unknown word id: ${selectorInputId}`);
     } else if (selectorType === "gesture" && !knownGestureSignalIds.has(selectorValueId)) {
       errors.push(`${ruleContext} references unknown gesture id: ${selectorInputId}`);
     } else if (selectorType === "orb_state" && !knownOrbStateSignalIds.has(selectorValueId)) {
@@ -220,17 +221,17 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
       for (const openSpellId of openWordEntries) {
         const normalizedOpenSpell = normalizeSpellId(openSpellId);
         if (!normalizedOpenSpell) {
-          errors.push(`${openActionContext} contains empty spell id`);
+          errors.push(`${openActionContext} contains empty word id`);
           continue;
         }
         pushDuplicateWhenSeen(
           errors,
           seenOpenSpellIds,
           normalizedOpenSpell,
-          `${openActionContext} contains duplicate spell id: ${openSpellId}`
+          `${openActionContext} contains duplicate word id: ${openSpellId}`
         );
         if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedOpenSpell)) {
-          errors.push(`${openActionContext} references inactive or unknown spell id: ${openSpellId}`);
+          errors.push(`${openActionContext} references inactive or unknown word id: ${openSpellId}`);
         }
       }
     }

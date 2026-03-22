@@ -1,7 +1,4 @@
-import {
-  EVT_VOICE_AXIS_SELECTED,
-  EVT_VOICE_SPELL_REJECTED,
-} from "../../src/contracts/events.js";
+import { EVT_VOICE_AXIS_SELECTED, EVT_VOICE_SPELL_REJECTED } from "../../src/contracts/events.js";
 import { assertCheck } from "./check-assert-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { CHECK_CONFIDENCE_V2 } from "./check-confidence-constants-v2.mjs";
@@ -20,8 +17,10 @@ import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.flatSpinGating;
+const PASS_MESSAGE = "flat-spin token gating contract holds";
 
-function detectOutsideWindow({ spellId, intent, expectedReason }) {
+function detectOutsideWindow({ wordId, intent, expectedReason }) {
+  const resolvedWordId = String(wordId || "").trim().toLowerCase();
   const eventBus = createCheckEventBus();
   const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
   const system = createCheckDispatchSystem({
@@ -31,16 +30,16 @@ function detectOutsideWindow({ spellId, intent, expectedReason }) {
   });
   runWithStartedSystem(system, () => {
     emitDetectedWordAt(eventBus, {
-      id: spellId,
+      id: resolvedWordId,
       intent,
       confidence: CHECK_CONFIDENCE_V2.high,
       atMs: CHECK_FIXED_TIMES_V2.flatSpinOutside,
     });
   });
-  assertCheck(rejects.length >= 1, `[${CHECK_TAG}] expected reject for ${spellId} outside flat-spin window`);
+  assertCheck(rejects.length >= 1, `[${CHECK_TAG}] expected reject for ${resolvedWordId} outside flat-spin window`);
   assertCheck(
     hasReason(rejects, expectedReason),
-    `[${CHECK_TAG}] expected reason=${expectedReason} for ${spellId}; got [${reasonList(rejects).join(", ")}]`
+    `[${CHECK_TAG}] expected reason=${expectedReason} for ${resolvedWordId}; got [${reasonList(rejects).join(", ")}]`
   );
 }
 
@@ -63,17 +62,20 @@ function detectInsideWindowAxisSelect() {
     });
   });
   assertCheck(axisSelected.length === 1, `[${CHECK_TAG}] expected axis select event for pyro inside flat-spin window`);
-  assertCheck(rejects.length === 0, `[${CHECK_TAG}] unexpected reject(s) for pyro inside flat-spin window: ${rejects.map((r) => r.reason).join(", ")}`);
+  assertCheck(
+    rejects.length === 0,
+    `[${CHECK_TAG}] unexpected reject(s) for pyro inside flat-spin window: ${rejects.map((r) => r.reason).join(", ")}`
+  );
 }
 
 function main() {
   detectOutsideWindow({
-    spellId: CHECK_SPELL_IDS_V2.pyro,
+    wordId: CHECK_SPELL_IDS_V2.pyro,
     intent: CHECK_SPELL_INTENTS_V2.axisSelect,
     expectedReason: CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell,
   });
   detectInsideWindowAxisSelect();
-  reportCheckPass(CHECK_TAG, "flat-spin token gating contract holds");
+  reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 
 main();

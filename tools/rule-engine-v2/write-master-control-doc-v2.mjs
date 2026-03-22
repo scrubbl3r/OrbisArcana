@@ -1,3 +1,4 @@
+// Generates master-control markdown/json authoring artifacts from SSOT content.
 import { writeFileSync } from "node:fs";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
@@ -26,6 +27,7 @@ import {
 const CHECK_TAG = "master-control-doc:v2";
 const logMasterControlDoc = createTaggedLogger(CHECK_TAG);
 
+// Generates synchronized markdown/json authoring views from SSOT + projection artifacts.
 function toJson(value) {
   return stringifyJson(value);
 }

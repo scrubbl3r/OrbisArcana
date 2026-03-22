@@ -1051,7 +1051,7 @@
     let KWS_AXIS_TOKENS = [];
     let KWS_WAKE_TOKENS = [];
     let KWS_WAKE_REQUIRED_TOKENS = [];
-    let KWS_AXIS_SPELL_BY_AXIS = Object.freeze({});
+    let KWS_AXIS_WORD_BY_AXIS = Object.freeze({});
     let KWS_LOG_TOKENS = new Set();
     let TEMP_UNGATED_KWS_TOKENS = new Set();
     let KWS_TOKEN_CANONICAL_MAP = Object.freeze({});
@@ -1077,6 +1077,7 @@
       resetHeardWakeWindowTokensForAxis() {},
       resetHeardWakeWindowTokensAllAxes() {},
       markHeardWakeWindowToken() {},
+      setSelectedAxisWord() {},
       setSelectedAxisSpell() {},
       flashToken() {},
       openWakeHudGate() {},
@@ -1094,8 +1095,10 @@
         eventBindings: kwsEventBindings,
         setEventBindings: (next) => { kwsEventBindings = next; },
         voiceProviderManager,
+        kwsWordProvider,
         kwsVoiceProvider,
         setVoiceProviderManager: (next) => { voiceProviderManager = next; },
+        setKwsWordProvider: (next) => { kwsWordProvider = next; },
         setKwsVoiceProvider: (next) => { kwsVoiceProvider = next; },
       });
     }
@@ -1130,7 +1133,7 @@
 
       // Debug-only "nirvana" test: enhanced grace + input processing reset.
       if ((e.key === "n" || e.key === "N") && e.shiftKey) {
-        executeSpellCastAction("orb_super_grace", { payload: { ms: SUPER_GRACE_DEFAULT_MS } });
+        executeWordCastAction("orb_super_grace", { payload: { ms: SUPER_GRACE_DEFAULT_MS } });
       }
     });
 
@@ -1207,13 +1210,15 @@
     let orbRuntimeLoop = null;
     let resourcesSystem = null;
     let voiceProviderManager = null;
+    let kwsWordProvider = null;
     let kwsVoiceProvider = null;
     let kwsBackendKey = DEFAULT_KWS_BACKEND_KEY;
     let inputSystem = null;
     let inputGestureSystem = null;
     let inputSystemsBundle = null;
     let orbRuntimeState = null;
-    let runtimeSpellIndex = Object.create(null);
+    let runtimeWordIndex = Object.create(null);
+    let runtimeSpellIndex = runtimeWordIndex;
     let castActionRegistryIndex = Object.create(null);
     let ruleSchema = null;
     let ruleEnginePreviewSystem = null;
@@ -1361,13 +1366,13 @@
       };
     }
 
-    function castActionForSpellId(spellId){
-      const id = String(spellId || "").toLowerCase();
-      const def = runtimeSpellIndex[id];
+    function castActionForWordId(wordId){
+      const id = String(wordId || "").toLowerCase();
+      const def = runtimeWordIndex[id] || runtimeSpellIndex[id];
       return def ? String(def.castActionId || "") : "";
     }
 
-    function initSpellActionHandlers(){
+    function initWordActionHandlers(){
       if (typeof createSpellActionHandlersModule !== "function") {
         throw new Error("spell-action-handlers module unavailable");
       }
@@ -1382,7 +1387,7 @@
       });
     }
 
-    function executeSpellCastAction(castActionId, context = {}){
+    function executeWordCastAction(castActionId, context = {}){
       if (!receiverModulesReady) return { handled: false, skipped: "not_ready" };
       if (!spellCastExecutor || typeof spellCastExecutor.execute !== "function") {
         throw new Error("spell-cast-executor unavailable");
@@ -1491,9 +1496,11 @@
             KWS_AXIS_TOKENS = Array.isArray(kwsConfig.axisTokens) ? kwsConfig.axisTokens.slice() : KWS_AXIS_TOKENS;
             KWS_WAKE_TOKENS = Array.isArray(kwsConfig.wakeTokens) ? kwsConfig.wakeTokens.slice() : KWS_WAKE_TOKENS;
             KWS_WAKE_REQUIRED_TOKENS = Array.isArray(kwsConfig.wakeRequiredTokens) ? kwsConfig.wakeRequiredTokens.slice() : KWS_WAKE_REQUIRED_TOKENS;
-            KWS_AXIS_SPELL_BY_AXIS = (kwsConfig.axisSpellByAxis && typeof kwsConfig.axisSpellByAxis === "object")
+            KWS_AXIS_WORD_BY_AXIS = (kwsConfig.axisWordByAxis && typeof kwsConfig.axisWordByAxis === "object")
+              ? Object.freeze({ ...kwsConfig.axisWordByAxis })
+              : (kwsConfig.axisSpellByAxis && typeof kwsConfig.axisSpellByAxis === "object")
               ? Object.freeze({ ...kwsConfig.axisSpellByAxis })
-              : KWS_AXIS_SPELL_BY_AXIS;
+              : KWS_AXIS_WORD_BY_AXIS;
             KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
             TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
             KWS_TOKEN_CANONICAL_MAP = (kwsConfig.tokenCanonicalMap && typeof kwsConfig.tokenCanonicalMap === "object")
@@ -1520,11 +1527,12 @@
             axisTokens: KWS_AXIS_TOKENS,
             wakeTokens: KWS_WAKE_TOKENS,
             wakeRequiredTokens: KWS_WAKE_REQUIRED_TOKENS,
-            axisSpellByAxis: KWS_AXIS_SPELL_BY_AXIS,
+            axisWordByAxis: KWS_AXIS_WORD_BY_AXIS,
             logTokens: Array.from(KWS_LOG_TOKENS),
             tempUngatedTokens: Array.from(TEMP_UNGATED_KWS_TOKENS),
             tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,
           },
+          getKwsWordProvider: () => kwsWordProvider,
           getKwsVoiceProvider: () => kwsVoiceProvider,
           onGateOpened: (payload = {}) => {
             if (mvp && mvp.eventBus) mvp.eventBus.emit("voice.gate_opened", payload);
@@ -1594,6 +1602,16 @@
           },
         });
         const mods = await loadReceiverInitModules();
+        const setRuntimeWordIndexes = (next = {}) => {
+          const index = (next.runtimeWordIndex && typeof next.runtimeWordIndex === "object")
+            ? next.runtimeWordIndex
+            : (next.runtimeSpellIndex && typeof next.runtimeSpellIndex === "object")
+            ? next.runtimeSpellIndex
+            : Object.create(null);
+          runtimeWordIndex = index;
+          runtimeSpellIndex = index;
+          castActionRegistryIndex = next.castActionRegistryIndex || Object.create(null);
+        };
         const receiverBootstrapCtx = {
           applyRuntimeTheme,
           setBuildInputHudViewModelModule: (fn) => { buildInputHudViewModelModule = fn; },
@@ -1619,10 +1637,7 @@
             if (next.INPUT_GESTURE_CFG) INPUT_GESTURE_CFG = next.INPUT_GESTURE_CFG;
             if (next.INPUT_DYNAMICS_CFG) INPUT_DYNAMICS_CFG = next.INPUT_DYNAMICS_CFG;
           },
-          setRuntimeSpellIndexes: (next = {}) => {
-            runtimeSpellIndex = next.runtimeSpellIndex || Object.create(null);
-            castActionRegistryIndex = next.castActionRegistryIndex || Object.create(null);
-          },
+          setRuntimeWordIndexes,
           setRuleSchema: (next = {}) => {
             ruleSchema = {
               source: String(next.source || "").trim().toLowerCase() || "unknown",
@@ -1813,7 +1828,7 @@
               els.rulesReadout.textContent = ruleEngineSourceReadout[source] || source || "unknown";
             }
           },
-          initSpellActionHandlers,
+          initWordActionHandlers,
           createSpellCastExecutorContext: () => ({
             castActionRegistryById: castActionRegistryIndex,
             handlers: spellActionHandlers,
@@ -2072,8 +2087,23 @@
             },
             resetHeardWakeWindowTokensForAxis: (axis) => kwsBridge.resetHeardWakeWindowTokensForAxis(axis),
             resetHeardWakeWindowTokensAllAxes: () => kwsBridge.resetHeardWakeWindowTokensAllAxes(),
+            setSelectedAxisWord: (axis, axisWord) => {
+              if (!kwsPanelController) return;
+              if (typeof kwsPanelController.setSelectedAxisWord === "function") {
+                kwsPanelController.setSelectedAxisWord(axis, axisWord);
+                return;
+              }
+              if (typeof kwsPanelController.setSelectedAxisSpell === "function") {
+                kwsPanelController.setSelectedAxisSpell(axis, axisWord);
+              }
+            },
             setSelectedAxisSpell: (axis, axisSpell) => {
-              if (kwsPanelController && typeof kwsPanelController.setSelectedAxisSpell === "function") {
+              if (!kwsPanelController) return;
+              if (typeof kwsPanelController.setSelectedAxisWord === "function") {
+                kwsPanelController.setSelectedAxisWord(axis, axisSpell);
+                return;
+              }
+              if (typeof kwsPanelController.setSelectedAxisSpell === "function") {
                 kwsPanelController.setSelectedAxisSpell(axis, axisSpell);
               }
             },
@@ -2092,7 +2122,8 @@
           syncKwsTuneUiFromStatus: (status) => kwsBridge.syncTuneUiFromStatus(status),
           refreshKwsMicBtn,
         });
-        kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider;
+        kwsWordProvider = kwsVoiceRuntime.kwsWordProvider || kwsVoiceRuntime.kwsVoiceProvider || null;
+        kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider || kwsVoiceRuntime.kwsWordProvider || null;
         voiceProviderManager = kwsVoiceRuntime.voiceProviderManager;
         kwsBackendKey = kwsVoiceRuntime.kwsBackendKey;
         fxSystem.start();
@@ -2175,12 +2206,12 @@
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
           const intent = String(p.intent || "");
-          const spellId = String(p.spellId || "").toLowerCase();
-          const spellDef = runtimeSpellIndex[spellId] || null;
-          const castActionId = spellDef ? String(spellDef.castActionId || "") : castActionForSpellId(spellId);
-          const result = executeSpellCastAction(castActionId, { payload: p, intent });
-          if (result && result.handled && spellDef) {
-            const postCastActions = Array.isArray(spellDef.postCastActions) ? spellDef.postCastActions : null;
+          const wordId = String((p.wordId || p.spellId) || "").toLowerCase();
+          const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
+          const castActionId = wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId);
+          const result = executeWordCastAction(castActionId, { payload: p, intent });
+          if (result && result.handled && wordDef) {
+            const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
             if (postCastActions) {
               for (const action of postCastActions) {
                 const actionId = String(action && action.id || "");
@@ -2188,11 +2219,11 @@
                 const payload = (action && typeof action.payload === "object" && action.payload)
                   ? { ...p, ...action.payload }
                   : p;
-                executeSpellCastAction(actionId, { payload, intent });
+                executeWordCastAction(actionId, { payload, intent });
               }
-            } else if (Array.isArray(spellDef.postCastActionIds)) {
-              for (const actionId of spellDef.postCastActionIds) {
-                executeSpellCastAction(String(actionId || ""), { payload: p, intent });
+            } else if (Array.isArray(wordDef.postCastActionIds)) {
+              for (const actionId of wordDef.postCastActionIds) {
+                executeWordCastAction(String(actionId || ""), { payload: p, intent });
               }
             }
           }
@@ -2242,7 +2273,7 @@
           if (kind === "cast_action") {
             const castActionId = String(runtime && runtime.castActionId || "");
             if (!castActionId) return;
-            executeSpellCastAction(castActionId, {
+            executeWordCastAction(castActionId, {
               intent: "rule_engine.event",
               payload: {
                 trigger: RULE_ENGINE_TRIGGER,
@@ -2295,6 +2326,7 @@
           orbSystemsBundle,
           orbRuntimeLoop,
           spellDispatchSystem,
+          kwsWordProvider,
           voiceProviderManager,
           kwsVoiceProvider,
           ...kwsMvpCommands,

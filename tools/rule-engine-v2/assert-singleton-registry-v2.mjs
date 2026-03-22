@@ -1,5 +1,6 @@
+// Asserts a registry-like value resolves to one non-empty string entry.
 import { failCheck } from "./check-fail-v2.mjs";
-
+// Kept as failCheck-based (not throw) to preserve check-script diagnostics format.
 export function assertSingletonRegistryV2({ tag, values, label }) {
   if (!tag) {
     failCheck("assert-singleton-registry:v2", "singleton registry assertion requires check tag");

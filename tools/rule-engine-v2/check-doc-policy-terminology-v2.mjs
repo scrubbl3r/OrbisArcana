@@ -1,9 +1,6 @@
 import { failCheck } from "./check-fail-v2.mjs";
 import { assertSingletonRegistryV2 } from "./assert-singleton-registry-v2.mjs";
-import {
-  POLICY_AUTHORING_DOC_RELS_V2,
-  POLICY_SCHEMA_DOC_RELS_V2,
-} from "./policy-targets-v2.mjs";
+import { POLICY_AUTHORING_DOC_RELS_V2, POLICY_SCHEMA_DOC_RELS_V2 } from "./policy-targets-v2.mjs";
 import {
   RULE_ENGINE_MASTER_CONTROL_COMPAT_ALIAS_LINE_V2,
   RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2,
@@ -15,11 +12,24 @@ import { assertPolicyTokenContractAcrossTargetsV2 } from "./check-policy-targets
 import { assertPolicyTokenContractV2 } from "./check-policy-token-contract-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 
+// Enforces policy-first terminology across active docs and schema registries.
 const CHECK_TAG = "doc-policy-terminology:v2";
 const LABELS = Object.freeze({
   authoringDoc: "policy authoring doc",
   schemaDocRelRegistry: "policy schema doc rel registry",
 });
+const DEPRECATED_TOKEN_LABEL = "contains deprecated token";
+const MUST_MENTION_LABEL = "must mention";
+const MUST_NOT_REFERENCE_LABEL = "must not reference";
+const PASS_MESSAGE = "active docs use policy-first projection flag naming";
+
+function mustMentionMessage(rel, token) {
+  return `${rel} ${MUST_MENTION_LABEL} ${token}`;
+}
+
+function deprecatedTokenMessage(rel, token) {
+  return `${rel} ${DEPRECATED_TOKEN_LABEL}: ${token}`;
+}
 
 function countLiteralOccurrences(text, token) {
   if (typeof text !== "string" || typeof token !== "string" || !token) return 0;
@@ -43,11 +53,11 @@ assertPolicyTokenContractAcrossTargetsV2({
     RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2,
     RULE_ENGINE_MASTER_CONTROL_TOKEN_V2,
   ],
-  missingMessage: (token, rel) => `${rel} must mention ${token}`,
+  missingMessage: (token, rel) => mustMentionMessage(rel, token),
   forbiddenMessage: (token, rel) =>
     token === RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2
-      ? `${rel} contains deprecated token: ${token}`
-      : `${rel} must not reference ${token}`,
+      ? deprecatedTokenMessage(rel, token)
+      : `${rel} ${MUST_NOT_REFERENCE_LABEL} ${token}`,
 });
 
 assertSingletonRegistryV2({
@@ -63,8 +73,8 @@ assertPolicyTokenContractV2({
   text: schemaDocText,
   requiredTokens: [RULE_ENGINE_POLICY_CONTROL_TOKEN_V2],
   forbiddenTokens: [RULE_ENGINE_MASTER_CONTROL_PROJECTION_TOKEN_V2],
-  missingMessage: (token) => `${schemaDocRel} must mention ${token}`,
-  forbiddenMessage: (token) => `${schemaDocRel} contains deprecated token: ${token}`,
+  missingMessage: (token) => mustMentionMessage(schemaDocRel, token),
+  forbiddenMessage: (token) => deprecatedTokenMessage(schemaDocRel, token),
 });
 const masterMentions = countLiteralOccurrences(schemaDocText, RULE_ENGINE_MASTER_CONTROL_TOKEN_V2);
 if (masterMentions !== 1) {
@@ -77,4 +87,4 @@ if (!schemaDocText.includes(RULE_ENGINE_MASTER_CONTROL_COMPAT_ALIAS_LINE_V2)) {
   failCheck(CHECK_TAG, `${schemaDocRel} compatibility alias line missing`);
 }
 
-reportCheckPass(CHECK_TAG, "active docs use policy-first projection flag naming");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

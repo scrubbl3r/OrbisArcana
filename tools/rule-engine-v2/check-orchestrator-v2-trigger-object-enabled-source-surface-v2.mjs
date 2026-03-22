@@ -4,6 +4,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-trigger-object-enabled-source-surface:v2";
 const BUILDER_REL = "src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
+const PASS_MESSAGE = "orchestrator-v2 builder source preserves object-trigger enabled propagation with reserved-key filtering";
 
 const text = readRelativeText(BUILDER_REL);
 requireTextIncludesTokensV2({
@@ -18,7 +19,4 @@ requireTextIncludesTokensV2({
   missingMessage: (token) => `${BUILDER_REL} missing trigger object-enabled token: ${token}`,
 });
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 builder source preserves object-trigger enabled propagation with reserved-key filtering"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

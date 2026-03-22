@@ -11,7 +11,7 @@ import {
   KWS_ROW_TOP_WORD_IDS,
   KWS_SIM_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
-  SPELL_RUNTIME_ROUTING,
+  WORD_RUNTIME_ROUTING,
   WAKE_WINDOW_RUNTIME_KEY_BY_WORD,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
@@ -69,6 +69,10 @@ function collectWakeWinWordIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
 
 export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
   const errors = [];
+  const routingEntries = Array.isArray(WORD_RUNTIME_ROUTING)
+    ? WORD_RUNTIME_ROUTING
+    : [];
+  const ROUTING_LABEL = "WORD_RUNTIME_ROUTING";
 
   checkSpellIdList(errors, "WAKE_WORD_IDS", WAKE_WORD_IDS);
   checkSpellIdList(errors, "WAKE_REQUIRED_WORD_IDS", WAKE_REQUIRED_WORD_IDS);
@@ -139,43 +143,43 @@ export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
   }
 
   const seenRoutingIds = new Set();
-  for (const item of Array.isArray(SPELL_RUNTIME_ROUTING) ? SPELL_RUNTIME_ROUTING : []) {
+  for (const item of routingEntries) {
     const id = asId(item && item.id);
     if (!id) {
-      errors.push("SPELL_RUNTIME_ROUTING contains entry with empty id");
+      errors.push(`${ROUTING_LABEL} contains entry with empty id`);
       continue;
     }
-    if (seenRoutingIds.has(id)) errors.push(`SPELL_RUNTIME_ROUTING duplicate id: ${id}`);
+    if (seenRoutingIds.has(id)) errors.push(`${ROUTING_LABEL} duplicate id: ${id}`);
     seenRoutingIds.add(id);
 
-    if (!SPELLS_BY_ID[id]) errors.push(`SPELL_RUNTIME_ROUTING entry references unknown spell id: ${id}`);
+    if (!SPELLS_BY_ID[id]) errors.push(`${ROUTING_LABEL} entry references unknown spell id: ${id}`);
 
     const intent = asId(item && item.intent);
     if (intent === "spell.school_select" || intent === "spell.class_select") {
-      errors.push(`SPELL_RUNTIME_ROUTING[${id}] uses retired intent: ${intent}`);
+      errors.push(`${ROUTING_LABEL}[${id}] uses retired intent: ${intent}`);
     }
 
     if (item && Object.prototype.hasOwnProperty.call(item, "school")) {
-      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains retired key: school`);
+      errors.push(`${ROUTING_LABEL}[${id}] contains retired key: school`);
     }
     if (item && Object.prototype.hasOwnProperty.call(item, "classKey")) {
-      errors.push(`SPELL_RUNTIME_ROUTING[${id}] contains retired key: classKey`);
+      errors.push(`${ROUTING_LABEL}[${id}] contains retired key: classKey`);
     }
 
     const allowedAxes = Array.isArray(item && item.allowedAxes) ? item.allowedAxes : [];
     for (const axis of allowedAxes) {
-      if (!isAxis(axis)) errors.push(`SPELL_RUNTIME_ROUTING[${id}] has invalid allowed axis: ${axis}`);
+      if (!isAxis(axis)) errors.push(`${ROUTING_LABEL}[${id}] has invalid allowed axis: ${axis}`);
     }
 
     if (item && Object.prototype.hasOwnProperty.call(item, "fixedSlot")) {
-      if (!isSlot(item.fixedSlot)) errors.push(`SPELL_RUNTIME_ROUTING[${id}] has invalid fixedSlot: ${item.fixedSlot}`);
+      if (!isSlot(item.fixedSlot)) errors.push(`${ROUTING_LABEL}[${id}] has invalid fixedSlot: ${item.fixedSlot}`);
     }
 
     const slotByAxis = (item && typeof item.slotByAxis === "object" && item.slotByAxis) ? item.slotByAxis : null;
     if (slotByAxis) {
       for (const [axis, slot] of Object.entries(slotByAxis)) {
-        if (!isAxis(axis)) errors.push(`SPELL_RUNTIME_ROUTING[${id}].slotByAxis has invalid axis key: ${axis}`);
-        if (!isSlot(slot)) errors.push(`SPELL_RUNTIME_ROUTING[${id}].slotByAxis[${axis}] has invalid slot: ${slot}`);
+        if (!isAxis(axis)) errors.push(`${ROUTING_LABEL}[${id}].slotByAxis has invalid axis key: ${axis}`);
+        if (!isSlot(slot)) errors.push(`${ROUTING_LABEL}[${id}].slotByAxis[${axis}] has invalid slot: ${slot}`);
       }
     }
 
@@ -184,10 +188,10 @@ export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
       : null;
     if (clearSlotsOnAxis) {
       for (const [axis, slotsRaw] of Object.entries(clearSlotsOnAxis)) {
-        if (!isAxis(axis)) errors.push(`SPELL_RUNTIME_ROUTING[${id}].clearSlotsOnAxis has invalid axis key: ${axis}`);
+        if (!isAxis(axis)) errors.push(`${ROUTING_LABEL}[${id}].clearSlotsOnAxis has invalid axis key: ${axis}`);
         const slots = Array.isArray(slotsRaw) ? slotsRaw : [];
         for (const slot of slots) {
-          if (!isSlot(slot)) errors.push(`SPELL_RUNTIME_ROUTING[${id}].clearSlotsOnAxis[${axis}] has invalid slot: ${slot}`);
+          if (!isSlot(slot)) errors.push(`${ROUTING_LABEL}[${id}].clearSlotsOnAxis[${axis}] has invalid slot: ${slot}`);
         }
       }
     }

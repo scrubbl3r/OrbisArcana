@@ -1,5 +1,6 @@
+// Canonical manifest-validator scripts that run before content checks.
 import { defineCheckEntriesV2 } from "./define-check-entries-v2.mjs";
-
+// Ordering is deliberate to keep startup diagnostics stable across runs.
 export const MANIFEST_VALIDATORS_V2 = defineCheckEntriesV2([
   { name: "ready", script: "tools/rule-engine-v2/check-ready-phases-manifest-v2.mjs" },
   { name: "contract", script: "tools/rule-engine-v2/check-contract-manifest-v2.mjs" },

@@ -1,3 +1,4 @@
+// Minimal in-memory event bus used by preview/runtime contract checks.
 export function createCheckEventBus() {
   const listeners = new Map();
   const getBucket = (key) => listeners.get(key) ?? [];

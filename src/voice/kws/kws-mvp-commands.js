@@ -21,9 +21,25 @@ export function createKwsMvpCommands({
       if (typeof setCurrentBackendKey === "function") setCurrentBackendKey(next);
       return ok;
     },
+    setKwsWordParserConfig(next = {}) {
+      if (!kwsRuntimeController) return null;
+      if (typeof kwsRuntimeController.setKwsWordParserConfig === "function") {
+        return kwsRuntimeController.setKwsWordParserConfig(next);
+      }
+      if (typeof kwsRuntimeController.setKwsParserConfig === "function") {
+        return kwsRuntimeController.setKwsParserConfig(next);
+      }
+      return null;
+    },
     setKwsParserConfig(next = {}) {
-      if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsParserConfig !== "function") return null;
-      return kwsRuntimeController.setKwsParserConfig(next);
+      if (!kwsRuntimeController) return null;
+      if (typeof kwsRuntimeController.setKwsParserConfig === "function") {
+        return kwsRuntimeController.setKwsParserConfig(next);
+      }
+      if (typeof kwsRuntimeController.setKwsWordParserConfig === "function") {
+        return kwsRuntimeController.setKwsWordParserConfig(next);
+      }
+      return null;
     },
     setKwsBackendConfig(next = {}) {
       if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsBackendConfig !== "function") return null;

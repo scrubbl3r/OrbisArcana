@@ -5,7 +5,9 @@ import * as wordbookManifest from "./kws-manifest-from-wordbook-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
+// Verifies spellbook-named shim modules forward canonical wordbook references exactly.
 const CHECK_TAG = "wordbook-shim-alias:v2";
+const PASS_MESSAGE = "legacy spellbook-named shim modules alias canonical wordbook modules";
 
 function assertSameRef(actual, expected, label) {
   if (actual !== expected) {
@@ -83,4 +85,4 @@ if (asJson(shimManifest) !== asJson(canonicalManifest)) {
   failCheck(CHECK_TAG, "kws-manifest shim output must match canonical wordbook manifest output");
 }
 
-reportCheckPass(CHECK_TAG, "legacy spellbook-named shim modules alias canonical wordbook modules");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

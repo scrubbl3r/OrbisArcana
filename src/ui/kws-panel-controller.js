@@ -1,6 +1,7 @@
 export function createKwsPanelController({
   els = {},
   constants = {},
+  getKwsWordProvider = null,
   getKwsVoiceProvider = () => null,
   onGateOpened = null,
   onGateClosed = null,
@@ -17,7 +18,9 @@ export function createKwsPanelController({
   const KWS_AXIS_TOKENS = Array.isArray(constants.axisTokens) ? constants.axisTokens.slice() : [];
   const KWS_WAKE_TOKENS = Array.isArray(constants.wakeTokens) ? constants.wakeTokens.slice() : [];
   const KWS_WAKE_REQUIRED_TOKENS = Array.isArray(constants.wakeRequiredTokens) ? constants.wakeRequiredTokens.slice() : [];
-  const KWS_AXIS_SPELL_BY_AXIS = (constants.axisSpellByAxis && typeof constants.axisSpellByAxis === "object")
+  const KWS_AXIS_WORD_BY_AXIS = (constants.axisWordByAxis && typeof constants.axisWordByAxis === "object")
+    ? { ...constants.axisWordByAxis }
+    : (constants.axisSpellByAxis && typeof constants.axisSpellByAxis === "object")
     ? { ...constants.axisSpellByAxis }
     : Object.create(null);
   const KWS_LOG_TOKENS = new Set(Array.isArray(constants.logTokens) ? constants.logTokens : []);
@@ -30,9 +33,11 @@ export function createKwsPanelController({
   const KWS_WAKE_TOKEN_SET = new Set(KWS_WAKE_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
   const KWS_WAKE_REQUIRED_TOKEN_SET = new Set(KWS_WAKE_REQUIRED_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
 
+  const selectedAxisWordByAxis = { x: "", y: "", z: "" };
   const kwsTokenUiState = {
     flatSpinAxis: "",
-    selectedAxisSpellByAxis: { x: "", y: "", z: "" },
+    selectedAxisWordByAxis,
+    selectedAxisSpellByAxis: selectedAxisWordByAxis,
     heardWakeWindowTokensByAxis: {
       x: Object.create(null),
       y: Object.create(null),
@@ -58,10 +63,11 @@ export function createKwsPanelController({
     return Number.isFinite(n) ? n : null;
   }
 
-  function expectedAxisSpellForAxis(axis) {
+  function expectedAxisWordForAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
-    return String(KWS_AXIS_SPELL_BY_AXIS[a] || "").trim().toLowerCase();
+    return String(KWS_AXIS_WORD_BY_AXIS[a] || "").trim().toLowerCase();
   }
+  const expectedAxisSpellForAxis = expectedAxisWordForAxis;
 
   function canonicalKwsToken(rawToken) {
     const token = String(rawToken || "").trim().toLowerCase();
@@ -72,8 +78,8 @@ export function createKwsPanelController({
   function isWakeWindowActive() {
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
     if (!(axis === "x" || axis === "y" || axis === "z")) return false;
-    const selectedAxisSpell = String(kwsTokenUiState.selectedAxisSpellByAxis[axis] || "").toLowerCase();
-    return KWS_AXIS_TOKEN_SET.has(selectedAxisSpell);
+    const selectedAxisWord = String((kwsTokenUiState.selectedAxisWordByAxis[axis] || "")).toLowerCase();
+    return KWS_AXIS_TOKEN_SET.has(selectedAxisWord);
   }
 
   function shouldLogHeardWakeword(rawToken) {
@@ -86,7 +92,7 @@ export function createKwsPanelController({
     }
     if (KWS_AXIS_TOKEN_SET.has(token)) {
       const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
-      return !!axis && token === expectedAxisSpellForAxis(axis);
+      return !!axis && token === expectedAxisWordForAxis(axis);
     }
     if (KWS_WAKE_WINDOW_TOKEN_SET.has(token)) {
       return isWakeWindowActive();
@@ -124,17 +130,19 @@ export function createKwsPanelController({
 
   function clearFlatSpinState() {
     kwsTokenUiState.flatSpinAxis = "";
-    kwsTokenUiState.selectedAxisSpellByAxis.x = "";
-    kwsTokenUiState.selectedAxisSpellByAxis.y = "";
-    kwsTokenUiState.selectedAxisSpellByAxis.z = "";
+    kwsTokenUiState.selectedAxisWordByAxis.x = "";
+    kwsTokenUiState.selectedAxisWordByAxis.y = "";
+    kwsTokenUiState.selectedAxisWordByAxis.z = "";
     resetHeardWakeWindowTokensAllAxes();
   }
 
-  function setSelectedAxisSpell(axis, axisSpell) {
+  function setSelectedAxisWord(axis, axisWord) {
     const a = String(axis || "").trim().toLowerCase();
     if (!(a === "x" || a === "y" || a === "z")) return;
-    kwsTokenUiState.selectedAxisSpellByAxis[a] = String(axisSpell || "").trim().toLowerCase();
+    const token = String(axisWord || "").trim().toLowerCase();
+    kwsTokenUiState.selectedAxisWordByAxis[a] = token;
   }
+  const setSelectedAxisSpell = setSelectedAxisWord;
 
   function clearKwsWakeHudGateTimer() {
     if (!kwsWakeHudGateTO) return;
@@ -200,13 +208,13 @@ export function createKwsPanelController({
     const now = Date.now();
     const orbisOpen = now < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
     const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
-    const expectedAxisSpell = expectedAxisSpellForAxis(axis);
+    const expectedAxisWord = expectedAxisWordForAxis(axis);
     const wakeWindowActive = isWakeWindowActive();
     const topTokens = KWS_ROW_TOP.map((token) => {
       const t = String(token || "").trim().toLowerCase();
       let lit = false;
       if (KWS_WAKE_TOKEN_SET.has(t)) lit = orbisOpen;
-      else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedAxisSpell;
+      else if (KWS_AXIS_TOKEN_SET.has(t)) lit = t === expectedAxisWord;
       const flash = Number(kwsTokenUiState.flashUntilMs[token] || 0) > now;
       return { token, lit, flash };
     });
@@ -221,9 +229,9 @@ export function createKwsPanelController({
       .map(({ token, lit, flash }) => tokenChipHtml(token, lit, flash))
       .join(" ");
     const parts = [];
-    const kwsVoiceProvider = getKwsVoiceProvider();
-    if (kwsVoiceProvider && typeof kwsVoiceProvider.getStatus === "function") {
-      const s = kwsVoiceProvider.getStatus();
+    const kwsWordProvider = readKwsWordProvider();
+    if (kwsWordProvider && typeof kwsWordProvider.getStatus === "function") {
+      const s = kwsWordProvider.getStatus();
       if (s && s.micError) parts.push(`micerr:${String(s.micError).slice(0, 220)}`);
       const backendStatus = s && s.audioBackendStatus ? s.audioBackendStatus : null;
       if (backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "connected")) {
@@ -350,6 +358,7 @@ export function createKwsPanelController({
     markHeardWakeWindowToken,
     setFlatSpinAxis,
     clearFlatSpinState,
+    setSelectedAxisWord,
     setSelectedAxisSpell,
     flashKwsToken,
     openKwsWakeHudGate,
@@ -360,3 +369,6 @@ export function createKwsPanelController({
     getUiState: () => kwsTokenUiState,
   };
 }
+  const readKwsWordProvider = (typeof getKwsWordProvider === "function")
+    ? getKwsWordProvider
+    : getKwsVoiceProvider;

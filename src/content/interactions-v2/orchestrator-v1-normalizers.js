@@ -34,6 +34,7 @@ const KEY_TRIGGERS = "triggers";
 const KEY_GESTURES = "gestures";
 const KEY_ORB_STATE = "orbState";
 const KEY_ORB_STATES = "orbStates";
+const KEY_WORDS = "words";
 const KEY_TTL = "ttl";
 const KEY_COOLDOWN_MS = "cooldownMs";
 const KEY_COOLDOWN = "cooldown";
@@ -150,6 +151,7 @@ const PREFIX_EVENT = "event.";
 const PREFIX_GESTURE = "gesture.";
 const PREFIX_ORB_STATE = "orb_state.";
 const TYPE_SPELL = "spell";
+const TYPE_WORD = "word";
 const TYPE_GESTURE = "gesture";
 const TYPE_ORB_STATE = "orb_state";
 
@@ -182,6 +184,10 @@ export function normalizeOrbStateId(orbStateIdRaw) {
 }
 
 export const ON_SELECTOR_SOURCES = Object.freeze([
+  // Canonical authoring keys.
+  Object.freeze({ key: TYPE_WORD, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
+  Object.freeze({ key: KEY_WORDS, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
+  // Legacy compatibility keys.
   Object.freeze({ key: TYPE_SPELL, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
   Object.freeze({ key: FIELD_SPELLS, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
   Object.freeze({ key: TYPE_GESTURE, [FIELD_TYPE]: TYPE_GESTURE, normalize: normalizeGestureId }),
@@ -269,6 +275,9 @@ function isAliasOfOrbState(typeRaw) {
 }
 
 function normalizeSelectorType(typeRaw) {
+  if (typeRaw === TYPE_WORD) {
+    return TYPE_SPELL;
+  }
   if (isAliasOfOrbState(typeRaw)) {
     return TYPE_ORB_STATE;
   }

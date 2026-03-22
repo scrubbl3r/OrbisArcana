@@ -1,3 +1,4 @@
+// Legacy spellbook-named re-export shim for canonical wordbook utility helpers.
 export {
   listSpellbookSpells,
   countSpellbookSpells,

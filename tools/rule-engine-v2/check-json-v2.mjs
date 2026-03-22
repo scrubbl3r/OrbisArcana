@@ -2,6 +2,8 @@ import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonCore } from "./read-json-core-v2.mjs";
 
+// Read helper that preserves prior failCheck messaging semantics for callers.
+// `relPath` remains in the error text so callers get stable, actionable output.
 export function readJsonOrFail(tag, relPath) {
   const absPath = resolve(process.cwd(), relPath);
   const result = readJsonCore(absPath);

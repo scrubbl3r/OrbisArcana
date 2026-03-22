@@ -1,5 +1,6 @@
+// Canonical list of top-level ready phase scripts.
 import { defineCheckEntriesV2 } from "./define-check-entries-v2.mjs";
-
+// Order matches ready-check execution order and emitted phase reporting.
 export const READY_PHASES_V2 = defineCheckEntriesV2([
   {
     id: "doctor",

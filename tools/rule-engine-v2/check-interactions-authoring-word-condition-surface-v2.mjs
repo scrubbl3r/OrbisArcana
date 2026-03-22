@@ -2,7 +2,9 @@ import { INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
+// Enforces canonical authoring condition type `word` (legacy `spell` is compatibility-only).
 const CHECK_TAG = "interactions-authoring-word-condition-surface:v2";
+const PASS_MESSAGE = "interactions authoring uses canonical word condition type (spell remains compatibility alias only)";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -37,7 +39,4 @@ if (!sawWordCondition) {
   failCheck(CHECK_TAG, "INTERACTIONS_V2 authoring must include canonical word conditions");
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "interactions authoring uses canonical word condition type (spell remains compatibility alias only)"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

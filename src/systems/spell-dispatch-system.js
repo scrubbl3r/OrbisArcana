@@ -1,8 +1,8 @@
-import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../voice/wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../voice/wordbook.js";
 import {
   WAKE_WINDOW_RUNTIME_KEY_BY_WORD,
-  SPELL_RUNTIME_ROUTING_BY_WORD_ID,
-  SPELL_WINDOW_BYPASS_WORD_IDS,
+  WORD_RUNTIME_ROUTING_BY_WORD_ID,
+  WORD_WINDOW_BYPASS_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
 } from "../content/spells/spell-runtime-routing.js";
 import {
@@ -34,12 +34,12 @@ export function createSpellDispatchSystem({
   }
 
   const unsub = [];
-  const lastCastBySpellId = new Map();
+  const lastCastByWordId = new Map();
   const SLOT_ORDER = ["UD", "LR", "FB"];
   const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
   const TEMP_UNGATED_WORD_IDS = new Set(
-    (Array.isArray(SPELL_WINDOW_BYPASS_WORD_IDS) ? SPELL_WINDOW_BYPASS_WORD_IDS : [])
+    (Array.isArray(WORD_WINDOW_BYPASS_WORD_IDS) ? WORD_WINDOW_BYPASS_WORD_IDS : [])
       .map((id) => String(id || "").trim().toLowerCase())
       .filter(Boolean)
   );
@@ -53,10 +53,10 @@ export function createSpellDispatchSystem({
     y: { UD: null, LR: null, FB: null },
     z: { UD: null, LR: null, FB: null },
   };
-  const lastFlatSpinLoadAtByAxisSpell = new Map();
+  const lastFlatSpinLoadAtByAxisWord = new Map();
   const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
   let activeFlatSpinAxis = null;
-  const selectedAxisSpellByAxis = { x: "", y: "", z: "" };
+  const selectedAxisWordByAxis = { x: "", y: "", z: "" };
   let lastVoiceDetectDedupeKey = "";
   let lastVoiceDetectDedupeAtMs = 0;
 
@@ -85,9 +85,9 @@ export function createSpellDispatchSystem({
   }
 
   function canCastSpellNow(spell, now) {
-    const spellId = String(spell.id || "");
+    const wordId = String(spell.id || "");
     const cooldownMs = Math.max(0, Number(spell.cooldownMs) || 0);
-    const last = Number(lastCastBySpellId.get(spellId) || 0);
+    const last = Number(lastCastByWordId.get(wordId) || 0);
     const elapsed = now - last;
     if (cooldownMs > 0 && elapsed < cooldownMs) {
       return {
@@ -169,7 +169,7 @@ export function createSpellDispatchSystem({
 
   function withRuntimeRouting(spell = {}) {
     const id = String(spell && spell.id || "").toLowerCase();
-    const routing = SPELL_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
+    const routing = WORD_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
     if (!routing) return spell;
     return {
       ...spell,
@@ -200,10 +200,10 @@ export function createSpellDispatchSystem({
     const a = normAxis(axis);
     const wakeWindowSpellRaw = String((routed && routed.wakeWindowSpell) || "").toLowerCase();
     const wakeWindowSpell = normalizeWakeWindowTokenForRuntime(wakeWindowSpellRaw);
-    const axisSpell = String(selectedAxisSpellByAxis[a] || "").toLowerCase();
-    if (!a || !wakeWindowSpell || !axisSpell) return null;
+    const axisWord = String(selectedAxisWordByAxis[a] || "").toLowerCase();
+    if (!a || !wakeWindowSpell || !axisWord) return null;
     const id = wakeWindowSpell;
-    const base = withRuntimeRouting(ACTIVE_SPELLS_BY_ID[id] || { id });
+    const base = withRuntimeRouting(ACTIVE_WORDS_BY_ID[id] || { id });
     if (!base || !base.id) return null;
     return {
       id: String(base.id || id),
@@ -212,7 +212,8 @@ export function createSpellDispatchSystem({
       phrase: String(base.phrase || id),
       allowedAxes: Array.isArray(base.allowedAxes) ? base.allowedAxes.slice() : [a],
       fixedSlot: String(base.fixedSlot || "").toUpperCase(),
-      axisSpell,
+      axisWord,
+      axisSpell: axisWord,
       wakeWindowSpell: String((base.wakeWindowSpell || wakeWindowSpell)).toLowerCase(),
     };
   }
@@ -223,16 +224,16 @@ export function createSpellDispatchSystem({
       activeFlatSpinAxis = axis || null;
       if (axis) {
         // Flat-spin activation requires re-speaking axis token for that axis.
-        selectedAxisSpellByAxis[axis] = "";
+        selectedAxisWordByAxis[axis] = "";
       }
     }));
 
     unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
       activeFlatSpinAxis = null;
       // Breaking flat-spin closes axis windows; user must re-speak axis token.
-      selectedAxisSpellByAxis.x = "";
-      selectedAxisSpellByAxis.y = "";
-      selectedAxisSpellByAxis.z = "";
+      selectedAxisWordByAxis.x = "";
+      selectedAxisWordByAxis.y = "";
+      selectedAxisWordByAxis.z = "";
     }));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
@@ -247,12 +248,12 @@ export function createSpellDispatchSystem({
         ? (payload.spell || payload.word || {})
         : {};
       const spell = withRuntimeRouting(detected || {});
-      const rawSpellId = String(spell.id || "");
+      const rawWordId = String(spell.id || "");
       const spellIntent = String(spell.intent || "");
-      const spellAxis = String((spell.axisSpell) || "").toLowerCase();
+      const spellAxis = String((spell.axisWord || spell.axisSpell) || "").toLowerCase();
       const spellWakeWindow = String((spell.wakeWindowSpell) || "").toLowerCase();
-      const spellId = rawSpellId;
-      if (!spellId) {
+      const wordId = rawWordId;
+      if (!wordId) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "invalid_spell",
           atMs: nowMs(),
@@ -265,7 +266,7 @@ export function createSpellDispatchSystem({
       const confidenceBucket = Number.isFinite(Number(payload && payload.confidence))
         ? Math.round(Number(payload.confidence) * 1000)
         : -1;
-      const dedupeKey = `${spellId}|${detectAtMs}|${confidenceBucket}`;
+      const dedupeKey = `${wordId}|${detectAtMs}|${confidenceBucket}`;
       if (
         dedupeKey &&
         dedupeKey === lastVoiceDetectDedupeKey &&
@@ -275,10 +276,11 @@ export function createSpellDispatchSystem({
       }
       lastVoiceDetectDedupeKey = dedupeKey;
       lastVoiceDetectDedupeAtMs = now;
-      if (!ACTIVE_SPELLS_BY_ID[String(spellId || "").toLowerCase()]) {
+      if (!ACTIVE_WORDS_BY_ID[String(wordId || "").toLowerCase()]) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "spell_inactive",
-          spellId,
+          wordId,
+          spellId: wordId,
           atMs: now,
         });
         return;
@@ -290,11 +292,12 @@ export function createSpellDispatchSystem({
 
       // Strict spell-tree enforcement:
       // - axis/wake-window tokens are valid only during an active flat-spin window.
-      const bypassFlatSpinGate = TEMP_UNGATED_WORD_IDS.has(spellId);
+      const bypassFlatSpinGate = TEMP_UNGATED_WORD_IDS.has(wordId);
       if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isAxisSelect || isWakeWindowSelect)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "spell_window_required",
-          spellId,
+          wordId,
+          spellId: wordId,
           atMs: now,
         });
         return;
@@ -305,18 +308,21 @@ export function createSpellDispatchSystem({
           if (!axisAllowedForSpell(spell, axis)) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "spell_axis_not_allowed",
-              spellId,
+              wordId,
+              spellId: wordId,
               axis,
               allowedAxes: Array.isArray(spell.allowedAxes) ? spell.allowedAxes.slice() : [],
               atMs: now,
             });
             return;
           }
-          selectedAxisSpellByAxis[axis] = spellAxis;
+          selectedAxisWordByAxis[axis] = spellAxis;
           eventBus.emit(EVT_VOICE_AXIS_SELECTED, {
             axis,
+            axisWord: spellAxis,
             axisSpell: spellAxis,
-            spellId,
+            wordId,
+            spellId: wordId,
             atMs: now,
           });
           return;
@@ -327,7 +333,8 @@ export function createSpellDispatchSystem({
         if (!isWakeWindowSelect) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "flat_spin_requires_wake_window_token",
-            spellId,
+            wordId,
+            spellId: wordId,
             axis,
             atMs: now,
           });
@@ -336,10 +343,11 @@ export function createSpellDispatchSystem({
 
         let concreteSpell = spell;
         if (isWakeWindowSelect) {
-          if (!selectedAxisSpellByAxis[axis]) {
+          if (!selectedAxisWordByAxis[axis]) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "no_axis_selected",
-              spellId,
+              wordId,
+              spellId: wordId,
               wakeWindowSpell: spellWakeWindow,
               axis,
               atMs: now,
@@ -350,22 +358,25 @@ export function createSpellDispatchSystem({
           if (!concreteSpell || !concreteSpell.id) {
             eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
               reason: "axis_wake_window_resolution_failed",
-              spellId,
+              wordId,
+              spellId: wordId,
               wakeWindowSpell: spellWakeWindow,
-              axisSpell: selectedAxisSpellByAxis[axis],
+              axisWord: selectedAxisWordByAxis[axis],
+              axisSpell: selectedAxisWordByAxis[axis],
               axis,
               atMs: now,
             });
             return;
           }
         }
-        const concreteSpellId = String(concreteSpell && concreteSpell.id || "");
-        const dedupeKey = `${axis}:${concreteSpellId}`;
-        const prevLoadAt = Number(lastFlatSpinLoadAtByAxisSpell.get(dedupeKey) || 0);
-        if (concreteSpellId && (now - prevLoadAt) < FLAT_SPIN_DUPLICATE_SUPPRESS_MS) {
+        const concreteWordId = String(concreteSpell && concreteSpell.id || "");
+        const dedupeKey = `${axis}:${concreteWordId}`;
+        const prevLoadAt = Number(lastFlatSpinLoadAtByAxisWord.get(dedupeKey) || 0);
+        if (concreteWordId && (now - prevLoadAt) < FLAT_SPIN_DUPLICATE_SUPPRESS_MS) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "duplicate_spell_token",
-            spellId: concreteSpellId,
+            wordId: concreteWordId,
+            spellId: concreteWordId,
             axis,
             atMs: now,
           });
@@ -376,7 +387,8 @@ export function createSpellDispatchSystem({
         if (storedGlobes <= 0) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "no_stored_globes",
-            spellId: String(concreteSpell.id || spellId),
+            wordId: String(concreteSpell.id || wordId),
+            spellId: String(concreteSpell.id || wordId),
             axis,
             atMs: now,
           });
@@ -385,7 +397,8 @@ export function createSpellDispatchSystem({
         if (!axisAllowedForSpell(concreteSpell, axis)) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "spell_axis_not_allowed",
-            spellId: String(concreteSpell.id || spellId),
+            wordId: String(concreteSpell.id || wordId),
+            spellId: String(concreteSpell.id || wordId),
             axis,
             allowedAxes: Array.isArray(concreteSpell.allowedAxes) ? concreteSpell.allowedAxes.slice() : [],
             atMs: now,
@@ -396,6 +409,7 @@ export function createSpellDispatchSystem({
         applyAxisSlotClearPolicy(concreteSpell, axis);
         const spendResult = consumeStoredGlobe({
           reason: "spell_load",
+          wordId: String(concreteSpell.id || ""),
           spellId: String(concreteSpell.id || ""),
           axis,
           slot,
@@ -404,33 +418,38 @@ export function createSpellDispatchSystem({
         if (!spendResult || spendResult.ok !== true) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "no_stored_globes",
-            spellId: String(concreteSpell.id || spellId),
+            wordId: String(concreteSpell.id || wordId),
+            spellId: String(concreteSpell.id || wordId),
             axis,
             atMs: now,
           });
           return;
         }
         loadedByAxis[axis][slot] = {
+          wordId: String(concreteSpell.id || ""),
           spellId: String(concreteSpell.id || ""),
           intent: concreteSpell.intent,
           phrase: concreteSpell.phrase,
           cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
-          axisSpell: String((concreteSpell.axisSpell) || "").toLowerCase(),
+          axisWord: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
+          axisSpell: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
           wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
         };
-        if (concreteSpellId) {
-          lastFlatSpinLoadAtByAxisSpell.set(dedupeKey, now);
+        if (concreteWordId) {
+          lastFlatSpinLoadAtByAxisWord.set(dedupeKey, now);
         }
         eventBus.emit(EVT_VOICE_SPELL_LOADED, {
+          wordId: String(concreteSpell.id || ""),
           spellId: String(concreteSpell.id || ""),
           intent: concreteSpell.intent,
           phrase: concreteSpell.phrase,
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
-          axisSpell: String((concreteSpell.axisSpell) || "").toLowerCase(),
+          axisWord: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
+          axisSpell: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
           wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
           atMs: now,
         });
@@ -441,25 +460,28 @@ export function createSpellDispatchSystem({
       if (!castCheck.ok) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "cooldown",
-          spellId,
+          wordId,
+          spellId: wordId,
           cooldownMs: castCheck.cooldownMs,
           remainingMs: castCheck.remainingMs,
           atMs: now,
         });
         return;
       }
-      if (ruleEngineEnabled && RULE_ENGINE_OWNED_IMMEDIATE_IDS.has(spellId)) {
+      if (ruleEngineEnabled && RULE_ENGINE_OWNED_IMMEDIATE_IDS.has(wordId)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "rule_engine_owned_immediate_spell",
-          spellId,
+          wordId,
+          spellId: wordId,
           atMs: now,
         });
         return;
       }
-      lastCastBySpellId.set(spellId, now);
+      lastCastByWordId.set(wordId, now);
       /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
       const castPayload = {
-        spellId,
+        wordId,
+        spellId: wordId,
         intent: spell.intent,
         phrase: spell.phrase,
         confidence: Number(payload.confidence) || 0,
@@ -488,16 +510,19 @@ export function createSpellDispatchSystem({
         loaded = mostRecentLoadedAny();
       }
       if (!loaded) return;
+      const loadedWordId = String(loaded.wordId || "");
+      if (!loadedWordId) return;
 
       const spell = {
-        id: loaded.spellId,
+        id: loadedWordId,
         cooldownMs: Math.max(0, Number(loaded.cooldownMs) || 0),
       };
       const castCheck = canCastSpellNow(spell, now);
       if (!castCheck.ok) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "cooldown",
-          spellId: loaded.spellId,
+          wordId: loadedWordId,
+          spellId: loadedWordId,
           cooldownMs: castCheck.cooldownMs,
           remainingMs: castCheck.remainingMs,
           atMs: now,
@@ -506,17 +531,19 @@ export function createSpellDispatchSystem({
       }
 
       loadedByAxis[loaded.axis][loaded.slot] = null;
-      lastCastBySpellId.set(loaded.spellId, now);
+      lastCastByWordId.set(loadedWordId, now);
       /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
       const castPayload = {
-        spellId: loaded.spellId,
+        wordId: loadedWordId,
+        spellId: loadedWordId,
         intent: loaded.intent,
         phrase: loaded.phrase,
         confidence: Number(loaded.confidence) || 0,
         trigger: "shake_detonation",
         axis: loaded.axis,
         slot: loaded.slot,
-        axisSpell: String((loaded.axisSpell) || "").toLowerCase(),
+        axisWord: String(loaded.axisWord || "").toLowerCase(),
+        axisSpell: String(loaded.axisWord || "").toLowerCase(),
         wakeWindowSpell: String((loaded.wakeWindowSpell) || "").toLowerCase(),
         directionGroup: group || String(loaded.slot || ""),
         atMs: now,
@@ -533,14 +560,14 @@ export function createSpellDispatchSystem({
   }
 
   function reset() {
-    lastCastBySpellId.clear();
-    lastFlatSpinLoadAtByAxisSpell.clear();
+    lastCastByWordId.clear();
+    lastFlatSpinLoadAtByAxisWord.clear();
     lastVoiceDetectDedupeKey = "";
     lastVoiceDetectDedupeAtMs = 0;
     activeFlatSpinAxis = null;
-    selectedAxisSpellByAxis.x = "";
-    selectedAxisSpellByAxis.y = "";
-    selectedAxisSpellByAxis.z = "";
+    selectedAxisWordByAxis.x = "";
+    selectedAxisWordByAxis.y = "";
+    selectedAxisWordByAxis.z = "";
     for (const axis of AXES) {
       nextSlotIndexByAxis[axis] = 0;
       for (const slot of SLOT_ORDER) {

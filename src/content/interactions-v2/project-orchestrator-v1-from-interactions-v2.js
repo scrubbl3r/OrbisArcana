@@ -33,6 +33,8 @@ const FIELD_MATCH_WINDOW_MS = "matchWindowMs";
 const FIELD_DEFAULTS = "defaults";
 const FIELD_VERSION = "version";
 const FIELD_RULES = "rules";
+const CONDITION_TYPE_SPELL = "spell";
+const CONDITION_TYPE_WORD = "word";
 const OPEN_COPY_KEYS = Object.freeze([FIELD_TTL_MS, FIELD_ENABLED]);
 const RULE_COPY_KEYS = Object.freeze([
   FIELD_ENABLED,
@@ -55,7 +57,8 @@ export function projectOrchestratorV1FromInteractionsV2(interactionsV2Input = IN
         const out = {
           [FIELD_ID]: asText(safeRule[FIELD_ID]),
           [FIELD_ON]: mapDefined(asArray(safeRule[FIELD_ON]), (cond) => {
-            const type = asId(cond?.[FIELD_TYPE]);
+            const rawType = asId(cond?.[FIELD_TYPE]);
+            const type = rawType === CONDITION_TYPE_SPELL ? CONDITION_TYPE_WORD : rawType;
             const id = asId(cond?.[FIELD_ID]);
             if (!type || !id) return "";
             return `${type}:${id}`;

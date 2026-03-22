@@ -8,6 +8,25 @@ import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-parity:v2";
+const PASS_MESSAGE = "orchestrator projection parity holds against interactions projection";
+
+function asRules(schemaLike) {
+  return Array.isArray(schemaLike?.rules) ? schemaLike.rules : [];
+}
+
+function buildProjectionOrFail(orchestratorProjection) {
+  try {
+    return buildRuleEngineFromOrchestratorV1({
+      orchestratorV1: orchestratorProjection,
+      baseRuleEngine: Object.freeze({ version: "2", rules: [] }),
+    });
+  } catch (err) {
+    const msg = err instanceof Error && typeof err.message === "string" && err.message
+      ? err.message
+      : "unknown error";
+    failCheck(CHECK_TAG, `orchestrator projection build failed: ${msg}`);
+  }
+}
 
 const projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
 if (!Array.isArray(projectedRules) || !projectedRules.length) {
@@ -15,21 +34,8 @@ if (!Array.isArray(projectedRules) || !projectedRules.length) {
 }
 
 const orchestratorProjection = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
-
-let rebuilt;
-try {
-  rebuilt = buildRuleEngineFromOrchestratorV1({
-    orchestratorV1: orchestratorProjection,
-    baseRuleEngine: Object.freeze({ version: "2", rules: [] }),
-  });
-} catch (err) {
-  const msg = err instanceof Error && typeof err.message === "string" && err.message
-    ? err.message
-    : "unknown error";
-  failCheck(CHECK_TAG, `orchestrator projection build failed: ${msg}`);
-}
-
-const rebuiltRules = Array.isArray(rebuilt?.rules) ? rebuilt.rules : [];
+const rebuilt = buildProjectionOrFail(orchestratorProjection);
+const rebuiltRules = asRules(rebuilt);
 const lhs = JSON.stringify(projectedRules);
 const rhs = JSON.stringify(rebuiltRules);
 if (lhs !== rhs) {
@@ -39,4 +45,4 @@ if (lhs !== rhs) {
   ]);
 }
 
-reportCheckPass(CHECK_TAG, "orchestrator projection parity holds against interactions projection");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

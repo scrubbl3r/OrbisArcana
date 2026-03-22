@@ -1,5 +1,7 @@
+// Shared source-surface token include/exclude assertion helpers for checks.
 import { failCheck } from "./check-fail-v2.mjs";
-
+// Consolidates token assertion input guards to keep error messaging consistent.
+// Validation runs before scanning to keep failure ordering deterministic.
 function assertTokenAssertionInputsV2({ tag, text, tokens, messageFn, mode }) {
   if (!tag) {
     failCheck("token-assertions:v2", `${mode} token assertion requires check tag`);

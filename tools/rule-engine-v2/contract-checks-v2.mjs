@@ -1,5 +1,6 @@
+// Ordered contract check manifest used by ready:v2 contract phase.
 import { defineCheckEntriesV2 } from "./define-check-entries-v2.mjs";
-
+// Order is intentional for predictable failure sequencing in CI/local runs.
 export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   {
     id: "wordbook_v2_alias",

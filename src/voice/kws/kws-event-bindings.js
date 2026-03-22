@@ -1,7 +1,7 @@
-import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
   KWS_FLASH_TOKEN_WORD_IDS,
-  SPELL_RUNTIME_ROUTING,
+  WORD_RUNTIME_ROUTING,
   WAKE_WINDOW_WORD_IDS,
 } from "../../content/spells/spell-runtime-routing.js";
 
@@ -31,38 +31,42 @@ export function bindKwsEventHandlers({
   const clearFlatSpinState = typeof deps.clearFlatSpinState === "function" ? deps.clearFlatSpinState : null;
   const resetHeardWakeWindowTokensForAxis = typeof deps.resetHeardWakeWindowTokensForAxis === "function" ? deps.resetHeardWakeWindowTokensForAxis : () => {};
   const resetHeardWakeWindowTokensAllAxes = typeof deps.resetHeardWakeWindowTokensAllAxes === "function" ? deps.resetHeardWakeWindowTokensAllAxes : () => {};
-  const setSelectedAxisSpell = typeof deps.setSelectedAxisSpell === "function" ? deps.setSelectedAxisSpell : null;
+  const setSelectedAxisWord = typeof deps.setSelectedAxisWord === "function"
+    ? deps.setSelectedAxisWord
+    : (typeof deps.setSelectedAxisSpell === "function" ? deps.setSelectedAxisSpell : null);
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
-  const wakeSpellIds = new Set(
-    (Array.isArray(SPELL_RUNTIME_ROUTING) ? SPELL_RUNTIME_ROUTING : [])
+  const wakeWordIds = new Set(
+    (Array.isArray(WORD_RUNTIME_ROUTING) ? WORD_RUNTIME_ROUTING : [])
       .filter((item) => String(item && item.intent || "").trim().toLowerCase() === "spell.wake")
       .map((item) => String(item && item.id || "").trim().toLowerCase())
       .filter(Boolean)
   );
   const wakeTokenSet = new Set(
-    Array.from(wakeSpellIds)
-      .map((spellId) => ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()])
+    Array.from(wakeWordIds)
+      .map((wordId) => ACTIVE_WORDS_BY_ID[String(wordId || "").trim().toLowerCase()])
       .filter(Boolean)
-      .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
+      .map((word) => String(word.phrase || word.id || "").trim().toLowerCase())
       .filter(Boolean)
   );
   const flashTokenSet = new Set(
     (Array.isArray(KWS_FLASH_TOKEN_WORD_IDS) ? KWS_FLASH_TOKEN_WORD_IDS : [])
-      .map((spellId) => ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()])
+      .map((wordId) => ACTIVE_WORDS_BY_ID[String(wordId || "").trim().toLowerCase()])
       .filter(Boolean)
-      .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
+      .map((word) => String(word.phrase || word.id || "").trim().toLowerCase())
       .filter(Boolean)
   );
   const wakeWindowTokenSet = new Set(
     (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
-      .map((spellId) => ACTIVE_SPELLS_BY_ID[String(spellId || "").trim().toLowerCase()])
+      .map((wordId) => ACTIVE_WORDS_BY_ID[String(wordId || "").trim().toLowerCase()])
       .filter(Boolean)
-      .map((spell) => String(spell.phrase || spell.id || "").trim().toLowerCase())
+      .map((word) => String(word.phrase || word.id || "").trim().toLowerCase())
       .filter(Boolean)
   );
 
   const unsub = [];
+  const getWordIdFromPayload = (p = {}) => String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
+  const getAxisWordFromPayload = (p = {}) => String((p.axisWord ?? p.axisSpell) || "").trim().toLowerCase();
 
   unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
     const token = canonicalKwsToken(p.token);
@@ -92,7 +96,7 @@ export function bindKwsEventHandlers({
     if (typeof setFlatSpinAxis === "function") setFlatSpinAxis(axis);
     const prevAxis = String(getFlatSpinAxis() || "").trim().toLowerCase();
     if (prevAxis) {
-      if (typeof setSelectedAxisSpell === "function") setSelectedAxisSpell(prevAxis, "");
+      if (typeof setSelectedAxisWord === "function") setSelectedAxisWord(prevAxis, "");
       resetHeardWakeWindowTokensForAxis(prevAxis);
     }
     updateKwsReadout();
@@ -106,22 +110,23 @@ export function bindKwsEventHandlers({
 
   function onAxisSelected(p = {}) {
     const axis = String(p.axis || "").trim().toLowerCase();
-    const axisSpell = String((p.axisSpell) || "").trim().toLowerCase();
+    const axisWord = getAxisWordFromPayload(p);
     if (axis === "x" || axis === "y" || axis === "z") {
-      if (typeof setSelectedAxisSpell === "function") setSelectedAxisSpell(axis, axisSpell);
+      if (typeof setSelectedAxisWord === "function") setSelectedAxisWord(axis, axisWord);
       resetHeardWakeWindowTokensForAxis(axis);
-      if (axisSpell === "electrum") flashKwsToken("electrum", 520);
+      if (axisWord === "electrum") flashKwsToken("electrum", 520);
     }
     updateKwsReadout();
   }
 
   unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_AXIS_SELECTED, onAxisSelected));
 
-  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
+  const kwsCandidateEvent = RECEIVER_EVENTS.EVT_VOICE_KWS_WORD_CANDIDATE || RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE;
+  unsub.push(eventBus.on(kwsCandidateEvent, (p = {}) => {
     const matched = !!p.matched;
-    const spellId = String(p.spellId || "");
+    const wordId = getWordIdFromPayload(p);
     const phrase = String(p.phrase || "");
-    kwsDebugState.lastCandidate = matched ? (spellId || phrase || "match") : (phrase || "no-match");
+    kwsDebugState.lastCandidate = matched ? (wordId || phrase || "match") : (phrase || "no-match");
     updateKwsReadout();
   }));
 

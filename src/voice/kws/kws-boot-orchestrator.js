@@ -4,6 +4,11 @@ export function createKwsBootOrchestrator({
 } = {}) {
   const DEFAULT_KWS_BACKEND_KEY = String(constants.defaultBackendKey || "openwakeword_browser");
   const DEFAULT_VOICE_ENGINE = String(constants.defaultVoiceEngine || "kws");
+  void DEFAULT_VOICE_ENGINE;
+
+  function resolveKwsProvider(mvp) {
+    return (mvp && (mvp.kwsWordProvider || mvp.kwsVoiceProvider)) || null;
+  }
 
   function emitWakeMode(mvp) {
     if (typeof callbacks.emitWakeMode === "function") {
@@ -17,7 +22,7 @@ export function createKwsBootOrchestrator({
   }
 
   function getKwsBootErrorReason(mvp) {
-    const provider = mvp && mvp.kwsVoiceProvider;
+    const provider = resolveKwsProvider(mvp);
     const status = provider && typeof provider.getStatus === "function"
       ? provider.getStatus()
       : null;
@@ -33,7 +38,7 @@ export function createKwsBootOrchestrator({
       : true;
     if (micOk === false) throw new Error(getKwsBootErrorReason(mvp));
 
-    const provider = mvp.kwsVoiceProvider;
+    const provider = resolveKwsProvider(mvp);
     if (provider && typeof provider.setEnabled === "function") provider.setEnabled(true);
     if (provider && typeof provider.setMode === "function") provider.setMode("active");
     emitWakeMode(mvp);

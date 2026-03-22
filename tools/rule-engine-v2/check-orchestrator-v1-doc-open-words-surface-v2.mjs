@@ -4,6 +4,7 @@ import { readRelativeText } from "./read-text-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-doc-open-words-surface:v2";
+const PASS_MESSAGE = "orchestrator-v1 docs use canonical word/words authoring with explicit legacy spells compatibility wording";
 
 const targets = Object.freeze([
   "docs/orchestrator-v1-schema.md",
@@ -15,15 +16,13 @@ for (const rel of targets) {
   requireTextIncludesTokensV2({
     tag: CHECK_TAG,
     text,
-    tokens: ["words", "spells"],
+    tokens: ["word", "words", "spells"],
     missingMessage: (token) => `${rel} missing required open authoring token: ${token}`,
   });
-  if (!text.toLowerCase().includes("compatibility alias")) {
-    failCheck(CHECK_TAG, `${rel} must include compatibility alias wording`);
+  const lower = text.toLowerCase();
+  if (!lower.includes("legacy") || !lower.includes("compatibility alias")) {
+    failCheck(CHECK_TAG, `${rel} must include explicit legacy compatibility alias wording`);
   }
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v1 docs use canonical open.words with explicit open.spells compatibility alias"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

@@ -1,5 +1,5 @@
-// Spell -> VFX binding schema (authoring/publish surface).
-// Keeps spell visual usage separate from spell gameplay action routing.
+// Word -> VFX binding schema (authoring/publish surface).
+// Keeps word visual usage separate from word gameplay action routing.
 
 /**
  * @typedef {Object} SpellVfxActionBinding
@@ -18,14 +18,16 @@
 
 /**
  * @typedef {Object} SpellVfxBindingEntry
- * @property {string} spellId Canonical spell id.
+ * @property {string} wordId Canonical word id.
+ * @property {string} [spellId] Legacy compatibility alias for `wordId`.
  * @property {SpellVfxActionBinding} primary
  * @property {SpellVfxPostActionBinding[]} [postCastActions]
  */
 
 /** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */
-export const SPELL_VFX_BINDINGS = Object.freeze([
+export const WORD_VFX_BINDINGS = Object.freeze([
   Object.freeze({
+    wordId: "rota",
     spellId: "rota",
     primary: Object.freeze({
       castActionId: "aoe_axis",
@@ -40,6 +42,7 @@ export const SPELL_VFX_BINDINGS = Object.freeze([
     ]),
   }),
   Object.freeze({
+    wordId: "vectus",
     spellId: "vectus",
     primary: Object.freeze({
       castActionId: "aoe_electric",
@@ -48,6 +51,7 @@ export const SPELL_VFX_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
+    wordId: "sanctum",
     spellId: "sanctum",
     primary: Object.freeze({
       castActionId: "sanctum_shield",
@@ -57,15 +61,15 @@ export const SPELL_VFX_BINDINGS = Object.freeze([
   }),
 ]);
 
-export const SPELL_VFX_BINDINGS_BY_SPELL_ID = Object.freeze(
-  SPELL_VFX_BINDINGS.reduce((acc, entry) => {
-    const spellId = String(entry && entry.spellId || "").toLowerCase();
-    if (!spellId) return acc;
-    acc[spellId] = entry;
+export const WORD_VFX_BINDINGS_BY_WORD_ID = Object.freeze(
+  WORD_VFX_BINDINGS.reduce((acc, entry) => {
+    const wordId = String((entry && entry.wordId) || "").toLowerCase();
+    if (!wordId) return acc;
+    acc[wordId] = entry;
     return acc;
   }, {})
 );
 
-export function getSpellVfxBinding(spellId) {
-  return SPELL_VFX_BINDINGS_BY_SPELL_ID[String(spellId || "").toLowerCase()] || null;
+export function getWordVfxBinding(wordId) {
+  return WORD_VFX_BINDINGS_BY_WORD_ID[String(wordId || "").toLowerCase()] || null;
 }

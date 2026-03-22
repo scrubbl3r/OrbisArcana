@@ -1,19 +1,22 @@
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
-import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { failIfOffenders, findMatchedFilesFromRg, findUnexpectedTokenFiles } from "./offender-utils-v2.mjs";
 import { RULE_ENGINE_MASTER_CONTROL_TOKEN_V2 } from "./policy-terms-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 import { runRgLines } from "./rg-lines-v2.mjs";
 
+// Restricts legacy master-control token usage to an explicit compatibility allowlist.
 const CHECK_TAG = "master-control-compat-surface:v2";
+const LIST_FILES_RG = "rg --files src tools docs";
+const SLICE_DOC_EXCLUDE_RE = /docs\/rule-engine-v[12]-slice-/;
+const PASS_MESSAGE = "compatibility surface is constrained";
+const OFFENDER_MESSAGE_PREFIX = "unexpected";
 
-function listFiles() {
-  return runRgLines("rg --files src tools docs")
-    .filter((p) => !/docs\/rule-engine-v[12]-slice-/.test(p));
-}
+const listFiles = () => findMatchedFilesFromRg(runRgLines, LIST_FILES_RG)
+  .filter((p) => !SLICE_DOC_EXCLUDE_RE.test(p));
 
 const token = RULE_ENGINE_MASTER_CONTROL_TOKEN_V2;
-const allowed = Object.freeze(new Set([
+const ALLOW = Object.freeze(new Set([
   "src/content/spell-rules/rule-engine-master-control.js",
   "src/content/spell-rules/index.js",
   "tools/rule-engine-v2/check-policy-control-contract-v2.mjs",
@@ -25,15 +28,8 @@ const allowed = Object.freeze(new Set([
   RULE_ENGINE_V2_DOC_PATHS.masterControlSchemaDoc,
 ]));
 
-const offenders = [];
-for (const rel of listFiles()) {
-  const text = readRelativeText(rel);
-  if (!text.includes(token)) continue;
-  if (!allowed.has(rel)) offenders.push(rel);
-}
+const offenders = findUnexpectedTokenFiles(listFiles(), readRelativeText, token, ALLOW);
 
-if (offenders.length) {
-  failCheck(CHECK_TAG, `unexpected ${token} usage in: ${offenders.join(", ")}`);
-}
+failIfOffenders(CHECK_TAG, offenders, `${OFFENDER_MESSAGE_PREFIX} ${token} usage in`);
 
-reportCheckPass(CHECK_TAG, "compatibility surface is constrained");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

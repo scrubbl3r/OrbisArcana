@@ -1,11 +1,9 @@
-import {
-  RULE_ENGINE_SOURCES,
-  RULE_ENGINE_SOURCE_READOUT,
-} from "../../src/runtime/receiver-bootstrap.js";
+import { RULE_ENGINE_SOURCES, RULE_ENGINE_SOURCE_READOUT } from "../../src/runtime/receiver-bootstrap.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "rule-source-contract:v2";
+const PASS_MESSAGE = "runtime source ids/readouts are canonical";
 
 const expectedSourceIds = Object.freeze([
   "orchestrator_v2",
@@ -58,4 +56,4 @@ for (const id of deprecatedIds) {
   }
 }
 
-reportCheckPass(CHECK_TAG, "runtime source ids/readouts are canonical");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

@@ -5,6 +5,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-on-spell-alias-warning-source-surface:v2";
 const VALIDATOR_REL = "src/content/interactions-v2/validate-orchestrator-v2.js";
+const PASS_MESSAGE = "orchestrator-v2 validator source preserves on.word precedence with on.spell compatibility warning";
 
 const text = readRelativeText(VALIDATOR_REL);
 requireTextIncludesTokensV2({
@@ -27,7 +28,4 @@ if (text.includes("uses on.word alias; prefer on.spell")) {
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 validator source preserves on.word precedence with on.spell compatibility warning"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

@@ -4,6 +4,7 @@ import { readRelativeText } from "./read-text-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "preview-runtime-wake-words-source-surface:v2";
+const PASS_MESSAGE = "preview runtime surfaces prefer canonical wake words[] with spells[] compatibility alias";
 
 const PREVIEW_SYSTEM_REL = "src/systems/rule-engine-preview-system.js";
 const previewSystemText = readRelativeText(PREVIEW_SYSTEM_REL);
@@ -37,7 +38,4 @@ if (!previewRuntimeText.includes("const words = Array.isArray(a && a.words)")) {
   failCheck(CHECK_TAG, `${PREVIEW_RUNTIME_REL} must prefer canonical action.words over action.spells`);
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "preview runtime surfaces prefer canonical wake words[] with spells[] compatibility alias"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

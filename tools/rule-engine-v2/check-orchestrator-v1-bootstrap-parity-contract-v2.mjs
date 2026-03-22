@@ -1,7 +1,4 @@
-import {
-  hydrateReceiverBootstrapState,
-  RULE_ENGINE_SOURCES,
-} from "../../src/runtime/receiver-bootstrap.js";
+import { hydrateReceiverBootstrapState, RULE_ENGINE_SOURCES } from "../../src/runtime/receiver-bootstrap.js";
 import {
   INTERACTIONS_V2,
   buildRuleEngineFromInteractionsV2,
@@ -11,8 +8,10 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { assertSchemaSourceV2 } from "./check-schema-source-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-bootstrap-parity:v2";
+const PASS_MESSAGE = "bootstrap payload parity holds between interactions and projected orchestrator";
 
 function stableJson(v) {
   return JSON.stringify(v);
@@ -77,24 +76,18 @@ const schemaFromProjectedOrchestrator = runScenario({
   interactionsBootstrap: { useInReceiverBootstrap: true },
 });
 
-const interactionsSource = typeof schemaFromInteractions.source === "string"
-  ? schemaFromInteractions.source
-  : "";
-if (interactionsSource !== RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER) {
-  failCheck(
-    CHECK_TAG,
-    `expected interactions source=${RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER}, got ${interactionsSource}`
-  );
-}
-const projectedSource = typeof schemaFromProjectedOrchestrator.source === "string"
-  ? schemaFromProjectedOrchestrator.source
-  : "";
-if (projectedSource !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED) {
-  failCheck(
-    CHECK_TAG,
-    `expected projected source=${RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED}, got ${projectedSource}`
-  );
-}
+assertSchemaSourceV2({
+  tag: CHECK_TAG,
+  schema: schemaFromInteractions,
+  expectedSource: RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER,
+  label: "interactions",
+});
+assertSchemaSourceV2({
+  tag: CHECK_TAG,
+  schema: schemaFromProjectedOrchestrator,
+  expectedSource: RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED,
+  label: "projected",
+});
 
 const comparableInteractions = {
   ...schemaFromInteractions,
@@ -114,4 +107,4 @@ if (lhs !== rhs) {
   ]);
 }
 
-reportCheckPass(CHECK_TAG, "bootstrap payload parity holds between interactions and projected orchestrator");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

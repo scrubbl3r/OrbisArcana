@@ -1,8 +1,5 @@
 import { failCheck } from "./check-fail-v2.mjs";
-import {
-  requireTextExcludesTokensV2,
-  requireTextIncludesTokensV2,
-} from "./check-token-assertions-v2.mjs";
+import { requireTextExcludesTokensV2, requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 export function assertPolicyTokenContractV2({
   tag,

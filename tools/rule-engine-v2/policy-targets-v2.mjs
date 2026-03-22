@@ -1,5 +1,6 @@
+// Canonical policy validation target lists for runtime imports and authoring docs.
 import { docRelPathForKeyV2, docRelPathsForKeysV2 } from "./docs-paths-v2.mjs";
-
+// These lists are consumed by policy checks and should remain narrowly scoped.
 export const POLICY_RUNTIME_IMPORT_TARGETS_V2 = Object.freeze([
   "src/runtime/receiver-bootstrap.js",
 ]);

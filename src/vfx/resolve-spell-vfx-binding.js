@@ -1,4 +1,4 @@
-import { getSpellVfxBinding, getVfxEffectRegistryEntry } from "../content/vfx/index.js";
+import { getWordVfxBinding, getVfxEffectRegistryEntry } from "../content/vfx/index.js";
 
 /**
  * Resolve a spell VFX binding entry into a lab/game-friendly structure.
@@ -6,11 +6,11 @@ import { getSpellVfxBinding, getVfxEffectRegistryEntry } from "../content/vfx/in
  * This is intentionally read-only and does not mutate runtime spell content.
  * It provides a stable bridge for future lab "publish binding" flows.
  *
- * @param {string} spellId
- * @returns {null|{spellId:string, primary:Object|null, postCastActions:Array<Object>}}
+ * @param {string} wordId
+ * @returns {null|{wordId:string, spellId:string, primary:Object|null, postCastActions:Array<Object>}}
  */
-export function resolveSpellVfxBinding(spellId) {
-  const binding = getSpellVfxBinding(spellId);
+export function resolveSpellVfxBinding(wordId) {
+  const binding = getWordVfxBinding(wordId);
   if (!binding) return null;
 
   const primary = binding.primary
@@ -27,10 +27,14 @@ export function resolveSpellVfxBinding(spellId) {
       }))
     : [];
 
+  const resolvedWordId = String(binding.wordId || "").toLowerCase();
   return {
-    spellId: String(binding.spellId || "").toLowerCase(),
+    wordId: resolvedWordId,
+    spellId: resolvedWordId,
     primary,
     postCastActions,
   };
 }
 
+// Canonical alias: preserve existing function name while exposing word-first naming.
+export const resolveWordVfxBinding = resolveSpellVfxBinding;

@@ -1,7 +1,4 @@
-import {
-  INTERACTIONS_V2,
-  WORDBOOK_V2_ACTIVE_WORDS_BY_ID,
-} from "../../src/content/interactions-v2/index.js";
+import { INTERACTIONS_V2, WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
@@ -10,7 +7,9 @@ import { getInteractionsRules } from "./interactions-v2-utils.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { asLowerText } from "./text-utils-v2.mjs";
 
+// Validates generated master-control authoring JSON shape and word inventory parity.
 const CHECK_TAG = "master-control-authoring:v2";
+const PASS_MESSAGE = "authoring artifact integrity verified";
 
 function isRecord(v) {
   return (!!v && typeof v === "object" && !Array.isArray(v)) ? v : null;
@@ -67,7 +66,7 @@ function main() {
     failCheck(CHECK_TAG, `rules count mismatch: doc=${root.rules.length} expected=${expectedRules.length}`);
   }
 
-  reportCheckPass(CHECK_TAG, "authoring artifact integrity verified");
+  reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 
 main();

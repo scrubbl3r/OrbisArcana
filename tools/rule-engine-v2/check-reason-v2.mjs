@@ -1,3 +1,5 @@
+// Shared reason constants/utilities for reject/cast reason assertions in checks.
+// Reason helpers normalize non-object/non-string inputs to empty text safely.
 export const CHECK_REASONS_V2 = Object.freeze({
   ruleEngineOwnedImmediateSpell: "rule_engine_owned_immediate_spell",
   noAxisSelected: "no_axis_selected",

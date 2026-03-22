@@ -8,9 +8,36 @@ import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-projection-validity:v2";
+const PASS_MESSAGE = "projected orchestrator shape is valid and complete";
 
 function asObject(value) {
   return (!!value && typeof value === "object" && !Array.isArray(value)) ? value : {};
+}
+
+function assertOpenWordAliases(ruleId, open) {
+  const hasWords = Array.isArray(open.words);
+  const hasSpells = Array.isArray(open.spells);
+  if (!hasWords) {
+    failCheck(CHECK_TAG, `projected rule ${ruleId} open missing canonical words[]`);
+  }
+  if (!hasSpells) {
+    failCheck(CHECK_TAG, `projected rule ${ruleId} open missing compatibility spells[]`);
+  }
+  if (hasWords && hasSpells && JSON.stringify(open.words) !== JSON.stringify(open.spells)) {
+    failCheck(CHECK_TAG, `projected rule ${ruleId} open words/spells alias mismatch`);
+  }
+}
+
+function assertCanonicalWordSelectors(ruleId, selectors) {
+  for (const selector of selectors) {
+    const text = typeof selector === "string" ? selector.trim().toLowerCase() : "";
+    if (!text) {
+      failCheck(CHECK_TAG, `projected rule ${ruleId} contains empty on[] selector`);
+    }
+    if (text.startsWith("spell:")) {
+      failCheck(CHECK_TAG, `projected rule ${ruleId} must use canonical on.word selectors (found ${selector})`);
+    }
+  }
 }
 
 const projected = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
@@ -36,6 +63,7 @@ for (const rule of projectedRules) {
   if (!selectors.length) {
     failCheck(CHECK_TAG, `projected rule ${ruleId} missing on[] selectors`);
   }
+  assertCanonicalWordSelectors(ruleId, selectors);
   const hasOpen = Object.prototype.hasOwnProperty.call(safeRule, "open");
   const hasTrigger = Object.prototype.hasOwnProperty.call(safeRule, "trigger");
   if (!hasOpen && !hasTrigger) {
@@ -43,18 +71,8 @@ for (const rule of projectedRules) {
   }
   if (hasOpen) {
     const open = asObject(safeRule.open);
-    const hasWords = Array.isArray(open.words);
-    const hasSpells = Array.isArray(open.spells);
-    if (!hasWords) {
-      failCheck(CHECK_TAG, `projected rule ${ruleId} open missing canonical words[]`);
-    }
-    if (!hasSpells) {
-      failCheck(CHECK_TAG, `projected rule ${ruleId} open missing compatibility spells[]`);
-    }
-    if (hasWords && hasSpells && JSON.stringify(open.words) !== JSON.stringify(open.spells)) {
-      failCheck(CHECK_TAG, `projected rule ${ruleId} open words/spells alias mismatch`);
-    }
+    assertOpenWordAliases(ruleId, open);
   }
 }
 
-reportCheckPass(CHECK_TAG, "projected orchestrator shape is valid and complete");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

@@ -22,28 +22,28 @@ export const ORCHESTRATOR_V1 = Object.freeze({
   [FIELD_RULES]: Object.freeze([
     {
       id: "r_fridgis_immediate",
-      on: { spell: "fridgis" },
+      on: { word: "fridgis" },
       trigger: {
         aoe_frost: true,
       },
     },
     {
       id: "r_electrum_immediate",
-      on: { spell: "electrum" },
+      on: { word: "electrum" },
       trigger: {
         aoe_electric: true,
       },
     },
     {
       id: "r_pyro_immediate",
-      on: { spell: "pyro" },
+      on: { word: "pyro" },
       trigger: {
         aoe_flame: true,
       },
     },
     {
       id: "r_domus_immediate",
-      on: { spell: "domus" },
+      on: { word: "domus" },
       trigger: {
         teleport_home: true,
       },
@@ -51,7 +51,7 @@ export const ORCHESTRATOR_V1 = Object.freeze({
     {
       id: "r_rota_yspin_charged",
       on: {
-        spell: "rota",
+        word: "rota",
         gesture: "spin_y",
         orb_state: "charged",
       },

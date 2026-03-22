@@ -1,3 +1,4 @@
+// Minimal stored-globe resource fixture used by dispatch/runtime check scenarios.
 export function createStoredGlobeResources(initialStored = 0) {
   const initialStoredNum = Number(initialStored);
   let stored = Number.isFinite(initialStoredNum) ? initialStoredNum : 0;

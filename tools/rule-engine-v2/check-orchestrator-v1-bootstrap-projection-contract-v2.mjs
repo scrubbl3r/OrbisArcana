@@ -1,7 +1,4 @@
-import {
-  hydrateReceiverBootstrapState,
-  RULE_ENGINE_SOURCES,
-} from "../../src/runtime/receiver-bootstrap.js";
+import { hydrateReceiverBootstrapState, RULE_ENGINE_SOURCES } from "../../src/runtime/receiver-bootstrap.js";
 import {
   INTERACTIONS_V2,
   buildRulesFromInteractionsV2,
@@ -11,8 +8,10 @@ import {
 } from "../../src/content/interactions-v2/index.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
+import { assertSchemaSourceV2 } from "./check-schema-source-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-bootstrap-projection:v2";
+const PASS_MESSAGE = "bootstrap projection source and rule count contract hold";
 
 const captured = {
   ruleSchema: null,
@@ -53,17 +52,11 @@ hydrateReceiverBootstrapState(
 );
 
 const schema = captured.ruleSchema;
-if (!schema || typeof schema !== "object") {
-  failCheck(CHECK_TAG, "setRuleSchema was not called");
-}
-const source = typeof schema.source === "string" ? schema.source : "";
-
-if (source !== RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED) {
-  failCheck(
-    CHECK_TAG,
-    `expected source=${RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED}, got ${source}`
-  );
-}
+assertSchemaSourceV2({
+  tag: CHECK_TAG,
+  schema,
+  expectedSource: RULE_ENGINE_SOURCES.ORCHESTRATOR_V1_PROJECTED,
+});
 
 const expectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
 const actualRules = Array.isArray(schema.rules) ? schema.rules : [];
@@ -74,4 +67,4 @@ if (actualRules.length !== expectedRules.length) {
   );
 }
 
-reportCheckPass(CHECK_TAG, "bootstrap projection source and rule count contract hold");
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

@@ -5,6 +5,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-on-spell-alias-compiler-source-surface:v2";
 const COMPILER_REL = "src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
+const PASS_MESSAGE = "orchestrator-v2 compiler source preserves on.word precedence with on.spell fallback to canonical word selectors";
 
 const text = readRelativeText(COMPILER_REL);
 requireTextIncludesTokensV2({
@@ -31,7 +32,4 @@ if (text.includes("for (const rawWordAlias of parseStringOrArray(on.spell)) {"))
   );
 }
 
-reportCheckPass(
-  CHECK_TAG,
-  "orchestrator-v2 compiler source preserves on.word precedence with on.spell fallback to canonical word selectors"
-);
+reportCheckPass(CHECK_TAG, PASS_MESSAGE);

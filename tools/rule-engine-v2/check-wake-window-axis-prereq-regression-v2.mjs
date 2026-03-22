@@ -1,7 +1,4 @@
-import {
-  EVT_VOICE_SPELL_LOADED,
-  EVT_VOICE_SPELL_REJECTED,
-} from "../../src/contracts/events.js";
+import { EVT_VOICE_SPELL_LOADED, EVT_VOICE_SPELL_REJECTED } from "../../src/contracts/events.js";
 import { assertCheck } from "./check-assert-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { CHECK_CONFIDENCE_V2 } from "./check-confidence-constants-v2.mjs";
@@ -15,13 +12,14 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_REASONS_V2, hasReason } from "./check-reason-v2.mjs";
 import { createStoredGlobeResources } from "./check-resources-v2.mjs";
 import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
-import { hasSpellId } from "./check-spell-event-v2.mjs";
+import { hasWordId } from "./check-spell-event-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 import { emitAxisThenWakeSelection } from "./check-wake-sequence-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.wakeWindowAxisPrereq;
+const PASS_MESSAGE = "wake-window axis prerequisite contract holds";
 
 function main() {
   const eventBus = createCheckEventBus();
@@ -47,7 +45,7 @@ function main() {
     // After axis selection, same wake-window token should load.
     emitAxisThenWakeSelection({
       eventBus,
-      axisSpellId: CHECK_SPELL_IDS_V2.pyro,
+      axisWordId: CHECK_SPELL_IDS_V2.pyro,
       wakeWindowToken: CHECK_SPELL_IDS_V2.sanctum,
       confidence: CHECK_CONFIDENCE_V2.medium,
       axisAtMs: 5001,
@@ -61,11 +59,11 @@ function main() {
   );
   assertCheck(loads.length >= 1, `[${CHECK_TAG}] expected wake token to load after axis selection`);
   assertCheck(
-    hasSpellId(loads, CHECK_SPELL_IDS_V2.sanctum),
+    hasWordId(loads, CHECK_SPELL_IDS_V2.sanctum),
     `[${CHECK_TAG}] expected sanctum load after axis selection`
   );
 
-  reportCheckPass(CHECK_TAG, "wake-window axis prerequisite contract holds");
+  reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 
 main();

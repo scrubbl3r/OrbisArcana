@@ -1,5 +1,6 @@
+// Token builders used to validate docs-index links and ownership entries.
 import { basename } from "node:path";
-
+// Path checks stay strict so token generation failures surface early.
 function assertRelPathStringV2(relPath, context) {
   if (typeof relPath !== "string") {
     throw new Error(`${context} relPath must be a string`);

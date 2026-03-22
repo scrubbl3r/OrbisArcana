@@ -1,7 +1,8 @@
+// Validates doc key/path registries for shape, uniqueness, and on-disk existence.
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { failCheck } from "./check-fail-v2.mjs";
-
+// Iterable coercion keeps support for arrays, sets, and frozen tuple-like sources.
 function toArrayOrFailV2({ value, tag, label, field }) {
   if (value == null) {
     failCheck(tag, `${label} validation requires ${field}`);
