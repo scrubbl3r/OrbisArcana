@@ -2364,6 +2364,8 @@
         } catch (_) {}
         receiverModulesReady = false;
         console.warn("MVP systems init failed:", e);
+        const detail = e && e.message ? String(e.message) : String(e || "unknown_error");
+        fatal(`Launch failed: ${detail}`);
       }
     }
     // ===== GAME MVP SYSTEMS (ORB STATE) END =====
