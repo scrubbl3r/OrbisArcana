@@ -1251,6 +1251,7 @@
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
     let kwsEventBindings = null;
+    const MODULE_CACHE_BUST_V = "20260322b";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1462,7 +1463,7 @@
         ] = await Promise.all([
           import("./src/runtime/receiver-bootstrap.js"),
           import("./src/runtime/receiver-events.js"),
-          import("./src/ui/kws-panel-controller.js"),
+          import(`./src/ui/kws-panel-controller.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/voice/kws/kws-boot-orchestrator.js"),
           import("./src/voice/kws/kws-event-bindings.js"),
