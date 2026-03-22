@@ -5,11 +5,10 @@ const FIELD_DEFAULTS = "defaults";
 const FIELD_RULES = "rules";
 
 export const ORCHESTRATOR_V1_BOOTSTRAP = Object.freeze({
-  // Stage 0 scaffold: keep disabled until compiler parity lands.
+  // Active bootstrap source for orchestrator-only runtime control.
   useInReceiverBootstrap: true,
-  // When bootstrap is enabled and ORCHESTRATOR_V1 has no rules yet,
-  // project from INTERACTIONS_V2 as a safe bridge.
-  projectFromInteractionsWhenOrchestratorEmpty: true,
+  // Disable interactions projection fallback for orchestrator-exclusive mode.
+  projectFromInteractionsWhenOrchestratorEmpty: false,
 });
 
 export const ORCHESTRATOR_V1 = Object.freeze({

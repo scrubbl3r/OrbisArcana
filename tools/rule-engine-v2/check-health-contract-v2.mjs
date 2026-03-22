@@ -29,7 +29,9 @@ if (Object.hasOwn(health, FIELD_SPELLBOOK_OK) && health[FIELD_SPELLBOOK_OK] !== 
   failCheck(CHECK_TAG, `${FIELD_SPELLBOOK_OK} must be true when present`);
 }
 if (health[FIELD_INTERACTIONS_OK] !== true) failCheck(CHECK_TAG, `${FIELD_INTERACTIONS_OK} must be true`);
-if (health[FIELD_BOOTSTRAP_V2] !== true) failCheck(CHECK_TAG, `${FIELD_BOOTSTRAP_V2} must be true`);
+if (typeof health[FIELD_BOOTSTRAP_V2] !== "boolean") {
+  failCheck(CHECK_TAG, `${FIELD_BOOTSTRAP_V2} must be boolean`);
+}
 if (health[FIELD_PROJECTION_RULES_ONLY] !== true) failCheck(CHECK_TAG, `${FIELD_PROJECTION_RULES_ONLY} must be true`);
 if (!Array.isArray(health[FIELD_DRIFT_RULE_IDS])) failCheck(CHECK_TAG, `${FIELD_DRIFT_RULE_IDS} must be an array`);
 if (health[FIELD_DRIFT_RULE_IDS].length !== 0) failCheck(CHECK_TAG, `${FIELD_DRIFT_RULE_IDS} must be empty (got ${health[FIELD_DRIFT_RULE_IDS].join(", ")})`);

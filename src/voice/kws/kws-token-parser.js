@@ -110,11 +110,13 @@ export function createKwsTokenParser(opts = {}) {
       .filter(Boolean),
   );
   const requireWakeForWordIds = new Set(
-    (Array.isArray(opts.requireWakeForWordIds) && opts.requireWakeForWordIds.length
-      ? opts.requireWakeForWordIds
-      : (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
-      ? opts.requireWakeForSpellIds
-      : WAKE_REQUIRED_WORD_IDS)
+    (
+      Array.isArray(opts.requireWakeForWordIds) && opts.requireWakeForWordIds.length
+        ? opts.requireWakeForWordIds
+        : (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
+          ? opts.requireWakeForSpellIds
+          : WAKE_REQUIRED_WORD_IDS)
+    )
       .map((s) => String(s || "").trim().toLowerCase())
       .filter(Boolean),
   );

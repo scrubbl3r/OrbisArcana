@@ -3,7 +3,7 @@ import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-bootstrap-defaults:v2";
-const PASS_MESSAGE = "orchestrator v1 bootstrap defaults remain in active guarded state";
+const PASS_MESSAGE = "orchestrator v1 bootstrap defaults remain in orchestrator-exclusive state";
 
 function assertCondition(condition, failureMessage) {
   if (!condition) {
@@ -19,8 +19,8 @@ assertCondition(
   "ORCHESTRATOR_V1 bootstrap must remain enabled by default"
 );
 assertCondition(
-  ORCHESTRATOR_V1_BOOTSTRAP.projectFromInteractionsWhenOrchestratorEmpty === true,
-  "ORCHESTRATOR_V1 projection bridge default must remain enabled"
+  ORCHESTRATOR_V1_BOOTSTRAP.projectFromInteractionsWhenOrchestratorEmpty === false,
+  "ORCHESTRATOR_V1 projection bridge default must remain disabled in orchestrator-exclusive mode"
 );
 
 if (!ORCHESTRATOR_V1 || typeof ORCHESTRATOR_V1 !== "object") {

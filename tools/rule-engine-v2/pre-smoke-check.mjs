@@ -5,6 +5,8 @@ import {
   WORDBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
+  ORCHESTRATOR_V1_BOOTSTRAP,
+  ORCHESTRATOR_V2_BOOTSTRAP,
   buildRulesFromInteractionsV2,
   validateWordbookV2,
   validateInteractionsV2,
@@ -118,9 +120,25 @@ failIfValidationErrors("spell-schema-integrity validation failed", validateSpell
 
 verifyKwsManifestCoverage();
 
-if (!INTERACTIONS_V2_BOOTSTRAP || INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap !== true) {
+const interactionsBootstrapEnabled = !!(
+  INTERACTIONS_V2_BOOTSTRAP &&
+  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+const orchestratorV1BootstrapEnabled = !!(
+  ORCHESTRATOR_V1_BOOTSTRAP &&
+  ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap === true
+);
+const orchestratorV2BootstrapEnabled = !!(
+  ORCHESTRATOR_V2_BOOTSTRAP &&
+  ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+if (!interactionsBootstrapEnabled && !orchestratorV1BootstrapEnabled && !orchestratorV2BootstrapEnabled) {
   fail("runtime bootstrap guard failed", [
-    "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap must be true",
+    "at least one bootstrap source must be enabled",
+    "expected one of:",
+    "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true",
+    "ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap === true",
+    "ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap === true",
   ]);
 }
 const drift = computeProjectionDrift(INTERACTIONS_V2);

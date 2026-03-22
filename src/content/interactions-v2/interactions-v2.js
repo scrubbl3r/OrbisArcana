@@ -69,7 +69,7 @@ function makeRule(id, allConditions, thenActions) {
 
 export const INTERACTIONS_V2_BOOTSTRAP = Object.freeze({
   // Runtime bootstrap policy switch for V2 adapter.
-  useInReceiverBootstrap: true,
+  useInReceiverBootstrap: false,
 });
 
 export const INTERACTIONS_V2 = Object.freeze({
