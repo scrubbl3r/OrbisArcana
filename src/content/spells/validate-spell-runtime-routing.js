@@ -1,9 +1,5 @@
 import { WORDS_BY_ID as SPELLS_BY_ID } from "../../voice/wordbook.js";
 import {
-  collectImmediateEventWordIdsFromInteractionsV2,
-  INTERACTIONS_V2,
-} from "../interactions-v2/interactions-v2.js";
-import {
   AXIS_WORD_IDS,
   KWS_FLASH_TOKEN_WORD_IDS,
   KWS_INFER_DEFAULT_WORD_ID,
@@ -17,6 +13,10 @@ import {
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
 } from "./spell-runtime-routing.js";
+import {
+  KWS_WAKE_WINDOW_WORD_IDS,
+  ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS,
+} from "../interactions-v2/orchestrator-v1-kws-profile.js";
 
 const AXES = new Set(["x", "y", "z"]);
 const SLOTS = new Set(["UD", "LR", "FB"]);
@@ -46,7 +46,38 @@ function isSlot(v) {
   return SLOTS.has(String(v || "").trim().toUpperCase());
 }
 
-function collectWakeWinWordIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
+function collectImmediateWordIdsFromConfig(cfg) {
+  const out = new Set();
+  const rules = Array.isArray(cfg && cfg.rules) ? cfg.rules : [];
+  for (const rule of rules) {
+    const on = (rule && typeof rule.on === "object" && rule.on) ? rule.on : null;
+    const conditions = Array.isArray(on && on.all) ? on.all : [];
+    const actions = Array.isArray(rule && rule.then)
+      ? rule.then
+      : [];
+    if (conditions.length !== 1) continue;
+    const condition = conditions[0];
+    const conditionType = String(condition && condition.type || "").trim().toLowerCase();
+    if (conditionType !== "word" && conditionType !== "spell") continue;
+    const wordId = asId(condition && condition.id).replace(/^(word|spell)\./, "");
+    if (!wordId) continue;
+    let hasImmediateEvent = false;
+    for (const action of actions) {
+      const actionType = String(action && action.type || "").trim().toLowerCase();
+      if (actionType === "wake_win") {
+        hasImmediateEvent = false;
+        break;
+      }
+      if (actionType !== "event") continue;
+      hasImmediateEvent = true;
+    }
+    if (!hasImmediateEvent) continue;
+    out.add(wordId);
+  }
+  return out;
+}
+
+function collectWakeWinWordIdsFromConfig(cfg) {
   const out = new Set();
   const rules = Array.isArray(cfg && cfg.rules) ? cfg.rules : [];
   for (const rule of rules) {
@@ -67,7 +98,11 @@ function collectWakeWinWordIdsFromInteractionsV2(cfg = INTERACTIONS_V2) {
   return out;
 }
 
-export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
+function isRuleLikeConfig(input) {
+  return !!(input && typeof input === "object" && Array.isArray(input.rules));
+}
+
+export function validateSpellRuntimeRouting(sourceConfig = null) {
   const errors = [];
   const routingEntries = Array.isArray(WORD_RUNTIME_ROUTING)
     ? WORD_RUNTIME_ROUTING
@@ -90,7 +125,12 @@ export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
   if (!inferId) errors.push("KWS_INFER_DEFAULT_WORD_ID is empty");
   else if (!SPELLS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_WORD_ID references unknown spell id: ${inferId}`);
 
-  const expectedOwnedImmediate = new Set(collectImmediateEventWordIdsFromInteractionsV2(interactions));
+  const legacySourceMode = isRuleLikeConfig(sourceConfig);
+  const expectedOwnedImmediate = legacySourceMode
+    ? collectImmediateWordIdsFromConfig(sourceConfig)
+    : new Set((Array.isArray(ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS)
+      ? ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS
+      : []).map((id) => asId(id)).filter(Boolean));
   const declaredOwnedImmediate = new Set(
     (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
       .map((id) => asId(id))
@@ -99,13 +139,23 @@ export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
   const missingOwnedImmediate = Array.from(expectedOwnedImmediate).filter((id) => !declaredOwnedImmediate.has(id)).sort();
   const extraOwnedImmediate = Array.from(declaredOwnedImmediate).filter((id) => !expectedOwnedImmediate.has(id)).sort();
   if (missingOwnedImmediate.length) {
-    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS missing interactions-v2 immediate word ids: ${missingOwnedImmediate.join(", ")}`);
+    errors.push(
+      legacySourceMode
+        ? `RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS missing interactions-v2 immediate word ids: ${missingOwnedImmediate.join(", ")}`
+        : `RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS missing orchestrator immediate word ids: ${missingOwnedImmediate.join(", ")}`
+    );
   }
   if (extraOwnedImmediate.length) {
-    errors.push(`RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS has ids not present as interactions-v2 immediate word rules: ${extraOwnedImmediate.join(", ")}`);
+    errors.push(
+      legacySourceMode
+        ? `RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS has ids not present as interactions-v2 immediate word rules: ${extraOwnedImmediate.join(", ")}`
+        : `RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS has ids not present as orchestrator immediate word rules: ${extraOwnedImmediate.join(", ")}`
+    );
   }
 
-  const expectedWakeWindowSpellIds = collectWakeWinWordIdsFromInteractionsV2(interactions);
+  const expectedWakeWindowSpellIds = legacySourceMode
+    ? collectWakeWinWordIdsFromConfig(sourceConfig)
+    : new Set((Array.isArray(KWS_WAKE_WINDOW_WORD_IDS) ? KWS_WAKE_WINDOW_WORD_IDS : []).map((id) => asId(id)).filter(Boolean));
   const declaredWakeWindowSpellIds = new Set(
     (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
       .map((id) => asId(id))
@@ -114,10 +164,18 @@ export function validateSpellRuntimeRouting(interactions = INTERACTIONS_V2) {
   const missingWakeWindowSpellIds = Array.from(expectedWakeWindowSpellIds).filter((id) => !declaredWakeWindowSpellIds.has(id)).sort();
   const extraWakeWindowSpellIds = Array.from(declaredWakeWindowSpellIds).filter((id) => !expectedWakeWindowSpellIds.has(id)).sort();
   if (missingWakeWindowSpellIds.length) {
-    errors.push(`WAKE_WINDOW_WORD_IDS missing interactions-v2 wake_win word ids: ${missingWakeWindowSpellIds.join(", ")}`);
+    errors.push(
+      legacySourceMode
+        ? `WAKE_WINDOW_WORD_IDS missing interactions-v2 wake_win word ids: ${missingWakeWindowSpellIds.join(", ")}`
+        : `WAKE_WINDOW_WORD_IDS missing orchestrator wake window word ids: ${missingWakeWindowSpellIds.join(", ")}`
+    );
   }
   if (extraWakeWindowSpellIds.length) {
-    errors.push(`WAKE_WINDOW_WORD_IDS has ids not present in interactions-v2 wake_win actions: ${extraWakeWindowSpellIds.join(", ")}`);
+    errors.push(
+      legacySourceMode
+        ? `WAKE_WINDOW_WORD_IDS has ids not present in interactions-v2 wake_win actions: ${extraWakeWindowSpellIds.join(", ")}`
+        : `WAKE_WINDOW_WORD_IDS has ids not present in orchestrator wake window words: ${extraWakeWindowSpellIds.join(", ")}`
+    );
   }
 
   const runtimeKeyTokens = new Set(
