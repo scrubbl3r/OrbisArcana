@@ -1064,6 +1064,7 @@
     let kwsPanelController = null;
     let kwsRuntimeController = null;
     let kwsTokenUiState = null;
+    let kwsConfigDebugLine = "";
     let teardownKwsRuntimeForReinit = null;
     let kwsBridge = {
       startReadoutTick() {},
@@ -1251,7 +1252,7 @@
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
     let kwsEventBindings = null;
-    const MODULE_CACHE_BUST_V = "20260322d";
+    const MODULE_CACHE_BUST_V = "20260322e";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1511,6 +1512,7 @@
             KWS_TOKEN_CANONICAL_MAP = (kwsConfig.tokenCanonicalMap && typeof kwsConfig.tokenCanonicalMap === "object")
               ? kwsConfig.tokenCanonicalMap
               : KWS_TOKEN_CANONICAL_MAP;
+            kwsConfigDebugLine = `cfg.rowTop=${KWS_ROW_TOP.join(",")}`;
             kwsDebugState.mode = DEFAULT_VOICE_ENGINE;
             kwsDebugState.backend = DEFAULT_KWS_BACKEND_KEY;
           }
@@ -1557,6 +1559,7 @@
           kwsPanelController.bindTuneApplyButton();
         }
         kwsBridge.startReadoutTick();
+        if (kwsConfigDebugLine) kwsBridge.pushLogLine(kwsConfigDebugLine, "muted");
         kwsRuntimeController = createKwsRuntimeController({
           constants: {
             defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
