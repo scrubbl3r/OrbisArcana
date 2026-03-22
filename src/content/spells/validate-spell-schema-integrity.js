@@ -1,8 +1,7 @@
 import { WORDS_BY_ID as SPELLS_BY_ID } from "../../voice/wordbook.js";
 import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
 import {
-  buildRulesFromInteractionsV2,
-  INTERACTIONS_V2,
+  buildRuleEngineFromOrchestratorV1,
 } from "../interactions-v2/index.js";
 import { EVENT_DEFINITIONS } from "../spell-rules/event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
@@ -31,7 +30,8 @@ export function validateSpellSchemaIntegrity(options = {}) {
   let projectedRules = [];
   if (!Array.isArray(options && options.rules)) {
     try {
-      projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
+      const engine = buildRuleEngineFromOrchestratorV1();
+      projectedRules = Array.isArray(engine && engine.rules) ? engine.rules : [];
     } catch (_) {
       projectedRules = [];
     }
