@@ -1,6 +1,6 @@
 {
   "schema": "orbis.orchestrator_v1.projection",
-  "generatedAt": "2026-03-22T16:43:46.517Z",
+  "generatedAt": "2026-03-22T16:59:35.561Z",
   "source": "projected_from_interactions_v2",
   "projection": {
     "version": "1",

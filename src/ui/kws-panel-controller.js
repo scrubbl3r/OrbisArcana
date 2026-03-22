@@ -32,6 +32,9 @@ export function createKwsPanelController({
   const KWS_AXIS_TOKEN_SET = new Set(KWS_AXIS_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
   const KWS_WAKE_TOKEN_SET = new Set(KWS_WAKE_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
   const KWS_WAKE_REQUIRED_TOKEN_SET = new Set(KWS_WAKE_REQUIRED_TOKENS.map((t) => String(t || "").trim().toLowerCase()).filter(Boolean));
+  const readKwsWordProvider = (typeof getKwsWordProvider === "function")
+    ? getKwsWordProvider
+    : getKwsVoiceProvider;
 
   const selectedAxisWordByAxis = { x: "", y: "", z: "" };
   const kwsTokenUiState = {

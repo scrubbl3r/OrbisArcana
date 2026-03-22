@@ -1,3 +1,5 @@
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
+
 export function bootstrapKwsVoiceRuntime({
   eventBus,
   createKwsProvider,
@@ -31,6 +33,8 @@ export function bootstrapKwsVoiceRuntime({
     kwsWordProvider = createKwsProvider({
       eventBus,
       shadow: true,
+      // Seed parser aliases from canonical word inventory so non-wake words match.
+      words: Object.freeze(Object.values(ACTIVE_WORDS_BY_ID || Object.create(null))),
       backendFactory: selectedBackend && typeof selectedBackend.factory === "function"
         ? selectedBackend.factory
         : null,
