@@ -115,7 +115,7 @@ failIfValidationErrors(
   "spell-rules validation failed",
   validateSpellRules(buildRulesFromInteractionsV2(INTERACTIONS_V2))
 );
-failIfValidationErrors("spell-runtime-routing validation failed", validateSpellRuntimeRouting(INTERACTIONS_V2));
+failIfValidationErrors("spell-runtime-routing validation failed", validateSpellRuntimeRouting());
 failIfValidationErrors("spell-schema-integrity validation failed", validateSpellSchemaIntegrity());
 
 verifyKwsManifestCoverage();
