@@ -1439,6 +1439,7 @@
 
     async function initMvpSystems(){
       try {
+        if (els.rulesReadout) els.rulesReadout.textContent = "boot:init";
         receiverModulesReady = false;
         await teardownKwsForReinit();
         const [
@@ -1602,6 +1603,7 @@
           },
         });
         const mods = await loadReceiverInitModules();
+        if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";
         const setRuntimeWordIndexes = (next = {}) => {
           const index = (next.runtimeWordIndex && typeof next.runtimeWordIndex === "object")
             ? next.runtimeWordIndex
@@ -1840,6 +1842,11 @@
           setReceiverModulesReady: (v) => { receiverModulesReady = !!v; },
         };
         hydrateReceiverBootstrapState(mods, receiverBootstrapCtx);
+        if (els.rulesReadout && ruleSchema && ruleSchema.source) {
+          els.rulesReadout.textContent = String(ruleSchema.source);
+        } else if (els.rulesReadout) {
+          els.rulesReadout.textContent = "boot:no_schema";
+        }
         if (typeof createVfxRuntimesBundle === "function") {
           vfxRuntimesBundle = createVfxRuntimesBundle({
             bubbleShield: {
@@ -2366,6 +2373,7 @@
         console.warn("MVP systems init failed:", e);
         const detail = e && e.message ? String(e.message) : String(e || "unknown_error");
         fatal(`Launch failed: ${detail}`);
+        if (els.rulesReadout) els.rulesReadout.textContent = "boot:fail";
       }
     }
     // ===== GAME MVP SYSTEMS (ORB STATE) END =====
