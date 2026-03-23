@@ -1,6 +1,6 @@
 // V2 wake-word inventory SSOT.
 // This file intentionally contains only spell availability/recognition metadata.
-// Docs index: docs/rule-engine-v2-docs-index.md
+// Docs index: docs/rule-engine-v2-docs-index.md 
 
 const SPELLBOOK_V2_VERSION = "2";
 const FIELD_VERSION = "version";
