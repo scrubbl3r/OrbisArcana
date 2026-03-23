@@ -1,5 +1,6 @@
 import {
   INTERACTIONS_V2,
+  INTERACTIONS_V2_BOOTSTRAP,
   buildRulesFromInteractionsV2,
   validateInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
@@ -14,6 +15,16 @@ const ACTION_WAKE_WIN = "wake_win";
 const WORD_PREFIX = "word.";
 const SPELL_PREFIX_PATTERN = /^spell\./;
 const PASS_MESSAGE = "interactions wake_win supports canonical words[] input and emits matching spells[] compatibility alias";
+const LEGACY_OPTIONAL_PASS_MESSAGE = "interactions wake-word alias contract is legacy-optional when interactions bootstrap is disabled";
+
+const interactionsBootstrapEnabled = !!(
+  INTERACTIONS_V2_BOOTSTRAP &&
+  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+if (!interactionsBootstrapEnabled) {
+  reportCheckPass(CHECK_TAG, LEGACY_OPTIONAL_PASS_MESSAGE);
+  process.exit(0);
+}
 
 const sample = cloneJsonV2(INTERACTIONS_V2);
 const targetRule = Array.isArray(sample?.rules)

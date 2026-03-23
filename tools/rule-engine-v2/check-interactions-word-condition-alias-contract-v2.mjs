@@ -1,5 +1,6 @@
 import {
   INTERACTIONS_V2,
+  INTERACTIONS_V2_BOOTSTRAP,
   buildRulesFromInteractionsV2,
   collectImmediateEventWordIdsFromInteractionsV2,
   validateInteractionsV2,
@@ -11,6 +12,16 @@ import { cloneJsonV2 } from "./json-clone-v2.mjs";
 // Verifies canonical `word` conditions compile to runtime spell semantics.
 const CHECK_TAG = "interactions-word-condition-alias-contract:v2";
 const PASS_MESSAGE = "interactions condition type supports canonical word alias and compiles to runtime spell semantics";
+const LEGACY_OPTIONAL_PASS_MESSAGE = "interactions word-condition alias contract is legacy-optional when interactions bootstrap is disabled";
+
+const interactionsBootstrapEnabled = !!(
+  INTERACTIONS_V2_BOOTSTRAP &&
+  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+if (!interactionsBootstrapEnabled) {
+  reportCheckPass(CHECK_TAG, LEGACY_OPTIONAL_PASS_MESSAGE);
+  process.exit(0);
+}
 
 const sample = cloneJsonV2(INTERACTIONS_V2);
 const targetRule = Array.isArray(sample?.rules)

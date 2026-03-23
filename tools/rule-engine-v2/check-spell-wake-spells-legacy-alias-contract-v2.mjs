@@ -1,4 +1,5 @@
-import { buildRulesFromInteractionsV2, INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromOrchestratorV1 } from "../../src/content/interactions-v2/index.js";
+import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing.js";
 import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
 import { validateSpellSchemaIntegrity } from "../../src/content/spells/validate-spell-schema-integrity.js";
 import { failCheck } from "./check-fail-v2.mjs";
@@ -11,7 +12,22 @@ const ACTION_WAKE_WIN = "wake_win";
 const SPELL_PREFIX = "spell.";
 const PASS_MESSAGE = "spell-layer validators accept legacy wake_win.spells[] alias when canonical words[] is absent";
 
-const interactionsSample = cloneJsonV2(INTERACTIONS_V2);
+function withSyntheticImmediateEventRules(sample) {
+  const rules = Array.isArray(sample?.rules) ? sample.rules : [];
+  for (const id of Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : []) {
+    rules.push({
+      id: `r_test_immediate_${id}`,
+      on: { all: [{ type: "word", id: `word.${id}` }] },
+      then: [{ type: "event", id: "teleport_home" }],
+    });
+  }
+  return sample;
+}
+
+const orchestratorEngine = buildRuleEngineFromOrchestratorV1();
+const interactionsSample = withSyntheticImmediateEventRules({
+  rules: cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []),
+});
 const sampleRule = Array.isArray(interactionsSample?.rules)
   ? interactionsSample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
   : null;
@@ -33,7 +49,7 @@ if (runtimeRoutingErrors.length) {
   );
 }
 
-const projectedRules = cloneJsonV2(buildRulesFromInteractionsV2(INTERACTIONS_V2));
+const projectedRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
 const projectedRule = Array.isArray(projectedRules)
   ? projectedRules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
   : null;

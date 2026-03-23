@@ -1,4 +1,4 @@
-import { buildRulesFromInteractionsV2, INTERACTIONS_V2 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromOrchestratorV1 } from "../../src/content/interactions-v2/index.js";
 import { validateSpellSchemaIntegrity } from "../../src/content/spells/validate-spell-schema-integrity.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
@@ -14,7 +14,8 @@ const CHECK_TAG = "spell-schema-integrity-wake-words-alias-contract:v2";
 const ACTION_WAKE_WIN = "wake_win";
 const PASS_MESSAGE = "spell schema integrity validates canonical wake_win.words[] with optional spells[] alias";
 
-const rules = cloneJsonV2(buildRulesFromInteractionsV2(INTERACTIONS_V2));
+const orchestratorEngine = buildRuleEngineFromOrchestratorV1();
+const rules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
 const targetRule = Array.isArray(rules)
   ? rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
   : null;
