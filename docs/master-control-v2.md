@@ -1,15 +1,15 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-23T00:16:41.524Z
+Generated: 2026-03-23T00:26:16.357Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
   - compatibility alias: `src/content/interactions-v2/spellbook-v2.js`
-- interactions: `src/content/interactions-v2/interactions-v2.js`
+- orchestrator: `src/content/interactions-v2/orchestrator-v1.js`
 
 ## Runtime Flags
 
-- interactionsEnabled: true
+- orchestratorEnabled: true
 
 ## Wordbook (SSOT)
 
@@ -101,14 +101,14 @@ This document is generated from SSOT:
 }
 ```
 
-## Interaction Defaults (SSOT)
+## Orchestrator Defaults (SSOT)
 
 ```json
 {
-  "wakeWin": {
+  "open": {
     "ttlMs": 2000
   },
-  "event": {
+  "trigger": {
     "grace": {
       "ms": 500
     }
@@ -116,127 +116,67 @@ This document is generated from SSOT:
 }
 ```
 
-## Interaction Rules (SSOT)
+## Orchestrator Rules (SSOT)
 
 ```json
 [
   {
     "id": "r_fridgis_immediate",
     "on": {
-      "all": [
-        {
-          "type": "word",
-          "id": "spell.fridgis"
-        }
-      ]
+      "word": "fridgis"
     },
-    "then": [
-      {
-        "type": "event",
-        "id": "aoe_frost"
-      }
-    ]
+    "trigger": {
+      "aoe_frost": true
+    }
   },
   {
     "id": "r_electrum_immediate",
     "on": {
-      "all": [
-        {
-          "type": "word",
-          "id": "spell.electrum"
-        }
-      ]
+      "word": "electrum"
     },
-    "then": [
-      {
-        "type": "event",
-        "id": "aoe_electric"
-      }
-    ]
+    "trigger": {
+      "aoe_electric": true
+    }
   },
   {
     "id": "r_pyro_immediate",
     "on": {
-      "all": [
-        {
-          "type": "word",
-          "id": "spell.pyro"
-        }
-      ]
+      "word": "pyro"
     },
-    "then": [
-      {
-        "type": "event",
-        "id": "aoe_flame"
-      }
-    ]
+    "trigger": {
+      "aoe_flame": true
+    }
   },
   {
     "id": "r_domus_immediate",
     "on": {
-      "all": [
-        {
-          "type": "word",
-          "id": "spell.domus"
-        }
-      ]
+      "word": "domus"
     },
-    "then": [
-      {
-        "type": "event",
-        "id": "teleport_home"
-      }
-    ]
+    "trigger": {
+      "teleport_home": true
+    }
   },
   {
     "id": "r_rota_yspin_charged",
     "on": {
-      "all": [
-        {
-          "type": "word",
-          "id": "spell.rota"
-        },
-        {
-          "type": "gesture",
-          "id": "gesture.spin_y"
-        },
-        {
-          "type": "orb_state",
-          "id": "orb_state.charged"
-        }
-      ]
+      "word": "rota",
+      "gesture": "spin_y",
+      "orb_state": "charged"
     },
-    "then": [
-      {
-        "type": "wake_win",
-        "words": [
-          "spell.rota",
-          "spell.sanctum",
-          "spell.vectus"
-        ],
-        "spells": [
-          "spell.rota",
-          "spell.sanctum",
-          "spell.vectus"
-        ]
-      },
-      {
-        "type": "event",
-        "id": "aoe_electric",
+    "open": [
+      "rota",
+      "sanctum",
+      "vectus"
+    ],
+    "trigger": {
+      "aoe_electric": {
         "range": 14
       },
-      {
-        "type": "event",
-        "id": "grace"
-      },
-      {
-        "type": "event",
-        "id": "orb_state",
-        "overrides": {
-          "state": "superheated"
-        }
+      "grace": true,
+      "orb_state": {
+        "state": "superheated"
       }
-    ]
+    }
   }
 ]
 ```
@@ -248,7 +188,7 @@ This document is generated from SSOT:
   "version": "1",
   "enabled": true,
   "ruleCount": 5,
-  "parityWithInteractionsRuleCount": true
+  "parityWithOrchestratorRuleCount": true
 }
 ```
 
@@ -305,5 +245,5 @@ This document is generated from SSOT:
 
 - Add/remove/toggle words in `wordbook-v2.js`.
   - compatibility alias path: `spellbook-v2.js`
-- Compose trigger/action chains in `interactions-v2.js`.
+- Compose trigger/action chains in `orchestrator-v1.js`.
 - Runtime rule/event/signal wiring is auto-validated in `ready:v2`.

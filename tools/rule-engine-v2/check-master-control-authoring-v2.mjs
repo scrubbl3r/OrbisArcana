@@ -1,9 +1,12 @@
-import { INTERACTIONS_V2, WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../../src/content/interactions-v2/index.js";
+import {
+  buildRuleEngineFromOrchestratorV1,
+  ORCHESTRATOR_V1,
+  WORDBOOK_V2_ACTIVE_WORDS_BY_ID,
+} from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import { getInteractionsRules } from "./interactions-v2-utils.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { asLowerText } from "./text-utils-v2.mjs";
 
@@ -61,9 +64,14 @@ function main() {
     }
   }
 
-  const expectedRules = getInteractionsRules(INTERACTIONS_V2);
+  const expectedRules = Array.isArray(ORCHESTRATOR_V1?.rules) ? ORCHESTRATOR_V1.rules : [];
   if (root.rules.length !== expectedRules.length) {
     failCheck(CHECK_TAG, `rules count mismatch: doc=${root.rules.length} expected=${expectedRules.length}`);
+  }
+  const projectedEngine = buildRuleEngineFromOrchestratorV1();
+  const projectedRules = Array.isArray(projectedEngine?.rules) ? projectedEngine.rules : [];
+  if (!projectedRules.length) {
+    failCheck(CHECK_TAG, "orchestrator compiled rules must be present");
   }
 
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);

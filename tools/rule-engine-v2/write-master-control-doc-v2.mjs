@@ -7,19 +7,14 @@ import { stringifyJson } from "./stringify-json-v2.mjs";
 import { writeJsonFile } from "./write-json-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
 import {
-  getInteractionsDefaults,
-  getInteractionsRules,
-  isInteractionsEnabled,
-} from "./interactions-v2-utils.mjs";
-import {
   listActiveWordAuthoringRows,
   listWordbookWords,
 } from "./wordbook-v2-utils.mjs";
 import {
   ACTION_HANDLES_V2,
+  buildRuleEngineFromOrchestratorV1,
   EVENT_HANDLES_V2,
-  INTERACTIONS_V2,
-  projectOrchestratorV1FromInteractionsV2,
+  ORCHESTRATOR_V1,
   SIGNAL_HANDLES_V2,
   WORDBOOK_V2,
 } from "../../src/content/interactions-v2/index.js";
@@ -32,16 +27,23 @@ function toJson(value) {
   return stringifyJson(value);
 }
 
+function asObject(value) {
+  return (value && typeof value === "object" && !Array.isArray(value)) ? value : Object.create(null);
+}
+
+function asRules(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 function buildDoc() {
   const generatedAt = nowIso();
   const words = listWordbookWords(WORDBOOK_V2);
-  const rules = getInteractionsRules(INTERACTIONS_V2);
-  const defaults = getInteractionsDefaults(INTERACTIONS_V2);
-  const enabled = isInteractionsEnabled(INTERACTIONS_V2);
-  const orchestratorProjection = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
-  const orchestratorProjectionRules = Array.isArray(orchestratorProjection?.rules)
-    ? orchestratorProjection.rules
-    : [];
+  const orchestrator = asObject(ORCHESTRATOR_V1);
+  const defaults = asObject(orchestrator.defaults);
+  const rules = asRules(orchestrator.rules);
+  const enabled = orchestrator.enabled !== false;
+  const compiledEngine = buildRuleEngineFromOrchestratorV1();
+  const compiledRules = asRules(compiledEngine?.rules);
 
   const lines = [];
   lines.push("# OrbisArcana Master Control V2");
@@ -51,11 +53,11 @@ function buildDoc() {
   lines.push("This document is generated from SSOT:");
   lines.push("- wordbook: `src/content/interactions-v2/wordbook-v2.js`");
   lines.push("  - compatibility alias: `src/content/interactions-v2/spellbook-v2.js`");
-  lines.push("- interactions: `src/content/interactions-v2/interactions-v2.js`");
+  lines.push("- orchestrator: `src/content/interactions-v2/orchestrator-v1.js`");
   lines.push("");
   lines.push("## Runtime Flags");
   lines.push("");
-  lines.push(`- interactionsEnabled: ${enabled}`);
+  lines.push(`- orchestratorEnabled: ${enabled}`);
   lines.push("");
   lines.push("## Wordbook (SSOT)");
   lines.push("");
@@ -63,13 +65,13 @@ function buildDoc() {
   lines.push(toJson({ version: WORDBOOK_V2?.version, words }));
   lines.push("```");
   lines.push("");
-  lines.push("## Interaction Defaults (SSOT)");
+  lines.push("## Orchestrator Defaults (SSOT)");
   lines.push("");
   lines.push("```json");
   lines.push(toJson(defaults));
   lines.push("```");
   lines.push("");
-  lines.push("## Interaction Rules (SSOT)");
+  lines.push("## Orchestrator Rules (SSOT)");
   lines.push("");
   lines.push("```json");
   lines.push(toJson(rules));
@@ -79,10 +81,10 @@ function buildDoc() {
   lines.push("");
   lines.push("```json");
   lines.push(toJson({
-    version: orchestratorProjection?.version,
-    enabled: orchestratorProjection?.enabled !== false,
-    ruleCount: orchestratorProjectionRules.length,
-    parityWithInteractionsRuleCount: orchestratorProjectionRules.length === rules.length,
+    version: orchestrator.version,
+    enabled,
+    ruleCount: compiledRules.length,
+    parityWithOrchestratorRuleCount: compiledRules.length === rules.length,
   }));
   lines.push("```");
   lines.push("");
@@ -110,18 +112,19 @@ function buildDoc() {
   lines.push("");
   lines.push("- Add/remove/toggle words in `wordbook-v2.js`.");
   lines.push("  - compatibility alias path: `spellbook-v2.js`");
-  lines.push("- Compose trigger/action chains in `interactions-v2.js`.");
+  lines.push("- Compose trigger/action chains in `orchestrator-v1.js`.");
   lines.push("- Runtime rule/event/signal wiring is auto-validated in `ready:v2`.");
   lines.push("");
   return lines.join("\n");
 }
 
 function buildMasterControlJson() {
-  const orchestratorProjection = projectOrchestratorV1FromInteractionsV2(INTERACTIONS_V2);
-  const interactionsRules = getInteractionsRules(INTERACTIONS_V2);
-  const orchestratorProjectionRules = Array.isArray(orchestratorProjection?.rules)
-    ? orchestratorProjection.rules
-    : [];
+  const orchestrator = asObject(ORCHESTRATOR_V1);
+  const orchestratorDefaults = asObject(orchestrator.defaults);
+  const orchestratorRules = asRules(orchestrator.rules);
+  const orchestratorEnabled = orchestrator.enabled !== false;
+  const compiledEngine = buildRuleEngineFromOrchestratorV1();
+  const compiledRules = asRules(compiledEngine?.rules);
   return {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControl,
     generatedAt: nowIso(),
@@ -133,17 +136,23 @@ function buildMasterControlJson() {
       version: WORDBOOK_V2?.version,
       spells: listWordbookWords(WORDBOOK_V2),
     },
+    orchestrator: {
+      version: orchestrator.version,
+      enabled: orchestratorEnabled,
+      defaults: orchestratorDefaults,
+      rules: orchestratorRules,
+    },
     interactions: {
-      version: INTERACTIONS_V2?.version,
-      enabled: isInteractionsEnabled(INTERACTIONS_V2),
-      defaults: getInteractionsDefaults(INTERACTIONS_V2),
-      rules: interactionsRules,
+      version: orchestrator.version,
+      enabled: orchestratorEnabled,
+      defaults: orchestratorDefaults,
+      rules: orchestratorRules,
     },
     orchestratorProjection: {
-      version: orchestratorProjection?.version,
-      enabled: orchestratorProjection?.enabled !== false,
-      ruleCount: orchestratorProjectionRules.length,
-      parityWithInteractionsRuleCount: orchestratorProjectionRules.length === interactionsRules.length,
+      version: orchestrator.version,
+      enabled: orchestratorEnabled,
+      ruleCount: compiledRules.length,
+      parityWithOrchestratorRuleCount: compiledRules.length === orchestratorRules.length,
     },
     handles: {
       signals: SIGNAL_HANDLES_V2,
@@ -155,13 +164,15 @@ function buildMasterControlJson() {
 
 function buildMasterControlAuthoringJson() {
   const activeWords = listActiveWordAuthoringRows(WORDBOOK_V2);
-  const defaults = getInteractionsDefaults(INTERACTIONS_V2);
-  const rules = getInteractionsRules(INTERACTIONS_V2);
+  const orchestrator = asObject(ORCHESTRATOR_V1);
+  const defaults = asObject(orchestrator.defaults);
+  const rules = asRules(orchestrator.rules);
+  const enabled = orchestrator.enabled !== false;
 
   return {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControlAuthoring,
     generatedAt: nowIso(),
-    enabled: isInteractionsEnabled(INTERACTIONS_V2),
+    enabled,
     defaults,
     words: activeWords,
     spells: activeWords,
