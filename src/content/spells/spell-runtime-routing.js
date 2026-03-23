@@ -35,9 +35,9 @@ export const WAKE_WINDOW_WORD_IDS = Object.freeze(
   (Array.isArray(KWS_WAKE_WINDOW_WORD_IDS) ? KWS_WAKE_WINDOW_WORD_IDS : []).slice()
 );
 
-export const WORD_WINDOW_BYPASS_WORD_IDS = Object.freeze([
-  ...new Set([...AXIS_WORD_IDS, ...WAKE_WINDOW_WORD_IDS]),
-]);
+// Keep empty in strict-gated mode: axis + wake-window words are valid only
+// inside the active flat-spin dispatch window.
+export const WORD_WINDOW_BYPASS_WORD_IDS = Object.freeze([]);
 export const SPELL_WINDOW_BYPASS_WORD_IDS = WORD_WINDOW_BYPASS_WORD_IDS;
 
 // Immediate voice words that are owned by the rule engine path.

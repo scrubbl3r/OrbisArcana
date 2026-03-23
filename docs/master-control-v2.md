@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-23T05:37:53.830Z
+Generated: 2026-03-23T07:10:33.585Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
@@ -121,33 +121,6 @@ This document is generated from SSOT:
 ```json
 [
   {
-    "id": "r_fridgis_immediate",
-    "on": {
-      "word": "fridgis"
-    },
-    "trigger": {
-      "aoe_frost": true
-    }
-  },
-  {
-    "id": "r_electrum_immediate",
-    "on": {
-      "word": "electrum"
-    },
-    "trigger": {
-      "aoe_electric": true
-    }
-  },
-  {
-    "id": "r_pyro_immediate",
-    "on": {
-      "word": "pyro"
-    },
-    "trigger": {
-      "aoe_flame": true
-    }
-  },
-  {
     "id": "r_domus_immediate",
     "on": {
       "word": "domus"
@@ -187,7 +160,7 @@ This document is generated from SSOT:
 {
   "version": "1",
   "enabled": true,
-  "ruleCount": 5,
+  "ruleCount": 2,
   "parityWithOrchestratorRuleCount": true
 }
 ```

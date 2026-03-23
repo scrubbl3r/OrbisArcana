@@ -72,7 +72,7 @@ function main() {
   detectOutsideWindow({
     wordId: CHECK_SPELL_IDS_V2.pyro,
     intent: CHECK_SPELL_INTENTS_V2.axisSelect,
-    expectedReason: CHECK_REASONS_V2.ruleEngineOwnedImmediateSpell,
+    expectedReason: CHECK_REASONS_V2.spellWindowRequired,
   });
   detectInsideWindowAxisSelect();
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);

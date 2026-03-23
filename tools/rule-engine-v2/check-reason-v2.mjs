@@ -2,6 +2,7 @@
 // Reason helpers normalize non-object/non-string inputs to empty text safely.
 export const CHECK_REASONS_V2 = Object.freeze({
   ruleEngineOwnedImmediateSpell: "rule_engine_owned_immediate_spell",
+  spellWindowRequired: "spell_window_required",
   noAxisSelected: "no_axis_selected",
 });
 

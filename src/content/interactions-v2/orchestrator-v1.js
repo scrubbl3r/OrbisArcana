@@ -105,27 +105,6 @@ export const ORCHESTRATOR_V1 = Object.freeze({
   }),
   [FIELD_RULES]: Object.freeze([
     {
-      id: "r_fridgis_immediate",
-      on: { word: "fridgis" },
-      trigger: {
-        aoe_frost: true,
-      },
-    },
-    {
-      id: "r_electrum_immediate",
-      on: { word: "electrum" },
-      trigger: {
-        aoe_electric: true,
-      },
-    },
-    {
-      id: "r_pyro_immediate",
-      on: { word: "pyro" },
-      trigger: {
-        aoe_flame: true,
-      },
-    },
-    {
       id: "r_domus_immediate",
       on: { word: "domus" },
       trigger: {
