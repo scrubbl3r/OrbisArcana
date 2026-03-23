@@ -1,4 +1,4 @@
-// V2 wake-word inventory SSOT. 
+// V2 wake-word inventory SSOT.
 // This file intentionally contains only spell availability/recognition metadata.
 // Docs index: docs/rule-engine-v2-docs-index.md 
 
