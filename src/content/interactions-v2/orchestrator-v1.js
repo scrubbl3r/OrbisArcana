@@ -1,6 +1,7 @@
 const ORCHESTRATOR_V1_VERSION = "1";
 const FIELD_VERSION = "version";
 const FIELD_ENABLED = "enabled";
+const FIELD_AXIS = "axis";
 const FIELD_DEFAULTS = "defaults";
 const FIELD_RULES = "rules";
 const FIELD_KWS = "kws";
@@ -16,15 +17,16 @@ export const ORCHESTRATOR_V1_BOOTSTRAP = Object.freeze({
 export const ORCHESTRATOR_V1 = Object.freeze({
   [FIELD_VERSION]: ORCHESTRATOR_V1_VERSION,
   [FIELD_ENABLED]: true,
+  [FIELD_AXIS]: Object.freeze({
+    x: "fridgis",
+    y: "pyro",
+    z: "electrum",
+    other: Object.freeze([]),
+  }),
   [FIELD_KWS]: Object.freeze({
     wakeWords: Object.freeze(["orbis"]),
     standaloneWords: Object.freeze(["arcana", "are_kay_nah"]),
     wakeRequiredWords: Object.freeze(["domus"]),
-    axisWordsByAxis: Object.freeze({
-      x: "fridgis",
-      y: "pyro",
-      z: "electrum",
-    }),
     wakeWindowWords: Object.freeze(["rota", "sanctum", "vectus"]),
     rowTopWords: Object.freeze(["orbis", "arcana", "are_kay_nah", "domus", "fridgis", "pyro", "electrum"]),
     rowBottomWords: Object.freeze(["rota", "sanctum", "vectus"]),

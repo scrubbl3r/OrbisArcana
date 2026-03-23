@@ -142,6 +142,12 @@ Adoption path:
 
 Canonical authoring uses `word`/`words`. Legacy `spell`/`spells` inputs remain compatibility-only while migration completes.
 
+Canonical axis descriptor uses top-level `axis`:
+- `axis.x`, `axis.y`, `axis.z`
+- optional `axis.other` (word-id list)
+
+Legacy compatibility alias `kws.axisWordsByAxis` remains accepted during migration, but when both are present they must match.
+
 The current compiler/validator accepts ergonomic shorthand:
 
 - `on`:

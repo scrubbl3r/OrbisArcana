@@ -9,8 +9,8 @@ Related index:
 - Keep daily authoring in SSOT sources only.
 
 ## Authoring Sources (SSOT)
-- `src/content/interactions-v2/interactions-v2.js`
-  - Trigger/action chains (`rules`).
+- `src/content/interactions-v2/orchestrator-v1.js`
+  - Trigger/action chains (`rules`, `open`, `trigger`).
 - `src/content/interactions-v2/wordbook-v2.js`
   - Word inventory + `active` toggles.
   - Compatibility alias: `src/content/interactions-v2/spellbook-v2.js`
@@ -30,7 +30,7 @@ Related index:
   - Runtime bootstrap wiring for orchestrator + interactions adapter startup.
 
 ## Runtime Mode Status
-- Runtime rule source family: orchestrator-v2, orchestrator-v1, and interactions-adapter (selected by bootstrap policy + safety fallback)
+- Runtime rule source family: orchestrator-v2, orchestrator-v1, and legacy interactions-adapter fallback (selected by bootstrap policy + safety fallback)
 - Projection-only rule execution: enabled (`RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly: true`)
 - Drift gate: enforced by `npm run pre-smoke:v2`
 - Runtime source IDs (authoritative): `src/runtime/receiver-bootstrap.js`

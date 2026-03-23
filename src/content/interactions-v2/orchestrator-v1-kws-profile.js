@@ -33,23 +33,46 @@ function unique(values) {
   return Array.from(new Set(values));
 }
 
-function resolveAxisWordsByAxis(rawAxisMap, fallbackAxisMap) {
+function resolveAxisWordsByAxisFromRouting(source = ORCHESTRATOR_V1) {
+  const routingSection = (source && source.routing && typeof source.routing === "object")
+    ? source.routing
+    : Object.create(null);
+  const routingWords = Array.isArray(routingSection.words) ? routingSection.words : [];
+  const out = Object.create(null);
+  for (const rawEntry of routingWords) {
+    const entry = (rawEntry && typeof rawEntry === "object") ? rawEntry : Object.create(null);
+    const intent = normalizeWordId(entry.intent);
+    if (!intent || !intent.includes("axis_select")) continue;
+    const allowedAxes = Array.isArray(entry.allowedAxes)
+      ? unique(entry.allowedAxes.map((axis) => normalizeWordId(axis)).filter((axis) => ["x", "y", "z"].includes(axis)))
+      : [];
+    if (allowedAxes.length !== 1) continue;
+    const axis = allowedAxes[0];
+    const axisWordId = normalizeWordId(entry.axisWord || entry.axisSpell || entry.id);
+    if (!axisWordId || !Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, axisWordId)) continue;
+    if (!Object.hasOwn(out, axis)) out[axis] = axisWordId;
+  }
+  return Object.freeze(out);
+}
+
+function resolveAxisWordsByAxis(...axisMaps) {
   const out = Object.create(null);
   for (const axis of ["x", "y", "z"]) {
-    const preferredId = normalizeWordId(rawAxisMap && rawAxisMap[axis]);
-    const fallbackId = normalizeWordId(fallbackAxisMap && fallbackAxisMap[axis]);
-    if (preferredId && Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, preferredId)) {
-      out[axis] = preferredId;
-      continue;
-    }
-    if (fallbackId && Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, fallbackId)) {
-      out[axis] = fallbackId;
+    for (const axisMap of axisMaps) {
+      const candidateId = normalizeWordId(axisMap && axisMap[axis]);
+      if (candidateId && Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, candidateId)) {
+        out[axis] = candidateId;
+        break;
+      }
     }
   }
   return Object.freeze(out);
 }
 
 function resolveKwsProfile(source = ORCHESTRATOR_V1) {
+  const orchestratorAxis = (source && source.axis && typeof source.axis === "object")
+    ? source.axis
+    : Object.create(null);
   const orchestratorKws = (source && source.kws && typeof source.kws === "object")
     ? source.kws
     : Object.create(null);
@@ -63,6 +86,8 @@ function resolveKwsProfile(source = ORCHESTRATOR_V1) {
     asWordIds(orchestratorKws.wakeRequiredWords).concat(asWordIds(DEFAULT_PROFILE.wakeRequiredWords))
   );
   const axisWordsByAxis = resolveAxisWordsByAxis(
+    orchestratorAxis,
+    resolveAxisWordsByAxisFromRouting(source),
     orchestratorKws.axisWordsByAxis,
     DEFAULT_PROFILE.axisWordsByAxis
   );

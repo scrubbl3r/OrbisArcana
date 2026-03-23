@@ -35,6 +35,7 @@ const DEFAULTS_CONTEXT = `${ROOT_CONTEXT}.defaults`;
 const DEFAULTS_OPEN_CONTEXT = `${DEFAULTS_CONTEXT}.open`;
 const DEFAULTS_TRIGGER_CONTEXT = `${DEFAULTS_CONTEXT}.trigger`;
 const DEFAULTS_RULE_CONTEXT = `${DEFAULTS_CONTEXT}.rule`;
+const AXIS_CONTEXT = `${ROOT_CONTEXT}.axis`;
 const KWS_CONTEXT = `${ROOT_CONTEXT}.kws`;
 const ROUTING_CONTEXT = `${ROOT_CONTEXT}.routing`;
 const signalDefsById = ((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
@@ -311,12 +312,85 @@ function validateKwsAxisWordsByAxis(errors, kwsConfig) {
   }
 }
 
+function validateLegacyKwsAxisCompatibility(errors, orchestratorConfig) {
+  const axisSection = asObj(orchestratorConfig.axis);
+  const kwsSection = asObj(orchestratorConfig.kws);
+  if (!Object.hasOwn(axisSection, "x")
+    && !Object.hasOwn(axisSection, "y")
+    && !Object.hasOwn(axisSection, "z")) {
+    return;
+  }
+  if (!Object.hasOwn(kwsSection, "axisWordsByAxis")) return;
+  const legacyAxisWordsByAxis = asObj(kwsSection.axisWordsByAxis);
+  for (const axis of ["x", "y", "z"]) {
+    if (!Object.hasOwn(axisSection, axis) || !Object.hasOwn(legacyAxisWordsByAxis, axis)) continue;
+    const canonicalAxisWordId = normalizeSpellId(axisSection[axis]);
+    const legacyAxisWordId = normalizeSpellId(legacyAxisWordsByAxis[axis]);
+    if (!canonicalAxisWordId || !legacyAxisWordId) continue;
+    if (canonicalAxisWordId !== legacyAxisWordId) {
+      errors.push(
+        `${KWS_CONTEXT}.axisWordsByAxis.${axis} compatibility alias must match ${AXIS_CONTEXT}.${axis}`
+      );
+    }
+  }
+}
+
 function isValidAxis(value) {
   return ["x", "y", "z"].includes(asText(value).toLowerCase());
 }
 
 function isValidSlot(value) {
   return ["UD", "LR", "FB"].includes(asText(value).toUpperCase());
+}
+
+function validateAxisSection(errors, axisSection) {
+  pushUnsupportedKeys(errors, AXIS_CONTEXT, axisSection, new Set(["x", "y", "z", "other"]));
+  const axisWordByAxis = Object.create(null);
+  for (const axis of ["x", "y", "z"]) {
+    if (!Object.hasOwn(axisSection, axis)) continue;
+    const axisWordId = asText(axisSection[axis]).toLowerCase();
+    if (!axisWordId) {
+      errors.push(`${AXIS_CONTEXT}.${axis} must be a non-empty word id when present`);
+      continue;
+    }
+    const normalizedAxisWordId = normalizeSpellId(axisWordId);
+    if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedAxisWordId)) {
+      errors.push(`${AXIS_CONTEXT}.${axis} references inactive or unknown word id: ${axisSection[axis]}`);
+      continue;
+    }
+    axisWordByAxis[axis] = normalizedAxisWordId;
+  }
+  const axisWords = Object.values(axisWordByAxis);
+  if (new Set(axisWords).size !== axisWords.length) {
+    errors.push(`${AXIS_CONTEXT} must not reuse the same word id across x/y/z`);
+  }
+  if (Object.hasOwn(axisSection, "other")) {
+    if (!Array.isArray(axisSection.other)) {
+      errors.push(`${AXIS_CONTEXT}.other must be an array when present`);
+      return;
+    }
+    const seenOther = new Set();
+    for (let index = 0; index < axisSection.other.length; index += 1) {
+      const rawOtherWordId = axisSection.other[index];
+      const otherWordId = normalizeSpellId(rawOtherWordId);
+      if (!otherWordId) {
+        errors.push(`${AXIS_CONTEXT}.other[${index}] must be a non-empty word id`);
+        continue;
+      }
+      if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, otherWordId)) {
+        errors.push(`${AXIS_CONTEXT}.other[${index}] references inactive or unknown word id: ${rawOtherWordId}`);
+        continue;
+      }
+      if (seenOther.has(otherWordId)) {
+        errors.push(`${AXIS_CONTEXT}.other contains duplicate word id: ${rawOtherWordId}`);
+        continue;
+      }
+      seenOther.add(otherWordId);
+      if (axisWords.includes(otherWordId)) {
+        errors.push(`${AXIS_CONTEXT}.other includes x/y/z axis word id: ${rawOtherWordId}`);
+      }
+    }
+  }
 }
 
 function validateRoutingWords(errors, routingSection) {
@@ -405,7 +479,7 @@ function validateRoutingWords(errors, routingSection) {
 export function validateOrchestratorV1(orchestratorInput) {
   const errors = [];
   const orchestratorConfig = asObj(orchestratorInput);
-  pushUnsupportedKeys(errors, ROOT_CONTEXT, orchestratorConfig, new Set(["version", "enabled", "kws", "routing", "defaults", "rules"]));
+  pushUnsupportedKeys(errors, ROOT_CONTEXT, orchestratorConfig, new Set(["version", "enabled", "axis", "kws", "routing", "defaults", "rules"]));
   if (asText(orchestratorConfig.version) !== "1") {
     errors.push(`${ROOT_CONTEXT}.version must be "1"`);
   }
@@ -416,6 +490,9 @@ export function validateOrchestratorV1(orchestratorInput) {
     errors.push(`${ROOT_CONTEXT}.rules must be an array`);
     return errors;
   }
+  validateOptionalObjectSection(orchestratorConfig, "axis", (axisSection) => {
+    validateAxisSection(errors, axisSection);
+  });
   validateOptionalObjectSection(orchestratorConfig, "kws", (kwsSection) => {
     pushUnsupportedKeys(
       errors,
@@ -450,6 +527,7 @@ export function validateOrchestratorV1(orchestratorInput) {
       }
     }
   });
+  validateLegacyKwsAxisCompatibility(errors, orchestratorConfig);
   validateOptionalObjectSection(orchestratorConfig, "routing", (routingSection) => {
     pushUnsupportedKeys(errors, ROUTING_CONTEXT, routingSection, new Set(["words"]));
     validateRoutingWords(errors, routingSection);

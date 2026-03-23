@@ -5,9 +5,11 @@ Related index:
 
 
 ## Daily Authoring Files (Primary)
-- `src/content/interactions-v2/interactions-v2.js`
+- `src/content/interactions-v2/orchestrator-v1.js`
   - Edit trigger/action chains here (`rules`).
   - This is the behavior SSOT source.
+  - Canonical axis descriptor lives at top-level `axis` (`axis.x`, `axis.y`, `axis.z`, optional `axis.other`).
+  - Legacy compatibility alias `kws.axisWordsByAxis` is supported during migration only.
 - `src/content/interactions-v2/wordbook-v2.js`
   - Edit word inventory and `active` toggles here.
   - This is the wake-word inventory SSOT source.
@@ -27,9 +29,9 @@ Related index:
 - `src/voice/spellbook.js` (compatibility alias runtime view)
 
 ## Runtime Switches
-- `INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap`
-  - Location: `src/content/interactions-v2/interactions-v2.js`
-  - Purpose: Must remain `true`; otherwise runtime enters safe-disabled mode.
+- `ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap`
+  - Location: `src/content/interactions-v2/orchestrator-v1.js`
+  - Purpose: Enables orchestrator-v1 bootstrap in receiver fallback/precedence flow.
 - `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`
   - Purpose: Require projected/runtime rules as the active rule source (must remain `true`).
@@ -39,15 +41,15 @@ Related index:
 - Canonical list and semantics: `docs/rule-engine-compatibility.md` (Runtime Mode Status).
 
 ## Authoring Rule of Thumb
-- If you are changing gameplay interaction logic, edit `interactions-v2.js`.
+- If you are changing gameplay interaction logic, edit `orchestrator-v1.js`.
 - If you are enabling/disabling words, edit `wordbook-v2.js` (compatibility alias: `spellbook-v2.js`).
 - Avoid editing runtime integration files unless you are doing intentional system/runtime wiring work.
 
 ## Quick Health Checks
 - `npm run pre-smoke:v2`
-  - Validates interactions config and regenerates effective snapshot.
+  - Validates orchestrator/wordbook config and regenerates effective snapshot.
 - `npm run report-drift:v2`
-  - Prints differences between projected runtime rules and effective interactions.
+  - Prints projection drift details when interactions projection checks are enabled.
 - `npm run doctor:v2`
   - Runs pre-smoke and prints concise SSOT health summary.
   - Output file: `docs/rule-engine-v2.health.json`.

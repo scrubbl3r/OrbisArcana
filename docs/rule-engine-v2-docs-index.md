@@ -1,7 +1,7 @@
 # Rule Engine v2 Docs Index
 
 ## Quick Start
-1. Edit behavior rules in `src/content/interactions-v2/interactions-v2.js`.
+1. Edit behavior rules in `src/content/interactions-v2/orchestrator-v1.js`.
 2. Edit wake-word inventory in `src/content/interactions-v2/wordbook-v2.js` (compatibility alias: `spellbook-v2.js`).
 3. Run `npm run ready:v2` for validation + health checks.
 4. Use **Before Push Checklist** below for push-time smoke requirements.
@@ -19,7 +19,7 @@
 
 ## File Ownership Map
 - Authoring sources (edit directly):
-  - `src/content/interactions-v2/interactions-v2.js`
+  - `src/content/interactions-v2/orchestrator-v1.js`
   - `src/content/interactions-v2/wordbook-v2.js`
   - compatibility alias: `src/content/interactions-v2/spellbook-v2.js`
 - Runtime integration/config surfaces (edit only for runtime/system work):
@@ -64,7 +64,7 @@
   - Suggested spell checks: `orbis+domus`, `pyro+rota`, `fridgis+sanctum`
 
 ## Before Push Checklist
-1. Authoring edits only in SSOT files (`interactions-v2.js`, `wordbook-v2.js`; compatibility alias `spellbook-v2.js`) unless doing intentional plumbing.
+1. Authoring edits only in SSOT files (`orchestrator-v1.js`, `wordbook-v2.js`; compatibility alias `spellbook-v2.js`) unless doing intentional plumbing.
 2. `npm run ready:v2` passes.
 3. `npm run smoke:milestone:v2` passes.
 4. If KWS-related changes were made, use **Troubleshooting Quick Map**, `KWS: init failed or token detection stalls`.
@@ -90,7 +90,7 @@
   - edit `src/content/interactions-v2/wordbook-v2.js` -> set `active: true|false`.
   - compatibility alias path: `src/content/interactions-v2/spellbook-v2.js`.
 - Add a new interaction chain:
-  - edit `src/content/interactions-v2/interactions-v2.js` -> add a `rules[]` entry with `on` + `then`.
+  - edit `src/content/interactions-v2/orchestrator-v1.js` -> add a `rules[]` entry with `on` + `open` + `trigger`.
 - Change default behavior for all instances of an event/window:
   - edit `src/content/spell-rules/rule-engine-master-control.js` -> default/override maps.
 - Tune one event instance without global changes:
