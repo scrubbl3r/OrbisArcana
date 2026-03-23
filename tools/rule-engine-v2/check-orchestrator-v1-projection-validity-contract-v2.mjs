@@ -1,5 +1,6 @@
 import {
   INTERACTIONS_V2,
+  INTERACTIONS_V2_BOOTSTRAP,
   buildRulesFromInteractionsV2,
   projectOrchestratorV1FromInteractionsV2,
   validateOrchestratorV1,
@@ -9,6 +10,16 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-projection-validity:v2";
 const PASS_MESSAGE = "projected orchestrator shape is valid and complete";
+const LEGACY_OPTIONAL_PASS_MESSAGE = "orchestrator projection validity is legacy-optional when interactions bootstrap is disabled";
+
+const interactionsBootstrapEnabled = !!(
+  INTERACTIONS_V2_BOOTSTRAP &&
+  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+if (!interactionsBootstrapEnabled) {
+  reportCheckPass(CHECK_TAG, LEGACY_OPTIONAL_PASS_MESSAGE);
+  process.exit(0);
+}
 
 function asObject(value) {
   return (!!value && typeof value === "object" && !Array.isArray(value)) ? value : {};

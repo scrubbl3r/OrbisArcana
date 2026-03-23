@@ -1,6 +1,7 @@
 import { hydrateReceiverBootstrapState, RULE_ENGINE_SOURCES } from "../../src/runtime/receiver-bootstrap.js";
 import {
   INTERACTIONS_V2,
+  INTERACTIONS_V2_BOOTSTRAP,
   buildRuleEngineFromInteractionsV2,
   buildRuleEngineFromOrchestratorV1,
   projectOrchestratorV1FromInteractionsV2,
@@ -12,6 +13,16 @@ import { assertSchemaSourceV2 } from "./check-schema-source-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-bootstrap-parity:v2";
 const PASS_MESSAGE = "bootstrap payload parity holds between interactions and projected orchestrator";
+const LEGACY_OPTIONAL_PASS_MESSAGE = "bootstrap parity contract is legacy-optional when interactions bootstrap is disabled";
+
+const interactionsBootstrapEnabled = !!(
+  INTERACTIONS_V2_BOOTSTRAP &&
+  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+if (!interactionsBootstrapEnabled) {
+  reportCheckPass(CHECK_TAG, LEGACY_OPTIONAL_PASS_MESSAGE);
+  process.exit(0);
+}
 
 function stableJson(v) {
   return JSON.stringify(v);

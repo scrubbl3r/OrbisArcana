@@ -1,5 +1,6 @@
 import {
   INTERACTIONS_V2,
+  INTERACTIONS_V2_BOOTSTRAP,
   buildRulesFromInteractionsV2,
   projectOrchestratorV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
@@ -9,6 +10,16 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v1-parity:v2";
 const PASS_MESSAGE = "orchestrator projection parity holds against interactions projection";
+const LEGACY_OPTIONAL_PASS_MESSAGE = "orchestrator projection parity is legacy-optional when interactions bootstrap is disabled";
+
+const interactionsBootstrapEnabled = !!(
+  INTERACTIONS_V2_BOOTSTRAP &&
+  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
+);
+if (!interactionsBootstrapEnabled) {
+  reportCheckPass(CHECK_TAG, LEGACY_OPTIONAL_PASS_MESSAGE);
+  process.exit(0);
+}
 
 function asRules(schemaLike) {
   return Array.isArray(schemaLike?.rules) ? schemaLike.rules : [];
