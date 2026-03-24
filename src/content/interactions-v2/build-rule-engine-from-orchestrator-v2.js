@@ -1,5 +1,6 @@
 import { ORCHESTRATOR_V2 } from "./orchestrator-v2.js";
 import { validateOrchestratorV2 } from "./validate-orchestrator-v2.js";
+import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import {
   asArray,
   asObj,
@@ -252,12 +253,19 @@ export function buildRuleEngineFromOrchestratorV2(options = {}) {
   const safeOptions = asObj(options);
   const orchestratorV2 = asObj(safeOptions[FIELD_ORCHESTRATOR_V2] || ORCHESTRATOR_V2);
   const baseRuleEngine = asObj(safeOptions[FIELD_BASE_RULE_ENGINE]);
+  const baseEventRuntimeBindings = asObj(baseRuleEngine.eventRuntimeBindings);
   const rules = buildCompiledRules(orchestratorV2);
   const groups = asObj(orchestratorV2[FIELD_GROUPS]);
   const wake = compileWakeSection(orchestratorV2[FIELD_WAKE], groups);
   return Object.freeze({
     ...baseRuleEngine,
     [FIELD_ENABLED]: orchestratorV2[FIELD_ENABLED] !== ENABLED_FALSE,
+    eventRuntimeBindings: Object.freeze({
+      ...(EVENT_RUNTIME_BINDINGS_BY_ID && typeof EVENT_RUNTIME_BINDINGS_BY_ID === "object"
+        ? EVENT_RUNTIME_BINDINGS_BY_ID
+        : Object.create(null)),
+      ...baseEventRuntimeBindings,
+    }),
     ...(wake ? { [FIELD_WAKE]: wake } : {}),
     [FIELD_RULES]: Object.freeze(rules),
   });
