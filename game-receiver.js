@@ -1241,8 +1241,10 @@
     let ruleEngineSourceReadout = DEFAULT_RULE_ENGINE_SOURCE_READOUT;
     const RULE_ENGINE_ACTION_EXECUTED_EVENT = "rule_engine.action_executed";
     const RULE_ENGINE_WAKE_WIN_OPENED_EVENT = "rule_engine.wake_win_opened";
+    const RULE_ENGINE_PREVIEW_MATCHED_EVENT = "rule_engine.preview_matched";
     const RULE_ENGINE_TRIGGER = "rule_engine";
     const RULE_ENGINE_EXECUTE_ACTIONS = true;
+    const RULE_CHAIN_TRACE_ENABLED = true;
     let bubbleShieldRuntime = null;
     let shockwaveRuntime = null;
     let orbShatterRuntime = null;
@@ -2315,6 +2317,44 @@
           }
         };
         eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, onRuleEngineActionExecuted);
+        if (RULE_CHAIN_TRACE_ENABLED) {
+          eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
+            const token = String(p.token || "").trim().toLowerCase();
+            if (!token) return;
+            if (token === "orbis" || token === "are kay nah" || token === "are_kay_nah") {
+              kwsBridge.pushLogLine(`TRACE token:${token}`, "muted");
+            }
+          });
+          eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
+            const wordId = String((p.word && p.word.id) || (p.spell && p.spell.id) || p.wordId || p.spellId || "")
+              .trim()
+              .toLowerCase();
+            if (!wordId) return;
+            if (wordId === "orbis" || wordId === "domus") {
+              kwsBridge.pushLogLine(`TRACE word:${wordId}`, "muted");
+            }
+          });
+          eventBus.on(RULE_ENGINE_PREVIEW_MATCHED_EVENT, (p = {}) => {
+            const ruleId = String(p.ruleId || "").trim().toLowerCase();
+            if (ruleId === "wake_main" || ruleId === "tele_home") {
+              kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
+            }
+          });
+          eventBus.on(RULE_ENGINE_WAKE_WIN_OPENED_EVENT, (p = {}) => {
+            const actionId = String(p.actionId || "").trim().toLowerCase();
+            const ruleId = String(p.ruleId || "").trim().toLowerCase();
+            if (ruleId === "wake_main") {
+              kwsBridge.pushLogLine(`TRACE wake_open:${actionId || "wake.main"}`, "ok");
+            }
+          });
+          eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, (p = {}) => {
+            const actionType = String(p.actionType || "").trim().toLowerCase();
+            const actionId = String(p.actionId || "").trim().toLowerCase();
+            if (actionType === "event" && actionId === "teleport_home") {
+              kwsBridge.pushLogLine("TRACE action:event:teleport_home", "ok");
+            }
+          });
+        }
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
