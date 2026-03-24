@@ -119,8 +119,14 @@ function buildDerivedRuntimeProfileV2() {
     const refs = asSelectorList(rule && rule.requires);
     return refs.length > 0;
   });
+  const wakeMainRequiredRules = rulesWithRequires.filter((rule) => {
+    const refs = asSelectorList(rule && rule.requires)
+      .map((refRaw) => String(refRaw || "").trim().toLowerCase())
+      .filter(Boolean);
+    return refs.includes("wake.main");
+  });
   const wakeRequiredWordIds = uniqueWordIds(
-    rulesWithRequires.flatMap((rule) => collectRuleOnWordIds(rule))
+    wakeMainRequiredRules.flatMap((rule) => collectRuleOnWordIds(rule))
   );
   const allOnWordIds = uniqueWordIds(
     collectRulesByPredicate(() => true).flatMap((rule) => collectRuleOnWordIds(rule))
