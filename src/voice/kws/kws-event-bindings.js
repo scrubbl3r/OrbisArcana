@@ -68,6 +68,14 @@ export function bindKwsEventHandlers({
   const unsub = [];
   const getWordIdFromPayload = (p = {}) => String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
   const getAxisWordFromPayload = (p = {}) => String((p.axisWord ?? p.axisSpell) || "").trim().toLowerCase();
+  const getDetectedWordId = (p = {}) => {
+    const direct = String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
+    if (direct) return direct;
+    const nestedWord = String(p?.word?.id || "").trim().toLowerCase();
+    if (nestedWord) return nestedWord;
+    const nestedSpell = String(p?.spell?.id || "").trim().toLowerCase();
+    return nestedSpell;
+  };
 
   unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
     const token = canonicalKwsToken(p.token);
@@ -90,6 +98,25 @@ export function bindKwsEventHandlers({
     }
     if (shouldLogHeardWakeword(token)) pushKwsLogLine(token);
     updateKwsReadout();
+  }));
+
+  // Bridge providers that emit only `voice.word_detected` for wake words:
+  // open wake windows by mirroring them into canonical token events.
+  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
+    const wordId = getDetectedWordId(p);
+    if (!wakeWordIds.has(wordId)) return;
+    const phrase = String((ACTIVE_WORDS_BY_ID[wordId] && ACTIVE_WORDS_BY_ID[wordId].phrase) || wordId)
+      .trim()
+      .toLowerCase();
+    const token = canonicalKwsToken(phrase);
+    if (!token) return;
+    eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, {
+      token,
+      confidence: Number.isFinite(Number(p.confidence)) ? Number(p.confidence) : 1,
+      atMs: Number.isFinite(Number(p.atMs)) ? Number(p.atMs) : Date.now(),
+      providerId: String(p.providerId || p.source || "word_bridge"),
+      source: "word_bridge",
+    });
   }));
 
   unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
