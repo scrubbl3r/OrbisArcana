@@ -2405,7 +2405,7 @@
               .trim()
               .toLowerCase();
             if (!wordId) return;
-            if (wordId === "orbis" || wordId === "domus" || wordId === "electrum" || wordId === "rota") {
+            if (wordId === "orbis" || wordId === "domus" || wordId === "electrum" || wordId === "pyro" || wordId === "rota") {
               kwsBridge.pushLogLine(`TRACE word:${wordId}`, "muted");
             }
           });
@@ -2415,7 +2415,9 @@
               ruleId === "wake_main" ||
               ruleId === "tele_home" ||
               ruleId === "electric_aoe" ||
-              ruleId === "electric_aoe_cast"
+              ruleId === "electric_aoe_cast" ||
+              ruleId === "spin_y_opens_pyro" ||
+              ruleId === "spin_y_pyro_rota_bind_fb"
             ) {
               kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
             }
@@ -2426,6 +2428,10 @@
             if (ruleId === "wake_main") {
               kwsBridge.pushLogLine(`TRACE wake_open:${actionId || "wake.main"}`, "ok");
             }
+            if (ruleId === "spin_y_opens_pyro") {
+              const windowId = String(p.windowId || "").trim().toLowerCase() || "school.pyro_spin";
+              kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
+            }
           });
           eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, (p = {}) => {
             const actionType = String(p.actionType || "").trim().toLowerCase();
@@ -2435,6 +2441,9 @@
             }
             if (actionType === "event" && actionId === "aoe_electric") {
               kwsBridge.pushLogLine("TRACE action:event:aoe_electric", "ok");
+            }
+            if (actionType === "event" && actionId === "spell_load_fb") {
+              kwsBridge.pushLogLine("TRACE action:event:spell_load_fb", "ok");
             }
           });
         }
