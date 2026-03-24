@@ -2301,6 +2301,14 @@
           }
           if (actionType !== "event") return;
           const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
+          // Direct runtime fallback for canonical tele_home action path.
+          // Keeps behavior stable even if cast-action binding lookup drifts.
+          if (actionId === "teleport_home") {
+            teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
+            grantFloatGrace(DOMUS_FLOAT_GRACE_MS);
+            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE exec:teleport_home:direct", "ok");
+            return;
+          }
           const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
             ? ruleSchema.eventRuntimeBindings
             : Object.create(null);
@@ -2312,7 +2320,7 @@
           if (kind === "cast_action") {
             const castActionId = String(runtime && runtime.castActionId || "");
             if (!castActionId) return;
-            executeWordCastAction(castActionId, {
+            const execResult = executeWordCastAction(castActionId, {
               intent: "rule_engine.event",
               payload: {
                 trigger: RULE_ENGINE_TRIGGER,
@@ -2322,6 +2330,10 @@
                 ...args,
               },
             });
+            if (RULE_CHAIN_TRACE_ENABLED && actionId === "teleport_home") {
+              const handled = !!(execResult && execResult.handled);
+              kwsBridge.pushLogLine(`TRACE exec:teleport_home:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
+            }
             return;
           }
           if (kind === "orb_event") {
