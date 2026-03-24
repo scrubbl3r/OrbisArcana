@@ -22,12 +22,14 @@ export const DREAM_CONFIG_V2 = {
       open: { id: "wake.main", words: ["domus", "electrum", "pyro", "fridgis"], ttlMs: 2000 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 2000 },
     },
+    // TELEPORT HOME
     {
       id: "tele_home",
       on: { word: "domus" },
       requires: "wake.main",
       trigger: { spell: "teleport_home" },
     },
+    // ELECTRIC AOE CHAIN
     {
       id: "electric_aoe",
       on: { word: "electrum" },
@@ -40,6 +42,7 @@ export const DREAM_CONFIG_V2 = {
       requires: "school.electrum",
       trigger: { spell: "aoe_electric" },
     },
+    // PYRO AOE CHAIN
     {
       id: "spin_y_opens_pyro",
       on: { gesture: "spin_y", orb_state: "charged" },
@@ -57,42 +60,7 @@ export const DREAM_CONFIG_V2 = {
       requires: "school.pyro_spin",
       bind: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" },
     },
-    {
-      id: "school_fridgis",
-      on: { word: "fridgis" },
-      requires: "wake.main",
-      open: { id: "school.fridgis", words: "@school_words", ttlMs: 2000 },
-    },
-    {
-      id: "fridgis_rota_load_ud",
-      on: { word: "rota" },
-      requires: "school.fridgis",
-      bind: { spell: "aoe_frost", axisWord: "fridgis", slot: "UD" },
-    },
-    {
-      id: "fridgis_sanctum_load_lr",
-      on: { word: "sanctum" },
-      requires: "school.fridgis",
-      bind: { spell: "aoe_frost", axisWord: "fridgis", slot: "LR" },
-    },
-    {
-      id: "fridgis_vectus_load_fb",
-      on: { word: "vectus" },
-      requires: "school.fridgis",
-      bind: { spell: "aoe_frost", axisWord: "fridgis", slot: "FB" },
-    },
-    {
-      id: "electrum_sanctum_load_lr",
-      on: { word: "sanctum" },
-      requires: "school.electrum",
-      bind: { spell: "aoe_electric", axisWord: "electrum", slot: "LR" },
-    },
-    {
-      id: "electrum_vectus_load_fb",
-      on: { word: "vectus" },
-      requires: "school.electrum",
-      bind: { spell: "aoe_electric", axisWord: "electrum", slot: "FB" },
-    },
+    // SHOCKWAVE
     {
       id: "shake_ud_cast",
       on: { gesture: "shake_ud" },
