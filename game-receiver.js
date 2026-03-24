@@ -2364,10 +2364,26 @@
         let electricFallbackWakeUntilMs = 0;
         let electricFallbackWindowUntilMs = 0;
         let electricFallbackLastEmitMs = 0;
+        // Receiver-side safety bridge for `spin_y + charged + rota -> spell_load_fb`.
+        let pyroSpinWindowUntilMs = 0;
+        let pyroChargedUntilMs = 0;
+        let pyroFallbackLastEmitMs = 0;
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
           const token = String(p.token || "").trim().toLowerCase();
           if (token !== "orbis") return;
           electricFallbackWakeUntilMs = Date.now() + 2000;
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
+          const axis = String(p.axis || "").trim().toLowerCase();
+          if (axis !== "y") return;
+          pyroSpinWindowUntilMs = Date.now() + 1500;
+          if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:spin_y_open", "muted");
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_GRANT, (p = {}) => {
+          const ms = Math.max(0, Number(p.ms) || 0);
+          if (ms <= 0) return;
+          pyroChargedUntilMs = Date.now() + ms;
+          if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine(`TRACE src:charged:${ms}`, "muted");
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
           const now = Date.now();
@@ -2391,6 +2407,27 @@
             atMs: now,
           });
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE fallback:electric_aoe:receiver", "ok");
+
+          return;
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
+          const now = Date.now();
+          const wordId = String((p.word && p.word.id) || (p.spell && p.spell.id) || p.wordId || p.spellId || "")
+            .trim()
+            .toLowerCase();
+          if (wordId !== "rota") return;
+          if (now > pyroSpinWindowUntilMs) return;
+          if (now > pyroChargedUntilMs) return;
+          if ((now - pyroFallbackLastEmitMs) < 250) return;
+          pyroFallbackLastEmitMs = now;
+          eventBus.emit(RULE_ENGINE_ACTION_EXECUTED_EVENT, {
+            ruleId: "pyro_bind_fb_fallback_receiver",
+            actionType: "event",
+            actionId: "spell_load_fb",
+            args: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" },
+            atMs: now,
+          });
+          if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE fallback:pyro_bind_fb:receiver", "ok");
         });
         if (RULE_CHAIN_TRACE_ENABLED) {
           eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
