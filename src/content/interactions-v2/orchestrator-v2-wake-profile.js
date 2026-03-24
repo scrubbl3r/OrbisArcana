@@ -39,4 +39,14 @@ function asWakeWords(wakeRaw) {
   );
 }
 
+function asWakeTtlMs(wakeRaw) {
+  const wakeObj = (wakeRaw && typeof wakeRaw === "object" && !Array.isArray(wakeRaw))
+    ? wakeRaw
+    : null;
+  const ttlMs = Number(wakeObj && wakeObj.ttlMs);
+  if (!Number.isFinite(ttlMs) || ttlMs < 0) return 0;
+  return ttlMs;
+}
+
 export const ORCHESTRATOR_V2_WAKE_WORD_IDS = Object.freeze(asWakeWords(ORCHESTRATOR_V2.wake));
+export const ORCHESTRATOR_V2_WAKE_TTL_MS = asWakeTtlMs(ORCHESTRATOR_V2.wake);
