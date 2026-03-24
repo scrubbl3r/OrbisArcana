@@ -15,6 +15,29 @@ function getByPath(obj, path) {
   return cur;
 }
 
+function resolveWhereValue(payload, path) {
+  const value = getByPath(payload, path);
+  if (value != null && value !== "") return value;
+  const normalizedPath = String(path || "").trim().toLowerCase();
+  if (normalizedPath === "word.id") {
+    return (
+      getByPath(payload, "spell.id")
+      ?? getByPath(payload, "wordId")
+      ?? getByPath(payload, "spellId")
+      ?? getByPath(payload, "id")
+    );
+  }
+  if (normalizedPath === "token") {
+    return (
+      getByPath(payload, "token")
+      ?? getByPath(payload, "transcript")
+      ?? getByPath(payload, "word.phrase")
+      ?? getByPath(payload, "spell.phrase")
+    );
+  }
+  return value;
+}
+
 function norm(v) {
   return String(v || "").trim().toLowerCase();
 }
@@ -46,7 +69,7 @@ function resolveActionArgOverride(ruleId, action, index, overrides = {}) {
 function signalMatchesPayload(signal, payload = {}) {
   const where = signal && signal.where;
   if (!where || typeof where !== "object") return true;
-  const value = getByPath(payload, where.path);
+  const value = resolveWhereValue(payload, where.path);
   if (Object.prototype.hasOwnProperty.call(where, "eq")) {
     return norm(value) === norm(where.eq);
   }
