@@ -2306,6 +2306,11 @@
           }
           if (actionType !== "event") return;
           const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
+          if (actionId === "aoe_electric") {
+            playElectricAoe();
+            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE exec:aoe_electric:direct", "ok");
+            return;
+          }
           // Direct runtime fallback for canonical tele_home action path.
           // Keeps behavior stable even if cast-action binding lookup drifts.
           if (actionId === "teleport_home") {
@@ -2335,9 +2340,9 @@
                 ...args,
               },
             });
-            if (RULE_CHAIN_TRACE_ENABLED && actionId === "teleport_home") {
+            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "teleport_home" || actionId === "aoe_electric")) {
               const handled = !!(execResult && execResult.handled);
-              kwsBridge.pushLogLine(`TRACE exec:teleport_home:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
+              kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
             }
             return;
           }
@@ -2367,13 +2372,18 @@
               .trim()
               .toLowerCase();
             if (!wordId) return;
-            if (wordId === "orbis" || wordId === "domus") {
+            if (wordId === "orbis" || wordId === "domus" || wordId === "electrum" || wordId === "rota") {
               kwsBridge.pushLogLine(`TRACE word:${wordId}`, "muted");
             }
           });
           eventBus.on(RULE_ENGINE_PREVIEW_MATCHED_EVENT, (p = {}) => {
             const ruleId = String(p.ruleId || "").trim().toLowerCase();
-            if (ruleId === "wake_main" || ruleId === "tele_home") {
+            if (
+              ruleId === "wake_main" ||
+              ruleId === "tele_home" ||
+              ruleId === "electric_aoe" ||
+              ruleId === "electric_aoe_cast"
+            ) {
               kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
             }
           });
@@ -2389,6 +2399,9 @@
             const actionId = String(p.actionId || "").trim().toLowerCase();
             if (actionType === "event" && actionId === "teleport_home") {
               kwsBridge.pushLogLine("TRACE action:event:teleport_home", "ok");
+            }
+            if (actionType === "event" && actionId === "aoe_electric") {
+              kwsBridge.pushLogLine("TRACE action:event:aoe_electric", "ok");
             }
           });
         }
