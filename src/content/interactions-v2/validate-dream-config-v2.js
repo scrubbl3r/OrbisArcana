@@ -19,7 +19,7 @@ const ALLOWED_RULE_KEYS = new Set([
 ]);
 const ALLOWED_ON_KEYS = new Set(["word", "spell", "gesture", "orb_state"]);
 const ALLOWED_OPEN_KEYS = new Set(["id", "words", "word", "spells", "ttlMs", "enabled"]);
-const ALLOWED_BIND_KEYS = new Set(["spell", "slot", "axisWord"]);
+const ALLOWED_BIND_KEYS = new Set(["spell", "slot"]);
 const LEGACY_BIND_EVENT_IDS = new Set(["spell_load_ud", "spell_load_lr", "spell_load_fb"]);
 
 function asArray(v) {
@@ -198,8 +198,8 @@ export function validateDreamConfigV2(dreamConfig) {
       } else if (!["UD", "LR", "FB"].includes(slotId)) {
         errors.push(`${ruleContext}.bind.slot must be one of UD, LR, FB`);
       }
-      if (Object.hasOwn(bind, "axisWord") && typeof bind.axisWord !== "string") {
-        errors.push(`${ruleContext}.bind.axisWord must be a string when present`);
+      if (Object.hasOwn(bind, "axisWord")) {
+        errors.push(`${ruleContext}.bind.axisWord is not allowed; axis provenance is inferred from bind.spell`);
       }
     }
     if (Object.hasOwn(rule, "trigger") && hasLegacyBindTriggerAuthoring(rule.trigger)) {

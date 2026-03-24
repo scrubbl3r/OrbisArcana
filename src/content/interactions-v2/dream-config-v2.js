@@ -58,7 +58,7 @@ export const DREAM_CONFIG_V2 = {
       id: "spin_y_pyro_rota_bind_fb",
       on: { word: "rota" },
       requires: "school.pyro_spin",
-      bind: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" },
+      bind: { spell: "aoe_flame", slot: "FB" },
     },
     // SHOCKWAVE
     {

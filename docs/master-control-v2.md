@@ -225,7 +225,6 @@ This document is generated from SSOT:
       "requires": "school.pyro_spin",
       "bind": {
         "spell": "aoe_flame",
-        "axisWord": "pyro",
         "slot": "FB"
       }
     },
@@ -249,7 +248,6 @@ This document is generated from SSOT:
       "requires": "school.fridgis",
       "bind": {
         "spell": "aoe_frost",
-        "axisWord": "fridgis",
         "slot": "UD"
       }
     },
@@ -261,7 +259,6 @@ This document is generated from SSOT:
       "requires": "school.fridgis",
       "bind": {
         "spell": "aoe_frost",
-        "axisWord": "fridgis",
         "slot": "LR"
       }
     },
@@ -273,7 +270,6 @@ This document is generated from SSOT:
       "requires": "school.fridgis",
       "bind": {
         "spell": "aoe_frost",
-        "axisWord": "fridgis",
         "slot": "FB"
       }
     },
@@ -285,7 +281,6 @@ This document is generated from SSOT:
       "requires": "school.electrum",
       "bind": {
         "spell": "aoe_electric",
-        "axisWord": "electrum",
         "slot": "LR"
       }
     },
@@ -297,7 +292,6 @@ This document is generated from SSOT:
       "requires": "school.electrum",
       "bind": {
         "spell": "aoe_electric",
-        "axisWord": "electrum",
         "slot": "FB"
       }
     },

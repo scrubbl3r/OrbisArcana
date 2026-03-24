@@ -202,7 +202,6 @@
       "requires": "school.pyro_spin",
       "bind": {
         "spell": "aoe_flame",
-        "axisWord": "pyro",
         "slot": "FB"
       }
     },
@@ -226,7 +225,6 @@
       "requires": "school.fridgis",
       "bind": {
         "spell": "aoe_frost",
-        "axisWord": "fridgis",
         "slot": "UD"
       }
     },
@@ -238,7 +236,6 @@
       "requires": "school.fridgis",
       "bind": {
         "spell": "aoe_frost",
-        "axisWord": "fridgis",
         "slot": "LR"
       }
     },
@@ -250,7 +247,6 @@
       "requires": "school.fridgis",
       "bind": {
         "spell": "aoe_frost",
-        "axisWord": "fridgis",
         "slot": "FB"
       }
     },
@@ -262,7 +258,6 @@
       "requires": "school.electrum",
       "bind": {
         "spell": "aoe_electric",
-        "axisWord": "electrum",
         "slot": "LR"
       }
     },
@@ -274,7 +269,6 @@
       "requires": "school.electrum",
       "bind": {
         "spell": "aoe_electric",
-        "axisWord": "electrum",
         "slot": "FB"
       }
     },

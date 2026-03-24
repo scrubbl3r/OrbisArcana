@@ -15,6 +15,11 @@ export function createSpellActionHandlers({
     LR: null,
     FB: null,
   };
+  const inferredAxisWordBySpellId = Object.freeze({
+    aoe_flame: "pyro",
+    aoe_frost: "fridgis",
+    aoe_electric: "electrum",
+  });
 
   function normalizeSlot(slotRaw) {
     const slot = String(slotRaw || "").trim().toUpperCase();
@@ -29,6 +34,8 @@ export function createSpellActionHandlers({
     if (!wordId) return;
     const castActionId = String((payload && (payload.castActionId || payload.spell)) || "").trim().toLowerCase();
     const axis = String((payload && payload.axis) || "y").trim().toLowerCase();
+    const explicitAxisWord = String((payload && (payload.axisWord || payload.axisSpell)) || "").trim().toLowerCase();
+    const inferredAxisWord = String(inferredAxisWordBySpellId[castActionId] || inferredAxisWordBySpellId[wordId] || "").trim().toLowerCase();
     const loaded = {
       wordId,
       spellId: wordId,
@@ -36,7 +43,7 @@ export function createSpellActionHandlers({
       slot,
       axis: axis || "y",
       loadedAtMs: Number(payload && payload.atMs) || Date.now(),
-      axisWord: String((payload && (payload.axisWord || payload.axisSpell)) || "").trim().toLowerCase(),
+      axisWord: explicitAxisWord || inferredAxisWord,
       wakeWindowSpell: String((payload && payload.wakeWindowSpell) || "").trim().toLowerCase(),
     };
     loadedBySlot[slot] = loaded;
