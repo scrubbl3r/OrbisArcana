@@ -19,7 +19,8 @@ export const DREAM_CONFIG_V2 = {
     {
       id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: "@wake_main_words", ttlMs: 2000 },
+      open: { id: "wake.main", words: ["domus", "electrum", "pyro", "fridgis"], ttlMs: 2000 },
+      //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 2000 },
     },
     {
       id: "tele_home",
