@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-24T07:00:09.104Z",
+  "generatedAt": "2026-03-24T07:10:30.904Z",
   "wordbook": {
     "version": "2",
     "words": [
@@ -122,15 +122,27 @@
         }
       },
       {
-        "id": "school_electrum",
+        "id": "electric_aoe",
         "on": {
           "word": "electrum"
         },
         "requires": "wake.main",
         "open": {
           "id": "school.electrum",
-          "words": "@school_words",
+          "words": [
+            "rota"
+          ],
           "ttlMs": 1500
+        }
+      },
+      {
+        "id": "electric_aoe_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "school.electrum",
+        "trigger": {
+          "aoe_electric": true
         }
       },
       {
@@ -292,16 +304,6 @@
             "axisWord": "fridgis",
             "slot": "FB"
           }
-        }
-      },
-      {
-        "id": "electrum_rota_load_ud",
-        "on": {
-          "word": "rota"
-        },
-        "requires": "school.electrum",
-        "trigger": {
-          "aoe_electric": true
         }
       },
       {
@@ -397,15 +399,27 @@
         }
       },
       {
-        "id": "school_electrum",
+        "id": "electric_aoe",
         "on": {
           "word": "electrum"
         },
         "requires": "wake.main",
         "open": {
           "id": "school.electrum",
-          "words": "@school_words",
+          "words": [
+            "rota"
+          ],
           "ttlMs": 1500
+        }
+      },
+      {
+        "id": "electric_aoe_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "school.electrum",
+        "trigger": {
+          "aoe_electric": true
         }
       },
       {
@@ -567,16 +581,6 @@
             "axisWord": "fridgis",
             "slot": "FB"
           }
-        }
-      },
-      {
-        "id": "electrum_rota_load_ud",
-        "on": {
-          "word": "rota"
-        },
-        "requires": "school.electrum",
-        "trigger": {
-          "aoe_electric": true
         }
       },
       {
@@ -693,15 +697,27 @@
         }
       },
       {
-        "id": "school_electrum",
+        "id": "electric_aoe",
         "on": {
           "word": "electrum"
         },
         "requires": "wake.main",
         "open": {
           "id": "school.electrum",
-          "words": "@school_words",
+          "words": [
+            "rota"
+          ],
           "ttlMs": 1500
+        }
+      },
+      {
+        "id": "electric_aoe_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "school.electrum",
+        "trigger": {
+          "spell": "aoe_electric"
         }
       },
       {
@@ -890,16 +906,6 @@
               "slot": "FB"
             }
           }
-        }
-      },
-      {
-        "id": "electrum_rota_load_ud",
-        "on": {
-          "word": "rota"
-        },
-        "requires": "school.electrum",
-        "trigger": {
-          "spell": "aoe_electric"
         }
       },
       {

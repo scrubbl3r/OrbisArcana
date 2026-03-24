@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-24T07:00:09.105Z",
+  "generatedAt": "2026-03-24T07:10:30.904Z",
   "enabled": true,
   "wake": {
     "roots": [
@@ -138,15 +138,27 @@
       }
     },
     {
-      "id": "school_electrum",
+      "id": "electric_aoe",
       "on": {
         "word": "electrum"
       },
       "requires": "wake.main",
       "open": {
         "id": "school.electrum",
-        "words": "@school_words",
+        "words": [
+          "rota"
+        ],
         "ttlMs": 1500
+      }
+    },
+    {
+      "id": "electric_aoe_cast",
+      "on": {
+        "word": "rota"
+      },
+      "requires": "school.electrum",
+      "trigger": {
+        "spell": "aoe_electric"
       }
     },
     {
@@ -338,16 +350,6 @@
       }
     },
     {
-      "id": "electrum_rota_load_ud",
-      "on": {
-        "word": "rota"
-      },
-      "requires": "school.electrum",
-      "trigger": {
-        "spell": "aoe_electric"
-      }
-    },
-    {
       "id": "electrum_sanctum_load_lr",
       "on": {
         "word": "sanctum"
@@ -444,15 +446,27 @@
         }
       },
       {
-        "id": "school_electrum",
+        "id": "electric_aoe",
         "on": {
           "word": "electrum"
         },
         "requires": "wake.main",
         "open": {
           "id": "school.electrum",
-          "words": "@school_words",
+          "words": [
+            "rota"
+          ],
           "ttlMs": 1500
+        }
+      },
+      {
+        "id": "electric_aoe_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "school.electrum",
+        "trigger": {
+          "aoe_electric": true
         }
       },
       {
@@ -614,16 +628,6 @@
             "axisWord": "fridgis",
             "slot": "FB"
           }
-        }
-      },
-      {
-        "id": "electrum_rota_load_ud",
-        "on": {
-          "word": "rota"
-        },
-        "requires": "school.electrum",
-        "trigger": {
-          "aoe_electric": true
         }
       },
       {

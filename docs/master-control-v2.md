@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-24T07:00:09.096Z
+Generated: 2026-03-24T07:10:30.899Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
@@ -161,15 +161,27 @@ This document is generated from SSOT:
       }
     },
     {
-      "id": "school_electrum",
+      "id": "electric_aoe",
       "on": {
         "word": "electrum"
       },
       "requires": "wake.main",
       "open": {
         "id": "school.electrum",
-        "words": "@school_words",
+        "words": [
+          "rota"
+        ],
         "ttlMs": 1500
+      }
+    },
+    {
+      "id": "electric_aoe_cast",
+      "on": {
+        "word": "rota"
+      },
+      "requires": "school.electrum",
+      "trigger": {
+        "spell": "aoe_electric"
       }
     },
     {
@@ -361,16 +373,6 @@ This document is generated from SSOT:
       }
     },
     {
-      "id": "electrum_rota_load_ud",
-      "on": {
-        "word": "rota"
-      },
-      "requires": "school.electrum",
-      "trigger": {
-        "spell": "aoe_electric"
-      }
-    },
-    {
       "id": "electrum_sanctum_load_lr",
       "on": {
         "word": "sanctum"
@@ -476,15 +478,27 @@ This document is generated from SSOT:
     }
   },
   {
-    "id": "school_electrum",
+    "id": "electric_aoe",
     "on": {
       "word": "electrum"
     },
     "requires": "wake.main",
     "open": {
       "id": "school.electrum",
-      "words": "@school_words",
+      "words": [
+        "rota"
+      ],
       "ttlMs": 1500
+    }
+  },
+  {
+    "id": "electric_aoe_cast",
+    "on": {
+      "word": "rota"
+    },
+    "requires": "school.electrum",
+    "trigger": {
+      "aoe_electric": true
     }
   },
   {
@@ -646,16 +660,6 @@ This document is generated from SSOT:
         "axisWord": "fridgis",
         "slot": "FB"
       }
-    }
-  },
-  {
-    "id": "electrum_rota_load_ud",
-    "on": {
-      "word": "rota"
-    },
-    "requires": "school.electrum",
-    "trigger": {
-      "aoe_electric": true
     }
   },
   {

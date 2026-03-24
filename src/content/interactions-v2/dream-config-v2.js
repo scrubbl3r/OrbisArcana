@@ -28,10 +28,16 @@ export const DREAM_CONFIG_V2 = {
       trigger: { spell: "teleport_home" },
     },
     {
-      id: "school_electrum",
+      id: "electric_aoe",
       on: { word: "electrum" },
       requires: "wake.main",
-      open: { id: "school.electrum", words: "@school_words", ttlMs: 1500 },
+      open: { id: "school.electrum", words: ["rota"], ttlMs: 1500 },
+    },
+    {
+      id: "electric_aoe_cast",
+      on: { word: "rota" },
+      requires: "school.electrum",
+      trigger: { spell: "aoe_electric" },
     },
     {
       id: "school_pyro",
@@ -103,12 +109,6 @@ export const DREAM_CONFIG_V2 = {
       on: { word: "vectus" },
       requires: "school.fridgis",
       trigger: { spell: { id: "spell_load_fb", args: { spell: "aoe_frost", axisWord: "fridgis", slot: "FB" } } },
-    },
-    {
-      id: "electrum_rota_load_ud",
-      on: { word: "rota" },
-      requires: "school.electrum",
-      trigger: { spell: "aoe_electric" },
     },
     {
       id: "electrum_sanctum_load_lr",
