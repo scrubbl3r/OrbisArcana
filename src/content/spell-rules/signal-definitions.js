@@ -9,8 +9,15 @@ import {
 } from "../spells/spell-runtime-routing.js";
 
 function buildWakeWindowWordSignals() {
+  const wakeWordIds = new Set(
+    (Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : [])
+      .map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
   return (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
     .map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase())
+    // Wake words must be token-driven; do not shadow them with word-detected wake-window signals.
+    .filter((wordId) => !wakeWordIds.has(wordId))
     .filter(Boolean)
     .map((wordId) => Object.freeze({
       // Runtime signal namespace remains spell.* for compatibility.
