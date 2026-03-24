@@ -2377,10 +2377,10 @@
           const axis = String(p.axis || "").trim().toLowerCase();
           if (axis !== "y") return;
           const now = Date.now();
-          pyroSpinWindowUntilMs = now + 3000;
+          pyroSpinWindowUntilMs = now + 8000;
           // Temporary fallback: synthesize charged window from sustained spin open
           // when explicit charged source events are unavailable.
-          pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + 3000);
+          pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + 8000);
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:spin_y_open", "muted");
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:charged:synthetic", "muted");
         });
@@ -2396,6 +2396,11 @@
             .trim()
             .toLowerCase();
           if (!wordId) return;
+          if (wordId === "pyro") {
+            pyroSpinWindowUntilMs = Math.max(pyroSpinWindowUntilMs, now + 8000);
+            pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + 8000);
+            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:pyro_open", "muted");
+          }
           if (wordId === "electrum" && now <= electricFallbackWakeUntilMs) {
             electricFallbackWindowUntilMs = now + 1500;
             return;
@@ -2422,11 +2427,17 @@
             .toLowerCase();
           if (wordId !== "rota") return;
           if (now > pyroSpinWindowUntilMs) {
-            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE gate:pyro_bind_fb:no_spin_window", "warn");
+            if (RULE_CHAIN_TRACE_ENABLED) {
+              const lateMs = Math.max(0, now - pyroSpinWindowUntilMs);
+              kwsBridge.pushLogLine(`TRACE gate:pyro_bind_fb:no_spin_window late_ms:${lateMs}`, "warn");
+            }
             return;
           }
           if (now > pyroChargedUntilMs) {
-            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE gate:pyro_bind_fb:not_charged", "warn");
+            if (RULE_CHAIN_TRACE_ENABLED) {
+              const lateMs = Math.max(0, now - pyroChargedUntilMs);
+              kwsBridge.pushLogLine(`TRACE gate:pyro_bind_fb:not_charged late_ms:${lateMs}`, "warn");
+            }
             return;
           }
           if ((now - pyroFallbackLastEmitMs) < 250) return;
