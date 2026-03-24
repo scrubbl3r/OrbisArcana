@@ -17,6 +17,8 @@ import {
   EVT_VOICE_SPELL_LOADED,
   EVT_VOICE_SPELL_CAST,
   EVT_INPUT_SHAKE_TRIGGERED,
+  EVT_SPELL_SLOT_LOAD_REQUESTED,
+  EVT_SPELL_SLOT_CAST_REQUESTED,
 } from "../contracts/events.js";
 
 // `resources` is an optional injected domain API.
@@ -59,6 +61,11 @@ export function createSpellDispatchSystem({
   const selectedAxisWordByAxis = { x: "", y: "", z: "" };
   let lastVoiceDetectDedupeKey = "";
   let lastVoiceDetectDedupeAtMs = 0;
+  const AXIS_BY_WORD_ID = Object.freeze({
+    fridgis: "x",
+    pyro: "y",
+    electrum: "z",
+  });
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -216,6 +223,137 @@ export function createSpellDispatchSystem({
       axisSpell: axisWord,
       wakeWindowSpell: String((base.wakeWindowSpell || wakeWindowSpell)).toLowerCase(),
     };
+  }
+
+  function resolveAxisForSlotPayload(payload = {}) {
+    const explicitAxis = normAxis(payload.axis);
+    if (explicitAxis) return explicitAxis;
+    const axisWord = String((payload.axisWord || payload.axisSpell) || "").trim().toLowerCase();
+    const inferredAxis = normAxis(AXIS_BY_WORD_ID[axisWord]);
+    return inferredAxis || "y";
+  }
+
+  function buildLoadedEntryFromPayload(payload = {}, slotOverride = "") {
+    const slot = normGroup(slotOverride || payload.slot);
+    const wordId = String((payload.wordId || payload.spellId || payload.spell) || "").trim().toLowerCase();
+    if (!slot || !wordId) return null;
+    const routed = withRuntimeRouting(ACTIVE_WORDS_BY_ID[wordId] || { id: wordId });
+    const axis = resolveAxisForSlotPayload(payload);
+    const axisWord = String((payload.axisWord || payload.axisSpell || routed.axisWord || routed.axisSpell) || "").trim().toLowerCase();
+    const wakeWindowSpell = String((payload.wakeWindowSpell || routed.wakeWindowSpell) || "").trim().toLowerCase();
+    return {
+      wordId,
+      spellId: wordId,
+      castActionId: String((payload.castActionId || payload.spell || routed.castActionId || wordId) || "").trim().toLowerCase(),
+      intent: String((payload.intent || routed.intent) || ""),
+      phrase: String((payload.phrase || routed.phrase || wordId) || ""),
+      cooldownMs: Math.max(0, Number(payload.cooldownMs ?? routed.cooldownMs) || 0),
+      confidence: Number(payload.confidence) || 0,
+      loadedAtMs: Number(payload.atMs) || nowMs(),
+      axis,
+      slot,
+      axisWord,
+      axisSpell: axisWord,
+      wakeWindowSpell,
+    };
+  }
+
+  function emitSpellLoadedFromEntry(entry, trigger = "rule_engine.event") {
+    eventBus.emit(EVT_VOICE_SPELL_LOADED, {
+      wordId: entry.wordId,
+      spellId: entry.spellId,
+      castActionId: entry.castActionId,
+      intent: entry.intent,
+      phrase: entry.phrase,
+      confidence: Number(entry.confidence) || 0,
+      axis: entry.axis,
+      slot: entry.slot,
+      axisWord: String(entry.axisWord || "").toLowerCase(),
+      axisSpell: String(entry.axisWord || "").toLowerCase(),
+      wakeWindowSpell: String(entry.wakeWindowSpell || "").toLowerCase(),
+      atMs: entry.loadedAtMs,
+      trigger,
+    });
+  }
+
+  function emitSpellCastFromEntry(entry, payload = {}) {
+    const now = Number(payload.atMs) || nowMs();
+    /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
+    const castPayload = {
+      wordId: entry.wordId,
+      spellId: entry.spellId,
+      castActionId: entry.castActionId,
+      intent: entry.intent,
+      phrase: entry.phrase,
+      confidence: Number(entry.confidence) || 0,
+      trigger: String(payload.trigger || "shake_detonation"),
+      axis: entry.axis,
+      slot: entry.slot,
+      axisWord: String(entry.axisWord || "").toLowerCase(),
+      axisSpell: String(entry.axisWord || "").toLowerCase(),
+      wakeWindowSpell: String(entry.wakeWindowSpell || "").toLowerCase(),
+      directionGroup: String(payload.directionGroup || entry.slot || ""),
+      atMs: now,
+    };
+    eventBus.emit(EVT_VOICE_SPELL_CAST, castPayload);
+  }
+
+  function loadSlot(slotRaw, payload = {}) {
+    const entry = buildLoadedEntryFromPayload(payload, slotRaw);
+    if (!entry) return null;
+    loadedByAxis[entry.axis][entry.slot] = {
+      wordId: entry.wordId,
+      spellId: entry.spellId,
+      castActionId: entry.castActionId,
+      intent: entry.intent,
+      phrase: entry.phrase,
+      cooldownMs: entry.cooldownMs,
+      confidence: entry.confidence,
+      loadedAtMs: entry.loadedAtMs,
+      axisWord: entry.axisWord,
+      axisSpell: entry.axisSpell,
+      wakeWindowSpell: entry.wakeWindowSpell,
+    };
+    emitSpellLoadedFromEntry(entry, String(payload.trigger || "rule_engine.event"));
+    return entry;
+  }
+
+  function castSlot(slotRaw, payload = {}) {
+    const slot = normGroup(slotRaw);
+    if (!slot) return null;
+    const explicitAxis = normAxis(payload.axis);
+    let loaded = null;
+    if (explicitAxis && loadedByAxis[explicitAxis][slot]) {
+      loaded = Object.assign({ axis: explicitAxis, slot }, loadedByAxis[explicitAxis][slot]);
+    } else {
+      loaded = mostRecentLoadedForGroup(slot);
+    }
+    if (!loaded || !loaded.wordId) return null;
+    const now = Number(payload.atMs) || nowMs();
+    const spell = {
+      id: String(loaded.wordId || ""),
+      cooldownMs: Math.max(0, Number(loaded.cooldownMs) || 0),
+    };
+    const castCheck = canCastSpellNow(spell, now);
+    if (!castCheck.ok) {
+      eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+        reason: "cooldown",
+        wordId: spell.id,
+        spellId: spell.id,
+        cooldownMs: castCheck.cooldownMs,
+        remainingMs: castCheck.remainingMs,
+        atMs: now,
+      });
+      return null;
+    }
+    loadedByAxis[loaded.axis][loaded.slot] = null;
+    lastCastByWordId.set(spell.id, now);
+    emitSpellCastFromEntry(loaded, {
+      ...payload,
+      atMs: now,
+      directionGroup: String(payload.directionGroup || slot),
+    });
+    return loaded;
   }
 
   function start() {
@@ -428,6 +566,7 @@ export function createSpellDispatchSystem({
         loadedByAxis[axis][slot] = {
           wordId: String(concreteSpell.id || ""),
           spellId: String(concreteSpell.id || ""),
+          castActionId: String((concreteSpell.castActionId || concreteSpell.id || "")).toLowerCase(),
           intent: concreteSpell.intent,
           phrase: concreteSpell.phrase,
           cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
@@ -493,6 +632,14 @@ export function createSpellDispatchSystem({
     unsub.push(eventBus.on(EVT_VOICE_SPELL_DETECTED, onVoiceDetected));
     unsub.push(eventBus.on(EVT_VOICE_WORD_DETECTED, onVoiceDetected));
 
+    unsub.push(eventBus.on(EVT_SPELL_SLOT_LOAD_REQUESTED, (payload = {}) => {
+      loadSlot(payload.slot, payload);
+    }));
+
+    unsub.push(eventBus.on(EVT_SPELL_SLOT_CAST_REQUESTED, (payload = {}) => {
+      castSlot(payload.slot, payload);
+    }));
+
     unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
       const group = normGroup(payload.group);
       const now = nowMs();
@@ -532,23 +679,11 @@ export function createSpellDispatchSystem({
 
       loadedByAxis[loaded.axis][loaded.slot] = null;
       lastCastByWordId.set(loadedWordId, now);
-      /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
-      const castPayload = {
-        wordId: loadedWordId,
-        spellId: loadedWordId,
-        intent: loaded.intent,
-        phrase: loaded.phrase,
-        confidence: Number(loaded.confidence) || 0,
+      emitSpellCastFromEntry(loaded, {
         trigger: "shake_detonation",
-        axis: loaded.axis,
-        slot: loaded.slot,
-        axisWord: String(loaded.axisWord || "").toLowerCase(),
-        axisSpell: String(loaded.axisWord || "").toLowerCase(),
-        wakeWindowSpell: String((loaded.wakeWindowSpell) || "").toLowerCase(),
         directionGroup: group || String(loaded.slot || ""),
         atMs: now,
-      };
-      eventBus.emit(EVT_VOICE_SPELL_CAST, castPayload);
+      });
     }));
   }
 

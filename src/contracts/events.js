@@ -98,6 +98,8 @@ export const EVT_VOICE_SPELL_REJECTED = "voice.spell_rejected";
 export const EVT_VOICE_AXIS_SELECTED = "voice.axis_selected";
 export const EVT_VOICE_SPELL_LOADED = "voice.spell_loaded";
 export const EVT_VOICE_SPELL_CAST = "voice.spell_cast";
+export const EVT_SPELL_SLOT_LOAD_REQUESTED = "spell.slot_load_requested";
+export const EVT_SPELL_SLOT_CAST_REQUESTED = "spell.slot_cast_requested";
 
 /**
  * @typedef {Object} PickupCollectedPayload

@@ -1,3 +1,8 @@
+import {
+  EVT_SPELL_SLOT_CAST_REQUESTED,
+  EVT_SPELL_SLOT_LOAD_REQUESTED,
+} from "../contracts/events.js";
+
 export function createSpellActionHandlers({
   eventBus,
   playElectricAoe,
@@ -10,73 +15,29 @@ export function createSpellActionHandlers({
   domusTeleportAboveGroundPx = 300,
   sanctusShieldMs = 8000,
 } = {}){
-  const loadedBySlot = {
-    UD: null,
-    LR: null,
-    FB: null,
-  };
-  const inferredAxisWordBySpellId = Object.freeze({
-    aoe_flame: "pyro",
-    aoe_frost: "fridgis",
-    aoe_electric: "electrum",
-  });
-
   function normalizeSlot(slotRaw) {
     const slot = String(slotRaw || "").trim().toUpperCase();
     return slot === "UD" || slot === "LR" || slot === "FB" ? slot : "";
   }
 
-  function emitLoadedSpell(slotRaw, payload = {}) {
+  function requestSlotLoad(slotRaw, payload = {}) {
     if (!eventBus || typeof eventBus.emit !== "function") return;
     const slot = normalizeSlot(slotRaw);
     if (!slot) return;
-    const wordId = String((payload && (payload.wordId || payload.spellId || payload.spell)) || "").trim().toLowerCase();
-    if (!wordId) return;
-    const castActionId = String((payload && (payload.castActionId || payload.spell)) || "").trim().toLowerCase();
-    const axis = String((payload && payload.axis) || "y").trim().toLowerCase();
-    const explicitAxisWord = String((payload && (payload.axisWord || payload.axisSpell)) || "").trim().toLowerCase();
-    const inferredAxisWord = String(inferredAxisWordBySpellId[castActionId] || inferredAxisWordBySpellId[wordId] || "").trim().toLowerCase();
-    const loaded = {
-      wordId,
-      spellId: wordId,
-      castActionId: castActionId || wordId,
+    eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
+      ...(payload && typeof payload === "object" ? payload : {}),
       slot,
-      axis: axis || "y",
-      loadedAtMs: Number(payload && payload.atMs) || Date.now(),
-      axisWord: explicitAxisWord || inferredAxisWord,
-      wakeWindowSpell: String((payload && payload.wakeWindowSpell) || "").trim().toLowerCase(),
-    };
-    loadedBySlot[slot] = loaded;
-    eventBus.emit("voice.spell_loaded", {
-      wordId: loaded.wordId,
-      spellId: loaded.spellId,
-      castActionId: loaded.castActionId,
-      axis: loaded.axis,
-      slot: loaded.slot,
-      axisWord: loaded.axisWord,
-      axisSpell: loaded.axisWord,
-      wakeWindowSpell: loaded.wakeWindowSpell,
-      atMs: loaded.loadedAtMs,
-      trigger: String((payload && payload.trigger) || "rule_engine.event"),
+      atMs: Number(payload && payload.atMs) || Date.now(),
     });
   }
 
-  function emitCastLoadedSpell(slotRaw, payload = {}) {
+  function requestSlotCast(slotRaw, payload = {}) {
     if (!eventBus || typeof eventBus.emit !== "function") return;
     const slot = normalizeSlot(slotRaw);
     if (!slot) return;
-    const loaded = loadedBySlot[slot];
-    if (!loaded || !loaded.wordId) return;
-    loadedBySlot[slot] = null;
-    eventBus.emit("voice.spell_cast", {
-      wordId: loaded.wordId,
-      spellId: loaded.spellId,
-      castActionId: loaded.castActionId,
-      axis: loaded.axis,
-      slot: loaded.slot,
-      axisWord: loaded.axisWord,
-      axisSpell: loaded.axisWord,
-      wakeWindowSpell: loaded.wakeWindowSpell,
+    eventBus.emit(EVT_SPELL_SLOT_CAST_REQUESTED, {
+      ...(payload && typeof payload === "object" ? payload : {}),
+      slot,
       atMs: Number(payload && payload.atMs) || Date.now(),
       trigger: String((payload && payload.trigger) || "rule_engine_loaded_slot"),
       directionGroup: slot,
@@ -146,22 +107,22 @@ export function createSpellActionHandlers({
       }
     },
     load_spell_ud(payload = {}) {
-      emitLoadedSpell("UD", payload);
+      requestSlotLoad("UD", payload);
     },
     load_spell_lr(payload = {}) {
-      emitLoadedSpell("LR", payload);
+      requestSlotLoad("LR", payload);
     },
     load_spell_fb(payload = {}) {
-      emitLoadedSpell("FB", payload);
+      requestSlotLoad("FB", payload);
     },
     cast_loaded_ud(payload = {}) {
-      emitCastLoadedSpell("UD", payload);
+      requestSlotCast("UD", payload);
     },
     cast_loaded_lr(payload = {}) {
-      emitCastLoadedSpell("LR", payload);
+      requestSlotCast("LR", payload);
     },
     cast_loaded_fb(payload = {}) {
-      emitCastLoadedSpell("FB", payload);
+      requestSlotCast("FB", payload);
     },
   };
 }
