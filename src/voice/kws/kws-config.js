@@ -1,10 +1,10 @@
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
-  KWS_AXIS_WORD_IDS,
+  AXIS_WORD_IDS,
   KWS_ROW_BOTTOM_WORD_IDS,
   KWS_ROW_TOP_WORD_IDS,
-  KWS_WAKE_WINDOW_WORD_IDS,
-  KWS_WAKE_REQUIRED_WORD_IDS,
+  WAKE_WINDOW_WORD_IDS,
+  WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING,
 } from "../../content/spells/spell-runtime-routing.js";
 import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
@@ -23,10 +23,10 @@ export function createKwsRuntimeConfig() {
     : [];
   const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_WORD_IDS);
   const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_WORD_IDS);
-  const wakeWindowTokens = resolveActivePhrasesByIds(KWS_WAKE_WINDOW_WORD_IDS);
-  const axisTokens = resolveActivePhrasesByIds(KWS_AXIS_WORD_IDS);
+  const wakeWindowTokens = resolveActivePhrasesByIds(WAKE_WINDOW_WORD_IDS);
+  const axisTokens = resolveActivePhrasesByIds(AXIS_WORD_IDS);
   const wakeTokens = resolveActivePhrasesByIds(wakeWordIds.length ? wakeWordIds : ["orbis"]);
-  const wakeRequiredTokens = resolveActivePhrasesByIds(KWS_WAKE_REQUIRED_WORD_IDS);
+  const wakeRequiredTokens = resolveActivePhrasesByIds(WAKE_REQUIRED_WORD_IDS);
   const axisWordByAxis = Object.create(null);
   for (const item of (Array.isArray(WORD_RUNTIME_ROUTING) ? WORD_RUNTIME_ROUTING : [])) {
     const intent = String(item && item.intent || "").trim().toLowerCase();
