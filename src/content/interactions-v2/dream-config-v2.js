@@ -41,6 +41,22 @@ export const DREAM_CONFIG_V2 = {
       trigger: { spell: "aoe_electric" },
     },
     {
+      id: "spin_y_opens_pyro",
+      on: { gesture: "spin_y", orb_state: "charged" },
+      open: { id: "school.pyro_spin", words: ["rota"], ttlMs: 1500 },
+    },
+    {
+      id: "spin_y_pyro_rota_bind_fb",
+      on: { word: "rota" },
+      requires: "school.pyro_spin",
+      trigger: {
+        spell: {
+          id: "spell_load_fb",
+          args: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" },
+        },
+      },
+    },
+    {
       id: "school_pyro",
       on: { word: "pyro" },
       requires: "wake.main",
@@ -51,11 +67,6 @@ export const DREAM_CONFIG_V2 = {
       on: { word: "fridgis" },
       requires: "wake.main",
       open: { id: "school.fridgis", words: "@school_words", ttlMs: 1500 },
-    },
-    {
-      id: "spin_y_opens_pyro",
-      on: { gesture: "spin_y" },
-      open: { id: "school.pyro_spin", words: "@school_words", ttlMs: 1500 },
     },
     {
       id: "pyro_rota_load_ud",

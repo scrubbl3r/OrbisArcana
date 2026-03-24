@@ -1,6 +1,6 @@
 {
   "schema": "orbis.rule_engine_v2.health",
-  "generatedAt": "2026-03-24T07:38:18.239Z",
+  "generatedAt": "2026-03-24T16:24:39.962Z",
   "wordbookOk": true,
   "interactionsOk": true,
   "interactionsBootstrapEnabled": false,
@@ -9,7 +9,7 @@
   "projectionRulesOnly": true,
   "interactionsRuleCount": 5,
   "projectedRuleCount": 5,
-  "orchestratorProjectedRuleCount": 21,
+  "orchestratorProjectedRuleCount": 22,
   "orchestratorProjectionParityOk": true,
   "driftRuleIds": []
 }

@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-24T07:38:18.216Z
+Generated: 2026-03-24T16:24:39.933Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
@@ -146,7 +146,12 @@ This document is generated from SSOT:
       },
       "open": {
         "id": "wake.main",
-        "words": "@wake_main_words",
+        "words": [
+          "domus",
+          "electrum",
+          "pyro",
+          "fridgis"
+        ],
         "ttlMs": 2000
       }
     },
@@ -185,6 +190,37 @@ This document is generated from SSOT:
       }
     },
     {
+      "id": "spin_y_opens_pyro",
+      "on": {
+        "gesture": "spin_y",
+        "orb_state": "charged"
+      },
+      "open": {
+        "id": "school.pyro_spin",
+        "words": [
+          "rota"
+        ],
+        "ttlMs": 1500
+      }
+    },
+    {
+      "id": "spin_y_pyro_rota_bind_fb",
+      "on": {
+        "word": "rota"
+      },
+      "requires": "school.pyro_spin",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_fb",
+          "args": {
+            "spell": "aoe_flame",
+            "axisWord": "pyro",
+            "slot": "FB"
+          }
+        }
+      }
+    },
+    {
       "id": "school_pyro",
       "on": {
         "word": "pyro"
@@ -204,17 +240,6 @@ This document is generated from SSOT:
       "requires": "wake.main",
       "open": {
         "id": "school.fridgis",
-        "words": "@school_words",
-        "ttlMs": 1500
-      }
-    },
-    {
-      "id": "spin_y_opens_pyro",
-      "on": {
-        "gesture": "spin_y"
-      },
-      "open": {
-        "id": "school.pyro_spin",
         "words": "@school_words",
         "ttlMs": 1500
       }
@@ -463,7 +488,12 @@ This document is generated from SSOT:
     },
     "open": {
       "id": "wake.main",
-      "words": "@wake_main_words",
+      "words": [
+        "domus",
+        "electrum",
+        "pyro",
+        "fridgis"
+      ],
       "ttlMs": 2000
     }
   },
@@ -502,6 +532,34 @@ This document is generated from SSOT:
     }
   },
   {
+    "id": "spin_y_opens_pyro",
+    "on": {
+      "gesture": "spin_y",
+      "orb_state": "charged"
+    },
+    "open": {
+      "id": "school.pyro_spin",
+      "words": [
+        "rota"
+      ],
+      "ttlMs": 1500
+    }
+  },
+  {
+    "id": "spin_y_pyro_rota_bind_fb",
+    "on": {
+      "word": "rota"
+    },
+    "requires": "school.pyro_spin",
+    "trigger": {
+      "spell_load_fb": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "FB"
+      }
+    }
+  },
+  {
     "id": "school_pyro",
     "on": {
       "word": "pyro"
@@ -521,17 +579,6 @@ This document is generated from SSOT:
     "requires": "wake.main",
     "open": {
       "id": "school.fridgis",
-      "words": "@school_words",
-      "ttlMs": 1500
-    }
-  },
-  {
-    "id": "spin_y_opens_pyro",
-    "on": {
-      "gesture": "spin_y"
-    },
-    "open": {
-      "id": "school.pyro_spin",
       "words": "@school_words",
       "ttlMs": 1500
     }
@@ -726,7 +773,7 @@ This document is generated from SSOT:
 {
   "version": "2",
   "enabled": true,
-  "ruleCount": 21,
+  "ruleCount": 22,
   "parityWithOrchestratorRuleCount": true
 }
 ```
