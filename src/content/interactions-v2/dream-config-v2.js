@@ -55,12 +55,7 @@ export const DREAM_CONFIG_V2 = {
       id: "spin_y_pyro_rota_bind_fb",
       on: { word: "rota" },
       requires: "school.pyro_spin",
-      trigger: {
-        spell: {
-          id: "spell_load_fb",
-          args: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" },
-        },
-      },
+      bind: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" },
     },
     {
       id: "school_fridgis",
@@ -72,31 +67,31 @@ export const DREAM_CONFIG_V2 = {
       id: "fridgis_rota_load_ud",
       on: { word: "rota" },
       requires: "school.fridgis",
-      trigger: { spell: { id: "spell_load_ud", args: { spell: "aoe_frost", axisWord: "fridgis", slot: "UD" } } },
+      bind: { spell: "aoe_frost", axisWord: "fridgis", slot: "UD" },
     },
     {
       id: "fridgis_sanctum_load_lr",
       on: { word: "sanctum" },
       requires: "school.fridgis",
-      trigger: { spell: { id: "spell_load_lr", args: { spell: "aoe_frost", axisWord: "fridgis", slot: "LR" } } },
+      bind: { spell: "aoe_frost", axisWord: "fridgis", slot: "LR" },
     },
     {
       id: "fridgis_vectus_load_fb",
       on: { word: "vectus" },
       requires: "school.fridgis",
-      trigger: { spell: { id: "spell_load_fb", args: { spell: "aoe_frost", axisWord: "fridgis", slot: "FB" } } },
+      bind: { spell: "aoe_frost", axisWord: "fridgis", slot: "FB" },
     },
     {
       id: "electrum_sanctum_load_lr",
       on: { word: "sanctum" },
       requires: "school.electrum",
-      trigger: { spell: { id: "spell_load_lr", args: { spell: "aoe_electric", axisWord: "electrum", slot: "LR" } } },
+      bind: { spell: "aoe_electric", axisWord: "electrum", slot: "LR" },
     },
     {
       id: "electrum_vectus_load_fb",
       on: { word: "vectus" },
       requires: "school.electrum",
-      trigger: { spell: { id: "spell_load_fb", args: { spell: "aoe_electric", axisWord: "electrum", slot: "FB" } } },
+      bind: { spell: "aoe_electric", axisWord: "electrum", slot: "FB" },
     },
     {
       id: "shake_ud_cast",

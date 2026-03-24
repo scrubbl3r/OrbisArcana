@@ -196,11 +196,25 @@ This document is generated from SSOT:
         "orb_state": "charged"
       },
       "open": {
+        "id": "school.pyro_spin_seed",
+        "words": [
+          "pyro"
+        ],
+        "ttlMs": 2000
+      }
+    },
+    {
+      "id": "spin_y_pyro_opens_rota",
+      "on": {
+        "word": "pyro"
+      },
+      "requires": "school.pyro_spin_seed",
+      "open": {
         "id": "school.pyro_spin",
         "words": [
           "rota"
         ],
-        "ttlMs": 1500
+        "ttlMs": 2000
       }
     },
     {
@@ -209,27 +223,10 @@ This document is generated from SSOT:
         "word": "rota"
       },
       "requires": "school.pyro_spin",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_fb",
-          "args": {
-            "spell": "aoe_flame",
-            "axisWord": "pyro",
-            "slot": "FB"
-          }
-        }
-      }
-    },
-    {
-      "id": "school_pyro",
-      "on": {
-        "word": "pyro"
-      },
-      "requires": "wake.main",
-      "open": {
-        "id": "school.pyro",
-        "words": "@school_words",
-        "ttlMs": 1500
+      "bind": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "FB"
       }
     },
     {
@@ -241,109 +238,7 @@ This document is generated from SSOT:
       "open": {
         "id": "school.fridgis",
         "words": "@school_words",
-        "ttlMs": 1500
-      }
-    },
-    {
-      "id": "pyro_rota_load_ud",
-      "on": {
-        "word": "rota"
-      },
-      "requires": "school.pyro",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_ud",
-          "args": {
-            "spell": "aoe_flame",
-            "axisWord": "pyro",
-            "slot": "UD"
-          }
-        }
-      }
-    },
-    {
-      "id": "pyro_sanctum_load_lr",
-      "on": {
-        "word": "sanctum"
-      },
-      "requires": "school.pyro",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_lr",
-          "args": {
-            "spell": "aoe_flame",
-            "axisWord": "pyro",
-            "slot": "LR"
-          }
-        }
-      }
-    },
-    {
-      "id": "pyro_vectus_load_fb",
-      "on": {
-        "word": "vectus"
-      },
-      "requires": "school.pyro",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_fb",
-          "args": {
-            "spell": "aoe_flame",
-            "axisWord": "pyro",
-            "slot": "FB"
-          }
-        }
-      }
-    },
-    {
-      "id": "pyro_rota_load_ud_spin",
-      "on": {
-        "word": "rota"
-      },
-      "requires": "school.pyro_spin",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_ud",
-          "args": {
-            "spell": "aoe_flame",
-            "axisWord": "pyro",
-            "slot": "UD"
-          }
-        }
-      }
-    },
-    {
-      "id": "pyro_sanctum_load_lr_spin",
-      "on": {
-        "word": "sanctum"
-      },
-      "requires": "school.pyro_spin",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_lr",
-          "args": {
-            "spell": "aoe_flame",
-            "axisWord": "pyro",
-            "slot": "LR"
-          }
-        }
-      }
-    },
-    {
-      "id": "pyro_vectus_load_fb_spin",
-      "on": {
-        "word": "vectus"
-      },
-      "requires": "school.pyro_spin",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_fb",
-          "args": {
-            "spell": "aoe_flame",
-            "axisWord": "pyro",
-            "slot": "FB"
-          }
-        }
+        "ttlMs": 2000
       }
     },
     {
@@ -352,15 +247,10 @@ This document is generated from SSOT:
         "word": "rota"
       },
       "requires": "school.fridgis",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_ud",
-          "args": {
-            "spell": "aoe_frost",
-            "axisWord": "fridgis",
-            "slot": "UD"
-          }
-        }
+      "bind": {
+        "spell": "aoe_frost",
+        "axisWord": "fridgis",
+        "slot": "UD"
       }
     },
     {
@@ -369,15 +259,10 @@ This document is generated from SSOT:
         "word": "sanctum"
       },
       "requires": "school.fridgis",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_lr",
-          "args": {
-            "spell": "aoe_frost",
-            "axisWord": "fridgis",
-            "slot": "LR"
-          }
-        }
+      "bind": {
+        "spell": "aoe_frost",
+        "axisWord": "fridgis",
+        "slot": "LR"
       }
     },
     {
@@ -386,15 +271,10 @@ This document is generated from SSOT:
         "word": "vectus"
       },
       "requires": "school.fridgis",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_fb",
-          "args": {
-            "spell": "aoe_frost",
-            "axisWord": "fridgis",
-            "slot": "FB"
-          }
-        }
+      "bind": {
+        "spell": "aoe_frost",
+        "axisWord": "fridgis",
+        "slot": "FB"
       }
     },
     {
@@ -403,15 +283,10 @@ This document is generated from SSOT:
         "word": "sanctum"
       },
       "requires": "school.electrum",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_lr",
-          "args": {
-            "spell": "aoe_electric",
-            "axisWord": "electrum",
-            "slot": "LR"
-          }
-        }
+      "bind": {
+        "spell": "aoe_electric",
+        "axisWord": "electrum",
+        "slot": "LR"
       }
     },
     {
@@ -420,15 +295,10 @@ This document is generated from SSOT:
         "word": "vectus"
       },
       "requires": "school.electrum",
-      "trigger": {
-        "spell": {
-          "id": "spell_load_fb",
-          "args": {
-            "spell": "aoe_electric",
-            "axisWord": "electrum",
-            "slot": "FB"
-          }
-        }
+      "bind": {
+        "spell": "aoe_electric",
+        "axisWord": "electrum",
+        "slot": "FB"
       }
     },
     {
@@ -837,5 +707,6 @@ This document is generated from SSOT:
 
 - Add/remove/toggle words in `wordbook-v2.js`.
 - Compose trigger/action chains in `dream-config-v2.js`.
+- Use `bind` as the canonical dream-config primitive for slot assignment/spell loading; compiled projections still lower it into `spell_load_*` runtime events.
 - `orchestrator-v2.js` is compiled output used by runtime/builder validation.
 - Runtime rule/event/signal wiring is auto-validated in `ready:v2`.

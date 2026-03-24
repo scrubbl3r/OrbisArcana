@@ -9,6 +9,7 @@ const ALLOWED_RULE_KEYS = new Set([
   "on",
   "open",
   "trigger",
+  "bind",
   "requires",
   "consume",
   "enabled",
@@ -18,6 +19,8 @@ const ALLOWED_RULE_KEYS = new Set([
 ]);
 const ALLOWED_ON_KEYS = new Set(["word", "spell", "gesture", "orb_state"]);
 const ALLOWED_OPEN_KEYS = new Set(["id", "words", "word", "spells", "ttlMs", "enabled"]);
+const ALLOWED_BIND_KEYS = new Set(["spell", "slot", "axisWord"]);
+const LEGACY_BIND_EVENT_IDS = new Set(["spell_load_ud", "spell_load_lr", "spell_load_fb"]);
 
 function asArray(v) {
   return Array.isArray(v) ? v : [];
@@ -61,7 +64,36 @@ function hasOn(rule) {
 }
 
 function hasAction(rule) {
-  return isObject(rule.open) || isObject(rule.trigger) || typeof rule.trigger === "string" || Array.isArray(rule.trigger);
+  return isObject(rule.open)
+    || isObject(rule.trigger)
+    || typeof rule.trigger === "string"
+    || Array.isArray(rule.trigger)
+    || isObject(rule.bind);
+}
+
+function hasLegacyBindTriggerAuthoring(triggerRaw) {
+  if (typeof triggerRaw === "string") {
+    return LEGACY_BIND_EVENT_IDS.has(asText(triggerRaw));
+  }
+  if (Array.isArray(triggerRaw)) {
+    return triggerRaw.some((entry) => hasLegacyBindTriggerAuthoring(entry));
+  }
+  if (!isObject(triggerRaw)) return false;
+
+  if (Object.hasOwn(triggerRaw, "spell")) {
+    const spellShorthand = triggerRaw.spell;
+    if (typeof spellShorthand === "string") {
+      return LEGACY_BIND_EVENT_IDS.has(asText(spellShorthand));
+    }
+    if (Array.isArray(spellShorthand)) {
+      return spellShorthand.some((entry) => hasLegacyBindTriggerAuthoring({ spell: entry }));
+    }
+    if (isObject(spellShorthand)) {
+      return LEGACY_BIND_EVENT_IDS.has(asText(spellShorthand.id));
+    }
+  }
+
+  return Object.keys(triggerRaw).some((key) => LEGACY_BIND_EVENT_IDS.has(asText(key)));
 }
 
 export function validateDreamConfigV2(dreamConfig) {
@@ -137,8 +169,12 @@ export function validateDreamConfigV2(dreamConfig) {
     if (Object.hasOwn(rule, "open") && !isObject(rule?.open) && typeof rule?.open !== "string" && !Array.isArray(rule?.open)) {
       errors.push(`${ruleContext}.open must be an object when present`);
     }
+    if (Object.hasOwn(rule, "bind") && !isObject(rule?.bind)) {
+      errors.push(`${ruleContext}.bind must be an object when present`);
+    }
     pushUnknownKeys(errors, `${ruleContext}.on`, rule?.on, ALLOWED_ON_KEYS);
     pushUnknownKeys(errors, `${ruleContext}.open`, rule?.open, ALLOWED_OPEN_KEYS);
+    pushUnknownKeys(errors, `${ruleContext}.bind`, rule?.bind, ALLOWED_BIND_KEYS);
     if (
       Object.hasOwn(rule, "trigger")
       && !isObject(rule?.trigger)
@@ -146,6 +182,28 @@ export function validateDreamConfigV2(dreamConfig) {
       && !Array.isArray(rule?.trigger)
     ) {
       errors.push(`${ruleContext}.trigger must be an object, string, or array when present`);
+    }
+    if (Object.hasOwn(rule, "bind") && Object.hasOwn(rule, "trigger")) {
+      errors.push(`${ruleContext} must not define both bind and trigger`);
+    }
+    if (isObject(rule?.bind)) {
+      const bind = rule.bind;
+      const spellId = asText(bind.spell);
+      const slotId = asText(bind.slot).toUpperCase();
+      if (!spellId) {
+        errors.push(`${ruleContext}.bind.spell is required`);
+      }
+      if (!slotId) {
+        errors.push(`${ruleContext}.bind.slot is required`);
+      } else if (!["UD", "LR", "FB"].includes(slotId)) {
+        errors.push(`${ruleContext}.bind.slot must be one of UD, LR, FB`);
+      }
+      if (Object.hasOwn(bind, "axisWord") && typeof bind.axisWord !== "string") {
+        errors.push(`${ruleContext}.bind.axisWord must be a string when present`);
+      }
+    }
+    if (Object.hasOwn(rule, "trigger") && hasLegacyBindTriggerAuthoring(rule.trigger)) {
+      errors.push(`${ruleContext}.trigger uses legacy spell_load_* authoring; use ${ruleContext}.bind instead`);
     }
     pushAliasError(errors, `${ruleContext}.on`, rule?.on, "spell", "word");
     pushAliasError(errors, `${ruleContext}.open`, rule?.open, "word", "words");
@@ -179,7 +237,7 @@ export function validateDreamConfigV2(dreamConfig) {
     if (seen.has(id)) errors.push(`${ROOT_CONTEXT}.rules[] contains duplicate id: ${id}`);
     seen.add(id);
     if (!hasOn(rule)) errors.push(`${ROOT_CONTEXT}.rules[${id}].on must include at least one selector`);
-    if (!hasAction(rule)) errors.push(`${ROOT_CONTEXT}.rules[${id}] must include open or trigger`);
+    if (!hasAction(rule)) errors.push(`${ROOT_CONTEXT}.rules[${id}] must include open, bind, or trigger`);
   }
 
   return { ok: errors.length === 0, errors, warnings };
