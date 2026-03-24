@@ -1229,6 +1229,7 @@
     let spellActionHandlers = Object.create(null);
     let spellCastExecutor = null;
     let createSpellActionHandlersModule = null;
+    let executeTeleportHomeSpellModule = null;
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
@@ -1385,6 +1386,7 @@
         eventBus,
         playElectricAoe,
         playFlameAoe,
+        executeTeleportHome: executeTeleportHomeSpellModule,
         teleportOrbToSpawnNeutralizePhysics,
         activateSanctusShield,
         grantSuperGrace,
@@ -1614,6 +1616,9 @@
           },
         });
         const mods = await loadReceiverInitModules();
+        executeTeleportHomeSpellModule = (typeof mods.executeTeleportHome === "function")
+          ? mods.executeTeleportHome
+          : null;
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";
         const setRuntimeWordIndexes = (next = {}) => {
           const index = (next.runtimeWordIndex && typeof next.runtimeWordIndex === "object")

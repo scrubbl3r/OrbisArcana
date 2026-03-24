@@ -4,6 +4,7 @@ export function createSpellActionHandlers({
   playFlameAoe,
   playFrostAoe,
   teleportOrbToSpawnNeutralizePhysics,
+  executeTeleportHome,
   activateSanctusShield,
   grantSuperGrace,
   domusTeleportAboveGroundPx = 300,
@@ -115,6 +116,13 @@ export function createSpellActionHandlers({
     },
     domus_teleport_orb(payload = {}) {
       void payload;
+      if (typeof executeTeleportHome === "function") {
+        executeTeleportHome({
+          teleportOrbToSpawnNeutralizePhysics,
+          aboveGroundPx: domusTeleportAboveGroundPx,
+        });
+        return;
+      }
       if (typeof teleportOrbToSpawnNeutralizePhysics === "function") {
         teleportOrbToSpawnNeutralizePhysics(domusTeleportAboveGroundPx);
       }
