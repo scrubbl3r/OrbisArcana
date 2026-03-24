@@ -108,7 +108,7 @@ export const DREAM_CONFIG_V2 = {
       id: "electrum_rota_load_ud",
       on: { word: "rota" },
       requires: "school.electrum",
-      trigger: { spell: { id: "spell_load_ud", args: { spell: "aoe_electric", axisWord: "electrum", slot: "UD" } } },
+      trigger: { spell: "aoe_electric" },
     },
     {
       id: "electrum_sanctum_load_lr",

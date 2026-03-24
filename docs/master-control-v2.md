@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-24T06:34:47.185Z
+Generated: 2026-03-24T07:00:09.096Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
@@ -367,14 +367,7 @@ This document is generated from SSOT:
       },
       "requires": "school.electrum",
       "trigger": {
-        "spell": {
-          "id": "spell_load_ud",
-          "args": {
-            "spell": "aoe_electric",
-            "axisWord": "electrum",
-            "slot": "UD"
-          }
-        }
+        "spell": "aoe_electric"
       }
     },
     {
@@ -662,11 +655,7 @@ This document is generated from SSOT:
     },
     "requires": "school.electrum",
     "trigger": {
-      "spell_load_ud": {
-        "spell": "aoe_electric",
-        "axisWord": "electrum",
-        "slot": "UD"
-      }
+      "aoe_electric": true
     }
   },
   {
