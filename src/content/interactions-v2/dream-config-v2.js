@@ -6,8 +6,10 @@ export const DREAM_CONFIG_V2 = {
     rule: { cooldownMs: 0, matchWindowMs: 2000, priority: 10 },
   },
   wake: {
-    words: ["orbis", "are_kay_nah"],
-    ttlMs: 2000,
+    roots: [
+      { id: "root.orbis", words: ["orbis"], ttlMs: 2000 },
+      { id: "root.are_kay_nah", words: ["are_kay_nah"], ttlMs: 2000 },
+    ],
   },
   groups: {
     wake_main_words: ["domus", "electrum", "pyro", "fridgis"],
@@ -16,7 +18,7 @@ export const DREAM_CONFIG_V2 = {
   rules: [
     {
       id: "wake_main",
-      on: { word: ["orbis", "are_kay_nah"] },
+      on: { word: "orbis" },
       open: { id: "wake.main", words: "@wake_main_words", ttlMs: 2000 },
     },
     {

@@ -1,13 +1,24 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-24T04:29:34.133Z",
+  "generatedAt": "2026-03-24T04:49:20.499Z",
   "enabled": true,
   "wake": {
-    "words": [
-      "orbis",
-      "are_kay_nah"
-    ],
-    "ttlMs": 2000
+    "roots": [
+      {
+        "id": "root.orbis",
+        "words": [
+          "orbis"
+        ],
+        "ttlMs": 2000
+      },
+      {
+        "id": "root.are_kay_nah",
+        "words": [
+          "are_kay_nah"
+        ],
+        "ttlMs": 2000
+      }
+    ]
   },
   "groups": {
     "wake_main_words": [
@@ -108,10 +119,7 @@
     {
       "id": "wake_main",
       "on": {
-        "word": [
-          "orbis",
-          "are_kay_nah"
-        ]
+        "word": "orbis"
       },
       "open": {
         "id": "wake.main",
@@ -424,10 +432,7 @@
       {
         "id": "wake_main",
         "on": {
-          "word": [
-            "orbis",
-            "are_kay_nah"
-          ]
+          "word": "orbis"
         },
         "open": {
           "id": "wake.main",

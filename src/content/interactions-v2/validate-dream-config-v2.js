@@ -2,7 +2,8 @@ import { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.
 
 const ROOT_CONTEXT = "DREAM_CONFIG_V2";
 const ALLOWED_ROOT_KEYS = new Set(["version", "enabled", "defaults", "wake", "groups", "rules"]);
-const ALLOWED_WAKE_KEYS = new Set(["words", "word", "spells", "ttlMs", "enabled"]);
+const ALLOWED_WAKE_KEYS = new Set(["words", "word", "spells", "ttlMs", "enabled", "roots"]);
+const ALLOWED_WAKE_ROOT_KEYS = new Set(["id", "words", "word", "ttlMs", "enabled"]);
 const ALLOWED_RULE_KEYS = new Set([
   "id",
   "on",
@@ -76,10 +77,37 @@ export function validateDreamConfigV2(dreamConfig) {
 
   if (!isObject(dreamConfig.wake)) {
     errors.push(`${ROOT_CONTEXT}.wake must be an object`);
-  } else if (!Object.hasOwn(dreamConfig.wake, "words")) {
-    errors.push(`${ROOT_CONTEXT}.wake.words is required`);
-  } else if (!asSelectorList(dreamConfig.wake.words).length) {
-    errors.push(`${ROOT_CONTEXT}.wake.words must contain at least one entry`);
+  } else {
+    const wake = dreamConfig.wake;
+    const hasWakeWords = Object.hasOwn(wake, "words");
+    const hasWakeRoots = Object.hasOwn(wake, "roots");
+    if (!hasWakeWords && !hasWakeRoots) {
+      errors.push(`${ROOT_CONTEXT}.wake.words or ${ROOT_CONTEXT}.wake.roots is required`);
+    }
+    if (hasWakeWords && !asSelectorList(wake.words).length) {
+      errors.push(`${ROOT_CONTEXT}.wake.words must contain at least one entry`);
+    }
+    if (hasWakeRoots) {
+      if (!Array.isArray(wake.roots) || !wake.roots.length) {
+        errors.push(`${ROOT_CONTEXT}.wake.roots must be a non-empty array`);
+      } else {
+        for (let i = 0; i < wake.roots.length; i += 1) {
+          const root = wake.roots[i];
+          const rootCtx = `${ROOT_CONTEXT}.wake.roots[${i}]`;
+          if (!isObject(root)) {
+            errors.push(`${rootCtx} must be an object`);
+            continue;
+          }
+          pushUnknownKeys(errors, rootCtx, root, ALLOWED_WAKE_ROOT_KEYS);
+          if (!Object.hasOwn(root, "words")) {
+            errors.push(`${rootCtx}.words is required`);
+          } else if (!asSelectorList(root.words).length) {
+            errors.push(`${rootCtx}.words must contain at least one entry`);
+          }
+          pushAliasError(errors, rootCtx, root, "word", "words");
+        }
+      }
+    }
   }
   pushUnknownKeys(errors, `${ROOT_CONTEXT}.wake`, dreamConfig.wake, ALLOWED_WAKE_KEYS);
 
