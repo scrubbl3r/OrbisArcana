@@ -1205,6 +1205,7 @@
 
     // ===== GAME MVP SYSTEMS (ORB STATE) BEGIN =====
     let mvp = null;
+    let eventBus = null;
     let worldSystem = null;
     let orbFxSystem = null;
     let orbSystemsBundle = null;
@@ -1985,7 +1986,7 @@
         const createRuleEnginePreviewSystemFactory = createRuleEnginePreviewSystem;
         const worldItemSpawns = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [];
 
-        const eventBus = createEventBus();
+        eventBus = createEventBus();
         const gameState = createGameState({
           orb: {
             maxHealth: 300,
