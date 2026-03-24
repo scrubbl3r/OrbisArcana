@@ -6,6 +6,18 @@ import {
 import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../interactions-v2/orchestrator-v2-wake-profile.js";
 import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js";
 
+const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
+  "orbis",
+  "are_kay_nah",
+  "domus",
+  "electrum",
+  "fridgis",
+  "pyro",
+  "rota",
+  "sanctum",
+  "vectus",
+]);
+
 function asSelectorList(raw) {
   if (Array.isArray(raw)) return raw.slice();
   const text = String(raw || "").trim();
@@ -32,6 +44,18 @@ function uniqueWordIds(ids = []) {
       .map((id) => asWordId(id))
       .filter((id) => id && Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, id))
   ));
+}
+
+function orderWordIdsByPreferred(ids = []) {
+  const set = new Set(uniqueWordIds(ids));
+  const out = [];
+  for (const preferredId of PREFERRED_KWS_TOKEN_ORDER) {
+    if (!set.has(preferredId)) continue;
+    out.push(preferredId);
+    set.delete(preferredId);
+  }
+  for (const id of set) out.push(id);
+  return out;
 }
 
 function resolveWordRefs(raw, groups = {}) {
@@ -109,13 +133,15 @@ function buildDerivedRuntimeProfileV2() {
       !wakeWindowWordIds.includes(id)
     )
   );
-  const rowTopWordIds = uniqueWordIds([
+  const rowTopWordIds = orderWordIdsByPreferred([
     ...wakeWordIds,
     ...standaloneWordIds,
     ...wakeRequiredWordIds,
     ...axisWordIds,
+    ...wakeWindowWordIds,
   ]);
-  const rowBottomWordIds = uniqueWordIds(wakeWindowWordIds);
+  // Keep wake-window tokens for gating logic, but avoid duplicate flasher rows in UI.
+  const rowBottomWordIds = [];
   const flashTokenWordIds = rowTopWordIds.slice();
   const inferDefaultWordId = axisWordIds.includes("pyro")
     ? "pyro"

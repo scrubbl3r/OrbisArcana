@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-24T04:21:28.157Z
+Generated: 2026-03-24T04:29:34.127Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
