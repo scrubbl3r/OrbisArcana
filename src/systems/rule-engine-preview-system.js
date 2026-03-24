@@ -42,6 +42,15 @@ function norm(v) {
   return String(v || "").trim().toLowerCase();
 }
 
+function resolveEventNowMs(payload = {}, nowMs = () => Date.now()) {
+  const runtimeNow = Number(nowMs()) || Date.now();
+  const rawAtMs = Number(payload && payload.atMs);
+  // Some providers emit frame/perf-relative timestamps (small numbers) while
+  // others emit epoch ms. Normalize to runtime clock to keep window gating stable.
+  if (!Number.isFinite(rawAtMs) || rawAtMs < 100000000000) return runtimeNow;
+  return rawAtMs;
+}
+
 function asActionType(v) {
   return String(v || "").trim().toLowerCase();
 }
@@ -618,7 +627,7 @@ export function createRuleEnginePreviewSystem({
   }
 
   function onSignalHit(signalId, sourceEvent, payload = {}, maxMatchesBudget = 0, maxActionsBudget = 0, maxRulesEvaluatedBudget = 0) {
-    const now = Number(payload && payload.atMs) || nowMs();
+    const now = resolveEventNowMs(payload, nowMs);
     const overrideDebounceMsRaw = Number(signalDebounceOverrides[signalId]);
     const effectiveSignalDebounceMs = Number.isFinite(overrideDebounceMsRaw)
       ? Math.max(0, overrideDebounceMsRaw)
@@ -780,7 +789,7 @@ export function createRuleEnginePreviewSystem({
       const signals = runtime.signalsBySourceEvent[sourceEvent] || [];
       if (!signals.length) continue;
       unsub.push(eventBus.on(sourceEvent, (payload = {}) => {
-        const now = Number(payload && payload.atMs) || nowMs();
+        const now = resolveEventNowMs(payload, nowMs);
         const sourceEventDebounceOverrideRaw = Number(sourceEventDebounceOverrides[sourceEvent]);
         const effectiveSourceEventDebounceMs = Number.isFinite(sourceEventDebounceOverrideRaw)
           ? Math.max(0, sourceEventDebounceOverrideRaw)

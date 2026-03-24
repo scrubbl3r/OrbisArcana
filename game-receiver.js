@@ -2068,6 +2068,23 @@
             schema: ruleSchema,
             executeActions: RULE_ENGINE_EXECUTE_ACTIONS,
           });
+          if (RULE_CHAIN_TRACE_ENABLED) {
+            const rules = Array.isArray(ruleSchema.rules) ? ruleSchema.rules : [];
+            const signals = Array.isArray(ruleSchema.signals) ? ruleSchema.signals : [];
+            const hasWakeMain = rules.some((r) => String(r && r.id || "").trim().toLowerCase() === "wake_main");
+            const hasTeleHome = rules.some((r) => String(r && r.id || "").trim().toLowerCase() === "tele_home");
+            const orbisSignal = signals.find((s) => String(s && s.id || "").trim().toLowerCase() === "spell.orbis");
+            kwsBridge.pushLogLine(
+              `TRACE schema rules:${rules.length} signals:${signals.length} wake_main:${hasWakeMain} tele_home:${hasTeleHome}`,
+              "muted"
+            );
+            if (orbisSignal) {
+              kwsBridge.pushLogLine(
+                `TRACE sig.orbis src:${String(orbisSignal.sourceEvent || "")} path:${String(orbisSignal.where && orbisSignal.where.path || "")} eq:${String(orbisSignal.where && orbisSignal.where.eq || "")}`,
+                "muted"
+              );
+            }
+          }
         }
         if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
           kwsEventBindings.dispose();
@@ -2151,6 +2168,9 @@
         spellDispatchSystem.start();
         if (ruleEnginePreviewSystem && typeof ruleEnginePreviewSystem.start === "function") {
           ruleEnginePreviewSystem.start();
+          if (RULE_CHAIN_TRACE_ENABLED) {
+            kwsBridge.pushLogLine("TRACE rule_engine:start", "muted");
+          }
         }
         const globeSpawns = (Array.isArray(worldItemSpawns) ? worldItemSpawns : [])
           .map(normalizeWorldItemSpawn)
