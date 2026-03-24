@@ -382,6 +382,9 @@ export function createSpellDispatchSystem({
     }));
 
     function onVoiceDetected(payload = {}) {
+      // When the rule engine is active, authored gameplay chains own voice recognition/load semantics.
+      // Dispatch remains the slot/shake owner and should not compete by consuming words directly.
+      if (ruleEngineEnabled) return;
       const detected = (payload && typeof payload === "object")
         ? (payload.spell || payload.word || {})
         : {};
