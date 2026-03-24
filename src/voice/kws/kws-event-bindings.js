@@ -42,6 +42,8 @@ export function bindKwsEventHandlers({
   const wakeTtlMs = Math.max(0, Number(ORCHESTRATOR_V2_WAKE_TTL_MS) || gateTimeoutMs);
   let wakeArmedUntilMs = 0;
   let lastTeleHomeFallbackAtMs = 0;
+  let electrumWindowUntilMs = 0;
+  let lastElectricAoeFallbackAtMs = 0;
   const wakeWordIds = new Set(
     (Array.isArray(ORCHESTRATOR_V2_WAKE_WORD_IDS) ? ORCHESTRATOR_V2_WAKE_WORD_IDS : [])
       .map((wordId) => String(wordId || "").trim().toLowerCase())
@@ -146,6 +148,31 @@ export function bindKwsEventHandlers({
       atMs: now,
     });
     pushKwsLogLine("TRACE fallback:tele_home", "ok");
+  }));
+
+  // Safety bridge: preserve expected `orbis -> electrum -> rota => aoe_electric`
+  // while runtime chain migration is in progress.
+  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
+    const now = Date.now();
+    const wordId = getDetectedWordId(p);
+    if (!wordId) return;
+
+    if (wordId === "electrum" && now <= wakeArmedUntilMs) {
+      electrumWindowUntilMs = now + 1500;
+      return;
+    }
+    if (wordId !== "rota") return;
+    if (now > electrumWindowUntilMs) return;
+    if ((now - lastElectricAoeFallbackAtMs) < 250) return;
+    lastElectricAoeFallbackAtMs = now;
+    eventBus.emit("rule_engine.action_executed", {
+      ruleId: "electric_aoe_fallback",
+      actionType: "event",
+      actionId: "aoe_electric",
+      args: {},
+      atMs: now,
+    });
+    pushKwsLogLine("TRACE fallback:electric_aoe", "ok");
   }));
 
   unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
