@@ -2460,6 +2460,25 @@
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine(`TRACE src:${windowId}:${ttlMs}`, "muted");
         });
         if (RULE_CHAIN_TRACE_ENABLED) {
+          eventBus.on("input.shake_triggered", (p = {}) => {
+            const group = String(p.group || "").trim().toUpperCase();
+            const code = String(p.code || "").trim().toUpperCase();
+            kwsBridge.pushLogLine(`TRACE shake:code:${code || "-"} group:${group || "-"}`, group ? "muted" : "warn");
+          });
+          eventBus.on("spell.slot_load_requested", (p = {}) => {
+            const slot = String(p.slot || "").trim().toUpperCase();
+            const spell = String((p.spell || p.wordId || p.spellId) || "").trim().toLowerCase();
+            kwsBridge.pushLogLine(`TRACE slot_load_req:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
+          });
+          eventBus.on("voice.spell_loaded", (p = {}) => {
+            const slot = String(p.slot || "").trim().toUpperCase();
+            const spell = String((p.castActionId || p.wordId || p.spellId) || "").trim().toLowerCase();
+            kwsBridge.pushLogLine(`TRACE slot_loaded:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
+          });
+          eventBus.on("spell.slot_cast_requested", (p = {}) => {
+            const slot = String(p.slot || "").trim().toUpperCase();
+            kwsBridge.pushLogLine(`TRACE slot_cast_req:${slot || "-"}`, slot ? "ok" : "warn");
+          });
           eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
             const token = String(p.token || "").trim().toLowerCase();
             if (!token) return;
