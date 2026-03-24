@@ -1,6 +1,6 @@
 import { WORDBOOK_V2_WORDS } from "../content/interactions-v2/wordbook-v2.js";
 
-// Canonical runtime view for wake words.
+// Canonical runtime view for words.
 export const WORDS = Object.freeze(
   (Array.isArray(WORDBOOK_V2_WORDS) ? WORDBOOK_V2_WORDS : []).map((w) => Object.freeze({
     active: w.active !== false,
@@ -33,9 +33,3 @@ export const ACTIVE_WORDS_BY_ID = Object.freeze(
     return acc;
   }, {})
 );
-
-// Backward-compatible aliases for existing spell-centric imports.
-export const SPELLS = WORDS;
-export const SPELLS_BY_ID = WORDS_BY_ID;
-export const ACTIVE_SPELLS = ACTIVE_WORDS;
-export const ACTIVE_SPELLS_BY_ID = ACTIVE_WORDS_BY_ID;

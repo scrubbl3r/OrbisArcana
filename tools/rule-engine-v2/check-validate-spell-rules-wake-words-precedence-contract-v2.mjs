@@ -13,7 +13,7 @@ import { hasWakeUnknownWordErrorV2 } from "./wake-error-matchers-v2.mjs";
 
 const CHECK_TAG = "validate-spell-rules-wake-words-precedence-contract:v2";
 const ACTION_WAKE_WIN = "wake_win";
-const PASS_MESSAGE = "validateSpellRules gives canonical wake_win.words[] precedence over legacy wake_win.spells[] alias when both are present";
+const PASS_MESSAGE = "validateSpellRules gives canonical wake_win.words[] precedence over compat wake_win.spells[] alias when both are present";
 
 const canonicalWinsRules = [
   {
@@ -26,7 +26,7 @@ const canonicalWinsErrors = validateSpellRules(canonicalWinsRules);
 if (hasWakeUnknownWordErrorV2(canonicalWinsErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateSpellRules should prefer canonical wake_win.words[] over legacy spells[] alias when both exist: ${canonicalWinsErrors.join(" | ")}`
+    `validateSpellRules should prefer canonical wake_win.words[] over compat spells[] alias when both exist: ${canonicalWinsErrors.join(" | ")}`
   );
 }
 

@@ -44,6 +44,48 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
       event: "orb.state_set",
     }),
   }),
+  Object.freeze({
+    id: "spell_load_ud",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "spell_load_ud",
+    }),
+  }),
+  Object.freeze({
+    id: "spell_load_lr",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "spell_load_lr",
+    }),
+  }),
+  Object.freeze({
+    id: "spell_load_fb",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "spell_load_fb",
+    }),
+  }),
+  Object.freeze({
+    id: "cast_loaded_ud",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "cast_loaded_ud",
+    }),
+  }),
+  Object.freeze({
+    id: "cast_loaded_lr",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "cast_loaded_lr",
+    }),
+  }),
+  Object.freeze({
+    id: "cast_loaded_fb",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "cast_loaded_fb",
+    }),
+  }),
 ]);
 
 export const EVENT_RUNTIME_BINDINGS_BY_ID = Object.freeze(

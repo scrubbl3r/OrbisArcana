@@ -13,11 +13,12 @@ import {
   requireNonEmptyArray,
   isStringOrArray,
   validateOptionalObjectSection,
-} from "./orchestrator-v1-normalizers.js";
+} from "./interactions-v2-normalizers.js";
 
 const ROOT_CONTEXT = "ORCHESTRATOR_V2";
 const DEFAULTS_CONTEXT = `${ROOT_CONTEXT}.defaults`;
 const GROUPS_CONTEXT = `${ROOT_CONTEXT}.groups`;
+const WAKE_CONTEXT = `${ROOT_CONTEXT}.wake`;
 
 const MIN_MATCH_WINDOW_MS = 100;
 const ID_RE = /^[A-Za-z0-9_.@-]+$/;
@@ -209,6 +210,77 @@ function validateGroups(groupsRaw, errors) {
       if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedWordId)) {
         errors.push(`${ctx} references unknown/inactive word id: ${normalizedWordId}`);
       }
+    }
+  }
+}
+
+function validateWake(wakeRaw, errors, warnings) {
+  const wakeShapeOk = (
+    wakeRaw == null
+    || typeof wakeRaw === "string"
+    || Array.isArray(wakeRaw)
+    || isPlainObject(wakeRaw)
+  );
+  if (!wakeShapeOk) {
+    errors.push(`${WAKE_CONTEXT} must be a string, array, or object when present`);
+    return;
+  }
+  if (wakeRaw == null) return;
+
+  let wakeWordsRaw = wakeRaw;
+  if (isPlainObject(wakeRaw)) {
+    const wake = asObj(wakeRaw);
+    pushUnsupportedKeys(errors, WAKE_CONTEXT, wake, new Set(["words", "spells", "enabled", "ttlMs"]));
+    pushBooleanEnabledErrorWhenPresent(errors, WAKE_CONTEXT, wake);
+    if (Object.hasOwn(wake, "words") && !isStringOrArray(wake.words)) {
+      errors.push(`${WAKE_CONTEXT}.words must be a string or array when present`);
+    }
+    if (Object.hasOwn(wake, "spells")) {
+      if (!isStringOrArray(wake.spells)) {
+        errors.push(`${WAKE_CONTEXT}.spells must be a string or array when present`);
+      } else {
+        warnings.push(`${WAKE_CONTEXT}.spells alias is deprecated; prefer ${WAKE_CONTEXT}.words`);
+      }
+    }
+    validateNumericWhenPresent(
+      errors,
+      WAKE_CONTEXT,
+      wake,
+      "ttlMs",
+      (n) => Number.isFinite(n) && n >= 0,
+      "must be a finite number >= 0 when present"
+    );
+    wakeWordsRaw = Object.hasOwn(wake, "words") ? wake.words : wake.spells;
+  }
+
+  const rawValues = asSelectorList(wakeWordsRaw);
+  if (!rawValues.length) {
+    // Keep message text stable for existing validator contract checks.
+    errors.push(`${WAKE_CONTEXT} must define at least one wake word`);
+    return;
+  }
+
+  const seen = new Set();
+  for (const rawValue of rawValues) {
+    if (typeof rawValue !== "string") {
+      errors.push(`${WAKE_CONTEXT} contains non-string word id: ${asText(rawValue) || "(empty)"}`);
+      continue;
+    }
+    if (rawValue !== rawValue.trim()) {
+      errors.push(`${WAKE_CONTEXT} contains word id with leading/trailing whitespace: ${rawValue}`);
+    }
+    const normalizedWordId = normalizeWordId(rawValue);
+    if (!normalizedWordId) {
+      errors.push(`${WAKE_CONTEXT} contains invalid word id: ${asText(rawValue) || "(empty)"}`);
+      continue;
+    }
+    if (!ID_RE.test(normalizedWordId)) {
+      errors.push(`${WAKE_CONTEXT} contains invalid word id shape: ${asText(rawValue) || "(empty)"}`);
+      continue;
+    }
+    pushDuplicateWhenSeen(errors, seen, normalizedWordId, `${WAKE_CONTEXT} contains duplicate word id: ${normalizedWordId}`);
+    if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedWordId)) {
+      errors.push(`${WAKE_CONTEXT} references unknown/inactive word id: ${normalizedWordId}`);
     }
   }
 }
@@ -682,7 +754,7 @@ export function validateOrchestratorV2(orchestratorInput = null) {
   const warnings = [];
   const cfg = asObj(orchestratorInput);
 
-  pushUnsupportedKeys(errors, ROOT_CONTEXT, cfg, new Set(["version", "enabled", "defaults", "groups", "rules"]));
+  pushUnsupportedKeys(errors, ROOT_CONTEXT, cfg, new Set(["version", "enabled", "defaults", "groups", "wake", "rules"]));
 
   if (typeof cfg.version === "string" && cfg.version !== cfg.version.trim()) {
     errors.push(`${ROOT_CONTEXT}.version must not include leading/trailing whitespace: ${cfg.version}`);
@@ -706,6 +778,7 @@ export function validateOrchestratorV2(orchestratorInput = null) {
 
   validateOptionalObjectSection(cfg, "defaults", (defaults) => validateDefaults(defaults, errors));
   validateOptionalObjectSection(cfg, "groups", (groups) => validateGroups(groups, errors));
+  if (Object.hasOwn(cfg, "wake")) validateWake(cfg.wake, errors, warnings);
 
   const groups = asObj(cfg.groups);
   const seenRuleIds = new Set();

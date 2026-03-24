@@ -1,6 +1,6 @@
 {
   "schema": "orbis.interactions_v2.effective_snapshot",
-  "generatedAt": "2026-03-23T07:10:33.522Z",
+  "generatedAt": "2026-03-24T03:58:33.366Z",
   "flags": {
     "interactionsV2Bootstrap": {
       "useInReceiverBootstrap": false
@@ -23,6 +23,88 @@
   },
   "spellbookV2": {
     "version": "2",
+    "words": [
+      {
+        "id": "orbis",
+        "phrase": "orbis",
+        "active": true,
+        "onnx": "orbis",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "arcana",
+        "phrase": "arcana",
+        "active": true,
+        "onnx": "arcana",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "are_kay_nah",
+        "phrase": "are kay nah",
+        "active": true,
+        "onnx": "are_kay_nah",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "domus",
+        "phrase": "domus",
+        "active": true,
+        "onnx": "domus",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "pyro",
+        "phrase": "pyro",
+        "active": true,
+        "onnx": "pyro",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "fridgis",
+        "phrase": "fridgis",
+        "active": true,
+        "onnx": "fridgis",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "electrum",
+        "phrase": "electrum",
+        "active": true,
+        "onnx": "electrum",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "sanctum",
+        "phrase": "sanctum",
+        "active": true,
+        "onnx": "sanctum",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "vectus",
+        "phrase": "vectus",
+        "active": true,
+        "onnx": "vectus",
+        "confidence": 0.4,
+        "cooldownMs": 0
+      },
+      {
+        "id": "rota",
+        "phrase": "rota",
+        "active": true,
+        "onnx": "rota",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      }
+    ],
     "spells": [
       {
         "id": "orbis",
@@ -126,7 +208,7 @@
           "all": [
             {
               "type": "word",
-              "id": "spell.fridgis"
+              "id": "word.fridgis"
             }
           ]
         },
@@ -143,7 +225,7 @@
           "all": [
             {
               "type": "word",
-              "id": "spell.electrum"
+              "id": "word.electrum"
             }
           ]
         },
@@ -160,7 +242,7 @@
           "all": [
             {
               "type": "word",
-              "id": "spell.pyro"
+              "id": "word.pyro"
             }
           ]
         },
@@ -177,7 +259,7 @@
           "all": [
             {
               "type": "word",
-              "id": "spell.domus"
+              "id": "word.domus"
             }
           ]
         },
@@ -194,7 +276,7 @@
           "all": [
             {
               "type": "word",
-              "id": "spell.rota"
+              "id": "word.rota"
             },
             {
               "type": "gesture",
@@ -210,14 +292,14 @@
           {
             "type": "wake_win",
             "words": [
-              "spell.rota",
-              "spell.sanctum",
-              "spell.vectus"
+              "word.rota",
+              "word.sanctum",
+              "word.vectus"
             ],
             "spells": [
-              "spell.rota",
-              "spell.sanctum",
-              "spell.vectus"
+              "word.rota",
+              "word.sanctum",
+              "word.vectus"
             ]
           },
           {

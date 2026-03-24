@@ -2,7 +2,7 @@ import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
 import { readJsonOrFail } from "./check-json-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import { buildRuleEngineFromOrchestratorV1, ORCHESTRATOR_V1 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromOrchestratorV2, ORCHESTRATOR_V2 } from "../../src/content/interactions-v2/index.js";
 
 // Validates orchestrator projection section fields inside master-control artifact.
 const CHECK_TAG = "master-control-orchestrator-section:v2";
@@ -23,10 +23,10 @@ if (!section || typeof section !== "object") {
   failCheck(CHECK_TAG, `master-control json missing ${PROJECTION_KEY} section`);
 }
 
-const expectedVersion = typeof ORCHESTRATOR_V1?.version === "string" ? ORCHESTRATOR_V1.version : "";
-const expectedEnabled = ORCHESTRATOR_V1?.enabled !== false;
-const expectedAuthoredRules = Array.isArray(ORCHESTRATOR_V1?.rules) ? ORCHESTRATOR_V1.rules : [];
-const expectedCompiledEngine = buildRuleEngineFromOrchestratorV1();
+const expectedVersion = typeof ORCHESTRATOR_V2?.version === "string" ? ORCHESTRATOR_V2.version : "";
+const expectedEnabled = ORCHESTRATOR_V2?.enabled !== false;
+const expectedAuthoredRules = Array.isArray(ORCHESTRATOR_V2?.rules) ? ORCHESTRATOR_V2.rules : [];
+const expectedCompiledEngine = buildRuleEngineFromOrchestratorV2();
 const expectedCompiledRules = Array.isArray(expectedCompiledEngine?.rules) ? expectedCompiledEngine.rules : [];
 const sectionVersion = typeof section.version === "string" ? section.version : "";
 

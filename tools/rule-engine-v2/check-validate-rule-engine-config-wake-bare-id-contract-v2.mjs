@@ -27,15 +27,15 @@ if (hasWakeUnknownWordErrorV2(canonicalBareKnown, KNOWN_WAKE_WORD_ID_V2)) {
   );
 }
 
-const legacyBareKnown = validateRuleEngineConfig(withSingleRule({
-  id: "t_legacy_bare_known",
+const compatBareKnown = validateRuleEngineConfig(withSingleRule({
+  id: "t_compat_bare_known",
   on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
   then: [{ type: ACTION_WAKE_WIN, spells: [KNOWN_WAKE_WORD_ID_V2] }],
 }));
-if (hasWakeUnknownWordErrorV2(legacyBareKnown, KNOWN_WAKE_WORD_ID_V2)) {
+if (hasWakeUnknownWordErrorV2(compatBareKnown, KNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateRuleEngineConfig should accept bare legacy wake spells[] alias refs: ${legacyBareKnown.join(" | ")}`
+    `validateRuleEngineConfig should accept bare compat wake spells[] alias refs: ${compatBareKnown.join(" | ")}`
   );
 }
 
@@ -51,15 +51,15 @@ if (!hasWakeUnknownWordErrorV2(canonicalBareUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
   );
 }
 
-const legacyBareUnknown = validateRuleEngineConfig(withSingleRule({
-  id: "t_legacy_bare_unknown",
+const compatBareUnknown = validateRuleEngineConfig(withSingleRule({
+  id: "t_compat_bare_unknown",
   on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
   then: [{ type: ACTION_WAKE_WIN, spells: [UNKNOWN_WAKE_WORD_ID_V2] }],
 }));
-if (!hasWakeUnknownWordErrorV2(legacyBareUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
+if (!hasWakeUnknownWordErrorV2(compatBareUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateRuleEngineConfig must reject unknown bare legacy wake spells[] refs: ${legacyBareUnknown.join(" | ")}`
+    `validateRuleEngineConfig must reject unknown bare compat wake spells[] refs: ${compatBareUnknown.join(" | ")}`
   );
 }
 

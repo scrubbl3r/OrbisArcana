@@ -8,7 +8,6 @@ import {
 
 const INTERACTIONS_V2_VERSION = "2";
 const CONDITION_TYPE_WORD = "word";
-const CONDITION_TYPE_SPELL = "spell";
 const CONDITION_TYPE_GESTURE = "gesture";
 const CONDITION_TYPE_ORB_STATE = "orb_state";
 const ACTION_TYPE_EVENT = "event";
@@ -32,6 +31,16 @@ const FIELD_GRACE = "grace";
 const FIELD_MS = "ms";
 const FIELD_OVERRIDES = "overrides";
 const FIELD_STATE = "state";
+const SPELL_PREFIX = "spell.";
+const WORD_PREFIX = `${CONDITION_TYPE_WORD}.`;
+
+function toCanonicalWordSelector(rawId) {
+  const id = typeof rawId === "string" ? rawId.trim().toLowerCase() : "";
+  if (!id) return id;
+  if (id.startsWith(WORD_PREFIX)) return id;
+  if (id.startsWith(SPELL_PREFIX)) return `${WORD_PREFIX}${id.slice(SPELL_PREFIX.length)}`;
+  return id;
+}
 
 function makeCondition(type, id) {
   return Object.freeze({ [FIELD_TYPE]: type, [FIELD_ID]: id });
@@ -84,36 +93,36 @@ export const INTERACTIONS_V2 = Object.freeze({
   [FIELD_RULES]: Object.freeze([
     makeRule(
       "r_fridgis_immediate",
-      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.FRIDGIS)],
+      [makeCondition(CONDITION_TYPE_WORD, toCanonicalWordSelector(SIGNAL_HANDLES_V2.FRIDGIS))],
       [makeEventAction(EVENT_HANDLES_V2.AOE_FROST)]
     ),
     makeRule(
       "r_electrum_immediate",
-      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.ELECTRUM)],
+      [makeCondition(CONDITION_TYPE_WORD, toCanonicalWordSelector(SIGNAL_HANDLES_V2.ELECTRUM))],
       [makeEventAction(EVENT_HANDLES_V2.AOE_ELECTRIC)]
     ),
     makeRule(
       "r_pyro_immediate",
-      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.PYRO)],
+      [makeCondition(CONDITION_TYPE_WORD, toCanonicalWordSelector(SIGNAL_HANDLES_V2.PYRO))],
       [makeEventAction(EVENT_HANDLES_V2.AOE_FLAME)]
     ),
     makeRule(
       "r_domus_immediate",
-      [makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.DOMUS)],
+      [makeCondition(CONDITION_TYPE_WORD, toCanonicalWordSelector(SIGNAL_HANDLES_V2.DOMUS))],
       [makeEventAction(EVENT_HANDLES_V2.TELEPORT_HOME)]
     ),
     makeRule(
       "r_rota_yspin_charged",
       [
-        makeCondition(CONDITION_TYPE_WORD, SIGNAL_HANDLES_V2.ROTA),
+        makeCondition(CONDITION_TYPE_WORD, toCanonicalWordSelector(SIGNAL_HANDLES_V2.ROTA)),
         makeCondition(CONDITION_TYPE_GESTURE, SIGNAL_HANDLES_V2.SPIN_Y),
         makeCondition(CONDITION_TYPE_ORB_STATE, SIGNAL_HANDLES_V2.ORB_CHARGED),
       ],
       [
         makeWakeWinAction([
-          SIGNAL_HANDLES_V2.ROTA,
-          SIGNAL_HANDLES_V2.SANCTUM,
-          SIGNAL_HANDLES_V2.VECTUS,
+          toCanonicalWordSelector(SIGNAL_HANDLES_V2.ROTA),
+          toCanonicalWordSelector(SIGNAL_HANDLES_V2.SANCTUM),
+          toCanonicalWordSelector(SIGNAL_HANDLES_V2.VECTUS),
         ]),
         makeEventAction(EVENT_HANDLES_V2.AOE_ELECTRIC, { range: 14 }),
         makeEventAction(EVENT_HANDLES_V2.GRACE),
@@ -122,8 +131,6 @@ export const INTERACTIONS_V2 = Object.freeze({
     ),
   ]),
 });
-
-const SPELL_PREFIX = `${CONDITION_TYPE_SPELL}.`;
 
 function asLowerTrimmed(value) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -139,9 +146,7 @@ function hasActionType(actions, expectedType) {
 function normalizeWordConditionId(rawId) {
   const condIdRaw = asLowerTrimmed(rawId);
   if (!condIdRaw) return "";
-  if (condIdRaw.startsWith(SPELL_PREFIX)) return condIdRaw.slice(SPELL_PREFIX.length);
-  const wordPrefix = `${CONDITION_TYPE_WORD}.`;
-  if (condIdRaw.startsWith(wordPrefix)) return condIdRaw.slice(wordPrefix.length);
+  if (condIdRaw.startsWith(WORD_PREFIX)) return condIdRaw.slice(WORD_PREFIX.length);
   return condIdRaw;
 }
 
@@ -158,7 +163,7 @@ function getSingleWordConditionId(rule) {
   const cond = onAll.length === 1 ? (onAll[0] || null) : null;
   if (!cond) return "";
   const condType = asLowerTrimmed(cond?.[FIELD_TYPE]);
-  if (condType !== CONDITION_TYPE_SPELL && condType !== CONDITION_TYPE_WORD) return "";
+  if (condType !== CONDITION_TYPE_WORD) return "";
   const condId = normalizeWordConditionId(cond?.[FIELD_ID]);
   return condId || "";
 }
@@ -201,7 +206,3 @@ export function collectImmediateEventWordIdsFromInteractionsV2(cfg = INTERACTION
   const rules = getInteractionRules(cfg);
   return Object.freeze(collectImmediateEventWordIdsFromRules(rules));
 }
-
-// Compatibility alias.
-export const collectImmediateEventSpellIdsFromInteractionsV2 =
-  collectImmediateEventWordIdsFromInteractionsV2;

@@ -23,18 +23,18 @@ if (hasWakeUnknownWordErrorV2(canonicalBareErrors, KNOWN_WAKE_WORD_ID_V2)) {
   );
 }
 
-const legacyBareRules = [
+const compatBareRules = [
   {
-    id: "t_wake_words_bare_legacy_alias",
+    id: "t_wake_words_bare_compat",
     on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
     then: [{ type: ACTION_WAKE_WIN, spells: [KNOWN_WAKE_WORD_ID_V2] }],
   },
 ];
-const legacyBareErrors = validateSpellRules(legacyBareRules);
-if (hasWakeUnknownWordErrorV2(legacyBareErrors, KNOWN_WAKE_WORD_ID_V2)) {
+const compatBareErrors = validateSpellRules(compatBareRules);
+if (hasWakeUnknownWordErrorV2(compatBareErrors, KNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateSpellRules should accept bare wake_win.spells[] alias refs: ${legacyBareErrors.join(" | ")}`
+    `validateSpellRules should accept bare wake_win.spells[] alias refs: ${compatBareErrors.join(" | ")}`
   );
 }
 

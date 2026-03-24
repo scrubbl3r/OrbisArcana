@@ -1,4 +1,4 @@
-import { WORDS_BY_ID as SPELLS_BY_ID } from "../../voice/wordbook.js";
+import { WORDS_BY_ID } from "../../voice/wordbook.js";
 import {
   AXIS_WORD_IDS,
   KWS_FLASH_TOKEN_WORD_IDS,
@@ -13,10 +13,7 @@ import {
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
 } from "./spell-runtime-routing.js";
-import {
-  KWS_WAKE_WINDOW_WORD_IDS,
-  ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS,
-} from "../interactions-v2/orchestrator-v1-kws-profile.js";
+import { ORCHESTRATOR_V2 } from "../interactions-v2/orchestrator-v2.js";
 
 const AXES = new Set(["x", "y", "z"]);
 const SLOTS = new Set(["UD", "LR", "FB"]);
@@ -32,7 +29,7 @@ function checkSpellIdList(errors, label, ids) {
       errors.push(`${label} contains empty spell id`);
       continue;
     }
-    if (!SPELLS_BY_ID[id]) {
+    if (!WORDS_BY_ID[id]) {
       errors.push(`${label} references unknown spell id: ${id}`);
     }
   }
@@ -102,6 +99,89 @@ function isRuleLikeConfig(input) {
   return !!(input && typeof input === "object" && Array.isArray(input.rules));
 }
 
+function asSelectorList(raw) {
+  if (Array.isArray(raw)) return raw.slice();
+  const text = String(raw || "").trim();
+  if (!text) return [];
+  if (text.includes(",")) {
+    return text.split(",").map((token) => String(token || "").trim()).filter(Boolean);
+  }
+  return [text];
+}
+
+function collectOnWordIdsFromOrchestratorRule(rule) {
+  const on = (rule && typeof rule.on === "object" && !Array.isArray(rule.on)) ? rule.on : null;
+  if (!on) return [];
+  const raw = Object.hasOwn(on, "word") ? on.word : on.spell;
+  return asSelectorList(raw)
+    .map((value) => asId(value).replace(/^(word|spell)\./, ""))
+    .filter(Boolean);
+}
+
+function collectWakeWinWordIdsFromOrchestratorV2(orchestratorV2) {
+  const rules = Array.isArray(orchestratorV2 && orchestratorV2.rules) ? orchestratorV2.rules : [];
+  const groups = (orchestratorV2 && typeof orchestratorV2.groups === "object" && orchestratorV2.groups)
+    ? orchestratorV2.groups
+    : Object.create(null);
+  const out = new Set();
+  for (const rule of rules) {
+    const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
+    const openId = asId(open && open.id);
+    if (!openId.startsWith("school.")) continue;
+    const rawWords = open && (Object.hasOwn(open, "words") ? open.words : open.spells);
+    const resolvedWords = [];
+    for (const token of asSelectorList(rawWords)) {
+      const text = String(token || "").trim();
+      if (!text) continue;
+      if (text.startsWith("@")) {
+        const groupName = text.slice(1).trim();
+        const groupWords = Array.isArray(groups[groupName]) ? groups[groupName] : [];
+        for (const groupWord of groupWords) resolvedWords.push(groupWord);
+        continue;
+      }
+      resolvedWords.push(text);
+    }
+    for (const rawWordId of resolvedWords) {
+      const wordId = asId(rawWordId).replace(/^(word|spell)\./, "");
+      if (!wordId) continue;
+      out.add(wordId);
+    }
+  }
+  return out;
+}
+
+function collectImmediateWordIdsFromOrchestratorV2(orchestratorV2) {
+  const rules = Array.isArray(orchestratorV2 && orchestratorV2.rules) ? orchestratorV2.rules : [];
+  const wakeWordIds = new Set(
+    asSelectorList(orchestratorV2 && orchestratorV2.wake && orchestratorV2.wake.words)
+      .map((id) => asId(id).replace(/^(word|spell)\./, ""))
+      .filter(Boolean)
+  );
+  const axisWordIds = new Set(
+    rules
+      .filter((rule) => {
+        const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
+        return asId(open && open.id).startsWith("school.");
+      })
+      .flatMap((rule) => collectOnWordIdsFromOrchestratorRule(rule))
+      .filter(Boolean)
+  );
+  const wakeWindowWordIds = collectWakeWinWordIdsFromOrchestratorV2(orchestratorV2);
+  const out = new Set();
+  for (const rule of rules) {
+    const hasOpen = !!(rule && typeof rule.open === "object" && !Array.isArray(rule.open));
+    const hasTrigger = !!rule && Object.hasOwn(rule, "trigger");
+    if (hasOpen || !hasTrigger) continue;
+    for (const wordId of collectOnWordIdsFromOrchestratorRule(rule)) {
+      if (wakeWordIds.has(wordId)) continue;
+      if (axisWordIds.has(wordId)) continue;
+      if (wakeWindowWordIds.has(wordId)) continue;
+      out.add(wordId);
+    }
+  }
+  return out;
+}
+
 export function validateSpellRuntimeRouting(sourceConfig = null) {
   const errors = [];
   const routingEntries = Array.isArray(WORD_RUNTIME_ROUTING)
@@ -123,14 +203,12 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
 
   const inferId = asId(KWS_INFER_DEFAULT_WORD_ID);
   if (!inferId) errors.push("KWS_INFER_DEFAULT_WORD_ID is empty");
-  else if (!SPELLS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_WORD_ID references unknown spell id: ${inferId}`);
+  else if (!WORDS_BY_ID[inferId]) errors.push(`KWS_INFER_DEFAULT_WORD_ID references unknown spell id: ${inferId}`);
 
   const legacySourceMode = isRuleLikeConfig(sourceConfig);
   const expectedOwnedImmediate = legacySourceMode
     ? collectImmediateWordIdsFromConfig(sourceConfig)
-    : new Set((Array.isArray(ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS)
-      ? ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS
-      : []).map((id) => asId(id)).filter(Boolean));
+    : collectImmediateWordIdsFromOrchestratorV2(ORCHESTRATOR_V2);
   const declaredOwnedImmediate = new Set(
     (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
       .map((id) => asId(id))
@@ -155,7 +233,7 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
 
   const expectedWakeWindowSpellIds = legacySourceMode
     ? collectWakeWinWordIdsFromConfig(sourceConfig)
-    : new Set((Array.isArray(KWS_WAKE_WINDOW_WORD_IDS) ? KWS_WAKE_WINDOW_WORD_IDS : []).map((id) => asId(id)).filter(Boolean));
+    : collectWakeWinWordIdsFromOrchestratorV2(ORCHESTRATOR_V2);
   const declaredWakeWindowSpellIds = new Set(
     (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
       .map((id) => asId(id))
@@ -198,7 +276,7 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
       errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD[${token}] has empty runtime id`);
       continue;
     }
-    if (!SPELLS_BY_ID[runtimeId]) {
+    if (!WORDS_BY_ID[runtimeId]) {
       errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD[${token}] references unknown spell id: ${runtimeId}`);
     }
   }
@@ -213,7 +291,7 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
     if (seenRoutingIds.has(id)) errors.push(`${ROUTING_LABEL} duplicate id: ${id}`);
     seenRoutingIds.add(id);
 
-    if (!SPELLS_BY_ID[id]) errors.push(`${ROUTING_LABEL} entry references unknown spell id: ${id}`);
+    if (!WORDS_BY_ID[id]) errors.push(`${ROUTING_LABEL} entry references unknown spell id: ${id}`);
 
     const intent = asId(item && item.intent);
     if (intent === "spell.school_select" || intent === "spell.class_select") {

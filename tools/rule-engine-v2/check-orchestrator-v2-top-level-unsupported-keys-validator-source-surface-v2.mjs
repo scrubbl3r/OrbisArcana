@@ -11,7 +11,7 @@ requireTextIncludesTokensV2({
   tag: CHECK_TAG,
   text,
   tokens: [
-    "pushUnsupportedKeys(errors, ROOT_CONTEXT, cfg, new Set([\"version\", \"enabled\", \"defaults\", \"groups\", \"rules\"]));",
+    "pushUnsupportedKeys(errors, ROOT_CONTEXT, cfg, new Set([\"version\", \"enabled\", \"defaults\", \"groups\", \"wake\", \"rules\"]));",
   ],
   missingMessage: (token) => `${VALIDATOR_REL} missing top-level unsupported-key validator token: ${token}`,
 });

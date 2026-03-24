@@ -11,7 +11,7 @@ import {
   setEnabledIfBoolean,
   finiteAtLeastOrNull,
   finiteOrNull,
-} from "./orchestrator-v1-normalizers.js";
+} from "./interactions-v2-normalizers.js";
 
 const ACTION_TYPE_WAKE_WIN = "wake_win";
 const ACTION_TYPE_EVENT = "event";
@@ -37,19 +37,24 @@ const FIELD_INTERACTIONS_V2 = "interactionsV2";
 const FIELD_BASE_RULE_ENGINE = "baseRuleEngine";
 const DEFAULT_BUILD_OPTIONS = {};
 const CONDITION_TYPE_WORD = "word";
-const CONDITION_TYPE_SPELL = "spell";
+const CONDITION_TYPE_RUNTIME_SPELL = "spell";
 const RESERVED_ACTION_KEYS = Object.freeze(
   new Set([FIELD_TYPE, FIELD_ID, FIELD_WORDS, FIELD_SPELLS, FIELD_OVERRIDES, KEY_ENABLED])
 );
 
 function normalizeConditionType(rawType) {
   const type = asId(rawType);
-  if (type === CONDITION_TYPE_WORD) return CONDITION_TYPE_SPELL;
+  if (type === CONDITION_TYPE_WORD) return CONDITION_TYPE_RUNTIME_SPELL;
   return type;
 }
 
 function normalizeConditionId(rawId, conditionType) {
-  if (conditionType === CONDITION_TYPE_SPELL) return normalizeSpellId(rawId);
+  if (conditionType === CONDITION_TYPE_RUNTIME_SPELL) {
+    const id = asId(rawId);
+    if (!id || id.startsWith("spell.")) return "";
+    const pref = `${CONDITION_TYPE_WORD}.`;
+    return id.startsWith(pref) ? id.slice(pref.length) : id;
+  }
   const id = asId(rawId);
   if (!id) return "";
   const pref = `${conditionType}.`;

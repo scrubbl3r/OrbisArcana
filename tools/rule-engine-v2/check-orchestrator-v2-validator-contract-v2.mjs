@@ -9,7 +9,7 @@ import {
 } from "./wake-test-ids-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-validator:v2";
-const PASS_MESSAGE = "orchestrator v2 validator contract holds for baseline + errors + alias warnings";
+const PASS_MESSAGE = "orchestrator v2 validator contract holds for baseline + errors + compat warnings";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -910,7 +910,7 @@ expectInvalidNoWarningsWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "on_spell_comma_string_alias_warning",
+  "on_spell_comma_string_compat_warning",
   {
     id: "on_spell_comma_string_rule",
     on: Object.freeze({ spell: "orbis, pyro" }),
@@ -1257,9 +1257,9 @@ expectInvalidNoWarningsWithAppendedRule(
 );
 
 expectWarningsWithSingleRule(
-  "alias_on_spell",
+  "compat_on_spell",
   {
-    id: "alias_rule",
+    id: "compat_rule",
     on: Object.freeze({ spell: "orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
@@ -1267,9 +1267,9 @@ expectWarningsWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "alias_open_spells",
+  "compat_open_spells",
   {
-    id: "alias_open_rule",
+    id: "compat_open_rule",
     on: Object.freeze({ word: "orbis" }),
     open: Object.freeze({
       id: "wake.main",
@@ -1281,9 +1281,9 @@ expectWarningsWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "alias_on_spell_and_open_spells_dual_warning",
+  "compat_on_spell_and_open_spells_dual_warning",
   {
-    id: "alias_dual_rule",
+    id: "compat_dual_rule",
     on: Object.freeze({ spell: "orbis" }),
     open: Object.freeze({
       id: "wake.main",
@@ -1545,9 +1545,9 @@ expectInvalidWithWarningWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "alias_on_spell_prefixed",
+  "compat_on_spell_prefixed",
   {
-    id: "alias_on_prefixed",
+    id: "compat_on_prefixed",
     on: Object.freeze({ spell: "word.orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
@@ -1555,7 +1555,7 @@ expectWarningsWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "on_word_precedence_over_spell_alias",
+  "on_word_precedence_over_spell_compat",
   {
     id: "on_word_precedence_rule",
     on: Object.freeze({
@@ -1568,9 +1568,9 @@ expectWarningsWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "on_word_precedence_over_valid_spell_alias",
+  "on_word_precedence_over_valid_spell_compat",
   {
-    id: "on_word_precedence_valid_alias_rule",
+    id: "on_word_precedence_valid_compat_rule",
     on: Object.freeze({
       word: "orbis",
       spell: "domus",
@@ -1581,9 +1581,9 @@ expectWarningsWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "on_spell_alias_with_open_words_precedence_only_on_warning",
+  "on_spell_compat_with_open_words_precedence_only_on_warning",
   {
-    id: "on_spell_alias_with_open_words_precedence_rule",
+    id: "on_spell_compat_with_open_words_precedence_rule",
     on: Object.freeze({ spell: "orbis" }),
     open: Object.freeze({
       id: "wake.main",
@@ -1624,9 +1624,9 @@ expectInvalidWithWarningWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "alias_open_spells_comma_string",
+  "compat_open_spells_comma_string",
   {
-    id: "alias_open_comma_rule",
+    id: "compat_open_comma_rule",
     on: Object.freeze({ word: "orbis" }),
     open: Object.freeze({
       id: "wake.main",
@@ -1638,9 +1638,9 @@ expectWarningsWithSingleRule(
 );
 
 expectInvalidWithWarningWithSingleRule(
-  "alias_open_spells_comma_string_unknown_invalid",
+  "compat_open_spells_comma_string_unknown_invalid",
   {
-    id: "alias_open_comma_unknown_rule",
+    id: "compat_open_comma_unknown_rule",
     on: Object.freeze({ word: "orbis" }),
     open: Object.freeze({
       id: "wake.main",
@@ -1655,7 +1655,7 @@ expectInvalidWithWarningWithSingleRule(
 expectInvalidWithWarningWithSingleRule(
   "open_spells_comma_unknown_invalid",
   {
-    id: "alias_open_comma_unknown_rule",
+    id: "compat_open_comma_unknown_rule",
     on: Object.freeze({ word: "orbis" }),
     open: Object.freeze({
       id: "wake.main",
@@ -1668,9 +1668,9 @@ expectInvalidWithWarningWithSingleRule(
 );
 
 expectWarningsWithSingleRule(
-  "alias_open_spells_prefixed",
+  "compat_open_spells_prefixed",
   {
-    id: "alias_open_prefixed",
+    id: "compat_open_prefixed",
     on: Object.freeze({ word: "orbis" }),
     open: Object.freeze({
       id: "wake.main",

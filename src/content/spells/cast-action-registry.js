@@ -37,6 +37,36 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     handlerKey: "grant_orb_super_grace",
     floatGracePolicy: "none",
   }),
+  Object.freeze({
+    id: "spell_load_ud",
+    handlerKey: "load_spell_ud",
+    floatGracePolicy: "none",
+  }),
+  Object.freeze({
+    id: "spell_load_lr",
+    handlerKey: "load_spell_lr",
+    floatGracePolicy: "none",
+  }),
+  Object.freeze({
+    id: "spell_load_fb",
+    handlerKey: "load_spell_fb",
+    floatGracePolicy: "none",
+  }),
+  Object.freeze({
+    id: "cast_loaded_ud",
+    handlerKey: "cast_loaded_ud",
+    floatGracePolicy: "none",
+  }),
+  Object.freeze({
+    id: "cast_loaded_lr",
+    handlerKey: "cast_loaded_lr",
+    floatGracePolicy: "none",
+  }),
+  Object.freeze({
+    id: "cast_loaded_fb",
+    handlerKey: "cast_loaded_fb",
+    floatGracePolicy: "none",
+  }),
 ]);
 
 export const CAST_ACTION_REGISTRY_BY_ID = Object.freeze(

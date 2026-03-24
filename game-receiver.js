@@ -1379,6 +1379,7 @@
         throw new Error("spell-action-handlers module unavailable");
       }
       spellActionHandlers = createSpellActionHandlersModule({
+        eventBus,
         playElectricAoe,
         playFlameAoe,
         teleportOrbToSpawnNeutralizePhysics,
@@ -2221,8 +2222,9 @@
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
           const intent = String(p.intent || "");
           const wordId = String((p.wordId || p.spellId) || "").toLowerCase();
+          const payloadCastActionId = String(p.castActionId || "").trim().toLowerCase();
           const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
-          const castActionId = wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId);
+          const castActionId = payloadCastActionId || (wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId));
           const result = executeWordCastAction(castActionId, { payload: p, intent });
           if (result && result.handled && wordDef) {
             const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;

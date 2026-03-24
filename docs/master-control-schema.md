@@ -18,11 +18,11 @@ Related index:
   - wake-window select: `spell.wake_window_select`
 - Action/event payload fields:
   - use `axisWord` and `wakeWindowSpell`
-  - compatibility alias remains: `axisSpell` -> `axisWord`
+  - legacy field alias: `axisSpell` -> `axisWord`
   - retired aliases are removed from runtime payloads (`school`, `classKey`)
 - KWS runtime config:
   - uses axis-to-token routing map (`axisWordByAxis`)
-  - compatibility alias remains: `axisSpellByAxis` -> `axisWordByAxis`
+  - legacy field alias: `axisSpellByAxis` -> `axisWordByAxis`
 - Dispatch reject reasons:
   - `spell_window_required`
   - `flat_spin_requires_wake_window_token`
@@ -152,7 +152,7 @@ Related index:
   // 2) { all:[...], any:[...] }
   // 3) single object => all:[single]
   on: [
-    { type: "spell", id: "rota" },
+    { type: "word", id: "rota" },
     { type: "gesture", id: "spin_y" },
     { type: "orb_state", id: "charged" }
   ],
@@ -162,7 +162,7 @@ Related index:
     {
       type: "wake_win",
       // id optional; defaults to "wake_win"
-      words: ["sanctum", "vectus"], // compatibility alias: spells
+      words: ["sanctum", "vectus"], // runtime compat alias exists: spells (not for dream authoring)
       ttlMs: 2000,
       enabled: true // optional, default true
     },
@@ -175,13 +175,14 @@ Related index:
 
 ## Authoring Notes
 - Condition type normalization:
-  - `{ type:"spell", id:"rota" }` resolves to signal `spell.rota`
+  - `{ type:"word", id:"rota" }` resolves to runtime signal id `spell.rota` (runtime namespace).
   - `{ type:"gesture", id:"spin_y" }` resolves to `gesture.spin_y`
   - `{ type:"orb_state", id:"charged" }` resolves to `orb_state.charged`
 - Action inline args are generic:
   - Any non-structural key is treated as action args.
   - Structural keys: `type`, `id`, `words`, `spells`, `overrides`, `enabled`.
-  - `wake_win.words[]` is canonical; `wake_win.spells[]` remains compatibility alias.
+  - `wake_win.words[]` is canonical authoring; `wake_win.spells[]` is runtime compatibility alias only.
+  - `dream-config-v2` authoring is stricter: alias keys are rejected there (`wake.spells`, `on.spell`, `open.spells`).
   - `actionArgOverrides` can centrally patch action args by key at runtime.
     - key formats:
       - `${ruleId}.${type}.${actionId}` (preferred)
@@ -502,12 +503,12 @@ Related index:
 {
   id: "r_rota_yspin_charged",
   on: [
-    { type: "spell", id: "rota" },
+    { type: "word", id: "rota" },
     { type: "gesture", id: "spin_y" },
     { type: "orb_state", id: "charged" }
   ],
   then: [
-    { type: "wake_win", words: ["rota","sanctum","vectus"], ttlMs: 2000 }, // compatibility alias: spells
+    { type: "wake_win", words: ["rota","sanctum","vectus"], ttlMs: 2000 }, // runtime compat alias exists: spells
     { type: "event", id: "aoe_electric", range: 14 },
     { type: "event", id: "grace", ms: 500 },
     { type: "event", id: "orb_state", state: "superheated" }

@@ -1,7 +1,7 @@
-import { WORDS_BY_ID as SPELLS_BY_ID } from "../../voice/wordbook.js";
+import { WORDS_BY_ID } from "../../voice/wordbook.js";
 import { CAST_ACTION_REGISTRY_BY_ID } from "./cast-action-registry.js";
 import {
-  buildRuleEngineFromOrchestratorV1,
+  buildRuleEngineFromOrchestratorV2,
 } from "../interactions-v2/index.js";
 import { EVENT_DEFINITIONS } from "../spell-rules/event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
@@ -30,7 +30,7 @@ export function validateSpellSchemaIntegrity(options = {}) {
   let projectedRules = [];
   if (!Array.isArray(options && options.rules)) {
     try {
-      const engine = buildRuleEngineFromOrchestratorV1();
+      const engine = buildRuleEngineFromOrchestratorV2();
       projectedRules = Array.isArray(engine && engine.rules) ? engine.rules : [];
     } catch (_) {
       projectedRules = [];
@@ -61,7 +61,7 @@ export function validateSpellSchemaIntegrity(options = {}) {
     : Object.create(null);
 
   // Every spellbook spell should have routing metadata during refactor.
-  for (const spellId of Object.keys(SPELLS_BY_ID || {})) {
+  for (const spellId of Object.keys(WORDS_BY_ID || {})) {
     if (!routingByWordId[spellId]) {
       errors.push(`missing routing entry for spellbook spell: ${spellId}`);
     }
@@ -70,19 +70,19 @@ export function validateSpellSchemaIntegrity(options = {}) {
   // Word lists should exist in spellbook.
   for (const idRaw of Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_WORD_IDS references unknown spell id: ${id}`);
+    if (!WORDS_BY_ID[id]) errors.push(`WAKE_WORD_IDS references unknown spell id: ${id}`);
   }
   for (const idRaw of Array.isArray(WAKE_REQUIRED_WORD_IDS) ? WAKE_REQUIRED_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_REQUIRED_WORD_IDS references unknown spell id: ${id}`);
+    if (!WORDS_BY_ID[id]) errors.push(`WAKE_REQUIRED_WORD_IDS references unknown spell id: ${id}`);
   }
   for (const idRaw of Array.isArray(AXIS_WORD_IDS) ? AXIS_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`AXIS_WORD_IDS references unknown spell id: ${id}`);
+    if (!WORDS_BY_ID[id]) errors.push(`AXIS_WORD_IDS references unknown spell id: ${id}`);
   }
   for (const idRaw of Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : []) {
     const id = asId(idRaw);
-    if (!SPELLS_BY_ID[id]) errors.push(`WAKE_WINDOW_WORD_IDS references unknown spell id: ${id}`);
+    if (!WORDS_BY_ID[id]) errors.push(`WAKE_WINDOW_WORD_IDS references unknown spell id: ${id}`);
   }
   // Every rule event action should have both definition and runtime binding.
   for (const rule of Array.isArray(rules) ? rules : []) {
@@ -97,7 +97,7 @@ export function validateSpellSchemaIntegrity(options = {}) {
           : (Array.isArray(action && action.spells) ? action.spells : []);
         for (const wordIdRaw of wordRefs) {
           const wordId = asId(wordIdRaw).replace(/^(word|spell)\./, "");
-          if (!SPELLS_BY_ID[wordId]) {
+          if (!WORDS_BY_ID[wordId]) {
             errors.push(`rule ${ruleId} wake_win references unknown word id: ${wordId}`);
           }
         }

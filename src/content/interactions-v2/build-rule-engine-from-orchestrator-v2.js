@@ -11,7 +11,7 @@ import {
   setEnabledIfBoolean,
   finiteAtLeastOrNull,
   finiteOrNull,
-} from "./orchestrator-v1-normalizers.js";
+} from "./interactions-v2-normalizers.js";
 
 const ACTION_TYPE_WAKE_WIN = "wake_win";
 const ACTION_TYPE_EVENT = "event";
@@ -25,6 +25,7 @@ const FIELD_ON = "on";
 const FIELD_THEN = "then";
 const FIELD_DEFAULTS = "defaults";
 const FIELD_GROUPS = "groups";
+const FIELD_WAKE = "wake";
 const FIELD_RULES = "rules";
 const FIELD_TRIGGER = "trigger";
 const FIELD_OPEN = "open";
@@ -69,6 +70,30 @@ function parseWordRefs(rawWords, groups) {
     if (normalized) out.push(normalized);
   }
   return out;
+}
+
+function compileWakeSection(wakeRaw, groups) {
+  if (wakeRaw == null) return null;
+  const wakeObj = isPlainWakeObject(wakeRaw) ? asObj(wakeRaw) : null;
+  const wordsRaw = wakeObj
+    ? (Object.hasOwn(wakeObj, FIELD_WORDS) ? wakeObj[FIELD_WORDS] : wakeObj[FIELD_SPELLS])
+    : wakeRaw;
+  const words = Array.from(new Set(parseWordRefs(wordsRaw, groups)));
+  if (!words.length) return null;
+  const out = {
+    [FIELD_WORDS]: words,
+    [FIELD_SPELLS]: words,
+  };
+  if (wakeObj) {
+    const ttlMs = finiteAtLeastOrNull(wakeObj[FIELD_TTL_MS], 0);
+    if (ttlMs != null) out[FIELD_TTL_MS] = ttlMs;
+  }
+  if (wakeObj) setEnabledIfBoolean(out, wakeObj);
+  return Object.freeze(out);
+}
+
+function isPlainWakeObject(wakeRaw) {
+  return !!(wakeRaw && typeof wakeRaw === "object" && !Array.isArray(wakeRaw));
 }
 
 function compileOnSelectors(onRaw) {
@@ -228,9 +253,12 @@ export function buildRuleEngineFromOrchestratorV2(options = {}) {
   const orchestratorV2 = asObj(safeOptions[FIELD_ORCHESTRATOR_V2] || ORCHESTRATOR_V2);
   const baseRuleEngine = asObj(safeOptions[FIELD_BASE_RULE_ENGINE]);
   const rules = buildCompiledRules(orchestratorV2);
+  const groups = asObj(orchestratorV2[FIELD_GROUPS]);
+  const wake = compileWakeSection(orchestratorV2[FIELD_WAKE], groups);
   return Object.freeze({
     ...baseRuleEngine,
     [FIELD_ENABLED]: orchestratorV2[FIELD_ENABLED] !== ENABLED_FALSE,
+    ...(wake ? { [FIELD_WAKE]: wake } : {}),
     [FIELD_RULES]: Object.freeze(rules),
   });
 }

@@ -9,5 +9,4 @@ export const RULE_ENGINE_V2_SCHEMA_IDS = Object.freeze({
   milestoneTrend: "orbis.rule_engine_v2.milestone_trend",
   masterControl: "orbis.master_control_v2",
   masterControlAuthoring: "orbis.master_control_v2.authoring",
-  orchestratorProjection: "orbis.orchestrator_v1.projection",
 });

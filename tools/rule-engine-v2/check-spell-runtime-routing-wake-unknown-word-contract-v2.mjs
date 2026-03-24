@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV1 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing.js";
 import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
 import { failCheck } from "./check-fail-v2.mjs";
@@ -11,7 +11,7 @@ const CHECK_TAG = "spell-runtime-routing-wake-unknown-word-contract:v2";
 const ACTION_WAKE_WIN = "wake_win";
 const WORD_PREFIX = "word.";
 const SPELL_PREFIX = "spell.";
-const PASS_MESSAGE = "spell runtime routing rejects unknown wake_win word refs for canonical words[] and legacy spells[] alias input";
+const PASS_MESSAGE = "spell runtime routing rejects unknown wake_win word refs for canonical words[] and compat spells[] alias input";
 
 function withSyntheticImmediateEventRules(sample) {
   const rules = Array.isArray(sample?.rules) ? sample.rules : [];
@@ -25,24 +25,31 @@ function withSyntheticImmediateEventRules(sample) {
   return sample;
 }
 
-function buildSampleWakeActionInput({ useLegacySpellsAlias = false } = {}) {
-  const orchestratorEngine = buildRuleEngineFromOrchestratorV1();
-  const sample = withSyntheticImmediateEventRules({
-    rules: cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []),
-  });
-  const targetRule = Array.isArray(sample?.rules)
-    ? sample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+function buildSampleWakeActionInput({ useCompatSpellsAlias = false } = {}) {
+  const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
+  const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
+  const targetRule = Array.isArray(compiledRules)
+    ? compiledRules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
     : null;
   if (!targetRule || !Array.isArray(targetRule?.then)) {
     failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
   }
+  const sample = withSyntheticImmediateEventRules({
+    rules: [targetRule],
+  });
+  const targetRuleSample = Array.isArray(sample?.rules)
+    ? sample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+    : null;
+  if (!targetRuleSample || !Array.isArray(targetRuleSample?.then)) {
+    failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
+  }
 
-  const wakeAction = targetRule.then.find((action) => action?.type === ACTION_WAKE_WIN);
+  const wakeAction = targetRuleSample.then.find((action) => action?.type === ACTION_WAKE_WIN);
   if (!wakeAction) {
     failCheck(CHECK_TAG, `sample ${ACTION_WAKE_WIN} action missing`);
   }
 
-  if (useLegacySpellsAlias) {
+  if (useCompatSpellsAlias) {
     wakeAction.spells = [`${SPELL_PREFIX}${UNKNOWN_WAKE_WORD_ID_V2}`];
     delete wakeAction.words;
   } else {
@@ -54,7 +61,7 @@ function buildSampleWakeActionInput({ useLegacySpellsAlias = false } = {}) {
 }
 
 const canonicalUnknownErrors = validateSpellRuntimeRouting(
-  buildSampleWakeActionInput({ useLegacySpellsAlias: false })
+  buildSampleWakeActionInput({ useCompatSpellsAlias: false })
 );
 if (!hasWakeWindowIdsMissingErrorV2(canonicalUnknownErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
@@ -63,13 +70,13 @@ if (!hasWakeWindowIdsMissingErrorV2(canonicalUnknownErrors, UNKNOWN_WAKE_WORD_ID
   );
 }
 
-const legacyUnknownErrors = validateSpellRuntimeRouting(
-  buildSampleWakeActionInput({ useLegacySpellsAlias: true })
+const compatUnknownErrors = validateSpellRuntimeRouting(
+  buildSampleWakeActionInput({ useCompatSpellsAlias: true })
 );
-if (!hasWakeWindowIdsMissingErrorV2(legacyUnknownErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
+if (!hasWakeWindowIdsMissingErrorV2(compatUnknownErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateSpellRuntimeRouting must reject unknown legacy wake_win.spells[] refs: ${legacyUnknownErrors.join(" | ")}`
+    `validateSpellRuntimeRouting must reject unknown compat wake_win.spells[] refs: ${compatUnknownErrors.join(" | ")}`
   );
 }
 

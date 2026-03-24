@@ -1,9 +1,11 @@
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
 import {
   KWS_FLASH_TOKEN_WORD_IDS,
-  KWS_WAKE_WINDOW_WORD_IDS,
-  KWS_WAKE_WORD_IDS,
-} from "../../content/interactions-v2/orchestrator-v1-kws-profile.js";
+  WAKE_WINDOW_WORD_IDS as KWS_WAKE_WINDOW_WORD_IDS,
+} from "../../content/spells/spell-runtime-routing.js";
+import {
+  ORCHESTRATOR_V2_WAKE_WORD_IDS,
+} from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
 
 export function bindKwsEventHandlers({
   eventBus,
@@ -37,7 +39,7 @@ export function bindKwsEventHandlers({
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
   const wakeWordIds = new Set(
-    (Array.isArray(KWS_WAKE_WORD_IDS) ? KWS_WAKE_WORD_IDS : [])
+    (Array.isArray(ORCHESTRATOR_V2_WAKE_WORD_IDS) ? ORCHESTRATOR_V2_WAKE_WORD_IDS : [])
       .map((wordId) => String(wordId || "").trim().toLowerCase())
       .filter(Boolean)
   );

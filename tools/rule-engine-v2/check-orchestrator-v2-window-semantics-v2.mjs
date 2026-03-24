@@ -15,9 +15,9 @@ const WINDOW_WAKE_WIN = "wake_win";
 const WINDOW_WAKE_MAIN_ID = "wake.main";
 const WORD_ORBIS_ID = "orbis";
 const WORD_DOMUS_ID = "domus";
-const SIGNAL_SPELL_ORBIS = "spell.orbis";
-const SIGNAL_SPELL_DOMUS = "spell.domus";
-const CONDITION_TYPE_SPELL = "spell";
+const SIGNAL_RUNTIME_ORBIS = "spell.orbis";
+const SIGNAL_RUNTIME_DOMUS = "spell.domus";
+const CONDITION_TYPE_WORD = "word";
 const CONDITION_WORD_ID_PATH = "word.id";
 const EVENT_TYPE = "event";
 const EVENT_TELEPORT_HOME_ID = "teleport_home";
@@ -25,14 +25,14 @@ const EVENT_TELEPORT_HOME_ID = "teleport_home";
 const schema = Object.freeze({
   signals: Object.freeze([
     Object.freeze({
-      id: SIGNAL_SPELL_ORBIS,
-      type: CONDITION_TYPE_SPELL,
+      id: SIGNAL_RUNTIME_ORBIS,
+      type: CONDITION_TYPE_WORD,
       sourceEvent: EVT_VOICE_WORD_DETECTED,
       where: Object.freeze({ path: CONDITION_WORD_ID_PATH, eq: WORD_ORBIS_ID }),
     }),
     Object.freeze({
-      id: SIGNAL_SPELL_DOMUS,
-      type: CONDITION_TYPE_SPELL,
+      id: SIGNAL_RUNTIME_DOMUS,
+      type: CONDITION_TYPE_WORD,
       sourceEvent: EVT_VOICE_WORD_DETECTED,
       where: Object.freeze({ path: CONDITION_WORD_ID_PATH, eq: WORD_DOMUS_ID }),
     }),
@@ -55,7 +55,7 @@ const schema = Object.freeze({
     Object.freeze({
       id: "master_wake",
       on: Object.freeze([
-        Object.freeze({ type: CONDITION_TYPE_SPELL, id: WORD_ORBIS_ID }),
+        Object.freeze({ type: CONDITION_TYPE_WORD, id: WORD_ORBIS_ID }),
       ]),
       then: Object.freeze([
         Object.freeze({
@@ -70,7 +70,7 @@ const schema = Object.freeze({
     Object.freeze({
       id: "tele_home",
       on: Object.freeze([
-        Object.freeze({ type: CONDITION_TYPE_SPELL, id: WORD_DOMUS_ID }),
+        Object.freeze({ type: CONDITION_TYPE_WORD, id: WORD_DOMUS_ID }),
       ]),
       requires: Object.freeze([WINDOW_WAKE_MAIN_ID]),
       consume: Object.freeze([WINDOW_WAKE_MAIN_ID]),

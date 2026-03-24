@@ -14,7 +14,7 @@ import {
 
 const CHECK_TAG = "validate-rule-engine-config-wake-words-contract:v2";
 const ACTION_WAKE_WIN = "wake_win";
-const PASS_MESSAGE = "validateRuleEngineConfig enforces wake_win word refs for canonical words[] and legacy spells[] alias";
+const PASS_MESSAGE = "validateRuleEngineConfig enforces wake_win word refs for canonical words[] and compat spells[] alias";
 
 function withSingleRule(rule) {
   const cfg = cloneJsonV2(RULE_ENGINE_POLICY_CONTROL);
@@ -31,13 +31,13 @@ if (hasWakeUnknownWordErrorV2(canonicalKnown, KNOWN_WAKE_WORD_ID_V2)) {
   failCheck(CHECK_TAG, `validateRuleEngineConfig should accept canonical known wake words[] refs: ${canonicalKnown.join(" | ")}`);
 }
 
-const legacyKnown = validateRuleEngineConfig(withSingleRule({
-  id: "t_legacy_known",
+const compatKnown = validateRuleEngineConfig(withSingleRule({
+  id: "t_compat_known",
   on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
   then: [{ type: ACTION_WAKE_WIN, spells: [KNOWN_WAKE_WORD_SPELL_SELECTOR_V2] }],
 }));
-if (hasWakeUnknownWordErrorV2(legacyKnown, KNOWN_WAKE_WORD_ID_V2)) {
-  failCheck(CHECK_TAG, `validateRuleEngineConfig should accept legacy known wake spells[] alias refs: ${legacyKnown.join(" | ")}`);
+if (hasWakeUnknownWordErrorV2(compatKnown, KNOWN_WAKE_WORD_ID_V2)) {
+  failCheck(CHECK_TAG, `validateRuleEngineConfig should accept compat wake spells[] alias refs: ${compatKnown.join(" | ")}`);
 }
 
 const canonicalUnknown = validateRuleEngineConfig(withSingleRule({
@@ -52,15 +52,15 @@ if (!hasWakeUnknownWordErrorV2(canonicalUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
   );
 }
 
-const legacyUnknown = validateRuleEngineConfig(withSingleRule({
-  id: "t_legacy_unknown",
+const compatUnknown = validateRuleEngineConfig(withSingleRule({
+  id: "t_compat_unknown",
   on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
   then: [{ type: ACTION_WAKE_WIN, spells: [UNKNOWN_WAKE_WORD_SPELL_SELECTOR_V2] }],
 }));
-if (!hasWakeUnknownWordErrorV2(legacyUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
+if (!hasWakeUnknownWordErrorV2(compatUnknown, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateRuleEngineConfig must reject unknown legacy wake spells[] refs: ${legacyUnknown.join(" | ")}`
+    `validateRuleEngineConfig must reject unknown compat wake spells[] refs: ${compatUnknown.join(" | ")}`
   );
 }
 

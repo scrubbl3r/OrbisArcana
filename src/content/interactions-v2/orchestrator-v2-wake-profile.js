@@ -1,0 +1,42 @@
+import { ORCHESTRATOR_V2 } from "./orchestrator-v2.js";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js";
+
+function asText(value) {
+  return String(value || "").trim();
+}
+
+function normalizeWordId(value) {
+  return asText(value).toLowerCase();
+}
+
+function asSelectorList(raw) {
+  if (Array.isArray(raw)) return raw.slice();
+  const value = asText(raw);
+  if (!value) return [];
+  if (value.includes(",")) {
+    return value.split(",").map((token) => asText(token)).filter(Boolean);
+  }
+  return [value];
+}
+
+function unique(values) {
+  return Array.from(new Set(values));
+}
+
+function asWakeWords(wakeRaw) {
+  if (!wakeRaw) return [];
+  const wakeObj = (wakeRaw && typeof wakeRaw === "object" && !Array.isArray(wakeRaw))
+    ? wakeRaw
+    : null;
+  const wordsRaw = wakeObj
+    ? (Object.hasOwn(wakeObj, "words") ? wakeObj.words : wakeObj.spells)
+    : wakeRaw;
+  return unique(
+    asSelectorList(wordsRaw)
+      .map((entry) => normalizeWordId(entry))
+      .filter(Boolean)
+      .filter((id) => Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, id))
+  );
+}
+
+export const ORCHESTRATOR_V2_WAKE_WORD_IDS = Object.freeze(asWakeWords(ORCHESTRATOR_V2.wake));

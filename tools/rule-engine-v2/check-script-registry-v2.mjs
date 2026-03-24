@@ -38,9 +38,9 @@ if (!scripts) failCheck(CHECK_TAG, `${PACKAGE_JSON_PATH} ${PACKAGE_SCRIPTS_LABEL
 
 const explicitScriptNames = Object.freeze({
   doctor: "doctor:v2",
-  rule_source: "check:rule-source-contract:v2",
-  policy_alias: "check:policy-control-contract:v2",
-  runtime_import: "check:runtime-policy-import-contract:v2",
+  rule_source_contract: "check:rule-source-contract:v2",
+  policy_control_contract: "check:policy-control-contract:v2",
+  runtime_policy_import_contract: "check:runtime-policy-import-contract:v2",
   doc_policy: "check:doc-policy-terminology:v2",
   validator_policy: "check:validator-policy-terminology:v2",
   compat_surface: "check:master-control-compat-surface:v2",

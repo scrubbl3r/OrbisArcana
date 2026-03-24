@@ -1,6 +1,6 @@
 // Data-only signal catalog for rule-engine scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
-import { ACTIVE_WORDS_BY_ID as ACTIVE_SPELLS_BY_ID } from "../../voice/wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js";
 import {
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
   WAKE_WORD_IDS,
@@ -8,27 +8,28 @@ import {
   WAKE_WINDOW_WORD_IDS,
 } from "../spells/spell-runtime-routing.js";
 
-function buildWakeWindowSpellSignals() {
+function buildWakeWindowWordSignals() {
   return (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
-    .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
+    .map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
-    .map((spellId) => Object.freeze({
-      id: `spell.${spellId}`,
+    .map((wordId) => Object.freeze({
+      // Runtime signal namespace remains spell.* for compatibility.
+      id: `spell.${wordId}`,
       type: "spell",
       sourceEvent: "voice.word_detected",
-      where: Object.freeze({ path: "word.id", eq: spellId }),
+      where: Object.freeze({ path: "word.id", eq: wordId }),
     }));
 }
 
-function buildWakeSpellSignals() {
+function buildWakeWordSignals() {
   return (Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : [])
-    .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
+    .map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
-    .map((spellId) => {
-      const active = ACTIVE_SPELLS_BY_ID[spellId] || null;
-      const phrase = String((active && (active.phrase || active.id)) || spellId).trim().toLowerCase();
+    .map((wordId) => {
+      const active = ACTIVE_WORDS_BY_ID[wordId] || null;
+      const phrase = String((active && (active.phrase || active.id)) || wordId).trim().toLowerCase();
       return Object.freeze({
-        id: `spell.${spellId}`,
+        id: `spell.${wordId}`,
         type: "spell",
         sourceEvent: "voice.token_detected",
         where: Object.freeze({ path: "token", eq: phrase }),
@@ -36,32 +37,32 @@ function buildWakeSpellSignals() {
     });
 }
 
-function buildWakeRequiredSpellSignals() {
+function buildWakeRequiredWordSignals() {
   return (Array.isArray(WAKE_REQUIRED_WORD_IDS) ? WAKE_REQUIRED_WORD_IDS : [])
-    .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
+    .map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
-    .map((spellId) => Object.freeze({
-      id: `spell.${spellId}`,
+    .map((wordId) => Object.freeze({
+      id: `spell.${wordId}`,
       type: "spell",
       sourceEvent: "voice.word_detected",
-      where: Object.freeze({ path: "word.id", eq: spellId }),
+      where: Object.freeze({ path: "word.id", eq: wordId }),
     }));
 }
 
-function buildRuleEngineOwnedImmediateSpellSignals() {
+function buildRuleEngineOwnedImmediateWordSignals() {
   const excluded = new Set([
     ...(Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : []),
     ...(Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : []),
     ...(Array.isArray(WAKE_REQUIRED_WORD_IDS) ? WAKE_REQUIRED_WORD_IDS : []),
-  ].map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase()).filter(Boolean));
+  ].map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase()).filter(Boolean));
   return (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
-    .map((spellIdRaw) => String(spellIdRaw || "").trim().toLowerCase())
-    .filter((spellId) => !!spellId && !excluded.has(spellId))
-    .map((spellId) => Object.freeze({
-      id: `spell.${spellId}`,
+    .map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase())
+    .filter((wordId) => !!wordId && !excluded.has(wordId))
+    .map((wordId) => Object.freeze({
+      id: `spell.${wordId}`,
       type: "spell",
       sourceEvent: "voice.word_detected",
-      where: Object.freeze({ path: "word.id", eq: spellId }),
+      where: Object.freeze({ path: "word.id", eq: wordId }),
     }));
 }
 
@@ -89,19 +90,19 @@ function buildDuplicateSignalIds(defs = []) {
   return Array.from(dups).sort();
 }
 
-const GENERATED_SPELL_SIGNALS = Object.freeze([
-  ...buildWakeWindowSpellSignals(),
-  ...buildWakeSpellSignals(),
-  ...buildWakeRequiredSpellSignals(),
-  ...buildRuleEngineOwnedImmediateSpellSignals(),
+const GENERATED_WORD_SIGNALS = Object.freeze([
+  ...buildWakeWindowWordSignals(),
+  ...buildWakeWordSignals(),
+  ...buildWakeRequiredWordSignals(),
+  ...buildRuleEngineOwnedImmediateWordSignals(),
 ]);
 
 export const SIGNAL_DEFINITION_COLLISIONS = Object.freeze(
-  buildDuplicateSignalIds(GENERATED_SPELL_SIGNALS)
+  buildDuplicateSignalIds(GENERATED_WORD_SIGNALS)
 );
 
 export const SIGNAL_DEFINITIONS = Object.freeze([
-  ...dedupeSignalsById(GENERATED_SPELL_SIGNALS),
+  ...dedupeSignalsById(GENERATED_WORD_SIGNALS),
   Object.freeze({
     id: "gesture.spin_x",
     type: "gesture",
@@ -119,6 +120,24 @@ export const SIGNAL_DEFINITIONS = Object.freeze([
     type: "gesture",
     sourceEvent: "spell_window.flat_spin_opened",
     where: Object.freeze({ path: "axis", eq: "z" }),
+  }),
+  Object.freeze({
+    id: "gesture.shake_ud",
+    type: "gesture",
+    sourceEvent: "input.shake_triggered",
+    where: Object.freeze({ path: "group", eq: "UD" }),
+  }),
+  Object.freeze({
+    id: "gesture.shake_lr",
+    type: "gesture",
+    sourceEvent: "input.shake_triggered",
+    where: Object.freeze({ path: "group", eq: "LR" }),
+  }),
+  Object.freeze({
+    id: "gesture.shake_fb",
+    type: "gesture",
+    sourceEvent: "input.shake_triggered",
+    where: Object.freeze({ path: "group", eq: "FB" }),
   }),
   Object.freeze({
     id: "orb_state.charged",

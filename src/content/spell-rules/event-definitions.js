@@ -32,6 +32,36 @@ export const EVENT_DEFINITIONS = Object.freeze([
     type: "event",
     defaultArgs: Object.freeze({ state: "normal" }),
   }),
+  Object.freeze({
+    id: "spell_load_ud",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
+    id: "spell_load_lr",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
+    id: "spell_load_fb",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
+    id: "cast_loaded_ud",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
+    id: "cast_loaded_lr",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
+    id: "cast_loaded_fb",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
 ]);
 
 export const EVENT_DEFINITIONS_BY_ID = Object.freeze(

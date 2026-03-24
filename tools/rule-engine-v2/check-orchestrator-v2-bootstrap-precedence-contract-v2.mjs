@@ -3,12 +3,8 @@ import {
   ORCHESTRATOR_V2,
   validateOrchestratorV2,
   buildRuleEngineFromOrchestratorV2,
-  ORCHESTRATOR_V1,
-  validateOrchestratorV1,
-  buildRuleEngineFromOrchestratorV1,
   INTERACTIONS_V2,
   buildRuleEngineFromInteractionsV2,
-  projectOrchestratorV1FromInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
@@ -34,22 +30,13 @@ hydrateReceiverBootstrapState(
     validateSpellRuntimeRouting: () => [],
     validateSpellSchemaIntegrity: () => [],
     validateWordbookV2: () => [],
-    validateSpellbookV2: () => [],
     ORCHESTRATOR_V2,
     ORCHESTRATOR_V2_BOOTSTRAP: Object.freeze({ useInReceiverBootstrap: true }),
     validateOrchestratorV2,
     buildRuleEngineFromOrchestratorV2,
-    ORCHESTRATOR_V1,
-    ORCHESTRATOR_V1_BOOTSTRAP: Object.freeze({
-      useInReceiverBootstrap: true,
-      projectFromInteractionsWhenOrchestratorEmpty: false,
-    }),
-    validateOrchestratorV1,
-    buildRuleEngineFromOrchestratorV1,
     INTERACTIONS_V2,
     INTERACTIONS_V2_BOOTSTRAP: Object.freeze({ useInReceiverBootstrap: true }),
     buildRuleEngineFromInteractionsV2,
-    projectOrchestratorV1FromInteractionsV2,
   },
   {
     setRuleSchema: (next) => {

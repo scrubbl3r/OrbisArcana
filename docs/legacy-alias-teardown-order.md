@@ -1,12 +1,12 @@
 # Legacy Alias Teardown Order
 
 ## Goal
-Remove legacy `spell*` naming aliases in controlled phases while keeping runtime behavior stable and `npm run ready:v2` green at each step.
+Remove legacy `spell*` naming aliases in controlled phases while keeping runtime behavior stable and `npm run ready:v2`/`npm run status:v2` green at each step.
 
 ## Guardrails
 - Keep compatibility exports until final phase.
 - Prefer internal/local renames first.
-- Run `npm run ready:v2` after every phase.
+- Run `npm run ready:v2` and `npm run status:v2` after every phase.
 - If a phase fails, revert only that phase and continue with smaller slices.
 
 ## Phase 1 (Internal Naming Only)
@@ -64,7 +64,7 @@ Remove legacy `spell*` naming aliases in controlled phases while keeping runtime
     - `initSpellActionHandlers`
 - Exit criteria:
   - Zero non-compat references to legacy symbols.
-  - `npm run ready:v2` green.
+  - `npm run ready:v2` and `npm run status:v2` green.
   - Smoke pass in receiver runtime.
 - Status:
   - Completed for the alias set above.
@@ -76,10 +76,10 @@ Remove legacy `spell*` naming aliases in controlled phases while keeping runtime
 ## Post-Teardown State
 - Canonical naming is now `word*` across active runtime and tooling surfaces.
 - Legacy alias exports/hooks listed above are removed.
-- Remaining legacy compatibility is limited to selected event payload alias fields (`spellId`) and dedicated spellbook bridge/shim contracts validated by `ready:v2`.
+- Remaining legacy compatibility is limited to selected event payload alias fields (`spellId`).
 
 ## Execution Pattern
 1. Make one phase-sized batch.
-2. Run `npm run ready:v2`.
+2. Run `npm run ready:v2` and `npm run status:v2`.
 3. If green, continue.
 4. If red, split phase into smaller sub-batches.

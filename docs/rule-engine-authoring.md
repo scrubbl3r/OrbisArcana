@@ -3,17 +3,17 @@
 Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
+Preflight:
+- Run `npm run status:v2` before editing to confirm current v2 health and contracts are green.
 
 ## Daily Authoring Files (Primary)
-- `src/content/interactions-v2/orchestrator-v1.js`
+- `src/content/interactions-v2/dream-config-v2.js`
   - Edit trigger/action chains here (`rules`).
   - This is the behavior SSOT source.
-  - Canonical axis descriptor lives at top-level `axis` (`axis.x`, `axis.y`, `axis.z`, optional `axis.other`).
-  - Legacy compatibility alias `kws.axisWordsByAxis` is supported during migration only.
+  - Author wake windows and trigger chains directly in `wake`, `groups`, and `rules`.
 - `src/content/interactions-v2/wordbook-v2.js`
   - Edit word inventory and `active` toggles here.
-  - This is the wake-word inventory SSOT source.
-  - Compatibility alias: `src/content/interactions-v2/spellbook-v2.js`
+  - This is the word inventory SSOT source.
 
 ## Reference File (Optional)
 - `src/content/interactions-v2/entity-handles-v2.js`
@@ -26,12 +26,11 @@ Related index:
 - `src/content/spells/runtime-spells.js` (runtime slot/cast routing integration layer)
 - `src/runtime/receiver-bootstrap.js` (bootstrap wiring + adapter flag routing)
 - `src/voice/wordbook.js` (runtime view derived from `wordbook-v2`)
-- `src/voice/spellbook.js` (compatibility alias runtime view)
 
 ## Runtime Switches
-- `ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap`
-  - Location: `src/content/interactions-v2/orchestrator-v1.js`
-  - Purpose: Enables orchestrator-v1 bootstrap in receiver fallback/precedence flow.
+- `ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap`
+  - Location: `src/content/interactions-v2/orchestrator-v2.js`
+  - Purpose: Enables orchestrator-v2 bootstrap in receiver fallback/precedence flow.
 - `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`
   - Purpose: Require projected/runtime rules as the active rule source (must remain `true`).
@@ -41,13 +40,27 @@ Related index:
 - Canonical list and semantics: `docs/rule-engine-compatibility.md` (Runtime Mode Status).
 
 ## Authoring Rule of Thumb
-- If you are changing gameplay interaction logic, edit `orchestrator-v1.js`.
-- If you are enabling/disabling words, edit `wordbook-v2.js` (compatibility alias: `spellbook-v2.js`).
+- If you are changing gameplay interaction logic, edit `dream-config-v2.js`.
+- If you are enabling/disabling words, edit `wordbook-v2.js`.
 - Avoid editing runtime integration files unless you are doing intentional system/runtime wiring work.
 
+## Dream DSL Guardrails (Canonical)
+- Top-level `dream-config-v2` keys are restricted to:
+  - `version`, `enabled`, `defaults`, `wake`, `groups`, `rules`
+- `wake` must be object form and must include non-empty `wake.words`.
+- `rules[]` entries must be objects with `id`.
+- `rule.on` and `rule.open` must be object form (no shorthand string/array).
+- Legacy alias keys are rejected in dream authoring:
+  - `wake.word` / `wake.spells`
+  - `rule.on.spell`
+  - `rule.open.word` / `rule.open.spells`
+- Unknown keys under root/wake/rule/on/open fail validation to keep authoring predictable.
+
 ## Quick Health Checks
+- `npm run status:v2`
+  - Prints current v2 health, contract, and regression status summary and writes `docs/rule-engine-v2.status.json`.
 - `npm run pre-smoke:v2`
-  - Validates orchestrator/wordbook config and regenerates effective snapshot.
+  - Validates dream-config/wordbook config and regenerates effective snapshot.
 - `npm run report-drift:v2`
   - Prints projection drift details when interactions projection checks are enabled.
 - `npm run doctor:v2`

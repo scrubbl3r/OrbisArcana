@@ -1,31 +1,17 @@
-const ORCHESTRATOR_V2_VERSION = "2";
-const FIELD_VERSION = "version";
-const FIELD_ENABLED = "enabled";
-const FIELD_DEFAULTS = "defaults";
-const FIELD_GROUPS = "groups";
-const FIELD_RULES = "rules";
+import { DREAM_CONFIG_V2 } from "./dream-config-v2.js";
+import { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js";
+import { validateDreamConfigV2 } from "./validate-dream-config-v2.js";
+
+const DREAM_CONFIG_V2_ERROR_PREFIX = "DREAM_CONFIG_V2 validation failed: ";
+const ERROR_DELIMITER = " | ";
 
 export const ORCHESTRATOR_V2_BOOTSTRAP = Object.freeze({
-  // Disabled until runtime adopts v2 windows/requires/consume semantics.
-  useInReceiverBootstrap: false,
+  useInReceiverBootstrap: true,
 });
 
-export const ORCHESTRATOR_V2 = Object.freeze({
-  [FIELD_VERSION]: ORCHESTRATOR_V2_VERSION,
-  [FIELD_ENABLED]: true,
-  [FIELD_DEFAULTS]: Object.freeze({
-    // open: { ttlMs: 1500 },
-    // rule: { cooldownMs: 0, matchWindowMs: 2000, priority: 10 },
-    // trigger: { grace: { ttlMs: 500 } },
-  }),
-  [FIELD_GROUPS]: Object.freeze({
-    // wake_main_words: ["domus", "pyro", "fridgis", "electrum", "rota"],
-  }),
-  [FIELD_RULES]: Object.freeze([
-    // {
-    //   id: "master_wake_01",
-    //   on: { word: "orbis" },
-    //   open: { id: "wake.main", words: "@wake_main_words", ttlMs: 1500 },
-    // },
-  ]),
-});
+const dreamValidation = validateDreamConfigV2(DREAM_CONFIG_V2);
+if (!dreamValidation.ok) {
+  throw new Error(`${DREAM_CONFIG_V2_ERROR_PREFIX}${dreamValidation.errors.join(ERROR_DELIMITER)}`);
+}
+
+export const ORCHESTRATOR_V2 = compileDreamConfigV2ToOrchestratorV2(DREAM_CONFIG_V2);

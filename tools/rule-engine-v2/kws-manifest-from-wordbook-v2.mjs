@@ -1,4 +1,4 @@
-// Builds/normalizes KWS manifests from canonical wordbook rows (+ compat alias export).
+// Builds/normalizes KWS manifests from canonical wordbook rows.
 import { WORDBOOK_V2 } from "../../src/content/interactions-v2/index.js";
 import { listWordbookWords } from "./wordbook-v2-utils.mjs";
 import { asLowerText, asTrimText } from "./text-utils-v2.mjs";
@@ -33,6 +33,3 @@ export function normalizeKwsManifest(input) {
     })),
   };
 }
-
-// Backward-compatible alias exports.
-export const buildKwsManifestFromSpellbookV2 = buildKwsManifestFromWordbookV2;

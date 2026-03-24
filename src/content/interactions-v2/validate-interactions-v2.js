@@ -13,7 +13,7 @@ import {
   pushUnsupportedKeys,
   requireNonEmptyArray,
   validateOptionalObjectSection,
-} from "./orchestrator-v1-normalizers.js";
+} from "./interactions-v2-normalizers.js";
 
 const ROOT_CONTEXT = "INTERACTIONS_V2";
 const DEFAULTS_CONTEXT = `${ROOT_CONTEXT}.defaults`;
@@ -22,9 +22,9 @@ const DEFAULTS_EVENT_CONTEXT = `${DEFAULTS_CONTEXT}.event`;
 const ENTITY_ID_RE = /^[A-Za-z0-9_]+$/;
 const BARE_NAMESPACE_RE = /^[a-z_]+\.$/;
 const CONDITION_TYPE_WORD = "word";
-const CONDITION_TYPE_SPELL = "spell";
 const CONDITION_TYPE_GESTURE = "gesture";
 const CONDITION_TYPE_ORB_STATE = "orb_state";
+const CONDITION_SIGNAL_TYPE = CONDITION_TYPE_WORD;
 const signalDefsById = ((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
   ? SIGNAL_DEFINITIONS_BY_ID
   : {});
@@ -45,16 +45,18 @@ function isBareNamespaceId(candidateIdRaw) {
 }
 
 function normalizeConditionType(conditionTypeRaw) {
-  const conditionType = asText(conditionTypeRaw).toLowerCase();
-  if (conditionType === CONDITION_TYPE_WORD) return CONDITION_TYPE_SPELL;
-  return conditionType;
+  return asText(conditionTypeRaw).toLowerCase();
 }
 
 function normalizeConditionId(conditionIdRaw, conditionTypeRaw) {
   const conditionType = normalizeConditionType(conditionTypeRaw);
   const conditionId = asText(conditionIdRaw);
   if (!conditionType || !conditionId) return "";
-  if (conditionType === CONDITION_TYPE_SPELL) return normalizeSpellId(conditionId);
+  if (conditionType === CONDITION_SIGNAL_TYPE) {
+    if (conditionId.startsWith("spell.")) return "";
+    if (conditionId.startsWith("word.")) return conditionId.slice("word.".length);
+    return conditionId;
+  }
   if (conditionId.startsWith(`${conditionType}.`)) {
     return conditionId.slice(`${conditionType}.`.length);
   }
@@ -148,18 +150,18 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
     if (!conditionId) errors.push(`${ruleContext} has on.all condition missing id`);
     if (
       conditionTypeInput &&
-      ![CONDITION_TYPE_WORD, CONDITION_TYPE_SPELL, CONDITION_TYPE_GESTURE, CONDITION_TYPE_ORB_STATE].includes(conditionTypeInput)
+      ![CONDITION_TYPE_WORD, CONDITION_TYPE_GESTURE, CONDITION_TYPE_ORB_STATE].includes(conditionTypeInput)
     ) {
       errors.push(`${ruleContext} has unsupported on.all condition type: ${conditionTypeInput}`);
     }
     const conditionIdPrefix = getQualifiedPrefix(conditionId);
-    const isWordFamily = conditionType === CONDITION_TYPE_SPELL;
+    const isWordFamily = conditionType === CONDITION_SIGNAL_TYPE;
     const conditionPrefixMismatched = isWordFamily
-      ? (conditionIdPrefix && ![CONDITION_TYPE_WORD, CONDITION_TYPE_SPELL].includes(conditionIdPrefix))
+      ? (conditionIdPrefix && conditionIdPrefix !== CONDITION_TYPE_WORD)
       : (conditionType && conditionIdPrefix && conditionIdPrefix !== conditionType);
     if (conditionPrefixMismatched) {
       errors.push(
-        `${ruleContext} condition type/id prefix mismatch: type=${conditionTypeInput} id=${conditionId} (expected ${isWordFamily ? "word.* | spell.*" : `${conditionType}.*`} or unqualified id)`
+        `${ruleContext} condition type/id prefix mismatch: type=${conditionTypeInput} id=${conditionId} (expected ${isWordFamily ? "word.*" : `${conditionType}.*`} or unqualified id)`
       );
     }
     if (
@@ -182,7 +184,7 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
     }
     if (conditionId && conditionType) {
       if (
-        conditionType === CONDITION_TYPE_SPELL &&
+        conditionType === CONDITION_SIGNAL_TYPE &&
         !Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, normalizedConditionId)
       ) {
         errors.push(`${ruleContext} references inactive or unknown word id: ${conditionId}`);

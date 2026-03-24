@@ -14,7 +14,7 @@ import {
 
 const CHECK_TAG = "validate-rule-engine-config-wake-words-precedence-contract:v2";
 const ACTION_WAKE_WIN = "wake_win";
-const PASS_MESSAGE = "validateRuleEngineConfig gives canonical wake_win.words[] precedence over legacy wake_win.spells[] alias when both are present";
+const PASS_MESSAGE = "validateRuleEngineConfig gives canonical wake_win.words[] precedence over compat wake_win.spells[] alias when both are present";
 
 function withSingleRule(rule) {
   const cfg = cloneJsonV2(RULE_ENGINE_POLICY_CONTROL);
@@ -30,7 +30,7 @@ const canonicalWins = validateRuleEngineConfig(withSingleRule({
 if (hasWakeUnknownWordErrorV2(canonicalWins, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateRuleEngineConfig should prefer canonical wake_win.words[] over legacy spells[] alias when both exist: ${canonicalWins.join(" | ")}`
+    `validateRuleEngineConfig should prefer canonical wake_win.words[] over compat spells[] alias when both exist: ${canonicalWins.join(" | ")}`
   );
 }
 

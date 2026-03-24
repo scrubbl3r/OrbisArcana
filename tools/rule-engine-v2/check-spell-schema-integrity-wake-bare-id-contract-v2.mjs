@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV1 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
 import { validateSpellSchemaIntegrity } from "../../src/content/spells/validate-spell-schema-integrity.js";
 import { cloneJsonV2 } from "./json-clone-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
@@ -11,14 +11,15 @@ const ACTION_WAKE_WIN = "wake_win";
 const PASS_MESSAGE = "spell schema integrity accepts bare wake ids for words[]/spells[] alias and rejects unknown bare refs";
 
 function withMutatedWakeAction(mutateWakeAction) {
-  const orchestratorEngine = buildRuleEngineFromOrchestratorV1();
-  const rules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
-  const targetRule = Array.isArray(rules)
-    ? rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+  const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
+  const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
+  const targetRule = Array.isArray(compiledRules)
+    ? compiledRules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
     : null;
   if (!targetRule || !Array.isArray(targetRule.then)) {
     failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} compiled rule sample`);
   }
+  const rules = [targetRule];
   const wakeAction = targetRule.then.find((action) => action?.type === ACTION_WAKE_WIN);
   if (!wakeAction) {
     failCheck(CHECK_TAG, `sample ${ACTION_WAKE_WIN} action missing`);
@@ -40,16 +41,16 @@ if (canonicalBareKnownErrors.length) {
   );
 }
 
-const legacyBareKnownErrors = validateSpellSchemaIntegrity({
+const compatBareKnownErrors = validateSpellSchemaIntegrity({
   rules: withMutatedWakeAction((wakeAction) => {
     wakeAction.spells = [KNOWN_WAKE_WORD_ID_V2];
     delete wakeAction.words;
   }),
 });
-if (legacyBareKnownErrors.length) {
+if (compatBareKnownErrors.length) {
   failCheck(
     CHECK_TAG,
-    `validateSpellSchemaIntegrity should accept bare legacy wake_win.spells[] refs: ${legacyBareKnownErrors.join(" | ")}`
+    `validateSpellSchemaIntegrity should accept bare compat wake_win.spells[] refs: ${compatBareKnownErrors.join(" | ")}`
   );
 }
 
@@ -66,16 +67,16 @@ if (!hasWakeUnknownWordErrorV2(canonicalBareUnknownErrors, UNKNOWN_WAKE_WORD_ID_
   );
 }
 
-const legacyBareUnknownErrors = validateSpellSchemaIntegrity({
+const compatBareUnknownErrors = validateSpellSchemaIntegrity({
   rules: withMutatedWakeAction((wakeAction) => {
     wakeAction.spells = [UNKNOWN_WAKE_WORD_ID_V2];
     delete wakeAction.words;
   }),
 });
-if (!hasWakeUnknownWordErrorV2(legacyBareUnknownErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
+if (!hasWakeUnknownWordErrorV2(compatBareUnknownErrors, UNKNOWN_WAKE_WORD_ID_V2)) {
   failCheck(
     CHECK_TAG,
-    `validateSpellSchemaIntegrity must reject unknown bare legacy wake_win.spells[] refs: ${legacyBareUnknownErrors.join(" | ")}`
+    `validateSpellSchemaIntegrity must reject unknown bare compat wake_win.spells[] refs: ${compatBareUnknownErrors.join(" | ")}`
   );
 }
 

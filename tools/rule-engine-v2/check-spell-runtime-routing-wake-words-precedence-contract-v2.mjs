@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV1 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing.js";
 import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
 import { cloneJsonV2 } from "./json-clone-v2.mjs";
@@ -28,17 +28,24 @@ function withSyntheticImmediateEventRules(sample) {
 }
 
 function withWakeActionMutator(mutateWakeAction) {
-  const orchestratorEngine = buildRuleEngineFromOrchestratorV1();
-  const sample = withSyntheticImmediateEventRules({
-    rules: cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []),
-  });
-  const targetRule = Array.isArray(sample?.rules)
-    ? sample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+  const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
+  const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
+  const targetRule = Array.isArray(compiledRules)
+    ? compiledRules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
     : null;
   if (!targetRule || !Array.isArray(targetRule?.then)) {
     failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
   }
-  const wakeAction = targetRule.then.find((action) => action?.type === ACTION_WAKE_WIN);
+  const sample = withSyntheticImmediateEventRules({
+    rules: [targetRule],
+  });
+  const targetRuleSample = Array.isArray(sample?.rules)
+    ? sample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+    : null;
+  if (!targetRuleSample || !Array.isArray(targetRuleSample?.then)) {
+    failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
+  }
+  const wakeAction = targetRuleSample.then.find((action) => action?.type === ACTION_WAKE_WIN);
   if (!wakeAction) {
     failCheck(CHECK_TAG, `sample ${ACTION_WAKE_WIN} action missing`);
   }

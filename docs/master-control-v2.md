@@ -1,11 +1,11 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-23T07:10:33.585Z
+Generated: 2026-03-24T03:58:33.426Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
-  - compatibility alias: `src/content/interactions-v2/spellbook-v2.js`
-- orchestrator: `src/content/interactions-v2/orchestrator-v1.js`
+- behavior authoring: `src/content/interactions-v2/dream-config-v2.js`
+- compiled orchestrator view: `src/content/interactions-v2/orchestrator-v2.js`
 
 ## Runtime Flags
 
@@ -101,54 +101,622 @@ This document is generated from SSOT:
 }
 ```
 
-## Orchestrator Defaults (SSOT)
+## Behavior Authoring (SSOT)
+
+```json
+{
+  "version": "2",
+  "enabled": true,
+  "wake": {
+    "words": [
+      "orbis",
+      "are_kay_nah"
+    ],
+    "ttlMs": 2000
+  },
+  "groups": {
+    "wake_main_words": [
+      "domus",
+      "electrum",
+      "pyro",
+      "fridgis"
+    ],
+    "school_words": [
+      "rota",
+      "sanctum",
+      "vectus"
+    ]
+  },
+  "rules": [
+    {
+      "id": "wake_main",
+      "on": {
+        "word": [
+          "orbis",
+          "are_kay_nah"
+        ]
+      },
+      "open": {
+        "id": "wake.main",
+        "words": "@wake_main_words",
+        "ttlMs": 2000
+      }
+    },
+    {
+      "id": "tele_home",
+      "on": {
+        "word": "domus"
+      },
+      "requires": "wake.main",
+      "trigger": {
+        "spell": "teleport_home"
+      }
+    },
+    {
+      "id": "school_electrum",
+      "on": {
+        "word": "electrum"
+      },
+      "requires": "wake.main",
+      "open": {
+        "id": "school.electrum",
+        "words": "@school_words",
+        "ttlMs": 1500
+      }
+    },
+    {
+      "id": "school_pyro",
+      "on": {
+        "word": "pyro"
+      },
+      "requires": "wake.main",
+      "open": {
+        "id": "school.pyro",
+        "words": "@school_words",
+        "ttlMs": 1500
+      }
+    },
+    {
+      "id": "school_fridgis",
+      "on": {
+        "word": "fridgis"
+      },
+      "requires": "wake.main",
+      "open": {
+        "id": "school.fridgis",
+        "words": "@school_words",
+        "ttlMs": 1500
+      }
+    },
+    {
+      "id": "spin_y_opens_pyro",
+      "on": {
+        "gesture": "spin_y"
+      },
+      "open": {
+        "id": "school.pyro_spin",
+        "words": "@school_words",
+        "ttlMs": 1500
+      }
+    },
+    {
+      "id": "pyro_rota_load_ud",
+      "on": {
+        "word": "rota"
+      },
+      "requires": "school.pyro",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_ud",
+          "args": {
+            "spell": "aoe_flame",
+            "axisWord": "pyro",
+            "slot": "UD"
+          }
+        }
+      }
+    },
+    {
+      "id": "pyro_sanctum_load_lr",
+      "on": {
+        "word": "sanctum"
+      },
+      "requires": "school.pyro",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_lr",
+          "args": {
+            "spell": "aoe_flame",
+            "axisWord": "pyro",
+            "slot": "LR"
+          }
+        }
+      }
+    },
+    {
+      "id": "pyro_vectus_load_fb",
+      "on": {
+        "word": "vectus"
+      },
+      "requires": "school.pyro",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_fb",
+          "args": {
+            "spell": "aoe_flame",
+            "axisWord": "pyro",
+            "slot": "FB"
+          }
+        }
+      }
+    },
+    {
+      "id": "pyro_rota_load_ud_spin",
+      "on": {
+        "word": "rota"
+      },
+      "requires": "school.pyro_spin",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_ud",
+          "args": {
+            "spell": "aoe_flame",
+            "axisWord": "pyro",
+            "slot": "UD"
+          }
+        }
+      }
+    },
+    {
+      "id": "pyro_sanctum_load_lr_spin",
+      "on": {
+        "word": "sanctum"
+      },
+      "requires": "school.pyro_spin",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_lr",
+          "args": {
+            "spell": "aoe_flame",
+            "axisWord": "pyro",
+            "slot": "LR"
+          }
+        }
+      }
+    },
+    {
+      "id": "pyro_vectus_load_fb_spin",
+      "on": {
+        "word": "vectus"
+      },
+      "requires": "school.pyro_spin",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_fb",
+          "args": {
+            "spell": "aoe_flame",
+            "axisWord": "pyro",
+            "slot": "FB"
+          }
+        }
+      }
+    },
+    {
+      "id": "fridgis_rota_load_ud",
+      "on": {
+        "word": "rota"
+      },
+      "requires": "school.fridgis",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_ud",
+          "args": {
+            "spell": "aoe_frost",
+            "axisWord": "fridgis",
+            "slot": "UD"
+          }
+        }
+      }
+    },
+    {
+      "id": "fridgis_sanctum_load_lr",
+      "on": {
+        "word": "sanctum"
+      },
+      "requires": "school.fridgis",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_lr",
+          "args": {
+            "spell": "aoe_frost",
+            "axisWord": "fridgis",
+            "slot": "LR"
+          }
+        }
+      }
+    },
+    {
+      "id": "fridgis_vectus_load_fb",
+      "on": {
+        "word": "vectus"
+      },
+      "requires": "school.fridgis",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_fb",
+          "args": {
+            "spell": "aoe_frost",
+            "axisWord": "fridgis",
+            "slot": "FB"
+          }
+        }
+      }
+    },
+    {
+      "id": "electrum_rota_load_ud",
+      "on": {
+        "word": "rota"
+      },
+      "requires": "school.electrum",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_ud",
+          "args": {
+            "spell": "aoe_electric",
+            "axisWord": "electrum",
+            "slot": "UD"
+          }
+        }
+      }
+    },
+    {
+      "id": "electrum_sanctum_load_lr",
+      "on": {
+        "word": "sanctum"
+      },
+      "requires": "school.electrum",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_lr",
+          "args": {
+            "spell": "aoe_electric",
+            "axisWord": "electrum",
+            "slot": "LR"
+          }
+        }
+      }
+    },
+    {
+      "id": "electrum_vectus_load_fb",
+      "on": {
+        "word": "vectus"
+      },
+      "requires": "school.electrum",
+      "trigger": {
+        "spell": {
+          "id": "spell_load_fb",
+          "args": {
+            "spell": "aoe_electric",
+            "axisWord": "electrum",
+            "slot": "FB"
+          }
+        }
+      }
+    },
+    {
+      "id": "shake_ud_cast",
+      "on": {
+        "gesture": "shake_ud"
+      },
+      "trigger": {
+        "spell": "cast_loaded_ud"
+      }
+    },
+    {
+      "id": "shake_lr_cast",
+      "on": {
+        "gesture": "shake_lr"
+      },
+      "trigger": {
+        "spell": "cast_loaded_lr"
+      }
+    },
+    {
+      "id": "shake_fb_cast",
+      "on": {
+        "gesture": "shake_fb"
+      },
+      "trigger": {
+        "spell": "cast_loaded_fb"
+      }
+    }
+  ]
+}
+```
+
+## Orchestrator Defaults (Compiled)
 
 ```json
 {
   "open": {
-    "ttlMs": 2000
+    "ttlMs": 1500
   },
-  "trigger": {
-    "grace": {
-      "ms": 500
-    }
+  "rule": {
+    "cooldownMs": 0,
+    "matchWindowMs": 2000,
+    "priority": 10
   }
 }
 ```
 
-## Orchestrator Rules (SSOT)
+## Orchestrator Rules (Compiled)
 
 ```json
 [
   {
-    "id": "r_domus_immediate",
+    "id": "wake_main",
+    "on": {
+      "word": [
+        "orbis",
+        "are_kay_nah"
+      ]
+    },
+    "open": {
+      "id": "wake.main",
+      "words": "@wake_main_words",
+      "ttlMs": 2000
+    }
+  },
+  {
+    "id": "tele_home",
     "on": {
       "word": "domus"
     },
+    "requires": "wake.main",
     "trigger": {
       "teleport_home": true
     }
   },
   {
-    "id": "r_rota_yspin_charged",
+    "id": "school_electrum",
     "on": {
-      "word": "rota",
-      "gesture": "spin_y",
-      "orb_state": "charged"
+      "word": "electrum"
     },
-    "open": [
-      "rota",
-      "sanctum",
-      "vectus"
-    ],
+    "requires": "wake.main",
+    "open": {
+      "id": "school.electrum",
+      "words": "@school_words",
+      "ttlMs": 1500
+    }
+  },
+  {
+    "id": "school_pyro",
+    "on": {
+      "word": "pyro"
+    },
+    "requires": "wake.main",
+    "open": {
+      "id": "school.pyro",
+      "words": "@school_words",
+      "ttlMs": 1500
+    }
+  },
+  {
+    "id": "school_fridgis",
+    "on": {
+      "word": "fridgis"
+    },
+    "requires": "wake.main",
+    "open": {
+      "id": "school.fridgis",
+      "words": "@school_words",
+      "ttlMs": 1500
+    }
+  },
+  {
+    "id": "spin_y_opens_pyro",
+    "on": {
+      "gesture": "spin_y"
+    },
+    "open": {
+      "id": "school.pyro_spin",
+      "words": "@school_words",
+      "ttlMs": 1500
+    }
+  },
+  {
+    "id": "pyro_rota_load_ud",
+    "on": {
+      "word": "rota"
+    },
+    "requires": "school.pyro",
     "trigger": {
-      "aoe_electric": {
-        "range": 14
-      },
-      "grace": true,
-      "orb_state": {
-        "state": "superheated"
+      "spell_load_ud": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "UD"
       }
+    }
+  },
+  {
+    "id": "pyro_sanctum_load_lr",
+    "on": {
+      "word": "sanctum"
+    },
+    "requires": "school.pyro",
+    "trigger": {
+      "spell_load_lr": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "LR"
+      }
+    }
+  },
+  {
+    "id": "pyro_vectus_load_fb",
+    "on": {
+      "word": "vectus"
+    },
+    "requires": "school.pyro",
+    "trigger": {
+      "spell_load_fb": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "FB"
+      }
+    }
+  },
+  {
+    "id": "pyro_rota_load_ud_spin",
+    "on": {
+      "word": "rota"
+    },
+    "requires": "school.pyro_spin",
+    "trigger": {
+      "spell_load_ud": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "UD"
+      }
+    }
+  },
+  {
+    "id": "pyro_sanctum_load_lr_spin",
+    "on": {
+      "word": "sanctum"
+    },
+    "requires": "school.pyro_spin",
+    "trigger": {
+      "spell_load_lr": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "LR"
+      }
+    }
+  },
+  {
+    "id": "pyro_vectus_load_fb_spin",
+    "on": {
+      "word": "vectus"
+    },
+    "requires": "school.pyro_spin",
+    "trigger": {
+      "spell_load_fb": {
+        "spell": "aoe_flame",
+        "axisWord": "pyro",
+        "slot": "FB"
+      }
+    }
+  },
+  {
+    "id": "fridgis_rota_load_ud",
+    "on": {
+      "word": "rota"
+    },
+    "requires": "school.fridgis",
+    "trigger": {
+      "spell_load_ud": {
+        "spell": "aoe_frost",
+        "axisWord": "fridgis",
+        "slot": "UD"
+      }
+    }
+  },
+  {
+    "id": "fridgis_sanctum_load_lr",
+    "on": {
+      "word": "sanctum"
+    },
+    "requires": "school.fridgis",
+    "trigger": {
+      "spell_load_lr": {
+        "spell": "aoe_frost",
+        "axisWord": "fridgis",
+        "slot": "LR"
+      }
+    }
+  },
+  {
+    "id": "fridgis_vectus_load_fb",
+    "on": {
+      "word": "vectus"
+    },
+    "requires": "school.fridgis",
+    "trigger": {
+      "spell_load_fb": {
+        "spell": "aoe_frost",
+        "axisWord": "fridgis",
+        "slot": "FB"
+      }
+    }
+  },
+  {
+    "id": "electrum_rota_load_ud",
+    "on": {
+      "word": "rota"
+    },
+    "requires": "school.electrum",
+    "trigger": {
+      "spell_load_ud": {
+        "spell": "aoe_electric",
+        "axisWord": "electrum",
+        "slot": "UD"
+      }
+    }
+  },
+  {
+    "id": "electrum_sanctum_load_lr",
+    "on": {
+      "word": "sanctum"
+    },
+    "requires": "school.electrum",
+    "trigger": {
+      "spell_load_lr": {
+        "spell": "aoe_electric",
+        "axisWord": "electrum",
+        "slot": "LR"
+      }
+    }
+  },
+  {
+    "id": "electrum_vectus_load_fb",
+    "on": {
+      "word": "vectus"
+    },
+    "requires": "school.electrum",
+    "trigger": {
+      "spell_load_fb": {
+        "spell": "aoe_electric",
+        "axisWord": "electrum",
+        "slot": "FB"
+      }
+    }
+  },
+  {
+    "id": "shake_ud_cast",
+    "on": {
+      "gesture": "shake_ud"
+    },
+    "trigger": {
+      "cast_loaded_ud": true
+    }
+  },
+  {
+    "id": "shake_lr_cast",
+    "on": {
+      "gesture": "shake_lr"
+    },
+    "trigger": {
+      "cast_loaded_lr": true
+    }
+  },
+  {
+    "id": "shake_fb_cast",
+    "on": {
+      "gesture": "shake_fb"
+    },
+    "trigger": {
+      "cast_loaded_fb": true
     }
   }
 ]
@@ -158,9 +726,9 @@ This document is generated from SSOT:
 
 ```json
 {
-  "version": "1",
+  "version": "2",
   "enabled": true,
-  "ruleCount": 2,
+  "ruleCount": 21,
   "parityWithOrchestratorRuleCount": true
 }
 ```
@@ -210,13 +778,19 @@ This document is generated from SSOT:
   "AOE_FROST": "aoe_frost",
   "AOE_ELECTRIC": "aoe_electric",
   "GRACE": "grace",
-  "ORB_STATE": "orb_state"
+  "ORB_STATE": "orb_state",
+  "SPELL_LOAD_UD": "spell_load_ud",
+  "SPELL_LOAD_LR": "spell_load_lr",
+  "SPELL_LOAD_FB": "spell_load_fb",
+  "CAST_LOADED_UD": "cast_loaded_ud",
+  "CAST_LOADED_LR": "cast_loaded_lr",
+  "CAST_LOADED_FB": "cast_loaded_fb"
 }
 ```
 
 ## Authoring Notes
 
 - Add/remove/toggle words in `wordbook-v2.js`.
-  - compatibility alias path: `spellbook-v2.js`
-- Compose trigger/action chains in `orchestrator-v1.js`.
+- Compose trigger/action chains in `dream-config-v2.js`.
+- `orchestrator-v2.js` is compiled output used by runtime/builder validation.
 - Runtime rule/event/signal wiring is auto-validated in `ready:v2`.

@@ -3,72 +3,40 @@ import { defineCheckEntriesV2 } from "./define-check-entries-v2.mjs";
 // Order is intentional for predictable failure sequencing in CI/local runs.
 export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   {
-    id: "wordbook_v2_alias",
-    script: "tools/rule-engine-v2/check-wordbook-v2-alias-contract-v2.mjs",
-  },
-  {
-    id: "wordbook_runtime_alias",
-    script: "tools/rule-engine-v2/check-wordbook-runtime-alias-contract-v2.mjs",
-  },
-  {
     id: "wordbook_canonical_imports",
     script: "tools/rule-engine-v2/check-wordbook-canonical-imports-v2.mjs",
   },
   {
-    id: "wordbook_src_imports",
-    script: "tools/rule-engine-v2/check-wordbook-src-imports-v2.mjs",
+    id: "wordbook_src_canonical_imports",
+    script: "tools/rule-engine-v2/check-wordbook-src-canonical-imports-v2.mjs",
   },
   {
-    id: "wordbook_interactions_imports",
-    script: "tools/rule-engine-v2/check-wordbook-interactions-imports-v2.mjs",
+    id: "wordbook_interactions_canonical_imports",
+    script: "tools/rule-engine-v2/check-wordbook-interactions-canonical-imports-v2.mjs",
   },
   {
-    id: "wordbook_src_spellbook_v2_imports",
-    script: "tools/rule-engine-v2/check-wordbook-src-spellbook-v2-imports-v2.mjs",
+    id: "wordbook_src_compat_module_import_surface",
+    script: "tools/rule-engine-v2/check-wordbook-src-compat-module-import-surface-v2.mjs",
   },
   {
-    id: "wordbook_shim_alias",
-    script: "tools/rule-engine-v2/check-wordbook-shim-alias-contract-v2.mjs",
+    id: "wordbook_kws_manifest_compat_surface",
+    script: "tools/rule-engine-v2/check-wordbook-kws-manifest-compat-surface-v2.mjs",
   },
   {
-    id: "wordbook_validator_alias_surface",
-    script: "tools/rule-engine-v2/check-wordbook-validator-alias-surface-v2.mjs",
+    id: "wordbook_compat_module_import_surface",
+    script: "tools/rule-engine-v2/check-wordbook-compat-module-import-surface-v2.mjs",
   },
   {
-    id: "wordbook_runtime_bridge_surface",
-    script: "tools/rule-engine-v2/check-wordbook-runtime-bridge-surface-v2.mjs",
-  },
-  {
-    id: "wordbook_runtime_bridge_shim",
-    script: "tools/rule-engine-v2/check-wordbook-runtime-bridge-shim-contract-v2.mjs",
-  },
-  {
-    id: "wordbook_legacy_symbol_surface",
-    script: "tools/rule-engine-v2/check-wordbook-legacy-symbol-surface-v2.mjs",
-  },
-  {
-    id: "wordbook_kws_manifest_alias_surface",
-    script: "tools/rule-engine-v2/check-wordbook-kws-manifest-alias-surface-v2.mjs",
-  },
-  {
-    id: "wordbook_direct_module_import_surface",
-    script: "tools/rule-engine-v2/check-wordbook-direct-module-import-surface-v2.mjs",
-  },
-  {
-    id: "rule_source",
+    id: "rule_source_contract",
     script: "tools/rule-engine-v2/check-rule-source-contract-v2.mjs",
   },
   {
-    id: "policy_alias",
+    id: "policy_control_contract",
     script: "tools/rule-engine-v2/check-policy-control-contract-v2.mjs",
   },
   {
-    id: "runtime_import",
+    id: "runtime_policy_import_contract",
     script: "tools/rule-engine-v2/check-runtime-policy-import-contract-v2.mjs",
-  },
-  {
-    id: "orchestrator_v1_compiler",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-compiler-contract-v2.mjs",
   },
   {
     id: "orchestrator_v2_compiler",
@@ -219,10 +187,6 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-orchestrator-v2-rule-section-shape-validator-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v1_validator",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-validator-contract-v2.mjs",
-  },
-  {
     id: "orchestrator_v2_validator",
     script: "tools/rule-engine-v2/check-orchestrator-v2-validator-contract-v2.mjs",
   },
@@ -251,16 +215,16 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-orchestrator-v2-open-entry-type-validator-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v2_open_spells_alias_warning_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-alias-warning-source-surface-v2.mjs",
+    id: "orchestrator_v2_open_spells_compat_warning_source_surface",
+    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-compat-warning-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v2_open_spells_alias_entry_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-alias-entry-validator-source-surface-v2.mjs",
+    id: "orchestrator_v2_open_spells_compat_entry_validator_source_surface",
+    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-compat-entry-validator-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v2_open_spells_alias_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-alias-whitespace-validator-source-surface-v2.mjs",
+    id: "orchestrator_v2_open_spells_compat_whitespace_validator_source_surface",
+    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-compat-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_selector_whitespace_validator_source_surface",
@@ -271,20 +235,20 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-fallback-compiler-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v2_on_spell_alias_compiler_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-alias-compiler-source-surface-v2.mjs",
+    id: "orchestrator_v2_on_spell_compat_compiler_source_surface",
+    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-compiler-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v2_on_spell_alias_warning_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-alias-warning-source-surface-v2.mjs",
+    id: "orchestrator_v2_on_spell_compat_warning_source_surface",
+    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-warning-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v2_on_spell_alias_entry_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-alias-entry-validator-source-surface-v2.mjs",
+    id: "orchestrator_v2_on_spell_compat_entry_validator_source_surface",
+    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-entry-validator-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v2_on_spell_alias_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-alias-whitespace-validator-source-surface-v2.mjs",
+    id: "orchestrator_v2_on_spell_compat_whitespace_validator_source_surface",
+    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_selector_whitespace_validator_source_surface",
@@ -387,16 +351,8 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-duplicate-source-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v1_parity",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-projection-parity-v2.mjs",
-  },
-  {
-    id: "interactions_wake_words_alias_contract",
-    script: "tools/rule-engine-v2/check-interactions-wake-words-alias-contract-v2.mjs",
-  },
-  {
-    id: "interactions_word_condition_alias_contract",
-    script: "tools/rule-engine-v2/check-interactions-word-condition-alias-contract-v2.mjs",
+    id: "interactions_wake_words_compat_contract",
+    script: "tools/rule-engine-v2/check-interactions-wake-words-compat-contract-v2.mjs",
   },
   {
     id: "interactions_authoring_word_condition_surface",
@@ -407,12 +363,8 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-interactions-authoring-wake-words-surface-v2.mjs",
   },
   {
-    id: "interactions_immediate_spell_collector_alias_surface",
-    script: "tools/rule-engine-v2/check-interactions-immediate-spell-collector-alias-surface-v2.mjs",
-  },
-  {
-    id: "spell_runtime_routing_wake_words_alias_contract",
-    script: "tools/rule-engine-v2/check-spell-runtime-routing-wake-words-alias-contract-v2.mjs",
+    id: "spell_runtime_routing_wake_words_compat_contract",
+    script: "tools/rule-engine-v2/check-spell-runtime-routing-wake-words-compat-contract-v2.mjs",
   },
   {
     id: "spell_runtime_routing_wake_words_precedence_contract",
@@ -427,8 +379,8 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-spell-runtime-routing-wake-unknown-word-contract-v2.mjs",
   },
   {
-    id: "spell_schema_integrity_wake_words_alias_contract",
-    script: "tools/rule-engine-v2/check-spell-schema-integrity-wake-words-alias-contract-v2.mjs",
+    id: "spell_schema_integrity_wake_words_compat_contract",
+    script: "tools/rule-engine-v2/check-spell-schema-integrity-wake-words-compat-contract-v2.mjs",
   },
   {
     id: "spell_schema_integrity_wake_words_precedence_contract",
@@ -439,32 +391,32 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-spell-schema-integrity-wake-bare-id-contract-v2.mjs",
   },
   {
-    id: "spell_wake_spells_legacy_alias_contract",
-    script: "tools/rule-engine-v2/check-spell-wake-spells-legacy-alias-contract-v2.mjs",
+    id: "spell_wake_spells_compat_contract",
+    script: "tools/rule-engine-v2/check-spell-wake-spells-compat-contract-v2.mjs",
   },
   {
-    id: "spell_validator_wake_alias_source_surface",
-    script: "tools/rule-engine-v2/check-spell-validator-wake-alias-source-surface-v2.mjs",
+    id: "spell_validator_wake_compat_source_surface",
+    script: "tools/rule-engine-v2/check-spell-validator-wake-compat-source-surface-v2.mjs",
   },
   {
     id: "preview_runtime_wake_words_source_surface",
     script: "tools/rule-engine-v2/check-preview-runtime-wake-words-source-surface-v2.mjs",
   },
   {
-    id: "preview_runtime_wake_words_alias_contract",
-    script: "tools/rule-engine-v2/check-preview-runtime-wake-words-alias-contract-v2.mjs",
+    id: "preview_runtime_wake_words_compat_contract",
+    script: "tools/rule-engine-v2/check-preview-runtime-wake-words-compat-contract-v2.mjs",
   },
   {
-    id: "preview_runtime_word_condition_alias_contract",
-    script: "tools/rule-engine-v2/check-preview-runtime-word-condition-alias-contract-v2.mjs",
+    id: "preview_runtime_word_condition_compat_contract",
+    script: "tools/rule-engine-v2/check-preview-runtime-word-condition-compat-contract-v2.mjs",
   },
   {
-    id: "rule_engine_preview_system_wake_words_alias_contract",
-    script: "tools/rule-engine-v2/check-rule-engine-preview-system-wake-words-alias-contract-v2.mjs",
+    id: "rule_engine_preview_system_wake_words_compat_contract",
+    script: "tools/rule-engine-v2/check-rule-engine-preview-system-wake-words-compat-contract-v2.mjs",
   },
   {
-    id: "rule_engine_preview_system_word_condition_alias_contract",
-    script: "tools/rule-engine-v2/check-rule-engine-preview-system-word-condition-alias-contract-v2.mjs",
+    id: "rule_engine_preview_system_word_condition_compat_contract",
+    script: "tools/rule-engine-v2/check-rule-engine-preview-system-word-condition-compat-contract-v2.mjs",
   },
   {
     id: "validate_spell_rules_wake_words_contract",
@@ -507,30 +459,6 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-pre-smoke-spell-validator-surface-v2.mjs",
   },
   {
-    id: "orchestrator_v1_projection_validity",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-projection-validity-contract-v2.mjs",
-  },
-  {
-    id: "orchestrator_v1_doc_open_words_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-doc-open-words-surface-v2.mjs",
-  },
-  {
-    id: "orchestrator_v1_bootstrap_projection",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-bootstrap-projection-contract-v2.mjs",
-  },
-  {
-    id: "orchestrator_v1_bootstrap_defaults",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-bootstrap-defaults-contract-v2.mjs",
-  },
-  {
-    id: "orchestrator_v1_bootstrap_parity",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-bootstrap-parity-contract-v2.mjs",
-  },
-  {
-    id: "orchestrator_v1_bootstrap_projection_toggle",
-    script: "tools/rule-engine-v2/check-orchestrator-v1-bootstrap-projection-toggle-contract-v2.mjs",
-  },
-  {
     id: "orchestrator_v2_bootstrap_precedence",
     script: "tools/rule-engine-v2/check-orchestrator-v2-bootstrap-precedence-contract-v2.mjs",
   },
@@ -547,8 +475,8 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-word-detected-bridge-v2.mjs",
   },
   {
-    id: "word_detected_legacy_event_surface",
-    script: "tools/rule-engine-v2/check-word-detected-legacy-event-surface-v2.mjs",
+    id: "word_detected_compat_event_surface",
+    script: "tools/rule-engine-v2/check-word-detected-compat-event-surface-v2.mjs",
   },
   {
     id: "detected_word_utils_surface",
@@ -557,10 +485,6 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   {
     id: "signal_definitions_word_event_surface",
     script: "tools/rule-engine-v2/check-signal-definitions-word-event-surface-v2.mjs",
-  },
-  {
-    id: "orchestrator_projection_doc",
-    script: "tools/rule-engine-v2/check-orchestrator-projection-doc-contract-v2.mjs",
   },
   {
     id: "master_control_orchestrator_section",
@@ -595,8 +519,8 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-docs-index-canonical-signals-v2.mjs",
   },
   {
-    id: "docs_legacy_handle_drift",
-    script: "tools/rule-engine-v2/check-docs-legacy-handle-drift-v2.mjs",
+    id: "docs_compat_handle_drift",
+    script: "tools/rule-engine-v2/check-docs-compat-handle-drift-v2.mjs",
   },
   {
     id: "docs_wordbook_canonical_ssot",
@@ -647,8 +571,8 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-health-contract-v2.mjs",
   },
   {
-    id: "health_wordbook_alias_surface",
-    script: "tools/rule-engine-v2/check-health-wordbook-alias-surface-v2.mjs",
+    id: "health_wordbook_surface",
+    script: "tools/rule-engine-v2/check-health-wordbook-surface-v2.mjs",
   },
   {
     id: "cross_manifest_integrity",

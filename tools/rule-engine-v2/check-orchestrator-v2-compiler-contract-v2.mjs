@@ -10,8 +10,8 @@ const WINDOW_WAKE_WIN = "wake_win";
 const WINDOW_WAKE_MAIN_ID = "wake.main";
 const WINDOW_PYRO_SCHOOL_ID = "pyro.school";
 const WINDOW_PRECEDENCE_ID = "precedence.win";
-const WINDOW_ALIAS_FALLBACK_ID = "alias.fallback";
-const WINDOW_ALIAS_PREFIXED_ID = "alias.prefixed";
+const WINDOW_COMPAT_FALLBACK_ID = "compat.fallback";
+const WINDOW_COMPAT_PREFIXED_ID = "compat.prefixed";
 const WINDOW_OPEN_WORDS_COMMA_ID = "open.words.comma";
 const WINDOW_OPEN_WORDS_PRECEDENCE_COMMA_ID = "open.words.precedence.comma";
 const WINDOW_OPEN_SPELLS_COMMA_ID = "open.spells.comma";
@@ -136,15 +136,15 @@ const sample = Object.freeze({
       }),
     }),
     Object.freeze({
-      id: "o_v2_open_spells_alias_fallback",
+      id: "o_v2_open_spells_compat_fallback",
       on: Object.freeze({ word: WORD_ORBIS_ID }),
       open: Object.freeze({
-        id: WINDOW_ALIAS_FALLBACK_ID,
+        id: WINDOW_COMPAT_FALLBACK_ID,
         spells: Object.freeze([WORD_PYRO_ID]),
       }),
     }),
     Object.freeze({
-      id: "o_v2_on_spell_alias",
+      id: "o_v2_on_spell_compat",
       on: Object.freeze({ spell: WORD_ORBIS_ID }),
       trigger: Object.freeze({ grace: true }),
     }),
@@ -197,25 +197,25 @@ const sample = Object.freeze({
       trigger: Object.freeze({ grace: true }),
     }),
     Object.freeze({
-      id: "o_v2_on_spell_comma_alias_fallback",
+      id: "o_v2_on_spell_comma_compat_fallback",
       on: Object.freeze({ spell: `${WORD_ORBIS_ID}, ${WORD_PYRO_ID}` }),
       trigger: Object.freeze({ grace: true }),
     }),
     Object.freeze({
-      id: "o_v2_on_word_precedence_over_spell_alias",
+      id: "o_v2_on_word_precedence_over_spell_compat",
       on: Object.freeze({ word: WORD_ORBIS_ID, spell: UNKNOWN_WAKE_WORD_ID_V2 }),
       trigger: Object.freeze({ grace: true }),
     }),
     Object.freeze({
-      id: "o_v2_on_word_precedence_over_valid_spell_alias",
+      id: "o_v2_on_word_precedence_over_valid_spell_compat",
       on: Object.freeze({ word: WORD_ORBIS_ID, spell: WORD_DOMUS_ID }),
       trigger: Object.freeze({ grace: true }),
     }),
     Object.freeze({
-      id: "o_v2_alias_prefixed_normalization",
+      id: "o_v2_compat_prefixed_normalization",
       on: Object.freeze({ spell: WORD_ORBIS_SELECTOR }),
       open: Object.freeze({
-        id: WINDOW_ALIAS_PREFIXED_ID,
+        id: WINDOW_COMPAT_PREFIXED_ID,
         spells: Object.freeze([WORD_PYRO_SELECTOR, SPELL_ROTA_SELECTOR]),
       }),
     }),
@@ -237,7 +237,7 @@ const sample = Object.freeze({
       }),
     }),
     Object.freeze({
-      id: "o_v2_open_spells_comma_alias_fallback",
+      id: "o_v2_open_spells_comma_compat_fallback",
       on: Object.freeze({ word: WORD_ORBIS_ID }),
       open: Object.freeze({
         id: WINDOW_OPEN_SPELLS_COMMA_ID,
@@ -281,8 +281,8 @@ if (built.rules.some((rule) => rule && rule.id === "base_rule_should_be_overridd
 const wakeRule = requireRuleById(built.rules, "o_v2_wake");
 const pyroRule = requireRuleById(built.rules, "o_v2_pyro_school");
 const precedenceRule = requireRuleById(built.rules, "o_v2_open_words_precedence");
-const aliasFallbackRule = requireRuleById(built.rules, "o_v2_open_spells_alias_fallback");
-const onSpellAliasRule = requireRuleById(built.rules, "o_v2_on_spell_alias");
+const compatFallbackRule = requireRuleById(built.rules, "o_v2_open_spells_compat_fallback");
+const onSpellCompatRule = requireRuleById(built.rules, "o_v2_on_spell_compat");
 const triggerDisabledRule = requireRuleById(built.rules, "o_v2_trigger_disabled_boolean");
 const triggerShorthandRule = requireRuleById(built.rules, "o_v2_trigger_shorthand_array");
 const triggerObjectEnabledFalseRule = requireRuleById(
@@ -303,24 +303,24 @@ const defaultsTriggerEnabledOverrideRule = requireRuleById(
 );
 const triggerCommaRule = requireRuleById(built.rules, "o_v2_trigger_requires_consume_comma_string");
 const onCommaRule = requireRuleById(built.rules, "o_v2_on_word_comma_string");
-const onSpellCommaAliasRule = requireRuleById(built.rules, "o_v2_on_spell_comma_alias_fallback");
+const onSpellCommaCompatRule = requireRuleById(built.rules, "o_v2_on_spell_comma_compat_fallback");
 const onWordPrecedenceRule = requireRuleById(
   built.rules,
-  "o_v2_on_word_precedence_over_spell_alias"
+  "o_v2_on_word_precedence_over_spell_compat"
 );
 const onWordPrecedenceValidAliasRule = requireRuleById(
   built.rules,
-  "o_v2_on_word_precedence_over_valid_spell_alias"
+  "o_v2_on_word_precedence_over_valid_spell_compat"
 );
-const prefixedAliasRule = requireRuleById(built.rules, "o_v2_alias_prefixed_normalization");
+const prefixedCompatRule = requireRuleById(built.rules, "o_v2_compat_prefixed_normalization");
 const openWordsCommaRule = requireRuleById(built.rules, "o_v2_open_words_comma_string");
 const openWordsCommaPrecedenceRule = requireRuleById(
   built.rules,
   "o_v2_open_words_comma_precedence_over_spells_comma"
 );
-const openSpellsCommaAliasRule = requireRuleById(
+const openSpellsCommaCompatRule = requireRuleById(
   built.rules,
-  "o_v2_open_spells_comma_alias_fallback"
+  "o_v2_open_spells_comma_compat_fallback"
 );
 const groupPrefixedRule = requireRuleById(built.rules, "o_v2_group_prefixed_normalization");
 const groupMixedRule = requireRuleById(built.rules, "o_v2_group_mixed_order");
@@ -369,24 +369,24 @@ assertEqual(
   details
 );
 
-const expectedAliasFallbackThen = expectedWakeThen(WINDOW_ALIAS_FALLBACK_ID, [WORD_PYRO_ID]);
+const expectedCompatFallbackThen = expectedWakeThen(WINDOW_COMPAT_FALLBACK_ID, [WORD_PYRO_ID]);
 assertEqual(
-  asJson(aliasFallbackRule.then),
-  asJson(expectedAliasFallbackThen),
-  "aliasFallbackRule.then",
+  asJson(compatFallbackRule.then),
+  asJson(expectedCompatFallbackThen),
+  "compatFallbackRule.then",
   details
 );
 
 assertEqual(
-  asJson(onSpellAliasRule.on),
+  asJson(onSpellCompatRule.on),
   asJson([{ type: "word", id: WORD_ORBIS_ID }]),
-  "onSpellAliasRule.on",
+  "onSpellCompatRule.on",
   details
 );
 assertEqual(
-  asJson(onSpellAliasRule.then),
+  asJson(onSpellCompatRule.then),
   asJson(expectedGraceThen),
-  "onSpellAliasRule.then",
+  "onSpellCompatRule.then",
   details
 );
 assertEqual(
@@ -471,18 +471,18 @@ assertEqual(
   details
 );
 assertEqual(
-  asJson(onSpellCommaAliasRule.on),
+  asJson(onSpellCommaCompatRule.on),
   asJson([
     { type: "word", id: WORD_ORBIS_ID },
     { type: "word", id: WORD_PYRO_ID },
   ]),
-  "onSpellCommaAliasRule.on",
+  "onSpellCommaCompatRule.on",
   details
 );
 assertEqual(
-  asJson(onSpellCommaAliasRule.then),
+  asJson(onSpellCommaCompatRule.then),
   asJson(expectedGraceThen),
-  "onSpellCommaAliasRule.then",
+  "onSpellCommaCompatRule.then",
   details
 );
 assertEqual(
@@ -511,15 +511,15 @@ assertEqual(
 );
 
 assertEqual(
-  asJson(prefixedAliasRule.on),
+  asJson(prefixedCompatRule.on),
   asJson([{ type: "word", id: WORD_ORBIS_ID }]),
-  "prefixedAliasRule.on",
+  "prefixedCompatRule.on",
   details
 );
 assertEqual(
-  asJson(prefixedAliasRule.then),
-  asJson(expectedWakeThen(WINDOW_ALIAS_PREFIXED_ID, [WORD_PYRO_ID, WORD_ROTA_ID])),
-  "prefixedAliasRule.then",
+  asJson(prefixedCompatRule.then),
+  asJson(expectedWakeThen(WINDOW_COMPAT_PREFIXED_ID, [WORD_PYRO_ID, WORD_ROTA_ID])),
+  "prefixedCompatRule.then",
   details
 );
 assertEqual(
@@ -535,9 +535,9 @@ assertEqual(
   details
 );
 assertEqual(
-  asJson(openSpellsCommaAliasRule.then),
+  asJson(openSpellsCommaCompatRule.then),
   asJson(expectedWakeThen(WINDOW_OPEN_SPELLS_COMMA_ID, [WORD_DOMUS_ID, WORD_PYRO_ID])),
-  "openSpellsCommaAliasRule.then",
+  "openSpellsCommaCompatRule.then",
   details
 );
 assertEqual(

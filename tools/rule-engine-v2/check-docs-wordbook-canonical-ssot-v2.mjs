@@ -3,12 +3,11 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { readRelativeText } from "./read-text-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
-// Confirms docs cite wordbook SSOT and explicit spellbook compatibility alias wording.
+// Confirms docs cite canonical wordbook SSOT and avoid legacy spellbook module-path references.
 const CHECK_TAG = "docs-wordbook-canonical-ssot:v2";
 const WORDBOOK_SSOT_TOKEN = "src/content/interactions-v2/wordbook-v2.js";
-const SPELLBOOK_COMPAT_TOKEN = "src/content/interactions-v2/spellbook-v2.js";
-const COMPAT_ALIAS_TOKEN = "compatibility alias";
-const PASS_MESSAGE = "rule-engine docs use canonical wordbook SSOT naming with explicit spellbook compatibility alias";
+const LEGACY_SPELLBOOK_MODULE_PATH = "src/content/interactions-v2/spellbook-v2.js";
+const PASS_MESSAGE = "rule-engine docs use canonical wordbook SSOT naming without legacy spellbook module-path alias";
 
 const TARGETS = Object.freeze([
   "docs/rule-engine-authoring.md",
@@ -20,11 +19,11 @@ for (const rel of TARGETS) {
   requireTextIncludesTokensV2({
     tag: CHECK_TAG,
     text,
-    tokens: [WORDBOOK_SSOT_TOKEN, SPELLBOOK_COMPAT_TOKEN],
+    tokens: [WORDBOOK_SSOT_TOKEN],
     missingMessage: (token) => `${rel} missing required wordbook SSOT token: ${token}`,
   });
-  if (!text.includes(COMPAT_ALIAS_TOKEN)) {
-    failCheck(CHECK_TAG, `${rel} must document compatibility alias wording`);
+  if (text.includes(LEGACY_SPELLBOOK_MODULE_PATH)) {
+    failCheck(CHECK_TAG, `${rel} must not reference retired spellbook module path`);
   }
 }
 

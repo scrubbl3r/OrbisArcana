@@ -213,9 +213,9 @@ expectBuilderValidWithSingleRule(
 );
 
 expectBuilderValidWithSingleRule(
-  "alias_surfaces_valid_build",
+  "compat_surfaces_valid_build",
   {
-    id: "alias_surfaces_valid_rule",
+    id: "compat_surfaces_valid_rule",
     on: Object.freeze({ spell: "orbis" }),
     open: Object.freeze({
       id: "wake.main",
@@ -311,9 +311,9 @@ expectBuilderValidWithSingleRule(
 );
 
 expectBuilderValidWithSingleRule(
-  "on_word_precedence_over_spell_alias_valid_build",
+  "on_word_precedence_over_spell_compat_valid_build",
   {
-    id: "on_word_precedence_over_spell_alias_valid_rule",
+    id: "on_word_precedence_over_spell_compat_valid_rule",
     on: Object.freeze({
       word: "orbis",
       spell: UNKNOWN_WAKE_WORD_ID_V2,
@@ -323,9 +323,9 @@ expectBuilderValidWithSingleRule(
 );
 
 expectBuilderValidWithSingleRule(
-  "on_word_precedence_over_valid_spell_alias_build",
+  "on_word_precedence_over_valid_spell_compat_build",
   {
-    id: "on_word_precedence_over_valid_spell_alias_rule",
+    id: "on_word_precedence_over_valid_spell_compat_rule",
     on: Object.freeze({
       word: "orbis",
       spell: "pyro",
@@ -1141,7 +1141,7 @@ expectBuilderErrorWithSingleRuleFragments(
 expectBuilderErrorWithSingleRule(
   "open_spells_comma_unknown_invalid",
   {
-    id: "alias_open_comma_unknown_rule",
+    id: "compat_open_comma_unknown_rule",
     on: Object.freeze({ word: "orbis" }),
     open: Object.freeze({
       id: "wake.main",

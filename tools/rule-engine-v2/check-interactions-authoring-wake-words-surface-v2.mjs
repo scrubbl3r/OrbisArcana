@@ -6,14 +6,14 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 const CHECK_TAG = "interactions-authoring-wake-words-surface:v2";
 const ACTION_WAKE_WIN = "wake_win";
 const PASS_MESSAGE = `interactions authoring ${ACTION_WAKE_WIN} uses canonical words[] with matching optional spells[] compatibility alias`;
-const LEGACY_OPTIONAL_PASS_MESSAGE = `interactions authoring ${ACTION_WAKE_WIN} surface is legacy-optional when interactions bootstrap is disabled`;
+const COMPAT_OPTIONAL_PASS_MESSAGE = `interactions authoring ${ACTION_WAKE_WIN} surface is compat-optional when interactions bootstrap is disabled`;
 
 const interactionsBootstrapEnabled = !!(
   INTERACTIONS_V2_BOOTSTRAP &&
   INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
 );
 if (!interactionsBootstrapEnabled) {
-  reportCheckPass(CHECK_TAG, LEGACY_OPTIONAL_PASS_MESSAGE);
+  reportCheckPass(CHECK_TAG, COMPAT_OPTIONAL_PASS_MESSAGE);
   process.exit(0);
 }
 

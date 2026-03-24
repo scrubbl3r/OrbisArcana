@@ -1,6 +1,6 @@
 import {
-  buildRuleEngineFromOrchestratorV1,
-  ORCHESTRATOR_V1,
+  buildRuleEngineFromOrchestratorV2,
+  ORCHESTRATOR_V2,
   WORDBOOK_V2_ACTIVE_WORDS_BY_ID,
 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
@@ -36,39 +36,29 @@ function main() {
   if (!Array.isArray(root.rules)) {
     failCheck(CHECK_TAG, "rules must be an array");
   }
-  const hasWords = Array.isArray(root.words);
-  const hasSpells = Array.isArray(root.spells);
-  if (!hasWords && !hasSpells) {
-    failCheck(CHECK_TAG, "words (or compatibility alias spells) must be an array");
+  if (!Array.isArray(root.words)) {
+    failCheck(CHECK_TAG, "words must be an array");
   }
+  const authoringWords = root.words;
 
-  const authoringWords = hasWords ? root.words : root.spells;
-  if (hasWords && hasSpells) {
-    const wordsJson = JSON.stringify(root.words);
-    const spellsJson = JSON.stringify(root.spells);
-    if (wordsJson !== spellsJson) {
-      failCheck(CHECK_TAG, "words and compatibility alias spells must be identical when both are present");
-    }
-  }
-
-  const seenSpellIds = new Set();
+  const seenWordIds = new Set();
   for (const s of authoringWords) {
-    const spell = isRecord(s);
-    if (!spell) failCheck(CHECK_TAG, "words[] entries must be objects");
-    const id = asLowerText(spell.id);
+    const word = isRecord(s);
+    if (!word) failCheck(CHECK_TAG, "words[] entries must be objects");
+    const id = asLowerText(word.id);
     if (!id) failCheck(CHECK_TAG, "words[] entry missing id");
-    if (seenSpellIds.has(id)) failCheck(CHECK_TAG, `duplicate spell id: ${id}`);
-    seenSpellIds.add(id);
+    if (seenWordIds.has(id)) failCheck(CHECK_TAG, `duplicate word id: ${id}`);
+    seenWordIds.add(id);
     if (!Object.prototype.hasOwnProperty.call(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, id)) {
-      failCheck(CHECK_TAG, `words[] contains inactive/unknown spell id: ${id}`);
+      failCheck(CHECK_TAG, `words[] contains inactive/unknown word id: ${id}`);
     }
   }
 
-  const expectedRules = Array.isArray(ORCHESTRATOR_V1?.rules) ? ORCHESTRATOR_V1.rules : [];
+  const expectedRules = Array.isArray(ORCHESTRATOR_V2?.rules) ? ORCHESTRATOR_V2.rules : [];
   if (root.rules.length !== expectedRules.length) {
     failCheck(CHECK_TAG, `rules count mismatch: doc=${root.rules.length} expected=${expectedRules.length}`);
   }
-  const projectedEngine = buildRuleEngineFromOrchestratorV1();
+  const projectedEngine = buildRuleEngineFromOrchestratorV2();
   const projectedRules = Array.isArray(projectedEngine?.rules) ? projectedEngine.rules : [];
   if (!projectedRules.length) {
     failCheck(CHECK_TAG, "orchestrator compiled rules must be present");

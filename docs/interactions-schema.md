@@ -4,13 +4,13 @@ Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
 ## Goal
-- One central behavior config for chaining spells, gestures, orb states, wake windows, and events.
-- One separate word inventory file for wake-word availability (`active` true/false).
+- One central behavior config for chaining words, gestures, orb states, wake windows, and events.
+- One separate word inventory file for availability (`active` true/false).
 - Keep syntax minimal and author-friendly.
 
-## File 1: Word Inventory (Wake Words Only)
+## File 1: Word Inventory
 `wordbook`
-Compatibility alias: `spellbook`
+Compatibility alias (legacy): `spellbook` (do not use for new authoring)
 
 ```js
 {
@@ -54,14 +54,14 @@ Compatibility alias: `spellbook`
 
       on: {
         all: [
-          { type: "word", id: "rota" }, // compatibility alias: "spell"
+          { type: "word", id: "rota" },
           { type: "gesture", id: "SPIN_Y" },
           { type: "orb_state", id: "charged" }
         ]
       },
 
       then: [
-        { type: "wake_win", words: ["sanctum", "vectus"] }, // compatibility alias: spells
+        { type: "wake_win", words: ["sanctum", "vectus"] }, // canonical authoring
         { type: "event", id: "aoe_electric" },
         { type: "event", id: "grace" },
         { type: "event", id: "orb_state", overrides: { state: "superheated" } }
@@ -72,21 +72,23 @@ Compatibility alias: `spellbook`
 ```
 
 ## Entity Types
-- Trigger types (`on`): `word` (compatibility alias: `spell`), `gesture`, `orb_state`
+- Trigger types (`on`): `word`, `gesture`, `orb_state`
 - Action types (`then`): `wake_win`, `event`
 
 ### Condition ID Forms
 - Condition `id` supports either:
   - bare form: `rota`, `spin_y`, `charged`
-  - qualified form: `word.rota`, `spell.rota`, `gesture.spin_y`, `orb_state.charged`
-- Runtime normalization strips matching type prefix automatically (`word.` and `spell.` are aliases).
+  - qualified form: `word.rota`, `gesture.spin_y`, `orb_state.charged`
+- Runtime normalization strips matching type prefix automatically (`word.` for word conditions).
 
 ### Wake Window Word ID Forms
 - `wake_win.words[]` supports either:
   - bare form: `rota`
-  - qualified form: `word.rota` (compatibility alias: `spell.rota`)
-- Runtime normalization strips `word.` and `spell.` prefixes automatically.
-- Compatibility alias: `wake_win.spells[]`.
+  - qualified form: `word.rota`
+- Canonical authoring is `wake_win.words[]` + `word.*`.
+- Compatibility aliases remain accepted for transition:
+  - `wake_win.spells[]` (legacy alias of `wake_win.words[]`)
+  - `spell.rota` style qualified entries (legacy runtime namespace alias)
 
 ## Override Rules
 - If `overrides` exists on an action, those values win.
@@ -101,9 +103,9 @@ Example:
 
 ## Authoring Principles
 - One behavior authoring file (`interactions`).
-- One word inventory file (`wordbook`; compatibility alias: `spellbook`).
+- One word inventory file (`wordbook`).
 - Neutral axis/wake-window taxonomy only.
-- All spell/gesture/orb interactions are modular and composable.
+- All word/gesture/orb interactions are modular and composable.
 
 ## Future-Proofing
 - Support base config + level/area overlays.

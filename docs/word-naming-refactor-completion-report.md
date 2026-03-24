@@ -4,7 +4,7 @@
 The `spell*` -> `word*` refactor is complete across active runtime and tooling surfaces.
 Canonical naming is now `word*` for authoring, runtime indexing, routing, and internal checks.
 
-`npm run ready:v2` is green after final teardown.
+`npm run ready:v2` and `npm run status:v2` are green after final teardown.
 
 ## Removed Legacy Alias Surfaces
 
@@ -25,15 +25,11 @@ Canonical naming is now `word*` for authoring, runtime indexing, routing, and in
 - `setRuntimeSpellIndexes`
 - `initSpellActionHandlers`
 
-## Remaining Intentional Compatibility Surfaces
+## Remaining Intentional Compatibility Surface
 
-### Event payload compatibility aliases
+### Event payload compatibility alias
 - Runtime payloads may still include `spellId` as an alias of canonical `wordId`.
 - This is intentional wire-compat for downstream consumers that have not fully migrated.
-
-### Bridge/shim compatibility contracts
-- Spellbook/wordbook bridge/shim contracts remain where explicitly validated by `ready:v2` checks.
-- These are constrained compatibility boundaries, not canonical authoring/runtime APIs.
 
 ## Human Smoke Checklist (Post-Refactor)
 1. Boot receiver and confirm no startup validation errors.
@@ -48,7 +44,7 @@ Canonical naming is now `word*` for authoring, runtime indexing, routing, and in
 5. Verify KWS readout:
    - candidate/readout surfaces show canonical word flow.
 6. Confirm docs/artifacts regenerate cleanly:
-   - run `npm run ready:v2`.
+   - run `npm run ready:v2` and `npm run status:v2`.
 
 ## Recommended Follow-Up
 - Coordinate eventual removal of payload-level `spellId` aliases once all external consumers are confirmed migrated.

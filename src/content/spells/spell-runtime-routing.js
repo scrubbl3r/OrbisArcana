@@ -1,49 +1,281 @@
-// Runtime routing metadata intentionally separated from recognition spellbook.
-// This file owns behavior-oriented spell metadata during refactor slices.
+// Runtime routing metadata intentionally separated from recognition wordbook.
+// This file owns behavior-oriented word metadata during refactor slices.
 import {
-  KWS_AXIS_WORD_IDS,
-  KWS_FLASH_TOKEN_WORD_IDS as ORCHESTRATOR_KWS_FLASH_TOKEN_WORD_IDS,
-  KWS_INFER_DEFAULT_WORD_ID as ORCHESTRATOR_KWS_INFER_DEFAULT_WORD_ID,
-  KWS_ROW_BOTTOM_WORD_IDS as ORCHESTRATOR_KWS_ROW_BOTTOM_WORD_IDS,
-  KWS_ROW_TOP_WORD_IDS as ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS,
-  KWS_SIM_WORD_IDS as ORCHESTRATOR_KWS_SIM_WORD_IDS,
-  KWS_STANDALONE_WORD_IDS,
-  KWS_WAKE_REQUIRED_WORD_IDS,
-  KWS_WAKE_WINDOW_WORD_IDS,
-  KWS_WAKE_WORD_IDS,
-  ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS,
-} from "../interactions-v2/orchestrator-v1-kws-profile.js";
-import { ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING } from "../interactions-v2/orchestrator-v1-routing-profile.js";
+  ORCHESTRATOR_V2,
+} from "../interactions-v2/orchestrator-v2.js";
+import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../interactions-v2/orchestrator-v2-wake-profile.js";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js";
+
+function asSelectorList(raw) {
+  if (Array.isArray(raw)) return raw.slice();
+  const text = String(raw || "").trim();
+  if (!text) return [];
+  if (text.includes(",")) {
+    return text.split(",").map((token) => String(token || "").trim()).filter(Boolean);
+  }
+  return [text];
+}
+
+function asWordId(raw) {
+  const id = String(raw || "").trim().toLowerCase().replace(/^word\./, "").replace(/^spell\./, "");
+  return id;
+}
+
+function asSlot(value) {
+  const token = String(value || "").trim().toUpperCase();
+  return ["UD", "LR", "FB"].includes(token) ? token : "";
+}
+
+function uniqueWordIds(ids = []) {
+  return Array.from(new Set(
+    (Array.isArray(ids) ? ids : [])
+      .map((id) => asWordId(id))
+      .filter((id) => id && Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, id))
+  ));
+}
+
+function resolveWordRefs(raw, groups = {}) {
+  const out = [];
+  for (const token of asSelectorList(raw)) {
+    const text = String(token || "").trim();
+    if (!text) continue;
+    if (text.startsWith("@")) {
+      const groupName = text.slice(1).trim();
+      const groupWords = Array.isArray(groups && groups[groupName]) ? groups[groupName] : [];
+      for (const groupWord of groupWords) out.push(groupWord);
+      continue;
+    }
+    out.push(text);
+  }
+  return out;
+}
+
+function collectRuleOnWordIds(rule) {
+  const on = (rule && typeof rule.on === "object" && !Array.isArray(rule.on)) ? rule.on : null;
+  if (!on) return [];
+  const raw = Object.hasOwn(on, "word") ? on.word : on.spell;
+  return uniqueWordIds(asSelectorList(raw));
+}
+
+function collectRuleOpenWordIds(rule) {
+  const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
+  if (!open) return [];
+  const raw = Object.hasOwn(open, "words") ? open.words : open.spells;
+  const groups = (ORCHESTRATOR_V2 && typeof ORCHESTRATOR_V2.groups === "object" && ORCHESTRATOR_V2.groups)
+    ? ORCHESTRATOR_V2.groups
+    : Object.create(null);
+  return uniqueWordIds(resolveWordRefs(raw, groups));
+}
+
+function collectRulesByPredicate(predicate) {
+  const rules = Array.isArray(ORCHESTRATOR_V2 && ORCHESTRATOR_V2.rules) ? ORCHESTRATOR_V2.rules : [];
+  return rules.filter((rule) => {
+    try {
+      return !!predicate(rule || {});
+    } catch (_) {
+      return false;
+    }
+  });
+}
+
+function buildDerivedRuntimeProfileV2() {
+  const wakeWordIds = uniqueWordIds(ORCHESTRATOR_V2_WAKE_WORD_IDS);
+  const schoolOpenRules = collectRulesByPredicate((rule) => {
+    const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
+    const openId = String(open && open.id || "").trim().toLowerCase();
+    return openId.startsWith("school.");
+  });
+  const axisWordIds = uniqueWordIds(
+    schoolOpenRules.flatMap((rule) => collectRuleOnWordIds(rule))
+  );
+  const wakeWindowWordIds = uniqueWordIds(
+    schoolOpenRules.flatMap((rule) => collectRuleOpenWordIds(rule))
+  );
+  const rulesWithRequires = collectRulesByPredicate((rule) => {
+    const refs = asSelectorList(rule && rule.requires);
+    return refs.length > 0;
+  });
+  const wakeRequiredWordIds = uniqueWordIds(
+    rulesWithRequires.flatMap((rule) => collectRuleOnWordIds(rule))
+  );
+  const allOnWordIds = uniqueWordIds(
+    collectRulesByPredicate(() => true).flatMap((rule) => collectRuleOnWordIds(rule))
+  );
+  const standaloneWordIds = uniqueWordIds(
+    allOnWordIds.filter((id) =>
+      !wakeWordIds.includes(id) &&
+      !wakeRequiredWordIds.includes(id) &&
+      !axisWordIds.includes(id) &&
+      !wakeWindowWordIds.includes(id)
+    )
+  );
+  const rowTopWordIds = uniqueWordIds([
+    ...wakeWordIds,
+    ...standaloneWordIds,
+    ...wakeRequiredWordIds,
+    ...axisWordIds,
+  ]);
+  const rowBottomWordIds = uniqueWordIds(wakeWindowWordIds);
+  const flashTokenWordIds = rowTopWordIds.slice();
+  const inferDefaultWordId = axisWordIds.includes("pyro")
+    ? "pyro"
+    : (axisWordIds[0] || "pyro");
+  const simWordIds = uniqueWordIds([
+    ...wakeRequiredWordIds,
+    ...wakeWindowWordIds,
+  ]);
+
+  const immediateTriggerCandidates = uniqueWordIds(
+    collectRulesByPredicate((rule) => {
+      const hasOpen = !!(rule && typeof rule.open === "object" && !Array.isArray(rule.open));
+      const hasTrigger = !!rule && Object.hasOwn(rule, "trigger");
+      return !hasOpen && hasTrigger;
+    }).flatMap((rule) => collectRuleOnWordIds(rule))
+  );
+  const immediateTriggerWordIds = uniqueWordIds(
+    immediateTriggerCandidates.filter((id) =>
+      !wakeWordIds.includes(id) &&
+      !axisWordIds.includes(id) &&
+      !wakeWindowWordIds.includes(id)
+    )
+  );
+
+  return Object.freeze({
+    wakeWordIds: Object.freeze(wakeWordIds),
+    standaloneWordIds: Object.freeze(standaloneWordIds),
+    wakeRequiredWordIds: Object.freeze(wakeRequiredWordIds),
+    axisWordIds: Object.freeze(axisWordIds),
+    wakeWindowWordIds: Object.freeze(wakeWindowWordIds),
+    rowTopWordIds: Object.freeze(rowTopWordIds),
+    rowBottomWordIds: Object.freeze(rowBottomWordIds),
+    flashTokenWordIds: Object.freeze(flashTokenWordIds),
+    simWordIds: Object.freeze(simWordIds),
+    inferDefaultWordId,
+    immediateTriggerWordIds: Object.freeze(immediateTriggerWordIds),
+  });
+}
+
+const ORCHESTRATOR_V2_RUNTIME_PROFILE = buildDerivedRuntimeProfileV2();
+const AXIS_BY_WORD_ID = Object.freeze({
+  fridgis: "x",
+  pyro: "y",
+  electrum: "z",
+});
+const CANONICAL_STANDALONE_WORD_IDS = Object.freeze(["arcana", "are_kay_nah"]);
+const WAKE_WINDOW_SLOT_BY_WORD_ID = Object.freeze({
+  sanctum: "UD",
+  vectus: "LR",
+  rota: "FB",
+});
+
+function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
+  const out = [];
+  const seen = new Set();
+  function add(entry) {
+    const id = asWordId(entry && entry.id);
+    if (!id || seen.has(id)) return;
+    if (!Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, id)) return;
+    seen.add(id);
+    out.push(Object.freeze({ ...entry, id }));
+  }
+
+  for (const id of (Array.isArray(profile.wakeWordIds) ? profile.wakeWordIds : [])) {
+    add({ id, intent: "spell.wake" });
+  }
+  const standaloneIds = uniqueWordIds([
+    ...(Array.isArray(profile.standaloneWordIds) ? profile.standaloneWordIds : []),
+    ...CANONICAL_STANDALONE_WORD_IDS,
+  ]);
+  for (const id of standaloneIds) {
+    if (id === "arcana") {
+      add({ id, intent: "spell.arcana_test" });
+      continue;
+    }
+    if (id === "are_kay_nah") {
+      add({ id, intent: "spell.are_kay_nah_test" });
+      continue;
+    }
+    add({ id, intent: `spell.${id}` });
+  }
+  if (Object.hasOwn(WORDBOOK_V2_ACTIVE_WORDS_BY_ID, "domus")) {
+    add({
+      id: "domus",
+      intent: "spell.domus",
+      allowedAxes: Object.freeze(["y"]),
+      fixedSlot: "UD",
+      slotByAxis: Object.freeze({ y: "UD" }),
+      clearSlotsOnAxis: Object.freeze({ y: Object.freeze(["LR", "FB"]) }),
+    });
+  }
+  for (const id of (Array.isArray(profile.axisWordIds) ? profile.axisWordIds : [])) {
+    const axis = String(AXIS_BY_WORD_ID[id] || "").toLowerCase();
+    const allowedAxes = axis ? Object.freeze([axis]) : Object.freeze([]);
+    add({
+      id,
+      intent: "spell.axis_select",
+      axisWord: id,
+      axisSpell: id,
+      ...(allowedAxes.length ? { allowedAxes } : {}),
+    });
+  }
+  for (const id of (Array.isArray(profile.wakeWindowWordIds) ? profile.wakeWindowWordIds : [])) {
+    const fixedSlot = asSlot(WAKE_WINDOW_SLOT_BY_WORD_ID[id]);
+    add({
+      id,
+      intent: "spell.wake_window_select",
+      wakeWindowWord: id,
+      wakeWindowSpell: id,
+      ...(fixedSlot ? { fixedSlot } : {}),
+      allowedAxes: Object.freeze(["x", "y", "z"]),
+    });
+  }
+  return Object.freeze(out);
+}
+
+const ORCHESTRATOR_V2_WORD_RUNTIME_ROUTING = buildWordRuntimeRoutingV2(ORCHESTRATOR_V2_RUNTIME_PROFILE);
 
 export const WAKE_WORD_IDS = Object.freeze(
-  (Array.isArray(KWS_WAKE_WORD_IDS) ? KWS_WAKE_WORD_IDS : []).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWordIds
+    : []).slice()
 );
 
 export const STANDALONE_WORD_IDS = Object.freeze(
-  (Array.isArray(KWS_STANDALONE_WORD_IDS) ? KWS_STANDALONE_WORD_IDS : []).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.standaloneWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.standaloneWordIds
+    : []).slice()
 );
 
 export const WAKE_REQUIRED_WORD_IDS = Object.freeze(
-  (Array.isArray(KWS_WAKE_REQUIRED_WORD_IDS) ? KWS_WAKE_REQUIRED_WORD_IDS : []).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeRequiredWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeRequiredWordIds
+    : []).slice()
 );
 
 export const AXIS_WORD_IDS = Object.freeze(
-  (Array.isArray(KWS_AXIS_WORD_IDS) ? KWS_AXIS_WORD_IDS : []).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.axisWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.axisWordIds
+    : []).slice()
 );
 
 export const WAKE_WINDOW_WORD_IDS = Object.freeze(
-  (Array.isArray(KWS_WAKE_WINDOW_WORD_IDS) ? KWS_WAKE_WINDOW_WORD_IDS : []).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWindowWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWindowWordIds
+    : []).slice()
 );
 
 // Keep empty in strict-gated mode: axis + wake-window words are valid only
 // inside the active flat-spin dispatch window.
 export const WORD_WINDOW_BYPASS_WORD_IDS = Object.freeze([]);
+// Compatibility alias; keep until all runtime callers use WORD_WINDOW_BYPASS_WORD_IDS.
 export const SPELL_WINDOW_BYPASS_WORD_IDS = WORD_WINDOW_BYPASS_WORD_IDS;
 
 // Immediate voice words that are owned by the rule engine path.
-// Spell dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
+// Runtime dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
 export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS) ? ORCHESTRATOR_V1_IMMEDIATE_TRIGGER_WORD_IDS : []).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.immediateTriggerWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.immediateTriggerWordIds
+    : []).slice()
 );
 
 export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({
@@ -55,7 +287,7 @@ export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({
   }, {}),
 });
 
-const LEGACY_KWS_TOP_WORD_IDS = Object.freeze([
+const DEFAULT_KWS_TOP_WORD_IDS = Object.freeze([
   ...new Set([
     ...WAKE_WORD_IDS,
     ...WAKE_REQUIRED_WORD_IDS,
@@ -67,30 +299,34 @@ const LEGACY_KWS_TOP_WORD_IDS = Object.freeze([
 ]);
 
 export const KWS_FLASH_TOKEN_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_KWS_FLASH_TOKEN_WORD_IDS)
-    ? ORCHESTRATOR_KWS_FLASH_TOKEN_WORD_IDS
-    : LEGACY_KWS_TOP_WORD_IDS).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.flashTokenWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.flashTokenWordIds
+    : DEFAULT_KWS_TOP_WORD_IDS).slice()
 );
 
 export const KWS_ROW_TOP_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS) ? ORCHESTRATOR_KWS_ROW_TOP_WORD_IDS : LEGACY_KWS_TOP_WORD_IDS).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.rowTopWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.rowTopWordIds
+    : DEFAULT_KWS_TOP_WORD_IDS).slice()
 );
 
 export const KWS_ROW_BOTTOM_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_KWS_ROW_BOTTOM_WORD_IDS) ? ORCHESTRATOR_KWS_ROW_BOTTOM_WORD_IDS : WAKE_WINDOW_WORD_IDS).slice()
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.rowBottomWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.rowBottomWordIds
+    : WAKE_WINDOW_WORD_IDS).slice()
 );
 
 export const KWS_SIM_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_KWS_SIM_WORD_IDS)
-    ? ORCHESTRATOR_KWS_SIM_WORD_IDS
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.simWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.simWordIds
     : []).slice()
 );
 
-export const KWS_INFER_DEFAULT_WORD_ID = ORCHESTRATOR_KWS_INFER_DEFAULT_WORD_ID || "";
+export const KWS_INFER_DEFAULT_WORD_ID = ORCHESTRATOR_V2_RUNTIME_PROFILE.inferDefaultWordId || "";
 
 export const WORD_RUNTIME_ROUTING = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING)
-    ? ORCHESTRATOR_V1_WORD_RUNTIME_ROUTING
+  (Array.isArray(ORCHESTRATOR_V2_WORD_RUNTIME_ROUTING)
+    ? ORCHESTRATOR_V2_WORD_RUNTIME_ROUTING
     : []).slice()
 );
 export const WORD_RUNTIME_ROUTING_TABLE = WORD_RUNTIME_ROUTING;

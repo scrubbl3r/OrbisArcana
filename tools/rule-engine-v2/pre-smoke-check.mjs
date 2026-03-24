@@ -5,9 +5,8 @@ import {
   WORDBOOK_V2,
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
-  ORCHESTRATOR_V1_BOOTSTRAP,
   ORCHESTRATOR_V2_BOOTSTRAP,
-  buildRuleEngineFromOrchestratorV1,
+  buildRuleEngineFromOrchestratorV2,
   validateWordbookV2,
   validateInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
@@ -109,7 +108,7 @@ function verifyKwsManifestCoverage() {
 failIfValidationErrors("wordbook-v2 validation failed", validateWordbookV2(WORDBOOK_V2));
 failIfValidationErrors(
   "spell-rules validation failed",
-  validateSpellRules(buildRuleEngineFromOrchestratorV1().rules)
+  validateSpellRules(buildRuleEngineFromOrchestratorV2().rules)
 );
 failIfValidationErrors("spell-runtime-routing validation failed", validateSpellRuntimeRouting());
 failIfValidationErrors("spell-schema-integrity validation failed", validateSpellSchemaIntegrity());
@@ -125,20 +124,15 @@ if (interactionsBootstrapEnabled) {
   const interactionsErrors = interactionsResult?.ok ? [] : interactionsResult?.errors;
   failIfValidationErrors("interactions-v2 validation failed", interactionsErrors);
 }
-const orchestratorV1BootstrapEnabled = !!(
-  ORCHESTRATOR_V1_BOOTSTRAP &&
-  ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap === true
-);
 const orchestratorV2BootstrapEnabled = !!(
   ORCHESTRATOR_V2_BOOTSTRAP &&
   ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap === true
 );
-if (!interactionsBootstrapEnabled && !orchestratorV1BootstrapEnabled && !orchestratorV2BootstrapEnabled) {
+if (!interactionsBootstrapEnabled && !orchestratorV2BootstrapEnabled) {
   fail("runtime bootstrap guard failed", [
     "at least one bootstrap source must be enabled",
     "expected one of:",
     "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true",
-    "ORCHESTRATOR_V1_BOOTSTRAP.useInReceiverBootstrap === true",
     "ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap === true",
   ]);
 }
@@ -152,8 +146,5 @@ if (interactionsBootstrapEnabled) {
 
 runScriptOrFail("effective snapshot generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeEffectiveSnapshot);
 runScriptOrFail("master control doc generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeMasterControlDoc);
-if (interactionsBootstrapEnabled) {
-  runScriptOrFail("orchestrator projection doc generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeOrchestratorProjectionDoc);
-}
 
 logPreSmoke("OK: validators passed + effective snapshot refreshed");

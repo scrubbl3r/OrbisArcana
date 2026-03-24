@@ -2,7 +2,6 @@
 // Authoring SSOT for interaction behavior is now:
 // - src/content/interactions-v2/interactions-v2.js
 // - src/content/interactions-v2/wordbook-v2.js
-//   - compatibility alias: src/content/interactions-v2/spellbook-v2.js
 // Keep edits here limited to runtime wiring/plumbing only.
 
 import { EVENT_DEFINITIONS } from "./event-definitions.js";
