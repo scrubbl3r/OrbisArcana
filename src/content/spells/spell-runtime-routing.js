@@ -257,12 +257,14 @@ export const AXIS_WORD_IDS = Object.freeze(
     ? ORCHESTRATOR_V2_RUNTIME_PROFILE.axisWordIds
     : []).slice()
 );
+export const KWS_AXIS_WORD_IDS = AXIS_WORD_IDS;
 
 export const WAKE_WINDOW_WORD_IDS = Object.freeze(
   (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWindowWordIds)
     ? ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWindowWordIds
     : []).slice()
 );
+export const KWS_WAKE_WINDOW_WORD_IDS = WAKE_WINDOW_WORD_IDS;
 
 // Keep empty in strict-gated mode: axis + wake-window words are valid only
 // inside the active flat-spin dispatch window.
@@ -277,6 +279,7 @@ export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = Object.freeze(
     ? ORCHESTRATOR_V2_RUNTIME_PROFILE.immediateTriggerWordIds
     : []).slice()
 );
+export const KWS_WAKE_REQUIRED_WORD_IDS = WAKE_REQUIRED_WORD_IDS;
 
 export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({
   ...WAKE_WINDOW_WORD_IDS.reduce((acc, id) => {
