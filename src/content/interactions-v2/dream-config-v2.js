@@ -2,7 +2,7 @@ export const DREAM_CONFIG_V2 = {
   version: "2",
   enabled: true,
   defaults: {
-    open: { ttlMs: 1500 },
+    open: { ttlMs: 2000 },
     rule: { cooldownMs: 0, matchWindowMs: 2000, priority: 10 },
   },
   wake: {
@@ -32,7 +32,7 @@ export const DREAM_CONFIG_V2 = {
       id: "electric_aoe",
       on: { word: "electrum" },
       requires: "wake.main",
-      open: { id: "school.electrum", words: ["rota"], ttlMs: 1500 },
+      open: { id: "school.electrum", words: ["rota"], ttlMs: 2000 },
     },
     {
       id: "electric_aoe_cast",
@@ -43,7 +43,13 @@ export const DREAM_CONFIG_V2 = {
     {
       id: "spin_y_opens_pyro",
       on: { gesture: "spin_y", orb_state: "charged" },
-      open: { id: "school.pyro_spin", words: ["rota"], ttlMs: 1500 },
+      open: { id: "school.pyro_spin_seed", words: ["pyro"], ttlMs: 2000 },
+    },
+    {
+      id: "spin_y_pyro_opens_rota",
+      on: { word: "pyro" },
+      requires: "school.pyro_spin_seed",
+      open: { id: "school.pyro_spin", words: ["rota"], ttlMs: 2000 },
     },
     {
       id: "spin_y_pyro_rota_bind_fb",
@@ -57,52 +63,10 @@ export const DREAM_CONFIG_V2 = {
       },
     },
     {
-      id: "school_pyro",
-      on: { word: "pyro" },
-      requires: "wake.main",
-      open: { id: "school.pyro", words: "@school_words", ttlMs: 1500 },
-    },
-    {
       id: "school_fridgis",
       on: { word: "fridgis" },
       requires: "wake.main",
-      open: { id: "school.fridgis", words: "@school_words", ttlMs: 1500 },
-    },
-    {
-      id: "pyro_rota_load_ud",
-      on: { word: "rota" },
-      requires: "school.pyro",
-      trigger: { spell: { id: "spell_load_ud", args: { spell: "aoe_flame", axisWord: "pyro", slot: "UD" } } },
-    },
-    {
-      id: "pyro_sanctum_load_lr",
-      on: { word: "sanctum" },
-      requires: "school.pyro",
-      trigger: { spell: { id: "spell_load_lr", args: { spell: "aoe_flame", axisWord: "pyro", slot: "LR" } } },
-    },
-    {
-      id: "pyro_vectus_load_fb",
-      on: { word: "vectus" },
-      requires: "school.pyro",
-      trigger: { spell: { id: "spell_load_fb", args: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" } } },
-    },
-    {
-      id: "pyro_rota_load_ud_spin",
-      on: { word: "rota" },
-      requires: "school.pyro_spin",
-      trigger: { spell: { id: "spell_load_ud", args: { spell: "aoe_flame", axisWord: "pyro", slot: "UD" } } },
-    },
-    {
-      id: "pyro_sanctum_load_lr_spin",
-      on: { word: "sanctum" },
-      requires: "school.pyro_spin",
-      trigger: { spell: { id: "spell_load_lr", args: { spell: "aoe_flame", axisWord: "pyro", slot: "LR" } } },
-    },
-    {
-      id: "pyro_vectus_load_fb_spin",
-      on: { word: "vectus" },
-      requires: "school.pyro_spin",
-      trigger: { spell: { id: "spell_load_fb", args: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" } } },
+      open: { id: "school.fridgis", words: "@school_words", ttlMs: 2000 },
     },
     {
       id: "fridgis_rota_load_ud",

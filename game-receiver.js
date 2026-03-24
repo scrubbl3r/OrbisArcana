@@ -2364,6 +2364,7 @@
         let electricFallbackWakeUntilMs = 0;
         let electricFallbackWindowUntilMs = 0;
         let electricFallbackLastEmitMs = 0;
+        const DEFAULT_CHAIN_OPEN_TTL_MS = 2000;
         // Receiver-side safety bridge for `spin_y + charged + rota -> spell_load_fb`.
         let pyroSpinWindowUntilMs = 0;
         let pyroChargedUntilMs = 0;
@@ -2377,10 +2378,9 @@
           const axis = String(p.axis || "").trim().toLowerCase();
           if (axis !== "y") return;
           const now = Date.now();
-          pyroSpinWindowUntilMs = now + 8000;
-          // Temporary fallback: synthesize charged window from sustained spin open
-          // when explicit charged source events are unavailable.
-          pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + 8000);
+          pyroSpinWindowUntilMs = Math.max(pyroSpinWindowUntilMs, now + DEFAULT_CHAIN_OPEN_TTL_MS);
+          // Keep the synthetic charged bridge short-lived so it mirrors authored chain wake TTLs.
+          pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + DEFAULT_CHAIN_OPEN_TTL_MS);
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:spin_y_open", "muted");
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:charged:synthetic", "muted");
         });
@@ -2397,8 +2397,8 @@
             .toLowerCase();
           if (!wordId) return;
           if (wordId === "pyro") {
-            pyroSpinWindowUntilMs = Math.max(pyroSpinWindowUntilMs, now + 8000);
-            pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + 8000);
+            pyroSpinWindowUntilMs = Math.max(pyroSpinWindowUntilMs, now + DEFAULT_CHAIN_OPEN_TTL_MS);
+            pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + DEFAULT_CHAIN_OPEN_TTL_MS);
             if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:pyro_open", "muted");
           }
           if (wordId === "electrum" && now <= electricFallbackWakeUntilMs) {
@@ -2451,6 +2451,14 @@
           });
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE fallback:pyro_bind_fb:receiver", "ok");
         });
+        eventBus.on(RULE_ENGINE_WAKE_WIN_OPENED_EVENT, (p = {}) => {
+          const windowId = String(p.windowId || "").trim().toLowerCase();
+          if (windowId !== "school.pyro_spin_seed" && windowId !== "school.pyro_spin" && windowId !== "school.pyro") return;
+          const atMs = Number.isFinite(Number(p.atMs)) ? Number(p.atMs) : Date.now();
+          const ttlMs = Math.max(0, Number(p.ttlMs) || DEFAULT_CHAIN_OPEN_TTL_MS);
+          pyroSpinWindowUntilMs = Math.max(pyroSpinWindowUntilMs, atMs + ttlMs);
+          if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine(`TRACE src:${windowId}:${ttlMs}`, "muted");
+        });
         if (RULE_CHAIN_TRACE_ENABLED) {
           eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
             const token = String(p.token || "").trim().toLowerCase();
@@ -2476,6 +2484,7 @@
               ruleId === "electric_aoe" ||
               ruleId === "electric_aoe_cast" ||
               ruleId === "spin_y_opens_pyro" ||
+              ruleId === "spin_y_pyro_opens_rota" ||
               ruleId === "spin_y_pyro_rota_bind_fb"
             ) {
               kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
@@ -2488,6 +2497,10 @@
               kwsBridge.pushLogLine(`TRACE wake_open:${actionId || "wake.main"}`, "ok");
             }
             if (ruleId === "spin_y_opens_pyro") {
+              const windowId = String(p.windowId || "").trim().toLowerCase() || "school.pyro_spin_seed";
+              kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
+            }
+            if (ruleId === "spin_y_pyro_opens_rota") {
               const windowId = String(p.windowId || "").trim().toLowerCase() || "school.pyro_spin";
               kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
             }
