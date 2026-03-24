@@ -2376,8 +2376,13 @@
         eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
           const axis = String(p.axis || "").trim().toLowerCase();
           if (axis !== "y") return;
-          pyroSpinWindowUntilMs = Date.now() + 1500;
+          const now = Date.now();
+          pyroSpinWindowUntilMs = now + 3000;
+          // Temporary fallback: synthesize charged window from sustained spin open
+          // when explicit charged source events are unavailable.
+          pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + 3000);
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:spin_y_open", "muted");
+          if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:charged:synthetic", "muted");
         });
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_GRANT, (p = {}) => {
           const ms = Math.max(0, Number(p.ms) || 0);
@@ -2416,8 +2421,14 @@
             .trim()
             .toLowerCase();
           if (wordId !== "rota") return;
-          if (now > pyroSpinWindowUntilMs) return;
-          if (now > pyroChargedUntilMs) return;
+          if (now > pyroSpinWindowUntilMs) {
+            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE gate:pyro_bind_fb:no_spin_window", "warn");
+            return;
+          }
+          if (now > pyroChargedUntilMs) {
+            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE gate:pyro_bind_fb:not_charged", "warn");
+            return;
+          }
           if ((now - pyroFallbackLastEmitMs) < 250) return;
           pyroFallbackLastEmitMs = now;
           eventBus.emit(RULE_ENGINE_ACTION_EXECUTED_EVENT, {
