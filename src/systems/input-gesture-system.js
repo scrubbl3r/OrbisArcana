@@ -140,7 +140,6 @@ export function createInputGestureSystem({
 
     if (typeof hooks.spendShake === "function") hooks.spendShake();
     if (typeof hooks.flashShakeLamp === "function") hooks.flashShakeLamp(400);
-    if (typeof hooks.triggerShockwave === "function") hooks.triggerShockwave();
 
     let shakeCode = "";
     if (state.pendingSd && (now - state.pendingSdAt) <= cfg.sdRecentMs) {
