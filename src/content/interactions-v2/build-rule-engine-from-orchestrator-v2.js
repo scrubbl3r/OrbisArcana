@@ -8,6 +8,8 @@ import {
   asText,
   mapDefined,
   normalizeEventId,
+  normalizeShakeId,
+  normalizeSpinId,
   normalizeSpellId,
   setEnabledIfBoolean,
   finiteAtLeastOrNull,
@@ -110,10 +112,26 @@ function compileOnSelectors(onRaw) {
     if (!id) continue;
     conditions.push(Object.freeze({ type: "word", id }));
   }
-  for (const rawGesture of parseStringOrArray(on.gesture)) {
-    const id = asText(rawGesture).toLowerCase();
+  for (const rawSpin of parseStringOrArray(on.spin)) {
+    const id = normalizeSpinId(rawSpin);
     if (!id) continue;
-    conditions.push(Object.freeze({ type: "gesture", id }));
+    conditions.push(Object.freeze({ type: "spin", id }));
+  }
+  for (const rawShake of parseStringOrArray(on.shake)) {
+    const id = normalizeShakeId(rawShake);
+    if (!id) continue;
+    conditions.push(Object.freeze({ type: "shake", id }));
+  }
+  for (const rawGesture of parseStringOrArray(on.gesture)) {
+    const spinId = normalizeSpinId(rawGesture);
+    if (spinId) {
+      conditions.push(Object.freeze({ type: "spin", id: spinId }));
+      continue;
+    }
+    const shakeId = normalizeShakeId(rawGesture);
+    if (shakeId) {
+      conditions.push(Object.freeze({ type: "shake", id: shakeId }));
+    }
   }
   for (const rawOrbState of parseStringOrArray(on.orb_state)) {
     const id = asText(rawOrbState).toLowerCase();

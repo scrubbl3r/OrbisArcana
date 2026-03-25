@@ -23,7 +23,7 @@ const WORD_DOMUS_ID = "domus";
 const WORD_ROTA_ID = "rota";
 const WORD_FRIDGIS_ID = "fridgis";
 const WORD_ELECTRUM_ID = "electrum";
-const GESTURE_SPIN_Y_ID = "spin_y";
+const SPIN_Y_ID = "y";
 const EVENT_GRACE_ID = "grace";
 const EVENT_TELEPORT_HOME_ID = "teleport_home";
 const EVENT_AOE_FROST_ID = "aoe_frost";
@@ -116,7 +116,7 @@ const sample = Object.freeze({
     }),
     Object.freeze({
       id: "o_v2_pyro_school",
-      on: Object.freeze({ word: WORD_PYRO_ID, gesture: GESTURE_SPIN_Y_ID }),
+      on: Object.freeze({ word: WORD_PYRO_ID, spin: SPIN_Y_ID }),
       requires: Object.freeze([WINDOW_WAKE_MAIN_ID]),
       consume: Object.freeze([WINDOW_WAKE_MAIN_ID]),
       open: Object.freeze({ id: WINDOW_PYRO_SCHOOL_ID, words: Object.freeze([WORD_ROTA_ID]) }),
@@ -351,7 +351,7 @@ assertEqual(
 
 assertEqual(
   asJson(pyroRule.on),
-  asJson([{ type: "word", id: WORD_PYRO_ID }, { type: "gesture", id: GESTURE_SPIN_Y_ID }]),
+  asJson([{ type: "word", id: WORD_PYRO_ID }, { type: "spin", id: SPIN_Y_ID }]),
   "pyroRule.on",
   details
 );

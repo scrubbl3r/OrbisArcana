@@ -8,7 +8,7 @@ import {
 
 const INTERACTIONS_V2_VERSION = "2";
 const CONDITION_TYPE_WORD = "word";
-const CONDITION_TYPE_GESTURE = "gesture";
+const CONDITION_TYPE_SPIN = "spin";
 const CONDITION_TYPE_ORB_STATE = "orb_state";
 const ACTION_TYPE_EVENT = "event";
 const ACTION_TYPE_WAKE_WIN = "wake_win";
@@ -115,7 +115,7 @@ export const INTERACTIONS_V2 = Object.freeze({
       "r_rota_yspin_charged",
       [
         makeCondition(CONDITION_TYPE_WORD, toCanonicalWordSelector(SIGNAL_HANDLES_V2.ROTA)),
-        makeCondition(CONDITION_TYPE_GESTURE, SIGNAL_HANDLES_V2.SPIN_Y),
+        makeCondition(CONDITION_TYPE_SPIN, SIGNAL_HANDLES_V2.SPIN_Y),
         makeCondition(CONDITION_TYPE_ORB_STATE, SIGNAL_HANDLES_V2.ORB_CHARGED),
       ],
       [

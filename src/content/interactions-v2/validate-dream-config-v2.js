@@ -17,7 +17,7 @@ const ALLOWED_RULE_KEYS = new Set([
   "matchWindowMs",
   "priority",
 ]);
-const ALLOWED_ON_KEYS = new Set(["word", "spell", "gesture", "orb_state"]);
+const ALLOWED_ON_KEYS = new Set(["word", "spell", "spin", "shake", "gesture", "orb_state"]);
 const ALLOWED_OPEN_KEYS = new Set(["id", "words", "word", "spells", "ttlMs", "enabled"]);
 const ALLOWED_BIND_KEYS = new Set(["spell", "slot"]);
 const LEGACY_BIND_EVENT_IDS = new Set(["spell_load_ud", "spell_load_lr", "spell_load_fb"]);
@@ -59,6 +59,8 @@ function hasOn(rule) {
   if (!isObject(rule.on)) return false;
   const on = rule.on;
   return asSelectorList(on.word).length
+    || asSelectorList(on.spin).length
+    || asSelectorList(on.shake).length
     || asSelectorList(on.gesture).length
     || asSelectorList(on.orb_state).length;
 }
@@ -206,6 +208,9 @@ export function validateDreamConfigV2(dreamConfig) {
       errors.push(`${ruleContext}.trigger uses legacy spell_load_* authoring; use ${ruleContext}.bind instead`);
     }
     pushAliasError(errors, `${ruleContext}.on`, rule?.on, "spell", "word");
+    if (Object.hasOwn(rule?.on || {}, "gesture")) {
+      errors.push(`${ruleContext}.on.gesture is not allowed; use ${ruleContext}.on.spin or ${ruleContext}.on.shake`);
+    }
     pushAliasError(errors, `${ruleContext}.open`, rule?.open, "word", "words");
     pushAliasError(errors, `${ruleContext}.open`, rule?.open, "spells", "words");
   }

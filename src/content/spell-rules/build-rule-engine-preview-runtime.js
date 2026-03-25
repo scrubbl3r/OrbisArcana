@@ -19,7 +19,31 @@ function resolveSignalConditionId(cond) {
     if (id.includes(".")) return id;
     return `spell.${id}`;
   }
+  if (type === "spin") {
+    if (id.startsWith("spin.")) return id;
+    if (id === "x" || id === "y" || id === "z") return `spin.${id}`;
+    if (id === "spin_x") return "spin.x";
+    if (id === "spin_y") return "spin.y";
+    if (id === "spin_z") return "spin.z";
+    return "";
+  }
+  if (type === "shake") {
+    if (id.startsWith("shake.")) return id;
+    if (id === "ud" || id === "lr" || id === "fb") return `shake.${id}`;
+    if (id === "shake_ud") return "shake.ud";
+    if (id === "shake_lr") return "shake.lr";
+    if (id === "shake_fb") return "shake.fb";
+    return "";
+  }
   if (type === "spell" || type === "gesture" || type === "orb_state") {
+    if (type === "gesture") {
+      if (id === "spin_x" || id === "x" || id === "gesture.spin_x") return "spin.x";
+      if (id === "spin_y" || id === "y" || id === "gesture.spin_y") return "spin.y";
+      if (id === "spin_z" || id === "z" || id === "gesture.spin_z") return "spin.z";
+      if (id === "shake_ud" || id === "ud" || id === "gesture.shake_ud") return "shake.ud";
+      if (id === "shake_lr" || id === "lr" || id === "gesture.shake_lr") return "shake.lr";
+      if (id === "shake_fb" || id === "fb" || id === "gesture.shake_fb") return "shake.fb";
+    }
     if (id.includes(".")) return id;
     return `${type}.${id}`;
   }

@@ -15,15 +15,15 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
   VECTUS: "spell.vectus",
   ROTA: "spell.rota",
 
-  // Flat spin gestures
-  SPIN_X: "gesture.spin_x",
-  SPIN_Y: "gesture.spin_y",
-  SPIN_Z: "gesture.spin_z",
+  // Spin signals
+  SPIN_X: "spin.x",
+  SPIN_Y: "spin.y",
+  SPIN_Z: "spin.z",
 
-  // Shake gestures
-  SHAKE_FB: "gesture.shake_fb",
-  SHAKE_LR: "gesture.shake_lr",
-  SHAKE_UD: "gesture.shake_ud",
+  // Shake signals
+  SHAKE_FB: "shake.fb",
+  SHAKE_LR: "shake.lr",
+  SHAKE_UD: "shake.ud",
 
   // Orb state signals
   ORB_CHARGED: "orb_state.charged",

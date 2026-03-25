@@ -149,10 +149,14 @@ const PREFIX_SPELL = "spell.";
 const PREFIX_WORD = "word.";
 const PREFIX_EVENT = "event.";
 const PREFIX_GESTURE = "gesture.";
+const PREFIX_SPIN = "spin.";
+const PREFIX_SHAKE = "shake.";
 const PREFIX_ORB_STATE = "orb_state.";
 const TYPE_SPELL = "spell";
 const TYPE_WORD = "word";
 const TYPE_GESTURE = "gesture";
+const TYPE_SPIN = "spin";
+const TYPE_SHAKE = "shake";
 const TYPE_ORB_STATE = "orb_state";
 
 export function normalizeSpellId(spellIdRaw) {
@@ -173,10 +177,33 @@ const GESTURE_ID_ALIASES = Object.freeze({
   z_spin: "spin_z",
 });
 
+export function normalizeSpinId(spinIdRaw) {
+  const rawId = asId(spinIdRaw);
+  if (!rawId) return "";
+  let trimmed = rawId;
+  if (trimmed.startsWith(PREFIX_GESTURE)) trimmed = trimmed.slice(PREFIX_GESTURE.length);
+  if (trimmed.startsWith(PREFIX_SPIN)) trimmed = trimmed.slice(PREFIX_SPIN.length);
+  trimmed = GESTURE_ID_ALIASES[trimmed] || trimmed;
+  if (trimmed === "x" || trimmed === "spin_x") return "x";
+  if (trimmed === "y" || trimmed === "spin_y") return "y";
+  if (trimmed === "z" || trimmed === "spin_z") return "z";
+  return "";
+}
+
+export function normalizeShakeId(shakeIdRaw) {
+  const rawId = asId(shakeIdRaw);
+  if (!rawId) return "";
+  let trimmed = rawId;
+  if (trimmed.startsWith(PREFIX_GESTURE)) trimmed = trimmed.slice(PREFIX_GESTURE.length);
+  if (trimmed.startsWith(PREFIX_SHAKE)) trimmed = trimmed.slice(PREFIX_SHAKE.length);
+  if (trimmed === "ud" || trimmed === "shake_ud") return "ud";
+  if (trimmed === "lr" || trimmed === "shake_lr") return "lr";
+  if (trimmed === "fb" || trimmed === "shake_fb") return "fb";
+  return "";
+}
+
 export function normalizeGestureId(gestureIdRaw) {
-  const trimmed = normalizePrefixedId(gestureIdRaw, PREFIX_GESTURE);
-  if (!trimmed) return "";
-  return GESTURE_ID_ALIASES[trimmed] || trimmed;
+  return normalizeSpinId(gestureIdRaw) || normalizeShakeId(gestureIdRaw);
 }
 
 export function normalizeOrbStateId(orbStateIdRaw) {
@@ -190,6 +217,8 @@ export const ON_SELECTOR_SOURCES = Object.freeze([
   // Legacy compatibility keys.
   Object.freeze({ key: TYPE_SPELL, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
   Object.freeze({ key: FIELD_SPELLS, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
+  Object.freeze({ key: TYPE_SPIN, [FIELD_TYPE]: TYPE_SPIN, normalize: normalizeSpinId }),
+  Object.freeze({ key: TYPE_SHAKE, [FIELD_TYPE]: TYPE_SHAKE, normalize: normalizeShakeId }),
   Object.freeze({ key: TYPE_GESTURE, [FIELD_TYPE]: TYPE_GESTURE, normalize: normalizeGestureId }),
   Object.freeze({ key: KEY_GESTURES, [FIELD_TYPE]: TYPE_GESTURE, normalize: normalizeGestureId }),
   Object.freeze({ key: TYPE_ORB_STATE, [FIELD_TYPE]: TYPE_ORB_STATE, normalize: normalizeOrbStateId }),
@@ -226,6 +255,8 @@ const BARE_ORB_STATE_IDS = new Set([
 
 const SELECTOR_ID_NORMALIZERS = Object.freeze({
   [TYPE_SPELL]: normalizeSpellId,
+  [TYPE_SPIN]: normalizeSpinId,
+  [TYPE_SHAKE]: normalizeShakeId,
   [TYPE_GESTURE]: normalizeGestureId,
   [TYPE_ORB_STATE]: normalizeOrbStateId,
 });

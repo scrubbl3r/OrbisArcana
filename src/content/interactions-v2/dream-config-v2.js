@@ -45,7 +45,7 @@ export const DREAM_CONFIG_V2 = {
     // PYRO AOE CHAIN
     {
       id: "spin_y_opens_pyro",
-      on: { gesture: "spin_y", orb_state: "charged" },
+      on: { spin: "y", orb_state: "charged" },
       open: { id: "school.pyro_spin_seed", words: ["pyro"], ttlMs: 2000 },
     },
     {
@@ -63,17 +63,17 @@ export const DREAM_CONFIG_V2 = {
     // SHOCKWAVE
     {
       id: "shake_ud_cast",
-      on: { gesture: "shake_ud" },
+      on: { shake: "UD" },
       trigger: { spell: "cast_loaded_ud" },
     },
     {
       id: "shake_lr_cast",
-      on: { gesture: "shake_lr" },
+      on: { shake: "LR" },
       trigger: { spell: "cast_loaded_lr" },
     },
     {
       id: "shake_fb_cast",
-      on: { gesture: "shake_fb" },
+      on: { shake: "FB" },
       trigger: { spell: "cast_loaded_fb" },
     },
   ],
