@@ -14,13 +14,17 @@
 export const EVT_INPUT_SHAKE_TRIGGERED = "input.shake_triggered";
 
 /**
- * @typedef {Object} FlatSpinWindowPayload
+ * @typedef {Object} SpinWindowPayload
  * @property {string} axis Dominant axis (`x`,`y`,`z`)
  * @property {number} atMs
  * @property {string} [reason] Present on close events (for example `reset`, `lost_dominance`)
  */
-export const EVT_SPELL_WINDOW_FLAT_SPIN_OPENED = "spell_window.flat_spin_opened";
-export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed";
+export const EVT_SPELL_WINDOW_SPIN_OPENED = "spell_window.spin_opened";
+export const EVT_SPELL_WINDOW_SPIN_CLOSED = "spell_window.spin_closed";
+/** @deprecated Legacy alias retained temporarily during flat-spin terminology removal. */
+export const EVT_SPELL_WINDOW_FLAT_SPIN_OPENED = EVT_SPELL_WINDOW_SPIN_OPENED;
+/** @deprecated Legacy alias retained temporarily during flat-spin terminology removal. */
+export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = EVT_SPELL_WINDOW_SPIN_CLOSED;
 
 /**
  * @typedef {Object} VoiceSpellCastPayload

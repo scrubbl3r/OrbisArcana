@@ -175,7 +175,9 @@ export function bindKwsEventHandlers({
     pushKwsLogLine("TRACE fallback:electric_aoe", "ok");
   }));
 
-  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
+  unsub.push(eventBus.on(
+    RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_OPENED || RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
+    (p = {}) => {
     const axis = String(p.axis || "").trim().toLowerCase();
     if (typeof setFlatSpinAxis === "function") setFlatSpinAxis(axis);
     const prevAxis = String(getFlatSpinAxis() || "").trim().toLowerCase();
@@ -186,7 +188,9 @@ export function bindKwsEventHandlers({
     updateKwsReadout();
   }));
 
-  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
+  unsub.push(eventBus.on(
+    RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED || RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
+    () => {
     if (typeof clearFlatSpinState === "function") clearFlatSpinState();
     else resetHeardWakeWindowTokensAllAxes();
     updateKwsReadout();

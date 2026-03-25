@@ -5,8 +5,8 @@ import {
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
 } from "../content/spells/spell-runtime-routing.js";
 import {
-  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
-  EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
+  EVT_SPELL_WINDOW_SPIN_OPENED,
+  EVT_SPELL_WINDOW_SPIN_CLOSED,
   EVT_ORB_DIED,
   EVT_ORB_REVIVED,
   EVT_VOICE_WORD_DETECTED,
@@ -235,8 +235,8 @@ export function createSpellDispatchSystem({
   }
 
   function start() {
-    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, () => {}));
-    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {}));
+    unsub.push(eventBus.on(EVT_SPELL_WINDOW_SPIN_OPENED, () => {}));
+    unsub.push(eventBus.on(EVT_SPELL_WINDOW_SPIN_CLOSED, () => {}));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       reset();

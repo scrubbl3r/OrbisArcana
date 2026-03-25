@@ -1,7 +1,7 @@
 import {
   EVT_INPUT_SHAKE_TRIGGERED,
-  EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
-  EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
+  EVT_SPELL_WINDOW_SPIN_OPENED,
+  EVT_SPELL_WINDOW_SPIN_CLOSED,
   EVT_VOICE_SET_MODE,
 } from "../contracts/events.js";
 
@@ -9,9 +9,9 @@ import {
  * @typedef {Object} InputGestureSystem
  * @property {() => void} start
  * @property {() => void} stop
- * @property {(atMs?: number) => void} reset Clears shake + flat-spin runtime state and invokes reset hooks.
+ * @property {(atMs?: number) => void} reset Clears shake + spin-window runtime state and invokes reset hooks.
  * @property {(sample?: {shakeVal01?:number, groove01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
- * @property {(frame?: {raw?:Object, atMs?:number, stabilityOn?:boolean, stabilityVisualGate?:boolean}) => void} processFlatSpinFrame
+ * @property {(frame?: {raw?:Object, atMs?:number, stabilityOn?:boolean, stabilityVisualGate?:boolean}) => void} processSpinFrame
  * @property {(code:string, atMs?:number) => void} setPendingDirection
  * @property {() => number} getShakeCooldownUntil
  */
@@ -20,14 +20,14 @@ import {
  * @typedef {Object} CreateInputGestureSystemOptions
  * @property {Object} eventBus Event bus with `emit` (and typically `on` for symmetry).
  * @property {() => number} [nowMs] Clock function.
- * @property {Object} [config] Gesture tuning values (shake + flat-spin thresholds/timings).
+ * @property {Object} [config] Gesture tuning values (shake + spin-window thresholds/timings).
  * @property {Object} [hooks] Receiver-provided side-effect hooks (lamps, shockwave, orb color, etc).
  */
 
 /**
  * Gesture runtime system for:
  * - shake detection / cooldown / direction cache
- * - flat-spin window detection and gate events
+ * - spin-window detection and gate events
  *
  * Emits events defined in `src/contracts/events.js`.
  *
@@ -216,7 +216,7 @@ export function createInputGestureSystem({
     fs.lastGateRefreshMs = atMs;
     if (typeof hooks.setOrbStrokeColorByAxis === "function") hooks.setOrbStrokeColorByAxis(axis);
     if (eventBus && typeof eventBus.emit === "function") {
-      eventBus.emit(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, { axis, atMs });
+      eventBus.emit(EVT_SPELL_WINDOW_SPIN_OPENED, { axis, atMs });
       eventBus.emit(EVT_VOICE_SET_MODE, { mode: "gated_window" });
     }
   }
@@ -232,7 +232,7 @@ export function createInputGestureSystem({
     fs.lastGateRefreshMs = 0;
     if (typeof hooks.resetOrbStrokeColor === "function") hooks.resetOrbStrokeColor();
     if (eventBus && typeof eventBus.emit === "function") {
-      eventBus.emit(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, { axis, reason, atMs });
+      eventBus.emit(EVT_SPELL_WINDOW_SPIN_CLOSED, { axis, reason, atMs });
       eventBus.emit(EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
     }
   }

@@ -113,19 +113,19 @@ export const SIGNAL_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: "gesture.spin_x",
     type: "gesture",
-    sourceEvent: "spell_window.flat_spin_opened",
+    sourceEvent: "spell_window.spin_opened",
     where: Object.freeze({ path: "axis", eq: "x" }),
   }),
   Object.freeze({
     id: "gesture.spin_y",
     type: "gesture",
-    sourceEvent: "spell_window.flat_spin_opened",
+    sourceEvent: "spell_window.spin_opened",
     where: Object.freeze({ path: "axis", eq: "y" }),
   }),
   Object.freeze({
     id: "gesture.spin_z",
     type: "gesture",
-    sourceEvent: "spell_window.flat_spin_opened",
+    sourceEvent: "spell_window.spin_opened",
     where: Object.freeze({ path: "axis", eq: "z" }),
   }),
   Object.freeze({
