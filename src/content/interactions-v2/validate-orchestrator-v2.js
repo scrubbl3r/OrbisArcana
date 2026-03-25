@@ -297,7 +297,7 @@ function validateWake(wakeRaw, errors, warnings) {
 function validateOnSelectors(rule, ruleId, errors, warnings) {
   const on = asObj(rule.on);
   const onContext = `rule ${ruleId} on`;
-  pushUnsupportedKeys(errors, onContext, on, new Set(["word", "spell", "spin", "shake", "gesture", "orb_state"]));
+  pushUnsupportedKeys(errors, onContext, on, new Set(["word", "spell", "spin", "shake", "orb_state"]));
 
   if (Object.hasOwn(on, "word") && !isStringOrArray(on.word)) {
     errors.push(`${onContext}.word must be a string or array when present`);
@@ -311,13 +311,10 @@ function validateOnSelectors(rule, ruleId, errors, warnings) {
   if (Object.hasOwn(on, "shake") && !isStringOrArray(on.shake)) {
     errors.push(`${onContext}.shake must be a string or array when present`);
   }
-  if (Object.hasOwn(on, "gesture") && !isStringOrArray(on.gesture)) {
-    errors.push(`${onContext}.gesture must be a string or array when present`);
-  }
   if (Object.hasOwn(on, "orb_state") && !isStringOrArray(on.orb_state)) {
     errors.push(`${onContext}.orb_state must be a string or array when present`);
   }
-  for (const key of ["word", "spin", "shake", "gesture", "orb_state"]) {
+  for (const key of ["word", "spin", "shake", "orb_state"]) {
     if (typeof on[key] === "string" && on[key] !== on[key].trim()) {
       errors.push(`${onContext}.${key} contains selector id with leading/trailing whitespace: ${on[key]}`);
     }
@@ -370,10 +367,6 @@ function validateOnSelectors(rule, ruleId, errors, warnings) {
   }
   parseAndPush("spin", on.spin);
   parseAndPush("shake", on.shake);
-  if (Object.hasOwn(on, "gesture")) {
-    warnings.push(`rule ${ruleId} uses on.gesture alias; prefer on.spin / on.shake`);
-    parseAndPush("gesture", on.gesture);
-  }
   parseAndPush("orb_state", on.orb_state);
 
   if (!requireNonEmptyArray(errors, selectorEntries, `rule ${ruleId} must define on selectors`)) {
@@ -424,29 +417,6 @@ function validateOnSelectors(rule, ruleId, errors, warnings) {
       if (!KNOWN_SHAKE_IDS.has(id)) {
         errors.push(`rule ${ruleId} references unknown shake id: ${entry.value}`);
       }
-      continue;
-    }
-
-    if (entry.kind === "gesture") {
-      const spinId = normalizeSpinId(entry.value);
-      if (spinId) {
-        const dedupeKey = `spin:${spinId}`;
-        pushDuplicateWhenSeen(errors, seen, dedupeKey, `rule ${ruleId} contains duplicate on selector: ${dedupeKey}`);
-        if (!KNOWN_SPIN_IDS.has(spinId)) {
-          errors.push(`rule ${ruleId} references unknown spin id: ${entry.value}`);
-        }
-        continue;
-      }
-      const shakeId = normalizeShakeId(entry.value);
-      if (shakeId) {
-        const dedupeKey = `shake:${shakeId}`;
-        pushDuplicateWhenSeen(errors, seen, dedupeKey, `rule ${ruleId} contains duplicate on selector: ${dedupeKey}`);
-        if (!KNOWN_SHAKE_IDS.has(shakeId)) {
-          errors.push(`rule ${ruleId} references unknown shake id: ${entry.value}`);
-        }
-        continue;
-      }
-      errors.push(`rule ${ruleId} has invalid on.gesture id: ${entry.value || "(empty)"}`);
       continue;
     }
 

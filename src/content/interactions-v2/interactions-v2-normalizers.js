@@ -31,7 +31,6 @@ const FIELD_TYPE = "type";
 const FIELD_ID = "id";
 const KEY_TRIGGER = "trigger";
 const KEY_TRIGGERS = "triggers";
-const KEY_GESTURES = "gestures";
 const KEY_ORB_STATE = "orbState";
 const KEY_ORB_STATES = "orbStates";
 const KEY_WORDS = "words";
@@ -148,13 +147,11 @@ function normalizePrefixedId(rawValue, prefix) {
 const PREFIX_SPELL = "spell.";
 const PREFIX_WORD = "word.";
 const PREFIX_EVENT = "event.";
-const PREFIX_GESTURE = "gesture.";
 const PREFIX_SPIN = "spin.";
 const PREFIX_SHAKE = "shake.";
 const PREFIX_ORB_STATE = "orb_state.";
 const TYPE_SPELL = "spell";
 const TYPE_WORD = "word";
-const TYPE_GESTURE = "gesture";
 const TYPE_SPIN = "spin";
 const TYPE_SHAKE = "shake";
 const TYPE_ORB_STATE = "orb_state";
@@ -181,7 +178,6 @@ export function normalizeSpinId(spinIdRaw) {
   const rawId = asId(spinIdRaw);
   if (!rawId) return "";
   let trimmed = rawId;
-  if (trimmed.startsWith(PREFIX_GESTURE)) trimmed = trimmed.slice(PREFIX_GESTURE.length);
   if (trimmed.startsWith(PREFIX_SPIN)) trimmed = trimmed.slice(PREFIX_SPIN.length);
   trimmed = GESTURE_ID_ALIASES[trimmed] || trimmed;
   if (trimmed === "x" || trimmed === "spin_x") return "x";
@@ -194,16 +190,11 @@ export function normalizeShakeId(shakeIdRaw) {
   const rawId = asId(shakeIdRaw);
   if (!rawId) return "";
   let trimmed = rawId;
-  if (trimmed.startsWith(PREFIX_GESTURE)) trimmed = trimmed.slice(PREFIX_GESTURE.length);
   if (trimmed.startsWith(PREFIX_SHAKE)) trimmed = trimmed.slice(PREFIX_SHAKE.length);
   if (trimmed === "ud" || trimmed === "shake_ud") return "ud";
   if (trimmed === "lr" || trimmed === "shake_lr") return "lr";
   if (trimmed === "fb" || trimmed === "shake_fb") return "fb";
   return "";
-}
-
-export function normalizeGestureId(gestureIdRaw) {
-  return normalizeSpinId(gestureIdRaw) || normalizeShakeId(gestureIdRaw);
 }
 
 export function normalizeOrbStateId(orbStateIdRaw) {
@@ -214,13 +205,10 @@ export const ON_SELECTOR_SOURCES = Object.freeze([
   // Canonical authoring keys.
   Object.freeze({ key: TYPE_WORD, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
   Object.freeze({ key: KEY_WORDS, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
-  // Legacy compatibility keys.
   Object.freeze({ key: TYPE_SPELL, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
   Object.freeze({ key: FIELD_SPELLS, [FIELD_TYPE]: TYPE_SPELL, normalize: normalizeSpellId }),
   Object.freeze({ key: TYPE_SPIN, [FIELD_TYPE]: TYPE_SPIN, normalize: normalizeSpinId }),
   Object.freeze({ key: TYPE_SHAKE, [FIELD_TYPE]: TYPE_SHAKE, normalize: normalizeShakeId }),
-  Object.freeze({ key: TYPE_GESTURE, [FIELD_TYPE]: TYPE_GESTURE, normalize: normalizeGestureId }),
-  Object.freeze({ key: KEY_GESTURES, [FIELD_TYPE]: TYPE_GESTURE, normalize: normalizeGestureId }),
   Object.freeze({ key: TYPE_ORB_STATE, [FIELD_TYPE]: TYPE_ORB_STATE, normalize: normalizeOrbStateId }),
   Object.freeze({ key: KEY_ORB_STATE, [FIELD_TYPE]: TYPE_ORB_STATE, normalize: normalizeOrbStateId }),
   Object.freeze({ key: KEY_ORB_STATES, [FIELD_TYPE]: TYPE_ORB_STATE, normalize: normalizeOrbStateId }),
@@ -236,7 +224,7 @@ export const OPEN_TTL_KEYS = Object.freeze([FIELD_TTL_MS, KEY_TTL]);
 export const RULE_COOLDOWN_KEYS = Object.freeze([KEY_COOLDOWN_MS, KEY_COOLDOWN]);
 export const RULE_MATCH_WINDOW_KEYS = Object.freeze([KEY_MATCH_WINDOW_MS, KEY_MATCH_WINDOW]);
 
-const BARE_GESTURE_IDS = new Set([
+const BARE_SPIN_OR_SHAKE_IDS = new Set([
   "spin_x",
   "spin_y",
   "spin_z",
@@ -257,7 +245,6 @@ const SELECTOR_ID_NORMALIZERS = Object.freeze({
   [TYPE_SPELL]: normalizeSpellId,
   [TYPE_SPIN]: normalizeSpinId,
   [TYPE_SHAKE]: normalizeShakeId,
-  [TYPE_GESTURE]: normalizeGestureId,
   [TYPE_ORB_STATE]: normalizeOrbStateId,
 });
 const EMPTY_SELECTOR = Object.freeze({ [FIELD_TYPE]: "", [FIELD_ID]: "" });
@@ -317,8 +304,8 @@ function normalizeSelectorType(typeRaw) {
 
 function resolveBareSelectorTypeAndId(text) {
   const bareId = asId(text);
-  if (BARE_GESTURE_IDS.has(bareId)) {
-    return makeFrozenSelector(TYPE_GESTURE, bareId);
+  if (BARE_SPIN_OR_SHAKE_IDS.has(bareId)) {
+    return makeFrozenSelector(normalizeSpinId(bareId) ? TYPE_SPIN : TYPE_SHAKE, bareId);
   }
   if (BARE_ORB_STATE_IDS.has(bareId)) {
     return makeFrozenSelector(TYPE_ORB_STATE, bareId);

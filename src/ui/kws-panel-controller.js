@@ -39,10 +39,7 @@ export function createKwsPanelController({
   const selectedSpinWordByAxis = { x: "", y: "", z: "" };
   const kwsTokenUiState = {
     activeSpinAxis: "",
-    flatSpinAxis: "",
     selectedSpinWordByAxis,
-    selectedAxisWordByAxis: selectedSpinWordByAxis,
-    selectedAxisSpellByAxis: selectedSpinWordByAxis,
     heardWakeWindowTokensByAxis: {
       x: Object.create(null),
       y: Object.create(null),
@@ -132,12 +129,10 @@ export function createKwsPanelController({
     const a = String(axis || "").trim().toLowerCase();
     const next = (a === "x" || a === "y" || a === "z") ? a : "";
     kwsTokenUiState.activeSpinAxis = next;
-    kwsTokenUiState.flatSpinAxis = next;
   }
 
   function clearActiveSpinState() {
     kwsTokenUiState.activeSpinAxis = "";
-    kwsTokenUiState.flatSpinAxis = "";
     kwsTokenUiState.selectedSpinWordByAxis.x = "";
     kwsTokenUiState.selectedSpinWordByAxis.y = "";
     kwsTokenUiState.selectedSpinWordByAxis.z = "";
@@ -150,9 +145,6 @@ export function createKwsPanelController({
     const token = String(axisWord || "").trim().toLowerCase();
     kwsTokenUiState.selectedSpinWordByAxis[a] = token;
   }
-  const setSelectedAxisWord = setSelectedSpinWord;
-  const setSelectedAxisSpell = setSelectedSpinWord;
-
   function clearKwsWakeHudGateTimer() {
     if (!kwsWakeHudGateTO) return;
     clearTimeout(kwsWakeHudGateTO);
@@ -367,11 +359,7 @@ export function createKwsPanelController({
     markHeardWakeWindowToken,
     setActiveSpinAxis,
     clearActiveSpinState,
-    setFlatSpinAxis: setActiveSpinAxis,
-    clearFlatSpinState: clearActiveSpinState,
     setSelectedSpinWord,
-    setSelectedAxisWord,
-    setSelectedAxisSpell,
     flashKwsToken,
     openKwsWakeHudGate,
     updateKwsReadout,

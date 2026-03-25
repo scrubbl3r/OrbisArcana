@@ -19,8 +19,6 @@ requireTextIncludesTokensV2({
     "errors.push(`${onContext}.spin must be a string or array when present`);",
     "if (Object.hasOwn(on, \"shake\") && !isStringOrArray(on.shake)) {",
     "errors.push(`${onContext}.shake must be a string or array when present`);",
-    "if (Object.hasOwn(on, \"gesture\") && !isStringOrArray(on.gesture)) {",
-    "errors.push(`${onContext}.gesture must be a string or array when present`);",
     "if (Object.hasOwn(on, \"orb_state\") && !isStringOrArray(on.orb_state)) {",
     "errors.push(`${onContext}.orb_state must be a string or array when present`);",
   ],

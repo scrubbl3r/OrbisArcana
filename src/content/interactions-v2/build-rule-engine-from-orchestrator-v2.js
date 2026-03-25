@@ -122,17 +122,6 @@ function compileOnSelectors(onRaw) {
     if (!id) continue;
     conditions.push(Object.freeze({ type: "shake", id }));
   }
-  for (const rawGesture of parseStringOrArray(on.gesture)) {
-    const spinId = normalizeSpinId(rawGesture);
-    if (spinId) {
-      conditions.push(Object.freeze({ type: "spin", id: spinId }));
-      continue;
-    }
-    const shakeId = normalizeShakeId(rawGesture);
-    if (shakeId) {
-      conditions.push(Object.freeze({ type: "shake", id: shakeId }));
-    }
-  }
   for (const rawOrbState of parseStringOrArray(on.orb_state)) {
     const id = asText(rawOrbState).toLowerCase();
     if (!id) continue;

@@ -26,7 +26,6 @@ const BARE_NAMESPACE_RE = /^[a-z_]+\.$/;
 const CONDITION_TYPE_WORD = "word";
 const CONDITION_TYPE_SPIN = "spin";
 const CONDITION_TYPE_SHAKE = "shake";
-const CONDITION_TYPE_GESTURE = "gesture";
 const CONDITION_TYPE_ORB_STATE = "orb_state";
 const CONDITION_SIGNAL_TYPE = CONDITION_TYPE_WORD;
 const signalDefsById = ((typeof SIGNAL_DEFINITIONS_BY_ID === "object" && SIGNAL_DEFINITIONS_BY_ID)
@@ -155,7 +154,7 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
     if (!conditionId) errors.push(`${ruleContext} has on.all condition missing id`);
     if (
       conditionTypeInput &&
-      ![CONDITION_TYPE_WORD, CONDITION_TYPE_SPIN, CONDITION_TYPE_SHAKE, CONDITION_TYPE_GESTURE, CONDITION_TYPE_ORB_STATE].includes(conditionTypeInput)
+      ![CONDITION_TYPE_WORD, CONDITION_TYPE_SPIN, CONDITION_TYPE_SHAKE, CONDITION_TYPE_ORB_STATE].includes(conditionTypeInput)
     ) {
       errors.push(`${ruleContext} has unsupported on.all condition type: ${conditionTypeInput}`);
     }
@@ -197,16 +196,6 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
         errors.push(`${ruleContext} references unknown spin id: ${conditionId}`);
       } else if (conditionType === CONDITION_TYPE_SHAKE && !knownShakeSignalIds.has(normalizeShakeId(conditionId))) {
         errors.push(`${ruleContext} references unknown shake id: ${conditionId}`);
-      } else if (conditionType === CONDITION_TYPE_GESTURE) {
-        const spinId = normalizeSpinId(conditionId);
-        const shakeId = normalizeShakeId(conditionId);
-        if (!spinId && !shakeId) {
-          errors.push(`${ruleContext} references unknown gesture id: ${conditionId}`);
-        } else if (spinId && !knownSpinSignalIds.has(spinId)) {
-          errors.push(`${ruleContext} references unknown spin id: ${conditionId}`);
-        } else if (shakeId && !knownShakeSignalIds.has(shakeId)) {
-          errors.push(`${ruleContext} references unknown shake id: ${conditionId}`);
-        }
       } else if (conditionType === CONDITION_TYPE_ORB_STATE && !knownOrbStateSignalIds.has(normalizedConditionId)) {
         errors.push(`${ruleContext} references unknown orb_state id: ${conditionId}`);
       }

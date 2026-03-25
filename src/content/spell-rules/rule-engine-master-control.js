@@ -19,12 +19,12 @@ const RULE_ENABLED_OVERRIDES = Object.freeze({
 
 const SIGNAL_ENABLED_OVERRIDES = Object.freeze({
   // Example:
-  // "gesture.spin_y": false,
+  // "spin.y": false,
 });
 
 const SIGNAL_DEBOUNCE_OVERRIDES = Object.freeze({
   // Example:
-  // "gesture.spin_y": 250,
+  // "spin.y": 250,
 });
 
 const SIGNAL_MAX_MATCHES_OVERRIDES = Object.freeze({
@@ -134,7 +134,7 @@ const SIGNAL_STOP_ON_FIRST_SIGNAL_MATCH_PER_EVENT_OVERRIDES = Object.freeze({
 
 const SIGNAL_PRIORITY_OVERRIDES = Object.freeze({
   // Example:
-  // "gesture.spin_y": 30,
+  // "spin.y": 30,
 });
 
 const SIGNAL_WHERE_OVERRIDES = Object.freeze({

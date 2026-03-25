@@ -35,15 +35,7 @@ function resolveSignalConditionId(cond) {
     if (id === "shake_fb") return "shake.fb";
     return "";
   }
-  if (type === "spell" || type === "gesture" || type === "orb_state") {
-    if (type === "gesture") {
-      if (id === "spin_x" || id === "x" || id === "gesture.spin_x") return "spin.x";
-      if (id === "spin_y" || id === "y" || id === "gesture.spin_y") return "spin.y";
-      if (id === "spin_z" || id === "z" || id === "gesture.spin_z") return "spin.z";
-      if (id === "shake_ud" || id === "ud" || id === "gesture.shake_ud") return "shake.ud";
-      if (id === "shake_lr" || id === "lr" || id === "gesture.shake_lr") return "shake.lr";
-      if (id === "shake_fb" || id === "fb" || id === "gesture.shake_fb") return "shake.fb";
-    }
+  if (type === "spell" || type === "orb_state") {
     if (id.includes(".")) return id;
     return `${type}.${id}`;
   }

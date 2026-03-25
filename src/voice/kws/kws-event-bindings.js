@@ -24,25 +24,17 @@ export function bindKwsEventHandlers({
   const flashKwsToken = typeof deps.flashKwsToken === "function" ? deps.flashKwsToken : () => {};
   const isWakeWindowActive = typeof deps.isWakeWindowActive === "function" ? deps.isWakeWindowActive : () => false;
   const markHeardWakeWindowToken = typeof deps.markHeardWakeWindowToken === "function" ? deps.markHeardWakeWindowToken : null;
-  const getActiveSpinAxis = typeof deps.getActiveSpinAxis === "function"
-    ? deps.getActiveSpinAxis
-    : (typeof deps.getFlatSpinAxis === "function" ? deps.getFlatSpinAxis : () => "");
+  const getActiveSpinAxis = typeof deps.getActiveSpinAxis === "function" ? deps.getActiveSpinAxis : () => "";
   const openKwsWakeHudGate = typeof deps.openKwsWakeHudGate === "function" ? deps.openKwsWakeHudGate : () => {};
   const shouldLogHeardWakeword = typeof deps.shouldLogHeardWakeword === "function" ? deps.shouldLogHeardWakeword : () => false;
   const pushKwsLogLine = typeof deps.pushKwsLogLine === "function" ? deps.pushKwsLogLine : () => {};
   const updateKwsReadout = typeof deps.updateKwsReadout === "function" ? deps.updateKwsReadout : () => {};
   const isUngatedToken = typeof deps.isUngatedToken === "function" ? deps.isUngatedToken : () => false;
-  const setActiveSpinAxis = typeof deps.setActiveSpinAxis === "function"
-    ? deps.setActiveSpinAxis
-    : (typeof deps.setFlatSpinAxis === "function" ? deps.setFlatSpinAxis : null);
-  const clearActiveSpinState = typeof deps.clearActiveSpinState === "function"
-    ? deps.clearActiveSpinState
-    : (typeof deps.clearFlatSpinState === "function" ? deps.clearFlatSpinState : null);
+  const setActiveSpinAxis = typeof deps.setActiveSpinAxis === "function" ? deps.setActiveSpinAxis : null;
+  const clearActiveSpinState = typeof deps.clearActiveSpinState === "function" ? deps.clearActiveSpinState : null;
   const resetHeardWakeWindowTokensForAxis = typeof deps.resetHeardWakeWindowTokensForAxis === "function" ? deps.resetHeardWakeWindowTokensForAxis : () => {};
   const resetHeardWakeWindowTokensAllAxes = typeof deps.resetHeardWakeWindowTokensAllAxes === "function" ? deps.resetHeardWakeWindowTokensAllAxes : () => {};
-  const setSelectedAxisWord = typeof deps.setSelectedAxisWord === "function"
-    ? deps.setSelectedAxisWord
-    : (typeof deps.setSelectedAxisSpell === "function" ? deps.setSelectedAxisSpell : null);
+  const setSelectedSpinWord = typeof deps.setSelectedSpinWord === "function" ? deps.setSelectedSpinWord : null;
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
   const wakeTtlMs = Math.max(0, Number(ORCHESTRATOR_V2_WAKE_TTL_MS) || gateTimeoutMs);
@@ -188,7 +180,7 @@ export function bindKwsEventHandlers({
     if (typeof setActiveSpinAxis === "function") setActiveSpinAxis(axis);
     const prevAxis = String(getActiveSpinAxis() || "").trim().toLowerCase();
     if (prevAxis) {
-      if (typeof setSelectedAxisWord === "function") setSelectedAxisWord(prevAxis, "");
+      if (typeof setSelectedSpinWord === "function") setSelectedSpinWord(prevAxis, "");
       resetHeardWakeWindowTokensForAxis(prevAxis);
     }
     updateKwsReadout();
@@ -206,7 +198,7 @@ export function bindKwsEventHandlers({
     const axis = String(p.axis || "").trim().toLowerCase();
     const axisWord = getAxisWordFromPayload(p);
     if (axis === "x" || axis === "y" || axis === "z") {
-      if (typeof setSelectedAxisWord === "function") setSelectedAxisWord(axis, axisWord);
+      if (typeof setSelectedSpinWord === "function") setSelectedSpinWord(axis, axisWord);
       resetHeardWakeWindowTokensForAxis(axis);
       if (axisWord === "electrum") flashKwsToken("electrum", 520);
     }
