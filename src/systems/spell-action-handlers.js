@@ -62,26 +62,6 @@ export function createSpellActionHandlers({
       // Fallback until dedicated frost VFX runtime is wired.
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
-    play_axis_aoe(payload = {}) {
-      const axisWord = String((payload && (payload.axisWord || payload.axisSpell)) || "").trim().toLowerCase();
-      if (axisWord === "fridgis") {
-        if (typeof playFrostAoe === "function") {
-          playFrostAoe();
-          return;
-        }
-        if (typeof playFlameAoe === "function") playFlameAoe();
-        return;
-      }
-      if (axisWord === "electrum") {
-        if (typeof playElectricAoe === "function") {
-          playElectricAoe();
-          return;
-        }
-        if (typeof playFlameAoe === "function") playFlameAoe();
-        return;
-      }
-      if (typeof playFlameAoe === "function") playFlameAoe();
-    },
     domus_teleport_orb(payload = {}) {
       void payload;
       if (typeof executeTeleportHome === "function") {

@@ -15,11 +15,6 @@ const SLOT_TO_LOAD_EVENT_ID = Object.freeze({
   LR: "spell_load_lr",
   FB: "spell_load_fb",
 });
-const AXIS_WORD_BY_BOUND_SPELL_ID = Object.freeze({
-  aoe_flame: "pyro",
-  aoe_frost: "fridgis",
-  aoe_electric: "electrum",
-});
 
 function deepFreeze(value) {
   if (!value || typeof value !== "object") return value;
@@ -77,10 +72,7 @@ function compileBindToTrigger(rawBind) {
   const slotId = asText(bind.slot).toUpperCase();
   const eventId = SLOT_TO_LOAD_EVENT_ID[slotId];
   if (!spellId || !eventId) return null;
-  const args = { spell: spellId, slot: slotId };
-  const axisWord = asText(AXIS_WORD_BY_BOUND_SPELL_ID[spellId]);
-  if (axisWord) args.axisWord = axisWord;
-  return { [eventId]: args };
+  return { [eventId]: { spell: spellId, slot: slotId } };
 }
 
 function normalizeWakeSection(rawWake) {

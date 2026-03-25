@@ -8,7 +8,6 @@ import {
   KWS_SIM_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
   WORD_RUNTIME_ROUTING,
-  WAKE_WINDOW_RUNTIME_KEY_BY_WORD,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
@@ -157,15 +156,6 @@ function collectImmediateWordIdsFromOrchestratorV2(orchestratorV2) {
       .map((id) => asId(id).replace(/^(word|spell)\./, ""))
       .filter(Boolean)
   );
-  const axisWordIds = new Set(
-    rules
-      .filter((rule) => {
-        const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
-        return asId(open && open.id).startsWith("school.");
-      })
-      .flatMap((rule) => collectOnWordIdsFromOrchestratorRule(rule))
-      .filter(Boolean)
-  );
   const wakeWindowWordIds = collectWakeWinWordIdsFromOrchestratorV2(orchestratorV2);
   const out = new Set();
   for (const rule of rules) {
@@ -174,7 +164,6 @@ function collectImmediateWordIdsFromOrchestratorV2(orchestratorV2) {
     if (hasOpen || !hasTrigger) continue;
     for (const wordId of collectOnWordIdsFromOrchestratorRule(rule)) {
       if (wakeWordIds.has(wordId)) continue;
-      if (axisWordIds.has(wordId)) continue;
       if (wakeWindowWordIds.has(wordId)) continue;
       out.add(wordId);
     }
@@ -256,31 +245,6 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
     );
   }
 
-  const runtimeKeyTokens = new Set(
-    Object.keys(WAKE_WINDOW_RUNTIME_KEY_BY_WORD || {})
-      .map((token) => asId(token))
-      .filter(Boolean)
-  );
-  const missingRuntimeKeyTokens = Array.from(declaredWakeWindowSpellIds).filter((id) => !runtimeKeyTokens.has(id)).sort();
-  const extraRuntimeKeyTokens = Array.from(runtimeKeyTokens).filter((id) => !declaredWakeWindowSpellIds.has(id)).sort();
-  if (missingRuntimeKeyTokens.length) {
-    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD missing token keys for wake window spells: ${missingRuntimeKeyTokens.join(", ")}`);
-  }
-  if (extraRuntimeKeyTokens.length) {
-    errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD has token keys not present in WAKE_WINDOW_WORD_IDS: ${extraRuntimeKeyTokens.join(", ")}`);
-  }
-
-  for (const [token, runtimeIdRaw] of Object.entries(WAKE_WINDOW_RUNTIME_KEY_BY_WORD || {})) {
-    const runtimeId = asId(runtimeIdRaw);
-    if (!runtimeId) {
-      errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD[${token}] has empty runtime id`);
-      continue;
-    }
-    if (!WORDS_BY_ID[runtimeId]) {
-      errors.push(`WAKE_WINDOW_RUNTIME_KEY_BY_WORD[${token}] references unknown spell id: ${runtimeId}`);
-    }
-  }
-
   const seenRoutingIds = new Set();
   for (const item of routingEntries) {
     const id = asId(item && item.id);
@@ -297,6 +261,9 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
     if (intent === "spell.school_select" || intent === "spell.class_select") {
       errors.push(`${ROUTING_LABEL}[${id}] uses retired intent: ${intent}`);
     }
+    if (intent === "spell.wake_window_select") {
+      errors.push(`${ROUTING_LABEL}[${id}] uses retired intent: ${intent}`);
+    }
 
     if (item && Object.prototype.hasOwnProperty.call(item, "school")) {
       errors.push(`${ROUTING_LABEL}[${id}] contains retired key: school`);
@@ -305,34 +272,8 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
       errors.push(`${ROUTING_LABEL}[${id}] contains retired key: classKey`);
     }
 
-    const allowedAxes = Array.isArray(item && item.allowedAxes) ? item.allowedAxes : [];
-    for (const axis of allowedAxes) {
-      if (!isAxis(axis)) errors.push(`${ROUTING_LABEL}[${id}] has invalid allowed axis: ${axis}`);
-    }
-
     if (item && Object.prototype.hasOwnProperty.call(item, "fixedSlot")) {
       if (!isSlot(item.fixedSlot)) errors.push(`${ROUTING_LABEL}[${id}] has invalid fixedSlot: ${item.fixedSlot}`);
-    }
-
-    const slotByAxis = (item && typeof item.slotByAxis === "object" && item.slotByAxis) ? item.slotByAxis : null;
-    if (slotByAxis) {
-      for (const [axis, slot] of Object.entries(slotByAxis)) {
-        if (!isAxis(axis)) errors.push(`${ROUTING_LABEL}[${id}].slotByAxis has invalid axis key: ${axis}`);
-        if (!isSlot(slot)) errors.push(`${ROUTING_LABEL}[${id}].slotByAxis[${axis}] has invalid slot: ${slot}`);
-      }
-    }
-
-    const clearSlotsOnAxis = (item && typeof item.clearSlotsOnAxis === "object" && item.clearSlotsOnAxis)
-      ? item.clearSlotsOnAxis
-      : null;
-    if (clearSlotsOnAxis) {
-      for (const [axis, slotsRaw] of Object.entries(clearSlotsOnAxis)) {
-        if (!isAxis(axis)) errors.push(`${ROUTING_LABEL}[${id}].clearSlotsOnAxis has invalid axis key: ${axis}`);
-        const slots = Array.isArray(slotsRaw) ? slotsRaw : [];
-        for (const slot of slots) {
-          if (!isSlot(slot)) errors.push(`${ROUTING_LABEL}[${id}].clearSlotsOnAxis[${axis}] has invalid slot: ${slot}`);
-        }
-      }
     }
   }
 

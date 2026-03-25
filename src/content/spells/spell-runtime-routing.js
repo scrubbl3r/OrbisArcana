@@ -180,11 +180,6 @@ function buildDerivedRuntimeProfileV2() {
 
 const ORCHESTRATOR_V2_RUNTIME_PROFILE = buildDerivedRuntimeProfileV2();
 const CANONICAL_STANDALONE_WORD_IDS = Object.freeze(["arcana", "are_kay_nah"]);
-const WAKE_WINDOW_SLOT_BY_WORD_ID = Object.freeze({
-  sanctum: "UD",
-  vectus: "LR",
-  rota: "FB",
-});
 
 function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
   const out = [];
@@ -223,13 +218,9 @@ function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
     });
   }
   for (const id of (Array.isArray(profile.wakeWindowWordIds) ? profile.wakeWindowWordIds : [])) {
-    const fixedSlot = asSlot(WAKE_WINDOW_SLOT_BY_WORD_ID[id]);
     add({
       id,
-      intent: "spell.wake_window_select",
-      wakeWindowWord: id,
-      wakeWindowSpell: id,
-      ...(fixedSlot ? { fixedSlot } : {}),
+      intent: `spell.${id}`,
     });
   }
   return Object.freeze(out);
@@ -280,14 +271,7 @@ export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = Object.freeze(
 );
 export const KWS_WAKE_REQUIRED_WORD_IDS = WAKE_REQUIRED_WORD_IDS;
 
-export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({
-  ...WAKE_WINDOW_WORD_IDS.reduce((acc, id) => {
-    const token = String(id || "").trim().toLowerCase();
-    if (!token) return acc;
-    acc[token] = token;
-    return acc;
-  }, {}),
-});
+export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({});
 
 const DEFAULT_KWS_TOP_WORD_IDS = Object.freeze([
   ...new Set([

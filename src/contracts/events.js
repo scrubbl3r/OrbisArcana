@@ -27,10 +27,10 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
  * @property {string} wordId Canonical detected word id
  * @property {string} [spellId] Legacy compatibility alias for `wordId`
  * @property {string} [intent] Spell intent/category
- * @property {string} [axis] Axis (`x`,`y`,`z`)
  * @property {string} [slot] Slot/group (`UD`,`LR`,`FB`)
- * @property {string} [axisWord] Selected axis word token id for wake-window casts
- * @property {string} [axisSpell] Legacy compatibility alias for `axisWord`
+ * @property {string} [axis] Deprecated legacy field from pre-SSOT runtime flow
+ * @property {string} [axisWord] Deprecated legacy field from pre-SSOT runtime flow
+ * @property {string} [axisSpell] Deprecated legacy alias for `axisWord`
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
  * @property {number} [floatGraceMs] Optional explicit grace override
@@ -44,10 +44,10 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = "spell_window.flat_spin_closed"
  * @typedef {Object} VoiceSpellLoadedPayload
  * @property {string} wordId Canonical detected word id
  * @property {string} [spellId] Legacy compatibility alias for `wordId`
- * @property {string} axis Axis (`x`,`y`,`z`)
  * @property {string} slot Slot/group (`UD`,`LR`,`FB`)
- * @property {string} [axisWord] Selected axis word token id for wake-window loads
- * @property {string} [axisSpell] Legacy compatibility alias for `axisWord`
+ * @property {string} [axis] Deprecated legacy field from pre-SSOT runtime flow
+ * @property {string} [axisWord] Deprecated legacy field from pre-SSOT runtime flow
+ * @property {string} [axisSpell] Deprecated legacy alias for `axisWord`
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
  */
@@ -95,6 +95,7 @@ export const EVT_VOICE_KWS_SPELL_CANDIDATE = "voice.kws_spell_candidate";
 export const EVT_VOICE_WORD_DETECTED = "voice.word_detected";
 export const EVT_VOICE_SPELL_DETECTED = "voice.spell_detected";
 export const EVT_VOICE_SPELL_REJECTED = "voice.spell_rejected";
+/** @deprecated Legacy axis-selection event retained temporarily for deferred KWS/UI cleanup. */
 export const EVT_VOICE_AXIS_SELECTED = "voice.axis_selected";
 export const EVT_VOICE_SPELL_LOADED = "voice.spell_loaded";
 export const EVT_VOICE_SPELL_CAST = "voice.spell_cast";

@@ -8,9 +8,6 @@
 export const RUNTIME_WORDS = Object.freeze([
   {
     id: "domus",
-    axisWord: null,
-    axisSpell: null,
-    wakeWindowSpell: null,
     slot: "UD",
     intent: "spell.domus",
     cooldownMs: 250,
@@ -18,21 +15,15 @@ export const RUNTIME_WORDS = Object.freeze([
   },
   {
     id: "sanctum",
-    axisWord: null,
-    axisSpell: null,
-    wakeWindowSpell: "sanctum",
     slot: "UD",
-    intent: "spell.wake_window_select",
+    intent: "spell.sanctum",
     cooldownMs: 1000,
     castActionId: "sanctum_shield",
   },
   {
     id: "rota",
-    axisWord: null,
-    axisSpell: null,
-    wakeWindowSpell: "rota",
     slot: "FB",
-    intent: "spell.wake_window_select",
+    intent: "spell.rota",
     cooldownMs: 1100,
     castActionId: "aoe_axis",
     postCastActions: [
@@ -41,11 +32,8 @@ export const RUNTIME_WORDS = Object.freeze([
   },
   {
     id: "vectus",
-    axisWord: null,
-    axisSpell: null,
-    wakeWindowSpell: "vectus",
     slot: "LR",
-    intent: "spell.wake_window_select",
+    intent: "spell.vectus",
     cooldownMs: 900,
     castActionId: "aoe_electric",
   },

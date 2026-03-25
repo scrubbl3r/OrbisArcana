@@ -1,6 +1,5 @@
 import { ACTIVE_WORDS_BY_ID } from "../voice/wordbook.js";
 import {
-  WAKE_WINDOW_RUNTIME_KEY_BY_WORD,
   WORD_RUNTIME_ROUTING_BY_WORD_ID,
   WORD_WINDOW_BYPASS_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
@@ -37,7 +36,6 @@ export function createSpellDispatchSystem({
   const unsub = [];
   const lastCastByWordId = new Map();
   const SLOT_ORDER = ["UD", "LR", "FB"];
-  const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
   const TEMP_UNGATED_WORD_IDS = new Set(
     (Array.isArray(WORD_WINDOW_BYPASS_WORD_IDS) ? WORD_WINDOW_BYPASS_WORD_IDS : [])
       .map((id) => String(id || "").trim().toLowerCase())
@@ -49,9 +47,7 @@ export function createSpellDispatchSystem({
       .filter(Boolean)
   );
   const loadedBySlot = { UD: null, LR: null, FB: null };
-  const lastFlatSpinLoadAtByWord = new Map();
   let nextSlotIndex = 0;
-  let activeFlatSpinAxis = null;
   let lastVoiceDetectDedupeKey = "";
   let lastVoiceDetectDedupeAtMs = 0;
 
@@ -135,17 +131,11 @@ export function createSpellDispatchSystem({
     };
   }
 
-  function isWakeWindowSelectIntent(intent) {
-    const value = String(intent || "").trim().toLowerCase();
-    return value === "spell.wake_window_select";
-  }
-
   function buildLoadedEntryFromPayload(payload = {}, slotOverride = "") {
     const slot = normGroup(slotOverride || payload.slot);
     const wordId = String((payload.wordId || payload.spellId || payload.spell) || "").trim().toLowerCase();
     if (!slot || !wordId) return null;
     const routed = withRuntimeRouting(ACTIVE_WORDS_BY_ID[wordId] || { id: wordId });
-    const wakeWindowSpell = String((payload.wakeWindowSpell || routed.wakeWindowSpell) || "").trim().toLowerCase();
     return {
       wordId,
       spellId: wordId,
@@ -157,7 +147,6 @@ export function createSpellDispatchSystem({
       loadedAtMs: Number(payload.atMs) || nowMs(),
       slot,
       axis: normAxis(payload.axis),
-      wakeWindowSpell,
     };
   }
 
@@ -171,7 +160,6 @@ export function createSpellDispatchSystem({
       confidence: Number(entry.confidence) || 0,
       axis: entry.axis,
       slot: entry.slot,
-      wakeWindowSpell: String(entry.wakeWindowSpell || "").toLowerCase(),
       atMs: entry.loadedAtMs,
       trigger,
     });
@@ -190,7 +178,6 @@ export function createSpellDispatchSystem({
       trigger: String(payload.trigger || "shake_detonation"),
       axis: entry.axis,
       slot: entry.slot,
-      wakeWindowSpell: String(entry.wakeWindowSpell || "").toLowerCase(),
       directionGroup: String(payload.directionGroup || entry.slot || ""),
       atMs: now,
     };
@@ -210,7 +197,6 @@ export function createSpellDispatchSystem({
       confidence: entry.confidence,
       loadedAtMs: entry.loadedAtMs,
       axis: entry.axis,
-      wakeWindowSpell: entry.wakeWindowSpell,
     };
     emitSpellLoadedFromEntry(entry, String(payload.trigger || "rule_engine.event"));
     return entry;
@@ -249,14 +235,8 @@ export function createSpellDispatchSystem({
   }
 
   function start() {
-    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (payload = {}) => {
-      const axis = normAxis(payload.axis);
-      activeFlatSpinAxis = axis || null;
-    }));
-
-    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
-      activeFlatSpinAxis = null;
-    }));
+    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, () => {}));
+    unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {}));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       reset();
@@ -274,8 +254,6 @@ export function createSpellDispatchSystem({
         : {};
       const spell = withRuntimeRouting(detected || {});
       const rawWordId = String(spell.id || "");
-      const spellIntent = String(spell.intent || "");
-      const spellWakeWindow = String((spell.wakeWindowSpell) || "").toLowerCase();
       const wordId = rawWordId;
       if (!wordId) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
@@ -305,109 +283,6 @@ export function createSpellDispatchSystem({
           reason: "spell_inactive",
           wordId,
           spellId: wordId,
-          atMs: now,
-        });
-        return;
-      }
-      const axis = normAxis(activeFlatSpinAxis);
-      const isFlatSpinLoadWindow = !!axis;
-      const isWakeWindowSelect = isWakeWindowSelectIntent(spellIntent);
-
-      // Strict spell-tree enforcement:
-      // - wake-window tokens are valid only during an active spin window.
-      const bypassFlatSpinGate = TEMP_UNGATED_WORD_IDS.has(wordId);
-      if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && isWakeWindowSelect) {
-        eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-          reason: "spell_window_required",
-          wordId,
-          spellId: wordId,
-          atMs: now,
-        });
-        return;
-      }
-
-      if (isFlatSpinLoadWindow) {
-        // Strict tree inside spin mode: only wake-window-select words are valid here.
-        if (!isWakeWindowSelect) {
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "flat_spin_requires_wake_window_token",
-            wordId,
-            spellId: wordId,
-            axis,
-            atMs: now,
-          });
-          return;
-        }
-
-        const concreteSpell = spell;
-        const concreteWordId = String(concreteSpell && concreteSpell.id || "");
-        const dedupeKey = concreteWordId;
-        const prevLoadAt = Number(lastFlatSpinLoadAtByWord.get(dedupeKey) || 0);
-        if (concreteWordId && (now - prevLoadAt) < FLAT_SPIN_DUPLICATE_SUPPRESS_MS) {
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "duplicate_spell_token",
-            wordId: concreteWordId,
-            spellId: concreteWordId,
-            axis,
-            atMs: now,
-          });
-          return;
-        }
-
-        const storedGlobes = getStoredGlobeCount();
-        if (storedGlobes <= 0) {
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "no_stored_globes",
-            wordId: String(concreteSpell.id || wordId),
-            spellId: String(concreteSpell.id || wordId),
-            axis,
-            atMs: now,
-          });
-          return;
-        }
-        const slot = pickSlotForLoad(concreteSpell);
-        const spendResult = consumeStoredGlobe({
-          reason: "spell_load",
-          wordId: String(concreteSpell.id || ""),
-          spellId: String(concreteSpell.id || ""),
-          axis,
-          slot,
-          atMs: now,
-        });
-        if (!spendResult || spendResult.ok !== true) {
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "no_stored_globes",
-            wordId: String(concreteSpell.id || wordId),
-            spellId: String(concreteSpell.id || wordId),
-            axis,
-            atMs: now,
-          });
-          return;
-        }
-        loadedBySlot[slot] = {
-          wordId: String(concreteSpell.id || ""),
-          spellId: String(concreteSpell.id || ""),
-          castActionId: String((concreteSpell.castActionId || concreteSpell.id || "")).toLowerCase(),
-          intent: concreteSpell.intent,
-          phrase: concreteSpell.phrase,
-          cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
-          confidence: Number(payload.confidence) || 0,
-          loadedAtMs: now,
-          axis,
-          wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
-        };
-        if (concreteWordId) {
-          lastFlatSpinLoadAtByWord.set(dedupeKey, now);
-        }
-        eventBus.emit(EVT_VOICE_SPELL_LOADED, {
-          wordId: String(concreteSpell.id || ""),
-          spellId: String(concreteSpell.id || ""),
-          intent: concreteSpell.intent,
-          phrase: concreteSpell.phrase,
-          confidence: Number(payload.confidence) || 0,
-          axis,
-          slot,
-          wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
           atMs: now,
         });
         return;
@@ -509,10 +384,8 @@ export function createSpellDispatchSystem({
 
   function reset() {
     lastCastByWordId.clear();
-    lastFlatSpinLoadAtByWord.clear();
     lastVoiceDetectDedupeKey = "";
     lastVoiceDetectDedupeAtMs = 0;
-    activeFlatSpinAxis = null;
     nextSlotIndex = 0;
     for (const slot of SLOT_ORDER) {
       loadedBySlot[slot] = null;
