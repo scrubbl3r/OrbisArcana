@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2.authoring",
-  "generatedAt": "2026-03-25T22:56:07.060Z",
+  "generatedAt": "2026-03-25T23:09:47.502Z",
   "enabled": true,
   "wake": {
     "roots": [
@@ -116,10 +116,7 @@
     {
       "id": "wake_main",
       "on": {
-        "word": [
-          "orbis",
-          "are_kay_nah"
-        ]
+        "word": "orbis"
       },
       "open": {
         "id": "wake.main",
@@ -248,10 +245,7 @@
       {
         "id": "wake_main",
         "on": {
-          "word": [
-            "orbis",
-            "are_kay_nah"
-          ]
+          "word": "orbis"
         },
         "open": {
           "id": "wake.main",

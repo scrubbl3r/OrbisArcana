@@ -8,6 +8,7 @@ export const REQUIRED_READY_PHASE_IDS_V2 = Object.freeze([
 ]);
 
 export const REQUIRED_REGRESSION_CHECK_IDS_V2 = Object.freeze([
+  "tele_home_regression",
   "shake_regression",
   "wake_load_regression",
   "immediate_ownership",

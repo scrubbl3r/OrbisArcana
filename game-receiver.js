@@ -2330,14 +2330,6 @@
             if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE exec:aoe_electric:direct", "ok");
             return;
           }
-          // Direct runtime fallback for canonical tele_home action path.
-          // Keeps behavior stable even if cast-action binding lookup drifts.
-          if (actionId === "teleport_home") {
-            teleportOrbToSpawnNeutralizePhysics(DOMUS_TELEPORT_ABOVE_GROUND_PX);
-            grantFloatGrace(DOMUS_FLOAT_GRACE_MS);
-            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE exec:teleport_home:direct", "ok");
-            return;
-          }
           const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
             ? ruleSchema.eventRuntimeBindings
             : Object.create(null);

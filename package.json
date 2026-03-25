@@ -3,6 +3,7 @@
   "scripts": {
     "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs",
     "write:master-control-doc:v2": "node tools/rule-engine-v2/write-master-control-doc-v2.mjs",
+    "check:tele-home-regression:v2": "node tools/rule-engine-v2/check-tele-home-regression-v2.mjs",
     "check:shake-regression:v2": "node tools/rule-engine-v2/check-shake-detonation-regression-v2.mjs",
     "check:wake-load-regression:v2": "node tools/rule-engine-v2/check-wake-window-load-regression-v2.mjs",
     "check:immediate-ownership:v2": "node tools/rule-engine-v2/check-immediate-dispatch-ownership-v2.mjs",

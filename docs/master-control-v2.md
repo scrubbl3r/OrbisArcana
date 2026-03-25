@@ -1,6 +1,6 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-25T22:56:07.055Z
+Generated: 2026-03-25T23:09:47.497Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
@@ -139,10 +139,7 @@ This document is generated from SSOT:
     {
       "id": "wake_main",
       "on": {
-        "word": [
-          "orbis",
-          "are_kay_nah"
-        ]
+        "word": "orbis"
       },
       "open": {
         "id": "wake.main",
@@ -280,10 +277,7 @@ This document is generated from SSOT:
   {
     "id": "wake_main",
     "on": {
-      "word": [
-        "orbis",
-        "are_kay_nah"
-      ]
+      "word": "orbis"
     },
     "open": {
       "id": "wake.main",
