@@ -18,7 +18,7 @@ export const DREAM_CONFIG_V2 = {
   rules: [
     {
       id: "wake_main",
-      on: { word: "orbis" },
+      on: { word: ["orbis", "are_kay_nah"] },
       open: { id: "wake.main", words: ["domus", "electrum", "pyro"], ttlMs: 2000 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 2000 },
     },

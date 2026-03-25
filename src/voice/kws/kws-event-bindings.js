@@ -39,7 +39,6 @@ export function bindKwsEventHandlers({
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
   const wakeTtlMs = Math.max(0, Number(ORCHESTRATOR_V2_WAKE_TTL_MS) || gateTimeoutMs);
   let wakeArmedUntilMs = 0;
-  let lastTeleHomeFallbackAtMs = 0;
   let electrumWindowUntilMs = 0;
   let lastElectricAoeFallbackAtMs = 0;
   const wakeWordIds = new Set(
@@ -127,25 +126,6 @@ export function bindKwsEventHandlers({
       source: "word_bridge",
     });
     wakeArmedUntilMs = Math.max(wakeArmedUntilMs, now + wakeTtlMs);
-  }));
-
-  // Safety bridge: preserve legacy expectation `orbis -> domus => teleport_home`
-  // even when upstream provider timing/source differences suppress a rule-engine match.
-  unsub.push(eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
-    const now = Date.now();
-    const wordId = getDetectedWordId(p);
-    if (wordId !== "domus") return;
-    if (now > wakeArmedUntilMs) return;
-    if ((now - lastTeleHomeFallbackAtMs) < 250) return;
-    lastTeleHomeFallbackAtMs = now;
-    eventBus.emit("rule_engine.action_executed", {
-      ruleId: "tele_home_fallback",
-      actionType: "event",
-      actionId: "teleport_home",
-      args: {},
-      atMs: now,
-    });
-    pushKwsLogLine("TRACE fallback:tele_home", "ok");
   }));
 
   // Safety bridge: preserve expected `orbis -> electrum -> rota => aoe_electric`
