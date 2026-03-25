@@ -597,6 +597,35 @@ export function createRuleEnginePreviewSystem({
         executedActionCount += 1;
         continue;
       }
+      if (type === "bind") {
+        const args = {
+          spell: String((action && action.spell) || (mergedOverrides && mergedOverrides.spell) || "").trim().toLowerCase(),
+          slot: String((action && action.slot) || (mergedOverrides && mergedOverrides.slot) || "").trim().toUpperCase(),
+          ...(mergedOverrides && typeof mergedOverrides === "object" ? mergedOverrides : {}),
+        };
+        const emitTypeEnabled = ruleTelemetryTypeGate && Object.prototype.hasOwnProperty.call(ruleTelemetryTypeGate, "bind")
+          ? !!ruleTelemetryTypeGate.bind
+          : (signalTelemetryTypeGate && Object.prototype.hasOwnProperty.call(signalTelemetryTypeGate, "bind")
+          ? !!signalTelemetryTypeGate.bind
+          : (sourceEventTelemetryTypeGate && Object.prototype.hasOwnProperty.call(sourceEventTelemetryTypeGate, "bind")
+          ? !!sourceEventTelemetryTypeGate.bind
+          : (
+            Object.prototype.hasOwnProperty.call(actionExecutedEventTypeEnabled, "bind")
+              ? !!actionExecutedEventTypeEnabled.bind
+              : true
+          )));
+        if (effectiveEmitActionExecutedEvents && emitTypeEnabled) {
+          eventBus.emit(EVT_RULE_ENGINE_ACTION_EXECUTED, {
+            ruleId: String(rule && rule.id || ""),
+            actionType: "bind",
+            actionId: id,
+            args,
+            atMs: Number(triggerMeta.atMs) || nowMs(),
+          });
+        }
+        executedActionCount += 1;
+        continue;
+      }
       if (type !== "event") continue;
       const eventDef = runtime.eventById[id];
       if (eventDef && eventDef.enabled === false) continue;

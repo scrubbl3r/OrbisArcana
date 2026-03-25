@@ -286,7 +286,7 @@ export function validateRuleEngineConfig(config = null) {
       if (!actionExecutedEventTypeEnabled || typeof actionExecutedEventTypeEnabled !== "object" || Array.isArray(actionExecutedEventTypeEnabled)) {
         errors.push("RULE_ENGINE_POLICY_CONTROL.execution.actionExecutedEventTypeEnabled must be an object when present");
       } else {
-        const allowed = new Set(["wake_win", "event"]);
+        const allowed = new Set(["wake_win", "event", "bind"]);
         for (const [k, v] of Object.entries(actionExecutedEventTypeEnabled)) {
           if (!allowed.has(String(k || "").trim().toLowerCase())) {
             errors.push(`RULE_ENGINE_POLICY_CONTROL.execution.actionExecutedEventTypeEnabled has unsupported key: ${k}`);
@@ -308,7 +308,7 @@ export function validateRuleEngineConfig(config = null) {
       if (!actionTypeEnabled || typeof actionTypeEnabled !== "object" || Array.isArray(actionTypeEnabled)) {
         errors.push("RULE_ENGINE_POLICY_CONTROL.execution.actionTypeEnabled must be an object when present");
       } else {
-        const allowed = new Set(["wake_win", "event"]);
+        const allowed = new Set(["wake_win", "event", "bind"]);
         for (const [k, v] of Object.entries(actionTypeEnabled)) {
           if (!allowed.has(String(k || "").trim().toLowerCase())) {
             errors.push(`RULE_ENGINE_POLICY_CONTROL.execution.actionTypeEnabled has unsupported key: ${k}`);
@@ -578,7 +578,7 @@ export function validateRuleEngineConfig(config = null) {
     if (!cfg.ruleActionExecutedEventTypeEnabledOverrides || typeof cfg.ruleActionExecutedEventTypeEnabledOverrides !== "object" || Array.isArray(cfg.ruleActionExecutedEventTypeEnabledOverrides)) {
       errors.push("RULE_ENGINE_POLICY_CONTROL.ruleActionExecutedEventTypeEnabledOverrides must be an object when present");
     } else {
-      const allowed = new Set(["wake_win", "event"]);
+      const allowed = new Set(["wake_win", "event", "bind"]);
       for (const [ruleId, value] of Object.entries(ruleActionExecutedEventTypeEnabledOverrides)) {
         if (!asText(ruleId)) {
           errors.push("RULE_ENGINE_POLICY_CONTROL.ruleActionExecutedEventTypeEnabledOverrides contains empty rule id key");
@@ -636,7 +636,7 @@ export function validateRuleEngineConfig(config = null) {
     if (!cfg.ruleActionTypeEnabledOverrides || typeof cfg.ruleActionTypeEnabledOverrides !== "object" || Array.isArray(cfg.ruleActionTypeEnabledOverrides)) {
       errors.push("RULE_ENGINE_POLICY_CONTROL.ruleActionTypeEnabledOverrides must be an object when present");
     } else {
-      const allowed = new Set(["wake_win", "event"]);
+      const allowed = new Set(["wake_win", "event", "bind"]);
       for (const [ruleId, value] of Object.entries(ruleActionTypeEnabledOverrides)) {
         if (!asText(ruleId)) {
           errors.push("RULE_ENGINE_POLICY_CONTROL.ruleActionTypeEnabledOverrides contains empty rule id key");
@@ -786,7 +786,7 @@ export function validateRuleEngineConfig(config = null) {
     if (!cfg.signalActionTypeEnabledOverrides || typeof cfg.signalActionTypeEnabledOverrides !== "object" || Array.isArray(cfg.signalActionTypeEnabledOverrides)) {
       errors.push("RULE_ENGINE_POLICY_CONTROL.signalActionTypeEnabledOverrides must be an object when present");
     } else {
-      const allowed = new Set(["wake_win", "event"]);
+      const allowed = new Set(["wake_win", "event", "bind"]);
       for (const [signalId, value] of Object.entries(signalActionTypeEnabledOverrides)) {
         if (!asText(signalId)) {
           errors.push("RULE_ENGINE_POLICY_CONTROL.signalActionTypeEnabledOverrides contains empty signal id key");
@@ -1012,7 +1012,7 @@ export function validateRuleEngineConfig(config = null) {
     if (!cfg.signalActionExecutedEventTypeEnabledOverrides || typeof cfg.signalActionExecutedEventTypeEnabledOverrides !== "object" || Array.isArray(cfg.signalActionExecutedEventTypeEnabledOverrides)) {
       errors.push("RULE_ENGINE_POLICY_CONTROL.signalActionExecutedEventTypeEnabledOverrides must be an object when present");
     } else {
-      const allowed = new Set(["wake_win", "event"]);
+      const allowed = new Set(["wake_win", "event", "bind"]);
       for (const [signalId, value] of Object.entries(signalActionExecutedEventTypeEnabledOverrides)) {
         if (!asText(signalId)) {
           errors.push("RULE_ENGINE_POLICY_CONTROL.signalActionExecutedEventTypeEnabledOverrides contains empty signal id key");
@@ -1484,7 +1484,7 @@ export function validateRuleEngineConfig(config = null) {
     if (!cfg.sourceEventActionTypeEnabledOverrides || typeof cfg.sourceEventActionTypeEnabledOverrides !== "object" || Array.isArray(cfg.sourceEventActionTypeEnabledOverrides)) {
       errors.push("RULE_ENGINE_POLICY_CONTROL.sourceEventActionTypeEnabledOverrides must be an object when present");
     } else {
-      const allowed = new Set(["wake_win", "event"]);
+      const allowed = new Set(["wake_win", "event", "bind"]);
       for (const [sourceEvent, value] of Object.entries(sourceEventActionTypeEnabledOverrides)) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_POLICY_CONTROL.sourceEventActionTypeEnabledOverrides contains empty source event key");
@@ -1578,7 +1578,7 @@ export function validateRuleEngineConfig(config = null) {
     if (!cfg.sourceEventActionExecutedEventTypeEnabledOverrides || typeof cfg.sourceEventActionExecutedEventTypeEnabledOverrides !== "object" || Array.isArray(cfg.sourceEventActionExecutedEventTypeEnabledOverrides)) {
       errors.push("RULE_ENGINE_POLICY_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides must be an object when present");
     } else {
-      const allowed = new Set(["wake_win", "event"]);
+      const allowed = new Set(["wake_win", "event", "bind"]);
       for (const [sourceEvent, value] of Object.entries(sourceEventActionExecutedEventTypeEnabledOverrides)) {
         if (!asText(sourceEvent)) {
           errors.push("RULE_ENGINE_POLICY_CONTROL.sourceEventActionExecutedEventTypeEnabledOverrides contains empty source event key");

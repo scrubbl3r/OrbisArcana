@@ -679,6 +679,40 @@ function validateTrigger(rule, ruleId, errors) {
   return true;
 }
 
+function validateBind(rule, ruleId, errors) {
+  if (!Object.hasOwn(rule, "bind")) return false;
+  const bind = rule.bind;
+  const ctx = `rule ${ruleId} bind`;
+  if (!isPlainObject(bind)) {
+    errors.push(`${ctx} must be an object`);
+    return true;
+  }
+  pushUnsupportedKeys(errors, ctx, bind, new Set(["spell", "slot"]));
+  const spellRaw = bind.spell;
+  const slotRaw = bind.slot;
+  const spellId = asText(spellRaw).toLowerCase();
+  const slotId = asText(slotRaw).toUpperCase();
+  if (!spellId) {
+    errors.push(`${ctx}.spell is required`);
+  } else if (typeof spellRaw !== "string") {
+    errors.push(`${ctx}.spell must be a string`);
+  } else if (spellRaw !== spellRaw.trim()) {
+    errors.push(`${ctx}.spell must not include leading/trailing whitespace: ${spellRaw}`);
+  } else if (!ID_RE.test(spellId)) {
+    errors.push(`${ctx}.spell has invalid shape: ${spellRaw}`);
+  }
+  if (!slotId) {
+    errors.push(`${ctx}.slot is required`);
+  } else if (typeof slotRaw !== "string") {
+    errors.push(`${ctx}.slot must be a string`);
+  } else if (slotRaw !== slotRaw.trim()) {
+    errors.push(`${ctx}.slot must not include leading/trailing whitespace: ${slotRaw}`);
+  } else if (!["UD", "LR", "FB"].includes(slotId)) {
+    errors.push(`${ctx}.slot must be one of UD, LR, FB`);
+  }
+  return true;
+}
+
 function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pendingWindowRefs, errors, warnings) {
   if (!isPlainObject(ruleRaw)) {
     errors.push(`${ROOT_CONTEXT}.rules[${ruleIndex}] must be an object`);
@@ -708,7 +742,7 @@ function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pe
     errors,
     ctx,
     rule,
-    new Set(["id", "on", "requires", "open", "consume", "trigger", "enabled", "cooldownMs", "matchWindowMs", "priority"])
+    new Set(["id", "on", "requires", "open", "consume", "trigger", "bind", "enabled", "cooldownMs", "matchWindowMs", "priority"])
   );
   pushBooleanEnabledErrorWhenPresent(errors, ctx, rule);
 
@@ -743,9 +777,13 @@ function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pe
   validateWindowRefs(rule, ruleId, "requires", errors, pendingWindowRefs);
   validateWindowRefs(rule, ruleId, "consume", errors, pendingWindowRefs);
   const hasTrigger = validateTrigger(rule, ruleId, errors);
+  const hasBind = validateBind(rule, ruleId, errors);
+  if (hasTrigger && hasBind) {
+    errors.push(`${ctx} must not define both trigger and bind`);
+  }
 
-  if (!hasOpenSection && !hasTrigger) {
-    errors.push(`${ctx} must define open and/or trigger`);
+  if (!hasOpenSection && !hasTrigger && !hasBind) {
+    errors.push(`${ctx} must define open, trigger, and/or bind`);
   }
 }
 

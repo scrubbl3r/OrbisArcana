@@ -10,11 +10,6 @@ const FIELD_BIND = "bind";
 const FIELD_WORDS = "words";
 const FIELD_ROOTS = "roots";
 const FIELD_TTL_MS = "ttlMs";
-const SLOT_TO_LOAD_EVENT_ID = Object.freeze({
-  UD: "spell_load_ud",
-  LR: "spell_load_lr",
-  FB: "spell_load_fb",
-});
 
 function deepFreeze(value) {
   if (!value || typeof value !== "object") return value;
@@ -65,14 +60,13 @@ function normalizeTriggerShorthand(rawTrigger) {
   return trigger;
 }
 
-function compileBindToTrigger(rawBind) {
+function compileBindAction(rawBind) {
   if (!rawBind || typeof rawBind !== "object" || Array.isArray(rawBind)) return null;
   const bind = { ...rawBind };
   const spellId = asText(bind.spell).toLowerCase();
   const slotId = asText(bind.slot).toUpperCase();
-  const eventId = SLOT_TO_LOAD_EVENT_ID[slotId];
-  if (!spellId || !eventId) return null;
-  return { [eventId]: { spell: spellId, slot: slotId } };
+  if (!spellId || !slotId) return null;
+  return { spell: spellId, slot: slotId };
 }
 
 function normalizeWakeSection(rawWake) {
@@ -116,13 +110,9 @@ export function compileDreamConfigV2ToOrchestratorV2(dreamConfig) {
         rule[FIELD_TRIGGER] = normalizeTriggerShorthand(rule[FIELD_TRIGGER]);
       }
       if (Object.hasOwn(rule, FIELD_BIND)) {
-        const compiledTrigger = compileBindToTrigger(rule[FIELD_BIND]);
-        delete rule[FIELD_BIND];
-        if (compiledTrigger) {
-          rule[FIELD_TRIGGER] = rule[FIELD_TRIGGER] == null
-            ? compiledTrigger
-            : { ...compiledTrigger, ...rule[FIELD_TRIGGER] };
-        }
+        const compiledBind = compileBindAction(rule[FIELD_BIND]);
+        if (compiledBind) rule[FIELD_BIND] = compiledBind;
+        else delete rule[FIELD_BIND];
       }
       return rule;
     })

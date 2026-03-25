@@ -336,6 +336,17 @@ export function validateSpellRules(rules = [], options = {}) {
         }
         continue;
       }
+      if (type === "bind") {
+        const spellId = asId(action && action.spell);
+        const slotId = String(action && action.slot || "").trim().toUpperCase();
+        if (!spellId) {
+          errors.push(`rule ${ruleId} bind action requires spell`);
+        }
+        if (slotId !== "UD" && slotId !== "LR" && slotId !== "FB") {
+          errors.push(`rule ${ruleId} bind action slot must be one of UD, LR, FB`);
+        }
+        continue;
+      }
       errors.push(`rule ${ruleId} has unsupported action type: ${type || "(empty)"}`);
     }
   }

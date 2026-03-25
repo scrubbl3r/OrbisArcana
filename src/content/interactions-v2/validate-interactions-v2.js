@@ -203,7 +203,7 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
     const action = asObj(rawAction);
     pushBooleanEnabledErrorWhenPresent(errors, ruleContext, action, "action enabled");
     const actionType = asText(action.type).toLowerCase();
-    if (!["wake_win", "event"].includes(actionType)) {
+    if (!["wake_win", "event", "bind"].includes(actionType)) {
       errors.push(`${ruleContext} has unsupported action type: ${actionType || "(empty)"}`);
       continue;
     }
@@ -270,6 +270,22 @@ function validateRuleEntry(errors, seenRuleIds, ruleSourceRaw) {
         }
       }
       pushNonNegativeNumericConstraintWhenPresent(errors, wakeWinActionContext, action, "ttlMs");
+      continue;
+    }
+    if (actionType === "bind") {
+      const bindActionContext = `${ruleContext} bind action`;
+      pushUnsupportedKeys(
+        errors,
+        bindActionContext,
+        action,
+        new Set(["type", "id", "spell", "slot", "enabled"])
+      );
+      const spellId = asText(action.spell).toLowerCase();
+      const slotId = asText(action.slot).toUpperCase();
+      if (!spellId) errors.push(`${bindActionContext} requires spell`);
+      if (!["UD", "LR", "FB"].includes(slotId)) {
+        errors.push(`${bindActionContext} slot must be one of UD, LR, FB`);
+      }
       continue;
     }
     const eventId = asText(action.id);

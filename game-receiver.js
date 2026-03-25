@@ -2304,6 +2304,25 @@
             eventBus.emit(RULE_ENGINE_WAKE_WIN_OPENED_EVENT, wakeWinPayload);
             return;
           }
+          if (actionType === "bind") {
+            const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
+            const slot = String(args.slot || actionId || "").trim().toUpperCase();
+            const spell = String(args.spell || "").trim().toLowerCase();
+            if (!slot || !spell) return;
+            eventBus.emit("spell.slot_load_requested", {
+              trigger: RULE_ENGINE_TRIGGER,
+              ruleId: String(p.ruleId || ""),
+              actionId,
+              atMs: Number(p.atMs) || performance.now(),
+              ...args,
+              slot,
+              spell,
+            });
+            if (RULE_CHAIN_TRACE_ENABLED) {
+              kwsBridge.pushLogLine(`TRACE exec:bind:${slot.toLowerCase()}:${spell}`, "ok");
+            }
+            return;
+          }
           if (actionType !== "event") return;
           const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
           if (actionId === "aoe_electric") {
@@ -2369,7 +2388,7 @@
         let electricFallbackWindowUntilMs = 0;
         let electricFallbackLastEmitMs = 0;
         const DEFAULT_CHAIN_OPEN_TTL_MS = 2000;
-        // Receiver-side safety bridge for `spin_y + charged + rota -> spell_load_fb`.
+        // Receiver-side safety bridge for `spin_y + charged + rota -> bind(FB, aoe_flame)`.
         let pyroSpinWindowUntilMs = 0;
         let pyroChargedUntilMs = 0;
         let pyroFallbackLastEmitMs = 0;
@@ -2448,9 +2467,9 @@
           pyroFallbackLastEmitMs = now;
           eventBus.emit(RULE_ENGINE_ACTION_EXECUTED_EVENT, {
             ruleId: "pyro_bind_fb_fallback_receiver",
-            actionType: "event",
-            actionId: "spell_load_fb",
-            args: { spell: "aoe_flame", axisWord: "pyro", slot: "FB" },
+            actionType: "bind",
+            actionId: "fb",
+            args: { spell: "aoe_flame", slot: "FB" },
             atMs: now,
           });
           if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE fallback:pyro_bind_fb:receiver", "ok");
@@ -2537,8 +2556,8 @@
             if (actionType === "event" && actionId === "aoe_electric") {
               kwsBridge.pushLogLine("TRACE action:event:aoe_electric", "ok");
             }
-            if (actionType === "event" && actionId === "spell_load_fb") {
-              kwsBridge.pushLogLine("TRACE action:event:spell_load_fb", "ok");
+            if (actionType === "bind" && actionId === "fb") {
+              kwsBridge.pushLogLine("TRACE action:bind:fb", "ok");
             }
           });
         }

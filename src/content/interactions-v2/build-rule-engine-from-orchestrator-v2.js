@@ -16,6 +16,7 @@ import {
 
 const ACTION_TYPE_WAKE_WIN = "wake_win";
 const ACTION_TYPE_EVENT = "event";
+const ACTION_TYPE_BIND = "bind";
 const DEFAULT_WAKE_WINDOW_ID = "wake_win";
 const ENABLED_FALSE = false;
 const ORCHESTRATOR_V2_VALIDATION_ERROR_PREFIX = "ORCHESTRATOR_V2 validation failed: ";
@@ -29,9 +30,12 @@ const FIELD_GROUPS = "groups";
 const FIELD_WAKE = "wake";
 const FIELD_RULES = "rules";
 const FIELD_TRIGGER = "trigger";
+const FIELD_BIND = "bind";
 const FIELD_OPEN = "open";
 const FIELD_WORDS = "words";
 const FIELD_SPELLS = "spells";
+const FIELD_SPELL = "spell";
+const FIELD_SLOT = "slot";
 const FIELD_ENABLED = "enabled";
 const FIELD_REQUIRES = "requires";
 const FIELD_CONSUME = "consume";
@@ -180,6 +184,20 @@ function compileTriggerActions(triggerRaw, defaultsTriggerByEvent) {
   });
 }
 
+function compileBindAction(bindRaw) {
+  if (!bindRaw || typeof bindRaw !== "object" || Array.isArray(bindRaw)) return null;
+  const bind = asObj(bindRaw);
+  const spellId = normalizeSpellId(bind[FIELD_SPELL]);
+  const slotId = asText(bind[FIELD_SLOT]).toUpperCase();
+  if (!spellId || !slotId) return null;
+  return Object.freeze({
+    [FIELD_TYPE]: ACTION_TYPE_BIND,
+    [FIELD_ID]: slotId.toLowerCase(),
+    [FIELD_SPELL]: spellId,
+    [FIELD_SLOT]: slotId,
+  });
+}
+
 function compileRule(ruleRaw, defaultsSafe, groups) {
   const rule = asObj(ruleRaw);
   const id = asText(rule[FIELD_ID]);
@@ -190,8 +208,12 @@ function compileRule(ruleRaw, defaultsSafe, groups) {
   const defaultsRule = asObj(defaultsSafe[DEFAULTS_RULE_KEY]);
   const defaultsTriggerByEvent = asObj(defaultsSafe[DEFAULTS_TRIGGER_KEY]);
   const openAction = compileOpenAction(rule[FIELD_OPEN], defaultsOpen, groups);
+  const bindAction = compileBindAction(rule[FIELD_BIND]);
   const triggerActions = compileTriggerActions(rule[FIELD_TRIGGER], defaultsTriggerByEvent);
-  const actions = openAction ? [openAction, ...triggerActions] : triggerActions;
+  const actions = [];
+  if (openAction) actions.push(openAction);
+  if (bindAction) actions.push(bindAction);
+  actions.push(...triggerActions);
   if (!actions.length) return null;
 
   const out = {

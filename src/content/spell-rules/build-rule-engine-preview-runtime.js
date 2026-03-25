@@ -30,7 +30,7 @@ function resolveActionArgs(action) {
   const base = (action && typeof action.overrides === "object" && action.overrides)
     ? { ...action.overrides }
     : {};
-  const RESERVED_KEYS = new Set(["type", "id", "words", "spells", "overrides", "enabled", "windowId"]);
+  const RESERVED_KEYS = new Set(["type", "id", "words", "spells", "overrides", "enabled", "windowId", "spell", "slot"]);
   if (action && typeof action === "object") {
     for (const [k, v] of Object.entries(action)) {
       if (RESERVED_KEYS.has(k)) continue;
@@ -176,6 +176,8 @@ export function buildRuleEnginePreviewRuntime({
             ? asId((a && a.id) || DEFAULT_WAKE_WINDOW_ID)
             : asId(a && a.id),
           windowId: asId(a && a.windowId),
+          spell: asId(a && a.spell),
+          slot: String(a && a.slot || "").trim().toUpperCase(),
           words,
           spells: words.slice(),
           overrides: resolveActionArgs(a),

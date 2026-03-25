@@ -4,7 +4,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { OTHER_UNKNOWN_WAKE_WORD_ID_V2, UNKNOWN_WAKE_WORD_ID_V2 } from "./wake-test-ids-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-compiler:v2";
-const PASS_MESSAGE = "orchestrator v2 compiler contract holds for on/requires/open/consume/trigger + defaults";
+const PASS_MESSAGE = "orchestrator v2 compiler contract holds for on/requires/open/consume/bind/trigger + defaults";
 const ACTION_WAKE_WIN = "wake_win";
 const WINDOW_WAKE_WIN = "wake_win";
 const WINDOW_WAKE_MAIN_ID = "wake.main";
@@ -28,6 +28,7 @@ const EVENT_GRACE_ID = "grace";
 const EVENT_TELEPORT_HOME_ID = "teleport_home";
 const EVENT_AOE_FROST_ID = "aoe_frost";
 const EVENT_AOE_FLAME_ID = "aoe_flame";
+const ACTION_BIND = "bind";
 const WORD_PYRO_SELECTOR = "word.pyro";
 const WORD_ORBIS_SELECTOR = "word.orbis";
 const WORD_GROUP_PREFIXED_REF = "@prefixed_words";
@@ -192,6 +193,11 @@ const sample = Object.freeze({
       trigger: "grace, teleport_home",
     }),
     Object.freeze({
+      id: "o_v2_bind_fb",
+      on: Object.freeze({ word: WORD_PYRO_ID }),
+      bind: Object.freeze({ spell: EVENT_AOE_FLAME_ID, slot: "FB" }),
+    }),
+    Object.freeze({
       id: "o_v2_on_word_comma_string",
       on: Object.freeze({ word: `${WORD_ORBIS_ID}, ${WORD_PYRO_ID}` }),
       trigger: Object.freeze({ grace: true }),
@@ -271,8 +277,8 @@ if (!built || typeof built !== "object") {
 if (built.enabled !== true) {
   failCheck(CHECK_TAG, "builder did not preserve top-level enabled=true");
 }
-if (!Array.isArray(built.rules) || built.rules.length !== 22) {
-  failCheck(CHECK_TAG, "builder did not produce exactly twenty-two compiled rules");
+if (!Array.isArray(built.rules) || built.rules.length !== 23) {
+  failCheck(CHECK_TAG, "builder did not produce exactly twenty-three compiled rules");
 }
 if (built.rules.some((rule) => rule && rule.id === "base_rule_should_be_overridden")) {
   failCheck(CHECK_TAG, "builder did not override baseRuleEngine.rules with compiled rules");
@@ -312,6 +318,7 @@ const onWordPrecedenceValidAliasRule = requireRuleById(
   built.rules,
   "o_v2_on_word_precedence_over_valid_spell_compat"
 );
+const bindRule = requireRuleById(built.rules, "o_v2_bind_fb");
 const prefixedCompatRule = requireRuleById(built.rules, "o_v2_compat_prefixed_normalization");
 const openWordsCommaRule = requireRuleById(built.rules, "o_v2_open_words_comma_string");
 const openWordsCommaPrecedenceRule = requireRuleById(
@@ -507,6 +514,12 @@ assertEqual(
   asJson(onWordPrecedenceValidAliasRule.then),
   asJson(expectedGraceThen),
   "onWordPrecedenceValidAliasRule.then",
+  details
+);
+assertEqual(
+  asJson(bindRule.then),
+  asJson([{ type: ACTION_BIND, id: "fb", spell: EVENT_AOE_FLAME_ID, slot: "FB" }]),
+  "bindRule.then",
   details
 );
 
