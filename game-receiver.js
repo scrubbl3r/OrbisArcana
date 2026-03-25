@@ -2561,12 +2561,10 @@
             const ruleId = String(p.ruleId || "").trim().toLowerCase();
             const matched = Number.isFinite(Number(p.matchedRuleCount)) ? Number(p.matchedRuleCount) : 0;
             const executed = Number.isFinite(Number(p.executedActionCount)) ? Number(p.executedActionCount) : 0;
-            if (signalId === "spell.orbis" || signalId === "spell.domus" || ruleId === "wake_main" || ruleId === "tele_home") {
-              kwsBridge.pushLogLine(
-                `TRACE source:${sourceEvent}:signal:${signalId || "-"}:rule:${ruleId || "-"}:matched:${matched}:actions:${executed}`,
-                matched > 0 ? "ok" : "muted"
-              );
-            }
+            kwsBridge.pushLogLine(
+              `TRACE source:${sourceEvent}:signal:${signalId || "-"}:rule:${ruleId || "-"}:matched:${matched}:actions:${executed}`,
+              matched > 0 ? "ok" : "muted"
+            );
           });
         }
         const kwsMvpCommands = createKwsMvpCommands({
