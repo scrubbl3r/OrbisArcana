@@ -4,110 +4,112 @@ Related index:
 - `docs/rule-engine-v2-docs-index.md`
 
 ## Goal
-- One central behavior config for chaining words, gestures, orb states, wake windows, and events.
-- One separate word inventory file for availability (`active` true/false).
-- Keep syntax minimal and author-friendly.
+
+- Keep one behavior authoring source.
+- Keep one separate word inventory source.
+- Treat words as components, not hardcoded behaviors.
+
+The canonical authoring model is now:
+- `word`
+- `spin`
+- `shake`
+- `open`
+- `requires`
+- `consume`
+- `bind`
+- `trigger`
 
 ## File 1: Word Inventory
-`wordbook`
-Compatibility alias (legacy): `spellbook` (do not use for new authoring)
+
+Canonical inventory file: `src/content/interactions-v2/wordbook-v2.js`
+
+Use the `wordbook` as the inventory SSOT. Do not treat the legacy `spellbook` label as behavior authoring; it only survives as a compatibility alias in older tooling.
+
+Responsibilities:
+- define which words exist
+- define phrase / ONNX / confidence / cooldown metadata
+- no behavior semantics
+
+Example:
 
 ```js
 {
   version: "2",
   words: [
-    { id: "orbis", phrase: "orbis", active: true, onnx: "orbis", confidence: 0.62, cooldownMs: 900 },
-    { id: "rota",  phrase: "rota",  active: true, onnx: "rota",  confidence: 0.60, cooldownMs: 1100 },
-    { id: "domus", phrase: "domus", active: true, onnx: "domus", confidence: 0.60, cooldownMs: 1000 }
+    { id: "orbis", phrase: "orbis", active: true, onnx: "orbis" },
+    { id: "domus", phrase: "domus", active: true, onnx: "domus" },
+    { id: "pyro", phrase: "pyro", active: true, onnx: "pyro" },
+    { id: "electrum", phrase: "electrum", active: true, onnx: "electrum" },
+    { id: "rota", phrase: "rota", active: true, onnx: "rota" },
   ],
-  // compatibility alias:
-  // spells: [...]
 }
 ```
 
-### Wordbook Responsibilities
-- Define what words exist.
-- Define if each word is active.
-- Define phrase/model/confidence/cooldown metadata only.
-- No behavior routing or interaction chaining.
+## Behavior Authoring
 
-## File 2: Master Interaction SSOT Source
-`interactions`
+`src/content/interactions-v2/dream-config-v2.js`
+
+Example:
 
 ```js
 {
   version: "2",
   enabled: true,
-
-  defaults: {
-    wakeWin: { ttlMs: 2000 },
-    event: {
-      grace: { ms: 500 }
-    }
-  },
-
   rules: [
     {
-      id: "r_rota_yspin_charged",
-      enabled: true,
-      priority: 50,
-
-      on: {
-        all: [
-          { type: "word", id: "rota" },
-          { type: "gesture", id: "SPIN_Y" },
-          { type: "orb_state", id: "charged" }
-        ]
-      },
-
-      then: [
-        { type: "wake_win", words: ["sanctum", "vectus"] }, // canonical authoring
-        { type: "event", id: "aoe_electric" },
-        { type: "event", id: "grace" },
-        { type: "event", id: "orb_state", overrides: { state: "superheated" } }
-      ]
-    }
-  ]
+      id: "wake_main",
+      on: { word: "orbis" },
+      open: { id: "wake.main", words: ["domus", "electrum", "pyro"], ttlMs: 2000 },
+    },
+    {
+      id: "tele_home",
+      on: { word: "domus" },
+      requires: "wake.main",
+      trigger: { spell: "teleport_home" },
+    },
+    {
+      id: "spin_y_pyro_rota_bind_fb",
+      on: { word: "rota" },
+      requires: "school.pyro_spin",
+      bind: { spell: "aoe_flame", slot: "FB" },
+    },
+    {
+      id: "shake_fb_cast",
+      on: { shake: "FB" },
+      trigger: { spell: "cast_loaded_fb" },
+    },
+  ],
 }
 ```
 
-## Entity Types
-- Trigger types (`on`): `word`, `gesture`, `orb_state`
-- Action types (`then`): `wake_win`, `event`
+Compatibility note:
+- `wake_win.words[]` is canonical.
+- `wake_win.spells[]` is a compatibility alias only.
 
-### Condition ID Forms
-- Condition `id` supports either:
-  - bare form: `rota`, `spin_y`, `charged`
-  - qualified form: `word.rota`, `gesture.spin_y`, `orb_state.charged`
-- Runtime normalization strips matching type prefix automatically (`word.` for word conditions).
+## Selector Types
 
-### Wake Window Word ID Forms
-- `wake_win.words[]` supports either:
-  - bare form: `rota`
-  - qualified form: `word.rota`
-- Canonical authoring is `wake_win.words[]` + `word.*`.
-- Compatibility aliases remain accepted for transition:
-  - `wake_win.spells[]` (legacy alias of `wake_win.words[]`)
-  - `spell.rota` style qualified entries (legacy runtime namespace alias)
+- `word`
+- `spin`
+- `shake`
+- `orb_state`
 
-## Override Rules
-- If `overrides` exists on an action, those values win.
-- If no `overrides`, use `defaults`.
-- If neither provides a value, runtime definition fallback applies.
-
-Example:
+Examples:
 
 ```js
-{ type: "event", id: "grace", overrides: { ms: 900 } }
+on: { word: "rota" }
+on: { all: [{ type: "word", id: "word.rota" }] }
+on: { spin: "y", orb_state: "charged" }
+on: { shake: "FB" }
 ```
 
 ## Authoring Principles
-- One behavior authoring file (`interactions`).
-- One word inventory file (`wordbook`).
-- Neutral axis/wake-window taxonomy only.
-- All word/gesture/orb interactions are modular and composable.
 
-## Future-Proofing
-- Support base config + level/area overlays.
-- Support progression-based unlocks without changing schema shape.
-- Keep stable IDs so per-area/per-player overrides are easy.
+- words do not carry built-in gameplay meaning
+- spins do not imply legacy axis semantics beyond their concrete id
+- shakes select slots only
+- sequencing is authored explicitly through windows
+- outcomes are authored explicitly through `bind` and `trigger`
+
+## Legacy Note
+
+Older adapter/runtime surfaces may still use runtime namespaces like `spell.rota` internally. That is runtime plumbing, not canonical authoring language.

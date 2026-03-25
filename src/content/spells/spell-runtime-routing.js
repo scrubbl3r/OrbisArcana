@@ -104,26 +104,21 @@ function collectRulesByPredicate(predicate) {
 
 function buildDerivedRuntimeProfileV2() {
   const wakeWordIds = uniqueWordIds(ORCHESTRATOR_V2_WAKE_WORD_IDS);
-  const schoolOpenRules = collectRulesByPredicate((rule) => {
+  const wakeMainOpenRules = collectRulesByPredicate((rule) => {
     const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
     const openId = String(open && open.id || "").trim().toLowerCase();
-    return openId.startsWith("school.");
-  });
-  const wakeWindowWordIds = uniqueWordIds(
-    schoolOpenRules.flatMap((rule) => collectRuleOpenWordIds(rule))
-  );
-  const rulesWithRequires = collectRulesByPredicate((rule) => {
-    const refs = asSelectorList(rule && rule.requires);
-    return refs.length > 0;
-  });
-  const wakeMainRequiredRules = rulesWithRequires.filter((rule) => {
-    const refs = asSelectorList(rule && rule.requires)
-      .map((refRaw) => String(refRaw || "").trim().toLowerCase())
-      .filter(Boolean);
-    return refs.includes("wake.main");
+    return openId === "wake.main";
   });
   const wakeRequiredWordIds = uniqueWordIds(
-    wakeMainRequiredRules.flatMap((rule) => collectRuleOnWordIds(rule))
+    wakeMainOpenRules.flatMap((rule) => collectRuleOpenWordIds(rule))
+  );
+  const wakeWindowOpenRules = collectRulesByPredicate((rule) => {
+    const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
+    const openId = String(open && open.id || "").trim().toLowerCase();
+    return !!openId && openId !== "wake.main";
+  });
+  const wakeWindowWordIds = uniqueWordIds(
+    wakeWindowOpenRules.flatMap((rule) => collectRuleOpenWordIds(rule))
   );
   const allOnWordIds = uniqueWordIds(
     collectRulesByPredicate(() => true).flatMap((rule) => collectRuleOnWordIds(rule))
@@ -153,8 +148,9 @@ function buildDerivedRuntimeProfileV2() {
   const immediateTriggerCandidates = uniqueWordIds(
     collectRulesByPredicate((rule) => {
       const hasOpen = !!(rule && typeof rule.open === "object" && !Array.isArray(rule.open));
-      const hasTrigger = !!rule && Object.hasOwn(rule, "trigger");
-      return !hasOpen && hasTrigger;
+      const hasRequires = asSelectorList(rule && rule.requires).length > 0;
+      const hasTrigger = !!rule && (Object.hasOwn(rule, "trigger") || Object.hasOwn(rule, "bind"));
+      return !hasOpen && !hasRequires && hasTrigger;
     }).flatMap((rule) => collectRuleOnWordIds(rule))
   );
   const immediateTriggerWordIds = uniqueWordIds(
@@ -218,6 +214,18 @@ function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
     });
   }
   for (const id of (Array.isArray(profile.wakeWindowWordIds) ? profile.wakeWindowWordIds : [])) {
+    add({
+      id,
+      intent: `spell.${id}`,
+    });
+  }
+  for (const id of (Array.isArray(profile.wakeRequiredWordIds) ? profile.wakeRequiredWordIds : [])) {
+    add({
+      id,
+      intent: `spell.${id}`,
+    });
+  }
+  for (const id of Object.keys(WORDBOOK_V2_ACTIVE_WORDS_BY_ID || {})) {
     add({
       id,
       intent: `spell.${id}`,

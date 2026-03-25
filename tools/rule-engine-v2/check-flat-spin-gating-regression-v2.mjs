@@ -1,80 +1,59 @@
-import { EVT_VOICE_AXIS_SELECTED, EVT_VOICE_SPELL_REJECTED } from "../../src/contracts/events.js";
+import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
+import { EVENT_DEFINITIONS } from "../../src/content/spell-rules/event-definitions.js";
+import { SIGNAL_DEFINITIONS } from "../../src/content/spell-rules/signal-definitions.js";
+import { WINDOW_DEFINITIONS } from "../../src/content/spell-rules/window-definitions.js";
+import { createRuleEnginePreviewSystem } from "../../src/systems/rule-engine-preview-system.js";
 import { assertCheck } from "./check-assert-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
-import { CHECK_CONFIDENCE_V2 } from "./check-confidence-constants-v2.mjs";
-import { emitDetectedWordAt } from "./check-detected-word-v2.mjs";
-import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
-import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
-import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
-import { CHECK_REASONS_V2, hasReason, reasonList } from "./check-reason-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import { createStoredGlobeResources } from "./check-resources-v2.mjs";
-import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
+import { emitDetectedWord, emitOrbCharged, emitSpinOpened } from "./check-wake-sequence-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.flatSpinGating;
-const PASS_MESSAGE = "flat-spin token gating contract holds";
+const PASS_MESSAGE = "spin-gated pyro chain opens only after charged spin input";
+const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 
-function detectOutsideWindow({ wordId, intent, expectedReason }) {
-  const resolvedWordId = String(wordId || "").trim().toLowerCase();
-  const eventBus = createCheckEventBus();
-  const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
-  const system = createCheckDispatchSystem({
-    eventBus,
-    nowMs: createFixedNowMs(CHECK_FIXED_TIMES_V2.flatSpinOutside),
-    resources: createStoredGlobeResources(1),
-  });
-  runWithStartedSystem(system, () => {
-    emitDetectedWordAt(eventBus, {
-      id: resolvedWordId,
-      intent,
-      confidence: CHECK_CONFIDENCE_V2.high,
-      atMs: CHECK_FIXED_TIMES_V2.flatSpinOutside,
-    });
-  });
-  assertCheck(rejects.length >= 1, `[${CHECK_TAG}] expected reject for ${resolvedWordId} outside flat-spin window`);
-  assertCheck(
-    hasReason(rejects, expectedReason),
-    `[${CHECK_TAG}] expected reason=${expectedReason} for ${resolvedWordId}; got [${reasonList(rejects).join(", ")}]`
-  );
-}
-
-function detectInsideWindowAxisSelect() {
-  const eventBus = createCheckEventBus();
-  const axisSelected = captureCheckEvents(eventBus, EVT_VOICE_AXIS_SELECTED);
-  const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
-  const system = createCheckDispatchSystem({
-    eventBus,
-    nowMs: createFixedNowMs(CHECK_FIXED_TIMES_V2.flatSpinInside),
-    resources: createStoredGlobeResources(1),
-  });
-  runWithStartedSystem(system, () => {
-    emitFlatSpinWindowOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.flatSpinInside });
-    emitDetectedWordAt(eventBus, {
-      id: CHECK_SPELL_IDS_V2.pyro,
-      intent: CHECK_SPELL_INTENTS_V2.axisSelect,
-      confidence: CHECK_CONFIDENCE_V2.high,
-      atMs: CHECK_FIXED_TIMES_V2.flatSpinInside,
-    });
-  });
-  assertCheck(axisSelected.length === 1, `[${CHECK_TAG}] expected axis select event for pyro inside flat-spin window`);
-  assertCheck(
-    rejects.length === 0,
-    `[${CHECK_TAG}] unexpected reject(s) for pyro inside flat-spin window: ${rejects.map((r) => r.reason).join(", ")}`
-  );
+function openWindowIds(events) {
+  return events.map((evt) => String(evt?.windowId || "").trim().toLowerCase()).filter(Boolean);
 }
 
 function main() {
-  detectOutsideWindow({
-    wordId: CHECK_SPELL_IDS_V2.pyro,
-    intent: CHECK_SPELL_INTENTS_V2.axisSelect,
-    expectedReason: CHECK_REASONS_V2.spellWindowRequired,
+  const eventBus = createCheckEventBus();
+  const wakeOpened = captureCheckEvents(eventBus, EVT_RULE_ENGINE_WAKE_WIN_OPENED);
+  const system = createRuleEnginePreviewSystem({
+    eventBus,
+    schema: {
+      signals: SIGNAL_DEFINITIONS,
+      windows: WINDOW_DEFINITIONS,
+      events: EVENT_DEFINITIONS,
+      rules: buildRuleEngineFromOrchestratorV2().rules,
+    },
+    executeActions: true,
+    nowMs: createFixedNowMs(CHECK_FIXED_TIMES_V2.flatSpinInside),
   });
-  detectInsideWindowAxisSelect();
+  system.start();
+  try {
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinOutside);
+    assertCheck(
+      !openWindowIds(wakeOpened).includes("school.pyro_spin"),
+      `[${CHECK_TAG}] unexpected pyro window open without spin gate`
+    );
+
+    emitOrbCharged(eventBus, CHECK_FIXED_TIMES_V2.flatSpinInside);
+    emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.flatSpinInside + 10 });
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinInside + 20);
+    assertCheck(
+      openWindowIds(wakeOpened).includes("school.pyro_spin"),
+      `[${CHECK_TAG}] expected school.pyro_spin to open after charged spin + pyro`
+    );
+  } finally {
+    system.stop();
+  }
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 

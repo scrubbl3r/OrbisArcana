@@ -1,60 +1,37 @@
-import { emitDetectedWord } from "./check-detected-word-v2.mjs";
-import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
+import { EVT_ORB_FLOAT_GRACE_GRANT, EVT_SPELL_WINDOW_SPIN_OPENED, EVT_VOICE_WORD_DETECTED } from "../../src/contracts/events.js";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
-import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
+import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 
-export function emitWakeLoadPrelude({
-  eventBus,
-  nowRef,
-  advance,
-  wakeWindowToken,
-  axis = CHECK_AXES_V2.y,
-  axisWordId = CHECK_SPELL_IDS_V2.pyro,
-  axisIntent = CHECK_SPELL_INTENTS_V2.axisSelect,
-  wakeIntent = CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
-  stepMs = 10,
-}) {
-  const axisTokenId = axisWordId || CHECK_SPELL_IDS_V2.pyro;
-  const startAt = Number(nowRef?.value ?? 0);
-  emitFlatSpinWindowOpened(eventBus, { axis, atMs: startAt });
-  emitDetectedWord(eventBus, {
-    id: axisTokenId,
-    intent: axisIntent,
-    atMs: startAt,
-  });
-  advance(stepMs);
-  const wakeAt = Number(nowRef?.value ?? 0);
-  emitDetectedWord(eventBus, {
-    id: wakeWindowToken,
-    intent: wakeIntent,
-    atMs: wakeAt,
+export function emitDetectedWord(eventBus, wordId, atMs) {
+  eventBus.emit(EVT_VOICE_WORD_DETECTED, {
+    word: { id: String(wordId || "").trim().toLowerCase() },
+    atMs: Number(atMs),
   });
 }
 
-export function emitAxisThenWakeSelection({
+export function emitSpinOpened(eventBus, { axis = CHECK_AXES_V2.y, atMs } = {}) {
+  eventBus.emit(EVT_SPELL_WINDOW_SPIN_OPENED, {
+    axis: String(axis || "").trim().toLowerCase(),
+    atMs: Number(atMs),
+  });
+}
+
+export function emitOrbCharged(eventBus, atMs, ms = 100) {
+  eventBus.emit(EVT_ORB_FLOAT_GRACE_GRANT, {
+    atMs: Number(atMs),
+    ms: Number(ms),
+  });
+}
+
+export function emitPyroBindPrelude({
   eventBus,
-  axisWordId = CHECK_SPELL_IDS_V2.pyro,
-  wakeWindowToken,
-  axisIntent = CHECK_SPELL_INTENTS_V2.axisSelect,
-  wakeIntent = CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
-  axisAtMs = 0,
-  wakeAtMs = 0,
-  confidence,
-}) {
-  const axisTokenId = axisWordId || CHECK_SPELL_IDS_V2.pyro;
-  const withConfidence = confidence === undefined ? {} : { confidence };
-  const axisAt = Number(axisAtMs);
-  const wakeAt = Number(wakeAtMs);
-  emitDetectedWord(eventBus, {
-    id: axisTokenId,
-    intent: axisIntent,
-    atMs: axisAt,
-    ...withConfidence,
-  });
-  emitDetectedWord(eventBus, {
-    id: wakeWindowToken,
-    intent: wakeIntent,
-    atMs: wakeAt,
-    ...withConfidence,
-  });
+  startAtMs = 1000,
+  axis = CHECK_AXES_V2.y,
+  pyroWordId = CHECK_SPELL_IDS_V2.pyro,
+} = {}) {
+  const start = Number(startAtMs);
+  emitOrbCharged(eventBus, start);
+  emitSpinOpened(eventBus, { axis, atMs: start + 10 });
+  emitDetectedWord(eventBus, pyroWordId, start + 20);
+  return start + 20;
 }

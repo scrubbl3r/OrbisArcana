@@ -20,15 +20,7 @@ Preflight:
 - Confirm no repeated error spam in the readout.
 
 ## 3) Word Detection
-- With word window open, trigger each canonical word token at least once:
-  - `orbis`
-  - `domus`
-  - `tempus`
-  - `fridgis`
-  - `electrum`
-  - `rota`
-  - `sanctum`
-  - `vectus`
+- With word window open, trigger each currently active word from `src/content/interactions-v2/wordbook-v2.js` at least once.
 - Confirm each word token flashes correctly in the KWS chip row.
 - Confirm recognized word tokens log once per valid trigger (no immediate duplicate double-fire).
 
@@ -38,9 +30,9 @@ Preflight:
 - Confirm trigger works again after cooldown window.
 
 ## 5) Word Window / Token Flow
-- Open flat-spin word token window and test word token set (`rota`, `sanctum`, `vectus`).
-- Confirm expected word token behavior and chip lighting.
-- Confirm closing word token window resets word token state.
+- Open a spin window and test the currently authored follow-up word set from `dream-config-v2.js`.
+- Confirm expected token behavior and chip lighting.
+- Confirm closing the spin window resets token state.
 
 ## 6) Tuning Controls
 - Change `Infer TH` and `Infer CD`, then click `Apply`.

@@ -12,14 +12,14 @@ export const DREAM_CONFIG_V2 = {
     ],
   },
   groups: {
-    wake_main_words: ["domus", "electrum", "pyro", "fridgis"],
-    school_words: ["rota", "sanctum", "vectus"],
+    wake_main_words: ["domus", "electrum", "pyro"],
+    school_words: ["rota"],
   },
   rules: [
     {
       id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: ["domus", "electrum", "pyro", "fridgis"], ttlMs: 2000 },
+      open: { id: "wake.main", words: ["domus", "electrum", "pyro"], ttlMs: 2000 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 2000 },
     },
     // TELEPORT HOME

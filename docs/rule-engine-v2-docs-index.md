@@ -68,7 +68,7 @@ Preflight:
   2. `npm run status:v2`
 - Human gameplay pack (manual confidence):
   - See **Troubleshooting Quick Map**, `KWS: init failed or word token detection stalls`.
-  - Suggested word checks: `orbis+domus`, `pyro+rota`, `fridgis+sanctum`
+  - Suggested exemplar checks: `orbis -> domus`, `orbis -> electrum -> rota`, `spin:y + charged -> pyro -> rota`, `shake:FB`
 
 ## Before Push Checklist
 1. Authoring edits only in SSOT files (`dream-config-v2.js`, `wordbook-v2.js`) unless doing intentional plumbing.
@@ -86,9 +86,9 @@ Preflight:
 5. Promote only known-good commits back into active development.
 
 ## Glossary (v2)
-- `signal`: normalized trigger identity matched from source events (for example `spell.rota`, `gesture.spin_y`).
+- `signal`: normalized trigger identity matched from source events (for example `spell.rota`, `spin.y`, `shake.fb`).
 - `rule`: condition/action bundle with `on` and `then`.
-- `wake_win`: action that opens a wake window and allows listed word tokens for a TTL.
+- `wake_win`: legacy runtime label for an opened window with an allowlist and TTL.
 - `event`: action that dispatches a named runtime effect/action binding.
 - `overrides`: per-instance action args that override defaults for that action execution.
 - `projection_only`: runtime mode where projected rules from v2 authoring are the active execution source.

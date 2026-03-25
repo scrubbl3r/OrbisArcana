@@ -25,15 +25,15 @@ function withSyntheticImmediateEventRules(sample) {
 
 const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
 const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
-const targetRule = Array.isArray(compiledRules)
-  ? compiledRules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+const sample = withSyntheticImmediateEventRules({
+  rules: compiledRules,
+});
+const targetRule = Array.isArray(sample?.rules)
+  ? sample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
   : null;
 if (!targetRule || !Array.isArray(targetRule?.then)) {
   failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
 }
-const sample = withSyntheticImmediateEventRules({
-  rules: [targetRule],
-});
 
 const wakeAction = targetRule.then.find((action) => action?.type === ACTION_WAKE_WIN);
 if (!wakeAction || !Array.isArray(wakeAction.words) || !wakeAction.words.length) {

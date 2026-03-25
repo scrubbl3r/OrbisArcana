@@ -47,7 +47,11 @@ function main() {
     : [])
     .map((id) => asLowerText(id))
     .filter(Boolean);
-  assertCheck(ownedImmediate.length > 0, `[${CHECK_TAG}] expected non-empty RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS`);
+
+  if (ownedImmediate.length === 0) {
+    reportCheckPass(CHECK_TAG, `${PASS_MESSAGE} (no authored immediate words active)`);
+    return;
+  }
 
   for (const wordId of ownedImmediate) {
     const withRuleEngine = detectWord({ ruleEngineEnabled: true, wordId });

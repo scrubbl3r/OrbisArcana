@@ -19,8 +19,8 @@ const CONDITION_TYPE_WORD = "word";
 const CONDITION_WORD_ID_PATH = "word.id";
 const RULE_WORDS_PRECEDENCE = "r_words_precedence";
 const RULE_SPELLS_FALLBACK = "r_spells_fallback";
-const OVERRIDE_SPELL_ID = "vectus";
-const FALLBACK_WORD_ID = "sanctum";
+const OVERRIDE_WORD_ID = "pyro";
+const FALLBACK_WORD_ID = "domus";
 const PASS_MESSAGE = "rule-engine preview system enforces wake_win words precedence with spells alias fallback semantics";
 
 function runScenario({ ruleId, wakeAction }) {
@@ -56,7 +56,7 @@ function runScenario({ ruleId, wakeAction }) {
 
 const precedence = runScenario({
   ruleId: RULE_WORDS_PRECEDENCE,
-  wakeAction: { type: ACTION_WAKE_WIN, words: [KNOWN_WAKE_WORD_ID_V2], spells: [OVERRIDE_SPELL_ID], ttlMs: 1400 },
+  wakeAction: { type: ACTION_WAKE_WIN, words: [KNOWN_WAKE_WORD_ID_V2], spells: [OVERRIDE_WORD_ID], ttlMs: 1400 },
 });
 if (precedence.wakeEvents.length !== 1) {
   failCheck(CHECK_TAG, `expected one wake opened event for words precedence scenario, got ${precedence.wakeEvents.length}`);

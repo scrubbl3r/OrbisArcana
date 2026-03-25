@@ -1,17 +1,14 @@
-# Orchestrator v2 Schema (Draft)
+# Orchestrator v2 Schema
 
-Purpose: define a compact, declarative SSOT for voice/gesture/orb sequencing with explicit window gating and consumable wake semantics.
+Purpose: define the authored behavior SSOT.
 
-This draft intentionally uses `word` terminology:
-- `word` = recognized utterance token (inventory is managed by `wordbook`)
-- `spell` = composed behavior/effects produced by orchestration rules
+The current model is:
+- inputs: `word`, `spin`, `shake`
+- sequencing: `open`, `requires`, `consume`
+- outcomes: `bind`, `trigger`
+- slots: `UD`, `LR`, `FB`
 
-## Design Goals
-
-- Keep syntax minimal and regular.
-- Make wake chaining explicit in config (no hidden parser-only behavior).
-- Keep runtime deterministic and validation-friendly.
-- Preserve existing JSON/JS object authoring style.
+Legacy concepts like axis words, wake-window words, and flat spin are not part of the schema.
 
 ## Canonical Shape
 
@@ -21,43 +18,66 @@ export const ORCHESTRATOR_V2 = Object.freeze({
   enabled: true,
 
   defaults: Object.freeze({
-    open: Object.freeze({
-      ttlMs: 1500,
-    }),
-    rule: Object.freeze({
-      cooldownMs: 0,
-      matchWindowMs: 2000,
-      priority: 10,
-    }),
-    trigger: Object.freeze({
-      // Event defaults by event id.
-      grace: Object.freeze({ ttlMs: 500 }),
-    }),
+    open: Object.freeze({ ttlMs: 2000 }),
+    rule: Object.freeze({ cooldownMs: 0, matchWindowMs: 2000, priority: 10 }),
+  }),
+
+  wake: Object.freeze({
+    roots: Object.freeze([
+      { id: "root.orbis", words: ["orbis"], ttlMs: 2000 },
+    ]),
   }),
 
   groups: Object.freeze({
-    wake_main_words: Object.freeze(["domus", "pyro", "fridgis", "electrum", "rota"]),
+    wake_main_words: Object.freeze(["domus", "electrum", "pyro"]),
+    school_words: Object.freeze(["rota"]),
   }),
 
   rules: Object.freeze([
     {
-      id: "master_wake_01",
+      id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: "@wake_main_words", ttlMs: 1500 },
+      open: { id: "wake.main", words: "@wake_main_words", ttlMs: 2000 },
     },
     {
-      id: "tele_home_01",
+      id: "tele_home",
       on: { word: "domus" },
-      requires: ["wake.main"],
-      consume: ["wake.main"],
-      trigger: { teleport_home: true },
+      requires: "wake.main",
+      trigger: { spell: "teleport_home" },
     },
     {
-      id: "pyro_school_01",
+      id: "electric_aoe",
+      on: { word: "electrum" },
+      requires: "wake.main",
+      open: { id: "school.electrum", words: ["rota"], ttlMs: 2000 },
+    },
+    {
+      id: "electric_aoe_cast",
+      on: { word: "rota" },
+      requires: "school.electrum",
+      trigger: { spell: "aoe_electric" },
+    },
+    {
+      id: "spin_y_opens_pyro",
+      on: { spin: "y", orb_state: "charged" },
+      open: { id: "school.pyro_spin_seed", words: ["pyro"], ttlMs: 2000 },
+    },
+    {
+      id: "spin_y_pyro_opens_rota",
       on: { word: "pyro" },
-      requires: ["wake.main"],
-      open: { id: "pyro.school", words: ["rota"], ttlMs: 1200 },
-      trigger: { aoe_flame: { range: 14, ttlMs: 5000, power: 95 } },
+      requires: "school.pyro_spin_seed",
+      open: { id: "school.pyro_spin", words: ["rota"], ttlMs: 2000 },
+    },
+    {
+      id: "spin_y_pyro_rota_bind_fb",
+      on: { word: "rota" },
+      requires: "school.pyro_spin",
+      bind: { spell: "aoe_flame", slot: "FB" },
+    },
+    {
+      id: "shake_fb_cast",
+      on: { shake: "FB" },
+      trigger: { spell: "cast_loaded_fb" },
     },
   ]),
 });
@@ -65,114 +85,94 @@ export const ORCHESTRATOR_V2 = Object.freeze({
 
 ## Root Fields
 
-- `version`: must be `"2"`.
-- `enabled`: boolean global switch.
-- `defaults`: optional global defaults.
-- `groups`: optional reusable `word` sets.
-- `rules`: ordered rule list.
+- `version`: must be `"2"`
+- `enabled`: optional global boolean
+- `defaults`: optional defaults for `open` and `rule`
+- `wake`: optional wake root declarations
+- `groups`: optional reusable word lists
+- `rules`: authored rule list
 
 ## Rule Fields
 
-- `id`: unique stable rule id.
-- `on`: selector object for match inputs.
-- `requires`: optional window id or list of window ids that must be open.
-- `open`: optional window-open action to publish on successful rule match.
-- `consume`: optional window id or list of window ids to consume/close on successful rule match.
-- `trigger`: optional event map describing emitted actions/effects and args.
-- `cooldownMs`: optional per-rule cooldown override.
-- `matchWindowMs`: optional per-rule temporal match window override.
-- `priority`: optional deterministic ordering override.
-- `enabled`: optional boolean override per rule.
+- `id`: required unique rule id
+- `on`: selector object
+- `requires`: optional string or list of required window ids
+- `open`: optional window-open action
+- `consume`: optional string or list of window ids to consume
+- `trigger`: optional triggered outcome
+- `bind`: optional slot-load outcome
+- `cooldownMs`: optional per-rule cooldown
+- `matchWindowMs`: optional per-rule match window
+- `priority`: optional per-rule ordering
+- `enabled`: optional per-rule boolean
 
-At least one action section is required per rule:
+Each rule must do at least one of:
 - `open`
-- and/or `trigger`
+- `bind`
+- `trigger`
 
 ## `on` Selectors
 
-Supported selector keys:
-- `word`: string or array of canonical word ids.
-- `gesture`: string or array of gesture ids.
-- `orb_state`: string or array of orb state ids.
+Canonical selector keys:
+- `word`
+- `spin`
+- `shake`
+- `orb_state`
 
-Notes:
-- Selectors are additive (logical AND across selector types, OR within each selector list).
-- `on` can support shorthand in compiler later, but this schema defines canonical form only.
+Selector semantics:
+- different selector keys are ANDed together
+- multiple values within one selector list are ORed
 
-## `open` Action
+Examples:
 
-Canonical shape:
+```js
+on: { word: "domus" }
+on: { spin: "y", orb_state: "charged" }
+on: { shake: "FB" }
+```
+
+## `open`
 
 ```js
 open: {
   id: "wake.main",
-  words: ["domus", "pyro"],
-  ttlMs: 1500,
-  enabled: true,
+  words: ["domus", "electrum", "pyro"],
+  ttlMs: 2000,
 }
 ```
 
-Fields:
-- `id`: required window id.
-- `words`: required word allowlist for the window; supports group refs with `@group_name`.
-- `ttlMs`: optional, falls back to `defaults.open.ttlMs`.
-- `enabled`: optional boolean.
+- `id`: required window id
+- `words`: required allowed follow-up words
+- `ttlMs`: optional TTL, defaulting from `defaults.open.ttlMs`
 
-## `requires` + `consume`
+## `requires` and `consume`
 
-`requires`:
-- Gate that requires windows to already be open.
-- Supports string or array of window ids.
+- `requires` gates a rule on currently open windows
+- `consume` closes windows after a successful match
 
-`consume`:
-- Consumes/closes window tokens after successful rule execution.
-- Supports string or array of window ids.
+These are the only sequencing primitives. Runtime should not infer extra word roles outside authored windows.
 
-Semantics:
-- `requires` ensures explicit wake pairing.
-- `consume` enables one-shot wake chains and nested control patterns.
-
-## `trigger` Action Map
-
-Canonical shape:
+## `bind`
 
 ```js
-trigger: {
-  teleport_home: true,
-  aoe_electric: { range: 14, ttlMs: 5000, power: 95 },
-  grace: true,
+bind: {
+  spell: "aoe_flame",
+  slot: "FB",
 }
 ```
 
-Map value forms:
-- `true`: trigger event with defaults only.
-- object: trigger event with per-instance args merged over defaults.
+`bind` is direct. It means load `spell` into slot `UD`, `LR`, or `FB`. It is not lowered to legacy `spell_load_*` semantics in authoring.
 
-Timing key convention:
-- Use `ttlMs` as the preferred lifetime key.
-
-## Groups
-
-Groups are reusable `word` sets:
+## `trigger`
 
 ```js
-groups: {
-  wake_main_words: ["domus", "pyro", "fridgis"],
-}
+trigger: { spell: "teleport_home" }
 ```
 
-Reference form inside `open.words`:
-- `"@wake_main_words"`
+`trigger` is used for immediate outcomes such as casts or other runtime events.
 
-## Deterministic Evaluation
+## Notes
 
-Recommended deterministic rule ordering for ties:
-1. `priority` descending
-2. selector specificity descending
-3. declaration order
-
-## Compatibility + Migration Notes
-
-- Existing runtime currently uses `spell` terminology in many codepaths.
-- Orchestrator v2 should treat `word` as canonical and optionally accept `spell` as a temporary alias during migration.
-- `spell-runtime-routing` wake semantics should migrate into orchestrator windows (`on` + `open` + `requires` + `consume`) so behavior is authored in SSOT.
+- Word inventory belongs in `src/content/interactions-v2/wordbook-v2.js`.
+- A word being present in the wordbook does not give it built-in behavior.
+- Behavior only exists where the word is used in authored rules.

@@ -26,25 +26,31 @@ function withSyntheticImmediateEventRules(sample) {
 
 const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
 const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
-const sampleRule = Array.isArray(compiledRules)
-  ? compiledRules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+const interactionsSample = withSyntheticImmediateEventRules({
+  rules: compiledRules,
+});
+const sampleRule = Array.isArray(interactionsSample?.rules)
+  ? interactionsSample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
   : null;
 if (!sampleRule || !Array.isArray(sampleRule.then)) {
   failCheck(CHECK_TAG, `unable to load ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
 }
-const sampleRuleRuntime = cloneJsonV2(sampleRule);
 const sampleRuleProjected = cloneJsonV2(sampleRule);
-const interactionsSample = withSyntheticImmediateEventRules({
-  rules: [sampleRuleRuntime],
-});
-const sampleWakeAction = sampleRuleRuntime.then.find((action) => action?.type === ACTION_WAKE_WIN);
+const runtimeSample = cloneJsonV2(interactionsSample);
+const runtimeRule = Array.isArray(runtimeSample?.rules)
+  ? runtimeSample.rules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)
+  : null;
+if (!runtimeRule || !Array.isArray(runtimeRule.then)) {
+  failCheck(CHECK_TAG, `unable to load runtime ${SAMPLE_WAKE_RULE_ID_V2} sample rule`);
+}
+const sampleWakeAction = runtimeRule.then.find((action) => action?.type === ACTION_WAKE_WIN);
 if (!sampleWakeAction || !Array.isArray(sampleWakeAction.words) || !sampleWakeAction.words.length) {
   failCheck(CHECK_TAG, `sample ${ACTION_WAKE_WIN} action missing canonical words[]`);
 }
 sampleWakeAction.spells = sampleWakeAction.words.map((id) => `${SPELL_PREFIX}${String(id).replace(/^(word|spell)\./, "")}`);
 delete sampleWakeAction.words;
 
-const runtimeRoutingErrors = validateSpellRuntimeRouting(interactionsSample);
+const runtimeRoutingErrors = validateSpellRuntimeRouting(runtimeSample);
 if (runtimeRoutingErrors.length) {
   failCheck(
     CHECK_TAG,

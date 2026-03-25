@@ -12,7 +12,7 @@ requireTextIncludesTokensV2({
   text,
   tokens: [
     "pushUnsupportedKeys(",
-    "new Set([\"id\", \"on\", \"requires\", \"open\", \"consume\", \"trigger\", \"enabled\", \"cooldownMs\", \"matchWindowMs\", \"priority\"])",
+    "new Set([\"id\", \"on\", \"requires\", \"open\", \"consume\", \"trigger\", \"bind\", \"enabled\", \"cooldownMs\", \"matchWindowMs\", \"priority\"])",
   ],
   missingMessage: (token) => `${VALIDATOR_REL} missing rule unsupported-key validator token: ${token}`,
 });

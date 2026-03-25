@@ -12,7 +12,8 @@ const ACTION_WAKE_WIN = "wake_win";
 const WINDOW_WAKE_WIN = "wake_win";
 const RULE_WORDS_PRECEDENCE = "r_words_precedence";
 const RULE_SPELLS_FALLBACK = "r_spells_fallback";
-const FALLBACK_WORD_ID = "sanctum";
+const OVERRIDE_WORD_ID = "pyro";
+const FALLBACK_WORD_ID = "domus";
 const PASS_MESSAGE = "preview runtime enforces wake_win words precedence with spells alias fallback semantics";
 
 const runtime = buildRuleEnginePreviewRuntime({
@@ -27,7 +28,7 @@ const runtime = buildRuleEnginePreviewRuntime({
     {
       id: RULE_WORDS_PRECEDENCE,
       on: { all: [{ type: "word", id: KNOWN_WAKE_WORD_ID_V2 }] },
-      then: [{ type: ACTION_WAKE_WIN, words: [KNOWN_WAKE_WORD_ID_V2], spells: ["vectus"] }],
+      then: [{ type: ACTION_WAKE_WIN, words: [KNOWN_WAKE_WORD_ID_V2], spells: [OVERRIDE_WORD_ID] }],
     },
     {
       id: RULE_SPELLS_FALLBACK,

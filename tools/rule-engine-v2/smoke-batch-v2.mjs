@@ -141,8 +141,8 @@ function run() {
     ];
     const wakeWin = findFirstAction(rule, "wake_win");
     if (!wakeWin) fail("wake_win action missing");
-    wakeWin.words = ["word.rota", "word.sanctum", "word.vectus"];
-    wakeWin.spells = ["word.rota", "word.sanctum", "word.vectus"];
+    wakeWin.words = ["word.rota", "word.pyro", "word.domus"];
+    wakeWin.spells = ["word.rota", "word.pyro", "word.domus"];
     const graceEvent = (Array.isArray(rule.then) ? rule.then : []).find((a) =>
       (typeof a?.type === "string" ? a.type.toLowerCase() : "") === "event"
         && (typeof a?.id === "string" ? a.id.toLowerCase() : "").includes("grace")

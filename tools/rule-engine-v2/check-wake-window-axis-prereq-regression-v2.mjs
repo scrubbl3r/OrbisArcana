@@ -1,67 +1,60 @@
-import { EVT_VOICE_SPELL_LOADED, EVT_VOICE_SPELL_REJECTED } from "../../src/contracts/events.js";
+import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
+import { EVENT_DEFINITIONS } from "../../src/content/spell-rules/event-definitions.js";
+import { SIGNAL_DEFINITIONS } from "../../src/content/spell-rules/signal-definitions.js";
+import { WINDOW_DEFINITIONS } from "../../src/content/spell-rules/window-definitions.js";
+import { createRuleEnginePreviewSystem } from "../../src/systems/rule-engine-preview-system.js";
 import { assertCheck } from "./check-assert-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
-import { CHECK_CONFIDENCE_V2 } from "./check-confidence-constants-v2.mjs";
-import { emitDetectedWordAt } from "./check-detected-word-v2.mjs";
-import { createCheckDispatchSystem } from "./check-dispatch-system-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
-import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";
-import { emitFlatSpinWindowOpened } from "./check-flat-spin-window-v2.mjs";
-import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
-import { CHECK_REASONS_V2, hasReason } from "./check-reason-v2.mjs";
-import { createStoredGlobeResources } from "./check-resources-v2.mjs";
-import { CHECK_SPELL_IDS_V2, CHECK_SPELL_INTENTS_V2 } from "./check-spell-constants-v2.mjs";
-import { hasWordId } from "./check-spell-event-v2.mjs";
+import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
-import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
-import { createFixedNowMs } from "./check-time-v2.mjs";
-import { emitAxisThenWakeSelection } from "./check-wake-sequence-v2.mjs";
+import { createMutableNow } from "./check-time-v2.mjs";
+import { emitDetectedWord, emitOrbCharged, emitSpinOpened } from "./check-wake-sequence-v2.mjs";
+import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.wakeWindowAxisPrereq;
-const PASS_MESSAGE = "wake-window axis prerequisite contract holds";
+const PASS_MESSAGE = "pyro bind chain requires its authored intermediate window";
+const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 
 function main() {
   const eventBus = createCheckEventBus();
-  const rejects = captureCheckEvents(eventBus, EVT_VOICE_SPELL_REJECTED);
-  const loads = captureCheckEvents(eventBus, EVT_VOICE_SPELL_LOADED);
-  const system = createCheckDispatchSystem({
+  const actions = captureCheckEvents(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED);
+  const { nowRef, nowMs, advance } = createMutableNow(5000);
+  const system = createRuleEnginePreviewSystem({
     eventBus,
-    nowMs: createFixedNowMs(CHECK_FIXED_TIMES_V2.wakeAxisPrereq),
-    resources: createStoredGlobeResources(2),
+    schema: {
+      signals: SIGNAL_DEFINITIONS,
+      windows: WINDOW_DEFINITIONS,
+      events: EVENT_DEFINITIONS,
+      rules: buildRuleEngineFromOrchestratorV2().rules,
+    },
+    executeActions: true,
+    nowMs,
   });
 
-  runWithStartedSystem(system, () => {
-    emitFlatSpinWindowOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.wakeAxisPrereq });
+  system.start();
+  try {
+    emitOrbCharged(eventBus, nowRef.value);
+    advance(10);
+    emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: nowRef.value });
 
-    // Wake-window token before axis selection must be rejected.
-    emitDetectedWordAt(eventBus, {
-      id: CHECK_SPELL_IDS_V2.sanctum,
-      intent: CHECK_SPELL_INTENTS_V2.wakeWindowSelect,
-      confidence: CHECK_CONFIDENCE_V2.medium,
-      atMs: CHECK_FIXED_TIMES_V2.wakeAxisPrereq,
-    });
+    // Missing authored intermediate word (`pyro`) means `rota` must not bind.
+    advance(10);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.rota, nowRef.value);
+    const bindCountBefore = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind").length;
+    assertCheck(bindCountBefore === 0, `[${CHECK_TAG}] unexpected bind without pyro intermediate window`);
 
-    // After axis selection, same wake-window token should load.
-    emitAxisThenWakeSelection({
-      eventBus,
-      axisWordId: CHECK_SPELL_IDS_V2.pyro,
-      wakeWindowToken: CHECK_SPELL_IDS_V2.sanctum,
-      confidence: CHECK_CONFIDENCE_V2.medium,
-      axisAtMs: 5001,
-      wakeAtMs: 5002,
-    });
-  });
-
-  assertCheck(
-    hasReason(rejects, CHECK_REASONS_V2.noAxisSelected),
-    `[${CHECK_TAG}] expected ${CHECK_REASONS_V2.noAxisSelected} reject when wake token spoken before axis token`
-  );
-  assertCheck(loads.length >= 1, `[${CHECK_TAG}] expected wake token to load after axis selection`);
-  assertCheck(
-    hasWordId(loads, CHECK_SPELL_IDS_V2.sanctum),
-    `[${CHECK_TAG}] expected sanctum load after axis selection`
-  );
+    // With authored intermediate window opened, `rota` should bind.
+    advance(10);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, nowRef.value);
+    advance(10);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.rota, nowRef.value);
+    const bindActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind");
+    assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind after pyro -> rota, got ${bindActions.length}`);
+  } finally {
+    system.stop();
+  }
 
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }

@@ -15,7 +15,7 @@ export const RULE_ENGINE_V2_LEGACY_HANDLE_TOKENS = Object.freeze([
 ]);
 
 export const RULE_ENGINE_V2_LEGACY_SIGNAL_EXAMPLES = Object.freeze([
-  "`spin.y`",
+  "`gesture.spin_y`",
 ]);
 
 export const RULE_ENGINE_V2_CANONICAL_SIGNAL_EXAMPLES = Object.freeze([

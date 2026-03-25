@@ -81,6 +81,8 @@ function collectWakeWinWordIdsFromConfig(cfg) {
     for (const action of actions) {
       const actionType = String(action && action.type || "").trim().toLowerCase();
       if (actionType !== "wake_win") continue;
+      const windowId = asId(action && action.windowId);
+      if (windowId === "wake.main") continue;
       const wordRefs = Array.isArray(action && action.words)
         ? action.words
         : (Array.isArray(action && action.spells) ? action.spells : []);
@@ -160,8 +162,9 @@ function collectImmediateWordIdsFromOrchestratorV2(orchestratorV2) {
   const out = new Set();
   for (const rule of rules) {
     const hasOpen = !!(rule && typeof rule.open === "object" && !Array.isArray(rule.open));
+    const hasRequires = asSelectorList(rule && rule.requires).length > 0;
     const hasTrigger = !!rule && Object.hasOwn(rule, "trigger");
-    if (hasOpen || !hasTrigger) continue;
+    if (hasOpen || hasRequires || !hasTrigger) continue;
     for (const wordId of collectOnWordIdsFromOrchestratorRule(rule)) {
       if (wakeWordIds.has(wordId)) continue;
       if (wakeWindowWordIds.has(wordId)) continue;
