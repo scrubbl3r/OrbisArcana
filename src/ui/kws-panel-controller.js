@@ -36,11 +36,13 @@ export function createKwsPanelController({
     ? getKwsWordProvider
     : getKwsVoiceProvider;
 
-  const selectedAxisWordByAxis = { x: "", y: "", z: "" };
+  const selectedSpinWordByAxis = { x: "", y: "", z: "" };
   const kwsTokenUiState = {
+    activeSpinAxis: "",
     flatSpinAxis: "",
-    selectedAxisWordByAxis,
-    selectedAxisSpellByAxis: selectedAxisWordByAxis,
+    selectedSpinWordByAxis,
+    selectedAxisWordByAxis: selectedSpinWordByAxis,
+    selectedAxisSpellByAxis: selectedSpinWordByAxis,
     heardWakeWindowTokensByAxis: {
       x: Object.create(null),
       y: Object.create(null),
@@ -79,9 +81,9 @@ export function createKwsPanelController({
   }
 
   function isWakeWindowActive() {
-    const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
+    const axis = String(kwsTokenUiState.activeSpinAxis || "").trim().toLowerCase();
     if (!(axis === "x" || axis === "y" || axis === "z")) return false;
-    const selectedAxisWord = String((kwsTokenUiState.selectedAxisWordByAxis[axis] || "")).toLowerCase();
+    const selectedAxisWord = String((kwsTokenUiState.selectedSpinWordByAxis[axis] || "")).toLowerCase();
     return KWS_AXIS_TOKEN_SET.has(selectedAxisWord);
   }
 
@@ -94,7 +96,7 @@ export function createKwsPanelController({
       return Date.now() < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
     }
     if (KWS_AXIS_TOKEN_SET.has(token)) {
-      const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
+      const axis = String(kwsTokenUiState.activeSpinAxis || "").trim().toLowerCase();
       return !!axis && token === expectedAxisWordForAxis(axis);
     }
     if (KWS_WAKE_WINDOW_TOKEN_SET.has(token)) {
@@ -126,26 +128,30 @@ export function createKwsPanelController({
     kwsTokenUiState.heardWakeWindowTokensByAxis[a][t] = true;
   }
 
-  function setFlatSpinAxis(axis) {
+  function setActiveSpinAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
-    kwsTokenUiState.flatSpinAxis = (a === "x" || a === "y" || a === "z") ? a : "";
+    const next = (a === "x" || a === "y" || a === "z") ? a : "";
+    kwsTokenUiState.activeSpinAxis = next;
+    kwsTokenUiState.flatSpinAxis = next;
   }
 
-  function clearFlatSpinState() {
+  function clearActiveSpinState() {
+    kwsTokenUiState.activeSpinAxis = "";
     kwsTokenUiState.flatSpinAxis = "";
-    kwsTokenUiState.selectedAxisWordByAxis.x = "";
-    kwsTokenUiState.selectedAxisWordByAxis.y = "";
-    kwsTokenUiState.selectedAxisWordByAxis.z = "";
+    kwsTokenUiState.selectedSpinWordByAxis.x = "";
+    kwsTokenUiState.selectedSpinWordByAxis.y = "";
+    kwsTokenUiState.selectedSpinWordByAxis.z = "";
     resetHeardWakeWindowTokensAllAxes();
   }
 
-  function setSelectedAxisWord(axis, axisWord) {
+  function setSelectedSpinWord(axis, axisWord) {
     const a = String(axis || "").trim().toLowerCase();
     if (!(a === "x" || a === "y" || a === "z")) return;
     const token = String(axisWord || "").trim().toLowerCase();
-    kwsTokenUiState.selectedAxisWordByAxis[a] = token;
+    kwsTokenUiState.selectedSpinWordByAxis[a] = token;
   }
-  const setSelectedAxisSpell = setSelectedAxisWord;
+  const setSelectedAxisWord = setSelectedSpinWord;
+  const setSelectedAxisSpell = setSelectedSpinWord;
 
   function clearKwsWakeHudGateTimer() {
     if (!kwsWakeHudGateTO) return;
@@ -210,7 +216,7 @@ export function createKwsPanelController({
     if (!els.kwsReadout) return;
     const now = Date.now();
     const orbisOpen = now < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
-    const axis = String(kwsTokenUiState.flatSpinAxis || "").trim().toLowerCase();
+    const axis = String(kwsTokenUiState.activeSpinAxis || "").trim().toLowerCase();
     const expectedAxisWord = expectedAxisWordForAxis(axis);
     const wakeWindowActive = isWakeWindowActive();
     const topTokens = KWS_ROW_TOP.map((token) => {
@@ -359,8 +365,11 @@ export function createKwsPanelController({
     resetHeardWakeWindowTokensForAxis,
     resetHeardWakeWindowTokensAllAxes,
     markHeardWakeWindowToken,
-    setFlatSpinAxis,
-    clearFlatSpinState,
+    setActiveSpinAxis,
+    clearActiveSpinState,
+    setFlatSpinAxis: setActiveSpinAxis,
+    clearFlatSpinState: clearActiveSpinState,
+    setSelectedSpinWord,
     setSelectedAxisWord,
     setSelectedAxisSpell,
     flashKwsToken,

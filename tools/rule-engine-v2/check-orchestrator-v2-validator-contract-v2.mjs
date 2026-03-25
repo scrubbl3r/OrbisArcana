@@ -768,13 +768,13 @@ expectInvalidNoWarningsWithSingleRule(
 );
 
 expectInvalidNoWarningsWithSingleRule(
-  "on_gesture_non_string_array_invalid",
+  "on_spin_non_string_array_invalid",
   {
-    id: "on_gesture_non_string_array_rule",
-    on: Object.freeze({ gesture: Object.freeze({ spin_y: true }) }),
+    id: "on_spin_non_string_array_rule",
+    on: Object.freeze({ spin: Object.freeze({ y: true }) }),
     trigger: Object.freeze({ grace: true }),
   },
-  "on.gesture must be a string or array when present"
+  "on.spin must be a string or array when present"
 );
 
 expectInvalidNoWarningsWithSingleRule(
@@ -840,33 +840,33 @@ expectInvalidWithWarningWithSingleRule(
 );
 
 expectInvalidNoWarningsWithSingleRule(
-  "on_gesture_non_string_entry_invalid",
+  "on_spin_non_string_entry_invalid",
   {
-    id: "on_gesture_non_string_entry_rule",
-    on: Object.freeze({ gesture: Object.freeze(["spin_y", 42]) }),
+    id: "on_spin_non_string_entry_rule",
+    on: Object.freeze({ spin: Object.freeze(["y", 42]) }),
     trigger: Object.freeze({ grace: true }),
   },
-  "on.gesture contains non-string selector id: 42"
+  "on.spin contains non-string selector id: 42"
 );
 
 expectInvalidNoWarningsWithSingleRule(
-  "on_gesture_whitespace_entry_invalid",
+  "on_spin_whitespace_entry_invalid",
   {
-    id: "on_gesture_whitespace_entry_rule",
-    on: Object.freeze({ gesture: Object.freeze([" spin_y "]) }),
+    id: "on_spin_whitespace_entry_rule",
+    on: Object.freeze({ spin: Object.freeze([" y "]) }),
     trigger: Object.freeze({ grace: true }),
   },
-  "on.gesture contains selector id with leading/trailing whitespace:  spin_y "
+  "on.spin contains selector id with leading/trailing whitespace:  y "
 );
 
 expectInvalidNoWarningsWithSingleRule(
-  "on_gesture_string_whitespace_invalid",
+  "on_spin_string_whitespace_invalid",
   {
-    id: "on_gesture_string_whitespace_rule",
-    on: Object.freeze({ gesture: " spin_y " }),
+    id: "on_spin_string_whitespace_rule",
+    on: Object.freeze({ spin: " y " }),
     trigger: Object.freeze({ grace: true }),
   },
-  "on.gesture contains selector id with leading/trailing whitespace:  spin_y "
+  "on.spin contains selector id with leading/trailing whitespace:  y "
 );
 
 expectInvalidNoWarningsWithSingleRule(

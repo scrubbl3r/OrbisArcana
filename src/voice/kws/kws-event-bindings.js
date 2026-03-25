@@ -24,14 +24,20 @@ export function bindKwsEventHandlers({
   const flashKwsToken = typeof deps.flashKwsToken === "function" ? deps.flashKwsToken : () => {};
   const isWakeWindowActive = typeof deps.isWakeWindowActive === "function" ? deps.isWakeWindowActive : () => false;
   const markHeardWakeWindowToken = typeof deps.markHeardWakeWindowToken === "function" ? deps.markHeardWakeWindowToken : null;
-  const getFlatSpinAxis = typeof deps.getFlatSpinAxis === "function" ? deps.getFlatSpinAxis : () => "";
+  const getActiveSpinAxis = typeof deps.getActiveSpinAxis === "function"
+    ? deps.getActiveSpinAxis
+    : (typeof deps.getFlatSpinAxis === "function" ? deps.getFlatSpinAxis : () => "");
   const openKwsWakeHudGate = typeof deps.openKwsWakeHudGate === "function" ? deps.openKwsWakeHudGate : () => {};
   const shouldLogHeardWakeword = typeof deps.shouldLogHeardWakeword === "function" ? deps.shouldLogHeardWakeword : () => false;
   const pushKwsLogLine = typeof deps.pushKwsLogLine === "function" ? deps.pushKwsLogLine : () => {};
   const updateKwsReadout = typeof deps.updateKwsReadout === "function" ? deps.updateKwsReadout : () => {};
   const isUngatedToken = typeof deps.isUngatedToken === "function" ? deps.isUngatedToken : () => false;
-  const setFlatSpinAxis = typeof deps.setFlatSpinAxis === "function" ? deps.setFlatSpinAxis : null;
-  const clearFlatSpinState = typeof deps.clearFlatSpinState === "function" ? deps.clearFlatSpinState : null;
+  const setActiveSpinAxis = typeof deps.setActiveSpinAxis === "function"
+    ? deps.setActiveSpinAxis
+    : (typeof deps.setFlatSpinAxis === "function" ? deps.setFlatSpinAxis : null);
+  const clearActiveSpinState = typeof deps.clearActiveSpinState === "function"
+    ? deps.clearActiveSpinState
+    : (typeof deps.clearFlatSpinState === "function" ? deps.clearFlatSpinState : null);
   const resetHeardWakeWindowTokensForAxis = typeof deps.resetHeardWakeWindowTokensForAxis === "function" ? deps.resetHeardWakeWindowTokensForAxis : () => {};
   const resetHeardWakeWindowTokensAllAxes = typeof deps.resetHeardWakeWindowTokensAllAxes === "function" ? deps.resetHeardWakeWindowTokensAllAxes : () => {};
   const setSelectedAxisWord = typeof deps.setSelectedAxisWord === "function"
@@ -92,7 +98,7 @@ export function bindKwsEventHandlers({
       flashKwsToken(token);
     }
     if (isWakeWindowActive() && wakeWindowTokenSet.has(token)) {
-      const axis = String(getFlatSpinAxis() || "").trim().toLowerCase();
+      const axis = String(getActiveSpinAxis() || "").trim().toLowerCase();
       if ((axis === "x" || axis === "y" || axis === "z") && typeof markHeardWakeWindowToken === "function") {
         markHeardWakeWindowToken(axis, token);
       }
@@ -179,8 +185,8 @@ export function bindKwsEventHandlers({
     RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_OPENED || RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED,
     (p = {}) => {
     const axis = String(p.axis || "").trim().toLowerCase();
-    if (typeof setFlatSpinAxis === "function") setFlatSpinAxis(axis);
-    const prevAxis = String(getFlatSpinAxis() || "").trim().toLowerCase();
+    if (typeof setActiveSpinAxis === "function") setActiveSpinAxis(axis);
+    const prevAxis = String(getActiveSpinAxis() || "").trim().toLowerCase();
     if (prevAxis) {
       if (typeof setSelectedAxisWord === "function") setSelectedAxisWord(prevAxis, "");
       resetHeardWakeWindowTokensForAxis(prevAxis);
@@ -191,7 +197,7 @@ export function bindKwsEventHandlers({
   unsub.push(eventBus.on(
     RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED || RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED,
     () => {
-    if (typeof clearFlatSpinState === "function") clearFlatSpinState();
+    if (typeof clearActiveSpinState === "function") clearActiveSpinState();
     else resetHeardWakeWindowTokensAllAxes();
     updateKwsReadout();
   }));

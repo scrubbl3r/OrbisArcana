@@ -81,7 +81,7 @@ function run() {
   {
     const cfg = cloneJsonV2(INTERACTIONS_V2);
     const rule = ruleById(cfg, "r_rota_yspin_charged");
-    rule.on.all[0] = { type: "word", id: "gesture.spin_y" };
+    rule.on.all[0] = { type: "word", id: "spin.y" };
     expectValidationFail("condition.prefix_mismatch", cfg, "condition type/id prefix mismatch");
   }
 
@@ -96,8 +96,8 @@ function run() {
       !Array.isArray(wakeWin.spells) ||
       !wakeWin.spells.length
     ) fail("wake_win action missing");
-    wakeWin.words[0] = "gesture.spin_y";
-    wakeWin.spells[0] = "gesture.spin_y";
+    wakeWin.words[0] = "spin.y";
+    wakeWin.spells[0] = "spin.y";
     expectValidationFail("wake_win.word_prefix_mismatch", cfg, "wake_win word prefix mismatch");
   }
 
@@ -136,7 +136,7 @@ function run() {
     const rule = ruleById(cfg, "r_rota_yspin_charged");
     rule.on.all = [
       { type: "word", id: "word.rota" },
-      { type: "gesture", id: "gesture.spin_y" },
+      { type: "spin", id: "spin.y" },
       { type: "orb_state", id: "orb_state.charged" },
     ];
     const wakeWin = findFirstAction(rule, "wake_win");
