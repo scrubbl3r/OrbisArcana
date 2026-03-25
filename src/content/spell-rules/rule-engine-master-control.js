@@ -208,13 +208,13 @@ const SOURCE_EVENT_EMIT_ACTION_EXECUTED_OVERRIDES = Object.freeze({
 });
 
 const SOURCE_EVENT_EMIT_SOURCE_EVENT_SUMMARY_OVERRIDES = Object.freeze({
-  // Example:
-  // "voice.word_detected": true,
+  "voice.token_detected": true,
+  "voice.word_detected": true,
 });
 
 const SOURCE_EVENT_SUMMARY_INCLUDE_SIGNAL_AND_RULE_IDS_OVERRIDES = Object.freeze({
-  // Example:
-  // "voice.word_detected": true,
+  "voice.token_detected": true,
+  "voice.word_detected": true,
 });
 
 const SOURCE_EVENT_SUMMARY_INCLUDE_BUDGET_CAPS_OVERRIDES = Object.freeze({

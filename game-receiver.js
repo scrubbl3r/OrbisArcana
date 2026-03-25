@@ -1243,6 +1243,7 @@
     const RULE_ENGINE_ACTION_EXECUTED_EVENT = "rule_engine.action_executed";
     const RULE_ENGINE_WAKE_WIN_OPENED_EVENT = "rule_engine.wake_win_opened";
     const RULE_ENGINE_PREVIEW_MATCHED_EVENT = "rule_engine.preview_matched";
+    const RULE_ENGINE_SOURCE_EVENT_SUMMARY_EVENT = "rule_engine.source_event_summary";
     const RULE_ENGINE_TRIGGER = "rule_engine";
     const RULE_ENGINE_EXECUTE_ACTIONS = true;
     const RULE_CHAIN_TRACE_ENABLED = true;
@@ -2528,7 +2529,8 @@
             const actionId = String(p.actionId || "").trim().toLowerCase();
             const ruleId = String(p.ruleId || "").trim().toLowerCase();
             if (ruleId === "wake_main") {
-              kwsBridge.pushLogLine(`TRACE wake_open:${actionId || "wake.main"}`, "ok");
+              const windowId = String(p.windowId || "").trim().toLowerCase() || actionId || "wake.main";
+              kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
             }
             if (ruleId === "spin_y_opens_pyro") {
               const windowId = String(p.windowId || "").trim().toLowerCase() || "school.pyro_spin_seed";
@@ -2550,6 +2552,20 @@
             }
             if (actionType === "bind" && actionId === "fb") {
               kwsBridge.pushLogLine("TRACE action:bind:fb", "ok");
+            }
+          });
+          eventBus.on(RULE_ENGINE_SOURCE_EVENT_SUMMARY_EVENT, (p = {}) => {
+            const sourceEvent = String(p.sourceEvent || "").trim().toLowerCase();
+            if (sourceEvent !== "voice.token_detected" && sourceEvent !== "voice.word_detected") return;
+            const signalId = String(p.signalId || "").trim().toLowerCase();
+            const ruleId = String(p.ruleId || "").trim().toLowerCase();
+            const matched = Number.isFinite(Number(p.matchedRuleCount)) ? Number(p.matchedRuleCount) : 0;
+            const executed = Number.isFinite(Number(p.executedActionCount)) ? Number(p.executedActionCount) : 0;
+            if (signalId === "spell.orbis" || signalId === "spell.domus" || ruleId === "wake_main" || ruleId === "tele_home") {
+              kwsBridge.pushLogLine(
+                `TRACE source:${sourceEvent}:signal:${signalId || "-"}:rule:${ruleId || "-"}:matched:${matched}:actions:${executed}`,
+                matched > 0 ? "ok" : "muted"
+              );
             }
           });
         }
