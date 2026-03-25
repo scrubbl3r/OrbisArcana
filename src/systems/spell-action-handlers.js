@@ -1,6 +1,5 @@
 import {
   EVT_SPELL_SLOT_CAST_REQUESTED,
-  EVT_SPELL_SLOT_LOAD_REQUESTED,
 } from "../contracts/events.js";
 
 export function createSpellActionHandlers({
@@ -18,17 +17,6 @@ export function createSpellActionHandlers({
   function normalizeSlot(slotRaw) {
     const slot = String(slotRaw || "").trim().toUpperCase();
     return slot === "UD" || slot === "LR" || slot === "FB" ? slot : "";
-  }
-
-  function requestSlotLoad(slotRaw, payload = {}) {
-    if (!eventBus || typeof eventBus.emit !== "function") return;
-    const slot = normalizeSlot(slotRaw);
-    if (!slot) return;
-    eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
-      ...(payload && typeof payload === "object" ? payload : {}),
-      slot,
-      atMs: Number(payload && payload.atMs) || Date.now(),
-    });
   }
 
   function requestSlotCast(slotRaw, payload = {}) {
@@ -85,15 +73,6 @@ export function createSpellActionHandlers({
       if (typeof grantSuperGrace === "function") {
         grantSuperGrace(Number.isFinite(ms) ? ms : undefined);
       }
-    },
-    load_spell_ud(payload = {}) {
-      requestSlotLoad("UD", payload);
-    },
-    load_spell_lr(payload = {}) {
-      requestSlotLoad("LR", payload);
-    },
-    load_spell_fb(payload = {}) {
-      requestSlotLoad("FB", payload);
     },
     cast_loaded_ud(payload = {}) {
       requestSlotCast("UD", payload);

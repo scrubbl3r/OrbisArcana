@@ -45,27 +45,6 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
-    id: "spell_load_ud",
-    runtime: Object.freeze({
-      kind: "cast_action",
-      castActionId: "spell_load_ud",
-    }),
-  }),
-  Object.freeze({
-    id: "spell_load_lr",
-    runtime: Object.freeze({
-      kind: "cast_action",
-      castActionId: "spell_load_lr",
-    }),
-  }),
-  Object.freeze({
-    id: "spell_load_fb",
-    runtime: Object.freeze({
-      kind: "cast_action",
-      castActionId: "spell_load_fb",
-    }),
-  }),
-  Object.freeze({
     id: "cast_loaded_ud",
     runtime: Object.freeze({
       kind: "cast_action",

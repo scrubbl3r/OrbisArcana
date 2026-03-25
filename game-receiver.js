@@ -2359,7 +2359,7 @@
                 ...args,
               },
             });
-            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "spell_load_ud" || actionId === "spell_load_lr" || actionId === "spell_load_fb" || actionId === "cast_loaded_ud" || actionId === "cast_loaded_lr" || actionId === "cast_loaded_fb")) {
+            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "cast_loaded_ud" || actionId === "cast_loaded_lr" || actionId === "cast_loaded_fb")) {
               const handled = !!(execResult && execResult.handled);
               kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
             }

@@ -33,21 +33,6 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({ state: "normal" }),
   }),
   Object.freeze({
-    id: "spell_load_ud",
-    type: "event",
-    defaultArgs: Object.freeze({}),
-  }),
-  Object.freeze({
-    id: "spell_load_lr",
-    type: "event",
-    defaultArgs: Object.freeze({}),
-  }),
-  Object.freeze({
-    id: "spell_load_fb",
-    type: "event",
-    defaultArgs: Object.freeze({}),
-  }),
-  Object.freeze({
     id: "cast_loaded_ud",
     type: "event",
     defaultArgs: Object.freeze({}),
