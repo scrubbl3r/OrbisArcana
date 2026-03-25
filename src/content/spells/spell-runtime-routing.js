@@ -109,9 +109,6 @@ function buildDerivedRuntimeProfileV2() {
     const openId = String(open && open.id || "").trim().toLowerCase();
     return openId.startsWith("school.");
   });
-  const axisWordIds = uniqueWordIds(
-    schoolOpenRules.flatMap((rule) => collectRuleOnWordIds(rule))
-  );
   const wakeWindowWordIds = uniqueWordIds(
     schoolOpenRules.flatMap((rule) => collectRuleOpenWordIds(rule))
   );
@@ -135,7 +132,6 @@ function buildDerivedRuntimeProfileV2() {
     allOnWordIds.filter((id) =>
       !wakeWordIds.includes(id) &&
       !wakeRequiredWordIds.includes(id) &&
-      !axisWordIds.includes(id) &&
       !wakeWindowWordIds.includes(id)
     )
   );
@@ -143,15 +139,12 @@ function buildDerivedRuntimeProfileV2() {
     ...wakeWordIds,
     ...standaloneWordIds,
     ...wakeRequiredWordIds,
-    ...axisWordIds,
     ...wakeWindowWordIds,
   ]);
   // Keep wake-window tokens for gating logic, but avoid duplicate flasher rows in UI.
   const rowBottomWordIds = [];
   const flashTokenWordIds = rowTopWordIds.slice();
-  const inferDefaultWordId = axisWordIds.includes("pyro")
-    ? "pyro"
-    : (axisWordIds[0] || "pyro");
+  const inferDefaultWordId = rowTopWordIds[0] || "pyro";
   const simWordIds = uniqueWordIds([
     ...wakeRequiredWordIds,
     ...wakeWindowWordIds,
@@ -167,7 +160,6 @@ function buildDerivedRuntimeProfileV2() {
   const immediateTriggerWordIds = uniqueWordIds(
     immediateTriggerCandidates.filter((id) =>
       !wakeWordIds.includes(id) &&
-      !axisWordIds.includes(id) &&
       !wakeWindowWordIds.includes(id)
     )
   );
@@ -176,7 +168,6 @@ function buildDerivedRuntimeProfileV2() {
     wakeWordIds: Object.freeze(wakeWordIds),
     standaloneWordIds: Object.freeze(standaloneWordIds),
     wakeRequiredWordIds: Object.freeze(wakeRequiredWordIds),
-    axisWordIds: Object.freeze(axisWordIds),
     wakeWindowWordIds: Object.freeze(wakeWindowWordIds),
     rowTopWordIds: Object.freeze(rowTopWordIds),
     rowBottomWordIds: Object.freeze(rowBottomWordIds),
@@ -188,11 +179,6 @@ function buildDerivedRuntimeProfileV2() {
 }
 
 const ORCHESTRATOR_V2_RUNTIME_PROFILE = buildDerivedRuntimeProfileV2();
-const AXIS_BY_WORD_ID = Object.freeze({
-  fridgis: "x",
-  pyro: "y",
-  electrum: "z",
-});
 const CANONICAL_STANDALONE_WORD_IDS = Object.freeze(["arcana", "are_kay_nah"]);
 const WAKE_WINDOW_SLOT_BY_WORD_ID = Object.freeze({
   sanctum: "UD",
@@ -233,21 +219,7 @@ function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
     add({
       id: "domus",
       intent: "spell.domus",
-      allowedAxes: Object.freeze(["y"]),
       fixedSlot: "UD",
-      slotByAxis: Object.freeze({ y: "UD" }),
-      clearSlotsOnAxis: Object.freeze({ y: Object.freeze(["LR", "FB"]) }),
-    });
-  }
-  for (const id of (Array.isArray(profile.axisWordIds) ? profile.axisWordIds : [])) {
-    const axis = String(AXIS_BY_WORD_ID[id] || "").toLowerCase();
-    const allowedAxes = axis ? Object.freeze([axis]) : Object.freeze([]);
-    add({
-      id,
-      intent: "spell.axis_select",
-      axisWord: id,
-      axisSpell: id,
-      ...(allowedAxes.length ? { allowedAxes } : {}),
     });
   }
   for (const id of (Array.isArray(profile.wakeWindowWordIds) ? profile.wakeWindowWordIds : [])) {
@@ -258,7 +230,6 @@ function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
       wakeWindowWord: id,
       wakeWindowSpell: id,
       ...(fixedSlot ? { fixedSlot } : {}),
-      allowedAxes: Object.freeze(["x", "y", "z"]),
     });
   }
   return Object.freeze(out);
@@ -284,11 +255,7 @@ export const WAKE_REQUIRED_WORD_IDS = Object.freeze(
     : []).slice()
 );
 
-export const AXIS_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.axisWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.axisWordIds
-    : []).slice()
-);
+export const AXIS_WORD_IDS = Object.freeze([]);
 export const KWS_AXIS_WORD_IDS = AXIS_WORD_IDS;
 
 export const WAKE_WINDOW_WORD_IDS = Object.freeze(
@@ -326,7 +293,6 @@ const DEFAULT_KWS_TOP_WORD_IDS = Object.freeze([
   ...new Set([
     ...WAKE_WORD_IDS,
     ...WAKE_REQUIRED_WORD_IDS,
-    ...AXIS_WORD_IDS,
     ...STANDALONE_WORD_IDS,
   ]
     .map((id) => String(id || "").trim().toLowerCase())

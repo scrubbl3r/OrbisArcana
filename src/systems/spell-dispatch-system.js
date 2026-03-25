@@ -13,7 +13,6 @@ import {
   EVT_VOICE_WORD_DETECTED,
   EVT_VOICE_SPELL_DETECTED,
   EVT_VOICE_SPELL_REJECTED,
-  EVT_VOICE_AXIS_SELECTED,
   EVT_VOICE_SPELL_LOADED,
   EVT_VOICE_SPELL_CAST,
   EVT_INPUT_SHAKE_TRIGGERED,
@@ -38,7 +37,6 @@ export function createSpellDispatchSystem({
   const unsub = [];
   const lastCastByWordId = new Map();
   const SLOT_ORDER = ["UD", "LR", "FB"];
-  const AXES = ["x", "y", "z"];
   const FLAT_SPIN_DUPLICATE_SUPPRESS_MS = 300;
   const TEMP_UNGATED_WORD_IDS = new Set(
     (Array.isArray(WORD_WINDOW_BYPASS_WORD_IDS) ? WORD_WINDOW_BYPASS_WORD_IDS : [])
@@ -50,22 +48,12 @@ export function createSpellDispatchSystem({
       .map((id) => String(id || "").trim().toLowerCase())
       .filter(Boolean)
   );
-  const loadedByAxis = {
-    x: { UD: null, LR: null, FB: null },
-    y: { UD: null, LR: null, FB: null },
-    z: { UD: null, LR: null, FB: null },
-  };
-  const lastFlatSpinLoadAtByAxisWord = new Map();
-  const nextSlotIndexByAxis = { x: 0, y: 0, z: 0 };
+  const loadedBySlot = { UD: null, LR: null, FB: null };
+  const lastFlatSpinLoadAtByWord = new Map();
+  let nextSlotIndex = 0;
   let activeFlatSpinAxis = null;
-  const selectedAxisWordByAxis = { x: "", y: "", z: "" };
   let lastVoiceDetectDedupeKey = "";
   let lastVoiceDetectDedupeAtMs = 0;
-  const AXIS_BY_WORD_ID = Object.freeze({
-    fridgis: "x",
-    pyro: "y",
-    electrum: "z",
-  });
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -83,7 +71,7 @@ export function createSpellDispatchSystem({
 
   function normAxis(axis) {
     const a = String(axis || "").trim().toLowerCase();
-    return AXES.includes(a) ? a : "";
+    return a === "x" || a === "y" || a === "z" ? a : "";
   }
 
   function normGroup(group) {
@@ -106,72 +94,35 @@ export function createSpellDispatchSystem({
     return { ok: true, cooldownMs: 0, remainingMs: 0 };
   }
 
-  function reserveNextSlotForAxis(axis) {
-    const idx = Number(nextSlotIndexByAxis[axis] || 0);
+  function reserveNextSlot() {
+    const idx = Number(nextSlotIndex || 0);
     const slot = SLOT_ORDER[idx % SLOT_ORDER.length];
-    nextSlotIndexByAxis[axis] = idx + 1;
+    nextSlotIndex = idx + 1;
     return slot;
   }
 
-  function pickSlotForLoad(spell, axis) {
-    const a = normAxis(axis);
-    const slotByAxis = (spell && typeof spell.slotByAxis === "object" && spell.slotByAxis)
-      ? spell.slotByAxis
-      : null;
-    if (slotByAxis && a) {
-      const axisSlot = normGroup(slotByAxis[a]);
-      if (axisSlot) return axisSlot;
-    }
+  function pickSlotForLoad(spell) {
     const fixed = normGroup(spell && spell.fixedSlot);
     if (fixed) return fixed;
-    return reserveNextSlotForAxis(a);
-  }
-
-  function applyAxisSlotClearPolicy(spell, axis) {
-    const a = normAxis(axis);
-    if (!a) return;
-    const clearSlotsOnAxis = (spell && typeof spell.clearSlotsOnAxis === "object" && spell.clearSlotsOnAxis)
-      ? spell.clearSlotsOnAxis
-      : null;
-    const slots = Array.isArray(clearSlotsOnAxis && clearSlotsOnAxis[a]) ? clearSlotsOnAxis[a] : [];
-    for (const slotRaw of slots) {
-      const slot = normGroup(slotRaw);
-      if (!slot) continue;
-      loadedByAxis[a][slot] = null;
-    }
+    return reserveNextSlot();
   }
 
   function mostRecentLoadedForGroup(group) {
-    let best = null;
-    for (const axis of AXES) {
-      const entry = loadedByAxis[axis][group];
-      if (!entry) continue;
-      if (!best || Number(entry.loadedAtMs) > Number(best.loadedAtMs)) {
-        best = Object.assign({ axis, slot: group }, entry);
-      }
-    }
-    return best;
+    const slot = normGroup(group);
+    if (!slot || !loadedBySlot[slot]) return null;
+    return Object.assign({ slot }, loadedBySlot[slot]);
   }
 
   function mostRecentLoadedAny() {
     let best = null;
-    for (const axis of AXES) {
-      for (const slot of SLOT_ORDER) {
-        const entry = loadedByAxis[axis][slot];
-        if (!entry) continue;
-        if (!best || Number(entry.loadedAtMs) > Number(best.loadedAtMs)) {
-          best = Object.assign({ axis, slot }, entry);
-        }
+    for (const slot of SLOT_ORDER) {
+      const entry = loadedBySlot[slot];
+      if (!entry) continue;
+      if (!best || Number(entry.loadedAtMs) > Number(best.loadedAtMs)) {
+        best = Object.assign({ slot }, entry);
       }
     }
     return best;
-  }
-
-  function axisAllowedForSpell(spell, axis) {
-    const a = normAxis(axis);
-    if (!a) return false;
-    if (!spell || !Array.isArray(spell.allowedAxes) || spell.allowedAxes.length === 0) return true;
-    return spell.allowedAxes.map(normAxis).includes(a);
   }
 
   function withRuntimeRouting(spell = {}) {
@@ -184,53 +135,9 @@ export function createSpellDispatchSystem({
     };
   }
 
-  function normalizeWakeWindowTokenForRuntime(wakeWindowToken) {
-    const token = String(wakeWindowToken || "").trim().toLowerCase();
-    if (!token) return "";
-    return String(WAKE_WINDOW_RUNTIME_KEY_BY_WORD[token] || token).trim().toLowerCase();
-  }
-
   function isWakeWindowSelectIntent(intent) {
     const value = String(intent || "").trim().toLowerCase();
     return value === "spell.wake_window_select";
-  }
-
-  function isAxisSelectIntent(intent) {
-    const value = String(intent || "").trim().toLowerCase();
-    return value === "spell.axis_select";
-  }
-
-  function resolveConcreteSpellForAxis(spell, axis) {
-    const routed = withRuntimeRouting(spell || {});
-    const intent = String(routed && routed.intent || "");
-    if (!isWakeWindowSelectIntent(intent)) return routed;
-    const a = normAxis(axis);
-    const wakeWindowSpellRaw = String((routed && routed.wakeWindowSpell) || "").toLowerCase();
-    const wakeWindowSpell = normalizeWakeWindowTokenForRuntime(wakeWindowSpellRaw);
-    const axisWord = String(selectedAxisWordByAxis[a] || "").toLowerCase();
-    if (!a || !wakeWindowSpell || !axisWord) return null;
-    const id = wakeWindowSpell;
-    const base = withRuntimeRouting(ACTIVE_WORDS_BY_ID[id] || { id });
-    if (!base || !base.id) return null;
-    return {
-      id: String(base.id || id),
-      intent: String(base.intent || ""),
-      cooldownMs: Math.max(0, Number(base.cooldownMs) || 0),
-      phrase: String(base.phrase || id),
-      allowedAxes: Array.isArray(base.allowedAxes) ? base.allowedAxes.slice() : [a],
-      fixedSlot: String(base.fixedSlot || "").toUpperCase(),
-      axisWord,
-      axisSpell: axisWord,
-      wakeWindowSpell: String((base.wakeWindowSpell || wakeWindowSpell)).toLowerCase(),
-    };
-  }
-
-  function resolveAxisForSlotPayload(payload = {}) {
-    const explicitAxis = normAxis(payload.axis);
-    if (explicitAxis) return explicitAxis;
-    const axisWord = String((payload.axisWord || payload.axisSpell) || "").trim().toLowerCase();
-    const inferredAxis = normAxis(AXIS_BY_WORD_ID[axisWord]);
-    return inferredAxis || "y";
   }
 
   function buildLoadedEntryFromPayload(payload = {}, slotOverride = "") {
@@ -238,8 +145,6 @@ export function createSpellDispatchSystem({
     const wordId = String((payload.wordId || payload.spellId || payload.spell) || "").trim().toLowerCase();
     if (!slot || !wordId) return null;
     const routed = withRuntimeRouting(ACTIVE_WORDS_BY_ID[wordId] || { id: wordId });
-    const axis = resolveAxisForSlotPayload(payload);
-    const axisWord = String((payload.axisWord || payload.axisSpell || routed.axisWord || routed.axisSpell) || "").trim().toLowerCase();
     const wakeWindowSpell = String((payload.wakeWindowSpell || routed.wakeWindowSpell) || "").trim().toLowerCase();
     return {
       wordId,
@@ -250,10 +155,8 @@ export function createSpellDispatchSystem({
       cooldownMs: Math.max(0, Number(payload.cooldownMs ?? routed.cooldownMs) || 0),
       confidence: Number(payload.confidence) || 0,
       loadedAtMs: Number(payload.atMs) || nowMs(),
-      axis,
       slot,
-      axisWord,
-      axisSpell: axisWord,
+      axis: normAxis(payload.axis),
       wakeWindowSpell,
     };
   }
@@ -268,8 +171,6 @@ export function createSpellDispatchSystem({
       confidence: Number(entry.confidence) || 0,
       axis: entry.axis,
       slot: entry.slot,
-      axisWord: String(entry.axisWord || "").toLowerCase(),
-      axisSpell: String(entry.axisWord || "").toLowerCase(),
       wakeWindowSpell: String(entry.wakeWindowSpell || "").toLowerCase(),
       atMs: entry.loadedAtMs,
       trigger,
@@ -289,8 +190,6 @@ export function createSpellDispatchSystem({
       trigger: String(payload.trigger || "shake_detonation"),
       axis: entry.axis,
       slot: entry.slot,
-      axisWord: String(entry.axisWord || "").toLowerCase(),
-      axisSpell: String(entry.axisWord || "").toLowerCase(),
       wakeWindowSpell: String(entry.wakeWindowSpell || "").toLowerCase(),
       directionGroup: String(payload.directionGroup || entry.slot || ""),
       atMs: now,
@@ -301,7 +200,7 @@ export function createSpellDispatchSystem({
   function loadSlot(slotRaw, payload = {}) {
     const entry = buildLoadedEntryFromPayload(payload, slotRaw);
     if (!entry) return null;
-    loadedByAxis[entry.axis][entry.slot] = {
+    loadedBySlot[entry.slot] = {
       wordId: entry.wordId,
       spellId: entry.spellId,
       castActionId: entry.castActionId,
@@ -310,8 +209,7 @@ export function createSpellDispatchSystem({
       cooldownMs: entry.cooldownMs,
       confidence: entry.confidence,
       loadedAtMs: entry.loadedAtMs,
-      axisWord: entry.axisWord,
-      axisSpell: entry.axisSpell,
+      axis: entry.axis,
       wakeWindowSpell: entry.wakeWindowSpell,
     };
     emitSpellLoadedFromEntry(entry, String(payload.trigger || "rule_engine.event"));
@@ -321,13 +219,7 @@ export function createSpellDispatchSystem({
   function castSlot(slotRaw, payload = {}) {
     const slot = normGroup(slotRaw);
     if (!slot) return null;
-    const explicitAxis = normAxis(payload.axis);
-    let loaded = null;
-    if (explicitAxis && loadedByAxis[explicitAxis][slot]) {
-      loaded = Object.assign({ axis: explicitAxis, slot }, loadedByAxis[explicitAxis][slot]);
-    } else {
-      loaded = mostRecentLoadedForGroup(slot);
-    }
+    const loaded = mostRecentLoadedForGroup(slot);
     if (!loaded || !loaded.wordId) return null;
     const now = Number(payload.atMs) || nowMs();
     const spell = {
@@ -346,7 +238,7 @@ export function createSpellDispatchSystem({
       });
       return null;
     }
-    loadedByAxis[loaded.axis][loaded.slot] = null;
+    loadedBySlot[loaded.slot] = null;
     lastCastByWordId.set(spell.id, now);
     emitSpellCastFromEntry(loaded, {
       ...payload,
@@ -360,18 +252,10 @@ export function createSpellDispatchSystem({
     unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (payload = {}) => {
       const axis = normAxis(payload.axis);
       activeFlatSpinAxis = axis || null;
-      if (axis) {
-        // Flat-spin activation requires re-speaking axis token for that axis.
-        selectedAxisWordByAxis[axis] = "";
-      }
     }));
 
     unsub.push(eventBus.on(EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED, () => {
       activeFlatSpinAxis = null;
-      // Breaking flat-spin closes axis windows; user must re-speak axis token.
-      selectedAxisWordByAxis.x = "";
-      selectedAxisWordByAxis.y = "";
-      selectedAxisWordByAxis.z = "";
     }));
 
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
@@ -391,7 +275,6 @@ export function createSpellDispatchSystem({
       const spell = withRuntimeRouting(detected || {});
       const rawWordId = String(spell.id || "");
       const spellIntent = String(spell.intent || "");
-      const spellAxis = String((spell.axisWord || spell.axisSpell) || "").toLowerCase();
       const spellWakeWindow = String((spell.wakeWindowSpell) || "").toLowerCase();
       const wordId = rawWordId;
       if (!wordId) {
@@ -429,12 +312,11 @@ export function createSpellDispatchSystem({
       const axis = normAxis(activeFlatSpinAxis);
       const isFlatSpinLoadWindow = !!axis;
       const isWakeWindowSelect = isWakeWindowSelectIntent(spellIntent);
-      const isAxisSelect = isAxisSelectIntent(spellIntent);
 
       // Strict spell-tree enforcement:
-      // - axis/wake-window tokens are valid only during an active flat-spin window.
+      // - wake-window tokens are valid only during an active spin window.
       const bypassFlatSpinGate = TEMP_UNGATED_WORD_IDS.has(wordId);
-      if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && (isAxisSelect || isWakeWindowSelect)) {
+      if (!isFlatSpinLoadWindow && !bypassFlatSpinGate && isWakeWindowSelect) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "spell_window_required",
           wordId,
@@ -445,32 +327,7 @@ export function createSpellDispatchSystem({
       }
 
       if (isFlatSpinLoadWindow) {
-        if (isAxisSelect) {
-          if (!axisAllowedForSpell(spell, axis)) {
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "spell_axis_not_allowed",
-              wordId,
-              spellId: wordId,
-              axis,
-              allowedAxes: Array.isArray(spell.allowedAxes) ? spell.allowedAxes.slice() : [],
-              atMs: now,
-            });
-            return;
-          }
-          selectedAxisWordByAxis[axis] = spellAxis;
-          eventBus.emit(EVT_VOICE_AXIS_SELECTED, {
-            axis,
-            axisWord: spellAxis,
-            axisSpell: spellAxis,
-            wordId,
-            spellId: wordId,
-            atMs: now,
-          });
-          return;
-        }
-
-        // Strict tree inside flat-spin mode:
-        // only wake-window-select is accepted after axis-select.
+        // Strict tree inside spin mode: only wake-window-select words are valid here.
         if (!isWakeWindowSelect) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "flat_spin_requires_wake_window_token",
@@ -482,37 +339,10 @@ export function createSpellDispatchSystem({
           return;
         }
 
-        let concreteSpell = spell;
-        if (isWakeWindowSelect) {
-          if (!selectedAxisWordByAxis[axis]) {
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "no_axis_selected",
-              wordId,
-              spellId: wordId,
-              wakeWindowSpell: spellWakeWindow,
-              axis,
-              atMs: now,
-            });
-            return;
-          }
-          concreteSpell = resolveConcreteSpellForAxis(spell, axis);
-          if (!concreteSpell || !concreteSpell.id) {
-            eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-              reason: "axis_wake_window_resolution_failed",
-              wordId,
-              spellId: wordId,
-              wakeWindowSpell: spellWakeWindow,
-              axisWord: selectedAxisWordByAxis[axis],
-              axisSpell: selectedAxisWordByAxis[axis],
-              axis,
-              atMs: now,
-            });
-            return;
-          }
-        }
+        const concreteSpell = spell;
         const concreteWordId = String(concreteSpell && concreteSpell.id || "");
-        const dedupeKey = `${axis}:${concreteWordId}`;
-        const prevLoadAt = Number(lastFlatSpinLoadAtByAxisWord.get(dedupeKey) || 0);
+        const dedupeKey = concreteWordId;
+        const prevLoadAt = Number(lastFlatSpinLoadAtByWord.get(dedupeKey) || 0);
         if (concreteWordId && (now - prevLoadAt) < FLAT_SPIN_DUPLICATE_SUPPRESS_MS) {
           eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
             reason: "duplicate_spell_token",
@@ -535,19 +365,7 @@ export function createSpellDispatchSystem({
           });
           return;
         }
-        if (!axisAllowedForSpell(concreteSpell, axis)) {
-          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
-            reason: "spell_axis_not_allowed",
-            wordId: String(concreteSpell.id || wordId),
-            spellId: String(concreteSpell.id || wordId),
-            axis,
-            allowedAxes: Array.isArray(concreteSpell.allowedAxes) ? concreteSpell.allowedAxes.slice() : [],
-            atMs: now,
-          });
-          return;
-        }
-        const slot = pickSlotForLoad(concreteSpell, axis);
-        applyAxisSlotClearPolicy(concreteSpell, axis);
+        const slot = pickSlotForLoad(concreteSpell);
         const spendResult = consumeStoredGlobe({
           reason: "spell_load",
           wordId: String(concreteSpell.id || ""),
@@ -566,7 +384,7 @@ export function createSpellDispatchSystem({
           });
           return;
         }
-        loadedByAxis[axis][slot] = {
+        loadedBySlot[slot] = {
           wordId: String(concreteSpell.id || ""),
           spellId: String(concreteSpell.id || ""),
           castActionId: String((concreteSpell.castActionId || concreteSpell.id || "")).toLowerCase(),
@@ -575,12 +393,11 @@ export function createSpellDispatchSystem({
           cooldownMs: Math.max(0, Number(concreteSpell.cooldownMs) || 0),
           confidence: Number(payload.confidence) || 0,
           loadedAtMs: now,
-          axisWord: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
-          axisSpell: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
+          axis,
           wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
         };
         if (concreteWordId) {
-          lastFlatSpinLoadAtByAxisWord.set(dedupeKey, now);
+          lastFlatSpinLoadAtByWord.set(dedupeKey, now);
         }
         eventBus.emit(EVT_VOICE_SPELL_LOADED, {
           wordId: String(concreteSpell.id || ""),
@@ -590,8 +407,6 @@ export function createSpellDispatchSystem({
           confidence: Number(payload.confidence) || 0,
           axis,
           slot,
-          axisWord: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
-          axisSpell: String((concreteSpell.axisWord || concreteSpell.axisSpell) || "").toLowerCase(),
           wakeWindowSpell: String((concreteSpell.wakeWindowSpell) || "").toLowerCase(),
           atMs: now,
         });
@@ -649,12 +464,7 @@ export function createSpellDispatchSystem({
 
       let loaded = null;
       if (group) {
-        const axis = normAxis(activeFlatSpinAxis);
-        if (axis && loadedByAxis[axis][group]) {
-          loaded = Object.assign({ axis, slot: group }, loadedByAxis[axis][group]);
-        } else {
-          loaded = mostRecentLoadedForGroup(group);
-        }
+        loaded = mostRecentLoadedForGroup(group);
       } else {
         // Directionless shake fallback: detonate the most recently loaded slot.
         loaded = mostRecentLoadedAny();
@@ -680,7 +490,7 @@ export function createSpellDispatchSystem({
         return;
       }
 
-      loadedByAxis[loaded.axis][loaded.slot] = null;
+      loadedBySlot[loaded.slot] = null;
       lastCastByWordId.set(loadedWordId, now);
       emitSpellCastFromEntry(loaded, {
         trigger: "shake_detonation",
@@ -699,18 +509,13 @@ export function createSpellDispatchSystem({
 
   function reset() {
     lastCastByWordId.clear();
-    lastFlatSpinLoadAtByAxisWord.clear();
+    lastFlatSpinLoadAtByWord.clear();
     lastVoiceDetectDedupeKey = "";
     lastVoiceDetectDedupeAtMs = 0;
     activeFlatSpinAxis = null;
-    selectedAxisWordByAxis.x = "";
-    selectedAxisWordByAxis.y = "";
-    selectedAxisWordByAxis.z = "";
-    for (const axis of AXES) {
-      nextSlotIndexByAxis[axis] = 0;
-      for (const slot of SLOT_ORDER) {
-        loadedByAxis[axis][slot] = null;
-      }
+    nextSlotIndex = 0;
+    for (const slot of SLOT_ORDER) {
+      loadedBySlot[slot] = null;
     }
   }
 
