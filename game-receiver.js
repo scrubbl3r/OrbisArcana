@@ -2157,44 +2157,30 @@
                 kwsPanelController.markHeardWakeWindowToken(axis, token);
               }
             },
-            getFlatSpinAxis: () => (kwsTokenUiState ? String(kwsTokenUiState.flatSpinAxis || "") : ""),
+            getActiveSpinAxis: () => (kwsTokenUiState ? String(kwsTokenUiState.activeSpinAxis || "") : ""),
             openKwsWakeHudGate: (timeoutMs) => kwsBridge.openWakeHudGate(timeoutMs),
             shouldLogHeardWakeword: (rawToken) => kwsBridge.shouldLogHeardWakeword(rawToken),
             pushKwsLogLine: (text, kind) => kwsBridge.pushLogLine(text, kind),
             updateKwsReadout: () => kwsBridge.updateReadout(),
             isUngatedToken: (token) => TEMP_UNGATED_KWS_TOKENS.has(token),
-            setFlatSpinAxis: (axis) => {
-              if (kwsPanelController && typeof kwsPanelController.setFlatSpinAxis === "function") {
-                kwsPanelController.setFlatSpinAxis(axis);
+            setActiveSpinAxis: (axis) => {
+              if (kwsPanelController && typeof kwsPanelController.setActiveSpinAxis === "function") {
+                kwsPanelController.setActiveSpinAxis(axis);
               }
             },
-            clearFlatSpinState: () => {
-              if (kwsPanelController && typeof kwsPanelController.clearFlatSpinState === "function") {
-                kwsPanelController.clearFlatSpinState();
+            clearActiveSpinState: () => {
+              if (kwsPanelController && typeof kwsPanelController.clearActiveSpinState === "function") {
+                kwsPanelController.clearActiveSpinState();
               } else {
                 kwsBridge.resetHeardWakeWindowTokensAllAxes();
               }
             },
             resetHeardWakeWindowTokensForAxis: (axis) => kwsBridge.resetHeardWakeWindowTokensForAxis(axis),
             resetHeardWakeWindowTokensAllAxes: () => kwsBridge.resetHeardWakeWindowTokensAllAxes(),
-            setSelectedAxisWord: (axis, axisWord) => {
+            setSelectedSpinWord: (axis, axisWord) => {
               if (!kwsPanelController) return;
-              if (typeof kwsPanelController.setSelectedAxisWord === "function") {
-                kwsPanelController.setSelectedAxisWord(axis, axisWord);
-                return;
-              }
-              if (typeof kwsPanelController.setSelectedAxisSpell === "function") {
-                kwsPanelController.setSelectedAxisSpell(axis, axisWord);
-              }
-            },
-            setSelectedAxisSpell: (axis, axisSpell) => {
-              if (!kwsPanelController) return;
-              if (typeof kwsPanelController.setSelectedAxisWord === "function") {
-                kwsPanelController.setSelectedAxisWord(axis, axisSpell);
-                return;
-              }
-              if (typeof kwsPanelController.setSelectedAxisSpell === "function") {
-                kwsPanelController.setSelectedAxisSpell(axis, axisSpell);
+              if (typeof kwsPanelController.setSelectedSpinWord === "function") {
+                kwsPanelController.setSelectedSpinWord(axis, axisWord);
               }
             },
             getKwsMode: () => String(kwsDebugState.mode || ""),

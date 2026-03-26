@@ -19,7 +19,15 @@ export function createEventBus() {
   function emit(eventName, payload) {
     const set = listeners.get(eventName);
     if (!set) return;
-    for (const handler of set) handler(payload);
+    for (const handler of set) {
+      try {
+        handler(payload);
+      } catch (error) {
+        try {
+          console.error(`[event-bus] handler failed for ${String(eventName || "")}`, error);
+        } catch {}
+      }
+    }
   }
 
   return { on, off, emit };
