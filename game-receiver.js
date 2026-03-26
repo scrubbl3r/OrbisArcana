@@ -2397,21 +2397,11 @@
           }
         };
         eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, onRuleEngineActionExecuted);
-        // Receiver-side safety bridge for `orbis -> electrum -> rota -> aoe_electric`.
-        // Kept local to receiver because live traces already prove these events arrive here.
-        let electricFallbackWakeUntilMs = 0;
-        let electricFallbackWindowUntilMs = 0;
-        let electricFallbackLastEmitMs = 0;
         const DEFAULT_CHAIN_OPEN_TTL_MS = 2000;
         // Receiver-side safety bridge for `spin_y + charged + rota -> bind(FB, aoe_flame)`.
         let pyroSpinWindowUntilMs = 0;
         let pyroChargedUntilMs = 0;
         let pyroFallbackLastEmitMs = 0;
-        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
-          const token = String(p.token || "").trim().toLowerCase();
-          if (token !== "orbis") return;
-          electricFallbackWakeUntilMs = Date.now() + 2000;
-        });
         eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_FLAT_SPIN_OPENED, (p = {}) => {
           const axis = String(p.axis || "").trim().toLowerCase();
           if (axis !== "y") return;
@@ -2439,30 +2429,6 @@
             pyroChargedUntilMs = Math.max(pyroChargedUntilMs, now + DEFAULT_CHAIN_OPEN_TTL_MS);
             if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE src:pyro_open", "muted");
           }
-          if (wordId === "electrum" && now <= electricFallbackWakeUntilMs) {
-            electricFallbackWindowUntilMs = now + 1500;
-            return;
-          }
-          if (wordId !== "rota") return;
-          if (now > electricFallbackWindowUntilMs) return;
-          if ((now - electricFallbackLastEmitMs) < 250) return;
-          electricFallbackLastEmitMs = now;
-          eventBus.emit(RULE_ENGINE_ACTION_EXECUTED_EVENT, {
-            ruleId: "electric_aoe_fallback_receiver",
-            actionType: "event",
-            actionId: "aoe_electric",
-            args: {},
-            atMs: now,
-          });
-          if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE fallback:electric_aoe:receiver", "ok");
-
-          return;
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
-          const now = Date.now();
-          const wordId = String((p.word && p.word.id) || (p.spell && p.spell.id) || p.wordId || p.spellId || "")
-            .trim()
-            .toLowerCase();
           if (wordId !== "rota") return;
           if (now > pyroSpinWindowUntilMs) {
             if (RULE_CHAIN_TRACE_ENABLED) {
