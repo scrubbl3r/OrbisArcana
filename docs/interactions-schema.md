@@ -98,7 +98,7 @@ Examples:
 ```js
 on: { word: "rota" }
 on: { all: [{ type: "word", id: "word.rota" }] }
-on: { spin: "y", orb_state: "charged" }
+on: { spin: "y", orb_state: "globe_loaded" }
 on: { shake: "FB" }
 ```
 

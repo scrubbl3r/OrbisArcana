@@ -1,4 +1,9 @@
-import { EVT_ORB_FLOAT_GRACE_GRANT, EVT_SPELL_WINDOW_SPIN_OPENED, EVT_VOICE_WORD_DETECTED } from "../../src/contracts/events.js";
+import {
+  EVT_ORB_FLOAT_GRACE_GRANT,
+  EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
+  EVT_SPELL_WINDOW_SPIN_OPENED,
+  EVT_VOICE_WORD_DETECTED,
+} from "../../src/contracts/events.js";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 
@@ -23,6 +28,13 @@ export function emitOrbCharged(eventBus, atMs, ms = 100) {
   });
 }
 
+export function emitStoredGlobe(eventBus, atMs, stored = 1) {
+  eventBus.emit(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, {
+    atMs: Number(atMs),
+    stored: Number(stored),
+  });
+}
+
 export function emitPyroBindPrelude({
   eventBus,
   startAtMs = 1000,
@@ -30,7 +42,7 @@ export function emitPyroBindPrelude({
   pyroWordId = CHECK_SPELL_IDS_V2.pyro,
 } = {}) {
   const start = Number(startAtMs);
-  emitOrbCharged(eventBus, start);
+  emitStoredGlobe(eventBus, start);
   emitSpinOpened(eventBus, { axis, atMs: start + 10 });
   emitDetectedWord(eventBus, pyroWordId, start + 20);
   return start + 20;

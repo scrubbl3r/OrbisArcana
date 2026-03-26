@@ -10,7 +10,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { createMutableNow } from "./check-time-v2.mjs";
-import { emitDetectedWord, emitOrbCharged, emitSpinOpened } from "./check-wake-sequence-v2.mjs";
+import { emitDetectedWord, emitSpinOpened, emitStoredGlobe } from "./check-wake-sequence-v2.mjs";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.wakeWindowAxisPrereq;
@@ -35,7 +35,7 @@ function main() {
 
   system.start();
   try {
-    emitOrbCharged(eventBus, nowRef.value);
+    emitStoredGlobe(eventBus, nowRef.value);
     advance(10);
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: nowRef.value });
 

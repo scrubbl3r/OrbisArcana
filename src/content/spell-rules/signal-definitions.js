@@ -152,6 +152,12 @@ export const SIGNAL_DEFINITIONS = Object.freeze([
     sourceEvent: "orb.float_grace_grant",
     where: Object.freeze({ path: "ms", gte: 1 }),
   }),
+  Object.freeze({
+    id: "orb_state.globe_loaded",
+    type: "orb_state",
+    sourceEvent: "energy.globe_inventory_changed",
+    where: Object.freeze({ path: "stored", gte: 1 }),
+  }),
 ]);
 
 export const SIGNAL_DEFINITIONS_BY_ID = Object.freeze(

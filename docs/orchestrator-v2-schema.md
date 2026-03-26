@@ -59,7 +59,7 @@ export const ORCHESTRATOR_V2 = Object.freeze({
     },
     {
       id: "spin_y_opens_pyro",
-      on: { spin: "y", orb_state: "charged" },
+      on: { spin: "y", orb_state: "globe_loaded" },
       open: { id: "school.pyro_spin_seed", words: ["pyro"], ttlMs: 2000 },
     },
     {
@@ -127,7 +127,7 @@ Examples:
 
 ```js
 on: { word: "domus" }
-on: { spin: "y", orb_state: "charged" }
+on: { spin: "y", orb_state: "globe_loaded" }
 on: { shake: "FB" }
 ```
 

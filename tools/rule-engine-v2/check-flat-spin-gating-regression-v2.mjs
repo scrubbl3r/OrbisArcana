@@ -12,10 +12,10 @@ import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
-import { emitDetectedWord, emitOrbCharged, emitSpinOpened } from "./check-wake-sequence-v2.mjs";
+import { emitDetectedWord, emitSpinOpened, emitStoredGlobe } from "./check-wake-sequence-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.flatSpinGating;
-const PASS_MESSAGE = "spin-gated pyro chain opens only after charged spin input";
+const PASS_MESSAGE = "spin-gated pyro chain opens only after stored-globe spin input";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 
 function openWindowIds(events) {
@@ -44,12 +44,12 @@ function main() {
       `[${CHECK_TAG}] unexpected pyro window open without spin gate`
     );
 
-    emitOrbCharged(eventBus, CHECK_FIXED_TIMES_V2.flatSpinInside);
+    emitStoredGlobe(eventBus, CHECK_FIXED_TIMES_V2.flatSpinInside);
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.flatSpinInside + 10 });
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinInside + 20);
     assertCheck(
       openWindowIds(wakeOpened).includes("school.pyro_spin"),
-      `[${CHECK_TAG}] expected school.pyro_spin to open after charged spin + pyro`
+      `[${CHECK_TAG}] expected school.pyro_spin to open after stored globe + spin + pyro`
     );
   } finally {
     system.stop();

@@ -27,6 +27,7 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
 
   // Orb state signals
   ORB_CHARGED: "orb_state.charged",
+  ORB_GLOBE_LOADED: "orb_state.globe_loaded",
   ORB_SUPERHEATED: "orb_state.superheated",
 });
 
