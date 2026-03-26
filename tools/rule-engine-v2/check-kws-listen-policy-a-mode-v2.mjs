@@ -16,15 +16,14 @@ function assertHasAll(haystack, expected, label) {
   }
 }
 
-function main() {
+async function main() {
   const eventBus = createEventBus();
   const backendConfigs = [];
   const parserConfigs = [];
-  let nowRef = 1000;
   const controller = createKwsListenPolicyController({
     eventBus,
     initialMode: "B",
-    nowMs: () => nowRef,
+    nowMs: () => Date.now(),
     kwsRuntimeController: {
       setKwsBackendConfig(next = {}) {
         backendConfigs.push({
@@ -67,16 +66,25 @@ function main() {
   eventBus.emit("rule_engine.wake_win_opened", {
     windowId: "wake.main",
     words: ["domus", "electrum", "pyro"],
-    ttlMs: 1500,
-    atMs: nowRef,
+    ttlMs: 10,
+    atMs: Date.now(),
   });
   status = controller.getStatus();
   assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A opened listenableWordIds");
   assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah", "domus", "electrum", "pyro"], "A opened backend tokens");
   assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A opened parser words");
 
+  await new Promise((resolve) => setTimeout(resolve, 40));
+  status = controller.getStatus();
+  assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah"], "A expired listenableWordIds");
+  assertCheck(!status.listenableWordIds.includes("pyro"), `[${CHECK_TAG}] expected pyro to expire from strict listen set`);
+  assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah"], "A expired backend tokens");
+  assertCheck(!(backendConfigs.at(-1)?.activeTokens || []).includes("pyro"), `[${CHECK_TAG}] expected pyro token to expire from backend`);
+  assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah"], "A expired parser words");
+  assertCheck(!(parserConfigs.at(-1)?.words || []).includes("pyro"), `[${CHECK_TAG}] expected pyro to expire from parser words`);
+
   controller.stop();
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 
-main();
+await main();

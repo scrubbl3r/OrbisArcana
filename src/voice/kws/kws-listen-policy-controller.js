@@ -163,6 +163,11 @@ export function createKwsListenPolicyController({
     const delayMs = Math.max(0, Math.round(expiresAtMs - ((Number(nowMs()) || Date.now()))));
     const timer = setTimeout(() => {
       expiryTimersById.delete(windowId);
+      const current = windowEntriesById.get(windowId);
+      const currentExpiresAtMs = Number(current && current.expiresAtMs);
+      if (current && (!Number.isFinite(currentExpiresAtMs) || currentExpiresAtMs <= expiresAtMs)) {
+        windowEntriesById.delete(windowId);
+      }
       pruneExpiredWindows();
       emitSnapshot("window_expired");
     }, delayMs);

@@ -2360,14 +2360,6 @@
             const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
             const ttlMs = Math.max(0, Number(args.ttlMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
             eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-            const wakeWinPayload = {
-              ruleId: String(p.ruleId || ""),
-              actionId,
-              spells: Array.isArray(p.spells) ? p.spells.slice() : [],
-              ttlMs,
-              atMs: Number(p.atMs) || performance.now(),
-            };
-            eventBus.emit(RULE_ENGINE_WAKE_WIN_OPENED_EVENT, wakeWinPayload);
             return;
           }
           if (actionType === "bind") {

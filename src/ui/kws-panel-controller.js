@@ -306,6 +306,7 @@ export function createKwsPanelController({
       const cls = `kwsLogLine${row && row.kind ? ` ${row.kind}` : ""}`;
       return `<div class="${cls}">${safe}</div>`;
     }).join("");
+    els.kwsLog.scrollTop = 0;
   }
 
   function pushKwsLogLine(text, kind = "") {
@@ -315,7 +316,7 @@ export function createKwsPanelController({
     if (line === kwsLastLogText && (nowMs - Number(kwsLastLogAtMs || 0)) <= KWS_LOG_DEDUP_MS) return;
     kwsLastLogText = line;
     kwsLastLogAtMs = nowMs;
-    kwsEventLog.unshift({ text: line, kind: String(kind || "") });
+    kwsEventLog.push({ text: line, kind: String(kind || "") });
     if (kwsEventLog.length > KWS_EVENT_LOG_MAX) kwsEventLog.length = KWS_EVENT_LOG_MAX;
     renderKwsLog();
   }

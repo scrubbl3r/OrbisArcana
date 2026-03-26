@@ -187,14 +187,18 @@
       border-radius:8px;
       padding:4px 6px;
       min-height:72px;
-      max-height:140px;
-      overflow:auto;
+      height:180px;
+      max-height:180px;
+      overflow-y:auto;
+      overflow-x:hidden;
       background:rgba(0,0,0,.22);
       font-size:11px;
       line-height:1.35;
       color:rgba(50,255,117,.9);
-      display:grid;
+      display:flex;
+      flex-direction:column;
       gap:2px;
+      scrollbar-gutter: stable;
     }
     .kwsLogLine{
       white-space:pre-wrap;
