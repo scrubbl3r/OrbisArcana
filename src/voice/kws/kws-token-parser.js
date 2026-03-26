@@ -106,33 +106,45 @@ export function createKwsTokenParser(opts = {}) {
       return String(active.phrase || active.id || "").trim().toLowerCase();
     })
     .filter(Boolean);
-  const wakeTokenSet = new Set(
-    (Array.isArray(opts.wakeTokens) && opts.wakeTokens.length ? opts.wakeTokens : defaultWakeTokens)
-      .map((t) => normToken(t))
-      .filter(Boolean),
-  );
-  const requireWakeForWordIds = new Set(
-    (
+  let wakeTokenSet = new Set();
+  let requireWakeForWordIds = new Set();
+  let aliasIndex = buildKwsWordAliasIndex(opts.words || opts.spells);
+  let activeTokenVocabulary = new Set();
+
+  function rebuildVocabulary({
+    words = opts.words || opts.spells,
+    wakeTokens = (Array.isArray(opts.wakeTokens) && opts.wakeTokens.length ? opts.wakeTokens : defaultWakeTokens),
+    requireWakeWordIds = (
       Array.isArray(opts.requireWakeForWordIds) && opts.requireWakeForWordIds.length
         ? opts.requireWakeForWordIds
         : (Array.isArray(opts.requireWakeForSpellIds) && opts.requireWakeForSpellIds.length
           ? opts.requireWakeForSpellIds
-      : WAKE_REQUIRED_WORD_IDS)
-    )
-      .map((s) => String(s || "").trim().toLowerCase())
-      .filter(Boolean),
-  );
-
-  const aliasIndex = buildKwsWordAliasIndex(opts.words || opts.spells);
-  const activeTokenVocabulary = new Set();
-  for (const entry of aliasIndex.all || []) {
-    const tokens = Array.isArray(entry && entry.tokens) ? entry.tokens : [];
-    for (const t of tokens) {
-      const tok = normToken(t);
-      if (tok) activeTokenVocabulary.add(tok);
+          : WAKE_REQUIRED_WORD_IDS)
+    ),
+  } = {}) {
+    wakeTokenSet = new Set(
+      (Array.isArray(wakeTokens) ? wakeTokens : [])
+        .map((t) => normToken(t))
+        .filter(Boolean),
+    );
+    requireWakeForWordIds = new Set(
+      (Array.isArray(requireWakeWordIds) ? requireWakeWordIds : [])
+        .map((s) => String(s || "").trim().toLowerCase())
+        .filter(Boolean),
+    );
+    aliasIndex = buildKwsWordAliasIndex(words);
+    activeTokenVocabulary = new Set();
+    for (const entry of aliasIndex.all || []) {
+      const tokens = Array.isArray(entry && entry.tokens) ? entry.tokens : [];
+      for (const t of tokens) {
+        const tok = normToken(t);
+        if (tok) activeTokenVocabulary.add(tok);
+      }
     }
+    for (const t of wakeTokenSet) activeTokenVocabulary.add(normToken(t));
   }
-  for (const t of wakeTokenSet) activeTokenVocabulary.add(normToken(t));
+
+  rebuildVocabulary();
   let enabled = true;
   let shadow = !!cfg.shadow;
   /** @type {Array<{token:string, confidence:number, atMs:number}>} */
@@ -177,6 +189,19 @@ export function createKwsTokenParser(opts = {}) {
     if (Number.isFinite(Number(next.wakeArmMs))) cfg.wakeArmMs = Math.max(0, Math.round(Number(next.wakeArmMs)));
     if (Number.isFinite(Number(next.wakeArmedMinConfidence))) cfg.wakeArmedMinConfidence = clamp01(next.wakeArmedMinConfidence);
     if (typeof next.clearBufferOnMatch === "boolean") cfg.clearBufferOnMatch = !!next.clearBufferOnMatch;
+    const hasWords = Object.prototype.hasOwnProperty.call(next, "words") || Object.prototype.hasOwnProperty.call(next, "spells");
+    const hasWakeTokens = Object.prototype.hasOwnProperty.call(next, "wakeTokens");
+    const hasRequireWake = Object.prototype.hasOwnProperty.call(next, "requireWakeForWordIds")
+      || Object.prototype.hasOwnProperty.call(next, "requireWakeForSpellIds");
+    if (hasWords || hasWakeTokens || hasRequireWake) {
+      rebuildVocabulary({
+        words: hasWords ? (next.words || next.spells || []) : (opts.words || opts.spells),
+        wakeTokens: hasWakeTokens ? next.wakeTokens : Array.from(wakeTokenSet),
+        requireWakeWordIds: hasRequireWake
+          ? (next.requireWakeForWordIds || next.requireWakeForSpellIds || [])
+          : Array.from(requireWakeForWordIds),
+      });
+    }
     return getStatus();
   }
 
@@ -402,6 +427,7 @@ export function createKwsTokenParser(opts = {}) {
       wakeArmed: wakeArmedUntilMs > lastSeenAtMs,
       maxTokensInBuffer: cfg.maxTokensInBuffer,
       clearBufferOnMatch: cfg.clearBufferOnMatch,
+      activeTokenVocabularySize: activeTokenVocabulary.size,
     };
   }
 

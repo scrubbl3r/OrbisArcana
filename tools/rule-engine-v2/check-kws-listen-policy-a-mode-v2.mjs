@@ -19,6 +19,7 @@ function assertHasAll(haystack, expected, label) {
 function main() {
   const eventBus = createEventBus();
   const backendConfigs = [];
+  const parserConfigs = [];
   let nowRef = 1000;
   const controller = createKwsListenPolicyController({
     eventBus,
@@ -28,6 +29,12 @@ function main() {
       setKwsBackendConfig(next = {}) {
         backendConfigs.push({
           activeTokens: Array.isArray(next.activeTokens) ? next.activeTokens.slice().sort() : null,
+        });
+      },
+      setKwsWordParserConfig(next = {}) {
+        parserConfigs.push({
+          words: Array.isArray(next.words) ? next.words.map((word) => String(word?.id || "")).filter(Boolean).sort() : null,
+          wakeTokens: Array.isArray(next.wakeTokens) ? next.wakeTokens.slice().sort() : null,
         });
       },
     },
@@ -54,6 +61,8 @@ function main() {
   assertCheck(status.mode === "A", `[${CHECK_TAG}] expected controller mode A after toggle`);
   assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah"], "A idle listenableWordIds");
   assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah"], "A idle backend tokens");
+  assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah"], "A idle parser words");
+  assertHasAll(parserConfigs.at(-1)?.wakeTokens || [], ["orbis", "are kay nah"], "A idle parser wakeTokens");
 
   eventBus.emit("rule_engine.wake_win_opened", {
     windowId: "wake.main",
@@ -64,6 +73,7 @@ function main() {
   status = controller.getStatus();
   assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A opened listenableWordIds");
   assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah", "domus", "electrum", "pyro"], "A opened backend tokens");
+  assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A opened parser words");
 
   controller.stop();
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);

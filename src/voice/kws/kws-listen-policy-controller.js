@@ -30,6 +30,13 @@ function resolveWordPhrase(wordId) {
   return String((word && (word.phrase || word.id)) || "").trim().toLowerCase();
 }
 
+function resolveActiveWords(wordIds = []) {
+  return normalizeWordIds(wordIds)
+    .map((wordId) => ACTIVE_WORDS_BY_ID[wordId])
+    .filter(Boolean)
+    .map((word) => Object.freeze({ ...word }));
+}
+
 function normalizeWordIds(rawWordIds = []) {
   return Array.from(new Set(
     (Array.isArray(rawWordIds) ? rawWordIds : [])
@@ -110,6 +117,17 @@ export function createKwsListenPolicyController({
         activeTokens: mode === KWS_LISTEN_POLICY_MODES.STRICT_A
           ? snapshot.listenableTokens.slice()
           : null,
+      });
+    }
+    if (kwsRuntimeController && typeof kwsRuntimeController.setKwsWordParserConfig === "function") {
+      kwsRuntimeController.setKwsWordParserConfig({
+        ...(mode === KWS_LISTEN_POLICY_MODES.STRICT_A
+          ? {
+            words: resolveActiveWords(snapshot.listenableWordIds),
+            wakeTokens: snapshot.rootWordIds.map((wordId) => resolveWordPhrase(wordId)).filter(Boolean),
+            requireWakeForWordIds: [],
+          }
+          : {}),
       });
     }
 

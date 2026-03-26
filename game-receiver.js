@@ -2198,6 +2198,11 @@
               }
             },
             getKwsMode: () => String(kwsDebugState.mode || ""),
+            getListenPolicyStatus: () => (
+              kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function"
+                ? kwsListenPolicyController.getStatus()
+                : null
+            ),
             gateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
           },
         });

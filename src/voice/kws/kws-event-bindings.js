@@ -36,6 +36,7 @@ export function bindKwsEventHandlers({
   const resetHeardWakeWindowTokensAllAxes = typeof deps.resetHeardWakeWindowTokensAllAxes === "function" ? deps.resetHeardWakeWindowTokensAllAxes : () => {};
   const setSelectedSpinWord = typeof deps.setSelectedSpinWord === "function" ? deps.setSelectedSpinWord : null;
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
+  const getListenPolicyStatus = typeof deps.getListenPolicyStatus === "function" ? deps.getListenPolicyStatus : () => null;
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
   const wakeTtlMs = Math.max(0, Number(ORCHESTRATOR_V2_WAKE_TTL_MS) || gateTimeoutMs);
   let wakeArmedUntilMs = 0;
@@ -67,6 +68,13 @@ export function bindKwsEventHandlers({
   );
 
   const unsub = [];
+  function isTokenListenableNow(token) {
+    const status = getListenPolicyStatus();
+    const mode = String(status && status.mode || "").trim().toUpperCase();
+    if (mode !== "A") return true;
+    const listenableTokens = Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [];
+    return new Set(listenableTokens.map((value) => canonicalKwsToken(value))).has(canonicalKwsToken(token));
+  }
   const getWordIdFromPayload = (p = {}) => String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
   const getAxisWordFromPayload = (p = {}) => String((p.axisWord ?? p.axisSpell) || "").trim().toLowerCase();
   const getDetectedWordId = (p = {}) => {
@@ -82,11 +90,11 @@ export function bindKwsEventHandlers({
     const token = canonicalKwsToken(p.token);
     const now = Date.now();
     kwsDebugState.lastToken = token;
-    if (isUngatedToken(token)) flashKwsToken(token);
-    if (flashTokenSet.has(token)) {
+    if (isUngatedToken(token) && isTokenListenableNow(token)) flashKwsToken(token);
+    if (flashTokenSet.has(token) && isTokenListenableNow(token)) {
       flashKwsToken(token);
     }
-    if (isWakeWindowActive() && wakeWindowTokenSet.has(token)) {
+    if (isWakeWindowActive() && wakeWindowTokenSet.has(token) && isTokenListenableNow(token)) {
       const axis = String(getActiveSpinAxis() || "").trim().toLowerCase();
       if ((axis === "x" || axis === "y" || axis === "z") && typeof markHeardWakeWindowToken === "function") {
         markHeardWakeWindowToken(axis, token);
@@ -153,7 +161,7 @@ export function bindKwsEventHandlers({
     if (axis === "x" || axis === "y" || axis === "z") {
       if (typeof setSelectedSpinWord === "function") setSelectedSpinWord(axis, axisWord);
       resetHeardWakeWindowTokensForAxis(axis);
-      if (axisWord === "electrum") flashKwsToken("electrum", 520);
+      if (axisWord === "electrum" && isTokenListenableNow("electrum")) flashKwsToken("electrum", 520);
     }
     updateKwsReadout();
   }
