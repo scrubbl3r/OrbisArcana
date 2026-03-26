@@ -2441,6 +2441,18 @@
         };
         eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, onRuleEngineActionExecuted);
         if (RULE_CHAIN_TRACE_ENABLED) {
+          const getListenPolicyTraceState = () => {
+            const status = (kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function")
+              ? kwsListenPolicyController.getStatus()
+              : null;
+            const mode = String(status && status.mode || "B").trim().toUpperCase() || "B";
+            const tokens = new Set(
+              (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
+                .map((token) => String(token || "").trim().toLowerCase())
+                .filter(Boolean)
+            );
+            return { mode, tokens };
+          };
           eventBus.on("input.shake_triggered", (p = {}) => {
             const group = String(p.group || "").trim().toUpperCase();
             const code = String(p.code || "").trim().toUpperCase();
@@ -2463,15 +2475,33 @@
           eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
             const token = String(p.token || "").trim().toLowerCase();
             if (!token) return;
+            const { mode, tokens } = getListenPolicyTraceState();
+            const listenable = tokens.has(token);
+            kwsBridge.pushLogLine(`TRACE leak:token:${token}:mode:${mode}:listenable:${listenable ? "yes" : "no"}`, listenable ? "muted" : "warn");
             if (token === "orbis" || token === "are kay nah" || token === "are_kay_nah") {
               kwsBridge.pushLogLine(`TRACE token:${token}`, "muted");
             }
+          });
+          eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_WORD_CANDIDATE || RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
+            const matched = !!p.matched;
+            const wordId = String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
+            const phrase = String(p.phrase || "").trim().toLowerCase();
+            const signal = wordId || phrase || "-";
+            const { mode, tokens } = getListenPolicyTraceState();
+            const listenable = tokens.has(signal);
+            kwsBridge.pushLogLine(
+              `TRACE leak:candidate:${signal}:matched:${matched ? "yes" : "no"}:mode:${mode}:listenable:${listenable ? "yes" : "no"}`,
+              (matched && !listenable) ? "warn" : "muted"
+            );
           });
           eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
             const wordId = String((p.word && p.word.id) || (p.spell && p.spell.id) || p.wordId || p.spellId || "")
               .trim()
               .toLowerCase();
             if (!wordId) return;
+            const { mode, tokens } = getListenPolicyTraceState();
+            const listenable = tokens.has(wordId);
+            kwsBridge.pushLogLine(`TRACE leak:word:${wordId}:mode:${mode}:listenable:${listenable ? "yes" : "no"}`, listenable ? "muted" : "warn");
             if (wordId === "orbis" || wordId === "domus" || wordId === "electrum" || wordId === "pyro" || wordId === "rota") {
               kwsBridge.pushLogLine(`TRACE word:${wordId}`, "muted");
             }
