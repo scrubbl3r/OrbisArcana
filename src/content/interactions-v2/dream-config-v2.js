@@ -45,7 +45,7 @@ export const DREAM_CONFIG_V2 = {
     // PYRO AOE CHAIN
     {
       id: "spin_y_opens_pyro",
-      on: { spin: "y", orb_state: "globe_loaded" },
+      on: { spin: "y" },
       open: { id: "school.pyro_spin_seed", words: ["pyro"], ttlMs: 2000 },
     },
     {

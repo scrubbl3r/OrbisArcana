@@ -68,7 +68,7 @@ Preflight:
   2. `npm run status:v2`
 - Human gameplay pack (manual confidence):
   - See **Troubleshooting Quick Map**, `KWS: init failed or word token detection stalls`.
-  - Suggested exemplar checks: `orbis -> domus`, `orbis -> electrum -> rota`, `spin:y + globe_loaded -> pyro -> rota`, `shake:FB`
+  - Suggested exemplar checks: `orbis -> domus`, `orbis -> electrum -> rota`, `spin:y -> pyro -> rota`, `shake:FB`
 
 ## Before Push Checklist
 1. Authoring edits only in SSOT files (`dream-config-v2.js`, `wordbook-v2.js`) unless doing intentional plumbing.

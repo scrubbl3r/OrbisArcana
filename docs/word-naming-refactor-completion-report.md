@@ -36,7 +36,7 @@ Canonical naming is now `word*` for authoring, runtime indexing, routing, and in
 3. Verify authored trigger chain:
    - `orbis -> electrum -> rota` -> electric AOE behavior.
 4. Verify authored bind chain:
-   - `spin:y + globe loaded -> pyro -> rota` -> load `FB`.
+   - `spin:y -> pyro -> rota` -> load `FB`.
 5. Verify shake detonation:
    - `shake:FB` casts the loaded slot.
 6. Verify KWS readout:

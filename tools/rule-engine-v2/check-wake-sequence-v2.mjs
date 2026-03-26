@@ -42,7 +42,6 @@ export function emitPyroBindPrelude({
   pyroWordId = CHECK_SPELL_IDS_V2.pyro,
 } = {}) {
   const start = Number(startAtMs);
-  emitStoredGlobe(eventBus, start);
   emitSpinOpened(eventBus, { axis, atMs: start + 10 });
   emitDetectedWord(eventBus, pyroWordId, start + 20);
   return start + 20;
