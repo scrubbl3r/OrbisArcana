@@ -56,6 +56,7 @@ export function createKwsPanelController({
   const kwsEventLog = [];
   let kwsLastLogText = "";
   let kwsLastLogAtMs = 0;
+  let kwsLogStartedAtMs = 0;
   let tuneApplyBound = false;
   let listenPolicyBound = false;
 
@@ -313,10 +314,13 @@ export function createKwsPanelController({
     const line = String(text || "").trim();
     if (!line) return;
     const nowMs = Date.now();
+    if (!kwsLogStartedAtMs) kwsLogStartedAtMs = nowMs;
     if (line === kwsLastLogText && (nowMs - Number(kwsLastLogAtMs || 0)) <= KWS_LOG_DEDUP_MS) return;
     kwsLastLogText = line;
     kwsLastLogAtMs = nowMs;
-    kwsEventLog.push({ text: line, kind: String(kind || "") });
+    const relMs = Math.max(0, nowMs - kwsLogStartedAtMs);
+    const stamp = `[${(relMs / 1000).toFixed(3)}]`;
+    kwsEventLog.push({ text: `${stamp} ${line}`, kind: String(kind || "") });
     renderKwsLog();
   }
 
