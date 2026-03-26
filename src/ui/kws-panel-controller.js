@@ -12,7 +12,6 @@ export function createKwsPanelController({
   const DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(250, Number(constants.defaultGateTimeoutMs) || 1500);
   const DEFAULT_KWS_START_STALL_MS = Math.max(0, Number(constants.startStallMs) || 8000);
   const KWS_READOUT_TICK_MS = Math.max(100, Number(constants.readoutTickMs) || 250);
-  const KWS_EVENT_LOG_MAX = Math.max(1, Number(constants.eventLogMax) || 200);
   const KWS_LOG_DEDUP_MS = Math.max(0, Number(constants.logDedupMs) || 450);
   const KWS_ROW_TOP = Array.isArray(constants.rowTop) ? constants.rowTop.slice() : [];
   const KWS_ROW_BOTTOM = Array.isArray(constants.rowBottom) ? constants.rowBottom.slice() : [];
@@ -318,7 +317,6 @@ export function createKwsPanelController({
     kwsLastLogText = line;
     kwsLastLogAtMs = nowMs;
     kwsEventLog.push({ text: line, kind: String(kind || "") });
-    while (kwsEventLog.length > KWS_EVENT_LOG_MAX) kwsEventLog.shift();
     renderKwsLog();
   }
 
