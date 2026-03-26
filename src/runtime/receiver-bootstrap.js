@@ -205,7 +205,8 @@ function buildRuleSchemaRuntimePayload(
   windows,
   events,
   rules,
-  eventRuntimeBindings
+  eventRuntimeBindings,
+  debugBootstrap = null,
 ) {
   return {
     source,
@@ -214,6 +215,9 @@ function buildRuleSchemaRuntimePayload(
     events,
     rules,
     eventRuntimeBindings,
+    debugBootstrap: debugBootstrap && typeof debugBootstrap === "object"
+      ? { ...debugBootstrap }
+      : null,
     ...buildRuleSchemaOverridePayload(schema),
   };
 }
@@ -531,9 +535,24 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     ? RULE_ENGINE_SOURCES.ORCHESTRATOR_V2
     : RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER;
   let ruleSchema = buildSafeDisabledRuleSchema();
+  const debugBootstrap = {
+    selectedRuleSourceMode,
+    adapterFallbackUsed: false,
+    buildRules: 0,
+    buildSignals: 0,
+    postValidateRules: 0,
+    postValidateSignals: 0,
+    postIntegrityRules: 0,
+    postIntegritySignals: 0,
+    validateErrorCount: 0,
+    integrityErrorCount: 0,
+    stage: "init",
+  };
   if (selectedRuleSourceMode === "orchestrator_v2") {
     if (typeof buildRuleEngineFromOrchestratorV2Fn !== "function") {
       adapterFallbackUsed = true;
+      debugBootstrap.adapterFallbackUsed = true;
+      debugBootstrap.stage = "missing_builder";
       ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V2_MISSING_BUILDER;
       safeConsoleWarn(WARN_ORCHESTRATOR_V2_BUILDER_MISSING);
     } else {
@@ -552,19 +571,29 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
           orchestratorV2: orchestratorV2Input,
           baseRuleEngine: adapterBaseRuleSchema,
         });
+        const builtState = deriveRuleSchemaState(ruleSchema);
+        debugBootstrap.buildRules = builtState.rules.length;
+        debugBootstrap.buildSignals = builtState.signals.length;
+        debugBootstrap.stage = "built";
       } catch (err) {
         safeConsoleWarn(WARN_ORCHESTRATOR_V2_BUILD_FAILED, err);
         adapterFallbackUsed = true;
+        debugBootstrap.adapterFallbackUsed = true;
+        debugBootstrap.stage = "build_failed";
         ruleSource = RULE_ENGINE_SOURCES.ORCHESTRATOR_V2_FALLBACK;
         ruleSchema = buildSafeDisabledRuleSchema();
       }
     }
   } else if (!useInteractionsV2) {
     adapterFallbackUsed = true;
+    debugBootstrap.adapterFallbackUsed = true;
+    debugBootstrap.stage = "bootstrap_disabled";
     ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_BOOTSTRAP_DISABLED;
     safeConsoleWarn(WARN_INTERACTIONS_BOOTSTRAP_DISABLED);
   } else if (typeof buildRuleEngineFromInteractions !== "function") {
     adapterFallbackUsed = true;
+    debugBootstrap.adapterFallbackUsed = true;
+    debugBootstrap.stage = "missing_builder";
     ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_MISSING_BUILDER;
     safeConsoleWarn(WARN_INTERACTIONS_BUILDER_MISSING);
   } else {
@@ -573,9 +602,15 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         interactionsV2: INTERACTIONS_V2,
         baseRuleEngine: adapterBaseRuleSchema,
       });
+      const builtState = deriveRuleSchemaState(ruleSchema);
+      debugBootstrap.buildRules = builtState.rules.length;
+      debugBootstrap.buildSignals = builtState.signals.length;
+      debugBootstrap.stage = "built";
     } catch (err) {
       safeConsoleWarn(WARN_INTERACTIONS_ADAPTER_FAILED, err);
       adapterFallbackUsed = true;
+      debugBootstrap.adapterFallbackUsed = true;
+      debugBootstrap.stage = "build_failed";
       ruleSource = RULE_ENGINE_SOURCES.INTERACTIONS_ADAPTER_FALLBACK;
       ruleSchema = adapterBaseRuleSchema;
     }
@@ -696,12 +731,17 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     const errors = validateRuleEngine(ruleSchema).filter(
       (msg) => String(msg || "") !== POLICY_ONLY_RULES_EMPTY_ERROR
     );
+    debugBootstrap.validateErrorCount = errors.length;
     if (errors.length) {
       warnWithErrorCount(WARN_RULE_SCHEMA_INVALID_PREFIX, errors.length);
       adapterFallbackUsed = true;
+      debugBootstrap.adapterFallbackUsed = true;
+      debugBootstrap.stage = "validate_failed";
       ruleSchema = buildSafeDisabledRuleSchema();
       refreshRuleSchemaDerived();
     }
+    debugBootstrap.postValidateRules = ruleRules.length;
+    debugBootstrap.postValidateSignals = ruleSignals.length;
   }
   if (typeof validateSpellSchemaIntegrityFn === "function") {
     const integrityErrors = validateSpellSchemaIntegrityFn(
@@ -712,12 +752,20 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         ruleEventRuntimeBindings
       )
     );
+    debugBootstrap.integrityErrorCount = integrityErrors.length;
     if (integrityErrors.length) {
       warnWithErrorCount(WARN_RULE_SCHEMA_INTEGRITY_INVALID_PREFIX, integrityErrors.length);
       adapterFallbackUsed = true;
+      debugBootstrap.adapterFallbackUsed = true;
+      debugBootstrap.stage = "integrity_failed";
       ruleSchema = buildSafeDisabledRuleSchema();
       refreshRuleSchemaDerived();
     }
+    debugBootstrap.postIntegrityRules = ruleRules.length;
+    debugBootstrap.postIntegritySignals = ruleSignals.length;
+  }
+  if (debugBootstrap.stage === "built") {
+    debugBootstrap.stage = "ready";
   }
   const resolvedRuleSource = adapterFallbackUsed
     ? ruleSource
@@ -734,7 +782,8 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
         ruleWindows,
         ruleEvents,
         ruleRules,
-        ruleEventRuntimeBindings
+        ruleEventRuntimeBindings,
+        debugBootstrap
       )
     );
   }

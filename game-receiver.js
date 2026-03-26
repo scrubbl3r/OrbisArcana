@@ -1664,6 +1664,9 @@
               windows: Array.isArray(next.windows) ? next.windows.slice() : [],
               events: Array.isArray(next.events) ? next.events.slice() : [],
               rules: Array.isArray(next.rules) ? next.rules.slice() : [],
+              debugBootstrap: (next.debugBootstrap && typeof next.debugBootstrap === "object")
+                ? { ...next.debugBootstrap }
+                : null,
               eventRuntimeBindings: (next.eventRuntimeBindings && typeof next.eventRuntimeBindings === "object")
                 ? { ...next.eventRuntimeBindings }
                 : Object.create(null),
@@ -1844,7 +1847,17 @@
             };
             if (els.rulesReadout) {
               const source = String(ruleSchema.source || "unknown");
-              els.rulesReadout.textContent = ruleEngineSourceReadout[source] || source || "unknown";
+              const debugBootstrap = (ruleSchema.debugBootstrap && typeof ruleSchema.debugBootstrap === "object")
+                ? ruleSchema.debugBootstrap
+                : null;
+              const builtRules = Number(debugBootstrap && debugBootstrap.buildRules) || 0;
+              const builtSignals = Number(debugBootstrap && debugBootstrap.buildSignals) || 0;
+              const finalRules = Array.isArray(ruleSchema.rules) ? ruleSchema.rules.length : 0;
+              const finalSignals = Array.isArray(ruleSchema.signals) ? ruleSchema.signals.length : 0;
+              const stage = String(debugBootstrap && debugBootstrap.stage || "na");
+              const fallback = !!(debugBootstrap && debugBootstrap.adapterFallbackUsed);
+              els.rulesReadout.textContent =
+                `${ruleEngineSourceReadout[source] || source || "unknown"} | build ${builtRules}/${builtSignals} -> live ${finalRules}/${finalSignals} | ${stage}${fallback ? " fallback" : ""}`;
             }
           },
           initWordActionHandlers,
@@ -2080,10 +2093,19 @@
             const hasWakeMain = rules.some((r) => String(r && r.id || "").trim().toLowerCase() === "wake_main");
             const hasTeleHome = rules.some((r) => String(r && r.id || "").trim().toLowerCase() === "tele_home");
             const orbisSignal = signals.find((s) => String(s && s.id || "").trim().toLowerCase() === "spell.orbis");
+            const debugBootstrap = (ruleSchema.debugBootstrap && typeof ruleSchema.debugBootstrap === "object")
+              ? ruleSchema.debugBootstrap
+              : null;
             kwsBridge.pushLogLine(
               `TRACE schema rules:${rules.length} signals:${signals.length} wake_main:${hasWakeMain} tele_home:${hasTeleHome}`,
               "muted"
             );
+            if (debugBootstrap) {
+              kwsBridge.pushLogLine(
+                `TRACE bootstrap stage:${String(debugBootstrap.stage || "na")} build:${Number(debugBootstrap.buildRules) || 0}/${Number(debugBootstrap.buildSignals) || 0} validate:${Number(debugBootstrap.postValidateRules) || 0}/${Number(debugBootstrap.postValidateSignals) || 0} integrity:${Number(debugBootstrap.postIntegrityRules) || 0}/${Number(debugBootstrap.postIntegritySignals) || 0} fallback:${debugBootstrap.adapterFallbackUsed ? "true" : "false"} errs:${Number(debugBootstrap.validateErrorCount) || 0}/${Number(debugBootstrap.integrityErrorCount) || 0}`,
+                "muted"
+              );
+            }
             if (orbisSignal) {
               kwsBridge.pushLogLine(
                 `TRACE sig.orbis src:${String(orbisSignal.sourceEvent || "")} path:${String(orbisSignal.where && orbisSignal.where.path || "")} eq:${String(orbisSignal.where && orbisSignal.where.eq || "")}`,
