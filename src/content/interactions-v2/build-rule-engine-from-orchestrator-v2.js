@@ -284,8 +284,6 @@ export function buildRuleEngineFromOrchestratorV2(options = {}) {
   const baseRuleEngine = asObj(safeOptions[FIELD_BASE_RULE_ENGINE]);
   const baseEventRuntimeBindings = asObj(baseRuleEngine.eventRuntimeBindings);
   const rules = buildCompiledRules(orchestratorV2);
-  const groups = asObj(orchestratorV2[FIELD_GROUPS]);
-  const wake = compileWakeSection(orchestratorV2[FIELD_WAKE], groups);
   return Object.freeze({
     ...baseRuleEngine,
     [FIELD_ENABLED]: orchestratorV2[FIELD_ENABLED] !== ENABLED_FALSE,
@@ -295,7 +293,6 @@ export function buildRuleEngineFromOrchestratorV2(options = {}) {
         : Object.create(null)),
       ...baseEventRuntimeBindings,
     }),
-    ...(wake ? { [FIELD_WAKE]: wake } : {}),
     [FIELD_RULES]: Object.freeze(rules),
   });
 }

@@ -6,10 +6,7 @@
 
 import { EVENT_DEFINITIONS } from "./event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "./event-runtime-bindings.js";
-import {
-  SIGNAL_DEFINITION_COLLISIONS,
-  SIGNAL_DEFINITIONS,
-} from "./signal-definitions.js";
+import { SIGNAL_DEFINITIONS } from "./signal-definitions.js";
 import { WINDOW_DEFINITIONS } from "./window-definitions.js";
 
 const RULE_ENABLED_OVERRIDES = Object.freeze({
@@ -680,7 +677,6 @@ export const RULE_ENGINE_MASTER_CONTROL = Object.freeze({
   eventDefaultOverrides: EVENT_DEFAULT_OVERRIDES,
   windowEnabledOverrides: WINDOW_ENABLED_OVERRIDES,
   windowDefaultOverrides: WINDOW_DEFAULT_OVERRIDES,
-  signalDefinitionCollisions: SIGNAL_DEFINITION_COLLISIONS,
   signals: applySignalEnabledOverrides(
     applySignalWhereOverrides(
       applySignalPriorityOverrides(
