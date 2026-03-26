@@ -209,6 +209,7 @@ export function createKwsPanelController({
 
   function updateKwsReadout() {
     if (!els.kwsReadout) return;
+    renderListenPolicyMode();
     const now = Date.now();
     const orbisOpen = now < Number(kwsTokenUiState.orbisWindowUntilMs || 0);
     const axis = String(kwsTokenUiState.activeSpinAxis || "").trim().toLowerCase();
@@ -306,7 +307,7 @@ export function createKwsPanelController({
       const cls = `kwsLogLine${row && row.kind ? ` ${row.kind}` : ""}`;
       return `<div class="${cls}">${safe}</div>`;
     }).join("");
-    els.kwsLog.scrollTop = 0;
+    els.kwsLog.scrollTop = els.kwsLog.scrollHeight;
   }
 
   function pushKwsLogLine(text, kind = "") {
