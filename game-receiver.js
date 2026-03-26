@@ -2447,6 +2447,8 @@
               ruleId === "electric_aoe" ||
               ruleId === "electric_aoe_cast" ||
               ruleId === "shake_ud_cast" ||
+              ruleId === "shake_lr_cast" ||
+              ruleId === "shake_fb_cast" ||
               ruleId === "spin_y_opens_pyro" ||
               ruleId === "spin_y_pyro_opens_rota" ||
               ruleId === "spin_y_pyro_rota_bind_fb"

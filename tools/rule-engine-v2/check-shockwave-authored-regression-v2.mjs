@@ -9,9 +9,27 @@ import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "shockwave-authored-regression:v2";
-const PASS_MESSAGE = "ud shake triggers authored shockwave through the orchestrator rule path";
+const PASS_MESSAGE = "ud/lr/fb shake triggers authored shockwave through the orchestrator rule path";
 
-function main() {
+const EXPECTED_RULE_ID_BY_GROUP = Object.freeze({
+  UD: "shake_ud_cast",
+  LR: "shake_lr_cast",
+  FB: "shake_fb_cast",
+});
+
+function assertSingleShockwaveAction(executedActions, ruleId, shakeGroup) {
+  const shockwaveActions = executedActions.filter((evt) =>
+    String(evt?.actionType || "") === "event"
+    && String(evt?.actionId || "") === "shockwave"
+    && String(evt?.ruleId || "") === ruleId
+  );
+  assertCheck(
+    shockwaveActions.length === 1,
+    `[${CHECK_TAG}] expected one authored shockwave action after ${shakeGroup} shake, got ${shockwaveActions.length}`
+  );
+}
+
+function runScenario(shakeGroup, code) {
   const eventBus = createCheckEventBus();
   const executedActions = captureCheckEvents(eventBus, "rule_engine.action_executed");
   const previewSystem = createRuleEnginePreviewSystem({
@@ -27,19 +45,20 @@ function main() {
   });
 
   previewSystem.start();
-  eventBus.emit("input.shake_triggered", { group: "UD", code: "U", atMs: 1000 });
+  eventBus.emit("input.shake_triggered", { group: shakeGroup, code, atMs: 1000 });
   previewSystem.stop();
 
-  const shockwaveActions = executedActions.filter((evt) =>
-    String(evt?.actionType || "") === "event"
-    && String(evt?.actionId || "") === "shockwave"
-    && String(evt?.ruleId || "") === "shake_ud_cast"
+  assertSingleShockwaveAction(
+    executedActions,
+    String(EXPECTED_RULE_ID_BY_GROUP[shakeGroup] || ""),
+    shakeGroup
   );
+}
 
-  assertCheck(
-    shockwaveActions.length === 1,
-    `[${CHECK_TAG}] expected one authored shockwave action after UD shake, got ${shockwaveActions.length}`
-  );
+function main() {
+  runScenario("UD", "U");
+  runScenario("LR", "L");
+  runScenario("FB", "F");
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 

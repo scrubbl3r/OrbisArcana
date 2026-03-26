@@ -25,7 +25,7 @@ import { CHECK_MUTABLE_TIME_STARTS_V2 } from "./check-time-constants-v2.mjs";
 import { createMutableNow } from "./check-time-v2.mjs";
 // Regression guard for shake detonation across fallback and grouped trigger modes.
 const CHECK_TAG = CHECK_TAGS_V2.shakeRegression;
-const PASS_MESSAGE = "shake detonation works for direct slot loads, grouped shakes, and authored FB binds after spin setup";
+const PASS_MESSAGE = "shake detonation works for direct slot loads, grouped shakes, and authored FB-loaded casts after spin setup";
 
 function runScenario({ wordId, slot, expectedWordId, shakeGroup = "" }) {
   const eventBus = createCheckEventBus();
@@ -142,7 +142,7 @@ function runAuthoredFbBindScenario() {
 
   assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one cast from authored FB shake, got ${casts.length}`);
   assertCheck(String(casts[0]?.castActionId || "") === "aoe_flame", `[${CHECK_TAG}] expected authored FB shake to cast aoe_flame`);
-  assertCheck(String(casts[0]?.trigger || "") === "rule_engine_loaded_slot", `[${CHECK_TAG}] expected authored FB shake trigger to route via loaded slot cast action`);
+  assertCheck(String(casts[0]?.trigger || "") === "shake_detonation", `[${CHECK_TAG}] expected authored FB shake trigger to route via direct shake detonation`);
   assertCheck(String(casts[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored FB shake cast to use FB slot`);
 }
 

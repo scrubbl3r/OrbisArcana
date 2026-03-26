@@ -69,12 +69,12 @@ export const DREAM_CONFIG_V2 = {
     {
       id: "shake_lr_cast",
       on: { shake: "LR" },
-      trigger: { spell: "cast_loaded_lr" },
+      trigger: { spell: "shockwave" },
     },
     {
       id: "shake_fb_cast",
       on: { shake: "FB" },
-      trigger: { spell: "cast_loaded_fb" },
+      trigger: { spell: "shockwave" },
     },
   ],
 };
