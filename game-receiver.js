@@ -2570,7 +2570,11 @@
           eventBus.on("voice.kws_listen_policy_changed", (p = {}) => {
             const mode = String(p.mode || "").trim().toUpperCase() || "-";
             const tokens = Array.isArray(p.listenableTokens) ? p.listenableTokens.join(",") : "";
-            kwsBridge.pushLogLine(`TRACE kws_policy:${mode}:${tokens || "-"}`, "muted");
+            const reason = String(p.reason || "update").trim().toLowerCase() || "update";
+            const windows = Array.isArray(p.openWindowIds) && p.openWindowIds.length
+              ? p.openWindowIds.join(",")
+              : "-";
+            kwsBridge.pushLogLine(`TRACE kws_policy:${mode}:reason:${reason}:windows:${windows}:tokens:${tokens || "-"}`, "muted");
           });
         }
         const kwsMvpCommands = createKwsMvpCommands({
