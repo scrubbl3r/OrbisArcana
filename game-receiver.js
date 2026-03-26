@@ -2568,8 +2568,16 @@
             const parserVocab = Number.isFinite(Number(parserStatus && parserStatus.activeTokenVocabularySize))
               ? Number(parserStatus.activeTokenVocabularySize)
               : 0;
+            const inferReady = backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "inferReady")
+              ? (backendStatus.inferReady ? "yes" : "no")
+              : "-";
+            const inferLoading = backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "inferLoading")
+              ? (backendStatus.inferLoading ? "yes" : "no")
+              : "-";
+            const inferInitStep = String(backendStatus && backendStatus.inferInitStep || "").trim().toLowerCase() || "-";
+            const inferError = String(backendStatus && backendStatus.inferError || "").trim() || "-";
             kwsBridge.pushLogLine(
-              `TRACE kws_runtime:${mode}:backend_tokens:${backendActiveTokens}:parser_vocab:${parserVocab}`,
+              `TRACE kws_runtime:${mode}:backend_tokens:${backendActiveTokens}:parser_vocab:${parserVocab}:infer_ready:${inferReady}:infer_loading:${inferLoading}:infer_init:${inferInitStep}:infer_error:${inferError}`,
               "muted"
             );
           });
