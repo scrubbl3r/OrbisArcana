@@ -2384,7 +2384,7 @@
               const handled = !!(execResult && execResult.handled);
               kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
             }
-            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "teleport_home" || actionId === "aoe_electric")) {
+            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "teleport_home" || actionId === "aoe_electric" || actionId === "shockwave")) {
               const handled = !!(execResult && execResult.handled);
               kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
             }
@@ -2446,6 +2446,7 @@
               ruleId === "tele_home" ||
               ruleId === "electric_aoe" ||
               ruleId === "electric_aoe_cast" ||
+              ruleId === "shake_ud_cast" ||
               ruleId === "spin_y_opens_pyro" ||
               ruleId === "spin_y_pyro_opens_rota" ||
               ruleId === "spin_y_pyro_rota_bind_fb"
@@ -2477,6 +2478,9 @@
             }
             if (actionType === "event" && actionId === "aoe_electric") {
               kwsBridge.pushLogLine("TRACE action:event:aoe_electric", "ok");
+            }
+            if (actionType === "event" && actionId === "shockwave") {
+              kwsBridge.pushLogLine("TRACE action:event:shockwave", "ok");
             }
             if (actionType === "bind" && actionId === "fb") {
               kwsBridge.pushLogLine("TRACE action:bind:fb", "ok");
