@@ -2212,7 +2212,7 @@
             eventBus,
             kwsRuntimeController,
             initialMode: DEFAULT_KWS_LISTEN_POLICY_MODE,
-            nowMs: () => performance.now(),
+            nowMs: () => Date.now(),
           });
           if (kwsListenPolicyController && typeof kwsListenPolicyController.start === "function") {
             kwsListenPolicyController.start();
