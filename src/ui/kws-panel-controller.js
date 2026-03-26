@@ -318,7 +318,7 @@ export function createKwsPanelController({
     kwsLastLogText = line;
     kwsLastLogAtMs = nowMs;
     kwsEventLog.push({ text: line, kind: String(kind || "") });
-    if (kwsEventLog.length > KWS_EVENT_LOG_MAX) kwsEventLog.length = KWS_EVENT_LOG_MAX;
+    while (kwsEventLog.length > KWS_EVENT_LOG_MAX) kwsEventLog.shift();
     renderKwsLog();
   }
 
