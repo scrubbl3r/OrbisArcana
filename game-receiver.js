@@ -1478,7 +1478,7 @@
           { createOrbRuntimeState },
           { createOrbRuntimeLoop },
         ] = await Promise.all([
-          import("./src/runtime/receiver-bootstrap.js"),
+          import(`./src/runtime/receiver-bootstrap.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/runtime/receiver-events.js"),
           import(`./src/ui/kws-panel-controller.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/voice/kws/kws-runtime-controller.js"),
@@ -2553,6 +2553,9 @@
               ? p.openWindowIds.join(",")
               : "-";
             kwsBridge.pushLogLine(`TRACE kws_policy:${mode}:reason:${reason}:windows:${windows}:tokens:${tokens || "-"}`, "muted");
+            if (reason === "window_refreshed") {
+              kwsBridge.pushLogLine(`TRACE wake_refresh:${windows}`, "ok");
+            }
             const runtimeStatus = kwsRuntimeController && typeof kwsRuntimeController.getStatus === "function"
               ? kwsRuntimeController.getStatus()
               : null;
