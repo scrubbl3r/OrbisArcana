@@ -1043,6 +1043,7 @@
     let DEFAULT_KWS_AUTOSTART_MAX_MS = 120000;
     let DEFAULT_KWS_AUTOSTART_REKICK_MS = 5000;
     let DEFAULT_KWS_START_STALL_MS = 8000;
+    let DEFAULT_KWS_LISTEN_POLICY_MODE = "B";
     let DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     let KWS_READOUT_TICK_MS = 250;
     let KWS_ROW_TOP = [];
@@ -1063,6 +1064,7 @@
     };
     let kwsPanelController = null;
     let kwsRuntimeController = null;
+    let kwsListenPolicyController = null;
     let kwsTokenUiState = null;
     let kwsConfigDebugLine = "";
     let teardownKwsRuntimeForReinit = null;
@@ -1094,7 +1096,9 @@
         stopReadoutTick: () => kwsBridge.stopReadoutTick(),
         clearWakeHudGateTimer: () => kwsBridge.clearWakeHudGateTimer(),
         eventBindings: kwsEventBindings,
+        kwsListenPolicyController,
         setEventBindings: (next) => { kwsEventBindings = next; },
+        setKwsListenPolicyController: (next) => { kwsListenPolicyController = next; },
         voiceProviderManager,
         kwsWordProvider,
         kwsVoiceProvider,
@@ -1463,6 +1467,7 @@
           { createKwsRuntimeController },
           { createKwsBootOrchestrator },
           { bindKwsEventHandlers },
+          { createKwsListenPolicyController },
           { bootstrapKwsVoiceRuntime },
           { createKwsRuntimeConfig },
           { createKwsMvpCommands },
@@ -1478,6 +1483,7 @@
           import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/voice/kws/kws-boot-orchestrator.js"),
           import(`./src/voice/kws/kws-event-bindings.js?v=${MODULE_CACHE_BUST_V}`),
+          import("./src/voice/kws/kws-listen-policy-controller.js"),
           import(`./src/voice/kws/kws-provider-bootstrap.js?v=${MODULE_CACHE_BUST_V}`),
           import(`./src/voice/kws/kws-config.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/voice/kws/kws-mvp-commands.js"),
@@ -1504,6 +1510,7 @@
             DEFAULT_KWS_AUTOSTART_MAX_MS = Math.max(1000, Number(kwsConfig.autostartMaxMs) || DEFAULT_KWS_AUTOSTART_MAX_MS);
             DEFAULT_KWS_AUTOSTART_REKICK_MS = Math.max(250, Number(kwsConfig.autostartRekickMs) || DEFAULT_KWS_AUTOSTART_REKICK_MS);
             DEFAULT_KWS_START_STALL_MS = Math.max(1000, Number(kwsConfig.startStallMs) || DEFAULT_KWS_START_STALL_MS);
+            DEFAULT_KWS_LISTEN_POLICY_MODE = String(kwsConfig.listenPolicyMode || DEFAULT_KWS_LISTEN_POLICY_MODE || "B").trim().toUpperCase() || "B";
             DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(100, Number(kwsConfig.gateTimeoutMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
             KWS_READOUT_TICK_MS = Math.max(100, Number(kwsConfig.readoutTickMs) || KWS_READOUT_TICK_MS);
             KWS_ROW_TOP = Array.isArray(kwsConfig.rowTop) ? kwsConfig.rowTop.slice() : KWS_ROW_TOP;
@@ -2195,6 +2202,17 @@
         kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider || kwsVoiceRuntime.kwsWordProvider || null;
         voiceProviderManager = kwsVoiceRuntime.voiceProviderManager;
         kwsBackendKey = kwsVoiceRuntime.kwsBackendKey;
+        if (typeof createKwsListenPolicyController === "function") {
+          kwsListenPolicyController = createKwsListenPolicyController({
+            eventBus,
+            kwsRuntimeController,
+            initialMode: DEFAULT_KWS_LISTEN_POLICY_MODE,
+            nowMs: () => performance.now(),
+          });
+          if (kwsListenPolicyController && typeof kwsListenPolicyController.start === "function") {
+            kwsListenPolicyController.start();
+          }
+        }
         fxSystem.start();
         audioSystem.start();
         inputSystemsBundle.start();
@@ -2500,9 +2518,15 @@
               matched > 0 ? "ok" : "muted"
             );
           });
+          eventBus.on("voice.kws_listen_policy_changed", (p = {}) => {
+            const mode = String(p.mode || "").trim().toUpperCase() || "-";
+            const tokens = Array.isArray(p.listenableTokens) ? p.listenableTokens.join(",") : "";
+            kwsBridge.pushLogLine(`TRACE kws_policy:${mode}:${tokens || "-"}`, "muted");
+          });
         }
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
+          kwsListenPolicyController,
           defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
           getCurrentBackendKey: () => kwsBackendKey,
           setCurrentBackendKey: (next) => { kwsBackendKey = String(next || DEFAULT_KWS_BACKEND_KEY); },

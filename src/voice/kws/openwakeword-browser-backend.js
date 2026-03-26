@@ -189,6 +189,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let inferModelUrl = "";
     let inferWasmRootUrl = "";
     let inferToken = "";
+    let activeTokens = null;
     let inferThreshold = normalizeThreshold(
       config.inferThreshold,
       normalizeThreshold(OPENWAKEWORD_BROWSER_CONFIG_DEFAULT.inferThreshold, 0.15),
@@ -532,7 +533,13 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       if (typeof Worker !== "function") {
         throw new Error("oww_browser_infer_worker_unavailable");
       }
-      const activeModels = loadedModels.filter((m) => !!(m && m.modelUrl));
+      const activeTokenSet = activeTokens instanceof Set ? activeTokens : null;
+      const activeModels = loadedModels.filter((m) => {
+        if (!(m && m.modelUrl)) return false;
+        if (!activeTokenSet) return true;
+        const token = normalizeToken(m.token || m.label || "", tokenMap);
+        return !!token && activeTokenSet.has(token);
+      });
       if (!activeModels.length) {
         throw new Error("oww_browser_infer_model_missing");
       }
@@ -913,6 +920,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
     function setConfig(next = {}) {
       if (!next || typeof next !== "object") return getStatus();
+      let shouldRestartInfer = false;
       if (Object.prototype.hasOwnProperty.call(next, "inferThreshold")) {
         const n = Number(next.inferThreshold);
         if (Number.isFinite(n)) inferThreshold = normalizeThreshold(n, inferThreshold);
@@ -925,6 +933,19 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         const n = Number(next.inferPollMs);
         if (Number.isFinite(n)) inferPollMs = Math.max(16, Math.round(n));
       }
+      if (Object.prototype.hasOwnProperty.call(next, "activeTokens")) {
+        const normalizedTokens = Array.isArray(next.activeTokens)
+          ? Array.from(new Set(next.activeTokens.map((token) => normalizeToken(token, tokenMap)).filter(Boolean)))
+          : null;
+        const prevTokens = activeTokens instanceof Set ? Array.from(activeTokens.values()) : null;
+        const nextTokens = Array.isArray(normalizedTokens) ? normalizedTokens.slice().sort() : null;
+        const prevKey = Array.isArray(prevTokens) ? prevTokens.slice().sort().join("|") : "";
+        const nextKey = Array.isArray(nextTokens) ? nextTokens.join("|") : "";
+        if (prevKey !== nextKey) {
+          activeTokens = Array.isArray(normalizedTokens) ? new Set(normalizedTokens) : null;
+          shouldRestartInfer = true;
+        }
+      }
       if (inferWorker) {
         try {
           inferWorker.postMessage({
@@ -932,6 +953,17 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
             threshold: inferThreshold,
           });
         } catch {}
+      }
+      if (shouldRestartInfer && started && !simulated && modelAssetsLoaded) {
+        Promise.resolve().then(async () => {
+          try {
+            await stopInferPipeline();
+            if (running) await startInferPipeline();
+          } catch (err) {
+            inferError = err && err.message ? String(err.message) : "oww_browser_infer_reconfigure_failed";
+            emitError(inferError);
+          }
+        });
       }
       return getStatus();
     }
@@ -993,6 +1025,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         inferModelUrl,
         inferWasmRootUrl,
         inferToken,
+        activeTokens: activeTokens instanceof Set ? Array.from(activeTokens.values()).sort() : null,
         inferThreshold,
         inferPollMs,
         inferCooldownMs,

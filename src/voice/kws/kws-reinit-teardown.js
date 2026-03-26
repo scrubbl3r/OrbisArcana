@@ -3,7 +3,9 @@ export async function teardownKwsRuntimeForReinit({
   stopReadoutTick,
   clearWakeHudGateTimer,
   eventBindings,
+  kwsListenPolicyController,
   setEventBindings,
+  setKwsListenPolicyController,
   voiceProviderManager,
   kwsWordProvider,
   kwsVoiceProvider,
@@ -19,6 +21,10 @@ export async function teardownKwsRuntimeForReinit({
     eventBindings.dispose();
   }
   if (typeof setEventBindings === "function") setEventBindings(null);
+  if (kwsListenPolicyController && typeof kwsListenPolicyController.stop === "function") {
+    try { kwsListenPolicyController.stop(); } catch (_) {}
+  }
+  if (typeof setKwsListenPolicyController === "function") setKwsListenPolicyController(null);
 
   const manager = voiceProviderManager || null;
   const provider = kwsWordProvider || kwsVoiceProvider || null;

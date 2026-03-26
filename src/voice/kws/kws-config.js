@@ -1,4 +1,5 @@
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
+import { DEFAULT_KWS_LISTEN_POLICY_MODE } from "../voice-config.js";
 import {
   AXIS_WORD_IDS,
   KWS_ROW_BOTTOM_WORD_IDS,
@@ -44,6 +45,7 @@ export function createKwsRuntimeConfig() {
     autostartMaxMs: 120000,
     autostartRekickMs: 5000,
     startStallMs: 8000,
+    listenPolicyMode: DEFAULT_KWS_LISTEN_POLICY_MODE,
     gateTimeoutMs: 1500,
     readoutTickMs: 250,
     rowTop,

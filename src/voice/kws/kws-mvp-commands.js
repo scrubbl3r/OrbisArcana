@@ -1,5 +1,6 @@
 export function createKwsMvpCommands({
   kwsRuntimeController,
+  kwsListenPolicyController,
   defaultBackendKey = "openwakeword_browser",
   getCurrentBackendKey = () => String(defaultBackendKey || "openwakeword_browser"),
   setCurrentBackendKey = () => {},
@@ -44,6 +45,14 @@ export function createKwsMvpCommands({
     setKwsBackendConfig(next = {}) {
       if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsBackendConfig !== "function") return null;
       return kwsRuntimeController.setKwsBackendConfig(next);
+    },
+    setKwsListenPolicyMode(nextMode = "B") {
+      if (!kwsListenPolicyController || typeof kwsListenPolicyController.setMode !== "function") return null;
+      return kwsListenPolicyController.setMode(nextMode);
+    },
+    getKwsListenPolicyStatus() {
+      if (!kwsListenPolicyController || typeof kwsListenPolicyController.getStatus !== "function") return null;
+      return kwsListenPolicyController.getStatus();
     },
     async setKwsMicEnabled(next) {
       if (!kwsRuntimeController || typeof kwsRuntimeController.setKwsMicEnabled !== "function") return false;
