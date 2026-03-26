@@ -6,6 +6,8 @@ export function createKwsPanelController({
   onGateOpened = null,
   onGateClosed = null,
   onApplyTune = null,
+  onToggleListenPolicyMode = null,
+  getListenPolicyStatus = null,
 } = {}) {
   const DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(250, Number(constants.defaultGateTimeoutMs) || 1500);
   const DEFAULT_KWS_START_STALL_MS = Math.max(0, Number(constants.startStallMs) || 8000);
@@ -56,6 +58,7 @@ export function createKwsPanelController({
   let kwsLastLogText = "";
   let kwsLastLogAtMs = 0;
   let tuneApplyBound = false;
+  let listenPolicyBound = false;
 
   function readNumberInputOrNull(el) {
     if (!el) return null;
@@ -230,6 +233,9 @@ export function createKwsPanelController({
       .map(({ token, lit, flash }) => tokenChipHtml(token, lit, flash))
       .join(" ");
     const parts = [];
+    const listenPolicyStatus = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
+    const listenPolicyMode = String(listenPolicyStatus && listenPolicyStatus.mode || "").trim().toUpperCase();
+    if (listenPolicyMode) parts.push(`lp:${listenPolicyMode}`);
     const kwsWordProvider = readKwsWordProvider();
     if (kwsWordProvider && typeof kwsWordProvider.getStatus === "function") {
       const s = kwsWordProvider.getStatus();
@@ -337,11 +343,35 @@ export function createKwsPanelController({
     return status;
   }
 
+  function renderListenPolicyMode() {
+    if (!els.kwsListenPolicyBtn) return;
+    const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
+    const mode = String(status && status.mode || "B").trim().toUpperCase() || "B";
+    els.kwsListenPolicyBtn.textContent = `Mode ${mode}`;
+    els.kwsListenPolicyBtn.dataset.mode = mode;
+  }
+
+  function toggleListenPolicyModeFromUi() {
+    if (typeof onToggleListenPolicyMode !== "function") return null;
+    const status = onToggleListenPolicyMode();
+    renderListenPolicyMode();
+    return status;
+  }
+
   function bindTuneApplyButton() {
     if (tuneApplyBound) return;
     tuneApplyBound = true;
     if (els.kwsApplyTuneBtn) {
       els.kwsApplyTuneBtn.addEventListener("click", applyKwsParserTuneFromUi);
+    }
+  }
+
+  function bindListenPolicyButton() {
+    if (listenPolicyBound) return;
+    listenPolicyBound = true;
+    if (els.kwsListenPolicyBtn) {
+      els.kwsListenPolicyBtn.addEventListener("click", toggleListenPolicyModeFromUi);
+      renderListenPolicyMode();
     }
   }
 
@@ -366,6 +396,8 @@ export function createKwsPanelController({
     pushKwsLogLine,
     syncKwsTuneUiFromStatus,
     bindTuneApplyButton,
+    bindListenPolicyButton,
+    renderListenPolicyMode,
     getUiState: () => kwsTokenUiState,
   };
 }

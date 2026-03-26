@@ -19,6 +19,7 @@
       kwsTokenThrInput: $("kwsTokenThrInput"),
       kwsCooldownMsInput: $("kwsCooldownMsInput"),
       kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
+      kwsListenPolicyBtn: $("kwsListenPolicyBtn"),
 
       vLift:  $("vLift"),
       vGroove: $("vGroove"),
@@ -1568,12 +1569,25 @@
             if (!mvp || typeof mvp.setKwsBackendConfig !== "function") return null;
             return mvp.setKwsBackendConfig(next);
           },
+          onToggleListenPolicyMode: () => {
+            if (!mvp || typeof mvp.getKwsListenPolicyStatus !== "function" || typeof mvp.setKwsListenPolicyMode !== "function") return null;
+            const current = mvp.getKwsListenPolicyStatus();
+            const mode = String(current && current.mode || "B").trim().toUpperCase();
+            return mvp.setKwsListenPolicyMode(mode === "A" ? "B" : "A");
+          },
+          getListenPolicyStatus: () => {
+            if (!mvp || typeof mvp.getKwsListenPolicyStatus !== "function") return null;
+            return mvp.getKwsListenPolicyStatus();
+          },
         });
         kwsTokenUiState = kwsPanelController && typeof kwsPanelController.getUiState === "function"
           ? kwsPanelController.getUiState()
           : null;
         if (kwsPanelController && typeof kwsPanelController.bindTuneApplyButton === "function") {
           kwsPanelController.bindTuneApplyButton();
+        }
+        if (kwsPanelController && typeof kwsPanelController.bindListenPolicyButton === "function") {
+          kwsPanelController.bindListenPolicyButton();
         }
         kwsBridge.startReadoutTick();
         if (kwsConfigDebugLine) kwsBridge.pushLogLine(kwsConfigDebugLine, "muted");
