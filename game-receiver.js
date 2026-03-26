@@ -1484,7 +1484,7 @@
           import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/voice/kws/kws-boot-orchestrator.js"),
           import(`./src/voice/kws/kws-event-bindings.js?v=${MODULE_CACHE_BUST_V}`),
-          import("./src/voice/kws/kws-listen-policy-controller.js"),
+          import(`./src/voice/kws/kws-listen-policy-controller.js?v=${MODULE_CACHE_BUST_V}`),
           import(`./src/voice/kws/kws-provider-bootstrap.js?v=${MODULE_CACHE_BUST_V}`),
           import(`./src/voice/kws/kws-config.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/voice/kws/kws-mvp-commands.js"),
