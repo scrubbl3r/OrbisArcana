@@ -28,6 +28,11 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     floatGracePolicy: "domus",
   }),
   Object.freeze({
+    id: "shockwave",
+    handlerKey: "trigger_shockwave",
+    floatGracePolicy: "default",
+  }),
+  Object.freeze({
     id: "sanctum_shield",
     handlerKey: "activate_sanctum_shield",
     floatGracePolicy: "none",

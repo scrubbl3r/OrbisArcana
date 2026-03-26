@@ -1230,6 +1230,7 @@
     let spellCastExecutor = null;
     let createSpellActionHandlersModule = null;
     let executeTeleportHomeSpellModule = null;
+    let executeShockwaveSpellModule = null;
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
@@ -1388,6 +1389,8 @@
         playElectricAoe,
         playFlameAoe,
         executeTeleportHome: executeTeleportHomeSpellModule,
+        executeShockwave: executeShockwaveSpellModule,
+        triggerShockwave,
         teleportOrbToSpawnNeutralizePhysics,
         activateSanctusShield,
         grantSuperGrace,
@@ -1619,6 +1622,9 @@
         const mods = await loadReceiverInitModules();
         executeTeleportHomeSpellModule = (typeof mods.executeTeleportHome === "function")
           ? mods.executeTeleportHome
+          : null;
+        executeShockwaveSpellModule = (typeof mods.executeShockwave === "function")
+          ? mods.executeShockwave
           : null;
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";
         const setRuntimeWordIndexes = (next = {}) => {

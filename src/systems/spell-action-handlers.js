@@ -9,6 +9,8 @@ export function createSpellActionHandlers({
   playFrostAoe,
   teleportOrbToSpawnNeutralizePhysics,
   executeTeleportHome,
+  executeShockwave,
+  triggerShockwave,
   activateSanctusShield,
   grantSuperGrace,
   domusTeleportAboveGroundPx = 300,
@@ -61,6 +63,16 @@ export function createSpellActionHandlers({
       }
       if (typeof teleportOrbToSpawnNeutralizePhysics === "function") {
         teleportOrbToSpawnNeutralizePhysics(domusTeleportAboveGroundPx);
+      }
+    },
+    trigger_shockwave(payload = {}) {
+      void payload;
+      if (typeof executeShockwave === "function") {
+        executeShockwave({ triggerShockwave });
+        return;
+      }
+      if (typeof triggerShockwave === "function") {
+        triggerShockwave();
       }
     },
     activate_sanctum_shield(payload = {}) {

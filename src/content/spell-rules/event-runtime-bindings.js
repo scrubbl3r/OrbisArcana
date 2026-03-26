@@ -38,6 +38,13 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
+    id: "shockwave",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "shockwave",
+    }),
+  }),
+  Object.freeze({
     id: "orb_state",
     runtime: Object.freeze({
       kind: "orb_event",
