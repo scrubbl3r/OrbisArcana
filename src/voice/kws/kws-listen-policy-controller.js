@@ -8,6 +8,7 @@ import {
 } from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
 
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
+const EVT_RULE_ENGINE_PREVIEW_MATCHED = "rule_engine.preview_matched";
 const EVT_KWS_LISTEN_POLICY_CHANGED = "voice.kws_listen_policy_changed";
 
 function asWordId(raw) {
@@ -65,6 +66,12 @@ export function deriveStrictKwsListenPolicySnapshot({
       id: String(windowEntry.id || "").trim().toLowerCase(),
       wordIds: Object.freeze(words.slice()),
       expiresAtMs: Number.isFinite(expiresAtMs) ? expiresAtMs : null,
+      ttlMs: Math.max(0, Number(windowEntry.ttlMs) || 0),
+      parentWindowIds: Object.freeze(
+        Array.isArray(windowEntry.parentWindowIds)
+          ? windowEntry.parentWindowIds.map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)
+          : []
+      ),
     }));
     windowWordIds.push(...words);
   }
@@ -174,6 +181,27 @@ export function createKwsListenPolicyController({
     expiryTimersById.set(windowId, timer);
   }
 
+  function refreshWindowChain(windowId, atMs, visited = new Set()) {
+    const normalizedWindowId = String(windowId || "").trim().toLowerCase();
+    if (!normalizedWindowId || visited.has(normalizedWindowId)) return false;
+    visited.add(normalizedWindowId);
+    const entry = windowEntriesById.get(normalizedWindowId);
+    if (!entry) return false;
+    const ttlMs = Math.max(0, Number(entry.ttlMs) || 0);
+    let changed = false;
+    if (ttlMs > 0) {
+      const nextExpiresAtMs = atMs + ttlMs;
+      entry.expiresAtMs = nextExpiresAtMs;
+      scheduleWindowExpiry(normalizedWindowId, nextExpiresAtMs);
+      changed = true;
+    }
+    const parentWindowIds = Array.isArray(entry.parentWindowIds) ? entry.parentWindowIds : [];
+    for (const parentWindowId of parentWindowIds) {
+      if (refreshWindowChain(parentWindowId, atMs, visited)) changed = true;
+    }
+    return changed;
+  }
+
   function onWakeWindowOpened(payload = {}) {
     const rawWindowId = String(payload.windowId || payload.actionId || "").trim().toLowerCase();
     const wordIds = normalizeWordIds(asSelectorList(payload.words || payload.spells));
@@ -181,18 +209,41 @@ export function createKwsListenPolicyController({
     const atMs = Number(payload.atMs) || Number(nowMs()) || Date.now();
     const ttlMs = Number(payload.ttlMs);
     const expiresAtMs = Number.isFinite(ttlMs) && ttlMs > 0 ? atMs + ttlMs : null;
+    const parentWindowIds = Array.from(new Set(
+      asSelectorList(payload.requiresWindowIds)
+        .map((id) => String(id || "").trim().toLowerCase())
+        .filter(Boolean)
+    ));
     windowEntriesById.set(rawWindowId, {
       id: rawWindowId,
       wordIds,
       expiresAtMs,
+      ttlMs: Number.isFinite(ttlMs) ? Math.max(0, ttlMs) : 0,
+      parentWindowIds,
     });
     if (expiresAtMs != null) scheduleWindowExpiry(rawWindowId, expiresAtMs);
     emitSnapshot("wake_window_opened");
   }
 
+  function onRuleMatched(payload = {}) {
+    const atMs = Number(payload.atMs) || Number(nowMs()) || Date.now();
+    const requiresWindowIds = Array.from(new Set(
+      asSelectorList(payload.requiresWindowIds)
+        .map((id) => String(id || "").trim().toLowerCase())
+        .filter(Boolean)
+    ));
+    if (!requiresWindowIds.length) return;
+    let changed = false;
+    for (const windowId of requiresWindowIds) {
+      if (refreshWindowChain(windowId, atMs)) changed = true;
+    }
+    if (changed) emitSnapshot("window_refreshed");
+  }
+
   function start() {
     if (eventBus && typeof eventBus.on === "function") {
       unsub.push(eventBus.on(EVT_RULE_ENGINE_WAKE_WIN_OPENED, onWakeWindowOpened));
+      unsub.push(eventBus.on(EVT_RULE_ENGINE_PREVIEW_MATCHED, onRuleMatched));
     }
     emitSnapshot("start");
     return getStatus();

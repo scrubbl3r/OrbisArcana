@@ -567,6 +567,7 @@ export function createRuleEnginePreviewSystem({
           ruleId: String(rule && rule.id || ""),
           actionId: id,
           windowId: runtimeWindowId,
+          requiresWindowIds: Array.isArray(rule && rule.requiresWindowIds) ? rule.requiresWindowIds.slice() : [],
           words,
           spells: words.slice(),
           ttlMs,
@@ -777,6 +778,7 @@ export function createRuleEnginePreviewSystem({
           signalId,
           sourceEvent: String(sourceEvent || ""),
           atMs: now,
+          requiresWindowIds: Array.isArray(rule && rule.requiresWindowIds) ? rule.requiresWindowIds.slice() : [],
         });
       }
       const remainingActionBudget = (maxActionsBudget > 0)

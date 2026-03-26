@@ -66,7 +66,7 @@ async function main() {
   eventBus.emit("rule_engine.wake_win_opened", {
     windowId: "wake.main",
     words: ["domus", "electrum", "pyro"],
-    ttlMs: 10,
+    ttlMs: 20,
     atMs: Date.now(),
   });
   status = controller.getStatus();
@@ -74,7 +74,18 @@ async function main() {
   assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah", "domus", "electrum", "pyro"], "A opened backend tokens");
   assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A opened parser words");
 
-  await new Promise((resolve) => setTimeout(resolve, 40));
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  eventBus.emit("rule_engine.preview_matched", {
+    ruleId: "tele_home",
+    requiresWindowIds: ["wake.main"],
+    atMs: Date.now(),
+  });
+
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  status = controller.getStatus();
+  assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A refreshed listenableWordIds");
+
+  await new Promise((resolve) => setTimeout(resolve, 45));
   status = controller.getStatus();
   assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah"], "A expired listenableWordIds");
   assertCheck(!status.listenableWordIds.includes("pyro"), `[${CHECK_TAG}] expected pyro to expire from strict listen set`);
