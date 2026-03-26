@@ -345,9 +345,9 @@ export function createKwsPanelController({
     return status;
   }
 
-  function renderListenPolicyMode() {
+  function renderListenPolicyMode(statusOverride = null) {
     if (!els.kwsListenPolicyBtn) return;
-    const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
+    const status = statusOverride || (typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null);
     const mode = String(status && status.mode || "B").trim().toUpperCase() || "B";
     els.kwsListenPolicyBtn.textContent = `Mode ${mode}`;
     els.kwsListenPolicyBtn.dataset.mode = mode;
@@ -356,7 +356,7 @@ export function createKwsPanelController({
   function toggleListenPolicyModeFromUi() {
     if (typeof onToggleListenPolicyMode !== "function") return null;
     const status = onToggleListenPolicyMode();
-    renderListenPolicyMode();
+    renderListenPolicyMode(status);
     return status;
   }
 
