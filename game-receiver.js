@@ -2575,6 +2575,25 @@
               ? p.openWindowIds.join(",")
               : "-";
             kwsBridge.pushLogLine(`TRACE kws_policy:${mode}:reason:${reason}:windows:${windows}:tokens:${tokens || "-"}`, "muted");
+            const runtimeStatus = kwsRuntimeController && typeof kwsRuntimeController.getStatus === "function"
+              ? kwsRuntimeController.getStatus()
+              : null;
+            const backendStatus = runtimeStatus && runtimeStatus.audioBackendStatus && typeof runtimeStatus.audioBackendStatus === "object"
+              ? runtimeStatus.audioBackendStatus
+              : null;
+            const parserStatus = runtimeStatus && runtimeStatus.parser && typeof runtimeStatus.parser === "object"
+              ? runtimeStatus.parser
+              : null;
+            const backendActiveTokens = Array.isArray(backendStatus && backendStatus.activeTokens)
+              ? backendStatus.activeTokens.join(",")
+              : "-";
+            const parserVocab = Number.isFinite(Number(parserStatus && parserStatus.activeTokenVocabularySize))
+              ? Number(parserStatus.activeTokenVocabularySize)
+              : 0;
+            kwsBridge.pushLogLine(
+              `TRACE kws_runtime:${mode}:backend_tokens:${backendActiveTokens}:parser_vocab:${parserVocab}`,
+              "muted"
+            );
           });
         }
         const kwsMvpCommands = createKwsMvpCommands({
