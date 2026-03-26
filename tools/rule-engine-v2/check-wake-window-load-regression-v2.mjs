@@ -1,4 +1,5 @@
 import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
+import { EVT_INPUT_SHAKE_TRIGGERED, EVT_VOICE_SPELL_CAST } from "../../src/contracts/events.js";
 import { EVENT_DEFINITIONS } from "../../src/content/spell-rules/event-definitions.js";
 import { SIGNAL_DEFINITIONS } from "../../src/content/spell-rules/signal-definitions.js";
 import { WINDOW_DEFINITIONS } from "../../src/content/spell-rules/window-definitions.js";
@@ -21,12 +22,13 @@ import { emitDetectedWord, emitPyroBindPrelude } from "./check-wake-sequence-v2.
 
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 const CHECK_TAG = CHECK_TAGS_V2.wakeLoadRegression;
-const PASS_MESSAGE = "pyro spin chain binds FB and loads the slot";
+const PASS_MESSAGE = "pyro spin chain binds aoe_flame to FB and shake:FB casts it";
 
 function main() {
   const eventBus = createCheckEventBus();
   const loaded = captureCheckEvents(eventBus, EVT_VOICE_SPELL_LOADED);
   const actions = captureCheckEvents(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED);
+  const casts = captureCheckEvents(eventBus, EVT_VOICE_SPELL_CAST);
   const resources = createStoredGlobeResources(1);
   const { nowRef, nowMs, advance } = createMutableNow(CHECK_MUTABLE_TIME_STARTS_V2.wakeLoad);
   const preview = createRuleEnginePreviewSystem({
@@ -63,6 +65,12 @@ function main() {
     emitPyroBindPrelude({ eventBus, startAtMs: nowRef.value });
     advance(10);
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.rota, nowRef.value);
+    advance(10);
+    eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, {
+      code: "",
+      group: CHECK_SLOTS_V2.fb,
+      atMs: nowRef.value,
+    });
     preview.stop();
   });
   if (typeof offAction === "function") offAction();
@@ -78,6 +86,11 @@ function main() {
   const slot = typeof loaded[0]?.slot === "string" ? loaded[0].slot : "";
   assertCheck(axis === "", `[${CHECK_TAG}] expected no axis payload on direct bind load, got ${axis}`);
   assertCheck(slot === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected slot FB, got ${slot}`);
+
+  assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one shake cast after bind, got ${casts.length}`);
+  assertCheck(wordIdText(casts[0]) === "aoe_flame", `[${CHECK_TAG}] expected shake cast word aoe_flame, got ${wordIdText(casts[0])}`);
+  assertCheck(String(casts[0]?.slot || "") === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected shake cast slot FB, got ${String(casts[0]?.slot || "")}`);
+  assertCheck(String(casts[0]?.trigger || "") === "shake_detonation", `[${CHECK_TAG}] expected shake_detonation trigger, got ${String(casts[0]?.trigger || "")}`);
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 
