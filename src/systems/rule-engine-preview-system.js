@@ -133,6 +133,7 @@ export function createRuleEnginePreviewSystem({
   schema = null,
   executeActions = false,
   nowMs = () => Date.now(),
+  getWakeWindowPadMs = () => 0,
 } = {}) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     throw new Error("createRuleEnginePreviewSystem requires eventBus.on/eventBus.emit");
@@ -549,7 +550,9 @@ export function createRuleEnginePreviewSystem({
         if (windowDef && windowDef.enabled === false) continue;
         const args = resolveWindowArgs(id, mergedOverrides);
         const runtimeWindowId = String((action && action.windowId) || id || "").trim().toLowerCase();
-        const ttlMs = Math.max(0, Number(args && args.ttlMs) || 0);
+        const baseTtlMs = Math.max(0, Number(args && args.ttlMs) || 0);
+        const padTtlMs = Math.max(0, Number(typeof getWakeWindowPadMs === "function" ? getWakeWindowPadMs() : 0) || 0);
+        const ttlMs = baseTtlMs > 0 ? (baseTtlMs + padTtlMs) : 0;
         if (runtimeWindowId) {
           if (ttlMs > 0) {
             openWindowUntilById.set(

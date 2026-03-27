@@ -27,6 +27,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260327a";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -321,7 +322,7 @@ export async function loadReceiverInitModules() {
     import("../voice/providers/kws-provider.js"),
     import("../voice/kws/openwakeword-browser-backend.js"),
     import("../systems/spell-dispatch-system.js"),
-    import("../systems/rule-engine-preview-system.js"),
+    import(`../systems/rule-engine-preview-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../systems/spell-action-handlers.js"),
     import("../spells/teleport-home.js"),
     import("../spells/shockwave.js"),

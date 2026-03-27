@@ -1046,6 +1046,7 @@
     let DEFAULT_KWS_START_STALL_MS = 8000;
     let DEFAULT_KWS_LISTEN_POLICY_MODE = "B";
     let DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
+    let STRICT_A_WAKE_WINDOW_PAD_MS = 4000;
     let KWS_READOUT_TICK_MS = 250;
     let KWS_ROW_TOP = [];
     let KWS_ROW_BOTTOM = [];
@@ -1263,7 +1264,7 @@
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
     let kwsEventBindings = null;
-    const MODULE_CACHE_BUST_V = "20260326a";
+    const MODULE_CACHE_BUST_V = "20260327b";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -2113,6 +2114,13 @@
             eventBus,
             schema: ruleSchema,
             executeActions: RULE_ENGINE_EXECUTE_ACTIONS,
+            getWakeWindowPadMs: () => {
+              const status = (kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function")
+                ? kwsListenPolicyController.getStatus()
+                : null;
+              const mode = String(status && status.mode || DEFAULT_KWS_LISTEN_POLICY_MODE).trim().toUpperCase();
+              return mode === "A" ? STRICT_A_WAKE_WINDOW_PAD_MS : 0;
+            },
           });
           if (RULE_CHAIN_TRACE_ENABLED) {
             const rules = Array.isArray(ruleSchema.rules) ? ruleSchema.rules : [];
