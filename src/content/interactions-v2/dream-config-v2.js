@@ -14,6 +14,8 @@ export const DREAM_CONFIG_V2 = {
   groups: {
     wake_main_words: ["domus", "electrum", "pyro"],
     school_words: ["rota"],
+    wake_are_kay_nah_words: ["pyro"],
+    pyro_school_words: ["sanctum", "rota"],
   },
   rules: [
     {
@@ -41,6 +43,30 @@ export const DREAM_CONFIG_V2 = {
       on: { word: "rota" },
       requires: "school.electrum",
       trigger: { spell: "aoe_electric" },
+    },
+    // ARE KAY NAH > PYRO > SANCTUM / ROTA
+    {
+      id: "wake_are_kay_nah",
+      on: { word: "are_kay_nah" },
+      open: { id: "wake.are_kay_nah", words: ["pyro"], ttlMs: 2000 },
+    },
+    {
+      id: "pyro_school_voice",
+      on: { word: "pyro" },
+      requires: "wake.are_kay_nah",
+      open: { id: "school.pyro_voice", words: ["sanctum", "rota"], ttlMs: 2000 },
+    },
+    {
+      id: "pyro_sanctum_cast",
+      on: { word: "sanctum" },
+      requires: "school.pyro_voice",
+      trigger: { spell: "sanctum_shield" },
+    },
+    {
+      id: "pyro_rota_cast",
+      on: { word: "rota" },
+      requires: "school.pyro_voice",
+      trigger: { spell: "aoe_flame" },
     },
     // PYRO AOE CHAIN
     {

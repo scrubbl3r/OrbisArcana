@@ -33,6 +33,11 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({}),
   }),
   Object.freeze({
+    id: "sanctum_shield",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
     id: "orb_state",
     type: "event",
     defaultArgs: Object.freeze({ state: "normal" }),

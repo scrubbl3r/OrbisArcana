@@ -45,6 +45,13 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
+    id: "sanctum_shield",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "sanctum_shield",
+    }),
+  }),
+  Object.freeze({
     id: "orb_state",
     runtime: Object.freeze({
       kind: "orb_event",
