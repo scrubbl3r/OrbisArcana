@@ -15,6 +15,8 @@
       kwsReadout: $("kwsReadout"),
       rulesReadout: $("rulesReadout"),
       kwsLog: $("kwsLog"),
+      logTabKws: $("logTabKws"),
+      logTabPhone: $("logTabPhone"),
       kwsTokenThrInput: $("kwsTokenThrInput"),
       kwsCooldownMsInput: $("kwsCooldownMsInput"),
       kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
@@ -1076,7 +1078,21 @@
       });
     }
 
-    function teleMaybeLog(d){ void d; }
+    function teleMaybeLog(d){
+      if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function" || !d || typeof d !== "object") return;
+      const speed = Number.isFinite(Number(d.speed01 ?? d.speed)) ? Number(d.speed01 ?? d.speed).toFixed(3) : "0.000";
+      const energy = Number.isFinite(Number(d.energy01 ?? d.energy)) ? Number(d.energy01 ?? d.energy).toFixed(3) : "0.000";
+      const groove = Number.isFinite(Number(d.groove01 ?? d.groove)) ? Number(d.groove01 ?? d.groove).toFixed(3) : "0.000";
+      const smooth = Number.isFinite(Number(d.smooth01 ?? d.smooth)) ? Number(d.smooth01 ?? d.smooth).toFixed(3) : "0.000";
+      const dynamics = Number.isFinite(Number(d.dynamics01 ?? d.orbit01)) ? Number(d.dynamics01 ?? d.orbit01).toFixed(3) : "0.000";
+      const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
+      const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
+      const locked = d.locked ? "1" : "0";
+      kwsPanelController.pushPhoneLogLine(
+        `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} locked:${locked} hz:${hz}`,
+        "muted"
+      );
+    }
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {

@@ -909,6 +909,25 @@
       font-weight: 1000;
       letter-spacing: .3px;
     }
+    .logPopupTabs{
+      display:flex;
+      gap:8px;
+      padding:10px 12px 8px;
+      border-bottom:1px solid rgba(50,255,117,.10);
+      background: rgba(0,0,0,.88);
+    }
+    .logTabBtn{
+      padding:6px 10px;
+      border-radius:10px;
+      font-size:12px;
+      line-height:1;
+    }
+    .logTabBtn.active{
+      background: rgba(50,255,117,.88);
+      color: rgba(0,0,0,.92);
+      border-color: rgba(50,255,117,.88);
+      box-shadow: 0 0 0 1px rgba(50,255,117,.25), 0 0 12px rgba(50,255,117,.20);
+    }
     .logPopupBody{
       flex: 1 1 auto;
       padding: 8px 10px;

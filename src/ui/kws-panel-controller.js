@@ -60,6 +60,11 @@ export function createKwsPanelController({
   let logPopupBound = false;
   let logPopupOpen = false;
   let logPopupDrag = null;
+  let activeLogChannel = "kws";
+  const logChannelState = {
+    kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
+    phone: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
+  };
   let tuneApplyBound = false;
   let listenPolicyBound = false;
 
@@ -296,11 +301,29 @@ export function createKwsPanelController({
     els.kwsReadout.innerHTML = `<div class="kwsTokenRow">${tokenLine}</div>${meta}`;
   }
 
-  function clearKwsLogBuffer() {
+  function syncLegacyKwsLogState() {
+    const state = logChannelState.kws;
     kwsEventLog.length = 0;
-    kwsLastLogText = "";
-    kwsLastLogAtMs = 0;
-    kwsLogStartedAtMs = 0;
+    kwsEventLog.push(...state.rows);
+    kwsLastLogText = state.lastText;
+    kwsLastLogAtMs = state.lastAtMs;
+    kwsLogStartedAtMs = state.startedAtMs;
+  }
+
+  function clearLogChannelBuffer(channel) {
+    const key = String(channel || "").trim().toLowerCase();
+    const state = logChannelState[key];
+    if (!state) return;
+    state.rows.length = 0;
+    state.lastText = "";
+    state.lastAtMs = 0;
+    state.startedAtMs = 0;
+    if (key === "kws") syncLegacyKwsLogState();
+  }
+
+  function clearAllLogBuffers() {
+    clearLogChannelBuffer("kws");
+    clearLogChannelBuffer("phone");
     if (els.kwsLog) els.kwsLog.textContent = "";
   }
 
@@ -313,6 +336,26 @@ export function createKwsPanelController({
     els.kwsLog.scrollTop = els.kwsLog.scrollHeight;
   }
 
+  function renderCurrentLogChannel() {
+    if (!els.kwsLog) return;
+    els.kwsLog.textContent = "";
+    const state = logChannelState[activeLogChannel];
+    if (!state || !state.rows.length) return;
+    for (const row of state.rows) appendKwsLogRow(row);
+  }
+
+  function renderLogChannelTabs() {
+    if (els.logTabKws) els.logTabKws.classList.toggle("active", activeLogChannel === "kws");
+    if (els.logTabPhone) els.logTabPhone.classList.toggle("active", activeLogChannel === "phone");
+  }
+
+  function setActiveLogChannel(nextChannel) {
+    const next = String(nextChannel || "").trim().toLowerCase();
+    activeLogChannel = next === "phone" ? "phone" : "kws";
+    renderLogChannelTabs();
+    renderCurrentLogChannel();
+  }
+
   function setLogPopupOpen(nextOpen) {
     logPopupOpen = !!nextOpen;
     if (els.logPopup) {
@@ -320,7 +363,10 @@ export function createKwsPanelController({
       els.logPopup.setAttribute("aria-hidden", logPopupOpen ? "false" : "true");
     }
     if (!logPopupOpen) {
-      clearKwsLogBuffer();
+      clearAllLogBuffers();
+    } else {
+      renderLogChannelTabs();
+      renderCurrentLogChannel();
     }
   }
 
@@ -364,6 +410,12 @@ export function createKwsPanelController({
     if (els.logPopupClose) {
       els.logPopupClose.addEventListener("click", () => setLogPopupOpen(false));
     }
+    if (els.logTabKws) {
+      els.logTabKws.addEventListener("click", () => setActiveLogChannel("kws"));
+    }
+    if (els.logTabPhone) {
+      els.logTabPhone.addEventListener("click", () => setActiveLogChannel("phone"));
+    }
     if (els.logPopupHeader) {
       els.logPopupHeader.addEventListener("pointerdown", beginLogPopupDrag);
       els.logPopupHeader.addEventListener("pointermove", moveLogPopupDrag);
@@ -373,18 +425,37 @@ export function createKwsPanelController({
   }
 
   function pushKwsLogLine(text, kind = "") {
-    if (!logPopupOpen) return;
+    if (!logPopupOpen || activeLogChannel !== "kws") return;
     const line = String(text || "").trim();
     if (!line) return;
     const nowMs = Date.now();
-    if (!kwsLogStartedAtMs) kwsLogStartedAtMs = nowMs;
-    if (line === kwsLastLogText && (nowMs - Number(kwsLastLogAtMs || 0)) <= KWS_LOG_DEDUP_MS) return;
-    kwsLastLogText = line;
-    kwsLastLogAtMs = nowMs;
-    const relMs = Math.max(0, nowMs - kwsLogStartedAtMs);
+    const state = logChannelState.kws;
+    if (!state.startedAtMs) state.startedAtMs = nowMs;
+    if (line === state.lastText && (nowMs - Number(state.lastAtMs || 0)) <= KWS_LOG_DEDUP_MS) return;
+    state.lastText = line;
+    state.lastAtMs = nowMs;
+    const relMs = Math.max(0, nowMs - state.startedAtMs);
     const stamp = `[${(relMs / 1000).toFixed(3)}]`;
     const row = { text: `${stamp} ${line}`, kind: String(kind || "") };
-    kwsEventLog.push(row);
+    state.rows.push(row);
+    syncLegacyKwsLogState();
+    appendKwsLogRow(row);
+  }
+
+  function pushPhoneLogLine(text, kind = "") {
+    if (!logPopupOpen || activeLogChannel !== "phone") return;
+    const line = String(text || "").trim();
+    if (!line) return;
+    const nowMs = Date.now();
+    const state = logChannelState.phone;
+    if (!state.startedAtMs) state.startedAtMs = nowMs;
+    if (line === state.lastText && (nowMs - Number(state.lastAtMs || 0)) <= KWS_LOG_DEDUP_MS) return;
+    state.lastText = line;
+    state.lastAtMs = nowMs;
+    const relMs = Math.max(0, nowMs - state.startedAtMs);
+    const stamp = `[${(relMs / 1000).toFixed(3)}]`;
+    const row = { text: `${stamp} ${line}`, kind: String(kind || "") };
+    state.rows.push(row);
     appendKwsLogRow(row);
   }
 
@@ -467,6 +538,7 @@ export function createKwsPanelController({
     bindListenPolicyButton,
     bindLogPopupButton,
     renderListenPolicyMode,
+    pushPhoneLogLine,
     getUiState: () => kwsTokenUiState,
   };
 }
