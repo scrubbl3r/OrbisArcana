@@ -4,7 +4,7 @@ import {
   ORCHESTRATOR_V2,
 } from "../interactions-v2/orchestrator-v2.js";
 import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../interactions-v2/orchestrator-v2-wake-profile.js";
-import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js?v=20260328b";
 
 const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "orbis",

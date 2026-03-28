@@ -1,5 +1,5 @@
 import { ORCHESTRATOR_V2 } from "./orchestrator-v2.js";
-import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260328b";
 
 function asText(value) {
   return String(value || "").trim();

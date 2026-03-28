@@ -14,8 +14,8 @@ export {
 } from "./interactions-v2.js";
 export { SIGNAL_HANDLES_V2, ACTION_HANDLES_V2, EVENT_HANDLES_V2 } from "./entity-handles-v2.js";
 export { validateInteractionsV2 } from "./validate-interactions-v2.js";
-export { validateWordbookV2 } from "./validate-wordbook-v2.js";
-export { validateOrchestratorV2 } from "./validate-orchestrator-v2.js";
+export { validateWordbookV2 } from "./validate-wordbook-v2.js?v=20260328b";
+export { validateOrchestratorV2 } from "./validate-orchestrator-v2.js?v=20260328b";
 export {
   buildRuleEngineFromInteractionsV2,
   buildRulesFromInteractionsV2,
