@@ -181,25 +181,6 @@
       font-size:12px;
       line-height:1;
     }
-    .kwsLog{
-      margin-top:4px;
-      border:1px solid rgba(50,255,117,.12);
-      border-radius:8px;
-      padding:4px 6px;
-      min-height:72px;
-      height:84px;
-      max-height:84px;
-      overflow-y:auto;
-      overflow-x:hidden;
-      background:rgba(0,0,0,.22);
-      font-size:11px;
-      line-height:1.35;
-      color:rgba(50,255,117,.9);
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      scrollbar-gutter: stable;
-    }
     .kwsLogLine{
       white-space:pre-wrap;
       overflow-wrap:anywhere;
@@ -917,6 +898,51 @@
       border-color: rgba(255,212,0,.35) !important;
       color: rgba(255,212,0,.95) !important;
       text-shadow: 0 0 10px rgba(255,212,0,.18);
+    }
+
+    .logPopup{
+      position: fixed;
+      left: 28px;
+      top: 28px;
+      width: 550px;
+      height: 400px;
+      display: none;
+      flex-direction: column;
+      border-radius: 16px;
+      border: 1px solid rgba(50,255,117,.22);
+      background: rgba(0,0,0,.90);
+      box-shadow: 0 22px 90px rgba(0,0,0,.65);
+      z-index: 1001;
+      overflow: hidden;
+    }
+    .logPopup.on{
+      display: flex;
+    }
+    .logPopupHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px 10px;
+      border-bottom:1px solid rgba(50,255,117,.14);
+      cursor: move;
+      user-select: none;
+      background: rgba(0,0,0,.94);
+    }
+    .logPopupTitle{
+      font-weight: 1000;
+      letter-spacing: .3px;
+    }
+    .logPopupBody{
+      flex: 1 1 auto;
+      padding: 8px 10px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: rgba(0,0,0,.22);
+      font-size: 11px;
+      line-height: 1.35;
+      color: rgba(50,255,117,.9);
+      scrollbar-gutter: stable;
     }
 
     @media (max-width: 900px){

@@ -30,7 +30,7 @@
         <div class="stat">
           <div class="statusLine">
             <div>Status: <span id="status" class="dim">Auto-connecting…</span></div>
-            <button id="teleBtn">Telemetry</button>
+            <button id="teleBtn">LOG</button>
           </div>
           <div class="dim">KWS:: <span id="kwsReadout" class="dim">idle</span></div>
           <div class="dim">Rules: <span id="rulesReadout" class="dim">unknown</span></div>
@@ -40,12 +40,6 @@
             <button id="kwsApplyTuneBtn" type="button">Apply</button>
             <button id="kwsListenPolicyBtn" type="button" aria-label="KWS listen policy mode">Mode B</button>
           </div>
-          <div class="kwsLog" id="kwsLog" aria-label="KWS debug log"></div>
-        </div>
-
-        <div class="logLine" aria-label="Last message">
-          <span class="muted">Last message:</span>
-          <span id="last" class="lastText">(none yet)</span>
         </div>
 
         <div class="bars">
@@ -233,6 +227,14 @@
 
       <div id="teleOut" class="teleOut">(not recording)</div>
     </div>
+  </div>
+
+  <div id="logPopup" class="logPopup" aria-hidden="true">
+    <div id="logPopupHeader" class="logPopupHeader">
+      <div class="logPopupTitle">KWS Log</div>
+      <button class="xBtn" id="logPopupClose" aria-label="Close log">✕</button>
+    </div>
+    <div id="kwsLog" class="logPopupBody" aria-label="KWS debug log"></div>
   </div>
 
   <!-- ===== LAN PARTY (P2P) BEGIN ===== -->

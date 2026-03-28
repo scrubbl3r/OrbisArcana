@@ -12,7 +12,6 @@
       teleBtn: $("teleBtn"),
 
       status: $("status"),
-      last: $("last"),
       kwsReadout: $("kwsReadout"),
       rulesReadout: $("rulesReadout"),
       kwsLog: $("kwsLog"),
@@ -85,6 +84,9 @@
       teleClose: $("teleClose"),
       teleRecBtn: $("teleRecBtn"),
       teleOut: $("teleOut"),
+      logPopup: $("logPopup"),
+      logPopupHeader: $("logPopupHeader"),
+      logPopupClose: $("logPopupClose"),
 
       calibOverlay: $("calibOverlay"),
       calibBtn: $("calibBtn"),
@@ -106,8 +108,6 @@
       lanEndBtn: $("lanEndBtn"),
       // ===== LAN PARTY (P2P) END =====
     };
-
-    const LAST_MESSAGE_ON = false; // disable Last Message debug output
 
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
 
@@ -1590,6 +1590,9 @@
         if (kwsPanelController && typeof kwsPanelController.bindListenPolicyButton === "function") {
           kwsPanelController.bindListenPolicyButton();
         }
+        if (kwsPanelController && typeof kwsPanelController.bindLogPopupButton === "function") {
+          kwsPanelController.bindLogPopupButton();
+        }
         kwsBridge.startReadoutTick();
         if (kwsConfigDebugLine) kwsBridge.pushLogLine(kwsConfigDebugLine, "muted");
         kwsRuntimeController = createKwsRuntimeController({
@@ -2666,9 +2669,6 @@
           const short = detail.length > 72 ? `${detail.slice(0, 72)}...` : detail;
           els.rulesReadout.textContent = `boot:fail ${short}`;
         }
-        if (els.kwsLog) {
-          els.kwsLog.textContent = `BOOT FAIL\n${detail}`;
-        }
       }
     }
     // ===== GAME MVP SYSTEMS (ORB STATE) END =====
@@ -3463,10 +3463,6 @@
           const dbg = (d && (d.calibOK != null || d.omegaOK != null))
             ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
             : "calibOK:— omegaOK:— ";
-          const decay = `decay:${shieldDecayActive ? 1 : 0} `;
-          els.last.textContent = rgb + decay + axis + dbg + sh + s;
-        } else if (els.last.textContent) {
-          els.last.textContent = "";
         }
 
         if (els.pairModal.classList.contains("on")) closePairModal();
@@ -3526,7 +3522,6 @@
 
     (async function init(){
       await initUiOverlaysSystem();
-      await initTelemetryDebugSystem();
       await initMobileImpulseSystem();
       await initLanSessionSystem();
       initMvpSystems();

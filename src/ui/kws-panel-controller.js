@@ -57,6 +57,9 @@ export function createKwsPanelController({
   let kwsLastLogText = "";
   let kwsLastLogAtMs = 0;
   let kwsLogStartedAtMs = 0;
+  let logPopupBound = false;
+  let logPopupOpen = false;
+  let logPopupDrag = null;
   let tuneApplyBound = false;
   let listenPolicyBound = false;
 
@@ -293,24 +296,84 @@ export function createKwsPanelController({
     els.kwsReadout.innerHTML = `<div class="kwsTokenRow">${tokenLine}</div>${meta}`;
   }
 
-  function renderKwsLog() {
-    if (!els.kwsLog) return;
-    if (!kwsEventLog.length) {
-      els.kwsLog.innerHTML = '<div class="kwsLogLine muted">no kws events yet</div>';
-      return;
-    }
-    els.kwsLog.innerHTML = kwsEventLog.map((row) => {
-      const safe = String(row && row.text || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-      const cls = `kwsLogLine${row && row.kind ? ` ${row.kind}` : ""}`;
-      return `<div class="${cls}">${safe}</div>`;
-    }).join("");
+  function clearKwsLogBuffer() {
+    kwsEventLog.length = 0;
+    kwsLastLogText = "";
+    kwsLastLogAtMs = 0;
+    kwsLogStartedAtMs = 0;
+    if (els.kwsLog) els.kwsLog.textContent = "";
+  }
+
+  function appendKwsLogRow(row) {
+    if (!els.kwsLog || !row) return;
+    const lineEl = document.createElement("div");
+    lineEl.className = `kwsLogLine${row.kind ? ` ${row.kind}` : ""}`;
+    lineEl.textContent = String(row.text || "");
+    els.kwsLog.appendChild(lineEl);
     els.kwsLog.scrollTop = els.kwsLog.scrollHeight;
   }
 
+  function setLogPopupOpen(nextOpen) {
+    logPopupOpen = !!nextOpen;
+    if (els.logPopup) {
+      els.logPopup.classList.toggle("on", logPopupOpen);
+      els.logPopup.setAttribute("aria-hidden", logPopupOpen ? "false" : "true");
+    }
+    if (!logPopupOpen) {
+      clearKwsLogBuffer();
+    }
+  }
+
+  function beginLogPopupDrag(ev) {
+    if (!els.logPopup || !els.logPopupHeader) return;
+    if (ev.target && typeof ev.target.closest === "function" && ev.target.closest("button")) return;
+    const rect = els.logPopup.getBoundingClientRect();
+    logPopupDrag = {
+      pointerId: ev.pointerId,
+      offsetX: ev.clientX - rect.left,
+      offsetY: ev.clientY - rect.top,
+    };
+    try { els.logPopupHeader.setPointerCapture(ev.pointerId); } catch (_) {}
+    ev.preventDefault();
+  }
+
+  function moveLogPopupDrag(ev) {
+    if (!logPopupDrag || !els.logPopup) return;
+    const maxLeft = Math.max(0, window.innerWidth - els.logPopup.offsetWidth);
+    const maxTop = Math.max(0, window.innerHeight - els.logPopup.offsetHeight);
+    const left = Math.max(0, Math.min(maxLeft, ev.clientX - logPopupDrag.offsetX));
+    const top = Math.max(0, Math.min(maxTop, ev.clientY - logPopupDrag.offsetY));
+    els.logPopup.style.left = `${left}px`;
+    els.logPopup.style.top = `${top}px`;
+  }
+
+  function endLogPopupDrag(ev) {
+    if (!logPopupDrag || !els.logPopupHeader) return;
+    try { els.logPopupHeader.releasePointerCapture(logPopupDrag.pointerId); } catch (_) {}
+    logPopupDrag = null;
+  }
+
+  function bindLogPopupButton() {
+    if (logPopupBound) return;
+    logPopupBound = true;
+    if (els.teleBtn) {
+      els.teleBtn.addEventListener("click", () => {
+        setLogPopupOpen(!logPopupOpen);
+      });
+    }
+    if (els.logPopupClose) {
+      els.logPopupClose.addEventListener("click", () => setLogPopupOpen(false));
+    }
+    if (els.logPopupHeader) {
+      els.logPopupHeader.addEventListener("pointerdown", beginLogPopupDrag);
+      els.logPopupHeader.addEventListener("pointermove", moveLogPopupDrag);
+      els.logPopupHeader.addEventListener("pointerup", endLogPopupDrag);
+      els.logPopupHeader.addEventListener("pointercancel", endLogPopupDrag);
+    }
+  }
+
   function pushKwsLogLine(text, kind = "") {
+    if (!logPopupOpen) return;
     const line = String(text || "").trim();
     if (!line) return;
     const nowMs = Date.now();
@@ -320,8 +383,9 @@ export function createKwsPanelController({
     kwsLastLogAtMs = nowMs;
     const relMs = Math.max(0, nowMs - kwsLogStartedAtMs);
     const stamp = `[${(relMs / 1000).toFixed(3)}]`;
-    kwsEventLog.push({ text: `${stamp} ${line}`, kind: String(kind || "") });
-    renderKwsLog();
+    const row = { text: `${stamp} ${line}`, kind: String(kind || "") };
+    kwsEventLog.push(row);
+    appendKwsLogRow(row);
   }
 
   function syncKwsTuneUiFromStatus(status) {
@@ -401,6 +465,7 @@ export function createKwsPanelController({
     syncKwsTuneUiFromStatus,
     bindTuneApplyButton,
     bindListenPolicyButton,
+    bindLogPopupButton,
     renderListenPolicyMode,
     getUiState: () => kwsTokenUiState,
   };
