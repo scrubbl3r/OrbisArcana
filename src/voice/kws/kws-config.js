@@ -47,7 +47,7 @@ export function createKwsRuntimeConfig() {
     startStallMs: 8000,
     listenPolicyMode: DEFAULT_KWS_LISTEN_POLICY_MODE,
     gateTimeoutMs: 1500,
-    readoutTickMs: 250,
+    readoutTickMs: 400,
     rowTop,
     rowBottom,
     wakeWindowTokens,
