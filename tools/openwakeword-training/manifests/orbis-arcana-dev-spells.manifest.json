@@ -36,11 +36,6 @@
       "token": "electrum"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/tem_pus.onnx",
-      "label": "tem pus",
-      "token": "tem pus"
-    },
-    {
       "path": "../../../assets/kws/openwakeword-models/sanctum.onnx",
       "label": "sanctum",
       "token": "sanctum"

@@ -6,5 +6,6 @@ export const CHECK_SPELL_IDS_V2 = Object.freeze({
   electrum: "electrum",
   pyro: "pyro",
   sanctum: "sanctum",
+  vectus: "vectus",
   rota: "rota",
 });

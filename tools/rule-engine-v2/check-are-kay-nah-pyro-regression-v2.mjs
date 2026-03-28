@@ -10,7 +10,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 
 const CHECK_TAG = "are-kay-nah-pyro-regression:v2";
-const PASS_MESSAGE = "are kay nah opens kry os through authored SSOT rules for detectability smoke";
+const PASS_MESSAGE = "are kay nah opens vectus through authored SSOT rules for detectability smoke";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 
 function emitDetectedToken(eventBus, token, atMs) {
@@ -43,11 +43,11 @@ function main() {
     String(evt?.ruleId || "") === "wake_are_kay_nah"
     && String(evt?.windowId || "") === "wake.are_kay_nah"
     && Array.isArray(evt?.words)
-    && evt.words.includes(CHECK_SPELL_IDS_V2.kry_os)
+    && evt.words.includes(CHECK_SPELL_IDS_V2.vectus)
   );
   assertCheck(
     matchingWakeOpen.length === 1,
-    `[${CHECK_TAG}] expected wake_are_kay_nah to open kry_os once, got ${matchingWakeOpen.length}`
+    `[${CHECK_TAG}] expected wake_are_kay_nah to open vectus once, got ${matchingWakeOpen.length}`
   );
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }

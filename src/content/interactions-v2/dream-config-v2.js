@@ -14,7 +14,7 @@ export const DREAM_CONFIG_V2 = {
   groups: {
     wake_main_words: ["domus", "electrum", "pyro"],
     school_words: ["rota"],
-    wake_are_kay_nah_words: ["pyro", "tem_pus"],
+    wake_are_kay_nah_words: ["pyro", "vectus"],
     pyro_school_words: ["sanctum", "rota"],
   },
   rules: [
@@ -44,11 +44,11 @@ export const DREAM_CONFIG_V2 = {
       requires: "school.electrum",
       trigger: { spell: "aoe_electric" },
     },
-    // ARE KAY NAH > TEM PUS
+    // ARE KAY NAH > VECTUS
     {
       id: "wake_are_kay_nah",
       on: { word: "are_kay_nah" },
-      open: { id: "wake.are_kay_nah", words: ["pyro", "tem_pus"], ttlMs: 2000 },
+      open: { id: "wake.are_kay_nah", words: ["pyro", "vectus"], ttlMs: 2000 },
     },
     {
       id: "pyro_school_voice",
