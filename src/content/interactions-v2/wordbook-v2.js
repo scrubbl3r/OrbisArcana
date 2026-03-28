@@ -16,16 +16,17 @@ const DEFAULT_COOLDOWN_MS = 0;
 function makeWord({
   id,
   phrase = id,
-  label = "",
+  label = null,
   active = true,
   onnx = id,
   confidence = DEFAULT_CONFIDENCE,
   cooldownMs = DEFAULT_COOLDOWN_MS,
 }) {
+  const normalizedLabel = String(label ?? "").trim();
   return Object.freeze({
     [FIELD_ID]: id,
     [FIELD_PHRASE]: phrase,
-    [FIELD_LABEL]: label,
+    ...(normalizedLabel ? { [FIELD_LABEL]: normalizedLabel } : {}),
     [FIELD_ACTIVE]: active,
     [FIELD_ONNX]: onnx,
     [FIELD_CONFIDENCE]: confidence,
