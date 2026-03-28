@@ -126,6 +126,12 @@
       justify-content:space-between;
       gap:10px;
     }
+    .statusTools{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-left:auto;
+    }
     .dim{opacity:.78}
     .kwsInjectRow{
       display:flex;
@@ -339,8 +345,10 @@
       text-shadow: none;
     }
 
-    #teleBtn{ opacity: 0.68; font-weight: 800; margin-left:auto; }
-    #teleBtn:hover{ opacity: 0.86; border-color: rgba(50,255,117,.30); }
+    #teleBtn,
+    #wordBoardBtn{ opacity: 0.68; font-weight: 800; }
+    #teleBtn:hover,
+    #wordBoardBtn:hover{ opacity: 0.86; border-color: rgba(50,255,117,.30); }
 
     #pairBtn{
       font-weight: 1000;
@@ -938,6 +946,77 @@
       line-height: 1.35;
       color: rgba(50,255,117,.9);
       scrollbar-gutter: stable;
+    }
+
+    .wordBoardPopup{
+      position: fixed;
+      left: 36px;
+      top: 110px;
+      width: 420px;
+      height: 360px;
+      display: none;
+      flex-direction: column;
+      border-radius: 16px;
+      border: 1px solid rgba(50,255,117,.22);
+      background: rgba(0,0,0,.92);
+      box-shadow: 0 22px 90px rgba(0,0,0,.65);
+      z-index: 1001;
+      overflow: hidden;
+    }
+    .wordBoardPopup.on{
+      display: flex;
+    }
+    .wordBoardPopupHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px 10px;
+      border-bottom:1px solid rgba(50,255,117,.14);
+      cursor: move;
+      user-select: none;
+      background: rgba(0,0,0,.94);
+    }
+    .wordBoardPopupTitle{
+      font-weight: 1000;
+      letter-spacing: .3px;
+    }
+    .wordBoardPopupBody{
+      flex: 1 1 auto;
+      padding: 10px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: rgba(0,0,0,.22);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      align-content: start;
+    }
+    .wordBoardChip{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:38px;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(50,255,117,.24);
+      background:rgba(0,0,0,.35);
+      color:rgba(50,255,117,.78);
+      font-weight:800;
+      text-align:center;
+      transition: all 90ms linear;
+    }
+    .wordBoardChip.on{
+      color: rgba(0,0,0,.92);
+      background: rgba(50,255,117,.88);
+      border-color: rgba(50,255,117,.88);
+      box-shadow: 0 0 0 1px rgba(50,255,117,.25), 0 0 12px rgba(50,255,117,.35);
+    }
+    .wordBoardChip.flash{
+      color: #001d0a;
+      background: rgba(253,241,0,.92);
+      border-color: rgba(253,241,0,.92);
+      box-shadow: 0 0 0 1px rgba(253,241,0,.25), 0 0 12px rgba(253,241,0,.35);
     }
 
     @media (max-width: 900px){

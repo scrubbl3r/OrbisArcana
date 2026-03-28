@@ -10,6 +10,7 @@
       newRoom: $("newRoom"),
       audioBtn: $("audioBtn"),
       teleBtn: $("teleBtn"),
+      wordBoardBtn: $("wordBoardBtn"),
 
       status: $("status"),
       kwsReadout: $("kwsReadout"),
@@ -83,6 +84,10 @@
       logPopup: $("logPopup"),
       logPopupHeader: $("logPopupHeader"),
       logPopupClose: $("logPopupClose"),
+      wordBoardPopup: $("wordBoardPopup"),
+      wordBoardPopupHeader: $("wordBoardPopupHeader"),
+      wordBoardPopupClose: $("wordBoardPopupClose"),
+      wordBoardBody: $("wordBoardBody"),
 
       calibOverlay: $("calibOverlay"),
       calibBtn: $("calibBtn"),
@@ -1022,6 +1027,7 @@
     let KWS_AXIS_TOKENS = [];
     let KWS_WAKE_TOKENS = [];
     let KWS_WAKE_REQUIRED_TOKENS = [];
+    let KWS_WORDFLASHBOARD_WORDS = [];
     let KWS_AXIS_WORD_BY_AXIS = Object.freeze({});
     let KWS_LOG_TOKENS = new Set();
     let TEMP_UNGATED_KWS_TOKENS = new Set();
@@ -1096,7 +1102,9 @@
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (els.logPopup && els.logPopup.classList.contains("on") && els.logPopupClose) {
+        if (els.wordBoardPopup && els.wordBoardPopup.classList.contains("on") && els.wordBoardPopupClose) {
+          els.wordBoardPopupClose.click();
+        } else if (els.logPopup && els.logPopup.classList.contains("on") && els.logPopupClose) {
           els.logPopupClose.click();
         } else if (els.pairModal.classList.contains("on")) {
           closePairModal();
@@ -1499,6 +1507,9 @@
             KWS_AXIS_TOKENS = Array.isArray(kwsConfig.axisTokens) ? kwsConfig.axisTokens.slice() : KWS_AXIS_TOKENS;
             KWS_WAKE_TOKENS = Array.isArray(kwsConfig.wakeTokens) ? kwsConfig.wakeTokens.slice() : KWS_WAKE_TOKENS;
             KWS_WAKE_REQUIRED_TOKENS = Array.isArray(kwsConfig.wakeRequiredTokens) ? kwsConfig.wakeRequiredTokens.slice() : KWS_WAKE_REQUIRED_TOKENS;
+            KWS_WORDFLASHBOARD_WORDS = Array.isArray(kwsConfig.wordFlashboardWords)
+              ? kwsConfig.wordFlashboardWords.map((entry) => ({ ...entry }))
+              : KWS_WORDFLASHBOARD_WORDS;
             KWS_AXIS_WORD_BY_AXIS = (kwsConfig.axisWordByAxis && typeof kwsConfig.axisWordByAxis === "object")
               ? Object.freeze({ ...kwsConfig.axisWordByAxis })
               : (kwsConfig.axisSpellByAxis && typeof kwsConfig.axisSpellByAxis === "object")
@@ -1531,6 +1542,7 @@
             axisTokens: KWS_AXIS_TOKENS,
             wakeTokens: KWS_WAKE_TOKENS,
             wakeRequiredTokens: KWS_WAKE_REQUIRED_TOKENS,
+            wordFlashboardWords: KWS_WORDFLASHBOARD_WORDS,
             axisWordByAxis: KWS_AXIS_WORD_BY_AXIS,
             logTokens: Array.from(KWS_LOG_TOKENS),
             tempUngatedTokens: Array.from(TEMP_UNGATED_KWS_TOKENS),
@@ -1570,6 +1582,9 @@
         }
         if (kwsPanelController && typeof kwsPanelController.bindLogPopupButton === "function") {
           kwsPanelController.bindLogPopupButton();
+        }
+        if (kwsPanelController && typeof kwsPanelController.bindWordBoardPopupButton === "function") {
+          kwsPanelController.bindWordBoardPopupButton();
         }
         kwsBridge.startReadoutTick();
         if (kwsConfigDebugLine) kwsBridge.pushLogLine(kwsConfigDebugLine, "muted");

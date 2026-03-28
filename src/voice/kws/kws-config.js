@@ -6,6 +6,7 @@ import {
   KWS_ROW_TOP_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
+  WORDFLASHBOARD_WORDS,
   WORD_RUNTIME_ROUTING,
 } from "../../content/spells/spell-runtime-routing.js?v=20260327a";
 import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
@@ -54,6 +55,9 @@ export function createKwsRuntimeConfig() {
     axisTokens,
     wakeTokens,
     wakeRequiredTokens,
+    wordFlashboardWords: Array.isArray(WORDFLASHBOARD_WORDS)
+      ? WORDFLASHBOARD_WORDS.map((entry) => Object.freeze({ ...entry }))
+      : [],
     axisWordByAxis: Object.freeze({}),
     axisSpellByAxis: Object.freeze({}),
     logTokens: tokenList.slice(),

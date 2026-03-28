@@ -30,7 +30,10 @@
         <div class="stat">
           <div class="statusLine">
             <div>Status: <span id="status" class="dim">Auto-connecting…</span></div>
-            <button id="teleBtn">LOG</button>
+            <div class="statusTools">
+              <button id="wordBoardBtn">WORDS</button>
+              <button id="teleBtn">LOG</button>
+            </div>
           </div>
           <div class="dim">KWS:: <span id="kwsReadout" class="dim">idle</span></div>
           <div class="dim">Rules: <span id="rulesReadout" class="dim">unknown</span></div>
@@ -218,6 +221,14 @@
       <button id="logTabPhone" class="logTabBtn" type="button">Phone</button>
     </div>
     <div id="kwsLog" class="logPopupBody" aria-label="KWS debug log"></div>
+  </div>
+
+  <div id="wordBoardPopup" class="wordBoardPopup" aria-hidden="true">
+    <div id="wordBoardPopupHeader" class="wordBoardPopupHeader">
+      <div class="wordBoardPopupTitle">WordFlashboard</div>
+      <button class="xBtn" id="wordBoardPopupClose" aria-label="Close word board">✕</button>
+    </div>
+    <div id="wordBoardBody" class="wordBoardPopupBody" aria-label="Word flashboard"></div>
   </div>
 
   <!-- ===== LAN PARTY (P2P) BEGIN ===== -->
