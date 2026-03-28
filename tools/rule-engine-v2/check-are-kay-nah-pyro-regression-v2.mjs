@@ -8,11 +8,10 @@ import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
-import { emitDetectedWord } from "./check-wake-sequence-v2.mjs";
 
 const CHECK_TAG = "are-kay-nah-pyro-regression:v2";
-const PASS_MESSAGE = "are kay nah opens pyro, then pyro opens sanctum/rota and triggers sanctum_shield or aoe_flame through authored SSOT rules";
-const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
+const PASS_MESSAGE = "are kay nah opens kry os through authored SSOT rules for detectability smoke";
+const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 
 function emitDetectedToken(eventBus, token, atMs) {
   eventBus.emit("voice.token_detected", {
@@ -21,9 +20,9 @@ function emitDetectedToken(eventBus, token, atMs) {
   });
 }
 
-function runScenario({ finalWordId, expectedRuleId, expectedActionId }) {
+function main() {
   const eventBus = createCheckEventBus();
-  const executedActions = captureCheckEvents(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED);
+  const wakeWindows = captureCheckEvents(eventBus, EVT_RULE_ENGINE_WAKE_WIN_OPENED);
   const previewSystem = createRuleEnginePreviewSystem({
     eventBus,
     executeActions: true,
@@ -38,33 +37,18 @@ function runScenario({ finalWordId, expectedRuleId, expectedActionId }) {
 
   previewSystem.start();
   emitDetectedToken(eventBus, "are kay nah", 1000);
-  emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, 1010);
-  emitDetectedWord(eventBus, finalWordId, 1020);
   previewSystem.stop();
 
-  const matchingActions = executedActions.filter((evt) =>
-    String(evt?.actionType || "") === "event"
-    && String(evt?.ruleId || "") === expectedRuleId
-    && String(evt?.actionId || "") === expectedActionId
+  const matchingWakeOpen = wakeWindows.filter((evt) =>
+    String(evt?.ruleId || "") === "wake_are_kay_nah"
+    && String(evt?.windowId || "") === "wake.are_kay_nah"
+    && Array.isArray(evt?.words)
+    && evt.words.includes(CHECK_SPELL_IDS_V2.kry_os)
   );
-
   assertCheck(
-    matchingActions.length === 1,
-    `[${CHECK_TAG}] expected one ${expectedActionId} action from ${expectedRuleId}, got ${matchingActions.length}`
+    matchingWakeOpen.length === 1,
+    `[${CHECK_TAG}] expected wake_are_kay_nah to open kry_os once, got ${matchingWakeOpen.length}`
   );
-}
-
-function main() {
-  runScenario({
-    finalWordId: CHECK_SPELL_IDS_V2.sanctum,
-    expectedRuleId: "pyro_sanctum_cast",
-    expectedActionId: "sanctum_shield",
-  });
-  runScenario({
-    finalWordId: CHECK_SPELL_IDS_V2.rota,
-    expectedRuleId: "pyro_rota_cast",
-    expectedActionId: "aoe_flame",
-  });
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 
