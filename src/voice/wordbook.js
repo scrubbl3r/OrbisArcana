@@ -6,6 +6,7 @@ export const WORDS = Object.freeze(
     active: w.active !== false,
     id: String(w.id || "").trim().toLowerCase(),
     phrase: String(w.phrase || "").trim().toLowerCase(),
+    label: String(w.label || "").trim(),
     onnxModel: String(w.onnx || "").trim().toLowerCase(),
     minConfidence: Number.isFinite(Number(w.confidence)) ? Number(w.confidence) : 0.6,
     cooldownMs: Number.isFinite(Number(w.cooldownMs)) ? Number(w.cooldownMs) : 0,

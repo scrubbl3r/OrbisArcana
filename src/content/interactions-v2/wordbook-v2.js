@@ -5,6 +5,7 @@ const FIELD_WORDS = "words";
 const FIELD_SPELLS = "spells";
 const FIELD_ID = "id";
 const FIELD_PHRASE = "phrase";
+const FIELD_LABEL = "label";
 const FIELD_ONNX = "onnx";
 const FIELD_ACTIVE = "active";
 const FIELD_CONFIDENCE = "confidence";
@@ -15,6 +16,7 @@ const DEFAULT_COOLDOWN_MS = 0;
 function makeWord({
   id,
   phrase = id,
+  label = "",
   active = true,
   onnx = id,
   confidence = DEFAULT_CONFIDENCE,
@@ -23,6 +25,7 @@ function makeWord({
   return Object.freeze({
     [FIELD_ID]: id,
     [FIELD_PHRASE]: phrase,
+    [FIELD_LABEL]: label,
     [FIELD_ACTIVE]: active,
     [FIELD_ONNX]: onnx,
     [FIELD_CONFIDENCE]: confidence,
@@ -33,7 +36,7 @@ function makeWord({
 const WORDBOOK_V2_WORD_ROWS = Object.freeze([
   makeWord({ id: "orbis" }),
   makeWord({ id: "arcana" }),
-  makeWord({ id: "are_kay_nah", phrase: "are kay nah" }),
+  makeWord({ id: "are_kay_nah", phrase: "are kay nah", label: "Arcana" }),
   makeWord({ id: "domus" }),
   makeWord({ id: "pyro" }),
   makeWord({ id: "fridgis" }),

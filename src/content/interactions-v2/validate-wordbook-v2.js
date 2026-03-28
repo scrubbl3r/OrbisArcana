@@ -9,6 +9,7 @@ const FIELD_WORDS = "words";
 const FIELD_SPELLS = "spells";
 const FIELD_ID = "id";
 const FIELD_PHRASE = "phrase";
+const FIELD_LABEL = "label";
 const FIELD_ONNX = "onnx";
 const FIELD_ACTIVE = "active";
 const FIELD_CONFIDENCE = "confidence";
@@ -99,6 +100,12 @@ export function validateWordbookV2(input = WORDBOOK_V2) {
     }
     if (Object.hasOwn(word, FIELD_ACTIVE) && typeof word[FIELD_ACTIVE] !== "boolean") {
       errors.push(wordContextMessage(id, "active must be boolean"));
+    }
+    if (Object.hasOwn(word, FIELD_LABEL)) {
+      const label = String(word[FIELD_LABEL] ?? "").trim();
+      if (!label) {
+        errors.push(wordContextMessage(id, "label must be a non-empty string when present"));
+      }
     }
     {
       const confidence = Number(word[FIELD_CONFIDENCE]);

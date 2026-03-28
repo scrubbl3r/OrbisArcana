@@ -61,6 +61,20 @@ function orderWordIdsByPreferred(ids = []) {
   return out;
 }
 
+function resolveDisplayTextByWordId(id) {
+  const word = WORDBOOK_V2_ACTIVE_WORDS_BY_ID[asWordId(id)];
+  if (!word) return "";
+  const label = String(word.label || "").trim();
+  if (label) return label;
+  const phrase = String(word.phrase || "").trim();
+  if (phrase) return phrase;
+  return String(word.id || "").trim();
+}
+
+function compareWordDisplay(a, b) {
+  return String(a || "").localeCompare(String(b || ""), undefined, { sensitivity: "base" });
+}
+
 function resolveWordRefs(raw, groups = {}) {
   const out = [];
   for (const token of asSelectorList(raw)) {
@@ -126,6 +140,12 @@ function buildDerivedRuntimeProfileV2() {
   const allOnWordIds = uniqueWordIds(
     collectRulesByPredicate(() => true).flatMap((rule) => collectRuleOnWordIds(rule))
   );
+  const authoredWordIds = uniqueWordIds([
+    ...wakeWordIds,
+    ...allOnWordIds,
+    ...wakeRequiredWordIds,
+    ...wakeWindowWordIds,
+  ]);
   const standaloneWordIds = uniqueWordIds(
     allOnWordIds.filter((id) =>
       !wakeWordIds.includes(id) &&
@@ -165,6 +185,7 @@ function buildDerivedRuntimeProfileV2() {
   );
 
   return Object.freeze({
+    authoredWordIds: Object.freeze(authoredWordIds),
     wakeWordIds: Object.freeze(wakeWordIds),
     standaloneWordIds: Object.freeze(standaloneWordIds),
     wakeRequiredWordIds: Object.freeze(wakeRequiredWordIds),
@@ -237,7 +258,30 @@ function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
   return Object.freeze(out);
 }
 
+function buildWordFlashboardWords(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
+  const ids = Array.isArray(profile?.authoredWordIds) ? profile.authoredWordIds : [];
+  return Object.freeze(
+    ids
+      .map((id) => WORDBOOK_V2_ACTIVE_WORDS_BY_ID[asWordId(id)])
+      .filter(Boolean)
+      .map((word) => {
+        const id = asWordId(word.id);
+        const phrase = String(word.phrase || "").trim().toLowerCase();
+        const label = String(word.label || "").trim();
+        const displayText = resolveDisplayTextByWordId(id);
+        return Object.freeze({
+          id,
+          phrase,
+          label,
+          displayText,
+        });
+      })
+      .sort((a, b) => compareWordDisplay(a.displayText, b.displayText))
+  );
+}
+
 const ORCHESTRATOR_V2_WORD_RUNTIME_ROUTING = buildWordRuntimeRoutingV2(ORCHESTRATOR_V2_RUNTIME_PROFILE);
+const ORCHESTRATOR_V2_WORDFLASHBOARD_WORDS = buildWordFlashboardWords(ORCHESTRATOR_V2_RUNTIME_PROFILE);
 
 export const WAKE_WORD_IDS = Object.freeze(
   (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWordIds)
@@ -248,6 +292,18 @@ export const WAKE_WORD_IDS = Object.freeze(
 export const STANDALONE_WORD_IDS = Object.freeze(
   (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.standaloneWordIds)
     ? ORCHESTRATOR_V2_RUNTIME_PROFILE.standaloneWordIds
+    : []).slice()
+);
+
+export const WORDFLASHBOARD_WORD_IDS = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.authoredWordIds)
+    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.authoredWordIds
+    : []).slice()
+);
+
+export const WORDFLASHBOARD_WORDS = Object.freeze(
+  (Array.isArray(ORCHESTRATOR_V2_WORDFLASHBOARD_WORDS)
+    ? ORCHESTRATOR_V2_WORDFLASHBOARD_WORDS
     : []).slice()
 );
 
