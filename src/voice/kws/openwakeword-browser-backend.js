@@ -103,6 +103,14 @@ function buildWorkerUrl() {
   }
 }
 
+function buildCaptureProcessorUrl() {
+  try {
+    return new URL("./openwakeword-browser-capture-processor.js", import.meta.url);
+  } catch {
+    return null;
+  }
+}
+
 function buildInferWorkerUrl() {
   try {
     return new URL("./openwakeword-browser-infer-worker.js", import.meta.url);
@@ -178,6 +186,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
     let audioWorkerLastChunkAtMs = 0;
     let audioWorkerError = "";
     let audioWorkerConfigured = false;
+    let audioCaptureMode = "";
     let audioInputSampleRate = 0;
     let audioResumeTimer = null;
     let audioResumeHandlersBound = false;
@@ -352,6 +361,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       audioWorkerLastChunkAtMs = 0;
       audioWorkerError = "";
       audioWorkerConfigured = false;
+      audioCaptureMode = "";
       audioStartAtMs = 0;
       audioInputSampleRate = 0;
       audioWatchdogRestartCount = 0;
@@ -479,8 +489,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
     async function stopInferPipeline() {
       clearInferPumpTimer();
-      inferFramePullInFlight = false;
-      inferFramePullSentAtMs = 0;
       terminateInferWorker();
       for (const k of Object.keys(inferLastEmitAtMsByToken)) {
         delete inferLastEmitAtMsByToken[k];
@@ -499,32 +507,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       inferInputShape = [];
       inferInitStep = "";
       return true;
-    }
-
-    function startInferPump() {
-      clearInferPumpTimer();
-      inferFramePullInFlight = false;
-      inferFramePullSentAtMs = 0;
-      inferPumpTimer = setInterval(() => {
-        if (!started || !running) return;
-        if (!audioWorker || !audioPipelineReady) return;
-        if (!inferWorker || !inferReady) return;
-        if (inferFramePullInFlight) {
-          const elapsed = Math.max(0, nowMs() - Number(inferFramePullSentAtMs || 0));
-          if (elapsed < inferFramePullTimeoutMs) return;
-          // Recover from a lost/ignored pull response instead of stalling forever.
-          inferFramePullInFlight = false;
-          inferFramePullSentAtMs = 0;
-        }
-        inferFramePullInFlight = true;
-        inferFramePullSentAtMs = nowMs();
-        try {
-          audioWorker.postMessage({ type: "pull_frame" });
-        } catch {
-          inferFramePullInFlight = false;
-          inferFramePullSentAtMs = 0;
-        }
-      }, inferPollMs);
     }
 
     async function startInferPipeline() {
@@ -708,7 +690,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
       inferReady = true;
       inferLoading = false;
-      startInferPump();
       return true;
     }
 
@@ -754,8 +735,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           return;
         }
         if (type === "frame") {
-          inferFramePullInFlight = false;
-          inferFramePullSentAtMs = 0;
           audioWorkerQueueDepth = Number(msg.queueDepth) || 0;
           if (!msg.hasFrame) return;
           if (!inferWorker || !inferReady) return;
@@ -773,6 +752,10 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           emitError(audioWorkerError);
         }
       });
+
+      const ctx = new AudioContextCtor();
+      audioContext = ctx;
+      audioInputSampleRate = Number(ctx.sampleRate) || 0;
 
       let readyResolved = false;
       await new Promise((resolve, reject) => {
@@ -793,50 +776,72 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         worker.addEventListener("message", onMessage);
         worker.postMessage({
           type: "init",
-          inputSampleRate: 48000, // temporary; replaced once AudioContext is ready
+          inputSampleRate: audioInputSampleRate || 48000,
           targetSampleRate: audioTargetSampleRate,
           frameSamples: audioFrameSamples,
           maxQueuedFrames: audioMaxQueuedFrames,
         });
       });
 
-      const ctx = new AudioContextCtor();
-      audioContext = ctx;
-      audioInputSampleRate = Number(ctx.sampleRate) || 0;
-
-      // Re-init worker with true device sample rate now that AudioContext is known.
-      worker.postMessage({
-        type: "init",
-        inputSampleRate: audioInputSampleRate || 48000,
-        targetSampleRate: audioTargetSampleRate,
-        frameSamples: audioFrameSamples,
-        maxQueuedFrames: audioMaxQueuedFrames,
-      });
-
       sourceNode = ctx.createMediaStreamSource(stream);
-      processorNode = ctx.createScriptProcessor(4096, 1, 1);
+      const captureProcessorUrl = buildCaptureProcessorUrl();
+      const canUseAudioWorklet = !!(ctx.audioWorklet && typeof ctx.audioWorklet.addModule === "function" && captureProcessorUrl);
 
-      processorNode.onaudioprocess = (ev) => {
-        if (!audioWorker) return;
+      if (canUseAudioWorklet) {
         try {
-          const ch0 = ev.inputBuffer.getChannelData(0);
-          if (!ch0 || !ch0.length) return;
-          const out0 = ev.outputBuffer && ev.outputBuffer.numberOfChannels > 0
-            ? ev.outputBuffer.getChannelData(0)
-            : null;
-          if (out0 && out0.length) out0.fill(0);
-          const copy = new Float32Array(ch0.length);
-          copy.set(ch0);
-          audioChunksSent += 1;
-          audioWorker.postMessage({ type: "audio", samples: copy }, [copy.buffer]);
+          await ctx.audioWorklet.addModule(captureProcessorUrl);
+          const node = new AudioWorkletNode(ctx, "oww-capture-processor", {
+            numberOfInputs: 1,
+            numberOfOutputs: 1,
+            outputChannelCount: [1],
+          });
+          node.port.onmessage = (ev) => {
+            if (!audioWorker) return;
+            const msg = ev && ev.data ? ev.data : {};
+            if (String(msg.type || "") !== "audio" || !(msg.samples instanceof Float32Array)) return;
+            try {
+              audioChunksSent += 1;
+              audioWorker.postMessage({ type: "audio", samples: msg.samples }, [msg.samples.buffer]);
+            } catch (err) {
+              audioWorkerError = err && err.message ? String(err.message) : "oww_browser_audio_chunk_send_failed";
+              emitError(audioWorkerError);
+            }
+          };
+          processorNode = node;
+          sourceNode.connect(node);
+          node.connect(ctx.destination);
+          audioCaptureMode = "worklet";
         } catch (err) {
-          audioWorkerError = err && err.message ? String(err.message) : "oww_browser_audio_chunk_send_failed";
+          audioWorkerError = err && err.message ? String(err.message) : "oww_browser_audio_worklet_init_failed";
           emitError(audioWorkerError);
         }
-      };
+      }
 
-      sourceNode.connect(processorNode);
-      processorNode.connect(ctx.destination);
+      if (!processorNode) {
+        const scriptNode = ctx.createScriptProcessor(4096, 1, 1);
+        scriptNode.onaudioprocess = (ev) => {
+          if (!audioWorker) return;
+          try {
+            const ch0 = ev.inputBuffer.getChannelData(0);
+            if (!ch0 || !ch0.length) return;
+            const out0 = ev.outputBuffer && ev.outputBuffer.numberOfChannels > 0
+              ? ev.outputBuffer.getChannelData(0)
+              : null;
+            if (out0 && out0.length) out0.fill(0);
+            const copy = new Float32Array(ch0.length);
+            copy.set(ch0);
+            audioChunksSent += 1;
+            audioWorker.postMessage({ type: "audio", samples: copy }, [copy.buffer]);
+          } catch (err) {
+            audioWorkerError = err && err.message ? String(err.message) : "oww_browser_audio_chunk_send_failed";
+            emitError(audioWorkerError);
+          }
+        };
+        processorNode = scriptNode;
+        sourceNode.connect(scriptNode);
+        scriptNode.connect(ctx.destination);
+        audioCaptureMode = "script_processor";
+      }
 
       if (ctx.state !== "running") {
         try { await ctx.resume(); } catch {}
@@ -991,6 +996,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         audioMaxQueuedFrames,
         audioChunksSent,
         audioWorkerConfigured,
+        audioCaptureMode,
         audioWorkerQueueDepth,
         audioWorkerFramesProduced,
         audioWorkerFramesDropped,

@@ -23,6 +23,7 @@ const state = {
   startedAtMs: 0,
   lastChunkAtMs: 0,
   statsTimer: null,
+  flushScheduled: false,
 };
 
 function nowMs() {
@@ -46,6 +47,7 @@ function resetState() {
   state.framesDropped = 0;
   state.startedAtMs = nowMs();
   state.lastChunkAtMs = 0;
+  state.flushScheduled = false;
 }
 
 function postStats() {
@@ -90,6 +92,25 @@ function emitFrame() {
   state.framesProduced += 1;
   state.frameBuf = new Int16Array(state.frameSamples);
   state.frameWrite = 0;
+  scheduleFlushFrames();
+}
+
+function flushFrames() {
+  state.flushScheduled = false;
+  while (state.frameQueue.length) {
+    const next = state.frameQueue.shift();
+    if (!next) continue;
+    postMessage(
+      { type: "frame", atMs: nowMs(), queueDepth: state.frameQueue.length, hasFrame: true, frame: next.buffer },
+      [next.buffer]
+    );
+  }
+}
+
+function scheduleFlushFrames() {
+  if (state.flushScheduled) return;
+  state.flushScheduled = true;
+  setTimeout(flushFrames, 0);
 }
 
 function handleAudioChunk(samples) {
@@ -143,22 +164,6 @@ self.onmessage = (ev) => {
     }
     if (type === "audio") {
       handleAudioChunk(msg.samples);
-      return;
-    }
-    if (type === "pull_frame_count") {
-      postMessage({ type: "frame_count", atMs: nowMs(), queueDepth: state.frameQueue.length });
-      return;
-    }
-    if (type === "pull_frame") {
-      const next = state.frameQueue.length ? state.frameQueue.shift() : null;
-      if (!next) {
-        postMessage({ type: "frame", atMs: nowMs(), queueDepth: state.frameQueue.length, hasFrame: false });
-        return;
-      }
-      postMessage(
-        { type: "frame", atMs: nowMs(), queueDepth: state.frameQueue.length, hasFrame: true, frame: next.buffer },
-        [next.buffer]
-      );
       return;
     }
     if (type === "stop") {
