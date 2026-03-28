@@ -128,7 +128,7 @@ function collectWakeWinWordIdsFromOrchestratorV2(orchestratorV2) {
   for (const rule of rules) {
     const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
     const openId = asId(open && open.id);
-    if (!openId.startsWith("school.")) continue;
+    if (!openId || openId === "wake.main") continue;
     const rawWords = open && (Object.hasOwn(open, "words") ? open.words : open.spells);
     const resolvedWords = [];
     for (const token of asSelectorList(rawWords)) {
