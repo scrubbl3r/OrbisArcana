@@ -38,7 +38,7 @@ const WORDBOOK_V2_WORD_ROWS = Object.freeze([
   makeWord({ id: "pyro" }),
   makeWord({ id: "fridgis" }),
   makeWord({ id: "electrum" }),
-  makeWord({ id: "kry_os", phrase: "kry os" }),
+  makeWord({ id: "tem_pus", phrase: "tem pus" }),
   makeWord({ id: "sanctum" }),
   makeWord({ id: "vectus", confidence: 0.4 }),
   makeWord({ id: "rota" }),
