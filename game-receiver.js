@@ -1250,7 +1250,7 @@
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
     let kwsEventBindings = null;
-    const MODULE_CACHE_BUST_V = "20260327c";
+    const MODULE_CACHE_BUST_V = "20260328a";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
