@@ -533,14 +533,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       if (typeof Worker !== "function") {
         throw new Error("oww_browser_infer_worker_unavailable");
       }
-      const activeTokenSet = activeTokens instanceof Set ? activeTokens : null;
-      const activeModels = loadedModels.filter((m) => {
-        if (!(m && m.modelUrl)) return false;
-        if (!activeTokenSet) return true;
-        const token = normalizeToken(m.token || m.label || "", tokenMap);
-        return !!token && activeTokenSet.has(token);
-      });
-      if (!activeModels.length) {
+      const classifierModels = loadedModels.filter((m) => !!(m && m.modelUrl));
+      if (!classifierModels.length) {
         throw new Error("oww_browser_infer_model_missing");
       }
       const inferWorkerUrl = buildInferWorkerUrl();
@@ -554,9 +548,9 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       if (!inferOrtModuleUrl) {
         throw new Error("oww_browser_infer_ort_module_url_invalid");
       }
-      inferModelUrl = activeModels.length === 1
-        ? String(activeModels[0].modelUrl || "")
-        : `multi:${activeModels.length}`;
+      inferModelUrl = classifierModels.length === 1
+        ? String(classifierModels[0].modelUrl || "")
+        : `multi:${classifierModels.length}`;
       inferToken = "multi";
       inferWasmRootUrl = safeUrl(config.ortWasmRootUrl || "");
       if (!inferWasmRootUrl) {
@@ -570,7 +564,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
       const worker = new Worker(inferWorkerUrl, { type: "module" });
       inferWorker = worker;
 
-      const classifiers = activeModels.map((m) => {
+      const classifiers = classifierModels.map((m) => {
         const modelUrl = String(m.modelUrl || "");
         const modelToken = normalizeToken(m.token || m.label || "", tokenMap);
         const modelThreshold = normalizeThreshold(m.threshold, inferThreshold);
@@ -707,6 +701,7 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           melModelBuffer,
           embeddingModelBuffer,
           classifiers,
+          activeTokens: activeTokens instanceof Set ? Array.from(activeTokens.values()) : null,
           threshold: inferThreshold,
         });
       });
@@ -920,7 +915,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
 
     function setConfig(next = {}) {
       if (!next || typeof next !== "object") return getStatus();
-      let shouldRestartInfer = false;
       if (Object.prototype.hasOwnProperty.call(next, "inferThreshold")) {
         const n = Number(next.inferThreshold);
         if (Number.isFinite(n)) inferThreshold = normalizeThreshold(n, inferThreshold);
@@ -943,7 +937,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         const nextKey = Array.isArray(nextTokens) ? nextTokens.join("|") : "";
         if (prevKey !== nextKey) {
           activeTokens = Array.isArray(normalizedTokens) ? new Set(normalizedTokens) : null;
-          shouldRestartInfer = true;
         }
       }
       if (inferWorker) {
@@ -951,19 +944,9 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           inferWorker.postMessage({
             type: "set_config",
             threshold: inferThreshold,
+            activeTokens: activeTokens instanceof Set ? Array.from(activeTokens.values()) : null,
           });
         } catch {}
-      }
-      if (shouldRestartInfer && started && !simulated && modelAssetsLoaded) {
-        Promise.resolve().then(async () => {
-          try {
-            await stopInferPipeline();
-            if (running) await startInferPipeline();
-          } catch (err) {
-            inferError = err && err.message ? String(err.message) : "oww_browser_infer_reconfigure_failed";
-            emitError(inferError);
-          }
-        });
       }
       return getStatus();
     }

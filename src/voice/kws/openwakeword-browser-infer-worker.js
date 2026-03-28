@@ -2,6 +2,7 @@ let ortRef = null;
 let melSession = null;
 let embeddingSession = null;
 const classifierEntries = [];
+let activeTokenSet = null;
 
 let melInputName = "";
 let melOutputName = "";
@@ -89,6 +90,22 @@ function resetState() {
   inputShape = [];
 }
 
+function normalizeToken(raw) {
+  return String(raw || "").trim().toLowerCase();
+}
+
+function setActiveTokens(tokens) {
+  if (!Array.isArray(tokens)) {
+    activeTokenSet = null;
+    return;
+  }
+  activeTokenSet = new Set(
+    tokens
+      .map((token) => normalizeToken(token))
+      .filter(Boolean)
+  );
+}
+
 function appendPcmFrame(frameI16) {
   const frame = frameI16 instanceof Int16Array ? frameI16 : new Int16Array(0);
   for (let i = 0; i < frame.length; i += 1) {
@@ -155,6 +172,7 @@ async function runPipelineForFrame(frameI16) {
   let frameMaxScore = 0;
   const warmupSuppressed = inferences <= 5; // mirror warmup suppression in openWakeWord
   for (const c of classifierEntries) {
+    if (activeTokenSet instanceof Set && !activeTokenSet.has(c.token)) continue;
     let clsOut;
     try {
       clsOut = await c.session.run({ [c.inputName]: clsInput });
@@ -210,6 +228,7 @@ async function onInit(msg) {
   const embeddingModelBuffer = msg && msg.embeddingModelBuffer instanceof ArrayBuffer ? msg.embeddingModelBuffer : null;
   threshold = toFiniteNumber(msg && msg.threshold, 0.15);
   const rawClassifiers = Array.isArray(msg && msg.classifiers) ? msg.classifiers : [];
+  setActiveTokens(Array.isArray(msg && msg.activeTokens) ? msg.activeTokens : null);
 
   if (!ortModuleUrl) throw new Error("oww_browser_infer_missing_ort_module_url");
   if (!melModelUrl && !melModelBuffer) throw new Error("oww_browser_infer_missing_mel_model");
@@ -326,6 +345,7 @@ self.onmessage = (ev) => {
     melSession = null;
     embeddingSession = null;
     classifierEntries.length = 0;
+    activeTokenSet = null;
     ortRef = null;
     melInputName = "";
     melOutputName = "";
@@ -337,8 +357,13 @@ self.onmessage = (ev) => {
   if (type === "set_config") {
     const n = toFiniteNumber(msg && msg.threshold, threshold);
     threshold = Math.max(0, Math.min(1, n));
-    for (const c of classifierEntries) {
-      c.threshold = threshold;
+    if (Object.prototype.hasOwnProperty.call(msg || {}, "activeTokens")) {
+      setActiveTokens(Array.isArray(msg.activeTokens) ? msg.activeTokens : null);
+    }
+    if (Object.prototype.hasOwnProperty.call(msg || {}, "threshold")) {
+      for (const c of classifierEntries) {
+        c.threshold = threshold;
+      }
     }
     return;
   }
