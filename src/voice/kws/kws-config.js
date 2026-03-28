@@ -7,7 +7,7 @@ import {
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING,
-} from "../../content/spells/spell-runtime-routing.js";
+} from "../../content/spells/spell-runtime-routing.js?v=20260327a";
 import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
 
 function resolveActivePhrasesByIds(ids = []) {
