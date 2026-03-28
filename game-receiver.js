@@ -78,12 +78,6 @@
       qr: $("qr"),
       urlText: $("urlText"),
       copyUrl: $("copyUrl"),
-
-      teleModal: $("teleModal"),
-      teleBackdrop: $("teleBackdrop"),
-      teleClose: $("teleClose"),
-      teleRecBtn: $("teleRecBtn"),
-      teleOut: $("teleOut"),
       logPopup: $("logPopup"),
       logPopupHeader: $("logPopupHeader"),
       logPopupClose: $("logPopupClose"),
@@ -1008,35 +1002,7 @@
     }
     // ===== LAN PARTY (P2P) END =====
 
-    // =========================================================================
-    // TELEMETRY + DEBUG SYSTEM
-    // =========================================================================
-    let telemetryDebugSystem = null;
-
-    async function initTelemetryDebugSystem(){
-      try {
-        const { createTelemetryDebugSystem } = await import("./src/systems/telemetry-debug-system.js");
-        telemetryDebugSystem = createTelemetryDebugSystem({
-          teleModalEl: els.teleModal,
-          teleBtnEl: els.teleBtn,
-          teleBackdropEl: els.teleBackdrop,
-          teleCloseEl: els.teleClose,
-          teleRecBtnEl: els.teleRecBtn,
-          teleOutEl: els.teleOut,
-          pickDirVec,
-        });
-        telemetryDebugSystem.bindUi();
-      } catch (e) {
-        telemetryDebugSystem = null;
-        console.warn("Telemetry debug system init failed:", e);
-      }
-    }
-
-    function updateDebugReadout(){
-      if (telemetryDebugSystem) {
-        telemetryDebugSystem.updateDebugReadout("—");
-      }
-    }
+    function updateDebugReadout(){}
 
     let DEFAULT_VOICE_ENGINE = "kws";
     let DEFAULT_KWS_BACKEND_KEY = "openwakeword_browser";
@@ -1110,16 +1076,12 @@
       });
     }
 
-    function teleMaybeLog(d){
-      if (telemetryDebugSystem) {
-        telemetryDebugSystem.teleMaybeLog(d);
-      }
-    }
+    function teleMaybeLog(d){ void d; }
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (telemetryDebugSystem && telemetryDebugSystem.isTeleOpen()) {
-          telemetryDebugSystem.closeTele();
+        if (els.logPopup && els.logPopup.classList.contains("on") && els.logPopupClose) {
+          els.logPopupClose.click();
         } else if (els.pairModal.classList.contains("on")) {
           closePairModal();
         }
