@@ -36,6 +36,11 @@
       "token": "electrum"
     },
     {
+      "path": "../../../assets/kws/openwakeword-models/kry_os.onnx",
+      "label": "kry os",
+      "token": "kry os"
+    },
+    {
       "path": "../../../assets/kws/openwakeword-models/sanctum.onnx",
       "label": "sanctum",
       "token": "sanctum"

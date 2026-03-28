@@ -13,10 +13,14 @@ const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "electrum",
   "fridgis",
   "pyro",
+  "kry_os",
   "rota",
   "sanctum",
   "vectus",
 ]);
+
+const CANONICAL_STANDALONE_WORD_IDS = Object.freeze(["arcana", "are_kay_nah", "kry_os"]);
+const CANONICAL_ROW_TOP_EXTRAS = Object.freeze(["kry_os"]);
 
 function asSelectorList(raw) {
   if (Array.isArray(raw)) return raw.slice();
@@ -133,6 +137,7 @@ function buildDerivedRuntimeProfileV2() {
   const rowTopWordIds = orderWordIdsByPreferred([
     ...wakeWordIds,
     ...standaloneWordIds,
+    ...CANONICAL_ROW_TOP_EXTRAS,
     ...wakeRequiredWordIds,
     ...wakeWindowWordIds,
   ]);
@@ -175,7 +180,6 @@ function buildDerivedRuntimeProfileV2() {
 }
 
 const ORCHESTRATOR_V2_RUNTIME_PROFILE = buildDerivedRuntimeProfileV2();
-const CANONICAL_STANDALONE_WORD_IDS = Object.freeze(["arcana", "are_kay_nah"]);
 
 function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
   const out = [];
