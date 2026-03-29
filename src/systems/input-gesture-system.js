@@ -136,9 +136,6 @@ export function createInputGestureSystem({
   function registerShakeHit(now) {
     if (now < state.shakeCooldownUntil) return false;
     if (typeof hooks.isDiversityLampLit === "function" && hooks.isDiversityLampLit()) return false;
-    if (typeof hooks.canSpendShake === "function" && !hooks.canSpendShake()) return false;
-
-    if (typeof hooks.spendShake === "function") hooks.spendShake();
     if (typeof hooks.flashShakeLamp === "function") hooks.flashShakeLamp(400);
 
     let shakeCode = "";
