@@ -75,6 +75,54 @@ function compareWordDisplay(a, b) {
   return String(a || "").localeCompare(String(b || ""), undefined, { sensitivity: "base" });
 }
 
+function buildWordFlashboardTierMap() {
+  const rules = Array.isArray(ORCHESTRATOR_V2 && ORCHESTRATOR_V2.rules) ? ORCHESTRATOR_V2.rules : [];
+  const wakeRoots = uniqueWordIds(ORCHESTRATOR_V2_WAKE_WORD_IDS);
+  const groups = (ORCHESTRATOR_V2 && typeof ORCHESTRATOR_V2.groups === "object" && ORCHESTRATOR_V2.groups)
+    ? ORCHESTRATOR_V2.groups
+    : Object.create(null);
+  const openedByWordId = new Map();
+  const tierByWordId = new Map();
+  const queue = [];
+
+  for (const rootId of wakeRoots) {
+    tierByWordId.set(rootId, 1);
+    queue.push(rootId);
+  }
+
+  for (const rule of rules) {
+    const triggerWordIds = collectRuleOnWordIds(rule);
+    if (!triggerWordIds.length) continue;
+    const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
+    if (!open) continue;
+    const openedWordIds = uniqueWordIds(resolveWordRefs(
+      Object.hasOwn(open, "words") ? open.words : open.spells,
+      groups
+    ));
+    if (!openedWordIds.length) continue;
+    for (const triggerWordId of triggerWordIds) {
+      const existing = openedByWordId.get(triggerWordId) || [];
+      openedByWordId.set(triggerWordId, existing.concat(openedWordIds));
+    }
+  }
+
+  while (queue.length) {
+    const wordId = queue.shift();
+    const currentTier = Number(tierByWordId.get(wordId) || 0);
+    if (!currentTier) continue;
+    const openedWordIds = uniqueWordIds(openedByWordId.get(wordId) || []);
+    for (const openedWordId of openedWordIds) {
+      const nextTier = currentTier + 1;
+      const existingTier = Number(tierByWordId.get(openedWordId) || 0);
+      if (existingTier && existingTier <= nextTier) continue;
+      tierByWordId.set(openedWordId, nextTier);
+      queue.push(openedWordId);
+    }
+  }
+
+  return tierByWordId;
+}
+
 function resolveWordRefs(raw, groups = {}) {
   const out = [];
   for (const token of asSelectorList(raw)) {
@@ -260,6 +308,7 @@ function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
 
 function buildWordFlashboardWords(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
   const ids = Array.isArray(profile?.authoredWordIds) ? profile.authoredWordIds : [];
+  const tierByWordId = buildWordFlashboardTierMap();
   return Object.freeze(
     ids
       .map((id) => WORDBOOK_V2_ACTIVE_WORDS_BY_ID[asWordId(id)])
@@ -269,14 +318,20 @@ function buildWordFlashboardWords(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
         const phrase = String(word.phrase || "").trim().toLowerCase();
         const label = String(word.label || "").trim();
         const displayText = resolveDisplayTextByWordId(id);
+        const tier = Math.max(1, Number(tierByWordId.get(id) || 1));
         return Object.freeze({
           id,
           phrase,
           label,
           displayText,
+          tier,
         });
       })
-      .sort((a, b) => compareWordDisplay(a.displayText, b.displayText))
+      .sort((a, b) => {
+        const tierDelta = Number(a.tier || 0) - Number(b.tier || 0);
+        if (tierDelta !== 0) return tierDelta;
+        return compareWordDisplay(a.displayText, b.displayText);
+      })
   );
 }
 

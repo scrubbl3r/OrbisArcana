@@ -952,8 +952,8 @@
       position: fixed;
       left: 36px;
       top: 110px;
-      width: 420px;
-      height: 360px;
+      width: 500px;
+      height: auto;
       display: none;
       flex-direction: column;
       border-radius: 16px;
@@ -982,21 +982,28 @@
       letter-spacing: .3px;
     }
     .wordBoardPopupBody{
-      flex: 1 1 auto;
+      flex: 0 0 auto;
       padding: 10px;
       overflow-y: auto;
       overflow-x: hidden;
       background: rgba(0,0,0,.22);
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      display: flex;
+      flex-direction: column;
       gap: 8px;
       align-content: start;
+      max-height: calc(100vh - 180px);
+    }
+    .wordBoardTierRow{
+      display:flex;
+      gap:8px;
+      align-items:stretch;
     }
     .wordBoardChip{
       display:flex;
+      flex:1 1 0;
       align-items:center;
       justify-content:center;
-      min-height:38px;
+      height:70px;
       padding:8px 10px;
       border-radius:10px;
       border:1px solid rgba(50,255,117,.24);

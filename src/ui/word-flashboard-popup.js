@@ -17,19 +17,35 @@ export function createWordFlashboardPopup({
     return `<div class="${cls}">${String(displayText || "")}</div>`;
   }
 
+  function groupWordsByTier(words = []) {
+    const rowsByTier = new Map();
+    for (const entry of Array.isArray(words) ? words : []) {
+      const tier = Math.max(1, Number(entry && entry.tier) || 1);
+      const row = rowsByTier.get(tier) || [];
+      row.push(entry);
+      rowsByTier.set(tier, row);
+    }
+    return Array.from(rowsByTier.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([, row]) => row);
+  }
+
   function render() {
     if (!open || !els.wordBoardBody) return;
     const now = Date.now();
     const listenableTokens = getListenableTokens() instanceof Set
       ? getListenableTokens()
       : new Set();
-    const html = flashboardWords
-      .map((entry) => {
-        const phrase = canonicalToken(entry && entry.phrase);
-        const lit = listenableTokens.has(phrase);
-        const flash = Number(getFlashUntilMs(phrase) || 0) > now;
-        const displayText = String(entry && entry.displayText || entry && entry.label || entry && entry.phrase || entry && entry.id || "");
-        return wordBoardChipHtml(displayText, lit, flash);
+    const html = groupWordsByTier(flashboardWords)
+      .map((row) => {
+        const rowHtml = row.map((entry) => {
+          const phrase = canonicalToken(entry && entry.phrase);
+          const lit = listenableTokens.has(phrase);
+          const flash = Number(getFlashUntilMs(phrase) || 0) > now;
+          const displayText = String(entry && entry.displayText || entry && entry.label || entry && entry.phrase || entry && entry.id || "");
+          return wordBoardChipHtml(displayText, lit, flash);
+        }).join("");
+        return `<div class="wordBoardTierRow">${rowHtml}</div>`;
       })
       .join("");
     els.wordBoardBody.innerHTML = html;
