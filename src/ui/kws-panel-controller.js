@@ -1,3 +1,5 @@
+import { createWordFlashboardPopup } from "./word-flashboard-popup.js";
+
 export function createKwsPanelController({
   els = {},
   constants = {},
@@ -63,9 +65,6 @@ export function createKwsPanelController({
   let logPopupBound = false;
   let logPopupOpen = false;
   let logPopupDrag = null;
-  let wordBoardPopupBound = false;
-  let wordBoardPopupOpen = false;
-  let wordBoardPopupDrag = null;
   let activeLogChannel = "kws";
   const logChannelState = {
     kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
@@ -73,6 +72,20 @@ export function createKwsPanelController({
   };
   let tuneApplyBound = false;
   let listenPolicyBound = false;
+  const wordFlashboardPopup = createWordFlashboardPopup({
+    els,
+    words: WORDFLASHBOARD_WORDS,
+    canonicalToken: canonicalKwsToken,
+    getListenableTokens: () => {
+      const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
+      return new Set(
+        (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
+          .map((token) => canonicalKwsToken(token))
+          .filter(Boolean)
+      );
+    },
+    getFlashUntilMs: (token) => Number(kwsTokenUiState.flashUntilMs[String(token || "").trim().toLowerCase()] || 0),
+  });
 
   function readNumberInputOrNull(el) {
     if (!el) return null;
@@ -171,7 +184,7 @@ export function createKwsPanelController({
   function flashKwsToken(token, ms = 360) {
     const t = String(token || "").trim().toLowerCase();
     if (!t) return;
-    if (!wordBoardPopupOpen) return;
+    if (!wordFlashboardPopup.isOpen()) return;
     const until = Date.now() + Math.max(60, Number(ms) || 360);
     kwsTokenUiState.flashUntilMs[t] = until;
     const existing = kwsTokenUiState.flashTOByToken[t];
@@ -189,11 +202,6 @@ export function createKwsPanelController({
     const cls = `kwsTokenChip${lit ? " on" : ""}${flash ? " flash" : ""}`;
     const t = String(token || "");
     return `<span class="${cls}">${t}</span>`;
-  }
-
-  function wordBoardChipHtml(displayText, lit, flash) {
-    const cls = `wordBoardChip${lit ? " on" : ""}${flash ? " flash" : ""}`;
-    return `<div class="${cls}">${String(displayText || "")}</div>`;
   }
 
   function openKwsWakeHudGate(timeoutMs = DEFAULT_KWS_GATE_TIMEOUT_MS) {
@@ -288,32 +296,7 @@ export function createKwsPanelController({
     }
     const meta = parts.length ? `<span class="kwsTokenMeta">${parts.join(" | ")}</span>` : "";
     els.kwsReadout.innerHTML = meta || "idle";
-    renderWordBoard();
-  }
-
-  function getListenableTokenSet() {
-    const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
-    return new Set(
-      (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
-        .map((token) => canonicalKwsToken(token))
-        .filter(Boolean)
-    );
-  }
-
-  function renderWordBoard() {
-    if (!wordBoardPopupOpen || !els.wordBoardBody) return;
-    const now = Date.now();
-    const listenableTokens = getListenableTokenSet();
-    const html = WORDFLASHBOARD_WORDS
-      .map((entry) => {
-        const phrase = canonicalKwsToken(entry && entry.phrase);
-        const lit = listenableTokens.has(phrase);
-        const flash = Number(kwsTokenUiState.flashUntilMs[phrase] || 0) > now;
-        const displayText = String(entry && entry.displayText || entry && entry.label || entry && entry.phrase || entry && entry.id || "");
-        return wordBoardChipHtml(displayText, lit, flash);
-      })
-      .join("");
-    els.wordBoardBody.innerHTML = html;
+    wordFlashboardPopup.render();
   }
 
   function syncLegacyKwsLogState() {
@@ -385,65 +368,8 @@ export function createKwsPanelController({
     }
   }
 
-  function beginWordBoardPopupDrag(ev) {
-    if (!els.wordBoardPopup || !els.wordBoardPopupHeader) return;
-    if (ev.target && typeof ev.target.closest === "function" && ev.target.closest("button")) return;
-    const rect = els.wordBoardPopup.getBoundingClientRect();
-    wordBoardPopupDrag = {
-      pointerId: ev.pointerId,
-      offsetX: ev.clientX - rect.left,
-      offsetY: ev.clientY - rect.top,
-    };
-    try { els.wordBoardPopupHeader.setPointerCapture(ev.pointerId); } catch (_) {}
-    ev.preventDefault();
-  }
-
-  function moveWordBoardPopupDrag(ev) {
-    if (!wordBoardPopupDrag || !els.wordBoardPopup) return;
-    const maxLeft = Math.max(0, window.innerWidth - els.wordBoardPopup.offsetWidth);
-    const maxTop = Math.max(0, window.innerHeight - els.wordBoardPopup.offsetHeight);
-    const left = Math.max(0, Math.min(maxLeft, ev.clientX - wordBoardPopupDrag.offsetX));
-    const top = Math.max(0, Math.min(maxTop, ev.clientY - wordBoardPopupDrag.offsetY));
-    els.wordBoardPopup.style.left = `${left}px`;
-    els.wordBoardPopup.style.top = `${top}px`;
-  }
-
-  function endWordBoardPopupDrag() {
-    if (!wordBoardPopupDrag || !els.wordBoardPopupHeader) return;
-    try { els.wordBoardPopupHeader.releasePointerCapture(wordBoardPopupDrag.pointerId); } catch (_) {}
-    wordBoardPopupDrag = null;
-  }
-
-  function setWordBoardPopupOpen(nextOpen) {
-    wordBoardPopupOpen = !!nextOpen;
-    if (els.wordBoardPopup) {
-      els.wordBoardPopup.classList.toggle("on", wordBoardPopupOpen);
-      els.wordBoardPopup.setAttribute("aria-hidden", wordBoardPopupOpen ? "false" : "true");
-    }
-    if (!wordBoardPopupOpen) {
-      if (els.wordBoardBody) els.wordBoardBody.textContent = "";
-      return;
-    }
-    renderWordBoard();
-  }
-
   function bindWordBoardPopupButton() {
-    if (wordBoardPopupBound) return;
-    wordBoardPopupBound = true;
-    if (els.wordBoardBtn) {
-      els.wordBoardBtn.addEventListener("click", () => {
-        setWordBoardPopupOpen(!wordBoardPopupOpen);
-      });
-    }
-    if (els.wordBoardPopupClose) {
-      els.wordBoardPopupClose.addEventListener("click", () => setWordBoardPopupOpen(false));
-    }
-    if (els.wordBoardPopupHeader) {
-      els.wordBoardPopupHeader.addEventListener("pointerdown", beginWordBoardPopupDrag);
-      els.wordBoardPopupHeader.addEventListener("pointermove", moveWordBoardPopupDrag);
-      els.wordBoardPopupHeader.addEventListener("pointerup", endWordBoardPopupDrag);
-      els.wordBoardPopupHeader.addEventListener("pointercancel", endWordBoardPopupDrag);
-    }
+    wordFlashboardPopup.bind();
   }
 
   function beginLogPopupDrag(ev) {
