@@ -952,8 +952,9 @@
       position: fixed;
       left: 36px;
       top: 110px;
-      width: 500px;
+      width: 640px;
       height: auto;
+      min-height: 210px;
       display: none;
       flex-direction: column;
       border-radius: 16px;
@@ -984,6 +985,7 @@
     .wordBoardPopupBody{
       flex: 0 0 auto;
       padding: 10px;
+      min-height: 150px;
       overflow-y: auto;
       overflow-x: hidden;
       background: rgba(0,0,0,.22);
