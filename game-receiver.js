@@ -1017,7 +1017,7 @@
     let DEFAULT_KWS_AUTOSTART_MAX_MS = 120000;
     let DEFAULT_KWS_AUTOSTART_REKICK_MS = 5000;
     let DEFAULT_KWS_START_STALL_MS = 8000;
-    let DEFAULT_KWS_LISTEN_POLICY_MODE = "B";
+    let DEFAULT_KWS_LISTEN_POLICY_MODE = "A";
     let DEFAULT_KWS_GATE_TIMEOUT_MS = 1500;
     let STRICT_A_WAKE_WINDOW_PAD_MS = 4000;
     let KWS_READOUT_TICK_MS = 250;
@@ -1498,7 +1498,7 @@
             DEFAULT_KWS_AUTOSTART_MAX_MS = Math.max(1000, Number(kwsConfig.autostartMaxMs) || DEFAULT_KWS_AUTOSTART_MAX_MS);
             DEFAULT_KWS_AUTOSTART_REKICK_MS = Math.max(250, Number(kwsConfig.autostartRekickMs) || DEFAULT_KWS_AUTOSTART_REKICK_MS);
             DEFAULT_KWS_START_STALL_MS = Math.max(1000, Number(kwsConfig.startStallMs) || DEFAULT_KWS_START_STALL_MS);
-            DEFAULT_KWS_LISTEN_POLICY_MODE = String(kwsConfig.listenPolicyMode || DEFAULT_KWS_LISTEN_POLICY_MODE || "B").trim().toUpperCase() || "B";
+            DEFAULT_KWS_LISTEN_POLICY_MODE = String(kwsConfig.listenPolicyMode || DEFAULT_KWS_LISTEN_POLICY_MODE || "A").trim().toUpperCase() || "A";
             DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(100, Number(kwsConfig.gateTimeoutMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
             KWS_READOUT_TICK_MS = Math.max(100, Number(kwsConfig.readoutTickMs) || KWS_READOUT_TICK_MS);
             KWS_ROW_TOP = Array.isArray(kwsConfig.rowTop) ? kwsConfig.rowTop.slice() : KWS_ROW_TOP;
