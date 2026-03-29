@@ -4,6 +4,7 @@ import {
   WORD_WINDOW_BYPASS_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
 } from "../content/spells/spell-runtime-routing.js";
+import { getCastActionMeta } from "../content/spells/cast-action-registry.js";
 import {
   EVT_SPELL_WINDOW_SPIN_OPENED,
   EVT_SPELL_WINDOW_SPIN_CLOSED,
@@ -69,6 +70,53 @@ export function createSpellDispatchSystem({
       return resources.consumeStoredGlobe(payload);
     }
     return { ok: false, stored: getStoredGlobeCount() };
+  }
+
+  function getGlobeCostForCastAction(castActionId) {
+    const meta = getCastActionMeta(castActionId);
+    return Math.max(0, Number(meta && meta.globeCost) || 0);
+  }
+
+  function tryConsumeSpellCost(entry, payload = {}) {
+    const castActionId = String(entry && entry.castActionId || "").trim().toLowerCase();
+    const globeCost = getGlobeCostForCastAction(castActionId);
+    if (globeCost <= 0) {
+      return { ok: true, globeCost: 0, stored: getStoredGlobeCount() };
+    }
+    const before = getStoredGlobeCount();
+    if (before < globeCost) {
+      return { ok: false, globeCost, stored: before };
+    }
+    let stored = before;
+    for (let i = 0; i < globeCost; i += 1) {
+      const result = consumeStoredGlobe({
+        ...payload,
+        reason: String(payload.reason || "spell_cast"),
+        wordId: String(entry.wordId || ""),
+        spellId: String(entry.spellId || entry.wordId || ""),
+        slot: String(entry.slot || payload.slot || ""),
+        axis: String(entry.axis || payload.axis || ""),
+      });
+      if (!result || result.ok !== true) {
+        return { ok: false, globeCost, stored: getStoredGlobeCount() };
+      }
+      stored = Math.max(0, Number(result.stored) || 0);
+    }
+    return { ok: true, globeCost, stored };
+  }
+
+  function emitInsufficientGlobes(entry, payload = {}, globeCost = 0, stored = 0) {
+    const now = Number(payload.atMs) || nowMs();
+    eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+      reason: "insufficient_globes",
+      wordId: String(entry && entry.wordId || ""),
+      spellId: String(entry && (entry.spellId || entry.wordId) || ""),
+      slot: String(entry && entry.slot || payload.slot || ""),
+      axis: String(entry && entry.axis || payload.axis || ""),
+      requiredGlobes: Math.max(0, Number(globeCost) || 0),
+      storedGlobes: Math.max(0, Number(stored) || 0),
+      atMs: now,
+    });
   }
 
   function normAxis(axis) {
@@ -254,6 +302,15 @@ export function createSpellDispatchSystem({
       });
       return null;
     }
+    const costResult = tryConsumeSpellCost(entry, {
+      ...payload,
+      atMs: now,
+      reason: "slot_cast",
+    });
+    if (!costResult.ok) {
+      emitInsufficientGlobes(entry, payload, costResult.globeCost, costResult.stored);
+      return null;
+    }
     if (entry.resident === "loaded") {
       loadedBySlot[entry.slot] = null;
     }
@@ -332,6 +389,24 @@ export function createSpellDispatchSystem({
         });
         return;
       }
+      const costResult = tryConsumeSpellCost({
+        wordId,
+        spellId: wordId,
+        castActionId: String(spell.castActionId || wordId || "").trim().toLowerCase(),
+        slot: "",
+        axis: "",
+      }, {
+        atMs: now,
+        reason: "voice_immediate",
+      });
+      if (!costResult.ok) {
+        emitInsufficientGlobes({
+          wordId,
+          spellId: wordId,
+          castActionId: String(spell.castActionId || wordId || "").trim().toLowerCase(),
+        }, { atMs: now }, costResult.globeCost, costResult.stored);
+        return;
+      }
       if (ruleEngineEnabled && RULE_ENGINE_OWNED_IMMEDIATE_IDS.has(wordId)) {
         eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
           reason: "rule_engine_owned_immediate_spell",
@@ -395,6 +470,20 @@ export function createSpellDispatchSystem({
           remainingMs: castCheck.remainingMs,
           atMs: now,
         });
+        return;
+      }
+      const costResult = tryConsumeSpellCost(entry, {
+        trigger: "shake_detonation",
+        directionGroup: group || String(entry.slot || ""),
+        atMs: now,
+        reason: "shake_detonation",
+      });
+      if (!costResult.ok) {
+        emitInsufficientGlobes(entry, {
+          trigger: "shake_detonation",
+          directionGroup: group || String(entry.slot || ""),
+          atMs: now,
+        }, costResult.globeCost, costResult.stored);
         return;
       }
 
