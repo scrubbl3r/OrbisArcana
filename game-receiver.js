@@ -2389,6 +2389,26 @@
           if (kind === "cast_action") {
             const castActionId = String(runtime && runtime.castActionId || "");
             if (!castActionId) return;
+            if (castActionId === "cast_loaded_ud" || castActionId === "cast_loaded_lr" || castActionId === "cast_loaded_fb") {
+              const slot = castActionId === "cast_loaded_ud"
+                ? "UD"
+                : castActionId === "cast_loaded_lr"
+                ? "LR"
+                : "FB";
+              eventBus.emit("spell.slot_cast_requested", {
+                trigger: "rule_engine_loaded_slot",
+                ruleId: String(p.ruleId || ""),
+                actionId,
+                atMs: Number(p.atMs) || performance.now(),
+                slot,
+                directionGroup: slot,
+                ...args,
+              });
+              if (RULE_CHAIN_TRACE_ENABLED) {
+                kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:ok`, "ok");
+              }
+              return;
+            }
             const execResult = executeWordCastAction(castActionId, {
               intent: "rule_engine.event",
               payload: {
