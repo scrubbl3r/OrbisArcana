@@ -25,7 +25,7 @@ import { CHECK_MUTABLE_TIME_STARTS_V2 } from "./check-time-constants-v2.mjs";
 import { createMutableNow } from "./check-time-v2.mjs";
 // Regression guard for shake detonation across fallback and grouped trigger modes.
 const CHECK_TAG = CHECK_TAGS_V2.shakeRegression;
-const PASS_MESSAGE = "shake detonation works for direct slot loads, grouped shakes, and authored FB-loaded casts after spin setup";
+const PASS_MESSAGE = "shake detonation works for direct slot loads, grouped shakes, and authored FB-loaded shield casts after spin setup";
 
 function runScenario({ wordId, slot, expectedWordId, shakeGroup = "" }) {
   const eventBus = createCheckEventBus();
@@ -150,11 +150,11 @@ function runAuthoredFbBindScenario() {
     advance(100);
     emitDetectedWord(eventBus, "pyro", nowRef.value);
     advance(100);
-    emitDetectedWord(eventBus, "rota", nowRef.value);
+    emitDetectedWord(eventBus, "vectus", nowRef.value);
 
     assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected authored pyro chain to load FB once, got ${loaded.length}`);
     assertCheck(String(loaded[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored pyro chain to load slot FB`);
-    assertCheck(String(loaded[0]?.castActionId || "") === "aoe_flame", `[${CHECK_TAG}] expected authored pyro chain to load aoe_flame into FB`);
+    assertCheck(String(loaded[0]?.castActionId || "") === "sanctum_shield", `[${CHECK_TAG}] expected authored pyro chain to load sanctum_shield into FB`);
 
     // Let the spin-seeded windows expire; the later FB shake must still cast the loaded spell.
     advance(2600);
@@ -163,7 +163,7 @@ function runAuthoredFbBindScenario() {
   previewSystem.stop();
 
   assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one cast from authored FB shake, got ${casts.length}`);
-  assertCheck(String(casts[0]?.castActionId || "") === "aoe_flame", `[${CHECK_TAG}] expected authored FB shake to cast aoe_flame`);
+  assertCheck(String(casts[0]?.castActionId || "") === "sanctum_shield", `[${CHECK_TAG}] expected authored FB shake to cast sanctum_shield`);
   assertCheck(String(casts[0]?.trigger || "") === "rule_engine_loaded_slot", `[${CHECK_TAG}] expected authored FB shake trigger to route via slot cast action`);
   assertCheck(String(casts[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored FB shake cast to use FB slot`);
 }

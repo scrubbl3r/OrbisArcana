@@ -75,16 +75,16 @@ export const DREAM_CONFIG_V2 = {
       open: { id: "school.pyro_spin_seed", words: ["pyro"], ttlMs: 1500 },
     },
     {
-      id: "spin_y_pyro_opens_rota",
+      id: "spin_y_pyro_opens_vectus",
       on: { word: "pyro" },
       requires: "school.pyro_spin_seed",
-      open: { id: "school.pyro_spin", words: ["rota"], ttlMs: 1500 },
+      open: { id: "school.pyro_spin", words: ["vectus"], ttlMs: 1500 },
     },
     {
-      id: "spin_y_pyro_rota_bind_fb",
-      on: { word: "rota" },
+      id: "spin_y_pyro_vectus_bind_fb",
+      on: { word: "vectus" },
       requires: "school.pyro_spin",
-      bind: { spell: "aoe_flame", slot: "FB" },
+      bind: { spell: "sanctum_shield", slot: "FB" },
     },
     // SHOCKWAVE
     {
