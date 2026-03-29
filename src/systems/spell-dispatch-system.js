@@ -225,6 +225,7 @@ export function createSpellDispatchSystem({
       confidence: entry.confidence,
       loadedAtMs: entry.loadedAtMs,
       axis: entry.axis,
+      resident: "loaded",
     };
     emitSpellLoadedFromEntry(entry, String(payload.trigger || "rule_engine.event"));
     return entry;

@@ -73,6 +73,13 @@ function main() {
       trigger: "test_slot_cast",
       atMs: nowRef.value,
     });
+    advance(10);
+    eventBus.emit(EVT_SPELL_SLOT_CAST_REQUESTED, {
+      slot: CHECK_SLOTS_V2.fb,
+      directionGroup: CHECK_SLOTS_V2.fb,
+      trigger: "test_slot_cast",
+      atMs: nowRef.value,
+    });
     preview.stop();
   });
   if (typeof offAction === "function") offAction();
@@ -89,10 +96,13 @@ function main() {
   assertCheck(axis === "", `[${CHECK_TAG}] expected no axis payload on direct bind load, got ${axis}`);
   assertCheck(slot === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected slot FB, got ${slot}`);
 
-  assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one shake cast after bind, got ${casts.length}`);
+  assertCheck(casts.length === 2, `[${CHECK_TAG}] expected loaded cast plus fallback cast after bind, got ${casts.length}`);
   assertCheck(wordIdText(casts[0]) === "sanctum_shield", `[${CHECK_TAG}] expected shake cast word sanctum_shield, got ${wordIdText(casts[0])}`);
   assertCheck(String(casts[0]?.slot || "") === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected shake cast slot FB, got ${String(casts[0]?.slot || "")}`);
   assertCheck(String(casts[0]?.trigger || "") === "test_slot_cast", `[${CHECK_TAG}] expected test_slot_cast trigger, got ${String(casts[0]?.trigger || "")}`);
+
+  assertCheck(wordIdText(casts[1]) === "shockwave", `[${CHECK_TAG}] expected fallback cast word shockwave, got ${wordIdText(casts[1])}`);
+  assertCheck(String(casts[1]?.slot || "") === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected fallback shockwave slot FB, got ${String(casts[1]?.slot || "")}`);
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 
