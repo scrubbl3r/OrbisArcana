@@ -1,5 +1,5 @@
 import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
-import { EVT_INPUT_SHAKE_TRIGGERED, EVT_VOICE_SPELL_CAST } from "../../src/contracts/events.js";
+import { EVT_SPELL_SLOT_CAST_REQUESTED, EVT_VOICE_SPELL_CAST } from "../../src/contracts/events.js";
 import { EVENT_DEFINITIONS } from "../../src/content/spell-rules/event-definitions.js";
 import { SIGNAL_DEFINITIONS } from "../../src/content/spell-rules/signal-definitions.js";
 import { WINDOW_DEFINITIONS } from "../../src/content/spell-rules/window-definitions.js";
@@ -47,6 +47,7 @@ function main() {
     eventBus,
     nowMs,
     resources,
+    ruleEngineEnabled: true,
   });
 
   const offAction = eventBus.on(EVT_RULE_ENGINE_ACTION_EXECUTED, (payload = {}) => {
@@ -66,9 +67,10 @@ function main() {
     advance(10);
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.rota, nowRef.value);
     advance(10);
-    eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, {
-      code: "",
-      group: CHECK_SLOTS_V2.fb,
+    eventBus.emit(EVT_SPELL_SLOT_CAST_REQUESTED, {
+      slot: CHECK_SLOTS_V2.fb,
+      directionGroup: CHECK_SLOTS_V2.fb,
+      trigger: "test_slot_cast",
       atMs: nowRef.value,
     });
     preview.stop();
@@ -90,7 +92,7 @@ function main() {
   assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one shake cast after bind, got ${casts.length}`);
   assertCheck(wordIdText(casts[0]) === "aoe_flame", `[${CHECK_TAG}] expected shake cast word aoe_flame, got ${wordIdText(casts[0])}`);
   assertCheck(String(casts[0]?.slot || "") === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected shake cast slot FB, got ${String(casts[0]?.slot || "")}`);
-  assertCheck(String(casts[0]?.trigger || "") === "shake_detonation", `[${CHECK_TAG}] expected shake_detonation trigger, got ${String(casts[0]?.trigger || "")}`);
+  assertCheck(String(casts[0]?.trigger || "") === "test_slot_cast", `[${CHECK_TAG}] expected test_slot_cast trigger, got ${String(casts[0]?.trigger || "")}`);
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
 

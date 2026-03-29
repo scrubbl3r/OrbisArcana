@@ -28,6 +28,7 @@ export function createSpellDispatchSystem({
   nowMs = () => Date.now(),
   resources = null,
   ruleEngineEnabled = true,
+  baseSpellBySlot = null,
 } = {}) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     throw new Error("createSpellDispatchSystem requires eventBus.on/eventBus.emit");
@@ -46,6 +47,11 @@ export function createSpellDispatchSystem({
       .map((id) => String(id || "").trim().toLowerCase())
       .filter(Boolean)
   );
+  const resolvedBaseSpellBySlot = Object.freeze({
+    UD: String((baseSpellBySlot && baseSpellBySlot.UD) || "shockwave").trim().toLowerCase(),
+    LR: String((baseSpellBySlot && baseSpellBySlot.LR) || "shockwave").trim().toLowerCase(),
+    FB: String((baseSpellBySlot && baseSpellBySlot.FB) || "shockwave").trim().toLowerCase(),
+  });
   const loadedBySlot = { UD: null, LR: null, FB: null };
   let nextSlotIndex = 0;
   let lastVoiceDetectDedupeKey = "";
@@ -121,6 +127,27 @@ export function createSpellDispatchSystem({
     return best;
   }
 
+  function buildBaseEntryForSlot(slotRaw, payload = {}) {
+    const slot = normGroup(slotRaw);
+    if (!slot) return null;
+    const wordId = String(resolvedBaseSpellBySlot[slot] || "").trim().toLowerCase();
+    if (!wordId) return null;
+    const routed = withRuntimeRouting(ACTIVE_WORDS_BY_ID[wordId] || { id: wordId });
+    return {
+      wordId,
+      spellId: wordId,
+      castActionId: String((payload.castActionId || routed.castActionId || wordId) || "").trim().toLowerCase(),
+      intent: String((payload.intent || routed.intent) || ""),
+      phrase: String((payload.phrase || routed.phrase || wordId) || ""),
+      cooldownMs: Math.max(0, Number(payload.cooldownMs ?? routed.cooldownMs) || 0),
+      confidence: Number(payload.confidence) || 0,
+      loadedAtMs: Number(payload.atMs) || nowMs(),
+      slot,
+      axis: normAxis(payload.axis),
+      resident: "base",
+    };
+  }
+
   function withRuntimeRouting(spell = {}) {
     const id = String(spell && spell.id || "").toLowerCase();
     const routing = WORD_RUNTIME_ROUTING_BY_WORD_ID[id] || null;
@@ -147,6 +174,7 @@ export function createSpellDispatchSystem({
       loadedAtMs: Number(payload.atMs) || nowMs(),
       slot,
       axis: normAxis(payload.axis),
+      resident: "loaded",
     };
   }
 
@@ -206,11 +234,12 @@ export function createSpellDispatchSystem({
     const slot = normGroup(slotRaw);
     if (!slot) return null;
     const loaded = mostRecentLoadedForGroup(slot);
-    if (!loaded || !loaded.wordId) return null;
+    const entry = (loaded && loaded.wordId) ? loaded : buildBaseEntryForSlot(slot, payload);
+    if (!entry || !entry.wordId) return null;
     const now = Number(payload.atMs) || nowMs();
     const spell = {
-      id: String(loaded.wordId || ""),
-      cooldownMs: Math.max(0, Number(loaded.cooldownMs) || 0),
+      id: String(entry.wordId || ""),
+      cooldownMs: Math.max(0, Number(entry.cooldownMs) || 0),
     };
     const castCheck = canCastSpellNow(spell, now);
     if (!castCheck.ok) {
@@ -224,14 +253,16 @@ export function createSpellDispatchSystem({
       });
       return null;
     }
-    loadedBySlot[loaded.slot] = null;
+    if (entry.resident === "loaded") {
+      loadedBySlot[entry.slot] = null;
+    }
     lastCastByWordId.set(spell.id, now);
-    emitSpellCastFromEntry(loaded, {
+    emitSpellCastFromEntry(entry, {
       ...payload,
       atMs: now,
       directionGroup: String(payload.directionGroup || slot),
     });
-    return loaded;
+    return entry;
   }
 
   function start() {
@@ -334,23 +365,24 @@ export function createSpellDispatchSystem({
     }));
 
     unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
+      if (ruleEngineEnabled) return;
       const group = normGroup(payload.group);
       const now = nowMs();
 
-      let loaded = null;
+      let entry = null;
       if (group) {
-        loaded = mostRecentLoadedForGroup(group);
+        entry = mostRecentLoadedForGroup(group) || buildBaseEntryForSlot(group, payload);
       } else {
         // Directionless shake fallback: detonate the most recently loaded slot.
-        loaded = mostRecentLoadedAny();
+        entry = mostRecentLoadedAny();
       }
-      if (!loaded) return;
-      const loadedWordId = String(loaded.wordId || "");
+      if (!entry) return;
+      const loadedWordId = String(entry.wordId || "");
       if (!loadedWordId) return;
 
       const spell = {
         id: loadedWordId,
-        cooldownMs: Math.max(0, Number(loaded.cooldownMs) || 0),
+        cooldownMs: Math.max(0, Number(entry.cooldownMs) || 0),
       };
       const castCheck = canCastSpellNow(spell, now);
       if (!castCheck.ok) {
@@ -365,11 +397,13 @@ export function createSpellDispatchSystem({
         return;
       }
 
-      loadedBySlot[loaded.slot] = null;
+      if (entry.resident === "loaded") {
+        loadedBySlot[entry.slot] = null;
+      }
       lastCastByWordId.set(loadedWordId, now);
-      emitSpellCastFromEntry(loaded, {
+      emitSpellCastFromEntry(entry, {
         trigger: "shake_detonation",
-        directionGroup: group || String(loaded.slot || ""),
+        directionGroup: group || String(entry.slot || ""),
         atMs: now,
       });
     }));

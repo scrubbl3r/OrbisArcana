@@ -90,17 +90,17 @@ export const DREAM_CONFIG_V2 = {
     {
       id: "shake_ud_cast",
       on: { shake: "UD" },
-      trigger: { spell: "shockwave" },
+      trigger: { spell: "cast_loaded_ud" },
     },
     {
       id: "shake_lr_cast",
       on: { shake: "LR" },
-      trigger: { spell: "shockwave" },
+      trigger: { spell: "cast_loaded_lr" },
     },
     {
       id: "shake_fb_cast",
       on: { shake: "FB" },
-      trigger: { spell: "shockwave" },
+      trigger: { spell: "cast_loaded_fb" },
     },
   ],
 };

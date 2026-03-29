@@ -6,11 +6,13 @@ export function createCheckDispatchSystem({
   nowMs,
   resources,
   ruleEngineEnabled = true,
+  baseSpellBySlot,
 }) {
   return createSpellDispatchSystem({
     eventBus,
     nowMs,
     resources,
     ruleEngineEnabled,
+    baseSpellBySlot,
   });
 }

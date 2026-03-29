@@ -36,6 +36,7 @@ function runScenario({ wordId, slot, expectedWordId, shakeGroup = "" }) {
     eventBus,
     nowMs,
     resources,
+    ruleEngineEnabled: false,
   });
   runWithStartedSystem(system, () => {
     eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
@@ -53,6 +54,27 @@ function runScenario({ wordId, slot, expectedWordId, shakeGroup = "" }) {
   assertCheck(wordIdText(casts[0]) === expectedWordId, `[${CHECK_TAG}] expected wordId=${expectedWordId}, got ${wordIdText(casts[0])}`);
   const trigger = typeof casts[0]?.trigger === "string" ? casts[0].trigger : "";
   assertCheck(trigger === "shake_detonation", `[${CHECK_TAG}] expected trigger=shake_detonation for ${wordId}`);
+}
+
+function runDefaultShockwaveScenario({ shakeGroup }) {
+  const eventBus = createCheckEventBus();
+  const casts = captureCheckEvents(eventBus, EVT_VOICE_SPELL_CAST);
+  const resources = createStoredGlobeResources(1);
+  const { nowRef, nowMs } = createMutableNow(CHECK_MUTABLE_TIME_STARTS_V2.shakeDetonation);
+  const system = createCheckDispatchSystem({
+    eventBus,
+    nowMs,
+    resources,
+    ruleEngineEnabled: false,
+  });
+
+  runWithStartedSystem(system, () => {
+    eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, { code: "", group: shakeGroup, atMs: nowRef.value });
+  });
+
+  assertCheck(casts.length === 1, `[${CHECK_TAG}] expected default shockwave cast for ${shakeGroup}, got ${casts.length}`);
+  assertCheck(wordIdText(casts[0]) === CHECK_SPELL_IDS_V2.shockwave, `[${CHECK_TAG}] expected default slot to cast shockwave for ${shakeGroup}`);
+  assertCheck(String(casts[0]?.slot || "") === shakeGroup, `[${CHECK_TAG}] expected default shockwave slot ${shakeGroup}, got ${String(casts[0]?.slot || "")}`);
 }
 
 function attachRuleActionBridge(eventBus) {
@@ -142,7 +164,7 @@ function runAuthoredFbBindScenario() {
 
   assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one cast from authored FB shake, got ${casts.length}`);
   assertCheck(String(casts[0]?.castActionId || "") === "aoe_flame", `[${CHECK_TAG}] expected authored FB shake to cast aoe_flame`);
-  assertCheck(String(casts[0]?.trigger || "") === "shake_detonation", `[${CHECK_TAG}] expected authored FB shake trigger to route via direct shake detonation`);
+  assertCheck(String(casts[0]?.trigger || "") === "rule_engine_loaded_slot", `[${CHECK_TAG}] expected authored FB shake trigger to route via slot cast action`);
   assertCheck(String(casts[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored FB shake cast to use FB slot`);
 }
 
@@ -150,6 +172,9 @@ function main() {
   runScenario({ wordId: CHECK_SPELL_IDS_V2.rota, slot: CHECK_SHAKE_GROUPS_V2.fb, expectedWordId: CHECK_SPELL_IDS_V2.rota, shakeGroup: CHECK_SHAKE_GROUPS_V2.fallback });
   runScenario({ wordId: CHECK_SPELL_IDS_V2.domus, slot: CHECK_SHAKE_GROUPS_V2.ud, expectedWordId: CHECK_SPELL_IDS_V2.domus, shakeGroup: CHECK_SHAKE_GROUPS_V2.ud });
   runScenario({ wordId: CHECK_SPELL_IDS_V2.rota, slot: CHECK_SHAKE_GROUPS_V2.fb, expectedWordId: CHECK_SPELL_IDS_V2.rota, shakeGroup: CHECK_SHAKE_GROUPS_V2.fb });
+  runDefaultShockwaveScenario({ shakeGroup: CHECK_SHAKE_GROUPS_V2.ud });
+  runDefaultShockwaveScenario({ shakeGroup: CHECK_SHAKE_GROUPS_V2.lr });
+  runDefaultShockwaveScenario({ shakeGroup: CHECK_SHAKE_GROUPS_V2.fb });
   runAuthoredFbBindScenario();
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }
