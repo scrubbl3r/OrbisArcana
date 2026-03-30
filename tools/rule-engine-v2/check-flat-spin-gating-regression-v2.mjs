@@ -40,15 +40,15 @@ function main() {
   try {
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinOutside);
     assertCheck(
-      !openWindowIds(wakeOpened).includes("school.pyro_spin"),
+      !openWindowIds(wakeOpened).includes("chain.spin_y_loaded"),
       `[${CHECK_TAG}] unexpected pyro window open without spin gate`
     );
 
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.flatSpinInside + 10 });
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinInside + 20);
     assertCheck(
-      openWindowIds(wakeOpened).includes("school.pyro_spin"),
-      `[${CHECK_TAG}] expected school.pyro_spin to open after spin + pyro`
+      openWindowIds(wakeOpened).includes("chain.spin_y_loaded"),
+      `[${CHECK_TAG}] expected chain.spin_y_loaded to open after spin + pyro`
     );
   } finally {
     system.stop();

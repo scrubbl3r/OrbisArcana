@@ -2533,11 +2533,11 @@
               kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
             }
             if (ruleId === "spin_y_opens_pyro") {
-              const windowId = String(p.windowId || "").trim().toLowerCase() || "school.pyro_spin_seed";
+              const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_seed";
               kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
             }
             if (ruleId === "spin_y_pyro_opens_rota") {
-              const windowId = String(p.windowId || "").trim().toLowerCase() || "school.pyro_spin";
+              const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_loaded";
               kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
             }
           });

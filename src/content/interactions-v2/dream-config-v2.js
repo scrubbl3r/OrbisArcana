@@ -13,9 +13,9 @@ export const DREAM_CONFIG_V2 = {
   },
   groups: {
     wake_main_words: ["domus", "electrum", "pyro"],
-    school_words: ["rota"],
+    electrum_chain_words: ["rota"],
     wake_are_kay_nah_words: ["pyro", "vectus"],
-    pyro_school_words: ["sanctum", "rota"],
+    pyro_voice_chain_words: ["sanctum", "rota"],
   },
   rules: [
     {
@@ -36,12 +36,12 @@ export const DREAM_CONFIG_V2 = {
       id: "electric_aoe",
       on: { word: "electrum" },
       requires: "wake.main",
-      open: { id: "school.electrum", words: ["rota"], ttlMs: 1500 },
+      open: { id: "chain.electrum", words: ["rota"], ttlMs: 1500 },
     },
     {
       id: "electric_aoe_cast",
       on: { word: "rota" },
-      requires: "school.electrum",
+      requires: "chain.electrum",
       trigger: { spell: "aoe_electric" },
     },
     // ARE KAY NAH > VECTUS
@@ -51,39 +51,39 @@ export const DREAM_CONFIG_V2 = {
       open: { id: "wake.are_kay_nah", words: ["pyro", "vectus"], ttlMs: 1500 },
     },
     {
-      id: "pyro_school_voice",
+      id: "pyro_voice_chain",
       on: { word: "pyro" },
       requires: "wake.are_kay_nah",
-      open: { id: "school.pyro_voice", words: ["sanctum", "rota"], ttlMs: 1500 },
+      open: { id: "chain.pyro_voice", words: ["sanctum", "rota"], ttlMs: 1500 },
     },
     {
       id: "pyro_sanctum_cast",
       on: { word: "sanctum" },
-      requires: "school.pyro_voice",
+      requires: "chain.pyro_voice",
       trigger: { spell: "sanctum_shield" },
     },
     {
       id: "pyro_rota_cast",
       on: { word: "rota" },
-      requires: "school.pyro_voice",
+      requires: "chain.pyro_voice",
       trigger: { spell: "aoe_flame" },
     },
     // PYRO AOE CHAIN
     {
       id: "spin_y_opens_pyro",
       on: { spin: "y" },
-      open: { id: "school.pyro_spin_seed", words: ["pyro"], ttlMs: 1500 },
+      open: { id: "chain.spin_y_seed", words: ["pyro"], ttlMs: 1500 },
     },
     {
       id: "spin_y_pyro_opens_vectus",
       on: { word: "pyro" },
-      requires: "school.pyro_spin_seed",
-      open: { id: "school.pyro_spin", words: ["vectus"], ttlMs: 1500 },
+      requires: "chain.spin_y_seed",
+      open: { id: "chain.spin_y_loaded", words: ["vectus"], ttlMs: 1500 },
     },
     {
       id: "spin_y_pyro_vectus_bind_fb",
       on: { word: "vectus" },
-      requires: "school.pyro_spin",
+      requires: "chain.spin_y_loaded",
       bind: { spell: "sanctum_shield", slot: "FB" },
     },
     // SHOCKWAVE

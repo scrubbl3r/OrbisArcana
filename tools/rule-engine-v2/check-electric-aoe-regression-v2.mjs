@@ -17,7 +17,7 @@ const WORD_ORBIS = "orbis";
 const WORD_ELECTRUM = "electrum";
 const WORD_ROTA = "rota";
 const WINDOW_WAKE_MAIN = "wake.main";
-const WINDOW_ELECTRUM = "school.electrum";
+const WINDOW_ELECTRUM = "chain.electrum";
 const EVENT_AOE_ELECTRIC = "aoe_electric";
 
 const eventBus = createCheckEventBus();
@@ -61,7 +61,7 @@ try {
   emitDetectedWord(WORD_ELECTRUM, 1100);
   const electrumWindowOpened = wakeOpenedEvents.some((evt) => String(evt?.windowId || "") === WINDOW_ELECTRUM);
   if (!electrumWindowOpened) {
-    failCheck(CHECK_TAG, "electric_aoe did not open school.electrum after orbis -> electrum");
+    failCheck(CHECK_TAG, "electric_aoe did not open chain.electrum after orbis -> electrum");
   }
 
   emitDetectedWord(WORD_ROTA, 1200);
