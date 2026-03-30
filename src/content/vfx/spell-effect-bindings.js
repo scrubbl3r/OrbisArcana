@@ -30,7 +30,7 @@ export const WORD_VFX_BINDINGS = Object.freeze([
     wordId: "rota",
     spellId: "rota",
     primary: Object.freeze({
-      castActionId: "aoe_axis",
+      castActionId: "aoe_flame",
       effectId: "spell.aoe_flame",
       presetId: "preset.flame_aoe.default",
     }),

@@ -15,12 +15,6 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     globeCost: 1,
   }),
   Object.freeze({
-    id: "aoe_axis",
-    handlerKey: "play_axis_aoe",
-    floatGracePolicy: "default",
-    globeCost: 1,
-  }),
-  Object.freeze({
     id: "aoe_frost",
     handlerKey: "play_frost_aoe",
     floatGracePolicy: "default",

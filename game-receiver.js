@@ -1191,13 +1191,18 @@
     let spellActionHandlers = Object.create(null);
     let spellCastExecutor = null;
     let createSpellActionHandlersModule = null;
-    let executeTeleportHomeSpellModule = null;
+    let executeTeleportSpellModule = null;
+    let executeAoeElectricSpellModule = null;
+    let executeAoeFlameSpellModule = null;
+    let executeAoeFrostSpellModule = null;
     let teleportOrbRuntimeToSpawnModule = null;
     let executeShockwaveSpellModule = null;
     let triggerShockwaveRuntimeModule = null;
     let playElectricAoeRuntimeModule = null;
     let playFlameAoeRuntimeModule = null;
     let executeColorizeSpellModule = null;
+    let executeBubbleShieldSpellModule = null;
+    let executeFloatGraceSpellModule = null;
     let clearFloatGraceRuntimeModule = null;
     let grantFloatGraceRuntimeModule = null;
     let grantSuperGraceRuntimeModule = null;
@@ -1370,8 +1375,14 @@
         eventBus,
         playElectricAoe,
         playFlameAoe,
-        executeTeleportHome: executeTeleportHomeSpellModule,
+        playFrostAoe: null,
+        executeAoeElectric: executeAoeElectricSpellModule,
+        executeAoeFlame: executeAoeFlameSpellModule,
+        executeAoeFrost: executeAoeFrostSpellModule,
+        executeTeleport: executeTeleportSpellModule,
         executeShockwave: executeShockwaveSpellModule,
+        executeBubbleShield: executeBubbleShieldSpellModule,
+        executeFloatGrace: executeFloatGraceSpellModule,
         executeColorize: executeColorizeSpellModule,
         triggerShockwave,
         teleportOrbToSpawnNeutralizePhysics,
@@ -1592,8 +1603,17 @@
           },
         });
         const mods = await loadReceiverInitModules();
-        executeTeleportHomeSpellModule = (typeof mods.executeTeleportHome === "function")
-          ? mods.executeTeleportHome
+        executeTeleportSpellModule = (typeof mods.executeTeleport === "function")
+          ? mods.executeTeleport
+          : null;
+        executeAoeElectricSpellModule = (typeof mods.executeAoeElectric === "function")
+          ? mods.executeAoeElectric
+          : null;
+        executeAoeFlameSpellModule = (typeof mods.executeAoeFlame === "function")
+          ? mods.executeAoeFlame
+          : null;
+        executeAoeFrostSpellModule = (typeof mods.executeAoeFrost === "function")
+          ? mods.executeAoeFrost
           : null;
         teleportOrbRuntimeToSpawnModule = (typeof mods.teleportOrbRuntimeToSpawn === "function")
           ? mods.teleportOrbRuntimeToSpawn
@@ -1612,6 +1632,12 @@
           : null;
         executeColorizeSpellModule = (typeof mods.executeColorize === "function")
           ? mods.executeColorize
+          : null;
+        executeBubbleShieldSpellModule = (typeof mods.executeBubbleShield === "function")
+          ? mods.executeBubbleShield
+          : null;
+        executeFloatGraceSpellModule = (typeof mods.executeFloatGrace === "function")
+          ? mods.executeFloatGrace
           : null;
         clearFloatGraceRuntimeModule = (typeof mods.clearFloatGraceRuntime === "function")
           ? mods.clearFloatGraceRuntime
