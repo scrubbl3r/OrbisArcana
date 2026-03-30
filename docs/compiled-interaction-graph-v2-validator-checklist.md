@@ -1,6 +1,6 @@
-# Orchestrator v2 Validator Checklist (Draft)
+# Compiled Interaction Graph v2 Validator Checklist (Draft)
 
-Companion to [Orchestrator v2 Schema](./orchestrator-v2-schema.md).
+Companion to [Compiled Interaction Graph v2 Schema](./compiled-interaction-graph-v2-schema.md).
 
 Use this checklist to define `validateCompiledInteractionGraphV2` contract behavior.
 

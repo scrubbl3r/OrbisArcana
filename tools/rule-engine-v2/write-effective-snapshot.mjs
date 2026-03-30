@@ -15,42 +15,48 @@ import {
   validateWordbookV2,
 } from "../../src/content/interactions-v2/index.js";
 
-// Builds the effective rule-engine snapshot from canonical orchestrator authoring.
+// Builds the effective rule-engine snapshot from the canonical interaction graph.
 function buildSnapshot() {
   const wordbookErrors = validateWordbookV2(WORDBOOK_V2);
-  const dreamValidation = validateInteractionGraphV2(INTERACTION_GRAPH_V2);
-  const orchestratorValidation = validateCompiledInteractionGraphV2(COMPILED_INTERACTION_GRAPH_V2);
+  const interactionGraphValidation = validateInteractionGraphV2(INTERACTION_GRAPH_V2);
+  const compiledInteractionGraphValidation = validateCompiledInteractionGraphV2(COMPILED_INTERACTION_GRAPH_V2);
   const projectedRuleEngine = buildRuleEngineFromCompiledInteractionGraphV2();
-  const orchestratorRules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2?.rules) ? COMPILED_INTERACTION_GRAPH_V2.rules : [];
+  const compiledInteractionGraphRules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2?.rules)
+    ? COMPILED_INTERACTION_GRAPH_V2.rules
+    : [];
 
   return {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.effectiveSnapshot,
     generatedAt: nowIso(),
     flags: {
-      orchestratorV2Bootstrap: cloneJsonV2(COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP),
+      compiledInteractionGraphV2Bootstrap: cloneJsonV2(COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP),
     },
     validation: {
       wordbookV2: {
         ok: wordbookErrors.length === 0,
         errors: wordbookErrors,
       },
-      dreamConfigV2: {
-        ok: !!dreamValidation?.ok,
-        errors: Array.isArray(dreamValidation?.errors) ? dreamValidation.errors.slice() : [],
+      interactionGraphV2: {
+        ok: !!interactionGraphValidation?.ok,
+        errors: Array.isArray(interactionGraphValidation?.errors) ? interactionGraphValidation.errors.slice() : [],
       },
-      orchestratorV2: {
-        ok: Array.isArray(orchestratorValidation?.errors) ? orchestratorValidation.errors.length === 0 : !!orchestratorValidation?.ok,
-        errors: Array.isArray(orchestratorValidation?.errors) ? orchestratorValidation.errors.slice() : [],
+      compiledInteractionGraphV2: {
+        ok: Array.isArray(compiledInteractionGraphValidation?.errors)
+          ? compiledInteractionGraphValidation.errors.length === 0
+          : !!compiledInteractionGraphValidation?.ok,
+        errors: Array.isArray(compiledInteractionGraphValidation?.errors)
+          ? compiledInteractionGraphValidation.errors.slice()
+          : [],
       },
     },
     counts: {
       wordbookV2Words: countWordbookWords(WORDBOOK_V2),
-      orchestratorV2Rules: orchestratorRules.length,
+      compiledInteractionGraphV2Rules: compiledInteractionGraphRules.length,
       compiledRuleEngineRules: Array.isArray(projectedRuleEngine.rules) ? projectedRuleEngine.rules.length : 0,
     },
     wordbookV2: cloneJsonV2(WORDBOOK_V2),
-    dreamConfigV2: cloneJsonV2(INTERACTION_GRAPH_V2),
-    orchestratorV2: cloneJsonV2(COMPILED_INTERACTION_GRAPH_V2),
+    interactionGraphV2: cloneJsonV2(INTERACTION_GRAPH_V2),
+    compiledInteractionGraphV2: cloneJsonV2(COMPILED_INTERACTION_GRAPH_V2),
     compiledRuleEngine: cloneJsonV2(projectedRuleEngine),
   };
 }

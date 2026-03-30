@@ -119,8 +119,8 @@ Preflight:
 ## Schema References
 - [Interactions Schema](./interactions-schema.md)
 - [Master Control Schema](./master-control-schema.md)
-- [Orchestrator v2 Schema (Draft)](./orchestrator-v2-schema.md)
-- [Orchestrator v2 Validator Checklist (Draft)](./orchestrator-v2-validator-checklist.md)
+- [Compiled Interaction Graph v2 Schema (Draft)](./compiled-interaction-graph-v2-schema.md)
+- [Compiled Interaction Graph v2 Validator Checklist (Draft)](./compiled-interaction-graph-v2-validator-checklist.md)
 
 ## Generated Artifacts Quick Links
 - [Effective Rule Engine Snapshot](./rule-engine-v2.effective-snapshot.json)

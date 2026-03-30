@@ -23,38 +23,38 @@ runCheckScriptOrFailStatus({
 });
 
 const snapshot = readJsonSafe(resolveRuleEngineDocPath("effectiveSnapshot"));
-const authoredRuleCount = Number(snapshot?.counts?.orchestratorV2Rules ?? 0);
+const compiledInteractionGraphRuleCount = Number(snapshot?.counts?.compiledInteractionGraphV2Rules ?? 0);
 const compiledRuleCount = Number(snapshot?.counts?.compiledRuleEngineRules ?? 0);
 const wordbookOk = isTrue(snapshot?.validation?.wordbookV2?.ok);
-const dreamConfigOk = isTrue(snapshot?.validation?.dreamConfigV2?.ok);
-const orchestratorOk = isTrue(snapshot?.validation?.orchestratorV2?.ok);
-const orchestratorV2BootstrapEnabled = isTrue(COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP?.useInReceiverBootstrap);
-let orchestratorProjectedRuleCount = 0;
-let orchestratorProjectionParityOk = false;
+const interactionGraphOk = isTrue(snapshot?.validation?.interactionGraphV2?.ok);
+const compiledInteractionGraphOk = isTrue(snapshot?.validation?.compiledInteractionGraphV2?.ok);
+const compiledInteractionGraphV2BootstrapEnabled = isTrue(COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP?.useInReceiverBootstrap);
+let compiledInteractionGraphProjectedRuleCount = 0;
+let compiledInteractionGraphProjectionParityOk = false;
 try {
   const compiled = buildRuleEngineFromCompiledInteractionGraphV2();
   const compiledRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
-  orchestratorProjectedRuleCount = compiledRules.length;
-  orchestratorProjectionParityOk = (
-    compiledRules.length === authoredRuleCount &&
+  compiledInteractionGraphProjectedRuleCount = compiledRules.length;
+  compiledInteractionGraphProjectionParityOk = (
+    compiledRules.length === compiledInteractionGraphRuleCount &&
     compiledRules.length === compiledRuleCount
   );
 } catch (_) {
-  orchestratorProjectedRuleCount = 0;
-  orchestratorProjectionParityOk = false;
+  compiledInteractionGraphProjectedRuleCount = 0;
+  compiledInteractionGraphProjectionParityOk = false;
 }
 const health = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.health,
   generatedAt: nowIso(),
   wordbookOk,
-  dreamConfigOk,
-  orchestratorOk,
-  orchestratorV2BootstrapEnabled,
+  interactionGraphOk,
+  compiledInteractionGraphOk,
+  compiledInteractionGraphV2BootstrapEnabled,
   projectionRulesOnly: true,
-  authoredRuleCount,
+  compiledInteractionGraphRuleCount,
   compiledRuleCount,
-  orchestratorProjectedRuleCount,
-  orchestratorProjectionParityOk,
+  compiledInteractionGraphProjectedRuleCount,
+  compiledInteractionGraphProjectionParityOk,
   driftRuleIds: [],
 };
 const healthPath = resolveRuleEngineDocPath("health");
@@ -62,13 +62,13 @@ writeJsonFile(healthPath, health);
 
 logDoctor("----");
 logDoctor(`wordbook ok: ${wordbookOk}`);
-logDoctor(`dream config ok: ${dreamConfigOk}`);
-logDoctor(`orchestrator ok: ${orchestratorOk}`);
-logDoctor(`orchestrator bootstrap enabled: ${orchestratorV2BootstrapEnabled}`);
+logDoctor(`interaction graph ok: ${interactionGraphOk}`);
+logDoctor(`compiled interaction graph ok: ${compiledInteractionGraphOk}`);
+logDoctor(`compiled interaction graph bootstrap enabled: ${compiledInteractionGraphV2BootstrapEnabled}`);
 logDoctor("rules mode: projection_only");
-logDoctor(`rules count (authored/compiled): ${authoredRuleCount}/${compiledRuleCount}`);
-logDoctor(`orchestrator projected rules: ${orchestratorProjectedRuleCount}`);
-logDoctor(`orchestrator projection parity: ${orchestratorProjectionParityOk}`);
+logDoctor(`rules count (compiled graph/rule engine): ${compiledInteractionGraphRuleCount}/${compiledRuleCount}`);
+logDoctor(`compiled interaction graph projected rules: ${compiledInteractionGraphProjectedRuleCount}`);
+logDoctor(`compiled interaction graph projection parity: ${compiledInteractionGraphProjectionParityOk}`);
 logDoctor("runtime-projection drift ids: 0");
 logDoctor(`wrote health: ${healthPath}`);
 logDoctor("----");

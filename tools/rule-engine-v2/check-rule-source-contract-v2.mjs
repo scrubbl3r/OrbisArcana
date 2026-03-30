@@ -6,10 +6,10 @@ const CHECK_TAG = "rule-source-contract:v2";
 const PASS_MESSAGE = "runtime source ids/readouts are canonical";
 
 const expectedSourceIds = Object.freeze([
-  "orchestrator_v2",
-  "orchestrator_v2_fallback",
-  "orchestrator_v2_disabled",
-  "orchestrator_v2_missing_builder",
+  "compiled_interaction_graph_v2",
+  "compiled_interaction_graph_v2_fallback",
+  "compiled_interaction_graph_v2_disabled",
+  "compiled_interaction_graph_v2_missing_builder",
 ]);
 
 function isObjectRecord(value) {

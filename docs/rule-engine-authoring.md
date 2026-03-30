@@ -30,7 +30,7 @@ Preflight:
 ## Runtime Switches
 - `COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP.useInReceiverBootstrap`
   - Location: `src/content/interactions-v2/compiled-interaction-graph-v2.js`
-  - Purpose: Enables orchestrator-v2 bootstrap in receiver fallback/precedence flow.
+  - Purpose: Enables compiled-interaction-graph bootstrap in receiver fallback/precedence flow.
 - `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`
   - Purpose: Require projected/runtime rules as the active rule source (must remain `true`).
@@ -60,7 +60,7 @@ Preflight:
 - `npm run status:v2`
   - Prints current v2 health, contract, and regression status summary and writes `docs/rule-engine-v2.status.json`.
 - `npm run pre-smoke:v2`
-  - Validates dream-config/wordbook config and regenerates effective snapshot.
+  - Validates interaction-graph/wordbook config and regenerates effective snapshot.
 - `npm run report-drift:v2`
   - Prints projection drift details when interactions projection checks are enabled.
 - `npm run doctor:v2`

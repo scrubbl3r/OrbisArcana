@@ -41,6 +41,12 @@ const explicitScriptNames = Object.freeze({
   rule_source_contract: "check:rule-source-contract:v2",
   policy_control_contract: "check:policy-control-contract:v2",
   runtime_policy_import_contract: "check:runtime-policy-import-contract:v2",
+  orchestrator_v2_compiler: "check:compiled-interaction-graph-v2-compiler:v2",
+  orchestrator_v2_builder_validation_contract: "check:compiled-interaction-graph-v2-builder-validation-contract:v2",
+  orchestrator_v2_bootstrap_precedence: "check:compiled-interaction-graph-v2-bootstrap-precedence:v2",
+  orchestrator_v2_window_semantics: "check:compiled-interaction-graph-v2-window-semantics:v2",
+  orchestrator_v2_window_semantics_event_surface:
+    "check:compiled-interaction-graph-v2-window-semantics-event-surface:v2",
   doc_policy: "check:doc-policy-terminology:v2",
   validator_policy: "check:validator-policy-terminology:v2",
   compat_surface: "check:master-control-compat-surface:v2",

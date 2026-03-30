@@ -14,7 +14,7 @@ import { emitDetectedWord, emitSpinOpened } from "./check-wake-sequence-v2.mjs";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.wakeWindowAxisPrereq;
-const PASS_MESSAGE = "pyro bind chain requires its authored intermediate window";
+const PASS_MESSAGE = "spin-y pyro bind chain requires its authored intermediate window";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 
 function main() {
@@ -37,19 +37,19 @@ function main() {
   try {
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: nowRef.value });
 
-    // Missing authored intermediate word (`pyro`) means `rota` must not bind.
+    // Missing authored intermediate word (`pyro`) means `vectus` must not bind.
     advance(10);
-    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.rota, nowRef.value);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.vectus, nowRef.value);
     const bindCountBefore = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind").length;
     assertCheck(bindCountBefore === 0, `[${CHECK_TAG}] unexpected bind without pyro intermediate window`);
 
-    // With authored intermediate window opened, `rota` should bind.
+    // With authored intermediate window opened, `vectus` should bind.
     advance(10);
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, nowRef.value);
     advance(10);
-    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.rota, nowRef.value);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.vectus, nowRef.value);
     const bindActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind");
-    assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind after pyro -> rota, got ${bindActions.length}`);
+    assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind after pyro -> vectus, got ${bindActions.length}`);
   } finally {
     system.stop();
   }

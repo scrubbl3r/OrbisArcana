@@ -27,8 +27,9 @@ const casts = captureCheckEvents(eventBus, EVT_VOICE_SPELL_CAST);
 const system = createCheckDispatchSystem({
   eventBus,
   nowMs: createFixedNowMs(nowRef.value),
-  resources: createStoredGlobeResources(0),
+  resources: createStoredGlobeResources(10),
   ruleEngineEnabled: false,
+  allowLegacyFallbacks: true,
 });
 
 runWithStartedSystem(system, () => {

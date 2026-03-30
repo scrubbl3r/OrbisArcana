@@ -1,6 +1,6 @@
 {
   "schema": "orbis.master_control_v2",
-  "generatedAt": "2026-03-30T23:38:48.536Z",
+  "generatedAt": "2026-03-30T23:57:49.121Z",
   "wordbook": {
     "version": "2",
     "words": [
@@ -87,7 +87,7 @@
       }
     ]
   },
-  "orchestrator": {
+  "compiledInteractionGraph": {
     "version": "2",
     "enabled": true,
     "defaults": {
@@ -302,222 +302,7 @@
       }
     ]
   },
-  "interactions": {
-    "version": "2",
-    "enabled": true,
-    "defaults": {
-      "open": {
-        "ttlMs": 1500
-      },
-      "rule": {
-        "cooldownMs": 0,
-        "matchWindowMs": 2000,
-        "priority": 10
-      }
-    },
-    "rules": [
-      {
-        "id": "wake_main",
-        "on": {
-          "word": "orbis"
-        },
-        "open": {
-          "id": "wake.main",
-          "words": [
-            "domus",
-            "electrum",
-            "pyro"
-          ],
-          "ttlMs": 1500
-        }
-      },
-      {
-        "id": "tele_home",
-        "on": {
-          "word": "domus"
-        },
-        "requires": "wake.main",
-        "trigger": {
-          "teleport": true
-        }
-      },
-      {
-        "id": "electric_aoe",
-        "on": {
-          "word": "electrum"
-        },
-        "requires": "wake.main",
-        "open": {
-          "id": "chain.electrum",
-          "words": [
-            "rota"
-          ],
-          "ttlMs": 1500
-        }
-      },
-      {
-        "id": "electric_aoe_cast",
-        "on": {
-          "word": "rota"
-        },
-        "requires": "chain.electrum",
-        "trigger": {
-          "aoe_electric": true
-        }
-      },
-      {
-        "id": "wake_are_kay_nah",
-        "on": {
-          "word": "are_kay_nah"
-        },
-        "open": {
-          "id": "wake.are_kay_nah",
-          "words": [
-            "pyro",
-            "vectus"
-          ],
-          "ttlMs": 1500
-        }
-      },
-      {
-        "id": "pyro_voice_chain",
-        "on": {
-          "word": "pyro"
-        },
-        "requires": "wake.are_kay_nah",
-        "open": {
-          "id": "chain.pyro_voice",
-          "words": [
-            "sanctum",
-            "rota"
-          ],
-          "ttlMs": 1500
-        }
-      },
-      {
-        "id": "pyro_sanctum_cast",
-        "on": {
-          "word": "sanctum"
-        },
-        "requires": "chain.pyro_voice",
-        "trigger": {
-          "bubble_shield": true
-        }
-      },
-      {
-        "id": "pyro_rota_cast",
-        "on": {
-          "word": "rota"
-        },
-        "requires": "chain.pyro_voice",
-        "trigger": {
-          "aoe_flame": true
-        }
-      },
-      {
-        "id": "spin_x_colorize",
-        "on": {
-          "spin": "x"
-        },
-        "trigger": {
-          "colorize": {
-            "r": 0,
-            "g": 100,
-            "b": 253,
-            "alpha": 0.2
-          }
-        }
-      },
-      {
-        "id": "spin_z_colorize",
-        "on": {
-          "spin": "z"
-        },
-        "trigger": {
-          "colorize": {
-            "r": 253,
-            "g": 241,
-            "b": 0,
-            "alpha": 0.2
-          }
-        }
-      },
-      {
-        "id": "spin_y_opens_pyro",
-        "on": {
-          "spin": "y"
-        },
-        "trigger": {
-          "colorize": {
-            "r": 253,
-            "g": 78,
-            "b": 0,
-            "alpha": 0.2
-          }
-        },
-        "open": {
-          "id": "chain.spin_y_seed",
-          "words": [
-            "pyro"
-          ],
-          "ttlMs": 1500
-        }
-      },
-      {
-        "id": "spin_y_pyro_opens_vectus",
-        "on": {
-          "word": "pyro"
-        },
-        "requires": "chain.spin_y_seed",
-        "open": {
-          "id": "chain.spin_y_loaded",
-          "words": [
-            "vectus"
-          ],
-          "ttlMs": 1500
-        }
-      },
-      {
-        "id": "spin_y_pyro_vectus_bind_fb",
-        "on": {
-          "word": "vectus"
-        },
-        "requires": "chain.spin_y_loaded",
-        "bind": {
-          "spell": "bubble_shield",
-          "slot": "FB"
-        }
-      },
-      {
-        "id": "shake_ud_cast",
-        "on": {
-          "shake": "UD"
-        },
-        "trigger": {
-          "cast_loaded_ud": true
-        }
-      },
-      {
-        "id": "shake_lr_cast",
-        "on": {
-          "shake": "LR"
-        },
-        "trigger": {
-          "cast_loaded_lr": true
-        }
-      },
-      {
-        "id": "shake_fb_cast",
-        "on": {
-          "shake": "FB"
-        },
-        "trigger": {
-          "cast_loaded_fb": true
-        }
-      }
-    ]
-  },
-  "dreamConfig": {
+  "interactionGraph": {
     "version": "2",
     "enabled": true,
     "wake": {
@@ -767,11 +552,11 @@
       }
     ]
   },
-  "orchestratorProjection": {
+  "compiledInteractionGraphProjection": {
     "version": "2",
     "enabled": true,
     "ruleCount": 16,
-    "parityWithOrchestratorRuleCount": true
+    "parityWithCompiledInteractionGraphRuleCount": true
   },
   "handles": {
     "signals": {

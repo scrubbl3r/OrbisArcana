@@ -40,11 +40,11 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_compiler",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-compiler-contract-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-compiler-contract-v2.mjs",
   },
   {
     id: "orchestrator_v2_builder_validation_contract",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-builder-validation-contract-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-builder-validation-contract-v2.mjs",
   },
   {
     id: "orchestrator_v2_builder_error_format_source_surface",
@@ -448,15 +448,15 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_bootstrap_precedence",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-bootstrap-precedence-contract-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-bootstrap-precedence-contract-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_semantics",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-semantics-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-semantics-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_semantics_event_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-semantics-event-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-semantics-event-surface-v2.mjs",
   },
   {
     id: "word_detected_bridge",

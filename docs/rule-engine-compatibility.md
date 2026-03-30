@@ -26,21 +26,17 @@ Preflight:
 - `src/content/spells/runtime-spells.js`
   - Runtime slot/cast routing integration layer.
 - `src/runtime/receiver-bootstrap.js`
-  - Runtime bootstrap wiring for orchestrator + interactions adapter startup.
+  - Runtime bootstrap wiring for compiled interaction graph startup.
 
 ## Runtime Mode Status
-- Runtime rule source family: orchestrator-v2 and interactions-adapter fallback (selected by bootstrap policy + safety fallback)
+- Runtime rule source family: compiled-interaction-graph-v2 with safe fallback (selected by bootstrap policy + safety fallback)
 - Projection-only rule execution: enabled (`RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly: true`)
 - Drift gate: enforced by `npm run pre-smoke:v2`
 - Runtime source IDs (authoritative): `src/runtime/receiver-bootstrap.js`
-  - `orchestrator_v2`
-  - `orchestrator_v2_fallback`
-  - `orchestrator_v2_disabled`
-  - `orchestrator_v2_missing_builder`
-  - `interactions_adapter`
-  - `interactions_adapter_fallback`
-  - `interactions_bootstrap_disabled`
-  - `interactions_adapter_missing_builder`
+  - `compiled_interaction_graph_v2`
+  - `compiled_interaction_graph_v2_fallback`
+  - `compiled_interaction_graph_v2_disabled`
+  - `compiled_interaction_graph_v2_missing_builder`
 
 ## Operations
 - Primary operational runbook: `docs/rule-engine-smoke.md`

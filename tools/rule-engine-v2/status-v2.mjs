@@ -23,13 +23,13 @@ const STATUS_DOC_PATHS = Object.freeze({
 });
 const STATUS_LINE_LABELS = Object.freeze({
   wordbookOk: "wordbook ok",
-  dreamConfigOk: "dream config ok",
-  orchestratorOk: "orchestrator ok",
-  orchestratorBootstrapEnabled: "orchestrator bootstrap enabled",
+  interactionGraphOk: "interaction graph ok",
+  compiledInteractionGraphOk: "compiled interaction graph ok",
+  compiledInteractionGraphBootstrapEnabled: "compiled interaction graph bootstrap enabled",
   rulesProjectionOnly: "rules projection only",
-  rulesCount: "rules (authored/compiled)",
-  orchestratorProjectedRuleCount: "orchestrator projected rules",
-  orchestratorProjectionParity: "orchestrator projection parity",
+  rulesCount: "rules (compiled graph/rule engine)",
+  compiledInteractionGraphProjectedRuleCount: "compiled interaction graph projected rules",
+  compiledInteractionGraphProjectionParity: "compiled interaction graph projection parity",
   driftIds: "drift ids",
   manifestsSummary: "manifests (ready/contract/regression)",
   milestoneRuns: "milestone runs",
@@ -149,32 +149,32 @@ function emitStatusLines(log, lines) {
 function normalizeHealthStatus(health) {
   return {
     wordbookOk: isTrue(health?.wordbookOk),
-    dreamConfigOk: isTrue(health?.dreamConfigOk),
-    orchestratorOk: isTrue(health?.orchestratorOk),
-    orchestratorV2BootstrapEnabled: isTrue(health?.orchestratorV2BootstrapEnabled),
+    interactionGraphOk: isTrue(health?.interactionGraphOk),
+    compiledInteractionGraphOk: isTrue(health?.compiledInteractionGraphOk),
+    compiledInteractionGraphV2BootstrapEnabled: isTrue(health?.compiledInteractionGraphV2BootstrapEnabled),
     projectionRulesOnly: isTrue(health?.projectionRulesOnly),
-    authoredRuleCount: toNumberOr(health?.authoredRuleCount),
+    compiledInteractionGraphRuleCount: toNumberOr(health?.compiledInteractionGraphRuleCount),
     compiledRuleCount: toNumberOr(health?.compiledRuleCount),
-    orchestratorProjectedRuleCount: toNumberOr(health?.orchestratorProjectedRuleCount),
-    orchestratorProjectionParityOk: isTrue(health?.orchestratorProjectionParityOk),
+    compiledInteractionGraphProjectedRuleCount: toNumberOr(health?.compiledInteractionGraphProjectedRuleCount),
+    compiledInteractionGraphProjectionParityOk: isTrue(health?.compiledInteractionGraphProjectionParityOk),
     driftRuleIds: Array.isArray(health?.driftRuleIds) ? health.driftRuleIds.slice() : [],
   };
 }
 
-function computeOrchestratorTelemetryLive(authoredRuleCount, compiledRuleCount) {
+function computeCompiledInteractionGraphTelemetryLive(compiledInteractionGraphRuleCount, compiledRuleCount) {
   try {
     const compiled = buildRuleEngineFromCompiledInteractionGraphV2();
-    const orchestratorRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
+    const compiledInteractionGraphRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
     return Object.freeze({
-      orchestratorProjectedRuleCount: orchestratorRules.length,
-      orchestratorProjectionParityOk:
-        orchestratorRules.length === authoredRuleCount &&
-        orchestratorRules.length === compiledRuleCount,
+      compiledInteractionGraphProjectedRuleCount: compiledInteractionGraphRules.length,
+      compiledInteractionGraphProjectionParityOk:
+        compiledInteractionGraphRules.length === compiledInteractionGraphRuleCount &&
+        compiledInteractionGraphRules.length === compiledRuleCount,
     });
   } catch (_) {
     return Object.freeze({
-      orchestratorProjectedRuleCount: 0,
-      orchestratorProjectionParityOk: false,
+      compiledInteractionGraphProjectedRuleCount: 0,
+      compiledInteractionGraphProjectionParityOk: false,
     });
   }
 }
@@ -196,12 +196,14 @@ const STATUS_SECTION_DEFS = Object.freeze([
 ]);
 
 const healthStatus = normalizeHealthStatus(readJsonSafe(STATUS_DOC_PATHS.health) ?? {});
-const orchestratorTelemetryLive = computeOrchestratorTelemetryLive(
-  healthStatus.authoredRuleCount,
+const compiledInteractionGraphTelemetryLive = computeCompiledInteractionGraphTelemetryLive(
+  healthStatus.compiledInteractionGraphRuleCount,
   healthStatus.compiledRuleCount
 );
-healthStatus.orchestratorProjectedRuleCount = orchestratorTelemetryLive.orchestratorProjectedRuleCount;
-healthStatus.orchestratorProjectionParityOk = orchestratorTelemetryLive.orchestratorProjectionParityOk;
+healthStatus.compiledInteractionGraphProjectedRuleCount =
+  compiledInteractionGraphTelemetryLive.compiledInteractionGraphProjectedRuleCount;
+healthStatus.compiledInteractionGraphProjectionParityOk =
+  compiledInteractionGraphTelemetryLive.compiledInteractionGraphProjectionParityOk;
 const trendStatus = normalizeTrendStatus(readJsonSafe(STATUS_DOC_PATHS.trend) ?? {});
 const manifestArtifacts = buildNamedManifestArtifacts(
   MANIFEST_VALIDATORS_V2,
@@ -216,13 +218,13 @@ const contracts = statusSections[STATUS_SECTION_KEYS.contracts];
 const lines = [
   "---",
   `${STATUS_LINE_LABELS.wordbookOk}: ${yn(healthStatus.wordbookOk)}`,
-  `${STATUS_LINE_LABELS.dreamConfigOk}: ${yn(healthStatus.dreamConfigOk)}`,
-  `${STATUS_LINE_LABELS.orchestratorOk}: ${yn(healthStatus.orchestratorOk)}`,
-  `${STATUS_LINE_LABELS.orchestratorBootstrapEnabled}: ${yn(healthStatus.orchestratorV2BootstrapEnabled)}`,
+  `${STATUS_LINE_LABELS.interactionGraphOk}: ${yn(healthStatus.interactionGraphOk)}`,
+  `${STATUS_LINE_LABELS.compiledInteractionGraphOk}: ${yn(healthStatus.compiledInteractionGraphOk)}`,
+  `${STATUS_LINE_LABELS.compiledInteractionGraphBootstrapEnabled}: ${yn(healthStatus.compiledInteractionGraphV2BootstrapEnabled)}`,
   `${STATUS_LINE_LABELS.rulesProjectionOnly}: ${yn(healthStatus.projectionRulesOnly)}`,
-  `${STATUS_LINE_LABELS.rulesCount}: ${healthStatus.authoredRuleCount}/${healthStatus.compiledRuleCount}`,
-  `${STATUS_LINE_LABELS.orchestratorProjectedRuleCount}: ${healthStatus.orchestratorProjectedRuleCount}`,
-  `${STATUS_LINE_LABELS.orchestratorProjectionParity}: ${yn(healthStatus.orchestratorProjectionParityOk)}`,
+  `${STATUS_LINE_LABELS.rulesCount}: ${healthStatus.compiledInteractionGraphRuleCount}/${healthStatus.compiledRuleCount}`,
+  `${STATUS_LINE_LABELS.compiledInteractionGraphProjectedRuleCount}: ${healthStatus.compiledInteractionGraphProjectedRuleCount}`,
+  `${STATUS_LINE_LABELS.compiledInteractionGraphProjectionParity}: ${yn(healthStatus.compiledInteractionGraphProjectionParityOk)}`,
   `${STATUS_LINE_LABELS.driftIds}: (none)`,
   `${STATUS_LINE_LABELS.manifestsSummary}: ${manifestArtifacts.summary}`,
   ...buildSectionStatusLines(STATUS_SECTION_LABELS.readyPhases, readyPhases, yn),
@@ -241,25 +243,25 @@ const status = {
   generatedAt: nowIso(),
   health: {
     wordbookOk: healthStatus.wordbookOk,
-    dreamConfigOk: healthStatus.dreamConfigOk,
-    orchestratorOk: healthStatus.orchestratorOk,
-    orchestratorBootstrapEnabled: healthStatus.orchestratorV2BootstrapEnabled,
+    interactionGraphOk: healthStatus.interactionGraphOk,
+    compiledInteractionGraphOk: healthStatus.compiledInteractionGraphOk,
+    compiledInteractionGraphBootstrapEnabled: healthStatus.compiledInteractionGraphV2BootstrapEnabled,
     projectionRulesOnly: healthStatus.projectionRulesOnly,
-    authoredRuleCount: healthStatus.authoredRuleCount,
+    compiledInteractionGraphRuleCount: healthStatus.compiledInteractionGraphRuleCount,
     compiledRuleCount: healthStatus.compiledRuleCount,
-    orchestratorProjectedRuleCount: healthStatus.orchestratorProjectedRuleCount,
-    orchestratorProjectionParityOk: healthStatus.orchestratorProjectionParityOk,
+    compiledInteractionGraphProjectedRuleCount: healthStatus.compiledInteractionGraphProjectedRuleCount,
+    compiledInteractionGraphProjectionParityOk: healthStatus.compiledInteractionGraphProjectionParityOk,
     driftRuleIds: [],
   },
   wordbookOk: healthStatus.wordbookOk,
-  dreamConfigOk: healthStatus.dreamConfigOk,
-  orchestratorOk: healthStatus.orchestratorOk,
-  orchestratorBootstrapEnabled: healthStatus.orchestratorV2BootstrapEnabled,
+  interactionGraphOk: healthStatus.interactionGraphOk,
+  compiledInteractionGraphOk: healthStatus.compiledInteractionGraphOk,
+  compiledInteractionGraphBootstrapEnabled: healthStatus.compiledInteractionGraphV2BootstrapEnabled,
   projectionRulesOnly: healthStatus.projectionRulesOnly,
-  authoredRuleCount: healthStatus.authoredRuleCount,
+  compiledInteractionGraphRuleCount: healthStatus.compiledInteractionGraphRuleCount,
   compiledRuleCount: healthStatus.compiledRuleCount,
-  orchestratorProjectedRuleCount: healthStatus.orchestratorProjectedRuleCount,
-  orchestratorProjectionParityOk: healthStatus.orchestratorProjectionParityOk,
+  compiledInteractionGraphProjectedRuleCount: healthStatus.compiledInteractionGraphProjectedRuleCount,
+  compiledInteractionGraphProjectionParityOk: healthStatus.compiledInteractionGraphProjectionParityOk,
   driftRuleIds: [],
   manifests: manifestArtifacts.booleans,
   readyPhases: readyPhases.booleans,

@@ -39,11 +39,11 @@ function asRules(value) {
 function buildDoc() {
   const generatedAt = nowIso();
   const words = listWordbookWords(WORDBOOK_V2);
-  const dream = asObject(INTERACTION_GRAPH_V2);
-  const orchestrator = asObject(COMPILED_INTERACTION_GRAPH_V2);
-  const defaults = asObject(orchestrator.defaults);
-  const rules = asRules(orchestrator.rules);
-  const enabled = orchestrator.enabled !== false;
+  const interactionGraph = asObject(INTERACTION_GRAPH_V2);
+  const compiledInteractionGraph = asObject(COMPILED_INTERACTION_GRAPH_V2);
+  const defaults = asObject(compiledInteractionGraph.defaults);
+  const rules = asRules(compiledInteractionGraph.rules);
+  const enabled = compiledInteractionGraph.enabled !== false;
   const compiledEngine = buildRuleEngineFromCompiledInteractionGraphV2();
   const compiledRules = asRules(compiledEngine?.rules);
 
@@ -55,11 +55,11 @@ function buildDoc() {
   lines.push("This document is generated from SSOT:");
   lines.push("- wordbook: `src/content/interactions-v2/wordbook-v2.js`");
   lines.push("- behavior authoring: `src/content/interactions-v2/interaction-graph-v2.js`");
-  lines.push("- compiled orchestrator view: `src/content/interactions-v2/compiled-interaction-graph-v2.js`");
+  lines.push("- compiled interaction graph view: `src/content/interactions-v2/compiled-interaction-graph-v2.js`");
   lines.push("");
   lines.push("## Runtime Flags");
   lines.push("");
-  lines.push(`- orchestratorEnabled: ${enabled}`);
+  lines.push(`- compiledInteractionGraphEnabled: ${enabled}`);
   lines.push("");
   lines.push("## Wordbook (SSOT)");
   lines.push("");
@@ -71,34 +71,34 @@ function buildDoc() {
   lines.push("");
   lines.push("```json");
   lines.push(toJson({
-    version: dream.version,
-    enabled: dream.enabled !== false,
-    wake: asObject(dream.wake),
-    groups: asObject(dream.groups),
-    rules: asRules(dream.rules),
+    version: interactionGraph.version,
+    enabled: interactionGraph.enabled !== false,
+    wake: asObject(interactionGraph.wake),
+    groups: asObject(interactionGraph.groups),
+    rules: asRules(interactionGraph.rules),
   }));
   lines.push("```");
   lines.push("");
-  lines.push("## Orchestrator Defaults (Compiled)");
+  lines.push("## Compiled Interaction Graph Defaults");
   lines.push("");
   lines.push("```json");
   lines.push(toJson(defaults));
   lines.push("```");
   lines.push("");
-  lines.push("## Orchestrator Rules (Compiled)");
+  lines.push("## Compiled Interaction Graph Rules");
   lines.push("");
   lines.push("```json");
   lines.push(toJson(rules));
   lines.push("```");
   lines.push("");
-  lines.push("## Orchestrator Projection (Derived)");
+  lines.push("## Compiled Interaction Graph Projection");
   lines.push("");
   lines.push("```json");
   lines.push(toJson({
-    version: orchestrator.version,
+    version: compiledInteractionGraph.version,
     enabled,
     ruleCount: compiledRules.length,
-    parityWithOrchestratorRuleCount: compiledRules.length === rules.length,
+    parityWithCompiledInteractionGraphRuleCount: compiledRules.length === rules.length,
   }));
   lines.push("```");
   lines.push("");
@@ -133,10 +133,10 @@ function buildDoc() {
 }
 
 function buildMasterControlJson() {
-  const orchestrator = asObject(COMPILED_INTERACTION_GRAPH_V2);
-  const orchestratorDefaults = asObject(orchestrator.defaults);
-  const orchestratorRules = asRules(orchestrator.rules);
-  const orchestratorEnabled = orchestrator.enabled !== false;
+  const compiledInteractionGraph = asObject(COMPILED_INTERACTION_GRAPH_V2);
+  const compiledInteractionGraphDefaults = asObject(compiledInteractionGraph.defaults);
+  const compiledInteractionGraphRules = asRules(compiledInteractionGraph.rules);
+  const compiledInteractionGraphEnabled = compiledInteractionGraph.enabled !== false;
   const compiledEngine = buildRuleEngineFromCompiledInteractionGraphV2();
   const compiledRules = asRules(compiledEngine?.rules);
   return {
@@ -146,30 +146,24 @@ function buildMasterControlJson() {
       version: WORDBOOK_V2?.version,
       words: listWordbookWords(WORDBOOK_V2),
     },
-    orchestrator: {
-      version: orchestrator.version,
-      enabled: orchestratorEnabled,
-      defaults: orchestratorDefaults,
-      rules: orchestratorRules,
+    compiledInteractionGraph: {
+      version: compiledInteractionGraph.version,
+      enabled: compiledInteractionGraphEnabled,
+      defaults: compiledInteractionGraphDefaults,
+      rules: compiledInteractionGraphRules,
     },
-    interactions: {
-      version: orchestrator.version,
-      enabled: orchestratorEnabled,
-      defaults: orchestratorDefaults,
-      rules: orchestratorRules,
-    },
-    dreamConfig: {
+    interactionGraph: {
       version: INTERACTION_GRAPH_V2?.version,
       enabled: INTERACTION_GRAPH_V2?.enabled !== false,
       wake: INTERACTION_GRAPH_V2?.wake ?? {},
       groups: INTERACTION_GRAPH_V2?.groups ?? {},
       rules: Array.isArray(INTERACTION_GRAPH_V2?.rules) ? INTERACTION_GRAPH_V2.rules : [],
     },
-    orchestratorProjection: {
-      version: orchestrator.version,
-      enabled: orchestratorEnabled,
+    compiledInteractionGraphProjection: {
+      version: compiledInteractionGraph.version,
+      enabled: compiledInteractionGraphEnabled,
       ruleCount: compiledRules.length,
-      parityWithOrchestratorRuleCount: compiledRules.length === orchestratorRules.length,
+      parityWithCompiledInteractionGraphRuleCount: compiledRules.length === compiledInteractionGraphRules.length,
     },
     handles: {
       signals: SIGNAL_HANDLES_V2,
@@ -181,21 +175,21 @@ function buildMasterControlJson() {
 
 function buildMasterControlAuthoringJson() {
   const activeWords = listActiveWordAuthoringRows(WORDBOOK_V2);
-  const dream = asObject(INTERACTION_GRAPH_V2);
-  const orchestrator = asObject(COMPILED_INTERACTION_GRAPH_V2);
-  const defaults = asObject(orchestrator.defaults);
-  const rules = asRules(orchestrator.rules);
-  const enabled = orchestrator.enabled !== false;
+  const interactionGraph = asObject(INTERACTION_GRAPH_V2);
+  const compiledInteractionGraph = asObject(COMPILED_INTERACTION_GRAPH_V2);
+  const defaults = asObject(compiledInteractionGraph.defaults);
+  const rules = asRules(compiledInteractionGraph.rules);
+  const enabled = compiledInteractionGraph.enabled !== false;
 
   return {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControlAuthoring,
     generatedAt: nowIso(),
-    enabled: dream.enabled !== false,
-    wake: asObject(dream.wake),
-    groups: asObject(dream.groups),
-    defaults: asObject(dream.defaults),
+    enabled: interactionGraph.enabled !== false,
+    wake: asObject(interactionGraph.wake),
+    groups: asObject(interactionGraph.groups),
+    defaults: asObject(interactionGraph.defaults),
     words: activeWords,
-    rules: asRules(dream.rules),
+    rules: asRules(interactionGraph.rules),
     compiled: {
       enabled,
       defaults,

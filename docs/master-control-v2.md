@@ -1,15 +1,15 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-30T23:38:48.532Z
+Generated: 2026-03-30T23:57:49.118Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
 - behavior authoring: `src/content/interactions-v2/interaction-graph-v2.js`
-- compiled orchestrator view: `src/content/interactions-v2/compiled-interaction-graph-v2.js`
+- compiled interaction graph view: `src/content/interactions-v2/compiled-interaction-graph-v2.js`
 
 ## Runtime Flags
 
-- orchestratorEnabled: true
+- compiledInteractionGraphEnabled: true
 
 ## Wordbook (SSOT)
 
@@ -357,7 +357,7 @@ This document is generated from SSOT:
 }
 ```
 
-## Orchestrator Defaults (Compiled)
+## Compiled Interaction Graph Defaults
 
 ```json
 {
@@ -372,7 +372,7 @@ This document is generated from SSOT:
 }
 ```
 
-## Orchestrator Rules (Compiled)
+## Compiled Interaction Graph Rules
 
 ```json
 [
@@ -578,14 +578,14 @@ This document is generated from SSOT:
 ]
 ```
 
-## Orchestrator Projection (Derived)
+## Compiled Interaction Graph Projection
 
 ```json
 {
   "version": "2",
   "enabled": true,
   "ruleCount": 16,
-  "parityWithOrchestratorRuleCount": true
+  "parityWithCompiledInteractionGraphRuleCount": true
 }
 ```
 

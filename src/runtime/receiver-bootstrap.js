@@ -5,17 +5,18 @@
  */
 
 export const RULE_ENGINE_SOURCES = Object.freeze({
-  COMPILED_INTERACTION_GRAPH_V2: "orchestrator_v2",
-  COMPILED_INTERACTION_GRAPH_V2_FALLBACK: "orchestrator_v2_fallback",
-  COMPILED_INTERACTION_GRAPH_V2_DISABLED: "orchestrator_v2_disabled",
-  COMPILED_INTERACTION_GRAPH_V2_MISSING_BUILDER: "orchestrator_v2_missing_builder",
+  COMPILED_INTERACTION_GRAPH_V2: "compiled_interaction_graph_v2",
+  COMPILED_INTERACTION_GRAPH_V2_FALLBACK: "compiled_interaction_graph_v2_fallback",
+  COMPILED_INTERACTION_GRAPH_V2_DISABLED: "compiled_interaction_graph_v2_disabled",
+  COMPILED_INTERACTION_GRAPH_V2_MISSING_BUILDER: "compiled_interaction_graph_v2_missing_builder",
 });
 
 export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
-  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2]: "Orchestrator V2",
-  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2_FALLBACK]: "Orchestrator V2 (safe fallback)",
-  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2_DISABLED]: "Orchestrator V2 disabled",
-  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2_MISSING_BUILDER]: "Orchestrator V2 missing builder (safe fallback)",
+  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2]: "Compiled Interaction Graph V2",
+  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2_FALLBACK]: "Compiled Interaction Graph V2 (safe fallback)",
+  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2_DISABLED]: "Compiled Interaction Graph V2 disabled",
+  [RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2_MISSING_BUILDER]:
+    "Compiled Interaction Graph V2 missing builder (safe fallback)",
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
@@ -28,7 +29,7 @@ const FIELD_EVENTS = "events";
 const FIELD_RULES = "rules";
 const FIELD_EVENT_RUNTIME_BINDINGS = "eventRuntimeBindings";
 const FIELD_EXECUTION = "execution";
-const ERR_PREFIX_COMPILED_INTERACTION_GRAPH_V2 = "Orchestrator v2 validation failed: ";
+const ERR_PREFIX_COMPILED_INTERACTION_GRAPH_V2 = "Compiled interaction graph v2 validation failed: ";
 const ERR_PREFIX_WORDBOOK_V2 = "Wordbook v2 validation failed: ";
 const ERR_PREFIX_WORD_RUNTIME_ROUTING = "Word runtime routing validation failed: ";
 const WARN_COMPILED_INTERACTION_GRAPH_V2_BUILDER_MISSING =
@@ -539,11 +540,11 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     : null;
   const setRuleSchemaRuntime = (typeof setRuleSchema === "function") ? setRuleSchema : undefined;
   const adapterBaseRuleSchema = buildAdapterBaseRuleSchema(ruleEnginePolicyControl);
-  const useOrchestratorV2 = isBootstrapFlagEnabled(
+  const useCompiledInteractionGraphV2 = isBootstrapFlagEnabled(
     COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP,
     BOOTSTRAP_FLAG_USE_IN_RECEIVER
   );
-  const selectedRuleSourceMode = "orchestrator_v2";
+  const selectedRuleSourceMode = "compiled_interaction_graph_v2";
   let adapterFallbackUsed = false;
   let ruleSource = RULE_ENGINE_SOURCES.COMPILED_INTERACTION_GRAPH_V2;
   let ruleSchema = buildSafeDisabledRuleSchema();
@@ -560,7 +561,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     integrityErrorCount: 0,
     stage: "init",
   };
-  if (!useOrchestratorV2) {
+  if (!useCompiledInteractionGraphV2) {
     adapterFallbackUsed = true;
     debugBootstrap.adapterFallbackUsed = true;
     debugBootstrap.stage = "bootstrap_disabled";

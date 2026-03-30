@@ -1,14 +1,14 @@
 {
   "schema": "orbis.rule_engine_v2.health",
-  "generatedAt": "2026-03-30T23:29:21.131Z",
+  "generatedAt": "2026-03-30T23:57:49.127Z",
   "wordbookOk": true,
-  "dreamConfigOk": true,
-  "orchestratorOk": true,
-  "orchestratorV2BootstrapEnabled": true,
+  "interactionGraphOk": true,
+  "compiledInteractionGraphOk": true,
+  "compiledInteractionGraphV2BootstrapEnabled": true,
   "projectionRulesOnly": true,
-  "authoredRuleCount": 16,
+  "compiledInteractionGraphRuleCount": 16,
   "compiledRuleCount": 16,
-  "orchestratorProjectedRuleCount": 16,
-  "orchestratorProjectionParityOk": true,
+  "compiledInteractionGraphProjectedRuleCount": 16,
+  "compiledInteractionGraphProjectionParityOk": true,
   "driftRuleIds": []
 }

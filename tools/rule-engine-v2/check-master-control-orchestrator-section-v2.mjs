@@ -4,14 +4,14 @@ import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { buildRuleEngineFromCompiledInteractionGraphV2, COMPILED_INTERACTION_GRAPH_V2 } from "../../src/content/interactions-v2/index.js";
 
-// Validates orchestrator projection section fields inside master-control artifact.
+// Validates compiled interaction graph projection section fields inside master-control artifact.
 const CHECK_TAG = "master-control-orchestrator-section:v2";
-const PROJECTION_KEY = "orchestratorProjection";
+const PROJECTION_KEY = "compiledInteractionGraphProjection";
 const PROJECTION_VERSION_KEY = `${PROJECTION_KEY}.version`;
 const PROJECTION_ENABLED_KEY = `${PROJECTION_KEY}.enabled`;
 const PROJECTION_RULE_COUNT_KEY = `${PROJECTION_KEY}.ruleCount`;
-const PROJECTION_PARITY_KEY = `${PROJECTION_KEY}.parityWithOrchestratorRuleCount`;
-const PASS_MESSAGE = "master-control orchestrator projection section is present and valid";
+const PROJECTION_PARITY_KEY = `${PROJECTION_KEY}.parityWithCompiledInteractionGraphRuleCount`;
+const PASS_MESSAGE = "master-control compiled interaction graph projection section is present and valid";
 
 const doc = readJsonOrFail(CHECK_TAG, RULE_ENGINE_V2_DOC_PATHS.masterControlJson);
 if (!doc || typeof doc !== "object") {
@@ -41,10 +41,10 @@ if (sectionRuleCount !== expectedCompiledRules.length) {
   failCheck(CHECK_TAG, `${PROJECTION_RULE_COUNT_KEY} mismatch: ${section.ruleCount}`);
 }
 const expectedParity = expectedCompiledRules.length === expectedAuthoredRules.length;
-if (section.parityWithOrchestratorRuleCount !== expectedParity) {
+if (section.parityWithCompiledInteractionGraphRuleCount !== expectedParity) {
   failCheck(
     CHECK_TAG,
-    `${PROJECTION_PARITY_KEY} mismatch: ${section.parityWithOrchestratorRuleCount}`
+    `${PROJECTION_PARITY_KEY} mismatch: ${section.parityWithCompiledInteractionGraphRuleCount}`
   );
 }
 
