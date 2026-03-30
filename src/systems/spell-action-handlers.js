@@ -8,6 +8,9 @@ export function createSpellActionHandlers({
   playFlameAoe,
   playFrostAoe,
   teleportOrbToSpawnNeutralizePhysics,
+  executeAoeElectric,
+  executeAoeFlame,
+  executeAoeFrost,
   executeTeleportHome,
   executeShockwave,
   executeBubbleShield,
@@ -39,14 +42,26 @@ export function createSpellActionHandlers({
   return {
     play_electric_aoe(payload = {}) {
       void payload;
+      if (typeof executeAoeElectric === "function") {
+        executeAoeElectric({ playElectricAoe });
+        return;
+      }
       if (typeof playElectricAoe === "function") playElectricAoe();
     },
     play_flame_aoe(payload = {}) {
       void payload;
+      if (typeof executeAoeFlame === "function") {
+        executeAoeFlame({ playFlameAoe });
+        return;
+      }
       if (typeof playFlameAoe === "function") playFlameAoe();
     },
     play_frost_aoe(payload = {}) {
       void payload;
+      if (typeof executeAoeFrost === "function") {
+        executeAoeFrost({ playFrostAoe, playFlameAoe });
+        return;
+      }
       if (typeof playFrostAoe === "function") {
         playFrostAoe();
         return;
