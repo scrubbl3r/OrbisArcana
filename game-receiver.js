@@ -2114,12 +2114,8 @@
             allDirLampOff,
             flashDirLampPair,
             flashDirLampSingle,
-            setOrbStrokeColorByAxis(axis) {
-              setOrbStrokeColor01(axisToColor01(axis));
-            },
-            resetOrbStrokeColor: () => {
-              resetOrbStrokeColor();
-            },
+            setOrbStrokeColorByAxis() {},
+            resetOrbStrokeColor: () => {},
           },
         });
         inputSystem = inputSystemsBundle.inputSystem;
@@ -2335,6 +2331,12 @@
         });
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
           stopShardSim();
+        });
+        eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED, () => {
+          executeWordCastAction("colorize", {
+            intent: "spin_window_closed",
+            payload: { mode: "stop" },
+          });
         });
         eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
           const intent = String(p.intent || "");
