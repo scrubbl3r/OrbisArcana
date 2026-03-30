@@ -68,8 +68,4 @@ export function applyThemeCssVars(theme, { root = document.documentElement } = {
     if (Number.isFinite(Number(theme.shockwave.strokeWidthPx))) setVar(root, "--shock-stroke", `${Math.round(Number(theme.shockwave.strokeWidthPx))}px`);
   }
 
-  if (theme.flameAoe) {
-    if (theme.flameAoe.stroke) setVar(root, "--flame-stroke", rgbaText(theme.flameAoe.stroke));
-    if (theme.flameAoe.fill) setVar(root, "--flame-fill", rgbaText(theme.flameAoe.fill));
-  }
 }

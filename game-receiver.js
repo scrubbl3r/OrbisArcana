@@ -1273,7 +1273,7 @@
     let sanctusShieldTO = 0;
     let kwsEventBindings = null;
     let buildOrbBaseVisualStateModule = null;
-    const MODULE_CACHE_BUST_V = "20260330b";
+    const MODULE_CACHE_BUST_V = "20260330c";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -2041,6 +2041,8 @@
               getConfig: () => ({
                 diameter: VFX_DEFAULTS.flame.diameter,
                 durationMs: VFX_DEFAULTS.flame.durationMs,
+                stroke: VFX_DEFAULTS.flame.stroke,
+                fill: VFX_DEFAULTS.flame.fill,
               }),
               clamp,
               evenPx,

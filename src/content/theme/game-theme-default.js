@@ -34,8 +34,4 @@ export const GAME_THEME_DEFAULT = Object.freeze({
     color: Object.freeze({ r: 255, g: 255, b: 255, a: 0.65 }),
     strokeWidthPx: 4,
   },
-  flameAoe: {
-    stroke: Object.freeze({ r: 255, g: 96, b: 24, a: 1.0 }),
-    fill: Object.freeze({ r: 255, g: 96, b: 24, a: 0.20 }),
-  },
 });

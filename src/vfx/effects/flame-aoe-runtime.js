@@ -2,6 +2,8 @@
  * @typedef {Object} FlameAoeRuntimeConfig
  * @property {number} diameter
  * @property {number} durationMs
+ * @property {{r:number,g:number,b:number,a:number}} [stroke]
+ * @property {{r:number,g:number,b:number,a:number}} [fill]
  */
 
 /**
@@ -15,8 +17,6 @@
 
 /**
  * Flame AOE SVG runtime.
- *
- * Uses CSS variables already managed by receiver/theme (`--flame-stroke`, `--flame-fill`).
  *
  * @param {CreateFlameAoeRuntimeOptions} options
  */
@@ -36,6 +36,21 @@ export function createFlameAoeRuntime({
   let flameSvg = null;
   let flameCore = null;
   const flameTendrils = [];
+
+  function clampByte(v) {
+    const n = Math.round(Number(v) || 0);
+    return Math.max(0, Math.min(255, n));
+  }
+
+  function clamp01(v) {
+    const n = Number(v);
+    return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
+  }
+
+  function rgbaText(c, fallback = { r: 255, g: 96, b: 24, a: 1 }) {
+    const src = c && typeof c === "object" ? c : fallback;
+    return `rgba(${clampByte(src.r)}, ${clampByte(src.g)}, ${clampByte(src.b)}, ${clamp01(src.a)})`;
+  }
 
   function polarPoint(cx, cy, angle, r) {
     return { x: cx + (Math.cos(angle) * r), y: cy + (Math.sin(angle) * r) };
@@ -91,7 +106,7 @@ export function createFlameAoeRuntime({
 
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.setAttribute("fill", "rgba(255, 96, 24, 0.30)");
-    group.setAttribute("stroke", "var(--flame-stroke)");
+    group.setAttribute("stroke", rgbaText(cfg.stroke));
     group.setAttribute("stroke-width", "2");
     group.setAttribute("stroke-linecap", "round");
     group.setAttribute("stroke-linejoin", "round");
@@ -100,8 +115,8 @@ export function createFlameAoeRuntime({
     core.setAttribute("cx", String(cx));
     core.setAttribute("cy", String(cy));
     core.setAttribute("r", String(radius.toFixed(2)));
-    core.setAttribute("fill", "var(--flame-fill)");
-    core.setAttribute("stroke", "var(--flame-stroke)");
+    core.setAttribute("fill", rgbaText(cfg.fill, { r: 255, g: 96, b: 24, a: 0.20 }));
+    core.setAttribute("stroke", rgbaText(cfg.stroke));
     core.setAttribute("stroke-width", "6");
     core.setAttribute("opacity", "1");
 
@@ -142,6 +157,8 @@ export function createFlameAoeRuntime({
     const cfg = {
       diameter: evenPx(clamp(raw.diameter, 120, 900), 2, 2000),
       durationMs: Math.max(200, Number(raw.durationMs) || 10000),
+      stroke: raw.stroke,
+      fill: raw.fill,
     };
 
     build(cfg);
@@ -237,4 +254,3 @@ export function createFlameAoeRuntime({
     destroy: clear,
   };
 }
-
