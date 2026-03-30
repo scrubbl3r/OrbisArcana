@@ -10,6 +10,8 @@ export function createSpellActionHandlers({
   teleportOrbToSpawnNeutralizePhysics,
   executeTeleportHome,
   executeShockwave,
+  executeBubbleShield,
+  executeFloatGrace,
   triggerShockwave,
   activateSanctusShield,
   grantSuperGrace,
@@ -79,6 +81,14 @@ export function createSpellActionHandlers({
       }
     },
     bubble_shield(payload = {}) {
+      if (typeof executeBubbleShield === "function") {
+        executeBubbleShield({
+          activateSanctusShield,
+          axis: (payload && payload.axis) || "y",
+          durationMs: sanctusShieldMs,
+        });
+        return;
+      }
       if (typeof activateSanctusShield === "function") {
         activateSanctusShield((payload && payload.axis) || "y", sanctusShieldMs);
       }
@@ -88,6 +98,13 @@ export function createSpellActionHandlers({
     },
     float_grace(payload = {}) {
       const ms = Number(payload && payload.ms);
+      if (typeof executeFloatGrace === "function") {
+        executeFloatGrace({
+          grantSuperGrace,
+          ms: Number.isFinite(ms) ? ms : undefined,
+        });
+        return;
+      }
       if (typeof grantSuperGrace === "function") {
         grantSuperGrace(Number.isFinite(ms) ? ms : undefined);
       }

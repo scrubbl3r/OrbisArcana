@@ -12,4 +12,6 @@
 
 export { executeShockwave } from "./shockwave.js";
 export { executeTeleport } from "./teleport.js";
+export { executeBubbleShield } from "./bubble-shield.js";
+export { executeFloatGrace } from "./float-grace.js";
 export { createColorizeEffect } from "./colorize.js";
