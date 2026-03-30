@@ -47,7 +47,7 @@ Example:
 
 ## Behavior Authoring
 
-`src/content/interactions-v2/dream-config-v2.js`
+`src/content/interactions-v2/interaction-graph-v2.js`
 
 Example:
 

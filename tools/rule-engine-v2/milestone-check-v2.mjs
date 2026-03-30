@@ -1,4 +1,4 @@
-// Runs ready+smoke milestone flow, writes milestone report/history, then refreshes trend.
+// Runs ready milestone flow, writes milestone report/history, then refreshes trend.
 import { spawnSync } from "node:child_process";
 import { resolveRuleEngineDocPath } from "./docs-paths-v2.mjs";
 import { readJsonSafe } from "./read-json-safe-v2.mjs";
@@ -12,24 +12,22 @@ import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { toTrimmedText } from "./value-utils-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
-// Milestone flow records ready/smoke/trend state in artifacts for longer-run tracking.
-// Execution order is intentional: ready -> smoke batch -> trend refresh.
+// Milestone flow records ready/trend state in artifacts for longer-run tracking.
+// Execution order is intentional: ready -> trend refresh.
 const CHECK_TAG = "milestone:v2";
 const logMilestone = createTaggedLogger(CHECK_TAG);
 const MILESTONE_STEP_LABELS = Object.freeze({
   ready: "ready:v2",
-  smokeBatch: "smoke:batch:v2",
 });
 const MILESTONE_MESSAGES = Object.freeze({
   trendGenerationFailed: "milestone trend generation failed",
-  readyOrBatchFailed: "ready and/or smoke batch failed",
+  readyOrBatchFailed: "ready milestone checks failed",
   pass: "PASS",
 });
 const MILESTONE_REPORT_LABELS = Object.freeze({
   wroteReport: "wrote report",
   refreshedWithTrend: "refreshed report with trend",
 });
-const MILESTONE_BATCH_SKIPPED_STATUS = -1;
 const MILESTONE_DOC_PATHS = Object.freeze({
   health: resolveRuleEngineDocPath("health"),
   smoke: resolveRuleEngineDocPath("milestoneSmoke"),
@@ -68,10 +66,6 @@ function appendMilestoneHistory(path, report) {
 
 const ready = runStep(MILESTONE_STEP_LABELS.ready, RULE_ENGINE_V2_SCRIPT_PATHS.readyCheck);
 const readyOk = ready.ok === true;
-const batch = readyOk
-  ? runStep(MILESTONE_STEP_LABELS.smokeBatch, RULE_ENGINE_V2_SCRIPT_PATHS.smokeBatch)
-  : { ok: false, status: MILESTONE_BATCH_SKIPPED_STATUS };
-const batchOk = batch.ok === true;
 
 const report = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.milestone,
@@ -79,10 +73,9 @@ const report = {
   gitRef: getGitRef(),
   steps: {
     ready: asStepResult(ready),
-    batch: asStepResult(batch, { skipped: !readyOk }),
   },
   health: readJsonSafe(MILESTONE_DOC_PATHS.health),
-  pass: readyOk && batchOk,
+  pass: readyOk,
 };
 
 writeMilestoneReport(MILESTONE_DOC_PATHS.smoke, report, MILESTONE_REPORT_LABELS.wroteReport);

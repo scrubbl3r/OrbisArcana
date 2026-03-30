@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing.js";
 import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
 import { failCheck } from "./check-fail-v2.mjs";
@@ -26,7 +26,7 @@ function withSyntheticImmediateEventRules(sample) {
 }
 
 function buildSampleWakeActionInput({ useCompatSpellsAlias = false } = {}) {
-  const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
+  const orchestratorEngine = buildRuleEngineFromCompiledInteractionGraphV2();
   const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
   const sample = withSyntheticImmediateEventRules({
     rules: compiledRules,

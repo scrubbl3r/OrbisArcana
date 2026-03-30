@@ -1,5 +1,5 @@
-import { ORCHESTRATOR_V2 } from "./orchestrator-v2.js";
-import { validateOrchestratorV2 } from "./validate-orchestrator-v2.js";
+import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js";
+import { validateCompiledInteractionGraphV2 } from "./validate-compiled-interaction-graph-v2.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../spell-rules/event-runtime-bindings.js";
 import {
   asArray,
@@ -21,7 +21,7 @@ const ACTION_TYPE_EVENT = "event";
 const ACTION_TYPE_BIND = "bind";
 const DEFAULT_WAKE_WINDOW_ID = "wake_win";
 const ENABLED_FALSE = false;
-const ORCHESTRATOR_V2_VALIDATION_ERROR_PREFIX = "ORCHESTRATOR_V2 validation failed: ";
+const COMPILED_INTERACTION_GRAPH_V2_VALIDATION_ERROR_PREFIX = "COMPILED_INTERACTION_GRAPH_V2 validation failed: ";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_TYPE = "type";
 const FIELD_ID = "id";
@@ -44,7 +44,7 @@ const FIELD_CONSUME = "consume";
 const FIELD_COOLDOWN_MS = "cooldownMs";
 const FIELD_MATCH_WINDOW_MS = "matchWindowMs";
 const FIELD_PRIORITY = "priority";
-const FIELD_ORCHESTRATOR_V2 = "orchestratorV2";
+const FIELD_COMPILED_INTERACTION_GRAPH_V2 = "compiledInteractionGraphV2";
 const FIELD_BASE_RULE_ENGINE = "baseRuleEngine";
 const DEFAULTS_OPEN_KEY = "open";
 const DEFAULTS_RULE_KEY = "rule";
@@ -252,15 +252,15 @@ function compileRule(ruleRaw, defaultsSafe, groups) {
   return Object.freeze(out);
 }
 
-function buildCompiledRules(orchestratorV2) {
-  const result = validateOrchestratorV2(orchestratorV2);
+function buildCompiledRules(compiledInteractionGraphV2) {
+  const result = validateCompiledInteractionGraphV2(compiledInteractionGraphV2);
   if (!result || result.ok !== true) {
     throw new Error(
-      `${ORCHESTRATOR_V2_VALIDATION_ERROR_PREFIX}${asArray(result && result.errors).join(VALIDATION_ERROR_DELIMITER)}`
+      `${COMPILED_INTERACTION_GRAPH_V2_VALIDATION_ERROR_PREFIX}${asArray(result && result.errors).join(VALIDATION_ERROR_DELIMITER)}`
     );
   }
-  const defaults = asObj(orchestratorV2[FIELD_DEFAULTS]);
-  const groups = asObj(orchestratorV2[FIELD_GROUPS]);
+  const defaults = asObj(compiledInteractionGraphV2[FIELD_DEFAULTS]);
+  const groups = asObj(compiledInteractionGraphV2[FIELD_GROUPS]);
   const defaultsTriggerRaw = asObj(defaults[DEFAULTS_TRIGGER_KEY]);
   const defaultsTriggerByEvent = Object.entries(defaultsTriggerRaw).reduce((acc, [rawEventId, args]) => {
     const eventId = normalizeEventId(rawEventId);
@@ -273,20 +273,22 @@ function buildCompiledRules(orchestratorV2) {
     [DEFAULTS_RULE_KEY]: asObj(defaults[DEFAULTS_RULE_KEY]),
     [DEFAULTS_TRIGGER_KEY]: defaultsTriggerByEvent,
   };
-  return mapDefined(asArray(orchestratorV2[FIELD_RULES]), (rule) =>
+  return mapDefined(asArray(compiledInteractionGraphV2[FIELD_RULES]), (rule) =>
     compileRule(rule, defaultsSafe, groups)
   );
 }
 
-export function buildRuleEngineFromOrchestratorV2(options = {}) {
+export function buildRuleEngineFromCompiledInteractionGraphV2(options = {}) {
   const safeOptions = asObj(options);
-  const orchestratorV2 = asObj(safeOptions[FIELD_ORCHESTRATOR_V2] || ORCHESTRATOR_V2);
+  const compiledInteractionGraphV2 = asObj(
+    safeOptions[FIELD_COMPILED_INTERACTION_GRAPH_V2] || COMPILED_INTERACTION_GRAPH_V2
+  );
   const baseRuleEngine = asObj(safeOptions[FIELD_BASE_RULE_ENGINE]);
   const baseEventRuntimeBindings = asObj(baseRuleEngine.eventRuntimeBindings);
-  const rules = buildCompiledRules(orchestratorV2);
+  const rules = buildCompiledRules(compiledInteractionGraphV2);
   return Object.freeze({
     ...baseRuleEngine,
-    [FIELD_ENABLED]: orchestratorV2[FIELD_ENABLED] !== ENABLED_FALSE,
+    [FIELD_ENABLED]: compiledInteractionGraphV2[FIELD_ENABLED] !== ENABLED_FALSE,
     eventRuntimeBindings: Object.freeze({
       ...(EVENT_RUNTIME_BINDINGS_BY_ID && typeof EVENT_RUNTIME_BINDINGS_BY_ID === "object"
         ? EVENT_RUNTIME_BINDINGS_BY_ID
@@ -297,6 +299,6 @@ export function buildRuleEngineFromOrchestratorV2(options = {}) {
   });
 }
 
-export function buildRulesFromOrchestratorV2(orchestratorV2 = ORCHESTRATOR_V2) {
-  return Object.freeze(buildCompiledRules(orchestratorV2));
+export function buildRulesFromCompiledInteractionGraphV2(compiledInteractionGraphV2 = COMPILED_INTERACTION_GRAPH_V2) {
+  return Object.freeze(buildCompiledRules(compiledInteractionGraphV2));
 }

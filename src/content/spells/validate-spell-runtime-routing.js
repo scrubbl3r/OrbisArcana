@@ -12,7 +12,7 @@ import {
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
 } from "./spell-runtime-routing.js";
-import { ORCHESTRATOR_V2 } from "../interactions-v2/orchestrator-v2.js";
+import { COMPILED_INTERACTION_GRAPH_V2 } from "../interactions-v2/compiled-interaction-graph-v2.js";
 
 const AXES = new Set(["x", "y", "z"]);
 const SLOTS = new Set(["UD", "LR", "FB"]);
@@ -200,7 +200,7 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
   const legacySourceMode = isRuleLikeConfig(sourceConfig);
   const expectedOwnedImmediate = legacySourceMode
     ? collectImmediateWordIdsFromConfig(sourceConfig)
-    : collectImmediateWordIdsFromOrchestratorV2(ORCHESTRATOR_V2);
+    : collectImmediateWordIdsFromOrchestratorV2(COMPILED_INTERACTION_GRAPH_V2);
   const declaredOwnedImmediate = new Set(
     (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])
       .map((id) => asId(id))
@@ -225,7 +225,7 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
 
   const expectedWakeWindowSpellIds = legacySourceMode
     ? collectWakeWinWordIdsFromConfig(sourceConfig)
-    : collectWakeWinWordIdsFromOrchestratorV2(ORCHESTRATOR_V2);
+    : collectWakeWinWordIdsFromOrchestratorV2(COMPILED_INTERACTION_GRAPH_V2);
   const declaredWakeWindowSpellIds = new Set(
     (Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : [])
       .map((id) => asId(id))

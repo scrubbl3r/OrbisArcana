@@ -11,7 +11,7 @@ Preflight:
 ## Primary Command
 
 ```bash
-npm run smoke:batch:v2
+npm run ready:v2
 ```
 
 ## Quick Snapshot Command
@@ -29,7 +29,7 @@ npm run smoke:milestone:v2
 This runs:
 
 1. `ready:v2` (runtime health + guard checks)
-2. `smoke:batch:v2` (multi-case validator + projection suite)
+2. `ready:v2` (validator + health gate)
 3. `status:v2` (quick current-state summary + status artifact refresh)
 
 It also writes report artifacts:

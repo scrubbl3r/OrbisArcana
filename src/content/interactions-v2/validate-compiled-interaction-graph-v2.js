@@ -17,7 +17,7 @@ import {
   validateOptionalObjectSection,
 } from "./interactions-v2-normalizers.js";
 
-const ROOT_CONTEXT = "ORCHESTRATOR_V2";
+const ROOT_CONTEXT = "COMPILED_INTERACTION_GRAPH_V2";
 const DEFAULTS_CONTEXT = `${ROOT_CONTEXT}.defaults`;
 const GROUPS_CONTEXT = `${ROOT_CONTEXT}.groups`;
 const WAKE_CONTEXT = `${ROOT_CONTEXT}.wake`;
@@ -814,7 +814,7 @@ function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pe
   }
 }
 
-export function validateOrchestratorV2(orchestratorInput = null) {
+export function validateCompiledInteractionGraphV2(orchestratorInput = null) {
   const errors = [];
   const warnings = [];
   const cfg = asObj(orchestratorInput);

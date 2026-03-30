@@ -2,11 +2,11 @@
 
 Companion to [Orchestrator v2 Schema](./orchestrator-v2-schema.md).
 
-Use this checklist to define `validateOrchestratorV2` contract behavior.
+Use this checklist to define `validateCompiledInteractionGraphV2` contract behavior.
 
 ## Root Validation
 
-- `ORCHESTRATOR_V2` must be an object.
+- `COMPILED_INTERACTION_GRAPH_V2` must be an object.
 - `version` must equal `"2"`.
 - `enabled` must be boolean.
 - `rules` must be an array.
@@ -111,7 +111,7 @@ If neither is present, fail.
 ## Suggested Error Message Style
 
 Prefer precise context labels:
-- `ORCHESTRATOR_V2.rules[2].on.word references unknown id: pyrox`
+- `COMPILED_INTERACTION_GRAPH_V2.rules[2].on.word references unknown id: pyrox`
 - `rule pyro_school_01 requires unknown window id: wake.main2`
 - `rule master_wake_01 open.words references unknown group: @wake_words_beta`
 

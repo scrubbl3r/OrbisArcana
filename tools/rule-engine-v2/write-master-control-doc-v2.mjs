@@ -12,10 +12,10 @@ import {
 } from "./wordbook-v2-utils.mjs";
 import {
   ACTION_HANDLES_V2,
-  buildRuleEngineFromOrchestratorV2,
-  DREAM_CONFIG_V2,
+  buildRuleEngineFromCompiledInteractionGraphV2,
+  INTERACTION_GRAPH_V2,
   EVENT_HANDLES_V2,
-  ORCHESTRATOR_V2,
+  COMPILED_INTERACTION_GRAPH_V2,
   SIGNAL_HANDLES_V2,
   WORDBOOK_V2,
 } from "../../src/content/interactions-v2/index.js";
@@ -39,12 +39,12 @@ function asRules(value) {
 function buildDoc() {
   const generatedAt = nowIso();
   const words = listWordbookWords(WORDBOOK_V2);
-  const dream = asObject(DREAM_CONFIG_V2);
-  const orchestrator = asObject(ORCHESTRATOR_V2);
+  const dream = asObject(INTERACTION_GRAPH_V2);
+  const orchestrator = asObject(COMPILED_INTERACTION_GRAPH_V2);
   const defaults = asObject(orchestrator.defaults);
   const rules = asRules(orchestrator.rules);
   const enabled = orchestrator.enabled !== false;
-  const compiledEngine = buildRuleEngineFromOrchestratorV2();
+  const compiledEngine = buildRuleEngineFromCompiledInteractionGraphV2();
   const compiledRules = asRules(compiledEngine?.rules);
 
   const lines = [];
@@ -54,8 +54,8 @@ function buildDoc() {
   lines.push("");
   lines.push("This document is generated from SSOT:");
   lines.push("- wordbook: `src/content/interactions-v2/wordbook-v2.js`");
-  lines.push("- behavior authoring: `src/content/interactions-v2/dream-config-v2.js`");
-  lines.push("- compiled orchestrator view: `src/content/interactions-v2/orchestrator-v2.js`");
+  lines.push("- behavior authoring: `src/content/interactions-v2/interaction-graph-v2.js`");
+  lines.push("- compiled orchestrator view: `src/content/interactions-v2/compiled-interaction-graph-v2.js`");
   lines.push("");
   lines.push("## Runtime Flags");
   lines.push("");
@@ -125,19 +125,19 @@ function buildDoc() {
   lines.push("## Authoring Notes");
   lines.push("");
   lines.push("- Add/remove/toggle words in `wordbook-v2.js`.");
-  lines.push("- Compose trigger/action chains in `dream-config-v2.js`.");
-  lines.push("- `orchestrator-v2.js` is compiled output used by runtime/builder validation.");
+  lines.push("- Compose trigger/action chains in `interaction-graph-v2.js`.");
+  lines.push("- `compiled-interaction-graph-v2.js` is compiled output used by runtime/builder validation.");
   lines.push("- Runtime rule/event/signal wiring is auto-validated in `ready:v2`.");
   lines.push("");
   return lines.join("\n");
 }
 
 function buildMasterControlJson() {
-  const orchestrator = asObject(ORCHESTRATOR_V2);
+  const orchestrator = asObject(COMPILED_INTERACTION_GRAPH_V2);
   const orchestratorDefaults = asObject(orchestrator.defaults);
   const orchestratorRules = asRules(orchestrator.rules);
   const orchestratorEnabled = orchestrator.enabled !== false;
-  const compiledEngine = buildRuleEngineFromOrchestratorV2();
+  const compiledEngine = buildRuleEngineFromCompiledInteractionGraphV2();
   const compiledRules = asRules(compiledEngine?.rules);
   return {
     schema: RULE_ENGINE_V2_SCHEMA_IDS.masterControl,
@@ -159,11 +159,11 @@ function buildMasterControlJson() {
       rules: orchestratorRules,
     },
     dreamConfig: {
-      version: DREAM_CONFIG_V2?.version,
-      enabled: DREAM_CONFIG_V2?.enabled !== false,
-      wake: DREAM_CONFIG_V2?.wake ?? {},
-      groups: DREAM_CONFIG_V2?.groups ?? {},
-      rules: Array.isArray(DREAM_CONFIG_V2?.rules) ? DREAM_CONFIG_V2.rules : [],
+      version: INTERACTION_GRAPH_V2?.version,
+      enabled: INTERACTION_GRAPH_V2?.enabled !== false,
+      wake: INTERACTION_GRAPH_V2?.wake ?? {},
+      groups: INTERACTION_GRAPH_V2?.groups ?? {},
+      rules: Array.isArray(INTERACTION_GRAPH_V2?.rules) ? INTERACTION_GRAPH_V2.rules : [],
     },
     orchestratorProjection: {
       version: orchestrator.version,
@@ -181,8 +181,8 @@ function buildMasterControlJson() {
 
 function buildMasterControlAuthoringJson() {
   const activeWords = listActiveWordAuthoringRows(WORDBOOK_V2);
-  const dream = asObject(DREAM_CONFIG_V2);
-  const orchestrator = asObject(ORCHESTRATOR_V2);
+  const dream = asObject(INTERACTION_GRAPH_V2);
+  const orchestrator = asObject(COMPILED_INTERACTION_GRAPH_V2);
   const defaults = asObject(orchestrator.defaults);
   const rules = asRules(orchestrator.rules);
   const enabled = orchestrator.enabled !== false;

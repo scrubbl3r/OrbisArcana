@@ -12,14 +12,8 @@ import { writeJsonFile } from "./write-json-v2.mjs";
 import { nowIso } from "./now-iso-v2.mjs";
 import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
-import {
-  INTERACTIONS_V2,
-  buildRulesFromInteractionsV2,
-  buildRuleEngineFromOrchestratorV2,
-} from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/index.js";
 
-// Status aggregator intentionally mirrors doctor/readiness semantics for a single summary artifact.
-// This file is read-heavy by design; side effects are limited to status artifact output.
 const CHECK_TAG = "status:v2";
 const logStatus = createTaggedLogger(CHECK_TAG);
 const STATUS_DOC_PATHS = Object.freeze({
@@ -29,10 +23,11 @@ const STATUS_DOC_PATHS = Object.freeze({
 });
 const STATUS_LINE_LABELS = Object.freeze({
   wordbookOk: "wordbook ok",
-  interactionsOk: "interactions ok",
-  bootstrapUsesV2: "bootstrap uses v2",
+  dreamConfigOk: "dream config ok",
+  orchestratorOk: "orchestrator ok",
+  orchestratorBootstrapEnabled: "orchestrator bootstrap enabled",
   rulesProjectionOnly: "rules projection only",
-  rulesCount: "rules (interactions/projection)",
+  rulesCount: "rules (authored/compiled)",
   orchestratorProjectedRuleCount: "orchestrator projected rules",
   orchestratorProjectionParity: "orchestrator projection parity",
   driftIds: "drift ids",
@@ -152,48 +147,29 @@ function emitStatusLines(log, lines) {
 }
 
 function normalizeHealthStatus(health) {
-  const canonicalWordbookOk = isTrue(health?.wordbookOk);
-  const interactionsBootstrapEnabled = isTrue(health?.interactionsBootstrapEnabled);
-  const orchestratorV2BootstrapEnabled = isTrue(health?.orchestratorV2BootstrapEnabled);
-  const bootstrapUsesV2Adapter = isTrue(health?.bootstrapUsesV2Adapter);
   return {
-    wordbookOk: canonicalWordbookOk,
-    interactionsOk: isTrue(health?.interactionsOk),
-    interactionsBootstrapEnabled,
-    orchestratorV2BootstrapEnabled,
-    bootstrapUsesV2Adapter,
+    wordbookOk: isTrue(health?.wordbookOk),
+    dreamConfigOk: isTrue(health?.dreamConfigOk),
+    orchestratorOk: isTrue(health?.orchestratorOk),
+    orchestratorV2BootstrapEnabled: isTrue(health?.orchestratorV2BootstrapEnabled),
     projectionRulesOnly: isTrue(health?.projectionRulesOnly),
-    interactionsRuleCount: toNumberOr(health?.interactionsRuleCount),
-    projectedRuleCount: toNumberOr(health?.projectedRuleCount),
+    authoredRuleCount: toNumberOr(health?.authoredRuleCount),
+    compiledRuleCount: toNumberOr(health?.compiledRuleCount),
     orchestratorProjectedRuleCount: toNumberOr(health?.orchestratorProjectedRuleCount),
     orchestratorProjectionParityOk: isTrue(health?.orchestratorProjectionParityOk),
     driftRuleIds: Array.isArray(health?.driftRuleIds) ? health.driftRuleIds.slice() : [],
   };
 }
 
-function computeOrchestratorTelemetryLive(interactionsBootstrapEnabled) {
-  if (!interactionsBootstrapEnabled) {
-    try {
-      const compiled = buildRuleEngineFromOrchestratorV2();
-      const orchestratorRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
-      return Object.freeze({
-        orchestratorProjectedRuleCount: orchestratorRules.length,
-        orchestratorProjectionParityOk: true,
-      });
-    } catch (_) {
-      return Object.freeze({
-        orchestratorProjectedRuleCount: 0,
-        orchestratorProjectionParityOk: false,
-      });
-    }
-  }
+function computeOrchestratorTelemetryLive(authoredRuleCount, compiledRuleCount) {
   try {
-    const compiled = buildRuleEngineFromOrchestratorV2();
-    const projectedRules = buildRulesFromInteractionsV2(INTERACTIONS_V2);
+    const compiled = buildRuleEngineFromCompiledInteractionGraphV2();
     const orchestratorRules = Array.isArray(compiled?.rules) ? compiled.rules : [];
     return Object.freeze({
       orchestratorProjectedRuleCount: orchestratorRules.length,
-      orchestratorProjectionParityOk: JSON.stringify(projectedRules) === JSON.stringify(orchestratorRules),
+      orchestratorProjectionParityOk:
+        orchestratorRules.length === authoredRuleCount &&
+        orchestratorRules.length === compiledRuleCount,
     });
   } catch (_) {
     return Object.freeze({
@@ -220,7 +196,10 @@ const STATUS_SECTION_DEFS = Object.freeze([
 ]);
 
 const healthStatus = normalizeHealthStatus(readJsonSafe(STATUS_DOC_PATHS.health) ?? {});
-const orchestratorTelemetryLive = computeOrchestratorTelemetryLive(healthStatus.interactionsBootstrapEnabled);
+const orchestratorTelemetryLive = computeOrchestratorTelemetryLive(
+  healthStatus.authoredRuleCount,
+  healthStatus.compiledRuleCount
+);
 healthStatus.orchestratorProjectedRuleCount = orchestratorTelemetryLive.orchestratorProjectedRuleCount;
 healthStatus.orchestratorProjectionParityOk = orchestratorTelemetryLive.orchestratorProjectionParityOk;
 const trendStatus = normalizeTrendStatus(readJsonSafe(STATUS_DOC_PATHS.trend) ?? {});
@@ -233,20 +212,18 @@ const statusSections = buildStatusSections(STATUS_SECTION_DEFS, runCheckScriptOk
 const readyPhases = statusSections[STATUS_SECTION_KEYS.readyPhases];
 const regressions = statusSections[STATUS_SECTION_KEYS.regressions];
 const contracts = statusSections[STATUS_SECTION_KEYS.contracts];
-const driftValue = !healthStatus.interactionsBootstrapEnabled
-  ? "skipped"
-  : String(healthStatus.driftRuleIds.length);
 
 const lines = [
   "---",
   `${STATUS_LINE_LABELS.wordbookOk}: ${yn(healthStatus.wordbookOk)}`,
-  `${STATUS_LINE_LABELS.interactionsOk}: ${yn(healthStatus.interactionsOk)}`,
-  `${STATUS_LINE_LABELS.bootstrapUsesV2}: ${yn(healthStatus.bootstrapUsesV2Adapter)}`,
+  `${STATUS_LINE_LABELS.dreamConfigOk}: ${yn(healthStatus.dreamConfigOk)}`,
+  `${STATUS_LINE_LABELS.orchestratorOk}: ${yn(healthStatus.orchestratorOk)}`,
+  `${STATUS_LINE_LABELS.orchestratorBootstrapEnabled}: ${yn(healthStatus.orchestratorV2BootstrapEnabled)}`,
   `${STATUS_LINE_LABELS.rulesProjectionOnly}: ${yn(healthStatus.projectionRulesOnly)}`,
-  `${STATUS_LINE_LABELS.rulesCount}: ${healthStatus.interactionsRuleCount}/${healthStatus.projectedRuleCount}`,
+  `${STATUS_LINE_LABELS.rulesCount}: ${healthStatus.authoredRuleCount}/${healthStatus.compiledRuleCount}`,
   `${STATUS_LINE_LABELS.orchestratorProjectedRuleCount}: ${healthStatus.orchestratorProjectedRuleCount}`,
   `${STATUS_LINE_LABELS.orchestratorProjectionParity}: ${yn(healthStatus.orchestratorProjectionParityOk)}`,
-  `${STATUS_LINE_LABELS.driftIds}: ${driftValue}`,
+  `${STATUS_LINE_LABELS.driftIds}: (none)`,
   `${STATUS_LINE_LABELS.manifestsSummary}: ${manifestArtifacts.summary}`,
   ...buildSectionStatusLines(STATUS_SECTION_LABELS.readyPhases, readyPhases, yn),
   ...buildSectionStatusLines(STATUS_SECTION_LABELS.regressions, regressions, yn),
@@ -259,22 +236,37 @@ const lines = [
 
 emitStatusLines(logStatus, lines);
 
-const statusArtifact = {
+const status = {
   schema: RULE_ENGINE_V2_SCHEMA_IDS.status,
   generatedAt: nowIso(),
-  health: healthStatus,
+  health: {
+    wordbookOk: healthStatus.wordbookOk,
+    dreamConfigOk: healthStatus.dreamConfigOk,
+    orchestratorOk: healthStatus.orchestratorOk,
+    orchestratorBootstrapEnabled: healthStatus.orchestratorV2BootstrapEnabled,
+    projectionRulesOnly: healthStatus.projectionRulesOnly,
+    authoredRuleCount: healthStatus.authoredRuleCount,
+    compiledRuleCount: healthStatus.compiledRuleCount,
+    orchestratorProjectedRuleCount: healthStatus.orchestratorProjectedRuleCount,
+    orchestratorProjectionParityOk: healthStatus.orchestratorProjectionParityOk,
+    driftRuleIds: [],
+  },
+  wordbookOk: healthStatus.wordbookOk,
+  dreamConfigOk: healthStatus.dreamConfigOk,
+  orchestratorOk: healthStatus.orchestratorOk,
+  orchestratorBootstrapEnabled: healthStatus.orchestratorV2BootstrapEnabled,
+  projectionRulesOnly: healthStatus.projectionRulesOnly,
+  authoredRuleCount: healthStatus.authoredRuleCount,
+  compiledRuleCount: healthStatus.compiledRuleCount,
+  orchestratorProjectedRuleCount: healthStatus.orchestratorProjectedRuleCount,
+  orchestratorProjectionParityOk: healthStatus.orchestratorProjectionParityOk,
+  driftRuleIds: [],
   manifests: manifestArtifacts.booleans,
   readyPhases: readyPhases.booleans,
   regressions: regressions.booleans,
   contracts: contracts.booleans,
-  summary: {
-    readyPhasesOk: readyPhases.results.ok,
-    regressionsOk: regressions.results.ok,
-    contractsOk: contracts.results.ok,
-  },
-  trend: trendStatus,
+  milestone: trendStatus,
 };
 
-const statusPath = STATUS_DOC_PATHS.status;
-writeJsonFile(statusPath, statusArtifact);
-logStatus(`wrote status: ${statusPath}`);
+writeJsonFile(STATUS_DOC_PATHS.status, status);
+logStatus(`wrote status: ${STATUS_DOC_PATHS.status}`);

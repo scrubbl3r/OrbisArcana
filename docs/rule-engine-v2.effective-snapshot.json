@@ -1,0 +1,1174 @@
+{
+  "schema": "orbis.rule_engine_v2.effective_snapshot",
+  "generatedAt": "2026-03-30T23:38:48.467Z",
+  "flags": {
+    "orchestratorV2Bootstrap": {
+      "useInReceiverBootstrap": true
+    }
+  },
+  "validation": {
+    "wordbookV2": {
+      "ok": true,
+      "errors": []
+    },
+    "dreamConfigV2": {
+      "ok": true,
+      "errors": []
+    },
+    "orchestratorV2": {
+      "ok": true,
+      "errors": []
+    }
+  },
+  "counts": {
+    "wordbookV2Words": 10,
+    "orchestratorV2Rules": 16,
+    "compiledRuleEngineRules": 16
+  },
+  "wordbookV2": {
+    "version": "2",
+    "words": [
+      {
+        "id": "orbis",
+        "phrase": "orbis",
+        "active": true,
+        "onnx": "orbis",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "arcana",
+        "phrase": "arcana",
+        "active": true,
+        "onnx": "arcana",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "are_kay_nah",
+        "phrase": "are kay nah",
+        "label": "Arcana",
+        "active": true,
+        "onnx": "are_kay_nah",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "domus",
+        "phrase": "domus",
+        "active": true,
+        "onnx": "domus",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "pyro",
+        "phrase": "pyro",
+        "active": true,
+        "onnx": "pyro",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "fridgis",
+        "phrase": "fridgis",
+        "active": true,
+        "onnx": "fridgis",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "electrum",
+        "phrase": "electrum",
+        "active": true,
+        "onnx": "electrum",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "sanctum",
+        "phrase": "sanctum",
+        "active": true,
+        "onnx": "sanctum",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "vectus",
+        "phrase": "vectus",
+        "active": true,
+        "onnx": "vectus",
+        "confidence": 0.4,
+        "cooldownMs": 0
+      },
+      {
+        "id": "rota",
+        "phrase": "rota",
+        "active": true,
+        "onnx": "rota",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      }
+    ],
+    "spells": [
+      {
+        "id": "orbis",
+        "phrase": "orbis",
+        "active": true,
+        "onnx": "orbis",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "arcana",
+        "phrase": "arcana",
+        "active": true,
+        "onnx": "arcana",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "are_kay_nah",
+        "phrase": "are kay nah",
+        "label": "Arcana",
+        "active": true,
+        "onnx": "are_kay_nah",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "domus",
+        "phrase": "domus",
+        "active": true,
+        "onnx": "domus",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "pyro",
+        "phrase": "pyro",
+        "active": true,
+        "onnx": "pyro",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "fridgis",
+        "phrase": "fridgis",
+        "active": true,
+        "onnx": "fridgis",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "electrum",
+        "phrase": "electrum",
+        "active": true,
+        "onnx": "electrum",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "sanctum",
+        "phrase": "sanctum",
+        "active": true,
+        "onnx": "sanctum",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      },
+      {
+        "id": "vectus",
+        "phrase": "vectus",
+        "active": true,
+        "onnx": "vectus",
+        "confidence": 0.4,
+        "cooldownMs": 0
+      },
+      {
+        "id": "rota",
+        "phrase": "rota",
+        "active": true,
+        "onnx": "rota",
+        "confidence": 0.6,
+        "cooldownMs": 0
+      }
+    ]
+  },
+  "dreamConfigV2": {
+    "version": "2",
+    "enabled": true,
+    "defaults": {
+      "open": {
+        "ttlMs": 1500
+      },
+      "rule": {
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      }
+    },
+    "wake": {
+      "roots": [
+        {
+          "id": "root.orbis",
+          "words": [
+            "orbis"
+          ],
+          "ttlMs": 1500
+        },
+        {
+          "id": "root.are_kay_nah",
+          "words": [
+            "are_kay_nah"
+          ],
+          "ttlMs": 1500
+        }
+      ]
+    },
+    "groups": {
+      "wake_main_words": [
+        "domus",
+        "electrum",
+        "pyro"
+      ],
+      "electrum_chain_words": [
+        "rota"
+      ],
+      "wake_are_kay_nah_words": [
+        "pyro",
+        "vectus"
+      ],
+      "pyro_voice_chain_words": [
+        "sanctum",
+        "rota"
+      ]
+    },
+    "rules": [
+      {
+        "id": "wake_main",
+        "on": {
+          "word": "orbis"
+        },
+        "open": {
+          "id": "wake.main",
+          "words": [
+            "domus",
+            "electrum",
+            "pyro"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "tele_home",
+        "on": {
+          "word": "domus"
+        },
+        "requires": "wake.main",
+        "trigger": {
+          "spell": "teleport"
+        }
+      },
+      {
+        "id": "electric_aoe",
+        "on": {
+          "word": "electrum"
+        },
+        "requires": "wake.main",
+        "open": {
+          "id": "chain.electrum",
+          "words": [
+            "rota"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "electric_aoe_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "chain.electrum",
+        "trigger": {
+          "spell": "aoe_electric"
+        }
+      },
+      {
+        "id": "wake_are_kay_nah",
+        "on": {
+          "word": "are_kay_nah"
+        },
+        "open": {
+          "id": "wake.are_kay_nah",
+          "words": [
+            "pyro",
+            "vectus"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "pyro_voice_chain",
+        "on": {
+          "word": "pyro"
+        },
+        "requires": "wake.are_kay_nah",
+        "open": {
+          "id": "chain.pyro_voice",
+          "words": [
+            "sanctum",
+            "rota"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "pyro_sanctum_cast",
+        "on": {
+          "word": "sanctum"
+        },
+        "requires": "chain.pyro_voice",
+        "trigger": {
+          "spell": "bubble_shield"
+        }
+      },
+      {
+        "id": "pyro_rota_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "chain.pyro_voice",
+        "trigger": {
+          "spell": "aoe_flame"
+        }
+      },
+      {
+        "id": "spin_x_colorize",
+        "on": {
+          "spin": "x"
+        },
+        "trigger": {
+          "spell": {
+            "id": "colorize",
+            "args": {
+              "r": 0,
+              "g": 100,
+              "b": 253,
+              "alpha": 0.2
+            }
+          }
+        }
+      },
+      {
+        "id": "spin_z_colorize",
+        "on": {
+          "spin": "z"
+        },
+        "trigger": {
+          "spell": {
+            "id": "colorize",
+            "args": {
+              "r": 253,
+              "g": 241,
+              "b": 0,
+              "alpha": 0.2
+            }
+          }
+        }
+      },
+      {
+        "id": "spin_y_opens_pyro",
+        "on": {
+          "spin": "y"
+        },
+        "trigger": {
+          "spell": {
+            "id": "colorize",
+            "args": {
+              "r": 253,
+              "g": 78,
+              "b": 0,
+              "alpha": 0.2
+            }
+          }
+        },
+        "open": {
+          "id": "chain.spin_y_seed",
+          "words": [
+            "pyro"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "spin_y_pyro_opens_vectus",
+        "on": {
+          "word": "pyro"
+        },
+        "requires": "chain.spin_y_seed",
+        "open": {
+          "id": "chain.spin_y_loaded",
+          "words": [
+            "vectus"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "spin_y_pyro_vectus_bind_fb",
+        "on": {
+          "word": "vectus"
+        },
+        "requires": "chain.spin_y_loaded",
+        "bind": {
+          "spell": "bubble_shield",
+          "slot": "FB"
+        }
+      },
+      {
+        "id": "shake_ud_cast",
+        "on": {
+          "shake": "UD"
+        },
+        "trigger": {
+          "spell": "cast_loaded_ud"
+        }
+      },
+      {
+        "id": "shake_lr_cast",
+        "on": {
+          "shake": "LR"
+        },
+        "trigger": {
+          "spell": "cast_loaded_lr"
+        }
+      },
+      {
+        "id": "shake_fb_cast",
+        "on": {
+          "shake": "FB"
+        },
+        "trigger": {
+          "spell": "cast_loaded_fb"
+        }
+      }
+    ]
+  },
+  "orchestratorV2": {
+    "version": "2",
+    "enabled": true,
+    "defaults": {
+      "open": {
+        "ttlMs": 1500
+      },
+      "rule": {
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      }
+    },
+    "wake": {
+      "words": [
+        "orbis",
+        "are_kay_nah"
+      ],
+      "ttlMs": 1500
+    },
+    "groups": {
+      "wake_main_words": [
+        "domus",
+        "electrum",
+        "pyro"
+      ],
+      "electrum_chain_words": [
+        "rota"
+      ],
+      "wake_are_kay_nah_words": [
+        "pyro",
+        "vectus"
+      ],
+      "pyro_voice_chain_words": [
+        "sanctum",
+        "rota"
+      ]
+    },
+    "rules": [
+      {
+        "id": "wake_main",
+        "on": {
+          "word": "orbis"
+        },
+        "open": {
+          "id": "wake.main",
+          "words": [
+            "domus",
+            "electrum",
+            "pyro"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "tele_home",
+        "on": {
+          "word": "domus"
+        },
+        "requires": "wake.main",
+        "trigger": {
+          "teleport": true
+        }
+      },
+      {
+        "id": "electric_aoe",
+        "on": {
+          "word": "electrum"
+        },
+        "requires": "wake.main",
+        "open": {
+          "id": "chain.electrum",
+          "words": [
+            "rota"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "electric_aoe_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "chain.electrum",
+        "trigger": {
+          "aoe_electric": true
+        }
+      },
+      {
+        "id": "wake_are_kay_nah",
+        "on": {
+          "word": "are_kay_nah"
+        },
+        "open": {
+          "id": "wake.are_kay_nah",
+          "words": [
+            "pyro",
+            "vectus"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "pyro_voice_chain",
+        "on": {
+          "word": "pyro"
+        },
+        "requires": "wake.are_kay_nah",
+        "open": {
+          "id": "chain.pyro_voice",
+          "words": [
+            "sanctum",
+            "rota"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "pyro_sanctum_cast",
+        "on": {
+          "word": "sanctum"
+        },
+        "requires": "chain.pyro_voice",
+        "trigger": {
+          "bubble_shield": true
+        }
+      },
+      {
+        "id": "pyro_rota_cast",
+        "on": {
+          "word": "rota"
+        },
+        "requires": "chain.pyro_voice",
+        "trigger": {
+          "aoe_flame": true
+        }
+      },
+      {
+        "id": "spin_x_colorize",
+        "on": {
+          "spin": "x"
+        },
+        "trigger": {
+          "colorize": {
+            "r": 0,
+            "g": 100,
+            "b": 253,
+            "alpha": 0.2
+          }
+        }
+      },
+      {
+        "id": "spin_z_colorize",
+        "on": {
+          "spin": "z"
+        },
+        "trigger": {
+          "colorize": {
+            "r": 253,
+            "g": 241,
+            "b": 0,
+            "alpha": 0.2
+          }
+        }
+      },
+      {
+        "id": "spin_y_opens_pyro",
+        "on": {
+          "spin": "y"
+        },
+        "trigger": {
+          "colorize": {
+            "r": 253,
+            "g": 78,
+            "b": 0,
+            "alpha": 0.2
+          }
+        },
+        "open": {
+          "id": "chain.spin_y_seed",
+          "words": [
+            "pyro"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "spin_y_pyro_opens_vectus",
+        "on": {
+          "word": "pyro"
+        },
+        "requires": "chain.spin_y_seed",
+        "open": {
+          "id": "chain.spin_y_loaded",
+          "words": [
+            "vectus"
+          ],
+          "ttlMs": 1500
+        }
+      },
+      {
+        "id": "spin_y_pyro_vectus_bind_fb",
+        "on": {
+          "word": "vectus"
+        },
+        "requires": "chain.spin_y_loaded",
+        "bind": {
+          "spell": "bubble_shield",
+          "slot": "FB"
+        }
+      },
+      {
+        "id": "shake_ud_cast",
+        "on": {
+          "shake": "UD"
+        },
+        "trigger": {
+          "cast_loaded_ud": true
+        }
+      },
+      {
+        "id": "shake_lr_cast",
+        "on": {
+          "shake": "LR"
+        },
+        "trigger": {
+          "cast_loaded_lr": true
+        }
+      },
+      {
+        "id": "shake_fb_cast",
+        "on": {
+          "shake": "FB"
+        },
+        "trigger": {
+          "cast_loaded_fb": true
+        }
+      }
+    ]
+  },
+  "compiledRuleEngine": {
+    "enabled": true,
+    "eventRuntimeBindings": {
+      "grace": {
+        "id": "grace",
+        "runtime": {
+          "kind": "orb_event",
+          "event": "orb.float_grace_grant"
+        }
+      },
+      "aoe_electric": {
+        "id": "aoe_electric",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "aoe_electric"
+        }
+      },
+      "aoe_flame": {
+        "id": "aoe_flame",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "aoe_flame"
+        }
+      },
+      "aoe_frost": {
+        "id": "aoe_frost",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "aoe_frost"
+        }
+      },
+      "teleport": {
+        "id": "teleport",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "teleport"
+        }
+      },
+      "shockwave": {
+        "id": "shockwave",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "shockwave"
+        }
+      },
+      "bubble_shield": {
+        "id": "bubble_shield",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "bubble_shield"
+        }
+      },
+      "colorize": {
+        "id": "colorize",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "colorize"
+        }
+      },
+      "orb_state": {
+        "id": "orb_state",
+        "runtime": {
+          "kind": "orb_event",
+          "event": "orb.state_set"
+        }
+      },
+      "cast_loaded_ud": {
+        "id": "cast_loaded_ud",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "cast_loaded_ud"
+        }
+      },
+      "cast_loaded_lr": {
+        "id": "cast_loaded_lr",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "cast_loaded_lr"
+        }
+      },
+      "cast_loaded_fb": {
+        "id": "cast_loaded_fb",
+        "runtime": {
+          "kind": "cast_action",
+          "castActionId": "cast_loaded_fb"
+        }
+      }
+    },
+    "rules": [
+      {
+        "id": "wake_main",
+        "on": [
+          {
+            "type": "word",
+            "id": "orbis"
+          }
+        ],
+        "then": [
+          {
+            "type": "wake_win",
+            "id": "wake_win",
+            "words": [
+              "domus",
+              "electrum",
+              "pyro"
+            ],
+            "spells": [
+              "domus",
+              "electrum",
+              "pyro"
+            ],
+            "ttlMs": 1500,
+            "windowId": "wake.main"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      },
+      {
+        "id": "tele_home",
+        "on": [
+          {
+            "type": "word",
+            "id": "domus"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "teleport"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "wake.main"
+        ]
+      },
+      {
+        "id": "electric_aoe",
+        "on": [
+          {
+            "type": "word",
+            "id": "electrum"
+          }
+        ],
+        "then": [
+          {
+            "type": "wake_win",
+            "id": "wake_win",
+            "words": [
+              "rota"
+            ],
+            "spells": [
+              "rota"
+            ],
+            "ttlMs": 1500,
+            "windowId": "chain.electrum"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "wake.main"
+        ]
+      },
+      {
+        "id": "electric_aoe_cast",
+        "on": [
+          {
+            "type": "word",
+            "id": "rota"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "aoe_electric"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "chain.electrum"
+        ]
+      },
+      {
+        "id": "wake_are_kay_nah",
+        "on": [
+          {
+            "type": "word",
+            "id": "are_kay_nah"
+          }
+        ],
+        "then": [
+          {
+            "type": "wake_win",
+            "id": "wake_win",
+            "words": [
+              "pyro",
+              "vectus"
+            ],
+            "spells": [
+              "pyro",
+              "vectus"
+            ],
+            "ttlMs": 1500,
+            "windowId": "wake.are_kay_nah"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      },
+      {
+        "id": "pyro_voice_chain",
+        "on": [
+          {
+            "type": "word",
+            "id": "pyro"
+          }
+        ],
+        "then": [
+          {
+            "type": "wake_win",
+            "id": "wake_win",
+            "words": [
+              "sanctum",
+              "rota"
+            ],
+            "spells": [
+              "sanctum",
+              "rota"
+            ],
+            "ttlMs": 1500,
+            "windowId": "chain.pyro_voice"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "wake.are_kay_nah"
+        ]
+      },
+      {
+        "id": "pyro_sanctum_cast",
+        "on": [
+          {
+            "type": "word",
+            "id": "sanctum"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "bubble_shield"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "chain.pyro_voice"
+        ]
+      },
+      {
+        "id": "pyro_rota_cast",
+        "on": [
+          {
+            "type": "word",
+            "id": "rota"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "aoe_flame"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "chain.pyro_voice"
+        ]
+      },
+      {
+        "id": "spin_x_colorize",
+        "on": [
+          {
+            "type": "spin",
+            "id": "x"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "colorize",
+            "r": 0,
+            "g": 100,
+            "b": 253,
+            "alpha": 0.2
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      },
+      {
+        "id": "spin_z_colorize",
+        "on": [
+          {
+            "type": "spin",
+            "id": "z"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "colorize",
+            "r": 253,
+            "g": 241,
+            "b": 0,
+            "alpha": 0.2
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      },
+      {
+        "id": "spin_y_opens_pyro",
+        "on": [
+          {
+            "type": "spin",
+            "id": "y"
+          }
+        ],
+        "then": [
+          {
+            "type": "wake_win",
+            "id": "wake_win",
+            "words": [
+              "pyro"
+            ],
+            "spells": [
+              "pyro"
+            ],
+            "ttlMs": 1500,
+            "windowId": "chain.spin_y_seed"
+          },
+          {
+            "type": "event",
+            "id": "colorize",
+            "r": 253,
+            "g": 78,
+            "b": 0,
+            "alpha": 0.2
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      },
+      {
+        "id": "spin_y_pyro_opens_vectus",
+        "on": [
+          {
+            "type": "word",
+            "id": "pyro"
+          }
+        ],
+        "then": [
+          {
+            "type": "wake_win",
+            "id": "wake_win",
+            "words": [
+              "vectus"
+            ],
+            "spells": [
+              "vectus"
+            ],
+            "ttlMs": 1500,
+            "windowId": "chain.spin_y_loaded"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "chain.spin_y_seed"
+        ]
+      },
+      {
+        "id": "spin_y_pyro_vectus_bind_fb",
+        "on": [
+          {
+            "type": "word",
+            "id": "vectus"
+          }
+        ],
+        "then": [
+          {
+            "type": "bind",
+            "id": "fb",
+            "spell": "bubble_shield",
+            "slot": "FB"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10,
+        "requires": [
+          "chain.spin_y_loaded"
+        ]
+      },
+      {
+        "id": "shake_ud_cast",
+        "on": [
+          {
+            "type": "shake",
+            "id": "ud"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "cast_loaded_ud"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      },
+      {
+        "id": "shake_lr_cast",
+        "on": [
+          {
+            "type": "shake",
+            "id": "lr"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "cast_loaded_lr"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      },
+      {
+        "id": "shake_fb_cast",
+        "on": [
+          {
+            "type": "shake",
+            "id": "fb"
+          }
+        ],
+        "then": [
+          {
+            "type": "event",
+            "id": "cast_loaded_fb"
+          }
+        ],
+        "cooldownMs": 0,
+        "matchWindowMs": 2000,
+        "priority": 10
+      }
+    ]
+  }
+}

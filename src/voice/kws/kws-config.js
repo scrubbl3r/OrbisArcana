@@ -9,7 +9,7 @@ import {
   WORDFLASHBOARD_WORDS,
   WORD_RUNTIME_ROUTING,
 } from "../../content/spells/spell-runtime-routing.js?v=20260327a";
-import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
+import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
 
 function resolveActivePhrasesByIds(ids = []) {
   return (Array.isArray(ids) ? ids : [])
@@ -20,8 +20,8 @@ function resolveActivePhrasesByIds(ids = []) {
 }
 
 export function createKwsRuntimeConfig() {
-  const wakeWordIds = Array.isArray(ORCHESTRATOR_V2_WAKE_WORD_IDS)
-    ? ORCHESTRATOR_V2_WAKE_WORD_IDS
+  const wakeWordIds = Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS)
+    ? COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS
     : [];
   const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_WORD_IDS);
   const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_WORD_IDS);

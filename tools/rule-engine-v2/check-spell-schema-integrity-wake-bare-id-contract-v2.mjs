@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/index.js";
 import { validateSpellSchemaIntegrity } from "../../src/content/spells/validate-spell-schema-integrity.js";
 import { cloneJsonV2 } from "./json-clone-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";
@@ -11,7 +11,7 @@ const ACTION_WAKE_WIN = "wake_win";
 const PASS_MESSAGE = "spell schema integrity accepts bare wake ids for words[]/spells[] alias and rejects unknown bare refs";
 
 function withMutatedWakeAction(mutateWakeAction) {
-  const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
+  const orchestratorEngine = buildRuleEngineFromCompiledInteractionGraphV2();
   const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
   const targetRule = Array.isArray(compiledRules)
     ? compiledRules.find((rule) => rule?.id === SAMPLE_WAKE_RULE_ID_V2)

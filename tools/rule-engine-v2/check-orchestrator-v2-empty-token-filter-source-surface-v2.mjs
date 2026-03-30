@@ -3,8 +3,8 @@ import { readRelativeText } from "./read-text-v2.mjs";
 import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-empty-token-filter-source-surface:v2";
-const BUILDER_REL = "src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
-const VALIDATOR_REL = "src/content/interactions-v2/validate-orchestrator-v2.js";
+const BUILDER_REL = "src/content/interactions-v2/build-rule-engine-from-compiled-interaction-graph-v2.js";
+const VALIDATOR_REL = "src/content/interactions-v2/validate-compiled-interaction-graph-v2.js";
 const PASS_MESSAGE = "orchestrator-v2 builder/validator sources preserve empty-token filtering in shared selector parsing";
 
 const builderText = readRelativeText(BUILDER_REL);

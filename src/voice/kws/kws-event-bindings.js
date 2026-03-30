@@ -4,9 +4,9 @@ import {
   WAKE_WINDOW_WORD_IDS as KWS_WAKE_WINDOW_WORD_IDS,
 } from "../../content/spells/spell-runtime-routing.js";
 import {
-  ORCHESTRATOR_V2_WAKE_WORD_IDS,
-  ORCHESTRATOR_V2_WAKE_TTL_MS,
-} from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
+  COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
+  COMPILED_INTERACTION_GRAPH_V2_WAKE_TTL_MS,
+} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
 
 export function bindKwsEventHandlers({
   eventBus,
@@ -38,10 +38,10 @@ export function bindKwsEventHandlers({
   const getKwsMode = typeof deps.getKwsMode === "function" ? deps.getKwsMode : () => String(kwsDebugState.mode || "");
   const getListenPolicyStatus = typeof deps.getListenPolicyStatus === "function" ? deps.getListenPolicyStatus : () => null;
   const gateTimeoutMs = Math.max(0, Number(deps.gateTimeoutMs) || 1500);
-  const wakeTtlMs = Math.max(0, Number(ORCHESTRATOR_V2_WAKE_TTL_MS) || gateTimeoutMs);
+  const wakeTtlMs = Math.max(0, Number(COMPILED_INTERACTION_GRAPH_V2_WAKE_TTL_MS) || gateTimeoutMs);
   let wakeArmedUntilMs = 0;
   const wakeWordIds = new Set(
-    (Array.isArray(ORCHESTRATOR_V2_WAKE_WORD_IDS) ? ORCHESTRATOR_V2_WAKE_WORD_IDS : [])
+    (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS) ? COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS : [])
       .map((wordId) => String(wordId || "").trim().toLowerCase())
       .filter(Boolean)
   );

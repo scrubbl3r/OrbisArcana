@@ -1,4 +1,4 @@
-export const DREAM_CONFIG_V2 = {
+export const INTERACTION_GRAPH_V2 = {
   version: "2",
   enabled: true,
   defaults: {

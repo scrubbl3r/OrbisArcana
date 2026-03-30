@@ -13,17 +13,17 @@ requireTextIncludesTokensV2({
   tag: CHECK_TAG,
   text,
   tokens: [
-    "buildRuleEngineFromOrchestratorV2",
+    "buildRuleEngineFromCompiledInteractionGraphV2",
     "validateSpellRules",
     "spell-rules validation failed",
   ],
   missingMessage: (token) => `${REL} missing required pre-smoke rule-validator token: ${token}`,
 });
 
-if (!text.includes("validateSpellRules(buildRuleEngineFromOrchestratorV2().rules)")) {
+if (!text.includes("validateSpellRules(buildRuleEngineFromCompiledInteractionGraphV2().rules)")) {
   failCheck(
     CHECK_TAG,
-    `${REL} must validate compiled spell rules from ORCHESTRATOR_V2 during pre-smoke`
+    `${REL} must validate compiled spell rules from COMPILED_INTERACTION_GRAPH_V2 during pre-smoke`
   );
 }
 

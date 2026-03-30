@@ -4,8 +4,8 @@ import {
   KWS_LISTEN_POLICY_MODES,
 } from "../voice-config.js";
 import {
-  ORCHESTRATOR_V2_WAKE_WORD_IDS,
-} from "../../content/interactions-v2/orchestrator-v2-wake-profile.js";
+  COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
+} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
 
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const EVT_RULE_ENGINE_PREVIEW_MATCHED = "rule_engine.preview_matched";
@@ -47,7 +47,7 @@ function normalizeWordIds(rawWordIds = []) {
 }
 
 export function deriveStrictKwsListenPolicySnapshot({
-  rootWordIds = ORCHESTRATOR_V2_WAKE_WORD_IDS,
+  rootWordIds = COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
   openWindows = [],
   nowMs = Date.now(),
 } = {}) {
@@ -95,7 +95,7 @@ export function createKwsListenPolicyController({
   eventBus,
   kwsRuntimeController,
   initialMode = DEFAULT_KWS_LISTEN_POLICY_MODE,
-  rootWordIds = ORCHESTRATOR_V2_WAKE_WORD_IDS,
+  rootWordIds = COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
   nowMs = () => Date.now(),
 } = {}) {
   const unsub = [];

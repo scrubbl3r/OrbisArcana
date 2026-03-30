@@ -1,9 +1,9 @@
 // Runtime routing metadata intentionally separated from recognition wordbook.
 // This file owns behavior-oriented word metadata during refactor slices.
 import {
-  ORCHESTRATOR_V2,
-} from "../interactions-v2/orchestrator-v2.js?v=20260329a";
-import { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "../interactions-v2/orchestrator-v2-wake-profile.js?v=20260329a";
+  COMPILED_INTERACTION_GRAPH_V2,
+} from "../interactions-v2/compiled-interaction-graph-v2.js?v=20260329a";
+import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260329a";
 import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js?v=20260328b";
 
 const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
@@ -76,10 +76,10 @@ function compareWordDisplay(a, b) {
 }
 
 function buildWordFlashboardTierMap() {
-  const rules = Array.isArray(ORCHESTRATOR_V2 && ORCHESTRATOR_V2.rules) ? ORCHESTRATOR_V2.rules : [];
-  const wakeRoots = uniqueWordIds(ORCHESTRATOR_V2_WAKE_WORD_IDS);
-  const groups = (ORCHESTRATOR_V2 && typeof ORCHESTRATOR_V2.groups === "object" && ORCHESTRATOR_V2.groups)
-    ? ORCHESTRATOR_V2.groups
+  const rules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2 && COMPILED_INTERACTION_GRAPH_V2.rules) ? COMPILED_INTERACTION_GRAPH_V2.rules : [];
+  const wakeRoots = uniqueWordIds(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS);
+  const groups = (COMPILED_INTERACTION_GRAPH_V2 && typeof COMPILED_INTERACTION_GRAPH_V2.groups === "object" && COMPILED_INTERACTION_GRAPH_V2.groups)
+    ? COMPILED_INTERACTION_GRAPH_V2.groups
     : Object.create(null);
   const openedByWordId = new Map();
   const tierByWordId = new Map();
@@ -150,14 +150,14 @@ function collectRuleOpenWordIds(rule) {
   const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
   if (!open) return [];
   const raw = Object.hasOwn(open, "words") ? open.words : open.spells;
-  const groups = (ORCHESTRATOR_V2 && typeof ORCHESTRATOR_V2.groups === "object" && ORCHESTRATOR_V2.groups)
-    ? ORCHESTRATOR_V2.groups
+  const groups = (COMPILED_INTERACTION_GRAPH_V2 && typeof COMPILED_INTERACTION_GRAPH_V2.groups === "object" && COMPILED_INTERACTION_GRAPH_V2.groups)
+    ? COMPILED_INTERACTION_GRAPH_V2.groups
     : Object.create(null);
   return uniqueWordIds(resolveWordRefs(raw, groups));
 }
 
 function collectRulesByPredicate(predicate) {
-  const rules = Array.isArray(ORCHESTRATOR_V2 && ORCHESTRATOR_V2.rules) ? ORCHESTRATOR_V2.rules : [];
+  const rules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2 && COMPILED_INTERACTION_GRAPH_V2.rules) ? COMPILED_INTERACTION_GRAPH_V2.rules : [];
   return rules.filter((rule) => {
     try {
       return !!predicate(rule || {});
@@ -168,7 +168,7 @@ function collectRulesByPredicate(predicate) {
 }
 
 function buildDerivedRuntimeProfileV2() {
-  const wakeWordIds = uniqueWordIds(ORCHESTRATOR_V2_WAKE_WORD_IDS);
+  const wakeWordIds = uniqueWordIds(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS);
   const wakeMainOpenRules = collectRulesByPredicate((rule) => {
     const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
     const openId = String(open && open.id || "").trim().toLowerCase();
@@ -247,9 +247,9 @@ function buildDerivedRuntimeProfileV2() {
   });
 }
 
-const ORCHESTRATOR_V2_RUNTIME_PROFILE = buildDerivedRuntimeProfileV2();
+const COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE = buildDerivedRuntimeProfileV2();
 
-function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
+function buildWordRuntimeRoutingV2(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE) {
   const out = [];
   const seen = new Set();
   function add(entry) {
@@ -306,7 +306,7 @@ function buildWordRuntimeRoutingV2(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
   return Object.freeze(out);
 }
 
-function buildWordFlashboardWords(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
+function buildWordFlashboardWords(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE) {
   const ids = Array.isArray(profile?.authoredWordIds) ? profile.authoredWordIds : [];
   const tierByWordId = buildWordFlashboardTierMap();
   return Object.freeze(
@@ -335,36 +335,36 @@ function buildWordFlashboardWords(profile = ORCHESTRATOR_V2_RUNTIME_PROFILE) {
   );
 }
 
-const ORCHESTRATOR_V2_WORD_RUNTIME_ROUTING = buildWordRuntimeRoutingV2(ORCHESTRATOR_V2_RUNTIME_PROFILE);
-const ORCHESTRATOR_V2_WORDFLASHBOARD_WORDS = buildWordFlashboardWords(ORCHESTRATOR_V2_RUNTIME_PROFILE);
+const COMPILED_INTERACTION_GRAPH_V2_WORD_RUNTIME_ROUTING = buildWordRuntimeRoutingV2(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE);
+const COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS = buildWordFlashboardWords(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE);
 
 export const WAKE_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeWordIds
     : []).slice()
 );
 
 export const STANDALONE_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.standaloneWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.standaloneWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.standaloneWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.standaloneWordIds
     : []).slice()
 );
 
 export const WORDFLASHBOARD_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.authoredWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.authoredWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.authoredWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.authoredWordIds
     : []).slice()
 );
 
 export const WORDFLASHBOARD_WORDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_WORDFLASHBOARD_WORDS)
-    ? ORCHESTRATOR_V2_WORDFLASHBOARD_WORDS
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS)
+    ? COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS
     : []).slice()
 );
 
 export const WAKE_REQUIRED_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeRequiredWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeRequiredWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeRequiredWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeRequiredWordIds
     : []).slice()
 );
 
@@ -372,8 +372,8 @@ export const AXIS_WORD_IDS = Object.freeze([]);
 export const KWS_AXIS_WORD_IDS = AXIS_WORD_IDS;
 
 export const WAKE_WINDOW_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWindowWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.wakeWindowWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeWindowWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeWindowWordIds
     : []).slice()
 );
 export const KWS_WAKE_WINDOW_WORD_IDS = WAKE_WINDOW_WORD_IDS;
@@ -387,8 +387,8 @@ export const SPELL_WINDOW_BYPASS_WORD_IDS = WORD_WINDOW_BYPASS_WORD_IDS;
 // Immediate voice words that are owned by the rule engine path.
 // Runtime dispatch should not emit duplicate EVT_VOICE_SPELL_CAST for these when rule engine is active.
 export const RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.immediateTriggerWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.immediateTriggerWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.immediateTriggerWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.immediateTriggerWordIds
     : []).slice()
 );
 export const KWS_WAKE_REQUIRED_WORD_IDS = WAKE_REQUIRED_WORD_IDS;
@@ -406,34 +406,34 @@ const DEFAULT_KWS_TOP_WORD_IDS = Object.freeze([
 ]);
 
 export const KWS_FLASH_TOKEN_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.flashTokenWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.flashTokenWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.flashTokenWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.flashTokenWordIds
     : DEFAULT_KWS_TOP_WORD_IDS).slice()
 );
 
 export const KWS_ROW_TOP_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.rowTopWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.rowTopWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.rowTopWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.rowTopWordIds
     : DEFAULT_KWS_TOP_WORD_IDS).slice()
 );
 
 export const KWS_ROW_BOTTOM_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.rowBottomWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.rowBottomWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.rowBottomWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.rowBottomWordIds
     : WAKE_WINDOW_WORD_IDS).slice()
 );
 
 export const KWS_SIM_WORD_IDS = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_RUNTIME_PROFILE.simWordIds)
-    ? ORCHESTRATOR_V2_RUNTIME_PROFILE.simWordIds
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.simWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.simWordIds
     : []).slice()
 );
 
-export const KWS_INFER_DEFAULT_WORD_ID = ORCHESTRATOR_V2_RUNTIME_PROFILE.inferDefaultWordId || "";
+export const KWS_INFER_DEFAULT_WORD_ID = COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.inferDefaultWordId || "";
 
 export const WORD_RUNTIME_ROUTING = Object.freeze(
-  (Array.isArray(ORCHESTRATOR_V2_WORD_RUNTIME_ROUTING)
-    ? ORCHESTRATOR_V2_WORD_RUNTIME_ROUTING
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WORD_RUNTIME_ROUTING)
+    ? COMPILED_INTERACTION_GRAPH_V2_WORD_RUNTIME_ROUTING
     : []).slice()
 );
 export const WORD_RUNTIME_ROUTING_TABLE = WORD_RUNTIME_ROUTING;

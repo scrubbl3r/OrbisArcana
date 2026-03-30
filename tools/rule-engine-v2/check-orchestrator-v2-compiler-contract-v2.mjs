@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
+import { buildRuleEngineFromCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/build-rule-engine-from-compiled-interaction-graph-v2.js";
 import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { OTHER_UNKNOWN_WAKE_WORD_ID_V2, UNKNOWN_WAKE_WORD_ID_V2 } from "./wake-test-ids-v2.mjs";
@@ -68,10 +68,10 @@ function createBaseRuleEngine(enabled) {
   });
 }
 
-function buildOrFail(orchestratorV2, baseEnabled, failureContext) {
+function buildOrFail(compiledInteractionGraphV2, baseEnabled, failureContext) {
   try {
-    return buildRuleEngineFromOrchestratorV2({
-      orchestratorV2,
+    return buildRuleEngineFromCompiledInteractionGraphV2({
+      compiledInteractionGraphV2,
       baseRuleEngine: createBaseRuleEngine(baseEnabled),
     });
   } catch (err) {

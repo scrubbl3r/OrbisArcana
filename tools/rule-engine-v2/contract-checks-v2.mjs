@@ -351,18 +351,6 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
     script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-duplicate-source-surface-v2.mjs",
   },
   {
-    id: "interactions_wake_words_compat_contract",
-    script: "tools/rule-engine-v2/check-interactions-wake-words-compat-contract-v2.mjs",
-  },
-  {
-    id: "interactions_authoring_word_condition_surface",
-    script: "tools/rule-engine-v2/check-interactions-authoring-word-condition-surface-v2.mjs",
-  },
-  {
-    id: "interactions_authoring_wake_words_surface",
-    script: "tools/rule-engine-v2/check-interactions-authoring-wake-words-surface-v2.mjs",
-  },
-  {
     id: "spell_runtime_routing_wake_words_compat_contract",
     script: "tools/rule-engine-v2/check-spell-runtime-routing-wake-words-compat-contract-v2.mjs",
   },

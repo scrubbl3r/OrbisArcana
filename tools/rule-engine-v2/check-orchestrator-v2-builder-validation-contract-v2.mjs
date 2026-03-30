@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
+import { buildRuleEngineFromCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/build-rule-engine-from-compiled-interaction-graph-v2.js";
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import {
@@ -9,16 +9,16 @@ import {
 } from "./wake-test-ids-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-builder-validation-contract:v2";
-const ERROR_PREFIX = "ORCHESTRATOR_V2 validation failed: ";
+const ERROR_PREFIX = "COMPILED_INTERACTION_GRAPH_V2 validation failed: ";
 const ERROR_DELIMITER = " | ";
 const PASS_MESSAGE = "orchestrator-v2 builder rejects invalid configs via validation-prefixed errors";
 
-function expectBuilderValid(caseName, orchestratorV2) {
+function expectBuilderValid(caseName, compiledInteractionGraphV2) {
   let threw = false;
   let result = null;
   let message = "";
   try {
-    result = buildRuleEngineFromOrchestratorV2({ orchestratorV2 });
+    result = buildRuleEngineFromCompiledInteractionGraphV2({ compiledInteractionGraphV2 });
   } catch (err) {
     threw = true;
     message = err instanceof Error ? String(err.message || "") : String(err || "");
@@ -31,11 +31,11 @@ function expectBuilderValid(caseName, orchestratorV2) {
   }
 }
 
-function expectBuilderError(caseName, orchestratorV2, expectedNeedle) {
+function expectBuilderError(caseName, compiledInteractionGraphV2, expectedNeedle) {
   let threw = false;
   let message = "";
   try {
-    buildRuleEngineFromOrchestratorV2({ orchestratorV2 });
+    buildRuleEngineFromCompiledInteractionGraphV2({ compiledInteractionGraphV2 });
   } catch (err) {
     threw = true;
     message = err instanceof Error ? String(err.message || "") : String(err || "");
@@ -52,8 +52,8 @@ function expectBuilderError(caseName, orchestratorV2, expectedNeedle) {
   return message;
 }
 
-function expectBuilderErrorWithFragments(caseName, orchestratorV2, expectedFragments) {
-  const message = expectBuilderError(caseName, orchestratorV2, expectedFragments[0]);
+function expectBuilderErrorWithFragments(caseName, compiledInteractionGraphV2, expectedFragments) {
+  const message = expectBuilderError(caseName, compiledInteractionGraphV2, expectedFragments[0]);
   for (const fragment of expectedFragments.slice(1)) {
     if (!message.includes(fragment)) {
       failCheck(CHECK_TAG, `${caseName} missing expected validation message fragment: ${fragment}`);
@@ -411,7 +411,7 @@ expectBuilderErrorWithSingleRule(
     on: Object.freeze({ word: "orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
-  "ORCHESTRATOR_V2.rules[] id has invalid shape: bad rule id"
+  "COMPILED_INTERACTION_GRAPH_V2.rules[] id has invalid shape: bad rule id"
 );
 
 expectBuilderErrorWithSingleRule(
@@ -421,7 +421,7 @@ expectBuilderErrorWithSingleRule(
     on: Object.freeze({ word: "orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
-  "ORCHESTRATOR_V2.rules[] id must be a string"
+  "COMPILED_INTERACTION_GRAPH_V2.rules[] id must be a string"
 );
 
 expectBuilderErrorWithSingleRule(
@@ -431,31 +431,31 @@ expectBuilderErrorWithSingleRule(
     on: Object.freeze({ word: "orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
-  "ORCHESTRATOR_V2.rules[] id must not include leading/trailing whitespace:  bad_rule_id "
+  "COMPILED_INTERACTION_GRAPH_V2.rules[] id must not include leading/trailing whitespace:  bad_rule_id "
 );
 
 expectBuilderErrorWithRuleEntries(
   "rule_entry_non_object_invalid",
   ["not-an-object"],
-  "ORCHESTRATOR_V2.rules[0] must be an object"
+  "COMPILED_INTERACTION_GRAPH_V2.rules[0] must be an object"
 );
 
 expectBuilderErrorWithVersion(
   "version_mismatch_invalid",
   "1",
-  "ORCHESTRATOR_V2.version must be \"2\""
+  "COMPILED_INTERACTION_GRAPH_V2.version must be \"2\""
 );
 
 expectBuilderErrorWithVersion(
   "version_non_string_invalid",
   2,
-  "ORCHESTRATOR_V2.version must be \"2\""
+  "COMPILED_INTERACTION_GRAPH_V2.version must be \"2\""
 );
 
 expectBuilderErrorWithVersion(
   "version_whitespace_invalid",
   " 2 ",
-  "ORCHESTRATOR_V2.version must not include leading/trailing whitespace:  2 "
+  "COMPILED_INTERACTION_GRAPH_V2.version must not include leading/trailing whitespace:  2 "
 );
 
 expectBuilderErrorWithBaselineOverride(
@@ -463,7 +463,7 @@ expectBuilderErrorWithBaselineOverride(
   {
     rules: Object.freeze({ not: "an-array" }),
   },
-  "ORCHESTRATOR_V2.rules must be an array"
+  "COMPILED_INTERACTION_GRAPH_V2.rules must be an array"
 );
 
 expectBuilderErrorWithBaselineOverride(
@@ -471,7 +471,7 @@ expectBuilderErrorWithBaselineOverride(
   {
     defaults: Object.freeze(["not-an-object"]),
   },
-  "ORCHESTRATOR_V2.defaults must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults must be an object when present"
 );
 
 expectBuilderErrorWithBaselineOverride(
@@ -479,7 +479,7 @@ expectBuilderErrorWithBaselineOverride(
   {
     groups: Object.freeze(["not-an-object"]),
   },
-  "ORCHESTRATOR_V2.groups must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.groups must be an object when present"
 );
 
 expectBuilderErrorWithGroupsAndSingleRule(
@@ -719,7 +719,7 @@ expectBuilderErrorWithBaselineOverride(
   {
     foo: true,
   },
-  "ORCHESTRATOR_V2 contains unsupported key: foo"
+  "COMPILED_INTERACTION_GRAPH_V2 contains unsupported key: foo"
 );
 
 expectBuilderErrorWithBaselineOverride(
@@ -727,7 +727,7 @@ expectBuilderErrorWithBaselineOverride(
   {
     enabled: "yes",
   },
-  "ORCHESTRATOR_V2.enabled must be boolean"
+  "COMPILED_INTERACTION_GRAPH_V2.enabled must be boolean"
 );
 
 expectBuilderErrorWithDefaults(
@@ -743,7 +743,7 @@ expectBuilderErrorWithDefaults(
   {
     open: Object.freeze(["bad"]),
   },
-  "ORCHESTRATOR_V2.defaults.open must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults.open must be an object when present"
 );
 
 expectBuilderErrorWithDefaults(
@@ -751,7 +751,7 @@ expectBuilderErrorWithDefaults(
   {
     rule: Object.freeze(["bad"]),
   },
-  "ORCHESTRATOR_V2.defaults.rule must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults.rule must be an object when present"
 );
 
 expectBuilderErrorWithDefaults(
@@ -759,7 +759,7 @@ expectBuilderErrorWithDefaults(
   {
     trigger: Object.freeze(["bad"]),
   },
-  "ORCHESTRATOR_V2.defaults.trigger must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults.trigger must be an object when present"
 );
 
 expectBuilderErrorWithDefaults(
@@ -791,7 +791,7 @@ expectBuilderErrorWithDefaults(
   {
     extra: Object.freeze({}),
   },
-  "ORCHESTRATOR_V2.defaults contains unsupported key: extra"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults contains unsupported key: extra"
 );
 
 expectBuilderErrorWithDefaults(
@@ -1133,7 +1133,7 @@ expectBuilderErrorWithSingleRuleFragments(
     open: Object.freeze({ id: "wake bad", words: Object.freeze(["domus"]) }),
   },
   Object.freeze([
-    "ORCHESTRATOR_V2.rules[] id has invalid shape: bad rule id",
+    "COMPILED_INTERACTION_GRAPH_V2.rules[] id has invalid shape: bad rule id",
     "open.id has invalid shape: wake bad",
   ])
 );

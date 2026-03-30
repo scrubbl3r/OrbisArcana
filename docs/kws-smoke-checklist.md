@@ -30,7 +30,7 @@ Preflight:
 - Confirm trigger works again after cooldown window.
 
 ## 5) Word Window / Token Flow
-- Open a spin window and test the currently authored follow-up word set from `dream-config-v2.js`.
+- Open a spin window and test the currently authored follow-up word set from `interaction-graph-v2.js`.
 - Confirm expected token behavior and chip lighting.
 - Confirm closing the spin window resets token state.
 

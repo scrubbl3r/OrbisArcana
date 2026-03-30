@@ -1,11 +1,11 @@
 # OrbisArcana Master Control V2
 
-Generated: 2026-03-26T00:54:57.303Z
+Generated: 2026-03-30T23:38:48.532Z
 
 This document is generated from SSOT:
 - wordbook: `src/content/interactions-v2/wordbook-v2.js`
-- behavior authoring: `src/content/interactions-v2/dream-config-v2.js`
-- compiled orchestrator view: `src/content/interactions-v2/orchestrator-v2.js`
+- behavior authoring: `src/content/interactions-v2/interaction-graph-v2.js`
+- compiled orchestrator view: `src/content/interactions-v2/compiled-interaction-graph-v2.js`
 
 ## Runtime Flags
 
@@ -36,6 +36,7 @@ This document is generated from SSOT:
     {
       "id": "are_kay_nah",
       "phrase": "are kay nah",
+      "label": "Arcana",
       "active": true,
       "onnx": "are_kay_nah",
       "confidence": 0.6,
@@ -114,14 +115,14 @@ This document is generated from SSOT:
         "words": [
           "orbis"
         ],
-        "ttlMs": 2000
+        "ttlMs": 1500
       },
       {
         "id": "root.are_kay_nah",
         "words": [
           "are_kay_nah"
         ],
-        "ttlMs": 2000
+        "ttlMs": 1500
       }
     ]
   },
@@ -131,7 +132,15 @@ This document is generated from SSOT:
       "electrum",
       "pyro"
     ],
-    "school_words": [
+    "electrum_chain_words": [
+      "rota"
+    ],
+    "wake_are_kay_nah_words": [
+      "pyro",
+      "vectus"
+    ],
+    "pyro_voice_chain_words": [
+      "sanctum",
       "rota"
     ]
   },
@@ -148,7 +157,7 @@ This document is generated from SSOT:
           "electrum",
           "pyro"
         ],
-        "ttlMs": 2000
+        "ttlMs": 1500
       }
     },
     {
@@ -158,7 +167,7 @@ This document is generated from SSOT:
       },
       "requires": "wake.main",
       "trigger": {
-        "spell": "teleport_home"
+        "spell": "teleport"
       }
     },
     {
@@ -168,11 +177,11 @@ This document is generated from SSOT:
       },
       "requires": "wake.main",
       "open": {
-        "id": "school.electrum",
+        "id": "chain.electrum",
         "words": [
           "rota"
         ],
-        "ttlMs": 2000
+        "ttlMs": 1500
       }
     },
     {
@@ -180,47 +189,140 @@ This document is generated from SSOT:
       "on": {
         "word": "rota"
       },
-      "requires": "school.electrum",
+      "requires": "chain.electrum",
       "trigger": {
         "spell": "aoe_electric"
       }
     },
     {
-      "id": "spin_y_opens_pyro",
+      "id": "wake_are_kay_nah",
       "on": {
-        "spin": "y",
-        "orb_state": "charged"
+        "word": "are_kay_nah"
       },
       "open": {
-        "id": "school.pyro_spin_seed",
+        "id": "wake.are_kay_nah",
         "words": [
-          "pyro"
+          "pyro",
+          "vectus"
         ],
-        "ttlMs": 2000
+        "ttlMs": 1500
       }
     },
     {
-      "id": "spin_y_pyro_opens_rota",
+      "id": "pyro_voice_chain",
       "on": {
         "word": "pyro"
       },
-      "requires": "school.pyro_spin_seed",
+      "requires": "wake.are_kay_nah",
       "open": {
-        "id": "school.pyro_spin",
+        "id": "chain.pyro_voice",
         "words": [
+          "sanctum",
           "rota"
         ],
-        "ttlMs": 2000
+        "ttlMs": 1500
       }
     },
     {
-      "id": "spin_y_pyro_rota_bind_fb",
+      "id": "pyro_sanctum_cast",
+      "on": {
+        "word": "sanctum"
+      },
+      "requires": "chain.pyro_voice",
+      "trigger": {
+        "spell": "bubble_shield"
+      }
+    },
+    {
+      "id": "pyro_rota_cast",
       "on": {
         "word": "rota"
       },
-      "requires": "school.pyro_spin",
+      "requires": "chain.pyro_voice",
+      "trigger": {
+        "spell": "aoe_flame"
+      }
+    },
+    {
+      "id": "spin_x_colorize",
+      "on": {
+        "spin": "x"
+      },
+      "trigger": {
+        "spell": {
+          "id": "colorize",
+          "args": {
+            "r": 0,
+            "g": 100,
+            "b": 253,
+            "alpha": 0.2
+          }
+        }
+      }
+    },
+    {
+      "id": "spin_z_colorize",
+      "on": {
+        "spin": "z"
+      },
+      "trigger": {
+        "spell": {
+          "id": "colorize",
+          "args": {
+            "r": 253,
+            "g": 241,
+            "b": 0,
+            "alpha": 0.2
+          }
+        }
+      }
+    },
+    {
+      "id": "spin_y_opens_pyro",
+      "on": {
+        "spin": "y"
+      },
+      "trigger": {
+        "spell": {
+          "id": "colorize",
+          "args": {
+            "r": 253,
+            "g": 78,
+            "b": 0,
+            "alpha": 0.2
+          }
+        }
+      },
+      "open": {
+        "id": "chain.spin_y_seed",
+        "words": [
+          "pyro"
+        ],
+        "ttlMs": 1500
+      }
+    },
+    {
+      "id": "spin_y_pyro_opens_vectus",
+      "on": {
+        "word": "pyro"
+      },
+      "requires": "chain.spin_y_seed",
+      "open": {
+        "id": "chain.spin_y_loaded",
+        "words": [
+          "vectus"
+        ],
+        "ttlMs": 1500
+      }
+    },
+    {
+      "id": "spin_y_pyro_vectus_bind_fb",
+      "on": {
+        "word": "vectus"
+      },
+      "requires": "chain.spin_y_loaded",
       "bind": {
-        "spell": "aoe_flame",
+        "spell": "bubble_shield",
         "slot": "FB"
       }
     },
@@ -260,7 +362,7 @@ This document is generated from SSOT:
 ```json
 {
   "open": {
-    "ttlMs": 2000
+    "ttlMs": 1500
   },
   "rule": {
     "cooldownMs": 0,
@@ -286,7 +388,7 @@ This document is generated from SSOT:
         "electrum",
         "pyro"
       ],
-      "ttlMs": 2000
+      "ttlMs": 1500
     }
   },
   {
@@ -296,7 +398,7 @@ This document is generated from SSOT:
     },
     "requires": "wake.main",
     "trigger": {
-      "teleport_home": true
+      "teleport": true
     }
   },
   {
@@ -306,11 +408,11 @@ This document is generated from SSOT:
     },
     "requires": "wake.main",
     "open": {
-      "id": "school.electrum",
+      "id": "chain.electrum",
       "words": [
         "rota"
       ],
-      "ttlMs": 2000
+      "ttlMs": 1500
     }
   },
   {
@@ -318,47 +420,131 @@ This document is generated from SSOT:
     "on": {
       "word": "rota"
     },
-    "requires": "school.electrum",
+    "requires": "chain.electrum",
     "trigger": {
       "aoe_electric": true
     }
   },
   {
-    "id": "spin_y_opens_pyro",
+    "id": "wake_are_kay_nah",
     "on": {
-      "spin": "y",
-      "orb_state": "charged"
+      "word": "are_kay_nah"
     },
     "open": {
-      "id": "school.pyro_spin_seed",
+      "id": "wake.are_kay_nah",
       "words": [
-        "pyro"
+        "pyro",
+        "vectus"
       ],
-      "ttlMs": 2000
+      "ttlMs": 1500
     }
   },
   {
-    "id": "spin_y_pyro_opens_rota",
+    "id": "pyro_voice_chain",
     "on": {
       "word": "pyro"
     },
-    "requires": "school.pyro_spin_seed",
+    "requires": "wake.are_kay_nah",
     "open": {
-      "id": "school.pyro_spin",
+      "id": "chain.pyro_voice",
       "words": [
+        "sanctum",
         "rota"
       ],
-      "ttlMs": 2000
+      "ttlMs": 1500
     }
   },
   {
-    "id": "spin_y_pyro_rota_bind_fb",
+    "id": "pyro_sanctum_cast",
+    "on": {
+      "word": "sanctum"
+    },
+    "requires": "chain.pyro_voice",
+    "trigger": {
+      "bubble_shield": true
+    }
+  },
+  {
+    "id": "pyro_rota_cast",
     "on": {
       "word": "rota"
     },
-    "requires": "school.pyro_spin",
+    "requires": "chain.pyro_voice",
+    "trigger": {
+      "aoe_flame": true
+    }
+  },
+  {
+    "id": "spin_x_colorize",
+    "on": {
+      "spin": "x"
+    },
+    "trigger": {
+      "colorize": {
+        "r": 0,
+        "g": 100,
+        "b": 253,
+        "alpha": 0.2
+      }
+    }
+  },
+  {
+    "id": "spin_z_colorize",
+    "on": {
+      "spin": "z"
+    },
+    "trigger": {
+      "colorize": {
+        "r": 253,
+        "g": 241,
+        "b": 0,
+        "alpha": 0.2
+      }
+    }
+  },
+  {
+    "id": "spin_y_opens_pyro",
+    "on": {
+      "spin": "y"
+    },
+    "trigger": {
+      "colorize": {
+        "r": 253,
+        "g": 78,
+        "b": 0,
+        "alpha": 0.2
+      }
+    },
+    "open": {
+      "id": "chain.spin_y_seed",
+      "words": [
+        "pyro"
+      ],
+      "ttlMs": 1500
+    }
+  },
+  {
+    "id": "spin_y_pyro_opens_vectus",
+    "on": {
+      "word": "pyro"
+    },
+    "requires": "chain.spin_y_seed",
+    "open": {
+      "id": "chain.spin_y_loaded",
+      "words": [
+        "vectus"
+      ],
+      "ttlMs": 1500
+    }
+  },
+  {
+    "id": "spin_y_pyro_vectus_bind_fb",
+    "on": {
+      "word": "vectus"
+    },
+    "requires": "chain.spin_y_loaded",
     "bind": {
-      "spell": "aoe_flame",
+      "spell": "bubble_shield",
       "slot": "FB"
     }
   },
@@ -398,7 +584,7 @@ This document is generated from SSOT:
 {
   "version": "2",
   "enabled": true,
-  "ruleCount": 10,
+  "ruleCount": 16,
   "parityWithOrchestratorRuleCount": true
 }
 ```
@@ -426,6 +612,7 @@ This document is generated from SSOT:
   "SHAKE_LR": "shake.lr",
   "SHAKE_UD": "shake.ud",
   "ORB_CHARGED": "orb_state.charged",
+  "ORB_GLOBE_LOADED": "orb_state.globe_loaded",
   "ORB_SUPERHEATED": "orb_state.superheated"
 }
 ```
@@ -443,7 +630,8 @@ This document is generated from SSOT:
 
 ```json
 {
-  "TELEPORT_HOME": "teleport_home",
+  "TELEPORT": "teleport",
+  "SHOCKWAVE": "shockwave",
   "AOE_FLAME": "aoe_flame",
   "AOE_FROST": "aoe_frost",
   "AOE_ELECTRIC": "aoe_electric",
@@ -458,6 +646,6 @@ This document is generated from SSOT:
 ## Authoring Notes
 
 - Add/remove/toggle words in `wordbook-v2.js`.
-- Compose trigger/action chains in `dream-config-v2.js`.
-- `orchestrator-v2.js` is compiled output used by runtime/builder validation.
+- Compose trigger/action chains in `interaction-graph-v2.js`.
+- `compiled-interaction-graph-v2.js` is compiled output used by runtime/builder validation.
 - Runtime rule/event/signal wiring is auto-validated in `ready:v2`.

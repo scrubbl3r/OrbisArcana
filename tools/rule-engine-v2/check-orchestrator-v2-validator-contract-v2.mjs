@@ -1,4 +1,4 @@
-import { validateOrchestratorV2 } from "../../src/content/interactions-v2/validate-orchestrator-v2.js";
+import { validateCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/validate-compiled-interaction-graph-v2.js";
 import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import {
@@ -50,7 +50,7 @@ function requireNeedles(caseName, needleKind, needles) {
 }
 
 function expectValidResult(caseName, config) {
-  const validationResult = validateOrchestratorV2(config);
+  const validationResult = validateCompiledInteractionGraphV2(config);
   if (validationResult?.ok !== true) {
     const errorLines = validationResult
       ? getErrors(validationResult)
@@ -140,7 +140,7 @@ function expectValidNoWarnings(caseName, config) {
 }
 
 function expectInvalidResult(caseName, config, expectedErrorNeedle) {
-  const validationResult = validateOrchestratorV2(config);
+  const validationResult = validateCompiledInteractionGraphV2(config);
   if (validationResult?.ok !== false) {
     failCheck(CHECK_TAG, `${caseName} expected validation failure`);
   }
@@ -246,55 +246,55 @@ function expectVersionInvalidNoWarnings(caseName, versionValue, expectedErrorNee
 expectVersionInvalidNoWarnings(
   "missing_version",
   "1",
-  'ORCHESTRATOR_V2.version must be "2"'
+  'COMPILED_INTERACTION_GRAPH_V2.version must be "2"'
 );
 
 expectVersionInvalidNoWarnings(
   "version_mismatch_invalid",
   "1",
-  'ORCHESTRATOR_V2.version must be "2"'
+  'COMPILED_INTERACTION_GRAPH_V2.version must be "2"'
 );
 
 expectVersionInvalidNoWarnings(
   "version_non_string_invalid",
   2,
-  'ORCHESTRATOR_V2.version must be "2"'
+  'COMPILED_INTERACTION_GRAPH_V2.version must be "2"'
 );
 
 expectVersionInvalidNoWarnings(
   "version_whitespace_invalid",
   " 2 ",
-  "ORCHESTRATOR_V2.version must not include leading/trailing whitespace:  2 "
+  "COMPILED_INTERACTION_GRAPH_V2.version must not include leading/trailing whitespace:  2 "
 );
 
 expectInvalidNoWarnings(
   "defaults_non_object_invalid",
   withBaselineOverride({ defaults: Object.freeze(["not-an-object"]) }),
-  "ORCHESTRATOR_V2.defaults must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults must be an object when present"
 );
 
 expectInvalidNoWarnings(
   "groups_non_object_invalid",
   withBaselineOverride({ groups: Object.freeze(["not-an-object"]) }),
-  "ORCHESTRATOR_V2.groups must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.groups must be an object when present"
 );
 
 expectInvalidNoWarnings(
   "rules_not_array_invalid",
   withBaselineOverride({ rules: Object.freeze({ not: "an-array" }) }),
-  "ORCHESTRATOR_V2.rules must be an array"
+  "COMPILED_INTERACTION_GRAPH_V2.rules must be an array"
 );
 
 expectInvalidNoWarnings(
   "top_level_unsupported_key_invalid",
   withBaselineOverride({ extra: true }),
-  "ORCHESTRATOR_V2 contains unsupported key: extra"
+  "COMPILED_INTERACTION_GRAPH_V2 contains unsupported key: extra"
 );
 
 expectInvalidNoWarnings(
   "top_level_enabled_non_boolean_invalid",
   withBaselineOverride({ enabled: "true" }),
-  "ORCHESTRATOR_V2.enabled must be boolean"
+  "COMPILED_INTERACTION_GRAPH_V2.enabled must be boolean"
 );
 
 function withBaselineDefaults(defaultsOverride) {
@@ -423,7 +423,7 @@ expectInvalidNoWarnings(
   withBaselineDefaults({
     open: Object.freeze(["bad"]),
   }),
-  "ORCHESTRATOR_V2.defaults.open must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults.open must be an object when present"
 );
 
 expectInvalidNoWarnings(
@@ -431,7 +431,7 @@ expectInvalidNoWarnings(
   withBaselineDefaults({
     rule: Object.freeze(["bad"]),
   }),
-  "ORCHESTRATOR_V2.defaults.rule must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults.rule must be an object when present"
 );
 
 expectInvalidNoWarnings(
@@ -439,7 +439,7 @@ expectInvalidNoWarnings(
   withBaselineDefaults({
     trigger: Object.freeze(["bad"]),
   }),
-  "ORCHESTRATOR_V2.defaults.trigger must be an object when present"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults.trigger must be an object when present"
 );
 
 expectInvalidNoWarnings(
@@ -447,7 +447,7 @@ expectInvalidNoWarnings(
   withBaselineDefaults({
     extra: true,
   }),
-  "ORCHESTRATOR_V2.defaults contains unsupported key: extra"
+  "COMPILED_INTERACTION_GRAPH_V2.defaults contains unsupported key: extra"
 );
 
 expectInvalidNoWarnings(
@@ -564,7 +564,7 @@ expectInvalidNoWarningsWithSingleRule(
     on: Object.freeze({ word: "orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
-  "ORCHESTRATOR_V2.rules[] id has invalid shape: bad rule id"
+  "COMPILED_INTERACTION_GRAPH_V2.rules[] id has invalid shape: bad rule id"
 );
 
 expectInvalidNoWarningsWithSingleRule(
@@ -574,7 +574,7 @@ expectInvalidNoWarningsWithSingleRule(
     on: Object.freeze({ word: "orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
-  "ORCHESTRATOR_V2.rules[] id must be a string"
+  "COMPILED_INTERACTION_GRAPH_V2.rules[] id must be a string"
 );
 
 expectInvalidNoWarningsWithSingleRule(
@@ -584,13 +584,13 @@ expectInvalidNoWarningsWithSingleRule(
     on: Object.freeze({ word: "orbis" }),
     trigger: Object.freeze({ grace: true }),
   },
-  "ORCHESTRATOR_V2.rules[] id must not include leading/trailing whitespace:  bad_rule_id "
+  "COMPILED_INTERACTION_GRAPH_V2.rules[] id must not include leading/trailing whitespace:  bad_rule_id "
 );
 
 expectInvalidNoWarnings(
   "rule_entry_non_object_invalid",
   withRuleSet(["not-an-object"]),
-  "ORCHESTRATOR_V2.rules[0] must be an object"
+  "COMPILED_INTERACTION_GRAPH_V2.rules[0] must be an object"
 );
 
 expectInvalidNoWarningsWithBaselineRulePrefixAndRule(
@@ -1367,7 +1367,7 @@ expectInvalidWithFragmentsWithSingleRule(
     open: Object.freeze({ id: "wake bad", words: Object.freeze(["domus"]) }),
   },
   Object.freeze([
-    "ORCHESTRATOR_V2.rules[] id has invalid shape: bad rule id",
+    "COMPILED_INTERACTION_GRAPH_V2.rules[] id has invalid shape: bad rule id",
     "open.id has invalid shape: wake bad",
   ])
 );

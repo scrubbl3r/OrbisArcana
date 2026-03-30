@@ -10,10 +10,6 @@ const expectedSourceIds = Object.freeze([
   "orchestrator_v2_fallback",
   "orchestrator_v2_disabled",
   "orchestrator_v2_missing_builder",
-  "interactions_adapter",
-  "interactions_adapter_fallback",
-  "interactions_bootstrap_disabled",
-  "interactions_adapter_missing_builder",
 ]);
 
 function isObjectRecord(value) {

@@ -3,12 +3,13 @@ import { existsSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import {
   WORDBOOK_V2,
-  INTERACTIONS_V2,
-  INTERACTIONS_V2_BOOTSTRAP,
-  ORCHESTRATOR_V2_BOOTSTRAP,
-  buildRuleEngineFromOrchestratorV2,
+  INTERACTION_GRAPH_V2,
+  COMPILED_INTERACTION_GRAPH_V2,
+  COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP,
+  buildRuleEngineFromCompiledInteractionGraphV2,
+  validateInteractionGraphV2,
+  validateCompiledInteractionGraphV2,
   validateWordbookV2,
-  validateInteractionsV2,
 } from "../../src/content/interactions-v2/index.js";
 import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
 import { validateSpellSchemaIntegrity } from "../../src/content/spells/validate-spell-schema-integrity.js";
@@ -22,7 +23,6 @@ import { runCheckScript } from "./run-check-v2.mjs";
 import { RULE_ENGINE_V2_SCRIPT_PATHS } from "./script-paths-v2.mjs";
 import { failCheckWithDetails } from "./check-fail-v2.mjs";
 import { readJsonCore } from "./read-json-core-v2.mjs";
-import { computeProjectionDrift } from "./rules-projection-drift-v2.mjs";
 import { listActiveWordModelRefs } from "./wordbook-v2-utils.mjs";
 import { createTaggedLogger } from "./log-tag-v2.mjs";
 
@@ -106,42 +106,34 @@ function verifyKwsManifestCoverage() {
 }
 
 failIfValidationErrors("wordbook-v2 validation failed", validateWordbookV2(WORDBOOK_V2));
+const dreamValidation = validateInteractionGraphV2(INTERACTION_GRAPH_V2);
+failIfValidationErrors(
+  "orchestrator-v2 source dream-config validation failed",
+  Array.isArray(dreamValidation?.errors) ? dreamValidation.errors : []
+);
+const orchestratorValidation = validateCompiledInteractionGraphV2(COMPILED_INTERACTION_GRAPH_V2);
+failIfValidationErrors(
+  "orchestrator-v2 validation failed",
+  Array.isArray(orchestratorValidation?.errors) ? orchestratorValidation.errors : []
+);
 failIfValidationErrors(
   "spell-rules validation failed",
-  validateSpellRules(buildRuleEngineFromOrchestratorV2().rules)
+  validateSpellRules(buildRuleEngineFromCompiledInteractionGraphV2().rules)
 );
 failIfValidationErrors("spell-runtime-routing validation failed", validateSpellRuntimeRouting());
 failIfValidationErrors("spell-schema-integrity validation failed", validateSpellSchemaIntegrity());
 
 verifyKwsManifestCoverage();
 
-const interactionsBootstrapEnabled = !!(
-  INTERACTIONS_V2_BOOTSTRAP &&
-  INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true
-);
-if (interactionsBootstrapEnabled) {
-  const interactionsResult = validateInteractionsV2(INTERACTIONS_V2);
-  const interactionsErrors = interactionsResult?.ok ? [] : interactionsResult?.errors;
-  failIfValidationErrors("interactions-v2 validation failed", interactionsErrors);
-}
 const orchestratorV2BootstrapEnabled = !!(
-  ORCHESTRATOR_V2_BOOTSTRAP &&
-  ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap === true
+  COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP &&
+  COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP.useInReceiverBootstrap === true
 );
-if (!interactionsBootstrapEnabled && !orchestratorV2BootstrapEnabled) {
+if (!orchestratorV2BootstrapEnabled) {
   fail("runtime bootstrap guard failed", [
-    "at least one bootstrap source must be enabled",
-    "expected one of:",
-    "INTERACTIONS_V2_BOOTSTRAP.useInReceiverBootstrap === true",
-    "ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap === true",
+    "orchestrator bootstrap must be enabled",
+    "COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP.useInReceiverBootstrap === true",
   ]);
-}
-if (interactionsBootstrapEnabled) {
-  const drift = computeProjectionDrift(INTERACTIONS_V2);
-  const driftIds = Array.isArray(drift?.driftIds) ? drift.driftIds : [];
-  if (driftIds.length) {
-    fail("projected runtime rules drift from direct V2 projection", driftIds.map((id) => `drift rule id: ${id}`));
-  }
 }
 
 runScriptOrFail("effective snapshot generation failed", RULE_ENGINE_V2_SCRIPT_PATHS.writeEffectiveSnapshot);

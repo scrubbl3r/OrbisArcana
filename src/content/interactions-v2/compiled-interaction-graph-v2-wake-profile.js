@@ -1,4 +1,4 @@
-import { ORCHESTRATOR_V2 } from "./orchestrator-v2.js?v=20260329a";
+import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js?v=20260329a";
 import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260328b";
 
 function asText(value) {
@@ -48,5 +48,5 @@ function asWakeTtlMs(wakeRaw) {
   return ttlMs;
 }
 
-export const ORCHESTRATOR_V2_WAKE_WORD_IDS = Object.freeze(asWakeWords(ORCHESTRATOR_V2.wake));
-export const ORCHESTRATOR_V2_WAKE_TTL_MS = asWakeTtlMs(ORCHESTRATOR_V2.wake);
+export const COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS = Object.freeze(asWakeWords(COMPILED_INTERACTION_GRAPH_V2.wake));
+export const COMPILED_INTERACTION_GRAPH_V2_WAKE_TTL_MS = asWakeTtlMs(COMPILED_INTERACTION_GRAPH_V2.wake);

@@ -4,7 +4,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 import { UNKNOWN_INACTIVE_WORD_ERROR_PREFIX_V2 } from "./wake-test-ids-v2.mjs";
 
 const CHECK_TAG = "orchestrator-v2-groups-unknown-word-validator-source-surface:v2";
-const VALIDATOR_REL = "src/content/interactions-v2/validate-orchestrator-v2.js";
+const VALIDATOR_REL = "src/content/interactions-v2/validate-compiled-interaction-graph-v2.js";
 const PASS_MESSAGE = "orchestrator-v2 validator source preserves groups unknown/inactive word-id rejection";
 
 const text = readRelativeText(VALIDATOR_REL);

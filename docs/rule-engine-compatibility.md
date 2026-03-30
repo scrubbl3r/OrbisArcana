@@ -11,7 +11,7 @@ Preflight:
 - Keep authoring edits in SSOT sources only.
 
 ## Authoring Sources (SSOT)
-- `src/content/interactions-v2/orchestrator-v2.js`
+- `src/content/interactions-v2/compiled-interaction-graph-v2.js`
   - Trigger/action chains (`rules`, `open`, `trigger`).
 - `src/content/interactions-v2/wordbook-v2.js`
   - Word inventory + `active` toggles.

@@ -7,8 +7,9 @@ import { RULE_ENGINE_V2_SCHEMA_IDS } from "./schema-ids-v2.mjs";
 // Validates the generated health artifact schema and required true/empty fields.
 const CHECK_TAG = "health-contract:v2";
 const FIELD_WORDBOOK_OK = "wordbookOk";
-const FIELD_INTERACTIONS_OK = "interactionsOk";
-const FIELD_BOOTSTRAP_V2 = "bootstrapUsesV2Adapter";
+const FIELD_DREAM_CONFIG_OK = "dreamConfigOk";
+const FIELD_ORCHESTRATOR_OK = "orchestratorOk";
+const FIELD_BOOTSTRAP_V2 = "orchestratorV2BootstrapEnabled";
 const FIELD_PROJECTION_RULES_ONLY = "projectionRulesOnly";
 const FIELD_DRIFT_RULE_IDS = "driftRuleIds";
 const PASS_MESSAGE = "health contract is valid";
@@ -22,7 +23,8 @@ if (schema !== RULE_ENGINE_V2_SCHEMA_IDS.health) {
 if (health[FIELD_WORDBOOK_OK] !== true) {
   failCheck(CHECK_TAG, `${FIELD_WORDBOOK_OK} must be true`);
 }
-if (health[FIELD_INTERACTIONS_OK] !== true) failCheck(CHECK_TAG, `${FIELD_INTERACTIONS_OK} must be true`);
+if (health[FIELD_DREAM_CONFIG_OK] !== true) failCheck(CHECK_TAG, `${FIELD_DREAM_CONFIG_OK} must be true`);
+if (health[FIELD_ORCHESTRATOR_OK] !== true) failCheck(CHECK_TAG, `${FIELD_ORCHESTRATOR_OK} must be true`);
 if (typeof health[FIELD_BOOTSTRAP_V2] !== "boolean") {
   failCheck(CHECK_TAG, `${FIELD_BOOTSTRAP_V2} must be boolean`);
 }

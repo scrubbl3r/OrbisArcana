@@ -1,6 +1,6 @@
-import { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js?v=20260329a";
+import { compileInteractionGraphV2ToCompiledInteractionGraphV2 } from "./compile-interaction-graph-v2.js?v=20260329a";
 
-const ROOT_CONTEXT = "DREAM_CONFIG_V2";
+const ROOT_CONTEXT = "INTERACTION_GRAPH_V2";
 const ALLOWED_ROOT_KEYS = new Set(["version", "enabled", "defaults", "wake", "groups", "rules"]);
 const ALLOWED_WAKE_KEYS = new Set(["words", "word", "spells", "ttlMs", "enabled", "roots"]);
 const ALLOWED_WAKE_ROOT_KEYS = new Set(["id", "words", "word", "ttlMs", "enabled"]);
@@ -97,21 +97,21 @@ function hasLegacyBindTriggerAuthoring(triggerRaw) {
   return Object.keys(triggerRaw).some((key) => LEGACY_BIND_EVENT_IDS.has(asText(key)));
 }
 
-export function validateDreamConfigV2(dreamConfig) {
+export function validateInteractionGraphV2(interactionGraph) {
   const errors = [];
   const warnings = [];
 
-  if (!isObject(dreamConfig)) {
+  if (!isObject(interactionGraph)) {
     errors.push(`${ROOT_CONTEXT} must be an object`);
     return { ok: false, errors, warnings };
   }
 
-  pushUnknownKeys(errors, ROOT_CONTEXT, dreamConfig, ALLOWED_ROOT_KEYS);
+  pushUnknownKeys(errors, ROOT_CONTEXT, interactionGraph, ALLOWED_ROOT_KEYS);
 
-  if (!isObject(dreamConfig.wake)) {
+  if (!isObject(interactionGraph.wake)) {
     errors.push(`${ROOT_CONTEXT}.wake must be an object`);
   } else {
-    const wake = dreamConfig.wake;
+    const wake = interactionGraph.wake;
     const hasWakeWords = Object.hasOwn(wake, "words");
     const hasWakeRoots = Object.hasOwn(wake, "roots");
     if (!hasWakeWords && !hasWakeRoots) {
@@ -142,12 +142,12 @@ export function validateDreamConfigV2(dreamConfig) {
       }
     }
   }
-  pushUnknownKeys(errors, `${ROOT_CONTEXT}.wake`, dreamConfig.wake, ALLOWED_WAKE_KEYS);
+  pushUnknownKeys(errors, `${ROOT_CONTEXT}.wake`, interactionGraph.wake, ALLOWED_WAKE_KEYS);
 
-  // Enforce canonical dream-config authoring keys (no legacy aliases).
-  pushAliasError(errors, `${ROOT_CONTEXT}.wake`, dreamConfig.wake, "word", "words");
-  pushAliasError(errors, `${ROOT_CONTEXT}.wake`, dreamConfig.wake, "spells", "words");
-  for (const rule of asArray(dreamConfig.rules)) {
+  // Enforce canonical interaction-graph authoring keys (no legacy aliases).
+  pushAliasError(errors, `${ROOT_CONTEXT}.wake`, interactionGraph.wake, "word", "words");
+  pushAliasError(errors, `${ROOT_CONTEXT}.wake`, interactionGraph.wake, "spells", "words");
+  for (const rule of asArray(interactionGraph.rules)) {
     if (!isObject(rule)) {
       errors.push(`${ROOT_CONTEXT}.rules[] entries must be objects`);
       continue;
@@ -211,7 +211,7 @@ export function validateDreamConfigV2(dreamConfig) {
     pushAliasError(errors, `${ruleContext}.open`, rule?.open, "spells", "words");
   }
 
-  const compiled = compileDreamConfigV2ToOrchestratorV2(dreamConfig);
+  const compiled = compileInteractionGraphV2ToCompiledInteractionGraphV2(interactionGraph);
 
   if (asText(compiled.version) !== "2") {
     errors.push(`${ROOT_CONTEXT}.version must be "2"`);

@@ -13,7 +13,7 @@ Legacy concepts like axis words, wake-window words, and flat spin are not part o
 ## Canonical Shape
 
 ```js
-export const ORCHESTRATOR_V2 = Object.freeze({
+export const COMPILED_INTERACTION_GRAPH_V2 = Object.freeze({
   version: "2",
   enabled: true,
 

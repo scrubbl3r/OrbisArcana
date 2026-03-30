@@ -1,4 +1,4 @@
-import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS } from "../../src/content/spells/spell-runtime-routing.js";
 import { validateSpellRuntimeRouting } from "../../src/content/spells/validate-spell-runtime-routing.js";
 import { validateSpellSchemaIntegrity } from "../../src/content/spells/validate-spell-schema-integrity.js";
@@ -24,7 +24,7 @@ function withSyntheticImmediateEventRules(sample) {
   return sample;
 }
 
-const orchestratorEngine = buildRuleEngineFromOrchestratorV2();
+const orchestratorEngine = buildRuleEngineFromCompiledInteractionGraphV2();
 const compiledRules = cloneJsonV2(Array.isArray(orchestratorEngine?.rules) ? orchestratorEngine.rules : []);
 const interactionsSample = withSyntheticImmediateEventRules({
   rules: compiledRules,

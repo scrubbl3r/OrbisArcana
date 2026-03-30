@@ -99,8 +99,8 @@ function normalizeWakeSection(rawWake) {
   return out;
 }
 
-export function compileDreamConfigV2ToOrchestratorV2(dreamConfig) {
-  const cfg = cloneJson(dreamConfig);
+export function compileInteractionGraphV2ToCompiledInteractionGraphV2(interactionGraph) {
+  const cfg = cloneJson(interactionGraph);
   const wake = normalizeWakeSection(cfg[FIELD_WAKE] ?? {});
   const rules = Array.isArray(cfg[FIELD_RULES])
     ? cfg[FIELD_RULES].map((rawRule) => {
@@ -117,7 +117,7 @@ export function compileDreamConfigV2ToOrchestratorV2(dreamConfig) {
       return rule;
     })
     : [];
-  const orchestrator = {
+  const compiledInteractionGraph = {
     [FIELD_VERSION]: String(cfg[FIELD_VERSION] ?? "2"),
     [FIELD_ENABLED]: cfg[FIELD_ENABLED] !== false,
     [FIELD_DEFAULTS]: cfg[FIELD_DEFAULTS] ?? {},
@@ -125,5 +125,5 @@ export function compileDreamConfigV2ToOrchestratorV2(dreamConfig) {
     [FIELD_GROUPS]: cfg[FIELD_GROUPS] ?? {},
     [FIELD_RULES]: rules,
   };
-  return deepFreeze(orchestrator);
+  return deepFreeze(compiledInteractionGraph);
 }

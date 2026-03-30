@@ -6,7 +6,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 const CHECK_TAG = "orchestrator-v2-open-words-precedence-source-surface:v2";
 const PASS_MESSAGE = "orchestrator-v2 compiler and validator source preserve canonical open.words precedence over open.spells alias";
 
-const COMPILER_REL = "src/content/interactions-v2/build-rule-engine-from-orchestrator-v2.js";
+const COMPILER_REL = "src/content/interactions-v2/build-rule-engine-from-compiled-interaction-graph-v2.js";
 const compilerText = readRelativeText(COMPILER_REL);
 requireTextIncludesTokensV2({
   tag: CHECK_TAG,
@@ -17,7 +17,7 @@ requireTextIncludesTokensV2({
   missingMessage: (token) => `${COMPILER_REL} missing open.words precedence token: ${token}`,
 });
 
-const VALIDATOR_REL = "src/content/interactions-v2/validate-orchestrator-v2.js";
+const VALIDATOR_REL = "src/content/interactions-v2/validate-compiled-interaction-graph-v2.js";
 const validatorText = readRelativeText(VALIDATOR_REL);
 requireTextIncludesTokensV2({
   tag: CHECK_TAG,

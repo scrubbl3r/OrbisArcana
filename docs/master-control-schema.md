@@ -11,7 +11,7 @@ Canonical policy surface: `RULE_ENGINE_POLICY_CONTROL`
 compatibility alias: `RULE_ENGINE_MASTER_CONTROL`
 
 Behavior SSOT lives in:
-- `src/content/interactions-v2/dream-config-v2.js`
+- `src/content/interactions-v2/interaction-graph-v2.js`
 - `src/content/interactions-v2/wordbook-v2.js`
 
 Generated projections and docs then flow from that authored source.
@@ -66,7 +66,7 @@ Those are runtime signal ids, not an invitation to recreate old authoring taxono
 
 ## Practical Guidance
 
-- edit `dream-config-v2.js` when changing behavior
+- edit `interaction-graph-v2.js` when changing behavior
 - edit `wordbook-v2.js` when changing the word inventory
 - edit master control only when changing runtime policy or bindings
 - do not hand-author gameplay meaning into runtime word tables
@@ -74,7 +74,7 @@ Those are runtime signal ids, not an invitation to recreate old authoring taxono
 ## Generated Artifacts
 
 For the current projected state, use:
-- `docs/effective-interactions-v2.snapshot.json`
+- `docs/rule-engine-v2.effective-snapshot.json`
 - `docs/master-control-v2.md`
 - `docs/master-control-v2.json`
 - `docs/master-control-v2.authoring.json`

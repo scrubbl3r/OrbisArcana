@@ -1,6 +1,6 @@
 import {
-  buildRuleEngineFromOrchestratorV2,
-  ORCHESTRATOR_V2,
+  buildRuleEngineFromCompiledInteractionGraphV2,
+  COMPILED_INTERACTION_GRAPH_V2,
   WORDBOOK_V2_ACTIVE_WORDS_BY_ID,
 } from "../../src/content/interactions-v2/index.js";
 import { RULE_ENGINE_V2_DOC_PATHS } from "./docs-paths-v2.mjs";
@@ -54,11 +54,11 @@ function main() {
     }
   }
 
-  const expectedRules = Array.isArray(ORCHESTRATOR_V2?.rules) ? ORCHESTRATOR_V2.rules : [];
+  const expectedRules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2?.rules) ? COMPILED_INTERACTION_GRAPH_V2.rules : [];
   if (root.rules.length !== expectedRules.length) {
     failCheck(CHECK_TAG, `rules count mismatch: doc=${root.rules.length} expected=${expectedRules.length}`);
   }
-  const projectedEngine = buildRuleEngineFromOrchestratorV2();
+  const projectedEngine = buildRuleEngineFromCompiledInteractionGraphV2();
   const projectedRules = Array.isArray(projectedEngine?.rules) ? projectedEngine.rules : [];
   if (!projectedRules.length) {
     failCheck(CHECK_TAG, "orchestrator compiled rules must be present");

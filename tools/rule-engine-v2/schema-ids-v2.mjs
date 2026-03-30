@@ -2,7 +2,7 @@
 // Shared by artifact writers and contract checks for schema pinning.
 // IDs are versioned strings; bump only during intentional schema changes.
 export const RULE_ENGINE_V2_SCHEMA_IDS = Object.freeze({
-  effectiveSnapshot: "orbis.interactions_v2.effective_snapshot",
+  effectiveSnapshot: "orbis.rule_engine_v2.effective_snapshot",
   health: "orbis.rule_engine_v2.health",
   status: "orbis.rule_engine_v2.status",
   milestone: "orbis.rule_engine_v2.milestone",

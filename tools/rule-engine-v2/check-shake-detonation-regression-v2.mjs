@@ -5,7 +5,7 @@ import {
   EVT_VOICE_SPELL_CAST,
   EVT_VOICE_SPELL_LOADED,
 } from "../../src/contracts/events.js";
-import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interactions-v2/index.js";
+import { buildRuleEngineFromCompiledInteractionGraphV2 } from "../../src/content/interactions-v2/index.js";
 import { EVENT_DEFINITIONS } from "../../src/content/spell-rules/event-definitions.js";
 import { SIGNAL_DEFINITIONS } from "../../src/content/spell-rules/signal-definitions.js";
 import { WINDOW_DEFINITIONS } from "../../src/content/spell-rules/window-definitions.js";
@@ -140,7 +140,7 @@ function runAuthoredFbBindScenario() {
       signals: SIGNAL_DEFINITIONS,
       windows: WINDOW_DEFINITIONS,
       events: EVENT_DEFINITIONS,
-      ...buildRuleEngineFromOrchestratorV2(),
+      ...buildRuleEngineFromCompiledInteractionGraphV2(),
     },
   });
 

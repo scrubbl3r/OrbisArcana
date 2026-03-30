@@ -23,7 +23,7 @@ if (!Array.isArray(RULE_ENGINE_POLICY_CONTROL.rules)) {
   failCheck(CHECK_TAG, "RULE_ENGINE_POLICY_CONTROL.rules must be an array");
 }
 if (RULE_ENGINE_POLICY_CONTROL.rules.length !== 0) {
-  failCheck(CHECK_TAG, "RULE_ENGINE_POLICY_CONTROL.rules must remain empty; author rules in ORCHESTRATOR_V2");
+  failCheck(CHECK_TAG, "RULE_ENGINE_POLICY_CONTROL.rules must remain empty; author rules in COMPILED_INTERACTION_GRAPH_V2");
 }
 
 reportCheckPass(CHECK_TAG, PASS_MESSAGE);

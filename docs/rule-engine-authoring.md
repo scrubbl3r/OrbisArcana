@@ -7,7 +7,7 @@ Preflight:
 - Run `npm run status:v2` before editing to confirm current v2 health and contracts are green.
 
 ## Daily Authoring Files (Primary)
-- `src/content/interactions-v2/dream-config-v2.js`
+- `src/content/interactions-v2/interaction-graph-v2.js`
   - Edit trigger/action chains here (`rules`).
   - This is the behavior SSOT source.
   - Author wake windows and trigger chains directly in `wake`, `groups`, and `rules`.
@@ -28,8 +28,8 @@ Preflight:
 - `src/voice/wordbook.js` (runtime view derived from `wordbook-v2`)
 
 ## Runtime Switches
-- `ORCHESTRATOR_V2_BOOTSTRAP.useInReceiverBootstrap`
-  - Location: `src/content/interactions-v2/orchestrator-v2.js`
+- `COMPILED_INTERACTION_GRAPH_V2_BOOTSTRAP.useInReceiverBootstrap`
+  - Location: `src/content/interactions-v2/compiled-interaction-graph-v2.js`
   - Purpose: Enables orchestrator-v2 bootstrap in receiver fallback/precedence flow.
 - `RULE_ENGINE_POLICY_CONTROL.execution.projectionRulesOnly`
   - Location: `src/content/spell-rules/rule-engine-master-control.js`
@@ -40,12 +40,12 @@ Preflight:
 - Canonical list and semantics: `docs/rule-engine-compatibility.md` (Runtime Mode Status).
 
 ## Authoring Rule of Thumb
-- If you are changing gameplay interaction logic, edit `dream-config-v2.js`.
+- If you are changing gameplay interaction logic, edit `interaction-graph-v2.js`.
 - If you are enabling/disabling words, edit `wordbook-v2.js`.
 - Avoid editing runtime integration files unless you are doing intentional system/runtime wiring work.
 
 ## Dream DSL Guardrails (Canonical)
-- Top-level `dream-config-v2` keys are restricted to:
+- Top-level `interaction-graph-v2` keys are restricted to:
   - `version`, `enabled`, `defaults`, `wake`, `groups`, `rules`
 - `wake` must be object form and must include non-empty `wake.words`.
 - `rules[]` entries must be objects with `id`.

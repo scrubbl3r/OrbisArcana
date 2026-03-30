@@ -10,7 +10,7 @@ It is intended as a handoff document for new threads after crashes/interruption.
 
 The codebase is in a mixed state:
 
-- `dream-config-v2` is the intended behavior authoring source.
+- `interaction-graph-v2` is the intended behavior authoring source.
 - Runtime still contains legacy inferred behavior concepts.
 - Those legacy concepts are reintroducing hidden semantics outside authored config.
 
@@ -317,7 +317,7 @@ Rule:
 
 Files:
 
-- `src/content/interactions-v2/compile-dream-config-v2.js`
+- `src/content/interactions-v2/compile-interaction-graph-v2.js`
 
 Remove:
 
@@ -391,9 +391,9 @@ Keep for transition:
 
 Files:
 
-- `src/content/interactions-v2/validate-dream-config-v2.js`
-- `src/content/interactions-v2/compile-dream-config-v2.js`
-- `src/content/interactions-v2/validate-orchestrator-v2.js`
+- `src/content/interactions-v2/validate-interaction-graph-v2.js`
+- `src/content/interactions-v2/compile-interaction-graph-v2.js`
+- `src/content/interactions-v2/validate-compiled-interaction-graph-v2.js`
 
 Goal:
 
@@ -623,7 +623,7 @@ Tasks:
 
 Files likely touched:
 
-- `src/content/interactions-v2/compile-dream-config-v2.js`
+- `src/content/interactions-v2/compile-interaction-graph-v2.js`
 - rule execution path
 - dispatch/load adapter path
 
@@ -765,7 +765,7 @@ The refactor is successful when all of the following are true:
 - no code depends on wake-window words
 - no code depends on flat-spin as a primitive
 - `bind` is direct and explicit
-- exemplar behaviors are fully authored in `dream-config-v2`
+- exemplar behaviors are fully authored in `interaction-graph-v2`
 - tests describe authored behavior, not historical plumbing
 
 ## Fresh Thread Context Paste

@@ -1,36 +1,46 @@
 {
   "schema": "orbis.rule_engine_v2.status",
-  "generatedAt": "2026-03-24T05:47:06.992Z",
+  "generatedAt": "2026-03-30T23:29:28.464Z",
   "health": {
     "wordbookOk": true,
-    "interactionsOk": true,
-    "interactionsBootstrapEnabled": false,
-    "orchestratorV2BootstrapEnabled": true,
-    "bootstrapUsesV2Adapter": true,
+    "dreamConfigOk": true,
+    "orchestratorOk": true,
+    "orchestratorBootstrapEnabled": true,
     "projectionRulesOnly": true,
-    "interactionsRuleCount": 5,
-    "projectedRuleCount": 5,
-    "orchestratorProjectedRuleCount": 21,
+    "authoredRuleCount": 16,
+    "compiledRuleCount": 16,
+    "orchestratorProjectedRuleCount": 16,
     "orchestratorProjectionParityOk": true,
     "driftRuleIds": []
   },
+  "wordbookOk": true,
+  "dreamConfigOk": true,
+  "orchestratorOk": true,
+  "orchestratorBootstrapEnabled": true,
+  "projectionRulesOnly": true,
+  "authoredRuleCount": 16,
+  "compiledRuleCount": 16,
+  "orchestratorProjectedRuleCount": 16,
+  "orchestratorProjectionParityOk": true,
+  "driftRuleIds": [],
   "manifests": {
     "ready": true,
-    "contract": true,
+    "contract": false,
     "regression": true
   },
   "readyPhases": {
     "doctor": true,
     "regression_manifest": true,
-    "contract_manifest": true,
+    "contract_manifest": false,
     "master_control_authoring": true
   },
   "regressions": {
+    "tele_home_regression": true,
     "shake_regression": true,
     "wake_load_regression": true,
     "immediate_ownership": true,
     "flat_spin_gating": true,
-    "wake_window_axis_prereq": true,
+    "wake_window_axis_prereq": false,
     "wake_sequence_regression": true
   },
   "contracts": {
@@ -121,9 +131,6 @@
     "orchestrator_v2_window_refs_whitespace_validator_source_surface": true,
     "orchestrator_v2_window_refs_string_whitespace_validator_source_surface": true,
     "orchestrator_v2_window_refs_duplicate_source_surface": true,
-    "interactions_wake_words_compat_contract": true,
-    "interactions_authoring_word_condition_surface": true,
-    "interactions_authoring_wake_words_surface": true,
     "spell_runtime_routing_wake_words_compat_contract": true,
     "spell_runtime_routing_wake_words_precedence_contract": true,
     "spell_runtime_routing_wake_bare_id_contract": true,
@@ -151,7 +158,7 @@
     "orchestrator_v2_bootstrap_precedence": true,
     "orchestrator_v2_window_semantics": true,
     "orchestrator_v2_window_semantics_event_surface": true,
-    "word_detected_bridge": true,
+    "word_detected_bridge": false,
     "word_detected_compat_event_surface": true,
     "detected_word_utils_surface": true,
     "signal_definitions_word_event_surface": true,
@@ -176,18 +183,13 @@
     "compat_surface": true,
     "import_boundary": true,
     "health_contract": true,
-    "health_wordbook_surface": true,
+    "health_wordbook_surface": false,
     "cross_manifest_integrity": true,
     "regression_tags_coverage": true,
     "regression_tag_source_surface": true,
     "script_registry": true
   },
-  "summary": {
-    "readyPhasesOk": true,
-    "regressionsOk": true,
-    "contractsOk": true
-  },
-  "trend": {
+  "milestone": {
     "totalRuns": 495,
     "passRateAllPct": 99.4,
     "passRateRecentPct": 100,
