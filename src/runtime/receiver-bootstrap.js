@@ -27,7 +27,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260330g";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260330h";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -336,8 +336,8 @@ export async function loadReceiverInitModules() {
     import("../voice/providers/voice-provider-manager.js"),
     import("../voice/providers/kws-provider.js"),
     import("../voice/kws/openwakeword-browser-backend.js"),
-    import("../systems/spell-dispatch-system.js"),
-    import(`../systems/rule-engine-preview-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
+    import("../game-runtime/triggers/spell-dispatch-system.js"),
+    import(`../game-runtime/triggers/rule-engine-preview-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../systems/spell-action-handlers.js"),
     import("../runtime-effects/aoe-electric.js"),
     import("../runtime-effects/aoe-flame.js"),
@@ -347,7 +347,7 @@ export async function loadReceiverInitModules() {
     import("../runtime-effects/bubble-shield.js"),
     import("../runtime-effects/float-grace.js"),
     import("../runtime-effects/colorize.js"),
-    import("../systems/spell-cast-executor.js"),
+    import("../game-runtime/triggers/spell-cast-executor.js"),
     import("../game-runtime/orb/orb-runtime-pipeline.js"),
     import("../game-runtime/orb/orb-base-state.js"),
     import("../game-runtime/orb/orb-color-runtime.js"),

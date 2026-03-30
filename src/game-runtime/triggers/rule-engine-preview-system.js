@@ -1,4 +1,4 @@
-import { buildRuleEnginePreviewRuntime } from "../content/spell-rules/index.js";
+import { buildRuleEnginePreviewRuntime } from "../../content/spell-rules/index.js";
 
 const EVT_RULE_ENGINE_PREVIEW_MATCHED = "rule_engine.preview_matched";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";

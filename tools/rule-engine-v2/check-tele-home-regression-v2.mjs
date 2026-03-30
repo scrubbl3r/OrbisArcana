@@ -2,7 +2,7 @@ import { buildRuleEngineFromOrchestratorV2 } from "../../src/content/interaction
 import { SIGNAL_DEFINITIONS } from "../../src/content/spell-rules/signal-definitions.js";
 import { WINDOW_DEFINITIONS } from "../../src/content/spell-rules/window-definitions.js";
 import { EVENT_DEFINITIONS } from "../../src/content/spell-rules/event-definitions.js";
-import { createRuleEnginePreviewSystem } from "../../src/systems/rule-engine-preview-system.js";
+import { createRuleEnginePreviewSystem } from "../../src/game-runtime/triggers/rule-engine-preview-system.js";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { failCheck } from "./check-fail-v2.mjs";

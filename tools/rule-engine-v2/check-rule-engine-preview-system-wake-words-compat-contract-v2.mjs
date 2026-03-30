@@ -1,4 +1,4 @@
-import { createRuleEnginePreviewSystem } from "../../src/systems/rule-engine-preview-system.js";
+import { createRuleEnginePreviewSystem } from "../../src/game-runtime/triggers/rule-engine-preview-system.js";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { runWithStartedSystem } from "./check-lifecycle-v2.mjs";

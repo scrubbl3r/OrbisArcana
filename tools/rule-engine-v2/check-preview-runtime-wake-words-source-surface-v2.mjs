@@ -6,7 +6,7 @@ import { requireTextIncludesTokensV2 } from "./check-token-assertions-v2.mjs";
 const CHECK_TAG = "preview-runtime-wake-words-source-surface:v2";
 const PASS_MESSAGE = "preview runtime surfaces prefer canonical wake words[] with spells[] compatibility alias";
 
-const PREVIEW_SYSTEM_REL = "src/systems/rule-engine-preview-system.js";
+const PREVIEW_SYSTEM_REL = "src/game-runtime/triggers/rule-engine-preview-system.js";
 const previewSystemText = readRelativeText(PREVIEW_SYSTEM_REL);
 requireTextIncludesTokensV2({
   tag: CHECK_TAG,

@@ -2,7 +2,7 @@ import { CAST_ACTION_REGISTRY_BY_ID } from "../../src/content/spells/cast-action
 import { EVENT_DEFINITIONS_BY_ID } from "../../src/content/spell-rules/event-definitions.js";
 import { EVENT_RUNTIME_BINDINGS_BY_ID } from "../../src/content/spell-rules/event-runtime-bindings.js";
 import { createSpellActionHandlers } from "../../src/systems/spell-action-handlers.js";
-import { createSpellCastExecutor } from "../../src/systems/spell-cast-executor.js";
+import { createSpellCastExecutor } from "../../src/game-runtime/triggers/spell-cast-executor.js";
 import { assertCheck } from "./check-assert-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 

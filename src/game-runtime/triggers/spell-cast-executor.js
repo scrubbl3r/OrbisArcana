@@ -36,16 +36,16 @@ export function createSpellCastExecutor({
   grantFloatGrace,
   floatGraceDefaultMs = 1000,
   floatGraceDomusMs = 5000,
-} = {}){
+} = {}) {
   const registry = castActionRegistryById || Object.create(null);
   const handlerMap = handlers || Object.create(null);
 
-  function execute(castActionId, context = {}){
+  function execute(castActionId, context = {}) {
     const actionId = String(castActionId || "").toLowerCase();
     const p = (context && context.payload) || {};
     const meta = registry[actionId] || null;
-    const handlerKey = String(meta && meta.handlerKey || "");
-    const floatGracePolicy = String(meta && meta.floatGracePolicy || "default");
+    const handlerKey = String((meta && meta.handlerKey) || "");
+    const floatGracePolicy = String((meta && meta.floatGracePolicy) || "default");
     const handler = handlerMap[handlerKey];
     let handled = false;
     let grantGrace = true;

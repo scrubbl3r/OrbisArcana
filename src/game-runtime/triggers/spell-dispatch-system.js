@@ -1,10 +1,10 @@
-import { ACTIVE_WORDS_BY_ID } from "../voice/wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js";
 import {
   WORD_RUNTIME_ROUTING_BY_WORD_ID,
   WORD_WINDOW_BYPASS_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
-} from "../content/spells/spell-runtime-routing.js";
-import { getCastActionMeta } from "../content/spells/cast-action-registry.js";
+} from "../../content/spells/spell-runtime-routing.js";
+import { getCastActionMeta } from "../../content/spells/cast-action-registry.js";
 import {
   EVT_SPELL_WINDOW_SPIN_OPENED,
   EVT_SPELL_WINDOW_SPIN_CLOSED,
@@ -18,7 +18,7 @@ import {
   EVT_INPUT_SHAKE_TRIGGERED,
   EVT_SPELL_SLOT_LOAD_REQUESTED,
   EVT_SPELL_SLOT_CAST_REQUESTED,
-} from "../contracts/events.js";
+} from "../../contracts/events.js";
 
 // `resources` is an optional injected domain API.
 // Expected methods (subset used here):
@@ -248,7 +248,6 @@ export function createSpellDispatchSystem({
 
   function emitSpellCastFromEntry(entry, payload = {}) {
     const now = Number(payload.atMs) || nowMs();
-    /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
     const castPayload = {
       wordId: entry.wordId,
       spellId: entry.spellId,
@@ -434,7 +433,6 @@ export function createSpellDispatchSystem({
         return;
       }
       lastCastByWordId.set(wordId, now);
-      /** @type {import("../contracts/events.js").VoiceSpellCastPayload} */
       const castPayload = {
         wordId,
         spellId: wordId,
