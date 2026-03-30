@@ -85,9 +85,6 @@ export function createSpellActionHandlers({
         teleportOrbToSpawnNeutralizePhysics(domusTeleportAboveGroundPx);
       }
     },
-    domus_teleport_orb(payload = {}) {
-      return this.teleport(payload);
-    },
     trigger_shockwave(payload = {}) {
       void payload;
       if (typeof executeShockwave === "function") {
@@ -111,9 +108,6 @@ export function createSpellActionHandlers({
         activateSanctusShield((payload && payload.axis) || "y", sanctusShieldMs);
       }
     },
-    activate_sanctum_shield(payload = {}) {
-      return this.bubble_shield(payload);
-    },
     float_grace(payload = {}) {
       const ms = Number(payload && payload.ms);
       if (typeof executeFloatGrace === "function") {
@@ -126,9 +120,6 @@ export function createSpellActionHandlers({
       if (typeof grantSuperGrace === "function") {
         grantSuperGrace(Number.isFinite(ms) ? ms : undefined);
       }
-    },
-    grant_orb_super_grace(payload = {}) {
-      return this.float_grace(payload);
     },
     colorize(payload = {}) {
       if (typeof executeColorize === "function") {
