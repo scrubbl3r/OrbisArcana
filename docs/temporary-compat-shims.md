@@ -7,10 +7,7 @@ When their import surfaces have been fully updated, delete them.
 
 ## Current Shim Files
 
-- `src/spells/shockwave.js`
-- `src/spells/teleport-home.js`
-- `src/ui/kws-panel-controller.js`
-- `src/ui/word-flashboard-popup.js`
+- None currently tracked.
 
 ## Rule
 
