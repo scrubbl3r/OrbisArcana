@@ -211,7 +211,6 @@ export function createInputGestureSystem({
     fs.axis = axis;
     fs.releaseMs = 0;
     fs.lastGateRefreshMs = atMs;
-    if (typeof hooks.setOrbStrokeColorByAxis === "function") hooks.setOrbStrokeColorByAxis(axis);
     if (eventBus && typeof eventBus.emit === "function") {
       eventBus.emit(EVT_SPELL_WINDOW_SPIN_OPENED, { axis, atMs });
       eventBus.emit(EVT_VOICE_SET_MODE, { mode: "gated_window" });
@@ -227,7 +226,6 @@ export function createInputGestureSystem({
     fs.holdMs = 0;
     fs.releaseMs = 0;
     fs.lastGateRefreshMs = 0;
-    if (typeof hooks.resetOrbStrokeColor === "function") hooks.resetOrbStrokeColor();
     if (eventBus && typeof eventBus.emit === "function") {
       eventBus.emit(EVT_SPELL_WINDOW_SPIN_CLOSED, { axis, reason, atMs });
       eventBus.emit(EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
@@ -263,7 +261,6 @@ export function createInputGestureSystem({
         && axisInfo.v >= domOffReq
         && (Number(axisInfo.gap) >= gapOffReq);
       if (sameAxis) {
-        if (typeof hooks.setOrbStrokeColorByAxis === "function") hooks.setOrbStrokeColorByAxis(axisInfo.axis);
         fs.releaseMs = 0;
         if ((now - fs.lastGateRefreshMs) >= cfg.flatSpinGateRefreshMs) {
           fs.lastGateRefreshMs = now;

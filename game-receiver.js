@@ -2114,8 +2114,6 @@
             allDirLampOff,
             flashDirLampPair,
             flashDirLampSingle,
-            setOrbStrokeColorByAxis() {},
-            resetOrbStrokeColor: () => {},
           },
         });
         inputSystem = inputSystemsBundle.inputSystem;
