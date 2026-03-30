@@ -278,7 +278,7 @@ export async function loadReceiverInitModules() {
     { executeAoeElectric },
     { executeAoeFlame },
     { executeAoeFrost },
-    { executeTeleport },
+    { executeTeleport, teleportOrbRuntimeToSpawn },
     { executeShockwave },
     { executeBubbleShield },
     {
@@ -397,6 +397,7 @@ export async function loadReceiverInitModules() {
     executeAoeFlame,
     executeAoeFrost,
     executeTeleportHome: executeTeleport,
+    teleportOrbRuntimeToSpawn,
     executeShockwave,
     executeBubbleShield,
     executeFloatGrace,

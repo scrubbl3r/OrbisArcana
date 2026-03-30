@@ -1221,6 +1221,7 @@
     let spellCastExecutor = null;
     let createSpellActionHandlersModule = null;
     let executeTeleportHomeSpellModule = null;
+    let teleportOrbRuntimeToSpawnModule = null;
     let executeShockwaveSpellModule = null;
     let executeColorizeSpellModule = null;
     let clearFloatGraceRuntimeModule = null;
@@ -1671,6 +1672,9 @@
         const mods = await loadReceiverInitModules();
         executeTeleportHomeSpellModule = (typeof mods.executeTeleportHome === "function")
           ? mods.executeTeleportHome
+          : null;
+        teleportOrbRuntimeToSpawnModule = (typeof mods.teleportOrbRuntimeToSpawn === "function")
+          ? mods.teleportOrbRuntimeToSpawn
           : null;
         executeShockwaveSpellModule = (typeof mods.executeShockwave === "function")
           ? mods.executeShockwave
@@ -2819,6 +2823,19 @@
     }
 
     function teleportOrbToSpawnNeutralizePhysics(aboveGroundPx = 0){
+      if (typeof teleportOrbRuntimeToSpawnModule === "function") {
+        const result = teleportOrbRuntimeToSpawnModule({
+          patchOrbRuntime,
+          applyOrbTransform,
+          worldSystem,
+          groundCenterWorld,
+          phys: PHYS,
+          aboveGroundPx,
+          nowMs: performance.now(),
+          updateDebugReadout,
+        });
+        if (result && result.handled) return;
+      }
       const yFloor = groundCenterWorld();
       const yCeil = PHYS.orbRadiusPx;
       const yTarget = clamp(yFloor - Math.max(0, Number(aboveGroundPx) || 0), yCeil, yFloor);
