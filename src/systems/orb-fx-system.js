@@ -40,8 +40,14 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       if (a === "z") return { r: 253/255, g: 241/255, b: 0/255 };
       return { r: 253/255, g: 78/255, b: 0/255 };
     });
+  const ORBIT_AXES = Object.freeze(["x", "y", "z"]);
   const readWordIdFromPayload = (payload = {}) =>
     String((payload.wordId ?? payload.spellId) || "");
+
+  function randomOrbitAxis() {
+    const idx = Math.floor(Math.random() * ORBIT_AXES.length);
+    return ORBIT_AXES[idx] || "y";
+  }
 
   function color01ToRgba(c, a) {
     const r = Math.round(clamp01(c && c.r) * 255);
@@ -143,13 +149,14 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
   }
 
   function upsertOrbitingGlobe({ axis, slot, wordId }) {
-    const a = String(axis || "").toLowerCase();
+    const a = String(axis || "").toLowerCase() || randomOrbitAxis();
     const s = String(slot || "").toUpperCase();
     if (!a || !s) return;
     const tokenId = String(wordId || "");
-    const existing = orbiting.particles.find((p) => p.axis === a && p.slot === s);
+    const existing = orbiting.particles.find((p) => p.slot === s);
     const color = axisColor(a);
     if (existing) {
+      existing.axis = a;
       existing.wordId = tokenId;
       existing.spellId = tokenId;
       existing.stroke = color.stroke;
@@ -165,7 +172,7 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       spellId: tokenId,
       phase: Math.random() * Math.PI * 2,
       speed: (1.35 + (Math.random() * 0.75)) * 4.0,
-      radius: Math.max(3, Number(orbRadiusPx) * 0.10),
+      radius: Math.max(5, Number(orbRadiusPx) * 0.13),
       orbitR: Math.max(14, (Number(orbRadiusPx) + 18) * 1.10),
       stroke: color.stroke,
       fill: color.fill,
@@ -183,13 +190,13 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       lastMs: 0,
       el: null,
     });
+    tickOrbitingGlobes(performance.now());
   }
 
   function consumeOrbitingGlobe({ axis, slot }) {
-    const a = String(axis || "").toLowerCase();
     const s = String(slot || "").toUpperCase();
-    if (!a || !s) return;
-    const idx = orbiting.particles.findIndex((p) => p.axis === a && p.slot === s);
+    if (!s) return;
+    const idx = orbiting.particles.findIndex((p) => p.slot === s);
     if (idx < 0) return;
     const p = orbiting.particles[idx];
     try { if (p.el) p.el.remove(); } catch (_) {}
@@ -448,12 +455,11 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       reconcileInnerGlobesToCount(payload.stored);
     }));
     unsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
-      const axis = String(payload.axis || "").toLowerCase();
       const slot = String(payload.slot || "").toUpperCase();
-      if (!axis || !slot) return;
+      if (!slot) return;
       const wordId = readWordIdFromPayload(payload);
       upsertOrbitingGlobe({
-        axis,
+        axis: String(payload.axis || "").toLowerCase(),
         slot,
         wordId,
       });
@@ -461,7 +467,6 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     unsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
       if (String(payload.trigger || "") !== "shake_detonation") return;
       consumeOrbitingGlobe({
-        axis: String(payload.axis || "").toLowerCase(),
         slot: String(payload.slot || "").toUpperCase(),
       });
     }));
