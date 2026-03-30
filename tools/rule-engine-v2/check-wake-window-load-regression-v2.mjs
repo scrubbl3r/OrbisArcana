@@ -22,7 +22,7 @@ import { emitDetectedWord, emitPyroBindPrelude } from "./check-wake-sequence-v2.
 
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 const CHECK_TAG = CHECK_TAGS_V2.wakeLoadRegression;
-const PASS_MESSAGE = "pyro spin chain binds sanctum_shield to FB and shake:FB casts it";
+const PASS_MESSAGE = "pyro spin chain binds bubble_shield to FB and shake:FB casts it";
 
 function main() {
   const eventBus = createCheckEventBus();
@@ -86,18 +86,18 @@ function main() {
 
   const bindActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind");
   assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind action, got ${bindActions.length}`);
-  assertCheck(String(bindActions[0]?.args?.spell || "") === "sanctum_shield", `[${CHECK_TAG}] expected bind spell sanctum_shield`);
+  assertCheck(String(bindActions[0]?.args?.spell || "") === "bubble_shield", `[${CHECK_TAG}] expected bind spell bubble_shield`);
   assertCheck(String(bindActions[0]?.args?.slot || "") === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected bind slot FB`);
 
   assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected one loaded spell from bind, got ${loaded.length}`);
-  assertCheck(wordIdText(loaded[0]) === "sanctum_shield", `[${CHECK_TAG}] expected loaded word sanctum_shield, got ${wordIdText(loaded[0])}`);
+  assertCheck(wordIdText(loaded[0]) === "bubble_shield", `[${CHECK_TAG}] expected loaded word bubble_shield, got ${wordIdText(loaded[0])}`);
   const axis = typeof loaded[0]?.axis === "string" ? loaded[0].axis : "";
   const slot = typeof loaded[0]?.slot === "string" ? loaded[0].slot : "";
   assertCheck(axis === "", `[${CHECK_TAG}] expected no axis payload on direct bind load, got ${axis}`);
   assertCheck(slot === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected slot FB, got ${slot}`);
 
   assertCheck(casts.length === 2, `[${CHECK_TAG}] expected loaded cast plus fallback cast after bind, got ${casts.length}`);
-  assertCheck(wordIdText(casts[0]) === "sanctum_shield", `[${CHECK_TAG}] expected shake cast word sanctum_shield, got ${wordIdText(casts[0])}`);
+  assertCheck(wordIdText(casts[0]) === "bubble_shield", `[${CHECK_TAG}] expected shake cast word bubble_shield, got ${wordIdText(casts[0])}`);
   assertCheck(String(casts[0]?.slot || "") === CHECK_SLOTS_V2.fb, `[${CHECK_TAG}] expected shake cast slot FB, got ${String(casts[0]?.slot || "")}`);
   assertCheck(String(casts[0]?.trigger || "") === "test_slot_cast", `[${CHECK_TAG}] expected test_slot_cast trigger, got ${String(casts[0]?.trigger || "")}`);
 

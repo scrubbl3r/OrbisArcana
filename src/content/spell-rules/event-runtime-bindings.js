@@ -34,7 +34,7 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     id: "teleport_home",
     runtime: Object.freeze({
       kind: "cast_action",
-      castActionId: "domus_teleport",
+      castActionId: "teleport",
     }),
   }),
   Object.freeze({
@@ -45,10 +45,17 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
+    id: "bubble_shield",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "bubble_shield",
+    }),
+  }),
+  Object.freeze({
     id: "sanctum_shield",
     runtime: Object.freeze({
       kind: "cast_action",
-      castActionId: "sanctum_shield",
+      castActionId: "bubble_shield",
     }),
   }),
   Object.freeze({

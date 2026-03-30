@@ -154,7 +154,7 @@ function runAuthoredFbBindScenario() {
 
     assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected authored pyro chain to load FB once, got ${loaded.length}`);
     assertCheck(String(loaded[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored pyro chain to load slot FB`);
-    assertCheck(String(loaded[0]?.castActionId || "") === "sanctum_shield", `[${CHECK_TAG}] expected authored pyro chain to load sanctum_shield into FB`);
+    assertCheck(String(loaded[0]?.castActionId || "") === "bubble_shield", `[${CHECK_TAG}] expected authored pyro chain to load bubble_shield into FB`);
 
     // Let the spin-seeded windows expire; the later FB shake must still cast the loaded spell.
     advance(2600);
@@ -163,7 +163,7 @@ function runAuthoredFbBindScenario() {
   previewSystem.stop();
 
   assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one cast from authored FB shake, got ${casts.length}`);
-  assertCheck(String(casts[0]?.castActionId || "") === "sanctum_shield", `[${CHECK_TAG}] expected authored FB shake to cast sanctum_shield`);
+  assertCheck(String(casts[0]?.castActionId || "") === "bubble_shield", `[${CHECK_TAG}] expected authored FB shake to cast bubble_shield`);
   assertCheck(String(casts[0]?.trigger || "") === "rule_engine_loaded_slot", `[${CHECK_TAG}] expected authored FB shake trigger to route via slot cast action`);
   assertCheck(String(casts[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored FB shake cast to use FB slot`);
 }

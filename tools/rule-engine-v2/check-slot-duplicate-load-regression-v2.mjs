@@ -45,14 +45,14 @@ function main() {
 
   runWithStartedSystem(system, () => {
     eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
-      wordId: "sanctum_shield",
+      wordId: "bubble_shield",
       slot: CHECK_SLOTS_V2.fb,
       atMs: nowRef.value,
       trigger: "test_direct_load",
     });
     advance(10);
     eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
-      wordId: "sanctum_shield",
+      wordId: "bubble_shield",
       slot: CHECK_SLOTS_V2.fb,
       atMs: nowRef.value,
       trigger: "test_direct_load",
@@ -79,7 +79,7 @@ function main() {
   assertCheck(consumeCalls === 1, `[${CHECK_TAG}] expected one globe consumed for the first load only, got ${consumeCalls}`);
   assertCheck(baseResources.getStoredGlobeCount() === 1, `[${CHECK_TAG}] expected one globe remaining after duplicate rejection, got ${baseResources.getStoredGlobeCount()}`);
   assertCheck(casts.length === 2, `[${CHECK_TAG}] expected loaded cast then fallback cast, got ${casts.length}`);
-  assertCheck(wordIdText(casts[0]) === "sanctum_shield", `[${CHECK_TAG}] expected first cast sanctum_shield, got ${wordIdText(casts[0])}`);
+  assertCheck(wordIdText(casts[0]) === "bubble_shield", `[${CHECK_TAG}] expected first cast bubble_shield, got ${wordIdText(casts[0])}`);
   assertCheck(wordIdText(casts[1]) === "shockwave", `[${CHECK_TAG}] expected fallback cast shockwave, got ${wordIdText(casts[1])}`);
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }

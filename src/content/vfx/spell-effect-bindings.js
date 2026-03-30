@@ -10,7 +10,7 @@
 
 /**
  * @typedef {Object} SpellVfxPostActionBinding
- * @property {string} id Follow-up action id (for example `orb_super_grace`).
+ * @property {string} id Follow-up action id (for example `float_grace`).
  * @property {string} [effectId] Optional VFX effect registry id if the post action has a visual component.
  * @property {string} [presetId] Optional preset id for the post action VFX.
  * @property {Object} [payload] Optional action payload override (for example `{ ms: 2500 }`).
@@ -36,7 +36,7 @@ export const WORD_VFX_BINDINGS = Object.freeze([
     }),
     postCastActions: Object.freeze([
       Object.freeze({
-        id: "orb_super_grace",
+        id: "float_grace",
         payload: Object.freeze({ ms: 2500 }),
       }),
     ]),
@@ -54,7 +54,7 @@ export const WORD_VFX_BINDINGS = Object.freeze([
     wordId: "sanctum",
     spellId: "sanctum",
     primary: Object.freeze({
-      castActionId: "sanctum_shield",
+      castActionId: "bubble_shield",
       effectId: "spell.shield_bubble",
       presetId: "preset.bubble_shield.default",
     }),

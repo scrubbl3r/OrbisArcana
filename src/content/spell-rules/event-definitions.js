@@ -33,9 +33,19 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({}),
   }),
   Object.freeze({
+    id: "bubble_shield",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
     id: "sanctum_shield",
     type: "event",
     defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
+    id: "colorize",
+    type: "event",
+    defaultArgs: Object.freeze({ r: 1, g: 1, b: 1, alpha: 1, fadeInMs: 0, fadeOutMs: 0 }),
   }),
   Object.freeze({
     id: "orb_state",

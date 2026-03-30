@@ -1126,7 +1126,7 @@
 
       // Debug-only "nirvana" test: enhanced grace + input processing reset.
       if ((e.key === "n" || e.key === "N") && e.shiftKey) {
-        executeWordCastAction("orb_super_grace", { payload: { ms: SUPER_GRACE_DEFAULT_MS } });
+        executeWordCastAction("float_grace", { payload: { ms: SUPER_GRACE_DEFAULT_MS } });
       }
     });
 

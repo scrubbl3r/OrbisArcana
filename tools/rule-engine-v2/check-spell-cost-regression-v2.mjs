@@ -35,7 +35,7 @@ function main() {
 
   runWithStartedSystem(system, () => {
     eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
-      wordId: "sanctum_shield",
+      wordId: "bubble_shield",
       slot: CHECK_SLOTS_V2.fb,
       atMs: nowRef.value,
       trigger: "test_direct_load",
@@ -62,7 +62,7 @@ function main() {
 
   assertCheck(rejected.length >= 1, `[${CHECK_TAG}] expected at least one rejection for zero-globe paid cast`);
   assertCheck(String(rejected[0]?.reason || "") === "insufficient_globes", `[${CHECK_TAG}] expected rejection reason insufficient_globes, got ${String(rejected[0]?.reason || "")}`);
-  assertCheck(String(rejected[0]?.wordId || "") === "sanctum_shield", `[${CHECK_TAG}] expected rejected spell sanctum_shield, got ${String(rejected[0]?.wordId || "")}`);
+  assertCheck(String(rejected[0]?.wordId || "") === "bubble_shield", `[${CHECK_TAG}] expected rejected spell bubble_shield, got ${String(rejected[0]?.wordId || "")}`);
   assertCheck(Number(rejected[0]?.requiredGlobes || 0) === 1, `[${CHECK_TAG}] expected requiredGlobes=1, got ${Number(rejected[0]?.requiredGlobes || 0)}`);
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }

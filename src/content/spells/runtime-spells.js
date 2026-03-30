@@ -11,14 +11,14 @@ export const RUNTIME_WORDS = Object.freeze([
     slot: "UD",
     intent: "spell.domus",
     cooldownMs: 250,
-    castActionId: "domus_teleport",
+    castActionId: "teleport",
   },
   {
     id: "sanctum",
     slot: "UD",
     intent: "spell.sanctum",
     cooldownMs: 1000,
-    castActionId: "sanctum_shield",
+    castActionId: "bubble_shield",
   },
   {
     id: "rota",
@@ -27,7 +27,7 @@ export const RUNTIME_WORDS = Object.freeze([
     cooldownMs: 1100,
     castActionId: "aoe_axis",
     postCastActions: [
-      { id: "orb_super_grace", payload: { ms: 2500 } },
+      { id: "float_grace", payload: { ms: 2500 } },
     ],
   },
   {

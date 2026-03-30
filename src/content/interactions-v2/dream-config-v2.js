@@ -60,7 +60,7 @@ export const DREAM_CONFIG_V2 = {
       id: "pyro_sanctum_cast",
       on: { word: "sanctum" },
       requires: "chain.pyro_voice",
-      trigger: { spell: "sanctum_shield" },
+      trigger: { spell: "bubble_shield" },
     },
     {
       id: "pyro_rota_cast",
@@ -84,7 +84,7 @@ export const DREAM_CONFIG_V2 = {
       id: "spin_y_pyro_vectus_bind_fb",
       on: { word: "vectus" },
       requires: "chain.spin_y_loaded",
-      bind: { spell: "sanctum_shield", slot: "FB" },
+      bind: { spell: "bubble_shield", slot: "FB" },
     },
     // SHOCKWAVE
     {

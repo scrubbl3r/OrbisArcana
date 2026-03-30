@@ -11,3 +11,4 @@
 // They remain in the cast-action / slot-dispatch layer.
 
 export { createShockwaveSpell } from "../spells/shockwave.js";
+export { createColorizeEffect } from "./colorize.js";
