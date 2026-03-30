@@ -1523,7 +1523,7 @@
         ] = await Promise.all([
           import(`./src/runtime/receiver-bootstrap.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/runtime/receiver-events.js"),
-          import(`./src/ui/kws-panel-controller.js?v=${MODULE_CACHE_BUST_V}`),
+          import(`./src/ui/dev-console/kws-panel-controller.js?v=${MODULE_CACHE_BUST_V}`),
           import("./src/voice/kws/kws-runtime-controller.js"),
           import("./src/voice/kws/kws-boot-orchestrator.js"),
           import(`./src/voice/kws/kws-event-bindings.js?v=${MODULE_CACHE_BUST_V}`),
