@@ -1,5 +1,6 @@
 /**
  * @typedef {Object} ShockwaveRuntimeConfig
+ * @property {{r:number,g:number,b:number,a:number}} [color]
  * @property {number} startR
  * @property {number} endR
  * @property {number} rings
@@ -12,7 +13,6 @@
  * @typedef {Object} CreateShockwaveRuntimeOptions
  * @property {HTMLElement} layerEl DOM layer where the shockwave SVG is mounted.
  * @property {() => ShockwaveRuntimeConfig} getConfig Returns runtime config (already sourced from SSOT/defaults).
- * @property {(strokePx:number) => void} [setShockStrokeCssVar] Hook to update receiver CSS var for stroke width.
  * @property {(n:number, min:number, max:number) => number} [clamp]
  * @property {(n:number, min?:number, max?:number) => number} [normalizeStroke]
  */
@@ -25,7 +25,6 @@
 export function createShockwaveRuntime({
   layerEl,
   getConfig,
-  setShockStrokeCssVar,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
   normalizeStroke = (n, min = 2, max = 20) => {
     let x = Math.round(Number(n) || 0);
@@ -38,6 +37,21 @@ export function createShockwaveRuntime({
   let shockSvg = null;
   let spawnAcc = 0;
   const activeRings = [];
+
+  function clampByte(v) {
+    const n = Math.round(Number(v) || 0);
+    return Math.max(0, Math.min(255, n));
+  }
+
+  function clamp01(v) {
+    const n = Number(v);
+    return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
+  }
+
+  function rgbaText(c) {
+    const src = c && typeof c === "object" ? c : { r: 255, g: 255, b: 255, a: 0.65 };
+    return `rgba(${clampByte(src.r)}, ${clampByte(src.g)}, ${clampByte(src.b)}, ${clamp01(src.a)})`;
+  }
 
   function buildShockSVG() {
     const maxR = 1000;
@@ -56,14 +70,14 @@ export function createShockwaveRuntime({
     return svg;
   }
 
-  function makeRingCircle(svg) {
+  function makeRingCircle(svg, cfg) {
     const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     c.setAttribute("cx", svg.__cx);
     c.setAttribute("cy", svg.__cy);
     c.setAttribute("r", "1");
     c.setAttribute("fill", "none");
-    c.setAttribute("stroke", "var(--shock-color)");
-    c.setAttribute("stroke-width", "var(--shock-stroke)");
+    c.setAttribute("stroke", rgbaText(cfg.color));
+    c.setAttribute("stroke-width", String(cfg.stroke));
     c.setAttribute("stroke-linecap", "round");
     c.setAttribute("opacity", "0");
     return c;
@@ -84,9 +98,9 @@ export function createShockwaveRuntime({
 
     const raw = getConfig() || {};
     const stroke = normalizeStroke(raw.stroke, 2, 20);
-    if (typeof setShockStrokeCssVar === "function") setShockStrokeCssVar(stroke);
 
     const cfg = {
+      color: raw.color,
       startR: clamp(raw.startR, 1, 1000),
       endR: clamp(raw.endR, 1, 1000),
       rings: Math.round(clamp(raw.rings, 1, 6)),
@@ -108,7 +122,7 @@ export function createShockwaveRuntime({
       spawnAcc += dt;
       while (spawned < cfg.rings && spawnAcc >= cfg.spawnMs) {
         spawnAcc -= cfg.spawnMs;
-        const circle = makeRingCircle(shockSvg);
+        const circle = makeRingCircle(shockSvg, cfg);
         shockSvg.appendChild(circle);
         activeRings.push({ born: now, circle });
         spawned += 1;
@@ -152,4 +166,3 @@ export function createShockwaveRuntime({
     destroy: clear,
   };
 }
-

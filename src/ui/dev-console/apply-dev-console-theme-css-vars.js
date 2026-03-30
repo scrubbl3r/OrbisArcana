@@ -12,16 +12,12 @@ function rgbText(rgb) {
   return `rgb(${clampByte(rgb.r)},${clampByte(rgb.g)},${clampByte(rgb.b)})`;
 }
 
-function rgbaText(c) {
-  return `rgba(${clampByte(c.r)}, ${clampByte(c.g)}, ${clampByte(c.b)}, ${clamp01(c.a)})`;
-}
-
 function setVar(root, name, value) {
   if (!root) return;
   root.style.setProperty(name, String(value));
 }
 
-export function applyThemeCssVars(theme, { root = document.documentElement } = {}) {
+export function applyDevConsoleThemeCssVars(theme, { root = document.documentElement } = {}) {
   if (!theme || !root) return;
 
   if (theme.ui && theme.ui.accentRgb) {
@@ -38,10 +34,4 @@ export function applyThemeCssVars(theme, { root = document.documentElement } = {
   if (theme.ui && theme.ui.backgroundRgb) {
     setVar(root, "--bg", rgbText(theme.ui.backgroundRgb));
   }
-
-  if (theme.shockwave) {
-    if (theme.shockwave.color) setVar(root, "--shock-color", rgbaText(theme.shockwave.color));
-    if (Number.isFinite(Number(theme.shockwave.strokeWidthPx))) setVar(root, "--shock-stroke", `${Math.round(Number(theme.shockwave.strokeWidthPx))}px`);
-  }
-
 }

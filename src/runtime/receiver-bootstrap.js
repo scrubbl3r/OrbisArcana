@@ -27,7 +27,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260330e";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260330f";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -296,7 +296,7 @@ export async function loadReceiverInitModules() {
     { ORB_RUNTIME_CONFIG_DEFAULT },
     { ORB_STATUS_CONFIG_DEFAULT },
     { GAME_THEME_DEFAULT },
-    { applyThemeCssVars },
+    { applyDevConsoleThemeCssVars },
     { buildInputHudViewModel: buildInputHudViewModelImported },
     { runInputFramePipeline: runInputFramePipelineImported },
     { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
@@ -353,7 +353,7 @@ export async function loadReceiverInitModules() {
     import("../content/orb/orb-runtime-config-default.js"),
     import("../content/orb/orb-status-config-default.js"),
     import("../content/theme/game-theme-default.js"),
-    import("../ui/apply-theme-css-vars.js"),
+    import("../ui/dev-console/apply-dev-console-theme-css-vars.js"),
     import("../ui/build-input-hud-view-model.js"),
     import("../systems/input-frame-pipeline.js"),
     import("../vfx/presets/index.js"),
@@ -421,7 +421,7 @@ export async function loadReceiverInitModules() {
     ORB_RUNTIME_CONFIG_DEFAULT,
     ORB_STATUS_CONFIG_DEFAULT,
     GAME_THEME_DEFAULT,
-    applyThemeCssVars,
+    applyDevConsoleThemeCssVars,
     buildInputHudViewModelImported,
     runInputFramePipelineImported,
     BUBBLE_SHIELD_PRESET_DEFAULT,
@@ -480,7 +480,7 @@ export async function loadReceiverInitModules() {
 export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const {
     GAME_THEME_DEFAULT,
-    applyThemeCssVars,
+    applyDevConsoleThemeCssVars,
     buildInputHudViewModelImported,
     createSpellActionHandlersImported,
     runInputFramePipelineImported,
@@ -679,7 +679,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
 
   if (GAME_THEME_DEFAULT) {
-    if (typeof applyThemeCssVars === "function") applyThemeCssVars(GAME_THEME_DEFAULT);
+    if (typeof applyDevConsoleThemeCssVars === "function") applyDevConsoleThemeCssVars(GAME_THEME_DEFAULT);
     if (typeof applyRuntimeTheme === "function") applyRuntimeTheme(GAME_THEME_DEFAULT);
   }
 

@@ -363,6 +363,7 @@
         pulseMax: 1.00
       },
       shock: {
+        color: { r: 255, g: 255, b: 255, a: 0.65 },
         startR: 43,
         endR: 169,
         rings: 2,
@@ -399,7 +400,6 @@
 
       const stroke = evenStroke(VFX_DEFAULTS.shock.stroke, 2, 20);
       VFX_DEFAULTS.shock.stroke = stroke;
-      setVar("--shock-stroke", stroke + "px");
     })();
 
     function evenStroke(n, min = 2, max = 20){
@@ -1232,7 +1232,7 @@
     let applyOrbBaseVisualCssVarsModule = null;
     let createOrbColorRuntimeModule = null;
     let orbColorRuntime = null;
-    const MODULE_CACHE_BUST_V = "20260330f";
+    const MODULE_CACHE_BUST_V = "20260330g";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1962,6 +1962,7 @@
             shockwave: {
               layerEl: els.shockLayer,
               getConfig: () => ({
+                color: VFX_DEFAULTS.shock.color,
                 startR: VFX_DEFAULTS.shock.startR,
                 endR: VFX_DEFAULTS.shock.endR,
                 rings: VFX_DEFAULTS.shock.rings,
@@ -1969,7 +1970,6 @@
                 decayMs: VFX_DEFAULTS.shock.decayMs,
                 stroke: VFX_DEFAULTS.shock.stroke,
               }),
-              setShockStrokeCssVar: (strokePx) => setVar("--shock-stroke", `${strokePx}px`),
               clamp,
               normalizeStroke: evenStroke,
             },
