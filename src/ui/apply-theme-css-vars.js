@@ -39,17 +39,6 @@ export function applyThemeCssVars(theme, { root = document.documentElement } = {
     setVar(root, "--bg", rgbText(theme.ui.backgroundRgb));
   }
 
-  if (theme.orb) {
-    if (Number.isFinite(Number(theme.orb.diameterPx))) setVar(root, "--orb-d", `${Math.round(Number(theme.orb.diameterPx))}px`);
-    if (Number.isFinite(Number(theme.orb.strokeWidthPx))) setVar(root, "--orb-stroke", `${Math.round(Number(theme.orb.strokeWidthPx))}px`);
-    if (theme.orb.strokeDefaultRgb) setVar(root, "--orb-stroke-color", rgbText(theme.orb.strokeDefaultRgb));
-    if (theme.orb.strokeDefaultRgb) {
-      const s = theme.orb.strokeDefaultRgb;
-      const a = clamp01(theme.orb.fillAlpha);
-      setVar(root, "--orb-fill", `rgba(${clampByte(s.r)},${clampByte(s.g)},${clampByte(s.b)},${a.toFixed(2)})`);
-    }
-  }
-
   if (theme.shockwave) {
     if (theme.shockwave.color) setVar(root, "--shock-color", rgbaText(theme.shockwave.color));
     if (Number.isFinite(Number(theme.shockwave.strokeWidthPx))) setVar(root, "--shock-stroke", `${Math.round(Number(theme.shockwave.strokeWidthPx))}px`);

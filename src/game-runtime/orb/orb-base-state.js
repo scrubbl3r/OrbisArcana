@@ -72,3 +72,23 @@ export function buildOrbBaseVisualState({ theme = null, physics = null } = {}) {
     fillAlpha,
   });
 }
+
+export function applyOrbBaseVisualCssVars(
+  orbBaseVisualState,
+  { root = globalThis.document && globalThis.document.documentElement } = {}
+) {
+  if (!root || !orbBaseVisualState || typeof orbBaseVisualState !== "object") return;
+
+  const stroke = orbBaseVisualState.strokeDefaultRgb || ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb;
+  const fillAlpha = clamp01(orbBaseVisualState.fillAlpha);
+  const diameterPx = Math.max(2, Math.round(Number(orbBaseVisualState.diameterPx) || ORB_BASE_VISUAL_DEFAULTS.diameterPx));
+  const strokeWidthPx = Math.max(1, Math.round(Number(orbBaseVisualState.strokeWidthPx) || ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx));
+
+  root.style.setProperty("--orb-d", `${diameterPx}px`);
+  root.style.setProperty("--orb-stroke", `${strokeWidthPx}px`);
+  root.style.setProperty("--orb-stroke-color", `rgb(${clampByte(stroke.r)},${clampByte(stroke.g)},${clampByte(stroke.b)})`);
+  root.style.setProperty(
+    "--orb-fill",
+    `rgba(${clampByte(stroke.r)},${clampByte(stroke.g)},${clampByte(stroke.b)},${fillAlpha.toFixed(2)})`
+  );
+}

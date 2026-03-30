@@ -1229,7 +1229,8 @@
     let shardPaletteSnapshot = null;
     let kwsEventBindings = null;
     let buildOrbBaseVisualStateModule = null;
-    const MODULE_CACHE_BUST_V = "20260330d";
+    let applyOrbBaseVisualCssVarsModule = null;
+    const MODULE_CACHE_BUST_V = "20260330e";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1265,6 +1266,9 @@
       orbBaseVisualState = next;
       ORB_FILL_ALPHA = clamp01(next.fillAlpha);
       ORB_STROKE_DEFAULT = { ...next.strokeDefault01 };
+      if (typeof applyOrbBaseVisualCssVarsModule === "function") {
+        applyOrbBaseVisualCssVarsModule(next, { root: document.documentElement });
+      }
       return next;
     }
 
@@ -1697,6 +1701,9 @@
           : null;
         buildOrbBaseVisualStateModule = (typeof mods.buildOrbBaseVisualState === "function")
           ? mods.buildOrbBaseVisualState
+          : null;
+        applyOrbBaseVisualCssVarsModule = (typeof mods.applyOrbBaseVisualCssVars === "function")
+          ? mods.applyOrbBaseVisualCssVars
           : null;
         rebuildOrbBaseVisualState(activeGameTheme);
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";

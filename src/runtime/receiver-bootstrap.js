@@ -27,7 +27,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260330c";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260330d";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -291,7 +291,7 @@ export async function loadReceiverInitModules() {
     { executeColorize },
     { createSpellCastExecutor },
     { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
-    { buildOrbBaseVisualState },
+    { buildOrbBaseVisualState, applyOrbBaseVisualCssVars },
     { ORB_RUNTIME_CONFIG_DEFAULT },
     { ORB_STATUS_CONFIG_DEFAULT },
     { GAME_THEME_DEFAULT },
@@ -414,6 +414,7 @@ export async function loadReceiverInitModules() {
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
     buildOrbBaseVisualState,
+    applyOrbBaseVisualCssVars,
     ORB_RUNTIME_CONFIG_DEFAULT,
     ORB_STATUS_CONFIG_DEFAULT,
     GAME_THEME_DEFAULT,
