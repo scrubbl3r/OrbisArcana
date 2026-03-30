@@ -1226,13 +1226,14 @@
     let electricAoeRuntime = null;
     let vfxRuntimesBundle = null;
     let receiverModulesReady = false;
-    let shardPaletteSnapshot = null;
     let kwsEventBindings = null;
     let buildOrbBaseVisualStateModule = null;
     let applyOrbBaseVisualCssVarsModule = null;
     let createOrbColorRuntimeModule = null;
     let orbColorRuntime = null;
-    const MODULE_CACHE_BUST_V = "20260330g";
+    let createOrbShatterRuntimeControllerModule = null;
+    let orbShatterController = null;
+    const MODULE_CACHE_BUST_V = "20260330h";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1330,9 +1331,11 @@
     }
 
     function stopShardSim(){
-      if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") {
-        orbShatterRuntime.clear();
+      if (orbShatterController && typeof orbShatterController.stopShardSim === "function") {
+        orbShatterController.stopShardSim();
+        return;
       }
+      if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") orbShatterRuntime.clear();
     }
 
     function normalizeWorldItemSpawn(item){
@@ -1389,49 +1392,9 @@
       return spellCastExecutor.execute(castActionId, context);
     }
 
-    function parseRgbLike(colorText){
-      const text = String(colorText || "").trim();
-      // Supports rgb(...) and rgba(...) values used by orb CSS vars.
-      const m = text.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i);
-      if (!m) return null;
-      const r = clamp(Math.round(Number(m[1]) || 0), 0, 255);
-      const g = clamp(Math.round(Number(m[2]) || 0), 0, 255);
-      const b = clamp(Math.round(Number(m[3]) || 0), 0, 255);
-      const a = clamp01(m[4] == null ? 1 : Number(m[4]));
-      return { r, g, b, a };
-    }
-
-    function captureCurrentOrbPalette(){
-      const rootStyle = getComputedStyle(document.documentElement);
-      const orbStyle = els.orb ? getComputedStyle(els.orb) : null;
-
-      // Prefer live CSS vars actually being rendered.
-      const strokeFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-stroke-color"));
-      const fillFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-fill"));
-
-      const orbColorState = (orbColorRuntime && typeof orbColorRuntime.getCurrentState === "function")
-        ? orbColorRuntime.getCurrentState()
-        : null;
-      const fallbackR = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.r) * 255);
-      const fallbackG = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.g) * 255);
-      const fallbackB = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.b) * 255);
-      const stroke = strokeFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: 1 };
-      const fill = fillFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: ORB_FILL_ALPHA };
-
-      // If orb opacity is modulated at runtime, preserve that in shard fill alpha snapshot.
-      const orbOpacity = orbStyle ? clamp01(Number(orbStyle.opacity) || 1) : 1;
-
-      return {
-        strokeRgb: `rgb(${stroke.r},${stroke.g},${stroke.b})`,
-        fillRgb: `rgb(${fill.r},${fill.g},${fill.b})`,
-        fillAlpha: clamp01(fill.a * orbOpacity),
-      };
-    }
-
     function spawnShardFx(p){
-      const palette = shardPaletteSnapshot || captureCurrentOrbPalette();
-      if (!orbShatterRuntime || typeof orbShatterRuntime.spawnPiece !== "function") return;
-      orbShatterRuntime.spawnPiece(p, palette);
+      if (!orbShatterController || typeof orbShatterController.spawnShardFx !== "function") return;
+      orbShatterController.spawnShardFx(p);
     }
 
     async function initMvpSystems(){
@@ -1670,6 +1633,9 @@
           : null;
         createOrbColorRuntimeModule = (typeof mods.createOrbColorRuntime === "function")
           ? mods.createOrbColorRuntime
+          : null;
+        createOrbShatterRuntimeControllerModule = (typeof mods.createOrbShatterRuntimeController === "function")
+          ? mods.createOrbShatterRuntimeController
           : null;
         orbColorRuntime = (typeof createOrbColorRuntimeModule === "function")
           ? createOrbColorRuntimeModule({
@@ -2011,6 +1977,19 @@
           orbShatterRuntime = vfxRuntimesBundle.orbShatterRuntime;
           flameAoeRuntime = vfxRuntimesBundle.flameAoeRuntime;
           electricAoeRuntime = vfxRuntimesBundle.electricAoeRuntime;
+          orbShatterController = (typeof createOrbShatterRuntimeControllerModule === "function")
+            ? createOrbShatterRuntimeControllerModule({
+                root: document.documentElement,
+                getOrbEl: () => els.orb,
+                getOrbShatterRuntime: () => orbShatterRuntime,
+                getOrbColorState: () => (orbColorRuntime && typeof orbColorRuntime.getCurrentState === "function")
+                  ? orbColorRuntime.getCurrentState()
+                  : null,
+                getBaseFillAlpha: () => ORB_FILL_ALPHA,
+                clamp,
+                clamp01,
+              })
+            : null;
         }
         if (typeof createOrbRuntimeState === "function") {
           orbRuntimeState = createOrbRuntimeState({ initialState: orbRuntimeFallbackState });
@@ -2320,7 +2299,9 @@
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbDamageVisuals);
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnShardFx);
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
-          shardPaletteSnapshot = captureCurrentOrbPalette();
+          if (orbShatterController && typeof orbShatterController.handleOrbDied === "function") {
+            orbShatterController.handleOrbDied();
+          }
           orbInputSuppressed = true;
           clearFloatGrace();
           clearOrbRuntimeFxForDeath();
@@ -2328,7 +2309,9 @@
           updateDebugReadout();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_REVIVED, () => {
-          shardPaletteSnapshot = null;
+          if (orbShatterController && typeof orbShatterController.handleOrbRevived === "function") {
+            orbShatterController.handleOrbRevived();
+          }
           orbInputSuppressed = false;
           clearFloatGrace();
           clearDeathOverlaySchedule();
@@ -2339,7 +2322,11 @@
           updateDebugReadout();
         });
         eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
-          stopShardSim();
+          if (orbShatterController && typeof orbShatterController.handleOrbShatterComplete === "function") {
+            orbShatterController.handleOrbShatterComplete();
+          } else {
+            stopShardSim();
+          }
         });
         eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED, () => {
           executeWordCastAction("colorize", {
