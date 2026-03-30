@@ -1230,7 +1230,9 @@
     let kwsEventBindings = null;
     let buildOrbBaseVisualStateModule = null;
     let applyOrbBaseVisualCssVarsModule = null;
-    const MODULE_CACHE_BUST_V = "20260330e";
+    let createOrbColorRuntimeModule = null;
+    let orbColorRuntime = null;
+    const MODULE_CACHE_BUST_V = "20260330f";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1244,14 +1246,6 @@
     let orbBaseVisualState = null;
     let ORB_FILL_ALPHA = 0.20;
     let ORB_STROKE_DEFAULT = { r: 1.0, g: 1.0, b: 1.0 };
-    const orbStrokeColor = {
-      current: { ...ORB_STROKE_DEFAULT },
-      target: { ...ORB_STROKE_DEFAULT },
-      currentAlpha: ORB_FILL_ALPHA,
-      targetAlpha: ORB_FILL_ALPHA,
-      initialized: false,
-    };
-
     function rebuildOrbBaseVisualState(theme = activeGameTheme){
       const next = (typeof buildOrbBaseVisualStateModule === "function")
         ? buildOrbBaseVisualStateModule({ theme, physics: PHYS })
@@ -1269,68 +1263,34 @@
       if (typeof applyOrbBaseVisualCssVarsModule === "function") {
         applyOrbBaseVisualCssVarsModule(next, { root: document.documentElement });
       }
+      if (orbColorRuntime && typeof orbColorRuntime.reset === "function") {
+        orbColorRuntime.reset(true);
+      }
       return next;
     }
 
-    function applyOrbStrokeColor01(c, alpha = ORB_FILL_ALPHA){
-      const r = Math.round(clamp01(c.r) * 255);
-      const g = Math.round(clamp01(c.g) * 255);
-      const b = Math.round(clamp01(c.b) * 255);
-      document.documentElement.style.setProperty("--orb-stroke-color", `rgb(${r},${g},${b})`);
-      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},${clamp01(alpha).toFixed(2)})`);
-    }
-
-    function setOrbStrokeColor01(c, alpha = ORB_FILL_ALPHA){
-      const nx = clamp01(c.r);
-      const ny = clamp01(c.g);
-      const nz = clamp01(c.b);
-      orbStrokeColor.target = { r: nx, g: ny, b: nz };
-      orbStrokeColor.targetAlpha = clamp01(alpha);
-      if (!orbStrokeColor.initialized) {
-        orbStrokeColor.current = { r: nx, g: ny, b: nz };
-        orbStrokeColor.currentAlpha = orbStrokeColor.targetAlpha;
-        orbStrokeColor.initialized = true;
-        applyOrbStrokeColor01(orbStrokeColor.current, orbStrokeColor.currentAlpha);
+    function updateOrbStrokeColor(dt){
+      if (orbColorRuntime && typeof orbColorRuntime.update === "function") {
+        orbColorRuntime.update(dt);
       }
     }
 
-    function updateOrbStrokeColor(dt){
-      const a = 1 - Math.exp(-7 * clamp(dt, 0, 0.05));
-      orbStrokeColor.current.r += (orbStrokeColor.target.r - orbStrokeColor.current.r) * a;
-      orbStrokeColor.current.g += (orbStrokeColor.target.g - orbStrokeColor.current.g) * a;
-      orbStrokeColor.current.b += (orbStrokeColor.target.b - orbStrokeColor.current.b) * a;
-      orbStrokeColor.currentAlpha += (orbStrokeColor.targetAlpha - orbStrokeColor.currentAlpha) * a;
-      applyOrbStrokeColor01(orbStrokeColor.current, orbStrokeColor.currentAlpha);
-    }
-
     function resetOrbStrokeColor(immediate = false){
-      orbStrokeColor.target = { ...ORB_STROKE_DEFAULT };
-      orbStrokeColor.targetAlpha = ORB_FILL_ALPHA;
-      if (immediate || !orbStrokeColor.initialized) {
-        orbStrokeColor.current = { ...ORB_STROKE_DEFAULT };
-        orbStrokeColor.currentAlpha = ORB_FILL_ALPHA;
-        orbStrokeColor.initialized = true;
-        applyOrbStrokeColor01(orbStrokeColor.current, orbStrokeColor.currentAlpha);
+      if (orbColorRuntime && typeof orbColorRuntime.reset === "function") {
+        orbColorRuntime.reset(immediate);
       }
     }
 
     function applyColorize(payload = {}){
-      const r = Number(payload.r);
-      const g = Number(payload.g);
-      const b = Number(payload.b);
-      const alpha = Number(payload.alpha);
-      setOrbStrokeColor01(
-        {
-          r: Number.isFinite(r) ? (r > 1 ? r / 255 : r) : orbStrokeColor.target.r,
-          g: Number.isFinite(g) ? (g > 1 ? g / 255 : g) : orbStrokeColor.target.g,
-          b: Number.isFinite(b) ? (b > 1 ? b / 255 : b) : orbStrokeColor.target.b,
-        },
-        Number.isFinite(alpha) ? (alpha > 1 ? alpha / 255 : alpha) : orbStrokeColor.targetAlpha
-      );
+      if (orbColorRuntime && typeof orbColorRuntime.applyColorize === "function") {
+        orbColorRuntime.applyColorize(payload);
+      }
     }
 
     function clearColorize(){
-      resetOrbStrokeColor(false);
+      if (orbColorRuntime && typeof orbColorRuntime.clearColorize === "function") {
+        orbColorRuntime.clearColorize();
+      }
     }
 
     function computeImpactMetric(rawImpactV){
@@ -1449,9 +1409,12 @@
       const strokeFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-stroke-color"));
       const fillFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-fill"));
 
-      const fallbackR = Math.round(clamp01(orbStrokeColor.current.r) * 255);
-      const fallbackG = Math.round(clamp01(orbStrokeColor.current.g) * 255);
-      const fallbackB = Math.round(clamp01(orbStrokeColor.current.b) * 255);
+      const orbColorState = (orbColorRuntime && typeof orbColorRuntime.getCurrentState === "function")
+        ? orbColorRuntime.getCurrentState()
+        : null;
+      const fallbackR = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.r) * 255);
+      const fallbackG = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.g) * 255);
+      const fallbackB = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.b) * 255);
       const stroke = strokeFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: 1 };
       const fill = fillFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: ORB_FILL_ALPHA };
 
@@ -1704,6 +1667,17 @@
           : null;
         applyOrbBaseVisualCssVarsModule = (typeof mods.applyOrbBaseVisualCssVars === "function")
           ? mods.applyOrbBaseVisualCssVars
+          : null;
+        createOrbColorRuntimeModule = (typeof mods.createOrbColorRuntime === "function")
+          ? mods.createOrbColorRuntime
+          : null;
+        orbColorRuntime = (typeof createOrbColorRuntimeModule === "function")
+          ? createOrbColorRuntimeModule({
+              root: document.documentElement,
+              getBaseVisualState: () => orbBaseVisualState,
+              clamp01,
+              clamp,
+            })
           : null;
         rebuildOrbBaseVisualState(activeGameTheme);
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";
