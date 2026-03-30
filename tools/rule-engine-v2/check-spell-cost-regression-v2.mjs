@@ -48,13 +48,6 @@ function main() {
       trigger: "test_slot_cast",
     });
     advance(10);
-    eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
-      wordId: "shockwave",
-      slot: CHECK_SLOTS_V2.fb,
-      atMs: nowRef.value,
-      trigger: "test_direct_load",
-    });
-    advance(10);
     eventBus.emit(EVT_SPELL_SLOT_CAST_REQUESTED, {
       slot: CHECK_SLOTS_V2.fb,
       directionGroup: CHECK_SLOTS_V2.fb,
@@ -63,8 +56,9 @@ function main() {
     });
   });
 
-  assertCheck(casts.length === 1, `[${CHECK_TAG}] expected only one successful cast, got ${casts.length}`);
-  assertCheck(wordIdText(casts[0]) === "shockwave", `[${CHECK_TAG}] expected the free fallback cast to be shockwave, got ${wordIdText(casts[0])}`);
+  assertCheck(casts.length === 2, `[${CHECK_TAG}] expected default shockwave casts after rejected paid load, got ${casts.length}`);
+  assertCheck(wordIdText(casts[0]) === "shockwave", `[${CHECK_TAG}] expected first free fallback cast to be shockwave, got ${wordIdText(casts[0])}`);
+  assertCheck(wordIdText(casts[1]) === "shockwave", `[${CHECK_TAG}] expected second free fallback cast to be shockwave, got ${wordIdText(casts[1])}`);
 
   assertCheck(rejected.length >= 1, `[${CHECK_TAG}] expected at least one rejection for zero-globe paid cast`);
   assertCheck(String(rejected[0]?.reason || "") === "insufficient_globes", `[${CHECK_TAG}] expected rejection reason insufficient_globes, got ${String(rejected[0]?.reason || "")}`);

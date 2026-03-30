@@ -263,6 +263,15 @@ export function createSpellDispatchSystem({
   function loadSlot(slotRaw, payload = {}) {
     const entry = buildLoadedEntryFromPayload(payload, slotRaw);
     if (!entry) return null;
+    const costResult = tryConsumeSpellCost(entry, {
+      ...payload,
+      atMs: entry.loadedAtMs,
+      reason: "slot_load",
+    });
+    if (!costResult.ok) {
+      emitInsufficientGlobes(entry, { ...payload, atMs: entry.loadedAtMs }, costResult.globeCost, costResult.stored);
+      return null;
+    }
     loadedBySlot[entry.slot] = {
       wordId: entry.wordId,
       spellId: entry.spellId,
@@ -300,15 +309,6 @@ export function createSpellDispatchSystem({
         remainingMs: castCheck.remainingMs,
         atMs: now,
       });
-      return null;
-    }
-    const costResult = tryConsumeSpellCost(entry, {
-      ...payload,
-      atMs: now,
-      reason: "slot_cast",
-    });
-    if (!costResult.ok) {
-      emitInsufficientGlobes(entry, payload, costResult.globeCost, costResult.stored);
       return null;
     }
     if (entry.resident === "loaded") {
