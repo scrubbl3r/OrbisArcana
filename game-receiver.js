@@ -1534,8 +1534,8 @@
           import("./src/voice/kws/kws-reinit-teardown.js"),
           import("./src/voice/kws/kws-receiver-bridge.js"),
           import("./src/vfx/effects/vfx-runtimes-bundle.js"),
-          import("./src/systems/orb-runtime-state.js"),
-          import("./src/systems/orb-runtime-loop.js"),
+          import("./src/game-runtime/orb/orb-runtime-state.js"),
+          import("./src/game-runtime/orb/orb-runtime-loop.js"),
         ]);
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:imports_ok";
         teardownKwsRuntimeForReinit = importedTeardownKwsRuntimeForReinit;
