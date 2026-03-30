@@ -465,10 +465,9 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
       });
     }));
     unsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
-      if (String(payload.trigger || "") !== "shake_detonation") return;
-      consumeOrbitingGlobe({
-        slot: String(payload.slot || "").toUpperCase(),
-      });
+      const slot = String(payload.slot || "").toUpperCase();
+      if (!slot) return;
+      consumeOrbitingGlobe({ slot });
     }));
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       releaseInnerGlobesAtDeath(performance.now());
