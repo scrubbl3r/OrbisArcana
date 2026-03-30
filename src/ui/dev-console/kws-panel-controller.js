@@ -1,4 +1,4 @@
-import { createWordFlashboardPopup } from "./word-flashboard-popup.js";
+import { createWordFlashboardPopup } from "./word-flashboard/word-flashboard-popup.js";
 import { createLogPopupController } from "./log/log-popup-controller.js";
 
 export function createKwsPanelController({
