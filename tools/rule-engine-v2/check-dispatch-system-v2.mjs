@@ -6,6 +6,7 @@ export function createCheckDispatchSystem({
   nowMs,
   resources,
   ruleEngineEnabled = true,
+  allowLegacyFallbacks = false,
   baseSpellBySlot,
 }) {
   return createSpellDispatchSystem({
@@ -13,6 +14,7 @@ export function createCheckDispatchSystem({
     nowMs,
     resources,
     ruleEngineEnabled,
+    allowLegacyFallbacks,
     baseSpellBySlot,
   });
 }

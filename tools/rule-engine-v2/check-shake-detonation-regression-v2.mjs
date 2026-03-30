@@ -37,6 +37,7 @@ function runScenario({ wordId, slot, expectedWordId, shakeGroup = "" }) {
     nowMs,
     resources,
     ruleEngineEnabled: false,
+    allowLegacyFallbacks: true,
   });
   runWithStartedSystem(system, () => {
     eventBus.emit(EVT_SPELL_SLOT_LOAD_REQUESTED, {
@@ -66,6 +67,7 @@ function runDefaultShockwaveScenario({ shakeGroup }) {
     nowMs,
     resources,
     ruleEngineEnabled: false,
+    allowLegacyFallbacks: true,
   });
 
   runWithStartedSystem(system, () => {

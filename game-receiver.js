@@ -2133,6 +2133,7 @@
           eventBus,
           resources: resourcesSystem,
           ruleEngineEnabled: (!ruleSchema || ruleSchema.enabled !== false) && RULE_ENGINE_EXECUTE_ACTIONS === true,
+          allowLegacyFallbacks: false,
         });
         if (typeof createRuleEnginePreviewSystemFactory === "function" && ruleSchema) {
           ruleEnginePreviewSystem = createRuleEnginePreviewSystemFactory({

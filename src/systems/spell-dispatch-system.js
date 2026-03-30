@@ -29,6 +29,7 @@ export function createSpellDispatchSystem({
   nowMs = () => Date.now(),
   resources = null,
   ruleEngineEnabled = true,
+  allowLegacyFallbacks = false,
   baseSpellBySlot = null,
 } = {}) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
@@ -57,6 +58,10 @@ export function createSpellDispatchSystem({
   let nextSlotIndex = 0;
   let lastVoiceDetectDedupeKey = "";
   let lastVoiceDetectDedupeAtMs = 0;
+
+  function legacyFallbacksEnabled() {
+    return !ruleEngineEnabled && allowLegacyFallbacks === true;
+  }
 
   function getStoredGlobeCount() {
     if (resources && typeof resources.getStoredGlobeCount === "function") {
@@ -349,7 +354,7 @@ export function createSpellDispatchSystem({
     function onVoiceDetected(payload = {}) {
       // When the rule engine is active, authored gameplay chains own voice recognition/load semantics.
       // Dispatch remains the slot/shake owner and should not compete by consuming words directly.
-      if (ruleEngineEnabled) return;
+      if (!legacyFallbacksEnabled()) return;
       const detected = (payload && typeof payload === "object")
         ? (payload.spell || payload.word || {})
         : {};
@@ -453,7 +458,7 @@ export function createSpellDispatchSystem({
     }));
 
     unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
-      if (ruleEngineEnabled) return;
+      if (!legacyFallbacksEnabled()) return;
       const group = normGroup(payload.group);
       const now = nowMs();
 
