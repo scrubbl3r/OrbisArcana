@@ -492,6 +492,13 @@
     }
 
     function triggerShockwave(){
+      if (typeof triggerShockwaveRuntimeModule === "function") {
+        const result = triggerShockwaveRuntimeModule({
+          shockwaveRuntime,
+          playShock,
+        });
+        if (result && result.handled) return;
+      }
       if (shockwaveRuntime && typeof shockwaveRuntime.trigger === "function") {
         shockwaveRuntime.trigger();
         return;
@@ -522,6 +529,12 @@
     }
 
     function playFlameAoe(){
+      if (typeof playFlameAoeRuntimeModule === "function") {
+        const result = playFlameAoeRuntimeModule({
+          flameAoeRuntime,
+        });
+        if (result && result.handled) return;
+      }
       if (flameAoeRuntime && typeof flameAoeRuntime.play === "function") {
         flameAoeRuntime.play();
       }
@@ -537,6 +550,12 @@
     }
 
     function playElectricAoe(){
+      if (typeof playElectricAoeRuntimeModule === "function") {
+        const result = playElectricAoeRuntimeModule({
+          electricAoeRuntime,
+        });
+        if (result && result.handled) return;
+      }
       if (electricAoeRuntime && typeof electricAoeRuntime.play === "function") {
         electricAoeRuntime.play();
       }
@@ -1223,6 +1242,9 @@
     let executeTeleportHomeSpellModule = null;
     let teleportOrbRuntimeToSpawnModule = null;
     let executeShockwaveSpellModule = null;
+    let triggerShockwaveRuntimeModule = null;
+    let playElectricAoeRuntimeModule = null;
+    let playFlameAoeRuntimeModule = null;
     let executeColorizeSpellModule = null;
     let clearFloatGraceRuntimeModule = null;
     let grantFloatGraceRuntimeModule = null;
@@ -1678,6 +1700,15 @@
           : null;
         executeShockwaveSpellModule = (typeof mods.executeShockwave === "function")
           ? mods.executeShockwave
+          : null;
+        triggerShockwaveRuntimeModule = (typeof mods.triggerShockwaveRuntime === "function")
+          ? mods.triggerShockwaveRuntime
+          : null;
+        playElectricAoeRuntimeModule = (typeof mods.playElectricAoeRuntime === "function")
+          ? mods.playElectricAoeRuntime
+          : null;
+        playFlameAoeRuntimeModule = (typeof mods.playFlameAoeRuntime === "function")
+          ? mods.playFlameAoeRuntime
           : null;
         executeColorizeSpellModule = (typeof mods.executeColorize === "function")
           ? mods.executeColorize

@@ -10,3 +10,13 @@ export function executeAoeFlame({
   playFlameAoe();
   return { handled: true };
 }
+
+export function playFlameAoeRuntime({
+  flameAoeRuntime,
+} = {}) {
+  if (!flameAoeRuntime || typeof flameAoeRuntime.play !== "function") {
+    return { handled: false };
+  }
+  flameAoeRuntime.play();
+  return { handled: true };
+}
