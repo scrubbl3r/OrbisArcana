@@ -263,6 +263,18 @@ export function createSpellDispatchSystem({
   function loadSlot(slotRaw, payload = {}) {
     const entry = buildLoadedEntryFromPayload(payload, slotRaw);
     if (!entry) return null;
+    const existing = mostRecentLoadedForGroup(entry.slot);
+    if (existing && String(existing.wordId || "") === String(entry.wordId || "")) {
+      eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+        reason: "slot_already_contains_spell",
+        wordId: String(entry.wordId || ""),
+        spellId: String(entry.spellId || entry.wordId || ""),
+        slot: String(entry.slot || ""),
+        axis: String(entry.axis || ""),
+        atMs: entry.loadedAtMs,
+      });
+      return null;
+    }
     const costResult = tryConsumeSpellCost(entry, {
       ...payload,
       atMs: entry.loadedAtMs,
