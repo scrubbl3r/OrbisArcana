@@ -81,13 +81,8 @@ export function createKwsReceiverBridge({
     if (!panel) return;
     if (typeof panel.setSelectedAxisWord === "function") {
       panel.setSelectedAxisWord(axis, axisWord);
-      return;
-    }
-    if (typeof panel.setSelectedAxisSpell === "function") {
-      panel.setSelectedAxisSpell(axis, axisWord);
     }
   }
-  const setSelectedAxisSpell = setSelectedAxisWord;
 
   function flashToken(token, ms = 360) {
     const panel = getPanel();
@@ -132,7 +127,6 @@ export function createKwsReceiverBridge({
     resetHeardWakeWindowTokensAllAxes,
     markHeardWakeWindowToken,
     setSelectedAxisWord,
-    setSelectedAxisSpell,
     flashToken,
     openWakeHudGate,
     updateReadout,

@@ -59,7 +59,6 @@ export function createKwsRuntimeConfig() {
       ? WORDFLASHBOARD_WORDS.map((entry) => Object.freeze({ ...entry }))
       : [],
     axisWordByAxis: Object.freeze({}),
-    axisSpellByAxis: Object.freeze({}),
     logTokens: tokenList.slice(),
     tempUngatedTokens: tokenList.slice(),
     tokenCanonicalMap,

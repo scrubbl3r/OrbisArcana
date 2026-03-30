@@ -76,7 +76,7 @@ export function bindKwsEventHandlers({
     return new Set(listenableTokens.map((value) => canonicalKwsToken(value))).has(canonicalKwsToken(token));
   }
   const getWordIdFromPayload = (p = {}) => String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
-  const getAxisWordFromPayload = (p = {}) => String((p.axisWord ?? p.axisSpell) || "").trim().toLowerCase();
+  const getAxisWordFromPayload = (p = {}) => String(p.axisWord || "").trim().toLowerCase();
   const getDetectedWordId = (p = {}) => {
     const direct = String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
     if (direct) return direct;

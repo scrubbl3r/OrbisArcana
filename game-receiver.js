@@ -1057,7 +1057,6 @@
       resetHeardWakeWindowTokensAllAxes() {},
       markHeardWakeWindowToken() {},
       setSelectedAxisWord() {},
-      setSelectedAxisSpell() {},
       flashToken() {},
       openWakeHudGate() {},
       updateReadout() {},
@@ -1542,8 +1541,6 @@
               : KWS_WORDFLASHBOARD_WORDS;
             KWS_AXIS_WORD_BY_AXIS = (kwsConfig.axisWordByAxis && typeof kwsConfig.axisWordByAxis === "object")
               ? Object.freeze({ ...kwsConfig.axisWordByAxis })
-              : (kwsConfig.axisSpellByAxis && typeof kwsConfig.axisSpellByAxis === "object")
-              ? Object.freeze({ ...kwsConfig.axisSpellByAxis })
               : KWS_AXIS_WORD_BY_AXIS;
             KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
             TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
@@ -2459,7 +2456,8 @@
             }
             if (RULE_CHAIN_TRACE_ENABLED && (actionId === "teleport_home" || actionId === "aoe_electric" || actionId === "shockwave")) {
               const handled = !!(execResult && execResult.handled);
-              kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
+              const traceActionId = actionId === "teleport_home" ? "teleport" : actionId;
+              kwsBridge.pushLogLine(`TRACE exec:${traceActionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
             }
             return;
           }
@@ -2553,8 +2551,8 @@
               ruleId === "shake_lr_cast" ||
               ruleId === "shake_fb_cast" ||
               ruleId === "spin_y_opens_pyro" ||
-              ruleId === "spin_y_pyro_opens_rota" ||
-              ruleId === "spin_y_pyro_rota_bind_fb"
+              ruleId === "spin_y_pyro_opens_vectus" ||
+              ruleId === "spin_y_pyro_vectus_bind_fb"
             ) {
               kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
             }
@@ -2570,7 +2568,7 @@
               const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_seed";
               kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
             }
-            if (ruleId === "spin_y_pyro_opens_rota") {
+            if (ruleId === "spin_y_pyro_opens_vectus") {
               const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_loaded";
               kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
             }
@@ -2579,7 +2577,7 @@
             const actionType = String(p.actionType || "").trim().toLowerCase();
             const actionId = String(p.actionId || "").trim().toLowerCase();
             if (actionType === "event" && actionId === "teleport_home") {
-              kwsBridge.pushLogLine("TRACE action:event:teleport_home", "ok");
+              kwsBridge.pushLogLine("TRACE action:event:teleport", "ok");
             }
             if (actionType === "event" && actionId === "aoe_electric") {
               kwsBridge.pushLogLine("TRACE action:event:aoe_electric", "ok");
