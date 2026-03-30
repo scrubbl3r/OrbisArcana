@@ -15,9 +15,12 @@ export function createSpellActionHandlers({
   executeShockwave,
   executeBubbleShield,
   executeFloatGrace,
+  executeColorize,
   triggerShockwave,
   activateSanctusShield,
   grantSuperGrace,
+  applyColorize,
+  clearColorize,
   domusTeleportAboveGroundPx = 300,
   sanctusShieldMs = 8000,
 } = {}){
@@ -128,8 +131,13 @@ export function createSpellActionHandlers({
       return this.float_grace(payload);
     },
     colorize(payload = {}) {
-      void payload;
-      // Stub only for now. Real orb color effect wiring will land in runtime-effects.
+      if (typeof executeColorize === "function") {
+        executeColorize({
+          applyColorize,
+          clearColorize,
+          payload,
+        });
+      }
     },
     cast_loaded_ud(payload = {}) {
       requestSlotCast("UD", payload);

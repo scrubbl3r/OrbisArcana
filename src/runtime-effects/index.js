@@ -17,4 +17,4 @@ export { executeAoeFlame } from "./aoe-flame.js";
 export { executeAoeFrost } from "./aoe-frost.js";
 export { executeBubbleShield } from "./bubble-shield.js";
 export { executeFloatGrace } from "./float-grace.js";
-export { createColorizeEffect } from "./colorize.js";
+export { executeColorize } from "./colorize.js";

@@ -1223,6 +1223,7 @@
     let createSpellActionHandlersModule = null;
     let executeTeleportHomeSpellModule = null;
     let executeShockwaveSpellModule = null;
+    let executeColorizeSpellModule = null;
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
@@ -1266,26 +1267,30 @@
     const orbStrokeColor = {
       current: { ...ORB_STROKE_DEFAULT },
       target: { ...ORB_STROKE_DEFAULT },
+      currentAlpha: ORB_FILL_ALPHA,
+      targetAlpha: ORB_FILL_ALPHA,
       initialized: false,
     };
 
-    function applyOrbStrokeColor01(c){
+    function applyOrbStrokeColor01(c, alpha = ORB_FILL_ALPHA){
       const r = Math.round(clamp01(c.r) * 255);
       const g = Math.round(clamp01(c.g) * 255);
       const b = Math.round(clamp01(c.b) * 255);
       document.documentElement.style.setProperty("--orb-stroke-color", `rgb(${r},${g},${b})`);
-      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},${ORB_FILL_ALPHA.toFixed(2)})`);
+      document.documentElement.style.setProperty("--orb-fill", `rgba(${r},${g},${b},${clamp01(alpha).toFixed(2)})`);
     }
 
-    function setOrbStrokeColor01(c){
+    function setOrbStrokeColor01(c, alpha = ORB_FILL_ALPHA){
       const nx = clamp01(c.r);
       const ny = clamp01(c.g);
       const nz = clamp01(c.b);
       orbStrokeColor.target = { r: nx, g: ny, b: nz };
+      orbStrokeColor.targetAlpha = clamp01(alpha);
       if (!orbStrokeColor.initialized) {
         orbStrokeColor.current = { r: nx, g: ny, b: nz };
+        orbStrokeColor.currentAlpha = orbStrokeColor.targetAlpha;
         orbStrokeColor.initialized = true;
-        applyOrbStrokeColor01(orbStrokeColor.current);
+        applyOrbStrokeColor01(orbStrokeColor.current, orbStrokeColor.currentAlpha);
       }
     }
 
@@ -1294,16 +1299,38 @@
       orbStrokeColor.current.r += (orbStrokeColor.target.r - orbStrokeColor.current.r) * a;
       orbStrokeColor.current.g += (orbStrokeColor.target.g - orbStrokeColor.current.g) * a;
       orbStrokeColor.current.b += (orbStrokeColor.target.b - orbStrokeColor.current.b) * a;
-      applyOrbStrokeColor01(orbStrokeColor.current);
+      orbStrokeColor.currentAlpha += (orbStrokeColor.targetAlpha - orbStrokeColor.currentAlpha) * a;
+      applyOrbStrokeColor01(orbStrokeColor.current, orbStrokeColor.currentAlpha);
     }
 
     function resetOrbStrokeColor(immediate = false){
       orbStrokeColor.target = { ...ORB_STROKE_DEFAULT };
+      orbStrokeColor.targetAlpha = ORB_FILL_ALPHA;
       if (immediate || !orbStrokeColor.initialized) {
         orbStrokeColor.current = { ...ORB_STROKE_DEFAULT };
+        orbStrokeColor.currentAlpha = ORB_FILL_ALPHA;
         orbStrokeColor.initialized = true;
-        applyOrbStrokeColor01(orbStrokeColor.current);
+        applyOrbStrokeColor01(orbStrokeColor.current, orbStrokeColor.currentAlpha);
       }
+    }
+
+    function applyColorize(payload = {}){
+      const r = Number(payload.r);
+      const g = Number(payload.g);
+      const b = Number(payload.b);
+      const alpha = Number(payload.alpha);
+      setOrbStrokeColor01(
+        {
+          r: Number.isFinite(r) ? (r > 1 ? r / 255 : r) : orbStrokeColor.target.r,
+          g: Number.isFinite(g) ? (g > 1 ? g / 255 : g) : orbStrokeColor.target.g,
+          b: Number.isFinite(b) ? (b > 1 ? b / 255 : b) : orbStrokeColor.target.b,
+        },
+        Number.isFinite(alpha) ? (alpha > 1 ? alpha / 255 : alpha) : orbStrokeColor.targetAlpha
+      );
+    }
+
+    function clearColorize(){
+      resetOrbStrokeColor(false);
     }
 
     function computeImpactMetric(rawImpactV){
@@ -1382,10 +1409,13 @@
         playFlameAoe,
         executeTeleportHome: executeTeleportHomeSpellModule,
         executeShockwave: executeShockwaveSpellModule,
+        executeColorize: executeColorizeSpellModule,
         triggerShockwave,
         teleportOrbToSpawnNeutralizePhysics,
         activateSanctusShield,
         grantSuperGrace,
+        applyColorize,
+        clearColorize,
         domusTeleportAboveGroundPx: DOMUS_TELEPORT_ABOVE_GROUND_PX,
         sanctusShieldMs: SANCTUS_SHIELD_MS,
       });
@@ -1643,6 +1673,9 @@
           : null;
         executeShockwaveSpellModule = (typeof mods.executeShockwave === "function")
           ? mods.executeShockwave
+          : null;
+        executeColorizeSpellModule = (typeof mods.executeColorize === "function")
+          ? mods.executeColorize
           : null;
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";
         const setRuntimeWordIndexes = (next = {}) => {
