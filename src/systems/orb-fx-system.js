@@ -1,5 +1,5 @@
 import {
-  EVT_PICKUP_COLLECTED,
+  EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
   EVT_VOICE_SPELL_LOADED,
   EVT_VOICE_SPELL_CAST,
   EVT_ORB_DIED,
@@ -117,6 +117,16 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
     try { if (p && p.el) p.el.remove(); } catch (_) {}
     renderInnerGlobes();
     return p;
+  }
+
+  function reconcileInnerGlobesToCount(targetCountRaw) {
+    const targetCount = Math.max(0, Math.floor(Number(targetCountRaw) || 0));
+    while (inner.particles.length < targetCount) {
+      spawnInnerGlobe();
+    }
+    while (inner.particles.length > targetCount) {
+      consumeOneInnerGlobe();
+    }
   }
 
   function axisColor(axis) {
@@ -434,15 +444,13 @@ export function createOrbFxSystem({ eventBus, orbInteriorEl, stageEl, getOrbScre
   }
 
   function start() {
-    unsub.push(eventBus.on(EVT_PICKUP_COLLECTED, () => {
-      spawnInnerGlobe();
+    unsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
+      reconcileInnerGlobesToCount(payload.stored);
     }));
     unsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       const axis = String(payload.axis || "").toLowerCase();
       const slot = String(payload.slot || "").toUpperCase();
       if (!axis || !slot) return;
-      const globe = consumeOneInnerGlobe();
-      if (!globe) return;
       const wordId = readWordIdFromPayload(payload);
       upsertOrbitingGlobe({
         axis,
