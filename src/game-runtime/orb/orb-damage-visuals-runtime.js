@@ -1,6 +1,6 @@
-export function createFxSystem({ eventBus }) {
+export function createOrbDamageVisualsRuntime({ eventBus }) {
   if (!eventBus || typeof eventBus.on !== 'function' || typeof eventBus.emit !== 'function') {
-    throw new Error('createFxSystem requires eventBus.on and eventBus.emit');
+    throw new Error('createOrbDamageVisualsRuntime requires eventBus.on and eventBus.emit');
   }
 
   const unsub = [];

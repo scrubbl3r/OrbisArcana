@@ -186,7 +186,7 @@
 
     async function initUiOverlaysSystem(){
       try {
-        const { createUiOverlaysSystem } = await import("./src/systems/ui-overlays-system.js");
+        const { createUiOverlaysSystem } = await import("./src/ui/game/ui-overlays-system.js");
         uiOverlaysSystem = createUiOverlaysSystem({
           startScreenEl: els.startScreen,
           calibOverlayEl: els.calibOverlay,
@@ -890,7 +890,7 @@
 
     async function initMobileImpulseSystem(){
       try {
-        const { createMobileImpulseSystem } = await import("./src/systems/mobile-impulse-system.js");
+        const { createMobileImpulseSystem } = await import("./src/runtime-shell/receiver/mobile-impulse-runtime.js");
         mobileImpulseSystem = createMobileImpulseSystem({
           idleMarkActivity,
           applyDataToUI,
@@ -918,7 +918,7 @@
 
     async function initLanSessionSystem(){
       try {
-        const { createLanSessionSystem } = await import("./src/systems/lan-session-system.js");
+        const { createLanSessionSystem } = await import("./src/runtime-shell/session/lan-session.js");
         lanSession = createLanSessionSystem({
           AblyCtor: (typeof Ably !== "undefined" && Ably && Ably.Realtime) ? Ably.Realtime : null,
           QRCodeLib: (typeof QRCode !== "undefined") ? QRCode : null,
@@ -1315,7 +1315,7 @@
 
     function renderOrbDamageVisuals(){
       if (!mvp || !els.orb || !els.orbCracks) return;
-      const fx = mvp.fxSystem.getState();
+      const fx = mvp.orbDamageVisualsRuntime.getState();
       const shattered = (fx.visualState === "shattered");
       els.orb.classList.toggle("shattered", shattered);
       els.orb.style.opacity = shattered ? "0" : "";
@@ -2036,7 +2036,7 @@
           createEventBus,
           createGameState,
           createOrbSystem,
-          createFxSystem,
+          createOrbDamageVisualsRuntime,
           createAudioSystem,
           createInputSystemsBundle,
           createWorldSystem,
@@ -2063,7 +2063,7 @@
             collisionCooldownMs: 250,
           }
         });
-        const fxSystem = createFxSystem({ eventBus });
+        const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({ eventBus });
         const audioSystem = createAudioSystem({ eventBus });
         inputSystemsBundle = createInputSystemsBundle({
           eventBus,
@@ -2239,7 +2239,7 @@
             kwsListenPolicyController.start();
           }
         }
-        fxSystem.start();
+        orbDamageVisualsRuntime.start();
         audioSystem.start();
         inputSystemsBundle.start();
         resourcesSystem.start();
@@ -2657,7 +2657,7 @@
           eventBus,
           gameState,
           orbSystem,
-          fxSystem,
+          orbDamageVisualsRuntime,
           audioSystem,
           inputSystemsBundle,
           inputSystem,

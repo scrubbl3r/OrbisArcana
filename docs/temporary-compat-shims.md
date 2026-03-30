@@ -9,10 +9,6 @@ When their import surfaces have been fully updated, delete them.
 
 - `src/spells/shockwave.js`
 - `src/spells/teleport-home.js`
-- `src/systems/orb-runtime-state.js`
-- `src/systems/orb-runtime-pipeline.js`
-- `src/systems/orb-runtime-loop.js`
-- `src/systems/orb-fx-system.js`
 - `src/ui/kws-panel-controller.js`
 - `src/ui/word-flashboard-popup.js`
 

@@ -1,7 +1,7 @@
 import {
   EVT_PICKUP_COLLECTED,
   EVT_VOICE_SPELL_CAST,
-} from "../contracts/events.js";
+} from "../../contracts/events.js";
 
 export function createWorldSystem({
   eventBus,

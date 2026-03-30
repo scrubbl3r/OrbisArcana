@@ -6,7 +6,7 @@ import {
   EVT_PICKUP_COLLECTED,
   EVT_ORB_DIED,
   EVT_ORB_REVIVED,
-} from "../contracts/events.js";
+} from "../../contracts/events.js";
 
 /**
  * @typedef {Object} ResourcesSnapshot

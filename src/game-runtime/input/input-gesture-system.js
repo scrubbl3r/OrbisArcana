@@ -3,7 +3,7 @@ import {
   EVT_SPELL_WINDOW_SPIN_OPENED,
   EVT_SPELL_WINDOW_SPIN_CLOSED,
   EVT_VOICE_SET_MODE,
-} from "../contracts/events.js";
+} from "../../contracts/events.js";
 
 /**
  * @typedef {Object} InputGestureSystem
