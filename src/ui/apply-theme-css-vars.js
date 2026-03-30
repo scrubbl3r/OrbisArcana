@@ -50,19 +50,6 @@ export function applyThemeCssVars(theme, { root = document.documentElement } = {
     }
   }
 
-  if (theme.shield) {
-    const c = theme.shield.colorRgb || { r: 120, g: 210, b: 255 };
-    setVar(root, "--shield-r", clampByte(c.r));
-    setVar(root, "--shield-g", clampByte(c.g));
-    setVar(root, "--shield-b", clampByte(c.b));
-    if (Number.isFinite(Number(theme.shield.alpha))) setVar(root, "--shield-alpha", clamp01(theme.shield.alpha).toFixed(2));
-    if (Number.isFinite(Number(theme.shield.diameterPx))) setVar(root, "--shield-d", `${Math.round(Number(theme.shield.diameterPx))}px`);
-    if (Number.isFinite(Number(theme.shield.strokeWidthPx))) setVar(root, "--shield-stroke", `${Math.round(Number(theme.shield.strokeWidthPx))}px`);
-    if (Number.isFinite(Number(theme.shield.pulseMs))) setVar(root, "--shield-pulse-ms", `${Math.round(Number(theme.shield.pulseMs))}ms`);
-    if (Number.isFinite(Number(theme.shield.pulseMin))) setVar(root, "--shield-pulse-min", clamp01(theme.shield.pulseMin).toFixed(2));
-    if (Number.isFinite(Number(theme.shield.pulseMax))) setVar(root, "--shield-pulse-max", clamp01(theme.shield.pulseMax).toFixed(2));
-  }
-
   if (theme.shockwave) {
     if (theme.shockwave.color) setVar(root, "--shock-color", rgbaText(theme.shockwave.color));
     if (Number.isFinite(Number(theme.shockwave.strokeWidthPx))) setVar(root, "--shock-stroke", `${Math.round(Number(theme.shockwave.strokeWidthPx))}px`);

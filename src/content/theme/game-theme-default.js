@@ -21,15 +21,6 @@ export const GAME_THEME_DEFAULT = Object.freeze({
     strokeDefaultRgb: Object.freeze({ r: 255, g: 255, b: 255 }),
     fillAlpha: 0.20,
   },
-  shield: {
-    diameterPx: 124,
-    strokeWidthPx: 4,
-    colorRgb: Object.freeze({ r: 120, g: 210, b: 255 }),
-    alpha: 1.00,
-    pulseMs: 80,
-    pulseMin: 0.30,
-    pulseMax: 1.00,
-  },
   shockwave: {
     color: Object.freeze({ r: 255, g: 255, b: 255, a: 0.65 }),
     strokeWidthPx: 4,

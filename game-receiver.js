@@ -321,25 +321,11 @@
         };
       }
       if (theme.orb) rebuildOrbBaseVisualState(theme);
-      if (theme.shield && typeof VFX_DEFAULTS === "object" && VFX_DEFAULTS.shield) {
-        if (Number.isFinite(Number(theme.shield.alpha))) VFX_DEFAULTS.shield.alpha = clamp01(theme.shield.alpha);
-        if (Number.isFinite(Number(theme.shield.pulseMs))) VFX_DEFAULTS.shield.pulseMs = Math.max(0, Number(theme.shield.pulseMs));
-        if (Number.isFinite(Number(theme.shield.pulseMin))) VFX_DEFAULTS.shield.pulseMin = clamp01(theme.shield.pulseMin);
-        if (Number.isFinite(Number(theme.shield.pulseMax))) VFX_DEFAULTS.shield.pulseMax = clamp01(theme.shield.pulseMax);
-        setVar("--shield-alpha", String(VFX_DEFAULTS.shield.alpha.toFixed(2)));
-        setVar("--shield-pulse-ms", String(Math.round(VFX_DEFAULTS.shield.pulseMs)) + "ms");
-        setVar("--shield-pulse-min", String(VFX_DEFAULTS.shield.pulseMin.toFixed(2)));
-        setVar("--shield-pulse-max", String(Math.min(VFX_DEFAULTS.shield.pulseMax, VFX_DEFAULTS.shield.alpha).toFixed(2)));
-      }
       if (theme.shockwave && typeof VFX_DEFAULTS === "object" && VFX_DEFAULTS.shock) {
         if (Number.isFinite(Number(theme.shockwave.strokeWidthPx))) {
           VFX_DEFAULTS.shock.stroke = evenStroke(theme.shockwave.strokeWidthPx, 2, 20);
           setVar("--shock-stroke", VFX_DEFAULTS.shock.stroke + "px");
         }
-      }
-      if (theme.shield && theme.shield.colorRgb) {
-        shieldColor01 = rgb255To01(theme.shield.colorRgb);
-        setShieldColor01(shieldColor01);
       }
       resetOrbStrokeColor(true);
       setBgFromEnergy(0);
@@ -367,7 +353,10 @@
 
     const VFX_DEFAULTS = {
       shield: {
-        durationMs: 1170,
+        colorRgb: { r: 120, g: 210, b: 255 },
+        diameterPx: 124,
+        strokeWidthPx: 4,
+        durationMs: 8000,
         alpha: 1.00,
         pulseMs: 80,
         pulseMin: 0.30,
@@ -398,6 +387,11 @@
     };
 
     (function initVfxDefaults(){
+      setVar("--shield-r", String(Math.round(Number(VFX_DEFAULTS.shield.colorRgb.r) || 120)));
+      setVar("--shield-g", String(Math.round(Number(VFX_DEFAULTS.shield.colorRgb.g) || 210)));
+      setVar("--shield-b", String(Math.round(Number(VFX_DEFAULTS.shield.colorRgb.b) || 255)));
+      setVar("--shield-d", String(Math.round(Number(VFX_DEFAULTS.shield.diameterPx) || 124)) + "px");
+      setVar("--shield-stroke", String(Math.round(Number(VFX_DEFAULTS.shield.strokeWidthPx) || 4)) + "px");
       setVar("--shield-alpha", String(VFX_DEFAULTS.shield.alpha.toFixed(2)));
       setVar("--shield-pulse-ms", String(Math.round(VFX_DEFAULTS.shield.pulseMs)) + "ms");
       setVar("--shield-pulse-min", String(VFX_DEFAULTS.shield.pulseMin.toFixed(2)));
@@ -407,18 +401,6 @@
       VFX_DEFAULTS.shock.stroke = stroke;
       setVar("--shock-stroke", stroke + "px");
     })();
-
-    const SHIELD_COLOR_SMOOTH = 1.00; // snap colors (no smoothing)
-    let shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
-
-    function setShieldColor01(c){
-      const r = Math.round(clamp01(c.r) * 255);
-      const g = Math.round(clamp01(c.g) * 255);
-      const b = Math.round(clamp01(c.b) * 255);
-      setVar("--shield-r", String(r));
-      setVar("--shield-g", String(g));
-      setVar("--shield-b", String(b));
-    }
 
     function evenStroke(n, min = 2, max = 20){
       n = Math.round(Number(n) || min);
@@ -430,18 +412,10 @@
     const SHIELD_DECAY_MS = 2000;
     const SHIELD_FADEIN_MS = 750;
     let shieldDecayActive = 0;
-    let sanctusShieldColorLocked = false;
 
     function shieldOffNow(){
-      sanctusShieldColorLocked = false;
       if (bubbleShieldRuntime && typeof bubbleShieldRuntime.off === "function") {
         bubbleShieldRuntime.off();
-      }
-    }
-
-    function shieldOnNow(){
-      if (bubbleShieldRuntime && typeof bubbleShieldRuntime.on === "function") {
-        bubbleShieldRuntime.on();
       }
     }
 
@@ -451,27 +425,11 @@
       }
     }
 
-    function activateSanctusShield(axis, durationMs = SANCTUS_SHIELD_MS){
-      if (!els.shield) return;
-      const c = axisToColor01(axis);
-      shieldColor01 = { r: c.r, g: c.g, b: c.b };
-      setShieldColor01(shieldColor01);
-      const baseShieldD = (PHYS.orbRadiusPx * 2) + 24;
-      const sanctusD = Math.max(10, baseShieldD * SANCTUS_SHIELD_SCALE);
-      shieldOnNow();
-      // Apply custom Sanctus size after shieldOnNow; first activation path
-      // calls shieldOffNow() internally, which clears width/height.
-      els.shield.style.width = `${sanctusD.toFixed(2)}px`;
-      els.shield.style.height = `${sanctusD.toFixed(2)}px`;
-      sanctusShieldColorLocked = true;
-      if (sanctusShieldTO) {
-        clearTimeout(sanctusShieldTO);
-        sanctusShieldTO = 0;
-      }
-      sanctusShieldTO = setTimeout(() => {
-        sanctusShieldTO = 0;
-        shieldDecay();
-      }, Math.max(150, Number(durationMs) || SANCTUS_SHIELD_MS));
+    function activateBubbleShield({ durationMs = BUBBLE_SHIELD_DEFAULT_MS } = {}){
+      if (!els.shield || !bubbleShieldRuntime || typeof bubbleShieldRuntime.activate !== "function") return;
+      bubbleShieldRuntime.activate({
+        durationMs: Math.max(150, Number(durationMs) || BUBBLE_SHIELD_DEFAULT_MS),
+      });
     }
 
     function clearShock(){
@@ -1198,8 +1156,7 @@
     let DOMUS_FLOAT_GRACE_MS = 5000;
     let SUPER_GRACE_DEFAULT_MS = 2500;
     const DOMUS_TELEPORT_ABOVE_GROUND_PX = 300;
-    const SANCTUS_SHIELD_MS = 8000;
-    const SANCTUS_SHIELD_SCALE = 1.25;
+    const BUBBLE_SHIELD_DEFAULT_MS = 8000;
     let IMPACT_MODEL = {
       mass: 1.0,
       gravityExp: 0.5,
@@ -1270,10 +1227,9 @@
     let vfxRuntimesBundle = null;
     let receiverModulesReady = false;
     let shardPaletteSnapshot = null;
-    let sanctusShieldTO = 0;
     let kwsEventBindings = null;
     let buildOrbBaseVisualStateModule = null;
-    const MODULE_CACHE_BUST_V = "20260330c";
+    const MODULE_CACHE_BUST_V = "20260330d";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1452,12 +1408,12 @@
         executeColorize: executeColorizeSpellModule,
         triggerShockwave,
         teleportOrbToSpawnNeutralizePhysics,
-        activateSanctusShield,
+        activateBubbleShield,
         grantSuperGrace,
         applyColorize,
         clearColorize,
         domusTeleportAboveGroundPx: DOMUS_TELEPORT_ABOVE_GROUND_PX,
-        sanctusShieldMs: SANCTUS_SHIELD_MS,
+        bubbleShieldMs: BUBBLE_SHIELD_DEFAULT_MS,
       });
     }
 
@@ -2006,6 +1962,10 @@
             bubbleShield: {
               shieldEl: els.shield,
               getConfig: () => ({
+                colorRgb: VFX_DEFAULTS.shield.colorRgb,
+                diameterPx: VFX_DEFAULTS.shield.diameterPx,
+                strokeWidthPx: VFX_DEFAULTS.shield.strokeWidthPx,
+                durationMs: VFX_DEFAULTS.shield.durationMs,
                 alpha: VFX_DEFAULTS.shield.alpha,
                 pulseMs: VFX_DEFAULTS.shield.pulseMs,
                 pulseMin: VFX_DEFAULTS.shield.pulseMin,
@@ -3313,15 +3273,8 @@
       clearShock();
       clearFlame();
       clearElectric();
-      if (sanctusShieldTO) {
-        clearTimeout(sanctusShieldTO);
-        sanctusShieldTO = 0;
-      }
       shieldOffNow();
       resetOrbStrokeColor(true);
-      sanctusShieldColorLocked = false;
-      shieldColor01 = { r: 120/255, g: 210/255, b: 255/255 };
-      setShieldColor01(shieldColor01);
 
       resetShakeDetector();
       resetStability();
@@ -3428,16 +3381,6 @@
       els.vDynamics.textContent = `${vm.dP}%`;
       els.vEnergy.textContent   = `${vm.ePts}`;
       els.vShake.textContent    = `${Math.max(0, vm.sh).toFixed(2)}`;
-
-      if (!sanctusShieldColorLocked && vm.shieldRgb01){
-        const tr = clamp01(vm.shieldRgb01[0]);
-        const tg = clamp01(vm.shieldRgb01[1]);
-        const tb = clamp01(vm.shieldRgb01[2]);
-        shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
-        shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
-        shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
-        setShieldColor01(shieldColor01);
-      }
 
       setBar(els.bLift,  vm.lift);
       setBar(els.bGroove, vm.groove);

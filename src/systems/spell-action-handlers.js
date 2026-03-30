@@ -17,12 +17,12 @@ export function createSpellActionHandlers({
   executeFloatGrace,
   executeColorize,
   triggerShockwave,
-  activateSanctusShield,
+  activateBubbleShield,
   grantSuperGrace,
   applyColorize,
   clearColorize,
   domusTeleportAboveGroundPx = 300,
-  sanctusShieldMs = 8000,
+  bubbleShieldMs = 8000,
 } = {}){
   function normalizeSlot(slotRaw) {
     const slot = String(slotRaw || "").trim().toUpperCase();
@@ -96,16 +96,18 @@ export function createSpellActionHandlers({
       }
     },
     bubble_shield(payload = {}) {
+      const durationMs = Number(payload && payload.durationMs);
       if (typeof executeBubbleShield === "function") {
         executeBubbleShield({
-          activateSanctusShield,
-          axis: (payload && payload.axis) || "y",
-          durationMs: sanctusShieldMs,
+          activateBubbleShield,
+          durationMs: Number.isFinite(durationMs) ? durationMs : bubbleShieldMs,
         });
         return;
       }
-      if (typeof activateSanctusShield === "function") {
-        activateSanctusShield((payload && payload.axis) || "y", sanctusShieldMs);
+      if (typeof activateBubbleShield === "function") {
+        activateBubbleShield({
+          durationMs: Number.isFinite(durationMs) ? durationMs : bubbleShieldMs,
+        });
       }
     },
     float_grace(payload = {}) {

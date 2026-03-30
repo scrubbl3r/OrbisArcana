@@ -2,13 +2,12 @@
  * Canonical bubble shield runtime effect implementation.
  */
 export function executeBubbleShield({
-  activateSanctusShield,
-  axis = "y",
+  activateBubbleShield,
   durationMs = 8000,
 } = {}) {
-  if (typeof activateSanctusShield !== "function") {
+  if (typeof activateBubbleShield !== "function") {
     return { handled: false };
   }
-  activateSanctusShield(axis, durationMs);
+  activateBubbleShield({ durationMs });
   return { handled: true };
 }
