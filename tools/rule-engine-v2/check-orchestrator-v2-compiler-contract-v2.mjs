@@ -25,7 +25,7 @@ const WORD_FRIDGIS_ID = "fridgis";
 const WORD_ELECTRUM_ID = "electrum";
 const SPIN_Y_ID = "y";
 const EVENT_GRACE_ID = "grace";
-const EVENT_TELEPORT_HOME_ID = "teleport_home";
+const EVENT_TELEPORT_HOME_ID = "teleport";
 const EVENT_AOE_FROST_ID = "aoe_frost";
 const EVENT_AOE_FLAME_ID = "aoe_flame";
 const ACTION_BIND = "bind";
@@ -190,7 +190,7 @@ const sample = Object.freeze({
       on: Object.freeze({ word: WORD_DOMUS_ID }),
       requires: `${WINDOW_WAKE_MAIN_ID}, ${WINDOW_PYRO_SCHOOL_ID}`,
       consume: `${WINDOW_WAKE_MAIN_ID},${WINDOW_PYRO_SCHOOL_ID}`,
-      trigger: "grace, teleport_home",
+      trigger: "grace, teleport",
     }),
     Object.freeze({
       id: "o_v2_bind_fb",

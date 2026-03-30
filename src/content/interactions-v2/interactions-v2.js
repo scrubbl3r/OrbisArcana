@@ -109,7 +109,7 @@ export const INTERACTIONS_V2 = Object.freeze({
     makeRule(
       "r_domus_immediate",
       [makeCondition(CONDITION_TYPE_WORD, toCanonicalWordSelector(SIGNAL_HANDLES_V2.DOMUS))],
-      [makeEventAction(EVENT_HANDLES_V2.TELEPORT_HOME)]
+      [makeEventAction(EVENT_HANDLES_V2.TELEPORT)]
     ),
     makeRule(
       "r_rota_yspin_charged",

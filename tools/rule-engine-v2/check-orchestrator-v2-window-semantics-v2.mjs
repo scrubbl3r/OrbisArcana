@@ -20,7 +20,7 @@ const SIGNAL_RUNTIME_DOMUS = "spell.domus";
 const CONDITION_TYPE_WORD = "word";
 const CONDITION_WORD_ID_PATH = "word.id";
 const EVENT_TYPE = "event";
-const EVENT_TELEPORT_HOME_ID = "teleport_home";
+const EVENT_TELEPORT_HOME_ID = "teleport";
 
 const schema = Object.freeze({
   signals: Object.freeze([

@@ -190,7 +190,7 @@ expectBuilderValidWithSingleRule(
   {
     id: "trigger_shorthand_comma_valid_rule",
     on: Object.freeze({ word: "orbis" }),
-    trigger: "grace, teleport_home",
+    trigger: "grace, teleport",
   }
 );
 
@@ -208,7 +208,7 @@ expectBuilderValidWithSingleRule(
   {
     id: "trigger_shorthand_array_valid_rule",
     on: Object.freeze({ word: "orbis" }),
-    trigger: Object.freeze(["grace", "teleport_home"]),
+    trigger: Object.freeze(["grace", "teleport"]),
   }
 );
 
@@ -265,7 +265,7 @@ expectBuilderValidWithRules(
       on: Object.freeze({ word: "domus" }),
       requires: "wake.main,pyro.school",
       consume: "wake.main, pyro.school",
-      trigger: Object.freeze({ teleport_home: true }),
+      trigger: Object.freeze({ teleport: true }),
     }),
   ]
 );
@@ -394,7 +394,7 @@ expectBuilderValidWithDefaultsAndSingleRule(
   {
     trigger: Object.freeze({
       grace: Object.freeze({ ttlMs: 500 }),
-      teleport_home: Object.freeze({ ttlMs: 900 }),
+      teleport: Object.freeze({ ttlMs: 900 }),
     }),
   },
   {
@@ -1334,7 +1334,7 @@ expectBuilderErrorWithSingleRule(
     id: "consume_comma_duplicate_rule",
     on: Object.freeze({ word: "domus" }),
     consume: "wake.main, wake.main",
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume contains duplicate window id: wake.main"
 );
@@ -1345,7 +1345,7 @@ expectBuilderErrorWithSingleRule(
     id: "requires_non_string_array_rule",
     on: Object.freeze({ word: "domus" }),
     requires: Object.freeze({ wake: "main" }),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "requires must be a string or array when present"
 );
@@ -1356,7 +1356,7 @@ expectBuilderErrorWithSingleRule(
     id: "requires_non_string_entry_rule",
     on: Object.freeze({ word: "domus" }),
     requires: Object.freeze(["wake.main", 42]),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "requires contains non-string window id: 42"
 );
@@ -1367,7 +1367,7 @@ expectBuilderErrorWithSingleRule(
     id: "consume_non_string_array_rule",
     on: Object.freeze({ word: "domus" }),
     consume: Object.freeze({ wake: "main" }),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume must be a string or array when present"
 );
@@ -1378,7 +1378,7 @@ expectBuilderErrorWithSingleRule(
     id: "consume_non_string_entry_rule",
     on: Object.freeze({ word: "domus" }),
     consume: Object.freeze(["wake.main", 42]),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume contains non-string window id: 42"
 );
@@ -1389,7 +1389,7 @@ expectBuilderErrorWithSingleRule(
     id: "consume_invalid_shape_rule",
     on: Object.freeze({ word: "domus" }),
     consume: "wake main",
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume has invalid window id shape: wake main"
 );
@@ -1400,7 +1400,7 @@ expectBuilderErrorWithSingleRule(
     id: "invalid_consume_window_shape_rule",
     on: Object.freeze({ word: "domus" }),
     consume: "wake main",
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume has invalid window id shape: wake main"
 );
@@ -1411,7 +1411,7 @@ expectBuilderErrorWithSingleRule(
     id: "invalid_requires_window_shape_rule",
     on: Object.freeze({ word: "domus" }),
     requires: "wake main",
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "requires has invalid window id shape: wake main"
 );
@@ -1428,7 +1428,7 @@ expectBuilderErrorWithRules(
       id: "requires_window_whitespace_rule",
       on: Object.freeze({ word: "domus" }),
       requires: Object.freeze([" wake.main "]),
-      trigger: Object.freeze({ teleport_home: true }),
+      trigger: Object.freeze({ teleport: true }),
     }),
   ],
   "requires contains window id with leading/trailing whitespace:  wake.main "
@@ -1446,7 +1446,7 @@ expectBuilderErrorWithRules(
       id: "requires_window_string_whitespace_rule",
       on: Object.freeze({ word: "domus" }),
       requires: " wake.main ",
-      trigger: Object.freeze({ teleport_home: true }),
+      trigger: Object.freeze({ teleport: true }),
     }),
   ],
   "requires contains window id with leading/trailing whitespace:  wake.main "
@@ -1464,7 +1464,7 @@ expectBuilderErrorWithRules(
       id: "consume_window_whitespace_rule",
       on: Object.freeze({ word: "domus" }),
       consume: Object.freeze([" wake.main "]),
-      trigger: Object.freeze({ teleport_home: true }),
+      trigger: Object.freeze({ teleport: true }),
     }),
   ],
   "consume contains window id with leading/trailing whitespace:  wake.main "
@@ -1482,7 +1482,7 @@ expectBuilderErrorWithRules(
       id: "consume_window_string_whitespace_rule",
       on: Object.freeze({ word: "domus" }),
       consume: " wake.main ",
-      trigger: Object.freeze({ teleport_home: true }),
+      trigger: Object.freeze({ teleport: true }),
     }),
   ],
   "consume contains window id with leading/trailing whitespace:  wake.main "

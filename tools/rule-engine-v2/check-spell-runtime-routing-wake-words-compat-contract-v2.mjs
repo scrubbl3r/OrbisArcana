@@ -17,7 +17,7 @@ function withSyntheticImmediateEventRules(sample) {
     rules.push({
       id: `r_test_immediate_${id}`,
       on: { all: [{ type: "word", id: `word.${id}` }] },
-      then: [{ type: "event", id: "teleport_home" }],
+      then: [{ type: "event", id: "teleport" }],
     });
   }
   return sample;

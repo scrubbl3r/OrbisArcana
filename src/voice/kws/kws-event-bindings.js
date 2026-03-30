@@ -76,7 +76,7 @@ export function bindKwsEventHandlers({
     return new Set(listenableTokens.map((value) => canonicalKwsToken(value))).has(canonicalKwsToken(token));
   }
   const getWordIdFromPayload = (p = {}) => String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
-  const getAxisWordFromPayload = (p = {}) => String(p.axisWord || "").trim().toLowerCase();
+  const getSpinWordFromPayload = (p = {}) => String((p.spinWord ?? p.axisWord) || "").trim().toLowerCase();
   const getDetectedWordId = (p = {}) => {
     const direct = String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
     if (direct) return direct;
@@ -157,11 +157,11 @@ export function bindKwsEventHandlers({
 
   function onAxisSelected(p = {}) {
     const axis = String(p.axis || "").trim().toLowerCase();
-    const axisWord = getAxisWordFromPayload(p);
+    const spinWord = getSpinWordFromPayload(p);
     if (axis === "x" || axis === "y" || axis === "z") {
-      if (typeof setSelectedSpinWord === "function") setSelectedSpinWord(axis, axisWord);
+      if (typeof setSelectedSpinWord === "function") setSelectedSpinWord(axis, spinWord);
       resetHeardWakeWindowTokensForAxis(axis);
-      if (axisWord === "electrum" && isTokenListenableNow("electrum")) flashKwsToken("electrum", 520);
+      if (spinWord === "electrum" && isTokenListenableNow("electrum")) flashKwsToken("electrum", 520);
     }
     updateKwsReadout();
   }

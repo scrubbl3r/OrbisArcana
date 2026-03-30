@@ -214,7 +214,7 @@ const baseline = Object.freeze({
       on: Object.freeze({ word: "domus" }),
       requires: Object.freeze(["wake.main"]),
       consume: Object.freeze(["wake.main"]),
-      trigger: Object.freeze({ teleport_home: true }),
+      trigger: Object.freeze({ teleport: true }),
     }),
     Object.freeze({
       id: "pyro_school_01",
@@ -735,7 +735,7 @@ expectValidNoWarningsWithSingleRule(
   {
     id: "trigger_shorthand_array_rule",
     on: Object.freeze({ word: "orbis" }),
-    trigger: Object.freeze(["grace", "teleport_home"]),
+    trigger: Object.freeze(["grace", "teleport"]),
   }
 );
 
@@ -744,7 +744,7 @@ expectValidNoWarningsWithSingleRule(
   {
     id: "trigger_shorthand_comma_rule",
     on: Object.freeze({ word: "orbis" }),
-    trigger: "grace, teleport_home",
+    trigger: "grace, teleport",
   }
 );
 
@@ -1096,7 +1096,7 @@ expectValidNoWarnings(
       on: Object.freeze({ word: "domus" }),
       requires: "wake.main,pyro.school",
       consume: "wake.main, pyro.school",
-      trigger: Object.freeze({ teleport_home: true }),
+      trigger: Object.freeze({ teleport: true }),
     }),
   ])
 );
@@ -1107,7 +1107,7 @@ expectInvalidNoWarningsWithSingleRule(
     id: "requires_comma_duplicate_rule",
     on: Object.freeze({ word: "domus" }),
     requires: "wake.main, wake.main",
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "requires contains duplicate window id: wake.main"
 );
@@ -1118,7 +1118,7 @@ expectInvalidNoWarningsWithSingleRule(
     id: "requires_non_string_array_rule",
     on: Object.freeze({ word: "domus" }),
     requires: Object.freeze({ wake: "main" }),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "requires must be a string or array when present"
 );
@@ -1129,7 +1129,7 @@ expectInvalidNoWarningsWithSingleRule(
     id: "requires_non_string_entry_rule",
     on: Object.freeze({ word: "domus" }),
     requires: Object.freeze(["wake.main", 42]),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "requires contains non-string window id: 42"
 );
@@ -1140,7 +1140,7 @@ expectInvalidNoWarningsWithSingleRule(
     id: "consume_comma_duplicate_rule",
     on: Object.freeze({ word: "domus" }),
     consume: "wake.main, wake.main",
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume contains duplicate window id: wake.main"
 );
@@ -1151,7 +1151,7 @@ expectInvalidNoWarningsWithSingleRule(
     id: "consume_non_string_array_rule",
     on: Object.freeze({ word: "domus" }),
     consume: Object.freeze({ wake: "main" }),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume must be a string or array when present"
 );
@@ -1162,7 +1162,7 @@ expectInvalidNoWarningsWithSingleRule(
     id: "consume_non_string_entry_rule",
     on: Object.freeze({ word: "domus" }),
     consume: Object.freeze(["wake.main", 42]),
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume contains non-string window id: 42"
 );
@@ -1218,7 +1218,7 @@ expectInvalidNoWarningsWithBaselineRulePrefixAndRule(
     id: "consume_invalid_window_shape_rule",
     on: Object.freeze({ word: "domus" }),
     consume: "wake main",
-    trigger: Object.freeze({ teleport_home: true }),
+    trigger: Object.freeze({ teleport: true }),
   },
   "consume has invalid window id shape: wake main"
 );

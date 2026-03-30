@@ -29,7 +29,7 @@ export const DREAM_CONFIG_V2 = {
       id: "tele_home",
       on: { word: "domus" },
       requires: "wake.main",
-      trigger: { spell: "teleport_home" },
+      trigger: { spell: "teleport" },
     },
     // ELECTRIC AOE CHAIN
     {

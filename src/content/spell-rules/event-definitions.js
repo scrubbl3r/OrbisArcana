@@ -23,7 +23,7 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({ ms: 500 }),
   }),
   Object.freeze({
-    id: "teleport_home",
+    id: "teleport",
     type: "event",
     defaultArgs: Object.freeze({}),
   }),
@@ -34,11 +34,6 @@ export const EVENT_DEFINITIONS = Object.freeze([
   }),
   Object.freeze({
     id: "bubble_shield",
-    type: "event",
-    defaultArgs: Object.freeze({}),
-  }),
-  Object.freeze({
-    id: "sanctum_shield",
     type: "event",
     defaultArgs: Object.freeze({}),
   }),

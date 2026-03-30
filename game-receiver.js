@@ -1028,7 +1028,7 @@
       resetHeardWakeWindowTokensForAxis() {},
       resetHeardWakeWindowTokensAllAxes() {},
       markHeardWakeWindowToken() {},
-      setSelectedAxisWord() {},
+      setSelectedSpinWord() {},
       flashToken() {},
       openWakeHudGate() {},
       updateReadout() {},
@@ -1477,8 +1477,8 @@
             KWS_WORDFLASHBOARD_WORDS = Array.isArray(kwsConfig.wordFlashboardWords)
               ? kwsConfig.wordFlashboardWords.map((entry) => ({ ...entry }))
               : KWS_WORDFLASHBOARD_WORDS;
-            KWS_AXIS_WORD_BY_AXIS = (kwsConfig.axisWordByAxis && typeof kwsConfig.axisWordByAxis === "object")
-              ? Object.freeze({ ...kwsConfig.axisWordByAxis })
+            KWS_AXIS_WORD_BY_AXIS = (kwsConfig.spinWordByAxis && typeof kwsConfig.spinWordByAxis === "object")
+              ? Object.freeze({ ...kwsConfig.spinWordByAxis })
               : KWS_AXIS_WORD_BY_AXIS;
             KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
             TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
@@ -1508,7 +1508,7 @@
             wakeTokens: KWS_WAKE_TOKENS,
             wakeRequiredTokens: KWS_WAKE_REQUIRED_TOKENS,
             wordFlashboardWords: KWS_WORDFLASHBOARD_WORDS,
-            axisWordByAxis: KWS_AXIS_WORD_BY_AXIS,
+            spinWordByAxis: KWS_AXIS_WORD_BY_AXIS,
             logTokens: Array.from(KWS_LOG_TOKENS),
             tempUngatedTokens: Array.from(TEMP_UNGATED_KWS_TOKENS),
             tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,
@@ -2224,10 +2224,10 @@
             },
             resetHeardWakeWindowTokensForAxis: (axis) => kwsBridge.resetHeardWakeWindowTokensForAxis(axis),
             resetHeardWakeWindowTokensAllAxes: () => kwsBridge.resetHeardWakeWindowTokensAllAxes(),
-            setSelectedSpinWord: (axis, axisWord) => {
+            setSelectedSpinWord: (axis, spinWord) => {
               if (!kwsPanelController) return;
               if (typeof kwsPanelController.setSelectedSpinWord === "function") {
-                kwsPanelController.setSelectedSpinWord(axis, axisWord);
+                kwsPanelController.setSelectedSpinWord(axis, spinWord);
               }
             },
             getKwsMode: () => String(kwsDebugState.mode || ""),
@@ -2480,10 +2480,9 @@
               const handled = !!(execResult && execResult.handled);
               kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
             }
-            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "teleport_home" || actionId === "aoe_electric" || actionId === "shockwave")) {
+            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "teleport" || actionId === "aoe_electric" || actionId === "shockwave")) {
               const handled = !!(execResult && execResult.handled);
-              const traceActionId = actionId === "teleport_home" ? "teleport" : actionId;
-              kwsBridge.pushLogLine(`TRACE exec:${traceActionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
+              kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
             }
             return;
           }
@@ -2602,7 +2601,7 @@
           eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, (p = {}) => {
             const actionType = String(p.actionType || "").trim().toLowerCase();
             const actionId = String(p.actionId || "").trim().toLowerCase();
-            if (actionType === "event" && actionId === "teleport_home") {
+            if (actionType === "event" && actionId === "teleport") {
               kwsBridge.pushLogLine("TRACE action:event:teleport", "ok");
             }
             if (actionType === "event" && actionId === "aoe_electric") {

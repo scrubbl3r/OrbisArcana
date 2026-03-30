@@ -10,13 +10,13 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.teleHomeRegression;
-const PASS_MESSAGE = "orbis wake followed by domus triggers teleport_home through authored rule path";
+const PASS_MESSAGE = "orbis wake followed by domus triggers teleport through authored rule path";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const WORD_ORBIS = "orbis";
 const WORD_DOMUS = "domus";
 const WINDOW_WAKE_MAIN = "wake.main";
-const EVENT_TELEPORT_HOME = "teleport_home";
+const EVENT_TELEPORT_HOME = "teleport";
 
 const eventBus = createCheckEventBus();
 const actionEvents = captureCheckEvents(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED);
@@ -62,7 +62,7 @@ try {
     && String(evt?.actionId || "") === EVENT_TELEPORT_HOME
   );
   if (teleHomeActions.length !== 1) {
-    failCheck(CHECK_TAG, `expected one authored teleport_home action after orbis -> domus, got ${teleHomeActions.length}`);
+    failCheck(CHECK_TAG, `expected one authored teleport action after orbis -> domus, got ${teleHomeActions.length}`);
   }
   const teleHomeRuleId = String(teleHomeActions[0]?.ruleId || "");
   if (teleHomeRuleId !== "tele_home") {
