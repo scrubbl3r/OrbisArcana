@@ -320,12 +320,7 @@
           b: clamp(Math.round(Number(bg.endRgb.b) || 0), 0, 255),
         };
       }
-      if (theme.orb) {
-        ORB_FILL_ALPHA = clamp01(theme.orb.fillAlpha);
-        if (theme.orb.strokeDefaultRgb) {
-          ORB_STROKE_DEFAULT = rgb255To01(theme.orb.strokeDefaultRgb);
-        }
-      }
+      if (theme.orb) rebuildOrbBaseVisualState(theme);
       if (theme.shield && typeof VFX_DEFAULTS === "object" && VFX_DEFAULTS.shield) {
         if (Number.isFinite(Number(theme.shield.alpha))) VFX_DEFAULTS.shield.alpha = clamp01(theme.shield.alpha);
         if (Number.isFinite(Number(theme.shield.pulseMs))) VFX_DEFAULTS.shield.pulseMs = Math.max(0, Number(theme.shield.pulseMs));
@@ -1277,7 +1272,8 @@
     let shardPaletteSnapshot = null;
     let sanctusShieldTO = 0;
     let kwsEventBindings = null;
-    const MODULE_CACHE_BUST_V = "20260330a";
+    let buildOrbBaseVisualStateModule = null;
+    const MODULE_CACHE_BUST_V = "20260330b";
 
     function axisToColor01(axis){
       const a = String(axis || "").toLowerCase();
@@ -1288,6 +1284,7 @@
       return { r: 253/255, g: 78/255, b: 0/255 };                   // #fd4e00
     }
 
+    let orbBaseVisualState = null;
     let ORB_FILL_ALPHA = 0.20;
     let ORB_STROKE_DEFAULT = { r: 1.0, g: 1.0, b: 1.0 };
     const orbStrokeColor = {
@@ -1297,6 +1294,23 @@
       targetAlpha: ORB_FILL_ALPHA,
       initialized: false,
     };
+
+    function rebuildOrbBaseVisualState(theme = activeGameTheme){
+      const next = (typeof buildOrbBaseVisualStateModule === "function")
+        ? buildOrbBaseVisualStateModule({ theme, physics: PHYS })
+        : {
+            diameterPx: Math.max(2, Math.round((Number(PHYS && PHYS.orbRadiusPx) || 50) * 2)),
+            radiusPx: Math.max(1, Number(PHYS && PHYS.orbRadiusPx) || 50),
+            strokeWidthPx: 2,
+            strokeDefaultRgb: { r: 255, g: 255, b: 255 },
+            strokeDefault01: { r: 1.0, g: 1.0, b: 1.0 },
+            fillAlpha: 0.20,
+          };
+      orbBaseVisualState = next;
+      ORB_FILL_ALPHA = clamp01(next.fillAlpha);
+      ORB_STROKE_DEFAULT = { ...next.strokeDefault01 };
+      return next;
+    }
 
     function applyOrbStrokeColor01(c, alpha = ORB_FILL_ALPHA){
       const r = Math.round(clamp01(c.r) * 255);
@@ -1725,6 +1739,10 @@
         isFloatGraceActiveRuntimeModule = (typeof mods.isFloatGraceActiveRuntime === "function")
           ? mods.isFloatGraceActiveRuntime
           : null;
+        buildOrbBaseVisualStateModule = (typeof mods.buildOrbBaseVisualState === "function")
+          ? mods.buildOrbBaseVisualState
+          : null;
+        rebuildOrbBaseVisualState(activeGameTheme);
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";
         const setRuntimeWordIndexes = (next = {}) => {
           const index = (next.runtimeWordIndex && typeof next.runtimeWordIndex === "object")
@@ -1748,6 +1766,7 @@
             if (next.SHIELD_DESCENT) SHIELD_DESCENT = next.SHIELD_DESCENT;
             if (next.IMPACT_MODEL) IMPACT_MODEL = next.IMPACT_MODEL;
             if (Number.isFinite(Number(next.IMPACT_TH))) IMPACT_TH = Number(next.IMPACT_TH);
+            rebuildOrbBaseVisualState(activeGameTheme);
           },
           getOrbStatusConfig: () => ({ FLOAT_GRACE_DEFAULT_MS, DOMUS_FLOAT_GRACE_MS, SUPER_GRACE_DEFAULT_MS }),
           setOrbStatusConfig: (next = {}) => {

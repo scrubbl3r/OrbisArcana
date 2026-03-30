@@ -27,7 +27,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260329a";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260330a";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -291,6 +291,7 @@ export async function loadReceiverInitModules() {
     { executeColorize },
     { createSpellCastExecutor },
     { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
+    { buildOrbBaseVisualState },
     { ORB_RUNTIME_CONFIG_DEFAULT },
     { ORB_STATUS_CONFIG_DEFAULT },
     { GAME_THEME_DEFAULT },
@@ -346,6 +347,7 @@ export async function loadReceiverInitModules() {
     import("../runtime-effects/colorize.js"),
     import("../systems/spell-cast-executor.js"),
     import("../game-runtime/orb/orb-runtime-pipeline.js"),
+    import("../game-runtime/orb/orb-base-state.js"),
     import("../content/orb/orb-runtime-config-default.js"),
     import("../content/orb/orb-status-config-default.js"),
     import("../content/theme/game-theme-default.js"),
@@ -411,6 +413,7 @@ export async function loadReceiverInitModules() {
     executeColorize,
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
+    buildOrbBaseVisualState,
     ORB_RUNTIME_CONFIG_DEFAULT,
     ORB_STATUS_CONFIG_DEFAULT,
     GAME_THEME_DEFAULT,
