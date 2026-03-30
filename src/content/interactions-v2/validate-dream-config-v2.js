@@ -1,4 +1,4 @@
-import { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js";
+import { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js?v=20260329a";
 
 const ROOT_CONTEXT = "DREAM_CONFIG_V2";
 const ALLOWED_ROOT_KEYS = new Set(["version", "enabled", "defaults", "wake", "groups", "rules"]);

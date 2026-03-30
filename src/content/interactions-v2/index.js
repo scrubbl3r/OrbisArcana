@@ -5,8 +5,8 @@ export {
   WORDBOOK_V2_ACTIVE_WORDS,
   WORDBOOK_V2_ACTIVE_WORDS_BY_ID,
 } from "./wordbook-v2.js?v=20260328a";
-export { ORCHESTRATOR_V2, ORCHESTRATOR_V2_BOOTSTRAP } from "./orchestrator-v2.js?v=20260328a";
-export { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "./orchestrator-v2-wake-profile.js";
+export { ORCHESTRATOR_V2, ORCHESTRATOR_V2_BOOTSTRAP } from "./orchestrator-v2.js?v=20260329a";
+export { ORCHESTRATOR_V2_WAKE_WORD_IDS } from "./orchestrator-v2-wake-profile.js?v=20260329a";
 export {
   INTERACTIONS_V2,
   INTERACTIONS_V2_BOOTSTRAP,
@@ -24,6 +24,6 @@ export {
   buildRuleEngineFromOrchestratorV2,
   buildRulesFromOrchestratorV2,
 } from "./build-rule-engine-from-orchestrator-v2.js";
-export { DREAM_CONFIG_V2 } from "./dream-config-v2.js?v=20260328a";
-export { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js";
-export { validateDreamConfigV2 } from "./validate-dream-config-v2.js";
+export { DREAM_CONFIG_V2 } from "./dream-config-v2.js?v=20260329a";
+export { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js?v=20260329a";
+export { validateDreamConfigV2 } from "./validate-dream-config-v2.js?v=20260329a";

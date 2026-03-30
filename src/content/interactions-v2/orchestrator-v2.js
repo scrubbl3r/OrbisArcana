@@ -1,6 +1,6 @@
-import { DREAM_CONFIG_V2 } from "./dream-config-v2.js";
-import { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js";
-import { validateDreamConfigV2 } from "./validate-dream-config-v2.js";
+import { DREAM_CONFIG_V2 } from "./dream-config-v2.js?v=20260329a";
+import { compileDreamConfigV2ToOrchestratorV2 } from "./compile-dream-config-v2.js?v=20260329a";
+import { validateDreamConfigV2 } from "./validate-dream-config-v2.js?v=20260329a";
 
 const DREAM_CONFIG_V2_ERROR_PREFIX = "DREAM_CONFIG_V2 validation failed: ";
 const ERROR_DELIMITER = " | ";
