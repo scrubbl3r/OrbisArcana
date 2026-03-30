@@ -15,6 +15,7 @@ export function createKwsPanelController({
   const DEFAULT_KWS_START_STALL_MS = Math.max(0, Number(constants.startStallMs) || 8000);
   const KWS_READOUT_TICK_MS = Math.max(100, Number(constants.readoutTickMs) || 250);
   const KWS_LOG_DEDUP_MS = Math.max(0, Number(constants.logDedupMs) || 450);
+  const KWS_PREOPEN_LOG_BUFFER_LIMIT = Math.max(10, Number(constants.preopenLogBufferLimit) || 80);
   const WORDFLASHBOARD_WORDS = Array.isArray(constants.wordFlashboardWords)
     ? constants.wordFlashboardWords.map((entry) => Object.freeze({ ...entry }))
     : [];
@@ -67,6 +68,10 @@ export function createKwsPanelController({
   let logPopupDrag = null;
   let activeLogChannel = "kws";
   const logChannelState = {
+    kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
+    phone: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
+  };
+  const preopenLogChannelState = {
     kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
     phone: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
   };
@@ -325,6 +330,21 @@ export function createKwsPanelController({
     if (els.kwsLog) els.kwsLog.textContent = "";
   }
 
+  function clearPreopenLogChannelBuffer(channel) {
+    const key = String(channel || "").trim().toLowerCase();
+    const state = preopenLogChannelState[key];
+    if (!state) return;
+    state.rows.length = 0;
+    state.lastText = "";
+    state.lastAtMs = 0;
+    state.startedAtMs = 0;
+  }
+
+  function clearAllPreopenLogBuffers() {
+    clearPreopenLogChannelBuffer("kws");
+    clearPreopenLogChannelBuffer("phone");
+  }
+
   function appendKwsLogRow(row) {
     if (!els.kwsLog || !row) return;
     const lineEl = document.createElement("div");
@@ -340,6 +360,35 @@ export function createKwsPanelController({
     const state = logChannelState[activeLogChannel];
     if (!state || !state.rows.length) return;
     for (const row of state.rows) appendKwsLogRow(row);
+  }
+
+  function appendLogRowToState(state, line, kind = "", limit = Number.POSITIVE_INFINITY) {
+    if (!state) return null;
+    const text = String(line || "").trim();
+    if (!text) return null;
+    const nowMs = Date.now();
+    if (!state.startedAtMs) state.startedAtMs = nowMs;
+    if (text === state.lastText && (nowMs - Number(state.lastAtMs || 0)) <= KWS_LOG_DEDUP_MS) return null;
+    state.lastText = text;
+    state.lastAtMs = nowMs;
+    const relMs = Math.max(0, nowMs - state.startedAtMs);
+    const stamp = `[${(relMs / 1000).toFixed(3)}]`;
+    const row = { text: `${stamp} ${text}`, kind: String(kind || "") };
+    state.rows.push(row);
+    while (state.rows.length > limit) state.rows.shift();
+    return row;
+  }
+
+  function seedLiveLogChannelFromPreopen(channel) {
+    const key = String(channel || "").trim().toLowerCase();
+    const live = logChannelState[key];
+    const preopen = preopenLogChannelState[key];
+    if (!live || !preopen || !preopen.rows.length || live.rows.length) return;
+    live.rows.push(...preopen.rows);
+    live.lastText = preopen.lastText;
+    live.lastAtMs = preopen.lastAtMs;
+    live.startedAtMs = preopen.startedAtMs;
+    if (key === "kws") syncLegacyKwsLogState();
   }
 
   function renderLogChannelTabs() {
@@ -363,8 +412,11 @@ export function createKwsPanelController({
     if (!logPopupOpen) {
       clearAllLogBuffers();
     } else {
+      seedLiveLogChannelFromPreopen("kws");
+      seedLiveLogChannelFromPreopen("phone");
       renderLogChannelTabs();
       renderCurrentLogChannel();
+      clearAllPreopenLogBuffers();
     }
   }
 
@@ -427,38 +479,28 @@ export function createKwsPanelController({
   }
 
   function pushKwsLogLine(text, kind = "") {
-    if (!logPopupOpen || activeLogChannel !== "kws") return;
     const line = String(text || "").trim();
     if (!line) return;
-    const nowMs = Date.now();
-    const state = logChannelState.kws;
-    if (!state.startedAtMs) state.startedAtMs = nowMs;
-    if (line === state.lastText && (nowMs - Number(state.lastAtMs || 0)) <= KWS_LOG_DEDUP_MS) return;
-    state.lastText = line;
-    state.lastAtMs = nowMs;
-    const relMs = Math.max(0, nowMs - state.startedAtMs);
-    const stamp = `[${(relMs / 1000).toFixed(3)}]`;
-    const row = { text: `${stamp} ${line}`, kind: String(kind || "") };
-    state.rows.push(row);
+    if (!logPopupOpen) {
+      appendLogRowToState(preopenLogChannelState.kws, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
+      return;
+    }
+    const row = appendLogRowToState(logChannelState.kws, line, kind);
+    if (!row) return;
     syncLegacyKwsLogState();
-    appendKwsLogRow(row);
+    if (activeLogChannel === "kws") appendKwsLogRow(row);
   }
 
   function pushPhoneLogLine(text, kind = "") {
-    if (!logPopupOpen || activeLogChannel !== "phone") return;
     const line = String(text || "").trim();
     if (!line) return;
-    const nowMs = Date.now();
-    const state = logChannelState.phone;
-    if (!state.startedAtMs) state.startedAtMs = nowMs;
-    if (line === state.lastText && (nowMs - Number(state.lastAtMs || 0)) <= KWS_LOG_DEDUP_MS) return;
-    state.lastText = line;
-    state.lastAtMs = nowMs;
-    const relMs = Math.max(0, nowMs - state.startedAtMs);
-    const stamp = `[${(relMs / 1000).toFixed(3)}]`;
-    const row = { text: `${stamp} ${line}`, kind: String(kind || "") };
-    state.rows.push(row);
-    appendKwsLogRow(row);
+    if (!logPopupOpen) {
+      appendLogRowToState(preopenLogChannelState.phone, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
+      return;
+    }
+    const row = appendLogRowToState(logChannelState.phone, line, kind);
+    if (!row) return;
+    if (activeLogChannel === "phone") appendKwsLogRow(row);
   }
 
   function syncKwsTuneUiFromStatus(status) {
