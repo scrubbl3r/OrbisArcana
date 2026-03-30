@@ -10,5 +10,6 @@
 // Bridge/control actions such as cast_loaded_ud/lr/fb do not belong here.
 // They remain in the cast-action / slot-dispatch layer.
 
-export { createShockwaveSpell } from "../spells/shockwave.js";
+export { executeShockwave } from "./shockwave.js";
+export { executeTeleport } from "./teleport.js";
 export { createColorizeEffect } from "./colorize.js";
