@@ -1223,6 +1223,10 @@
     let executeTeleportHomeSpellModule = null;
     let executeShockwaveSpellModule = null;
     let executeColorizeSpellModule = null;
+    let clearFloatGraceRuntimeModule = null;
+    let grantFloatGraceRuntimeModule = null;
+    let grantSuperGraceRuntimeModule = null;
+    let isFloatGraceActiveRuntimeModule = null;
     let buildInputHudViewModelModule = null;
     let runInputFramePipelineModule = null;
     let runOrbRuntimePipelineModule = null;
@@ -1673,6 +1677,18 @@
           : null;
         executeColorizeSpellModule = (typeof mods.executeColorize === "function")
           ? mods.executeColorize
+          : null;
+        clearFloatGraceRuntimeModule = (typeof mods.clearFloatGraceRuntime === "function")
+          ? mods.clearFloatGraceRuntime
+          : null;
+        grantFloatGraceRuntimeModule = (typeof mods.grantFloatGraceRuntime === "function")
+          ? mods.grantFloatGraceRuntime
+          : null;
+        grantSuperGraceRuntimeModule = (typeof mods.grantSuperGraceRuntime === "function")
+          ? mods.grantSuperGraceRuntime
+          : null;
+        isFloatGraceActiveRuntimeModule = (typeof mods.isFloatGraceActiveRuntime === "function")
+          ? mods.isFloatGraceActiveRuntime
           : null;
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:mods";
         const setRuntimeWordIndexes = (next = {}) => {
@@ -2822,6 +2838,10 @@
     }
 
     function clearFloatGrace(){
+      if (typeof clearFloatGraceRuntimeModule === "function") {
+        clearFloatGraceRuntimeModule({ patchOrbRuntime });
+        return;
+      }
       patchOrbRuntime({
         floatGraceActive: false,
         floatGraceUntilMs: 0,
@@ -2829,6 +2849,16 @@
     }
 
     function grantFloatGrace(ms = FLOAT_GRACE_DEFAULT_MS){
+      if (typeof grantFloatGraceRuntimeModule === "function") {
+        grantFloatGraceRuntimeModule({
+          patchOrbRuntime,
+          getOrbRuntime,
+          durationMs: ms,
+          defaultMs: FLOAT_GRACE_DEFAULT_MS,
+          nowMs: performance.now(),
+        });
+        return;
+      }
       const dur = Math.max(50, Number(ms) || FLOAT_GRACE_DEFAULT_MS);
       const now = performance.now();
       patchOrbRuntime({
@@ -2850,12 +2880,29 @@
     }
 
     function grantSuperGrace(ms = SUPER_GRACE_DEFAULT_MS){
+      if (typeof grantSuperGraceRuntimeModule === "function") {
+        grantSuperGraceRuntimeModule({
+          resetInputProcessingState,
+          grantFloatGrace,
+          durationMs: ms,
+          defaultMs: SUPER_GRACE_DEFAULT_MS,
+          nowMs: performance.now(),
+        });
+        return;
+      }
       const now = performance.now();
       resetInputProcessingState(now);
       grantFloatGrace(ms);
     }
 
     function isFloatGraceActive(nowMs){
+      if (typeof isFloatGraceActiveRuntimeModule === "function") {
+        return !!isFloatGraceActiveRuntimeModule({
+          getOrbRuntime,
+          clearFloatGrace,
+          nowMs,
+        });
+      }
       const orbRt = getOrbRuntime();
       if (!orbRt.floatGraceActive) return false;
       if ((Number(nowMs) || 0) <= Number(orbRt.floatGraceUntilMs || 0)) return true;

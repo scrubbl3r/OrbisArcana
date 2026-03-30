@@ -33,12 +33,6 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     globeCost: 1,
   }),
   Object.freeze({
-    id: "domus_teleport",
-    handlerKey: "teleport",
-    floatGracePolicy: "domus",
-    globeCost: 1,
-  }),
-  Object.freeze({
     id: "shockwave",
     handlerKey: "trigger_shockwave",
     floatGracePolicy: "default",
@@ -51,19 +45,7 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     globeCost: 1,
   }),
   Object.freeze({
-    id: "sanctum_shield",
-    handlerKey: "bubble_shield",
-    floatGracePolicy: "none",
-    globeCost: 1,
-  }),
-  Object.freeze({
     id: "float_grace",
-    handlerKey: "float_grace",
-    floatGracePolicy: "none",
-    globeCost: 0,
-  }),
-  Object.freeze({
-    id: "orb_super_grace",
     handlerKey: "float_grace",
     floatGracePolicy: "none",
     globeCost: 0,

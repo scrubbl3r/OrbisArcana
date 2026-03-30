@@ -61,12 +61,9 @@ function minConfidence(tokens) {
  * @property {number} [maxTokensInBuffer]
  * @property {number} [tokenThreshold]
  * @property {number} [wordCooldownMs]
- * @property {number} [spellCooldownMs] Legacy compatibility alias for `wordCooldownMs`
  * @property {boolean} [clearBufferOnMatch]
  * @property {Array<Object>} [words]
- * @property {Array<Object>} [spells] Legacy compatibility alias for `words`
  * @property {string[]} [requireWakeForWordIds]
- * @property {string[]} [requireWakeForSpellIds] Legacy compatibility alias for `requireWakeForWordIds`
  */
 
 /**

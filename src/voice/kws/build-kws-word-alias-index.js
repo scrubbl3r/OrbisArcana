@@ -4,7 +4,6 @@ import { normalizeTranscript } from "../normalizer.js";
 /**
  * @typedef {Object} KwsWordAliasEntry
  * @property {string} wordId
- * @property {string} spellId Legacy compatibility alias for `wordId`
  * @property {string} alias
  * @property {string[]} tokens
  * @property {number} minConfidence
@@ -44,7 +43,6 @@ export function buildKwsWordAliasIndex(words = ACTIVE_WORDS) {
       /** @type {KwsWordAliasEntry} */
       const entry = {
         wordId: String(word.id),
-        spellId: String(word.id),
         alias: String(alias || ""),
         tokens,
         minConfidence,

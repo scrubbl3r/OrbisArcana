@@ -34,7 +34,6 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = EVT_SPELL_WINDOW_SPIN_CLOSED;
  * @property {string} [slot] Slot/group (`UD`,`LR`,`FB`)
  * @property {string} [axis] Deprecated legacy field from pre-SSOT runtime flow
  * @property {string} [axisWord] Deprecated legacy field from pre-SSOT runtime flow
- * @property {string} [axisSpell] Deprecated legacy alias for `axisWord`
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
  * @property {number} [floatGraceMs] Optional explicit grace override
@@ -51,7 +50,6 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = EVT_SPELL_WINDOW_SPIN_CLOSED;
  * @property {string} slot Slot/group (`UD`,`LR`,`FB`)
  * @property {string} [axis] Deprecated legacy field from pre-SSOT runtime flow
  * @property {string} [axisWord] Deprecated legacy field from pre-SSOT runtime flow
- * @property {string} [axisSpell] Deprecated legacy alias for `axisWord`
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
  */
