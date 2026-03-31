@@ -9,7 +9,6 @@ export function createKwsPanelController({
   onGateOpened = null,
   onGateClosed = null,
   onApplyTune = null,
-  onToggleListenPolicyMode = null,
   getListenPolicyStatus = null,
 } = {}) {
   const DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(250, Number(constants.defaultGateTimeoutMs) || 1500);
@@ -60,7 +59,6 @@ export function createKwsPanelController({
   let kwsLastBackendErrorLogged = "";
   const kwsEventLog = [];
   let tuneApplyBound = false;
-  let listenPolicyBound = false;
   const wordFlashboardPopup = createWordFlashboardPopup({
     els,
     words: WORDFLASHBOARD_WORDS,
@@ -230,7 +228,6 @@ export function createKwsPanelController({
 
   function updateKwsReadout() {
     if (!els.kwsReadout) return;
-    renderListenPolicyMode();
     const parts = [];
     const listenPolicyStatus = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
     const listenPolicyMode = String(listenPolicyStatus && listenPolicyStatus.mode || "").trim().toUpperCase();
@@ -319,35 +316,11 @@ export function createKwsPanelController({
     return status;
   }
 
-  function renderListenPolicyMode(statusOverride = null) {
-    if (!els.kwsListenPolicyBtn) return;
-    const status = statusOverride || (typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null);
-    const mode = String(status && status.mode || "B").trim().toUpperCase() || "B";
-    els.kwsListenPolicyBtn.textContent = `Mode ${mode}`;
-    els.kwsListenPolicyBtn.dataset.mode = mode;
-  }
-
-  function toggleListenPolicyModeFromUi() {
-    if (typeof onToggleListenPolicyMode !== "function") return null;
-    const status = onToggleListenPolicyMode();
-    renderListenPolicyMode(status);
-    return status;
-  }
-
   function bindTuneApplyButton() {
     if (tuneApplyBound) return;
     tuneApplyBound = true;
     if (els.kwsApplyTuneBtn) {
       els.kwsApplyTuneBtn.addEventListener("click", applyKwsParserTuneFromUi);
-    }
-  }
-
-  function bindListenPolicyButton() {
-    if (listenPolicyBound) return;
-    listenPolicyBound = true;
-    if (els.kwsListenPolicyBtn) {
-      els.kwsListenPolicyBtn.addEventListener("click", toggleListenPolicyModeFromUi);
-      renderListenPolicyMode();
     }
   }
 
@@ -372,10 +345,8 @@ export function createKwsPanelController({
     pushKwsLogLine: logPopupController.pushKwsLogLine,
     syncKwsTuneUiFromStatus,
     bindTuneApplyButton,
-    bindListenPolicyButton,
     bindLogPopupButton: logPopupController.bindLogPopupButton,
     bindWordBoardPopupButton,
-    renderListenPolicyMode,
     pushPhoneLogLine: logPopupController.pushPhoneLogLine,
     getUiState: () => kwsTokenUiState,
   };
