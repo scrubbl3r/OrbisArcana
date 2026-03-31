@@ -954,10 +954,10 @@
       top: 110px;
       width: 640px;
       height: auto;
-      min-height: 248px;
+      min-height: 230px;
       display: none;
       flex-direction: column;
-      border-radius: 16px;
+      border-radius: 14px;
       border: 1px solid rgba(50,255,117,.22);
       background: rgba(0,0,0,.92);
       box-shadow: 0 22px 90px rgba(0,0,0,.65);
@@ -972,7 +972,7 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      padding:12px 12px 10px;
+      padding:9px 10px 8px;
       border-bottom:1px solid rgba(50,255,117,.14);
       cursor: move;
       user-select: none;
@@ -980,13 +980,14 @@
     }
     .wordBoardPopupTitle{
       font-weight: 1000;
+      font-size: 13px;
       letter-spacing: .3px;
     }
     .wordBoardMeta{
       display:flex;
       flex-direction:column;
-      gap:8px;
-      padding:10px 12px 9px;
+      gap:6px;
+      padding:7px 10px 7px;
       border-bottom:1px solid rgba(50,255,117,.12);
       background:
         linear-gradient(180deg, rgba(50,255,117,.06), rgba(50,255,117,0)),
@@ -994,9 +995,9 @@
     }
     .wordBoardMetaReadout{
       display:grid;
-      gap:4px;
-      font-size:12px;
-      line-height:1.35;
+      gap:2px;
+      font-size:11px;
+      line-height:1.25;
     }
     .wordBoardMetaLine{
       white-space:nowrap;
@@ -1005,46 +1006,48 @@
     }
     .wordBoardMetaLabel{
       display:inline-block;
-      min-width:42px;
+      min-width:40px;
       font-weight:900;
       color:rgba(50,255,117,.92);
     }
     .wordBoardTuneRow{
       margin-top:0;
-      gap:8px;
+      gap:6px;
       align-items:flex-end;
     }
     .wordBoardTuneRow label{
-      font-size:11px;
+      font-size:10px;
       letter-spacing:.1px;
+      gap:3px;
     }
     .wordBoardTuneRow input{
-      width:62px;
-      height:22px;
-      border-radius:6px;
-      font-size:11px;
+      width:58px;
+      height:20px;
+      border-radius:5px;
+      font-size:10px;
     }
     .wordBoardTuneRow button{
-      padding:4px 8px;
-      border-radius:7px;
-      font-size:11px;
+      padding:5px 8px;
+      min-height:20px;
+      border-radius:6px;
+      font-size:10px;
     }
     .wordBoardPopupBody{
       flex: 1 1 auto;
-      padding: 8px 10px 10px;
-      min-height: 162px;
+      padding: 7px 8px 8px;
+      min-height: 148px;
       overflow-y: auto;
       overflow-x: hidden;
       background: rgba(0,0,0,.22);
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
       align-content: start;
-      max-height: calc(100vh - 210px);
+      max-height: calc(100vh - 190px);
     }
     .wordBoardTierRow{
       display:flex;
-      gap:5px;
+      gap:4px;
       align-items:stretch;
     }
     .wordBoardChip{
@@ -1052,14 +1055,14 @@
       flex:1 1 0;
       align-items:center;
       justify-content:center;
-      height:36px;
-      padding:3px 8px;
-      border-radius:7px;
+      height:28px;
+      padding:2px 7px;
+      border-radius:6px;
       border:1px solid rgba(50,255,117,.24);
       background:rgba(0,0,0,.35);
       color:rgba(50,255,117,.78);
       font-weight:800;
-      font-size:13px;
+      font-size:11px;
       line-height:1;
       text-align:center;
       transition: all 90ms linear;
