@@ -57,6 +57,7 @@ export function createKwsPanelController({
   let kwsWakeHudGateTO = 0;
   let kwsReadoutTickTO = 0;
   let kwsLastBackendErrorLogged = "";
+  let pendingKwsReadoutHtml = "idle";
   const kwsEventLog = [];
   let tuneApplyBound = false;
   const wordFlashboardPopup = createWordFlashboardPopup({
@@ -72,6 +73,14 @@ export function createKwsPanelController({
       );
     },
     getFlashUntilMs: (token) => Number(kwsTokenUiState.flashUntilMs[String(token || "").trim().toLowerCase()] || 0),
+    onVisibilityChanged: (open) => {
+      if (typeof logPopupController.setWordBoardVisible === "function") {
+        logPopupController.setWordBoardVisible(open);
+      }
+      if (!open) return;
+      if (els.kwsReadout) els.kwsReadout.innerHTML = pendingKwsReadoutHtml || "idle";
+      wordFlashboardPopup.render();
+    },
   });
   const logPopupController = createLogPopupController({
     els,
@@ -285,7 +294,9 @@ export function createKwsPanelController({
       }
     }
     const meta = parts.length ? `<span class="kwsTokenMeta">${parts.join(" | ")}</span>` : "";
-    els.kwsReadout.innerHTML = meta || "idle";
+    pendingKwsReadoutHtml = meta || "idle";
+    if (!wordFlashboardPopup.isOpen()) return;
+    els.kwsReadout.innerHTML = pendingKwsReadoutHtml;
     wordFlashboardPopup.render();
   }
 

@@ -4,6 +4,7 @@ export function createWordFlashboardPopup({
   canonicalToken = (token) => String(token || "").trim().toLowerCase(),
   getListenableTokens = () => new Set(),
   getFlashUntilMs = () => 0,
+  onVisibilityChanged = null,
 } = {}) {
   const flashboardWords = Array.isArray(words)
     ? words.map((entry) => Object.freeze({ ...entry }))
@@ -59,8 +60,10 @@ export function createWordFlashboardPopup({
     }
     if (!open) {
       if (els.wordBoardBody) els.wordBoardBody.textContent = "";
+      if (typeof onVisibilityChanged === "function") onVisibilityChanged(false);
       return;
     }
+    if (typeof onVisibilityChanged === "function") onVisibilityChanged(true);
     render();
   }
 
