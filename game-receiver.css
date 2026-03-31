@@ -954,7 +954,7 @@
       top: 110px;
       width: 640px;
       height: auto;
-      min-height: 210px;
+      min-height: 248px;
       display: none;
       flex-direction: column;
       border-radius: 16px;
@@ -982,22 +982,69 @@
       font-weight: 1000;
       letter-spacing: .3px;
     }
+    .wordBoardMeta{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:10px 12px 9px;
+      border-bottom:1px solid rgba(50,255,117,.12);
+      background:
+        linear-gradient(180deg, rgba(50,255,117,.06), rgba(50,255,117,0)),
+        rgba(0,0,0,.88);
+    }
+    .wordBoardMetaReadout{
+      display:grid;
+      gap:4px;
+      font-size:12px;
+      line-height:1.35;
+    }
+    .wordBoardMetaLine{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .wordBoardMetaLabel{
+      display:inline-block;
+      min-width:42px;
+      font-weight:900;
+      color:rgba(50,255,117,.92);
+    }
+    .wordBoardTuneRow{
+      margin-top:0;
+      gap:8px;
+      align-items:flex-end;
+    }
+    .wordBoardTuneRow label{
+      font-size:11px;
+      letter-spacing:.1px;
+    }
+    .wordBoardTuneRow input{
+      width:62px;
+      height:22px;
+      border-radius:6px;
+      font-size:11px;
+    }
+    .wordBoardTuneRow button{
+      padding:4px 8px;
+      border-radius:7px;
+      font-size:11px;
+    }
     .wordBoardPopupBody{
-      flex: 0 0 auto;
-      padding: 8px;
-      min-height: 150px;
+      flex: 1 1 auto;
+      padding: 8px 10px 10px;
+      min-height: 162px;
       overflow-y: auto;
       overflow-x: hidden;
       background: rgba(0,0,0,.22);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       align-content: start;
-      max-height: calc(100vh - 180px);
+      max-height: calc(100vh - 210px);
     }
     .wordBoardTierRow{
       display:flex;
-      gap:6px;
+      gap:5px;
       align-items:stretch;
     }
     .wordBoardChip{
@@ -1005,14 +1052,14 @@
       flex:1 1 0;
       align-items:center;
       justify-content:center;
-      height:44px;
-      padding:4px 8px;
-      border-radius:8px;
+      height:36px;
+      padding:3px 8px;
+      border-radius:7px;
       border:1px solid rgba(50,255,117,.24);
       background:rgba(0,0,0,.35);
       color:rgba(50,255,117,.78);
       font-weight:800;
-      font-size:14px;
+      font-size:13px;
       line-height:1;
       text-align:center;
       transition: all 90ms linear;
