@@ -954,7 +954,7 @@
       top: 110px;
       width: 640px;
       height: auto;
-      min-height: 230px;
+      min-height: 0;
       display: none;
       flex-direction: column;
       border-radius: 14px;
@@ -1033,9 +1033,9 @@
       font-size:10px;
     }
     .wordBoardPopupBody{
-      flex: 1 1 auto;
+      flex: 0 0 auto;
       padding: 7px 8px 8px;
-      min-height: 148px;
+      min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
       background: rgba(0,0,0,.22);
@@ -1043,7 +1043,7 @@
       flex-direction: column;
       gap: 4px;
       align-content: start;
-      max-height: calc(100vh - 190px);
+      max-height: calc(100vh - 220px);
     }
     .wordBoardTierRow{
       display:flex;
@@ -1078,6 +1078,74 @@
       background: rgba(253,241,0,.92);
       border-color: rgba(253,241,0,.92);
       box-shadow: 0 0 0 1px rgba(253,241,0,.25), 0 0 12px rgba(253,241,0,.35);
+    }
+    .wordBoardDebugPanel{
+      display:flex;
+      flex-direction:column;
+      border-top:1px solid rgba(50,255,117,.12);
+      background: rgba(0,0,0,.76);
+    }
+    .wordBoardDebugToggle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      width:100%;
+      padding:6px 8px;
+      border:none;
+      border-radius:0;
+      background:rgba(0,0,0,.22);
+      color:rgba(50,255,117,.86);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.25px;
+      text-transform:uppercase;
+    }
+    .wordBoardDebugToggle:hover{
+      border:none;
+      background:rgba(50,255,117,.06);
+    }
+    .wordBoardDebugBadge{
+      color:rgba(50,255,117,.58);
+      font-size:10px;
+      font-weight:700;
+      text-transform:none;
+      letter-spacing:0;
+    }
+    .wordBoardDebugBadge.hot{
+      color:#ffd400;
+    }
+    .wordBoardDebugBadge.bad{
+      color:#ff7b7b;
+    }
+    .wordBoardDebugBody{
+      display:none;
+      padding:6px 8px 8px;
+      max-height:112px;
+      overflow:auto;
+      background:rgba(0,0,0,.18);
+      font-size:10px;
+      line-height:1.3;
+    }
+    .wordBoardDebugPanel.on .wordBoardDebugBody{
+      display:block;
+    }
+    .wordBoardDebugLine{
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      color:rgba(50,255,117,.82);
+      opacity:.86;
+    }
+    .wordBoardDebugLine + .wordBoardDebugLine{
+      margin-top:3px;
+    }
+    .wordBoardDebugLine.bad{
+      color:#ff8d8d;
+      opacity:1;
+    }
+    .wordBoardDebugLine.muted{
+      opacity:.55;
     }
 
     @media (max-width: 900px){

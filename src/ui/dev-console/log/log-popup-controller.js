@@ -5,6 +5,7 @@ export function createLogPopupController({
 } = {}) {
   const KWS_LOG_DEDUP_MS = Math.max(0, Number(dedupMs) || 450);
   const KWS_PREOPEN_LOG_BUFFER_LIMIT = Math.max(10, Number(preopenBufferLimit) || 80);
+  const WORDBOARD_DEBUG_LIMIT = 18;
   const kwsEventLog = [];
   let kwsLastLogText = "";
   let kwsLastLogAtMs = 0;
@@ -12,7 +13,10 @@ export function createLogPopupController({
   let logPopupBound = false;
   let logPopupOpen = false;
   let logPopupDrag = null;
+  let wordBoardDebugOpen = false;
+  let wordBoardDebugBound = false;
   let activeLogChannel = "kws";
+  const wordBoardDebugRows = [];
   const logChannelState = {
     kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
     phone: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
@@ -70,6 +74,66 @@ export function createLogPopupController({
     lineEl.textContent = String(row.text || "");
     els.kwsLog.appendChild(lineEl);
     els.kwsLog.scrollTop = els.kwsLog.scrollHeight;
+  }
+
+  function shouldAutoOpenWordBoardDebug(line, kind = "") {
+    const text = String(line || "").trim();
+    const normalizedKind = String(kind || "").trim().toLowerCase();
+    return normalizedKind === "bad" || /(^|[\s:_-])(error|failed|fatal)([\s:_-]|$)/i.test(text);
+  }
+
+  function appendWordBoardDebugRow(row) {
+    if (!row) return;
+    wordBoardDebugRows.push(row);
+    while (wordBoardDebugRows.length > WORDBOARD_DEBUG_LIMIT) wordBoardDebugRows.shift();
+    renderWordBoardDebugBody();
+  }
+
+  function renderWordBoardDebugBody() {
+    if (!els.wordBoardDebugBody) return;
+    els.wordBoardDebugBody.textContent = "";
+    for (const row of wordBoardDebugRows) {
+      const lineEl = document.createElement("div");
+      lineEl.className = `wordBoardDebugLine${row.kind ? ` ${row.kind}` : ""}`;
+      lineEl.textContent = String(row.text || "");
+      els.wordBoardDebugBody.appendChild(lineEl);
+    }
+    els.wordBoardDebugBody.scrollTop = els.wordBoardDebugBody.scrollHeight;
+  }
+
+  function renderWordBoardDebugBadge() {
+    if (!els.wordBoardDebugBadge) return;
+    const lastRow = wordBoardDebugRows[wordBoardDebugRows.length - 1] || null;
+    const badge = els.wordBoardDebugBadge;
+    badge.classList.remove("hot", "bad");
+    if (!lastRow) {
+      badge.textContent = "idle";
+      return;
+    }
+    if (String(lastRow.kind || "").trim().toLowerCase() === "bad") {
+      badge.textContent = "error";
+      badge.classList.add("bad");
+      return;
+    }
+    badge.textContent = `${wordBoardDebugRows.length} lines`;
+    badge.classList.add("hot");
+  }
+
+  function setWordBoardDebugOpen(nextOpen) {
+    wordBoardDebugOpen = !!nextOpen;
+    if (els.wordBoardDebugPanel) els.wordBoardDebugPanel.classList.toggle("on", wordBoardDebugOpen);
+    if (els.wordBoardDebugToggle) els.wordBoardDebugToggle.setAttribute("aria-expanded", wordBoardDebugOpen ? "true" : "false");
+    if (els.wordBoardDebugBody) els.wordBoardDebugBody.setAttribute("aria-hidden", wordBoardDebugOpen ? "false" : "true");
+  }
+
+  function bindWordBoardDebugToggle() {
+    if (wordBoardDebugBound) return;
+    wordBoardDebugBound = true;
+    if (els.wordBoardDebugToggle) {
+      els.wordBoardDebugToggle.addEventListener("click", () => {
+        setWordBoardDebugOpen(!wordBoardDebugOpen);
+      });
+    }
   }
 
   function renderCurrentLogChannel() {
@@ -195,12 +259,14 @@ export function createLogPopupController({
   function pushKwsLogLine(text, kind = "") {
     const line = String(text || "").trim();
     if (!line) return;
-    if (!logPopupOpen) {
-      appendLogRowToState(preopenLogChannelState.kws, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
-      return;
-    }
-    const row = appendLogRowToState(logChannelState.kws, line, kind);
+    const row = logPopupOpen
+      ? appendLogRowToState(logChannelState.kws, line, kind)
+      : appendLogRowToState(preopenLogChannelState.kws, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
     if (!row) return;
+    appendWordBoardDebugRow(row);
+    renderWordBoardDebugBadge();
+    if (shouldAutoOpenWordBoardDebug(line, kind)) setWordBoardDebugOpen(true);
+    if (!logPopupOpen) return;
     syncLegacyKwsLogState();
     if (activeLogChannel === "kws") appendKwsLogRow(row);
   }
@@ -221,5 +287,6 @@ export function createLogPopupController({
     pushKwsLogLine,
     pushPhoneLogLine,
     bindLogPopupButton,
+    bindWordBoardDebugToggle,
   };
 }

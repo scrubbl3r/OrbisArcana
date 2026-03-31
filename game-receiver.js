@@ -87,6 +87,10 @@
       wordBoardPopupHeader: $("wordBoardPopupHeader"),
       wordBoardPopupClose: $("wordBoardPopupClose"),
       wordBoardBody: $("wordBoardBody"),
+      wordBoardDebugPanel: $("wordBoardDebugPanel"),
+      wordBoardDebugToggle: $("wordBoardDebugToggle"),
+      wordBoardDebugBadge: $("wordBoardDebugBadge"),
+      wordBoardDebugBody: $("wordBoardDebugBody"),
 
       calibOverlay: $("calibOverlay"),
       calibBtn: $("calibBtn"),
@@ -1540,6 +1544,9 @@
         }
         if (kwsPanelController && typeof kwsPanelController.bindWordBoardPopupButton === "function") {
           kwsPanelController.bindWordBoardPopupButton();
+        }
+        if (kwsPanelController && typeof kwsPanelController.bindWordBoardDebugToggle === "function") {
+          kwsPanelController.bindWordBoardDebugToggle();
         }
         kwsBridge.startReadoutTick();
         if (kwsConfigDebugLine) kwsBridge.pushLogLine(kwsConfigDebugLine, "muted");

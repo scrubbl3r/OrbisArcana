@@ -346,6 +346,7 @@ export function createKwsPanelController({
     syncKwsTuneUiFromStatus,
     bindTuneApplyButton,
     bindLogPopupButton: logPopupController.bindLogPopupButton,
+    bindWordBoardDebugToggle: logPopupController.bindWordBoardDebugToggle,
     bindWordBoardPopupButton,
     pushPhoneLogLine: logPopupController.pushPhoneLogLine,
     getUiState: () => kwsTokenUiState,
