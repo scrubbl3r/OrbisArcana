@@ -4,7 +4,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { createCheckEventBus } from "./check-event-bus-v2.mjs";
 import { captureCheckEvents } from "./check-capture-v2.mjs";
 
-const CHECK_TAG = "orchestrator-v2-window-semantics:v2";
+const CHECK_TAG = "compiled-interaction-graph-v2-window-semantics:v2";
 const PASS_MESSAGE = "requires/consume/open.windowId semantics hold for wake chains";
 
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";

@@ -8,10 +8,10 @@ import {
   unknownInactiveWordErrorTokenV2,
 } from "./wake-test-ids-v2.mjs";
 
-const CHECK_TAG = "orchestrator-v2-builder-validation-contract:v2";
+const CHECK_TAG = "compiled-interaction-graph-v2-builder-validation-contract:v2";
 const ERROR_PREFIX = "COMPILED_INTERACTION_GRAPH_V2 validation failed: ";
 const ERROR_DELIMITER = " | ";
-const PASS_MESSAGE = "orchestrator-v2 builder rejects invalid configs via validation-prefixed errors";
+const PASS_MESSAGE = "compiled-interaction-graph-v2 builder rejects invalid configs via validation-prefixed errors";
 
 function expectBuilderValid(caseName, compiledInteractionGraphV2) {
   let threw = false;

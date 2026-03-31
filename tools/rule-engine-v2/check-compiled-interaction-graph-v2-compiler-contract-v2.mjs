@@ -3,8 +3,8 @@ import { failCheck, failCheckWithDetails } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 import { OTHER_UNKNOWN_WAKE_WORD_ID_V2, UNKNOWN_WAKE_WORD_ID_V2 } from "./wake-test-ids-v2.mjs";
 
-const CHECK_TAG = "orchestrator-v2-compiler:v2";
-const PASS_MESSAGE = "orchestrator v2 compiler contract holds for on/requires/open/consume/bind/trigger + defaults";
+const CHECK_TAG = "compiled-interaction-graph-v2-compiler:v2";
+const PASS_MESSAGE = "compiled interaction graph v2 compiler contract holds for on/requires/open/consume/bind/trigger + defaults";
 const ACTION_WAKE_WIN = "wake_win";
 const WINDOW_WAKE_WIN = "wake_win";
 const WINDOW_WAKE_MAIN_ID = "wake.main";

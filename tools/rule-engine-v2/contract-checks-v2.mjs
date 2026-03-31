@@ -100,31 +100,31 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_defaults_trigger_enabled_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-defaults-trigger-enabled-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-defaults-trigger-enabled-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_defaults_section_shape_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-defaults-section-shape-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-defaults-section-shape-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_defaults_trigger_object_shape_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-defaults-trigger-object-shape-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-defaults-trigger-object-shape-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_defaults_trigger_unknown_event_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-defaults-trigger-unknown-event-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-defaults-trigger-unknown-event-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_defaults_numeric_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-defaults-numeric-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-defaults-numeric-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_defaults_unsupported_keys_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-defaults-unsupported-keys-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-defaults-unsupported-keys-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_defaults_rule_numeric_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-defaults-rule-numeric-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-defaults-rule-numeric-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_parser_parity_source_surface",
@@ -140,7 +140,7 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_window_refs_compiler_parser_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-compiler-parser-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-refs-compiler-parser-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_rule_timing_defaults_compiler_source_surface",
@@ -148,7 +148,7 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_top_level_enabled_compiler_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-top-level-enabled-compiler-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-top-level-enabled-compiler-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_base_merge_precedence_compiler_source_surface",
@@ -156,23 +156,23 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_top_level_enabled_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-top-level-enabled-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-top-level-enabled-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_top_level_version_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-top-level-version-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-top-level-version-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_top_level_rules_array_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-top-level-rules-array-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-top-level-rules-array-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_top_level_unsupported_keys_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-top-level-unsupported-keys-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-top-level-unsupported-keys-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_top_level_optional_object_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-top-level-optional-object-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-top-level-optional-object-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_rule_unsupported_keys_validator_source_surface",
@@ -192,91 +192,91 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_open_words_precedence_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-words-precedence-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-words-precedence-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_words_shape_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-words-shape-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-words-shape-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_group_ref_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-group-ref-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-group-ref-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_group_ref_shape_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-group-ref-shape-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-group-ref-shape-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_group_ref_empty_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-group-ref-empty-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-group-ref-empty-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_entry_type_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-entry-type-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-entry-type-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_spells_compat_warning_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-compat-warning-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-spells-compat-warning-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_spells_compat_entry_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-compat-entry-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-spells-compat-entry-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_spells_compat_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-compat-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-spells-compat-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_selector_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-selector-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-selector-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_spells_fallback_compiler_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-spells-fallback-compiler-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-spells-fallback-compiler-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_spell_compat_compiler_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-compiler-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-spell-compat-compiler-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_spell_compat_warning_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-warning-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-spell-compat-warning-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_spell_compat_entry_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-entry-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-spell-compat-entry-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_spell_compat_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-spell-compat-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-spell-compat-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_selector_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-selector-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-selector-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_shape_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-shape-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-shape-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_entry_type_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-entry-type-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-entry-type-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_on_duplicate_normalized_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-on-duplicate-normalized-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-on-duplicate-normalized-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_id_shape_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-id-shape-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-id-shape-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_id_type_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-id-type-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-id-type-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_id_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-id-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-id-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_word_id_normalizer_source_surface",
@@ -288,67 +288,67 @@ export const CONTRACT_CHECKS_V2 = defineCheckEntriesV2([
   },
   {
     id: "orchestrator_v2_groups_normalization_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-normalization-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-normalization-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_groups_shape_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-shape-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-shape-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_groups_key_shape_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-key-shape-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-key-shape-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_groups_unknown_word_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-unknown-word-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-unknown-word-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_groups_entry_type_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-entry-type-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-entry-type-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_groups_word_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-word-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-word-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_groups_normalization_compiler_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-normalization-compiler-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-normalization-compiler-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_groups_duplicate_normalized_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-groups-duplicate-normalized-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-groups-duplicate-normalized-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_duplicate_normalized_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-duplicate-normalized-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-duplicate-normalized-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_open_tokenization_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-open-tokenization-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-open-tokenization-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_refs_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-refs-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_refs_shape_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-shape-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-refs-shape-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_refs_entry_type_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-entry-type-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-refs-entry-type-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_refs_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-refs-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_refs_string_whitespace_validator_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-string-whitespace-validator-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-refs-string-whitespace-validator-source-surface-v2.mjs",
   },
   {
     id: "orchestrator_v2_window_refs_duplicate_source_surface",
-    script: "tools/rule-engine-v2/check-orchestrator-v2-window-refs-duplicate-source-surface-v2.mjs",
+    script: "tools/rule-engine-v2/check-compiled-interaction-graph-v2-window-refs-duplicate-source-surface-v2.mjs",
   },
   {
     id: "spell_runtime_routing_wake_words_compat_contract",

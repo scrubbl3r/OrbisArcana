@@ -7,8 +7,8 @@ import {
 import { failCheck } from "./check-fail-v2.mjs";
 import { reportCheckPass } from "./check-pass-v2.mjs";
 
-const CHECK_TAG = "orchestrator-v2-bootstrap-precedence:v2";
-const PASS_MESSAGE = "bootstrap source selection uses orchestrator v2 when enabled";
+const CHECK_TAG = "compiled-interaction-graph-v2-bootstrap-precedence:v2";
+const PASS_MESSAGE = "bootstrap source selection uses compiled interaction graph v2 when enabled";
 
 const captured = {
   ruleSchema: null,
