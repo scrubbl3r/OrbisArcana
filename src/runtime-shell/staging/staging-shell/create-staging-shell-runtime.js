@@ -649,16 +649,63 @@ function resolveShellRootWakeWindow(payload = {}) {
   return null;
 }
 
-function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = null, kwsPanelController = null } = {}) {
+function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = null } = {}) {
   if (!eventBus || typeof eventBus.on !== "function" || typeof eventBus.emit !== "function") {
     return { dispose() {} };
   }
   const tokenEvent = String(receiverEvents.EVT_VOICE_TOKEN_DETECTED || "voice.token_detected");
   const wordEvent = String(receiverEvents.EVT_VOICE_WORD_DETECTED || "voice.word_detected");
   const lastOpenedAtByWindowId = new Map();
+  const unsub = [];
+
+  function maybeEmitWakeWindow(payload = {}, sourceEvent = "") {
+    const wake = resolveShellRootWakeWindow(payload);
+    if (!wake) return;
+    const now = resolveShellEventAtMs(payload.atMs);
+    const prev = Number(lastOpenedAtByWindowId.get(wake.windowId) || 0);
+    if (prev && (now - prev) < 180) return;
+    lastOpenedAtByWindowId.set(wake.windowId, now);
+    eventBus.emit("rule_engine.wake_win_opened", {
+      ruleId: wake.ruleId,
+      actionId: wake.windowId,
+      windowId: wake.windowId,
+      words: wake.words.slice(),
+      ttlMs: wake.ttlMs,
+      atMs: now,
+      sourceEvent: String(sourceEvent || ""),
+    });
+    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
+      kwsBridge.pushLogLine(
+        `TRACE wake_open:${wake.windowId}:words:${Array.isArray(wake.words) && wake.words.length ? wake.words.join(",") : "-"}:ttl:${Number(wake.ttlMs) || 0}:at:${now}`,
+        "ok"
+      );
+    }
+  }
+
+  unsub.push(eventBus.on(tokenEvent, (payload = {}) => {
+    maybeEmitWakeWindow(payload, tokenEvent);
+  }));
+  unsub.push(eventBus.on(wordEvent, (payload = {}) => {
+    maybeEmitWakeWindow(payload, wordEvent);
+  }));
+
+  return {
+    dispose() {
+      while (unsub.length) {
+        const off = unsub.pop();
+        try { off(); } catch (_) {}
+      }
+    },
+  };
+}
+
+function bindShellWakeWindowVisuals({ eventBus, kwsPanelController = null, kwsBridge = null } = {}) {
+  if (!eventBus || typeof eventBus.on !== "function" || !kwsPanelController) {
+    return { dispose() {} };
+  }
+
   const activeWakeWindowTokensByWindowId = new Map();
   let wakeWindowExpiryTO = 0;
-  const unsub = [];
 
   function clearWakeWindowExpiryTimer() {
     if (!wakeWindowExpiryTO) return;
@@ -667,7 +714,7 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
   }
 
   function syncWakeWindowVisualTokens() {
-    if (!kwsPanelController || typeof kwsPanelController.setManualWakeWindowTokens !== "function") return;
+    if (typeof kwsPanelController.setManualWakeWindowTokens !== "function") return;
     const now = Date.now();
     const activeTokens = [];
     const windowDebug = [];
@@ -712,50 +759,26 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
     }, Math.max(0, nextExpiry - Date.now()));
   }
 
-  function maybeEmitWakeWindow(payload = {}, sourceEvent = "") {
-    const wake = resolveShellRootWakeWindow(payload);
-    if (!wake) return;
-    const now = resolveShellEventAtMs(payload.atMs);
-    const prev = Number(lastOpenedAtByWindowId.get(wake.windowId) || 0);
-    if (prev && (now - prev) < 180) return;
-    lastOpenedAtByWindowId.set(wake.windowId, now);
-    eventBus.emit("rule_engine.wake_win_opened", {
-      ruleId: wake.ruleId,
-      actionId: wake.windowId,
-      windowId: wake.windowId,
-      words: wake.words.slice(),
-      ttlMs: wake.ttlMs,
-      atMs: now,
-      sourceEvent: String(sourceEvent || ""),
-    });
-    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
-      kwsBridge.pushLogLine(
-        `TRACE wake_open:${wake.windowId}:words:${Array.isArray(wake.words) && wake.words.length ? wake.words.join(",") : "-"}:ttl:${Number(wake.ttlMs) || 0}:at:${now}`,
-        "ok"
-      );
-    }
-    activeWakeWindowTokensByWindowId.set(wake.windowId, {
-      tokens: wake.words.slice(),
-      expiresAtMs: now + Math.max(250, Number(wake.ttlMs) || 1500),
+  const off = eventBus.on("rule_engine.wake_win_opened", (payload = {}) => {
+    const windowId = String(payload.windowId || payload.actionId || "").trim().toLowerCase();
+    const tokens = (Array.isArray(payload.words) ? payload.words : [])
+      .map((token) => normalizeShellToken(token))
+      .filter(Boolean);
+    if (!windowId || !tokens.length) return;
+    const atMs = resolveShellEventAtMs(payload.atMs);
+    const ttlMs = Math.max(250, Number(payload.ttlMs) || 1500);
+    activeWakeWindowTokensByWindowId.set(windowId, {
+      tokens,
+      expiresAtMs: atMs + ttlMs,
     });
     syncWakeWindowVisualTokens();
     scheduleWakeWindowExpirySweep();
-  }
-
-  unsub.push(eventBus.on(tokenEvent, (payload = {}) => {
-    maybeEmitWakeWindow(payload, tokenEvent);
-  }));
-  unsub.push(eventBus.on(wordEvent, (payload = {}) => {
-    maybeEmitWakeWindow(payload, wordEvent);
-  }));
+  });
 
   return {
     dispose() {
       clearWakeWindowExpiryTimer();
-      while (unsub.length) {
-        const off = unsub.pop();
-        try { off(); } catch (_) {}
-      }
+      try { off(); } catch (_) {}
     },
   };
 }
@@ -1256,7 +1279,17 @@ async function initShellKwsRuntime(shellContext) {
     eventBus,
     receiverEvents: RECEIVER_EVENTS,
     kwsBridge,
+  });
+  const kwsWakeWindowVisuals = bindShellWakeWindowVisuals({
+    eventBus,
     kwsPanelController,
+    kwsBridge,
+  });
+
+  const kwsRuleTraceOff = eventBus.on("rule_engine.preview_matched", (payload = {}) => {
+    const ruleId = String(payload.ruleId || "").trim().toLowerCase();
+    if (!ruleId || !kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
+    kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
   });
 
   runtime.eventBus = eventBus;
@@ -1277,6 +1310,8 @@ async function initShellKwsRuntime(shellContext) {
     kwsEventRuntime,
     kwsListenPolicySyncOff,
     kwsRootWakeBridge,
+    kwsWakeWindowVisuals,
+    kwsRuleTraceOff,
     kwsBackendKey,
     kwsDebugState,
     receiverEvents: RECEIVER_EVENTS,
