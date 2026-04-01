@@ -50,6 +50,27 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function clamp01(n) {
+  return clamp(n, 0, 1);
+}
+
+function pickImpulse01(d, newKey, oldKey) {
+  if (d && d[newKey] != null) {
+    const n = Number(d[newKey]);
+    return Number.isFinite(n) ? clamp01(n) : 0;
+  }
+  const n = Number(d && d[oldKey]);
+  if (!Number.isFinite(n)) return 0;
+  return clamp01(n > 1.5 ? (n / 100) : n);
+}
+
+function computeLift01(groove01, smooth01, speed01) {
+  const g = clamp01(groove01);
+  const s = clamp01(smooth01);
+  const p = clamp01(speed01);
+  return clamp01(Math.pow(Math.max(0, g * s * p), 1 / 3));
+}
+
 function buildShellStageInitialState(phys = {}) {
   const groundFromBottomPx = Number(phys.groundFromBottomPx) || 17;
   const groundLinePx = Number(phys.groundLinePx) || 2;
@@ -316,8 +337,9 @@ function tickShellStageRuntime(shellContext, dt) {
   const yFloor = shellGroundCenterWorld(shellContext);
   const yCeil = Number(phys.orbRadiusPx) || 50;
   const g = gBase * gravityMul;
+  const thrust = Math.max(0, Number(phys.thrustMax) || 0) * clamp01(state.lift01);
 
-  let a = g;
+  let a = g - thrust;
   const drag = state.v >= 0 ? downDrag : upDrag;
   a += (-drag * state.v);
   state.v += a * dt;
@@ -334,6 +356,101 @@ function tickShellStageRuntime(shellContext, dt) {
   if (state.yW < yCeil) {
     state.yW = yCeil;
     if (state.v < 0) state.v = -state.v * bounce;
+  }
+}
+
+function setLamp(el, on) {
+  if (!el) return;
+  el.classList.toggle("on", !!on);
+}
+
+function flashLamp(el, runtime, key, ms = 380) {
+  if (!el || !runtime) return;
+  if (!runtime.dirLampTO) runtime.dirLampTO = Object.create(null);
+  el.classList.add("on");
+  if (runtime.dirLampTO[key]) clearTimeout(runtime.dirLampTO[key]);
+  runtime.dirLampTO[key] = setTimeout(() => {
+    el.classList.remove("on");
+    runtime.dirLampTO[key] = null;
+  }, ms);
+}
+
+function flashDirectionLamp(shellContext, code, ms = 380) {
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!refs || !runtime) return;
+  const map = {
+    U: refs.lampUp,
+    D: refs.lampDown,
+    L: refs.lampLeft,
+    R: refs.lampRight,
+    F: refs.lampForward,
+    B: refs.lampBack,
+  };
+  const c = String(code || "").trim().toUpperCase();
+  if (!c || !map[c]) return;
+  flashLamp(map[c], runtime, c, ms);
+}
+
+function handleShellImpulseFrame(shellContext, data) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
+  const devRefs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
+  const buildInputHudViewModel =
+    sharedModules &&
+    sharedModules.buildInputHudViewModelModule &&
+    sharedModules.buildInputHudViewModelModule.buildInputHudViewModel;
+  const stage = runtime && runtime.stage;
+  if (!runtime || !stage || !stage.orbRuntimeState || typeof stage.orbRuntimeState.patch !== "function") return;
+
+  const groove = pickImpulse01(data, "groove01", "groove");
+  const smooth = pickImpulse01(data, "smooth01", "smooth");
+  const speed = pickImpulse01(data, "speed01", "speed");
+  const dynamics = pickImpulse01(data, "dynamics01", "orbit01");
+  const shake = pickImpulse01(data, "shake01", "shake");
+  const energy = pickImpulse01(data, "energy01", "energy");
+  const locked = !!(data && data.locked);
+  const lift = computeLift01(groove, smooth, speed);
+  const nowMs = performance.now();
+
+  stage.orbRuntimeState.patch({
+    lift01: lift,
+    energy01: energy,
+    dynamics01: dynamics,
+  });
+
+  if (typeof buildInputHudViewModel === "function" && devView && typeof devView.renderInputHud === "function") {
+    const vm = buildInputHudViewModel({
+      processed: {
+        nowMs,
+        lift,
+        groove,
+        smooth,
+        speed,
+        dynamics,
+        shake,
+        locked,
+        energyUI01: energy,
+        energyBankPts: Math.round(energy * 1000),
+        shieldRgb01: Array.isArray(data && data.shieldRGB) ? data.shieldRGB : null,
+      },
+      shakeCooldownUntil: 0,
+      shakeLampThreshold: 1.65,
+    });
+    devView.renderInputHud(vm);
+  }
+
+  setLamp(devRefs && devRefs.shakeLamp, shake >= 0.72);
+  setLamp(devRefs && devRefs.dynLampStable, dynamics >= 0.08 && speed >= 0.02);
+  setLamp(devRefs && devRefs.dynLampVar, dynamics >= 0.8 && speed >= 0.02);
+
+  if (data && typeof data.sd === "string" && data.sd.trim()) {
+    flashDirectionLamp(shellContext, data.sd, 380);
+  }
+
+  if (devView && typeof devView.setStatus === "function") {
+    devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
   }
 }
 
@@ -532,7 +649,9 @@ async function initShellPairingRuntime(shellContext) {
 
   mobileImpulseSystem = createMobileImpulseSystem({
     idleMarkActivity: () => {},
-    applyDataToUI: () => {},
+    applyDataToUI: (data) => {
+      handleShellImpulseFrame(shellContext, data);
+    },
     teleMaybeLog: () => {},
     onCalibrated: () => {
       setCalibStatus("Calibrated");

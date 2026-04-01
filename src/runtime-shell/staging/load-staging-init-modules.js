@@ -11,6 +11,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
   const [
     eventBusModule,
     receiverBootstrapModule,
+    buildInputHudViewModelModule,
     bootstrapKwsStagingModule,
     bootstrapGameStagingRuntimeModule,
     bootstrapStagingRuntimeContextModule,
@@ -37,6 +38,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
   ] = await Promise.all([
     import("../../events/event-bus.js"),
     import(withVersion("../../runtime/receiver-bootstrap.js", moduleCacheBustV)),
+    import("../../ui/build-input-hud-view-model.js"),
     import("./bootstrap-kws-staging.js"),
     import("./bootstrap-game-staging-runtime.js"),
     import("./bootstrap-staging-runtime-context.js"),
@@ -65,6 +67,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
   return {
     eventBusModule,
     receiverBootstrapModule,
+    buildInputHudViewModelModule,
     bootstrapKwsStagingModule,
     bootstrapGameStagingRuntimeModule,
     bootstrapStagingRuntimeContextModule,
