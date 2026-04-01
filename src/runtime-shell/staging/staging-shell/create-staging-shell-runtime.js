@@ -43,6 +43,14 @@ function normalizeShellToken(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function resolveShellEventAtMs(value) {
+  const atMs = Number(value);
+  if (!Number.isFinite(atMs) || atMs < 100000000000) {
+    return Date.now();
+  }
+  return atMs;
+}
+
 const STAGING_WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
 
 function cloneJsonLike(value, fallback = {}) {
@@ -703,7 +711,7 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
   function maybeEmitWakeWindow(payload = {}, sourceEvent = "") {
     const wake = resolveShellRootWakeWindow(payload);
     if (!wake) return;
-    const now = Number(payload.atMs) || Date.now();
+    const now = resolveShellEventAtMs(payload.atMs);
     const prev = Number(lastOpenedAtByWindowId.get(wake.windowId) || 0);
     if (prev && (now - prev) < 180) return;
     lastOpenedAtByWindowId.set(wake.windowId, now);
