@@ -1607,6 +1607,9 @@
           bootstrapStagingRuntimeContextModule: {
             bootstrapStagingRuntimeContext,
           },
+          bootstrapStagingMvpModule: {
+            bootstrapStagingMvp,
+          },
           bindStagingRuntimeEventsModule: {
             bindStagingRuntimeEvents,
           },
@@ -2321,12 +2324,7 @@
           getCurrentBackendKey: () => kwsBackendKey,
           setCurrentBackendKey: (next) => { kwsBackendKey = String(next || DEFAULT_KWS_BACKEND_KEY); },
         });
-        const ruleEngineMvpState = {
-          ruleSchema,
-          ruleEnginePreviewSystem,
-          ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
-        };
-        mvp = {
+        mvp = bootstrapStagingMvp({
           eventBus,
           gameState,
           orbSystem,
@@ -2337,7 +2335,9 @@
           inputDynamicsSystem,
           inputGestureSystem,
           orbRuntimeState,
-          ...ruleEngineMvpState,
+          ruleSchema,
+          ruleEnginePreviewSystem,
+          RULE_ENGINE_EXECUTE_ACTIONS,
           resourcesSystem,
           orbFxSystem,
           orbSystemsBundle,
@@ -2346,35 +2346,18 @@
           kwsWordProvider,
           voiceProviderManager,
           kwsVoiceProvider,
-          ...kwsMvpCommands,
+          kwsMvpCommands,
+          kwsBootOrchestrator,
           grantFloatGrace,
           grantSuperGrace,
-          lastImpact: null,
-          applyImpact(impact, source, meta = {}){
-            this.lastImpact = {
-              impact: Number(impact) || 0,
-              source: source || "unknown",
-              rawImpact: Number(meta.rawImpact) || 0,
-              gravityMul: Number(meta.gravityMul) || 0,
-              fallDrag: Number(meta.fallDrag) || 0,
-              atMs: performance.now(),
-            };
-            orbSystem.applyImpact({ impact, source, atMs: performance.now() });
-            renderOrbDamageVisuals();
-            updateDebugReadout();
-          },
-        };
-        if (mvp) kwsBootOrchestrator.bootAndAutostart(mvp);
-        mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
-        mvp.lastImpact = null;
-        if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") orbShatterRuntime.clear();
-        orbInputSuppressed = false;
-        if (orbFxSystem) orbFxSystem.reset();
-        if (worldSystem) worldSystem.reset(performance.now());
-        clearDeathOverlaySchedule();
-        closeDeathOverlay();
-        renderOrbDamageVisuals();
-        updateDebugReadout();
+          orbShatterRuntime,
+          worldSystem,
+          clearDeathOverlaySchedule,
+          closeDeathOverlay,
+          renderOrbDamageVisuals,
+          updateDebugReadout,
+          setOrbInputSuppressed: (next) => { orbInputSuppressed = !!next; },
+        });
       } catch (e) {
         try {
           await teardownKwsForReinit();

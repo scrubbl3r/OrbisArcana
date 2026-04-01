@@ -9,11 +9,17 @@ function withVersion(path, version = "") {
  */
 export async function loadStagingInitModules(moduleCacheBustV = "") {
   const [
+    eventBusModule,
     receiverBootstrapModule,
     bootstrapKwsStagingModule,
     bootstrapGameStagingRuntimeModule,
     bootstrapStagingRuntimeContextModule,
+    bootstrapStagingMvpModule,
     bindStagingRuntimeEventsModule,
+    orbRuntimeConfigDefaultModule,
+    orbStatusConfigDefaultModule,
+    worldSystemModule,
+    worldItemsModule,
     receiverEventsModule,
     kwsPanelControllerModule,
     kwsRuntimeControllerModule,
@@ -29,11 +35,17 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     orbRuntimeStateModule,
     orbRuntimeLoopModule,
   ] = await Promise.all([
+    import("../../events/event-bus.js"),
     import(withVersion("../../runtime/receiver-bootstrap.js", moduleCacheBustV)),
     import("./bootstrap-kws-staging.js"),
     import("./bootstrap-game-staging-runtime.js"),
     import("./bootstrap-staging-runtime-context.js"),
+    import("./bootstrap-staging-mvp.js"),
     import("./bind-staging-runtime-events.js"),
+    import("../../content/orb/orb-runtime-config-default.js"),
+    import("../../content/orb/orb-status-config-default.js"),
+    import("../../game-runtime/world/world-system.js"),
+    import("../../content/world-items/default-world-items.js"),
     import("../../runtime/receiver-events.js"),
     import(withVersion("../../ui/dev-console/kws-panel-controller.js", moduleCacheBustV)),
     import("../../voice/kws/kws-runtime-controller.js"),
@@ -51,11 +63,17 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
   ]);
 
   return {
+    eventBusModule,
     receiverBootstrapModule,
     bootstrapKwsStagingModule,
     bootstrapGameStagingRuntimeModule,
     bootstrapStagingRuntimeContextModule,
+    bootstrapStagingMvpModule,
     bindStagingRuntimeEventsModule,
+    orbRuntimeConfigDefaultModule,
+    orbStatusConfigDefaultModule,
+    worldSystemModule,
+    worldItemsModule,
     receiverEventsModule,
     kwsPanelControllerModule,
     kwsRuntimeControllerModule,

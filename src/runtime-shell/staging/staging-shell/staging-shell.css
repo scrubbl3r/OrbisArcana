@@ -21,6 +21,135 @@ body {
   min-height: 100vh;
 }
 
+.shellStartScreen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  z-index: 998;
+  pointer-events: auto;
+  background: var(--bg);
+}
+
+.shellStartScreen.off {
+  display: none;
+}
+
+.shellStartCard {
+  width: min(500px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.shellStartBtn {
+  width: 100%;
+  height: 92px;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-strong);
+  font-weight: 1000;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: none;
+  text-shadow: 0 0 16px rgba(255,255,255,.08);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+.shellStartBtn:active {
+  transform: translateY(1px);
+}
+
+.shellStartBtn span {
+  font-size: clamp(28px, 4.2vw, 48px);
+  line-height: 1;
+}
+
+.shellQrBox {
+  width: 280px;
+  height: 280px;
+  border-radius: 14px;
+  border: 1px solid var(--frame);
+  background: #fff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.shellStartQrBox {
+  width: auto;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset, 0 0 28px rgba(255,255,255,.04);
+  box-sizing: border-box;
+}
+
+.shellCalibOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(6px);
+  z-index: 999;
+}
+
+.shellCalibOverlay.off {
+  display: none;
+}
+
+.shellCalibCard {
+  width: min(420px, 92vw);
+  border-radius: 16px;
+  border: 1px solid var(--frame);
+  background: rgba(10,10,12,.96);
+  box-shadow: 0 22px 90px rgba(0,0,0,.65);
+  padding: 18px 16px 16px;
+  text-align: center;
+}
+
+.shellCalibText {
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.shellCalibBtn {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--frame);
+  background: rgba(16,16,20,.92);
+  color: var(--text-strong);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.shellCalibBtn:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.shellCalibStatus {
+  margin-top: 12px;
+  color: var(--text-muted);
+}
+
 .stagingShell {
   min-height: 100vh;
   padding: 32px 24px 40px;
@@ -91,5 +220,10 @@ body {
 
   .shellMount {
     min-height: auto;
+  }
+
+  .shellQrBox {
+    width: 240px;
+    height: 240px;
   }
 }

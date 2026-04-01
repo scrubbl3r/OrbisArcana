@@ -7,8 +7,19 @@
   <link rel="stylesheet" href="./staging-shell.css" />
   <link rel="stylesheet" href="../dev-staging/dev-staging.css" />
   <link rel="stylesheet" href="../game-staging/game-staging.css" />
+  <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+  <script src="../../../../qrcode.min.js"></script>
 </head>
 <body>
+  <div id="startScreen" class="shellStartScreen" aria-label="Staging shell start screen">
+    <div class="shellStartCard">
+      <button id="startBtn" class="shellStartBtn" aria-label="Pair phone">
+        <span>PAIR PHONE</span>
+      </button>
+      <div id="startQr" class="shellQrBox shellStartQrBox"></div>
+    </div>
+  </div>
+
   <main class="stagingShell">
     <section class="shellHero">
       <div class="shellEyebrow">Runtime Shell</div>
@@ -25,6 +36,14 @@
       <div id="gameStagingMount" class="shellMount shellMountGame" aria-label="Game staging mount"></div>
     </section>
   </main>
+
+  <div id="calibOverlay" class="shellCalibOverlay off" aria-hidden="true">
+    <div class="shellCalibCard" role="dialog" aria-label="Calibration">
+      <div class="shellCalibText">Place phone flat on desk.<br>Align top edge of phone to bottom edge of laptop and press CALIBRATE.</div>
+      <button id="calibBtn" class="shellCalibBtn" type="button" disabled>CALIBRATE</button>
+      <div id="calibStatus" class="shellCalibStatus">Waiting for phone…</div>
+    </div>
+  </div>
 
   <script type="module" src="./staging-shell.js"></script>
 </body>

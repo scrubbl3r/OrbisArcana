@@ -54,12 +54,37 @@ export function renderGameStaging(root) {
   if (!root) return null;
   root.innerHTML = GAME_STAGING_TEMPLATE;
 
+  const refs = {
+    root,
+    physStage: root.querySelector("#physStage"),
+    stars: root.querySelector("#stars"),
+    terrain: root.querySelector("#terrain"),
+    groundLine: root.querySelector("#groundLine"),
+    orbWrap: root.querySelector("#orbWrap"),
+    orb: root.querySelector("#orb"),
+    orbInterior: root.querySelector("#orbInterior"),
+    orbCracks: root.querySelector("#orbCracks"),
+    orbShards: root.querySelector("#orbShards"),
+    testGlobe: root.querySelector("#testGlobe"),
+    shield: root.querySelector("#shield"),
+    shockLayer: root.querySelector("#shockLayer"),
+    flameLayer: root.querySelector("#flameLayer"),
+    electricLayer: root.querySelector("#electricLayer"),
+    deathPanel: root.querySelector("#deathPanel"),
+    tryAgainBtn: root.querySelector("#tryAgainBtn"),
+    gSlider: root.querySelector("#gSlider"),
+    gVal: root.querySelector("#gVal"),
+    dSlider: root.querySelector("#dSlider"),
+    dVal: root.querySelector("#dVal"),
+  };
+
   return {
     root,
-    stageEl: root.querySelector("#physStage"),
-    gravitySliderEl: root.querySelector("#gSlider"),
-    dragSliderEl: root.querySelector("#dSlider"),
-    tryAgainBtnEl: root.querySelector("#tryAgainBtn"),
+    refs,
+    stageEl: refs.physStage,
+    gravitySliderEl: refs.gSlider,
+    dragSliderEl: refs.dSlider,
+    tryAgainBtnEl: refs.tryAgainBtn,
   };
 }
 
