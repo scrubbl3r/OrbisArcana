@@ -2262,6 +2262,20 @@
             kwsListenPolicyController.start();
           }
         }
+        orbDamageVisualsRuntime.start();
+        audioSystem.start();
+        inputSystemsBundle.start();
+        resourcesSystem.start();
+        spellDispatchSystem.start();
+        if (ruleEnginePreviewSystem && typeof ruleEnginePreviewSystem.start === "function") {
+          ruleEnginePreviewSystem.start();
+          if (RULE_CHAIN_TRACE_ENABLED) {
+            kwsBridge.pushLogLine("TRACE rule_engine:start", "muted");
+          }
+        }
+        if (orbSystemsBundle && typeof orbSystemsBundle.start === "function") {
+          orbSystemsBundle.start();
+        }
         bindStagingRuntimeEvents({
           eventBus,
           RECEIVER_EVENTS,
