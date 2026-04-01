@@ -90,6 +90,15 @@ function pickImpulse01(d, newKey, oldKey) {
   return clamp01(n > 1.5 ? (n / 100) : n);
 }
 
+function pickShakeMetric(d, newKey = "shake01", oldKey = "shake") {
+  if (d && d[newKey] != null) {
+    const n = Number(d[newKey]);
+    return Number.isFinite(n) ? n : 0;
+  }
+  const n = Number(d && d[oldKey]);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function computeLift01(groove01, smooth01, speed01) {
   const g = clamp01(groove01);
   const s = clamp01(smooth01);
@@ -438,6 +447,18 @@ function flashDirectionLamp(shellContext, code, ms = 380) {
   flashLamp(map[c], runtime, c, ms);
 }
 
+function flashShellShakeLamp(shellContext, ms = 400) {
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!refs || !runtime || !refs.shakeLamp) return;
+  refs.shakeLamp.classList.add("on");
+  if (runtime.shakeLampTO) clearTimeout(runtime.shakeLampTO);
+  runtime.shakeLampTO = setTimeout(() => {
+    refs.shakeLamp.classList.remove("on");
+    runtime.shakeLampTO = 0;
+  }, ms);
+}
+
 function handleShellImpulseFrame(shellContext, data) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
@@ -454,7 +475,7 @@ function handleShellImpulseFrame(shellContext, data) {
   const smooth = pickImpulse01(data, "smooth01", "smooth");
   const speed = pickImpulse01(data, "speed01", "speed");
   const dynamics = pickImpulse01(data, "dynamics01", "orbit01");
-  const shake = pickImpulse01(data, "shake01", "shake");
+  const shake = pickShakeMetric(data, "shake01", "shake");
   const energy = pickImpulse01(data, "energy01", "energy");
   const locked = !!(data && data.locked);
   const lift = computeLift01(groove, smooth, speed);
@@ -481,13 +502,22 @@ function handleShellImpulseFrame(shellContext, data) {
         energyBankPts: Math.round(energy * 1000),
         shieldRgb01: Array.isArray(data && data.shieldRGB) ? data.shieldRGB : null,
       },
-      shakeCooldownUntil: 0,
+      shakeCooldownUntil: Number(runtime.shakeCooldownUntil) || 0,
       shakeLampThreshold: 1.65,
     });
     devView.renderInputHud(vm);
   }
 
-  setLamp(devRefs && devRefs.shakeLamp, shake >= 0.72);
+  if (shake >= 1.65) {
+    flashShellShakeLamp(shellContext, 400);
+    if (nowMs >= (Number(runtime.shakeCooldownUntil) || 0) && groove <= 0.2) {
+      const shellVfx = runtime.vfx || null;
+      if (shellVfx && typeof shellVfx.triggerShockwave === "function") {
+        shellVfx.triggerShockwave();
+      }
+      runtime.shakeCooldownUntil = nowMs + 2500;
+    }
+  }
   setLamp(devRefs && devRefs.dynLampStable, dynamics >= 0.08 && speed >= 0.02);
   setLamp(devRefs && devRefs.dynLampVar, dynamics >= 0.8 && speed >= 0.02);
 
@@ -672,6 +702,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
   const {
     playElectricAoeRuntime,
     playFlameAoeRuntime,
+    triggerShockwaveRuntime,
   } = mods || {};
   const rootStyle = (
     shellContext &&
@@ -755,6 +786,27 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     shockwaveRuntime: vfxRuntimesBundle && vfxRuntimesBundle.shockwaveRuntime,
     flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
     electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
+    playShock() {
+      if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.play === "function") {
+        shellVfx.shockwaveRuntime.play();
+        return { handled: true };
+      }
+      return { handled: false };
+    },
+    triggerShockwave() {
+      if (typeof triggerShockwaveRuntime === "function") {
+        const result = triggerShockwaveRuntime({
+          shockwaveRuntime: shellVfx.shockwaveRuntime,
+          playShock: () => shellVfx.playShock(),
+        });
+        if (result && result.handled) return result;
+      }
+      if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.trigger === "function") {
+        shellVfx.shockwaveRuntime.trigger();
+        return { handled: true };
+      }
+      return shellVfx.playShock();
+    },
     playElectricAoe() {
       if (typeof playElectricAoeRuntime === "function") {
         const result = playElectricAoeRuntime({
@@ -1406,9 +1458,11 @@ async function initShellKwsRuntime(shellContext) {
     executeBubbleShield,
     executeFloatGrace,
     executeColorize,
+    executeShockwave,
     CAST_ACTION_REGISTRY_BY_ID,
     playElectricAoeRuntime,
     playFlameAoeRuntime,
+    triggerShockwaveRuntime,
     hydrateReceiverVfxDefaults,
     BUBBLE_SHIELD_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
@@ -1568,6 +1622,7 @@ async function initShellKwsRuntime(shellContext) {
   const shellVfx = initShellReceiverVfxRuntime(shellContext, {
     playElectricAoeRuntime,
     playFlameAoeRuntime,
+    triggerShockwaveRuntime,
   });
 
   let ruleEnginePreviewSystem = null;
@@ -1688,11 +1743,15 @@ async function initShellKwsRuntime(shellContext) {
     executeAoeFlame,
     executeAoeFrost: null,
     executeTeleport,
-    executeShockwave: null,
+    executeShockwave,
     executeBubbleShield,
     executeFloatGrace,
     executeColorize,
-    triggerShockwave: () => {},
+    triggerShockwave: () => (
+      shellVfx && typeof shellVfx.triggerShockwave === "function"
+        ? shellVfx.triggerShockwave()
+        : { handled: false }
+    ),
     teleportOrbToSpawnNeutralizePhysics: (aboveGroundPx) => shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx),
     activateBubbleShield: ({ durationMs } = {}) => shellActivateBubbleShield(shellContext, { durationMs }),
     grantSuperGrace: (ms) => shellGrantSuperGrace(shellContext, ms),
