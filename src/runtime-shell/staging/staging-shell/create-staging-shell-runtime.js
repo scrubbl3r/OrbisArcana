@@ -1493,7 +1493,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260330h",
+  moduleCacheBustV = "20260331k",
 } = {}) {
   const docEl = rootDocument.documentElement;
   const devRoot = rootDocument.getElementById("devStagingMount");
