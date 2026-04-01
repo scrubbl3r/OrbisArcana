@@ -622,61 +622,186 @@ function shellGrantSuperGrace(shellContext, ms = 2500) {
   shellGrantFloatGrace(shellContext, ms);
 }
 
-function pulseShellLayer(el, durationMs = 600, opacity = 1) {
-  if (!el) return;
-  if (el.classList.contains("electricLayer")) {
-    const bolt = document.createElement("div");
-    bolt.style.position = "absolute";
-    bolt.style.left = "-90px";
-    bolt.style.top = "-90px";
-    bolt.style.width = "180px";
-    bolt.style.height = "180px";
-    bolt.style.borderRadius = "999px";
-    bolt.style.border = "3px solid rgba(120,210,255,0.98)";
-    bolt.style.boxShadow = "0 0 32px rgba(120,210,255,0.95), inset 0 0 24px rgba(120,210,255,0.35)";
-    bolt.style.background = "radial-gradient(circle, rgba(120,210,255,0.20) 0%, rgba(120,210,255,0.08) 38%, rgba(120,210,255,0.00) 70%)";
-    bolt.style.transform = "translate(-50%,-50%) scale(0.35)";
-    bolt.style.opacity = String(opacity);
-    bolt.style.pointerEvents = "none";
-    bolt.style.transition = `transform ${Math.max(180, durationMs)}ms cubic-bezier(.2,.8,.2,1), opacity ${Math.max(180, durationMs)}ms linear`;
-    el.appendChild(bolt);
-    requestAnimationFrame(() => {
-      bolt.style.transform = "translate(-50%,-50%) scale(1.08)";
-      bolt.style.opacity = "0";
-    });
-    setTimeout(() => {
-      if (bolt.parentNode === el) el.removeChild(bolt);
-    }, Math.max(220, durationMs + 40));
-    return;
-  }
+function createShellReceiverVfxDefaults() {
+  return {
+    shield: {
+      colorRgb: { r: 120, g: 210, b: 255 },
+      diameterPx: 124,
+      strokeWidthPx: 4,
+      durationMs: 8000,
+      alpha: 1.0,
+      pulseMs: 80,
+      pulseMin: 0.3,
+      pulseMax: 1.0,
+    },
+    shock: {
+      color: { r: 255, g: 255, b: 255, a: 0.65 },
+      startR: 43,
+      endR: 169,
+      rings: 2,
+      spawnMs: 105,
+      stroke: 4,
+      decayMs: 150,
+    },
+    flame: {
+      diameter: 200,
+      durationMs: 10000,
+    },
+    electric: {
+      startR: 80,
+      endR: 200,
+      durationMs: 10000,
+      nodeCount: 13,
+      particleCount: 340,
+      particleSpeed: 0.62,
+      maxBoltJumpSq: 1200,
+      startJitterRatio: 0.3,
+    },
+  };
+}
 
-  if (el.classList.contains("flameLayer")) {
-    const burst = document.createElement("div");
-    burst.style.position = "absolute";
-    burst.style.left = "-78px";
-    burst.style.top = "-78px";
-    burst.style.width = "156px";
-    burst.style.height = "156px";
-    burst.style.borderRadius = "999px";
-    burst.style.background = "radial-gradient(circle, rgba(255,238,140,0.96) 0%, rgba(255,126,38,0.88) 34%, rgba(255,58,0,0.26) 62%, rgba(255,58,0,0.00) 100%)";
-    burst.style.boxShadow = "0 0 34px rgba(255,126,38,0.72)";
-    burst.style.transform = "translate(-50%,-50%) scale(0.25)";
-    burst.style.opacity = String(opacity);
-    burst.style.pointerEvents = "none";
-    burst.style.transition = `transform ${Math.max(200, durationMs)}ms ease-out, opacity ${Math.max(200, durationMs)}ms linear`;
-    el.appendChild(burst);
-    requestAnimationFrame(() => {
-      burst.style.transform = "translate(-50%,-50%) scale(1.18)";
-      burst.style.opacity = "0";
-    });
-    setTimeout(() => {
-      if (burst.parentNode === el) el.removeChild(burst);
-    }, Math.max(240, durationMs + 60));
-    return;
-  }
+function initShellReceiverVfxRuntime(shellContext, mods = {}) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
+  const createVfxRuntimesBundle =
+    sharedModules &&
+    sharedModules.vfxRuntimesBundleModule &&
+    sharedModules.vfxRuntimesBundleModule.createVfxRuntimesBundle;
+  if (!runtime || typeof createVfxRuntimesBundle !== "function") return null;
+
+  const {
+    playElectricAoeRuntime,
+    playFlameAoeRuntime,
+  } = mods || {};
+  const rootStyle = (
+    shellContext &&
+    shellContext.rootDocument &&
+    shellContext.rootDocument.documentElement &&
+    shellContext.rootDocument.documentElement.style
+  ) || null;
+  const stageEls = shellContext.stageEls || {};
+  const vfxDefaults = runtime.vfxDefaults || createShellReceiverVfxDefaults();
+
+  const vfxRuntimesBundle = createVfxRuntimesBundle({
+    bubbleShield: {
+      shieldEl: stageEls.shield,
+      getConfig: () => ({
+        colorRgb: vfxDefaults.shield.colorRgb,
+        diameterPx: vfxDefaults.shield.diameterPx,
+        strokeWidthPx: vfxDefaults.shield.strokeWidthPx,
+        durationMs: vfxDefaults.shield.durationMs,
+        alpha: vfxDefaults.shield.alpha,
+        pulseMs: vfxDefaults.shield.pulseMs,
+        pulseMin: vfxDefaults.shield.pulseMin,
+        pulseMax: vfxDefaults.shield.pulseMax,
+      }),
+      setCssVar: (name, value) => {
+        if (rootStyle) rootStyle.setProperty(name, value);
+      },
+      clamp,
+      clamp01,
+      fadeInMs: 750,
+      decayMs: 2000,
+      onDecayActiveChange: () => {},
+    },
+    shockwave: {
+      layerEl: stageEls.shockLayer,
+      getConfig: () => ({
+        color: vfxDefaults.shock.color,
+        startR: vfxDefaults.shock.startR,
+        endR: vfxDefaults.shock.endR,
+        rings: vfxDefaults.shock.rings,
+        spawnMs: vfxDefaults.shock.spawnMs,
+        decayMs: vfxDefaults.shock.decayMs,
+        stroke: vfxDefaults.shock.stroke,
+      }),
+      clamp,
+      normalizeStroke: (value) => value,
+    },
+    flameAoe: {
+      layerEl: stageEls.flameLayer,
+      getConfig: () => ({
+        diameter: vfxDefaults.flame.diameter,
+        durationMs: vfxDefaults.flame.durationMs,
+        stroke: vfxDefaults.flame.stroke,
+        fill: vfxDefaults.flame.fill,
+      }),
+      clamp,
+      evenPx: (value) => value,
+      showCore: false,
+    },
+    electricAoe: {
+      layerEl: stageEls.electricLayer,
+      getConfig: () => ({
+        startR: vfxDefaults.electric.startR,
+        endR: vfxDefaults.electric.endR,
+        durationMs: vfxDefaults.electric.durationMs,
+        nodeCount: vfxDefaults.electric.nodeCount,
+        particleCount: vfxDefaults.electric.particleCount,
+        particleSpeed: vfxDefaults.electric.particleSpeed,
+        maxBoltJumpSq: vfxDefaults.electric.maxBoltJumpSq,
+        startJitterRatio: vfxDefaults.electric.startJitterRatio,
+      }),
+      clamp,
+      evenPx: (value) => value,
+      rand: Math.random,
+    },
+  });
+
+  const shellVfx = {
+    vfxDefaults,
+    vfxRuntimesBundle,
+    bubbleShieldRuntime: vfxRuntimesBundle && vfxRuntimesBundle.bubbleShieldRuntime,
+    shockwaveRuntime: vfxRuntimesBundle && vfxRuntimesBundle.shockwaveRuntime,
+    flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
+    electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
+    playElectricAoe() {
+      if (typeof playElectricAoeRuntime === "function") {
+        const result = playElectricAoeRuntime({
+          electricAoeRuntime: shellVfx.electricAoeRuntime,
+        });
+        if (result && result.handled) return result;
+      }
+      if (shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.play === "function") {
+        shellVfx.electricAoeRuntime.play();
+        return { handled: true };
+      }
+      return { handled: false };
+    },
+    playFlameAoe() {
+      if (typeof playFlameAoeRuntime === "function") {
+        const result = playFlameAoeRuntime({
+          flameAoeRuntime: shellVfx.flameAoeRuntime,
+        });
+        if (result && result.handled) return result;
+      }
+      if (shellVfx.flameAoeRuntime && typeof shellVfx.flameAoeRuntime.play === "function") {
+        shellVfx.flameAoeRuntime.play();
+        return { handled: true };
+      }
+      return { handled: false };
+    },
+    activateBubbleShield({ durationMs } = {}) {
+      if (shellVfx.bubbleShieldRuntime && typeof shellVfx.bubbleShieldRuntime.activate === "function") {
+        shellVfx.bubbleShieldRuntime.activate({
+          durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),
+        });
+        return { handled: true };
+      }
+      return { handled: false };
+    },
+  };
+
+  runtime.vfx = shellVfx;
+  return shellVfx;
 }
 
 function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
+  const shellVfx = shellContext && shellContext.runtime ? shellContext.runtime.vfx : null;
+  if (shellVfx && typeof shellVfx.activateBubbleShield === "function") {
+    const result = shellVfx.activateBubbleShield({ durationMs });
+    if (result && result.handled) return;
+  }
   const shieldEl = shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null;
   if (!shieldEl) return;
   shieldEl.classList.add("on");
@@ -1282,6 +1407,13 @@ async function initShellKwsRuntime(shellContext) {
     executeFloatGrace,
     executeColorize,
     CAST_ACTION_REGISTRY_BY_ID,
+    playElectricAoeRuntime,
+    playFlameAoeRuntime,
+    hydrateReceiverVfxDefaults,
+    BUBBLE_SHIELD_PRESET_DEFAULT,
+    SHOCKWAVE_PRESET_DEFAULT,
+    FLAME_AOE_PRESET_DEFAULT,
+    ELECTRIC_AOE_PRESET_DEFAULT,
   } = await loadReceiverInitModules();
 
   if (
@@ -1384,6 +1516,7 @@ async function initShellKwsRuntime(shellContext) {
   let ruleSchema = null;
   let runtimeWordIndex = Object.create(null);
   let runtimeSpellIndex = Object.create(null);
+  const vfxDefaults = createShellReceiverVfxDefaults();
   if (typeof hydrateReceiverBootstrapState === "function") {
     hydrateReceiverBootstrapState(
       {
@@ -1406,7 +1539,7 @@ async function initShellKwsRuntime(shellContext) {
           SUPER_GRACE_DEFAULT_MS: 0,
         }),
         setOrbStatusConfig: () => {},
-        vfxDefaults: {},
+        vfxDefaults,
         getInputConfigs: () => ({ INPUT_GESTURE_CFG: {}, INPUT_DYNAMICS_CFG: {} }),
         setInputConfigs: () => {},
         setRuntimeWordIndexes: (next = {}) => {
@@ -1423,6 +1556,19 @@ async function initShellKwsRuntime(shellContext) {
       }
     );
   }
+  if (typeof hydrateReceiverVfxDefaults === "function") {
+    hydrateReceiverVfxDefaults(vfxDefaults, {
+      bubbleShield: BUBBLE_SHIELD_PRESET_DEFAULT,
+      shockwave: SHOCKWAVE_PRESET_DEFAULT,
+      flameAoe: FLAME_AOE_PRESET_DEFAULT,
+      electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
+    });
+  }
+  runtime.vfxDefaults = vfxDefaults;
+  const shellVfx = initShellReceiverVfxRuntime(shellContext, {
+    playElectricAoeRuntime,
+    playFlameAoeRuntime,
+  });
 
   let ruleEnginePreviewSystem = null;
   if (ruleSchema) {
@@ -1527,8 +1673,16 @@ async function initShellKwsRuntime(shellContext) {
   runtime.eventBus = eventBus;
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
-    playElectricAoe: () => pulseShellLayer(shellContext.stageEls && shellContext.stageEls.electricLayer, 680, 1),
-    playFlameAoe: () => pulseShellLayer(shellContext.stageEls && shellContext.stageEls.flameLayer, 780, 0.95),
+    playElectricAoe: () => (
+      shellVfx && typeof shellVfx.playElectricAoe === "function"
+        ? shellVfx.playElectricAoe()
+        : { handled: false }
+    ),
+    playFlameAoe: () => (
+      shellVfx && typeof shellVfx.playFlameAoe === "function"
+        ? shellVfx.playFlameAoe()
+        : { handled: false }
+    ),
     playFrostAoe: null,
     executeAoeElectric,
     executeAoeFlame,
