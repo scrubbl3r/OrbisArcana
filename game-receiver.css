@@ -121,16 +121,20 @@
       flex-direction:column;
     }
 
-    .devStagingLegacy{
-      display:flex;
-      flex:1 1 auto;
-      flex-direction:column;
-      min-height:0;
-    }
+.devStagingLegacy{
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  min-height:0;
+}
 
-    .devStagingMount{
-      display:flex;
-      flex:1 1 auto;
+.devStagingLegacy.off{
+  display:none;
+}
+
+.devStagingMount{
+  display:flex;
+  flex:1 1 auto;
       min-height:0;
     }
 
