@@ -129,6 +129,26 @@
         refs: {
           status: els.status,
           fatal: els.fatal,
+          teleBtn: els.teleBtn,
+          wordBoardBtn: els.wordBoardBtn,
+          kwsReadout: els.kwsReadout,
+          kwsLog: els.kwsLog,
+          logTabKws: els.logTabKws,
+          logTabPhone: els.logTabPhone,
+          kwsTokenThrInput: els.kwsTokenThrInput,
+          kwsCooldownMsInput: els.kwsCooldownMsInput,
+          kwsApplyTuneBtn: els.kwsApplyTuneBtn,
+          logPopup: els.logPopup,
+          logPopupHeader: els.logPopupHeader,
+          logPopupClose: els.logPopupClose,
+          wordBoardPopup: els.wordBoardPopup,
+          wordBoardPopupHeader: els.wordBoardPopupHeader,
+          wordBoardPopupClose: els.wordBoardPopupClose,
+          wordBoardBody: els.wordBoardBody,
+          wordBoardDebugPanel: els.wordBoardDebugPanel,
+          wordBoardDebugToggle: els.wordBoardDebugToggle,
+          wordBoardDebugBadge: els.wordBoardDebugBadge,
+          wordBoardDebugBody: els.wordBoardDebugBody,
           vLift: els.vLift,
           vGroove: els.vGroove,
           vSmooth: els.vSmooth,
@@ -143,6 +163,15 @@
           bDynamics: els.bDynamics,
           bEnergy: els.bEnergy,
           bShake: els.bShake,
+          dynLampStable: els.dynLampStable,
+          dynLampVar: els.dynLampVar,
+          shakeLamp: els.shakeLamp,
+          lampUp: els.lampUp,
+          lampDown: els.lampDown,
+          lampLeft: els.lampLeft,
+          lampRight: els.lampRight,
+          lampForward: els.lampForward,
+          lampBack: els.lampBack,
         },
         setStatus(html, cls){
           if (!els.status) return;
@@ -154,6 +183,17 @@
           const hasMessage = !!String(message || "");
           els.fatal.style.display = hasMessage ? "block" : "none";
           els.fatal.textContent = hasMessage ? String(message) : "";
+        },
+        closeTopmostPopup() {
+          if (this.refs.wordBoardPopup && this.refs.wordBoardPopup.classList.contains("on") && this.refs.wordBoardPopupClose) {
+            this.refs.wordBoardPopupClose.click();
+            return true;
+          }
+          if (this.refs.logPopup && this.refs.logPopup.classList.contains("on") && this.refs.logPopupClose) {
+            this.refs.logPopupClose.click();
+            return true;
+          }
+          return false;
         },
         resetMeters() {
           setBar(els.bLift, 0);
@@ -198,6 +238,32 @@
     }
 
     const devStagingView = createLegacyDevStagingAdapter();
+    const devStagingRefs = devStagingView.refs;
+
+    function createDevStagingPanelElements() {
+      return {
+        teleBtn: devStagingRefs.teleBtn,
+        wordBoardBtn: devStagingRefs.wordBoardBtn,
+        kwsReadout: devStagingRefs.kwsReadout,
+        kwsLog: devStagingRefs.kwsLog,
+        logTabKws: devStagingRefs.logTabKws,
+        logTabPhone: devStagingRefs.logTabPhone,
+        kwsTokenThrInput: devStagingRefs.kwsTokenThrInput,
+        kwsCooldownMsInput: devStagingRefs.kwsCooldownMsInput,
+        kwsApplyTuneBtn: devStagingRefs.kwsApplyTuneBtn,
+        logPopup: devStagingRefs.logPopup,
+        logPopupHeader: devStagingRefs.logPopupHeader,
+        logPopupClose: devStagingRefs.logPopupClose,
+        wordBoardPopup: devStagingRefs.wordBoardPopup,
+        wordBoardPopupHeader: devStagingRefs.wordBoardPopupHeader,
+        wordBoardPopupClose: devStagingRefs.wordBoardPopupClose,
+        wordBoardBody: devStagingRefs.wordBoardBody,
+        wordBoardDebugPanel: devStagingRefs.wordBoardDebugPanel,
+        wordBoardDebugToggle: devStagingRefs.wordBoardDebugToggle,
+        wordBoardDebugBadge: devStagingRefs.wordBoardDebugBadge,
+        wordBoardDebugBody: devStagingRefs.wordBoardDebugBody,
+      };
+    }
 
     function computeLift01(groove01, smooth01, speed01){
       const g = clamp01(groove01);
@@ -699,17 +765,17 @@
     let shakeLampTO = null;
 
     function flashShakeLamp(ms = 400){
-      els.shakeLamp.classList.add("on");
+      if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.add("on");
       if (shakeLampTO) clearTimeout(shakeLampTO);
       shakeLampTO = setTimeout(() => {
-        els.shakeLamp.classList.remove("on");
+        if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.remove("on");
         shakeLampTO = null;
       }, ms);
     }
 
     function forceShakeLampOff(){
       if (shakeLampTO) { clearTimeout(shakeLampTO); shakeLampTO = null; }
-      els.shakeLamp.classList.remove("on");
+      if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.remove("on");
     }
 
     // Direction lamps (flash on sd from phone)
@@ -723,12 +789,12 @@
     }
 
     function allDirLampOff(){
-      if (els.lampUp) els.lampUp.classList.remove("on");
-      if (els.lampDown) els.lampDown.classList.remove("on");
-      if (els.lampLeft) els.lampLeft.classList.remove("on");
-      if (els.lampRight) els.lampRight.classList.remove("on");
-      if (els.lampForward) els.lampForward.classList.remove("on");
-      if (els.lampBack) els.lampBack.classList.remove("on");
+      if (devStagingRefs.lampUp) devStagingRefs.lampUp.classList.remove("on");
+      if (devStagingRefs.lampDown) devStagingRefs.lampDown.classList.remove("on");
+      if (devStagingRefs.lampLeft) devStagingRefs.lampLeft.classList.remove("on");
+      if (devStagingRefs.lampRight) devStagingRefs.lampRight.classList.remove("on");
+      if (devStagingRefs.lampForward) devStagingRefs.lampForward.classList.remove("on");
+      if (devStagingRefs.lampBack) devStagingRefs.lampBack.classList.remove("on");
     }
 
     function flashDirLamp(code, ms=380){
@@ -736,12 +802,12 @@
       if (!c) return;
 
       const map = {
-        U: els.lampUp,
-        D: els.lampDown,
-        L: els.lampLeft,
-        R: els.lampRight,
-        F: els.lampForward,
-        B: els.lampBack,
+        U: devStagingRefs.lampUp,
+        D: devStagingRefs.lampDown,
+        L: devStagingRefs.lampLeft,
+        R: devStagingRefs.lampRight,
+        F: devStagingRefs.lampForward,
+        B: devStagingRefs.lampBack,
       };
 
       const el = map[c];
@@ -886,8 +952,8 @@
       const showStable = !!dynState.stabilityOn && !!stabilityVisualGate;
       const showVar = !!dynState.variabilityOn && !!stabilityVisualGate;
 
-      els.dynLampStable.classList.toggle("on", showStable);
-      els.dynLampVar.classList.toggle("on", showVar);
+      if (devStagingRefs.dynLampStable) devStagingRefs.dynLampStable.classList.toggle("on", showStable);
+      if (devStagingRefs.dynLampVar) devStagingRefs.dynLampVar.classList.toggle("on", showVar);
     }
 
     function isDiversityLampLit(){
@@ -1160,10 +1226,7 @@
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (els.wordBoardPopup && els.wordBoardPopup.classList.contains("on") && els.wordBoardPopupClose) {
-          els.wordBoardPopupClose.click();
-        } else if (els.logPopup && els.logPopup.classList.contains("on") && els.logPopupClose) {
-          els.logPopupClose.click();
+        if (devStagingView.closeTopmostPopup()) {
         } else if (els.pairModal.classList.contains("on")) {
           closePairModal();
         }
@@ -1583,7 +1646,7 @@
           defaultGateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
         });
         kwsPanelController = createKwsPanelController({
-          els,
+          els: createDevStagingPanelElements(),
           constants: {
             defaultGateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
             startStallMs: DEFAULT_KWS_START_STALL_MS,
