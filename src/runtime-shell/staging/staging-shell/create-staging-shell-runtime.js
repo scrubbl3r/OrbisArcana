@@ -365,6 +365,23 @@ function tickShellStageRuntime(shellContext, dt) {
 
   const yFloor = shellGroundCenterWorld(shellContext);
   const yCeil = Number(phys.orbRadiusPx) || 50;
+  const nowMs = performance.now();
+
+  if (state.floatGraceActive) {
+    const untilMs = Number(state.floatGraceUntilMs) || 0;
+    if (untilMs > nowMs) {
+      const anchorY = Number.isFinite(Number(state.floatGraceAnchorY)) ? Number(state.floatGraceAnchorY) : Number(state.yW || yFloor);
+      const phase = Number(state.floatGracePhase) || 0;
+      const bob = Math.sin(phase + (nowMs * 0.008)) * 6;
+      state.yW = clamp(anchorY + bob, yCeil, yFloor);
+      state.v = 0;
+      state.onGround = false;
+      return;
+    }
+    state.floatGraceActive = false;
+    state.floatGraceUntilMs = 0;
+  }
+
   const g = gBase * gravityMul;
   const thrust = Math.max(0, Number(phys.thrustMax) || 0) * clamp01(state.lift01);
 
@@ -599,29 +616,48 @@ function shellGrantSuperGrace(shellContext, ms = 2500) {
 
 function pulseShellLayer(el, durationMs = 600, opacity = 1) {
   if (!el) return;
-  el.style.opacity = String(opacity);
-  el.style.transition = "opacity 100ms linear";
-  const fadeTimer = setTimeout(() => {
-    el.style.transition = `opacity ${Math.max(120, Math.round(durationMs * 0.85))}ms linear`;
-    el.style.opacity = "0";
-  }, 20);
-  const clearTimer = setTimeout(() => {
-    clearTimeout(fadeTimer);
-    el.style.opacity = "";
-    el.style.transition = "";
-  }, Math.max(160, durationMs));
-  void clearTimer;
+  const color = el.classList.contains("electricLayer")
+    ? "rgba(120,210,255,0.95)"
+    : el.classList.contains("flameLayer")
+      ? "rgba(255,130,40,0.92)"
+      : "rgba(255,255,255,0.92)";
+  const sizePx = el.classList.contains("electricLayer") ? 190 : 170;
+  const ring = document.createElement("div");
+  ring.style.position = "absolute";
+  ring.style.left = "0";
+  ring.style.top = "0";
+  ring.style.width = `${sizePx}px`;
+  ring.style.height = `${sizePx}px`;
+  ring.style.transform = "translate(-50%,-50%) scale(0.25)";
+  ring.style.transformOrigin = "50% 50%";
+  ring.style.borderRadius = "999px";
+  ring.style.border = `3px solid ${color}`;
+  ring.style.background = color.replace(/0\.\d+\)/, "0.12)");
+  ring.style.boxShadow = `0 0 26px ${color}`;
+  ring.style.opacity = String(opacity);
+  ring.style.pointerEvents = "none";
+  ring.style.transition = `transform ${Math.max(180, durationMs)}ms ease-out, opacity ${Math.max(180, durationMs)}ms linear`;
+  el.appendChild(ring);
+  requestAnimationFrame(() => {
+    ring.style.transform = "translate(-50%,-50%) scale(1.0)";
+    ring.style.opacity = "0";
+  });
+  setTimeout(() => {
+    if (ring.parentNode === el) el.removeChild(ring);
+  }, Math.max(220, durationMs + 40));
 }
 
 function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
   const shieldEl = shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null;
   if (!shieldEl) return;
+  shieldEl.classList.add("on");
   shieldEl.style.opacity = "1";
   shieldEl.style.transition = "opacity 120ms linear";
   if (shellContext.runtime.bubbleShieldTimer) {
     clearTimeout(shellContext.runtime.bubbleShieldTimer);
   }
   shellContext.runtime.bubbleShieldTimer = setTimeout(() => {
+    shieldEl.classList.remove("on");
     shieldEl.style.transition = "opacity 420ms linear";
     shieldEl.style.opacity = "0";
     shellContext.runtime.bubbleShieldTimer = 0;
