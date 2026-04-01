@@ -447,6 +447,45 @@ function flashDirectionLamp(shellContext, code, ms = 380) {
   flashLamp(map[c], runtime, c, ms);
 }
 
+function clearShellDirectionLampTimers(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!runtime || !runtime.dirLampTO) return;
+  for (const key of Object.keys(runtime.dirLampTO)) {
+    if (runtime.dirLampTO[key]) {
+      clearTimeout(runtime.dirLampTO[key]);
+      runtime.dirLampTO[key] = 0;
+    }
+  }
+}
+
+function allShellDirectionLampsOff(shellContext) {
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  if (!refs) return;
+  [
+    refs.lampUp,
+    refs.lampDown,
+    refs.lampLeft,
+    refs.lampRight,
+    refs.lampForward,
+    refs.lampBack,
+  ].forEach((el) => {
+    if (el) el.classList.remove("on");
+  });
+}
+
+function flashShellDirectionLampPair(shellContext, a, b, ms = 380) {
+  clearShellDirectionLampTimers(shellContext);
+  allShellDirectionLampsOff(shellContext);
+  flashDirectionLamp(shellContext, a, ms);
+  flashDirectionLamp(shellContext, b, ms);
+}
+
+function flashShellDirectionLampSingle(shellContext, code, ms = 380) {
+  clearShellDirectionLampTimers(shellContext);
+  allShellDirectionLampsOff(shellContext);
+  flashDirectionLamp(shellContext, code, ms);
+}
+
 function flashShellShakeLamp(shellContext, ms = 400) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -457,6 +496,59 @@ function flashShellShakeLamp(shellContext, ms = 400) {
     refs.shakeLamp.classList.remove("on");
     runtime.shakeLampTO = 0;
   }, ms);
+}
+
+function forceShellShakeLampOff(shellContext) {
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (runtime && runtime.shakeLampTO) {
+    clearTimeout(runtime.shakeLampTO);
+    runtime.shakeLampTO = 0;
+  }
+  if (refs && refs.shakeLamp) refs.shakeLamp.classList.remove("on");
+}
+
+function createShellReceiverConfigs() {
+  return {
+    ENERGY_BANK_CAP: 1000,
+    ENERGY_SHAKE_COST: 100,
+    ENERGY_CHARGE_RATE_PPS: 160,
+    INPUT_GESTURE_CFG: {
+      shake: {
+        cooldownMs: 2500,
+        mode: 2,
+        grooveGate: 0.20,
+        lampThreshold: 1.65,
+        directionRecentMs: 750,
+        rearmThreshold: 0.10,
+      },
+      flatSpin: {
+        dominanceOn: 0.72,
+        dominanceOff: 0.60,
+        dominanceGapOn: 0.14,
+        dominanceGapOff: 0.09,
+        onHoldMs: 200,
+        offHoldMs: 280,
+        gateRefreshMs: 1100,
+        minSpeed01: 0.02,
+      },
+    },
+    INPUT_DYNAMICS_CFG: {
+      stability: {
+        avgMs: 250,
+        armMs: 220,
+        onThreshold: 0.08,
+        offThreshold: 0.10,
+        speedMin01: 0.02,
+      },
+      variability: {
+        avgMs: 250,
+        armMs: 220,
+        onThreshold: 0.80,
+        offThreshold: 0.78,
+      },
+    },
+  };
 }
 
 function handleShellImpulseFrame(shellContext, data) {
@@ -470,6 +562,15 @@ function handleShellImpulseFrame(shellContext, data) {
     sharedModules.buildInputHudViewModelModule.buildInputHudViewModel;
   const stage = runtime && runtime.stage;
   if (!runtime || !stage || !stage.orbRuntimeState || typeof stage.orbRuntimeState.patch !== "function") return;
+  const receiverParity = runtime && runtime.receiverParity ? runtime.receiverParity : null;
+
+  if (receiverParity && typeof receiverParity.processIncomingImpulse === "function") {
+    receiverParity.processIncomingImpulse(data);
+    if (devView && typeof devView.setStatus === "function") {
+      devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
+    }
+    return;
+  }
 
   const groove = pickImpulse01(data, "groove01", "groove");
   const smooth = pickImpulse01(data, "smooth01", "smooth");
@@ -886,6 +987,346 @@ function shellClearColorize(shellContext) {
   if (!orbEl) return;
   orbEl.style.borderColor = "";
   orbEl.style.background = "";
+}
+
+async function initShellReceiverParityRuntime(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
+  const shellKws = runtime && runtime.kws ? runtime.kws : null;
+  if (!runtime || !sharedModules || !shellKws) return null;
+
+  const receiverBootstrapModule = sharedModules.receiverBootstrapModule || null;
+  const bootstrapStagingRuntimeContext =
+    sharedModules.bootstrapStagingRuntimeContextModule &&
+    sharedModules.bootstrapStagingRuntimeContextModule.bootstrapStagingRuntimeContext;
+  const bindStagingRuntimeEvents =
+    sharedModules.bindStagingRuntimeEventsModule &&
+    sharedModules.bindStagingRuntimeEventsModule.bindStagingRuntimeEvents;
+  const loadReceiverInitModules =
+    receiverBootstrapModule &&
+    receiverBootstrapModule.loadReceiverInitModules;
+  if (
+    typeof bootstrapStagingRuntimeContext !== "function" ||
+    typeof bindStagingRuntimeEvents !== "function" ||
+    typeof loadReceiverInitModules !== "function"
+  ) {
+    return null;
+  }
+
+  const mods = shellKws.receiverMods || await loadReceiverInitModules();
+  shellKws.receiverMods = mods;
+
+  const {
+    createEventBus,
+    createGameState,
+    createOrbDamageVisualsRuntime,
+    createAudioSystem,
+    createInputSystemsBundle,
+    createResourcesSystem,
+    createSpellDispatchSystem,
+    createWorldSystem,
+    createOrbSystemsBundle,
+    createOrbSystem,
+    createOrbFxSystem,
+    runInputFramePipelineImported,
+    WORLD_ITEMS,
+  } = mods || {};
+  if (
+    typeof createGameState !== "function" ||
+    typeof createOrbDamageVisualsRuntime !== "function" ||
+    typeof createAudioSystem !== "function" ||
+    typeof createInputSystemsBundle !== "function" ||
+    typeof createResourcesSystem !== "function" ||
+    typeof createSpellDispatchSystem !== "function" ||
+    typeof createWorldSystem !== "function" ||
+    typeof createOrbSystemsBundle !== "function" ||
+    typeof createOrbSystem !== "function" ||
+    typeof createOrbFxSystem !== "function" ||
+    typeof runInputFramePipelineImported !== "function"
+  ) {
+    return null;
+  }
+
+  const {
+    ENERGY_BANK_CAP,
+    ENERGY_SHAKE_COST,
+    ENERGY_CHARGE_RATE_PPS,
+    INPUT_GESTURE_CFG,
+    INPUT_DYNAMICS_CFG,
+  } = createShellReceiverConfigs();
+
+  const parityState = {
+    stabilityVisualGate: true,
+  };
+
+  const applyStabilityVisuals = () => {
+    const inputDynamicsSystem = parityState.inputDynamicsSystem;
+    const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+    const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
+      ? inputDynamicsSystem.getState()
+      : { stabilityOn: false, variabilityOn: false };
+    const showStable = !!dynState.stabilityOn && !!parityState.stabilityVisualGate;
+    const showVar = !!dynState.variabilityOn && !!parityState.stabilityVisualGate;
+    setLamp(refs && refs.dynLampStable, showStable);
+    setLamp(refs && refs.dynLampVar, showVar);
+  };
+
+  const isDiversityLampLit = () => {
+    const inputDynamicsSystem = parityState.inputDynamicsSystem;
+    const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
+      ? inputDynamicsSystem.getState()
+      : { variabilityOn: false };
+    return !!dynState.variabilityOn && !!parityState.stabilityVisualGate;
+  };
+
+  const runtimeContext = bootstrapStagingRuntimeContext({
+    createEventBus: () => runtime.eventBus,
+    createGameState,
+    createOrbDamageVisualsRuntime,
+    createAudioSystem,
+    createInputSystemsBundle,
+    createResourcesSystem,
+    createSpellDispatchSystem,
+    createRuleEnginePreviewSystem: null,
+    createWorldSystem,
+    createOrbSystemsBundle,
+    createOrbSystem,
+    createOrbFxSystem,
+    els: shellContext.stageEls,
+    IMPACT_TH: 0,
+    INPUT_DYNAMICS_CFG,
+    INPUT_GESTURE_CFG,
+    ENERGY_BANK_CAP,
+    ENERGY_SHAKE_COST,
+    ENERGY_CHARGE_RATE_PPS,
+    ruleSchema: shellKws.ruleSchema,
+    RULE_ENGINE_EXECUTE_ACTIONS: true,
+    DEFAULT_KWS_LISTEN_POLICY_MODE: "A",
+    STRICT_A_WAKE_WINDOW_PAD_MS: 4000,
+    kwsListenPolicyController: shellKws.kwsListenPolicyController,
+    kwsBridge: shellKws.kwsBridge,
+    RULE_CHAIN_TRACE_ENABLED: true,
+    PHYS: runtime.stage ? runtime.stage.phys : {},
+    worldItemSpawns: Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [],
+    normalizeWorldItemSpawn: (item) => normalizeShellWorldItemSpawn(item, () => shellGroundCenterWorld(shellContext)),
+    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+    stageRect: () => shellStageRect(shellContext),
+    pickupScreenY: (yW) => {
+      const rect = shellStageRect(shellContext);
+      const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
+      return Number(yW || 0) - camTop;
+    },
+    getOrbRuntime: () => (runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function" ? runtime.orbRuntimeState.get() : { yW: 0 }),
+    getOrbScreenY: () => shellOrbScreenY(shellContext),
+    axisToColor01: () => 0,
+    gestureHooks: {
+      canSpendShake: () => {
+        const resourcesSystem = parityState.resourcesSystem;
+        return !!(resourcesSystem && typeof resourcesSystem.canSpendShake === "function" && resourcesSystem.canSpendShake());
+      },
+      spendShake: () => {
+        const resourcesSystem = parityState.resourcesSystem;
+        if (resourcesSystem && typeof resourcesSystem.spendShake === "function") {
+          resourcesSystem.spendShake(performance.now());
+        }
+      },
+      isDiversityLampLit,
+      flashShakeLamp: () => flashShellShakeLamp(shellContext, 400),
+      triggerShockwave: () => {
+        const shellVfx = runtime.vfx || null;
+        if (shellVfx && typeof shellVfx.triggerShockwave === "function") {
+          shellVfx.triggerShockwave();
+        }
+      },
+      forceShakeLampOff: () => forceShellShakeLampOff(shellContext),
+      clearDirLampTimers: () => clearShellDirectionLampTimers(shellContext),
+      allDirLampOff: () => allShellDirectionLampsOff(shellContext),
+      flashDirLampPair: (a, b, ms) => flashShellDirectionLampPair(shellContext, a, b, ms),
+      flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
+    },
+  });
+
+  parityState.inputSystemsBundle = runtimeContext.inputSystemsBundle;
+  parityState.inputSystem = runtimeContext.inputSystem;
+  parityState.inputDynamicsSystem = runtimeContext.inputDynamicsSystem;
+  parityState.inputGestureSystem = runtimeContext.inputGestureSystem;
+  parityState.resourcesSystem = runtimeContext.resourcesSystem;
+  parityState.spellDispatchSystem = runtimeContext.spellDispatchSystem;
+  parityState.orbDamageVisualsRuntime = runtimeContext.orbDamageVisualsRuntime;
+  parityState.audioSystem = runtimeContext.audioSystem;
+  parityState.orbSystemsBundle = runtimeContext.orbSystemsBundle;
+
+  if (parityState.orbDamageVisualsRuntime && typeof parityState.orbDamageVisualsRuntime.start === "function") {
+    parityState.orbDamageVisualsRuntime.start();
+  }
+  if (parityState.audioSystem && typeof parityState.audioSystem.start === "function") {
+    parityState.audioSystem.start();
+  }
+  if (parityState.inputSystemsBundle && typeof parityState.inputSystemsBundle.start === "function") {
+    parityState.inputSystemsBundle.start();
+  }
+  if (parityState.resourcesSystem && typeof parityState.resourcesSystem.start === "function") {
+    parityState.resourcesSystem.start();
+  }
+  if (parityState.spellDispatchSystem && typeof parityState.spellDispatchSystem.start === "function") {
+    parityState.spellDispatchSystem.start();
+  }
+  if (parityState.orbSystemsBundle && typeof parityState.orbSystemsBundle.start === "function") {
+    parityState.orbSystemsBundle.start();
+  }
+
+  const castActionForWordId = (wordId) => {
+    const key = String(wordId || "").trim().toLowerCase();
+    const entry = shellKws.runtimeWordIndex[key] || shellKws.runtimeSpellIndex[key] || null;
+    return String(entry && entry.castActionId || key || "");
+  };
+
+  const eventBinder = bindStagingRuntimeEvents({
+    eventBus: runtime.eventBus,
+    RECEIVER_EVENTS: shellKws.receiverEvents,
+    RULE_ENGINE_ACTION_EXECUTED_EVENT: "rule_engine.action_executed",
+    RULE_ENGINE_PREVIEW_MATCHED_EVENT: "rule_engine.preview_matched",
+    RULE_ENGINE_WAKE_WIN_OPENED_EVENT: "rule_engine.wake_win_opened",
+    RULE_ENGINE_SOURCE_EVENT_SUMMARY_EVENT: "rule_engine.source_event_summary",
+    RULE_ENGINE_TRIGGER: "rule_engine",
+    RULE_CHAIN_TRACE_ENABLED: true,
+    DEFAULT_KWS_GATE_TIMEOUT_MS: 1500,
+    kwsBridge: shellKws.kwsBridge,
+    kwsListenPolicyController: shellKws.kwsListenPolicyController,
+    kwsRuntimeController: shellKws.kwsRuntimeController,
+    kwsPanelController: shellKws.kwsPanelController,
+    kwsTokenUiState: shellKws.kwsTokenUiState,
+    TEMP_UNGATED_KWS_TOKENS: new Set(),
+    kwsDebugState: shellKws.kwsDebugState,
+    ruleSchema: shellKws.ruleSchema,
+    runtimeWordIndex: shellKws.runtimeWordIndex,
+    runtimeSpellIndex: shellKws.runtimeSpellIndex,
+    castActionForWordId,
+    executeWordCastAction: (castActionId, context = {}) => {
+      return shellKws.shellSpellCastExecutor && typeof shellKws.shellSpellCastExecutor.execute === "function"
+        ? shellKws.shellSpellCastExecutor.execute(castActionId, context)
+        : { handled: false };
+    },
+    playElectricAoe: () => {
+      const shellVfx = runtime.vfx || null;
+      return shellVfx && typeof shellVfx.playElectricAoe === "function" ? shellVfx.playElectricAoe() : { handled: false };
+    },
+    grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
+    clearFloatGrace: () => {
+      patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
+    },
+    renderOrbDamageVisuals: () => {},
+    spawnShardFx: () => {},
+    clearOrbRuntimeFxForDeath: () => {},
+    scheduleDeathOverlay: () => {},
+    updateDebugReadout: () => {},
+    orbShatterController: null,
+    stopShardSim: () => {},
+    worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
+    resetOrbStrokeColor: () => shellClearColorize(shellContext),
+    clearDeathOverlaySchedule: () => {},
+    closeDeathOverlay: () => {},
+    setOrbInputSuppressed: () => {},
+  });
+
+  parityState.processIncomingImpulse = (d = {}) => {
+    const inputSystem = parityState.inputSystem;
+    const inputGestureSystem = parityState.inputGestureSystem;
+    const inputDynamicsSystem = parityState.inputDynamicsSystem;
+    const resourcesSystem = parityState.resourcesSystem;
+    const nowMs = performance.now();
+
+    function pick01NewOrOld(newKey, oldKey) {
+      if (d[newKey] != null) {
+        const n = Number(d[newKey]);
+        return Number.isFinite(n) ? n : 0;
+      }
+      const n = Number(d[oldKey]);
+      if (!Number.isFinite(n)) return 0;
+      return (n > 1.5) ? (n / 100) : n;
+    }
+
+    if (inputSystem && typeof inputSystem.ingest === "function") {
+      inputSystem.ingest(d, nowMs);
+    }
+    const frame = (inputSystem && typeof inputSystem.getLatest === "function")
+      ? inputSystem.getLatest()
+      : null;
+    const processed = runInputFramePipelineImported({
+      d,
+      frame,
+      nowMs,
+      values: {
+        energyFromPhone: frame ? frame.energy01 : pick01NewOrOld("energy01", "energy"),
+        groove: frame ? frame.groove01 : pick01NewOrOld("groove01", "groove"),
+        dynamics: frame ? frame.dynamics01 : pick01NewOrOld("dynamics01", "orbit01"),
+        smooth: frame ? frame.smooth01 : pick01NewOrOld("smooth01", "smooth"),
+        speed: frame ? frame.speed01 : pick01NewOrOld("speed01", "speed"),
+        shake: frame ? frame.shake01 : pickShakeMetric(d, "shake01", "shake"),
+        locked: frame ? !!frame.locked : !!d.locked,
+      },
+      systems: {
+        inputGestureSystem,
+        inputDynamicsSystem,
+      },
+      runtime: {
+        orbRuntimeState: runtime.orbRuntimeState,
+      },
+      configs: {
+        inputDynamics: INPUT_DYNAMICS_CFG,
+      },
+      hooks: {
+        updateEnergyBankFromPhone: (energyFromPhone, atMs) => {
+          if (resourcesSystem && typeof resourcesSystem.updateEnergyBankFromPhone === "function") {
+            resourcesSystem.updateEnergyBankFromPhone(energyFromPhone, atMs);
+          }
+        },
+        getEnergyBankPts: () => (
+          resourcesSystem && typeof resourcesSystem.getEnergyBankPts === "function"
+            ? resourcesSystem.getEnergyBankPts()
+            : 0
+        ),
+        getEnergyBankCap: () => (
+          resourcesSystem && typeof resourcesSystem.getEnergyBankCap === "function"
+            ? resourcesSystem.getEnergyBankCap()
+            : ENERGY_BANK_CAP
+        ),
+        computeLift01,
+        setBgFromEnergy: () => {},
+        setStabilityVisualGate: (next) => {
+          parityState.stabilityVisualGate = !!next;
+        },
+        applyStabilityVisuals,
+        processShakeDoubleBang: (shakeVal01, atMs, groove01) => {
+          if (inputGestureSystem && typeof inputGestureSystem.processShakeSample === "function") {
+            inputGestureSystem.processShakeSample({
+              shakeVal01,
+              groove01,
+              atMs,
+            });
+          }
+        },
+        setAudio: () => {},
+      },
+    });
+
+    if (typeof buildInputHudViewModel === "function" && shellContext.views && shellContext.views.devStagingView && typeof shellContext.views.devStagingView.renderInputHud === "function") {
+      const vm = buildInputHudViewModel({
+        processed,
+        shakeCooldownUntil: (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
+          ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
+          : 0,
+        shakeLampThreshold: Number(INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold) || 1.65,
+      });
+      shellContext.views.devStagingView.renderInputHud(vm);
+    }
+  };
+
+  runtime.receiverParity = {
+    ...parityState,
+    eventBinder,
+  };
+  return runtime.receiverParity;
 }
 
 function bindShellRuleActionRuntime({
@@ -1445,6 +1886,7 @@ async function initShellKwsRuntime(shellContext) {
     return null;
   }
 
+  const receiverMods = await loadReceiverInitModules();
   const {
     createKwsProvider,
     createVoiceProviderManager,
@@ -1468,7 +1910,7 @@ async function initShellKwsRuntime(shellContext) {
     SHOCKWAVE_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
-  } = await loadReceiverInitModules();
+  } = receiverMods;
 
   if (
     typeof createKwsProvider !== "function" ||
@@ -1804,6 +2246,7 @@ async function initShellKwsRuntime(shellContext) {
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
+    receiverMods,
     kwsBackendKey,
     kwsDebugState,
     receiverEvents: RECEIVER_EVENTS,
@@ -2049,6 +2492,7 @@ export async function createStagingShellRuntime({
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
+    await initShellReceiverParityRuntime(shellContext);
     activateShellStageVisuals(shellContext);
     bindShellStageResize(shellContext);
     bindShellStageActions(shellContext);
