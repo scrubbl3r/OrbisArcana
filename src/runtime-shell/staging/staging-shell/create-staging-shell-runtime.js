@@ -542,6 +542,156 @@ function bindShellStageActions(shellContext) {
   });
 }
 
+function patchShellOrbRuntime(shellContext, patch = {}) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbRuntimeState = runtime && runtime.orbRuntimeState;
+  if (!orbRuntimeState || typeof orbRuntimeState.patch !== "function") return;
+  orbRuntimeState.patch(patch);
+}
+
+function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 0) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const stage = runtime && runtime.stage;
+  const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  if (!stage || !orbState) return { handled: false };
+  const yFloor = shellGroundCenterWorld(shellContext);
+  const yCeil = Number(stage.phys && stage.phys.orbRadiusPx) || 50;
+  const lift = Math.max(0, Number(aboveGroundPx) || 0);
+  const yTarget = Math.min(yFloor, Math.max(yCeil, yFloor - lift));
+  patchShellOrbRuntime(shellContext, {
+    yW: yTarget,
+    v: 0,
+    onGround: !(yTarget < (yFloor - 0.5)),
+    descendMs: 0,
+    shieldDescentBlocked: false,
+    floatGraceAnchorY: yTarget,
+    floatGracePhase: 0,
+  });
+  applyShellGroundLine(shellContext);
+  applyShellOrbTransform(shellContext);
+  if (stage.worldSystem && typeof stage.worldSystem.render === "function") {
+    stage.worldSystem.render(performance.now());
+  }
+  updateShellStageReadouts(shellContext);
+  return { handled: true, yTarget };
+}
+
+function shellGrantFloatGrace(shellContext, ms = 1000) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  if (!orbState) return;
+  const now = performance.now();
+  patchShellOrbRuntime(shellContext, {
+    floatGraceActive: true,
+    floatGraceUntilMs: now + Math.max(50, Number(ms) || 1000),
+    floatGraceAnchorY: Number(orbState.yW) || 0,
+    floatGracePhase: Math.random() * Math.PI * 2,
+  });
+}
+
+function shellGrantSuperGrace(shellContext, ms = 2500) {
+  shellGrantFloatGrace(shellContext, ms);
+}
+
+function pulseShellLayer(el, durationMs = 600, opacity = 1) {
+  if (!el) return;
+  el.style.opacity = String(opacity);
+  el.style.transition = "opacity 100ms linear";
+  const fadeTimer = setTimeout(() => {
+    el.style.transition = `opacity ${Math.max(120, Math.round(durationMs * 0.85))}ms linear`;
+    el.style.opacity = "0";
+  }, 20);
+  const clearTimer = setTimeout(() => {
+    clearTimeout(fadeTimer);
+    el.style.opacity = "";
+    el.style.transition = "";
+  }, Math.max(160, durationMs));
+  void clearTimer;
+}
+
+function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
+  const shieldEl = shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null;
+  if (!shieldEl) return;
+  shieldEl.style.opacity = "1";
+  shieldEl.style.transition = "opacity 120ms linear";
+  if (shellContext.runtime.bubbleShieldTimer) {
+    clearTimeout(shellContext.runtime.bubbleShieldTimer);
+  }
+  shellContext.runtime.bubbleShieldTimer = setTimeout(() => {
+    shieldEl.style.transition = "opacity 420ms linear";
+    shieldEl.style.opacity = "0";
+    shellContext.runtime.bubbleShieldTimer = 0;
+  }, Math.max(200, Number(durationMs) || 8000));
+}
+
+function shellApplyColorize(shellContext, payload = {}) {
+  const orbEl = shellContext && shellContext.stageEls ? shellContext.stageEls.orb : null;
+  if (!orbEl) return;
+  const r = Math.max(0, Math.min(255, Number(payload.r) || 255));
+  const g = Math.max(0, Math.min(255, Number(payload.g) || 255));
+  const b = Math.max(0, Math.min(255, Number(payload.b) || 255));
+  const alpha = Math.max(0, Math.min(1, Number(payload.alpha) || 0.2));
+  orbEl.style.borderColor = `rgba(${r}, ${g}, ${b}, 0.98)`;
+  orbEl.style.background = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function shellClearColorize(shellContext) {
+  const orbEl = shellContext && shellContext.stageEls ? shellContext.stageEls.orb : null;
+  if (!orbEl) return;
+  orbEl.style.borderColor = "";
+  orbEl.style.background = "";
+}
+
+function bindShellRuleActionRuntime({
+  shellContext,
+  eventBus,
+  ruleSchema = null,
+  executeWordCastAction = () => ({ handled: false }),
+  kwsBridge = null,
+} = {}) {
+  if (!eventBus || typeof eventBus.on !== "function") {
+    return { dispose() {} };
+  }
+  const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
+    ? ruleSchema.eventRuntimeBindings
+    : Object.create(null);
+  const off = eventBus.on("rule_engine.action_executed", (p = {}) => {
+    const actionType = String(p.actionType || "").trim().toLowerCase();
+    const actionId = String(p.actionId || "").trim().toLowerCase();
+    if (actionType !== "event") return;
+    const binding = bindings[actionId] || null;
+    const runtime = binding && binding.runtime && typeof binding.runtime === "object"
+      ? binding.runtime
+      : null;
+    const kind = String(runtime && runtime.kind || "").trim().toLowerCase();
+    if (kind !== "cast_action") return;
+    const castActionId = String(runtime && runtime.castActionId || "").trim().toLowerCase();
+    if (!castActionId) return;
+    const result = executeWordCastAction(castActionId, {
+      intent: "rule_engine.event",
+      payload: {
+        trigger: "rule_engine",
+        actionId,
+        ruleId: String(p.ruleId || ""),
+        atMs: Number(p.atMs) || performance.now(),
+        ...(p && typeof p.args === "object" ? p.args : {}),
+      },
+    });
+    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
+      kwsBridge.pushLogLine(`TRACE exec:${castActionId}:${result && result.handled ? "ok" : "miss"}`, result && result.handled ? "ok" : "warn");
+    }
+  });
+  return {
+    dispose() {
+      try { off(); } catch (_) {}
+    },
+  };
+}
+
 function createShellSurfaceRefs({ devStagingView, gameStagingView } = {}) {
   return {
     dev: devStagingView && devStagingView.refs ? devStagingView.refs : Object.create(null),
@@ -1058,13 +1208,24 @@ async function initShellKwsRuntime(shellContext) {
     createVoiceProviderManager,
     createOpenWakeWordBrowserBackendFactory,
     createRuleEnginePreviewSystem,
+    createSpellCastExecutor,
+    createSpellActionHandlers,
+    executeAoeElectric,
+    executeAoeFlame,
+    executeTeleport,
+    executeBubbleShield,
+    executeFloatGrace,
+    executeColorize,
+    CAST_ACTION_REGISTRY_BY_ID,
   } = await loadReceiverInitModules();
 
   if (
     typeof createKwsProvider !== "function" ||
     typeof createVoiceProviderManager !== "function" ||
     typeof createOpenWakeWordBrowserBackendFactory !== "function" ||
-    typeof createRuleEnginePreviewSystem !== "function"
+    typeof createRuleEnginePreviewSystem !== "function" ||
+    typeof createSpellCastExecutor !== "function" ||
+    typeof createSpellActionHandlers !== "function"
   ) {
     return null;
   }
@@ -1299,6 +1460,49 @@ async function initShellKwsRuntime(shellContext) {
   });
 
   runtime.eventBus = eventBus;
+  const shellSpellActionHandlers = createSpellActionHandlers({
+    eventBus,
+    playElectricAoe: () => pulseShellLayer(shellContext.stageEls && shellContext.stageEls.electricLayer, 680, 1),
+    playFlameAoe: () => pulseShellLayer(shellContext.stageEls && shellContext.stageEls.flameLayer, 780, 0.95),
+    playFrostAoe: null,
+    executeAoeElectric,
+    executeAoeFlame,
+    executeAoeFrost: null,
+    executeTeleport,
+    executeShockwave: null,
+    executeBubbleShield,
+    executeFloatGrace,
+    executeColorize,
+    triggerShockwave: () => {},
+    teleportOrbToSpawnNeutralizePhysics: (aboveGroundPx) => shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx),
+    activateBubbleShield: ({ durationMs } = {}) => shellActivateBubbleShield(shellContext, { durationMs }),
+    grantSuperGrace: (ms) => shellGrantSuperGrace(shellContext, ms),
+    applyColorize: (payload) => shellApplyColorize(shellContext, payload),
+    clearColorize: () => shellClearColorize(shellContext),
+    domusTeleportAboveGroundPx: 300,
+    bubbleShieldMs: 8000,
+  });
+  const shellSpellCastExecutor = createSpellCastExecutor({
+    castActionRegistryById: CAST_ACTION_REGISTRY_BY_ID,
+    handlers: shellSpellActionHandlers,
+    grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
+    floatGraceDefaultMs: 1000,
+    floatGraceDomusMs: 5000,
+  });
+  const executeShellWordCastAction = (castActionId, context = {}) => {
+    if (!shellSpellCastExecutor || typeof shellSpellCastExecutor.execute !== "function") {
+      return { handled: false, skipped: "executor_unavailable" };
+    }
+    return shellSpellCastExecutor.execute(castActionId, context);
+  };
+  const shellRuleActionRuntime = bindShellRuleActionRuntime({
+    shellContext,
+    eventBus,
+    ruleSchema,
+    executeWordCastAction: executeShellWordCastAction,
+    kwsBridge,
+  });
+
   runtime.kws = {
     kwsBridge,
     kwsPanelController,
@@ -1319,6 +1523,9 @@ async function initShellKwsRuntime(shellContext) {
     kwsWakeWindowVisuals,
     kwsRuleTraceOff,
     kwsActionTraceOff,
+    shellSpellActionHandlers,
+    shellSpellCastExecutor,
+    shellRuleActionRuntime,
     kwsBackendKey,
     kwsDebugState,
     receiverEvents: RECEIVER_EVENTS,
