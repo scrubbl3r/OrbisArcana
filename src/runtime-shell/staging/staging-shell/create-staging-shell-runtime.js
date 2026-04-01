@@ -6,8 +6,22 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   splitPrototype: "split-prototype",
   booting: "booting",
   sharedModulesReady: "shared-modules-ready",
+  localStageReady: "local-stage-ready",
+  pairingBooting: "pairing-booting",
+  pairingReady: "pairing-ready",
   bootFailed: "boot-failed",
 });
+
+function updateShellBootUi(rootDocument, phase, detail, state = "booting") {
+  const docEl = rootDocument && rootDocument.documentElement;
+  const banner = rootDocument && rootDocument.getElementById("shellBootBanner");
+  const phaseEl = rootDocument && rootDocument.getElementById("shellBootPhase");
+  const detailEl = rootDocument && rootDocument.getElementById("shellBootDetail");
+  if (docEl && phase) docEl.dataset.stagingShellBoot = String(phase);
+  if (banner) banner.dataset.state = String(state || "booting");
+  if (phaseEl && phase) phaseEl.textContent = String(phase);
+  if (detailEl && detail) detailEl.textContent = String(detail);
+}
 
 function safeSetText(el, value) {
   if (!el) return;
@@ -494,6 +508,8 @@ async function initShellPairingRuntime(shellContext) {
   let mobileImpulseSystem = null;
   let lanSession = null;
 
+  updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.pairingBooting, "Loading pairing systems");
+
   const { createUiOverlaysSystem } = await import("../../../ui/game/ui-overlays-system.js");
   const { createMobileImpulseSystem } = await import("../../receiver/mobile-impulse-runtime.js");
   const { createLanSessionSystem } = await import("../../session/lan-session.js");
@@ -566,7 +582,18 @@ async function initShellPairingRuntime(shellContext) {
 
   const launchLanPairingFlow = async (forceNew = false) => {
     if (!lanSession) return;
+    updateShellBootUi(
+      rootDocument,
+      STAGING_SHELL_STATUS.pairingBooting,
+      forceNew ? "Launching fresh QR pairing room" : "Launching QR pairing room"
+    );
     await lanSession.launch(forceNew);
+    updateShellBootUi(
+      rootDocument,
+      STAGING_SHELL_STATUS.pairingReady,
+      "QR ready. Pair phone to continue.",
+      "ready"
+    );
   };
 
   const sendCalibrationTrigger = () => {
@@ -621,6 +648,7 @@ export async function createStagingShellRuntime({
     docEl.dataset.stagingShell = STAGING_SHELL_STATUS.splitPrototype;
     docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.booting;
   }
+  updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.booting, "Mounting dev-staging and game-staging");
 
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const gameStagingView = gameRoot ? renderGameStaging(gameRoot) : null;
@@ -633,10 +661,12 @@ export async function createStagingShellRuntime({
   }
 
   try {
+    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.booting, "Loading shared staging modules");
     const sharedModules = await loadStagingInitModules(moduleCacheBustV);
     if (docEl) {
       docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.sharedModulesReady;
     }
+    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Shared staging modules loaded");
     if (devStagingView && typeof devStagingView.setStatus === "function") {
       devStagingView.setStatus(
         'Staging shell ready <span class="devStagingDim">(shared modules loaded)</span>',
@@ -658,6 +688,7 @@ export async function createStagingShellRuntime({
     bindShellStageResize(shellContext);
     bindShellStageActions(shellContext);
     startShellStageLoop(shellContext);
+    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.localStageReady, "Local game-staging runtime active");
     await initShellPairingRuntime(shellContext);
     exposeShellContext(rootDocument, shellContext);
     return shellContext;
@@ -665,6 +696,12 @@ export async function createStagingShellRuntime({
     if (docEl) {
       docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.bootFailed;
     }
+    updateShellBootUi(
+      rootDocument,
+      STAGING_SHELL_STATUS.bootFailed,
+      error && error.message ? String(error.message) : "Unknown staging shell boot error",
+      "failed"
+    );
     if (devStagingView && typeof devStagingView.setStatus === "function") {
       devStagingView.setStatus("Staging shell boot failed", "devStagingFatal on");
     }

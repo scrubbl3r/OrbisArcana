@@ -11,6 +11,21 @@
   <script src="../../../../qrcode.min.js"></script>
 </head>
 <body>
+  <div id="shellBootBanner" class="shellBootBanner" aria-live="polite">
+    <div class="shellBootBannerRow">
+      <span class="shellBootLabel">Build</span>
+      <span id="shellBuildStamp" class="shellBootValue">20260331-shell-diag1</span>
+    </div>
+    <div class="shellBootBannerRow">
+      <span class="shellBootLabel">Boot</span>
+      <span id="shellBootPhase" class="shellBootValue">html-loaded</span>
+    </div>
+    <div class="shellBootBannerRow">
+      <span class="shellBootLabel">Detail</span>
+      <span id="shellBootDetail" class="shellBootValue">Waiting for staging-shell.js</span>
+    </div>
+  </div>
+
   <div id="startScreen" class="shellStartScreen" aria-label="Staging shell start screen">
     <div class="shellStartCard">
       <button id="startBtn" class="shellStartBtn" aria-label="Pair phone">

@@ -21,6 +21,50 @@ body {
   min-height: 100vh;
 }
 
+.shellBootBanner {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1200;
+  width: min(340px, calc(100vw - 24px));
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(10, 10, 12, 0.92);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+.shellBootBanner[data-state="failed"] {
+  border-color: rgba(255, 132, 132, 0.45);
+}
+
+.shellBootBannerRow {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.shellBootBannerRow + .shellBootBannerRow {
+  margin-top: 6px;
+}
+
+.shellBootLabel {
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.shellBootValue {
+  color: var(--text-strong);
+  font-size: 12px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .shellStartScreen {
   position: fixed;
   inset: 0;
@@ -214,6 +258,12 @@ body {
 }
 
 @media (max-width: 900px) {
+  .shellBootBanner {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
   .shellGridSplit {
     grid-template-columns: 1fr;
   }
