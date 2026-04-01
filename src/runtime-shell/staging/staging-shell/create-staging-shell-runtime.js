@@ -670,7 +670,11 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
     if (!kwsPanelController || typeof kwsPanelController.setManualWakeWindowTokens !== "function") return;
     const now = Date.now();
     const activeTokens = [];
+    const windowDebug = [];
     for (const entry of activeWakeWindowTokensByWindowId.values()) {
+      windowDebug.push(
+        `${Array.isArray(entry.tokens) ? entry.tokens.join(",") : "-"}@${Number(entry.expiresAtMs || 0)}`
+      );
       if (Number(entry.expiresAtMs || 0) <= now) continue;
       activeTokens.push(...entry.tokens);
     }
@@ -680,7 +684,7 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
     }
     if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
       kwsBridge.pushLogLine(
-        `TRACE tree.visual tokens:${activeTokens.length ? Array.from(new Set(activeTokens)).join(",") : "-"}`,
+        `TRACE tree.visual tokens:${activeTokens.length ? Array.from(new Set(activeTokens)).join(",") : "-"} windows:${windowDebug.length ? windowDebug.join("|") : "-"}`,
         "muted"
       );
     }
@@ -725,7 +729,10 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
       sourceEvent: String(sourceEvent || ""),
     });
     if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
-      kwsBridge.pushLogLine(`TRACE wake_open:${wake.windowId}`, "ok");
+      kwsBridge.pushLogLine(
+        `TRACE wake_open:${wake.windowId}:words:${Array.isArray(wake.words) && wake.words.length ? wake.words.join(",") : "-"}:ttl:${Number(wake.ttlMs) || 0}:at:${now}`,
+        "ok"
+      );
     }
     activeWakeWindowTokensByWindowId.set(wake.windowId, {
       tokens: wake.words.slice(),
