@@ -670,6 +670,12 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
     if (typeof kwsPanelController.refreshWordFlashboard === "function") {
       kwsPanelController.refreshWordFlashboard();
     }
+    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
+      kwsBridge.pushLogLine(
+        `TRACE tree.visual tokens:${activeTokens.length ? Array.from(new Set(activeTokens)).join(",") : "-"}`,
+        "muted"
+      );
+    }
   }
 
   function scheduleWakeWindowExpirySweep() {
@@ -1222,6 +1228,12 @@ async function initShellKwsRuntime(shellContext) {
     }
     if (kwsPanelController && typeof kwsPanelController.refreshWordFlashboard === "function") {
       kwsPanelController.refreshWordFlashboard();
+    }
+    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
+      kwsBridge.pushLogLine(
+        `TRACE tree.policy tokens:${tokens.length ? tokens.join(",") : "-"}`,
+        "muted"
+      );
     }
   });
 
