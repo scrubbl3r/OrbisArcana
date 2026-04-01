@@ -1592,39 +1592,42 @@
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:teardown";
         await teardownKwsForReinit();
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:imports";
-        const [
-          { loadReceiverInitModules, hydrateReceiverBootstrapState, RULE_ENGINE_SOURCE_READOUT: importedRuleEngineSourceReadout },
+        const {
+          receiverBootstrapModule: {
+            loadReceiverInitModules,
+            hydrateReceiverBootstrapState,
+            RULE_ENGINE_SOURCE_READOUT: importedRuleEngineSourceReadout,
+          },
+          bootstrapKwsStagingModule: {
+            bootstrapKwsStaging,
+          },
+          bootstrapGameStagingRuntimeModule: {
+            bootstrapGameStagingRuntime,
+          },
+          bootstrapStagingRuntimeContextModule: {
+            bootstrapStagingRuntimeContext,
+          },
+          bindStagingRuntimeEventsModule: {
+            bindStagingRuntimeEvents,
+          },
           receiverEventsModule,
-          { createKwsPanelController },
-          { createKwsRuntimeController },
-          { createKwsBootOrchestrator },
-          { bindKwsEventHandlers },
-          { createKwsListenPolicyController },
-          { bootstrapKwsVoiceRuntime },
-          { createKwsRuntimeConfig },
-          { createKwsMvpCommands },
-          { teardownKwsRuntimeForReinit: importedTeardownKwsRuntimeForReinit },
-          { createKwsReceiverBridge },
-          { createVfxRuntimesBundle },
-          { createOrbRuntimeState },
-          { createOrbRuntimeLoop },
-        ] = await Promise.all([
-          import(`./src/runtime/receiver-bootstrap.js?v=${MODULE_CACHE_BUST_V}`),
-          import("./src/runtime/receiver-events.js"),
-          import(`./src/ui/dev-console/kws-panel-controller.js?v=${MODULE_CACHE_BUST_V}`),
-          import("./src/voice/kws/kws-runtime-controller.js"),
-          import("./src/voice/kws/kws-boot-orchestrator.js"),
-          import(`./src/voice/kws/kws-event-bindings.js?v=${MODULE_CACHE_BUST_V}`),
-          import(`./src/voice/kws/kws-listen-policy-controller.js?v=${MODULE_CACHE_BUST_V}`),
-          import(`./src/voice/kws/kws-provider-bootstrap.js?v=${MODULE_CACHE_BUST_V}`),
-          import(`./src/voice/kws/kws-config.js?v=${MODULE_CACHE_BUST_V}`),
-          import("./src/voice/kws/kws-mvp-commands.js"),
-          import("./src/voice/kws/kws-reinit-teardown.js"),
-          import("./src/voice/kws/kws-receiver-bridge.js"),
-          import("./src/vfx/effects/vfx-runtimes-bundle.js"),
-          import("./src/game-runtime/orb/orb-runtime-state.js"),
-          import("./src/game-runtime/orb/orb-runtime-loop.js"),
-        ]);
+          kwsPanelControllerModule: { createKwsPanelController },
+          kwsRuntimeControllerModule: { createKwsRuntimeController },
+          kwsBootOrchestratorModule: { createKwsBootOrchestrator },
+          kwsEventBindingsModule: { bindKwsEventHandlers },
+          kwsListenPolicyControllerModule: { createKwsListenPolicyController },
+          kwsProviderBootstrapModule: { bootstrapKwsVoiceRuntime },
+          kwsConfigModule: { createKwsRuntimeConfig },
+          kwsMvpCommandsModule: { createKwsMvpCommands },
+          kwsReinitTeardownModule: {
+            teardownKwsRuntimeForReinit: importedTeardownKwsRuntimeForReinit,
+          },
+          kwsReceiverBridgeModule: { createKwsReceiverBridge },
+          vfxRuntimesBundleModule: { createVfxRuntimesBundle },
+          orbRuntimeStateModule: { createOrbRuntimeState },
+          orbRuntimeLoopModule: { createOrbRuntimeLoop },
+        } = await import(`./src/runtime-shell/staging/load-staging-init-modules.js?v=${MODULE_CACHE_BUST_V}`)
+          .then(({ loadStagingInitModules }) => loadStagingInitModules(MODULE_CACHE_BUST_V));
         if (els.rulesReadout) els.rulesReadout.textContent = "boot:imports_ok";
         teardownKwsRuntimeForReinit = importedTeardownKwsRuntimeForReinit;
         if (importedRuleEngineSourceReadout && typeof importedRuleEngineSourceReadout === "object") {
@@ -1633,50 +1636,64 @@
         if (receiverEventsModule && receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object") {
           RECEIVER_EVENTS = { ...RECEIVER_EVENTS, ...receiverEventsModule.RECEIVER_EVENTS };
         }
-        if (typeof createKwsRuntimeConfig === "function") {
-          const kwsConfig = createKwsRuntimeConfig();
-          if (kwsConfig && typeof kwsConfig === "object") {
-            DEFAULT_VOICE_ENGINE = String(kwsConfig.defaultVoiceEngine || DEFAULT_VOICE_ENGINE);
-            DEFAULT_KWS_BACKEND_KEY = String(kwsConfig.defaultBackendKey || DEFAULT_KWS_BACKEND_KEY);
-            DEFAULT_KWS_AUTOSTART_RETRY_MS = Math.max(250, Number(kwsConfig.autostartRetryMs) || DEFAULT_KWS_AUTOSTART_RETRY_MS);
-            DEFAULT_KWS_AUTOSTART_MAX_MS = Math.max(1000, Number(kwsConfig.autostartMaxMs) || DEFAULT_KWS_AUTOSTART_MAX_MS);
-            DEFAULT_KWS_AUTOSTART_REKICK_MS = Math.max(250, Number(kwsConfig.autostartRekickMs) || DEFAULT_KWS_AUTOSTART_REKICK_MS);
-            DEFAULT_KWS_START_STALL_MS = Math.max(1000, Number(kwsConfig.startStallMs) || DEFAULT_KWS_START_STALL_MS);
-            DEFAULT_KWS_LISTEN_POLICY_MODE = String(kwsConfig.listenPolicyMode || DEFAULT_KWS_LISTEN_POLICY_MODE || "A").trim().toUpperCase() || "A";
-            DEFAULT_KWS_GATE_TIMEOUT_MS = Math.max(100, Number(kwsConfig.gateTimeoutMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
-            KWS_READOUT_TICK_MS = Math.max(100, Number(kwsConfig.readoutTickMs) || KWS_READOUT_TICK_MS);
-            KWS_ROW_TOP = Array.isArray(kwsConfig.rowTop) ? kwsConfig.rowTop.slice() : KWS_ROW_TOP;
-            KWS_ROW_BOTTOM = Array.isArray(kwsConfig.rowBottom) ? kwsConfig.rowBottom.slice() : KWS_ROW_BOTTOM;
-            KWS_WAKE_WINDOW_TOKENS = Array.isArray(kwsConfig.wakeWindowTokens) ? kwsConfig.wakeWindowTokens.slice() : KWS_WAKE_WINDOW_TOKENS;
-            KWS_AXIS_TOKENS = Array.isArray(kwsConfig.axisTokens) ? kwsConfig.axisTokens.slice() : KWS_AXIS_TOKENS;
-            KWS_WAKE_TOKENS = Array.isArray(kwsConfig.wakeTokens) ? kwsConfig.wakeTokens.slice() : KWS_WAKE_TOKENS;
-            KWS_WAKE_REQUIRED_TOKENS = Array.isArray(kwsConfig.wakeRequiredTokens) ? kwsConfig.wakeRequiredTokens.slice() : KWS_WAKE_REQUIRED_TOKENS;
-            KWS_WORDFLASHBOARD_WORDS = Array.isArray(kwsConfig.wordFlashboardWords)
-              ? kwsConfig.wordFlashboardWords.map((entry) => ({ ...entry }))
-              : KWS_WORDFLASHBOARD_WORDS;
-            KWS_AXIS_WORD_BY_AXIS = (kwsConfig.spinWordByAxis && typeof kwsConfig.spinWordByAxis === "object")
-              ? Object.freeze({ ...kwsConfig.spinWordByAxis })
-              : KWS_AXIS_WORD_BY_AXIS;
-            KWS_LOG_TOKENS = new Set(Array.isArray(kwsConfig.logTokens) ? kwsConfig.logTokens : Array.from(KWS_LOG_TOKENS));
-            TEMP_UNGATED_KWS_TOKENS = new Set(Array.isArray(kwsConfig.tempUngatedTokens) ? kwsConfig.tempUngatedTokens : Array.from(TEMP_UNGATED_KWS_TOKENS));
-            KWS_TOKEN_CANONICAL_MAP = (kwsConfig.tokenCanonicalMap && typeof kwsConfig.tokenCanonicalMap === "object")
-              ? kwsConfig.tokenCanonicalMap
-              : KWS_TOKEN_CANONICAL_MAP;
-            kwsConfigDebugLine = `cfg.rowTop=${KWS_ROW_TOP.join(",")}`;
-            kwsDebugState.mode = DEFAULT_VOICE_ENGINE;
-            kwsDebugState.backend = DEFAULT_KWS_BACKEND_KEY;
-          }
-        }
-        kwsBridge = createKwsReceiverBridge({
-          getPanelController: () => kwsPanelController,
-          getRuntimeController: () => kwsRuntimeController,
-          defaultGateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
-        });
-        kwsPanelController = createKwsPanelController({
-          els: createDevStagingPanelElements(),
-          constants: {
-            defaultGateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
+        ({
+          kwsBridge,
+          kwsPanelController,
+          kwsTokenUiState,
+          kwsRuntimeController,
+          kwsBootOrchestrator,
+          runtimeConfig: {
+            defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
+            defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
+            autostartRetryMs: DEFAULT_KWS_AUTOSTART_RETRY_MS,
+            autostartMaxMs: DEFAULT_KWS_AUTOSTART_MAX_MS,
+            autostartRekickMs: DEFAULT_KWS_AUTOSTART_REKICK_MS,
             startStallMs: DEFAULT_KWS_START_STALL_MS,
+            listenPolicyMode: DEFAULT_KWS_LISTEN_POLICY_MODE,
+            gateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
+            readoutTickMs: KWS_READOUT_TICK_MS,
+            rowTop: KWS_ROW_TOP,
+            rowBottom: KWS_ROW_BOTTOM,
+            wakeWindowTokens: KWS_WAKE_WINDOW_TOKENS,
+            axisTokens: KWS_AXIS_TOKENS,
+            wakeTokens: KWS_WAKE_TOKENS,
+            wakeRequiredTokens: KWS_WAKE_REQUIRED_TOKENS,
+            wordFlashboardWords: KWS_WORDFLASHBOARD_WORDS,
+            spinWordByAxis: KWS_AXIS_WORD_BY_AXIS,
+            logTokens: KWS_LOG_TOKENS,
+            tempUngatedTokens: TEMP_UNGATED_KWS_TOKENS,
+            tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,
+            configDebugLine: kwsConfigDebugLine,
+          },
+        } = bootstrapKwsStaging({
+          createKwsRuntimeConfig,
+          createKwsReceiverBridge,
+          createKwsPanelController,
+          createKwsRuntimeController,
+          createKwsBootOrchestrator,
+          createDevStagingPanelElements,
+          getKwsWordProvider: () => kwsWordProvider,
+          getKwsVoiceProvider: () => kwsVoiceProvider,
+          getMvp: () => mvp,
+          readTuneFromUi: () => ({
+            inferThreshold: readNumberInputOrNull(els.kwsTokenThrInput),
+            inferCooldownMs: readNumberInputOrNull(els.kwsCooldownMsInput),
+          }),
+          refreshKwsMicBtn,
+          readout: {
+            setDebugMode: (mode) => { kwsDebugState.mode = String(mode || "kws"); },
+            setDebugBackend: (key) => { kwsDebugState.backend = String(key || DEFAULT_KWS_BACKEND_KEY); },
+            receiverEvents: RECEIVER_EVENTS,
+          },
+          runtime: {
+            defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
+            defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
+            autostartRetryMs: DEFAULT_KWS_AUTOSTART_RETRY_MS,
+            autostartMaxMs: DEFAULT_KWS_AUTOSTART_MAX_MS,
+            autostartRekickMs: DEFAULT_KWS_AUTOSTART_REKICK_MS,
+            startStallMs: DEFAULT_KWS_START_STALL_MS,
+            listenPolicyMode: DEFAULT_KWS_LISTEN_POLICY_MODE,
+            gateTimeoutMs: DEFAULT_KWS_GATE_TIMEOUT_MS,
             readoutTickMs: KWS_READOUT_TICK_MS,
             rowTop: KWS_ROW_TOP,
             rowBottom: KWS_ROW_BOTTOM,
@@ -1690,89 +1707,9 @@
             tempUngatedTokens: Array.from(TEMP_UNGATED_KWS_TOKENS),
             tokenCanonicalMap: KWS_TOKEN_CANONICAL_MAP,
           },
-          getKwsWordProvider: () => kwsWordProvider,
-          getKwsVoiceProvider: () => kwsVoiceProvider,
-          onGateOpened: (payload = {}) => {
-            if (mvp && mvp.eventBus) mvp.eventBus.emit("voice.gate_opened", payload);
-          },
-          onGateClosed: (payload = {}) => {
-            if (mvp && mvp.eventBus) mvp.eventBus.emit("voice.gate_closed", payload);
-          },
-          onApplyTune: (next = {}) => {
-            if (!mvp || typeof mvp.setKwsBackendConfig !== "function") return null;
-            return mvp.setKwsBackendConfig(next);
-          },
-          getListenPolicyStatus: () => {
-            if (!mvp || typeof mvp.getKwsListenPolicyStatus !== "function") return null;
-            return mvp.getKwsListenPolicyStatus();
-          },
-        });
-        kwsTokenUiState = kwsPanelController && typeof kwsPanelController.getUiState === "function"
-          ? kwsPanelController.getUiState()
-          : null;
-        if (kwsPanelController && typeof kwsPanelController.bindTuneApplyButton === "function") {
-          kwsPanelController.bindTuneApplyButton();
-        }
-        if (kwsPanelController && typeof kwsPanelController.bindLogPopupButton === "function") {
-          kwsPanelController.bindLogPopupButton();
-        }
-        if (kwsPanelController && typeof kwsPanelController.bindWordBoardPopupButton === "function") {
-          kwsPanelController.bindWordBoardPopupButton();
-        }
-        if (kwsPanelController && typeof kwsPanelController.bindWordBoardDebugToggle === "function") {
-          kwsPanelController.bindWordBoardDebugToggle();
-        }
-        kwsBridge.startReadoutTick();
-        if (kwsConfigDebugLine) kwsBridge.pushLogLine(kwsConfigDebugLine, "muted");
-        kwsRuntimeController = createKwsRuntimeController({
-          constants: {
-            defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
-            defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
-            autostartRetryMs: DEFAULT_KWS_AUTOSTART_RETRY_MS,
-            autostartMaxMs: DEFAULT_KWS_AUTOSTART_MAX_MS,
-            autostartRekickMs: DEFAULT_KWS_AUTOSTART_REKICK_MS,
-          },
-          callbacks: {
-            readTuneFromUi: () => ({
-              inferThreshold: readNumberInputOrNull(els.kwsTokenThrInput),
-              inferCooldownMs: readNumberInputOrNull(els.kwsCooldownMsInput),
-            }),
-            syncTuneUiFromStatus: (status) => kwsBridge.syncTuneUiFromStatus(status),
-            refreshMicBtn: refreshKwsMicBtn,
-            updateReadout: () => kwsBridge.updateReadout(),
-            setDebugMode: (mode) => { kwsDebugState.mode = String(mode || "kws"); },
-            setDebugBackend: (key) => { kwsDebugState.backend = String(key || DEFAULT_KWS_BACKEND_KEY); },
-            emitVoiceSetMode: (mode) => {
-              const bus = mvp && mvp.eventBus;
-              if (bus && typeof bus.emit === "function") {
-                bus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode });
-              }
-            },
-          },
-        });
-        const kwsBootOrchestrator = createKwsBootOrchestrator({
-          constants: {
-            defaultBackendKey: DEFAULT_KWS_BACKEND_KEY,
-            defaultVoiceEngine: DEFAULT_VOICE_ENGINE,
-          },
-          callbacks: {
-            emitWakeMode: (instance) => {
-              if (instance && instance.eventBus) {
-                instance.eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-              }
-            },
-            onBootSuccess: () => {
-              kwsBridge.updateReadout();
-              refreshKwsMicBtn();
-            },
-            onBootFailed: (err) => {
-              console.warn("KWS boot auto-init failed:", err);
-            },
-            startAutostartWatchdog: () => {
-              kwsBridge.startAutostartWatchdog();
-            },
-          },
-        });
+        }));
+        kwsDebugState.mode = DEFAULT_VOICE_ENGINE;
+        kwsDebugState.backend = DEFAULT_KWS_BACKEND_KEY;
         const mods = await loadReceiverInitModules();
         executeTeleportSpellModule = (typeof mods.executeTeleport === "function")
           ? mods.executeTeleport
@@ -2104,134 +2041,60 @@
         } else if (els.rulesReadout) {
           els.rulesReadout.textContent = "boot:no_schema";
         }
-        if (typeof createVfxRuntimesBundle === "function") {
-          vfxRuntimesBundle = createVfxRuntimesBundle({
-            bubbleShield: {
-              shieldEl: els.shield,
-              getConfig: () => ({
-                colorRgb: VFX_DEFAULTS.shield.colorRgb,
-                diameterPx: VFX_DEFAULTS.shield.diameterPx,
-                strokeWidthPx: VFX_DEFAULTS.shield.strokeWidthPx,
-                durationMs: VFX_DEFAULTS.shield.durationMs,
-                alpha: VFX_DEFAULTS.shield.alpha,
-                pulseMs: VFX_DEFAULTS.shield.pulseMs,
-                pulseMin: VFX_DEFAULTS.shield.pulseMin,
-                pulseMax: VFX_DEFAULTS.shield.pulseMax,
-              }),
-              setCssVar: (name, value) => setVar(name, value),
-              clamp,
-              clamp01,
-              fadeInMs: SHIELD_FADEIN_MS,
-              decayMs: SHIELD_DECAY_MS,
-              onDecayActiveChange: (active) => { shieldDecayActive = active ? 1 : 0; },
-            },
-            shockwave: {
-              layerEl: els.shockLayer,
-              getConfig: () => ({
-                color: VFX_DEFAULTS.shock.color,
-                startR: VFX_DEFAULTS.shock.startR,
-                endR: VFX_DEFAULTS.shock.endR,
-                rings: VFX_DEFAULTS.shock.rings,
-                spawnMs: VFX_DEFAULTS.shock.spawnMs,
-                decayMs: VFX_DEFAULTS.shock.decayMs,
-                stroke: VFX_DEFAULTS.shock.stroke,
-              }),
-              clamp,
-              normalizeStroke: evenStroke,
-            },
-            orbShatter: {
-              layerEl: els.orbShards,
-              clamp,
-            },
-            flameAoe: {
-              layerEl: els.flameLayer,
-              getConfig: () => ({
-                diameter: VFX_DEFAULTS.flame.diameter,
-                durationMs: VFX_DEFAULTS.flame.durationMs,
-                stroke: VFX_DEFAULTS.flame.stroke,
-                fill: VFX_DEFAULTS.flame.fill,
-              }),
-              clamp,
-              evenPx,
-              showCore: FLAME_SHOW_CORE,
-            },
-            electricAoe: {
-              layerEl: els.electricLayer,
-              getConfig: () => ({
-                startR: VFX_DEFAULTS.electric.startR,
-                endR: VFX_DEFAULTS.electric.endR,
-                durationMs: VFX_DEFAULTS.electric.durationMs,
-                nodeCount: VFX_DEFAULTS.electric.nodeCount,
-                particleCount: VFX_DEFAULTS.electric.particleCount,
-                particleSpeed: VFX_DEFAULTS.electric.particleSpeed,
-                maxBoltJumpSq: VFX_DEFAULTS.electric.maxBoltJumpSq,
-                startJitterRatio: VFX_DEFAULTS.electric.startJitterRatio,
-              }),
-              clamp,
-              evenPx,
-              rand,
-            },
-          });
-          bubbleShieldRuntime = vfxRuntimesBundle.bubbleShieldRuntime;
-          shockwaveRuntime = vfxRuntimesBundle.shockwaveRuntime;
-          orbShatterRuntime = vfxRuntimesBundle.orbShatterRuntime;
-          flameAoeRuntime = vfxRuntimesBundle.flameAoeRuntime;
-          electricAoeRuntime = vfxRuntimesBundle.electricAoeRuntime;
-          orbShatterController = (typeof createOrbShatterRuntimeControllerModule === "function")
-            ? createOrbShatterRuntimeControllerModule({
-                root: document.documentElement,
-                getOrbEl: () => els.orb,
-                getOrbShatterRuntime: () => orbShatterRuntime,
-                getOrbColorState: () => (orbColorRuntime && typeof orbColorRuntime.getCurrentState === "function")
-                  ? orbColorRuntime.getCurrentState()
-                  : null,
-                getBaseFillAlpha: () => ORB_FILL_ALPHA,
-                clamp,
-                clamp01,
-              })
-            : null;
-        }
-        if (typeof createOrbRuntimeState === "function") {
-          orbRuntimeState = createOrbRuntimeState({ initialState: orbRuntimeFallbackState });
-        }
-        if (typeof createOrbRuntimeLoop === "function") {
-          if (orbRuntimeLoop && typeof orbRuntimeLoop.stop === "function") {
-            orbRuntimeLoop.stop();
-          }
-          orbRuntimeLoop = createOrbRuntimeLoop({
-            getState: () => getOrbRuntime(),
-            isReady: () => (typeof runOrbRuntimePipelineModule === "function"),
+        ({
+          vfxRuntimesBundle,
+          bubbleShieldRuntime,
+          shockwaveRuntime,
+          orbShatterRuntime,
+          flameAoeRuntime,
+          electricAoeRuntime,
+          orbShatterController,
+          orbRuntimeState,
+          orbRuntimeLoop,
+        } = bootstrapGameStagingRuntime({
+          createVfxRuntimesBundle,
+          createOrbShatterRuntimeController: createOrbShatterRuntimeControllerModule,
+          createOrbRuntimeState,
+          createOrbRuntimeLoop,
+          documentRoot: document.documentElement,
+          els,
+          orbColorRuntime,
+          orbRuntimeFallbackState,
+          existingOrbRuntimeLoop: orbRuntimeLoop,
+          getOrbRuntime,
+          runOrbRuntimePipelineModule,
+          PHYS,
+          SHIELD_DESCENT,
+          mvp,
+          orbFxSystem,
+          worldSystem,
+          VFX_DEFAULTS,
+          SHIELD_FADEIN_MS,
+          SHIELD_DECAY_MS,
+          FLAME_SHOW_CORE,
+          ORB_FILL_ALPHA,
+          shieldDecay: {
+            setActive: (active) => { shieldDecayActive = active ? 1 : 0; },
+          },
+          hooks: {
+            setVar,
             clamp,
-            runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
-              runOrbRuntimePipelineModule({
-                ts,
-                dt,
-                nowMs,
-                wasOnGround,
-                orbRuntimeState,
-                phys: PHYS,
-                shieldDescent: SHIELD_DESCENT,
-                mvp,
-                orbFxSystem,
-                worldSystem,
-                hooks: {
-                  clamp,
-                  liftToThrustAccel,
-                  isFloatGraceActive,
-                  clearFloatGrace,
-                  groundCenterWorld,
-                  computeImpactMetric,
-                  drawStars,
-                  drawWorldBackdrop,
-                  updateOrbStrokeColor,
-                  applyOrbTransform,
-                  updateDebugReadout,
-                },
-              });
-            },
-          });
-          orbRuntimeLoop.start();
-        }
+            clamp01,
+            evenStroke,
+            evenPx,
+            rand,
+            liftToThrustAccel,
+            isFloatGraceActive,
+            clearFloatGrace,
+            groundCenterWorld,
+            computeImpactMetric,
+            drawStars,
+            drawWorldBackdrop,
+            updateOrbStrokeColor,
+            applyOrbTransform,
+            updateDebugReadout,
+          },
+        }));
         const {
           createEventBus,
           createGameState,
@@ -2253,45 +2116,42 @@
         const createRuleEnginePreviewSystemFactory = createRuleEnginePreviewSystem;
         const worldItemSpawns = Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [];
 
-        eventBus = createEventBus();
-        const gameState = createGameState({
-          orb: {
-            maxHealth: 300,
-            health: 300,
-            collisionDamage: 100,
-            collisionThreshold: IMPACT_TH,
-            collisionCooldownMs: 250,
-          }
-        });
-        const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({ eventBus });
-        const audioSystem = createAudioSystem({ eventBus });
-        inputSystemsBundle = createInputSystemsBundle({
-          eventBus,
-          dynamicsConfig: {
-            stabilityAvgMs: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.avgMs,
-            stabilityArmMs: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.armMs,
-            stabilityOnThr: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.onThreshold,
-            stabilityOffThr: INPUT_DYNAMICS_CFG.stability && INPUT_DYNAMICS_CFG.stability.offThreshold,
-            variabilityAvgMs: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.avgMs,
-            variabilityArmMs: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.armMs,
-            variabilityOnThr: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.onThreshold,
-            variabilityOffThr: INPUT_DYNAMICS_CFG.variability && INPUT_DYNAMICS_CFG.variability.offThreshold,
-          },
-          gestureConfig: {
-            shakeCooldownMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.cooldownMs,
-            shakeMode: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.mode,
-            grooveShakeGate: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.grooveGate,
-            shakeLampThr: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold,
-            sdRecentMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.directionRecentMs,
-            flatSpinDominanceOn: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceOn,
-            flatSpinDominanceOff: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceOff,
-            flatSpinDominanceGapOn: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceGapOn,
-            flatSpinDominanceGapOff: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceGapOff,
-            flatSpinOnHoldMs: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.onHoldMs,
-            flatSpinOffHoldMs: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.offHoldMs,
-            flatSpinGateRefreshMs: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.gateRefreshMs,
-            flatSpinMinSpeed01: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.minSpeed01,
-          },
+        const runtimeContext = bootstrapStagingRuntimeContext({
+          createEventBus,
+          createGameState,
+          createOrbDamageVisualsRuntime,
+          createAudioSystem,
+          createInputSystemsBundle,
+          createResourcesSystem,
+          createSpellDispatchSystem,
+          createRuleEnginePreviewSystem: createRuleEnginePreviewSystemFactory,
+          createWorldSystem,
+          createOrbSystemsBundle,
+          createOrbSystem,
+          createOrbFxSystem,
+          els,
+          IMPACT_TH,
+          INPUT_DYNAMICS_CFG,
+          INPUT_GESTURE_CFG,
+          ENERGY_BANK_CAP,
+          ENERGY_SHAKE_COST,
+          ENERGY_CHARGE_RATE_PPS,
+          ruleSchema,
+          RULE_ENGINE_EXECUTE_ACTIONS,
+          DEFAULT_KWS_LISTEN_POLICY_MODE,
+          STRICT_A_WAKE_WINDOW_PAD_MS,
+          kwsListenPolicyController,
+          kwsBridge,
+          RULE_CHAIN_TRACE_ENABLED,
+          PHYS,
+          worldItemSpawns,
+          normalizeWorldItemSpawn,
+          groundCenterWorld,
+          stageRect,
+          pickupScreenY,
+          getOrbRuntime,
+          getOrbScreenY: () => orbScreenY(),
+          axisToColor01,
           gestureHooks: {
             canSpendShake,
             spendShake,
@@ -2305,63 +2165,21 @@
             flashDirLampSingle,
           },
         });
-        inputSystem = inputSystemsBundle.inputSystem;
-        inputDynamicsSystem = inputSystemsBundle.inputDynamicsSystem;
-        inputGestureSystem = inputSystemsBundle.inputGestureSystem;
-        resourcesSystem = createResourcesSystem({
-          eventBus,
-          config: {
-            energyBankCap: ENERGY_BANK_CAP,
-            energyShakeCost: ENERGY_SHAKE_COST,
-            energyChargeRatePps: ENERGY_CHARGE_RATE_PPS,
-          },
-        });
-        const spellDispatchSystem = createSpellDispatchSystem({
-          eventBus,
-          resources: resourcesSystem,
-          ruleEngineEnabled: (!ruleSchema || ruleSchema.enabled !== false) && RULE_ENGINE_EXECUTE_ACTIONS === true,
-          allowLegacyFallbacks: false,
-        });
-        if (typeof createRuleEnginePreviewSystemFactory === "function" && ruleSchema) {
-          ruleEnginePreviewSystem = createRuleEnginePreviewSystemFactory({
-            eventBus,
-            schema: ruleSchema,
-            executeActions: RULE_ENGINE_EXECUTE_ACTIONS,
-            getWakeWindowPadMs: () => {
-              const status = (kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function")
-                ? kwsListenPolicyController.getStatus()
-                : null;
-              const mode = String(status && status.mode || DEFAULT_KWS_LISTEN_POLICY_MODE).trim().toUpperCase();
-              return mode === "A" ? STRICT_A_WAKE_WINDOW_PAD_MS : 0;
-            },
-          });
-          if (RULE_CHAIN_TRACE_ENABLED) {
-            const rules = Array.isArray(ruleSchema.rules) ? ruleSchema.rules : [];
-            const signals = Array.isArray(ruleSchema.signals) ? ruleSchema.signals : [];
-            const hasWakeMain = rules.some((r) => String(r && r.id || "").trim().toLowerCase() === "wake_main");
-            const hasTeleHome = rules.some((r) => String(r && r.id || "").trim().toLowerCase() === "tele_home");
-            const orbisSignal = signals.find((s) => String(s && s.id || "").trim().toLowerCase() === "spell.orbis");
-            const debugBootstrap = (ruleSchema.debugBootstrap && typeof ruleSchema.debugBootstrap === "object")
-              ? ruleSchema.debugBootstrap
-              : null;
-            kwsBridge.pushLogLine(
-              `TRACE schema rules:${rules.length} signals:${signals.length} wake_main:${hasWakeMain} tele_home:${hasTeleHome}`,
-              "muted"
-            );
-            if (debugBootstrap) {
-              kwsBridge.pushLogLine(
-                `TRACE bootstrap stage:${String(debugBootstrap.stage || "na")} build:${Number(debugBootstrap.buildRules) || 0}/${Number(debugBootstrap.buildSignals) || 0} validate:${Number(debugBootstrap.postValidateRules) || 0}/${Number(debugBootstrap.postValidateSignals) || 0} integrity:${Number(debugBootstrap.postIntegrityRules) || 0}/${Number(debugBootstrap.postIntegritySignals) || 0} fallback:${debugBootstrap.adapterFallbackUsed ? "true" : "false"} errs:${Number(debugBootstrap.validateErrorCount) || 0}/${Number(debugBootstrap.integrityErrorCount) || 0}`,
-                "muted"
-              );
-            }
-            if (orbisSignal) {
-              kwsBridge.pushLogLine(
-                `TRACE sig.orbis src:${String(orbisSignal.sourceEvent || "")} path:${String(orbisSignal.where && orbisSignal.where.path || "")} eq:${String(orbisSignal.where && orbisSignal.where.eq || "")}`,
-                "muted"
-              );
-            }
-          }
-        }
+        eventBus = runtimeContext.eventBus;
+        const gameState = runtimeContext.gameState;
+        const orbDamageVisualsRuntime = runtimeContext.orbDamageVisualsRuntime;
+        const audioSystem = runtimeContext.audioSystem;
+        inputSystemsBundle = runtimeContext.inputSystemsBundle;
+        inputSystem = runtimeContext.inputSystem;
+        inputDynamicsSystem = runtimeContext.inputDynamicsSystem;
+        inputGestureSystem = runtimeContext.inputGestureSystem;
+        resourcesSystem = runtimeContext.resourcesSystem;
+        const spellDispatchSystem = runtimeContext.spellDispatchSystem;
+        ruleEnginePreviewSystem = runtimeContext.ruleEnginePreviewSystem;
+        worldSystem = runtimeContext.worldSystem;
+        orbSystemsBundle = runtimeContext.orbSystemsBundle;
+        const orbSystem = runtimeContext.orbSystem;
+        orbFxSystem = runtimeContext.orbFxSystem;
         if (kwsEventBindings && typeof kwsEventBindings.dispose === "function") {
           kwsEventBindings.dispose();
         }
@@ -2439,407 +2257,44 @@
             kwsListenPolicyController.start();
           }
         }
-        orbDamageVisualsRuntime.start();
-        audioSystem.start();
-        inputSystemsBundle.start();
-        resourcesSystem.start();
-        spellDispatchSystem.start();
-        if (ruleEnginePreviewSystem && typeof ruleEnginePreviewSystem.start === "function") {
-          ruleEnginePreviewSystem.start();
-          if (RULE_CHAIN_TRACE_ENABLED) {
-            kwsBridge.pushLogLine("TRACE rule_engine:start", "muted");
-          }
-        }
-        const globeSpawns = (Array.isArray(worldItemSpawns) ? worldItemSpawns : [])
-          .map(normalizeWorldItemSpawn)
-          .filter(Boolean);
-        const fallbackSpawn = {
-          id: "globe_mid_01",
-          xNorm: 0.5,
-          yW: groundCenterWorld() - 1000,
-          r: 25,
-        };
-        const resolvedGlobeSpawns = globeSpawns.length ? globeSpawns : [fallbackSpawn];
-
-        worldSystem = createWorldSystem({
+        bindStagingRuntimeEvents({
           eventBus,
-          stageEl: els.physStage,
-          getStageRect: () => stageRect(),
-          worldToScreenY: (yW) => pickupScreenY(yW),
-          getOrbWorldPosition: () => ({ xNorm: 0.5, yW: getOrbRuntime().yW }),
-          orbRadiusPx: PHYS.orbRadiusPx,
-          spawns: resolvedGlobeSpawns,
-          spawn: {
-            xNorm: 0.5,
-            yW: groundCenterWorld() - 1000,
-            r: 25,
-          },
-          getGlobeEl: () => els.testGlobe,
-          setGlobeEl: (el) => { els.testGlobe = el; },
+          RECEIVER_EVENTS,
+          RULE_ENGINE_ACTION_EXECUTED_EVENT,
+          RULE_ENGINE_PREVIEW_MATCHED_EVENT,
+          RULE_ENGINE_WAKE_WIN_OPENED_EVENT,
+          RULE_ENGINE_SOURCE_EVENT_SUMMARY_EVENT,
+          RULE_ENGINE_TRIGGER,
+          RULE_CHAIN_TRACE_ENABLED,
+          DEFAULT_KWS_GATE_TIMEOUT_MS,
+          kwsBridge,
+          kwsListenPolicyController,
+          kwsRuntimeController,
+          kwsPanelController,
+          kwsTokenUiState,
+          TEMP_UNGATED_KWS_TOKENS,
+          kwsDebugState,
+          ruleSchema,
+          runtimeWordIndex,
+          runtimeSpellIndex,
+          castActionForWordId,
+          executeWordCastAction,
+          playElectricAoe,
+          grantFloatGrace,
+          clearFloatGrace,
+          renderOrbDamageVisuals,
+          spawnShardFx,
+          clearOrbRuntimeFxForDeath,
+          scheduleDeathOverlay,
+          updateDebugReadout,
+          orbShatterController,
+          stopShardSim,
+          worldSystem,
+          resetOrbStrokeColor,
+          clearDeathOverlaySchedule,
+          closeDeathOverlay,
+          setOrbInputSuppressed: (next) => { orbInputSuppressed = !!next; },
         });
-        orbSystemsBundle = createOrbSystemsBundle({
-          createOrbSystem,
-          createOrbFxSystem,
-          gameState,
-          eventBus,
-          orbFxOptions: {
-            orbInteriorEl: els.orbInterior,
-            stageEl: els.physStage,
-            getOrbScreenY: () => orbScreenY(),
-            orbRadiusPx: PHYS.orbRadiusPx,
-            getAxisColor01: (axis) => axisToColor01(axis),
-          },
-        });
-        const orbSystem = orbSystemsBundle && orbSystemsBundle.orbSystem;
-        orbFxSystem = orbSystemsBundle && orbSystemsBundle.orbFxSystem;
-        if (orbSystemsBundle && typeof orbSystemsBundle.start === "function") {
-          orbSystemsBundle.start();
-        }
-
-        eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbDamageVisuals);
-        eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnShardFx);
-        eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
-          if (orbShatterController && typeof orbShatterController.handleOrbDied === "function") {
-            orbShatterController.handleOrbDied();
-          }
-          orbInputSuppressed = true;
-          clearFloatGrace();
-          clearOrbRuntimeFxForDeath();
-          scheduleDeathOverlay();
-          updateDebugReadout();
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_ORB_REVIVED, () => {
-          if (orbShatterController && typeof orbShatterController.handleOrbRevived === "function") {
-            orbShatterController.handleOrbRevived();
-          }
-          orbInputSuppressed = false;
-          clearFloatGrace();
-          clearDeathOverlaySchedule();
-          closeDeathOverlay();
-          if (worldSystem) worldSystem.reset(performance.now());
-          resetOrbStrokeColor(true);
-          renderOrbDamageVisuals();
-          updateDebugReadout();
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
-          if (orbShatterController && typeof orbShatterController.handleOrbShatterComplete === "function") {
-            orbShatterController.handleOrbShatterComplete();
-          } else {
-            stopShardSim();
-          }
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED, () => {
-          executeWordCastAction("colorize", {
-            intent: "spin_window_closed",
-            payload: { mode: "stop" },
-          });
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
-          const intent = String(p.intent || "");
-          const wordId = String((p.wordId || p.spellId) || "").toLowerCase();
-          const payloadCastActionId = String(p.castActionId || "").trim().toLowerCase();
-          const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
-          const castActionId = payloadCastActionId || (wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId));
-          const result = executeWordCastAction(castActionId, { payload: p, intent });
-          if (result && result.handled && wordDef) {
-            const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
-            if (postCastActions) {
-              for (const action of postCastActions) {
-                const actionId = String(action && action.id || "");
-                if (!actionId) continue;
-                const payload = (action && typeof action.payload === "object" && action.payload)
-                  ? { ...p, ...action.payload }
-                  : p;
-                executeWordCastAction(actionId, { payload, intent });
-              }
-            } else if (Array.isArray(wordDef.postCastActionIds)) {
-              for (const actionId of wordDef.postCastActionIds) {
-                executeWordCastAction(String(actionId || ""), { payload: p, intent });
-              }
-            }
-          }
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_GRANT, (p = {}) => {
-          grantFloatGrace(p.ms);
-        });
-        eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_CLEAR, () => {
-          clearFloatGrace();
-        });
-        let lastRuleEngineActionKey = "";
-        let lastRuleEngineActionAtMs = 0;
-        const onRuleEngineActionExecuted = (p = {}) => {
-          const actionType = String(p.actionType || "").toLowerCase();
-          const actionId = String(p.actionId || "").toLowerCase();
-          const dedupeAtMsRaw = Number(p.atMs);
-          const dedupeAtMs = Number.isFinite(dedupeAtMsRaw) ? Math.floor(dedupeAtMsRaw) : 0;
-          const dedupeKey = `${String(p.ruleId || "")}|${actionType}|${actionId}|${dedupeAtMs}`;
-          const nowMs = performance.now();
-          if (dedupeKey && dedupeKey === lastRuleEngineActionKey && (nowMs - lastRuleEngineActionAtMs) < 100) return;
-          lastRuleEngineActionKey = dedupeKey;
-          lastRuleEngineActionAtMs = nowMs;
-          if (actionType === "wake_win") {
-            const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
-            const ttlMs = Math.max(0, Number(args.ttlMs) || DEFAULT_KWS_GATE_TIMEOUT_MS);
-            eventBus.emit(RECEIVER_EVENTS.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
-            return;
-          }
-          if (actionType === "bind") {
-            const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
-            const slot = String(args.slot || actionId || "").trim().toUpperCase();
-            const spell = String(args.spell || "").trim().toLowerCase();
-            if (!slot || !spell) return;
-            eventBus.emit("spell.slot_load_requested", {
-              trigger: RULE_ENGINE_TRIGGER,
-              ruleId: String(p.ruleId || ""),
-              actionId,
-              atMs: Number(p.atMs) || performance.now(),
-              ...args,
-              slot,
-              spell,
-            });
-            if (RULE_CHAIN_TRACE_ENABLED) {
-              kwsBridge.pushLogLine(`TRACE exec:bind:${slot.toLowerCase()}:${spell}`, "ok");
-            }
-            return;
-          }
-          if (actionType !== "event") return;
-          const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
-          if (actionId === "aoe_electric") {
-            playElectricAoe();
-            if (RULE_CHAIN_TRACE_ENABLED) kwsBridge.pushLogLine("TRACE exec:aoe_electric:direct", "ok");
-            return;
-          }
-          const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
-            ? ruleSchema.eventRuntimeBindings
-            : Object.create(null);
-          const binding = bindings[actionId] || null;
-          const runtime = binding && binding.runtime && typeof binding.runtime === "object"
-            ? binding.runtime
-            : null;
-          const kind = String(runtime && runtime.kind || "").toLowerCase();
-          if (kind === "cast_action") {
-            const castActionId = String(runtime && runtime.castActionId || "");
-            if (!castActionId) return;
-            if (castActionId === "cast_loaded_ud" || castActionId === "cast_loaded_lr" || castActionId === "cast_loaded_fb") {
-              const slot = castActionId === "cast_loaded_ud"
-                ? "UD"
-                : castActionId === "cast_loaded_lr"
-                ? "LR"
-                : "FB";
-              eventBus.emit("spell.slot_cast_requested", {
-                trigger: "rule_engine_loaded_slot",
-                ruleId: String(p.ruleId || ""),
-                actionId,
-                atMs: Number(p.atMs) || performance.now(),
-                slot,
-                directionGroup: slot,
-                ...args,
-              });
-              if (RULE_CHAIN_TRACE_ENABLED) {
-                kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:ok`, "ok");
-              }
-              return;
-            }
-            const execResult = executeWordCastAction(castActionId, {
-              intent: "rule_engine.event",
-              payload: {
-                trigger: RULE_ENGINE_TRIGGER,
-                actionId,
-                ruleId: String(p.ruleId || ""),
-                atMs: Number(p.atMs) || performance.now(),
-                ...args,
-              },
-            });
-            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "cast_loaded_ud" || actionId === "cast_loaded_lr" || actionId === "cast_loaded_fb")) {
-              const handled = !!(execResult && execResult.handled);
-              kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
-            }
-            if (RULE_CHAIN_TRACE_ENABLED && (actionId === "teleport" || actionId === "aoe_electric" || actionId === "shockwave")) {
-              const handled = !!(execResult && execResult.handled);
-              kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
-            }
-            return;
-          }
-          if (kind === "orb_event") {
-            const eventId = String(runtime && runtime.event || "");
-            if (!eventId) return;
-            eventBus.emit(eventId, {
-              trigger: RULE_ENGINE_TRIGGER,
-              actionId,
-              ruleId: String(p.ruleId || ""),
-              atMs: Number(p.atMs) || performance.now(),
-              ...args,
-            });
-          }
-        };
-        eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, onRuleEngineActionExecuted);
-        if (RULE_CHAIN_TRACE_ENABLED) {
-          const getListenPolicyTraceState = () => {
-            const status = (kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function")
-              ? kwsListenPolicyController.getStatus()
-              : null;
-            const mode = String(status && status.mode || "B").trim().toUpperCase() || "B";
-            const tokens = new Set(
-              (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
-                .map((token) => String(token || "").trim().toLowerCase())
-                .filter(Boolean)
-            );
-            return { mode, tokens };
-          };
-          eventBus.on("input.shake_triggered", (p = {}) => {
-            const group = String(p.group || "").trim().toUpperCase();
-            const code = String(p.code || "").trim().toUpperCase();
-            kwsBridge.pushLogLine(`TRACE shake:code:${code || "-"} group:${group || "-"}`, group ? "muted" : "warn");
-          });
-          eventBus.on("spell.slot_load_requested", (p = {}) => {
-            const slot = String(p.slot || "").trim().toUpperCase();
-            const spell = String((p.spell || p.wordId || p.spellId) || "").trim().toLowerCase();
-            kwsBridge.pushLogLine(`TRACE slot_load_req:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
-          });
-          eventBus.on("voice.spell_loaded", (p = {}) => {
-            const slot = String(p.slot || "").trim().toUpperCase();
-            const spell = String((p.castActionId || p.wordId || p.spellId) || "").trim().toLowerCase();
-            kwsBridge.pushLogLine(`TRACE slot_loaded:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
-          });
-          eventBus.on("spell.slot_cast_requested", (p = {}) => {
-            const slot = String(p.slot || "").trim().toUpperCase();
-            kwsBridge.pushLogLine(`TRACE slot_cast_req:${slot || "-"}`, slot ? "ok" : "warn");
-          });
-          eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
-            const token = String(p.token || "").trim().toLowerCase();
-            if (!token) return;
-            const { mode, tokens } = getListenPolicyTraceState();
-            const listenable = tokens.has(token);
-            kwsBridge.pushLogLine(`TRACE leak:token:${token}:mode:${mode}:listenable:${listenable ? "yes" : "no"}`, listenable ? "muted" : "warn");
-            if (token === "orbis" || token === "are kay nah" || token === "are_kay_nah") {
-              kwsBridge.pushLogLine(`TRACE token:${token}`, "muted");
-            }
-          });
-          eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_WORD_CANDIDATE || RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
-            const matched = !!p.matched;
-            const wordId = String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
-            const phrase = String(p.phrase || "").trim().toLowerCase();
-            const signal = wordId || phrase || "-";
-            const { mode, tokens } = getListenPolicyTraceState();
-            const listenable = tokens.has(signal);
-            kwsBridge.pushLogLine(
-              `TRACE leak:candidate:${signal}:matched:${matched ? "yes" : "no"}:mode:${mode}:listenable:${listenable ? "yes" : "no"}`,
-              (matched && !listenable) ? "warn" : "muted"
-            );
-          });
-          eventBus.on(RECEIVER_EVENTS.EVT_VOICE_WORD_DETECTED, (p = {}) => {
-            const wordId = String((p.word && p.word.id) || (p.spell && p.spell.id) || p.wordId || p.spellId || "")
-              .trim()
-              .toLowerCase();
-            if (!wordId) return;
-            const { mode, tokens } = getListenPolicyTraceState();
-            const listenable = tokens.has(wordId);
-            kwsBridge.pushLogLine(`TRACE leak:word:${wordId}:mode:${mode}:listenable:${listenable ? "yes" : "no"}`, listenable ? "muted" : "warn");
-            if (wordId === "orbis" || wordId === "domus" || wordId === "electrum" || wordId === "pyro" || wordId === "rota") {
-              kwsBridge.pushLogLine(`TRACE word:${wordId}`, "muted");
-            }
-          });
-          eventBus.on(RULE_ENGINE_PREVIEW_MATCHED_EVENT, (p = {}) => {
-            const ruleId = String(p.ruleId || "").trim().toLowerCase();
-            if (
-              ruleId === "wake_main" ||
-              ruleId === "tele_home" ||
-              ruleId === "electric_aoe" ||
-              ruleId === "electric_aoe_cast" ||
-              ruleId === "shake_ud_cast" ||
-              ruleId === "shake_lr_cast" ||
-              ruleId === "shake_fb_cast" ||
-              ruleId === "spin_y_opens_pyro" ||
-              ruleId === "spin_y_pyro_opens_vectus" ||
-              ruleId === "spin_y_pyro_vectus_bind_fb"
-            ) {
-              kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
-            }
-          });
-          eventBus.on(RULE_ENGINE_WAKE_WIN_OPENED_EVENT, (p = {}) => {
-            const actionId = String(p.actionId || "").trim().toLowerCase();
-            const ruleId = String(p.ruleId || "").trim().toLowerCase();
-            if (ruleId === "wake_main") {
-              const windowId = String(p.windowId || "").trim().toLowerCase() || actionId || "wake.main";
-              kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
-            }
-            if (ruleId === "spin_y_opens_pyro") {
-              const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_seed";
-              kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
-            }
-            if (ruleId === "spin_y_pyro_opens_vectus") {
-              const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_loaded";
-              kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
-            }
-          });
-          eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, (p = {}) => {
-            const actionType = String(p.actionType || "").trim().toLowerCase();
-            const actionId = String(p.actionId || "").trim().toLowerCase();
-            if (actionType === "event" && actionId === "teleport") {
-              kwsBridge.pushLogLine("TRACE action:event:teleport", "ok");
-            }
-            if (actionType === "event" && actionId === "aoe_electric") {
-              kwsBridge.pushLogLine("TRACE action:event:aoe_electric", "ok");
-            }
-            if (actionType === "event" && actionId === "shockwave") {
-              kwsBridge.pushLogLine("TRACE action:event:shockwave", "ok");
-            }
-            if (actionType === "bind" && actionId === "fb") {
-              kwsBridge.pushLogLine("TRACE action:bind:fb", "ok");
-            }
-          });
-          eventBus.on(RULE_ENGINE_SOURCE_EVENT_SUMMARY_EVENT, (p = {}) => {
-            const sourceEvent = String(p.sourceEvent || "").trim().toLowerCase();
-            if (sourceEvent !== "voice.token_detected" && sourceEvent !== "voice.word_detected") return;
-            const signalId = String(p.signalId || "").trim().toLowerCase();
-            const ruleId = String(p.ruleId || "").trim().toLowerCase();
-            const matched = Number.isFinite(Number(p.matchedRuleCount)) ? Number(p.matchedRuleCount) : 0;
-            const executed = Number.isFinite(Number(p.executedActionCount)) ? Number(p.executedActionCount) : 0;
-            kwsBridge.pushLogLine(
-              `TRACE source:${sourceEvent}:signal:${signalId || "-"}:rule:${ruleId || "-"}:matched:${matched}:actions:${executed}`,
-              matched > 0 ? "ok" : "muted"
-            );
-          });
-          eventBus.on("voice.kws_listen_policy_changed", (p = {}) => {
-            const mode = String(p.mode || "").trim().toUpperCase() || "-";
-            const tokens = Array.isArray(p.listenableTokens) ? p.listenableTokens.join(",") : "";
-            const reason = String(p.reason || "update").trim().toLowerCase() || "update";
-            const windows = Array.isArray(p.openWindowIds) && p.openWindowIds.length
-              ? p.openWindowIds.join(",")
-              : "-";
-            kwsBridge.pushLogLine(`TRACE kws_policy:${mode}:reason:${reason}:windows:${windows}:tokens:${tokens || "-"}`, "muted");
-            if (reason === "window_refreshed") {
-              kwsBridge.pushLogLine(`TRACE wake_refresh:${windows}`, "ok");
-            }
-            const runtimeStatus = kwsRuntimeController && typeof kwsRuntimeController.getStatus === "function"
-              ? kwsRuntimeController.getStatus()
-              : null;
-            const backendStatus = runtimeStatus && runtimeStatus.audioBackendStatus && typeof runtimeStatus.audioBackendStatus === "object"
-              ? runtimeStatus.audioBackendStatus
-              : null;
-            const parserStatus = runtimeStatus && runtimeStatus.parser && typeof runtimeStatus.parser === "object"
-              ? runtimeStatus.parser
-              : null;
-            const backendActiveTokens = Array.isArray(backendStatus && backendStatus.activeTokens)
-              ? backendStatus.activeTokens.join(",")
-              : "-";
-            const parserVocab = Number.isFinite(Number(parserStatus && parserStatus.activeTokenVocabularySize))
-              ? Number(parserStatus.activeTokenVocabularySize)
-              : 0;
-            const inferReady = backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "inferReady")
-              ? (backendStatus.inferReady ? "yes" : "no")
-              : "-";
-            const inferLoading = backendStatus && Object.prototype.hasOwnProperty.call(backendStatus, "inferLoading")
-              ? (backendStatus.inferLoading ? "yes" : "no")
-              : "-";
-            const inferInitStep = String(backendStatus && backendStatus.inferInitStep || "").trim().toLowerCase() || "-";
-            const inferError = String(backendStatus && backendStatus.inferError || "").trim() || "-";
-            kwsBridge.pushLogLine(
-              `TRACE kws_runtime:${mode}:backend_tokens:${backendActiveTokens}:parser_vocab:${parserVocab}:infer_ready:${inferReady}:infer_loading:${inferLoading}:infer_init:${inferInitStep}:infer_error:${inferError}`,
-              "muted"
-            );
-          });
-        }
         const kwsMvpCommands = createKwsMvpCommands({
           kwsRuntimeController,
           kwsListenPolicyController,

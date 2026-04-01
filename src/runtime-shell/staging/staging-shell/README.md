@@ -7,3 +7,8 @@ Planned responsibilities:
 - control presentation modes such as overlay, dock, or split view
 
 The shell should orchestrate staging surfaces, not own deep gameplay logic.
+
+Current testing policy:
+- `game-receiver.html` remains the stability baseline while migration continues
+- `staging-shell.html` is the preferred URL for architecture-forward staging work
+- once parity is proven here, behavior can be cut over from the legacy receiver

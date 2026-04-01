@@ -68,12 +68,20 @@ body {
 }
 
 .shellMount {
+  display: flex;
   min-height: 800px;
 }
 
 .shellMountDev,
 .shellMountGame {
   display: flex;
+  min-width: 0;
+}
+
+.shellMountDev > *,
+.shellMountGame > * {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
