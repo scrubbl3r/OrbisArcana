@@ -1002,12 +1002,16 @@ async function initShellReceiverParityRuntime(shellContext) {
   const bindStagingRuntimeEvents =
     sharedModules.bindStagingRuntimeEventsModule &&
     sharedModules.bindStagingRuntimeEventsModule.bindStagingRuntimeEvents;
+  const bootstrapStagingMvp =
+    sharedModules.bootstrapStagingMvpModule &&
+    sharedModules.bootstrapStagingMvpModule.bootstrapStagingMvp;
   const loadReceiverInitModules =
     receiverBootstrapModule &&
     receiverBootstrapModule.loadReceiverInitModules;
   if (
     typeof bootstrapStagingRuntimeContext !== "function" ||
     typeof bindStagingRuntimeEvents !== "function" ||
+    typeof bootstrapStagingMvp !== "function" ||
     typeof loadReceiverInitModules !== "function"
   ) {
     return null;
@@ -1229,6 +1233,44 @@ async function initShellReceiverParityRuntime(shellContext) {
     setOrbInputSuppressed: () => {},
   });
 
+  const mvp = bootstrapStagingMvp({
+    eventBus: runtime.eventBus,
+    gameState: runtimeContext.gameState,
+    orbSystem: runtimeContext.orbSystem,
+    orbDamageVisualsRuntime: runtimeContext.orbDamageVisualsRuntime,
+    audioSystem: runtimeContext.audioSystem,
+    inputSystemsBundle: runtimeContext.inputSystemsBundle,
+    inputSystem: runtimeContext.inputSystem,
+    inputDynamicsSystem: runtimeContext.inputDynamicsSystem,
+    inputGestureSystem: runtimeContext.inputGestureSystem,
+    orbRuntimeState: runtime.orbRuntimeState,
+    ruleSchema: shellKws.ruleSchema,
+    ruleEnginePreviewSystem: shellKws.ruleEnginePreviewSystem,
+    RULE_ENGINE_EXECUTE_ACTIONS: true,
+    resourcesSystem: runtimeContext.resourcesSystem,
+    orbFxSystem: runtimeContext.orbFxSystem,
+    orbSystemsBundle: runtimeContext.orbSystemsBundle,
+    orbRuntimeLoop: runtime.orbRuntimeLoop,
+    spellDispatchSystem: runtimeContext.spellDispatchSystem,
+    kwsWordProvider: shellKws.kwsWordProvider,
+    voiceProviderManager: shellKws.voiceProviderManager,
+    kwsVoiceProvider: shellKws.kwsVoiceProvider,
+    kwsMvpCommands: {},
+    kwsBootOrchestrator: shellKws.kwsBootOrchestrator,
+    grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
+    grantSuperGrace: (ms) => shellGrantSuperGrace(shellContext, ms),
+    orbShatterRuntime: runtime.vfx && runtime.vfx.vfxRuntimesBundle
+      ? runtime.vfx.vfxRuntimesBundle.orbShatterRuntime
+      : null,
+    worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
+    clearDeathOverlaySchedule: () => {},
+    closeDeathOverlay: () => {},
+    renderOrbDamageVisuals: () => {},
+    updateDebugReadout: () => {},
+    setOrbInputSuppressed: () => {},
+  });
+  runtime.mvp = mvp;
+
   parityState.processIncomingImpulse = (d = {}) => {
     const inputSystem = parityState.inputSystem;
     const inputGestureSystem = parityState.inputGestureSystem;
@@ -1324,7 +1366,9 @@ async function initShellReceiverParityRuntime(shellContext) {
 
   runtime.receiverParity = {
     ...parityState,
+    runtimeContext,
     eventBinder,
+    mvp,
   };
   return runtime.receiverParity;
 }
@@ -2343,6 +2387,11 @@ async function initShellPairingRuntime(shellContext) {
       setCalibStatus("Calibrated");
       closeCalibOverlay();
       statusSet('Phone calibrated <span class="devStagingDim">(staging shell)</span>', "devStagingDim");
+      const shellKws = shellContext.runtime && shellContext.runtime.kws ? shellContext.runtime.kws : null;
+      const receiverEvents = shellKws && shellKws.receiverEvents ? shellKws.receiverEvents : null;
+      if (runtime.mvp && runtime.mvp.eventBus && receiverEvents && receiverEvents.EVT_VOICE_SET_MODE) {
+        runtime.mvp.eventBus.emit(receiverEvents.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+      }
     },
     onCalibAvailable: () => {
       if (calibAvailable) return;
