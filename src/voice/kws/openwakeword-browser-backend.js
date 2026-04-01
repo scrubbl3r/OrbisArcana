@@ -21,6 +21,23 @@ function safeUrl(rawUrl) {
   if (!s) return "";
   try {
     if (typeof window !== "undefined" && window.location && window.location.href) {
+      const path = String(window.location.pathname || "");
+      const repoMarker = "/OrbisArcana/";
+      const repoIdx = path.indexOf(repoMarker);
+      const repoBase = repoIdx >= 0
+        ? `${window.location.origin}${path.slice(0, repoIdx + repoMarker.length)}`
+        : `${window.location.origin}/`;
+      if (
+        s.startsWith("./tools/") ||
+        s.startsWith("./assets/") ||
+        s.startsWith("./vendor/") ||
+        s.startsWith("tools/") ||
+        s.startsWith("assets/") ||
+        s.startsWith("vendor/")
+      ) {
+        const normalized = s.startsWith("./") ? s.slice(2) : s;
+        return new URL(normalized, repoBase).toString();
+      }
       return new URL(s, window.location.href).toString();
     }
     return new URL(s).toString();
