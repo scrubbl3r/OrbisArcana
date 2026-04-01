@@ -1,0 +1,87 @@
+:root {
+  --bg: rgb(5, 5, 6);
+  --surface: rgb(10, 10, 12);
+  --surface-raised: rgb(16, 16, 20);
+  --text: rgb(183, 183, 188);
+  --text-strong: rgb(238, 238, 242);
+  --text-muted: rgb(122, 122, 128);
+  --frame: rgba(82, 82, 88, 0.34);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.stagingShell {
+  min-height: 100vh;
+  padding: 32px 24px 40px;
+  box-sizing: border-box;
+}
+
+.shellHero {
+  max-width: 760px;
+  margin: 0 auto 28px;
+}
+
+.shellEyebrow,
+.shellCardEyebrow {
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.shellHero h1,
+.shellCard h2 {
+  margin: 10px 0 8px;
+  color: var(--text-strong);
+  font-weight: 900;
+}
+
+.shellCopy,
+.shellCard p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.shellGrid {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.shellGridSplit {
+  max-width: 1280px;
+  grid-template-columns: 1.2fr 1fr;
+  align-items: stretch;
+}
+
+.shellMount {
+  min-height: 800px;
+}
+
+.shellMountDev,
+.shellMountGame {
+  display: flex;
+}
+
+@media (max-width: 900px) {
+  .shellGridSplit {
+    grid-template-columns: 1fr;
+  }
+
+  .shellMount {
+    min-height: auto;
+  }
+}

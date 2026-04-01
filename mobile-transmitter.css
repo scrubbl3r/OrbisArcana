@@ -1,9 +1,19 @@
-    :root { --green:#7dd35f; }
+    :root {
+      --accent-rgb: 230, 230, 230;
+      --text-rgb: 183, 183, 188;
+      --text-strong-rgb: 238, 238, 242;
+      --frame-rgb: 82, 82, 88;
+      --frame-strong-rgb: 118, 118, 126;
+      --surface-rgb: 10, 10, 12;
+      --surface-raised-rgb: 16, 16, 20;
+      --green: rgb(var(--text-rgb));
+      --bg: rgb(5, 5, 6);
+    }
 
     html, body {
       height: 100%;
       margin: 0;
-      background: #000;
+      background: var(--bg);
       color: var(--green);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       transition: background-color 80ms linear;
@@ -21,13 +31,13 @@
       width: min(180px, 46vw);
       height: min(180px, 46vw);
       border-radius: 999px;
-      border: 2px solid var(--green);
-      background: rgba(0,0,0,0.15);
-      color: var(--green);
+      border: 2px solid rgba(var(--frame-strong-rgb), 0.8);
+      background: rgba(var(--surface-raised-rgb), 0.88);
+      color: rgb(var(--text-strong-rgb));
       font-size: 22px;
       font-weight: 800;
       letter-spacing: 0.02em;
-      box-shadow: 0 0 22px rgba(125,211,95,0.18);
+      box-shadow: 0 0 22px rgba(255,255,255,0.06);
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
@@ -50,10 +60,10 @@
       width: 40px;
       height: 40px;
       border-radius: 999px;
-      border: 3px solid rgba(125,211,95,0.25);
-      border-top-color: rgba(125,211,95,0.95);
+      border: 3px solid rgba(var(--frame-rgb), 0.32);
+      border-top-color: rgba(var(--text-strong-rgb), 0.92);
       animation: lanspin 0.8s linear infinite;
-      filter: drop-shadow(0 0 10px rgba(125,211,95,0.28));
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.08));
     }
     @keyframes lanspin{
       to { transform: rotate(360deg); }

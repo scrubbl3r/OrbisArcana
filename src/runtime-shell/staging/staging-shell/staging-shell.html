@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Orbis Arcana Staging Shell</title>
+  <link rel="stylesheet" href="./staging-shell.css" />
+</head>
+<body>
+  <main class="stagingShell">
+    <section class="shellHero">
+      <div class="shellEyebrow">Runtime Shell</div>
+      <h1>Staging Shell</h1>
+      <p class="shellCopy">
+        Transitional composite host for dev-staging and game-staging. The
+        current split layout is preserved here on purpose so we can extract
+        safely before redesigning the staging experience later.
+      </p>
+    </section>
+
+    <section class="shellGrid shellGridSplit" aria-label="Composite staging surface">
+      <div id="devStagingMount" class="shellMount shellMountDev" aria-label="Dev staging mount"></div>
+      <div id="gameStagingMount" class="shellMount shellMountGame" aria-label="Game staging mount"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./staging-shell.js"></script>
+</body>
+</html>

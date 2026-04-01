@@ -124,6 +124,81 @@
       el.style.width = p.toFixed(1) + "%";
     }
 
+    function createLegacyDevStagingAdapter() {
+      return {
+        refs: {
+          status: els.status,
+          fatal: els.fatal,
+          vLift: els.vLift,
+          vGroove: els.vGroove,
+          vSmooth: els.vSmooth,
+          vSpeed: els.vSpeed,
+          vDynamics: els.vDynamics,
+          vEnergy: els.vEnergy,
+          vShake: els.vShake,
+          bLift: els.bLift,
+          bGroove: els.bGroove,
+          bSmooth: els.bSmooth,
+          bSpeed: els.bSpeed,
+          bDynamics: els.bDynamics,
+          bEnergy: els.bEnergy,
+          bShake: els.bShake,
+        },
+        setStatus(html, cls){
+          if (!els.status) return;
+          els.status.className = cls || "dim";
+          els.status.innerHTML = html;
+        },
+        setFatal(message = "") {
+          if (!els.fatal) return;
+          const hasMessage = !!String(message || "");
+          els.fatal.style.display = hasMessage ? "block" : "none";
+          els.fatal.textContent = hasMessage ? String(message) : "";
+        },
+        resetMeters() {
+          setBar(els.bLift, 0);
+          setBar(els.bGroove, 0);
+          setBar(els.bSmooth, 0);
+          setBar(els.bSpeed, 0);
+          setBar(els.bDynamics, 0);
+          setBar(els.bEnergy, 0);
+          setBar(els.bShake, 0);
+          els.vLift.textContent = "0%";
+          els.vGroove.textContent = "0%";
+          els.vSmooth.textContent = "0%";
+          els.vSpeed.textContent = "0%";
+          els.vDynamics.textContent = "0%";
+          els.vEnergy.textContent = "0";
+          els.vShake.textContent = "0.00";
+          els.vEnergy.classList.remove("over");
+          els.bEnergy.classList.remove("over");
+        },
+        renderInputHud(vm) {
+          if (!vm) return;
+          els.vLift.textContent = `${vm.liftP}%`;
+          els.vGroove.textContent = `${vm.gP}%${vm.locked ? " (locked)" : ""}`;
+          els.vSmooth.textContent = `${vm.sP}%`;
+          els.vSpeed.textContent = `${vm.sp}%`;
+          els.vDynamics.textContent = `${vm.dP}%`;
+          els.vEnergy.textContent = `${vm.ePts}`;
+          els.vShake.textContent = `${Math.max(0, vm.sh).toFixed(2)}`;
+
+          setBar(els.bLift, vm.lift);
+          setBar(els.bGroove, vm.groove);
+          setBar(els.bSmooth, vm.smooth);
+          setBar(els.bSpeed, vm.speed);
+          setBar(els.bDynamics, vm.dynamics);
+          setBar(els.bEnergy, vm.energyUI01);
+          setBar(els.bShake, vm.shakeMeter);
+
+          els.vEnergy.classList.toggle("over", vm.over);
+          els.bEnergy.classList.toggle("over", vm.over);
+        },
+      };
+    }
+
+    const devStagingView = createLegacyDevStagingAdapter();
+
     function computeLift01(groove01, smooth01, speed01){
       const g = clamp01(groove01);
       const s = clamp01(smooth01);
@@ -171,13 +246,11 @@
     }
 
     function fatal(msg){
-      els.fatal.style.display = "block";
-      els.fatal.textContent = msg;
+      devStagingView.setFatal(msg);
     }
 
     function setStatus(html, cls){
-      els.status.className = cls || "dim";
-      els.status.innerHTML = html;
+      devStagingView.setStatus(html, cls);
     }
 
     // =========================================================================
@@ -298,6 +371,7 @@
     let activeGameTheme = null;
     let BG0 = { r: 0,   g: 0,  b: 0  };
     let BG1 = { r: 255, g: 42, b: 0  };
+    let applyGameThemeCssVarsModule = null;
 
     function rgb255To01(c){
       return {
@@ -307,9 +381,19 @@
       };
     }
 
+    function themeAccentRgba(alpha = 1){
+      const accent = (activeGameTheme && activeGameTheme.ui && activeGameTheme.ui.accentRgb)
+        ? activeGameTheme.ui.accentRgb
+        : { r: 50, g: 255, b: 117 };
+      return `rgba(${clamp(Math.round(Number(accent.r) || 0), 0, 255)},${clamp(Math.round(Number(accent.g) || 0), 0, 255)},${clamp(Math.round(Number(accent.b) || 0), 0, 255)},${clamp01(alpha)})`;
+    }
+
     function applyRuntimeTheme(theme){
       if (!theme || typeof theme !== "object") return;
       activeGameTheme = theme;
+      if (typeof applyGameThemeCssVarsModule === "function") {
+        applyGameThemeCssVarsModule(theme, { root: document.documentElement });
+      }
       const bg = theme.world && theme.world.energyBackground;
       if (bg && bg.startRgb && bg.endRgb) {
         BG0 = {
@@ -1650,6 +1734,9 @@
           : null;
         buildOrbBaseVisualStateModule = (typeof mods.buildOrbBaseVisualState === "function")
           ? mods.buildOrbBaseVisualState
+          : null;
+        applyGameThemeCssVarsModule = (typeof mods.applyGameThemeCssVars === "function")
+          ? mods.applyGameThemeCssVars
           : null;
         applyOrbBaseVisualCssVarsModule = (typeof mods.applyOrbBaseVisualCssVars === "function")
           ? mods.applyOrbBaseVisualCssVars
@@ -2996,7 +3083,7 @@
         points.push({ x, yOff });
       }
       return {
-        stroke: cfg.stroke || "rgba(50,255,117,0.95)",
+        stroke: cfg.stroke || themeAccentRgba(0.95),
         fill: cfg.fill || "rgba(0,0,0,1.0)",
         lineW: Math.max(1, Number(cfg.lineW) || 2),
         points,
@@ -3009,7 +3096,7 @@
         minOff: 56,
         maxOff: 186,
         jitter: 28,
-        stroke: "rgba(50,255,117,0.95)",
+        stroke: themeAccentRgba(0.95),
         fill: "rgba(0,0,0,1.0)",
         lineW: 2,
       })];
@@ -3153,7 +3240,7 @@
         ctx.lineWidth = layer.lineW;
         ctx.lineJoin = "miter";
         ctx.lineCap = "round";
-        ctx.shadowColor = "rgba(50,255,117,0.28)";
+        ctx.shadowColor = themeAccentRgba(0.28);
         ctx.shadowBlur = 8;
         ctx.stroke();
         ctx.shadowBlur = 0;
@@ -3279,22 +3366,7 @@
       });
 
       setBgFromEnergy(0);
-      setBar(els.bLift, 0);
-      setBar(els.bGroove, 0);
-      setBar(els.bSmooth, 0);
-      setBar(els.bSpeed, 0);
-      setBar(els.bDynamics, 0);
-      setBar(els.bEnergy, 0);
-      setBar(els.bShake, 0);
-      els.vLift.textContent = "0%";
-      els.vGroove.textContent = "0%";
-      els.vSmooth.textContent = "0%";
-      els.vSpeed.textContent = "0%";
-      els.vDynamics.textContent = "0%";
-      els.vEnergy.textContent = "0";
-      els.vShake.textContent = "0.00";
-      els.vEnergy.classList.remove("over");
-      els.bEnergy.classList.remove("over");
+      devStagingView.resetMeters();
 
       zeroAudioNow();
     }
@@ -3363,25 +3435,7 @@
 
     function renderInputHud(vm){
       if (!vm) return;
-
-      els.vLift.textContent     = `${vm.liftP}%`;
-      els.vGroove.textContent   = `${vm.gP}%${vm.locked ? " (locked)" : ""}`;
-      els.vSmooth.textContent   = `${vm.sP}%`;
-      els.vSpeed.textContent    = `${vm.sp}%`;
-      els.vDynamics.textContent = `${vm.dP}%`;
-      els.vEnergy.textContent   = `${vm.ePts}`;
-      els.vShake.textContent    = `${Math.max(0, vm.sh).toFixed(2)}`;
-
-      setBar(els.bLift,  vm.lift);
-      setBar(els.bGroove, vm.groove);
-      setBar(els.bSmooth, vm.smooth);
-      setBar(els.bSpeed,  vm.speed);
-      setBar(els.bDynamics, vm.dynamics);
-      setBar(els.bEnergy, vm.energyUI01);
-      setBar(els.bShake,  vm.shakeMeter);
-
-      els.vEnergy.classList.toggle("over", vm.over);
-      els.bEnergy.classList.toggle("over", vm.over);
+      devStagingView.renderInputHud(vm);
 
       // Repurposed row: Orb debug readout.
       updateDebugReadout();

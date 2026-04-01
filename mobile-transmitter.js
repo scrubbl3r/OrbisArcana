@@ -69,6 +69,23 @@
     }
     setStartReady(false);
 
+    (async () => {
+      try {
+        const [
+          { GAME_THEME_DEFAULT },
+          { applyGameThemeCssVars },
+        ] = await Promise.all([
+          import("./src/content/theme/game-theme-default.js"),
+          import("./src/ui/theme/apply-game-theme-css-vars.js"),
+        ]);
+        if (typeof applyGameThemeCssVars === "function") {
+          applyGameThemeCssVars(GAME_THEME_DEFAULT, { root: document.documentElement });
+        }
+      } catch (err) {
+        console.warn("Mobile theme bootstrap failed:", err);
+      }
+    })();
+
     if (VERSION_TAG) {
       const tag = document.createElement("div");
       tag.textContent = VERSION_TEXT;
@@ -80,7 +97,7 @@
       tag.style.opacity = "0.65";
       tag.style.letterSpacing = "0.04em";
       tag.style.pointerEvents = "none";
-      tag.style.color = "rgba(125,211,95,0.9)";
+      tag.style.color = "rgba(var(--accent-rgb), 0.9)";
       document.body.appendChild(tag);
     }
 

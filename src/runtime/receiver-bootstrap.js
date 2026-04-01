@@ -284,6 +284,7 @@ export async function loadReceiverInitModules() {
     { ORB_RUNTIME_CONFIG_DEFAULT },
     { ORB_STATUS_CONFIG_DEFAULT },
     { GAME_THEME_DEFAULT },
+    { applyGameThemeCssVars },
     { applyDevConsoleThemeCssVars },
     { buildInputHudViewModel: buildInputHudViewModelImported },
     { runInputFramePipeline: runInputFramePipelineImported },
@@ -339,6 +340,7 @@ export async function loadReceiverInitModules() {
     import("../content/orb/orb-runtime-config-default.js"),
     import("../content/orb/orb-status-config-default.js"),
     import("../content/theme/game-theme-default.js"),
+    import("../ui/theme/apply-game-theme-css-vars.js"),
     import("../ui/dev-console/apply-dev-console-theme-css-vars.js"),
     import("../ui/build-input-hud-view-model.js"),
     import("../game-runtime/input/input-frame-pipeline.js"),
@@ -407,6 +409,7 @@ export async function loadReceiverInitModules() {
     ORB_RUNTIME_CONFIG_DEFAULT,
     ORB_STATUS_CONFIG_DEFAULT,
     GAME_THEME_DEFAULT,
+    applyGameThemeCssVars,
     applyDevConsoleThemeCssVars,
     buildInputHudViewModelImported,
     runInputFramePipelineImported,
@@ -464,6 +467,7 @@ export async function loadReceiverInitModules() {
 export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   const {
     GAME_THEME_DEFAULT,
+    applyGameThemeCssVars,
     applyDevConsoleThemeCssVars,
     buildInputHudViewModelImported,
     createSpellActionHandlersImported,
@@ -622,6 +626,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   }
 
   if (GAME_THEME_DEFAULT) {
+    if (typeof applyGameThemeCssVars === "function") applyGameThemeCssVars(GAME_THEME_DEFAULT);
     if (typeof applyDevConsoleThemeCssVars === "function") applyDevConsoleThemeCssVars(GAME_THEME_DEFAULT);
     if (typeof applyRuntimeTheme === "function") applyRuntimeTheme(GAME_THEME_DEFAULT);
   }
