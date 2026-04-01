@@ -969,6 +969,7 @@ async function initShellReceiverHostRuntime(shellContext) {
     createOrbSystemsBundle,
     createOrbSystem,
     createOrbFxSystem,
+    createRuleEnginePreviewSystem,
     runInputFramePipelineImported,
     WORLD_ITEMS,
   } = mods || {};
@@ -1028,7 +1029,7 @@ async function initShellReceiverHostRuntime(shellContext) {
     createInputSystemsBundle,
     createResourcesSystem,
     createSpellDispatchSystem,
-    createRuleEnginePreviewSystem: null,
+    createRuleEnginePreviewSystem,
     createWorldSystem,
     createOrbSystemsBundle,
     createOrbSystem,
@@ -1062,11 +1063,11 @@ async function initShellReceiverHostRuntime(shellContext) {
     axisToColor01: () => 0,
     gestureHooks: {
       canSpendShake: () => {
-        const resourcesSystem = parityState.resourcesSystem;
+        const resourcesSystem = receiverHostState.resourcesSystem;
         return !!(resourcesSystem && typeof resourcesSystem.canSpendShake === "function" && resourcesSystem.canSpendShake());
       },
       spendShake: () => {
-        const resourcesSystem = parityState.resourcesSystem;
+        const resourcesSystem = receiverHostState.resourcesSystem;
         if (resourcesSystem && typeof resourcesSystem.spendShake === "function") {
           resourcesSystem.spendShake(performance.now());
         }
@@ -1112,8 +1113,22 @@ async function initShellReceiverHostRuntime(shellContext) {
   if (receiverHostState.spellDispatchSystem && typeof receiverHostState.spellDispatchSystem.start === "function") {
     receiverHostState.spellDispatchSystem.start();
   }
+  if (runtimeContext.ruleEnginePreviewSystem && typeof runtimeContext.ruleEnginePreviewSystem.start === "function") {
+    runtimeContext.ruleEnginePreviewSystem.start();
+  }
   if (receiverHostState.orbSystemsBundle && typeof receiverHostState.orbSystemsBundle.start === "function") {
     receiverHostState.orbSystemsBundle.start();
+  }
+
+  if (shellKws.ruleEnginePreviewSystem && typeof shellKws.ruleEnginePreviewSystem.stop === "function") {
+    shellKws.ruleEnginePreviewSystem.stop();
+  }
+  shellKws.ruleEnginePreviewSystem = runtimeContext.ruleEnginePreviewSystem || shellKws.ruleEnginePreviewSystem;
+  if (shellKws.shellRuleActionRuntime && typeof shellKws.shellRuleActionRuntime.dispose === "function") {
+    shellKws.shellRuleActionRuntime.dispose();
+  }
+  if (shellKws.kwsRootWakeBridge && typeof shellKws.kwsRootWakeBridge.dispose === "function") {
+    shellKws.kwsRootWakeBridge.dispose();
   }
 
   const castActionForWordId = (wordId) => {
