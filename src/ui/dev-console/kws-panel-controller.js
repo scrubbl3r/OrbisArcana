@@ -318,6 +318,10 @@ export function createKwsPanelController({
     }
   }
 
+  function getManualListenableTokens() {
+    return Array.from(manualListenableTokens.values());
+  }
+
   function refreshWordFlashboard() {
     if (wordFlashboardPopup.isOpen()) {
       wordFlashboardPopup.render();
@@ -381,6 +385,7 @@ export function createKwsPanelController({
     bindWordBoardPopupButton,
     pushPhoneLogLine: logPopupController.pushPhoneLogLine,
     setManualListenableTokens,
+    getManualListenableTokens,
     refreshWordFlashboard,
     getUiState: () => kwsTokenUiState,
   };

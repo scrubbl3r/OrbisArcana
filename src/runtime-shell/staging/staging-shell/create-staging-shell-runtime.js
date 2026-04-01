@@ -688,6 +688,97 @@ function bindShellRootWakeWindows({ eventBus, receiverEvents = {}, kwsBridge = n
   };
 }
 
+function bindShellWordTreeVisualBridge({
+  eventBus,
+  kwsPanelController = null,
+  rootTokens = [],
+} = {}) {
+  if (!eventBus || typeof eventBus.on !== "function" || !kwsPanelController) {
+    return { dispose() {} };
+  }
+
+  const rootTokenSet = new Set(
+    (Array.isArray(rootTokens) ? rootTokens : [])
+      .map((token) => normalizeShellToken(token))
+      .filter(Boolean)
+  );
+  const windowEntries = new Map();
+  let expiryTimer = 0;
+
+  function currentTokens() {
+    const now = Date.now();
+    const opened = [];
+    for (const entry of windowEntries.values()) {
+      if (Number(entry.expiresAtMs || 0) <= now) continue;
+      opened.push(...entry.tokens);
+    }
+    return Array.from(new Set([...rootTokenSet, ...opened]));
+  }
+
+  function syncTokens() {
+    if (typeof kwsPanelController.setManualListenableTokens === "function") {
+      kwsPanelController.setManualListenableTokens(currentTokens());
+    }
+    if (typeof kwsPanelController.refreshWordFlashboard === "function") {
+      kwsPanelController.refreshWordFlashboard();
+    }
+  }
+
+  function clearExpiryTimer() {
+    if (!expiryTimer) return;
+    clearTimeout(expiryTimer);
+    expiryTimer = 0;
+  }
+
+  function scheduleExpirySweep() {
+    clearExpiryTimer();
+    let nextExpiry = 0;
+    for (const entry of windowEntries.values()) {
+      const expiresAtMs = Number(entry.expiresAtMs || 0);
+      if (!expiresAtMs) continue;
+      if (!nextExpiry || expiresAtMs < nextExpiry) nextExpiry = expiresAtMs;
+    }
+    if (!nextExpiry) return;
+    const delayMs = Math.max(0, nextExpiry - Date.now());
+    expiryTimer = setTimeout(() => {
+      expiryTimer = 0;
+      const now = Date.now();
+      for (const [windowId, entry] of windowEntries.entries()) {
+        if (Number(entry.expiresAtMs || 0) <= now) {
+          windowEntries.delete(windowId);
+        }
+      }
+      syncTokens();
+      scheduleExpirySweep();
+    }, delayMs);
+  }
+
+  syncTokens();
+
+  const off = eventBus.on("rule_engine.wake_win_opened", (payload = {}) => {
+    const windowId = String(payload.windowId || payload.actionId || "").trim().toLowerCase();
+    const tokens = (Array.isArray(payload.words) ? payload.words : [])
+      .map((token) => normalizeShellToken(token))
+      .filter(Boolean);
+    if (!windowId || !tokens.length) return;
+    const atMs = Number(payload.atMs) || Date.now();
+    const ttlMs = Math.max(0, Number(payload.ttlMs) || 0);
+    windowEntries.set(windowId, {
+      tokens,
+      expiresAtMs: ttlMs > 0 ? atMs + ttlMs : (Date.now() + 1500),
+    });
+    syncTokens();
+    scheduleExpirySweep();
+  });
+
+  return {
+    dispose() {
+      clearExpiryTimer();
+      try { off(); } catch (_) {}
+    },
+  };
+}
+
 function createStagingShellContext({
   rootDocument,
   devStagingView,
@@ -1179,6 +1270,11 @@ async function initShellKwsRuntime(shellContext) {
     receiverEvents: RECEIVER_EVENTS,
     kwsBridge,
   });
+  const kwsWordTreeVisualBridge = bindShellWordTreeVisualBridge({
+    eventBus,
+    kwsPanelController,
+    rootTokens: ["orbis", "are kay nah"],
+  });
 
   runtime.eventBus = eventBus;
   runtime.kws = {
@@ -1198,6 +1294,7 @@ async function initShellKwsRuntime(shellContext) {
     kwsEventRuntime,
     kwsListenPolicySyncOff,
     kwsRootWakeBridge,
+    kwsWordTreeVisualBridge,
     kwsBackendKey,
     kwsDebugState,
     receiverEvents: RECEIVER_EVENTS,
