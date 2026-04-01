@@ -716,8 +716,9 @@ function bindShellWordTreeVisualBridge({
   }
 
   function syncTokens() {
-    if (typeof kwsPanelController.setManualListenableTokens === "function") {
-      kwsPanelController.setManualListenableTokens(currentTokens());
+    if (typeof kwsPanelController.setManualWakeWindowTokens === "function") {
+      const onlyWakeWindowTokens = currentTokens().filter((token) => !rootTokenSet.has(token));
+      kwsPanelController.setManualWakeWindowTokens(onlyWakeWindowTokens);
     }
     if (typeof kwsPanelController.refreshWordFlashboard === "function") {
       kwsPanelController.refreshWordFlashboard();

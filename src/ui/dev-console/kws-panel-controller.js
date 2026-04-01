@@ -55,6 +55,7 @@ export function createKwsPanelController({
     orbisWindowUntilMs: 0,
   };
   let manualListenableTokens = new Set();
+  let manualWakeWindowTokens = new Set();
   let kwsWakeHudGateTO = 0;
   let kwsReadoutTickTO = 0;
   let kwsLastBackendErrorLogged = "";
@@ -73,6 +74,7 @@ export function createKwsPanelController({
       return new Set([
         ...policyTokens,
         ...Array.from(manualListenableTokens.values()),
+        ...Array.from(manualWakeWindowTokens.values()),
       ]);
     },
     getFlashUntilMs: (token) => Number(kwsTokenUiState.flashUntilMs[String(token || "").trim().toLowerCase()] || 0),
@@ -322,6 +324,21 @@ export function createKwsPanelController({
     return Array.from(manualListenableTokens.values());
   }
 
+  function setManualWakeWindowTokens(tokens = []) {
+    manualWakeWindowTokens = new Set(
+      (Array.isArray(tokens) ? tokens : [])
+        .map((token) => canonicalKwsToken(token))
+        .filter(Boolean)
+    );
+    if (wordFlashboardPopup.isOpen()) {
+      wordFlashboardPopup.render();
+    }
+  }
+
+  function getManualWakeWindowTokens() {
+    return Array.from(manualWakeWindowTokens.values());
+  }
+
   function refreshWordFlashboard() {
     if (wordFlashboardPopup.isOpen()) {
       wordFlashboardPopup.render();
@@ -386,6 +403,8 @@ export function createKwsPanelController({
     pushPhoneLogLine: logPopupController.pushPhoneLogLine,
     setManualListenableTokens,
     getManualListenableTokens,
+    setManualWakeWindowTokens,
+    getManualWakeWindowTokens,
     refreshWordFlashboard,
     getUiState: () => kwsTokenUiState,
   };
