@@ -1001,6 +1001,28 @@ async function initShellKwsRuntime(shellContext) {
     receiverEvents: RECEIVER_EVENTS,
   };
 
+  try {
+    if (typeof kwsRuntimeController.setKwsBackend === "function") {
+      await kwsRuntimeController.setKwsBackend(runtimeConfig.defaultBackendKey);
+    }
+    if (typeof kwsRuntimeController.setVoiceEngine === "function") {
+      kwsRuntimeController.setVoiceEngine();
+    }
+    if (typeof kwsRuntimeController.setKwsMicEnabled === "function") {
+      await kwsRuntimeController.setKwsMicEnabled(true);
+    }
+    if (typeof kwsBridge.startAutostartWatchdog === "function") {
+      kwsBridge.startAutostartWatchdog();
+    }
+  } catch (error) {
+    if (typeof kwsBridge.pushLogLine === "function") {
+      kwsBridge.pushLogLine(
+        `kws boot warning: ${error && error.message ? String(error.message) : "unknown error"}`,
+        "warn"
+      );
+    }
+  }
+
   if (devRefs.rulesReadout) devRefs.rulesReadout.textContent = "boot:kws_ready";
   if (typeof kwsBridge.updateReadout === "function") kwsBridge.updateReadout();
   if (typeof kwsBridge.pushLogLine === "function") kwsBridge.pushLogLine("kws runtime active", "ok");
