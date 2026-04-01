@@ -602,12 +602,20 @@ function shellGrantFloatGrace(shellContext, ms = 1000) {
     : null;
   if (!orbState) return;
   const now = performance.now();
+  const yFloor = shellGroundCenterWorld(shellContext);
+  const yCeil = Number(runtime && runtime.stage && runtime.stage.phys && runtime.stage.phys.orbRadiusPx) || 50;
+  const liftPx = Math.max(40, Math.min(180, Number(ms) * 0.08));
+  const anchorY = clamp((Number(orbState.yW) || yFloor) - liftPx, yCeil, yFloor - 6);
   patchShellOrbRuntime(shellContext, {
+    yW: anchorY,
+    v: 0,
+    onGround: false,
     floatGraceActive: true,
     floatGraceUntilMs: now + Math.max(50, Number(ms) || 1000),
-    floatGraceAnchorY: Number(orbState.yW) || 0,
+    floatGraceAnchorY: anchorY,
     floatGracePhase: Math.random() * Math.PI * 2,
   });
+  applyShellOrbTransform(shellContext);
 }
 
 function shellGrantSuperGrace(shellContext, ms = 2500) {
@@ -616,35 +624,56 @@ function shellGrantSuperGrace(shellContext, ms = 2500) {
 
 function pulseShellLayer(el, durationMs = 600, opacity = 1) {
   if (!el) return;
-  const color = el.classList.contains("electricLayer")
-    ? "rgba(120,210,255,0.95)"
-    : el.classList.contains("flameLayer")
-      ? "rgba(255,130,40,0.92)"
-      : "rgba(255,255,255,0.92)";
-  const sizePx = el.classList.contains("electricLayer") ? 190 : 170;
-  const ring = document.createElement("div");
-  ring.style.position = "absolute";
-  ring.style.left = "0";
-  ring.style.top = "0";
-  ring.style.width = `${sizePx}px`;
-  ring.style.height = `${sizePx}px`;
-  ring.style.transform = "translate(-50%,-50%) scale(0.25)";
-  ring.style.transformOrigin = "50% 50%";
-  ring.style.borderRadius = "999px";
-  ring.style.border = `3px solid ${color}`;
-  ring.style.background = color.replace(/0\.\d+\)/, "0.12)");
-  ring.style.boxShadow = `0 0 26px ${color}`;
-  ring.style.opacity = String(opacity);
-  ring.style.pointerEvents = "none";
-  ring.style.transition = `transform ${Math.max(180, durationMs)}ms ease-out, opacity ${Math.max(180, durationMs)}ms linear`;
-  el.appendChild(ring);
-  requestAnimationFrame(() => {
-    ring.style.transform = "translate(-50%,-50%) scale(1.0)";
-    ring.style.opacity = "0";
-  });
-  setTimeout(() => {
-    if (ring.parentNode === el) el.removeChild(ring);
-  }, Math.max(220, durationMs + 40));
+  if (el.classList.contains("electricLayer")) {
+    const bolt = document.createElement("div");
+    bolt.style.position = "absolute";
+    bolt.style.left = "-90px";
+    bolt.style.top = "-90px";
+    bolt.style.width = "180px";
+    bolt.style.height = "180px";
+    bolt.style.borderRadius = "999px";
+    bolt.style.border = "3px solid rgba(120,210,255,0.98)";
+    bolt.style.boxShadow = "0 0 32px rgba(120,210,255,0.95), inset 0 0 24px rgba(120,210,255,0.35)";
+    bolt.style.background = "radial-gradient(circle, rgba(120,210,255,0.20) 0%, rgba(120,210,255,0.08) 38%, rgba(120,210,255,0.00) 70%)";
+    bolt.style.transform = "translate(-50%,-50%) scale(0.35)";
+    bolt.style.opacity = String(opacity);
+    bolt.style.pointerEvents = "none";
+    bolt.style.transition = `transform ${Math.max(180, durationMs)}ms cubic-bezier(.2,.8,.2,1), opacity ${Math.max(180, durationMs)}ms linear`;
+    el.appendChild(bolt);
+    requestAnimationFrame(() => {
+      bolt.style.transform = "translate(-50%,-50%) scale(1.08)";
+      bolt.style.opacity = "0";
+    });
+    setTimeout(() => {
+      if (bolt.parentNode === el) el.removeChild(bolt);
+    }, Math.max(220, durationMs + 40));
+    return;
+  }
+
+  if (el.classList.contains("flameLayer")) {
+    const burst = document.createElement("div");
+    burst.style.position = "absolute";
+    burst.style.left = "-78px";
+    burst.style.top = "-78px";
+    burst.style.width = "156px";
+    burst.style.height = "156px";
+    burst.style.borderRadius = "999px";
+    burst.style.background = "radial-gradient(circle, rgba(255,238,140,0.96) 0%, rgba(255,126,38,0.88) 34%, rgba(255,58,0,0.26) 62%, rgba(255,58,0,0.00) 100%)";
+    burst.style.boxShadow = "0 0 34px rgba(255,126,38,0.72)";
+    burst.style.transform = "translate(-50%,-50%) scale(0.25)";
+    burst.style.opacity = String(opacity);
+    burst.style.pointerEvents = "none";
+    burst.style.transition = `transform ${Math.max(200, durationMs)}ms ease-out, opacity ${Math.max(200, durationMs)}ms linear`;
+    el.appendChild(burst);
+    requestAnimationFrame(() => {
+      burst.style.transform = "translate(-50%,-50%) scale(1.18)";
+      burst.style.opacity = "0";
+    });
+    setTimeout(() => {
+      if (burst.parentNode === el) el.removeChild(burst);
+    }, Math.max(240, durationMs + 60));
+    return;
+  }
 }
 
 function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
