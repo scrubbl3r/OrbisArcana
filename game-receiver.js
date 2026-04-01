@@ -5,6 +5,9 @@
       startBtn: $("startBtn"),
       startQr: $("startQr"),
 
+      devStagingLegacy: $("devStagingLegacy"),
+      devStagingMount: $("devStagingMount"),
+
       pairBtn: $("pairBtn"),
       lanPartyBtn: $("lanPartyBtn"),
       newRoom: $("newRoom"),
@@ -114,6 +117,7 @@
     };
 
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
+    const ENABLE_MOUNTED_DEV_STAGING = false;
 
     function clamp01(x){ x = Number(x); return Math.max(0, Math.min(1, isFinite(x) ? x : 0)); }
     function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
@@ -237,32 +241,55 @@
       };
     }
 
-    const devStagingView = createLegacyDevStagingAdapter();
-    const devStagingRefs = devStagingView.refs;
+    const legacyDevStagingView = createLegacyDevStagingAdapter();
+    let currentDevStagingView = legacyDevStagingView;
+    let devStagingRefs = currentDevStagingView.refs;
 
     function createDevStagingPanelElements() {
       return {
-        teleBtn: devStagingRefs.teleBtn,
-        wordBoardBtn: devStagingRefs.wordBoardBtn,
-        kwsReadout: devStagingRefs.kwsReadout,
-        kwsLog: devStagingRefs.kwsLog,
-        logTabKws: devStagingRefs.logTabKws,
-        logTabPhone: devStagingRefs.logTabPhone,
-        kwsTokenThrInput: devStagingRefs.kwsTokenThrInput,
-        kwsCooldownMsInput: devStagingRefs.kwsCooldownMsInput,
-        kwsApplyTuneBtn: devStagingRefs.kwsApplyTuneBtn,
-        logPopup: devStagingRefs.logPopup,
-        logPopupHeader: devStagingRefs.logPopupHeader,
-        logPopupClose: devStagingRefs.logPopupClose,
-        wordBoardPopup: devStagingRefs.wordBoardPopup,
-        wordBoardPopupHeader: devStagingRefs.wordBoardPopupHeader,
-        wordBoardPopupClose: devStagingRefs.wordBoardPopupClose,
-        wordBoardBody: devStagingRefs.wordBoardBody,
-        wordBoardDebugPanel: devStagingRefs.wordBoardDebugPanel,
-        wordBoardDebugToggle: devStagingRefs.wordBoardDebugToggle,
-        wordBoardDebugBadge: devStagingRefs.wordBoardDebugBadge,
-        wordBoardDebugBody: devStagingRefs.wordBoardDebugBody,
+        teleBtn: currentDevStagingView.refs.teleBtn,
+        wordBoardBtn: currentDevStagingView.refs.wordBoardBtn,
+        kwsReadout: currentDevStagingView.refs.kwsReadout,
+        kwsLog: currentDevStagingView.refs.kwsLog,
+        logTabKws: currentDevStagingView.refs.logTabKws,
+        logTabPhone: currentDevStagingView.refs.logTabPhone,
+        kwsTokenThrInput: currentDevStagingView.refs.kwsTokenThrInput,
+        kwsCooldownMsInput: currentDevStagingView.refs.kwsCooldownMsInput,
+        kwsApplyTuneBtn: currentDevStagingView.refs.kwsApplyTuneBtn,
+        logPopup: currentDevStagingView.refs.logPopup,
+        logPopupHeader: currentDevStagingView.refs.logPopupHeader,
+        logPopupClose: currentDevStagingView.refs.logPopupClose,
+        wordBoardPopup: currentDevStagingView.refs.wordBoardPopup,
+        wordBoardPopupHeader: currentDevStagingView.refs.wordBoardPopupHeader,
+        wordBoardPopupClose: currentDevStagingView.refs.wordBoardPopupClose,
+        wordBoardBody: currentDevStagingView.refs.wordBoardBody,
+        wordBoardDebugPanel: currentDevStagingView.refs.wordBoardDebugPanel,
+        wordBoardDebugToggle: currentDevStagingView.refs.wordBoardDebugToggle,
+        wordBoardDebugBadge: currentDevStagingView.refs.wordBoardDebugBadge,
+        wordBoardDebugBody: currentDevStagingView.refs.wordBoardDebugBody,
       };
+    }
+
+    async function maybeMountDevStagingSurface() {
+      if (!ENABLE_MOUNTED_DEV_STAGING) return null;
+      if (!els.devStagingMount || !els.devStagingLegacy) return null;
+      try {
+        const { mountDevStaging } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
+        const mounted = (typeof mountDevStaging === "function")
+          ? mountDevStaging(els.devStagingMount)
+          : null;
+        if (!mounted) return null;
+        currentDevStagingView = mounted;
+        devStagingRefs = currentDevStagingView.refs;
+        els.devStagingLegacy.classList.add("off");
+        els.devStagingLegacy.setAttribute("aria-hidden", "true");
+        els.devStagingMount.classList.remove("off");
+        els.devStagingMount.setAttribute("aria-hidden", "false");
+        return mounted;
+      } catch (err) {
+        console.warn("Mounted dev-staging activation failed:", err);
+        return null;
+      }
     }
 
     function computeLift01(groove01, smooth01, speed01){
@@ -312,11 +339,11 @@
     }
 
     function fatal(msg){
-      devStagingView.setFatal(msg);
+      currentDevStagingView.setFatal(msg);
     }
 
     function setStatus(html, cls){
-      devStagingView.setStatus(html, cls);
+      currentDevStagingView.setStatus(html, cls);
     }
 
     // =========================================================================
@@ -1226,7 +1253,7 @@
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (devStagingView.closeTopmostPopup()) {
+        if (currentDevStagingView.closeTopmostPopup()) {
         } else if (els.pairModal.classList.contains("on")) {
           closePairModal();
         }
@@ -3429,7 +3456,7 @@
       });
 
       setBgFromEnergy(0);
-      devStagingView.resetMeters();
+      currentDevStagingView.resetMeters();
 
       zeroAudioNow();
     }
@@ -3498,7 +3525,7 @@
 
     function renderInputHud(vm){
       if (!vm) return;
-      devStagingView.renderInputHud(vm);
+      currentDevStagingView.renderInputHud(vm);
 
       // Repurposed row: Orb debug readout.
       updateDebugReadout();

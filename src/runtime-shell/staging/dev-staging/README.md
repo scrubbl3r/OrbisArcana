@@ -22,3 +22,9 @@ Current low-risk integration seam:
 - `setFatal(message)` mirrors the legacy fatal readout
 - `resetMeters()` mirrors the legacy zero-state HUD reset
 - `renderInputHud(vm)` mirrors the legacy left-side meter update contract
+
+Current mount-path seam in the legacy receiver:
+- `#devStagingLegacy` wraps the existing left-side DOM
+- `#devStagingMount` is the future mounted host for replacing that DOM
+- the legacy receiver now includes a disabled `maybeMountDevStagingSurface()`
+  seam so activation can happen in a later slice without changing layout first

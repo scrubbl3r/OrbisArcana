@@ -79,6 +79,44 @@ const DEV_STAGING_TEMPLATE = `
 
       <div id="fatal" class="devStagingFatal" aria-live="polite"></div>
     </div>
+
+    <div id="logPopup" class="logPopup" aria-hidden="true">
+      <div id="logPopupHeader" class="logPopupHeader">
+        <div class="logPopupTitle">KWS Log</div>
+        <button class="devStagingButton devStagingPopupClose" id="logPopupClose" aria-label="Close log" type="button">Close</button>
+      </div>
+      <div class="logPopupTabs" aria-label="Debug log channel">
+        <button id="logTabKws" class="devStagingButton logTabBtn active" type="button">KWS</button>
+        <button id="logTabPhone" class="devStagingButton logTabBtn" type="button">Phone</button>
+      </div>
+      <div id="kwsLog" class="logPopupBody" aria-label="KWS debug log"></div>
+    </div>
+
+    <div id="wordBoardPopup" class="wordBoardPopup" aria-hidden="true">
+      <div id="wordBoardPopupHeader" class="wordBoardPopupHeader">
+        <div class="wordBoardPopupTitle">WordFlashboard</div>
+        <button class="devStagingButton devStagingPopupClose" id="wordBoardPopupClose" aria-label="Close word board" type="button">Close</button>
+      </div>
+      <div class="wordBoardMeta" aria-label="KWS status and tuning">
+        <div class="wordBoardMetaReadout">
+          <div class="wordBoardMetaLine"><span class="wordBoardMetaLabel">KWS::</span> <span id="kwsReadout" class="devStagingDim">idle</span></div>
+          <div class="wordBoardMetaLine"><span class="wordBoardMetaLabel">Rules:</span> <span id="rulesReadout" class="devStagingDim">unknown</span></div>
+        </div>
+        <div class="devStagingTuneRow wordBoardTuneRow" aria-label="KWS infer tuning">
+          <label>Infer TH <input id="kwsTokenThrInput" type="number" min="0" max="1" step="0.001" placeholder="0.150" /></label>
+          <label>Infer CD <input id="kwsCooldownMsInput" type="number" min="0" max="5000" step="25" placeholder="600" /></label>
+          <button id="kwsApplyTuneBtn" class="devStagingButton" type="button">Apply</button>
+        </div>
+      </div>
+      <div id="wordBoardBody" class="wordBoardPopupBody" aria-label="Word flashboard"></div>
+      <div id="wordBoardDebugPanel" class="wordBoardDebugPanel">
+        <button id="wordBoardDebugToggle" class="wordBoardDebugToggle" type="button" aria-expanded="false" aria-controls="wordBoardDebugBody">
+          <span>KWS Debug</span>
+          <span id="wordBoardDebugBadge" class="wordBoardDebugBadge">idle</span>
+        </button>
+        <div id="wordBoardDebugBody" class="wordBoardDebugBody" aria-hidden="true"></div>
+      </div>
+    </div>
   </section>
 `;
 
@@ -109,6 +147,25 @@ export function mountDevStaging(root) {
     fatal: $("fatal"),
     teleBtn: $("teleBtn"),
     wordBoardBtn: $("wordBoardBtn"),
+    kwsReadout: $("kwsReadout"),
+    rulesReadout: $("rulesReadout"),
+    kwsLog: $("kwsLog"),
+    logTabKws: $("logTabKws"),
+    logTabPhone: $("logTabPhone"),
+    kwsTokenThrInput: $("kwsTokenThrInput"),
+    kwsCooldownMsInput: $("kwsCooldownMsInput"),
+    kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
+    logPopup: $("logPopup"),
+    logPopupHeader: $("logPopupHeader"),
+    logPopupClose: $("logPopupClose"),
+    wordBoardPopup: $("wordBoardPopup"),
+    wordBoardPopupHeader: $("wordBoardPopupHeader"),
+    wordBoardPopupClose: $("wordBoardPopupClose"),
+    wordBoardBody: $("wordBoardBody"),
+    wordBoardDebugPanel: $("wordBoardDebugPanel"),
+    wordBoardDebugToggle: $("wordBoardDebugToggle"),
+    wordBoardDebugBadge: $("wordBoardDebugBadge"),
+    wordBoardDebugBody: $("wordBoardDebugBody"),
     vLift: $("vLift"),
     vGroove: $("vGroove"),
     vSmooth: $("vSmooth"),
@@ -146,6 +203,17 @@ export function mountDevStaging(root) {
       if (!refs.fatal) return;
       refs.fatal.textContent = String(message || "");
       refs.fatal.classList.toggle("on", !!message);
+    },
+    closeTopmostPopup() {
+      if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
+        refs.wordBoardPopupClose.click();
+        return true;
+      }
+      if (refs.logPopup && refs.logPopup.classList.contains("on") && refs.logPopupClose) {
+        refs.logPopupClose.click();
+        return true;
+      }
+      return false;
     },
     resetMeters() {
       setBar(refs.bLift, 0);

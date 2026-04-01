@@ -25,104 +25,108 @@
   <div class="wrap">
     <div class="grid">
       <div class="card cardTall">
-        <div class="physHeader">Orb Receiver</div>
+        <div id="devStagingLegacy" class="devStagingLegacy">
+          <div class="physHeader">Orb Receiver</div>
 
-        <div class="stat">
-          <div class="statusLine">
-            <div>Status: <span id="status" class="dim">Auto-connecting…</span></div>
-            <div class="statusTools">
-              <button id="wordBoardBtn">WORDS</button>
-              <button id="teleBtn">LOG</button>
+          <div class="stat">
+            <div class="statusLine">
+              <div>Status: <span id="status" class="dim">Auto-connecting…</span></div>
+              <div class="statusTools">
+                <button id="wordBoardBtn">WORDS</button>
+                <button id="teleBtn">LOG</button>
+              </div>
             </div>
           </div>
+
+          <div class="bars">
+            <!-- Lift -->
+            <div class="barLabel"><div>Lift</div><span class="dim"> </span></div>
+            <div class="meterRow">
+              <div class="bar barShort"><div id="bLift" class="fill"></div></div>
+              <div id="vLift" class="meterVal">0%</div>
+            </div>
+
+            <!-- Groove -->
+            <div class="barLabel"><div>Groove</div><span class="dim"> </span></div>
+            <div class="meterRow">
+              <div class="bar barShort"><div id="bGroove" class="fill"></div></div>
+              <div id="vGroove" class="meterVal">0%</div>
+            </div>
+
+            <!-- Smooth -->
+            <div class="barLabel"><div>Smooth</div><span class="dim"> </span></div>
+            <div class="meterRow">
+              <div class="bar barShort"><div id="bSmooth" class="fill"></div></div>
+              <div id="vSmooth" class="meterVal">0%</div>
+            </div>
+
+            <!-- Speed -->
+            <div class="barLabel"><div>Speed</div><span class="dim"> </span></div>
+            <div class="meterRow">
+              <div class="bar barShort"><div id="bSpeed" class="fill"></div></div>
+              <div id="vSpeed" class="meterVal">0%</div>
+            </div>
+
+            <!-- Dynamics (two lamps: stability + variability) -->
+            <div class="barLabel"><div>Dynamics</div><span class="dim"> </span></div>
+            <div class="meterRow">
+              <div class="bar barShort"><div id="bDynamics" class="fill"></div></div>
+              <div id="dynLampStable" class="lamp dyn" aria-label="Stability lamp"></div>
+              <div id="dynLampVar" class="lamp dyn" aria-label="Variability lamp"></div>
+              <div id="vDynamics" class="meterVal">0%</div>
+            </div>
+
+            <!-- Energy -->
+            <div class="barLabel"><div>Energy</div><span class="dim"> </span></div>
+            <div class="meterRow">
+              <div class="bar barShort"><div id="bEnergy" class="fill"></div></div>
+              <div id="vEnergy" class="meterVal">0%</div>
+            </div>
+
+            <div class="groupGap"></div>
+
+            <!-- Shake -->
+            <div class="barLabel"><div>Shake</div><span class="dim"> </span></div>
+            <div class="meterRow">
+              <div class="bar barShort"><div id="bShake" class="fill"></div></div>
+              <div id="shakeLamp" class="lamp" aria-label="Shake trigger lamp"></div>
+              <div id="vShake" class="meterVal">0%</div>
+            </div>
+
+            <!-- ✅ 6 Direction Lamps (restored) -->
+            <div class="dirRow" aria-label="Directional lamps">
+              <div class="dirItem">
+                <div id="lampUp" class="lamp" aria-label="Up lamp"></div>
+                <div class="dirLabel">UP</div>
+              </div>
+              <div class="dirItem">
+                <div id="lampDown" class="lamp" aria-label="Down lamp"></div>
+                <div class="dirLabel">DOWN</div>
+              </div>
+              <div class="dirItem">
+                <div id="lampLeft" class="lamp" aria-label="Left lamp"></div>
+                <div class="dirLabel">LEFT</div>
+              </div>
+              <div class="dirItem">
+                <div id="lampRight" class="lamp" aria-label="Right lamp"></div>
+                <div class="dirLabel">RIGHT</div>
+              </div>
+              <div class="dirItem">
+                <div id="lampForward" class="lamp" aria-label="Forward lamp"></div>
+                <div class="dirLabel">FWD</div>
+              </div>
+              <div class="dirItem">
+                <div id="lampBack" class="lamp" aria-label="Back lamp"></div>
+                <div class="dirLabel">BACK</div>
+              </div>
+            </div>
+            <!-- /Direction lamps -->
+          </div>
+
+          <div id="fatal" class="mono bad" style="display:none;"></div>
         </div>
 
-        <div class="bars">
-          <!-- Lift -->
-          <div class="barLabel"><div>Lift</div><span class="dim"> </span></div>
-          <div class="meterRow">
-            <div class="bar barShort"><div id="bLift" class="fill"></div></div>
-            <div id="vLift" class="meterVal">0%</div>
-          </div>
-
-          <!-- Groove -->
-          <div class="barLabel"><div>Groove</div><span class="dim"> </span></div>
-          <div class="meterRow">
-            <div class="bar barShort"><div id="bGroove" class="fill"></div></div>
-            <div id="vGroove" class="meterVal">0%</div>
-          </div>
-
-          <!-- Smooth -->
-          <div class="barLabel"><div>Smooth</div><span class="dim"> </span></div>
-          <div class="meterRow">
-            <div class="bar barShort"><div id="bSmooth" class="fill"></div></div>
-            <div id="vSmooth" class="meterVal">0%</div>
-          </div>
-
-          <!-- Speed -->
-          <div class="barLabel"><div>Speed</div><span class="dim"> </span></div>
-          <div class="meterRow">
-            <div class="bar barShort"><div id="bSpeed" class="fill"></div></div>
-            <div id="vSpeed" class="meterVal">0%</div>
-          </div>
-
-          <!-- Dynamics (two lamps: stability + variability) -->
-          <div class="barLabel"><div>Dynamics</div><span class="dim"> </span></div>
-          <div class="meterRow">
-            <div class="bar barShort"><div id="bDynamics" class="fill"></div></div>
-            <div id="dynLampStable" class="lamp dyn" aria-label="Stability lamp"></div>
-            <div id="dynLampVar" class="lamp dyn" aria-label="Variability lamp"></div>
-            <div id="vDynamics" class="meterVal">0%</div>
-          </div>
-
-          <!-- Energy -->
-          <div class="barLabel"><div>Energy</div><span class="dim"> </span></div>
-          <div class="meterRow">
-            <div class="bar barShort"><div id="bEnergy" class="fill"></div></div>
-            <div id="vEnergy" class="meterVal">0%</div>
-          </div>
-
-          <div class="groupGap"></div>
-
-          <!-- Shake -->
-          <div class="barLabel"><div>Shake</div><span class="dim"> </span></div>
-          <div class="meterRow">
-            <div class="bar barShort"><div id="bShake" class="fill"></div></div>
-            <div id="shakeLamp" class="lamp" aria-label="Shake trigger lamp"></div>
-            <div id="vShake" class="meterVal">0%</div>
-          </div>
-
-          <!-- ✅ 6 Direction Lamps (restored) -->
-          <div class="dirRow" aria-label="Directional lamps">
-            <div class="dirItem">
-              <div id="lampUp" class="lamp" aria-label="Up lamp"></div>
-              <div class="dirLabel">UP</div>
-            </div>
-            <div class="dirItem">
-              <div id="lampDown" class="lamp" aria-label="Down lamp"></div>
-              <div class="dirLabel">DOWN</div>
-            </div>
-            <div class="dirItem">
-              <div id="lampLeft" class="lamp" aria-label="Left lamp"></div>
-              <div class="dirLabel">LEFT</div>
-            </div>
-            <div class="dirItem">
-              <div id="lampRight" class="lamp" aria-label="Right lamp"></div>
-              <div class="dirLabel">RIGHT</div>
-            </div>
-            <div class="dirItem">
-              <div id="lampForward" class="lamp" aria-label="Forward lamp"></div>
-              <div class="dirLabel">FWD</div>
-            </div>
-            <div class="dirItem">
-              <div id="lampBack" class="lamp" aria-label="Back lamp"></div>
-              <div class="dirLabel">BACK</div>
-            </div>
-          </div>
-          <!-- /Direction lamps -->
-        </div>
-
-        <div id="fatal" class="mono bad" style="display:none;"></div>
+        <div id="devStagingMount" class="devStagingMount off" aria-hidden="true"></div>
       </div>
 
       <div class="card cardTall">

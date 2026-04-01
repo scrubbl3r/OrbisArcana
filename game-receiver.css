@@ -121,6 +121,23 @@
       flex-direction:column;
     }
 
+    .devStagingLegacy{
+      display:flex;
+      flex:1 1 auto;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    .devStagingMount{
+      display:flex;
+      flex:1 1 auto;
+      min-height:0;
+    }
+
+    .devStagingMount.off{
+      display:none;
+    }
+
     .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 
     button{
