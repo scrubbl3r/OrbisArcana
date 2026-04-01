@@ -857,15 +857,21 @@ async function initShellKwsRuntime(shellContext) {
     createKwsProvider,
     createVoiceProviderManager,
     createOpenWakeWordBrowserBackendFactory,
+    createRuleEnginePreviewSystem,
   } = await loadReceiverInitModules();
 
   if (
     typeof createKwsProvider !== "function" ||
     typeof createVoiceProviderManager !== "function" ||
-    typeof createOpenWakeWordBrowserBackendFactory !== "function"
+    typeof createOpenWakeWordBrowserBackendFactory !== "function" ||
+    typeof createRuleEnginePreviewSystem !== "function"
   ) {
     return null;
   }
+
+  const hydrateReceiverBootstrapState =
+    sharedModules.receiverBootstrapModule &&
+    sharedModules.receiverBootstrapModule.hydrateReceiverBootstrapState;
 
   let kwsWordProvider = null;
   let kwsVoiceProvider = null;
@@ -936,6 +942,62 @@ async function initShellKwsRuntime(shellContext) {
     kwsListenPolicyController.start();
   }
 
+  let ruleSchema = null;
+  let runtimeWordIndex = Object.create(null);
+  let runtimeSpellIndex = Object.create(null);
+  if (typeof hydrateReceiverBootstrapState === "function") {
+    hydrateReceiverBootstrapState(
+      {
+        ...sharedModules.receiverBootstrapModule,
+        ...(
+          await loadReceiverInitModules()
+        ),
+      },
+      {
+        applyRuntimeTheme: () => {},
+        setBuildInputHudViewModelModule: () => {},
+        setCreateSpellActionHandlersModule: () => {},
+        setRunInputFramePipelineModule: () => {},
+        setRunOrbRuntimePipelineModule: () => {},
+        getOrbRuntimeConfig: () => ({ PHYS: {}, SHIELD_DESCENT: {}, IMPACT_MODEL: {}, IMPACT_TH: 0 }),
+        setOrbRuntimeConfig: () => {},
+        getOrbStatusConfig: () => ({
+          FLOAT_GRACE_DEFAULT_MS: 0,
+          DOMUS_FLOAT_GRACE_MS: 0,
+          SUPER_GRACE_DEFAULT_MS: 0,
+        }),
+        setOrbStatusConfig: () => {},
+        vfxDefaults: {},
+        getInputConfigs: () => ({ INPUT_GESTURE_CFG: {}, INPUT_DYNAMICS_CFG: {} }),
+        setInputConfigs: () => {},
+        setRuntimeWordIndexes: (next = {}) => {
+          runtimeWordIndex = next.runtimeWordIndex || Object.create(null);
+          runtimeSpellIndex = next.runtimeSpellIndex || runtimeWordIndex;
+        },
+        setRuleSchema: (next = {}) => {
+          ruleSchema = next && typeof next === "object" ? { ...next } : null;
+        },
+        initWordActionHandlers: () => {},
+        createSpellCastExecutorContext: () => ({}),
+        setSpellCastExecutor: () => {},
+        setReceiverModulesReady: () => {},
+      }
+    );
+  }
+
+  let ruleEnginePreviewSystem = null;
+  if (ruleSchema) {
+    ruleEnginePreviewSystem = createRuleEnginePreviewSystem({
+      eventBus,
+      schema: ruleSchema,
+      executeActions: false,
+      getWakeWindowPadMs: () => 0,
+    });
+    if (ruleEnginePreviewSystem && typeof ruleEnginePreviewSystem.start === "function") {
+      ruleEnginePreviewSystem.start();
+    }
+  }
+
   const kwsEventRuntime = bindKwsEventHandlers({
     eventBus,
     events: RECEIVER_EVENTS,
@@ -995,6 +1057,10 @@ async function initShellKwsRuntime(shellContext) {
     kwsVoiceProvider,
     voiceProviderManager,
     kwsListenPolicyController,
+    ruleSchema,
+    runtimeWordIndex,
+    runtimeSpellIndex,
+    ruleEnginePreviewSystem,
     kwsEventRuntime,
     kwsBackendKey,
     kwsDebugState,
