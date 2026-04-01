@@ -554,80 +554,17 @@ function createShellReceiverConfigs() {
 function handleShellImpulseFrame(shellContext, data) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
-  const devRefs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
-  const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
-  const buildInputHudViewModel =
-    sharedModules &&
-    sharedModules.buildInputHudViewModelModule &&
-    sharedModules.buildInputHudViewModelModule.buildInputHudViewModel;
-  const stage = runtime && runtime.stage;
-  if (!runtime || !stage || !stage.orbRuntimeState || typeof stage.orbRuntimeState.patch !== "function") return;
-  const receiverParity = runtime && runtime.receiverParity ? runtime.receiverParity : null;
+  const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
 
-  if (receiverParity && typeof receiverParity.processIncomingImpulse === "function") {
-    receiverParity.processIncomingImpulse(data);
+  if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
+    receiverHostRuntime.processIncomingImpulse(data);
     if (devView && typeof devView.setStatus === "function") {
       devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
     }
     return;
   }
-
-  const groove = pickImpulse01(data, "groove01", "groove");
-  const smooth = pickImpulse01(data, "smooth01", "smooth");
-  const speed = pickImpulse01(data, "speed01", "speed");
-  const dynamics = pickImpulse01(data, "dynamics01", "orbit01");
-  const shake = pickShakeMetric(data, "shake01", "shake");
-  const energy = pickImpulse01(data, "energy01", "energy");
-  const locked = !!(data && data.locked);
-  const lift = computeLift01(groove, smooth, speed);
-  const nowMs = performance.now();
-
-  stage.orbRuntimeState.patch({
-    lift01: lift,
-    energy01: energy,
-    dynamics01: dynamics,
-  });
-
-  if (typeof buildInputHudViewModel === "function" && devView && typeof devView.renderInputHud === "function") {
-    const vm = buildInputHudViewModel({
-      processed: {
-        nowMs,
-        lift,
-        groove,
-        smooth,
-        speed,
-        dynamics,
-        shake,
-        locked,
-        energyUI01: energy,
-        energyBankPts: Math.round(energy * 1000),
-        shieldRgb01: Array.isArray(data && data.shieldRGB) ? data.shieldRGB : null,
-      },
-      shakeCooldownUntil: Number(runtime.shakeCooldownUntil) || 0,
-      shakeLampThreshold: 1.65,
-    });
-    devView.renderInputHud(vm);
-  }
-
-  if (shake >= 1.65) {
-    flashShellShakeLamp(shellContext, 400);
-    if (nowMs >= (Number(runtime.shakeCooldownUntil) || 0) && groove <= 0.2) {
-      const shellVfx = runtime.vfx || null;
-      if (shellVfx && typeof shellVfx.triggerShockwave === "function") {
-        shellVfx.triggerShockwave();
-      }
-      runtime.shakeCooldownUntil = nowMs + 2500;
-    }
-  }
-  setLamp(devRefs && devRefs.dynLampStable, dynamics >= 0.08 && speed >= 0.02);
-  setLamp(devRefs && devRefs.dynLampVar, dynamics >= 0.8 && speed >= 0.02);
-
-  if (data && typeof data.sd === "string" && data.sd.trim()) {
-    flashDirectionLamp(shellContext, data.sd, 380);
-  }
-
   if (devView && typeof devView.setStatus === "function") {
-    devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
+    devView.setStatus('Phone calibrated <span class="devStagingDim">(receiver host boot pending)</span>', "devStagingDim");
   }
 }
 
@@ -989,7 +926,7 @@ function shellClearColorize(shellContext) {
   orbEl.style.background = "";
 }
 
-async function initShellReceiverParityRuntime(shellContext) {
+async function initShellReceiverHostRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
   const shellKws = runtime && runtime.kws ? runtime.kws : null;
@@ -1059,28 +996,28 @@ async function initShellReceiverParityRuntime(shellContext) {
     INPUT_DYNAMICS_CFG,
   } = createShellReceiverConfigs();
 
-  const parityState = {
+  const receiverHostState = {
     stabilityVisualGate: true,
   };
 
   const applyStabilityVisuals = () => {
-    const inputDynamicsSystem = parityState.inputDynamicsSystem;
+    const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
     const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
     const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
       ? inputDynamicsSystem.getState()
       : { stabilityOn: false, variabilityOn: false };
-    const showStable = !!dynState.stabilityOn && !!parityState.stabilityVisualGate;
-    const showVar = !!dynState.variabilityOn && !!parityState.stabilityVisualGate;
+    const showStable = !!dynState.stabilityOn && !!receiverHostState.stabilityVisualGate;
+    const showVar = !!dynState.variabilityOn && !!receiverHostState.stabilityVisualGate;
     setLamp(refs && refs.dynLampStable, showStable);
     setLamp(refs && refs.dynLampVar, showVar);
   };
 
   const isDiversityLampLit = () => {
-    const inputDynamicsSystem = parityState.inputDynamicsSystem;
+    const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
     const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
       ? inputDynamicsSystem.getState()
       : { variabilityOn: false };
-    return !!dynState.variabilityOn && !!parityState.stabilityVisualGate;
+    return !!dynState.variabilityOn && !!receiverHostState.stabilityVisualGate;
   };
 
   const runtimeContext = bootstrapStagingRuntimeContext({
@@ -1150,33 +1087,33 @@ async function initShellReceiverParityRuntime(shellContext) {
     },
   });
 
-  parityState.inputSystemsBundle = runtimeContext.inputSystemsBundle;
-  parityState.inputSystem = runtimeContext.inputSystem;
-  parityState.inputDynamicsSystem = runtimeContext.inputDynamicsSystem;
-  parityState.inputGestureSystem = runtimeContext.inputGestureSystem;
-  parityState.resourcesSystem = runtimeContext.resourcesSystem;
-  parityState.spellDispatchSystem = runtimeContext.spellDispatchSystem;
-  parityState.orbDamageVisualsRuntime = runtimeContext.orbDamageVisualsRuntime;
-  parityState.audioSystem = runtimeContext.audioSystem;
-  parityState.orbSystemsBundle = runtimeContext.orbSystemsBundle;
+  receiverHostState.inputSystemsBundle = runtimeContext.inputSystemsBundle;
+  receiverHostState.inputSystem = runtimeContext.inputSystem;
+  receiverHostState.inputDynamicsSystem = runtimeContext.inputDynamicsSystem;
+  receiverHostState.inputGestureSystem = runtimeContext.inputGestureSystem;
+  receiverHostState.resourcesSystem = runtimeContext.resourcesSystem;
+  receiverHostState.spellDispatchSystem = runtimeContext.spellDispatchSystem;
+  receiverHostState.orbDamageVisualsRuntime = runtimeContext.orbDamageVisualsRuntime;
+  receiverHostState.audioSystem = runtimeContext.audioSystem;
+  receiverHostState.orbSystemsBundle = runtimeContext.orbSystemsBundle;
 
-  if (parityState.orbDamageVisualsRuntime && typeof parityState.orbDamageVisualsRuntime.start === "function") {
-    parityState.orbDamageVisualsRuntime.start();
+  if (receiverHostState.orbDamageVisualsRuntime && typeof receiverHostState.orbDamageVisualsRuntime.start === "function") {
+    receiverHostState.orbDamageVisualsRuntime.start();
   }
-  if (parityState.audioSystem && typeof parityState.audioSystem.start === "function") {
-    parityState.audioSystem.start();
+  if (receiverHostState.audioSystem && typeof receiverHostState.audioSystem.start === "function") {
+    receiverHostState.audioSystem.start();
   }
-  if (parityState.inputSystemsBundle && typeof parityState.inputSystemsBundle.start === "function") {
-    parityState.inputSystemsBundle.start();
+  if (receiverHostState.inputSystemsBundle && typeof receiverHostState.inputSystemsBundle.start === "function") {
+    receiverHostState.inputSystemsBundle.start();
   }
-  if (parityState.resourcesSystem && typeof parityState.resourcesSystem.start === "function") {
-    parityState.resourcesSystem.start();
+  if (receiverHostState.resourcesSystem && typeof receiverHostState.resourcesSystem.start === "function") {
+    receiverHostState.resourcesSystem.start();
   }
-  if (parityState.spellDispatchSystem && typeof parityState.spellDispatchSystem.start === "function") {
-    parityState.spellDispatchSystem.start();
+  if (receiverHostState.spellDispatchSystem && typeof receiverHostState.spellDispatchSystem.start === "function") {
+    receiverHostState.spellDispatchSystem.start();
   }
-  if (parityState.orbSystemsBundle && typeof parityState.orbSystemsBundle.start === "function") {
-    parityState.orbSystemsBundle.start();
+  if (receiverHostState.orbSystemsBundle && typeof receiverHostState.orbSystemsBundle.start === "function") {
+    receiverHostState.orbSystemsBundle.start();
   }
 
   const castActionForWordId = (wordId) => {
@@ -1271,11 +1208,11 @@ async function initShellReceiverParityRuntime(shellContext) {
   });
   runtime.mvp = mvp;
 
-  parityState.processIncomingImpulse = (d = {}) => {
-    const inputSystem = parityState.inputSystem;
-    const inputGestureSystem = parityState.inputGestureSystem;
-    const inputDynamicsSystem = parityState.inputDynamicsSystem;
-    const resourcesSystem = parityState.resourcesSystem;
+  receiverHostState.processIncomingImpulse = (d = {}) => {
+    const inputSystem = receiverHostState.inputSystem;
+    const inputGestureSystem = receiverHostState.inputGestureSystem;
+    const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
+    const resourcesSystem = receiverHostState.resourcesSystem;
     const nowMs = performance.now();
 
     function pick01NewOrOld(newKey, oldKey) {
@@ -1336,7 +1273,7 @@ async function initShellReceiverParityRuntime(shellContext) {
         computeLift01,
         setBgFromEnergy: () => {},
         setStabilityVisualGate: (next) => {
-          parityState.stabilityVisualGate = !!next;
+          receiverHostState.stabilityVisualGate = !!next;
         },
         applyStabilityVisuals,
         processShakeDoubleBang: (shakeVal01, atMs, groove01) => {
@@ -1364,13 +1301,13 @@ async function initShellReceiverParityRuntime(shellContext) {
     }
   };
 
-  runtime.receiverParity = {
-    ...parityState,
+  runtime.receiverHostRuntime = {
+    ...receiverHostState,
     runtimeContext,
     eventBinder,
     mvp,
   };
-  return runtime.receiverParity;
+  return runtime.receiverHostRuntime;
 }
 
 function bindShellRuleActionRuntime({
@@ -2541,7 +2478,7 @@ export async function createStagingShellRuntime({
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
-    await initShellReceiverParityRuntime(shellContext);
+    await initShellReceiverHostRuntime(shellContext);
     activateShellStageVisuals(shellContext);
     bindShellStageResize(shellContext);
     bindShellStageActions(shellContext);

@@ -1,4 +1,4 @@
-import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260331o";
+import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260331p";
 
 function setBootBanner({ phase, detail, state = "booting" } = {}) {
   const banner = document.getElementById("shellBootBanner");
