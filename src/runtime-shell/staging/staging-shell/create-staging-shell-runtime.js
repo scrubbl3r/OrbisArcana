@@ -1203,7 +1203,7 @@ async function initShellKwsRuntime(shellContext) {
     ruleEnginePreviewSystem = createRuleEnginePreviewSystem({
       eventBus,
       schema: ruleSchema,
-      executeActions: false,
+      executeActions: true,
       getWakeWindowPadMs: () => 0,
     });
     if (ruleEnginePreviewSystem && typeof ruleEnginePreviewSystem.start === "function") {
@@ -1291,6 +1291,12 @@ async function initShellKwsRuntime(shellContext) {
     if (!ruleId || !kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
     kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
   });
+  const kwsActionTraceOff = eventBus.on("rule_engine.action_executed", (payload = {}) => {
+    const actionType = String(payload.actionType || "").trim().toLowerCase();
+    const actionId = String(payload.actionId || "").trim().toLowerCase();
+    if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
+    kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
+  });
 
   runtime.eventBus = eventBus;
   runtime.kws = {
@@ -1312,6 +1318,7 @@ async function initShellKwsRuntime(shellContext) {
     kwsRootWakeBridge,
     kwsWakeWindowVisuals,
     kwsRuleTraceOff,
+    kwsActionTraceOff,
     kwsBackendKey,
     kwsDebugState,
     receiverEvents: RECEIVER_EVENTS,
