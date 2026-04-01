@@ -313,8 +313,11 @@ function updateShellStageReadouts(shellContext) {
 }
 
 function activateShellStageVisuals(shellContext) {
+  ensureShellStageBackdrop(shellContext);
   resetShellOrbToGround(shellContext);
   updateShellStageReadouts(shellContext);
+  drawShellStars(shellContext);
+  drawShellBackdrop(shellContext);
 }
 
 function tickShellStageRuntime(shellContext, dt) {
@@ -483,6 +486,8 @@ function startShellStageLoop(shellContext) {
         runtime.stage.worldSystem.tick(performance.now(), dt);
       }
       updateShellStageReadouts(shellContext);
+      drawShellStars(shellContext);
+      drawShellBackdrop(shellContext);
     },
   });
   runtime.orbRuntimeLoop = runtime.stageLoop;
@@ -515,6 +520,32 @@ function createShellSurfaceRefs({ devStagingView, gameStagingView } = {}) {
   return {
     dev: devStagingView && devStagingView.refs ? devStagingView.refs : Object.create(null),
     game: gameStagingView && gameStagingView.refs ? gameStagingView.refs : Object.create(null),
+  };
+}
+
+function createShellDevStagingPanelElements(refs = {}) {
+  return {
+    teleBtn: refs.teleBtn || null,
+    wordBoardBtn: refs.wordBoardBtn || null,
+    kwsReadout: refs.kwsReadout || null,
+    rulesReadout: refs.rulesReadout || null,
+    kwsLog: refs.kwsLog || null,
+    logTabKws: refs.logTabKws || null,
+    logTabPhone: refs.logTabPhone || null,
+    kwsTokenThrInput: refs.kwsTokenThrInput || null,
+    kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
+    kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,
+    logPopup: refs.logPopup || null,
+    logPopupHeader: refs.logPopupHeader || null,
+    logPopupClose: refs.logPopupClose || null,
+    wordBoardPopup: refs.wordBoardPopup || null,
+    wordBoardPopupHeader: refs.wordBoardPopupHeader || null,
+    wordBoardPopupClose: refs.wordBoardPopupClose || null,
+    wordBoardBody: refs.wordBoardBody || null,
+    wordBoardDebugPanel: refs.wordBoardDebugPanel || null,
+    wordBoardDebugToggle: refs.wordBoardDebugToggle || null,
+    wordBoardDebugBadge: refs.wordBoardDebugBadge || null,
+    wordBoardDebugBody: refs.wordBoardDebugBody || null,
   };
 }
 
@@ -580,6 +611,158 @@ function exposeShellContext(rootDocument, shellContext) {
   win.__orbisStagingShell = shellContext;
 }
 
+function formatPhoneImpulseLogLine(d) {
+  if (!d || typeof d !== "object") return "";
+  const speed = Number.isFinite(Number(d.speed01 ?? d.speed)) ? Number(d.speed01 ?? d.speed).toFixed(3) : "0.000";
+  const energy = Number.isFinite(Number(d.energy01 ?? d.energy)) ? Number(d.energy01 ?? d.energy).toFixed(3) : "0.000";
+  const groove = Number.isFinite(Number(d.groove01 ?? d.groove)) ? Number(d.groove01 ?? d.groove).toFixed(3) : "0.000";
+  const smooth = Number.isFinite(Number(d.smooth01 ?? d.smooth)) ? Number(d.smooth01 ?? d.smooth).toFixed(3) : "0.000";
+  const dynamics = Number.isFinite(Number(d.dynamics01 ?? d.orbit01)) ? Number(d.dynamics01 ?? d.orbit01).toFixed(3) : "0.000";
+  const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
+  const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
+  const locked = d.locked ? "1" : "0";
+  return `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} locked:${locked} hz:${hz}`;
+}
+
+function ensureShellStageBackdrop(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
+  const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
+  if (!runtime || !refs || !refs.physStage || !refs.stars || !refs.terrain || !rootDocument) return;
+
+  const rect = shellStageRect(shellContext);
+  const width = Math.max(1, Math.floor(rect.width));
+  const height = Math.max(1, Math.floor(rect.height));
+  const dpr = Math.max(1, Math.min(2.5, (rootDocument.defaultView && rootDocument.defaultView.devicePixelRatio) || 1));
+  const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = Object.create(null));
+
+  if (stageBackdrop.width === width && stageBackdrop.height === height && stageBackdrop.starCtx && stageBackdrop.terrainCtx) {
+    return;
+  }
+
+  stageBackdrop.width = width;
+  stageBackdrop.height = height;
+  refs.stars.width = Math.floor(width * dpr);
+  refs.stars.height = Math.floor(height * dpr);
+  refs.stars.style.width = `${width}px`;
+  refs.stars.style.height = `${height}px`;
+  refs.terrain.width = Math.floor(width * dpr);
+  refs.terrain.height = Math.floor(height * dpr);
+  refs.terrain.style.width = `${width}px`;
+  refs.terrain.style.height = `${height}px`;
+
+  stageBackdrop.starCtx = refs.stars.getContext("2d", { alpha: false });
+  stageBackdrop.terrainCtx = refs.terrain.getContext("2d", { alpha: true });
+  if (stageBackdrop.starCtx) stageBackdrop.starCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (stageBackdrop.terrainCtx) stageBackdrop.terrainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const colorSets = [
+    [255, 255, 255],
+    [192, 208, 255],
+    [255, 224, 164],
+  ];
+  stageBackdrop.layers = [
+    { count: 56, rMin: 0.7, rMax: 1.3, aMin: 0.16, aMax: 0.46 },
+    { count: 42, rMin: 0.8, rMax: 1.6, aMin: 0.22, aMax: 0.60 },
+    { count: 24, rMin: 1.0, rMax: 2.0, aMin: 0.35, aMax: 0.82 },
+  ].map((cfg, layerIndex) => ({
+    cfg,
+    stars: Array.from({ length: cfg.count }, (_, i) => {
+      const seed = (i + 1) * (layerIndex + 3) * 97;
+      return {
+        x: (seed * 37) % width,
+        yW: (seed * 91) % 5000,
+        r: cfg.rMin + (((seed * 17) % 100) / 100) * (cfg.rMax - cfg.rMin),
+        a: cfg.aMin + (((seed * 29) % 100) / 100) * (cfg.aMax - cfg.aMin),
+        rgb: colorSets[layerIndex] || colorSets[0],
+      };
+    }),
+  }));
+
+  stageBackdrop.mountainPoints = Array.from({ length: 10 }, (_, i) => {
+    const t = i / 9;
+    return {
+      x: Math.round(t * width),
+      yOff: [58, 74, 52, 96, 66, 84, 61, 98, 76, 88][i] || 60,
+    };
+  });
+}
+
+function shellGroundLineScreenY(shellContext) {
+  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+  if (!stage || !stage.phys || !stage.orbRuntimeState || typeof stage.orbRuntimeState.get !== "function") return 0;
+  const rect = shellStageRect(shellContext);
+  const groundLineWorldY = shellGroundCenterWorld(shellContext) +
+    (Number(stage.phys.orbRadiusPx) || 50) +
+    ((Number(stage.phys.groundLinePx) || 2) * 0.5);
+  const camTop = shellCameraTopFor(shellContext, stage.orbRuntimeState.get().yW, rect.height || 0);
+  return groundLineWorldY - camTop;
+}
+
+function drawShellStars(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const stageBackdrop = runtime && runtime.stageBackdrop;
+  if (!stageBackdrop || !stageBackdrop.starCtx) return;
+  const ctx = stageBackdrop.starCtx;
+  const w = stageBackdrop.width || 0;
+  const h = stageBackdrop.height || 0;
+
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, w, h);
+
+  const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, h);
+  for (const layer of stageBackdrop.layers || []) {
+    for (const star of layer.stars || []) {
+      const y = ((star.yW - camTop) % h + h) % h;
+      ctx.fillStyle = `rgba(${star.rgb[0]},${star.rgb[1]},${star.rgb[2]},${star.a})`;
+      ctx.beginPath();
+      ctx.arc(star.x, y, star.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  const vignette = ctx.createRadialGradient(w * 0.5, h * 0.42, Math.min(w, h) * 0.10, w * 0.5, h * 0.42, Math.max(w, h) * 0.75);
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, "rgba(0,0,0,0.55)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawShellBackdrop(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const stageBackdrop = runtime && runtime.stageBackdrop;
+  if (!stageBackdrop || !stageBackdrop.terrainCtx) return;
+  const ctx = stageBackdrop.terrainCtx;
+  const w = stageBackdrop.width || 0;
+  const h = stageBackdrop.height || 0;
+  const groundY = shellGroundLineScreenY(shellContext);
+  const pts = stageBackdrop.mountainPoints || [];
+
+  ctx.clearRect(0, 0, w, h);
+  if (pts.length < 2) return;
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, groundY - pts[0].yOff);
+  for (const p of pts) ctx.lineTo(p.x, groundY - p.yOff);
+  ctx.lineTo(pts[pts.length - 1].x, groundY);
+  ctx.lineTo(pts[0].x, groundY);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(0,0,0,1)";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, groundY - pts[0].yOff);
+  for (const p of pts) ctx.lineTo(p.x, groundY - p.yOff);
+  ctx.strokeStyle = "rgba(132, 232, 164, 0.92)";
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "miter";
+  ctx.lineCap = "round";
+  ctx.shadowColor = "rgba(132, 232, 164, 0.25)";
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
 function syncShellStartQrSize(rootDocument) {
   const startBtn = rootDocument.getElementById("startBtn");
   const startQr = rootDocument.getElementById("startQr");
@@ -624,12 +807,17 @@ async function initShellPairingRuntime(shellContext) {
   let uiOverlaysSystem = null;
   let mobileImpulseSystem = null;
   let lanSession = null;
+  let kwsPanelController = null;
 
   updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.pairingBooting, "Loading pairing systems");
 
   const { createUiOverlaysSystem } = await import("../../../ui/game/ui-overlays-system.js");
   const { createMobileImpulseSystem } = await import("../../receiver/mobile-impulse-runtime.js");
   const { createLanSessionSystem } = await import("../../session/lan-session.js");
+  const createKwsPanelController =
+    shellContext.sharedModules &&
+    shellContext.sharedModules.kwsPanelControllerModule &&
+    shellContext.sharedModules.kwsPanelControllerModule.createKwsPanelController;
 
   uiOverlaysSystem = createUiOverlaysSystem({
     startScreenEl,
@@ -647,12 +835,53 @@ async function initShellPairingRuntime(shellContext) {
   const setCalibStatus = (msg) => uiOverlaysSystem.setCalibStatus(msg);
   const hideStartScreen = () => uiOverlaysSystem.hideStartScreen();
 
+  if (typeof createKwsPanelController === "function") {
+    kwsPanelController = createKwsPanelController({
+      els: createShellDevStagingPanelElements(shellContext.refs.dev),
+      constants: {
+        defaultGateTimeoutMs: 1500,
+        startStallMs: 8000,
+        readoutTickMs: 250,
+        rowTop: [],
+        rowBottom: [],
+        wakeWindowTokens: [],
+        axisTokens: [],
+        wakeTokens: [],
+        wakeRequiredTokens: [],
+        wordFlashboardWords: [],
+        spinWordByAxis: Object.freeze({}),
+        logTokens: [],
+        tempUngatedTokens: [],
+        tokenCanonicalMap: Object.freeze({}),
+      },
+      getKwsWordProvider: () => null,
+      getKwsVoiceProvider: () => null,
+    });
+    if (kwsPanelController && typeof kwsPanelController.bindLogPopupButton === "function") {
+      kwsPanelController.bindLogPopupButton();
+    }
+    if (kwsPanelController && typeof kwsPanelController.bindWordBoardPopupButton === "function") {
+      kwsPanelController.bindWordBoardPopupButton();
+    }
+    if (kwsPanelController && typeof kwsPanelController.bindWordBoardDebugToggle === "function") {
+      kwsPanelController.bindWordBoardDebugToggle();
+    }
+    if (kwsPanelController && typeof kwsPanelController.pushKwsLogLine === "function") {
+      kwsPanelController.pushKwsLogLine("staging shell log online", "ok");
+    }
+  }
+
   mobileImpulseSystem = createMobileImpulseSystem({
     idleMarkActivity: () => {},
     applyDataToUI: (data) => {
       handleShellImpulseFrame(shellContext, data);
     },
-    teleMaybeLog: () => {},
+    teleMaybeLog: (data) => {
+      if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
+      const line = formatPhoneImpulseLogLine(data);
+      if (!line) return;
+      kwsPanelController.pushPhoneLogLine(line, "muted");
+    },
     onCalibrated: () => {
       setCalibStatus("Calibrated");
       closeCalibOverlay();
@@ -743,6 +972,7 @@ async function initShellPairingRuntime(shellContext) {
     uiOverlaysSystem,
     mobileImpulseSystem,
     lanSession,
+    kwsPanelController,
     launchLanPairingFlow,
     sendCalibrationTrigger,
     hideStartScreen,
