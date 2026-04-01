@@ -54,6 +54,7 @@ export function createKwsPanelController({
     flashTOByToken: Object.create(null),
     orbisWindowUntilMs: 0,
   };
+  let manualListenableTokens = new Set();
   let kwsWakeHudGateTO = 0;
   let kwsReadoutTickTO = 0;
   let kwsLastBackendErrorLogged = "";
@@ -66,11 +67,13 @@ export function createKwsPanelController({
     canonicalToken: canonicalKwsToken,
     getListenableTokens: () => {
       const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
-      return new Set(
-        (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
-          .map((token) => canonicalKwsToken(token))
-          .filter(Boolean)
-      );
+      const policyTokens = (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
+        .map((token) => canonicalKwsToken(token))
+        .filter(Boolean);
+      return new Set([
+        ...policyTokens,
+        ...Array.from(manualListenableTokens.values()),
+      ]);
     },
     getFlashUntilMs: (token) => Number(kwsTokenUiState.flashUntilMs[String(token || "").trim().toLowerCase()] || 0),
     onVisibilityChanged: (open) => {
@@ -304,6 +307,23 @@ export function createKwsPanelController({
     wordFlashboardPopup.bind();
   }
 
+  function setManualListenableTokens(tokens = []) {
+    manualListenableTokens = new Set(
+      (Array.isArray(tokens) ? tokens : [])
+        .map((token) => canonicalKwsToken(token))
+        .filter(Boolean)
+    );
+    if (wordFlashboardPopup.isOpen()) {
+      wordFlashboardPopup.render();
+    }
+  }
+
+  function refreshWordFlashboard() {
+    if (wordFlashboardPopup.isOpen()) {
+      wordFlashboardPopup.render();
+    }
+  }
+
   function syncKwsTuneUiFromStatus(status) {
     const backend = status && status.audioBackendStatus ? status.audioBackendStatus : status;
     if (!backend || typeof backend !== "object") return;
@@ -360,6 +380,8 @@ export function createKwsPanelController({
     bindWordBoardDebugToggle: logPopupController.bindWordBoardDebugToggle,
     bindWordBoardPopupButton,
     pushPhoneLogLine: logPopupController.pushPhoneLogLine,
+    setManualListenableTokens,
+    refreshWordFlashboard,
     getUiState: () => kwsTokenUiState,
   };
 }

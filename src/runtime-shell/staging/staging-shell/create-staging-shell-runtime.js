@@ -1047,6 +1047,19 @@ async function initShellKwsRuntime(shellContext) {
     kwsListenPolicyController.start();
   }
 
+  if (kwsPanelController && typeof kwsPanelController.setManualListenableTokens === "function") {
+    const initialPolicyStatus = (
+      kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function"
+        ? kwsListenPolicyController.getStatus()
+        : null
+    );
+    kwsPanelController.setManualListenableTokens(
+      Array.isArray(initialPolicyStatus && initialPolicyStatus.listenableTokens)
+        ? initialPolicyStatus.listenableTokens
+        : []
+    );
+  }
+
   let ruleSchema = null;
   let runtimeWordIndex = Object.create(null);
   let runtimeSpellIndex = Object.create(null);
@@ -1151,6 +1164,16 @@ async function initShellKwsRuntime(shellContext) {
     },
   });
 
+  const kwsListenPolicySyncOff = eventBus.on("voice.kws_listen_policy_changed", (payload = {}) => {
+    const tokens = Array.isArray(payload.listenableTokens) ? payload.listenableTokens : [];
+    if (kwsPanelController && typeof kwsPanelController.setManualListenableTokens === "function") {
+      kwsPanelController.setManualListenableTokens(tokens);
+    }
+    if (kwsPanelController && typeof kwsPanelController.refreshWordFlashboard === "function") {
+      kwsPanelController.refreshWordFlashboard();
+    }
+  });
+
   const kwsRootWakeBridge = bindShellRootWakeWindows({
     eventBus,
     receiverEvents: RECEIVER_EVENTS,
@@ -1173,6 +1196,7 @@ async function initShellKwsRuntime(shellContext) {
     runtimeSpellIndex,
     ruleEnginePreviewSystem,
     kwsEventRuntime,
+    kwsListenPolicySyncOff,
     kwsRootWakeBridge,
     kwsBackendKey,
     kwsDebugState,
