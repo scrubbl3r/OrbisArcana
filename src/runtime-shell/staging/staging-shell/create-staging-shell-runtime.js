@@ -50,6 +50,14 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function readNumberInputOrNull(el) {
+  if (!el) return null;
+  const raw = String(el.value == null ? "" : el.value).trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 function clamp01(n) {
   return clamp(n, 0, 1);
 }
@@ -785,10 +793,226 @@ function stagingMobilePageBaseUrl(rootDocument) {
   }
 }
 
+async function initShellKwsRuntime(shellContext) {
+  const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const devRefs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  if (!sharedModules || !runtime || !devRefs) return null;
+
+  const createEventBus = sharedModules.eventBusModule && sharedModules.eventBusModule.createEventBus;
+  const bootstrapKwsStaging =
+    sharedModules.bootstrapKwsStagingModule &&
+    sharedModules.bootstrapKwsStagingModule.bootstrapKwsStaging;
+  const createKwsPanelController =
+    sharedModules.kwsPanelControllerModule &&
+    sharedModules.kwsPanelControllerModule.createKwsPanelController;
+  const createKwsRuntimeController =
+    sharedModules.kwsRuntimeControllerModule &&
+    sharedModules.kwsRuntimeControllerModule.createKwsRuntimeController;
+  const createKwsBootOrchestrator =
+    sharedModules.kwsBootOrchestratorModule &&
+    sharedModules.kwsBootOrchestratorModule.createKwsBootOrchestrator;
+  const bindKwsEventHandlers =
+    sharedModules.kwsEventBindingsModule &&
+    sharedModules.kwsEventBindingsModule.bindKwsEventHandlers;
+  const createKwsListenPolicyController =
+    sharedModules.kwsListenPolicyControllerModule &&
+    sharedModules.kwsListenPolicyControllerModule.createKwsListenPolicyController;
+  const bootstrapKwsVoiceRuntime =
+    sharedModules.kwsProviderBootstrapModule &&
+    sharedModules.kwsProviderBootstrapModule.bootstrapKwsVoiceRuntime;
+  const createKwsRuntimeConfig =
+    sharedModules.kwsConfigModule &&
+    sharedModules.kwsConfigModule.createKwsRuntimeConfig;
+  const createKwsReceiverBridge =
+    sharedModules.kwsReceiverBridgeModule &&
+    sharedModules.kwsReceiverBridgeModule.createKwsReceiverBridge;
+  const receiverEventsModule = sharedModules.receiverEventsModule || {};
+  const RECEIVER_EVENTS = {
+    ...(receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object"
+      ? receiverEventsModule.RECEIVER_EVENTS
+      : {}),
+  };
+  const loadReceiverInitModules =
+    sharedModules.receiverBootstrapModule &&
+    sharedModules.receiverBootstrapModule.loadReceiverInitModules;
+
+  if (
+    typeof createEventBus !== "function" ||
+    typeof bootstrapKwsStaging !== "function" ||
+    typeof createKwsPanelController !== "function" ||
+    typeof createKwsRuntimeController !== "function" ||
+    typeof createKwsBootOrchestrator !== "function" ||
+    typeof bindKwsEventHandlers !== "function" ||
+    typeof createKwsListenPolicyController !== "function" ||
+    typeof bootstrapKwsVoiceRuntime !== "function" ||
+    typeof createKwsRuntimeConfig !== "function" ||
+    typeof createKwsReceiverBridge !== "function" ||
+    typeof loadReceiverInitModules !== "function"
+  ) {
+    return null;
+  }
+
+  const {
+    createKwsProvider,
+    createVoiceProviderManager,
+    createOpenWakeWordBrowserBackendFactory,
+  } = await loadReceiverInitModules();
+
+  if (
+    typeof createKwsProvider !== "function" ||
+    typeof createVoiceProviderManager !== "function" ||
+    typeof createOpenWakeWordBrowserBackendFactory !== "function"
+  ) {
+    return null;
+  }
+
+  let kwsWordProvider = null;
+  let kwsVoiceProvider = null;
+  let voiceProviderManager = null;
+  let kwsListenPolicyController = null;
+  let kwsBackendKey = "openwakeword_browser";
+  const kwsDebugState = { mode: "kws", backend: "openwakeword_browser" };
+  const eventBus = createEventBus();
+
+  const {
+    kwsBridge,
+    kwsPanelController,
+    kwsTokenUiState,
+    kwsRuntimeController,
+    kwsBootOrchestrator,
+    runtimeConfig,
+  } = bootstrapKwsStaging({
+    createKwsRuntimeConfig,
+    createKwsReceiverBridge,
+    createKwsPanelController,
+    createKwsRuntimeController,
+    createKwsBootOrchestrator,
+    createDevStagingPanelElements: () => createShellDevStagingPanelElements(devRefs),
+    getKwsWordProvider: () => kwsWordProvider,
+    getKwsVoiceProvider: () => kwsVoiceProvider,
+    getMvp: () => runtime.mvp,
+    readTuneFromUi: () => ({
+      inferThreshold: readNumberInputOrNull(devRefs.kwsTokenThrInput),
+      inferCooldownMs: readNumberInputOrNull(devRefs.kwsCooldownMsInput),
+    }),
+    refreshKwsMicBtn: () => {},
+    readout: {
+      setDebugMode: (mode) => { kwsDebugState.mode = String(mode || "kws"); },
+      setDebugBackend: (key) => { kwsDebugState.backend = String(key || "openwakeword_browser"); },
+      receiverEvents: RECEIVER_EVENTS,
+    },
+    runtime: {
+      defaultVoiceEngine: "kws",
+      defaultBackendKey: "openwakeword_browser",
+    },
+  });
+
+  const kwsVoiceRuntime = bootstrapKwsVoiceRuntime({
+    eventBus,
+    createKwsProvider,
+    createVoiceProviderManager,
+    createOpenWakeWordBrowserBackendFactory,
+    kwsRuntimeController,
+    defaultBackendKey: runtimeConfig.defaultBackendKey,
+    defaultVoiceEngine: runtimeConfig.defaultVoiceEngine,
+    syncKwsTuneUiFromStatus: (status) => kwsBridge.syncTuneUiFromStatus(status),
+    refreshKwsMicBtn: () => {},
+  });
+
+  kwsWordProvider = kwsVoiceRuntime.kwsWordProvider || kwsVoiceRuntime.kwsVoiceProvider || null;
+  kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider || kwsVoiceRuntime.kwsWordProvider || null;
+  voiceProviderManager = kwsVoiceRuntime.voiceProviderManager || null;
+  kwsBackendKey = String(kwsVoiceRuntime.kwsBackendKey || runtimeConfig.defaultBackendKey || "openwakeword_browser");
+  kwsDebugState.backend = kwsBackendKey;
+
+  kwsListenPolicyController = createKwsListenPolicyController({
+    eventBus,
+    kwsRuntimeController,
+    initialMode: String(runtimeConfig.listenPolicyMode || "A"),
+    nowMs: () => Date.now(),
+  });
+  if (kwsListenPolicyController && typeof kwsListenPolicyController.start === "function") {
+    kwsListenPolicyController.start();
+  }
+
+  const kwsEventRuntime = bindKwsEventHandlers({
+    eventBus,
+    events: RECEIVER_EVENTS,
+    state: kwsDebugState,
+    deps: {
+      canonicalKwsToken: (token) => kwsBridge.canonicalToken(token),
+      flashKwsToken: (token, ms) => kwsBridge.flashToken(token, ms),
+      isWakeWindowActive: () => kwsBridge.isWakeWindowActive(),
+      markHeardWakeWindowToken: (axis, token) => {
+        if (kwsPanelController && typeof kwsPanelController.markHeardWakeWindowToken === "function") {
+          kwsPanelController.markHeardWakeWindowToken(axis, token);
+        }
+      },
+      getActiveSpinAxis: () => (kwsTokenUiState ? String(kwsTokenUiState.activeSpinAxis || "") : ""),
+      openKwsWakeHudGate: (timeoutMs) => kwsBridge.openWakeHudGate(timeoutMs),
+      shouldLogHeardWakeword: (rawToken) => kwsBridge.shouldLogHeardWakeword(rawToken),
+      pushKwsLogLine: (text, kind) => kwsBridge.pushLogLine(text, kind),
+      updateKwsReadout: () => kwsBridge.updateReadout(),
+      isUngatedToken: () => false,
+      setActiveSpinAxis: (axis) => {
+        if (kwsPanelController && typeof kwsPanelController.setActiveSpinAxis === "function") {
+          kwsPanelController.setActiveSpinAxis(axis);
+        }
+      },
+      clearActiveSpinState: () => {
+        if (kwsPanelController && typeof kwsPanelController.clearActiveSpinState === "function") {
+          kwsPanelController.clearActiveSpinState();
+        } else {
+          kwsBridge.resetHeardWakeWindowTokensAllAxes();
+        }
+      },
+      resetHeardWakeWindowTokensForAxis: (axis) => kwsBridge.resetHeardWakeWindowTokensForAxis(axis),
+      resetHeardWakeWindowTokensAllAxes: () => kwsBridge.resetHeardWakeWindowTokensAllAxes(),
+      setSelectedSpinWord: (axis, spinWord) => {
+        if (kwsPanelController && typeof kwsPanelController.setSelectedSpinWord === "function") {
+          kwsPanelController.setSelectedSpinWord(axis, spinWord);
+        }
+      },
+      getKwsMode: () => String(kwsDebugState.mode || ""),
+      getListenPolicyStatus: () => (
+        kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function"
+          ? kwsListenPolicyController.getStatus()
+          : null
+      ),
+      gateTimeoutMs: Math.max(0, Number(runtimeConfig.gateTimeoutMs) || 1500),
+    },
+  });
+
+  runtime.eventBus = eventBus;
+  runtime.kws = {
+    kwsBridge,
+    kwsPanelController,
+    kwsTokenUiState,
+    kwsRuntimeController,
+    kwsBootOrchestrator,
+    kwsWordProvider,
+    kwsVoiceProvider,
+    voiceProviderManager,
+    kwsListenPolicyController,
+    kwsEventRuntime,
+    kwsBackendKey,
+    kwsDebugState,
+    receiverEvents: RECEIVER_EVENTS,
+  };
+
+  if (devRefs.rulesReadout) devRefs.rulesReadout.textContent = "boot:kws_ready";
+  if (typeof kwsBridge.updateReadout === "function") kwsBridge.updateReadout();
+  if (typeof kwsBridge.pushLogLine === "function") kwsBridge.pushLogLine("kws runtime active", "ok");
+
+  return runtime.kws;
+}
+
 async function initShellPairingRuntime(shellContext) {
   const rootDocument = shellContext.rootDocument;
   const win = rootDocument.defaultView;
   const devView = shellContext.views.devStagingView;
+  const shellKws = shellContext.runtime && shellContext.runtime.kws ? shellContext.runtime.kws : null;
   const statusSet = (html, cls = "devStagingDim") => {
     if (devView && typeof devView.setStatus === "function") {
       devView.setStatus(html, cls);
@@ -807,17 +1031,12 @@ async function initShellPairingRuntime(shellContext) {
   let uiOverlaysSystem = null;
   let mobileImpulseSystem = null;
   let lanSession = null;
-  let kwsPanelController = null;
 
   updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.pairingBooting, "Loading pairing systems");
 
   const { createUiOverlaysSystem } = await import("../../../ui/game/ui-overlays-system.js");
   const { createMobileImpulseSystem } = await import("../../receiver/mobile-impulse-runtime.js");
   const { createLanSessionSystem } = await import("../../session/lan-session.js");
-  const createKwsPanelController =
-    shellContext.sharedModules &&
-    shellContext.sharedModules.kwsPanelControllerModule &&
-    shellContext.sharedModules.kwsPanelControllerModule.createKwsPanelController;
 
   uiOverlaysSystem = createUiOverlaysSystem({
     startScreenEl,
@@ -835,48 +1054,13 @@ async function initShellPairingRuntime(shellContext) {
   const setCalibStatus = (msg) => uiOverlaysSystem.setCalibStatus(msg);
   const hideStartScreen = () => uiOverlaysSystem.hideStartScreen();
 
-  if (typeof createKwsPanelController === "function") {
-    kwsPanelController = createKwsPanelController({
-      els: createShellDevStagingPanelElements(shellContext.refs.dev),
-      constants: {
-        defaultGateTimeoutMs: 1500,
-        startStallMs: 8000,
-        readoutTickMs: 250,
-        rowTop: [],
-        rowBottom: [],
-        wakeWindowTokens: [],
-        axisTokens: [],
-        wakeTokens: [],
-        wakeRequiredTokens: [],
-        wordFlashboardWords: [],
-        spinWordByAxis: Object.freeze({}),
-        logTokens: [],
-        tempUngatedTokens: [],
-        tokenCanonicalMap: Object.freeze({}),
-      },
-      getKwsWordProvider: () => null,
-      getKwsVoiceProvider: () => null,
-    });
-    if (kwsPanelController && typeof kwsPanelController.bindLogPopupButton === "function") {
-      kwsPanelController.bindLogPopupButton();
-    }
-    if (kwsPanelController && typeof kwsPanelController.bindWordBoardPopupButton === "function") {
-      kwsPanelController.bindWordBoardPopupButton();
-    }
-    if (kwsPanelController && typeof kwsPanelController.bindWordBoardDebugToggle === "function") {
-      kwsPanelController.bindWordBoardDebugToggle();
-    }
-    if (kwsPanelController && typeof kwsPanelController.pushKwsLogLine === "function") {
-      kwsPanelController.pushKwsLogLine("staging shell log online", "ok");
-    }
-  }
-
   mobileImpulseSystem = createMobileImpulseSystem({
     idleMarkActivity: () => {},
     applyDataToUI: (data) => {
       handleShellImpulseFrame(shellContext, data);
     },
     teleMaybeLog: (data) => {
+      const kwsPanelController = shellKws && shellKws.kwsPanelController;
       if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
       const line = formatPhoneImpulseLogLine(data);
       if (!line) return;
@@ -972,7 +1156,7 @@ async function initShellPairingRuntime(shellContext) {
     uiOverlaysSystem,
     mobileImpulseSystem,
     lanSession,
-    kwsPanelController,
+    kwsPanelController: shellKws ? shellKws.kwsPanelController : null,
     launchLanPairingFlow,
     sendCalibrationTrigger,
     hideStartScreen,
@@ -1032,6 +1216,8 @@ export async function createStagingShellRuntime({
       gameStagingView,
       sharedModules,
     });
+    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
+    await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
     activateShellStageVisuals(shellContext);
     bindShellStageResize(shellContext);

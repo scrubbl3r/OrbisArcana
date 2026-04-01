@@ -37,15 +37,15 @@ body {
 }
 
 .gameStaging {
-  min-height: 100vh;
+  min-height: 100%;
   box-sizing: border-box;
-  padding: 24px;
+  padding: 0;
 }
 
 .gameStagingCard {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 48px);
+  min-height: 100%;
   background: var(--surface);
   border: 1px solid var(--frame);
   border-radius: 16px;
