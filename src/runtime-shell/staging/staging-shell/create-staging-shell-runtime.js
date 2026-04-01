@@ -1209,7 +1209,7 @@ async function initShellKwsRuntime(shellContext) {
     createOpenWakeWordBrowserBackendFactory,
     createRuleEnginePreviewSystem,
     createSpellCastExecutor,
-    createSpellActionHandlers,
+    createSpellActionHandlersImported,
     executeAoeElectric,
     executeAoeFlame,
     executeTeleport,
@@ -1225,7 +1225,7 @@ async function initShellKwsRuntime(shellContext) {
     typeof createOpenWakeWordBrowserBackendFactory !== "function" ||
     typeof createRuleEnginePreviewSystem !== "function" ||
     typeof createSpellCastExecutor !== "function" ||
-    typeof createSpellActionHandlers !== "function"
+    typeof createSpellActionHandlersImported !== "function"
   ) {
     return null;
   }
@@ -1460,7 +1460,7 @@ async function initShellKwsRuntime(shellContext) {
   });
 
   runtime.eventBus = eventBus;
-  const shellSpellActionHandlers = createSpellActionHandlers({
+  const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
     playElectricAoe: () => pulseShellLayer(shellContext.stageEls && shellContext.stageEls.electricLayer, 680, 1),
     playFlameAoe: () => pulseShellLayer(shellContext.stageEls && shellContext.stageEls.flameLayer, 780, 0.95),
