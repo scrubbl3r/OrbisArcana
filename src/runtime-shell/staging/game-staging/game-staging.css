@@ -240,6 +240,32 @@ body {
 .flameLayer { z-index: 6; }
 .electricLayer { z-index: 7; }
 
+.shockSvg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%,-50%);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.flameSvg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%,-50%);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.electricCanvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+
 .deathPanel {
   position: absolute;
   inset: 0;
