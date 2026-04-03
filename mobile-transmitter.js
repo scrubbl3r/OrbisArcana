@@ -388,6 +388,14 @@
       tokenUrl: TOKEN_URL,
       ablyCtor: Ably,
     });
+    const fastPathJoin = window.createFastPathJoinTransport({
+      ablyCtor: Ably,
+      workerBase: WORKER_BASE,
+      onStatus: () => {},
+      onControl: (name) => {
+        if (name === "calibrate") startCalibration();
+      },
+    });
 
     function normalizeRoom(input){
       let r = String(input || "").trim();
@@ -413,6 +421,7 @@
     const roomInfo = parseRoom();
     const room = roomInfo.channelName;
     const roomCode = roomInfo.roomCode;
+    const joinInfo = fastPathJoin.parseJoinParamsFromUrl(window.location.href);
 
     async function connectRelay() {
       return relay.connect({
@@ -433,8 +442,8 @@
     // =========================================================================
     // NETWORK THROTTLE (unchanged)
     // =========================================================================
-    const SEND_HZ = 12;
-    const SEND_MIN_MS = 1000 / SEND_HZ;
+    const SEND_HZ_RELAY = 12;
+    const SEND_HZ_FAST = 60;
 
     // =========================================================================
     // TELEMETRY SIZE SWITCH
@@ -536,13 +545,15 @@
       if (!relay.getChannel()) return;
 
       const now = performance.now();
+      const directActive = fastPathJoin.shouldUseDirect();
+      const sendMinMs = 1000 / (directActive ? SEND_HZ_FAST : SEND_HZ_RELAY);
       if (!force && now < nextSendAtMs) return;
 
       const sig = buildSigFromPayload(payload);
-      if (!force && !sigChanged(sig)) return;
+      if (!directActive && !force && !sigChanged(sig)) return;
 
       lastSig = sig;
-      nextSendAtMs = now + SEND_MIN_MS;
+      nextSendAtMs = now + sendMinMs;
 
 
       const out = {
@@ -588,6 +599,11 @@
         out.d_gate    = roundN(payload.d_gate, 4);
         out.d_balance = roundN(payload.d_balance, 4);
         out.d_couple  = roundN(payload.d_couple, 4);
+      }
+
+      if (fastPathJoin.shouldUseDirect()) {
+        fastPathJoin.sendImpulse(out);
+        return;
       }
 
       relay.publish("orb", out, (err) => {
@@ -1896,6 +1912,7 @@
         await connectRelay();
 
         running = true;
+        fastPathJoin.setRunning(true);
         lastT = null;
 
         ox=oy=oz=0;
@@ -1959,6 +1976,7 @@
 
     function stop() {
       running = false;
+      fastPathJoin.setRunning(false);
       calib.cancel();
       removeMotionListener();
 
@@ -1977,6 +1995,18 @@
     // =========================================================================
     // Final: Start/Stop click logic
     // =========================================================================
+    (async () => {
+      if (!joinInfo) return;
+      try {
+        await fastPathJoin.connect({
+          roomId: joinInfo.roomId,
+          token: joinInfo.token,
+        });
+      } catch (err) {
+        console.warn("Fast path join failed:", err);
+      }
+    })();
+
     startBtn.onclick = () => {
       if (UI.state === "idle") start();
       else stop();

@@ -98,6 +98,29 @@
       workerBase: WORKER_BASE,
       ablyCtor: Ably,
     });
+    const pairingService = window.createPairingService({
+      ablyCtor: Ably,
+      qrCodeLib: QRCode,
+      workerBase: WORKER_BASE,
+      mobileJoinUrl: (roomId, token) => {
+        const base = "https://scrubbl3r.github.io/OrbisArcana/mobile-transmitter.html";
+        return base + "?join=1&room=" + encodeURIComponent(roomId) + "&token=" + encodeURIComponent(token);
+      },
+    });
+    const fastPathHost = window.createFastPathHostTransport({
+      onImpulse: handleIncomingImpulse,
+      onPhoneStarted: () => {
+        if (els.pairModal.classList.contains("on")) closePairModal();
+        if (!calibAvailable){
+          calibAvailable = true;
+          setCalibStatus("Ready");
+          openCalibOverlay();
+        }
+      },
+      onConnectionState: (msg) => {
+        setStatus(`${msg} <span class="dim">(direct)</span>`, msg.indexOf("failed") >= 0 ? "bad" : "ok");
+      },
+    });
 
     function randCode(n=6){
       const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -857,22 +880,14 @@
     function openPairModal(){
       els.pairModal.classList.add("on");
       els.pairModal.setAttribute("aria-hidden","false");
-      renderQR(currentRoomChannel);
+      if (!pairingService.getState().active) {
+        renderQR(currentRoomChannel);
+      }
     }
     function closePairModal(){
       els.pairModal.classList.remove("on");
       els.pairModal.setAttribute("aria-hidden","true");
     }
-
-    els.pairBtn.addEventListener("click", async () => {
-      currentRoomChannel = "orb:" + randCode(6);
-      await connect({ auto:false });
-      resetShakeDetector();
-      resetStability();
-      resetVariability();
-      resetEnergyBank();
-      openPairModal();
-    });
 
     els.pairBackdrop.addEventListener("click", closePairModal);
     els.pairClose.addEventListener("click", closePairModal);
@@ -1468,6 +1483,25 @@
       });
     }
 
+    function handleIncomingImpulse(d){
+      idleMarkActivity();
+      if (els.pairModal.classList.contains("on")) closePairModal();
+      if (els.startScreen && !els.startScreen.classList.contains("off")) {
+        els.startScreen.classList.add("off");
+      }
+      if (d && d.calib === 1){
+        setCalibStatus("Calibrated");
+        closeCalibOverlay();
+      }
+      if (!calibAvailable){
+        calibAvailable = true;
+        setCalibStatus("Ready");
+        openCalibOverlay();
+      }
+      teleMaybeLog(d);
+      scheduleUIUpdate(d);
+    }
+
     const physicsAdapter = window.createReceiverPhysicsAdapter({
       physState,
     });
@@ -1543,6 +1577,10 @@
           idleStartTimers();
         },
         onMessage: (d) => {
+          if (fastPathHost.shouldIgnoreRelayImpulses()) {
+            idleMarkActivity();
+            return;
+          }
           idleMarkActivity();
 
           if (LAST_MESSAGE_ON) {
@@ -1565,37 +1603,21 @@
           } else if (els.last.textContent) {
             els.last.textContent = "";
           }
-
-          if (els.pairModal.classList.contains("on")) closePairModal();
-
-          if (els.startScreen && !els.startScreen.classList.contains("off")) {
-            els.startScreen.classList.add("off");
-          }
-
-          if (d && d.calib === 1){
-            setCalibStatus("Calibrated");
-            closeCalibOverlay();
-          }
-          if (!calibAvailable){
-            calibAvailable = true;
-            setCalibStatus("Ready");
-            openCalibOverlay();
-          }
-
-          teleMaybeLog(d);
-          scheduleUIUpdate(d);
+          handleIncomingImpulse(d);
         },
       });
 
       if (els.calibBtn){
         els.calibBtn.onclick = () => {
-          if (!receiverTransport.getChannel()) return;
           if (!calibAvailable) return;
           if (calibInFlight) return;
           calibInFlight = true;
           els.calibBtn.disabled = true;
           setCalibStatus("Calibrating… (2s)");
-          receiverTransport.publishControl("ctl", { calibrate: 1, ts: Date.now() });
+          if (!fastPathHost.sendControl("calibrate")) {
+            if (!receiverTransport.getChannel()) return;
+            receiverTransport.publishControl("ctl", { calibrate: 1, ts: Date.now() });
+          }
         };
       }
 
@@ -1604,6 +1626,8 @@
 
     // DEV button forces room=test always + launches QR
     els.newRoom.addEventListener("click", async () => {
+      pairingService.reset({ reason: "new_room" });
+      fastPathHost.reset();
       currentRoomChannel = "orb:test";
       resetShakeDetector();
       resetStability();
@@ -1620,6 +1644,30 @@
       // Hide immediately (visual intent), then run exact same behavior as Pair Phone.
       els.startScreen.classList.add("off");
       els.pairBtn.click();
+    });
+
+    els.pairBtn.addEventListener("click", async () => {
+      pairingService.reset({ reason: "new_pair" });
+      fastPathHost.reset();
+      currentRoomChannel = "orb:" + randCode(8);
+      resetShakeDetector();
+      resetStability();
+      resetVariability();
+      resetEnergyBank();
+      await connect({ auto:false });
+      openPairModal();
+      await pairingService.launch({
+        roomId: stripOrbPrefix(currentRoomChannel),
+        qrEl: els.qr,
+        urlTextEl: els.urlText,
+        copyBtn: els.copyUrl,
+        onSignal: (d) => {
+          fastPathHost.handleSignal(d);
+        },
+      });
+      await fastPathHost.start({
+        publishSignal: pairingService.publishSignal,
+      });
     });
 
     (async function init(){
