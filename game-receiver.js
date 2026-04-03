@@ -629,6 +629,10 @@
     let shakeArmed = true;
     let pendingSd = null;
     let pendingSdAt = 0;
+    function setPendingDirection(code, nowMs){
+      pendingSd = code;
+      pendingSdAt = nowMs;
+    }
 
     function resetShakeDetector(){
       shakeCooldownUntil = 0;
@@ -726,6 +730,9 @@
 
     const STABILITY_SPEED_MIN = 0.02;
     let stabilityVisualGate = true;
+    function setStabilityVisualGate(next){
+      stabilityVisualGate = !!next;
+    }
 
     let prevStableVisual = false;
 
@@ -1461,90 +1468,35 @@
       });
     }
 
-    function syncPhysicsFromMotion(state){
-      const motion = state.motion;
-      const energyBank = state.energyBank;
+    const physicsAdapter = window.createReceiverPhysicsAdapter({
+      physState,
+    });
+    const hudAdapter = window.createReceiverHudAdapter({
+      els,
+      clamp01,
+      lerp,
+      setBgFromEnergy,
+      setBar,
+      setShieldColor01,
+      shieldColor01,
+      shieldColorSmooth: SHIELD_COLOR_SMOOTH,
+    });
+    const gameplayAdapter = window.createReceiverGameplayAdapter({
+      clamp01,
+      physState,
+      setPendingDirection,
+      setStabilityVisualGate,
+      applyStabilityVisuals,
+      updateStability,
+      updateVariability,
+      processShakeDoubleBang,
+      setAudio,
+      stabilitySpeedMin: STABILITY_SPEED_MIN,
+    });
 
-      physState.lift01 = motion.lift01;
-      physState.energy01 = energyBank.level01;
-      physState.dynamics01 = motion.dynamics01;
-    }
-
-    function renderMotionState(state){
-      const motion = state.motion;
-      const direction = state.direction || {};
-      const presentation = state.presentation || {};
-      const debug = state.debug || {};
-      const nowMs = state.receivedAtMs;
-      const energyUI01 = state.energyBank.level01;
-      const liftP = Math.round(clamp01(motion.lift01) * 100);
-      const gP = Math.round(clamp01(motion.groove01) * 100);
-      const sP = Math.round(clamp01(motion.smooth01) * 100);
-      const sp = Math.round(clamp01(motion.speed01) * 100);
-      const dP = Math.round(clamp01(motion.dynamics01) * 100);
-      const ePts = Math.round(state.energyBank.points);
-
-      setBgFromEnergy(energyUI01);
-      els.vLift.textContent     = `${liftP}%`;
-      els.vGroove.textContent   = `${gP}%${motion.locked ? " (locked)" : ""}`;
-      els.vSmooth.textContent   = `${sP}%`;
-      els.vSpeed.textContent    = `${sp}%`;
-      els.vDynamics.textContent = `${dP}%`;
-      els.vEnergy.textContent   = `${ePts}`;
-      els.vShake.textContent    = `${Math.max(0, motion.shakeDisplayValue).toFixed(2)}`;
-
-      if (presentation.spinColor && presentation.spinColor.length >= 3){
-        const tr = clamp01(presentation.spinColor[0]);
-        const tg = clamp01(presentation.spinColor[1]);
-        const tb = clamp01(presentation.spinColor[2]);
-        shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
-        shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
-        shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
-        setShieldColor01(shieldColor01);
-      }
-
-      setBar(els.bLift,  motion.lift01);
-      setBar(els.bGroove, motion.groove01);
-      setBar(els.bSmooth, motion.smooth01);
-      setBar(els.bSpeed,  motion.speed01);
-      setBar(els.bDynamics, motion.dynamics01);
-      setBar(els.bEnergy, energyUI01);
-      setBar(els.bShake,  motion.shakeMeter01);
-
-      const over = (energyUI01 > 1);
-      els.vEnergy.classList.toggle("over", over);
-      els.bEnergy.classList.toggle("over", over);
-
-      if (els.dirReadout){
-        if (direction.vector){
-          els.dirReadout.textContent = `${Number(direction.yawDeg || 0).toFixed(0)}° yaw  |  ${Number(direction.tiltDeg || 0).toFixed(0)}° tilt`;
-        } else {
-          els.dirReadout.textContent = "—";
-        }
-      }
-
-      if (direction.code) {
-        pendingSd = direction.code;
-        pendingSdAt = nowMs;
-      }
-
-      stabilityVisualGate =
-        (!physState.onGround) &&
-        (clamp01(motion.speed01) >= STABILITY_SPEED_MIN) &&
-        (!physState.shieldDescentBlocked);
-
-      applyStabilityVisuals();
-
-      updateStability(motion.dynamics01, nowMs);
-      updateVariability(motion.dynamics01, nowMs);
-
-      processShakeDoubleBang(motion.shake01, nowMs, motion.groove01);
-
-      setAudio(energyUI01, motion.groove01, motion.locked);
-    }
-
-    motionStore.subscribe(syncPhysicsFromMotion);
-    motionStore.subscribe(renderMotionState);
+    motionStore.subscribe(physicsAdapter);
+    motionStore.subscribe(hudAdapter);
+    motionStore.subscribe(gameplayAdapter);
 
     let connecting = false;
 

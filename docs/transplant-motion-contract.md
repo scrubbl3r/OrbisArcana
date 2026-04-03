@@ -95,6 +95,20 @@ They should not:
 - maintain parallel motion truth
 - depend directly on transport payload aliases
 
+## Classic receiver adapter split
+
+The classic receiver now acts as an app shell around the headless core:
+
+- `receiver-transport.js` handles room connection and packet ingress
+- `signal-processor.js` derives receiver-side motion state
+- `motion-store.js` publishes that state
+- `receiver-adapters.js` contains classic app subscribers:
+  - physics adapter
+  - HUD adapter
+  - gameplay/audio/VFX reaction adapter
+
+This is the intended transplant shape: preserve the core, swap the adapters.
+
 ## Transplant target
 
 When moved into the modern repo:
