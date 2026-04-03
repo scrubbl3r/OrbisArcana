@@ -1,3 +1,6 @@
+    import { createProcessedSignalStore } from "./src/receiver/processed-signal-store.js";
+    import { createReceiverSignalPipeline } from "./src/receiver/receiver-signal-pipeline.js";
+
     const $ = (id) => document.getElementById(id);
 
     const els = {
@@ -88,12 +91,11 @@
       el.style.width = p.toFixed(1) + "%";
     }
 
-    function computeLift01(groove01, smooth01, speed01){
-      const g = clamp01(groove01);
-      const s = clamp01(smooth01);
-      const p = clamp01(speed01);
-      return clamp01(Math.pow(Math.max(0, g*s*p), 1/3));
-    }
+    const motionStore = window.createMotionStore({
+      energyBankCap: 1000,
+      energyChargeRatePps: 160,
+      shakeLampThreshold: 1.45,
+    });
 
     function randCode(n=6){
       const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -591,30 +593,44 @@
     // =========================================================================
     // ENERGY BANK (receiver-side battery)
     // =========================================================================
-    const ENERGY_BANK_CAP = 1000;
     const ENERGY_SHAKE_COST = 100;
-    const ENERGY_CHARGE_RATE_PPS = 160;
-
-    let energyBankPts = 0;
-    let energyBankLastMs = 0;
+<<<<<<< Updated upstream
 
     function resetEnergyBank(){
-      energyBankPts = 0;
-      energyBankLastMs = 0;
+      motionStore.reset();
     }
 
-    function updateEnergyBankFromPhone(energyFromPhone01, nowMs){
-      const e = Math.max(0, Number(energyFromPhone01) || 0);
-      if (!energyBankLastMs) energyBankLastMs = nowMs;
-      let dt = (nowMs - energyBankLastMs) / 1000;
-      energyBankLastMs = nowMs;
-      dt = clamp(dt, 0, 0.25);
-
-      energyBankPts = clamp(energyBankPts + (e * ENERGY_CHARGE_RATE_PPS * dt), 0, ENERGY_BANK_CAP);
+    function canSpendShake(){
+      return motionStore.getState().energyBank.points >= ENERGY_SHAKE_COST;
     }
 
-    function canSpendShake(){ return energyBankPts >= ENERGY_SHAKE_COST; }
-    function spendShake(){ energyBankPts = clamp(energyBankPts - ENERGY_SHAKE_COST, 0, ENERGY_BANK_CAP); }
+    function spendShake(){
+      motionStore.spendEnergy(ENERGY_SHAKE_COST);
+    }
+=======
+    const ENERGY_CHARGE_RATE_PPS = 160;
+
+    const processedSignalStore = createProcessedSignalStore();
+    const receiverSignalPipeline = createReceiverSignalPipeline({
+      store: processedSignalStore,
+      computeLift01,
+      clamp,
+      clamp01,
+      energyBankCap: ENERGY_BANK_CAP,
+      energyChargeRatePps: ENERGY_CHARGE_RATE_PPS,
+    });
+
+    receiverSignalPipeline.reset();
+    window.orbisProcessedSignalStore = processedSignalStore;
+    window.__ORBIS_SIGNAL_STORE__ = processedSignalStore;
+
+    function resetEnergyBank(){
+      receiverSignalPipeline.reset();
+    }
+
+    function canSpendShake(){ return receiverSignalPipeline.canSpendEnergy(ENERGY_SHAKE_COST); }
+    function spendShake(){ receiverSignalPipeline.spendEnergy(ENERGY_SHAKE_COST); }
+>>>>>>> Stashed changes
 
     // =========================================================================
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate) 
@@ -665,6 +681,7 @@
 
       if (!canSpendShake()) return;
 
+      shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
       spendShake();
       flashShakeLamp(400);
       triggerShockwave();
@@ -685,7 +702,6 @@
 
       // Reset shake-related caches after a successful hit (do not kill lamp/cooldown)
       resetShakeCachesAfterHit();
-      shakeCooldownUntil = nowMs + SHAKE_COOLDOWN_MS;
     }
 
     function processShakeDoubleBang(shakeVal01, nowMs, groove01){
@@ -1451,19 +1467,32 @@
       }, IDLE.hardMaxMs);
     }
 
-    let lastData = null;
+    let lastSignalState = null;
     let rafPending = false;
 
-    function scheduleUIUpdate(data){
-      lastData = data;
+    function scheduleUIUpdate(signalState){
+      lastSignalState = signalState;
       if (rafPending) return;
       rafPending = true;
       requestAnimationFrame(() => {
         rafPending = false;
+<<<<<<< Updated upstream
         if (!lastData) return;
-        applyDataToUI(lastData);
+        const receivedAtMs = performance.now();
+        motionStore.ingestPacket(lastData, receivedAtMs, {
+          suppressShake: receivedAtMs < shakeCooldownUntil,
+        });
+=======
+        if (!lastSignalState || !lastSignalState.processed) return;
+        applyDataToUI(lastSignalState);
+>>>>>>> Stashed changes
       });
     }
+
+    processedSignalStore.subscribe((signalState) => {
+      if (!signalState || !signalState.processed) return;
+      scheduleUIUpdate(signalState);
+    });
 
     function pickDirVec(d){
       // Priority:
@@ -1507,34 +1536,51 @@
       return { yaw, tilt };
     }
 
-    function applyDataToUI(d){
-      function pick01NewOrOld(newKey, oldKey){
-        if (d[newKey] != null) {
-          const n = Number(d[newKey]);
-          return isFinite(n) ? n : 0;
-        }
-        const n = Number(d[oldKey]);
-        if (!isFinite(n)) return 0;
-        return (n > 1.5) ? (n / 100) : n;
-      }
+<<<<<<< Updated upstream
+    function syncPhysicsFromMotion(state){
+      const motion = state.motion;
+      const energyBank = state.energyBank;
 
-      const nowMs = performance.now();
+      physState.lift01 = motion.lift01;
+      physState.energy01 = energyBank.level01;
+      physState.dynamics01 = motion.dynamics01;
+    }
 
-      const energyFromPhone   = pick01NewOrOld("energy01", "energy");
-      const groove   = pick01NewOrOld("groove01", "groove");
-      const dynamics = pick01NewOrOld("dynamics01", "orbit01");
-      const smooth   = pick01NewOrOld("smooth01", "smooth");
-      const speed    = pick01NewOrOld("speed01", "speed");
-      const shake    = pick01NewOrOld("shake01", "shake");
-      const locked   = !!d.locked;
-      
-      updateEnergyBankFromPhone(energyFromPhone, nowMs);
+    function renderMotionState(state){
+      const motion = state.motion;
+      const packet = state.packet || {};
+      const nowMs = state.receivedAtMs;
+      const energyUI01 = motionStore.getState().energyBank.level01;
+      const liftP = Math.round(clamp01(motion.lift01) * 100);
+      const gP = Math.round(clamp01(motion.groove01) * 100);
+      const sP = Math.round(clamp01(motion.smooth01) * 100);
+      const sp = Math.round(clamp01(motion.speed01) * 100);
+      const dP = Math.round(clamp01(motion.dynamics01) * 100);
+      const ePts = Math.round(motionStore.getState().energyBank.points);
 
-      const energyUI01 = energyBankPts / ENERGY_BANK_CAP;
-      const lift = computeLift01(groove, smooth, speed);
+      setBgFromEnergy(energyUI01);
+
+=======
+    function applyDataToUI(signalState){
+      const processed = signalState && signalState.processed;
+      if (!processed) return;
+
+      const nowMs = processed.receivedAtMs || performance.now();
+      const metrics = processed.metrics || {};
+      const direction = processed.direction || {};
+      const shield = processed.shield || {};
+
+      const groove = clamp01(metrics.groove01);
+      const dynamics = clamp01(metrics.dynamics01);
+      const smooth = clamp01(metrics.smooth01);
+      const speed = clamp01(metrics.speed01);
+      const shake = Math.max(0, Number(metrics.shake01) || 0);
+      const locked = !!metrics.locked;
+      const energyUI01 = clamp01(metrics.energyBank01);
+      const lift = clamp01(metrics.lift01);
 
       physState.lift01 = lift;
-      physState.energy01 = Math.max(0, Number(energyUI01) || 0);
+      physState.energy01 = energyUI01;
       physState.dynamics01 = dynamics;
 
       setBgFromEnergy(energyUI01);
@@ -1545,74 +1591,89 @@
       const sp = Math.round(clamp01(speed) * 100);
       const dP = Math.round(clamp01(dynamics) * 100);
       const shakeForUI = (nowMs < shakeCooldownUntil) ? 0 : shake;
-      const shakeMeter = (SHAKE_LAMP_THR > 1e-6)
-        ? clamp01((Number(shakeForUI) || 0) / SHAKE_LAMP_THR)
-        : 0;
+      const shakeMeter = (nowMs < shakeCooldownUntil) ? 0 : clamp01(metrics.shakeMeter01);
       const sh = (Number(shakeMeter) * SHAKE_LAMP_THR);
-      const ePts = Math.round(energyBankPts);
+      const ePts = Math.round(Number(metrics.energyBankPts) || 0);
 
+>>>>>>> Stashed changes
       els.vLift.textContent     = `${liftP}%`;
-      els.vGroove.textContent   = `${gP}%${locked ? " (locked)" : ""}`;
+      els.vGroove.textContent   = `${gP}%${motion.locked ? " (locked)" : ""}`;
       els.vSmooth.textContent   = `${sP}%`;
       els.vSpeed.textContent    = `${sp}%`;
       els.vDynamics.textContent = `${dP}%`;
       els.vEnergy.textContent   = `${ePts}`;
-      els.vShake.textContent    = `${Math.max(0, sh).toFixed(2)}`;
+      els.vShake.textContent    = `${Math.max(0, motion.shakeDisplayValue).toFixed(2)}`;
 
-      if (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3){
-        const tr = clamp01(d.shieldRGB[0]);
-        const tg = clamp01(d.shieldRGB[1]);
-        const tb = clamp01(d.shieldRGB[2]);
+<<<<<<< Updated upstream
+      if (motion.shieldRGB && motion.shieldRGB.length >= 3){
+        const tr = clamp01(motion.shieldRGB[0]);
+        const tg = clamp01(motion.shieldRGB[1]);
+        const tb = clamp01(motion.shieldRGB[2]);
         shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
         shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
         shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
+=======
+      if (shield.rgb){
+        shieldColor01.r = lerp(shieldColor01.r, shield.rgb.r, SHIELD_COLOR_SMOOTH);
+        shieldColor01.g = lerp(shieldColor01.g, shield.rgb.g, SHIELD_COLOR_SMOOTH);
+        shieldColor01.b = lerp(shieldColor01.b, shield.rgb.b, SHIELD_COLOR_SMOOTH);
+>>>>>>> Stashed changes
         setShieldColor01(shieldColor01);
       }
 
-      setBar(els.bLift,  lift);
-      setBar(els.bGroove, groove);
-      setBar(els.bSmooth, smooth);
-      setBar(els.bSpeed,  speed);
-      setBar(els.bDynamics, dynamics);
+      setBar(els.bLift,  motion.lift01);
+      setBar(els.bGroove, motion.groove01);
+      setBar(els.bSmooth, motion.smooth01);
+      setBar(els.bSpeed,  motion.speed01);
+      setBar(els.bDynamics, motion.dynamics01);
       setBar(els.bEnergy, energyUI01);
-      setBar(els.bShake,  shakeMeter);
+      setBar(els.bShake,  motion.shakeMeter01);
 
       const over = (energyUI01 > 1);
       els.vEnergy.classList.toggle("over", over);
       els.bEnergy.classList.toggle("over", over);
 
       // --- Direction readout (optional; does nothing if phone isn't sending it yet)
-      const dirV = pickDirVec(d);
+<<<<<<< Updated upstream
+      const dirV = pickDirVec(packet);
+=======
+>>>>>>> Stashed changes
       if (els.dirReadout){
-        if (dirV){
-          const a = dirToYawTiltDeg(dirV);
-          const yaw = ((a.yaw % 360) + 360) % 360; // 0..360
-          els.dirReadout.textContent = `${yaw.toFixed(0)}° yaw  |  ${a.tilt.toFixed(0)}° tilt`;
+        if (direction.vector){
+          els.dirReadout.textContent = `${Number(direction.yawDeg || 0).toFixed(0)}° yaw  |  ${Number(direction.tiltDeg || 0).toFixed(0)}° tilt`;
         } else {
           els.dirReadout.textContent = "—";
         }
       }
 
+<<<<<<< Updated upstream
       // sd is only sent by the phone on shakeHit
-      if (d && typeof d.sd === "string" && d.sd.trim()) {
-        pendingSd = d.sd;
+      if (motion.sd) {
+        pendingSd = motion.sd;
+=======
+      if (direction.shakeDirection) {
+        pendingSd = direction.shakeDirection;
+>>>>>>> Stashed changes
         pendingSdAt = nowMs;
       }
 
       stabilityVisualGate =
         (!physState.onGround) &&
-        (clamp01(speed) >= STABILITY_SPEED_MIN) &&
+        (clamp01(motion.speed01) >= STABILITY_SPEED_MIN) &&
         (!physState.shieldDescentBlocked);
 
       applyStabilityVisuals();
 
-      updateStability(dynamics, nowMs);
-      updateVariability(dynamics, nowMs);
+      updateStability(motion.dynamics01, nowMs);
+      updateVariability(motion.dynamics01, nowMs);
 
-      processShakeDoubleBang(shake, nowMs, groove);
+      processShakeDoubleBang(motion.shake01, nowMs, motion.groove01);
 
-      setAudio(energyUI01, groove, locked);
+      setAudio(energyUI01, motion.groove01, motion.locked);
     }
+
+    motionStore.subscribe(syncPhysicsFromMotion);
+    motionStore.subscribe(renderMotionState);
 
     let connecting = false;
 
@@ -1714,7 +1775,9 @@
         }
 
         teleMaybeLog(d);
-        scheduleUIUpdate(d);
+        receiverSignalPipeline.ingest(d, performance.now(), {
+          shakeLampThreshold: SHAKE_LAMP_THR,
+        });
       });
 
       connecting = false;
