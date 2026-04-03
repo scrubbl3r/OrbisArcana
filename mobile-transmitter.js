@@ -384,6 +384,10 @@
     // =========================================================================
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
     const TOKEN_URL = WORKER_BASE + "/token";
+    const relay = window.createTransmitterRelay({
+      tokenUrl: TOKEN_URL,
+      ablyCtor: Ably,
+    });
 
     function normalizeRoom(input){
       let r = String(input || "").trim();
@@ -406,55 +410,24 @@
       return { raw, roomCode, channelName };
     }
 
-    let ably = null;
-    let ablyChannel = null;
-
     const roomInfo = parseRoom();
     const room = roomInfo.channelName;
     const roomCode = roomInfo.roomCode;
 
     async function connectRelay() {
-      try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
-      try { if (ably) ably.close(); } catch(e) {}
-      ably = null; ablyChannel = null;
-
-      const authUrl =
-        TOKEN_URL +
-        "?room=" + encodeURIComponent(roomCode) +
-        "&clientId=" + encodeURIComponent("phone-" + Math.random().toString(16).slice(2,6));
-
-      // Quick preflight (kept)
-      try {
-        const r = await fetch(authUrl, { method: "GET", cache: "no-store" });
-        const j = await r.json();
-        if (!r.ok || !j.token) return false;
-      } catch (e) {
-        return false;
-      }
-
-      ably = new Ably.Realtime({ authUrl, autoConnect: true });
-      ablyChannel = ably.channels.get(room);
-
-      // Await attach so we don’t publish into a not-yet-attached channel.
-      await new Promise((resolve) => {
-        ablyChannel.attach(() => resolve());
-      });
-
-      try { ablyChannel.unsubscribe("ctl"); } catch(_) {}
-      ablyChannel.subscribe("ctl", (msg) => {
-        const d = (msg && msg.data) ? msg.data : {};
+      return relay.connect({
+        room,
+        roomCode,
+        onControlMessage: (d) => {
         if (d && d.calibrate){
           startCalibration();
         }
+        },
       });
-
-      return true;
     }
 
     function disconnectRelay() {
-      try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
-      try { if (ably) ably.close(); } catch(e) {}
-      ably = null; ablyChannel = null;
+      relay.disconnect();
     }
 
     // =========================================================================
@@ -562,7 +535,7 @@
     // publishDynamics trims payload when TELEMETRY_ON is false
     // =========================================================================
     function publishDynamics(payload, dt, force=false) {
-      if (!ablyChannel) return;
+      if (!relay.getChannel()) return;
 
       const now = performance.now();
       if (!force && now < nextSendAtMs) return;
@@ -617,7 +590,7 @@
         out.d_couple  = roundN(payload.d_couple, 4);
       }
 
-      ablyChannel.publish("orb", out, (err) => {
+      relay.publish("orb", out, (err) => {
         if (err) console.warn("[ably publish err]", err);
       });
     }
@@ -1389,42 +1362,29 @@
     // =========================================================================
     const impulseHist = []; // { t, ax, ay, az }
 
-    const calib = {
-      active: false,
-      startMs: 0,
-      samples: [],
-      ackPending: false,
-      pendingReq: false
-    };
+    const calib = window.createCalibrationSession();
 
     function startCalibration(){
-      if (!running){
-        calib.pendingReq = true;
-        return;
-      }
-      calib.pendingReq = false;
-      calib.active = true;
-      calib.startMs = performance.now();
-      calib.samples = [];
+      calib.requestStart(running, performance.now());
     }
 
     function finishCalibration(){
-      if (!calib.samples.length) {
-        calib.active = false;
+      if (!calib.state.samples.length) {
+        calib.cancel();
         return;
       }
       let sx=0, sy=0, sz=0;
-      for (const s of calib.samples){ sx+=s.ax; sy+=s.ay; sz+=s.az; }
-      const n = calib.samples.length || 1;
+      for (const s of calib.state.samples){ sx+=s.ax; sy+=s.ay; sz+=s.az; }
+      const n = calib.state.samples.length || 1;
       const gRaw = { x:sx/n, y:sy/n, z:sz/n };
       const gHatN = vNorm(gRaw);
       if (!(gHatN.mag > 0.5)) {
-        calib.active = false;
+        calib.cancel();
         return;
       }
 
       if (!orientState || !orientState.R) {
-        calib.active = false;
+        calib.cancel();
         return;
       }
 
@@ -1450,8 +1410,7 @@
       calibAlpha0 = orientState && isFinite(orientState.alpha) ? orientState.alpha : calibAlpha0;
       saveCalibBasis();
 
-      calib.active = false;
-      calib.ackPending = true;
+      calib.finishWithAck();
     }
 
     function classifyDirectionalShake(nowMs){
@@ -1628,9 +1587,9 @@
         const impCutoff = nowMs - HIT_WIN_MAX_MS;
         while (impulseHist.length && impulseHist[0].t < impCutoff) impulseHist.shift();
 
-        if (calib.active){
-          calib.samples.push({ ax: agx, ay: agy, az: agz });
-          if ((nowMs - calib.startMs) >= CALIB_MS){
+        if (calib.state.active){
+          calib.addSample({ ax: agx, ay: agy, az: agz });
+          if (calib.shouldFinish(nowMs, CALIB_MS)){
             finishCalibration();
           }
         }
@@ -1664,9 +1623,8 @@
           const held = meterHoldOrFade(dt);
 
           const sd = (sh.shake01 > SD_SLOP_GATE) ? classifyDirectionalShake(nowMs) : null;
-          const calibAck = calib.ackPending ? 1 : 0;
+          const calibAck = calib.consumeAck();
           const forceSend = !!calibAck || !!sh.shakeHit;
-          if (calib.ackPending) calib.ackPending = false;
 
           publishDynamics({
             room,
@@ -1868,9 +1826,8 @@
         const lockedNow = !!(lock || inGrace);
 
         const sd = (sh.shake01 > SD_SLOP_GATE) ? classifyDirectionalShake(nowMs) : null;
-        const calibAck = calib.ackPending ? 1 : 0;
+        const calibAck = calib.consumeAck();
         const forceSend = !!calibAck || !!sh.shakeHit;
-        if (calib.ackPending) calib.ackPending = false;
 
         publishDynamics({
           room,
@@ -1982,7 +1939,7 @@
         UI.state = "running";
         setBtn("Stop");
 
-        if (calib.pendingReq) startCalibration();
+        if (calib.takePendingRequest()) startCalibration();
 
       } finally {
         startBtn.disabled = false;
@@ -1996,7 +1953,7 @@
 
     function stop() {
       running = false;
-      calib.active = false;
+      calib.cancel();
       removeMotionListener();
 
       if (audioCtx && gainNode) {

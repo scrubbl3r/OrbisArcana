@@ -93,6 +93,10 @@
       energyChargeRatePps: 160,
       shakeLampThreshold: 1.45,
     });
+    const receiverTransport = window.createReceiverTransport({
+      workerBase: WORKER_BASE,
+      ablyCtor: Ably,
+    });
 
     function randCode(n=6){
       const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -1378,12 +1382,6 @@
     }
     requestAnimationFrame(physicsStep);
 
-    // =========================================================================
-    // ABLY RECEIVER — unchanged plumbing
-    // =========================================================================
-    let realtime = null;
-    let channel = null;
-
     const IDLE = {
       idleMs: 1 * 60 * 1000,
       warnMs: 90 * 1000,
@@ -1408,11 +1406,7 @@
 
     function idleDisconnect(reason){
       idleClearTimers();
-      try { if (channel) channel.unsubscribe(); } catch(_) {}
-      try { if (channel) channel.detach(); } catch(_) {}
-      try { if (realtime) realtime.close(); } catch(_) {}
-      channel = null;
-      realtime = null;
+      receiverTransport.disconnect();
       setStatus(reason, "bad");
     }
 
@@ -1608,85 +1602,82 @@
       );
 
       idleClearTimers();
+      receiverTransport.connect({
+        roomChannel,
+        onConnectionConnected: (connectedRoom) => {
+          setStatus(`Connected ✓ <span class="dim">(${connectedRoom})</span>`, "ok");
+        },
+        onConnectionFailed: (state) => {
+          console.error("Ably failed:", state);
+          setStatus("FAILED — see console", "bad");
+        },
+        onConnectionDisconnected: () => {
+          setStatus("Disconnected <span class=\"dim\">(refresh page)</span>", "bad");
+        },
+        onAttached: (err, attachedRoom) => {
+          if (err) {
+            console.error("Channel attach failed:", err);
+            setStatus("Channel attach FAILED — see console", "bad");
+            return;
+          }
+          setStatus(`Connected ✓ (listening…) <span class="dim">(${attachedRoom})</span>`, "ok");
+          idleStartTimers();
+        },
+        onMessage: (d) => {
+          idleMarkActivity();
 
-      try { if (channel) channel.unsubscribe(); } catch(e) {}
-      try { if (realtime) realtime.close(); } catch(e) {}
-      realtime = null; channel = null;
+          if (LAST_MESSAGE_ON) {
+            let s = "";
+            try { s = JSON.stringify(d); } catch(_) { s = String(d); }
+            if (s.length > 240) s = s.slice(0, 240) + " …";
+            const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
+            const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
+              ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
+              : "shieldRGB:— ";
+            const axis = (d && Array.isArray(d.shieldAxis) && d.shieldAxis.length >= 3)
+              ? `axis:${d.shieldAxis.map(v => Number(v).toFixed(2)).join(",")} `
+              : "axis:— ";
+            const dbg = (d && (d.calibOK != null || d.omegaOK != null))
+              ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
+              : "calibOK:— omegaOK:— ";
+            const decay = `decay:${shieldDecayActive ? 1 : 0} `;
+            els.last.textContent = rgb + decay + axis + dbg + sh + s;
+          } else if (els.last.textContent) {
+            els.last.textContent = "";
+          }
 
-      const roomCode = stripOrbPrefix(roomChannel);
-      const authUrl = WORKER_BASE + "/token?room=" + encodeURIComponent(roomCode) + "&v=" + Date.now();
+          if (els.pairModal.classList.contains("on")) closePairModal();
 
-      realtime = new Ably.Realtime({ authUrl, echoMessages:false });
+          if (els.startScreen && !els.startScreen.classList.contains("off")) {
+            els.startScreen.classList.add("off");
+          }
 
-      realtime.connection.on("connected", () => setStatus(`Connected ✓ <span class="dim">(${roomChannel})</span>`, "ok"));
-      realtime.connection.on("failed", (st) => { console.error("Ably failed:", st); setStatus("FAILED — see console", "bad"); });
-      realtime.connection.on("disconnected", () => setStatus("Disconnected <span class=\"dim\">(refresh page)</span>", "bad"));
+          if (d && d.calib === 1){
+            setCalibStatus("Calibrated");
+            closeCalibOverlay();
+          }
+          if (!calibAvailable){
+            calibAvailable = true;
+            setCalibStatus("Ready");
+            openCalibOverlay();
+          }
 
-      channel = realtime.channels.get(roomChannel);
-
-      channel.attach((err) => {
-        if (err) { console.error("Channel attach failed:", err); setStatus("Channel attach FAILED — see console", "bad"); return; }
-        setStatus(`Connected ✓ (listening…) <span class="dim">(${roomChannel})</span>`, "ok");
-        idleStartTimers();
+          teleMaybeLog(d);
+          scheduleUIUpdate(d);
+        },
       });
 
       if (els.calibBtn){
         els.calibBtn.onclick = () => {
-          if (!channel) return;
+          if (!receiverTransport.getChannel()) return;
           if (!calibAvailable) return;
           if (calibInFlight) return;
           calibInFlight = true;
           els.calibBtn.disabled = true;
           setCalibStatus("Calibrating… (2s)");
-          channel.publish("ctl", { calibrate: 1, ts: Date.now() });
+          receiverTransport.publishControl("ctl", { calibrate: 1, ts: Date.now() });
         };
       }
-
-      channel.subscribe("orb", (msg) => {
-        idleMarkActivity();
-
-        const d = (msg && msg.data) ? msg.data : {};
-
-        if (LAST_MESSAGE_ON) {
-          let s = "";
-          try { s = JSON.stringify(d); } catch(_) { s = String(d); }
-          if (s.length > 240) s = s.slice(0, 240) + " …";
-          const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
-          const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
-            ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
-            : "shieldRGB:— ";
-          const axis = (d && Array.isArray(d.shieldAxis) && d.shieldAxis.length >= 3)
-            ? `axis:${d.shieldAxis.map(v => Number(v).toFixed(2)).join(",")} `
-            : "axis:— ";
-          const dbg = (d && (d.calibOK != null || d.omegaOK != null))
-            ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
-            : "calibOK:— omegaOK:— ";
-          const decay = `decay:${shieldDecayActive ? 1 : 0} `;
-          els.last.textContent = rgb + decay + axis + dbg + sh + s;
-        } else if (els.last.textContent) {
-          els.last.textContent = "";
-        }
-
-        if (els.pairModal.classList.contains("on")) closePairModal();
-
-        // If the start screen is still up for some reason, drop it on first msg.
-        if (els.startScreen && !els.startScreen.classList.contains("off")) {
-          els.startScreen.classList.add("off");
-        }
-
-        if (d && d.calib === 1){
-          setCalibStatus("Calibrated");
-          closeCalibOverlay();
-        }
-        if (!calibAvailable){
-          calibAvailable = true;
-          setCalibStatus("Ready");
-          openCalibOverlay();
-        }
-
-        teleMaybeLog(d);
-        scheduleUIUpdate(d);
-      });
 
       connecting = false;
     }
