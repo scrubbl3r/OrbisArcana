@@ -1019,7 +1019,9 @@
       if (!d) return 0;
       if (d[key] != null) return 1;
 
-      // ✅ NEW fallbacks: a -> dir, r -> omega
+      // Canonical names first, legacy aliases second.
+      if (key === "dir" && d.accel != null) return 1;
+      if (key === "omega" && d.rotationRate != null) return 1;
       if (key === "dir" && d.a != null) return 1;
       if (key === "omega" && d.r != null) return 1;
 
@@ -1028,13 +1030,14 @@
 
     function telePickVecRaw(d, prefix){
       // prefix = "dir" or "omega"
-      // Accepts:
-      //  - d.dir / d.omega (array/object)
-      //  - scalar dirX/dirY/dirZ, omegaX/omegaY/omegaZ
-      //  - ✅ NEW fallbacks: d.a (for dir), d.r (for omega)
-      const fallbackKey = (prefix === "dir") ? "a" : (prefix === "omega") ? "r" : null;
+      const canonicalKey = (prefix === "dir") ? "accel" : (prefix === "omega") ? "rotationRate" : null;
+      const legacyKey = (prefix === "dir") ? "a" : (prefix === "omega") ? "r" : null;
 
-      const src = (d && (d[prefix] != null ? d[prefix] : (fallbackKey ? d[fallbackKey] : null)));
+      const src = (d && (
+        d[prefix] != null ? d[prefix] :
+        canonicalKey && d[canonicalKey] != null ? d[canonicalKey] :
+        legacyKey ? d[legacyKey] : null
+      ));
 
       let x = 0, y = 0, z = 0;
 
