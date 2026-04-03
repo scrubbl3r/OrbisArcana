@@ -88,11 +88,12 @@
       el.style.width = p.toFixed(1) + "%";
     }
 
-    const motionStore = window.createMotionStore({
+    const signalProcessor = window.createSignalProcessor({
       energyBankCap: 1000,
       energyChargeRatePps: 160,
       shakeLampThreshold: 1.45,
     });
+    const motionStore = window.createMotionStore();
     const receiverTransport = window.createReceiverTransport({
       workerBase: WORKER_BASE,
       ablyCtor: Ably,
@@ -597,15 +598,21 @@
     const ENERGY_SHAKE_COST = 100;
 
     function resetEnergyBank(){
+      signalProcessor.reset();
       motionStore.reset();
     }
 
     function canSpendShake(){
-      return motionStore.getState().energyBank.points >= ENERGY_SHAKE_COST;
+      return signalProcessor.getEnergyBankState().points >= ENERGY_SHAKE_COST;
     }
 
     function spendShake(){
-      motionStore.spendEnergy(ENERGY_SHAKE_COST);
+      signalProcessor.spendEnergy(ENERGY_SHAKE_COST);
+      const state = motionStore.getState();
+      motionStore.publish({
+        ...state,
+        energyBank: signalProcessor.getEnergyBankState(),
+      });
     }
 
     // =========================================================================
@@ -1444,52 +1451,11 @@
         rafPending = false;
         if (!lastData) return;
         const receivedAtMs = performance.now();
-        motionStore.ingestPacket(lastData, receivedAtMs, {
+        const nextState = signalProcessor.processPacket(lastData, receivedAtMs, {
           suppressShake: receivedAtMs < shakeCooldownUntil,
         });
+        motionStore.publish(nextState);
       });
-    }
-
-    function pickDirVec(d){
-      // Priority:
-      // 1) d.dir
-      // 2) d.a   (accelIncludingGravity)
-      // 3) d.omega
-      // 4) d.r   (rotationRate)
-      // 5) scalar dirX.. / omegaX..
-      const src =
-        (d && (d.dir != null ? d.dir :
-          d.a   != null ? d.a   :
-          d.omega != null ? d.omega :
-          d.r   != null ? d.r   :
-          null));
-
-      let x=0,y=0,z=0;
-
-      if (Array.isArray(src) && src.length >= 3){
-        x = Number(src[0]); y = Number(src[1]); z = Number(src[2]);
-      } else if (src && typeof src === "object"){
-        x = Number(src.x); y = Number(src.y); z = Number(src.z);
-      } else {
-        // scalar fields (prefer dir*, then omega*)
-        x = Number(d && (d.dirX != null ? d.dirX : d.omegaX));
-        y = Number(d && (d.dirY != null ? d.dirY : d.omegaY));
-        z = Number(d && (d.dirZ != null ? d.dirZ : d.omegaZ));
-      }
-
-      if (!isFinite(x) || !isFinite(y) || !isFinite(z)) return null;
-
-      const m = Math.hypot(x,y,z);
-      if (!(m > 1e-6)) return null;
-
-      return { x:x/m, y:y/m, z:z/m, mag:m };
-    }
-
-    function dirToYawTiltDeg(v){
-      // yaw around vertical axis (x/y plane), tilt from horizon via z
-      const yaw = Math.atan2(v.y, v.x) * 180/Math.PI;   // -180..180
-      const tilt = Math.asin(clamp(v.z, -1, 1)) * 180/Math.PI; // -90..90
-      return { yaw, tilt };
     }
 
     function syncPhysicsFromMotion(state){
@@ -1503,15 +1469,15 @@
 
     function renderMotionState(state){
       const motion = state.motion;
-      const packet = state.packet || {};
+      const direction = state.direction || {};
       const nowMs = state.receivedAtMs;
-      const energyUI01 = motionStore.getState().energyBank.level01;
+      const energyUI01 = state.energyBank.level01;
       const liftP = Math.round(clamp01(motion.lift01) * 100);
       const gP = Math.round(clamp01(motion.groove01) * 100);
       const sP = Math.round(clamp01(motion.smooth01) * 100);
       const sp = Math.round(clamp01(motion.speed01) * 100);
       const dP = Math.round(clamp01(motion.dynamics01) * 100);
-      const ePts = Math.round(motionStore.getState().energyBank.points);
+      const ePts = Math.round(state.energyBank.points);
 
       setBgFromEnergy(energyUI01);
       els.vLift.textContent     = `${liftP}%`;
@@ -1544,13 +1510,9 @@
       els.vEnergy.classList.toggle("over", over);
       els.bEnergy.classList.toggle("over", over);
 
-      // --- Direction readout (optional; does nothing if phone isn't sending it yet)
-      const dirV = pickDirVec(packet);
       if (els.dirReadout){
-        if (dirV){
-          const a = dirToYawTiltDeg(dirV);
-          const yaw = ((a.yaw % 360) + 360) % 360;
-          els.dirReadout.textContent = `${yaw.toFixed(0)}° yaw  |  ${a.tilt.toFixed(0)}° tilt`;
+        if (direction.vector){
+          els.dirReadout.textContent = `${Number(direction.yawDeg || 0).toFixed(0)}° yaw  |  ${Number(direction.tiltDeg || 0).toFixed(0)}° tilt`;
         } else {
           els.dirReadout.textContent = "—";
         }
