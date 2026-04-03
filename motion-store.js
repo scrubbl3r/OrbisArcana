@@ -16,9 +16,6 @@
         shakeHit: false,
         shakeMeter01: 0,
         shakeDisplayValue: 0,
-        sd: null,
-        shieldRGB: null,
-        shieldAxis: null,
         accel: null,
         rotationRate: null,
       },
@@ -26,6 +23,16 @@
         vector: null,
         yawDeg: null,
         tiltDeg: null,
+        code: null,
+      },
+      presentation: {
+        spinColor: null,
+      },
+      debug: {
+        spinAxis: null,
+        calibOK: null,
+        omegaOK: null,
+        tag: null,
       },
       energyBank: {
         points: 0,
@@ -67,9 +74,6 @@
           shakeHit: false,
           shakeMeter01: 0,
           shakeDisplayValue: 0,
-          sd: null,
-          shieldRGB: null,
-          shieldAxis: null,
           accel: null,
           rotationRate: null,
         },
@@ -77,6 +81,16 @@
           vector: null,
           yawDeg: null,
           tiltDeg: null,
+          code: null,
+        },
+        presentation: {
+          spinColor: null,
+        },
+        debug: {
+          spinAxis: null,
+          calibOK: null,
+          omegaOK: null,
+          tag: null,
         },
         energyBank: {
           points: 0,

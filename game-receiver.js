@@ -1470,6 +1470,8 @@
     function renderMotionState(state){
       const motion = state.motion;
       const direction = state.direction || {};
+      const presentation = state.presentation || {};
+      const debug = state.debug || {};
       const nowMs = state.receivedAtMs;
       const energyUI01 = state.energyBank.level01;
       const liftP = Math.round(clamp01(motion.lift01) * 100);
@@ -1488,10 +1490,10 @@
       els.vEnergy.textContent   = `${ePts}`;
       els.vShake.textContent    = `${Math.max(0, motion.shakeDisplayValue).toFixed(2)}`;
 
-      if (motion.shieldRGB && motion.shieldRGB.length >= 3){
-        const tr = clamp01(motion.shieldRGB[0]);
-        const tg = clamp01(motion.shieldRGB[1]);
-        const tb = clamp01(motion.shieldRGB[2]);
+      if (presentation.spinColor && presentation.spinColor.length >= 3){
+        const tr = clamp01(presentation.spinColor[0]);
+        const tg = clamp01(presentation.spinColor[1]);
+        const tb = clamp01(presentation.spinColor[2]);
         shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
         shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
         shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
@@ -1518,8 +1520,8 @@
         }
       }
 
-      if (motion.sd) {
-        pendingSd = motion.sd;
+      if (direction.code) {
+        pendingSd = direction.code;
         pendingSdAt = nowMs;
       }
 
@@ -1593,14 +1595,15 @@
             try { s = JSON.stringify(d); } catch(_) { s = String(d); }
             if (s.length > 240) s = s.slice(0, 240) + " …";
             const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
-            const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
-              ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
-              : "shieldRGB:— ";
-            const axis = (d && Array.isArray(d.shieldAxis) && d.shieldAxis.length >= 3)
-              ? `axis:${d.shieldAxis.map(v => Number(v).toFixed(2)).join(",")} `
+            const state = motionStore.getState();
+            const rgb = (state.presentation && Array.isArray(state.presentation.spinColor) && state.presentation.spinColor.length >= 3)
+              ? `spinColor:${state.presentation.spinColor.map(v => Number(v).toFixed(2)).join(",")} `
+              : "spinColor:— ";
+            const axis = (state.debug && Array.isArray(state.debug.spinAxis) && state.debug.spinAxis.length >= 3)
+              ? `spinAxis:${state.debug.spinAxis.map(v => Number(v).toFixed(2)).join(",")} `
               : "axis:— ";
-            const dbg = (d && (d.calibOK != null || d.omegaOK != null))
-              ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
+            const dbg = (state.debug && (state.debug.calibOK != null || state.debug.omegaOK != null))
+              ? `calibOK:${Number(state.debug.calibOK)||0} omegaOK:${Number(state.debug.omegaOK)||0} `
               : "calibOK:— omegaOK:— ";
             const decay = `decay:${shieldDecayActive ? 1 : 0} `;
             els.last.textContent = rgb + decay + axis + dbg + sh + s;

@@ -29,12 +29,12 @@ This branch already exposes a compact classic motion pipeline:
 | `locked` | groove lock/grace state | `mobile-transmitter.js` | HUD, audio | Keep | Canonical state flag. |
 | `hz` | autocorrelation frequency | `mobile-transmitter.js` | audio, telemetry | Keep | Useful canonical signal. |
 | `sd` | directional shake classification | `mobile-transmitter.js` | receiver direction lamps | Keep | Canonical event payload for direction. |
-| `a` | accel including gravity vector | `mobile-transmitter.js` | telemetry, receiver direction readout fallback | Keep / Rename later | Good transport input; rename later to something clearer like `accel`. |
-| `r` | rotation rate vector | `mobile-transmitter.js` | telemetry, receiver direction readout fallback | Keep / Rename later | Good transport input; rename later to `rotationRate`. |
+| `accel` | accel including gravity vector | `mobile-transmitter.js` | telemetry, receiver direction readout fallback | Keep | Canonical transport input name. Legacy alias `a` may remain temporarily for compatibility. |
+| `rotationRate` | rotation rate vector | `mobile-transmitter.js` | telemetry, receiver direction readout fallback | Keep | Canonical transport input name. Legacy alias `r` may remain temporarily for compatibility. |
 | `lift01` | `groove01 * smooth01 * speed01` cube-root | receiver | HUD, physics | Keep | Not sent from phone; derived receiver-side today. Good MotionStore candidate. |
 | energy bank points | receiver integration of `energy01` over time | receiver | HUD, shake spend gate, background, audio | Keep | Receiver/game state, not raw motion truth. |
-| `shieldRGB` | calibrated spin-axis dominance | `mobile-transmitter.js` | receiver shield color VFX | Drop from canonical motion core | Presentation-oriented legacy naming; may survive only as VFX adapter output. |
-| `shieldAxis` | calibrated spin-axis dominance vector | `mobile-transmitter.js` | receiver debug/VFX | Drop from canonical motion core | Legacy `shield` naming; likely becomes optional spin-axis debug output. |
+| `spinColor` | calibrated spin-axis dominance color | `mobile-transmitter.js` | receiver shield/stability VFX | Keep as presentation-only | Not part of canonical motion truth. Legacy alias `shieldRGB` may remain temporarily for compatibility. |
+| `spinAxis` | calibrated spin-axis dominance vector | `mobile-transmitter.js` | receiver debug/VFX | Keep as debug-only | Not part of canonical motion truth. Legacy alias `shieldAxis` may remain temporarily for compatibility. |
 | `calib`, `calibOK`, `omegaOK` | calibration/debug flags | `mobile-transmitter.js` | receiver overlay/debug | Keep adapter-only | Useful for pairing/calibration flow, not part of motion truth. |
 | `fallDrag` | constant payload field | `mobile-transmitter.js` | no meaningful receiver dependency | Drop | Looks like transport baggage. |
 
@@ -43,7 +43,7 @@ This branch already exposes a compact classic motion pipeline:
 - Receiver-side `applyDataToUI()` was serving as packet normalizer, derived-state builder, HUD updater, physics updater, and audio/VFX dispatcher all at once.
 - Lift and energy-bank state were derived locally inside the render path rather than published as shared state.
 - Stability, variability, shake gating, HUD values, and physics all consumed packet values directly instead of subscribing to a shared motion state.
-- `shield*` naming is legacy/presentation baggage even though the underlying value is really spin-axis/VFX data.
+- `shield*` naming is legacy/presentation baggage even though the underlying value is really spin-axis/VFX data. The cleanup direction is `spinColor`/`spinAxis` outside canonical motion state.
 
 ## First refactor seam
 

@@ -116,10 +116,10 @@
       const hz = (packet && isFinite(Number(packet.hz))) ? Number(packet.hz) : 0;
       const shakeHit = !!(packet && packet.shakeHit);
       const sd = (packet && typeof packet.sd === "string" && packet.sd.trim()) ? packet.sd.trim().toUpperCase() : null;
-      const shieldRGB = pickVec3(packet, "shieldRGB");
-      const shieldAxis = pickVec3(packet, "shieldAxis");
-      const accel = pickVec3(packet, "a");
-      const rotationRate = pickVec3(packet, "r");
+      const spinColor = pickVec3(packet, "spinColor") || pickVec3(packet, "shieldRGB");
+      const spinAxis = pickVec3(packet, "spinAxis") || pickVec3(packet, "shieldAxis");
+      const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
+      const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
@@ -156,9 +156,6 @@
           shakeHit,
           shakeMeter01,
           shakeDisplayValue: shakeMeter01 * settings.shakeLampThreshold,
-          sd,
-          shieldRGB,
-          shieldAxis,
           accel,
           rotationRate,
         },
@@ -166,6 +163,16 @@
           vector: directionVector,
           yawDeg: directionAngles ? (((directionAngles.yaw % 360) + 360) % 360) : null,
           tiltDeg: directionAngles ? directionAngles.tilt : null,
+          code: sd,
+        },
+        presentation: {
+          spinColor,
+        },
+        debug: {
+          spinAxis,
+          calibOK: (packet && packet.calibOK != null) ? Number(packet.calibOK) || 0 : null,
+          omegaOK: (packet && packet.omegaOK != null) ? Number(packet.omegaOK) || 0 : null,
+          tag: (packet && packet.dbgTag != null) ? String(packet.dbgTag) : null,
         },
         energyBank: getEnergyBankState(),
       };

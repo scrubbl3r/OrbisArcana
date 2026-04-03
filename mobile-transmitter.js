@@ -451,8 +451,6 @@
     // =========================================================================
     // 1) FALL DRAG DEFAULT (requested)
     // =========================================================================
-    const FALL_DRAG_DEFAULT = 1.0;
-
     // EPS for signature-gated publishing
     const EPS = {
       energy01:    0.006,
@@ -549,8 +547,6 @@
 
       const out = {
         room: payload.room,
-        fallDrag: FALL_DRAG_DEFAULT,
-
         energy01:   sig.energy01,
         groove01:   sig.groove01,
         dynamics01: sig.dynamics01,
@@ -564,10 +560,14 @@
         // Compact payload (keep)
         a: [sig.agx, sig.agy, sig.agz],  // accelIncludingGravity
         r: [sig.rrx, sig.rry, sig.rrz],  // rotationRate
+        accel: [sig.agx, sig.agy, sig.agz],
+        rotationRate: [sig.rrx, sig.rry, sig.rrz],
       };
 
       if (payload.sd) out.sd = payload.sd;
       if (payload.calib) out.calib = payload.calib;
+      if (payload.spinColor) out.spinColor = payload.spinColor;
+      if (payload.spinAxis) out.spinAxis = payload.spinAxis;
       if (payload.shieldRGB) out.shieldRGB = payload.shieldRGB;
       if (payload.shieldAxis) out.shieldAxis = payload.shieldAxis;
       if (payload.calibOK != null) out.calibOK = payload.calibOK;
@@ -1645,6 +1645,8 @@
             calib: calibAck,
             locked: false,
             hz: 0,
+            spinColor: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            spinAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
             shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             dbgTag: VERSION_TEXT,
@@ -1739,6 +1741,8 @@
             shakeHit: sh.shakeHit,
             locked: false,
             hz: 0,
+            spinColor: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+            spinAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
             shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             dbgTag: VERSION_TEXT,
@@ -1848,6 +1852,8 @@
           calib: calibAck,
           locked: lockedNow,
           hz: grooveHz,
+          spinColor: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
+          spinAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
           shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
           shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
           dbgTag: VERSION_TEXT,
