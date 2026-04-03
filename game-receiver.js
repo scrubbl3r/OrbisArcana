@@ -1,6 +1,3 @@
-    import { createProcessedSignalStore } from "./src/receiver/processed-signal-store.js";
-    import { createReceiverSignalPipeline } from "./src/receiver/receiver-signal-pipeline.js";
-
     const $ = (id) => document.getElementById(id);
 
     const els = {
@@ -594,7 +591,6 @@
     // ENERGY BANK (receiver-side battery)
     // =========================================================================
     const ENERGY_SHAKE_COST = 100;
-<<<<<<< Updated upstream
 
     function resetEnergyBank(){
       motionStore.reset();
@@ -607,30 +603,6 @@
     function spendShake(){
       motionStore.spendEnergy(ENERGY_SHAKE_COST);
     }
-=======
-    const ENERGY_CHARGE_RATE_PPS = 160;
-
-    const processedSignalStore = createProcessedSignalStore();
-    const receiverSignalPipeline = createReceiverSignalPipeline({
-      store: processedSignalStore,
-      computeLift01,
-      clamp,
-      clamp01,
-      energyBankCap: ENERGY_BANK_CAP,
-      energyChargeRatePps: ENERGY_CHARGE_RATE_PPS,
-    });
-
-    receiverSignalPipeline.reset();
-    window.orbisProcessedSignalStore = processedSignalStore;
-    window.__ORBIS_SIGNAL_STORE__ = processedSignalStore;
-
-    function resetEnergyBank(){
-      receiverSignalPipeline.reset();
-    }
-
-    function canSpendShake(){ return receiverSignalPipeline.canSpendEnergy(ENERGY_SHAKE_COST); }
-    function spendShake(){ receiverSignalPipeline.spendEnergy(ENERGY_SHAKE_COST); }
->>>>>>> Stashed changes
 
     // =========================================================================
     // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate) 
@@ -1467,32 +1439,22 @@
       }, IDLE.hardMaxMs);
     }
 
-    let lastSignalState = null;
+    let lastData = null;
     let rafPending = false;
 
-    function scheduleUIUpdate(signalState){
-      lastSignalState = signalState;
+    function scheduleUIUpdate(data){
+      lastData = data;
       if (rafPending) return;
       rafPending = true;
       requestAnimationFrame(() => {
         rafPending = false;
-<<<<<<< Updated upstream
         if (!lastData) return;
         const receivedAtMs = performance.now();
         motionStore.ingestPacket(lastData, receivedAtMs, {
           suppressShake: receivedAtMs < shakeCooldownUntil,
         });
-=======
-        if (!lastSignalState || !lastSignalState.processed) return;
-        applyDataToUI(lastSignalState);
->>>>>>> Stashed changes
       });
     }
-
-    processedSignalStore.subscribe((signalState) => {
-      if (!signalState || !signalState.processed) return;
-      scheduleUIUpdate(signalState);
-    });
 
     function pickDirVec(d){
       // Priority:
@@ -1536,7 +1498,6 @@
       return { yaw, tilt };
     }
 
-<<<<<<< Updated upstream
     function syncPhysicsFromMotion(state){
       const motion = state.motion;
       const energyBank = state.energyBank;
@@ -1559,43 +1520,6 @@
       const ePts = Math.round(motionStore.getState().energyBank.points);
 
       setBgFromEnergy(energyUI01);
-
-=======
-    function applyDataToUI(signalState){
-      const processed = signalState && signalState.processed;
-      if (!processed) return;
-
-      const nowMs = processed.receivedAtMs || performance.now();
-      const metrics = processed.metrics || {};
-      const direction = processed.direction || {};
-      const shield = processed.shield || {};
-
-      const groove = clamp01(metrics.groove01);
-      const dynamics = clamp01(metrics.dynamics01);
-      const smooth = clamp01(metrics.smooth01);
-      const speed = clamp01(metrics.speed01);
-      const shake = Math.max(0, Number(metrics.shake01) || 0);
-      const locked = !!metrics.locked;
-      const energyUI01 = clamp01(metrics.energyBank01);
-      const lift = clamp01(metrics.lift01);
-
-      physState.lift01 = lift;
-      physState.energy01 = energyUI01;
-      physState.dynamics01 = dynamics;
-
-      setBgFromEnergy(energyUI01);
-
-      const liftP = Math.round(clamp01(lift) * 100);
-      const gP = Math.round(clamp01(groove) * 100);
-      const sP = Math.round(clamp01(smooth) * 100);
-      const sp = Math.round(clamp01(speed) * 100);
-      const dP = Math.round(clamp01(dynamics) * 100);
-      const shakeForUI = (nowMs < shakeCooldownUntil) ? 0 : shake;
-      const shakeMeter = (nowMs < shakeCooldownUntil) ? 0 : clamp01(metrics.shakeMeter01);
-      const sh = (Number(shakeMeter) * SHAKE_LAMP_THR);
-      const ePts = Math.round(Number(metrics.energyBankPts) || 0);
-
->>>>>>> Stashed changes
       els.vLift.textContent     = `${liftP}%`;
       els.vGroove.textContent   = `${gP}%${motion.locked ? " (locked)" : ""}`;
       els.vSmooth.textContent   = `${sP}%`;
@@ -1604,7 +1528,6 @@
       els.vEnergy.textContent   = `${ePts}`;
       els.vShake.textContent    = `${Math.max(0, motion.shakeDisplayValue).toFixed(2)}`;
 
-<<<<<<< Updated upstream
       if (motion.shieldRGB && motion.shieldRGB.length >= 3){
         const tr = clamp01(motion.shieldRGB[0]);
         const tg = clamp01(motion.shieldRGB[1]);
@@ -1612,12 +1535,6 @@
         shieldColor01.r = lerp(shieldColor01.r, tr, SHIELD_COLOR_SMOOTH);
         shieldColor01.g = lerp(shieldColor01.g, tg, SHIELD_COLOR_SMOOTH);
         shieldColor01.b = lerp(shieldColor01.b, tb, SHIELD_COLOR_SMOOTH);
-=======
-      if (shield.rgb){
-        shieldColor01.r = lerp(shieldColor01.r, shield.rgb.r, SHIELD_COLOR_SMOOTH);
-        shieldColor01.g = lerp(shieldColor01.g, shield.rgb.g, SHIELD_COLOR_SMOOTH);
-        shieldColor01.b = lerp(shieldColor01.b, shield.rgb.b, SHIELD_COLOR_SMOOTH);
->>>>>>> Stashed changes
         setShieldColor01(shieldColor01);
       }
 
@@ -1634,26 +1551,19 @@
       els.bEnergy.classList.toggle("over", over);
 
       // --- Direction readout (optional; does nothing if phone isn't sending it yet)
-<<<<<<< Updated upstream
       const dirV = pickDirVec(packet);
-=======
->>>>>>> Stashed changes
       if (els.dirReadout){
-        if (direction.vector){
-          els.dirReadout.textContent = `${Number(direction.yawDeg || 0).toFixed(0)}° yaw  |  ${Number(direction.tiltDeg || 0).toFixed(0)}° tilt`;
+        if (dirV){
+          const a = dirToYawTiltDeg(dirV);
+          const yaw = ((a.yaw % 360) + 360) % 360;
+          els.dirReadout.textContent = `${yaw.toFixed(0)}° yaw  |  ${a.tilt.toFixed(0)}° tilt`;
         } else {
           els.dirReadout.textContent = "—";
         }
       }
 
-<<<<<<< Updated upstream
-      // sd is only sent by the phone on shakeHit
       if (motion.sd) {
         pendingSd = motion.sd;
-=======
-      if (direction.shakeDirection) {
-        pendingSd = direction.shakeDirection;
->>>>>>> Stashed changes
         pendingSdAt = nowMs;
       }
 
@@ -1775,9 +1685,7 @@
         }
 
         teleMaybeLog(d);
-        receiverSignalPipeline.ingest(d, performance.now(), {
-          shakeLampThreshold: SHAKE_LAMP_THR,
-        });
+        scheduleUIUpdate(d);
       });
 
       connecting = false;
