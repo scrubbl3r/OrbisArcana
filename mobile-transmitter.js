@@ -384,6 +384,9 @@
     // =========================================================================
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
     const TOKEN_URL = WORKER_BASE + "/token";
+    const TRANSPORT_POLICY = {
+      allowRelayMotionFallback: false,
+    };
     const relay = window.createTransmitterRelay({
       tokenUrl: TOKEN_URL,
       ablyCtor: Ably,
@@ -542,8 +545,6 @@
     // publishDynamics trims payload when TELEMETRY_ON is false
     // =========================================================================
     function publishDynamics(payload, dt, force=false) {
-      if (!relay.getChannel()) return;
-
       const now = performance.now();
       const directActive = fastPathJoin.shouldUseDirect();
       const sendMinMs = 1000 / (directActive ? SEND_HZ_FAST : SEND_HZ_RELAY);
@@ -606,6 +607,11 @@
         return;
       }
 
+      if (joinInfo && !TRANSPORT_POLICY.allowRelayMotionFallback) {
+        return;
+      }
+
+      if (!relay.getChannel()) return;
       relay.publish("orb", out, (err) => {
         if (err) console.warn("[ably publish err]", err);
       });
@@ -1909,7 +1915,9 @@
 
         nextSendAtMs = 0;
         lastSig = null;
-        await connectRelay();
+        if (!joinInfo) {
+          await connectRelay();
+        }
 
         running = true;
         fastPathJoin.setRunning(true);

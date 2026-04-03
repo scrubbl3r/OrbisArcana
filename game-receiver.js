@@ -94,6 +94,10 @@
       shakeLampThreshold: 1.45,
     });
     const motionStore = window.createMotionStore();
+    const TRANSPORT_POLICY = {
+      allowRelayMotionFallback: false,
+      allowRelayControlFallback: false,
+    };
     const receiverTransport = window.createReceiverTransport({
       workerBase: WORKER_BASE,
       ablyCtor: Ably,
@@ -1577,6 +1581,10 @@
           idleStartTimers();
         },
         onMessage: (d) => {
+          if (!TRANSPORT_POLICY.allowRelayMotionFallback && pairingService.getState().active) {
+            idleMarkActivity();
+            return;
+          }
           if (fastPathHost.shouldIgnoreRelayImpulses()) {
             idleMarkActivity();
             return;
@@ -1615,6 +1623,12 @@
           els.calibBtn.disabled = true;
           setCalibStatus("Calibrating… (2s)");
           if (!fastPathHost.sendControl("calibrate")) {
+            if (!TRANSPORT_POLICY.allowRelayControlFallback) {
+              calibInFlight = false;
+              els.calibBtn.disabled = false;
+              setCalibStatus("Direct session required");
+              return;
+            }
             if (!receiverTransport.getChannel()) return;
             receiverTransport.publishControl("ctl", { calibrate: 1, ts: Date.now() });
           }
@@ -1650,11 +1664,12 @@
       pairingService.reset({ reason: "new_pair" });
       fastPathHost.reset();
       currentRoomChannel = "orb:" + randCode(8);
+      idleClearTimers();
+      receiverTransport.disconnect();
       resetShakeDetector();
       resetStability();
       resetVariability();
       resetEnergyBank();
-      await connect({ auto:false });
       openPairModal();
       await pairingService.launch({
         roomId: stripOrbPrefix(currentRoomChannel),
@@ -1668,6 +1683,7 @@
       await fastPathHost.start({
         publishSignal: pairingService.publishSignal,
       });
+      setStatus(`Pairing… <span class="dim">(bootstrap only)</span>`, "ok");
     });
 
     (async function init(){
