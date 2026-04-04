@@ -3174,6 +3174,7 @@
         d,
         frame,
         nowMs,
+        skipPhysStatePatch: !!classicMotionStore,
         values: {
           energyFromPhone,
           groove,

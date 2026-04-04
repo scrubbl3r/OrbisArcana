@@ -16,6 +16,7 @@ function clamp01(n){
  * @property {{physState?:Object, orbRuntimeState?:{get?:() => Object}}} [runtime]
  * @property {{inputDynamics?:Object}} [configs]
  * @property {Object} [hooks] Receiver-provided hooks for resource updates, visuals, audio, and shake processing.
+ * @property {boolean} [skipPhysStatePatch] When true, do not mutate orb runtime scalar state inside the legacy pipeline.
  */
 
 /**
@@ -36,6 +37,7 @@ export function runInputFramePipeline({
   runtime,
   configs,
   hooks,
+  skipPhysStatePatch = false,
 } = {}){
   const energyFromPhone = Number(values && values.energyFromPhone) || 0;
   const groove = Number(values && values.groove) || 0;
@@ -71,7 +73,7 @@ export function runInputFramePipeline({
   const energyUI01 = energyBankPts / energyBankCap;
   const lift = (typeof computeLift01 === "function") ? Number(computeLift01(groove, smooth, speed)) || 0 : 0;
 
-  if (physState && typeof physState === "object") {
+  if (!skipPhysStatePatch && physState && typeof physState === "object") {
     physState.lift01 = lift;
     physState.energy01 = Math.max(0, Number(energyUI01) || 0);
     physState.dynamics01 = dynamics;
