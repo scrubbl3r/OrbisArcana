@@ -1068,6 +1068,35 @@
     let mobileImpulseSystem = null;
     let lanSession = null;
 
+    async function initClassicReceiverShadowCore(){
+      try {
+        await Promise.all([
+          import("./src/runtime-shell/receiver/calibration-engine.js"),
+          import("./src/runtime-shell/receiver/signal-processor.js"),
+          import("./src/runtime-shell/receiver/motion-store.js"),
+        ]);
+        classicCalibrationSession = (typeof window.createCalibrationSession === "function")
+          ? window.createCalibrationSession()
+          : null;
+        classicSignalProcessor = (typeof window.createSignalProcessor === "function")
+          ? window.createSignalProcessor({})
+          : null;
+        classicMotionStore = (typeof window.createMotionStore === "function")
+          ? window.createMotionStore()
+          : null;
+        window.__classicReceiverShadowCore = {
+          calibrationSession: classicCalibrationSession,
+          signalProcessor: classicSignalProcessor,
+          motionStore: classicMotionStore,
+        };
+      } catch (e) {
+        classicCalibrationSession = null;
+        classicSignalProcessor = null;
+        classicMotionStore = null;
+        console.warn("Classic receiver shadow core init failed:", e);
+      }
+    }
+
     async function initMobileImpulseSystem(){
       try {
         const { createMobileImpulseSystem } = await import("./src/runtime-shell/receiver/mobile-impulse-runtime.js");
@@ -1358,6 +1387,9 @@
     let inputGestureSystem = null;
     let inputSystemsBundle = null;
     let orbRuntimeState = null;
+    let classicCalibrationSession = null;
+    let classicSignalProcessor = null;
+    let classicMotionStore = null;
     let runtimeWordIndex = Object.create(null);
     let runtimeSpellIndex = runtimeWordIndex;
     let castActionRegistryIndex = Object.create(null);
@@ -3069,6 +3101,16 @@
     }
 
     function applyDataToUI(d){
+      if (classicSignalProcessor && classicMotionStore) {
+        try {
+          const classicState = classicSignalProcessor.processPacket(d, performance.now(), {
+            suppressShake: !!orbInputSuppressed,
+          });
+          classicMotionStore.publish(classicState);
+        } catch (e) {
+          console.warn("Classic receiver shadow process failed:", e);
+        }
+      }
       if (!receiverModulesReady) return;
       const nowMs = performance.now();
       const processed = processInputFrame(d, nowMs);
@@ -3218,6 +3260,7 @@
     (async function init(){
       await initUiOverlaysSystem();
       await maybeMountDevStagingSurface();
+      await initClassicReceiverShadowCore();
       await initMobileImpulseSystem();
       await initLanSessionSystem();
       initMvpSystems();
