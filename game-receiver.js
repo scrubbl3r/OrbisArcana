@@ -1273,7 +1273,7 @@
       const incomingLabel = incoming && incoming.axis ? incoming.axis : "—";
       const incomingDom = incoming && Number.isFinite(Number(incoming.dominance)) ? Number(incoming.dominance).toFixed(2) : "—";
       const incomingGap = incoming && Number.isFinite(Number(incoming.gap)) ? Number(incoming.gap).toFixed(2) : "—";
-      const spinVector = raw && raw.spinVector ? raw.spinVector : (spin && spin.axis ? spin.axis : null);
+      const spinVector = raw && raw.spinVector ? raw.spinVector : (spin && spin.vector ? spin.vector : null);
       currentDevStagingView.setDebugNote(
         `Spin compare: incoming ${incomingLabel} d${incomingDom} g${incomingGap} | canonical ${canonicalLabel} d${canonicalDom} g${canonicalGap} dir:${canonicalDir} vec:${formatVec3(spinVector)}`
       );
@@ -3199,7 +3199,7 @@
       if (!state || !state.spin) return raw;
       return {
         ...(raw || {}),
-        spinAxis: state.spin.axis,
+        spinVector: state.spin.vector,
         spinAxisDominance: state.spin.dominance,
         spinAxisGap: state.spin.gap,
         spinAxisLabel: state.spin.label,

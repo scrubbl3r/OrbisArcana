@@ -21,7 +21,6 @@
       },
       spin: {
         vector: null,
-        axis: null,
         dominance: 0,
         gap: 0,
         label: null,
@@ -33,12 +32,8 @@
         tiltDeg: null,
         code: null,
       },
-      presentation: {
-        spinColor: null,
-      },
       debug: {
         spinVector: null,
-        spinAxis: null,
         spinAxisDominance: 0,
         spinAxisGap: 0,
         spinAxisLabel: null,
@@ -92,7 +87,6 @@
         },
         spin: {
           vector: null,
-          axis: null,
           dominance: 0,
           gap: 0,
           label: null,
@@ -104,12 +98,8 @@
           tiltDeg: null,
           code: null,
         },
-        presentation: {
-          spinColor: null,
-        },
         debug: {
           spinVector: null,
-          spinAxis: null,
           spinAxisDominance: 0,
           spinAxisGap: 0,
           spinAxisLabel: null,

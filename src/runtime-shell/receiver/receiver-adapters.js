@@ -15,17 +15,12 @@
   function createReceiverHudAdapter(options){
     const els = options.els;
     const clamp01 = options.clamp01;
-    const lerp = options.lerp;
     const setBgFromEnergy = options.setBgFromEnergy;
     const setBar = options.setBar;
-    const setShieldColor01 = options.setShieldColor01;
-    const shieldColor01 = options.shieldColor01;
-    const shieldColorSmooth = options.shieldColorSmooth;
 
     return function renderHudFromMotion(state){
       const motion = state.motion;
       const direction = state.direction || {};
-      const presentation = state.presentation || {};
       const energyUI01 = state.energyBank.level01;
       const liftP = Math.round(clamp01(motion.lift01) * 100);
       const gP = Math.round(clamp01(motion.groove01) * 100);
@@ -42,16 +37,6 @@
       els.vDynamics.textContent = `${dP}%`;
       els.vEnergy.textContent = `${ePts}`;
       els.vShake.textContent = `${Math.max(0, motion.shakeDisplayValue).toFixed(2)}`;
-
-      if (presentation.spinColor && presentation.spinColor.length >= 3){
-        const tr = clamp01(presentation.spinColor[0]);
-        const tg = clamp01(presentation.spinColor[1]);
-        const tb = clamp01(presentation.spinColor[2]);
-        shieldColor01.r = lerp(shieldColor01.r, tr, shieldColorSmooth);
-        shieldColor01.g = lerp(shieldColor01.g, tg, shieldColorSmooth);
-        shieldColor01.b = lerp(shieldColor01.b, tb, shieldColorSmooth);
-        setShieldColor01(shieldColor01);
-      }
 
       setBar(els.bLift, motion.lift01);
       setBar(els.bGroove, motion.groove01);

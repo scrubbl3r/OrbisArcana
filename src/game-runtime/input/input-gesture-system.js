@@ -173,11 +173,13 @@ export function createInputGestureSystem({
     const label = raw && typeof raw.spinAxisLabel === "string" ? String(raw.spinAxisLabel).trim().toLowerCase() : "";
     const dominance = Number(raw && raw.spinAxisDominance);
     const gap = Number(raw && raw.spinAxisGap);
-    const axis = Array.isArray(raw && raw.spinAxis) && raw.spinAxis.length >= 3
+    const vectorSource =
+      Array.isArray(raw && raw.spinVector) && raw.spinVector.length >= 3 ? raw.spinVector : null;
+    const vector = vectorSource
       ? [
-          Math.max(0, Number(raw.spinAxis[0]) || 0),
-          Math.max(0, Number(raw.spinAxis[1]) || 0),
-          Math.max(0, Number(raw.spinAxis[2]) || 0),
+          Math.max(0, Number(vectorSource[0]) || 0),
+          Math.max(0, Number(vectorSource[1]) || 0),
+          Math.max(0, Number(vectorSource[2]) || 0),
         ]
       : null;
 
@@ -196,7 +198,7 @@ export function createInputGestureSystem({
       v: 1,
       gap: 1,
       source: "axis",
-      vector: axis,
+      vector,
       direction: raw && typeof raw.spinDirection === "string" ? String(raw.spinDirection) : null,
       dominance,
       rawGap: gap,

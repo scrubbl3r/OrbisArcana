@@ -112,7 +112,6 @@
 
     return {
       vector: [x, y, z],
-      axis: [x, y, z],
       dominance: top.magnitude,
       gap: top.magnitude - second.magnitude,
       label: top.label,
@@ -126,7 +125,6 @@
     if (!Array.isArray(rotationRate) || rotationRate.length < 3) {
         return {
           vector: null,
-          axis: null,
           dominance: 0,
           gap: 0,
           label: null,
@@ -147,7 +145,6 @@
     if (!(unit.mag > 1e-6)) {
       return {
         vector: null,
-        axis: null,
         dominance: 0,
         gap: 0,
         label: null,
@@ -201,7 +198,6 @@
 
     return {
       vector: [vectorByLabel.x, vectorByLabel.y, vectorByLabel.z],
-      axis: [vectorByLabel.x, vectorByLabel.y, vectorByLabel.z],
       dominance: top.magnitude,
       gap: top.magnitude - second.magnitude,
       label: top.label,
@@ -257,7 +253,6 @@
       const hz = (packet && isFinite(Number(packet.hz))) ? Number(packet.hz) : 0;
       const shakeHit = !!(packet && packet.shakeHit);
       const sd = (packet && typeof packet.sd === "string" && packet.sd.trim()) ? packet.sd.trim().toUpperCase() : null;
-      const spinColor = pickVec3(packet, "spinColor");
       const spinVector = pickVec3(packet, "spinVector");
       const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
       const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
@@ -309,12 +304,8 @@
           tiltDeg: directionAngles ? directionAngles.tilt : null,
           code: sd,
         },
-        presentation: {
-          spinColor,
-        },
         debug: {
           spinVector: spin.vector,
-          spinAxis: spin.axis,
           spinAxisDominance: spin.dominance,
           spinAxisGap: spin.gap,
           spinAxisLabel: spin.label,
