@@ -88,6 +88,39 @@
     return { x: x / mag, y: y / mag, z: z / mag, mag };
   }
 
+  function deriveSpinStateFromVector(spinVector, spinDirection){
+    if (!Array.isArray(spinVector) || spinVector.length < 3) {
+      return null;
+    }
+
+    const rawX = Math.max(0, Number(spinVector[0]) || 0);
+    const rawY = Math.max(0, Number(spinVector[1]) || 0);
+    const rawZ = Math.max(0, Number(spinVector[2]) || 0);
+    const total = rawX + rawY + rawZ;
+    if (!(total > 1e-6)) return null;
+
+    const x = rawX / total;
+    const y = rawY / total;
+    const z = rawZ / total;
+    const ranked = [
+      { label: "x", magnitude: x },
+      { label: "y", magnitude: y },
+      { label: "z", magnitude: z },
+    ].sort((left, right) => right.magnitude - left.magnitude);
+    const top = ranked[0];
+    const second = ranked[1] || { magnitude: 0 };
+
+    return {
+      axis: [x, y, z],
+      dominance: top.magnitude,
+      gap: top.magnitude - second.magnitude,
+      label: top.label,
+      direction: (typeof spinDirection === "string" && spinDirection)
+        ? String(spinDirection).toLowerCase()
+        : null,
+    };
+  }
+
   function deriveSpinState(rotationRate, receivedAtMs, spinRuntime){
     if (!Array.isArray(rotationRate) || rotationRate.length < 3) {
       return {
@@ -221,9 +254,11 @@
       const sd = (packet && typeof packet.sd === "string" && packet.sd.trim()) ? packet.sd.trim().toUpperCase() : null;
       const spinColor = pickVec3(packet, "spinColor") || pickVec3(packet, "shieldRGB");
       const spinAxis = pickVec3(packet, "spinAxis") || pickVec3(packet, "shieldAxis");
+      const spinVector = pickVec3(packet, "spinVector");
       const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
       const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
-      const spin = deriveSpinState(rotationRate, receivedAtMs, spinRuntime);
+      const spin = deriveSpinStateFromVector(spinVector, packet && packet.spinDirection)
+        || deriveSpinState(rotationRate, receivedAtMs, spinRuntime);
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
