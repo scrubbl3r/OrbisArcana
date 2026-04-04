@@ -190,11 +190,16 @@ export function createInputGestureSystem({
 
     return {
       axis: label,
-      v: dominance,
-      gap,
-      source: "canonical",
+      // Preserve the old spin-window feel by treating a canonical axis choice
+      // as a quantized gate once it is decisive enough, rather than making the
+      // live gate ride every small dominance wobble frame-to-frame.
+      v: 1,
+      gap: 1,
+      source: "axis",
       vector: axis,
       direction: raw && typeof raw.spinDirection === "string" ? String(raw.spinDirection) : null,
+      dominance,
+      rawGap: gap,
     };
   }
 
