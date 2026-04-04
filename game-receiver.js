@@ -1239,46 +1239,23 @@
       return value.map((v) => Number(v).toFixed(2)).join("/");
     }
 
-    function deriveShieldSpinReadout(raw){
-      if (Array.isArray(raw && raw.shieldAxis) && raw.shieldAxis.length >= 3) {
-        const gx = Math.max(0, Number(raw.shieldAxis[2]) || 0);
-        const gy = Math.max(0, Number(raw.shieldAxis[1]) || 0);
-        const gz = Math.max(0, Number(raw.shieldAxis[0]) || 0);
-        const sum = gx + gy + gz;
-        if (sum > 1e-6) {
-          const ranked = [
-            { axis: "x", value: gx / sum },
-            { axis: "y", value: gy / sum },
-            { axis: "z", value: gz / sum },
-          ].sort((left, right) => right.value - left.value);
-          return {
-            axis: ranked[0].axis,
-            dominance: ranked[0].value,
-            gap: ranked[0].value - (ranked[1] ? ranked[1].value : 0),
-          };
-        }
-      }
-
-      if (Array.isArray(raw && raw.shieldRGB) && raw.shieldRGB.length >= 3) {
-        const r = Math.max(0, Number(raw.shieldRGB[0]) || 0);
-        const g = Math.max(0, Number(raw.shieldRGB[1]) || 0);
-        const b = Math.max(0, Number(raw.shieldRGB[2]) || 0);
-        const sum = r + g + b;
-        if (sum > 1e-6) {
-          const ranked = [
-            { axis: "x", value: b / sum },
-            { axis: "y", value: g / sum },
-            { axis: "z", value: r / sum },
-          ].sort((left, right) => right.value - left.value);
-          return {
-            axis: ranked[0].axis,
-            dominance: ranked[0].value,
-            gap: ranked[0].value - (ranked[1] ? ranked[1].value : 0),
-          };
-        }
-      }
-
-      return null;
+    function deriveIncomingSpinReadout(raw){
+      if (!Array.isArray(raw && raw.spinVector) || raw.spinVector.length < 3) return null;
+      const x = Math.max(0, Number(raw.spinVector[0]) || 0);
+      const y = Math.max(0, Number(raw.spinVector[1]) || 0);
+      const z = Math.max(0, Number(raw.spinVector[2]) || 0);
+      const sum = x + y + z;
+      if (!(sum > 1e-6)) return null;
+      const ranked = [
+        { axis: "x", value: x / sum },
+        { axis: "y", value: y / sum },
+        { axis: "z", value: z / sum },
+      ].sort((left, right) => right.value - left.value);
+      return {
+        axis: ranked[0].axis,
+        dominance: ranked[0].value,
+        gap: ranked[0].value - (ranked[1] ? ranked[1].value : 0),
+      };
     }
 
     function updateDebugReadout(){
@@ -1287,18 +1264,18 @@
       const state = (classicMotionStore && typeof classicMotionStore.getState === "function")
         ? classicMotionStore.getState()
         : null;
-      const shield = deriveShieldSpinReadout(raw);
+      const incoming = deriveIncomingSpinReadout(raw);
       const spin = state && state.spin ? state.spin : null;
       const canonicalLabel = spin && spin.label ? String(spin.label) : "—";
       const canonicalDom = spin && Number.isFinite(Number(spin.dominance)) ? Number(spin.dominance).toFixed(2) : "—";
       const canonicalGap = spin && Number.isFinite(Number(spin.gap)) ? Number(spin.gap).toFixed(2) : "—";
       const canonicalDir = spin && spin.direction ? String(spin.direction) : "—";
-      const shieldLabel = shield && shield.axis ? shield.axis : "—";
-      const shieldDom = shield && Number.isFinite(Number(shield.dominance)) ? Number(shield.dominance).toFixed(2) : "—";
-      const shieldGap = shield && Number.isFinite(Number(shield.gap)) ? Number(shield.gap).toFixed(2) : "—";
+      const incomingLabel = incoming && incoming.axis ? incoming.axis : "—";
+      const incomingDom = incoming && Number.isFinite(Number(incoming.dominance)) ? Number(incoming.dominance).toFixed(2) : "—";
+      const incomingGap = incoming && Number.isFinite(Number(incoming.gap)) ? Number(incoming.gap).toFixed(2) : "—";
       const spinVector = raw && raw.spinVector ? raw.spinVector : (spin && spin.axis ? spin.axis : null);
       currentDevStagingView.setDebugNote(
-        `Spin compare: live ${shieldLabel} d${shieldDom} g${shieldGap} | canonical ${canonicalLabel} d${canonicalDom} g${canonicalGap} dir:${canonicalDir} vec:${formatVec3(spinVector)}`
+        `Spin compare: incoming ${incomingLabel} d${incomingDom} g${incomingGap} | canonical ${canonicalLabel} d${canonicalDom} g${canonicalGap} dir:${canonicalDir} vec:${formatVec3(spinVector)}`
       );
     }
 
@@ -3431,12 +3408,12 @@
           try { s = JSON.stringify(d); } catch(_) { s = String(d); }
           if (s.length > 240) s = s.slice(0, 240) + " …";
           const sh = (d && d.shakeHit) ? "shakeHit:1 " : "shakeHit:0 ";
-          const rgb = (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3)
-            ? `shieldRGB:${d.shieldRGB.map(v => Number(v).toFixed(2)).join(",")} `
-            : "shieldRGB:— ";
-          const axis = (d && Array.isArray(d.shieldAxis) && d.shieldAxis.length >= 3)
-            ? `axis:${d.shieldAxis.map(v => Number(v).toFixed(2)).join(",")} `
-            : "axis:— ";
+          const spinVector = (d && Array.isArray(d.spinVector) && d.spinVector.length >= 3)
+            ? `spinVector:${d.spinVector.map(v => Number(v).toFixed(2)).join(",")} `
+            : "spinVector:— ";
+          const spinDir = (d && typeof d.spinDirection === "string")
+            ? `spinDir:${String(d.spinDirection)} `
+            : "spinDir:— ";
           const dbg = (d && (d.calibOK != null || d.omegaOK != null))
             ? `calibOK:${Number(d.calibOK)||0} omegaOK:${Number(d.omegaOK)||0} `
             : "calibOK:— omegaOK:— ";

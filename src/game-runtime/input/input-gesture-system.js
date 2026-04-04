@@ -169,42 +169,6 @@ export function createInputGestureSystem({
     return true;
   }
 
-  function axisFromShieldAxis(shieldAxis) {
-    if (!Array.isArray(shieldAxis) || shieldAxis.length < 3) return null;
-    const gx = Math.max(0, Number(shieldAxis[2]) || 0);
-    const gy = Math.max(0, Number(shieldAxis[1]) || 0);
-    const gz = Math.max(0, Number(shieldAxis[0]) || 0);
-    const sum = gx + gy + gz;
-    if (!(sum > 1e-6)) return null;
-    const vals = [
-      { axis: "x", v: gx / sum },
-      { axis: "y", v: gy / sum },
-      { axis: "z", v: gz / sum },
-    ];
-    vals.sort((a, b) => b.v - a.v);
-    return { axis: vals[0].axis, v: vals[0].v, gap: vals[0].v - vals[1].v, source: "axis" };
-  }
-
-  function axisFromShieldRgb(shieldRGB) {
-    if (!Array.isArray(shieldRGB) || shieldRGB.length < 3) return null;
-    const r = Math.max(0, Number(shieldRGB[0]) || 0);
-    const g = Math.max(0, Number(shieldRGB[1]) || 0);
-    const b = Math.max(0, Number(shieldRGB[2]) || 0);
-    const sum = r + g + b;
-    if (!(sum > 1e-6)) return null;
-    const vals = [
-      { axis: "x", v: b / sum },
-      { axis: "y", v: g / sum },
-      { axis: "z", v: r / sum },
-    ];
-    vals.sort((a, b) => b.v - a.v);
-    return { axis: vals[0].axis, v: vals[0].v, gap: vals[0].v - vals[1].v, source: "rgb" };
-  }
-
-  function axisFromVisibleShield(raw) {
-    return axisFromShieldAxis(raw && raw.shieldAxis) || axisFromShieldRgb(raw && raw.shieldRGB);
-  }
-
   function axisFromCanonicalSpin(raw) {
     const label = raw && typeof raw.spinAxisLabel === "string" ? String(raw.spinAxisLabel).trim().toLowerCase() : "";
     const dominance = Number(raw && raw.spinAxisDominance);
@@ -272,17 +236,16 @@ export function createInputGestureSystem({
     const dt = fs.lastTs ? clamp(now - fs.lastTs, 0, 120) : 0;
     fs.lastTs = now;
 
-    const axisInfo = axisFromCanonicalSpin(raw) || axisFromVisibleShield(raw);
+    const axisInfo = axisFromCanonicalSpin(raw);
     void stabilityOn;
     // Preserve the older "always responsive" spin feel by qualifying from the visual
     // spin gate + axis signal, without requiring dynamics stability to be armed.
     const stableEnough = !!stabilityVisualGate;
     const canQualify = !!axisInfo && stableEnough;
-    const isAxisSignal = !!(axisInfo && axisInfo.source === "axis");
-    const domOnReq = isAxisSignal ? 0.56 : cfg.flatSpinDominanceOn;
-    const domOffReq = isAxisSignal ? 0.48 : cfg.flatSpinDominanceOff;
-    const gapOnReq = isAxisSignal ? 0.06 : cfg.flatSpinDominanceGapOn;
-    const gapOffReq = isAxisSignal ? 0.03 : cfg.flatSpinDominanceGapOff;
+    const domOnReq = cfg.flatSpinDominanceOn;
+    const domOffReq = cfg.flatSpinDominanceOff;
+    const gapOnReq = cfg.flatSpinDominanceGapOn;
+    const gapOffReq = cfg.flatSpinDominanceGapOff;
 
     if (fs.active) {
       const sameAxis = canQualify

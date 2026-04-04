@@ -252,8 +252,7 @@
       const hz = (packet && isFinite(Number(packet.hz))) ? Number(packet.hz) : 0;
       const shakeHit = !!(packet && packet.shakeHit);
       const sd = (packet && typeof packet.sd === "string" && packet.sd.trim()) ? packet.sd.trim().toUpperCase() : null;
-      const spinColor = pickVec3(packet, "spinColor") || pickVec3(packet, "shieldRGB");
-      const spinAxis = pickVec3(packet, "spinAxis") || pickVec3(packet, "shieldAxis");
+      const spinColor = pickVec3(packet, "spinColor");
       const spinVector = pickVec3(packet, "spinVector");
       const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
       const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
@@ -309,7 +308,7 @@
           spinColor,
         },
         debug: {
-          spinAxis: spin.axis || spinAxis,
+          spinAxis: spin.axis,
           spinAxisDominance: spin.dominance,
           spinAxisGap: spin.gap,
           spinAxisLabel: spin.label,

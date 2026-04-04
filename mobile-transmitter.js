@@ -170,9 +170,7 @@
 
     let orientState = { alpha:0, beta:0, gamma:0, has:false, R:null };
     let gVecLP = { x:0, y:0, z:0, has:false };
-    const shieldAxisHist = []; // {t, x, y, z} in calibrated frame
-    let shieldRGB = null;
-    let shieldAxis01 = null;
+    const spinVectorHist = []; // {t, x, y, z} in calibrated frame
     let spinVector01 = null;
     let spinDirection = null;
 
@@ -253,7 +251,7 @@
       return matMul(matMul(Rz, Rx), Ry);
     }
 
-    function updateShieldAxis(nowMs, omegaUnit){
+    function updateSpinVectorState(nowMs, omegaUnit){
       if (!orientState || !orientState.R) return;
       if (!calibBasis) return;
       if (!omegaUnit) return;
@@ -265,12 +263,12 @@
       const v = vNorm({ x, y, z });
       if (!(v.mag > 1e-6)) return;
 
-      shieldAxisHist.push({ t: nowMs, x: v.x, y: v.y, z: v.z });
+      spinVectorHist.push({ t: nowMs, x: v.x, y: v.y, z: v.z });
       const cutoff = nowMs - SHIELD_AXIS_WIN_MS;
-      while (shieldAxisHist.length && shieldAxisHist[0].t < cutoff) shieldAxisHist.shift();
+      while (spinVectorHist.length && spinVectorHist[0].t < cutoff) spinVectorHist.shift();
 
       let sx = 0, sy = 0, sz = 0;
-      for (const s of shieldAxisHist){
+      for (const s of spinVectorHist){
         sx += Math.abs(s.x);
         sy += Math.abs(s.y);
         sz += Math.abs(s.z);
@@ -278,7 +276,6 @@
       const a = vNorm({ x: sx, y: sy, z: sz });
       if (!(a.mag > 1e-6)) return;
 
-      shieldAxis01 = { x: a.x, y: a.y, z: a.z };
       spinVector01 = { x: a.z, y: a.y, z: a.x };
 
       const semantic = [
@@ -290,13 +287,6 @@
         ? (semantic[0].signed >= 0 ? "cw" : "ccw")
         : null;
 
-      // Quantize to 3 primary axes (no diagonals)
-      const ax = a.x, ay = a.y, az = a.z;
-      let r = 0, g = 0, b = 0;
-      if (ax >= ay && ax >= az) r = 1;
-      else if (ay >= ax && ay >= az) g = 1;
-      else b = 1;
-      shieldRGB = { r, g, b };
     }
 
     function loadCalibBasis(){
@@ -1135,8 +1125,6 @@
       if (payload.calib) out.calib = payload.calib;
       if (payload.spinVector) out.spinVector = payload.spinVector;
       if (payload.spinDirection) out.spinDirection = payload.spinDirection;
-      if (payload.shieldRGB) out.shieldRGB = payload.shieldRGB;
-      if (payload.shieldAxis) out.shieldAxis = payload.shieldAxis;
       if (payload.calibOK != null) out.calibOK = payload.calibOK;
       if (payload.omegaOK != null) out.omegaOK = payload.omegaOK;
       if (payload.dbgTag) out.dbgTag = payload.dbgTag;
@@ -2243,8 +2231,6 @@
             hz: 0,
             spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
             spinDirection,
-            shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
-            shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             dbgTag: VERSION_TEXT,
             ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
@@ -2293,7 +2279,7 @@
           const invM = 1 / Math.max(1e-6, mStability);
           const vUnit = { x: ox*invM, y: oy*invM, z: oz*invM };
           omegaVec.push(vUnit);
-          updateShieldAxis(nowMs, vUnit);
+          updateSpinVectorState(nowMs, vUnit);
 
           if (dtForFilter > 0) dynamicsBufPush(vUnit, dtForFilter);
 
@@ -2339,8 +2325,6 @@
             hz: 0,
             spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
             spinDirection,
-            shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
-            shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
             dbgTag: VERSION_TEXT,
             ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
@@ -2451,8 +2435,6 @@
           hz: grooveHz,
           spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
           spinDirection,
-          shieldRGB: shieldRGB ? [shieldRGB.r, shieldRGB.g, shieldRGB.b] : null,
-          shieldAxis: shieldAxis01 ? [shieldAxis01.x, shieldAxis01.y, shieldAxis01.z] : null,
           dbgTag: VERSION_TEXT,
           ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
@@ -2499,6 +2481,7 @@
         lastT = null;
 
         ox=oy=oz=0;
+        spinVectorHist.length = 0;
         spinVector01 = null;
         spinDirection = null;
         omegaMag.length  = 0;
