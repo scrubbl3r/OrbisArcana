@@ -76,6 +76,7 @@ const DEV_STAGING_TEMPLATE = `
         flashboard, controls, and tuning will be extracted into this surface in
         later slices without locking in today’s layout as the final UX.
       </div>
+      <div id="devSpinAuditNote" class="devStagingNote devStagingDim"></div>
 
       <div id="fatal" class="devStagingFatal" aria-live="polite"></div>
     </div>
@@ -166,6 +167,7 @@ export function mountDevStaging(root) {
     wordBoardDebugToggle: $("wordBoardDebugToggle"),
     wordBoardDebugBadge: $("wordBoardDebugBadge"),
     wordBoardDebugBody: $("wordBoardDebugBody"),
+    devSpinAuditNote: $("devSpinAuditNote"),
     vLift: $("vLift"),
     vGroove: $("vGroove"),
     vSmooth: $("vSmooth"),
@@ -203,6 +205,10 @@ export function mountDevStaging(root) {
       if (!refs.fatal) return;
       refs.fatal.textContent = String(message || "");
       refs.fatal.classList.toggle("on", !!message);
+    },
+    setDebugNote(text = "") {
+      if (!refs.devSpinAuditNote) return;
+      refs.devSpinAuditNote.textContent = String(text || "");
     },
     closeTopmostPopup() {
       if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
