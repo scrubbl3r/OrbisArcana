@@ -1,5 +1,6 @@
 export function createLanSessionSystem({
   AblyCtor,
+  AblyNamespace,
   QRCodeLib,
   pairingServiceFactory,
   fastPathHostTransportFactory,
@@ -282,7 +283,7 @@ export function createLanSessionSystem({
       reset();
 
       classicPairingService = pairingServiceFactory({
-        ablyCtor: AblyCtor,
+        ablyCtor: AblyNamespace,
         qrCodeLib: QRCodeLib,
         workerBase,
         mobileJoinUrl: (roomId, token) => lanJoinUrl(roomId, token),

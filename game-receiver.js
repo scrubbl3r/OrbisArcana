@@ -1165,6 +1165,7 @@
         const { createLanSessionSystem } = await import("./src/runtime-shell/session/lan-session.js");
         lanSession = createLanSessionSystem({
           AblyCtor: (typeof Ably !== "undefined" && Ably && Ably.Realtime) ? Ably.Realtime : null,
+          AblyNamespace: (typeof Ably !== "undefined") ? Ably : null,
           QRCodeLib: (typeof QRCode !== "undefined") ? QRCode : null,
           pairingServiceFactory: classicPairingServiceFactory,
           fastPathHostTransportFactory: classicFastPathHostTransportFactory,
