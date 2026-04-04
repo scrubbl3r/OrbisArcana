@@ -176,6 +176,7 @@
           lampRight: els.lampRight,
           lampForward: els.lampForward,
           lampBack: els.lampBack,
+          devSpinAuditNote: els.devSpinAuditNote,
         },
         setStatus(html, cls){
           if (!els.status) return;
@@ -188,7 +189,10 @@
           els.fatal.style.display = hasMessage ? "block" : "none";
           els.fatal.textContent = hasMessage ? String(message) : "";
         },
-        setDebugNote(_text = "") {},
+        setDebugNote(text = "") {
+          if (!els.devSpinAuditNote) return;
+          els.devSpinAuditNote.textContent = String(text || "");
+        },
         closeTopmostPopup() {
           if (this.refs.wordBoardPopup && this.refs.wordBoardPopup.classList.contains("on") && this.refs.wordBoardPopupClose) {
             this.refs.wordBoardPopupClose.click();
