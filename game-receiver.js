@@ -1069,6 +1069,7 @@
     let lanSession = null;
     let classicShadowPacketCount = 0;
     let classicShadowLastAtMs = 0;
+    let classicReceiverTransport = null;
 
     async function initClassicReceiverShadowCore(){
       try {
@@ -1076,6 +1077,7 @@
           import("./src/runtime-shell/receiver/calibration-engine.js"),
           import("./src/runtime-shell/receiver/signal-processor.js"),
           import("./src/runtime-shell/receiver/motion-store.js"),
+          import("./src/runtime-shell/session/relay-transport.js"),
         ]);
         classicCalibrationSession = (typeof window.createCalibrationSession === "function")
           ? window.createCalibrationSession()
@@ -1086,10 +1088,17 @@
         classicMotionStore = (typeof window.createMotionStore === "function")
           ? window.createMotionStore()
           : null;
+        classicReceiverTransport = (typeof window.createReceiverTransport === "function")
+          ? window.createReceiverTransport({
+              workerBase: WORKER_BASE,
+              ablyCtor: (typeof Ably !== "undefined" && Ably) ? Ably : null,
+            })
+          : null;
         window.__classicReceiverShadowCore = {
           calibrationSession: classicCalibrationSession,
           signalProcessor: classicSignalProcessor,
           motionStore: classicMotionStore,
+          receiverTransport: classicReceiverTransport,
           getSnapshot: () => (classicMotionStore && typeof classicMotionStore.getState === "function")
             ? classicMotionStore.getState()
             : null,
@@ -1100,6 +1109,7 @@
         classicCalibrationSession = null;
         classicSignalProcessor = null;
         classicMotionStore = null;
+        classicReceiverTransport = null;
         console.warn("Classic receiver shadow core init failed:", e);
       }
     }
@@ -3202,8 +3212,40 @@
       try { if (realtime) realtime.close(); } catch(e) {}
       realtime = null; channel = null;
 
+      if (classicReceiverTransport && typeof classicReceiverTransport.disconnect === "function") {
+        classicReceiverTransport.disconnect();
+      }
+
       const roomCode = stripOrbPrefix(roomChannel);
       const authUrl = WORKER_BASE + "/token?room=" + encodeURIComponent(roomCode) + "&v=" + Date.now();
+
+      if (classicReceiverTransport && typeof classicReceiverTransport.connect === "function") {
+        const connected = classicReceiverTransport.connect({
+          roomChannel,
+          onConnectionConnected: () => setStatus(`Connected ✓ <span class="dim">(${roomChannel})</span>`, "ok"),
+          onConnectionFailed: (st) => { console.error("Ably failed:", st); setStatus("FAILED — see console", "bad"); },
+          onConnectionDisconnected: () => setStatus("Disconnected <span class=\"dim\">(refresh page)</span>", "bad"),
+          onAttached: (err) => {
+            if (err) {
+              console.error("Channel attach failed:", err);
+              setStatus("Channel attach FAILED — see console", "bad");
+              return;
+            }
+            setStatus(`Connected ✓ (listening…) <span class="dim">(${roomChannel})</span>`, "ok");
+            idleStartTimers();
+          },
+          onMessage: (d) => {
+            if (lanSession && lanSession.shouldIgnoreAblyImpulses()) return;
+            if (els.pairModal.classList.contains("on")) closePairModal();
+            if (els.startScreen && !els.startScreen.classList.contains("off")) hideStartScreen();
+            handleIncomingImpulse(d);
+          },
+        });
+        realtime = connected ? connected.realtime : null;
+        channel = connected ? connected.channel : null;
+        connecting = false;
+        return;
+      }
 
       realtime = new Ably.Realtime({ authUrl, echoMessages:false });
 
