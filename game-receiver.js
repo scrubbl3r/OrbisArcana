@@ -1112,6 +1112,10 @@
           applyDataToUI,
           teleMaybeLog,
           onCalibrated: () => {
+            if (classicCalibrationSession) {
+              classicCalibrationSession.finishWithAck();
+              classicCalibrationSession.consumeAck();
+            }
             setCalibStatus("Calibrated");
             closeCalibOverlay();
             if (mvp && mvp.eventBus) {
@@ -3149,6 +3153,9 @@
     function applyDataToUI(d){
       if (classicSignalProcessor && classicMotionStore) {
         try {
+          if (classicCalibrationSession && classicCalibrationSession.state && classicCalibrationSession.state.active) {
+            classicCalibrationSession.addSample(d);
+          }
           const classicState = classicSignalProcessor.processPacket(d, performance.now(), {
             suppressShake: !!orbInputSuppressed,
           });
@@ -3222,8 +3229,15 @@
           const canCalib = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
           if (!canCalib) return;
           if (calibInFlight) return;
+          if (classicCalibrationSession) {
+            const started = classicCalibrationSession.requestStart(canCalib, performance.now());
+            if (!started) return;
+          }
           const ok = sendCalibrationTrigger();
-          if (!ok) return;
+          if (!ok) {
+            if (classicCalibrationSession) classicCalibrationSession.cancel();
+            return;
+          }
           calibInFlight = true;
           els.calibBtn.disabled = true;
           setCalibStatus("Calibrating… (2s)");
