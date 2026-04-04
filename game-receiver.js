@@ -52,6 +52,7 @@
       lampRight: $("lampRight"),
       lampForward: $("lampForward"),
       lampBack: $("lampBack"),
+      devSpinAuditNote: $("devSpinAuditNote"),
 
       fatal: $("fatal"),
 
