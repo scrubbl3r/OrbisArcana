@@ -3103,6 +3103,10 @@
       };
     }
 
+    function hasClassicShadowHudViewModel(){
+      return !!getClassicShadowHudViewModel();
+    }
+
     function applyClassicShadowOrbRuntimeState(){
       if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return;
       const state = classicMotionStore.getState();
@@ -3223,7 +3227,7 @@
       const nowMs = performance.now();
       const processed = processInputFrame(d, nowMs);
       applyClassicShadowOrbRuntimeState();
-      const vm = buildInputHudViewModel(processed);
+      const vm = hasClassicShadowHudViewModel() ? null : buildInputHudViewModel(processed);
       renderInputHud(vm);
     }
 
