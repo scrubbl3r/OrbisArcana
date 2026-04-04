@@ -4,6 +4,25 @@ This branch now exposes a reusable motion-core contract with four distinct layer
 
 `TelemetryTransport -> CalibrationSession/CalibrationEngine inputs -> SignalProcessor -> MotionStore -> subscribers`
 
+## Strict transport policy
+
+Paired sessions now treat Ably as bootstrap-only transport.
+
+- Ably is used for:
+  - room-scoped auth
+  - QR/bootstrap signaling
+  - offer / answer / ICE exchange
+- After LAN-safe direct pairing completes:
+  - motion flows only over the direct data channel
+  - runtime `calibrate` control flows only over the direct data channel
+  - Ably signaling is closed on both sides
+- If direct transport is unavailable or dies:
+  - the session fails closed
+  - motion does not silently fall back to Ably relay
+  - calibration does not silently fall back to Ably control
+
+This is intentional cost/safety policy, not a temporary limitation.
+
 ## Canonical receiver state
 
 `MotionStore` should publish four buckets:

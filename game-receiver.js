@@ -114,6 +114,7 @@
     const fastPathHost = window.createFastPathHostTransport({
       onImpulse: handleIncomingImpulse,
       onPhoneStarted: () => {
+        pairingService.closeSignalChannel();
         if (els.pairModal.classList.contains("on")) closePairModal();
         if (!calibAvailable){
           calibAvailable = true;

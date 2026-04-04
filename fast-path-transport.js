@@ -261,6 +261,15 @@
       state.startedAcked = false;
     }
 
+    function closeSignaling(){
+      clearHelloRetry();
+      try { if (state.pairChannel) state.pairChannel.unsubscribe(); } catch (_) {}
+      try { if (state.pairChannel) state.pairChannel.detach(); } catch (_) {}
+      try { if (state.pairRealtime) state.pairRealtime.close(); } catch (_) {}
+      state.pairChannel = null;
+      state.pairRealtime = null;
+    }
+
     function buildSignal(t, extra){
       return Object.assign({
         t,
@@ -358,6 +367,7 @@
           if (d.name === "phone_started_ack") {
             state.startedAcked = true;
             clearStartedRetry();
+            closeSignaling();
             return;
           }
           if (typeof onControl === "function") onControl(d.name, d);

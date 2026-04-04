@@ -189,6 +189,7 @@
       launch,
       reset,
       publishSignal,
+      closeSignalChannel: cleanupSignaling,
       getState,
       getChannel: () => state.pairChannel,
     };
