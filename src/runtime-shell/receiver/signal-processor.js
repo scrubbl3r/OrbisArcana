@@ -78,7 +78,17 @@
     return { yaw, tilt };
   }
 
-  function deriveSpinState(rotationRate){
+  function lerp(a, b, t){
+    return Number(a) + (Number(b) - Number(a)) * Number(t);
+  }
+
+  function vNorm3(x, y, z){
+    const mag = Math.hypot(x, y, z);
+    if (!(mag > 1e-6)) return { x: 0, y: 0, z: 0, mag: 0 };
+    return { x: x / mag, y: y / mag, z: z / mag, mag };
+  }
+
+  function deriveSpinState(rotationRate, receivedAtMs, spinRuntime){
     if (!Array.isArray(rotationRate) || rotationRate.length < 3) {
       return {
         axis: null,
@@ -93,16 +103,13 @@
     const ry = Number(rotationRate[1]) || 0;
     const rz = Number(rotationRate[2]) || 0;
 
-    // Preserve current live axis semantics:
-    // legacy shield mapping effectively resolves labels from [z, y, x].
-    const mapped = [
-      { label: "x", magnitude: Math.abs(rz), signed: rz },
-      { label: "y", magnitude: Math.abs(ry), signed: ry },
-      { label: "z", magnitude: Math.abs(rx), signed: rx },
-    ];
+    const runtime = spinRuntime || { ox: 0, oy: 0, oz: 0, hist: [] };
+    runtime.ox = lerp(runtime.ox, rx, 0.22);
+    runtime.oy = lerp(runtime.oy, ry, 0.22);
+    runtime.oz = lerp(runtime.oz, rz, 0.22);
 
-    const total = mapped[0].magnitude + mapped[1].magnitude + mapped[2].magnitude;
-    if (!(total > 1e-6)) {
+    const unit = vNorm3(runtime.ox, runtime.oy, runtime.oz);
+    if (!(unit.mag > 1e-6)) {
       return {
         axis: null,
         dominance: 0,
@@ -112,27 +119,53 @@
       };
     }
 
-    const normalized = mapped.map((item) => ({
-      label: item.label,
-      value: item.magnitude / total,
-      signed: item.signed,
-    })).sort((a, b) => b.value - a.value);
+    runtime.hist.push({ t: Number(receivedAtMs) || 0, x: unit.x, y: unit.y, z: unit.z });
+    const cutoff = (Number(receivedAtMs) || 0) - 1500;
+    while (runtime.hist.length && runtime.hist[0].t < cutoff) runtime.hist.shift();
 
-    const top = normalized[0];
-    const second = normalized[1] || { value: 0 };
+    let sx = 0;
+    let sy = 0;
+    let sz = 0;
+    for (const sample of runtime.hist) {
+      sx += Math.abs(sample.x);
+      sy += Math.abs(sample.y);
+      sz += Math.abs(sample.z);
+    }
+
+    const dominant = vNorm3(sx, sy, sz);
+    if (!(dominant.mag > 1e-6)) {
+      return {
+        axis: null,
+        dominance: 0,
+        gap: 0,
+        label: null,
+        direction: null,
+      };
+    }
+
+    // Preserve current live axis semantics:
+    // legacy shield mapping effectively resolves labels from [z, y, x].
+    const mapped = [
+      { label: "x", magnitude: dominant.z, signed: unit.z },
+      { label: "y", magnitude: dominant.y, signed: unit.y },
+      { label: "z", magnitude: dominant.x, signed: unit.x },
+    ].sort((a, b) => b.magnitude - a.magnitude);
+
+    const top = mapped[0];
+    const second = mapped[1] || { magnitude: 0 };
     const vectorByLabel = {
       x: 0,
       y: 0,
       z: 0,
     };
-    normalized.forEach((item) => {
-      vectorByLabel[item.label] = item.value;
+    mapped.forEach((item) => {
+      vectorByLabel[item.label] = item.magnitude;
     });
 
     return {
       axis: [vectorByLabel.x, vectorByLabel.y, vectorByLabel.z],
-      dominance: top.value,
-      gap: top.value - second.value,
+      dominance: top.magnitude,
+      gap: top.magnitude - second.magnitude,
       label: top.label,
       direction: top.signed >= 0 ? "cw" : "ccw",
     };
@@ -147,10 +180,20 @@
 
     let energyBankPts = 0;
     let energyBankLastMs = 0;
+    const spinRuntime = {
+      ox: 0,
+      oy: 0,
+      oz: 0,
+      hist: [],
+    };
 
     function reset(){
       energyBankPts = 0;
       energyBankLastMs = 0;
+      spinRuntime.ox = 0;
+      spinRuntime.oy = 0;
+      spinRuntime.oz = 0;
+      spinRuntime.hist = [];
     }
 
     function spendEnergy(points){
@@ -180,7 +223,7 @@
       const spinAxis = pickVec3(packet, "spinAxis") || pickVec3(packet, "shieldAxis");
       const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
       const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
-      const spin = deriveSpinState(rotationRate);
+      const spin = deriveSpinState(rotationRate, receivedAtMs, spinRuntime);
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
