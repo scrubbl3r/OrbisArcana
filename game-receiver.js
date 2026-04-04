@@ -3019,9 +3019,37 @@
       return { yaw, tilt };
     }
 
+    function getClassicShadowHudViewModel(){
+      if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return null;
+      const state = classicMotionStore.getState();
+      if (!state || !state.motion || !state.energyBank) return null;
+      const motion = state.motion;
+      const energyBank = state.energyBank;
+      return {
+        lift: Number(motion.lift01) || 0,
+        groove: Number(motion.groove01) || 0,
+        smooth: Number(motion.smooth01) || 0,
+        speed: Number(motion.speed01) || 0,
+        dynamics: Number(motion.dynamics01) || 0,
+        energyUI01: Number(energyBank.level01) || 0,
+        energyBankPts: Number(energyBank.points) || 0,
+        liftP: Math.round(clamp01(motion.lift01) * 100),
+        gP: Math.round(clamp01(motion.groove01) * 100),
+        sP: Math.round(clamp01(motion.smooth01) * 100),
+        sp: Math.round(clamp01(motion.speed01) * 100),
+        dP: Math.round(clamp01(motion.dynamics01) * 100),
+        ePts: Math.round(Number(energyBank.points) || 0),
+        shakeMeter: Number(motion.shakeMeter01) || 0,
+        sh: Number(motion.shakeDisplayValue) || 0,
+        locked: !!motion.locked,
+        over: ((Number(energyBank.level01) || 0) > 1),
+      };
+    }
+
     function renderInputHud(vm){
-      if (!vm) return;
-      currentDevStagingView.renderInputHud(vm);
+      const nextVm = getClassicShadowHudViewModel() || vm;
+      if (!nextVm) return;
+      currentDevStagingView.renderInputHud(nextVm);
 
       // Repurposed row: Orb debug readout.
       updateDebugReadout();
