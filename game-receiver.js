@@ -3046,6 +3046,17 @@
       };
     }
 
+    function applyClassicShadowOrbRuntimeState(){
+      if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return;
+      const state = classicMotionStore.getState();
+      if (!state || !state.motion || !state.energyBank) return;
+      patchOrbRuntime({
+        lift01: Number(state.motion.lift01) || 0,
+        energy01: Number(state.energyBank.level01) || 0,
+        dynamics01: Number(state.motion.dynamics01) || 0,
+      });
+    }
+
     function renderInputHud(vm){
       const nextVm = getClassicShadowHudViewModel() || vm;
       if (!nextVm) return;
@@ -3151,6 +3162,7 @@
       if (!receiverModulesReady) return;
       const nowMs = performance.now();
       const processed = processInputFrame(d, nowMs);
+      applyClassicShadowOrbRuntimeState();
       const vm = buildInputHudViewModel(processed);
       renderInputHud(vm);
     }
