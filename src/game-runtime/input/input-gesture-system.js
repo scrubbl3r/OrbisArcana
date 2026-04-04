@@ -272,7 +272,7 @@ export function createInputGestureSystem({
     const dt = fs.lastTs ? clamp(now - fs.lastTs, 0, 120) : 0;
     fs.lastTs = now;
 
-    const axisInfo = axisFromCanonicalSpin(raw) || axisFromVisibleShield(raw);
+    const axisInfo = axisFromVisibleShield(raw) || axisFromCanonicalSpin(raw);
     void stabilityOn;
     // Preserve the older "always responsive" spin feel by qualifying from the visual
     // spin gate + axis signal, without requiring dynamics stability to be armed.
