@@ -1067,6 +1067,8 @@
     // ===== LAN PARTY (P2P) BEGIN =====
     let mobileImpulseSystem = null;
     let lanSession = null;
+    let classicShadowPacketCount = 0;
+    let classicShadowLastAtMs = 0;
 
     async function initClassicReceiverShadowCore(){
       try {
@@ -1088,6 +1090,11 @@
           calibrationSession: classicCalibrationSession,
           signalProcessor: classicSignalProcessor,
           motionStore: classicMotionStore,
+          getSnapshot: () => (classicMotionStore && typeof classicMotionStore.getState === "function")
+            ? classicMotionStore.getState()
+            : null,
+          getPacketCount: () => classicShadowPacketCount,
+          getLastAtMs: () => classicShadowLastAtMs,
         };
       } catch (e) {
         classicCalibrationSession = null;
@@ -3107,6 +3114,8 @@
             suppressShake: !!orbInputSuppressed,
           });
           classicMotionStore.publish(classicState);
+          classicShadowPacketCount += 1;
+          classicShadowLastAtMs = Number(classicState && classicState.receivedAtMs) || performance.now();
         } catch (e) {
           console.warn("Classic receiver shadow process failed:", e);
         }
