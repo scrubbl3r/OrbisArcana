@@ -2991,6 +2991,32 @@
       return false;
     }
 
+    function bindCalibrationButton(){
+      if (!els.calibBtn) return;
+      els.calibBtn.onclick = () => {
+        if (!audioEnabled) {
+          enableAudio().catch(() => {});
+        } else if (audioCtx) {
+          audioCtx.resume().catch(() => {});
+        }
+        const canCalib = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
+        if (!canCalib) return;
+        if (calibInFlight) return;
+        if (classicCalibrationSession) {
+          const started = classicCalibrationSession.requestStart(canCalib, performance.now());
+          if (!started) return;
+        }
+        const ok = sendCalibrationTrigger();
+        if (!ok) {
+          if (classicCalibrationSession) classicCalibrationSession.cancel();
+          return;
+        }
+        calibInFlight = true;
+        els.calibBtn.disabled = true;
+        setCalibStatus("Calibrating… (2s)");
+      };
+    }
+
     function pickDirVec(d){
       // Priority:
       // 1) d.dir
@@ -3218,6 +3244,7 @@
 
       const roomCode = stripOrbPrefix(roomChannel);
       const authUrl = WORKER_BASE + "/token?room=" + encodeURIComponent(roomCode) + "&v=" + Date.now();
+      bindCalibrationButton();
 
       if (classicReceiverTransport && typeof classicReceiverTransport.connect === "function") {
         const connected = classicReceiverTransport.connect({
@@ -3260,31 +3287,6 @@
         setStatus(`Connected ✓ (listening…) <span class="dim">(${roomChannel})</span>`, "ok");
         idleStartTimers();
       });
-
-      if (els.calibBtn){
-        els.calibBtn.onclick = () => {
-          if (!audioEnabled) {
-            enableAudio().catch(() => {});
-          } else if (audioCtx) {
-            audioCtx.resume().catch(() => {});
-          }
-          const canCalib = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
-          if (!canCalib) return;
-          if (calibInFlight) return;
-          if (classicCalibrationSession) {
-            const started = classicCalibrationSession.requestStart(canCalib, performance.now());
-            if (!started) return;
-          }
-          const ok = sendCalibrationTrigger();
-          if (!ok) {
-            if (classicCalibrationSession) classicCalibrationSession.cancel();
-            return;
-          }
-          calibInFlight = true;
-          els.calibBtn.disabled = true;
-          setCalibStatus("Calibrating… (2s)");
-        };
-      }
 
       channel.subscribe("orb", (msg) => {
         const d = (msg && msg.data) ? msg.data : {};
