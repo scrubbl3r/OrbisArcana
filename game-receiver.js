@@ -3175,6 +3175,7 @@
         frame,
         nowMs,
         skipPhysStatePatch: !!classicMotionStore,
+        skipLegacyHudFields: !!classicMotionStore,
         values: {
           energyFromPhone,
           groove,

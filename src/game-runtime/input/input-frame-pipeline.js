@@ -17,6 +17,7 @@ function clamp01(n){
  * @property {{inputDynamics?:Object}} [configs]
  * @property {Object} [hooks] Receiver-provided hooks for resource updates, visuals, audio, and shake processing.
  * @property {boolean} [skipPhysStatePatch] When true, do not mutate orb runtime scalar state inside the legacy pipeline.
+ * @property {boolean} [skipLegacyHudFields] When true, skip legacy HUD-only return shaping that is no longer consumed.
  */
 
 /**
@@ -38,6 +39,7 @@ export function runInputFramePipeline({
   configs,
   hooks,
   skipPhysStatePatch = false,
+  skipLegacyHudFields = false,
 } = {}){
   const energyFromPhone = Number(values && values.energyFromPhone) || 0;
   const groove = Number(values && values.groove) || 0;
@@ -83,7 +85,9 @@ export function runInputFramePipeline({
     setBgFromEnergy(energyUI01);
   }
 
-  const shieldRgb01 = (frame && Array.isArray(frame.shieldRGB) && frame.shieldRGB.length >= 3)
+  const shieldRgb01 = skipLegacyHudFields
+    ? null
+    : (frame && Array.isArray(frame.shieldRGB) && frame.shieldRGB.length >= 3)
     ? frame.shieldRGB
     : (d && Array.isArray(d.shieldRGB) && d.shieldRGB.length >= 3 ? d.shieldRGB : null);
 
