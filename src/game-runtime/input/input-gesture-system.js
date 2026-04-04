@@ -242,10 +242,11 @@ export function createInputGestureSystem({
     // spin gate + axis signal, without requiring dynamics stability to be armed.
     const stableEnough = !!stabilityVisualGate;
     const canQualify = !!axisInfo && stableEnough;
-    const domOnReq = cfg.flatSpinDominanceOn;
-    const domOffReq = cfg.flatSpinDominanceOff;
-    const gapOnReq = cfg.flatSpinDominanceGapOn;
-    const gapOffReq = cfg.flatSpinDominanceGapOff;
+    const isCanonicalSignal = !!(axisInfo && axisInfo.source === "canonical");
+    const domOnReq = isCanonicalSignal ? 0.56 : cfg.flatSpinDominanceOn;
+    const domOffReq = isCanonicalSignal ? 0.48 : cfg.flatSpinDominanceOff;
+    const gapOnReq = isCanonicalSignal ? 0.06 : cfg.flatSpinDominanceGapOn;
+    const gapOffReq = isCanonicalSignal ? 0.03 : cfg.flatSpinDominanceGapOff;
 
     if (fs.active) {
       const sameAxis = canQualify
