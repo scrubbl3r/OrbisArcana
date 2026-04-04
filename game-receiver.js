@@ -1070,6 +1070,8 @@
     let classicShadowPacketCount = 0;
     let classicShadowLastAtMs = 0;
     let classicReceiverTransport = null;
+    let classicPairingServiceFactory = null;
+    let classicFastPathHostTransportFactory = null;
 
     async function initClassicReceiverShadowCore(){
       try {
@@ -1078,6 +1080,8 @@
           import("./src/runtime-shell/receiver/signal-processor.js"),
           import("./src/runtime-shell/receiver/motion-store.js"),
           import("./src/runtime-shell/session/relay-transport.js"),
+          import("./src/runtime-shell/session/pairing-service.js"),
+          import("./src/runtime-shell/session/fast-path-transport.js"),
         ]);
         classicCalibrationSession = (typeof window.createCalibrationSession === "function")
           ? window.createCalibrationSession()
@@ -1094,11 +1098,19 @@
               ablyCtor: (typeof Ably !== "undefined" && Ably) ? Ably : null,
             })
           : null;
+        classicPairingServiceFactory = (typeof window.createPairingService === "function")
+          ? window.createPairingService
+          : null;
+        classicFastPathHostTransportFactory = (typeof window.createFastPathHostTransport === "function")
+          ? window.createFastPathHostTransport
+          : null;
         window.__classicReceiverShadowCore = {
           calibrationSession: classicCalibrationSession,
           signalProcessor: classicSignalProcessor,
           motionStore: classicMotionStore,
           receiverTransport: classicReceiverTransport,
+          pairingServiceFactory: classicPairingServiceFactory,
+          fastPathHostTransportFactory: classicFastPathHostTransportFactory,
           getSnapshot: () => (classicMotionStore && typeof classicMotionStore.getState === "function")
             ? classicMotionStore.getState()
             : null,
@@ -1110,6 +1122,8 @@
         classicSignalProcessor = null;
         classicMotionStore = null;
         classicReceiverTransport = null;
+        classicPairingServiceFactory = null;
+        classicFastPathHostTransportFactory = null;
         console.warn("Classic receiver shadow core init failed:", e);
       }
     }
@@ -1152,6 +1166,8 @@
         lanSession = createLanSessionSystem({
           AblyCtor: (typeof Ably !== "undefined" && Ably && Ably.Realtime) ? Ably.Realtime : null,
           QRCodeLib: (typeof QRCode !== "undefined") ? QRCode : null,
+          pairingServiceFactory: classicPairingServiceFactory,
+          fastPathHostTransportFactory: classicFastPathHostTransportFactory,
           workerBase: WORKER_BASE,
           ui: {
             lanModal: els.lanModal,

@@ -1,6 +1,8 @@
 export function createLanSessionSystem({
   AblyCtor,
   QRCodeLib,
+  pairingServiceFactory,
+  fastPathHostTransportFactory,
   workerBase,
   ui,
   mobilePageBaseUrl,
@@ -36,6 +38,8 @@ export function createLanSessionSystem({
     expiryTO: null,
     helloSeen: false,
   };
+  let classicPairingService = null;
+  let classicFastPathHost = null;
 
   function nowTs() {
     return Date.now();
@@ -130,6 +134,7 @@ export function createLanSessionSystem({
     state.pc = null;
     state.offerSdp = "";
     state.helloSeen = false;
+    try { if (classicFastPathHost) classicFastPathHost.reset(); } catch (_) {}
   }
 
   function publishSignal(t, extra) {
@@ -145,13 +150,17 @@ export function createLanSessionSystem({
   }
 
   function reset() {
-    if (state.active && state.pairChannel) {
+    if (classicPairingService && state.active) {
+      classicPairingService.reset({ reason: "host_closed" });
+      classicPairingService = null;
+    } else if (state.active && state.pairChannel) {
       publishSignal("abort", { reason: "host_closed" });
     }
     state.active = false;
     state.gameplayEnabled = false;
     cleanupPeer();
     cleanupSignaling();
+    classicFastPathHost = null;
     setLanConnState("Closed");
     setLanSafeState("Pending…");
   }
@@ -269,6 +278,70 @@ export function createLanSessionSystem({
   }
 
   async function startHostFlow() {
+    if (typeof pairingServiceFactory === "function" && typeof fastPathHostTransportFactory === "function") {
+      reset();
+
+      classicPairingService = pairingServiceFactory({
+        ablyCtor: AblyCtor,
+        qrCodeLib: QRCodeLib,
+        workerBase,
+        mobileJoinUrl: (roomId, token) => lanJoinUrl(roomId, token),
+        tokenTtlMs,
+      });
+
+      classicFastPathHost = fastPathHostTransportFactory({
+        stunServers,
+        onImpulse,
+        onPhoneStarted: (d) => {
+          closeModal();
+          if (typeof onPhoneStarted === "function") onPhoneStarted(d);
+        },
+        onConnectionState: (msg) => setLanConnState(msg),
+        onSafetyState: (lanSafety) => {
+          setLanSafeState(lanSafety && lanSafety.label ? lanSafety.label : "Pending…");
+          state.gameplayEnabled = !!(lanSafety && lanSafety.safe);
+        },
+      });
+
+      setLanConnState("Waiting for phone…");
+      setLanSafeState("Pending…");
+
+      await classicPairingService.launch({
+        qrEl: ui.lanQr,
+        urlTextEl: ui.lanUrlText,
+        copyBtn: ui.lanCopyUrl,
+        onSignal: async (d) => {
+          if (classicFastPathHost && typeof classicFastPathHost.handleSignal === "function") {
+            await classicFastPathHost.handleSignal(d);
+          }
+        },
+      });
+
+      const classicState = classicPairingService.getState();
+      state.active = true;
+      state.roomId = classicState.roomId;
+      state.token = classicState.token;
+      state.code6 = classicState.code6;
+      state.expiresAt = classicState.expiresAt;
+
+      if (ui.lanRoomCode) ui.lanRoomCode.textContent = state.roomId;
+      if (ui.lanCode6) ui.lanCode6.textContent = state.code6;
+      if (ui.lanUrlText) ui.lanUrlText.textContent = classicState.joinUrl;
+
+      const startSize = syncStartQrSizeToTitlePx() || 280;
+      await renderQrInto(ui.startQr, classicState.joinUrl, startSize);
+
+      if (classicFastPathHost && typeof classicFastPathHost.start === "function") {
+        await classicFastPathHost.start({
+          publishSignal: (t, extra) => classicPairingService.publishSignal(t, extra),
+        });
+      }
+
+      setLanConnState("Pairing…");
+      setStatus(`LAN host ready <span class="dim">(orb:${state.roomId})</span>`, "ok");
+      return;
+    }
+
     reset();
     state.active = true;
     state.roomId = randCode(8);
@@ -408,10 +481,16 @@ export function createLanSessionSystem({
   }
 
   function shouldIgnoreAblyImpulses() {
+    if (classicFastPathHost && typeof classicFastPathHost.shouldIgnoreRelayImpulses === "function") {
+      return !!classicFastPathHost.shouldIgnoreRelayImpulses();
+    }
     return !!(state.active && state.gameplayEnabled);
   }
 
   function sendControl(name, extra = {}) {
+    if (classicFastPathHost && typeof classicFastPathHost.sendControl === "function") {
+      return !!classicFastPathHost.sendControl(name, extra);
+    }
     if (!state.active || !state.dc || state.dc.readyState !== "open") return false;
     const msg = Object.assign({ t: "control", name, ts: Date.now() }, extra || {});
     try {
