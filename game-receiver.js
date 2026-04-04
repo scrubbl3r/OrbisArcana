@@ -1384,8 +1384,29 @@
       const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
       const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
       const locked = d.locked ? "1" : "0";
+      const spinVector = Array.isArray(d.spinVector) && d.spinVector.length >= 3
+        ? d.spinVector.map((v) => Math.max(0, Number(v) || 0))
+        : null;
+      let spinAxis = "—";
+      if (spinVector) {
+        const total = spinVector[0] + spinVector[1] + spinVector[2];
+        if (total > 1e-6) {
+          const ranked = [
+            { axis: "x", value: spinVector[0] / total },
+            { axis: "y", value: spinVector[1] / total },
+            { axis: "z", value: spinVector[2] / total },
+          ].sort((left, right) => right.value - left.value);
+          spinAxis = ranked[0].axis;
+        }
+      }
+      const spinDirection = (typeof d.spinDirection === "string" && d.spinDirection)
+        ? String(d.spinDirection).toLowerCase()
+        : "—";
+      const spinVectorText = spinVector
+        ? spinVector.map((v) => Number(v).toFixed(2)).join("/")
+        : "—";
       kwsPanelController.pushPhoneLogLine(
-        `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} locked:${locked} hz:${hz}`,
+        `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} locked:${locked} hz:${hz} spin:${spinAxis} dir:${spinDirection} vec:${spinVectorText}`,
         "muted"
       );
     }
