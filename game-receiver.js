@@ -3107,6 +3107,20 @@
       return !!getClassicShadowHudViewModel();
     }
 
+    function applyClassicSpinToPayload(raw){
+      if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return raw;
+      const state = classicMotionStore.getState();
+      if (!state || !state.spin) return raw;
+      return {
+        ...(raw || {}),
+        spinAxis: state.spin.axis,
+        spinAxisDominance: state.spin.dominance,
+        spinAxisGap: state.spin.gap,
+        spinAxisLabel: state.spin.label,
+        spinDirection: state.spin.direction,
+      };
+    }
+
     function applyClassicShadowOrbRuntimeState(){
       if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return;
       const state = classicMotionStore.getState();
@@ -3227,7 +3241,8 @@
       }
       if (!receiverModulesReady) return;
       const nowMs = performance.now();
-      const processed = processInputFrame(d, nowMs);
+      const inputPayload = applyClassicSpinToPayload(d);
+      const processed = processInputFrame(inputPayload, nowMs);
       applyClassicShadowOrbRuntimeState();
       const vm = hasClassicShadowHudViewModel() ? null : buildInputHudViewModel(processed);
       renderInputHud(vm);

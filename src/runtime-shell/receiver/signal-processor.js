@@ -78,6 +78,66 @@
     return { yaw, tilt };
   }
 
+  function deriveSpinState(rotationRate){
+    if (!Array.isArray(rotationRate) || rotationRate.length < 3) {
+      return {
+        axis: null,
+        dominance: 0,
+        gap: 0,
+        label: null,
+        direction: null,
+      };
+    }
+
+    const rx = Number(rotationRate[0]) || 0;
+    const ry = Number(rotationRate[1]) || 0;
+    const rz = Number(rotationRate[2]) || 0;
+
+    // Preserve current live axis semantics:
+    // legacy shield mapping effectively resolves labels from [z, y, x].
+    const mapped = [
+      { label: "x", magnitude: Math.abs(rz), signed: rz },
+      { label: "y", magnitude: Math.abs(ry), signed: ry },
+      { label: "z", magnitude: Math.abs(rx), signed: rx },
+    ];
+
+    const total = mapped[0].magnitude + mapped[1].magnitude + mapped[2].magnitude;
+    if (!(total > 1e-6)) {
+      return {
+        axis: null,
+        dominance: 0,
+        gap: 0,
+        label: null,
+        direction: null,
+      };
+    }
+
+    const normalized = mapped.map((item) => ({
+      label: item.label,
+      value: item.magnitude / total,
+      signed: item.signed,
+    })).sort((a, b) => b.value - a.value);
+
+    const top = normalized[0];
+    const second = normalized[1] || { value: 0 };
+    const vectorByLabel = {
+      x: 0,
+      y: 0,
+      z: 0,
+    };
+    normalized.forEach((item) => {
+      vectorByLabel[item.label] = item.value;
+    });
+
+    return {
+      axis: [vectorByLabel.x, vectorByLabel.y, vectorByLabel.z],
+      dominance: top.value,
+      gap: top.value - second.value,
+      label: top.label,
+      direction: top.signed >= 0 ? "cw" : "ccw",
+    };
+  }
+
   function createSignalProcessor(options){
     const settings = {
       energyBankCap: Number(options && options.energyBankCap) || 1000,
@@ -120,6 +180,7 @@
       const spinAxis = pickVec3(packet, "spinAxis") || pickVec3(packet, "shieldAxis");
       const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
       const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
+      const spin = deriveSpinState(rotationRate);
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
@@ -159,6 +220,7 @@
           accel,
           rotationRate,
         },
+        spin,
         direction: {
           vector: directionVector,
           yawDeg: directionAngles ? (((directionAngles.yaw % 360) + 360) % 360) : null,
@@ -169,7 +231,11 @@
           spinColor,
         },
         debug: {
-          spinAxis,
+          spinAxis: spin.axis || spinAxis,
+          spinAxisDominance: spin.dominance,
+          spinAxisGap: spin.gap,
+          spinAxisLabel: spin.label,
+          spinDirection: spin.direction,
           calibOK: (packet && packet.calibOK != null) ? Number(packet.calibOK) || 0 : null,
           omegaOK: (packet && packet.omegaOK != null) ? Number(packet.omegaOK) || 0 : null,
           tag: (packet && packet.dbgTag != null) ? String(packet.dbgTag) : null,

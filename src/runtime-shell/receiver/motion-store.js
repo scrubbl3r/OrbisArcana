@@ -19,6 +19,13 @@
         accel: null,
         rotationRate: null,
       },
+      spin: {
+        axis: null,
+        dominance: 0,
+        gap: 0,
+        label: null,
+        direction: null,
+      },
       direction: {
         vector: null,
         yawDeg: null,
@@ -30,6 +37,10 @@
       },
       debug: {
         spinAxis: null,
+        spinAxisDominance: 0,
+        spinAxisGap: 0,
+        spinAxisLabel: null,
+        spinDirection: null,
         calibOK: null,
         omegaOK: null,
         tag: null,
@@ -77,6 +88,13 @@
           accel: null,
           rotationRate: null,
         },
+        spin: {
+          axis: null,
+          dominance: 0,
+          gap: 0,
+          label: null,
+          direction: null,
+        },
         direction: {
           vector: null,
           yawDeg: null,
@@ -88,6 +106,10 @@
         },
         debug: {
           spinAxis: null,
+          spinAxisDominance: 0,
+          spinAxisGap: 0,
+          spinAxisLabel: null,
+          spinDirection: null,
           calibOK: null,
           omegaOK: null,
           tag: null,

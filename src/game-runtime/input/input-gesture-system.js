@@ -205,6 +205,31 @@ export function createInputGestureSystem({
     return axisFromShieldAxis(raw && raw.shieldAxis) || axisFromShieldRgb(raw && raw.shieldRGB);
   }
 
+  function axisFromCanonicalSpin(raw) {
+    const label = raw && typeof raw.spinAxisLabel === "string" ? String(raw.spinAxisLabel).trim().toLowerCase() : "";
+    const dominance = Number(raw && raw.spinAxisDominance);
+    const gap = Number(raw && raw.spinAxisGap);
+    const axis = Array.isArray(raw && raw.spinAxis) && raw.spinAxis.length >= 3
+      ? [
+          Math.max(0, Number(raw.spinAxis[0]) || 0),
+          Math.max(0, Number(raw.spinAxis[1]) || 0),
+          Math.max(0, Number(raw.spinAxis[2]) || 0),
+        ]
+      : null;
+
+    if (!label || !Number.isFinite(dominance) || !Number.isFinite(gap)) return null;
+    if (label !== "x" && label !== "y" && label !== "z") return null;
+
+    return {
+      axis: label,
+      v: dominance,
+      gap,
+      source: "canonical",
+      vector: axis,
+      direction: raw && typeof raw.spinDirection === "string" ? String(raw.spinDirection) : null,
+    };
+  }
+
   function openFlatSpinWindow(axis, atMs) {
     const fs = state.flatSpin;
     fs.active = true;
@@ -243,7 +268,7 @@ export function createInputGestureSystem({
     const dt = fs.lastTs ? clamp(now - fs.lastTs, 0, 120) : 0;
     fs.lastTs = now;
 
-    const axisInfo = axisFromVisibleShield(raw);
+    const axisInfo = axisFromCanonicalSpin(raw) || axisFromVisibleShield(raw);
     void stabilityOn;
     // Preserve the older "always responsive" spin feel by qualifying from the visual
     // spin gate + axis signal, without requiring dynamics stability to be armed.
