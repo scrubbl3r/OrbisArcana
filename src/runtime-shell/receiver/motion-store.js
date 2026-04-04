@@ -20,6 +20,7 @@
         rotationRate: null,
       },
       spin: {
+        vector: null,
         axis: null,
         dominance: 0,
         gap: 0,
@@ -36,6 +37,7 @@
         spinColor: null,
       },
       debug: {
+        spinVector: null,
         spinAxis: null,
         spinAxisDominance: 0,
         spinAxisGap: 0,
@@ -89,6 +91,7 @@
           rotationRate: null,
         },
         spin: {
+          vector: null,
           axis: null,
           dominance: 0,
           gap: 0,
@@ -105,6 +108,7 @@
           spinColor: null,
         },
         debug: {
+          spinVector: null,
           spinAxis: null,
           spinAxisDominance: 0,
           spinAxisGap: 0,

@@ -111,6 +111,7 @@
     const second = ranked[1] || { magnitude: 0 };
 
     return {
+      vector: [x, y, z],
       axis: [x, y, z],
       dominance: top.magnitude,
       gap: top.magnitude - second.magnitude,
@@ -123,11 +124,12 @@
 
   function deriveSpinState(rotationRate, receivedAtMs, spinRuntime){
     if (!Array.isArray(rotationRate) || rotationRate.length < 3) {
-      return {
-        axis: null,
-        dominance: 0,
-        gap: 0,
-        label: null,
+        return {
+          vector: null,
+          axis: null,
+          dominance: 0,
+          gap: 0,
+          label: null,
         direction: null,
       };
     }
@@ -144,6 +146,7 @@
     const unit = vNorm3(runtime.ox, runtime.oy, runtime.oz);
     if (!(unit.mag > 1e-6)) {
       return {
+        vector: null,
         axis: null,
         dominance: 0,
         gap: 0,
@@ -168,6 +171,7 @@
     const dominant = vNorm3(sx, sy, sz);
     if (!(dominant.mag > 1e-6)) {
       return {
+        vector: null,
         axis: null,
         dominance: 0,
         gap: 0,
@@ -196,6 +200,7 @@
     });
 
     return {
+      vector: [vectorByLabel.x, vectorByLabel.y, vectorByLabel.z],
       axis: [vectorByLabel.x, vectorByLabel.y, vectorByLabel.z],
       dominance: top.magnitude,
       gap: top.magnitude - second.magnitude,
@@ -308,6 +313,7 @@
           spinColor,
         },
         debug: {
+          spinVector: spin.vector,
           spinAxis: spin.axis,
           spinAxisDominance: spin.dominance,
           spinAxisGap: spin.gap,
