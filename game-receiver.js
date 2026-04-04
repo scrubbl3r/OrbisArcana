@@ -2420,6 +2420,21 @@
         if (orbSystemsBundle && typeof orbSystemsBundle.start === "function") {
           orbSystemsBundle.start();
         }
+        if (eventBus && typeof eventBus.on === "function") {
+          eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_OPENED, (payload = {}) => {
+            if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
+            const axis = String(payload.axis || "-");
+            const atMs = Number(payload.atMs || 0);
+            kwsPanelController.pushPhoneLogLine(`TRACE spin_open axis:${axis} at:${Math.round(atMs)}`, "ok");
+          });
+          eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED, (payload = {}) => {
+            if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
+            const axis = String(payload.axis || "-");
+            const reason = String(payload.reason || "-");
+            const atMs = Number(payload.atMs || 0);
+            kwsPanelController.pushPhoneLogLine(`TRACE spin_close axis:${axis} reason:${reason} at:${Math.round(atMs)}`, "muted");
+          });
+        }
         bindStagingRuntimeEvents({
           eventBus,
           RECEIVER_EVENTS,
