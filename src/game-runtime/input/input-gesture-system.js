@@ -219,6 +219,10 @@ export function createInputGestureSystem({
 
     if (!label || !Number.isFinite(dominance) || !Number.isFinite(gap)) return null;
     if (label !== "x" && label !== "y" && label !== "z") return null;
+    // During cutover, only treat canonical spin as authoritative when it is
+    // already decisive enough to stand on its own. Otherwise allow legacy
+    // shield-derived fallback to preserve current live parity.
+    if (dominance < 0.48 || gap < 0.03) return null;
 
     return {
       axis: label,
