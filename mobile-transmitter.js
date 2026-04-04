@@ -448,12 +448,46 @@
 
     let ably = null;
     let ablyChannel = null;
+    let classicTransmitterRelay = null;
 
     const roomInfo = parseRoom();
     const room = roomInfo.channelName;
     const roomCode = roomInfo.roomCode;
 
+    async function initClassicTransmitterRelay(){
+      if (classicTransmitterRelay) return classicTransmitterRelay;
+      try {
+        await import("./src/runtime-shell/transmitter/transmitter-relay.js");
+        classicTransmitterRelay = (typeof window.createTransmitterRelay === "function")
+          ? window.createTransmitterRelay({
+              tokenUrl: TOKEN_URL,
+              ablyCtor: (typeof Ably !== "undefined" && Ably) ? Ably : null,
+            })
+          : null;
+      } catch (e) {
+        classicTransmitterRelay = null;
+        console.warn("Classic transmitter relay init failed:", e);
+      }
+      return classicTransmitterRelay;
+    }
+
     async function connectRelay() {
+      const relay = await initClassicTransmitterRelay();
+      if (relay && typeof relay.connect === "function") {
+        const ok = await relay.connect({
+          room,
+          roomCode,
+          onControlMessage: (d) => {
+            if (d && d.calibrate){
+              startCalibration();
+            }
+          },
+        });
+        ably = relay.getRealtime ? relay.getRealtime() : null;
+        ablyChannel = relay.getChannel ? relay.getChannel() : null;
+        return !!ok;
+      }
+
       try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
       try { if (ably) ably.close(); } catch(e) {}
       ably = null; ablyChannel = null;
@@ -492,6 +526,12 @@
     }
 
     function disconnectRelay() {
+      if (classicTransmitterRelay && typeof classicTransmitterRelay.disconnect === "function") {
+        classicTransmitterRelay.disconnect();
+        ably = null;
+        ablyChannel = null;
+        return;
+      }
       try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
       try { if (ably) ably.close(); } catch(e) {}
       ably = null; ablyChannel = null;
@@ -1049,6 +1089,13 @@
       if (lanParty.active) {
         impulseTransport.sendImpulse("impulse", out);
         return;
+      }
+
+      if (classicTransmitterRelay && typeof classicTransmitterRelay.publish === "function") {
+        const published = classicTransmitterRelay.publish("orb", out, (err) => {
+          if (err) console.warn("[ably publish err]", err);
+        });
+        if (published) return;
       }
 
       if (!ablyChannel) return;
