@@ -453,6 +453,7 @@
     const roomInfo = parseRoom();
     const room = roomInfo.channelName;
     const roomCode = roomInfo.roomCode;
+    let classicFastPathJoinTransport = null;
 
     async function initClassicTransmitterRelay(){
       if (classicTransmitterRelay) return classicTransmitterRelay;
@@ -469,6 +470,34 @@
         console.warn("Classic transmitter relay init failed:", e);
       }
       return classicTransmitterRelay;
+    }
+
+    async function initClassicFastPathJoinTransport(){
+      if (classicFastPathJoinTransport) return classicFastPathJoinTransport;
+      try {
+        await import("./src/runtime-shell/session/fast-path-transport.js");
+        classicFastPathJoinTransport = (typeof window.createFastPathJoinTransport === "function")
+          ? window.createFastPathJoinTransport({
+              ablyCtor: (typeof Ably !== "undefined") ? Ably : null,
+              workerBase: WORKER_BASE,
+              stunServers: LAN_STUN_SERVERS,
+              tokenTtlMs: LAN_TOKEN_TTL_MS,
+              onStatus: (msg) => {
+                setJoinStatus(msg);
+                if (/Connected|NOT LAN SAFE|Disconnected|Aborted|failed/i.test(String(msg || ""))) {
+                  hideLanConnecting();
+                }
+              },
+              onControl: (name) => {
+                if (name === "calibrate") startCalibration();
+              },
+            })
+          : null;
+      } catch (e) {
+        classicFastPathJoinTransport = null;
+        console.warn("Classic fast-path join transport init failed:", e);
+      }
+      return classicFastPathJoinTransport;
     }
 
     async function connectRelay() {
@@ -599,6 +628,9 @@
     }
 
     function disconnectLanPairing(){
+      if (classicFastPathJoinTransport && typeof classicFastPathJoinTransport.disconnect === "function") {
+        classicFastPathJoinTransport.disconnect();
+      }
       if (lanParty.active && lanParty.pairChannel) {
         publishLanSignal("abort", { reason: "joiner_closed" });
       }
@@ -800,6 +832,31 @@
       if (code6 && String(code6).trim() && String(code6).trim() !== lanParty.code6) {
         setJoinStatus("Backup code mismatch");
         return false;
+      }
+
+      const classicJoin = await initClassicFastPathJoinTransport();
+      if (classicJoin && typeof classicJoin.connect === "function") {
+        const ok = await classicJoin.connect({
+          roomId: lanParty.roomId,
+          token: lanParty.token,
+        });
+        if (!ok) {
+          hideLanConnecting();
+          return false;
+        }
+        setImpulseTransport({
+          sendImpulse(type, payload){
+            if (type !== "impulse") return false;
+            return !!classicJoin.sendImpulse(payload);
+          },
+          onImpulse(){},
+          close(){
+            if (classicJoin && typeof classicJoin.disconnect === "function") {
+              classicJoin.disconnect();
+            }
+          }
+        });
+        return true;
       }
 
       setJoinStatus("Pairing…");
@@ -2468,7 +2525,11 @@
         setBtn("Stop");
 
         if (lanParty.active) {
-          armPhoneStartedHandshake();
+          if (classicFastPathJoinTransport && typeof classicFastPathJoinTransport.setRunning === "function") {
+            classicFastPathJoinTransport.setRunning(true);
+          } else {
+            armPhoneStartedHandshake();
+          }
         }
 
         if (calib.pendingReq) startCalibration();
@@ -2488,6 +2549,10 @@
       running = false;
       calib.active = false;
       removeMotionListener();
+
+      if (classicFastPathJoinTransport && typeof classicFastPathJoinTransport.setRunning === "function") {
+        classicFastPathJoinTransport.setRunning(false);
+      }
 
       if (audioCtx && gainNode) {
         const now = audioCtx.currentTime;
