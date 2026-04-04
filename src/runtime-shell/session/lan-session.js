@@ -328,8 +328,7 @@ export function createLanSessionSystem({
       if (ui.lanCode6) ui.lanCode6.textContent = state.code6;
       if (ui.lanUrlText) ui.lanUrlText.textContent = classicState.joinUrl;
 
-      const startSize = syncStartQrSizeToTitlePx() || 280;
-      await renderQrInto(ui.startQr, classicState.joinUrl, startSize);
+      await renderLanQr(classicState.joinUrl);
 
       if (classicFastPathHost && typeof classicFastPathHost.start === "function") {
         await classicFastPathHost.start({
