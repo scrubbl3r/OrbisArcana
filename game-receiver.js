@@ -185,20 +185,7 @@
       };
     }
 
-    function createBootFallbackDevStagingAdapter() {
-      const refs = createBootFallbackDevStagingRefs();
-      if (typeof createLegacyDevStagingAdapterFactory === "function") {
-        return createLegacyDevStagingAdapterFactory({
-          els,
-          setBar,
-          renderDevStagingHud,
-          resetDevStagingHud,
-          setDevStagingStatus,
-          setDevStagingFatal,
-          setDevStagingDebugNote,
-          closeDevStagingTopmostPopup,
-        });
-      }
+    function createInlineBootFallbackDevStagingAdapter(refs) {
       return {
         refs,
         setStatus(html, cls){
@@ -290,6 +277,23 @@
           refs.bEnergy.classList.toggle("over", vm.over);
         },
       };
+    }
+
+    function createBootFallbackDevStagingAdapter() {
+      const refs = createBootFallbackDevStagingRefs();
+      if (typeof createLegacyDevStagingAdapterFactory === "function") {
+        return createLegacyDevStagingAdapterFactory({
+          els,
+          setBar,
+          renderDevStagingHud,
+          resetDevStagingHud,
+          setDevStagingStatus,
+          setDevStagingFatal,
+          setDevStagingDebugNote,
+          closeDevStagingTopmostPopup,
+        });
+      }
+      return createInlineBootFallbackDevStagingAdapter(refs);
     }
 
     let renderDevStagingHud = null;
