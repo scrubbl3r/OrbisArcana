@@ -298,6 +298,22 @@
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
 
+    function setCurrentDevStagingView(nextView) {
+      if (!nextView) return;
+      currentDevStagingView = nextView;
+      devStagingRefs = currentDevStagingView.refs || {};
+    }
+
+    function refreshLegacyDevStagingView() {
+      const wasUsingLegacyView = (currentDevStagingView === legacyDevStagingView);
+      const nextLegacyDevStagingView = createBootFallbackDevStagingAdapter();
+      legacyDevStagingView = nextLegacyDevStagingView;
+      if (wasUsingLegacyView) {
+        setCurrentDevStagingView(legacyDevStagingView);
+      }
+      return nextLegacyDevStagingView;
+    }
+
     function createDevStagingPanelElements() {
       if (typeof createDevStagingPanelElementsFactory === "function") {
         return createDevStagingPanelElementsFactory(currentDevStagingView.refs || currentDevStagingView);
@@ -343,8 +359,7 @@
           ? mountDevStaging(els.devStagingMount)
           : null;
         if (!mounted) return null;
-        currentDevStagingView = mounted;
-        devStagingRefs = currentDevStagingView.refs;
+        setCurrentDevStagingView(mounted);
         els.devStagingLegacy.classList.add("off");
         els.devStagingLegacy.setAttribute("aria-hidden", "true");
         els.devStagingMount.classList.remove("off");
@@ -1084,14 +1099,7 @@
         createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
         createLegacyDevStagingRefsFactory = legacyDevStagingAdapterModule.createLegacyDevStagingRefsFromElements || null;
         createDevStagingPanelElementsFactory = legacyDevStagingAdapterModule.createDevStagingPanelElements || null;
-        const nextLegacyDevStagingView = createBootFallbackDevStagingAdapter();
-        if (currentDevStagingView === legacyDevStagingView) {
-          legacyDevStagingView = nextLegacyDevStagingView;
-          currentDevStagingView = legacyDevStagingView;
-          devStagingRefs = currentDevStagingView.refs;
-        } else {
-          legacyDevStagingView = nextLegacyDevStagingView;
-        }
+        refreshLegacyDevStagingView();
         classicCalibrationSession = (typeof window.createCalibrationSession === "function")
           ? window.createCalibrationSession()
           : null;
