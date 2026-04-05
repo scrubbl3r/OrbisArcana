@@ -137,6 +137,28 @@ function setText(el, value) {
   el.textContent = String(value);
 }
 
+export function renderDevStagingHud(refs, vm) {
+  if (!refs || !vm) return;
+  setText(refs.vLift, `${vm.liftP}%`);
+  setText(refs.vGroove, `${vm.gP}%${vm.locked ? " (locked)" : ""}`);
+  setText(refs.vSmooth, `${vm.sP}%`);
+  setText(refs.vSpeed, `${vm.sp}%`);
+  setText(refs.vDynamics, `${vm.dP}%`);
+  setText(refs.vEnergy, `${vm.ePts}`);
+  setText(refs.vShake, `${Math.max(0, vm.sh).toFixed(2)}`);
+
+  setBar(refs.bLift, vm.lift);
+  setBar(refs.bGroove, vm.groove);
+  setBar(refs.bSmooth, vm.smooth);
+  setBar(refs.bSpeed, vm.speed);
+  setBar(refs.bDynamics, vm.dynamics);
+  setBar(refs.bEnergy, vm.energyUI01);
+  setBar(refs.bShake, vm.shakeMeter);
+
+  refs.vEnergy && refs.vEnergy.classList.toggle("over", !!vm.over);
+  refs.bEnergy && refs.bEnergy.classList.toggle("over", !!vm.over);
+}
+
 export function mountDevStaging(root) {
   if (!root) return null;
   root.innerHTML = DEV_STAGING_TEMPLATE;
@@ -240,25 +262,7 @@ export function mountDevStaging(root) {
       refs.bEnergy && refs.bEnergy.classList.remove("over");
     },
     renderInputHud(vm) {
-      if (!vm) return;
-      setText(refs.vLift, `${vm.liftP}%`);
-      setText(refs.vGroove, `${vm.gP}%${vm.locked ? " (locked)" : ""}`);
-      setText(refs.vSmooth, `${vm.sP}%`);
-      setText(refs.vSpeed, `${vm.sp}%`);
-      setText(refs.vDynamics, `${vm.dP}%`);
-      setText(refs.vEnergy, `${vm.ePts}`);
-      setText(refs.vShake, `${Math.max(0, vm.sh).toFixed(2)}`);
-
-      setBar(refs.bLift, vm.lift);
-      setBar(refs.bGroove, vm.groove);
-      setBar(refs.bSmooth, vm.smooth);
-      setBar(refs.bSpeed, vm.speed);
-      setBar(refs.bDynamics, vm.dynamics);
-      setBar(refs.bEnergy, vm.energyUI01);
-      setBar(refs.bShake, vm.shakeMeter);
-
-      refs.vEnergy && refs.vEnergy.classList.toggle("over", !!vm.over);
-      refs.bEnergy && refs.bEnergy.classList.toggle("over", !!vm.over);
+      renderDevStagingHud(refs, vm);
     },
   };
 

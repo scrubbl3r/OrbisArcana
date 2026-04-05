@@ -224,6 +224,10 @@
         },
         renderInputHud(vm) {
           if (!vm) return;
+          if (typeof renderDevStagingHud === "function") {
+            renderDevStagingHud(els, vm);
+            return;
+          }
           els.vLift.textContent = `${vm.liftP}%`;
           els.vGroove.textContent = `${vm.gP}%${vm.locked ? " (locked)" : ""}`;
           els.vSmooth.textContent = `${vm.sP}%`;
@@ -246,6 +250,7 @@
       };
     }
 
+    let renderDevStagingHud = null;
     const legacyDevStagingView = createLegacyDevStagingAdapter();
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
@@ -279,7 +284,13 @@
       if (!ENABLE_MOUNTED_DEV_STAGING) return null;
       if (!els.devStagingMount || !els.devStagingLegacy) return null;
       try {
-        const { mountDevStaging } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
+        const {
+          mountDevStaging,
+          renderDevStagingHud: renderDevStagingHudModule,
+        } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
+        renderDevStagingHud = (typeof renderDevStagingHudModule === "function")
+          ? renderDevStagingHudModule
+          : null;
         const mounted = (typeof mountDevStaging === "function")
           ? mountDevStaging(els.devStagingMount)
           : null;
