@@ -3217,6 +3217,17 @@
       });
     }
 
+    function applyClassicShadowAudioState(){
+      if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return;
+      const state = classicMotionStore.getState();
+      if (!state || !state.motion || !state.energyBank) return;
+      setAudio(
+        Number(state.energyBank.level01) || 0,
+        Number(state.motion.groove01) || 0,
+        !!state.motion.locked
+      );
+    }
+
     function renderInputHud(vm){
       const nextVm = getClassicShadowHudViewModel() || vm;
       if (!nextVm) return;
@@ -3275,6 +3286,7 @@
         nowMs,
         skipPhysStatePatch: !!classicMotionStore,
         skipLegacyHudFields: !!classicMotionStore,
+        skipAudioSideEffects: !!classicMotionStore,
         values: {
           energyFromPhone,
           groove,
@@ -3330,6 +3342,7 @@
       const inputPayload = applyClassicSpinToPayload(d);
       const processed = processInputFrame(inputPayload, nowMs);
       applyClassicShadowOrbRuntimeState();
+      applyClassicShadowAudioState();
       const vm = hasClassicShadowHudViewModel() ? null : buildInputHudViewModel(processed);
       renderInputHud(vm);
     }

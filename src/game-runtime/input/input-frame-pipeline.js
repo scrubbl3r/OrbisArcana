@@ -18,6 +18,7 @@ function clamp01(n){
  * @property {Object} [hooks] Receiver-provided hooks for resource updates, visuals, audio, and shake processing.
  * @property {boolean} [skipPhysStatePatch] When true, do not mutate orb runtime scalar state inside the legacy pipeline.
  * @property {boolean} [skipLegacyHudFields] When true, skip legacy HUD-only return shaping that is no longer consumed.
+ * @property {boolean} [skipAudioSideEffects] When true, skip legacy audio updates that are now driven elsewhere.
  */
 
 /**
@@ -40,6 +41,7 @@ export function runInputFramePipeline({
   hooks,
   skipPhysStatePatch = false,
   skipLegacyHudFields = false,
+  skipAudioSideEffects = false,
 } = {}){
   const energyFromPhone = Number(values && values.energyFromPhone) || 0;
   const groove = Number(values && values.groove) || 0;
@@ -135,7 +137,7 @@ export function runInputFramePipeline({
     processShakeDoubleBang(shake, nowMs, groove);
   }
 
-  if (typeof setAudio === "function") {
+  if (!skipAudioSideEffects && typeof setAudio === "function") {
     setAudio(energyUI01, groove, locked);
   }
 
