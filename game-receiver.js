@@ -302,6 +302,7 @@
     let setDevStagingFatal = null;
     let setDevStagingDebugNote = null;
     let closeDevStagingTopmostPopup = null;
+    let projectDevStagingPanelRefs = null;
     let legacyDevStagingView = createBootFallbackDevStagingAdapter();
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
@@ -354,28 +355,30 @@
 
     function createDevStagingPanelElements() {
       const refs = currentDevStagingView.refs || {};
-      return {
-        teleBtn: refs.teleBtn || null,
-        wordBoardBtn: refs.wordBoardBtn || null,
-        kwsReadout: refs.kwsReadout || null,
-        kwsLog: refs.kwsLog || null,
-        logTabKws: refs.logTabKws || null,
-        logTabPhone: refs.logTabPhone || null,
-        kwsTokenThrInput: refs.kwsTokenThrInput || null,
-        kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
-        kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,
-        logPopup: refs.logPopup || null,
-        logPopupHeader: refs.logPopupHeader || null,
-        logPopupClose: refs.logPopupClose || null,
-        wordBoardPopup: refs.wordBoardPopup || null,
-        wordBoardPopupHeader: refs.wordBoardPopupHeader || null,
-        wordBoardPopupClose: refs.wordBoardPopupClose || null,
-        wordBoardBody: refs.wordBoardBody || null,
-        wordBoardDebugPanel: refs.wordBoardDebugPanel || null,
-        wordBoardDebugToggle: refs.wordBoardDebugToggle || null,
-        wordBoardDebugBadge: refs.wordBoardDebugBadge || null,
-        wordBoardDebugBody: refs.wordBoardDebugBody || null,
-      };
+      return (typeof projectDevStagingPanelRefs === "function")
+        ? projectDevStagingPanelRefs(refs)
+        : {
+            teleBtn: refs.teleBtn || null,
+            wordBoardBtn: refs.wordBoardBtn || null,
+            kwsReadout: refs.kwsReadout || null,
+            kwsLog: refs.kwsLog || null,
+            logTabKws: refs.logTabKws || null,
+            logTabPhone: refs.logTabPhone || null,
+            kwsTokenThrInput: refs.kwsTokenThrInput || null,
+            kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
+            kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,
+            logPopup: refs.logPopup || null,
+            logPopupHeader: refs.logPopupHeader || null,
+            logPopupClose: refs.logPopupClose || null,
+            wordBoardPopup: refs.wordBoardPopup || null,
+            wordBoardPopupHeader: refs.wordBoardPopupHeader || null,
+            wordBoardPopupClose: refs.wordBoardPopupClose || null,
+            wordBoardBody: refs.wordBoardBody || null,
+            wordBoardDebugPanel: refs.wordBoardDebugPanel || null,
+            wordBoardDebugToggle: refs.wordBoardDebugToggle || null,
+            wordBoardDebugBadge: refs.wordBoardDebugBadge || null,
+            wordBoardDebugBody: refs.wordBoardDebugBody || null,
+          };
     }
 
     async function maybeMountDevStagingSurface() {
@@ -385,6 +388,7 @@
         const {
           closeDevStagingTopmostPopup: closeDevStagingTopmostPopupModule,
           mountDevStaging,
+          projectDevStagingPanelRefs: projectDevStagingPanelRefsModule,
           renderDevStagingHud: renderDevStagingHudModule,
           resetDevStagingHud: resetDevStagingHudModule,
           setDevStagingDebugNote: setDevStagingDebugNoteModule,
@@ -393,6 +397,9 @@
         } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
         closeDevStagingTopmostPopup = (typeof closeDevStagingTopmostPopupModule === "function")
           ? closeDevStagingTopmostPopupModule
+          : null;
+        projectDevStagingPanelRefs = (typeof projectDevStagingPanelRefsModule === "function")
+          ? projectDevStagingPanelRefsModule
           : null;
         renderDevStagingHud = (typeof renderDevStagingHudModule === "function")
           ? renderDevStagingHudModule
