@@ -757,9 +757,14 @@
     // =========================================================================
     // LAMPS — independent timers
     // =========================================================================
+    let receiverDevLampVisuals = null;
     let shakeLampTO = null;
 
     function flashShakeLamp(ms = 400){
+      if (receiverDevLampVisuals && typeof receiverDevLampVisuals.flashShakeLamp === "function") {
+        receiverDevLampVisuals.flashShakeLamp(ms);
+        return;
+      }
       if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.add("on");
       if (shakeLampTO) clearTimeout(shakeLampTO);
       shakeLampTO = setTimeout(() => {
@@ -769,6 +774,10 @@
     }
 
     function forceShakeLampOff(){
+      if (receiverDevLampVisuals && typeof receiverDevLampVisuals.forceShakeLampOff === "function") {
+        receiverDevLampVisuals.forceShakeLampOff();
+        return;
+      }
       if (shakeLampTO) { clearTimeout(shakeLampTO); shakeLampTO = null; }
       if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.remove("on");
     }
@@ -778,12 +787,20 @@
 
     // ✅ NEW: clear any queued timeouts (prevents timer pile-ups / late callbacks)
     function clearDirLampTimers(){
+      if (receiverDevLampVisuals && typeof receiverDevLampVisuals.clearDirLampTimers === "function") {
+        receiverDevLampVisuals.clearDirLampTimers();
+        return;
+      }
       for (const k in dirLampTO){
         if (dirLampTO[k]) { clearTimeout(dirLampTO[k]); dirLampTO[k] = null; }
       }
     }
 
     function allDirLampOff(){
+      if (receiverDevLampVisuals && typeof receiverDevLampVisuals.allDirLampOff === "function") {
+        receiverDevLampVisuals.allDirLampOff();
+        return;
+      }
       if (devStagingRefs.lampUp) devStagingRefs.lampUp.classList.remove("on");
       if (devStagingRefs.lampDown) devStagingRefs.lampDown.classList.remove("on");
       if (devStagingRefs.lampLeft) devStagingRefs.lampLeft.classList.remove("on");
@@ -793,6 +810,10 @@
     }
 
     function flashDirLamp(code, ms=380){
+      if (receiverDevLampVisuals && typeof receiverDevLampVisuals.flashDirLamp === "function") {
+        receiverDevLampVisuals.flashDirLamp(code, ms);
+        return;
+      }
       const c = String(code || "").trim().toUpperCase();
       if (!c) return;
 
@@ -818,6 +839,10 @@
     }
 
     function flashDirLampSingle(code, ms=380){
+      if (receiverDevLampVisuals && typeof receiverDevLampVisuals.flashDirLampSingle === "function") {
+        receiverDevLampVisuals.flashDirLampSingle(code, ms);
+        return;
+      }
       clearDirLampTimers();
       allDirLampOff();
       flashDirLamp(code, ms);
@@ -1027,12 +1052,14 @@
           ,
           ,
           stabilityVisualsModule,
+          receiverDevLampsModule,
           legacyDevStagingAdapterModule,
         ] = await Promise.all([
           import("./src/runtime-shell/receiver/calibration-engine.js"),
           import("./src/runtime-shell/receiver/signal-processor.js"),
           import("./src/runtime-shell/receiver/motion-store.js"),
           import("./src/runtime-shell/receiver/stability-visuals.js"),
+          import("./src/runtime-shell/receiver/dev-lamps.js"),
           import("./src/runtime-shell/staging/dev-staging/create-legacy-dev-staging-adapter.js"),
           import("./src/runtime-shell/session/relay-transport.js"),
           import("./src/runtime-shell/session/pairing-service.js"),
@@ -1040,6 +1067,11 @@
         ]);
         getReceiverStabilityVisualState = stabilityVisualsModule.getReceiverStabilityVisualState || null;
         applyReceiverStabilityLampState = stabilityVisualsModule.applyReceiverStabilityLampState || null;
+        receiverDevLampVisuals = (typeof receiverDevLampsModule.createReceiverDevLampVisuals === "function")
+          ? receiverDevLampsModule.createReceiverDevLampVisuals({
+              getRefs: () => devStagingRefs,
+            })
+          : null;
         createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
         createDevStagingPanelElementsFactory = legacyDevStagingAdapterModule.createDevStagingPanelElements || null;
         const nextLegacyDevStagingView = createBootFallbackDevStagingAdapter();
