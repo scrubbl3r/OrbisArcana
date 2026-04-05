@@ -313,6 +313,26 @@
       return nextLegacyDevStagingView;
     }
 
+    function setDevSurfaceDebugNote(text = "") {
+      if (!currentDevStagingView || typeof currentDevStagingView.setDebugNote !== "function") return;
+      currentDevStagingView.setDebugNote(text);
+    }
+
+    function closeTopmostDevSurfacePopup() {
+      if (!currentDevStagingView || typeof currentDevStagingView.closeTopmostPopup !== "function") return false;
+      return !!currentDevStagingView.closeTopmostPopup();
+    }
+
+    function resetDevSurfaceMeters() {
+      if (!currentDevStagingView || typeof currentDevStagingView.resetMeters !== "function") return;
+      currentDevStagingView.resetMeters();
+    }
+
+    function renderDevSurfaceHud(vm) {
+      if (!currentDevStagingView || typeof currentDevStagingView.renderInputHud !== "function") return;
+      currentDevStagingView.renderInputHud(vm);
+    }
+
     function createDevStagingPanelElements() {
       const refs = currentDevStagingView.refs || {};
       return {
@@ -1266,7 +1286,6 @@
     // ===== LAN PARTY (P2P) END =====
 
     function updateDebugReadout(){
-      if (!currentDevStagingView || typeof currentDevStagingView.setDebugNote !== "function") return;
       const raw = lastImpulseSample;
       const state = (classicMotionStore && typeof classicMotionStore.getState === "function")
         ? classicMotionStore.getState()
@@ -1275,7 +1294,7 @@
       const text = (typeof buildReceiverSpinDebugNoteModule === "function")
         ? buildReceiverSpinDebugNoteModule({ raw, spin })
         : "";
-      currentDevStagingView.setDebugNote(text);
+      setDevSurfaceDebugNote(text);
     }
 
     let DEFAULT_VOICE_ENGINE = "kws";
@@ -1389,7 +1408,7 @@
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (currentDevStagingView.closeTopmostPopup()) {
+        if (closeTopmostDevSurfacePopup()) {
         } else if (els.pairModal.classList.contains("on")) {
           closePairModal();
         }
@@ -3053,7 +3072,7 @@
         dynamics01: 0,
       });
 
-      currentDevStagingView.resetMeters();
+      resetDevSurfaceMeters();
 
     }
 
@@ -3197,7 +3216,7 @@
     function renderInputHud(vm){
       const nextVm = getClassicShadowHudViewModel() || vm;
       if (!nextVm) return;
-      currentDevStagingView.renderInputHud(nextVm);
+      renderDevSurfaceHud(nextVm);
 
       // Repurposed row: Orb debug readout.
       updateDebugReadout();
