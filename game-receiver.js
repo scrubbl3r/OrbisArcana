@@ -11,7 +11,6 @@
       pairBtn: $("pairBtn"),
       lanPartyBtn: $("lanPartyBtn"),
       newRoom: $("newRoom"),
-      audioBtn: $("audioBtn"),
       teleBtn: $("teleBtn"),
       wordBoardBtn: $("wordBoardBtn"),
 
@@ -514,10 +513,7 @@
         }
       }
       resetOrbStrokeColor(true);
-      setBgFromEnergy(0);
     }
-    function setBgFromEnergy() {}
-    setBgFromEnergy(0);
 
     // =========================================================================
     // [VFX] SHIELD + SHOCKWAVE (ported from VFX tester)
@@ -689,12 +685,6 @@
       }
     }
 
-    // =========================================================================
-    // RECEIVER AUDIO (sunset)
-    // =========================================================================
-    function setAudio() {}
-
-    
     // =========================================================================
     // LAMPS — independent timers
     // =========================================================================
@@ -2936,8 +2926,6 @@
 
     let orbInputSuppressed = false;
 
-    function zeroAudioNow(){}
-
     function clearOrbRuntimeFxForDeath(){
       // Stop all residual orb/VFX/audio state so death is a clean reset.
       if (mobileImpulseSystem) mobileImpulseSystem.resetFrameQueue();
@@ -2964,10 +2952,8 @@
         dynamics01: 0,
       });
 
-      setBgFromEnergy(0);
       currentDevStagingView.resetMeters();
 
-      zeroAudioNow();
     }
 
     function handleIncomingImpulse(data){
@@ -3108,24 +3094,6 @@
       });
     }
 
-    function applyClassicShadowAudioState(){
-      if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return;
-      const state = classicMotionStore.getState();
-      if (!state || !state.motion || !state.energyBank) return;
-      setAudio(
-        Number(state.energyBank.level01) || 0,
-        Number(state.motion.groove01) || 0,
-        !!state.motion.locked
-      );
-    }
-
-    function applyClassicShadowBackgroundState(){
-      if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return;
-      const state = classicMotionStore.getState();
-      if (!state || !state.energyBank) return;
-      setBgFromEnergy(Number(state.energyBank.level01) || 0);
-    }
-
     function renderInputHud(vm){
       const nextVm = getClassicShadowHudViewModel() || vm;
       if (!nextVm) return;
@@ -3184,8 +3152,6 @@
         nowMs,
         skipPhysStatePatch: !!classicMotionStore,
         skipLegacyHudFields: !!classicMotionStore,
-        skipAudioSideEffects: !!classicMotionStore,
-        skipBackgroundSideEffects: !!classicMotionStore,
         values: {
           energyFromPhone,
           groove,
@@ -3210,11 +3176,9 @@
           getEnergyBankPts,
           getEnergyBankCap,
           computeLift01,
-          setBgFromEnergy,
           setStabilityVisualGate: (v) => { stabilityVisualGate = !!v; },
           applyStabilityVisuals,
           processShakeDoubleBang,
-          setAudio,
         },
       });
     }
@@ -3241,8 +3205,6 @@
       const inputPayload = applyClassicSpinToPayload(d);
       const processed = processInputFrame(inputPayload, nowMs);
       applyClassicShadowOrbRuntimeState();
-      applyClassicShadowAudioState();
-      applyClassicShadowBackgroundState();
       const vm = hasClassicShadowHudViewModel() ? null : buildInputHudViewModel(processed);
       renderInputHud(vm);
     }
