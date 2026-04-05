@@ -318,6 +318,16 @@
       currentDevStagingView.setDebugNote(text);
     }
 
+    function setDevSurfaceFatal(message = "") {
+      if (!currentDevStagingView || typeof currentDevStagingView.setFatal !== "function") return;
+      currentDevStagingView.setFatal(message);
+    }
+
+    function setDevSurfaceStatus(html, cls) {
+      if (!currentDevStagingView || typeof currentDevStagingView.setStatus !== "function") return;
+      currentDevStagingView.setStatus(html, cls);
+    }
+
     function closeTopmostDevSurfacePopup() {
       if (!currentDevStagingView || typeof currentDevStagingView.closeTopmostPopup !== "function") return false;
       return !!currentDevStagingView.closeTopmostPopup();
@@ -453,11 +463,11 @@
     }
 
     function fatal(msg){
-      currentDevStagingView.setFatal(msg);
+      setDevSurfaceFatal(msg);
     }
 
     function setStatus(html, cls){
-      currentDevStagingView.setStatus(html, cls);
+      setDevSurfaceStatus(html, cls);
     }
 
     // =========================================================================
