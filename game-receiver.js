@@ -1061,6 +1061,7 @@
     let classicReceiverTransport = null;
     let classicPairingServiceFactory = null;
     let classicFastPathHostTransportFactory = null;
+    let buildReceiverSpinDebugNoteModule = null;
 
     async function initClassicReceiverShadowCore(){
       try {
@@ -1070,6 +1071,7 @@
           ,
           stabilityVisualsModule,
           receiverDevLampsModule,
+          spinDebugReadoutModule,
           legacyDevStagingAdapterModule,
         ] = await Promise.all([
           import("./src/runtime-shell/receiver/calibration-engine.js"),
@@ -1077,6 +1079,7 @@
           import("./src/runtime-shell/receiver/motion-store.js"),
           import("./src/runtime-shell/receiver/stability-visuals.js"),
           import("./src/runtime-shell/receiver/dev-lamps.js"),
+          import("./src/runtime-shell/receiver/spin-debug-readout.js"),
           import("./src/runtime-shell/staging/dev-staging/create-legacy-dev-staging-adapter.js"),
           import("./src/runtime-shell/session/relay-transport.js"),
           import("./src/runtime-shell/session/pairing-service.js"),
@@ -1095,6 +1098,9 @@
           ? receiverDevLampsModule.createReceiverDevLampVisuals({
               getRefs: () => devStagingRefs,
             })
+          : null;
+        buildReceiverSpinDebugNoteModule = (typeof spinDebugReadoutModule.buildReceiverSpinDebugNote === "function")
+          ? spinDebugReadoutModule.buildReceiverSpinDebugNote
           : null;
         createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
         createLegacyDevStagingRefsFactory = legacyDevStagingAdapterModule.createLegacyDevStagingRefsFromElements || null;
@@ -1245,49 +1251,17 @@
     }
     // ===== LAN PARTY (P2P) END =====
 
-    function formatVec3(value){
-      if (!Array.isArray(value) || value.length < 3) return "—";
-      return value.map((v) => Number(v).toFixed(2)).join("/");
-    }
-
-    function deriveIncomingSpinReadout(raw){
-      if (!Array.isArray(raw && raw.spinVector) || raw.spinVector.length < 3) return null;
-      const x = Math.max(0, Number(raw.spinVector[0]) || 0);
-      const y = Math.max(0, Number(raw.spinVector[1]) || 0);
-      const z = Math.max(0, Number(raw.spinVector[2]) || 0);
-      const sum = x + y + z;
-      if (!(sum > 1e-6)) return null;
-      const ranked = [
-        { axis: "x", value: x / sum },
-        { axis: "y", value: y / sum },
-        { axis: "z", value: z / sum },
-      ].sort((left, right) => right.value - left.value);
-      return {
-        axis: ranked[0].axis,
-        dominance: ranked[0].value,
-        gap: ranked[0].value - (ranked[1] ? ranked[1].value : 0),
-      };
-    }
-
     function updateDebugReadout(){
       if (!currentDevStagingView || typeof currentDevStagingView.setDebugNote !== "function") return;
       const raw = lastImpulseSample;
       const state = (classicMotionStore && typeof classicMotionStore.getState === "function")
         ? classicMotionStore.getState()
         : null;
-      const incoming = deriveIncomingSpinReadout(raw);
       const spin = state && state.spin ? state.spin : null;
-      const canonicalLabel = spin && spin.label ? String(spin.label) : "—";
-      const canonicalDom = spin && Number.isFinite(Number(spin.dominance)) ? Number(spin.dominance).toFixed(2) : "—";
-      const canonicalGap = spin && Number.isFinite(Number(spin.gap)) ? Number(spin.gap).toFixed(2) : "—";
-      const canonicalDir = spin && spin.direction ? String(spin.direction) : "—";
-      const incomingLabel = incoming && incoming.axis ? incoming.axis : "—";
-      const incomingDom = incoming && Number.isFinite(Number(incoming.dominance)) ? Number(incoming.dominance).toFixed(2) : "—";
-      const incomingGap = incoming && Number.isFinite(Number(incoming.gap)) ? Number(incoming.gap).toFixed(2) : "—";
-      const spinVector = raw && raw.spinVector ? raw.spinVector : (spin && spin.vector ? spin.vector : null);
-      currentDevStagingView.setDebugNote(
-        `Spin compare: incoming ${incomingLabel} d${incomingDom} g${incomingGap} | canonical ${canonicalLabel} d${canonicalDom} g${canonicalGap} dir:${canonicalDir} vec:${formatVec3(spinVector)}`
-      );
+      const text = (typeof buildReceiverSpinDebugNoteModule === "function")
+        ? buildReceiverSpinDebugNoteModule({ raw, spin })
+        : "";
+      currentDevStagingView.setDebugNote(text);
     }
 
     let DEFAULT_VOICE_ENGINE = "kws";
