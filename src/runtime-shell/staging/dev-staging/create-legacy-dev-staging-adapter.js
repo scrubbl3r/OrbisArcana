@@ -50,6 +50,7 @@ export function createLegacyDevStagingRefsFromElements(els = {}) {
 }
 
 export function createLegacyDevStagingAdapter({
+  refs: providedRefs = null,
   els,
   setBar,
   renderDevStagingHud = null,
@@ -59,7 +60,7 @@ export function createLegacyDevStagingAdapter({
   setDevStagingDebugNote = null,
   closeDevStagingTopmostPopup = null,
 } = {}) {
-  const refs = createLegacyDevStagingRefsFromElements(els);
+  const refs = providedRefs || createLegacyDevStagingRefsFromElements(els);
   return {
     refs,
     setStatus(html, cls){
