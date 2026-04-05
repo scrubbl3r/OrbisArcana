@@ -1,13 +1,12 @@
 import {
   closeDevStagingTopmostPopup,
   projectDevStagingPanelRefs,
-  renderDevStagingHud,
-  resetDevStagingHud,
   setDevStagingDebugNote,
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-helpers.js";
 import { createDevStagingApi } from "./dev-staging-api.js";
+import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js";
 import { createDevStagingRefs } from "./dev-staging-refs.js";
 import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js";
 

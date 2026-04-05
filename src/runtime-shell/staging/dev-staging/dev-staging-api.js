@@ -1,11 +1,10 @@
 import {
   closeDevStagingTopmostPopup,
-  renderDevStagingHud,
-  resetDevStagingHud,
   setDevStagingDebugNote,
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-helpers.js";
+import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js";
 
 export function createDevStagingApi(root, refs) {
   return {
