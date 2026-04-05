@@ -7,6 +7,7 @@ import {
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-helpers.js";
+import { createDevStagingApi } from "./dev-staging-api.js";
 import { createDevStagingRefs } from "./dev-staging-refs.js";
 
 const DEV_STAGING_TEMPLATE = `
@@ -146,29 +147,7 @@ export function mountDevStaging(root) {
   if (!root) return null;
   root.innerHTML = DEV_STAGING_TEMPLATE;
   const refs = createDevStagingRefs(root);
-
-  const api = {
-    root,
-    refs,
-    setStatus(html, cls = "devStagingDim") {
-      setDevStagingStatus(refs, html, cls);
-    },
-    setFatal(message = "") {
-      setDevStagingFatal(refs, message);
-    },
-    setDebugNote(text = "") {
-      setDevStagingDebugNote(refs, text);
-    },
-    closeTopmostPopup() {
-      return closeDevStagingTopmostPopup(refs);
-    },
-    resetMeters() {
-      resetDevStagingHud(refs);
-    },
-    renderInputHud(vm) {
-      renderDevStagingHud(refs, vm);
-    },
-  };
+  const api = createDevStagingApi(root, refs);
 
   api.resetMeters();
   return api;
