@@ -128,7 +128,17 @@
       el.style.width = p.toFixed(1) + "%";
     }
 
+    let createLegacyDevStagingAdapterFactory = null;
+
     function createLegacyDevStagingAdapter() {
+      if (typeof createLegacyDevStagingAdapterFactory === "function") {
+        return createLegacyDevStagingAdapterFactory({
+          els,
+          setBar,
+          renderDevStagingHud,
+          resetDevStagingHud,
+        });
+      }
       return {
         refs: {
           status: els.status,
@@ -256,7 +266,7 @@
 
     let renderDevStagingHud = null;
     let resetDevStagingHud = null;
-    const legacyDevStagingView = createLegacyDevStagingAdapter();
+    let legacyDevStagingView = createLegacyDevStagingAdapter();
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
 
@@ -978,17 +988,28 @@
           ,
           ,
           stabilityVisualsModule,
+          legacyDevStagingAdapterModule,
         ] = await Promise.all([
           import("./src/runtime-shell/receiver/calibration-engine.js"),
           import("./src/runtime-shell/receiver/signal-processor.js"),
           import("./src/runtime-shell/receiver/motion-store.js"),
           import("./src/runtime-shell/receiver/stability-visuals.js"),
+          import("./src/runtime-shell/staging/dev-staging/create-legacy-dev-staging-adapter.js"),
           import("./src/runtime-shell/session/relay-transport.js"),
           import("./src/runtime-shell/session/pairing-service.js"),
           import("./src/runtime-shell/session/fast-path-transport.js"),
         ]);
         getReceiverStabilityVisualState = stabilityVisualsModule.getReceiverStabilityVisualState || null;
         applyReceiverStabilityLampState = stabilityVisualsModule.applyReceiverStabilityLampState || null;
+        createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
+        const nextLegacyDevStagingView = createLegacyDevStagingAdapter();
+        if (currentDevStagingView === legacyDevStagingView) {
+          legacyDevStagingView = nextLegacyDevStagingView;
+          currentDevStagingView = legacyDevStagingView;
+          devStagingRefs = currentDevStagingView.refs;
+        } else {
+          legacyDevStagingView = nextLegacyDevStagingView;
+        }
         classicCalibrationSession = (typeof window.createCalibrationSession === "function")
           ? window.createCalibrationSession()
           : null;
