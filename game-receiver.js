@@ -185,7 +185,7 @@
           };
       if (typeof createLegacyDevStagingAdapterFactory === "function") {
         return createLegacyDevStagingAdapterFactory({
-          refs,
+          els,
           setBar,
           renderDevStagingHud,
           resetDevStagingHud,
