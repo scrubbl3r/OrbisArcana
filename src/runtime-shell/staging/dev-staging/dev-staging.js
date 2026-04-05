@@ -137,6 +137,36 @@ function setText(el, value) {
   el.textContent = String(value);
 }
 
+export function setDevStagingStatus(refs, html, cls = "devStagingDim") {
+  if (!refs || !refs.status) return;
+  refs.status.className = cls;
+  refs.status.innerHTML = String(html || "");
+}
+
+export function setDevStagingFatal(refs, message = "") {
+  if (!refs || !refs.fatal) return;
+  refs.fatal.textContent = String(message || "");
+  refs.fatal.classList.toggle("on", !!message);
+}
+
+export function setDevStagingDebugNote(refs, text = "") {
+  if (!refs || !refs.devSpinAuditNote) return;
+  refs.devSpinAuditNote.textContent = String(text || "");
+}
+
+export function closeDevStagingTopmostPopup(refs) {
+  if (!refs) return false;
+  if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
+    refs.wordBoardPopupClose.click();
+    return true;
+  }
+  if (refs.logPopup && refs.logPopup.classList.contains("on") && refs.logPopupClose) {
+    refs.logPopupClose.click();
+    return true;
+  }
+  return false;
+}
+
 export function renderDevStagingHud(refs, vm) {
   if (!refs || !vm) return;
   setText(refs.vLift, `${vm.liftP}%`);
@@ -239,29 +269,16 @@ export function mountDevStaging(root) {
     root,
     refs,
     setStatus(html, cls = "devStagingDim") {
-      if (!refs.status) return;
-      refs.status.className = cls;
-      refs.status.innerHTML = html;
+      setDevStagingStatus(refs, html, cls);
     },
     setFatal(message = "") {
-      if (!refs.fatal) return;
-      refs.fatal.textContent = String(message || "");
-      refs.fatal.classList.toggle("on", !!message);
+      setDevStagingFatal(refs, message);
     },
     setDebugNote(text = "") {
-      if (!refs.devSpinAuditNote) return;
-      refs.devSpinAuditNote.textContent = String(text || "");
+      setDevStagingDebugNote(refs, text);
     },
     closeTopmostPopup() {
-      if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
-        refs.wordBoardPopupClose.click();
-        return true;
-      }
-      if (refs.logPopup && refs.logPopup.classList.contains("on") && refs.logPopupClose) {
-        refs.logPopupClose.click();
-        return true;
-      }
-      return false;
+      return closeDevStagingTopmostPopup(refs);
     },
     resetMeters() {
       resetDevStagingHud(refs);

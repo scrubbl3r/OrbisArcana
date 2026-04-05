@@ -190,21 +190,36 @@
           devSpinAuditNote: els.devSpinAuditNote,
         },
         setStatus(html, cls){
+          if (typeof setDevStagingStatus === "function") {
+            setDevStagingStatus(els, html, cls || "dim");
+            return;
+          }
           if (!els.status) return;
           els.status.className = cls || "dim";
           els.status.innerHTML = html;
         },
         setFatal(message = "") {
+          if (typeof setDevStagingFatal === "function") {
+            setDevStagingFatal(els, message);
+            return;
+          }
           if (!els.fatal) return;
           const hasMessage = !!String(message || "");
           els.fatal.style.display = hasMessage ? "block" : "none";
           els.fatal.textContent = hasMessage ? String(message) : "";
         },
         setDebugNote(text = "") {
+          if (typeof setDevStagingDebugNote === "function") {
+            setDevStagingDebugNote(els, text);
+            return;
+          }
           if (!els.devSpinAuditNote) return;
           els.devSpinAuditNote.textContent = String(text || "");
         },
         closeTopmostPopup() {
+          if (typeof closeDevStagingTopmostPopup === "function") {
+            return !!closeDevStagingTopmostPopup(this.refs);
+          }
           if (this.refs.wordBoardPopup && this.refs.wordBoardPopup.classList.contains("on") && this.refs.wordBoardPopupClose) {
             this.refs.wordBoardPopupClose.click();
             return true;
@@ -267,6 +282,10 @@
 
     let renderDevStagingHud = null;
     let resetDevStagingHud = null;
+    let setDevStagingStatus = null;
+    let setDevStagingFatal = null;
+    let setDevStagingDebugNote = null;
+    let closeDevStagingTopmostPopup = null;
     let legacyDevStagingView = createLegacyDevStagingAdapter();
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
@@ -304,15 +323,31 @@
       if (!els.devStagingMount || !els.devStagingLegacy) return null;
       try {
         const {
+          closeDevStagingTopmostPopup: closeDevStagingTopmostPopupModule,
           mountDevStaging,
           renderDevStagingHud: renderDevStagingHudModule,
           resetDevStagingHud: resetDevStagingHudModule,
+          setDevStagingDebugNote: setDevStagingDebugNoteModule,
+          setDevStagingFatal: setDevStagingFatalModule,
+          setDevStagingStatus: setDevStagingStatusModule,
         } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
+        closeDevStagingTopmostPopup = (typeof closeDevStagingTopmostPopupModule === "function")
+          ? closeDevStagingTopmostPopupModule
+          : null;
         renderDevStagingHud = (typeof renderDevStagingHudModule === "function")
           ? renderDevStagingHudModule
           : null;
         resetDevStagingHud = (typeof resetDevStagingHudModule === "function")
           ? resetDevStagingHudModule
+          : null;
+        setDevStagingDebugNote = (typeof setDevStagingDebugNoteModule === "function")
+          ? setDevStagingDebugNoteModule
+          : null;
+        setDevStagingFatal = (typeof setDevStagingFatalModule === "function")
+          ? setDevStagingFatalModule
+          : null;
+        setDevStagingStatus = (typeof setDevStagingStatusModule === "function")
+          ? setDevStagingStatusModule
           : null;
         const mounted = (typeof mountDevStaging === "function")
           ? mountDevStaging(els.devStagingMount)
