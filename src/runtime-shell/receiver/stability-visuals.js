@@ -67,3 +67,33 @@ export function createReceiverStabilityVisualController({
     isDiversityLampLit,
   };
 }
+
+export function createInlineReceiverStabilityVisualController({
+  inputDynamicsSystem = null,
+  stabilityVisualGate = false,
+  refs = {},
+} = {}) {
+  function computeState() {
+    return getReceiverStabilityVisualState({
+      inputDynamicsSystem,
+      stabilityVisualGate,
+    });
+  }
+
+  function apply() {
+    applyReceiverStabilityLampState({
+      stableEl: refs.dynLampStable || null,
+      varEl: refs.dynLampVar || null,
+      state: computeState(),
+    });
+  }
+
+  function isDiversityLampLit() {
+    return !!computeState().diversityLampLit;
+  }
+
+  return {
+    apply,
+    isDiversityLampLit,
+  };
+}

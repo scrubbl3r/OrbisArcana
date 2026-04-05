@@ -846,19 +846,13 @@
     // LAMPS — independent timers
     // =========================================================================
     let receiverDevLampVisuals = null;
-    let shakeLampTO = null;
+    let createInlineReceiverDevLampVisualsModule = null;
 
     function flashShakeLamp(ms = 400){
       if (receiverDevLampVisuals && typeof receiverDevLampVisuals.flashShakeLamp === "function") {
         receiverDevLampVisuals.flashShakeLamp(ms);
         return;
       }
-      if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.add("on");
-      if (shakeLampTO) clearTimeout(shakeLampTO);
-      shakeLampTO = setTimeout(() => {
-        if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.remove("on");
-        shakeLampTO = null;
-      }, ms);
     }
 
     function forceShakeLampOff(){
@@ -866,21 +860,13 @@
         receiverDevLampVisuals.forceShakeLampOff();
         return;
       }
-      if (shakeLampTO) { clearTimeout(shakeLampTO); shakeLampTO = null; }
-      if (devStagingRefs.shakeLamp) devStagingRefs.shakeLamp.classList.remove("on");
     }
 
     // Direction lamps (flash on sd from phone)
-    const dirLampTO = { U:null, D:null, L:null, R:null, F:null, B:null };
-
-    // ✅ NEW: clear any queued timeouts (prevents timer pile-ups / late callbacks)
     function clearDirLampTimers(){
       if (receiverDevLampVisuals && typeof receiverDevLampVisuals.clearDirLampTimers === "function") {
         receiverDevLampVisuals.clearDirLampTimers();
         return;
-      }
-      for (const k in dirLampTO){
-        if (dirLampTO[k]) { clearTimeout(dirLampTO[k]); dirLampTO[k] = null; }
       }
     }
 
@@ -889,12 +875,6 @@
         receiverDevLampVisuals.allDirLampOff();
         return;
       }
-      if (devStagingRefs.lampUp) devStagingRefs.lampUp.classList.remove("on");
-      if (devStagingRefs.lampDown) devStagingRefs.lampDown.classList.remove("on");
-      if (devStagingRefs.lampLeft) devStagingRefs.lampLeft.classList.remove("on");
-      if (devStagingRefs.lampRight) devStagingRefs.lampRight.classList.remove("on");
-      if (devStagingRefs.lampForward) devStagingRefs.lampForward.classList.remove("on");
-      if (devStagingRefs.lampBack) devStagingRefs.lampBack.classList.remove("on");
     }
 
     function flashDirLamp(code, ms=380){
@@ -902,28 +882,6 @@
         receiverDevLampVisuals.flashDirLamp(code, ms);
         return;
       }
-      const c = String(code || "").trim().toUpperCase();
-      if (!c) return;
-
-      const map = {
-        U: devStagingRefs.lampUp,
-        D: devStagingRefs.lampDown,
-        L: devStagingRefs.lampLeft,
-        R: devStagingRefs.lampRight,
-        F: devStagingRefs.lampForward,
-        B: devStagingRefs.lampBack,
-      };
-
-      const el = map[c];
-      if (!el) return;
-
-      el.classList.add("on");
-
-      if (dirLampTO[c]) clearTimeout(dirLampTO[c]);
-      dirLampTO[c] = setTimeout(() => {
-        el.classList.remove("on");
-        dirLampTO[c] = null;
-      }, ms);
     }
 
     function flashDirLampSingle(code, ms=380){
@@ -1013,37 +971,13 @@
     let getReceiverStabilityVisualState = null;
     let applyReceiverStabilityLampState = null;
     let receiverStabilityVisualController = null;
+    let createInlineReceiverStabilityVisualControllerModule = null;
 
     function applyStabilityVisuals(){
       if (receiverStabilityVisualController && typeof receiverStabilityVisualController.apply === "function") {
         receiverStabilityVisualController.apply();
         return;
       }
-      const state = (typeof getReceiverStabilityVisualState === "function")
-        ? getReceiverStabilityVisualState({
-            inputDynamicsSystem,
-            stabilityVisualGate,
-          })
-        : {
-            showStable: !!((inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
-              ? (inputDynamicsSystem.getState() || {}).stabilityOn
-              : false) && !!stabilityVisualGate,
-            showVar: !!((inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
-              ? (inputDynamicsSystem.getState() || {}).variabilityOn
-              : false) && !!stabilityVisualGate,
-          };
-
-      if (typeof applyReceiverStabilityLampState === "function") {
-        applyReceiverStabilityLampState({
-          stableEl: devStagingRefs.dynLampStable,
-          varEl: devStagingRefs.dynLampVar,
-          state,
-        });
-        return;
-      }
-
-      if (devStagingRefs.dynLampStable) devStagingRefs.dynLampStable.classList.toggle("on", !!state.showStable);
-      if (devStagingRefs.dynLampVar) devStagingRefs.dynLampVar.classList.toggle("on", !!state.showVar);
     }
 
     function isDiversityLampLit(){
@@ -1170,6 +1104,10 @@
         ]);
         getReceiverStabilityVisualState = stabilityVisualsModule.getReceiverStabilityVisualState || null;
         applyReceiverStabilityLampState = stabilityVisualsModule.applyReceiverStabilityLampState || null;
+        createInlineReceiverStabilityVisualControllerModule =
+          (typeof stabilityVisualsModule.createInlineReceiverStabilityVisualController === "function")
+            ? stabilityVisualsModule.createInlineReceiverStabilityVisualController
+            : null;
         receiverStabilityVisualController = (typeof stabilityVisualsModule.createReceiverStabilityVisualController === "function")
           ? stabilityVisualsModule.createReceiverStabilityVisualController({
               getInputDynamicsSystem: () => inputDynamicsSystem,
@@ -1182,6 +1120,11 @@
               getRefs: () => devStagingRefs,
             })
           : null;
+        if (!receiverDevLampVisuals && typeof receiverDevLampsModule.createInlineReceiverDevLampVisuals === "function") {
+          receiverDevLampVisuals = receiverDevLampsModule.createInlineReceiverDevLampVisuals({
+            refs: devStagingRefs,
+          });
+        }
         buildReceiverSpinDebugNoteModule = (typeof spinDebugReadoutModule.buildReceiverSpinDebugNote === "function")
           ? spinDebugReadoutModule.buildReceiverSpinDebugNote
           : null;
@@ -1189,6 +1132,16 @@
         createLegacyDevStagingRefsFactory = legacyDevStagingAdapterModule.createLegacyDevStagingRefsFromElements || null;
         createInlineLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createInlineLegacyDevStagingAdapter || null;
         refreshLegacyDevStagingView();
+        if (
+          !receiverStabilityVisualController &&
+          typeof createInlineReceiverStabilityVisualControllerModule === "function"
+        ) {
+          receiverStabilityVisualController = createInlineReceiverStabilityVisualControllerModule({
+            inputDynamicsSystem,
+            stabilityVisualGate,
+            refs: devStagingRefs,
+          });
+        }
         classicCalibrationSession = (typeof window.createCalibrationSession === "function")
           ? window.createCalibrationSession()
           : null;
