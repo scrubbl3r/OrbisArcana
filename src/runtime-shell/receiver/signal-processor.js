@@ -207,13 +207,8 @@
 
   function createSignalProcessor(options){
     const settings = {
-      energyBankCap: Number(options && options.energyBankCap) || 1000,
-      energyChargeRatePps: Number(options && options.energyChargeRatePps) || 160,
       shakeLampThreshold: Number(options && options.shakeLampThreshold) || 1.45,
     };
-
-    let energyBankPts = 0;
-    let energyBankLastMs = 0;
     const spinRuntime = {
       ox: 0,
       oy: 0,
@@ -222,23 +217,10 @@
     };
 
     function reset(){
-      energyBankPts = 0;
-      energyBankLastMs = 0;
       spinRuntime.ox = 0;
       spinRuntime.oy = 0;
       spinRuntime.oz = 0;
       spinRuntime.hist = [];
-    }
-
-    function spendEnergy(points){
-      energyBankPts = clamp(energyBankPts - (Number(points) || 0), 0, settings.energyBankCap);
-    }
-
-    function getEnergyBankState(){
-      return {
-        points: energyBankPts,
-        level01: settings.energyBankCap > 0 ? (energyBankPts / settings.energyBankCap) : 0,
-      };
     }
 
     function processPacket(packet, nowMs, options){
@@ -260,17 +242,6 @@
         || deriveSpinState(rotationRate, receivedAtMs, spinRuntime);
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
-
-      if (!energyBankLastMs) energyBankLastMs = receivedAtMs;
-      let dt = (receivedAtMs - energyBankLastMs) / 1000;
-      energyBankLastMs = receivedAtMs;
-      dt = clamp(dt, 0, 0.25);
-
-      energyBankPts = clamp(
-        energyBankPts + (energy01 * settings.energyChargeRatePps * dt),
-        0,
-        settings.energyBankCap
-      );
 
       const suppressShake = !!(options && options.suppressShake);
       const shakeForUi = suppressShake ? 0 : shake01;
@@ -314,15 +285,12 @@
           omegaOK: (packet && packet.omegaOK != null) ? Number(packet.omegaOK) || 0 : null,
           tag: (packet && packet.dbgTag != null) ? String(packet.dbgTag) : null,
         },
-        energyBank: getEnergyBankState(),
       };
     }
 
     return {
       processPacket,
       reset,
-      spendEnergy,
-      getEnergyBankState,
     };
   }
 

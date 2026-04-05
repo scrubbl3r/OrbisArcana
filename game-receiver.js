@@ -755,53 +755,7 @@
     }
 
     // =========================================================================
-    // ENERGY BANK (resources-system-backed)
-    // =========================================================================
-    const ENERGY_BANK_CAP = 1000;
-    const ENERGY_SHAKE_COST = 100;
-    const ENERGY_CHARGE_RATE_PPS = 160;
-
-    function resetEnergyBank(){
-      if (resourcesSystem && typeof resourcesSystem.resetEnergyBank === "function") {
-        resourcesSystem.resetEnergyBank(performance.now());
-      }
-    }
-
-    function updateEnergyBankFromPhone(energyFromPhone01, nowMs){
-      if (resourcesSystem && typeof resourcesSystem.updateEnergyBankFromPhone === "function") {
-        resourcesSystem.updateEnergyBankFromPhone(energyFromPhone01, nowMs);
-      }
-    }
-
-    function getEnergyBankPts(){
-      if (resourcesSystem && typeof resourcesSystem.getEnergyBankPts === "function") {
-        return Number(resourcesSystem.getEnergyBankPts()) || 0;
-      }
-      return 0;
-    }
-
-    function getEnergyBankCap(){
-      if (resourcesSystem && typeof resourcesSystem.getEnergyBankCap === "function") {
-        return Math.max(1, Number(resourcesSystem.getEnergyBankCap()) || ENERGY_BANK_CAP);
-      }
-      return ENERGY_BANK_CAP;
-    }
-
-    function canSpendShake(){
-      if (resourcesSystem && typeof resourcesSystem.canSpendShake === "function") {
-        return !!resourcesSystem.canSpendShake();
-      }
-      return false;
-    }
-
-    function spendShake(){
-      if (resourcesSystem && typeof resourcesSystem.spendShake === "function") {
-        resourcesSystem.spendShake(performance.now());
-      }
-    }
-
-    // =========================================================================
-    // SHAKE THRESHOLD + energy-gated detonation (receiver-side gate)
+    // SHAKE THRESHOLD + receiver-side detonation gate
     // =========================================================================
     let INPUT_GESTURE_CFG = {
       shake: {
@@ -2175,9 +2129,6 @@
           IMPACT_TH,
           INPUT_DYNAMICS_CFG,
           INPUT_GESTURE_CFG,
-          ENERGY_BANK_CAP,
-          ENERGY_SHAKE_COST,
-          ENERGY_CHARGE_RATE_PPS,
           ruleSchema,
           RULE_ENGINE_EXECUTE_ACTIONS,
           DEFAULT_KWS_LISTEN_POLICY_MODE,
@@ -2195,8 +2146,6 @@
           getOrbScreenY: () => orbScreenY(),
           axisToColor01,
           gestureHooks: {
-            canSpendShake,
-            spendShake,
             isDiversityLampLit,
             flashShakeLamp,
             triggerShockwave,
@@ -3042,27 +2991,26 @@
     function getClassicShadowHudViewModel(){
       if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return null;
       const state = classicMotionStore.getState();
-      if (!state || !state.motion || !state.energyBank) return null;
+      if (!state || !state.motion) return null;
       const motion = state.motion;
-      const energyBank = state.energyBank;
+      const energyUI01 = clamp01(motion.energy01);
       return {
         lift: Number(motion.lift01) || 0,
         groove: Number(motion.groove01) || 0,
         smooth: Number(motion.smooth01) || 0,
         speed: Number(motion.speed01) || 0,
         dynamics: Number(motion.dynamics01) || 0,
-        energyUI01: Number(energyBank.level01) || 0,
-        energyBankPts: Number(energyBank.points) || 0,
+        energyUI01,
         liftP: Math.round(clamp01(motion.lift01) * 100),
         gP: Math.round(clamp01(motion.groove01) * 100),
         sP: Math.round(clamp01(motion.smooth01) * 100),
         sp: Math.round(clamp01(motion.speed01) * 100),
         dP: Math.round(clamp01(motion.dynamics01) * 100),
-        ePts: Math.round(Number(energyBank.points) || 0),
+        ePts: Math.round(energyUI01 * 100),
         shakeMeter: Number(motion.shakeMeter01) || 0,
         sh: Number(motion.shakeDisplayValue) || 0,
         locked: !!motion.locked,
-        over: ((Number(energyBank.level01) || 0) > 1),
+        over: false,
       };
     }
 
@@ -3087,7 +3035,7 @@
     function applyClassicShadowOrbRuntimeState(){
       if (!classicMotionStore || typeof classicMotionStore.getState !== "function") return;
       const state = classicMotionStore.getState();
-      if (!state || !state.motion || !state.energyBank) return;
+      if (!state || !state.motion) return;
       patchOrbRuntime({
         lift01: Number(state.motion.lift01) || 0,
         dynamics01: Number(state.motion.dynamics01) || 0,
@@ -3172,9 +3120,6 @@
           inputDynamics: INPUT_DYNAMICS_CFG,
         },
         hooks: {
-          updateEnergyBankFromPhone,
-          getEnergyBankPts,
-          getEnergyBankCap,
           computeLift01,
           setStabilityVisualGate: (v) => { stabilityVisualGate = !!v; },
           applyStabilityVisuals,

@@ -42,10 +42,6 @@
         omegaOK: null,
         tag: null,
       },
-      energyBank: {
-        points: 0,
-        level01: 0,
-      },
     };
     const subscribers = new Set();
 
@@ -107,10 +103,6 @@
           calibOK: null,
           omegaOK: null,
           tag: null,
-        },
-        energyBank: {
-          points: 0,
-          level01: 0,
         },
       };
       notify();

@@ -1062,16 +1062,6 @@ async function initShellReceiverHostRuntime(shellContext) {
     getOrbScreenY: () => shellOrbScreenY(shellContext),
     axisToColor01: () => 0,
     gestureHooks: {
-      canSpendShake: () => {
-        const resourcesSystem = receiverHostState.resourcesSystem;
-        return !!(resourcesSystem && typeof resourcesSystem.canSpendShake === "function" && resourcesSystem.canSpendShake());
-      },
-      spendShake: () => {
-        const resourcesSystem = receiverHostState.resourcesSystem;
-        if (resourcesSystem && typeof resourcesSystem.spendShake === "function") {
-          resourcesSystem.spendShake(performance.now());
-        }
-      },
       isDiversityLampLit,
       flashShakeLamp: () => flashShellShakeLamp(shellContext, 400),
       triggerShockwave: () => {
@@ -1270,21 +1260,6 @@ async function initShellReceiverHostRuntime(shellContext) {
         inputDynamics: INPUT_DYNAMICS_CFG,
       },
       hooks: {
-        updateEnergyBankFromPhone: (energyFromPhone, atMs) => {
-          if (resourcesSystem && typeof resourcesSystem.updateEnergyBankFromPhone === "function") {
-            resourcesSystem.updateEnergyBankFromPhone(energyFromPhone, atMs);
-          }
-        },
-        getEnergyBankPts: () => (
-          resourcesSystem && typeof resourcesSystem.getEnergyBankPts === "function"
-            ? resourcesSystem.getEnergyBankPts()
-            : 0
-        ),
-        getEnergyBankCap: () => (
-          resourcesSystem && typeof resourcesSystem.getEnergyBankCap === "function"
-            ? resourcesSystem.getEnergyBankCap()
-            : ENERGY_BANK_CAP
-        ),
         computeLift01,
         setBgFromEnergy: () => {},
         setStabilityVisualGate: (next) => {

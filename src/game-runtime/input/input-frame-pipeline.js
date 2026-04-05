@@ -15,7 +15,7 @@ function clamp01(n){
  * @property {{inputGestureSystem?:Object, inputDynamicsSystem?:Object}} [systems]
  * @property {{physState?:Object, orbRuntimeState?:{get?:() => Object}}} [runtime]
  * @property {{inputDynamics?:Object}} [configs]
- * @property {Object} [hooks] Receiver-provided hooks for resource updates and gesture/stability side effects.
+ * @property {Object} [hooks] Receiver-provided hooks for gesture/stability side effects.
  * @property {boolean} [skipPhysStatePatch] When true, do not mutate orb runtime scalar state inside the legacy pipeline.
  * @property {boolean} [skipLegacyHudFields] When true, skip legacy HUD-only return shaping that is no longer consumed.
  */
@@ -27,7 +27,7 @@ function clamp01(n){
  * values needed by the HUD view-model builder.
  *
  * @param {RunInputFramePipelineOptions} [options]
- * @returns {{nowMs:number, lift:number, groove:number, smooth:number, speed:number, dynamics:number, shake:number, locked:boolean, energyUI01:number, energyBankPts:number, shieldRgb01:(number[]|null)}}
+ * @returns {{nowMs:number, lift:number, groove:number, smooth:number, speed:number, dynamics:number, shake:number, locked:boolean, energyUI01:number, shieldRgb01:(number[]|null)}}
  */
 export function runInputFramePipeline({
   d,
@@ -56,21 +56,11 @@ export function runInputFramePipeline({
   const inputDynamicsSystem = systems && systems.inputDynamicsSystem;
   const inputDynamicsCfg = (configs && configs.inputDynamics) || {};
 
-  const updateEnergyBankFromPhone = hooks && hooks.updateEnergyBankFromPhone;
-  const getEnergyBankPts = hooks && hooks.getEnergyBankPts;
-  const getEnergyBankCap = hooks && hooks.getEnergyBankCap;
   const computeLift01 = hooks && hooks.computeLift01;
   const setStabilityVisualGate = hooks && hooks.setStabilityVisualGate;
   const applyStabilityVisuals = hooks && hooks.applyStabilityVisuals;
   const processShakeDoubleBang = hooks && hooks.processShakeDoubleBang;
-
-  if (typeof updateEnergyBankFromPhone === "function") {
-    updateEnergyBankFromPhone(energyFromPhone, nowMs);
-  }
-
-  const energyBankPts = (typeof getEnergyBankPts === "function") ? Number(getEnergyBankPts()) || 0 : 0;
-  const energyBankCap = (typeof getEnergyBankCap === "function") ? Number(getEnergyBankCap()) || 1 : 1;
-  const energyUI01 = energyBankPts / energyBankCap;
+  const energyUI01 = clamp01(energyFromPhone);
   const lift = (typeof computeLift01 === "function") ? Number(computeLift01(groove, smooth, speed)) || 0 : 0;
 
   if (!skipPhysStatePatch && physState && typeof physState === "object") {
@@ -139,7 +129,6 @@ export function runInputFramePipeline({
     shake,
     locked,
     energyUI01,
-    energyBankPts,
     shieldRgb01,
   };
 }

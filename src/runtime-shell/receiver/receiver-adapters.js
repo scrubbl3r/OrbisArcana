@@ -13,21 +13,18 @@
   function createReceiverHudAdapter(options){
     const els = options.els;
     const clamp01 = options.clamp01;
-    const setBgFromEnergy = options.setBgFromEnergy;
     const setBar = options.setBar;
 
     return function renderHudFromMotion(state){
       const motion = state.motion;
       const direction = state.direction || {};
-      const energyUI01 = state.energyBank.level01;
+      const energyUI01 = clamp01(motion.energy01);
       const liftP = Math.round(clamp01(motion.lift01) * 100);
       const gP = Math.round(clamp01(motion.groove01) * 100);
       const sP = Math.round(clamp01(motion.smooth01) * 100);
       const sp = Math.round(clamp01(motion.speed01) * 100);
       const dP = Math.round(clamp01(motion.dynamics01) * 100);
-      const ePts = Math.round(state.energyBank.points);
-
-      setBgFromEnergy(energyUI01);
+      const ePts = Math.round(energyUI01 * 100);
       els.vLift.textContent = `${liftP}%`;
       els.vGroove.textContent = `${gP}%${motion.locked ? " (locked)" : ""}`;
       els.vSmooth.textContent = `${sP}%`;
@@ -67,14 +64,12 @@
     const updateStability = options.updateStability;
     const updateVariability = options.updateVariability;
     const processShakeDoubleBang = options.processShakeDoubleBang;
-    const setAudio = options.setAudio;
     const stabilitySpeedMin = options.stabilitySpeedMin;
 
     return function applyGameplayFromMotion(state){
       const motion = state.motion;
       const direction = state.direction || {};
       const nowMs = state.receivedAtMs;
-      const energyUI01 = state.energyBank.level01;
 
       if (direction.code) {
         setPendingDirection(direction.code, nowMs);
@@ -90,7 +85,6 @@
       updateStability(motion.dynamics01, nowMs);
       updateVariability(motion.dynamics01, nowMs);
       processShakeDoubleBang(motion.shake01, nowMs, motion.groove01);
-      setAudio(energyUI01, motion.groove01, motion.locked);
     };
   }
 

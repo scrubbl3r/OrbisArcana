@@ -38,9 +38,8 @@ export function buildInputHudViewModel({
     dP: Math.round(clamp01(processed.dynamics) * 100),
     shakeMeter,
     sh: (Number(shakeMeter) * shakeLampThr),
-    ePts: Math.round(Number(processed.energyBankPts) || 0),
-    over: ((Number(processed.energyUI01) || 0) > 1),
+    ePts: Math.round(clamp01(processed.energyUI01) * 100),
+    over: false,
     shieldRgb01: processed.shieldRgb01 || null,
   };
 }
-
