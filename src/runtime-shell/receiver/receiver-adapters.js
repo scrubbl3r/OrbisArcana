@@ -4,10 +4,8 @@
 
     return function syncPhysicsFromMotion(state){
       const motion = state.motion;
-      const energyBank = state.energyBank;
 
       physState.lift01 = motion.lift01;
-      physState.energy01 = energyBank.level01;
       physState.dynamics01 = motion.dynamics01;
     };
   }

@@ -3213,7 +3213,6 @@
       if (!state || !state.motion || !state.energyBank) return;
       patchOrbRuntime({
         lift01: Number(state.motion.lift01) || 0,
-        energy01: Number(state.energyBank.level01) || 0,
         dynamics01: Number(state.motion.dynamics01) || 0,
       });
     }

@@ -77,7 +77,6 @@ export function runInputFramePipeline({
 
   if (!skipPhysStatePatch && physState && typeof physState === "object") {
     physState.lift01 = lift;
-    physState.energy01 = Math.max(0, Number(energyUI01) || 0);
     physState.dynamics01 = dynamics;
   }
 
