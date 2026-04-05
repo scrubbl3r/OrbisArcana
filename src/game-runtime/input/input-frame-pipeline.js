@@ -19,6 +19,7 @@ function clamp01(n){
  * @property {boolean} [skipPhysStatePatch] When true, do not mutate orb runtime scalar state inside the legacy pipeline.
  * @property {boolean} [skipLegacyHudFields] When true, skip legacy HUD-only return shaping that is no longer consumed.
  * @property {boolean} [skipAudioSideEffects] When true, skip legacy audio updates that are now driven elsewhere.
+ * @property {boolean} [skipBackgroundSideEffects] When true, skip legacy background energy visuals that are now driven elsewhere.
  */
 
 /**
@@ -42,6 +43,7 @@ export function runInputFramePipeline({
   skipPhysStatePatch = false,
   skipLegacyHudFields = false,
   skipAudioSideEffects = false,
+  skipBackgroundSideEffects = false,
 } = {}){
   const energyFromPhone = Number(values && values.energyFromPhone) || 0;
   const groove = Number(values && values.groove) || 0;
@@ -82,7 +84,7 @@ export function runInputFramePipeline({
     physState.dynamics01 = dynamics;
   }
 
-  if (typeof setBgFromEnergy === "function") {
+  if (!skipBackgroundSideEffects && typeof setBgFromEnergy === "function") {
     setBgFromEnergy(energyUI01);
   }
 
