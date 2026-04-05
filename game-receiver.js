@@ -130,6 +130,7 @@
 
     let createLegacyDevStagingAdapterFactory = null;
     let createLegacyDevStagingRefsFactory = null;
+    let createInlineLegacyDevStagingAdapterFactory = null;
 
     function createBootFallbackDevStagingRefs() {
       if (typeof createLegacyDevStagingRefsFactory === "function") {
@@ -186,6 +187,18 @@
     }
 
     function createInlineBootFallbackDevStagingAdapter(refs) {
+      if (typeof createInlineLegacyDevStagingAdapterFactory === "function") {
+        return createInlineLegacyDevStagingAdapterFactory({
+          refs,
+          setBar,
+          renderDevStagingHud,
+          resetDevStagingHud,
+          setDevStagingStatus,
+          setDevStagingFatal,
+          setDevStagingDebugNote,
+          closeDevStagingTopmostPopup,
+        });
+      }
       return {
         refs,
         setStatus(html, cls){
@@ -1174,6 +1187,7 @@
           : null;
         createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
         createLegacyDevStagingRefsFactory = legacyDevStagingAdapterModule.createLegacyDevStagingRefsFromElements || null;
+        createInlineLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createInlineLegacyDevStagingAdapter || null;
         refreshLegacyDevStagingView();
         classicCalibrationSession = (typeof window.createCalibrationSession === "function")
           ? window.createCalibrationSession()
