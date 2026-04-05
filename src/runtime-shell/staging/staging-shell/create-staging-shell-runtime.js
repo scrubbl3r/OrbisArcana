@@ -1,6 +1,10 @@
 import { mountDevStaging } from "../dev-staging/dev-staging.js";
 import { renderGameStaging } from "../game-staging/game-staging.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
+import {
+  applyReceiverStabilityLampState,
+  getReceiverStabilityVisualState,
+} from "../../receiver/stability-visuals.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
@@ -1004,21 +1008,24 @@ async function initShellReceiverHostRuntime(shellContext) {
   const applyStabilityVisuals = () => {
     const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
     const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
-    const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
-      ? inputDynamicsSystem.getState()
-      : { stabilityOn: false, variabilityOn: false };
-    const showStable = !!dynState.stabilityOn && !!receiverHostState.stabilityVisualGate;
-    const showVar = !!dynState.variabilityOn && !!receiverHostState.stabilityVisualGate;
-    setLamp(refs && refs.dynLampStable, showStable);
-    setLamp(refs && refs.dynLampVar, showVar);
+    const state = getReceiverStabilityVisualState({
+      inputDynamicsSystem,
+      stabilityVisualGate: receiverHostState.stabilityVisualGate,
+    });
+    applyReceiverStabilityLampState({
+      stableEl: refs && refs.dynLampStable,
+      varEl: refs && refs.dynLampVar,
+      state,
+      setLamp,
+    });
   };
 
   const isDiversityLampLit = () => {
-    const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
-    const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
-      ? inputDynamicsSystem.getState()
-      : { variabilityOn: false };
-    return !!dynState.variabilityOn && !!receiverHostState.stabilityVisualGate;
+    const state = getReceiverStabilityVisualState({
+      inputDynamicsSystem: receiverHostState.inputDynamicsSystem,
+      stabilityVisualGate: receiverHostState.stabilityVisualGate,
+    });
+    return !!state.diversityLampLit;
   };
 
   const runtimeContext = bootstrapStagingRuntimeContext({

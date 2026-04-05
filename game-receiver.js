@@ -824,19 +824,44 @@
     };
     let stabilityVisualGate = true;
     let inputDynamicsSystem = null;
+    let getReceiverStabilityVisualState = null;
+    let applyReceiverStabilityLampState = null;
 
     function applyStabilityVisuals(){
-      const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
-        ? inputDynamicsSystem.getState()
-        : { stabilityOn: false, variabilityOn: false };
-      const showStable = !!dynState.stabilityOn && !!stabilityVisualGate;
-      const showVar = !!dynState.variabilityOn && !!stabilityVisualGate;
+      const state = (typeof getReceiverStabilityVisualState === "function")
+        ? getReceiverStabilityVisualState({
+            inputDynamicsSystem,
+            stabilityVisualGate,
+          })
+        : {
+            showStable: !!((inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
+              ? (inputDynamicsSystem.getState() || {}).stabilityOn
+              : false) && !!stabilityVisualGate,
+            showVar: !!((inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
+              ? (inputDynamicsSystem.getState() || {}).variabilityOn
+              : false) && !!stabilityVisualGate,
+          };
 
-      if (devStagingRefs.dynLampStable) devStagingRefs.dynLampStable.classList.toggle("on", showStable);
-      if (devStagingRefs.dynLampVar) devStagingRefs.dynLampVar.classList.toggle("on", showVar);
+      if (typeof applyReceiverStabilityLampState === "function") {
+        applyReceiverStabilityLampState({
+          stableEl: devStagingRefs.dynLampStable,
+          varEl: devStagingRefs.dynLampVar,
+          state,
+        });
+        return;
+      }
+
+      if (devStagingRefs.dynLampStable) devStagingRefs.dynLampStable.classList.toggle("on", !!state.showStable);
+      if (devStagingRefs.dynLampVar) devStagingRefs.dynLampVar.classList.toggle("on", !!state.showVar);
     }
 
     function isDiversityLampLit(){
+      if (typeof getReceiverStabilityVisualState === "function") {
+        return !!getReceiverStabilityVisualState({
+          inputDynamicsSystem,
+          stabilityVisualGate,
+        }).diversityLampLit;
+      }
       const dynState = (inputDynamicsSystem && typeof inputDynamicsSystem.getState === "function")
         ? inputDynamicsSystem.getState()
         : { variabilityOn: false };
@@ -928,14 +953,22 @@
 
     async function initClassicReceiverShadowCore(){
       try {
-        await Promise.all([
+        const [
+          ,
+          ,
+          ,
+          stabilityVisualsModule,
+        ] = await Promise.all([
           import("./src/runtime-shell/receiver/calibration-engine.js"),
           import("./src/runtime-shell/receiver/signal-processor.js"),
           import("./src/runtime-shell/receiver/motion-store.js"),
+          import("./src/runtime-shell/receiver/stability-visuals.js"),
           import("./src/runtime-shell/session/relay-transport.js"),
           import("./src/runtime-shell/session/pairing-service.js"),
           import("./src/runtime-shell/session/fast-path-transport.js"),
         ]);
+        getReceiverStabilityVisualState = stabilityVisualsModule.getReceiverStabilityVisualState || null;
+        applyReceiverStabilityLampState = stabilityVisualsModule.applyReceiverStabilityLampState || null;
         classicCalibrationSession = (typeof window.createCalibrationSession === "function")
           ? window.createCalibrationSession()
           : null;
