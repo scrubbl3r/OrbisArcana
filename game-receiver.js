@@ -920,8 +920,13 @@
     let inputDynamicsSystem = null;
     let getReceiverStabilityVisualState = null;
     let applyReceiverStabilityLampState = null;
+    let receiverStabilityVisualController = null;
 
     function applyStabilityVisuals(){
+      if (receiverStabilityVisualController && typeof receiverStabilityVisualController.apply === "function") {
+        receiverStabilityVisualController.apply();
+        return;
+      }
       const state = (typeof getReceiverStabilityVisualState === "function")
         ? getReceiverStabilityVisualState({
             inputDynamicsSystem,
@@ -950,6 +955,9 @@
     }
 
     function isDiversityLampLit(){
+      if (receiverStabilityVisualController && typeof receiverStabilityVisualController.isDiversityLampLit === "function") {
+        return !!receiverStabilityVisualController.isDiversityLampLit();
+      }
       if (typeof getReceiverStabilityVisualState === "function") {
         return !!getReceiverStabilityVisualState({
           inputDynamicsSystem,
@@ -1067,6 +1075,13 @@
         ]);
         getReceiverStabilityVisualState = stabilityVisualsModule.getReceiverStabilityVisualState || null;
         applyReceiverStabilityLampState = stabilityVisualsModule.applyReceiverStabilityLampState || null;
+        receiverStabilityVisualController = (typeof stabilityVisualsModule.createReceiverStabilityVisualController === "function")
+          ? stabilityVisualsModule.createReceiverStabilityVisualController({
+              getInputDynamicsSystem: () => inputDynamicsSystem,
+              getStabilityVisualGate: () => stabilityVisualGate,
+              getRefs: () => devStagingRefs,
+            })
+          : null;
         receiverDevLampVisuals = (typeof receiverDevLampsModule.createReceiverDevLampVisuals === "function")
           ? receiverDevLampsModule.createReceiverDevLampVisuals({
               getRefs: () => devStagingRefs,

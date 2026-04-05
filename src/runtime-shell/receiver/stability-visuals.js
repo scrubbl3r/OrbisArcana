@@ -34,3 +34,36 @@ export function applyReceiverStabilityLampState({
   if (stableEl && stableEl.classList) stableEl.classList.toggle("on", showStable);
   if (varEl && varEl.classList) varEl.classList.toggle("on", showVar);
 }
+
+export function createReceiverStabilityVisualController({
+  getInputDynamicsSystem = null,
+  getStabilityVisualGate = null,
+  getRefs = null,
+  setLamp = null,
+} = {}) {
+  function computeState() {
+    return getReceiverStabilityVisualState({
+      inputDynamicsSystem: (typeof getInputDynamicsSystem === "function") ? getInputDynamicsSystem() : null,
+      stabilityVisualGate: (typeof getStabilityVisualGate === "function") ? !!getStabilityVisualGate() : false,
+    });
+  }
+
+  function apply() {
+    const refs = (typeof getRefs === "function") ? (getRefs() || {}) : {};
+    applyReceiverStabilityLampState({
+      stableEl: refs.dynLampStable || null,
+      varEl: refs.dynLampVar || null,
+      state: computeState(),
+      setLamp,
+    });
+  }
+
+  function isDiversityLampLit() {
+    return !!computeState().diversityLampLit;
+  }
+
+  return {
+    apply,
+    isDiversityLampLit,
+  };
+}

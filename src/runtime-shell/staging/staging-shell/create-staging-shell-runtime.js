@@ -1005,28 +1005,16 @@ async function initShellReceiverHostRuntime(shellContext) {
     stabilityVisualGate: true,
   };
 
-  const applyStabilityVisuals = () => {
-    const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
-    const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
-    const state = getReceiverStabilityVisualState({
-      inputDynamicsSystem,
-      stabilityVisualGate: receiverHostState.stabilityVisualGate,
-    });
-    applyReceiverStabilityLampState({
-      stableEl: refs && refs.dynLampStable,
-      varEl: refs && refs.dynLampVar,
-      state,
-      setLamp,
-    });
-  };
+  const receiverStabilityVisualController = createReceiverStabilityVisualController({
+    getInputDynamicsSystem: () => receiverHostState.inputDynamicsSystem,
+    getStabilityVisualGate: () => receiverHostState.stabilityVisualGate,
+    getRefs: () => ((shellContext && shellContext.refs) ? shellContext.refs.dev : null),
+    setLamp,
+  });
 
-  const isDiversityLampLit = () => {
-    const state = getReceiverStabilityVisualState({
-      inputDynamicsSystem: receiverHostState.inputDynamicsSystem,
-      stabilityVisualGate: receiverHostState.stabilityVisualGate,
-    });
-    return !!state.diversityLampLit;
-  };
+  const applyStabilityVisuals = () => receiverStabilityVisualController.apply();
+
+  const isDiversityLampLit = () => receiverStabilityVisualController.isDiversityLampLit();
 
   const runtimeContext = bootstrapStagingRuntimeContext({
     createEventBus: () => runtime.eventBus,
