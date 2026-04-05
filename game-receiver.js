@@ -300,29 +300,30 @@
 
     function createDevStagingPanelElements() {
       if (typeof createDevStagingPanelElementsFactory === "function") {
-        return createDevStagingPanelElementsFactory(currentDevStagingView);
+        return createDevStagingPanelElementsFactory(currentDevStagingView.refs || currentDevStagingView);
       }
+      const refs = currentDevStagingView.refs || {};
       return {
-        teleBtn: currentDevStagingView.refs.teleBtn,
-        wordBoardBtn: currentDevStagingView.refs.wordBoardBtn,
-        kwsReadout: currentDevStagingView.refs.kwsReadout,
-        kwsLog: currentDevStagingView.refs.kwsLog,
-        logTabKws: currentDevStagingView.refs.logTabKws,
-        logTabPhone: currentDevStagingView.refs.logTabPhone,
-        kwsTokenThrInput: currentDevStagingView.refs.kwsTokenThrInput,
-        kwsCooldownMsInput: currentDevStagingView.refs.kwsCooldownMsInput,
-        kwsApplyTuneBtn: currentDevStagingView.refs.kwsApplyTuneBtn,
-        logPopup: currentDevStagingView.refs.logPopup,
-        logPopupHeader: currentDevStagingView.refs.logPopupHeader,
-        logPopupClose: currentDevStagingView.refs.logPopupClose,
-        wordBoardPopup: currentDevStagingView.refs.wordBoardPopup,
-        wordBoardPopupHeader: currentDevStagingView.refs.wordBoardPopupHeader,
-        wordBoardPopupClose: currentDevStagingView.refs.wordBoardPopupClose,
-        wordBoardBody: currentDevStagingView.refs.wordBoardBody,
-        wordBoardDebugPanel: currentDevStagingView.refs.wordBoardDebugPanel,
-        wordBoardDebugToggle: currentDevStagingView.refs.wordBoardDebugToggle,
-        wordBoardDebugBadge: currentDevStagingView.refs.wordBoardDebugBadge,
-        wordBoardDebugBody: currentDevStagingView.refs.wordBoardDebugBody,
+        teleBtn: refs.teleBtn,
+        wordBoardBtn: refs.wordBoardBtn,
+        kwsReadout: refs.kwsReadout,
+        kwsLog: refs.kwsLog,
+        logTabKws: refs.logTabKws,
+        logTabPhone: refs.logTabPhone,
+        kwsTokenThrInput: refs.kwsTokenThrInput,
+        kwsCooldownMsInput: refs.kwsCooldownMsInput,
+        kwsApplyTuneBtn: refs.kwsApplyTuneBtn,
+        logPopup: refs.logPopup,
+        logPopupHeader: refs.logPopupHeader,
+        logPopupClose: refs.logPopupClose,
+        wordBoardPopup: refs.wordBoardPopup,
+        wordBoardPopupHeader: refs.wordBoardPopupHeader,
+        wordBoardPopupClose: refs.wordBoardPopupClose,
+        wordBoardBody: refs.wordBoardBody,
+        wordBoardDebugPanel: refs.wordBoardDebugPanel,
+        wordBoardDebugToggle: refs.wordBoardDebugToggle,
+        wordBoardDebugBadge: refs.wordBoardDebugBadge,
+        wordBoardDebugBody: refs.wordBoardDebugBody,
       };
     }
 

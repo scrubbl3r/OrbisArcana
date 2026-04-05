@@ -154,7 +154,7 @@ export function createLegacyDevStagingAdapter({
 }
 
 export function createDevStagingPanelElements(view) {
-  const refs = view && view.refs ? view.refs : {};
+  const refs = (view && view.refs) ? view.refs : (view || {});
   return {
     teleBtn: refs.teleBtn,
     wordBoardBtn: refs.wordBoardBtn,
