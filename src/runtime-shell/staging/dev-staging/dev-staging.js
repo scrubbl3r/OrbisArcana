@@ -7,6 +7,7 @@ import { createDevStagingApi } from "./dev-staging-api.js";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js";
 import {
   closeDevStagingTopmostPopup,
+  createDevStagingPanelElementsFromView,
   projectDevStagingPanelRefs,
 } from "./dev-staging-panel.js";
 import { createDevStagingRefs } from "./dev-staging-refs.js";
@@ -14,6 +15,7 @@ import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js";
 
 export {
   closeDevStagingTopmostPopup,
+  createDevStagingPanelElementsFromView,
   projectDevStagingPanelRefs,
   renderDevStagingHud,
   resetDevStagingHud,

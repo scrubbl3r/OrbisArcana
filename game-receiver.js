@@ -303,6 +303,7 @@
     let setDevStagingDebugNote = null;
     let closeDevStagingTopmostPopup = null;
     let projectDevStagingPanelRefs = null;
+    let createDevStagingPanelElementsFromView = null;
     let legacyDevStagingView = createBootFallbackDevStagingAdapter();
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
@@ -354,31 +355,35 @@
     }
 
     function createDevStagingPanelElements() {
-      const refs = currentDevStagingView.refs || {};
-      return (typeof projectDevStagingPanelRefs === "function")
-        ? projectDevStagingPanelRefs(refs)
-        : {
-            teleBtn: refs.teleBtn || null,
-            wordBoardBtn: refs.wordBoardBtn || null,
-            kwsReadout: refs.kwsReadout || null,
-            kwsLog: refs.kwsLog || null,
-            logTabKws: refs.logTabKws || null,
-            logTabPhone: refs.logTabPhone || null,
-            kwsTokenThrInput: refs.kwsTokenThrInput || null,
-            kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
-            kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,
-            logPopup: refs.logPopup || null,
-            logPopupHeader: refs.logPopupHeader || null,
-            logPopupClose: refs.logPopupClose || null,
-            wordBoardPopup: refs.wordBoardPopup || null,
-            wordBoardPopupHeader: refs.wordBoardPopupHeader || null,
-            wordBoardPopupClose: refs.wordBoardPopupClose || null,
-            wordBoardBody: refs.wordBoardBody || null,
-            wordBoardDebugPanel: refs.wordBoardDebugPanel || null,
-            wordBoardDebugToggle: refs.wordBoardDebugToggle || null,
-            wordBoardDebugBadge: refs.wordBoardDebugBadge || null,
-            wordBoardDebugBody: refs.wordBoardDebugBody || null,
-          };
+      return (typeof createDevStagingPanelElementsFromView === "function")
+        ? createDevStagingPanelElementsFromView(currentDevStagingView)
+        : (() => {
+            const refs = currentDevStagingView.refs || {};
+            return (typeof projectDevStagingPanelRefs === "function")
+              ? projectDevStagingPanelRefs(refs)
+              : {
+                  teleBtn: refs.teleBtn || null,
+                  wordBoardBtn: refs.wordBoardBtn || null,
+                  kwsReadout: refs.kwsReadout || null,
+                  kwsLog: refs.kwsLog || null,
+                  logTabKws: refs.logTabKws || null,
+                  logTabPhone: refs.logTabPhone || null,
+                  kwsTokenThrInput: refs.kwsTokenThrInput || null,
+                  kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
+                  kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,
+                  logPopup: refs.logPopup || null,
+                  logPopupHeader: refs.logPopupHeader || null,
+                  logPopupClose: refs.logPopupClose || null,
+                  wordBoardPopup: refs.wordBoardPopup || null,
+                  wordBoardPopupHeader: refs.wordBoardPopupHeader || null,
+                  wordBoardPopupClose: refs.wordBoardPopupClose || null,
+                  wordBoardBody: refs.wordBoardBody || null,
+                  wordBoardDebugPanel: refs.wordBoardDebugPanel || null,
+                  wordBoardDebugToggle: refs.wordBoardDebugToggle || null,
+                  wordBoardDebugBadge: refs.wordBoardDebugBadge || null,
+                  wordBoardDebugBody: refs.wordBoardDebugBody || null,
+                };
+          })();
     }
 
     async function maybeMountDevStagingSurface() {
@@ -387,6 +392,7 @@
       try {
         const {
           closeDevStagingTopmostPopup: closeDevStagingTopmostPopupModule,
+          createDevStagingPanelElementsFromView: createDevStagingPanelElementsFromViewModule,
           mountDevStaging,
           projectDevStagingPanelRefs: projectDevStagingPanelRefsModule,
           renderDevStagingHud: renderDevStagingHudModule,
@@ -397,6 +403,9 @@
         } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
         closeDevStagingTopmostPopup = (typeof closeDevStagingTopmostPopupModule === "function")
           ? closeDevStagingTopmostPopupModule
+          : null;
+        createDevStagingPanelElementsFromView = (typeof createDevStagingPanelElementsFromViewModule === "function")
+          ? createDevStagingPanelElementsFromViewModule
           : null;
         projectDevStagingPanelRefs = (typeof projectDevStagingPanelRefsModule === "function")
           ? projectDevStagingPanelRefsModule

@@ -35,3 +35,8 @@ export function projectDevStagingPanelRefs(refs = {}) {
     wordBoardDebugBody: refs.wordBoardDebugBody || null,
   };
 }
+
+export function createDevStagingPanelElementsFromView(view = null) {
+  const refs = (view && view.refs) ? view.refs : {};
+  return projectDevStagingPanelRefs(refs);
+}
