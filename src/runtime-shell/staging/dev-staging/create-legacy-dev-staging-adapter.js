@@ -1,130 +1,154 @@
+export function createLegacyDevStagingRefsFromElements(els = {}) {
+  return {
+    status: els.status,
+    fatal: els.fatal,
+    teleBtn: els.teleBtn,
+    wordBoardBtn: els.wordBoardBtn,
+    kwsReadout: els.kwsReadout,
+    kwsLog: els.kwsLog,
+    logTabKws: els.logTabKws,
+    logTabPhone: els.logTabPhone,
+    kwsTokenThrInput: els.kwsTokenThrInput,
+    kwsCooldownMsInput: els.kwsCooldownMsInput,
+    kwsApplyTuneBtn: els.kwsApplyTuneBtn,
+    logPopup: els.logPopup,
+    logPopupHeader: els.logPopupHeader,
+    logPopupClose: els.logPopupClose,
+    wordBoardPopup: els.wordBoardPopup,
+    wordBoardPopupHeader: els.wordBoardPopupHeader,
+    wordBoardPopupClose: els.wordBoardPopupClose,
+    wordBoardBody: els.wordBoardBody,
+    wordBoardDebugPanel: els.wordBoardDebugPanel,
+    wordBoardDebugToggle: els.wordBoardDebugToggle,
+    wordBoardDebugBadge: els.wordBoardDebugBadge,
+    wordBoardDebugBody: els.wordBoardDebugBody,
+    vLift: els.vLift,
+    vGroove: els.vGroove,
+    vSmooth: els.vSmooth,
+    vSpeed: els.vSpeed,
+    vDynamics: els.vDynamics,
+    vEnergy: els.vEnergy,
+    vShake: els.vShake,
+    bLift: els.bLift,
+    bGroove: els.bGroove,
+    bSmooth: els.bSmooth,
+    bSpeed: els.bSpeed,
+    bDynamics: els.bDynamics,
+    bEnergy: els.bEnergy,
+    bShake: els.bShake,
+    dynLampStable: els.dynLampStable,
+    dynLampVar: els.dynLampVar,
+    shakeLamp: els.shakeLamp,
+    lampUp: els.lampUp,
+    lampDown: els.lampDown,
+    lampLeft: els.lampLeft,
+    lampRight: els.lampRight,
+    lampForward: els.lampForward,
+    lampBack: els.lampBack,
+    devSpinAuditNote: els.devSpinAuditNote,
+  };
+}
+
 export function createLegacyDevStagingAdapter({
   els,
   setBar,
   renderDevStagingHud = null,
   resetDevStagingHud = null,
+  setDevStagingStatus = null,
+  setDevStagingFatal = null,
+  setDevStagingDebugNote = null,
+  closeDevStagingTopmostPopup = null,
 } = {}) {
+  const refs = createLegacyDevStagingRefsFromElements(els);
   return {
-    refs: {
-      status: els.status,
-      fatal: els.fatal,
-      teleBtn: els.teleBtn,
-      wordBoardBtn: els.wordBoardBtn,
-      kwsReadout: els.kwsReadout,
-      kwsLog: els.kwsLog,
-      logTabKws: els.logTabKws,
-      logTabPhone: els.logTabPhone,
-      kwsTokenThrInput: els.kwsTokenThrInput,
-      kwsCooldownMsInput: els.kwsCooldownMsInput,
-      kwsApplyTuneBtn: els.kwsApplyTuneBtn,
-      logPopup: els.logPopup,
-      logPopupHeader: els.logPopupHeader,
-      logPopupClose: els.logPopupClose,
-      wordBoardPopup: els.wordBoardPopup,
-      wordBoardPopupHeader: els.wordBoardPopupHeader,
-      wordBoardPopupClose: els.wordBoardPopupClose,
-      wordBoardBody: els.wordBoardBody,
-      wordBoardDebugPanel: els.wordBoardDebugPanel,
-      wordBoardDebugToggle: els.wordBoardDebugToggle,
-      wordBoardDebugBadge: els.wordBoardDebugBadge,
-      wordBoardDebugBody: els.wordBoardDebugBody,
-      vLift: els.vLift,
-      vGroove: els.vGroove,
-      vSmooth: els.vSmooth,
-      vSpeed: els.vSpeed,
-      vDynamics: els.vDynamics,
-      vEnergy: els.vEnergy,
-      vShake: els.vShake,
-      bLift: els.bLift,
-      bGroove: els.bGroove,
-      bSmooth: els.bSmooth,
-      bSpeed: els.bSpeed,
-      bDynamics: els.bDynamics,
-      bEnergy: els.bEnergy,
-      bShake: els.bShake,
-      dynLampStable: els.dynLampStable,
-      dynLampVar: els.dynLampVar,
-      shakeLamp: els.shakeLamp,
-      lampUp: els.lampUp,
-      lampDown: els.lampDown,
-      lampLeft: els.lampLeft,
-      lampRight: els.lampRight,
-      lampForward: els.lampForward,
-      lampBack: els.lampBack,
-      devSpinAuditNote: els.devSpinAuditNote,
-    },
+    refs,
     setStatus(html, cls){
-      if (!els.status) return;
-      els.status.className = cls || "dim";
-      els.status.innerHTML = html;
+      if (typeof setDevStagingStatus === "function") {
+        setDevStagingStatus(refs, html, cls || "dim");
+        return;
+      }
+      if (!refs.status) return;
+      refs.status.className = cls || "dim";
+      refs.status.innerHTML = html;
     },
     setFatal(message = "") {
-      if (!els.fatal) return;
+      if (typeof setDevStagingFatal === "function") {
+        setDevStagingFatal(refs, message);
+        return;
+      }
+      if (!refs.fatal) return;
       const hasMessage = !!String(message || "");
-      els.fatal.style.display = hasMessage ? "block" : "none";
-      els.fatal.textContent = hasMessage ? String(message) : "";
+      refs.fatal.style.display = hasMessage ? "block" : "none";
+      refs.fatal.textContent = hasMessage ? String(message) : "";
     },
     setDebugNote(text = "") {
-      if (!els.devSpinAuditNote) return;
-      els.devSpinAuditNote.textContent = String(text || "");
+      if (typeof setDevStagingDebugNote === "function") {
+        setDevStagingDebugNote(refs, text);
+        return;
+      }
+      if (!refs.devSpinAuditNote) return;
+      refs.devSpinAuditNote.textContent = String(text || "");
     },
     closeTopmostPopup() {
-      if (this.refs.wordBoardPopup && this.refs.wordBoardPopup.classList.contains("on") && this.refs.wordBoardPopupClose) {
-        this.refs.wordBoardPopupClose.click();
+      if (typeof closeDevStagingTopmostPopup === "function") {
+        return !!closeDevStagingTopmostPopup(refs);
+      }
+      if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
+        refs.wordBoardPopupClose.click();
         return true;
       }
-      if (this.refs.logPopup && this.refs.logPopup.classList.contains("on") && this.refs.logPopupClose) {
-        this.refs.logPopupClose.click();
+      if (refs.logPopup && refs.logPopup.classList.contains("on") && refs.logPopupClose) {
+        refs.logPopupClose.click();
         return true;
       }
       return false;
     },
     resetMeters() {
       if (typeof resetDevStagingHud === "function") {
-        resetDevStagingHud(els);
+        resetDevStagingHud(refs);
         return;
       }
-      setBar(els.bLift, 0);
-      setBar(els.bGroove, 0);
-      setBar(els.bSmooth, 0);
-      setBar(els.bSpeed, 0);
-      setBar(els.bDynamics, 0);
-      setBar(els.bEnergy, 0);
-      setBar(els.bShake, 0);
-      els.vLift.textContent = "0%";
-      els.vGroove.textContent = "0%";
-      els.vSmooth.textContent = "0%";
-      els.vSpeed.textContent = "0%";
-      els.vDynamics.textContent = "0%";
-      els.vEnergy.textContent = "0";
-      els.vShake.textContent = "0.00";
-      els.vEnergy.classList.remove("over");
-      els.bEnergy.classList.remove("over");
+      setBar(refs.bLift, 0);
+      setBar(refs.bGroove, 0);
+      setBar(refs.bSmooth, 0);
+      setBar(refs.bSpeed, 0);
+      setBar(refs.bDynamics, 0);
+      setBar(refs.bEnergy, 0);
+      setBar(refs.bShake, 0);
+      refs.vLift.textContent = "0%";
+      refs.vGroove.textContent = "0%";
+      refs.vSmooth.textContent = "0%";
+      refs.vSpeed.textContent = "0%";
+      refs.vDynamics.textContent = "0%";
+      refs.vEnergy.textContent = "0";
+      refs.vShake.textContent = "0.00";
+      refs.vEnergy.classList.remove("over");
+      refs.bEnergy.classList.remove("over");
     },
     renderInputHud(vm) {
       if (!vm) return;
       if (typeof renderDevStagingHud === "function") {
-        renderDevStagingHud(els, vm);
+        renderDevStagingHud(refs, vm);
         return;
       }
-      els.vLift.textContent = `${vm.liftP}%`;
-      els.vGroove.textContent = `${vm.gP}%${vm.locked ? " (locked)" : ""}`;
-      els.vSmooth.textContent = `${vm.sP}%`;
-      els.vSpeed.textContent = `${vm.sp}%`;
-      els.vDynamics.textContent = `${vm.dP}%`;
-      els.vEnergy.textContent = `${vm.ePts}`;
-      els.vShake.textContent = `${Math.max(0, vm.sh).toFixed(2)}`;
+      refs.vLift.textContent = `${vm.liftP}%`;
+      refs.vGroove.textContent = `${vm.gP}%${vm.locked ? " (locked)" : ""}`;
+      refs.vSmooth.textContent = `${vm.sP}%`;
+      refs.vSpeed.textContent = `${vm.sp}%`;
+      refs.vDynamics.textContent = `${vm.dP}%`;
+      refs.vEnergy.textContent = `${vm.ePts}`;
+      refs.vShake.textContent = `${Math.max(0, vm.sh).toFixed(2)}`;
 
-      setBar(els.bLift, vm.lift);
-      setBar(els.bGroove, vm.groove);
-      setBar(els.bSmooth, vm.smooth);
-      setBar(els.bSpeed, vm.speed);
-      setBar(els.bDynamics, vm.dynamics);
-      setBar(els.bEnergy, vm.energyUI01);
-      setBar(els.bShake, vm.shakeMeter);
+      setBar(refs.bLift, vm.lift);
+      setBar(refs.bGroove, vm.groove);
+      setBar(refs.bSmooth, vm.smooth);
+      setBar(refs.bSpeed, vm.speed);
+      setBar(refs.bDynamics, vm.dynamics);
+      setBar(refs.bEnergy, vm.energyUI01);
+      setBar(refs.bShake, vm.shakeMeter);
 
-      els.vEnergy.classList.toggle("over", vm.over);
-      els.bEnergy.classList.toggle("over", vm.over);
+      refs.vEnergy.classList.toggle("over", vm.over);
+      refs.bEnergy.classList.toggle("over", vm.over);
     },
   };
 }
