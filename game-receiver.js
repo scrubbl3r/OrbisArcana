@@ -516,18 +516,7 @@
       resetOrbStrokeColor(true);
       setBgFromEnergy(0);
     }
-    function setBgFromEnergy(e01) {
-      const t = clamp01(e01);
-      const r = Math.round(BG0.r + (BG1.r - BG0.r) * t);
-      const g = Math.round(BG0.g + (BG1.g - BG0.g) * t);
-      const b = Math.round(BG0.b + (BG1.b - BG0.b) * t);
-
-      document.body.style.backgroundColor = `rgb(${r},${g},${b})`;
-      document.documentElement.style.setProperty("--charge", String(t));
-      document.documentElement.style.setProperty("--bg-r", String(r));
-      document.documentElement.style.setProperty("--bg-g", String(g));
-      document.documentElement.style.setProperty("--bg-b", String(b));
-    }
+    function setBgFromEnergy() {}
     setBgFromEnergy(0);
 
     // =========================================================================
@@ -701,95 +690,9 @@
     }
 
     // =========================================================================
-    // AUDIO (optional) — unchanged behavior  
+    // RECEIVER AUDIO (sunset)
     // =========================================================================
-    let audioEnabled = false;
-    let audioCtx = null, osc = null, gainNode = null;
-
-    const AUDIO_GATE   = 0.02;
-    const AUDIO_MIN_DB = -42;
-    const AUDIO_MAX_DB = -6;
-    const AUDIO_EXP    = 1.15;
-    const MASTER_GAIN  = 2.2;
-    const TONE_BASE_HZ    = 180;
-    const TONE_MAX_ADD_HZ = 220;
-
-    const dbToGain = (db) => Math.pow(10, db/20);
-
-    function energyToGain(e) {
-      if (e <= AUDIO_GATE) return 0;
-      const x = (e - AUDIO_GATE) / (1 - AUDIO_GATE);
-      const shaped = Math.pow(clamp01(x), AUDIO_EXP);
-      const db = AUDIO_MIN_DB + (AUDIO_MAX_DB - AUDIO_MIN_DB) * shaped;
-      return dbToGain(db);
-    }
-
-    function ensureAudio() {
-      if (audioCtx) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      gainNode = audioCtx.createGain();
-      gainNode.gain.value = 0;
-
-      osc = audioCtx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.value = TONE_BASE_HZ;
-
-      osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      osc.start();
-    }
-
-    async function enableAudio() {
-      ensureAudio();
-      try { await audioCtx.resume(); } catch(_) {}
-      audioEnabled = true;
-      if (els.audioBtn){
-        els.audioBtn.textContent = "Audio: On";
-        els.audioBtn.classList.add("on");
-        els.audioBtn.classList.remove("dim");
-      }
-    }
-
-    function disableAudio() {
-      audioEnabled = false;
-      if (els.audioBtn){
-        els.audioBtn.textContent = "Audio: Off";
-        els.audioBtn.classList.remove("on");
-      }
-      if (audioCtx && gainNode) {
-        const now = audioCtx.currentTime;
-        gainNode.gain.cancelScheduledValues(now);
-        gainNode.gain.setTargetAtTime(0, now, 0.06);
-      }
-    }
-
-    function setAudio(eUI, groove, locked) {
-      if (!audioEnabled || !audioCtx || !gainNode || !osc) return;
-      const e01 = clamp01(eUI);
-
-      const gBase = energyToGain(e01);
-      const gGroove = locked ? (0.30 + 0.70*groove) : (0.08 + 0.22*groove);
-      const g = MASTER_GAIN * gBase * gGroove;
-
-      const f = TONE_BASE_HZ
-              + TONE_MAX_ADD_HZ * (locked ? groove : 0.30*groove)
-              + 60 * e01;
-
-      const now = audioCtx.currentTime;
-      gainNode.gain.cancelScheduledValues(now);
-      gainNode.gain.setTargetAtTime(g, now, 0.06);
-
-      osc.frequency.cancelScheduledValues(now);
-      osc.frequency.setTargetAtTime(f, now, 0.06);
-    }
-
-    disableAudio();
-    if (els.audioBtn){
-      els.audioBtn.addEventListener("click", async () => {
-        if (!audioEnabled) await enableAudio();
-        else disableAudio();
-      });
-    }
+    function setAudio() {}
 
     
     // =========================================================================
@@ -3033,14 +2936,7 @@
 
     let orbInputSuppressed = false;
 
-    function zeroAudioNow(){
-      if (!audioCtx || !gainNode || !osc) return;
-      const now = audioCtx.currentTime;
-      gainNode.gain.cancelScheduledValues(now);
-      gainNode.gain.setValueAtTime(0, now);
-      osc.frequency.cancelScheduledValues(now);
-      osc.frequency.setValueAtTime(TONE_BASE_HZ, now);
-    }
+    function zeroAudioNow(){}
 
     function clearOrbRuntimeFxForDeath(){
       // Stop all residual orb/VFX/audio state so death is a clean reset.
@@ -3097,11 +2993,6 @@
     function bindCalibrationButton(){
       if (!els.calibBtn) return;
       els.calibBtn.onclick = () => {
-        if (!audioEnabled) {
-          enableAudio().catch(() => {});
-        } else if (audioCtx) {
-          audioCtx.resume().catch(() => {});
-        }
         const canCalib = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
         if (!canCalib) return;
         if (calibInFlight) return;
@@ -3481,22 +3372,12 @@
     }
 
     els.startBtn.addEventListener("click", async () => {
-      // User gesture: ensure receiver audio is enabled on first run.
-      if (!audioEnabled) await enableAudio();
-      else if (audioCtx) {
-        try { await audioCtx.resume(); } catch (_) {}
-      }
       await launchLanPairingFlow(true);
     });
 
     if (els.tryAgainBtn) {
       els.tryAgainBtn.addEventListener("click", async () => {
         if (!mvp || !mvp.orbSystem || !mvp.gameState) return;
-        // User gesture: keep audio alive across death/reset.
-        if (!audioEnabled) await enableAudio();
-        else if (audioCtx) {
-          try { await audioCtx.resume(); } catch (_) {}
-        }
         clearDeathOverlaySchedule();
         mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
         mvp.lastImpact = null;
