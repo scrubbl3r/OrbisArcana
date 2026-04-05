@@ -129,6 +129,7 @@
     }
 
     let createLegacyDevStagingAdapterFactory = null;
+    let createDevStagingPanelElementsFactory = null;
 
     function createLegacyDevStagingAdapter() {
       if (typeof createLegacyDevStagingAdapterFactory === "function") {
@@ -271,6 +272,9 @@
     let devStagingRefs = currentDevStagingView.refs;
 
     function createDevStagingPanelElements() {
+      if (typeof createDevStagingPanelElementsFactory === "function") {
+        return createDevStagingPanelElementsFactory(currentDevStagingView);
+      }
       return {
         teleBtn: currentDevStagingView.refs.teleBtn,
         wordBoardBtn: currentDevStagingView.refs.wordBoardBtn,
@@ -1002,6 +1006,7 @@
         getReceiverStabilityVisualState = stabilityVisualsModule.getReceiverStabilityVisualState || null;
         applyReceiverStabilityLampState = stabilityVisualsModule.applyReceiverStabilityLampState || null;
         createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
+        createDevStagingPanelElementsFactory = legacyDevStagingAdapterModule.createDevStagingPanelElements || null;
         const nextLegacyDevStagingView = createLegacyDevStagingAdapter();
         if (currentDevStagingView === legacyDevStagingView) {
           legacyDevStagingView = nextLegacyDevStagingView;

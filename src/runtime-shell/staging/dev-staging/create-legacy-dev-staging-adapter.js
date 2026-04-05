@@ -128,3 +128,29 @@ export function createLegacyDevStagingAdapter({
     },
   };
 }
+
+export function createDevStagingPanelElements(view) {
+  const refs = view && view.refs ? view.refs : {};
+  return {
+    teleBtn: refs.teleBtn,
+    wordBoardBtn: refs.wordBoardBtn,
+    kwsReadout: refs.kwsReadout,
+    kwsLog: refs.kwsLog,
+    logTabKws: refs.logTabKws,
+    logTabPhone: refs.logTabPhone,
+    kwsTokenThrInput: refs.kwsTokenThrInput,
+    kwsCooldownMsInput: refs.kwsCooldownMsInput,
+    kwsApplyTuneBtn: refs.kwsApplyTuneBtn,
+    logPopup: refs.logPopup,
+    logPopupHeader: refs.logPopupHeader,
+    logPopupClose: refs.logPopupClose,
+    wordBoardPopup: refs.wordBoardPopup,
+    wordBoardPopupHeader: refs.wordBoardPopupHeader,
+    wordBoardPopupClose: refs.wordBoardPopupClose,
+    wordBoardBody: refs.wordBoardBody,
+    wordBoardDebugPanel: refs.wordBoardDebugPanel,
+    wordBoardDebugToggle: refs.wordBoardDebugToggle,
+    wordBoardDebugBadge: refs.wordBoardDebugBadge,
+    wordBoardDebugBody: refs.wordBoardDebugBody,
+  };
+}
