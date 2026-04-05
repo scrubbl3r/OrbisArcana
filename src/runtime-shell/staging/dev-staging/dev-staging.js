@@ -7,6 +7,7 @@ import {
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-helpers.js";
+import { createDevStagingRefs } from "./dev-staging-refs.js";
 
 const DEV_STAGING_TEMPLATE = `
   <section class="devStaging" aria-label="Dev staging">
@@ -144,58 +145,7 @@ export {
 export function mountDevStaging(root) {
   if (!root) return null;
   root.innerHTML = DEV_STAGING_TEMPLATE;
-
-  const $ = (id) => root.querySelector(`#${id}`);
-  const refs = {
-    root,
-    status: $("status"),
-    fatal: $("fatal"),
-    teleBtn: $("teleBtn"),
-    wordBoardBtn: $("wordBoardBtn"),
-    kwsReadout: $("kwsReadout"),
-    rulesReadout: $("rulesReadout"),
-    kwsLog: $("kwsLog"),
-    logTabKws: $("logTabKws"),
-    logTabPhone: $("logTabPhone"),
-    kwsTokenThrInput: $("kwsTokenThrInput"),
-    kwsCooldownMsInput: $("kwsCooldownMsInput"),
-    kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
-    logPopup: $("logPopup"),
-    logPopupHeader: $("logPopupHeader"),
-    logPopupClose: $("logPopupClose"),
-    wordBoardPopup: $("wordBoardPopup"),
-    wordBoardPopupHeader: $("wordBoardPopupHeader"),
-    wordBoardPopupClose: $("wordBoardPopupClose"),
-    wordBoardBody: $("wordBoardBody"),
-    wordBoardDebugPanel: $("wordBoardDebugPanel"),
-    wordBoardDebugToggle: $("wordBoardDebugToggle"),
-    wordBoardDebugBadge: $("wordBoardDebugBadge"),
-    wordBoardDebugBody: $("wordBoardDebugBody"),
-    devSpinAuditNote: $("devSpinAuditNote"),
-    vLift: $("vLift"),
-    vGroove: $("vGroove"),
-    vSmooth: $("vSmooth"),
-    vSpeed: $("vSpeed"),
-    vDynamics: $("vDynamics"),
-    vEnergy: $("vEnergy"),
-    vShake: $("vShake"),
-    bLift: $("bLift"),
-    bGroove: $("bGroove"),
-    bSmooth: $("bSmooth"),
-    bSpeed: $("bSpeed"),
-    bDynamics: $("bDynamics"),
-    bEnergy: $("bEnergy"),
-    bShake: $("bShake"),
-    dynLampStable: $("dynLampStable"),
-    dynLampVar: $("dynLampVar"),
-    shakeLamp: $("shakeLamp"),
-    lampUp: $("lampUp"),
-    lampDown: $("lampDown"),
-    lampLeft: $("lampLeft"),
-    lampRight: $("lampRight"),
-    lampForward: $("lampForward"),
-    lampBack: $("lampBack"),
-  };
+  const refs = createDevStagingRefs(root);
 
   const api = {
     root,
