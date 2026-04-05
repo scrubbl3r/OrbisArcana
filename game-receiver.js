@@ -131,7 +131,7 @@
     let createLegacyDevStagingAdapterFactory = null;
     let createDevStagingPanelElementsFactory = null;
 
-    function createLegacyDevStagingAdapter() {
+    function createBootFallbackDevStagingAdapter() {
       if (typeof createLegacyDevStagingAdapterFactory === "function") {
         return createLegacyDevStagingAdapterFactory({
           els,
@@ -286,7 +286,7 @@
     let setDevStagingFatal = null;
     let setDevStagingDebugNote = null;
     let closeDevStagingTopmostPopup = null;
-    let legacyDevStagingView = createLegacyDevStagingAdapter();
+    let legacyDevStagingView = createBootFallbackDevStagingAdapter();
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
 
@@ -1042,7 +1042,7 @@
         applyReceiverStabilityLampState = stabilityVisualsModule.applyReceiverStabilityLampState || null;
         createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
         createDevStagingPanelElementsFactory = legacyDevStagingAdapterModule.createDevStagingPanelElements || null;
-        const nextLegacyDevStagingView = createLegacyDevStagingAdapter();
+        const nextLegacyDevStagingView = createBootFallbackDevStagingAdapter();
         if (currentDevStagingView === legacyDevStagingView) {
           legacyDevStagingView = nextLegacyDevStagingView;
           currentDevStagingView = legacyDevStagingView;
