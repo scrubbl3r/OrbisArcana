@@ -205,6 +205,10 @@
           return false;
         },
         resetMeters() {
+          if (typeof resetDevStagingHud === "function") {
+            resetDevStagingHud(els);
+            return;
+          }
           setBar(els.bLift, 0);
           setBar(els.bGroove, 0);
           setBar(els.bSmooth, 0);
@@ -251,6 +255,7 @@
     }
 
     let renderDevStagingHud = null;
+    let resetDevStagingHud = null;
     const legacyDevStagingView = createLegacyDevStagingAdapter();
     let currentDevStagingView = legacyDevStagingView;
     let devStagingRefs = currentDevStagingView.refs;
@@ -287,9 +292,13 @@
         const {
           mountDevStaging,
           renderDevStagingHud: renderDevStagingHudModule,
+          resetDevStagingHud: resetDevStagingHudModule,
         } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
         renderDevStagingHud = (typeof renderDevStagingHudModule === "function")
           ? renderDevStagingHudModule
+          : null;
+        resetDevStagingHud = (typeof resetDevStagingHudModule === "function")
+          ? resetDevStagingHudModule
           : null;
         const mounted = (typeof mountDevStaging === "function")
           ? mountDevStaging(els.devStagingMount)

@@ -159,6 +159,26 @@ export function renderDevStagingHud(refs, vm) {
   refs.bEnergy && refs.bEnergy.classList.toggle("over", !!vm.over);
 }
 
+export function resetDevStagingHud(refs) {
+  if (!refs) return;
+  setBar(refs.bLift, 0);
+  setBar(refs.bGroove, 0);
+  setBar(refs.bSmooth, 0);
+  setBar(refs.bSpeed, 0);
+  setBar(refs.bDynamics, 0);
+  setBar(refs.bEnergy, 0);
+  setBar(refs.bShake, 0);
+  setText(refs.vLift, "0%");
+  setText(refs.vGroove, "0%");
+  setText(refs.vSmooth, "0%");
+  setText(refs.vSpeed, "0%");
+  setText(refs.vDynamics, "0%");
+  setText(refs.vEnergy, "0");
+  setText(refs.vShake, "0.00");
+  refs.vEnergy && refs.vEnergy.classList.remove("over");
+  refs.bEnergy && refs.bEnergy.classList.remove("over");
+}
+
 export function mountDevStaging(root) {
   if (!root) return null;
   root.innerHTML = DEV_STAGING_TEMPLATE;
@@ -244,22 +264,7 @@ export function mountDevStaging(root) {
       return false;
     },
     resetMeters() {
-      setBar(refs.bLift, 0);
-      setBar(refs.bGroove, 0);
-      setBar(refs.bSmooth, 0);
-      setBar(refs.bSpeed, 0);
-      setBar(refs.bDynamics, 0);
-      setBar(refs.bEnergy, 0);
-      setBar(refs.bShake, 0);
-      setText(refs.vLift, "0%");
-      setText(refs.vGroove, "0%");
-      setText(refs.vSmooth, "0%");
-      setText(refs.vSpeed, "0%");
-      setText(refs.vDynamics, "0%");
-      setText(refs.vEnergy, "0");
-      setText(refs.vShake, "0.00");
-      refs.vEnergy && refs.vEnergy.classList.remove("over");
-      refs.bEnergy && refs.bEnergy.classList.remove("over");
+      resetDevStagingHud(refs);
     },
     renderInputHud(vm) {
       renderDevStagingHud(refs, vm);
