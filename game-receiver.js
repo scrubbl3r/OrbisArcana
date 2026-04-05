@@ -892,6 +892,10 @@
     }
 
     function flashDirLampPair(a, b, ms=380){
+      if (receiverDevLampVisuals && typeof receiverDevLampVisuals.flashDirLampPair === "function") {
+        receiverDevLampVisuals.flashDirLampPair(a, b, ms);
+        return;
+      }
       clearDirLampTimers();
       allDirLampOff();
       flashDirLamp(a, ms);

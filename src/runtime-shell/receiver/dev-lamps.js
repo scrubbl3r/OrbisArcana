@@ -77,12 +77,20 @@ export function createReceiverDevLampVisuals({ getRefs } = {}) {
     flashDirLamp(code, ms);
   }
 
+  function flashDirLampPair(a, b, ms = 380) {
+    clearDirLampTimers();
+    allDirLampOff();
+    flashDirLamp(a, ms);
+    flashDirLamp(b, ms);
+  }
+
   return {
     flashShakeLamp,
     forceShakeLampOff,
     clearDirLampTimers,
     allDirLampOff,
     flashDirLamp,
+    flashDirLampPair,
     flashDirLampSingle,
   };
 }
