@@ -628,6 +628,13 @@ function handleShellImpulseFrame(shellContext, data) {
   }
 }
 
+function setShellDebugNote(shellContext, text = "") {
+  const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
+  if (devView && typeof devView.setDebugNote === "function") {
+    devView.setDebugNote(text);
+  }
+}
+
 function startShellStageLoop(shellContext) {
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -2106,6 +2113,27 @@ async function initShellKwsRuntime(shellContext) {
     if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
     kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
   });
+  const orbVisualTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, (payload = {}) => {
+    setShellDebugNote(
+      shellContext,
+      `Shatter trace: visual ${String(payload.to || "-")} | health ${Number(payload.health) || 0}`
+    );
+  });
+  const orbDiedTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, (payload = {}) => {
+    setShellDebugNote(
+      shellContext,
+      `Shatter trace: died | hits ${Number(payload.hitsTaken) || 0} | at ${Math.round(Number(payload.atMs) || 0)}`
+    );
+  });
+  const orbShatterStartTraceOff = eventBus.on("orb.shatter_started", (payload = {}) => {
+    setShellDebugNote(
+      shellContext,
+      `Shatter trace: start | pieces ${Number(payload.pieceCount) || 0} | seed ${Number(payload.seed) || 0}`
+    );
+  });
+  const orbShatterCompleteTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
+    setShellDebugNote(shellContext, "Shatter trace: complete");
+  });
   runtime.eventBus = eventBus;
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
@@ -2187,6 +2215,10 @@ async function initShellKwsRuntime(shellContext) {
     kwsWakeWindowVisuals,
     kwsRuleTraceOff,
     kwsActionTraceOff,
+    orbVisualTraceOff,
+    orbDiedTraceOff,
+    orbShatterStartTraceOff,
+    orbShatterCompleteTraceOff,
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
