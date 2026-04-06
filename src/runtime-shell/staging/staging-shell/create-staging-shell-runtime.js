@@ -138,6 +138,13 @@ function computeLift01(groove01, smooth01, speed01) {
   return clamp01(Math.pow(Math.max(0, g * s * p), 1 / 3));
 }
 
+function axisToColor01(axis) {
+  const a = String(axis || "").trim().toLowerCase();
+  if (a === "x") return { r: 0 / 255, g: 100 / 255, b: 253 / 255 };
+  if (a === "z") return { r: 253 / 255, g: 241 / 255, b: 0 / 255 };
+  return { r: 253 / 255, g: 78 / 255, b: 0 / 255 };
+}
+
 function buildShellStageInitialState(phys = {}) {
   const groundFromBottomPx = Number(phys.groundFromBottomPx) || 17;
   const groundLinePx = Number(phys.groundLinePx) || 2;
