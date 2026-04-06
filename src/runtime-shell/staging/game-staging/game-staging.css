@@ -141,6 +141,11 @@ body {
   position: relative;
 }
 
+.orb.shattered {
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+
 .orb::after {
   content: "";
   position: absolute;
@@ -167,12 +172,31 @@ body {
   z-index: 6;
 }
 
+.orbCracks path {
+  fill: none;
+  stroke: var(--orb-stroke-color);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 3px var(--orb-stroke-color));
+}
+
 .orbShards {
   width: 160px;
   height: 160px;
   overflow: visible;
   pointer-events: none;
   z-index: 7;
+}
+
+.orbShard {
+  fill: var(--orb-fill);
+  stroke: var(--orb-stroke-color);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px var(--orb-stroke-color));
 }
 
 .pickupGlobe {

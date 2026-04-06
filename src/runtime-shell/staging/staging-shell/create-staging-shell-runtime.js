@@ -58,6 +58,14 @@ function resolveShellEventAtMs(value) {
 }
 
 const STAGING_WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
+const SHELL_STAGE_UI_DEFAULTS = Object.freeze({
+  gravityMul: 0.33,
+  gravityMin: 0,
+  gravityMax: 3,
+  downDrag: -0.24,
+  downDragMin: -1,
+  downDragMax: 1,
+});
 
 function cloneJsonLike(value, fallback = {}) {
   if (!value || typeof value !== "object") return { ...fallback };
@@ -140,7 +148,7 @@ function buildShellStageInitialState(phys = {}) {
     yW,
     v: 0,
     lastTs: null,
-    gravityMul: 0.33,
+    gravityMul: SHELL_STAGE_UI_DEFAULTS.gravityMul,
     lift01: 0,
     energy01: 0,
     dynamics01: 0,
@@ -183,15 +191,15 @@ function bindShellStageControls(shellContext) {
     : null;
 
   const syncControls = () => {
-    if (refs.gSlider) refs.gSlider.value = String(Number(orbState && orbState.gravityMul) || 0.33);
-    if (refs.gVal) refs.gVal.textContent = (Number(orbState && orbState.gravityMul) || 0.33).toFixed(2);
-    if (refs.dSlider) refs.dSlider.value = String(Number(stage.phys.downDrag) || -0.83);
-    if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || -0.83).toFixed(2);
+    if (refs.gSlider) refs.gSlider.value = String(Number(orbState && orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul);
+    if (refs.gVal) refs.gVal.textContent = (Number(orbState && orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul).toFixed(2);
+    if (refs.dSlider) refs.dSlider.value = String(Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag);
+    if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag).toFixed(2);
   };
 
   if (refs.gSlider) {
     refs.gSlider.addEventListener("input", () => {
-      const next = clamp(refs.gSlider.value, 0, 3);
+      const next = clamp(refs.gSlider.value, SHELL_STAGE_UI_DEFAULTS.gravityMin, SHELL_STAGE_UI_DEFAULTS.gravityMax);
       if (stage.orbRuntimeState && typeof stage.orbRuntimeState.patch === "function") {
         stage.orbRuntimeState.patch({ gravityMul: next });
       }
@@ -201,7 +209,7 @@ function bindShellStageControls(shellContext) {
 
   if (refs.dSlider) {
     refs.dSlider.addEventListener("input", () => {
-      const next = clamp(refs.dSlider.value, -1, 1);
+      const next = clamp(refs.dSlider.value, SHELL_STAGE_UI_DEFAULTS.downDragMin, SHELL_STAGE_UI_DEFAULTS.downDragMax);
       stage.phys.downDrag = next;
       if (refs.dVal) refs.dVal.textContent = next.toFixed(2);
     });
@@ -232,6 +240,7 @@ function initializeShellStageRuntime(shellContext) {
   if (typeof createOrbRuntimeState !== "function" || !ORB_RUNTIME_CONFIG_DEFAULT) return;
 
   const phys = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.physics);
+  phys.downDrag = SHELL_STAGE_UI_DEFAULTS.downDrag;
   const shieldDescent = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.shieldDescent);
   const impact = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.impact);
   const statusConfig = cloneJsonLike(ORB_STATUS_CONFIG_DEFAULT && ORB_STATUS_CONFIG_DEFAULT.floatGrace);
@@ -367,8 +376,8 @@ function updateShellStageReadouts(shellContext) {
     ? stage.orbRuntimeState.get()
     : null;
   if (!refs || !stage || !orbState) return;
-  if (refs.gVal) refs.gVal.textContent = (Number(orbState.gravityMul) || 0.33).toFixed(2);
-  if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || -0.83).toFixed(2);
+  if (refs.gVal) refs.gVal.textContent = (Number(orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul).toFixed(2);
+  if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag).toFixed(2);
 }
 
 function activateShellStageVisuals(shellContext) {
@@ -388,13 +397,21 @@ function tickShellStageRuntime(shellContext, dt) {
   if (!stage || !state) return;
 
   const phys = stage.phys || {};
-  const gravityMul = clamp(Number(state.gravityMul) || 0.33, 0, 3);
+  const gravityMul = clamp(
+    Number(state.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul,
+    SHELL_STAGE_UI_DEFAULTS.gravityMin,
+    SHELL_STAGE_UI_DEFAULTS.gravityMax
+  );
   const gBase = Number(phys.gBase) || 2200;
   const maxUpSpeed = Math.max(0, Number(phys.maxUpSpeed) || 2200);
   const maxDownSpeed = Math.max(0, Number(phys.maxDownSpeed) || 2800);
   const bounce = clamp(Number(phys.bounce) || 0.35, 0, 1);
   const upDrag = Math.max(0, Number(phys.upDrag) || 2.6);
-  const downDrag = clamp(Number(phys.downDrag) || -0.83, -1, 1);
+  const downDrag = clamp(
+    Number(phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag,
+    SHELL_STAGE_UI_DEFAULTS.downDragMin,
+    SHELL_STAGE_UI_DEFAULTS.downDragMax
+  );
 
   const yFloor = shellGroundCenterWorld(shellContext);
   const yCeil = Number(phys.orbRadiusPx) || 50;
