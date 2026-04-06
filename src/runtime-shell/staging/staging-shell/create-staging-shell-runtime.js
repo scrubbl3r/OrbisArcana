@@ -86,6 +86,20 @@ function clamp01(n) {
   return clamp(n, 0, 1);
 }
 
+function evenPx(value, min = 2, max = 4096) {
+  let n = Math.round(Number(value) || 0);
+  n = Math.max(min, Math.min(max, n));
+  if (n % 2 === 1) n += 1;
+  return n;
+}
+
+function evenStroke(value, min = 2, max = 20) {
+  let n = Math.round(Number(value) || min);
+  n = Math.max(min, Math.min(max, n));
+  if (n % 2 === 1) n += 1;
+  return n;
+}
+
 function pickImpulse01(d, newKey, oldKey) {
   if (d && d[newKey] != null) {
     const n = Number(d[newKey]);
@@ -826,7 +840,7 @@ function shellGrantSuperGrace(shellContext, ms = 2500) {
 }
 
 function createShellReceiverVfxDefaults() {
-  return {
+  const defaults = {
     shield: {
       colorRgb: { r: 120, g: 210, b: 255 },
       diameterPx: 124,
@@ -861,6 +875,8 @@ function createShellReceiverVfxDefaults() {
       startJitterRatio: 0.3,
     },
   };
+  defaults.shock.stroke = evenStroke(defaults.shock.stroke, 2, 20);
+  return defaults;
 }
 
 function initShellReceiverVfxRuntime(shellContext, mods = {}) {
@@ -920,7 +936,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         stroke: vfxDefaults.shock.stroke,
       }),
       clamp,
-      normalizeStroke: (value) => value,
+      normalizeStroke: evenStroke,
     },
     flameAoe: {
       layerEl: stageEls.flameLayer,
@@ -931,7 +947,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         fill: vfxDefaults.flame.fill,
       }),
       clamp,
-      evenPx: (value) => value,
+      evenPx,
       showCore: false,
     },
     electricAoe: {
@@ -947,7 +963,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         startJitterRatio: vfxDefaults.electric.startJitterRatio,
       }),
       clamp,
-      evenPx: (value) => value,
+      evenPx,
       rand: Math.random,
     },
   });
