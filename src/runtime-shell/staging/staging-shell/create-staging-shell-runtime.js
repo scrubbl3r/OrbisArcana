@@ -548,6 +548,7 @@ function forceShellShakeLampOff(shellContext) {
 
 function createShellReceiverConfigs() {
   return {
+    IMPACT_TH: 500,
     ENERGY_BANK_CAP: 1000,
     ENERGY_SHAKE_COST: 100,
     ENERGY_CHARGE_RATE_PPS: 160,
@@ -733,11 +734,29 @@ function bindShellStageActions(shellContext) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
   if (!refs || !refs.tryAgainBtn) return;
   refs.tryAgainBtn.addEventListener("click", () => {
+    const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+    const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
+    const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || (runtime && runtime.mvp) || null;
     resetShellOrbToGround(shellContext);
     const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+    clearShellDeathOverlaySchedule(shellContext);
+    if (mvp && mvp.orbSystem && typeof mvp.orbSystem.revive === "function") {
+      mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
+      mvp.lastImpact = null;
+    }
+    stopShellShardSim(shellContext);
     if (stage && stage.worldSystem && typeof stage.worldSystem.reset === "function") {
       stage.worldSystem.reset(performance.now());
     }
+    const orbFxSystem =
+      (receiverHostRuntime && receiverHostRuntime.runtimeContext && receiverHostRuntime.runtimeContext.orbFxSystem) ||
+      (mvp && mvp.orbFxSystem) ||
+      null;
+    if (orbFxSystem && typeof orbFxSystem.reset === "function") {
+      orbFxSystem.reset();
+    }
+    closeShellDeathOverlay(shellContext);
+    renderShellOrbDamageVisuals(shellContext);
   });
 }
 
@@ -1267,6 +1286,7 @@ async function initShellReceiverHostRuntime(shellContext) {
   if (!runtime || !sharedModules || !shellKws) return null;
 
   const {
+    IMPACT_TH,
     ENERGY_BANK_CAP,
     ENERGY_SHAKE_COST,
     ENERGY_CHARGE_RATE_PPS,
@@ -1283,6 +1303,7 @@ async function initShellReceiverHostRuntime(shellContext) {
       ENERGY_BANK_CAP,
       ENERGY_SHAKE_COST,
       ENERGY_CHARGE_RATE_PPS,
+      IMPACT_TH,
       INPUT_GESTURE_CFG,
       INPUT_DYNAMICS_CFG,
     },
