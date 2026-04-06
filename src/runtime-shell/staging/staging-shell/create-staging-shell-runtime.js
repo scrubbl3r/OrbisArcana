@@ -1012,7 +1012,7 @@ async function initShellReceiverHostRuntime(shellContext) {
     applyStabilityVisuals,
   } = assembly;
 
-  attachShellReceiverHostImpulseAdapter({
+  const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
     receiverHostState,
     runtime,
     runInputFramePipelineImported,
@@ -1026,6 +1026,9 @@ async function initShellReceiverHostRuntime(shellContext) {
       ? (vm) => shellContext.views.devStagingView.renderInputHud(vm)
       : null,
   });
+  if (runtime.receiverHostRuntime && typeof processIncomingImpulse === "function") {
+    runtime.receiverHostRuntime.processIncomingImpulse = processIncomingImpulse;
+  }
   return runtime.receiverHostRuntime;
 }
 
