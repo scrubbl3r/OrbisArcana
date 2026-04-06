@@ -1138,6 +1138,10 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
       clamp,
       normalizeStroke: evenStroke,
     },
+    orbShatter: {
+      layerEl: stageEls.orbShards,
+      clamp,
+    },
     flameAoe: {
       layerEl: stageEls.flameLayer,
       getConfig: () => ({
