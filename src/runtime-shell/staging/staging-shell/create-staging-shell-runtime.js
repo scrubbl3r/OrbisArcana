@@ -630,6 +630,7 @@ function startShellStageLoop(shellContext) {
     clamp,
     runFrame: ({ dt }) => {
       tickShellStageRuntime(shellContext, dt);
+      updateShellOrbStrokeColor(shellContext, dt);
       applyShellGroundLine(shellContext);
       applyShellOrbTransform(shellContext);
       if (runtime.stage && runtime.stage.worldSystem && typeof runtime.stage.worldSystem.tick === "function") {
@@ -678,6 +679,21 @@ function getShellOrbRuntime(shellContext) {
   const orbRuntimeState = runtime && runtime.orbRuntimeState;
   if (!orbRuntimeState || typeof orbRuntimeState.get !== "function") return null;
   return orbRuntimeState.get();
+}
+
+function getShellOrbBaseVisualState() {
+  return {
+    strokeDefault01: { r: 1, g: 1, b: 1 },
+    fillAlpha: 0.20,
+  };
+}
+
+function updateShellOrbStrokeColor(shellContext, dt) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbColorRuntime = runtime && runtime.orbColorRuntime;
+  if (orbColorRuntime && typeof orbColorRuntime.update === "function") {
+    orbColorRuntime.update(dt);
+  }
 }
 
 function resetShellInputProcessingState(shellContext, atMs = performance.now()) {
@@ -1028,21 +1044,19 @@ function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
 }
 
 function shellApplyColorize(shellContext, payload = {}) {
-  const orbEl = shellContext && shellContext.stageEls ? shellContext.stageEls.orb : null;
-  if (!orbEl) return;
-  const r = Math.max(0, Math.min(255, Number(payload.r) || 255));
-  const g = Math.max(0, Math.min(255, Number(payload.g) || 255));
-  const b = Math.max(0, Math.min(255, Number(payload.b) || 255));
-  const alpha = Math.max(0, Math.min(1, Number(payload.alpha) || 0.2));
-  orbEl.style.borderColor = `rgba(${r}, ${g}, ${b}, 0.98)`;
-  orbEl.style.background = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbColorRuntime = runtime && runtime.orbColorRuntime;
+  if (orbColorRuntime && typeof orbColorRuntime.applyColorize === "function") {
+    orbColorRuntime.applyColorize(payload);
+  }
 }
 
 function shellClearColorize(shellContext) {
-  const orbEl = shellContext && shellContext.stageEls ? shellContext.stageEls.orb : null;
-  if (!orbEl) return;
-  orbEl.style.borderColor = "";
-  orbEl.style.background = "";
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbColorRuntime = runtime && runtime.orbColorRuntime;
+  if (orbColorRuntime && typeof orbColorRuntime.clearColorize === "function") {
+    orbColorRuntime.clearColorize();
+  }
 }
 
 async function initShellReceiverHostRuntime(shellContext) {
@@ -2082,6 +2096,18 @@ export async function createStagingShellRuntime({
       gameStagingView,
       sharedModules,
     });
+    const createOrbColorRuntime =
+      sharedModules.orbColorRuntimeModule &&
+      sharedModules.orbColorRuntimeModule.createOrbColorRuntime;
+    shellContext.runtime.orbColorRuntime = (typeof createOrbColorRuntime === "function")
+      ? createOrbColorRuntime({
+          root: rootDocument && rootDocument.documentElement,
+          getBaseVisualState: getShellOrbBaseVisualState,
+        })
+      : null;
+    if (shellContext.runtime.orbColorRuntime && typeof shellContext.runtime.orbColorRuntime.reset === "function") {
+      shellContext.runtime.orbColorRuntime.reset(true);
+    }
     shellContext.runtime.classicSignalProcessor = (typeof window.createSignalProcessor === "function")
       ? window.createSignalProcessor({})
       : null;
