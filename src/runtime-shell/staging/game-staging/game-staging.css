@@ -109,6 +109,7 @@ body {
   will-change: transform;
   z-index: 3;
   pointer-events: none;
+  overflow: visible;
 }
 
 .origin {
@@ -118,6 +119,7 @@ body {
   width: 0;
   height: 0;
   pointer-events: none;
+  overflow: visible;
 }
 
 .atOrigin {
@@ -126,6 +128,7 @@ body {
   top: 0;
   transform: translate(-50%,-50%);
   pointer-events: none;
+  overflow: visible;
 }
 
 .orb {
@@ -264,6 +267,8 @@ body {
   top: 0;
   transform: translate(-50%,-50%);
   pointer-events: none;
+  overflow: visible;
+  display: block;
 }
 
 .deathPanel {
