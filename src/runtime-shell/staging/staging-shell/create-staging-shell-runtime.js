@@ -850,17 +850,16 @@ function stopShellShardSim(shellContext) {
 function spawnShellShardFx(shellContext, payload) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const controller = runtime && runtime.orbShatterController;
-  const kwsBridge = runtime && runtime.kws ? runtime.kws.kwsBridge : null;
+  const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
   if (controller && typeof controller.spawnShardFx === "function") {
     const handled = controller.spawnShardFx(payload);
     const shatterRuntime = runtime && runtime.vfx ? runtime.vfx.orbShatterRuntime : null;
     const shardState = shatterRuntime && typeof shatterRuntime.getState === "function"
       ? shatterRuntime.getState()
       : null;
-    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
-      kwsBridge.pushLogLine(
-        `TRACE shatter piece:${String(payload && payload.pieceId || "-")} handled:${handled ? 1 : 0} count:${Number(shardState && shardState.count) || 0} running:${shardState && shardState.running ? 1 : 0}`,
-        handled ? "ok" : "warn"
+    if (devView && typeof devView.setDebugNote === "function") {
+      devView.setDebugNote(
+        `Shatter trace: piece ${String(payload && payload.pieceId || "-")} | handled ${handled ? 1 : 0} | count ${Number(shardState && shardState.count) || 0} | running ${shardState && shardState.running ? 1 : 0}`
       );
     }
   }
