@@ -862,8 +862,19 @@ function stopShellShardSim(shellContext) {
 function spawnShellShardFx(shellContext, payload) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const controller = runtime && runtime.orbShatterController;
+  const kwsBridge = runtime && runtime.kws ? runtime.kws.kwsBridge : null;
   if (controller && typeof controller.spawnShardFx === "function") {
-    controller.spawnShardFx(payload);
+    const handled = controller.spawnShardFx(payload);
+    const shatterRuntime = runtime && runtime.vfx ? runtime.vfx.orbShatterRuntime : null;
+    const shardState = shatterRuntime && typeof shatterRuntime.getState === "function"
+      ? shatterRuntime.getState()
+      : null;
+    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
+      kwsBridge.pushLogLine(
+        `TRACE shell_shard_spawn handled:${handled ? 1 : 0} count:${Number(shardState && shardState.count) || 0} running:${shardState && shardState.running ? 1 : 0}`,
+        handled ? "ok" : "warn"
+      );
+    }
   }
 }
 
