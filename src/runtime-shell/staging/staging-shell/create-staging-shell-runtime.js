@@ -1609,9 +1609,7 @@ async function initShellKwsRuntime(shellContext) {
     hydrateReceiverBootstrapState(
       {
         ...sharedModules.receiverBootstrapModule,
-        ...(
-          await loadReceiverInitModules()
-        ),
+        ...receiverMods,
       },
       {
         applyRuntimeTheme: () => {},
