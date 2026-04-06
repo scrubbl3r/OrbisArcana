@@ -21,6 +21,44 @@ body {
   min-height: 100vh;
 }
 
+.shellBootBanner {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1200;
+  min-width: min(420px, calc(100vw - 24px));
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid var(--frame);
+  background: rgba(10, 10, 12, 0.92);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+
+.shellBootBanner[data-state="ready"] {
+  border-color: rgba(132, 232, 164, 0.32);
+}
+
+.shellBootBanner[data-state="failed"] {
+  border-color: rgba(255, 110, 110, 0.42);
+}
+
+.shellBootPhase {
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shellBootDetail {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .shellStartScreen {
   position: fixed;
   inset: 0;
@@ -187,6 +225,13 @@ body {
 }
 
 @media (max-width: 900px) {
+  .shellBootBanner {
+    top: 10px;
+    left: 10px;
+    min-width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+  }
+
   .shellGridSplit {
     grid-template-columns: 1fr;
   }
