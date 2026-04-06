@@ -595,24 +595,24 @@ function handleShellImpulseFrame(shellContext, data) {
   const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
   let inputPayload = data;
 
-  if (runtime && runtime.classicSignalProcessor && runtime.classicMotionStore) {
+  if (runtime && runtime.signalProcessor && runtime.motionStore) {
     try {
-      const classicState = runtime.classicSignalProcessor.processPacket(data, performance.now(), {
+      const motionState = runtime.signalProcessor.processPacket(data, performance.now(), {
         suppressShake: false,
       });
-      runtime.classicMotionStore.publish(classicState);
-      if (classicState && classicState.spin) {
+      runtime.motionStore.publish(motionState);
+      if (motionState && motionState.spin) {
         inputPayload = {
           ...(data || {}),
-          spinVector: classicState.spin.vector,
-          spinAxisDominance: classicState.spin.dominance,
-          spinAxisGap: classicState.spin.gap,
-          spinAxisLabel: classicState.spin.label,
-          spinDirection: classicState.spin.direction,
+          spinVector: motionState.spin.vector,
+          spinAxisDominance: motionState.spin.dominance,
+          spinAxisGap: motionState.spin.gap,
+          spinAxisLabel: motionState.spin.label,
+          spinDirection: motionState.spin.direction,
         };
       }
     } catch (error) {
-      try { console.warn("[staging-shell] classic spin shadow failed", error); } catch (_) {}
+      try { console.warn("[staging-shell] signal processor failed", error); } catch (_) {}
     }
   }
 
@@ -635,9 +635,9 @@ function setShellDebugNote(shellContext, text = "") {
   }
 }
 
-function getShellClassicHudViewModel(shellContext) {
+function getShellMotionStoreHudViewModel(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const store = runtime && runtime.classicMotionStore;
+  const store = runtime && runtime.motionStore;
   if (!store || typeof store.getState !== "function") return null;
   const state = store.getState();
   if (!state || !state.motion) return null;
@@ -1398,7 +1398,7 @@ async function initShellReceiverHostRuntime(shellContext) {
     buildInputHudViewModel,
     renderInputHud: (shellContext.views && shellContext.views.devStagingView && typeof shellContext.views.devStagingView.renderInputHud === "function")
       ? (vm) => {
-          const nextVm = getShellClassicHudViewModel(shellContext) || vm;
+          const nextVm = getShellMotionStoreHudViewModel(shellContext) || vm;
           if (!nextVm) return;
           shellContext.views.devStagingView.renderInputHud(nextVm);
         }
@@ -1717,8 +1717,8 @@ function createStagingShellContext({
     runtime: {
       bootStatus: STAGING_SHELL_STATUS.sharedModulesReady,
       receiverModulesReady: false,
-      classicSignalProcessor: null,
-      classicMotionStore: null,
+      signalProcessor: null,
+      motionStore: null,
       mvp: null,
       eventBus: null,
       worldSystem: null,
@@ -2350,10 +2350,10 @@ export async function createStagingShellRuntime({
     if (shellContext.runtime.orbColorRuntime && typeof shellContext.runtime.orbColorRuntime.reset === "function") {
       shellContext.runtime.orbColorRuntime.reset(true);
     }
-    shellContext.runtime.classicSignalProcessor = (typeof window.createSignalProcessor === "function")
+    shellContext.runtime.signalProcessor = (typeof window.createSignalProcessor === "function")
       ? window.createSignalProcessor({})
       : null;
-    shellContext.runtime.classicMotionStore = (typeof window.createMotionStore === "function")
+    shellContext.runtime.motionStore = (typeof window.createMotionStore === "function")
       ? window.createMotionStore()
       : null;
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
