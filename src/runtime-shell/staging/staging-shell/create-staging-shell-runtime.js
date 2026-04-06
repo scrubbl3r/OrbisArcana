@@ -228,15 +228,11 @@ function initializeShellStageRuntime(shellContext) {
     orbRuntimeConfigDefaultModule,
     orbStatusConfigDefaultModule,
     eventBusModule,
-    worldSystemModule,
-    worldItemsModule,
   } = sharedModules;
   const createOrbRuntimeState = orbRuntimeStateModule && orbRuntimeStateModule.createOrbRuntimeState;
   const ORB_RUNTIME_CONFIG_DEFAULT = orbRuntimeConfigDefaultModule && orbRuntimeConfigDefaultModule.ORB_RUNTIME_CONFIG_DEFAULT;
   const ORB_STATUS_CONFIG_DEFAULT = orbStatusConfigDefaultModule && orbStatusConfigDefaultModule.ORB_STATUS_CONFIG_DEFAULT;
   const createEventBus = eventBusModule && eventBusModule.createEventBus;
-  const createWorldSystem = worldSystemModule && worldSystemModule.createWorldSystem;
-  const WORLD_ITEMS = worldItemsModule && worldItemsModule.WORLD_ITEMS;
   if (typeof createOrbRuntimeState !== "function" || !ORB_RUNTIME_CONFIG_DEFAULT) return;
 
   const phys = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.physics);
@@ -258,33 +254,6 @@ function initializeShellStageRuntime(shellContext) {
     worldSystem: null,
   };
   runtime.orbRuntimeState = orbRuntimeState;
-
-  const localEventBus = runtime.stage.localEventBus;
-  if (typeof createWorldSystem === "function" && localEventBus) {
-    const spawns = (Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [])
-      .map((item) => normalizeShellWorldItemSpawn(item, () => shellGroundCenterWorld(shellContext)))
-      .filter(Boolean);
-    runtime.stage.worldSystem = createWorldSystem({
-      eventBus: localEventBus,
-      stageEl: shellContext.stageEls.physStage,
-      getStageRect: () => shellStageRect(shellContext),
-      worldToScreenY: (yW) => {
-        const rect = shellStageRect(shellContext);
-        const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
-        return Number(yW || 0) - camTop;
-      },
-      getOrbWorldPosition: () => ({ xNorm: 0.5, yW: runtime.orbRuntimeState.get().yW }),
-      orbRadiusPx: Number(phys.orbRadiusPx) || 50,
-      spawns,
-      spawn: {
-        xNorm: 0.5,
-        yW: shellGroundCenterWorld(shellContext) - 1000,
-        r: 25,
-      },
-      getGlobeEl: () => shellContext.stageEls.testGlobe,
-      setGlobeEl: (el) => { shellContext.stageEls.testGlobe = el; },
-    });
-  }
   bindShellStageControls(shellContext);
 }
 
@@ -1307,10 +1276,15 @@ async function initShellReceiverHostRuntime(shellContext) {
 
   const {
     receiverHostState,
+    runtimeContext,
     runInputFramePipelineImported,
     buildInputHudViewModel,
     applyStabilityVisuals,
   } = assembly;
+
+  if (runtime.stage) {
+    runtime.stage.worldSystem = runtimeContext && runtimeContext.worldSystem ? runtimeContext.worldSystem : null;
+  }
 
   const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
     receiverHostState,
