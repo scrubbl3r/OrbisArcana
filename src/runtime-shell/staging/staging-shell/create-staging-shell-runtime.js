@@ -879,6 +879,31 @@ function createShellReceiverVfxDefaults() {
   return defaults;
 }
 
+function traceShellElectricAoe(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const kwsBridge = runtime && runtime.kws ? runtime.kws.kwsBridge : null;
+  const stageEls = shellContext && shellContext.stageEls ? shellContext.stageEls : null;
+  const layerEl = stageEls && stageEls.electricLayer ? stageEls.electricLayer : null;
+  const orbEl = stageEls && stageEls.orb ? stageEls.orb : null;
+  const physStage = stageEls && stageEls.physStage ? stageEls.physStage : null;
+  if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function" || !layerEl) return;
+
+  const canvas = layerEl.querySelector("canvas");
+  const layerRect = layerEl.getBoundingClientRect ? layerEl.getBoundingClientRect() : null;
+  const canvasRect = canvas && canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+  const orbRect = orbEl && orbEl.getBoundingClientRect ? orbEl.getBoundingClientRect() : null;
+  const stageRect = physStage && physStage.getBoundingClientRect ? physStage.getBoundingClientRect() : null;
+  const msg = [
+    `TRACE electric`,
+    `canvas:${canvas ? `${canvas.width}x${canvas.height}` : "-"}`,
+    `canvasRect:${canvasRect ? `${Math.round(canvasRect.left)},${Math.round(canvasRect.top)},${Math.round(canvasRect.width)}x${Math.round(canvasRect.height)}` : "-"}`,
+    `layerRect:${layerRect ? `${Math.round(layerRect.left)},${Math.round(layerRect.top)},${Math.round(layerRect.width)}x${Math.round(layerRect.height)}` : "-"}`,
+    `orbRect:${orbRect ? `${Math.round(orbRect.left)},${Math.round(orbRect.top)},${Math.round(orbRect.width)}x${Math.round(orbRect.height)}` : "-"}`,
+    `stageRect:${stageRect ? `${Math.round(stageRect.left)},${Math.round(stageRect.top)},${Math.round(stageRect.width)}x${Math.round(stageRect.height)}` : "-"}`,
+  ].join(" ");
+  kwsBridge.pushLogLine(msg, "muted");
+}
+
 function initShellReceiverVfxRuntime(shellContext, mods = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
@@ -1001,10 +1026,14 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         const result = playElectricAoeRuntime({
           electricAoeRuntime: shellVfx.electricAoeRuntime,
         });
-        if (result && result.handled) return result;
+        if (result && result.handled) {
+          traceShellElectricAoe(shellContext);
+          return result;
+        }
       }
       if (shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.play === "function") {
         shellVfx.electricAoeRuntime.play();
+        traceShellElectricAoe(shellContext);
         return { handled: true };
       }
       return { handled: false };
