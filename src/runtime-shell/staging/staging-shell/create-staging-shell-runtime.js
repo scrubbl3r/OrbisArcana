@@ -3,6 +3,7 @@ import { renderGameStaging } from "../game-staging/game-staging.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
+import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
@@ -1008,82 +1009,20 @@ async function initShellReceiverHostRuntime(shellContext) {
     applyStabilityVisuals,
   } = assembly;
 
-  receiverHostState.processIncomingImpulse = (d = {}) => {
-    const inputSystem = receiverHostState.inputSystem;
-    const inputGestureSystem = receiverHostState.inputGestureSystem;
-    const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
-    const nowMs = performance.now();
-
-    function pick01NewOrOld(newKey, oldKey) {
-      if (d[newKey] != null) {
-        const n = Number(d[newKey]);
-        return Number.isFinite(n) ? n : 0;
-      }
-      const n = Number(d[oldKey]);
-      if (!Number.isFinite(n)) return 0;
-      return (n > 1.5) ? (n / 100) : n;
-    }
-
-    if (inputSystem && typeof inputSystem.ingest === "function") {
-      inputSystem.ingest(d, nowMs);
-    }
-    const frame = (inputSystem && typeof inputSystem.getLatest === "function")
-      ? inputSystem.getLatest()
-      : null;
-    const processed = runInputFramePipelineImported({
-      d,
-      frame,
-      nowMs,
-      values: {
-        energyFromPhone: frame ? frame.energy01 : pick01NewOrOld("energy01", "energy"),
-        groove: frame ? frame.groove01 : pick01NewOrOld("groove01", "groove"),
-        dynamics: frame ? frame.dynamics01 : pick01NewOrOld("dynamics01", "orbit01"),
-        smooth: frame ? frame.smooth01 : pick01NewOrOld("smooth01", "smooth"),
-        speed: frame ? frame.speed01 : pick01NewOrOld("speed01", "speed"),
-        shake: frame ? frame.shake01 : pickShakeMetric(d, "shake01", "shake"),
-        locked: frame ? !!frame.locked : !!d.locked,
-      },
-      systems: {
-        inputGestureSystem,
-        inputDynamicsSystem,
-      },
-      runtime: {
-        orbRuntimeState: runtime.orbRuntimeState,
-      },
-      configs: {
-        inputDynamics: INPUT_DYNAMICS_CFG,
-      },
-      hooks: {
-        computeLift01,
-        setBgFromEnergy: () => {},
-        setStabilityVisualGate: (next) => {
-          receiverHostState.stabilityVisualGate = !!next;
-        },
-        applyStabilityVisuals,
-        processShakeDoubleBang: (shakeVal01, atMs, groove01) => {
-          if (inputGestureSystem && typeof inputGestureSystem.processShakeSample === "function") {
-            inputGestureSystem.processShakeSample({
-              shakeVal01,
-              groove01,
-              atMs,
-            });
-          }
-        },
-        setAudio: () => {},
-      },
-    });
-
-    if (typeof buildInputHudViewModel === "function" && shellContext.views && shellContext.views.devStagingView && typeof shellContext.views.devStagingView.renderInputHud === "function") {
-      const vm = buildInputHudViewModel({
-        processed,
-        shakeCooldownUntil: (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
-          ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
-          : 0,
-        shakeLampThreshold: Number(INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold) || 1.65,
-      });
-      shellContext.views.devStagingView.renderInputHud(vm);
-    }
-  };
+  attachShellReceiverHostImpulseAdapter({
+    receiverHostState,
+    runtime,
+    runInputFramePipelineImported,
+    inputDynamicsConfig: INPUT_DYNAMICS_CFG,
+    inputGestureConfig: INPUT_GESTURE_CFG,
+    applyStabilityVisuals,
+    computeLift01,
+    pickShakeMetric,
+    buildInputHudViewModel,
+    renderInputHud: (shellContext.views && shellContext.views.devStagingView && typeof shellContext.views.devStagingView.renderInputHud === "function")
+      ? (vm) => shellContext.views.devStagingView.renderInputHud(vm)
+      : null,
+  });
   return runtime.receiverHostRuntime;
 }
 
