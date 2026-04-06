@@ -14,6 +14,16 @@ export function attachShellReceiverHostImpulseAdapter({
     return null;
   }
 
+  let pendingHudVm = null;
+  let hudRaf = 0;
+
+  function flushHud() {
+    hudRaf = 0;
+    if (!pendingHudVm || typeof renderInputHud !== "function") return;
+    renderInputHud(pendingHudVm);
+    pendingHudVm = null;
+  }
+
   receiverHostState.processIncomingImpulse = (d = {}) => {
     const inputSystem = receiverHostState.inputSystem;
     const inputGestureSystem = receiverHostState.inputGestureSystem;
@@ -89,7 +99,10 @@ export function attachShellReceiverHostImpulseAdapter({
           : 0,
         shakeLampThreshold: Number(inputGestureConfig && inputGestureConfig.shake && inputGestureConfig.shake.lampThreshold) || 1.65,
       });
-      renderInputHud(vm);
+      pendingHudVm = vm;
+      if (!hudRaf) {
+        hudRaf = requestAnimationFrame(flushHud);
+      }
     }
   };
 

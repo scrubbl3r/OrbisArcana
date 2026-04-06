@@ -8,6 +8,10 @@
   --frame: rgba(var(--frame-rgb), 0.30);
   --frame-strong: rgba(118, 118, 126, 0.52);
   --emphasis-rgb: 230, 230, 230;
+  --lamp: rgba(255, 60, 60, 1.0);
+  --lampGlow: rgba(255, 60, 60, 0.50);
+  --dynLamp: rgba(80, 160, 255, 1.0);
+  --dynLampGlow: rgba(80, 160, 255, 0.55);
 }
 
 .devStaging {
