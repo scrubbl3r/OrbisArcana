@@ -2059,6 +2059,22 @@ async function initShellKwsRuntime(shellContext) {
     const atMs = Number(payload.atMs || 0);
     kwsPanelController.pushPhoneLogLine(`TRACE spin_close axis:${axis} reason:${reason} at:${Math.round(atMs)}`, "muted");
   });
+  const kwsSpellLoadedTraceOff = eventBus.on("voice.spell_loaded", (payload = {}) => {
+    if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
+    const slot = String(payload.slot || "-").trim().toUpperCase() || "-";
+    const axis = String(payload.axis || "-").trim().toLowerCase() || "-";
+    const spell = String((payload.castActionId || payload.wordId || payload.spellId) || "-").trim().toLowerCase() || "-";
+    const physStage = shellContext && shellContext.stageEls ? shellContext.stageEls.physStage : null;
+    requestAnimationFrame(() => {
+      const orbitCount = physStage && typeof physStage.querySelectorAll === "function"
+        ? physStage.querySelectorAll(".orbitGlobe").length
+        : 0;
+      kwsPanelController.pushPhoneLogLine(
+        `TRACE shell_slot_loaded slot:${slot} axis:${axis} spell:${spell} orbit:${orbitCount}`,
+        orbitCount > 0 ? "ok" : "warn"
+      );
+    });
+  });
 
   runtime.eventBus = eventBus;
   runtime.receiverSpellRuntime = {
@@ -2143,6 +2159,7 @@ async function initShellKwsRuntime(shellContext) {
     kwsActionTraceOff,
     kwsSpinTraceOpenOff,
     kwsSpinTraceCloseOff,
+    kwsSpellLoadedTraceOff,
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
