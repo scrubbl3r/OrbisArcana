@@ -1177,6 +1177,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     vfxRuntimesBundle,
     bubbleShieldRuntime: vfxRuntimesBundle && vfxRuntimesBundle.bubbleShieldRuntime,
     shockwaveRuntime: vfxRuntimesBundle && vfxRuntimesBundle.shockwaveRuntime,
+    orbShatterRuntime: vfxRuntimesBundle && vfxRuntimesBundle.orbShatterRuntime,
     flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
     electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
     playShock() {
