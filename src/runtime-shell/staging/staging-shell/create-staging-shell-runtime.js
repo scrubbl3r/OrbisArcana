@@ -1,10 +1,8 @@
 import { mountDevStaging } from "../dev-staging/dev-staging.js";
 import { renderGameStaging } from "../game-staging/game-staging.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
-import {
-  applyReceiverStabilityLampState,
-  getReceiverStabilityVisualState,
-} from "../../receiver/stability-visuals.js";
+import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
@@ -936,63 +934,6 @@ async function initShellReceiverHostRuntime(shellContext) {
   const shellKws = runtime && runtime.kws ? runtime.kws : null;
   if (!runtime || !sharedModules || !shellKws) return null;
 
-  const receiverBootstrapModule = sharedModules.receiverBootstrapModule || null;
-  const bootstrapStagingRuntimeContext =
-    sharedModules.bootstrapStagingRuntimeContextModule &&
-    sharedModules.bootstrapStagingRuntimeContextModule.bootstrapStagingRuntimeContext;
-  const bindStagingRuntimeEvents =
-    sharedModules.bindStagingRuntimeEventsModule &&
-    sharedModules.bindStagingRuntimeEventsModule.bindStagingRuntimeEvents;
-  const bootstrapStagingMvp =
-    sharedModules.bootstrapStagingMvpModule &&
-    sharedModules.bootstrapStagingMvpModule.bootstrapStagingMvp;
-  const loadReceiverInitModules =
-    receiverBootstrapModule &&
-    receiverBootstrapModule.loadReceiverInitModules;
-  if (
-    typeof bootstrapStagingRuntimeContext !== "function" ||
-    typeof bindStagingRuntimeEvents !== "function" ||
-    typeof bootstrapStagingMvp !== "function" ||
-    typeof loadReceiverInitModules !== "function"
-  ) {
-    return null;
-  }
-
-  const mods = shellKws.receiverMods || await loadReceiverInitModules();
-  shellKws.receiverMods = mods;
-
-  const {
-    createEventBus,
-    createGameState,
-    createOrbDamageVisualsRuntime,
-    createAudioSystem,
-    createInputSystemsBundle,
-    createResourcesSystem,
-    createSpellDispatchSystem,
-    createWorldSystem,
-    createOrbSystemsBundle,
-    createOrbSystem,
-    createOrbFxSystem,
-    createRuleEnginePreviewSystem,
-    runInputFramePipelineImported,
-    WORLD_ITEMS,
-  } = mods || {};
-  if (
-    typeof createGameState !== "function" ||
-    typeof createOrbDamageVisualsRuntime !== "function" ||
-    typeof createAudioSystem !== "function" ||
-    typeof createInputSystemsBundle !== "function" ||
-    typeof createResourcesSystem !== "function" ||
-    typeof createSpellDispatchSystem !== "function" ||
-    typeof createWorldSystem !== "function" ||
-    typeof createOrbSystemsBundle !== "function" ||
-    typeof createOrbSystem !== "function" ||
-    typeof createOrbFxSystem !== "function" ||
-    typeof runInputFramePipelineImported !== "function"
-  ) {
-    return null;
-  }
-
   const {
     ENERGY_BANK_CAP,
     ENERGY_SHAKE_COST,
@@ -1001,63 +942,40 @@ async function initShellReceiverHostRuntime(shellContext) {
     INPUT_DYNAMICS_CFG,
   } = createShellReceiverConfigs();
 
-  const receiverHostState = {
-    stabilityVisualGate: true,
-  };
-
-  const receiverStabilityVisualController = createReceiverStabilityVisualController({
-    getInputDynamicsSystem: () => receiverHostState.inputDynamicsSystem,
-    getStabilityVisualGate: () => receiverHostState.stabilityVisualGate,
-    getRefs: () => ((shellContext && shellContext.refs) ? shellContext.refs.dev : null),
-    setLamp,
-  });
-
-  const applyStabilityVisuals = () => receiverStabilityVisualController.apply();
-
-  const isDiversityLampLit = () => receiverStabilityVisualController.isDiversityLampLit();
-
-  const runtimeContext = bootstrapStagingRuntimeContext({
-    createEventBus: () => runtime.eventBus,
-    createGameState,
-    createOrbDamageVisualsRuntime,
-    createAudioSystem,
-    createInputSystemsBundle,
-    createResourcesSystem,
-    createSpellDispatchSystem,
-    createRuleEnginePreviewSystem,
-    createWorldSystem,
-    createOrbSystemsBundle,
-    createOrbSystem,
-    createOrbFxSystem,
-    els: shellContext.stageEls,
-    IMPACT_TH: 0,
-    INPUT_DYNAMICS_CFG,
-    INPUT_GESTURE_CFG,
-    ENERGY_BANK_CAP,
-    ENERGY_SHAKE_COST,
-    ENERGY_CHARGE_RATE_PPS,
-    ruleSchema: shellKws.ruleSchema,
-    RULE_ENGINE_EXECUTE_ACTIONS: true,
-    DEFAULT_KWS_LISTEN_POLICY_MODE: "A",
-    STRICT_A_WAKE_WINDOW_PAD_MS: 4000,
-    kwsListenPolicyController: shellKws.kwsListenPolicyController,
-    kwsBridge: shellKws.kwsBridge,
-    RULE_CHAIN_TRACE_ENABLED: true,
-    PHYS: runtime.stage ? runtime.stage.phys : {},
-    worldItemSpawns: Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [],
-    normalizeWorldItemSpawn: (item) => normalizeShellWorldItemSpawn(item, () => shellGroundCenterWorld(shellContext)),
-    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
-    stageRect: () => shellStageRect(shellContext),
-    pickupScreenY: (yW) => {
-      const rect = shellStageRect(shellContext);
-      const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
-      return Number(yW || 0) - camTop;
+  const assembly = await bootstrapShellReceiverHostRuntimeAssembly({
+    shellContext,
+    runtime,
+    sharedModules,
+    shellKws,
+    receiverConfigs: {
+      ENERGY_BANK_CAP,
+      ENERGY_SHAKE_COST,
+      ENERGY_CHARGE_RATE_PPS,
+      INPUT_GESTURE_CFG,
+      INPUT_DYNAMICS_CFG,
     },
-    getOrbRuntime: () => (runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function" ? runtime.orbRuntimeState.get() : { yW: 0 }),
-    getOrbScreenY: () => shellOrbScreenY(shellContext),
-    axisToColor01: () => 0,
-    gestureHooks: {
-      isDiversityLampLit,
+    createReceiverStabilityVisualController,
+    setLamp,
+    stageAdapters: {
+      normalizeWorldItemSpawn: (item) => normalizeShellWorldItemSpawn(item, () => shellGroundCenterWorld(shellContext)),
+      groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+      stageRect: () => shellStageRect(shellContext),
+      pickupScreenY: (yW) => {
+        const rect = shellStageRect(shellContext);
+        const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
+        return Number(yW || 0) - camTop;
+      },
+      getOrbRuntime: () => (
+        runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+          ? runtime.orbRuntimeState.get()
+          : { yW: 0 }
+      ),
+      getOrbScreenY: () => shellOrbScreenY(shellContext),
+      getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
+      getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
+      getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,
+    },
+    shellHooks: {
       flashShakeLamp: () => flashShellShakeLamp(shellContext, 400),
       triggerShockwave: () => {
         const shellVfx = runtime.vfx || null;
@@ -1070,149 +988,30 @@ async function initShellReceiverHostRuntime(shellContext) {
       allDirLampOff: () => allShellDirectionLampsOff(shellContext),
       flashDirLampPair: (a, b, ms) => flashShellDirectionLampPair(shellContext, a, b, ms),
       flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
+      playElectricAoe: () => {
+        const shellVfx = runtime.vfx || null;
+        return shellVfx && typeof shellVfx.playElectricAoe === "function" ? shellVfx.playElectricAoe() : { handled: false };
+      },
+      grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
+      grantSuperGrace: (ms) => shellGrantSuperGrace(shellContext, ms),
+      clearFloatGrace: () => {
+        patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
+      },
+      resetOrbStrokeColor: () => shellClearColorize(shellContext),
     },
   });
+  if (!assembly) return null;
 
-  receiverHostState.inputSystemsBundle = runtimeContext.inputSystemsBundle;
-  receiverHostState.inputSystem = runtimeContext.inputSystem;
-  receiverHostState.inputDynamicsSystem = runtimeContext.inputDynamicsSystem;
-  receiverHostState.inputGestureSystem = runtimeContext.inputGestureSystem;
-  receiverHostState.resourcesSystem = runtimeContext.resourcesSystem;
-  receiverHostState.spellDispatchSystem = runtimeContext.spellDispatchSystem;
-  receiverHostState.orbDamageVisualsRuntime = runtimeContext.orbDamageVisualsRuntime;
-  receiverHostState.audioSystem = runtimeContext.audioSystem;
-  receiverHostState.orbSystemsBundle = runtimeContext.orbSystemsBundle;
-
-  if (receiverHostState.orbDamageVisualsRuntime && typeof receiverHostState.orbDamageVisualsRuntime.start === "function") {
-    receiverHostState.orbDamageVisualsRuntime.start();
-  }
-  if (receiverHostState.audioSystem && typeof receiverHostState.audioSystem.start === "function") {
-    receiverHostState.audioSystem.start();
-  }
-  if (receiverHostState.inputSystemsBundle && typeof receiverHostState.inputSystemsBundle.start === "function") {
-    receiverHostState.inputSystemsBundle.start();
-  }
-  if (receiverHostState.resourcesSystem && typeof receiverHostState.resourcesSystem.start === "function") {
-    receiverHostState.resourcesSystem.start();
-  }
-  if (receiverHostState.spellDispatchSystem && typeof receiverHostState.spellDispatchSystem.start === "function") {
-    receiverHostState.spellDispatchSystem.start();
-  }
-  if (runtimeContext.ruleEnginePreviewSystem && typeof runtimeContext.ruleEnginePreviewSystem.start === "function") {
-    runtimeContext.ruleEnginePreviewSystem.start();
-  }
-  if (receiverHostState.orbSystemsBundle && typeof receiverHostState.orbSystemsBundle.start === "function") {
-    receiverHostState.orbSystemsBundle.start();
-  }
-
-  if (shellKws.ruleEnginePreviewSystem && typeof shellKws.ruleEnginePreviewSystem.stop === "function") {
-    shellKws.ruleEnginePreviewSystem.stop();
-  }
-  shellKws.ruleEnginePreviewSystem = runtimeContext.ruleEnginePreviewSystem || shellKws.ruleEnginePreviewSystem;
-  if (shellKws.shellRuleActionRuntime && typeof shellKws.shellRuleActionRuntime.dispose === "function") {
-    shellKws.shellRuleActionRuntime.dispose();
-  }
-  if (shellKws.kwsRootWakeBridge && typeof shellKws.kwsRootWakeBridge.dispose === "function") {
-    shellKws.kwsRootWakeBridge.dispose();
-  }
-
-  const castActionForWordId = (wordId) => {
-    const key = String(wordId || "").trim().toLowerCase();
-    const entry = shellKws.runtimeWordIndex[key] || shellKws.runtimeSpellIndex[key] || null;
-    return String(entry && entry.castActionId || key || "");
-  };
-
-  const eventBinder = bindStagingRuntimeEvents({
-    eventBus: runtime.eventBus,
-    RECEIVER_EVENTS: shellKws.receiverEvents,
-    RULE_ENGINE_ACTION_EXECUTED_EVENT: "rule_engine.action_executed",
-    RULE_ENGINE_PREVIEW_MATCHED_EVENT: "rule_engine.preview_matched",
-    RULE_ENGINE_WAKE_WIN_OPENED_EVENT: "rule_engine.wake_win_opened",
-    RULE_ENGINE_SOURCE_EVENT_SUMMARY_EVENT: "rule_engine.source_event_summary",
-    RULE_ENGINE_TRIGGER: "rule_engine",
-    RULE_CHAIN_TRACE_ENABLED: true,
-    DEFAULT_KWS_GATE_TIMEOUT_MS: 1500,
-    kwsBridge: shellKws.kwsBridge,
-    kwsListenPolicyController: shellKws.kwsListenPolicyController,
-    kwsRuntimeController: shellKws.kwsRuntimeController,
-    kwsPanelController: shellKws.kwsPanelController,
-    kwsTokenUiState: shellKws.kwsTokenUiState,
-    TEMP_UNGATED_KWS_TOKENS: new Set(),
-    kwsDebugState: shellKws.kwsDebugState,
-    ruleSchema: shellKws.ruleSchema,
-    runtimeWordIndex: shellKws.runtimeWordIndex,
-    runtimeSpellIndex: shellKws.runtimeSpellIndex,
-    castActionForWordId,
-    executeWordCastAction: (castActionId, context = {}) => {
-      return shellKws.shellSpellCastExecutor && typeof shellKws.shellSpellCastExecutor.execute === "function"
-        ? shellKws.shellSpellCastExecutor.execute(castActionId, context)
-        : { handled: false };
-    },
-    playElectricAoe: () => {
-      const shellVfx = runtime.vfx || null;
-      return shellVfx && typeof shellVfx.playElectricAoe === "function" ? shellVfx.playElectricAoe() : { handled: false };
-    },
-    grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
-    clearFloatGrace: () => {
-      patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
-    },
-    renderOrbDamageVisuals: () => {},
-    spawnShardFx: () => {},
-    clearOrbRuntimeFxForDeath: () => {},
-    scheduleDeathOverlay: () => {},
-    updateDebugReadout: () => {},
-    orbShatterController: null,
-    stopShardSim: () => {},
-    worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
-    resetOrbStrokeColor: () => shellClearColorize(shellContext),
-    clearDeathOverlaySchedule: () => {},
-    closeDeathOverlay: () => {},
-    setOrbInputSuppressed: () => {},
-  });
-
-  const mvp = bootstrapStagingMvp({
-    eventBus: runtime.eventBus,
-    gameState: runtimeContext.gameState,
-    orbSystem: runtimeContext.orbSystem,
-    orbDamageVisualsRuntime: runtimeContext.orbDamageVisualsRuntime,
-    audioSystem: runtimeContext.audioSystem,
-    inputSystemsBundle: runtimeContext.inputSystemsBundle,
-    inputSystem: runtimeContext.inputSystem,
-    inputDynamicsSystem: runtimeContext.inputDynamicsSystem,
-    inputGestureSystem: runtimeContext.inputGestureSystem,
-    orbRuntimeState: runtime.orbRuntimeState,
-    ruleSchema: shellKws.ruleSchema,
-    ruleEnginePreviewSystem: shellKws.ruleEnginePreviewSystem,
-    RULE_ENGINE_EXECUTE_ACTIONS: true,
-    resourcesSystem: runtimeContext.resourcesSystem,
-    orbFxSystem: runtimeContext.orbFxSystem,
-    orbSystemsBundle: runtimeContext.orbSystemsBundle,
-    orbRuntimeLoop: runtime.orbRuntimeLoop,
-    spellDispatchSystem: runtimeContext.spellDispatchSystem,
-    kwsWordProvider: shellKws.kwsWordProvider,
-    voiceProviderManager: shellKws.voiceProviderManager,
-    kwsVoiceProvider: shellKws.kwsVoiceProvider,
-    kwsMvpCommands: {},
-    kwsBootOrchestrator: shellKws.kwsBootOrchestrator,
-    grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
-    grantSuperGrace: (ms) => shellGrantSuperGrace(shellContext, ms),
-    orbShatterRuntime: runtime.vfx && runtime.vfx.vfxRuntimesBundle
-      ? runtime.vfx.vfxRuntimesBundle.orbShatterRuntime
-      : null,
-    worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
-    clearDeathOverlaySchedule: () => {},
-    closeDeathOverlay: () => {},
-    renderOrbDamageVisuals: () => {},
-    updateDebugReadout: () => {},
-    setOrbInputSuppressed: () => {},
-  });
-  runtime.mvp = mvp;
+  const {
+    receiverHostState,
+    runInputFramePipelineImported,
+    applyStabilityVisuals,
+  } = assembly;
 
   receiverHostState.processIncomingImpulse = (d = {}) => {
     const inputSystem = receiverHostState.inputSystem;
     const inputGestureSystem = receiverHostState.inputGestureSystem;
     const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
-    const resourcesSystem = receiverHostState.resourcesSystem;
     const nowMs = performance.now();
 
     function pick01NewOrOld(newKey, oldKey) {
@@ -1284,13 +1083,6 @@ async function initShellReceiverHostRuntime(shellContext) {
       });
       shellContext.views.devStagingView.renderInputHud(vm);
     }
-  };
-
-  runtime.receiverHostRuntime = {
-    ...receiverHostState,
-    runtimeContext,
-    eventBinder,
-    mvp,
   };
   return runtime.receiverHostRuntime;
 }
