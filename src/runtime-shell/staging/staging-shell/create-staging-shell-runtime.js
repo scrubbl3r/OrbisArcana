@@ -865,31 +865,8 @@ function stopShellShardSim(shellContext) {
 function spawnShellShardFx(shellContext, payload) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const controller = runtime && runtime.orbShatterController;
-  const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
-  const shatterRuntime = runtime && runtime.vfx ? runtime.vfx.orbShatterRuntime : null;
-  pushShellGeneralLog(
-    shellContext,
-    `Shatter trace: piece_seen ${String(payload && payload.pieceId || "-")} | controller ${controller && typeof controller.spawnShardFx === "function" ? 1 : 0} | runtime ${shatterRuntime ? 1 : 0}`,
-    "muted"
-  );
   if (!controller || typeof controller.spawnShardFx !== "function") return;
-  try {
-    const handled = controller.spawnShardFx(payload);
-    const shardState = shatterRuntime && typeof shatterRuntime.getState === "function"
-      ? shatterRuntime.getState()
-      : null;
-    const msg = `Shatter trace: piece ${String(payload && payload.pieceId || "-")} | handled ${handled ? 1 : 0} | count ${Number(shardState && shardState.count) || 0} | running ${shardState && shardState.running ? 1 : 0}`;
-    if (devView && typeof devView.setDebugNote === "function") {
-      devView.setDebugNote(msg);
-    }
-    pushShellGeneralLog(shellContext, msg, handled ? "ok" : "warn");
-  } catch (error) {
-    pushShellGeneralLog(
-      shellContext,
-      `Shatter trace: piece_error ${String(payload && payload.pieceId || "-")} | ${(error && error.message) ? error.message : String(error || "unknown")}`,
-      "warn"
-    );
-  }
+  controller.spawnShardFx(payload);
 }
 
 function clearShellOrbRuntimeFxForDeath(shellContext) {
@@ -2134,25 +2111,10 @@ async function initShellKwsRuntime(shellContext) {
     if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
     kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
   });
-  const orbVisualTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, (payload = {}) => {
-    const msg = `Shatter trace: visual ${String(payload.to || "-")} | health ${Number(payload.health) || 0}`;
-    setShellDebugNote(shellContext, msg);
-    pushShellGeneralLog(shellContext, msg, "muted");
-  });
-  const orbDiedTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, (payload = {}) => {
-    const msg = `Shatter trace: died | hits ${Number(payload.hitsTaken) || 0} | at ${Math.round(Number(payload.atMs) || 0)}`;
-    setShellDebugNote(shellContext, msg);
-    pushShellGeneralLog(shellContext, msg, "warn");
-  });
-  const orbShatterStartTraceOff = eventBus.on("orb.shatter_started", (payload = {}) => {
-    const msg = `Shatter trace: start | pieces ${Number(payload.pieceCount) || 0} | seed ${Number(payload.seed) || 0}`;
-    setShellDebugNote(shellContext, msg);
-    pushShellGeneralLog(shellContext, msg, "ok");
-  });
-  const orbShatterCompleteTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
-    setShellDebugNote(shellContext, "Shatter trace: complete");
-    pushShellGeneralLog(shellContext, "Shatter trace: complete", "ok");
-  });
+  const orbVisualTraceOff = () => {};
+  const orbDiedTraceOff = () => {};
+  const orbShatterStartTraceOff = () => {};
+  const orbShatterCompleteTraceOff = () => {};
   runtime.eventBus = eventBus;
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,

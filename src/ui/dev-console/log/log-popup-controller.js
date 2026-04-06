@@ -164,6 +164,12 @@ export function createLogPopupController({
     for (const row of state.rows) appendKwsLogRow(row);
   }
 
+  function appendLiveRowIfActive(channel, row) {
+    if (!row || !logPopupOpen) return;
+    if (String(channel || "").trim().toLowerCase() !== activeLogChannel) return;
+    appendKwsLogRow(row);
+  }
+
   function appendLogRowToState(state, line, kind = "", limit = Number.POSITIVE_INFINITY) {
     if (!state) return null;
     const text = String(line || "").trim();
@@ -293,7 +299,7 @@ export function createLogPopupController({
     if (shouldAutoOpenWordBoardDebug(line, kind)) setWordBoardDebugOpen(true);
     if (!logPopupOpen) return;
     syncLegacyKwsLogState();
-    if (activeLogChannel === "kws") appendKwsLogRow(row);
+    appendLiveRowIfActive("kws", row);
   }
 
   function pushGeneralLogLine(text, kind = "") {
@@ -305,7 +311,7 @@ export function createLogPopupController({
     }
     const row = appendLogRowToState(logChannelState.general, line, kind);
     if (!row) return;
-    if (activeLogChannel === "general") appendKwsLogRow(row);
+    appendLiveRowIfActive("general", row);
   }
 
   function pushPhoneLogLine(text, kind = "") {
@@ -317,7 +323,7 @@ export function createLogPopupController({
     }
     const row = appendLogRowToState(logChannelState.phone, line, kind);
     if (!row) return;
-    if (activeLogChannel === "phone") appendKwsLogRow(row);
+    appendLiveRowIfActive("phone", row);
   }
 
   return {
