@@ -274,20 +274,38 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     clearFloatGrace: () => {
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
-    renderOrbDamageVisuals: () => {},
-    spawnShardFx: () => {},
-    clearOrbRuntimeFxForDeath: () => {},
-    scheduleDeathOverlay: () => {},
-    updateDebugReadout: () => {},
-    orbShatterController: null,
-    stopShardSim: () => {},
+    renderOrbDamageVisuals: () => {
+      if (shellHooks && typeof shellHooks.renderOrbDamageVisuals === "function") shellHooks.renderOrbDamageVisuals();
+    },
+    spawnShardFx: (payload) => {
+      if (shellHooks && typeof shellHooks.spawnShardFx === "function") shellHooks.spawnShardFx(payload);
+    },
+    clearOrbRuntimeFxForDeath: () => {
+      if (shellHooks && typeof shellHooks.clearOrbRuntimeFxForDeath === "function") shellHooks.clearOrbRuntimeFxForDeath();
+    },
+    scheduleDeathOverlay: () => {
+      if (shellHooks && typeof shellHooks.scheduleDeathOverlay === "function") shellHooks.scheduleDeathOverlay();
+    },
+    updateDebugReadout: () => {
+      if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
+    },
+    orbShatterController: shellHooks && shellHooks.orbShatterController ? shellHooks.orbShatterController : null,
+    stopShardSim: () => {
+      if (shellHooks && typeof shellHooks.stopShardSim === "function") shellHooks.stopShardSim();
+    },
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
     resetOrbStrokeColor: () => {
       if (shellHooks && typeof shellHooks.resetOrbStrokeColor === "function") shellHooks.resetOrbStrokeColor();
     },
-    clearDeathOverlaySchedule: () => {},
-    closeDeathOverlay: () => {},
-    setOrbInputSuppressed: () => {},
+    clearDeathOverlaySchedule: () => {
+      if (shellHooks && typeof shellHooks.clearDeathOverlaySchedule === "function") shellHooks.clearDeathOverlaySchedule();
+    },
+    closeDeathOverlay: () => {
+      if (shellHooks && typeof shellHooks.closeDeathOverlay === "function") shellHooks.closeDeathOverlay();
+    },
+    setOrbInputSuppressed: (next) => {
+      if (shellHooks && typeof shellHooks.setOrbInputSuppressed === "function") shellHooks.setOrbInputSuppressed(next);
+    },
   });
 
   const mvp = bootstrapStagingMvp({
@@ -324,11 +342,21 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       ? runtime.vfx.vfxRuntimesBundle.orbShatterRuntime
       : null,
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
-    clearDeathOverlaySchedule: () => {},
-    closeDeathOverlay: () => {},
-    renderOrbDamageVisuals: () => {},
-    updateDebugReadout: () => {},
-    setOrbInputSuppressed: () => {},
+    clearDeathOverlaySchedule: () => {
+      if (shellHooks && typeof shellHooks.clearDeathOverlaySchedule === "function") shellHooks.clearDeathOverlaySchedule();
+    },
+    closeDeathOverlay: () => {
+      if (shellHooks && typeof shellHooks.closeDeathOverlay === "function") shellHooks.closeDeathOverlay();
+    },
+    renderOrbDamageVisuals: () => {
+      if (shellHooks && typeof shellHooks.renderOrbDamageVisuals === "function") shellHooks.renderOrbDamageVisuals();
+    },
+    updateDebugReadout: () => {
+      if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
+    },
+    setOrbInputSuppressed: (next) => {
+      if (shellHooks && typeof shellHooks.setOrbInputSuppressed === "function") shellHooks.setOrbInputSuppressed(next);
+    },
   });
   runtime.mvp = mvp;
 

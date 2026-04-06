@@ -36,6 +36,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     kwsReceiverBridgeModule,
     vfxRuntimesBundleModule,
     orbColorRuntimeModule,
+    orbShatterRuntimeModule,
     orbRuntimeStateModule,
     orbRuntimeLoopModule,
   ] = await Promise.all([
@@ -66,6 +67,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import("../../voice/kws/kws-receiver-bridge.js"),
     import("../../vfx/effects/vfx-runtimes-bundle.js"),
     import("../../game-runtime/orb/orb-color-runtime.js"),
+    import("../../game-runtime/orb/orb-shatter-runtime.js"),
     import("../../game-runtime/orb/orb-runtime-state.js"),
     import("../../game-runtime/orb/orb-runtime-loop.js"),
   ]);
@@ -98,6 +100,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     kwsReceiverBridgeModule,
     vfxRuntimesBundleModule,
     orbColorRuntimeModule,
+    orbShatterRuntimeModule,
     orbRuntimeStateModule,
     orbRuntimeLoopModule,
   };

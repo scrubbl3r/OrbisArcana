@@ -706,12 +706,108 @@ function getShellOrbBaseVisualState() {
   };
 }
 
+function lineToPath(seg) {
+  if (!seg || !seg.a || !seg.b) return "";
+  return `M ${Number(seg.a.x).toFixed(2)} ${Number(seg.a.y).toFixed(2)} L ${Number(seg.b.x).toFixed(2)} ${Number(seg.b.y).toFixed(2)}`;
+}
+
 function updateShellOrbStrokeColor(shellContext, dt) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const orbColorRuntime = runtime && runtime.orbColorRuntime;
   if (orbColorRuntime && typeof orbColorRuntime.update === "function") {
     orbColorRuntime.update(dt);
   }
+}
+
+function renderShellOrbDamageVisuals(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const mvp = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime.mvp : (runtime && runtime.mvp ? runtime.mvp : null);
+  const stageEls = shellContext && shellContext.stageEls ? shellContext.stageEls : null;
+  if (!mvp || !mvp.orbDamageVisualsRuntime || !stageEls || !stageEls.orb || !stageEls.orbCracks) return;
+  const fx = mvp.orbDamageVisualsRuntime.getState();
+  const shattered = (fx && fx.visualState === "shattered");
+  stageEls.orb.classList.toggle("shattered", shattered);
+  stageEls.orb.style.opacity = shattered ? "0" : "";
+
+  const paths = [];
+  if (!shattered && Array.isArray(fx && fx.crackSegments)) {
+    for (const seg of fx.crackSegments) {
+      const d = lineToPath(seg);
+      if (d) paths.push(`<path d="${d}" />`);
+    }
+  }
+  stageEls.orbCracks.innerHTML = paths.join("");
+}
+
+function openShellDeathOverlay(shellContext) {
+  const deathPanel = shellContext && shellContext.stageEls ? shellContext.stageEls.deathPanel : null;
+  if (!deathPanel) return;
+  deathPanel.classList.remove("off");
+  deathPanel.setAttribute("aria-hidden", "false");
+}
+
+function closeShellDeathOverlay(shellContext) {
+  const deathPanel = shellContext && shellContext.stageEls ? shellContext.stageEls.deathPanel : null;
+  if (!deathPanel) return;
+  deathPanel.classList.add("off");
+  deathPanel.setAttribute("aria-hidden", "true");
+}
+
+function clearShellDeathOverlaySchedule(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!runtime || !runtime.deathOverlayTO) return;
+  clearTimeout(runtime.deathOverlayTO);
+  runtime.deathOverlayTO = 0;
+}
+
+function scheduleShellDeathOverlay(shellContext, delayMs = 3000) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!runtime) return;
+  clearShellDeathOverlaySchedule(shellContext);
+  closeShellDeathOverlay(shellContext);
+  runtime.deathOverlayTO = setTimeout(() => {
+    runtime.deathOverlayTO = 0;
+    openShellDeathOverlay(shellContext);
+  }, Math.max(0, Number(delayMs) || 3000));
+}
+
+function stopShellShardSim(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const controller = runtime && runtime.orbShatterController;
+  if (controller && typeof controller.stopShardSim === "function") {
+    controller.stopShardSim();
+    return;
+  }
+  const shatterRuntime = runtime && runtime.vfx && runtime.vfx.orbShatterRuntime;
+  if (shatterRuntime && typeof shatterRuntime.clear === "function") {
+    shatterRuntime.clear();
+  }
+}
+
+function spawnShellShardFx(shellContext, payload) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const controller = runtime && runtime.orbShatterController;
+  if (controller && typeof controller.spawnShardFx === "function") {
+    controller.spawnShardFx(payload);
+  }
+}
+
+function clearShellOrbRuntimeFxForDeath(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
+  if (shellVfx && shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.clear === "function") {
+    shellVfx.shockwaveRuntime.clear();
+  }
+  if (shellVfx && shellVfx.flameAoeRuntime && typeof shellVfx.flameAoeRuntime.clear === "function") {
+    shellVfx.flameAoeRuntime.clear();
+  }
+  if (shellVfx && shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.clear === "function") {
+    shellVfx.electricAoeRuntime.clear();
+  }
+  if (shellVfx && shellVfx.bubbleShieldRuntime && typeof shellVfx.bubbleShieldRuntime.off === "function") {
+    shellVfx.bubbleShieldRuntime.off();
+  }
+  shellClearColorize(shellContext);
 }
 
 function resetShellInputProcessingState(shellContext, atMs = performance.now()) {
@@ -1168,6 +1264,15 @@ async function initShellReceiverHostRuntime(shellContext) {
       allDirLampOff: () => allShellDirectionLampsOff(shellContext),
       flashDirLampPair: (a, b, ms) => flashShellDirectionLampPair(shellContext, a, b, ms),
       flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
+      renderOrbDamageVisuals: () => renderShellOrbDamageVisuals(shellContext),
+      spawnShardFx: (payload) => spawnShellShardFx(shellContext, payload),
+      clearOrbRuntimeFxForDeath: () => clearShellOrbRuntimeFxForDeath(shellContext),
+      scheduleDeathOverlay: () => scheduleShellDeathOverlay(shellContext, 3000),
+      clearDeathOverlaySchedule: () => clearShellDeathOverlaySchedule(shellContext),
+      closeDeathOverlay: () => closeShellDeathOverlay(shellContext),
+      stopShardSim: () => stopShellShardSim(shellContext),
+      orbShatterController: runtime.orbShatterController || null,
+      setOrbInputSuppressed: (next) => { runtime.orbInputSuppressed = !!next; },
       playElectricAoe: () => {
         const shellVfx = runtime.vfx || null;
         return shellVfx && typeof shellVfx.playElectricAoe === "function" ? shellVfx.playElectricAoe() : { handled: false };
@@ -1178,6 +1283,7 @@ async function initShellReceiverHostRuntime(shellContext) {
         patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
       },
       resetOrbStrokeColor: () => shellClearColorize(shellContext),
+      updateDebugReadout: () => {},
     },
   });
   if (!assembly) return null;
@@ -2165,6 +2271,34 @@ export async function createStagingShellRuntime({
       : null;
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
     await initShellKwsRuntime(shellContext);
+    const createOrbShatterRuntimeController =
+      sharedModules.orbShatterRuntimeModule &&
+      sharedModules.orbShatterRuntimeModule.createOrbShatterRuntimeController;
+    shellContext.runtime.orbShatterController = (
+      typeof createOrbShatterRuntimeController === "function" &&
+      shellContext.runtime.vfx &&
+      shellContext.runtime.vfx.orbShatterRuntime
+    )
+      ? createOrbShatterRuntimeController({
+          root: rootDocument && rootDocument.documentElement,
+          getOrbEl: () => (shellContext.stageEls ? shellContext.stageEls.orb : null),
+          getOrbShatterRuntime: () => (
+            shellContext.runtime && shellContext.runtime.vfx
+              ? shellContext.runtime.vfx.orbShatterRuntime
+              : null
+          ),
+          getOrbColorState: () => (
+            shellContext.runtime &&
+            shellContext.runtime.orbColorRuntime &&
+            typeof shellContext.runtime.orbColorRuntime.getCurrentState === "function"
+              ? shellContext.runtime.orbColorRuntime.getCurrentState()
+              : null
+          ),
+          getBaseFillAlpha: () => 0.20,
+          clamp,
+          clamp01,
+        })
+      : null;
     initializeShellStageRuntime(shellContext);
     await initShellReceiverHostRuntime(shellContext);
     activateShellStageVisuals(shellContext);
