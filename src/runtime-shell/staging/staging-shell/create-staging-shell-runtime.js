@@ -632,11 +632,18 @@ function startShellStageLoop(shellContext) {
     ),
     isReady: () => true,
     clamp,
-    runFrame: ({ dt }) => {
+    runFrame: ({ ts, dt }) => {
       tickShellStageRuntime(shellContext, dt);
       updateShellOrbStrokeColor(shellContext, dt);
       applyShellGroundLine(shellContext);
       applyShellOrbTransform(shellContext);
+      const orbFxSystem =
+        (runtime.receiverHostRuntime && runtime.receiverHostRuntime.runtimeContext && runtime.receiverHostRuntime.runtimeContext.orbFxSystem) ||
+        (runtime.mvp && runtime.mvp.orbFxSystem) ||
+        null;
+      if (orbFxSystem && typeof orbFxSystem.tick === "function") {
+        orbFxSystem.tick(ts, dt);
+      }
       if (runtime.stage && runtime.stage.worldSystem && typeof runtime.stage.worldSystem.tick === "function") {
         runtime.stage.worldSystem.tick(performance.now(), dt);
       }
