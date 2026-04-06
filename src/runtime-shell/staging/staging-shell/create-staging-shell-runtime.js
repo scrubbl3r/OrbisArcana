@@ -2356,6 +2356,7 @@ export async function createStagingShellRuntime({
       : null;
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
     await initShellKwsRuntime(shellContext);
+    initializeShellStageRuntime(shellContext);
     const createOrbShatterRuntimeController =
       sharedModules.orbShatterRuntimeModule &&
       sharedModules.orbShatterRuntimeModule.createOrbShatterRuntimeController;
@@ -2384,7 +2385,6 @@ export async function createStagingShellRuntime({
           clamp01,
         })
       : null;
-    initializeShellStageRuntime(shellContext);
     await initShellReceiverHostRuntime(shellContext);
     activateShellStageVisuals(shellContext);
     bindShellStageResize(shellContext);
