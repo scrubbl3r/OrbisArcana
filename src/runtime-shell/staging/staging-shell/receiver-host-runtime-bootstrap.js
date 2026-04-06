@@ -161,7 +161,11 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         ? stageAdapters.getOrbScreenY()
         : 0
     ),
-    axisToColor01: () => 0,
+    axisToColor01: (axis) => (
+      stageAdapters && typeof stageAdapters.axisToColor01 === "function"
+        ? stageAdapters.axisToColor01(axis)
+        : 0
+    ),
     gestureHooks: {
       isDiversityLampLit,
       flashShakeLamp: () => {

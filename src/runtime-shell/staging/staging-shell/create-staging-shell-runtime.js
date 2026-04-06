@@ -1240,6 +1240,7 @@ async function initShellReceiverHostRuntime(shellContext) {
           : { yW: 0 }
       ),
       getOrbScreenY: () => shellOrbScreenY(shellContext),
+      axisToColor01,
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
       getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,
