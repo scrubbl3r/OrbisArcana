@@ -635,6 +635,14 @@ function setShellDebugNote(shellContext, text = "") {
   }
 }
 
+function pushShellGeneralLog(shellContext, text = "", kind = "") {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const kwsPanelController = runtime && runtime.kws ? runtime.kws.kwsPanelController : null;
+  if (kwsPanelController && typeof kwsPanelController.pushGeneralLogLine === "function") {
+    kwsPanelController.pushGeneralLogLine(text, kind);
+  }
+}
+
 function startShellStageLoop(shellContext) {
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -869,6 +877,11 @@ function spawnShellShardFx(shellContext, payload) {
         `Shatter trace: piece ${String(payload && payload.pieceId || "-")} | handled ${handled ? 1 : 0} | count ${Number(shardState && shardState.count) || 0} | running ${shardState && shardState.running ? 1 : 0}`
       );
     }
+    pushShellGeneralLog(
+      shellContext,
+      `Shatter trace: piece ${String(payload && payload.pieceId || "-")} | handled ${handled ? 1 : 0} | count ${Number(shardState && shardState.count) || 0} | running ${shardState && shardState.running ? 1 : 0}`,
+      handled ? "ok" : "warn"
+    );
   }
 }
 
@@ -2114,25 +2127,23 @@ async function initShellKwsRuntime(shellContext) {
     kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
   });
   const orbVisualTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, (payload = {}) => {
-    setShellDebugNote(
-      shellContext,
-      `Shatter trace: visual ${String(payload.to || "-")} | health ${Number(payload.health) || 0}`
-    );
+    const msg = `Shatter trace: visual ${String(payload.to || "-")} | health ${Number(payload.health) || 0}`;
+    setShellDebugNote(shellContext, msg);
+    pushShellGeneralLog(shellContext, msg, "muted");
   });
   const orbDiedTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, (payload = {}) => {
-    setShellDebugNote(
-      shellContext,
-      `Shatter trace: died | hits ${Number(payload.hitsTaken) || 0} | at ${Math.round(Number(payload.atMs) || 0)}`
-    );
+    const msg = `Shatter trace: died | hits ${Number(payload.hitsTaken) || 0} | at ${Math.round(Number(payload.atMs) || 0)}`;
+    setShellDebugNote(shellContext, msg);
+    pushShellGeneralLog(shellContext, msg, "warn");
   });
   const orbShatterStartTraceOff = eventBus.on("orb.shatter_started", (payload = {}) => {
-    setShellDebugNote(
-      shellContext,
-      `Shatter trace: start | pieces ${Number(payload.pieceCount) || 0} | seed ${Number(payload.seed) || 0}`
-    );
+    const msg = `Shatter trace: start | pieces ${Number(payload.pieceCount) || 0} | seed ${Number(payload.seed) || 0}`;
+    setShellDebugNote(shellContext, msg);
+    pushShellGeneralLog(shellContext, msg, "ok");
   });
   const orbShatterCompleteTraceOff = eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
     setShellDebugNote(shellContext, "Shatter trace: complete");
+    pushShellGeneralLog(shellContext, "Shatter trace: complete", "ok");
   });
   runtime.eventBus = eventBus;
   runtime.receiverSpellRuntime = {

@@ -16,13 +16,15 @@ export function createLogPopupController({
   let wordBoardDebugOpen = false;
   let wordBoardDebugBound = false;
   let wordBoardVisible = false;
-  let activeLogChannel = "kws";
+  let activeLogChannel = "general";
   const wordBoardDebugRows = [];
   const logChannelState = {
+    general: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
     kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
     phone: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
   };
   const preopenLogChannelState = {
+    general: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
     kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
     phone: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
   };
@@ -48,6 +50,7 @@ export function createLogPopupController({
   }
 
   function clearAllLogBuffers() {
+    clearLogChannelBuffer("general");
     clearLogChannelBuffer("kws");
     clearLogChannelBuffer("phone");
     if (els.kwsLog) els.kwsLog.textContent = "";
@@ -64,6 +67,7 @@ export function createLogPopupController({
   }
 
   function clearAllPreopenLogBuffers() {
+    clearPreopenLogChannelBuffer("general");
     clearPreopenLogChannelBuffer("kws");
     clearPreopenLogChannelBuffer("phone");
   }
@@ -190,13 +194,14 @@ export function createLogPopupController({
   }
 
   function renderLogChannelTabs() {
+    if (els.logTabGeneral) els.logTabGeneral.classList.toggle("active", activeLogChannel === "general");
     if (els.logTabKws) els.logTabKws.classList.toggle("active", activeLogChannel === "kws");
     if (els.logTabPhone) els.logTabPhone.classList.toggle("active", activeLogChannel === "phone");
   }
 
   function setActiveLogChannel(nextChannel) {
     const next = String(nextChannel || "").trim().toLowerCase();
-    activeLogChannel = next === "phone" ? "phone" : "kws";
+    activeLogChannel = next === "phone" ? "phone" : (next === "kws" ? "kws" : "general");
     renderLogChannelTabs();
     renderCurrentLogChannel();
   }
@@ -210,6 +215,7 @@ export function createLogPopupController({
     if (!logPopupOpen) {
       clearAllLogBuffers();
     } else {
+      seedLiveLogChannelFromPreopen("general");
       seedLiveLogChannelFromPreopen("kws");
       seedLiveLogChannelFromPreopen("phone");
       renderLogChannelTabs();
@@ -258,6 +264,9 @@ export function createLogPopupController({
     if (els.logPopupClose) {
       els.logPopupClose.addEventListener("click", () => setLogPopupOpen(false));
     }
+    if (els.logTabGeneral) {
+      els.logTabGeneral.addEventListener("click", () => setActiveLogChannel("general"));
+    }
     if (els.logTabKws) {
       els.logTabKws.addEventListener("click", () => setActiveLogChannel("kws"));
     }
@@ -287,6 +296,18 @@ export function createLogPopupController({
     if (activeLogChannel === "kws") appendKwsLogRow(row);
   }
 
+  function pushGeneralLogLine(text, kind = "") {
+    const line = String(text || "").trim();
+    if (!line) return;
+    if (!logPopupOpen) {
+      appendLogRowToState(preopenLogChannelState.general, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
+      return;
+    }
+    const row = appendLogRowToState(logChannelState.general, line, kind);
+    if (!row) return;
+    if (activeLogChannel === "general") appendKwsLogRow(row);
+  }
+
   function pushPhoneLogLine(text, kind = "") {
     const line = String(text || "").trim();
     if (!line) return;
@@ -300,6 +321,7 @@ export function createLogPopupController({
   }
 
   return {
+    pushGeneralLogLine,
     pushKwsLogLine,
     pushPhoneLogLine,
     bindLogPopupButton,

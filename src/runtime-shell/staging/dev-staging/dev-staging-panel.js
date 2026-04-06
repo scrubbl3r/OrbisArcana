@@ -17,6 +17,7 @@ export function projectDevStagingPanelRefs(refs = {}) {
     wordBoardBtn: refs.wordBoardBtn || null,
     kwsReadout: refs.kwsReadout || null,
     kwsLog: refs.kwsLog || null,
+    logTabGeneral: refs.logTabGeneral || null,
     logTabKws: refs.logTabKws || null,
     logTabPhone: refs.logTabPhone || null,
     kwsTokenThrInput: refs.kwsTokenThrInput || null,

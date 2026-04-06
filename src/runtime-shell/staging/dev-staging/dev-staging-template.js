@@ -87,7 +87,8 @@ export const DEV_STAGING_TEMPLATE = `
         <button class="devStagingButton devStagingPopupClose" id="logPopupClose" aria-label="Close log" type="button">Close</button>
       </div>
       <div class="logPopupTabs" aria-label="Debug log channel">
-        <button id="logTabKws" class="devStagingButton logTabBtn active" type="button">KWS</button>
+        <button id="logTabGeneral" class="devStagingButton logTabBtn active" type="button">GENERAL</button>
+        <button id="logTabKws" class="devStagingButton logTabBtn" type="button">KWS</button>
         <button id="logTabPhone" class="devStagingButton logTabBtn" type="button">Phone</button>
       </div>
       <div id="kwsLog" class="logPopupBody" aria-label="KWS debug log"></div>

@@ -10,6 +10,7 @@ export function createDevStagingRefs(root) {
     kwsReadout: $("kwsReadout"),
     rulesReadout: $("rulesReadout"),
     kwsLog: $("kwsLog"),
+    logTabGeneral: $("logTabGeneral"),
     logTabKws: $("logTabKws"),
     logTabPhone: $("logTabPhone"),
     kwsTokenThrInput: $("kwsTokenThrInput"),
