@@ -560,9 +560,31 @@ function handleShellImpulseFrame(shellContext, data) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
   const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
+  let inputPayload = data;
+
+  if (runtime && runtime.classicSignalProcessor && runtime.classicMotionStore) {
+    try {
+      const classicState = runtime.classicSignalProcessor.processPacket(data, performance.now(), {
+        suppressShake: false,
+      });
+      runtime.classicMotionStore.publish(classicState);
+      if (classicState && classicState.spin) {
+        inputPayload = {
+          ...(data || {}),
+          spinVector: classicState.spin.vector,
+          spinAxisDominance: classicState.spin.dominance,
+          spinAxisGap: classicState.spin.gap,
+          spinAxisLabel: classicState.spin.label,
+          spinDirection: classicState.spin.direction,
+        };
+      }
+    } catch (error) {
+      try { console.warn("[staging-shell] classic spin shadow failed", error); } catch (_) {}
+    }
+  }
 
   if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
-    receiverHostRuntime.processIncomingImpulse(data);
+    receiverHostRuntime.processIncomingImpulse(inputPayload);
     if (devView && typeof devView.setStatus === "function") {
       devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
     }
@@ -1419,6 +1441,8 @@ function createStagingShellContext({
     runtime: {
       bootStatus: STAGING_SHELL_STATUS.sharedModulesReady,
       receiverModulesReady: false,
+      classicSignalProcessor: null,
+      classicMotionStore: null,
       mvp: null,
       eventBus: null,
       worldSystem: null,
@@ -2031,6 +2055,12 @@ export async function createStagingShellRuntime({
       gameStagingView,
       sharedModules,
     });
+    shellContext.runtime.classicSignalProcessor = (typeof window.createSignalProcessor === "function")
+      ? window.createSignalProcessor({})
+      : null;
+    shellContext.runtime.classicMotionStore = (typeof window.createMotionStore === "function")
+      ? window.createMotionStore()
+      : null;
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
