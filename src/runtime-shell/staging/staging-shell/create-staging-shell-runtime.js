@@ -5,6 +5,7 @@ import { createReceiverStabilityVisualController } from "../../receiver/stabilit
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
+import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
@@ -1529,66 +1530,44 @@ async function initShellKwsRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const devRefs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   if (!sharedModules || !runtime || !devRefs) return null;
-
-  const createEventBus = sharedModules.eventBusModule && sharedModules.eventBusModule.createEventBus;
-  const bootstrapKwsStaging =
-    sharedModules.bootstrapKwsStagingModule &&
-    sharedModules.bootstrapKwsStagingModule.bootstrapKwsStaging;
-  const createKwsPanelController =
-    sharedModules.kwsPanelControllerModule &&
-    sharedModules.kwsPanelControllerModule.createKwsPanelController;
-  const createKwsRuntimeController =
-    sharedModules.kwsRuntimeControllerModule &&
-    sharedModules.kwsRuntimeControllerModule.createKwsRuntimeController;
-  const createKwsBootOrchestrator =
-    sharedModules.kwsBootOrchestratorModule &&
-    sharedModules.kwsBootOrchestratorModule.createKwsBootOrchestrator;
   const bindKwsEventHandlers =
     sharedModules.kwsEventBindingsModule &&
     sharedModules.kwsEventBindingsModule.bindKwsEventHandlers;
-  const createKwsListenPolicyController =
-    sharedModules.kwsListenPolicyControllerModule &&
-    sharedModules.kwsListenPolicyControllerModule.createKwsListenPolicyController;
-  const bootstrapKwsVoiceRuntime =
-    sharedModules.kwsProviderBootstrapModule &&
-    sharedModules.kwsProviderBootstrapModule.bootstrapKwsVoiceRuntime;
-  const createKwsRuntimeConfig =
-    sharedModules.kwsConfigModule &&
-    sharedModules.kwsConfigModule.createKwsRuntimeConfig;
-  const createKwsReceiverBridge =
-    sharedModules.kwsReceiverBridgeModule &&
-    sharedModules.kwsReceiverBridgeModule.createKwsReceiverBridge;
-  const receiverEventsModule = sharedModules.receiverEventsModule || {};
-  const RECEIVER_EVENTS = {
-    ...(receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object"
-      ? receiverEventsModule.RECEIVER_EVENTS
-      : {}),
-  };
-  const loadReceiverInitModules =
-    sharedModules.receiverBootstrapModule &&
-    sharedModules.receiverBootstrapModule.loadReceiverInitModules;
 
   if (
-    typeof createEventBus !== "function" ||
-    typeof bootstrapKwsStaging !== "function" ||
-    typeof createKwsPanelController !== "function" ||
-    typeof createKwsRuntimeController !== "function" ||
-    typeof createKwsBootOrchestrator !== "function" ||
-    typeof bindKwsEventHandlers !== "function" ||
-    typeof createKwsListenPolicyController !== "function" ||
-    typeof bootstrapKwsVoiceRuntime !== "function" ||
-    typeof createKwsRuntimeConfig !== "function" ||
-    typeof createKwsReceiverBridge !== "function" ||
-    typeof loadReceiverInitModules !== "function"
+    typeof bindKwsEventHandlers !== "function"
   ) {
     return null;
   }
 
-  const receiverMods = await loadReceiverInitModules();
+  const base = await bootstrapShellKwsRuntimeBase({
+    sharedModules,
+    runtime,
+    devRefs,
+    createDevStagingPanelElements: createShellDevStagingPanelElements,
+    readNumberInputOrNull,
+  });
+  if (!base) return null;
+
   const {
-    createKwsProvider,
-    createVoiceProviderManager,
-    createOpenWakeWordBrowserBackendFactory,
+    eventBus,
+    receiverMods,
+    kwsBridge,
+    kwsPanelController,
+    kwsTokenUiState,
+    kwsRuntimeController,
+    kwsBootOrchestrator,
+    kwsWordProvider,
+    kwsVoiceProvider,
+    voiceProviderManager,
+    kwsListenPolicyController,
+    kwsDebugState,
+    kwsBackendKey,
+    runtimeConfig,
+    receiverEvents: RECEIVER_EVENTS,
+  } = base;
+
+  const {
     createRuleEnginePreviewSystem,
     createSpellCastExecutor,
     createSpellActionHandlersImported,
@@ -1611,9 +1590,6 @@ async function initShellKwsRuntime(shellContext) {
   } = receiverMods;
 
   if (
-    typeof createKwsProvider !== "function" ||
-    typeof createVoiceProviderManager !== "function" ||
-    typeof createOpenWakeWordBrowserBackendFactory !== "function" ||
     typeof createRuleEnginePreviewSystem !== "function" ||
     typeof createSpellCastExecutor !== "function" ||
     typeof createSpellActionHandlersImported !== "function"
@@ -1624,88 +1600,6 @@ async function initShellKwsRuntime(shellContext) {
   const hydrateReceiverBootstrapState =
     sharedModules.receiverBootstrapModule &&
     sharedModules.receiverBootstrapModule.hydrateReceiverBootstrapState;
-
-  let kwsWordProvider = null;
-  let kwsVoiceProvider = null;
-  let voiceProviderManager = null;
-  let kwsListenPolicyController = null;
-  let kwsBackendKey = "openwakeword_browser";
-  const kwsDebugState = { mode: "kws", backend: "openwakeword_browser" };
-  const eventBus = createEventBus();
-
-  const {
-    kwsBridge,
-    kwsPanelController,
-    kwsTokenUiState,
-    kwsRuntimeController,
-    kwsBootOrchestrator,
-    runtimeConfig,
-  } = bootstrapKwsStaging({
-    createKwsRuntimeConfig,
-    createKwsReceiverBridge,
-    createKwsPanelController,
-    createKwsRuntimeController,
-    createKwsBootOrchestrator,
-    createDevStagingPanelElements: () => createShellDevStagingPanelElements(devRefs),
-    getKwsWordProvider: () => kwsWordProvider,
-    getKwsVoiceProvider: () => kwsVoiceProvider,
-    getMvp: () => runtime.mvp,
-    readTuneFromUi: () => ({
-      inferThreshold: readNumberInputOrNull(devRefs.kwsTokenThrInput),
-      inferCooldownMs: readNumberInputOrNull(devRefs.kwsCooldownMsInput),
-    }),
-    refreshKwsMicBtn: () => {},
-    readout: {
-      setDebugMode: (mode) => { kwsDebugState.mode = String(mode || "kws"); },
-      setDebugBackend: (key) => { kwsDebugState.backend = String(key || "openwakeword_browser"); },
-      receiverEvents: RECEIVER_EVENTS,
-    },
-    runtime: {
-      defaultVoiceEngine: "kws",
-      defaultBackendKey: "openwakeword_browser",
-    },
-  });
-
-  const kwsVoiceRuntime = bootstrapKwsVoiceRuntime({
-    eventBus,
-    createKwsProvider,
-    createVoiceProviderManager,
-    createOpenWakeWordBrowserBackendFactory,
-    kwsRuntimeController,
-    defaultBackendKey: runtimeConfig.defaultBackendKey,
-    defaultVoiceEngine: runtimeConfig.defaultVoiceEngine,
-    syncKwsTuneUiFromStatus: (status) => kwsBridge.syncTuneUiFromStatus(status),
-    refreshKwsMicBtn: () => {},
-  });
-
-  kwsWordProvider = kwsVoiceRuntime.kwsWordProvider || kwsVoiceRuntime.kwsVoiceProvider || null;
-  kwsVoiceProvider = kwsVoiceRuntime.kwsVoiceProvider || kwsVoiceRuntime.kwsWordProvider || null;
-  voiceProviderManager = kwsVoiceRuntime.voiceProviderManager || null;
-  kwsBackendKey = String(kwsVoiceRuntime.kwsBackendKey || runtimeConfig.defaultBackendKey || "openwakeword_browser");
-  kwsDebugState.backend = kwsBackendKey;
-
-  kwsListenPolicyController = createKwsListenPolicyController({
-    eventBus,
-    kwsRuntimeController,
-    initialMode: String(runtimeConfig.listenPolicyMode || "A"),
-    nowMs: () => Date.now(),
-  });
-  if (kwsListenPolicyController && typeof kwsListenPolicyController.start === "function") {
-    kwsListenPolicyController.start();
-  }
-
-  if (kwsPanelController && typeof kwsPanelController.setManualListenableTokens === "function") {
-    const initialPolicyStatus = (
-      kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function"
-        ? kwsListenPolicyController.getStatus()
-        : null
-    );
-    kwsPanelController.setManualListenableTokens(
-      Array.isArray(initialPolicyStatus && initialPolicyStatus.listenableTokens)
-        ? initialPolicyStatus.listenableTokens
-        : []
-    );
-  }
 
   let ruleSchema = null;
   let runtimeWordIndex = Object.create(null);
