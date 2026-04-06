@@ -100,6 +100,10 @@ function evenStroke(value, min = 2, max = 20) {
   return n;
 }
 
+function rand(min, max) {
+  return Number(min) + (Math.random() * (Number(max) - Number(min)));
+}
+
 function pickImpulse01(d, newKey, oldKey) {
   if (d && d[newKey] != null) {
     const n = Number(d[newKey]);
@@ -989,7 +993,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
       }),
       clamp,
       evenPx,
-      rand: Math.random,
+      rand,
     },
   });
 
