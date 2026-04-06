@@ -635,6 +635,34 @@ function setShellDebugNote(shellContext, text = "") {
   }
 }
 
+function getShellClassicHudViewModel(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const store = runtime && runtime.classicMotionStore;
+  if (!store || typeof store.getState !== "function") return null;
+  const state = store.getState();
+  if (!state || !state.motion) return null;
+  const motion = state.motion;
+  const energyUI01 = clamp01(motion.energy01);
+  return {
+    lift: Number(motion.lift01) || 0,
+    groove: Number(motion.groove01) || 0,
+    smooth: Number(motion.smooth01) || 0,
+    speed: Number(motion.speed01) || 0,
+    dynamics: Number(motion.dynamics01) || 0,
+    energyUI01,
+    liftP: Math.round(clamp01(motion.lift01) * 100),
+    gP: Math.round(clamp01(motion.groove01) * 100),
+    sP: Math.round(clamp01(motion.smooth01) * 100),
+    sp: Math.round(clamp01(motion.speed01) * 100),
+    dP: Math.round(clamp01(motion.dynamics01) * 100),
+    ePts: Math.round(energyUI01 * 100),
+    shakeMeter: Number(motion.shakeMeter01) || 0,
+    sh: Number(motion.shakeDisplayValue) || 0,
+    locked: !!motion.locked,
+    over: false,
+  };
+}
+
 function pushShellGeneralLog(shellContext, text = "", kind = "") {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const kwsPanelController = runtime && runtime.kws ? runtime.kws.kwsPanelController : null;
@@ -1369,7 +1397,11 @@ async function initShellReceiverHostRuntime(shellContext) {
     pickShakeMetric,
     buildInputHudViewModel,
     renderInputHud: (shellContext.views && shellContext.views.devStagingView && typeof shellContext.views.devStagingView.renderInputHud === "function")
-      ? (vm) => shellContext.views.devStagingView.renderInputHud(vm)
+      ? (vm) => {
+          const nextVm = getShellClassicHudViewModel(shellContext) || vm;
+          if (!nextVm) return;
+          shellContext.views.devStagingView.renderInputHud(nextVm);
+        }
       : null,
   });
   if (runtime.receiverHostRuntime && typeof processIncomingImpulse === "function") {
