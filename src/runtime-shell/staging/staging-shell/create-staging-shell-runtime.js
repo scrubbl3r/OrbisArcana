@@ -1008,6 +1008,7 @@ async function initShellReceiverHostRuntime(shellContext) {
   const {
     receiverHostState,
     runInputFramePipelineImported,
+    buildInputHudViewModel,
     applyStabilityVisuals,
   } = assembly;
 
