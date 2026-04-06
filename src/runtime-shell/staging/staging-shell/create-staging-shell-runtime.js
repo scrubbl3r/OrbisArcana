@@ -2,6 +2,7 @@ import { mountDevStaging } from "../dev-staging/dev-staging.js";
 import { renderGameStaging } from "../game-staging/game-staging.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
+import { buildReceiverSpinDebugNote } from "../../receiver/spin-debug-readout.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
@@ -561,6 +562,7 @@ function handleShellImpulseFrame(shellContext, data) {
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
   const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
   let inputPayload = data;
+  let latestClassicSpin = null;
 
   if (runtime && runtime.classicSignalProcessor && runtime.classicMotionStore) {
     try {
@@ -568,6 +570,7 @@ function handleShellImpulseFrame(shellContext, data) {
         suppressShake: false,
       });
       runtime.classicMotionStore.publish(classicState);
+      latestClassicSpin = classicState && classicState.spin ? classicState.spin : null;
       if (classicState && classicState.spin) {
         inputPayload = {
           ...(data || {}),
@@ -581,6 +584,15 @@ function handleShellImpulseFrame(shellContext, data) {
     } catch (error) {
       try { console.warn("[staging-shell] classic spin shadow failed", error); } catch (_) {}
     }
+  }
+
+  if (devView && typeof devView.setDebugNote === "function") {
+    try {
+      devView.setDebugNote(buildReceiverSpinDebugNote({
+        raw: inputPayload,
+        spin: latestClassicSpin,
+      }));
+    } catch (_) {}
   }
 
   if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
@@ -1867,6 +1879,19 @@ async function initShellKwsRuntime(shellContext) {
     if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
     kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
   });
+  const kwsSpinTraceOpenOff = eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_OPENED, (payload = {}) => {
+    if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
+    const axis = String(payload.axis || "-");
+    const atMs = Number(payload.atMs || 0);
+    kwsPanelController.pushPhoneLogLine(`TRACE spin_open axis:${axis} at:${Math.round(atMs)}`, "ok");
+  });
+  const kwsSpinTraceCloseOff = eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED, (payload = {}) => {
+    if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
+    const axis = String(payload.axis || "-");
+    const reason = String(payload.reason || "-");
+    const atMs = Number(payload.atMs || 0);
+    kwsPanelController.pushPhoneLogLine(`TRACE spin_close axis:${axis} reason:${reason} at:${Math.round(atMs)}`, "muted");
+  });
 
   runtime.eventBus = eventBus;
   runtime.receiverSpellRuntime = {
@@ -1949,6 +1974,8 @@ async function initShellKwsRuntime(shellContext) {
     kwsWakeWindowVisuals,
     kwsRuleTraceOff,
     kwsActionTraceOff,
+    kwsSpinTraceOpenOff,
+    kwsSpinTraceCloseOff,
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
