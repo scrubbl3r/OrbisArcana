@@ -639,13 +639,65 @@ function patchShellOrbRuntime(shellContext, patch = {}) {
   orbRuntimeState.patch(patch);
 }
 
+function getShellOrbRuntime(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbRuntimeState = runtime && runtime.orbRuntimeState;
+  if (!orbRuntimeState || typeof orbRuntimeState.get !== "function") return null;
+  return orbRuntimeState.get();
+}
+
+function resetShellInputProcessingState(shellContext, atMs = performance.now()) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
+  if (
+    receiverHostRuntime &&
+    receiverHostRuntime.inputSystemsBundle &&
+    typeof receiverHostRuntime.inputSystemsBundle.resetProcessingState === "function"
+  ) {
+    receiverHostRuntime.inputSystemsBundle.resetProcessingState(atMs);
+    return;
+  }
+  if (receiverHostRuntime && receiverHostRuntime.inputSystem && typeof receiverHostRuntime.inputSystem.reset === "function") {
+    receiverHostRuntime.inputSystem.reset(atMs);
+  }
+  if (
+    receiverHostRuntime &&
+    receiverHostRuntime.inputDynamicsSystem &&
+    typeof receiverHostRuntime.inputDynamicsSystem.reset === "function"
+  ) {
+    receiverHostRuntime.inputDynamicsSystem.reset(atMs);
+  }
+  if (
+    receiverHostRuntime &&
+    receiverHostRuntime.inputGestureSystem &&
+    typeof receiverHostRuntime.inputGestureSystem.reset === "function"
+  ) {
+    receiverHostRuntime.inputGestureSystem.reset(atMs);
+  }
+}
+
 function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 0) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const stage = runtime && runtime.stage;
-  const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
-    ? runtime.orbRuntimeState.get()
-    : null;
+  const orbState = getShellOrbRuntime(shellContext);
   if (!stage || !orbState) return { handled: false };
+  const teleportOrbRuntimeToSpawn =
+    runtime &&
+    runtime.receiverSpellRuntime &&
+    runtime.receiverSpellRuntime.teleportOrbRuntimeToSpawn;
+  if (typeof teleportOrbRuntimeToSpawn === "function") {
+    const result = teleportOrbRuntimeToSpawn({
+      patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
+      applyOrbTransform: () => applyShellOrbTransform(shellContext),
+      worldSystem: stage.worldSystem || null,
+      groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+      phys: stage.phys || {},
+      aboveGroundPx,
+      nowMs: performance.now(),
+      updateDebugReadout: () => updateShellStageReadouts(shellContext),
+    });
+    if (result && result.handled) return result;
+  }
   const yFloor = shellGroundCenterWorld(shellContext);
   const yCeil = Number(stage.phys && stage.phys.orbRadiusPx) || 50;
   const lift = Math.max(0, Number(aboveGroundPx) || 0);
@@ -670,10 +722,23 @@ function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 
 
 function shellGrantFloatGrace(shellContext, ms = 1000) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
-    ? runtime.orbRuntimeState.get()
-    : null;
+  const orbState = getShellOrbRuntime(shellContext);
   if (!orbState) return;
+  const grantFloatGraceRuntime =
+    runtime &&
+    runtime.receiverSpellRuntime &&
+    runtime.receiverSpellRuntime.grantFloatGraceRuntime;
+  if (typeof grantFloatGraceRuntime === "function") {
+    grantFloatGraceRuntime({
+      patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
+      getOrbRuntime: () => getShellOrbRuntime(shellContext),
+      durationMs: ms,
+      defaultMs: 1000,
+      nowMs: performance.now(),
+    });
+    applyShellOrbTransform(shellContext);
+    return;
+  }
   const now = performance.now();
   const yFloor = shellGroundCenterWorld(shellContext);
   const yCeil = Number(runtime && runtime.stage && runtime.stage.phys && runtime.stage.phys.orbRadiusPx) || 50;
@@ -692,6 +757,21 @@ function shellGrantFloatGrace(shellContext, ms = 1000) {
 }
 
 function shellGrantSuperGrace(shellContext, ms = 2500) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const grantSuperGraceRuntime =
+    runtime &&
+    runtime.receiverSpellRuntime &&
+    runtime.receiverSpellRuntime.grantSuperGraceRuntime;
+  if (typeof grantSuperGraceRuntime === "function") {
+    grantSuperGraceRuntime({
+      resetInputProcessingState: (atMs) => resetShellInputProcessingState(shellContext, atMs),
+      grantFloatGrace: (durMs) => shellGrantFloatGrace(shellContext, durMs),
+      durationMs: ms,
+      defaultMs: 2500,
+      nowMs: performance.now(),
+    });
+    return;
+  }
   shellGrantFloatGrace(shellContext, ms);
 }
 
@@ -1586,6 +1666,9 @@ async function initShellKwsRuntime(shellContext) {
     playElectricAoeRuntime,
     playFlameAoeRuntime,
     triggerShockwaveRuntime,
+    teleportOrbRuntimeToSpawn,
+    grantFloatGraceRuntime,
+    grantSuperGraceRuntime,
     hydrateReceiverVfxDefaults,
     BUBBLE_SHIELD_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
@@ -1762,6 +1845,11 @@ async function initShellKwsRuntime(shellContext) {
   });
 
   runtime.eventBus = eventBus;
+  runtime.receiverSpellRuntime = {
+    teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
+    grantFloatGraceRuntime: (typeof grantFloatGraceRuntime === "function") ? grantFloatGraceRuntime : null,
+    grantSuperGraceRuntime: (typeof grantSuperGraceRuntime === "function") ? grantSuperGraceRuntime : null,
+  };
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
     playElectricAoe: () => (

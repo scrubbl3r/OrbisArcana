@@ -138,6 +138,23 @@
   flex: 0 0 auto;
 }
 
+.devStagingLamp.on {
+  border-color: rgba(255,60,60,0.88);
+  background: var(--lamp);
+  box-shadow:
+    0 0 12px var(--lampGlow),
+    0 0 28px rgba(255,60,60,0.26);
+}
+
+#dynLampStable.on,
+#dynLampVar.on {
+  border-color: rgba(80,160,255,0.90);
+  background: var(--dynLamp);
+  box-shadow:
+    0 0 12px var(--dynLampGlow),
+    0 0 28px rgba(80,160,255,0.30);
+}
+
 .devStagingDirRow {
   display: flex;
   gap: 10px;
