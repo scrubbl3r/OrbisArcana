@@ -39,6 +39,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     orbShatterRuntimeModule,
     orbRuntimeStateModule,
     orbRuntimeLoopModule,
+    orbRuntimePipelineModule,
   ] = await Promise.all([
     import("../../events/event-bus.js"),
     import(withVersion("../../runtime/receiver-bootstrap.js", moduleCacheBustV)),
@@ -70,6 +71,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import("../../game-runtime/orb/orb-shatter-runtime.js"),
     import("../../game-runtime/orb/orb-runtime-state.js"),
     import("../../game-runtime/orb/orb-runtime-loop.js"),
+    import("../../game-runtime/orb/orb-runtime-pipeline.js"),
   ]);
 
   return {
@@ -103,5 +105,6 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     orbShatterRuntimeModule,
     orbRuntimeStateModule,
     orbRuntimeLoopModule,
+    orbRuntimePipelineModule,
   };
 }

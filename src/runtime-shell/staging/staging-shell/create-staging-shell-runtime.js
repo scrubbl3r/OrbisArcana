@@ -67,6 +67,12 @@ const SHELL_STAGE_UI_DEFAULTS = Object.freeze({
   downDragMax: 1,
 });
 
+const SHELL_IMPACT_MODEL = Object.freeze({
+  mass: 1.0,
+  gravityExp: 0.5,
+  dragMirrorScale: 0.5,
+});
+
 function cloneJsonLike(value, fallback = {}) {
   if (!value || typeof value !== "object") return { ...fallback };
   try {
@@ -356,6 +362,21 @@ function updateShellStageReadouts(shellContext) {
   if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag).toFixed(2);
 }
 
+function computeShellImpactMetric(shellContext, rawImpactV) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const stage = runtime && runtime.stage ? runtime.stage : null;
+  const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  const v = Math.max(0, Number(rawImpactV) || 0);
+  const gMul = Math.max(0.05, Number(orbState && orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul);
+  const fallDrag = clamp(Number(stage && stage.phys && stage.phys.downDrag) || 0, -1, 1);
+  const eLike = 0.5 * SHELL_IMPACT_MODEL.mass * v * v;
+  const gravityTerm = Math.pow(gMul, SHELL_IMPACT_MODEL.gravityExp);
+  const dragMirror = clamp(1 - (fallDrag * SHELL_IMPACT_MODEL.dragMirrorScale), 0.05, 2.0);
+  return Math.sqrt(eLike * 2) * gravityTerm * dragMirror;
+}
+
 function activateShellStageVisuals(shellContext) {
   ensureShellStageBackdrop(shellContext);
   resetShellOrbToGround(shellContext);
@@ -625,7 +646,11 @@ function startShellStageLoop(shellContext) {
     sharedModules &&
     sharedModules.orbRuntimeLoopModule &&
     sharedModules.orbRuntimeLoopModule.createOrbRuntimeLoop;
-  if (!runtime || typeof createOrbRuntimeLoop !== "function") return;
+  const runOrbRuntimePipeline =
+    sharedModules &&
+    sharedModules.orbRuntimePipelineModule &&
+    sharedModules.orbRuntimePipelineModule.runOrbRuntimePipeline;
+  if (!runtime || typeof createOrbRuntimeLoop !== "function" || typeof runOrbRuntimePipeline !== "function") return;
 
   if (runtime.stageLoop && typeof runtime.stageLoop.stop === "function") {
     runtime.stageLoop.stop();
@@ -639,24 +664,55 @@ function startShellStageLoop(shellContext) {
     ),
     isReady: () => true,
     clamp,
-    runFrame: ({ ts, dt }) => {
-      tickShellStageRuntime(shellContext, dt);
-      updateShellOrbStrokeColor(shellContext, dt);
-      applyShellGroundLine(shellContext);
-      applyShellOrbTransform(shellContext);
+    runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
+      const receiverHostRuntime = runtime.receiverHostRuntime || null;
+      const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || runtime.mvp || null;
       const orbFxSystem =
-        (runtime.receiverHostRuntime && runtime.receiverHostRuntime.runtimeContext && runtime.receiverHostRuntime.runtimeContext.orbFxSystem) ||
-        (runtime.mvp && runtime.mvp.orbFxSystem) ||
+        (receiverHostRuntime && receiverHostRuntime.runtimeContext && receiverHostRuntime.runtimeContext.orbFxSystem) ||
+        (mvp && mvp.orbFxSystem) ||
         null;
-      if (orbFxSystem && typeof orbFxSystem.tick === "function") {
-        orbFxSystem.tick(ts, dt);
-      }
-      if (runtime.stage && runtime.stage.worldSystem && typeof runtime.stage.worldSystem.tick === "function") {
-        runtime.stage.worldSystem.tick(performance.now(), dt);
-      }
+      runOrbRuntimePipeline({
+        ts,
+        dt,
+        nowMs,
+        wasOnGround,
+        orbRuntimeState: runtime.orbRuntimeState,
+        phys: runtime.stage ? runtime.stage.phys : {},
+        shieldDescent: runtime.stage ? runtime.stage.shieldDescent : {},
+        mvp,
+        orbFxSystem,
+        worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
+        hooks: {
+          clamp,
+          liftToThrustAccel: (l01) => {
+            const phys = runtime.stage ? runtime.stage.phys : null;
+            return Math.max(0, Number(phys && phys.thrustMax) || 0) * clamp01(l01);
+          },
+          isFloatGraceActive: (frameNowMs) => {
+            const state = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+              ? runtime.orbRuntimeState.get()
+              : null;
+            return !!(state && state.floatGraceActive && Number(state.floatGraceUntilMs) > Number(frameNowMs || 0));
+          },
+          clearFloatGrace: () => {
+            patchShellOrbRuntime(shellContext, {
+              floatGraceActive: false,
+              floatGraceUntilMs: 0,
+            });
+          },
+          groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+          computeImpactMetric: (rawImpactV) => computeShellImpactMetric(shellContext, rawImpactV),
+          drawStars: () => drawShellStars(shellContext),
+          drawWorldBackdrop: () => drawShellBackdrop(shellContext),
+          updateOrbStrokeColor: (frameDt) => updateShellOrbStrokeColor(shellContext, frameDt),
+          applyOrbTransform: () => {
+            applyShellGroundLine(shellContext);
+            applyShellOrbTransform(shellContext);
+          },
+          updateDebugReadout: () => updateShellStageReadouts(shellContext),
+        },
+      });
       updateShellStageReadouts(shellContext);
-      drawShellStars(shellContext);
-      drawShellBackdrop(shellContext);
     },
   });
   runtime.orbRuntimeLoop = runtime.stageLoop;
