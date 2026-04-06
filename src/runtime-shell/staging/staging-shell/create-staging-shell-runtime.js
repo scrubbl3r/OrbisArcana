@@ -2,7 +2,6 @@ import { mountDevStaging } from "../dev-staging/dev-staging.js";
 import { renderGameStaging } from "../game-staging/game-staging.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { buildReceiverSpinDebugNote } from "../../receiver/spin-debug-readout.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
@@ -595,7 +594,6 @@ function handleShellImpulseFrame(shellContext, data) {
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
   const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
   let inputPayload = data;
-  let latestClassicSpin = null;
 
   if (runtime && runtime.classicSignalProcessor && runtime.classicMotionStore) {
     try {
@@ -603,7 +601,6 @@ function handleShellImpulseFrame(shellContext, data) {
         suppressShake: false,
       });
       runtime.classicMotionStore.publish(classicState);
-      latestClassicSpin = classicState && classicState.spin ? classicState.spin : null;
       if (classicState && classicState.spin) {
         inputPayload = {
           ...(data || {}),
@@ -617,15 +614,6 @@ function handleShellImpulseFrame(shellContext, data) {
     } catch (error) {
       try { console.warn("[staging-shell] classic spin shadow failed", error); } catch (_) {}
     }
-  }
-
-  if (devView && typeof devView.setDebugNote === "function") {
-    try {
-      devView.setDebugNote(buildReceiverSpinDebugNote({
-        raw: inputPayload,
-        spin: latestClassicSpin,
-      }));
-    } catch (_) {}
   }
 
   if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
@@ -871,7 +859,7 @@ function spawnShellShardFx(shellContext, payload) {
       : null;
     if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
       kwsBridge.pushLogLine(
-        `TRACE shell_shard_spawn handled:${handled ? 1 : 0} count:${Number(shardState && shardState.count) || 0} running:${shardState && shardState.running ? 1 : 0}`,
+        `TRACE shatter piece:${String(payload && payload.pieceId || "-")} handled:${handled ? 1 : 0} count:${Number(shardState && shardState.count) || 0} running:${shardState && shardState.running ? 1 : 0}`,
         handled ? "ok" : "warn"
       );
     }
@@ -1065,31 +1053,6 @@ function createShellReceiverVfxDefaults() {
   return defaults;
 }
 
-function traceShellElectricAoe(shellContext) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const kwsBridge = runtime && runtime.kws ? runtime.kws.kwsBridge : null;
-  const stageEls = shellContext && shellContext.stageEls ? shellContext.stageEls : null;
-  const layerEl = stageEls && stageEls.electricLayer ? stageEls.electricLayer : null;
-  const orbEl = stageEls && stageEls.orb ? stageEls.orb : null;
-  const physStage = stageEls && stageEls.physStage ? stageEls.physStage : null;
-  if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function" || !layerEl) return;
-
-  const canvas = layerEl.querySelector("canvas");
-  const layerRect = layerEl.getBoundingClientRect ? layerEl.getBoundingClientRect() : null;
-  const canvasRect = canvas && canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
-  const orbRect = orbEl && orbEl.getBoundingClientRect ? orbEl.getBoundingClientRect() : null;
-  const stageRect = physStage && physStage.getBoundingClientRect ? physStage.getBoundingClientRect() : null;
-  const msg = [
-    `TRACE electric`,
-    `canvas:${canvas ? `${canvas.width}x${canvas.height}` : "-"}`,
-    `canvasRect:${canvasRect ? `${Math.round(canvasRect.left)},${Math.round(canvasRect.top)},${Math.round(canvasRect.width)}x${Math.round(canvasRect.height)}` : "-"}`,
-    `layerRect:${layerRect ? `${Math.round(layerRect.left)},${Math.round(layerRect.top)},${Math.round(layerRect.width)}x${Math.round(layerRect.height)}` : "-"}`,
-    `orbRect:${orbRect ? `${Math.round(orbRect.left)},${Math.round(orbRect.top)},${Math.round(orbRect.width)}x${Math.round(orbRect.height)}` : "-"}`,
-    `stageRect:${stageRect ? `${Math.round(stageRect.left)},${Math.round(stageRect.top)},${Math.round(stageRect.width)}x${Math.round(stageRect.height)}` : "-"}`,
-  ].join(" ");
-  kwsBridge.pushLogLine(msg, "muted");
-}
-
 function initShellReceiverVfxRuntime(shellContext, mods = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
@@ -1217,13 +1180,11 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
           electricAoeRuntime: shellVfx.electricAoeRuntime,
         });
         if (result && result.handled) {
-          traceShellElectricAoe(shellContext);
           return result;
         }
       }
       if (shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.play === "function") {
         shellVfx.electricAoeRuntime.play();
-        traceShellElectricAoe(shellContext);
         return { handled: true };
       }
       return { handled: false };
@@ -2146,36 +2107,6 @@ async function initShellKwsRuntime(shellContext) {
     if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
     kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
   });
-  const kwsSpinTraceOpenOff = eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_OPENED, (payload = {}) => {
-    if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
-    const axis = String(payload.axis || "-");
-    const atMs = Number(payload.atMs || 0);
-    kwsPanelController.pushPhoneLogLine(`TRACE spin_open axis:${axis} at:${Math.round(atMs)}`, "ok");
-  });
-  const kwsSpinTraceCloseOff = eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED, (payload = {}) => {
-    if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
-    const axis = String(payload.axis || "-");
-    const reason = String(payload.reason || "-");
-    const atMs = Number(payload.atMs || 0);
-    kwsPanelController.pushPhoneLogLine(`TRACE spin_close axis:${axis} reason:${reason} at:${Math.round(atMs)}`, "muted");
-  });
-  const kwsSpellLoadedTraceOff = eventBus.on("voice.spell_loaded", (payload = {}) => {
-    if (!kwsPanelController || typeof kwsPanelController.pushPhoneLogLine !== "function") return;
-    const slot = String(payload.slot || "-").trim().toUpperCase() || "-";
-    const axis = String(payload.axis || "-").trim().toLowerCase() || "-";
-    const spell = String((payload.castActionId || payload.wordId || payload.spellId) || "-").trim().toLowerCase() || "-";
-    const physStage = shellContext && shellContext.stageEls ? shellContext.stageEls.physStage : null;
-    requestAnimationFrame(() => {
-      const orbitCount = physStage && typeof physStage.querySelectorAll === "function"
-        ? physStage.querySelectorAll(".orbitGlobe").length
-        : 0;
-      kwsPanelController.pushPhoneLogLine(
-        `TRACE shell_slot_loaded slot:${slot} axis:${axis} spell:${spell} orbit:${orbitCount}`,
-        orbitCount > 0 ? "ok" : "warn"
-      );
-    });
-  });
-
   runtime.eventBus = eventBus;
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
@@ -2257,9 +2188,6 @@ async function initShellKwsRuntime(shellContext) {
     kwsWakeWindowVisuals,
     kwsRuleTraceOff,
     kwsActionTraceOff,
-    kwsSpinTraceOpenOff,
-    kwsSpinTraceCloseOff,
-    kwsSpellLoadedTraceOff,
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
