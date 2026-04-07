@@ -1006,7 +1006,6 @@
     let lanSession = null;
     let classicShadowPacketCount = 0;
     let classicShadowLastAtMs = 0;
-    let classicReceiverTransport = null;
     let classicPairingServiceFactory = null;
     let classicFastPathHostTransportFactory = null;
     let buildReceiverSpinDebugNoteModule = null;
@@ -1029,7 +1028,6 @@
           import("./src/runtime-shell/receiver/dev-lamps.js"),
           import("./src/runtime-shell/receiver/spin-debug-readout.js"),
           import("./src/runtime-shell/staging/dev-staging/create-legacy-dev-staging-adapter.js"),
-          import("./src/runtime-shell/session/relay-transport.js"),
           import("./src/runtime-shell/session/pairing-service.js"),
           import("./src/runtime-shell/session/fast-path-transport.js"),
         ]);
@@ -1082,12 +1080,6 @@
         classicMotionStore = (typeof window.createMotionStore === "function")
           ? window.createMotionStore()
           : null;
-        classicReceiverTransport = (typeof window.createReceiverTransport === "function")
-          ? window.createReceiverTransport({
-              workerBase: WORKER_BASE,
-              ablyCtor: (typeof Ably !== "undefined" && Ably) ? Ably : null,
-            })
-          : null;
         classicPairingServiceFactory = (typeof window.createPairingService === "function")
           ? window.createPairingService
           : null;
@@ -1098,7 +1090,6 @@
           calibrationSession: classicCalibrationSession,
           signalProcessor: classicSignalProcessor,
           motionStore: classicMotionStore,
-          receiverTransport: classicReceiverTransport,
           pairingServiceFactory: classicPairingServiceFactory,
           fastPathHostTransportFactory: classicFastPathHostTransportFactory,
           getSnapshot: () => (classicMotionStore && typeof classicMotionStore.getState === "function")
@@ -1111,7 +1102,6 @@
         classicCalibrationSession = null;
         classicSignalProcessor = null;
         classicMotionStore = null;
-        classicReceiverTransport = null;
         classicPairingServiceFactory = null;
         classicFastPathHostTransportFactory = null;
         console.warn("Classic receiver shadow core init failed:", e);
@@ -3286,41 +3276,9 @@
       try { if (realtime) realtime.close(); } catch(e) {}
       realtime = null; channel = null;
 
-      if (classicReceiverTransport && typeof classicReceiverTransport.disconnect === "function") {
-        classicReceiverTransport.disconnect();
-      }
-
       const roomCode = stripOrbPrefix(roomChannel);
       const authUrl = WORKER_BASE + "/token?room=" + encodeURIComponent(roomCode) + "&v=" + Date.now();
       bindCalibrationButton();
-
-      if (classicReceiverTransport && typeof classicReceiverTransport.connect === "function") {
-        const connected = classicReceiverTransport.connect({
-          roomChannel,
-          onConnectionConnected: () => setStatus(`Connected ✓ <span class="dim">(${roomChannel})</span>`, "ok"),
-          onConnectionFailed: (st) => { console.error("Ably failed:", st); setStatus("FAILED — see console", "bad"); },
-          onConnectionDisconnected: () => setStatus("Disconnected <span class=\"dim\">(refresh page)</span>", "bad"),
-          onAttached: (err) => {
-            if (err) {
-              console.error("Channel attach failed:", err);
-              setStatus("Channel attach FAILED — see console", "bad");
-              return;
-            }
-            setStatus(`Connected ✓ (listening…) <span class="dim">(${roomChannel})</span>`, "ok");
-            idleStartTimers();
-          },
-          onMessage: (d) => {
-            if (lanSession && lanSession.shouldIgnoreAblyImpulses()) return;
-            if (els.pairModal.classList.contains("on")) closePairModal();
-            if (els.startScreen && !els.startScreen.classList.contains("off")) hideStartScreen();
-            handleIncomingImpulse(d);
-          },
-        });
-        realtime = connected ? connected.realtime : null;
-        channel = connected ? connected.channel : null;
-        connecting = false;
-        return;
-      }
 
       realtime = new Ably.Realtime({ authUrl, echoMessages:false });
 
