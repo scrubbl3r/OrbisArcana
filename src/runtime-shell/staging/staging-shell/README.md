@@ -9,6 +9,7 @@ Planned responsibilities:
 The shell should orchestrate staging surfaces, not own deep gameplay logic.
 
 Current testing policy:
-- `game-receiver.html` remains the stability baseline while migration continues
-- `staging-shell.html` is the preferred URL for architecture-forward staging work
-- once parity is proven here, behavior can be cut over from the legacy receiver
+- `staging-shell.html` is now the default harness and default smoke target
+- `game-receiver.html` is temporary fallback/comparator only
+- new receiver/runtime work should land in the shell path, not the old root host
+- once the proving window closes, the remaining legacy receiver harness can be retired

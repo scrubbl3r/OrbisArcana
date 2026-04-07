@@ -9,7 +9,7 @@ Preflight:
 - Run `npm run status:v2` before manual KWS checks to confirm current v2 health and contracts are green.
 
 ## 1) Boot + Auto Start
-- Load `game-receiver.html`.
+- Load `src/runtime-shell/staging/staging-shell/staging-shell.html`.
 - Confirm no freeze/hard error on boot.
 - Confirm KWS auto-starts without gesture interaction.
 - Confirm status line reaches infer-ready path (for example `inf:on/...` after warmup).
