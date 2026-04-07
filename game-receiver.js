@@ -6,7 +6,6 @@
       startQr: $("startQr"),
 
       devStagingLegacy: $("devStagingLegacy"),
-      devStagingMount: $("devStagingMount"),
 
       pairBtn: $("pairBtn"),
       lanPartyBtn: $("lanPartyBtn"),
@@ -117,8 +116,6 @@
     };
 
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
-    const ENABLE_MOUNTED_DEV_STAGING = false;
-
     function clamp01(x){ x = Number(x); return Math.max(0, Math.min(1, isFinite(x) ? x : 0)); }
     function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
     const lerp = (a,b,t) => a + (b-a)*t;
@@ -317,61 +314,50 @@
     let closeDevStagingTopmostPopup = null;
     let projectDevStagingPanelRefs = null;
     let createDevStagingPanelElementsFromView = null;
-    let legacyDevStagingView = createBootFallbackDevStagingAdapter();
-    let currentDevStagingView = legacyDevStagingView;
-    let devStagingRefs = currentDevStagingView.refs;
+    let devStagingView = createBootFallbackDevStagingAdapter();
+    let devStagingRefs = devStagingView.refs;
 
-    function setCurrentDevStagingView(nextView) {
-      if (!nextView) return;
-      currentDevStagingView = nextView;
-      devStagingRefs = currentDevStagingView.refs || {};
-    }
-
-    function refreshLegacyDevStagingView() {
-      const wasUsingLegacyView = (currentDevStagingView === legacyDevStagingView);
-      const nextLegacyDevStagingView = createBootFallbackDevStagingAdapter();
-      legacyDevStagingView = nextLegacyDevStagingView;
-      if (wasUsingLegacyView) {
-        setCurrentDevStagingView(legacyDevStagingView);
-      }
-      return nextLegacyDevStagingView;
+    function refreshDevStagingView() {
+      devStagingView = createBootFallbackDevStagingAdapter();
+      devStagingRefs = devStagingView.refs || {};
+      return devStagingView;
     }
 
     function setDevSurfaceDebugNote(text = "") {
-      if (!currentDevStagingView || typeof currentDevStagingView.setDebugNote !== "function") return;
-      currentDevStagingView.setDebugNote(text);
+      if (!devStagingView || typeof devStagingView.setDebugNote !== "function") return;
+      devStagingView.setDebugNote(text);
     }
 
     function setDevSurfaceFatal(message = "") {
-      if (!currentDevStagingView || typeof currentDevStagingView.setFatal !== "function") return;
-      currentDevStagingView.setFatal(message);
+      if (!devStagingView || typeof devStagingView.setFatal !== "function") return;
+      devStagingView.setFatal(message);
     }
 
     function setDevSurfaceStatus(html, cls) {
-      if (!currentDevStagingView || typeof currentDevStagingView.setStatus !== "function") return;
-      currentDevStagingView.setStatus(html, cls);
+      if (!devStagingView || typeof devStagingView.setStatus !== "function") return;
+      devStagingView.setStatus(html, cls);
     }
 
     function closeTopmostDevSurfacePopup() {
-      if (!currentDevStagingView || typeof currentDevStagingView.closeTopmostPopup !== "function") return false;
-      return !!currentDevStagingView.closeTopmostPopup();
+      if (!devStagingView || typeof devStagingView.closeTopmostPopup !== "function") return false;
+      return !!devStagingView.closeTopmostPopup();
     }
 
     function resetDevSurfaceMeters() {
-      if (!currentDevStagingView || typeof currentDevStagingView.resetMeters !== "function") return;
-      currentDevStagingView.resetMeters();
+      if (!devStagingView || typeof devStagingView.resetMeters !== "function") return;
+      devStagingView.resetMeters();
     }
 
     function renderDevSurfaceHud(vm) {
-      if (!currentDevStagingView || typeof currentDevStagingView.renderInputHud !== "function") return;
-      currentDevStagingView.renderInputHud(vm);
+      if (!devStagingView || typeof devStagingView.renderInputHud !== "function") return;
+      devStagingView.renderInputHud(vm);
     }
 
     function createDevStagingPanelElements() {
       return (typeof createDevStagingPanelElementsFromView === "function")
-        ? createDevStagingPanelElementsFromView(currentDevStagingView)
+        ? createDevStagingPanelElementsFromView(devStagingView)
         : (() => {
-            const refs = currentDevStagingView.refs || {};
+            const refs = devStagingView.refs || {};
             return (typeof projectDevStagingPanelRefs === "function")
               ? projectDevStagingPanelRefs(refs)
               : {
@@ -397,61 +383,6 @@
                   wordBoardDebugBody: refs.wordBoardDebugBody || null,
                 };
           })();
-    }
-
-    async function maybeMountDevStagingSurface() {
-      if (!ENABLE_MOUNTED_DEV_STAGING) return null;
-      if (!els.devStagingMount || !els.devStagingLegacy) return null;
-      try {
-        const {
-          closeDevStagingTopmostPopup: closeDevStagingTopmostPopupModule,
-          createDevStagingPanelElementsFromView: createDevStagingPanelElementsFromViewModule,
-          mountDevStaging,
-          projectDevStagingPanelRefs: projectDevStagingPanelRefsModule,
-          renderDevStagingHud: renderDevStagingHudModule,
-          resetDevStagingHud: resetDevStagingHudModule,
-          setDevStagingDebugNote: setDevStagingDebugNoteModule,
-          setDevStagingFatal: setDevStagingFatalModule,
-          setDevStagingStatus: setDevStagingStatusModule,
-        } = await import("./src/runtime-shell/staging/dev-staging/dev-staging.js");
-        closeDevStagingTopmostPopup = (typeof closeDevStagingTopmostPopupModule === "function")
-          ? closeDevStagingTopmostPopupModule
-          : null;
-        createDevStagingPanelElementsFromView = (typeof createDevStagingPanelElementsFromViewModule === "function")
-          ? createDevStagingPanelElementsFromViewModule
-          : null;
-        projectDevStagingPanelRefs = (typeof projectDevStagingPanelRefsModule === "function")
-          ? projectDevStagingPanelRefsModule
-          : null;
-        renderDevStagingHud = (typeof renderDevStagingHudModule === "function")
-          ? renderDevStagingHudModule
-          : null;
-        resetDevStagingHud = (typeof resetDevStagingHudModule === "function")
-          ? resetDevStagingHudModule
-          : null;
-        setDevStagingDebugNote = (typeof setDevStagingDebugNoteModule === "function")
-          ? setDevStagingDebugNoteModule
-          : null;
-        setDevStagingFatal = (typeof setDevStagingFatalModule === "function")
-          ? setDevStagingFatalModule
-          : null;
-        setDevStagingStatus = (typeof setDevStagingStatusModule === "function")
-          ? setDevStagingStatusModule
-          : null;
-        const mounted = (typeof mountDevStaging === "function")
-          ? mountDevStaging(els.devStagingMount)
-          : null;
-        if (!mounted) return null;
-        setCurrentDevStagingView(mounted);
-        els.devStagingLegacy.classList.add("off");
-        els.devStagingLegacy.setAttribute("aria-hidden", "true");
-        els.devStagingMount.classList.remove("off");
-        els.devStagingMount.setAttribute("aria-hidden", "false");
-        return mounted;
-      } catch (err) {
-        console.warn("Mounted dev-staging activation failed:", err);
-        return null;
-      }
     }
 
     function computeLift01(groove01, smooth01, speed01){
@@ -1131,7 +1062,7 @@
         createLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createLegacyDevStagingAdapter || null;
         createLegacyDevStagingRefsFactory = legacyDevStagingAdapterModule.createLegacyDevStagingRefsFromElements || null;
         createInlineLegacyDevStagingAdapterFactory = legacyDevStagingAdapterModule.createInlineLegacyDevStagingAdapter || null;
-        refreshLegacyDevStagingView();
+        refreshDevStagingView();
         if (
           !receiverStabilityVisualController &&
           typeof createInlineReceiverStabilityVisualControllerModule === "function"
@@ -3473,7 +3404,6 @@
 
     (async function init(){
       await initUiOverlaysSystem();
-      await maybeMountDevStagingSurface();
       await initClassicReceiverShadowCore();
       await initMobileImpulseSystem();
       await initLanSessionSystem();
