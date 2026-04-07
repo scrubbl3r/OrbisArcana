@@ -3368,7 +3368,6 @@
       initMvpSystems();
       connect({ auto:true });
       syncStartQrSizeToTitlePx();
-      launchLanPairingFlow();
     })();
 
     window.addEventListener("resize", () => {
