@@ -22,8 +22,9 @@
     // UI — Start/Stop + Gesture Lab
     // =========================================================================
     const transmitterPageShell = window.__orbisTransmitterPageShell || null;
-    const VERSION_TAG = !transmitterPageShell;
-    const VERSION_TEXT = "vtag:shield-debug";
+    const transmitterUiBoot = window.__orbisTransmitterUiBoot || null;
+    const VERSION_TAG = !transmitterUiBoot;
+    const VERSION_TEXT = (transmitterUiBoot && transmitterUiBoot.versionText) || "vtag:shield-debug";
     const startBtn = transmitterPageShell && transmitterPageShell.refs
       ? transmitterPageShell.refs.startBtn
       : document.getElementById('startBtn');
@@ -96,23 +97,6 @@
     }
     setStartReady(false);
 
-    (async () => {
-      try {
-        const [
-          { GAME_THEME_DEFAULT },
-          { applyGameThemeCssVars },
-        ] = await Promise.all([
-          import("./src/content/theme/game-theme-default.js"),
-          import("./src/ui/theme/apply-game-theme-css-vars.js"),
-        ]);
-        if (typeof applyGameThemeCssVars === "function") {
-          applyGameThemeCssVars(GAME_THEME_DEFAULT, { root: document.documentElement });
-        }
-      } catch (err) {
-        console.warn("Mobile theme bootstrap failed:", err);
-      }
-    })();
-
     if (VERSION_TAG) {
       const tag = document.createElement("div");
       tag.textContent = VERSION_TEXT;
@@ -131,13 +115,15 @@
     // =========================================================================
     // Keep phone glow mapping (background color), driven by energy
     // =========================================================================
-    const BG0 = { r: 0,   g: 0,  b: 0  };
-    const BG1 = { r: 255, g: 42, b: 0  };
     function setBgFromEnergy(e01) {
+      if (transmitterUiBoot && typeof transmitterUiBoot.setBgFromEnergy === "function") {
+        transmitterUiBoot.setBgFromEnergy(e01);
+        return;
+      }
       const t = Math.max(0, Math.min(1, e01));
-      const r = Math.round(BG0.r + (BG1.r - BG0.r) * t);
-      const g = Math.round(BG0.g + (BG1.g - BG0.g) * t);
-      const b = Math.round(BG0.b + (BG1.b - BG0.b) * t);
+      const r = Math.round((255) * t);
+      const g = Math.round(42 * t);
+      const b = 0;
       document.body.style.backgroundColor = `rgb(${r},${g},${b})`;
     }
     setBgFromEnergy(0);
