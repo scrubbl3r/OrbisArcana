@@ -226,6 +226,7 @@
   flex-direction: column;
   z-index: 1001;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .logPopup {
@@ -249,6 +250,8 @@
 
 .logPopupHeader,
 .wordBoardPopupHeader {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -269,12 +272,18 @@
 }
 
 .logPopupTabs {
+  position: relative;
+  z-index: 3;
   display: flex;
   gap: 8px;
   padding: 10px 12px 8px;
+  pointer-events: auto;
 }
 
 .logPopupTabs .logTabBtn {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);
   color: rgba(122, 122, 128, 0.68);
@@ -318,6 +327,8 @@
 }
 
 .logPopupBody {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   padding: 8px 10px;
   overflow-y: auto;
