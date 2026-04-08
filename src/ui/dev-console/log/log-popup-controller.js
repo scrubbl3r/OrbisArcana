@@ -282,24 +282,26 @@ export function createLogPopupController({
     if (els.logPopupClose) {
       els.logPopupClose.addEventListener("click", () => setLogPopupOpen(false));
     }
-    if (els.logPopupTabs) {
-      els.logPopupTabs.addEventListener("click", (ev) => {
-        const target = ev.target && typeof ev.target.closest === "function"
-          ? ev.target.closest(".logTabBtn")
-          : null;
-        if (!target) return;
-        setActiveLogChannel(target.dataset.channel || "");
+    if (els.logTabGeneral) {
+      els.logTabGeneral.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setActiveLogChannel("general");
       });
-    } else {
-      if (els.logTabGeneral) {
-        els.logTabGeneral.addEventListener("click", () => setActiveLogChannel("general"));
-      }
-      if (els.logTabKws) {
-        els.logTabKws.addEventListener("click", () => setActiveLogChannel("kws"));
-      }
-      if (els.logTabPhone) {
-        els.logTabPhone.addEventListener("click", () => setActiveLogChannel("phone"));
-      }
+    }
+    if (els.logTabKws) {
+      els.logTabKws.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setActiveLogChannel("kws");
+      });
+    }
+    if (els.logTabPhone) {
+      els.logTabPhone.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setActiveLogChannel("phone");
+      });
     }
     if (els.logPopupHeader) {
       els.logPopupHeader.addEventListener("pointerdown", beginLogPopupDrag);

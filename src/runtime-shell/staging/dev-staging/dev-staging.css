@@ -289,7 +289,8 @@
 }
 
 .logPopupTabs .logTabBtn.on,
-.logPopupTabs .logTabBtn[data-active="true"] {
+.logPopupTabs .logTabBtn[data-active="true"],
+.logPopupTabs .logTabBtn[aria-pressed="true"] {
   border-color: rgba(230, 230, 230, 0.88);
   color: var(--text-strong);
   background: rgba(var(--frame-rgb), 0.18);
@@ -297,7 +298,8 @@
 }
 
 .logPopupTabs .logTabBtn:not(.on),
-.logPopupTabs .logTabBtn[data-active="false"] {
+.logPopupTabs .logTabBtn[data-active="false"],
+.logPopupTabs .logTabBtn[aria-pressed="false"] {
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);
   color: rgba(122, 122, 128, 0.68);
