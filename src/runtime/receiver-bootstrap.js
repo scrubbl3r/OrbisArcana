@@ -238,7 +238,7 @@ function buildAdapterBaseRuleSchema(ruleEnginePolicyControl) {
 }
 
 /**
- * Dynamically import the receiver runtime dependencies used by `game-receiver.js` startup.
+ * Dynamically import the receiver runtime dependencies used by receiver host startup.
  *
  * This keeps the shell bootstrap loading logic centralized and versionable.
  *
