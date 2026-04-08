@@ -1,30 +1,24 @@
 import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260331q";
+import { createShellBootStatusController } from "./shell-boot-status.js?v=20260408a";
 
-function setBootBanner({ phase, detail, state = "booting" } = {}) {
-  const banner = document.getElementById("shellBootBanner");
-  const phaseEl = document.getElementById("shellBootPhase");
-  const detailEl = document.getElementById("shellBootDetail");
-  if (banner) banner.dataset.state = state;
-  if (phaseEl && phase) phaseEl.textContent = String(phase);
-  if (detailEl && detail) detailEl.textContent = String(detail);
-}
+const bootStatus = createShellBootStatusController({ rootDocument: document });
 
 async function initStagingShell() {
-  setBootBanner({
+  bootStatus.setStatus({
     phase: "js-loaded",
     detail: "staging-shell.js running",
     state: "booting",
   });
   try {
-    await createStagingShellRuntime({ rootDocument: document });
-    setBootBanner({
+    await createStagingShellRuntime({ rootDocument: document, bootStatus });
+    bootStatus.setStatus({
       phase: "runtime-ready",
       detail: "createStagingShellRuntime resolved",
       state: "ready",
     });
   } catch (error) {
     console.warn("[staging-shell] boot failed", error);
-    setBootBanner({
+    bootStatus.setStatus({
       phase: "boot-failed",
       detail: error && error.message ? String(error.message) : "Unknown staging shell boot error",
       state: "failed",

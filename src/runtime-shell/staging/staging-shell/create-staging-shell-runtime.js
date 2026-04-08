@@ -19,17 +19,6 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   bootFailed: "boot-failed",
 });
 
-function updateShellBootUi(rootDocument, phase, detail, state = "booting") {
-  const docEl = rootDocument && rootDocument.documentElement;
-  const banner = rootDocument && rootDocument.getElementById("shellBootBanner");
-  const phaseEl = rootDocument && rootDocument.getElementById("shellBootPhase");
-  const detailEl = rootDocument && rootDocument.getElementById("shellBootDetail");
-  if (docEl && phase) docEl.dataset.stagingShellBoot = String(phase);
-  if (banner) banner.dataset.state = String(state || "booting");
-  if (phaseEl && phase) phaseEl.textContent = String(phase);
-  if (detailEl && detail) detailEl.textContent = String(detail);
-}
-
 function safeSetText(el, value) {
   if (!el) return;
   el.textContent = String(value || "");
@@ -2284,10 +2273,15 @@ async function initShellKwsRuntime(shellContext) {
 
 async function initShellPairingRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const bootStatusController = shellContext && shellContext.bootStatus ? shellContext.bootStatus : null;
+  const updateBootUi = (_rootDocument, phase, detail, state = "booting") => {
+    if (!bootStatusController || typeof bootStatusController.setStatus !== "function") return;
+    bootStatusController.setStatus({ phase, detail, state });
+  };
   await bootstrapShellPairingRuntime({
     shellContext,
     workerBase: STAGING_WORKER_BASE,
-    updateBootUi: updateShellBootUi,
+    updateBootUi,
     bootStatus: STAGING_SHELL_STATUS,
     stagingMobilePageBaseUrl,
     syncStartQrSize: syncShellStartQrSize,
@@ -2306,6 +2300,7 @@ async function initShellPairingRuntime(shellContext) {
 export async function createStagingShellRuntime({
   rootDocument = document,
   moduleCacheBustV = "20260331k",
+  bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
   const devRoot = rootDocument.getElementById("devStagingMount");
@@ -2315,7 +2310,13 @@ export async function createStagingShellRuntime({
     docEl.dataset.stagingShell = STAGING_SHELL_STATUS.splitPrototype;
     docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.booting;
   }
-  updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.booting, "Mounting dev-staging and game-staging");
+  if (bootStatus && typeof bootStatus.setStatus === "function") {
+    bootStatus.setStatus({
+      phase: STAGING_SHELL_STATUS.booting,
+      detail: "Mounting dev-staging and game-staging",
+      state: "booting",
+    });
+  }
 
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const gameStagingView = gameRoot ? renderGameStaging(gameRoot) : null;
@@ -2328,12 +2329,24 @@ export async function createStagingShellRuntime({
   }
 
   try {
-    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.booting, "Loading shared staging modules");
+    if (bootStatus && typeof bootStatus.setStatus === "function") {
+      bootStatus.setStatus({
+        phase: STAGING_SHELL_STATUS.booting,
+        detail: "Loading shared staging modules",
+        state: "booting",
+      });
+    }
     const sharedModules = await loadStagingInitModules(moduleCacheBustV);
     if (docEl) {
       docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.sharedModulesReady;
     }
-    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Shared staging modules loaded");
+    if (bootStatus && typeof bootStatus.setStatus === "function") {
+      bootStatus.setStatus({
+        phase: STAGING_SHELL_STATUS.sharedModulesReady,
+        detail: "Shared staging modules loaded",
+        state: "booting",
+      });
+    }
     if (devStagingView && typeof devStagingView.setStatus === "function") {
       devStagingView.setStatus(
         'Staging shell ready <span class="devStagingDim">(shared modules loaded)</span>',
@@ -2350,6 +2363,7 @@ export async function createStagingShellRuntime({
       gameStagingView,
       sharedModules,
     });
+    shellContext.bootStatus = bootStatus;
     const createOrbColorRuntime =
       sharedModules.orbColorRuntimeModule &&
       sharedModules.orbColorRuntimeModule.createOrbColorRuntime;
@@ -2369,7 +2383,13 @@ export async function createStagingShellRuntime({
       ? window.createMotionStore()
       : null;
     renderShellHudFromMotionStore(shellContext);
-    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
+    if (bootStatus && typeof bootStatus.setStatus === "function") {
+      bootStatus.setStatus({
+        phase: STAGING_SHELL_STATUS.sharedModulesReady,
+        detail: "Booting KWS runtime",
+        state: "booting",
+      });
+    }
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
     const createOrbShatterRuntimeController =
@@ -2405,7 +2425,13 @@ export async function createStagingShellRuntime({
     bindShellStageResize(shellContext);
     bindShellStageActions(shellContext);
     startShellStageLoop(shellContext);
-    updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.localStageReady, "Local game-staging runtime active");
+    if (bootStatus && typeof bootStatus.setStatus === "function") {
+      bootStatus.setStatus({
+        phase: STAGING_SHELL_STATUS.localStageReady,
+        detail: "Local game-staging runtime active",
+        state: "booting",
+      });
+    }
     await initShellPairingRuntime(shellContext);
     exposeShellContext(rootDocument, shellContext);
     return shellContext;
@@ -2413,12 +2439,13 @@ export async function createStagingShellRuntime({
     if (docEl) {
       docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.bootFailed;
     }
-    updateShellBootUi(
-      rootDocument,
-      STAGING_SHELL_STATUS.bootFailed,
-      error && error.message ? String(error.message) : "Unknown staging shell boot error",
-      "failed"
-    );
+    if (bootStatus && typeof bootStatus.setStatus === "function") {
+      bootStatus.setStatus({
+        phase: STAGING_SHELL_STATUS.bootFailed,
+        detail: error && error.message ? String(error.message) : "Unknown staging shell boot error",
+        state: "failed",
+      });
+    }
     if (devStagingView && typeof devStagingView.setStatus === "function") {
       devStagingView.setStatus("Staging shell boot failed", "devStagingFatal on");
     }
