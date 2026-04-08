@@ -1118,8 +1118,21 @@
       }
     }
 
+    async function startLegacyFallbackSession({ forceNewPairing = false } = {}) {
+      if (!legacyFallbackSessionStarted) {
+        await connect({ auto:false });
+        legacyFallbackSessionStarted = true;
+      }
+      if (forceNewPairing) {
+        await launchLanPairingFlow(true);
+      }
+    }
+
     if (els.lanPartyBtn) {
-      els.lanPartyBtn.addEventListener("click", () => launchLanPairingFlow(false));
+      els.lanPartyBtn.addEventListener("click", async () => {
+        await startLegacyFallbackSession({ forceNewPairing: false });
+        await launchLanPairingFlow(false);
+      });
     }
     if (els.lanClose) {
       els.lanClose.addEventListener("click", () => {
@@ -1179,6 +1192,7 @@
     let kwsTokenUiState = null;
     let kwsConfigDebugLine = "";
     let teardownKwsRuntimeForReinit = null;
+    let legacyFallbackSessionStarted = false;
     let kwsBridge = {
       startReadoutTick() {},
       stopReadoutTick() {},
@@ -3249,7 +3263,7 @@
     }
 
     els.startBtn.addEventListener("click", async () => {
-      await launchLanPairingFlow(true);
+      await startLegacyFallbackSession({ forceNewPairing: true });
     });
 
     if (els.tryAgainBtn) {
@@ -3274,7 +3288,7 @@
       await initMobileImpulseSystem();
       await initLanSessionSystem();
       initMvpSystems();
-      connect({ auto:true });
+      setStatus('Legacy fallback idle <span class="dim">(click PAIR PHONE to use)</span>', "dim");
       syncStartQrSizeToTitlePx();
     })();
 
