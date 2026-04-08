@@ -29,6 +29,7 @@
     const transmitterPageShell = window.__orbisTransmitterPageShell || null;
     const transmitterLifecycle = window.__orbisTransmitterLifecycle || null;
     const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
+    const transmitterGestureLabUi = window.__orbisTransmitterGestureLabUi || null;
     const transmitterGestureLabState = window.__orbisTransmitterGestureLabState || {
       gestureBank: { templates: {}, mastery: 0.35 },
       lab: {
@@ -77,23 +78,15 @@
     const lanConnecting = transmitterPageShell && transmitterPageShell.refs
       ? transmitterPageShell.refs.lanConnecting
       : document.getElementById('lanConnecting');
-    const labBtn = document.getElementById('labBtn');
-    const labModal = document.getElementById('labModal');
-    const labClose = document.getElementById('labClose');
-    const lockGravityBtn = document.getElementById('lockGravityBtn');
-    const lockGravityBar = document.getElementById('lockGravityBar');
-    const gravityReadout = document.getElementById('gravityReadout');
-    const labelGroup = document.getElementById('labelGroup');
-    const recordBtn = document.getElementById('recordBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const qualityBar = document.getElementById('qualityBar');
-    const recordStatus = document.getElementById('recordStatus');
-    const testToggle = document.getElementById('testToggle');
-    const testReadout = document.getElementById('testReadout');
-    const masterySlider = document.getElementById('masterySlider');
-    const masteryReadout = document.getElementById('masteryReadout');
-    const resetLabBtn = document.getElementById('resetLabBtn');
+    const gestureLabRefs = transmitterGestureLabUi && transmitterGestureLabUi.refs
+      ? transmitterGestureLabUi.refs
+      : {};
+    const lockGravityBar = gestureLabRefs.lockGravityBar || null;
+    const recordBtn = gestureLabRefs.recordBtn || null;
+    const stopBtn = gestureLabRefs.stopBtn || null;
+    const saveBtn = gestureLabRefs.saveBtn || null;
+    const qualityBar = gestureLabRefs.qualityBar || null;
+    const testReadout = gestureLabRefs.testReadout || null;
 
     const UI = { state: "idle" }; // compatibility mirror
     let appReady = false;
@@ -347,36 +340,39 @@
 
     function setLabOpen(on){
       lab.open = !!on;
-      labModal.classList.toggle("on", lab.open);
-      labModal.setAttribute("aria-hidden", lab.open ? "false" : "true");
+      if (transmitterGestureLabUi && typeof transmitterGestureLabUi.setLabOpen === "function") {
+        transmitterGestureLabUi.setLabOpen(lab.open);
+      }
     }
 
     function setLabelSelection(label){
       lab.selectedLabel = label;
-      const btns = labelGroup ? labelGroup.querySelectorAll(".labLabelBtn") : [];
-      btns.forEach((b) => b.classList.toggle("on", b.dataset.label === label));
+      if (transmitterGestureLabUi && typeof transmitterGestureLabUi.setLabelSelection === "function") {
+        transmitterGestureLabUi.setLabelSelection(label);
+      }
     }
 
     function setProgress(el, v01){
+      if (transmitterGestureLabUi && typeof transmitterGestureLabUi.setProgress === "function") {
+        transmitterGestureLabUi.setProgress(el, v01);
+        return;
+      }
       if (!el) return;
       const p = clamp01(v01) * 100;
       el.style.width = p.toFixed(1) + "%";
     }
 
     function updateGravityReadout(){
-      if (!gravityReadout) return;
-      if (!calibrationState.gravityLock){
-        gravityReadout.textContent = "g: —";
-        return;
+      if (transmitterGestureLabUi && typeof transmitterGestureLabUi.updateGravityReadout === "function") {
+        transmitterGestureLabUi.updateGravityReadout(calibrationState.gravityLock);
       }
-      gravityReadout.textContent =
-        `g: ${calibrationState.gravityLock.x.toFixed(2)}, ${calibrationState.gravityLock.y.toFixed(2)}, ${calibrationState.gravityLock.z.toFixed(2)}`;
     }
 
     function updateMasteryUI(){
       const m = clamp01(gestureBank.mastery);
-      if (masterySlider) masterySlider.value = String(m);
-      if (masteryReadout) masteryReadout.textContent = m.toFixed(2);
+      if (transmitterGestureLabUi && typeof transmitterGestureLabUi.updateMasteryUi === "function") {
+        transmitterGestureLabUi.updateMasteryUi(m);
+      }
     }
 
     function basisFromGravity(gHat){
@@ -1641,7 +1637,9 @@
     }
 
     function setRecordStatus(msg){
-      if (recordStatus) recordStatus.textContent = msg;
+      if (transmitterGestureLabUi && typeof transmitterGestureLabUi.setRecordStatus === "function") {
+        transmitterGestureLabUi.setRecordStatus(msg);
+      }
     }
 
     function beginGravityLock(){
@@ -1733,56 +1731,42 @@
     updateGravityReadout();
     setLabelSelection(lab.selectedLabel);
 
-    if (labBtn) labBtn.onclick = () => setLabOpen(true);
-    if (labClose) labClose.onclick = () => setLabOpen(false);
-
-    if (labelGroup){
-      labelGroup.addEventListener("click", (e) => {
-        const btn = e.target && e.target.closest(".labLabelBtn");
-        if (!btn) return;
-        const label = btn.dataset.label || "U";
-        setLabelSelection(label);
+    if (transmitterGestureLabUi && typeof transmitterGestureLabUi.bindControls === "function") {
+      transmitterGestureLabUi.bindControls({
+        onOpen: () => setLabOpen(true),
+        onClose: () => setLabOpen(false),
+        onSelectLabel: (label) => setLabelSelection(label),
+        onLockGravity: () => beginGravityLock(),
+        onRecord: () => beginRecording(performance.now()),
+        onStopRecord: () => endRecording(),
+        onSave: () => {
+          if (!lab.lastCandidate) return;
+          gestureBank.templates[lab.selectedLabel] = {
+            shape: lab.lastCandidate.shape,
+            power: lab.lastCandidate.power
+          };
+          saveGestureBank();
+          setRecordStatus(`Saved ${lab.selectedLabel}`);
+          if (saveBtn) saveBtn.disabled = true;
+        },
+        onToggleTest: (enabled) => {
+          lab.testMode = !!enabled;
+          if (!lab.testMode && testReadout) testReadout.textContent = "Match: —";
+        },
+        onMasteryInput: (value) => {
+          gestureBank.mastery = clamp01(Number(value));
+          updateMasteryUI();
+          saveGestureBank();
+        },
+        onReset: () => {
+          clearGestureBank();
+          updateGravityReadout();
+          setProgress(qualityBar, 0);
+          setProgress(lockGravityBar, 0);
+          if (testReadout) testReadout.textContent = "Match: —";
+          setRecordStatus("Reset");
+        },
       });
-    }
-
-    if (lockGravityBtn) lockGravityBtn.onclick = () => beginGravityLock();
-    if (recordBtn) recordBtn.onclick = () => beginRecording(performance.now());
-    if (stopBtn) stopBtn.onclick = () => endRecording();
-    if (saveBtn) saveBtn.onclick = () => {
-      if (!lab.lastCandidate) return;
-      gestureBank.templates[lab.selectedLabel] = {
-        shape: lab.lastCandidate.shape,
-        power: lab.lastCandidate.power
-      };
-      saveGestureBank();
-      setRecordStatus(`Saved ${lab.selectedLabel}`);
-      saveBtn.disabled = true;
-    };
-
-    if (testToggle){
-      testToggle.onchange = () => {
-        lab.testMode = !!testToggle.checked;
-        if (!lab.testMode && testReadout) testReadout.textContent = "Match: —";
-      };
-    }
-
-    if (masterySlider){
-      masterySlider.oninput = () => {
-        gestureBank.mastery = clamp01(Number(masterySlider.value));
-        updateMasteryUI();
-        saveGestureBank();
-      };
-    }
-
-    if (resetLabBtn){
-      resetLabBtn.onclick = () => {
-        clearGestureBank();
-        updateGravityReadout();
-        setProgress(qualityBar, 0);
-        setProgress(lockGravityBar, 0);
-        if (testReadout) testReadout.textContent = "Match: —";
-        setRecordStatus("Reset");
-      };
     }
 
 

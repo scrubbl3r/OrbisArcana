@@ -15,6 +15,7 @@ Migration note:
 - `transmitter-lifecycle.js` now owns start/stop host state at this layer
 - `transmitter-session-bootstrap.js` now owns room/relay/session bootstrap at this layer
 - `gesture-lab/transmitter-gesture-lab-state.js` now owns gesture-lab persisted state and calibration state at this layer
+- `gesture-lab/transmitter-gesture-lab-ui.js` now owns gesture-lab UI refs and control wiring at this layer
 - it still delegates the deep runtime to the existing root-level
   `mobile-transmitter.js` / `mobile-transmitter.css` during transition
 - follow-on work should move runtime/bootstrap ownership here and then retire the
