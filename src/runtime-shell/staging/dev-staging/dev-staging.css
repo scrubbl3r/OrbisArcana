@@ -274,25 +274,33 @@
   padding: 10px 12px 8px;
 }
 
-.logTabBtn.active {
+.logPopupTabs .logTabBtn {
+  border-color: rgba(var(--frame-rgb), 0.24);
+  background: rgba(var(--frame-rgb), 0.06);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.logPopupTabs .logTabBtn:hover {
+  border-color: rgba(var(--frame-rgb), 0.38);
+  background: rgba(var(--frame-rgb), 0.09);
+  color: var(--text);
+}
+
+.logPopupTabs .logTabBtn.active,
+.logPopupTabs .logTabBtn[aria-pressed="true"] {
   border-color: rgba(230, 230, 230, 0.88);
   color: var(--text-strong);
   background: rgba(var(--frame-rgb), 0.22);
 }
 
-.logTabBtn:not(.active) {
-  border-color: rgba(var(--frame-rgb), 0.24);
-  background: rgba(var(--frame-rgb), 0.06);
-  color: var(--text-muted);
-}
-
-.logTabBtn:focus,
-.logTabBtn:focus-visible {
+.logPopupTabs .logTabBtn:focus,
+.logPopupTabs .logTabBtn:focus-visible {
   outline: none;
   box-shadow: none;
 }
 
-.logTabBtn:not(.active):focus-visible {
+.logPopupTabs .logTabBtn[aria-pressed="false"]:focus-visible {
   border-color: rgba(var(--frame-rgb), 0.38);
   background: rgba(var(--frame-rgb), 0.09);
   color: var(--text);
