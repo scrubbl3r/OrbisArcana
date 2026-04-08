@@ -286,6 +286,18 @@
   color: var(--text-muted);
 }
 
+.logTabBtn:focus,
+.logTabBtn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.logTabBtn:not(.active):focus-visible {
+  border-color: rgba(var(--frame-rgb), 0.38);
+  background: rgba(var(--frame-rgb), 0.09);
+  color: var(--text);
+}
+
 .logPopupBody {
   flex: 1 1 auto;
   padding: 8px 10px;
