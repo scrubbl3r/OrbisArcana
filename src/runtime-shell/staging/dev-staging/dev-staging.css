@@ -288,13 +288,17 @@
   color: var(--text);
 }
 
-.logPopupTabs[data-active-channel="general"] #logTabGeneral,
-.logPopupTabs[data-active-channel="kws"] #logTabKws,
-.logPopupTabs[data-active-channel="phone"] #logTabPhone {
+.logPopupTabs .logTabBtn[data-active="true"] {
   border-color: rgba(230, 230, 230, 0.88);
   color: var(--text-strong);
   background: rgba(var(--frame-rgb), 0.18);
   box-shadow: 0 0 0 1px rgba(230, 230, 230, 0.08) inset;
+}
+
+.logPopupTabs .logTabBtn[data-active="false"] {
+  border-color: rgba(var(--frame-rgb), 0.14);
+  background: rgba(var(--frame-rgb), 0.02);
+  color: rgba(122, 122, 128, 0.68);
 }
 
 .logPopupTabs .logTabBtn:focus,

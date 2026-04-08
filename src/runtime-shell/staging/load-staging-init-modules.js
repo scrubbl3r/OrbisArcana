@@ -46,7 +46,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import("../../runtime-shell/receiver/signal-processor.js"),
     import("../../runtime-shell/receiver/motion-store.js"),
     import("../../ui/build-input-hud-view-model.js"),
-    import("./bootstrap-kws-staging.js"),
+    import(withVersion("./bootstrap-kws-staging.js", moduleCacheBustV)),
     import("./bootstrap-game-staging-runtime.js"),
     import("./bootstrap-staging-runtime-context.js"),
     import("./bootstrap-staging-mvp.js"),

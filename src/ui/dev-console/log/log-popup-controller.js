@@ -212,6 +212,7 @@ export function createLogPopupController({
       if (!tab.el) continue;
       const active = activeLogChannel === tab.key;
       tab.el.setAttribute("aria-pressed", active ? "true" : "false");
+      tab.el.dataset.active = active ? "true" : "false";
     }
   }
 
@@ -286,17 +287,7 @@ export function createLogPopupController({
           ? ev.target.closest(".logTabBtn")
           : null;
         if (!target) return;
-        if (target === els.logTabGeneral) {
-          setActiveLogChannel("general");
-          return;
-        }
-        if (target === els.logTabKws) {
-          setActiveLogChannel("kws");
-          return;
-        }
-        if (target === els.logTabPhone) {
-          setActiveLogChannel("phone");
-        }
+        setActiveLogChannel(target.dataset.channel || "");
       });
     } else {
       if (els.logTabGeneral) {
