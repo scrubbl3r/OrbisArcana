@@ -29,6 +29,45 @@
     const transmitterPageShell = window.__orbisTransmitterPageShell || null;
     const transmitterLifecycle = window.__orbisTransmitterLifecycle || null;
     const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
+    const transmitterGestureLabState = window.__orbisTransmitterGestureLabState || {
+      gestureBank: { templates: {}, mastery: 0.35 },
+      lab: {
+        open: false,
+        selectedLabel: "U",
+        recording: false,
+        recordSamples: [],
+        recordStartedAtMs: 0,
+        lastCandidate: null,
+        lastQuality: 0,
+        locking: false,
+        lockBuf: [],
+        testMode: false,
+        lastMatch: null,
+      },
+      calibration: {
+        gravityLock: null,
+        calibBasis: null,
+        calibR: null,
+        calibAlpha0: null,
+        calib: {
+          active: false,
+          startMs: 0,
+          samples: [],
+          ackPending: false,
+          pendingReq: false,
+        },
+      },
+      loadCalibBasis() {},
+      saveCalibBasis() {},
+      loadGestureBank() {},
+      saveGestureBank() {},
+      loadGravityLock() {},
+      saveGravityLock() {},
+      clearGestureBank() {
+        this.gestureBank.templates = {};
+        this.calibration.gravityLock = null;
+      },
+    };
     const transmitterUiBoot = window.__orbisTransmitterUiBoot || null;
     const VERSION_TAG = !transmitterUiBoot;
     const VERSION_TEXT = (transmitterUiBoot && transmitterUiBoot.versionText) || "vtag:shield-debug";
@@ -169,29 +208,9 @@
     const SHIELD_AXIS_WIN_MS = 1500;
     const DEBUG_SHIELD = true;
 
-    const gestureBank = {
-      templates: {},
-      mastery: 0.35
-    };
-
-    let gravityLock = null; // {x,y,z}
-    let calibBasis = null; // { up, right, forward }
-    let calibR = null;     // 3x3 rotation at calibration time
-    let calibAlpha0 = null;
-
-    const lab = {
-      open: false,
-      selectedLabel: "U",
-      recording: false,
-      recordSamples: [],
-      recordStartedAtMs: 0,
-      lastCandidate: null,
-      lastQuality: 0,
-      locking: false,
-      lockBuf: [],
-      testMode: false,
-      lastMatch: null
-    };
+    const gestureBank = transmitterGestureLabState.gestureBank;
+    const lab = transmitterGestureLabState.lab;
+    const calibrationState = transmitterGestureLabState.calibration;
 
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
     const clamp01x2 = (x) => Math.max(0, Math.min(2, x));
@@ -282,13 +301,13 @@
 
     function updateSpinVectorState(nowMs, omegaUnit){
       if (!orientState || !orientState.R) return;
-      if (!calibBasis) return;
+      if (!calibrationState.calibBasis) return;
       if (!omegaUnit) return;
 
       const wWorld = matVec(orientState.R, omegaUnit);
-      const x = vDot(wWorld, calibBasis.right);
-      const y = vDot(wWorld, calibBasis.forward);
-      const z = vDot(wWorld, calibBasis.up);
+      const x = vDot(wWorld, calibrationState.calibBasis.right);
+      const y = vDot(wWorld, calibrationState.calibBasis.forward);
+      const z = vDot(wWorld, calibrationState.calibBasis.up);
       const v = vNorm({ x, y, z });
       if (!(v.mag > 1e-6)) return;
 
@@ -318,94 +337,13 @@
 
     }
 
-    function loadCalibBasis(){
-      try{
-        const raw = localStorage.getItem(CALIB_BASIS_KEY);
-        if (!raw) return;
-        const j = JSON.parse(raw);
-        if (j && j.up && j.right && j.forward){
-          const up = vNorm(j.up);
-          const right = vNorm(j.right);
-          const forward = vNorm(j.forward);
-          if (up.mag > 0.5 && right.mag > 0.5 && forward.mag > 0.5){
-            calibBasis = {
-              up: {x:up.x,y:up.y,z:up.z},
-              right: {x:right.x,y:right.y,z:right.z},
-              forward: {x:forward.x,y:forward.y,z:forward.z}
-            };
-          }
-        }
-        if (j && j.r && Array.isArray(j.r) && j.r.length === 3){
-          calibR = j.r;
-        }
-        if (j && typeof j.alpha0 === "number"){
-          calibAlpha0 = j.alpha0;
-        }
-      }catch(_){}
-    }
-
-    function saveCalibBasis(){
-      if (!calibBasis) return;
-      try{
-        localStorage.setItem(CALIB_BASIS_KEY, JSON.stringify({
-          up: calibBasis.up,
-          right: calibBasis.right,
-          forward: calibBasis.forward,
-          r: calibR,
-          alpha0: calibAlpha0
-        }));
-      }catch(_){}
-    }
-
-
-    function loadGestureBank(){
-      try{
-        const raw = localStorage.getItem(GESTURE_BANK_KEY);
-        if (!raw) return;
-        const j = JSON.parse(raw);
-        if (j && typeof j === "object"){
-          if (j.templates && typeof j.templates === "object") gestureBank.templates = j.templates;
-          if (typeof j.mastery === "number") gestureBank.mastery = clamp01(j.mastery);
-        }
-      }catch(_){}
-    }
-
-    function saveGestureBank(){
-      try{
-        localStorage.setItem(GESTURE_BANK_KEY, JSON.stringify({
-          templates: gestureBank.templates,
-          mastery: gestureBank.mastery
-        }));
-      }catch(_){}
-    }
-
-    function loadGravityLock(){
-      try{
-        const raw = localStorage.getItem(GRAVITY_LOCK_KEY);
-        if (!raw) return;
-        const j = JSON.parse(raw);
-        if (j && isFinite(j.x) && isFinite(j.y) && isFinite(j.z)){
-          const g = vNorm({ x:j.x, y:j.y, z:j.z });
-          if (g.mag > 0.5) gravityLock = { x:g.x, y:g.y, z:g.z };
-        }
-      }catch(_){}
-    }
-
-    function saveGravityLock(){
-      if (!gravityLock) return;
-      try{
-        localStorage.setItem(GRAVITY_LOCK_KEY, JSON.stringify(gravityLock));
-      }catch(_){}
-    }
-
-    function clearGestureBank(){
-      gestureBank.templates = {};
-      saveGestureBank();
-      gravityLock = null;
-      try{
-        localStorage.removeItem(GRAVITY_LOCK_KEY);
-      }catch(_){}
-    }
+    const loadCalibBasis = () => transmitterGestureLabState.loadCalibBasis();
+    const saveCalibBasis = () => transmitterGestureLabState.saveCalibBasis();
+    const loadGestureBank = () => transmitterGestureLabState.loadGestureBank();
+    const saveGestureBank = () => transmitterGestureLabState.saveGestureBank();
+    const loadGravityLock = () => transmitterGestureLabState.loadGravityLock();
+    const saveGravityLock = () => transmitterGestureLabState.saveGravityLock();
+    const clearGestureBank = () => transmitterGestureLabState.clearGestureBank();
 
     function setLabOpen(on){
       lab.open = !!on;
@@ -427,12 +365,12 @@
 
     function updateGravityReadout(){
       if (!gravityReadout) return;
-      if (!gravityLock){
+      if (!calibrationState.gravityLock){
         gravityReadout.textContent = "g: —";
         return;
       }
       gravityReadout.textContent =
-        `g: ${gravityLock.x.toFixed(2)}, ${gravityLock.y.toFixed(2)}, ${gravityLock.z.toFixed(2)}`;
+        `g: ${calibrationState.gravityLock.x.toFixed(2)}, ${calibrationState.gravityLock.y.toFixed(2)}, ${calibrationState.gravityLock.z.toFixed(2)}`;
     }
 
     function updateMasteryUI(){
@@ -1691,11 +1629,11 @@
     }
 
     function recognizeGestureFromRecentBuffer(nowMs){
-      if (!gravityLock) return null;
+      if (!calibrationState.gravityLock) return null;
       const cutoff = nowMs - HIT_WIN_MAX_MS;
       const samples = motionHist.filter(s => s.t >= cutoff);
       if (!samples.length) return null;
-      const candidate = buildTemplateFromSamples(samples, gravityLock);
+      const candidate = buildTemplateFromSamples(samples, calibrationState.gravityLock);
       if (!candidate) return null;
       const match = matchTemplates(candidate);
       if (match) return match;
@@ -1731,7 +1669,7 @@
 
       if (progress >= 1){
         const g = vNorm({ x:sx, y:sy, z:sz });
-        gravityLock = { x:g.x, y:g.y, z:g.z };
+        calibrationState.gravityLock = { x:g.x, y:g.y, z:g.z };
         saveGravityLock();
         lab.locking = false;
         updateGravityReadout();
@@ -1740,7 +1678,7 @@
     }
 
     function beginRecording(nowMs){
-      if (!gravityLock){
+      if (!calibrationState.gravityLock){
         setRecordStatus("Lock gravity first");
         return;
       }
@@ -1767,12 +1705,12 @@
       stopBtn.disabled = true;
       recordBtn.disabled = false;
 
-      if (!gravityLock){
+      if (!calibrationState.gravityLock){
         setRecordStatus("Lock gravity first");
         return;
       }
 
-      const candidate = buildTemplateFromSamples(lab.recordSamples, gravityLock);
+      const candidate = buildTemplateFromSamples(lab.recordSamples, calibrationState.gravityLock);
       if (!candidate){
         lab.lastCandidate = null;
         setProgress(qualityBar, 0);
@@ -1853,13 +1791,7 @@
     // =========================================================================
     const impulseHist = []; // { t, ax, ay, az }
 
-    const calib = {
-      active: false,
-      startMs: 0,
-      samples: [],
-      ackPending: false,
-      pendingReq: false
-    };
+    const calib = calibrationState.calib;
 
     function startCalibration(){
       if (!running){
@@ -1910,9 +1842,9 @@
       const rightN = vNorm(vCross(forward, up));
       const right = { x:rightN.x, y:rightN.y, z:rightN.z };
 
-      calibBasis = { up, right, forward };
-      calibR = orientState.R;
-      calibAlpha0 = orientState && isFinite(orientState.alpha) ? orientState.alpha : calibAlpha0;
+      calibrationState.calibBasis = { up, right, forward };
+      calibrationState.calibR = orientState.R;
+      calibrationState.calibAlpha0 = orientState && isFinite(orientState.alpha) ? orientState.alpha : calibrationState.calibAlpha0;
       saveCalibBasis();
 
       calib.active = false;
@@ -1920,10 +1852,10 @@
     }
 
     function classifyDirectionalShake(nowMs){
-      if (!calibBasis) return null;
+      if (!calibrationState.calibBasis) return null;
       if (!orientState || !orientState.R) return null;
       const t0 = nowMs - IMPULSE_WIN_MS;
-      const basis = calibBasis;
+      const basis = calibrationState.calibBasis;
       let sumUp = 0, sumRight = 0, sumForward = 0, n = 0;
       const gHat = { x:-basis.up.x, y:-basis.up.y, z:-basis.up.z };
 
@@ -2155,7 +2087,7 @@
             spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
             spinDirection,
             dbgTag: VERSION_TEXT,
-            ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
+            ...(DEBUG_SHIELD ? { calibOK: calibrationState.calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
             ag: [agx, agy, agz],
             rr: [rrx, rry, rrz],
@@ -2249,7 +2181,7 @@
             spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
             spinDirection,
             dbgTag: VERSION_TEXT,
-            ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
+            ...(DEBUG_SHIELD ? { calibOK: calibrationState.calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
             ag: [agx, agy, agz],
             rr: [rrx, rry, rrz],
@@ -2359,7 +2291,7 @@
           spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
           spinDirection,
           dbgTag: VERSION_TEXT,
-          ...(DEBUG_SHIELD ? { calibOK: calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
+          ...(DEBUG_SHIELD ? { calibOK: calibrationState.calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
 
           ag: [agx, agy, agz],
           rr: [rrx, rry, rrz],

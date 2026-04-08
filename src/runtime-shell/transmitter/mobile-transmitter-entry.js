@@ -3,6 +3,7 @@ import { createTransmitterLifecycle } from "./transmitter-lifecycle.js";
 import { createTransmitterSessionBootstrap } from "./transmitter-session-bootstrap.js";
 import { createTransmitterUiBoot } from "./transmitter-ui-boot.js";
 import { createTransmitterViewportBoot } from "./transmitter-viewport-boot.js";
+import { createTransmitterGestureLabState } from "./gesture-lab/transmitter-gesture-lab-state.js";
 
 function loadLegacyTransmitterRuntime() {
   const script = document.createElement("script");
@@ -33,6 +34,9 @@ window.__orbisTransmitterSessionBootstrap = createTransmitterSessionBootstrap({
       window.__orbisStartTransmitterCalibration();
     }
   },
+});
+window.__orbisTransmitterGestureLabState = createTransmitterGestureLabState({
+  rootStorage: localStorage,
 });
 window.__orbisTransmitterUiBoot = createTransmitterUiBoot({
   rootDocument: document,
