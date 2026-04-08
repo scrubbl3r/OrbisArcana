@@ -1832,11 +1832,16 @@ function drawShellStars(shellContext) {
   const ctx = stageBackdrop.starCtx;
   const w = stageBackdrop.width || 0;
   const h = stageBackdrop.height || 0;
+  const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, h);
+  const lastCamTop = Number(stageBackdrop.lastStarCamTop);
+  if (Number.isFinite(lastCamTop) && Math.abs(camTop - lastCamTop) < 2) {
+    return;
+  }
+  stageBackdrop.lastStarCamTop = camTop;
 
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, w, h);
 
-  const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, h);
   for (const layer of stageBackdrop.layers || []) {
     for (const star of layer.stars || []) {
       const y = ((star.yW - camTop) % h + h) % h;
@@ -1862,6 +1867,11 @@ function drawShellBackdrop(shellContext) {
   const w = stageBackdrop.width || 0;
   const h = stageBackdrop.height || 0;
   const groundY = shellGroundLineScreenY(shellContext);
+  const lastGroundY = Number(stageBackdrop.lastGroundY);
+  if (Number.isFinite(lastGroundY) && Math.abs(groundY - lastGroundY) < 1) {
+    return;
+  }
+  stageBackdrop.lastGroundY = groundY;
   const pts = stageBackdrop.mountainPoints || [];
 
   ctx.clearRect(0, 0, w, h);
