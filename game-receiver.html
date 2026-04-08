@@ -4,236 +4,91 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Orb Relay — Archived Legacy Receiver</title>
-  <link rel="stylesheet" href="./game-receiver.css">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050506;
+      --panel: #0d0d10;
+      --border: rgba(255,255,255,.12);
+      --text: #e8e8ec;
+      --muted: #8b8b93;
+      --accent: #7dd35f;
+    }
 
-  <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
-  <script src="./qrcode.min.js"></script>
-  <script src="./game-receiver.js" defer></script>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(720px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    a.primary {
+      border-color: rgba(125,211,95,.45);
+      color: var(--accent);
+    }
+
+    code {
+      color: var(--text);
+    }
+  </style>
 </head>
-
 <body>
-  <!-- START SCREEN OVERLAY -->
-  <div id="startScreen" aria-label="Start screen">
-    <div class="startPairCard">
-      <button id="startBtn" aria-label="Pair phone">
-        <span>PAIR PHONE (ARCHIVED)</span>
-      </button>
-      <div id="startQr" class="qrBox startQrBox"></div>
+  <main class="card">
+    <h1>Archived Legacy Receiver</h1>
+    <p>This page is no longer an active host.</p>
+    <p>The primary harness is now <code>staging-shell.html</code>. The old root receiver has been archived and is being removed from the runtime path.</p>
+    <div class="actions">
+      <a class="primary" href="./src/runtime-shell/staging/staging-shell/staging-shell.html">Open Staging Shell</a>
+      <a href="./index.html">Open Project Launcher</a>
     </div>
-  </div>
-
-  <div class="wrap">
-    <div class="grid">
-      <div class="card cardTall">
-        <div id="devStagingLegacy" class="devStagingLegacy">
-          <div class="physHeader">Archived Legacy Receiver</div>
-
-          <div class="stat">
-            <div class="statusLine">
-              <div>Status: <span id="status" class="dim">Archived legacy page</span></div>
-              <div class="statusTools">
-                <button id="wordBoardBtn">WORDS</button>
-                <button id="teleBtn">LOG</button>
-              </div>
-            </div>
-            <div class="mono dim" style="margin-top:8px;">
-              Staging shell is the primary harness. This page is archived legacy code and is being phased out.
-            </div>
-          </div>
-
-          <div class="bars">
-            <!-- Lift -->
-            <div class="barLabel"><div>Lift</div><span class="dim"> </span></div>
-            <div class="meterRow">
-              <div class="bar barShort"><div id="bLift" class="fill"></div></div>
-              <div id="vLift" class="meterVal">0%</div>
-            </div>
-
-            <!-- Groove -->
-            <div class="barLabel"><div>Groove</div><span class="dim"> </span></div>
-            <div class="meterRow">
-              <div class="bar barShort"><div id="bGroove" class="fill"></div></div>
-              <div id="vGroove" class="meterVal">0%</div>
-            </div>
-
-            <!-- Smooth -->
-            <div class="barLabel"><div>Smooth</div><span class="dim"> </span></div>
-            <div class="meterRow">
-              <div class="bar barShort"><div id="bSmooth" class="fill"></div></div>
-              <div id="vSmooth" class="meterVal">0%</div>
-            </div>
-
-            <!-- Speed -->
-            <div class="barLabel"><div>Speed</div><span class="dim"> </span></div>
-            <div class="meterRow">
-              <div class="bar barShort"><div id="bSpeed" class="fill"></div></div>
-              <div id="vSpeed" class="meterVal">0%</div>
-            </div>
-
-            <!-- Dynamics (two lamps: stability + variability) -->
-            <div class="barLabel"><div>Dynamics</div><span class="dim"> </span></div>
-            <div class="meterRow">
-              <div class="bar barShort"><div id="bDynamics" class="fill"></div></div>
-              <div id="dynLampStable" class="lamp dyn" aria-label="Stability lamp"></div>
-              <div id="dynLampVar" class="lamp dyn" aria-label="Variability lamp"></div>
-              <div id="vDynamics" class="meterVal">0%</div>
-            </div>
-
-            <!-- Energy -->
-            <div class="barLabel"><div>Energy</div><span class="dim"> </span></div>
-            <div class="meterRow">
-              <div class="bar barShort"><div id="bEnergy" class="fill"></div></div>
-              <div id="vEnergy" class="meterVal">0%</div>
-            </div>
-
-            <div class="groupGap"></div>
-
-            <!-- Shake -->
-            <div class="barLabel"><div>Shake</div><span class="dim"> </span></div>
-            <div class="meterRow">
-              <div class="bar barShort"><div id="bShake" class="fill"></div></div>
-              <div id="shakeLamp" class="lamp" aria-label="Shake trigger lamp"></div>
-              <div id="vShake" class="meterVal">0%</div>
-            </div>
-
-            <!-- ✅ 6 Direction Lamps (restored) -->
-            <div class="dirRow" aria-label="Directional lamps">
-              <div class="dirItem">
-                <div id="lampUp" class="lamp" aria-label="Up lamp"></div>
-                <div class="dirLabel">UP</div>
-              </div>
-              <div class="dirItem">
-                <div id="lampDown" class="lamp" aria-label="Down lamp"></div>
-                <div class="dirLabel">DOWN</div>
-              </div>
-              <div class="dirItem">
-                <div id="lampLeft" class="lamp" aria-label="Left lamp"></div>
-                <div class="dirLabel">LEFT</div>
-              </div>
-              <div class="dirItem">
-                <div id="lampRight" class="lamp" aria-label="Right lamp"></div>
-                <div class="dirLabel">RIGHT</div>
-              </div>
-              <div class="dirItem">
-                <div id="lampForward" class="lamp" aria-label="Forward lamp"></div>
-                <div class="dirLabel">FWD</div>
-              </div>
-              <div class="dirItem">
-                <div id="lampBack" class="lamp" aria-label="Back lamp"></div>
-                <div class="dirLabel">BACK</div>
-              </div>
-          </div>
-          <!-- /Direction lamps -->
-          </div>
-
-          <div id="devSpinAuditNote" class="mono dim" style="margin-top:14px; min-height:16px;"></div>
-          <div id="fatal" class="mono bad" style="display:none;"></div>
-        </div>
-      </div>
-
-      <div class="card cardTall">
-        <div class="physHeader">Game Physics</div>
-
-        <div id="physStage" class="physStage" aria-label="Physics test stage">
-          <canvas id="stars" class="starCanvas" aria-hidden="true"></canvas>
-          <canvas id="terrain" class="terrainCanvas" aria-hidden="true"></canvas>
-          <div id="groundLine" class="groundLine" aria-label="Ground"></div>
-
-          <!-- [VFX] Updated orb schema (origin stack) -->
-          <div id="orbWrap" class="orbWrap" aria-hidden="true">
-            <div id="origin" class="origin" aria-hidden="true">
-              <div id="electricLayer" class="electricLayer" aria-hidden="true"></div>
-              <div id="flameLayer" class="flameLayer" aria-hidden="true"></div>
-              <div id="shockLayer" class="shockLayer" aria-hidden="true"></div>
-              <div id="shield" class="shield atOrigin" aria-label="Stability shield"></div>
-              <div id="orb" class="orb atOrigin" aria-label="Orb"></div>
-              <div id="orbInterior" class="orbInterior atOrigin" aria-hidden="true"></div>
-              <svg id="orbCracks" class="orbCracks atOrigin" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
-              <svg id="orbShards" class="orbShards atOrigin" viewBox="-80 -80 160 160" aria-hidden="true"></svg>
-            </div>
-          </div>
-          <div id="testGlobe" class="pickupGlobe" aria-label="Energy globe"></div>
-
-          <div id="deathPanel" class="deathPanel off" aria-hidden="true">
-            <div class="deathCard" role="dialog" aria-label="You died">
-              <div class="deathTitle">YOU DIED</div>
-              <button id="tryAgainBtn" class="calibBtn" type="button">TRY AGAIN</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="physControls">
-          <div class="sliderRow">
-            <span>Gravity</span>
-            <strong><span id="gVal">0.33</span>x</strong>
-          </div>
-          <input id="gSlider" type="range" min="0" max="3" value="0.33" step="0.01" />
-
-          <div style="height:10px"></div>
-
-          <div class="sliderRow">
-            <span>Fall Drag</span>
-            <strong><span id="dVal">-0.24</span></strong>
-          </div>
-          <input id="dSlider" type="range" min="-1" max="1" value="-0.24" step="0.01" />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="calibOverlay" class="calibOverlay off" aria-hidden="true">
-    <div class="calibCard" role="dialog" aria-label="Calibration">
-      <div class="calibText">Place phone flat on desk.<br>Align top edge of phone to bottom edge of laptop and press CALIBRATE.</div>
-      <button id="calibBtn" class="calibBtn" type="button" disabled>CALIBRATE</button>
-      <div id="calibStatus" class="calibStatus">Waiting for phone…</div>
-    </div>
-  </div>
-
-  <div id="logPopup" class="logPopup" aria-hidden="true">
-    <div id="logPopupHeader" class="logPopupHeader">
-      <div class="logPopupTitle">KWS Log</div>
-      <button class="xBtn" id="logPopupClose" aria-label="Close log">✕</button>
-    </div>
-    <div class="logPopupTabs" aria-label="Debug log channel">
-      <button id="logTabKws" class="logTabBtn active" type="button">KWS</button>
-      <button id="logTabPhone" class="logTabBtn" type="button">Phone</button>
-    </div>
-    <div id="kwsLog" class="logPopupBody" aria-label="KWS debug log"></div>
-  </div>
-
-  <div id="wordBoardPopup" class="wordBoardPopup" aria-hidden="true">
-    <div id="wordBoardPopupHeader" class="wordBoardPopupHeader">
-      <div class="wordBoardPopupTitle">WordFlashboard</div>
-      <button class="xBtn" id="wordBoardPopupClose" aria-label="Close word board">✕</button>
-    </div>
-    <div class="wordBoardMeta" aria-label="KWS status and tuning">
-      <div class="wordBoardMetaReadout">
-        <div class="wordBoardMetaLine"><span class="wordBoardMetaLabel">KWS::</span> <span id="kwsReadout" class="dim">idle</span></div>
-        <div class="wordBoardMetaLine"><span class="wordBoardMetaLabel">Rules:</span> <span id="rulesReadout" class="dim">unknown</span></div>
-      </div>
-      <div class="kwsTuneRow wordBoardTuneRow" aria-label="KWS infer tuning">
-        <label>Infer TH <input id="kwsTokenThrInput" type="number" min="0" max="1" step="0.001" placeholder="0.150" /></label>
-        <label>Infer CD <input id="kwsCooldownMsInput" type="number" min="0" max="5000" step="25" placeholder="600" /></label>
-        <button id="kwsApplyTuneBtn" type="button">Apply</button>
-      </div>
-    </div>
-    <div id="wordBoardBody" class="wordBoardPopupBody" aria-label="Word flashboard"></div>
-    <div id="wordBoardDebugPanel" class="wordBoardDebugPanel">
-      <button id="wordBoardDebugToggle" class="wordBoardDebugToggle" type="button" aria-expanded="false" aria-controls="wordBoardDebugBody">
-        <span>KWS Debug</span>
-        <span id="wordBoardDebugBadge" class="wordBoardDebugBadge">idle</span>
-      </button>
-      <div id="wordBoardDebugBody" class="wordBoardDebugBody" aria-hidden="true"></div>
-    </div>
-  </div>
-
-  <!-- ===== LAN PARTY (P2P) BEGIN ===== -->
-  <div id="lanModal" class="modal" aria-hidden="true">
-    <div class="backdrop" id="lanBackdrop"></div>
-    <div class="modalCard qrOnlyCard" role="dialog" aria-label="Pair phone QR">
-      <div id="lanQr" class="qrBox"></div>
-    </div>
-  </div>
-  <!-- ===== LAN PARTY (P2P) END ===== -->
+  </main>
 </body>
 </html>
