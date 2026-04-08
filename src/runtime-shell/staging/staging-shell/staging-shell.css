@@ -132,7 +132,7 @@ body {
   padding: 24px 16px;
   z-index: 998;
   pointer-events: auto;
-  background: var(--bg);
+  background: transparent;
 }
 
 .shellStartScreen.off {
@@ -176,8 +176,8 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: rgba(0,0,0,.72);
-  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,.18);
+  backdrop-filter: blur(2px);
   z-index: 999;
 }
 
