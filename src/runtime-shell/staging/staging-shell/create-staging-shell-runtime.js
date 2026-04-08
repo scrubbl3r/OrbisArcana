@@ -618,13 +618,15 @@ function handleShellImpulseFrame(shellContext, data) {
 
   if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
     receiverHostRuntime.processIncomingImpulse(inputPayload);
-    if (devView && typeof devView.setStatus === "function") {
+    if (devView && typeof devView.setStatus === "function" && !runtime.liveInputStatusShown) {
       devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
+      runtime.liveInputStatusShown = true;
     }
     return;
   }
-  if (devView && typeof devView.setStatus === "function") {
+  if (devView && typeof devView.setStatus === "function" && !runtime.pendingInputStatusShown) {
     devView.setStatus('Phone calibrated <span class="devStagingDim">(receiver host boot pending)</span>', "devStagingDim");
+    runtime.pendingInputStatusShown = true;
   }
 }
 
@@ -661,6 +663,31 @@ function getShellMotionStoreHudViewModel(shellContext) {
     locked: !!motion.locked,
     over: false,
   };
+}
+
+function bindShellHudToMotionStore(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
+  const store = runtime && runtime.motionStore;
+  if (!runtime || !store || typeof store.subscribe !== "function" || !devView || typeof devView.renderInputHud !== "function") {
+    return;
+  }
+
+  if (runtime.motionStoreHudUnsubscribe) {
+    try { runtime.motionStoreHudUnsubscribe(); } catch (_) {}
+    runtime.motionStoreHudUnsubscribe = null;
+  }
+
+  runtime.motionStoreHudUnsubscribe = store.subscribe(() => {
+    const vm = getShellMotionStoreHudViewModel(shellContext);
+    if (!vm) return;
+    devView.renderInputHud(vm);
+  });
+
+  const initialVm = getShellMotionStoreHudViewModel(shellContext);
+  if (initialVm) {
+    devView.renderInputHud(initialVm);
+  }
 }
 
 function pushShellGeneralLog(shellContext, text = "", kind = "") {
@@ -1378,7 +1405,6 @@ async function initShellReceiverHostRuntime(shellContext) {
     receiverHostState,
     runtimeContext,
     runInputFramePipelineImported,
-    buildInputHudViewModel,
     applyStabilityVisuals,
   } = assembly;
 
@@ -1395,14 +1421,6 @@ async function initShellReceiverHostRuntime(shellContext) {
     applyStabilityVisuals,
     computeLift01,
     pickShakeMetric,
-    buildInputHudViewModel,
-    renderInputHud: (shellContext.views && shellContext.views.devStagingView && typeof shellContext.views.devStagingView.renderInputHud === "function")
-      ? (vm) => {
-          const nextVm = getShellMotionStoreHudViewModel(shellContext) || vm;
-          if (!nextVm) return;
-          shellContext.views.devStagingView.renderInputHud(nextVm);
-        }
-      : null,
   });
   if (runtime.receiverHostRuntime && typeof processIncomingImpulse === "function") {
     runtime.receiverHostRuntime.processIncomingImpulse = processIncomingImpulse;
@@ -2356,6 +2374,7 @@ export async function createStagingShellRuntime({
     shellContext.runtime.motionStore = (typeof window.createMotionStore === "function")
       ? window.createMotionStore()
       : null;
+    bindShellHudToMotionStore(shellContext);
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);

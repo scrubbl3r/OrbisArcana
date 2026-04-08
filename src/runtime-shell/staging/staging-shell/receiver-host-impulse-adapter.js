@@ -7,21 +7,9 @@ export function attachShellReceiverHostImpulseAdapter({
   applyStabilityVisuals = null,
   computeLift01 = null,
   pickShakeMetric = null,
-  buildInputHudViewModel = null,
-  renderInputHud = null,
 } = {}) {
   if (!receiverHostState || !runtime || typeof runInputFramePipelineImported !== "function") {
     return null;
-  }
-
-  let pendingHudVm = null;
-  let hudRaf = 0;
-
-  function flushHud() {
-    hudRaf = 0;
-    if (!pendingHudVm || typeof renderInputHud !== "function") return;
-    renderInputHud(pendingHudVm);
-    pendingHudVm = null;
   }
 
   receiverHostState.processIncomingImpulse = (d = {}) => {
@@ -91,19 +79,6 @@ export function attachShellReceiverHostImpulseAdapter({
       },
     });
 
-    if (typeof buildInputHudViewModel === "function" && typeof renderInputHud === "function") {
-      const vm = buildInputHudViewModel({
-        processed,
-        shakeCooldownUntil: (inputGestureSystem && typeof inputGestureSystem.getShakeCooldownUntil === "function")
-          ? Number(inputGestureSystem.getShakeCooldownUntil()) || 0
-          : 0,
-        shakeLampThreshold: Number(inputGestureConfig && inputGestureConfig.shake && inputGestureConfig.shake.lampThreshold) || 1.65,
-      });
-      pendingHudVm = vm;
-      if (!hudRaf) {
-        hudRaf = requestAnimationFrame(flushHud);
-      }
-    }
   };
 
   return receiverHostState.processIncomingImpulse;
