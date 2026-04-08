@@ -289,6 +289,7 @@
   color: rgba(122, 122, 128, 0.68);
   box-shadow: none;
   text-shadow: none;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
 
 .logPopupTabs .logTabBtn:hover {
@@ -297,21 +298,20 @@
   color: var(--text);
 }
 
-.logPopupTabs .logTabBtn.on,
-.logPopupTabs .logTabBtn[data-active="true"],
-.logPopupTabs .logTabBtn[aria-pressed="true"] {
-  border-color: rgba(230, 230, 230, 0.88);
-  color: var(--text-strong);
-  background: rgba(var(--frame-rgb), 0.18);
-  box-shadow: 0 0 0 1px rgba(230, 230, 230, 0.08) inset;
+.logPopupTabs .logTabBtn.on {
+  border-color: rgba(240, 240, 244, 0.98);
+  color: rgb(245, 245, 248);
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+    0 0 18px rgba(255, 255, 255, 0.05);
 }
 
-.logPopupTabs .logTabBtn:not(.on),
-.logPopupTabs .logTabBtn[data-active="false"],
-.logPopupTabs .logTabBtn[aria-pressed="false"] {
+.logPopupTabs .logTabBtn:not(.on) {
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);
   color: rgba(122, 122, 128, 0.68);
+  box-shadow: none;
 }
 
 .logPopupTabs .logTabBtn:focus,
