@@ -16,6 +16,8 @@ Migration note:
 - `transmitter-session-bootstrap.js` now owns room/relay/session bootstrap at this layer
 - `transmitter-motion-input.js` now owns motion permission and browser listener wiring at this layer
 - `transmitter-packet-publisher.js` now owns publish cadence, signature gating, and packet shaping at this layer
+- `transmitter-audio-runtime.js` now owns phone audio synth/runtime behavior at this layer
+- `transmitter-runtime-reset.js` now owns runtime reset/state wipe behavior at this layer
 - `gesture-lab/transmitter-gesture-lab-state.js` now owns gesture-lab persisted state and calibration state at this layer
 - `gesture-lab/transmitter-gesture-lab-ui.js` now owns gesture-lab UI refs and control wiring at this layer
 - `gesture-lab/transmitter-gesture-lab-logic.js` now owns gesture template math and matching logic at this layer

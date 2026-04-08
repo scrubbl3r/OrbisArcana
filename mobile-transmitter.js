@@ -31,6 +31,8 @@
     const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
     const transmitterMotionInput = window.__orbisTransmitterMotionInput || null;
     const createTransmitterPacketPublisher = window.__orbisCreateTransmitterPacketPublisher || null;
+    const transmitterAudioRuntime = window.__orbisTransmitterAudioRuntime || null;
+    const createTransmitterRuntimeReset = window.__orbisCreateTransmitterRuntimeReset || null;
     const transmitterGestureLabLogic = window.__orbisTransmitterGestureLabLogic || null;
     const transmitterCalibrationLogic = window.__orbisTransmitterCalibrationLogic || null;
     const transmitterGestureLabUi = window.__orbisTransmitterGestureLabUi || null;
@@ -907,6 +909,17 @@
           sendImpulse: (type, payload) => impulseTransport.sendImpulse(type, payload),
         })
       : null;
+    const runtimeReset = createTransmitterRuntimeReset
+      ? createTransmitterRuntimeReset({
+          resetPacketPublisher: () => {
+            if (packetPublisher && typeof packetPublisher.reset === "function") {
+              packetPublisher.reset();
+            }
+          },
+          resetAudio: () => setAudio(0, 0, false),
+          resetBg: () => setBgFromEnergy(0),
+        })
+      : null;
 
     // =========================================================================
     // publishDynamics trims payload when TELEMETRY_ON is false
@@ -1228,40 +1241,17 @@
 
     let shakeFullTimes = [];
 
-    let audioCtx = null, osc = null, gainNode = null;
-
     function ensureAudio() {
-      if (audioCtx) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      gainNode = audioCtx.createGain();
-      gainNode.gain.value = 0;
-
-      osc = audioCtx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = TONE_BASE_HZ;
-
-      osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      osc.start();
+      if (transmitterAudioRuntime && typeof transmitterAudioRuntime.ensureAudio === "function") {
+        return transmitterAudioRuntime.ensureAudio();
+      }
+      return null;
     }
 
     function setAudio(eUI, groove, locked) {
-      if (!audioCtx || !gainNode || !osc) return;
-
-      const gBase = energyToGain(clamp01(eUI));
-      const gGroove = locked ? (0.30 + 0.70*groove) : (0.08 + 0.22*groove);
-      const g = MASTER_GAIN * gBase * gGroove;
-
-      const f = TONE_BASE_HZ
-              + TONE_MAX_ADD_HZ * (locked ? groove : 0.30*groove)
-              + 60 * clamp01(eUI);
-
-      const now = audioCtx.currentTime;
-      gainNode.gain.cancelScheduledValues(now);
-      gainNode.gain.setTargetAtTime(g, now, 0.06);
-
-      osc.frequency.cancelScheduledValues(now);
-      osc.frequency.setTargetAtTime(f, now, 0.06);
+      if (transmitterAudioRuntime && typeof transmitterAudioRuntime.setAudio === "function") {
+        transmitterAudioRuntime.setAudio(eUI, groove, locked);
+      }
     }
 
     function flushHistorySoft() {
@@ -2040,62 +2030,81 @@
         if (!ok) return;
 
         ensureAudio();
-        try { await audioCtx.resume(); } catch(e) {}
-
-        if (packetPublisher && typeof packetPublisher.reset === "function") {
-          packetPublisher.reset();
+        if (transmitterAudioRuntime && typeof transmitterAudioRuntime.resume === "function") {
+          await transmitterAudioRuntime.resume();
         }
         if (!lanParty.active) {
           await connectRelay();
         }
 
         running = true;
-        lastT = null;
-
-        ox=oy=oz=0;
-        spinVectorHist.length = 0;
-        spinVector01 = null;
-        spinDirection = null;
-        omegaMag.length  = 0;
-        omegaNorm.length = 0;
-        omegaVec.length  = 0;
-        jerkBuf.length   = 0;
-        dtBuf.length     = 0;
-
-        dynamicsVecBuf.length = 0;
-        dynamicsDtBuf.length  = 0;
-
-        emaMean = 0;
-        emaVar  = 1;
-
-        lock = false;
-        lockStrength = 0;
-        grooveHz = 0;
-
-        graceLeft = 0;
-        recenterBadTime = 0;
-
-        energy = 0;
-        energyUI = 0;
-
-        mSpeedEMA = 0;
-        speedOut  = 0;
-
-        meterHoldLeft = 0;
-        lastGrooveUI   = 0;
-        lastDynamicsUI = 0;
-        lastSmoothUI   = 0;
-
-        shake01 = 0;
-        accelBaseMag = 9.81;
-
-        prevAx = prevAy = prevAz = 0;
-        prevAmag = 9.81;
-
-        shakeFullTimes.length = 0;
-
-        setAudio(0,0,false);
-        setBgFromEnergy(0);
+        if (runtimeReset && typeof runtimeReset.resetRuntimeState === "function") {
+          runtimeReset.resetRuntimeState({
+            get lastT() { return lastT; },
+            set lastT(v) { lastT = v; },
+            get ox() { return ox; },
+            set ox(v) { ox = v; },
+            get oy() { return oy; },
+            set oy(v) { oy = v; },
+            get oz() { return oz; },
+            set oz(v) { oz = v; },
+            get spinVector01() { return spinVector01; },
+            set spinVector01(v) { spinVector01 = v; },
+            get spinDirection() { return spinDirection; },
+            set spinDirection(v) { spinDirection = v; },
+            spinVectorHist,
+            omegaMag,
+            omegaNorm,
+            omegaVec,
+            jerkBuf,
+            dtBuf,
+            dynamicsVecBuf,
+            dynamicsDtBuf,
+            shakeFullTimes,
+            get emaMean() { return emaMean; },
+            set emaMean(v) { emaMean = v; },
+            get emaVar() { return emaVar; },
+            set emaVar(v) { emaVar = v; },
+            get lock() { return lock; },
+            set lock(v) { lock = v; },
+            get lockStrength() { return lockStrength; },
+            set lockStrength(v) { lockStrength = v; },
+            get grooveHz() { return grooveHz; },
+            set grooveHz(v) { grooveHz = v; },
+            get graceLeft() { return graceLeft; },
+            set graceLeft(v) { graceLeft = v; },
+            get recenterBadTime() { return recenterBadTime; },
+            set recenterBadTime(v) { recenterBadTime = v; },
+            get energy() { return energy; },
+            set energy(v) { energy = v; },
+            get energyUI() { return energyUI; },
+            set energyUI(v) { energyUI = v; },
+            get mSpeedEMA() { return mSpeedEMA; },
+            set mSpeedEMA(v) { mSpeedEMA = v; },
+            get speedOut() { return speedOut; },
+            set speedOut(v) { speedOut = v; },
+            get meterHoldLeft() { return meterHoldLeft; },
+            set meterHoldLeft(v) { meterHoldLeft = v; },
+            get lastGrooveUI() { return lastGrooveUI; },
+            set lastGrooveUI(v) { lastGrooveUI = v; },
+            get lastDynamicsUI() { return lastDynamicsUI; },
+            set lastDynamicsUI(v) { lastDynamicsUI = v; },
+            get lastSmoothUI() { return lastSmoothUI; },
+            set lastSmoothUI(v) { lastSmoothUI = v; },
+            get shake01() { return shake01; },
+            set shake01(v) { shake01 = v; },
+            get accelBaseMag() { return accelBaseMag; },
+            set accelBaseMag(v) { accelBaseMag = v; },
+            get prevAx() { return prevAx; },
+            set prevAx(v) { prevAx = v; },
+            get prevAy() { return prevAy; },
+            set prevAy(v) { prevAy = v; },
+            get prevAz() { return prevAz; },
+            set prevAz(v) { prevAz = v; },
+            get prevAmag() { return prevAmag; },
+            set prevAmag(v) { prevAmag = v; },
+          });
+        }
 
         addMotionListener();
 
@@ -2140,10 +2149,8 @@
         classicFastPathJoinTransport.setRunning(false);
       }
 
-      if (audioCtx && gainNode) {
-        const now = audioCtx.currentTime;
-        gainNode.gain.cancelScheduledValues(now);
-        gainNode.gain.setTargetAtTime(0, now, 0.05);
+      if (transmitterAudioRuntime && typeof transmitterAudioRuntime.silence === "function") {
+        transmitterAudioRuntime.silence();
       }
 
       disconnectRelay();
