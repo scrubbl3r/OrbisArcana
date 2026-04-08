@@ -1,21 +1,26 @@
-    (function setVhUnit(){
-      const root = document.documentElement;
+    const transmitterViewportBoot = window.__orbisTransmitterViewportBoot || null;
+    if (transmitterViewportBoot && typeof transmitterViewportBoot.applyVhUnit === "function") {
+      transmitterViewportBoot.applyVhUnit();
+    } else {
+      (function setVhUnit(){
+        const root = document.documentElement;
 
-      const set = () => {
-        const vv = window.visualViewport;
-        const h = (vv && vv.height) ? vv.height : window.innerHeight;
-        root.style.setProperty('--vh', (h * 0.01) + 'px');
-      };
+        const set = () => {
+          const vv = window.visualViewport;
+          const h = (vv && vv.height) ? vv.height : window.innerHeight;
+          root.style.setProperty('--vh', (h * 0.01) + 'px');
+        };
 
-      set();
+        set();
 
-      window.addEventListener('resize', set, { passive: true });
-      window.addEventListener('orientationchange', set, { passive: true });
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', set, { passive: true });
-        window.visualViewport.addEventListener('scroll', set, { passive: true });
-      }
-    })();
+        window.addEventListener('resize', set, { passive: true });
+        window.addEventListener('orientationchange', set, { passive: true });
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', set, { passive: true });
+          window.visualViewport.addEventListener('scroll', set, { passive: true });
+        }
+      })();
+    }
   
   (() => {
     // =========================================================================

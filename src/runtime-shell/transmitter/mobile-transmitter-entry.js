@@ -1,5 +1,6 @@
 import { createTransmitterPageShell } from "./transmitter-page-shell.js";
 import { createTransmitterUiBoot } from "./transmitter-ui-boot.js";
+import { createTransmitterViewportBoot } from "./transmitter-viewport-boot.js";
 
 function loadLegacyTransmitterRuntime() {
   const script = document.createElement("script");
@@ -15,8 +16,13 @@ window.__orbisTransmitterPageShell = createTransmitterPageShell({
 window.__orbisTransmitterUiBoot = createTransmitterUiBoot({
   rootDocument: document,
 });
+window.__orbisTransmitterViewportBoot = createTransmitterViewportBoot({
+  rootWindow: window,
+  rootDocument: document,
+});
 window.__orbisTransmitterUiBoot.applyTheme();
 window.__orbisTransmitterUiBoot.attachVersionTag();
 window.__orbisTransmitterUiBoot.setBgFromEnergy(0);
+window.__orbisTransmitterViewportBoot.attach();
 
 loadLegacyTransmitterRuntime();
