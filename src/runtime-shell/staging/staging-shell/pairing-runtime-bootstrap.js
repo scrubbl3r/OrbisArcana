@@ -22,11 +22,11 @@ export async function bootstrapShellPairingRuntime({
   };
 
   const startScreenEl = rootDocument.getElementById("startScreen");
-  const startBtn = rootDocument.getElementById("startBtn");
   const startQr = rootDocument.getElementById("startQr");
   const calibOverlayEl = rootDocument.getElementById("calibOverlay");
   const calibBtnEl = rootDocument.getElementById("calibBtn");
   const calibStatusEl = rootDocument.getElementById("calibStatus");
+  const shellBootReadyChip = rootDocument.getElementById("shellBootReadyChip");
 
   let calibInFlight = false;
   let calibAvailable = false;
@@ -55,6 +55,28 @@ export async function bootstrapShellPairingRuntime({
   const closeCalibOverlay = () => uiOverlaysSystem.closeCalibOverlay();
   const setCalibStatus = (msg) => uiOverlaysSystem.setCalibStatus(msg);
   const hideStartScreen = () => uiOverlaysSystem.hideStartScreen();
+  const showStartScreen = () => {
+    if (!startScreenEl) return;
+    startScreenEl.classList.remove("off");
+    startScreenEl.setAttribute("aria-hidden", "false");
+  };
+  const destroyStartScreen = () => {
+    if (!startScreenEl || !startScreenEl.parentNode) return;
+    startScreenEl.parentNode.removeChild(startScreenEl);
+  };
+  const destroyCalibOverlay = () => {
+    if (!calibOverlayEl || !calibOverlayEl.parentNode) return;
+    calibOverlayEl.parentNode.removeChild(calibOverlayEl);
+  };
+  const destroyBootArtifacts = () => {
+    if (shellContext && shellContext.bootStatus && typeof shellContext.bootStatus.destroy === "function") {
+      shellContext.bootStatus.destroy();
+      return;
+    }
+    if (shellBootReadyChip && shellBootReadyChip.parentNode) {
+      shellBootReadyChip.parentNode.removeChild(shellBootReadyChip);
+    }
+  };
 
   mobileImpulseSystem = createMobileImpulseSystem({
     idleMarkActivity: () => {},
@@ -71,6 +93,7 @@ export async function bootstrapShellPairingRuntime({
     onCalibrated: () => {
       setCalibStatus("Calibrated");
       closeCalibOverlay();
+      destroyCalibOverlay();
       statusSet('Phone calibrated <span class="devStagingDim">(staging shell)</span>', "devStagingDim");
       onVoiceModeOpenWorld();
     },
@@ -106,6 +129,7 @@ export async function bootstrapShellPairingRuntime({
     },
     onPhoneStarted: () => {
       hideStartScreen();
+      destroyStartScreen();
       if (mobileImpulseSystem) mobileImpulseSystem.markCalibAvailable();
       else {
         calibAvailable = true;
@@ -123,6 +147,8 @@ export async function bootstrapShellPairingRuntime({
       forceNew ? "Launching fresh QR pairing room" : "Launching QR pairing room"
     );
     await lanSession.launch(forceNew);
+    showStartScreen();
+    destroyBootArtifacts();
     updateBootUi(
       rootDocument,
       bootStatus.pairingReady,
@@ -147,12 +173,6 @@ export async function bootstrapShellPairingRuntime({
       calibBtnEl.disabled = true;
       setCalibStatus("Calibrating… (2s)");
     };
-  }
-
-  if (startBtn) {
-    startBtn.addEventListener("click", async () => {
-      await launchLanPairingFlow(true);
-    });
   }
 
   shellContext.runtime.pairing = {

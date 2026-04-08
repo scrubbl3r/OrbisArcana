@@ -1,6 +1,5 @@
 export function createShellBootStatusController({
   rootDocument = document,
-  autoCollapseDelayMs = 1800,
 } = {}) {
   const docEl = rootDocument && rootDocument.documentElement;
   const banner = rootDocument && rootDocument.getElementById("shellBootBanner");
@@ -11,7 +10,6 @@ export function createShellBootStatusController({
   const readyChip = rootDocument && rootDocument.getElementById("shellBootReadyChip");
 
   let collapsed = false;
-  let collapseTimer = null;
 
   const phaseOrder = [
     "js-loaded",
@@ -30,12 +28,6 @@ export function createShellBootStatusController({
       collapseBtn.setAttribute("aria-label", collapsed ? "Expand boot status" : "Collapse boot status");
       collapseBtn.textContent = collapsed ? "+" : "-";
     }
-  }
-
-  function clearAutoCollapse() {
-    if (!collapseTimer) return;
-    clearTimeout(collapseTimer);
-    collapseTimer = null;
   }
 
   function setProgress(progress01) {
@@ -63,13 +55,6 @@ export function createShellBootStatusController({
     syncCollapsed();
   }
 
-  function scheduleReadyCollapse() {
-    clearAutoCollapse();
-    collapseTimer = setTimeout(() => {
-      setCollapsed(true);
-    }, autoCollapseDelayMs);
-  }
-
   function setStatus({ phase, detail, state = "booting" } = {}) {
     const normalizedState = String(state || "booting");
     if (docEl && phase) docEl.dataset.stagingShellBoot = String(phase);
@@ -80,19 +65,18 @@ export function createShellBootStatusController({
     syncReadyChip(normalizedState);
 
     if (normalizedState === "failed" || normalizedState === "booting") {
-      clearAutoCollapse();
       setCollapsed(false);
       return;
     }
+  }
 
-    if (normalizedState === "ready") {
-      scheduleReadyCollapse();
-    }
+  function destroy() {
+    if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+    if (readyChip && readyChip.parentNode) readyChip.parentNode.removeChild(readyChip);
   }
 
   if (collapseBtn) {
     collapseBtn.addEventListener("click", () => {
-      clearAutoCollapse();
       setCollapsed(!collapsed);
     });
   }
@@ -104,6 +88,7 @@ export function createShellBootStatusController({
   return {
     setStatus,
     setCollapsed,
+    destroy,
     isCollapsed() {
       return collapsed;
     },

@@ -1891,17 +1891,13 @@ function drawShellBackdrop(shellContext) {
 }
 
 function syncShellStartQrSize(rootDocument) {
-  const startBtn = rootDocument.getElementById("startBtn");
   const startQr = rootDocument.getElementById("startQr");
-  if (!startBtn || !startQr) return 0;
-  const titleEl = startBtn.querySelector("span");
-  if (!titleEl || typeof titleEl.getBoundingClientRect !== "function") return 0;
-  const titleWidthPx = Math.ceil(titleEl.getBoundingClientRect().width);
-  if (!(titleWidthPx > 0)) return 0;
-  startQr.style.width = `${titleWidthPx}px`;
-  startQr.style.height = `${titleWidthPx}px`;
-  startQr.dataset.titleWidthPx = String(titleWidthPx);
-  return titleWidthPx;
+  if (!startQr) return 0;
+  const qrSizePx = Math.max(240, Math.round(Math.min(rootDocument.defaultView.innerWidth * 0.4, 320)));
+  startQr.style.width = `${qrSizePx}px`;
+  startQr.style.height = `${qrSizePx}px`;
+  startQr.dataset.titleWidthPx = String(qrSizePx);
+  return qrSizePx;
 }
 
 function stagingMobilePageBaseUrl(rootDocument) {
@@ -2301,7 +2297,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260408c",
+  moduleCacheBustV = "20260408d",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

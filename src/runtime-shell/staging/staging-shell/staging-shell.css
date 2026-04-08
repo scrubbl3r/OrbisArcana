@@ -11,14 +11,15 @@ body {
 
 .shellBootBanner {
   position: fixed;
-  top: 12px;
-  left: 12px;
+  top: 50%;
+  left: 50%;
   overflow: hidden;
   z-index: 1200;
   min-width: min(260px, calc(100vw - 24px));
   max-width: min(340px, calc(100vw - 24px));
   padding: 10px 12px;
   box-sizing: border-box;
+  transform: translate(-50%, -50%);
   transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
@@ -30,23 +31,6 @@ body {
 .shellBootBanner[data-state="failed"] {
   border-color: rgba(255, 110, 110, 0.42);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
-}
-
-.shellBootBanner[data-collapsed="true"] {
-  min-width: 0;
-  width: 170px;
-  max-width: calc(100vw - 24px);
-  padding-bottom: 10px;
-}
-
-.shellBootBanner[data-collapsed="true"] .shellBootDetail {
-  display: none;
-}
-
-.shellBootBanner[data-state="ready"][data-collapsed="true"] {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-6px);
 }
 
 .shellBootHead {
@@ -91,14 +75,7 @@ body {
     conic-gradient(rgba(255, 110, 110, 0.98) 1turn, rgba(255, 110, 110, 0.98) 1turn);
 }
 
-.shellBootCollapse {
-  margin-left: auto;
-  width: 22px;
-  height: 22px;
-  font-size: 14px;
-  line-height: 1;
-  padding: 0;
-}
+.shellBootCollapse { display: none; }
 
 .shellBootPhase {
   color: var(--text-strong);
@@ -163,44 +140,13 @@ body {
 }
 
 .shellStartCard {
-  width: min(500px, 92vw);
+  width: min(360px, 92vw);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  background: transparent;
-  box-sizing: border-box;
-}
-
-.shellStartBtn {
-  width: 100%;
-  height: 92px;
-  padding: 0;
-  border-radius: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text-strong);
-  font-weight: 1000;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  cursor: pointer;
-  box-shadow: none;
-  text-shadow: 0 0 16px rgba(255,255,255,.08);
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  background: transparent;
   box-sizing: border-box;
-}
-
-.shellStartBtn:active {
-  transform: translateY(1px);
-}
-
-.shellStartBtn span {
-  font-size: clamp(28px, 4.2vw, 48px);
-  line-height: 1;
 }
 
 .shellQrBox {
@@ -216,8 +162,8 @@ body {
 }
 
 .shellStartQrBox {
-  width: auto;
-  height: auto;
+  width: 280px;
+  height: 280px;
   border-radius: 18px;
   box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset, 0 0 28px rgba(255,255,255,.04);
   box-sizing: border-box;
@@ -305,8 +251,6 @@ body {
 
 @media (max-width: 900px) {
   .shellBootBanner {
-    top: 10px;
-    left: 10px;
     min-width: min(260px, calc(100vw - 20px));
     max-width: min(320px, calc(100vw - 20px));
   }
