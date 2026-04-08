@@ -276,10 +276,11 @@
 
 .logPopupTabs .logTabBtn,
 .logPopupTabs .logTabBtn[data-active="false"] {
-  border-color: rgba(var(--frame-rgb), 0.24);
-  background: rgba(var(--frame-rgb), 0.06);
-  color: var(--text-muted);
+  border-color: rgba(var(--frame-rgb), 0.14);
+  background: rgba(var(--frame-rgb), 0.02);
+  color: rgba(122, 122, 128, 0.68);
   box-shadow: none;
+  text-shadow: none;
 }
 
 .logPopupTabs .logTabBtn:hover {
@@ -293,7 +294,8 @@
 .logPopupTabs .logTabBtn[data-active="true"] {
   border-color: rgba(230, 230, 230, 0.88);
   color: var(--text-strong);
-  background: rgba(var(--frame-rgb), 0.22);
+  background: rgba(var(--frame-rgb), 0.18);
+  box-shadow: 0 0 0 1px rgba(230, 230, 230, 0.08) inset;
 }
 
 .logPopupTabs .logTabBtn:focus,
