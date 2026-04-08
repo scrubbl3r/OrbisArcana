@@ -27,6 +27,7 @@ export async function bootstrapShellPairingRuntime({
   const calibBtnEl = rootDocument.getElementById("calibBtn");
   const calibStatusEl = rootDocument.getElementById("calibStatus");
   const shellBootReadyChip = rootDocument.getElementById("shellBootReadyChip");
+  const shellOnboardingOverlay = rootDocument.getElementById("shellOnboardingOverlay");
 
   let calibInFlight = false;
   let calibAvailable = false;
@@ -77,6 +78,10 @@ export async function bootstrapShellPairingRuntime({
       shellBootReadyChip.parentNode.removeChild(shellBootReadyChip);
     }
   };
+  const destroyOnboardingOverlay = () => {
+    if (!shellOnboardingOverlay || !shellOnboardingOverlay.parentNode) return;
+    shellOnboardingOverlay.parentNode.removeChild(shellOnboardingOverlay);
+  };
 
   mobileImpulseSystem = createMobileImpulseSystem({
     idleMarkActivity: () => {},
@@ -94,6 +99,7 @@ export async function bootstrapShellPairingRuntime({
       setCalibStatus("Calibrated");
       closeCalibOverlay();
       destroyCalibOverlay();
+      destroyOnboardingOverlay();
       statusSet('Phone calibrated <span class="devStagingDim">(staging shell)</span>', "devStagingDim");
       onVoiceModeOpenWorld();
     },

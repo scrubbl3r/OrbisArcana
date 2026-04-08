@@ -9,6 +9,13 @@ body {
   min-height: 100vh;
 }
 
+.shellOnboardingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 997;
+  background: #000;
+}
+
 .shellBootBanner {
   position: fixed;
   top: 50%;
@@ -176,8 +183,8 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: rgba(0,0,0,.18);
-  backdrop-filter: blur(2px);
+  background: transparent;
+  backdrop-filter: none;
   z-index: 999;
 }
 
