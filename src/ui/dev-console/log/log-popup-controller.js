@@ -200,9 +200,21 @@ export function createLogPopupController({
   }
 
   function renderLogChannelTabs() {
-    if (els.logTabGeneral) els.logTabGeneral.classList.toggle("active", activeLogChannel === "general");
-    if (els.logTabKws) els.logTabKws.classList.toggle("active", activeLogChannel === "kws");
-    if (els.logTabPhone) els.logTabPhone.classList.toggle("active", activeLogChannel === "phone");
+    if (els.logTabGeneral) {
+      const active = activeLogChannel === "general";
+      els.logTabGeneral.classList.toggle("active", active);
+      els.logTabGeneral.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+    if (els.logTabKws) {
+      const active = activeLogChannel === "kws";
+      els.logTabKws.classList.toggle("active", active);
+      els.logTabKws.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+    if (els.logTabPhone) {
+      const active = activeLogChannel === "phone";
+      els.logTabPhone.classList.toggle("active", active);
+      els.logTabPhone.setAttribute("aria-pressed", active ? "true" : "false");
+    }
   }
 
   function setActiveLogChannel(nextChannel) {
