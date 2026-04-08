@@ -10,6 +10,6 @@ The shell should orchestrate staging surfaces, not own deep gameplay logic.
 
 Current testing policy:
 - `staging-shell.html` is now the default harness and default smoke target
-- `game-receiver.html` is temporary fallback/comparator only
+- `game-receiver.html` is archived legacy receiver code and not part of normal workflow
 - new receiver/runtime work should land in the shell path, not the old root host
-- once the proving window closes, the remaining legacy receiver harness can be retired
+- remaining root receiver code should be removed rather than preserved as fallback
