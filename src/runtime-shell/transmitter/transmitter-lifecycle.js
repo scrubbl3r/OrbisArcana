@@ -40,6 +40,9 @@ export function createTransmitterLifecycle({
 
   function setMode(mode) {
     state.mode = mode === "running" ? "running" : "idle";
+    if (pageShell && typeof pageShell.setMode === "function") {
+      pageShell.setMode(state.mode);
+    }
     setButtonLabel(state.mode === "running" ? "Stop" : "Start");
   }
 

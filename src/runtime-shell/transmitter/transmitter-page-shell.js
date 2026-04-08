@@ -4,6 +4,8 @@ export function createTransmitterPageShell({
   versionText = "vtag:shield-debug",
 } = {}) {
   const refs = {
+    app: rootDocument.getElementById("app") || rootDocument.querySelector(".app"),
+    startCard: rootDocument.getElementById("startCard"),
     startBtn: rootDocument.getElementById("startBtn"),
     lanConnecting: rootDocument.getElementById("lanConnecting"),
   };
@@ -22,6 +24,20 @@ export function createTransmitterPageShell({
   function setStartBusy(busy) {
     if (!refs.startBtn) return;
     refs.startBtn.disabled = !!busy;
+  }
+
+  function setMode(mode = "idle") {
+    const next = String(mode || "").trim().toLowerCase();
+    const isRunning = next === "running";
+    if (rootDocument && rootDocument.body) {
+      rootDocument.body.classList.toggle("transmitterRunning", isRunning);
+    }
+    if (!isRunning) return;
+    if (refs.startCard && refs.startCard.parentNode) {
+      refs.startCard.parentNode.removeChild(refs.startCard);
+      refs.startCard = null;
+      refs.startBtn = null;
+    }
   }
 
   function showLanConnecting() {
@@ -62,6 +78,7 @@ export function createTransmitterPageShell({
     setButtonLabel,
     setStartReady,
     setStartBusy,
+    setMode,
     setJoinStatus,
     showLanConnecting,
     hideLanConnecting,
