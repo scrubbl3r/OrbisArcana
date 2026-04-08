@@ -17,6 +17,7 @@ Migration note:
 - `gesture-lab/transmitter-gesture-lab-state.js` now owns gesture-lab persisted state and calibration state at this layer
 - `gesture-lab/transmitter-gesture-lab-ui.js` now owns gesture-lab UI refs and control wiring at this layer
 - `gesture-lab/transmitter-gesture-lab-logic.js` now owns gesture template math and matching logic at this layer
+- `gesture-lab/transmitter-calibration-logic.js` now owns calibration basis and directional impulse helper logic at this layer
 - it still delegates the deep runtime to the existing root-level
   `mobile-transmitter.js` / `mobile-transmitter.css` during transition
 - follow-on work should move runtime/bootstrap ownership here and then retire the

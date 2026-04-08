@@ -30,6 +30,7 @@
     const transmitterLifecycle = window.__orbisTransmitterLifecycle || null;
     const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
     const transmitterGestureLabLogic = window.__orbisTransmitterGestureLabLogic || null;
+    const transmitterCalibrationLogic = window.__orbisTransmitterCalibrationLogic || null;
     const transmitterGestureLabUi = window.__orbisTransmitterGestureLabUi || null;
     const transmitterGestureLabState = window.__orbisTransmitterGestureLabState || {
       gestureBank: { templates: {}, mastery: 0.35 },
@@ -1686,45 +1687,22 @@
     window.__orbisStartTransmitterCalibration = startCalibration;
 
     function finishCalibration(){
-      if (!calib.samples.length) {
+      if (!transmitterCalibrationLogic || typeof transmitterCalibrationLogic.computeCalibrationBasis !== "function") {
         calib.active = false;
         return;
       }
-      let sx=0, sy=0, sz=0;
-      for (const s of calib.samples){ sx+=s.ax; sy+=s.ay; sz+=s.az; }
-      const n = calib.samples.length || 1;
-      const gRaw = { x:sx/n, y:sy/n, z:sz/n };
-      const gHatN = vNorm(gRaw);
-      if (!(gHatN.mag > 0.5)) {
+      const result = transmitterCalibrationLogic.computeCalibrationBasis(calib.samples, orientState && orientState.R, {
+        phoneTopAxis: PHONE_TOP_AXIS,
+        previousAlpha0: calibrationState.calibAlpha0,
+        orientationAlpha: orientState && orientState.alpha,
+      });
+      if (!result) {
         calib.active = false;
         return;
       }
-
-      if (!orientState || !orientState.R) {
-        calib.active = false;
-        return;
-      }
-
-      const gHat = { x:gHatN.x, y:gHatN.y, z:gHatN.z };
-      const gHatWorld = matVec(orientState.R, gHat);
-      const up = { x:-gHatWorld.x, y:-gHatWorld.y, z:-gHatWorld.z };
-
-      // forward from phone top axis projected into desk plane (world frame)
-      const topWorld = matVec(orientState.R, PHONE_TOP_AXIS);
-      let f = vSub(topWorld, vScale(up, vDot(topWorld, up)));
-      let fN = vNorm(f);
-      if (!(fN.mag > 1e-6)){
-        const alt = { x:1, y:0, z:0 };
-        f = vSub(alt, vScale(up, vDot(alt, up)));
-        fN = vNorm(f);
-      }
-      const forward = { x:fN.x, y:fN.y, z:fN.z };
-      const rightN = vNorm(vCross(forward, up));
-      const right = { x:rightN.x, y:rightN.y, z:rightN.z };
-
-      calibrationState.calibBasis = { up, right, forward };
-      calibrationState.calibR = orientState.R;
-      calibrationState.calibAlpha0 = orientState && isFinite(orientState.alpha) ? orientState.alpha : calibrationState.calibAlpha0;
+      calibrationState.calibBasis = result.basis;
+      calibrationState.calibR = result.calibR;
+      calibrationState.calibAlpha0 = result.calibAlpha0;
       saveCalibBasis();
 
       calib.active = false;
@@ -1732,73 +1710,21 @@
     }
 
     function classifyDirectionalShake(nowMs){
-      if (!calibrationState.calibBasis) return null;
-      if (!orientState || !orientState.R) return null;
-      const t0 = nowMs - IMPULSE_WIN_MS;
-      const basis = calibrationState.calibBasis;
-      let sumUp = 0, sumRight = 0, sumForward = 0, n = 0;
-      const gHat = { x:-basis.up.x, y:-basis.up.y, z:-basis.up.z };
-
-      for (let i = impulseHist.length - 1; i >= 0; i--){
-        const s = impulseHist[i];
-        if (s.t < t0) break;
-        n++;
+      if (!transmitterCalibrationLogic || typeof transmitterCalibrationLogic.classifyDirectionalImpulse !== "function") {
+        return null;
       }
-      if (!n) return null;
-
-      let upPos = { v:0, t:0 }, upNeg = { v:0, t:0 };
-      let rPos = { v:0, t:0 }, rNeg = { v:0, t:0 };
-      let fPos = { v:0, t:0 }, fNeg = { v:0, t:0 };
-      for (let i = impulseHist.length - 1; i >= 0; i--){
-        const s = impulseHist[i];
-        if (s.t < t0) break;
-        const aRaw = matVec(orientState.R, { x:s.ax, y:s.ay, z:s.az });
-        const aLin = vSub(aRaw, vScale(gHat, vDot(aRaw, gHat)));
-        const gBias = (gVecLP && gVecLP.has) ? vDot(gVecLP, basis.up) : 0;
-        const u = (vDot(aRaw, basis.up) - gBias) * FLIP_U;
-        const r = vDot(aLin, basis.right) * FLIP_R;
-        const f = vDot(aLin, basis.forward) * FLIP_F;
-        sumUp += u;
-        sumRight += r;
-        sumForward += f;
-        if (u >= 0 && u > upPos.v) upPos = { v:u, t:s.t };
-        if (u < 0 && -u > upNeg.v) upNeg = { v:-u, t:s.t };
-        if (r >= 0 && r > rPos.v) rPos = { v:r, t:s.t };
-        if (r < 0 && -r > rNeg.v) rNeg = { v:-r, t:s.t };
-        if (f >= 0 && f > fPos.v) fPos = { v:f, t:s.t };
-        if (f < 0 && -f > fNeg.v) fNeg = { v:-f, t:s.t };
-      }
-
-      const u = sumUp / n;
-      const r = sumRight / n;
-      const f = sumForward / n;
-
-      const maxU = Math.max(upPos.v, upNeg.v);
-      const maxR = Math.max(rPos.v, rNeg.v);
-      const maxF = Math.max(fPos.v, fNeg.v);
-      const maxAbs = Math.max(maxU, maxR, maxF);
-      if (maxAbs < DIR_MIN_THR) return null;
-
-      function pickSign(pos, neg){
-        if (pos.v > 0 && neg.v > 0){
-          // use earlier peak (drive) if opposite peak exists later
-          return (pos.t < neg.t) ? 1 : -1;
-        }
-        if (pos.v > 0) return 1;
-        if (neg.v > 0) return -1;
-        return 0;
-      }
-
-      if (maxAbs === maxU) {
-        const s = pickSign(upPos, upNeg);
-        return (s >= 0) ? "U" : "D";
-      }
-      if (maxAbs === maxR) {
-        const s = pickSign(rPos, rNeg);
-        return (s >= 0) ? "R" : "L";
-      }
-      const s = pickSign(fPos, fNeg);
-      return (s >= 0) ? "F" : "B";
+      return transmitterCalibrationLogic.classifyDirectionalImpulse({
+        impulseHist,
+        nowMs,
+        orientRotation: orientState && orientState.R,
+        calibBasis: calibrationState.calibBasis,
+        gravityVectorLp: gVecLP,
+        impulseWinMs: IMPULSE_WIN_MS,
+        dirMinThreshold: DIR_MIN_THR,
+        flipU: FLIP_U,
+        flipR: FLIP_R,
+        flipF: FLIP_F,
+      });
     }
 
     const SD_SLOP_GATE = 0.18;
