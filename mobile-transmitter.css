@@ -23,21 +23,6 @@
       place-items: center;
     }
 
-    .startCard {
-      width: min(260px, 72vw);
-      height: min(260px, 72vw);
-      display: grid;
-      place-items: center;
-      border-radius: 28px;
-      border: 1px solid rgba(var(--frame-rgb), 0.24);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)),
-        rgba(10, 10, 12, 0.92);
-      box-shadow:
-        0 24px 80px rgba(0,0,0,0.48),
-        0 0 0 1px rgba(255,255,255,0.03) inset;
-    }
-
     /* Single centered round Start button */
     #startBtn {
       width: min(180px, 46vw);
@@ -56,26 +41,6 @@
     #startBtn:active { transform: scale(0.98); }
     #startBtn:disabled { opacity: 0.55; }
 
-    body.transmitterRunning {
-      background:
-        radial-gradient(circle at 50% 34%, rgba(255, 220, 180, 0.28), transparent 18%),
-        radial-gradient(circle at 50% 50%, rgba(255, 112, 42, 0.22), transparent 32%),
-        linear-gradient(180deg, rgb(120, 18, 0), rgb(255, 78, 18) 52%, rgb(255, 122, 30));
-      animation: transmitterPulse 1800ms ease-in-out infinite;
-    }
-
-    body.transmitterRunning .app {
-      place-items: stretch;
-    }
-
-    @keyframes transmitterPulse {
-      0%, 100% {
-        filter: saturate(1) brightness(1);
-      }
-      50% {
-        filter: saturate(1.08) brightness(1.04);
-      }
-    }
 
     /* ===== LAN PARTY (P2P) BEGIN ===== */
     .lanConnecting{
