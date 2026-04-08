@@ -6,6 +6,7 @@ import { createTransmitterPacketPublisher } from "./transmitter-packet-publisher
 import { createTransmitterAudioRuntime } from "./transmitter-audio-runtime.js";
 import { createTransmitterMotionCore } from "./transmitter-motion-core.js";
 import { createTransmitterRuntimeReset } from "./transmitter-runtime-reset.js";
+import { createTransmitterLanSession } from "./transmitter-lan-session.js";
 import { createTransmitterGestureLabUi } from "./gesture-lab/transmitter-gesture-lab-ui.js";
 import { createTransmitterGestureLabLogic } from "./gesture-lab/transmitter-gesture-lab-logic.js";
 import { createTransmitterCalibrationLogic } from "./gesture-lab/transmitter-calibration-logic.js";
@@ -55,6 +56,7 @@ window.__orbisTransmitterAudioRuntime = createTransmitterAudioRuntime({
 });
 window.__orbisCreateTransmitterMotionCore = createTransmitterMotionCore;
 window.__orbisCreateTransmitterRuntimeReset = createTransmitterRuntimeReset;
+window.__orbisCreateTransmitterLanSession = createTransmitterLanSession;
 window.__orbisTransmitterGestureLabUi = createTransmitterGestureLabUi({
   rootDocument: document,
 });

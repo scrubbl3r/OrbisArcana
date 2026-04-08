@@ -14,6 +14,7 @@ Migration note:
 - `mobile-transmitter-entry.js` owns page boot at this layer
 - `transmitter-lifecycle.js` now owns start/stop host state at this layer
 - `transmitter-session-bootstrap.js` now owns room/relay/session bootstrap at this layer
+- `transmitter-lan-session.js` now owns LAN join/session orchestration at this layer
 - `transmitter-motion-input.js` now owns motion permission and browser listener wiring at this layer
 - `transmitter-packet-publisher.js` now owns publish cadence, signature gating, and packet shaping at this layer
 - `transmitter-audio-runtime.js` now owns phone audio synth/runtime behavior at this layer
