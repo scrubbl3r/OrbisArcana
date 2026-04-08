@@ -20,6 +20,7 @@ export function projectDevStagingPanelRefs(refs = {}) {
     logTabGeneral: refs.logTabGeneral || null,
     logTabKws: refs.logTabKws || null,
     logTabPhone: refs.logTabPhone || null,
+    logTabGhone: refs.logTabGhone || null,
     kwsTokenThrInput: refs.kwsTokenThrInput || null,
     kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
     kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,

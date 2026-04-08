@@ -13,6 +13,7 @@ export function createDevStagingRefs(root) {
     logTabGeneral: $("logTabGeneral"),
     logTabKws: $("logTabKws"),
     logTabPhone: $("logTabPhone"),
+    logTabGhone: $("logTabGhone"),
     kwsTokenThrInput: $("kwsTokenThrInput"),
     kwsCooldownMsInput: $("kwsCooldownMsInput"),
     kwsApplyTuneBtn: $("kwsApplyTuneBtn"),

@@ -215,6 +215,7 @@ export function createLogPopupController({
       { el: els.logTabGeneral, key: "general" },
       { el: els.logTabKws, key: "kws" },
       { el: els.logTabPhone, key: "phone" },
+      { el: els.logTabGhone, key: "phone" },
     ];
     for (const tab of tabs) {
       if (!tab.el) continue;
@@ -310,6 +311,7 @@ export function createLogPopupController({
     bindLogTab(els.logTabGeneral, "general");
     bindLogTab(els.logTabKws, "kws");
     bindLogTab(els.logTabPhone, "phone");
+    bindLogTab(els.logTabGhone, "phone");
     if (els.logPopupHeader) {
       els.logPopupHeader.addEventListener("pointerdown", beginLogPopupDrag);
       els.logPopupHeader.addEventListener("pointermove", moveLogPopupDrag);
