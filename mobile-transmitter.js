@@ -186,26 +186,17 @@
     // =========================================================================
     // Gesture Lab — user-taught gesture templates (mobile)
     // =========================================================================
-    const DEBUG_GESTURE = false;
-
-    const GESTURE_BANK_KEY = "orbis_gesture_bank_v1";
-    const GRAVITY_LOCK_KEY = "orbis_gravity_lock_v1";
-    const CALIB_BASIS_KEY = "orbis_calib_basis_v1";
-
     const MAX_REC_MS = 1200;
     const PRE_ROLL_MS = 100;
     const START_THR = 0.35;
     const MIN_REC_MS = 180;
     const RESAMPLE_N = 32;
     const MOTION_HIST_MS = 900;
-    const HIT_WIN_MIN_MS = 180;
     const HIT_WIN_MAX_MS = 500;
     const CALIB_MS = 2000;
     const IMPULSE_WIN_MS = 360;
     const DIR_MIN_THR = 0.35;
     const PHONE_TOP_AXIS = { x:0, y:1, z:0 };
-    const GRAV_LPF_HZ = 0.8; // Gravity vector LPF cutoff (Hz)
-    const SHIELD_AXIS_WIN_MS = 1500;
     const DEBUG_SHIELD = true;
 
     const gestureBank = transmitterGestureLabState.gestureBank;
@@ -215,12 +206,6 @@
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
     const clamp01x2 = (x) => Math.max(0, Math.min(2, x));
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-    let orientState = { alpha:0, beta:0, gamma:0, has:false, R:null };
-    let gVecLP = { x:0, y:0, z:0, has:false };
-    const spinVectorHist = []; // {t, x, y, z} in calibrated frame
-    let spinVector01 = null;
-    let spinDirection = null;
 
     function vDot(a,b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
     function vCross(a,b){
@@ -235,108 +220,6 @@
       if (!(m > 1e-6)) return { x:0, y:0, z:0, mag:0 };
       return { x:v.x/m, y:v.y/m, z:v.z/m, mag:m };
     }
-    function vScale(v,s){ return { x:v.x*s, y:v.y*s, z:v.z*s }; }
-    function vSub(a,b){ return { x:a.x-b.x, y:a.y-b.y, z:a.z-b.z }; }
-    function matMul(a,b){
-      return [
-        [
-          a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0],
-          a[0][0]*b[0][1] + a[0][1]*b[1][1] + a[0][2]*b[2][1],
-          a[0][0]*b[0][2] + a[0][1]*b[1][2] + a[0][2]*b[2][2],
-        ],
-        [
-          a[1][0]*b[0][0] + a[1][1]*b[1][0] + a[1][2]*b[2][0],
-          a[1][0]*b[0][1] + a[1][1]*b[1][1] + a[1][2]*b[2][1],
-          a[1][0]*b[0][2] + a[1][1]*b[1][2] + a[1][2]*b[2][2],
-        ],
-        [
-          a[2][0]*b[0][0] + a[2][1]*b[1][0] + a[2][2]*b[2][0],
-          a[2][0]*b[0][1] + a[2][1]*b[1][1] + a[2][2]*b[2][1],
-          a[2][0]*b[0][2] + a[2][1]*b[1][2] + a[2][2]*b[2][2],
-        ],
-      ];
-    }
-    function matT(m){
-      return [
-        [m[0][0], m[1][0], m[2][0]],
-        [m[0][1], m[1][1], m[2][1]],
-        [m[0][2], m[1][2], m[2][2]],
-      ];
-    }
-    function matVec(m,v){
-      return {
-        x: m[0][0]*v.x + m[0][1]*v.y + m[0][2]*v.z,
-        y: m[1][0]*v.x + m[1][1]*v.y + m[1][2]*v.z,
-        z: m[2][0]*v.x + m[2][1]*v.y + m[2][2]*v.z,
-      };
-    }
-
-    function rotFromEuler(alpha, beta, gamma){
-      // Z (alpha), X (beta), Y (gamma) intrinsic rotation
-      const _x = (beta || 0)  * Math.PI / 180;
-      const _y = (gamma || 0) * Math.PI / 180;
-      const _z = (alpha || 0) * Math.PI / 180;
-
-      const cX = Math.cos(_x), sX = Math.sin(_x);
-      const cY = Math.cos(_y), sY = Math.sin(_y);
-      const cZ = Math.cos(_z), sZ = Math.sin(_z);
-
-      const Rz = [
-        [ cZ, -sZ, 0 ],
-        [ sZ,  cZ, 0 ],
-        [  0,   0, 1 ],
-      ];
-      const Rx = [
-        [ 1,  0,   0 ],
-        [ 0, cX, -sX ],
-        [ 0, sX,  cX ],
-      ];
-      const Ry = [
-        [ cY, 0, sY ],
-        [  0, 1,  0 ],
-        [ -sY,0, cY ],
-      ];
-      return matMul(matMul(Rz, Rx), Ry);
-    }
-
-    function updateSpinVectorState(nowMs, omegaUnit){
-      if (!orientState || !orientState.R) return;
-      if (!calibrationState.calibBasis) return;
-      if (!omegaUnit) return;
-
-      const wWorld = matVec(orientState.R, omegaUnit);
-      const x = vDot(wWorld, calibrationState.calibBasis.right);
-      const y = vDot(wWorld, calibrationState.calibBasis.forward);
-      const z = vDot(wWorld, calibrationState.calibBasis.up);
-      const v = vNorm({ x, y, z });
-      if (!(v.mag > 1e-6)) return;
-
-      spinVectorHist.push({ t: nowMs, x: v.x, y: v.y, z: v.z });
-      const cutoff = nowMs - SHIELD_AXIS_WIN_MS;
-      while (spinVectorHist.length && spinVectorHist[0].t < cutoff) spinVectorHist.shift();
-
-      let sx = 0, sy = 0, sz = 0;
-      for (const s of spinVectorHist){
-        sx += Math.abs(s.x);
-        sy += Math.abs(s.y);
-        sz += Math.abs(s.z);
-      }
-      const a = vNorm({ x: sx, y: sy, z: sz });
-      if (!(a.mag > 1e-6)) return;
-
-      spinVector01 = { x: a.z, y: a.y, z: a.x };
-
-      const semantic = [
-        { axis: "x", magnitude: spinVector01.x, signed: v.z },
-        { axis: "y", magnitude: spinVector01.y, signed: v.y },
-        { axis: "z", magnitude: spinVector01.z, signed: v.x },
-      ].sort((left, right) => right.magnitude - left.magnitude);
-      spinDirection = semantic[0] && semantic[0].magnitude > 1e-6
-        ? (semantic[0].signed >= 0 ? "cw" : "ccw")
-        : null;
-
-    }
-
     const loadCalibBasis = () => transmitterGestureLabState.loadCalibBasis();
     const saveCalibBasis = () => transmitterGestureLabState.saveCalibBasis();
     const loadGestureBank = () => transmitterGestureLabState.loadGestureBank();
@@ -425,7 +308,6 @@
           return { raw, roomCode, channelName: roomCode ? channelName : "orb:test" };
         })();
     const room = roomInfo.channelName;
-    const roomCode = roomInfo.roomCode;
     async function initClassicFastPathJoinTransport(){
       if (transmitterSessionBootstrap && typeof transmitterSessionBootstrap.initClassicFastPathJoinTransport === "function") {
         return transmitterSessionBootstrap.initClassicFastPathJoinTransport();
@@ -978,316 +860,7 @@
         })
       : null;
 
-    // =========================================================================
-    // DIAL PACK v4 — base detection (PRESERVED)
-    // =========================================================================
-    const OMEGA_LPF = 0.22;
-
-    const HUNT_WINDOW_SEC   = .80;
-    const STABLE_WINDOW_SEC = 1.60;
-
-    const MIN_WINDOW_SAMPLES = 28;
-    const MAX_WINDOW_SAMPLES = 260;
-
-    const MIN_OMEGA = 0.02;
-
-    const LOCK_ON  = 0.10;
-    const LOCK_OFF = 0.05;
-
-    const MIN_HZ = 0.55;
-    const MAX_HZ = 2.30;
-
-    const JERK_TIGHT = 220.0;
-    const JERK_LOOSE = 2600.0;
-
-    // =========================================================================
-    // DYNAMICS — v4.0 (DIRECTIONAL DIVERSITY, 1s window) — functionally same 
-    // =========================================================================
-    const DYNAMICS_WINDOW_SEC = 1.00;
-    const DYNAMICS_FLOOR = 0.18;
-
-    const DYNAMICS_UI_EXP  = 1.0;
-    const DYNAMICS_UI_GAIN = 3.5;
-
-    const DYNAMICS_ACTIVITY_MIN01 = 0.06;
-    const DYNAMICS_ACTIVITY_POW   = 1.15;
-
-    const ENERGY_GAIN_LOCKED = 1.25;
-    const ENERGY_GAIN_FREE   = 0.65;
-
-    const ENERGY_DECAY       = 0.1;
-
-    const UI_SMOOTH   = 0.10;
-    const LOCK_SMOOTH = 0.05;
-
-    const GROOVE_EXP    = 0.70;
-    const SMOOTH_EXP    = 0.70;
-    const DYNAMICS_EXP  = 1.00;
-
-    const EARN_SCALE = 1.00;
-
-    const COAST_QUALITY_MIN  = 0.28;
-    const COAST_DECAY_MULT   = 0.65;
-
-    const SMOOTH_KILL_THRESH     = 0.12;
-    const SMOOTH_KILL_DECAY_MULT = 3.25;
-    const SMOOTH_KILL_UNLOCK     = true;
-
-    const GRACE_SEC = 0.75;
-
-    const RECENTER_SEC = 0.85;
-    const RECENTER_GROOVE_MAX = 0.22;
-
-    const NORM_ALPHA = 0.10;
-
-    // ============================================================================
-    // SPEED METER — tuned for “force” (rotationRate magnitude, deg/sec)
-    // ============================================================================
-    const SPEED_DEAD_DPS = 8.0;
-    const SPEED_CAP_DPS  = 360.0;
-
-    const SPEED_EMA_CUTOFF_FAST_HZ = 1.5;
-    const SPEED_EMA_CUTOFF_SLOW_HZ = .10;
-
-    const SPEED_ADAPT_START_DPS = 18.0;
-    const SPEED_ADAPT_END_DPS   = 130.0;
-
-    const SPEED_ADAPT_POW = 1.0;
-
-    const SPEED_NORM_DPS = 300.0;
-    const SPEED_MAP_POW  = 1.10;
-
-    const SPEED_ATTACK_HZ  = 5.0;
-    const SPEED_RELEASE_HZ = 8.0;
-
-    // =========================================================================
-    // DISRUPTOR v3 — SHAKE (FAST HIT + SLOW METER) + LOW-SMOOTH BOOST
-    // =========================================================================
-    const SHAKE_BASELINE_HZ = 0.75;
-    const SHAKE_HP_DEAD_G   = 0.35;
-    const SHAKE_JERK_DEAD   = 6.0;
-
-    const SHAKE_HP_WEIGHT   = 1.00;
-    const SHAKE_JERK_WEIGHT = 0.35;
-
-    const SHAKE_METER_GAIN  = 2.60;
-    const SHAKE_METER_DECAY = 2.60;
-
-    const SHAKE_SMOOTH_BOOST_START   = 0.45;
-    const SHAKE_SMOOTH_THR_DROP_MAX  = 0.60;
-
-    // =========================================================================
-    // NEW SHAKE WIN RULE:
-    // "When shake meter hits 100% twice in 500ms" => shakeHit 
-    // =========================================================================
-    const SHAKE_WIN_WINDOW_SEC = 0.90;
-    const SHAKE_FULL_HI = 0.50;
-
-    // =========================================================================
-    // AUDIO MAPPING (preserved)
-    // =========================================================================
-    const AUDIO_GATE   = 0.02;
-    const AUDIO_MIN_DB = -42;
-    const AUDIO_MAX_DB = -6;
-    const AUDIO_EXP    = 1.15;
-
-    const MASTER_GAIN  = 2.2;
-
-    const TONE_BASE_HZ    = 180;
-    const TONE_MAX_ADD_HZ = 220;
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
-    const lerp = (a,b,t) => a + (b-a)*t;
-    const mag3 = (x,y,z) => Math.sqrt(x*x+y*y+z*z);
-    const dbToGain = (db) => Math.pow(10, db/20);
-
-    function alphaFromCutoff(dt, cutoffHz){
-      const tau = 1 / (2 * Math.PI * cutoffHz);
-      return 1 / (1 + tau / Math.max(1e-4, dt));
-    }
-
-    function median(arr) {
-      if (!arr.length) return 0;
-      const a = arr.slice().sort((x,y) => x - y);
-      const mid = (a.length - 1) / 2;
-      const lo = Math.floor(mid), hi = Math.ceil(mid);
-      return (a[lo] + a[hi]) / 2;
-    }
-
-    function energyToGain(e) {
-      if (e <= AUDIO_GATE) return 0;
-      const x = (e - AUDIO_GATE) / (1 - AUDIO_GATE);
-      const shaped = Math.pow(clamp01(x), AUDIO_EXP);
-      const db = AUDIO_MIN_DB + (AUDIO_MAX_DB - AUDIO_MIN_DB) * shaped;
-      return dbToGain(db);
-    }
-
-    function autocorrPeak(signal, dt) {
-      const n = signal.length;
-      if (n < 24) return {peak: 0, lag: 0, hz: 0};
-
-      let mean=0;
-      for (let i=0;i<n;i++) mean += signal[i];
-      mean /= n;
-
-      let varr=0;
-      for (let i=0;i<n;i++) {
-        const d = signal[i]-mean;
-        varr += d*d;
-      }
-      if (varr < 1e-9) return {peak: 0, lag: 0, hz: 0};
-
-      const minLag = Math.max(2, Math.floor(1/(MAX_HZ*dt)));
-      const maxLag = Math.min(n-3, Math.floor(1/(MIN_HZ*dt)));
-
-      let best = -1;
-      let bestLag = 0;
-
-      for (let lag=minLag; lag<=maxLag; lag++) {
-        let c=0;
-        for (let i=0;i<n-lag;i++) c += (signal[i]-mean) * (signal[i+lag]-mean);
-        const r = c / varr;
-        if (r > best) { best = r; bestLag = lag; }
-      }
-
-      const hz = bestLag > 0 ? (1/(bestLag*dt)) : 0;
-      return {peak: clamp01(best), lag: bestLag, hz};
-    }
-
-    function smoothnessFromJerk(avgJerk) {
-      const t = (JERK_LOOSE - avgJerk) / (JERK_LOOSE - JERK_TIGHT);
-      return clamp01(t);
-    }
-
-    function dynamicsActivityGate(speed01){
-      const v = clamp01(speed01 || 0);
-      const x = (v - DYNAMICS_ACTIVITY_MIN01) / (1 - DYNAMICS_ACTIVITY_MIN01);
-      return Math.pow(clamp01(x), DYNAMICS_ACTIVITY_POW);
-    }
-
-    function computeAvg(arr) {
-      if (!arr.length) return 0;
-      let s=0;
-      for (const x of arr) s+=x;
-      return s/arr.length;
-    }
-
-    function trimToWindow(dtMean, targetSec, omegaMag, omegaNorm, omegaVec, jerkBuf, dtBuf) {
-      let targetN = dtMean > 1e-4 ? Math.round(targetSec / dtMean) : MAX_WINDOW_SAMPLES;
-      targetN = Math.max(MIN_WINDOW_SAMPLES, Math.min(MAX_WINDOW_SAMPLES, targetN));
-
-      while (omegaMag.length  > targetN) omegaMag.shift();
-      while (omegaNorm.length > targetN) omegaNorm.shift();
-      while (omegaVec.length  > targetN) omegaVec.shift();
-      while (jerkBuf.length   > targetN) jerkBuf.shift();
-      while (dtBuf.length     > targetN) dtBuf.shift();
-
-      return targetN;
-    }
-
-    // =========================================================================
-    // Dynamics diversity window buffer (time-based, ~1000ms)
-    // =========================================================================
-    const dynamicsVecBuf = [];
-    const dynamicsDtBuf  = [];
-
-    function dynamicsBufPush(vec, dt){
-      const d = Math.max(1e-4, Number(dt) || 0);
-      dynamicsVecBuf.push(vec);
-      dynamicsDtBuf.push(d);
-
-      let acc = 0;
-      for (let i = dynamicsDtBuf.length - 1; i >= 0; i--){
-        acc += dynamicsDtBuf[i];
-        if (acc >= 2.5) {
-          dynamicsVecBuf.splice(0, i);
-          dynamicsDtBuf.splice(0, i);
-          break;
-        }
-      }
-    }
-
-    function dynamicsDiversityLastSec(windowSec){
-      const W = Math.max(0.2, Number(windowSec) || 1.0);
-
-      let sumW = 0;
-      let sx = 0, sy = 0, sz = 0;
-
-      for (let i = dynamicsVecBuf.length - 1; i >= 0; i--){
-        const dt = dynamicsDtBuf[i] || 0;
-        if (sumW >= W) break;
-
-        const w = Math.min(dt, W - sumW);
-        const v = dynamicsVecBuf[i];
-        if (v) {
-          sx += (v.x || 0) * w;
-          sy += (v.y || 0) * w;
-          sz += (v.z || 0) * w;
-        }
-        sumW += w;
-      }
-
-      if (sumW < 0.25) return { div01: 0, R: 1, n: dynamicsVecBuf.length };
-
-      const inv = 1 / sumW;
-      const mx = sx * inv, my = sy * inv, mz = sz * inv;
-      const R = clamp01(Math.sqrt(mx*mx + my*my + mz*mz));
-      const div01 = clamp01(1 - R);
-
-      return { div01, R, n: dynamicsVecBuf.length };
-    }
-
-    // =========================================================================
-    // Meter continuity (logic preserved; no UI)
-    // =========================================================================
-    const METER_HOLD_SEC = 0.55;
-    const METER_FADE_HZ  = 3.0;
-
-    // =========================================================================
-    // State
-    // =========================================================================
     let running = false;
-    let lastT = null;
-
-    let ox=0, oy=0, oz=0;
-
-    const omegaMag  = [];
-    const omegaNorm = [];
-    const omegaVec  = [];
-    const jerkBuf   = [];
-    const dtBuf     = [];
-
-    let emaMean = 0;
-    let emaVar  = 1;
-
-    let lock = false;
-    let lockStrength = 0;
-    let grooveHz = 0;
-
-    let graceLeft = 0;
-    let recenterBadTime = 0;
-
-    let energy = 0;
-    let energyUI = 0;
-
-    let mSpeedEMA = 0;
-    let speedOut  = 0;
-
-    let meterHoldLeft = 0;
-    let lastGrooveUI = 0;
-    let lastDynamicsUI  = 0;
-    let lastSmoothUI = 0;
-
-    // SHAKE state
-    let shake01 = 0;
-
-    let accelBaseMag = 9.81;
-    let prevAx = 0, prevAy = 0, prevAz = 0;
-    let prevAmag = 9.81;
-
-    let shakeFullTimes = [];
 
     function ensureAudio() {
       if (transmitterAudioRuntime && typeof transmitterAudioRuntime.ensureAudio === "function") {
@@ -1300,130 +873,6 @@
       if (transmitterAudioRuntime && typeof transmitterAudioRuntime.setAudio === "function") {
         transmitterAudioRuntime.setAudio(eUI, groove, locked);
       }
-    }
-
-    function flushHistorySoft() {
-      const keep = Math.min(18, omegaMag.length);
-      omegaMag.splice(0, Math.max(0, omegaMag.length - keep));
-      omegaNorm.splice(0, Math.max(0, omegaNorm.length - keep));
-      omegaVec.splice(0, Math.max(0, omegaVec.length - keep));
-      jerkBuf.splice(0, Math.max(0, jerkBuf.length - keep));
-      dtBuf.splice(0, Math.max(0, dtBuf.length - keep));
-
-      dynamicsVecBuf.splice(0, Math.max(0, dynamicsVecBuf.length - keep));
-      dynamicsDtBuf.splice(0, Math.max(0, dynamicsDtBuf.length - keep));
-    }
-
-    function meterHoldOrFade(dt) {
-      if (dt > 0) meterHoldLeft = Math.max(0, meterHoldLeft - dt);
-
-      const dtFade = Math.max(1e-3, dt || computeAvg(dtBuf.slice(-50)) || 1/60);
-      const aFade = alphaFromCutoff(dtFade, METER_FADE_HZ);
-      const holding = meterHoldLeft > 0;
-
-      const grooveOut   = holding ? lastGrooveUI   : (1 - aFade) * lastGrooveUI;
-      const dynamicsOut = holding ? lastDynamicsUI : (1 - aFade) * lastDynamicsUI;
-      const smoothOut   = holding ? lastSmoothUI   : (1 - aFade) * lastSmoothUI;
-
-      lastGrooveUI   = grooveOut;
-      lastDynamicsUI = dynamicsOut;
-      lastSmoothUI   = smoothOut;
-
-      return { grooveOut, dynamicsOut, smoothOut };
-    }
-
-    function updateSpeedV0(wRawDps, dt) {
-      const dtSafe = Math.max(1e-3, dt || 1/60);
-
-      const wRaw = Math.max(0, wRawDps || 0);
-      const cap  = SPEED_CAP_DPS;
-      const wCap = Math.min(wRaw, cap);
-
-      const wDz = Math.max(0, wCap - SPEED_DEAD_DPS);
-
-      const denom = Math.max(1e-6, (SPEED_ADAPT_END_DPS - SPEED_ADAPT_START_DPS));
-      let tAdapt = (wDz - SPEED_ADAPT_START_DPS) / denom;
-      tAdapt = clamp01(tAdapt);
-      tAdapt = Math.pow(tAdapt, SPEED_ADAPT_POW);
-
-      const cutoffHz = lerp(SPEED_EMA_CUTOFF_FAST_HZ, SPEED_EMA_CUTOFF_SLOW_HZ, tAdapt);
-      const aE = alphaFromCutoff(dtSafe, cutoffHz);
-
-      mSpeedEMA = (mSpeedEMA === 0) ? wDz : ((1 - aE) * mSpeedEMA + aE * wDz);
-      const wFilt = mSpeedEMA;
-
-      const n = clamp01(wFilt / SPEED_NORM_DPS);
-      const target = Math.pow(n, SPEED_MAP_POW);
-
-      const aAtk = alphaFromCutoff(dtSafe, SPEED_ATTACK_HZ);
-      const aRel = alphaFromCutoff(dtSafe, SPEED_RELEASE_HZ);
-      const a = (target >= speedOut) ? aAtk : aRel;
-      speedOut = (1 - a) * speedOut + a * target;
-
-      return { cap, dt: dtSafe, wRaw, wCap, wDz, wFilt, speed: speedOut, cutoffHz, tAdapt };
-    }
-
-    // =========================================================================
-    // SHAKE — meter unchanged; shakeHit double 100% within 500ms
-    // =========================================================================
-    function updateShake(e, t, dt, groove01=0, locked=false, smooth01=1){
-      const acc = e.accelerationIncludingGravity || e.acceleration;
-      const dtSafe = Math.max(1e-3, dt || 1/60);
-
-      const prevShake = shake01;
-
-      if (!acc) {
-        shake01 = Math.max(0, shake01 - SHAKE_METER_DECAY * dtSafe);
-        return { shake01, shakeHit:false, spike:0, amag:0, jerk:0 };
-      }
-
-      const ax = Number(acc.x) || 0;
-      const ay = Number(acc.y) || 0;
-      const az = Number(acc.z) || 0;
-
-      const amag = mag3(ax, ay, az);
-
-      // baseline magnitude (LPF)
-      const aBase = alphaFromCutoff(dtSafe, SHAKE_BASELINE_HZ);
-      accelBaseMag = (isFinite(accelBaseMag) ? accelBaseMag : amag);
-      accelBaseMag = (1 - aBase) * accelBaseMag + aBase * amag;
-
-      // high-pass impact
-      const hp = Math.abs(amag - accelBaseMag);
-      const hpSpike = Math.max(0, hp - SHAKE_HP_DEAD_G);
-
-      // jerk (delta accel / sec)
-      const dax = ax - prevAx;
-      const day = ay - prevAy;
-      const daz = az - prevAz;
-      const jerk = mag3(dax, day, daz) / dtSafe;
-      const jerkSpike = Math.max(0, jerk - SHAKE_JERK_DEAD);
-
-      prevAx = ax; prevAy = ay; prevAz = az;
-      prevAmag = amag;
-
-      const spike = (SHAKE_HP_WEIGHT * hpSpike) + (SHAKE_JERK_WEIGHT * (jerkSpike / 80.0));
-
-      shake01 = clamp01x2(shake01 + SHAKE_METER_GAIN * spike * dtSafe - SHAKE_METER_DECAY * dtSafe);
-
-      // "full meter" rising edge tracking
-      const hitFull = (prevShake < SHAKE_FULL_HI) && (shake01 >= SHAKE_FULL_HI);
-      if (hitFull) {
-        shakeFullTimes.push(t);
-        const cutoff = t - SHAKE_WIN_WINDOW_SEC;
-        while (shakeFullTimes.length && shakeFullTimes[0] < cutoff) shakeFullTimes.shift();
-      } else if (shakeFullTimes.length) {
-        const cutoff = t - SHAKE_WIN_WINDOW_SEC;
-        while (shakeFullTimes.length && shakeFullTimes[0] < cutoff) shakeFullTimes.shift();
-      }
-
-      let shakeHit = false;
-      if (hitFull) {
-        shakeHit = true;
-        shakeFullTimes.length = 0;
-      }
-
-      return { shake01, shakeHit, spike, amag, jerk };
     }
 
     // =========================================================================
@@ -1624,7 +1073,7 @@
       }
       const orientRuntime = motionCore && typeof motionCore.getOrientState === "function"
         ? motionCore.getOrientState()
-        : orientState;
+        : null;
       const result = transmitterCalibrationLogic.computeCalibrationBasis(calib.samples, orientRuntime && orientRuntime.R, {
         phoneTopAxis: PHONE_TOP_AXIS,
         previousAlpha0: calibrationState.calibAlpha0,
@@ -1649,10 +1098,10 @@
       }
       const orientRuntime = motionCore && typeof motionCore.getOrientState === "function"
         ? motionCore.getOrientState()
-        : orientState;
+        : null;
       const gravityVectorLp = motionCore && typeof motionCore.getGravityVectorLp === "function"
         ? motionCore.getGravityVectorLp()
-        : gVecLP;
+        : null;
       return transmitterCalibrationLogic.classifyDirectionalImpulse({
         impulseHist,
         nowMs,
@@ -1667,7 +1116,6 @@
       });
     }
 
-    const SD_SLOP_GATE = 0.18;
     const FLIP_U = 1;
     const FLIP_R = -1;
     const FLIP_F = -1;
