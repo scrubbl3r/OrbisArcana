@@ -274,7 +274,8 @@
   padding: 10px 12px 8px;
 }
 
-.logPopupTabs .logTabBtn {
+.logPopupTabs .logTabBtn,
+.logPopupTabs .logTabBtn[data-active="false"] {
   border-color: rgba(var(--frame-rgb), 0.24);
   background: rgba(var(--frame-rgb), 0.06);
   color: var(--text-muted);
@@ -288,7 +289,8 @@
 }
 
 .logPopupTabs .logTabBtn.active,
-.logPopupTabs .logTabBtn[aria-pressed="true"] {
+.logPopupTabs .logTabBtn[aria-pressed="true"],
+.logPopupTabs .logTabBtn[data-active="true"] {
   border-color: rgba(230, 230, 230, 0.88);
   color: var(--text-strong);
   background: rgba(var(--frame-rgb), 0.22);

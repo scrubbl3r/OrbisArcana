@@ -200,20 +200,17 @@ export function createLogPopupController({
   }
 
   function renderLogChannelTabs() {
-    if (els.logTabGeneral) {
-      const active = activeLogChannel === "general";
-      els.logTabGeneral.classList.toggle("active", active);
-      els.logTabGeneral.setAttribute("aria-pressed", active ? "true" : "false");
-    }
-    if (els.logTabKws) {
-      const active = activeLogChannel === "kws";
-      els.logTabKws.classList.toggle("active", active);
-      els.logTabKws.setAttribute("aria-pressed", active ? "true" : "false");
-    }
-    if (els.logTabPhone) {
-      const active = activeLogChannel === "phone";
-      els.logTabPhone.classList.toggle("active", active);
-      els.logTabPhone.setAttribute("aria-pressed", active ? "true" : "false");
+    const tabs = [
+      { el: els.logTabGeneral, key: "general" },
+      { el: els.logTabKws, key: "kws" },
+      { el: els.logTabPhone, key: "phone" },
+    ];
+    for (const tab of tabs) {
+      if (!tab.el) continue;
+      const active = activeLogChannel === tab.key;
+      tab.el.classList.toggle("active", active);
+      tab.el.setAttribute("aria-pressed", active ? "true" : "false");
+      tab.el.dataset.active = active ? "true" : "false";
     }
   }
 
