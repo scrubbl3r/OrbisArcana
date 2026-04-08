@@ -82,11 +82,11 @@ export const DEV_STAGING_TEMPLATE = `
     </div>
 
     <div id="logPopup" class="logPopup" aria-hidden="true">
-      <div id="logPopupHeader" class="logPopupHeader">
+      <div id="logPopupHeader" class="logPopupHeader runtimeShellPopupHeader">
         <div class="logPopupTitle">KWS Log</div>
         <button class="devStagingButton devStagingPopupClose" id="logPopupClose" aria-label="Close log" type="button">Close</button>
       </div>
-      <div class="logPopupTabs" aria-label="Debug log channel">
+      <div class="logPopupTabs runtimeShellPopupSubhead" aria-label="Debug log channel">
         <button id="logTabGeneral" class="devStagingButton logTabBtn active" type="button">GENERAL</button>
         <button id="logTabKws" class="devStagingButton logTabBtn" type="button">KWS</button>
         <button id="logTabPhone" class="devStagingButton logTabBtn" type="button">Phone</button>
@@ -95,7 +95,7 @@ export const DEV_STAGING_TEMPLATE = `
     </div>
 
     <div id="wordBoardPopup" class="wordBoardPopup" aria-hidden="true">
-      <div id="wordBoardPopupHeader" class="wordBoardPopupHeader">
+      <div id="wordBoardPopupHeader" class="wordBoardPopupHeader runtimeShellPopupHeader">
         <div class="wordBoardPopupTitle">WordFlashboard</div>
         <button class="devStagingButton devStagingPopupClose" id="wordBoardPopupClose" aria-label="Close word board" type="button">Close</button>
       </div>
