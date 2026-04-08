@@ -12,6 +12,6 @@ dev staging surface.
 The old root receiver is now archived legacy host code.
 It is being phased out and should not be used for normal smoke or operator work.
 
-The active phone page is still `mobile-transmitter.html`, launched by the shell
+The active phone page is `src/runtime-shell/transmitter/mobile-transmitter.html`, launched by the shell
 pairing flow. Receiver retirement is ahead of transmitter retirement in the
 current cutover sequence.
