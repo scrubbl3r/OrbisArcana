@@ -276,8 +276,12 @@
   z-index: 3;
   display: flex;
   gap: 8px;
-  padding: 10px 12px 8px;
+  padding: 10px 12px 8px 22px;
   pointer-events: auto;
+}
+
+.logPopupTabs #logTabGeneral {
+  margin-right: 4px;
 }
 
 .logPopupTabs .logTabBtn {
