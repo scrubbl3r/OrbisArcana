@@ -417,12 +417,6 @@
       }
     }
 
-    function phoneUrlFor(roomChannel){
-      const base = mobilePageBaseUrl();
-      const roomCode = stripOrbPrefix(roomChannel);
-      return base + "?room=" + encodeURIComponent(roomCode);
-    }
-
     function fatal(msg){
       setDevSurfaceFatal(msg);
     }
