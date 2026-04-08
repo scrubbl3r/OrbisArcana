@@ -1903,9 +1903,9 @@ function syncShellStartQrSize(rootDocument) {
 
 function stagingMobilePageBaseUrl(rootDocument) {
   try {
-    return new URL("../../../../mobile-transmitter.html", rootDocument.defaultView.location.href).toString();
+    return new URL("../../transmitter/mobile-transmitter.html", rootDocument.defaultView.location.href).toString();
   } catch (_) {
-    return "https://scrubbl3r.github.io/OrbisArcana/mobile-transmitter.html";
+    return "https://scrubbl3r.github.io/OrbisArcana/src/runtime-shell/transmitter/mobile-transmitter.html";
   }
 }
 

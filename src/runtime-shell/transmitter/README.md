@@ -5,3 +5,13 @@ wiring.
 
 This directory is for transmitter-role guts, not for broad staging/debug host
 surfaces.
+
+Current entry path:
+- `src/runtime-shell/transmitter/mobile-transmitter.html`
+
+Migration note:
+- the current transmitter entry now lives in this domain, but it still boots the
+  existing root-level `mobile-transmitter.js` / `mobile-transmitter.css`
+  runtime during transition
+- follow-on work should move runtime/bootstrap ownership here and then retire the
+  old root-level transmitter entry
