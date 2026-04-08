@@ -17,6 +17,7 @@ export function createDevStagingRefs(root) {
     kwsCooldownMsInput: $("kwsCooldownMsInput"),
     kwsApplyTuneBtn: $("kwsApplyTuneBtn"),
     logPopup: $("logPopup"),
+    logPopupTabs: $("logPopupTabs"),
     logPopupHeader: $("logPopupHeader"),
     logPopupClose: $("logPopupClose"),
     wordBoardPopup: $("wordBoardPopup"),

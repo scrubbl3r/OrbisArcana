@@ -274,8 +274,7 @@
   padding: 10px 12px 8px;
 }
 
-.logPopupTabs .logTabBtn,
-.logPopupTabs .logTabBtn[data-active="false"] {
+.logPopupTabs .logTabBtn {
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);
   color: rgba(122, 122, 128, 0.68);
@@ -289,9 +288,9 @@
   color: var(--text);
 }
 
-.logPopupTabs .logTabBtn.active,
-.logPopupTabs .logTabBtn[aria-pressed="true"],
-.logPopupTabs .logTabBtn[data-active="true"] {
+.logPopupTabs[data-active-channel="general"] #logTabGeneral,
+.logPopupTabs[data-active-channel="kws"] #logTabKws,
+.logPopupTabs[data-active-channel="phone"] #logTabPhone {
   border-color: rgba(230, 230, 230, 0.88);
   color: var(--text-strong);
   background: rgba(var(--frame-rgb), 0.18);
@@ -304,7 +303,7 @@
   box-shadow: none;
 }
 
-.logPopupTabs .logTabBtn[aria-pressed="false"]:focus-visible {
+.logPopupTabs .logTabBtn:focus-visible {
   border-color: rgba(var(--frame-rgb), 0.38);
   background: rgba(var(--frame-rgb), 0.09);
   color: var(--text);

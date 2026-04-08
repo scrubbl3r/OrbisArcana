@@ -24,6 +24,7 @@ export function projectDevStagingPanelRefs(refs = {}) {
     kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
     kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,
     logPopup: refs.logPopup || null,
+    logPopupTabs: refs.logPopupTabs || null,
     logPopupHeader: refs.logPopupHeader || null,
     logPopupClose: refs.logPopupClose || null,
     wordBoardPopup: refs.wordBoardPopup || null,

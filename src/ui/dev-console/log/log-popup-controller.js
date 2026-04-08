@@ -200,6 +200,9 @@ export function createLogPopupController({
   }
 
   function renderLogChannelTabs() {
+    if (els.logPopupTabs) {
+      els.logPopupTabs.dataset.activeChannel = activeLogChannel;
+    }
     const tabs = [
       { el: els.logTabGeneral, key: "general" },
       { el: els.logTabKws, key: "kws" },
@@ -208,9 +211,7 @@ export function createLogPopupController({
     for (const tab of tabs) {
       if (!tab.el) continue;
       const active = activeLogChannel === tab.key;
-      tab.el.classList.toggle("active", active);
       tab.el.setAttribute("aria-pressed", active ? "true" : "false");
-      tab.el.dataset.active = active ? "true" : "false";
     }
   }
 
