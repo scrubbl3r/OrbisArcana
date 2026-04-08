@@ -29,6 +29,7 @@
     const transmitterPageShell = window.__orbisTransmitterPageShell || null;
     const transmitterLifecycle = window.__orbisTransmitterLifecycle || null;
     const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
+    const transmitterMotionInput = window.__orbisTransmitterMotionInput || null;
     const transmitterGestureLabLogic = window.__orbisTransmitterGestureLabLogic || null;
     const transmitterCalibrationLogic = window.__orbisTransmitterCalibrationLogic || null;
     const transmitterGestureLabUi = window.__orbisTransmitterGestureLabUi || null;
@@ -1736,10 +1737,18 @@
     // Motion listener helpers 
     // =========================================================================
     function addMotionListener(){
+      if (transmitterMotionInput && typeof transmitterMotionInput.addListeners === "function") {
+        transmitterMotionInput.addListeners({ onMotion, onOrient });
+        return;
+      }
       window.addEventListener('devicemotion', onMotion, { passive: true });
       window.addEventListener('deviceorientation', onOrient, { passive: true });
     }
     function removeMotionListener(){
+      if (transmitterMotionInput && typeof transmitterMotionInput.removeListeners === "function") {
+        transmitterMotionInput.removeListeners({ onMotion, onOrient });
+        return;
+      }
       window.removeEventListener('devicemotion', onMotion);
       window.removeEventListener('deviceorientation', onOrient);
     }
@@ -1748,6 +1757,9 @@
     // iOS permission gate (UI-less)
     // =========================================================================
     async function requestMotionPermissionIfNeeded() {
+      if (transmitterMotionInput && typeof transmitterMotionInput.requestPermissionIfNeeded === "function") {
+        return transmitterMotionInput.requestPermissionIfNeeded();
+      }
       const needs = (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function')
                  || (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function');
 

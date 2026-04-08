@@ -1,6 +1,7 @@
 import { createTransmitterPageShell } from "./transmitter-page-shell.js";
 import { createTransmitterLifecycle } from "./transmitter-lifecycle.js";
 import { createTransmitterSessionBootstrap } from "./transmitter-session-bootstrap.js";
+import { createTransmitterMotionInput } from "./transmitter-motion-input.js";
 import { createTransmitterGestureLabUi } from "./gesture-lab/transmitter-gesture-lab-ui.js";
 import { createTransmitterGestureLabLogic } from "./gesture-lab/transmitter-gesture-lab-logic.js";
 import { createTransmitterCalibrationLogic } from "./gesture-lab/transmitter-calibration-logic.js";
@@ -37,6 +38,9 @@ window.__orbisTransmitterSessionBootstrap = createTransmitterSessionBootstrap({
       window.__orbisStartTransmitterCalibration();
     }
   },
+});
+window.__orbisTransmitterMotionInput = createTransmitterMotionInput({
+  rootWindow: window,
 });
 window.__orbisTransmitterGestureLabUi = createTransmitterGestureLabUi({
   rootDocument: document,
