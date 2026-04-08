@@ -7,9 +7,7 @@
 
       devStagingLegacy: $("devStagingLegacy"),
 
-      pairBtn: $("pairBtn"),
       lanPartyBtn: $("lanPartyBtn"),
-      newRoom: $("newRoom"),
       teleBtn: $("teleBtn"),
       wordBoardBtn: $("wordBoardBtn"),
 
@@ -76,12 +74,6 @@
       dSlider: $("dSlider"),
       dVal: $("dVal"),
 
-      pairModal: $("pairModal"),
-      pairBackdrop: $("pairBackdrop"),
-      pairClose: $("pairClose"),
-      qr: $("qr"),
-      urlText: $("urlText"),
-      copyUrl: $("copyUrl"),
       logPopup: $("logPopup"),
       logPopupHeader: $("logPopupHeader"),
       logPopupClose: $("logPopupClose"),
@@ -941,66 +933,6 @@
       applyStabilityVisuals();
     }
 
-    // =========================================================================
-    // PAIR MODAL (QR popup)
-    // =========================================================================
-    function openPairModal(){
-      els.pairModal.classList.add("on");
-      els.pairModal.setAttribute("aria-hidden","false");
-      renderQR(currentRoomChannel);
-    }
-    function closePairModal(){
-      els.pairModal.classList.remove("on");
-      els.pairModal.setAttribute("aria-hidden","true");
-    }
-
-    if (els.pairBtn) {
-      els.pairBtn.addEventListener("click", async () => {
-        await launchLanPairingFlow();
-      });
-    }
-
-    els.pairBackdrop.addEventListener("click", closePairModal);
-    els.pairClose.addEventListener("click", closePairModal);
-
-    async function renderQR(roomChannel){
-      els.qr.innerHTML = "";
-      const url = phoneUrlFor(roomChannel);
-      els.urlText.textContent = url;
-
-      els.copyUrl.onclick = async () => {
-        try{
-          await navigator.clipboard.writeText(url);
-          els.copyUrl.textContent = "Copied";
-          setTimeout(() => els.copyUrl.textContent = "Copy", 700);
-        }catch(_){
-          els.copyUrl.textContent = "Nope";
-          setTimeout(() => els.copyUrl.textContent = "Copy", 700);
-        }
-      };
-
-      if (typeof QRCode === "undefined" || !QRCode.toCanvas) {
-        els.qr.style.background = "#fff";
-        els.qr.textContent = "QR lib failed to load";
-        return;
-      }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = 280; canvas.height = 280;
-      els.qr.appendChild(canvas);
-
-      try{
-        await QRCode.toCanvas(canvas, url, {
-          width: 260,
-          margin: 2,
-          color: { dark: "#000000", light: "#ffffff" }
-        });
-      }catch(e){
-        els.qr.textContent = "QR render error";
-        console.error("QR render error:", e);
-      }
-    }
-
     // ===== LAN PARTY (P2P) BEGIN =====
     let mobileImpulseSystem = null;
     let lanSession = null;
@@ -1332,8 +1264,6 @@
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         if (closeTopmostDevSurfacePopup()) {
-        } else if (els.pairModal.classList.contains("on")) {
-          closePairModal();
         }
         return;
       }
@@ -3315,8 +3245,6 @@
             : "calibOK:— omegaOK:— ";
         }
 
-        if (els.pairModal.classList.contains("on")) closePairModal();
-
         // If the start screen is still up for some reason, drop it on first msg.
         if (els.startScreen && !els.startScreen.classList.contains("off")) hideStartScreen();
 
@@ -3324,20 +3252,6 @@
       });
 
       connecting = false;
-    }
-
-    // DEV button forces room=test always + launches QR
-    if (els.newRoom) {
-      els.newRoom.addEventListener("click", async () => {
-        currentRoomChannel = "orb:test";
-        resetShakeDetector();
-        resetStability();
-        resetVariability();
-        if (inputSystem && typeof inputSystem.reset === "function") inputSystem.reset(performance.now());
-        resetEnergyBank();
-        await connect({ auto:false });
-        openPairModal();
-      });
     }
 
     els.startBtn.addEventListener("click", async () => {
