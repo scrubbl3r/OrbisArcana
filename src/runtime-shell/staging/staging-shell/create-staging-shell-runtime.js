@@ -618,6 +618,7 @@ function handleShellImpulseFrame(shellContext, data) {
 
   if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
     receiverHostRuntime.processIncomingImpulse(inputPayload);
+    renderShellHudFromMotionStore(shellContext);
     if (devView && typeof devView.setStatus === "function" && !runtime.liveInputStatusShown) {
       devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
       runtime.liveInputStatusShown = true;
@@ -665,29 +666,12 @@ function getShellMotionStoreHudViewModel(shellContext) {
   };
 }
 
-function bindShellHudToMotionStore(shellContext) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+function renderShellHudFromMotionStore(shellContext) {
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
-  const store = runtime && runtime.motionStore;
-  if (!runtime || !store || typeof store.subscribe !== "function" || !devView || typeof devView.renderInputHud !== "function") {
-    return;
-  }
-
-  if (runtime.motionStoreHudUnsubscribe) {
-    try { runtime.motionStoreHudUnsubscribe(); } catch (_) {}
-    runtime.motionStoreHudUnsubscribe = null;
-  }
-
-  runtime.motionStoreHudUnsubscribe = store.subscribe(() => {
-    const vm = getShellMotionStoreHudViewModel(shellContext);
-    if (!vm) return;
-    devView.renderInputHud(vm);
-  });
-
-  const initialVm = getShellMotionStoreHudViewModel(shellContext);
-  if (initialVm) {
-    devView.renderInputHud(initialVm);
-  }
+  if (!devView || typeof devView.renderInputHud !== "function") return;
+  const vm = getShellMotionStoreHudViewModel(shellContext);
+  if (!vm) return;
+  devView.renderInputHud(vm);
 }
 
 function pushShellGeneralLog(shellContext, text = "", kind = "") {
@@ -2374,7 +2358,7 @@ export async function createStagingShellRuntime({
     shellContext.runtime.motionStore = (typeof window.createMotionStore === "function")
       ? window.createMotionStore()
       : null;
-    bindShellHudToMotionStore(shellContext);
+    renderShellHudFromMotionStore(shellContext);
     updateShellBootUi(rootDocument, STAGING_SHELL_STATUS.sharedModulesReady, "Booting KWS runtime");
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
