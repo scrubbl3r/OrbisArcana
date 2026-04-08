@@ -30,6 +30,7 @@
     const transmitterLifecycle = window.__orbisTransmitterLifecycle || null;
     const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
     const transmitterMotionInput = window.__orbisTransmitterMotionInput || null;
+    const createTransmitterPacketPublisher = window.__orbisCreateTransmitterPacketPublisher || null;
     const transmitterGestureLabLogic = window.__orbisTransmitterGestureLabLogic || null;
     const transmitterCalibrationLogic = window.__orbisTransmitterCalibrationLogic || null;
     const transmitterGestureLabUi = window.__orbisTransmitterGestureLabUi || null;
@@ -891,138 +892,29 @@
       rr:          2.0,  // deg/sec scale
     };
 
-    let nextSendAtMs = 0;
-    let lastSig = null;
-
-    function roundN(x, n=4){
-      const v = Number(x);
-      if (!isFinite(v)) return 0;
-      const p = Math.pow(10, n);
-      return Math.round(v * p) / p;
-    }
-
-    function buildSigFromPayload(p){
-      // streamed vectors are intentionally quantized for size + stability
-      const ag = p.ag || [0,0,0];
-      const rr = p.rr || [0,0,0];
-
-      return {
-        energy01:    roundN(p.energy01, 4),
-        groove01:    roundN(p.groove01, 4),
-        dynamics01:  roundN(p.dynamics01, 4),
-        smooth01:    roundN(p.smooth01, 4),
-        speed01:     roundN(p.speed01, 4),
-        shake01:     roundN(p.shake01, 4),
-        locked:      !!p.locked,
-        shakeHit:    !!p.shakeHit,
-        hz:          roundN(p.hz, 3),
-
-        // NEW: streamed vectors (sig uses same quantization as payload)
-        agx: roundN(ag[0], 2),
-        agy: roundN(ag[1], 2),
-        agz: roundN(ag[2], 2),
-
-        rrx: roundN(rr[0], 1),
-        rry: roundN(rr[1], 1),
-        rrz: roundN(rr[2], 1),
-      };
-    }
-
-    function sigChanged(sig){
-      if (!lastSig) return true;
-
-      if (sig.shakeHit && !lastSig.shakeHit) return true;
-      if (sig.locked !== lastSig.locked) return true;
-
-      if (Math.abs(sig.energy01   - lastSig.energy01)   > EPS.energy01) return true;
-      if (Math.abs(sig.groove01   - lastSig.groove01)   > EPS.groove01) return true;
-      if (Math.abs(sig.dynamics01 - lastSig.dynamics01) > EPS.dynamics01) return true;
-      if (Math.abs(sig.smooth01   - lastSig.smooth01)   > EPS.smooth01) return true;
-      if (Math.abs(sig.speed01    - lastSig.speed01)    > EPS.speed01) return true;
-      if (Math.abs(sig.shake01    - lastSig.shake01)    > EPS.shake01) return true;
-      if (Math.abs(sig.hz         - lastSig.hz)         > EPS.hz) return true;
-
-      // NEW: streamed vectors gating
-      if (Math.abs(sig.agx - lastSig.agx) > EPS.ag) return true;
-      if (Math.abs(sig.agy - lastSig.agy) > EPS.ag) return true;
-      if (Math.abs(sig.agz - lastSig.agz) > EPS.ag) return true;
-
-      if (Math.abs(sig.rrx - lastSig.rrx) > EPS.rr) return true;
-      if (Math.abs(sig.rry - lastSig.rry) > EPS.rr) return true;
-      if (Math.abs(sig.rrz - lastSig.rrz) > EPS.rr) return true;
-
-      return false;
-    }
+    const packetPublisher = createTransmitterPacketPublisher
+      ? createTransmitterPacketPublisher({
+          rootWindow: window,
+          sendHzRelay: SEND_HZ_RELAY,
+          sendHzLan: SEND_HZ_LAN,
+          telemetryOn: TELEMETRY_ON,
+          fallDragDefault: FALL_DRAG_DEFAULT,
+          eps: EPS,
+          publishRelay: (name, data, callback) => {
+            if (!transmitterSessionBootstrap || typeof transmitterSessionBootstrap.publishRelay !== "function") return false;
+            return transmitterSessionBootstrap.publishRelay(name, data, callback);
+          },
+          sendImpulse: (type, payload) => impulseTransport.sendImpulse(type, payload),
+        })
+      : null;
 
     // =========================================================================
     // publishDynamics trims payload when TELEMETRY_ON is false
     // =========================================================================
     function publishDynamics(payload, dt, force=false) {
-      const now = performance.now();
-      if (!force && now < nextSendAtMs) return;
-
-      const sig = buildSigFromPayload(payload);
-      if (!force && !sigChanged(sig)) return;
-
-      lastSig = sig;
-      const activeHz = lanParty.active ? SEND_HZ_LAN : SEND_HZ_RELAY;
-      const sendMinMs = 1000 / Math.max(1, activeHz);
-      nextSendAtMs = now + sendMinMs;
-
-
-      const out = {
-        room: payload.room,
-        fallDrag: FALL_DRAG_DEFAULT,
-
-        energy01:   sig.energy01,
-        groove01:   sig.groove01,
-        dynamics01: sig.dynamics01,
-        smooth01:   sig.smooth01,
-        speed01:    sig.speed01,
-        shake01:    sig.shake01,
-        locked:     sig.locked,
-        shakeHit:   sig.shakeHit,
-        hz:         sig.hz,
-
-        // Compact payload (keep)
-        a: [sig.agx, sig.agy, sig.agz],  // accelIncludingGravity
-        r: [sig.rrx, sig.rry, sig.rrz],  // rotationRate
-      };
-
-      if (payload.sd) out.sd = payload.sd;
-      if (payload.calib) out.calib = payload.calib;
-      if (payload.spinVector) out.spinVector = payload.spinVector;
-      if (payload.spinDirection) out.spinDirection = payload.spinDirection;
-      if (payload.calibOK != null) out.calibOK = payload.calibOK;
-      if (payload.omegaOK != null) out.omegaOK = payload.omegaOK;
-      if (payload.dbgTag) out.dbgTag = payload.dbgTag;
-
-
-      if (TELEMETRY_ON) {
-        out.t     = roundN(payload.t, 1);
-        out.dt    = roundN(payload.dt, 4);
-        out.wRaw  = roundN(payload.wRaw, 2);
-        out.wCap  = roundN(payload.wCap, 2);
-        out.wFilt = roundN(payload.wFilt, 2);
-        out.cap   = roundN(payload.cap, 2);
-
-        out.d_r2      = roundN(payload.d_r2, 4);
-        out.d_r3      = roundN(payload.d_r3, 4);
-        out.d_gate    = roundN(payload.d_gate, 4);
-        out.d_balance = roundN(payload.d_balance, 4);
-        out.d_couple  = roundN(payload.d_couple, 4);
+      if (packetPublisher && typeof packetPublisher.publishDynamics === "function") {
+        packetPublisher.publishDynamics(payload, dt, force, { lanActive: lanParty.active });
       }
-
-      // LAN mode: gameplay impulses are DataChannel only once connected+safe.
-      if (lanParty.active) {
-        impulseTransport.sendImpulse("impulse", out);
-        return;
-      }
-
-      if (!transmitterSessionBootstrap || typeof transmitterSessionBootstrap.publishRelay !== "function") return;
-      transmitterSessionBootstrap.publishRelay("orb", out, (err) => {
-        if (err) console.warn("[ably publish err]", err);
-      });
     }
 
     // =========================================================================
@@ -2150,8 +2042,9 @@
         ensureAudio();
         try { await audioCtx.resume(); } catch(e) {}
 
-        nextSendAtMs = 0;
-        lastSig = null;
+        if (packetPublisher && typeof packetPublisher.reset === "function") {
+          packetPublisher.reset();
+        }
         if (!lanParty.active) {
           await connectRelay();
         }
