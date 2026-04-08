@@ -288,6 +288,7 @@
   color: var(--text);
 }
 
+.logPopupTabs .logTabBtn.on,
 .logPopupTabs .logTabBtn[data-active="true"] {
   border-color: rgba(230, 230, 230, 0.88);
   color: var(--text-strong);
@@ -295,6 +296,7 @@
   box-shadow: 0 0 0 1px rgba(230, 230, 230, 0.08) inset;
 }
 
+.logPopupTabs .logTabBtn:not(.on),
 .logPopupTabs .logTabBtn[data-active="false"] {
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);

@@ -213,6 +213,7 @@ export function createLogPopupController({
       const active = activeLogChannel === tab.key;
       tab.el.setAttribute("aria-pressed", active ? "true" : "false");
       tab.el.dataset.active = active ? "true" : "false";
+      tab.el.classList.toggle("on", active);
     }
   }
 
