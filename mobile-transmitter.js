@@ -27,6 +27,7 @@
     // UI — Start/Stop + Gesture Lab
     // =========================================================================
     const transmitterPageShell = window.__orbisTransmitterPageShell || null;
+    const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
     const transmitterUiBoot = window.__orbisTransmitterUiBoot || null;
     const VERSION_TAG = !transmitterUiBoot;
     const VERSION_TEXT = (transmitterUiBoot && transmitterUiBoot.versionText) || "vtag:shield-debug";
@@ -445,146 +446,55 @@
     // =========================================================================
     const WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
     const TOKEN_URL = WORKER_BASE + "/token";
-
-    function normalizeRoom(input){
-      let r = String(input || "").trim();
-      if (!r) r = "orb:test";
-      if (r.indexOf(":") === -1) r = "orb:" + r;
-      const code = stripOrbPrefix(r).trim();
-      if (!code) r = "orb:test";
-      return r;
-    }
-
-    function stripOrbPrefix(room){
-      return String(room || "").startsWith("orb:") ? String(room).slice(4) : String(room || "");
-    }
-
-    function parseRoom() {
-      const u = new URL(window.location.href);
-      const raw = (u.searchParams.get("room") || "").trim();
-      const channelName = normalizeRoom(raw);
-      const roomCode = stripOrbPrefix(channelName);
-      return { raw, roomCode, channelName };
-    }
-
-    let ably = null;
-    let ablyChannel = null;
-    let classicTransmitterRelay = null;
-
-    const roomInfo = parseRoom();
+    const stripOrbPrefix = transmitterSessionBootstrap && typeof transmitterSessionBootstrap.stripOrbPrefix === "function"
+      ? transmitterSessionBootstrap.stripOrbPrefix
+      : function(room){
+          return String(room || "").startsWith("orb:") ? String(room).slice(4) : String(room || "");
+        };
+    const parseJoinParamsFromUrl = transmitterSessionBootstrap && typeof transmitterSessionBootstrap.parseJoinParamsFromUrl === "function"
+      ? transmitterSessionBootstrap.parseJoinParamsFromUrl
+      : function(raw){
+          try {
+            const u = new URL(raw || window.location.href);
+            const room = (u.searchParams.get("room") || "").trim();
+            const token = (u.searchParams.get("token") || "").trim();
+            if (room && token) return { room, token };
+          } catch (_) {}
+          return null;
+        };
+    const roomInfo = transmitterSessionBootstrap && transmitterSessionBootstrap.roomInfo
+      ? transmitterSessionBootstrap.roomInfo
+      : (() => {
+          const u = new URL(window.location.href);
+          const raw = (u.searchParams.get("room") || "").trim();
+          const channelName = !raw ? "orb:test" : (raw.indexOf(":") === -1 ? `orb:${raw}` : raw);
+          const roomCode = stripOrbPrefix(channelName);
+          return { raw, roomCode, channelName: roomCode ? channelName : "orb:test" };
+        })();
     const room = roomInfo.channelName;
     const roomCode = roomInfo.roomCode;
-    let classicFastPathJoinTransport = null;
-
-    async function initClassicTransmitterRelay(){
-      if (classicTransmitterRelay) return classicTransmitterRelay;
-      try {
-        await import("./src/runtime-shell/transmitter/transmitter-relay.js");
-        classicTransmitterRelay = (typeof window.createTransmitterRelay === "function")
-          ? window.createTransmitterRelay({
-              tokenUrl: TOKEN_URL,
-              ablyCtor: (typeof Ably !== "undefined" && Ably) ? Ably : null,
-            })
-          : null;
-      } catch (e) {
-        classicTransmitterRelay = null;
-        console.warn("Classic transmitter relay init failed:", e);
-      }
-      return classicTransmitterRelay;
-    }
-
     async function initClassicFastPathJoinTransport(){
-      if (classicFastPathJoinTransport) return classicFastPathJoinTransport;
-      try {
-        await import("./src/runtime-shell/session/fast-path-transport.js");
-        classicFastPathJoinTransport = (typeof window.createFastPathJoinTransport === "function")
-          ? window.createFastPathJoinTransport({
-              ablyCtor: (typeof Ably !== "undefined") ? Ably : null,
-              workerBase: WORKER_BASE,
-              stunServers: LAN_STUN_SERVERS,
-              tokenTtlMs: LAN_TOKEN_TTL_MS,
-              onStatus: (msg) => {
-                setJoinStatus(msg);
-                if (/Connected|NOT LAN SAFE|Disconnected|Aborted|failed/i.test(String(msg || ""))) {
-                  hideLanConnecting();
-                }
-              },
-              onControl: (name) => {
-                if (name === "calibrate") startCalibration();
-              },
-            })
-          : null;
-      } catch (e) {
-        classicFastPathJoinTransport = null;
-        console.warn("Classic fast-path join transport init failed:", e);
+      if (transmitterSessionBootstrap && typeof transmitterSessionBootstrap.initClassicFastPathJoinTransport === "function") {
+        return transmitterSessionBootstrap.initClassicFastPathJoinTransport();
       }
-      return classicFastPathJoinTransport;
+      return null;
     }
-
+    function getClassicFastPathJoinTransport() {
+      if (transmitterSessionBootstrap && typeof transmitterSessionBootstrap.getFastPathJoinTransport === "function") {
+        return transmitterSessionBootstrap.getFastPathJoinTransport();
+      }
+      return null;
+    }
     async function connectRelay() {
-      const relay = await initClassicTransmitterRelay();
-      if (relay && typeof relay.connect === "function") {
-        const ok = await relay.connect({
-          room,
-          roomCode,
-          onControlMessage: (d) => {
-            if (d && d.calibrate){
-              startCalibration();
-            }
-          },
-        });
-        ably = relay.getRealtime ? relay.getRealtime() : null;
-        ablyChannel = relay.getChannel ? relay.getChannel() : null;
-        return !!ok;
+      if (transmitterSessionBootstrap && typeof transmitterSessionBootstrap.connectRelay === "function") {
+        return transmitterSessionBootstrap.connectRelay();
       }
-
-      try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
-      try { if (ably) ably.close(); } catch(e) {}
-      ably = null; ablyChannel = null;
-
-      const authUrl =
-        TOKEN_URL +
-        "?room=" + encodeURIComponent(roomCode) +
-        "&clientId=" + encodeURIComponent("phone-" + Math.random().toString(16).slice(2,6));
-
-      // Quick preflight (kept)
-      try {
-        const r = await fetch(authUrl, { method: "GET", cache: "no-store" });
-        const j = await r.json();
-        if (!r.ok || !j.token) return false;
-      } catch (e) {
-        return false;
-      }
-
-      ably = new Ably.Realtime({ authUrl, autoConnect: true });
-      ablyChannel = ably.channels.get(room);
-
-      // Await attach so we don’t publish into a not-yet-attached channel.
-      await new Promise((resolve) => {
-        ablyChannel.attach(() => resolve());
-      });
-
-      try { ablyChannel.unsubscribe("ctl"); } catch(_) {}
-      ablyChannel.subscribe("ctl", (msg) => {
-        const d = (msg && msg.data) ? msg.data : {};
-        if (d && d.calibrate){
-          startCalibration();
-        }
-      });
-
-      return true;
+      return false;
     }
-
     function disconnectRelay() {
-      if (classicTransmitterRelay && typeof classicTransmitterRelay.disconnect === "function") {
-        classicTransmitterRelay.disconnect();
-        ably = null;
-        ablyChannel = null;
-        return;
+      if (transmitterSessionBootstrap && typeof transmitterSessionBootstrap.disconnectRelay === "function") {
+        transmitterSessionBootstrap.disconnectRelay();
       }
-      try { if (ablyChannel) ablyChannel.detach(); } catch(e) {}
-      try { if (ably) ably.close(); } catch(e) {}
-      ably = null; ablyChannel = null;
     }
 
     // ===== LAN PARTY (P2P) BEGIN =====
@@ -605,16 +515,6 @@
       const code = String(roomId || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "") || "TEST";
       return "orb:" + code;
     }
-    function parseJoinParamsFromUrl(raw){
-      try {
-        const u = new URL(raw || window.location.href);
-        const room = (u.searchParams.get("room") || "").trim();
-        const token = (u.searchParams.get("token") || "").trim();
-        if (room && token) return { room, token };
-      } catch (_) {}
-      return null;
-    }
-
     const lanParty = {
       active: false,
       roomId: "",
@@ -649,6 +549,7 @@
     }
 
     function disconnectLanPairing(){
+      const classicFastPathJoinTransport = getClassicFastPathJoinTransport();
       if (classicFastPathJoinTransport && typeof classicFastPathJoinTransport.disconnect === "function") {
         classicFastPathJoinTransport.disconnect();
       }
@@ -1169,15 +1070,8 @@
         return;
       }
 
-      if (classicTransmitterRelay && typeof classicTransmitterRelay.publish === "function") {
-        const published = classicTransmitterRelay.publish("orb", out, (err) => {
-          if (err) console.warn("[ably publish err]", err);
-        });
-        if (published) return;
-      }
-
-      if (!ablyChannel) return;
-      ablyChannel.publish("orb", out, (err) => {
+      if (!transmitterSessionBootstrap || typeof transmitterSessionBootstrap.publishRelay !== "function") return;
+      transmitterSessionBootstrap.publishRelay("orb", out, (err) => {
         if (err) console.warn("[ably publish err]", err);
       });
     }
@@ -1967,6 +1861,7 @@
       calib.startMs = performance.now();
       calib.samples = [];
     }
+    window.__orbisStartTransmitterCalibration = startCalibration;
 
     function finishCalibration(){
       if (!calib.samples.length) {
@@ -2553,6 +2448,7 @@
         setBtn("Stop");
 
         if (lanParty.active) {
+          const classicFastPathJoinTransport = getClassicFastPathJoinTransport();
           if (classicFastPathJoinTransport && typeof classicFastPathJoinTransport.setRunning === "function") {
             classicFastPathJoinTransport.setRunning(true);
           } else {
@@ -2582,6 +2478,7 @@
       calib.active = false;
       removeMotionListener();
 
+      const classicFastPathJoinTransport = getClassicFastPathJoinTransport();
       if (classicFastPathJoinTransport && typeof classicFastPathJoinTransport.setRunning === "function") {
         classicFastPathJoinTransport.setRunning(false);
       }

@@ -12,6 +12,7 @@ Current entry path:
 Migration note:
 - the current transmitter entry now lives in this domain
 - `mobile-transmitter-entry.js` owns page boot at this layer
+- `transmitter-session-bootstrap.js` now owns room/relay/session bootstrap at this layer
 - it still delegates the deep runtime to the existing root-level
   `mobile-transmitter.js` / `mobile-transmitter.css` during transition
 - follow-on work should move runtime/bootstrap ownership here and then retire the
