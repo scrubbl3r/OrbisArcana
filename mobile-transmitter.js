@@ -844,6 +844,7 @@
 
     (async () => {
       const joinFromUrl = parseJoinParamsFromUrl(window.location.href);
+      setStartReady(true);
       if (joinFromUrl) {
         showLanConnecting();
         try {
@@ -853,7 +854,6 @@
           setJoinStatus("Auto-join failed");
         }
       }
-      setStartReady(true);
     })();
     // ===== LAN PARTY (P2P) END =====
 
