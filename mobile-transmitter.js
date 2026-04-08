@@ -32,6 +32,7 @@
     const transmitterMotionInput = window.__orbisTransmitterMotionInput || null;
     const createTransmitterPacketPublisher = window.__orbisCreateTransmitterPacketPublisher || null;
     const transmitterAudioRuntime = window.__orbisTransmitterAudioRuntime || null;
+    const createTransmitterMotionCore = window.__orbisCreateTransmitterMotionCore || null;
     const createTransmitterRuntimeReset = window.__orbisCreateTransmitterRuntimeReset || null;
     const transmitterGestureLabLogic = window.__orbisTransmitterGestureLabLogic || null;
     const transmitterCalibrationLogic = window.__orbisTransmitterCalibrationLogic || null;
@@ -930,6 +931,53 @@
       }
     }
 
+    const motionCore = createTransmitterMotionCore
+      ? createTransmitterMotionCore({
+          rootWindow: window,
+          room,
+          versionText: VERSION_TEXT,
+          debugShield: DEBUG_SHIELD,
+          getRunning: () => running,
+          getCalibrationBasis: () => calibrationState.calibBasis,
+          isCalibrationReady: () => !!calibrationState.calibBasis,
+          consumeCalibAck: () => {
+            const ack = calib.ackPending ? 1 : 0;
+            if (calib.ackPending) calib.ackPending = false;
+            return ack;
+          },
+          handleLinearMotionSample: ({ nowMs, agx, agy, agz }) => {
+            pushMotionSample(nowMs, agx, agy, agz);
+            updateGravityLocking({ x: agx, y: agy, z: agz });
+
+            if (lab.recording){
+              lab.recordSamples.push({ t: nowMs, ax: agx, ay: agy, az: agz });
+              if (nowMs - lab.recordStartedAtMs >= MAX_REC_MS) endRecording();
+            }
+
+            impulseHist.push({ t: nowMs, ax: agx, ay: agy, az: agz });
+            const impCutoff = nowMs - HIT_WIN_MAX_MS;
+            while (impulseHist.length && impulseHist[0].t < impCutoff) impulseHist.shift();
+
+            if (calib.active){
+              calib.samples.push({ ax: agx, ay: agy, az: agz });
+              if ((nowMs - calib.startMs) >= CALIB_MS) finishCalibration();
+            }
+
+            if (lab.testMode && testReadout){
+              const live = recognizeGestureFromRecentBuffer(nowMs);
+              lab.lastMatch = live;
+              testReadout.textContent = live
+                ? `Match: ${live.label} (${live.score.toFixed(2)})`
+                : "Match: —";
+            }
+          },
+          classifyDirectionalShake: (nowMs) => classifyDirectionalShake(nowMs),
+          publishDynamics,
+          setBgFromEnergy,
+          setAudio,
+        })
+      : null;
+
     // =========================================================================
     // DIAL PACK v4 — base detection (PRESERVED)
     // =========================================================================
@@ -1574,10 +1622,13 @@
         calib.active = false;
         return;
       }
-      const result = transmitterCalibrationLogic.computeCalibrationBasis(calib.samples, orientState && orientState.R, {
+      const orientRuntime = motionCore && typeof motionCore.getOrientState === "function"
+        ? motionCore.getOrientState()
+        : orientState;
+      const result = transmitterCalibrationLogic.computeCalibrationBasis(calib.samples, orientRuntime && orientRuntime.R, {
         phoneTopAxis: PHONE_TOP_AXIS,
         previousAlpha0: calibrationState.calibAlpha0,
-        orientationAlpha: orientState && orientState.alpha,
+        orientationAlpha: orientRuntime && orientRuntime.alpha,
       });
       if (!result) {
         calib.active = false;
@@ -1596,12 +1647,18 @@
       if (!transmitterCalibrationLogic || typeof transmitterCalibrationLogic.classifyDirectionalImpulse !== "function") {
         return null;
       }
+      const orientRuntime = motionCore && typeof motionCore.getOrientState === "function"
+        ? motionCore.getOrientState()
+        : orientState;
+      const gravityVectorLp = motionCore && typeof motionCore.getGravityVectorLp === "function"
+        ? motionCore.getGravityVectorLp()
+        : gVecLP;
       return transmitterCalibrationLogic.classifyDirectionalImpulse({
         impulseHist,
         nowMs,
-        orientRotation: orientState && orientState.R,
+        orientRotation: orientRuntime && orientRuntime.R,
         calibBasis: calibrationState.calibBasis,
-        gravityVectorLp: gVecLP,
+        gravityVectorLp,
         impulseWinMs: IMPULSE_WIN_MS,
         dirMinThreshold: DIR_MIN_THR,
         flipU: FLIP_U,
@@ -1662,15 +1719,9 @@
     }
 
     function onOrient(e){
-      // Option C: ignore yaw (alpha) to avoid drift; use gravity only (beta/gamma)
-      const alpha = 0;
-      const beta  = (e && e.beta  != null) ? Number(e.beta)  : 0;
-      const gamma = (e && e.gamma != null) ? Number(e.gamma) : 0;
-      orientState.alpha = isFinite(alpha) ? alpha : 0;
-      orientState.beta = isFinite(beta) ? beta : 0;
-      orientState.gamma = isFinite(gamma) ? gamma : 0;
-      orientState.R = rotFromEuler(orientState.alpha, orientState.beta, orientState.gamma);
-      orientState.has = true;
+      if (motionCore && typeof motionCore.onOrient === "function") {
+        motionCore.onOrient(e);
+      }
     }
 
     // =========================================================================
@@ -1679,335 +1730,8 @@
     //  - no orientation flow / sd / oc/od
     // =========================================================================
     function onMotion(e) {
-      if (!running) return;
-
-      try {
-        const t = performance.now() / 1000;
-        const dt = (lastT == null) ? 0 : (t - lastT);
-        const nowMs = t * 1000;
-        lastT = t;
-
-        if (dt > 0) dtBuf.push(dt);
-
-        const lockedProxy = !!(lock || graceLeft > 0);
-        const grooveProxy = clamp01(lockStrength || lastGrooveUI || 0);
-        const smoothProxy = clamp01(lastSmoothUI || 0);
-
-        const sh = updateShake(e, t, dt, grooveProxy, lockedProxy, smoothProxy);
-
-        // NEW: streamed vectors (raw, then quantized in publishDynamics)
-        const acc = e.accelerationIncludingGravity || e.acceleration;
-        const agx = acc ? (Number(acc.x) || 0) : 0;
-        const agy = acc ? (Number(acc.y) || 0) : 0;
-        const agz = acc ? (Number(acc.z) || 0) : 0;
-
-        // Gravity vector LPF in world frame (for U/D bias removal)
-        if (orientState && orientState.R) {
-          const gWorld = matVec(orientState.R, { x: agx, y: agy, z: agz });
-          const aG = alphaFromCutoff(Math.max(1e-3, dt || 1/60), GRAV_LPF_HZ);
-          if (!gVecLP.has) {
-            gVecLP = { x: gWorld.x, y: gWorld.y, z: gWorld.z, has: true };
-          } else {
-            gVecLP.x = (1 - aG) * gVecLP.x + aG * gWorld.x;
-            gVecLP.y = (1 - aG) * gVecLP.y + aG * gWorld.y;
-            gVecLP.z = (1 - aG) * gVecLP.z + aG * gWorld.z;
-          }
-        }
-
-        pushMotionSample(nowMs, agx, agy, agz);
-        updateGravityLocking({ x:agx, y:agy, z:agz });
-        if (lab.recording){
-          lab.recordSamples.push({ t: nowMs, ax: agx, ay: agy, az: agz });
-          if (nowMs - lab.recordStartedAtMs >= MAX_REC_MS) endRecording();
-        }
-
-        impulseHist.push({ t: nowMs, ax: agx, ay: agy, az: agz });
-        const impCutoff = nowMs - HIT_WIN_MAX_MS;
-        while (impulseHist.length && impulseHist[0].t < impCutoff) impulseHist.shift();
-
-        if (calib.active){
-          calib.samples.push({ ax: agx, ay: agy, az: agz });
-          if ((nowMs - calib.startMs) >= CALIB_MS){
-            finishCalibration();
-          }
-        }
-
-        const rr = e.rotationRate;
-        // Keep same axis mapping you had (beta/gamma/alpha)
-        const rrx = rr ? (rr.beta  ?? 0) : 0;
-        const rry = rr ? (rr.gamma ?? 0) : 0;
-        const rrz = rr ? (rr.alpha ?? 0) : 0;
-
-        if (lab.testMode && testReadout){
-          const live = recognizeGestureFromRecentBuffer(nowMs);
-          lab.lastMatch = live;
-          if (live) {
-            testReadout.textContent = `Match: ${live.label} (${live.score.toFixed(2)})`;
-          } else {
-            testReadout.textContent = "Match: —";
-          }
-        }
-
-        if (!rr) {
-          const dtMean = Math.max(1e-3, computeAvg(dtBuf.slice(-50)) || 1/60);
-          const dtForFilter = (dt > 0) ? dt : dtMean;
-          const sv = updateSpeedV0(0, dtForFilter);
-
-          if (dt > 0) {
-            energy = Math.max(0, energy - ENERGY_DECAY * dt);
-            energyUI = lerp(energyUI, energy, UI_SMOOTH);
-          }
-
-          const held = meterHoldOrFade(dt);
-
-          const sd = (sh.shake01 > SD_SLOP_GATE) ? classifyDirectionalShake(nowMs) : null;
-          const calibAck = calib.ackPending ? 1 : 0;
-          const forceSend = !!calibAck || !!sh.shakeHit;
-          if (calib.ackPending) calib.ackPending = false;
-
-          publishDynamics({
-            room,
-            t: performance.now(),
-            dt: sv.dt,
-            wRaw: sv.wRaw,
-            wCap: sv.wCap,
-            wFilt: sv.wFilt,
-            cap: sv.cap,
-            energy01: energyUI,
-            groove01: held.grooveOut,
-            dynamics01: held.dynamicsOut,
-            smooth01: held.smoothOut,
-            speed01: sv.speed,
-            shake01: sh.shake01,
-            shakeHit: sh.shakeHit,
-            sd,
-            calib: calibAck,
-            locked: false,
-            hz: 0,
-            spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
-            spinDirection,
-            dbgTag: VERSION_TEXT,
-            ...(DEBUG_SHIELD ? { calibOK: calibrationState.calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
-
-            ag: [agx, agy, agz],
-            rr: [rrx, rry, rrz],
-
-            d_r2: 0, d_r3: 0, d_gate: 0, d_balance: 0, d_couple: 0
-          }, dt, forceSend);
-
-          setBgFromEnergy(clamp01(energyUI));
-          setAudio(energyUI, held.grooveOut, false);
-          return;
-        }
-
-        const x = rrx;
-        const y = rry;
-        const z = rrz;
-
-        const prevOx=ox, prevOy=oy, prevOz=oz;
-
-        ox = lerp(ox, x, OMEGA_LPF);
-        oy = lerp(oy, y, OMEGA_LPF);
-        oz = lerp(oz, z, OMEGA_LPF);
-
-        const mStability = mag3(ox,oy,oz);
-        const dtMean = Math.max(1e-3, computeAvg(dtBuf.slice(-50)));
-        const dtForFilter = (dt > 0) ? dt : dtMean;
-
-        const wRaw = mag3(x, y, z);
-        const sv = updateSpeedV0(wRaw, dtForFilter);
-
-        if (dt > 0) graceLeft = Math.max(0, graceLeft - dt);
-
-        if (mStability > MIN_OMEGA) {
-          omegaMag.push(mStability);
-
-          const d0 = mStability - emaMean;
-          emaMean = emaMean + NORM_ALPHA * d0;
-
-          const d2 = (mStability - emaMean);
-          emaVar = emaVar + NORM_ALPHA * (d2*d2 - emaVar);
-
-          const rms = Math.sqrt(Math.max(1e-6, emaVar));
-          omegaNorm.push((mStability - emaMean) / rms);
-
-          const invM = 1 / Math.max(1e-6, mStability);
-          const vUnit = { x: ox*invM, y: oy*invM, z: oz*invM };
-          omegaVec.push(vUnit);
-          updateSpinVectorState(nowMs, vUnit);
-
-          if (dtForFilter > 0) dynamicsBufPush(vUnit, dtForFilter);
-
-          if (dt > 0) {
-            const dtSafe = Math.max(dt, dtMean * 0.5, 1/120);
-            jerkBuf.push(mag3(ox-prevOx, oy-prevOy, oz-prevOz) / dtSafe);
-          }
-        } else {
-          if (omegaMag.length) omegaMag.shift();
-          if (omegaNorm.length) omegaNorm.shift();
-          if (omegaVec.length) omegaVec.shift();
-          if (jerkBuf.length)  jerkBuf.shift();
-        }
-
-        const inStableMode = lock || graceLeft > 0;
-        const windowSec = inStableMode ? STABLE_WINDOW_SEC : HUNT_WINDOW_SEC;
-        const nTarget = trimToWindow(dtMean, windowSec, omegaMag, omegaNorm, omegaVec, jerkBuf, dtBuf);
-
-        if (omegaNorm.length < Math.min(MIN_WINDOW_SAMPLES, nTarget)) {
-          if (dt > 0) {
-            energy = Math.max(0, energy - ENERGY_DECAY * dt);
-            energyUI = lerp(energyUI, energy, UI_SMOOTH);
-          }
-
-          const held = meterHoldOrFade(dt);
-
-          publishDynamics({
-            room,
-            t: performance.now(),
-            dt: sv.dt,
-            wRaw: sv.wRaw,
-            wCap: sv.wCap,
-            wFilt: sv.wFilt,
-            cap: sv.cap,
-            energy01: energyUI,
-            groove01: held.grooveOut,
-            dynamics01: held.dynamicsOut,
-            smooth01: held.smoothOut,
-            speed01: sv.speed,
-            shake01: sh.shake01,
-            shakeHit: sh.shakeHit,
-            locked: false,
-            hz: 0,
-            spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
-            spinDirection,
-            dbgTag: VERSION_TEXT,
-            ...(DEBUG_SHIELD ? { calibOK: calibrationState.calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
-
-            ag: [agx, agy, agz],
-            rr: [rrx, rry, rrz],
-
-            d_r2: 0, d_r3: 0, d_gate: 0, d_balance: 0, d_couple: 0
-          }, dt);
-
-          setBgFromEnergy(clamp01(energyUI));
-          setAudio(energyUI, held.grooveOut, false);
-          return;
-        }
-
-        const ac = autocorrPeak(omegaNorm, dtMean);
-        lockStrength = lerp(lockStrength, ac.peak, LOCK_SMOOTH);
-        grooveHz = ac.hz;
-
-        const jerkWindow = jerkBuf.slice(-Math.min(jerkBuf.length, 70));
-        const avgJerk = median(jerkWindow);
-        const smoothScore = smoothnessFromJerk(avgJerk);
-
-        const dDiv = dynamicsDiversityLastSec(DYNAMICS_WINDOW_SEC);
-        const actGate = dynamicsActivityGate(sv.speed);
-        const diversityGated = clamp01(dDiv.div01 * actGate);
-
-        const dynamicsBonus = DYNAMICS_FLOOR + (1 - DYNAMICS_FLOOR) * diversityGated;
-        const shapedCore = diversityGated;
-        const dynamicsUI = clamp01(DYNAMICS_UI_GAIN * Math.pow(shapedCore, DYNAMICS_UI_EXP));
-
-        meterHoldLeft = METER_HOLD_SEC;
-        lastGrooveUI   = lockStrength;
-        lastDynamicsUI = dynamicsUI;
-        lastSmoothUI   = smoothScore;
-
-        if (!lock) {
-          if (lockStrength > LOCK_ON) { lock = true; graceLeft = 0; }
-        } else {
-          if (lockStrength < LOCK_OFF) { lock = false; graceLeft = GRACE_SEC; }
-        }
-
-        const inGrace = (!lock && graceLeft > 0);
-        if (inGrace && lockStrength > LOCK_ON) { lock = true; graceLeft = 0; }
-
-        if (dt > 0) {
-          const badGroove = lockStrength <= RECENTER_GROOVE_MAX;
-          const notLockedNow = !lock;
-          if (badGroove && notLockedNow) recenterBadTime += dt;
-          else recenterBadTime = Math.max(0, recenterBadTime - 1.5*dt);
-
-          if (recenterBadTime >= RECENTER_SEC) {
-            flushHistorySoft();
-            recenterBadTime = 0;
-          }
-        }
-
-        if (dt > 0) {
-          const grooveTerm   = Math.pow(clamp01(lockStrength), GROOVE_EXP);
-          const smoothTerm   = Math.pow(clamp01(smoothScore), SMOOTH_EXP);
-          const dynamicsTerm = Math.pow(clamp01(dynamicsBonus), DYNAMICS_EXP);
-
-          const qualityTerm = grooveTerm * smoothTerm;
-          const earnBase = EARN_SCALE * grooveTerm * smoothTerm * dynamicsTerm;
-
-          const effectivelyLocked = lock || inGrace;
-          const gain = effectivelyLocked ? ENERGY_GAIN_LOCKED : ENERGY_GAIN_FREE;
-
-          const smoothKill = (smoothScore < SMOOTH_KILL_THRESH);
-          const earn = smoothKill ? 0 : (gain * earnBase);
-
-          let decay = ENERGY_DECAY;
-          if (qualityTerm >= COAST_QUALITY_MIN) decay *= COAST_DECAY_MULT;
-
-          if (smoothKill) {
-            decay *= SMOOTH_KILL_DECAY_MULT;
-            if (SMOOTH_KILL_UNLOCK) { lock = false; graceLeft = 0; }
-          }
-
-          energy = Math.max(0, energy + (earn - decay) * dt);
-          energyUI = lerp(energyUI, energy, UI_SMOOTH);
-        }
-
-        const lockedNow = !!(lock || inGrace);
-
-        const sd = (sh.shake01 > SD_SLOP_GATE) ? classifyDirectionalShake(nowMs) : null;
-        const calibAck = calib.ackPending ? 1 : 0;
-        const forceSend = !!calibAck || !!sh.shakeHit;
-        if (calib.ackPending) calib.ackPending = false;
-
-        publishDynamics({
-          room,
-          t: performance.now(),
-          dt: sv.dt,
-          wRaw: sv.wRaw,
-          wCap: sv.wCap,
-          wFilt: sv.wFilt,
-          cap: sv.cap,
-          energy01: energyUI,
-          groove01: lockStrength,
-          dynamics01: dynamicsUI,
-          smooth01: smoothScore,
-          speed01: sv.speed,
-          shake01: sh.shake01,
-          shakeHit: sh.shakeHit,
-          sd,
-          calib: calibAck,
-          locked: lockedNow,
-          hz: grooveHz,
-          spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
-          spinDirection,
-          dbgTag: VERSION_TEXT,
-          ...(DEBUG_SHIELD ? { calibOK: calibrationState.calibBasis ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
-
-          ag: [agx, agy, agz],
-          rr: [rrx, rry, rrz],
-
-          d_r2: dDiv.R,
-          d_r3: dDiv.div01,
-          d_gate: actGate,
-          d_balance: 0,
-          d_couple: 0
-        }, dt, forceSend);
-
-        setBgFromEnergy(clamp01(energyUI));
-        setAudio(energyUI, lockStrength, lockedNow);
-
-      } catch (err) {
-        console.error("[onMotion crash]", err);
+      if (motionCore && typeof motionCore.onMotion === "function") {
+        motionCore.onMotion(e);
       }
     }
 
@@ -2039,71 +1763,10 @@
 
         running = true;
         if (runtimeReset && typeof runtimeReset.resetRuntimeState === "function") {
-          runtimeReset.resetRuntimeState({
-            get lastT() { return lastT; },
-            set lastT(v) { lastT = v; },
-            get ox() { return ox; },
-            set ox(v) { ox = v; },
-            get oy() { return oy; },
-            set oy(v) { oy = v; },
-            get oz() { return oz; },
-            set oz(v) { oz = v; },
-            get spinVector01() { return spinVector01; },
-            set spinVector01(v) { spinVector01 = v; },
-            get spinDirection() { return spinDirection; },
-            set spinDirection(v) { spinDirection = v; },
-            spinVectorHist,
-            omegaMag,
-            omegaNorm,
-            omegaVec,
-            jerkBuf,
-            dtBuf,
-            dynamicsVecBuf,
-            dynamicsDtBuf,
-            shakeFullTimes,
-            get emaMean() { return emaMean; },
-            set emaMean(v) { emaMean = v; },
-            get emaVar() { return emaVar; },
-            set emaVar(v) { emaVar = v; },
-            get lock() { return lock; },
-            set lock(v) { lock = v; },
-            get lockStrength() { return lockStrength; },
-            set lockStrength(v) { lockStrength = v; },
-            get grooveHz() { return grooveHz; },
-            set grooveHz(v) { grooveHz = v; },
-            get graceLeft() { return graceLeft; },
-            set graceLeft(v) { graceLeft = v; },
-            get recenterBadTime() { return recenterBadTime; },
-            set recenterBadTime(v) { recenterBadTime = v; },
-            get energy() { return energy; },
-            set energy(v) { energy = v; },
-            get energyUI() { return energyUI; },
-            set energyUI(v) { energyUI = v; },
-            get mSpeedEMA() { return mSpeedEMA; },
-            set mSpeedEMA(v) { mSpeedEMA = v; },
-            get speedOut() { return speedOut; },
-            set speedOut(v) { speedOut = v; },
-            get meterHoldLeft() { return meterHoldLeft; },
-            set meterHoldLeft(v) { meterHoldLeft = v; },
-            get lastGrooveUI() { return lastGrooveUI; },
-            set lastGrooveUI(v) { lastGrooveUI = v; },
-            get lastDynamicsUI() { return lastDynamicsUI; },
-            set lastDynamicsUI(v) { lastDynamicsUI = v; },
-            get lastSmoothUI() { return lastSmoothUI; },
-            set lastSmoothUI(v) { lastSmoothUI = v; },
-            get shake01() { return shake01; },
-            set shake01(v) { shake01 = v; },
-            get accelBaseMag() { return accelBaseMag; },
-            set accelBaseMag(v) { accelBaseMag = v; },
-            get prevAx() { return prevAx; },
-            set prevAx(v) { prevAx = v; },
-            get prevAy() { return prevAy; },
-            set prevAy(v) { prevAy = v; },
-            get prevAz() { return prevAz; },
-            set prevAz(v) { prevAz = v; },
-            get prevAmag() { return prevAmag; },
-            set prevAmag(v) { prevAmag = v; },
-          });
+          runtimeReset.resetRuntimeState({});
+        }
+        if (motionCore && typeof motionCore.resetRuntimeState === "function") {
+          motionCore.resetRuntimeState();
         }
 
         addMotionListener();
