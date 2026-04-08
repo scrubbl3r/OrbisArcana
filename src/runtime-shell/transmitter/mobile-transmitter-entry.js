@@ -1,4 +1,5 @@
 import { createTransmitterPageShell } from "./transmitter-page-shell.js";
+import { createTransmitterLifecycle } from "./transmitter-lifecycle.js";
 import { createTransmitterSessionBootstrap } from "./transmitter-session-bootstrap.js";
 import { createTransmitterUiBoot } from "./transmitter-ui-boot.js";
 import { createTransmitterViewportBoot } from "./transmitter-viewport-boot.js";
@@ -13,6 +14,10 @@ function loadLegacyTransmitterRuntime() {
 
 window.__orbisTransmitterPageShell = createTransmitterPageShell({
   rootDocument: document,
+});
+window.__orbisTransmitterLifecycle = createTransmitterLifecycle({
+  pageShell: window.__orbisTransmitterPageShell,
+  startButton: window.__orbisTransmitterPageShell.refs.startBtn,
 });
 window.__orbisTransmitterSessionBootstrap = createTransmitterSessionBootstrap({
   rootWindow: window,

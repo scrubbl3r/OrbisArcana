@@ -27,6 +27,7 @@
     // UI — Start/Stop + Gesture Lab
     // =========================================================================
     const transmitterPageShell = window.__orbisTransmitterPageShell || null;
+    const transmitterLifecycle = window.__orbisTransmitterLifecycle || null;
     const transmitterSessionBootstrap = window.__orbisTransmitterSessionBootstrap || null;
     const transmitterUiBoot = window.__orbisTransmitterUiBoot || null;
     const VERSION_TAG = !transmitterUiBoot;
@@ -55,11 +56,16 @@
     const masteryReadout = document.getElementById('masteryReadout');
     const resetLabBtn = document.getElementById('resetLabBtn');
 
-    const UI = { state: "idle" }; // "idle" | "running"
+    const UI = { state: "idle" }; // compatibility mirror
     let appReady = false;
     let startInFlight = false;
 
     function setBtn(label){
+      if (transmitterLifecycle && typeof transmitterLifecycle.setMode === "function") {
+        transmitterLifecycle.setMode(String(label || "").toLowerCase() === "stop" ? "running" : "idle");
+        UI.state = transmitterLifecycle.isRunning() ? "running" : "idle";
+        return;
+      }
       if (transmitterPageShell && typeof transmitterPageShell.setButtonLabel === "function") {
         transmitterPageShell.setButtonLabel(label);
         return;
@@ -69,6 +75,10 @@
     }
     function setStartReady(ready){
       appReady = !!ready;
+      if (transmitterLifecycle && typeof transmitterLifecycle.setReady === "function") {
+        transmitterLifecycle.setReady(appReady);
+        return;
+      }
       if (transmitterPageShell && typeof transmitterPageShell.setStartReady === "function") {
         transmitterPageShell.setStartReady(appReady);
         return;
@@ -2376,7 +2386,9 @@
       if (!window.isSecureContext || !appReady || startInFlight) return;
 
       startInFlight = true;
-      if (transmitterPageShell && typeof transmitterPageShell.setStartBusy === "function") {
+      if (transmitterLifecycle && typeof transmitterLifecycle.setBusy === "function") {
+        transmitterLifecycle.setBusy(true);
+      } else if (transmitterPageShell && typeof transmitterPageShell.setStartBusy === "function") {
         transmitterPageShell.setStartBusy(true);
       } else if (startBtn) {
         startBtn.disabled = true;
@@ -2460,7 +2472,9 @@
 
       } finally {
         startInFlight = false;
-        if (transmitterPageShell && typeof transmitterPageShell.setStartBusy === "function") {
+        if (transmitterLifecycle && typeof transmitterLifecycle.setBusy === "function") {
+          transmitterLifecycle.setBusy(false);
+        } else if (transmitterPageShell && typeof transmitterPageShell.setStartBusy === "function") {
           transmitterPageShell.setStartBusy(false);
         } else if (startBtn) {
           startBtn.disabled = false;
@@ -2499,9 +2513,13 @@
     // =========================================================================
     // Final: Start/Stop click logic
     // =========================================================================
-    startBtn.onclick = () => {
-      if (UI.state === "idle") start();
-      else stop();
-    };
+    if (transmitterLifecycle && typeof transmitterLifecycle.attachToggle === "function") {
+      transmitterLifecycle.attachToggle(start, stop);
+    } else if (startBtn) {
+      startBtn.onclick = () => {
+        if (UI.state === "idle") start();
+        else stop();
+      };
+    }
 
   })();
