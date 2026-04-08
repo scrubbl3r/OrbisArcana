@@ -160,7 +160,15 @@ export function createLogPopupController({
     if (!els.kwsLog) return;
     els.kwsLog.textContent = "";
     const state = logChannelState[activeLogChannel];
-    if (!state || !state.rows.length) return;
+    if (!state || !state.rows.length) {
+      const lineEl = document.createElement("div");
+      lineEl.className = "kwsLogLine muted";
+      lineEl.textContent = activeLogChannel === "general"
+        ? "No general log lines yet."
+        : (activeLogChannel === "phone" ? "No phone log lines yet." : "No KWS log lines yet.");
+      els.kwsLog.appendChild(lineEl);
+      return;
+    }
     for (const row of state.rows) appendKwsLogRow(row);
   }
 
@@ -282,27 +290,26 @@ export function createLogPopupController({
     if (els.logPopupClose) {
       els.logPopupClose.addEventListener("click", () => setLogPopupOpen(false));
     }
-    if (els.logTabGeneral) {
-      els.logTabGeneral.addEventListener("click", (ev) => {
+    const bindLogTab = (el, channel) => {
+      if (!el) return;
+      let pointerActivated = false;
+      el.addEventListener("pointerdown", (ev) => {
+        pointerActivated = true;
         ev.preventDefault();
-        ev.stopPropagation();
-        setActiveLogChannel("general");
+        setActiveLogChannel(channel);
       });
-    }
-    if (els.logTabKws) {
-      els.logTabKws.addEventListener("click", (ev) => {
+      el.addEventListener("click", (ev) => {
         ev.preventDefault();
-        ev.stopPropagation();
-        setActiveLogChannel("kws");
+        if (pointerActivated) {
+          pointerActivated = false;
+          return;
+        }
+        setActiveLogChannel(channel);
       });
-    }
-    if (els.logTabPhone) {
-      els.logTabPhone.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        setActiveLogChannel("phone");
-      });
-    }
+    };
+    bindLogTab(els.logTabGeneral, "general");
+    bindLogTab(els.logTabKws, "kws");
+    bindLogTab(els.logTabPhone, "phone");
     if (els.logPopupHeader) {
       els.logPopupHeader.addEventListener("pointerdown", beginLogPopupDrag);
       els.logPopupHeader.addEventListener("pointermove", moveLogPopupDrag);
