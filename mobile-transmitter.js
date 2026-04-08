@@ -21,10 +21,15 @@
     // =========================================================================
     // UI — Start/Stop + Gesture Lab
     // =========================================================================
-    const VERSION_TAG = true;
+    const transmitterPageShell = window.__orbisTransmitterPageShell || null;
+    const VERSION_TAG = !transmitterPageShell;
     const VERSION_TEXT = "vtag:shield-debug";
-    const startBtn = document.getElementById('startBtn');
-    const lanConnecting = document.getElementById('lanConnecting');
+    const startBtn = transmitterPageShell && transmitterPageShell.refs
+      ? transmitterPageShell.refs.startBtn
+      : document.getElementById('startBtn');
+    const lanConnecting = transmitterPageShell && transmitterPageShell.refs
+      ? transmitterPageShell.refs.lanConnecting
+      : document.getElementById('lanConnecting');
     const labBtn = document.getElementById('labBtn');
     const labModal = document.getElementById('labModal');
     const labClose = document.getElementById('labClose');
@@ -47,22 +52,44 @@
     let appReady = false;
     let startInFlight = false;
 
-    function setBtn(label){ startBtn.textContent = label; }
+    function setBtn(label){
+      if (transmitterPageShell && typeof transmitterPageShell.setButtonLabel === "function") {
+        transmitterPageShell.setButtonLabel(label);
+        return;
+      }
+      if (!startBtn) return;
+      startBtn.textContent = label;
+    }
     function setStartReady(ready){
       appReady = !!ready;
+      if (transmitterPageShell && typeof transmitterPageShell.setStartReady === "function") {
+        transmitterPageShell.setStartReady(appReady);
+        return;
+      }
       if (!startBtn) return;
       startBtn.style.visibility = appReady ? "visible" : "hidden";
       startBtn.disabled = !appReady;
     }
-    function setJoinStatus(_msg){
-      // Intentionally silent in production mobile UI.
+    function setJoinStatus(msg){
+      if (transmitterPageShell && typeof transmitterPageShell.setJoinStatus === "function") {
+        transmitterPageShell.setJoinStatus(msg);
+        return;
+      }
     }
     function showLanConnecting(){
+      if (transmitterPageShell && typeof transmitterPageShell.showLanConnecting === "function") {
+        transmitterPageShell.showLanConnecting();
+        return;
+      }
       if (!lanConnecting) return;
       lanConnecting.classList.add("on");
       lanConnecting.setAttribute("aria-hidden", "false");
     }
     function hideLanConnecting(){
+      if (transmitterPageShell && typeof transmitterPageShell.hideLanConnecting === "function") {
+        transmitterPageShell.hideLanConnecting();
+        return;
+      }
       if (!lanConnecting) return;
       lanConnecting.classList.remove("on");
       lanConnecting.setAttribute("aria-hidden", "true");
@@ -2463,7 +2490,11 @@
       if (!window.isSecureContext || !appReady || startInFlight) return;
 
       startInFlight = true;
-      startBtn.disabled = true;
+      if (transmitterPageShell && typeof transmitterPageShell.setStartBusy === "function") {
+        transmitterPageShell.setStartBusy(true);
+      } else if (startBtn) {
+        startBtn.disabled = true;
+      }
       try {
         const ok = await requestMotionPermissionIfNeeded();
         if (!ok) return;
@@ -2542,7 +2573,11 @@
 
       } finally {
         startInFlight = false;
-        startBtn.disabled = false;
+        if (transmitterPageShell && typeof transmitterPageShell.setStartBusy === "function") {
+          transmitterPageShell.setStartBusy(false);
+        } else if (startBtn) {
+          startBtn.disabled = false;
+        }
       }
 
       if (screen.orientation && screen.orientation.lock) {
