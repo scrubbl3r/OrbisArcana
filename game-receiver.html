@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Orb Relay — Receiver Test</title>
+  <title>Orb Relay — Legacy Receiver Fallback</title>
   <link rel="stylesheet" href="./game-receiver.css">
 
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
@@ -16,7 +16,7 @@
   <div id="startScreen" aria-label="Start screen">
     <div class="startPairCard">
       <button id="startBtn" aria-label="Pair phone">
-        <span>PAIR PHONE</span>
+        <span>PAIR PHONE (LEGACY)</span>
       </button>
       <div id="startQr" class="qrBox startQrBox"></div>
     </div>
@@ -26,15 +26,18 @@
     <div class="grid">
       <div class="card cardTall">
         <div id="devStagingLegacy" class="devStagingLegacy">
-          <div class="physHeader">Orb Receiver</div>
+          <div class="physHeader">Legacy Receiver Fallback</div>
 
           <div class="stat">
             <div class="statusLine">
-              <div>Status: <span id="status" class="dim">Auto-connecting…</span></div>
+              <div>Status: <span id="status" class="dim">Legacy fallback connecting…</span></div>
               <div class="statusTools">
                 <button id="wordBoardBtn">WORDS</button>
                 <button id="teleBtn">LOG</button>
               </div>
+            </div>
+            <div class="mono dim" style="margin-top:8px;">
+              Staging shell is the primary harness. This page is temporary fallback only.
             </div>
           </div>
 
