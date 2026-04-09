@@ -2988,6 +2988,54 @@
         playElectric();
       }
     });
+
+    window.__vfxStudioRuntimeReady = true;
+  </script>
+  <script>
+    (() => {
+      const recognizedEffects = new Set(["bubble-shield", "electric-aoe", "shockwave", "flame-aoe"]);
+      const effectSelect = document.getElementById("effectSelect");
+      const sections = Array.from(document.querySelectorAll(".section[data-effect]"));
+      const shield = document.getElementById("shield");
+      const playShieldBtn = document.getElementById("playShield");
+      const shieldMs = document.getElementById("shieldMs");
+      let shieldTimer = 0;
+
+      function currentEffectValue() {
+        const raw = String((effectSelect && effectSelect.value) || "").trim().toLowerCase();
+        return recognizedEffects.has(raw) ? raw : "bubble-shield";
+      }
+
+      function syncFallbackSections() {
+        if (window.__vfxStudioRuntimeReady) return;
+        const active = currentEffectValue();
+        sections.forEach((section) => {
+          section.hidden = String(section.getAttribute("data-effect") || "") !== active;
+        });
+      }
+
+      function playFallbackShield() {
+        if (window.__vfxStudioRuntimeReady) return;
+        if (!shield) return;
+        shield.classList.remove("on");
+        void shield.offsetWidth;
+        shield.classList.add("on");
+        if (shieldTimer) window.clearTimeout(shieldTimer);
+        const durationMs = Math.max(80, Number((shieldMs && shieldMs.value) || 1170) || 1170);
+        shieldTimer = window.setTimeout(() => {
+          shield.classList.remove("on");
+          shieldTimer = 0;
+        }, durationMs);
+      }
+
+      if (effectSelect) {
+        effectSelect.addEventListener("change", syncFallbackSections);
+      }
+      if (playShieldBtn) {
+        playShieldBtn.addEventListener("click", playFallbackShield);
+      }
+      syncFallbackSections();
+    })();
   </script>
 </body>
 </html>
