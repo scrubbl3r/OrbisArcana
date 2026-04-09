@@ -335,7 +335,7 @@
 
     .stage{
       height:min(78vh, 740px);
-      border:1px solid rgba(50,255,117,.22);
+      border:1px solid var(--frame);
       border-radius:14px;
       background:#000;
       position:relative;
@@ -539,7 +539,12 @@
     <div class="studioBar" role="toolbar" aria-label="VFX studio effect library and profile actions">
       <div class="studioBarGroup">
         <label class="studioBarLabel" for="effectSelect">Effect</label>
-        <select id="effectSelect" class="effectSelect" aria-label="Select effect controls"></select>
+        <select id="effectSelect" class="effectSelect" aria-label="Select effect controls">
+          <option value="bubble-shield" data-registry-id="spell.shield_bubble" data-base-effect="bubble-shield" data-category="spell" data-locked="true" selected>Bubble Shield</option>
+          <option value="electric-aoe" data-registry-id="spell.aoe_electric" data-base-effect="electric-aoe" data-category="spell" data-locked="true">Electric AOE</option>
+          <option value="flame-aoe" data-registry-id="spell.aoe_flame" data-base-effect="flame-aoe" data-category="spell" data-locked="true">Flame AOE</option>
+          <option value="shockwave" data-registry-id="spell.shockwave_ring" data-base-effect="shockwave" data-category="spell" data-locked="true">Shockwave</option>
+        </select>
       </div>
       <div class="studioBarGroup">
         <button id="newEffectBtn" class="toolBtn" type="button">New</button>
@@ -586,7 +591,7 @@
       </details>
 
       <!-- Electric AOE controls -->
-      <div class="section" data-effect="electric-aoe">
+      <div class="section" data-effect="electric-aoe" hidden>
         <div class="row">
           <button id="playElectric">Play Electric AOE</button>
         </div>
@@ -663,7 +668,7 @@
       </div>
 
       <!-- Shockwave controls -->
-      <div class="section" data-effect="shockwave">
+      <div class="section" data-effect="shockwave" hidden>
         <div class="row">
           <button id="playShock">Play Shockwave</button>
         </div>
@@ -710,7 +715,7 @@
       </div>
 
       <!-- Flame AOE controls -->
-      <div class="section" data-effect="flame-aoe">
+      <div class="section" data-effect="flame-aoe" hidden>
         <div class="row">
           <button id="playFlame">Play Flame AOE</button>
         </div>
