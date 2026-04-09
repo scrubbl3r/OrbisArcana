@@ -749,7 +749,7 @@
     import { WORD_VFX_BINDINGS } from "../../src/content/vfx/spell-effect-bindings.js";
     import { resolveSpellVfxBinding } from "../../src/vfx/resolve-spell-vfx-binding.js";
     import { RUNTIME_WORDS, getRuntimeWordById } from "../../src/content/spells/runtime-spells.js";
-    import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
+    import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
@@ -1779,7 +1779,7 @@
 
     function applyLabThemeDefaults(theme){
       if (!theme || typeof theme !== "object") return;
-      applyThemeCssVars(theme);
+      applyGameThemeCssVars(theme);
 
       if (theme.orb) {
         if (theme.orb.diameterPx != null) GEOM.orbD = evenPx(theme.orb.diameterPx, 2, 2000);
@@ -1812,7 +1812,7 @@
         if (els.stroke) els.stroke.value = String(evenPx(SHOCKWAVE_PRESET_DEFAULT.stroke, 2, 20));
       }
       if (theme.flameAoe && theme.flameAoe.stroke && theme.flameAoe.fill) {
-        // CSS variables are applied via applyThemeCssVars(theme); no lab controls for these yet.
+        // CSS variables are applied via applyGameThemeCssVars(theme); no lab controls for these yet.
       }
       if (els.flameD && FLAME_AOE_PRESET_DEFAULT) {
         els.flameD.value = String(evenPx(clamp(FLAME_AOE_PRESET_DEFAULT.diameter, 120, 900), 2, 2000));
