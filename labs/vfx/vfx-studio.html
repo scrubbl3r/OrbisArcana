@@ -695,8 +695,9 @@
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js";
-    import { SPELL_VFX_BINDINGS } from "../../src/content/vfx/spell-effect-bindings.js";
+    import { WORD_VFX_BINDINGS } from "../../src/content/vfx/spell-effect-bindings.js";
     import { resolveSpellVfxBinding } from "../../src/vfx/resolve-spell-vfx-binding.js";
+    import { RUNTIME_WORDS, getRuntimeWordById } from "../../src/content/spells/runtime-spells.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
@@ -903,7 +904,7 @@
         return;
       }
 
-      const matches = (Array.isArray(SPELL_VFX_BINDINGS) ? SPELL_VFX_BINDINGS : [])
+      const matches = (Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS : [])
         .filter((b) => b && b.primary && String(b.primary.effectId || "") === registryId)
         .map((b) => resolveSpellVfxBinding(String(b.spellId || "")))
         .filter(Boolean);
@@ -1365,15 +1366,174 @@
       };
     }
 
+    function buildPublishedBindingPayload(wordId){
+      const opt = selectedEffectOption();
+      if (!opt) return null;
+      const runtimeWord = getRuntimeWordById(wordId);
+      if (!runtimeWord) return null;
+      const registryId = String(opt.dataset.registryId || "").trim();
+      if (!registryId) return null;
+
+      const builtPreset = buildPublishedPresetPayload();
+      const registryEntry = (Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : [])
+        .find((entry) => String(entry && entry.id || "") === registryId) || null;
+      const effectId = registryId;
+      const presetId = String(
+        (builtPreset && builtPreset.payload && builtPreset.payload.presetId)
+        || (registryEntry && registryEntry.defaultPresetId)
+        || ""
+      ).trim();
+      if (!presetId) return null;
+
+      const existing = (Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS : [])
+        .find((entry) => String((entry && entry.wordId) || "").toLowerCase() === String(wordId || "").toLowerCase()) || null;
+
+      const postCastActions = Array.isArray(existing && existing.postCastActions)
+        ? existing.postCastActions
+        : (Array.isArray(runtimeWord.postCastActions) ? runtimeWord.postCastActions : []);
+
+      const nextEntries = (Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS : [])
+        .filter((entry) => String((entry && entry.wordId) || "").toLowerCase() !== String(wordId || "").toLowerCase())
+        .concat([{
+          wordId: String(wordId || "").toLowerCase(),
+          spellId: String(wordId || "").toLowerCase(),
+          primary: {
+            castActionId: String(runtimeWord.castActionId || wordId || "").toLowerCase(),
+            effectId,
+            presetId,
+          },
+          ...(Array.isArray(postCastActions) && postCastActions.length ? { postCastActions } : {}),
+        }])
+        .sort((a, b) => String(a && a.wordId || "").localeCompare(String(b && b.wordId || "")));
+
+      return {
+        filename: "spell-effect-bindings.js",
+        wordId: String(wordId || "").toLowerCase(),
+        payload: {
+          kind: "orbis-arcana.vfx-binding-draft",
+          version: 1,
+          target: "spell",
+          wordId: String(wordId || "").toLowerCase(),
+          effectId,
+          presetId,
+          castActionId: String(runtimeWord.castActionId || wordId || "").toLowerCase(),
+          publishedAtMs: Date.now(),
+        },
+        moduleText: buildSpellVfxBindingsModule(nextEntries),
+      };
+    }
+
+    function toJsValue(source, indent = 0){
+      const pad = " ".repeat(indent);
+      const nextPad = " ".repeat(indent + 2);
+      if (Array.isArray(source)) {
+        if (!source.length) return "[]";
+        return [
+          "[",
+          source.map((item) => `${nextPad}${toJsValue(item, indent + 2)}`).join(",\n"),
+          `${pad}]`,
+        ].join("\n");
+      }
+      if (source && typeof source === "object") {
+        const entries = Object.entries(source).filter(([, value]) => value !== undefined);
+        if (!entries.length) return "{}";
+        return [
+          "{",
+          entries.map(([key, value]) => `${nextPad}${key}: ${toJsValue(value, indent + 2)}`).join(",\n"),
+          `${pad}}`,
+        ].join("\n");
+      }
+      return JSON.stringify(source);
+    }
+
+    function buildSpellVfxBindingsModule(entries){
+      const items = Array.isArray(entries) ? entries : [];
+      return [
+        "// Word -> VFX binding schema (authoring/publish surface).",
+        "// Keeps word visual usage separate from word gameplay action routing.",
+        "",
+        "/**",
+        " * @typedef {Object} SpellVfxActionBinding",
+        " * @property {string} castActionId Which action this VFX binding describes (for example `aoe_flame`).",
+        " * @property {string} effectId VFX effect registry id.",
+        " * @property {string} presetId Preset id to use for this action/effect.",
+        " */",
+        "",
+        "/**",
+        " * @typedef {Object} SpellVfxPostActionBinding",
+        " * @property {string} id Follow-up action id (for example `float_grace`).",
+        " * @property {string} [effectId] Optional VFX effect registry id if the post action has a visual component.",
+        " * @property {string} [presetId] Optional preset id for the post action VFX.",
+        " * @property {Object} [payload] Optional action payload override (for example `{ ms: 2500 }`).",
+        " */",
+        "",
+        "/**",
+        " * @typedef {Object} SpellVfxBindingEntry",
+        " * @property {string} wordId Canonical word id.",
+        " * @property {string} [spellId] Legacy compatibility alias for `wordId`.",
+        " * @property {SpellVfxActionBinding} primary",
+        " * @property {SpellVfxPostActionBinding[]} [postCastActions]",
+        " */",
+        "",
+        "/** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */",
+        "export const WORD_VFX_BINDINGS = Object.freeze([",
+        items.map((entry) => `  Object.freeze(${toJsValue({
+          wordId: String(entry.wordId || "").toLowerCase(),
+          spellId: String(entry.spellId || entry.wordId || "").toLowerCase(),
+          primary: {
+            castActionId: String(entry.primary && entry.primary.castActionId || "").toLowerCase(),
+            effectId: String(entry.primary && entry.primary.effectId || ""),
+            presetId: String(entry.primary && entry.primary.presetId || ""),
+          },
+          ...(Array.isArray(entry.postCastActions) && entry.postCastActions.length
+            ? { postCastActions: entry.postCastActions.map((action) => ({
+                id: String(action && action.id || ""),
+                ...(action && action.effectId ? { effectId: String(action.effectId) } : {}),
+                ...(action && action.presetId ? { presetId: String(action.presetId) } : {}),
+                ...(action && action.payload !== undefined ? { payload: action.payload } : {}),
+              })) }
+            : {}),
+        }, 2)}),`).join("\n"),
+        "]);",
+        "",
+        "export const WORD_VFX_BINDINGS_BY_WORD_ID = Object.freeze(",
+        "  WORD_VFX_BINDINGS.reduce((acc, entry) => {",
+        "    const wordId = String((entry && entry.wordId) || \"\").toLowerCase();",
+        "    if (!wordId) return acc;",
+        "    acc[wordId] = entry;",
+        "    return acc;",
+        "  }, {})",
+        ");",
+        "",
+        "export function getWordVfxBinding(wordId) {",
+        "  return WORD_VFX_BINDINGS_BY_WORD_ID[String(wordId || \"\").toLowerCase()] || null;",
+        "}",
+        "",
+        "// Legacy aliases preserved for older lab/runtime surfaces that still speak in",
+        "// spell-first terms while the repo converges on word-first naming.",
+        "export const SPELL_VFX_BINDINGS = WORD_VFX_BINDINGS;",
+        "export const SPELL_VFX_BINDINGS_BY_SPELL_ID = WORD_VFX_BINDINGS_BY_WORD_ID;",
+        "",
+        "export function getSpellVfxBinding(spellId) {",
+        "  return getWordVfxBinding(spellId);",
+        "}",
+        "",
+      ].join("\n");
+    }
+
     async function saveTextToProjectFile(filename, text){
       if (!window.showSaveFilePicker) {
         return false;
       }
+      const lowerName = String(filename || "").toLowerCase();
+      const isJs = lowerName.endsWith(".js");
       const handle = await window.showSaveFilePicker({
         suggestedName: filename,
         types: [{
-          description: "JSON preset draft",
-          accept: { "application/json": [".json"] },
+          description: isJs ? "JavaScript module" : "JSON preset draft",
+          accept: isJs
+            ? { "text/javascript": [".js"] }
+            : { "application/json": [".json"] },
         }],
       });
       const writable = await handle.createWritable();
@@ -1435,7 +1595,52 @@
         window.alert("This effect profile is locked. Unlock it to publish a binding.");
         return;
       }
-      window.alert("Bind is next: spell/world-item binding publish UI is not implemented yet.");
+      void (async () => {
+        const opt = selectedEffectOption();
+        if (!opt) return;
+        const registryId = String(opt.dataset.registryId || "").trim();
+        if (!registryId) {
+          window.alert("Select a published registry effect before binding.");
+          return;
+        }
+        const words = (Array.isArray(RUNTIME_WORDS) ? RUNTIME_WORDS : []).map((word) => String(word && word.id || "")).filter(Boolean);
+        const suggested = words[0] || "";
+        const entered = window.prompt(
+          `Bind effect to runtime word id.\nAvailable words: ${words.join(", ")}`,
+          suggested
+        );
+        if (!entered) return;
+        const wordId = String(entered || "").trim().toLowerCase();
+        const runtimeWord = getRuntimeWordById(wordId);
+        if (!runtimeWord) {
+          window.alert(`Unknown runtime word id: ${wordId}`);
+          return;
+        }
+        const built = buildPublishedBindingPayload(wordId);
+        if (!built) {
+          window.alert("Could not build binding payload for the selected effect.");
+          return;
+        }
+        const payloadText = built.moduleText;
+        let ok = false;
+        if (!projectRootDirHandle && window.showDirectoryPicker) {
+          const connected = await connectProjectFolder();
+          if (!connected) return;
+        }
+        if (projectRootDirHandle) {
+          ok = await saveTextToConnectedProjectPath(["src", "content", "vfx", built.filename], payloadText);
+          if (ok) {
+            window.alert(`Published binding for ${built.wordId} to src/content/vfx/${built.filename}`);
+            return;
+          }
+        }
+        ok = await saveTextToProjectFile(built.filename, payloadText);
+        if (ok) {
+          window.alert(`Binding file written for ${built.wordId}.`);
+          return;
+        }
+        downloadTextFile(built.filename, payloadText);
+      })();
     }
 
     function captureCurrentEffectSettings(baseEffect){

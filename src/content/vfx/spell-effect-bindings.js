@@ -73,3 +73,12 @@ export const WORD_VFX_BINDINGS_BY_WORD_ID = Object.freeze(
 export function getWordVfxBinding(wordId) {
   return WORD_VFX_BINDINGS_BY_WORD_ID[String(wordId || "").toLowerCase()] || null;
 }
+
+// Legacy aliases preserved for older lab/runtime surfaces that still speak in
+// spell-first terms while the repo converges on word-first naming.
+export const SPELL_VFX_BINDINGS = WORD_VFX_BINDINGS;
+export const SPELL_VFX_BINDINGS_BY_SPELL_ID = WORD_VFX_BINDINGS_BY_WORD_ID;
+
+export function getSpellVfxBinding(spellId) {
+  return getWordVfxBinding(spellId);
+}
