@@ -751,6 +751,13 @@
     import { RUNTIME_WORDS, getRuntimeWordById } from "../../src/content/spells/runtime-spells.js";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js";
     import {
+      bootStudioShell,
+      refreshEffectMeta as refreshEffectMetaHelper,
+      refreshLockUi as refreshLockUiHelper,
+      toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
+      updateEffectSections as updateEffectSectionsHelper,
+    } from "./studio/vfx-studio-shell.js";
+    import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
       createCustomEffectProfile as createCustomEffectProfileHelper,
@@ -809,7 +816,7 @@
     const draftStore = createDraftStore();
     let draftHydrationDone = false;
     let suspendDraftApply = false;
-    let lastSelectedEffectValue = "";
+    const lastSelectedEffectValueRef = { value: "" };
     let projectRootDirHandle = null;
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LIVE_PRESET_MODULES_BY_BASE_EFFECT = Object.freeze({
@@ -960,41 +967,27 @@
     }
 
     function refreshLockUi(){
-      if (!els.lockEffectBtn) return;
-      const opt = selectedEffectOption();
-      const locked = isSelectedEffectLocked();
-      const isCore = isCoreEffectOption(opt);
-      els.lockEffectBtn.classList.toggle("locked", locked);
-      els.lockEffectBtn.classList.toggle("unlocked", !locked);
-      els.lockEffectBtn.setAttribute("aria-label", locked ? "Unlock effect profile" : "Lock effect profile");
-      els.lockEffectBtn.title = locked ? "Unlock effect profile" : "Lock effect profile";
-      els.lockEffectBtn.disabled = !opt || !!(opt && opt.disabled);
-
-      const blockSave = locked;
-      if (els.saveDraftBtn) els.saveDraftBtn.disabled = blockSave;
-      if (els.publishPresetBtn) els.publishPresetBtn.disabled = blockSave;
-      if (els.bindBtn) els.bindBtn.disabled = blockSave;
-      if (els.deleteEffectBtn) els.deleteEffectBtn.disabled = blockSave || !!(opt && opt.disabled);
+      return refreshLockUiHelper({
+        lockEffectBtn: els.lockEffectBtn,
+        saveDraftBtn: els.saveDraftBtn,
+        publishPresetBtn: els.publishPresetBtn,
+        bindBtn: els.bindBtn,
+        deleteEffectBtn: els.deleteEffectBtn,
+        selectedEffectOption,
+        isSelectedEffectLocked,
+        isCoreEffectOption,
+      });
     }
 
     function toggleSelectedEffectLock(){
-      const opt = selectedEffectOption();
-      if (!opt) return;
-      if (opt.disabled) {
-        refreshLockUi();
-        return;
-      }
-      const nextLocked = !(String(opt.dataset.locked || "") === "true");
-      opt.dataset.locked = nextLocked ? "true" : "false";
-      const record = buildPresetDraftRecordFromSelection();
-      if (record) {
-        record.locked = nextLocked;
-        draftStore.profilesByValue[String(record.value || "")] = record;
-        draftStore.activeValue = String(record.value || "");
-        persistDraftStore();
-      }
-      refreshLockUi();
-      refreshBindingPanel();
+      return toggleSelectedEffectLockHelper({
+        selectedEffectOption,
+        refreshLockUi,
+        buildPresetDraftRecordFromSelection,
+        draftStore,
+        persistDraftStore,
+        refreshBindingPanel,
+      });
     }
 
     function slugifyEffectName(text){
@@ -1282,12 +1275,7 @@
     }
 
     function refreshEffectMeta(){
-      try {
-        refreshBindingPanel();
-      } catch (err) {
-        console.error("refreshBindingPanel failed", err);
-      }
-      refreshLockUi();
+      return refreshEffectMetaHelper({ refreshBindingPanel, refreshLockUi });
     }
 
     function createCustomEffectProfile(){
@@ -1582,47 +1570,47 @@
     shieldOffNow(); // OFF by default, no continuous pulse
 
     function updateEffectSections(){
-      const opt = selectedEffectOption();
-      const selectedValue = String((opt && opt.value) || "");
-      if (lastSelectedEffectValue && selectedValue && selectedValue !== lastSelectedEffectValue) {
-        stopAllStudioEffects();
-      }
-      lastSelectedEffectValue = selectedValue;
-
-      const effect = selectedBaseEffect();
-      const sections = document.querySelectorAll(".section[data-effect]");
-      sections.forEach((section) => {
-        section.hidden = section.getAttribute("data-effect") !== effect;
+      return updateEffectSectionsHelper({
+        selectedEffectOption,
+        stopAllStudioEffects,
+        lastSelectedEffectValueRef,
+        selectedBaseEffect,
+        draftStore,
+        applyDraftToSelectedProfile,
+        persistDraftStore,
+        refreshEffectMeta,
       });
-      draftStore.activeValue = String((opt && opt.value) || "");
-      applyDraftToSelectedProfile();
-      persistDraftStore();
-      refreshEffectMeta();
     }
-    if (els.effectSelect) {
-      loadDraftStore();
-      buildEffectLibraryOptionsFromRegistry();
-      populateBindingWordOptions();
-      draftHydrationDone = true;
-      els.effectSelect.addEventListener("change", updateEffectSections);
-      try {
-        updateEffectSections();
-      } catch (err) {
-        console.error("updateEffectSections init failed", err);
-      }
-    }
-    if (els.newEffectBtn) els.newEffectBtn.addEventListener("click", createCustomEffectProfile);
-    if (els.saveDraftBtn) els.saveDraftBtn.addEventListener("click", saveDraft);
-    if (els.connectProjectBtn) els.connectProjectBtn.addEventListener("click", () => { void connectProjectFolder(); });
-    if (els.publishPresetBtn) els.publishPresetBtn.addEventListener("click", publishPreset);
-    if (els.bindBtn) els.bindBtn.addEventListener("click", publishBinding);
-    if (els.bindingWordSelect) els.bindingWordSelect.addEventListener("change", refreshBindingPanel);
-    if (els.renameEffectBtn) els.renameEffectBtn.addEventListener("click", renameEffectProfile);
-    if (els.duplicateEffectBtn) els.duplicateEffectBtn.addEventListener("click", duplicateEffectProfile);
-    if (els.deleteEffectBtn) els.deleteEffectBtn.addEventListener("click", deleteEffectProfile);
-    if (els.lockEffectBtn) els.lockEffectBtn.addEventListener("click", toggleSelectedEffectLock);
-    refreshProjectConnectUi();
-    refreshLockUi();
+    bootStudioShell({
+      effectSelect: els.effectSelect,
+      loadDraftStore,
+      buildEffectLibraryOptionsFromRegistry,
+      populateBindingWordOptions,
+      setDraftHydrationDone: (value) => { draftHydrationDone = !!value; },
+      updateEffectSections,
+      newEffectBtn: els.newEffectBtn,
+      createCustomEffectProfile,
+      saveDraftBtn: els.saveDraftBtn,
+      saveDraft,
+      connectProjectBtn: els.connectProjectBtn,
+      connectProjectFolder,
+      publishPresetBtn: els.publishPresetBtn,
+      publishPreset,
+      bindBtn: els.bindBtn,
+      publishBinding,
+      bindingWordSelect: els.bindingWordSelect,
+      refreshBindingPanel,
+      renameEffectBtn: els.renameEffectBtn,
+      renameEffectProfile,
+      duplicateEffectBtn: els.duplicateEffectBtn,
+      duplicateEffectProfile,
+      deleteEffectBtn: els.deleteEffectBtn,
+      deleteEffectProfile,
+      lockEffectBtn: els.lockEffectBtn,
+      toggleSelectedEffectLock,
+      refreshProjectConnectUi,
+      refreshLockUi,
+    });
 
     // =========================================================================
     // Shockwave (spawned rings; plain circles)
