@@ -241,7 +241,6 @@ body {
 
 .shellMount {
   display: flex;
-  min-height: 800px;
 }
 
 .shellMountDev,

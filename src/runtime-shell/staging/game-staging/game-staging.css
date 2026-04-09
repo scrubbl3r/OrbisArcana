@@ -1,4 +1,6 @@
 :root {
+  --game-staging-panel-height: 800px;
+  --game-staging-level-box-height: 640px;
   --orb-d: 100px;
   --orb-stroke: 2px;
   --orb-stroke-color: rgb(255,255,255);
@@ -34,7 +36,7 @@ body {
 .gameStagingCard {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  min-height: var(--game-staging-panel-height);
   padding: 14px 14px 16px;
 }
 
@@ -48,6 +50,7 @@ body {
 .physStage {
   position: relative;
   flex: 1 1 auto;
+  min-height: var(--game-staging-level-box-height);
   border: 1px solid var(--frame);
   border-radius: 14px;
   background: #000;
