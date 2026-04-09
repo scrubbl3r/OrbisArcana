@@ -4,6 +4,7 @@ Its job is intentionally small:
 
 - own the stage panel height
 - own the visible level-box height
+- own the authored world height/depth
 - own the authored terrain silhouette
 - own the default globe spawn used by the proto-level
 

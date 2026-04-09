@@ -144,7 +144,7 @@ function buildShellStageInitialState(phys = {}) {
   const groundFromBottomPx = Number(phys.groundFromBottomPx) || 17;
   const groundLinePx = Number(phys.groundLinePx) || 2;
   const orbRadiusPx = Number(phys.orbRadiusPx) || 50;
-  const WORLD_H = 5000;
+  const WORLD_H = Number(phys.worldHeightPx) || 5000;
   const yW = WORLD_H - (groundFromBottomPx + groundLinePx + orbRadiusPx);
   return {
     yW,
@@ -239,6 +239,7 @@ function initializeShellStageRuntime(shellContext) {
 
   const phys = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.physics);
   phys.downDrag = SHELL_STAGE_UI_DEFAULTS.downDrag;
+  phys.worldHeightPx = shellWorldHeight(shellContext);
   const shieldDescent = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.shieldDescent);
   const impact = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.impact);
   const statusConfig = cloneJsonLike(ORB_STATUS_CONFIG_DEFAULT && ORB_STATUS_CONFIG_DEFAULT.floatGrace);
@@ -267,10 +268,18 @@ function shellStageRect(shellContext) {
   return physStage.getBoundingClientRect();
 }
 
+function shellWorldHeight(shellContext) {
+  const levelWorld = shellContext && shellContext.currentLevel && shellContext.currentLevel.world
+    ? shellContext.currentLevel.world
+    : null;
+  const heightPx = Number(levelWorld && levelWorld.heightPx);
+  return Number.isFinite(heightPx) && heightPx > 0 ? heightPx : 5000;
+}
+
 function shellGroundCenterWorld(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   if (!stage || !stage.phys) return 0;
-  const WORLD_H = 5000;
+  const WORLD_H = Number(stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
   const phys = stage.phys;
   return WORLD_H - (
     (Number(phys.groundFromBottomPx) || 17) +
@@ -280,7 +289,8 @@ function shellGroundCenterWorld(shellContext) {
 }
 
 function shellCameraTopFor(shellContext, yW, stageH) {
-  const WORLD_H = 5000;
+  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+  const WORLD_H = Number(stage && stage.phys && stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
   const maxCam = Math.max(0, WORLD_H - stageH);
   const target = Number(yW || 0) - (stageH * 0.5);
   return clamp(target, 0, maxCam);
@@ -1796,7 +1806,7 @@ function ensureShellStageBackdrop(shellContext) {
       const seed = (i + 1) * (layerIndex + 3) * 97;
       return {
         x: (seed * 37) % width,
-        yW: (seed * 91) % 5000,
+        yW: (seed * 91) % shellWorldHeight(shellContext),
         r: cfg.rMin + (((seed * 17) % 100) / 100) * (cfg.rMax - cfg.rMin),
         a: cfg.aMin + (((seed * 29) % 100) / 100) * (cfg.aMax - cfg.aMin),
         rgb: colorSets[layerIndex] || colorSets[0],
