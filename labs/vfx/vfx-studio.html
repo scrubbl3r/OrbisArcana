@@ -182,8 +182,8 @@
       margin-left:4px;
       position:relative;
       overflow:visible;
-      color: var(--g);
-      text-shadow: 0 0 10px rgba(50,255,117,.35);
+      color: var(--text);
+      text-shadow: none;
     }
     .lockBtn::before{
       content:"";
@@ -195,8 +195,8 @@
       transform:translate(-50%,-50%);
       border:2px solid currentColor;
       border-radius:3px;
-      box-shadow: inset 0 0 8px rgba(50,255,117,.10);
-      background: rgba(50,255,117,.03);
+      box-shadow: inset 0 0 8px rgba(255,255,255,.04);
+      background: rgba(255,255,255,.02);
       z-index:2;
     }
     .lockBtn::after{
@@ -222,8 +222,8 @@
     .numField{
       width:120px;
       background: rgba(0,0,0,.45);
-      color: var(--g);
-      border:1px solid var(--border);
+      color: var(--text);
+      border:1px solid var(--frame);
       border-radius:8px;
       padding:6px 8px;
       font: inherit;
@@ -464,7 +464,7 @@
     }
 
     .section{
-      border-top:1px solid rgba(50,255,117,.14);
+      border-top:1px solid rgba(var(--frame-rgb), .18);
       padding-top:12px;
       margin-top:12px;
     }
@@ -485,14 +485,14 @@
     button{
       padding:10px 12px;
       border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(0,0,0,.45);
-      color:var(--g);
+      border:1px solid var(--frame);
+      background:rgba(var(--frame-rgb), .12);
+      color:var(--text);
       cursor:pointer;
       font-weight:1000;
       white-space:nowrap;
     }
-    button:hover{border-color:rgba(50,255,117,.35)}
+    button:hover{border-color:var(--frame-strong); color:var(--text-strong)}
     button:disabled{ opacity:.55; cursor:default; }
 
     .sliderRow{
@@ -508,7 +508,7 @@
     input[type="range"]{
       width:100%;
       margin-top:8px;
-      accent-color: var(--g);
+      accent-color: var(--emphasis);
     }
 
     .hint{
@@ -593,7 +593,7 @@
       <!-- Electric AOE controls -->
       <div class="section" data-effect="electric-aoe" hidden>
         <div class="row">
-          <button id="playElectric">Play Electric AOE</button>
+          <button id="playElectric">Play</button>
         </div>
         <div class="sliderRow">
           <span>Duration</span>
@@ -619,7 +619,7 @@
       <!-- Shield controls -->
       <div class="section" data-effect="bubble-shield">
         <div class="row">
-          <button id="playShield">Play Shield</button>
+          <button id="playShield">Play</button>
         </div>
 
         <div class="sliderRow">
@@ -670,7 +670,7 @@
       <!-- Shockwave controls -->
       <div class="section" data-effect="shockwave" hidden>
         <div class="row">
-          <button id="playShock">Play Shockwave</button>
+          <button id="playShock">Play</button>
         </div>
 
         <div class="sliderRow">
@@ -717,7 +717,7 @@
       <!-- Flame AOE controls -->
       <div class="section" data-effect="flame-aoe" hidden>
         <div class="row">
-          <button id="playFlame">Play Flame AOE</button>
+          <button id="playFlame">Play</button>
         </div>
 
         <div class="sliderRow">
@@ -2997,9 +2997,25 @@
       const effectSelect = document.getElementById("effectSelect");
       const sections = Array.from(document.querySelectorAll(".section[data-effect]"));
       const shield = document.getElementById("shield");
+      const shockLayer = document.getElementById("shockLayer");
+      const flameLayer = document.getElementById("flameLayer");
+      const electricLayer = document.getElementById("electricLayer");
       const playShieldBtn = document.getElementById("playShield");
+      const playShockBtn = document.getElementById("playShock");
+      const playFlameBtn = document.getElementById("playFlame");
+      const playElectricBtn = document.getElementById("playElectric");
       const shieldMs = document.getElementById("shieldMs");
+      const startR = document.getElementById("startR");
+      const endR = document.getElementById("endR");
+      const decay = document.getElementById("decay");
+      const flameD = document.getElementById("flameD");
+      const flameMs = document.getElementById("flameMs");
+      const electricMs = document.getElementById("electricMs");
+      const electricEndR = document.getElementById("electricEndR");
       let shieldTimer = 0;
+      let shockTimer = 0;
+      let flameTimer = 0;
+      let electricTimer = 0;
 
       function currentEffectValue() {
         const raw = String((effectSelect && effectSelect.value) || "").trim().toLowerCase();
@@ -3028,11 +3044,118 @@
         }, durationMs);
       }
 
+      function clearChildren(node) {
+        if (!node) return;
+        while (node.firstChild) node.removeChild(node.firstChild);
+      }
+
+      function playFallbackShock() {
+        if (window.__vfxStudioRuntimeReady) return;
+        if (!shockLayer) return;
+        clearChildren(shockLayer);
+        if (shockTimer) window.clearTimeout(shockTimer);
+        const r0 = Math.max(1, Number((startR && startR.value) || 43) || 43);
+        const r1 = Math.max(r0 + 4, Number((endR && endR.value) || 169) || 169);
+        const ms = Math.max(120, Number((decay && decay.value) || 150) || 150);
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "shockSvg");
+        svg.setAttribute("width", String((r1 * 2) + 48));
+        svg.setAttribute("height", String((r1 * 2) + 48));
+        svg.setAttribute("viewBox", `0 0 ${(r1 * 2) + 48} ${(r1 * 2) + 48}`);
+        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const mid = ((r1 * 2) + 48) / 2;
+        c.setAttribute("cx", String(mid));
+        c.setAttribute("cy", String(mid));
+        c.setAttribute("r", String(r0));
+        c.setAttribute("fill", "none");
+        c.setAttribute("stroke", "rgba(255,255,255,0.8)");
+        c.setAttribute("stroke-width", "4");
+        c.style.transition = `r ${ms}ms linear, opacity ${ms}ms linear`;
+        svg.appendChild(c);
+        shockLayer.appendChild(svg);
+        requestAnimationFrame(() => {
+          c.setAttribute("r", String(r1));
+          c.style.opacity = "0";
+        });
+        shockTimer = window.setTimeout(() => {
+          clearChildren(shockLayer);
+          shockTimer = 0;
+        }, ms + 40);
+      }
+
+      function playFallbackFlame() {
+        if (window.__vfxStudioRuntimeReady) return;
+        if (!flameLayer) return;
+        clearChildren(flameLayer);
+        if (flameTimer) window.clearTimeout(flameTimer);
+        const d = Math.max(40, Number((flameD && flameD.value) || 200) || 200);
+        const ms = Math.max(200, Number((flameMs && flameMs.value) || 10000) || 10000);
+        const ring = document.createElement("div");
+        ring.style.position = "absolute";
+        ring.style.left = "0";
+        ring.style.top = "0";
+        ring.style.width = `${d}px`;
+        ring.style.height = `${d}px`;
+        ring.style.transform = "translate(-50%,-50%)";
+        ring.style.borderRadius = "999px";
+        ring.style.border = "4px solid rgba(255,96,24,0.95)";
+        ring.style.background = "rgba(255,96,24,0.18)";
+        ring.style.boxShadow = "0 0 28px rgba(255,96,24,0.32)";
+        ring.style.opacity = "1";
+        ring.style.transition = `opacity ${ms}ms linear`;
+        flameLayer.appendChild(ring);
+        requestAnimationFrame(() => {
+          ring.style.opacity = "0";
+        });
+        flameTimer = window.setTimeout(() => {
+          clearChildren(flameLayer);
+          flameTimer = 0;
+        }, ms + 40);
+      }
+
+      function playFallbackElectric() {
+        if (window.__vfxStudioRuntimeReady) return;
+        if (!electricLayer) return;
+        clearChildren(electricLayer);
+        if (electricTimer) window.clearTimeout(electricTimer);
+        const d = Math.max(40, (Number((electricEndR && electricEndR.value) || 200) || 200) * 2);
+        const ms = Math.max(200, Number((electricMs && electricMs.value) || 10000) || 10000);
+        const ring = document.createElement("div");
+        ring.style.position = "absolute";
+        ring.style.left = "0";
+        ring.style.top = "0";
+        ring.style.width = `${d}px`;
+        ring.style.height = `${d}px`;
+        ring.style.transform = "translate(-50%,-50%)";
+        ring.style.borderRadius = "999px";
+        ring.style.border = "2px solid rgba(255,230,120,0.9)";
+        ring.style.boxShadow = "0 0 34px rgba(255,230,120,0.45), inset 0 0 34px rgba(255,230,120,0.18)";
+        ring.style.opacity = "1";
+        ring.style.transition = `opacity ${ms}ms linear`;
+        electricLayer.appendChild(ring);
+        requestAnimationFrame(() => {
+          ring.style.opacity = "0";
+        });
+        electricTimer = window.setTimeout(() => {
+          clearChildren(electricLayer);
+          electricTimer = 0;
+        }, ms + 40);
+      }
+
       if (effectSelect) {
         effectSelect.addEventListener("change", syncFallbackSections);
       }
       if (playShieldBtn) {
         playShieldBtn.addEventListener("click", playFallbackShield);
+      }
+      if (playShockBtn) {
+        playShockBtn.addEventListener("click", playFallbackShock);
+      }
+      if (playFlameBtn) {
+        playFlameBtn.addEventListener("click", playFallbackFlame);
+      }
+      if (playElectricBtn) {
+        playElectricBtn.addEventListener("click", playFallbackElectric);
       }
       syncFallbackSections();
     })();
