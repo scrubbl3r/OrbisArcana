@@ -1133,12 +1133,29 @@
         const firstEnabled = Array.from(els.effectSelect.options).find((o) => !o.disabled);
         if (firstEnabled) els.effectSelect.value = firstEnabled.value;
       }
+
+      const selected = selectedEffectOption();
+      if (!selected) {
+        const firstEnabled = Array.from(els.effectSelect.options).find((o) => !o.disabled);
+        if (firstEnabled) {
+          firstEnabled.selected = true;
+          els.effectSelect.value = firstEnabled.value;
+        }
+      }
     }
 
     function selectedBaseEffect(){
       const opt = selectedEffectOption();
-      if (!opt) return "bubble-shield";
-      return String(opt.dataset.baseEffect || opt.value || "bubble-shield");
+      const candidate = String((opt && (opt.dataset.baseEffect || opt.value)) || "").trim().toLowerCase();
+      switch (candidate) {
+        case "bubble-shield":
+        case "electric-aoe":
+        case "shockwave":
+        case "flame-aoe":
+          return candidate;
+        default:
+          return "bubble-shield";
+      }
     }
 
     function selectedEffectCategory(){
@@ -2237,7 +2254,7 @@
       sections.forEach((section) => {
         section.hidden = section.getAttribute("data-effect") !== effect;
       });
-      draftStore.activeValue = String((opt && opt.value) || "");
+      draftStore.activeValue = String((opt && opt.value) || effect || "");
       applyDraftToSelectedProfile();
       persistDraftStore();
       refreshEffectMeta();
