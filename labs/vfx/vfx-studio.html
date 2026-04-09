@@ -751,6 +751,26 @@
     import { RUNTIME_WORDS, getRuntimeWordById } from "../../src/content/spells/runtime-spells.js";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js";
     import {
+      buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
+      buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
+      createCustomEffectProfile as createCustomEffectProfileHelper,
+      createDraftStore,
+      deleteEffectProfile as deleteEffectProfileHelper,
+      duplicateEffectProfile as duplicateEffectProfileHelper,
+      findEffectOptionByValue as findEffectOptionByValueHelper,
+      isCoreEffectOption as isCoreEffectOptionHelper,
+      isCustomEffectOption as isCustomEffectOptionHelper,
+      isSelectedEffectLocked as isSelectedEffectLockedHelper,
+      loadDraftStore as loadDraftStoreHelper,
+      persistDraftStore as persistDraftStoreHelper,
+      renameEffectProfile as renameEffectProfileHelper,
+      selectedBaseEffect as selectedBaseEffectHelper,
+      selectedEffectCategory as selectedEffectCategoryHelper,
+      selectedEffectOption as selectedEffectOptionHelper,
+      slugifyEffectName as slugifyEffectNameHelper,
+      upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
+    } from "./studio/vfx-studio-state.js";
+    import {
       populateBindingWordOptions as populateBindingWordOptionsHelper,
       refreshBindingPanel as refreshBindingPanelHelper,
     } from "./studio/vfx-studio-bindings.js";
@@ -786,10 +806,7 @@
       enemy: "Enemies",
     });
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
-    const draftStore = {
-      profilesByValue: Object.create(null),
-      activeValue: "",
-    };
+    const draftStore = createDraftStore();
     let draftHydrationDone = false;
     let suspendDraftApply = false;
     let lastSelectedEffectValue = "";
@@ -881,56 +898,19 @@
     }
 
     function selectedEffectOption(){
-      if (!els.effectSelect) return null;
-      const idx = els.effectSelect.selectedIndex;
-      return idx >= 0 ? els.effectSelect.options[idx] : null;
-    }
-
-    function listEffectOptions(){
-      return els.effectSelect ? Array.from(els.effectSelect.options) : [];
+      return selectedEffectOptionHelper(els.effectSelect);
     }
 
     function findEffectOptionByValue(value){
-      return listEffectOptions().find((o) => o.value === value) || null;
+      return findEffectOptionByValueHelper(els.effectSelect, value);
     }
 
     function loadDraftStore(){
-      let parsed = null;
-      try {
-        parsed = JSON.parse(window.localStorage.getItem(DRAFT_STORAGE_KEY) || "null");
-      } catch (_err) {
-        parsed = null;
-      }
-      const profiles = parsed && typeof parsed === "object" && parsed.profilesByValue && typeof parsed.profilesByValue === "object"
-        ? parsed.profilesByValue
-        : {};
-      for (const [value, profile] of Object.entries(profiles)) {
-        if (!profile || typeof profile !== "object") continue;
-        draftStore.profilesByValue[value] = {
-          value: String(profile.value || value),
-          label: String(profile.label || value),
-          baseEffect: String(profile.baseEffect || "bubble-shield"),
-          category: String(profile.category || "spell"),
-          registryId: String(profile.registryId || ""),
-          locked: !!profile.locked,
-          settingsByBaseEffect: profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
-            ? profile.settingsByBaseEffect
-            : {},
-          savedAtMs: Number(profile.savedAtMs) || Date.now(),
-        };
-      }
-      draftStore.activeValue = parsed && typeof parsed.activeValue === "string" ? parsed.activeValue : "";
+      return loadDraftStoreHelper(DRAFT_STORAGE_KEY, draftStore);
     }
 
     function persistDraftStore(){
-      try {
-        window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
-          profilesByValue: draftStore.profilesByValue,
-          activeValue: draftStore.activeValue || "",
-        }));
-      } catch (_err) {
-        // Ignore localStorage write failures (private mode/quota). Draft button remains non-fatal.
-      }
+      return persistDraftStoreHelper(DRAFT_STORAGE_KEY, draftStore);
     }
 
     function refreshBindingPanel(){
@@ -949,128 +929,34 @@
       return populateBindingWordOptionsHelper(els.bindingWordSelect, RUNTIME_WORDS);
     }
 
-    function ensureCategoryGroup(category){
-      if (!els.effectSelect) return null;
-      const key = String(category || "spell");
-      let group = els.effectSelect.querySelector(`optgroup[data-category="${key}"]`);
-      if (group) return group;
-      group = document.createElement("optgroup");
-      group.label = CATEGORY_LABELS[key] || key;
-      group.dataset.kind = "builtin";
-      group.dataset.category = key;
-      els.effectSelect.appendChild(group);
-      return group;
-    }
-
-    function restoreDraftProfilesIntoSelect(){
-      if (!els.effectSelect) return;
-      for (const profile of Object.values(draftStore.profilesByValue)) {
-        if (!profile || typeof profile !== "object") continue;
-        const value = String(profile.value || "");
-        if (!value || !value.startsWith("custom:")) continue;
-        if (findEffectOptionByValue(value)) continue;
-        const category = String(profile.category || "spell");
-        const targetGroup = ensureCategoryGroup(category);
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = String(profile.label || value);
-        opt.dataset.baseEffect = String(profile.baseEffect || "bubble-shield");
-        opt.dataset.category = category;
-        opt.dataset.custom = "true";
-        // Always start locked on page load, regardless of saved prior lock state.
-        opt.dataset.locked = "true";
-        if (profile.registryId) opt.dataset.registryId = String(profile.registryId);
-        targetGroup.appendChild(opt);
-      }
-    }
-
     function buildEffectLibraryOptionsFromRegistry(){
-      if (!els.effectSelect) return;
-      const previousValue = draftStore.activeValue || els.effectSelect.value;
-      const customOptions = Array.from(els.effectSelect.querySelectorAll('option[data-custom="true"]'))
-        .map((o) => o.cloneNode(true));
-      els.effectSelect.innerHTML = "";
-
-      const groups = new Map();
-      for (const entry of Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : []) {
-        if (!entry) continue;
-        const category = String(entry.category || "spell");
-        if (!groups.has(category)) {
-          const optgroup = document.createElement("optgroup");
-          optgroup.label = CATEGORY_LABELS[category] || category;
-          optgroup.dataset.kind = "builtin";
-          optgroup.dataset.category = category;
-          groups.set(category, optgroup);
-        }
-        const opt = document.createElement("option");
-        const effectId = String(entry.id || "");
-        const baseEffect = STUDIO_BASE_EFFECT_BY_REGISTRY_ID[effectId] || "";
-        opt.value = baseEffect || `registry:${effectId}`;
-        opt.textContent = String(entry.label || effectId || "effect");
-        opt.dataset.registryId = effectId;
-        opt.dataset.baseEffect = baseEffect;
-        opt.dataset.category = category;
-        // Always start locked on page load, regardless of saved prior lock state.
-        opt.dataset.locked = "true";
-        if (!baseEffect) {
-          opt.disabled = true;
-          opt.textContent = `${opt.textContent} (coming soon)`;
-        }
-        groups.get(category).appendChild(opt);
-      }
-
-      for (const category of ["spell", "orb", "globe", "world-item", "enemy"]) {
-        const group = groups.get(category);
-        if (group && group.children.length) els.effectSelect.appendChild(group);
-      }
-
-      for (const opt of customOptions) {
-        const category = String(opt.dataset.category || "spell");
-        ensureCategoryGroup(category).appendChild(opt);
-      }
-      restoreDraftProfilesIntoSelect();
-
-      const hasValue = (value) => Array.from(els.effectSelect.options).some((o) => o.value === value && !o.disabled);
-      if (previousValue && hasValue(previousValue)) {
-        els.effectSelect.value = previousValue;
-      } else if (hasValue("bubble-shield")) {
-        els.effectSelect.value = "bubble-shield";
-      } else {
-        const firstEnabled = Array.from(els.effectSelect.options).find((o) => !o.disabled);
-        if (firstEnabled) els.effectSelect.value = firstEnabled.value;
-      }
+      return buildEffectLibraryOptionsFromRegistryHelper({
+        effectSelect: els.effectSelect,
+        draftStore,
+        registry: VFX_EFFECT_REGISTRY,
+        baseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
+        categoryLabels: CATEGORY_LABELS,
+      });
     }
 
     function selectedBaseEffect(){
-      const opt = selectedEffectOption();
-      if (!opt) return "bubble-shield";
-      return String(opt.dataset.baseEffect || opt.value || "bubble-shield");
+      return selectedBaseEffectHelper(selectedEffectOption());
     }
 
     function selectedEffectCategory(){
-      const opt = selectedEffectOption();
-      if (!opt) return "spell";
-      if (opt.dataset.category) return String(opt.dataset.category);
-      const parent = opt.parentElement;
-      if (parent && parent.tagName === "OPTGROUP" && parent.dataset.category) {
-        return String(parent.dataset.category);
-      }
-      return "spell";
+      return selectedEffectCategoryHelper(selectedEffectOption());
     }
 
     function isSelectedEffectLocked(){
-      const opt = selectedEffectOption();
-      if (!opt) return false;
-      return String(opt.dataset.locked || "") === "true";
+      return isSelectedEffectLockedHelper(selectedEffectOption());
     }
 
     function isCustomEffectOption(opt){
-      if (!opt) return false;
-      return String(opt.dataset.custom || "") === "true" || String(opt.value || "").startsWith("custom:");
+      return isCustomEffectOptionHelper(opt);
     }
 
     function isCoreEffectOption(opt){
-      return !!opt && !isCustomEffectOption(opt);
+      return isCoreEffectOptionHelper(opt);
     }
 
     function refreshLockUi(){
@@ -1112,56 +998,25 @@
     }
 
     function slugifyEffectName(text){
-      return String(text || "")
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-    }
-
-    function nextCustomEffectValue(baseEffect, name){
-      const base = slugifyEffectName(baseEffect) || "effect";
-      const slug = slugifyEffectName(name) || "custom";
-      let i = 1;
-      let value = `custom:${base}:${slug}`;
-      if (!els.effectSelect) return value;
-      const exists = () => Array.from(els.effectSelect.options).some((o) => o.value === value);
-      while (exists()) {
-        i += 1;
-        value = `custom:${base}:${slug}-${i}`;
-      }
-      return value;
+      return slugifyEffectNameHelper(text);
     }
 
     function buildPresetDraftRecordFromSelection(){
-      const opt = selectedEffectOption();
-      if (!opt) return null;
-      const value = String(opt.value || "");
-      if (!value) return null;
-      const baseEffect = selectedBaseEffect();
-      const prev = draftStore.profilesByValue[value] || {};
-      return {
-        value,
-        label: String(opt.textContent || value),
-        baseEffect,
+      return buildPresetDraftRecordFromSelectionHelper({
+        opt: selectedEffectOption(),
+        draftStore,
+        baseEffect: selectedBaseEffect(),
         category: selectedEffectCategory(),
-        registryId: String(opt.dataset.registryId || prev.registryId || ""),
-        locked: String(opt.dataset.locked || "") === "true",
-        settingsByBaseEffect: {
-          ...(prev.settingsByBaseEffect && typeof prev.settingsByBaseEffect === "object" ? prev.settingsByBaseEffect : {}),
-          [baseEffect]: captureCurrentEffectSettings(baseEffect),
-        },
-        savedAtMs: Date.now(),
-      };
+        captureCurrentEffectSettings,
+      });
     }
 
     function upsertCurrentDraftProfile(){
-      const record = buildPresetDraftRecordFromSelection();
-      if (!record) return null;
-      draftStore.profilesByValue[record.value] = record;
-      draftStore.activeValue = record.value;
-      persistDraftStore();
-      return record;
+      return upsertCurrentDraftProfileHelper({
+        draftStore,
+        record: buildPresetDraftRecordFromSelection(),
+        persistDraftStore,
+      });
     }
 
     function sanitizePresetIdPart(text, fallback = "preset"){
@@ -1443,36 +1298,20 @@
       if (!name) return;
       const trimmed = String(name).trim();
       if (!trimmed) return;
-
-      const opt = document.createElement("option");
-      const newValue = nextCustomEffectValue(baseEffect, trimmed);
-      opt.value = newValue;
-      opt.dataset.baseEffect = baseEffect;
       const category = selectedEffectCategory();
-      opt.dataset.category = category;
-      opt.dataset.custom = "true";
       const srcOpt = selectedEffectOption();
-      if (srcOpt && srcOpt.dataset.registryId) opt.dataset.registryId = String(srcOpt.dataset.registryId);
-      opt.textContent = trimmed;
-      ensureCategoryGroup(category)?.appendChild(opt);
-
-      // "New" starts from clean defaults for the chosen base effect, not the current live sliders.
-      draftStore.profilesByValue[newValue] = {
-        value: newValue,
-        label: trimmed,
+      return createCustomEffectProfileHelper({
+        effectSelect: els.effectSelect,
+        selectedOption: srcOpt,
         baseEffect,
         category,
-        registryId: String((srcOpt && srcOpt.dataset.registryId) || ""),
-        locked: false,
-        settingsByBaseEffect: {
-          [baseEffect]: defaultSettingsForBaseEffect(baseEffect),
-        },
-        savedAtMs: Date.now(),
-      };
-      draftStore.activeValue = newValue;
-      persistDraftStore();
-      els.effectSelect.value = opt.value;
-      updateEffectSections();
+        trimmedName: trimmed,
+        draftStore,
+        categoryLabels: CATEGORY_LABELS,
+        defaultSettings: defaultSettingsForBaseEffect(baseEffect),
+        updateEffectSections,
+        persistDraftStore,
+      });
     }
 
     function duplicateEffectProfile(){
@@ -1487,38 +1326,18 @@
       const trimmed = String(name).trim();
       if (!trimmed) return;
 
-      const newValue = nextCustomEffectValue(baseEffect, trimmed);
-      const opt = document.createElement("option");
-      opt.value = newValue;
-      opt.dataset.baseEffect = baseEffect;
-      opt.dataset.category = category;
-      opt.dataset.custom = "true";
-      if (srcOpt.dataset.registryId) opt.dataset.registryId = String(srcOpt.dataset.registryId);
-      opt.textContent = trimmed;
-      ensureCategoryGroup(category)?.appendChild(opt);
-
-      const srcValue = String(srcOpt.value || "");
-      const srcDraft = draftStore.profilesByValue[srcValue];
-      const srcSettingsByBase = srcDraft && srcDraft.settingsByBaseEffect && typeof srcDraft.settingsByBaseEffect === "object"
-        ? srcDraft.settingsByBaseEffect
-        : null;
-      draftStore.profilesByValue[newValue] = {
-        value: newValue,
-        label: trimmed,
+      return duplicateEffectProfileHelper({
+        effectSelect: els.effectSelect,
+        selectedOption: srcOpt,
         baseEffect,
         category,
-        registryId: String(srcOpt.dataset.registryId || ""),
-        locked: false,
-        settingsByBaseEffect: srcSettingsByBase
-          ? JSON.parse(JSON.stringify(srcSettingsByBase))
-          : { [baseEffect]: captureCurrentEffectSettings(baseEffect) },
-        savedAtMs: Date.now(),
-      };
-      draftStore.activeValue = newValue;
-      persistDraftStore();
-
-      els.effectSelect.value = newValue;
-      updateEffectSections();
+        trimmedName: trimmed,
+        draftStore,
+        categoryLabels: CATEGORY_LABELS,
+        captureCurrentEffectSettings,
+        updateEffectSections,
+        persistDraftStore,
+      });
     }
 
     function renameEffectProfile(){
@@ -1528,12 +1347,7 @@
       if (!next) return;
       const trimmed = String(next).trim();
       if (!trimmed) return;
-      opt.textContent = trimmed;
-      const profile = draftStore.profilesByValue[String(opt.value || "")];
-      if (profile) {
-        profile.label = trimmed;
-        persistDraftStore();
-      }
+      renameEffectProfileHelper({ opt, trimmedName: trimmed, draftStore, persistDraftStore });
       refreshEffectMeta();
     }
 
@@ -1546,13 +1360,13 @@
       }
       const label = String(opt.textContent || opt.value || "this effect");
       if (!window.confirm(`Delete effect profile \"${label}\"?`)) return;
-      delete draftStore.profilesByValue[String(opt.value || "")];
-      const fallback = Array.from(els.effectSelect.options).find((o) => String(o.dataset.locked || "") === "true") || els.effectSelect.options[0];
-      opt.remove();
-      if (fallback) els.effectSelect.value = fallback.value;
-      draftStore.activeValue = String((fallback && fallback.value) || "");
-      persistDraftStore();
-      updateEffectSections();
+      return deleteEffectProfileHelper({
+        opt,
+        effectSelect: els.effectSelect,
+        draftStore,
+        persistDraftStore,
+        updateEffectSections,
+      });
     }
 
     function clamp(v, lo, hi){
