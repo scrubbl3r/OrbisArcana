@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Orb VFX Tester — Electric AOE + Shield + Shockwave</title>
-  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260409-vfxlab" />
+  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260409-vfxlab-restore" />
   <style>
     :root{
       --g: var(--text-strong);
@@ -270,7 +270,6 @@
       font-weight:800;
       opacity:.65;
       letter-spacing:0;
-      color: var(--text-muted);
     }
     .bindingPanel{
       margin: 0;
@@ -279,41 +278,6 @@
       background: rgba(0,0,0,.25);
       display:grid;
       gap:8px;
-    }
-    .bindingEditor{
-      display:grid;
-      gap:8px;
-      margin:0 0 4px;
-      padding:0 0 10px;
-      border-bottom:1px solid rgba(var(--frame-rgb), 0.16);
-    }
-    .bindingEditorRow{
-      display:grid;
-      gap:6px;
-    }
-    .bindingEditorLabel{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      color: var(--text-muted);
-    }
-    .bindingEditorHelp{
-      font-size:12px;
-      line-height:1.35;
-      color: var(--text-muted);
-    }
-    .bindingSelect{
-      width:100%;
-      min-height:36px;
-      border-radius:10px;
-      border:1px solid var(--frame);
-      background: rgba(0,0,0,.45);
-      color: var(--text);
-      padding:6px 10px;
-      font: inherit;
-      font-size:12px;
-      font-weight:800;
     }
     .bindingPanel h3{
       margin:0;
@@ -578,13 +542,6 @@
           <span class="dim">View current schema binding info</span>
         </summary>
         <div class="bindingPanel" id="bindingPanel" aria-live="polite">
-          <div class="bindingEditor">
-            <div class="bindingEditorRow">
-              <label class="bindingEditorLabel" for="bindingWordSelect">Bind To Runtime Word</label>
-              <select id="bindingWordSelect" class="bindingSelect" aria-label="Bind effect to runtime word"></select>
-            </div>
-            <div class="bindingEditorHelp" id="bindingEditorHelp">Publish this effect/preset onto a runtime word binding.</div>
-          </div>
           <h3>Current Binding</h3>
           <div class="bindingGrid" id="bindingGrid"></div>
         </div>
@@ -747,9 +704,8 @@
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js";
-    import { WORD_VFX_BINDINGS } from "../../src/content/vfx/spell-effect-bindings.js";
+    import { SPELL_VFX_BINDINGS_V1 } from "../../src/content/vfx/spell-effect-bindings-v1.js";
     import { resolveSpellVfxBinding } from "../../src/vfx/resolve-spell-vfx-binding.js";
-    import { RUNTIME_WORDS, getRuntimeWordById } from "../../src/content/spells/runtime-spells.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
@@ -772,13 +728,6 @@
       "world-item": "World Items",
       enemy: "Enemies",
     });
-    const STUDIO_FALLBACK_EFFECTS = Object.freeze([
-      Object.freeze({ id: "spell.shield_bubble", label: "Bubble Shield", category: "spell", baseEffect: "bubble-shield" }),
-      Object.freeze({ id: "spell.aoe_electric", label: "Electric AOE", category: "spell", baseEffect: "electric-aoe" }),
-      Object.freeze({ id: "spell.aoe_flame", label: "Flame AOE", category: "spell", baseEffect: "flame-aoe" }),
-      Object.freeze({ id: "spell.shockwave_ring", label: "Shockwave", category: "spell", baseEffect: "shockwave" }),
-    ]);
-    window.__vfxStudioEffectReady = Object.create(null);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
     const draftStore = {
       profilesByValue: Object.create(null),
@@ -821,7 +770,6 @@
       connectProjectBtn: $("connectProjectBtn"),
       publishPresetBtn: $("publishPresetBtn"),
       bindBtn: $("bindBtn"),
-      bindingWordSelect: $("bindingWordSelect"),
       lockEffectBtn: $("lockEffectBtn"),
       renameEffectBtn: $("renameEffectBtn"),
       duplicateEffectBtn: $("duplicateEffectBtn"),
@@ -942,31 +890,11 @@
       }
     }
 
-    function populateBindingWordOptions(){
-      if (!els.bindingWordSelect) return;
-      const previousValue = String(els.bindingWordSelect.value || "").trim().toLowerCase();
-      const words = Array.isArray(RUNTIME_WORDS) ? RUNTIME_WORDS : [];
-      els.bindingWordSelect.innerHTML = "";
-      for (const word of words) {
-        const wordId = String(word && word.id || "").trim().toLowerCase();
-        if (!wordId) continue;
-        const opt = document.createElement("option");
-        opt.value = wordId;
-        opt.textContent = `${wordId} (${String(word.castActionId || wordId)})`;
-        els.bindingWordSelect.appendChild(opt);
-      }
-      if (previousValue && Array.from(els.bindingWordSelect.options).some((opt) => opt.value === previousValue)) {
-        els.bindingWordSelect.value = previousValue;
-      }
-    }
-
     function refreshBindingPanel(){
       const opt = selectedEffectOption();
       if (!opt) return;
       const registryId = String(opt.dataset.registryId || "");
       const isCustom = String(opt.value || "").startsWith("custom:");
-      const selectedWordId = String((els.bindingWordSelect && els.bindingWordSelect.value) || "").trim().toLowerCase();
-      const selectedRuntimeWord = selectedWordId ? getRuntimeWordById(selectedWordId) : null;
 
       if (isCustom) {
         setBindingRows([
@@ -984,23 +912,7 @@
         return;
       }
 
-      if (selectedRuntimeWord && registryId) {
-        const selectedBinding = resolveSpellVfxBinding(selectedWordId);
-        const selectedPrimary = selectedBinding && selectedBinding.primary ? selectedBinding.primary : null;
-        const selectedEffectId = String((selectedPrimary && selectedPrimary.effectId) || "");
-        const selectedPresetId = String((selectedPrimary && selectedPrimary.presetId) || "");
-        setBindingRows([
-          { k: "Selected word", v: selectedWordId },
-          { k: "Cast action", v: String(selectedRuntimeWord.castActionId || "unknown") },
-          { k: "Current effect", v: selectedEffectId || "No published binding yet" },
-          { k: "Current preset", v: selectedPresetId || "Will use selected/default preset" },
-          { k: "Selected effect", v: registryId },
-          { k: "Publish target", v: "src/content/vfx/spell-effect-bindings.js" },
-        ]);
-        return;
-      }
-
-      const matches = (Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS : [])
+      const matches = (Array.isArray(SPELL_VFX_BINDINGS_V1) ? SPELL_VFX_BINDINGS_V1 : [])
         .filter((b) => b && b.primary && String(b.primary.effectId || "") === registryId)
         .map((b) => resolveSpellVfxBinding(String(b.spellId || "")))
         .filter(Boolean);
@@ -1110,20 +1022,6 @@
         if (group && group.children.length) els.effectSelect.appendChild(group);
       }
 
-      if (!els.effectSelect.options.length) {
-        for (const entry of STUDIO_FALLBACK_EFFECTS) {
-          const group = ensureCategoryGroup(String(entry.category || "spell"));
-          const opt = document.createElement("option");
-          opt.value = String(entry.baseEffect || "");
-          opt.textContent = String(entry.label || entry.id || "effect");
-          opt.dataset.registryId = String(entry.id || "");
-          opt.dataset.baseEffect = String(entry.baseEffect || "");
-          opt.dataset.category = String(entry.category || "spell");
-          opt.dataset.locked = "true";
-          group.appendChild(opt);
-        }
-      }
-
       for (const opt of customOptions) {
         const category = String(opt.dataset.category || "spell");
         ensureCategoryGroup(category).appendChild(opt);
@@ -1139,29 +1037,12 @@
         const firstEnabled = Array.from(els.effectSelect.options).find((o) => !o.disabled);
         if (firstEnabled) els.effectSelect.value = firstEnabled.value;
       }
-
-      const selected = selectedEffectOption();
-      if (!selected) {
-        const firstEnabled = Array.from(els.effectSelect.options).find((o) => !o.disabled);
-        if (firstEnabled) {
-          firstEnabled.selected = true;
-          els.effectSelect.value = firstEnabled.value;
-        }
-      }
     }
 
     function selectedBaseEffect(){
       const opt = selectedEffectOption();
-      const candidate = String((opt && (opt.dataset.baseEffect || opt.value)) || "").trim().toLowerCase();
-      switch (candidate) {
-        case "bubble-shield":
-        case "electric-aoe":
-        case "shockwave":
-        case "flame-aoe":
-          return candidate;
-        default:
-          return "bubble-shield";
-      }
+      if (!opt) return "bubble-shield";
+      return String(opt.dataset.baseEffect || opt.value || "bubble-shield");
     }
 
     function selectedEffectCategory(){
@@ -1205,7 +1086,6 @@
       if (els.saveDraftBtn) els.saveDraftBtn.disabled = blockSave;
       if (els.publishPresetBtn) els.publishPresetBtn.disabled = blockSave;
       if (els.bindBtn) els.bindBtn.disabled = blockSave;
-      if (els.bindingWordSelect) els.bindingWordSelect.disabled = blockSave;
       if (els.deleteEffectBtn) els.deleteEffectBtn.disabled = blockSave || !!(opt && opt.disabled);
     }
 
@@ -1494,174 +1374,15 @@
       };
     }
 
-    function buildPublishedBindingPayload(wordId){
-      const opt = selectedEffectOption();
-      if (!opt) return null;
-      const runtimeWord = getRuntimeWordById(wordId);
-      if (!runtimeWord) return null;
-      const registryId = String(opt.dataset.registryId || "").trim();
-      if (!registryId) return null;
-
-      const builtPreset = buildPublishedPresetPayload();
-      const registryEntry = (Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : [])
-        .find((entry) => String(entry && entry.id || "") === registryId) || null;
-      const effectId = registryId;
-      const presetId = String(
-        (builtPreset && builtPreset.payload && builtPreset.payload.presetId)
-        || (registryEntry && registryEntry.defaultPresetId)
-        || ""
-      ).trim();
-      if (!presetId) return null;
-
-      const existing = (Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS : [])
-        .find((entry) => String((entry && entry.wordId) || "").toLowerCase() === String(wordId || "").toLowerCase()) || null;
-
-      const postCastActions = Array.isArray(existing && existing.postCastActions)
-        ? existing.postCastActions
-        : (Array.isArray(runtimeWord.postCastActions) ? runtimeWord.postCastActions : []);
-
-      const nextEntries = (Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS : [])
-        .filter((entry) => String((entry && entry.wordId) || "").toLowerCase() !== String(wordId || "").toLowerCase())
-        .concat([{
-          wordId: String(wordId || "").toLowerCase(),
-          spellId: String(wordId || "").toLowerCase(),
-          primary: {
-            castActionId: String(runtimeWord.castActionId || wordId || "").toLowerCase(),
-            effectId,
-            presetId,
-          },
-          ...(Array.isArray(postCastActions) && postCastActions.length ? { postCastActions } : {}),
-        }])
-        .sort((a, b) => String(a && a.wordId || "").localeCompare(String(b && b.wordId || "")));
-
-      return {
-        filename: "spell-effect-bindings.js",
-        wordId: String(wordId || "").toLowerCase(),
-        payload: {
-          kind: "orbis-arcana.vfx-binding-draft",
-          version: 1,
-          target: "spell",
-          wordId: String(wordId || "").toLowerCase(),
-          effectId,
-          presetId,
-          castActionId: String(runtimeWord.castActionId || wordId || "").toLowerCase(),
-          publishedAtMs: Date.now(),
-        },
-        moduleText: buildSpellVfxBindingsModule(nextEntries),
-      };
-    }
-
-    function toJsValue(source, indent = 0){
-      const pad = " ".repeat(indent);
-      const nextPad = " ".repeat(indent + 2);
-      if (Array.isArray(source)) {
-        if (!source.length) return "[]";
-        return [
-          "[",
-          source.map((item) => `${nextPad}${toJsValue(item, indent + 2)}`).join(",\n"),
-          `${pad}]`,
-        ].join("\n");
-      }
-      if (source && typeof source === "object") {
-        const entries = Object.entries(source).filter(([, value]) => value !== undefined);
-        if (!entries.length) return "{}";
-        return [
-          "{",
-          entries.map(([key, value]) => `${nextPad}${key}: ${toJsValue(value, indent + 2)}`).join(",\n"),
-          `${pad}}`,
-        ].join("\n");
-      }
-      return JSON.stringify(source);
-    }
-
-    function buildSpellVfxBindingsModule(entries){
-      const items = Array.isArray(entries) ? entries : [];
-      return [
-        "// Word -> VFX binding schema (authoring/publish surface).",
-        "// Keeps word visual usage separate from word gameplay action routing.",
-        "",
-        "/**",
-        " * @typedef {Object} SpellVfxActionBinding",
-        " * @property {string} castActionId Which action this VFX binding describes (for example `aoe_flame`).",
-        " * @property {string} effectId VFX effect registry id.",
-        " * @property {string} presetId Preset id to use for this action/effect.",
-        " */",
-        "",
-        "/**",
-        " * @typedef {Object} SpellVfxPostActionBinding",
-        " * @property {string} id Follow-up action id (for example `float_grace`).",
-        " * @property {string} [effectId] Optional VFX effect registry id if the post action has a visual component.",
-        " * @property {string} [presetId] Optional preset id for the post action VFX.",
-        " * @property {Object} [payload] Optional action payload override (for example `{ ms: 2500 }`).",
-        " */",
-        "",
-        "/**",
-        " * @typedef {Object} SpellVfxBindingEntry",
-        " * @property {string} wordId Canonical word id.",
-        " * @property {string} [spellId] Legacy compatibility alias for `wordId`.",
-        " * @property {SpellVfxActionBinding} primary",
-        " * @property {SpellVfxPostActionBinding[]} [postCastActions]",
-        " */",
-        "",
-        "/** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */",
-        "export const WORD_VFX_BINDINGS = Object.freeze([",
-        items.map((entry) => `  Object.freeze(${toJsValue({
-          wordId: String(entry.wordId || "").toLowerCase(),
-          spellId: String(entry.spellId || entry.wordId || "").toLowerCase(),
-          primary: {
-            castActionId: String(entry.primary && entry.primary.castActionId || "").toLowerCase(),
-            effectId: String(entry.primary && entry.primary.effectId || ""),
-            presetId: String(entry.primary && entry.primary.presetId || ""),
-          },
-          ...(Array.isArray(entry.postCastActions) && entry.postCastActions.length
-            ? { postCastActions: entry.postCastActions.map((action) => ({
-                id: String(action && action.id || ""),
-                ...(action && action.effectId ? { effectId: String(action.effectId) } : {}),
-                ...(action && action.presetId ? { presetId: String(action.presetId) } : {}),
-                ...(action && action.payload !== undefined ? { payload: action.payload } : {}),
-              })) }
-            : {}),
-        }, 2)}),`).join("\n"),
-        "]);",
-        "",
-        "export const WORD_VFX_BINDINGS_BY_WORD_ID = Object.freeze(",
-        "  WORD_VFX_BINDINGS.reduce((acc, entry) => {",
-        "    const wordId = String((entry && entry.wordId) || \"\").toLowerCase();",
-        "    if (!wordId) return acc;",
-        "    acc[wordId] = entry;",
-        "    return acc;",
-        "  }, {})",
-        ");",
-        "",
-        "export function getWordVfxBinding(wordId) {",
-        "  return WORD_VFX_BINDINGS_BY_WORD_ID[String(wordId || \"\").toLowerCase()] || null;",
-        "}",
-        "",
-        "// Legacy aliases preserved for older lab/runtime surfaces that still speak in",
-        "// spell-first terms while the repo converges on word-first naming.",
-        "export const SPELL_VFX_BINDINGS = WORD_VFX_BINDINGS;",
-        "export const SPELL_VFX_BINDINGS_BY_SPELL_ID = WORD_VFX_BINDINGS_BY_WORD_ID;",
-        "",
-        "export function getSpellVfxBinding(spellId) {",
-        "  return getWordVfxBinding(spellId);",
-        "}",
-        "",
-      ].join("\n");
-    }
-
     async function saveTextToProjectFile(filename, text){
       if (!window.showSaveFilePicker) {
         return false;
       }
-      const lowerName = String(filename || "").toLowerCase();
-      const isJs = lowerName.endsWith(".js");
       const handle = await window.showSaveFilePicker({
         suggestedName: filename,
         types: [{
-          description: isJs ? "JavaScript module" : "JSON preset draft",
-          accept: isJs
-            ? { "text/javascript": [".js"] }
-            : { "application/json": [".json"] },
+          description: "JSON preset draft",
+          accept: { "application/json": [".json"] },
         }],
       });
       const writable = await handle.createWritable();
@@ -1723,49 +1444,7 @@
         window.alert("This effect profile is locked. Unlock it to publish a binding.");
         return;
       }
-      void (async () => {
-        const opt = selectedEffectOption();
-        if (!opt) return;
-        const registryId = String(opt.dataset.registryId || "").trim();
-        if (!registryId) {
-          window.alert("Select a published registry effect before binding.");
-          return;
-        }
-        const wordId = String((els.bindingWordSelect && els.bindingWordSelect.value) || "").trim().toLowerCase();
-        if (!wordId) {
-          window.alert("Choose a runtime word before publishing the binding.");
-          return;
-        }
-        const runtimeWord = getRuntimeWordById(wordId);
-        if (!runtimeWord) {
-          window.alert(`Unknown runtime word id: ${wordId}`);
-          return;
-        }
-        const built = buildPublishedBindingPayload(wordId);
-        if (!built) {
-          window.alert("Could not build binding payload for the selected effect.");
-          return;
-        }
-        const payloadText = built.moduleText;
-        let ok = false;
-        if (!projectRootDirHandle && window.showDirectoryPicker) {
-          const connected = await connectProjectFolder();
-          if (!connected) return;
-        }
-        if (projectRootDirHandle) {
-          ok = await saveTextToConnectedProjectPath(["src", "content", "vfx", built.filename], payloadText);
-          if (ok) {
-            window.alert(`Published binding for ${built.wordId} to src/content/vfx/${built.filename}`);
-            return;
-          }
-        }
-        ok = await saveTextToProjectFile(built.filename, payloadText);
-        if (ok) {
-          window.alert(`Binding file written for ${built.wordId}.`);
-          return;
-        }
-        downloadTextFile(built.filename, payloadText);
-      })();
+      window.alert("Bind is next: spell/world-item binding publish UI is not implemented yet.");
     }
 
     function captureCurrentEffectSettings(baseEffect){
@@ -2215,7 +1894,6 @@
     }
 
     function playShield(){
-      stopAllStudioEffects();
       shieldOnNow();
 
       if (shieldTO) clearTimeout(shieldTO);
@@ -2226,8 +1904,6 @@
         shieldTO = null;
       }, Math.max(80, ms));
     }
-    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
-    window.__vfxStudioApi.playShield = playShield;
 
     function stopAllStudioEffects(){
       shieldOffNow();
@@ -2236,24 +1912,19 @@
       clearElectric();
     }
 
-    try {
-      els.playShield.addEventListener("click", playShield);
-      els.shieldMs.addEventListener("input", applyShield);
-      els.shieldAlpha.addEventListener("input", () => { applyShield(); applyPulse(); });
-      els.shieldD.addEventListener("input", applyShieldGeometry);
-      els.shieldStroke.addEventListener("input", applyShieldGeometry);
+    els.playShield.addEventListener("click", playShield);
+    els.shieldMs.addEventListener("input", applyShield);
+    els.shieldAlpha.addEventListener("input", () => { applyShield(); applyPulse(); });
+    els.shieldD.addEventListener("input", applyShieldGeometry);
+    els.shieldStroke.addEventListener("input", applyShieldGeometry);
 
-      els.pulseMs.addEventListener("input", applyPulse);
-      els.pulseMin.addEventListener("input", applyPulse);
-      els.pulseMax.addEventListener("input", applyPulse);
+    els.pulseMs.addEventListener("input", applyPulse);
+    els.pulseMin.addEventListener("input", applyPulse);
+    els.pulseMax.addEventListener("input", applyPulse);
 
-      applyShield();
-      applyPulse();
-      shieldOffNow(); // OFF by default, no continuous pulse
-      window.__vfxStudioEffectReady["bubble-shield"] = true;
-    } catch (err) {
-      console.error("bubble-shield init failed", err);
-    }
+    applyShield();
+    applyPulse();
+    shieldOffNow(); // OFF by default, no continuous pulse
 
     function updateEffectSections(){
       const opt = selectedEffectOption();
@@ -2268,7 +1939,7 @@
       sections.forEach((section) => {
         section.hidden = section.getAttribute("data-effect") !== effect;
       });
-      draftStore.activeValue = String((opt && opt.value) || effect || "");
+      draftStore.activeValue = String((opt && opt.value) || "");
       applyDraftToSelectedProfile();
       persistDraftStore();
       refreshEffectMeta();
@@ -2276,7 +1947,6 @@
     if (els.effectSelect) {
       loadDraftStore();
       buildEffectLibraryOptionsFromRegistry();
-      populateBindingWordOptions();
       draftHydrationDone = true;
       els.effectSelect.addEventListener("change", updateEffectSections);
       try {
@@ -2290,7 +1960,6 @@
     if (els.connectProjectBtn) els.connectProjectBtn.addEventListener("click", () => { void connectProjectFolder(); });
     if (els.publishPresetBtn) els.publishPresetBtn.addEventListener("click", publishPreset);
     if (els.bindBtn) els.bindBtn.addEventListener("click", publishBinding);
-    if (els.bindingWordSelect) els.bindingWordSelect.addEventListener("change", refreshBindingPanel);
     if (els.renameEffectBtn) els.renameEffectBtn.addEventListener("click", renameEffectProfile);
     if (els.duplicateEffectBtn) els.duplicateEffectBtn.addEventListener("click", duplicateEffectProfile);
     if (els.deleteEffectBtn) els.deleteEffectBtn.addEventListener("click", deleteEffectProfile);
@@ -2385,7 +2054,6 @@
     }
 
     function playShock(){
-      stopAllStudioEffects();
       const cfg = applyShock();
       clearShock();
 
@@ -2440,23 +2108,16 @@
 
       shockRAF = requestAnimationFrame(tick);
     }
-    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
-    window.__vfxStudioApi.playShock = playShock;
 
-    try {
-      els.playShock.addEventListener("click", playShock);
-      els.startR.addEventListener("input", applyShock);
-      els.endR.addEventListener("input", applyShock);
-      els.rings.addEventListener("input", applyShock);
-      els.spawn.addEventListener("input", applyShock);
-      els.stroke.addEventListener("input", applyShock);
-      els.decay.addEventListener("input", applyShock);
+    els.playShock.addEventListener("click", playShock);
+    els.startR.addEventListener("input", applyShock);
+    els.endR.addEventListener("input", applyShock);
+    els.rings.addEventListener("input", applyShock);
+    els.spawn.addEventListener("input", applyShock);
+    els.stroke.addEventListener("input", applyShock);
+    els.decay.addEventListener("input", applyShock);
 
-      applyShock();
-      window.__vfxStudioEffectReady.shockwave = true;
-    } catch (err) {
-      console.error("shockwave init failed", err);
-    }
+    applyShock();
 
     // =========================================================================
     // Flame AOE (solid ring + vector tendrils)
@@ -2592,7 +2253,6 @@
     }
 
     function playFlame(){
-      stopAllStudioEffects();
       if (!els.flameLayer) return;
       clearFlame();
       const flameCtl = applyFlameControls();
@@ -2644,9 +2304,12 @@
             const u = s / (samples - 1);
             const along = len * u;
 
-            const envelope = Math.sin(Math.PI * u);
+            // Animate anchor-point curvature directly for smooth snake-like motion.
+            // Two bends across the tendril body, with secondary ripple for sharpness.
+            const envelope = Math.sin(Math.PI * u); // zero at base/tip
             const lateral = Math.sin((u * Math.PI * 2) + wigglePhase) * amp * envelope * t.lateralFlip;
 
+            // Curved taper (pucker/bloat-like): slight mid-body bloat, then tighter pinch to tip.
             const taper = Math.pow(1 - u, 1.85);
             const bloat = Math.sin(Math.PI * u) * (1 - (u * 0.35));
             const width = tipWidth
@@ -2698,9 +2361,8 @@
         renderFrame(0);
       }
     }
-    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
-    window.__vfxStudioApi.playFlame = playFlame;
 
+    els.playFlame.addEventListener("click", playFlame);
     function applyFlameControls(){
       const d = evenPx(clamp(els.flameD.value, 120, 900), 2, 2000);
       const ms = Math.round(clamp(els.flameMs && els.flameMs.value, 200, 60000));
@@ -2710,15 +2372,9 @@
       setVar("--flame-d", d + "px");
       return { diameter: d, durationMs: ms };
     }
-    try {
-      els.playFlame.addEventListener("click", playFlame);
-      els.flameD.addEventListener("input", applyFlameControls);
-      if (els.flameMs) els.flameMs.addEventListener("input", applyFlameControls);
-      applyFlameControls();
-      window.__vfxStudioEffectReady["flame-aoe"] = true;
-    } catch (err) {
-      console.error("flame-aoe init failed", err);
-    }
+    els.flameD.addEventListener("input", applyFlameControls);
+    if (els.flameMs) els.flameMs.addEventListener("input", applyFlameControls);
+    applyFlameControls();
 
     // =========================================================================
     // Electric AOE (plasma ball)
@@ -2760,6 +2416,7 @@
       setVar("--electric-d", (endR * 2) + "px");
       return { startR, endR, durationMs };
     }
+
     function clearElectric(){
       if (electricRAF) cancelAnimationFrame(electricRAF);
       electricRAF = 0;
@@ -2974,7 +2631,6 @@
     }
 
     function playElectric(){
-      stopAllStudioEffects();
       clearElectric();
       if (!els.electricLayer) return;
 
@@ -2988,19 +2644,12 @@
       electricLastNow = 0;
       electricRAF = requestAnimationFrame(tickElectric);
     }
-    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
-    window.__vfxStudioApi.playElectric = playElectric;
 
-    try {
-      els.playElectric.addEventListener("click", playElectric);
-      if (els.electricMs) els.electricMs.addEventListener("input", applyElectricControls);
-      els.electricStartR.addEventListener("input", applyElectricControls);
-      els.electricEndR.addEventListener("input", applyElectricControls);
-      applyElectricControls();
-      window.__vfxStudioEffectReady["electric-aoe"] = true;
-    } catch (err) {
-      console.error("electric-aoe init failed", err);
-    }
+    els.playElectric.addEventListener("click", playElectric);
+    if (els.electricMs) els.electricMs.addEventListener("input", applyElectricControls);
+    els.electricStartR.addEventListener("input", applyElectricControls);
+    els.electricEndR.addEventListener("input", applyElectricControls);
+    applyElectricControls();
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){
@@ -3017,8 +2666,6 @@
         playElectric();
       }
     });
-
-    window.__vfxStudioRuntimeReady = true;
   </script>
 </body>
 </html>
