@@ -2217,6 +2217,7 @@
     }
 
     function playShield(){
+      stopAllStudioEffects();
       shieldOnNow();
 
       if (shieldTO) clearTimeout(shieldTO);
@@ -2386,6 +2387,7 @@
     }
 
     function playShock(){
+      stopAllStudioEffects();
       const cfg = applyShock();
       clearShock();
 
@@ -2595,6 +2597,7 @@
     }
 
     function playFlame(){
+      stopAllStudioEffects();
       if (!els.flameLayer) return;
       const flameCtl = applyFlameControls();
       setVar("--flame-d", flameCtl.diameter + "px");
@@ -2915,6 +2918,7 @@
     }
 
     function playElectric(){
+      stopAllStudioEffects();
       if (!els.electricLayer) return;
       applyElectricControls();
       electricAoeRuntime.play();
