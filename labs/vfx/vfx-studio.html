@@ -778,6 +778,7 @@
       Object.freeze({ id: "spell.aoe_flame", label: "Flame AOE", category: "spell", baseEffect: "flame-aoe" }),
       Object.freeze({ id: "spell.shockwave_ring", label: "Shockwave", category: "spell", baseEffect: "shockwave" }),
     ]);
+    window.__vfxStudioEffectReady = Object.create(null);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
     const draftStore = {
       profilesByValue: Object.create(null),
@@ -2232,19 +2233,24 @@
       clearElectric();
     }
 
-    els.playShield.addEventListener("click", playShield);
-    els.shieldMs.addEventListener("input", applyShield);
-    els.shieldAlpha.addEventListener("input", () => { applyShield(); applyPulse(); });
-    els.shieldD.addEventListener("input", applyShieldGeometry);
-    els.shieldStroke.addEventListener("input", applyShieldGeometry);
+    try {
+      els.playShield.addEventListener("click", playShield);
+      els.shieldMs.addEventListener("input", applyShield);
+      els.shieldAlpha.addEventListener("input", () => { applyShield(); applyPulse(); });
+      els.shieldD.addEventListener("input", applyShieldGeometry);
+      els.shieldStroke.addEventListener("input", applyShieldGeometry);
 
-    els.pulseMs.addEventListener("input", applyPulse);
-    els.pulseMin.addEventListener("input", applyPulse);
-    els.pulseMax.addEventListener("input", applyPulse);
+      els.pulseMs.addEventListener("input", applyPulse);
+      els.pulseMin.addEventListener("input", applyPulse);
+      els.pulseMax.addEventListener("input", applyPulse);
 
-    applyShield();
-    applyPulse();
-    shieldOffNow(); // OFF by default, no continuous pulse
+      applyShield();
+      applyPulse();
+      shieldOffNow(); // OFF by default, no continuous pulse
+      window.__vfxStudioEffectReady["bubble-shield"] = true;
+    } catch (err) {
+      console.error("bubble-shield init failed", err);
+    }
 
     function updateEffectSections(){
       const opt = selectedEffectOption();
@@ -2431,15 +2437,20 @@
       shockRAF = requestAnimationFrame(tick);
     }
 
-    els.playShock.addEventListener("click", playShock);
-    els.startR.addEventListener("input", applyShock);
-    els.endR.addEventListener("input", applyShock);
-    els.rings.addEventListener("input", applyShock);
-    els.spawn.addEventListener("input", applyShock);
-    els.stroke.addEventListener("input", applyShock);
-    els.decay.addEventListener("input", applyShock);
+    try {
+      els.playShock.addEventListener("click", playShock);
+      els.startR.addEventListener("input", applyShock);
+      els.endR.addEventListener("input", applyShock);
+      els.rings.addEventListener("input", applyShock);
+      els.spawn.addEventListener("input", applyShock);
+      els.stroke.addEventListener("input", applyShock);
+      els.decay.addEventListener("input", applyShock);
 
-    applyShock();
+      applyShock();
+      window.__vfxStudioEffectReady.shockwave = true;
+    } catch (err) {
+      console.error("shockwave init failed", err);
+    }
 
     // =========================================================================
     // Flame AOE (solid ring + vector tendrils)
@@ -2684,7 +2695,6 @@
       }
     }
 
-    els.playFlame.addEventListener("click", playFlame);
     function applyFlameControls(){
       const d = evenPx(clamp(els.flameD.value, 120, 900), 2, 2000);
       const ms = Math.round(clamp(els.flameMs && els.flameMs.value, 200, 60000));
@@ -2694,9 +2704,15 @@
       setVar("--flame-d", d + "px");
       return { diameter: d, durationMs: ms };
     }
-    els.flameD.addEventListener("input", applyFlameControls);
-    if (els.flameMs) els.flameMs.addEventListener("input", applyFlameControls);
-    applyFlameControls();
+    try {
+      els.playFlame.addEventListener("click", playFlame);
+      els.flameD.addEventListener("input", applyFlameControls);
+      if (els.flameMs) els.flameMs.addEventListener("input", applyFlameControls);
+      applyFlameControls();
+      window.__vfxStudioEffectReady["flame-aoe"] = true;
+    } catch (err) {
+      console.error("flame-aoe init failed", err);
+    }
 
     // =========================================================================
     // Electric AOE (plasma ball)
@@ -2967,11 +2983,16 @@
       electricRAF = requestAnimationFrame(tickElectric);
     }
 
-    els.playElectric.addEventListener("click", playElectric);
-    if (els.electricMs) els.electricMs.addEventListener("input", applyElectricControls);
-    els.electricStartR.addEventListener("input", applyElectricControls);
-    els.electricEndR.addEventListener("input", applyElectricControls);
-    applyElectricControls();
+    try {
+      els.playElectric.addEventListener("click", playElectric);
+      if (els.electricMs) els.electricMs.addEventListener("input", applyElectricControls);
+      els.electricStartR.addEventListener("input", applyElectricControls);
+      els.electricEndR.addEventListener("input", applyElectricControls);
+      applyElectricControls();
+      window.__vfxStudioEffectReady["electric-aoe"] = true;
+    } catch (err) {
+      console.error("electric-aoe init failed", err);
+    }
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){
@@ -3031,7 +3052,7 @@
       }
 
       function playFallbackShield() {
-        if (window.__vfxStudioRuntimeReady) return;
+        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady["bubble-shield"]) return;
         if (!shield) return;
         shield.classList.remove("on");
         void shield.offsetWidth;
@@ -3050,7 +3071,7 @@
       }
 
       function playFallbackShock() {
-        if (window.__vfxStudioRuntimeReady) return;
+        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady.shockwave) return;
         if (!shockLayer) return;
         clearChildren(shockLayer);
         if (shockTimer) window.clearTimeout(shockTimer);
@@ -3084,7 +3105,7 @@
       }
 
       function playFallbackFlame() {
-        if (window.__vfxStudioRuntimeReady) return;
+        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady["flame-aoe"]) return;
         if (!flameLayer) return;
         clearChildren(flameLayer);
         if (flameTimer) window.clearTimeout(flameTimer);
@@ -3114,7 +3135,7 @@
       }
 
       function playFallbackElectric() {
-        if (window.__vfxStudioRuntimeReady) return;
+        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady["electric-aoe"]) return;
         if (!electricLayer) return;
         clearChildren(electricLayer);
         if (electricTimer) window.clearTimeout(electricTimer);
