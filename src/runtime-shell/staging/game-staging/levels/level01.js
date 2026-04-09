@@ -28,8 +28,8 @@ export const LEVEL01 = Object.freeze({
   id: "level01",
   label: "Level 01",
   stage: Object.freeze({
-    panelHeightPx: 800,
-    levelBoxHeightPx: 640,
+    panelHeightPx: 5160,
+    levelBoxHeightPx: 5000,
   }),
   terrainProfile: LEVEL01_TERRAIN_PROFILE,
   worldItemSpawns: LEVEL01_WORLD_ITEM_SPAWNS,
