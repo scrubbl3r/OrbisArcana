@@ -1,5 +1,6 @@
 import { mountDevStaging } from "../dev-staging/dev-staging.js";
 import { renderGameStaging } from "../game-staging/game-staging.js";
+import { LEVEL01 } from "../game-staging/levels/level01.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
@@ -1335,6 +1336,11 @@ async function initShellReceiverHostRuntime(shellContext) {
       axisToColor01,
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
+      getWorldItemSpawns: () => (
+        Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.worldItemSpawns)
+          ? shellContext.currentLevel.worldItemSpawns
+          : []
+      ),
       getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,
     },
     shellHooks: {
@@ -1694,6 +1700,7 @@ function createStagingShellContext({
   rootDocument,
   devStagingView,
   gameStagingView,
+  currentLevel = LEVEL01,
   sharedModules,
 } = {}) {
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, gameStagingView });
@@ -1704,6 +1711,7 @@ function createStagingShellContext({
       devStagingView,
       gameStagingView,
     },
+    currentLevel,
     refs: surfaceRefs,
     stageEls,
     sharedModules,
@@ -1796,13 +1804,21 @@ function ensureShellStageBackdrop(shellContext) {
     }),
   }));
 
-  stageBackdrop.mountainPoints = Array.from({ length: 10 }, (_, i) => {
-    const t = i / 9;
-    return {
-      x: Math.round(t * width),
-      yOff: [58, 74, 52, 96, 66, 84, 61, 98, 76, 88][i] || 60,
-    };
-  });
+  const terrainProfile = Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.terrainProfile)
+    ? shellContext.currentLevel.terrainProfile
+    : [];
+  stageBackdrop.mountainPoints = terrainProfile.length
+    ? terrainProfile.map((point = {}) => ({
+        x: Math.round(clamp01(point.xNorm) * width),
+        yOff: Number.isFinite(Number(point.yOff)) ? Number(point.yOff) : 60,
+      }))
+    : Array.from({ length: 10 }, (_, i) => {
+        const t = i / 9;
+        return {
+          x: Math.round(t * width),
+          yOff: [58, 74, 52, 96, 66, 84, 61, 98, 76, 88][i] || 60,
+        };
+      });
 }
 
 function shellGroundLineScreenY(shellContext) {
@@ -2316,8 +2332,9 @@ export async function createStagingShellRuntime({
     });
   }
 
+  const currentLevel = LEVEL01;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
-  const gameStagingView = gameRoot ? renderGameStaging(gameRoot) : null;
+  const gameStagingView = gameRoot ? renderGameStaging(gameRoot, { level: currentLevel }) : null;
 
   if (devStagingView && typeof devStagingView.setStatus === "function") {
     devStagingView.setStatus("Booting staging shell…", "devStagingDim");
@@ -2359,6 +2376,7 @@ export async function createStagingShellRuntime({
       rootDocument,
       devStagingView,
       gameStagingView,
+      currentLevel,
       sharedModules,
     });
     shellContext.bootStatus = bootStatus;

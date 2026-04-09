@@ -103,6 +103,11 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       : false
   );
 
+  const stageWorldItemSpawns =
+    stageAdapters && typeof stageAdapters.getWorldItemSpawns === "function"
+      ? stageAdapters.getWorldItemSpawns()
+      : null;
+
   const runtimeContext = bootstrapStagingRuntimeContext({
     createEventBus: () => runtime.eventBus,
     createGameState,
@@ -131,7 +136,9 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     kwsBridge: shellKws.kwsBridge,
     RULE_CHAIN_TRACE_ENABLED: true,
     PHYS: stageAdapters && typeof stageAdapters.getPhys === "function" ? stageAdapters.getPhys() : {},
-    worldItemSpawns: Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : [],
+    worldItemSpawns: Array.isArray(stageWorldItemSpawns) && stageWorldItemSpawns.length
+      ? stageWorldItemSpawns
+      : (Array.isArray(WORLD_ITEMS) ? WORLD_ITEMS : []),
     normalizeWorldItemSpawn: (item) => (
       stageAdapters && typeof stageAdapters.normalizeWorldItemSpawn === "function"
         ? stageAdapters.normalizeWorldItemSpawn(item)

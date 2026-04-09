@@ -1,3 +1,5 @@
+import { LEVEL01 } from "./levels/level01.js";
+
 const GAME_STAGING_TEMPLATE = `
   <section class="gameStaging" aria-label="Game staging">
     <div class="gameStagingCard">
@@ -50,9 +52,13 @@ const GAME_STAGING_TEMPLATE = `
   </section>
 `;
 
-export function renderGameStaging(root) {
+export function renderGameStaging(root, { level = LEVEL01 } = {}) {
   if (!root) return null;
   root.innerHTML = GAME_STAGING_TEMPLATE;
+  const stage = level && level.stage ? level.stage : {};
+  root.dataset.levelId = String(level && level.id || "level01");
+  root.style.setProperty("--game-staging-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
+  root.style.setProperty("--game-staging-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
 
   const refs = {
     root,
@@ -81,6 +87,7 @@ export function renderGameStaging(root) {
   return {
     root,
     refs,
+    level,
     stageEl: refs.physStage,
     gravitySliderEl: refs.gSlider,
     dragSliderEl: refs.dSlider,
@@ -90,5 +97,5 @@ export function renderGameStaging(root) {
 
 if (globalThis.document) {
   const root = document.getElementById("gameStagingRoot");
-  if (root) renderGameStaging(root);
+  if (root) renderGameStaging(root, { level: LEVEL01 });
 }
