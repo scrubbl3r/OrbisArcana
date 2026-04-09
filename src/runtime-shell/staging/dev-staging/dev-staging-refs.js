@@ -52,5 +52,14 @@ export function createDevStagingRefs(root) {
     lampRight: $("lampRight"),
     lampForward: $("lampForward"),
     lampBack: $("lampBack"),
+    skylineWorldHeight: $("skylineWorldHeight"),
+    skylineViewportHeight: $("skylineViewportHeight"),
+    skylineOrbY: $("skylineOrbY"),
+    skylineCameraY: $("skylineCameraY"),
+    skylineViewportWindow: $("skylineViewportWindow"),
+    skylineMarkerTop: $("skylineMarkerTop"),
+    skylineMarkerViewportTop: $("skylineMarkerViewportTop"),
+    skylineMarkerOrb: $("skylineMarkerOrb"),
+    skylineMarkerGround: $("skylineMarkerGround"),
   };
 }

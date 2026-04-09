@@ -5,6 +5,7 @@ import {
 } from "./dev-staging-surface-state.js";
 import { closeDevStagingTopmostPopup } from "./dev-staging-panel.js";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js";
+import { renderDevStagingSkyline, resetDevStagingSkyline } from "./dev-staging-skyline.js";
 
 export function createDevStagingApi(root, refs) {
   return {
@@ -24,9 +25,13 @@ export function createDevStagingApi(root, refs) {
     },
     resetMeters() {
       resetDevStagingHud(refs);
+      resetDevStagingSkyline(refs);
     },
     renderInputHud(vm) {
       renderDevStagingHud(refs, vm);
+    },
+    renderSkyline(vm) {
+      renderDevStagingSkyline(refs, vm);
     },
   };
 }

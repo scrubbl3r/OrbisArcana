@@ -69,6 +69,25 @@ export const DEV_STAGING_TEMPLATE = `
           <div class="devStagingDirItem"><div id="lampForward" class="devStagingLamp" aria-hidden="true"></div><div class="devStagingDirLabel">FWD</div></div>
           <div class="devStagingDirItem"><div id="lampBack" class="devStagingLamp" aria-hidden="true"></div><div class="devStagingDirLabel">BACK</div></div>
         </div>
+
+        <div class="devSkyline" aria-label="Skyline world meter">
+          <div class="devSkylineHeader">
+            <div class="devSkylineTitle">Skyline</div>
+            <div class="devSkylineMeta">
+              <span>World <strong id="skylineWorldHeight">0</strong></span>
+              <span>View <strong id="skylineViewportHeight">0</strong></span>
+              <span>Orb <strong id="skylineOrbY">0</strong></span>
+              <span>Cam <strong id="skylineCameraY">0</strong></span>
+            </div>
+          </div>
+          <div class="devSkylineRail">
+            <div id="skylineViewportWindow" class="devSkylineViewportWindow" aria-hidden="true"></div>
+            <div id="skylineMarkerTop" class="devSkylineMarker devSkylineMarkerTop">TOP</div>
+            <div id="skylineMarkerViewportTop" class="devSkylineMarker devSkylineMarkerViewport">CAM</div>
+            <div id="skylineMarkerOrb" class="devSkylineMarker devSkylineMarkerOrb">ORB</div>
+            <div id="skylineMarkerGround" class="devSkylineMarker devSkylineMarkerGround">GND</div>
+          </div>
+        </div>
       </div>
 
       <div id="fatal" class="devStagingFatal" aria-live="polite"></div>

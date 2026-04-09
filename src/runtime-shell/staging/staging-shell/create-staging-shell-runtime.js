@@ -351,6 +351,7 @@ function resetShellOrbToGround(shellContext) {
 
 function updateShellStageReadouts(shellContext) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
+  const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const stage = runtime && runtime.stage;
   const orbState = stage && stage.orbRuntimeState && typeof stage.orbRuntimeState.get === "function"
@@ -359,6 +360,18 @@ function updateShellStageReadouts(shellContext) {
   if (!refs || !stage || !orbState) return;
   if (refs.gVal) refs.gVal.textContent = (Number(orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul).toFixed(2);
   if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag).toFixed(2);
+  if (devView && typeof devView.renderSkyline === "function") {
+    const rect = shellStageRect(shellContext);
+    const stageH = Number(rect.height) || 0;
+    const cameraTopWorld = shellCameraTopFor(shellContext, Number(orbState.yW) || 0, stageH);
+    devView.renderSkyline({
+      worldHeightPx: shellWorldHeight(shellContext),
+      viewportHeightPx: stageH,
+      orbYWorld: Number(orbState.yW) || 0,
+      cameraTopWorld,
+      groundYWorld: shellGroundCenterWorld(shellContext),
+    });
+  }
 }
 
 function computeShellImpactMetric(shellContext, rawImpactV) {
