@@ -275,6 +275,41 @@
       display:grid;
       gap:8px;
     }
+    .bindingEditor{
+      display:grid;
+      gap:8px;
+      margin:0 0 4px;
+      padding:0 0 10px;
+      border-bottom:1px solid rgba(50,255,117,.12);
+    }
+    .bindingEditorRow{
+      display:grid;
+      gap:6px;
+    }
+    .bindingEditorLabel{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color: rgba(50,255,117,.62);
+    }
+    .bindingEditorHelp{
+      font-size:12px;
+      line-height:1.35;
+      color: rgba(50,255,117,.74);
+    }
+    .bindingSelect{
+      width:100%;
+      min-height:36px;
+      border-radius:10px;
+      border:1px solid rgba(50,255,117,.18);
+      background: rgba(0,0,0,.45);
+      color: var(--g);
+      padding:6px 10px;
+      font: inherit;
+      font-size:12px;
+      font-weight:800;
+    }
     .bindingPanel h3{
       margin:0;
       font-size:12px;
@@ -533,6 +568,13 @@
           <span class="dim">View current schema binding info</span>
         </summary>
         <div class="bindingPanel" id="bindingPanel" aria-live="polite">
+          <div class="bindingEditor">
+            <div class="bindingEditorRow">
+              <label class="bindingEditorLabel" for="bindingWordSelect">Bind To Runtime Word</label>
+              <select id="bindingWordSelect" class="bindingSelect" aria-label="Bind effect to runtime word"></select>
+            </div>
+            <div class="bindingEditorHelp" id="bindingEditorHelp">Publish this effect/preset onto a runtime word binding.</div>
+          </div>
           <h3>Current Binding</h3>
           <div class="bindingGrid" id="bindingGrid"></div>
         </div>
@@ -762,6 +804,7 @@
       connectProjectBtn: $("connectProjectBtn"),
       publishPresetBtn: $("publishPresetBtn"),
       bindBtn: $("bindBtn"),
+      bindingWordSelect: $("bindingWordSelect"),
       lockEffectBtn: $("lockEffectBtn"),
       renameEffectBtn: $("renameEffectBtn"),
       duplicateEffectBtn: $("duplicateEffectBtn"),
@@ -882,11 +925,31 @@
       }
     }
 
+    function populateBindingWordOptions(){
+      if (!els.bindingWordSelect) return;
+      const previousValue = String(els.bindingWordSelect.value || "").trim().toLowerCase();
+      const words = Array.isArray(RUNTIME_WORDS) ? RUNTIME_WORDS : [];
+      els.bindingWordSelect.innerHTML = "";
+      for (const word of words) {
+        const wordId = String(word && word.id || "").trim().toLowerCase();
+        if (!wordId) continue;
+        const opt = document.createElement("option");
+        opt.value = wordId;
+        opt.textContent = `${wordId} (${String(word.castActionId || wordId)})`;
+        els.bindingWordSelect.appendChild(opt);
+      }
+      if (previousValue && Array.from(els.bindingWordSelect.options).some((opt) => opt.value === previousValue)) {
+        els.bindingWordSelect.value = previousValue;
+      }
+    }
+
     function refreshBindingPanel(){
       const opt = selectedEffectOption();
       if (!opt) return;
       const registryId = String(opt.dataset.registryId || "");
       const isCustom = String(opt.value || "").startsWith("custom:");
+      const selectedWordId = String((els.bindingWordSelect && els.bindingWordSelect.value) || "").trim().toLowerCase();
+      const selectedRuntimeWord = selectedWordId ? getRuntimeWordById(selectedWordId) : null;
 
       if (isCustom) {
         setBindingRows([
@@ -900,6 +963,22 @@
       if (!registryId) {
         setBindingRows([
           { k: "Binding", v: "No registry effect selected" },
+        ]);
+        return;
+      }
+
+      if (selectedRuntimeWord && registryId) {
+        const selectedBinding = resolveSpellVfxBinding(selectedWordId);
+        const selectedPrimary = selectedBinding && selectedBinding.primary ? selectedBinding.primary : null;
+        const selectedEffectId = String((selectedPrimary && selectedPrimary.effectId) || "");
+        const selectedPresetId = String((selectedPrimary && selectedPrimary.presetId) || "");
+        setBindingRows([
+          { k: "Selected word", v: selectedWordId },
+          { k: "Cast action", v: String(selectedRuntimeWord.castActionId || "unknown") },
+          { k: "Current effect", v: selectedEffectId || "No published binding yet" },
+          { k: "Current preset", v: selectedPresetId || "Will use selected/default preset" },
+          { k: "Selected effect", v: registryId },
+          { k: "Publish target", v: "src/content/vfx/spell-effect-bindings.js" },
         ]);
         return;
       }
@@ -1078,6 +1157,7 @@
       if (els.saveDraftBtn) els.saveDraftBtn.disabled = blockSave;
       if (els.publishPresetBtn) els.publishPresetBtn.disabled = blockSave;
       if (els.bindBtn) els.bindBtn.disabled = blockSave;
+      if (els.bindingWordSelect) els.bindingWordSelect.disabled = blockSave;
       if (els.deleteEffectBtn) els.deleteEffectBtn.disabled = blockSave || !!(opt && opt.disabled);
     }
 
@@ -1603,14 +1683,11 @@
           window.alert("Select a published registry effect before binding.");
           return;
         }
-        const words = (Array.isArray(RUNTIME_WORDS) ? RUNTIME_WORDS : []).map((word) => String(word && word.id || "")).filter(Boolean);
-        const suggested = words[0] || "";
-        const entered = window.prompt(
-          `Bind effect to runtime word id.\nAvailable words: ${words.join(", ")}`,
-          suggested
-        );
-        if (!entered) return;
-        const wordId = String(entered || "").trim().toLowerCase();
+        const wordId = String((els.bindingWordSelect && els.bindingWordSelect.value) || "").trim().toLowerCase();
+        if (!wordId) {
+          window.alert("Choose a runtime word before publishing the binding.");
+          return;
+        }
         const runtimeWord = getRuntimeWordById(wordId);
         if (!runtimeWord) {
           window.alert(`Unknown runtime word id: ${wordId}`);
@@ -2143,6 +2220,7 @@
     if (els.effectSelect) {
       loadDraftStore();
       buildEffectLibraryOptionsFromRegistry();
+      populateBindingWordOptions();
       draftHydrationDone = true;
       els.effectSelect.addEventListener("change", updateEffectSections);
       try {
@@ -2156,6 +2234,7 @@
     if (els.connectProjectBtn) els.connectProjectBtn.addEventListener("click", () => { void connectProjectFolder(); });
     if (els.publishPresetBtn) els.publishPresetBtn.addEventListener("click", publishPreset);
     if (els.bindBtn) els.bindBtn.addEventListener("click", publishBinding);
+    if (els.bindingWordSelect) els.bindingWordSelect.addEventListener("change", refreshBindingPanel);
     if (els.renameEffectBtn) els.renameEffectBtn.addEventListener("click", renameEffectProfile);
     if (els.duplicateEffectBtn) els.duplicateEffectBtn.addEventListener("click", duplicateEffectProfile);
     if (els.deleteEffectBtn) els.deleteEffectBtn.addEventListener("click", deleteEffectProfile);
