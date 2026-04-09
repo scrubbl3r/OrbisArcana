@@ -2225,6 +2225,8 @@
         shieldTO = null;
       }, Math.max(80, ms));
     }
+    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
+    window.__vfxStudioApi.playShield = playShield;
 
     function stopAllStudioEffects(){
       shieldOffNow();
@@ -2436,6 +2438,8 @@
 
       shockRAF = requestAnimationFrame(tick);
     }
+    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
+    window.__vfxStudioApi.playShock = playShock;
 
     try {
       els.playShock.addEventListener("click", playShock);
@@ -2694,6 +2698,8 @@
         renderFrame(0);
       }
     }
+    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
+    window.__vfxStudioApi.playFlame = playFlame;
 
     function applyFlameControls(){
       const d = evenPx(clamp(els.flameD.value, 120, 900), 2, 2000);
@@ -2982,6 +2988,8 @@
       electricLastNow = 0;
       electricRAF = requestAnimationFrame(tickElectric);
     }
+    window.__vfxStudioApi = window.__vfxStudioApi || Object.create(null);
+    window.__vfxStudioApi.playElectric = playElectric;
 
     try {
       els.playElectric.addEventListener("click", playElectric);
@@ -3052,7 +3060,15 @@
       }
 
       function playFallbackShield() {
-        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady["bubble-shield"]) return;
+        const runtimePlay = window.__vfxStudioApi && window.__vfxStudioApi.playShield;
+        if (typeof runtimePlay === "function") {
+          try {
+            runtimePlay();
+            return;
+          } catch (err) {
+            console.error("fallback shield runtime play failed", err);
+          }
+        }
         if (!shield) return;
         shield.classList.remove("on");
         void shield.offsetWidth;
@@ -3071,7 +3087,15 @@
       }
 
       function playFallbackShock() {
-        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady.shockwave) return;
+        const runtimePlay = window.__vfxStudioApi && window.__vfxStudioApi.playShock;
+        if (typeof runtimePlay === "function") {
+          try {
+            runtimePlay();
+            return;
+          } catch (err) {
+            console.error("fallback shock runtime play failed", err);
+          }
+        }
         if (!shockLayer) return;
         clearChildren(shockLayer);
         if (shockTimer) window.clearTimeout(shockTimer);
@@ -3105,7 +3129,15 @@
       }
 
       function playFallbackFlame() {
-        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady["flame-aoe"]) return;
+        const runtimePlay = window.__vfxStudioApi && window.__vfxStudioApi.playFlame;
+        if (typeof runtimePlay === "function") {
+          try {
+            runtimePlay();
+            return;
+          } catch (err) {
+            console.error("fallback flame runtime play failed", err);
+          }
+        }
         if (!flameLayer) return;
         clearChildren(flameLayer);
         if (flameTimer) window.clearTimeout(flameTimer);
@@ -3135,7 +3167,15 @@
       }
 
       function playFallbackElectric() {
-        if (window.__vfxStudioEffectReady && window.__vfxStudioEffectReady["electric-aoe"]) return;
+        const runtimePlay = window.__vfxStudioApi && window.__vfxStudioApi.playElectric;
+        if (typeof runtimePlay === "function") {
+          try {
+            runtimePlay();
+            return;
+          } catch (err) {
+            console.error("fallback electric runtime play failed", err);
+          }
+        }
         if (!electricLayer) return;
         clearChildren(electricLayer);
         if (electricTimer) window.clearTimeout(electricTimer);
