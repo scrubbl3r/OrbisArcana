@@ -746,8 +746,9 @@
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js";
-    import { SPELL_VFX_BINDINGS_V1 } from "../../src/content/vfx/spell-effect-bindings-v1.js";
+    import { WORD_VFX_BINDINGS } from "../../src/content/vfx/spell-effect-bindings.js";
     import { resolveSpellVfxBinding } from "../../src/vfx/resolve-spell-vfx-binding.js";
+    import { RUNTIME_WORDS, getRuntimeWordById } from "../../src/content/spells/runtime-spells.js";
     import { applyThemeCssVars } from "../../src/ui/apply-theme-css-vars.js";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
@@ -973,7 +974,7 @@
         return;
       }
 
-      const matches = (Array.isArray(SPELL_VFX_BINDINGS_V1) ? SPELL_VFX_BINDINGS_V1 : [])
+      const matches = (Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS : [])
         .filter((b) => b && b.primary && String(b.primary.effectId || "") === registryId)
         .map((b) => resolveSpellVfxBinding(String(b.spellId || "")))
         .filter(Boolean);
