@@ -9,6 +9,7 @@ import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
+import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   splitPrototype: "split-prototype",
@@ -1188,6 +1189,69 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     },
   });
 
+  function directPlayShock() {
+    if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.play === "function") {
+      shellVfx.shockwaveRuntime.play();
+      return { handled: true };
+    }
+    return { handled: false };
+  }
+
+  function directTriggerShockwave() {
+    if (typeof triggerShockwaveRuntime === "function") {
+      const result = triggerShockwaveRuntime({
+        shockwaveRuntime: shellVfx.shockwaveRuntime,
+        playShock: () => directPlayShock(),
+      });
+      if (result && result.handled) return result;
+    }
+    if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.trigger === "function") {
+      shellVfx.shockwaveRuntime.trigger();
+      return { handled: true };
+    }
+    return directPlayShock();
+  }
+
+  function directPlayElectricAoe() {
+    if (typeof playElectricAoeRuntime === "function") {
+      const result = playElectricAoeRuntime({
+        electricAoeRuntime: shellVfx.electricAoeRuntime,
+      });
+      if (result && result.handled) {
+        return result;
+      }
+    }
+    if (shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.play === "function") {
+      shellVfx.electricAoeRuntime.play();
+      return { handled: true };
+    }
+    return { handled: false };
+  }
+
+  function directPlayFlameAoe() {
+    if (typeof playFlameAoeRuntime === "function") {
+      const result = playFlameAoeRuntime({
+        flameAoeRuntime: shellVfx.flameAoeRuntime,
+      });
+      if (result && result.handled) return result;
+    }
+    if (shellVfx.flameAoeRuntime && typeof shellVfx.flameAoeRuntime.play === "function") {
+      shellVfx.flameAoeRuntime.play();
+      return { handled: true };
+    }
+    return { handled: false };
+  }
+
+  function directActivateBubbleShield({ durationMs } = {}) {
+    if (shellVfx.bubbleShieldRuntime && typeof shellVfx.bubbleShieldRuntime.activate === "function") {
+      shellVfx.bubbleShieldRuntime.activate({
+        durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),
+      });
+      return { handled: true };
+    }
+    return { handled: false };
+  }
+
   const shellVfx = {
     vfxDefaults,
     vfxRuntimesBundle,
@@ -1197,62 +1261,30 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
     electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
     playShock() {
-      if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.play === "function") {
-        shellVfx.shockwaveRuntime.play();
-        return { handled: true };
-      }
-      return { handled: false };
+      return directPlayShock();
     },
     triggerShockwave() {
-      if (typeof triggerShockwaveRuntime === "function") {
-        const result = triggerShockwaveRuntime({
-          shockwaveRuntime: shellVfx.shockwaveRuntime,
-          playShock: () => shellVfx.playShock(),
-        });
-        if (result && result.handled) return result;
-      }
-      if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.trigger === "function") {
-        shellVfx.shockwaveRuntime.trigger();
-        return { handled: true };
-      }
-      return shellVfx.playShock();
+      return directTriggerShockwave();
     },
     playElectricAoe() {
-      if (typeof playElectricAoeRuntime === "function") {
-        const result = playElectricAoeRuntime({
-          electricAoeRuntime: shellVfx.electricAoeRuntime,
-        });
-        if (result && result.handled) {
-          return result;
-        }
-      }
-      if (shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.play === "function") {
-        shellVfx.electricAoeRuntime.play();
-        return { handled: true };
-      }
-      return { handled: false };
+      return directPlayElectricAoe();
     },
     playFlameAoe() {
-      if (typeof playFlameAoeRuntime === "function") {
-        const result = playFlameAoeRuntime({
-          flameAoeRuntime: shellVfx.flameAoeRuntime,
-        });
-        if (result && result.handled) return result;
-      }
-      if (shellVfx.flameAoeRuntime && typeof shellVfx.flameAoeRuntime.play === "function") {
-        shellVfx.flameAoeRuntime.play();
-        return { handled: true };
-      }
-      return { handled: false };
+      const dispatched = dispatchRuntimeEffect({
+        targetKind: "spell",
+        targetId: "aoe_flame",
+        runtime: {
+          playFlameAoe: () => directPlayFlameAoe(),
+          playElectricAoe: () => directPlayElectricAoe(),
+          triggerShockwave: () => directTriggerShockwave(),
+          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+        },
+      });
+      if (dispatched && dispatched.handled) return dispatched;
+      return directPlayFlameAoe();
     },
     activateBubbleShield({ durationMs } = {}) {
-      if (shellVfx.bubbleShieldRuntime && typeof shellVfx.bubbleShieldRuntime.activate === "function") {
-        shellVfx.bubbleShieldRuntime.activate({
-          durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),
-        });
-        return { handled: true };
-      }
-      return { handled: false };
+      return directActivateBubbleShield({ durationMs });
     },
   };
 
