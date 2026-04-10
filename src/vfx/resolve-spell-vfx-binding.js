@@ -1,33 +1,33 @@
-import { getWordVfxBinding, getVfxEffectRegistryEntry } from "../content/vfx/index.js";
+import { getRuntimeWordById } from "../content/spells/runtime-spells.js";
+import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js";
 
 /**
  * Resolve a spell VFX binding entry into a lab/game-friendly structure.
  *
  * This is intentionally read-only and does not mutate runtime spell content.
- * It provides a stable bridge for future lab "publish binding" flows.
+ * It now resolves through runtime-target VFX bindings via castActionId instead
+ * of using the legacy word-binding schema directly.
  *
  * @param {string} wordId
  * @returns {null|{wordId:string, spellId:string, primary:Object|null, postCastActions:Array<Object>}}
  */
 export function resolveSpellVfxBinding(wordId) {
-  const binding = getWordVfxBinding(wordId);
-  if (!binding) return null;
+  const runtimeWord = getRuntimeWordById(wordId);
+  if (!runtimeWord) return null;
 
-  const primary = binding.primary
-    ? {
-        ...binding.primary,
-        effect: getVfxEffectRegistryEntry(binding.primary.effectId),
-      }
+  const resolvedWordId = String(runtimeWord.id || "").toLowerCase();
+  const castActionId = String(runtimeWord.castActionId || "").trim().toLowerCase();
+  const primary = castActionId
+    ? resolveRuntimeEffectBinding("spell", castActionId)
     : null;
 
-  const postCastActions = Array.isArray(binding.postCastActions)
-    ? binding.postCastActions.map((a) => ({
-        ...a,
-        effect: a && a.effectId ? getVfxEffectRegistryEntry(a.effectId) : null,
+  const postCastActions = Array.isArray(runtimeWord.postCastActions)
+    ? runtimeWord.postCastActions.map((action) => ({
+        ...action,
+        effect: null,
       }))
     : [];
 
-  const resolvedWordId = String(binding.wordId || "").toLowerCase();
   return {
     wordId: resolvedWordId,
     spellId: resolvedWordId,
