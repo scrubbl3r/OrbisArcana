@@ -5,6 +5,12 @@ export {
 } from "./effect-registry.js";
 
 export {
+  RUNTIME_EFFECT_TARGET_REGISTRY,
+  RUNTIME_EFFECT_TARGET_REGISTRY_BY_ID,
+  getRuntimeEffectTarget,
+} from "./runtime-effect-target-registry.js";
+
+export {
   WORD_VFX_BINDINGS,
   WORD_VFX_BINDINGS_BY_WORD_ID,
   getWordVfxBinding,
