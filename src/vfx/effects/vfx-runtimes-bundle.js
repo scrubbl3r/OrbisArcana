@@ -1,8 +1,8 @@
-import { createBubbleShieldRuntime } from "./bubble-shield-runtime.js";
-import { createShockwaveRuntime } from "./shockwave-runtime.js";
-import { createOrbShatterRuntime } from "./orb-shatter-runtime.js";
-import { createFlameAoeRuntime } from "./flame-aoe-runtime.js";
-import { createElectricAoeRuntime } from "./electric-aoe-runtime.js";
+import { createBubbleShieldRuntime } from "./spells/bubble-shield-runtime.js";
+import { createShockwaveRuntime } from "./spells/shockwave-runtime.js";
+import { createOrbShatterRuntime } from "./orb-states/orb-shatter-runtime.js";
+import { createFlameAoeRuntime } from "./spells/flame-aoe-runtime.js";
+import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
 
 /**
  * @typedef {Object} VfxRuntimesBundle
