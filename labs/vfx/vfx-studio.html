@@ -1195,6 +1195,10 @@
         window.alert("This effect does not currently support binding publish.");
         return;
       }
+      if (!projectRootDirHandle) {
+        window.alert("Connect Project first. Bind writes to the fixed repo path src/content/vfx/spell-effect-bindings.js.");
+        return;
+      }
 
       const built = buildPublishedPresetPayload();
       if (!built || !built.payload) {
@@ -1236,25 +1240,17 @@
 
       (async () => {
         try {
-          if (!projectRootDirHandle && window.showDirectoryPicker) {
-            const connected = await connectProjectFolder();
-            if (!connected) return;
+          const ok = await saveTextToConnectedProjectPath(targetPath, moduleText);
+          if (ok) {
+            refreshBindingPanel();
+            window.alert(`Published binding to ${targetPath.join("/")}`);
+            return;
           }
-          if (projectRootDirHandle) {
-            const ok = await saveTextToConnectedProjectPath(targetPath, moduleText);
-            if (ok) {
-              refreshBindingPanel();
-              window.alert(`Published binding to ${targetPath.join("/")}`);
-              return;
-            }
-          }
-          downloadTextFile("spell-effect-bindings.js", moduleText);
-          refreshBindingPanel();
-          window.alert("Binding module downloaded. Add it to src/content/vfx/spell-effect-bindings.js to apply it.");
+          throw new Error("Binding write failed");
         } catch (err) {
           if (err && err.name === "AbortError") return;
           console.error(err);
-          downloadTextFile("spell-effect-bindings.js", moduleText);
+          window.alert("Binding publish failed. No fallback export was created. Reconnect the project and try again.");
         }
       })();
     }
@@ -1440,14 +1436,50 @@
         return;
       }
       const label = String(opt.textContent || opt.value || "this effect");
-      if (!window.confirm(`Delete effect profile \"${label}\"?`)) return;
-      return deleteEffectProfileHelper({
-        opt,
-        effectSelect: els.effectSelect,
-        draftStore,
-        persistDraftStore,
-        updateEffectSections,
-      });
+      const built = buildPublishedPresetPayload();
+      const presetId = String((built && built.payload && built.payload.presetId) || "").trim();
+      const affectedBindings = presetId
+        ? (Array.isArray(wordVfxBindingsState) ? wordVfxBindingsState : []).filter((entry) => {
+            const bindingPresetId = String((entry && entry.primary && entry.primary.presetId) || "").trim();
+            return bindingPresetId === presetId;
+          })
+        : [];
+      if (affectedBindings.length && !projectRootDirHandle) {
+        window.alert("Connect Project first. This profile is bound in src/content/vfx/spell-effect-bindings.js and deletion needs to clean that file.");
+        return;
+      }
+      const bindingWarning = affectedBindings.length
+        ? `\n\nThis will also remove ${affectedBindings.length} runtime word binding${affectedBindings.length === 1 ? "" : "s"} that point at preset ${presetId}.`
+        : "";
+      if (!window.confirm(`Delete effect profile \"${label}\"?${bindingWarning}`)) return;
+
+      (async () => {
+        if (affectedBindings.length) {
+          const targetPath = ["src", "content", "vfx", "spell-effect-bindings.js"];
+          const remainingBindings = wordVfxBindingsState.filter((entry) => !affectedBindings.includes(entry));
+          const moduleText = buildWordVfxBindingsModule(remainingBindings);
+          try {
+            const ok = await saveTextToConnectedProjectPath(targetPath, moduleText);
+            if (!ok) {
+              throw new Error("Binding cleanup write failed");
+            }
+            wordVfxBindingsState = remainingBindings;
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+            console.error(err);
+            window.alert("Delete aborted. Binding cleanup failed, so nothing was removed.");
+            return;
+          }
+        }
+
+        deleteEffectProfileHelper({
+          opt,
+          effectSelect: els.effectSelect,
+          draftStore,
+          persistDraftStore,
+          updateEffectSections,
+        });
+      })();
     }
 
     function clamp(v, lo, hi){
