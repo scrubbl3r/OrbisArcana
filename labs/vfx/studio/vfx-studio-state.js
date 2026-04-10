@@ -157,6 +157,11 @@ export function buildEffectLibraryOptionsFromRegistry({
     const firstEnabled = Array.from(effectSelect.options).find((o) => !o.disabled);
     if (firstEnabled) effectSelect.value = firstEnabled.value;
   }
+
+  const orbShatterOption = findEffectOptionByValue(effectSelect, "orb-shatter");
+  if (orbShatterOption) {
+    orbShatterOption.disabled = false;
+  }
 }
 
 export function selectedBaseEffect(opt) {
