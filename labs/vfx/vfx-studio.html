@@ -579,10 +579,10 @@
         <div class="bindingPanel" id="bindingPanel" aria-live="polite">
           <div class="bindingEditor">
             <div class="bindingEditorRow">
-              <label class="bindingEditorLabel" for="bindingWordSelect">Bind To Runtime Word</label>
-              <select id="bindingWordSelect" class="bindingSelect" aria-label="Bind effect to runtime word"></select>
+              <label class="bindingEditorLabel" for="bindingTargetSelect">Bind To Runtime Target</label>
+              <select id="bindingTargetSelect" class="bindingSelect" aria-label="Bind effect to runtime target"></select>
             </div>
-            <div class="bindingEditorHelp" id="bindingEditorHelp">Publish this effect/preset onto a runtime word binding.</div>
+            <div class="bindingEditorHelp" id="bindingEditorHelp">Publish this effect/preset onto a runtime spell or orb-state target.</div>
           </div>
           <h3>Current Binding</h3>
           <div class="bindingGrid" id="bindingGrid"></div>
@@ -746,9 +746,8 @@
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
     import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js";
-    import { WORD_VFX_BINDINGS } from "../../src/content/vfx/spell-effect-bindings.js";
-    import { resolveSpellVfxBinding } from "../../src/vfx/resolve-spell-vfx-binding.js";
-    import { RUNTIME_WORDS, getRuntimeWordById } from "../../src/content/spells/runtime-spells.js";
+    import { RUNTIME_EFFECT_TARGET_REGISTRY } from "../../src/content/vfx/runtime-effect-target-registry.js";
+    import { RUNTIME_EFFECT_BINDINGS, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-bindings.js";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js";
     import { createShieldPreview } from "./studio/previews/shield-preview.js";
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js";
@@ -782,8 +781,8 @@
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
     } from "./studio/vfx-studio-state.js";
     import {
-      buildWordVfxBindingsModule,
-      populateBindingWordOptions as populateBindingWordOptionsHelper,
+      buildRuntimeEffectBindingsModule,
+      populateBindingTargetOptions as populateBindingTargetOptionsHelper,
       refreshBindingPanel as refreshBindingPanelHelper,
     } from "./studio/vfx-studio-bindings.js";
     import {
@@ -823,7 +822,7 @@
     let suspendDraftApply = false;
     const lastSelectedEffectValueRef = { value: "" };
     let projectRootDirHandle = null;
-    let wordVfxBindingsState = Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS.map((entry) => ({ ...entry })) : [];
+    let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LIVE_PRESET_MODULES_BY_BASE_EFFECT = Object.freeze({
       "shockwave": {
@@ -857,7 +856,7 @@
       connectProjectBtn: $("connectProjectBtn"),
       publishPresetBtn: $("publishPresetBtn"),
       bindBtn: $("bindBtn"),
-      bindingWordSelect: $("bindingWordSelect"),
+      bindingTargetSelect: $("bindingTargetSelect"),
       lockEffectBtn: $("lockEffectBtn"),
       renameEffectBtn: $("renameEffectBtn"),
       duplicateEffectBtn: $("duplicateEffectBtn"),
@@ -929,17 +928,16 @@
     function refreshBindingPanel(){
       return refreshBindingPanelHelper({
         bindingGrid: els.bindingGrid,
-        bindingWordSelect: els.bindingWordSelect,
+        bindingTargetSelect: els.bindingTargetSelect,
         selectedEffectOption,
         selectedEffectCategory,
-        getRuntimeWordById,
-        resolveSpellVfxBinding,
-        wordVfxBindings: wordVfxBindingsState,
+        getRuntimeEffectTarget,
+        runtimeEffectBindings: runtimeEffectBindingsState,
       });
     }
 
-    function populateBindingWordOptions(){
-      return populateBindingWordOptionsHelper(els.bindingWordSelect, RUNTIME_WORDS);
+    function populateBindingTargetOptions(){
+      return populateBindingTargetOptionsHelper(els.bindingTargetSelect, RUNTIME_EFFECT_TARGET_REGISTRY);
     }
 
     function buildEffectLibraryOptionsFromRegistry(){
@@ -1174,14 +1172,14 @@
         window.alert("Select an effect profile before publishing a binding.");
         return;
       }
-      const selectedWordId = String((els.bindingWordSelect && els.bindingWordSelect.value) || "").trim().toLowerCase();
-      if (!selectedWordId) {
-        window.alert("Choose a runtime word to bind first.");
+      const selectedTargetRegistryId = String((els.bindingTargetSelect && els.bindingTargetSelect.value) || "").trim().toLowerCase();
+      if (!selectedTargetRegistryId) {
+        window.alert("Choose a runtime target to bind first.");
         return;
       }
-      const runtimeWord = getRuntimeWordById(selectedWordId);
-      if (!runtimeWord) {
-        window.alert("The selected runtime word could not be resolved.");
+      const runtimeTarget = getRuntimeEffectTarget(selectedTargetRegistryId);
+      if (!runtimeTarget) {
+        window.alert("The selected runtime target could not be resolved.");
         return;
       }
       const registryId = String(opt.dataset.registryId || "").trim();
@@ -1196,7 +1194,7 @@
         return;
       }
       if (!projectRootDirHandle) {
-        window.alert("Connect Project first. Bind writes to the fixed repo path src/content/vfx/spell-effect-bindings.js.");
+        window.alert("Connect Project first. Bind writes to the fixed repo path src/content/vfx/runtime-effect-bindings.js.");
         return;
       }
 
@@ -1207,36 +1205,30 @@
       }
 
       const nextEntry = {
-        wordId: selectedWordId,
-        spellId: selectedWordId,
-        primary: {
-          castActionId: String(runtimeWord.castActionId || "unknown"),
-          effectId: registryId,
-          presetId: String(built.payload.presetId || registryEntry.defaultPresetId || ""),
-        },
+        targetKind: String(runtimeTarget.targetKind || ""),
+        targetId: String(runtimeTarget.targetId || ""),
+        effectId: registryId,
+        presetId: String(built.payload.presetId || registryEntry.defaultPresetId || ""),
       };
 
-      const existingEntry = (Array.isArray(wordVfxBindingsState) ? wordVfxBindingsState : []).find((entry) => {
-        const entryWordId = String((entry && (entry.wordId || entry.spellId)) || "").trim().toLowerCase();
-        return entryWordId === selectedWordId;
+      const existingEntry = (Array.isArray(runtimeEffectBindingsState) ? runtimeEffectBindingsState : []).find((entry) => {
+        const entryKind = String((entry && entry.targetKind) || "").trim().toLowerCase();
+        const entryId = String((entry && entry.targetId) || "").trim().toLowerCase();
+        return entryKind === String(runtimeTarget.targetKind || "").trim().toLowerCase()
+          && entryId === String(runtimeTarget.targetId || "").trim().toLowerCase();
       }) || null;
-      if (existingEntry && Array.isArray(existingEntry.postCastActions) && existingEntry.postCastActions.length) {
-        nextEntry.postCastActions = existingEntry.postCastActions.map((action) => ({
-          ...action,
-          payload: action && action.payload && typeof action.payload === "object"
-            ? { ...action.payload }
-            : action && action.payload,
-        }));
-      }
+      void existingEntry;
 
-      const otherEntries = (Array.isArray(wordVfxBindingsState) ? wordVfxBindingsState : []).filter((entry) => {
-        const entryWordId = String((entry && (entry.wordId || entry.spellId)) || "").trim().toLowerCase();
-        return entryWordId !== selectedWordId;
+      const otherEntries = (Array.isArray(runtimeEffectBindingsState) ? runtimeEffectBindingsState : []).filter((entry) => {
+        const entryKind = String((entry && entry.targetKind) || "").trim().toLowerCase();
+        const entryId = String((entry && entry.targetId) || "").trim().toLowerCase();
+        return !(entryKind === String(runtimeTarget.targetKind || "").trim().toLowerCase()
+          && entryId === String(runtimeTarget.targetId || "").trim().toLowerCase());
       });
-      wordVfxBindingsState = [...otherEntries, nextEntry];
+      runtimeEffectBindingsState = [...otherEntries, nextEntry];
 
-      const moduleText = buildWordVfxBindingsModule(wordVfxBindingsState);
-      const targetPath = ["src", "content", "vfx", "spell-effect-bindings.js"];
+      const moduleText = buildRuntimeEffectBindingsModule(runtimeEffectBindingsState);
+      const targetPath = ["src", "content", "vfx", "runtime-effect-bindings.js"];
 
       (async () => {
         try {
@@ -1439,31 +1431,31 @@
       const built = buildPublishedPresetPayload();
       const presetId = String((built && built.payload && built.payload.presetId) || "").trim();
       const affectedBindings = presetId
-        ? (Array.isArray(wordVfxBindingsState) ? wordVfxBindingsState : []).filter((entry) => {
-            const bindingPresetId = String((entry && entry.primary && entry.primary.presetId) || "").trim();
+        ? (Array.isArray(runtimeEffectBindingsState) ? runtimeEffectBindingsState : []).filter((entry) => {
+            const bindingPresetId = String((entry && entry.presetId) || "").trim();
             return bindingPresetId === presetId;
           })
         : [];
       if (affectedBindings.length && !projectRootDirHandle) {
-        window.alert("Connect Project first. This profile is bound in src/content/vfx/spell-effect-bindings.js and deletion needs to clean that file.");
+        window.alert("Connect Project first. This profile is bound in src/content/vfx/runtime-effect-bindings.js and deletion needs to clean that file.");
         return;
       }
       const bindingWarning = affectedBindings.length
-        ? `\n\nThis will also remove ${affectedBindings.length} runtime word binding${affectedBindings.length === 1 ? "" : "s"} that point at preset ${presetId}.`
+        ? `\n\nThis will also remove ${affectedBindings.length} runtime target binding${affectedBindings.length === 1 ? "" : "s"} that point at preset ${presetId}.`
         : "";
       if (!window.confirm(`Delete effect profile \"${label}\"?${bindingWarning}`)) return;
 
       (async () => {
         if (affectedBindings.length) {
-          const targetPath = ["src", "content", "vfx", "spell-effect-bindings.js"];
-          const remainingBindings = wordVfxBindingsState.filter((entry) => !affectedBindings.includes(entry));
-          const moduleText = buildWordVfxBindingsModule(remainingBindings);
+          const targetPath = ["src", "content", "vfx", "runtime-effect-bindings.js"];
+          const remainingBindings = runtimeEffectBindingsState.filter((entry) => !affectedBindings.includes(entry));
+          const moduleText = buildRuntimeEffectBindingsModule(remainingBindings);
           try {
             const ok = await saveTextToConnectedProjectPath(targetPath, moduleText);
             if (!ok) {
               throw new Error("Binding cleanup write failed");
             }
-            wordVfxBindingsState = remainingBindings;
+            runtimeEffectBindingsState = remainingBindings;
           } catch (err) {
             if (err && err.name === "AbortError") return;
             console.error(err);
@@ -1579,7 +1571,7 @@
       effectSelect: els.effectSelect,
       loadDraftStore,
       buildEffectLibraryOptionsFromRegistry,
-      populateBindingWordOptions,
+      populateBindingWordOptions: populateBindingTargetOptions,
       setDraftHydrationDone: (value) => { draftHydrationDone = !!value; },
       updateEffectSections,
       newEffectBtn: els.newEffectBtn,
@@ -1592,7 +1584,7 @@
       publishPreset,
       bindBtn: els.bindBtn,
       publishBinding,
-      bindingWordSelect: els.bindingWordSelect,
+      bindingWordSelect: els.bindingTargetSelect,
       refreshBindingPanel,
       renameEffectBtn: els.renameEffectBtn,
       renameEffectProfile,

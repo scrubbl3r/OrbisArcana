@@ -11,6 +11,12 @@ export {
 } from "./runtime-effect-target-registry.js";
 
 export {
+  RUNTIME_EFFECT_BINDINGS,
+  RUNTIME_EFFECT_BINDINGS_BY_KEY,
+  getRuntimeEffectBinding,
+} from "./runtime-effect-bindings.js";
+
+export {
   WORD_VFX_BINDINGS,
   WORD_VFX_BINDINGS_BY_WORD_ID,
   getWordVfxBinding,

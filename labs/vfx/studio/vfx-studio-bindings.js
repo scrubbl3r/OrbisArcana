@@ -13,29 +13,30 @@ export function setBindingRows(bindingGrid, rows) {
   }
 }
 
-function getBindingEntry(wordVfxBindings, wordId) {
-  const normalized = String(wordId || "").trim().toLowerCase();
-  return (Array.isArray(wordVfxBindings) ? wordVfxBindings : []).find((entry) => {
-    const entryWordId = String((entry && (entry.wordId || entry.spellId)) || "").trim().toLowerCase();
-    return entryWordId === normalized;
+function getBindingEntry(runtimeEffectBindings, targetKind, targetId) {
+  const kind = String(targetKind || "").trim().toLowerCase();
+  const id = String(targetId || "").trim().toLowerCase();
+  return (Array.isArray(runtimeEffectBindings) ? runtimeEffectBindings : []).find((entry) => {
+    const entryKind = String((entry && entry.targetKind) || "").trim().toLowerCase();
+    const entryId = String((entry && entry.targetId) || "").trim().toLowerCase();
+    return entryKind === kind && entryId === id;
   }) || null;
 }
 
 export function refreshBindingPanel({
   bindingGrid,
-  bindingWordSelect,
+  bindingTargetSelect,
   selectedEffectOption,
   selectedEffectCategory,
-  getRuntimeWordById,
-  resolveSpellVfxBinding,
-  wordVfxBindings,
+  getRuntimeEffectTarget,
+  runtimeEffectBindings,
 }) {
   const opt = selectedEffectOption();
   if (!opt) return;
   const registryId = String(opt.dataset.registryId || "");
   const isCustom = String(opt.value || "").startsWith("custom:");
-  const selectedWordId = String((bindingWordSelect && bindingWordSelect.value) || "").trim().toLowerCase();
-  const selectedRuntimeWord = selectedWordId ? getRuntimeWordById(selectedWordId) : null;
+  const selectedTargetRegistryId = String((bindingTargetSelect && bindingTargetSelect.value) || "").trim().toLowerCase();
+  const selectedTarget = selectedTargetRegistryId ? getRuntimeEffectTarget(selectedTargetRegistryId) : null;
 
   if (isCustom) {
     setBindingRows(bindingGrid, [
@@ -53,76 +54,69 @@ export function refreshBindingPanel({
     return;
   }
 
-  if (selectedRuntimeWord && registryId) {
-    const selectedBinding = getBindingEntry(wordVfxBindings, selectedWordId);
-    const selectedPrimary = selectedBinding && selectedBinding.primary ? selectedBinding.primary : null;
-    const selectedEffectId = String((selectedPrimary && selectedPrimary.effectId) || "");
-    const selectedPresetId = String((selectedPrimary && selectedPrimary.presetId) || "");
+  if (selectedTarget && registryId) {
+    const selectedBinding = getBindingEntry(runtimeEffectBindings, selectedTarget.targetKind, selectedTarget.targetId);
     setBindingRows(bindingGrid, [
-      { k: "Selected word", v: selectedWordId },
-      { k: "Cast action", v: String(selectedRuntimeWord.castActionId || "unknown") },
-      { k: "Current effect", v: selectedEffectId || "No published binding yet" },
-      { k: "Current preset", v: selectedPresetId || "Will use selected/default preset" },
+      { k: "Selected target", v: selectedTarget.label || selectedTarget.id },
+      { k: "Target kind", v: String(selectedTarget.targetKind || "unknown") },
+      { k: "Target id", v: String(selectedTarget.targetId || "unknown") },
+      { k: "Current effect", v: String((selectedBinding && selectedBinding.effectId) || "No published binding yet") },
+      { k: "Current preset", v: String((selectedBinding && selectedBinding.presetId) || "Will use selected/default preset") },
       { k: "Selected effect", v: registryId },
-      { k: "Publish target", v: "src/content/vfx/spell-effect-bindings.js" },
+      { k: "Publish target", v: "src/content/vfx/runtime-effect-bindings.js" },
     ]);
     return;
   }
 
-  const matches = (Array.isArray(wordVfxBindings) ? wordVfxBindings : [])
-    .filter((b) => b && b.primary && String(b.primary.effectId || "") === registryId)
-    .map((b) => ({
-      wordId: String((b.wordId || b.spellId || "")).toLowerCase(),
-      spellId: String((b.wordId || b.spellId || "")).toLowerCase(),
-      primary: b.primary || null,
-      postCastActions: Array.isArray(b.postCastActions) ? b.postCastActions : [],
-    }));
+  const matches = (Array.isArray(runtimeEffectBindings) ? runtimeEffectBindings : [])
+    .filter((entry) => String((entry && entry.effectId) || "") === registryId);
 
   if (!matches.length) {
     setBindingRows(bindingGrid, [
       { k: "Effect ID", v: registryId },
-      { k: "Bindings", v: "No spell binding yet (or non-spell effect)" },
+      { k: "Bindings", v: "No runtime target binding yet" },
       { k: "Status", v: opt.disabled ? "Preview scene coming soon" : "Preset-only / unbound" },
     ]);
     return;
   }
 
-  const first = matches[0];
-  const primary = first && first.primary ? first.primary : null;
-  const effect = primary && primary.effect ? primary.effect : null;
-  const postCast = Array.isArray(first.postCastActions) ? first.postCastActions : [];
-  const postCastText = postCast.length
-    ? postCast.map((a) => {
-        const ms = a && a.payload && a.payload.ms != null ? ` (${a.payload.ms}ms)` : "";
-        return `${String(a && a.id || "action")}${ms}`;
-      }).join(", ")
-    : "none";
-
   setBindingRows(bindingGrid, [
     { k: "Effect ID", v: registryId },
-    { k: "Bound spells", v: matches.map((m) => m.spellId).join(", ") },
-    { k: "Preset", v: String((primary && primary.presetId) || "unknown") },
-    { k: "Cast action", v: String((primary && primary.castActionId) || "unknown") },
-    { k: "Publish", v: effect && Array.isArray(effect.publishTargets) ? effect.publishTargets.join(", ") : "preset" },
-    { k: "Post-cast", v: postCastText },
+    { k: "Bound targets", v: matches.map((entry) => `${entry.targetKind}:${entry.targetId}`).join(", ") },
+    { k: "Preset", v: String((matches[0] && matches[0].presetId) || "unknown") },
+    { k: "Binding count", v: String(matches.length) },
+    { k: "Publish target", v: "src/content/vfx/runtime-effect-bindings.js" },
   ]);
 }
 
-export function populateBindingWordOptions(bindingWordSelect, runtimeWords) {
-  if (!bindingWordSelect) return;
-  const previousValue = String(bindingWordSelect.value || "").trim().toLowerCase();
-  const words = Array.isArray(runtimeWords) ? runtimeWords : [];
-  bindingWordSelect.innerHTML = "";
-  for (const word of words) {
-    const wordId = String(word && word.id || "").trim().toLowerCase();
-    if (!wordId) continue;
+export function populateBindingTargetOptions(bindingTargetSelect, runtimeEffectTargetRegistry) {
+  if (!bindingTargetSelect) return;
+  const previousValue = String(bindingTargetSelect.value || "").trim().toLowerCase();
+  const targets = Array.isArray(runtimeEffectTargetRegistry) ? runtimeEffectTargetRegistry : [];
+  bindingTargetSelect.innerHTML = "";
+
+  const groups = new Map();
+  for (const target of targets) {
+    const kind = String((target && target.targetKind) || "").trim().toLowerCase();
+    const registryId = String((target && target.id) || "").trim().toLowerCase();
+    if (!kind || !registryId) continue;
+    if (!groups.has(kind)) {
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = kind === "spell" ? "Spells" : kind === "orb-state" ? "Orb States" : kind;
+      groups.set(kind, optgroup);
+    }
     const opt = document.createElement("option");
-    opt.value = wordId;
-    opt.textContent = `${wordId} (${String(word.castActionId || wordId)})`;
-    bindingWordSelect.appendChild(opt);
+    opt.value = registryId;
+    opt.textContent = String(target.label || registryId);
+    groups.get(kind).appendChild(opt);
   }
-  if (previousValue && Array.from(bindingWordSelect.options).some((opt) => opt.value === previousValue)) {
-    bindingWordSelect.value = previousValue;
+
+  for (const kind of ["spell", "orb-state"]) {
+    if (groups.has(kind)) bindingTargetSelect.appendChild(groups.get(kind));
+  }
+
+  if (previousValue && Array.from(bindingTargetSelect.options).some((opt) => opt.value === previousValue)) {
+    bindingTargetSelect.value = previousValue;
   }
 }
 
@@ -130,114 +124,56 @@ function quoteString(value) {
   return JSON.stringify(String(value || ""));
 }
 
-function serializeActionBinding(primary, indent) {
+function serializeBindingEntry(entry) {
   return [
-    `${indent}primary: Object.freeze({`,
-    `${indent}  castActionId: ${quoteString(primary && primary.castActionId)},`,
-    `${indent}  effectId: ${quoteString(primary && primary.effectId)},`,
-    `${indent}  presetId: ${quoteString(primary && primary.presetId)},`,
-    `${indent}}),`,
+    "  Object.freeze({",
+    `    targetKind: ${quoteString(entry && entry.targetKind)},`,
+    `    targetId: ${quoteString(entry && entry.targetId)},`,
+    `    effectId: ${quoteString(entry && entry.effectId)},`,
+    `    presetId: ${quoteString(entry && entry.presetId)},`,
+    "  })",
   ].join("\n");
 }
 
-function serializePostCastAction(action, indent) {
-  const lines = [`${indent}Object.freeze({`, `${indent}  id: ${quoteString(action && action.id)},`];
-  if (action && action.effectId) lines.push(`${indent}  effectId: ${quoteString(action.effectId)},`);
-  if (action && action.presetId) lines.push(`${indent}  presetId: ${quoteString(action.presetId)},`);
-  if (action && action.payload && typeof action.payload === "object" && Object.keys(action.payload).length) {
-    lines.push(`${indent}  payload: Object.freeze(${JSON.stringify(action.payload)}),`);
-  }
-  lines.push(`${indent}})`);
-  return lines.join("\n");
-}
-
-function serializeBindingEntry(entry) {
-  const lines = [
-    "  Object.freeze({",
-    `    wordId: ${quoteString(entry && entry.wordId)},`,
-    `    spellId: ${quoteString(entry && (entry.spellId || entry.wordId))},`,
-    serializeActionBinding(entry && entry.primary, "    "),
-  ];
-  const postCastActions = Array.isArray(entry && entry.postCastActions) ? entry.postCastActions : [];
-  if (postCastActions.length) {
-    lines.push("    postCastActions: Object.freeze([");
-    lines.push(postCastActions.map((action) => serializePostCastAction(action, "      ")).join(",\n"));
-    lines.push("    ]),");
-  }
-  lines.push("  })");
-  return lines.join("\n");
-}
-
-export function buildWordVfxBindingsModule(wordVfxBindings) {
-  const entries = (Array.isArray(wordVfxBindings) ? wordVfxBindings : [])
+export function buildRuntimeEffectBindingsModule(runtimeEffectBindings) {
+  const entries = (Array.isArray(runtimeEffectBindings) ? runtimeEffectBindings : [])
     .map((entry) => ({
-      ...entry,
-      wordId: String((entry && (entry.wordId || entry.spellId)) || "").toLowerCase(),
-      spellId: String((entry && (entry.wordId || entry.spellId)) || "").toLowerCase(),
-      primary: entry && entry.primary ? { ...entry.primary } : null,
-      postCastActions: Array.isArray(entry && entry.postCastActions)
-        ? entry.postCastActions.map((action) => ({
-            ...action,
-            payload: action && action.payload && typeof action.payload === "object"
-              ? { ...action.payload }
-              : action && action.payload,
-          }))
-        : [],
+      targetKind: String((entry && entry.targetKind) || "").trim().toLowerCase(),
+      targetId: String((entry && entry.targetId) || "").trim().toLowerCase(),
+      effectId: String((entry && entry.effectId) || "").trim(),
+      presetId: String((entry && entry.presetId) || "").trim(),
     }))
-    .filter((entry) => entry.wordId && entry.primary && entry.primary.castActionId && entry.primary.effectId && entry.primary.presetId)
-    .sort((a, b) => a.wordId.localeCompare(b.wordId));
+    .filter((entry) => entry.targetKind && entry.targetId && entry.effectId && entry.presetId)
+    .sort((a, b) => `${a.targetKind}:${a.targetId}`.localeCompare(`${b.targetKind}:${b.targetId}`));
 
-  return `// Word -> VFX binding schema (authoring/publish surface).
-// Keeps word visual usage separate from word gameplay action routing.
-
-/**
- * @typedef {Object} SpellVfxActionBinding
- * @property {string} castActionId Which action this VFX binding describes (for example \`aoe_flame\`).
- * @property {string} effectId VFX effect registry id.
- * @property {string} presetId Preset id to use for this action/effect.
- */
+  return `// Runtime target -> VFX binding schema (authoring/publish surface).
+// Keeps VFX binding attached to runtime effect slots, not upstream triggers.
 
 /**
- * @typedef {Object} SpellVfxPostActionBinding
- * @property {string} id Follow-up action id (for example \`float_grace\`).
- * @property {string} [effectId] Optional VFX effect registry id if the post action has a visual component.
- * @property {string} [presetId] Optional preset id for the post action VFX.
- * @property {Object} [payload] Optional action payload override (for example \`{ ms: 2500 }\`).
+ * @typedef {Object} RuntimeEffectBindingEntry
+ * @property {"spell"|"orb-state"} targetKind
+ * @property {string} targetId
+ * @property {string} effectId
+ * @property {string} presetId
  */
 
-/**
- * @typedef {Object} SpellVfxBindingEntry
- * @property {string} wordId Canonical word id.
- * @property {string} [spellId] Legacy compatibility alias for \`wordId\`.
- * @property {SpellVfxActionBinding} primary
- * @property {SpellVfxPostActionBinding[]} [postCastActions]
- */
-
-/** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */
-export const WORD_VFX_BINDINGS = Object.freeze([
+/** @type {ReadonlyArray<Readonly<RuntimeEffectBindingEntry>>} */
+export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
 ${entries.map((entry) => serializeBindingEntry(entry)).join(",\n")}
 ]);
 
-export const WORD_VFX_BINDINGS_BY_WORD_ID = Object.freeze(
-  WORD_VFX_BINDINGS.reduce((acc, entry) => {
-    const wordId = String((entry && entry.wordId) || "").toLowerCase();
-    if (!wordId) return acc;
-    acc[wordId] = entry;
+export const RUNTIME_EFFECT_BINDINGS_BY_KEY = Object.freeze(
+  RUNTIME_EFFECT_BINDINGS.reduce((acc, entry) => {
+    const key = \`\${String((entry && entry.targetKind) || "").trim().toLowerCase()}:\${String((entry && entry.targetId) || "").trim().toLowerCase()}\`;
+    if (!key || key === ":") return acc;
+    acc[key] = entry;
     return acc;
   }, {})
 );
 
-export function getWordVfxBinding(wordId) {
-  return WORD_VFX_BINDINGS_BY_WORD_ID[String(wordId || "").toLowerCase()] || null;
-}
-
-// Legacy aliases preserved for older lab/runtime surfaces that still speak in
-// spell-first terms while the repo converges on word-first naming.
-export const SPELL_VFX_BINDINGS = WORD_VFX_BINDINGS;
-export const SPELL_VFX_BINDINGS_BY_SPELL_ID = WORD_VFX_BINDINGS_BY_WORD_ID;
-
-export function getSpellVfxBinding(spellId) {
-  return getWordVfxBinding(spellId);
+export function getRuntimeEffectBinding(targetKind, targetId) {
+  const key = \`\${String(targetKind || "").trim().toLowerCase()}:\${String(targetId || "").trim().toLowerCase()}\`;
+  return RUNTIME_EFFECT_BINDINGS_BY_KEY[key] || null;
 }
 `;
 }
