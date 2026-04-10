@@ -1267,6 +1267,17 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
       return directTriggerShockwave();
     },
     playElectricAoe() {
+      const dispatched = dispatchRuntimeEffect({
+        targetKind: "spell",
+        targetId: "aoe_electric",
+        runtime: {
+          playFlameAoe: () => directPlayFlameAoe(),
+          playElectricAoe: () => directPlayElectricAoe(),
+          triggerShockwave: () => directTriggerShockwave(),
+          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+        },
+      });
+      if (dispatched && dispatched.handled) return dispatched;
       return directPlayElectricAoe();
     },
     playFlameAoe() {
