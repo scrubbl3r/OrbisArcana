@@ -1,51 +1,75 @@
+import { createOrbDamageVisualsRuntime } from "../../../../src/game-runtime/orb/orb-damage-visuals-runtime.js";
+import { createOrbShatterRuntimeController } from "../../../../src/game-runtime/orb/orb-shatter-runtime.js";
 import { createOrbShatterRuntime } from "../../../../src/vfx/effects/orb-states/orb-shatter-runtime.js";
 
-function buildShardPoints(innerR, outerR, startA, endA) {
-  return [
-    { x: Math.cos(startA) * innerR, y: Math.sin(startA) * innerR },
-    { x: Math.cos((startA + endA) * 0.5) * outerR, y: Math.sin((startA + endA) * 0.5) * outerR },
-    { x: Math.cos(endA) * innerR, y: Math.sin(endA) * innerR },
-  ];
+function createEventBus() {
+  const listenersByType = new Map();
+  return {
+    on(type, handler) {
+      const key = String(type || "");
+      if (!listenersByType.has(key)) listenersByType.set(key, new Set());
+      const set = listenersByType.get(key);
+      set.add(handler);
+      return () => {
+        try { set.delete(handler); } catch (_) {}
+      };
+    },
+    emit(type, payload) {
+      const set = listenersByType.get(String(type || ""));
+      if (!set) return;
+      for (const handler of Array.from(set)) {
+        try { handler(payload); } catch (err) { console.error(err); }
+      }
+    },
+  };
 }
 
 export function createOrbShatterPreview({ els } = {}) {
-  const runtime = createOrbShatterRuntime({
+  const eventBus = createEventBus();
+  const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({ eventBus });
+  const orbShatterRuntime = createOrbShatterRuntime({
     layerEl: els && els.orbShatterLayer,
   });
-
-  const palette = Object.freeze({
-    strokeRgb: "rgb(255,255,255)",
-    fillRgb: "rgb(255,255,255)",
-    fillAlpha: 0.20,
+  const orbShatterController = createOrbShatterRuntimeController({
+    root: globalThis.document && globalThis.document.documentElement,
+    getOrbEl: () => (els ? els.orb : null),
+    getOrbShatterRuntime: () => orbShatterRuntime,
+    getOrbColorState: () => null,
+    getBaseFillAlpha: () => 0.20,
   });
 
+  let started = false;
+  let seedCounter = 1;
+  const unsub = [];
+
+  function ensureStarted() {
+    if (started) return;
+    started = true;
+    orbDamageVisualsRuntime.start();
+    unsub.push(eventBus.on("orb.shatter_piece_spawned", (piecePayload) => {
+      orbShatterController.spawnShardFx(piecePayload);
+    }));
+    unsub.push(eventBus.on("orb.shatter_complete", () => {
+      orbShatterController.handleOrbShatterComplete();
+    }));
+    unsub.push(eventBus.on("orb.revived", () => {
+      orbShatterController.handleOrbRevived();
+    }));
+  }
+
   function clear() {
-    runtime.clear();
+    ensureStarted();
+    orbShatterController.handleOrbRevived();
   }
 
   function play() {
-    runtime.clear();
-    const pieceCount = 12;
-    const ttlMs = 760;
-    const innerR = 22;
-    const outerR = 52;
-    for (let i = 0; i < pieceCount; i += 1) {
-      const startA = (Math.PI * 2 * i) / pieceCount;
-      const endA = (Math.PI * 2 * (i + 1)) / pieceCount;
-      const centerA = (startA + endA) * 0.5;
-      runtime.spawnPiece({
-        pieceId: `orb-shatter-${i}`,
-        points: buildShardPoints(innerR, outerR, startA, endA),
-        center: {
-          x: Math.cos(centerA) * ((innerR + outerR) * 0.5),
-          y: Math.sin(centerA) * ((innerR + outerR) * 0.5),
-        },
-        vx: Math.cos(centerA) * 170,
-        vy: Math.sin(centerA) * 170 - 28,
-        angVel: (i % 2 === 0 ? 1 : -1) * (1.2 + (i * 0.08)),
-        ttlMs,
-      }, palette);
-    }
+    ensureStarted();
+    orbShatterController.handleOrbDied();
+    eventBus.emit("orb.shatter_started", {
+      atMs: Date.now(),
+      pieceCount: 12,
+      seed: 1000 + (seedCounter++),
+    });
   }
 
   function wire() {
