@@ -13,6 +13,14 @@ export function setBindingRows(bindingGrid, rows) {
   }
 }
 
+function getBindingEntry(wordVfxBindings, wordId) {
+  const normalized = String(wordId || "").trim().toLowerCase();
+  return (Array.isArray(wordVfxBindings) ? wordVfxBindings : []).find((entry) => {
+    const entryWordId = String((entry && (entry.wordId || entry.spellId)) || "").trim().toLowerCase();
+    return entryWordId === normalized;
+  }) || null;
+}
+
 export function refreshBindingPanel({
   bindingGrid,
   bindingWordSelect,
@@ -46,7 +54,7 @@ export function refreshBindingPanel({
   }
 
   if (selectedRuntimeWord && registryId) {
-    const selectedBinding = resolveSpellVfxBinding(selectedWordId);
+    const selectedBinding = getBindingEntry(wordVfxBindings, selectedWordId);
     const selectedPrimary = selectedBinding && selectedBinding.primary ? selectedBinding.primary : null;
     const selectedEffectId = String((selectedPrimary && selectedPrimary.effectId) || "");
     const selectedPresetId = String((selectedPrimary && selectedPrimary.presetId) || "");
@@ -63,8 +71,12 @@ export function refreshBindingPanel({
 
   const matches = (Array.isArray(wordVfxBindings) ? wordVfxBindings : [])
     .filter((b) => b && b.primary && String(b.primary.effectId || "") === registryId)
-    .map((b) => resolveSpellVfxBinding(String((b.wordId || b.spellId || ""))))
-    .filter(Boolean);
+    .map((b) => ({
+      wordId: String((b.wordId || b.spellId || "")).toLowerCase(),
+      spellId: String((b.wordId || b.spellId || "")).toLowerCase(),
+      primary: b.primary || null,
+      postCastActions: Array.isArray(b.postCastActions) ? b.postCastActions : [],
+    }));
 
   if (!matches.length) {
     setBindingRows(bindingGrid, [
@@ -112,4 +124,120 @@ export function populateBindingWordOptions(bindingWordSelect, runtimeWords) {
   if (previousValue && Array.from(bindingWordSelect.options).some((opt) => opt.value === previousValue)) {
     bindingWordSelect.value = previousValue;
   }
+}
+
+function quoteString(value) {
+  return JSON.stringify(String(value || ""));
+}
+
+function serializeActionBinding(primary, indent) {
+  return [
+    `${indent}primary: Object.freeze({`,
+    `${indent}  castActionId: ${quoteString(primary && primary.castActionId)},`,
+    `${indent}  effectId: ${quoteString(primary && primary.effectId)},`,
+    `${indent}  presetId: ${quoteString(primary && primary.presetId)},`,
+    `${indent}}),`,
+  ].join("\n");
+}
+
+function serializePostCastAction(action, indent) {
+  const lines = [`${indent}Object.freeze({`, `${indent}  id: ${quoteString(action && action.id)},`];
+  if (action && action.effectId) lines.push(`${indent}  effectId: ${quoteString(action.effectId)},`);
+  if (action && action.presetId) lines.push(`${indent}  presetId: ${quoteString(action.presetId)},`);
+  if (action && action.payload && typeof action.payload === "object" && Object.keys(action.payload).length) {
+    lines.push(`${indent}  payload: Object.freeze(${JSON.stringify(action.payload)}),`);
+  }
+  lines.push(`${indent}})`);
+  return lines.join("\n");
+}
+
+function serializeBindingEntry(entry) {
+  const lines = [
+    "  Object.freeze({",
+    `    wordId: ${quoteString(entry && entry.wordId)},`,
+    `    spellId: ${quoteString(entry && (entry.spellId || entry.wordId))},`,
+    serializeActionBinding(entry && entry.primary, "    "),
+  ];
+  const postCastActions = Array.isArray(entry && entry.postCastActions) ? entry.postCastActions : [];
+  if (postCastActions.length) {
+    lines.push("    postCastActions: Object.freeze([");
+    lines.push(postCastActions.map((action) => serializePostCastAction(action, "      ")).join(",\n"));
+    lines.push("    ]),");
+  }
+  lines.push("  })");
+  return lines.join("\n");
+}
+
+export function buildWordVfxBindingsModule(wordVfxBindings) {
+  const entries = (Array.isArray(wordVfxBindings) ? wordVfxBindings : [])
+    .map((entry) => ({
+      ...entry,
+      wordId: String((entry && (entry.wordId || entry.spellId)) || "").toLowerCase(),
+      spellId: String((entry && (entry.wordId || entry.spellId)) || "").toLowerCase(),
+      primary: entry && entry.primary ? { ...entry.primary } : null,
+      postCastActions: Array.isArray(entry && entry.postCastActions)
+        ? entry.postCastActions.map((action) => ({
+            ...action,
+            payload: action && action.payload && typeof action.payload === "object"
+              ? { ...action.payload }
+              : action && action.payload,
+          }))
+        : [],
+    }))
+    .filter((entry) => entry.wordId && entry.primary && entry.primary.castActionId && entry.primary.effectId && entry.primary.presetId)
+    .sort((a, b) => a.wordId.localeCompare(b.wordId));
+
+  return `// Word -> VFX binding schema (authoring/publish surface).
+// Keeps word visual usage separate from word gameplay action routing.
+
+/**
+ * @typedef {Object} SpellVfxActionBinding
+ * @property {string} castActionId Which action this VFX binding describes (for example \`aoe_flame\`).
+ * @property {string} effectId VFX effect registry id.
+ * @property {string} presetId Preset id to use for this action/effect.
+ */
+
+/**
+ * @typedef {Object} SpellVfxPostActionBinding
+ * @property {string} id Follow-up action id (for example \`float_grace\`).
+ * @property {string} [effectId] Optional VFX effect registry id if the post action has a visual component.
+ * @property {string} [presetId] Optional preset id for the post action VFX.
+ * @property {Object} [payload] Optional action payload override (for example \`{ ms: 2500 }\`).
+ */
+
+/**
+ * @typedef {Object} SpellVfxBindingEntry
+ * @property {string} wordId Canonical word id.
+ * @property {string} [spellId] Legacy compatibility alias for \`wordId\`.
+ * @property {SpellVfxActionBinding} primary
+ * @property {SpellVfxPostActionBinding[]} [postCastActions]
+ */
+
+/** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */
+export const WORD_VFX_BINDINGS = Object.freeze([
+${entries.map((entry) => serializeBindingEntry(entry)).join(",\n")}
+]);
+
+export const WORD_VFX_BINDINGS_BY_WORD_ID = Object.freeze(
+  WORD_VFX_BINDINGS.reduce((acc, entry) => {
+    const wordId = String((entry && entry.wordId) || "").toLowerCase();
+    if (!wordId) return acc;
+    acc[wordId] = entry;
+    return acc;
+  }, {})
+);
+
+export function getWordVfxBinding(wordId) {
+  return WORD_VFX_BINDINGS_BY_WORD_ID[String(wordId || "").toLowerCase()] || null;
+}
+
+// Legacy aliases preserved for older lab/runtime surfaces that still speak in
+// spell-first terms while the repo converges on word-first naming.
+export const SPELL_VFX_BINDINGS = WORD_VFX_BINDINGS;
+export const SPELL_VFX_BINDINGS_BY_SPELL_ID = WORD_VFX_BINDINGS_BY_WORD_ID;
+
+export function getSpellVfxBinding(spellId) {
+  return getWordVfxBinding(spellId);
+}
+`;
 }

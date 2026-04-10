@@ -782,6 +782,7 @@
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
     } from "./studio/vfx-studio-state.js";
     import {
+      buildWordVfxBindingsModule,
       populateBindingWordOptions as populateBindingWordOptionsHelper,
       refreshBindingPanel as refreshBindingPanelHelper,
     } from "./studio/vfx-studio-bindings.js";
@@ -822,6 +823,7 @@
     let suspendDraftApply = false;
     const lastSelectedEffectValueRef = { value: "" };
     let projectRootDirHandle = null;
+    let wordVfxBindingsState = Array.isArray(WORD_VFX_BINDINGS) ? WORD_VFX_BINDINGS.map((entry) => ({ ...entry })) : [];
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LIVE_PRESET_MODULES_BY_BASE_EFFECT = Object.freeze({
       "shockwave": {
@@ -932,7 +934,7 @@
         selectedEffectCategory,
         getRuntimeWordById,
         resolveSpellVfxBinding,
-        wordVfxBindings: WORD_VFX_BINDINGS,
+        wordVfxBindings: wordVfxBindingsState,
       });
     }
 
@@ -1167,7 +1169,94 @@
         window.alert("This effect profile is locked. Unlock it to publish a binding.");
         return;
       }
-      window.alert("Bind is next: spell/world-item binding publish UI is not implemented yet.");
+      const opt = selectedEffectOption();
+      if (!opt) {
+        window.alert("Select an effect profile before publishing a binding.");
+        return;
+      }
+      const selectedWordId = String((els.bindingWordSelect && els.bindingWordSelect.value) || "").trim().toLowerCase();
+      if (!selectedWordId) {
+        window.alert("Choose a runtime word to bind first.");
+        return;
+      }
+      const runtimeWord = getRuntimeWordById(selectedWordId);
+      if (!runtimeWord) {
+        window.alert("The selected runtime word could not be resolved.");
+        return;
+      }
+      const registryId = String(opt.dataset.registryId || "").trim();
+      if (!registryId) {
+        window.alert("This profile is missing a registry effect id, so it cannot publish a runtime binding yet.");
+        return;
+      }
+      const registryEntry = (Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : [])
+        .find((entry) => String((entry && entry.id) || "") === registryId) || null;
+      if (!registryEntry || !Array.isArray(registryEntry.publishTargets) || !registryEntry.publishTargets.includes("binding")) {
+        window.alert("This effect does not currently support binding publish.");
+        return;
+      }
+
+      const built = buildPublishedPresetPayload();
+      if (!built || !built.payload) {
+        window.alert("Could not build the selected preset payload for binding publish.");
+        return;
+      }
+
+      const nextEntry = {
+        wordId: selectedWordId,
+        spellId: selectedWordId,
+        primary: {
+          castActionId: String(runtimeWord.castActionId || "unknown"),
+          effectId: registryId,
+          presetId: String(built.payload.presetId || registryEntry.defaultPresetId || ""),
+        },
+      };
+
+      const existingEntry = (Array.isArray(wordVfxBindingsState) ? wordVfxBindingsState : []).find((entry) => {
+        const entryWordId = String((entry && (entry.wordId || entry.spellId)) || "").trim().toLowerCase();
+        return entryWordId === selectedWordId;
+      }) || null;
+      if (existingEntry && Array.isArray(existingEntry.postCastActions) && existingEntry.postCastActions.length) {
+        nextEntry.postCastActions = existingEntry.postCastActions.map((action) => ({
+          ...action,
+          payload: action && action.payload && typeof action.payload === "object"
+            ? { ...action.payload }
+            : action && action.payload,
+        }));
+      }
+
+      const otherEntries = (Array.isArray(wordVfxBindingsState) ? wordVfxBindingsState : []).filter((entry) => {
+        const entryWordId = String((entry && (entry.wordId || entry.spellId)) || "").trim().toLowerCase();
+        return entryWordId !== selectedWordId;
+      });
+      wordVfxBindingsState = [...otherEntries, nextEntry];
+
+      const moduleText = buildWordVfxBindingsModule(wordVfxBindingsState);
+      const targetPath = ["src", "content", "vfx", "spell-effect-bindings.js"];
+
+      (async () => {
+        try {
+          if (!projectRootDirHandle && window.showDirectoryPicker) {
+            const connected = await connectProjectFolder();
+            if (!connected) return;
+          }
+          if (projectRootDirHandle) {
+            const ok = await saveTextToConnectedProjectPath(targetPath, moduleText);
+            if (ok) {
+              refreshBindingPanel();
+              window.alert(`Published binding to ${targetPath.join("/")}`);
+              return;
+            }
+          }
+          downloadTextFile("spell-effect-bindings.js", moduleText);
+          refreshBindingPanel();
+          window.alert("Binding module downloaded. Add it to src/content/vfx/spell-effect-bindings.js to apply it.");
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+          console.error(err);
+          downloadTextFile("spell-effect-bindings.js", moduleText);
+        }
+      })();
     }
 
     function captureCurrentEffectSettings(baseEffect){
