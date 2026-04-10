@@ -102,7 +102,7 @@ export function populateBindingTargetOptions(bindingTargetSelect, runtimeEffectT
     if (!kind || !registryId) continue;
     if (!groups.has(kind)) {
       const optgroup = document.createElement("optgroup");
-      optgroup.label = kind === "spell" ? "Spells" : kind === "orb-state" ? "Orb States" : kind;
+      optgroup.label = kind === "spell" ? "spell" : kind === "orb-state" ? "orb-state" : kind;
       groups.set(kind, optgroup);
     }
     const opt = document.createElement("option");
