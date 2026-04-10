@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Orb VFX Tester — Electric AOE + Shield + Shockwave</title>
-  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260409-vfxlab-restore" />
+  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-taxonomy" />
   <style>
     :root{
       --g: var(--text-strong);
@@ -763,23 +763,23 @@
   </div>
 
   <script type="module">
-    import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js";
-    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js";
-    import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js";
-    import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js";
-    import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js";
-    import { createShieldPreview } from "./studio/previews/shield-preview.js";
-    import { createShockwavePreview } from "./studio/previews/shockwave-preview.js";
-    import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js";
-    import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js";
-    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js";
+    import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410a";
+    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260410a";
+    import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410a";
+    import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410a";
+    import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410a";
+    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260410a";
+    import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260410a";
+    import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260410a";
+    import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260410a";
+    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js?v=20260410a";
     import {
       bootStudioShell,
       refreshEffectMeta as refreshEffectMetaHelper,
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
       updateEffectSections as updateEffectSectionsHelper,
-    } from "./studio/vfx-studio-shell.js";
+    } from "./studio/vfx-studio-shell.js?v=20260410a";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
@@ -799,12 +799,12 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js";
+    } from "./studio/vfx-studio-state.js?v=20260410a";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
       refreshBindingPanel as refreshBindingPanelHelper,
-    } from "./studio/vfx-studio-bindings.js";
+    } from "./studio/vfx-studio-bindings.js?v=20260410a";
     import {
       applyLabThemeDefaults,
       buildLivePresetModuleForBaseEffect,
@@ -814,13 +814,13 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260410a";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
       FLAME_AOE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js";
+    } from "../../src/vfx/presets/index.js?v=20260410a";
 
     const $ = (id) => document.getElementById(id);
     const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze({
