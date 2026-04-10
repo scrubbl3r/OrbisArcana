@@ -359,6 +359,16 @@
       transform: translate(-50%,-50%);
       pointer-events:none;
     }
+    .orbShatterLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:240px;
+      height:240px;
+      overflow:visible;
+      transform: translate(-50%,-50%);
+      pointer-events:none;
+    }
 
     .orb{
       width: var(--orb-d);
@@ -543,6 +553,7 @@
           <option value="electric-aoe" data-registry-id="spell.aoe_electric" data-base-effect="electric-aoe" data-category="spell" data-locked="true">Electric AOE</option>
           <option value="flame-aoe" data-registry-id="spell.aoe_flame" data-base-effect="flame-aoe" data-category="spell" data-locked="true">Flame AOE</option>
           <option value="shockwave" data-registry-id="spell.shockwave_ring" data-base-effect="shockwave" data-category="spell" data-locked="true">Shockwave</option>
+          <option value="orb-shatter" data-registry-id="orb.shatter_voronoi" data-base-effect="orb-shatter" data-category="orb" data-locked="true">Orb Shatter (Voronoi)</option>
         </select>
       </div>
       <div class="studioBarGroup">
@@ -559,11 +570,12 @@
     </div>
 
     <div class="card">
-      <div class="stage" id="stage" aria-label="Preview stage">
+        <div class="stage" id="stage" aria-label="Preview stage">
         <div class="origin" id="origin">
           <div class="electricLayer" id="electricLayer"></div>
           <div class="flameLayer" id="flameLayer"></div>
           <div class="shockLayer" id="shockLayer"></div>
+          <svg class="orbShatterLayer" id="orbShatterLayer" viewBox="-120 -120 240 240" aria-hidden="true"></svg>
           <div class="shield atOrigin" id="shield" aria-hidden="true"></div>
           <div class="orb atOrigin" id="orb" aria-hidden="true"></div>
         </div>
@@ -740,6 +752,13 @@
           Solid red-orange AOE ring with vector tendrils emanating in all directions.
         </div>
       </div>
+
+      <div class="section" data-effect="orb-shatter" hidden>
+        <div class="row">
+          <button id="playOrbShatter">Play</button>
+        </div>
+        <div class="bindingEditorHelp">Voronoi shard burst bound to the first real orb-state exemplar: <strong>orb-state.shattered</strong>.</div>
+      </div>
     </div>
   </div>
 
@@ -753,6 +772,7 @@
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js";
+    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js";
     import {
       bootStudioShell,
       refreshEffectMeta as refreshEffectMetaHelper,
@@ -808,6 +828,7 @@
       "spell.aoe_flame": "flame-aoe",
       "spell.shield_bubble": "bubble-shield",
       "spell.shockwave_ring": "shockwave",
+      "orb.shatter_voronoi": "orb-shatter",
     });
     const CATEGORY_LABELS = Object.freeze({
       spell: "spell",
@@ -841,12 +862,17 @@
         path: ["src", "vfx", "presets", "electric-aoe-default.js"],
         exportName: "ELECTRIC_AOE_PRESET_DEFAULT",
       },
+      "orb-shatter": {
+        path: ["src", "vfx", "presets", "orb-shatter-default.js"],
+        exportName: "ORB_SHATTER_PRESET_DEFAULT",
+      },
     });
 
     const els = {
       shockLayer: $("shockLayer"),
       flameLayer: $("flameLayer"),
       electricLayer: $("electricLayer"),
+      orbShatterLayer: $("orbShatterLayer"),
       shield: $("shield"),
 
       playShield: $("playShield"),
@@ -898,6 +924,7 @@
       flameMs: $("flameMs"),
 
       playElectric: $("playElectric"),
+      playOrbShatter: $("playOrbShatter"),
       electricMs: $("electricMs"),
       electricStartR: $("electricStartR"),
       vElectricStartR: $("vElectricStartR"),
@@ -1053,6 +1080,8 @@
             electricStartR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.startR, 2, 500)),
             electricEndR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.endR, 8, 1000)),
           };
+        case "orb-shatter":
+          return {};
         default:
           return {};
       }
@@ -1279,6 +1308,8 @@
             electricStartR: Number(els.electricStartR && els.electricStartR.value),
             electricEndR: Number(els.electricEndR && els.electricEndR.value),
           };
+        case "orb-shatter":
+          return {};
         default:
           return {};
       }
@@ -1320,6 +1351,8 @@
             if (els.electricStartR && settings.electricStartR != null) els.electricStartR.value = String(settings.electricStartR);
             if (els.electricEndR && settings.electricEndR != null) els.electricEndR.value = String(settings.electricEndR);
             applyElectricControls();
+            break;
+          case "orb-shatter":
             break;
           default:
             break;
@@ -1551,6 +1584,7 @@
       clearShock();
       clearFlame();
       clearElectric();
+      clearOrbShatter();
     }
 
     shieldPreview.wire();
@@ -1642,6 +1676,14 @@
     const playElectric = electricPreview.play;
     electricPreview.wire();
 
+    // =========================================================================
+    // Orb Shatter (first orb-state exemplar)
+    // =========================================================================
+    const orbShatterPreview = createOrbShatterPreview({ els });
+    const clearOrbShatter = orbShatterPreview.clear;
+    const playOrbShatter = orbShatterPreview.play;
+    orbShatterPreview.wire();
+
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){
         e.preventDefault();
@@ -1655,6 +1697,9 @@
       }
       if (e.key.toLowerCase() === "e"){
         playElectric();
+      }
+      if (e.key.toLowerCase() === "o"){
+        playOrbShatter();
       }
     });
   </script>

@@ -140,6 +140,11 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "orb-shatter":
+      return [
+        "export const ORB_SHATTER_PRESET_DEFAULT = Object.freeze({});",
+        "",
+      ].join("\n");
     default:
       return "";
   }
