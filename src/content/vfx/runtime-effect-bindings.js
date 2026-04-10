@@ -29,6 +29,12 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
     effectId: "spell.shield_bubble",
     presetId: "preset.bubble_shield.default",
   }),
+  Object.freeze({
+    targetKind: "orb-state",
+    targetId: "shattered",
+    effectId: "orb.shatter_voronoi",
+    presetId: "preset.orb_shatter.default",
+  }),
 ]);
 
 export const RUNTIME_EFFECT_BINDINGS_BY_KEY = Object.freeze(

@@ -48,7 +48,7 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     runtimeModuleId: "orb_shatter_runtime",
     defaultPresetId: "preset.orb_shatter.default",
     supportedContexts: ["lab", "receiver"],
-    publishTargets: ["preset"],
+    publishTargets: ["preset", "binding"],
   }),
   Object.freeze({
     id: "spell.shockwave_ring",
@@ -73,4 +73,3 @@ export const VFX_EFFECT_REGISTRY_BY_ID = Object.freeze(
 export function getVfxEffectRegistryEntry(effectId) {
   return VFX_EFFECT_REGISTRY_BY_ID[String(effectId || "").toLowerCase()] || null;
 }
-
