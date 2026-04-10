@@ -14,8 +14,8 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
   Object.freeze({
     targetKind: "spell",
     targetId: "aoe_flame",
-    effectId: "spell.aoe_flame",
-    presetId: "preset.flame_aoe.default",
+    effectId: "spell.aoe_electric",
+    presetId: "preset.electric_aoe.default",
   }),
   Object.freeze({
     targetKind: "spell",
