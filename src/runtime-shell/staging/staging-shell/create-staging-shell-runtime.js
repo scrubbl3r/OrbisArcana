@@ -309,8 +309,8 @@ function shellOrbScreenY(shellContext) {
 
 function applyShellGroundLine(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
-  const groundLine = shellContext && shellContext.stageEls ? shellContext.stageEls.groundLine : null;
-  if (!stage || !stage.phys || !groundLine) return;
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  if (!stage || !stage.phys || !gameStagingAdapter || typeof gameStagingAdapter.applyGroundLine !== "function") return;
   const rect = shellStageRect(shellContext);
   const groundLineWorldY = shellGroundCenterWorld(shellContext) +
     (Number(stage.phys.orbRadiusPx) || 50) +
@@ -318,16 +318,16 @@ function applyShellGroundLine(shellContext) {
   const camTop = shellCameraTopFor(shellContext, stage.orbRuntimeState.get().yW, rect.height || 0);
   const groundY = groundLineWorldY - camTop;
   const top = groundY - (((Number(stage.phys.groundLinePx) || 2) * 0.5));
-  groundLine.style.top = `${top.toFixed(2)}px`;
+  gameStagingAdapter.applyGroundLine({ top });
 }
 
 function applyShellOrbTransform(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbWrap = shellContext && shellContext.stageEls ? shellContext.stageEls.orbWrap : null;
-  if (!runtime || !runtime.stage || !orbWrap) return;
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  if (!runtime || !runtime.stage || !gameStagingAdapter || typeof gameStagingAdapter.applyOrbTransform !== "function") return;
   const y = shellOrbScreenY(shellContext);
   const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
-  orbWrap.style.transform = `translate(-50%, ${top.toFixed(2)}px)`;
+  gameStagingAdapter.applyOrbTransform({ top });
 }
 
 function resetShellOrbToGround(shellContext) {
@@ -824,11 +824,6 @@ function getShellOrbBaseVisualState() {
   };
 }
 
-function lineToPath(seg) {
-  if (!seg || !seg.a || !seg.b) return "";
-  return `M ${Number(seg.a.x).toFixed(2)} ${Number(seg.a.y).toFixed(2)} L ${Number(seg.b.x).toFixed(2)} ${Number(seg.b.y).toFixed(2)}`;
-}
-
 function updateShellOrbStrokeColor(shellContext, dt) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const orbColorRuntime = runtime && runtime.orbColorRuntime;
@@ -840,21 +835,10 @@ function updateShellOrbStrokeColor(shellContext, dt) {
 function renderShellOrbDamageVisuals(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const mvp = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime.mvp : (runtime && runtime.mvp ? runtime.mvp : null);
-  const stageEls = shellContext && shellContext.stageEls ? shellContext.stageEls : null;
-  if (!mvp || !mvp.orbDamageVisualsRuntime || !stageEls || !stageEls.orb || !stageEls.orbCracks) return;
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  if (!mvp || !mvp.orbDamageVisualsRuntime || !gameStagingAdapter || typeof gameStagingAdapter.renderOrbDamageVisuals !== "function") return;
   const fx = mvp.orbDamageVisualsRuntime.getState();
-  const shattered = (fx && fx.visualState === "shattered");
-  stageEls.orb.classList.toggle("shattered", shattered);
-  stageEls.orb.style.opacity = shattered ? "0" : "";
-
-  const paths = [];
-  if (!shattered && Array.isArray(fx && fx.crackSegments)) {
-    for (const seg of fx.crackSegments) {
-      const d = lineToPath(seg);
-      if (d) paths.push(`<path d="${d}" />`);
-    }
-  }
-  stageEls.orbCracks.innerHTML = paths.join("");
+  gameStagingAdapter.renderOrbDamageVisuals({ fx });
 }
 
 function openShellDeathOverlay(shellContext) {

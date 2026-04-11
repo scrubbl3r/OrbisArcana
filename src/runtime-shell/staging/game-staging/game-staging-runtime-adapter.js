@@ -22,6 +22,11 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
     dVal: refs.dVal || null,
   });
 
+  function lineToPath(seg) {
+    if (!seg || !seg.a || !seg.b) return "";
+    return `M ${Number(seg.a.x).toFixed(2)} ${Number(seg.a.y).toFixed(2)} L ${Number(seg.b.x).toFixed(2)} ${Number(seg.b.y).toFixed(2)}`;
+  }
+
   return Object.freeze({
     level,
     refs: stageRefs,
@@ -201,6 +206,35 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
       ctx.shadowBlur = 8;
       ctx.stroke();
       ctx.shadowBlur = 0;
+    },
+    applyGroundLine({
+      top = 0,
+    } = {}) {
+      if (!stageRefs.groundLine) return;
+      stageRefs.groundLine.style.top = `${Number(top || 0).toFixed(2)}px`;
+    },
+    applyOrbTransform({
+      top = 0,
+    } = {}) {
+      if (!stageRefs.orbWrap) return;
+      stageRefs.orbWrap.style.transform = `translate(-50%, ${Number(top || 0).toFixed(2)}px)`;
+    },
+    renderOrbDamageVisuals({
+      fx = null,
+    } = {}) {
+      if (!stageRefs.orb || !stageRefs.orbCracks) return;
+      const shattered = !!(fx && fx.visualState === "shattered");
+      stageRefs.orb.classList.toggle("shattered", shattered);
+      stageRefs.orb.style.opacity = shattered ? "0" : "";
+
+      const paths = [];
+      if (!shattered && Array.isArray(fx && fx.crackSegments)) {
+        for (const seg of fx.crackSegments) {
+          const d = lineToPath(seg);
+          if (d) paths.push(`<path d="${d}" />`);
+        }
+      }
+      stageRefs.orbCracks.innerHTML = paths.join("");
     },
   });
 }
