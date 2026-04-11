@@ -571,6 +571,7 @@
       margin-top:0;
     }
     .section[hidden]{ display:none; }
+    [data-preview-layer][hidden]{ display:none !important; }
 
     .row{
       display:flex;
@@ -660,15 +661,15 @@
     <div class="card">
         <div class="stage" id="stage" aria-label="Preview stage">
         <div class="origin" id="origin">
-          <div class="electricLayer" id="electricLayer"></div>
-          <div class="flameLayer" id="flameLayer"></div>
-          <div class="shockLayer" id="shockLayer"></div>
-          <div class="orbGlobePreviewLayer" id="orbGlobePreviewLayer" aria-hidden="true"></div>
-          <svg class="orbFractureLayer" id="orbFractureLayer" viewBox="-70 -70 140 140" aria-hidden="true"></svg>
-          <svg class="orbShatterLayer" id="orbShatterLayer" viewBox="-120 -120 240 240" aria-hidden="true"></svg>
-          <div class="shield atOrigin" id="shield" aria-hidden="true"></div>
-          <div class="orbInterior" id="orbInterior" aria-hidden="true"></div>
-          <div class="orb atOrigin" id="orb" aria-hidden="true"></div>
+          <div class="electricLayer" id="electricLayer" data-preview-layer hidden aria-hidden="true"></div>
+          <div class="flameLayer" id="flameLayer" data-preview-layer hidden aria-hidden="true"></div>
+          <div class="shockLayer" id="shockLayer" data-preview-layer hidden aria-hidden="true"></div>
+          <div class="orbGlobePreviewLayer" id="orbGlobePreviewLayer" data-preview-layer hidden aria-hidden="true"></div>
+          <svg class="orbFractureLayer" id="orbFractureLayer" viewBox="-70 -70 140 140" data-preview-layer hidden aria-hidden="true"></svg>
+          <svg class="orbShatterLayer" id="orbShatterLayer" viewBox="-120 -120 240 240" data-preview-layer hidden aria-hidden="true"></svg>
+          <div class="shield atOrigin" id="shield" data-preview-layer hidden aria-hidden="true"></div>
+          <div class="orbInterior" id="orbInterior" data-preview-layer hidden aria-hidden="true"></div>
+          <div class="orb atOrigin" id="orb" data-preview-layer hidden aria-hidden="true"></div>
         </div>
       </div>
     </div>
@@ -1963,6 +1964,16 @@
     // GEOMETRY (forced even)
     // =========================================================================
     const GEOM = { orbD:100, orbStroke:2, shieldD:186, shieldStroke:4 };
+    const PREVIEW_LAYER_GROUPS = {
+      "bubble-shield": [els.orb, els.shield],
+      "shockwave": [els.orb, els.shockLayer],
+      "flame-aoe": [els.orb, els.flameLayer],
+      "electric-aoe": [els.orb, els.electricLayer],
+      "orb-shatter": [els.orb, els.orbShatterLayer],
+      "orb-base": [els.orb],
+      "orb-fracture": [els.orb, els.orbFractureLayer, els.orbShatterLayer],
+      "orb-globe": [els.orb, els.orbInterior, els.orbGlobePreviewLayer],
+    };
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
 
     function applyGeometryVars(){
@@ -2002,6 +2013,11 @@
       clearOrbFracture();
       clearOrbGlobe();
       clearOrbShatter();
+      Object.values(PREVIEW_LAYER_GROUPS).flat().forEach((layer) => {
+        if (!layer || typeof layer.setAttribute !== "function") return;
+        layer.setAttribute("aria-hidden", "true");
+        layer.toggleAttribute("hidden", true);
+      });
     }
 
     shieldPreview.wire();
@@ -2016,6 +2032,7 @@
         applyDraftToSelectedProfile,
         persistDraftStore,
         refreshEffectMeta,
+        previewLayerGroups: PREVIEW_LAYER_GROUPS,
       });
     }
     bootStudioShell({
