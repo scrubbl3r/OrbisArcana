@@ -867,6 +867,11 @@
         </div>
         <input id="orbBaseStroke" type="range" min="2" max="20" value="2" step="1" />
         <div class="sliderRow">
+          <span>Stroke alpha</span>
+          <strong><span id="vOrbBaseStrokeAlpha">1.00</span></strong>
+        </div>
+        <input id="orbBaseStrokeAlpha" type="range" min="0" max="1" value="1.00" step="0.01" />
+        <div class="sliderRow">
           <span>Fill alpha</span>
           <strong><span id="vOrbBaseFillAlpha">0.20</span></strong>
         </div>
@@ -886,6 +891,21 @@
           <strong><span id="vOrbBaseStrokeB">255</span></strong>
         </div>
         <input id="orbBaseStrokeB" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Fill red</span>
+          <strong><span id="vOrbBaseFillR">255</span></strong>
+        </div>
+        <input id="orbBaseFillR" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Fill green</span>
+          <strong><span id="vOrbBaseFillG">255</span></strong>
+        </div>
+        <input id="orbBaseFillG" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Fill blue</span>
+          <strong><span id="vOrbBaseFillB">255</span></strong>
+        </div>
+        <input id="orbBaseFillB" type="range" min="0" max="255" value="255" step="1" />
       </div>
 
       <div class="section" data-effect="orb-fracture" hidden>
@@ -1177,6 +1197,8 @@
       vOrbBaseD: $("vOrbBaseD"),
       orbBaseStroke: $("orbBaseStroke"),
       vOrbBaseStroke: $("vOrbBaseStroke"),
+      orbBaseStrokeAlpha: $("orbBaseStrokeAlpha"),
+      vOrbBaseStrokeAlpha: $("vOrbBaseStrokeAlpha"),
       orbBaseFillAlpha: $("orbBaseFillAlpha"),
       vOrbBaseFillAlpha: $("vOrbBaseFillAlpha"),
       orbBaseStrokeR: $("orbBaseStrokeR"),
@@ -1185,6 +1207,12 @@
       vOrbBaseStrokeG: $("vOrbBaseStrokeG"),
       orbBaseStrokeB: $("orbBaseStrokeB"),
       vOrbBaseStrokeB: $("vOrbBaseStrokeB"),
+      orbBaseFillR: $("orbBaseFillR"),
+      vOrbBaseFillR: $("vOrbBaseFillR"),
+      orbBaseFillG: $("orbBaseFillG"),
+      vOrbBaseFillG: $("vOrbBaseFillG"),
+      orbBaseFillB: $("orbBaseFillB"),
+      vOrbBaseFillB: $("vOrbBaseFillB"),
       orbFractureCrackStroke: $("orbFractureCrackStroke"),
       vOrbFractureCrackStroke: $("vOrbFractureCrackStroke"),
       orbFractureShardStroke: $("orbFractureShardStroke"),
@@ -1338,10 +1366,14 @@
           return {
             orbBaseD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
             orbBaseStroke: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
+            orbBaseStrokeAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.strokeAlpha.toFixed(2)),
             orbBaseFillAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha.toFixed(2)),
             orbBaseStrokeR: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.r),
             orbBaseStrokeG: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.g),
             orbBaseStrokeB: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.b),
+            orbBaseFillR: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.r),
+            orbBaseFillG: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.g),
+            orbBaseFillB: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b),
           };
         case "orb-fracture":
           return {
@@ -1595,10 +1627,14 @@
           return {
             orbBaseD: Number(els.orbBaseD && els.orbBaseD.value),
             orbBaseStroke: Number(els.orbBaseStroke && els.orbBaseStroke.value),
+            orbBaseStrokeAlpha: Number(els.orbBaseStrokeAlpha && els.orbBaseStrokeAlpha.value),
             orbBaseFillAlpha: Number(els.orbBaseFillAlpha && els.orbBaseFillAlpha.value),
             orbBaseStrokeR: Number(els.orbBaseStrokeR && els.orbBaseStrokeR.value),
             orbBaseStrokeG: Number(els.orbBaseStrokeG && els.orbBaseStrokeG.value),
             orbBaseStrokeB: Number(els.orbBaseStrokeB && els.orbBaseStrokeB.value),
+            orbBaseFillR: Number(els.orbBaseFillR && els.orbBaseFillR.value),
+            orbBaseFillG: Number(els.orbBaseFillG && els.orbBaseFillG.value),
+            orbBaseFillB: Number(els.orbBaseFillB && els.orbBaseFillB.value),
           };
         case "orb-fracture":
           return {
@@ -1665,10 +1701,14 @@
           case "orb-base":
             if (els.orbBaseD && settings.orbBaseD != null) els.orbBaseD.value = String(settings.orbBaseD);
             if (els.orbBaseStroke && settings.orbBaseStroke != null) els.orbBaseStroke.value = String(settings.orbBaseStroke);
+            if (els.orbBaseStrokeAlpha && settings.orbBaseStrokeAlpha != null) els.orbBaseStrokeAlpha.value = String(settings.orbBaseStrokeAlpha);
             if (els.orbBaseFillAlpha && settings.orbBaseFillAlpha != null) els.orbBaseFillAlpha.value = String(settings.orbBaseFillAlpha);
             if (els.orbBaseStrokeR && settings.orbBaseStrokeR != null) els.orbBaseStrokeR.value = String(settings.orbBaseStrokeR);
             if (els.orbBaseStrokeG && settings.orbBaseStrokeG != null) els.orbBaseStrokeG.value = String(settings.orbBaseStrokeG);
             if (els.orbBaseStrokeB && settings.orbBaseStrokeB != null) els.orbBaseStrokeB.value = String(settings.orbBaseStrokeB);
+            if (els.orbBaseFillR && settings.orbBaseFillR != null) els.orbBaseFillR.value = String(settings.orbBaseFillR);
+            if (els.orbBaseFillG && settings.orbBaseFillG != null) els.orbBaseFillG.value = String(settings.orbBaseFillG);
+            if (els.orbBaseFillB && settings.orbBaseFillB != null) els.orbBaseFillB.value = String(settings.orbBaseFillB);
             applyOrbBase();
             break;
           case "orb-fracture":

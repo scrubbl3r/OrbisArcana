@@ -7,5 +7,11 @@ export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({
     g: 255,
     b: 255,
   }),
+  strokeAlpha: 1,
+  fillDefaultRgb: Object.freeze({
+    r: 255,
+    g: 255,
+    b: 255,
+  }),
   fillAlpha: 0.20,
 });

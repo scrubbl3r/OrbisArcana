@@ -24,6 +24,8 @@ const ORB_THEME_DEFAULT = (GAME_THEME_DEFAULT && GAME_THEME_DEFAULT.orb) || {
   diameterPx: 100,
   strokeWidthPx: 2,
   strokeDefaultRgb: { r: 255, g: 255, b: 255 },
+  strokeAlpha: 1,
+  fillDefaultRgb: { r: 255, g: 255, b: 255 },
   fillAlpha: 0.20,
 };
 
@@ -39,6 +41,25 @@ export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({
     r: clampByte(ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb.r),
     g: clampByte(ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb.g),
     b: clampByte(ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb.b),
+  }),
+  strokeAlpha: clamp01(
+    Object.prototype.hasOwnProperty.call(ORB_BASE_VISUAL_DEFAULTS_FILE, "strokeAlpha")
+      ? ORB_BASE_VISUAL_DEFAULTS_FILE.strokeAlpha
+      : ORB_THEME_DEFAULT.strokeAlpha
+  ),
+  fillDefaultRgb: Object.freeze({
+    r: clampByte(
+      (ORB_BASE_VISUAL_DEFAULTS_FILE.fillDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.fillDefaultRgb.r)
+      ?? (ORB_THEME_DEFAULT.fillDefaultRgb && ORB_THEME_DEFAULT.fillDefaultRgb.r)
+    ),
+    g: clampByte(
+      (ORB_BASE_VISUAL_DEFAULTS_FILE.fillDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.fillDefaultRgb.g)
+      ?? (ORB_THEME_DEFAULT.fillDefaultRgb && ORB_THEME_DEFAULT.fillDefaultRgb.g)
+    ),
+    b: clampByte(
+      (ORB_BASE_VISUAL_DEFAULTS_FILE.fillDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.fillDefaultRgb.b)
+      ?? (ORB_THEME_DEFAULT.fillDefaultRgb && ORB_THEME_DEFAULT.fillDefaultRgb.b)
+    ),
   }),
   fillAlpha: clamp01(
     Object.prototype.hasOwnProperty.call(ORB_BASE_VISUAL_DEFAULTS_FILE, "fillAlpha")
@@ -66,6 +87,25 @@ export function buildOrbBaseVisualState({ theme = null, physics = null } = {}) {
     g: clampByte(themeOrb.strokeDefaultRgb && themeOrb.strokeDefaultRgb.g),
     b: clampByte(themeOrb.strokeDefaultRgb && themeOrb.strokeDefaultRgb.b),
   });
+  const strokeAlpha = clamp01(
+    Object.prototype.hasOwnProperty.call(themeOrb, "strokeAlpha")
+      ? themeOrb.strokeAlpha
+      : ORB_BASE_VISUAL_DEFAULTS.strokeAlpha
+  );
+  const fillDefaultRgb = Object.freeze({
+    r: clampByte(
+      (themeOrb.fillDefaultRgb && themeOrb.fillDefaultRgb.r)
+      ?? ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.r
+    ),
+    g: clampByte(
+      (themeOrb.fillDefaultRgb && themeOrb.fillDefaultRgb.g)
+      ?? ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.g
+    ),
+    b: clampByte(
+      (themeOrb.fillDefaultRgb && themeOrb.fillDefaultRgb.b)
+      ?? ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b
+    ),
+  });
   const fillAlpha = clamp01(themeOrb.fillAlpha);
 
   return Object.freeze({
@@ -74,6 +114,8 @@ export function buildOrbBaseVisualState({ theme = null, physics = null } = {}) {
     strokeWidthPx,
     strokeDefaultRgb,
     strokeDefault01: Object.freeze(toStroke01(strokeDefaultRgb)),
+    strokeAlpha,
+    fillDefaultRgb,
     fillAlpha,
   });
 }
@@ -85,15 +127,24 @@ export function applyOrbBaseVisualCssVars(
   if (!root || !orbBaseVisualState || typeof orbBaseVisualState !== "object") return;
 
   const stroke = orbBaseVisualState.strokeDefaultRgb || ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb;
+  const strokeAlpha = clamp01(
+    Object.prototype.hasOwnProperty.call(orbBaseVisualState, "strokeAlpha")
+      ? orbBaseVisualState.strokeAlpha
+      : ORB_BASE_VISUAL_DEFAULTS.strokeAlpha
+  );
+  const fill = orbBaseVisualState.fillDefaultRgb || ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb;
   const fillAlpha = clamp01(orbBaseVisualState.fillAlpha);
   const diameterPx = Math.max(2, Math.round(Number(orbBaseVisualState.diameterPx) || ORB_BASE_VISUAL_DEFAULTS.diameterPx));
   const strokeWidthPx = Math.max(1, Math.round(Number(orbBaseVisualState.strokeWidthPx) || ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx));
 
   root.style.setProperty("--orb-d", `${diameterPx}px`);
   root.style.setProperty("--orb-stroke", `${strokeWidthPx}px`);
-  root.style.setProperty("--orb-stroke-color", `rgb(${clampByte(stroke.r)},${clampByte(stroke.g)},${clampByte(stroke.b)})`);
+  root.style.setProperty(
+    "--orb-stroke-color",
+    `rgba(${clampByte(stroke.r)},${clampByte(stroke.g)},${clampByte(stroke.b)},${strokeAlpha.toFixed(2)})`
+  );
   root.style.setProperty(
     "--orb-fill",
-    `rgba(${clampByte(stroke.r)},${clampByte(stroke.g)},${clampByte(stroke.b)},${fillAlpha.toFixed(2)})`
+    `rgba(${clampByte(fill.r)},${clampByte(fill.g)},${clampByte(fill.b)},${fillAlpha.toFixed(2)})`
   );
 }
