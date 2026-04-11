@@ -1616,6 +1616,19 @@ function createLegacyLikeStageElements(surfaceRefs = {}) {
   };
 }
 
+function createGameStagingAdapter(gameStagingView = null) {
+  if (gameStagingView && gameStagingView.adapter && typeof gameStagingView.adapter.getStageElements === "function") {
+    return gameStagingView.adapter;
+  }
+  const refs = gameStagingView && gameStagingView.refs ? gameStagingView.refs : Object.create(null);
+  return Object.freeze({
+    refs,
+    getStageElements() {
+      return createLegacyLikeStageElements({ game: refs });
+    },
+  });
+}
+
 function buildShellRootWakeWindowMap() {
   const rules = Array.isArray(INTERACTION_GRAPH_V2 && INTERACTION_GRAPH_V2.rules)
     ? INTERACTION_GRAPH_V2.rules
@@ -1806,7 +1819,8 @@ function createStagingShellContext({
   sharedModules,
 } = {}) {
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, gameStagingView });
-  const stageEls = createLegacyLikeStageElements(surfaceRefs);
+  const gameStagingAdapter = createGameStagingAdapter(gameStagingView);
+  const stageEls = gameStagingAdapter.getStageElements();
   return {
     rootDocument,
     views: {
@@ -1815,6 +1829,7 @@ function createStagingShellContext({
     },
     currentLevel,
     refs: surfaceRefs,
+    gameStagingAdapter,
     stageEls,
     sharedModules,
     runtime: {

@@ -1,4 +1,5 @@
 import { LEVEL01 } from "./levels/level01.js";
+import { createGameStagingRuntimeAdapter } from "./game-staging-runtime-adapter.js";
 
 const GAME_STAGING_TEMPLATE = `
   <section class="gameStaging" aria-label="Game staging">
@@ -87,6 +88,7 @@ export function renderGameStaging(root, { level = LEVEL01 } = {}) {
   return {
     root,
     refs,
+    adapter: createGameStagingRuntimeAdapter({ refs, level }),
     level,
     stageEl: refs.physStage,
     gravitySliderEl: refs.gSlider,
