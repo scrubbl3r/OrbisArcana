@@ -11,15 +11,17 @@ export function refreshLockUi({
   if (!lockEffectBtn) return;
   const opt = selectedEffectOption();
   const locked = isSelectedEffectLocked();
+  const baseEffect = String((opt && opt.dataset && opt.dataset.baseEffect) || "");
   const _isCore = isCoreEffectOption(opt);
   void _isCore;
   lockEffectBtn.classList.toggle("locked", locked);
   lockEffectBtn.classList.toggle("unlocked", !locked);
   lockEffectBtn.setAttribute("aria-label", locked ? "Unlock effect profile" : "Lock effect profile");
   lockEffectBtn.title = locked ? "Unlock effect profile" : "Lock effect profile";
-  lockEffectBtn.disabled = !opt || !!(opt && opt.disabled);
+  const isTemplateSeed = baseEffect === "orb-template";
+  lockEffectBtn.disabled = !opt || !!(opt && opt.disabled) || isTemplateSeed;
 
-  const blockSave = locked;
+  const blockSave = locked || isTemplateSeed;
   if (saveDraftBtn) saveDraftBtn.disabled = blockSave;
   if (publishPresetBtn) publishPresetBtn.disabled = blockSave;
   if (bindBtn) bindBtn.disabled = blockSave;
@@ -36,6 +38,10 @@ export function toggleSelectedEffectLock({
 }) {
   const opt = selectedEffectOption();
   if (!opt) return;
+  if (String((opt.dataset && opt.dataset.baseEffect) || "") === "orb-template") {
+    refreshLockUi();
+    return;
+  }
   if (opt.disabled) {
     refreshLockUi();
     return;
