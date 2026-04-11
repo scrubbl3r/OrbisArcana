@@ -5,8 +5,22 @@ import {
   EVT_ORB_DIED,
   EVT_ORB_REVIVED,
 } from "../../contracts/events.js";
+import {
+  getInnerGlobeDiameterPx,
+  getOrbitDistancePx,
+  getOrbitGlobeRadiusPx,
+  ORB_GLOBE_VISUAL_DEFAULTS,
+} from "./orb-globe-base-state.js";
 
-export function createOrbGlobesRuntime({ eventBus, orbInteriorEl, stageEl, getOrbScreenY, orbRadiusPx, getAxisColor01 }) {
+export function createOrbGlobesRuntime({
+  eventBus,
+  orbInteriorEl,
+  stageEl,
+  getOrbScreenY,
+  orbRadiusPx,
+  getAxisColor01,
+  globeVisualState = ORB_GLOBE_VISUAL_DEFAULTS,
+}) {
   if (!eventBus || typeof eventBus.on !== 'function') {
     throw new Error('createOrbGlobesRuntime requires eventBus.on');
   }
@@ -57,7 +71,7 @@ export function createOrbGlobesRuntime({ eventBus, orbInteriorEl, stageEl, getOr
   }
 
   function innerGlobeDiameterPx() {
-    return Number(orbRadiusPx) * 0.2; // 10% of orb diameter
+    return getInnerGlobeDiameterPx(orbRadiusPx, globeVisualState);
   }
 
   function clearInnerGlobes() {
@@ -172,8 +186,8 @@ export function createOrbGlobesRuntime({ eventBus, orbInteriorEl, stageEl, getOr
       spellId: tokenId,
       phase: Math.random() * Math.PI * 2,
       speed: (1.35 + (Math.random() * 0.75)) * 4.0,
-      radius: Math.max(5, Number(orbRadiusPx) * 0.13),
-      orbitR: Math.max(14, (Number(orbRadiusPx) + 18) * 1.10),
+      radius: getOrbitGlobeRadiusPx(orbRadiusPx, globeVisualState),
+      orbitR: getOrbitDistancePx(orbRadiusPx, globeVisualState),
       stroke: color.stroke,
       fill: color.fill,
       glow: color.glow,
