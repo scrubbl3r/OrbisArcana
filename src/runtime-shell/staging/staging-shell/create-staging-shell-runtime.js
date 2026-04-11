@@ -904,6 +904,11 @@ function stopShellShardSim(shellContext) {
 
 function spawnShellShardFx(shellContext, payload) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
+  if (shellVfx && typeof shellVfx.playOrbShatter === "function") {
+    const result = shellVfx.playOrbShatter(payload);
+    if (result && result.handled) return;
+  }
   const controller = runtime && runtime.orbShatterController;
   if (!controller || typeof controller.spawnShardFx !== "function") return;
   controller.spawnShardFx(payload);
@@ -1252,6 +1257,15 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     return { handled: false };
   }
 
+  function directPlayOrbShatter(payload = {}) {
+    const controller = runtime && runtime.orbShatterController;
+    if (controller && typeof controller.spawnShardFx === "function") {
+      controller.spawnShardFx(payload);
+      return { handled: true };
+    }
+    return { handled: false };
+  }
+
   const shellVfx = {
     vfxDefaults,
     vfxRuntimesBundle,
@@ -1319,6 +1333,18 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
       });
       if (dispatched && dispatched.handled) return dispatched;
       return directActivateBubbleShield({ durationMs });
+    },
+    playOrbShatter(payload = {}) {
+      const dispatched = dispatchRuntimeEffect({
+        targetKind: "orb-state",
+        targetId: "shattered",
+        runtime: {
+          playOrbShatter: (nextPayload = {}) => directPlayOrbShatter(nextPayload),
+        },
+        payload,
+      });
+      if (dispatched && dispatched.handled) return dispatched;
+      return directPlayOrbShatter(payload);
     },
   };
 
