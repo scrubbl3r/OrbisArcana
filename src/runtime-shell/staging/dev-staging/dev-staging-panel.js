@@ -39,6 +39,8 @@ export function projectDevStagingPanelRefs(refs = {}) {
 }
 
 export function createDevStagingPanelElementsFromView(view = null) {
-  const refs = (view && view.refs) ? view.refs : {};
+  const refs = (view && view.refs)
+    ? view.refs
+    : (view && typeof view === "object" ? view : {});
   return projectDevStagingPanelRefs(refs);
 }
