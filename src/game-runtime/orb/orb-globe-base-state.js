@@ -1,3 +1,5 @@
+import { ORB_GLOBE_VISUAL_DEFAULTS as ORB_GLOBE_VISUAL_DEFAULTS_FILE } from "./orb-globe-default.js";
+
 function clamp01(v) {
   const n = Number(v);
   return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
@@ -14,16 +16,46 @@ function clampRatio(v, fallback) {
 }
 
 export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
-  innerDiameterRatio: 0.2,
-  orbitRadiusRatio: 0.13,
-  orbitDistanceOffsetPx: 18,
-  orbitDistanceRatio: 1.10,
-  orbitDistanceMinPx: 14,
-  orbitRadiusMinPx: 5,
-  pickupDiameterPx: 50,
-  innerStrokeWidthPx: 2,
-  releasedStrokeWidthPx: 2,
-  orbitStrokeWidthPx: 2,
+  innerDiameterRatio: clampRatio(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerDiameterRatio,
+    0.2
+  ),
+  orbitRadiusRatio: clampRatio(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitRadiusRatio,
+    0.13
+  ),
+  orbitDistanceOffsetPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDistanceOffsetPx,
+    18
+  ),
+  orbitDistanceRatio: clampRatio(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDistanceRatio,
+    1.10
+  ),
+  orbitDistanceMinPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDistanceMinPx,
+    14
+  ),
+  orbitRadiusMinPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitRadiusMinPx,
+    5
+  ),
+  pickupDiameterPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.pickupDiameterPx,
+    50
+  ),
+  innerStrokeWidthPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerStrokeWidthPx,
+    2
+  ),
+  releasedStrokeWidthPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.releasedStrokeWidthPx,
+    2
+  ),
+  orbitStrokeWidthPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitStrokeWidthPx,
+    2
+  ),
 });
 
 export function buildOrbGlobeVisualState(overrides = null) {

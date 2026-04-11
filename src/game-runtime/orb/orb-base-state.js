@@ -1,5 +1,6 @@
 import { ORB_RUNTIME_CONFIG_DEFAULT } from "../../content/orb/orb-runtime-config-default.js";
 import { GAME_THEME_DEFAULT } from "../../content/theme/game-theme-default.js";
+import { ORB_BASE_VISUAL_DEFAULTS as ORB_BASE_VISUAL_DEFAULTS_FILE } from "./orb-base-default.js";
 
 function clamp01(v) {
   const n = Number(v);
@@ -31,15 +32,19 @@ const ORB_RUNTIME_PHYSICS_DEFAULT = (ORB_RUNTIME_CONFIG_DEFAULT && ORB_RUNTIME_C
 };
 
 export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({
-  diameterPx: Math.max(2, Math.round(Number(ORB_THEME_DEFAULT.diameterPx) || 100)),
-  radiusPx: Math.max(1, Number(ORB_RUNTIME_PHYSICS_DEFAULT.orbRadiusPx) || 50),
-  strokeWidthPx: Math.max(1, Math.round(Number(ORB_THEME_DEFAULT.strokeWidthPx) || 2)),
+  diameterPx: Math.max(2, Math.round(Number(ORB_BASE_VISUAL_DEFAULTS_FILE.diameterPx) || Number(ORB_THEME_DEFAULT.diameterPx) || 100)),
+  radiusPx: Math.max(1, Number(ORB_BASE_VISUAL_DEFAULTS_FILE.radiusPx) || Number(ORB_RUNTIME_PHYSICS_DEFAULT.orbRadiusPx) || 50),
+  strokeWidthPx: Math.max(1, Math.round(Number(ORB_BASE_VISUAL_DEFAULTS_FILE.strokeWidthPx) || Number(ORB_THEME_DEFAULT.strokeWidthPx) || 2)),
   strokeDefaultRgb: Object.freeze({
-    r: clampByte(ORB_THEME_DEFAULT.strokeDefaultRgb && ORB_THEME_DEFAULT.strokeDefaultRgb.r),
-    g: clampByte(ORB_THEME_DEFAULT.strokeDefaultRgb && ORB_THEME_DEFAULT.strokeDefaultRgb.g),
-    b: clampByte(ORB_THEME_DEFAULT.strokeDefaultRgb && ORB_THEME_DEFAULT.strokeDefaultRgb.b),
+    r: clampByte(ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb.r),
+    g: clampByte(ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb.g),
+    b: clampByte(ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb && ORB_BASE_VISUAL_DEFAULTS_FILE.strokeDefaultRgb.b),
   }),
-  fillAlpha: clamp01(ORB_THEME_DEFAULT.fillAlpha),
+  fillAlpha: clamp01(
+    Object.prototype.hasOwnProperty.call(ORB_BASE_VISUAL_DEFAULTS_FILE, "fillAlpha")
+      ? ORB_BASE_VISUAL_DEFAULTS_FILE.fillAlpha
+      : ORB_THEME_DEFAULT.fillAlpha
+  ),
 });
 
 export function buildOrbBaseVisualState({ theme = null, physics = null } = {}) {

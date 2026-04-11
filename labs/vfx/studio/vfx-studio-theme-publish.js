@@ -145,6 +145,47 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "export const ORB_SHATTER_PRESET_DEFAULT = Object.freeze({});",
         "",
       ].join("\n");
+    case "orb-base":
+      return [
+        "export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({",
+        `  diameterPx: ${Math.round(toNum(p.orbBaseD, 100))},`,
+        `  radiusPx: ${Math.round(toNum(p.orbBaseD, 100) * 0.5)},`,
+        `  strokeWidthPx: ${Math.round(toNum(p.orbBaseStroke, 2))},`,
+        "  strokeDefaultRgb: Object.freeze({",
+        `    r: ${Math.round(toNum(p.orbBaseStrokeR, 255))},`,
+        `    g: ${Math.round(toNum(p.orbBaseStrokeG, 255))},`,
+        `    b: ${Math.round(toNum(p.orbBaseStrokeB, 255))},`,
+        "  }),",
+        `  fillAlpha: ${toNum(p.orbBaseFillAlpha, 0.20).toFixed(2)},`,
+        "});",
+        "",
+      ].join("\n");
+    case "orb-fracture":
+      return [
+        "export const ORB_FRACTURE_VISUAL_DEFAULTS = Object.freeze({",
+        `  crackStrokeWidthPx: ${toNum(p.orbFractureCrackStroke, 1.6).toFixed(1)},`,
+        `  shardStrokeWidthPx: ${toNum(p.orbFractureShardStroke, 1.2).toFixed(1)},`,
+        `  glowBlurPx: ${Math.round(toNum(p.orbFractureGlowBlur, 3))},`,
+        `  glowAlpha: ${toNum(p.orbFractureGlowAlpha, 1).toFixed(2)},`,
+        "});",
+        "",
+      ].join("\n");
+    case "orb-globe":
+      return [
+        "export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({",
+        `  innerDiameterRatio: ${toNum(p.orbGlobeInnerDiameterRatio, 0.2).toFixed(2)},`,
+        `  orbitRadiusRatio: ${toNum(p.orbGlobeOrbitRadiusRatio, 0.13).toFixed(2)},`,
+        `  orbitDistanceOffsetPx: ${Math.round(toNum(p.orbGlobeOrbitOffset, 18))},`,
+        `  orbitDistanceRatio: ${toNum(p.orbGlobeOrbitDistanceRatio, 1.10).toFixed(2)},`,
+        `  orbitDistanceMinPx: ${Math.round(toNum(p.orbGlobeOrbitDistanceMin, 14))},`,
+        `  orbitRadiusMinPx: ${Math.round(toNum(p.orbGlobeOrbitRadiusMin, 5))},`,
+        `  pickupDiameterPx: ${Math.round(toNum(p.orbGlobePickupD, 50))},`,
+        `  innerStrokeWidthPx: ${toNum(p.orbGlobeInnerStroke, 2).toFixed(1)},`,
+        `  releasedStrokeWidthPx: ${toNum(p.orbGlobeReleasedStroke, 2).toFixed(1)},`,
+        `  orbitStrokeWidthPx: ${toNum(p.orbGlobeOrbitStroke, 2).toFixed(1)},`,
+        "});",
+        "",
+      ].join("\n");
     default:
       return "";
   }

@@ -102,6 +102,7 @@ export function buildEffectLibraryOptionsFromRegistry({
   registry,
   baseEffectByRegistryId,
   categoryLabels,
+  extraBuiltinOptions = [],
 }) {
   if (!effectSelect) return;
   const previousValue = draftStore.activeValue || effectSelect.value;
@@ -139,6 +140,19 @@ export function buildEffectLibraryOptionsFromRegistry({
   for (const category of ["spell", "orb", "globe", "world-item", "enemy"]) {
     const group = groups.get(category);
     if (group && group.children.length) effectSelect.appendChild(group);
+  }
+
+  for (const optionDef of Array.isArray(extraBuiltinOptions) ? extraBuiltinOptions : []) {
+    if (!optionDef || typeof optionDef !== "object") continue;
+    const category = String(optionDef.category || "orb");
+    const targetGroup = ensureCategoryGroup(effectSelect, categoryLabels, category);
+    const opt = document.createElement("option");
+    opt.value = String(optionDef.value || "");
+    opt.textContent = String(optionDef.label || optionDef.value || "effect");
+    opt.dataset.baseEffect = String(optionDef.baseEffect || optionDef.value || "");
+    opt.dataset.category = category;
+    opt.dataset.locked = String(optionDef.locked ? "true" : "false");
+    targetGroup.appendChild(opt);
   }
 
   for (const opt of customOptions) {

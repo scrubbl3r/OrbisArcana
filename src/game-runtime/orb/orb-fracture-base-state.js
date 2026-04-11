@@ -1,3 +1,5 @@
+import { ORB_FRACTURE_VISUAL_DEFAULTS as ORB_FRACTURE_VISUAL_DEFAULTS_FILE } from "./orb-fracture-default.js";
+
 function clamp01(v) {
   const n = Number(v);
   return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
@@ -9,10 +11,23 @@ function clampPx(v, fallback) {
 }
 
 export const ORB_FRACTURE_VISUAL_DEFAULTS = Object.freeze({
-  crackStrokeWidthPx: 1.6,
-  shardStrokeWidthPx: 1.2,
-  glowBlurPx: 3,
-  glowAlpha: 1,
+  crackStrokeWidthPx: clampPx(
+    ORB_FRACTURE_VISUAL_DEFAULTS_FILE.crackStrokeWidthPx,
+    1.6
+  ),
+  shardStrokeWidthPx: clampPx(
+    ORB_FRACTURE_VISUAL_DEFAULTS_FILE.shardStrokeWidthPx,
+    1.2
+  ),
+  glowBlurPx: clampPx(
+    ORB_FRACTURE_VISUAL_DEFAULTS_FILE.glowBlurPx,
+    3
+  ),
+  glowAlpha: clamp01(
+    Object.prototype.hasOwnProperty.call(ORB_FRACTURE_VISUAL_DEFAULTS_FILE, "glowAlpha")
+      ? ORB_FRACTURE_VISUAL_DEFAULTS_FILE.glowAlpha
+      : 1
+  ),
 });
 
 export function buildOrbFractureVisualState(overrides = null) {
