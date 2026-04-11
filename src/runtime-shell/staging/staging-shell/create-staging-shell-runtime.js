@@ -1,4 +1,14 @@
 import { mountDevStaging } from "../dev-staging/dev-staging.js";
+import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js";
+import {
+  allDevStagingDirectionLampsOff,
+  clearDevStagingDirectionLampTimers,
+  flashDevStagingDirectionLampPair,
+  flashDevStagingDirectionLampSingle,
+  flashDevStagingShakeLamp,
+  forceDevStagingShakeLampOff,
+  setDevStagingLamp,
+} from "../dev-staging/dev-staging-lamps.js";
 import { renderGameStaging } from "../game-staging/game-staging.js";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
 import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
@@ -435,98 +445,38 @@ function tickShellStageRuntime(shellContext, dt) {
   }
 }
 
-function setLamp(el, on) {
-  if (!el) return;
-  el.classList.toggle("on", !!on);
-}
-
-function flashLamp(el, runtime, key, ms = 380) {
-  if (!el || !runtime) return;
-  if (!runtime.dirLampTO) runtime.dirLampTO = Object.create(null);
-  el.classList.add("on");
-  if (runtime.dirLampTO[key]) clearTimeout(runtime.dirLampTO[key]);
-  runtime.dirLampTO[key] = setTimeout(() => {
-    el.classList.remove("on");
-    runtime.dirLampTO[key] = null;
-  }, ms);
-}
-
-function flashDirectionLamp(shellContext, code, ms = 380) {
-  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  if (!refs || !runtime) return;
-  const map = {
-    U: refs.lampUp,
-    D: refs.lampDown,
-    L: refs.lampLeft,
-    R: refs.lampRight,
-    F: refs.lampForward,
-    B: refs.lampBack,
-  };
-  const c = String(code || "").trim().toUpperCase();
-  if (!c || !map[c]) return;
-  flashLamp(map[c], runtime, c, ms);
-}
-
 function clearShellDirectionLampTimers(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  if (!runtime || !runtime.dirLampTO) return;
-  for (const key of Object.keys(runtime.dirLampTO)) {
-    if (runtime.dirLampTO[key]) {
-      clearTimeout(runtime.dirLampTO[key]);
-      runtime.dirLampTO[key] = 0;
-    }
-  }
+  clearDevStagingDirectionLampTimers(runtime);
 }
 
 function allShellDirectionLampsOff(shellContext) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
-  if (!refs) return;
-  [
-    refs.lampUp,
-    refs.lampDown,
-    refs.lampLeft,
-    refs.lampRight,
-    refs.lampForward,
-    refs.lampBack,
-  ].forEach((el) => {
-    if (el) el.classList.remove("on");
-  });
+  allDevStagingDirectionLampsOff(refs);
 }
 
 function flashShellDirectionLampPair(shellContext, a, b, ms = 380) {
-  clearShellDirectionLampTimers(shellContext);
-  allShellDirectionLampsOff(shellContext);
-  flashDirectionLamp(shellContext, a, ms);
-  flashDirectionLamp(shellContext, b, ms);
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  flashDevStagingDirectionLampPair(refs, runtime, a, b, ms);
 }
 
 function flashShellDirectionLampSingle(shellContext, code, ms = 380) {
-  clearShellDirectionLampTimers(shellContext);
-  allShellDirectionLampsOff(shellContext);
-  flashDirectionLamp(shellContext, code, ms);
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  flashDevStagingDirectionLampSingle(refs, runtime, code, ms);
 }
 
 function flashShellShakeLamp(shellContext, ms = 400) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  if (!refs || !runtime || !refs.shakeLamp) return;
-  refs.shakeLamp.classList.add("on");
-  if (runtime.shakeLampTO) clearTimeout(runtime.shakeLampTO);
-  runtime.shakeLampTO = setTimeout(() => {
-    refs.shakeLamp.classList.remove("on");
-    runtime.shakeLampTO = 0;
-  }, ms);
+  flashDevStagingShakeLamp(refs, runtime, ms);
 }
 
 function forceShellShakeLampOff(shellContext) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  if (runtime && runtime.shakeLampTO) {
-    clearTimeout(runtime.shakeLampTO);
-    runtime.shakeLampTO = 0;
-  }
-  if (refs && refs.shakeLamp) refs.shakeLamp.classList.remove("on");
+  forceDevStagingShakeLampOff(refs, runtime);
 }
 
 function createShellReceiverConfigs() {
@@ -1060,7 +1010,7 @@ async function initShellReceiverHostRuntime(shellContext) {
       INPUT_DYNAMICS_CFG,
     },
     createReceiverStabilityVisualController,
-    setLamp,
+    setLamp: setDevStagingLamp,
     stageAdapters: {
       normalizeWorldItemSpawn: (item) => (
         shellContext &&
@@ -1217,34 +1167,6 @@ function createShellSurfaceRefs({ devStagingView, gameStagingView } = {}) {
   return {
     dev: devStagingView && devStagingView.refs ? devStagingView.refs : Object.create(null),
     game: gameStagingView && gameStagingView.refs ? gameStagingView.refs : Object.create(null),
-  };
-}
-
-function createShellDevStagingPanelElements(refs = {}) {
-  return {
-    teleBtn: refs.teleBtn || null,
-    wordBoardBtn: refs.wordBoardBtn || null,
-    kwsReadout: refs.kwsReadout || null,
-    rulesReadout: refs.rulesReadout || null,
-    kwsLog: refs.kwsLog || null,
-    logTabGeneral: refs.logTabGeneral || null,
-    logTabKws: refs.logTabKws || null,
-    logTabPhone: refs.logTabPhone || null,
-    kwsTokenThrInput: refs.kwsTokenThrInput || null,
-    kwsCooldownMsInput: refs.kwsCooldownMsInput || null,
-    kwsApplyTuneBtn: refs.kwsApplyTuneBtn || null,
-    logPopup: refs.logPopup || null,
-    logPopupTabs: refs.logPopupTabs || null,
-    logPopupHeader: refs.logPopupHeader || null,
-    logPopupClose: refs.logPopupClose || null,
-    wordBoardPopup: refs.wordBoardPopup || null,
-    wordBoardPopupHeader: refs.wordBoardPopupHeader || null,
-    wordBoardPopupClose: refs.wordBoardPopupClose || null,
-    wordBoardBody: refs.wordBoardBody || null,
-    wordBoardDebugPanel: refs.wordBoardDebugPanel || null,
-    wordBoardDebugToggle: refs.wordBoardDebugToggle || null,
-    wordBoardDebugBadge: refs.wordBoardDebugBadge || null,
-    wordBoardDebugBody: refs.wordBoardDebugBody || null,
   };
 }
 
@@ -1617,7 +1539,7 @@ async function initShellKwsRuntime(shellContext) {
     sharedModules,
     runtime,
     devRefs,
-    createDevStagingPanelElements: createShellDevStagingPanelElements,
+    createDevStagingPanelElements: createDevStagingPanelElementsFromView,
     readNumberInputOrNull,
   });
   if (!base) return null;
