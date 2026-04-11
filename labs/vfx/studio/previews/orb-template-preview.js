@@ -48,9 +48,12 @@ export function createOrbTemplatePreview({ els } = {}) {
     }
   }
 
-  function getRevealCount() {
+  function getActiveShardCount() {
     if (currentHits <= 0) return 0;
-    return currentShardTotal;
+    return Math.max(2, Math.min(
+      currentShardTotal,
+      Math.round((currentHits / Math.max(1, currentHitTotal)) * currentShardTotal)
+    ));
   }
 
   function renderPattern() {
@@ -59,10 +62,7 @@ export function createOrbTemplatePreview({ els } = {}) {
     applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), { root: els.previewRoot });
 
     const stroke = buildStrokeColor(els.previewRoot);
-    const revealCount = getRevealCount();
-    const ids = new Set((currentLayout && currentLayout.crackOrder || []).slice(0, revealCount));
     const edgeMarkup = (currentLayout && currentLayout.edges || [])
-      .filter((edge) => ids.has(edge.id))
       .map((edge) => (
         `<line x1="${edge.a.x.toFixed(3)}" y1="${edge.a.y.toFixed(3)}" x2="${edge.b.x.toFixed(3)}" y2="${edge.b.y.toFixed(3)}" />`
       )).join("");
@@ -78,8 +78,9 @@ export function createOrbTemplatePreview({ els } = {}) {
 
   function rebuildLayout({ nextSeed = null, resetHits = true } = {}) {
     currentSeed = nextSeed == null ? currentSeed : nextSeed;
-    currentLayout = makeVoronoiLayout(currentSeed, currentShardTotal);
     if (resetHits) currentHits = 0;
+    const activeShardCount = getActiveShardCount();
+    currentLayout = activeShardCount > 0 ? makeVoronoiLayout(currentSeed, activeShardCount) : null;
     shatterRuntime.clear();
     renderPattern();
   }
@@ -94,7 +95,7 @@ export function createOrbTemplatePreview({ els } = {}) {
     currentHitTotal = clampInt(els.orbTemplateHitTotal && els.orbTemplateHitTotal.value, 1, 12, currentHitTotal);
     if (els.orbTemplateHitTotal) els.orbTemplateHitTotal.value = String(currentHitTotal);
     currentHits = Math.min(currentHits, currentHitTotal);
-    renderPattern();
+    rebuildLayout({ resetHits: false });
   }
 
   function explode() {
@@ -126,7 +127,7 @@ export function createOrbTemplatePreview({ els } = {}) {
 
   function hit() {
     currentHits = Math.min(currentHitTotal, currentHits + 1);
-    renderPattern();
+    rebuildLayout({ resetHits: false });
     if (currentHits >= currentHitTotal) {
       explode();
     }
@@ -138,7 +139,7 @@ export function createOrbTemplatePreview({ els } = {}) {
       shatterRuntime.clear();
     }
     currentHits = Math.max(0, currentHits - 1);
-    renderPattern();
+    rebuildLayout({ resetHits: false });
   }
 
   function regenerate() {
@@ -161,13 +162,8 @@ export function createOrbTemplatePreview({ els } = {}) {
     currentHitTotal = clampInt(els.orbTemplateHitTotal && els.orbTemplateHitTotal.value, 1, 12, currentHitTotal);
     if (els.orbTemplateShardTotal) els.orbTemplateShardTotal.value = String(currentShardTotal);
     if (els.orbTemplateHitTotal) els.orbTemplateHitTotal.value = String(currentHitTotal);
-    if (!currentLayout) {
-      rebuildLayout();
-      return;
-    }
     currentHits = Math.min(currentHits, currentHitTotal);
-    shatterRuntime.clear();
-    renderPattern();
+    rebuildLayout({ resetHits: false });
   }
 
   function wire() {
