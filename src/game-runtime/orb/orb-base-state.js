@@ -69,9 +69,25 @@ export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({
 });
 
 export function buildOrbBaseVisualState({ theme = null, physics = null } = {}) {
-  const themeOrb = (theme && theme.orb && typeof theme.orb === "object")
-    ? theme.orb
-    : ORB_THEME_DEFAULT;
+  const themeOrb = {
+    ...ORB_THEME_DEFAULT,
+    ...ORB_BASE_VISUAL_DEFAULTS,
+    ...((theme && theme.orb && typeof theme.orb === "object") ? theme.orb : {}),
+    strokeDefaultRgb: {
+      ...ORB_THEME_DEFAULT.strokeDefaultRgb,
+      ...ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb,
+      ...(((theme && theme.orb && theme.orb.strokeDefaultRgb) && typeof theme.orb.strokeDefaultRgb === "object")
+        ? theme.orb.strokeDefaultRgb
+        : {}),
+    },
+    fillDefaultRgb: {
+      ...(ORB_THEME_DEFAULT.fillDefaultRgb || ORB_THEME_DEFAULT.strokeDefaultRgb || {}),
+      ...(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb || {}),
+      ...(((theme && theme.orb && theme.orb.fillDefaultRgb) && typeof theme.orb.fillDefaultRgb === "object")
+        ? theme.orb.fillDefaultRgb
+        : {}),
+    },
+  };
   const physicsOrb = (physics && typeof physics === "object")
     ? physics
     : ORB_RUNTIME_PHYSICS_DEFAULT;
