@@ -165,24 +165,6 @@ function buildShellStageInitialState(phys = {}) {
   };
 }
 
-function normalizeShellWorldItemSpawn(item, groundCenterWorldFn) {
-  if (!item || String(item.kind || "") !== "energy_globe") return null;
-  const s = item.spawn || {};
-  const xNorm = clamp(Number(s.xNorm), 0, 1);
-  const r = Math.max(1, Number(s.r) || 25);
-  const yMode = String(s.yMode || "absolute");
-  const yValue = Number(s.yValue) || 0;
-  const yW = (yMode === "ground_center_offset")
-    ? (groundCenterWorldFn() + yValue)
-    : yValue;
-  return {
-    id: String(item.id || ""),
-    xNorm: Number.isFinite(xNorm) ? xNorm : 0.5,
-    yW,
-    r,
-  };
-}
-
 function bindShellStageControls(shellContext) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -1403,13 +1385,28 @@ async function initShellReceiverHostRuntime(shellContext) {
     createReceiverStabilityVisualController,
     setLamp,
     stageAdapters: {
-      normalizeWorldItemSpawn: (item) => normalizeShellWorldItemSpawn(item, () => shellGroundCenterWorld(shellContext)),
+      normalizeWorldItemSpawn: (item) => (
+        shellContext &&
+        shellContext.gameStagingAdapter &&
+        typeof shellContext.gameStagingAdapter.normalizeWorldItemSpawn === "function"
+          ? shellContext.gameStagingAdapter.normalizeWorldItemSpawn(item, {
+              groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+              clamp,
+            })
+          : null
+      ),
       groundCenterWorld: () => shellGroundCenterWorld(shellContext),
       stageRect: () => shellStageRect(shellContext),
       pickupScreenY: (yW) => {
         const rect = shellStageRect(shellContext);
         const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
-        return Number(yW || 0) - camTop;
+        return (
+          shellContext &&
+          shellContext.gameStagingAdapter &&
+          typeof shellContext.gameStagingAdapter.pickupScreenY === "function"
+            ? shellContext.gameStagingAdapter.pickupScreenY(yW, { camTop })
+            : (Number(yW || 0) - camTop)
+        );
       },
       getOrbRuntime: () => (
         runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
@@ -1421,8 +1418,10 @@ async function initShellReceiverHostRuntime(shellContext) {
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
       getWorldItemSpawns: () => (
-        Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.worldItemSpawns)
-          ? shellContext.currentLevel.worldItemSpawns
+        shellContext &&
+        shellContext.gameStagingAdapter &&
+        typeof shellContext.gameStagingAdapter.getWorldItemSpawns === "function"
+          ? shellContext.gameStagingAdapter.getWorldItemSpawns()
           : []
       ),
       getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,

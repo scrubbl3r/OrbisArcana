@@ -1,6 +1,7 @@
 import { createOrbShatterRuntimeController } from "../../../game-runtime/orb/orb-shatter-runtime.js";
 
 export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}) {
+  let primaryGlobeEl = refs.testGlobe || null;
   const stageRefs = Object.freeze({
     physStage: refs.physStage || null,
     stars: refs.stars || null,
@@ -42,6 +43,52 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
         terrain: stageRefs.terrain,
         groundLine: stageRefs.groundLine,
       });
+    },
+    getStageRect() {
+      if (!stageRefs.physStage || typeof stageRefs.physStage.getBoundingClientRect !== "function") {
+        return { width: 0, height: 0 };
+      }
+      return stageRefs.physStage.getBoundingClientRect();
+    },
+    getWorldItemSpawns() {
+      return Array.isArray(level && level.worldItemSpawns) ? level.worldItemSpawns : [];
+    },
+    normalizeWorldItemSpawn(
+      item,
+      {
+        groundCenterWorld = () => 0,
+        clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
+      } = {}
+    ) {
+      if (!item || String(item.kind || "") !== "energy_globe") return null;
+      const s = item.spawn || {};
+      const xNorm = clamp(Number(s.xNorm), 0, 1);
+      const r = Math.max(1, Number(s.r) || 25);
+      const yMode = String(s.yMode || "absolute");
+      const yValue = Number(s.yValue) || 0;
+      const yW = (yMode === "ground_center_offset")
+        ? (groundCenterWorld() + yValue)
+        : yValue;
+      return {
+        id: String(item.id || ""),
+        xNorm: Number.isFinite(xNorm) ? xNorm : 0.5,
+        yW,
+        r,
+      };
+    },
+    pickupScreenY(
+      yW,
+      {
+        camTop = 0,
+      } = {}
+    ) {
+      return Number(yW || 0) - Number(camTop || 0);
+    },
+    getPrimaryGlobeEl() {
+      return primaryGlobeEl;
+    },
+    setPrimaryGlobeEl(el) {
+      primaryGlobeEl = el || null;
     },
     getOrbVisualRefs() {
       return Object.freeze({
