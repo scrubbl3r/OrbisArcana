@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Orb VFX Tester — Electric AOE + Shield + Shockwave</title>
-  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-taxonomy" />
+  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-semantics" />
   <style>
     :root{
       --g: var(--text-strong);
@@ -585,18 +585,18 @@
     <div class="card">
       <details class="bindingDetails">
         <summary class="bindingSummary">
-          <span>Bindings</span>
-          <span class="dim">View current schema binding info</span>
+          <span>Runtime target</span>
+          <span class="dim">Bind this authored effect to a runtime spell or orb-state.</span>
         </summary>
         <div class="bindingPanel" id="bindingPanel" aria-live="polite">
           <div class="bindingEditor">
             <div class="bindingEditorRow">
-              <label class="bindingEditorLabel" for="bindingTargetSelect">Bind to runtime target</label>
+              <label class="bindingEditorLabel" for="bindingTargetSelect">Runtime target</label>
               <select id="bindingTargetSelect" class="bindingSelect" aria-label="Bind effect to runtime target"></select>
             </div>
-            <div class="bindingEditorHelp" id="bindingEditorHelp">Publish this effect/preset onto a runtime spell or orb-state target.</div>
+            <div class="bindingEditorHelp" id="bindingEditorHelp">Choose the runtime spell or orb-state slot this authored effect should drive.</div>
           </div>
-          <h3>Current Binding</h3>
+          <h3>Binding Readout</h3>
           <div class="bindingGrid" id="bindingGrid"></div>
         </div>
       </details>
@@ -763,23 +763,23 @@
   </div>
 
   <script type="module">
-    import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410a";
-    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260410a";
-    import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410a";
-    import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410a";
-    import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410a";
-    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260410a";
-    import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260410a";
-    import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260410a";
-    import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260410a";
-    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js?v=20260410a";
+    import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410b";
+    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260410b";
+    import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
+    import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
+    import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
+    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260410b";
+    import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260410b";
+    import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260410b";
+    import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260410b";
+    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js?v=20260410b";
     import {
       bootStudioShell,
       refreshEffectMeta as refreshEffectMetaHelper,
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
       updateEffectSections as updateEffectSectionsHelper,
-    } from "./studio/vfx-studio-shell.js?v=20260410a";
+    } from "./studio/vfx-studio-shell.js?v=20260410b";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
@@ -799,12 +799,12 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260410a";
+    } from "./studio/vfx-studio-state.js?v=20260410b";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
       refreshBindingPanel as refreshBindingPanelHelper,
-    } from "./studio/vfx-studio-bindings.js?v=20260410a";
+    } from "./studio/vfx-studio-bindings.js?v=20260410b";
     import {
       applyLabThemeDefaults,
       buildLivePresetModuleForBaseEffect,
@@ -814,13 +814,13 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260410a";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260410b";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
       FLAME_AOE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260410a";
+    } from "../../src/vfx/presets/index.js?v=20260410b";
 
     const $ = (id) => document.getElementById(id);
     const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze({

@@ -1,53 +1,46 @@
 import { CAST_ACTION_REGISTRY } from "../spells/cast-action-registry.js";
 
-const SPELL_TARGET_LABELS = Object.freeze({
-  aoe_flame: "Flame AOE",
-  aoe_electric: "Electric AOE",
-  bubble_shield: "Bubble Shield",
-  shockwave: "Shockwave",
-});
-
 const ORB_STATE_TARGETS = Object.freeze([
   Object.freeze({
     id: "orb-state.pristine",
     targetKind: "orb-state",
     targetId: "pristine",
-    label: "Pristine",
+    label: "orb-state.pristine",
     vfxCategory: "orb",
   }),
   Object.freeze({
     id: "orb-state.crack_1",
     targetKind: "orb-state",
     targetId: "crack_1",
-    label: "Crack 1",
+    label: "orb-state.crack_1",
     vfxCategory: "orb",
   }),
   Object.freeze({
     id: "orb-state.crack_2",
     targetKind: "orb-state",
     targetId: "crack_2",
-    label: "Crack 2",
+    label: "orb-state.crack_2",
     vfxCategory: "orb",
   }),
   Object.freeze({
     id: "orb-state.shattered",
     targetKind: "orb-state",
     targetId: "shattered",
-    label: "Shattered",
+    label: "orb-state.shattered",
     vfxCategory: "orb",
   }),
   Object.freeze({
     id: "orb-state.charged",
     targetKind: "orb-state",
     targetId: "charged",
-    label: "Charged",
+    label: "orb-state.charged",
     vfxCategory: "orb",
   }),
   Object.freeze({
     id: "orb-state.globe_loaded",
     targetKind: "orb-state",
     targetId: "globe_loaded",
-    label: "Globe Loaded",
+    label: "orb-state.globe_loaded",
     vfxCategory: "orb",
   }),
 ]);
@@ -62,7 +55,7 @@ function buildSpellTargets() {
         id: `spell.${targetId}`,
         targetKind: "spell",
         targetId,
-        label: SPELL_TARGET_LABELS[targetId] || targetId,
+        label: `spell.${targetId}`,
         vfxCategory: "spell",
       });
     });

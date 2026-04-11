@@ -40,9 +40,8 @@ export function refreshBindingPanel({
 
   if (isCustom) {
     setBindingRows(bindingGrid, [
-      { k: "Scope", v: `Custom profile (local ${selectedEffectCategory()})` },
-      { k: "Base", v: String(opt.dataset.baseEffect || "unknown") },
-      { k: "Binding", v: "Not published yet" },
+      { k: "Authored effect", v: String(opt.dataset.registryId || opt.value || "unknown") },
+      { k: "Runtime target", v: "Not published yet" },
     ]);
     return;
   }
@@ -57,13 +56,9 @@ export function refreshBindingPanel({
   if (selectedTarget && registryId) {
     const selectedBinding = getBindingEntry(runtimeEffectBindings, selectedTarget.targetKind, selectedTarget.targetId);
     setBindingRows(bindingGrid, [
-      { k: "Selected target", v: selectedTarget.label || selectedTarget.id },
-      { k: "Target kind", v: String(selectedTarget.targetKind || "unknown") },
-      { k: "Target id", v: String(selectedTarget.targetId || "unknown") },
-      { k: "Current effect", v: String((selectedBinding && selectedBinding.effectId) || "No published binding yet") },
-      { k: "Current preset", v: String((selectedBinding && selectedBinding.presetId) || "Will use selected/default preset") },
-      { k: "Selected effect", v: registryId },
-      { k: "Publish target", v: "src/content/vfx/runtime-effect-bindings.js" },
+      { k: "Runtime target", v: selectedTarget.label || selectedTarget.id },
+      { k: "Bound effect", v: String((selectedBinding && selectedBinding.effectId) || "No published binding yet") },
+      { k: "Authored effect", v: registryId },
     ]);
     return;
   }
@@ -73,19 +68,15 @@ export function refreshBindingPanel({
 
   if (!matches.length) {
     setBindingRows(bindingGrid, [
-      { k: "Effect ID", v: registryId },
-      { k: "Bindings", v: "No runtime target binding yet" },
-      { k: "Status", v: opt.disabled ? "Preview scene coming soon" : "Preset-only / unbound" },
+      { k: "Authored effect", v: registryId },
+      { k: "Runtime target", v: "No runtime target binding yet" },
     ]);
     return;
   }
 
   setBindingRows(bindingGrid, [
-    { k: "Effect ID", v: registryId },
-    { k: "Bound targets", v: matches.map((entry) => `${entry.targetKind}:${entry.targetId}`).join(", ") },
-    { k: "Preset", v: String((matches[0] && matches[0].presetId) || "unknown") },
-    { k: "Binding count", v: String(matches.length) },
-    { k: "Publish target", v: "src/content/vfx/runtime-effect-bindings.js" },
+    { k: "Authored effect", v: registryId },
+    { k: "Runtime target", v: matches.map((entry) => `${entry.targetKind}.${entry.targetId}`).join(", ") },
   ]);
 }
 
