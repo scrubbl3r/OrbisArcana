@@ -681,6 +681,9 @@
         <div class="previewLane" id="orbBasePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbBaseLaneOrb"></div>
         </div>
+        <div class="previewLane" id="orbTemplatePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbTemplateLaneOrb"></div>
+        </div>
         <div class="previewLane" id="orbFracturePreviewRoot" data-preview-root hidden aria-hidden="true">
           <svg class="orbShatterLayer" id="orbFractureLaneShatterLayer" viewBox="-120 -120 240 240"></svg>
           <svg class="orbFractureLayer" id="orbFractureLaneLayer" viewBox="-70 -70 140 140"></svg>
@@ -933,6 +936,63 @@
         <input id="orbBaseFillB" type="range" min="0" max="255" value="255" step="1" />
       </div>
 
+      <div class="section" data-effect="orb-template" hidden>
+        <div class="row">
+          <button id="previewOrbTemplate">Preview</button>
+        </div>
+        <div class="bindingEditorHelp">Template orb-state seed. Starts from vanilla orb defaults, but does not publish back into the upstream orb base SSOT.</div>
+        <div class="sliderRow">
+          <span>Diameter</span>
+          <strong><span id="vOrbTemplateD">100</span>px</strong>
+        </div>
+        <input id="orbTemplateD" type="range" min="20" max="400" value="100" step="2" />
+        <div class="sliderRow">
+          <span>Stroke width</span>
+          <strong><span id="vOrbTemplateStroke">2</span>px</strong>
+        </div>
+        <input id="orbTemplateStroke" type="range" min="2" max="20" value="2" step="1" />
+        <div class="sliderRow">
+          <span>Stroke alpha</span>
+          <strong><span id="vOrbTemplateStrokeAlpha">1.00</span></strong>
+        </div>
+        <input id="orbTemplateStrokeAlpha" type="range" min="0" max="1" value="1.00" step="0.01" />
+        <div class="sliderRow">
+          <span>Fill alpha</span>
+          <strong><span id="vOrbTemplateFillAlpha">0.20</span></strong>
+        </div>
+        <input id="orbTemplateFillAlpha" type="range" min="0" max="1" value="0.20" step="0.01" />
+        <div class="sliderRow">
+          <span>Stroke red</span>
+          <strong><span id="vOrbTemplateStrokeR">255</span></strong>
+        </div>
+        <input id="orbTemplateStrokeR" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Stroke green</span>
+          <strong><span id="vOrbTemplateStrokeG">255</span></strong>
+        </div>
+        <input id="orbTemplateStrokeG" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Stroke blue</span>
+          <strong><span id="vOrbTemplateStrokeB">255</span></strong>
+        </div>
+        <input id="orbTemplateStrokeB" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Fill red</span>
+          <strong><span id="vOrbTemplateFillR">255</span></strong>
+        </div>
+        <input id="orbTemplateFillR" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Fill green</span>
+          <strong><span id="vOrbTemplateFillG">255</span></strong>
+        </div>
+        <input id="orbTemplateFillG" type="range" min="0" max="255" value="255" step="1" />
+        <div class="sliderRow">
+          <span>Fill blue</span>
+          <strong><span id="vOrbTemplateFillB">255</span></strong>
+        </div>
+        <input id="orbTemplateFillB" type="range" min="0" max="255" value="255" step="1" />
+      </div>
+
       <div class="section" data-effect="orb-fracture" hidden>
         <div class="row">
           <button id="previewOrbFracture">Preview</button>
@@ -1105,6 +1165,7 @@
     });
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
+      { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
       { value: "orb-fracture", label: "Orb Fracture", baseEffect: "orb-fracture", category: "orb", locked: true },
       { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
     ]);
@@ -1158,12 +1219,14 @@
       flamePreviewRoot: $("flamePreviewRoot"),
       electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
+      orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
       orbFracturePreviewRoot: $("orbFracturePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
       orbShatterPreviewRoot: $("orbShatterPreviewRoot"),
 
       playShield: $("playShield"),
       previewOrbBase: $("previewOrbBase"),
+      previewOrbTemplate: $("previewOrbTemplate"),
       previewOrbFracture: $("previewOrbFracture"),
       previewOrbGlobe: $("previewOrbGlobe"),
       effectSelect: $("effectSelect"),
@@ -1268,6 +1331,26 @@
       vOrbGlobeReleasedStroke: $("vOrbGlobeReleasedStroke"),
       orbGlobeOrbitStroke: $("orbGlobeOrbitStroke"),
       vOrbGlobeOrbitStroke: $("vOrbGlobeOrbitStroke"),
+      orbTemplateD: $("orbTemplateD"),
+      vOrbTemplateD: $("vOrbTemplateD"),
+      orbTemplateStroke: $("orbTemplateStroke"),
+      vOrbTemplateStroke: $("vOrbTemplateStroke"),
+      orbTemplateStrokeAlpha: $("orbTemplateStrokeAlpha"),
+      vOrbTemplateStrokeAlpha: $("vOrbTemplateStrokeAlpha"),
+      orbTemplateFillAlpha: $("orbTemplateFillAlpha"),
+      vOrbTemplateFillAlpha: $("vOrbTemplateFillAlpha"),
+      orbTemplateStrokeR: $("orbTemplateStrokeR"),
+      vOrbTemplateStrokeR: $("vOrbTemplateStrokeR"),
+      orbTemplateStrokeG: $("orbTemplateStrokeG"),
+      vOrbTemplateStrokeG: $("vOrbTemplateStrokeG"),
+      orbTemplateStrokeB: $("orbTemplateStrokeB"),
+      vOrbTemplateStrokeB: $("vOrbTemplateStrokeB"),
+      orbTemplateFillR: $("orbTemplateFillR"),
+      vOrbTemplateFillR: $("vOrbTemplateFillR"),
+      orbTemplateFillG: $("orbTemplateFillG"),
+      vOrbTemplateFillG: $("vOrbTemplateFillG"),
+      orbTemplateFillB: $("orbTemplateFillB"),
+      vOrbTemplateFillB: $("vOrbTemplateFillB"),
     };
 
     const shieldPreviewEls = Object.freeze({
@@ -1298,6 +1381,32 @@
       ...els,
       previewRoot: els.orbBasePreviewRoot,
       orb: $("orbBaseLaneOrb"),
+    });
+    const orbTemplatePreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbTemplatePreviewRoot,
+      orb: $("orbTemplateLaneOrb"),
+      previewOrbBase: els.previewOrbTemplate,
+      orbBaseD: els.orbTemplateD,
+      vOrbBaseD: els.vOrbTemplateD,
+      orbBaseStroke: els.orbTemplateStroke,
+      vOrbBaseStroke: els.vOrbTemplateStroke,
+      orbBaseStrokeAlpha: els.orbTemplateStrokeAlpha,
+      vOrbBaseStrokeAlpha: els.vOrbTemplateStrokeAlpha,
+      orbBaseFillAlpha: els.orbTemplateFillAlpha,
+      vOrbBaseFillAlpha: els.vOrbTemplateFillAlpha,
+      orbBaseStrokeR: els.orbTemplateStrokeR,
+      vOrbBaseStrokeR: els.vOrbTemplateStrokeR,
+      orbBaseStrokeG: els.orbTemplateStrokeG,
+      vOrbBaseStrokeG: els.vOrbTemplateStrokeG,
+      orbBaseStrokeB: els.orbTemplateStrokeB,
+      vOrbBaseStrokeB: els.vOrbTemplateStrokeB,
+      orbBaseFillR: els.orbTemplateFillR,
+      vOrbBaseFillR: els.vOrbTemplateFillR,
+      orbBaseFillG: els.orbTemplateFillG,
+      vOrbBaseFillG: els.vOrbTemplateFillG,
+      orbBaseFillB: els.orbTemplateFillB,
+      vOrbBaseFillB: els.vOrbTemplateFillB,
     });
     const orbFracturePreviewEls = Object.freeze({
       ...els,
@@ -1449,6 +1558,7 @@
     function defaultSettingsForBaseEffect(baseEffect){
       switch (String(baseEffect || "")) {
         case "orb-base":
+        case "orb-template":
           return {
             orbBaseD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
             orbBaseStroke: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
@@ -1722,6 +1832,19 @@
             orbBaseFillG: Number(els.orbBaseFillG && els.orbBaseFillG.value),
             orbBaseFillB: Number(els.orbBaseFillB && els.orbBaseFillB.value),
           };
+        case "orb-template":
+          return {
+            orbBaseD: Number(els.orbTemplateD && els.orbTemplateD.value),
+            orbBaseStroke: Number(els.orbTemplateStroke && els.orbTemplateStroke.value),
+            orbBaseStrokeAlpha: Number(els.orbTemplateStrokeAlpha && els.orbTemplateStrokeAlpha.value),
+            orbBaseFillAlpha: Number(els.orbTemplateFillAlpha && els.orbTemplateFillAlpha.value),
+            orbBaseStrokeR: Number(els.orbTemplateStrokeR && els.orbTemplateStrokeR.value),
+            orbBaseStrokeG: Number(els.orbTemplateStrokeG && els.orbTemplateStrokeG.value),
+            orbBaseStrokeB: Number(els.orbTemplateStrokeB && els.orbTemplateStrokeB.value),
+            orbBaseFillR: Number(els.orbTemplateFillR && els.orbTemplateFillR.value),
+            orbBaseFillG: Number(els.orbTemplateFillG && els.orbTemplateFillG.value),
+            orbBaseFillB: Number(els.orbTemplateFillB && els.orbTemplateFillB.value),
+          };
         case "orb-fracture":
           return {
             orbFractureCrackStroke: Number(els.orbFractureCrackStroke && els.orbFractureCrackStroke.value),
@@ -1796,6 +1919,19 @@
             if (els.orbBaseFillG && settings.orbBaseFillG != null) els.orbBaseFillG.value = String(settings.orbBaseFillG);
             if (els.orbBaseFillB && settings.orbBaseFillB != null) els.orbBaseFillB.value = String(settings.orbBaseFillB);
             applyOrbBase();
+            break;
+          case "orb-template":
+            if (els.orbTemplateD && settings.orbBaseD != null) els.orbTemplateD.value = String(settings.orbBaseD);
+            if (els.orbTemplateStroke && settings.orbBaseStroke != null) els.orbTemplateStroke.value = String(settings.orbBaseStroke);
+            if (els.orbTemplateStrokeAlpha && settings.orbBaseStrokeAlpha != null) els.orbTemplateStrokeAlpha.value = String(settings.orbBaseStrokeAlpha);
+            if (els.orbTemplateFillAlpha && settings.orbBaseFillAlpha != null) els.orbTemplateFillAlpha.value = String(settings.orbBaseFillAlpha);
+            if (els.orbTemplateStrokeR && settings.orbBaseStrokeR != null) els.orbTemplateStrokeR.value = String(settings.orbBaseStrokeR);
+            if (els.orbTemplateStrokeG && settings.orbBaseStrokeG != null) els.orbTemplateStrokeG.value = String(settings.orbBaseStrokeG);
+            if (els.orbTemplateStrokeB && settings.orbBaseStrokeB != null) els.orbTemplateStrokeB.value = String(settings.orbBaseStrokeB);
+            if (els.orbTemplateFillR && settings.orbBaseFillR != null) els.orbTemplateFillR.value = String(settings.orbBaseFillR);
+            if (els.orbTemplateFillG && settings.orbBaseFillG != null) els.orbTemplateFillG.value = String(settings.orbBaseFillG);
+            if (els.orbTemplateFillB && settings.orbBaseFillB != null) els.orbTemplateFillB.value = String(settings.orbBaseFillB);
+            applyOrbTemplate();
             break;
           case "orb-fracture":
             if (els.orbFractureCrackStroke && settings.orbFractureCrackStroke != null) els.orbFractureCrackStroke.value = String(settings.orbFractureCrackStroke);
@@ -2055,6 +2191,7 @@
       "flame-aoe": els.flamePreviewRoot,
       "electric-aoe": els.electricPreviewRoot,
       "orb-base": els.orbBasePreviewRoot,
+      "orb-template": els.orbTemplatePreviewRoot,
       "orb-fracture": els.orbFracturePreviewRoot,
       "orb-globe": els.orbGlobePreviewRoot,
       "orb-shatter": els.orbShatterPreviewRoot,
@@ -2085,6 +2222,7 @@
       setRootVar(els.shieldPreviewRoot, "--shield-d", GEOM.shieldD + "px");
       setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
       applyOrbLaneSsot(els.orbBasePreviewRoot);
+      applyOrbLaneSsot(els.orbTemplatePreviewRoot);
       applyOrbLaneSsot(els.orbFracturePreviewRoot, { includeFracture: true });
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.orbShatterPreviewRoot, { includeFracture: true });
@@ -2220,6 +2358,15 @@
     });
     const applyOrbBase = orbBasePreview.apply;
     orbBasePreview.wire();
+
+    const orbTemplatePreview = createOrbBasePreview({
+      els: orbTemplatePreviewEls,
+      evenPx,
+      clamp,
+      clampByte,
+    });
+    const applyOrbTemplate = orbTemplatePreview.apply;
+    orbTemplatePreview.wire();
 
     const orbFracturePreview = createOrbFracturePreview({
       els: orbFracturePreviewEls,
