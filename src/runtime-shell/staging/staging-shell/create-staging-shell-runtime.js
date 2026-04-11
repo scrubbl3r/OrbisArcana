@@ -750,11 +750,18 @@ function getShellOrbRuntime(shellContext) {
   return orbRuntimeState.get();
 }
 
-function getShellOrbBaseVisualState() {
-  return {
-    strokeDefault01: { r: 1, g: 1, b: 1 },
-    fillAlpha: 0.20,
-  };
+function getShellOrbBaseVisualState(shellContext) {
+  const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const buildOrbBaseVisualState =
+    sharedModules &&
+    sharedModules.orbBaseStateModule &&
+    sharedModules.orbBaseStateModule.buildOrbBaseVisualState;
+  if (typeof buildOrbBaseVisualState !== "function") {
+    throw new Error("Missing orb base visual SSOT in shared staging modules");
+  }
+  const phys = runtime && runtime.stage ? runtime.stage.phys : null;
+  return buildOrbBaseVisualState({ physics: phys });
 }
 
 function updateShellOrbStrokeColor(shellContext, dt) {
@@ -1998,7 +2005,7 @@ export async function createStagingShellRuntime({
     shellContext.runtime.orbColorRuntime = (typeof createOrbColorRuntime === "function")
       ? createOrbColorRuntime({
           root: gameStagingRoot,
-          getBaseVisualState: getShellOrbBaseVisualState,
+          getBaseVisualState: () => getShellOrbBaseVisualState(shellContext),
         })
       : null;
     if (shellContext.runtime.orbColorRuntime && typeof shellContext.runtime.orbColorRuntime.reset === "function") {
