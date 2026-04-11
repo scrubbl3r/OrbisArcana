@@ -1994,7 +1994,7 @@ export async function createStagingShellRuntime({
       sharedModules.orbColorRuntimeModule.createOrbColorRuntime;
     const gameStagingRoot = gameStagingView && gameStagingView.root
       ? gameStagingView.root
-      : (rootDocument && rootDocument.documentElement);
+      : null;
     shellContext.runtime.orbColorRuntime = (typeof createOrbColorRuntime === "function")
       ? createOrbColorRuntime({
           root: gameStagingRoot,
@@ -2028,9 +2028,7 @@ export async function createStagingShellRuntime({
       shellContext.runtime.vfx.orbShatterRuntime
     )
       ? gameStagingAdapter.createOrbShatterController({
-          root: (gameStagingView && gameStagingView.root)
-            ? gameStagingView.root
-            : (rootDocument && rootDocument.documentElement),
+          root: gameStagingRoot,
           getOrbShatterRuntime: () => (
             shellContext.runtime && shellContext.runtime.vfx
               ? shellContext.runtime.vfx.orbShatterRuntime

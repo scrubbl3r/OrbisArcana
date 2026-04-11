@@ -3,6 +3,7 @@ import { createOrbShatterRuntimeController } from "../../../game-runtime/orb/orb
 export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}) {
   let primaryGlobeEl = refs.testGlobe || null;
   const stageRefs = Object.freeze({
+    root: refs.root || null,
     physStage: refs.physStage || null,
     stars: refs.stars || null,
     terrain: refs.terrain || null,
@@ -296,7 +297,7 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
       stageRefs.deathPanel.setAttribute("aria-hidden", "true");
     },
     createOrbShatterController({
-      root = globalThis.document && globalThis.document.documentElement,
+      root = stageRefs.root,
       getOrbShatterRuntime = () => null,
       getOrbColorState = () => null,
       getBaseFillAlpha = () => 0.20,
