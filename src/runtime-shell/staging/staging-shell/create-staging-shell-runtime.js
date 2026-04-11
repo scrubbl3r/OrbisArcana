@@ -842,17 +842,15 @@ function renderShellOrbDamageVisuals(shellContext) {
 }
 
 function openShellDeathOverlay(shellContext) {
-  const deathPanel = shellContext && shellContext.stageEls ? shellContext.stageEls.deathPanel : null;
-  if (!deathPanel) return;
-  deathPanel.classList.remove("off");
-  deathPanel.setAttribute("aria-hidden", "false");
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  if (!gameStagingAdapter || typeof gameStagingAdapter.openDeathOverlay !== "function") return;
+  gameStagingAdapter.openDeathOverlay();
 }
 
 function closeShellDeathOverlay(shellContext) {
-  const deathPanel = shellContext && shellContext.stageEls ? shellContext.stageEls.deathPanel : null;
-  if (!deathPanel) return;
-  deathPanel.classList.add("off");
-  deathPanel.setAttribute("aria-hidden", "true");
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  if (!gameStagingAdapter || typeof gameStagingAdapter.closeDeathOverlay !== "function") return;
+  gameStagingAdapter.closeDeathOverlay();
 }
 
 function clearShellDeathOverlaySchedule(shellContext) {
@@ -2408,17 +2406,15 @@ export async function createStagingShellRuntime({
     }
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
-    const createOrbShatterRuntimeController =
-      sharedModules.orbShatterRuntimeModule &&
-      sharedModules.orbShatterRuntimeModule.createOrbShatterRuntimeController;
+    const gameStagingAdapter = shellContext.gameStagingAdapter || null;
     shellContext.runtime.orbShatterController = (
-      typeof createOrbShatterRuntimeController === "function" &&
+      gameStagingAdapter &&
+      typeof gameStagingAdapter.createOrbShatterController === "function" &&
       shellContext.runtime.vfx &&
       shellContext.runtime.vfx.orbShatterRuntime
     )
-      ? createOrbShatterRuntimeController({
+      ? gameStagingAdapter.createOrbShatterController({
           root: rootDocument && rootDocument.documentElement,
-          getOrbEl: () => (shellContext.stageEls ? shellContext.stageEls.orb : null),
           getOrbShatterRuntime: () => (
             shellContext.runtime && shellContext.runtime.vfx
               ? shellContext.runtime.vfx.orbShatterRuntime

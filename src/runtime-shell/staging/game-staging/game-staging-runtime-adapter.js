@@ -1,3 +1,5 @@
+import { createOrbShatterRuntimeController } from "../../../game-runtime/orb/orb-shatter-runtime.js";
+
 export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}) {
   const stageRefs = Object.freeze({
     physStage: refs.physStage || null,
@@ -235,6 +237,35 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
         }
       }
       stageRefs.orbCracks.innerHTML = paths.join("");
+    },
+    openDeathOverlay() {
+      if (!stageRefs.deathPanel) return;
+      stageRefs.deathPanel.classList.remove("off");
+      stageRefs.deathPanel.setAttribute("aria-hidden", "false");
+    },
+    closeDeathOverlay() {
+      if (!stageRefs.deathPanel) return;
+      stageRefs.deathPanel.classList.add("off");
+      stageRefs.deathPanel.setAttribute("aria-hidden", "true");
+    },
+    createOrbShatterController({
+      root = globalThis.document && globalThis.document.documentElement,
+      getOrbShatterRuntime = () => null,
+      getOrbColorState = () => null,
+      getBaseFillAlpha = () => 0.20,
+      clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
+      clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
+    } = {}) {
+      if (!stageRefs.orb || typeof createOrbShatterRuntimeController !== "function") return null;
+      return createOrbShatterRuntimeController({
+        root,
+        getOrbEl: () => stageRefs.orb,
+        getOrbShatterRuntime,
+        getOrbColorState,
+        getBaseFillAlpha,
+        clamp,
+        clamp01,
+      });
     },
   });
 }
