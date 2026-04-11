@@ -12,29 +12,29 @@
 /** @type {ReadonlyArray<Readonly<RuntimeEffectBindingEntry>>} */
 export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
   Object.freeze({
-    targetKind: "spell",
-    targetId: "aoe_flame",
-    effectId: "spell.aoe_electric",
-    presetId: "preset.electric_aoe.default",
+    targetKind: "orb-state",
+    targetId: "shattered",
+    effectId: "orb.shatter_voronoi",
+    presetId: "preset.orb_shatter.default",
   }),
   Object.freeze({
     targetKind: "spell",
     targetId: "aoe_electric",
+    effectId: "spell.aoe_electric",
+    presetId: "preset.spell-aoe-electric.electric-aoe",
+  }),
+  Object.freeze({
+    targetKind: "spell",
+    targetId: "aoe_flame",
     effectId: "spell.aoe_flame",
-    presetId: "preset.flame_aoe.default",
+    presetId: "preset.spell-aoe-flame.flame-aoe",
   }),
   Object.freeze({
     targetKind: "spell",
     targetId: "bubble_shield",
     effectId: "spell.shield_bubble",
     presetId: "preset.bubble_shield.default",
-  }),
-  Object.freeze({
-    targetKind: "orb-state",
-    targetId: "shattered",
-    effectId: "orb.shatter_voronoi",
-    presetId: "preset.orb_shatter.default",
-  }),
+  })
 ]);
 
 export const RUNTIME_EFFECT_BINDINGS_BY_KEY = Object.freeze(
