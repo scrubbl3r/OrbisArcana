@@ -59,7 +59,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     pickup.style.left = "50%";
     pickup.style.top = "22px";
     pickup.style.transform = "translate(-50%, 0)";
-    els.stage.appendChild(pickup);
+    els.orbGlobePreviewLayer.appendChild(pickup);
 
     samples = [orbit, released, pickup];
   }

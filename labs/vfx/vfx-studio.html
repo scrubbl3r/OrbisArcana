@@ -2013,6 +2013,10 @@
       clearOrbFracture();
       clearOrbGlobe();
       clearOrbShatter();
+      if (els.orbFractureLayer) els.orbFractureLayer.innerHTML = "";
+      if (els.orbShatterLayer) els.orbShatterLayer.innerHTML = "";
+      if (els.orbInterior) els.orbInterior.innerHTML = "";
+      if (els.orbGlobePreviewLayer) els.orbGlobePreviewLayer.innerHTML = "";
       Object.values(PREVIEW_LAYER_GROUPS).flat().forEach((layer) => {
         if (!layer || typeof layer.setAttribute !== "function") return;
         layer.setAttribute("aria-hidden", "true");
