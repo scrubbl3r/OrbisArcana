@@ -71,7 +71,7 @@ export function updateEffectSections({
   applyDraftToSelectedProfile,
   persistDraftStore,
   refreshEffectMeta,
-  previewLayerGroups = {},
+  previewRootsByEffect = {},
 }) {
   const opt = selectedEffectOption();
   const selectedValue = String((opt && opt.value) || "");
@@ -86,17 +86,12 @@ export function updateEffectSections({
     section.hidden = section.getAttribute("data-effect") !== effect;
   });
 
-  const activeLayers = Array.isArray(previewLayerGroups[effect]) ? previewLayerGroups[effect] : [];
-  const allLayers = new Set(
-    Object.values(previewLayerGroups)
-      .flat()
-      .filter(Boolean)
-  );
-  allLayers.forEach((layer) => {
-    if (!layer || typeof layer.toggleAttribute !== "function") return;
-    const shouldShow = activeLayers.includes(layer);
-    layer.toggleAttribute("hidden", !shouldShow);
-    layer.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+  const activeRoot = previewRootsByEffect[effect] || null;
+  Object.values(previewRootsByEffect).forEach((root) => {
+    if (!root || typeof root.toggleAttribute !== "function") return;
+    const shouldShow = root === activeRoot;
+    root.toggleAttribute("hidden", !shouldShow);
+    root.setAttribute("aria-hidden", shouldShow ? "false" : "true");
   });
 
   draftStore.activeValue = String((opt && opt.value) || "");

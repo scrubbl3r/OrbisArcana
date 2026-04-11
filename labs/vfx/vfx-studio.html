@@ -342,14 +342,16 @@
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
     }
 
-    /* ONE TRUE ORIGIN */
-    .origin{
+    .previewLane{
       position:absolute;
       left:50%;
       top:50%;
       width:0;
       height:0;
       pointer-events:none;
+    }
+    [data-preview-root][hidden]{
+      display:none;
     }
 
     .atOrigin{
@@ -659,17 +661,39 @@
     </div>
 
     <div class="card">
-        <div class="stage" id="stage" aria-label="Preview stage">
-        <div class="origin" id="origin">
-          <div class="electricLayer" id="electricLayer" data-preview-layer hidden aria-hidden="true"></div>
-          <div class="flameLayer" id="flameLayer" data-preview-layer hidden aria-hidden="true"></div>
-          <div class="shockLayer" id="shockLayer" data-preview-layer hidden aria-hidden="true"></div>
-          <div class="orbGlobePreviewLayer" id="orbGlobePreviewLayer" data-preview-layer hidden aria-hidden="true"></div>
-          <svg class="orbFractureLayer" id="orbFractureLayer" viewBox="-70 -70 140 140" data-preview-layer hidden aria-hidden="true"></svg>
-          <svg class="orbShatterLayer" id="orbShatterLayer" viewBox="-120 -120 240 240" data-preview-layer hidden aria-hidden="true"></svg>
-          <div class="shield atOrigin" id="shield" data-preview-layer hidden aria-hidden="true"></div>
-          <div class="orbInterior" id="orbInterior" data-preview-layer hidden aria-hidden="true"></div>
-          <div class="orb atOrigin" id="orb" data-preview-layer hidden aria-hidden="true"></div>
+      <div class="stage" id="stage" aria-label="Preview stage">
+        <div class="previewLane" id="shieldPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="shield atOrigin" id="shieldLaneShield"></div>
+          <div class="orb atOrigin" id="shieldLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="shockPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="shockLayer" id="shockLaneLayer"></div>
+          <div class="orb atOrigin" id="shockLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="flamePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="flameLayer" id="flameLaneLayer"></div>
+          <div class="orb atOrigin" id="flameLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="electricPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="electricLayer" id="electricLaneLayer"></div>
+          <div class="orb atOrigin" id="electricLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbBasePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbBaseLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbFracturePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <svg class="orbShatterLayer" id="orbFractureLaneShatterLayer" viewBox="-120 -120 240 240"></svg>
+          <svg class="orbFractureLayer" id="orbFractureLaneLayer" viewBox="-70 -70 140 140"></svg>
+          <div class="orb atOrigin" id="orbFractureLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orbGlobePreviewLayer" id="orbGlobeLaneLayer"></div>
+          <div class="orbInterior" id="orbGlobeLaneInterior"></div>
+          <div class="orb atOrigin" id="orbGlobeLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbShatterPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <svg class="orbShatterLayer" id="orbShatterLaneLayer" viewBox="-120 -120 240 240"></svg>
+          <div class="orb atOrigin" id="orbShatterLaneOrb"></div>
         </div>
       </div>
     </div>
@@ -1005,17 +1029,17 @@
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260410b";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260410b";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260410b";
-    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js?v=20260410b";
-    import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260411a";
-    import { createOrbFracturePreview } from "./studio/previews/orb-fracture-preview.js?v=20260411a";
-    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260411a";
+    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js?v=20260411b";
+    import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260411b";
+    import { createOrbFracturePreview } from "./studio/previews/orb-fracture-preview.js?v=20260411b";
+    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260411b";
     import {
       bootStudioShell,
       refreshEffectMeta as refreshEffectMetaHelper,
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
       updateEffectSections as updateEffectSectionsHelper,
-    } from "./studio/vfx-studio-shell.js?v=20260410b";
+    } from "./studio/vfx-studio-shell.js?v=20260411b";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
@@ -1035,7 +1059,7 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260411a";
+    } from "./studio/vfx-studio-state.js?v=20260411b";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1060,6 +1084,9 @@
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_FRACTURE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-fracture-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260411a";
+    import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
+    import { applyOrbFractureVisualCssVars, buildOrbFractureVisualState } from "../../src/game-runtime/orb/orb-fracture-base-state.js?v=20260411a";
+    import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260411a";
 
     const $ = (id) => document.getElementById(id);
     const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze({
@@ -1126,15 +1153,14 @@
 
     const els = {
       stage: $("stage"),
-      orb: $("orb"),
-      orbInterior: $("orbInterior"),
-      shockLayer: $("shockLayer"),
-      flameLayer: $("flameLayer"),
-      electricLayer: $("electricLayer"),
-      orbFractureLayer: $("orbFractureLayer"),
-      orbGlobePreviewLayer: $("orbGlobePreviewLayer"),
-      orbShatterLayer: $("orbShatterLayer"),
-      shield: $("shield"),
+      shieldPreviewRoot: $("shieldPreviewRoot"),
+      shockPreviewRoot: $("shockPreviewRoot"),
+      flamePreviewRoot: $("flamePreviewRoot"),
+      electricPreviewRoot: $("electricPreviewRoot"),
+      orbBasePreviewRoot: $("orbBasePreviewRoot"),
+      orbFracturePreviewRoot: $("orbFracturePreviewRoot"),
+      orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
+      orbShatterPreviewRoot: $("orbShatterPreviewRoot"),
 
       playShield: $("playShield"),
       previewOrbBase: $("previewOrbBase"),
@@ -1244,8 +1270,67 @@
       vOrbGlobeOrbitStroke: $("vOrbGlobeOrbitStroke"),
     };
 
+    const shieldPreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.shieldPreviewRoot,
+      shield: $("shieldLaneShield"),
+      orb: $("shieldLaneOrb"),
+    });
+    const shockPreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.shockPreviewRoot,
+      shockLayer: $("shockLaneLayer"),
+      orb: $("shockLaneOrb"),
+    });
+    const flamePreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.flamePreviewRoot,
+      flameLayer: $("flameLaneLayer"),
+      orb: $("flameLaneOrb"),
+    });
+    const electricPreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.electricPreviewRoot,
+      electricLayer: $("electricLaneLayer"),
+      orb: $("electricLaneOrb"),
+    });
+    const orbBasePreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbBasePreviewRoot,
+      orb: $("orbBaseLaneOrb"),
+    });
+    const orbFracturePreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbFracturePreviewRoot,
+      orb: $("orbFractureLaneOrb"),
+      orbFractureLayer: $("orbFractureLaneLayer"),
+      orbShatterLayer: $("orbFractureLaneShatterLayer"),
+    });
+    const orbGlobePreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbGlobePreviewRoot,
+      orb: $("orbGlobeLaneOrb"),
+      orbInterior: $("orbGlobeLaneInterior"),
+      orbGlobePreviewLayer: $("orbGlobeLaneLayer"),
+    });
+    const orbShatterPreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbShatterPreviewRoot,
+      orb: $("orbShatterLaneOrb"),
+      orbShatterLayer: $("orbShatterLaneLayer"),
+    });
+
     function setVar(name, value){
       document.documentElement.style.setProperty(name, value);
+    }
+
+    function setRootVar(root, name, value){
+      if (!root || !root.style) return;
+      root.style.setProperty(name, value);
+    }
+
+    function createScopedVarSetter(root){
+      return (name, value) => setRootVar(root, name, value);
     }
 
     function selectedEffectOption(){
@@ -1964,17 +2049,28 @@
     // GEOMETRY (forced even)
     // =========================================================================
     const GEOM = { orbD:100, orbStroke:2, shieldD:186, shieldStroke:4 };
-    const PREVIEW_LAYER_GROUPS = {
-      "bubble-shield": [els.orb, els.shield],
-      "shockwave": [els.orb, els.shockLayer],
-      "flame-aoe": [els.orb, els.flameLayer],
-      "electric-aoe": [els.orb, els.electricLayer],
-      "orb-shatter": [els.orb, els.orbShatterLayer],
-      "orb-base": [els.orb],
-      "orb-fracture": [els.orb, els.orbFractureLayer, els.orbShatterLayer],
-      "orb-globe": [els.orb, els.orbInterior, els.orbGlobePreviewLayer],
+    const PREVIEW_ROOTS_BY_EFFECT = {
+      "bubble-shield": els.shieldPreviewRoot,
+      "shockwave": els.shockPreviewRoot,
+      "flame-aoe": els.flamePreviewRoot,
+      "electric-aoe": els.electricPreviewRoot,
+      "orb-base": els.orbBasePreviewRoot,
+      "orb-fracture": els.orbFracturePreviewRoot,
+      "orb-globe": els.orbGlobePreviewRoot,
+      "orb-shatter": els.orbShatterPreviewRoot,
     };
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
+
+    function applyOrbLaneSsot(root, { includeFracture = false, includeGlobe = false } = {}){
+      if (!root) return;
+      applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), { root });
+      if (includeFracture) {
+        applyOrbFractureVisualCssVars(buildOrbFractureVisualState(), { root });
+      }
+      if (includeGlobe) {
+        applyOrbGlobeVisualCssVars(buildOrbGlobeVisualState(), { root });
+      }
+    }
 
     function applyGeometryVars(){
       GEOM.orbD = evenPx(GEOM.orbD, 2, 2000);
@@ -1982,10 +2078,16 @@
       GEOM.shieldD = evenPx(GEOM.shieldD, 2, 2000);
       GEOM.shieldStroke = evenPx(GEOM.shieldStroke, 2, 40);
 
-      setVar("--orb-d", GEOM.orbD + "px");
-      setVar("--orb-stroke", GEOM.orbStroke + "px");
-      setVar("--shield-d", GEOM.shieldD + "px");
-      setVar("--shield-stroke", GEOM.shieldStroke + "px");
+      [els.shieldPreviewRoot, els.shockPreviewRoot, els.flamePreviewRoot, els.electricPreviewRoot].forEach((root) => {
+        setRootVar(root, "--orb-d", GEOM.orbD + "px");
+        setRootVar(root, "--orb-stroke", GEOM.orbStroke + "px");
+      });
+      setRootVar(els.shieldPreviewRoot, "--shield-d", GEOM.shieldD + "px");
+      setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
+      applyOrbLaneSsot(els.orbBasePreviewRoot);
+      applyOrbLaneSsot(els.orbFracturePreviewRoot, { includeFracture: true });
+      applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
+      applyOrbLaneSsot(els.orbShatterPreviewRoot, { includeFracture: true });
     }
     applyGeometryVars();
 
@@ -1993,11 +2095,11 @@
     // Shield (pulse only while ON)
     // =========================================================================
     const shieldPreview = createShieldPreview({
-      els,
+      els: shieldPreviewEls,
       GEOM,
       clamp,
       evenPx,
-      setVar,
+      setVar: createScopedVarSetter(els.shieldPreviewRoot),
     });
     const applyShieldGeometry = shieldPreview.applyGeometry;
     const applyShield = shieldPreview.apply;
@@ -2013,14 +2115,10 @@
       clearOrbFracture();
       clearOrbGlobe();
       clearOrbShatter();
-      if (els.orbFractureLayer) els.orbFractureLayer.innerHTML = "";
-      if (els.orbShatterLayer) els.orbShatterLayer.innerHTML = "";
-      if (els.orbInterior) els.orbInterior.innerHTML = "";
-      if (els.orbGlobePreviewLayer) els.orbGlobePreviewLayer.innerHTML = "";
-      Object.values(PREVIEW_LAYER_GROUPS).flat().forEach((layer) => {
-        if (!layer || typeof layer.setAttribute !== "function") return;
-        layer.setAttribute("aria-hidden", "true");
-        layer.toggleAttribute("hidden", true);
+      Object.values(PREVIEW_ROOTS_BY_EFFECT).forEach((root) => {
+        if (!root || typeof root.setAttribute !== "function") return;
+        root.setAttribute("aria-hidden", "true");
+        root.toggleAttribute("hidden", true);
       });
     }
 
@@ -2036,7 +2134,7 @@
         applyDraftToSelectedProfile,
         persistDraftStore,
         refreshEffectMeta,
-        previewLayerGroups: PREVIEW_LAYER_GROUPS,
+        previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
       });
     }
     bootStudioShell({
@@ -2074,9 +2172,9 @@
     // Shockwave (spawned rings; plain circles)
     // =========================================================================
     const shockwavePreview = createShockwavePreview({
-      els,
+      els: shockPreviewEls,
       clamp,
-      setVar,
+      setVar: createScopedVarSetter(els.shockPreviewRoot),
       shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
     });
     const applyShock = shockwavePreview.apply;
@@ -2088,10 +2186,10 @@
     // Flame AOE (solid ring + vector tendrils)
     // =========================================================================
     const flamePreview = createFlameAoePreview({
-      els,
+      els: flamePreviewEls,
       clamp,
       evenPx,
-      setVar,
+      setVar: createScopedVarSetter(els.flamePreviewRoot),
       flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
     });
     const applyFlameControls = flamePreview.apply;
@@ -2103,10 +2201,10 @@
     // Electric AOE (plasma ball)
     // =========================================================================
     const electricPreview = createElectricAoePreview({
-      els,
+      els: electricPreviewEls,
       clamp,
       evenPx,
-      setVar,
+      setVar: createScopedVarSetter(els.electricPreviewRoot),
       electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
     });
     const applyElectricControls = electricPreview.apply;
@@ -2115,7 +2213,7 @@
     electricPreview.wire();
 
     const orbBasePreview = createOrbBasePreview({
-      els,
+      els: orbBasePreviewEls,
       evenPx,
       clamp,
       clampByte,
@@ -2124,7 +2222,7 @@
     orbBasePreview.wire();
 
     const orbFracturePreview = createOrbFracturePreview({
-      els,
+      els: orbFracturePreviewEls,
       clamp,
       evenPx,
     });
@@ -2133,7 +2231,7 @@
     orbFracturePreview.wire();
 
     const orbGlobePreview = createOrbGlobePreview({
-      els,
+      els: orbGlobePreviewEls,
       clamp,
       evenPx,
     });
@@ -2144,7 +2242,7 @@
     // =========================================================================
     // Orb Shatter (first orb-state exemplar)
     // =========================================================================
-    const orbShatterPreview = createOrbShatterPreview({ els });
+    const orbShatterPreview = createOrbShatterPreview({ els: orbShatterPreviewEls });
     const clearOrbShatter = orbShatterPreview.clear;
     const playOrbShatter = orbShatterPreview.play;
     orbShatterPreview.wire();

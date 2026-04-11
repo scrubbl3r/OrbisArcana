@@ -31,7 +31,7 @@ export function createOrbShatterPreview({ els } = {}) {
     layerEl: els && els.orbShatterLayer,
   });
   const orbShatterController = createOrbShatterRuntimeController({
-    root: globalThis.document && globalThis.document.documentElement,
+    root: els && els.previewRoot,
     getOrbEl: () => (els ? els.orb : null),
     getOrbShatterRuntime: () => orbShatterRuntime,
     getOrbColorState: () => null,

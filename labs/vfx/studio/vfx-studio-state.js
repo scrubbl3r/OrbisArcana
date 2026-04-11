@@ -142,7 +142,8 @@ export function buildEffectLibraryOptionsFromRegistry({
     if (group && group.children.length) effectSelect.appendChild(group);
   }
 
-  for (const optionDef of Array.isArray(extraBuiltinOptions) ? extraBuiltinOptions : []) {
+  const extraOptions = Array.isArray(extraBuiltinOptions) ? extraBuiltinOptions.slice() : [];
+  for (const optionDef of extraOptions.slice().reverse()) {
     if (!optionDef || typeof optionDef !== "object") continue;
     const category = String(optionDef.category || "orb");
     const targetGroup = ensureCategoryGroup(effectSelect, categoryLabels, category);
@@ -152,7 +153,11 @@ export function buildEffectLibraryOptionsFromRegistry({
     opt.dataset.baseEffect = String(optionDef.baseEffect || optionDef.value || "");
     opt.dataset.category = category;
     opt.dataset.locked = String(optionDef.locked ? "true" : "false");
-    targetGroup.appendChild(opt);
+    if (category === "orb" && targetGroup.firstChild) {
+      targetGroup.insertBefore(opt, targetGroup.firstChild);
+    } else {
+      targetGroup.appendChild(opt);
+    }
   }
 
   for (const opt of customOptions) {

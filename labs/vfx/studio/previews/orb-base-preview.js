@@ -47,7 +47,7 @@ export function createOrbBasePreview({ els, evenPx, clamp, clampByte }) {
       physics: {
         orbRadiusPx: diameterPx * 0.5,
       },
-    }));
+    }), { root: els.previewRoot });
   }
 
   function clear() {}

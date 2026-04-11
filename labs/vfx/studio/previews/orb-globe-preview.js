@@ -1,4 +1,8 @@
 import {
+  applyOrbBaseVisualCssVars,
+  buildOrbBaseVisualState,
+} from "../../../../src/game-runtime/orb/orb-base-state.js";
+import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
   getInnerGlobeDiameterPx,
@@ -27,7 +31,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     clear();
     if (!els.orbInterior || !els.orbGlobePreviewLayer) return;
 
-    const orbDiameter = Number(getComputedStyle(document.documentElement).getPropertyValue("--orb-d").replace("px", "")) || 100;
+    const orbDiameter = Number(getComputedStyle(els.previewRoot).getPropertyValue("--orb-d").replace("px", "")) || 100;
     const orbRadius = orbDiameter * 0.5;
     const innerD = getInnerGlobeDiameterPx(orbRadius, state);
     const orbitR = getOrbitDistancePx(orbRadius, state);
@@ -89,7 +93,10 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     els.vOrbGlobeReleasedStroke.textContent = String(Number(state.releasedStrokeWidthPx).toFixed(1));
     els.vOrbGlobeOrbitStroke.textContent = String(Number(state.orbitStrokeWidthPx).toFixed(1));
 
-    applyOrbGlobeVisualCssVars(state);
+    applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), {
+      root: els.previewRoot,
+    });
+    applyOrbGlobeVisualCssVars(state, { root: els.previewRoot });
     renderSamples(state);
   }
 

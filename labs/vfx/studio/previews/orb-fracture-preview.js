@@ -1,4 +1,8 @@
 import {
+  applyOrbBaseVisualCssVars,
+  buildOrbBaseVisualState,
+} from "../../../../src/game-runtime/orb/orb-base-state.js";
+import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../../src/game-runtime/orb/orb-fracture-base-state.js";
@@ -35,12 +39,15 @@ export function createOrbFracturePreview({ els, clamp, evenPx }) {
     els.vOrbFractureGlowBlur.textContent = String(glowBlurPx);
     els.vOrbFractureGlowAlpha.textContent = glowAlpha.toFixed(2);
 
+    applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), {
+      root: els.previewRoot,
+    });
     applyOrbFractureVisualCssVars(buildOrbFractureVisualState({
       crackStrokeWidthPx,
       shardStrokeWidthPx,
       glowBlurPx,
       glowAlpha,
-    }));
+    }), { root: els.previewRoot });
     renderSamples();
   }
 
