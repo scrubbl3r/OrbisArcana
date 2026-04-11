@@ -50,10 +50,7 @@ export function createOrbTemplatePreview({ els } = {}) {
 
   function getRevealCount() {
     if (currentHits <= 0) return 0;
-    return Math.max(0, Math.min(
-      currentShardTotal,
-      Math.round((currentHits / Math.max(1, currentHitTotal)) * currentShardTotal)
-    ));
+    return currentShardTotal;
   }
 
   function renderPattern() {
