@@ -720,6 +720,7 @@
           <div class="orb atOrigin" id="orbBaseLaneOrb"></div>
         </div>
         <div class="previewLane" id="orbTemplatePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <svg class="orbShatterLayer" id="orbTemplateShatterLayer" viewBox="-120 -120 240 240"></svg>
           <svg class="orbTemplatePatternLayer" id="orbTemplatePatternLayer" viewBox="-50 -50 100 100"></svg>
           <div class="orb atOrigin" id="orbTemplateLaneOrb"></div>
         </div>
@@ -976,22 +977,32 @@
       </div>
 
       <div class="section" data-effect="orb-template" hidden>
-        <div class="bindingEditorHelp">First orb-state authoring lane. Uses Orb Base as its visual provider and renders a real Voronoi fracture map across the orb.</div>
+        <div class="bindingEditorHelp">First orb-state authoring lane. Uses Orb Base as its visual provider and drives one seeded Voronoi fracture map through hit, heal, and full shatter.</div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
-            <label for="orbTemplateSeed">Seed</label>
-            <input id="orbTemplateSeed" class="paramFieldInput" type="number" min="1" max="999999999" step="1" value="1001" />
-            <button id="orbTemplateApplySeedBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbTemplateShardTotal">Shards total</label>
+            <input id="orbTemplateShardTotal" class="paramFieldInput" type="number" min="3" max="64" step="1" value="16" />
+            <button id="orbTemplateApplyShardTotalBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateShatterCount">Shatter count</label>
-            <input id="orbTemplateShatterCount" class="paramFieldInput" type="number" min="3" max="64" step="1" value="16" />
-            <button id="orbTemplateApplyShatterCountBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbTemplateHitTotal">Hit total</label>
+            <input id="orbTemplateHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
+            <button id="orbTemplateApplyHitTotalBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateSeed">Randomize seed</label>
-            <input class="paramFieldInput" type="text" value="Generate a fresh Voronoi map" readonly />
-            <button id="orbTemplateRandomizeSeedBtn" class="toolBtn" type="button">Randomize</button>
+            <label for="orbTemplateHitBtn">Damage flow</label>
+            <input id="orbTemplateStatus" class="paramFieldInput" type="text" value="Hits 0 / 3" readonly />
+            <button id="orbTemplateHitBtn" class="toolBtn" type="button">Hit</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTemplateHealBtn">Recovery</label>
+            <input class="paramFieldInput" type="text" value="Reverse one hit across the same fracture map" readonly />
+            <button id="orbTemplateHealBtn" class="toolBtn" type="button">Heal</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTemplateRegenerateBtn">Regenerate</label>
+            <input class="paramFieldInput" type="text" value="Rebuild the orb with a fresh Voronoi seed" readonly />
+            <button id="orbTemplateRegenerateBtn" class="toolBtn" type="button">Regenerate</button>
           </div>
         </div>
       </div>
@@ -1094,7 +1105,7 @@
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260410b";
     import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js?v=20260411b";
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260411b";
-    import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260411c";
+    import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260411d";
     import { createOrbFracturePreview } from "./studio/previews/orb-fracture-preview.js?v=20260411b";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260411b";
     import {
@@ -1228,6 +1239,7 @@
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
       orbShatterPreviewRoot: $("orbShatterPreviewRoot"),
       orbTemplatePatternLayer: $("orbTemplatePatternLayer"),
+      orbTemplateShatterLayer: $("orbTemplateShatterLayer"),
 
       playShield: $("playShield"),
       previewOrbBase: $("previewOrbBase"),
@@ -1335,11 +1347,14 @@
       vOrbGlobeReleasedStroke: $("vOrbGlobeReleasedStroke"),
       orbGlobeOrbitStroke: $("orbGlobeOrbitStroke"),
       vOrbGlobeOrbitStroke: $("vOrbGlobeOrbitStroke"),
-      orbTemplateSeed: $("orbTemplateSeed"),
-      orbTemplateApplySeedBtn: $("orbTemplateApplySeedBtn"),
-      orbTemplateRandomizeSeedBtn: $("orbTemplateRandomizeSeedBtn"),
-      orbTemplateShatterCount: $("orbTemplateShatterCount"),
-      orbTemplateApplyShatterCountBtn: $("orbTemplateApplyShatterCountBtn"),
+      orbTemplateShardTotal: $("orbTemplateShardTotal"),
+      orbTemplateApplyShardTotalBtn: $("orbTemplateApplyShardTotalBtn"),
+      orbTemplateHitTotal: $("orbTemplateHitTotal"),
+      orbTemplateApplyHitTotalBtn: $("orbTemplateApplyHitTotalBtn"),
+      orbTemplateHitBtn: $("orbTemplateHitBtn"),
+      orbTemplateHealBtn: $("orbTemplateHealBtn"),
+      orbTemplateRegenerateBtn: $("orbTemplateRegenerateBtn"),
+      orbTemplateStatus: $("orbTemplateStatus"),
     };
 
     const shieldPreviewEls = Object.freeze({
@@ -1375,6 +1390,7 @@
       ...els,
       previewRoot: els.orbTemplatePreviewRoot,
       orb: $("orbTemplateLaneOrb"),
+      orbShatterLayer: $("orbTemplateShatterLayer"),
     });
     const orbFracturePreviewEls = Object.freeze({
       ...els,
@@ -1540,8 +1556,8 @@
           };
         case "orb-template":
           return {
-            orbTemplateSeed: 1001,
-            orbTemplateShatterCount: 16,
+            orbTemplateShardTotal: 16,
+            orbTemplateHitTotal: 3,
           };
         case "orb-fracture":
           return {
@@ -1806,8 +1822,8 @@
           };
         case "orb-template":
           return {
-            orbTemplateSeed: Number(els.orbTemplateSeed && els.orbTemplateSeed.value),
-            orbTemplateShatterCount: Number(els.orbTemplateShatterCount && els.orbTemplateShatterCount.value),
+            orbTemplateShardTotal: Number(els.orbTemplateShardTotal && els.orbTemplateShardTotal.value),
+            orbTemplateHitTotal: Number(els.orbTemplateHitTotal && els.orbTemplateHitTotal.value),
           };
         case "orb-fracture":
           return {
@@ -1885,8 +1901,8 @@
             applyOrbBase();
             break;
           case "orb-template":
-            if (els.orbTemplateSeed && settings.orbTemplateSeed != null) els.orbTemplateSeed.value = String(settings.orbTemplateSeed);
-            if (els.orbTemplateShatterCount && settings.orbTemplateShatterCount != null) els.orbTemplateShatterCount.value = String(settings.orbTemplateShatterCount);
+            if (els.orbTemplateShardTotal && settings.orbTemplateShardTotal != null) els.orbTemplateShardTotal.value = String(settings.orbTemplateShardTotal);
+            if (els.orbTemplateHitTotal && settings.orbTemplateHitTotal != null) els.orbTemplateHitTotal.value = String(settings.orbTemplateHitTotal);
             applyOrbTemplate();
             break;
           case "orb-fracture":
