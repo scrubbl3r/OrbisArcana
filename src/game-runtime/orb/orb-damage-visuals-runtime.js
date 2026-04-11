@@ -1,124 +1,108 @@
-export function createOrbDamageVisualsRuntime({ eventBus }) {
-  if (!eventBus || typeof eventBus.on !== 'function' || typeof eventBus.emit !== 'function') {
-    throw new Error('createOrbDamageVisualsRuntime requires eventBus.on and eventBus.emit');
-  }
+function rand(rng, a, b) {
+  return a + (b - a) * rng();
+}
 
-  const unsub = [];
-  const pieceTimers = new Set();
-
-  const state = {
-    visualState: 'pristine',
-    crackSegments: [],
-    shatterActive: false,
-    shards: [],
-    layout: null,
+export function createRng(seed) {
+  let t = (seed >>> 0) || 1;
+  return function next() {
+    t += 0x6D2B79F5;
+    let x = t;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
+}
 
-  function rand(rng, a, b) {
-    return a + (b - a) * rng();
+function circlePoly(radius = 50, steps = 28) {
+  const pts = [];
+  for (let i = 0; i < steps; i++) {
+    const t = (Math.PI * 2 * i) / steps;
+    pts.push({ x: radius * Math.cos(t), y: radius * Math.sin(t) });
+  }
+  return pts;
+}
+
+function clipPolyHalfPlane(poly, a, b, c) {
+  if (!poly.length) return [];
+  const out = [];
+  const eps = 1e-6;
+
+  function inside(p) {
+    return (a * p.x + b * p.y + c) <= eps;
   }
 
-  function createRng(seed) {
-    let t = (seed >>> 0) || 1;
-    return function next() {
-      t += 0x6D2B79F5;
-      let x = t;
-      x = Math.imul(x ^ (x >>> 15), x | 1);
-      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
-      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  function intersect(p1, p2) {
+    const sideEvalStart = a * p1.x + b * p1.y + c;
+    const sideEvalEnd = a * p2.x + b * p2.y + c;
+    const den = (sideEvalStart - sideEvalEnd);
+    if (Math.abs(den) < 1e-9) return { x: p2.x, y: p2.y };
+    const t = sideEvalStart / den;
+    return {
+      x: p1.x + (p2.x - p1.x) * t,
+      y: p1.y + (p2.y - p1.y) * t,
     };
   }
 
-  function circlePoly(radius = 50, steps = 28) {
-    const pts = [];
-    for (let i = 0; i < steps; i++) {
-      const t = (Math.PI * 2 * i) / steps;
-      pts.push({ x: radius * Math.cos(t), y: radius * Math.sin(t) });
+  let prev = poly[poly.length - 1];
+  let prevIn = inside(prev);
+  for (const curr of poly) {
+    const currIn = inside(curr);
+    if (currIn) {
+      if (!prevIn) out.push(intersect(prev, curr));
+      out.push(curr);
+    } else if (prevIn) {
+      out.push(intersect(prev, curr));
     }
-    return pts;
+    prev = curr;
+    prevIn = currIn;
   }
+  return out;
+}
 
-  function clipPolyHalfPlane(poly, a, b, c) {
-    if (!poly.length) return [];
-    const out = [];
-    const eps = 1e-6;
-
-    function inside(p) {
-      return (a * p.x + b * p.y + c) <= eps;
-    }
-
-    function intersect(p1, p2) {
-      const sideEvalStart = a * p1.x + b * p1.y + c;
-      const sideEvalEnd = a * p2.x + b * p2.y + c;
-      const den = (sideEvalStart - sideEvalEnd);
-      if (Math.abs(den) < 1e-9) return { x: p2.x, y: p2.y };
-      const t = sideEvalStart / den;
-      return {
-        x: p1.x + (p2.x - p1.x) * t,
-        y: p1.y + (p2.y - p1.y) * t,
-      };
-    }
-
-    let prev = poly[poly.length - 1];
-    let prevIn = inside(prev);
-    for (const curr of poly) {
-      const currIn = inside(curr);
-      if (currIn) {
-        if (!prevIn) out.push(intersect(prev, curr));
-        out.push(curr);
-      } else if (prevIn) {
-        out.push(intersect(prev, curr));
-      }
-      prev = curr;
-      prevIn = currIn;
-    }
-    return out;
+function polyArea(poly) {
+  let s = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i];
+    const q = poly[(i + 1) % poly.length];
+    s += (p.x * q.y - q.x * p.y);
   }
+  return Math.abs(s) * 0.5;
+}
 
-  function polyArea(poly) {
-    let s = 0;
-    for (let i = 0; i < poly.length; i++) {
-      const p = poly[i];
-      const q = poly[(i + 1) % poly.length];
-      s += (p.x * q.y - q.x * p.y);
-    }
-    return Math.abs(s) * 0.5;
+function centroid(poly) {
+  if (!poly.length) return { x: 0, y: 0 };
+  let area2 = 0;
+  let cx = 0;
+  let cy = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i];
+    const q = poly[(i + 1) % poly.length];
+    const cross = p.x * q.y - q.x * p.y;
+    area2 += cross;
+    cx += (p.x + q.x) * cross;
+    cy += (p.y + q.y) * cross;
   }
+  if (Math.abs(area2) < 1e-6) return poly[0];
+  return { x: cx / (3 * area2), y: cy / (3 * area2) };
+}
 
-  function centroid(poly) {
-    if (!poly.length) return { x: 0, y: 0 };
-    let area2 = 0;
-    let cx = 0;
-    let cy = 0;
-    for (let i = 0; i < poly.length; i++) {
-      const p = poly[i];
-      const q = poly[(i + 1) % poly.length];
-      const cross = p.x * q.y - q.x * p.y;
-      area2 += cross;
-      cx += (p.x + q.x) * cross;
-      cy += (p.y + q.y) * cross;
-    }
-    if (Math.abs(area2) < 1e-6) return poly[0];
-    return { x: cx / (3 * area2), y: cy / (3 * area2) };
-  }
+function edgeKey(a, b) {
+  const ax = Number(a.x).toFixed(3), ay = Number(a.y).toFixed(3);
+  const bx = Number(b.x).toFixed(3), by = Number(b.y).toFixed(3);
+  return (ax < bx || (ax === bx && ay <= by))
+    ? `${ax},${ay}|${bx},${by}`
+    : `${bx},${by}|${ax},${ay}`;
+}
 
-  function edgeKey(a, b) {
-    const ax = Number(a.x).toFixed(3), ay = Number(a.y).toFixed(3);
-    const bx = Number(b.x).toFixed(3), by = Number(b.y).toFixed(3);
-    return (ax < bx || (ax === bx && ay <= by))
-      ? `${ax},${ay}|${bx},${by}`
-      : `${bx},${by}|${ax},${ay}`;
-  }
+function pointKey(p) {
+  return `${Number(p.x).toFixed(3)},${Number(p.y).toFixed(3)}`;
+}
 
-  function pointKey(p) {
-    return `${Number(p.x).toFixed(3)},${Number(p.y).toFixed(3)}`;
-  }
+function pointRadius(p) {
+  return Math.hypot(Number(p.x) || 0, Number(p.y) || 0);
+}
 
-  function pointRadius(p) {
-    return Math.hypot(Number(p.x) || 0, Number(p.y) || 0);
-  }
-
-  function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount = 16) {
+export function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount = 16) {
     const rng = createRng(seed);
     const bound = circlePoly(50, 30);
 
@@ -226,8 +210,24 @@ export function createOrbDamageVisualsRuntime({ eventBus }) {
       }
     }
 
-    return { seed, cells, edges, crackOrder };
+  return { seed, cells, edges, crackOrder };
+}
+
+export function createOrbDamageVisualsRuntime({ eventBus }) {
+  if (!eventBus || typeof eventBus.on !== 'function' || typeof eventBus.emit !== 'function') {
+    throw new Error('createOrbDamageVisualsRuntime requires eventBus.on and eventBus.emit');
   }
+
+  const unsub = [];
+  const pieceTimers = new Set();
+
+  const state = {
+    visualState: 'pristine',
+    crackSegments: [],
+    shatterActive: false,
+    shards: [],
+    layout: null,
+  };
 
   function getRevealedSegments(layout, hitsTaken) {
     if (!layout || !Array.isArray(layout.edges)) return [];
