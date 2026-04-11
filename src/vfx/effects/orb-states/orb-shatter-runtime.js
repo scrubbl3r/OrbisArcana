@@ -28,6 +28,8 @@ export function createOrbShatterRuntime({
   let lastTs = 0;
   /** @type {Array<Object>} */
   let shards = [];
+  /** @type {Set<ReturnType<typeof setTimeout>>} */
+  let ttlTimers = new Set();
 
   function stopSim() {
     if (raf) cancelAnimationFrame(raf);
@@ -114,15 +116,21 @@ export function createOrbShatterRuntime({
     if (!raf) raf = requestAnimationFrame(tick);
 
     const ttl = Math.max(50, Number(p && p.ttlMs) || 300);
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      ttlTimers.delete(timer);
       shards = shards.filter((x) => x !== shard);
       try { shard.el.remove(); } catch (_) {}
     }, ttl);
+    ttlTimers.add(timer);
 
     return true;
   }
 
   function clear() {
+    for (const timer of ttlTimers) {
+      try { clearTimeout(timer); } catch (_) {}
+    }
+    ttlTimers.clear();
     shards = [];
     stopSim();
     try {
@@ -145,4 +153,3 @@ export function createOrbShatterRuntime({
     getState,
   };
 }
-

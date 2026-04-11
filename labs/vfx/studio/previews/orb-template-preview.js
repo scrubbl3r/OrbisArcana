@@ -42,6 +42,12 @@ export function createOrbTemplatePreview({ els } = {}) {
     layerEl: els && els.orbShatterLayer,
   });
 
+  function clearPatternLayer() {
+    if (els && els.orbTemplatePatternLayer) {
+      els.orbTemplatePatternLayer.innerHTML = "";
+    }
+  }
+
   function updateStatus() {
     if (els && els.orbTemplateStatus) {
       els.orbTemplateStatus.value = `Hits ${currentHits} / ${currentHitTotal}`;
@@ -60,6 +66,13 @@ export function createOrbTemplatePreview({ els } = {}) {
     if (!els || !els.previewRoot || !els.orbTemplatePatternLayer || !els.orb) return;
 
     applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), { root: els.previewRoot });
+
+    if (!currentLayout) {
+      clearPatternLayer();
+      els.orb.hidden = false;
+      updateStatus();
+      return;
+    }
 
     const stroke = buildStrokeColor(els.previewRoot);
     const edgeMarkup = (currentLayout && currentLayout.edges || [])
@@ -101,6 +114,7 @@ export function createOrbTemplatePreview({ els } = {}) {
   function explode() {
     if (!currentLayout) return;
     shatterRuntime.clear();
+    clearPatternLayer();
     const strokeRgb = buildStrokeColor(els.previewRoot);
     const fillParts = buildFillParts(els.previewRoot);
     const rng = createRng(currentSeed ^ 0x9e3779b9);
@@ -149,9 +163,7 @@ export function createOrbTemplatePreview({ els } = {}) {
 
   function clear() {
     shatterRuntime.clear();
-    if (els && els.orbTemplatePatternLayer) {
-      els.orbTemplatePatternLayer.innerHTML = "";
-    }
+    clearPatternLayer();
     if (els && els.orb) {
       els.orb.hidden = false;
     }
