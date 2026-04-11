@@ -1868,74 +1868,22 @@ function formatPhoneImpulseLogLine(d) {
 
 function ensureShellStageBackdrop(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
   const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
-  if (!runtime || !refs || !refs.physStage || !refs.stars || !refs.terrain || !rootDocument) return;
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  if (!runtime || !gameStagingAdapter || typeof gameStagingAdapter.ensureBackdrop !== "function" || !rootDocument) return;
 
   const rect = shellStageRect(shellContext);
-  const width = Math.max(1, Math.floor(rect.width));
-  const height = Math.max(1, Math.floor(rect.height));
-  const dpr = Math.max(1, Math.min(2.5, (rootDocument.defaultView && rootDocument.defaultView.devicePixelRatio) || 1));
-  const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = Object.create(null));
-
-  if (stageBackdrop.width === width && stageBackdrop.height === height && stageBackdrop.starCtx && stageBackdrop.terrainCtx) {
-    return;
-  }
-
-  stageBackdrop.width = width;
-  stageBackdrop.height = height;
-  refs.stars.width = Math.floor(width * dpr);
-  refs.stars.height = Math.floor(height * dpr);
-  refs.stars.style.width = `${width}px`;
-  refs.stars.style.height = `${height}px`;
-  refs.terrain.width = Math.floor(width * dpr);
-  refs.terrain.height = Math.floor(height * dpr);
-  refs.terrain.style.width = `${width}px`;
-  refs.terrain.style.height = `${height}px`;
-
-  stageBackdrop.starCtx = refs.stars.getContext("2d", { alpha: false });
-  stageBackdrop.terrainCtx = refs.terrain.getContext("2d", { alpha: true });
-  if (stageBackdrop.starCtx) stageBackdrop.starCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (stageBackdrop.terrainCtx) stageBackdrop.terrainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const colorSets = [
-    [255, 255, 255],
-    [192, 208, 255],
-    [255, 224, 164],
-  ];
-  stageBackdrop.layers = [
-    { count: 56, rMin: 0.7, rMax: 1.3, aMin: 0.16, aMax: 0.46 },
-    { count: 42, rMin: 0.8, rMax: 1.6, aMin: 0.22, aMax: 0.60 },
-    { count: 24, rMin: 1.0, rMax: 2.0, aMin: 0.35, aMax: 0.82 },
-  ].map((cfg, layerIndex) => ({
-    cfg,
-    stars: Array.from({ length: cfg.count }, (_, i) => {
-      const seed = (i + 1) * (layerIndex + 3) * 97;
-      return {
-        x: (seed * 37) % width,
-        yW: (seed * 91) % shellWorldHeight(shellContext),
-        r: cfg.rMin + (((seed * 17) % 100) / 100) * (cfg.rMax - cfg.rMin),
-        a: cfg.aMin + (((seed * 29) % 100) / 100) * (cfg.aMax - cfg.aMin),
-        rgb: colorSets[layerIndex] || colorSets[0],
-      };
-    }),
-  }));
-
   const terrainProfile = Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.terrainProfile)
     ? shellContext.currentLevel.terrainProfile
     : [];
-  stageBackdrop.mountainPoints = terrainProfile.length
-    ? terrainProfile.map((point = {}) => ({
-        x: Math.round(clamp01(point.xNorm) * width),
-        yOff: Number.isFinite(Number(point.yOff)) ? Number(point.yOff) : 60,
-      }))
-    : Array.from({ length: 10 }, (_, i) => {
-        const t = i / 9;
-        return {
-          x: Math.round(t * width),
-          yOff: [58, 74, 52, 96, 66, 84, 61, 98, 76, 88][i] || 60,
-        };
-      });
+  gameStagingAdapter.ensureBackdrop({
+    runtime,
+    rootDocument,
+    rect,
+    worldHeight: shellWorldHeight(shellContext),
+    terrainProfile,
+    clamp01,
+  });
 }
 
 function shellGroundLineScreenY(shellContext) {
@@ -1951,76 +1899,27 @@ function shellGroundLineScreenY(shellContext) {
 
 function drawShellStars(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!stageBackdrop || !stageBackdrop.starCtx) return;
-  const ctx = stageBackdrop.starCtx;
-  const w = stageBackdrop.width || 0;
+  if (!runtime || !gameStagingAdapter || typeof gameStagingAdapter.drawStars !== "function" || !stageBackdrop) return;
   const h = stageBackdrop.height || 0;
   const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, h);
-  const lastCamTop = Number(stageBackdrop.lastStarCamTop);
-  if (Number.isFinite(lastCamTop) && Math.abs(camTop - lastCamTop) < 2) {
-    return;
-  }
-  stageBackdrop.lastStarCamTop = camTop;
-
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, w, h);
-
-  for (const layer of stageBackdrop.layers || []) {
-    for (const star of layer.stars || []) {
-      const y = ((star.yW - camTop) % h + h) % h;
-      ctx.fillStyle = `rgba(${star.rgb[0]},${star.rgb[1]},${star.rgb[2]},${star.a})`;
-      ctx.beginPath();
-      ctx.arc(star.x, y, star.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  const vignette = ctx.createRadialGradient(w * 0.5, h * 0.42, Math.min(w, h) * 0.10, w * 0.5, h * 0.42, Math.max(w, h) * 0.75);
-  vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, "rgba(0,0,0,0.55)");
-  ctx.fillStyle = vignette;
-  ctx.fillRect(0, 0, w, h);
+  gameStagingAdapter.drawStars({
+    runtime,
+    camTop,
+  });
 }
 
 function drawShellBackdrop(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!stageBackdrop || !stageBackdrop.terrainCtx) return;
-  const ctx = stageBackdrop.terrainCtx;
-  const w = stageBackdrop.width || 0;
-  const h = stageBackdrop.height || 0;
+  if (!runtime || !gameStagingAdapter || typeof gameStagingAdapter.drawBackdrop !== "function" || !stageBackdrop) return;
   const groundY = shellGroundLineScreenY(shellContext);
-  const lastGroundY = Number(stageBackdrop.lastGroundY);
-  if (Number.isFinite(lastGroundY) && Math.abs(groundY - lastGroundY) < 1) {
-    return;
-  }
-  stageBackdrop.lastGroundY = groundY;
-  const pts = stageBackdrop.mountainPoints || [];
-
-  ctx.clearRect(0, 0, w, h);
-  if (pts.length < 2) return;
-
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, groundY - pts[0].yOff);
-  for (const p of pts) ctx.lineTo(p.x, groundY - p.yOff);
-  ctx.lineTo(pts[pts.length - 1].x, groundY);
-  ctx.lineTo(pts[0].x, groundY);
-  ctx.closePath();
-  ctx.fillStyle = "rgba(0,0,0,1)";
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, groundY - pts[0].yOff);
-  for (const p of pts) ctx.lineTo(p.x, groundY - p.yOff);
-  ctx.strokeStyle = "rgba(132, 232, 164, 0.92)";
-  ctx.lineWidth = 2;
-  ctx.lineJoin = "miter";
-  ctx.lineCap = "round";
-  ctx.shadowColor = "rgba(132, 232, 164, 0.25)";
-  ctx.shadowBlur = 8;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  gameStagingAdapter.drawBackdrop({
+    runtime,
+    groundY,
+  });
 }
 
 function syncShellStartQrSize(rootDocument) {
