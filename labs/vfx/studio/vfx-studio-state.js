@@ -31,13 +31,16 @@ export function loadDraftStore(storageKey, draftStore) {
     : {};
   for (const [value, profile] of Object.entries(profiles)) {
     if (!profile || typeof profile !== "object") continue;
+    const resolvedValue = String(profile.value || value);
+    const resolvedBaseEffect = String(profile.baseEffect || "bubble-shield");
+    const isTemplateClone = resolvedValue.startsWith("custom:") && resolvedBaseEffect === "orb-template";
     draftStore.profilesByValue[value] = {
-      value: String(profile.value || value),
+      value: resolvedValue,
       label: String(profile.label || value),
-      baseEffect: String(profile.baseEffect || "bubble-shield"),
+      baseEffect: resolvedBaseEffect,
       category: String(profile.category || "spell"),
       registryId: String(profile.registryId || ""),
-      locked: !!profile.locked,
+      locked: isTemplateClone ? false : !!profile.locked,
       settingsByBaseEffect: profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
         ? profile.settingsByBaseEffect
         : {},
@@ -90,7 +93,7 @@ export function restoreDraftProfilesIntoSelect({
     opt.dataset.baseEffect = String(profile.baseEffect || "bubble-shield");
     opt.dataset.category = category;
     opt.dataset.custom = "true";
-    opt.dataset.locked = "true";
+    opt.dataset.locked = profile.locked ? "true" : "false";
     if (profile.registryId) opt.dataset.registryId = String(profile.registryId);
     targetGroup.appendChild(opt);
   }
