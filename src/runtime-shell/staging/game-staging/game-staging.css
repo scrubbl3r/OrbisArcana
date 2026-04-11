@@ -188,10 +188,13 @@ body {
 .orbCracks path {
   fill: none;
   stroke: var(--orb-stroke-color);
-  stroke-width: 1.6;
+  stroke-width: var(--orb-fracture-crack-stroke);
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 3px var(--orb-stroke-color));
+  filter: drop-shadow(
+    0 0 var(--orb-fracture-glow-blur)
+    color-mix(in srgb, var(--orb-stroke-color) calc(var(--orb-fracture-glow-alpha) * 100%), transparent)
+  );
 }
 
 .orbShards {
@@ -205,11 +208,14 @@ body {
 .orbShard {
   fill: var(--orb-fill);
   stroke: var(--orb-stroke-color);
-  stroke-width: 1.2;
+  stroke-width: var(--orb-fracture-shard-stroke);
   vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 3px var(--orb-stroke-color));
+  filter: drop-shadow(
+    0 0 var(--orb-fracture-glow-blur)
+    color-mix(in srgb, var(--orb-stroke-color) calc(var(--orb-fracture-glow-alpha) * 100%), transparent)
+  );
 }
 
 .pickupGlobe {

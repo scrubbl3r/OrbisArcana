@@ -4,6 +4,10 @@ import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
 } from "../../../game-runtime/orb/orb-base-state.js";
+import {
+  applyOrbFractureVisualCssVars,
+  buildOrbFractureVisualState,
+} from "../../../game-runtime/orb/orb-fracture-base-state.js";
 
 const GAME_STAGING_TEMPLATE = `
   <section class="gameStaging" aria-label="Game staging">
@@ -62,10 +66,12 @@ export function renderGameStaging(root, { level = LEVEL01 } = {}) {
   root.innerHTML = GAME_STAGING_TEMPLATE;
   const stage = level && level.stage ? level.stage : {};
   const orbBaseVisualState = buildOrbBaseVisualState();
+  const orbFractureVisualState = buildOrbFractureVisualState();
   root.dataset.levelId = String(level && level.id || "level01");
   root.style.setProperty("--game-staging-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
   root.style.setProperty("--game-staging-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
   applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
+  applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
 
   const refs = {
     root,
