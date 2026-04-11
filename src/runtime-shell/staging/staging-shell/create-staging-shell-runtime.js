@@ -1264,6 +1264,17 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
       return directPlayShock();
     },
     triggerShockwave() {
+      const dispatched = dispatchRuntimeEffect({
+        targetKind: "spell",
+        targetId: "shockwave",
+        runtime: {
+          playFlameAoe: () => directPlayFlameAoe(),
+          playElectricAoe: () => directPlayElectricAoe(),
+          triggerShockwave: () => directTriggerShockwave(),
+          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+        },
+      });
+      if (dispatched && dispatched.handled) return dispatched;
       return directTriggerShockwave();
     },
     playElectricAoe() {
@@ -1295,6 +1306,18 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
       return directPlayFlameAoe();
     },
     activateBubbleShield({ durationMs } = {}) {
+      const dispatched = dispatchRuntimeEffect({
+        targetKind: "spell",
+        targetId: "bubble_shield",
+        runtime: {
+          playFlameAoe: () => directPlayFlameAoe(),
+          playElectricAoe: () => directPlayElectricAoe(),
+          triggerShockwave: () => directTriggerShockwave(),
+          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+        },
+        payload: { durationMs },
+      });
+      if (dispatched && dispatched.handled) return dispatched;
       return directActivateBubbleShield({ durationMs });
     },
   };
