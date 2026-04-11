@@ -1,6 +1,8 @@
 import { mountDevStaging } from "../dev-staging/dev-staging.js";
 import { renderGameStaging } from "../game-staging/game-staging.js";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
+import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
+import { createGameStagingOrbActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
@@ -9,7 +11,6 @@ import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
-import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   splitPrototype: "split-prototype",
@@ -928,141 +929,47 @@ function resetShellInputProcessingState(shellContext, atMs = performance.now()) 
 
 function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 0) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const stage = runtime && runtime.stage;
-  const orbState = getShellOrbRuntime(shellContext);
-  if (!stage || !orbState) return { handled: false };
-  const teleportOrbRuntimeToSpawn =
-    runtime &&
-    runtime.receiverSpellRuntime &&
-    runtime.receiverSpellRuntime.teleportOrbRuntimeToSpawn;
-  if (typeof teleportOrbRuntimeToSpawn === "function") {
-    const result = teleportOrbRuntimeToSpawn({
-      patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
-      applyOrbTransform: () => applyShellOrbTransform(shellContext),
-      worldSystem: stage.worldSystem || null,
-      groundCenterWorld: () => shellGroundCenterWorld(shellContext),
-      phys: stage.phys || {},
-      aboveGroundPx,
-      nowMs: performance.now(),
-      updateDebugReadout: () => updateShellStageReadouts(shellContext),
-    });
-    if (result && result.handled) return result;
+  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
+  if (!gameStageActions || typeof gameStageActions.teleportOrbToSpawnNeutralizePhysics !== "function") {
+    return { handled: false };
   }
-  const yFloor = shellGroundCenterWorld(shellContext);
-  const yCeil = Number(stage.phys && stage.phys.orbRadiusPx) || 50;
-  const lift = Math.max(0, Number(aboveGroundPx) || 0);
-  const yTarget = Math.min(yFloor, Math.max(yCeil, yFloor - lift));
-  patchShellOrbRuntime(shellContext, {
-    yW: yTarget,
-    v: 0,
-    onGround: !(yTarget < (yFloor - 0.5)),
-    descendMs: 0,
-    shieldDescentBlocked: false,
-    floatGraceAnchorY: yTarget,
-    floatGracePhase: 0,
+  return gameStageActions.teleportOrbToSpawnNeutralizePhysics({
+    aboveGroundPx,
+    teleportOrbRuntimeToSpawn:
+      runtime &&
+      runtime.receiverSpellRuntime &&
+      runtime.receiverSpellRuntime.teleportOrbRuntimeToSpawn,
   });
-  applyShellGroundLine(shellContext);
-  applyShellOrbTransform(shellContext);
-  if (stage.worldSystem && typeof stage.worldSystem.render === "function") {
-    stage.worldSystem.render(performance.now());
-  }
-  updateShellStageReadouts(shellContext);
-  return { handled: true, yTarget };
 }
 
 function shellGrantFloatGrace(shellContext, ms = 1000) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbState = getShellOrbRuntime(shellContext);
-  if (!orbState) return;
-  const grantFloatGraceRuntime =
-    runtime &&
-    runtime.receiverSpellRuntime &&
-    runtime.receiverSpellRuntime.grantFloatGraceRuntime;
-  if (typeof grantFloatGraceRuntime === "function") {
-    grantFloatGraceRuntime({
-      patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
-      getOrbRuntime: () => getShellOrbRuntime(shellContext),
-      durationMs: ms,
-      defaultMs: 1000,
-      nowMs: performance.now(),
-    });
-    applyShellOrbTransform(shellContext);
-    return;
-  }
-  const now = performance.now();
-  const yFloor = shellGroundCenterWorld(shellContext);
-  const yCeil = Number(runtime && runtime.stage && runtime.stage.phys && runtime.stage.phys.orbRadiusPx) || 50;
-  const liftPx = Math.max(40, Math.min(180, Number(ms) * 0.08));
-  const anchorY = clamp((Number(orbState.yW) || yFloor) - liftPx, yCeil, yFloor - 6);
-  patchShellOrbRuntime(shellContext, {
-    yW: anchorY,
-    v: 0,
-    onGround: false,
-    floatGraceActive: true,
-    floatGraceUntilMs: now + Math.max(50, Number(ms) || 1000),
-    floatGraceAnchorY: anchorY,
-    floatGracePhase: Math.random() * Math.PI * 2,
+  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
+  if (!gameStageActions || typeof gameStageActions.grantFloatGrace !== "function") return;
+  gameStageActions.grantFloatGrace({
+    durationMs: ms,
+    grantFloatGraceRuntime:
+      runtime &&
+      runtime.receiverSpellRuntime &&
+      runtime.receiverSpellRuntime.grantFloatGraceRuntime,
   });
-  applyShellOrbTransform(shellContext);
 }
 
 function shellGrantSuperGrace(shellContext, ms = 2500) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const grantSuperGraceRuntime =
-    runtime &&
-    runtime.receiverSpellRuntime &&
-    runtime.receiverSpellRuntime.grantSuperGraceRuntime;
-  if (typeof grantSuperGraceRuntime === "function") {
-    grantSuperGraceRuntime({
-      resetInputProcessingState: (atMs) => resetShellInputProcessingState(shellContext, atMs),
-      grantFloatGrace: (durMs) => shellGrantFloatGrace(shellContext, durMs),
-      durationMs: ms,
-      defaultMs: 2500,
-      nowMs: performance.now(),
-    });
-    return;
-  }
-  shellGrantFloatGrace(shellContext, ms);
+  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
+  if (!gameStageActions || typeof gameStageActions.grantSuperGrace !== "function") return;
+  gameStageActions.grantSuperGrace({
+    durationMs: ms,
+    grantSuperGraceRuntime:
+      runtime &&
+      runtime.receiverSpellRuntime &&
+      runtime.receiverSpellRuntime.grantSuperGraceRuntime,
+  });
 }
 
 function createShellReceiverVfxDefaults() {
-  const defaults = {
-    shield: {
-      colorRgb: { r: 120, g: 210, b: 255 },
-      diameterPx: 124,
-      strokeWidthPx: 4,
-      durationMs: 8000,
-      alpha: 1.0,
-      pulseMs: 80,
-      pulseMin: 0.3,
-      pulseMax: 1.0,
-    },
-    shock: {
-      color: { r: 255, g: 255, b: 255, a: 0.65 },
-      startR: 43,
-      endR: 169,
-      rings: 2,
-      spawnMs: 105,
-      stroke: 4,
-      decayMs: 150,
-    },
-    flame: {
-      diameter: 200,
-      durationMs: 10000,
-    },
-    electric: {
-      startR: 80,
-      endR: 200,
-      durationMs: 10000,
-      nodeCount: 13,
-      particleCount: 340,
-      particleSpeed: 0.62,
-      maxBoltJumpSq: 1200,
-      startJitterRatio: 0.3,
-    },
-  };
-  defaults.shock.stroke = evenStroke(defaults.shock.stroke, 2, 20);
-  return defaults;
+  return createGameStagingReceiverVfxDefaults({ evenStroke });
 }
 
 function initShellReceiverVfxRuntime(shellContext, mods = {}) {
@@ -1085,273 +992,43 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     shellContext.rootDocument.documentElement &&
     shellContext.rootDocument.documentElement.style
   ) || null;
-  const stageEls = shellContext.stageEls || {};
   const vfxDefaults = runtime.vfxDefaults || createShellReceiverVfxDefaults();
-
-  const vfxRuntimesBundle = createVfxRuntimesBundle({
-    bubbleShield: {
-      shieldEl: stageEls.shield,
-      getConfig: () => ({
-        colorRgb: vfxDefaults.shield.colorRgb,
-        diameterPx: vfxDefaults.shield.diameterPx,
-        strokeWidthPx: vfxDefaults.shield.strokeWidthPx,
-        durationMs: vfxDefaults.shield.durationMs,
-        alpha: vfxDefaults.shield.alpha,
-        pulseMs: vfxDefaults.shield.pulseMs,
-        pulseMin: vfxDefaults.shield.pulseMin,
-        pulseMax: vfxDefaults.shield.pulseMax,
-      }),
-      setCssVar: (name, value) => {
-        if (rootStyle) rootStyle.setProperty(name, value);
-      },
-      clamp,
-      clamp01,
-      fadeInMs: 750,
-      decayMs: 2000,
-      onDecayActiveChange: () => {},
-    },
-    shockwave: {
-      layerEl: stageEls.shockLayer,
-      getConfig: () => ({
-        color: vfxDefaults.shock.color,
-        startR: vfxDefaults.shock.startR,
-        endR: vfxDefaults.shock.endR,
-        rings: vfxDefaults.shock.rings,
-        spawnMs: vfxDefaults.shock.spawnMs,
-        decayMs: vfxDefaults.shock.decayMs,
-        stroke: vfxDefaults.shock.stroke,
-      }),
-      clamp,
-      normalizeStroke: evenStroke,
-    },
-    orbShatter: {
-      layerEl: stageEls.orbShards,
-      clamp,
-    },
-    flameAoe: {
-      layerEl: stageEls.flameLayer,
-      getConfig: () => ({
-        diameter: vfxDefaults.flame.diameter,
-        durationMs: vfxDefaults.flame.durationMs,
-        stroke: vfxDefaults.flame.stroke,
-        fill: vfxDefaults.flame.fill,
-      }),
-      clamp,
-      evenPx,
-      showCore: false,
-    },
-    electricAoe: {
-      layerEl: stageEls.electricLayer,
-      getConfig: () => ({
-        startR: vfxDefaults.electric.startR,
-        endR: vfxDefaults.electric.endR,
-        durationMs: vfxDefaults.electric.durationMs,
-        nodeCount: vfxDefaults.electric.nodeCount,
-        particleCount: vfxDefaults.electric.particleCount,
-        particleSpeed: vfxDefaults.electric.particleSpeed,
-        maxBoltJumpSq: vfxDefaults.electric.maxBoltJumpSq,
-        startJitterRatio: vfxDefaults.electric.startJitterRatio,
-      }),
-      clamp,
-      evenPx,
-      rand,
-    },
-  });
-
-  function directPlayShock() {
-    if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.play === "function") {
-      shellVfx.shockwaveRuntime.play();
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
-  function directTriggerShockwave() {
-    if (typeof triggerShockwaveRuntime === "function") {
-      const result = triggerShockwaveRuntime({
-        shockwaveRuntime: shellVfx.shockwaveRuntime,
-        playShock: () => directPlayShock(),
-      });
-      if (result && result.handled) return result;
-    }
-    if (shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.trigger === "function") {
-      shellVfx.shockwaveRuntime.trigger();
-      return { handled: true };
-    }
-    return directPlayShock();
-  }
-
-  function directPlayElectricAoe() {
-    if (typeof playElectricAoeRuntime === "function") {
-      const result = playElectricAoeRuntime({
-        electricAoeRuntime: shellVfx.electricAoeRuntime,
-      });
-      if (result && result.handled) {
-        return result;
-      }
-    }
-    if (shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.play === "function") {
-      shellVfx.electricAoeRuntime.play();
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
-  function directPlayFlameAoe() {
-    if (typeof playFlameAoeRuntime === "function") {
-      const result = playFlameAoeRuntime({
-        flameAoeRuntime: shellVfx.flameAoeRuntime,
-      });
-      if (result && result.handled) return result;
-    }
-    if (shellVfx.flameAoeRuntime && typeof shellVfx.flameAoeRuntime.play === "function") {
-      shellVfx.flameAoeRuntime.play();
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
-  function directActivateBubbleShield({ durationMs } = {}) {
-    if (shellVfx.bubbleShieldRuntime && typeof shellVfx.bubbleShieldRuntime.activate === "function") {
-      shellVfx.bubbleShieldRuntime.activate({
-        durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),
-      });
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
-  function directPlayOrbShatter(payload = {}) {
-    const controller = runtime && runtime.orbShatterController;
-    if (controller && typeof controller.spawnShardFx === "function") {
-      controller.spawnShardFx(payload);
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
-  const shellVfx = {
+  return initGameStagingReceiverVfxRuntime({
+    runtime,
+    stageEls: shellContext.stageEls || {},
+    createVfxRuntimesBundle,
+    rootStyle,
     vfxDefaults,
-    vfxRuntimesBundle,
-    bubbleShieldRuntime: vfxRuntimesBundle && vfxRuntimesBundle.bubbleShieldRuntime,
-    shockwaveRuntime: vfxRuntimesBundle && vfxRuntimesBundle.shockwaveRuntime,
-    orbShatterRuntime: vfxRuntimesBundle && vfxRuntimesBundle.orbShatterRuntime,
-    flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
-    electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
-    playShock() {
-      return directPlayShock();
-    },
-    triggerShockwave() {
-      const dispatched = dispatchRuntimeEffect({
-        targetKind: "spell",
-        targetId: "shockwave",
-        runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
-        },
-      });
-      if (dispatched && dispatched.handled) return dispatched;
-      return directTriggerShockwave();
-    },
-    playElectricAoe() {
-      const dispatched = dispatchRuntimeEffect({
-        targetKind: "spell",
-        targetId: "aoe_electric",
-        runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
-        },
-      });
-      if (dispatched && dispatched.handled) return dispatched;
-      return directPlayElectricAoe();
-    },
-    playFlameAoe() {
-      const dispatched = dispatchRuntimeEffect({
-        targetKind: "spell",
-        targetId: "aoe_flame",
-        runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
-        },
-      });
-      if (dispatched && dispatched.handled) return dispatched;
-      return directPlayFlameAoe();
-    },
-    activateBubbleShield({ durationMs } = {}) {
-      const dispatched = dispatchRuntimeEffect({
-        targetKind: "spell",
-        targetId: "bubble_shield",
-        runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
-        },
-        payload: { durationMs },
-      });
-      if (dispatched && dispatched.handled) return dispatched;
-      return directActivateBubbleShield({ durationMs });
-    },
-    playOrbShatter(payload = {}) {
-      const dispatched = dispatchRuntimeEffect({
-        targetKind: "orb-state",
-        targetId: "shattered",
-        runtime: {
-          playOrbShatter: (nextPayload = {}) => directPlayOrbShatter(nextPayload),
-        },
-        payload,
-      });
-      if (dispatched && dispatched.handled) return dispatched;
-      return directPlayOrbShatter(payload);
-    },
-  };
-
-  runtime.vfx = shellVfx;
-  return shellVfx;
+    playElectricAoeRuntime,
+    playFlameAoeRuntime,
+    triggerShockwaveRuntime,
+    clamp,
+    clamp01,
+    evenPx,
+    evenStroke,
+    rand,
+  });
 }
 
 function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
-  const shellVfx = shellContext && shellContext.runtime ? shellContext.runtime.vfx : null;
-  if (shellVfx && typeof shellVfx.activateBubbleShield === "function") {
-    const result = shellVfx.activateBubbleShield({ durationMs });
-    if (result && result.handled) return;
-  }
-  const shieldEl = shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null;
-  if (!shieldEl) return;
-  shieldEl.classList.add("on");
-  shieldEl.style.opacity = "1";
-  shieldEl.style.transition = "opacity 120ms linear";
-  if (shellContext.runtime.bubbleShieldTimer) {
-    clearTimeout(shellContext.runtime.bubbleShieldTimer);
-  }
-  shellContext.runtime.bubbleShieldTimer = setTimeout(() => {
-    shieldEl.classList.remove("on");
-    shieldEl.style.transition = "opacity 420ms linear";
-    shieldEl.style.opacity = "0";
-    shellContext.runtime.bubbleShieldTimer = 0;
-  }, Math.max(200, Number(durationMs) || 8000));
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
+  if (!gameStageActions || typeof gameStageActions.activateBubbleShield !== "function") return;
+  gameStageActions.activateBubbleShield({ durationMs });
 }
 
 function shellApplyColorize(shellContext, payload = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbColorRuntime = runtime && runtime.orbColorRuntime;
-  if (orbColorRuntime && typeof orbColorRuntime.applyColorize === "function") {
-    orbColorRuntime.applyColorize(payload);
-  }
+  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
+  if (!gameStageActions || typeof gameStageActions.applyColorize !== "function") return;
+  gameStageActions.applyColorize(payload);
 }
 
 function shellClearColorize(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbColorRuntime = runtime && runtime.orbColorRuntime;
-  if (orbColorRuntime && typeof orbColorRuntime.clearColorize === "function") {
-    orbColorRuntime.clearColorize();
-  }
+  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
+  if (!gameStageActions || typeof gameStageActions.clearColorize !== "function") return;
+  gameStageActions.clearColorize();
 }
 
 async function initShellReceiverHostRuntime(shellContext) {
@@ -2054,6 +1731,19 @@ async function initShellKwsRuntime(shellContext) {
     playElectricAoeRuntime,
     playFlameAoeRuntime,
     triggerShockwaveRuntime,
+  });
+  runtime.gameStageActions = createGameStagingOrbActionBridge({
+    runtime,
+    shieldEl: shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null,
+    patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
+    getOrbRuntime: () => getShellOrbRuntime(shellContext),
+    applyOrbTransform: () => applyShellOrbTransform(shellContext),
+    applyGroundLine: () => applyShellGroundLine(shellContext),
+    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+    updateDebugReadout: () => updateShellStageReadouts(shellContext),
+    resetInputProcessingState: (atMs) => resetShellInputProcessingState(shellContext, atMs),
+    performanceNow: () => performance.now(),
+    clamp,
   });
 
   let ruleEnginePreviewSystem = null;
