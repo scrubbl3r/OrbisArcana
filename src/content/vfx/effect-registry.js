@@ -57,7 +57,7 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     runtimeModuleId: "shockwave_runtime",
     defaultPresetId: "preset.shockwave.default",
     supportedContexts: ["lab", "receiver"],
-    publishTargets: ["preset"],
+    publishTargets: ["preset", "binding"],
   }),
 ]);
 
