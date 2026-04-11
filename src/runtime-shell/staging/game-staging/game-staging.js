@@ -1,5 +1,9 @@
 import { LEVEL01 } from "./levels/level01.js";
 import { createGameStagingRuntimeAdapter } from "./game-staging-runtime-adapter.js";
+import {
+  applyOrbBaseVisualCssVars,
+  buildOrbBaseVisualState,
+} from "../../../game-runtime/orb/orb-base-state.js";
 
 const GAME_STAGING_TEMPLATE = `
   <section class="gameStaging" aria-label="Game staging">
@@ -57,9 +61,11 @@ export function renderGameStaging(root, { level = LEVEL01 } = {}) {
   if (!root) return null;
   root.innerHTML = GAME_STAGING_TEMPLATE;
   const stage = level && level.stage ? level.stage : {};
+  const orbBaseVisualState = buildOrbBaseVisualState();
   root.dataset.levelId = String(level && level.id || "level01");
   root.style.setProperty("--game-staging-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
   root.style.setProperty("--game-staging-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
+  applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
 
   const refs = {
     root,
