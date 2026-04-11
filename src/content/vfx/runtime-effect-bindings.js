@@ -33,7 +33,7 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
     targetKind: "spell",
     targetId: "bubble_shield",
     effectId: "spell.shield_bubble",
-    presetId: "preset.bubble_shield.default",
+    presetId: "preset.spell-shield-bubble.bubble-shield",
   }),
   Object.freeze({
     targetKind: "spell",
