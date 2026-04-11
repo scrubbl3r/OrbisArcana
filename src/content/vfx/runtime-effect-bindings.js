@@ -15,7 +15,7 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
     targetKind: "orb-state",
     targetId: "shattered",
     effectId: "orb.shatter_voronoi",
-    presetId: "preset.orb_shatter.default",
+    presetId: "preset.orb-shatter-voronoi.orb-shatter-voronoi",
   }),
   Object.freeze({
     targetKind: "spell",
