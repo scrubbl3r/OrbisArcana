@@ -102,6 +102,11 @@ function pointRadius(p) {
   return Math.hypot(Number(p.x) || 0, Number(p.y) || 0);
 }
 
+function seedFromLifeId(lifeId = 1) {
+  const n = (Math.floor(Number(lifeId)) || 1) >>> 0;
+  return (Math.imul(n ^ 0x9e3779b9, 0x85ebca6b) >>> 0) || 1;
+}
+
 export function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount = 16) {
     const rng = createRng(seed);
     const bound = circlePoly(50, 30);
@@ -227,15 +232,25 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
     shatterActive: false,
     shards: [],
     layout: null,
+    lifeId: 1,
+    maxHits: 3,
+    hitsTaken: 0,
+    maxShards: 16,
   };
 
-  function getRevealedSegments(layout, hitsTaken) {
+  function getActiveShardCount(hitsTaken = state.hitsTaken, maxHits = state.maxHits) {
+    const hits = Math.max(0, Math.floor(Number(hitsTaken) || 0));
+    const totalHits = Math.max(1, Math.floor(Number(maxHits) || 1));
+    if (hits <= 0) return 0;
+    return Math.max(2, Math.min(
+      state.maxShards,
+      Math.round((hits / totalHits) * state.maxShards)
+    ));
+  }
+
+  function getFullSegmentationSegments(layout) {
     if (!layout || !Array.isArray(layout.edges)) return [];
-    if (hitsTaken <= 0) return [];
-    const revealCount = hitsTaken >= 2 ? 12 : 5;
-    const ids = layout.crackOrder.slice(0, revealCount);
-    const set = new Set(ids);
-    return layout.edges.filter((e) => set.has(e.id)).map((e) => ({ a: e.a, b: e.b }));
+    return layout.edges.map((e) => ({ a: e.a, b: e.b }));
   }
 
   function clearPieceTimers() {
@@ -243,8 +258,15 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
     pieceTimers.clear();
   }
 
-  function rebuildLayout(seed) {
-    state.layout = makeVoronoiLayout(seed);
+  function rebuildLayoutForState() {
+    const activeShardCount = getActiveShardCount();
+    if (activeShardCount <= 0) {
+      state.layout = null;
+      state.crackSegments = [];
+      return;
+    }
+    state.layout = makeVoronoiLayout(seedFromLifeId(state.lifeId), activeShardCount);
+    state.crackSegments = getFullSegmentationSegments(state.layout);
   }
 
   function startShatter(payload = {}) {
@@ -252,7 +274,10 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
     state.shatterActive = true;
     state.shards = [];
 
-    if (!state.layout) rebuildLayout(payload.seed);
+    if (!state.layout) {
+      state.lifeId = Math.max(1, Math.floor(Number(payload.lifeId) || state.lifeId || 1));
+      rebuildLayoutForState();
+    }
     const rng = createRng((state.layout.seed || 1) ^ 0x9e3779b9);
 
     for (const cell of state.layout.cells) {
@@ -293,12 +318,34 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
     }
   }
 
+  function applyLifecycleSnapshot(payload = {}) {
+    if (payload.lifeId != null) {
+      state.lifeId = Math.max(1, Math.floor(Number(payload.lifeId) || state.lifeId || 1));
+    }
+    if (payload.maxHits != null) {
+      state.maxHits = Math.max(1, Math.floor(Number(payload.maxHits) || state.maxHits || 1));
+    }
+    if (payload.hitsTaken != null) {
+      state.hitsTaken = Math.max(0, Math.floor(Number(payload.hitsTaken) || 0));
+    }
+  }
+
   function start() {
-    rebuildLayout();
+    state.layout = null;
+    state.crackSegments = [];
 
     unsub.push(eventBus.on('orb.damage_applied', (payload = {}) => {
-      const hits = Number(payload.hitsTaken) || 0;
-      state.crackSegments = getRevealedSegments(state.layout, hits);
+      applyLifecycleSnapshot(payload);
+      state.shatterActive = false;
+      state.shards = [];
+      rebuildLayoutForState();
+    }));
+
+    unsub.push(eventBus.on('orb.healed', (payload = {}) => {
+      applyLifecycleSnapshot(payload);
+      state.shatterActive = false;
+      state.shards = [];
+      rebuildLayoutForState();
     }));
 
     unsub.push(eventBus.on('orb.visual_state_changed', (payload = {}) => {
@@ -307,18 +354,21 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
     }));
 
     unsub.push(eventBus.on('orb.shatter_started', (payload = {}) => {
+      applyLifecycleSnapshot(payload);
       state.visualState = 'shattered';
       state.crackSegments = [];
       startShatter(payload);
     }));
 
-    unsub.push(eventBus.on('orb.revived', () => {
+    unsub.push(eventBus.on('orb.revived', (payload = {}) => {
       clearPieceTimers();
       state.shatterActive = false;
       state.shards = [];
       state.visualState = 'pristine';
+      applyLifecycleSnapshot(payload);
+      state.hitsTaken = 0;
+      state.layout = null;
       state.crackSegments = [];
-      rebuildLayout(); // new orb, new fixed Voronoi map
     }));
   }
 
@@ -339,6 +389,9 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
       shatterActive: state.shatterActive,
       shards: state.shards.slice(),
       layoutSeed: state.layout ? state.layout.seed : null,
+      lifeId: state.lifeId,
+      maxHits: state.maxHits,
+      hitsTaken: state.hitsTaken,
     };
   }
 
