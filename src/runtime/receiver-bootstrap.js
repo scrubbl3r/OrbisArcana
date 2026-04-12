@@ -311,7 +311,7 @@ export async function loadReceiverInitModules() {
     import("../events/event-bus.js"),
     import("../state/game-state.js"),
     import("../game-runtime/orb/orb-system.js"),
-    import("../game-runtime/orb/orb-damage-visuals-runtime.js"),
+    import("../game-runtime/orb/orb-lifecycle-vfx-runtime.js"),
     import("../game-runtime/audio/audio-system.js"),
     import("../game-runtime/input/input-systems-bundle.js"),
     import("../game-runtime/world/world-system.js"),

@@ -1,4 +1,4 @@
-import { createOrbDamageVisualsRuntime } from "../../../../src/game-runtime/orb/orb-damage-visuals-runtime.js";
+import { createOrbLifecycleVfxRuntime } from "../../../../src/game-runtime/orb/orb-lifecycle-vfx-runtime.js";
 import { createOrbShatterRuntimeController } from "../../../../src/game-runtime/orb/orb-shatter-runtime.js";
 import { createOrbShatterRuntime } from "../../../../src/vfx/effects/orb-states/orb-shatter-runtime.js";
 
@@ -26,7 +26,7 @@ function createEventBus() {
 
 export function createOrbShatterPreview({ els } = {}) {
   const eventBus = createEventBus();
-  const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({ eventBus });
+  const orbLifecycleVfxRuntime = createOrbLifecycleVfxRuntime({ eventBus });
   const orbShatterRuntime = createOrbShatterRuntime({
     layerEl: els && els.orbShatterLayer,
   });
@@ -45,7 +45,7 @@ export function createOrbShatterPreview({ els } = {}) {
   function ensureStarted() {
     if (started) return;
     started = true;
-    orbDamageVisualsRuntime.start();
+    orbLifecycleVfxRuntime.start();
     unsub.push(eventBus.on("orb.shatter_piece_spawned", (piecePayload) => {
       orbShatterController.spawnShardFx(piecePayload);
     }));

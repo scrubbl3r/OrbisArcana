@@ -213,7 +213,7 @@ export function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount
   return { seed, cells, edges, crackOrder };
 }
 
-export function createOrbDamageVisualsRuntime({ eventBus }) {
+export function createOrbLifecycleVfxRuntime({ eventBus }) {
   if (!eventBus || typeof eventBus.on !== 'function' || typeof eventBus.emit !== 'function') {
     throw new Error('createOrbDamageVisualsRuntime requires eventBus.on and eventBus.emit');
   }
@@ -344,3 +344,5 @@ export function createOrbDamageVisualsRuntime({ eventBus }) {
 
   return { start, stop, getState };
 }
+
+export const createOrbDamageVisualsRuntime = createOrbLifecycleVfxRuntime;
