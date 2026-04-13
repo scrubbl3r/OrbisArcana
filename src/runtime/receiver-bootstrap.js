@@ -278,7 +278,7 @@ export async function loadReceiverInitModules() {
     { executeColorize },
     { createSpellCastExecutor },
     { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
-    { buildOrbBaseVisualState, applyOrbBaseVisualCssVars },
+    { buildOrbBaseVisualState, applyOrbBaseVisualCssVars, getCanonicalOrbBaseRadiusPx },
     { createOrbColorRuntime },
     { createOrbShatterRuntimeController },
     { ORB_RUNTIME_CONFIG_DEFAULT },
@@ -641,7 +641,13 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     const current = getOrbRuntimeConfig() || {};
     const cfg = ORB_RUNTIME_CONFIG_DEFAULT;
     setOrbRuntimeConfig({
-      PHYS: isObjectLike(cfg.physics) ? { ...(current.PHYS || {}), ...cfg.physics } : current.PHYS,
+      PHYS: isObjectLike(cfg.physics)
+        ? {
+            ...(current.PHYS || {}),
+            ...cfg.physics,
+            orbRadiusPx: getCanonicalOrbBaseRadiusPx(),
+          }
+        : current.PHYS,
       SHIELD_DESCENT: isObjectLike(cfg.shieldDescent) ? { ...(current.SHIELD_DESCENT || {}), ...cfg.shieldDescent } : current.SHIELD_DESCENT,
       IMPACT_MODEL: isObjectLike(cfg.impact?.model) ? { ...(current.IMPACT_MODEL || {}), ...cfg.impact.model } : current.IMPACT_MODEL,
       IMPACT_TH: (cfg.impact && Number.isFinite(Number(cfg.impact.threshold))) ? Number(cfg.impact.threshold) : current.IMPACT_TH,

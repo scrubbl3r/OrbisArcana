@@ -2,6 +2,8 @@ import { ORB_RUNTIME_CONFIG_DEFAULT } from "../../content/orb/orb-runtime-config
 import { GAME_THEME_DEFAULT } from "../../content/theme/game-theme-default.js";
 import { ORB_BASE_VISUAL_DEFAULTS as ORB_BASE_VISUAL_DEFAULTS_FILE } from "./orb-base-default.js";
 
+export const ORB_BASE_SCALE_REFERENCE_DIAMETER_PX = 100;
+
 function clamp01(v) {
   const n = Number(v);
   return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
@@ -67,6 +69,57 @@ export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({
       : ORB_THEME_DEFAULT.fillAlpha
   ),
 });
+
+export function getCanonicalOrbBaseDiameterPx({ theme = null } = {}) {
+  const themeOrb = (theme && theme.orb && typeof theme.orb === "object") ? theme.orb : null;
+  const themedDiameter = Number(themeOrb && themeOrb.diameterPx);
+  if (Number.isFinite(themedDiameter) && themedDiameter > 0) {
+    return Math.max(2, Math.round(themedDiameter));
+  }
+  return Math.max(
+    2,
+    Math.round(
+      Number(ORB_BASE_VISUAL_DEFAULTS_FILE.diameterPx)
+      || Number(ORB_THEME_DEFAULT.diameterPx)
+      || ORB_BASE_SCALE_REFERENCE_DIAMETER_PX
+    )
+  );
+}
+
+export function getCanonicalOrbBaseRadiusPx({ theme = null } = {}) {
+  const themeOrb = (theme && theme.orb && typeof theme.orb === "object") ? theme.orb : null;
+  const themedRadius = Number(themeOrb && themeOrb.radiusPx);
+  if (Number.isFinite(themedRadius) && themedRadius > 0) {
+    return Math.max(1, themedRadius);
+  }
+
+  const fileRadius = Number(ORB_BASE_VISUAL_DEFAULTS_FILE.radiusPx);
+  if (Number.isFinite(fileRadius) && fileRadius > 0) {
+    return Math.max(1, fileRadius);
+  }
+
+  return Math.max(1, getCanonicalOrbBaseDiameterPx({ theme }) * 0.5);
+}
+
+export function getOrbBaseScaleFactor({
+  diameterPx = null,
+  theme = null,
+  physics = null,
+  referenceDiameterPx = ORB_BASE_SCALE_REFERENCE_DIAMETER_PX,
+} = {}) {
+  const reference = Math.max(1, Number(referenceDiameterPx) || ORB_BASE_SCALE_REFERENCE_DIAMETER_PX);
+  const explicitDiameter = Number(diameterPx);
+  const resolvedDiameter = Number.isFinite(explicitDiameter) && explicitDiameter > 0
+    ? explicitDiameter
+    : Number(buildOrbBaseVisualState({ theme, physics }).diameterPx) || reference;
+  return Math.max(0.01, resolvedDiameter / reference);
+}
+
+export function syncOrbPhysicsToBaseVisualScale(physics, { theme = null } = {}) {
+  if (!physics || typeof physics !== "object") return physics;
+  physics.orbRadiusPx = getCanonicalOrbBaseRadiusPx({ theme });
+  return physics;
+}
 
 export function buildOrbBaseVisualState({ theme = null, physics = null } = {}) {
   const themeOrb = {

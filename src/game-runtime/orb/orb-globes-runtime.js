@@ -18,6 +18,7 @@ export function createOrbGlobesRuntime({
   stageEl,
   getOrbScreenY,
   orbRadiusPx,
+  getOrbRadiusPx = null,
   getAxisColor01,
   globeVisualState = ORB_GLOBE_VISUAL_DEFAULTS,
 }) {
@@ -27,7 +28,9 @@ export function createOrbGlobesRuntime({
   if (!orbInteriorEl) throw new Error('createOrbGlobesRuntime requires orbInteriorEl');
   if (!stageEl) throw new Error('createOrbGlobesRuntime requires stageEl');
   if (typeof getOrbScreenY !== 'function') throw new Error('createOrbGlobesRuntime requires getOrbScreenY');
-  if (!(Number(orbRadiusPx) > 0)) throw new Error('createOrbGlobesRuntime requires orbRadiusPx');
+  if (!(Number(orbRadiusPx) > 0) && typeof getOrbRadiusPx !== "function") {
+    throw new Error('createOrbGlobesRuntime requires orbRadiusPx or getOrbRadiusPx');
+  }
 
   const unsub = [];
   const inner = {
@@ -58,6 +61,12 @@ export function createOrbGlobesRuntime({
   const readWordIdFromPayload = (payload = {}) =>
     String((payload.wordId ?? payload.spellId) || "");
 
+  function readOrbRadiusPx() {
+    const liveRadius = (typeof getOrbRadiusPx === "function") ? Number(getOrbRadiusPx()) : NaN;
+    if (Number.isFinite(liveRadius) && liveRadius > 0) return liveRadius;
+    return Math.max(1, Number(orbRadiusPx) || 1);
+  }
+
   function randomOrbitAxis() {
     const idx = Math.floor(Math.random() * ORBIT_AXES.length);
     return ORBIT_AXES[idx] || "y";
@@ -71,7 +80,7 @@ export function createOrbGlobesRuntime({
   }
 
   function innerGlobeDiameterPx() {
-    return getInnerGlobeDiameterPx(orbRadiusPx, globeVisualState);
+    return getInnerGlobeDiameterPx(readOrbRadiusPx(), globeVisualState);
   }
 
   function clearInnerGlobes() {
@@ -108,10 +117,11 @@ export function createOrbGlobesRuntime({
         orbInteriorEl.appendChild(el);
       }
       const d = p.r * 2;
+      const orbRadius = readOrbRadiusPx();
       p.el.style.width = `${d.toFixed(2)}px`;
       p.el.style.height = `${d.toFixed(2)}px`;
-      p.el.style.left = `${(Number(orbRadiusPx) + p.x - p.r).toFixed(2)}px`;
-      p.el.style.top = `${(Number(orbRadiusPx) + p.y - p.r).toFixed(2)}px`;
+      p.el.style.left = `${(orbRadius + p.x - p.r).toFixed(2)}px`;
+      p.el.style.top = `${(orbRadius + p.y - p.r).toFixed(2)}px`;
     }
   }
 
@@ -186,8 +196,8 @@ export function createOrbGlobesRuntime({
       spellId: tokenId,
       phase: Math.random() * Math.PI * 2,
       speed: (1.35 + (Math.random() * 0.75)) * 4.0,
-      radius: getOrbitGlobeRadiusPx(orbRadiusPx, globeVisualState),
-      orbitR: getOrbitDistancePx(orbRadiusPx, globeVisualState),
+      radius: getOrbitGlobeRadiusPx(readOrbRadiusPx(), globeVisualState),
+      orbitR: getOrbitDistancePx(readOrbRadiusPx(), globeVisualState),
       stroke: color.stroke,
       fill: color.fill,
       glow: color.glow,
@@ -218,7 +228,8 @@ export function createOrbGlobesRuntime({
   }
 
   function orbitProjection(p, tS) {
-    const r = Number(p.orbitR) || (Number(orbRadiusPx) + 18);
+    const currentOrbRadius = readOrbRadiusPx();
+    const r = Number(p.orbitR) || (currentOrbRadius + 18);
     const drift = Math.sin((tS * (Number(p.driftHz) || 0.5) * Math.PI * 2) + (Number(p.driftPhase) || 0))
       * (Number(p.driftAmp) || 0);
     const rw = r + drift;
@@ -285,11 +296,14 @@ export function createOrbGlobesRuntime({
     if (!orbiting.particles.length) return;
     const now = Number(nowMs) || performance.now();
     const tS = now / 1000;
+    const currentOrbRadius = readOrbRadiusPx();
     const stageRect = stageEl.getBoundingClientRect();
     const cx = (stageRect.width || 0) * 0.5;
     const cy = Number(getOrbScreenY()) || 0;
     for (const p of orbiting.particles) {
       const liveColor = axisColor(p.axis);
+      p.radius = getOrbitGlobeRadiusPx(currentOrbRadius, globeVisualState);
+      p.orbitR = getOrbitDistancePx(currentOrbRadius, globeVisualState);
       p.stroke = liveColor.stroke;
       p.fill = liveColor.fill;
       p.glow = liveColor.glow;
@@ -342,7 +356,7 @@ export function createOrbGlobesRuntime({
 
   function tickInnerGlobes(dt) {
     if (!inner.particles.length) return;
-    const maxDistBase = Number(orbRadiusPx);
+    const maxDistBase = readOrbRadiusPx();
     for (const p of inner.particles) {
       p.vx += (Math.random() - 0.5) * 120 * dt;
       p.vy += (Math.random() - 0.5) * 120 * dt;

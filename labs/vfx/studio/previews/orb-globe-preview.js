@@ -6,6 +6,7 @@ import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
   getInnerGlobeDiameterPx,
+  getPickupGlobeDiameterPx,
   getOrbitDistancePx,
   getOrbitGlobeRadiusPx,
 } from "../../../../src/game-runtime/orb/orb-globe-base-state.js";
@@ -36,6 +37,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     const innerD = getInnerGlobeDiameterPx(orbRadius, state);
     const orbitR = getOrbitDistancePx(orbRadius, state);
     const orbitRadius = getOrbitGlobeRadiusPx(orbRadius, state);
+    const pickupD = getPickupGlobeDiameterPx(orbRadius, state);
 
     const inner = ensureSample("innerGlobe");
     inner.style.width = `${innerD.toFixed(2)}px`;
@@ -60,6 +62,8 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     els.orbGlobePreviewLayer.appendChild(released);
 
     const pickup = ensureSample("pickupGlobe");
+    pickup.style.width = `${pickupD.toFixed(2)}px`;
+    pickup.style.height = `${pickupD.toFixed(2)}px`;
     pickup.style.left = "50%";
     pickup.style.top = "22px";
     pickup.style.transform = "translate(-50%, 0)";
@@ -93,10 +97,14 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     els.vOrbGlobeReleasedStroke.textContent = String(Number(state.releasedStrokeWidthPx).toFixed(1));
     els.vOrbGlobeOrbitStroke.textContent = String(Number(state.orbitStrokeWidthPx).toFixed(1));
 
-    applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), {
+    const orbBaseVisualState = buildOrbBaseVisualState();
+    applyOrbBaseVisualCssVars(orbBaseVisualState, {
       root: els.previewRoot,
     });
-    applyOrbGlobeVisualCssVars(state, { root: els.previewRoot });
+    applyOrbGlobeVisualCssVars(state, {
+      root: els.previewRoot,
+      orbRadiusPx: orbBaseVisualState.radiusPx,
+    });
     renderSamples(state);
   }
 

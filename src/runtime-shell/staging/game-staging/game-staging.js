@@ -77,7 +77,7 @@ export function renderGameStaging(root, { level = LEVEL01 } = {}) {
   root.style.setProperty("--game-staging-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
   applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
   applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
-  applyOrbGlobeVisualCssVars(orbGlobeVisualState, { root });
+  applyOrbGlobeVisualCssVars(orbGlobeVisualState, { root, orbRadiusPx: orbBaseVisualState.radiusPx });
 
   const refs = {
     root,

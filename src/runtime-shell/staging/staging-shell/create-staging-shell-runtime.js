@@ -229,9 +229,16 @@ function initializeShellStageRuntime(shellContext) {
   const ORB_RUNTIME_CONFIG_DEFAULT = orbRuntimeConfigDefaultModule && orbRuntimeConfigDefaultModule.ORB_RUNTIME_CONFIG_DEFAULT;
   const ORB_STATUS_CONFIG_DEFAULT = orbStatusConfigDefaultModule && orbStatusConfigDefaultModule.ORB_STATUS_CONFIG_DEFAULT;
   const createEventBus = eventBusModule && eventBusModule.createEventBus;
+  const syncOrbPhysicsToBaseVisualScale =
+    sharedModules &&
+    sharedModules.orbBaseStateModule &&
+    sharedModules.orbBaseStateModule.syncOrbPhysicsToBaseVisualScale;
   if (typeof createOrbRuntimeState !== "function" || !ORB_RUNTIME_CONFIG_DEFAULT) return;
 
   const phys = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.physics);
+  if (typeof syncOrbPhysicsToBaseVisualScale === "function") {
+    syncOrbPhysicsToBaseVisualScale(phys);
+  }
   phys.downDrag = SHELL_STAGE_UI_DEFAULTS.downDrag;
   phys.worldHeightPx = shellWorldHeight(shellContext);
   const shieldDescent = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.shieldDescent);
@@ -252,6 +259,11 @@ function initializeShellStageRuntime(shellContext) {
   };
   runtime.orbRuntimeState = orbRuntimeState;
   bindShellStageControls(shellContext);
+}
+
+function getShellOrbScaleFactor(shellContext) {
+  const visualState = getShellOrbBaseVisualState(shellContext);
+  return Math.max(0.01, Number(visualState && visualState.diameterPx) || 100) / 100;
 }
 
 function shellStageRect(shellContext) {
@@ -964,6 +976,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     evenPx,
     evenStroke,
     rand,
+    getOrbScaleFactor: () => getShellOrbScaleFactor(shellContext),
   });
 }
 

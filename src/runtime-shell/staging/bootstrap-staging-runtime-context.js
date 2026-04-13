@@ -47,7 +47,10 @@ export function bootstrapStagingRuntimeContext({
     },
   });
 
-  const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({ eventBus });
+  const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({
+    eventBus,
+    getOrbRadiusPx: () => Number(PHYS.orbRadiusPx) || 0,
+  });
   const audioSystem = createAudioSystem({ eventBus });
   const inputSystemsBundle = createInputSystemsBundle({
     eventBus,
@@ -158,6 +161,7 @@ export function bootstrapStagingRuntimeContext({
     worldToScreenY: (yW) => pickupScreenY(yW),
     getOrbWorldPosition: () => ({ xNorm: 0.5, yW: getOrbRuntime().yW }),
     orbRadiusPx: PHYS.orbRadiusPx,
+    getOrbRadiusPx: () => Number(PHYS.orbRadiusPx) || 0,
     spawns: resolvedGlobeSpawns,
     spawn: {
       xNorm: 0.5,
@@ -178,6 +182,7 @@ export function bootstrapStagingRuntimeContext({
       stageEl: els.physStage,
       getOrbScreenY,
       orbRadiusPx: PHYS.orbRadiusPx,
+      getOrbRadiusPx: () => Number(PHYS.orbRadiusPx) || 0,
       getAxisColor01: (axis) => axisToColor01(axis),
     },
   });

@@ -2,6 +2,7 @@ import {
   EVT_PICKUP_COLLECTED,
   EVT_VOICE_SPELL_CAST,
 } from "../../contracts/events.js";
+import { ORB_BASE_SCALE_REFERENCE_DIAMETER_PX } from "../orb/orb-base-state.js";
 
 export function createWorldSystem({
   eventBus,
@@ -10,6 +11,7 @@ export function createWorldSystem({
   worldToScreenY,
   getOrbWorldPosition,
   orbRadiusPx,
+  getOrbRadiusPx = null,
   spawn,
   spawns,
   getGlobeEl,
@@ -22,7 +24,9 @@ export function createWorldSystem({
   if (typeof getStageRect !== "function") throw new Error("createWorldSystem requires getStageRect");
   if (typeof worldToScreenY !== "function") throw new Error("createWorldSystem requires worldToScreenY");
   if (typeof getOrbWorldPosition !== "function") throw new Error("createWorldSystem requires getOrbWorldPosition");
-  if (typeof orbRadiusPx !== "number" || !(orbRadiusPx > 0)) throw new Error("createWorldSystem requires orbRadiusPx");
+  if (!(Number(orbRadiusPx) > 0) && typeof getOrbRadiusPx !== "function") {
+    throw new Error("createWorldSystem requires orbRadiusPx or getOrbRadiusPx");
+  }
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
@@ -31,6 +35,18 @@ export function createWorldSystem({
   const PICKUP_ATTRACT_START_EDGE_GAP_PX = 120;
   const PICKUP_CONSUME_EDGE_GAP_PX = 15;
   const PICKUP_RESPAWN_FADE_MS = 2000;
+
+  function readOrbRadiusPx() {
+    const liveRadius = (typeof getOrbRadiusPx === "function") ? Number(getOrbRadiusPx()) : NaN;
+    if (Number.isFinite(liveRadius) && liveRadius > 0) return liveRadius;
+    return Math.max(1, Number(orbRadiusPx) || 1);
+  }
+
+  function getPickupRadiusPx(pickup) {
+    const authoredRadius = Math.max(1, Number(pickup && pickup.r) || 1);
+    const scale = Math.max(0.01, (readOrbRadiusPx() * 2) / ORB_BASE_SCALE_REFERENCE_DIAMETER_PX);
+    return authoredRadius * scale;
+  }
 
   function buildPickupFromSpawn(s, index) {
     const xNorm = Number(s && s.xNorm) || 0.5;
@@ -113,12 +129,13 @@ export function createWorldSystem({
     const pos = pickupWorldPos(p, nowMs);
     const rect = getStageRect();
     const y = worldToScreenY(pos.yW);
-    const top = y - p.r;
-    const d = p.r * 2;
+    const pickupRadiusPx = getPickupRadiusPx(p);
+    const top = y - pickupRadiusPx;
+    const d = pickupRadiusPx * 2;
     globeEl.style.display = "block";
     globeEl.style.width = `${d.toFixed(2)}px`;
     globeEl.style.height = `${d.toFixed(2)}px`;
-    const left = ((Number(pos.xNorm) || 0.5) * (rect.width || 0)) - p.r;
+    const left = ((Number(pos.xNorm) || 0.5) * (rect.width || 0)) - pickupRadiusPx;
     globeEl.style.left = `${left.toFixed(2)}px`;
     globeEl.style.top = `${top.toFixed(2)}px`;
     globeEl.style.transform = "none";
@@ -158,16 +175,18 @@ export function createWorldSystem({
     const orb = getOrbWorldPosition();
     const orbXNorm = Number(orb && orb.xNorm) || 0.5;
     const orbYW = Number(orb && orb.yW) || 0;
+    const currentOrbRadiusPx = readOrbRadiusPx();
 
     for (let i = 0; i < state.pickups.length; i++) {
       const p = state.pickups[i];
       if (!p || !p.active) continue;
 
       const pos = pickupWorldPos(p, nowMs);
+      const pickupRadiusPx = getPickupRadiusPx(p);
       const dxPx = ((orbXNorm - pos.xNorm) * stageW);
       const dyPx = (orbYW - pos.yW);
       let centerDist = Math.hypot(dxPx, dyPx);
-      let edgeGapPx = centerDist - (orbRadiusPx + p.r);
+      let edgeGapPx = centerDist - (currentOrbRadiusPx + pickupRadiusPx);
 
       if (edgeGapPx <= PICKUP_ATTRACT_START_EDGE_GAP_PX) {
         if (!p.attracting) {
@@ -192,7 +211,7 @@ export function createWorldSystem({
         const dx2 = ((orbXNorm - p.xNorm) * stageW);
         const dy2 = (orbYW - p.yW);
         centerDist = Math.hypot(dx2, dy2);
-        edgeGapPx = centerDist - (orbRadiusPx + p.r);
+        edgeGapPx = centerDist - (currentOrbRadiusPx + pickupRadiusPx);
       } else {
         p.lastStepTs = Number(nowMs) || performance.now();
       }

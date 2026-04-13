@@ -1,3 +1,5 @@
+import { getCanonicalOrbBaseRadiusPx } from "./orb-base-state.js";
+
 function rand(rng, a, b) {
   return a + (b - a) * rng();
 }
@@ -107,13 +109,20 @@ function seedFromLifeId(lifeId = 1) {
   return (Math.imul(n ^ 0x9e3779b9, 0x85ebca6b) >>> 0) || 1;
 }
 
-export function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount = 16) {
+export function makeVoronoiLayout(
+  seed = ((Math.random() * 1e9) | 0),
+  pieceCount = 16,
+  { orbRadiusPx = getCanonicalOrbBaseRadiusPx() } = {}
+) {
     const rng = createRng(seed);
-    const bound = circlePoly(50, 30);
+    const resolvedRadiusPx = Math.max(4, Number(orbRadiusPx) || getCanonicalOrbBaseRadiusPx());
+    const bound = circlePoly(resolvedRadiusPx, 30);
+    const seedMaxRadiusPx = resolvedRadiusPx * 0.88;
+    const minCellAreaPx = Math.max(4, resolvedRadiusPx * resolvedRadiusPx * 0.0032);
 
     const seeds = [];
     for (let i = 0; i < pieceCount; i++) {
-      const r = Math.sqrt(rand(rng, 0.02, 0.95)) * 44;
+      const r = Math.sqrt(rand(rng, 0.02, 0.95)) * seedMaxRadiusPx;
       const t = rand(rng, -Math.PI, Math.PI);
       seeds.push({ x: r * Math.cos(t), y: r * Math.sin(t) });
     }
@@ -130,7 +139,7 @@ export function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount
         const c = (si.x * si.x + si.y * si.y) - (sj.x * sj.x + sj.y * sj.y);
         poly = clipPolyHalfPlane(poly, a, b, c);
       }
-      if (poly.length >= 3 && polyArea(poly) > 8) {
+      if (poly.length >= 3 && polyArea(poly) > minCellAreaPx) {
         cells.push({ id: i, poly, center: centroid(poly) });
       }
     }
@@ -218,7 +227,10 @@ export function makeVoronoiLayout(seed = ((Math.random() * 1e9) | 0), pieceCount
   return { seed, cells, edges, crackOrder };
 }
 
-export function createOrbLifecycleVfxRuntime({ eventBus }) {
+export function createOrbLifecycleVfxRuntime({
+  eventBus,
+  getOrbRadiusPx = () => getCanonicalOrbBaseRadiusPx(),
+} = {}) {
   if (!eventBus || typeof eventBus.on !== 'function' || typeof eventBus.emit !== 'function') {
     throw new Error('createOrbDamageVisualsRuntime requires eventBus.on and eventBus.emit');
   }
@@ -265,7 +277,9 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
       state.crackSegments = [];
       return;
     }
-    state.layout = makeVoronoiLayout(seedFromLifeId(state.lifeId), activeShardCount);
+    state.layout = makeVoronoiLayout(seedFromLifeId(state.lifeId), activeShardCount, {
+      orbRadiusPx: getOrbRadiusPx(),
+    });
     state.crackSegments = getFullSegmentationSegments(state.layout);
   }
 

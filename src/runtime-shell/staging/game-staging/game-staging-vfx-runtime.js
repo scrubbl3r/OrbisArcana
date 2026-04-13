@@ -54,16 +54,28 @@ export function initGameStagingReceiverVfxRuntime({
   evenPx = (value) => value,
   evenStroke = (value) => value,
   rand = (min, max) => Number(min) + (Math.random() * (Number(max) - Number(min))),
+  getOrbScaleFactor = () => 1,
 } = {}) {
   if (!runtime || typeof createVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
+
+  const scaleGeomPx = (value, { stroke = false } = {}) => {
+    const scale = Math.max(0.01, Number(getOrbScaleFactor()) || 1);
+    const scaled = Math.max(0, (Number(value) || 0) * scale);
+    return stroke ? evenStroke(scaled, 1, 64) : scaled;
+  };
+
+  const scaleGeomSq = (value) => {
+    const scale = Math.max(0.01, Number(getOrbScaleFactor()) || 1);
+    return Math.max(0, (Number(value) || 0) * scale * scale);
+  };
 
   const vfxRuntimesBundle = createVfxRuntimesBundle({
     bubbleShield: {
       shieldEl: stageEls.shield,
       getConfig: () => ({
         colorRgb: vfxDefaults.shield.colorRgb,
-        diameterPx: vfxDefaults.shield.diameterPx,
-        strokeWidthPx: vfxDefaults.shield.strokeWidthPx,
+        diameterPx: scaleGeomPx(vfxDefaults.shield.diameterPx),
+        strokeWidthPx: scaleGeomPx(vfxDefaults.shield.strokeWidthPx, { stroke: true }),
         durationMs: vfxDefaults.shield.durationMs,
         alpha: vfxDefaults.shield.alpha,
         pulseMs: vfxDefaults.shield.pulseMs,
@@ -83,12 +95,12 @@ export function initGameStagingReceiverVfxRuntime({
       layerEl: stageEls.shockLayer,
       getConfig: () => ({
         color: vfxDefaults.shock.color,
-        startR: vfxDefaults.shock.startR,
-        endR: vfxDefaults.shock.endR,
+        startR: scaleGeomPx(vfxDefaults.shock.startR),
+        endR: scaleGeomPx(vfxDefaults.shock.endR),
         rings: vfxDefaults.shock.rings,
         spawnMs: vfxDefaults.shock.spawnMs,
         decayMs: vfxDefaults.shock.decayMs,
-        stroke: vfxDefaults.shock.stroke,
+        stroke: scaleGeomPx(vfxDefaults.shock.stroke, { stroke: true }),
       }),
       clamp,
       normalizeStroke: evenStroke,
@@ -100,7 +112,7 @@ export function initGameStagingReceiverVfxRuntime({
     flameAoe: {
       layerEl: stageEls.flameLayer,
       getConfig: () => ({
-        diameter: vfxDefaults.flame.diameter,
+        diameter: scaleGeomPx(vfxDefaults.flame.diameter),
         durationMs: vfxDefaults.flame.durationMs,
         stroke: vfxDefaults.flame.stroke,
         fill: vfxDefaults.flame.fill,
@@ -112,13 +124,13 @@ export function initGameStagingReceiverVfxRuntime({
     electricAoe: {
       layerEl: stageEls.electricLayer,
       getConfig: () => ({
-        startR: vfxDefaults.electric.startR,
-        endR: vfxDefaults.electric.endR,
+        startR: scaleGeomPx(vfxDefaults.electric.startR),
+        endR: scaleGeomPx(vfxDefaults.electric.endR),
         durationMs: vfxDefaults.electric.durationMs,
         nodeCount: vfxDefaults.electric.nodeCount,
         particleCount: vfxDefaults.electric.particleCount,
         particleSpeed: vfxDefaults.electric.particleSpeed,
-        maxBoltJumpSq: vfxDefaults.electric.maxBoltJumpSq,
+        maxBoltJumpSq: scaleGeomSq(vfxDefaults.electric.maxBoltJumpSq),
         startJitterRatio: vfxDefaults.electric.startJitterRatio,
       }),
       clamp,

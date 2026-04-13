@@ -1,4 +1,5 @@
 import { ORB_GLOBE_VISUAL_DEFAULTS as ORB_GLOBE_VISUAL_DEFAULTS_FILE } from "./orb-globe-default.js";
+import { ORB_BASE_SCALE_REFERENCE_DIAMETER_PX } from "./orb-base-state.js";
 
 function clamp01(v) {
   const n = Number(v);
@@ -13,6 +14,15 @@ function clampPx(v, fallback) {
 function clampRatio(v, fallback) {
   const n = Number(v);
   return Math.max(0, Number.isFinite(n) ? n : fallback);
+}
+
+function orbScaleFactorFromRadius(orbRadiusPx) {
+  const radius = Math.max(0, Number(orbRadiusPx) || 0);
+  return Math.max(0.01, (radius * 2) / ORB_BASE_SCALE_REFERENCE_DIAMETER_PX);
+}
+
+function scaleOrbLinkedPx(value, orbRadiusPx) {
+  return clampPx(value, 0) * orbScaleFactorFromRadius(orbRadiusPx);
 }
 
 export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
@@ -107,36 +117,54 @@ export function buildOrbGlobeVisualState(overrides = null) {
 
 export function applyOrbGlobeVisualCssVars(
   orbGlobeVisualState,
-  { root = globalThis.document && globalThis.document.documentElement } = {}
+  {
+    root = globalThis.document && globalThis.document.documentElement,
+    orbRadiusPx = null,
+  } = {}
 ) {
   if (!root || !orbGlobeVisualState || typeof orbGlobeVisualState !== "object") return;
 
   root.style.setProperty(
     "--orb-globe-pickup-d",
-    `${clampPx(
-      orbGlobeVisualState.pickupDiameterPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterPx
-    )}px`
+    `${getPickupGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState)}px`
   );
   root.style.setProperty(
     "--orb-globe-inner-stroke",
-    `${clampPx(
-      orbGlobeVisualState.innerStrokeWidthPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthPx
+    `${Math.max(
+      0,
+      scaleOrbLinkedPx(
+        clampPx(
+          orbGlobeVisualState.innerStrokeWidthPx,
+          ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthPx
+        ),
+        orbRadiusPx
+      )
     )}px`
   );
   root.style.setProperty(
     "--orb-globe-released-stroke",
-    `${clampPx(
-      orbGlobeVisualState.releasedStrokeWidthPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthPx
+    `${Math.max(
+      0,
+      scaleOrbLinkedPx(
+        clampPx(
+          orbGlobeVisualState.releasedStrokeWidthPx,
+          ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthPx
+        ),
+        orbRadiusPx
+      )
     )}px`
   );
   root.style.setProperty(
     "--orb-globe-orbit-stroke",
-    `${clampPx(
-      orbGlobeVisualState.orbitStrokeWidthPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitStrokeWidthPx
+    `${Math.max(
+      0,
+      scaleOrbLinkedPx(
+        clampPx(
+          orbGlobeVisualState.orbitStrokeWidthPx,
+          ORB_GLOBE_VISUAL_DEFAULTS.orbitStrokeWidthPx
+        ),
+        orbRadiusPx
+      )
     )}px`
   );
 }
@@ -150,9 +178,9 @@ export function getInnerGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState = ORB_G
 
 export function getOrbitGlobeRadiusPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
   return Math.max(
-    clampPx(
+    scaleOrbLinkedPx(
       orbGlobeVisualState && orbGlobeVisualState.orbitRadiusMinPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusMinPx
+      orbRadiusPx
     ),
     Number(orbRadiusPx) * clampRatio(
       orbGlobeVisualState && orbGlobeVisualState.orbitRadiusRatio,
@@ -163,16 +191,26 @@ export function getOrbitGlobeRadiusPx(orbRadiusPx, orbGlobeVisualState = ORB_GLO
 
 export function getOrbitDistancePx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
   return Math.max(
-    clampPx(
+    scaleOrbLinkedPx(
       orbGlobeVisualState && orbGlobeVisualState.orbitDistanceMinPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceMinPx
+      orbRadiusPx
     ),
-    (Number(orbRadiusPx) + clampPx(
+    (Number(orbRadiusPx) + scaleOrbLinkedPx(
       orbGlobeVisualState && orbGlobeVisualState.orbitDistanceOffsetPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceOffsetPx
+      orbRadiusPx
     )) * clampRatio(
       orbGlobeVisualState && orbGlobeVisualState.orbitDistanceRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceRatio
+    )
+  );
+}
+
+export function getPickupGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
+  return Math.max(
+    0,
+    scaleOrbLinkedPx(
+      orbGlobeVisualState && orbGlobeVisualState.pickupDiameterPx,
+      orbRadiusPx
     )
   );
 }
