@@ -106,6 +106,7 @@ export function restoreDraftProfilesIntoSelect({
     opt.value = value;
     opt.textContent = String(profile.label || value);
     opt.dataset.baseEffect = String(profile.baseEffect || "bubble-shield");
+    opt.dataset.spawnBaseEffect = String(profile.baseEffect || "bubble-shield");
     opt.dataset.category = category;
     opt.dataset.custom = "true";
     opt.dataset.locked = profile.locked ? "true" : "false";
@@ -149,6 +150,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     opt.textContent = String(entry.label || effectId || "effect");
     opt.dataset.registryId = effectId;
     opt.dataset.baseEffect = baseEffect;
+    opt.dataset.spawnBaseEffect = baseEffect;
     opt.dataset.category = category;
     opt.dataset.locked = "true";
     if (!baseEffect) {
@@ -172,6 +174,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     opt.value = String(optionDef.value || "");
     opt.textContent = String(optionDef.label || optionDef.value || "effect");
     opt.dataset.baseEffect = String(optionDef.baseEffect || optionDef.value || "");
+    opt.dataset.spawnBaseEffect = String(optionDef.spawnBaseEffect || optionDef.baseEffect || optionDef.value || "");
     opt.dataset.category = category;
     opt.dataset.locked = String(optionDef.locked ? "true" : "false");
     if (category === "orb" && targetGroup.firstChild) {
@@ -203,6 +206,11 @@ export function buildEffectLibraryOptionsFromRegistry({
 export function selectedBaseEffect(opt) {
   if (!opt) return "bubble-shield";
   return String(opt.dataset.baseEffect || opt.value || "bubble-shield");
+}
+
+export function selectedSpawnBaseEffect(opt) {
+  if (!opt) return "bubble-shield";
+  return String(opt.dataset.spawnBaseEffect || opt.dataset.baseEffect || opt.value || "bubble-shield");
 }
 
 export function selectedEffectCategory(opt) {
@@ -305,6 +313,7 @@ export function createCustomEffectProfile({
   const newValue = nextCustomEffectValue(effectSelect, baseEffect, trimmedName);
   opt.value = newValue;
   opt.dataset.baseEffect = baseEffect;
+  opt.dataset.spawnBaseEffect = baseEffect;
   opt.dataset.category = category;
   opt.dataset.custom = "true";
   if (selectedOption && selectedOption.dataset.registryId) opt.dataset.registryId = String(selectedOption.dataset.registryId);
@@ -345,6 +354,7 @@ export function duplicateEffectProfile({
   const opt = document.createElement("option");
   opt.value = newValue;
   opt.dataset.baseEffect = baseEffect;
+  opt.dataset.spawnBaseEffect = baseEffect;
   opt.dataset.category = category;
   opt.dataset.custom = "true";
   if (selectedOption && selectedOption.dataset.registryId) opt.dataset.registryId = String(selectedOption.dataset.registryId);

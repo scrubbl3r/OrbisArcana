@@ -1092,11 +1092,12 @@
       persistDraftStore as persistDraftStoreHelper,
       renameEffectProfile as renameEffectProfileHelper,
       selectedBaseEffect as selectedBaseEffectHelper,
+      selectedSpawnBaseEffect as selectedSpawnBaseEffectHelper,
       selectedEffectCategory as selectedEffectCategoryHelper,
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260412a";
+    } from "./studio/vfx-studio-state.js?v=20260412b";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1140,8 +1141,7 @@
     });
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
-      { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
-      { value: "orb-lifecycle", label: "Orb Lifecycle", baseEffect: "orb-lifecycle", category: "orb", locked: true },
+      { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", spawnBaseEffect: "orb-lifecycle", category: "orb", locked: true },
       { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
     ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
@@ -1404,6 +1404,10 @@
 
     function selectedBaseEffect(){
       return selectedBaseEffectHelper(selectedEffectOption());
+    }
+
+    function selectedSpawnBaseEffect(){
+      return selectedSpawnBaseEffectHelper(selectedEffectOption());
     }
 
     function selectedEffectCategory(){
@@ -1913,7 +1917,7 @@
 
     function createCustomEffectProfile(){
       if (!els.effectSelect) return;
-      const baseEffect = selectedBaseEffect();
+      const baseEffect = selectedSpawnBaseEffect();
       const baseLabel = (selectedEffectOption() && selectedEffectOption().textContent) || baseEffect;
       const name = window.prompt("New effect profile name", `${baseLabel} new`);
       if (!name) return;
@@ -1939,7 +1943,7 @@
       if (!els.effectSelect) return;
       const srcOpt = selectedEffectOption();
       if (!srcOpt) return;
-      const baseEffect = selectedBaseEffect();
+      const baseEffect = selectedSpawnBaseEffect();
       const category = selectedEffectCategory();
       const srcLabel = String(srcOpt.textContent || baseEffect || "effect");
       const name = window.prompt("Duplicate effect profile as", `${srcLabel} copy`);
