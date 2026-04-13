@@ -106,6 +106,7 @@ export function buildEffectLibraryOptionsFromRegistry({
   baseEffectByRegistryId,
   categoryLabels,
   extraBuiltinOptions = [],
+  omitRegistryIds = [],
 }) {
   if (!effectSelect) return;
   const previousValue = draftStore.activeValue || effectSelect.value;
@@ -113,9 +114,11 @@ export function buildEffectLibraryOptionsFromRegistry({
     .map((o) => o.cloneNode(true));
   effectSelect.innerHTML = "";
 
+  const omitted = new Set((Array.isArray(omitRegistryIds) ? omitRegistryIds : []).map((id) => String(id || "")));
   const groups = new Map();
   for (const entry of Array.isArray(registry) ? registry : []) {
     if (!entry) continue;
+    if (omitted.has(String(entry.id || ""))) continue;
     const category = String(entry.category || "spell");
     if (!groups.has(category)) {
       const optgroup = document.createElement("optgroup");
@@ -180,10 +183,6 @@ export function buildEffectLibraryOptionsFromRegistry({
     if (firstEnabled) effectSelect.value = firstEnabled.value;
   }
 
-  const orbShatterOption = findEffectOptionByValue(effectSelect, "orb-shatter");
-  if (orbShatterOption) {
-    orbShatterOption.disabled = false;
-  }
 }
 
 export function selectedBaseEffect(opt) {

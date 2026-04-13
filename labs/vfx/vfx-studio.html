@@ -682,7 +682,6 @@
           <option value="electric-aoe" data-registry-id="spell.aoe_electric" data-base-effect="electric-aoe" data-category="spell" data-locked="true">Electric AOE</option>
           <option value="flame-aoe" data-registry-id="spell.aoe_flame" data-base-effect="flame-aoe" data-category="spell" data-locked="true">Flame AOE</option>
           <option value="shockwave" data-registry-id="spell.shockwave_ring" data-base-effect="shockwave" data-category="spell" data-locked="true">Shockwave</option>
-          <option value="orb-shatter" data-registry-id="orb.shatter_voronoi" data-base-effect="orb-shatter" data-category="orb" data-locked="true">Orb Shatter</option>
         </select>
       </div>
       <div class="studioBarGroup">
@@ -724,19 +723,10 @@
           <svg class="orbTemplatePatternLayer" id="orbTemplatePatternLayer" viewBox="-50 -50 100 100"></svg>
           <div class="orb atOrigin" id="orbTemplateLaneOrb"></div>
         </div>
-        <div class="previewLane" id="orbFracturePreviewRoot" data-preview-root hidden aria-hidden="true">
-          <svg class="orbShatterLayer" id="orbFractureLaneShatterLayer" viewBox="-120 -120 240 240"></svg>
-          <svg class="orbFractureLayer" id="orbFractureLaneLayer" viewBox="-70 -70 140 140"></svg>
-          <div class="orb atOrigin" id="orbFractureLaneOrb"></div>
-        </div>
         <div class="previewLane" id="orbGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orbGlobePreviewLayer" id="orbGlobeLaneLayer"></div>
           <div class="orbInterior" id="orbGlobeLaneInterior"></div>
           <div class="orb atOrigin" id="orbGlobeLaneOrb"></div>
-        </div>
-        <div class="previewLane" id="orbShatterPreviewRoot" data-preview-root hidden aria-hidden="true">
-          <svg class="orbShatterLayer" id="orbShatterLaneLayer" viewBox="-120 -120 240 240"></svg>
-          <div class="orb atOrigin" id="orbShatterLaneOrb"></div>
         </div>
       </div>
     </div>
@@ -912,13 +902,6 @@
         </div>
       </div>
 
-      <div class="section" data-effect="orb-shatter" hidden>
-        <div class="row">
-          <button id="playOrbShatter">Play</button>
-        </div>
-        <div class="bindingEditorHelp">Voronoi shard burst bound to the first real orb-state exemplar: <strong>orb-state.shattered</strong>.</div>
-      </div>
-
       <div class="section" data-effect="orb-base" hidden>
         <div class="row">
           <button id="previewOrbBase">Preview</button>
@@ -1007,33 +990,6 @@
         </div>
       </div>
 
-      <div class="section" data-effect="orb-fracture" hidden>
-        <div class="row">
-          <button id="previewOrbFracture">Preview</button>
-        </div>
-        <div class="bindingEditorHelp">Shared fracture-family visual SSOT for crack and shard styling.</div>
-        <div class="sliderRow">
-          <span>Crack stroke width</span>
-          <strong><span id="vOrbFractureCrackStroke">1.6</span>px</strong>
-        </div>
-        <input id="orbFractureCrackStroke" type="range" min="0.2" max="8" value="1.6" step="0.1" />
-        <div class="sliderRow">
-          <span>Shard stroke width</span>
-          <strong><span id="vOrbFractureShardStroke">1.2</span>px</strong>
-        </div>
-        <input id="orbFractureShardStroke" type="range" min="0.2" max="8" value="1.2" step="0.1" />
-        <div class="sliderRow">
-          <span>Glow blur</span>
-          <strong><span id="vOrbFractureGlowBlur">3</span>px</strong>
-        </div>
-        <input id="orbFractureGlowBlur" type="range" min="0" max="20" value="3" step="1" />
-        <div class="sliderRow">
-          <span>Glow alpha</span>
-          <strong><span id="vOrbFractureGlowAlpha">1.00</span></strong>
-        </div>
-        <input id="orbFractureGlowAlpha" type="range" min="0" max="1" value="1.00" step="0.01" />
-      </div>
-
       <div class="section" data-effect="orb-globe" hidden>
         <div class="row">
           <button id="previewOrbGlobe">Preview</button>
@@ -1103,10 +1059,8 @@
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260410b";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260410b";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260410b";
-    import { createOrbShatterPreview } from "./studio/previews/orb-shatter-preview.js?v=20260411b";
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260411b";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260411d";
-    import { createOrbFracturePreview } from "./studio/previews/orb-fracture-preview.js?v=20260411b";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260411b";
     import {
       bootStudioShell,
@@ -1157,10 +1111,8 @@
       ELECTRIC_AOE_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260410b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
-    import { ORB_FRACTURE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-fracture-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260411a";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
-    import { applyOrbFractureVisualCssVars, buildOrbFractureVisualState } from "../../src/game-runtime/orb/orb-fracture-base-state.js?v=20260411a";
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260411a";
 
     const $ = (id) => document.getElementById(id);
@@ -1169,8 +1121,8 @@
       "spell.aoe_flame": "flame-aoe",
       "spell.shield_bubble": "bubble-shield",
       "spell.shockwave_ring": "shockwave",
-      "orb.shatter_voronoi": "orb-shatter",
     });
+    const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi"]);
     const CATEGORY_LABELS = Object.freeze({
       spell: "spell",
       orb: "orb",
@@ -1181,7 +1133,6 @@
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
       { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
-      { value: "orb-fracture", label: "Orb Fracture", baseEffect: "orb-fracture", category: "orb", locked: true },
       { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
     ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
@@ -1209,17 +1160,9 @@
         path: ["src", "vfx", "presets", "electric-aoe-default.js"],
         exportName: "ELECTRIC_AOE_PRESET_DEFAULT",
       },
-      "orb-shatter": {
-        path: ["src", "vfx", "presets", "orb-shatter-default.js"],
-        exportName: "ORB_SHATTER_PRESET_DEFAULT",
-      },
       "orb-base": {
         path: ["src", "game-runtime", "orb", "orb-base-default.js"],
         exportName: "ORB_BASE_VISUAL_DEFAULTS",
-      },
-      "orb-fracture": {
-        path: ["src", "game-runtime", "orb", "orb-fracture-default.js"],
-        exportName: "ORB_FRACTURE_VISUAL_DEFAULTS",
       },
       "orb-globe": {
         path: ["src", "game-runtime", "orb", "orb-globe-default.js"],
@@ -1235,15 +1178,12 @@
       electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
       orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
-      orbFracturePreviewRoot: $("orbFracturePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
-      orbShatterPreviewRoot: $("orbShatterPreviewRoot"),
       orbTemplatePatternLayer: $("orbTemplatePatternLayer"),
       orbTemplateShatterLayer: $("orbTemplateShatterLayer"),
 
       playShield: $("playShield"),
       previewOrbBase: $("previewOrbBase"),
-      previewOrbFracture: $("previewOrbFracture"),
       previewOrbGlobe: $("previewOrbGlobe"),
       effectSelect: $("effectSelect"),
       newEffectBtn: $("newEffectBtn"),
@@ -1293,7 +1233,6 @@
       flameMs: $("flameMs"),
 
       playElectric: $("playElectric"),
-      playOrbShatter: $("playOrbShatter"),
       electricMs: $("electricMs"),
       electricStartR: $("electricStartR"),
       vElectricStartR: $("vElectricStartR"),
@@ -1319,14 +1258,6 @@
       vOrbBaseFillG: $("vOrbBaseFillG"),
       orbBaseFillB: $("orbBaseFillB"),
       vOrbBaseFillB: $("vOrbBaseFillB"),
-      orbFractureCrackStroke: $("orbFractureCrackStroke"),
-      vOrbFractureCrackStroke: $("vOrbFractureCrackStroke"),
-      orbFractureShardStroke: $("orbFractureShardStroke"),
-      vOrbFractureShardStroke: $("vOrbFractureShardStroke"),
-      orbFractureGlowBlur: $("orbFractureGlowBlur"),
-      vOrbFractureGlowBlur: $("vOrbFractureGlowBlur"),
-      orbFractureGlowAlpha: $("orbFractureGlowAlpha"),
-      vOrbFractureGlowAlpha: $("vOrbFractureGlowAlpha"),
       orbGlobeInnerDiameterRatio: $("orbGlobeInnerDiameterRatio"),
       vOrbGlobeInnerDiameterRatio: $("vOrbGlobeInnerDiameterRatio"),
       orbGlobeOrbitRadiusRatio: $("orbGlobeOrbitRadiusRatio"),
@@ -1392,25 +1323,12 @@
       orb: $("orbTemplateLaneOrb"),
       orbShatterLayer: $("orbTemplateShatterLayer"),
     });
-    const orbFracturePreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbFracturePreviewRoot,
-      orb: $("orbFractureLaneOrb"),
-      orbFractureLayer: $("orbFractureLaneLayer"),
-      orbShatterLayer: $("orbFractureLaneShatterLayer"),
-    });
     const orbGlobePreviewEls = Object.freeze({
       ...els,
       previewRoot: els.orbGlobePreviewRoot,
       orb: $("orbGlobeLaneOrb"),
       orbInterior: $("orbGlobeLaneInterior"),
       orbGlobePreviewLayer: $("orbGlobeLaneLayer"),
-    });
-    const orbShatterPreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbShatterPreviewRoot,
-      orb: $("orbShatterLaneOrb"),
-      orbShatterLayer: $("orbShatterLaneLayer"),
     });
 
     function setVar(name, value){
@@ -1465,6 +1383,7 @@
         baseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
         categoryLabels: CATEGORY_LABELS,
         extraBuiltinOptions: STUDIO_EXTRA_BUILTIN_OPTIONS,
+        omitRegistryIds: STUDIO_OMIT_REGISTRY_IDS,
       });
     }
 
@@ -1559,13 +1478,6 @@
             orbTemplateShardTotal: 16,
             orbTemplateHitTotal: 3,
           };
-        case "orb-fracture":
-          return {
-            orbFractureCrackStroke: Number(ORB_FRACTURE_VISUAL_DEFAULTS.crackStrokeWidthPx),
-            orbFractureShardStroke: Number(ORB_FRACTURE_VISUAL_DEFAULTS.shardStrokeWidthPx),
-            orbFractureGlowBlur: Math.round(ORB_FRACTURE_VISUAL_DEFAULTS.glowBlurPx),
-            orbFractureGlowAlpha: Number(ORB_FRACTURE_VISUAL_DEFAULTS.glowAlpha.toFixed(2)),
-          };
         case "orb-globe":
           return {
             orbGlobeInnerDiameterRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDiameterRatio.toFixed(2)),
@@ -1609,8 +1521,6 @@
             electricStartR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.startR, 2, 500)),
             electricEndR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.endR, 8, 1000)),
           };
-        case "orb-shatter":
-          return {};
         default:
           return {};
       }
@@ -1825,13 +1735,6 @@
             orbTemplateShardTotal: Number(els.orbTemplateShardTotal && els.orbTemplateShardTotal.value),
             orbTemplateHitTotal: Number(els.orbTemplateHitTotal && els.orbTemplateHitTotal.value),
           };
-        case "orb-fracture":
-          return {
-            orbFractureCrackStroke: Number(els.orbFractureCrackStroke && els.orbFractureCrackStroke.value),
-            orbFractureShardStroke: Number(els.orbFractureShardStroke && els.orbFractureShardStroke.value),
-            orbFractureGlowBlur: Number(els.orbFractureGlowBlur && els.orbFractureGlowBlur.value),
-            orbFractureGlowAlpha: Number(els.orbFractureGlowAlpha && els.orbFractureGlowAlpha.value),
-          };
         case "orb-globe":
           return {
             orbGlobeInnerDiameterRatio: Number(els.orbGlobeInnerDiameterRatio && els.orbGlobeInnerDiameterRatio.value),
@@ -1875,8 +1778,6 @@
             electricStartR: Number(els.electricStartR && els.electricStartR.value),
             electricEndR: Number(els.electricEndR && els.electricEndR.value),
           };
-        case "orb-shatter":
-          return {};
         default:
           return {};
       }
@@ -1904,13 +1805,6 @@
             if (els.orbTemplateShardTotal && settings.orbTemplateShardTotal != null) els.orbTemplateShardTotal.value = String(settings.orbTemplateShardTotal);
             if (els.orbTemplateHitTotal && settings.orbTemplateHitTotal != null) els.orbTemplateHitTotal.value = String(settings.orbTemplateHitTotal);
             applyOrbTemplate();
-            break;
-          case "orb-fracture":
-            if (els.orbFractureCrackStroke && settings.orbFractureCrackStroke != null) els.orbFractureCrackStroke.value = String(settings.orbFractureCrackStroke);
-            if (els.orbFractureShardStroke && settings.orbFractureShardStroke != null) els.orbFractureShardStroke.value = String(settings.orbFractureShardStroke);
-            if (els.orbFractureGlowBlur && settings.orbFractureGlowBlur != null) els.orbFractureGlowBlur.value = String(settings.orbFractureGlowBlur);
-            if (els.orbFractureGlowAlpha && settings.orbFractureGlowAlpha != null) els.orbFractureGlowAlpha.value = String(settings.orbFractureGlowAlpha);
-            applyOrbFracture();
             break;
           case "orb-globe":
             if (els.orbGlobeInnerDiameterRatio && settings.orbGlobeInnerDiameterRatio != null) els.orbGlobeInnerDiameterRatio.value = String(settings.orbGlobeInnerDiameterRatio);
@@ -1956,8 +1850,6 @@
             if (els.electricStartR && settings.electricStartR != null) els.electricStartR.value = String(settings.electricStartR);
             if (els.electricEndR && settings.electricEndR != null) els.electricEndR.value = String(settings.electricEndR);
             applyElectricControls();
-            break;
-          case "orb-shatter":
             break;
           default:
             break;
@@ -2164,18 +2056,13 @@
       "electric-aoe": els.electricPreviewRoot,
       "orb-base": els.orbBasePreviewRoot,
       "orb-template": els.orbTemplatePreviewRoot,
-      "orb-fracture": els.orbFracturePreviewRoot,
       "orb-globe": els.orbGlobePreviewRoot,
-      "orb-shatter": els.orbShatterPreviewRoot,
     };
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
 
-    function applyOrbLaneSsot(root, { includeFracture = false, includeGlobe = false } = {}){
+    function applyOrbLaneSsot(root, { includeGlobe = false } = {}){
       if (!root) return;
       applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), { root });
-      if (includeFracture) {
-        applyOrbFractureVisualCssVars(buildOrbFractureVisualState(), { root });
-      }
       if (includeGlobe) {
         applyOrbGlobeVisualCssVars(buildOrbGlobeVisualState(), { root });
       }
@@ -2195,9 +2082,7 @@
       setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
       applyOrbLaneSsot(els.orbBasePreviewRoot);
       applyOrbLaneSsot(els.orbTemplatePreviewRoot);
-      applyOrbLaneSsot(els.orbFracturePreviewRoot, { includeFracture: true });
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
-      applyOrbLaneSsot(els.orbShatterPreviewRoot, { includeFracture: true });
     }
     applyGeometryVars();
 
@@ -2223,9 +2108,7 @@
       clearFlame();
       clearElectric();
       clearOrbTemplate();
-      clearOrbFracture();
       clearOrbGlobe();
-      clearOrbShatter();
       Object.values(PREVIEW_ROOTS_BY_EFFECT).forEach((root) => {
         if (!root || typeof root.setAttribute !== "function") return;
         root.setAttribute("aria-hidden", "true");
@@ -2337,15 +2220,6 @@
     const clearOrbTemplate = orbTemplatePreview.clear;
     orbTemplatePreview.wire();
 
-    const orbFracturePreview = createOrbFracturePreview({
-      els: orbFracturePreviewEls,
-      clamp,
-      evenPx,
-    });
-    const applyOrbFracture = orbFracturePreview.apply;
-    const clearOrbFracture = orbFracturePreview.clear;
-    orbFracturePreview.wire();
-
     const orbGlobePreview = createOrbGlobePreview({
       els: orbGlobePreviewEls,
       clamp,
@@ -2354,14 +2228,6 @@
     const applyOrbGlobe = orbGlobePreview.apply;
     const clearOrbGlobe = orbGlobePreview.clear;
     orbGlobePreview.wire();
-
-    // =========================================================================
-    // Orb Shatter (first orb-state exemplar)
-    // =========================================================================
-    const orbShatterPreview = createOrbShatterPreview({ els: orbShatterPreviewEls });
-    const clearOrbShatter = orbShatterPreview.clear;
-    const playOrbShatter = orbShatterPreview.play;
-    orbShatterPreview.wire();
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){
@@ -2376,9 +2242,6 @@
       }
       if (e.key.toLowerCase() === "e"){
         playElectric();
-      }
-      if (e.key.toLowerCase() === "o"){
-        playOrbShatter();
       }
     });
   </script>
