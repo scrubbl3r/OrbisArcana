@@ -1,6 +1,6 @@
 export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({
-  diameterPx: 100,
-  radiusPx: 50,
+  diameterPx: 74,
+  radiusPx: 37,
   strokeWidthPx: 2,
   strokeDefaultRgb: Object.freeze({
     r: 255,
