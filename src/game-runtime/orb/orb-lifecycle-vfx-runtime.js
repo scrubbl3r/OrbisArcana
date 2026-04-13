@@ -292,7 +292,7 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
         vx: nx * rand(rng, 150, 320) + rand(rng, -45, 45),
         vy: ny * rand(rng, 120, 280) + rand(rng, -260, -90),
         angVel: rand(rng, -7, 7),
-        ttlMs: Math.floor(rand(rng, 250, 750)),
+        ttlMs: Math.floor(rand(rng, 500, 750)),
       };
 
       state.shards.push(shard);
@@ -311,6 +311,8 @@ export function createOrbLifecycleVfxRuntime({ eventBus }) {
         pieceTimers.delete(to);
         if (state.shards.length === 0 && state.shatterActive) {
           state.shatterActive = false;
+          state.layout = null;
+          state.crackSegments = [];
           eventBus.emit('orb.shatter_complete', { atMs: Date.now() });
         }
       }, shard.ttlMs);

@@ -78,6 +78,7 @@ export function createOrbShatterRuntimeController({
   }
 
   function handleOrbShatterComplete() {
+    clearSnapshot();
     stopShardSim();
   }
 
