@@ -475,6 +475,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     runOrbRuntimePipelineImported,
     ORB_RUNTIME_CONFIG_DEFAULT,
     ORB_STATUS_CONFIG_DEFAULT,
+    getCanonicalOrbBaseRadiusPx,
     hydrateReceiverVfxDefaults,
     BUBBLE_SHIELD_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
