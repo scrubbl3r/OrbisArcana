@@ -719,9 +719,12 @@
           <div class="orb atOrigin" id="orbBaseLaneOrb"></div>
         </div>
         <div class="previewLane" id="orbTemplatePreviewRoot" data-preview-root hidden aria-hidden="true">
-          <svg class="orbShatterLayer" id="orbTemplateShatterLayer" viewBox="-120 -120 240 240"></svg>
-          <svg class="orbTemplatePatternLayer" id="orbTemplatePatternLayer" viewBox="-50 -50 100 100"></svg>
           <div class="orb atOrigin" id="orbTemplateLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbLifecyclePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <svg class="orbShatterLayer" id="orbLifecycleShatterLayer" viewBox="-120 -120 240 240"></svg>
+          <svg class="orbTemplatePatternLayer" id="orbLifecyclePatternLayer" viewBox="-50 -50 100 100"></svg>
+          <div class="orb atOrigin" id="orbLifecycleLaneOrb"></div>
         </div>
         <div class="previewLane" id="orbGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orbGlobePreviewLayer" id="orbGlobeLaneLayer"></div>
@@ -960,32 +963,36 @@
       </div>
 
       <div class="section" data-effect="orb-template" hidden>
-        <div class="bindingEditorHelp">First orb-state authoring lane. Uses Orb Base as its visual provider and drives one seeded Voronoi fracture map through full-fracture hits, heal, and final shatter.</div>
+        <div class="bindingEditorHelp">Clean blank orb subscriber. Uses Orb Base as its visual provider and serves as the seed lane for future orb-state starts.</div>
+      </div>
+
+      <div class="section" data-effect="orb-lifecycle" hidden>
+        <div class="bindingEditorHelp">Lifecycle orb-state authoring lane. Uses Orb Base as its visual provider and drives one seeded Voronoi fracture map through full-fracture hits, heal, and final shatter.</div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
-            <label for="orbTemplateShardTotal">Shards total</label>
-            <input id="orbTemplateShardTotal" class="paramFieldInput" type="number" min="3" max="64" step="1" value="16" />
-            <button id="orbTemplateApplyShardTotalBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbLifecycleShardTotal">Shards total</label>
+            <input id="orbLifecycleShardTotal" class="paramFieldInput" type="number" min="3" max="64" step="1" value="16" />
+            <button id="orbLifecycleApplyShardTotalBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateHitTotal">Hit total</label>
-            <input id="orbTemplateHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
-            <button id="orbTemplateApplyHitTotalBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbLifecycleHitTotal">Hit total</label>
+            <input id="orbLifecycleHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
+            <button id="orbLifecycleApplyHitTotalBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateHitBtn">Damage flow</label>
-            <input id="orbTemplateStatus" class="paramFieldInput" type="text" value="Hits 0 / 3" readonly />
-            <button id="orbTemplateHitBtn" class="toolBtn" type="button">Hit</button>
+            <label for="orbLifecycleHitBtn">Damage flow</label>
+            <input id="orbLifecycleStatus" class="paramFieldInput" type="text" value="Hits 0 / 3" readonly />
+            <button id="orbLifecycleHitBtn" class="toolBtn" type="button">Hit</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateHealBtn">Recovery</label>
+            <label for="orbLifecycleHealBtn">Recovery</label>
             <input class="paramFieldInput" type="text" value="Reverse one hit while preserving the same fracture map" readonly />
-            <button id="orbTemplateHealBtn" class="toolBtn" type="button">Heal</button>
+            <button id="orbLifecycleHealBtn" class="toolBtn" type="button">Heal</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateRegenerateBtn">Regenerate</label>
+            <label for="orbLifecycleRegenerateBtn">Regenerate</label>
             <input class="paramFieldInput" type="text" value="Rebuild the orb with a fresh Voronoi seed" readonly />
-            <button id="orbTemplateRegenerateBtn" class="toolBtn" type="button">Regenerate</button>
+            <button id="orbLifecycleRegenerateBtn" class="toolBtn" type="button">Regenerate</button>
           </div>
         </div>
       </div>
@@ -1060,7 +1067,8 @@
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260410b";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260410b";
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260411b";
-    import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260411d";
+    import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260412a";
+    import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260411b";
     import {
       bootStudioShell,
@@ -1088,7 +1096,7 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260411b";
+    } from "./studio/vfx-studio-state.js?v=20260412a";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1133,6 +1141,7 @@
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
       { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
+      { value: "orb-lifecycle", label: "Orb Lifecycle", baseEffect: "orb-lifecycle", category: "orb", locked: true },
       { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
     ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
@@ -1178,9 +1187,10 @@
       electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
       orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
+      orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
-      orbTemplatePatternLayer: $("orbTemplatePatternLayer"),
-      orbTemplateShatterLayer: $("orbTemplateShatterLayer"),
+      orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
+      orbLifecycleShatterLayer: $("orbLifecycleShatterLayer"),
 
       playShield: $("playShield"),
       previewOrbBase: $("previewOrbBase"),
@@ -1278,14 +1288,14 @@
       vOrbGlobeReleasedStroke: $("vOrbGlobeReleasedStroke"),
       orbGlobeOrbitStroke: $("orbGlobeOrbitStroke"),
       vOrbGlobeOrbitStroke: $("vOrbGlobeOrbitStroke"),
-      orbTemplateShardTotal: $("orbTemplateShardTotal"),
-      orbTemplateApplyShardTotalBtn: $("orbTemplateApplyShardTotalBtn"),
-      orbTemplateHitTotal: $("orbTemplateHitTotal"),
-      orbTemplateApplyHitTotalBtn: $("orbTemplateApplyHitTotalBtn"),
-      orbTemplateHitBtn: $("orbTemplateHitBtn"),
-      orbTemplateHealBtn: $("orbTemplateHealBtn"),
-      orbTemplateRegenerateBtn: $("orbTemplateRegenerateBtn"),
-      orbTemplateStatus: $("orbTemplateStatus"),
+      orbLifecycleShardTotal: $("orbLifecycleShardTotal"),
+      orbLifecycleApplyShardTotalBtn: $("orbLifecycleApplyShardTotalBtn"),
+      orbLifecycleHitTotal: $("orbLifecycleHitTotal"),
+      orbLifecycleApplyHitTotalBtn: $("orbLifecycleApplyHitTotalBtn"),
+      orbLifecycleHitBtn: $("orbLifecycleHitBtn"),
+      orbLifecycleHealBtn: $("orbLifecycleHealBtn"),
+      orbLifecycleRegenerateBtn: $("orbLifecycleRegenerateBtn"),
+      orbLifecycleStatus: $("orbLifecycleStatus"),
     };
 
     const shieldPreviewEls = Object.freeze({
@@ -1321,7 +1331,12 @@
       ...els,
       previewRoot: els.orbTemplatePreviewRoot,
       orb: $("orbTemplateLaneOrb"),
-      orbShatterLayer: $("orbTemplateShatterLayer"),
+    });
+    const orbLifecyclePreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbLifecyclePreviewRoot,
+      orb: $("orbLifecycleLaneOrb"),
+      orbShatterLayer: $("orbLifecycleShatterLayer"),
     });
     const orbGlobePreviewEls = Object.freeze({
       ...els,
@@ -1474,9 +1489,11 @@
             orbBaseFillB: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b),
           };
         case "orb-template":
+          return {};
+        case "orb-lifecycle":
           return {
-            orbTemplateShardTotal: 16,
-            orbTemplateHitTotal: 3,
+            orbLifecycleShardTotal: 16,
+            orbLifecycleHitTotal: 3,
           };
         case "orb-globe":
           return {
@@ -1731,9 +1748,11 @@
             orbBaseFillB: Number(els.orbBaseFillB && els.orbBaseFillB.value),
           };
         case "orb-template":
+          return {};
+        case "orb-lifecycle":
           return {
-            orbTemplateShardTotal: Number(els.orbTemplateShardTotal && els.orbTemplateShardTotal.value),
-            orbTemplateHitTotal: Number(els.orbTemplateHitTotal && els.orbTemplateHitTotal.value),
+            orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
+            orbLifecycleHitTotal: Number(els.orbLifecycleHitTotal && els.orbLifecycleHitTotal.value),
           };
         case "orb-globe":
           return {
@@ -1802,9 +1821,12 @@
             applyOrbBase();
             break;
           case "orb-template":
-            if (els.orbTemplateShardTotal && settings.orbTemplateShardTotal != null) els.orbTemplateShardTotal.value = String(settings.orbTemplateShardTotal);
-            if (els.orbTemplateHitTotal && settings.orbTemplateHitTotal != null) els.orbTemplateHitTotal.value = String(settings.orbTemplateHitTotal);
             applyOrbTemplate();
+            break;
+          case "orb-lifecycle":
+            if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
+            if (els.orbLifecycleHitTotal && settings.orbLifecycleHitTotal != null) els.orbLifecycleHitTotal.value = String(settings.orbLifecycleHitTotal);
+            applyOrbLifecycle();
             break;
           case "orb-globe":
             if (els.orbGlobeInnerDiameterRatio && settings.orbGlobeInnerDiameterRatio != null) els.orbGlobeInnerDiameterRatio.value = String(settings.orbGlobeInnerDiameterRatio);
@@ -2056,6 +2078,7 @@
       "electric-aoe": els.electricPreviewRoot,
       "orb-base": els.orbBasePreviewRoot,
       "orb-template": els.orbTemplatePreviewRoot,
+      "orb-lifecycle": els.orbLifecyclePreviewRoot,
       "orb-globe": els.orbGlobePreviewRoot,
     };
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
@@ -2082,6 +2105,7 @@
       setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
       applyOrbLaneSsot(els.orbBasePreviewRoot);
       applyOrbLaneSsot(els.orbTemplatePreviewRoot);
+      applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
     }
     applyGeometryVars();
@@ -2108,6 +2132,7 @@
       clearFlame();
       clearElectric();
       clearOrbTemplate();
+      clearOrbLifecycle();
       clearOrbGlobe();
       Object.values(PREVIEW_ROOTS_BY_EFFECT).forEach((root) => {
         if (!root || typeof root.setAttribute !== "function") return;
@@ -2219,6 +2244,11 @@
     const applyOrbTemplate = orbTemplatePreview.apply;
     const clearOrbTemplate = orbTemplatePreview.clear;
     orbTemplatePreview.wire();
+
+    const orbLifecyclePreview = createOrbLifecyclePreview({ els: orbLifecyclePreviewEls });
+    const applyOrbLifecycle = orbLifecyclePreview.apply;
+    const clearOrbLifecycle = orbLifecyclePreview.clear;
+    orbLifecyclePreview.wire();
 
     const orbGlobePreview = createOrbGlobePreview({
       els: orbGlobePreviewEls,

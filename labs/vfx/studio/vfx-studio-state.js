@@ -32,18 +32,33 @@ export function loadDraftStore(storageKey, draftStore) {
   for (const [value, profile] of Object.entries(profiles)) {
     if (!profile || typeof profile !== "object") continue;
     const resolvedValue = String(profile.value || value);
-    const resolvedBaseEffect = String(profile.baseEffect || "bubble-shield");
+    let resolvedBaseEffect = String(profile.baseEffect || "bubble-shield");
+    const resolvedLabel = String(profile.label || value);
+    const lifecycleLike = resolvedValue.startsWith("custom:")
+      && resolvedBaseEffect === "orb-template"
+      && (slugifyEffectName(resolvedLabel) === "lifecycle" || /:lifecycle(?:-\d+)?$/i.test(resolvedValue));
+    if (lifecycleLike) {
+      resolvedBaseEffect = "orb-lifecycle";
+    }
     const isTemplateClone = resolvedValue.startsWith("custom:") && resolvedBaseEffect === "orb-template";
+    const settingsByBaseEffect = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
+      ? { ...profile.settingsByBaseEffect }
+      : {};
+    if (lifecycleLike && settingsByBaseEffect["orb-template"] && !settingsByBaseEffect["orb-lifecycle"]) {
+      const prev = settingsByBaseEffect["orb-template"];
+      settingsByBaseEffect["orb-lifecycle"] = {
+        orbLifecycleShardTotal: Number(prev.orbTemplateShardTotal) || 16,
+        orbLifecycleHitTotal: Number(prev.orbTemplateHitTotal) || 3,
+      };
+    }
     draftStore.profilesByValue[value] = {
       value: resolvedValue,
-      label: String(profile.label || value),
+      label: resolvedLabel,
       baseEffect: resolvedBaseEffect,
       category: String(profile.category || "spell"),
       registryId: String(profile.registryId || ""),
       locked: isTemplateClone ? false : !!profile.locked,
-      settingsByBaseEffect: profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
-        ? profile.settingsByBaseEffect
-        : {},
+      settingsByBaseEffect,
       savedAtMs: Number(profile.savedAtMs) || Date.now(),
     };
   }
