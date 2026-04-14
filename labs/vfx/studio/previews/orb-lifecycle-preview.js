@@ -1,9 +1,12 @@
 import {
+  ORB_BASE_SCALE_REFERENCE_DIAMETER_PX,
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
 } from "../../../../src/game-runtime/orb/orb-base-state.js";
 import { createRng, makeVoronoiLayout } from "../../../../src/game-runtime/orb/orb-lifecycle-vfx-runtime.js";
 import { createOrbShatterRuntime } from "../../../../src/vfx/effects/orb-states/orb-shatter-runtime.js";
+
+const AUTHORING_ORB_RADIUS_PX = ORB_BASE_SCALE_REFERENCE_DIAMETER_PX * 0.5;
 
 function clampInt(value, min, max, fallback) {
   const n = Math.round(Number(value));
@@ -93,7 +96,14 @@ export function createOrbLifecyclePreview({ els } = {}) {
     currentSeed = nextSeed == null ? currentSeed : nextSeed;
     if (resetHits) currentHits = 0;
     const activeShardCount = getActiveShardCount();
-    currentLayout = activeShardCount > 0 ? makeVoronoiLayout(currentSeed, activeShardCount) : null;
+    currentLayout = activeShardCount > 0
+      ? makeVoronoiLayout(currentSeed, activeShardCount, {
+          // Lifecycle authoring lives in normalized orb space. The preview lane
+          // already scales the whole orb via `--orb-d`, so the fracture map
+          // should stay in canonical -50..50 coordinates here.
+          orbRadiusPx: AUTHORING_ORB_RADIUS_PX,
+        })
+      : null;
     shatterRuntime.clear();
     renderPattern();
   }
