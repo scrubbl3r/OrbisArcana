@@ -1,5 +1,7 @@
 import { getCanonicalOrbBaseRadiusPx } from "./orb-base-state.js";
 
+const CANONICAL_ORB_RADIUS_PX = 50;
+
 function rand(rng, a, b) {
   return a + (b - a) * rng();
 }
@@ -107,6 +109,21 @@ function pointRadius(p) {
 function seedFromLifeId(lifeId = 1) {
   const n = (Math.floor(Number(lifeId)) || 1) >>> 0;
   return (Math.imul(n ^ 0x9e3779b9, 0x85ebca6b) >>> 0) || 1;
+}
+
+function scalePoint(point, scale = 1) {
+  return {
+    x: Number(point && point.x || 0) * scale,
+    y: Number(point && point.y || 0) * scale,
+  };
+}
+
+function scaleShardCell(cell, scale = 1) {
+  return {
+    id: cell && cell.id,
+    poly: Array.isArray(cell && cell.poly) ? cell.poly.map((point) => scalePoint(point, scale)) : [],
+    center: scalePoint(cell && cell.center, scale),
+  };
 }
 
 export function makeVoronoiLayout(
@@ -277,8 +294,10 @@ export function createOrbLifecycleVfxRuntime({
       state.crackSegments = [];
       return;
     }
+    // Crack overlays render into an orb-sized normalized SVG shell, so they
+    // should stay in canonical orb coordinates and let the shell scale them.
     state.layout = makeVoronoiLayout(seedFromLifeId(state.lifeId), activeShardCount, {
-      orbRadiusPx: getOrbRadiusPx(),
+      orbRadiusPx: CANONICAL_ORB_RADIUS_PX,
     });
     state.crackSegments = getFullSegmentationSegments(state.layout);
   }
@@ -293,18 +312,21 @@ export function createOrbLifecycleVfxRuntime({
       rebuildLayoutForState();
     }
     const rng = createRng((state.layout.seed || 1) ^ 0x9e3779b9);
+    const orbRadiusPx = Math.max(1, Number(getOrbRadiusPx()) || CANONICAL_ORB_RADIUS_PX);
+    const shardScale = orbRadiusPx / CANONICAL_ORB_RADIUS_PX;
 
     for (const cell of state.layout.cells) {
-      const dirLen = Math.hypot(cell.center.x, cell.center.y) || 1;
-      const nx = cell.center.x / dirLen;
-      const ny = cell.center.y / dirLen;
+      const scaledCell = scaleShardCell(cell, shardScale);
+      const dirLen = Math.hypot(scaledCell.center.x, scaledCell.center.y) || 1;
+      const nx = scaledCell.center.x / dirLen;
+      const ny = scaledCell.center.y / dirLen;
 
       const shard = {
-        id: cell.id,
-        points: cell.poly,
-        center: cell.center,
-        vx: nx * rand(rng, 150, 320) + rand(rng, -45, 45),
-        vy: ny * rand(rng, 120, 280) + rand(rng, -260, -90),
+        id: scaledCell.id,
+        points: scaledCell.poly,
+        center: scaledCell.center,
+        vx: (nx * rand(rng, 150, 320) + rand(rng, -45, 45)) * shardScale,
+        vy: (ny * rand(rng, 120, 280) + rand(rng, -260, -90)) * shardScale,
         angVel: rand(rng, -7, 7),
         ttlMs: Math.floor(rand(rng, 500, 750)),
       };
