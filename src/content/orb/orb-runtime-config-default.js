@@ -10,7 +10,7 @@ export const ORB_RUNTIME_CONFIG_DEFAULT = {
     gBase: 2200,
     thrustMax: 3000,
     upDrag: 2.6,
-    downDrag: -0.83,
+    downDrag: -0.53,
     bounce: 0.35,
     maxUpSpeed: 2200,
     maxDownSpeed: 2800,
@@ -24,4 +24,3 @@ export const ORB_RUNTIME_CONFIG_DEFAULT = {
     },
   },
 };
-

@@ -60,10 +60,10 @@ function resolveShellEventAtMs(value) {
 
 const STAGING_WORKER_BASE = "https://orb-token.mrgarthwilliams.workers.dev";
 const SHELL_STAGE_UI_DEFAULTS = Object.freeze({
-  gravityMul: 0.33,
+  gravityMul: 0.34,
   gravityMin: 0,
   gravityMax: 3,
-  downDrag: -0.24,
+  downDrag: -0.53,
   downDragMin: -1,
   downDragMax: 1,
 });
@@ -346,7 +346,7 @@ function resetShellOrbToGround(shellContext) {
     onGround: true,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
-    gravityMul: Number(stage.orbRuntimeState.get().gravityMul) || 0.33,
+    gravityMul: Number(stage.orbRuntimeState.get().gravityMul) || 0.34,
   });
   applyShellGroundLine(shellContext);
   applyShellOrbTransform(shellContext);

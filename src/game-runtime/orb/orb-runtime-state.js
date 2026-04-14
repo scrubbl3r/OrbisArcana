@@ -25,7 +25,7 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     yW: 0,
     v: 0,
     lastTs: null,
-    gravityMul: 0.33,
+    gravityMul: 0.34,
     lift01: 0,
     energy01: 0,
     dynamics01: 0,
@@ -52,7 +52,7 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.yW = 0;
     state.v = 0;
     state.lastTs = null;
-    state.gravityMul = 0.33;
+    state.gravityMul = 0.34;
     state.lift01 = 0;
     state.energy01 = 0;
     state.dynamics01 = 0;

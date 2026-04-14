@@ -49,17 +49,17 @@ const GAME_STAGING_TEMPLATE = `
       <div class="physControls">
         <div class="sliderRow">
           <span>Gravity</span>
-          <strong><span id="gVal">0.33</span>x</strong>
+          <strong><span id="gVal">0.34</span>x</strong>
         </div>
-        <input id="gSlider" type="range" min="0" max="3" value="0.33" step="0.01" />
+        <input id="gSlider" type="range" min="0" max="3" value="0.34" step="0.01" />
 
         <div style="height:10px"></div>
 
         <div class="sliderRow">
           <span>Fall Drag</span>
-          <strong><span id="dVal">-0.24</span></strong>
+          <strong><span id="dVal">-0.53</span></strong>
         </div>
-        <input id="dSlider" type="range" min="-1" max="1" value="-0.24" step="0.01" />
+        <input id="dSlider" type="range" min="-1" max="1" value="-0.53" step="0.01" />
       </div>
     </div>
   </section>
