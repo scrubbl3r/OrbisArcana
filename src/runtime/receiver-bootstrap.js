@@ -404,6 +404,7 @@ export async function loadReceiverInitModules() {
     runOrbRuntimePipelineImported,
     buildOrbBaseVisualState,
     applyOrbBaseVisualCssVars,
+    getCanonicalOrbBaseRadiusPx,
     createOrbColorRuntime,
     createOrbShatterRuntimeController,
     ORB_RUNTIME_CONFIG_DEFAULT,
