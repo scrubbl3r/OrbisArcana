@@ -1,3 +1,5 @@
+import { resolveFlameAoeGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+
 export function createFlameAoePreview({
   els,
   clamp,
@@ -134,14 +136,25 @@ export function createFlameAoePreview({
     flameCore = core;
   }
 
+  function getOrbDiameterPx() {
+    const root = els && els.previewRoot;
+    const cssDiameter = root
+      ? Number(getComputedStyle(root).getPropertyValue("--orb-d").replace("px", ""))
+      : 0;
+    return Math.max(2, cssDiameter || 100);
+  }
+
   function apply() {
     const d = evenPx(clamp(els.flameD.value, 120, 900), 2, 2000);
     const ms = Math.round(clamp(els.flameMs && els.flameMs.value, 200, 60000));
+    const resolved = resolveFlameAoeGeometry({ diameter: d }, {
+      orbDiameterPx: getOrbDiameterPx(),
+    });
     els.flameD.value = String(d);
     if (els.flameMs) els.flameMs.value = String(ms);
     els.vFlameD.textContent = String(d);
-    setVar("--flame-d", `${d}px`);
-    return { diameter: d, durationMs: ms };
+    setVar("--flame-d", `${Number(resolved.diameter).toFixed(2)}px`);
+    return { diameter: resolved.diameter, durationMs: ms };
   }
 
   function play() {
@@ -150,13 +163,13 @@ export function createFlameAoePreview({
     const flameCtl = apply();
 
     const cfg = {
-      diameter: evenPx(clamp(els.flameD.value, 120, 900), 2, 2000),
+      diameter: Number(flameCtl && flameCtl.diameter) || 0,
       durationMs: Math.max(
         200,
         Number(flameCtl && flameCtl.durationMs) || Number(flamePresetDefault.durationMs) || 10000,
       ),
     };
-    setVar("--flame-d", `${cfg.diameter}px`);
+    setVar("--flame-d", `${Number(cfg.diameter).toFixed(2)}px`);
     setVar("--flame-duration", `${cfg.durationMs}ms`);
     build(cfg);
     els.flameLayer.appendChild(flameSvg);

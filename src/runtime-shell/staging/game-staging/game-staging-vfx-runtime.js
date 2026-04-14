@@ -1,4 +1,10 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
+import {
+  resolveBubbleShieldGeometry,
+  resolveElectricAoeGeometry,
+  resolveFlameAoeGeometry,
+  resolveShockwaveGeometry,
+} from "../../../game-runtime/orb/orb-spell-geometry.js";
 
 export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => value } = {}) {
   const defaults = {
@@ -55,32 +61,20 @@ export function initGameStagingReceiverVfxRuntime({
   evenStroke = (value) => value,
   rand = (min, max) => Number(min) + (Math.random() * (Number(max) - Number(min))),
   getOrbScaleFactor = () => 1,
+  getOrbDiameterPx = () => Math.max(1, Number(getOrbScaleFactor()) || 1) * 100,
 } = {}) {
   if (!runtime || typeof createVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
-
-  const scaleGeomPx = (value, { stroke = false } = {}) => {
-    const scale = Math.max(0.01, Number(getOrbScaleFactor()) || 1);
-    const scaled = Math.max(0, (Number(value) || 0) * scale);
-    return stroke ? evenStroke(scaled, 1, 64) : scaled;
-  };
-
-  const scaleGeomSq = (value) => {
-    const scale = Math.max(0.01, Number(getOrbScaleFactor()) || 1);
-    return Math.max(0, (Number(value) || 0) * scale * scale);
-  };
+  const readOrbDiameterPx = () => Math.max(
+    1,
+    Number(getOrbDiameterPx()) || (Math.max(0.01, Number(getOrbScaleFactor()) || 1) * 100)
+  );
 
   const vfxRuntimesBundle = createVfxRuntimesBundle({
     bubbleShield: {
       shieldEl: stageEls.shield,
-      getConfig: () => ({
-        colorRgb: vfxDefaults.shield.colorRgb,
-        diameterPx: scaleGeomPx(vfxDefaults.shield.diameterPx),
-        strokeWidthPx: scaleGeomPx(vfxDefaults.shield.strokeWidthPx, { stroke: true }),
-        durationMs: vfxDefaults.shield.durationMs,
-        alpha: vfxDefaults.shield.alpha,
-        pulseMs: vfxDefaults.shield.pulseMs,
-        pulseMin: vfxDefaults.shield.pulseMin,
-        pulseMax: vfxDefaults.shield.pulseMax,
+      getConfig: () => resolveBubbleShieldGeometry(vfxDefaults.shield, {
+        orbDiameterPx: readOrbDiameterPx(),
+        normalizeStroke: (value) => evenStroke(value, 1, 64),
       }),
       setCssVar: (name, value) => {
         if (rootStyle) rootStyle.setProperty(name, value);
@@ -93,14 +87,9 @@ export function initGameStagingReceiverVfxRuntime({
     },
     shockwave: {
       layerEl: stageEls.shockLayer,
-      getConfig: () => ({
-        color: vfxDefaults.shock.color,
-        startR: scaleGeomPx(vfxDefaults.shock.startR),
-        endR: scaleGeomPx(vfxDefaults.shock.endR),
-        rings: vfxDefaults.shock.rings,
-        spawnMs: vfxDefaults.shock.spawnMs,
-        decayMs: vfxDefaults.shock.decayMs,
-        stroke: scaleGeomPx(vfxDefaults.shock.stroke, { stroke: true }),
+      getConfig: () => resolveShockwaveGeometry(vfxDefaults.shock, {
+        orbDiameterPx: readOrbDiameterPx(),
+        normalizeStroke: (value) => evenStroke(value, 1, 64),
       }),
       clamp,
       normalizeStroke: evenStroke,
@@ -111,11 +100,8 @@ export function initGameStagingReceiverVfxRuntime({
     },
     flameAoe: {
       layerEl: stageEls.flameLayer,
-      getConfig: () => ({
-        diameter: scaleGeomPx(vfxDefaults.flame.diameter),
-        durationMs: vfxDefaults.flame.durationMs,
-        stroke: vfxDefaults.flame.stroke,
-        fill: vfxDefaults.flame.fill,
+      getConfig: () => resolveFlameAoeGeometry(vfxDefaults.flame, {
+        orbDiameterPx: readOrbDiameterPx(),
       }),
       clamp,
       evenPx,
@@ -123,15 +109,8 @@ export function initGameStagingReceiverVfxRuntime({
     },
     electricAoe: {
       layerEl: stageEls.electricLayer,
-      getConfig: () => ({
-        startR: scaleGeomPx(vfxDefaults.electric.startR),
-        endR: scaleGeomPx(vfxDefaults.electric.endR),
-        durationMs: vfxDefaults.electric.durationMs,
-        nodeCount: vfxDefaults.electric.nodeCount,
-        particleCount: vfxDefaults.electric.particleCount,
-        particleSpeed: vfxDefaults.electric.particleSpeed,
-        maxBoltJumpSq: scaleGeomSq(vfxDefaults.electric.maxBoltJumpSq),
-        startJitterRatio: vfxDefaults.electric.startJitterRatio,
+      getConfig: () => resolveElectricAoeGeometry(vfxDefaults.electric, {
+        orbDiameterPx: readOrbDiameterPx(),
       }),
       clamp,
       evenPx,

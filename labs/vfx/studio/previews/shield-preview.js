@@ -1,3 +1,5 @@
+import { resolveBubbleShieldGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+
 export function createShieldPreview({
   els,
   GEOM,
@@ -11,17 +13,32 @@ export function createShieldPreview({
   let shieldDecayTO = null;
   let shieldFadeTO = null;
 
+  function getOrbDiameterPx() {
+    const root = els && els.previewRoot;
+    const cssDiameter = root
+      ? Number(getComputedStyle(root).getPropertyValue("--orb-d").replace("px", ""))
+      : 0;
+    return Math.max(2, cssDiameter || Number(GEOM && GEOM.orbD) || 100);
+  }
+
   function applyGeometry() {
     GEOM.shieldD = evenPx(els.shieldD.value, 2, 2000);
     GEOM.shieldStroke = evenPx(els.shieldStroke.value, 2, 40);
+    const resolved = resolveBubbleShieldGeometry({
+      diameterPx: GEOM.shieldD,
+      strokeWidthPx: GEOM.shieldStroke,
+    }, {
+      orbDiameterPx: getOrbDiameterPx(),
+      normalizeStroke: (value) => Math.max(1, Math.round(value)),
+    });
 
     els.shieldD.value = String(GEOM.shieldD);
     els.shieldStroke.value = String(GEOM.shieldStroke);
     els.vShieldD.textContent = String(GEOM.shieldD);
     els.vShieldStroke.textContent = String(GEOM.shieldStroke);
 
-    setVar("--shield-d", `${GEOM.shieldD}px`);
-    setVar("--shield-stroke", `${GEOM.shieldStroke}px`);
+    setVar("--shield-d", `${Number(resolved.diameterPx).toFixed(2)}px`);
+    setVar("--shield-stroke", `${Number(resolved.strokeWidthPx).toFixed(2)}px`);
   }
 
   function cancelDecay() {

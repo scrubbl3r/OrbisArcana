@@ -969,6 +969,10 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     evenStroke,
     rand,
     getOrbScaleFactor: () => getShellOrbScaleFactor(shellContext),
+    getOrbDiameterPx: () => {
+      const visualState = getShellOrbBaseVisualState(shellContext);
+      return Math.max(1, Number(visualState && visualState.diameterPx) || 100);
+    },
   });
 }
 

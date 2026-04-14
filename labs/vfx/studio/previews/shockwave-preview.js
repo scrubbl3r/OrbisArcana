@@ -1,3 +1,5 @@
+import { resolveShockwaveGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+
 export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefault }) {
   const SHOCK = {
     endRadiusPx: Number(shockwavePresetDefault.endR) || 169,
@@ -17,29 +19,52 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
     return n;
   }
 
+  function getOrbDiameterPx() {
+    const root = els && els.previewRoot;
+    const cssDiameter = root
+      ? Number(getComputedStyle(root).getPropertyValue("--orb-d").replace("px", ""))
+      : 0;
+    return Math.max(2, cssDiameter || 100);
+  }
+
   function apply() {
-    const startR = clamp(els.startR.value, 1, 1000);
-    const endR = clamp(els.endR.value, 1, 1000);
+    const authoredStartR = clamp(els.startR.value, 1, 1000);
+    const authoredEndR = clamp(els.endR.value, 1, 1000);
     const rings = Math.round(clamp(els.rings.value, 1, 6));
     const spawnMs = Math.round(clamp(els.spawn.value, 1, 700));
     const decayMs = Math.round(clamp(els.decay.value, 40, 2000));
+    const authoredStroke = evenStroke(els.stroke.value, 2, 20);
+    const resolved = resolveShockwaveGeometry({
+      startR: authoredStartR,
+      endR: authoredEndR,
+      stroke: authoredStroke,
+    }, {
+      orbDiameterPx: getOrbDiameterPx(),
+      normalizeStroke: (value) => evenStroke(value, 2, 20),
+    });
 
-    const stroke = evenStroke(els.stroke.value, 2, 20);
-    els.stroke.value = stroke;
+    els.stroke.value = authoredStroke;
 
-    els.vStartR.textContent = String(Math.round(startR));
-    els.vEndR.textContent = String(Math.round(endR));
+    els.vStartR.textContent = String(Math.round(authoredStartR));
+    els.vEndR.textContent = String(Math.round(authoredEndR));
     els.vRings.textContent = String(rings);
     els.vSpawn.textContent = String(spawnMs);
     els.vDecay.textContent = String(decayMs);
-    els.vStroke.textContent = String(stroke);
+    els.vStroke.textContent = String(authoredStroke);
 
-    SHOCK.endRadiusPx = endR;
+    SHOCK.endRadiusPx = resolved.endR;
     SHOCK.spawnRateMs = spawnMs;
     SHOCK.decayMs = decayMs;
 
-    setVar("--shock-stroke", `${stroke}px`);
-    return { startR, endR, rings, spawnMs, decayMs, stroke };
+    setVar("--shock-stroke", `${Number(resolved.stroke).toFixed(2)}px`);
+    return {
+      startR: resolved.startR,
+      endR: resolved.endR,
+      rings,
+      spawnMs,
+      decayMs,
+      stroke: resolved.stroke,
+    };
   }
 
   function buildShockSVG() {

@@ -1,3 +1,5 @@
+import { resolveElectricAoeGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+
 export function createElectricAoePreview({
   els,
   clamp,
@@ -25,20 +27,38 @@ export function createElectricAoePreview({
     return (dx * dx) + (dy * dy);
   }
 
+  function getOrbDiameterPx() {
+    const root = els && els.previewRoot;
+    const cssDiameter = root
+      ? Number(getComputedStyle(root).getPropertyValue("--orb-d").replace("px", ""))
+      : 0;
+    return Math.max(2, cssDiameter || 100);
+  }
+
   function apply() {
     const durationMs = Math.round(clamp(els.electricMs && els.electricMs.value, 200, 60000));
-    let startR = Math.round(clamp(els.electricStartR.value, 2, 500));
-    let endR = Math.round(clamp(els.electricEndR.value, 8, 1000));
-    if (endR <= startR + 4) endR = startR + 4;
+    let authoredStartR = Math.round(clamp(els.electricStartR.value, 2, 500));
+    let authoredEndR = Math.round(clamp(els.electricEndR.value, 8, 1000));
+    if (authoredEndR <= authoredStartR + 4) authoredEndR = authoredStartR + 4;
+    const resolved = resolveElectricAoeGeometry({
+      startR: authoredStartR,
+      endR: authoredEndR,
+    }, {
+      orbDiameterPx: getOrbDiameterPx(),
+    });
 
     if (els.electricMs) els.electricMs.value = String(durationMs);
-    els.electricStartR.value = String(startR);
-    els.electricEndR.value = String(endR);
-    els.vElectricStartR.textContent = String(startR);
-    els.vElectricEndR.textContent = String(endR);
+    els.electricStartR.value = String(authoredStartR);
+    els.electricEndR.value = String(authoredEndR);
+    els.vElectricStartR.textContent = String(authoredStartR);
+    els.vElectricEndR.textContent = String(authoredEndR);
 
-    setVar("--electric-d", `${endR * 2}px`);
-    return { startR, endR, durationMs };
+    setVar("--electric-d", `${(Number(resolved.endR) * 2).toFixed(2)}px`);
+    return {
+      startR: resolved.startR,
+      endR: resolved.endR,
+      durationMs,
+    };
   }
 
   function clear() {
@@ -82,7 +102,14 @@ export function createElectricAoePreview({
       startR: cfg.startR,
       endR: cfg.endR,
       durationMs: Math.max(200, Number(cfg.durationMs) || Number(electricPresetDefault.durationMs) || 10000),
-      maxBoltJumpSq: Math.max(100, Number(electricPresetDefault.maxBoltJumpSq) || 1200),
+      maxBoltJumpSq: Math.max(
+        100,
+        Number(resolveElectricAoeGeometry({
+          maxBoltJumpSq: electricPresetDefault.maxBoltJumpSq,
+        }, {
+          orbDiameterPx: getOrbDiameterPx(),
+        }).maxBoltJumpSq) || 1200
+      ),
       particleCount: Math.max(50, Math.round(Number(electricPresetDefault.particleCount) || 340)),
       nodeCount: Math.max(1, Math.round(Number(electricPresetDefault.nodeCount) || 13)),
       particleSpeed: Math.max(0.05, Number(electricPresetDefault.particleSpeed) || 0.62),

@@ -33,7 +33,7 @@ export function createOrbBasePreview({ els, evenPx, clamp, clampByte }) {
     els.vOrbBaseFillG.textContent = String(fillDefaultRgb.g);
     els.vOrbBaseFillB.textContent = String(fillDefaultRgb.b);
 
-    applyOrbBaseVisualCssVars(buildOrbBaseVisualState({
+    const visualState = buildOrbBaseVisualState({
       theme: {
         orb: {
           diameterPx,
@@ -47,7 +47,12 @@ export function createOrbBasePreview({ els, evenPx, clamp, clampByte }) {
       physics: {
         orbRadiusPx: diameterPx * 0.5,
       },
-    }), { root: els.previewRoot });
+    });
+
+    applyOrbBaseVisualCssVars(visualState, { root: els.previewRoot });
+    if (typeof els.onApply === "function") {
+      els.onApply(visualState);
+    }
   }
 
   function clear() {}
