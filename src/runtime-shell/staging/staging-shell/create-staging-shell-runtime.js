@@ -21,6 +21,7 @@ import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
+import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
@@ -244,7 +245,7 @@ function initializeShellStageRuntime(shellContext) {
   phys.worldHeightPx = shellWorldHeight(shellContext);
   const shieldDescent = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.shieldDescent);
   const impact = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.impact);
-  const statusConfig = cloneJsonLike(ORB_STATUS_CONFIG_DEFAULT && ORB_STATUS_CONFIG_DEFAULT.floatGrace);
+  const statusConfig = cloneJsonLike(ORB_STATUS_CONFIG_DEFAULT && ORB_STATUS_CONFIG_DEFAULT.grace);
   const initialState = buildShellStageInitialState(phys);
   const orbRuntimeState = createOrbRuntimeState({ initialState });
 
@@ -915,29 +916,16 @@ function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 
   });
 }
 
-function shellGrantFloatGrace(shellContext, ms = 1000) {
+function shellGrantOrbGrace(shellContext, grace = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
-  if (!gameStageActions || typeof gameStageActions.grantFloatGrace !== "function") return;
-  gameStageActions.grantFloatGrace({
-    durationMs: ms,
-    grantFloatGraceRuntime:
+  if (!gameStageActions || typeof gameStageActions.grantOrbGrace !== "function") return;
+  gameStageActions.grantOrbGrace({
+    grace,
+    grantOrbGraceRuntime:
       runtime &&
       runtime.receiverSpellRuntime &&
-      runtime.receiverSpellRuntime.grantFloatGraceRuntime,
-  });
-}
-
-function shellGrantSuperGrace(shellContext, ms = 2500) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
-  if (!gameStageActions || typeof gameStageActions.grantSuperGrace !== "function") return;
-  gameStageActions.grantSuperGrace({
-    durationMs: ms,
-    grantSuperGraceRuntime:
-      runtime &&
-      runtime.receiverSpellRuntime &&
-      runtime.receiverSpellRuntime.grantSuperGraceRuntime,
+      runtime.receiverSpellRuntime.grantOrbGraceRuntime,
   });
 }
 
@@ -1103,8 +1091,7 @@ async function initShellReceiverHostRuntime(shellContext) {
         const shellVfx = runtime.vfx || null;
         return shellVfx && typeof shellVfx.playElectricAoe === "function" ? shellVfx.playElectricAoe() : { handled: false };
       },
-      grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
-      grantSuperGrace: (ms) => shellGrantSuperGrace(shellContext, ms),
+      grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
       clearFloatGrace: () => {
         patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
       },
@@ -1594,7 +1581,6 @@ async function initShellKwsRuntime(shellContext) {
     executeAoeFlame,
     executeTeleport,
     executeBubbleShield,
-    executeFloatGrace,
     executeColorize,
     executeShockwave,
     CAST_ACTION_REGISTRY_BY_ID,
@@ -1602,8 +1588,7 @@ async function initShellKwsRuntime(shellContext) {
     playFlameAoeRuntime,
     triggerShockwaveRuntime,
     teleportOrbRuntimeToSpawn,
-    grantFloatGraceRuntime,
-    grantSuperGraceRuntime,
+    grantOrbGraceRuntime,
     hydrateReceiverVfxDefaults,
     BUBBLE_SHIELD_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
@@ -1642,9 +1627,7 @@ async function initShellKwsRuntime(shellContext) {
         getOrbRuntimeConfig: () => ({ PHYS: {}, SHIELD_DESCENT: {}, IMPACT_MODEL: {}, IMPACT_TH: 0 }),
         setOrbRuntimeConfig: () => {},
         getOrbStatusConfig: () => ({
-          FLOAT_GRACE_DEFAULT_MS: 0,
-          DOMUS_FLOAT_GRACE_MS: 0,
-          SUPER_GRACE_DEFAULT_MS: 0,
+          GRACE_DEFAULT_TTL_MS: 0,
         }),
         setOrbStatusConfig: () => {},
         vfxDefaults,
@@ -1798,8 +1781,7 @@ async function initShellKwsRuntime(shellContext) {
   runtime.eventBus = eventBus;
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
-    grantFloatGraceRuntime: (typeof grantFloatGraceRuntime === "function") ? grantFloatGraceRuntime : null,
-    grantSuperGraceRuntime: (typeof grantSuperGraceRuntime === "function") ? grantSuperGraceRuntime : null,
+    grantOrbGraceRuntime: (typeof grantOrbGraceRuntime === "function") ? grantOrbGraceRuntime : null,
   };
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
@@ -1820,7 +1802,6 @@ async function initShellKwsRuntime(shellContext) {
     executeTeleport,
     executeShockwave,
     executeBubbleShield,
-    executeFloatGrace,
     executeColorize,
     triggerShockwave: () => (
       shellVfx && typeof shellVfx.triggerShockwave === "function"
@@ -1829,16 +1810,19 @@ async function initShellKwsRuntime(shellContext) {
     ),
     teleportOrbToSpawnNeutralizePhysics: (aboveGroundPx) => shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx),
     activateBubbleShield: ({ durationMs } = {}) => shellActivateBubbleShield(shellContext, { durationMs }),
-    grantSuperGrace: (ms) => shellGrantSuperGrace(shellContext, ms),
     applyColorize: (payload) => shellApplyColorize(shellContext, payload),
     clearColorize: () => shellClearColorize(shellContext),
     domusTeleportAboveGroundPx: 300,
     bubbleShieldMs: 8000,
   });
+  const getShellDefaultGraceTtlMs = () => resolveOrbGraceDefaultTtlMs(
+    runtime && runtime.stage ? runtime.stage.statusConfig : null,
+    2500
+  );
   const shellSpellCastExecutor = createSpellCastExecutor({
     castActionRegistryById: CAST_ACTION_REGISTRY_BY_ID,
     handlers: shellSpellActionHandlers,
-    grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
+    grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
     getCastGateState: () => {
       const runtimeContext = runtime && runtime.receiverHostRuntime && runtime.receiverHostRuntime.runtimeContext
         ? runtime.receiverHostRuntime.runtimeContext
@@ -1846,8 +1830,7 @@ async function initShellKwsRuntime(shellContext) {
       const orb = runtimeContext && runtimeContext.gameState ? runtimeContext.gameState.orb : null;
       return getSharedOrbCastGateState(orb);
     },
-    floatGraceDefaultMs: 1000,
-    floatGraceDomusMs: 5000,
+    defaultGraceTtlMs: getShellDefaultGraceTtlMs(),
   });
   const executeShellWordCastAction = (castActionId, context = {}) => {
     if (!shellSpellCastExecutor || typeof shellSpellCastExecutor.execute !== "function") {

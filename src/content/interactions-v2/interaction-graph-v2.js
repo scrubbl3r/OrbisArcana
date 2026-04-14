@@ -30,6 +30,7 @@ export const INTERACTION_GRAPH_V2 = {
       on: { word: "domus" },
       requires: "wake.main",
       trigger: { spell: "teleport" },
+      grace: { ttlMs: 5000 },
     },
     // ELECTRIC AOE CHAIN
     {
@@ -43,6 +44,7 @@ export const INTERACTION_GRAPH_V2 = {
       on: { word: "rota" },
       requires: "chain.electrum",
       trigger: { spell: "aoe_electric" },
+      grace: {},
     },
     // ARE KAY NAH > VECTUS
     {
@@ -61,12 +63,14 @@ export const INTERACTION_GRAPH_V2 = {
       on: { word: "sanctum" },
       requires: "chain.pyro_voice",
       trigger: { spell: "bubble_shield" },
+      grace: {},
     },
     {
       id: "pyro_rota_cast",
       on: { word: "rota" },
       requires: "chain.pyro_voice",
       trigger: { spell: "aoe_flame" },
+      grace: {},
     },
     // PYRO AOE CHAIN
     {
@@ -117,16 +121,19 @@ export const INTERACTION_GRAPH_V2 = {
       id: "shake_ud_cast",
       on: { shake: "UD" },
       trigger: { spell: "cast_loaded_ud" },
+      grace: {},
     },
     {
       id: "shake_lr_cast",
       on: { shake: "LR" },
       trigger: { spell: "cast_loaded_lr" },
+      grace: {},
     },
     {
       id: "shake_fb_cast",
       on: { shake: "FB" },
       trigger: { spell: "cast_loaded_fb" },
+      grace: {},
     },
   ],
 };

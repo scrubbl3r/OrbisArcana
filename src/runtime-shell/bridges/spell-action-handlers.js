@@ -14,11 +14,9 @@ export function createSpellActionHandlers({
   executeTeleport,
   executeShockwave,
   executeBubbleShield,
-  executeFloatGrace,
   executeColorize,
   triggerShockwave,
   activateBubbleShield,
-  grantSuperGrace,
   applyColorize,
   clearColorize,
   domusTeleportAboveGroundPx = 300,
@@ -77,14 +75,6 @@ export function createSpellActionHandlers({
       executeBubbleShield({
         activateBubbleShield,
         durationMs: Number.isFinite(durationMs) ? durationMs : bubbleShieldMs,
-      });
-    },
-    float_grace(payload = {}) {
-      const ms = Number(payload && payload.ms);
-      if (typeof executeFloatGrace !== "function") return;
-      executeFloatGrace({
-        grantSuperGrace,
-        ms: Number.isFinite(ms) ? ms : undefined,
       });
     },
     colorize(payload = {}) {

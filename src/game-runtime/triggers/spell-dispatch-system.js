@@ -288,6 +288,9 @@ export function createSpellDispatchSystem({
       directionGroup: String(payload.directionGroup || entry.slot || ""),
       atMs: now,
     };
+    if (payload.grace && typeof payload.grace === "object" && !Array.isArray(payload.grace)) {
+      castPayload.grace = { ...payload.grace };
+    }
     eventBus.emit(EVT_VOICE_SPELL_CAST, castPayload);
   }
 

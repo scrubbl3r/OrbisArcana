@@ -1,3 +1,5 @@
+import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
+
 export function createGameStagingOrbActionBridge({
   runtime = null,
   shieldEl = null,
@@ -88,18 +90,22 @@ export function createGameStagingOrbActionBridge({
       updateDebugReadout();
       return { handled: true, yTarget };
     },
-    grantFloatGrace({
-      durationMs = 1000,
-      grantFloatGraceRuntime = null,
+    grantOrbGrace({
+      grace = null,
+      grantOrbGraceRuntime = null,
     } = {}) {
       const orbState = getOrbRuntime();
       if (!orbState) return;
-      if (typeof grantFloatGraceRuntime === "function") {
-        grantFloatGraceRuntime({
+      const defaultTtlMs = resolveOrbGraceDefaultTtlMs(runtime && runtime.stage ? runtime.stage.statusConfig : null, 2500);
+      const resolvedGrace = resolveOrbGracePayload(grace, { defaultTtlMs });
+      if (!resolvedGrace) return;
+      if (typeof grantOrbGraceRuntime === "function") {
+        grantOrbGraceRuntime({
           patchOrbRuntime: (patch = {}) => patchOrbRuntime(patch),
           getOrbRuntime: () => getOrbRuntime(),
-          durationMs,
-          defaultMs: 1000,
+          grace: resolvedGrace,
+          durationMs: resolvedGrace.ttlMs,
+          defaultTtlMs,
           nowMs: performanceNow(),
         });
         applyOrbTransform();
@@ -108,34 +114,18 @@ export function createGameStagingOrbActionBridge({
       const now = performanceNow();
       const yFloor = groundCenterWorld();
       const yCeil = Number(runtime && runtime.stage && runtime.stage.phys && runtime.stage.phys.orbRadiusPx) || 50;
-      const liftPx = Math.max(40, Math.min(180, Number(durationMs) * 0.08));
+      const liftPx = Math.max(40, Math.min(180, Number(resolvedGrace.ttlMs) * 0.08));
       const anchorY = clamp((Number(orbState.yW) || yFloor) - liftPx, yCeil, yFloor - 6);
       patchOrbRuntime({
         yW: anchorY,
         v: 0,
         onGround: false,
         floatGraceActive: true,
-        floatGraceUntilMs: now + Math.max(50, Number(durationMs) || 1000),
+        floatGraceUntilMs: now + Math.max(50, Number(resolvedGrace.ttlMs) || defaultTtlMs),
         floatGraceAnchorY: anchorY,
         floatGracePhase: Math.random() * Math.PI * 2,
       });
       applyOrbTransform();
-    },
-    grantSuperGrace({
-      durationMs = 2500,
-      grantSuperGraceRuntime = null,
-    } = {}) {
-      if (typeof grantSuperGraceRuntime === "function") {
-        grantSuperGraceRuntime({
-          resetInputProcessingState: (atMs) => resetInputProcessingState(atMs),
-          grantFloatGrace: (durMs) => this.grantFloatGrace({ durationMs: durMs }),
-          durationMs,
-          defaultMs: 2500,
-          nowMs: performanceNow(),
-        });
-        return;
-      }
-      this.grantFloatGrace({ durationMs });
     },
   });
 }

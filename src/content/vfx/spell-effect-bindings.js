@@ -9,19 +9,10 @@
  */
 
 /**
- * @typedef {Object} SpellVfxPostActionBinding
- * @property {string} id Follow-up action id (for example `float_grace`).
- * @property {string} [effectId] Optional VFX effect registry id if the post action has a visual component.
- * @property {string} [presetId] Optional preset id for the post action VFX.
- * @property {Object} [payload] Optional action payload override (for example `{ ms: 2500 }`).
- */
-
-/**
  * @typedef {Object} SpellVfxBindingEntry
  * @property {string} wordId Canonical word id.
  * @property {string} [spellId] Legacy compatibility alias for `wordId`.
  * @property {SpellVfxActionBinding} primary
- * @property {SpellVfxPostActionBinding[]} [postCastActions]
  */
 
 /** @type {ReadonlyArray<Readonly<SpellVfxBindingEntry>>} */
@@ -34,12 +25,6 @@ export const WORD_VFX_BINDINGS = Object.freeze([
       effectId: "spell.aoe_flame",
       presetId: "preset.flame_aoe.default",
     }),
-    postCastActions: Object.freeze([
-      Object.freeze({
-        id: "float_grace",
-        payload: Object.freeze({ ms: 2500 }),
-      }),
-    ]),
   }),
   Object.freeze({
     wordId: "vectus",

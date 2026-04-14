@@ -214,9 +214,14 @@ function compileRule(ruleRaw, defaultsSafe, groups) {
   const defaultsOpen = asObj(defaultsSafe[DEFAULTS_OPEN_KEY]);
   const defaultsRule = asObj(defaultsSafe[DEFAULTS_RULE_KEY]);
   const defaultsTriggerByEvent = asObj(defaultsSafe[DEFAULTS_TRIGGER_KEY]);
+  const grace = (rule.grace && typeof rule.grace === "object" && !Array.isArray(rule.grace))
+    ? { ...rule.grace }
+    : null;
   const openAction = compileOpenAction(rule[FIELD_OPEN], defaultsOpen, groups);
   const bindAction = compileBindAction(rule[FIELD_BIND]);
-  const triggerActions = compileTriggerActions(rule[FIELD_TRIGGER], defaultsTriggerByEvent);
+  const triggerActions = compileTriggerActions(rule[FIELD_TRIGGER], defaultsTriggerByEvent).map((action) => (
+    grace ? Object.freeze({ ...action, grace: { ...grace } }) : action
+  ));
   const actions = [];
   if (openAction) actions.push(openAction);
   if (bindAction) actions.push(bindAction);

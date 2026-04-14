@@ -280,9 +280,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         ? shellHooks.playElectricAoe()
         : { handled: false }
     ),
-    grantFloatGrace: (ms) => {
-      if (shellHooks && typeof shellHooks.grantFloatGrace === "function") shellHooks.grantFloatGrace(ms);
-    },
     clearFloatGrace: () => {
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
@@ -344,11 +341,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     kwsVoiceProvider: shellKws.kwsVoiceProvider,
     kwsMvpCommands: {},
     kwsBootOrchestrator: shellKws.kwsBootOrchestrator,
-    grantFloatGrace: (ms) => {
-      if (shellHooks && typeof shellHooks.grantFloatGrace === "function") shellHooks.grantFloatGrace(ms);
-    },
-    grantSuperGrace: (ms) => {
-      if (shellHooks && typeof shellHooks.grantSuperGrace === "function") shellHooks.grantSuperGrace(ms);
+    grantOrbGrace: (grace) => {
+      if (shellHooks && typeof shellHooks.grantOrbGrace === "function") shellHooks.grantOrbGrace(grace);
     },
     orbShatterRuntime: runtime.vfx && runtime.vfx.vfxRuntimesBundle
       ? runtime.vfx.vfxRuntimesBundle.orbShatterRuntime

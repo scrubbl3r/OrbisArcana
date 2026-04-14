@@ -269,11 +269,9 @@ export async function loadReceiverInitModules() {
     { executeShockwave, triggerShockwaveRuntime },
     { executeBubbleShield },
     {
-      executeFloatGrace,
-      clearFloatGraceRuntime,
-      grantFloatGraceRuntime,
-      grantSuperGraceRuntime,
-      isFloatGraceActiveRuntime,
+      clearOrbGraceRuntime,
+      grantOrbGraceRuntime,
+      isOrbGraceActiveRuntime,
     },
     { executeColorize },
     { createSpellCastExecutor },
@@ -394,11 +392,9 @@ export async function loadReceiverInitModules() {
     executeShockwave,
     triggerShockwaveRuntime,
     executeBubbleShield,
-    executeFloatGrace,
-    clearFloatGraceRuntime,
-    grantFloatGraceRuntime,
-    grantSuperGraceRuntime,
-    isFloatGraceActiveRuntime,
+    clearOrbGraceRuntime,
+    grantOrbGraceRuntime,
+    isOrbGraceActiveRuntime,
     executeColorize,
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
@@ -443,8 +439,8 @@ export async function loadReceiverInitModules() {
  * @property {(fn:Function) => void} [setRunOrbRuntimePipelineModule]
  * @property {() => {PHYS:Object, SHIELD_DESCENT:Object, IMPACT_MODEL:Object, IMPACT_TH:number}} [getOrbRuntimeConfig]
  * @property {(next:{PHYS?:Object, SHIELD_DESCENT?:Object, IMPACT_MODEL?:Object, IMPACT_TH?:number}) => void} [setOrbRuntimeConfig]
- * @property {() => {FLOAT_GRACE_DEFAULT_MS:number, DOMUS_FLOAT_GRACE_MS:number, SUPER_GRACE_DEFAULT_MS:number}} [getOrbStatusConfig]
- * @property {(next:{FLOAT_GRACE_DEFAULT_MS?:number, DOMUS_FLOAT_GRACE_MS?:number, SUPER_GRACE_DEFAULT_MS?:number}) => void} [setOrbStatusConfig]
+ * @property {() => {GRACE_DEFAULT_TTL_MS:number}} [getOrbStatusConfig]
+ * @property {(next:{GRACE_DEFAULT_TTL_MS?:number}) => void} [setOrbStatusConfig]
  * @property {Object} [vfxDefaults] Receiver VFX defaults object mutated by preset hydration.
  * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
  * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
@@ -659,19 +655,13 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   if (isObjectLike(ORB_STATUS_CONFIG_DEFAULT) &&
       typeof getOrbStatusConfig === "function" && typeof setOrbStatusConfig === "function") {
     const current = getOrbStatusConfig() || {};
-    const fg = isObjectLike(ORB_STATUS_CONFIG_DEFAULT.floatGrace)
-      ? ORB_STATUS_CONFIG_DEFAULT.floatGrace
+    const fg = isObjectLike(ORB_STATUS_CONFIG_DEFAULT.grace)
+      ? ORB_STATUS_CONFIG_DEFAULT.grace
       : {};
     setOrbStatusConfig({
-      FLOAT_GRACE_DEFAULT_MS: Number.isFinite(Number(fg.defaultMs))
-        ? Number(fg.defaultMs)
-        : current.FLOAT_GRACE_DEFAULT_MS,
-      DOMUS_FLOAT_GRACE_MS: Number.isFinite(Number(fg.domusMs))
-        ? Number(fg.domusMs)
-        : current.DOMUS_FLOAT_GRACE_MS,
-      SUPER_GRACE_DEFAULT_MS: Number.isFinite(Number(fg.superGraceMs))
-        ? Number(fg.superGraceMs)
-        : current.SUPER_GRACE_DEFAULT_MS,
+      GRACE_DEFAULT_TTL_MS: Number.isFinite(Number(fg.defaultTtlMs))
+        ? Number(fg.defaultTtlMs)
+        : current.GRACE_DEFAULT_TTL_MS,
     });
   }
 

@@ -3,13 +3,6 @@
 
 export const EVENT_RUNTIME_BINDINGS = Object.freeze([
   Object.freeze({
-    id: "grace",
-    runtime: Object.freeze({
-      kind: "orb_event",
-      event: "orb.float_grace_grant",
-    }),
-  }),
-  Object.freeze({
     id: "aoe_electric",
     runtime: Object.freeze({
       kind: "cast_action",

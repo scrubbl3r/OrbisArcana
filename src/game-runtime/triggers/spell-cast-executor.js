@@ -1,10 +1,12 @@
+import { resolveOrbGracePayload } from "../orb/orb-grace.js";
+
 /**
  * @typedef {Object} SpellCastExecutorResult
  * @property {boolean} handled Whether an action handler was found/executed.
  * @property {boolean} blocked Whether execution was blocked before handler dispatch.
  * @property {string} [reason] Domain reason for a blocked or skipped cast.
- * @property {boolean} grantGrace Whether float grace was granted by policy.
- * @property {number} floatGraceMs Resolved float grace duration (when granted).
+ * @property {boolean} grantGrace Whether orb grace was granted from authored interaction data.
+ * @property {number} graceTtlMs Resolved grace duration (when granted).
  */
 
 /**
@@ -14,19 +16,18 @@
 
 /**
  * @typedef {Object} CreateSpellCastExecutorOptions
- * @property {Object<string, {handlerKey?:string, floatGracePolicy?:string}>} [castActionRegistryById]
+ * @property {Object<string, {handlerKey?:string}>} [castActionRegistryById]
  * @property {Object<string, Function>} [handlers] Receiver-local handler functions keyed by `handlerKey`.
- * @property {(ms:number) => void} [grantFloatGrace] Receiver hook for float grace application.
+ * @property {(grace:{ttlMs:number}) => void} [grantOrbGrace] Receiver hook for orb grace application.
  * @property {() => {allowed?:boolean, reason?:string}|null} [getCastGateState] Domain gate consulted before handler dispatch.
- * @property {number} [floatGraceDefaultMs] Default grace duration for `default` policy.
- * @property {number} [floatGraceDomusMs] Grace duration for `domus` policy.
+ * @property {number} [defaultGraceTtlMs] Default authored grace duration when `grace: {}` is present.
  */
 
 /**
  * Create a runtime spell cast executor that:
  * - resolves action metadata from `castActionId`
  * - dispatches to a local handler
- * - applies float grace policy
+ * - applies authored interaction grace when present
  *
  * The receiver remains responsible for providing concrete handler implementations.
  *
@@ -36,10 +37,9 @@
 export function createSpellCastExecutor({
   castActionRegistryById,
   handlers,
-  grantFloatGrace,
+  grantOrbGrace,
   getCastGateState,
-  floatGraceDefaultMs = 1000,
-  floatGraceDomusMs = 5000,
+  defaultGraceTtlMs = 2500,
 } = {}) {
   const registry = castActionRegistryById || Object.create(null);
   const handlerMap = handlers || Object.create(null);
@@ -59,34 +59,31 @@ export function createSpellCastExecutor({
         blocked: true,
         reason: castBlockedReason,
         grantGrace: false,
-        floatGraceMs: 0,
+        graceTtlMs: 0,
       };
     }
     const meta = registry[actionId] || null;
     const handlerKey = String((meta && meta.handlerKey) || "");
-    const floatGracePolicy = String((meta && meta.floatGracePolicy) || "default");
     const handler = handlerMap[handlerKey];
     let handled = false;
-    let grantGrace = true;
-    let floatGraceMs = Number(p && p.floatGraceMs);
+    let grantGrace = false;
+    let graceTtlMs = 0;
 
     if (typeof handler === "function") {
       handler(p);
       handled = true;
     }
 
-    if (floatGracePolicy === "none") {
-      grantGrace = false;
-    } else if (floatGracePolicy === "domus") {
-      floatGraceMs = Number(floatGraceDomusMs);
+    const resolvedGrace = handled
+      ? resolveOrbGracePayload(p && p.grace, { defaultTtlMs: defaultGraceTtlMs })
+      : null;
+    if (resolvedGrace && typeof grantOrbGrace === "function") {
+      grantOrbGrace(resolvedGrace);
+      grantGrace = true;
+      graceTtlMs = Number(resolvedGrace.ttlMs) || 0;
     }
 
-    if (grantGrace && typeof grantFloatGrace === "function") {
-      if (!Number.isFinite(floatGraceMs)) floatGraceMs = Number(floatGraceDefaultMs);
-      grantFloatGrace(floatGraceMs);
-    }
-
-    return { handled, blocked: false, reason: "", grantGrace, floatGraceMs };
+    return { handled, blocked: false, reason: "", grantGrace, graceTtlMs };
   }
 
   return { execute };

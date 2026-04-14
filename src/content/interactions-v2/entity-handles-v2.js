@@ -42,7 +42,6 @@ export const EVENT_HANDLES_V2 = Object.freeze({
   AOE_FLAME: "aoe_flame",
   AOE_FROST: "aoe_frost",
   AOE_ELECTRIC: "aoe_electric",
-  GRACE: "grace",
   ORB_STATE: "orb_state",
   CAST_LOADED_UD: "cast_loaded_ud",
   CAST_LOADED_LR: "cast_loaded_lr",

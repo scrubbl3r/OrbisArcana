@@ -36,7 +36,7 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = EVT_SPELL_WINDOW_SPIN_CLOSED;
  * @property {string} [axisWord] Deprecated legacy field from pre-SSOT runtime flow
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
- * @property {number} [floatGraceMs] Optional explicit grace override
+ * @property {{ttlMs?:number}} [grace] Optional authored interaction grace payload
  * @property {string} [trigger] Trigger source (for example `shake_detonation`)
  * @property {string} [phrase] Recognized phrase/display text
  * @property {number} [confidence] Recognition confidence (0..1)
@@ -150,5 +150,3 @@ export const EVT_ORB_SHATTER_COMPLETE = "orb.shatter_complete";
 export const EVT_ORB_HEAL_BLOCKED = "orb.heal_blocked";
 export const EVT_ORB_HEALED = "orb.healed";
 export const EVT_ORB_REVIVED = "orb.revived";
-export const EVT_ORB_FLOAT_GRACE_GRANT = "orb.float_grace_grant";
-export const EVT_ORB_FLOAT_GRACE_CLEAR = "orb.float_grace_clear";

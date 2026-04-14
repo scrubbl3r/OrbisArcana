@@ -26,9 +26,6 @@ export const RUNTIME_WORDS = Object.freeze([
     intent: "spell.rota",
     cooldownMs: 1100,
     castActionId: "aoe_flame",
-    postCastActions: [
-      { id: "float_grace", payload: { ms: 2500 } },
-    ],
   },
   {
     id: "vectus",

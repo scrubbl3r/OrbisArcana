@@ -19,6 +19,4 @@ export const RECEIVER_EVENTS = Object.freeze({
   EVT_ORB_DIED: "orb.died",
   EVT_ORB_REVIVED: "orb.revived",
   EVT_ORB_SHATTER_COMPLETE: "orb.shatter_complete",
-  EVT_ORB_FLOAT_GRACE_GRANT: "orb.float_grace_grant",
-  EVT_ORB_FLOAT_GRACE_CLEAR: "orb.float_grace_clear",
 });

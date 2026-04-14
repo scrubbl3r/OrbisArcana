@@ -16,5 +16,5 @@ export { executeAoeElectric } from "./aoe-electric.js";
 export { executeAoeFlame } from "./aoe-flame.js";
 export { executeAoeFrost } from "./aoe-frost.js";
 export { executeBubbleShield } from "./bubble-shield.js";
-export { executeFloatGrace } from "./float-grace.js";
+export { clearOrbGraceRuntime, grantOrbGraceRuntime, isOrbGraceActiveRuntime } from "./float-grace.js";
 export { executeColorize } from "./colorize.js";

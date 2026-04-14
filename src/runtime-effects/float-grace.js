@@ -1,18 +1,4 @@
-/**
- * Canonical float grace runtime effect implementation.
- */
-export function executeFloatGrace({
-  grantSuperGrace,
-  ms,
-} = {}) {
-  if (typeof grantSuperGrace !== "function") {
-    return { handled: false };
-  }
-  grantSuperGrace(Number.isFinite(Number(ms)) ? Number(ms) : undefined);
-  return { handled: true };
-}
-
-export function clearFloatGraceRuntime({
+export function clearOrbGraceRuntime({
   patchOrbRuntime,
 } = {}) {
   if (typeof patchOrbRuntime !== "function") return;
@@ -22,16 +8,18 @@ export function clearFloatGraceRuntime({
   });
 }
 
-export function grantFloatGraceRuntime({
+export function grantOrbGraceRuntime({
   patchOrbRuntime,
   getOrbRuntime,
+  grace = null,
   durationMs,
-  defaultMs = 1000,
+  defaultTtlMs = 2500,
   nowMs = performance.now(),
   random = Math.random,
 } = {}) {
   if (typeof patchOrbRuntime !== "function" || typeof getOrbRuntime !== "function") return;
-  const dur = Math.max(50, Number(durationMs) || Number(defaultMs) || 1000);
+  const ttlCandidate = Number(grace && grace.ttlMs);
+  const dur = Math.max(50, ttlCandidate || Number(durationMs) || Number(defaultTtlMs) || 2500);
   const orbRuntime = getOrbRuntime();
   patchOrbRuntime({
     floatGraceActive: true,
@@ -41,29 +29,15 @@ export function grantFloatGraceRuntime({
   });
 }
 
-export function grantSuperGraceRuntime({
-  resetInputProcessingState,
-  grantFloatGrace,
-  durationMs,
-  defaultMs = 2500,
-  nowMs = performance.now(),
-} = {}) {
-  if (typeof resetInputProcessingState === "function") {
-    resetInputProcessingState(Number(nowMs));
-  }
-  if (typeof grantFloatGrace !== "function") return;
-  grantFloatGrace(Number.isFinite(Number(durationMs)) ? Number(durationMs) : Number(defaultMs) || 2500);
-}
-
-export function isFloatGraceActiveRuntime({
+export function isOrbGraceActiveRuntime({
   getOrbRuntime,
-  clearFloatGrace,
+  clearOrbGrace,
   nowMs,
 } = {}) {
   if (typeof getOrbRuntime !== "function") return false;
   const orbRt = getOrbRuntime();
   if (!orbRt || !orbRt.floatGraceActive) return false;
   if ((Number(nowMs) || 0) <= Number(orbRt.floatGraceUntilMs || 0)) return true;
-  if (typeof clearFloatGrace === "function") clearFloatGrace();
+  if (typeof clearOrbGrace === "function") clearOrbGrace();
   return false;
 }

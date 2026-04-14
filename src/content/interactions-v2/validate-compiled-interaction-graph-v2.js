@@ -740,6 +740,24 @@ function validateBind(rule, ruleId, errors) {
   return true;
 }
 
+function validateGrace(rule, ruleId, errors) {
+  if (!Object.hasOwn(rule, "grace")) return false;
+  const grace = rule.grace;
+  const ctx = `rule ${ruleId} grace`;
+  if (!isPlainObject(grace)) {
+    errors.push(`${ctx} must be an object`);
+    return true;
+  }
+  pushUnsupportedKeys(errors, ctx, grace, new Set(["ttlMs"]));
+  if (Object.hasOwn(grace, "ttlMs")) {
+    const n = asNonNegativeFiniteOrNull(grace.ttlMs);
+    if (n == null) {
+      errors.push(`${ctx}.ttlMs must be a finite number >= 0 when present`);
+    }
+  }
+  return true;
+}
+
 function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pendingWindowRefs, errors, warnings) {
   if (!isPlainObject(ruleRaw)) {
     errors.push(`${ROOT_CONTEXT}.rules[${ruleIndex}] must be an object`);
@@ -769,7 +787,7 @@ function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pe
     errors,
     ctx,
     rule,
-    new Set(["id", "on", "requires", "open", "consume", "trigger", "bind", "enabled", "cooldownMs", "matchWindowMs", "priority"])
+    new Set(["id", "on", "requires", "open", "consume", "trigger", "grace", "bind", "enabled", "cooldownMs", "matchWindowMs", "priority"])
   );
   pushBooleanEnabledErrorWhenPresent(errors, ctx, rule);
 
@@ -803,6 +821,7 @@ function validateRule(ruleRaw, ruleIndex, groups, seenRuleIds, openWindowIds, pe
     : false;
   validateWindowRefs(rule, ruleId, "requires", errors, pendingWindowRefs);
   validateWindowRefs(rule, ruleId, "consume", errors, pendingWindowRefs);
+  validateGrace(rule, ruleId, errors);
   const hasTrigger = validateTrigger(rule, ruleId, errors);
   const hasBind = validateBind(rule, ruleId, errors);
   if (hasTrigger && hasBind) {

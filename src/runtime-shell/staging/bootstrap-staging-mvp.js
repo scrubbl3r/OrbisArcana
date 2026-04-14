@@ -22,8 +22,7 @@ export function bootstrapStagingMvp({
   kwsVoiceProvider = null,
   kwsMvpCommands = {},
   kwsBootOrchestrator = null,
-  grantFloatGrace = () => {},
-  grantSuperGrace = () => {},
+  grantOrbGrace = () => {},
   orbShatterRuntime = null,
   worldSystem = null,
   clearDeathOverlaySchedule = () => {},
@@ -59,8 +58,7 @@ export function bootstrapStagingMvp({
     voiceProviderManager,
     kwsVoiceProvider,
     ...kwsMvpCommands,
-    grantFloatGrace,
-    grantSuperGrace,
+    grantOrbGrace,
     lastImpact: null,
     applyImpact(impact, source, meta = {}) {
       this.lastImpact = {

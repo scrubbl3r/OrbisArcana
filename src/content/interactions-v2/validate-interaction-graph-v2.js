@@ -9,6 +9,7 @@ const ALLOWED_RULE_KEYS = new Set([
   "on",
   "open",
   "trigger",
+  "grace",
   "bind",
   "requires",
   "consume",
@@ -20,6 +21,7 @@ const ALLOWED_RULE_KEYS = new Set([
 const ALLOWED_ON_KEYS = new Set(["word", "spell", "spin", "shake", "orb_state"]);
 const ALLOWED_OPEN_KEYS = new Set(["id", "words", "word", "spells", "ttlMs", "enabled"]);
 const ALLOWED_BIND_KEYS = new Set(["spell", "slot"]);
+const ALLOWED_GRACE_KEYS = new Set(["ttlMs"]);
 const LEGACY_BIND_EVENT_IDS = new Set(["spell_load_ud", "spell_load_lr", "spell_load_fb"]);
 
 function asArray(v) {
@@ -173,9 +175,13 @@ export function validateInteractionGraphV2(interactionGraph) {
     if (Object.hasOwn(rule, "bind") && !isObject(rule?.bind)) {
       errors.push(`${ruleContext}.bind must be an object when present`);
     }
+    if (Object.hasOwn(rule, "grace") && !isObject(rule?.grace)) {
+      errors.push(`${ruleContext}.grace must be an object when present`);
+    }
     pushUnknownKeys(errors, `${ruleContext}.on`, rule?.on, ALLOWED_ON_KEYS);
     pushUnknownKeys(errors, `${ruleContext}.open`, rule?.open, ALLOWED_OPEN_KEYS);
     pushUnknownKeys(errors, `${ruleContext}.bind`, rule?.bind, ALLOWED_BIND_KEYS);
+    pushUnknownKeys(errors, `${ruleContext}.grace`, rule?.grace, ALLOWED_GRACE_KEYS);
     if (
       Object.hasOwn(rule, "trigger")
       && !isObject(rule?.trigger)
@@ -201,6 +207,12 @@ export function validateInteractionGraphV2(interactionGraph) {
       }
       if (Object.hasOwn(bind, "axisWord")) {
         errors.push(`${ruleContext}.bind.axisWord is not allowed; axis provenance is inferred from bind.spell`);
+      }
+    }
+    if (isObject(rule?.grace) && Object.hasOwn(rule.grace, "ttlMs")) {
+      const ttlMs = Number(rule.grace.ttlMs);
+      if (!Number.isFinite(ttlMs) || ttlMs < 0) {
+        errors.push(`${ruleContext}.grace.ttlMs must be a finite number >= 0 when present`);
       }
     }
     if (Object.hasOwn(rule, "trigger") && hasLegacyBindTriggerAuthoring(rule.trigger)) {

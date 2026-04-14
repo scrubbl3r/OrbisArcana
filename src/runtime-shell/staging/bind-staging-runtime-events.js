@@ -21,7 +21,6 @@ export function bindStagingRuntimeEvents({
   castActionForWordId = () => "",
   executeWordCastAction = () => ({ handled: false }),
   playElectricAoe = () => {},
-  grantFloatGrace = () => {},
   clearFloatGrace = () => {},
   renderOrbDamageVisuals = () => {},
   spawnShardFx = () => {},
@@ -99,13 +98,6 @@ export function bindStagingRuntimeEvents({
       }
     }
   });
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_GRANT, (p = {}) => {
-    grantFloatGrace(p.ms);
-  });
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_FLOAT_GRACE_CLEAR, () => {
-    clearFloatGrace();
-  });
-
   let lastRuleEngineActionKey = "";
   let lastRuleEngineActionAtMs = 0;
   eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, (p = {}) => {

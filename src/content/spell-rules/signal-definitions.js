@@ -147,12 +147,6 @@ export const SIGNAL_DEFINITIONS = Object.freeze([
     where: Object.freeze({ path: "group", eq: "FB" }),
   }),
   Object.freeze({
-    id: "orb_state.charged",
-    type: "orb_state",
-    sourceEvent: "orb.float_grace_grant",
-    where: Object.freeze({ path: "ms", gte: 1 }),
-  }),
-  Object.freeze({
     id: "orb_state.globe_loaded",
     type: "orb_state",
     sourceEvent: "energy.globe_inventory_changed",

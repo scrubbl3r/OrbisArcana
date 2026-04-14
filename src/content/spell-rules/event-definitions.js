@@ -18,11 +18,6 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({ ms: 900 }),
   }),
   Object.freeze({
-    id: "grace",
-    type: "event",
-    defaultArgs: Object.freeze({ ms: 500 }),
-  }),
-  Object.freeze({
     id: "teleport",
     type: "event",
     defaultArgs: Object.freeze({}),
