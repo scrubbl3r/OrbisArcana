@@ -1,0 +1,20 @@
+{
+  "kind": "orbis-arcana.vfx-preset-draft",
+  "version": 1,
+  "profileName": "Lifecycle",
+  "profileValue": "custom:orb-template:orb-lifecycle",
+  "effectId": null,
+  "baseEffect": "orb-lifecycle",
+  "presetId": "preset.orb-lifecycle.lifecycle",
+  "params": {
+    "orbLifecycleShardTotal": 16,
+    "orbLifecycleHitTotal": 3
+  },
+  "source": {
+    "studio": "vfx-studio.html",
+    "selectionLabel": "Lifecycle",
+    "registryDefaultPresetId": ""
+  },
+  "savedAtMs": 1776126377590,
+  "exportedAtMs": 1776126377591
+}
