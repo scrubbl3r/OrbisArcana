@@ -1,5 +1,5 @@
 export const ELECTRIC_AOE_PRESET_DEFAULT = Object.freeze({
-  startR: 80,
+  startR: 62,
   endR: 200,
   durationMs: 10000,
   nodeCount: 13,
