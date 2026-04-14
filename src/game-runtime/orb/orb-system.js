@@ -10,6 +10,7 @@ import {
   EVT_ORB_HEALED,
   EVT_ORB_REVIVED,
 } from "../../contracts/events.js";
+import { createOrbLifeSeed, resolveOrbLifeSeed } from "../../state/orb-life-instance.js";
 import { createOrbLifecycle } from "./orb-lifecycle.js";
 
 export function createOrbSystem({ gameState, eventBus }) {
@@ -23,6 +24,7 @@ export function createOrbSystem({ gameState, eventBus }) {
     dead: !orb.alive || Number(orb.health) <= 0,
     lifeId: Number(orb.lifeId) || 1,
   });
+  orb.fractureSeed = resolveOrbLifeSeed(orb.fractureSeed, createOrbLifeSeed());
 
   function syncLifecycleToOrb() {
     const snapshot = lifecycle.getState();
@@ -142,6 +144,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       hitsTaken: orb.hitsTaken,
       maxHits: lifecycleState.maxHits,
       lifeId: lifecycleState.lifeId,
+      fractureSeed: orb.fractureSeed,
       source,
       impact: command.impact,
       cause: command.cause || 'generic',
@@ -169,12 +172,14 @@ export function createOrbSystem({ gameState, eventBus }) {
         hitsTaken: orb.hitsTaken,
         maxHits: deathState.maxHits,
         lifeId: deathState.lifeId,
+        fractureSeed: orb.fractureSeed,
       });
       eventBus.emit(EVT_ORB_SHATTER_STARTED, {
         atMs,
         pieceCount: command.pieceCount || 12,
-        seed: command.seed || ((Math.random() * 1e9) | 0),
+        seed: resolveOrbLifeSeed(command.seed, orb.fractureSeed),
         lifeId: deathState.lifeId,
+        fractureSeed: orb.fractureSeed,
       });
     }
 
@@ -216,6 +221,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       hitsTaken: lifecycleState.hitsTaken,
       maxHits: lifecycleState.maxHits,
       lifeId: lifecycleState.lifeId,
+      fractureSeed: orb.fractureSeed,
       hitsRemoved: lifecycleResult && lifecycleResult.amountRemoved ? lifecycleResult.amountRemoved : 0,
       source,
       atMs,
@@ -243,9 +249,16 @@ export function createOrbSystem({ gameState, eventBus }) {
     orb.lastDamageAtMs = -Infinity;
     orb.invulnUntilMs = 0;
     const lifecycleState = lifecycle.resetLife();
+    orb.fractureSeed = createOrbLifeSeed();
     syncLifecycleToOrb();
 
-    eventBus.emit(EVT_ORB_REVIVED, { health: orb.health, atMs, lifeId: lifecycleState.lifeId, maxHits: lifecycleState.maxHits });
+    eventBus.emit(EVT_ORB_REVIVED, {
+      health: orb.health,
+      atMs,
+      lifeId: lifecycleState.lifeId,
+      maxHits: lifecycleState.maxHits,
+      fractureSeed: orb.fractureSeed,
+    });
     eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
       from: before,
       to: orb.health,

@@ -1,3 +1,5 @@
+import { createOrbLifeSeed, resolveOrbLifeSeed } from "./orb-life-instance.js";
+
 export function createOrbState(config = {}) {
   const maxHealth = Number.isFinite(config.maxHealth) ? Math.max(1, Math.floor(config.maxHealth)) : 300;
   const health = Number.isFinite(config.health) ? Math.max(0, Math.min(maxHealth, Math.floor(config.health))) : maxHealth;
@@ -17,6 +19,8 @@ export function createOrbState(config = {}) {
 
     // Derived gameplay/status fields.
     hitsTaken: Number.isFinite(config.hitsTaken) ? Math.max(0, Math.floor(config.hitsTaken)) : 0,
+    lifeId: Number.isFinite(config.lifeId) ? Math.max(1, Math.floor(config.lifeId)) : 1,
+    fractureSeed: resolveOrbLifeSeed(config.fractureSeed, createOrbLifeSeed()),
     visualState: config.visualState || (health <= 0 ? 'shattered' : health <= 100 ? 'crack_2' : health <= 200 ? 'crack_1' : 'pristine'),
 
     invulnUntilMs: config.invulnUntilMs ?? 0,

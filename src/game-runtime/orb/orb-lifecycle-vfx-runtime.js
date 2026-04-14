@@ -106,11 +106,6 @@ function pointRadius(p) {
   return Math.hypot(Number(p.x) || 0, Number(p.y) || 0);
 }
 
-function seedFromLifeId(lifeId = 1) {
-  const n = (Math.floor(Number(lifeId)) || 1) >>> 0;
-  return (Math.imul(n ^ 0x9e3779b9, 0x85ebca6b) >>> 0) || 1;
-}
-
 function scalePoint(point, scale = 1) {
   return {
     x: Number(point && point.x || 0) * scale,
@@ -262,6 +257,7 @@ export function createOrbLifecycleVfxRuntime({
     shards: [],
     layout: null,
     lifeId: 1,
+    fractureSeed: 1,
     maxHits: 3,
     hitsTaken: 0,
     maxShards: 16,
@@ -296,7 +292,7 @@ export function createOrbLifecycleVfxRuntime({
     }
     // Crack overlays render into an orb-sized normalized SVG shell, so they
     // should stay in canonical orb coordinates and let the shell scale them.
-    state.layout = makeVoronoiLayout(seedFromLifeId(state.lifeId), activeShardCount, {
+    state.layout = makeVoronoiLayout(state.fractureSeed || 1, activeShardCount, {
       orbRadiusPx: CANONICAL_ORB_RADIUS_PX,
     });
     state.crackSegments = getFullSegmentationSegments(state.layout);
@@ -359,6 +355,9 @@ export function createOrbLifecycleVfxRuntime({
   function applyLifecycleSnapshot(payload = {}) {
     if (payload.lifeId != null) {
       state.lifeId = Math.max(1, Math.floor(Number(payload.lifeId) || state.lifeId || 1));
+    }
+    if (payload.fractureSeed != null) {
+      state.fractureSeed = Math.max(1, (Math.floor(Number(payload.fractureSeed)) >>> 0) || state.fractureSeed || 1);
     }
     if (payload.maxHits != null) {
       state.maxHits = Math.max(1, Math.floor(Number(payload.maxHits) || state.maxHits || 1));
@@ -428,6 +427,7 @@ export function createOrbLifecycleVfxRuntime({
       shards: state.shards.slice(),
       layoutSeed: state.layout ? state.layout.seed : null,
       lifeId: state.lifeId,
+      fractureSeed: state.fractureSeed,
       maxHits: state.maxHits,
       hitsTaken: state.hitsTaken,
     };
