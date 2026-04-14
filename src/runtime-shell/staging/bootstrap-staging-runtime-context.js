@@ -1,3 +1,5 @@
+import { getOrbCastGateState as getSharedOrbCastGateState } from "../../game-runtime/orb/orb-cast-policy.js";
+
 export function bootstrapStagingRuntimeContext({
   createEventBus,
   createGameState,
@@ -46,6 +48,7 @@ export function bootstrapStagingRuntimeContext({
       collisionCooldownMs: 250,
     },
   });
+  const getOrbCastGateState = () => getSharedOrbCastGateState(gameState && gameState.orb ? gameState.orb : null);
 
   const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({
     eventBus,
@@ -97,6 +100,7 @@ export function bootstrapStagingRuntimeContext({
   const spellDispatchSystem = createSpellDispatchSystem({
     eventBus,
     resources: resourcesSystem,
+    getOrbCastGateState,
     ruleEngineEnabled: (!ruleSchema || ruleSchema.enabled !== false) && RULE_ENGINE_EXECUTE_ACTIONS === true,
     allowLegacyFallbacks: false,
   });

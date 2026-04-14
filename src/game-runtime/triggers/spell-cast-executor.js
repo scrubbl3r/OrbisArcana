@@ -1,6 +1,8 @@
 /**
  * @typedef {Object} SpellCastExecutorResult
  * @property {boolean} handled Whether an action handler was found/executed.
+ * @property {boolean} blocked Whether execution was blocked before handler dispatch.
+ * @property {string} [reason] Domain reason for a blocked or skipped cast.
  * @property {boolean} grantGrace Whether float grace was granted by policy.
  * @property {number} floatGraceMs Resolved float grace duration (when granted).
  */
@@ -15,6 +17,7 @@
  * @property {Object<string, {handlerKey?:string, floatGracePolicy?:string}>} [castActionRegistryById]
  * @property {Object<string, Function>} [handlers] Receiver-local handler functions keyed by `handlerKey`.
  * @property {(ms:number) => void} [grantFloatGrace] Receiver hook for float grace application.
+ * @property {() => {allowed?:boolean, reason?:string}|null} [getCastGateState] Domain gate consulted before handler dispatch.
  * @property {number} [floatGraceDefaultMs] Default grace duration for `default` policy.
  * @property {number} [floatGraceDomusMs] Grace duration for `domus` policy.
  */
@@ -34,6 +37,7 @@ export function createSpellCastExecutor({
   castActionRegistryById,
   handlers,
   grantFloatGrace,
+  getCastGateState,
   floatGraceDefaultMs = 1000,
   floatGraceDomusMs = 5000,
 } = {}) {
@@ -43,6 +47,21 @@ export function createSpellCastExecutor({
   function execute(castActionId, context = {}) {
     const actionId = String(castActionId || "").toLowerCase();
     const p = (context && context.payload) || {};
+    const castGateState = (typeof getCastGateState === "function")
+      ? (getCastGateState() || null)
+      : null;
+    const castBlockedReason = castGateState && castGateState.allowed === false
+      ? String(castGateState.reason || "blocked")
+      : "";
+    if (castBlockedReason) {
+      return {
+        handled: false,
+        blocked: true,
+        reason: castBlockedReason,
+        grantGrace: false,
+        floatGraceMs: 0,
+      };
+    }
     const meta = registry[actionId] || null;
     const handlerKey = String((meta && meta.handlerKey) || "");
     const floatGracePolicy = String((meta && meta.floatGracePolicy) || "default");
@@ -67,7 +86,7 @@ export function createSpellCastExecutor({
       grantFloatGrace(floatGraceMs);
     }
 
-    return { handled, grantGrace, floatGraceMs };
+    return { handled, blocked: false, reason: "", grantGrace, floatGraceMs };
   }
 
   return { execute };

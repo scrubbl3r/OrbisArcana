@@ -20,6 +20,7 @@ import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-a
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
+import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
@@ -1838,6 +1839,13 @@ async function initShellKwsRuntime(shellContext) {
     castActionRegistryById: CAST_ACTION_REGISTRY_BY_ID,
     handlers: shellSpellActionHandlers,
     grantFloatGrace: (ms) => shellGrantFloatGrace(shellContext, ms),
+    getCastGateState: () => {
+      const runtimeContext = runtime && runtime.receiverHostRuntime && runtime.receiverHostRuntime.runtimeContext
+        ? runtime.receiverHostRuntime.runtimeContext
+        : null;
+      const orb = runtimeContext && runtimeContext.gameState ? runtimeContext.gameState.orb : null;
+      return getSharedOrbCastGateState(orb);
+    },
     floatGraceDefaultMs: 1000,
     floatGraceDomusMs: 5000,
   });

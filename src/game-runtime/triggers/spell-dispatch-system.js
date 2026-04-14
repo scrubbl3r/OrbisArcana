@@ -1,4 +1,5 @@
 import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js";
+import { getOrbCastGateState as getSharedOrbCastGateState } from "../orb/orb-cast-policy.js";
 import {
   WORD_RUNTIME_ROUTING_BY_WORD_ID,
   WORD_WINDOW_BYPASS_WORD_IDS,
@@ -28,6 +29,7 @@ export function createSpellDispatchSystem({
   eventBus,
   nowMs = () => Date.now(),
   resources = null,
+  getOrbCastGateState = () => getSharedOrbCastGateState(null),
   ruleEngineEnabled = true,
   allowLegacyFallbacks = false,
   baseSpellBySlot = null,
@@ -61,6 +63,31 @@ export function createSpellDispatchSystem({
 
   function legacyFallbacksEnabled() {
     return !ruleEngineEnabled && allowLegacyFallbacks === true;
+  }
+
+  function resolveCastGateState() {
+    const gateState = (typeof getOrbCastGateState === "function")
+      ? (getOrbCastGateState() || null)
+      : null;
+    if (gateState && typeof gateState === "object" && Object.prototype.hasOwnProperty.call(gateState, "allowed")) {
+      return {
+        allowed: gateState.allowed !== false,
+        reason: String(gateState.reason || ""),
+      };
+    }
+    return { allowed: true, reason: "" };
+  }
+
+  function emitCastBlocked(payload = {}, reason = "") {
+    const now = Number(payload.atMs) || nowMs();
+    eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+      reason: String(reason || "blocked"),
+      wordId: String((payload.wordId || payload.spellId || payload.spell) || ""),
+      spellId: String((payload.spellId || payload.wordId || payload.spell) || ""),
+      slot: String(payload.slot || ""),
+      axis: String(payload.axis || ""),
+      atMs: now,
+    });
   }
 
   function getStoredGlobeCount() {
@@ -265,6 +292,11 @@ export function createSpellDispatchSystem({
   }
 
   function loadSlot(slotRaw, payload = {}) {
+    const gateState = resolveCastGateState();
+    if (!gateState.allowed) {
+      emitCastBlocked({ ...payload, slot: slotRaw }, gateState.reason);
+      return null;
+    }
     const entry = buildLoadedEntryFromPayload(payload, slotRaw);
     if (!entry) return null;
     const existing = mostRecentLoadedForGroup(entry.slot);
@@ -305,6 +337,11 @@ export function createSpellDispatchSystem({
   }
 
   function castSlot(slotRaw, payload = {}) {
+    const gateState = resolveCastGateState();
+    if (!gateState.allowed) {
+      emitCastBlocked({ ...payload, slot: slotRaw }, gateState.reason);
+      return null;
+    }
     const slot = normGroup(slotRaw);
     if (!slot) return null;
     const loaded = mostRecentLoadedForGroup(slot);
@@ -351,6 +388,11 @@ export function createSpellDispatchSystem({
     }));
 
     function onVoiceDetected(payload = {}) {
+      const gateState = resolveCastGateState();
+      if (!gateState.allowed) {
+        emitCastBlocked(payload, gateState.reason);
+        return;
+      }
       // When the rule engine is active, authored gameplay chains own voice recognition/load semantics.
       // Dispatch remains the slot/shake owner and should not compete by consuming words directly.
       if (!legacyFallbacksEnabled()) return;
@@ -456,6 +498,11 @@ export function createSpellDispatchSystem({
     }));
 
     unsub.push(eventBus.on(EVT_INPUT_SHAKE_TRIGGERED, (payload = {}) => {
+      const gateState = resolveCastGateState();
+      if (!gateState.allowed) {
+        emitCastBlocked(payload, gateState.reason);
+        return;
+      }
       if (!legacyFallbacksEnabled()) return;
       const group = normGroup(payload.group);
       const now = nowMs();
