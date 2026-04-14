@@ -6,6 +6,9 @@ function clamp01(n){
   return n;
 }
 
+const FLOOR_CONTACT_EPSILON_PX = 0.25;
+const CEIL_CONTACT_EPSILON_PX = 0.25;
+
 /**
  * @typedef {Object} RunOrbRuntimePipelineOptions
  * @property {number} ts Frame timestamp (RAF time)
@@ -112,11 +115,11 @@ export function runOrbRuntimePipeline({
   let impactMag = 0;
   let impactSrc = "";
   const vyPreClamp = state.v;
-  const wasAtCeil = (state.yW <= (yCeil + 0.25));
+  const wasAtCeil = (state.yW <= (yCeil + CEIL_CONTACT_EPSILON_PX));
 
   state.onGround = false;
 
-  if (state.yW > yFloor) {
+  if (state.yW >= (yFloor - FLOOR_CONTACT_EPSILON_PX)) {
     if (!wasOnGround && vyPreClamp > 0) {
       impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
       impactSrc = "ground";
@@ -126,7 +129,7 @@ export function runOrbRuntimePipeline({
     state.onGround = true;
   }
 
-  if (state.yW < yCeil) {
+  if (state.yW <= (yCeil + CEIL_CONTACT_EPSILON_PX)) {
     if (!wasAtCeil && vyPreClamp < 0) {
       impactMag = Math.max(impactMag, Math.abs(vyPreClamp));
       impactSrc = impactSrc || "ceiling";

@@ -382,6 +382,9 @@ function computeShellImpactMetric(shellContext, rawImpactV) {
   return Math.sqrt(eLike * 2) * gravityTerm * dragMirror;
 }
 
+const SHELL_STAGE_FLOOR_CONTACT_EPSILON_PX = 0.25;
+const SHELL_STAGE_CEIL_CONTACT_EPSILON_PX = 0.25;
+
 function activateShellStageVisuals(shellContext) {
   ensureShellStageBackdrop(shellContext);
   resetShellOrbToGround(shellContext);
@@ -445,13 +448,13 @@ function tickShellStageRuntime(shellContext, dt) {
   state.yW += state.v * dt;
   state.onGround = false;
 
-  if (state.yW > yFloor) {
+  if (state.yW >= (yFloor - SHELL_STAGE_FLOOR_CONTACT_EPSILON_PX)) {
     state.yW = yFloor;
     if (state.v > 0) state.v = 0;
     state.onGround = true;
   }
 
-  if (state.yW < yCeil) {
+  if (state.yW <= (yCeil + SHELL_STAGE_CEIL_CONTACT_EPSILON_PX)) {
     state.yW = yCeil;
     if (state.v < 0) state.v = -state.v * bounce;
   }
