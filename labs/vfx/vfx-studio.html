@@ -1218,6 +1218,22 @@
       "orb.nod": "orb-nod",
     });
     const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi"]);
+    const DEFAULT_BIND_TARGET_BY_EFFECT_ID = Object.freeze({
+      "spell.aoe_electric": "spell.aoe_electric",
+      "spell.aoe_flame": "spell.aoe_flame",
+      "spell.shield_bubble": "spell.bubble_shield",
+      "spell.shockwave_ring": "spell.shockwave",
+      "spell.teleport": "spell.teleport",
+      "orb.nod": "orb-state.nod",
+      "orb.shatter_voronoi": "orb-state.shattered",
+      "electric-aoe": "spell.aoe_electric",
+      "flame-aoe": "spell.aoe_flame",
+      "bubble-shield": "spell.bubble_shield",
+      "shockwave": "spell.shockwave",
+      "teleport": "spell.teleport",
+      "orb-nod": "orb-state.nod",
+      "orb-shatter": "orb-state.shattered",
+    });
     const CATEGORY_LABELS = Object.freeze({
       spell: "spell",
       orb: "orb",
@@ -1546,6 +1562,19 @@
 
     function populateBindingTargetOptions(){
       return populateBindingTargetOptionsHelper(els.bindingTargetSelect, RUNTIME_EFFECT_TARGET_REGISTRY);
+    }
+
+    function alignBindingTargetToSelectedEffect(){
+      const opt = selectedEffectOption();
+      if (!opt || !els.bindingTargetSelect) return;
+      const registryId = String(opt.dataset.registryId || "").trim().toLowerCase();
+      const baseEffect = String(opt.dataset.baseEffect || opt.value || "").trim().toLowerCase();
+      const desiredTargetId = DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
+      if (!desiredTargetId) return;
+      const hasTarget = Array.from(els.bindingTargetSelect.options).some((entry) => String(entry.value || "").trim().toLowerCase() === desiredTargetId);
+      if (!hasTarget) return;
+      if (String(els.bindingTargetSelect.value || "").trim().toLowerCase() === desiredTargetId) return;
+      els.bindingTargetSelect.value = desiredTargetId;
     }
 
     function buildEffectLibraryOptionsFromRegistry(){
@@ -2428,7 +2457,7 @@
     shieldPreview.wire();
 
     function updateEffectSections(){
-      return updateEffectSectionsHelper({
+      const result = updateEffectSectionsHelper({
         selectedEffectOption,
         stopAllStudioEffects,
         lastSelectedEffectValueRef,
@@ -2439,6 +2468,9 @@
         refreshEffectMeta,
         previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
       });
+      alignBindingTargetToSelectedEffect();
+      refreshBindingPanel();
+      return result;
     }
     bootStudioShell({
       effectSelect: els.effectSelect,
