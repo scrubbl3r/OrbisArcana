@@ -20,6 +20,7 @@ import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-a
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
+import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
@@ -304,62 +305,11 @@ function shellCameraTopFor(shellContext, yW, stageH) {
   const WORLD_H = Number(stage && stage.phys && stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
   const maxCam = Math.max(0, WORLD_H - stageH);
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const travel = runtime && runtime.cameraTravel;
-  let effectiveYW = Number(yW || 0);
-  if (travel && travel.active) {
-    const now = performance.now();
-    const durationMs = Math.max(1, Number(travel.durationMs) || 1);
-    const rawT = clamp((now - Number(travel.startMs || 0)) / durationMs, 0, 1);
-    const easedT = (typeof travel.ease === "function") ? travel.ease(rawT) : rawT;
-    effectiveYW = Number(travel.fromYW || 0) + ((Number(travel.toYW || 0) - Number(travel.fromYW || 0)) * easedT);
-    if (rawT >= 1) {
-      travel.active = false;
-      effectiveYW = Number(travel.toYW || effectiveYW);
-      if (typeof travel.resolve === "function") {
-        const resolve = travel.resolve;
-        travel.resolve = null;
-        resolve({ handled: true, yW: effectiveYW });
-      }
-    }
-  }
-  const target = Number(yW || 0) - (stageH * 0.5);
+  const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
+  const effectiveYW = cameraRuntime && typeof cameraRuntime.resolveWorldY === "function"
+    ? cameraRuntime.resolveWorldY({ baselineYW: yW, nowMs: performance.now() })
+    : Number(yW || 0);
   return clamp((Number.isFinite(effectiveYW) ? effectiveYW : 0) - (stageH * 0.5), 0, maxCam);
-}
-
-function easeInOutExpo01(t) {
-  const x = clamp(Number(t) || 0, 0, 1);
-  if (x <= 0) return 0;
-  if (x >= 1) return 1;
-  return x < 0.5
-    ? Math.pow(2, (20 * x) - 10) / 2
-    : (2 - Math.pow(2, (-20 * x) + 10)) / 2;
-}
-
-function requestShellCameraTravel(shellContext, {
-  fromYW = 0,
-  toYW = 0,
-  durationMs = 1500,
-  easing = "easeInOutExpo",
-} = {}) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  if (!runtime) return Promise.resolve({ handled: false });
-  const ease = String(easing || "").trim() === "easeInOutExpo" ? easeInOutExpo01 : (t) => clamp(t, 0, 1);
-  if (runtime.cameraTravel && runtime.cameraTravel.active && typeof runtime.cameraTravel.resolve === "function") {
-    const resolve = runtime.cameraTravel.resolve;
-    runtime.cameraTravel.resolve = null;
-    resolve({ handled: false, canceled: true });
-  }
-  return new Promise((resolve) => {
-    runtime.cameraTravel = {
-      active: true,
-      fromYW: Number(fromYW) || 0,
-      toYW: Number(toYW) || 0,
-      durationMs: Math.max(0, Number(durationMs) || 0),
-      startMs: performance.now(),
-      ease,
-      resolve,
-    };
-  });
 }
 
 function shellOrbScreenY(shellContext) {
@@ -1022,6 +972,13 @@ function clearShellOrbRuntimeFxForDeath(shellContext) {
   if (shellVfx && shellVfx.teleportRuntime && typeof shellVfx.teleportRuntime.clear === "function") {
     shellVfx.teleportRuntime.clear();
   }
+  if (
+    runtime &&
+    runtime.cameraRuntime &&
+    typeof runtime.cameraRuntime.clearTravel === "function"
+  ) {
+    runtime.cameraRuntime.clearTravel({ handled: false, canceled: true, reason: "death" });
+  }
   shellClearColorize(shellContext);
 }
 
@@ -1127,7 +1084,18 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
       const visualState = getShellOrbBaseVisualState(shellContext);
       return Math.max(1, Number(visualState && visualState.diameterPx) || 100);
     },
-    requestCameraTravel: (payload = {}) => requestShellCameraTravel(shellContext, payload),
+    requestCameraTravel: (payload = {}) => {
+      const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
+      return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
+        ? cameraRuntime.requestTravel(payload)
+        : Promise.resolve({ handled: false });
+    },
+    cancelCameraTravel: () => {
+      const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
+      if (cameraRuntime && typeof cameraRuntime.clearTravel === "function") {
+        cameraRuntime.clearTravel({ handled: false, canceled: true, reason: "teleport-clear" });
+      }
+    },
   });
 }
 
@@ -1591,6 +1559,9 @@ function createStagingShellContext({
       receiverModulesReady: false,
       signalProcessor: null,
       motionStore: null,
+      cameraRuntime: createCameraRuntime({
+        now: () => performance.now(),
+      }),
       mvp: null,
       eventBus: null,
       worldSystem: null,

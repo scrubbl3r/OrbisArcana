@@ -18,6 +18,7 @@ export function createTeleportRuntime({
   patchOrbRuntime = () => null,
   getConfig = () => ({}),
   requestCameraTravel = null,
+  cancelCameraTravel = null,
 } = {}) {
   if (!orbEl) return null;
 
@@ -28,8 +29,8 @@ export function createTeleportRuntime({
   let completed = false;
   let fadeInStartMs = 0;
   let cameraTravelDone = false;
-  let cameraTravelRequested = false;
   let teleportSourceYW = 0;
+  let playToken = 0;
 
   function normalizeConfig(raw = {}) {
     return {
@@ -92,6 +93,7 @@ export function createTeleportRuntime({
   }
 
   function clear() {
+    playToken += 1;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
     startMs = 0;
@@ -99,8 +101,12 @@ export function createTeleportRuntime({
     completed = false;
     fadeInStartMs = 0;
     cameraTravelDone = false;
-    cameraTravelRequested = false;
     teleportSourceYW = 0;
+    if (typeof cancelCameraTravel === "function") {
+      try {
+        cancelCameraTravel();
+      } catch (_) {}
+    }
     releaseTeleportHold();
     reset();
   }
@@ -137,7 +143,7 @@ export function createTeleportRuntime({
         typeof requestCameraTravel === "function" &&
         Math.abs(destinationYW - teleportSourceYW) > 1
       ) {
-        cameraTravelRequested = true;
+        const activeToken = playToken;
         try {
           const maybePromise = requestCameraTravel({
             fromYW: teleportSourceYW,
@@ -147,6 +153,7 @@ export function createTeleportRuntime({
           });
           if (maybePromise && typeof maybePromise.then === "function") {
             maybePromise.finally(() => {
+              if (activeToken !== playToken) return;
               cameraTravelDone = true;
               fadeInStartMs = performance.now();
             });
@@ -193,6 +200,7 @@ export function createTeleportRuntime({
 
   function play(payload = {}) {
     clear();
+    playToken += 1;
     lastConfig = normalizeConfig({
       ...(typeof getConfig === "function" ? (getConfig() || {}) : {}),
       ...(payload && typeof payload === "object" ? payload : {}),

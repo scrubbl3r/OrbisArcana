@@ -81,6 +81,7 @@ export function initGameStagingReceiverVfxRuntime({
   getOrbScaleFactor = () => 1,
   getOrbDiameterPx = () => Math.max(1, Number(getOrbScaleFactor()) || 1) * 100,
   requestCameraTravel = null,
+  cancelCameraTravel = null,
 } = {}) {
   if (!runtime || typeof createVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
   const readOrbDiameterPx = () => Math.max(
@@ -173,6 +174,9 @@ export function initGameStagingReceiverVfxRuntime({
           ? requestCameraTravel(payload)
           : Promise.resolve({ handled: false })
       ),
+      cancelCameraTravel: () => {
+        if (typeof cancelCameraTravel === "function") cancelCameraTravel();
+      },
       getConfig: () => (vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object")
         ? vfxDefaults.teleport
         : Object.create(null),
