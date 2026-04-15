@@ -2074,7 +2074,12 @@
     // =========================================================================
     // GEOMETRY (forced even)
     // =========================================================================
-    const GEOM = { orbD:100, orbStroke:2, shieldD:186, shieldStroke:4 };
+    const GEOM = {
+      orbD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
+      orbStroke: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
+      shieldD: 186,
+      shieldStroke: 4,
+    };
     const PREVIEW_ROOTS_BY_EFFECT = {
       "bubble-shield": els.shieldPreviewRoot,
       "shockwave": els.shockPreviewRoot,
@@ -2139,10 +2144,10 @@
       GEOM.shieldD = evenPx(GEOM.shieldD, 2, 2000);
       GEOM.shieldStroke = evenPx(GEOM.shieldStroke, 2, 40);
 
-      [els.shieldPreviewRoot, els.shockPreviewRoot, els.flamePreviewRoot, els.electricPreviewRoot].forEach((root) => {
-        setRootVar(root, "--orb-d", GEOM.orbD + "px");
-        setRootVar(root, "--orb-stroke", GEOM.orbStroke + "px");
-      });
+      applyOrbLaneSsot(els.shieldPreviewRoot);
+      applyOrbLaneSsot(els.shockPreviewRoot);
+      applyOrbLaneSsot(els.flamePreviewRoot);
+      applyOrbLaneSsot(els.electricPreviewRoot);
       setRootVar(els.shieldPreviewRoot, "--shield-d", GEOM.shieldD + "px");
       setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
       applyOrbLaneSsot(els.orbBasePreviewRoot);
