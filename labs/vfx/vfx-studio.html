@@ -979,8 +979,8 @@
             <button id="orbTemplateApplyDurationBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateFillOpacityBoost">Fill opacity lift (%)</label>
-            <input id="orbTemplateFillOpacityBoost" class="paramFieldInput" type="number" min="0" max="100" step="1" value="24" />
+            <label for="orbTemplateFillAlpha">Fill opacity</label>
+            <input id="orbTemplateFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.20" />
             <button id="orbTemplateApplyFillOpacityBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
@@ -1313,7 +1313,7 @@
       orbTemplateApplyShrinkBtn: $("orbTemplateApplyShrinkBtn"),
       orbTemplateDurationMs: $("orbTemplateDurationMs"),
       orbTemplateApplyDurationBtn: $("orbTemplateApplyDurationBtn"),
-      orbTemplateFillOpacityBoost: $("orbTemplateFillOpacityBoost"),
+      orbTemplateFillAlpha: $("orbTemplateFillAlpha"),
       orbTemplateApplyFillOpacityBtn: $("orbTemplateApplyFillOpacityBtn"),
       orbTemplateWaveCount: $("orbTemplateWaveCount"),
       orbTemplateApplyWaveCountBtn: $("orbTemplateApplyWaveCountBtn"),
@@ -1363,6 +1363,7 @@
     if (els.orbBaseFillR) els.orbBaseFillR.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.r));
     if (els.orbBaseFillG) els.orbBaseFillG.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.g));
     if (els.orbBaseFillB) els.orbBaseFillB.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b));
+    if (els.orbTemplateFillAlpha) els.orbTemplateFillAlpha.value = String(Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha).toFixed(2));
 
     const shieldPreviewEls = Object.freeze({
       ...els,
@@ -1562,7 +1563,7 @@
           return {
             orbTemplateShrinkPct: 8,
             orbTemplateDurationMs: 500,
-            orbTemplateFillOpacityBoost: 24,
+            orbTemplateFillAlpha: Number(buildCurrentLabOrbBaseVisualState().fillAlpha.toFixed(2)),
             orbTemplateWaveCount: 10,
             orbTemplateWaveDepthPx: 4,
             orbTemplateOscillationSpeedHz: 12,
@@ -1829,7 +1830,7 @@
           return {
             orbTemplateShrinkPct: Number(els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value),
             orbTemplateDurationMs: Number(els.orbTemplateDurationMs && els.orbTemplateDurationMs.value),
-            orbTemplateFillOpacityBoost: Number(els.orbTemplateFillOpacityBoost && els.orbTemplateFillOpacityBoost.value),
+            orbTemplateFillAlpha: Number(els.orbTemplateFillAlpha && els.orbTemplateFillAlpha.value),
             orbTemplateWaveCount: Number(els.orbTemplateWaveCount && els.orbTemplateWaveCount.value),
             orbTemplateWaveDepthPx: Number(els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value),
             orbTemplateOscillationSpeedHz: Number(els.orbTemplateOscillationSpeedHz && els.orbTemplateOscillationSpeedHz.value),
@@ -1909,10 +1910,16 @@
           case "orb-template":
             if (els.orbTemplateShrinkPct && settings.orbTemplateShrinkPct != null) els.orbTemplateShrinkPct.value = String(settings.orbTemplateShrinkPct);
             if (els.orbTemplateDurationMs && settings.orbTemplateDurationMs != null) els.orbTemplateDurationMs.value = String(settings.orbTemplateDurationMs);
-            if (els.orbTemplateFillOpacityBoost && settings.orbTemplateFillOpacityBoost != null) {
-              els.orbTemplateFillOpacityBoost.value = String(settings.orbTemplateFillOpacityBoost);
-            } else if (els.orbTemplateFillOpacityBoost && settings.orbTemplateBrightnessBoost != null) {
-              els.orbTemplateFillOpacityBoost.value = String(settings.orbTemplateBrightnessBoost);
+            if (els.orbTemplateFillAlpha && settings.orbTemplateFillAlpha != null) {
+              els.orbTemplateFillAlpha.value = String(settings.orbTemplateFillAlpha);
+            } else if (els.orbTemplateFillAlpha && settings.orbTemplateFillOpacityBoost != null) {
+              const baseFillAlpha = Number(buildCurrentLabOrbBaseVisualState().fillAlpha) || 0.20;
+              const boost01 = Math.max(0, Math.min(1, Number(settings.orbTemplateFillOpacityBoost) / 100));
+              els.orbTemplateFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
+            } else if (els.orbTemplateFillAlpha && settings.orbTemplateBrightnessBoost != null) {
+              const baseFillAlpha = Number(buildCurrentLabOrbBaseVisualState().fillAlpha) || 0.20;
+              const boost01 = Math.max(0, Math.min(1, Number(settings.orbTemplateBrightnessBoost) / 100));
+              els.orbTemplateFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
             }
             if (els.orbTemplateWaveCount && settings.orbTemplateWaveCount != null) els.orbTemplateWaveCount.value = String(settings.orbTemplateWaveCount);
             if (els.orbTemplateWaveDepthPx && settings.orbTemplateWaveDepthPx != null) els.orbTemplateWaveDepthPx.value = String(settings.orbTemplateWaveDepthPx);

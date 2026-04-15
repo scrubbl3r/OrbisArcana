@@ -97,25 +97,27 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
   function readCssVars() {
     const root = els && els.previewRoot;
     const styles = root ? getComputedStyle(root) : null;
+    const fillColor = styles ? styles.getPropertyValue("--orb-fill").trim() || "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.20)";
     return {
       strokeColor: styles ? styles.getPropertyValue("--orb-stroke-color").trim() || "rgba(255,255,255,1)" : "rgba(255,255,255,1)",
-      fillColor: styles ? styles.getPropertyValue("--orb-fill").trim() || "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.20)",
+      fillColor,
+      fillAlpha: parseRgba(fillColor).a,
       strokeWidth: styles ? Number(styles.getPropertyValue("--orb-stroke").replace("px", "")) || 2 : 2,
     };
   }
 
   function readConfig() {
     const orbDiameterPx = readOrbDiameterPx();
+    const css = readCssVars();
     return {
       shrinkPct: clampNumber(els && els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value, 0, 40, 8) / 100,
       durationMs: Math.round(clampNumber(els && els.orbTemplateDurationMs && els.orbTemplateDurationMs.value, 80, 3000, 500)),
-      fillOpacityBoost: clampNumber(
-        (els && els.orbTemplateFillOpacityBoost && els.orbTemplateFillOpacityBoost.value)
-          ?? (els && els.orbTemplateBrightnessBoost && els.orbTemplateBrightnessBoost.value),
+      fillAlpha: clampNumber(
+        els && els.orbTemplateFillAlpha && els.orbTemplateFillAlpha.value,
         0,
-        100,
-        24
-      ) / 100,
+        1,
+        css.fillAlpha
+      ),
       waveCount: Math.round(clampNumber(els && els.orbTemplateWaveCount && els.orbTemplateWaveCount.value, 2, 32, 10)),
       waveDepthPx: resolveOrbLinkedPx(
         clampNumber(els && els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value, 0, 32, 4),
@@ -130,7 +132,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     if (!els) return;
     if (els.orbTemplateShrinkPct) els.orbTemplateShrinkPct.value = String(Math.round(cfg.shrinkPct * 100));
     if (els.orbTemplateDurationMs) els.orbTemplateDurationMs.value = String(cfg.durationMs);
-    if (els.orbTemplateFillOpacityBoost) els.orbTemplateFillOpacityBoost.value = String(Math.round(cfg.fillOpacityBoost * 100));
+    if (els.orbTemplateFillAlpha) els.orbTemplateFillAlpha.value = String(Number(cfg.fillAlpha).toFixed(2));
     if (els.orbTemplateWaveCount) els.orbTemplateWaveCount.value = String(cfg.waveCount);
     if (els.orbTemplateWaveDepthPx) {
       const authored = clampNumber(els.orbTemplateWaveDepthPx.value, 0, 32, 4);
@@ -161,7 +163,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     const standingOscillation = Math.sin(oscillationTime * Math.PI * 2 * cfg.oscillationSpeedHz);
     const signedWaveDepth = cfg.waveDepthPx * envelope * standingOscillation;
     const scale = 1 - (cfg.shrinkPct * envelope);
-    const liftedFillAlpha = Math.min(1, fill.a + ((1 - fill.a) * cfg.fillOpacityBoost * envelope));
+    const animatedFillAlpha = fill.a + ((cfg.fillAlpha - fill.a) * envelope);
 
     els.orb.hidden = true;
     activeSvg.style.display = "";
@@ -170,7 +172,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
       waveCount: cfg.waveCount,
       waveDepth: signedWaveDepth,
     }));
-    activePath.setAttribute("fill", `rgba(${Math.round(fill.r)}, ${Math.round(fill.g)}, ${Math.round(fill.b)}, ${liftedFillAlpha.toFixed(3)})`);
+    activePath.setAttribute("fill", `rgba(${Math.round(fill.r)}, ${Math.round(fill.g)}, ${Math.round(fill.b)}, ${animatedFillAlpha.toFixed(3)})`);
     activePath.setAttribute("stroke", css.strokeColor);
     activePath.setAttribute("stroke-width", String(css.strokeWidth));
     activeSvg.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(4)})`;
