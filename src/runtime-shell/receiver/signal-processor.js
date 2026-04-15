@@ -121,17 +121,17 @@
 
   const SPIN_AXIS_WINDOW_MS = 1500;
   const SPIN_DIRECTION_WINDOW_MS = 550;
-  const SPIN_DIRECTION_ACQUIRE_BIAS = 0.16;
-  const SPIN_DIRECTION_HOLD_BIAS = 0.08;
-  const SPIN_DIRECTION_REVERSE_BIAS = 0.22;
-  const SPIN_DIRECTION_ACQUIRE_TURN_RAD = 0.7;
-  const SPIN_DIRECTION_HOLD_TURN_RAD = 0.35;
+  const SPIN_DIRECTION_ACQUIRE_BIAS = 0.1;
+  const SPIN_DIRECTION_HOLD_BIAS = 0.05;
+  const SPIN_DIRECTION_REVERSE_BIAS = 0.16;
+  const SPIN_DIRECTION_ACQUIRE_TURN_RAD = 0.32;
+  const SPIN_DIRECTION_HOLD_TURN_RAD = 0.14;
 
   function projectSpinSampleToAxisPlane(axisLabel, sample){
     const axis = String(axisLabel || "").trim().toLowerCase();
     if (!sample || typeof sample !== "object") return null;
     if (axis === "x") return { a: Number(sample.y) || 0, b: Number(sample.z) || 0 };
-    if (axis === "y") return { a: Number(sample.z) || 0, b: Number(sample.x) || 0 };
+    if (axis === "y") return { a: Number(sample.x) || 0, b: Number(sample.z) || 0 };
     if (axis === "z") return { a: Number(sample.x) || 0, b: Number(sample.y) || 0 };
     return null;
   }
