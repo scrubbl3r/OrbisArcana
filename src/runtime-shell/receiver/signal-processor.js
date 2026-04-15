@@ -121,9 +121,20 @@
 
   const SPIN_AXIS_WINDOW_MS = 1500;
   const SPIN_DIRECTION_WINDOW_MS = 550;
-  const SPIN_DIRECTION_ACQUIRE_BIAS = 0.18;
+  const SPIN_DIRECTION_ACQUIRE_BIAS = 0.16;
   const SPIN_DIRECTION_HOLD_BIAS = 0.08;
-  const SPIN_DIRECTION_REVERSE_BIAS = 0.24;
+  const SPIN_DIRECTION_REVERSE_BIAS = 0.22;
+  const SPIN_DIRECTION_ACQUIRE_TURN_RAD = 0.7;
+  const SPIN_DIRECTION_HOLD_TURN_RAD = 0.35;
+
+  function projectSpinSampleToAxisPlane(axisLabel, sample){
+    const axis = String(axisLabel || "").trim().toLowerCase();
+    if (!sample || typeof sample !== "object") return null;
+    if (axis === "x") return { a: Number(sample.y) || 0, b: Number(sample.z) || 0 };
+    if (axis === "y") return { a: Number(sample.z) || 0, b: Number(sample.x) || 0 };
+    if (axis === "z") return { a: Number(sample.x) || 0, b: Number(sample.y) || 0 };
+    return null;
+  }
 
   function resolveSpinDirectionForAxis(axisLabel, history, runtime){
     const axis = String(axisLabel || "").trim().toLowerCase();
@@ -131,44 +142,56 @@
       if (runtime) {
         runtime.directionAxis = null;
         runtime.direction = null;
+        runtime.directionBias = 0;
+        runtime.directionTurn = 0;
       }
       return null;
     }
 
-    let signed = 0;
-    let absolute = 0;
+    let signedTurn = 0;
+    let absoluteTurn = 0;
+    let previous = null;
     for (const sample of history) {
-      let component = 0;
-      if (axis === "x") component = Number(sample.z) || 0;
-      else if (axis === "y") component = Number(sample.y) || 0;
-      else if (axis === "z") component = Number(sample.x) || 0;
-      signed += component;
-      absolute += Math.abs(component);
+      const projected = projectSpinSampleToAxisPlane(axis, sample);
+      if (!projected) continue;
+      const mag = Math.hypot(projected.a, projected.b);
+      if (!(mag > 1e-4)) continue;
+      const current = { a: projected.a / mag, b: projected.b / mag };
+      if (previous) {
+        const cross = previous.a * current.b - previous.b * current.a;
+        const dot = clamp(previous.a * current.a + previous.b * current.b, -1, 1);
+        const theta = Math.atan2(cross, dot);
+        signedTurn += theta;
+        absoluteTurn += Math.abs(theta);
+      }
+      previous = current;
     }
 
-    if (!(absolute > 1e-6)) {
+    if (!(absoluteTurn > 1e-6)) {
       if (runtime) {
         runtime.directionAxis = null;
         runtime.direction = null;
+        runtime.directionBias = 0;
+        runtime.directionTurn = 0;
       }
       return null;
     }
 
-    const bias = signed / absolute;
+    const bias = signedTurn / absoluteTurn;
     const priorAxis = runtime ? String(runtime.directionAxis || "") : "";
     const priorDirection = runtime ? String(runtime.direction || "") : "";
     const sameAxis = priorAxis === axis;
 
     let nextDirection = null;
     if (sameAxis && priorDirection === "cw") {
-      if (bias <= -SPIN_DIRECTION_REVERSE_BIAS) nextDirection = "ccw";
-      else if (bias >= -SPIN_DIRECTION_HOLD_BIAS) nextDirection = "cw";
+      if (bias <= -SPIN_DIRECTION_REVERSE_BIAS && absoluteTurn >= SPIN_DIRECTION_ACQUIRE_TURN_RAD) nextDirection = "ccw";
+      else if (bias >= -SPIN_DIRECTION_HOLD_BIAS && absoluteTurn >= SPIN_DIRECTION_HOLD_TURN_RAD) nextDirection = "cw";
     } else if (sameAxis && priorDirection === "ccw") {
-      if (bias >= SPIN_DIRECTION_REVERSE_BIAS) nextDirection = "cw";
-      else if (bias <= SPIN_DIRECTION_HOLD_BIAS) nextDirection = "ccw";
-    } else if (bias >= SPIN_DIRECTION_ACQUIRE_BIAS) {
+      if (bias >= SPIN_DIRECTION_REVERSE_BIAS && absoluteTurn >= SPIN_DIRECTION_ACQUIRE_TURN_RAD) nextDirection = "cw";
+      else if (bias <= SPIN_DIRECTION_HOLD_BIAS && absoluteTurn >= SPIN_DIRECTION_HOLD_TURN_RAD) nextDirection = "ccw";
+    } else if (bias >= SPIN_DIRECTION_ACQUIRE_BIAS && absoluteTurn >= SPIN_DIRECTION_ACQUIRE_TURN_RAD) {
       nextDirection = "cw";
-    } else if (bias <= -SPIN_DIRECTION_ACQUIRE_BIAS) {
+    } else if (bias <= -SPIN_DIRECTION_ACQUIRE_BIAS && absoluteTurn >= SPIN_DIRECTION_ACQUIRE_TURN_RAD) {
       nextDirection = "ccw";
     }
 
@@ -176,6 +199,7 @@
       runtime.directionAxis = nextDirection ? axis : null;
       runtime.direction = nextDirection;
       runtime.directionBias = bias;
+      runtime.directionTurn = absoluteTurn;
     }
     return nextDirection;
   }
@@ -186,6 +210,7 @@
           spinRuntime.directionAxis = null;
           spinRuntime.direction = null;
           spinRuntime.directionBias = 0;
+          spinRuntime.directionTurn = 0;
         }
         return {
           vector: null,
@@ -210,6 +235,7 @@
       runtime.directionAxis = null;
       runtime.direction = null;
       runtime.directionBias = 0;
+      runtime.directionTurn = 0;
       return {
         vector: null,
         dominance: 0,
@@ -237,6 +263,7 @@
       runtime.directionAxis = null;
       runtime.direction = null;
       runtime.directionBias = 0;
+      runtime.directionTurn = 0;
       return {
         vector: null,
         axis: null,
@@ -291,6 +318,7 @@
       directionAxis: null,
       direction: null,
       directionBias: 0,
+      directionTurn: 0,
     };
 
     function reset(){
@@ -301,6 +329,7 @@
       spinRuntime.directionAxis = null;
       spinRuntime.direction = null;
       spinRuntime.directionBias = 0;
+      spinRuntime.directionTurn = 0;
     }
 
     function processPacket(packet, nowMs, options){
