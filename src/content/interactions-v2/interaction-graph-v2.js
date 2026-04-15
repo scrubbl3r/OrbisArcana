@@ -9,13 +9,12 @@ export const INTERACTION_GRAPH_V2 = {
     roots: [
       { id: "root.orbis", words: ["orbis"], ttlMs: 1500 },
       { id: "root.are_kay_nah", words: ["are_kay_nah"], ttlMs: 1500 },
-      { id: "root.azerith", words: ["azerith"], ttlMs: 1500 },
     ],
   },
   groups: {
     wake_main_words: ["echovar", "electrum", "pyro"],
     electrum_chain_words: ["rota"],
-    wake_are_kay_nah_words: ["pyro", "vectus"],
+    wake_are_kay_nah_words: ["pyro", "azerith"],
     pyro_voice_chain_words: ["sanctum", "rota"],
   },
   rules: [
@@ -47,11 +46,11 @@ export const INTERACTION_GRAPH_V2 = {
       trigger: { spell: "aoe_electric" },
       grace: {},
     },
-    // ARE KAY NAH > VECTUS
+    // ARE KAY NAH > AZERITH
     {
       id: "wake_are_kay_nah",
       on: { word: "are_kay_nah" },
-      open: { id: "wake.are_kay_nah", words: ["pyro", "vectus"], ttlMs: 1500 },
+      open: { id: "wake.are_kay_nah", words: ["pyro", "azerith"], ttlMs: 1500 },
     },
     {
       id: "pyro_voice_chain",
@@ -80,14 +79,14 @@ export const INTERACTION_GRAPH_V2 = {
       open: { id: "chain.spin_y_seed", words: ["pyro"], ttlMs: 1500 },
     },
     {
-      id: "spin_y_pyro_opens_vectus",
+      id: "spin_y_pyro_opens_azerith",
       on: { word: "pyro" },
       requires: "chain.spin_y_seed",
-      open: { id: "chain.spin_y_loaded", words: ["vectus"], ttlMs: 1500 },
+      open: { id: "chain.spin_y_loaded", words: ["azerith"], ttlMs: 1500 },
     },
     {
-      id: "spin_y_pyro_vectus_bind_fb",
-      on: { word: "vectus" },
+      id: "spin_y_pyro_azerith_bind_fb",
+      on: { word: "azerith" },
       requires: "chain.spin_y_loaded",
       bind: { spell: "bubble_shield", slot: "FB" },
     },

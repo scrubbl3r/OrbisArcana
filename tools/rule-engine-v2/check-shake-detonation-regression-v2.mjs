@@ -152,7 +152,7 @@ function runAuthoredFbBindScenario() {
     advance(100);
     emitDetectedWord(eventBus, "pyro", nowRef.value);
     advance(100);
-    emitDetectedWord(eventBus, "vectus", nowRef.value);
+    emitDetectedWord(eventBus, "azerith", nowRef.value);
 
     assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected authored pyro chain to load FB once, got ${loaded.length}`);
     assertCheck(String(loaded[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored pyro chain to load slot FB`);

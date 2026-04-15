@@ -27,12 +27,12 @@ export const WORD_VFX_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
-    wordId: "vectus",
-    spellId: "vectus",
+    wordId: "azerith",
+    spellId: "azerith",
     primary: Object.freeze({
-      castActionId: "aoe_electric",
-      effectId: "spell.aoe_electric",
-      presetId: "preset.electric_aoe.default",
+      castActionId: "bubble_shield",
+      effectId: "spell.shield_bubble",
+      presetId: "preset.bubble_shield.default",
     }),
   }),
   Object.freeze({

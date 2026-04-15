@@ -17,7 +17,6 @@ const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "pyro",
   "rota",
   "sanctum",
-  "vectus",
 ]);
 
 const CANONICAL_STANDALONE_WORD_IDS = Object.freeze(["arcana", "are_kay_nah"]);

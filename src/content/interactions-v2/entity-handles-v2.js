@@ -12,7 +12,7 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
   FRIDGIS: "spell.fridgis",
   ELECTRUM: "spell.electrum",
   SANCTUM: "spell.sanctum",
-  VECTUS: "spell.vectus",
+  AZERITH: "spell.azerith",
   ROTA: "spell.rota",
 
   // Spin signals

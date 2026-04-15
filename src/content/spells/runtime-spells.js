@@ -28,11 +28,11 @@ export const RUNTIME_WORDS = Object.freeze([
     castActionId: "aoe_flame",
   },
   {
-    id: "vectus",
+    id: "azerith",
     slot: "LR",
-    intent: "spell.vectus",
+    intent: "spell.azerith",
     cooldownMs: 900,
-    castActionId: "aoe_electric",
+    castActionId: "bubble_shield",
   },
 ]);
 

@@ -44,7 +44,6 @@ Canonical token set
 - `electrum`
 - `rota`
 - `sanctum`
-- `vectus`
 
 Notes
 

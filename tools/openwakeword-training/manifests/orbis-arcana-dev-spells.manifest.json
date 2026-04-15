@@ -41,11 +41,6 @@
       "token": "sanctum"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/vectus.onnx",
-      "label": "vectus",
-      "token": "vectus"
-    },
-    {
       "path": "../../../assets/kws/openwakeword-models/rota.onnx",
       "label": "rota",
       "token": "rota"

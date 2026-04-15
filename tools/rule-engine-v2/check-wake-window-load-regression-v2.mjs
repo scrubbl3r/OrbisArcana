@@ -65,7 +65,7 @@ function main() {
     preview.start();
     emitPyroBindPrelude({ eventBus, startAtMs: nowRef.value });
     advance(10);
-    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.vectus, nowRef.value);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.azerith, nowRef.value);
     advance(10);
     eventBus.emit(EVT_SPELL_SLOT_CAST_REQUESTED, {
       slot: CHECK_SLOTS_V2.fb,

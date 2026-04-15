@@ -37,19 +37,19 @@ function main() {
   try {
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: nowRef.value });
 
-    // Missing authored intermediate word (`pyro`) means `vectus` must not bind.
+    // Missing authored intermediate word (`pyro`) means `azerith` must not bind.
     advance(10);
-    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.vectus, nowRef.value);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.azerith, nowRef.value);
     const bindCountBefore = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind").length;
     assertCheck(bindCountBefore === 0, `[${CHECK_TAG}] unexpected bind without pyro intermediate window`);
 
-    // With authored intermediate window opened, `vectus` should bind.
+    // With authored intermediate window opened, `azerith` should bind.
     advance(10);
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, nowRef.value);
     advance(10);
-    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.vectus, nowRef.value);
+    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.azerith, nowRef.value);
     const bindActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind");
-    assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind after pyro -> vectus, got ${bindActions.length}`);
+    assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind after pyro -> azerith, got ${bindActions.length}`);
   } finally {
     system.stop();
   }
