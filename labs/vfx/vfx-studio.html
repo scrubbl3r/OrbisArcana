@@ -1544,6 +1544,24 @@
       return slug || fallback;
     }
 
+    function derivePublishedEffectIdentity({ opt, record, profileName, baseEffect }) {
+      const authoringBaseEffect = String(baseEffect || "unknown");
+      const isCustomProfile = !!(opt && (String(opt.dataset.custom || "") === "true" || String(opt.value || "").startsWith("custom:")));
+      if (isCustomProfile && authoringBaseEffect === "orb-template") {
+        const stateSlug = sanitizePresetIdPart(profileName, "orb-state");
+        return {
+          authoringBaseEffect,
+          publishedBaseEffect: `orb-${stateSlug}`,
+          publishedEffectId: `orb-${stateSlug}`,
+        };
+      }
+      return {
+        authoringBaseEffect,
+        publishedBaseEffect: authoringBaseEffect,
+        publishedEffectId: String((record && record.registryId) || "").trim() || null,
+      };
+    }
+
     function defaultSettingsForBaseEffect(baseEffect){
       switch (String(baseEffect || "")) {
         case "orb-base":
@@ -1647,6 +1665,13 @@
       const profileName = String(record.label || record.value || "effect");
       const baseEffect = String(record.baseEffect || selectedBaseEffect() || "unknown");
       const registryId = String(record.registryId || "");
+      const publishedIdentity = derivePublishedEffectIdentity({
+        opt,
+        record,
+        profileName,
+        baseEffect,
+      });
+      const publishedBaseEffect = String(publishedIdentity.publishedBaseEffect || baseEffect || "unknown");
       const settings = record.settingsByBaseEffect && record.settingsByBaseEffect[baseEffect]
         ? record.settingsByBaseEffect[baseEffect]
         : captureCurrentEffectSettings(baseEffect);
@@ -1654,22 +1679,23 @@
         .find((e) => String(e && e.id || "") === registryId) || null;
       const generatedPresetId = registryId
         ? `preset.${sanitizePresetIdPart(registryId.replace(/\./g, "-"), "effect")}.${sanitizePresetIdPart(profileName, "custom")}`
-        : `preset.${sanitizePresetIdPart(baseEffect, "effect")}.${sanitizePresetIdPart(profileName, "custom")}`;
+        : `preset.${sanitizePresetIdPart(publishedBaseEffect, "effect")}.${sanitizePresetIdPart(profileName, "custom")}`;
 
       return {
-        filename: `${sanitizePresetIdPart(baseEffect, "effect")}--${sanitizePresetIdPart(profileName, "preset")}.preset.json`,
+        filename: `${sanitizePresetIdPart(publishedBaseEffect, "effect")}--${sanitizePresetIdPart(profileName, "preset")}.preset.json`,
         payload: {
           kind: "orbis-arcana.vfx-preset-draft",
           version: 1,
           profileName,
           profileValue: String(record.value || ""),
-          effectId: registryId || null,
-          baseEffect,
+          effectId: registryId || publishedIdentity.publishedEffectId || null,
+          baseEffect: publishedBaseEffect,
           presetId: generatedPresetId,
           params: settings || {},
           source: {
             studio: "vfx-studio.html",
             selectionLabel: String(opt.textContent || profileName),
+            authoringBaseEffect: String(publishedIdentity.authoringBaseEffect || baseEffect || ""),
             registryDefaultPresetId: registryEntry ? String(registryEntry.defaultPresetId || "") : "",
           },
           savedAtMs: Number(record.savedAtMs) || Date.now(),
