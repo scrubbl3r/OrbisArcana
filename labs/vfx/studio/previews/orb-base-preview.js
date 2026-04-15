@@ -22,16 +22,14 @@ export function createOrbBasePreview({ els, evenPx, clamp, clampByte }) {
 
     els.orbBaseD.value = String(diameterPx);
     els.orbBaseStroke.value = String(strokeWidthPx);
-    els.vOrbBaseD.textContent = String(diameterPx);
-    els.vOrbBaseStroke.textContent = String(strokeWidthPx);
-    els.vOrbBaseStrokeAlpha.textContent = strokeAlpha.toFixed(2);
-    els.vOrbBaseFillAlpha.textContent = fillAlpha.toFixed(2);
-    els.vOrbBaseStrokeR.textContent = String(strokeDefaultRgb.r);
-    els.vOrbBaseStrokeG.textContent = String(strokeDefaultRgb.g);
-    els.vOrbBaseStrokeB.textContent = String(strokeDefaultRgb.b);
-    els.vOrbBaseFillR.textContent = String(fillDefaultRgb.r);
-    els.vOrbBaseFillG.textContent = String(fillDefaultRgb.g);
-    els.vOrbBaseFillB.textContent = String(fillDefaultRgb.b);
+    els.orbBaseStrokeAlpha.value = strokeAlpha.toFixed(2);
+    els.orbBaseFillAlpha.value = fillAlpha.toFixed(2);
+    els.orbBaseStrokeR.value = String(strokeDefaultRgb.r);
+    els.orbBaseStrokeG.value = String(strokeDefaultRgb.g);
+    els.orbBaseStrokeB.value = String(strokeDefaultRgb.b);
+    els.orbBaseFillR.value = String(fillDefaultRgb.r);
+    els.orbBaseFillG.value = String(fillDefaultRgb.g);
+    els.orbBaseFillB.value = String(fillDefaultRgb.b);
 
     const visualState = buildOrbBaseVisualState({
       theme: {
@@ -60,18 +58,18 @@ export function createOrbBasePreview({ els, evenPx, clamp, clampByte }) {
   function wire() {
     if (els.previewOrbBase) els.previewOrbBase.addEventListener("click", apply);
     [
-      els.orbBaseD,
-      els.orbBaseStroke,
-      els.orbBaseStrokeAlpha,
-      els.orbBaseFillAlpha,
-      els.orbBaseStrokeR,
-      els.orbBaseStrokeG,
-      els.orbBaseStrokeB,
-      els.orbBaseFillR,
-      els.orbBaseFillG,
-      els.orbBaseFillB,
+      els.orbBaseApplyDiameterBtn,
+      els.orbBaseApplyStrokeBtn,
+      els.orbBaseApplyStrokeAlphaBtn,
+      els.orbBaseApplyFillAlphaBtn,
+      els.orbBaseApplyStrokeRBtn,
+      els.orbBaseApplyStrokeGBtn,
+      els.orbBaseApplyStrokeBBtn,
+      els.orbBaseApplyFillRBtn,
+      els.orbBaseApplyFillGBtn,
+      els.orbBaseApplyFillBBtn,
     ].forEach((el) => {
-      if (el) el.addEventListener("input", apply);
+      if (el) el.addEventListener("click", apply);
     });
     apply();
   }

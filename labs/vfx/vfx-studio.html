@@ -910,56 +910,58 @@
           <button id="previewOrbBase">Preview</button>
         </div>
         <div class="bindingEditorHelp">Vanilla orb visual SSOT. Downstream orb-state visuals inherit from this unless they override it.</div>
-        <div class="sliderRow">
-          <span>Diameter</span>
-          <strong><span id="vOrbBaseD">100</span>px</strong>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbBaseD">Diameter</label>
+            <input id="orbBaseD" class="paramFieldInput" type="number" min="20" max="400" step="2" value="100" />
+            <button id="orbBaseApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseStroke">Stroke width</label>
+            <input id="orbBaseStroke" class="paramFieldInput" type="number" min="2" max="20" step="1" value="2" />
+            <button id="orbBaseApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseStrokeAlpha">Stroke alpha</label>
+            <input id="orbBaseStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
+            <button id="orbBaseApplyStrokeAlphaBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseFillAlpha">Fill alpha</label>
+            <input id="orbBaseFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.20" />
+            <button id="orbBaseApplyFillAlphaBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseStrokeR">Stroke red</label>
+            <input id="orbBaseStrokeR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orbBaseApplyStrokeRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseStrokeG">Stroke green</label>
+            <input id="orbBaseStrokeG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orbBaseApplyStrokeGBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseStrokeB">Stroke blue</label>
+            <input id="orbBaseStrokeB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orbBaseApplyStrokeBBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseFillR">Fill red</label>
+            <input id="orbBaseFillR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orbBaseApplyFillRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseFillG">Fill green</label>
+            <input id="orbBaseFillG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orbBaseApplyFillGBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseFillB">Fill blue</label>
+            <input id="orbBaseFillB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orbBaseApplyFillBBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
-        <input id="orbBaseD" type="range" min="20" max="400" value="100" step="2" />
-        <div class="sliderRow">
-          <span>Stroke width</span>
-          <strong><span id="vOrbBaseStroke">2</span>px</strong>
-        </div>
-        <input id="orbBaseStroke" type="range" min="2" max="20" value="2" step="1" />
-        <div class="sliderRow">
-          <span>Stroke alpha</span>
-          <strong><span id="vOrbBaseStrokeAlpha">1.00</span></strong>
-        </div>
-        <input id="orbBaseStrokeAlpha" type="range" min="0" max="1" value="1.00" step="0.01" />
-        <div class="sliderRow">
-          <span>Fill alpha</span>
-          <strong><span id="vOrbBaseFillAlpha">0.20</span></strong>
-        </div>
-        <input id="orbBaseFillAlpha" type="range" min="0" max="1" value="0.20" step="0.01" />
-        <div class="sliderRow">
-          <span>Stroke red</span>
-          <strong><span id="vOrbBaseStrokeR">255</span></strong>
-        </div>
-        <input id="orbBaseStrokeR" type="range" min="0" max="255" value="255" step="1" />
-        <div class="sliderRow">
-          <span>Stroke green</span>
-          <strong><span id="vOrbBaseStrokeG">255</span></strong>
-        </div>
-        <input id="orbBaseStrokeG" type="range" min="0" max="255" value="255" step="1" />
-        <div class="sliderRow">
-          <span>Stroke blue</span>
-          <strong><span id="vOrbBaseStrokeB">255</span></strong>
-        </div>
-        <input id="orbBaseStrokeB" type="range" min="0" max="255" value="255" step="1" />
-        <div class="sliderRow">
-          <span>Fill red</span>
-          <strong><span id="vOrbBaseFillR">255</span></strong>
-        </div>
-        <input id="orbBaseFillR" type="range" min="0" max="255" value="255" step="1" />
-        <div class="sliderRow">
-          <span>Fill green</span>
-          <strong><span id="vOrbBaseFillG">255</span></strong>
-        </div>
-        <input id="orbBaseFillG" type="range" min="0" max="255" value="255" step="1" />
-        <div class="sliderRow">
-          <span>Fill blue</span>
-          <strong><span id="vOrbBaseFillB">255</span></strong>
-        </div>
-        <input id="orbBaseFillB" type="range" min="0" max="255" value="255" step="1" />
       </div>
 
       <div class="section" data-effect="orb-template" hidden>
@@ -1290,25 +1292,25 @@
       electricEndR: $("electricEndR"),
       vElectricEndR: $("vElectricEndR"),
       orbBaseD: $("orbBaseD"),
-      vOrbBaseD: $("vOrbBaseD"),
+      orbBaseApplyDiameterBtn: $("orbBaseApplyDiameterBtn"),
       orbBaseStroke: $("orbBaseStroke"),
-      vOrbBaseStroke: $("vOrbBaseStroke"),
+      orbBaseApplyStrokeBtn: $("orbBaseApplyStrokeBtn"),
       orbBaseStrokeAlpha: $("orbBaseStrokeAlpha"),
-      vOrbBaseStrokeAlpha: $("vOrbBaseStrokeAlpha"),
+      orbBaseApplyStrokeAlphaBtn: $("orbBaseApplyStrokeAlphaBtn"),
       orbBaseFillAlpha: $("orbBaseFillAlpha"),
-      vOrbBaseFillAlpha: $("vOrbBaseFillAlpha"),
+      orbBaseApplyFillAlphaBtn: $("orbBaseApplyFillAlphaBtn"),
       orbBaseStrokeR: $("orbBaseStrokeR"),
-      vOrbBaseStrokeR: $("vOrbBaseStrokeR"),
+      orbBaseApplyStrokeRBtn: $("orbBaseApplyStrokeRBtn"),
       orbBaseStrokeG: $("orbBaseStrokeG"),
-      vOrbBaseStrokeG: $("vOrbBaseStrokeG"),
+      orbBaseApplyStrokeGBtn: $("orbBaseApplyStrokeGBtn"),
       orbBaseStrokeB: $("orbBaseStrokeB"),
-      vOrbBaseStrokeB: $("vOrbBaseStrokeB"),
+      orbBaseApplyStrokeBBtn: $("orbBaseApplyStrokeBBtn"),
       orbBaseFillR: $("orbBaseFillR"),
-      vOrbBaseFillR: $("vOrbBaseFillR"),
+      orbBaseApplyFillRBtn: $("orbBaseApplyFillRBtn"),
       orbBaseFillG: $("orbBaseFillG"),
-      vOrbBaseFillG: $("vOrbBaseFillG"),
+      orbBaseApplyFillGBtn: $("orbBaseApplyFillGBtn"),
       orbBaseFillB: $("orbBaseFillB"),
-      vOrbBaseFillB: $("vOrbBaseFillB"),
+      orbBaseApplyFillBBtn: $("orbBaseApplyFillBBtn"),
       orbTemplateShrinkPct: $("orbTemplateShrinkPct"),
       orbTemplateApplyShrinkBtn: $("orbTemplateApplyShrinkBtn"),
       orbTemplateDurationMs: $("orbTemplateDurationMs"),
