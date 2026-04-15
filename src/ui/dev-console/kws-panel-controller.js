@@ -147,9 +147,10 @@ export function createKwsPanelController({
         if (!phrase) return true;
         return entry.tokens.has(phrase);
       });
+      const flash = Number(kwsTokenUiState.flashUntilMs[phrase] || 0) > Date.now();
       return {
         lit: listenableTokens.has(phrase) && windowsSatisfied,
-        flash: Number(kwsTokenUiState.flashUntilMs[phrase] || 0) > Date.now(),
+        flash: flash && windowsSatisfied,
       };
     },
     onVisibilityChanged: (open) => {
