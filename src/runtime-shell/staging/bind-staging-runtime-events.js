@@ -97,12 +97,6 @@ export function bindStagingRuntimeEvents({
       stopShardSim();
     }
   });
-  eventBus.on(RECEIVER_EVENTS.EVT_SPELL_WINDOW_SPIN_CLOSED, () => {
-    executeWordCastAction("colorize", {
-      intent: "spin_window_closed",
-      payload: { mode: "stop" },
-    });
-  });
   eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
     const intent = String(p.intent || "");
     const wordId = String((p.wordId || p.spellId) || "").toLowerCase();

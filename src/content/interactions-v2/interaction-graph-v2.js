@@ -74,34 +74,8 @@ export const INTERACTION_GRAPH_V2 = {
     },
     // PYRO AOE CHAIN
     {
-      id: "spin_x_colorize",
-      on: { spin: "x" },
-      trigger: {
-        spell: {
-          id: "colorize",
-          args: { r: 0, g: 100, b: 253, alpha: 0.20 },
-        },
-      },
-    },
-    {
-      id: "spin_z_colorize",
-      on: { spin: "z" },
-      trigger: {
-        spell: {
-          id: "colorize",
-          args: { r: 253, g: 241, b: 0, alpha: 0.20 },
-        },
-      },
-    },
-    {
       id: "spin_y_opens_pyro",
       on: { spin: "y" },
-      trigger: {
-        spell: {
-          id: "colorize",
-          args: { r: 253, g: 78, b: 0, alpha: 0.20 },
-        },
-      },
       open: { id: "chain.spin_y_seed", words: ["pyro"], ttlMs: 1500 },
     },
     {
