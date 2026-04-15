@@ -54,6 +54,11 @@
       "path": "../../../assets/kws/openwakeword-models/echovar.onnx",
       "label": "echovar",
       "token": "echovar"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/varavectus.onnx",
+      "label": "varavectus",
+      "token": "varavectus"
     }
   ]
 }

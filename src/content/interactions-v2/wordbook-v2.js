@@ -39,6 +39,7 @@ const WORDBOOK_V2_WORD_ROWS = Object.freeze([
   makeWord({ id: "arcana" }),
   makeWord({ id: "are_kay_nah", phrase: "are kay nah", label: "Arcana" }),
   makeWord({ id: "echovar" }),
+  makeWord({ id: "varavectus" }),
   makeWord({ id: "domus" }),
   makeWord({ id: "pyro" }),
   makeWord({ id: "fridgis" }),
