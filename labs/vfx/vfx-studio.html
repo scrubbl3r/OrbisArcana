@@ -721,6 +721,9 @@
         <div class="previewLane" id="orbTemplatePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbTemplateLaneOrb"></div>
         </div>
+        <div class="previewLane" id="orbNodPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbNodLaneOrb"></div>
+        </div>
         <div class="previewLane" id="orbLifecyclePreviewRoot" data-preview-root hidden aria-hidden="true">
           <svg class="orbShatterLayer" id="orbLifecycleShatterLayer" viewBox="-120 -120 240 240"></svg>
           <svg class="orbTemplatePatternLayer" id="orbLifecyclePatternLayer" viewBox="-50 -50 100 100"></svg>
@@ -965,45 +968,49 @@
       </div>
 
       <div class="section" data-effect="orb-template" hidden>
-        <div class="bindingEditorHelp">Clean blank orb subscriber. Uses Orb Base as its visual provider and serves as the neutral seed lane for future orb-state starts. Apply only the motion you want for the new state.</div>
+        <div class="bindingEditorHelp">Clean blank orb subscriber. Uses Orb Base as its visual provider and serves as the neutral seed lane for future orb-state starts. Duplicate and rename this lane to begin a new orb-state from a plain vanilla orb.</div>
+      </div>
+
+      <div class="section" data-effect="orb-nod" hidden>
+        <div class="bindingEditorHelp">Responsive heard-word orb-state. Uses Orb Base as its visual provider and shapes a short nod impulse for KWS feedback.</div>
         <div class="row">
-          <button id="previewOrbTemplate" class="toolBtn" type="button">Preview</button>
+          <button id="previewOrbNod" class="toolBtn" type="button">Preview</button>
         </div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
-            <label for="orbTemplateShrinkPct">Size dip (%)</label>
-            <input id="orbTemplateShrinkPct" class="paramFieldInput" type="number" min="0" max="40" step="1" value="0" />
-            <button id="orbTemplateApplyShrinkBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbNodShrinkPct">Size dip (%)</label>
+            <input id="orbNodShrinkPct" class="paramFieldInput" type="number" min="0" max="40" step="1" value="6" />
+            <button id="orbNodApplyShrinkBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateDurationMs">Duration (ms)</label>
-            <input id="orbTemplateDurationMs" class="paramFieldInput" type="number" min="80" max="3000" step="10" value="500" />
-            <button id="orbTemplateApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbNodDurationMs">Duration (ms)</label>
+            <input id="orbNodDurationMs" class="paramFieldInput" type="number" min="80" max="3000" step="10" value="200" />
+            <button id="orbNodApplyDurationBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateFillAlpha">Fill opacity</label>
-            <input id="orbTemplateFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.20" />
-            <button id="orbTemplateApplyFillOpacityBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbNodFillAlpha">Fill opacity</label>
+            <input id="orbNodFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.07" />
+            <button id="orbNodApplyFillOpacityBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateWaveCount">Wave count</label>
-            <input id="orbTemplateWaveCount" class="paramFieldInput" type="number" min="2" max="32" step="1" value="10" />
-            <button id="orbTemplateApplyWaveCountBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbNodWaveCount">Wave count</label>
+            <input id="orbNodWaveCount" class="paramFieldInput" type="number" min="2" max="32" step="1" value="10" />
+            <button id="orbNodApplyWaveCountBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateWaveDepthPx">Wave depth</label>
-            <input id="orbTemplateWaveDepthPx" class="paramFieldInput" type="number" min="0" max="32" step="0.5" value="0" />
-            <button id="orbTemplateApplyWaveDepthBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbNodWaveDepthPx">Wave depth</label>
+            <input id="orbNodWaveDepthPx" class="paramFieldInput" type="number" min="0" max="32" step="0.5" value="10" />
+            <button id="orbNodApplyWaveDepthBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateOscillationSpeedHz">Oscillation speed (Hz)</label>
-            <input id="orbTemplateOscillationSpeedHz" class="paramFieldInput" type="number" min="1" max="40" step="0.5" value="12" />
-            <button id="orbTemplateApplyOscillationSpeedBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbNodOscillationSpeedHz">Oscillation speed (Hz)</label>
+            <input id="orbNodOscillationSpeedHz" class="paramFieldInput" type="number" min="1" max="40" step="0.5" value="12" />
+            <button id="orbNodApplyOscillationSpeedBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateOscillationCount">Oscillation count</label>
-            <input id="orbTemplateOscillationCount" class="paramFieldInput" type="number" min="0" max="12" step="1" value="0" />
-            <button id="orbTemplateApplyOscillationCountBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbNodOscillationCount">Oscillation count</label>
+            <input id="orbNodOscillationCount" class="paramFieldInput" type="number" min="0" max="12" step="1" value="2" />
+            <button id="orbNodApplyOscillationCountBtn" class="toolBtn" type="button">Apply</button>
           </div>
         </div>
       </div>
@@ -1159,7 +1166,8 @@
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
       FLAME_AOE_PRESET_DEFAULT,
-      ELECTRIC_AOE_PRESET_DEFAULT
+      ELECTRIC_AOE_PRESET_DEFAULT,
+      ORB_NOD_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260410b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260411a";
@@ -1172,6 +1180,7 @@
       "spell.aoe_flame": "flame-aoe",
       "spell.shield_bubble": "bubble-shield",
       "spell.shockwave_ring": "shockwave",
+      "orb.nod": "orb-nod",
     });
     const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi"]);
     const CATEGORY_LABELS = Object.freeze({
@@ -1233,6 +1242,7 @@
       electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
       orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
+      orbNodPreviewRoot: $("orbNodPreviewRoot"),
       orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
       orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
@@ -1315,20 +1325,21 @@
       orbBaseApplyFillGBtn: $("orbBaseApplyFillGBtn"),
       orbBaseFillB: $("orbBaseFillB"),
       orbBaseApplyFillBBtn: $("orbBaseApplyFillBBtn"),
-      orbTemplateShrinkPct: $("orbTemplateShrinkPct"),
-      orbTemplateApplyShrinkBtn: $("orbTemplateApplyShrinkBtn"),
-      orbTemplateDurationMs: $("orbTemplateDurationMs"),
-      orbTemplateApplyDurationBtn: $("orbTemplateApplyDurationBtn"),
-      orbTemplateFillAlpha: $("orbTemplateFillAlpha"),
-      orbTemplateApplyFillOpacityBtn: $("orbTemplateApplyFillOpacityBtn"),
-      orbTemplateWaveCount: $("orbTemplateWaveCount"),
-      orbTemplateApplyWaveCountBtn: $("orbTemplateApplyWaveCountBtn"),
-      orbTemplateWaveDepthPx: $("orbTemplateWaveDepthPx"),
-      orbTemplateApplyWaveDepthBtn: $("orbTemplateApplyWaveDepthBtn"),
-      orbTemplateOscillationSpeedHz: $("orbTemplateOscillationSpeedHz"),
-      orbTemplateApplyOscillationSpeedBtn: $("orbTemplateApplyOscillationSpeedBtn"),
-      orbTemplateOscillationCount: $("orbTemplateOscillationCount"),
-      orbTemplateApplyOscillationCountBtn: $("orbTemplateApplyOscillationCountBtn"),
+      previewOrbNod: $("previewOrbNod"),
+      orbNodShrinkPct: $("orbNodShrinkPct"),
+      orbNodApplyShrinkBtn: $("orbNodApplyShrinkBtn"),
+      orbNodDurationMs: $("orbNodDurationMs"),
+      orbNodApplyDurationBtn: $("orbNodApplyDurationBtn"),
+      orbNodFillAlpha: $("orbNodFillAlpha"),
+      orbNodApplyFillOpacityBtn: $("orbNodApplyFillOpacityBtn"),
+      orbNodWaveCount: $("orbNodWaveCount"),
+      orbNodApplyWaveCountBtn: $("orbNodApplyWaveCountBtn"),
+      orbNodWaveDepthPx: $("orbNodWaveDepthPx"),
+      orbNodApplyWaveDepthBtn: $("orbNodApplyWaveDepthBtn"),
+      orbNodOscillationSpeedHz: $("orbNodOscillationSpeedHz"),
+      orbNodApplyOscillationSpeedBtn: $("orbNodApplyOscillationSpeedBtn"),
+      orbNodOscillationCount: $("orbNodOscillationCount"),
+      orbNodApplyOscillationCountBtn: $("orbNodApplyOscillationCountBtn"),
       orbGlobeInnerDiameterRatio: $("orbGlobeInnerDiameterRatio"),
       vOrbGlobeInnerDiameterRatio: $("vOrbGlobeInnerDiameterRatio"),
       orbGlobeOrbitRadiusRatio: $("orbGlobeOrbitRadiusRatio"),
@@ -1369,7 +1380,7 @@
     if (els.orbBaseFillR) els.orbBaseFillR.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.r));
     if (els.orbBaseFillG) els.orbBaseFillG.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.g));
     if (els.orbBaseFillB) els.orbBaseFillB.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b));
-    if (els.orbTemplateFillAlpha) els.orbTemplateFillAlpha.value = String(Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha).toFixed(2));
+    if (els.orbNodFillAlpha) els.orbNodFillAlpha.value = String(Number(ORB_NOD_PRESET_DEFAULT.orbTemplateFillAlpha).toFixed(2));
 
     const shieldPreviewEls = Object.freeze({
       ...els,
@@ -1404,6 +1415,26 @@
       ...els,
       previewRoot: els.orbTemplatePreviewRoot,
       orb: $("orbTemplateLaneOrb"),
+    });
+    const orbNodPreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbNodPreviewRoot,
+      orb: $("orbNodLaneOrb"),
+      previewOrbTemplate: els.previewOrbNod,
+      orbTemplateShrinkPct: els.orbNodShrinkPct,
+      orbTemplateApplyShrinkBtn: els.orbNodApplyShrinkBtn,
+      orbTemplateDurationMs: els.orbNodDurationMs,
+      orbTemplateApplyDurationBtn: els.orbNodApplyDurationBtn,
+      orbTemplateFillAlpha: els.orbNodFillAlpha,
+      orbTemplateApplyFillOpacityBtn: els.orbNodApplyFillOpacityBtn,
+      orbTemplateWaveCount: els.orbNodWaveCount,
+      orbTemplateApplyWaveCountBtn: els.orbNodApplyWaveCountBtn,
+      orbTemplateWaveDepthPx: els.orbNodWaveDepthPx,
+      orbTemplateApplyWaveDepthBtn: els.orbNodApplyWaveDepthBtn,
+      orbTemplateOscillationSpeedHz: els.orbNodOscillationSpeedHz,
+      orbTemplateApplyOscillationSpeedBtn: els.orbNodApplyOscillationSpeedBtn,
+      orbTemplateOscillationCount: els.orbNodOscillationCount,
+      orbTemplateApplyOscillationCountBtn: els.orbNodApplyOscillationCountBtn,
     });
     const orbLifecyclePreviewEls = Object.freeze({
       ...els,
@@ -1584,14 +1615,16 @@
             orbBaseFillB: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b),
           };
         case "orb-template":
+          return {};
+        case "orb-nod":
           return {
-            orbTemplateShrinkPct: 0,
-            orbTemplateDurationMs: 500,
-            orbTemplateFillAlpha: Number(buildCurrentLabOrbBaseVisualState().fillAlpha.toFixed(2)),
-            orbTemplateWaveCount: 10,
-            orbTemplateWaveDepthPx: 0,
-            orbTemplateOscillationSpeedHz: 12,
-            orbTemplateOscillationCount: 0,
+            orbTemplateShrinkPct: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateShrinkPct) || 6),
+            orbTemplateDurationMs: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateDurationMs) || 200),
+            orbTemplateFillAlpha: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateFillAlpha).toFixed(2)),
+            orbTemplateWaveCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateWaveCount) || 10),
+            orbTemplateWaveDepthPx: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateWaveDepthPx) || 10),
+            orbTemplateOscillationSpeedHz: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationSpeedHz) || 12),
+            orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 2),
           };
         case "orb-lifecycle":
           return {
@@ -1859,14 +1892,16 @@
             orbBaseFillB: Number(els.orbBaseFillB && els.orbBaseFillB.value),
           };
         case "orb-template":
+          return {};
+        case "orb-nod":
           return {
-            orbTemplateShrinkPct: Number(els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value),
-            orbTemplateDurationMs: Number(els.orbTemplateDurationMs && els.orbTemplateDurationMs.value),
-            orbTemplateFillAlpha: Number(els.orbTemplateFillAlpha && els.orbTemplateFillAlpha.value),
-            orbTemplateWaveCount: Number(els.orbTemplateWaveCount && els.orbTemplateWaveCount.value),
-            orbTemplateWaveDepthPx: Number(els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value),
-            orbTemplateOscillationSpeedHz: Number(els.orbTemplateOscillationSpeedHz && els.orbTemplateOscillationSpeedHz.value),
-            orbTemplateOscillationCount: Number(els.orbTemplateOscillationCount && els.orbTemplateOscillationCount.value),
+            orbTemplateShrinkPct: Number(els.orbNodShrinkPct && els.orbNodShrinkPct.value),
+            orbTemplateDurationMs: Number(els.orbNodDurationMs && els.orbNodDurationMs.value),
+            orbTemplateFillAlpha: Number(els.orbNodFillAlpha && els.orbNodFillAlpha.value),
+            orbTemplateWaveCount: Number(els.orbNodWaveCount && els.orbNodWaveCount.value),
+            orbTemplateWaveDepthPx: Number(els.orbNodWaveDepthPx && els.orbNodWaveDepthPx.value),
+            orbTemplateOscillationSpeedHz: Number(els.orbNodOscillationSpeedHz && els.orbNodOscillationSpeedHz.value),
+            orbTemplateOscillationCount: Number(els.orbNodOscillationCount && els.orbNodOscillationCount.value),
           };
         case "orb-lifecycle":
           return {
@@ -1940,24 +1975,27 @@
             applyOrbBase();
             break;
           case "orb-template":
-            if (els.orbTemplateShrinkPct && settings.orbTemplateShrinkPct != null) els.orbTemplateShrinkPct.value = String(settings.orbTemplateShrinkPct);
-            if (els.orbTemplateDurationMs && settings.orbTemplateDurationMs != null) els.orbTemplateDurationMs.value = String(settings.orbTemplateDurationMs);
-            if (els.orbTemplateFillAlpha && settings.orbTemplateFillAlpha != null) {
-              els.orbTemplateFillAlpha.value = String(settings.orbTemplateFillAlpha);
-            } else if (els.orbTemplateFillAlpha && settings.orbTemplateFillOpacityBoost != null) {
+            applyOrbLaneSsot(els.orbTemplatePreviewRoot);
+            break;
+          case "orb-nod":
+            if (els.orbNodShrinkPct && settings.orbTemplateShrinkPct != null) els.orbNodShrinkPct.value = String(settings.orbTemplateShrinkPct);
+            if (els.orbNodDurationMs && settings.orbTemplateDurationMs != null) els.orbNodDurationMs.value = String(settings.orbTemplateDurationMs);
+            if (els.orbNodFillAlpha && settings.orbTemplateFillAlpha != null) {
+              els.orbNodFillAlpha.value = String(settings.orbTemplateFillAlpha);
+            } else if (els.orbNodFillAlpha && settings.orbTemplateFillOpacityBoost != null) {
               const baseFillAlpha = Number(buildCurrentLabOrbBaseVisualState().fillAlpha) || 0.20;
               const boost01 = Math.max(0, Math.min(1, Number(settings.orbTemplateFillOpacityBoost) / 100));
-              els.orbTemplateFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
-            } else if (els.orbTemplateFillAlpha && settings.orbTemplateBrightnessBoost != null) {
+              els.orbNodFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
+            } else if (els.orbNodFillAlpha && settings.orbTemplateBrightnessBoost != null) {
               const baseFillAlpha = Number(buildCurrentLabOrbBaseVisualState().fillAlpha) || 0.20;
               const boost01 = Math.max(0, Math.min(1, Number(settings.orbTemplateBrightnessBoost) / 100));
-              els.orbTemplateFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
+              els.orbNodFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
             }
-            if (els.orbTemplateWaveCount && settings.orbTemplateWaveCount != null) els.orbTemplateWaveCount.value = String(settings.orbTemplateWaveCount);
-            if (els.orbTemplateWaveDepthPx && settings.orbTemplateWaveDepthPx != null) els.orbTemplateWaveDepthPx.value = String(settings.orbTemplateWaveDepthPx);
-            if (els.orbTemplateOscillationSpeedHz && settings.orbTemplateOscillationSpeedHz != null) els.orbTemplateOscillationSpeedHz.value = String(settings.orbTemplateOscillationSpeedHz);
-            if (els.orbTemplateOscillationCount && settings.orbTemplateOscillationCount != null) els.orbTemplateOscillationCount.value = String(settings.orbTemplateOscillationCount);
-            applyOrbTemplate();
+            if (els.orbNodWaveCount && settings.orbTemplateWaveCount != null) els.orbNodWaveCount.value = String(settings.orbTemplateWaveCount);
+            if (els.orbNodWaveDepthPx && settings.orbTemplateWaveDepthPx != null) els.orbNodWaveDepthPx.value = String(settings.orbTemplateWaveDepthPx);
+            if (els.orbNodOscillationSpeedHz && settings.orbTemplateOscillationSpeedHz != null) els.orbNodOscillationSpeedHz.value = String(settings.orbTemplateOscillationSpeedHz);
+            if (els.orbNodOscillationCount && settings.orbTemplateOscillationCount != null) els.orbNodOscillationCount.value = String(settings.orbTemplateOscillationCount);
+            applyOrbNod();
             break;
           case "orb-lifecycle":
             if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
@@ -2235,6 +2273,7 @@
       "electric-aoe": els.electricPreviewRoot,
       "orb-base": els.orbBasePreviewRoot,
       "orb-template": els.orbTemplatePreviewRoot,
+      "orb-nod": els.orbNodPreviewRoot,
       "orb-lifecycle": els.orbLifecyclePreviewRoot,
       "orb-globe": els.orbGlobePreviewRoot,
     };
@@ -2270,6 +2309,7 @@
       setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
       applyOrbLaneSsot(els.orbBasePreviewRoot);
       applyOrbLaneSsot(els.orbTemplatePreviewRoot);
+      applyOrbLaneSsot(els.orbNodPreviewRoot);
       applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
     }
@@ -2297,6 +2337,7 @@
       clearFlame();
       clearElectric();
       clearOrbTemplate();
+      clearOrbNod();
       clearOrbLifecycle();
       clearOrbGlobe();
       Object.values(PREVIEW_ROOTS_BY_EFFECT).forEach((root) => {
@@ -2428,7 +2469,15 @@
     });
     const applyOrbTemplate = orbTemplatePreview.apply;
     const clearOrbTemplate = orbTemplatePreview.clear;
-    orbTemplatePreview.wire();
+    void applyOrbTemplate;
+
+    const orbNodPreview = createOrbTemplatePreview({
+      els: orbNodPreviewEls,
+      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
+    });
+    const applyOrbNod = orbNodPreview.apply;
+    const clearOrbNod = orbNodPreview.clear;
+    orbNodPreview.wire();
 
     const orbLifecyclePreview = createOrbLifecyclePreview({ els: orbLifecyclePreviewEls });
     const applyOrbLifecycle = orbLifecyclePreview.apply;
