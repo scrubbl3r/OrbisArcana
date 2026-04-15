@@ -120,21 +120,21 @@ export function createKwsPanelController({
     getFlashUntilMs: (token) => Number(kwsTokenUiState.flashUntilMs[String(token || "").trim().toLowerCase()] || 0),
     getTrailStepState: (step = {}) => {
       const kind = String(step.kind || "").trim().toLowerCase();
-      if (kind === "signal") {
-        const signalId = String(step.id || "").trim().toLowerCase();
-        if (signalId.startsWith("spin.")) {
-          const axis = signalId.slice(5);
-          return { lit: String(kwsTokenUiState.activeSpinAxis || "").trim().toLowerCase() === axis, flash: false };
-        }
-        return { lit: false, flash: false };
-      }
-      const phrase = canonicalKwsToken(step.phrase || step.id);
-      const listenableTokens = readCurrentListenableTokens();
-      const openWindowIds = readOpenWindowIds();
-      const wakeWindowsById = readCurrentWakeWindowsById();
       const requiredWindowIds = Array.isArray(step && step.requiredWindowIds)
         ? step.requiredWindowIds.map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)
         : [];
+      const openWindowIds = readOpenWindowIds();
+      const wakeWindowsById = readCurrentWakeWindowsById();
+      const signalWindowsSatisfied = requiredWindowIds.every((id) => openWindowIds.has(id) || wakeWindowsById.has(id));
+      if (kind === "signal") {
+        const signalId = String(step.id || "").trim().toLowerCase();
+        if (signalId.startsWith("spin.")) {
+          return { lit: signalWindowsSatisfied, flash: false };
+        }
+        return { lit: signalWindowsSatisfied, flash: false };
+      }
+      const phrase = canonicalKwsToken(step.phrase || step.id);
+      const listenableTokens = readCurrentListenableTokens();
       const windowsSatisfied = requiredWindowIds.every((id) => {
         if (openWindowIds.has(id)) {
           const entry = wakeWindowsById.get(id);
