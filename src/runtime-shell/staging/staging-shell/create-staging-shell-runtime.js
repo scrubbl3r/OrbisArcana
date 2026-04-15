@@ -627,9 +627,46 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
   const direction = String(spin && spin.direction || "").trim().toLowerCase();
   const dominance = Number(spin && spin.dominance) || 0;
   const gap = Number(spin && spin.gap) || 0;
-  const color = resolveOrbSpinColor(axis, direction);
-  const shouldApply = !!color && dominance >= 0.58 && gap >= 0.08;
-  if (shouldApply && typeof orbColorRuntime.applySpinColor === "function") {
+  const state = runtime.spinColorState || (runtime.spinColorState = {
+    active: false,
+    axis: "",
+    direction: "",
+  });
+  const spinAcquire = !!axis && dominance >= 0.48 && gap >= 0.03;
+  const spinHold = !!axis && dominance >= 0.38 && gap >= 0.015;
+
+  if (state.active) {
+    const sameAxis = axis === state.axis;
+    if (!sameAxis || !spinHold) {
+      state.active = false;
+      state.axis = "";
+      state.direction = "";
+    }
+  }
+
+  if (!state.active && spinAcquire) {
+    state.active = true;
+    state.axis = axis;
+    state.direction = "";
+  }
+
+  if (!state.active) {
+    if (typeof orbColorRuntime.clearSpinColor === "function") {
+      orbColorRuntime.clearSpinColor();
+    }
+    return;
+  }
+
+  if (axis && axis !== state.axis) {
+    state.axis = axis;
+    state.direction = "";
+  }
+  if (direction === "cw" || direction === "ccw") {
+    state.direction = direction;
+  }
+
+  const color = resolveOrbSpinColor(state.axis, state.direction);
+  if (color && typeof orbColorRuntime.applySpinColor === "function") {
     orbColorRuntime.applySpinColor(color);
     return;
   }
