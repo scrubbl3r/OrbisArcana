@@ -36,7 +36,10 @@ export function loadDraftStore(storageKey, draftStore) {
     const resolvedLabel = String(profile.label || value);
     const lifecycleLike = resolvedValue.startsWith("custom:")
       && resolvedBaseEffect === "orb-template"
-      && (slugifyEffectName(resolvedLabel) === "lifecycle" || /:lifecycle(?:-\d+)?$/i.test(resolvedValue));
+      && (
+        resolvedValue.startsWith("custom:orb-lifecycle:")
+        || /:lifecycle(?:-\d+)?$/i.test(resolvedValue)
+      );
     if (lifecycleLike) {
       resolvedBaseEffect = "orb-lifecycle";
     }
