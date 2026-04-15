@@ -110,7 +110,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     const orbDiameterPx = readOrbDiameterPx();
     const css = readCssVars();
     return {
-      shrinkPct: clampNumber(els && els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value, 0, 40, 8) / 100,
+      shrinkPct: clampNumber(els && els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value, 0, 40, 0) / 100,
       durationMs: Math.round(clampNumber(els && els.orbTemplateDurationMs && els.orbTemplateDurationMs.value, 80, 3000, 500)),
       fillAlpha: clampNumber(
         els && els.orbTemplateFillAlpha && els.orbTemplateFillAlpha.value,
@@ -120,11 +120,11 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
       ),
       waveCount: Math.round(clampNumber(els && els.orbTemplateWaveCount && els.orbTemplateWaveCount.value, 2, 32, 10)),
       waveDepthPx: resolveOrbLinkedPx(
-        clampNumber(els && els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value, 0, 32, 4),
+        clampNumber(els && els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value, 0, 32, 0),
         { orbDiameterPx, min: 0 }
       ),
       oscillationSpeedHz: clampNumber(els && els.orbTemplateOscillationSpeedHz && els.orbTemplateOscillationSpeedHz.value, 1, 40, 12),
-      oscillationCount: Math.round(clampNumber(els && els.orbTemplateOscillationCount && els.orbTemplateOscillationCount.value, 1, 12, 4)),
+      oscillationCount: Math.round(clampNumber(els && els.orbTemplateOscillationCount && els.orbTemplateOscillationCount.value, 0, 12, 0)),
     };
   }
 
@@ -135,7 +135,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     if (els.orbTemplateFillAlpha) els.orbTemplateFillAlpha.value = String(Number(cfg.fillAlpha).toFixed(2));
     if (els.orbTemplateWaveCount) els.orbTemplateWaveCount.value = String(cfg.waveCount);
     if (els.orbTemplateWaveDepthPx) {
-      const authored = clampNumber(els.orbTemplateWaveDepthPx.value, 0, 32, 4);
+      const authored = clampNumber(els.orbTemplateWaveDepthPx.value, 0, 32, 0);
       els.orbTemplateWaveDepthPx.value = String(authored);
     }
     if (els.orbTemplateOscillationSpeedHz) els.orbTemplateOscillationSpeedHz.value = String(cfg.oscillationSpeedHz);

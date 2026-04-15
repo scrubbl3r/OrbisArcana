@@ -965,14 +965,14 @@
       </div>
 
       <div class="section" data-effect="orb-template" hidden>
-        <div class="bindingEditorHelp">Clean blank orb subscriber. Uses Orb Base as its visual provider and serves as the seed lane for future orb-state starts. Use this lane to sketch responsive orb-state motion like Nod.</div>
+        <div class="bindingEditorHelp">Clean blank orb subscriber. Uses Orb Base as its visual provider and serves as the neutral seed lane for future orb-state starts. Apply only the motion you want for the new state.</div>
         <div class="row">
           <button id="previewOrbTemplate" class="toolBtn" type="button">Preview</button>
         </div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
             <label for="orbTemplateShrinkPct">Size dip (%)</label>
-            <input id="orbTemplateShrinkPct" class="paramFieldInput" type="number" min="0" max="40" step="1" value="8" />
+            <input id="orbTemplateShrinkPct" class="paramFieldInput" type="number" min="0" max="40" step="1" value="0" />
             <button id="orbTemplateApplyShrinkBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
@@ -992,7 +992,7 @@
           </div>
           <div class="paramFieldRow">
             <label for="orbTemplateWaveDepthPx">Wave depth</label>
-            <input id="orbTemplateWaveDepthPx" class="paramFieldInput" type="number" min="0" max="32" step="0.5" value="4" />
+            <input id="orbTemplateWaveDepthPx" class="paramFieldInput" type="number" min="0" max="32" step="0.5" value="0" />
             <button id="orbTemplateApplyWaveDepthBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
@@ -1002,7 +1002,7 @@
           </div>
           <div class="paramFieldRow">
             <label for="orbTemplateOscillationCount">Oscillation count</label>
-            <input id="orbTemplateOscillationCount" class="paramFieldInput" type="number" min="1" max="12" step="1" value="4" />
+            <input id="orbTemplateOscillationCount" class="paramFieldInput" type="number" min="0" max="12" step="1" value="0" />
             <button id="orbTemplateApplyOscillationCountBtn" class="toolBtn" type="button">Apply</button>
           </div>
         </div>
@@ -1585,13 +1585,13 @@
           };
         case "orb-template":
           return {
-            orbTemplateShrinkPct: 8,
+            orbTemplateShrinkPct: 0,
             orbTemplateDurationMs: 500,
             orbTemplateFillAlpha: Number(buildCurrentLabOrbBaseVisualState().fillAlpha.toFixed(2)),
             orbTemplateWaveCount: 10,
-            orbTemplateWaveDepthPx: 4,
+            orbTemplateWaveDepthPx: 0,
             orbTemplateOscillationSpeedHz: 12,
-            orbTemplateOscillationCount: 4,
+            orbTemplateOscillationCount: 0,
           };
         case "orb-lifecycle":
           return {
