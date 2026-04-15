@@ -49,6 +49,11 @@
       "path": "../../../assets/kws/openwakeword-models/rota.onnx",
       "label": "rota",
       "token": "rota"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/echovar.onnx",
+      "label": "echovar",
+      "token": "echovar"
     }
   ]
 }
