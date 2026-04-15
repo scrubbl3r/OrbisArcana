@@ -1,3 +1,4 @@
+import { applyOrbBaseVisualCssVars } from "../../../../src/game-runtime/orb/orb-base-state.js";
 import { resolveOrbLinkedPx } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -40,7 +41,7 @@ function buildWobblePath({
   return d;
 }
 
-export function createOrbTemplatePreview({ els } = {}) {
+export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } = {}) {
   let raf = 0;
   let activeSvg = null;
   let activePath = null;
@@ -160,6 +161,12 @@ export function createOrbTemplatePreview({ els } = {}) {
 
   function apply() {
     if (!els || !els.previewRoot) return;
+    if (typeof getOrbBaseVisualState === "function") {
+      const orbBaseVisualState = getOrbBaseVisualState();
+      if (orbBaseVisualState) {
+        applyOrbBaseVisualCssVars(orbBaseVisualState, { root: els.previewRoot });
+      }
+    }
     const cfg = readConfig();
     hydrateFields(cfg);
     if (els.orb) {

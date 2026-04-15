@@ -2381,7 +2381,10 @@
     const applyOrbBase = orbBasePreview.apply;
     orbBasePreview.wire();
 
-    const orbTemplatePreview = createOrbTemplatePreview({ els: orbTemplatePreviewEls });
+    const orbTemplatePreview = createOrbTemplatePreview({
+      els: orbTemplatePreviewEls,
+      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
+    });
     const applyOrbTemplate = orbTemplatePreview.apply;
     const clearOrbTemplate = orbTemplatePreview.clear;
     orbTemplatePreview.wire();
