@@ -81,6 +81,15 @@ export function createKwsPanelController({
     ]);
   }
 
+  function readOpenWindowIds() {
+    const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
+    return new Set(
+      (Array.isArray(status && status.openWindowIds) ? status.openWindowIds : [])
+        .map((id) => String(id || "").trim().toLowerCase())
+        .filter(Boolean)
+    );
+  }
+
   const wordFlashboardPopup = createWordFlashboardPopup({
     els,
     words: WORDFLASHBOARD_WORDS,
@@ -100,8 +109,13 @@ export function createKwsPanelController({
       }
       const phrase = canonicalKwsToken(step.phrase || step.id);
       const listenableTokens = readCurrentListenableTokens();
+      const openWindowIds = readOpenWindowIds();
+      const requiredWindowIds = Array.isArray(step && step.requiredWindowIds)
+        ? step.requiredWindowIds.map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)
+        : [];
+      const windowsSatisfied = requiredWindowIds.every((id) => openWindowIds.has(id));
       return {
-        lit: listenableTokens.has(phrase),
+        lit: listenableTokens.has(phrase) && windowsSatisfied,
         flash: Number(kwsTokenUiState.flashUntilMs[phrase] || 0) > Date.now(),
       };
     },

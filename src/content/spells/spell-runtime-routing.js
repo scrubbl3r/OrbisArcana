@@ -195,7 +195,7 @@ function resolveSignalTrailheadDisplay(signalId) {
   return id;
 }
 
-function buildWordTrailStep(id) {
+function buildWordTrailStep(id, { requiredWindowIds = [] } = {}) {
   const word = WORDBOOK_V2_ACTIVE_WORDS_BY_ID[asWordId(id)];
   if (!word) return null;
   const wordId = asWordId(word.id);
@@ -206,10 +206,17 @@ function buildWordTrailStep(id) {
     phrase,
     label: String(word.label || "").trim(),
     displayText: toTrailDisplayText(resolveDisplayTextByWordId(wordId)),
+    requiredWindowIds: Object.freeze(
+      Array.from(new Set(
+        (Array.isArray(requiredWindowIds) ? requiredWindowIds : [])
+          .map((windowId) => String(windowId || "").trim().toLowerCase())
+          .filter(Boolean)
+      ))
+    ),
   });
 }
 
-function buildSignalTrailStep(signalId) {
+function buildSignalTrailStep(signalId, { requiredWindowIds = [] } = {}) {
   const id = String(signalId || "").trim().toLowerCase();
   if (!id) return null;
   return Object.freeze({
@@ -218,6 +225,13 @@ function buildSignalTrailStep(signalId) {
     phrase: "",
     label: "",
     displayText: resolveSignalTrailheadDisplay(id),
+    requiredWindowIds: Object.freeze(
+      Array.from(new Set(
+        (Array.isArray(requiredWindowIds) ? requiredWindowIds : [])
+          .map((windowId) => String(windowId || "").trim().toLowerCase())
+          .filter(Boolean)
+      ))
+    ),
   });
 }
 
@@ -476,7 +490,9 @@ function buildWordFlashboardTrailRows() {
       const openId = String(open && open.id || "").trim().toLowerCase();
       if (openId) nextWindows.add(openId);
       for (const wordId of openWordIds) {
-        const nextStep = buildWordTrailStep(wordId);
+        const nextStep = buildWordTrailStep(wordId, {
+          requiredWindowIds: openId ? [openId] : Array.from(activeWindows),
+        });
         if (!nextStep) continue;
         if (path.some((entry) => buildTrailStepKey(entry) === buildTrailStepKey(nextStep))) continue;
         visit(path.concat([nextStep]), nextStep, nextWindows);
