@@ -1019,7 +1019,7 @@
       </div>
 
       <div class="section" data-effect="orb-teleport" hidden>
-        <div class="bindingEditorHelp">Teleport orb-state sketch. The orb freezes, flickers out, the camera travels to destination, then the orb flickers back in and settles.</div>
+        <div class="bindingEditorHelp">Teleport orb-state sketch. The orb freezes in place, flickers while fading out, then flickers while fading back in and settles cleanly.</div>
         <div class="row">
           <button id="previewOrbTeleport" class="toolBtn" type="button">Preview</button>
         </div>
@@ -1038,11 +1038,6 @@
             <label for="orbTeleportFadeOutMs">Fade-out (ms)</label>
             <input id="orbTeleportFadeOutMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="280" />
             <button id="orbTeleportApplyFadeOutBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbTeleportCameraMoveMs">Camera move (ms)</label>
-            <input id="orbTeleportCameraMoveMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="360" />
-            <button id="orbTeleportApplyCameraMoveBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
             <label for="orbTeleportFadeInMs">Fade-in (ms)</label>
@@ -1415,8 +1410,6 @@
       orbTeleportApplyFlickerOffBtn: $("orbTeleportApplyFlickerOffBtn"),
       orbTeleportFadeOutMs: $("orbTeleportFadeOutMs"),
       orbTeleportApplyFadeOutBtn: $("orbTeleportApplyFadeOutBtn"),
-      orbTeleportCameraMoveMs: $("orbTeleportCameraMoveMs"),
-      orbTeleportApplyCameraMoveBtn: $("orbTeleportApplyCameraMoveBtn"),
       orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
       orbTeleportApplyFadeInBtn: $("orbTeleportApplyFadeInBtn"),
     };
@@ -1687,7 +1680,6 @@
             orbTeleportFlickerOnMs: 60,
             orbTeleportFlickerOffMs: 60,
             orbTeleportFadeOutMs: 280,
-            orbTeleportCameraMoveMs: 360,
             orbTeleportFadeInMs: 280,
           };
         case "orb-lifecycle":
@@ -1972,7 +1964,6 @@
             orbTeleportFlickerOnMs: Number(els.orbTeleportFlickerOnMs && els.orbTeleportFlickerOnMs.value),
             orbTeleportFlickerOffMs: Number(els.orbTeleportFlickerOffMs && els.orbTeleportFlickerOffMs.value),
             orbTeleportFadeOutMs: Number(els.orbTeleportFadeOutMs && els.orbTeleportFadeOutMs.value),
-            orbTeleportCameraMoveMs: Number(els.orbTeleportCameraMoveMs && els.orbTeleportCameraMoveMs.value),
             orbTeleportFadeInMs: Number(els.orbTeleportFadeInMs && els.orbTeleportFadeInMs.value),
           };
         case "orb-lifecycle":
@@ -2073,7 +2064,6 @@
             if (els.orbTeleportFlickerOnMs && settings.orbTeleportFlickerOnMs != null) els.orbTeleportFlickerOnMs.value = String(settings.orbTeleportFlickerOnMs);
             if (els.orbTeleportFlickerOffMs && settings.orbTeleportFlickerOffMs != null) els.orbTeleportFlickerOffMs.value = String(settings.orbTeleportFlickerOffMs);
             if (els.orbTeleportFadeOutMs && settings.orbTeleportFadeOutMs != null) els.orbTeleportFadeOutMs.value = String(settings.orbTeleportFadeOutMs);
-            if (els.orbTeleportCameraMoveMs && settings.orbTeleportCameraMoveMs != null) els.orbTeleportCameraMoveMs.value = String(settings.orbTeleportCameraMoveMs);
             if (els.orbTeleportFadeInMs && settings.orbTeleportFadeInMs != null) els.orbTeleportFadeInMs.value = String(settings.orbTeleportFadeInMs);
             applyOrbTeleport();
             break;
