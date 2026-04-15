@@ -566,6 +566,7 @@ function handleShellImpulseFrame(shellContext, data) {
       });
       runtime.motionStore.publish(motionState);
       updateShellSpinColorFromMotionState(shellContext, motionState);
+      traceShellSpinDirection(shellContext, motionState);
       if (motionState && motionState.spin) {
         inputPayload = {
           ...(data || {}),
@@ -594,6 +595,29 @@ function handleShellImpulseFrame(shellContext, data) {
     devView.setStatus('Phone calibrated <span class="devStagingDim">(receiver host boot pending)</span>', "devStagingDim");
     runtime.pendingInputStatusShown = true;
   }
+}
+
+function traceShellSpinDirection(shellContext, motionState) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const shellKws = runtime && runtime.kws ? runtime.kws : null;
+  const kwsBridge = shellKws && shellKws.kwsBridge ? shellKws.kwsBridge : null;
+  if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
+  const spin = motionState && motionState.spin ? motionState.spin : null;
+  const axis = String(spin && spin.label || "").trim().toLowerCase();
+  const direction = String(spin && spin.direction || "").trim().toLowerCase();
+  const dominance = Number(spin && spin.dominance) || 0;
+  const gap = Number(spin && spin.gap) || 0;
+  const traceKey = axis
+    ? `${axis}:${direction || "-"}:${dominance.toFixed(2)}:${gap.toFixed(2)}`
+    : "none";
+  if (runtime && runtime.lastSpinDirectionTraceKey === traceKey) return;
+  if (runtime) runtime.lastSpinDirectionTraceKey = traceKey;
+  kwsBridge.pushLogLine(
+    axis
+      ? `TRACE spin:${axis}:${direction || "-"}:dom:${dominance.toFixed(2)}:gap:${gap.toFixed(2)}`
+      : "TRACE spin:-",
+    axis ? "muted" : "warn"
+  );
 }
 
 function updateShellSpinColorFromMotionState(shellContext, motionState) {
