@@ -2,9 +2,9 @@
 // This file owns behavior-oriented word metadata during refactor slices.
 import {
   COMPILED_INTERACTION_GRAPH_V2,
-} from "../interactions-v2/compiled-interaction-graph-v2.js?v=20260329a";
-import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260329a";
-import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js?v=20260328b";
+} from "../interactions-v2/compiled-interaction-graph-v2.js?v=20260415c";
+import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260415c";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js?v=20260415c";
 
 const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "orbis",
