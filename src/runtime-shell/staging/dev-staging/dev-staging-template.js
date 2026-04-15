@@ -104,13 +104,6 @@ export const DEV_STAGING_TEMPLATE = `
         </div>
       </div>
       <div id="wordBoardBody" class="wordBoardPopupBody" aria-label="Word flashboard"></div>
-      <div id="wordBoardDebugPanel" class="wordBoardDebugPanel">
-        <button id="wordBoardDebugToggle" class="wordBoardDebugToggle" type="button" aria-expanded="false" aria-controls="wordBoardDebugBody">
-          <span>KWS Debug</span>
-          <span id="wordBoardDebugBadge" class="wordBoardDebugBadge">idle</span>
-        </button>
-        <div id="wordBoardDebugBody" class="wordBoardDebugBody" aria-hidden="true"></div>
-      </div>
     </div>
   </section>
 `;
