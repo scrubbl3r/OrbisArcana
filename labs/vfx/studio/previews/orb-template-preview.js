@@ -1,31 +1,223 @@
-import {
-  applyOrbBaseVisualCssVars,
-  buildOrbBaseVisualState,
-} from "../../../../src/game-runtime/orb/orb-base-state.js";
+import { resolveOrbLinkedPx } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
+function polarPoint(angle, radius) {
+  return {
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+  };
+}
+
+function buildWobblePath({
+  baseRadius = 50,
+  waveCount = 10,
+  waveDepth = 0,
+  phase = 0,
+  samples = 96,
+} = {}) {
+  const count = Math.max(2, Math.round(Number(waveCount) || 10));
+  const totalSamples = Math.max(24, Math.round(Number(samples) || 96));
+  const points = [];
+  for (let i = 0; i < totalSamples; i += 1) {
+    const t = i / totalSamples;
+    const angle = t * Math.PI * 2;
+    const radius = baseRadius + (Math.sin((angle * count) + phase) * waveDepth);
+    points.push(polarPoint(angle, radius));
+  }
+  if (!points.length) return "";
+  let d = `M ${points[0].x.toFixed(3)} ${points[0].y.toFixed(3)}`;
+  for (let i = 1; i < points.length; i += 1) {
+    d += ` L ${points[i].x.toFixed(3)} ${points[i].y.toFixed(3)}`;
+  }
+  d += " Z";
+  return d;
+}
 
 export function createOrbTemplatePreview({ els } = {}) {
-  function apply() {
+  let raf = 0;
+  let activeSvg = null;
+  let activePath = null;
+
+  function ensureOverlay() {
+    if (activeSvg && activePath) return;
     if (!els || !els.previewRoot) return;
-    applyOrbBaseVisualCssVars(buildOrbBaseVisualState(), { root: els.previewRoot });
-    if (els.orb) {
+
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "-60 -60 120 120");
+    svg.style.position = "absolute";
+    svg.style.left = "0";
+    svg.style.top = "0";
+    svg.style.width = "var(--orb-d)";
+    svg.style.height = "var(--orb-d)";
+    svg.style.transform = "translate(-50%,-50%)";
+    svg.style.pointerEvents = "none";
+    svg.style.overflow = "visible";
+    svg.style.display = "none";
+
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("vector-effect", "non-scaling-stroke");
+    path.setAttribute("stroke-linejoin", "round");
+    path.setAttribute("stroke-linecap", "round");
+    svg.appendChild(path);
+    els.previewRoot.appendChild(svg);
+
+    activeSvg = svg;
+    activePath = path;
+  }
+
+  function readOrbDiameterPx() {
+    const root = els && els.previewRoot;
+    const cssDiameter = root
+      ? Number(getComputedStyle(root).getPropertyValue("--orb-d").replace("px", ""))
+      : 0;
+    return Math.max(2, cssDiameter || 100);
+  }
+
+  function readCssVars() {
+    const root = els && els.previewRoot;
+    const styles = root ? getComputedStyle(root) : null;
+    return {
+      strokeColor: styles ? styles.getPropertyValue("--orb-stroke-color").trim() || "rgba(255,255,255,1)" : "rgba(255,255,255,1)",
+      fillColor: styles ? styles.getPropertyValue("--orb-fill").trim() || "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.20)",
+      strokeWidth: styles ? Number(styles.getPropertyValue("--orb-stroke").replace("px", "")) || 2 : 2,
+    };
+  }
+
+  function readConfig() {
+    const orbDiameterPx = readOrbDiameterPx();
+    return {
+      shrinkPct: clampNumber(els && els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value, 0, 40, 8) / 100,
+      durationMs: Math.round(clampNumber(els && els.orbTemplateDurationMs && els.orbTemplateDurationMs.value, 80, 3000, 500)),
+      brightnessBoost: clampNumber(els && els.orbTemplateBrightnessBoost && els.orbTemplateBrightnessBoost.value, 0, 100, 24) / 100,
+      waveCount: Math.round(clampNumber(els && els.orbTemplateWaveCount && els.orbTemplateWaveCount.value, 2, 32, 10)),
+      waveDepthPx: resolveOrbLinkedPx(
+        clampNumber(els && els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value, 0, 32, 4),
+        { orbDiameterPx, min: 0 }
+      ),
+      oscillationSpeedHz: clampNumber(els && els.orbTemplateOscillationSpeedHz && els.orbTemplateOscillationSpeedHz.value, 1, 40, 12),
+      oscillationCount: Math.round(clampNumber(els && els.orbTemplateOscillationCount && els.orbTemplateOscillationCount.value, 1, 12, 4)),
+    };
+  }
+
+  function hydrateFields(cfg) {
+    if (!els) return;
+    if (els.orbTemplateShrinkPct) els.orbTemplateShrinkPct.value = String(Math.round(cfg.shrinkPct * 100));
+    if (els.orbTemplateDurationMs) els.orbTemplateDurationMs.value = String(cfg.durationMs);
+    if (els.orbTemplateBrightnessBoost) els.orbTemplateBrightnessBoost.value = String(Math.round(cfg.brightnessBoost * 100));
+    if (els.orbTemplateWaveCount) els.orbTemplateWaveCount.value = String(cfg.waveCount);
+    if (els.orbTemplateWaveDepthPx) {
+      const authored = clampNumber(els.orbTemplateWaveDepthPx.value, 0, 32, 4);
+      els.orbTemplateWaveDepthPx.value = String(authored);
+    }
+    if (els.orbTemplateOscillationSpeedHz) els.orbTemplateOscillationSpeedHz.value = String(cfg.oscillationSpeedHz);
+    if (els.orbTemplateOscillationCount) els.orbTemplateOscillationCount.value = String(cfg.oscillationCount);
+  }
+
+  function stopAnimation() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    if (activeSvg) activeSvg.style.display = "none";
+    if (els && els.orb) {
       els.orb.hidden = false;
+      els.orb.style.transform = "";
+      els.orb.style.filter = "";
     }
   }
 
-  function clear() {
-    if (els && els.orb) {
+  function renderFrame(cfg, progress) {
+    ensureOverlay();
+    if (!activeSvg || !activePath || !els || !els.orb) return;
+    const css = readCssVars();
+    const envelope = Math.sin(progress * Math.PI);
+    const pulse = Math.sin(progress * Math.PI * cfg.oscillationCount);
+    const wobble = envelope * Math.abs(pulse);
+    const phase = progress * Math.PI * 2 * cfg.oscillationSpeedHz * (cfg.durationMs / 1000);
+    const waveDepth = Math.max(0, cfg.waveDepthPx * wobble);
+    const scale = 1 - (cfg.shrinkPct * envelope);
+    const brightness = 1 + (cfg.brightnessBoost * envelope);
+
+    els.orb.hidden = true;
+    activeSvg.style.display = "";
+    activePath.setAttribute("d", buildWobblePath({
+      baseRadius: 50,
+      waveCount: cfg.waveCount,
+      waveDepth,
+      phase,
+    }));
+    activePath.setAttribute("fill", css.fillColor);
+    activePath.setAttribute("stroke", css.strokeColor);
+    activePath.setAttribute("stroke-width", String(css.strokeWidth));
+    activeSvg.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(4)})`;
+    activeSvg.style.filter = `brightness(${brightness.toFixed(3)}) drop-shadow(0 0 ${Math.max(2, waveDepth * 1.4).toFixed(2)}px ${css.strokeColor})`;
+  }
+
+  function apply() {
+    if (!els || !els.previewRoot) return;
+    const cfg = readConfig();
+    hydrateFields(cfg);
+    if (els.orb) {
       els.orb.hidden = false;
+      els.orb.style.transform = "";
+      els.orb.style.filter = "";
     }
+    if (activeSvg) activeSvg.style.display = "none";
+    return cfg;
+  }
+
+  function play() {
+    const cfg = apply();
+    if (!cfg) return;
+    stopAnimation();
+    const start = performance.now();
+
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.max(0, Math.min(1, elapsed / cfg.durationMs));
+      renderFrame(cfg, progress);
+      if (progress >= 1) {
+        stopAnimation();
+        apply();
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    raf = requestAnimationFrame(tick);
+  }
+
+  function clear() {
+    stopAnimation();
+    apply();
   }
 
   function wire() {
     apply();
+    if (els && els.previewOrbTemplate) els.previewOrbTemplate.addEventListener("click", play);
+    if (els && els.orb) els.orb.addEventListener("click", play);
+    [
+      els && els.orbTemplateApplyShrinkBtn,
+      els && els.orbTemplateApplyDurationBtn,
+      els && els.orbTemplateApplyBrightnessBtn,
+      els && els.orbTemplateApplyWaveCountBtn,
+      els && els.orbTemplateApplyWaveDepthBtn,
+      els && els.orbTemplateApplyOscillationSpeedBtn,
+      els && els.orbTemplateApplyOscillationCountBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", apply);
+    });
   }
 
   return {
     apply,
     clear,
-    play: apply,
+    play,
     wire,
   };
 }
