@@ -37,6 +37,21 @@ export function bindStagingRuntimeEvents({
   setOrbInputSuppressed = () => {},
   getOrbAlive = () => true,
 } = {}) {
+  let lastHeardNodToken = "";
+  let lastHeardNodAtMs = 0;
+
+  function shouldTriggerHeardWordNod(token, atMs) {
+    const heardToken = String(token || "").trim().toLowerCase();
+    const heardAtMs = Number.isFinite(Number(atMs)) ? Number(atMs) : performance.now();
+    if (!heardToken || !getOrbAlive()) return false;
+    if (heardToken === lastHeardNodToken && (heardAtMs - lastHeardNodAtMs) < 120) {
+      return false;
+    }
+    lastHeardNodToken = heardToken;
+    lastHeardNodAtMs = heardAtMs;
+    return true;
+  }
+
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbDamageVisuals);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnShardFx);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
@@ -61,6 +76,19 @@ export function bindStagingRuntimeEvents({
     resetOrbStrokeColor(true);
     renderOrbDamageVisuals();
     updateDebugReadout();
+  });
+  eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
+    const token = String(p.token || "").trim().toLowerCase();
+    const atMs = Number.isFinite(Number(p.atMs)) ? Number(p.atMs) : performance.now();
+    if (!shouldTriggerHeardWordNod(token, atMs)) return;
+    playOrbNod({
+      token,
+      phrase: token,
+      confidence: Number(p.confidence),
+      atMs,
+      source: String(p.source || "kws"),
+      providerId: String(p.providerId || ""),
+    });
   });
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
     if (orbShatterController && typeof orbShatterController.handleOrbShatterComplete === "function") {
@@ -260,15 +288,6 @@ export function bindStagingRuntimeEvents({
     }
   });
   eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_WORD_CANDIDATE || RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
-    if (!!p.matched && !p.suppressed && getOrbAlive()) {
-      playOrbNod({
-        wordId: String((p.wordId ?? p.spellId) || "").trim().toLowerCase(),
-        phrase: String(p.phrase || "").trim().toLowerCase(),
-        confidence: Number(p.confidence),
-        atMs: Number.isFinite(Number(p.atMs)) ? Number(p.atMs) : performance.now(),
-        source: String(p.source || "kws"),
-      });
-    }
     const matched = !!p.matched;
     const wordId = String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
     const phrase = String(p.phrase || "").trim().toLowerCase();
