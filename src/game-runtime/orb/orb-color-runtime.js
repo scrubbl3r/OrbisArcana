@@ -26,6 +26,14 @@ export function createOrbColorRuntime({
     targetFill: { r: 1, g: 1, b: 1 },
     currentAlpha: 0.20,
     targetAlpha: 0.20,
+    explicitActive: false,
+    explicitStroke: null,
+    explicitFill: null,
+    explicitAlpha: 0.20,
+    spinActive: false,
+    spinStroke: null,
+    spinFill: null,
+    spinAlpha: 0.20,
     initialized: false,
   };
 
@@ -75,14 +83,17 @@ export function createOrbColorRuntime({
     }
   }
 
-  function setTarget(color, alpha) {
-    const nextColor = {
-      r: clamp01(color.r),
-      g: clamp01(color.g),
-      b: clamp01(color.b),
+  function applyResolvedTarget(strokeColor, fillColor, alpha) {
+    state.targetStroke = {
+      r: clamp01(strokeColor.r),
+      g: clamp01(strokeColor.g),
+      b: clamp01(strokeColor.b),
     };
-    state.targetStroke = { ...nextColor };
-    state.targetFill = { ...nextColor };
+    state.targetFill = {
+      r: clamp01(fillColor.r),
+      g: clamp01(fillColor.g),
+      b: clamp01(fillColor.b),
+    };
     state.targetAlpha = clamp01(alpha);
     if (!state.initialized) {
       state.currentStroke = { ...state.targetStroke };
@@ -93,19 +104,91 @@ export function createOrbColorRuntime({
     }
   }
 
+  function resolveLayerTarget() {
+    if (state.explicitActive && state.explicitStroke && state.explicitFill) {
+      return {
+        stroke: state.explicitStroke,
+        fill: state.explicitFill,
+        alpha: state.explicitAlpha,
+      };
+    }
+    if (state.spinActive && state.spinStroke && state.spinFill) {
+      return {
+        stroke: state.spinStroke,
+        fill: state.spinFill,
+        alpha: state.spinAlpha,
+      };
+    }
+    const base = resolveBaseState();
+    return {
+      stroke: base.strokeDefault01,
+      fill: base.fillDefault01,
+      alpha: base.fillAlpha,
+    };
+  }
+
+  function syncTargetToActiveLayer() {
+    const target = resolveLayerTarget();
+    applyResolvedTarget(target.stroke, target.fill, target.alpha);
+  }
+
+  function setExplicitTarget(color, alpha) {
+    const nextColor = {
+      r: clamp01(color.r),
+      g: clamp01(color.g),
+      b: clamp01(color.b),
+    };
+    state.explicitActive = true;
+    state.explicitStroke = { ...nextColor };
+    state.explicitFill = { ...nextColor };
+    state.explicitAlpha = clamp01(alpha);
+    syncTargetToActiveLayer();
+  }
+
   function applyColorize(payload = {}) {
     const r = toChannel01(payload.r, state.targetStroke.r);
     const g = toChannel01(payload.g, state.targetStroke.g);
     const b = toChannel01(payload.b, state.targetStroke.b);
     const alpha = toChannel01(payload.alpha, state.targetAlpha);
-    setTarget({ r, g, b }, alpha);
+    setExplicitTarget({ r, g, b }, alpha);
   }
 
   function clearColorize() {
-    syncToBase({ immediate: false });
+    state.explicitActive = false;
+    state.explicitStroke = null;
+    state.explicitFill = null;
+    syncTargetToActiveLayer();
+  }
+
+  function applySpinColor(payload = {}) {
+    const r = toChannel01(payload.r, state.targetStroke.r);
+    const g = toChannel01(payload.g, state.targetStroke.g);
+    const b = toChannel01(payload.b, state.targetStroke.b);
+    const base = resolveBaseState();
+    const alpha = payload.alpha != null
+      ? toChannel01(payload.alpha, base.fillAlpha)
+      : base.fillAlpha;
+    state.spinActive = true;
+    state.spinStroke = { r, g, b };
+    state.spinFill = { r, g, b };
+    state.spinAlpha = alpha;
+    syncTargetToActiveLayer();
+  }
+
+  function clearSpinColor() {
+    state.spinActive = false;
+    state.spinStroke = null;
+    state.spinFill = null;
+    syncTargetToActiveLayer();
   }
 
   function reset(immediate = false) {
+    state.explicitActive = false;
+    state.explicitStroke = null;
+    state.explicitFill = null;
+    state.spinActive = false;
+    state.spinStroke = null;
+    state.spinFill = null;
     syncToBase({ immediate: !!immediate });
   }
 
@@ -136,6 +219,8 @@ export function createOrbColorRuntime({
   return {
     applyColorize,
     clearColorize,
+    applySpinColor,
+    clearSpinColor,
     reset,
     update,
     getCurrentState,

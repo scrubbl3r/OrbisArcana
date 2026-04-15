@@ -22,6 +22,7 @@ import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
+import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
@@ -564,6 +565,7 @@ function handleShellImpulseFrame(shellContext, data) {
         suppressShake: false,
       });
       runtime.motionStore.publish(motionState);
+      updateShellSpinColorFromMotionState(shellContext, motionState);
       if (motionState && motionState.spin) {
         inputPayload = {
           ...(data || {}),
@@ -591,6 +593,26 @@ function handleShellImpulseFrame(shellContext, data) {
   if (devView && typeof devView.setStatus === "function" && !runtime.pendingInputStatusShown) {
     devView.setStatus('Phone calibrated <span class="devStagingDim">(receiver host boot pending)</span>', "devStagingDim");
     runtime.pendingInputStatusShown = true;
+  }
+}
+
+function updateShellSpinColorFromMotionState(shellContext, motionState) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbColorRuntime = runtime && runtime.orbColorRuntime ? runtime.orbColorRuntime : null;
+  if (!orbColorRuntime) return;
+  const spin = motionState && motionState.spin ? motionState.spin : null;
+  const axis = String(spin && spin.label || "").trim().toLowerCase();
+  const direction = String(spin && spin.direction || "").trim().toLowerCase();
+  const dominance = Number(spin && spin.dominance) || 0;
+  const gap = Number(spin && spin.gap) || 0;
+  const color = resolveOrbSpinColor(axis, direction);
+  const shouldApply = !!color && dominance >= 0.58 && gap >= 0.08;
+  if (shouldApply && typeof orbColorRuntime.applySpinColor === "function") {
+    orbColorRuntime.applySpinColor(color);
+    return;
+  }
+  if (typeof orbColorRuntime.clearSpinColor === "function") {
+    orbColorRuntime.clearSpinColor();
   }
 }
 
