@@ -40,7 +40,6 @@ Canonical token set
 - `orbis`
 - `domus`
 - `tempus`
-- `fridgis`
 - `electrum`
 - `rota`
 - `sanctum`

@@ -197,7 +197,7 @@ const baseline = Object.freeze({
     trigger: Object.freeze({ grace: Object.freeze({ ttlMs: 500 }) }),
   }),
   groups: Object.freeze({
-    wake_main_words: Object.freeze(["domus", "pyro", "fridgis", "electrum", "rota"]),
+    wake_main_words: Object.freeze(["domus", "pyro", "electrum", "rota", "sanctum"]),
   }),
   rules: Object.freeze([
     Object.freeze({
@@ -1065,7 +1065,7 @@ expectInvalidNoWarningsWithAppendedRule(
   "unknown_requires_window",
   {
     id: "bad_window_ref",
-    on: Object.freeze({ word: "fridgis" }),
+    on: Object.freeze({ word: "sanctum" }),
     requires: Object.freeze(["wake.unknown"]),
     trigger: Object.freeze({ aoe_frost: true }),
   },
@@ -1171,7 +1171,7 @@ expectInvalidNoWarningsWithAppendedRule(
   "invalid_requires_window_shape",
   {
     id: "bad_requires_window_shape",
-    on: Object.freeze({ word: "fridgis" }),
+    on: Object.freeze({ word: "sanctum" }),
     requires: Object.freeze(["wake main"]),
     trigger: Object.freeze({ aoe_frost: true }),
   },
@@ -1182,7 +1182,7 @@ expectInvalidNoWarningsWithAppendedRule(
   "requires_window_whitespace_invalid",
   {
     id: "requires_window_whitespace_rule",
-    on: Object.freeze({ word: "fridgis" }),
+    on: Object.freeze({ word: "sanctum" }),
     requires: Object.freeze([" wake.main "]),
     trigger: Object.freeze({ aoe_frost: true }),
   },
@@ -1193,7 +1193,7 @@ expectInvalidNoWarningsWithAppendedRule(
   "requires_window_string_whitespace_invalid",
   {
     id: "requires_window_string_whitespace_rule",
-    on: Object.freeze({ word: "fridgis" }),
+    on: Object.freeze({ word: "sanctum" }),
     requires: " wake.main ",
     trigger: Object.freeze({ aoe_frost: true }),
   },

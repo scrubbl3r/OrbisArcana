@@ -9,7 +9,6 @@ export const SIGNAL_HANDLES_V2 = Object.freeze({
   ARE_KAY_NAH: "spell.are_kay_nah",
   DOMUS: "spell.domus",
   PYRO: "spell.pyro",
-  FRIDGIS: "spell.fridgis",
   ELECTRUM: "spell.electrum",
   SANCTUM: "spell.sanctum",
   AZERITH: "spell.azerith",

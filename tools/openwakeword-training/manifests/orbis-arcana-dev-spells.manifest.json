@@ -26,11 +26,6 @@
       "token": "pyro"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/fridgis.onnx",
-      "label": "fridgis",
-      "token": "fridgis"
-    },
-    {
       "path": "../../../assets/kws/openwakeword-models/electrum.onnx",
       "label": "electrum",
       "token": "electrum"

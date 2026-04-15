@@ -13,7 +13,6 @@ const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "echovar",
   "domus",
   "electrum",
-  "fridgis",
   "pyro",
   "rota",
   "sanctum",

@@ -21,7 +21,7 @@ const WORD_ORBIS_ID = "orbis";
 const WORD_PYRO_ID = "pyro";
 const WORD_DOMUS_ID = "domus";
 const WORD_ROTA_ID = "rota";
-const WORD_FRIDGIS_ID = "fridgis";
+const WORD_SANCTUM_ID = "sanctum";
 const WORD_ELECTRUM_ID = "electrum";
 const SPIN_Y_ID = "y";
 const EVENT_GRACE_ID = "grace";
@@ -33,7 +33,7 @@ const WORD_PYRO_SELECTOR = "word.pyro";
 const WORD_ORBIS_SELECTOR = "word.orbis";
 const WORD_GROUP_PREFIXED_REF = "@prefixed_words";
 const SPELL_ROTA_SELECTOR = "spell.rota";
-const SPELL_FRIDGIS_SELECTOR = "spell.fridgis";
+const SPELL_SANCTUM_SELECTOR = "spell.sanctum";
 
 function asJson(v) {
   return JSON.stringify(v);
@@ -105,7 +105,7 @@ const sample = Object.freeze({
     }),
   }),
   groups: Object.freeze({
-    wake_main_words: Object.freeze([WORD_DOMUS_ID, WORD_PYRO_ID, WORD_FRIDGIS_ID, WORD_ELECTRUM_ID, WORD_ROTA_ID]),
+    wake_main_words: Object.freeze([WORD_DOMUS_ID, WORD_PYRO_ID, WORD_SANCTUM_ID, WORD_ELECTRUM_ID, WORD_ROTA_ID]),
     prefixed_words: Object.freeze([WORD_PYRO_SELECTOR, SPELL_ROTA_SELECTOR]),
   }),
   rules: Object.freeze([
@@ -263,7 +263,7 @@ const sample = Object.freeze({
       on: Object.freeze({ word: WORD_ORBIS_ID }),
       open: Object.freeze({
         id: WINDOW_GROUP_MIXED_ID,
-        words: Object.freeze([WORD_GROUP_PREFIXED_REF, WORD_DOMUS_ID, SPELL_FRIDGIS_SELECTOR]),
+        words: Object.freeze([WORD_GROUP_PREFIXED_REF, WORD_DOMUS_ID, SPELL_SANCTUM_SELECTOR]),
       }),
     }),
   ]),
@@ -344,7 +344,7 @@ assertEqual(String(wakeRule.matchWindowMs), "1999", "wakeRule.matchWindowMs(defa
 assertEqual(String(wakeRule.priority), "7", "wakeRule.priority(default)", details);
 assertEqual(
   asJson(wakeRule.then),
-  asJson(expectedWakeThen(WINDOW_WAKE_MAIN_ID, [WORD_DOMUS_ID, WORD_PYRO_ID, WORD_FRIDGIS_ID, WORD_ELECTRUM_ID, WORD_ROTA_ID], 1800)),
+  asJson(expectedWakeThen(WINDOW_WAKE_MAIN_ID, [WORD_DOMUS_ID, WORD_PYRO_ID, WORD_SANCTUM_ID, WORD_ELECTRUM_ID, WORD_ROTA_ID], 1800)),
   "wakeRule.then",
   details
 );
@@ -561,7 +561,7 @@ assertEqual(
 );
 assertEqual(
   asJson(groupMixedRule.then),
-  asJson(expectedWakeThen(WINDOW_GROUP_MIXED_ID, [WORD_PYRO_ID, WORD_ROTA_ID, WORD_DOMUS_ID, WORD_FRIDGIS_ID])),
+  asJson(expectedWakeThen(WINDOW_GROUP_MIXED_ID, [WORD_PYRO_ID, WORD_ROTA_ID, WORD_DOMUS_ID, WORD_SANCTUM_ID])),
   "groupMixedRule.then",
   details
 );
