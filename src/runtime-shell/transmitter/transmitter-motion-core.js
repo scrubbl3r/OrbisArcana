@@ -435,10 +435,14 @@ export function createTransmitterMotionCore({
     while (spinVectorHist.length && spinVectorHist[0].t < cutoff) spinVectorHist.shift();
 
     let sx = 0, sy = 0, sz = 0;
+    let signedX = 0, signedY = 0, signedZ = 0;
     for (const s of spinVectorHist) {
       sx += Math.abs(s.x);
       sy += Math.abs(s.y);
       sz += Math.abs(s.z);
+      signedX += s.x;
+      signedY += s.y;
+      signedZ += s.z;
     }
     const a = vNorm({ x: sx, y: sy, z: sz });
     if (!(a.mag > 1e-6)) return;
@@ -446,9 +450,9 @@ export function createTransmitterMotionCore({
     spinVector01 = { x: a.z, y: a.y, z: a.x };
 
     const semantic = [
-      { axis: "x", magnitude: spinVector01.x, signed: v.z },
-      { axis: "y", magnitude: spinVector01.y, signed: v.y },
-      { axis: "z", magnitude: spinVector01.z, signed: v.x },
+      { axis: "x", magnitude: spinVector01.x, signed: signedZ },
+      { axis: "y", magnitude: spinVector01.y, signed: signedY },
+      { axis: "z", magnitude: spinVector01.z, signed: signedX },
     ].sort((left, right) => right.magnitude - left.magnitude);
     spinDirection = semantic[0] && semantic[0].magnitude > 1e-6
       ? (semantic[0].signed >= 0 ? "cw" : "ccw")

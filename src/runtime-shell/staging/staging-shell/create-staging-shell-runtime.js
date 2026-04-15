@@ -599,9 +599,6 @@ function handleShellImpulseFrame(shellContext, data) {
 
 function traceShellSpinDirection(shellContext, motionState) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const shellKws = runtime && runtime.kws ? runtime.kws : null;
-  const kwsBridge = shellKws && shellKws.kwsBridge ? shellKws.kwsBridge : null;
-  if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
   const spin = motionState && motionState.spin ? motionState.spin : null;
   const axis = String(spin && spin.label || "").trim().toLowerCase();
   const direction = String(spin && spin.direction || "").trim().toLowerCase();
@@ -612,7 +609,8 @@ function traceShellSpinDirection(shellContext, motionState) {
     : "none";
   if (runtime && runtime.lastSpinDirectionTraceKey === traceKey) return;
   if (runtime) runtime.lastSpinDirectionTraceKey = traceKey;
-  kwsBridge.pushLogLine(
+  pushShellGeneralLog(
+    shellContext,
     axis
       ? `TRACE spin:${axis}:${direction || "-"}:dom:${dominance.toFixed(2)}:gap:${gap.toFixed(2)}`
       : "TRACE spin:-",
