@@ -238,8 +238,16 @@
       const spinVector = pickVec3(packet, "spinVector");
       const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
       const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
-      const spin = deriveSpinStateFromVector(spinVector, packet && packet.spinDirection)
-        || deriveSpinState(rotationRate, receivedAtMs, spinRuntime);
+      const vectorSpin = deriveSpinStateFromVector(spinVector, packet && packet.spinDirection);
+      const derivedSpin = deriveSpinState(rotationRate, receivedAtMs, spinRuntime);
+      const spin = vectorSpin
+        ? {
+            ...vectorSpin,
+            direction: derivedSpin && derivedSpin.direction
+              ? derivedSpin.direction
+              : vectorSpin.direction,
+          }
+        : derivedSpin;
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
