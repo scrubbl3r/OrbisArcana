@@ -56,6 +56,7 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
       orbTeleportFlickerOnMs: 60,
       orbTeleportFlickerOffMs: 60,
       orbTeleportFadeOutMs: 280,
+      orbTeleportCameraTravelMs: 1500,
       orbTeleportFadeInMs: 280,
     },
   };
@@ -79,6 +80,7 @@ export function initGameStagingReceiverVfxRuntime({
   rand = (min, max) => Number(min) + (Math.random() * (Number(max) - Number(min))),
   getOrbScaleFactor = () => 1,
   getOrbDiameterPx = () => Math.max(1, Number(getOrbScaleFactor()) || 1) * 100,
+  requestCameraTravel = null,
 } = {}) {
   if (!runtime || typeof createVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
   const readOrbDiameterPx = () => Math.max(
@@ -165,6 +167,11 @@ export function initGameStagingReceiverVfxRuntime({
         runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.patch === "function"
           ? runtime.stage.orbRuntimeState.patch(patch)
           : null
+      ),
+      requestCameraTravel: (payload = {}) => (
+        typeof requestCameraTravel === "function"
+          ? requestCameraTravel(payload)
+          : Promise.resolve({ handled: false })
       ),
       getConfig: () => (vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object")
         ? vfxDefaults.teleport

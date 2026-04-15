@@ -17,6 +17,7 @@ export function createTeleportRuntime({
   getOrbRuntime = () => null,
   patchOrbRuntime = () => null,
   getConfig = () => ({}),
+  requestCameraTravel = null,
 } = {}) {
   if (!orbEl) return null;
 
@@ -25,12 +26,17 @@ export function createTeleportRuntime({
   let lastConfig = null;
   let teleported = false;
   let completed = false;
+  let fadeInStartMs = 0;
+  let cameraTravelDone = false;
+  let cameraTravelRequested = false;
+  let teleportSourceYW = 0;
 
   function normalizeConfig(raw = {}) {
     return {
       flickerOnMs: Math.round(clampNumber(raw.flickerOnMs ?? raw.orbTeleportFlickerOnMs, 10, 1000, 60)),
       flickerOffMs: Math.round(clampNumber(raw.flickerOffMs ?? raw.orbTeleportFlickerOffMs, 10, 1000, 60)),
       fadeOutMs: Math.round(clampNumber(raw.fadeOutMs ?? raw.orbTeleportFadeOutMs, 40, 4000, 280)),
+      cameraTravelMs: Math.round(clampNumber(raw.cameraTravelMs ?? raw.orbTeleportCameraTravelMs, 0, 8000, 1500)),
       fadeInMs: Math.round(clampNumber(raw.fadeInMs ?? raw.orbTeleportFadeInMs, 40, 4000, 280)),
       onTeleport: typeof raw.onTeleport === "function" ? raw.onTeleport : null,
       onComplete: typeof raw.onComplete === "function" ? raw.onComplete : null,
@@ -91,6 +97,10 @@ export function createTeleportRuntime({
     startMs = 0;
     teleported = false;
     completed = false;
+    fadeInStartMs = 0;
+    cameraTravelDone = false;
+    cameraTravelRequested = false;
+    teleportSourceYW = 0;
     releaseTeleportHold();
     reset();
   }
@@ -99,7 +109,6 @@ export function createTeleportRuntime({
     if (!lastConfig) return;
     const elapsedMs = Math.max(0, nowMs - startMs);
     const fadeOutEnd = lastConfig.fadeOutMs;
-    const totalEnd = fadeOutEnd + lastConfig.fadeInMs;
 
     if (elapsedMs <= fadeOutEnd) {
       const progress = Math.max(0, Math.min(1, elapsedMs / Math.max(1, lastConfig.fadeOutMs)));
@@ -111,20 +120,63 @@ export function createTeleportRuntime({
 
     if (!teleported) {
       teleported = true;
+      let teleportResult = null;
       if (typeof lastConfig.onTeleport === "function") {
         try {
-          lastConfig.onTeleport();
+          teleportResult = lastConfig.onTeleport();
         } catch (_) {}
       }
       refreshTeleportHoldAnchor();
+      const destinationState = typeof getOrbRuntime === "function" ? getOrbRuntime() : null;
+      const destinationYW = Number.isFinite(Number(destinationState && destinationState.yW))
+        ? Number(destinationState.yW)
+        : teleportSourceYW;
+      const durationMs = Math.max(0, Number(lastConfig.cameraTravelMs) || 0);
+      if (
+        durationMs > 0 &&
+        typeof requestCameraTravel === "function" &&
+        Math.abs(destinationYW - teleportSourceYW) > 1
+      ) {
+        cameraTravelRequested = true;
+        try {
+          const maybePromise = requestCameraTravel({
+            fromYW: teleportSourceYW,
+            toYW: destinationYW,
+            durationMs,
+            easing: "easeInOutExpo",
+          });
+          if (maybePromise && typeof maybePromise.then === "function") {
+            maybePromise.finally(() => {
+              cameraTravelDone = true;
+              fadeInStartMs = performance.now();
+            });
+          } else {
+            cameraTravelDone = true;
+            fadeInStartMs = performance.now();
+          }
+        } catch (_) {
+          cameraTravelDone = true;
+          fadeInStartMs = performance.now();
+        }
+      } else {
+        cameraTravelDone = true;
+        fadeInStartMs = performance.now();
+      }
+      void teleportResult;
     }
 
-    const fadeInElapsedMs = elapsedMs - fadeOutEnd;
+    if (!cameraTravelDone) {
+      setOpacity(0);
+      raf = requestAnimationFrame(render);
+      return;
+    }
+
+    const fadeInElapsedMs = Math.max(0, nowMs - fadeInStartMs);
     const progress = Math.max(0, Math.min(1, fadeInElapsedMs / Math.max(1, lastConfig.fadeInMs)));
     const flicker = buildFlickerMask(fadeInElapsedMs, lastConfig.flickerOnMs, lastConfig.flickerOffMs);
     setOpacity(progress * flicker);
 
-    if (elapsedMs >= totalEnd) {
+    if (fadeInElapsedMs >= lastConfig.fadeInMs) {
       releaseTeleportHold();
       setOpacity(1);
       if (!completed && typeof lastConfig.onComplete === "function") {
@@ -145,6 +197,8 @@ export function createTeleportRuntime({
       ...(typeof getConfig === "function" ? (getConfig() || {}) : {}),
       ...(payload && typeof payload === "object" ? payload : {}),
     });
+    const state = typeof getOrbRuntime === "function" ? getOrbRuntime() : null;
+    teleportSourceYW = Number.isFinite(Number(state && state.yW)) ? Number(state.yW) : 0;
     engageTeleportHold();
     startMs = performance.now();
     raf = requestAnimationFrame(render);
