@@ -347,6 +347,7 @@ export function duplicateEffectProfile({
   draftStore,
   categoryLabels,
   captureCurrentEffectSettings,
+  defaultSettingsForBaseEffect = null,
   updateEffectSections,
   persistDraftStore,
 }) {
@@ -366,6 +367,11 @@ export function duplicateEffectProfile({
   const srcSettingsByBase = srcDraft && srcDraft.settingsByBaseEffect && typeof srcDraft.settingsByBaseEffect === "object"
     ? srcDraft.settingsByBaseEffect
     : null;
+  const isLockedBuiltinTemplate = (
+    String(baseEffect || "") === "orb-template"
+    && String((selectedOption && selectedOption.dataset.locked) || "") === "true"
+    && typeof defaultSettingsForBaseEffect === "function"
+  );
   draftStore.profilesByValue[newValue] = {
     value: newValue,
     label: trimmedName,
@@ -375,6 +381,8 @@ export function duplicateEffectProfile({
     locked: false,
     settingsByBaseEffect: srcSettingsByBase
       ? JSON.parse(JSON.stringify(srcSettingsByBase))
+      : isLockedBuiltinTemplate
+      ? { [baseEffect]: defaultSettingsForBaseEffect(baseEffect) }
       : { [baseEffect]: captureCurrentEffectSettings(baseEffect) },
     savedAtMs: Date.now(),
   };
