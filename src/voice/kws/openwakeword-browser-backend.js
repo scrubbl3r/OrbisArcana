@@ -112,6 +112,14 @@ async function fetchBuffer(url, signal) {
   return { buffer: buf, bytes: buf.byteLength >>> 0 };
 }
 
+async function fetchOptionalBuffer(url, signal) {
+  const res = await fetch(url, { method: "GET", signal });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`oww_browser_model_fetch_failed:${res.status}:${url}`);
+  const buf = await res.arrayBuffer();
+  return { buffer: buf, bytes: buf.byteLength >>> 0 };
+}
+
 function buildWorkerUrl() {
   try {
     return new URL("./openwakeword-browser-audio-worker.js", import.meta.url);
@@ -295,7 +303,6 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
         manifestLoaded = true;
         manifestLoadAtMs = nowMs();
         modelCount = parsed.models.length;
-        const requireOnnxDataPair = !!config.requireOnnxDataPair;
         const nextLoaded = [];
 
         for (const m of parsed.models) {
@@ -308,8 +315,8 @@ export function createOpenWakeWordBrowserBackendFactory(cfg = {}) {
           let dataBuffer = null;
           if (/\.onnx$/i.test(m.url)) {
             dataUrl = `${m.url}.data`;
-            if (requireOnnxDataPair) {
-              const dataBlob = await fetchBuffer(dataUrl, controller.signal);
+            const dataBlob = await fetchOptionalBuffer(dataUrl, controller.signal);
+            if (dataBlob) {
               dataBytes = dataBlob.bytes;
               dataBuffer = dataBlob.buffer;
               totalModelBytes += dataBytes;
