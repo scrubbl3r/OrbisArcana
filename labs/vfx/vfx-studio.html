@@ -979,9 +979,9 @@
             <button id="orbTemplateApplyDurationBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbTemplateBrightnessBoost">Brightness boost (%)</label>
-            <input id="orbTemplateBrightnessBoost" class="paramFieldInput" type="number" min="0" max="100" step="1" value="24" />
-            <button id="orbTemplateApplyBrightnessBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbTemplateFillOpacityBoost">Fill opacity lift (%)</label>
+            <input id="orbTemplateFillOpacityBoost" class="paramFieldInput" type="number" min="0" max="100" step="1" value="24" />
+            <button id="orbTemplateApplyFillOpacityBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
             <label for="orbTemplateWaveCount">Wave count</label>
@@ -1313,8 +1313,8 @@
       orbTemplateApplyShrinkBtn: $("orbTemplateApplyShrinkBtn"),
       orbTemplateDurationMs: $("orbTemplateDurationMs"),
       orbTemplateApplyDurationBtn: $("orbTemplateApplyDurationBtn"),
-      orbTemplateBrightnessBoost: $("orbTemplateBrightnessBoost"),
-      orbTemplateApplyBrightnessBtn: $("orbTemplateApplyBrightnessBtn"),
+      orbTemplateFillOpacityBoost: $("orbTemplateFillOpacityBoost"),
+      orbTemplateApplyFillOpacityBtn: $("orbTemplateApplyFillOpacityBtn"),
       orbTemplateWaveCount: $("orbTemplateWaveCount"),
       orbTemplateApplyWaveCountBtn: $("orbTemplateApplyWaveCountBtn"),
       orbTemplateWaveDepthPx: $("orbTemplateWaveDepthPx"),
@@ -1562,7 +1562,7 @@
           return {
             orbTemplateShrinkPct: 8,
             orbTemplateDurationMs: 500,
-            orbTemplateBrightnessBoost: 24,
+            orbTemplateFillOpacityBoost: 24,
             orbTemplateWaveCount: 10,
             orbTemplateWaveDepthPx: 4,
             orbTemplateOscillationSpeedHz: 12,
@@ -1829,7 +1829,7 @@
           return {
             orbTemplateShrinkPct: Number(els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value),
             orbTemplateDurationMs: Number(els.orbTemplateDurationMs && els.orbTemplateDurationMs.value),
-            orbTemplateBrightnessBoost: Number(els.orbTemplateBrightnessBoost && els.orbTemplateBrightnessBoost.value),
+            orbTemplateFillOpacityBoost: Number(els.orbTemplateFillOpacityBoost && els.orbTemplateFillOpacityBoost.value),
             orbTemplateWaveCount: Number(els.orbTemplateWaveCount && els.orbTemplateWaveCount.value),
             orbTemplateWaveDepthPx: Number(els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value),
             orbTemplateOscillationSpeedHz: Number(els.orbTemplateOscillationSpeedHz && els.orbTemplateOscillationSpeedHz.value),
@@ -1909,7 +1909,11 @@
           case "orb-template":
             if (els.orbTemplateShrinkPct && settings.orbTemplateShrinkPct != null) els.orbTemplateShrinkPct.value = String(settings.orbTemplateShrinkPct);
             if (els.orbTemplateDurationMs && settings.orbTemplateDurationMs != null) els.orbTemplateDurationMs.value = String(settings.orbTemplateDurationMs);
-            if (els.orbTemplateBrightnessBoost && settings.orbTemplateBrightnessBoost != null) els.orbTemplateBrightnessBoost.value = String(settings.orbTemplateBrightnessBoost);
+            if (els.orbTemplateFillOpacityBoost && settings.orbTemplateFillOpacityBoost != null) {
+              els.orbTemplateFillOpacityBoost.value = String(settings.orbTemplateFillOpacityBoost);
+            } else if (els.orbTemplateFillOpacityBoost && settings.orbTemplateBrightnessBoost != null) {
+              els.orbTemplateFillOpacityBoost.value = String(settings.orbTemplateBrightnessBoost);
+            }
             if (els.orbTemplateWaveCount && settings.orbTemplateWaveCount != null) els.orbTemplateWaveCount.value = String(settings.orbTemplateWaveCount);
             if (els.orbTemplateWaveDepthPx && settings.orbTemplateWaveDepthPx != null) els.orbTemplateWaveDepthPx.value = String(settings.orbTemplateWaveDepthPx);
             if (els.orbTemplateOscillationSpeedHz && settings.orbTemplateOscillationSpeedHz != null) els.orbTemplateOscillationSpeedHz.value = String(settings.orbTemplateOscillationSpeedHz);

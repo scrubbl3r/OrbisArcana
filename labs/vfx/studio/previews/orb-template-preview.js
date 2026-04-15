@@ -16,6 +16,20 @@ function polarPoint(angle, radius) {
   };
 }
 
+function parseRgba(text) {
+  const match = String(text || "").match(/rgba?\(([^)]+)\)/i);
+  if (!match) {
+    return { r: 255, g: 255, b: 255, a: 0.20 };
+  }
+  const parts = match[1].split(",").map((part) => Number(part.trim()));
+  return {
+    r: Number.isFinite(parts[0]) ? parts[0] : 255,
+    g: Number.isFinite(parts[1]) ? parts[1] : 255,
+    b: Number.isFinite(parts[2]) ? parts[2] : 255,
+    a: Number.isFinite(parts[3]) ? parts[3] : 1,
+  };
+}
+
 function buildWobblePath({
   baseRadius = 50,
   waveCount = 10,
@@ -50,7 +64,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     if (!els || !els.previewRoot) return;
 
     const svg = document.createElementNS(SVG_NS, "svg");
-    svg.setAttribute("viewBox", "-60 -60 120 120");
+    svg.setAttribute("viewBox", "-50 -50 100 100");
     svg.style.position = "absolute";
     svg.style.left = "0";
     svg.style.top = "0";
@@ -95,7 +109,13 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     return {
       shrinkPct: clampNumber(els && els.orbTemplateShrinkPct && els.orbTemplateShrinkPct.value, 0, 40, 8) / 100,
       durationMs: Math.round(clampNumber(els && els.orbTemplateDurationMs && els.orbTemplateDurationMs.value, 80, 3000, 500)),
-      brightnessBoost: clampNumber(els && els.orbTemplateBrightnessBoost && els.orbTemplateBrightnessBoost.value, 0, 100, 24) / 100,
+      fillOpacityBoost: clampNumber(
+        (els && els.orbTemplateFillOpacityBoost && els.orbTemplateFillOpacityBoost.value)
+          ?? (els && els.orbTemplateBrightnessBoost && els.orbTemplateBrightnessBoost.value),
+        0,
+        100,
+        24
+      ) / 100,
       waveCount: Math.round(clampNumber(els && els.orbTemplateWaveCount && els.orbTemplateWaveCount.value, 2, 32, 10)),
       waveDepthPx: resolveOrbLinkedPx(
         clampNumber(els && els.orbTemplateWaveDepthPx && els.orbTemplateWaveDepthPx.value, 0, 32, 4),
@@ -110,7 +130,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     if (!els) return;
     if (els.orbTemplateShrinkPct) els.orbTemplateShrinkPct.value = String(Math.round(cfg.shrinkPct * 100));
     if (els.orbTemplateDurationMs) els.orbTemplateDurationMs.value = String(cfg.durationMs);
-    if (els.orbTemplateBrightnessBoost) els.orbTemplateBrightnessBoost.value = String(Math.round(cfg.brightnessBoost * 100));
+    if (els.orbTemplateFillOpacityBoost) els.orbTemplateFillOpacityBoost.value = String(Math.round(cfg.fillOpacityBoost * 100));
     if (els.orbTemplateWaveCount) els.orbTemplateWaveCount.value = String(cfg.waveCount);
     if (els.orbTemplateWaveDepthPx) {
       const authored = clampNumber(els.orbTemplateWaveDepthPx.value, 0, 32, 4);
@@ -135,12 +155,13 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     ensureOverlay();
     if (!activeSvg || !activePath || !els || !els.orb) return;
     const css = readCssVars();
+    const fill = parseRgba(css.fillColor);
     const envelope = Math.sin(progress * Math.PI);
     const oscillationTime = progress * cfg.durationMs * 0.001;
     const standingOscillation = Math.sin(oscillationTime * Math.PI * 2 * cfg.oscillationSpeedHz);
     const signedWaveDepth = cfg.waveDepthPx * envelope * standingOscillation;
     const scale = 1 - (cfg.shrinkPct * envelope);
-    const brightness = 1 + (cfg.brightnessBoost * envelope);
+    const liftedFillAlpha = Math.min(1, fill.a + ((1 - fill.a) * cfg.fillOpacityBoost * envelope));
 
     els.orb.hidden = true;
     activeSvg.style.display = "";
@@ -149,11 +170,11 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
       waveCount: cfg.waveCount,
       waveDepth: signedWaveDepth,
     }));
-    activePath.setAttribute("fill", css.fillColor);
+    activePath.setAttribute("fill", `rgba(${Math.round(fill.r)}, ${Math.round(fill.g)}, ${Math.round(fill.b)}, ${liftedFillAlpha.toFixed(3)})`);
     activePath.setAttribute("stroke", css.strokeColor);
     activePath.setAttribute("stroke-width", String(css.strokeWidth));
     activeSvg.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(4)})`;
-    activeSvg.style.filter = `brightness(${brightness.toFixed(3)}) drop-shadow(0 0 ${Math.max(2, Math.abs(signedWaveDepth) * 1.4).toFixed(2)}px ${css.strokeColor})`;
+    activeSvg.style.filter = `drop-shadow(0 0 ${Math.max(2, Math.abs(signedWaveDepth) * 1.4).toFixed(2)}px ${css.strokeColor})`;
   }
 
   function apply() {
@@ -208,7 +229,7 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     [
       els && els.orbTemplateApplyShrinkBtn,
       els && els.orbTemplateApplyDurationBtn,
-      els && els.orbTemplateApplyBrightnessBtn,
+      els && els.orbTemplateApplyFillOpacityBtn,
       els && els.orbTemplateApplyWaveCountBtn,
       els && els.orbTemplateApplyWaveDepthBtn,
       els && els.orbTemplateApplyOscillationSpeedBtn,
