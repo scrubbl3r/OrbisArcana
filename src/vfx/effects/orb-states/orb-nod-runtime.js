@@ -62,6 +62,9 @@ function readCurrentFillAlpha(orbEl) {
 export function createOrbNodRuntime({
   orbEl = null,
   mountEl = null,
+  orbInteriorEl = null,
+  orbCracksEl = null,
+  orbShardsEl = null,
   getOrbDiameterPx = () => 100,
   getConfig = () => ({}),
 } = {}) {
@@ -125,6 +128,9 @@ export function createOrbNodRuntime({
     orbEl.hidden = false;
     orbEl.style.transform = "";
     orbEl.style.filter = "";
+    if (orbInteriorEl) orbInteriorEl.style.visibility = "";
+    if (orbCracksEl) orbCracksEl.style.visibility = "";
+    if (orbShardsEl) orbShardsEl.style.visibility = "";
   }
 
   function render(nowMs) {
@@ -152,6 +158,9 @@ export function createOrbNodRuntime({
     ) || 2;
 
     orbEl.hidden = true;
+    if (orbInteriorEl) orbInteriorEl.style.visibility = "hidden";
+    if (orbCracksEl) orbCracksEl.style.visibility = "hidden";
+    if (orbShardsEl) orbShardsEl.style.visibility = "hidden";
     activeSvg.style.display = "";
     activePath.setAttribute("d", buildWobblePath({
       baseRadius: 50,

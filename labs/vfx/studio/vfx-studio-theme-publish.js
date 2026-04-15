@@ -192,6 +192,19 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "orb-nod":
+      return [
+        "export const ORB_NOD_PRESET_DEFAULT = Object.freeze({",
+        `  orbTemplateShrinkPct: ${toNum(p.orbTemplateShrinkPct, 6).toFixed(0)},`,
+        `  orbTemplateDurationMs: ${Math.round(toNum(p.orbTemplateDurationMs, 200))},`,
+        `  orbTemplateFillAlpha: ${toNum(p.orbTemplateFillAlpha, 0.07).toFixed(2)},`,
+        `  orbTemplateWaveCount: ${toNum(p.orbTemplateWaveCount, 10).toFixed(0)},`,
+        `  orbTemplateWaveDepthPx: ${toNum(p.orbTemplateWaveDepthPx, 10).toFixed(1)},`,
+        `  orbTemplateOscillationSpeedHz: ${toNum(p.orbTemplateOscillationSpeedHz, 12).toFixed(1)},`,
+        `  orbTemplateOscillationCount: ${toNum(p.orbTemplateOscillationCount, 2).toFixed(0)},`,
+        "});",
+        "",
+      ].join("\n");
     default:
       return "";
   }

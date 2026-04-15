@@ -137,6 +137,9 @@ export function initGameStagingReceiverVfxRuntime({
     orbNodRuntime: createOrbNodRuntime({
       orbEl: stageEls.orb,
       mountEl: stageEls.orb ? stageEls.orb.parentElement : null,
+      orbInteriorEl: stageEls.orbInterior,
+      orbCracksEl: stageEls.orbCracks,
+      orbShardsEl: stageEls.orbShards,
       getOrbDiameterPx: readOrbDiameterPx,
       getConfig: () => (vfxDefaults && vfxDefaults.nod && typeof vfxDefaults.nod === "object")
         ? vfxDefaults.nod

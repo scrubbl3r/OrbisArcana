@@ -1159,7 +1159,8 @@
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
       FLAME_AOE_PRESET_DEFAULT,
-      ELECTRIC_AOE_PRESET_DEFAULT
+      ELECTRIC_AOE_PRESET_DEFAULT,
+      ORB_NOD_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260410b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260411a";
@@ -1218,6 +1219,10 @@
       "orb-globe": {
         path: ["src", "game-runtime", "orb", "orb-globe-default.js"],
         exportName: "ORB_GLOBE_VISUAL_DEFAULTS",
+      },
+      "orb-nod": {
+        path: ["src", "vfx", "presets", "orb-nod-default.js"],
+        exportName: "ORB_NOD_PRESET_DEFAULT",
       },
     });
 
@@ -1580,15 +1585,21 @@
             orbBaseFillB: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b),
           };
         case "orb-template":
+          {
+            const orbNodFillAlpha = Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateFillAlpha);
+            const resolvedFillAlpha = Number.isFinite(orbNodFillAlpha)
+              ? orbNodFillAlpha
+              : Number(buildCurrentLabOrbBaseVisualState().fillAlpha);
           return {
-            orbTemplateShrinkPct: 8,
-            orbTemplateDurationMs: 500,
-            orbTemplateFillAlpha: Number(buildCurrentLabOrbBaseVisualState().fillAlpha.toFixed(2)),
-            orbTemplateWaveCount: 10,
-            orbTemplateWaveDepthPx: 4,
-            orbTemplateOscillationSpeedHz: 12,
-            orbTemplateOscillationCount: 4,
+            orbTemplateShrinkPct: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateShrinkPct) || 8),
+            orbTemplateDurationMs: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateDurationMs) || 500),
+            orbTemplateFillAlpha: Number(resolvedFillAlpha.toFixed(2)),
+            orbTemplateWaveCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateWaveCount) || 10),
+            orbTemplateWaveDepthPx: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateWaveDepthPx) || 4),
+            orbTemplateOscillationSpeedHz: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationSpeedHz) || 12),
+            orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 4),
           };
+          }
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: 16,
