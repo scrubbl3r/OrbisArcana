@@ -22,7 +22,7 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   label: "openwakeword-browser",
   simulate: false,
   simulationIntervalMs: 1400,
-  manifestUrl: "./tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json",
+  manifestUrl: "./tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json?v=20260415b",
   melModelUrl: "./assets/kws/openwakeword-base-models/melspectrogram.onnx",
   embeddingModelUrl: "./assets/kws/openwakeword-base-models/embedding_model.onnx",
   requireOnnxDataPair: true,
