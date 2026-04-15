@@ -1018,8 +1018,8 @@
         </div>
       </div>
 
-      <div class="section" data-effect="orb-teleport" hidden>
-        <div class="bindingEditorHelp">Teleport orb-state sketch. The orb freezes in place, flickers while fading out, then flickers while fading back in and settles cleanly.</div>
+      <div class="section" data-effect="teleport" hidden>
+        <div class="bindingEditorHelp">Teleport spell sketch. The orb freezes in place, flickers while fading out, then flickers while fading back in and settles cleanly.</div>
         <div class="row">
           <button id="previewOrbTeleport" class="toolBtn" type="button">Preview</button>
         </div>
@@ -1200,7 +1200,8 @@
       SHOCKWAVE_PRESET_DEFAULT,
       FLAME_AOE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
-      ORB_NOD_PRESET_DEFAULT
+      ORB_NOD_PRESET_DEFAULT,
+      TELEPORT_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260410b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260411a";
@@ -1213,6 +1214,7 @@
       "spell.aoe_flame": "flame-aoe",
       "spell.shield_bubble": "bubble-shield",
       "spell.shockwave_ring": "shockwave",
+      "spell.teleport": "teleport",
       "orb.nod": "orb-nod",
     });
     const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi"]);
@@ -1226,7 +1228,6 @@
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
       { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
-      { value: "orb-teleport", label: "Orb Teleport", baseEffect: "orb-teleport", category: "orb", locked: true },
       { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
     ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
@@ -1265,6 +1266,10 @@
       "orb-nod": {
         path: ["src", "vfx", "presets", "orb-nod-default.js"],
         exportName: "ORB_NOD_PRESET_DEFAULT",
+      },
+      "teleport": {
+        path: ["src", "vfx", "presets", "teleport-default.js"],
+        exportName: "TELEPORT_PRESET_DEFAULT",
       },
     });
 
@@ -1675,12 +1680,12 @@
             orbTemplateOscillationSpeedHz: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationSpeedHz) || 12),
             orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 2),
           };
-        case "orb-teleport":
+        case "teleport":
           return {
-            orbTeleportFlickerOnMs: 60,
-            orbTeleportFlickerOffMs: 60,
-            orbTeleportFadeOutMs: 280,
-            orbTeleportFadeInMs: 280,
+            orbTeleportFlickerOnMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOnMs) || 60),
+            orbTeleportFlickerOffMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOffMs) || 60),
+            orbTeleportFadeOutMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeOutMs) || 280),
+            orbTeleportFadeInMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeInMs) || 280),
           };
         case "orb-lifecycle":
           return {
@@ -1959,7 +1964,7 @@
             orbTemplateOscillationSpeedHz: Number(els.orbNodOscillationSpeedHz && els.orbNodOscillationSpeedHz.value),
             orbTemplateOscillationCount: Number(els.orbNodOscillationCount && els.orbNodOscillationCount.value),
           };
-        case "orb-teleport":
+        case "teleport":
           return {
             orbTeleportFlickerOnMs: Number(els.orbTeleportFlickerOnMs && els.orbTeleportFlickerOnMs.value),
             orbTeleportFlickerOffMs: Number(els.orbTeleportFlickerOffMs && els.orbTeleportFlickerOffMs.value),
@@ -2060,7 +2065,7 @@
             if (els.orbNodOscillationCount && settings.orbTemplateOscillationCount != null) els.orbNodOscillationCount.value = String(settings.orbTemplateOscillationCount);
             applyOrbNod();
             break;
-          case "orb-teleport":
+          case "teleport":
             if (els.orbTeleportFlickerOnMs && settings.orbTeleportFlickerOnMs != null) els.orbTeleportFlickerOnMs.value = String(settings.orbTeleportFlickerOnMs);
             if (els.orbTeleportFlickerOffMs && settings.orbTeleportFlickerOffMs != null) els.orbTeleportFlickerOffMs.value = String(settings.orbTeleportFlickerOffMs);
             if (els.orbTeleportFadeOutMs && settings.orbTeleportFadeOutMs != null) els.orbTeleportFadeOutMs.value = String(settings.orbTeleportFadeOutMs);
@@ -2346,7 +2351,7 @@
       "orb-nod": els.orbNodPreviewRoot,
       "orb-lifecycle": els.orbLifecyclePreviewRoot,
       "orb-globe": els.orbGlobePreviewRoot,
-      "orb-teleport": els.orbTeleportPreviewRoot,
+      "teleport": els.orbTeleportPreviewRoot,
     };
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
 

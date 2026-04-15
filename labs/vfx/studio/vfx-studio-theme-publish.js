@@ -140,6 +140,16 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "teleport":
+      return [
+        "export const TELEPORT_PRESET_DEFAULT = Object.freeze({",
+        `  orbTeleportFlickerOnMs: ${Math.round(toNum(p.orbTeleportFlickerOnMs, 60))},`,
+        `  orbTeleportFlickerOffMs: ${Math.round(toNum(p.orbTeleportFlickerOffMs, 60))},`,
+        `  orbTeleportFadeOutMs: ${Math.round(toNum(p.orbTeleportFadeOutMs, 280))},`,
+        `  orbTeleportFadeInMs: ${Math.round(toNum(p.orbTeleportFadeInMs, 280))},`,
+        "});",
+        "",
+      ].join("\n");
     case "orb-shatter":
       return [
         "export const ORB_SHATTER_PRESET_DEFAULT = Object.freeze({});",

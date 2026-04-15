@@ -60,6 +60,15 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     publishTargets: ["preset", "binding"],
   }),
   Object.freeze({
+    id: "spell.teleport",
+    label: "Teleport",
+    category: "spell",
+    runtimeModuleId: "teleport_runtime",
+    defaultPresetId: "preset.teleport.default",
+    supportedContexts: ["lab", "receiver"],
+    publishTargets: ["preset", "binding"],
+  }),
+  Object.freeze({
     id: "orb.nod",
     label: "Orb Nod",
     category: "orb",
