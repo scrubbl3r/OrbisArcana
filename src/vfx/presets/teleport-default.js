@@ -1,6 +1,6 @@
 export const TELEPORT_PRESET_DEFAULT = Object.freeze({
-  orbTeleportFlickerOnMs: 60,
-  orbTeleportFlickerOffMs: 60,
-  orbTeleportFadeOutMs: 280,
-  orbTeleportFadeInMs: 280,
+  orbTeleportFlickerOnMs: 25,
+  orbTeleportFlickerOffMs: 25,
+  orbTeleportFadeOutMs: 1700,
+  orbTeleportFadeInMs: 1700,
 });
