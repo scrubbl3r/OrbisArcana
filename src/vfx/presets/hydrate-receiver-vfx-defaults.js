@@ -6,6 +6,7 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
     shockwave = null,
     flameAoe = null,
     electricAoe = null,
+    teleport = null,
     orbNod = null,
   } = presets || {};
 
@@ -20,6 +21,9 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
   }
   if (electricAoe && vfxDefaults.electric && typeof vfxDefaults.electric === "object") {
     Object.assign(vfxDefaults.electric, electricAoe);
+  }
+  if (teleport && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object") {
+    Object.assign(vfxDefaults.teleport, teleport);
   }
   if (orbNod && vfxDefaults.nod && typeof vfxDefaults.nod === "object") {
     Object.assign(vfxDefaults.nod, orbNod);

@@ -871,6 +871,9 @@ function clearShellOrbRuntimeFxForDeath(shellContext) {
   if (shellVfx && shellVfx.orbNodRuntime && typeof shellVfx.orbNodRuntime.clear === "function") {
     shellVfx.orbNodRuntime.clear();
   }
+  if (shellVfx && shellVfx.teleportRuntime && typeof shellVfx.teleportRuntime.clear === "function") {
+    shellVfx.teleportRuntime.clear();
+  }
   shellClearColorize(shellContext);
 }
 
@@ -1605,6 +1608,7 @@ async function initShellKwsRuntime(shellContext) {
     SHOCKWAVE_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
+    TELEPORT_PRESET_DEFAULT,
     ORB_NOD_PRESET_DEFAULT,
   } = receiverMods;
 
@@ -1665,6 +1669,7 @@ async function initShellKwsRuntime(shellContext) {
       shockwave: SHOCKWAVE_PRESET_DEFAULT,
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
+      teleport: TELEPORT_PRESET_DEFAULT,
       orbNod: ORB_NOD_PRESET_DEFAULT,
     });
   }
@@ -1806,6 +1811,11 @@ async function initShellKwsRuntime(shellContext) {
     playFlameAoe: () => (
       shellVfx && typeof shellVfx.playFlameAoe === "function"
         ? shellVfx.playFlameAoe()
+        : { handled: false }
+    ),
+    playTeleport: (payload = {}) => (
+      shellVfx && typeof shellVfx.playTeleport === "function"
+        ? shellVfx.playTeleport(payload)
         : { handled: false }
     ),
     playFrostAoe: null,

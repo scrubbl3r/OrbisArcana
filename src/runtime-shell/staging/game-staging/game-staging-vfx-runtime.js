@@ -1,5 +1,6 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
 import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
+import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
@@ -50,6 +51,12 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
       orbTemplateWaveDepthPx: 4,
       orbTemplateOscillationSpeedHz: 12,
       orbTemplateOscillationCount: 4,
+    },
+    teleport: {
+      orbTeleportFlickerOnMs: 60,
+      orbTeleportFlickerOffMs: 60,
+      orbTeleportFadeOutMs: 280,
+      orbTeleportFadeInMs: 280,
     },
   };
   defaults.shock.stroke = evenStroke(defaults.shock.stroke, 2, 20);
@@ -145,6 +152,14 @@ export function initGameStagingReceiverVfxRuntime({
         ? vfxDefaults.nod
         : Object.create(null),
     }),
+    teleportRuntime: createTeleportRuntime({
+      orbEl: stageEls.orb,
+      orbInteriorEl: stageEls.orbInterior,
+      orbCracksEl: stageEls.orbCracks,
+      getConfig: () => (vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object")
+        ? vfxDefaults.teleport
+        : Object.create(null),
+    }),
     flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
     electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
   };
@@ -226,6 +241,13 @@ export function initGameStagingReceiverVfxRuntime({
     return { handled: false };
   }
 
+  function directPlayTeleport(payload = {}) {
+    if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.play === "function") {
+      return stageVfx.teleportRuntime.play(payload);
+    }
+    return { handled: false };
+  }
+
   const shellVfx = {
     ...stageVfx,
     playShock() {
@@ -287,6 +309,18 @@ export function initGameStagingReceiverVfxRuntime({
       });
       if (dispatched && dispatched.handled) return dispatched;
       return directActivateBubbleShield({ durationMs });
+    },
+    playTeleport(payload = {}) {
+      const dispatched = dispatchRuntimeEffect({
+        targetKind: "spell",
+        targetId: "teleport",
+        runtime: {
+          playTeleport: (nextPayload = {}) => directPlayTeleport(nextPayload),
+        },
+        payload,
+      });
+      if (dispatched && dispatched.handled) return dispatched;
+      return directPlayTeleport(payload);
     },
     playOrbShatter(payload = {}) {
       const dispatched = dispatchRuntimeEffect({

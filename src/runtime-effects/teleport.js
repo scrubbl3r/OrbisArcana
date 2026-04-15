@@ -3,14 +3,28 @@
  * Keeps movement behavior out of receiver wiring code.
  */
 export function executeTeleport({
+  playTeleport,
   teleportOrbToSpawnNeutralizePhysics,
   aboveGroundPx = 0,
 } = {}) {
-  if (typeof teleportOrbToSpawnNeutralizePhysics !== "function") {
-    return { handled: false };
+  const performTeleport = () => {
+    if (typeof teleportOrbToSpawnNeutralizePhysics !== "function") {
+      return { handled: false };
+    }
+    teleportOrbToSpawnNeutralizePhysics(aboveGroundPx);
+    return { handled: true };
+  };
+
+  if (typeof playTeleport === "function") {
+    const result = playTeleport({
+      aboveGroundPx,
+      onTeleport: () => performTeleport(),
+    });
+    if (result && result.handled) {
+      return result;
+    }
   }
-  teleportOrbToSpawnNeutralizePhysics(aboveGroundPx);
-  return { handled: true };
+  return performTeleport();
 }
 
 export function teleportOrbRuntimeToSpawn({

@@ -17,6 +17,7 @@ import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js
  * @param {Function} [options.runtime.activateBubbleShield]
  * @param {Function} [options.runtime.playOrbShatter]
  * @param {Function} [options.runtime.playOrbNod]
+ * @param {Function} [options.runtime.playTeleport]
  * @param {Object} [options.payload]
  * @returns {{handled:boolean, skipped?:string, binding?:Object|null}}
  */
@@ -47,6 +48,10 @@ export function dispatchRuntimeEffect({
     case "spell.shield_bubble":
       return typeof runtime.activateBubbleShield === "function"
         ? { ...(runtime.activateBubbleShield(payload) || { handled: false }), binding }
+        : { handled: false, skipped: "runtime_missing", binding };
+    case "spell.teleport":
+      return typeof runtime.playTeleport === "function"
+        ? { ...(runtime.playTeleport(payload) || { handled: false }), binding }
         : { handled: false, skipped: "runtime_missing", binding };
     case "orb.shatter_voronoi":
       return typeof runtime.playOrbShatter === "function"

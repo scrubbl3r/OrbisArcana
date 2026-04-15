@@ -7,6 +7,7 @@ export function createSpellActionHandlers({
   playElectricAoe,
   playFlameAoe,
   playFrostAoe,
+  playTeleport,
   teleportOrbToSpawnNeutralizePhysics,
   executeAoeElectric,
   executeAoeFlame,
@@ -60,6 +61,7 @@ export function createSpellActionHandlers({
       void payload;
       if (typeof executeTeleport !== "function") return;
       executeTeleport({
+        playTeleport,
         teleportOrbToSpawnNeutralizePhysics,
         aboveGroundPx: domusTeleportAboveGroundPx,
       });
