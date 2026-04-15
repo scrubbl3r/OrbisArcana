@@ -1,4 +1,4 @@
-import { createWordFlashboardPopup } from "./word-flashboard/word-flashboard-popup.js";
+import { createPathBoardPopup } from "./path-board/path-board-popup.js";
 import { createLogPopupController } from "./log/log-popup-controller.js";
 
 export function createKwsPanelController({
@@ -16,11 +16,11 @@ export function createKwsPanelController({
   const KWS_READOUT_TICK_MS = Math.max(100, Number(constants.readoutTickMs) || 250);
   const KWS_LOG_DEDUP_MS = Math.max(0, Number(constants.logDedupMs) || 450);
   const KWS_PREOPEN_LOG_BUFFER_LIMIT = Math.max(10, Number(constants.preopenLogBufferLimit) || 80);
-  const WORDFLASHBOARD_WORDS = Array.isArray(constants.wordFlashboardWords)
-    ? constants.wordFlashboardWords.map((entry) => Object.freeze({ ...entry }))
+  const PATH_BOARD_WORDS = Array.isArray(constants.pathBoardWords)
+    ? constants.pathBoardWords.map((entry) => Object.freeze({ ...entry }))
     : [];
-  const WORDFLASHBOARD_TRAIL_ROWS = Array.isArray(constants.wordFlashboardTrailRows)
-    ? constants.wordFlashboardTrailRows.map((row) => Object.freeze({
+  const PATH_BOARD_TRAIL_ROWS = Array.isArray(constants.pathBoardTrailRows)
+    ? constants.pathBoardTrailRows.map((row) => Object.freeze({
       ...row,
       steps: Object.freeze((Array.isArray(row && row.steps) ? row.steps : []).map((entry) => Object.freeze({ ...entry }))),
     }))
@@ -111,10 +111,10 @@ export function createKwsPanelController({
     return out;
   }
 
-  const wordFlashboardPopup = createWordFlashboardPopup({
+  const pathBoardPopup = createPathBoardPopup({
     els,
-    words: WORDFLASHBOARD_WORDS,
-    trailRows: WORDFLASHBOARD_TRAIL_ROWS,
+    words: PATH_BOARD_WORDS,
+    trailRows: PATH_BOARD_TRAIL_ROWS,
     canonicalToken: canonicalKwsToken,
     getListenableTokens: () => readCurrentListenableTokens(),
     getFlashUntilMs: (token) => Number(kwsTokenUiState.flashUntilMs[String(token || "").trim().toLowerCase()] || 0),
@@ -154,12 +154,12 @@ export function createKwsPanelController({
       };
     },
     onVisibilityChanged: (open) => {
-      if (typeof logPopupController.setWordBoardVisible === "function") {
-        logPopupController.setWordBoardVisible(open);
+      if (typeof logPopupController.setPathBoardVisible === "function") {
+        logPopupController.setPathBoardVisible(open);
       }
       if (!open) return;
       if (els.kwsReadout) els.kwsReadout.innerHTML = pendingKwsReadoutHtml || "idle";
-      wordFlashboardPopup.render();
+      pathBoardPopup.render();
     },
   });
   const logPopupController = createLogPopupController({
@@ -264,7 +264,7 @@ export function createKwsPanelController({
   function flashKwsToken(token, ms = 360) {
     const t = String(token || "").trim().toLowerCase();
     if (!t) return;
-    if (!wordFlashboardPopup.isOpen()) return;
+    if (!pathBoardPopup.isOpen()) return;
     const until = Date.now() + Math.max(60, Number(ms) || 360);
     kwsTokenUiState.flashUntilMs[t] = until;
     const existing = kwsTokenUiState.flashTOByToken[t];
@@ -375,13 +375,13 @@ export function createKwsPanelController({
     }
     const meta = parts.length ? `<span class="kwsTokenMeta">${parts.join(" | ")}</span>` : "";
     pendingKwsReadoutHtml = meta || "idle";
-    if (!wordFlashboardPopup.isOpen()) return;
+    if (!pathBoardPopup.isOpen()) return;
     els.kwsReadout.innerHTML = pendingKwsReadoutHtml;
-    wordFlashboardPopup.render();
+    pathBoardPopup.render();
   }
 
-  function bindWordBoardPopupButton() {
-    wordFlashboardPopup.bind();
+  function bindPathBoardPopupButton() {
+    pathBoardPopup.bind();
   }
 
   function setManualListenableTokens(tokens = []) {
@@ -390,8 +390,8 @@ export function createKwsPanelController({
         .map((token) => canonicalKwsToken(token))
         .filter(Boolean)
     );
-    if (wordFlashboardPopup.isOpen()) {
-      wordFlashboardPopup.render();
+    if (pathBoardPopup.isOpen()) {
+      pathBoardPopup.render();
     }
   }
 
@@ -405,8 +405,8 @@ export function createKwsPanelController({
         .map((token) => canonicalKwsToken(token))
         .filter(Boolean)
     );
-    if (wordFlashboardPopup.isOpen()) {
-      wordFlashboardPopup.render();
+    if (pathBoardPopup.isOpen()) {
+      pathBoardPopup.render();
     }
   }
 
@@ -426,8 +426,8 @@ export function createKwsPanelController({
       });
     }
     manualWakeWindowsById = next;
-    if (wordFlashboardPopup.isOpen()) {
-      wordFlashboardPopup.render();
+    if (pathBoardPopup.isOpen()) {
+      pathBoardPopup.render();
     }
   }
 
@@ -435,9 +435,9 @@ export function createKwsPanelController({
     return Array.from(manualWakeWindowTokens.values());
   }
 
-  function refreshWordFlashboard() {
-    if (wordFlashboardPopup.isOpen()) {
-      wordFlashboardPopup.render();
+  function refreshPathBoard() {
+    if (pathBoardPopup.isOpen()) {
+      pathBoardPopup.render();
     }
   }
 
@@ -495,15 +495,15 @@ export function createKwsPanelController({
     syncKwsTuneUiFromStatus,
     bindTuneApplyButton,
     bindLogPopupButton: logPopupController.bindLogPopupButton,
-    bindWordBoardDebugToggle: logPopupController.bindWordBoardDebugToggle,
-    bindWordBoardPopupButton,
+    bindPathBoardDebugToggle: logPopupController.bindPathBoardDebugToggle,
+    bindPathBoardPopupButton,
     pushPhoneLogLine: logPopupController.pushPhoneLogLine,
     setManualListenableTokens,
     getManualListenableTokens,
     setManualWakeWindowTokens,
     setManualWakeWindows,
     getManualWakeWindowTokens,
-    refreshWordFlashboard,
+    refreshPathBoard,
     getUiState: () => kwsTokenUiState,
   };
 }

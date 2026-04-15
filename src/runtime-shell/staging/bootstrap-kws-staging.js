@@ -29,11 +29,11 @@ export function bootstrapKwsStaging({
     axisTokens: Array.isArray(runtime.axisTokens) ? runtime.axisTokens.slice() : [],
     wakeTokens: Array.isArray(runtime.wakeTokens) ? runtime.wakeTokens.slice() : [],
     wakeRequiredTokens: Array.isArray(runtime.wakeRequiredTokens) ? runtime.wakeRequiredTokens.slice() : [],
-    wordFlashboardWords: Array.isArray(runtime.wordFlashboardWords)
-      ? runtime.wordFlashboardWords.map((entry) => ({ ...entry }))
+    pathBoardWords: Array.isArray(runtime.pathBoardWords)
+      ? runtime.pathBoardWords.map((entry) => ({ ...entry }))
       : [],
-    wordFlashboardTrailRows: Array.isArray(runtime.wordFlashboardTrailRows)
-      ? runtime.wordFlashboardTrailRows.map((row) => ({
+    pathBoardTrailRows: Array.isArray(runtime.pathBoardTrailRows)
+      ? runtime.pathBoardTrailRows.map((row) => ({
         ...row,
         steps: Array.isArray(row && row.steps) ? row.steps.map((entry) => ({ ...entry })) : [],
       }))
@@ -69,15 +69,15 @@ export function bootstrapKwsStaging({
       next.wakeRequiredTokens = Array.isArray(kwsConfig.wakeRequiredTokens)
         ? kwsConfig.wakeRequiredTokens.slice()
         : next.wakeRequiredTokens;
-      next.wordFlashboardWords = Array.isArray(kwsConfig.wordFlashboardWords)
-        ? kwsConfig.wordFlashboardWords.map((entry) => ({ ...entry }))
-        : next.wordFlashboardWords;
-      next.wordFlashboardTrailRows = Array.isArray(kwsConfig.wordFlashboardTrailRows)
-        ? kwsConfig.wordFlashboardTrailRows.map((row) => ({
+      next.pathBoardWords = Array.isArray(kwsConfig.pathBoardWords)
+        ? kwsConfig.pathBoardWords.map((entry) => ({ ...entry }))
+        : next.pathBoardWords;
+      next.pathBoardTrailRows = Array.isArray(kwsConfig.pathBoardTrailRows)
+        ? kwsConfig.pathBoardTrailRows.map((row) => ({
           ...row,
           steps: Array.isArray(row && row.steps) ? row.steps.map((entry) => ({ ...entry })) : [],
         }))
-        : next.wordFlashboardTrailRows;
+        : next.pathBoardTrailRows;
       next.spinWordByAxis = (kwsConfig.spinWordByAxis && typeof kwsConfig.spinWordByAxis === "object")
         ? Object.freeze({ ...kwsConfig.spinWordByAxis })
         : next.spinWordByAxis;
@@ -110,8 +110,8 @@ export function bootstrapKwsStaging({
       axisTokens: next.axisTokens,
       wakeTokens: next.wakeTokens,
       wakeRequiredTokens: next.wakeRequiredTokens,
-      wordFlashboardWords: next.wordFlashboardWords,
-      wordFlashboardTrailRows: next.wordFlashboardTrailRows,
+      pathBoardWords: next.pathBoardWords,
+      pathBoardTrailRows: next.pathBoardTrailRows,
       spinWordByAxis: next.spinWordByAxis,
       logTokens: Array.from(next.logTokens),
       tempUngatedTokens: Array.from(next.tempUngatedTokens),
@@ -149,11 +149,11 @@ export function bootstrapKwsStaging({
   if (kwsPanelController && typeof kwsPanelController.bindLogPopupButton === "function") {
     kwsPanelController.bindLogPopupButton();
   }
-  if (kwsPanelController && typeof kwsPanelController.bindWordBoardPopupButton === "function") {
-    kwsPanelController.bindWordBoardPopupButton();
+  if (kwsPanelController && typeof kwsPanelController.bindPathBoardPopupButton === "function") {
+    kwsPanelController.bindPathBoardPopupButton();
   }
-  if (kwsPanelController && typeof kwsPanelController.bindWordBoardDebugToggle === "function") {
-    kwsPanelController.bindWordBoardDebugToggle();
+  if (kwsPanelController && typeof kwsPanelController.bindPathBoardDebugToggle === "function") {
+    kwsPanelController.bindPathBoardDebugToggle();
   }
 
   kwsBridge.startReadoutTick();

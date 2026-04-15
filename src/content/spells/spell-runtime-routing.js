@@ -84,7 +84,7 @@ function toTrailDisplayText(raw) {
     .join(" ");
 }
 
-function buildWordFlashboardTierMap() {
+function buildPathBoardTierMap() {
   const rules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2 && COMPILED_INTERACTION_GRAPH_V2.rules) ? COMPILED_INTERACTION_GRAPH_V2.rules : [];
   const wakeRoots = uniqueWordIds(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS);
   const groups = (COMPILED_INTERACTION_GRAPH_V2 && typeof COMPILED_INTERACTION_GRAPH_V2.groups === "object" && COMPILED_INTERACTION_GRAPH_V2.groups)
@@ -394,9 +394,9 @@ function buildWordRuntimeRoutingV2(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTI
   return Object.freeze(out);
 }
 
-function buildWordFlashboardWords(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE) {
+function buildPathBoardWords(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE) {
   const ids = Array.isArray(profile?.authoredWordIds) ? profile.authoredWordIds : [];
-  const tierByWordId = buildWordFlashboardTierMap();
+  const tierByWordId = buildPathBoardTierMap();
   return Object.freeze(
     ids
       .map((id) => WORDBOOK_V2_ACTIVE_WORDS_BY_ID[asWordId(id)])
@@ -423,7 +423,7 @@ function buildWordFlashboardWords(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTIM
   );
 }
 
-function buildWordFlashboardTrailRows() {
+function buildPathBoardTrailRows() {
   const rules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2 && COMPILED_INTERACTION_GRAPH_V2.rules)
     ? COMPILED_INTERACTION_GRAPH_V2.rules
     : [];
@@ -508,8 +508,8 @@ function buildWordFlashboardTrailRows() {
 }
 
 const COMPILED_INTERACTION_GRAPH_V2_WORD_RUNTIME_ROUTING = buildWordRuntimeRoutingV2(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE);
-const COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS = buildWordFlashboardWords(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE);
-const COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_TRAIL_ROWS = buildWordFlashboardTrailRows();
+const COMPILED_INTERACTION_GRAPH_V2_PATH_BOARD_WORDS = buildPathBoardWords(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE);
+const COMPILED_INTERACTION_GRAPH_V2_PATH_BOARD_TRAIL_ROWS = buildPathBoardTrailRows();
 
 export const WAKE_WORD_IDS = Object.freeze(
   (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeWordIds)
@@ -523,21 +523,21 @@ export const STANDALONE_WORD_IDS = Object.freeze(
     : []).slice()
 );
 
-export const WORDFLASHBOARD_WORD_IDS = Object.freeze(
+export const PATH_BOARD_WORD_IDS = Object.freeze(
   (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.authoredWordIds)
     ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.authoredWordIds
     : []).slice()
 );
 
-export const WORDFLASHBOARD_WORDS = Object.freeze(
-  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS)
-    ? COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS
+export const PATH_BOARD_WORDS = Object.freeze(
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_PATH_BOARD_WORDS)
+    ? COMPILED_INTERACTION_GRAPH_V2_PATH_BOARD_WORDS
     : []).slice()
 );
 
-export const WORDFLASHBOARD_TRAIL_ROWS = Object.freeze(
-  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_TRAIL_ROWS)
-    ? COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_TRAIL_ROWS
+export const PATH_BOARD_TRAIL_ROWS = Object.freeze(
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_PATH_BOARD_TRAIL_ROWS)
+    ? COMPILED_INTERACTION_GRAPH_V2_PATH_BOARD_TRAIL_ROWS
     : []).map((row) => Object.freeze({
       ...row,
       steps: Object.freeze(

@@ -5,7 +5,7 @@ export function createLogPopupController({
 } = {}) {
   const KWS_LOG_DEDUP_MS = Math.max(0, Number(dedupMs) || 450);
   const KWS_PREOPEN_LOG_BUFFER_LIMIT = Math.max(10, Number(preopenBufferLimit) || 80);
-  const WORDBOARD_DEBUG_LIMIT = 18;
+  const PATH_BOARD_DEBUG_LIMIT = 18;
   const kwsEventLog = [];
   let kwsLastLogText = "";
   let kwsLastLogAtMs = 0;
@@ -13,11 +13,11 @@ export function createLogPopupController({
   let logPopupBound = false;
   let logPopupOpen = false;
   let logPopupDrag = null;
-  let wordBoardDebugOpen = false;
-  let wordBoardDebugBound = false;
-  let wordBoardVisible = false;
+  let pathBoardDebugOpen = false;
+  let pathBoardDebugBound = false;
+  let pathBoardVisible = false;
   let activeLogChannel = "general";
-  const wordBoardDebugRows = [];
+  const pathBoardDebugRows = [];
   const logChannelState = {
     general: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
     kws: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
@@ -81,35 +81,35 @@ export function createLogPopupController({
     els.kwsLog.scrollTop = els.kwsLog.scrollHeight;
   }
 
-  function shouldAutoOpenWordBoardDebug(line, kind = "") {
+  function shouldAutoOpenPathBoardDebug(line, kind = "") {
     const text = String(line || "").trim();
     const normalizedKind = String(kind || "").trim().toLowerCase();
     return normalizedKind === "bad" || /(^|[\s:_-])(error|failed|fatal)([\s:_-]|$)/i.test(text);
   }
 
-  function appendWordBoardDebugRow(row) {
+  function appendPathBoardDebugRow(row) {
     if (!row) return;
-    wordBoardDebugRows.push(row);
-    while (wordBoardDebugRows.length > WORDBOARD_DEBUG_LIMIT) wordBoardDebugRows.shift();
-    if (wordBoardVisible && wordBoardDebugOpen) renderWordBoardDebugBody();
+    pathBoardDebugRows.push(row);
+    while (pathBoardDebugRows.length > PATH_BOARD_DEBUG_LIMIT) pathBoardDebugRows.shift();
+    if (pathBoardVisible && pathBoardDebugOpen) renderPathBoardDebugBody();
   }
 
-  function renderWordBoardDebugBody() {
-    if (!els.wordBoardDebugBody) return;
-    els.wordBoardDebugBody.textContent = "";
-    for (const row of wordBoardDebugRows) {
+  function renderPathBoardDebugBody() {
+    if (!els.pathBoardDebugBody) return;
+    els.pathBoardDebugBody.textContent = "";
+    for (const row of pathBoardDebugRows) {
       const lineEl = document.createElement("div");
-      lineEl.className = `wordBoardDebugLine${row.kind ? ` ${row.kind}` : ""}`;
+      lineEl.className = `pathBoardDebugLine${row.kind ? ` ${row.kind}` : ""}`;
       lineEl.textContent = String(row.text || "");
-      els.wordBoardDebugBody.appendChild(lineEl);
+      els.pathBoardDebugBody.appendChild(lineEl);
     }
-    els.wordBoardDebugBody.scrollTop = els.wordBoardDebugBody.scrollHeight;
+    els.pathBoardDebugBody.scrollTop = els.pathBoardDebugBody.scrollHeight;
   }
 
-  function renderWordBoardDebugBadge() {
-    if (!wordBoardVisible || !els.wordBoardDebugBadge) return;
-    const lastRow = wordBoardDebugRows[wordBoardDebugRows.length - 1] || null;
-    const badge = els.wordBoardDebugBadge;
+  function renderPathBoardDebugBadge() {
+    if (!pathBoardVisible || !els.pathBoardDebugBadge) return;
+    const lastRow = pathBoardDebugRows[pathBoardDebugRows.length - 1] || null;
+    const badge = els.pathBoardDebugBadge;
     badge.classList.remove("hot", "bad");
     if (!lastRow) {
       badge.textContent = "idle";
@@ -120,40 +120,40 @@ export function createLogPopupController({
       badge.classList.add("bad");
       return;
     }
-    badge.textContent = `${wordBoardDebugRows.length} lines`;
+    badge.textContent = `${pathBoardDebugRows.length} lines`;
     badge.classList.add("hot");
   }
 
-  function setWordBoardDebugOpen(nextOpen) {
-    wordBoardDebugOpen = !!nextOpen;
-    if (els.wordBoardDebugPanel) els.wordBoardDebugPanel.classList.toggle("on", wordBoardDebugOpen);
-    if (els.wordBoardDebugToggle) els.wordBoardDebugToggle.setAttribute("aria-expanded", wordBoardDebugOpen ? "true" : "false");
-    if (els.wordBoardDebugBody) els.wordBoardDebugBody.setAttribute("aria-hidden", wordBoardDebugOpen ? "false" : "true");
-    if (!wordBoardVisible || !wordBoardDebugOpen) {
-      if (els.wordBoardDebugBody) els.wordBoardDebugBody.textContent = "";
+  function setPathBoardDebugOpen(nextOpen) {
+    pathBoardDebugOpen = !!nextOpen;
+    if (els.pathBoardDebugPanel) els.pathBoardDebugPanel.classList.toggle("on", pathBoardDebugOpen);
+    if (els.pathBoardDebugToggle) els.pathBoardDebugToggle.setAttribute("aria-expanded", pathBoardDebugOpen ? "true" : "false");
+    if (els.pathBoardDebugBody) els.pathBoardDebugBody.setAttribute("aria-hidden", pathBoardDebugOpen ? "false" : "true");
+    if (!pathBoardVisible || !pathBoardDebugOpen) {
+      if (els.pathBoardDebugBody) els.pathBoardDebugBody.textContent = "";
       return;
     }
-    renderWordBoardDebugBody();
+    renderPathBoardDebugBody();
   }
 
-  function bindWordBoardDebugToggle() {
-    if (wordBoardDebugBound) return;
-    wordBoardDebugBound = true;
-    if (els.wordBoardDebugToggle) {
-      els.wordBoardDebugToggle.addEventListener("click", () => {
-        setWordBoardDebugOpen(!wordBoardDebugOpen);
+  function bindPathBoardDebugToggle() {
+    if (pathBoardDebugBound) return;
+    pathBoardDebugBound = true;
+    if (els.pathBoardDebugToggle) {
+      els.pathBoardDebugToggle.addEventListener("click", () => {
+        setPathBoardDebugOpen(!pathBoardDebugOpen);
       });
     }
   }
 
-  function setWordBoardVisible(nextVisible) {
-    wordBoardVisible = !!nextVisible;
-    if (!wordBoardVisible) {
-      if (els.wordBoardDebugBody) els.wordBoardDebugBody.textContent = "";
+  function setPathBoardVisible(nextVisible) {
+    pathBoardVisible = !!nextVisible;
+    if (!pathBoardVisible) {
+      if (els.pathBoardDebugBody) els.pathBoardDebugBody.textContent = "";
       return;
     }
-    renderWordBoardDebugBadge();
-    if (wordBoardDebugOpen) renderWordBoardDebugBody();
+    renderPathBoardDebugBadge();
+    if (pathBoardDebugOpen) renderPathBoardDebugBody();
   }
 
   function renderCurrentLogChannel() {
@@ -325,9 +325,9 @@ export function createLogPopupController({
       ? appendLogRowToState(logChannelState.kws, line, kind)
       : appendLogRowToState(preopenLogChannelState.kws, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
     if (!row) return;
-    appendWordBoardDebugRow(row);
-    if (wordBoardVisible) renderWordBoardDebugBadge();
-    if (shouldAutoOpenWordBoardDebug(line, kind)) setWordBoardDebugOpen(true);
+    appendPathBoardDebugRow(row);
+    if (pathBoardVisible) renderPathBoardDebugBadge();
+    if (shouldAutoOpenPathBoardDebug(line, kind)) setPathBoardDebugOpen(true);
     if (!logPopupOpen) return;
     syncLegacyKwsLogState();
     appendLiveRowIfActive("kws", row);
@@ -362,7 +362,7 @@ export function createLogPopupController({
     pushKwsLogLine,
     pushPhoneLogLine,
     bindLogPopupButton,
-    bindWordBoardDebugToggle,
-    setWordBoardVisible,
+    bindPathBoardDebugToggle,
+    setPathBoardVisible,
   };
 }

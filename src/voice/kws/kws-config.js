@@ -4,10 +4,10 @@ import {
   AXIS_WORD_IDS,
   KWS_ROW_BOTTOM_WORD_IDS,
   KWS_ROW_TOP_WORD_IDS,
+  PATH_BOARD_TRAIL_ROWS,
+  PATH_BOARD_WORDS,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
-  WORDFLASHBOARD_TRAIL_ROWS,
-  WORDFLASHBOARD_WORDS,
   WORD_RUNTIME_ROUTING,
 } from "../../content/spells/spell-runtime-routing.js?v=20260415e";
 import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
@@ -56,11 +56,11 @@ export function createKwsRuntimeConfig() {
     axisTokens,
     wakeTokens,
     wakeRequiredTokens,
-    wordFlashboardWords: Array.isArray(WORDFLASHBOARD_WORDS)
-      ? WORDFLASHBOARD_WORDS.map((entry) => Object.freeze({ ...entry }))
+    pathBoardWords: Array.isArray(PATH_BOARD_WORDS)
+      ? PATH_BOARD_WORDS.map((entry) => Object.freeze({ ...entry }))
       : [],
-    wordFlashboardTrailRows: Array.isArray(WORDFLASHBOARD_TRAIL_ROWS)
-      ? WORDFLASHBOARD_TRAIL_ROWS.map((row) => Object.freeze({
+    pathBoardTrailRows: Array.isArray(PATH_BOARD_TRAIL_ROWS)
+      ? PATH_BOARD_TRAIL_ROWS.map((row) => Object.freeze({
         ...row,
         steps: Object.freeze((Array.isArray(row && row.steps) ? row.steps : []).map((entry) => Object.freeze({ ...entry }))),
       }))

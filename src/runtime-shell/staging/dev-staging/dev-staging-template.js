@@ -7,7 +7,7 @@ export const DEV_STAGING_TEMPLATE = `
         <div class="devStagingStatusLine">
           <div>Status: <span id="status" class="devStagingDim">Auto-connecting…</span></div>
           <div class="devStagingStatusTools">
-            <button id="wordBoardBtn" class="devStagingButton" type="button">WORDS</button>
+            <button id="pathBoardBtn" class="devStagingButton" type="button">PATH BOARD</button>
             <button id="teleBtn" class="devStagingButton" type="button">LOG</button>
           </div>
         </div>
@@ -87,23 +87,23 @@ export const DEV_STAGING_TEMPLATE = `
       <div id="kwsLog" class="logPopupBody" aria-label="Debug log"></div>
     </div>
 
-    <div id="wordBoardPopup" class="wordBoardPopup" aria-hidden="true">
-      <div id="wordBoardPopupHeader" class="wordBoardPopupHeader runtimeShellPopupHeader">
-        <div class="wordBoardPopupTitle">WordFlashboard</div>
-        <button class="devStagingButton devStagingPopupClose" id="wordBoardPopupClose" aria-label="Close word board" type="button">Close</button>
+    <div id="pathBoardPopup" class="pathBoardPopup" aria-hidden="true">
+      <div id="pathBoardPopupHeader" class="pathBoardPopupHeader runtimeShellPopupHeader">
+        <div class="pathBoardPopupTitle">Path Board</div>
+        <button class="devStagingButton devStagingPopupClose" id="pathBoardPopupClose" aria-label="Close path board" type="button">Close</button>
       </div>
-      <div class="wordBoardMeta" aria-label="KWS status and tuning">
-        <div class="wordBoardMetaReadout">
-          <div class="wordBoardMetaLine"><span class="wordBoardMetaLabel">KWS::</span> <span id="kwsReadout" class="devStagingDim">idle</span></div>
-          <div class="wordBoardMetaLine"><span class="wordBoardMetaLabel">Rules:</span> <span id="rulesReadout" class="devStagingDim">unknown</span></div>
+      <div class="pathBoardMeta" aria-label="KWS status and tuning">
+        <div class="pathBoardMetaReadout">
+          <div class="pathBoardMetaLine"><span class="pathBoardMetaLabel">KWS::</span> <span id="kwsReadout" class="devStagingDim">idle</span></div>
+          <div class="pathBoardMetaLine"><span class="pathBoardMetaLabel">Rules:</span> <span id="rulesReadout" class="devStagingDim">unknown</span></div>
         </div>
-        <div class="devStagingTuneRow wordBoardTuneRow" aria-label="KWS infer tuning">
+        <div class="devStagingTuneRow pathBoardTuneRow" aria-label="KWS infer tuning">
           <label>Infer TH <input id="kwsTokenThrInput" type="number" min="0" max="1" step="0.001" placeholder="0.150" /></label>
           <label>Infer CD <input id="kwsCooldownMsInput" type="number" min="0" max="5000" step="25" placeholder="600" /></label>
           <button id="kwsApplyTuneBtn" class="devStagingButton" type="button">Apply</button>
         </div>
       </div>
-      <div id="wordBoardBody" class="wordBoardPopupBody" aria-label="Word flashboard"></div>
+      <div id="pathBoardBody" class="pathBoardPopupBody" aria-label="Path board"></div>
     </div>
   </section>
 `;

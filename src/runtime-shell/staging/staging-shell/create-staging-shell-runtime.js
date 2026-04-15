@@ -1485,8 +1485,8 @@ function bindShellWakeWindowVisuals({ eventBus, kwsPanelController = null, kwsBr
     if (typeof kwsPanelController.setManualWakeWindows === "function") {
       kwsPanelController.setManualWakeWindows(activeWindows);
     }
-    if (typeof kwsPanelController.refreshWordFlashboard === "function") {
-      kwsPanelController.refreshWordFlashboard();
+    if (typeof kwsPanelController.refreshPathBoard === "function") {
+      kwsPanelController.refreshPathBoard();
     }
     if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
       kwsBridge.pushLogLine(
@@ -1888,8 +1888,8 @@ async function initShellKwsRuntime(shellContext) {
     if (kwsPanelController && typeof kwsPanelController.setManualListenableTokens === "function") {
       kwsPanelController.setManualListenableTokens(tokens);
     }
-    if (kwsPanelController && typeof kwsPanelController.refreshWordFlashboard === "function") {
-      kwsPanelController.refreshWordFlashboard();
+    if (kwsPanelController && typeof kwsPanelController.refreshPathBoard === "function") {
+      kwsPanelController.refreshPathBoard();
     }
     if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
       kwsBridge.pushLogLine(

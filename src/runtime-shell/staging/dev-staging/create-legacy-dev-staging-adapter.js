@@ -3,7 +3,7 @@ export function createLegacyDevStagingRefsFromElements(els = {}) {
     status: els.status,
     fatal: els.fatal,
     teleBtn: els.teleBtn,
-    wordBoardBtn: els.wordBoardBtn,
+    pathBoardBtn: els.pathBoardBtn,
     kwsReadout: els.kwsReadout,
     kwsLog: els.kwsLog,
     logTabKws: els.logTabKws,
@@ -14,14 +14,14 @@ export function createLegacyDevStagingRefsFromElements(els = {}) {
     logPopup: els.logPopup,
     logPopupHeader: els.logPopupHeader,
     logPopupClose: els.logPopupClose,
-    wordBoardPopup: els.wordBoardPopup,
-    wordBoardPopupHeader: els.wordBoardPopupHeader,
-    wordBoardPopupClose: els.wordBoardPopupClose,
-    wordBoardBody: els.wordBoardBody,
-    wordBoardDebugPanel: els.wordBoardDebugPanel,
-    wordBoardDebugToggle: els.wordBoardDebugToggle,
-    wordBoardDebugBadge: els.wordBoardDebugBadge,
-    wordBoardDebugBody: els.wordBoardDebugBody,
+    pathBoardPopup: els.pathBoardPopup,
+    pathBoardPopupHeader: els.pathBoardPopupHeader,
+    pathBoardPopupClose: els.pathBoardPopupClose,
+    pathBoardBody: els.pathBoardBody,
+    pathBoardDebugPanel: els.pathBoardDebugPanel,
+    pathBoardDebugToggle: els.pathBoardDebugToggle,
+    pathBoardDebugBadge: els.pathBoardDebugBadge,
+    pathBoardDebugBody: els.pathBoardDebugBody,
     vLift: els.vLift,
     vGroove: els.vGroove,
     vSmooth: els.vSmooth,
@@ -94,8 +94,8 @@ export function createLegacyDevStagingAdapter({
       if (typeof closeDevStagingTopmostPopup === "function") {
         return !!closeDevStagingTopmostPopup(refs);
       }
-      if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
-        refs.wordBoardPopupClose.click();
+      if (refs.pathBoardPopup && refs.pathBoardPopup.classList.contains("on") && refs.pathBoardPopupClose) {
+        refs.pathBoardPopupClose.click();
         return true;
       }
       if (refs.logPopup && refs.logPopup.classList.contains("on") && refs.logPopupClose) {
@@ -197,8 +197,8 @@ export function createInlineLegacyDevStagingAdapter({
       if (typeof closeDevStagingTopmostPopup === "function") {
         return !!closeDevStagingTopmostPopup(refs);
       }
-      if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
-        refs.wordBoardPopupClose.click();
+      if (refs.pathBoardPopup && refs.pathBoardPopup.classList.contains("on") && refs.pathBoardPopupClose) {
+        refs.pathBoardPopupClose.click();
         return true;
       }
       if (refs.logPopup && refs.logPopup.classList.contains("on") && refs.logPopupClose) {

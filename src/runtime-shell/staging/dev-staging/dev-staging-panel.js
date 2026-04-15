@@ -1,7 +1,7 @@
 export function closeDevStagingTopmostPopup(refs) {
   if (!refs) return false;
-  if (refs.wordBoardPopup && refs.wordBoardPopup.classList.contains("on") && refs.wordBoardPopupClose) {
-    refs.wordBoardPopupClose.click();
+  if (refs.pathBoardPopup && refs.pathBoardPopup.classList.contains("on") && refs.pathBoardPopupClose) {
+    refs.pathBoardPopupClose.click();
     return true;
   }
   if (refs.logPopup && refs.logPopup.classList.contains("on") && refs.logPopupClose) {
@@ -14,7 +14,7 @@ export function closeDevStagingTopmostPopup(refs) {
 export function projectDevStagingPanelRefs(refs = {}) {
   return {
     teleBtn: refs.teleBtn || null,
-    wordBoardBtn: refs.wordBoardBtn || null,
+    pathBoardBtn: refs.pathBoardBtn || null,
     kwsReadout: refs.kwsReadout || null,
     kwsLog: refs.kwsLog || null,
     logTabGeneral: refs.logTabGeneral || null,
@@ -27,14 +27,14 @@ export function projectDevStagingPanelRefs(refs = {}) {
     logPopupTabs: refs.logPopupTabs || null,
     logPopupHeader: refs.logPopupHeader || null,
     logPopupClose: refs.logPopupClose || null,
-    wordBoardPopup: refs.wordBoardPopup || null,
-    wordBoardPopupHeader: refs.wordBoardPopupHeader || null,
-    wordBoardPopupClose: refs.wordBoardPopupClose || null,
-    wordBoardBody: refs.wordBoardBody || null,
-    wordBoardDebugPanel: refs.wordBoardDebugPanel || null,
-    wordBoardDebugToggle: refs.wordBoardDebugToggle || null,
-    wordBoardDebugBadge: refs.wordBoardDebugBadge || null,
-    wordBoardDebugBody: refs.wordBoardDebugBody || null,
+    pathBoardPopup: refs.pathBoardPopup || null,
+    pathBoardPopupHeader: refs.pathBoardPopupHeader || null,
+    pathBoardPopupClose: refs.pathBoardPopupClose || null,
+    pathBoardBody: refs.pathBoardBody || null,
+    pathBoardDebugPanel: refs.pathBoardDebugPanel || null,
+    pathBoardDebugToggle: refs.pathBoardDebugToggle || null,
+    pathBoardDebugBadge: refs.pathBoardDebugBadge || null,
+    pathBoardDebugBody: refs.pathBoardDebugBody || null,
   };
 }
 

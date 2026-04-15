@@ -221,7 +221,7 @@
 }
 
 .logPopup,
-.wordBoardPopup {
+.pathBoardPopup {
   position: fixed;
   display: none;
   flex-direction: column;
@@ -237,7 +237,7 @@
   height: 400px;
 }
 
-.wordBoardPopup {
+.pathBoardPopup {
   left: 36px;
   top: 110px;
   width: 640px;
@@ -245,12 +245,12 @@
 }
 
 .logPopup.on,
-.wordBoardPopup.on {
+.pathBoardPopup.on {
   display: flex;
 }
 
 .logPopupHeader,
-.wordBoardPopupHeader {
+.pathBoardPopupHeader {
   position: relative;
   z-index: 2;
   display: flex;
@@ -262,7 +262,7 @@
 }
 
 .logPopupTitle,
-.wordBoardPopupTitle {
+.pathBoardPopupTitle {
   font-weight: 1000;
   letter-spacing: .3px;
   color: var(--text-strong);
@@ -345,7 +345,7 @@
   scrollbar-gutter: stable;
 }
 
-.wordBoardMeta {
+.pathBoardMeta {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -355,27 +355,27 @@
     rgba(10, 10, 12, 0.92);
 }
 
-.wordBoardMetaReadout {
+.pathBoardMetaReadout {
   display: grid;
   gap: 2px;
   font-size: 11px;
   line-height: 1.25;
 }
 
-.wordBoardMetaLine {
+.pathBoardMetaLine {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.wordBoardMetaLabel {
+.pathBoardMetaLabel {
   display: inline-block;
   min-width: 40px;
   font-weight: 900;
   color: var(--text-strong);
 }
 
-.wordBoardPopupBody {
+.pathBoardPopupBody {
   flex: 1 1 auto;
   padding: 16px 12px 18px;
   min-height: 0;
@@ -388,34 +388,34 @@
   align-content: start;
 }
 
-.wordBoardTrailGroup {
+.pathBoardTrailGroup {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.wordBoardTrailGroup + .wordBoardTrailGroup {
+.pathBoardTrailGroup + .pathBoardTrailGroup {
   margin-top: 12px;
 }
 
-.wordBoardTierRow {
+.pathBoardTierRow {
   display: flex;
   gap: 4px;
   align-items: stretch;
 }
 
-.wordBoardTrailRow {
+.pathBoardTrailRow {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.wordBoardTrailRow .wordBoardChip {
+.pathBoardTrailRow .pathBoardChip {
   flex: 0 0 auto;
   min-width: 84px;
 }
 
-.wordBoardTrailSep {
+.pathBoardTrailSep {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -426,7 +426,7 @@
   user-select: none;
 }
 
-.wordBoardChip {
+.pathBoardChip {
   display: flex;
   flex: 1 1 0;
   align-items: center;
@@ -444,42 +444,42 @@
   transition: all 90ms linear;
 }
 
-.wordBoardChip.signal {
+.pathBoardChip.signal {
   border-style: dashed;
 }
 
-.wordBoardChip.signal.on {
+.pathBoardChip.signal.on {
   color: rgba(0,0,0,.92);
   background: rgba(255,255,255,.88);
   border-color: rgba(255,255,255,.88);
 }
 
-.wordBoardChip.signal.flash {
+.pathBoardChip.signal.flash {
   color: rgba(0,0,0,.92);
   background: rgba(255,255,255,.96);
   border-color: rgba(255,255,255,.96);
 }
 
-.wordBoardChip.on {
+.pathBoardChip.on {
   color: rgba(0,0,0,.92);
   background: rgba(var(--emphasis-rgb), .88);
   border-color: rgba(var(--emphasis-rgb), .88);
 }
 
-.wordBoardChip.flash {
+.pathBoardChip.flash {
   color: #001d0a;
   background: rgba(253,241,0,.92);
   border-color: rgba(253,241,0,.92);
 }
 
-.wordBoardDebugPanel {
+.pathBoardDebugPanel {
   display: flex;
   flex-direction: column;
   border-top: 1px solid rgba(var(--frame-rgb), .18);
   background: rgba(10, 10, 12, 0.88);
 }
 
-.wordBoardDebugToggle {
+.pathBoardDebugToggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -498,7 +498,7 @@
   cursor: pointer;
 }
 
-.wordBoardDebugBadge {
+.pathBoardDebugBadge {
   color: var(--text-muted);
   font-size: 10px;
   font-weight: 700;
@@ -506,7 +506,7 @@
   letter-spacing: 0;
 }
 
-.wordBoardDebugBody {
+.pathBoardDebugBody {
   display: none;
   padding: 6px 8px 8px;
   max-height: 112px;
@@ -516,11 +516,11 @@
   line-height: 1.3;
 }
 
-.wordBoardDebugPanel.on .wordBoardDebugBody {
+.pathBoardDebugPanel.on .pathBoardDebugBody {
   display: block;
 }
 
-.wordBoardDebugLine {
+.pathBoardDebugLine {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
