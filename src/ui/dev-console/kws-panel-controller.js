@@ -62,6 +62,7 @@ export function createKwsPanelController({
   };
   let manualListenableTokens = new Set();
   let manualWakeWindowTokens = new Set();
+  let manualWakeWindowsById = new Map();
   let kwsWakeHudGateTO = 0;
   let kwsReadoutTickTO = 0;
   let kwsLastBackendErrorLogged = "";
@@ -83,11 +84,31 @@ export function createKwsPanelController({
 
   function readOpenWindowIds() {
     const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
-    return new Set(
+    return new Set([
       (Array.isArray(status && status.openWindowIds) ? status.openWindowIds : [])
         .map((id) => String(id || "").trim().toLowerCase())
-        .filter(Boolean)
-    );
+        .filter(Boolean),
+      ...Array.from(manualWakeWindowsById.keys()),
+    ]);
+  }
+
+  function readCurrentWakeWindowsById() {
+    const now = Date.now();
+    const out = new Map();
+    for (const [windowId, entry] of manualWakeWindowsById.entries()) {
+      if (!entry || typeof entry !== "object") continue;
+      const expiresAtMs = Number(entry.expiresAtMs || 0);
+      if (expiresAtMs > 0 && expiresAtMs <= now) continue;
+      out.set(windowId, {
+        tokens: new Set(
+          Array.isArray(entry.tokens)
+            ? entry.tokens.map((token) => canonicalKwsToken(token)).filter(Boolean)
+            : []
+        ),
+        expiresAtMs: expiresAtMs > 0 ? expiresAtMs : 0,
+      });
+    }
+    return out;
   }
 
   const wordFlashboardPopup = createWordFlashboardPopup({
@@ -110,10 +131,22 @@ export function createKwsPanelController({
       const phrase = canonicalKwsToken(step.phrase || step.id);
       const listenableTokens = readCurrentListenableTokens();
       const openWindowIds = readOpenWindowIds();
+      const wakeWindowsById = readCurrentWakeWindowsById();
       const requiredWindowIds = Array.isArray(step && step.requiredWindowIds)
         ? step.requiredWindowIds.map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)
         : [];
-      const windowsSatisfied = requiredWindowIds.every((id) => openWindowIds.has(id));
+      const windowsSatisfied = requiredWindowIds.every((id) => {
+        if (openWindowIds.has(id)) {
+          const entry = wakeWindowsById.get(id);
+          if (!entry || !entry.tokens || !(entry.tokens instanceof Set)) return true;
+          if (!phrase) return true;
+          return entry.tokens.has(phrase);
+        }
+        const entry = wakeWindowsById.get(id);
+        if (!entry || !entry.tokens || !(entry.tokens instanceof Set)) return false;
+        if (!phrase) return true;
+        return entry.tokens.has(phrase);
+      });
       return {
         lit: listenableTokens.has(phrase) && windowsSatisfied,
         flash: Number(kwsTokenUiState.flashUntilMs[phrase] || 0) > Date.now(),
@@ -376,6 +409,27 @@ export function createKwsPanelController({
     }
   }
 
+  function setManualWakeWindows(windows = []) {
+    const next = new Map();
+    for (const entry of Array.isArray(windows) ? windows : []) {
+      if (!entry || typeof entry !== "object") continue;
+      const windowId = String(entry.windowId || entry.id || "").trim().toLowerCase();
+      if (!windowId) continue;
+      const tokens = Array.isArray(entry.tokens)
+        ? entry.tokens.map((token) => canonicalKwsToken(token)).filter(Boolean)
+        : [];
+      next.set(windowId, {
+        windowId,
+        tokens,
+        expiresAtMs: Math.max(0, Number(entry.expiresAtMs) || 0),
+      });
+    }
+    manualWakeWindowsById = next;
+    if (wordFlashboardPopup.isOpen()) {
+      wordFlashboardPopup.render();
+    }
+  }
+
   function getManualWakeWindowTokens() {
     return Array.from(manualWakeWindowTokens.values());
   }
@@ -446,6 +500,7 @@ export function createKwsPanelController({
     setManualListenableTokens,
     getManualListenableTokens,
     setManualWakeWindowTokens,
+    setManualWakeWindows,
     getManualWakeWindowTokens,
     refreshWordFlashboard,
     getUiState: () => kwsTokenUiState,

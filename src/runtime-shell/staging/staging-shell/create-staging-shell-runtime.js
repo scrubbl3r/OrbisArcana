@@ -1467,15 +1467,24 @@ function bindShellWakeWindowVisuals({ eventBus, kwsPanelController = null, kwsBr
     if (typeof kwsPanelController.setManualWakeWindowTokens !== "function") return;
     const now = Date.now();
     const activeTokens = [];
+    const activeWindows = [];
     const windowDebug = [];
-    for (const entry of activeWakeWindowTokensByWindowId.values()) {
+    for (const [windowId, entry] of activeWakeWindowTokensByWindowId.entries()) {
       windowDebug.push(
         `${Array.isArray(entry.tokens) ? entry.tokens.join(",") : "-"}@${Number(entry.expiresAtMs || 0)}`
       );
       if (Number(entry.expiresAtMs || 0) <= now) continue;
       activeTokens.push(...entry.tokens);
+      activeWindows.push({
+        windowId,
+        tokens: Array.isArray(entry.tokens) ? entry.tokens.slice() : [],
+        expiresAtMs: Number(entry.expiresAtMs || 0),
+      });
     }
     kwsPanelController.setManualWakeWindowTokens(Array.from(new Set(activeTokens)));
+    if (typeof kwsPanelController.setManualWakeWindows === "function") {
+      kwsPanelController.setManualWakeWindows(activeWindows);
+    }
     if (typeof kwsPanelController.refreshWordFlashboard === "function") {
       kwsPanelController.refreshWordFlashboard();
     }
