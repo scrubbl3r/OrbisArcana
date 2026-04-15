@@ -88,7 +88,7 @@
     return { x: x / mag, y: y / mag, z: z / mag, mag };
   }
 
-  function deriveSpinStateFromVector(spinVector, spinDirection){
+  function deriveSpinStateFromVector(spinVector){
     if (!Array.isArray(spinVector) || spinVector.length < 3) {
       return null;
     }
@@ -115,14 +115,78 @@
       dominance: top.magnitude,
       gap: top.magnitude - second.magnitude,
       label: top.label,
-      direction: (typeof spinDirection === "string" && spinDirection)
-        ? String(spinDirection).toLowerCase()
-        : null,
+      direction: null,
     };
+  }
+
+  const SPIN_AXIS_WINDOW_MS = 1500;
+  const SPIN_DIRECTION_WINDOW_MS = 550;
+  const SPIN_DIRECTION_ACQUIRE_BIAS = 0.18;
+  const SPIN_DIRECTION_HOLD_BIAS = 0.08;
+  const SPIN_DIRECTION_REVERSE_BIAS = 0.24;
+
+  function resolveSpinDirectionForAxis(axisLabel, history, runtime){
+    const axis = String(axisLabel || "").trim().toLowerCase();
+    if (!axis || !Array.isArray(history) || !history.length) {
+      if (runtime) {
+        runtime.directionAxis = null;
+        runtime.direction = null;
+      }
+      return null;
+    }
+
+    let signed = 0;
+    let absolute = 0;
+    for (const sample of history) {
+      let component = 0;
+      if (axis === "x") component = Number(sample.z) || 0;
+      else if (axis === "y") component = Number(sample.y) || 0;
+      else if (axis === "z") component = Number(sample.x) || 0;
+      signed += component;
+      absolute += Math.abs(component);
+    }
+
+    if (!(absolute > 1e-6)) {
+      if (runtime) {
+        runtime.directionAxis = null;
+        runtime.direction = null;
+      }
+      return null;
+    }
+
+    const bias = signed / absolute;
+    const priorAxis = runtime ? String(runtime.directionAxis || "") : "";
+    const priorDirection = runtime ? String(runtime.direction || "") : "";
+    const sameAxis = priorAxis === axis;
+
+    let nextDirection = null;
+    if (sameAxis && priorDirection === "cw") {
+      if (bias <= -SPIN_DIRECTION_REVERSE_BIAS) nextDirection = "ccw";
+      else if (bias >= -SPIN_DIRECTION_HOLD_BIAS) nextDirection = "cw";
+    } else if (sameAxis && priorDirection === "ccw") {
+      if (bias >= SPIN_DIRECTION_REVERSE_BIAS) nextDirection = "cw";
+      else if (bias <= SPIN_DIRECTION_HOLD_BIAS) nextDirection = "ccw";
+    } else if (bias >= SPIN_DIRECTION_ACQUIRE_BIAS) {
+      nextDirection = "cw";
+    } else if (bias <= -SPIN_DIRECTION_ACQUIRE_BIAS) {
+      nextDirection = "ccw";
+    }
+
+    if (runtime) {
+      runtime.directionAxis = nextDirection ? axis : null;
+      runtime.direction = nextDirection;
+      runtime.directionBias = bias;
+    }
+    return nextDirection;
   }
 
   function deriveSpinState(rotationRate, receivedAtMs, spinRuntime){
     if (!Array.isArray(rotationRate) || rotationRate.length < 3) {
+        if (spinRuntime) {
+          spinRuntime.directionAxis = null;
+          spinRuntime.direction = null;
+          spinRuntime.directionBias = 0;
+        }
         return {
           vector: null,
           dominance: 0,
@@ -143,6 +207,9 @@
 
     const unit = vNorm3(runtime.ox, runtime.oy, runtime.oz);
     if (!(unit.mag > 1e-6)) {
+      runtime.directionAxis = null;
+      runtime.direction = null;
+      runtime.directionBias = 0;
       return {
         vector: null,
         dominance: 0,
@@ -153,7 +220,7 @@
     }
 
     runtime.hist.push({ t: Number(receivedAtMs) || 0, x: unit.x, y: unit.y, z: unit.z });
-    const cutoff = (Number(receivedAtMs) || 0) - 1500;
+    const cutoff = (Number(receivedAtMs) || 0) - SPIN_AXIS_WINDOW_MS;
     while (runtime.hist.length && runtime.hist[0].t < cutoff) runtime.hist.shift();
 
     let sx = 0;
@@ -167,6 +234,9 @@
 
     const dominant = vNorm3(sx, sy, sz);
     if (!(dominant.mag > 1e-6)) {
+      runtime.directionAxis = null;
+      runtime.direction = null;
+      runtime.directionBias = 0;
       return {
         vector: null,
         axis: null,
@@ -180,9 +250,9 @@
     // Preserve current live axis semantics:
     // legacy shield mapping effectively resolves labels from [z, y, x].
     const mapped = [
-      { label: "x", magnitude: dominant.z, signed: unit.z },
-      { label: "y", magnitude: dominant.y, signed: unit.y },
-      { label: "z", magnitude: dominant.x, signed: unit.x },
+      { label: "x", magnitude: dominant.z },
+      { label: "y", magnitude: dominant.y },
+      { label: "z", magnitude: dominant.x },
     ].sort((a, b) => b.magnitude - a.magnitude);
 
     const top = mapped[0];
@@ -196,12 +266,16 @@
       vectorByLabel[item.label] = item.magnitude;
     });
 
+    const directionHistoryCutoff = (Number(receivedAtMs) || 0) - SPIN_DIRECTION_WINDOW_MS;
+    const directionHistory = runtime.hist.filter((sample) => sample.t >= directionHistoryCutoff);
+    const direction = resolveSpinDirectionForAxis(top.label, directionHistory, runtime);
+
     return {
       vector: [vectorByLabel.x, vectorByLabel.y, vectorByLabel.z],
       dominance: top.magnitude,
       gap: top.magnitude - second.magnitude,
       label: top.label,
-      direction: top.signed >= 0 ? "cw" : "ccw",
+      direction,
     };
   }
 
@@ -214,6 +288,9 @@
       oy: 0,
       oz: 0,
       hist: [],
+      directionAxis: null,
+      direction: null,
+      directionBias: 0,
     };
 
     function reset(){
@@ -221,6 +298,9 @@
       spinRuntime.oy = 0;
       spinRuntime.oz = 0;
       spinRuntime.hist = [];
+      spinRuntime.directionAxis = null;
+      spinRuntime.direction = null;
+      spinRuntime.directionBias = 0;
     }
 
     function processPacket(packet, nowMs, options){
@@ -238,7 +318,7 @@
       const spinVector = pickVec3(packet, "spinVector");
       const accel = pickVec3(packet, "accel") || pickVec3(packet, "a");
       const rotationRate = pickVec3(packet, "rotationRate") || pickVec3(packet, "r");
-      const vectorSpin = deriveSpinStateFromVector(spinVector, packet && packet.spinDirection);
+      const vectorSpin = deriveSpinStateFromVector(spinVector);
       const derivedSpin = deriveSpinState(rotationRate, receivedAtMs, spinRuntime);
       const spin = vectorSpin
         ? {
