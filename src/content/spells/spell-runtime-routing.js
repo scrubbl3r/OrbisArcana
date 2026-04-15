@@ -9,6 +9,7 @@ import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.j
 const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "orbis",
   "are_kay_nah",
+  "echovar",
   "domus",
   "electrum",
   "fridgis",
