@@ -26,8 +26,8 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
   Object.freeze({
     targetKind: "spell",
     targetId: "aoe_electric",
-    effectId: "spell.teleport",
-    presetId: "preset.spell-teleport.teleport",
+    effectId: "spell.aoe_electric",
+    presetId: "preset.spell-aoe-electric.electric-aoe",
   }),
   Object.freeze({
     targetKind: "spell",
