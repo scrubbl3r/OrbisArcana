@@ -9,11 +9,10 @@ export const INTERACTION_GRAPH_V2 = {
     roots: [
       { id: "root.orbis", words: ["orbis"], ttlMs: 1500 },
       { id: "root.are_kay_nah", words: ["are_kay_nah"], ttlMs: 1500 },
-      { id: "root.echovar", words: ["echovar"], ttlMs: 1500 },
     ],
   },
   groups: {
-    wake_main_words: ["domus", "electrum", "pyro"],
+    wake_main_words: ["echovar", "electrum", "pyro"],
     electrum_chain_words: ["rota"],
     wake_are_kay_nah_words: ["pyro", "vectus"],
     pyro_voice_chain_words: ["sanctum", "rota"],
@@ -22,13 +21,13 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: ["domus", "electrum", "pyro"], ttlMs: 1500 },
+      open: { id: "wake.main", words: ["echovar", "electrum", "pyro"], ttlMs: 1500 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 1500 },
     },
     // TELEPORT HOME
     {
       id: "tele_home",
-      on: { word: "domus" },
+      on: { word: "echovar" },
       requires: "wake.main",
       trigger: { spell: "teleport" },
       grace: { ttlMs: 5000 },
