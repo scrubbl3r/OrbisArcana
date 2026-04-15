@@ -868,6 +868,9 @@ function clearShellOrbRuntimeFxForDeath(shellContext) {
   if (shellVfx && shellVfx.bubbleShieldRuntime && typeof shellVfx.bubbleShieldRuntime.off === "function") {
     shellVfx.bubbleShieldRuntime.off();
   }
+  if (shellVfx && shellVfx.orbNodRuntime && typeof shellVfx.orbNodRuntime.clear === "function") {
+    shellVfx.orbNodRuntime.clear();
+  }
   shellClearColorize(shellContext);
 }
 
@@ -1094,6 +1097,10 @@ async function initShellReceiverHostRuntime(shellContext) {
       playElectricAoe: () => {
         const shellVfx = runtime.vfx || null;
         return shellVfx && typeof shellVfx.playElectricAoe === "function" ? shellVfx.playElectricAoe() : { handled: false };
+      },
+      playOrbNod: (payload = {}) => {
+        const shellVfx = runtime.vfx || null;
+        return shellVfx && typeof shellVfx.playOrbNod === "function" ? shellVfx.playOrbNod(payload) : { handled: false };
       },
       grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
       clearFloatGrace: () => {
@@ -1598,6 +1605,7 @@ async function initShellKwsRuntime(shellContext) {
     SHOCKWAVE_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
+    ORB_NOD_PRESET_DEFAULT,
   } = receiverMods;
 
   if (
@@ -1657,6 +1665,7 @@ async function initShellKwsRuntime(shellContext) {
       shockwave: SHOCKWAVE_PRESET_DEFAULT,
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
+      orbNod: ORB_NOD_PRESET_DEFAULT,
     });
   }
   runtime.vfxDefaults = vfxDefaults;

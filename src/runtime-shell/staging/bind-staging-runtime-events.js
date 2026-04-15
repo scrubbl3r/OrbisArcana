@@ -21,6 +21,7 @@ export function bindStagingRuntimeEvents({
   castActionForWordId = () => "",
   executeWordCastAction = () => ({ handled: false }),
   playElectricAoe = () => {},
+  playOrbNod = () => {},
   clearFloatGrace = () => {},
   renderOrbDamageVisuals = () => {},
   spawnShardFx = () => {},
@@ -34,6 +35,7 @@ export function bindStagingRuntimeEvents({
   clearDeathOverlaySchedule = () => {},
   closeDeathOverlay = () => {},
   setOrbInputSuppressed = () => {},
+  getOrbAlive = () => true,
 } = {}) {
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbDamageVisuals);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnShardFx);
@@ -258,6 +260,15 @@ export function bindStagingRuntimeEvents({
     }
   });
   eventBus.on(RECEIVER_EVENTS.EVT_VOICE_KWS_WORD_CANDIDATE || RECEIVER_EVENTS.EVT_VOICE_KWS_SPELL_CANDIDATE, (p = {}) => {
+    if (!!p.matched && !p.suppressed && getOrbAlive()) {
+      playOrbNod({
+        wordId: String((p.wordId ?? p.spellId) || "").trim().toLowerCase(),
+        phrase: String(p.phrase || "").trim().toLowerCase(),
+        confidence: Number(p.confidence),
+        atMs: Number.isFinite(Number(p.atMs)) ? Number(p.atMs) : performance.now(),
+        source: String(p.source || "kws"),
+      });
+    }
     const matched = !!p.matched;
     const wordId = String((p.wordId ?? p.spellId) || "").trim().toLowerCase();
     const phrase = String(p.phrase || "").trim().toLowerCase();

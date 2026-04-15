@@ -59,6 +59,15 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     supportedContexts: ["lab", "receiver"],
     publishTargets: ["preset", "binding"],
   }),
+  Object.freeze({
+    id: "orb.nod",
+    label: "Orb Nod",
+    category: "orb",
+    runtimeModuleId: "orb_nod_runtime",
+    defaultPresetId: "preset.orb-nod.default",
+    supportedContexts: ["lab", "receiver"],
+    publishTargets: ["preset", "binding"],
+  }),
 ]);
 
 export const VFX_EFFECT_REGISTRY_BY_ID = Object.freeze(

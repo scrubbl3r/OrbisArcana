@@ -1,4 +1,5 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
+import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
@@ -40,6 +41,15 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
       particleSpeed: 0.62,
       maxBoltJumpSq: 1200,
       startJitterRatio: 0.3,
+    },
+    nod: {
+      orbTemplateShrinkPct: 6,
+      orbTemplateDurationMs: 500,
+      orbTemplateFillAlpha: 0.28,
+      orbTemplateWaveCount: 10,
+      orbTemplateWaveDepthPx: 4,
+      orbTemplateOscillationSpeedHz: 12,
+      orbTemplateOscillationCount: 4,
     },
   };
   defaults.shock.stroke = evenStroke(defaults.shock.stroke, 2, 20);
@@ -124,6 +134,14 @@ export function initGameStagingReceiverVfxRuntime({
     bubbleShieldRuntime: vfxRuntimesBundle && vfxRuntimesBundle.bubbleShieldRuntime,
     shockwaveRuntime: vfxRuntimesBundle && vfxRuntimesBundle.shockwaveRuntime,
     orbShatterRuntime: vfxRuntimesBundle && vfxRuntimesBundle.orbShatterRuntime,
+    orbNodRuntime: createOrbNodRuntime({
+      orbEl: stageEls.orb,
+      mountEl: stageEls.orb ? stageEls.orb.parentElement : null,
+      getOrbDiameterPx: readOrbDiameterPx,
+      getConfig: () => (vfxDefaults && vfxDefaults.nod && typeof vfxDefaults.nod === "object")
+        ? vfxDefaults.nod
+        : Object.create(null),
+    }),
     flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
     electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
   };
@@ -194,6 +212,13 @@ export function initGameStagingReceiverVfxRuntime({
     if (controller && typeof controller.spawnShardFx === "function") {
       controller.spawnShardFx(payload);
       return { handled: true };
+    }
+    return { handled: false };
+  }
+
+  function directPlayOrbNod(payload = {}) {
+    if (stageVfx.orbNodRuntime && typeof stageVfx.orbNodRuntime.play === "function") {
+      return stageVfx.orbNodRuntime.play(payload);
     }
     return { handled: false };
   }
@@ -271,6 +296,18 @@ export function initGameStagingReceiverVfxRuntime({
       });
       if (dispatched && dispatched.handled) return dispatched;
       return directPlayOrbShatter(payload);
+    },
+    playOrbNod(payload = {}) {
+      const dispatched = dispatchRuntimeEffect({
+        targetKind: "orb-state",
+        targetId: "nod",
+        runtime: {
+          playOrbNod: (nextPayload = {}) => directPlayOrbNod(nextPayload),
+        },
+        payload,
+      });
+      if (dispatched && dispatched.handled) return dispatched;
+      return directPlayOrbNod(payload);
     },
   };
 

@@ -286,7 +286,7 @@ export async function loadReceiverInitModules() {
     { applyDevConsoleThemeCssVars },
     { buildInputHudViewModel: buildInputHudViewModelImported },
     { runInputFramePipeline: runInputFramePipelineImported },
-    { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
+    { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, ORB_NOD_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
     { INPUT_GESTURE_CONFIG_DEFAULT },
     { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
@@ -414,6 +414,7 @@ export async function loadReceiverInitModules() {
     SHOCKWAVE_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
+    ORB_NOD_PRESET_DEFAULT,
     hydrateReceiverVfxDefaults,
     INPUT_GESTURE_CONFIG_DEFAULT,
     INPUT_DYNAMICS_CONFIG_DEFAULT,
@@ -478,6 +479,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     SHOCKWAVE_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
+    ORB_NOD_PRESET_DEFAULT,
     INPUT_GESTURE_CONFIG_DEFAULT,
     INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
@@ -671,6 +673,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       shockwave: SHOCKWAVE_PRESET_DEFAULT,
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
+      orbNod: ORB_NOD_PRESET_DEFAULT,
     });
   }
 

@@ -280,6 +280,11 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         ? shellHooks.playElectricAoe()
         : { handled: false }
     ),
+    playOrbNod: (payload = {}) => (
+      shellHooks && typeof shellHooks.playOrbNod === "function"
+        ? shellHooks.playOrbNod(payload)
+        : { handled: false }
+    ),
     clearFloatGrace: () => {
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
@@ -315,6 +320,12 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     setOrbInputSuppressed: (next) => {
       if (shellHooks && typeof shellHooks.setOrbInputSuppressed === "function") shellHooks.setOrbInputSuppressed(next);
     },
+    getOrbAlive: () => !!(
+      runtimeContext &&
+      runtimeContext.gameState &&
+      runtimeContext.gameState.orb &&
+      runtimeContext.gameState.orb.alive
+    ),
   });
 
   const mvp = bootstrapStagingMvp({

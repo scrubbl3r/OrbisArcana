@@ -16,6 +16,7 @@ import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js
  * @param {Function} [options.runtime.triggerShockwave]
  * @param {Function} [options.runtime.activateBubbleShield]
  * @param {Function} [options.runtime.playOrbShatter]
+ * @param {Function} [options.runtime.playOrbNod]
  * @param {Object} [options.payload]
  * @returns {{handled:boolean, skipped?:string, binding?:Object|null}}
  */
@@ -50,6 +51,10 @@ export function dispatchRuntimeEffect({
     case "orb.shatter_voronoi":
       return typeof runtime.playOrbShatter === "function"
         ? { ...(runtime.playOrbShatter(payload) || { handled: false }), binding }
+        : { handled: false, skipped: "runtime_missing", binding };
+    case "orb.nod":
+      return typeof runtime.playOrbNod === "function"
+        ? { ...(runtime.playOrbNod(payload) || { handled: false }), binding }
         : { handled: false, skipped: "runtime_missing", binding };
     default:
       return { handled: false, skipped: "effect_unhandled", binding };

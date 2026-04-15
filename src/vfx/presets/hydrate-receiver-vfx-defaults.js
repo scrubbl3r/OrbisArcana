@@ -6,6 +6,7 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
     shockwave = null,
     flameAoe = null,
     electricAoe = null,
+    orbNod = null,
   } = presets || {};
 
   if (bubbleShield && vfxDefaults.shield && typeof vfxDefaults.shield === "object") {
@@ -19,6 +20,9 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
   }
   if (electricAoe && vfxDefaults.electric && typeof vfxDefaults.electric === "object") {
     Object.assign(vfxDefaults.electric, electricAoe);
+  }
+  if (orbNod && vfxDefaults.nod && typeof vfxDefaults.nod === "object") {
+    Object.assign(vfxDefaults.nod, orbNod);
   }
 
   return vfxDefaults;
