@@ -149,6 +149,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     const opt = document.createElement("option");
     const effectId = String(entry.id || "");
     const baseEffect = baseEffectByRegistryId[effectId] || "";
+    if (!baseEffect) continue;
     opt.value = baseEffect || `registry:${effectId}`;
     opt.textContent = String(entry.label || effectId || "effect");
     opt.dataset.registryId = effectId;
@@ -156,10 +157,6 @@ export function buildEffectLibraryOptionsFromRegistry({
     opt.dataset.spawnBaseEffect = baseEffect;
     opt.dataset.category = category;
     opt.dataset.locked = "true";
-    if (!baseEffect) {
-      opt.disabled = true;
-      opt.textContent = `${opt.textContent} (coming soon)`;
-    }
     groups.get(category).appendChild(opt);
   }
 
