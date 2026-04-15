@@ -377,15 +377,25 @@
 
 .wordBoardPopupBody {
   flex: 1 1 auto;
-  padding: 7px 8px 8px;
+  padding: 11px 12px 12px;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   background: rgba(16, 16, 20, 0.52);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   align-content: start;
+}
+
+.wordBoardTrailGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wordBoardTrailGroup + .wordBoardTrailGroup {
+  margin-top: 6px;
 }
 
 .wordBoardTierRow {
@@ -421,8 +431,8 @@
   flex: 1 1 0;
   align-items: center;
   justify-content: center;
-  height: 28px;
-  padding: 2px 7px;
+  height: 24px;
+  padding: 1px 8px;
   border-radius: 6px;
   border: 1px solid rgba(var(--frame-rgb), .30);
   background: rgba(var(--frame-rgb), .14);

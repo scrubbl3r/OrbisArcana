@@ -44,16 +44,32 @@ export function createWordFlashboardPopup({
     const now = Date.now();
     const listenableTokens = getListenableTokens() instanceof Set ? getListenableTokens() : new Set();
     const html = flashboardTrailRows.length
-      ? flashboardTrailRows.map((row) => {
-        const stepsHtml = (Array.isArray(row && row.steps) ? row.steps : []).map((step, index) => {
-          const state = (typeof getTrailStepState === "function" ? getTrailStepState(step) : null) || {};
-          const displayText = String(step && step.displayText || step && step.label || step && step.phrase || step && step.id || "");
-          const chipHtml = wordBoardChipHtml(displayText, !!state.lit, !!state.flash, String(step && step.kind || "word"));
-          if (index <= 0) return chipHtml;
-          return `<div class="wordBoardTrailSep">&gt;</div>${chipHtml}`;
+      ? (() => {
+        const groups = [];
+        let currentGroup = null;
+        for (const row of flashboardTrailRows) {
+          const firstStep = Array.isArray(row && row.steps) && row.steps.length ? row.steps[0] : null;
+          const groupKey = `${String(firstStep && firstStep.kind || "").trim().toLowerCase()}:${String(firstStep && firstStep.id || "").trim().toLowerCase()}`;
+          if (!currentGroup || currentGroup.key !== groupKey) {
+            currentGroup = { key: groupKey, rows: [] };
+            groups.push(currentGroup);
+          }
+          currentGroup.rows.push(row);
+        }
+        return groups.map((group) => {
+          const rowsHtml = group.rows.map((row) => {
+            const stepsHtml = (Array.isArray(row && row.steps) ? row.steps : []).map((step, index) => {
+              const state = (typeof getTrailStepState === "function" ? getTrailStepState(step) : null) || {};
+              const displayText = String(step && step.displayText || step && step.label || step && step.phrase || step && step.id || "");
+              const chipHtml = wordBoardChipHtml(displayText, !!state.lit, !!state.flash, String(step && step.kind || "word"));
+              if (index <= 0) return chipHtml;
+              return `<div class="wordBoardTrailSep">&gt;</div>${chipHtml}`;
+            }).join("");
+            return `<div class="wordBoardTierRow wordBoardTrailRow">${stepsHtml}</div>`;
+          }).join("");
+          return `<div class="wordBoardTrailGroup">${rowsHtml}</div>`;
         }).join("");
-        return `<div class="wordBoardTierRow wordBoardTrailRow">${stepsHtml}</div>`;
-      }).join("")
+      })()
       : groupWordsByTier(flashboardWords)
         .map((row) => {
           const rowHtml = row.map((entry) => {
