@@ -14,6 +14,8 @@ export function createTeleportRuntime({
   orbEl = null,
   orbInteriorEl = null,
   orbCracksEl = null,
+  getOrbRuntime = () => null,
+  patchOrbRuntime = () => null,
   getConfig = () => ({}),
 } = {}) {
   if (!orbEl) return null;
@@ -22,6 +24,7 @@ export function createTeleportRuntime({
   let startMs = 0;
   let lastConfig = null;
   let teleported = false;
+  let completed = false;
 
   function normalizeConfig(raw = {}) {
     return {
@@ -30,7 +33,42 @@ export function createTeleportRuntime({
       fadeOutMs: Math.round(clampNumber(raw.fadeOutMs ?? raw.orbTeleportFadeOutMs, 40, 4000, 280)),
       fadeInMs: Math.round(clampNumber(raw.fadeInMs ?? raw.orbTeleportFadeInMs, 40, 4000, 280)),
       onTeleport: typeof raw.onTeleport === "function" ? raw.onTeleport : null,
+      onComplete: typeof raw.onComplete === "function" ? raw.onComplete : null,
     };
+  }
+
+  function engageTeleportHold() {
+    const state = typeof getOrbRuntime === "function" ? getOrbRuntime() : null;
+    const anchorY = Number.isFinite(Number(state && state.yW)) ? Number(state.yW) : 0;
+    patchOrbRuntime({
+      teleportHoldActive: true,
+      teleportHoldAnchorY: anchorY,
+      v: 0,
+      onGround: false,
+      descendMs: 0,
+      shieldDescentBlocked: false,
+    });
+  }
+
+  function refreshTeleportHoldAnchor() {
+    const state = typeof getOrbRuntime === "function" ? getOrbRuntime() : null;
+    const anchorY = Number.isFinite(Number(state && state.yW)) ? Number(state.yW) : 0;
+    patchOrbRuntime({
+      teleportHoldActive: true,
+      teleportHoldAnchorY: anchorY,
+      v: 0,
+      onGround: false,
+    });
+  }
+
+  function releaseTeleportHold() {
+    const state = typeof getOrbRuntime === "function" ? getOrbRuntime() : null;
+    const anchorY = Number.isFinite(Number(state && state.yW)) ? Number(state.yW) : 0;
+    patchOrbRuntime({
+      teleportHoldActive: false,
+      teleportHoldAnchorY: anchorY,
+      v: 0,
+    });
   }
 
   function setOpacity(alpha) {
@@ -52,6 +90,8 @@ export function createTeleportRuntime({
     raf = 0;
     startMs = 0;
     teleported = false;
+    completed = false;
+    releaseTeleportHold();
     reset();
   }
 
@@ -76,6 +116,7 @@ export function createTeleportRuntime({
           lastConfig.onTeleport();
         } catch (_) {}
       }
+      refreshTeleportHoldAnchor();
     }
 
     const fadeInElapsedMs = elapsedMs - fadeOutEnd;
@@ -84,7 +125,14 @@ export function createTeleportRuntime({
     setOpacity(progress * flicker);
 
     if (elapsedMs >= totalEnd) {
+      releaseTeleportHold();
       setOpacity(1);
+      if (!completed && typeof lastConfig.onComplete === "function") {
+        completed = true;
+        try {
+          lastConfig.onComplete();
+        } catch (_) {}
+      }
       raf = 0;
       return;
     }
@@ -97,6 +145,7 @@ export function createTeleportRuntime({
       ...(typeof getConfig === "function" ? (getConfig() || {}) : {}),
       ...(payload && typeof payload === "object" ? payload : {}),
     });
+    engageTeleportHold();
     startMs = performance.now();
     raf = requestAnimationFrame(render);
     return { handled: true };

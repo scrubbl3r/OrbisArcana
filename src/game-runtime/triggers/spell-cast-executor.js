@@ -65,22 +65,33 @@ export function createSpellCastExecutor({
     const meta = registry[actionId] || null;
     const handlerKey = String((meta && meta.handlerKey) || "");
     const handler = handlerMap[handlerKey];
+    const resolvedGrace = resolveOrbGracePayload(p && p.grace, { defaultTtlMs: defaultGraceTtlMs });
     let handled = false;
     let grantGrace = false;
     let graceTtlMs = 0;
+    let graceDeferred = false;
 
-    if (typeof handler === "function") {
-      handler(p);
-      handled = true;
-    }
-
-    const resolvedGrace = handled
-      ? resolveOrbGracePayload(p && p.grace, { defaultTtlMs: defaultGraceTtlMs })
-      : null;
-    if (resolvedGrace && typeof grantOrbGrace === "function") {
+    function grantResolvedGrace() {
+      if (!resolvedGrace || typeof grantOrbGrace !== "function") return false;
       grantOrbGrace(resolvedGrace);
       grantGrace = true;
       graceTtlMs = Number(resolvedGrace.ttlMs) || 0;
+      return true;
+    }
+
+    if (typeof handler === "function") {
+      const handlerResult = handler(p, {
+        resolvedGrace,
+        deferGrace() {
+          graceDeferred = true;
+        },
+        grantResolvedGrace,
+      });
+      handled = handlerResult !== false;
+    }
+
+    if (handled && resolvedGrace && !graceDeferred) {
+      grantResolvedGrace();
     }
 
     return { handled, blocked: false, reason: "", grantGrace, graceTtlMs };

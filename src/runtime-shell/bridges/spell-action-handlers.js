@@ -57,13 +57,21 @@ export function createSpellActionHandlers({
       if (typeof executeAoeFrost !== "function") return;
       executeAoeFrost({ playFrostAoe, playFlameAoe });
     },
-    teleport(payload = {}) {
+    teleport(payload = {}, context = {}) {
       void payload;
       if (typeof executeTeleport !== "function") return;
+      if (context && typeof context.deferGrace === "function" && payload && payload.grace) {
+        context.deferGrace();
+      }
       executeTeleport({
         playTeleport,
         teleportOrbToSpawnNeutralizePhysics,
         aboveGroundPx: domusTeleportAboveGroundPx,
+        onComplete: () => {
+          if (context && typeof context.grantResolvedGrace === "function") {
+            context.grantResolvedGrace();
+          }
+        },
       });
     },
     trigger_shockwave(payload = {}) {

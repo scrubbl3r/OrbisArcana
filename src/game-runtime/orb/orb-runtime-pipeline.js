@@ -69,6 +69,28 @@ export function runOrbRuntimePipeline({
     mvp.orbSystem.tick(nowMs);
   }
 
+  if (state.teleportHoldActive) {
+    const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;
+    const yCeil  = Number(phys.orbRadiusPx) || 0;
+    const holdY = Number.isFinite(Number(state.teleportHoldAnchorY))
+      ? Number(state.teleportHoldAnchorY)
+      : Number(state.yW || yFloor);
+    state.yW = clamp(holdY, yCeil, yFloor);
+    state.v = 0;
+    state.onGround = false;
+    state.descendMs = 0;
+    state.shieldDescentBlocked = false;
+
+    if (typeof drawStars === "function") drawStars();
+    if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
+    if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
+    if (typeof applyOrbTransform === "function") applyOrbTransform();
+    if (orbFxSystem && typeof orbFxSystem.tick === "function") orbFxSystem.tick(ts, dt);
+    if (worldSystem && typeof worldSystem.tick === "function") worldSystem.tick(ts, dt);
+    if (typeof updateDebugReadout === "function") updateDebugReadout();
+    return;
+  }
+
   const g = phys.gBase * state.gravityMul;
   const thrust = (typeof liftToThrustAccel === "function")
     ? Number(liftToThrustAccel(state.lift01)) || 0

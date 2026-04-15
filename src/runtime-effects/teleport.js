@@ -6,6 +6,7 @@ export function executeTeleport({
   playTeleport,
   teleportOrbToSpawnNeutralizePhysics,
   aboveGroundPx = 0,
+  onComplete = null,
 } = {}) {
   const performTeleport = () => {
     if (typeof teleportOrbToSpawnNeutralizePhysics !== "function") {
@@ -19,6 +20,7 @@ export function executeTeleport({
     const result = playTeleport({
       aboveGroundPx,
       onTeleport: () => performTeleport(),
+      onComplete: typeof onComplete === "function" ? onComplete : null,
     });
     if (result && result.handled) {
       return result;

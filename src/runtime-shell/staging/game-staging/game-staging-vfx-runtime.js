@@ -156,6 +156,16 @@ export function initGameStagingReceiverVfxRuntime({
       orbEl: stageEls.orb,
       orbInteriorEl: stageEls.orbInterior,
       orbCracksEl: stageEls.orbCracks,
+      getOrbRuntime: () => (
+        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.get === "function"
+          ? runtime.stage.orbRuntimeState.get()
+          : null
+      ),
+      patchOrbRuntime: (patch = {}) => (
+        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.patch === "function"
+          ? runtime.stage.orbRuntimeState.patch(patch)
+          : null
+      ),
       getConfig: () => (vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object")
         ? vfxDefaults.teleport
         : Object.create(null),

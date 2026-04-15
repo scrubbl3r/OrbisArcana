@@ -175,6 +175,8 @@ function buildShellStageInitialState(phys = {}) {
     floatGraceUntilMs: 0,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
+    teleportHoldActive: false,
+    teleportHoldAnchorY: yW,
   };
 }
 
@@ -437,6 +439,16 @@ function tickShellStageRuntime(shellContext, dt) {
     }
     state.floatGraceActive = false;
     state.floatGraceUntilMs = 0;
+  }
+
+  if (state.teleportHoldActive) {
+    const anchorY = Number.isFinite(Number(state.teleportHoldAnchorY)) ? Number(state.teleportHoldAnchorY) : Number(state.yW || yFloor);
+    state.yW = clamp(anchorY, yCeil, yFloor);
+    state.v = 0;
+    state.onGround = false;
+    state.descendMs = 0;
+    state.shieldDescentBlocked = false;
+    return;
   }
 
   const g = gBase * gravityMul;

@@ -14,6 +14,8 @@
  * @property {number} floatGraceUntilMs
  * @property {number} floatGraceAnchorY
  * @property {number} floatGracePhase
+ * @property {boolean} teleportHoldActive
+ * @property {number} teleportHoldAnchorY
  */
 
 /**
@@ -36,6 +38,8 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     floatGraceUntilMs: 0,
     floatGraceAnchorY: 0,
     floatGracePhase: 0,
+    teleportHoldActive: false,
+    teleportHoldAnchorY: 0,
     ...(initialState || {}),
   };
 
@@ -63,6 +67,8 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.floatGraceUntilMs = 0;
     state.floatGraceAnchorY = 0;
     state.floatGracePhase = 0;
+    state.teleportHoldActive = false;
+    state.teleportHoldAnchorY = 0;
     if (next && typeof next === "object") Object.assign(state, next);
     return state;
   }
