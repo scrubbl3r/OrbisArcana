@@ -56,9 +56,9 @@
       "token": "echovar"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/varavectus.onnx",
-      "label": "varavectus",
-      "token": "varavectus"
+      "path": "../../../assets/kws/openwakeword-models/azerith.onnx",
+      "label": "azerith",
+      "token": "azerith"
     }
   ]
 }

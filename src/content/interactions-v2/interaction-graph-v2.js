@@ -9,7 +9,7 @@ export const INTERACTION_GRAPH_V2 = {
     roots: [
       { id: "root.orbis", words: ["orbis"], ttlMs: 1500 },
       { id: "root.are_kay_nah", words: ["are_kay_nah"], ttlMs: 1500 },
-      { id: "root.varavectus", words: ["varavectus"], ttlMs: 1500 },
+      { id: "root.azerith", words: ["azerith"], ttlMs: 1500 },
     ],
   },
   groups: {
