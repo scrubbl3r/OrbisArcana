@@ -20,7 +20,6 @@ function buildWobblePath({
   baseRadius = 50,
   waveCount = 10,
   waveDepth = 0,
-  phase = 0,
   samples = 96,
 } = {}) {
   const count = Math.max(2, Math.round(Number(waveCount) || 10));
@@ -29,7 +28,7 @@ function buildWobblePath({
   for (let i = 0; i < totalSamples; i += 1) {
     const t = i / totalSamples;
     const angle = t * Math.PI * 2;
-    const radius = baseRadius + (Math.sin((angle * count) + phase) * waveDepth);
+    const radius = baseRadius + (Math.sin(angle * count) * waveDepth);
     points.push(polarPoint(angle, radius));
   }
   if (!points.length) return "";
@@ -137,10 +136,9 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     if (!activeSvg || !activePath || !els || !els.orb) return;
     const css = readCssVars();
     const envelope = Math.sin(progress * Math.PI);
-    const pulse = Math.sin(progress * Math.PI * cfg.oscillationCount);
-    const wobble = envelope * Math.abs(pulse);
-    const phase = progress * Math.PI * 2 * cfg.oscillationSpeedHz * (cfg.durationMs / 1000);
-    const waveDepth = Math.max(0, cfg.waveDepthPx * wobble);
+    const oscillationTime = progress * cfg.durationMs * 0.001;
+    const standingOscillation = Math.sin(oscillationTime * Math.PI * 2 * cfg.oscillationSpeedHz);
+    const signedWaveDepth = cfg.waveDepthPx * envelope * standingOscillation;
     const scale = 1 - (cfg.shrinkPct * envelope);
     const brightness = 1 + (cfg.brightnessBoost * envelope);
 
@@ -149,14 +147,13 @@ export function createOrbTemplatePreview({ els, getOrbBaseVisualState = null } =
     activePath.setAttribute("d", buildWobblePath({
       baseRadius: 50,
       waveCount: cfg.waveCount,
-      waveDepth,
-      phase,
+      waveDepth: signedWaveDepth,
     }));
     activePath.setAttribute("fill", css.fillColor);
     activePath.setAttribute("stroke", css.strokeColor);
     activePath.setAttribute("stroke-width", String(css.strokeWidth));
     activeSvg.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(4)})`;
-    activeSvg.style.filter = `brightness(${brightness.toFixed(3)}) drop-shadow(0 0 ${Math.max(2, waveDepth * 1.4).toFixed(2)}px ${css.strokeColor})`;
+    activeSvg.style.filter = `brightness(${brightness.toFixed(3)}) drop-shadow(0 0 ${Math.max(2, Math.abs(signedWaveDepth) * 1.4).toFixed(2)}px ${css.strokeColor})`;
   }
 
   function apply() {
