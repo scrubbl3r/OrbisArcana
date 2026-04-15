@@ -1353,6 +1353,17 @@
       orbLifecycleStatus: $("orbLifecycleStatus"),
     };
 
+    if (els.orbBaseD) els.orbBaseD.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx));
+    if (els.orbBaseStroke) els.orbBaseStroke.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx));
+    if (els.orbBaseStrokeAlpha) els.orbBaseStrokeAlpha.value = String(Number(ORB_BASE_VISUAL_DEFAULTS.strokeAlpha).toFixed(2));
+    if (els.orbBaseFillAlpha) els.orbBaseFillAlpha.value = String(Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha).toFixed(2));
+    if (els.orbBaseStrokeR) els.orbBaseStrokeR.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.r));
+    if (els.orbBaseStrokeG) els.orbBaseStrokeG.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.g));
+    if (els.orbBaseStrokeB) els.orbBaseStrokeB.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.b));
+    if (els.orbBaseFillR) els.orbBaseFillR.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.r));
+    if (els.orbBaseFillG) els.orbBaseFillG.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.g));
+    if (els.orbBaseFillB) els.orbBaseFillB.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b));
+
     const shieldPreviewEls = Object.freeze({
       ...els,
       previewRoot: els.shieldPreviewRoot,
@@ -2158,6 +2169,21 @@
       shieldD: 186,
       shieldStroke: 4,
     };
+    let currentLabOrbBaseVisualState = buildOrbBaseVisualState({
+      theme: {
+        orb: {
+          diameterPx: Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
+          strokeWidthPx: Number(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
+          strokeDefaultRgb: ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb,
+          strokeAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.strokeAlpha),
+          fillDefaultRgb: ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb,
+          fillAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha),
+        },
+      },
+      physics: {
+        orbRadiusPx: Number(ORB_BASE_VISUAL_DEFAULTS.radiusPx) || (Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx) * 0.5),
+      },
+    });
     const PREVIEW_ROOTS_BY_EFFECT = {
       "bubble-shield": els.shieldPreviewRoot,
       "shockwave": els.shockPreviewRoot,
@@ -2171,37 +2197,7 @@
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
 
     function buildCurrentLabOrbBaseVisualState(){
-      const hasLiveControls = !!(els.orbBaseD && els.orbBaseStroke);
-      if (!hasLiveControls) {
-        return buildOrbBaseVisualState();
-      }
-      const diameterPx = evenPx(els.orbBaseD.value, 2, 2000);
-      const strokeWidthPx = evenPx(els.orbBaseStroke.value, 1, 40);
-      const strokeAlpha = clamp(els.orbBaseStrokeAlpha && els.orbBaseStrokeAlpha.value, 0, 1);
-      const fillAlpha = clamp(els.orbBaseFillAlpha && els.orbBaseFillAlpha.value, 0, 1);
-      return buildOrbBaseVisualState({
-        theme: {
-          orb: {
-            diameterPx,
-            strokeWidthPx,
-            strokeDefaultRgb: {
-              r: clampByte(els.orbBaseStrokeR && els.orbBaseStrokeR.value),
-              g: clampByte(els.orbBaseStrokeG && els.orbBaseStrokeG.value),
-              b: clampByte(els.orbBaseStrokeB && els.orbBaseStrokeB.value),
-            },
-            strokeAlpha,
-            fillDefaultRgb: {
-              r: clampByte(els.orbBaseFillR && els.orbBaseFillR.value),
-              g: clampByte(els.orbBaseFillG && els.orbBaseFillG.value),
-              b: clampByte(els.orbBaseFillB && els.orbBaseFillB.value),
-            },
-            fillAlpha,
-          },
-        },
-        physics: {
-          orbRadiusPx: diameterPx * 0.5,
-        },
-      });
+      return currentLabOrbBaseVisualState || buildOrbBaseVisualState();
     }
 
     function applyOrbLaneSsot(root, { includeGlobe = false } = {}){
@@ -2360,6 +2356,7 @@
       els: {
         ...orbBasePreviewEls,
         onApply: (visualState) => {
+          currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
           GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
           GEOM.orbStroke = evenPx(visualState && visualState.strokeWidthPx, 1, 40);
           applyGeometryVars();
