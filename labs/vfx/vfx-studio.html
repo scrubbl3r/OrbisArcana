@@ -734,6 +734,9 @@
           <div class="orbInterior" id="orbGlobeLaneInterior"></div>
           <div class="orb atOrigin" id="orbGlobeLaneOrb"></div>
         </div>
+        <div class="previewLane" id="orbTeleportPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbTeleportLaneOrb"></div>
+        </div>
       </div>
     </div>
 
@@ -1015,6 +1018,40 @@
         </div>
       </div>
 
+      <div class="section" data-effect="orb-teleport" hidden>
+        <div class="bindingEditorHelp">Teleport orb-state sketch. The orb freezes, flickers out, the camera travels to destination, then the orb flickers back in and settles.</div>
+        <div class="row">
+          <button id="previewOrbTeleport" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbTeleportFlickerOnMs">Flicker on (ms)</label>
+            <input id="orbTeleportFlickerOnMs" class="paramFieldInput" type="number" min="10" max="1000" step="5" value="60" />
+            <button id="orbTeleportApplyFlickerOnBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleportFlickerOffMs">Flicker off (ms)</label>
+            <input id="orbTeleportFlickerOffMs" class="paramFieldInput" type="number" min="10" max="1000" step="5" value="60" />
+            <button id="orbTeleportApplyFlickerOffBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleportFadeOutMs">Fade-out (ms)</label>
+            <input id="orbTeleportFadeOutMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="280" />
+            <button id="orbTeleportApplyFadeOutBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleportCameraMoveMs">Camera move (ms)</label>
+            <input id="orbTeleportCameraMoveMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="360" />
+            <button id="orbTeleportApplyCameraMoveBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleportFadeInMs">Fade-in (ms)</label>
+            <input id="orbTeleportFadeInMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="280" />
+            <button id="orbTeleportApplyFadeInBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
       <div class="section" data-effect="orb-lifecycle" hidden>
         <div class="bindingEditorHelp">Lifecycle orb-state authoring lane. Uses Orb Base as its visual provider and drives one seeded Voronoi fracture map through full-fracture hits, heal, and final shatter.</div>
         <div class="paramFieldRows">
@@ -1119,6 +1156,7 @@
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260411b";
+    import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
     import {
       bootStudioShell,
       refreshEffectMeta as refreshEffectMetaHelper,
@@ -1193,6 +1231,7 @@
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
       { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
+      { value: "orb-teleport", label: "Orb Teleport", baseEffect: "orb-teleport", category: "orb", locked: true },
       { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
     ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
@@ -1245,6 +1284,7 @@
       orbNodPreviewRoot: $("orbNodPreviewRoot"),
       orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
+      orbTeleportPreviewRoot: $("orbTeleportPreviewRoot"),
       orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
       orbLifecycleShatterLayer: $("orbLifecycleShatterLayer"),
 
@@ -1368,6 +1408,17 @@
       orbLifecycleHealBtn: $("orbLifecycleHealBtn"),
       orbLifecycleRegenerateBtn: $("orbLifecycleRegenerateBtn"),
       orbLifecycleStatus: $("orbLifecycleStatus"),
+      previewOrbTeleport: $("previewOrbTeleport"),
+      orbTeleportFlickerOnMs: $("orbTeleportFlickerOnMs"),
+      orbTeleportApplyFlickerOnBtn: $("orbTeleportApplyFlickerOnBtn"),
+      orbTeleportFlickerOffMs: $("orbTeleportFlickerOffMs"),
+      orbTeleportApplyFlickerOffBtn: $("orbTeleportApplyFlickerOffBtn"),
+      orbTeleportFadeOutMs: $("orbTeleportFadeOutMs"),
+      orbTeleportApplyFadeOutBtn: $("orbTeleportApplyFadeOutBtn"),
+      orbTeleportCameraMoveMs: $("orbTeleportCameraMoveMs"),
+      orbTeleportApplyCameraMoveBtn: $("orbTeleportApplyCameraMoveBtn"),
+      orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
+      orbTeleportApplyFadeInBtn: $("orbTeleportApplyFadeInBtn"),
     };
 
     if (els.orbBaseD) els.orbBaseD.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx));
@@ -1448,6 +1499,11 @@
       orb: $("orbGlobeLaneOrb"),
       orbInterior: $("orbGlobeLaneInterior"),
       orbGlobePreviewLayer: $("orbGlobeLaneLayer"),
+    });
+    const orbTeleportPreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.orbTeleportPreviewRoot,
+      orb: $("orbTeleportLaneOrb"),
     });
 
     function setVar(name, value){
@@ -1625,6 +1681,14 @@
             orbTemplateWaveDepthPx: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateWaveDepthPx) || 10),
             orbTemplateOscillationSpeedHz: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationSpeedHz) || 12),
             orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 2),
+          };
+        case "orb-teleport":
+          return {
+            orbTeleportFlickerOnMs: 60,
+            orbTeleportFlickerOffMs: 60,
+            orbTeleportFadeOutMs: 280,
+            orbTeleportCameraMoveMs: 360,
+            orbTeleportFadeInMs: 280,
           };
         case "orb-lifecycle":
           return {
@@ -1903,6 +1967,14 @@
             orbTemplateOscillationSpeedHz: Number(els.orbNodOscillationSpeedHz && els.orbNodOscillationSpeedHz.value),
             orbTemplateOscillationCount: Number(els.orbNodOscillationCount && els.orbNodOscillationCount.value),
           };
+        case "orb-teleport":
+          return {
+            orbTeleportFlickerOnMs: Number(els.orbTeleportFlickerOnMs && els.orbTeleportFlickerOnMs.value),
+            orbTeleportFlickerOffMs: Number(els.orbTeleportFlickerOffMs && els.orbTeleportFlickerOffMs.value),
+            orbTeleportFadeOutMs: Number(els.orbTeleportFadeOutMs && els.orbTeleportFadeOutMs.value),
+            orbTeleportCameraMoveMs: Number(els.orbTeleportCameraMoveMs && els.orbTeleportCameraMoveMs.value),
+            orbTeleportFadeInMs: Number(els.orbTeleportFadeInMs && els.orbTeleportFadeInMs.value),
+          };
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
@@ -1996,6 +2068,14 @@
             if (els.orbNodOscillationSpeedHz && settings.orbTemplateOscillationSpeedHz != null) els.orbNodOscillationSpeedHz.value = String(settings.orbTemplateOscillationSpeedHz);
             if (els.orbNodOscillationCount && settings.orbTemplateOscillationCount != null) els.orbNodOscillationCount.value = String(settings.orbTemplateOscillationCount);
             applyOrbNod();
+            break;
+          case "orb-teleport":
+            if (els.orbTeleportFlickerOnMs && settings.orbTeleportFlickerOnMs != null) els.orbTeleportFlickerOnMs.value = String(settings.orbTeleportFlickerOnMs);
+            if (els.orbTeleportFlickerOffMs && settings.orbTeleportFlickerOffMs != null) els.orbTeleportFlickerOffMs.value = String(settings.orbTeleportFlickerOffMs);
+            if (els.orbTeleportFadeOutMs && settings.orbTeleportFadeOutMs != null) els.orbTeleportFadeOutMs.value = String(settings.orbTeleportFadeOutMs);
+            if (els.orbTeleportCameraMoveMs && settings.orbTeleportCameraMoveMs != null) els.orbTeleportCameraMoveMs.value = String(settings.orbTeleportCameraMoveMs);
+            if (els.orbTeleportFadeInMs && settings.orbTeleportFadeInMs != null) els.orbTeleportFadeInMs.value = String(settings.orbTeleportFadeInMs);
+            applyOrbTeleport();
             break;
           case "orb-lifecycle":
             if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
@@ -2276,6 +2356,7 @@
       "orb-nod": els.orbNodPreviewRoot,
       "orb-lifecycle": els.orbLifecyclePreviewRoot,
       "orb-globe": els.orbGlobePreviewRoot,
+      "orb-teleport": els.orbTeleportPreviewRoot,
     };
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
 
@@ -2312,6 +2393,7 @@
       applyOrbLaneSsot(els.orbNodPreviewRoot);
       applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
+      applyOrbLaneSsot(els.orbTeleportPreviewRoot);
     }
     applyGeometryVars();
 
@@ -2340,6 +2422,7 @@
       clearOrbNod();
       clearOrbLifecycle();
       clearOrbGlobe();
+      clearOrbTeleport();
       Object.values(PREVIEW_ROOTS_BY_EFFECT).forEach((root) => {
         if (!root || typeof root.setAttribute !== "function") return;
         root.setAttribute("aria-hidden", "true");
@@ -2492,6 +2575,14 @@
     const applyOrbGlobe = orbGlobePreview.apply;
     const clearOrbGlobe = orbGlobePreview.clear;
     orbGlobePreview.wire();
+
+    const orbTeleportPreview = createOrbTeleportPreview({
+      els: orbTeleportPreviewEls,
+      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
+    });
+    const applyOrbTeleport = orbTeleportPreview.apply;
+    const clearOrbTeleport = orbTeleportPreview.clear;
+    orbTeleportPreview.wire();
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){
