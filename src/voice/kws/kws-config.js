@@ -6,9 +6,10 @@ import {
   KWS_ROW_TOP_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
+  WORDFLASHBOARD_TRAIL_ROWS,
   WORDFLASHBOARD_WORDS,
   WORD_RUNTIME_ROUTING,
-} from "../../content/spells/spell-runtime-routing.js?v=20260327a";
+} from "../../content/spells/spell-runtime-routing.js?v=20260415e";
 import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
 
 function resolveActivePhrasesByIds(ids = []) {
@@ -57,6 +58,12 @@ export function createKwsRuntimeConfig() {
     wakeRequiredTokens,
     wordFlashboardWords: Array.isArray(WORDFLASHBOARD_WORDS)
       ? WORDFLASHBOARD_WORDS.map((entry) => Object.freeze({ ...entry }))
+      : [],
+    wordFlashboardTrailRows: Array.isArray(WORDFLASHBOARD_TRAIL_ROWS)
+      ? WORDFLASHBOARD_TRAIL_ROWS.map((row) => Object.freeze({
+        ...row,
+        steps: Object.freeze((Array.isArray(row && row.steps) ? row.steps : []).map((entry) => Object.freeze({ ...entry }))),
+      }))
       : [],
     spinWordByAxis: Object.freeze({}),
     logTokens: tokenList.slice(),

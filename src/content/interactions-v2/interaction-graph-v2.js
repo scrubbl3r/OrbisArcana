@@ -14,7 +14,7 @@ export const INTERACTION_GRAPH_V2 = {
   groups: {
     wake_main_words: ["echovar", "electrum", "pyro"],
     electrum_chain_words: ["rota"],
-    wake_are_kay_nah_words: ["pyro", "azerith"],
+    wake_are_kay_nah_words: ["pyro"],
     pyro_voice_chain_words: ["sanctum", "rota"],
   },
   rules: [
@@ -50,7 +50,7 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "wake_are_kay_nah",
       on: { word: "are_kay_nah" },
-      open: { id: "wake.are_kay_nah", words: ["pyro", "azerith"], ttlMs: 1500 },
+      open: { id: "wake.are_kay_nah", words: ["pyro"], ttlMs: 1500 },
     },
     {
       id: "pyro_voice_chain",

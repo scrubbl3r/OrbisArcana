@@ -1,20 +1,28 @@
 export function createWordFlashboardPopup({
   els = {},
   words = [],
+  trailRows = [],
   canonicalToken = (token) => String(token || "").trim().toLowerCase(),
   getListenableTokens = () => new Set(),
   getFlashUntilMs = () => 0,
+  getTrailStepState = () => ({ lit: false, flash: false }),
   onVisibilityChanged = null,
 } = {}) {
   const flashboardWords = Array.isArray(words)
     ? words.map((entry) => Object.freeze({ ...entry }))
     : [];
+  const flashboardTrailRows = Array.isArray(trailRows)
+    ? trailRows.map((row) => Object.freeze({
+      ...row,
+      steps: Object.freeze((Array.isArray(row && row.steps) ? row.steps : []).map((entry) => Object.freeze({ ...entry }))),
+    }))
+    : [];
   let bound = false;
   let open = false;
   let drag = null;
 
-  function wordBoardChipHtml(displayText, lit, flash) {
-    const cls = `wordBoardChip${lit ? " on" : ""}${flash ? " flash" : ""}`;
+  function wordBoardChipHtml(displayText, lit, flash, kind = "word") {
+    const cls = `wordBoardChip${lit ? " on" : ""}${flash ? " flash" : ""}${kind === "signal" ? " signal" : ""}`;
     return `<div class="${cls}">${String(displayText || "")}</div>`;
   }
 
@@ -34,21 +42,30 @@ export function createWordFlashboardPopup({
   function render() {
     if (!open || !els.wordBoardBody) return;
     const now = Date.now();
-    const listenableTokens = getListenableTokens() instanceof Set
-      ? getListenableTokens()
-      : new Set();
-    const html = groupWordsByTier(flashboardWords)
-      .map((row) => {
-        const rowHtml = row.map((entry) => {
-          const phrase = canonicalToken(entry && entry.phrase);
-          const lit = listenableTokens.has(phrase);
-          const flash = Number(getFlashUntilMs(phrase) || 0) > now;
-          const displayText = String(entry && entry.displayText || entry && entry.label || entry && entry.phrase || entry && entry.id || "");
-          return wordBoardChipHtml(displayText, lit, flash);
+    const listenableTokens = getListenableTokens() instanceof Set ? getListenableTokens() : new Set();
+    const html = flashboardTrailRows.length
+      ? flashboardTrailRows.map((row) => {
+        const stepsHtml = (Array.isArray(row && row.steps) ? row.steps : []).map((step, index) => {
+          const state = (typeof getTrailStepState === "function" ? getTrailStepState(step) : null) || {};
+          const displayText = String(step && step.displayText || step && step.label || step && step.phrase || step && step.id || "");
+          const chipHtml = wordBoardChipHtml(displayText, !!state.lit, !!state.flash, String(step && step.kind || "word"));
+          if (index <= 0) return chipHtml;
+          return `<div class="wordBoardTrailSep">&gt;</div>${chipHtml}`;
         }).join("");
-        return `<div class="wordBoardTierRow">${rowHtml}</div>`;
-      })
-      .join("");
+        return `<div class="wordBoardTierRow wordBoardTrailRow">${stepsHtml}</div>`;
+      }).join("")
+      : groupWordsByTier(flashboardWords)
+        .map((row) => {
+          const rowHtml = row.map((entry) => {
+            const phrase = canonicalToken(entry && entry.phrase);
+            const lit = listenableTokens.has(phrase);
+            const flash = Number(getFlashUntilMs(phrase) || 0) > now;
+            const displayText = String(entry && entry.displayText || entry && entry.label || entry && entry.phrase || entry && entry.id || "");
+            return wordBoardChipHtml(displayText, lit, flash);
+          }).join("");
+          return `<div class="wordBoardTierRow">${rowHtml}</div>`;
+        })
+        .join("");
     els.wordBoardBody.innerHTML = html;
   }
 

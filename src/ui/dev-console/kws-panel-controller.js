@@ -19,6 +19,12 @@ export function createKwsPanelController({
   const WORDFLASHBOARD_WORDS = Array.isArray(constants.wordFlashboardWords)
     ? constants.wordFlashboardWords.map((entry) => Object.freeze({ ...entry }))
     : [];
+  const WORDFLASHBOARD_TRAIL_ROWS = Array.isArray(constants.wordFlashboardTrailRows)
+    ? constants.wordFlashboardTrailRows.map((row) => Object.freeze({
+      ...row,
+      steps: Object.freeze((Array.isArray(row && row.steps) ? row.steps : []).map((entry) => Object.freeze({ ...entry }))),
+    }))
+    : [];
   const KWS_ROW_TOP = Array.isArray(constants.rowTop) ? constants.rowTop.slice() : [];
   const KWS_ROW_BOTTOM = Array.isArray(constants.rowBottom) ? constants.rowBottom.slice() : [];
   const KWS_WAKE_WINDOW_TOKENS = Array.isArray(constants.wakeWindowTokens) ? constants.wakeWindowTokens.slice() : [];
@@ -62,22 +68,43 @@ export function createKwsPanelController({
   let pendingKwsReadoutHtml = "idle";
   const kwsEventLog = [];
   let tuneApplyBound = false;
+
+  function readCurrentListenableTokens() {
+    const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
+    const policyTokens = (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
+      .map((token) => canonicalKwsToken(token))
+      .filter(Boolean);
+    return new Set([
+      ...policyTokens,
+      ...Array.from(manualListenableTokens.values()),
+      ...Array.from(manualWakeWindowTokens.values()),
+    ]);
+  }
+
   const wordFlashboardPopup = createWordFlashboardPopup({
     els,
     words: WORDFLASHBOARD_WORDS,
+    trailRows: WORDFLASHBOARD_TRAIL_ROWS,
     canonicalToken: canonicalKwsToken,
-    getListenableTokens: () => {
-      const status = typeof getListenPolicyStatus === "function" ? getListenPolicyStatus() : null;
-      const policyTokens = (Array.isArray(status && status.listenableTokens) ? status.listenableTokens : [])
-        .map((token) => canonicalKwsToken(token))
-        .filter(Boolean);
-      return new Set([
-        ...policyTokens,
-        ...Array.from(manualListenableTokens.values()),
-        ...Array.from(manualWakeWindowTokens.values()),
-      ]);
-    },
+    getListenableTokens: () => readCurrentListenableTokens(),
     getFlashUntilMs: (token) => Number(kwsTokenUiState.flashUntilMs[String(token || "").trim().toLowerCase()] || 0),
+    getTrailStepState: (step = {}) => {
+      const kind = String(step.kind || "").trim().toLowerCase();
+      if (kind === "signal") {
+        const signalId = String(step.id || "").trim().toLowerCase();
+        if (signalId.startsWith("spin.")) {
+          const axis = signalId.slice(5);
+          return { lit: String(kwsTokenUiState.activeSpinAxis || "").trim().toLowerCase() === axis, flash: false };
+        }
+        return { lit: false, flash: false };
+      }
+      const phrase = canonicalKwsToken(step.phrase || step.id);
+      const listenableTokens = readCurrentListenableTokens();
+      return {
+        lit: listenableTokens.has(phrase),
+        flash: Number(kwsTokenUiState.flashUntilMs[phrase] || 0) > Date.now(),
+      };
+    },
     onVisibilityChanged: (open) => {
       if (typeof logPopupController.setWordBoardVisible === "function") {
         logPopupController.setWordBoardVisible(open);

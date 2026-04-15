@@ -76,6 +76,15 @@ function compareWordDisplay(a, b) {
   return String(a || "").localeCompare(String(b || ""), undefined, { sensitivity: "base" });
 }
 
+function toTrailDisplayText(raw) {
+  return String(raw || "")
+    .trim()
+    .split(/\s+/g)
+    .filter(Boolean)
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function buildWordFlashboardTierMap() {
   const rules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2 && COMPILED_INTERACTION_GRAPH_V2.rules) ? COMPILED_INTERACTION_GRAPH_V2.rules : [];
   const wakeRoots = uniqueWordIds(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS);
@@ -145,6 +154,71 @@ function collectRuleOnWordIds(rule) {
   if (!on) return [];
   const raw = Object.hasOwn(on, "word") ? on.word : on.spell;
   return uniqueWordIds(asSelectorList(raw));
+}
+
+function collectRuleOnSignalIds(rule) {
+  const on = (rule && typeof rule.on === "object" && !Array.isArray(rule.on)) ? rule.on : null;
+  if (!on) return [];
+  const spinIds = asSelectorList(on.spin)
+    .map((id) => String(id || "").trim().toLowerCase())
+    .filter((id) => id === "x" || id === "y" || id === "z")
+    .map((id) => `spin.${id}`);
+  const shakeIds = asSelectorList(on.shake)
+    .map((id) => String(id || "").trim().toLowerCase())
+    .filter((id) => id === "ud" || id === "lr" || id === "fb")
+    .map((id) => `shake.${id}`);
+  return Array.from(new Set([...spinIds, ...shakeIds]));
+}
+
+function collectRuleRequires(rule) {
+  return Array.from(new Set(
+    asSelectorList(rule && rule.requires)
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter(Boolean)
+  ));
+}
+
+function buildTrailStepKey(step) {
+  const kind = String(step && step.kind || "").trim().toLowerCase();
+  const id = String(step && step.id || "").trim().toLowerCase();
+  return `${kind}:${id}`;
+}
+
+function resolveSignalTrailheadDisplay(signalId) {
+  const id = String(signalId || "").trim().toLowerCase();
+  if (id === "spin.x") return "Spin X";
+  if (id === "spin.y") return "Spin Y";
+  if (id === "spin.z") return "Spin Z";
+  if (id === "shake.ud") return "Shake UD";
+  if (id === "shake.lr") return "Shake LR";
+  if (id === "shake.fb") return "Shake FB";
+  return id;
+}
+
+function buildWordTrailStep(id) {
+  const word = WORDBOOK_V2_ACTIVE_WORDS_BY_ID[asWordId(id)];
+  if (!word) return null;
+  const wordId = asWordId(word.id);
+  const phrase = String(word.phrase || word.id || "").trim().toLowerCase();
+  return Object.freeze({
+    kind: "word",
+    id: wordId,
+    phrase,
+    label: String(word.label || "").trim(),
+    displayText: toTrailDisplayText(resolveDisplayTextByWordId(wordId)),
+  });
+}
+
+function buildSignalTrailStep(signalId) {
+  const id = String(signalId || "").trim().toLowerCase();
+  if (!id) return null;
+  return Object.freeze({
+    kind: "signal",
+    id,
+    phrase: "",
+    label: "",
+    displayText: resolveSignalTrailheadDisplay(id),
+  });
 }
 
 function collectRuleOpenWordIds(rule) {
@@ -336,8 +410,91 @@ function buildWordFlashboardWords(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTIM
   );
 }
 
+function buildWordFlashboardTrailRows() {
+  const rules = Array.isArray(COMPILED_INTERACTION_GRAPH_V2 && COMPILED_INTERACTION_GRAPH_V2.rules)
+    ? COMPILED_INTERACTION_GRAPH_V2.rules
+    : [];
+  const wakeRoots = uniqueWordIds(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS);
+  const trailheads = [];
+  const trailheadSeen = new Set();
+
+  function addTrailhead(step) {
+    if (!step) return;
+    const key = buildTrailStepKey(step);
+    if (trailheadSeen.has(key)) return;
+    trailheadSeen.add(key);
+    trailheads.push(step);
+  }
+
+  for (const rootId of wakeRoots) {
+    addTrailhead(buildWordTrailStep(rootId));
+  }
+
+  for (const rule of rules) {
+    const signalTriggerIds = collectRuleOnSignalIds(rule);
+    for (const signalId of signalTriggerIds) {
+      if (collectRuleRequires(rule).length > 0) continue;
+      addTrailhead(buildSignalTrailStep(signalId));
+    }
+  }
+
+  const rows = [];
+  const rowSeen = new Set();
+
+  function pushRow(path) {
+    const key = path.map((entry) => buildTrailStepKey(entry)).join(">");
+    if (rowSeen.has(key)) return;
+    rowSeen.add(key);
+    rows.push(Object.freeze({
+      id: key,
+      steps: Object.freeze(path.map((entry) => Object.freeze({ ...entry }))),
+    }));
+  }
+
+  function ruleMatchesStep(rule, step, activeWindows) {
+    const requiredWindows = collectRuleRequires(rule);
+    if (requiredWindows.some((id) => !activeWindows.has(id))) return false;
+    if (step.kind === "signal") {
+      return collectRuleOnSignalIds(rule).includes(step.id);
+    }
+    return collectRuleOnWordIds(rule).includes(step.id);
+  }
+
+  function visit(path, step, activeWindows) {
+    let expanded = false;
+    for (const rule of rules) {
+      if (!ruleMatchesStep(rule, step, activeWindows)) continue;
+      const hasTerminalAction = !!(rule && (Object.hasOwn(rule, "trigger") || Object.hasOwn(rule, "bind")));
+      if (hasTerminalAction && path.length > 1 && step.kind === "word") {
+        pushRow(path);
+      }
+      const openWordIds = collectRuleOpenWordIds(rule);
+      if (!openWordIds.length) continue;
+      expanded = true;
+      const nextWindows = new Set(activeWindows);
+      const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
+      const openId = String(open && open.id || "").trim().toLowerCase();
+      if (openId) nextWindows.add(openId);
+      for (const wordId of openWordIds) {
+        const nextStep = buildWordTrailStep(wordId);
+        if (!nextStep) continue;
+        if (path.some((entry) => buildTrailStepKey(entry) === buildTrailStepKey(nextStep))) continue;
+        visit(path.concat([nextStep]), nextStep, nextWindows);
+      }
+    }
+    return expanded;
+  }
+
+  for (const trailhead of trailheads) {
+    visit([trailhead], trailhead, new Set());
+  }
+
+  return Object.freeze(rows);
+}
+
 const COMPILED_INTERACTION_GRAPH_V2_WORD_RUNTIME_ROUTING = buildWordRuntimeRoutingV2(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE);
 const COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS = buildWordFlashboardWords(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE);
+const COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_TRAIL_ROWS = buildWordFlashboardTrailRows();
 
 export const WAKE_WORD_IDS = Object.freeze(
   (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeWordIds)
@@ -361,6 +518,17 @@ export const WORDFLASHBOARD_WORDS = Object.freeze(
   (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS)
     ? COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_WORDS
     : []).slice()
+);
+
+export const WORDFLASHBOARD_TRAIL_ROWS = Object.freeze(
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_TRAIL_ROWS)
+    ? COMPILED_INTERACTION_GRAPH_V2_WORDFLASHBOARD_TRAIL_ROWS
+    : []).map((row) => Object.freeze({
+      ...row,
+      steps: Object.freeze(
+        (Array.isArray(row && row.steps) ? row.steps : []).map((entry) => Object.freeze({ ...entry }))
+      ),
+    }))
 );
 
 export const WAKE_REQUIRED_WORD_IDS = Object.freeze(

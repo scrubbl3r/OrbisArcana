@@ -394,6 +394,28 @@
   align-items: stretch;
 }
 
+.wordBoardTrailRow {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wordBoardTrailRow .wordBoardChip {
+  flex: 0 0 auto;
+  min-width: 84px;
+}
+
+.wordBoardTrailSep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(var(--frame-rgb), .72);
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 1;
+  user-select: none;
+}
+
 .wordBoardChip {
   display: flex;
   flex: 1 1 0;
@@ -410,6 +432,10 @@
   line-height: 1;
   text-align: center;
   transition: all 90ms linear;
+}
+
+.wordBoardChip.signal {
+  border-style: dashed;
 }
 
 .wordBoardChip.on {

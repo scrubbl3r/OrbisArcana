@@ -32,6 +32,12 @@ export function bootstrapKwsStaging({
     wordFlashboardWords: Array.isArray(runtime.wordFlashboardWords)
       ? runtime.wordFlashboardWords.map((entry) => ({ ...entry }))
       : [],
+    wordFlashboardTrailRows: Array.isArray(runtime.wordFlashboardTrailRows)
+      ? runtime.wordFlashboardTrailRows.map((row) => ({
+        ...row,
+        steps: Array.isArray(row && row.steps) ? row.steps.map((entry) => ({ ...entry })) : [],
+      }))
+      : [],
     spinWordByAxis: (runtime.spinWordByAxis && typeof runtime.spinWordByAxis === "object")
       ? Object.freeze({ ...runtime.spinWordByAxis })
       : Object.freeze({}),
@@ -66,6 +72,12 @@ export function bootstrapKwsStaging({
       next.wordFlashboardWords = Array.isArray(kwsConfig.wordFlashboardWords)
         ? kwsConfig.wordFlashboardWords.map((entry) => ({ ...entry }))
         : next.wordFlashboardWords;
+      next.wordFlashboardTrailRows = Array.isArray(kwsConfig.wordFlashboardTrailRows)
+        ? kwsConfig.wordFlashboardTrailRows.map((row) => ({
+          ...row,
+          steps: Array.isArray(row && row.steps) ? row.steps.map((entry) => ({ ...entry })) : [],
+        }))
+        : next.wordFlashboardTrailRows;
       next.spinWordByAxis = (kwsConfig.spinWordByAxis && typeof kwsConfig.spinWordByAxis === "object")
         ? Object.freeze({ ...kwsConfig.spinWordByAxis })
         : next.spinWordByAxis;
@@ -99,6 +111,7 @@ export function bootstrapKwsStaging({
       wakeTokens: next.wakeTokens,
       wakeRequiredTokens: next.wakeRequiredTokens,
       wordFlashboardWords: next.wordFlashboardWords,
+      wordFlashboardTrailRows: next.wordFlashboardTrailRows,
       spinWordByAxis: next.spinWordByAxis,
       logTokens: Array.from(next.logTokens),
       tempUngatedTokens: Array.from(next.tempUngatedTokens),
