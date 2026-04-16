@@ -42,6 +42,15 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     clearDom();
   }
 
+  function readSpeedRange() {
+    const rawMin = clamp(els.orbGlobeSpeedMin && els.orbGlobeSpeedMin.value, 0, 12);
+    const rawMax = clamp(els.orbGlobeSpeedMax && els.orbGlobeSpeedMax.value, 0, 12);
+    return {
+      min: Math.min(rawMin, rawMax),
+      max: Math.max(rawMin, rawMax),
+    };
+  }
+
   function readState() {
     return buildOrbGlobeVisualState({
       innerDiameterRatio: clamp(els.orbGlobeInnerDiameterRatio.value, 0.01, 1),
@@ -55,6 +64,17 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
       releasedStrokeWidthPx: clamp(els.orbGlobeReleasedStroke.value, 0, 12),
       orbitStrokeWidthPx: clamp(els.orbGlobeOrbitStroke.value, 0, 12),
     });
+  }
+
+  function randomBetween(min, max) {
+    return min + (Math.random() * (max - min));
+  }
+
+  function randomAxis() {
+    return {
+      angle: Math.random() * Math.PI * 2,
+      squash: randomBetween(0.22, 0.68),
+    };
   }
 
   function renderPhaseGlobes(state) {
@@ -75,12 +95,17 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
       const el = createGlobeElement("orbitGlobe");
       const orbitD = orbitRadius * 2;
       const angle = globe.phase + (t * globe.speed);
-      const x = Math.cos(angle) * orbitR;
-      const y = Math.sin(angle) * orbitR * 0.28;
+      const axis = globe.axis || { angle: 0, squash: 0.28 };
+      const localX = Math.cos(angle) * orbitR;
+      const localY = Math.sin(angle) * orbitR * axis.squash;
+      const axisCos = Math.cos(axis.angle);
+      const axisSin = Math.sin(axis.angle);
+      const x = (localX * axisCos) - (localY * axisSin);
+      const y = (localX * axisSin) + (localY * axisCos);
       el.style.width = `${orbitD.toFixed(2)}px`;
       el.style.height = `${orbitD.toFixed(2)}px`;
-      el.style.left = `${(orbRadius + x - orbitRadius).toFixed(2)}px`;
-      el.style.top = `${(orbRadius + y - orbitRadius).toFixed(2)}px`;
+      el.style.left = `${(x - orbitRadius).toFixed(2)}px`;
+      el.style.top = `${(y - orbitRadius).toFixed(2)}px`;
       el.style.opacity = `${Math.max(0.55, 1 - (index * 0.08)).toFixed(3)}`;
       els.orbGlobePreviewLayer.appendChild(el);
       samples.push(el);
@@ -131,11 +156,13 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
   }
 
   function addGlobe() {
+    const speedRange = readSpeedRange();
     phaseGlobes.push({
       id: nextPhaseGlobeId++,
       state: "loaded",
       phase: Math.random() * Math.PI * 2,
-      speed: 1.8 + (Math.random() * 0.65),
+      axis: randomAxis(),
+      speed: randomBetween(speedRange.min, speedRange.max),
     });
     apply();
     startAnimation();
@@ -146,6 +173,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     if (globe) {
       globe.state = "bound";
       globe.phase = Math.random() * Math.PI * 2;
+      globe.axis = randomAxis();
     }
     apply();
     startAnimation();
@@ -174,6 +202,8 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
       els.orbGlobeApplyInnerStrokeBtn,
       els.orbGlobeApplyReleasedStrokeBtn,
       els.orbGlobeApplyOrbitStrokeBtn,
+      els.orbGlobeApplySpeedMinBtn,
+      els.orbGlobeApplySpeedMaxBtn,
     ].forEach((el) => {
       if (el) el.addEventListener("click", apply);
     });

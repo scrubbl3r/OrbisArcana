@@ -1140,6 +1140,16 @@
             <input id="orbGlobeOrbitStroke" class="paramFieldInput" type="number" min="0" max="8" value="2" step="0.1" />
             <button id="orbGlobeApplyOrbitStrokeBtn" class="toolBtn" type="button">Apply</button>
           </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeSpeedMin">Orbit speed min</label>
+            <input id="orbGlobeSpeedMin" class="paramFieldInput" type="number" min="0" max="12" value="1.80" step="0.05" />
+            <button id="orbGlobeApplySpeedMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeSpeedMax">Orbit speed max</label>
+            <input id="orbGlobeSpeedMax" class="paramFieldInput" type="number" min="0" max="12" value="2.45" step="0.05" />
+            <button id="orbGlobeApplySpeedMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
       </div>
 
@@ -1165,7 +1175,7 @@
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
-    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416b";
+    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416c";
     import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260416a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
     import {
@@ -1442,6 +1452,10 @@
       orbGlobeApplyReleasedStrokeBtn: $("orbGlobeApplyReleasedStrokeBtn"),
       orbGlobeOrbitStroke: $("orbGlobeOrbitStroke"),
       orbGlobeApplyOrbitStrokeBtn: $("orbGlobeApplyOrbitStrokeBtn"),
+      orbGlobeSpeedMin: $("orbGlobeSpeedMin"),
+      orbGlobeApplySpeedMinBtn: $("orbGlobeApplySpeedMinBtn"),
+      orbGlobeSpeedMax: $("orbGlobeSpeedMax"),
+      orbGlobeApplySpeedMaxBtn: $("orbGlobeApplySpeedMaxBtn"),
       orbLifecycleShardTotal: $("orbLifecycleShardTotal"),
       orbLifecycleApplyShardTotalBtn: $("orbLifecycleApplyShardTotalBtn"),
       orbLifecycleHitTotal: $("orbLifecycleHitTotal"),
@@ -1764,6 +1778,8 @@
             orbGlobeInnerStroke: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthPx),
             orbGlobeReleasedStroke: Number(ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthPx),
             orbGlobeOrbitStroke: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitStrokeWidthPx),
+            orbGlobeSpeedMin: 1.8,
+            orbGlobeSpeedMax: 2.45,
           };
         case "world-globe":
           return {};
@@ -2050,6 +2066,8 @@
             orbGlobeInnerStroke: Number(els.orbGlobeInnerStroke && els.orbGlobeInnerStroke.value),
             orbGlobeReleasedStroke: Number(els.orbGlobeReleasedStroke && els.orbGlobeReleasedStroke.value),
             orbGlobeOrbitStroke: Number(els.orbGlobeOrbitStroke && els.orbGlobeOrbitStroke.value),
+            orbGlobeSpeedMin: Number(els.orbGlobeSpeedMin && els.orbGlobeSpeedMin.value),
+            orbGlobeSpeedMax: Number(els.orbGlobeSpeedMax && els.orbGlobeSpeedMax.value),
           };
         case "world-globe":
           return {};
@@ -2152,6 +2170,8 @@
             if (els.orbGlobeInnerStroke && settings.orbGlobeInnerStroke != null) els.orbGlobeInnerStroke.value = String(settings.orbGlobeInnerStroke);
             if (els.orbGlobeReleasedStroke && settings.orbGlobeReleasedStroke != null) els.orbGlobeReleasedStroke.value = String(settings.orbGlobeReleasedStroke);
             if (els.orbGlobeOrbitStroke && settings.orbGlobeOrbitStroke != null) els.orbGlobeOrbitStroke.value = String(settings.orbGlobeOrbitStroke);
+            if (els.orbGlobeSpeedMin && settings.orbGlobeSpeedMin != null) els.orbGlobeSpeedMin.value = String(settings.orbGlobeSpeedMin);
+            if (els.orbGlobeSpeedMax && settings.orbGlobeSpeedMax != null) els.orbGlobeSpeedMax.value = String(settings.orbGlobeSpeedMax);
             applyOrbGlobe();
             break;
           case "world-globe":
