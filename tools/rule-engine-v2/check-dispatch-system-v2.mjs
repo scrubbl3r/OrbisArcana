@@ -13,6 +13,7 @@ export function createCheckDispatchSystem({
     eventBus,
     nowMs,
     resources,
+    getOrbCastGateState: () => ({ allowed: true, reason: "" }),
     ruleEngineEnabled,
     allowLegacyFallbacks,
     baseSpellBySlot,

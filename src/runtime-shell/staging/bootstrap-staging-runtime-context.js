@@ -151,10 +151,13 @@ export function bootstrapStagingRuntimeContext({
     .map(normalizeWorldItemSpawn)
     .filter(Boolean);
   const fallbackSpawn = {
-    id: "globe_mid_01",
+    id: "globe_emitter_01",
+    kind: "energy_globe_emitter",
     xNorm: 0.5,
     yW: groundCenterWorld() - 1000,
     r: 25,
+    capacity: 1,
+    regenTrigger: "globe_spent",
   };
   const resolvedGlobeSpawns = globeSpawns.length ? globeSpawns : [fallbackSpawn];
 

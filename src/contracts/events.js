@@ -107,6 +107,8 @@ export const EVT_SPELL_SLOT_CAST_REQUESTED = "spell.slot_cast_requested";
 /**
  * @typedef {Object} PickupCollectedPayload
  * @property {string} id Pickup instance id
+ * @property {string} [globeId] Emitted globe instance id
+ * @property {string} [emitterId] Source globe emitter/spawn id
  * @property {string} type Pickup type (currently `energy_globe`)
  * @property {number} atMs
  * @property {number} [xNorm]
@@ -126,6 +128,7 @@ export const EVT_RESOURCES_ENERGY_BANK_CHANGED = "energy.bank_changed";
 /**
  * @typedef {Object} ResourcesGlobeInventoryChangedPayload
  * @property {number} stored Stored globe count
+ * @property {Array<Object>} [globes] Active loaded/bound globe records
  * @property {number} atMs
  * Legacy event id currently used: `energy.globe_inventory_changed`.
  */

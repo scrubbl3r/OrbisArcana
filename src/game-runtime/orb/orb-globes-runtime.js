@@ -172,15 +172,21 @@ export function createOrbGlobesRuntime({
     };
   }
 
-  function upsertOrbitingGlobe({ axis, slot, wordId }) {
-    const a = String(axis || "").toLowerCase() || randomOrbitAxis();
+  function upsertOrbitingGlobe({ axis, slot, wordId, globeId, emitterId, state }) {
     const s = String(slot || "").toUpperCase();
-    if (!a || !s) return;
+    const g = String(globeId || "");
+    if (!s && !g) return;
     const tokenId = String(wordId || "");
-    const existing = orbiting.particles.find((p) => p.slot === s);
+    const existing = orbiting.particles.find((p) => (g && p.globeId === g) || (s && p.slot === s));
+    const a = String(axis || "").toLowerCase() || (existing && existing.axis) || randomOrbitAxis();
+    if (!a) return;
     const color = axisColor(a);
     if (existing) {
       existing.axis = a;
+      existing.slot = s;
+      existing.globeId = g || existing.globeId || "";
+      existing.emitterId = String(emitterId || existing.emitterId || "");
+      existing.state = String(state || existing.state || "loaded");
       existing.wordId = tokenId;
       existing.spellId = tokenId;
       existing.stroke = color.stroke;
@@ -190,6 +196,9 @@ export function createOrbGlobesRuntime({
     }
     orbiting.particles.push({
       id: orbiting.nextId++,
+      globeId: g,
+      emitterId: String(emitterId || ""),
+      state: String(state || "loaded"),
       axis: a,
       slot: s,
       wordId: tokenId,
@@ -217,10 +226,11 @@ export function createOrbGlobesRuntime({
     tickOrbitingGlobes(performance.now());
   }
 
-  function consumeOrbitingGlobe({ axis, slot }) {
+  function consumeOrbitingGlobe({ axis, slot, globeId }) {
     const s = String(slot || "").toUpperCase();
-    if (!s) return;
-    const idx = orbiting.particles.findIndex((p) => p.slot === s);
+    const g = String(globeId || "");
+    if (!s && !g) return;
+    const idx = orbiting.particles.findIndex((p) => (g && p.globeId === g) || (s && p.slot === s));
     if (idx < 0) return;
     const p = orbiting.particles[idx];
     try { if (p.el) p.el.remove(); } catch (_) {}
@@ -302,8 +312,9 @@ export function createOrbGlobesRuntime({
     const cy = Number(getOrbScreenY()) || 0;
     for (const p of orbiting.particles) {
       const liveColor = axisColor(p.axis);
+      const isBound = String(p.state || "") === "bound" || !!String(p.slot || "");
       p.radius = getOrbitGlobeRadiusPx(currentOrbRadius, globeVisualState);
-      p.orbitR = getOrbitDistancePx(currentOrbRadius, globeVisualState);
+      p.orbitR = getOrbitDistancePx(currentOrbRadius, globeVisualState) * (isBound ? 0.88 : 1);
       p.stroke = liveColor.stroke;
       p.fill = liveColor.fill;
       p.glow = liveColor.glow;
@@ -348,9 +359,33 @@ export function createOrbGlobesRuntime({
       p.el.style.opacity = clamp01(proj.opacity).toFixed(3);
       p.el.style.borderColor = p.stroke;
       p.el.style.backgroundColor = p.fill;
-      p.el.style.boxShadow = p.glow;
+      p.el.style.boxShadow = isBound ? `${p.glow}, 0 0 18px rgba(255,255,255,0.20)` : p.glow;
       p.el.style.transform = `scale(${proj.scale.toFixed(3)})`;
       p.el.style.zIndex = proj.scale >= 1 ? "34" : "30";
+    }
+  }
+
+  function reconcileOrbitingGlobesFromInventory(globes = []) {
+    const active = (Array.isArray(globes) ? globes : [])
+      .filter((g) => g && String(g.state || "") !== "spent")
+      .map((g) => ({
+        globeId: String(g.globeId || g.id || ""),
+        emitterId: String(g.emitterId || ""),
+        state: String(g.state || "loaded"),
+        slot: String(g.slot || "").toUpperCase(),
+        wordId: String(g.wordId || g.spellId || ""),
+        axis: String(g.axis || g.spinAxis || "").toLowerCase(),
+      }))
+      .filter((g) => g.globeId);
+    const activeIds = new Set(active.map((g) => g.globeId));
+    for (let i = orbiting.particles.length - 1; i >= 0; i -= 1) {
+      const p = orbiting.particles[i];
+      if (p.globeId && activeIds.has(p.globeId)) continue;
+      try { if (p.el) p.el.remove(); } catch (_) {}
+      orbiting.particles.splice(i, 1);
+    }
+    for (const g of active) {
+      upsertOrbitingGlobe(g);
     }
   }
 
@@ -480,22 +515,28 @@ export function createOrbGlobesRuntime({
 
   function start() {
     unsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
-      reconcileInnerGlobesToCount(payload.stored);
+      clearInnerGlobes();
+      reconcileOrbitingGlobesFromInventory(payload.globes || []);
     }));
     unsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       const slot = String(payload.slot || "").toUpperCase();
-      if (!slot) return;
+      const globeId = String(payload.globeId || payload.boundGlobeId || "");
+      if (!slot && !globeId) return;
       const wordId = readWordIdFromPayload(payload);
       upsertOrbitingGlobe({
         axis: String(payload.axis || "").toLowerCase(),
         slot,
         wordId,
+        globeId,
+        emitterId: String(payload.emitterId || ""),
+        state: "bound",
       });
     }));
     unsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
       const slot = String(payload.slot || "").toUpperCase();
-      if (!slot) return;
-      consumeOrbitingGlobe({ slot });
+      const globeId = String(payload.globeId || payload.boundGlobeId || "");
+      if (!slot && !globeId) return;
+      consumeOrbitingGlobe({ slot, globeId });
     }));
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       releaseInnerGlobesAtDeath(performance.now());

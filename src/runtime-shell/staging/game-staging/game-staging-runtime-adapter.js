@@ -61,7 +61,8 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
         clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
       } = {}
     ) {
-      if (!item || String(item.kind || "") !== "energy_globe") return null;
+      const kind = String(item && item.kind || "");
+      if (!item || (kind !== "energy_globe" && kind !== "energy_globe_emitter")) return null;
       const s = item.spawn || {};
       const xNorm = clamp(Number(s.xNorm), 0, 1);
       const r = Math.max(1, Number(s.r) || 25);
@@ -72,9 +73,12 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
         : yValue;
       return {
         id: String(item.id || ""),
+        kind,
         xNorm: Number.isFinite(xNorm) ? xNorm : 0.5,
         yW,
         r,
+        capacity: Math.max(1, Math.floor(Number(item.capacity) || 1)),
+        regenTrigger: String(item.regenTrigger || (kind === "energy_globe_emitter" ? "globe_spent" : "manual")),
       };
     },
     pickupScreenY(

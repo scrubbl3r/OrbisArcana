@@ -24,7 +24,9 @@ import {
 // `resources` is an optional injected domain API.
 // Expected methods (subset used here):
 // - getStoredGlobeCount(): number
-// - consumeStoredGlobe(payload): { ok: boolean, stored: number }
+// - bindLoadedGlobe(payload): { ok: boolean, stored: number, globe?: Object }
+// - spendBoundGlobe(payload): { ok: boolean, stored: number, globe?: Object }
+// - consumeStoredGlobe(payload): { ok: boolean, stored: number, globe?: Object }
 export function createSpellDispatchSystem({
   eventBus,
   nowMs = () => Date.now(),
@@ -104,6 +106,20 @@ export function createSpellDispatchSystem({
     return { ok: false, stored: getStoredGlobeCount() };
   }
 
+  function bindLoadedGlobe(payload = {}) {
+    if (resources && typeof resources.bindLoadedGlobe === "function") {
+      return resources.bindLoadedGlobe(payload);
+    }
+    return consumeStoredGlobe(payload);
+  }
+
+  function spendBoundGlobe(payload = {}) {
+    if (resources && typeof resources.spendBoundGlobe === "function") {
+      return resources.spendBoundGlobe(payload);
+    }
+    return { ok: true, stored: getStoredGlobeCount() };
+  }
+
   function getGlobeCostForCastAction(castActionId) {
     const meta = getCastActionMeta(castActionId);
     return Math.max(0, Number(meta && meta.globeCost) || 0);
@@ -135,6 +151,36 @@ export function createSpellDispatchSystem({
       stored = Math.max(0, Number(result.stored) || 0);
     }
     return { ok: true, globeCost, stored };
+  }
+
+  function tryBindSpellCost(entry, payload = {}) {
+    const castActionId = String(entry && entry.castActionId || "").trim().toLowerCase();
+    const globeCost = getGlobeCostForCastAction(castActionId);
+    if (globeCost <= 0) {
+      return { ok: true, globeCost: 0, stored: getStoredGlobeCount(), globes: [] };
+    }
+    const before = getStoredGlobeCount();
+    if (before < globeCost) {
+      return { ok: false, globeCost, stored: before, globes: [] };
+    }
+    const globes = [];
+    let stored = before;
+    for (let i = 0; i < globeCost; i += 1) {
+      const result = bindLoadedGlobe({
+        ...payload,
+        reason: String(payload.reason || "slot_load"),
+        wordId: String(entry.wordId || ""),
+        spellId: String(entry.spellId || entry.wordId || ""),
+        slot: String(entry.slot || payload.slot || ""),
+        axis: String(entry.axis || payload.axis || ""),
+      });
+      if (!result || result.ok !== true) {
+        return { ok: false, globeCost, stored: getStoredGlobeCount(), globes };
+      }
+      stored = Math.max(0, Number(result.stored) || 0);
+      if (result.globe) globes.push({ ...result.globe });
+    }
+    return { ok: true, globeCost, stored, globes, globe: globes[0] || null };
   }
 
   function emitInsufficientGlobes(entry, payload = {}, globeCost = 0, stored = 0) {
@@ -255,6 +301,8 @@ export function createSpellDispatchSystem({
       slot,
       axis: normAxis(payload.axis),
       resident: "loaded",
+      boundGlobeId: payload.boundGlobeId ? String(payload.boundGlobeId) : "",
+      emitterId: payload.emitterId ? String(payload.emitterId) : "",
     };
   }
 
@@ -268,6 +316,9 @@ export function createSpellDispatchSystem({
       confidence: Number(entry.confidence) || 0,
       axis: entry.axis,
       slot: entry.slot,
+      boundGlobeId: entry.boundGlobeId || "",
+      globeId: entry.boundGlobeId || "",
+      emitterId: entry.emitterId || "",
       atMs: entry.loadedAtMs,
       trigger,
     });
@@ -285,6 +336,9 @@ export function createSpellDispatchSystem({
       trigger: String(payload.trigger || "shake_detonation"),
       axis: entry.axis,
       slot: entry.slot,
+      boundGlobeId: entry.boundGlobeId || "",
+      globeId: entry.boundGlobeId || "",
+      emitterId: entry.emitterId || "",
       directionGroup: String(payload.directionGroup || entry.slot || ""),
       atMs: now,
     };
@@ -314,7 +368,7 @@ export function createSpellDispatchSystem({
       });
       return null;
     }
-    const costResult = tryConsumeSpellCost(entry, {
+    const costResult = tryBindSpellCost(entry, {
       ...payload,
       atMs: entry.loadedAtMs,
       reason: "slot_load",
@@ -323,6 +377,8 @@ export function createSpellDispatchSystem({
       emitInsufficientGlobes(entry, { ...payload, atMs: entry.loadedAtMs }, costResult.globeCost, costResult.stored);
       return null;
     }
+    entry.boundGlobeId = String(costResult.globe && (costResult.globe.globeId || costResult.globe.id) || "");
+    entry.emitterId = String(costResult.globe && costResult.globe.emitterId || "");
     loadedBySlot[entry.slot] = {
       wordId: entry.wordId,
       spellId: entry.spellId,
@@ -333,6 +389,8 @@ export function createSpellDispatchSystem({
       confidence: entry.confidence,
       loadedAtMs: entry.loadedAtMs,
       axis: entry.axis,
+      boundGlobeId: entry.boundGlobeId,
+      emitterId: entry.emitterId,
       resident: "loaded",
     };
     emitSpellLoadedFromEntry(entry, String(payload.trigger || "rule_engine.event"));
@@ -368,6 +426,21 @@ export function createSpellDispatchSystem({
       return null;
     }
     if (entry.resident === "loaded") {
+      const spendResult = spendBoundGlobe({
+        ...payload,
+        atMs: now,
+        reason: String(payload.reason || "spell_cast"),
+        wordId: String(entry.wordId || ""),
+        spellId: String(entry.spellId || entry.wordId || ""),
+        slot: String(entry.slot || slot || ""),
+        axis: String(entry.axis || payload.axis || ""),
+        boundGlobeId: String(entry.boundGlobeId || ""),
+        globeId: String(entry.boundGlobeId || ""),
+      });
+      if (!spendResult || spendResult.ok !== true) {
+        emitInsufficientGlobes(entry, { ...payload, atMs: now }, 1, getStoredGlobeCount());
+        return null;
+      }
       loadedBySlot[entry.slot] = null;
     }
     lastCastByWordId.set(spell.id, now);
@@ -537,22 +610,45 @@ export function createSpellDispatchSystem({
         });
         return;
       }
-      const costResult = tryConsumeSpellCost(entry, {
-        trigger: "shake_detonation",
-        directionGroup: group || String(entry.slot || ""),
-        atMs: now,
-        reason: "shake_detonation",
-      });
-      if (!costResult.ok) {
-        emitInsufficientGlobes(entry, {
+      if (entry.resident !== "loaded") {
+        const costResult = tryConsumeSpellCost(entry, {
           trigger: "shake_detonation",
           directionGroup: group || String(entry.slot || ""),
           atMs: now,
-        }, costResult.globeCost, costResult.stored);
-        return;
+          reason: "shake_detonation",
+        });
+        if (!costResult.ok) {
+          emitInsufficientGlobes(entry, {
+            trigger: "shake_detonation",
+            directionGroup: group || String(entry.slot || ""),
+            atMs: now,
+          }, costResult.globeCost, costResult.stored);
+          return;
+        }
       }
 
       if (entry.resident === "loaded") {
+        const spendResult = spendBoundGlobe({
+          ...payload,
+          trigger: "shake_detonation",
+          directionGroup: group || String(entry.slot || ""),
+          atMs: now,
+          reason: "shake_detonation",
+          wordId: String(entry.wordId || ""),
+          spellId: String(entry.spellId || entry.wordId || ""),
+          slot: String(entry.slot || group || ""),
+          axis: String(entry.axis || payload.axis || ""),
+          boundGlobeId: String(entry.boundGlobeId || ""),
+          globeId: String(entry.boundGlobeId || ""),
+        });
+        if (!spendResult || spendResult.ok !== true) {
+          emitInsufficientGlobes(entry, {
+            trigger: "shake_detonation",
+            directionGroup: group || String(entry.slot || ""),
+            atMs: now,
+          }, 1, getStoredGlobeCount());
+          return;
+        }
         loadedBySlot[entry.slot] = null;
       }
       lastCastByWordId.set(loadedWordId, now);

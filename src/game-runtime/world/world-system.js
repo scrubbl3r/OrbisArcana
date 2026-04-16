@@ -1,6 +1,6 @@
 import {
   EVT_PICKUP_COLLECTED,
-  EVT_VOICE_SPELL_CAST,
+  EVT_RESOURCES_GLOBE_SPENT,
 } from "../../contracts/events.js";
 import { ORB_BASE_SCALE_REFERENCE_DIAMETER_PX } from "../orb/orb-base-state.js";
 
@@ -52,8 +52,12 @@ export function createWorldSystem({
     const xNorm = Number(s && s.xNorm) || 0.5;
     const yW = Number(s && s.yW) || 0;
     const r = Number(s && s.r) || 25;
+    const emitterId = String((s && s.id) || `globe_emitter_${String(index + 1).padStart(2, "0")}`);
     return {
-      id: String((s && s.id) || `globe_mid_${String(index + 1).padStart(2, "0")}`),
+      id: `${emitterId}.globe.1`,
+      globeId: `${emitterId}.globe.1`,
+      emitterId,
+      kind: String((s && s.kind) || "energy_globe_emitter"),
       xNorm,
       yW,
       anchorXNorm: xNorm,
@@ -71,6 +75,8 @@ export function createWorldSystem({
       driftPhaseY: Math.random() * Math.PI * 2,
       fadeInMs: 0,
       fadeInStartMs: 0,
+      capacity: Math.max(1, Math.floor(Number(s && s.capacity) || 1)),
+      regenTrigger: String((s && s.regenTrigger) || "globe_spent"),
       el: null,
     };
   }
@@ -164,8 +170,12 @@ export function createWorldSystem({
     /** @type {import("../contracts/events.js").PickupCollectedPayload} */
     const payload = {
       id: p.id,
+      globeId: String(p.globeId || p.id || ""),
+      emitterId: String(p.emitterId || ""),
       type: "energy_globe",
       atMs: Number(nowMs) || performance.now(),
+      xNorm: Number(p.xNorm) || Number(p.anchorXNorm) || 0.5,
+      yW: Number(p.yW) || Number(p.anchorYW) || 0,
     };
     eventBus.emit(EVT_PICKUP_COLLECTED, payload);
   }
@@ -240,30 +250,24 @@ export function createWorldSystem({
     render(tNow);
   }
 
-  function respawnInactiveWithFade(nowMs, fadeMs = PICKUP_RESPAWN_FADE_MS) {
-    const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
-    let changed = false;
-    for (let i = 0; i < state.pickups.length; i++) {
-      const p = state.pickups[i];
-      if (p.active) continue;
+  const unsub = [];
+  if (eventBus && typeof eventBus.on === "function") {
+    unsub.push(eventBus.on(EVT_RESOURCES_GLOBE_SPENT, (payload = {}) => {
+      const emitterId = String(payload.emitterId || "");
+      if (!emitterId) return;
+      const p = state.pickups.find((pickup) => String(pickup && pickup.emitterId || "") === emitterId);
+      if (!p || p.active) return;
+      if (String(p.regenTrigger || "") !== "globe_spent") return;
       p.xNorm = p.anchorXNorm;
       p.yW = p.anchorYW;
       p.active = true;
-      p.spawnedAtMs = tNow;
+      p.spawnedAtMs = clockNowMs();
       p.attracting = false;
       p.lastStepTs = 0;
-      p.fadeInMs = Math.max(0, Number(fadeMs) || 0);
-      p.fadeInStartMs = tNow;
-      changed = true;
-    }
-    if (changed) render(tNow);
-  }
-
-  if (eventBus && typeof eventBus.on === "function") {
-    eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
-      if (String(payload.trigger || "") !== "shake_detonation") return;
-      respawnInactiveWithFade(clockNowMs(), PICKUP_RESPAWN_FADE_MS);
-    });
+      p.fadeInMs = PICKUP_RESPAWN_FADE_MS;
+      p.fadeInStartMs = p.spawnedAtMs;
+      render(p.spawnedAtMs);
+    }));
   }
 
   function getState() {
@@ -279,5 +283,11 @@ export function createWorldSystem({
     render,
     reset,
     getState,
+    stop() {
+      while (unsub.length) {
+        const fn = unsub.pop();
+        try { fn(); } catch (_) {}
+      }
+    },
   };
 }

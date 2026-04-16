@@ -13,14 +13,16 @@ const LEVEL01_TERRAIN_PROFILE = Object.freeze([
 
 const LEVEL01_WORLD_ITEM_SPAWNS = Object.freeze([
   Object.freeze({
-    id: "level01_globe_mid_01",
-    kind: "energy_globe",
+    id: "level01_globe_emitter_01",
+    kind: "energy_globe_emitter",
     spawn: Object.freeze({
       xNorm: 0.5,
       yMode: "ground_center_offset",
       yValue: -1000,
       r: 25,
     }),
+    capacity: 1,
+    regenTrigger: "globe_spent",
   }),
 ]);
 
