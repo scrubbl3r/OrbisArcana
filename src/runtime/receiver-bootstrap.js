@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260415d";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260416a";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -312,14 +312,14 @@ export async function loadReceiverInitModules() {
     import("../game-runtime/orb/orb-lifecycle-vfx-runtime.js"),
     import("../game-runtime/audio/audio-system.js"),
     import("../game-runtime/input/input-systems-bundle.js"),
-    import("../game-runtime/world/world-system.js"),
-    import("../game-runtime/resources/resources-system.js"),
+    import(`../game-runtime/world/world-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
+    import(`../game-runtime/resources/resources-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../game-runtime/orb/orb-systems-bundle.js"),
-    import("../game-runtime/orb/orb-globes-runtime.js"),
+    import(`../game-runtime/orb/orb-globes-runtime.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../voice/providers/voice-provider-manager.js"),
     import("../voice/providers/kws-provider.js"),
     import(`../voice/kws/openwakeword-browser-backend.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
-    import("../game-runtime/triggers/spell-dispatch-system.js"),
+    import(`../game-runtime/triggers/spell-dispatch-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import(`../game-runtime/triggers/rule-engine-preview-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../runtime-shell/bridges/spell-action-handlers.js"),
     import("../runtime-effects/aoe-electric.js"),
