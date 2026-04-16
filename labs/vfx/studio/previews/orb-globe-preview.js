@@ -6,7 +6,6 @@ import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
   getInnerGlobeDiameterPx,
-  getPickupGlobeDiameterPx,
   getOrbitDistancePx,
   getOrbitGlobeRadiusPx,
 } from "../../../../src/game-runtime/orb/orb-globe-base-state.js";
@@ -15,14 +14,15 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
   let samples = [];
   let phaseGlobes = [];
   let nextPhaseGlobeId = 1;
+  let rafId = 0;
 
-  function ensureSample(className) {
+  function createGlobeElement(className) {
     const el = document.createElement("div");
     el.className = className;
     return el;
   }
 
-  function clear() {
+  function clearDom() {
     for (const el of samples) {
       try { el.remove(); } catch (_) {}
     }
@@ -30,48 +30,16 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     if (els.orbInterior) els.orbInterior.innerHTML = "";
   }
 
-  function renderSamples(state) {
-    clear();
-    if (!els.orbInterior || !els.orbGlobePreviewLayer) return;
+  function stopAnimation() {
+    if (!rafId) return;
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
 
-    const orbDiameter = Number(getComputedStyle(els.previewRoot).getPropertyValue("--orb-d").replace("px", "")) || 100;
-    const orbRadius = orbDiameter * 0.5;
-    const innerD = getInnerGlobeDiameterPx(orbRadius, state);
-    const orbitR = getOrbitDistancePx(orbRadius, state);
-    const orbitRadius = getOrbitGlobeRadiusPx(orbRadius, state);
-    const pickupD = getPickupGlobeDiameterPx(orbRadius, state);
-
-    const inner = ensureSample("innerGlobe");
-    inner.style.width = `${innerD.toFixed(2)}px`;
-    inner.style.height = `${innerD.toFixed(2)}px`;
-    inner.style.left = `${(orbRadius - innerD * 0.5).toFixed(2)}px`;
-    inner.style.top = `${(orbRadius - innerD * 0.5).toFixed(2)}px`;
-    els.orbInterior.appendChild(inner);
-
-    const orbit = ensureSample("orbitGlobe");
-    const orbitD = orbitRadius * 2;
-    orbit.style.width = `${orbitD.toFixed(2)}px`;
-    orbit.style.height = `${orbitD.toFixed(2)}px`;
-    orbit.style.left = `${(orbitR - orbitRadius).toFixed(2)}px`;
-    orbit.style.top = `${(-orbitRadius).toFixed(2)}px`;
-    els.orbGlobePreviewLayer.appendChild(orbit);
-
-    const released = ensureSample("releasedGlobe");
-    released.style.width = `${orbitD.toFixed(2)}px`;
-    released.style.height = `${orbitD.toFixed(2)}px`;
-    released.style.left = `${(-orbitRadius - 36).toFixed(2)}px`;
-    released.style.top = `${(orbitRadius + 32).toFixed(2)}px`;
-    els.orbGlobePreviewLayer.appendChild(released);
-
-    const pickup = ensureSample("pickupGlobe");
-    pickup.style.width = `${pickupD.toFixed(2)}px`;
-    pickup.style.height = `${pickupD.toFixed(2)}px`;
-    pickup.style.left = "50%";
-    pickup.style.top = "22px";
-    pickup.style.transform = "translate(-50%, 0)";
-    els.orbGlobePreviewLayer.appendChild(pickup);
-
-    samples = [orbit, released, pickup];
+  function clear() {
+    stopAnimation();
+    phaseGlobes = [];
+    clearDom();
   }
 
   function readState() {
@@ -90,8 +58,9 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
   }
 
   function renderPhaseGlobes(state) {
-    clear();
+    clearDom();
     if (!els.orbInterior || !els.orbGlobePreviewLayer) return;
+    if (!phaseGlobes.length) return;
 
     const orbDiameter = Number(getComputedStyle(els.previewRoot).getPropertyValue("--orb-d").replace("px", "")) || 100;
     const orbRadius = orbDiameter * 0.5;
@@ -103,7 +72,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     const bound = phaseGlobes.filter((g) => g.state === "bound");
 
     loaded.forEach((globe, index) => {
-      const el = ensureSample("orbitGlobe");
+      const el = createGlobeElement("orbitGlobe");
       const orbitD = orbitRadius * 2;
       const angle = globe.phase + (t * globe.speed);
       const x = Math.cos(angle) * orbitR;
@@ -118,7 +87,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     });
 
     bound.forEach((globe, index) => {
-      const el = ensureSample("innerGlobe");
+      const el = createGlobeElement("innerGlobe");
       const bounceT = t * (1.8 + (index * 0.25)) + globe.phase;
       const x = Math.cos(bounceT) * Math.max(4, orbRadius - innerD);
       const y = Math.sin(bounceT * 1.31) * Math.max(4, orbRadius - innerD);
@@ -129,25 +98,25 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
       els.orbInterior.appendChild(el);
       samples.push(el);
     });
+  }
 
+  function tick() {
     if (!phaseGlobes.length) {
-      renderSamples(state);
+      stopAnimation();
+      clearDom();
+      return;
     }
+    renderPhaseGlobes(readState());
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function startAnimation() {
+    if (rafId || !phaseGlobes.length) return;
+    rafId = requestAnimationFrame(tick);
   }
 
   function apply() {
     const state = readState();
-
-    els.vOrbGlobeInnerDiameterRatio.textContent = state.innerDiameterRatio.toFixed(2);
-    els.vOrbGlobeOrbitRadiusRatio.textContent = state.orbitRadiusRatio.toFixed(2);
-    els.vOrbGlobeOrbitOffset.textContent = String(Math.round(state.orbitDistanceOffsetPx));
-    els.vOrbGlobeOrbitDistanceRatio.textContent = state.orbitDistanceRatio.toFixed(2);
-    els.vOrbGlobeOrbitDistanceMin.textContent = String(Math.round(state.orbitDistanceMinPx));
-    els.vOrbGlobeOrbitRadiusMin.textContent = String(Math.round(state.orbitRadiusMinPx));
-    els.vOrbGlobePickupD.textContent = String(Math.round(state.pickupDiameterPx));
-    els.vOrbGlobeInnerStroke.textContent = String(Number(state.innerStrokeWidthPx).toFixed(1));
-    els.vOrbGlobeReleasedStroke.textContent = String(Number(state.releasedStrokeWidthPx).toFixed(1));
-    els.vOrbGlobeOrbitStroke.textContent = String(Number(state.orbitStrokeWidthPx).toFixed(1));
 
     const orbBaseVisualState = buildOrbBaseVisualState();
     applyOrbBaseVisualCssVars(orbBaseVisualState, {
@@ -158,6 +127,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
       orbRadiusPx: orbBaseVisualState.radiusPx,
     });
     renderPhaseGlobes(state);
+    startAnimation();
   }
 
   function addGlobe() {
@@ -168,6 +138,7 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
       speed: 1.8 + (Math.random() * 0.65),
     });
     apply();
+    startAnimation();
   }
 
   function bindGlobe() {
@@ -177,10 +148,13 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
       globe.phase = Math.random() * Math.PI * 2;
     }
     apply();
+    startAnimation();
   }
 
   function clearPhaseGlobes() {
     phaseGlobes = [];
+    stopAnimation();
+    clearDom();
     apply();
   }
 
@@ -190,18 +164,18 @@ export function createOrbGlobePreview({ els, clamp, evenPx }) {
     if (els.orbGlobeBindBtn) els.orbGlobeBindBtn.addEventListener("click", bindGlobe);
     if (els.orbGlobeClearBtn) els.orbGlobeClearBtn.addEventListener("click", clearPhaseGlobes);
     [
-      els.orbGlobeInnerDiameterRatio,
-      els.orbGlobeOrbitRadiusRatio,
-      els.orbGlobeOrbitOffset,
-      els.orbGlobeOrbitDistanceRatio,
-      els.orbGlobeOrbitDistanceMin,
-      els.orbGlobeOrbitRadiusMin,
-      els.orbGlobePickupD,
-      els.orbGlobeInnerStroke,
-      els.orbGlobeReleasedStroke,
-      els.orbGlobeOrbitStroke,
+      els.orbGlobeApplyInnerDiameterRatioBtn,
+      els.orbGlobeApplyOrbitRadiusRatioBtn,
+      els.orbGlobeApplyOrbitOffsetBtn,
+      els.orbGlobeApplyOrbitDistanceRatioBtn,
+      els.orbGlobeApplyOrbitDistanceMinBtn,
+      els.orbGlobeApplyOrbitRadiusMinBtn,
+      els.orbGlobeApplyPickupDBtn,
+      els.orbGlobeApplyInnerStrokeBtn,
+      els.orbGlobeApplyReleasedStrokeBtn,
+      els.orbGlobeApplyOrbitStrokeBtn,
     ].forEach((el) => {
-      if (el) el.addEventListener("input", apply);
+      if (el) el.addEventListener("click", apply);
     });
     apply();
   }

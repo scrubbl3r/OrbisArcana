@@ -1089,56 +1089,58 @@
           <button id="orbGlobeClearBtn" type="button">Clear Globes</button>
         </div>
         <div class="bindingEditorHelp">Orb-side globe lifecycle authoring lane. Add simulates catch into loaded orbit, Bind absorbs one loaded globe into the orb interior, and Clear resets the orb-side globe state.</div>
-        <div class="sliderRow">
-          <span>Inner diameter ratio</span>
-          <strong><span id="vOrbGlobeInnerDiameterRatio">0.20</span></strong>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerDiameterRatio">Inner diameter ratio</label>
+            <input id="orbGlobeInnerDiameterRatio" class="paramFieldInput" type="number" min="0.05" max="0.60" value="0.20" step="0.01" />
+            <button id="orbGlobeApplyInnerDiameterRatioBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitRadiusRatio">Orbit radius ratio</label>
+            <input id="orbGlobeOrbitRadiusRatio" class="paramFieldInput" type="number" min="0.05" max="0.40" value="0.13" step="0.01" />
+            <button id="orbGlobeApplyOrbitRadiusRatioBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitOffset">Orbit offset px</label>
+            <input id="orbGlobeOrbitOffset" class="paramFieldInput" type="number" min="0" max="60" value="18" step="1" />
+            <button id="orbGlobeApplyOrbitOffsetBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitDistanceRatio">Orbit distance ratio</label>
+            <input id="orbGlobeOrbitDistanceRatio" class="paramFieldInput" type="number" min="0.50" max="2.00" value="1.10" step="0.01" />
+            <button id="orbGlobeApplyOrbitDistanceRatioBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitDistanceMin">Orbit distance min px</label>
+            <input id="orbGlobeOrbitDistanceMin" class="paramFieldInput" type="number" min="0" max="60" value="14" step="1" />
+            <button id="orbGlobeApplyOrbitDistanceMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitRadiusMin">Orbit radius min px</label>
+            <input id="orbGlobeOrbitRadiusMin" class="paramFieldInput" type="number" min="0" max="30" value="5" step="1" />
+            <button id="orbGlobeApplyOrbitRadiusMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobePickupD">Pickup diameter px</label>
+            <input id="orbGlobePickupD" class="paramFieldInput" type="number" min="10" max="120" value="50" step="2" />
+            <button id="orbGlobeApplyPickupDBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerStroke">Inner stroke px</label>
+            <input id="orbGlobeInnerStroke" class="paramFieldInput" type="number" min="0" max="8" value="2" step="0.1" />
+            <button id="orbGlobeApplyInnerStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeReleasedStroke">Released stroke px</label>
+            <input id="orbGlobeReleasedStroke" class="paramFieldInput" type="number" min="0" max="8" value="2" step="0.1" />
+            <button id="orbGlobeApplyReleasedStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitStroke">Orbit stroke px</label>
+            <input id="orbGlobeOrbitStroke" class="paramFieldInput" type="number" min="0" max="8" value="2" step="0.1" />
+            <button id="orbGlobeApplyOrbitStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
-        <input id="orbGlobeInnerDiameterRatio" type="range" min="0.05" max="0.60" value="0.20" step="0.01" />
-        <div class="sliderRow">
-          <span>Orbit radius ratio</span>
-          <strong><span id="vOrbGlobeOrbitRadiusRatio">0.13</span></strong>
-        </div>
-        <input id="orbGlobeOrbitRadiusRatio" type="range" min="0.05" max="0.40" value="0.13" step="0.01" />
-        <div class="sliderRow">
-          <span>Orbit offset</span>
-          <strong><span id="vOrbGlobeOrbitOffset">18</span>px</strong>
-        </div>
-        <input id="orbGlobeOrbitOffset" type="range" min="0" max="60" value="18" step="1" />
-        <div class="sliderRow">
-          <span>Orbit distance ratio</span>
-          <strong><span id="vOrbGlobeOrbitDistanceRatio">1.10</span></strong>
-        </div>
-        <input id="orbGlobeOrbitDistanceRatio" type="range" min="0.50" max="2.00" value="1.10" step="0.01" />
-        <div class="sliderRow">
-          <span>Orbit distance min</span>
-          <strong><span id="vOrbGlobeOrbitDistanceMin">14</span>px</strong>
-        </div>
-        <input id="orbGlobeOrbitDistanceMin" type="range" min="0" max="60" value="14" step="1" />
-        <div class="sliderRow">
-          <span>Orbit radius min</span>
-          <strong><span id="vOrbGlobeOrbitRadiusMin">5</span>px</strong>
-        </div>
-        <input id="orbGlobeOrbitRadiusMin" type="range" min="0" max="30" value="5" step="1" />
-        <div class="sliderRow">
-          <span>Pickup diameter</span>
-          <strong><span id="vOrbGlobePickupD">50</span>px</strong>
-        </div>
-        <input id="orbGlobePickupD" type="range" min="10" max="120" value="50" step="2" />
-        <div class="sliderRow">
-          <span>Inner stroke</span>
-          <strong><span id="vOrbGlobeInnerStroke">2.0</span>px</strong>
-        </div>
-        <input id="orbGlobeInnerStroke" type="range" min="0" max="8" value="2" step="0.1" />
-        <div class="sliderRow">
-          <span>Released stroke</span>
-          <strong><span id="vOrbGlobeReleasedStroke">2.0</span>px</strong>
-        </div>
-        <input id="orbGlobeReleasedStroke" type="range" min="0" max="8" value="2" step="0.1" />
-        <div class="sliderRow">
-          <span>Orbit stroke</span>
-          <strong><span id="vOrbGlobeOrbitStroke">2.0</span>px</strong>
-        </div>
-        <input id="orbGlobeOrbitStroke" type="range" min="0" max="8" value="2" step="0.1" />
       </div>
 
       <div class="section" data-effect="world-globe" hidden>
@@ -1163,7 +1165,7 @@
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
-    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416a";
+    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416b";
     import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260416a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
     import {
@@ -1421,25 +1423,25 @@
       orbNodOscillationCount: $("orbNodOscillationCount"),
       orbNodApplyOscillationCountBtn: $("orbNodApplyOscillationCountBtn"),
       orbGlobeInnerDiameterRatio: $("orbGlobeInnerDiameterRatio"),
-      vOrbGlobeInnerDiameterRatio: $("vOrbGlobeInnerDiameterRatio"),
+      orbGlobeApplyInnerDiameterRatioBtn: $("orbGlobeApplyInnerDiameterRatioBtn"),
       orbGlobeOrbitRadiusRatio: $("orbGlobeOrbitRadiusRatio"),
-      vOrbGlobeOrbitRadiusRatio: $("vOrbGlobeOrbitRadiusRatio"),
+      orbGlobeApplyOrbitRadiusRatioBtn: $("orbGlobeApplyOrbitRadiusRatioBtn"),
       orbGlobeOrbitOffset: $("orbGlobeOrbitOffset"),
-      vOrbGlobeOrbitOffset: $("vOrbGlobeOrbitOffset"),
+      orbGlobeApplyOrbitOffsetBtn: $("orbGlobeApplyOrbitOffsetBtn"),
       orbGlobeOrbitDistanceRatio: $("orbGlobeOrbitDistanceRatio"),
-      vOrbGlobeOrbitDistanceRatio: $("vOrbGlobeOrbitDistanceRatio"),
+      orbGlobeApplyOrbitDistanceRatioBtn: $("orbGlobeApplyOrbitDistanceRatioBtn"),
       orbGlobeOrbitDistanceMin: $("orbGlobeOrbitDistanceMin"),
-      vOrbGlobeOrbitDistanceMin: $("vOrbGlobeOrbitDistanceMin"),
+      orbGlobeApplyOrbitDistanceMinBtn: $("orbGlobeApplyOrbitDistanceMinBtn"),
       orbGlobeOrbitRadiusMin: $("orbGlobeOrbitRadiusMin"),
-      vOrbGlobeOrbitRadiusMin: $("vOrbGlobeOrbitRadiusMin"),
+      orbGlobeApplyOrbitRadiusMinBtn: $("orbGlobeApplyOrbitRadiusMinBtn"),
       orbGlobePickupD: $("orbGlobePickupD"),
-      vOrbGlobePickupD: $("vOrbGlobePickupD"),
+      orbGlobeApplyPickupDBtn: $("orbGlobeApplyPickupDBtn"),
       orbGlobeInnerStroke: $("orbGlobeInnerStroke"),
-      vOrbGlobeInnerStroke: $("vOrbGlobeInnerStroke"),
+      orbGlobeApplyInnerStrokeBtn: $("orbGlobeApplyInnerStrokeBtn"),
       orbGlobeReleasedStroke: $("orbGlobeReleasedStroke"),
-      vOrbGlobeReleasedStroke: $("vOrbGlobeReleasedStroke"),
+      orbGlobeApplyReleasedStrokeBtn: $("orbGlobeApplyReleasedStrokeBtn"),
       orbGlobeOrbitStroke: $("orbGlobeOrbitStroke"),
-      vOrbGlobeOrbitStroke: $("vOrbGlobeOrbitStroke"),
+      orbGlobeApplyOrbitStrokeBtn: $("orbGlobeApplyOrbitStrokeBtn"),
       orbLifecycleShardTotal: $("orbLifecycleShardTotal"),
       orbLifecycleApplyShardTotalBtn: $("orbLifecycleApplyShardTotalBtn"),
       orbLifecycleHitTotal: $("orbLifecycleHitTotal"),
