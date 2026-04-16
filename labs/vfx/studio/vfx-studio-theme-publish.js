@@ -215,6 +215,16 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "world-globe":
+      return [
+        "export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({",
+        "  idleBobPx: 7,",
+        "  idleBobHz: 0.65,",
+        "  idlePulseScale: 0.045,",
+        "  idlePulseHz: 0.9,",
+        "});",
+        "",
+      ].join("\n");
     default:
       return "";
   }

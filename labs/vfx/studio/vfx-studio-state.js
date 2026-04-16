@@ -34,6 +34,12 @@ export function loadDraftStore(storageKey, draftStore) {
     const resolvedValue = String(profile.value || value);
     let resolvedBaseEffect = String(profile.baseEffect || "bubble-shield");
     const resolvedLabel = String(profile.label || value);
+    const duplicateBuiltinOrb = resolvedValue.startsWith("custom:")
+      && (
+        (resolvedBaseEffect === "orb-nod" && slugifyEffectName(resolvedLabel) === "orb-nod")
+        || (resolvedBaseEffect === "orb-lifecycle" && slugifyEffectName(resolvedLabel) === "orb-lifecycle")
+      );
+    if (duplicateBuiltinOrb) continue;
     const lifecycleLike = resolvedValue.startsWith("custom:")
       && resolvedBaseEffect === "orb-template"
       && (
@@ -160,7 +166,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     groups.get(category).appendChild(opt);
   }
 
-  for (const category of ["spell", "orb", "globe", "world-item", "enemy"]) {
+  for (const category of ["spell", "orb", "world", "enemy"]) {
     const group = groups.get(category);
     if (group && group.children.length) effectSelect.appendChild(group);
   }

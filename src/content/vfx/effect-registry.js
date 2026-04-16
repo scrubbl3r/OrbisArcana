@@ -4,7 +4,7 @@
 /**
  * @typedef {Object} VfxEffectRegistryEntry
  * @property {string} id Stable effect id used by bindings (for example `spell.aoe_flame`).
- * @property {"spell"|"orb"|"globe"|"world-item"|"enemy"} category High-level domain bucket for lab organization.
+ * @property {"spell"|"orb"|"world"|"enemy"} category High-level domain bucket for lab organization.
  * @property {string} runtimeModuleId Runtime implementation id/path token (not necessarily a file path).
  * @property {string} defaultPresetId Default preset id used when a binding does not override.
  * @property {string[]} supportedContexts Where the effect can be previewed/executed (`lab`, `receiver`, etc.).
@@ -76,6 +76,15 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     defaultPresetId: "preset.orb-nod.default",
     supportedContexts: ["lab", "receiver"],
     publishTargets: ["preset", "binding"],
+  }),
+  Object.freeze({
+    id: "world.globe",
+    label: "World Globe",
+    category: "world",
+    runtimeModuleId: "world_globe_runtime",
+    defaultPresetId: "preset.world_globe.default",
+    supportedContexts: ["lab"],
+    publishTargets: ["preset"],
   }),
 ]);
 

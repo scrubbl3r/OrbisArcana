@@ -734,6 +734,9 @@
           <div class="orbInterior" id="orbGlobeLaneInterior"></div>
           <div class="orb atOrigin" id="orbGlobeLaneOrb"></div>
         </div>
+        <div class="previewLane" id="worldGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orbGlobePreviewLayer" id="worldGlobeLaneLayer"></div>
+        </div>
         <div class="previewLane" id="orbTeleportPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbTeleportLaneOrb"></div>
         </div>
@@ -1081,8 +1084,11 @@
       <div class="section" data-effect="orb-globe" hidden>
         <div class="row">
           <button id="previewOrbGlobe">Preview</button>
+          <button id="orbGlobeAddBtn" type="button">Add Globe</button>
+          <button id="orbGlobeBindBtn" type="button">Bind Globe</button>
+          <button id="orbGlobeClearBtn" type="button">Clear Globes</button>
         </div>
-        <div class="bindingEditorHelp">Shared globe-family visual and ratio SSOT for pickup, inner, released, and orbit globe presentation.</div>
+        <div class="bindingEditorHelp">Orb-side globe lifecycle authoring lane. Add simulates catch into loaded orbit, Bind absorbs one loaded globe into the orb interior, and Clear resets the orb-side globe state.</div>
         <div class="sliderRow">
           <span>Inner diameter ratio</span>
           <strong><span id="vOrbGlobeInnerDiameterRatio">0.20</span></strong>
@@ -1134,12 +1140,19 @@
         </div>
         <input id="orbGlobeOrbitStroke" type="range" min="0" max="8" value="2" step="0.1" />
       </div>
+
+      <div class="section" data-effect="world-globe" hidden>
+        <div class="row">
+          <button id="previewWorldGlobe">Preview</button>
+        </div>
+        <div class="bindingEditorHelp">World-side collectible globe authoring lane. This is the generic globe item in the level before the orb catches it.</div>
+      </div>
     </div>
   </div>
 
   <script type="module">
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410b";
-    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260410b";
+    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260416a";
     import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
@@ -1150,7 +1163,8 @@
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
-    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260411b";
+    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416a";
+    import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260416a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
     import {
       bootStudioShell,
@@ -1179,7 +1193,7 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260412b";
+    } from "./studio/vfx-studio-state.js?v=20260416a";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1194,7 +1208,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260411a";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260416a";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
@@ -1216,6 +1230,7 @@
       "spell.shockwave_ring": "shockwave",
       "spell.teleport": "teleport",
       "orb.nod": "orb-nod",
+      "world.globe": "world-globe",
     });
     const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi"]);
     const DEFAULT_BIND_TARGET_BY_EFFECT_ID = Object.freeze({
@@ -1237,14 +1252,14 @@
     const CATEGORY_LABELS = Object.freeze({
       spell: "spell",
       orb: "orb",
-      globe: "globe",
-      "world-item": "world-item",
+      world: "world",
       enemy: "enemy",
     });
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
       { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
       { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
+      { value: "orb-lifecycle", label: "Orb Lifecycle", baseEffect: "orb-lifecycle", category: "orb", locked: true },
     ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
     const draftStore = createDraftStore();
@@ -1279,6 +1294,10 @@
         path: ["src", "game-runtime", "orb", "orb-globe-default.js"],
         exportName: "ORB_GLOBE_VISUAL_DEFAULTS",
       },
+      "world-globe": {
+        path: ["src", "game-runtime", "world", "world-globe-default.js"],
+        exportName: "WORLD_GLOBE_VISUAL_DEFAULTS",
+      },
       "orb-nod": {
         path: ["src", "vfx", "presets", "orb-nod-default.js"],
         exportName: "ORB_NOD_PRESET_DEFAULT",
@@ -1300,6 +1319,7 @@
       orbNodPreviewRoot: $("orbNodPreviewRoot"),
       orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
+      worldGlobePreviewRoot: $("worldGlobePreviewRoot"),
       orbTeleportPreviewRoot: $("orbTeleportPreviewRoot"),
       orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
       orbLifecycleShatterLayer: $("orbLifecycleShatterLayer"),
@@ -1308,6 +1328,10 @@
       previewOrbTemplate: $("previewOrbTemplate"),
       previewOrbBase: $("previewOrbBase"),
       previewOrbGlobe: $("previewOrbGlobe"),
+      orbGlobeAddBtn: $("orbGlobeAddBtn"),
+      orbGlobeBindBtn: $("orbGlobeBindBtn"),
+      orbGlobeClearBtn: $("orbGlobeClearBtn"),
+      previewWorldGlobe: $("previewWorldGlobe"),
       effectSelect: $("effectSelect"),
       newEffectBtn: $("newEffectBtn"),
       saveDraftBtn: $("saveDraftBtn"),
@@ -1513,6 +1537,11 @@
       orb: $("orbGlobeLaneOrb"),
       orbInterior: $("orbGlobeLaneInterior"),
       orbGlobePreviewLayer: $("orbGlobeLaneLayer"),
+    });
+    const worldGlobePreviewEls = Object.freeze({
+      ...els,
+      previewRoot: els.worldGlobePreviewRoot,
+      worldGlobePreviewLayer: $("worldGlobeLaneLayer"),
     });
     const orbTeleportPreviewEls = Object.freeze({
       ...els,
@@ -1734,6 +1763,8 @@
             orbGlobeReleasedStroke: Number(ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthPx),
             orbGlobeOrbitStroke: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitStrokeWidthPx),
           };
+        case "world-globe":
+          return {};
         case "bubble-shield":
           return {
             shieldMs: Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.durationMs, 80, 1200)),
@@ -2018,6 +2049,8 @@
             orbGlobeReleasedStroke: Number(els.orbGlobeReleasedStroke && els.orbGlobeReleasedStroke.value),
             orbGlobeOrbitStroke: Number(els.orbGlobeOrbitStroke && els.orbGlobeOrbitStroke.value),
           };
+        case "world-globe":
+          return {};
         case "bubble-shield":
           return {
             shieldMs: Number(els.shieldMs && els.shieldMs.value),
@@ -2118,6 +2151,9 @@
             if (els.orbGlobeReleasedStroke && settings.orbGlobeReleasedStroke != null) els.orbGlobeReleasedStroke.value = String(settings.orbGlobeReleasedStroke);
             if (els.orbGlobeOrbitStroke && settings.orbGlobeOrbitStroke != null) els.orbGlobeOrbitStroke.value = String(settings.orbGlobeOrbitStroke);
             applyOrbGlobe();
+            break;
+          case "world-globe":
+            applyWorldGlobe();
             break;
           case "bubble-shield":
             if (els.shieldMs && settings.shieldMs != null) els.shieldMs.value = String(settings.shieldMs);
@@ -2380,6 +2416,7 @@
       "orb-nod": els.orbNodPreviewRoot,
       "orb-lifecycle": els.orbLifecyclePreviewRoot,
       "orb-globe": els.orbGlobePreviewRoot,
+      "world-globe": els.worldGlobePreviewRoot,
       "teleport": els.orbTeleportPreviewRoot,
     };
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
@@ -2417,6 +2454,7 @@
       applyOrbLaneSsot(els.orbNodPreviewRoot);
       applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
+      applyOrbLaneSsot(els.worldGlobePreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.orbTeleportPreviewRoot);
     }
     applyGeometryVars();
@@ -2446,6 +2484,7 @@
       clearOrbNod();
       clearOrbLifecycle();
       clearOrbGlobe();
+      clearWorldGlobe();
       clearOrbTeleport();
       Object.values(PREVIEW_ROOTS_BY_EFFECT).forEach((root) => {
         if (!root || typeof root.setAttribute !== "function") return;
@@ -2563,6 +2602,7 @@
             if (typeof applyOrbTemplate === "function") applyOrbTemplate();
             if (typeof applyOrbLifecycle === "function") applyOrbLifecycle();
             if (typeof applyOrbGlobe === "function") applyOrbGlobe();
+            if (typeof applyWorldGlobe === "function") applyWorldGlobe();
           });
         },
       },
@@ -2602,6 +2642,13 @@
     const applyOrbGlobe = orbGlobePreview.apply;
     const clearOrbGlobe = orbGlobePreview.clear;
     orbGlobePreview.wire();
+
+    const worldGlobePreview = createWorldGlobePreview({
+      els: worldGlobePreviewEls,
+    });
+    const applyWorldGlobe = worldGlobePreview.apply;
+    const clearWorldGlobe = worldGlobePreview.clear;
+    worldGlobePreview.wire();
 
     const orbTeleportPreview = createOrbTeleportPreview({
       els: orbTeleportPreviewEls,
