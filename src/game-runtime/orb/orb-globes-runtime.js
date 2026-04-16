@@ -122,20 +122,33 @@ export function createOrbGlobesRuntime({
       p.el.style.height = `${d.toFixed(2)}px`;
       p.el.style.left = `${(orbRadius + p.x - p.r).toFixed(2)}px`;
       p.el.style.top = `${(orbRadius + p.y - p.r).toFixed(2)}px`;
+      if (p.fill) p.el.style.backgroundColor = p.fill;
+      if (p.glow) p.el.style.boxShadow = p.glow;
     }
   }
 
-  function spawnInnerGlobe() {
+  function spawnInnerGlobe(payload = {}) {
+    const axis = String(payload.axis || "").toLowerCase();
+    const color = axis ? axisColor(axis) : null;
     const r = innerGlobeDiameterPx() * 0.5;
     const speed = 360 + (Math.random() * 270);
     const a = Math.random() * Math.PI * 2;
     inner.particles.push({
       id: inner.nextId++,
+      globeId: String(payload.globeId || ""),
+      emitterId: String(payload.emitterId || ""),
+      state: String(payload.state || "bound"),
+      axis,
+      slot: String(payload.slot || "").toUpperCase(),
+      wordId: String(payload.wordId || ""),
+      spellId: String(payload.wordId || ""),
       x: (Math.random() - 0.5) * 8,
       y: (Math.random() - 0.5) * 8,
       vx: Math.cos(a) * speed,
       vy: Math.sin(a) * speed,
       r,
+      fill: color ? color.fill : "",
+      glow: color ? color.glow : "",
       el: null,
     });
     renderInnerGlobes();
@@ -157,6 +170,48 @@ export function createOrbGlobesRuntime({
     while (inner.particles.length > targetCount) {
       consumeOneInnerGlobe();
     }
+  }
+
+  function upsertInnerGlobe({ axis, slot, wordId, globeId, emitterId, state }) {
+    const g = String(globeId || "");
+    const s = String(slot || "").toUpperCase();
+    if (!g && !s) return;
+    const existing = inner.particles.find((p) => (g && p.globeId === g) || (s && p.slot === s));
+    const a = String(axis || "").toLowerCase() || (existing && existing.axis) || randomOrbitAxis();
+    const color = axisColor(a);
+    if (existing) {
+      existing.globeId = g || existing.globeId || "";
+      existing.emitterId = String(emitterId || existing.emitterId || "");
+      existing.state = String(state || existing.state || "bound");
+      existing.axis = a;
+      existing.slot = s || existing.slot || "";
+      existing.wordId = String(wordId || existing.wordId || "");
+      existing.spellId = String(wordId || existing.spellId || "");
+      existing.fill = color.fill;
+      existing.glow = color.glow;
+      renderInnerGlobes();
+      return;
+    }
+    spawnInnerGlobe({
+      axis: a,
+      slot: s,
+      wordId,
+      globeId: g,
+      emitterId,
+      state: state || "bound",
+    });
+  }
+
+  function consumeInnerGlobe({ slot, globeId }) {
+    const s = String(slot || "").toUpperCase();
+    const g = String(globeId || "");
+    if (!s && !g) return;
+    const idx = inner.particles.findIndex((p) => (g && p.globeId === g) || (s && p.slot === s));
+    if (idx < 0) return;
+    const p = inner.particles[idx];
+    try { if (p.el) p.el.remove(); } catch (_) {}
+    inner.particles.splice(idx, 1);
+    renderInnerGlobes();
   }
 
   function axisColor(axis) {
@@ -365,7 +420,7 @@ export function createOrbGlobesRuntime({
     }
   }
 
-  function reconcileOrbitingGlobesFromInventory(globes = []) {
+  function reconcileGlobesFromInventory(globes = []) {
     const active = (Array.isArray(globes) ? globes : [])
       .filter((g) => g && String(g.state || "") !== "spent")
       .map((g) => ({
@@ -377,15 +432,27 @@ export function createOrbGlobesRuntime({
         axis: String(g.axis || g.spinAxis || "").toLowerCase(),
       }))
       .filter((g) => g.globeId);
-    const activeIds = new Set(active.map((g) => g.globeId));
+    const loaded = active.filter((g) => String(g.state || "") === "loaded");
+    const bound = active.filter((g) => String(g.state || "") === "bound");
+    const loadedIds = new Set(loaded.map((g) => g.globeId));
+    const boundIds = new Set(bound.map((g) => g.globeId));
     for (let i = orbiting.particles.length - 1; i >= 0; i -= 1) {
       const p = orbiting.particles[i];
-      if (p.globeId && activeIds.has(p.globeId)) continue;
+      if (p.globeId && loadedIds.has(p.globeId)) continue;
       try { if (p.el) p.el.remove(); } catch (_) {}
       orbiting.particles.splice(i, 1);
     }
-    for (const g of active) {
+    for (let i = inner.particles.length - 1; i >= 0; i -= 1) {
+      const p = inner.particles[i];
+      if (p.globeId && boundIds.has(p.globeId)) continue;
+      try { if (p.el) p.el.remove(); } catch (_) {}
+      inner.particles.splice(i, 1);
+    }
+    for (const g of loaded) {
       upsertOrbitingGlobe(g);
+    }
+    for (const g of bound) {
+      upsertInnerGlobe(g);
     }
   }
 
@@ -515,15 +582,14 @@ export function createOrbGlobesRuntime({
 
   function start() {
     unsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
-      clearInnerGlobes();
-      reconcileOrbitingGlobesFromInventory(payload.globes || []);
+      reconcileGlobesFromInventory(payload.globes || []);
     }));
     unsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       const slot = String(payload.slot || "").toUpperCase();
       const globeId = String(payload.globeId || payload.boundGlobeId || "");
       if (!slot && !globeId) return;
       const wordId = readWordIdFromPayload(payload);
-      upsertOrbitingGlobe({
+      upsertInnerGlobe({
         axis: String(payload.axis || "").toLowerCase(),
         slot,
         wordId,
@@ -537,6 +603,7 @@ export function createOrbGlobesRuntime({
       const globeId = String(payload.globeId || payload.boundGlobeId || "");
       if (!slot && !globeId) return;
       consumeOrbitingGlobe({ slot, globeId });
+      consumeInnerGlobe({ slot, globeId });
     }));
     unsub.push(eventBus.on(EVT_ORB_DIED, () => {
       releaseInnerGlobesAtDeath(performance.now());
