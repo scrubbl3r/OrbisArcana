@@ -3,7 +3,7 @@ export const ORB_NOD_PRESET_DEFAULT = Object.freeze({
   orbTemplateDurationMs: 200,
   orbTemplateFillAlpha: 0.07,
   orbTemplateWaveCount: 10,
-  orbTemplateWaveDepthPx: 10,
-  orbTemplateOscillationSpeedHz: 12,
+  orbTemplateWaveDepthPx: 20.0,
+  orbTemplateOscillationSpeedHz: 12.0,
   orbTemplateOscillationCount: 2,
 });
