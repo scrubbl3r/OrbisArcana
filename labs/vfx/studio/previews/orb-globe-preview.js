@@ -80,6 +80,10 @@ export function createOrbGlobePreview({ els, clamp }) {
     };
   }
 
+  function readInnerPaddingPx() {
+    return clamp(els.orbGlobeInnerPaddingPx && els.orbGlobeInnerPaddingPx.value, 0, 120);
+  }
+
   function readState() {
     return buildOrbGlobeVisualState({
       innerDiameterRatio: clamp(els.orbGlobeInnerDiameterRatio.value, 0.01, 1),
@@ -129,7 +133,7 @@ export function createOrbGlobePreview({ els, clamp }) {
     const orbDiameter = Number(getComputedStyle(els.previewRoot).getPropertyValue("--orb-d").replace("px", "")) || 100;
     const orbRadius = orbDiameter * 0.5;
     const innerD = getInnerGlobeDiameterPx(orbRadius, state);
-    const wallRadius = Math.max(0, orbRadius - (innerD * 0.5) - 1);
+    const wallRadius = Math.max(0, orbRadius - (innerD * 0.5) - readInnerPaddingPx());
 
     phaseGlobes
       .filter((g) => g.state === "bound")
@@ -315,6 +319,7 @@ export function createOrbGlobePreview({ els, clamp }) {
       els.orbGlobeApplyInnerSpeedMaxBtn,
       els.orbGlobeApplyInnerDriftMinBtn,
       els.orbGlobeApplyInnerDriftMaxBtn,
+      els.orbGlobeApplyInnerPaddingBtn,
     ].forEach((el) => {
       if (el) el.addEventListener("click", refreshInnerMotion);
     });

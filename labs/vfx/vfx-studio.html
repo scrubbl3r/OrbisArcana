@@ -1164,6 +1164,11 @@
             <input id="orbGlobeInnerDriftMax" class="paramFieldInput" type="number" min="0" max="1.5" value="0.28" step="0.01" />
             <button id="orbGlobeApplyInnerDriftMaxBtn" class="toolBtn" type="button">Apply</button>
           </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerPaddingPx">inner-padding px</label>
+            <input id="orbGlobeInnerPaddingPx" class="paramFieldInput" type="number" min="0" max="120" value="6" step="1" />
+            <button id="orbGlobeApplyInnerPaddingBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
       </div>
 
@@ -1472,6 +1477,8 @@
       orbGlobeApplyInnerDriftMinBtn: $("orbGlobeApplyInnerDriftMinBtn"),
       orbGlobeInnerDriftMax: $("orbGlobeInnerDriftMax"),
       orbGlobeApplyInnerDriftMaxBtn: $("orbGlobeApplyInnerDriftMaxBtn"),
+      orbGlobeInnerPaddingPx: $("orbGlobeInnerPaddingPx"),
+      orbGlobeApplyInnerPaddingBtn: $("orbGlobeApplyInnerPaddingBtn"),
       orbLifecycleShardTotal: $("orbLifecycleShardTotal"),
       orbLifecycleApplyShardTotalBtn: $("orbLifecycleApplyShardTotalBtn"),
       orbLifecycleHitTotal: $("orbLifecycleHitTotal"),
@@ -1797,6 +1804,7 @@
             orbGlobeInnerSpeedMax: 150,
             orbGlobeInnerDriftMin: 0.08,
             orbGlobeInnerDriftMax: 0.28,
+            orbGlobeInnerPaddingPx: 6,
           };
         case "world-globe":
           return {};
@@ -2086,6 +2094,7 @@
             orbGlobeInnerSpeedMax: Number(els.orbGlobeInnerSpeedMax && els.orbGlobeInnerSpeedMax.value),
             orbGlobeInnerDriftMin: Number(els.orbGlobeInnerDriftMin && els.orbGlobeInnerDriftMin.value),
             orbGlobeInnerDriftMax: Number(els.orbGlobeInnerDriftMax && els.orbGlobeInnerDriftMax.value),
+            orbGlobeInnerPaddingPx: Number(els.orbGlobeInnerPaddingPx && els.orbGlobeInnerPaddingPx.value),
           };
         case "world-globe":
           return {};
@@ -2191,6 +2200,7 @@
             if (els.orbGlobeInnerSpeedMax && settings.orbGlobeInnerSpeedMax != null) els.orbGlobeInnerSpeedMax.value = String(settings.orbGlobeInnerSpeedMax);
             if (els.orbGlobeInnerDriftMin && settings.orbGlobeInnerDriftMin != null) els.orbGlobeInnerDriftMin.value = String(settings.orbGlobeInnerDriftMin);
             if (els.orbGlobeInnerDriftMax && settings.orbGlobeInnerDriftMax != null) els.orbGlobeInnerDriftMax.value = String(settings.orbGlobeInnerDriftMax);
+            if (els.orbGlobeInnerPaddingPx && settings.orbGlobeInnerPaddingPx != null) els.orbGlobeInnerPaddingPx.value = String(settings.orbGlobeInnerPaddingPx);
             applyOrbGlobe();
             break;
           case "world-globe":
