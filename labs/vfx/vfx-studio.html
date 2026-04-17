@@ -1759,12 +1759,27 @@
       return populateBindingTargetOptionsHelper(els.bindingTargetSelect, RUNTIME_EFFECT_TARGET_REGISTRY);
     }
 
+    function selectedEffectLooksLikeTeleport(opt = selectedEffectOption()){
+      if (!opt) return false;
+      const registryId = String(opt.dataset.registryId || "").trim().toLowerCase();
+      const baseEffect = String(opt.dataset.baseEffect || "").trim().toLowerCase();
+      const value = String(opt.value || "").trim().toLowerCase();
+      const label = String(opt.textContent || "").trim().toLowerCase();
+      return registryId === "spell.teleport"
+        || baseEffect === "teleport"
+        || value === "teleport"
+        || value.includes(":teleport")
+        || label === "teleport";
+    }
+
     function alignBindingTargetToSelectedEffect(){
       const opt = selectedEffectOption();
       if (!opt || !els.bindingTargetSelect) return;
       const registryId = String(opt.dataset.registryId || "").trim().toLowerCase();
       const baseEffect = String(opt.dataset.baseEffect || opt.value || "").trim().toLowerCase();
-      const desiredTargetId = DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
+      const desiredTargetId = selectedEffectLooksLikeTeleport(opt)
+        ? "spell.teleport"
+        : DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
       if (!desiredTargetId) return;
       const hasTarget = Array.from(els.bindingTargetSelect.options).some((entry) => String(entry.value || "").trim().toLowerCase() === desiredTargetId);
       if (!hasTarget) return;
@@ -2768,7 +2783,7 @@
       const selectedTargetId = String(els.bindingTargetSelect && els.bindingTargetSelect.value || "").trim().toLowerCase();
       const defaultTargetId = DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
       const targetId = selectedTargetId || String(defaultTargetId || "").trim().toLowerCase();
-      if (registryId === "spell.teleport" || baseEffect === "teleport" || targetId === "spell.teleport") return "teleport";
+      if (selectedEffectLooksLikeTeleport(opt) || targetId === "spell.teleport") return "teleport";
       return "";
     }
 
