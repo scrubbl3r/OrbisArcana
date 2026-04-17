@@ -1180,6 +1180,12 @@ async function initShellReceiverHostRuntime(shellContext) {
           : { yW: 0 }
       ),
       getOrbScreenY: () => shellOrbScreenY(shellContext),
+      getOrbVisualRadiusPx: () => {
+        const visualState = getShellOrbBaseVisualState(shellContext);
+        const visualRadiusPx = Number(visualState && visualState.radiusPx);
+        if (Number.isFinite(visualRadiusPx) && visualRadiusPx > 0) return visualRadiusPx;
+        return Number(runtime.stage && runtime.stage.phys && runtime.stage.phys.orbRadiusPx) || 0;
+      },
       axisToColor01,
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
@@ -2088,7 +2094,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260416b",
+  moduleCacheBustV = "20260416c",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

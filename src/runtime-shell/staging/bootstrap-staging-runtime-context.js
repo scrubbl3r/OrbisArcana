@@ -35,6 +35,7 @@ export function bootstrapStagingRuntimeContext({
   pickupScreenY = (value) => value,
   getOrbRuntime = () => ({ yW: 0 }),
   getOrbScreenY = () => 0,
+  getOrbVisualRadiusPx = null,
   axisToColor01 = () => 0,
   gestureHooks = {},
 } = {}) {
@@ -49,10 +50,15 @@ export function bootstrapStagingRuntimeContext({
     },
   });
   const getOrbCastGateState = () => getSharedOrbCastGateState(gameState && gameState.orb ? gameState.orb : null);
+  const getOrbFxRadiusPx = () => {
+    const visualRadiusPx = (typeof getOrbVisualRadiusPx === "function") ? Number(getOrbVisualRadiusPx()) : NaN;
+    if (Number.isFinite(visualRadiusPx) && visualRadiusPx > 0) return visualRadiusPx;
+    return Number(PHYS.orbRadiusPx) || 0;
+  };
 
   const orbDamageVisualsRuntime = createOrbDamageVisualsRuntime({
     eventBus,
-    getOrbRadiusPx: () => Number(PHYS.orbRadiusPx) || 0,
+    getOrbRadiusPx: getOrbFxRadiusPx,
   });
   const audioSystem = createAudioSystem({ eventBus });
   const inputSystemsBundle = createInputSystemsBundle({
@@ -167,8 +173,8 @@ export function bootstrapStagingRuntimeContext({
     getStageRect: () => stageRect(),
     worldToScreenY: (yW) => pickupScreenY(yW),
     getOrbWorldPosition: () => ({ xNorm: 0.5, yW: getOrbRuntime().yW }),
-    orbRadiusPx: PHYS.orbRadiusPx,
-    getOrbRadiusPx: () => Number(PHYS.orbRadiusPx) || 0,
+    orbRadiusPx: getOrbFxRadiusPx(),
+    getOrbRadiusPx: getOrbFxRadiusPx,
     spawns: resolvedGlobeSpawns,
     spawn: {
       xNorm: 0.5,
@@ -188,8 +194,8 @@ export function bootstrapStagingRuntimeContext({
       orbInteriorEl: els.orbInterior,
       stageEl: els.physStage,
       getOrbScreenY,
-      orbRadiusPx: PHYS.orbRadiusPx,
-      getOrbRadiusPx: () => Number(PHYS.orbRadiusPx) || 0,
+      orbRadiusPx: getOrbFxRadiusPx(),
+      getOrbRadiusPx: getOrbFxRadiusPx,
       getAxisColor01: (axis) => axisToColor01(axis),
     },
   });

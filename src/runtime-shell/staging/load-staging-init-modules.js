@@ -49,7 +49,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import("../../ui/build-input-hud-view-model.js"),
     import(withVersion("./bootstrap-kws-staging.js", moduleCacheBustV)),
     import("./bootstrap-game-staging-runtime.js"),
-    import("./bootstrap-staging-runtime-context.js"),
+    import(withVersion("./bootstrap-staging-runtime-context.js", moduleCacheBustV)),
     import("./bootstrap-staging-mvp.js"),
     import("./bind-staging-runtime-events.js"),
     import("../../content/orb/orb-runtime-config-default.js"),
