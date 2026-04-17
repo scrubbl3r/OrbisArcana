@@ -448,6 +448,36 @@
       pointer-events:none;
       overflow:visible;
     }
+    .worldGlobeSamples{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:44px;
+      pointer-events:none;
+    }
+    .worldGlobeSample{
+      min-width:86px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .worldGlobeSample > div:first-child{
+      position:relative;
+      left:auto;
+      top:auto;
+      box-sizing:border-box;
+    }
+    .worldGlobeSampleLabel{
+      opacity:.78;
+    }
     .innerGlobe{
       position:absolute;
       border-radius:999px;
@@ -745,7 +775,7 @@
           <div class="orbInterior" id="orbGlobeLaneInterior"></div>
         </div>
         <div class="previewLane" id="worldGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
-          <div class="orbGlobePreviewLayer" id="worldGlobeLaneLayer"></div>
+          <div class="worldGlobeSamples" id="worldGlobeLaneLayer"></div>
         </div>
         <div class="previewLane" id="orbTeleportPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbTeleportLaneOrb"></div>
@@ -1176,7 +1206,50 @@
         <div class="row">
           <button id="previewWorldGlobe">Preview</button>
         </div>
-        <div class="bindingEditorHelp">World-side collectible globe authoring lane. This is the generic globe item in the level before the orb catches it.</div>
+        <div class="bindingEditorHelp">Idle</div>
+        <div class="paramGrid">
+          <div class="paramField"><label for="worldGlobeIdleSize">Globe size</label><input id="worldGlobeIdleSize" class="paramFieldInput" type="number" min="1" max="400" value="50" step="1" /><button id="worldGlobeApplyIdleSizeBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleFillR">Fill red</label><input id="worldGlobeIdleFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyIdleFillRBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleFillG">Fill green</label><input id="worldGlobeIdleFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyIdleFillGBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleFillB">Fill blue</label><input id="worldGlobeIdleFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyIdleFillBBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleFillAlpha">Fill alpha</label><input id="worldGlobeIdleFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.42" step="0.01" /><button id="worldGlobeApplyIdleFillAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleStrokeR">Stroke red</label><input id="worldGlobeIdleStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyIdleStrokeRBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleStrokeG">Stroke green</label><input id="worldGlobeIdleStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyIdleStrokeGBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleStrokeB">Stroke blue</label><input id="worldGlobeIdleStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyIdleStrokeBBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleStrokeAlpha">Stroke alpha</label><input id="worldGlobeIdleStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyIdleStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleStrokeWidth">Stroke size</label><input id="worldGlobeIdleStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyIdleStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleDrift">Drift px</label><input id="worldGlobeIdleDrift" class="paramFieldInput" type="number" min="0" max="200" value="10" step="1" /><button id="worldGlobeApplyIdleDriftBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleBob">Bob px</label><input id="worldGlobeIdleBob" class="paramFieldInput" type="number" min="0" max="200" value="7" step="1" /><button id="worldGlobeApplyIdleBobBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleBobHz">Bob hz</label><input id="worldGlobeIdleBobHz" class="paramFieldInput" type="number" min="0" max="20" value="0.65" step="0.05" /><button id="worldGlobeApplyIdleBobHzBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdlePulseScale">Pulse scale</label><input id="worldGlobeIdlePulseScale" class="paramFieldInput" type="number" min="0" max="1" value="0.045" step="0.005" /><button id="worldGlobeApplyIdlePulseScaleBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdlePulseHz">Pulse hz</label><input id="worldGlobeIdlePulseHz" class="paramFieldInput" type="number" min="0" max="20" value="0.9" step="0.05" /><button id="worldGlobeApplyIdlePulseHzBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+        <div class="bindingEditorHelp">Collected</div>
+        <div class="paramGrid" id="worldGlobeCollectedFields">
+          <div class="paramField"><label for="worldGlobeCollectedSize">Globe size</label><input id="worldGlobeCollectedSize" class="paramFieldInput" type="number" min="1" max="400" value="14" step="1" /><button id="worldGlobeApplyCollectedSizeBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedFillR">Fill red</label><input id="worldGlobeCollectedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyCollectedFillRBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedFillG">Fill green</label><input id="worldGlobeCollectedFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyCollectedFillGBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedFillB">Fill blue</label><input id="worldGlobeCollectedFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyCollectedFillBBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedFillAlpha">Fill alpha</label><input id="worldGlobeCollectedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.42" step="0.01" /><button id="worldGlobeApplyCollectedFillAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedStrokeR">Stroke red</label><input id="worldGlobeCollectedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyCollectedStrokeRBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedStrokeG">Stroke green</label><input id="worldGlobeCollectedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyCollectedStrokeGBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedStrokeB">Stroke blue</label><input id="worldGlobeCollectedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyCollectedStrokeBBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedStrokeAlpha">Stroke alpha</label><input id="worldGlobeCollectedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyCollectedStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedStrokeWidth">Stroke size</label><input id="worldGlobeCollectedStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyCollectedStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+        <div class="bindingEditorHelp">Consumed</div>
+        <div class="paramGrid" id="worldGlobeConsumedFields">
+          <div class="paramField"><label for="worldGlobeConsumedSize">Globe size</label><input id="worldGlobeConsumedSize" class="paramFieldInput" type="number" min="1" max="400" value="11" step="1" /><button id="worldGlobeApplyConsumedSizeBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedFillR">Fill red</label><input id="worldGlobeConsumedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyConsumedFillRBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedFillG">Fill green</label><input id="worldGlobeConsumedFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyConsumedFillGBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedFillB">Fill blue</label><input id="worldGlobeConsumedFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyConsumedFillBBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedFillAlpha">Fill alpha</label><input id="worldGlobeConsumedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="1" step="0.01" /><button id="worldGlobeApplyConsumedFillAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedStrokeR">Stroke red</label><input id="worldGlobeConsumedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyConsumedStrokeRBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedStrokeG">Stroke green</label><input id="worldGlobeConsumedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyConsumedStrokeGBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedStrokeB">Stroke blue</label><input id="worldGlobeConsumedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyConsumedStrokeBBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedStrokeAlpha">Stroke alpha</label><input id="worldGlobeConsumedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyConsumedStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedStrokeWidth">Stroke size</label><input id="worldGlobeConsumedStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyConsumedStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1195,7 +1268,7 @@
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416g";
-    import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260416a";
+    import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260417a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
     import {
       bootStudioShell,
@@ -1239,7 +1312,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260416b";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260417a";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
@@ -1250,6 +1323,7 @@
     } from "../../src/vfx/presets/index.js?v=20260410b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260416b";
+    import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260417a";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260416b";
 
@@ -1753,6 +1827,50 @@
       };
     }
 
+    function readWorldGlobeDefaults(prefix, state = {}) {
+      const fill = state.fillRgb || {};
+      const stroke = state.strokeRgb || {};
+      return {
+        [`${prefix}Size`]: Math.round(Number(state.diameterPx) || 0),
+        [`${prefix}FillR`]: Math.round(Number(fill.r) || 0),
+        [`${prefix}FillG`]: Math.round(Number(fill.g) || 0),
+        [`${prefix}FillB`]: Math.round(Number(fill.b) || 0),
+        [`${prefix}FillAlpha`]: Number(Number(state.fillAlpha).toFixed(2)),
+        [`${prefix}StrokeR`]: Math.round(Number(stroke.r) || 0),
+        [`${prefix}StrokeG`]: Math.round(Number(stroke.g) || 0),
+        [`${prefix}StrokeB`]: Math.round(Number(stroke.b) || 0),
+        [`${prefix}StrokeAlpha`]: Number(Number(state.strokeAlpha).toFixed(2)),
+        [`${prefix}StrokeWidth`]: Number(Number(state.strokeWidthPx).toFixed(1)),
+      };
+    }
+
+    function readWorldGlobeFields(prefix) {
+      const read = (suffix) => Number($(prefix + suffix) && $(prefix + suffix).value);
+      return {
+        [`${prefix}Size`]: read("Size"),
+        [`${prefix}FillR`]: read("FillR"),
+        [`${prefix}FillG`]: read("FillG"),
+        [`${prefix}FillB`]: read("FillB"),
+        [`${prefix}FillAlpha`]: read("FillAlpha"),
+        [`${prefix}StrokeR`]: read("StrokeR"),
+        [`${prefix}StrokeG`]: read("StrokeG"),
+        [`${prefix}StrokeB`]: read("StrokeB"),
+        [`${prefix}StrokeAlpha`]: read("StrokeAlpha"),
+        [`${prefix}StrokeWidth`]: read("StrokeWidth"),
+      };
+    }
+
+    function applyWorldGlobeFields(prefix, settings) {
+      [
+        "Size", "FillR", "FillG", "FillB", "FillAlpha",
+        "StrokeR", "StrokeG", "StrokeB", "StrokeAlpha", "StrokeWidth",
+      ].forEach((suffix) => {
+        const key = prefix + suffix;
+        const el = $(key);
+        if (el && settings[key] != null) el.value = String(settings[key]);
+      });
+    }
+
     function defaultSettingsForBaseEffect(baseEffect){
       switch (String(baseEffect || "")) {
         case "orb-base":
@@ -1810,7 +1928,16 @@
             orbGlobeInnerPaddingPx: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx),
           };
         case "world-globe":
-          return {};
+          return {
+            ...readWorldGlobeDefaults("worldGlobeIdle", WORLD_GLOBE_VISUAL_DEFAULTS.idle),
+            worldGlobeIdleDrift: Math.round(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.driftPx) || 0),
+            worldGlobeIdleBob: Math.round(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobPx) || 0),
+            worldGlobeIdleBobHz: Number(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobHz).toFixed(2)),
+            worldGlobeIdlePulseScale: Number(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.pulseScale).toFixed(3)),
+            worldGlobeIdlePulseHz: Number(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.pulseHz).toFixed(2)),
+            ...readWorldGlobeDefaults("worldGlobeCollected", WORLD_GLOBE_VISUAL_DEFAULTS.collected),
+            ...readWorldGlobeDefaults("worldGlobeConsumed", WORLD_GLOBE_VISUAL_DEFAULTS.consumed),
+          };
         case "bubble-shield":
           return {
             shieldMs: Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.durationMs, 80, 1200)),
@@ -2101,7 +2228,16 @@
             orbGlobeInnerPaddingPx: Number(els.orbGlobeInnerPaddingPx && els.orbGlobeInnerPaddingPx.value),
           };
         case "world-globe":
-          return {};
+          return {
+            ...readWorldGlobeFields("worldGlobeIdle"),
+            worldGlobeIdleDrift: Number($("worldGlobeIdleDrift") && $("worldGlobeIdleDrift").value),
+            worldGlobeIdleBob: Number($("worldGlobeIdleBob") && $("worldGlobeIdleBob").value),
+            worldGlobeIdleBobHz: Number($("worldGlobeIdleBobHz") && $("worldGlobeIdleBobHz").value),
+            worldGlobeIdlePulseScale: Number($("worldGlobeIdlePulseScale") && $("worldGlobeIdlePulseScale").value),
+            worldGlobeIdlePulseHz: Number($("worldGlobeIdlePulseHz") && $("worldGlobeIdlePulseHz").value),
+            ...readWorldGlobeFields("worldGlobeCollected"),
+            ...readWorldGlobeFields("worldGlobeConsumed"),
+          };
         case "bubble-shield":
           return {
             shieldMs: Number(els.shieldMs && els.shieldMs.value),
@@ -2208,6 +2344,14 @@
             applyOrbGlobe();
             break;
           case "world-globe":
+            applyWorldGlobeFields("worldGlobeIdle", settings);
+            if ($("worldGlobeIdleDrift") && settings.worldGlobeIdleDrift != null) $("worldGlobeIdleDrift").value = String(settings.worldGlobeIdleDrift);
+            if ($("worldGlobeIdleBob") && settings.worldGlobeIdleBob != null) $("worldGlobeIdleBob").value = String(settings.worldGlobeIdleBob);
+            if ($("worldGlobeIdleBobHz") && settings.worldGlobeIdleBobHz != null) $("worldGlobeIdleBobHz").value = String(settings.worldGlobeIdleBobHz);
+            if ($("worldGlobeIdlePulseScale") && settings.worldGlobeIdlePulseScale != null) $("worldGlobeIdlePulseScale").value = String(settings.worldGlobeIdlePulseScale);
+            if ($("worldGlobeIdlePulseHz") && settings.worldGlobeIdlePulseHz != null) $("worldGlobeIdlePulseHz").value = String(settings.worldGlobeIdlePulseHz);
+            applyWorldGlobeFields("worldGlobeCollected", settings);
+            applyWorldGlobeFields("worldGlobeConsumed", settings);
             applyWorldGlobe();
             break;
           case "bubble-shield":

@@ -2,7 +2,7 @@ import {
   EVT_PICKUP_COLLECTED,
   EVT_RESOURCES_GLOBE_SPENT,
 } from "../../contracts/events.js";
-import { ORB_BASE_SCALE_REFERENCE_DIAMETER_PX } from "../orb/orb-base-state.js";
+import { WORLD_GLOBE_VISUAL_DEFAULTS } from "./world-globe-state.js?v=20260417a";
 
 export function createWorldSystem({
   eventBus,
@@ -16,6 +16,7 @@ export function createWorldSystem({
   spawns,
   getGlobeEl,
   setGlobeEl,
+  worldGlobeVisualState = WORLD_GLOBE_VISUAL_DEFAULTS,
 }) {
   if (!eventBus || typeof eventBus.emit !== "function") {
     throw new Error("createWorldSystem requires eventBus.emit");
@@ -43,9 +44,12 @@ export function createWorldSystem({
   }
 
   function getPickupRadiusPx(pickup) {
-    const authoredRadius = Math.max(1, Number(pickup && pickup.r) || 1);
-    const scale = Math.max(0.01, (readOrbRadiusPx() * 2) / ORB_BASE_SCALE_REFERENCE_DIAMETER_PX);
-    return authoredRadius * scale;
+    const authoredDiameter = Math.max(
+      1,
+      Number(worldGlobeVisualState && worldGlobeVisualState.idle && worldGlobeVisualState.idle.diameterPx) ||
+        ((Number(pickup && pickup.r) || 25) * 2)
+    );
+    return authoredDiameter * 0.5;
   }
 
   function buildPickupFromSpawn(s, index) {
@@ -67,10 +71,10 @@ export function createWorldSystem({
       spawnedAtMs: 0,
       attracting: false,
       lastStepTs: 0,
-      driftAmpXNorm: 0.014,
-      driftAmpY: 24,
+      driftAmpPx: Math.max(0, Number(worldGlobeVisualState && worldGlobeVisualState.idle && worldGlobeVisualState.idle.driftPx) || 0),
+      bobAmpY: Math.max(0, Number(worldGlobeVisualState && worldGlobeVisualState.idle && worldGlobeVisualState.idle.bobPx) || 0),
+      bobHz: Math.max(0, Number(worldGlobeVisualState && worldGlobeVisualState.idle && worldGlobeVisualState.idle.bobHz) || 0),
       driftFreqXHz: 0.23,
-      driftFreqYHz: 0.31,
       driftPhaseX: Math.random() * Math.PI * 2,
       driftPhaseY: Math.random() * Math.PI * 2,
       fadeInMs: 0,
@@ -117,10 +121,15 @@ export function createWorldSystem({
       };
     }
     const t = (Number(nowMs) || performance.now()) / 1000;
+    const rect = getStageRect();
+    const stageW = Math.max(1, Number(rect && rect.width) || 1);
     const xNorm = (Number(p.anchorXNorm) || 0.5) +
-      (Math.sin((t * (Number(p.driftFreqXHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseX) || 0)) * (Number(p.driftAmpXNorm) || 0));
+      (
+        Math.sin((t * (Number(p.driftFreqXHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseX) || 0)) *
+        ((Number(p.driftAmpPx) || 0) / stageW)
+      );
     const yW = (Number(p.anchorYW) || 0) +
-      (Math.sin((t * (Number(p.driftFreqYHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseY) || 0)) * (Number(p.driftAmpY) || 0));
+      (Math.sin((t * (Number(p.bobHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseY) || 0)) * (Number(p.bobAmpY) || 0));
     return { xNorm, yW };
   }
 

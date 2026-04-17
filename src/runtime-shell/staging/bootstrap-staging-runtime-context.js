@@ -1,4 +1,5 @@
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../game-runtime/orb/orb-cast-policy.js";
+import { buildWorldGlobeVisualState } from "../../game-runtime/world/world-globe-state.js?v=20260417a";
 
 export function bootstrapStagingRuntimeContext({
   createEventBus,
@@ -183,6 +184,7 @@ export function bootstrapStagingRuntimeContext({
     },
     getGlobeEl: () => els.testGlobe,
     setGlobeEl: (el) => { els.testGlobe = el; },
+    worldGlobeVisualState: buildWorldGlobeVisualState(),
   });
 
   const orbSystemsBundle = createOrbSystemsBundle({

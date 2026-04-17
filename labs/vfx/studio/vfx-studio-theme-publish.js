@@ -222,16 +222,41 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
-    case "world-globe":
+    case "world-globe": {
+      const styleBlock = (name, prefix, fallbacks) => [
+        `  ${name}: Object.freeze({`,
+        `    diameterPx: ${Math.round(toNum(p[`${prefix}Size`], fallbacks.size))},`,
+        "    fillRgb: Object.freeze({",
+        `      r: ${Math.round(toNum(p[`${prefix}FillR`], 255))},`,
+        `      g: ${Math.round(toNum(p[`${prefix}FillG`], 214))},`,
+        `      b: ${Math.round(toNum(p[`${prefix}FillB`], 64))},`,
+        "    }),",
+        `    fillAlpha: ${toNum(p[`${prefix}FillAlpha`], fallbacks.fillAlpha).toFixed(2)},`,
+        "    strokeRgb: Object.freeze({",
+        `      r: ${Math.round(toNum(p[`${prefix}StrokeR`], 255))},`,
+        `      g: ${Math.round(toNum(p[`${prefix}StrokeG`], 214))},`,
+        `      b: ${Math.round(toNum(p[`${prefix}StrokeB`], 64))},`,
+        "    }),",
+        `    strokeAlpha: ${toNum(p[`${prefix}StrokeAlpha`], 0.96).toFixed(2)},`,
+        `    strokeWidthPx: ${toNum(p[`${prefix}StrokeWidth`], 2).toFixed(1)},`,
+      ];
       return [
         "export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({",
-        "  idleBobPx: 7,",
-        "  idleBobHz: 0.65,",
-        "  idlePulseScale: 0.045,",
-        "  idlePulseHz: 0.9,",
+        ...styleBlock("idle", "worldGlobeIdle", { size: 50, fillAlpha: 0.42 }),
+        `    driftPx: ${Math.round(toNum(p.worldGlobeIdleDrift, 10))},`,
+        `    bobPx: ${Math.round(toNum(p.worldGlobeIdleBob, 7))},`,
+        `    bobHz: ${toNum(p.worldGlobeIdleBobHz, 0.65).toFixed(2)},`,
+        `    pulseScale: ${toNum(p.worldGlobeIdlePulseScale, 0.045).toFixed(3)},`,
+        `    pulseHz: ${toNum(p.worldGlobeIdlePulseHz, 0.9).toFixed(2)},`,
+        "  }),",
+        ...styleBlock("collected", "worldGlobeCollected", { size: 14, fillAlpha: 0.42 }),
+        "  }),",
+        ...styleBlock("consumed", "worldGlobeConsumed", { size: 11, fillAlpha: 1 }),
+        "  }),",
         "});",
         "",
       ].join("\n");
+    }
     default:
       return "";
   }
