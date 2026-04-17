@@ -198,7 +198,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  pickupDiameterPx: ${Math.round(toNum(p.orbGlobePickupD, 50))},`,
         `  innerStrokeWidthPx: ${toNum(p.orbGlobeInnerStroke, 2).toFixed(1)},`,
         `  releasedStrokeWidthPx: ${toNum(p.orbGlobeReleasedStroke, 2).toFixed(1)},`,
-        `  orbitStrokeWidthPx: ${toNum(p.orbGlobeOrbitStroke, 2).toFixed(1)},`,
         "});",
         "",
       ].join("\n");

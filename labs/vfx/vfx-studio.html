@@ -1121,11 +1121,6 @@
             <button id="orbGlobeApplyOrbitRadiusMinBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="orbGlobeOrbitStroke">Orbit stroke px</label>
-            <input id="orbGlobeOrbitStroke" class="paramFieldInput" type="number" min="0" max="8" value="2" step="0.1" />
-            <button id="orbGlobeApplyOrbitStrokeBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
             <label for="orbGlobeSpeedMin">Orbit speed min</label>
             <input id="orbGlobeSpeedMin" class="paramFieldInput" type="number" min="0" max="12" value="1.80" step="0.05" />
             <button id="orbGlobeApplySpeedMinBtn" class="toolBtn" type="button">Apply</button>
@@ -1144,6 +1139,26 @@
             <label for="orbGlobeDriftMax">Orbit drift max</label>
             <input id="orbGlobeDriftMax" class="paramFieldInput" type="number" min="0" max="2" value="0.18" step="0.01" />
             <button id="orbGlobeApplyDriftMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerSpeedMin">inner-speed min px/s</label>
+            <input id="orbGlobeInnerSpeedMin" class="paramFieldInput" type="number" min="0" max="600" value="80" step="1" />
+            <button id="orbGlobeApplyInnerSpeedMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerSpeedMax">inner-speed max px/s</label>
+            <input id="orbGlobeInnerSpeedMax" class="paramFieldInput" type="number" min="0" max="600" value="150" step="1" />
+            <button id="orbGlobeApplyInnerSpeedMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerDriftMin">inner-drift min</label>
+            <input id="orbGlobeInnerDriftMin" class="paramFieldInput" type="number" min="0" max="1.5" value="0.08" step="0.01" />
+            <button id="orbGlobeApplyInnerDriftMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerDriftMax">inner-drift max</label>
+            <input id="orbGlobeInnerDriftMax" class="paramFieldInput" type="number" min="0" max="1.5" value="0.28" step="0.01" />
+            <button id="orbGlobeApplyInnerDriftMaxBtn" class="toolBtn" type="button">Apply</button>
           </div>
         </div>
       </div>
@@ -1170,7 +1185,7 @@
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
-    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416d";
+    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416e";
     import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260416a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
     import {
@@ -1439,8 +1454,6 @@
       orbGlobeApplyOrbitDistanceMinBtn: $("orbGlobeApplyOrbitDistanceMinBtn"),
       orbGlobeOrbitRadiusMin: $("orbGlobeOrbitRadiusMin"),
       orbGlobeApplyOrbitRadiusMinBtn: $("orbGlobeApplyOrbitRadiusMinBtn"),
-      orbGlobeOrbitStroke: $("orbGlobeOrbitStroke"),
-      orbGlobeApplyOrbitStrokeBtn: $("orbGlobeApplyOrbitStrokeBtn"),
       orbGlobeSpeedMin: $("orbGlobeSpeedMin"),
       orbGlobeApplySpeedMinBtn: $("orbGlobeApplySpeedMinBtn"),
       orbGlobeSpeedMax: $("orbGlobeSpeedMax"),
@@ -1449,6 +1462,14 @@
       orbGlobeApplyDriftMinBtn: $("orbGlobeApplyDriftMinBtn"),
       orbGlobeDriftMax: $("orbGlobeDriftMax"),
       orbGlobeApplyDriftMaxBtn: $("orbGlobeApplyDriftMaxBtn"),
+      orbGlobeInnerSpeedMin: $("orbGlobeInnerSpeedMin"),
+      orbGlobeApplyInnerSpeedMinBtn: $("orbGlobeApplyInnerSpeedMinBtn"),
+      orbGlobeInnerSpeedMax: $("orbGlobeInnerSpeedMax"),
+      orbGlobeApplyInnerSpeedMaxBtn: $("orbGlobeApplyInnerSpeedMaxBtn"),
+      orbGlobeInnerDriftMin: $("orbGlobeInnerDriftMin"),
+      orbGlobeApplyInnerDriftMinBtn: $("orbGlobeApplyInnerDriftMinBtn"),
+      orbGlobeInnerDriftMax: $("orbGlobeInnerDriftMax"),
+      orbGlobeApplyInnerDriftMaxBtn: $("orbGlobeApplyInnerDriftMaxBtn"),
       orbLifecycleShardTotal: $("orbLifecycleShardTotal"),
       orbLifecycleApplyShardTotalBtn: $("orbLifecycleApplyShardTotalBtn"),
       orbLifecycleHitTotal: $("orbLifecycleHitTotal"),
@@ -1767,11 +1788,14 @@
             orbGlobeOrbitDistanceRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceRatio.toFixed(2)),
             orbGlobeOrbitDistanceMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceMinPx),
             orbGlobeOrbitRadiusMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusMinPx),
-            orbGlobeOrbitStroke: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitStrokeWidthPx),
             orbGlobeSpeedMin: 1.8,
             orbGlobeSpeedMax: 2.45,
             orbGlobeDriftMin: 0.03,
             orbGlobeDriftMax: 0.18,
+            orbGlobeInnerSpeedMin: 80,
+            orbGlobeInnerSpeedMax: 150,
+            orbGlobeInnerDriftMin: 0.08,
+            orbGlobeInnerDriftMax: 0.28,
           };
         case "world-globe":
           return {};
@@ -2054,11 +2078,14 @@
             orbGlobeOrbitDistanceRatio: Number(els.orbGlobeOrbitDistanceRatio && els.orbGlobeOrbitDistanceRatio.value),
             orbGlobeOrbitDistanceMin: Number(els.orbGlobeOrbitDistanceMin && els.orbGlobeOrbitDistanceMin.value),
             orbGlobeOrbitRadiusMin: Number(els.orbGlobeOrbitRadiusMin && els.orbGlobeOrbitRadiusMin.value),
-            orbGlobeOrbitStroke: Number(els.orbGlobeOrbitStroke && els.orbGlobeOrbitStroke.value),
             orbGlobeSpeedMin: Number(els.orbGlobeSpeedMin && els.orbGlobeSpeedMin.value),
             orbGlobeSpeedMax: Number(els.orbGlobeSpeedMax && els.orbGlobeSpeedMax.value),
             orbGlobeDriftMin: Number(els.orbGlobeDriftMin && els.orbGlobeDriftMin.value),
             orbGlobeDriftMax: Number(els.orbGlobeDriftMax && els.orbGlobeDriftMax.value),
+            orbGlobeInnerSpeedMin: Number(els.orbGlobeInnerSpeedMin && els.orbGlobeInnerSpeedMin.value),
+            orbGlobeInnerSpeedMax: Number(els.orbGlobeInnerSpeedMax && els.orbGlobeInnerSpeedMax.value),
+            orbGlobeInnerDriftMin: Number(els.orbGlobeInnerDriftMin && els.orbGlobeInnerDriftMin.value),
+            orbGlobeInnerDriftMax: Number(els.orbGlobeInnerDriftMax && els.orbGlobeInnerDriftMax.value),
           };
         case "world-globe":
           return {};
@@ -2157,11 +2184,14 @@
             if (els.orbGlobeOrbitDistanceRatio && settings.orbGlobeOrbitDistanceRatio != null) els.orbGlobeOrbitDistanceRatio.value = String(settings.orbGlobeOrbitDistanceRatio);
             if (els.orbGlobeOrbitDistanceMin && settings.orbGlobeOrbitDistanceMin != null) els.orbGlobeOrbitDistanceMin.value = String(settings.orbGlobeOrbitDistanceMin);
             if (els.orbGlobeOrbitRadiusMin && settings.orbGlobeOrbitRadiusMin != null) els.orbGlobeOrbitRadiusMin.value = String(settings.orbGlobeOrbitRadiusMin);
-            if (els.orbGlobeOrbitStroke && settings.orbGlobeOrbitStroke != null) els.orbGlobeOrbitStroke.value = String(settings.orbGlobeOrbitStroke);
             if (els.orbGlobeSpeedMin && settings.orbGlobeSpeedMin != null) els.orbGlobeSpeedMin.value = String(settings.orbGlobeSpeedMin);
             if (els.orbGlobeSpeedMax && settings.orbGlobeSpeedMax != null) els.orbGlobeSpeedMax.value = String(settings.orbGlobeSpeedMax);
             if (els.orbGlobeDriftMin && settings.orbGlobeDriftMin != null) els.orbGlobeDriftMin.value = String(settings.orbGlobeDriftMin);
             if (els.orbGlobeDriftMax && settings.orbGlobeDriftMax != null) els.orbGlobeDriftMax.value = String(settings.orbGlobeDriftMax);
+            if (els.orbGlobeInnerSpeedMin && settings.orbGlobeInnerSpeedMin != null) els.orbGlobeInnerSpeedMin.value = String(settings.orbGlobeInnerSpeedMin);
+            if (els.orbGlobeInnerSpeedMax && settings.orbGlobeInnerSpeedMax != null) els.orbGlobeInnerSpeedMax.value = String(settings.orbGlobeInnerSpeedMax);
+            if (els.orbGlobeInnerDriftMin && settings.orbGlobeInnerDriftMin != null) els.orbGlobeInnerDriftMin.value = String(settings.orbGlobeInnerDriftMin);
+            if (els.orbGlobeInnerDriftMax && settings.orbGlobeInnerDriftMax != null) els.orbGlobeInnerDriftMax.value = String(settings.orbGlobeInnerDriftMax);
             applyOrbGlobe();
             break;
           case "world-globe":
