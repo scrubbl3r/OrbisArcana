@@ -50,6 +50,42 @@ export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitRadiusMinPx,
     5
   ),
+  orbitSpeedMin: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitSpeedMin,
+    1.8
+  ),
+  orbitSpeedMax: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitSpeedMax,
+    2.45
+  ),
+  orbitDriftMin: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDriftMin,
+    0.03
+  ),
+  orbitDriftMax: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDriftMax,
+    0.18
+  ),
+  innerSpeedMinPxPerSec: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerSpeedMinPxPerSec,
+    80
+  ),
+  innerSpeedMaxPxPerSec: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerSpeedMaxPxPerSec,
+    150
+  ),
+  innerDriftMin: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerDriftMin,
+    0.08
+  ),
+  innerDriftMax: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerDriftMax,
+    0.28
+  ),
+  innerPaddingPx: clampPx(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerPaddingPx,
+    6
+  ),
   pickupDiameterPx: clampPx(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.pickupDiameterPx,
     50
@@ -95,6 +131,42 @@ export function buildOrbGlobeVisualState(overrides = null) {
     orbitRadiusMinPx: clampPx(
       source.orbitRadiusMinPx,
       ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusMinPx
+    ),
+    orbitSpeedMin: clampPx(
+      source.orbitSpeedMin,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMin
+    ),
+    orbitSpeedMax: clampPx(
+      source.orbitSpeedMax,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMax
+    ),
+    orbitDriftMin: clampPx(
+      source.orbitDriftMin,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMin
+    ),
+    orbitDriftMax: clampPx(
+      source.orbitDriftMax,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMax
+    ),
+    innerSpeedMinPxPerSec: clampPx(
+      source.innerSpeedMinPxPerSec,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMinPxPerSec
+    ),
+    innerSpeedMaxPxPerSec: clampPx(
+      source.innerSpeedMaxPxPerSec,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMaxPxPerSec
+    ),
+    innerDriftMin: clampPx(
+      source.innerDriftMin,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMin
+    ),
+    innerDriftMax: clampPx(
+      source.innerDriftMax,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMax
+    ),
+    innerPaddingPx: clampPx(
+      source.innerPaddingPx,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx
     ),
     pickupDiameterPx: clampPx(
       source.pickupDiameterPx,

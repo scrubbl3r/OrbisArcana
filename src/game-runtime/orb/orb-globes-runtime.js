@@ -48,7 +48,6 @@ export function createOrbGlobesRuntime({
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
-  const TILT_MAX_DEG = 10;
   const axisColorProvider = (typeof getAxisColor01 === "function")
     ? getAxisColor01
     : ((axis) => {
@@ -60,6 +59,17 @@ export function createOrbGlobesRuntime({
   const ORBIT_AXES = Object.freeze(["x", "y", "z"]);
   const readWordIdFromPayload = (payload = {}) =>
     String((payload.wordId ?? payload.spellId) || "");
+  const readRange = (minValue, maxValue, fallbackMin, fallbackMax) => {
+    const rawMin = Math.max(0, Number(minValue));
+    const rawMax = Math.max(0, Number(maxValue));
+    const min = Number.isFinite(rawMin) ? rawMin : fallbackMin;
+    const max = Number.isFinite(rawMax) ? rawMax : fallbackMax;
+    return {
+      min: Math.min(min, max),
+      max: Math.max(min, max),
+    };
+  };
+  const randBetween = (min, max) => Number(min) + (Math.random() * (Number(max) - Number(min)));
 
   function readOrbRadiusPx() {
     const liveRadius = (typeof getOrbRadiusPx === "function") ? Number(getOrbRadiusPx()) : NaN;
@@ -70,6 +80,63 @@ export function createOrbGlobesRuntime({
   function randomOrbitAxis() {
     const idx = Math.floor(Math.random() * ORBIT_AXES.length);
     return ORBIT_AXES[idx] || "y";
+  }
+
+  function randomOrbitPlane() {
+    return {
+      angle: Math.random() * Math.PI * 2,
+      squash: randBetween(0.22, 0.68),
+    };
+  }
+
+  function orbitSpeedRange() {
+    return readRange(
+      globeVisualState && globeVisualState.orbitSpeedMin,
+      globeVisualState && globeVisualState.orbitSpeedMax,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMin,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMax
+    );
+  }
+
+  function orbitDriftRange() {
+    return readRange(
+      globeVisualState && globeVisualState.orbitDriftMin,
+      globeVisualState && globeVisualState.orbitDriftMax,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMin,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMax
+    );
+  }
+
+  function innerSpeedRange() {
+    return readRange(
+      globeVisualState && globeVisualState.innerSpeedMinPxPerSec,
+      globeVisualState && globeVisualState.innerSpeedMaxPxPerSec,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMinPxPerSec,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMaxPxPerSec
+    );
+  }
+
+  function innerDriftRange() {
+    return readRange(
+      globeVisualState && globeVisualState.innerDriftMin,
+      globeVisualState && globeVisualState.innerDriftMax,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMin,
+      ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMax
+    );
+  }
+
+  function innerPaddingPx() {
+    const n = Number(globeVisualState && globeVisualState.innerPaddingPx);
+    return Math.max(0, Number.isFinite(n) ? n : ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx);
+  }
+
+  function rotateVector(vx, vy, angle) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return {
+      x: (vx * cos) - (vy * sin),
+      y: (vx * sin) + (vy * cos),
+    };
   }
 
   function color01ToRgba(c, a) {
@@ -131,7 +198,9 @@ export function createOrbGlobesRuntime({
     const axis = String(payload.axis || "").toLowerCase();
     const color = axis ? axisColor(axis) : null;
     const r = innerGlobeDiameterPx() * 0.5;
-    const speed = 360 + (Math.random() * 270);
+    const speeds = innerSpeedRange();
+    const drifts = innerDriftRange();
+    const speed = randBetween(speeds.min, speeds.max);
     const a = Math.random() * Math.PI * 2;
     inner.particles.push({
       id: inner.nextId++,
@@ -142,10 +211,12 @@ export function createOrbGlobesRuntime({
       slot: String(payload.slot || "").toUpperCase(),
       wordId: String(payload.wordId || ""),
       spellId: String(payload.wordId || ""),
-      x: (Math.random() - 0.5) * 8,
-      y: (Math.random() - 0.5) * 8,
+      x: 0,
+      y: 0,
       vx: Math.cos(a) * speed,
       vy: Math.sin(a) * speed,
+      driftMin: drifts.min,
+      driftMax: drifts.max,
       r,
       fill: color ? color.fill : "",
       glow: color ? color.glow : "",
@@ -249,6 +320,8 @@ export function createOrbGlobesRuntime({
       existing.glow = color.glow;
       return;
     }
+    const speeds = orbitSpeedRange();
+    const drifts = orbitDriftRange();
     orbiting.particles.push({
       id: orbiting.nextId++,
       globeId: g,
@@ -259,23 +332,16 @@ export function createOrbGlobesRuntime({
       wordId: tokenId,
       spellId: tokenId,
       phase: Math.random() * Math.PI * 2,
-      speed: (1.35 + (Math.random() * 0.75)) * 4.0,
+      speed: randBetween(speeds.min, speeds.max),
+      direction: Math.random() < 0.5 ? -1 : 1,
+      orbitPlane: randomOrbitPlane(),
+      drift: randBetween(drifts.min, drifts.max),
+      driftDirection: Math.random() < 0.5 ? -1 : 1,
       radius: getOrbitGlobeRadiusPx(readOrbRadiusPx(), globeVisualState),
       orbitR: getOrbitDistancePx(readOrbRadiusPx(), globeVisualState),
       stroke: color.stroke,
       fill: color.fill,
       glow: color.glow,
-      tiltA: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
-      tiltB: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
-      tiltTargetA: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
-      tiltTargetB: ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG),
-      tiltTargetMsA: 1000 + (Math.random() * 2200),
-      tiltTargetMsB: 1200 + (Math.random() * 2400),
-      tiltPhase: Math.random() * Math.PI * 2,
-      driftPhase: Math.random() * Math.PI * 2,
-      driftHz: 0.35 + (Math.random() * 0.45),
-      driftAmp: 3 + (Math.random() * 7),
-      lastMs: 0,
       el: null,
     });
     tickOrbitingGlobes(performance.now());
@@ -295,65 +361,19 @@ export function createOrbGlobesRuntime({
   function orbitProjection(p, tS) {
     const currentOrbRadius = readOrbRadiusPx();
     const r = Number(p.orbitR) || (currentOrbRadius + 18);
-    const drift = Math.sin((tS * (Number(p.driftHz) || 0.5) * Math.PI * 2) + (Number(p.driftPhase) || 0))
-      * (Number(p.driftAmp) || 0);
-    const rw = r + drift;
-    const th = (Number(p.phase) || 0) + (Number(p.speed) || 1) * tS;
-    const c = Math.cos(th);
-    const s = Math.sin(th);
-    let x = 0;
-    let y = 0;
-    let z = 0;
-    if (p.axis === "y") {
-      x = c * rw;
-      y = s * (rw * 0.26);
-      z = s;
-    } else if (p.axis === "x") {
-      x = s * (rw * 0.26);
-      y = c * rw;
-      z = s;
-    } else {
-      // True Z-axis orbit: circle in the screen XY plane (no diagonal tilt).
-      x = c * rw;
-      y = s * rw;
-      z = 0;
-    }
-    const toRad = Math.PI / 180;
-    const a = (Number(p.tiltA) || 0) * toRad;
-    const b = (Number(p.tiltB) || 0) * toRad;
-
-    // Apply dual-axis tilt drift per orbit axis:
-    // x-axis orbit -> tilt on y/z
-    // y-axis orbit -> tilt on x/z
-    // z-axis orbit -> tilt on x/y
-    const sinA = Math.sin(a), cosA = Math.cos(a);
-    const sinB = Math.sin(b), cosB = Math.cos(b);
-    if (p.axis === "x") {
-      // rotate around Y (a), then around Z (b)
-      const x1 = (x * cosA) + (z * sinA);
-      const z1 = (-x * sinA) + (z * cosA);
-      const x2 = (x1 * cosB) - (y * sinB);
-      const y2 = (x1 * sinB) + (y * cosB);
-      x = x2; y = y2; z = z1;
-    } else if (p.axis === "y") {
-      // rotate around X (a), then around Z (b)
-      const y1 = (y * cosA) - (z * sinA);
-      const z1 = (y * sinA) + (z * cosA);
-      const x2 = (x * cosB) - (y1 * sinB);
-      const y2 = (x * sinB) + (y1 * cosB);
-      x = x2; y = y2; z = z1;
-    } else {
-      // rotate around X (a), then around Y (b)
-      const y1 = (y * cosA) - (z * sinA);
-      const z1 = (y * sinA) + (z * cosA);
-      const x2 = (x * cosB) + (z1 * sinB);
-      const z2 = (-x * sinB) + (z1 * cosB);
-      x = x2; y = y1; z = z2;
-    }
-
-    const depth01 = clamp01(((z / Math.max(1, rw)) + 1) * 0.5);
-    const scale = 0.72 + (0.42 * depth01);
-    const opacity = 0.48 + (0.50 * depth01);
+    const direction = Number(p.direction) || 1;
+    const th = (Number(p.phase) || 0) + ((Number(p.speed) || 1) * tS * direction);
+    const plane = p.orbitPlane || { angle: 0, squash: 0.28 };
+    const driftDirection = Number(p.driftDirection) || 1;
+    const axisAngle = (Number(plane.angle) || 0) + (tS * (Number(p.drift) || 0) * driftDirection);
+    const localX = Math.cos(th) * r;
+    const localY = Math.sin(th) * r * (Number(plane.squash) || 0.28);
+    const cos = Math.cos(axisAngle);
+    const sin = Math.sin(axisAngle);
+    const x = (localX * cos) - (localY * sin);
+    const y = (localX * sin) + (localY * cos);
+    const scale = 1;
+    const opacity = 0.92;
     return { x, y, scale, opacity };
   }
 
@@ -367,9 +387,8 @@ export function createOrbGlobesRuntime({
     const cy = Number(getOrbScreenY()) || 0;
     for (const p of orbiting.particles) {
       const liveColor = axisColor(p.axis);
-      const isBound = String(p.state || "") === "bound" || !!String(p.slot || "");
       p.radius = getOrbitGlobeRadiusPx(currentOrbRadius, globeVisualState);
-      p.orbitR = getOrbitDistancePx(currentOrbRadius, globeVisualState) * (isBound ? 0.88 : 1);
+      p.orbitR = getOrbitDistancePx(currentOrbRadius, globeVisualState);
       p.stroke = liveColor.stroke;
       p.fill = liveColor.fill;
       p.glow = liveColor.glow;
@@ -383,26 +402,6 @@ export function createOrbGlobesRuntime({
         stageEl.appendChild(el);
       }
       const proj = orbitProjection(p, tS);
-      const dt = p.lastMs ? clamp((now - p.lastMs) / 1000, 0, 0.05) : 0.016;
-      p.lastMs = now;
-      p.tiltTargetMsA = (Number(p.tiltTargetMsA) || 0) - (dt * 1000);
-      p.tiltTargetMsB = (Number(p.tiltTargetMsB) || 0) - (dt * 1000);
-      if (p.tiltTargetMsA <= 0) {
-        p.tiltTargetA = ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG);
-        p.tiltTargetMsA = 900 + (Math.random() * 2600);
-      }
-      if (p.tiltTargetMsB <= 0) {
-        p.tiltTargetB = ((Math.random() * 2 * TILT_MAX_DEG) - TILT_MAX_DEG);
-        p.tiltTargetMsB = 1100 + (Math.random() * 2800);
-      }
-      const wobbleHz = 0.35;
-      const alpha = 1 - Math.exp(-(wobbleHz * dt));
-      p.tiltA += ((Number(p.tiltTargetA) || 0) - (Number(p.tiltA) || 0)) * alpha;
-      p.tiltB += ((Number(p.tiltTargetB) || 0) - (Number(p.tiltB) || 0)) * alpha;
-      p.tiltA += Math.sin((tS * 0.43) + p.tiltPhase) * 0.08;
-      p.tiltB += Math.sin((tS * 0.37) + p.tiltPhase + 1.1) * 0.08;
-      p.tiltA = clamp(p.tiltA, -TILT_MAX_DEG, TILT_MAX_DEG);
-      p.tiltB = clamp(p.tiltB, -TILT_MAX_DEG, TILT_MAX_DEG);
       const r = Math.max(2, Number(p.radius) || 4);
       const d = r * 2;
       const x = cx + proj.x;
@@ -414,9 +413,9 @@ export function createOrbGlobesRuntime({
       p.el.style.opacity = clamp01(proj.opacity).toFixed(3);
       p.el.style.borderColor = p.stroke;
       p.el.style.backgroundColor = p.fill;
-      p.el.style.boxShadow = isBound ? `${p.glow}, 0 0 18px rgba(255,255,255,0.20)` : p.glow;
+      p.el.style.boxShadow = p.glow;
       p.el.style.transform = `scale(${proj.scale.toFixed(3)})`;
-      p.el.style.zIndex = proj.scale >= 1 ? "34" : "30";
+      p.el.style.zIndex = "30";
     }
   }
 
@@ -460,35 +459,25 @@ export function createOrbGlobesRuntime({
     if (!inner.particles.length) return;
     const maxDistBase = readOrbRadiusPx();
     for (const p of inner.particles) {
-      p.vx += (Math.random() - 0.5) * 120 * dt;
-      p.vy += (Math.random() - 0.5) * 120 * dt;
-      const vMag = Math.hypot(p.vx, p.vy);
-      const vCap = 900;
-      if (vMag > vCap) {
-        const s = vCap / (vMag || 1);
-        p.vx *= s;
-        p.vy *= s;
-      }
-
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       const dist = Math.hypot(p.x, p.y);
-      const maxDist = maxDistBase - p.r;
+      const maxDist = Math.max(0, maxDistBase - p.r - innerPaddingPx());
       if (dist > maxDist && maxDist > 0) {
         const nx = p.x / (dist || 1);
         const ny = p.y / (dist || 1);
         p.x = nx * maxDist;
         p.y = ny * maxDist;
         const vn = (p.vx * nx) + (p.vy * ny);
-        if (vn > 0) {
-          p.vx = p.vx - (2 * vn * nx);
-          p.vy = p.vy - (2 * vn * ny);
-          const tx = -ny;
-          const ty = nx;
-          const kick = (Math.random() - 0.5) * 120;
-          p.vx += tx * kick;
-          p.vy += ty * kick;
-        }
+        p.vx = p.vx - (2 * vn * nx);
+        p.vy = p.vy - (2 * vn * ny);
+
+        const driftMin = Number.isFinite(p.driftMin) ? p.driftMin : ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMin;
+        const driftMax = Number.isFinite(p.driftMax) ? p.driftMax : driftMin;
+        const drift = randBetween(Math.min(driftMin, driftMax), Math.max(driftMin, driftMax));
+        const drifted = rotateVector(p.vx, p.vy, drift * (Math.random() < 0.5 ? -1 : 1));
+        p.vx = drifted.x;
+        p.vy = drifted.y;
       }
     }
     renderInnerGlobes();
