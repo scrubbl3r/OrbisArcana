@@ -189,6 +189,7 @@ export function createOrbGlobesRuntime({
       p.el.style.height = `${d.toFixed(2)}px`;
       p.el.style.left = `${(orbRadius + p.x - p.r).toFixed(2)}px`;
       p.el.style.top = `${(orbRadius + p.y - p.r).toFixed(2)}px`;
+      p.el.style.opacity = "1";
       if (p.fill) p.el.style.backgroundColor = p.fill;
       if (p.glow) p.el.style.boxShadow = p.glow;
     }

@@ -213,7 +213,7 @@ export function createOrbGlobePreview({ els, clamp }) {
       el.style.height = `${innerD.toFixed(2)}px`;
       el.style.left = `${(orbRadius + globe.innerX - innerD * 0.5).toFixed(2)}px`;
       el.style.top = `${(orbRadius + globe.innerY - innerD * 0.5).toFixed(2)}px`;
-      el.style.opacity = `${Math.max(0.62, 1 - (index * 0.06)).toFixed(3)}`;
+      el.style.opacity = "1";
       els.orbInterior.appendChild(el);
       samples.push(el);
     });
