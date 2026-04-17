@@ -331,18 +331,21 @@
     }
     .bindingGrid .k{ color: var(--text-muted); font-weight:800; }
     .bindingGrid .v{ color: var(--text-strong); word-break: break-word; }
-    .paramFieldRows{
+    .paramFieldRows,
+    .paramGrid{
       display:grid;
       gap:10px;
       margin-top:10px;
     }
-    .paramFieldRow{
+    .paramFieldRow,
+    .paramField{
       display:grid;
       grid-template-columns: minmax(110px, auto) 1fr auto;
       gap:8px;
       align-items:center;
     }
-    .paramFieldRow label{
+    .paramFieldRow label,
+    .paramField label{
       font-size:12px;
       font-weight:900;
       color: var(--text-strong);
@@ -2843,6 +2846,7 @@
 
     const worldGlobePreview = createWorldGlobePreview({
       els: worldGlobePreviewEls,
+      clamp,
     });
     const applyWorldGlobe = worldGlobePreview.apply;
     const clearWorldGlobe = worldGlobePreview.clear;

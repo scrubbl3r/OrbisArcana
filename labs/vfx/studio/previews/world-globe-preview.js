@@ -7,6 +7,13 @@ export function createWorldGlobePreview({ els, clamp }) {
   let samples = [];
   let rafId = 0;
   const field = (name) => els[name] || document.getElementById(name);
+  const clampValue = typeof clamp === "function"
+    ? clamp
+    : (value, lo, hi) => {
+        const n = Number(value);
+        const v = Number.isFinite(n) ? n : lo;
+        return Math.max(lo, Math.min(hi, v));
+      };
 
   function clear() {
     if (rafId) cancelAnimationFrame(rafId);
@@ -19,28 +26,28 @@ export function createWorldGlobePreview({ els, clamp }) {
 
   function readRgb(prefix) {
     return {
-      r: clamp(field(`${prefix}FillR`) && field(`${prefix}FillR`).value, 0, 255),
-      g: clamp(field(`${prefix}FillG`) && field(`${prefix}FillG`).value, 0, 255),
-      b: clamp(field(`${prefix}FillB`) && field(`${prefix}FillB`).value, 0, 255),
+      r: clampValue(field(`${prefix}FillR`) && field(`${prefix}FillR`).value, 0, 255),
+      g: clampValue(field(`${prefix}FillG`) && field(`${prefix}FillG`).value, 0, 255),
+      b: clampValue(field(`${prefix}FillB`) && field(`${prefix}FillB`).value, 0, 255),
     };
   }
 
   function readStrokeRgb(prefix) {
     return {
-      r: clamp(field(`${prefix}StrokeR`) && field(`${prefix}StrokeR`).value, 0, 255),
-      g: clamp(field(`${prefix}StrokeG`) && field(`${prefix}StrokeG`).value, 0, 255),
-      b: clamp(field(`${prefix}StrokeB`) && field(`${prefix}StrokeB`).value, 0, 255),
+      r: clampValue(field(`${prefix}StrokeR`) && field(`${prefix}StrokeR`).value, 0, 255),
+      g: clampValue(field(`${prefix}StrokeG`) && field(`${prefix}StrokeG`).value, 0, 255),
+      b: clampValue(field(`${prefix}StrokeB`) && field(`${prefix}StrokeB`).value, 0, 255),
     };
   }
 
   function readStyle(prefix) {
     return {
-      diameterPx: clamp(field(`${prefix}Size`) && field(`${prefix}Size`).value, 1, 400),
+      diameterPx: clampValue(field(`${prefix}Size`) && field(`${prefix}Size`).value, 1, 400),
       fillRgb: readRgb(prefix),
-      fillAlpha: clamp(field(`${prefix}FillAlpha`) && field(`${prefix}FillAlpha`).value, 0, 1),
+      fillAlpha: clampValue(field(`${prefix}FillAlpha`) && field(`${prefix}FillAlpha`).value, 0, 1),
       strokeRgb: readStrokeRgb(prefix),
-      strokeAlpha: clamp(field(`${prefix}StrokeAlpha`) && field(`${prefix}StrokeAlpha`).value, 0, 1),
-      strokeWidthPx: clamp(field(`${prefix}StrokeWidth`) && field(`${prefix}StrokeWidth`).value, 0, 40),
+      strokeAlpha: clampValue(field(`${prefix}StrokeAlpha`) && field(`${prefix}StrokeAlpha`).value, 0, 1),
+      strokeWidthPx: clampValue(field(`${prefix}StrokeWidth`) && field(`${prefix}StrokeWidth`).value, 0, 40),
     };
   }
 
@@ -48,11 +55,11 @@ export function createWorldGlobePreview({ els, clamp }) {
     return buildWorldGlobeVisualState({
       idle: {
         ...readStyle("worldGlobeIdle"),
-        driftPx: clamp(field("worldGlobeIdleDrift") && field("worldGlobeIdleDrift").value, 0, 200),
-        bobPx: clamp(field("worldGlobeIdleBob") && field("worldGlobeIdleBob").value, 0, 200),
-        bobHz: clamp(field("worldGlobeIdleBobHz") && field("worldGlobeIdleBobHz").value, 0, 20),
-        pulseScale: clamp(field("worldGlobeIdlePulseScale") && field("worldGlobeIdlePulseScale").value, 0, 1),
-        pulseHz: clamp(field("worldGlobeIdlePulseHz") && field("worldGlobeIdlePulseHz").value, 0, 20),
+        driftPx: clampValue(field("worldGlobeIdleDrift") && field("worldGlobeIdleDrift").value, 0, 200),
+        bobPx: clampValue(field("worldGlobeIdleBob") && field("worldGlobeIdleBob").value, 0, 200),
+        bobHz: clampValue(field("worldGlobeIdleBobHz") && field("worldGlobeIdleBobHz").value, 0, 20),
+        pulseScale: clampValue(field("worldGlobeIdlePulseScale") && field("worldGlobeIdlePulseScale").value, 0, 1),
+        pulseHz: clampValue(field("worldGlobeIdlePulseHz") && field("worldGlobeIdlePulseHz").value, 0, 20),
       },
       collected: readStyle("worldGlobeCollected"),
       consumed: readStyle("worldGlobeConsumed"),
