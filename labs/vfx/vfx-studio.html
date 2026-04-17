@@ -236,46 +236,63 @@
       align-items:center;
       gap:6px;
     }
-    .bindingDetails{
-      margin: 0 0 12px;
+    .authoringTabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
       border-radius: 12px;
       border: 1px solid var(--frame);
       background: rgba(0,0,0,.18);
-      overflow:hidden;
+      padding:6px;
+      margin:0 0 12px;
     }
-    .bindingSummary{
-      list-style:none;
+    .authoringTab{
       cursor:pointer;
-      padding:10px 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
+      border-radius:9px;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--text-muted);
       font-size:12px;
       font-weight:900;
-      letter-spacing:.04em;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      padding:9px 10px;
+    }
+    .authoringTab.active{
+      border-color:rgba(var(--frame-rgb), .36);
+      background:rgba(var(--frame-rgb), .14);
       color: var(--text-strong);
-      user-select:none;
     }
-    .bindingSummary::-webkit-details-marker{ display:none; }
-    .bindingSummary::after{
-      content:"+";
-      font-size:14px;
-      opacity:.85;
+    .authoringPanel{
+      display:block;
     }
-    .bindingDetails[open] .bindingSummary::after{
-      content:"-";
+    .authoringPanel[hidden]{
+      display:none;
     }
-    .bindingSummary .dim{
-      font-size:11px;
-      font-weight:800;
-      opacity:.65;
-      letter-spacing:0;
+    .behaviorSection{
+      border-top:1px solid rgba(var(--frame-rgb), .18);
+      padding-top:12px;
+      margin-top:12px;
+    }
+    .behaviorSection:first-child{
+      border-top:none;
+      padding-top:0;
+      margin-top:0;
+    }
+    .behaviorSection[hidden]{ display:none; }
+    .behaviorTitle{
+      margin:0 0 10px;
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--text-strong);
     }
     .bindingPanel{
       margin: 0;
       padding: 10px 12px;
-      border-top: 1px solid rgba(var(--frame-rgb), 0.18);
+      border: 1px solid rgba(var(--frame-rgb), 0.18);
+      border-radius:12px;
       background: rgba(0,0,0,.25);
       display:grid;
       gap:8px;
@@ -302,6 +319,9 @@
       font-size:12px;
       line-height:1.35;
       color: var(--text-muted);
+    }
+    .bindingEditorHelp:empty{
+      display:none;
     }
     .bindingSelect{
       width:100%;
@@ -365,7 +385,7 @@
     }
 
     .stage{
-      height:min(78vh, 740px);
+      height:min(50vh, 520px);
       border:1px solid var(--frame);
       border-radius:14px;
       background:#000;
@@ -712,7 +732,7 @@
         flex:1;
         min-width:180px;
       }
-      .stage{ height:min(62vh, 620px); }
+      .stage{ height:min(50vh, 520px); }
     }
   </style>
 </head>
@@ -736,7 +756,6 @@
         <button id="saveDraftBtn" class="toolBtn secondary" type="button">Save</button>
         <button id="connectProjectBtn" class="toolBtn secondary" type="button">Connect Project</button>
         <button id="publishPresetBtn" class="toolBtn secondary" type="button">Publish</button>
-        <button id="bindBtn" class="toolBtn secondary" type="button">Bind</button>
         <button id="lockEffectBtn" class="toolBtn lockBtn unlocked" type="button" aria-label="Lock effect profile" title="Lock effect profile"></button>
       </div>
     </div>
@@ -788,23 +807,12 @@
     </div>
 
     <div class="card">
-      <details class="bindingDetails">
-        <summary class="bindingSummary">
-          <span>Runtime target</span>
-          <span class="dim">Bind this authored effect to a runtime spell or orb-state.</span>
-        </summary>
-        <div class="bindingPanel" id="bindingPanel" aria-live="polite">
-          <div class="bindingEditor">
-            <div class="bindingEditorRow">
-              <label class="bindingEditorLabel" for="bindingTargetSelect">Runtime target</label>
-              <select id="bindingTargetSelect" class="bindingSelect" aria-label="Bind effect to runtime target"></select>
-            </div>
-            <div class="bindingEditorHelp" id="bindingEditorHelp">Choose the runtime spell or orb-state slot this authored effect should drive.</div>
-          </div>
-          <h3>Binding Readout</h3>
-          <div class="bindingGrid" id="bindingGrid"></div>
-        </div>
-      </details>
+      <div class="authoringTabs" role="tablist" aria-label="Authoring surface">
+        <button id="vfxTabBtn" class="authoringTab active" type="button" role="tab" aria-selected="true" aria-controls="vfxAuthoringPanel">VFX</button>
+        <button id="behaviorTabBtn" class="authoringTab" type="button" role="tab" aria-selected="false" aria-controls="behaviorAuthoringPanel">Behavior</button>
+      </div>
+
+      <div id="vfxAuthoringPanel" class="authoringPanel" role="tabpanel" aria-labelledby="vfxTabBtn">
 
       <!-- Electric AOE controls -->
       <div class="section" data-effect="electric-aoe" hidden>
@@ -924,10 +932,6 @@
           <strong><span id="vDecay">150</span>ms</strong>
         </div>
         <input id="decay" type="range" min="40" max="2000" value="150" step="10" />
-
-        <div class="hint">
-          Spawn rate controls how often a new ring is created. Decay controls how long each ring lives (and fades).
-        </div>
       </div>
 
       <!-- Flame AOE controls -->
@@ -952,17 +956,12 @@
           <span>Fill alpha</span>
           <strong>0.20</strong>
         </div>
-
-        <div class="hint">
-          Solid red-orange AOE ring with vector tendrils emanating in all directions.
-        </div>
       </div>
 
       <div class="section" data-effect="orb-base" hidden>
         <div class="row">
           <button id="previewOrbBase">Preview</button>
         </div>
-        <div class="bindingEditorHelp">Vanilla orb visual SSOT. Downstream orb-state visuals inherit from this unless they override it.</div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
             <label for="orbBaseD">Diameter</label>
@@ -1018,11 +1017,9 @@
       </div>
 
       <div class="section" data-effect="orb-template" hidden>
-        <div class="bindingEditorHelp">Clean blank orb subscriber. Uses Orb Base as its visual provider and serves as the neutral seed lane for future orb-state starts. Duplicate and rename this lane to begin a new orb-state from a plain vanilla orb.</div>
       </div>
 
       <div class="section" data-effect="orb-nod" hidden>
-        <div class="bindingEditorHelp">Responsive heard-word orb-state. Uses Orb Base as its visual provider and shapes a short nod impulse for KWS feedback.</div>
         <div class="row">
           <button id="previewOrbNod" class="toolBtn" type="button">Preview</button>
         </div>
@@ -1066,7 +1063,6 @@
       </div>
 
       <div class="section" data-effect="teleport" hidden>
-        <div class="bindingEditorHelp">Teleport spell sketch. The orb freezes in place, flickers while fading out, then flickers while fading back in and settles cleanly.</div>
         <div class="row">
           <button id="previewOrbTeleport" class="toolBtn" type="button">Preview</button>
         </div>
@@ -1095,7 +1091,6 @@
       </div>
 
       <div class="section" data-effect="orb-lifecycle" hidden>
-        <div class="bindingEditorHelp">Lifecycle orb-state authoring lane. Uses Orb Base as its visual provider and drives one seeded Voronoi fracture map through full-fracture hits, heal, and final shatter.</div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
             <label for="orbLifecycleShardTotal">Shards total</label>
@@ -1210,7 +1205,7 @@
         <div class="row">
           <button id="previewWorldGlobe">Preview</button>
         </div>
-        <div class="bindingEditorHelp">Idle</div>
+        <div class="behaviorTitle">Idle</div>
         <div class="paramGrid">
           <div class="paramField"><label for="worldGlobeIdleSize">Globe size</label><input id="worldGlobeIdleSize" class="paramFieldInput" type="number" min="1" max="400" value="50" step="1" /><button id="worldGlobeApplyIdleSizeBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeIdleFillR">Fill red</label><input id="worldGlobeIdleFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyIdleFillRBtn" class="toolBtn" type="button">Apply</button></div>
@@ -1228,7 +1223,7 @@
           <div class="paramField"><label for="worldGlobeIdlePulseScale">Pulse scale</label><input id="worldGlobeIdlePulseScale" class="paramFieldInput" type="number" min="0" max="1" value="0.045" step="0.005" /><button id="worldGlobeApplyIdlePulseScaleBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeIdlePulseHz">Pulse hz</label><input id="worldGlobeIdlePulseHz" class="paramFieldInput" type="number" min="0" max="20" value="0.9" step="0.05" /><button id="worldGlobeApplyIdlePulseHzBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
-        <div class="bindingEditorHelp">Collected</div>
+        <div class="behaviorTitle">Collected</div>
         <div class="paramGrid" id="worldGlobeCollectedFields">
           <div class="paramField"><label for="worldGlobeCollectedSize">Globe size</label><input id="worldGlobeCollectedSize" class="paramFieldInput" type="number" min="1" max="400" value="14" step="1" /><button id="worldGlobeApplyCollectedSizeBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeCollectedFillR">Fill red</label><input id="worldGlobeCollectedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyCollectedFillRBtn" class="toolBtn" type="button">Apply</button></div>
@@ -1241,7 +1236,7 @@
           <div class="paramField"><label for="worldGlobeCollectedStrokeAlpha">Stroke alpha</label><input id="worldGlobeCollectedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyCollectedStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeCollectedStrokeWidth">Stroke size</label><input id="worldGlobeCollectedStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyCollectedStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
-        <div class="bindingEditorHelp">Consumed</div>
+        <div class="behaviorTitle">Consumed</div>
         <div class="paramGrid" id="worldGlobeConsumedFields">
           <div class="paramField"><label for="worldGlobeConsumedSize">Globe size</label><input id="worldGlobeConsumedSize" class="paramFieldInput" type="number" min="1" max="400" value="11" step="1" /><button id="worldGlobeApplyConsumedSizeBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeConsumedFillR">Fill red</label><input id="worldGlobeConsumedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyConsumedFillRBtn" class="toolBtn" type="button">Apply</button></div>
@@ -1253,6 +1248,51 @@
           <div class="paramField"><label for="worldGlobeConsumedStrokeB">Stroke blue</label><input id="worldGlobeConsumedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyConsumedStrokeBBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeConsumedStrokeAlpha">Stroke alpha</label><input id="worldGlobeConsumedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyConsumedStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeConsumedStrokeWidth">Stroke size</label><input id="worldGlobeConsumedStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyConsumedStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+      </div>
+      </div>
+
+      <div id="behaviorAuthoringPanel" class="authoringPanel" role="tabpanel" aria-labelledby="behaviorTabBtn" hidden>
+        <div class="bindingPanel" id="bindingPanel" aria-live="polite">
+          <div class="bindingEditor">
+            <div class="bindingEditorRow">
+              <label class="bindingEditorLabel" for="bindingTargetSelect">Runtime target</label>
+              <select id="bindingTargetSelect" class="bindingSelect" aria-label="Bind effect to runtime target"></select>
+              <button id="bindBtn" class="toolBtn secondary" type="button">Bind</button>
+            </div>
+            <div class="bindingEditorHelp" id="bindingEditorHelp"></div>
+          </div>
+          <h3>Binding Readout</h3>
+          <div class="bindingGrid" id="bindingGrid"></div>
+        </div>
+        <div class="behaviorSection" data-behavior-effect="teleport" hidden>
+          <h3 class="behaviorTitle">Teleport Behavior</h3>
+          <div class="paramFieldRows">
+            <div class="paramFieldRow">
+              <label for="teleportBehaviorTravelMs">Travel duration (ms)</label>
+              <input id="teleportBehaviorTravelMs" class="paramFieldInput" type="number" min="0" max="10000" value="1500" step="10" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleportBehaviorEasing">Travel easing</label>
+              <input id="teleportBehaviorEasing" class="paramFieldInput" type="text" value="easeInOutExpo" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleportBehaviorFreeze">Freeze orb</label>
+              <input id="teleportBehaviorFreeze" class="paramFieldInput" type="text" value="true" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleportBehaviorGrace">Grace starts after travel</label>
+              <input id="teleportBehaviorGrace" class="paramFieldInput" type="text" value="true" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="behaviorSection" data-behavior-effect="default">
+          <h3 class="behaviorTitle">No Behavior Surface</h3>
         </div>
       </div>
     </div>
@@ -1450,6 +1490,10 @@
       connectProjectBtn: $("connectProjectBtn"),
       publishPresetBtn: $("publishPresetBtn"),
       bindBtn: $("bindBtn"),
+      vfxTabBtn: $("vfxTabBtn"),
+      behaviorTabBtn: $("behaviorTabBtn"),
+      vfxAuthoringPanel: $("vfxAuthoringPanel"),
+      behaviorAuthoringPanel: $("behaviorAuthoringPanel"),
       bindingTargetSelect: $("bindingTargetSelect"),
       lockEffectBtn: $("lockEffectBtn"),
       renameEffectBtn: $("renameEffectBtn"),
@@ -2698,6 +2742,32 @@
 
     shieldPreview.wire();
 
+    function setAuthoringTab(tabName){
+      const showBehavior = tabName === "behavior";
+      if (els.vfxAuthoringPanel) els.vfxAuthoringPanel.hidden = showBehavior;
+      if (els.behaviorAuthoringPanel) els.behaviorAuthoringPanel.hidden = !showBehavior;
+      if (els.vfxTabBtn) {
+        els.vfxTabBtn.classList.toggle("active", !showBehavior);
+        els.vfxTabBtn.setAttribute("aria-selected", showBehavior ? "false" : "true");
+      }
+      if (els.behaviorTabBtn) {
+        els.behaviorTabBtn.classList.toggle("active", showBehavior);
+        els.behaviorTabBtn.setAttribute("aria-selected", showBehavior ? "true" : "false");
+      }
+    }
+
+    function updateBehaviorSections(){
+      const effect = selectedBaseEffect();
+      const hasBehaviorSurface = effect === "teleport";
+      document.querySelectorAll(".behaviorSection[data-behavior-effect]").forEach((section) => {
+        const target = section.getAttribute("data-behavior-effect");
+        section.hidden = hasBehaviorSurface ? target !== effect : target !== "default";
+      });
+    }
+
+    if (els.vfxTabBtn) els.vfxTabBtn.addEventListener("click", () => setAuthoringTab("vfx"));
+    if (els.behaviorTabBtn) els.behaviorTabBtn.addEventListener("click", () => setAuthoringTab("behavior"));
+
     function updateEffectSections(){
       const result = updateEffectSectionsHelper({
         selectedEffectOption,
@@ -2710,6 +2780,7 @@
         refreshEffectMeta,
         previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
       });
+      updateBehaviorSections();
       alignBindingTargetToSelectedEffect();
       refreshBindingPanel();
       requestAnimationFrame(autoPreviewSelectedEffect);
