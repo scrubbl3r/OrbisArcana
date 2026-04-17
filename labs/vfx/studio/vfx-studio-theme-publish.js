@@ -146,6 +146,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  orbTeleportFlickerOnMs: ${Math.round(toNum(p.orbTeleportFlickerOnMs, 60))},`,
         `  orbTeleportFlickerOffMs: ${Math.round(toNum(p.orbTeleportFlickerOffMs, 60))},`,
         `  orbTeleportFadeOutMs: ${Math.round(toNum(p.orbTeleportFadeOutMs, 280))},`,
+        `  orbTeleportCameraTravelMs: ${Math.round(toNum(p.orbTeleportCameraTravelMs, 1500))},`,
         `  orbTeleportFadeInMs: ${Math.round(toNum(p.orbTeleportFadeInMs, 280))},`,
         "});",
         "",

@@ -1269,9 +1269,9 @@
           <h3 class="behaviorTitle">Teleport Behavior</h3>
           <div class="paramFieldRows">
             <div class="paramFieldRow">
-              <label for="teleportBehaviorTravelMs">Travel duration (ms)</label>
-              <input id="teleportBehaviorTravelMs" class="paramFieldInput" type="number" min="0" max="10000" value="1500" step="10" readonly />
-              <button class="toolBtn" type="button" disabled>Apply</button>
+              <label for="orbTeleportCameraTravelMs">Camera travel (ms)</label>
+              <input id="orbTeleportCameraTravelMs" class="paramFieldInput" type="number" min="0" max="8000" value="1500" step="10" />
+              <button id="orbTeleportApplyCameraTravelBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="teleportBehaviorEasing">Travel easing</label>
@@ -1313,7 +1313,7 @@
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416g";
     import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260417a";
-    import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
+    import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260417b";
     import {
       bootStudioShell,
       refreshEffectMeta as refreshEffectMetaHelper,
@@ -1356,7 +1356,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260417a";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260417b";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
@@ -1364,7 +1364,7 @@
       ELECTRIC_AOE_PRESET_DEFAULT,
       ORB_NOD_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260410b";
+    } from "../../src/vfx/presets/index.js?v=20260417b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260416b";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260417a";
@@ -1619,6 +1619,8 @@
       orbTeleportApplyFlickerOffBtn: $("orbTeleportApplyFlickerOffBtn"),
       orbTeleportFadeOutMs: $("orbTeleportFadeOutMs"),
       orbTeleportApplyFadeOutBtn: $("orbTeleportApplyFadeOutBtn"),
+      orbTeleportCameraTravelMs: $("orbTeleportCameraTravelMs"),
+      orbTeleportApplyCameraTravelBtn: $("orbTeleportApplyCameraTravelBtn"),
       orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
       orbTeleportApplyFadeInBtn: $("orbTeleportApplyFadeInBtn"),
     };
@@ -1951,6 +1953,7 @@
             orbTeleportFlickerOnMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOnMs) || 60),
             orbTeleportFlickerOffMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOffMs) || 60),
             orbTeleportFadeOutMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeOutMs) || 280),
+            orbTeleportCameraTravelMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportCameraTravelMs) || 1500),
             orbTeleportFadeInMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeInMs) || 280),
           };
         case "orb-lifecycle":
@@ -2251,6 +2254,7 @@
             orbTeleportFlickerOnMs: Number(els.orbTeleportFlickerOnMs && els.orbTeleportFlickerOnMs.value),
             orbTeleportFlickerOffMs: Number(els.orbTeleportFlickerOffMs && els.orbTeleportFlickerOffMs.value),
             orbTeleportFadeOutMs: Number(els.orbTeleportFadeOutMs && els.orbTeleportFadeOutMs.value),
+            orbTeleportCameraTravelMs: Number(els.orbTeleportCameraTravelMs && els.orbTeleportCameraTravelMs.value),
             orbTeleportFadeInMs: Number(els.orbTeleportFadeInMs && els.orbTeleportFadeInMs.value),
           };
         case "orb-lifecycle":
@@ -2366,6 +2370,7 @@
             if (els.orbTeleportFlickerOnMs && settings.orbTeleportFlickerOnMs != null) els.orbTeleportFlickerOnMs.value = String(settings.orbTeleportFlickerOnMs);
             if (els.orbTeleportFlickerOffMs && settings.orbTeleportFlickerOffMs != null) els.orbTeleportFlickerOffMs.value = String(settings.orbTeleportFlickerOffMs);
             if (els.orbTeleportFadeOutMs && settings.orbTeleportFadeOutMs != null) els.orbTeleportFadeOutMs.value = String(settings.orbTeleportFadeOutMs);
+            if (els.orbTeleportCameraTravelMs && settings.orbTeleportCameraTravelMs != null) els.orbTeleportCameraTravelMs.value = String(settings.orbTeleportCameraTravelMs);
             if (els.orbTeleportFadeInMs && settings.orbTeleportFadeInMs != null) els.orbTeleportFadeInMs.value = String(settings.orbTeleportFadeInMs);
             applyOrbTeleport();
             break;

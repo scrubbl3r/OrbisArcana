@@ -20,6 +20,7 @@ export function createOrbTeleportPreview({ els, getOrbBaseVisualState = null } =
       flickerOnMs: Math.round(clampNumber(els && els.orbTeleportFlickerOnMs && els.orbTeleportFlickerOnMs.value, 10, 1000, 60)),
       flickerOffMs: Math.round(clampNumber(els && els.orbTeleportFlickerOffMs && els.orbTeleportFlickerOffMs.value, 10, 1000, 60)),
       fadeOutMs: Math.round(clampNumber(els && els.orbTeleportFadeOutMs && els.orbTeleportFadeOutMs.value, 40, 4000, 280)),
+      cameraTravelMs: Math.round(clampNumber(els && els.orbTeleportCameraTravelMs && els.orbTeleportCameraTravelMs.value, 0, 8000, 1500)),
       fadeInMs: Math.round(clampNumber(els && els.orbTeleportFadeInMs && els.orbTeleportFadeInMs.value, 40, 4000, 280)),
     };
   }
@@ -29,6 +30,7 @@ export function createOrbTeleportPreview({ els, getOrbBaseVisualState = null } =
     if (els.orbTeleportFlickerOnMs) els.orbTeleportFlickerOnMs.value = String(cfg.flickerOnMs);
     if (els.orbTeleportFlickerOffMs) els.orbTeleportFlickerOffMs.value = String(cfg.flickerOffMs);
     if (els.orbTeleportFadeOutMs) els.orbTeleportFadeOutMs.value = String(cfg.fadeOutMs);
+    if (els.orbTeleportCameraTravelMs) els.orbTeleportCameraTravelMs.value = String(cfg.cameraTravelMs);
     if (els.orbTeleportFadeInMs) els.orbTeleportFadeInMs.value = String(cfg.fadeInMs);
   }
 
@@ -63,7 +65,8 @@ export function createOrbTeleportPreview({ els, getOrbBaseVisualState = null } =
   function renderFrame(cfg, elapsedMs) {
     if (!els || !els.orb) return false;
     const fadeOutEnd = cfg.fadeOutMs;
-    const fadeInEnd = fadeOutEnd + cfg.fadeInMs;
+    const fadeInStart = fadeOutEnd + cfg.cameraTravelMs;
+    const fadeInEnd = fadeInStart + cfg.fadeInMs;
     const totalEnd = fadeInEnd;
 
     if (elapsedMs <= fadeOutEnd) {
@@ -75,8 +78,16 @@ export function createOrbTeleportPreview({ els, getOrbBaseVisualState = null } =
       return elapsedMs < totalEnd;
     }
 
-    const progress = Math.max(0, Math.min(1, (elapsedMs - fadeOutEnd) / Math.max(1, cfg.fadeInMs)));
-    const flicker = buildFlickerMask(elapsedMs - fadeOutEnd, cfg.flickerOnMs, cfg.flickerOffMs);
+    if (elapsedMs < fadeInStart) {
+      els.orb.hidden = false;
+      els.orb.style.transform = "";
+      els.orb.style.opacity = "0";
+      return true;
+    }
+
+    const fadeInElapsedMs = elapsedMs - fadeInStart;
+    const progress = Math.max(0, Math.min(1, fadeInElapsedMs / Math.max(1, cfg.fadeInMs)));
+    const flicker = buildFlickerMask(fadeInElapsedMs, cfg.flickerOnMs, cfg.flickerOffMs);
     els.orb.hidden = false;
     els.orb.style.transform = "";
     els.orb.style.opacity = String(progress * flicker);
@@ -113,6 +124,7 @@ export function createOrbTeleportPreview({ els, getOrbBaseVisualState = null } =
       els && els.orbTeleportApplyFlickerOnBtn,
       els && els.orbTeleportApplyFlickerOffBtn,
       els && els.orbTeleportApplyFadeOutBtn,
+      els && els.orbTeleportApplyCameraTravelBtn,
       els && els.orbTeleportApplyFadeInBtn,
     ].forEach((btn) => {
       if (btn) btn.addEventListener("click", apply);
