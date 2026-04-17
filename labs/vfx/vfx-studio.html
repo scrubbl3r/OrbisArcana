@@ -1203,7 +1203,7 @@
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
       updateEffectSections as updateEffectSectionsHelper,
-    } from "./studio/vfx-studio-shell.js?v=20260411b";
+    } from "./studio/vfx-studio-shell.js?v=20260416a";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
@@ -1908,7 +1908,8 @@
     }
 
     function publishPreset(){
-      if (isSelectedEffectLocked()) {
+      const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[String(selectedBaseEffect() || "")] || null;
+      if (isSelectedEffectLocked() && !liveTarget) {
         window.alert("This effect profile is locked. Unlock it to publish a preset.");
         return;
       }

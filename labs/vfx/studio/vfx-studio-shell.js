@@ -21,8 +21,9 @@ export function refreshLockUi({
   lockEffectBtn.disabled = !opt || !!(opt && opt.disabled) || isTemplateSeed;
 
   const blockSave = locked || isTemplateSeed;
+  const blockPublish = isTemplateSeed || (locked && !isCore);
   if (saveDraftBtn) saveDraftBtn.disabled = blockSave;
-  if (publishPresetBtn) publishPresetBtn.disabled = blockSave;
+  if (publishPresetBtn) publishPresetBtn.disabled = blockPublish;
   if (bindBtn) bindBtn.disabled = blockSave;
   if (deleteEffectBtn) deleteEffectBtn.disabled = blockSave || !!(opt && opt.disabled);
 }
