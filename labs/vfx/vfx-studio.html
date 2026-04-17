@@ -2761,8 +2761,19 @@
       }
     }
 
+    function selectedBehaviorEffect(){
+      const opt = selectedEffectOption();
+      const registryId = String(opt && opt.dataset && opt.dataset.registryId || "").trim().toLowerCase();
+      const baseEffect = String(opt && opt.dataset && opt.dataset.baseEffect || opt && opt.value || "").trim().toLowerCase();
+      const selectedTargetId = String(els.bindingTargetSelect && els.bindingTargetSelect.value || "").trim().toLowerCase();
+      const defaultTargetId = DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
+      const targetId = selectedTargetId || String(defaultTargetId || "").trim().toLowerCase();
+      if (registryId === "spell.teleport" || baseEffect === "teleport" || targetId === "spell.teleport") return "teleport";
+      return "";
+    }
+
     function updateBehaviorSections(){
-      const effect = selectedBaseEffect();
+      const effect = selectedBehaviorEffect();
       const hasBehaviorSurface = effect === "teleport";
       document.querySelectorAll(".behaviorSection[data-behavior-effect]").forEach((section) => {
         const target = section.getAttribute("data-behavior-effect");
@@ -2772,6 +2783,7 @@
 
     if (els.vfxTabBtn) els.vfxTabBtn.addEventListener("click", () => setAuthoringTab("vfx"));
     if (els.behaviorTabBtn) els.behaviorTabBtn.addEventListener("click", () => setAuthoringTab("behavior"));
+    if (els.bindingTargetSelect) els.bindingTargetSelect.addEventListener("change", updateBehaviorSections);
 
     function updateEffectSections(){
       const result = updateEffectSectionsHelper({
@@ -2785,9 +2797,9 @@
         refreshEffectMeta,
         previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
       });
-      updateBehaviorSections();
       alignBindingTargetToSelectedEffect();
       refreshBindingPanel();
+      updateBehaviorSections();
       requestAnimationFrame(autoPreviewSelectedEffect);
       return result;
     }
