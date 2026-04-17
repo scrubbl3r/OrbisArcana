@@ -183,6 +183,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     opt.dataset.spawnBaseEffect = String(optionDef.spawnBaseEffect || optionDef.baseEffect || optionDef.value || "");
     opt.dataset.category = category;
     opt.dataset.locked = String(optionDef.locked ? "true" : "false");
+    if (optionDef.registryId) opt.dataset.registryId = String(optionDef.registryId);
     if (category === "orb" && targetGroup.firstChild) {
       targetGroup.insertBefore(opt, targetGroup.firstChild);
     } else {

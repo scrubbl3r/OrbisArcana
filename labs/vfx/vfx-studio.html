@@ -1224,7 +1224,7 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260416b";
+    } from "./studio/vfx-studio-state.js?v=20260416c";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1261,9 +1261,10 @@
       "spell.shockwave_ring": "shockwave",
       "spell.teleport": "teleport",
       "orb.nod": "orb-nod",
+      "orb.globe": "orb-globe",
       "world.globe": "world-globe",
     });
-    const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi"]);
+    const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi", "orb.globe"]);
     const DEFAULT_BIND_TARGET_BY_EFFECT_ID = Object.freeze({
       "spell.aoe_electric": "spell.aoe_electric",
       "spell.aoe_flame": "spell.aoe_flame",
@@ -1271,6 +1272,7 @@
       "spell.shockwave_ring": "spell.shockwave",
       "spell.teleport": "spell.teleport",
       "orb.nod": "orb-state.nod",
+      "orb.globe": "orb-state.globe_loaded",
       "orb.shatter_voronoi": "orb-state.shattered",
       "electric-aoe": "spell.aoe_electric",
       "flame-aoe": "spell.aoe_flame",
@@ -1278,6 +1280,7 @@
       "shockwave": "spell.shockwave",
       "teleport": "spell.teleport",
       "orb-nod": "orb-state.nod",
+      "orb-globe": "orb-state.globe_loaded",
       "orb-shatter": "orb-state.shattered",
     });
     const CATEGORY_LABELS = Object.freeze({
@@ -1289,7 +1292,7 @@
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
       { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
       { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
-      { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", locked: true },
+      { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", registryId: "orb.globe", locked: true },
       { value: "orb-lifecycle", label: "Orb Lifecycle", baseEffect: "orb-lifecycle", category: "orb", locked: true },
     ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
