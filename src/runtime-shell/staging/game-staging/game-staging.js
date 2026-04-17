@@ -30,8 +30,8 @@ const GAME_STAGING_TEMPLATE = `
             <div id="shockLayer" class="shockLayer" aria-hidden="true"></div>
             <div id="shield" class="shield atOrigin" aria-label="Stability shield"></div>
             <div id="orb" class="orb atOrigin" aria-label="Orb"></div>
-            <div id="orbInterior" class="orbInterior atOrigin" aria-hidden="true"></div>
             <svg id="orbCracks" class="orbCracks atOrigin" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
+            <div id="orbInterior" class="orbInterior atOrigin" aria-hidden="true"></div>
             <svg id="orbShards" class="orbShards atOrigin" viewBox="-80 -80 160 160" aria-hidden="true"></svg>
           </div>
         </div>
