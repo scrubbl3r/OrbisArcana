@@ -2712,6 +2712,7 @@
       });
       alignBindingTargetToSelectedEffect();
       refreshBindingPanel();
+      requestAnimationFrame(autoPreviewSelectedEffect);
       return result;
     }
     bootStudioShell({
@@ -2860,6 +2861,50 @@
     const applyOrbTeleport = orbTeleportPreview.apply;
     const clearOrbTeleport = orbTeleportPreview.clear;
     orbTeleportPreview.wire();
+
+    function autoPreviewSelectedEffect(){
+      try {
+        switch (selectedBaseEffect()) {
+          case "bubble-shield":
+            playShield();
+            return;
+          case "shockwave":
+            playShock();
+            return;
+          case "flame-aoe":
+            playFlame();
+            return;
+          case "electric-aoe":
+            playElectric();
+            return;
+          case "orb-base":
+            applyOrbBase();
+            return;
+          case "orb-template":
+            applyOrbTemplate();
+            return;
+          case "orb-nod":
+            applyOrbNod();
+            return;
+          case "orb-lifecycle":
+            applyOrbLifecycle();
+            return;
+          case "orb-globe":
+            applyOrbGlobe();
+            return;
+          case "world-globe":
+            applyWorldGlobe();
+            return;
+          case "teleport":
+            applyOrbTeleport();
+            return;
+          default:
+            return;
+        }
+      } catch (err) {
+        console.error("autoPreviewSelectedEffect failed", err);
+      }
+    }
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){
