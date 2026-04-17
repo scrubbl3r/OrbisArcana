@@ -1390,27 +1390,6 @@
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260416b";
 
     const $ = (id) => document.getElementById(id);
-    const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze({
-      "spell.aoe_electric": "electric-aoe",
-      "spell.aoe_flame": "flame-aoe",
-      "spell.shield_bubble": "bubble-shield",
-      "spell.shockwave_ring": "shockwave",
-      "spell.teleport": "teleport",
-      "orb.nod": "orb-nod",
-      "orb.globe": "orb-globe",
-      "world.globe": "world-globe",
-    });
-    const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(["orb.shatter_voronoi", "orb.globe"]);
-    const DEFAULT_BIND_TARGET_BY_REGISTRY_ID = Object.freeze({
-      "spell.aoe_electric": "spell.aoe_electric",
-      "spell.aoe_flame": "spell.aoe_flame",
-      "spell.shield_bubble": "spell.bubble_shield",
-      "spell.shockwave_ring": "spell.shockwave",
-      "spell.teleport": "spell.teleport",
-      "orb.nod": "orb-state.nod",
-      "orb.globe": "orb-state.globe_loaded",
-      "orb.shatter_voronoi": "orb-state.shattered",
-    });
     const CATEGORY_LABELS = Object.freeze({
       spell: "spell",
       orb: "orb",
@@ -1428,26 +1407,31 @@
     const LAB_EFFECT_SURFACES = Object.freeze({
       "electric-aoe": Object.freeze({
         category: "spell",
+        registryIds: Object.freeze(["spell.aoe_electric"]),
         defaultBindTarget: "spell.aoe_electric",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "electric-aoe-default.js"], exportName: "ELECTRIC_AOE_PRESET_DEFAULT" }),
       }),
       "flame-aoe": Object.freeze({
         category: "spell",
+        registryIds: Object.freeze(["spell.aoe_flame"]),
         defaultBindTarget: "spell.aoe_flame",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "flame-aoe-default.js"], exportName: "FLAME_AOE_PRESET_DEFAULT" }),
       }),
       "bubble-shield": Object.freeze({
         category: "spell",
+        registryIds: Object.freeze(["spell.shield_bubble"]),
         defaultBindTarget: "spell.bubble_shield",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "bubble-shield-default.js"], exportName: "BUBBLE_SHIELD_PRESET_DEFAULT" }),
       }),
       "shockwave": Object.freeze({
         category: "spell",
+        registryIds: Object.freeze(["spell.shockwave_ring"]),
         defaultBindTarget: "spell.shockwave",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "shockwave-default.js"], exportName: "SHOCKWAVE_PRESET_DEFAULT" }),
       }),
       "teleport": Object.freeze({
         category: "spell",
+        registryIds: Object.freeze(["spell.teleport"]),
         defaultBindTarget: "spell.teleport",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "teleport-default.js"], exportName: "TELEPORT_PRESET_DEFAULT" }),
         behavior: Object.freeze({
@@ -1470,13 +1454,15 @@
       }),
       "orb-nod": Object.freeze({
         category: "orb",
+        registryIds: Object.freeze(["orb.nod"]),
         defaultBindTarget: "orb-state.nod",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "orb-nod-default.js"], exportName: "ORB_NOD_PRESET_DEFAULT" }),
       }),
       "orb-globe": Object.freeze({
         label: "Orb Globe",
         category: "orb",
-        registryId: "orb.globe",
+        registryIds: Object.freeze(["orb.globe"]),
+        omitRegistryOption: true,
         builtinOption: true,
         defaultBindTarget: "orb-state.globe_loaded",
         livePreset: Object.freeze({ path: ["src", "game-runtime", "orb", "orb-globe-default.js"], exportName: "ORB_GLOBE_VISUAL_DEFAULTS" }),
@@ -1488,15 +1474,32 @@
       }),
       "orb-shatter": Object.freeze({
         category: "orb",
+        registryIds: Object.freeze(["orb.shatter_voronoi"]),
+        omitRegistryOption: true,
         defaultBindTarget: "orb-state.shattered",
       }),
       "world-globe": Object.freeze({
         category: "world",
+        registryIds: Object.freeze(["world.globe"]),
         livePreset: Object.freeze({ path: ["src", "game-runtime", "world", "world-globe-default.js"], exportName: "WORLD_GLOBE_VISUAL_DEFAULTS" }),
       }),
     });
+    const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES).flatMap(([baseEffect, surface]) => (
+        Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => [String(registryId), baseEffect]) : []
+      )))
+    );
+    const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(
+      Object.entries(LAB_EFFECT_SURFACES).flatMap(([, surface]) => (
+        surface.omitRegistryOption && Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => String(registryId)) : []
+      ))
+    );
     const DEFAULT_BIND_TARGET_BY_EFFECT_ID = Object.freeze({
-      ...DEFAULT_BIND_TARGET_BY_REGISTRY_ID,
+      ...Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES).flatMap(([, surface]) => (
+        surface.defaultBindTarget && Array.isArray(surface.registryIds)
+          ? surface.registryIds.map((registryId) => [String(registryId), surface.defaultBindTarget])
+          : []
+      ))),
       ...Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
         .filter(([, surface]) => surface.defaultBindTarget)
         .map(([baseEffect, surface]) => [baseEffect, surface.defaultBindTarget])),
@@ -1509,7 +1512,7 @@
           label: surface.label || baseEffect,
           baseEffect,
           category: surface.category || "orb",
-          registryId: surface.registryId || "",
+          registryId: Array.isArray(surface.registryIds) ? surface.registryIds[0] || "" : "",
           locked: true,
         }))
     );
