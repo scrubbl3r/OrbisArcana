@@ -136,6 +136,7 @@ export function bootStudioShell({
   toggleSelectedEffectLock,
   refreshProjectConnectUi,
   refreshLockUi,
+  initEffectSections = true,
 }) {
   if (effectSelect) {
     loadDraftStore();
@@ -143,10 +144,12 @@ export function bootStudioShell({
     populateBindingWordOptions();
     setDraftHydrationDone(true);
     effectSelect.addEventListener("change", updateEffectSections);
-    try {
-      updateEffectSections();
-    } catch (err) {
-      console.error("updateEffectSections init failed", err);
+    if (initEffectSections) {
+      try {
+        updateEffectSections();
+      } catch (err) {
+        console.error("updateEffectSections init failed", err);
+      }
     }
   }
   if (newEffectBtn) newEffectBtn.addEventListener("click", createCustomEffectProfile);

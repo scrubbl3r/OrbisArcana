@@ -1336,7 +1336,7 @@
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
       updateEffectSections as updateEffectSectionsHelper,
-    } from "./studio/vfx-studio-shell.js?v=20260416a";
+    } from "./studio/vfx-studio-shell.js?v=20260417a";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
@@ -1482,6 +1482,12 @@
         path: ["src", "game-runtime", "behaviors", "teleport-behavior-default.js"],
         exportName: "TELEPORT_BEHAVIOR_DEFAULT",
       },
+    });
+    const LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT = Object.freeze({
+      "teleport": buildTeleportBehaviorModule,
+    });
+    const BEHAVIOR_BASE_EFFECT_BY_TARGET_ID = Object.freeze({
+      "spell.teleport": "teleport",
     });
 
     const els = {
@@ -1786,27 +1792,17 @@
       return populateBindingTargetOptionsHelper(els.bindingTargetSelect, RUNTIME_EFFECT_TARGET_REGISTRY);
     }
 
-    function selectedEffectLooksLikeTeleport(opt = selectedEffectOption()){
-      if (!opt) return false;
+    function defaultBindTargetForEffect(opt = selectedEffectOption()){
+      if (!opt) return "";
       const registryId = String(opt.dataset.registryId || "").trim().toLowerCase();
-      const baseEffect = String(opt.dataset.baseEffect || "").trim().toLowerCase();
-      const value = String(opt.value || "").trim().toLowerCase();
-      const label = String(opt.textContent || "").trim().toLowerCase();
-      return registryId === "spell.teleport"
-        || baseEffect === "teleport"
-        || value === "teleport"
-        || value.includes(":teleport")
-        || label === "teleport";
+      const baseEffect = String(opt.dataset.baseEffect || opt.value || "").trim().toLowerCase();
+      return DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
     }
 
     function alignBindingTargetToSelectedEffect(){
       const opt = selectedEffectOption();
       if (!opt || !els.bindingTargetSelect) return;
-      const registryId = String(opt.dataset.registryId || "").trim().toLowerCase();
-      const baseEffect = String(opt.dataset.baseEffect || opt.value || "").trim().toLowerCase();
-      const desiredTargetId = selectedEffectLooksLikeTeleport(opt)
-        ? "spell.teleport"
-        : DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
+      const desiredTargetId = defaultBindTargetForEffect(opt);
       if (!desiredTargetId) return;
       const hasTarget = Array.from(els.bindingTargetSelect.options).some((entry) => String(entry.value || "").trim().toLowerCase() === desiredTargetId);
       if (!hasTarget) return;
@@ -2151,16 +2147,18 @@
         if (projectRootDirHandle) {
           const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
           const behaviorTarget = LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
+          const buildBehaviorModule = LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
+          const canPublishBehavior = !!behaviorTarget && typeof buildBehaviorModule === "function";
           if (liveTarget) {
             const moduleText = buildLivePresetModuleForBaseEffect(built.payload.baseEffect, built.payload.params);
             if (moduleText) {
               ok = await saveTextToConnectedProjectPath(liveTarget.path, moduleText);
-              if (ok && behaviorTarget) {
-                const behaviorModuleText = buildTeleportBehaviorModule(built.payload.params);
+              if (ok && canPublishBehavior) {
+                const behaviorModuleText = buildBehaviorModule(built.payload.params);
                 ok = await saveTextToConnectedProjectPath(behaviorTarget.path, behaviorModuleText);
               }
               if (ok) {
-                window.alert(behaviorTarget
+                window.alert(canPublishBehavior
                   ? `Published live preset and behavior to ${liveTarget.path.join("/")} + ${behaviorTarget.path.join("/")}`
                   : `Published live preset to ${liveTarget.path.join("/")}`);
                 return;
@@ -2812,13 +2810,11 @@
 
     function selectedBehaviorEffect(){
       const opt = selectedEffectOption();
-      const registryId = String(opt && opt.dataset && opt.dataset.registryId || "").trim().toLowerCase();
       const baseEffect = String(opt && opt.dataset && opt.dataset.baseEffect || opt && opt.value || "").trim().toLowerCase();
+      if (LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT[baseEffect]) return baseEffect;
       const selectedTargetId = String(els.bindingTargetSelect && els.bindingTargetSelect.value || "").trim().toLowerCase();
-      const defaultTargetId = DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
-      const targetId = selectedTargetId || String(defaultTargetId || "").trim().toLowerCase();
-      if (selectedEffectLooksLikeTeleport(opt) || targetId === "spell.teleport") return "teleport";
-      return "";
+      const targetId = selectedTargetId || String(defaultBindTargetForEffect(opt) || "").trim().toLowerCase();
+      return BEHAVIOR_BASE_EFFECT_BY_TARGET_ID[targetId] || "";
     }
 
     function readTeleportPreviewNumber(el, min, max, fallback){
@@ -2859,7 +2855,7 @@
 
     function updateBehaviorSections(){
       const effect = selectedBehaviorEffect();
-      const hasBehaviorSurface = effect === "teleport";
+      const hasBehaviorSurface = !!effect;
       document.querySelectorAll(".behaviorSection[data-behavior-effect]").forEach((section) => {
         const target = section.getAttribute("data-behavior-effect");
         section.hidden = hasBehaviorSurface ? target !== effect : target !== "default";
@@ -2889,6 +2885,18 @@
       requestAnimationFrame(autoPreviewSelectedEffect);
       return result;
     }
+
+    function settleSelectedEffectState(){
+      const result = updateEffectSections();
+      requestAnimationFrame(() => {
+        alignBindingTargetToSelectedEffect();
+        refreshBindingPanel();
+        updateBehaviorSections();
+        autoPreviewSelectedEffect();
+      });
+      return result;
+    }
+
     bootStudioShell({
       effectSelect: els.effectSelect,
       loadDraftStore,
@@ -2918,6 +2926,7 @@
       toggleSelectedEffectLock,
       refreshProjectConnectUi,
       refreshLockUi,
+      initEffectSections: false,
     });
 
     // =========================================================================
@@ -3063,6 +3072,7 @@
     ].forEach((btn) => {
       if (btn) btn.addEventListener("click", updateTeleportBehaviorReadout);
     });
+    requestAnimationFrame(settleSelectedEffectState);
 
     function autoPreviewSelectedEffect(){
       try {
