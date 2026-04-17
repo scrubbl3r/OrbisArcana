@@ -1,4 +1,4 @@
-import { ORB_GLOBE_VISUAL_DEFAULTS as ORB_GLOBE_VISUAL_DEFAULTS_FILE } from "./orb-globe-default.js";
+import { ORB_GLOBE_VISUAL_DEFAULTS as ORB_GLOBE_VISUAL_DEFAULTS_FILE } from "./orb-globe-default.js?v=20260416b";
 import { ORB_BASE_SCALE_REFERENCE_DIAMETER_PX } from "./orb-base-state.js";
 
 function clamp01(v) {

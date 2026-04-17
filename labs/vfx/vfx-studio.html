@@ -1194,7 +1194,7 @@
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260412a";
-    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416e";
+    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416f";
     import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260416a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260414a";
     import {
@@ -1224,7 +1224,7 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260416a";
+    } from "./studio/vfx-studio-state.js?v=20260416b";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1239,7 +1239,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260416a";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260416b";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
@@ -1249,9 +1249,9 @@
       TELEPORT_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260410b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
-    import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260411a";
+    import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260416b";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
-    import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260411a";
+    import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260416b";
 
     const $ = (id) => document.getElementById(id);
     const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze({
@@ -1796,15 +1796,15 @@
             orbGlobeOrbitDistanceRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceRatio.toFixed(2)),
             orbGlobeOrbitDistanceMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceMinPx),
             orbGlobeOrbitRadiusMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusMinPx),
-            orbGlobeSpeedMin: 1.8,
-            orbGlobeSpeedMax: 2.45,
-            orbGlobeDriftMin: 0.03,
-            orbGlobeDriftMax: 0.18,
-            orbGlobeInnerSpeedMin: 80,
-            orbGlobeInnerSpeedMax: 150,
-            orbGlobeInnerDriftMin: 0.08,
-            orbGlobeInnerDriftMax: 0.28,
-            orbGlobeInnerPaddingPx: 6,
+            orbGlobeSpeedMin: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMin.toFixed(2)),
+            orbGlobeSpeedMax: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMax.toFixed(2)),
+            orbGlobeDriftMin: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMin.toFixed(2)),
+            orbGlobeDriftMax: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMax.toFixed(2)),
+            orbGlobeInnerSpeedMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMinPxPerSec),
+            orbGlobeInnerSpeedMax: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMaxPxPerSec),
+            orbGlobeInnerDriftMin: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMin.toFixed(2)),
+            orbGlobeInnerDriftMax: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMax.toFixed(2)),
+            orbGlobeInnerPaddingPx: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx),
           };
         case "world-globe":
           return {};

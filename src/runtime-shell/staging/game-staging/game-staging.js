@@ -11,7 +11,7 @@ import {
 import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
-} from "../../../game-runtime/orb/orb-globe-base-state.js";
+} from "../../../game-runtime/orb/orb-globe-base-state.js?v=20260416b";
 
 const GAME_STAGING_TEMPLATE = `
   <section class="gameStaging" aria-label="Game staging">
