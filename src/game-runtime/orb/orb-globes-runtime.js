@@ -196,7 +196,7 @@ export function createOrbGlobesRuntime({
 
   function spawnInnerGlobe(payload = {}) {
     const axis = String(payload.axis || "").toLowerCase();
-    const color = axis ? axisColor(axis) : null;
+    const color = axis ? axisColor(axis, { fillAlpha: 1 }) : null;
     const r = innerGlobeDiameterPx() * 0.5;
     const speeds = innerSpeedRange();
     const drifts = innerDriftRange();
@@ -249,7 +249,7 @@ export function createOrbGlobesRuntime({
     if (!g && !s) return;
     const existing = inner.particles.find((p) => (g && p.globeId === g) || (s && p.slot === s));
     const a = String(axis || "").toLowerCase() || (existing && existing.axis) || randomOrbitAxis();
-    const color = axisColor(a);
+    const color = axisColor(a, { fillAlpha: 1 });
     if (existing) {
       existing.globeId = g || existing.globeId || "";
       existing.emitterId = String(emitterId || existing.emitterId || "");
@@ -285,10 +285,10 @@ export function createOrbGlobesRuntime({
     renderInnerGlobes();
   }
 
-  function axisColor(axis) {
+  function axisColor(axis, { fillAlpha = 0.28 } = {}) {
     const c = axisColorProvider(axis);
     const stroke = color01ToRgba(c, 0.98);
-    const fill = color01ToRgba(c, 0.28);
+    const fill = color01ToRgba(c, fillAlpha);
     const glowOuter = color01ToRgba(c, 0.30);
     const glowInner = color01ToRgba(c, 0.34);
     return {
