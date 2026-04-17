@@ -1417,12 +1417,6 @@
       world: "world",
       enemy: "enemy",
     });
-    const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze([
-      { value: "orb-base", label: "Orb Base", baseEffect: "orb-base", category: "orb", locked: true },
-      { value: "orb-template", label: "Orb Template", baseEffect: "orb-template", category: "orb", locked: true },
-      { value: "orb-globe", label: "Orb Globe", baseEffect: "orb-globe", category: "orb", registryId: "orb.globe", locked: true },
-      { value: "orb-lifecycle", label: "Orb Lifecycle", baseEffect: "orb-lifecycle", category: "orb", locked: true },
-    ]);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
     const draftStore = createDraftStore();
     let draftHydrationDone = false;
@@ -1464,11 +1458,15 @@
         }),
       }),
       "orb-base": Object.freeze({
+        label: "Orb Base",
         category: "orb",
+        builtinOption: true,
         livePreset: Object.freeze({ path: ["src", "game-runtime", "orb", "orb-base-default.js"], exportName: "ORB_BASE_VISUAL_DEFAULTS" }),
       }),
       "orb-template": Object.freeze({
+        label: "Orb Template",
         category: "orb",
+        builtinOption: true,
       }),
       "orb-nod": Object.freeze({
         category: "orb",
@@ -1476,12 +1474,17 @@
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "orb-nod-default.js"], exportName: "ORB_NOD_PRESET_DEFAULT" }),
       }),
       "orb-globe": Object.freeze({
+        label: "Orb Globe",
         category: "orb",
+        registryId: "orb.globe",
+        builtinOption: true,
         defaultBindTarget: "orb-state.globe_loaded",
         livePreset: Object.freeze({ path: ["src", "game-runtime", "orb", "orb-globe-default.js"], exportName: "ORB_GLOBE_VISUAL_DEFAULTS" }),
       }),
       "orb-lifecycle": Object.freeze({
+        label: "Orb Lifecycle",
         category: "orb",
+        builtinOption: true,
       }),
       "orb-shatter": Object.freeze({
         category: "orb",
@@ -1498,6 +1501,18 @@
         .filter(([, surface]) => surface.defaultBindTarget)
         .map(([baseEffect, surface]) => [baseEffect, surface.defaultBindTarget])),
     });
+    const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze(
+      Object.entries(LAB_EFFECT_SURFACES)
+        .filter(([, surface]) => surface.builtinOption)
+        .map(([baseEffect, surface]) => ({
+          value: baseEffect,
+          label: surface.label || baseEffect,
+          baseEffect,
+          category: surface.category || "orb",
+          registryId: surface.registryId || "",
+          locked: true,
+        }))
+    );
     const LIVE_PRESET_MODULES_BY_BASE_EFFECT = Object.freeze(
       Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
         .filter(([, surface]) => surface.livePreset)
