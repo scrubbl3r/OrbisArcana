@@ -1477,18 +1477,32 @@
         exportName: "TELEPORT_PRESET_DEFAULT",
       },
     });
-    const LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT = Object.freeze({
-      "teleport": {
+    const LAB_BEHAVIOR_SURFACES = Object.freeze({
+      "teleport": Object.freeze({
+        baseEffect: "teleport",
+        targetIds: Object.freeze(["spell.teleport"]),
         path: ["src", "game-runtime", "behaviors", "teleport-behavior-default.js"],
         exportName: "TELEPORT_BEHAVIOR_DEFAULT",
-      },
+        buildModule: buildTeleportBehaviorModule,
+      }),
     });
-    const LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT = Object.freeze({
-      "teleport": buildTeleportBehaviorModule,
-    });
-    const BEHAVIOR_BASE_EFFECT_BY_TARGET_ID = Object.freeze({
-      "spell.teleport": "teleport",
-    });
+    const LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_BEHAVIOR_SURFACES).map(([baseEffect, surface]) => [
+        baseEffect,
+        { path: surface.path, exportName: surface.exportName },
+      ]))
+    );
+    const LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_BEHAVIOR_SURFACES).map(([baseEffect, surface]) => [
+        baseEffect,
+        surface.buildModule,
+      ]))
+    );
+    const BEHAVIOR_BASE_EFFECT_BY_TARGET_ID = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_BEHAVIOR_SURFACES).flatMap(([baseEffect, surface]) => (
+        Array.isArray(surface.targetIds) ? surface.targetIds.map((targetId) => [String(targetId).trim().toLowerCase(), baseEffect]) : []
+      )))
+    );
 
     const els = {
       stage: $("stage"),
