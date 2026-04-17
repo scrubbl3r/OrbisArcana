@@ -288,6 +288,17 @@
       text-transform:uppercase;
       color:var(--text-strong);
     }
+    .behaviorReadout{
+      margin-top:10px;
+      border:1px solid rgba(var(--frame-rgb), .18);
+      border-radius:10px;
+      background:rgba(0,0,0,.22);
+      color:var(--text-muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.35;
+      padding:9px 10px;
+    }
     .bindingPanel{
       margin: 0;
       padding: 10px 12px;
@@ -1267,6 +1278,11 @@
         </div>
         <div class="behaviorSection" data-behavior-effect="teleport" hidden>
           <h3 class="behaviorTitle">Teleport Behavior</h3>
+          <div class="row">
+            <button id="applyTeleportBehaviorBtn" class="toolBtn" type="button">Apply Behavior</button>
+            <button id="previewTeleportBehaviorBtn" class="toolBtn" type="button">Preview Behavior</button>
+          </div>
+          <div id="teleportBehaviorReadout" class="behaviorReadout" aria-live="polite"></div>
           <div class="paramFieldRows">
             <div class="paramFieldRow">
               <label for="orbTeleportCameraTravelMs">Camera travel (ms)</label>
@@ -1627,6 +1643,9 @@
       orbTeleportApplyFlickerOffBtn: $("orbTeleportApplyFlickerOffBtn"),
       orbTeleportFadeOutMs: $("orbTeleportFadeOutMs"),
       orbTeleportApplyFadeOutBtn: $("orbTeleportApplyFadeOutBtn"),
+      applyTeleportBehaviorBtn: $("applyTeleportBehaviorBtn"),
+      previewTeleportBehaviorBtn: $("previewTeleportBehaviorBtn"),
+      teleportBehaviorReadout: $("teleportBehaviorReadout"),
       orbTeleportCameraTravelMs: $("orbTeleportCameraTravelMs"),
       orbTeleportApplyCameraTravelBtn: $("orbTeleportApplyCameraTravelBtn"),
       orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
@@ -2802,6 +2821,42 @@
       return "";
     }
 
+    function readTeleportPreviewNumber(el, min, max, fallback){
+      const value = Number(el && el.value);
+      return Math.round(clamp(Number.isFinite(value) ? value : fallback, min, max));
+    }
+
+    function readTeleportBehaviorPreviewConfig(){
+      return {
+        fadeOutMs: readTeleportPreviewNumber(
+          els.orbTeleportFadeOutMs,
+          40,
+          4000,
+          TELEPORT_PRESET_DEFAULT.orbTeleportFadeOutMs
+        ),
+        cameraTravelMs: readTeleportPreviewNumber(
+          els.orbTeleportCameraTravelMs,
+          0,
+          8000,
+          TELEPORT_BEHAVIOR_DEFAULT.cameraTravelMs
+        ),
+        fadeInMs: readTeleportPreviewNumber(
+          els.orbTeleportFadeInMs,
+          40,
+          4000,
+          TELEPORT_PRESET_DEFAULT.orbTeleportFadeInMs
+        ),
+        easing: String(TELEPORT_BEHAVIOR_DEFAULT.cameraEasing || "easeInOutExpo"),
+      };
+    }
+
+    function updateTeleportBehaviorReadout(){
+      if (!els.teleportBehaviorReadout) return;
+      const cfg = readTeleportBehaviorPreviewConfig();
+      const totalMs = cfg.fadeOutMs + cfg.cameraTravelMs + cfg.fadeInMs;
+      els.teleportBehaviorReadout.textContent = `VFX fade-out ${cfg.fadeOutMs}ms -> camera travel ${cfg.cameraTravelMs}ms (${cfg.easing}) -> VFX fade-in ${cfg.fadeInMs}ms. Total ${totalMs}ms.`;
+    }
+
     function updateBehaviorSections(){
       const effect = selectedBehaviorEffect();
       const hasBehaviorSurface = effect === "teleport";
@@ -2809,6 +2864,7 @@
         const target = section.getAttribute("data-behavior-effect");
         section.hidden = hasBehaviorSurface ? target !== effect : target !== "default";
       });
+      if (effect === "teleport") updateTeleportBehaviorReadout();
     }
 
     if (els.vfxTabBtn) els.vfxTabBtn.addEventListener("click", () => setAuthoringTab("vfx"));
@@ -2978,7 +3034,35 @@
     });
     const applyOrbTeleport = orbTeleportPreview.apply;
     const clearOrbTeleport = orbTeleportPreview.clear;
+    const playOrbTeleport = orbTeleportPreview.play;
     orbTeleportPreview.wire();
+    updateTeleportBehaviorReadout();
+    if (els.applyTeleportBehaviorBtn) {
+      els.applyTeleportBehaviorBtn.addEventListener("click", () => {
+        updateTeleportBehaviorReadout();
+        applyOrbTeleport();
+      });
+    }
+    if (els.previewTeleportBehaviorBtn) {
+      els.previewTeleportBehaviorBtn.addEventListener("click", () => {
+        updateTeleportBehaviorReadout();
+        playOrbTeleport();
+      });
+    }
+    [
+      els.orbTeleportFadeOutMs,
+      els.orbTeleportCameraTravelMs,
+      els.orbTeleportFadeInMs,
+    ].forEach((field) => {
+      if (field) field.addEventListener("input", updateTeleportBehaviorReadout);
+    });
+    [
+      els.orbTeleportApplyFadeOutBtn,
+      els.orbTeleportApplyCameraTravelBtn,
+      els.orbTeleportApplyFadeInBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", updateTeleportBehaviorReadout);
+    });
 
     function autoPreviewSelectedEffect(){
       try {
