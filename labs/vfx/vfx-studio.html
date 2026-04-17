@@ -619,6 +619,16 @@
       align-items:center;
       flex-wrap:wrap;
     }
+    .orbGlobeActions{
+      flex-wrap:nowrap;
+      gap:6px;
+    }
+    .orbGlobeActions button{
+      flex:1 1 0;
+      min-width:0;
+      padding:8px 8px;
+      white-space:nowrap;
+    }
 
     button{
       padding:10px 12px;
@@ -1082,13 +1092,12 @@
       </div>
 
       <div class="section" data-effect="orb-globe" hidden>
-        <div class="row">
+        <div class="row orbGlobeActions">
           <button id="previewOrbGlobe">Preview</button>
           <button id="orbGlobeAddBtn" type="button">Add Globe</button>
           <button id="orbGlobeBindBtn" type="button">Bind Globe</button>
-          <button id="orbGlobeClearBtn" type="button">Clear Globes</button>
+          <button id="orbGlobeClearBtn" type="button">Clear</button>
         </div>
-        <div class="bindingEditorHelp">Orb-side globe lifecycle authoring lane. Add simulates catch into loaded orbit, Bind absorbs one loaded globe into the orb interior, and Clear resets the orb-side globe state.</div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
             <label for="orbGlobeInnerDiameterRatio">inner-diameter ratio</label>
@@ -1099,11 +1108,6 @@
             <label for="orbGlobeOrbitRadiusRatio">Orbit radius ratio</label>
             <input id="orbGlobeOrbitRadiusRatio" class="paramFieldInput" type="number" min="0.05" max="0.40" value="0.13" step="0.01" />
             <button id="orbGlobeApplyOrbitRadiusRatioBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbGlobeOrbitOffset">Orbit offset px</label>
-            <input id="orbGlobeOrbitOffset" class="paramFieldInput" type="number" min="0" max="60" value="18" step="1" />
-            <button id="orbGlobeApplyOrbitOffsetBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
             <label for="orbGlobeOrbitDistanceRatio">Orbit distance ratio</label>
@@ -1446,8 +1450,6 @@
       orbGlobeApplyInnerDiameterRatioBtn: $("orbGlobeApplyInnerDiameterRatioBtn"),
       orbGlobeOrbitRadiusRatio: $("orbGlobeOrbitRadiusRatio"),
       orbGlobeApplyOrbitRadiusRatioBtn: $("orbGlobeApplyOrbitRadiusRatioBtn"),
-      orbGlobeOrbitOffset: $("orbGlobeOrbitOffset"),
-      orbGlobeApplyOrbitOffsetBtn: $("orbGlobeApplyOrbitOffsetBtn"),
       orbGlobeOrbitDistanceRatio: $("orbGlobeOrbitDistanceRatio"),
       orbGlobeApplyOrbitDistanceRatioBtn: $("orbGlobeApplyOrbitDistanceRatioBtn"),
       orbGlobeOrbitDistanceMin: $("orbGlobeOrbitDistanceMin"),
@@ -1784,7 +1786,6 @@
           return {
             orbGlobeInnerDiameterRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDiameterRatio.toFixed(2)),
             orbGlobeOrbitRadiusRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusRatio.toFixed(2)),
-            orbGlobeOrbitOffset: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceOffsetPx),
             orbGlobeOrbitDistanceRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceRatio.toFixed(2)),
             orbGlobeOrbitDistanceMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceMinPx),
             orbGlobeOrbitRadiusMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusMinPx),
@@ -2074,7 +2075,6 @@
           return {
             orbGlobeInnerDiameterRatio: Number(els.orbGlobeInnerDiameterRatio && els.orbGlobeInnerDiameterRatio.value),
             orbGlobeOrbitRadiusRatio: Number(els.orbGlobeOrbitRadiusRatio && els.orbGlobeOrbitRadiusRatio.value),
-            orbGlobeOrbitOffset: Number(els.orbGlobeOrbitOffset && els.orbGlobeOrbitOffset.value),
             orbGlobeOrbitDistanceRatio: Number(els.orbGlobeOrbitDistanceRatio && els.orbGlobeOrbitDistanceRatio.value),
             orbGlobeOrbitDistanceMin: Number(els.orbGlobeOrbitDistanceMin && els.orbGlobeOrbitDistanceMin.value),
             orbGlobeOrbitRadiusMin: Number(els.orbGlobeOrbitRadiusMin && els.orbGlobeOrbitRadiusMin.value),
@@ -2180,7 +2180,6 @@
           case "orb-globe":
             if (els.orbGlobeInnerDiameterRatio && settings.orbGlobeInnerDiameterRatio != null) els.orbGlobeInnerDiameterRatio.value = String(settings.orbGlobeInnerDiameterRatio);
             if (els.orbGlobeOrbitRadiusRatio && settings.orbGlobeOrbitRadiusRatio != null) els.orbGlobeOrbitRadiusRatio.value = String(settings.orbGlobeOrbitRadiusRatio);
-            if (els.orbGlobeOrbitOffset && settings.orbGlobeOrbitOffset != null) els.orbGlobeOrbitOffset.value = String(settings.orbGlobeOrbitOffset);
             if (els.orbGlobeOrbitDistanceRatio && settings.orbGlobeOrbitDistanceRatio != null) els.orbGlobeOrbitDistanceRatio.value = String(settings.orbGlobeOrbitDistanceRatio);
             if (els.orbGlobeOrbitDistanceMin && settings.orbGlobeOrbitDistanceMin != null) els.orbGlobeOrbitDistanceMin.value = String(settings.orbGlobeOrbitDistanceMin);
             if (els.orbGlobeOrbitRadiusMin && settings.orbGlobeOrbitRadiusMin != null) els.orbGlobeOrbitRadiusMin.value = String(settings.orbGlobeOrbitRadiusMin);

@@ -191,7 +191,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({",
         `  innerDiameterRatio: ${toNum(p.orbGlobeInnerDiameterRatio, 0.2).toFixed(2)},`,
         `  orbitRadiusRatio: ${toNum(p.orbGlobeOrbitRadiusRatio, 0.13).toFixed(2)},`,
-        `  orbitDistanceOffsetPx: ${Math.round(toNum(p.orbGlobeOrbitOffset, 18))},`,
         `  orbitDistanceRatio: ${toNum(p.orbGlobeOrbitDistanceRatio, 1.10).toFixed(2)},`,
         `  orbitDistanceMinPx: ${Math.round(toNum(p.orbGlobeOrbitDistanceMin, 14))},`,
         `  orbitRadiusMinPx: ${Math.round(toNum(p.orbGlobeOrbitRadiusMin, 5))},`,

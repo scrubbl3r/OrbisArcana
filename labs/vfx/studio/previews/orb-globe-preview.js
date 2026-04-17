@@ -84,7 +84,6 @@ export function createOrbGlobePreview({ els, clamp }) {
     return buildOrbGlobeVisualState({
       innerDiameterRatio: clamp(els.orbGlobeInnerDiameterRatio.value, 0.01, 1),
       orbitRadiusRatio: clamp(els.orbGlobeOrbitRadiusRatio.value, 0.01, 1),
-      orbitDistanceOffsetPx: clamp(els.orbGlobeOrbitOffset.value, 0, 200),
       orbitDistanceRatio: clamp(els.orbGlobeOrbitDistanceRatio.value, 0.1, 3),
       orbitDistanceMinPx: clamp(els.orbGlobeOrbitDistanceMin.value, 0, 200),
       orbitRadiusMinPx: clamp(els.orbGlobeOrbitRadiusMin.value, 0, 100),
@@ -301,7 +300,6 @@ export function createOrbGlobePreview({ els, clamp }) {
     [
       els.orbGlobeApplyInnerDiameterRatioBtn,
       els.orbGlobeApplyOrbitRadiusRatioBtn,
-      els.orbGlobeApplyOrbitOffsetBtn,
       els.orbGlobeApplyOrbitDistanceRatioBtn,
       els.orbGlobeApplyOrbitDistanceMinBtn,
       els.orbGlobeApplyOrbitRadiusMinBtn,
