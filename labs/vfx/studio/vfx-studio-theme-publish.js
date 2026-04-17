@@ -146,7 +146,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  orbTeleportFlickerOnMs: ${Math.round(toNum(p.orbTeleportFlickerOnMs, 60))},`,
         `  orbTeleportFlickerOffMs: ${Math.round(toNum(p.orbTeleportFlickerOffMs, 60))},`,
         `  orbTeleportFadeOutMs: ${Math.round(toNum(p.orbTeleportFadeOutMs, 280))},`,
-        `  orbTeleportCameraTravelMs: ${Math.round(toNum(p.orbTeleportCameraTravelMs, 1500))},`,
         `  orbTeleportFadeInMs: ${Math.round(toNum(p.orbTeleportFadeInMs, 280))},`,
         "});",
         "",
@@ -261,6 +260,20 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     default:
       return "";
   }
+}
+
+export function buildTeleportBehaviorModule(params) {
+  const p = params && typeof params === "object" ? params : {};
+  return [
+    "export const TELEPORT_BEHAVIOR_DEFAULT = Object.freeze({",
+    `  cameraTravelMs: ${Math.round(toNum(p.orbTeleportCameraTravelMs ?? p.cameraTravelMs, 1500))},`,
+    `  cameraEasing: ${JSON.stringify(String(p.cameraEasing || "easeInOutExpo"))},`,
+    "  freezeDuringTeleport: true,",
+    "  teleportAfterFadeOut: true,",
+    "  grantGraceOnComplete: true,",
+    "});",
+    "",
+  ].join("\n");
 }
 
 export function applyLabThemeDefaults({

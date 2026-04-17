@@ -1349,6 +1349,7 @@
     } from "./studio/vfx-studio-bindings.js?v=20260410b";
     import {
       applyLabThemeDefaults,
+      buildTeleportBehaviorModule,
       buildLivePresetModuleForBaseEffect,
       connectProjectFolder as connectProjectFolderHelper,
       downloadTextFile,
@@ -1356,7 +1357,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260417b";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260417c";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
@@ -1365,6 +1366,7 @@
       ORB_NOD_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260417b";
+    import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260416b";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260417a";
@@ -1457,6 +1459,12 @@
       "teleport": {
         path: ["src", "vfx", "presets", "teleport-default.js"],
         exportName: "TELEPORT_PRESET_DEFAULT",
+      },
+    });
+    const LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT = Object.freeze({
+      "teleport": {
+        path: ["src", "game-runtime", "behaviors", "teleport-behavior-default.js"],
+        exportName: "TELEPORT_BEHAVIOR_DEFAULT",
       },
     });
 
@@ -1968,7 +1976,7 @@
             orbTeleportFlickerOnMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOnMs) || 60),
             orbTeleportFlickerOffMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOffMs) || 60),
             orbTeleportFadeOutMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeOutMs) || 280),
-            orbTeleportCameraTravelMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportCameraTravelMs) || 1500),
+            orbTeleportCameraTravelMs: Math.round(Number(TELEPORT_BEHAVIOR_DEFAULT && TELEPORT_BEHAVIOR_DEFAULT.cameraTravelMs) || 1500),
             orbTeleportFadeInMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeInMs) || 280),
           };
         case "orb-lifecycle":
@@ -2123,12 +2131,19 @@
         }
         if (projectRootDirHandle) {
           const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
+          const behaviorTarget = LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
           if (liveTarget) {
             const moduleText = buildLivePresetModuleForBaseEffect(built.payload.baseEffect, built.payload.params);
             if (moduleText) {
               ok = await saveTextToConnectedProjectPath(liveTarget.path, moduleText);
+              if (ok && behaviorTarget) {
+                const behaviorModuleText = buildTeleportBehaviorModule(built.payload.params);
+                ok = await saveTextToConnectedProjectPath(behaviorTarget.path, behaviorModuleText);
+              }
               if (ok) {
-                window.alert(`Published live preset to ${liveTarget.path.join("/")}`);
+                window.alert(behaviorTarget
+                  ? `Published live preset and behavior to ${liveTarget.path.join("/")} + ${behaviorTarget.path.join("/")}`
+                  : `Published live preset to ${liveTarget.path.join("/")}`);
                 return;
               }
             }

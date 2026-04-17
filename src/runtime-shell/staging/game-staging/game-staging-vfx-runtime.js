@@ -1,6 +1,8 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
 import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
+import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js";
+import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
@@ -56,8 +58,10 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
       orbTeleportFlickerOnMs: 60,
       orbTeleportFlickerOffMs: 60,
       orbTeleportFadeOutMs: 280,
-      orbTeleportCameraTravelMs: 1500,
       orbTeleportFadeInMs: 280,
+    },
+    behaviors: {
+      teleport: TELEPORT_BEHAVIOR_DEFAULT,
     },
   };
   defaults.shock.stroke = evenStroke(defaults.shock.stroke, 2, 20);
@@ -177,9 +181,21 @@ export function initGameStagingReceiverVfxRuntime({
       cancelCameraTravel: () => {
         if (typeof cancelCameraTravel === "function") cancelCameraTravel();
       },
-      getConfig: () => (vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object")
-        ? vfxDefaults.teleport
-        : Object.create(null),
+      getConfig: () => ({
+        ...(
+          vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
+            ? vfxDefaults.teleport
+            : Object.create(null)
+        ),
+        ...buildTeleportBehaviorConfig(
+          vfxDefaults &&
+          vfxDefaults.behaviors &&
+          vfxDefaults.behaviors.teleport &&
+          typeof vfxDefaults.behaviors.teleport === "object"
+            ? vfxDefaults.behaviors.teleport
+            : Object.create(null)
+        ),
+      }),
     }),
     flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
     electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,

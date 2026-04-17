@@ -38,6 +38,7 @@ export function createTeleportRuntime({
       flickerOffMs: Math.round(clampNumber(raw.flickerOffMs ?? raw.orbTeleportFlickerOffMs, 10, 1000, 60)),
       fadeOutMs: Math.round(clampNumber(raw.fadeOutMs ?? raw.orbTeleportFadeOutMs, 40, 4000, 280)),
       cameraTravelMs: Math.round(clampNumber(raw.cameraTravelMs ?? raw.orbTeleportCameraTravelMs, 0, 8000, 1500)),
+      cameraEasing: String(raw.cameraEasing || "easeInOutExpo"),
       fadeInMs: Math.round(clampNumber(raw.fadeInMs ?? raw.orbTeleportFadeInMs, 40, 4000, 280)),
       onTeleport: typeof raw.onTeleport === "function" ? raw.onTeleport : null,
       onComplete: typeof raw.onComplete === "function" ? raw.onComplete : null,
@@ -149,7 +150,7 @@ export function createTeleportRuntime({
             fromYW: teleportSourceYW,
             toYW: destinationYW,
             durationMs,
-            easing: "easeInOutExpo",
+            easing: lastConfig.cameraEasing,
           });
           if (maybePromise && typeof maybePromise.then === "function") {
             maybePromise.finally(() => {
