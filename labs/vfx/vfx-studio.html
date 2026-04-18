@@ -1413,7 +1413,7 @@
         previewRootKey: "electricPreviewRoot",
         autoPreviewKey: "playElectric",
         defaultBindTarget: "spell.aoe_electric",
-        livePreset: Object.freeze({ path: ["src", "vfx", "presets", "electric-aoe-default.js"], exportName: "ELECTRIC_AOE_PRESET_DEFAULT" }),
+        livePreset: Object.freeze({ buildKey: "electric-aoe", path: ["src", "vfx", "presets", "electric-aoe-default.js"], exportName: "ELECTRIC_AOE_PRESET_DEFAULT" }),
       }),
       "flame-aoe": Object.freeze({
         category: "spell",
@@ -1423,7 +1423,7 @@
         previewRootKey: "flamePreviewRoot",
         autoPreviewKey: "playFlame",
         defaultBindTarget: "spell.aoe_flame",
-        livePreset: Object.freeze({ path: ["src", "vfx", "presets", "flame-aoe-default.js"], exportName: "FLAME_AOE_PRESET_DEFAULT" }),
+        livePreset: Object.freeze({ buildKey: "flame-aoe", path: ["src", "vfx", "presets", "flame-aoe-default.js"], exportName: "FLAME_AOE_PRESET_DEFAULT" }),
       }),
       "bubble-shield": Object.freeze({
         category: "spell",
@@ -1433,7 +1433,7 @@
         previewRootKey: "shieldPreviewRoot",
         autoPreviewKey: "playShield",
         defaultBindTarget: "spell.bubble_shield",
-        livePreset: Object.freeze({ path: ["src", "vfx", "presets", "bubble-shield-default.js"], exportName: "BUBBLE_SHIELD_PRESET_DEFAULT" }),
+        livePreset: Object.freeze({ buildKey: "bubble-shield", path: ["src", "vfx", "presets", "bubble-shield-default.js"], exportName: "BUBBLE_SHIELD_PRESET_DEFAULT" }),
       }),
       "shockwave": Object.freeze({
         category: "spell",
@@ -1443,7 +1443,7 @@
         previewRootKey: "shockPreviewRoot",
         autoPreviewKey: "playShock",
         defaultBindTarget: "spell.shockwave",
-        livePreset: Object.freeze({ path: ["src", "vfx", "presets", "shockwave-default.js"], exportName: "SHOCKWAVE_PRESET_DEFAULT" }),
+        livePreset: Object.freeze({ buildKey: "shockwave", path: ["src", "vfx", "presets", "shockwave-default.js"], exportName: "SHOCKWAVE_PRESET_DEFAULT" }),
       }),
       "teleport": Object.freeze({
         category: "spell",
@@ -1453,7 +1453,7 @@
         previewRootKey: "orbTeleportPreviewRoot",
         autoPreviewKey: "applyOrbTeleport",
         defaultBindTarget: "spell.teleport",
-        livePreset: Object.freeze({ path: ["src", "vfx", "presets", "teleport-default.js"], exportName: "TELEPORT_PRESET_DEFAULT" }),
+        livePreset: Object.freeze({ buildKey: "teleport", path: ["src", "vfx", "presets", "teleport-default.js"], exportName: "TELEPORT_PRESET_DEFAULT" }),
         behavior: Object.freeze({
           targetIds: Object.freeze(["spell.teleport"]),
           path: ["src", "game-runtime", "behaviors", "teleport-behavior-default.js"],
@@ -1469,7 +1469,7 @@
         builtinOption: true,
         previewRootKey: "orbBasePreviewRoot",
         autoPreviewKey: "applyOrbBase",
-        livePreset: Object.freeze({ path: ["src", "game-runtime", "orb", "orb-base-default.js"], exportName: "ORB_BASE_VISUAL_DEFAULTS" }),
+        livePreset: Object.freeze({ buildKey: "orb-base", path: ["src", "game-runtime", "orb", "orb-base-default.js"], exportName: "ORB_BASE_VISUAL_DEFAULTS" }),
       }),
       "orb-template": Object.freeze({
         label: "Orb Template",
@@ -1489,7 +1489,7 @@
         previewRootKey: "orbNodPreviewRoot",
         autoPreviewKey: "applyOrbNod",
         defaultBindTarget: "orb-state.nod",
-        livePreset: Object.freeze({ path: ["src", "vfx", "presets", "orb-nod-default.js"], exportName: "ORB_NOD_PRESET_DEFAULT" }),
+        livePreset: Object.freeze({ buildKey: "orb-nod", path: ["src", "vfx", "presets", "orb-nod-default.js"], exportName: "ORB_NOD_PRESET_DEFAULT" }),
       }),
       "orb-globe": Object.freeze({
         label: "Orb Globe",
@@ -1502,7 +1502,7 @@
         previewRootKey: "orbGlobePreviewRoot",
         autoPreviewKey: "applyOrbGlobe",
         defaultBindTarget: "orb-state.globe_loaded",
-        livePreset: Object.freeze({ path: ["src", "game-runtime", "orb", "orb-globe-default.js"], exportName: "ORB_GLOBE_VISUAL_DEFAULTS" }),
+        livePreset: Object.freeze({ buildKey: "orb-globe", path: ["src", "game-runtime", "orb", "orb-globe-default.js"], exportName: "ORB_GLOBE_VISUAL_DEFAULTS" }),
       }),
       "orb-lifecycle": Object.freeze({
         label: "Orb Lifecycle",
@@ -1528,7 +1528,7 @@
         registryIds: Object.freeze(["world.globe"]),
         previewRootKey: "worldGlobePreviewRoot",
         autoPreviewKey: "applyWorldGlobe",
-        livePreset: Object.freeze({ path: ["src", "game-runtime", "world", "world-globe-default.js"], exportName: "WORLD_GLOBE_VISUAL_DEFAULTS" }),
+        livePreset: Object.freeze({ buildKey: "world-globe", path: ["src", "game-runtime", "world", "world-globe-default.js"], exportName: "WORLD_GLOBE_VISUAL_DEFAULTS" }),
       }),
     });
     const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze(
@@ -1575,6 +1575,14 @@
       Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
         .filter(([, surface]) => surface.livePreset)
         .map(([baseEffect, surface]) => [baseEffect, surface.livePreset]))
+    );
+    const LIVE_PRESET_BUILDERS_BY_BASE_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
+        .filter(([, surface]) => surface.livePreset)
+        .map(([baseEffect, surface]) => [
+          baseEffect,
+          (params) => buildLivePresetModuleForBaseEffect(surface.livePreset.buildKey || baseEffect, params),
+        ]))
     );
     const LAB_BEHAVIOR_SURFACES = Object.freeze(
       Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
@@ -2269,11 +2277,12 @@
         }
         if (projectRootDirHandle) {
           const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
+          const buildLivePresetModule = LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
           const behaviorTarget = LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
           const buildBehaviorModule = LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
           const canPublishBehavior = !!behaviorTarget && typeof buildBehaviorModule === "function";
-          if (liveTarget) {
-            const moduleText = buildLivePresetModuleForBaseEffect(built.payload.baseEffect, built.payload.params);
+          if (liveTarget && typeof buildLivePresetModule === "function") {
+            const moduleText = buildLivePresetModule(built.payload.params);
             if (moduleText) {
               ok = await saveTextToConnectedProjectPath(liveTarget.path, moduleText);
               if (ok && canPublishBehavior) {
