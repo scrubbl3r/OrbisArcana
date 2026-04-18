@@ -1,6 +1,7 @@
 export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
   createOrbGlobeAuthoringAdapter,
+  createOrbNodAuthoringAdapter,
   createTeleportAuthoringAdapter,
   createWorldGlobeAuthoringAdapter,
 } = {}) {
@@ -91,6 +92,7 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "applyOrbNod",
       defaultBindTarget: "orb-state.nod",
       livePreset: Object.freeze({ buildKey: "orb-nod", path: ["src", "vfx", "presets", "orb-nod-default.js"], exportName: "ORB_NOD_PRESET_DEFAULT" }),
+      authoringAdapter: createOrbNodAuthoringAdapter,
     }),
     "orb-globe": Object.freeze({
       label: "Orb Globe",

@@ -1366,8 +1366,9 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418c";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418d";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
+    import { createOrbNodAuthoringAdapter } from "./studio/adapters/orb-nod-authoring-adapter.js?v=20260418a";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
     import { createWorldGlobeAuthoringAdapter } from "./studio/adapters/world-globe-authoring-adapter.js?v=20260418a";
     import {
@@ -1414,6 +1415,7 @@
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
       createOrbGlobeAuthoringAdapter,
+      createOrbNodAuthoringAdapter,
       createTeleportAuthoringAdapter,
       createWorldGlobeAuthoringAdapter,
     });
@@ -1606,6 +1608,8 @@
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
+      orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
+      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
       worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
       getElementById: $,
     });
@@ -1819,6 +1823,9 @@
             case "orb-globe":
               applyOrbGlobe();
               break;
+            case "orb-nod":
+              applyOrbNod();
+              break;
             case "world-globe":
               applyWorldGlobe();
               break;
@@ -1935,16 +1942,6 @@
           };
         case "orb-template":
           return {};
-        case "orb-nod":
-          return {
-            orbTemplateShrinkPct: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateShrinkPct) || 6),
-            orbTemplateDurationMs: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateDurationMs) || 200),
-            orbTemplateFillAlpha: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateFillAlpha).toFixed(2)),
-            orbTemplateWaveCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateWaveCount) || 10),
-            orbTemplateWaveDepthPx: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateWaveDepthPx) || 10),
-            orbTemplateOscillationSpeedHz: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationSpeedHz) || 12),
-            orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 2),
-          };
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: 16,
@@ -2214,16 +2211,6 @@
           };
         case "orb-template":
           return {};
-        case "orb-nod":
-          return {
-            orbTemplateShrinkPct: Number(els.orbNodShrinkPct && els.orbNodShrinkPct.value),
-            orbTemplateDurationMs: Number(els.orbNodDurationMs && els.orbNodDurationMs.value),
-            orbTemplateFillAlpha: Number(els.orbNodFillAlpha && els.orbNodFillAlpha.value),
-            orbTemplateWaveCount: Number(els.orbNodWaveCount && els.orbNodWaveCount.value),
-            orbTemplateWaveDepthPx: Number(els.orbNodWaveDepthPx && els.orbNodWaveDepthPx.value),
-            orbTemplateOscillationSpeedHz: Number(els.orbNodOscillationSpeedHz && els.orbNodOscillationSpeedHz.value),
-            orbTemplateOscillationCount: Number(els.orbNodOscillationCount && els.orbNodOscillationCount.value),
-          };
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
@@ -2287,26 +2274,6 @@
             break;
           case "orb-template":
             applyOrbLaneSsot(els.orbTemplatePreviewRoot);
-            break;
-          case "orb-nod":
-            if (els.orbNodShrinkPct && settings.orbTemplateShrinkPct != null) els.orbNodShrinkPct.value = String(settings.orbTemplateShrinkPct);
-            if (els.orbNodDurationMs && settings.orbTemplateDurationMs != null) els.orbNodDurationMs.value = String(settings.orbTemplateDurationMs);
-            if (els.orbNodFillAlpha && settings.orbTemplateFillAlpha != null) {
-              els.orbNodFillAlpha.value = String(settings.orbTemplateFillAlpha);
-            } else if (els.orbNodFillAlpha && settings.orbTemplateFillOpacityBoost != null) {
-              const baseFillAlpha = Number(buildCurrentLabOrbBaseVisualState().fillAlpha) || 0.20;
-              const boost01 = Math.max(0, Math.min(1, Number(settings.orbTemplateFillOpacityBoost) / 100));
-              els.orbNodFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
-            } else if (els.orbNodFillAlpha && settings.orbTemplateBrightnessBoost != null) {
-              const baseFillAlpha = Number(buildCurrentLabOrbBaseVisualState().fillAlpha) || 0.20;
-              const boost01 = Math.max(0, Math.min(1, Number(settings.orbTemplateBrightnessBoost) / 100));
-              els.orbNodFillAlpha.value = String((baseFillAlpha + ((1 - baseFillAlpha) * boost01)).toFixed(2));
-            }
-            if (els.orbNodWaveCount && settings.orbTemplateWaveCount != null) els.orbNodWaveCount.value = String(settings.orbTemplateWaveCount);
-            if (els.orbNodWaveDepthPx && settings.orbTemplateWaveDepthPx != null) els.orbNodWaveDepthPx.value = String(settings.orbTemplateWaveDepthPx);
-            if (els.orbNodOscillationSpeedHz && settings.orbTemplateOscillationSpeedHz != null) els.orbNodOscillationSpeedHz.value = String(settings.orbTemplateOscillationSpeedHz);
-            if (els.orbNodOscillationCount && settings.orbTemplateOscillationCount != null) els.orbNodOscillationCount.value = String(settings.orbTemplateOscillationCount);
-            applyOrbNod();
             break;
           case "orb-lifecycle":
             if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
