@@ -1,5 +1,6 @@
 export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
+  createOrbBaseAuthoringAdapter,
   createOrbGlobeAuthoringAdapter,
   createOrbLifecycleAuthoringAdapter,
   createOrbNodAuthoringAdapter,
@@ -73,6 +74,7 @@ export function createLabEffectSurfaces({
       previewRootKey: "orbBasePreviewRoot",
       autoPreviewKey: "applyOrbBase",
       livePreset: Object.freeze({ buildKey: "orb-base", path: ["src", "game-runtime", "orb", "orb-base-default.js"], exportName: "ORB_BASE_VISUAL_DEFAULTS" }),
+      authoringAdapter: createOrbBaseAuthoringAdapter,
     }),
     "orb-template": Object.freeze({
       label: "Orb Template",

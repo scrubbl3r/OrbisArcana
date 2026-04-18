@@ -1366,7 +1366,8 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418e";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418f";
+    import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
     import { createOrbLifecycleAuthoringAdapter } from "./studio/adapters/orb-lifecycle-authoring-adapter.js?v=20260418a";
     import { createOrbNodAuthoringAdapter } from "./studio/adapters/orb-nod-authoring-adapter.js?v=20260418a";
@@ -1415,6 +1416,7 @@
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
+      createOrbBaseAuthoringAdapter,
       createOrbGlobeAuthoringAdapter,
       createOrbLifecycleAuthoringAdapter,
       createOrbNodAuthoringAdapter,
@@ -1609,6 +1611,7 @@
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
+      orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       orbLifecycleDefaults: Object.freeze({
         orbLifecycleShardTotal: 16,
@@ -1823,6 +1826,9 @@
       return {
         applyPreview: () => {
           switch (String(baseEffect || "")) {
+            case "orb-base":
+              applyOrbBase();
+              break;
             case "teleport":
               applyOrbTeleport();
               break;
@@ -1936,19 +1942,6 @@
       const adapterDefaults = callAuthoringAdapter(defaultSettingsKey, "defaultSettings");
       if (adapterDefaults !== undefined) return adapterDefaults;
       switch (String(defaultSettingsKey || "")) {
-        case "orb-base":
-          return {
-            orbBaseD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
-            orbBaseStroke: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
-            orbBaseStrokeAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.strokeAlpha.toFixed(2)),
-            orbBaseFillAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha.toFixed(2)),
-            orbBaseStrokeR: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.r),
-            orbBaseStrokeG: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.g),
-            orbBaseStrokeB: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.b),
-            orbBaseFillR: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.r),
-            orbBaseFillG: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.g),
-            orbBaseFillB: Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b),
-          };
         case "orb-template":
           return {};
         case "bubble-shield":
@@ -2200,19 +2193,6 @@
       const adapterSettings = callAuthoringAdapter(baseEffect, "capture", [els]);
       if (adapterSettings !== undefined) return adapterSettings;
       switch (String(baseEffect || "")) {
-        case "orb-base":
-          return {
-            orbBaseD: Number(els.orbBaseD && els.orbBaseD.value),
-            orbBaseStroke: Number(els.orbBaseStroke && els.orbBaseStroke.value),
-            orbBaseStrokeAlpha: Number(els.orbBaseStrokeAlpha && els.orbBaseStrokeAlpha.value),
-            orbBaseFillAlpha: Number(els.orbBaseFillAlpha && els.orbBaseFillAlpha.value),
-            orbBaseStrokeR: Number(els.orbBaseStrokeR && els.orbBaseStrokeR.value),
-            orbBaseStrokeG: Number(els.orbBaseStrokeG && els.orbBaseStrokeG.value),
-            orbBaseStrokeB: Number(els.orbBaseStrokeB && els.orbBaseStrokeB.value),
-            orbBaseFillR: Number(els.orbBaseFillR && els.orbBaseFillR.value),
-            orbBaseFillG: Number(els.orbBaseFillG && els.orbBaseFillG.value),
-            orbBaseFillB: Number(els.orbBaseFillB && els.orbBaseFillB.value),
-          };
         case "orb-template":
           return {};
         case "bubble-shield":
@@ -2258,19 +2238,6 @@
           return;
         }
         switch (String(baseEffect || "")) {
-          case "orb-base":
-            if (els.orbBaseD && settings.orbBaseD != null) els.orbBaseD.value = String(settings.orbBaseD);
-            if (els.orbBaseStroke && settings.orbBaseStroke != null) els.orbBaseStroke.value = String(settings.orbBaseStroke);
-            if (els.orbBaseStrokeAlpha && settings.orbBaseStrokeAlpha != null) els.orbBaseStrokeAlpha.value = String(settings.orbBaseStrokeAlpha);
-            if (els.orbBaseFillAlpha && settings.orbBaseFillAlpha != null) els.orbBaseFillAlpha.value = String(settings.orbBaseFillAlpha);
-            if (els.orbBaseStrokeR && settings.orbBaseStrokeR != null) els.orbBaseStrokeR.value = String(settings.orbBaseStrokeR);
-            if (els.orbBaseStrokeG && settings.orbBaseStrokeG != null) els.orbBaseStrokeG.value = String(settings.orbBaseStrokeG);
-            if (els.orbBaseStrokeB && settings.orbBaseStrokeB != null) els.orbBaseStrokeB.value = String(settings.orbBaseStrokeB);
-            if (els.orbBaseFillR && settings.orbBaseFillR != null) els.orbBaseFillR.value = String(settings.orbBaseFillR);
-            if (els.orbBaseFillG && settings.orbBaseFillG != null) els.orbBaseFillG.value = String(settings.orbBaseFillG);
-            if (els.orbBaseFillB && settings.orbBaseFillB != null) els.orbBaseFillB.value = String(settings.orbBaseFillB);
-            applyOrbBase();
-            break;
           case "orb-template":
             applyOrbLaneSsot(els.orbTemplatePreviewRoot);
             break;
