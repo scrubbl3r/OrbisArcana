@@ -62,7 +62,7 @@ export function createShieldPreview({
   }
 
   function apply() {
-    const ms = clamp(els.shieldMs.value, 80, 1200);
+    const ms = clamp(els.shieldMs.value, 80, 120000);
     const a = clamp(els.shieldAlpha.value, 0, 1);
     els.shieldMs.value = String(Math.round(ms));
     els.vShieldAlpha.textContent = a.toFixed(2);
@@ -144,7 +144,7 @@ export function createShieldPreview({
     onNow();
 
     if (shieldTO) clearTimeout(shieldTO);
-    const ms = clamp(els.shieldMs.value, 80, 1200);
+    const ms = clamp(els.shieldMs.value, 80, 120000);
 
     shieldTO = setTimeout(() => {
       decay();

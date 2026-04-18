@@ -24,14 +24,13 @@ function roundedNumber(value, fallback = 0) {
 
 export function createBubbleShieldAuthoringAdapter({
   bubbleShieldPresetDefault = {},
-  bubbleShieldGeometryDefaults = {},
 } = {}) {
   function defaultSettings() {
     return {
-      shieldMs: roundedNumber(clampNumber(bubbleShieldPresetDefault.durationMs, 80, 1200, 1170)),
+      shieldMs: roundedNumber(clampNumber(bubbleShieldPresetDefault.durationMs, 80, 120000, 8000)),
       shieldAlpha: fixedNumber(clampNumber(bubbleShieldPresetDefault.alpha, 0, 1, 1), 2, 1),
-      shieldD: roundedNumber(bubbleShieldGeometryDefaults.shieldD, 186),
-      shieldStroke: roundedNumber(bubbleShieldGeometryDefaults.shieldStroke, 4),
+      shieldD: roundedNumber(bubbleShieldPresetDefault.diameterPx, 124),
+      shieldStroke: roundedNumber(bubbleShieldPresetDefault.strokeWidthPx, 4),
       pulseMs: roundedNumber(clampNumber(bubbleShieldPresetDefault.pulseMs, 20, 700, 80)),
       pulseMin: fixedNumber(clampNumber(bubbleShieldPresetDefault.pulseMin, 0, 1, 0.3), 2, 0.3),
       pulseMax: fixedNumber(clampNumber(bubbleShieldPresetDefault.pulseMax, 0, 1, 1), 2, 1),

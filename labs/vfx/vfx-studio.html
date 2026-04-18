@@ -860,7 +860,7 @@
         <div class="sliderRow">
           <span>Shield duration</span>
           <span class="inlineField">
-            <input id="shieldMs" class="numField" type="number" min="80" max="120000" step="10" value="1170" />
+            <input id="shieldMs" class="numField" type="number" min="80" max="120000" step="10" value="8000" />
             <strong>ms</strong>
           </span>
         </div>
@@ -1320,7 +1320,7 @@
     import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
-    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260414-orbscale";
+    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418a";
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260414-orbscale";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260414-orbscale";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260414-orbscale";
@@ -1367,7 +1367,7 @@
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
     } from "./studio/vfx-studio-surfaces.js?v=20260418h";
-    import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418a";
+    import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418b";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
@@ -1385,7 +1385,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260417c";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260418a";
     import {
       BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
@@ -1617,7 +1617,6 @@
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
       bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
-      bubbleShieldGeometryDefaults: Object.freeze({ shieldD: 186, shieldStroke: 4 }),
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       orbLifecycleDefaults: Object.freeze({
@@ -2442,8 +2441,8 @@
     const GEOM = {
       orbD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
       orbStroke: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
-      shieldD: 186,
-      shieldStroke: 4,
+      shieldD: Math.round(BUBBLE_SHIELD_PRESET_DEFAULT.diameterPx),
+      shieldStroke: Math.round(BUBBLE_SHIELD_PRESET_DEFAULT.strokeWidthPx),
     };
     let currentLabOrbBaseVisualState = buildOrbBaseVisualState({
       theme: {
