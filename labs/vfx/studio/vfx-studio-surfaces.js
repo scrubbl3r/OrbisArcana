@@ -1,5 +1,6 @@
 export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
+  createBubbleShieldAuthoringAdapter,
   createElectricAoeAuthoringAdapter,
   createOrbBaseAuthoringAdapter,
   createOrbGlobeAuthoringAdapter,
@@ -39,6 +40,7 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "playShield",
       defaultBindTarget: "spell.bubble_shield",
       livePreset: Object.freeze({ buildKey: "bubble-shield", path: ["src", "vfx", "presets", "bubble-shield-default.js"], exportName: "BUBBLE_SHIELD_PRESET_DEFAULT" }),
+      authoringAdapter: createBubbleShieldAuthoringAdapter,
     }),
     "shockwave": Object.freeze({
       category: "spell",

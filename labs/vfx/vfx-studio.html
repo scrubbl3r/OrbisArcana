@@ -1366,7 +1366,8 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418g";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418h";
+    import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418a";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
@@ -1417,6 +1418,7 @@
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
+      createBubbleShieldAuthoringAdapter,
       createElectricAoeAuthoringAdapter,
       createOrbBaseAuthoringAdapter,
       createOrbGlobeAuthoringAdapter,
@@ -1613,7 +1615,9 @@
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
+      bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+      bubbleShieldGeometryDefaults: Object.freeze({ shieldD: 186, shieldStroke: 4 }),
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       orbLifecycleDefaults: Object.freeze({
@@ -1832,6 +1836,11 @@
             case "electric-aoe":
               applyElectricControls();
               break;
+            case "bubble-shield":
+              options.applyGeometry = applyShieldGeometry;
+              options.applyShield = applyShield;
+              options.applyPulse = applyPulse;
+              break;
             case "orb-base":
               applyOrbBase();
               break;
@@ -1950,16 +1959,6 @@
       switch (String(defaultSettingsKey || "")) {
         case "orb-template":
           return {};
-        case "bubble-shield":
-          return {
-            shieldMs: Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.durationMs, 80, 1200)),
-            shieldAlpha: Number(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.alpha, 0, 1).toFixed(2)),
-            shieldD: GEOM.shieldD,
-            shieldStroke: GEOM.shieldStroke,
-            pulseMs: Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.pulseMs, 20, 700)),
-            pulseMin: Number(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.pulseMin, 0, 1).toFixed(2)),
-            pulseMax: Number(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.pulseMax, 0, 1).toFixed(2)),
-          };
         case "shockwave":
           return {
             startR: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.startR, 1, 1000)),
@@ -2195,16 +2194,6 @@
       switch (String(baseEffect || "")) {
         case "orb-template":
           return {};
-        case "bubble-shield":
-          return {
-            shieldMs: Number(els.shieldMs && els.shieldMs.value),
-            shieldAlpha: Number(els.shieldAlpha && els.shieldAlpha.value),
-            shieldD: Number(els.shieldD && els.shieldD.value),
-            shieldStroke: Number(els.shieldStroke && els.shieldStroke.value),
-            pulseMs: Number(els.pulseMs && els.pulseMs.value),
-            pulseMin: Number(els.pulseMin && els.pulseMin.value),
-            pulseMax: Number(els.pulseMax && els.pulseMax.value),
-          };
         case "shockwave":
           return {
             startR: Number(els.startR && els.startR.value),
@@ -2234,18 +2223,6 @@
         switch (String(baseEffect || "")) {
           case "orb-template":
             applyOrbLaneSsot(els.orbTemplatePreviewRoot);
-            break;
-          case "bubble-shield":
-            if (els.shieldMs && settings.shieldMs != null) els.shieldMs.value = String(settings.shieldMs);
-            if (els.shieldAlpha && settings.shieldAlpha != null) els.shieldAlpha.value = String(settings.shieldAlpha);
-            if (els.shieldD && settings.shieldD != null) els.shieldD.value = String(settings.shieldD);
-            if (els.shieldStroke && settings.shieldStroke != null) els.shieldStroke.value = String(settings.shieldStroke);
-            if (els.pulseMs && settings.pulseMs != null) els.pulseMs.value = String(settings.pulseMs);
-            if (els.pulseMin && settings.pulseMin != null) els.pulseMin.value = String(settings.pulseMin);
-            if (els.pulseMax && settings.pulseMax != null) els.pulseMax.value = String(settings.pulseMax);
-            applyShieldGeometry();
-            applyShield();
-            applyPulse();
             break;
           case "shockwave":
             if (els.startR && settings.startR != null) els.startR.value = String(settings.startR);
