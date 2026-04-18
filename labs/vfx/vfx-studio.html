@@ -1408,30 +1408,35 @@
       "electric-aoe": Object.freeze({
         category: "spell",
         registryIds: Object.freeze(["spell.aoe_electric"]),
+        previewRootKey: "electricPreviewRoot",
         defaultBindTarget: "spell.aoe_electric",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "electric-aoe-default.js"], exportName: "ELECTRIC_AOE_PRESET_DEFAULT" }),
       }),
       "flame-aoe": Object.freeze({
         category: "spell",
         registryIds: Object.freeze(["spell.aoe_flame"]),
+        previewRootKey: "flamePreviewRoot",
         defaultBindTarget: "spell.aoe_flame",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "flame-aoe-default.js"], exportName: "FLAME_AOE_PRESET_DEFAULT" }),
       }),
       "bubble-shield": Object.freeze({
         category: "spell",
         registryIds: Object.freeze(["spell.shield_bubble"]),
+        previewRootKey: "shieldPreviewRoot",
         defaultBindTarget: "spell.bubble_shield",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "bubble-shield-default.js"], exportName: "BUBBLE_SHIELD_PRESET_DEFAULT" }),
       }),
       "shockwave": Object.freeze({
         category: "spell",
         registryIds: Object.freeze(["spell.shockwave_ring"]),
+        previewRootKey: "shockPreviewRoot",
         defaultBindTarget: "spell.shockwave",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "shockwave-default.js"], exportName: "SHOCKWAVE_PRESET_DEFAULT" }),
       }),
       "teleport": Object.freeze({
         category: "spell",
         registryIds: Object.freeze(["spell.teleport"]),
+        previewRootKey: "orbTeleportPreviewRoot",
         defaultBindTarget: "spell.teleport",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "teleport-default.js"], exportName: "TELEPORT_PRESET_DEFAULT" }),
         behavior: Object.freeze({
@@ -1445,16 +1450,19 @@
         label: "Orb Base",
         category: "orb",
         builtinOption: true,
+        previewRootKey: "orbBasePreviewRoot",
         livePreset: Object.freeze({ path: ["src", "game-runtime", "orb", "orb-base-default.js"], exportName: "ORB_BASE_VISUAL_DEFAULTS" }),
       }),
       "orb-template": Object.freeze({
         label: "Orb Template",
         category: "orb",
         builtinOption: true,
+        previewRootKey: "orbTemplatePreviewRoot",
       }),
       "orb-nod": Object.freeze({
         category: "orb",
         registryIds: Object.freeze(["orb.nod"]),
+        previewRootKey: "orbNodPreviewRoot",
         defaultBindTarget: "orb-state.nod",
         livePreset: Object.freeze({ path: ["src", "vfx", "presets", "orb-nod-default.js"], exportName: "ORB_NOD_PRESET_DEFAULT" }),
       }),
@@ -1464,6 +1472,7 @@
         registryIds: Object.freeze(["orb.globe"]),
         omitRegistryOption: true,
         builtinOption: true,
+        previewRootKey: "orbGlobePreviewRoot",
         defaultBindTarget: "orb-state.globe_loaded",
         livePreset: Object.freeze({ path: ["src", "game-runtime", "orb", "orb-globe-default.js"], exportName: "ORB_GLOBE_VISUAL_DEFAULTS" }),
       }),
@@ -1471,6 +1480,7 @@
         label: "Orb Lifecycle",
         category: "orb",
         builtinOption: true,
+        previewRootKey: "orbLifecyclePreviewRoot",
       }),
       "orb-shatter": Object.freeze({
         category: "orb",
@@ -1481,6 +1491,7 @@
       "world-globe": Object.freeze({
         category: "world",
         registryIds: Object.freeze(["world.globe"]),
+        previewRootKey: "worldGlobePreviewRoot",
         livePreset: Object.freeze({ path: ["src", "game-runtime", "world", "world-globe-default.js"], exportName: "WORLD_GLOBE_VISUAL_DEFAULTS" }),
       }),
     });
@@ -2759,19 +2770,11 @@
         orbRadiusPx: Number(ORB_BASE_VISUAL_DEFAULTS.radiusPx) || (Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx) * 0.5),
       },
     });
-    const PREVIEW_ROOTS_BY_EFFECT = {
-      "bubble-shield": els.shieldPreviewRoot,
-      "shockwave": els.shockPreviewRoot,
-      "flame-aoe": els.flamePreviewRoot,
-      "electric-aoe": els.electricPreviewRoot,
-      "orb-base": els.orbBasePreviewRoot,
-      "orb-template": els.orbTemplatePreviewRoot,
-      "orb-nod": els.orbNodPreviewRoot,
-      "orb-lifecycle": els.orbLifecyclePreviewRoot,
-      "orb-globe": els.orbGlobePreviewRoot,
-      "world-globe": els.worldGlobePreviewRoot,
-      "teleport": els.orbTeleportPreviewRoot,
-    };
+    const PREVIEW_ROOTS_BY_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
+        .filter(([, surface]) => surface.previewRootKey && els[surface.previewRootKey])
+        .map(([baseEffect, surface]) => [baseEffect, els[surface.previewRootKey]]))
+    );
     applyLabThemeDefaults(GAME_THEME_DEFAULT);
 
     function buildCurrentLabOrbBaseVisualState(){
