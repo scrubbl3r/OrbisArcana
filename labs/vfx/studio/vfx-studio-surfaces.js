@@ -1,5 +1,6 @@
 export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
+  createElectricAoeAuthoringAdapter,
   createOrbBaseAuthoringAdapter,
   createOrbGlobeAuthoringAdapter,
   createOrbLifecycleAuthoringAdapter,
@@ -17,6 +18,7 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "playElectric",
       defaultBindTarget: "spell.aoe_electric",
       livePreset: Object.freeze({ buildKey: "electric-aoe", path: ["src", "vfx", "presets", "electric-aoe-default.js"], exportName: "ELECTRIC_AOE_PRESET_DEFAULT" }),
+      authoringAdapter: createElectricAoeAuthoringAdapter,
     }),
     "flame-aoe": Object.freeze({
       category: "spell",

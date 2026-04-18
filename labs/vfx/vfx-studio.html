@@ -1366,7 +1366,8 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418f";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418g";
+    import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
     import { createOrbLifecycleAuthoringAdapter } from "./studio/adapters/orb-lifecycle-authoring-adapter.js?v=20260418a";
@@ -1416,6 +1417,7 @@
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
+      createElectricAoeAuthoringAdapter,
       createOrbBaseAuthoringAdapter,
       createOrbGlobeAuthoringAdapter,
       createOrbLifecycleAuthoringAdapter,
@@ -1611,6 +1613,7 @@
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
+      electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       orbLifecycleDefaults: Object.freeze({
@@ -1826,6 +1829,9 @@
       return {
         applyPreview: () => {
           switch (String(baseEffect || "")) {
+            case "electric-aoe":
+              applyElectricControls();
+              break;
             case "orb-base":
               applyOrbBase();
               break;
@@ -1967,12 +1973,6 @@
           return {
             flameD: evenPx(clamp(FLAME_AOE_PRESET_DEFAULT && FLAME_AOE_PRESET_DEFAULT.diameter, 120, 900), 2, 2000),
             flameMs: Math.round(clamp(FLAME_AOE_PRESET_DEFAULT && FLAME_AOE_PRESET_DEFAULT.durationMs, 200, 60000)),
-          };
-        case "electric-aoe":
-          return {
-            electricMs: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.durationMs, 200, 60000)),
-            electricStartR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.startR, 2, 500)),
-            electricEndR: Math.round(clamp(ELECTRIC_AOE_PRESET_DEFAULT && ELECTRIC_AOE_PRESET_DEFAULT.endR, 8, 1000)),
           };
         default:
           return {};
@@ -2219,12 +2219,6 @@
             flameD: Number(els.flameD && els.flameD.value),
             flameMs: Number(els.flameMs && els.flameMs.value),
           };
-        case "electric-aoe":
-          return {
-            electricMs: Number(els.electricMs && els.electricMs.value),
-            electricStartR: Number(els.electricStartR && els.electricStartR.value),
-            electricEndR: Number(els.electricEndR && els.electricEndR.value),
-          };
         default:
           return {};
       }
@@ -2266,12 +2260,6 @@
             if (els.flameD && settings.flameD != null) els.flameD.value = String(settings.flameD);
             if (els.flameMs && settings.flameMs != null) els.flameMs.value = String(settings.flameMs);
             applyFlameControls();
-            break;
-          case "electric-aoe":
-            if (els.electricMs && settings.electricMs != null) els.electricMs.value = String(settings.electricMs);
-            if (els.electricStartR && settings.electricStartR != null) els.electricStartR.value = String(settings.electricStartR);
-            if (els.electricEndR && settings.electricEndR != null) els.electricEndR.value = String(settings.electricEndR);
-            applyElectricControls();
             break;
           default:
             break;
