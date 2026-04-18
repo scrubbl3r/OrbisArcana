@@ -1,5 +1,6 @@
 export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
+  createOrbGlobeAuthoringAdapter,
   createTeleportAuthoringAdapter,
   createWorldGlobeAuthoringAdapter,
 } = {}) {
@@ -103,6 +104,7 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "applyOrbGlobe",
       defaultBindTarget: "orb-state.globe_loaded",
       livePreset: Object.freeze({ buildKey: "orb-globe", path: ["src", "game-runtime", "orb", "orb-globe-default.js"], exportName: "ORB_GLOBE_VISUAL_DEFAULTS" }),
+      authoringAdapter: createOrbGlobeAuthoringAdapter,
     }),
     "orb-lifecycle": Object.freeze({
       label: "Orb Lifecycle",

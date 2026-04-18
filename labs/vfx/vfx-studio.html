@@ -1366,7 +1366,8 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418b";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418c";
+    import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
     import { createWorldGlobeAuthoringAdapter } from "./studio/adapters/world-globe-authoring-adapter.js?v=20260418a";
     import {
@@ -1412,6 +1413,7 @@
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
+      createOrbGlobeAuthoringAdapter,
       createTeleportAuthoringAdapter,
       createWorldGlobeAuthoringAdapter,
     });
@@ -1603,6 +1605,7 @@
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
+      orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
       getElementById: $,
     });
@@ -1813,6 +1816,9 @@
             case "teleport":
               applyOrbTeleport();
               break;
+            case "orb-globe":
+              applyOrbGlobe();
+              break;
             case "world-globe":
               applyWorldGlobe();
               break;
@@ -1943,23 +1949,6 @@
           return {
             orbLifecycleShardTotal: 16,
             orbLifecycleHitTotal: 3,
-          };
-        case "orb-globe":
-          return {
-            orbGlobeInnerDiameterRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDiameterRatio.toFixed(2)),
-            orbGlobeOrbitRadiusRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusRatio.toFixed(2)),
-            orbGlobeOrbitDistanceRatio: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceRatio.toFixed(2)),
-            orbGlobeOrbitDistanceMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceMinPx),
-            orbGlobeOrbitRadiusMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusMinPx),
-            orbGlobeSpeedMin: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMin.toFixed(2)),
-            orbGlobeSpeedMax: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitSpeedMax.toFixed(2)),
-            orbGlobeDriftMin: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMin.toFixed(2)),
-            orbGlobeDriftMax: Number(ORB_GLOBE_VISUAL_DEFAULTS.orbitDriftMax.toFixed(2)),
-            orbGlobeInnerSpeedMin: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMinPxPerSec),
-            orbGlobeInnerSpeedMax: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerSpeedMaxPxPerSec),
-            orbGlobeInnerDriftMin: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMin.toFixed(2)),
-            orbGlobeInnerDriftMax: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMax.toFixed(2)),
-            orbGlobeInnerPaddingPx: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx),
           };
         case "bubble-shield":
           return {
@@ -2240,23 +2229,6 @@
             orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
             orbLifecycleHitTotal: Number(els.orbLifecycleHitTotal && els.orbLifecycleHitTotal.value),
           };
-        case "orb-globe":
-          return {
-            orbGlobeInnerDiameterRatio: Number(els.orbGlobeInnerDiameterRatio && els.orbGlobeInnerDiameterRatio.value),
-            orbGlobeOrbitRadiusRatio: Number(els.orbGlobeOrbitRadiusRatio && els.orbGlobeOrbitRadiusRatio.value),
-            orbGlobeOrbitDistanceRatio: Number(els.orbGlobeOrbitDistanceRatio && els.orbGlobeOrbitDistanceRatio.value),
-            orbGlobeOrbitDistanceMin: Number(els.orbGlobeOrbitDistanceMin && els.orbGlobeOrbitDistanceMin.value),
-            orbGlobeOrbitRadiusMin: Number(els.orbGlobeOrbitRadiusMin && els.orbGlobeOrbitRadiusMin.value),
-            orbGlobeSpeedMin: Number(els.orbGlobeSpeedMin && els.orbGlobeSpeedMin.value),
-            orbGlobeSpeedMax: Number(els.orbGlobeSpeedMax && els.orbGlobeSpeedMax.value),
-            orbGlobeDriftMin: Number(els.orbGlobeDriftMin && els.orbGlobeDriftMin.value),
-            orbGlobeDriftMax: Number(els.orbGlobeDriftMax && els.orbGlobeDriftMax.value),
-            orbGlobeInnerSpeedMin: Number(els.orbGlobeInnerSpeedMin && els.orbGlobeInnerSpeedMin.value),
-            orbGlobeInnerSpeedMax: Number(els.orbGlobeInnerSpeedMax && els.orbGlobeInnerSpeedMax.value),
-            orbGlobeInnerDriftMin: Number(els.orbGlobeInnerDriftMin && els.orbGlobeInnerDriftMin.value),
-            orbGlobeInnerDriftMax: Number(els.orbGlobeInnerDriftMax && els.orbGlobeInnerDriftMax.value),
-            orbGlobeInnerPaddingPx: Number(els.orbGlobeInnerPaddingPx && els.orbGlobeInnerPaddingPx.value),
-          };
         case "bubble-shield":
           return {
             shieldMs: Number(els.shieldMs && els.shieldMs.value),
@@ -2340,23 +2312,6 @@
             if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
             if (els.orbLifecycleHitTotal && settings.orbLifecycleHitTotal != null) els.orbLifecycleHitTotal.value = String(settings.orbLifecycleHitTotal);
             applyOrbLifecycle();
-            break;
-          case "orb-globe":
-            if (els.orbGlobeInnerDiameterRatio && settings.orbGlobeInnerDiameterRatio != null) els.orbGlobeInnerDiameterRatio.value = String(settings.orbGlobeInnerDiameterRatio);
-            if (els.orbGlobeOrbitRadiusRatio && settings.orbGlobeOrbitRadiusRatio != null) els.orbGlobeOrbitRadiusRatio.value = String(settings.orbGlobeOrbitRadiusRatio);
-            if (els.orbGlobeOrbitDistanceRatio && settings.orbGlobeOrbitDistanceRatio != null) els.orbGlobeOrbitDistanceRatio.value = String(settings.orbGlobeOrbitDistanceRatio);
-            if (els.orbGlobeOrbitDistanceMin && settings.orbGlobeOrbitDistanceMin != null) els.orbGlobeOrbitDistanceMin.value = String(settings.orbGlobeOrbitDistanceMin);
-            if (els.orbGlobeOrbitRadiusMin && settings.orbGlobeOrbitRadiusMin != null) els.orbGlobeOrbitRadiusMin.value = String(settings.orbGlobeOrbitRadiusMin);
-            if (els.orbGlobeSpeedMin && settings.orbGlobeSpeedMin != null) els.orbGlobeSpeedMin.value = String(settings.orbGlobeSpeedMin);
-            if (els.orbGlobeSpeedMax && settings.orbGlobeSpeedMax != null) els.orbGlobeSpeedMax.value = String(settings.orbGlobeSpeedMax);
-            if (els.orbGlobeDriftMin && settings.orbGlobeDriftMin != null) els.orbGlobeDriftMin.value = String(settings.orbGlobeDriftMin);
-            if (els.orbGlobeDriftMax && settings.orbGlobeDriftMax != null) els.orbGlobeDriftMax.value = String(settings.orbGlobeDriftMax);
-            if (els.orbGlobeInnerSpeedMin && settings.orbGlobeInnerSpeedMin != null) els.orbGlobeInnerSpeedMin.value = String(settings.orbGlobeInnerSpeedMin);
-            if (els.orbGlobeInnerSpeedMax && settings.orbGlobeInnerSpeedMax != null) els.orbGlobeInnerSpeedMax.value = String(settings.orbGlobeInnerSpeedMax);
-            if (els.orbGlobeInnerDriftMin && settings.orbGlobeInnerDriftMin != null) els.orbGlobeInnerDriftMin.value = String(settings.orbGlobeInnerDriftMin);
-            if (els.orbGlobeInnerDriftMax && settings.orbGlobeInnerDriftMax != null) els.orbGlobeInnerDriftMax.value = String(settings.orbGlobeInnerDriftMax);
-            if (els.orbGlobeInnerPaddingPx && settings.orbGlobeInnerPaddingPx != null) els.orbGlobeInnerPaddingPx.value = String(settings.orbGlobeInnerPaddingPx);
-            applyOrbGlobe();
             break;
           case "bubble-shield":
             if (els.shieldMs && settings.shieldMs != null) els.shieldMs.value = String(settings.shieldMs);
