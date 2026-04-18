@@ -189,6 +189,7 @@ body {
   fill: none;
   stroke: var(--orb-stroke-color);
   stroke-width: var(--orb-fracture-crack-stroke);
+  stroke-opacity: 0.46;
   stroke-linecap: round;
   stroke-linejoin: round;
   filter: drop-shadow(
