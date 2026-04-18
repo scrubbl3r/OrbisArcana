@@ -3,6 +3,9 @@ const BUBBLE_SHIELD_FIELDS = Object.freeze([
   ["shieldAlpha", "shieldAlpha"],
   ["shieldD", "shieldD"],
   ["shieldStroke", "shieldStroke"],
+  ["shieldR", "shieldR"],
+  ["shieldG", "shieldG"],
+  ["shieldB", "shieldB"],
   ["pulseMs", "pulseMs"],
   ["pulseMin", "pulseMin"],
   ["pulseMax", "pulseMax"],
@@ -26,11 +29,15 @@ export function createBubbleShieldAuthoringAdapter({
   bubbleShieldPresetDefault = {},
 } = {}) {
   function defaultSettings() {
+    const colorRgb = bubbleShieldPresetDefault.colorRgb || {};
     return {
       shieldMs: roundedNumber(clampNumber(bubbleShieldPresetDefault.durationMs, 80, 120000, 8000)),
       shieldAlpha: fixedNumber(clampNumber(bubbleShieldPresetDefault.alpha, 0, 1, 1), 2, 1),
       shieldD: roundedNumber(bubbleShieldPresetDefault.diameterPx, 124),
       shieldStroke: roundedNumber(bubbleShieldPresetDefault.strokeWidthPx, 4),
+      shieldR: roundedNumber(clampNumber(colorRgb.r, 0, 255, 120)),
+      shieldG: roundedNumber(clampNumber(colorRgb.g, 0, 255, 210)),
+      shieldB: roundedNumber(clampNumber(colorRgb.b, 0, 255, 255)),
       pulseMs: roundedNumber(clampNumber(bubbleShieldPresetDefault.pulseMs, 20, 700, 80)),
       pulseMin: fixedNumber(clampNumber(bubbleShieldPresetDefault.pulseMin, 0, 1, 0.3), 2, 0.3),
       pulseMax: fixedNumber(clampNumber(bubbleShieldPresetDefault.pulseMax, 0, 1, 1), 2, 1),

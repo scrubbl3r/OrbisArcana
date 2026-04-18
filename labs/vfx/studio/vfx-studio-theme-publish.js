@@ -92,6 +92,10 @@ export function toNum(v, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function clampNum(v, min, max, fallback = 0) {
+  return Math.max(min, Math.min(max, toNum(v, fallback)));
+}
+
 export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricDefaults) {
   const p = params && typeof params === "object" ? params : {};
   switch (String(baseEffect || "")) {
@@ -111,7 +115,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       return [
         "export const BUBBLE_SHIELD_PRESET_DEFAULT = Object.freeze({",
         `  durationMs: ${Math.round(toNum(p.shieldMs, 8000))},`,
-        `  colorRgb: Object.freeze({ r: ${Math.round(toNum(p.shieldR, 120))}, g: ${Math.round(toNum(p.shieldG, 210))}, b: ${Math.round(toNum(p.shieldB, 255))} }),`,
+        `  colorRgb: Object.freeze({ r: ${Math.round(clampNum(p.shieldR, 0, 255, 120))}, g: ${Math.round(clampNum(p.shieldG, 0, 255, 210))}, b: ${Math.round(clampNum(p.shieldB, 0, 255, 255))} }),`,
         `  diameterPx: ${Math.round(toNum(p.shieldD, 124))},`,
         `  strokeWidthPx: ${Math.round(toNum(p.shieldStroke, 4))},`,
         `  alpha: ${toNum(p.shieldAlpha, 1).toFixed(2)},`,

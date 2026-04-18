@@ -22,8 +22,8 @@ export function createShieldPreview({
   }
 
   function applyGeometry() {
-    GEOM.shieldD = evenPx(els.shieldD.value, 2, 2000);
-    GEOM.shieldStroke = evenPx(els.shieldStroke.value, 2, 40);
+    GEOM.shieldD = Math.max(10, Math.round(Number(els.shieldD.value) || 124));
+    GEOM.shieldStroke = Math.max(1, Math.round(Number(els.shieldStroke.value) || 4));
     const resolved = resolveBubbleShieldGeometry({
       diameterPx: GEOM.shieldD,
       strokeWidthPx: GEOM.shieldStroke,
@@ -34,8 +34,6 @@ export function createShieldPreview({
 
     els.shieldD.value = String(GEOM.shieldD);
     els.shieldStroke.value = String(GEOM.shieldStroke);
-    els.vShieldD.textContent = String(GEOM.shieldD);
-    els.vShieldStroke.textContent = String(GEOM.shieldStroke);
 
     setVar("--shield-d", `${Number(resolved.diameterPx).toFixed(2)}px`);
     setVar("--shield-stroke", `${Number(resolved.strokeWidthPx).toFixed(2)}px`);
@@ -61,13 +59,25 @@ export function createShieldPreview({
     if (els.shield) els.shield.style.setProperty("--shield-fade", String(val));
   }
 
+  function applyColor() {
+    const r = Math.max(0, Math.min(255, Math.round(Number(els.shieldR && els.shieldR.value) || 120)));
+    const g = Math.max(0, Math.min(255, Math.round(Number(els.shieldG && els.shieldG.value) || 210)));
+    const b = Math.max(0, Math.min(255, Math.round(Number(els.shieldB && els.shieldB.value) || 255)));
+    if (els.shieldR) els.shieldR.value = String(r);
+    if (els.shieldG) els.shieldG.value = String(g);
+    if (els.shieldB) els.shieldB.value = String(b);
+    setVar("--shield-r", String(r));
+    setVar("--shield-g", String(g));
+    setVar("--shield-b", String(b));
+  }
+
   function apply() {
     const ms = clamp(els.shieldMs.value, 80, 120000);
     const a = clamp(els.shieldAlpha.value, 0, 1);
     els.shieldMs.value = String(Math.round(ms));
-    if (els.vShieldMs) els.vShieldMs.textContent = String(Math.round(ms));
-    els.vShieldAlpha.textContent = a.toFixed(2);
+    els.shieldAlpha.value = a.toFixed(2);
 
+    applyColor();
     setVar("--shield-alpha", a.toFixed(2));
     setVar("--shield-pulse-max", a.toFixed(2));
   }
@@ -86,9 +96,9 @@ export function createShieldPreview({
     const a = clamp(els.shieldAlpha.value, 0, 1);
     const maxClamped = Math.min(pMax, a);
 
-    els.vPulseMs.textContent = String(pMs);
-    els.vPulseMin.textContent = pMin.toFixed(2);
-    els.vPulseMax.textContent = maxClamped.toFixed(2);
+    els.pulseMs.value = String(pMs);
+    els.pulseMin.value = pMin.toFixed(2);
+    els.pulseMax.value = maxClamped.toFixed(2);
 
     setVar("--shield-pulse-ms", `${pMs}ms`);
     setVar("--shield-pulse-min", pMin.toFixed(2));
@@ -155,13 +165,28 @@ export function createShieldPreview({
 
   function wire() {
     els.playShield.addEventListener("click", play);
-    els.shieldMs.addEventListener("input", apply);
-    els.shieldAlpha.addEventListener("input", () => { apply(); applyPulse(); });
-    els.shieldD.addEventListener("input", applyGeometry);
-    els.shieldStroke.addEventListener("input", applyGeometry);
-    els.pulseMs.addEventListener("input", applyPulse);
-    els.pulseMin.addEventListener("input", applyPulse);
-    els.pulseMax.addEventListener("input", applyPulse);
+    [
+      els.shieldApplyDurationBtn,
+      els.shieldApplyAlphaBtn,
+      els.shieldApplyRedBtn,
+      els.shieldApplyGreenBtn,
+      els.shieldApplyBlueBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", () => { apply(); applyPulse(); });
+    });
+    [
+      els.shieldApplyDiameterBtn,
+      els.shieldApplyStrokeBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", applyGeometry);
+    });
+    [
+      els.shieldApplyPulseMsBtn,
+      els.shieldApplyPulseMinBtn,
+      els.shieldApplyPulseMaxBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", applyPulse);
+    });
     applyGeometry();
     apply();
     applyPulse();

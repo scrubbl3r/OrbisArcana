@@ -856,50 +856,58 @@
         <div class="row">
           <button id="playShield">Play</button>
         </div>
-
-        <div class="sliderRow">
-          <span>Shield duration</span>
-          <span class="inlineField">
-            <input id="shieldMs" class="numField" type="number" min="80" max="120000" step="10" value="8000" />
-            <strong><span id="vShieldMs">8000</span>ms</strong>
-          </span>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="shieldMs">Duration ms</label>
+            <input id="shieldMs" class="paramFieldInput" type="number" min="80" max="120000" step="10" value="8000" />
+            <button id="shieldApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldD">Diameter px</label>
+            <input id="shieldD" class="paramFieldInput" type="number" min="10" max="1000" step="1" value="124" />
+            <button id="shieldApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldStroke">Stroke width px</label>
+            <input id="shieldStroke" class="paramFieldInput" type="number" min="1" max="40" step="1" value="4" />
+            <button id="shieldApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldAlpha">Opacity</label>
+            <input id="shieldAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
+            <button id="shieldApplyAlphaBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="pulseMs">Pulse rate ms</label>
+            <input id="pulseMs" class="paramFieldInput" type="number" min="20" max="700" step="5" value="80" />
+            <button id="shieldApplyPulseMsBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="pulseMin">Pulse min alpha</label>
+            <input id="pulseMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.30" />
+            <button id="shieldApplyPulseMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="pulseMax">Pulse max alpha</label>
+            <input id="pulseMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
+            <button id="shieldApplyPulseMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldR">Color red</label>
+            <input id="shieldR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="120" />
+            <button id="shieldApplyRedBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldG">Color green</label>
+            <input id="shieldG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="210" />
+            <button id="shieldApplyGreenBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldB">Color blue</label>
+            <input id="shieldB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="shieldApplyBlueBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
-
-        <div class="sliderRow">
-          <span>Shield opacity</span>
-          <strong><span id="vShieldAlpha">1.00</span></strong>
-        </div>
-        <input id="shieldAlpha" type="range" min="0" max="1" value="1.00" step="0.01" />
-
-        <div class="sliderRow">
-          <span>Shield size (diameter)</span>
-          <strong><span id="vShieldD">186</span>px</strong>
-        </div>
-        <input id="shieldD" type="range" min="40" max="600" value="186" step="1" />
-
-        <div class="sliderRow">
-          <span>Shield stroke width (even)</span>
-          <strong><span id="vShieldStroke">4</span>px</strong>
-        </div>
-        <input id="shieldStroke" type="range" min="2" max="20" value="4" step="1" />
-
-        <div class="sliderRow">
-          <span>Pulse rate</span>
-          <strong><span id="vPulseMs">80</span>ms</strong>
-        </div>
-        <input id="pulseMs" type="range" min="20" max="700" value="80" step="5" />
-
-        <div class="sliderRow">
-          <span>Pulse min alpha</span>
-          <strong><span id="vPulseMin">0.30</span></strong>
-        </div>
-        <input id="pulseMin" type="range" min="0" max="1" value="0.30" step="0.01" />
-
-        <div class="sliderRow">
-          <span>Pulse max alpha</span>
-          <strong><span id="vPulseMax">1.00</span></strong>
-        </div>
-        <input id="pulseMax" type="range" min="0" max="1" value="1.00" step="0.01" />
       </div>
 
       <!-- Shockwave controls -->
@@ -1320,7 +1328,7 @@
     import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
-    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418a";
+    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418b";
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260414-orbscale";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260414-orbscale";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260414-orbscale";
@@ -1367,7 +1375,7 @@
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
     } from "./studio/vfx-studio-surfaces.js?v=20260418h";
-    import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418b";
+    import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418c";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
@@ -1487,20 +1495,26 @@
       bindingPanel: $("bindingPanel"),
       bindingGrid: $("bindingGrid"),
       shieldMs: $("shieldMs"),
-      vShieldMs: $("vShieldMs"),
+      shieldApplyDurationBtn: $("shieldApplyDurationBtn"),
       shieldAlpha: $("shieldAlpha"),
-      vShieldAlpha: $("vShieldAlpha"),
+      shieldApplyAlphaBtn: $("shieldApplyAlphaBtn"),
       shieldD: $("shieldD"),
-      vShieldD: $("vShieldD"),
+      shieldApplyDiameterBtn: $("shieldApplyDiameterBtn"),
       shieldStroke: $("shieldStroke"),
-      vShieldStroke: $("vShieldStroke"),
+      shieldApplyStrokeBtn: $("shieldApplyStrokeBtn"),
+      shieldR: $("shieldR"),
+      shieldApplyRedBtn: $("shieldApplyRedBtn"),
+      shieldG: $("shieldG"),
+      shieldApplyGreenBtn: $("shieldApplyGreenBtn"),
+      shieldB: $("shieldB"),
+      shieldApplyBlueBtn: $("shieldApplyBlueBtn"),
 
       pulseMs: $("pulseMs"),
-      vPulseMs: $("vPulseMs"),
+      shieldApplyPulseMsBtn: $("shieldApplyPulseMsBtn"),
       pulseMin: $("pulseMin"),
-      vPulseMin: $("vPulseMin"),
+      shieldApplyPulseMinBtn: $("shieldApplyPulseMinBtn"),
       pulseMax: $("pulseMax"),
-      vPulseMax: $("vPulseMax"),
+      shieldApplyPulseMaxBtn: $("shieldApplyPulseMaxBtn"),
 
       playShock: $("playShock"),
       startR: $("startR"),
