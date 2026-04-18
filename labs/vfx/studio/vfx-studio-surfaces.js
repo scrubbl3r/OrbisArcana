@@ -1,6 +1,7 @@
 export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
   createTeleportAuthoringAdapter,
+  createWorldGlobeAuthoringAdapter,
 } = {}) {
   return Object.freeze({
     "electric-aoe": Object.freeze({
@@ -128,6 +129,7 @@ export function createLabEffectSurfaces({
       previewRootKey: "worldGlobePreviewRoot",
       autoPreviewKey: "applyWorldGlobe",
       livePreset: Object.freeze({ buildKey: "world-globe", path: ["src", "game-runtime", "world", "world-globe-default.js"], exportName: "WORLD_GLOBE_VISUAL_DEFAULTS" }),
+      authoringAdapter: createWorldGlobeAuthoringAdapter,
     }),
   });
 }

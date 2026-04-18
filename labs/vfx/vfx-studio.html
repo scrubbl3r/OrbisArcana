@@ -1366,8 +1366,9 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418a";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418b";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
+    import { createWorldGlobeAuthoringAdapter } from "./studio/adapters/world-globe-authoring-adapter.js?v=20260418a";
     import {
       applyLabThemeDefaults,
       buildTeleportBehaviorModule,
@@ -1412,6 +1413,7 @@
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
       createTeleportAuthoringAdapter,
+      createWorldGlobeAuthoringAdapter,
     });
     const {
       studioBaseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
@@ -1602,6 +1604,8 @@
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
+      worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
+      getElementById: $,
     });
     const AUTHORING_ADAPTERS_BY_BASE_EFFECT = Object.freeze(
       Object.fromEntries(Object.entries(LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT)
@@ -1800,6 +1804,23 @@
       return typeof method === "function" ? method(...args) : undefined;
     }
 
+    function buildAuthoringAdapterApplyOptions(baseEffect){
+      return {
+        applyPreview: () => {
+          switch (String(baseEffect || "")) {
+            case "teleport":
+              applyOrbTeleport();
+              break;
+            case "world-globe":
+              applyWorldGlobe();
+              break;
+            default:
+              break;
+          }
+        },
+      };
+    }
+
     function selectedEffectCategory(){
       return selectedEffectCategoryHelper(selectedEffectOption());
     }
@@ -1886,50 +1907,6 @@
       };
     }
 
-    function readWorldGlobeDefaults(prefix, state = {}) {
-      const fill = state.fillRgb || {};
-      const stroke = state.strokeRgb || {};
-      return {
-        [`${prefix}Size`]: Math.round(Number(state.diameterPx) || 0),
-        [`${prefix}FillR`]: Math.round(Number(fill.r) || 0),
-        [`${prefix}FillG`]: Math.round(Number(fill.g) || 0),
-        [`${prefix}FillB`]: Math.round(Number(fill.b) || 0),
-        [`${prefix}FillAlpha`]: Number(Number(state.fillAlpha).toFixed(2)),
-        [`${prefix}StrokeR`]: Math.round(Number(stroke.r) || 0),
-        [`${prefix}StrokeG`]: Math.round(Number(stroke.g) || 0),
-        [`${prefix}StrokeB`]: Math.round(Number(stroke.b) || 0),
-        [`${prefix}StrokeAlpha`]: Number(Number(state.strokeAlpha).toFixed(2)),
-        [`${prefix}StrokeWidth`]: Number(Number(state.strokeWidthPx).toFixed(1)),
-      };
-    }
-
-    function readWorldGlobeFields(prefix) {
-      const read = (suffix) => Number($(prefix + suffix) && $(prefix + suffix).value);
-      return {
-        [`${prefix}Size`]: read("Size"),
-        [`${prefix}FillR`]: read("FillR"),
-        [`${prefix}FillG`]: read("FillG"),
-        [`${prefix}FillB`]: read("FillB"),
-        [`${prefix}FillAlpha`]: read("FillAlpha"),
-        [`${prefix}StrokeR`]: read("StrokeR"),
-        [`${prefix}StrokeG`]: read("StrokeG"),
-        [`${prefix}StrokeB`]: read("StrokeB"),
-        [`${prefix}StrokeAlpha`]: read("StrokeAlpha"),
-        [`${prefix}StrokeWidth`]: read("StrokeWidth"),
-      };
-    }
-
-    function applyWorldGlobeFields(prefix, settings) {
-      [
-        "Size", "FillR", "FillG", "FillB", "FillAlpha",
-        "StrokeR", "StrokeG", "StrokeB", "StrokeAlpha", "StrokeWidth",
-      ].forEach((suffix) => {
-        const key = prefix + suffix;
-        const el = $(key);
-        if (el && settings[key] != null) el.value = String(settings[key]);
-      });
-    }
-
     function defaultSettingsForBaseEffect(baseEffect){
       const defaultSettingsKey = defaultSettingsKeyForBaseEffect(baseEffect);
       const adapterDefaults = callAuthoringAdapter(defaultSettingsKey, "defaultSettings");
@@ -1981,17 +1958,6 @@
             orbGlobeInnerDriftMin: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMin.toFixed(2)),
             orbGlobeInnerDriftMax: Number(ORB_GLOBE_VISUAL_DEFAULTS.innerDriftMax.toFixed(2)),
             orbGlobeInnerPaddingPx: Math.round(ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx),
-          };
-        case "world-globe":
-          return {
-            ...readWorldGlobeDefaults("worldGlobeIdle", WORLD_GLOBE_VISUAL_DEFAULTS.idle),
-            worldGlobeIdleDrift: Math.round(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.driftPx) || 0),
-            worldGlobeIdleBob: Math.round(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobPx) || 0),
-            worldGlobeIdleBobHz: Number(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobHz).toFixed(2)),
-            worldGlobeIdlePulseScale: Number(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.pulseScale).toFixed(3)),
-            worldGlobeIdlePulseHz: Number(Number(WORLD_GLOBE_VISUAL_DEFAULTS.idle.pulseHz).toFixed(2)),
-            ...readWorldGlobeDefaults("worldGlobeCollected", WORLD_GLOBE_VISUAL_DEFAULTS.collected),
-            ...readWorldGlobeDefaults("worldGlobeConsumed", WORLD_GLOBE_VISUAL_DEFAULTS.consumed),
           };
         case "bubble-shield":
           return {
@@ -2289,17 +2255,6 @@
             orbGlobeInnerDriftMax: Number(els.orbGlobeInnerDriftMax && els.orbGlobeInnerDriftMax.value),
             orbGlobeInnerPaddingPx: Number(els.orbGlobeInnerPaddingPx && els.orbGlobeInnerPaddingPx.value),
           };
-        case "world-globe":
-          return {
-            ...readWorldGlobeFields("worldGlobeIdle"),
-            worldGlobeIdleDrift: Number($("worldGlobeIdleDrift") && $("worldGlobeIdleDrift").value),
-            worldGlobeIdleBob: Number($("worldGlobeIdleBob") && $("worldGlobeIdleBob").value),
-            worldGlobeIdleBobHz: Number($("worldGlobeIdleBobHz") && $("worldGlobeIdleBobHz").value),
-            worldGlobeIdlePulseScale: Number($("worldGlobeIdlePulseScale") && $("worldGlobeIdlePulseScale").value),
-            worldGlobeIdlePulseHz: Number($("worldGlobeIdlePulseHz") && $("worldGlobeIdlePulseHz").value),
-            ...readWorldGlobeFields("worldGlobeCollected"),
-            ...readWorldGlobeFields("worldGlobeConsumed"),
-          };
         case "bubble-shield":
           return {
             shieldMs: Number(els.shieldMs && els.shieldMs.value),
@@ -2339,7 +2294,7 @@
       if (!settings || typeof settings !== "object") return;
       suspendDraftApply = true;
       try {
-        if (callAuthoringAdapter(baseEffect, "apply", [els, settings, { applyPreview: applyOrbTeleport }]) !== undefined) {
+        if (callAuthoringAdapter(baseEffect, "apply", [els, settings, buildAuthoringAdapterApplyOptions(baseEffect)]) !== undefined) {
           return;
         }
         switch (String(baseEffect || "")) {
@@ -2400,17 +2355,6 @@
             if (els.orbGlobeInnerDriftMax && settings.orbGlobeInnerDriftMax != null) els.orbGlobeInnerDriftMax.value = String(settings.orbGlobeInnerDriftMax);
             if (els.orbGlobeInnerPaddingPx && settings.orbGlobeInnerPaddingPx != null) els.orbGlobeInnerPaddingPx.value = String(settings.orbGlobeInnerPaddingPx);
             applyOrbGlobe();
-            break;
-          case "world-globe":
-            applyWorldGlobeFields("worldGlobeIdle", settings);
-            if ($("worldGlobeIdleDrift") && settings.worldGlobeIdleDrift != null) $("worldGlobeIdleDrift").value = String(settings.worldGlobeIdleDrift);
-            if ($("worldGlobeIdleBob") && settings.worldGlobeIdleBob != null) $("worldGlobeIdleBob").value = String(settings.worldGlobeIdleBob);
-            if ($("worldGlobeIdleBobHz") && settings.worldGlobeIdleBobHz != null) $("worldGlobeIdleBobHz").value = String(settings.worldGlobeIdleBobHz);
-            if ($("worldGlobeIdlePulseScale") && settings.worldGlobeIdlePulseScale != null) $("worldGlobeIdlePulseScale").value = String(settings.worldGlobeIdlePulseScale);
-            if ($("worldGlobeIdlePulseHz") && settings.worldGlobeIdlePulseHz != null) $("worldGlobeIdlePulseHz").value = String(settings.worldGlobeIdlePulseHz);
-            applyWorldGlobeFields("worldGlobeCollected", settings);
-            applyWorldGlobeFields("worldGlobeConsumed", settings);
-            applyWorldGlobe();
             break;
           case "bubble-shield":
             if (els.shieldMs && settings.shieldMs != null) els.shieldMs.value = String(settings.shieldMs);
