@@ -1428,7 +1428,6 @@
       labAuthoringAdapterFactoriesByBaseEffect: LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT,
       liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
       liveBehaviorBuildersByBaseEffect: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT,
-      behaviorBaseEffectByTargetId: BEHAVIOR_BASE_EFFECT_BY_TARGET_ID,
     } = deriveLabSurfaceMaps({
       surfaces: LAB_EFFECT_SURFACES,
       buildLivePresetModuleForBaseEffect,
@@ -1757,7 +1756,10 @@
       const opt = selectedEffectOption();
       if (!opt || !els.bindingTargetSelect) return;
       const desiredTargetId = defaultBindTargetForEffect(opt);
-      if (!desiredTargetId) return;
+      if (!desiredTargetId) {
+        els.bindingTargetSelect.selectedIndex = -1;
+        return;
+      }
       const hasTarget = Array.from(els.bindingTargetSelect.options).some((entry) => String(entry.value || "").trim().toLowerCase() === desiredTargetId);
       if (!hasTarget) return;
       if (String(els.bindingTargetSelect.value || "").trim().toLowerCase() === desiredTargetId) return;
@@ -2709,9 +2711,7 @@
       const opt = selectedEffectOption();
       const baseEffect = String(opt && opt.dataset && opt.dataset.baseEffect || opt && opt.value || "").trim().toLowerCase();
       if (LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT[baseEffect]) return baseEffect;
-      const selectedTargetId = String(els.bindingTargetSelect && els.bindingTargetSelect.value || "").trim().toLowerCase();
-      const targetId = selectedTargetId || String(defaultBindTargetForEffect(opt) || "").trim().toLowerCase();
-      return BEHAVIOR_BASE_EFFECT_BY_TARGET_ID[targetId] || "";
+      return "";
     }
 
     function readTeleportBehaviorPreviewConfig(){
