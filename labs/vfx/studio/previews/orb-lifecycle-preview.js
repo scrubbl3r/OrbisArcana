@@ -86,7 +86,7 @@ export function createOrbLifecyclePreview({ els } = {}) {
     els.orbLifecyclePatternLayer.setAttribute("fill", "none");
     els.orbLifecyclePatternLayer.setAttribute("stroke", stroke);
     els.orbLifecyclePatternLayer.setAttribute("stroke-width", "1");
-    els.orbLifecyclePatternLayer.setAttribute("stroke-opacity", "0.33");
+    els.orbLifecyclePatternLayer.setAttribute("stroke-opacity", "0.46");
     els.orbLifecyclePatternLayer.setAttribute("vector-effect", "non-scaling-stroke");
     els.orbLifecyclePatternLayer.innerHTML = edgeMarkup;
     els.orb.hidden = currentHits >= currentHitTotal;
