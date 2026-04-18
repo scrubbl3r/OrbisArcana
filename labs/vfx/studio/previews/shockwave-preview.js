@@ -19,6 +19,18 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
     return n;
   }
 
+  function clampByte(v, fallback = 255) {
+    const n = Math.round(Number(v));
+    const f = Math.round(Number(fallback));
+    return Math.max(0, Math.min(255, Number.isFinite(n) ? n : f));
+  }
+
+  function clampAlpha(v, fallback = 0.65) {
+    const n = Number(v);
+    const f = Number(fallback);
+    return Math.max(0, Math.min(1, Number.isFinite(n) ? n : f));
+  }
+
   function getOrbDiameterPx() {
     const root = els && els.previewRoot;
     const cssDiameter = root
@@ -34,6 +46,12 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
     const spawnMs = Math.round(clamp(els.spawn.value, 1, 700));
     const decayMs = Math.round(clamp(els.decay.value, 40, 2000));
     const authoredStroke = evenStroke(els.stroke.value, 2, 20);
+    const color = {
+      r: clampByte(els.shockR && els.shockR.value, 255),
+      g: clampByte(els.shockG && els.shockG.value, 255),
+      b: clampByte(els.shockB && els.shockB.value, 255),
+      a: clampAlpha(els.shockA && els.shockA.value, 0.65),
+    };
     const resolved = resolveShockwaveGeometry({
       startR: authoredStartR,
       endR: authoredEndR,
@@ -43,19 +61,22 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
       normalizeStroke: (value) => evenStroke(value, 2, 20),
     });
 
+    els.startR.value = String(Math.round(authoredStartR));
+    els.endR.value = String(Math.round(authoredEndR));
+    els.rings.value = String(rings);
+    els.spawn.value = String(spawnMs);
+    els.decay.value = String(decayMs);
     els.stroke.value = authoredStroke;
-
-    els.vStartR.textContent = String(Math.round(authoredStartR));
-    els.vEndR.textContent = String(Math.round(authoredEndR));
-    els.vRings.textContent = String(rings);
-    els.vSpawn.textContent = String(spawnMs);
-    els.vDecay.textContent = String(decayMs);
-    els.vStroke.textContent = String(authoredStroke);
+    if (els.shockR) els.shockR.value = String(color.r);
+    if (els.shockG) els.shockG.value = String(color.g);
+    if (els.shockB) els.shockB.value = String(color.b);
+    if (els.shockA) els.shockA.value = color.a.toFixed(2);
 
     SHOCK.endRadiusPx = resolved.endR;
     SHOCK.spawnRateMs = spawnMs;
     SHOCK.decayMs = decayMs;
 
+    setVar("--shock-color", `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a.toFixed(2)})`);
     setVar("--shock-stroke", `${Number(resolved.stroke).toFixed(2)}px`);
     return {
       startR: resolved.startR,
@@ -64,6 +85,7 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
       spawnMs,
       decayMs,
       stroke: resolved.stroke,
+      color,
     };
   }
 
@@ -165,12 +187,17 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
 
   function wire() {
     els.playShock.addEventListener("click", play);
-    els.startR.addEventListener("input", apply);
-    els.endR.addEventListener("input", apply);
-    els.rings.addEventListener("input", apply);
-    els.spawn.addEventListener("input", apply);
-    els.stroke.addEventListener("input", apply);
-    els.decay.addEventListener("input", apply);
+    [
+      els.shockApplyStartRBtn,
+      els.shockApplyEndRBtn,
+      els.shockApplyRingsBtn,
+      els.shockApplySpawnBtn,
+      els.shockApplyStrokeBtn,
+      els.shockApplyDecayBtn,
+      els.shockApplyColorBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", apply);
+    });
     apply();
   }
 

@@ -394,6 +394,20 @@
       font-size:12px;
       font-weight:800;
     }
+    .rgbaParamRow{
+      display:grid;
+      grid-template-columns: auto auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto;
+      gap:8px;
+      align-items:center;
+    }
+    .rgbaParamRow .rgbaLabel,
+    .rgbaParamRow label{
+      font-size:12px;
+      font-weight:900;
+      color: var(--text-strong);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
 
     .stage{
       height:min(50vh, 520px);
@@ -915,42 +929,50 @@
         <div class="row">
           <button id="playShock">Play</button>
         </div>
-
-        <div class="sliderRow">
-          <span>Start radius</span>
-          <strong><span id="vStartR">43</span>px</strong>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="startR">Start radius px</label>
+            <input id="startR" class="paramFieldInput" type="number" min="1" max="1000" value="43" step="1" />
+            <button id="shockApplyStartRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="endR">End radius px</label>
+            <input id="endR" class="paramFieldInput" type="number" min="1" max="1000" value="169" step="1" />
+            <button id="shockApplyEndRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="rings">Ring count</label>
+            <input id="rings" class="paramFieldInput" type="number" min="1" max="6" value="2" step="1" />
+            <button id="shockApplyRingsBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="spawn">Spawn rate ms</label>
+            <input id="spawn" class="paramFieldInput" type="number" min="1" max="700" value="105" step="1" />
+            <button id="shockApplySpawnBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="stroke">Stroke width px</label>
+            <input id="stroke" class="paramFieldInput" type="number" min="1" max="40" value="4" step="1" />
+            <button id="shockApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="decay">Decay ms</label>
+            <input id="decay" class="paramFieldInput" type="number" min="40" max="2000" value="150" step="10" />
+            <button id="shockApplyDecayBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">RGBA</span>
+            <label for="shockR">r</label>
+            <input id="shockR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="shockG">g</label>
+            <input id="shockG" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="shockB">b</label>
+            <input id="shockB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="shockA">a</label>
+            <input id="shockA" class="paramFieldInput" type="number" min="0" max="1" value="0.65" step="0.01" />
+            <button id="shockApplyColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
-        <input id="startR" type="range" min="1" max="1000" value="43" step="1" />
-
-        <div class="sliderRow">
-          <span>End radius</span>
-          <strong><span id="vEndR">169</span>px</strong>
-        </div>
-        <input id="endR" type="range" min="1" max="1000" value="169" step="1" />
-
-        <div class="sliderRow">
-          <span>Rings count</span>
-          <strong><span id="vRings">2</span></strong>
-        </div>
-        <input id="rings" type="range" min="1" max="6" value="2" step="1" />
-
-        <div class="sliderRow">
-          <span>Ring spawn rate</span>
-          <strong><span id="vSpawn">105</span>ms</strong>
-        </div>
-        <input id="spawn" type="range" min="1" max="700" value="105" step="1" />
-
-        <div class="sliderRow">
-          <span>Stroke width (even)</span>
-          <strong><span id="vStroke">4</span>px</strong>
-        </div>
-        <input id="stroke" type="range" min="2" max="20" value="4" step="1" />
-
-        <div class="sliderRow">
-          <span>Decay</span>
-          <strong><span id="vDecay">150</span>ms</strong>
-        </div>
-        <input id="decay" type="range" min="40" max="2000" value="150" step="10" />
       </div>
 
       <!-- Flame AOE controls -->
@@ -1329,7 +1351,7 @@
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
     import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418b";
-    import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260414-orbscale";
+    import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260418a";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260414-orbscale";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260414-orbscale";
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
@@ -1374,13 +1396,14 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418h";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418i";
     import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418c";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
     import { createOrbLifecycleAuthoringAdapter } from "./studio/adapters/orb-lifecycle-authoring-adapter.js?v=20260418a";
     import { createOrbNodAuthoringAdapter } from "./studio/adapters/orb-nod-authoring-adapter.js?v=20260418a";
+    import { createShockwaveAuthoringAdapter } from "./studio/adapters/shockwave-authoring-adapter.js?v=20260418a";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
     import { createWorldGlobeAuthoringAdapter } from "./studio/adapters/world-globe-authoring-adapter.js?v=20260418a";
     import {
@@ -1432,6 +1455,7 @@
       createOrbGlobeAuthoringAdapter,
       createOrbLifecycleAuthoringAdapter,
       createOrbNodAuthoringAdapter,
+      createShockwaveAuthoringAdapter,
       createTeleportAuthoringAdapter,
       createWorldGlobeAuthoringAdapter,
     });
@@ -1518,17 +1542,22 @@
 
       playShock: $("playShock"),
       startR: $("startR"),
-      vStartR: $("vStartR"),
+      shockApplyStartRBtn: $("shockApplyStartRBtn"),
       endR: $("endR"),
-      vEndR: $("vEndR"),
+      shockApplyEndRBtn: $("shockApplyEndRBtn"),
       rings: $("rings"),
-      vRings: $("vRings"),
+      shockApplyRingsBtn: $("shockApplyRingsBtn"),
       spawn: $("spawn"),
-      vSpawn: $("vSpawn"),
+      shockApplySpawnBtn: $("shockApplySpawnBtn"),
       stroke: $("stroke"),
-      vStroke: $("vStroke"),
+      shockApplyStrokeBtn: $("shockApplyStrokeBtn"),
       decay: $("decay"),
-      vDecay: $("vDecay"),
+      shockApplyDecayBtn: $("shockApplyDecayBtn"),
+      shockR: $("shockR"),
+      shockG: $("shockG"),
+      shockB: $("shockB"),
+      shockA: $("shockA"),
+      shockApplyColorBtn: $("shockApplyColorBtn"),
 
       playFlame: $("playFlame"),
       flameD: $("flameD"),
@@ -1632,6 +1661,7 @@
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
       bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+      shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       orbLifecycleDefaults: Object.freeze({
@@ -1855,6 +1885,9 @@
               options.applyShield = applyShield;
               options.applyPulse = applyPulse;
               break;
+            case "shockwave":
+              applyShock();
+              break;
             case "orb-base":
               applyOrbBase();
               break;
@@ -1973,15 +2006,6 @@
       switch (String(defaultSettingsKey || "")) {
         case "orb-template":
           return {};
-        case "shockwave":
-          return {
-            startR: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.startR, 1, 1000)),
-            endR: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.endR, 1, 1000)),
-            rings: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.rings, 1, 6)),
-            spawn: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.spawnMs, 1, 700)),
-            stroke: evenPx(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.stroke, 2, 20),
-            decay: Math.round(clamp(SHOCKWAVE_PRESET_DEFAULT && SHOCKWAVE_PRESET_DEFAULT.decayMs, 40, 2000)),
-          };
         case "flame-aoe":
           return {
             flameD: evenPx(clamp(FLAME_AOE_PRESET_DEFAULT && FLAME_AOE_PRESET_DEFAULT.diameter, 120, 900), 2, 2000),
@@ -2208,15 +2232,6 @@
       switch (String(baseEffect || "")) {
         case "orb-template":
           return {};
-        case "shockwave":
-          return {
-            startR: Number(els.startR && els.startR.value),
-            endR: Number(els.endR && els.endR.value),
-            rings: Number(els.rings && els.rings.value),
-            spawn: Number(els.spawn && els.spawn.value),
-            stroke: Number(els.stroke && els.stroke.value),
-            decay: Number(els.decay && els.decay.value),
-          };
         case "flame-aoe":
           return {
             flameD: Number(els.flameD && els.flameD.value),
@@ -2237,15 +2252,6 @@
         switch (String(baseEffect || "")) {
           case "orb-template":
             applyOrbLaneSsot(els.orbTemplatePreviewRoot);
-            break;
-          case "shockwave":
-            if (els.startR && settings.startR != null) els.startR.value = String(settings.startR);
-            if (els.endR && settings.endR != null) els.endR.value = String(settings.endR);
-            if (els.rings && settings.rings != null) els.rings.value = String(settings.rings);
-            if (els.spawn && settings.spawn != null) els.spawn.value = String(settings.spawn);
-            if (els.stroke && settings.stroke != null) els.stroke.value = String(settings.stroke);
-            if (els.decay && settings.decay != null) els.decay.value = String(settings.decay);
-            applyShock();
             break;
           case "flame-aoe":
             if (els.flameD && settings.flameD != null) els.flameD.value = String(settings.flameD);

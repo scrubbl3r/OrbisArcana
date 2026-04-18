@@ -102,6 +102,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "shockwave":
       return [
         "export const SHOCKWAVE_PRESET_DEFAULT = Object.freeze({",
+        `  color: Object.freeze({ r: ${Math.round(clampNum(p.shockR, 0, 255, 255))}, g: ${Math.round(clampNum(p.shockG, 0, 255, 255))}, b: ${Math.round(clampNum(p.shockB, 0, 255, 255))}, a: ${clampNum(p.shockA, 0, 1, 0.65).toFixed(2)} }),`,
         `  startR: ${Math.round(toNum(p.startR, 43))},`,
         `  endR: ${Math.round(toNum(p.endR, 169))},`,
         `  rings: ${Math.round(toNum(p.rings, 2))},`,
@@ -321,12 +322,17 @@ export function applyLabThemeDefaults({
     els.stroke.value = String(evenPx(theme.shockwave.strokeWidthPx, 2, 20));
   }
   if (shockwavePresetDefault) {
+    const shockColor = shockwavePresetDefault.color || {};
     if (els.startR) els.startR.value = String(Math.round(clamp(shockwavePresetDefault.startR, 1, 1000)));
     if (els.endR) els.endR.value = String(Math.round(clamp(shockwavePresetDefault.endR, 1, 1000)));
     if (els.rings) els.rings.value = String(Math.round(clamp(shockwavePresetDefault.rings, 1, 6)));
     if (els.spawn) els.spawn.value = String(Math.round(clamp(shockwavePresetDefault.spawnMs, 1, 700)));
     if (els.decay) els.decay.value = String(Math.round(clamp(shockwavePresetDefault.decayMs, 40, 2000)));
     if (els.stroke) els.stroke.value = String(evenPx(shockwavePresetDefault.stroke, 2, 20));
+    if (els.shockR) els.shockR.value = String(Math.round(clamp(shockColor.r, 0, 255)));
+    if (els.shockG) els.shockG.value = String(Math.round(clamp(shockColor.g, 0, 255)));
+    if (els.shockB) els.shockB.value = String(Math.round(clamp(shockColor.b, 0, 255)));
+    if (els.shockA) els.shockA.value = String(clamp(shockColor.a, 0, 1).toFixed(2));
   }
   if (els.flameD && flameAoePresetDefault) {
     els.flameD.value = String(evenPx(clamp(flameAoePresetDefault.diameter, 120, 900), 2, 2000));

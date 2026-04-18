@@ -6,6 +6,7 @@ export function createLabEffectSurfaces({
   createOrbGlobeAuthoringAdapter,
   createOrbLifecycleAuthoringAdapter,
   createOrbNodAuthoringAdapter,
+  createShockwaveAuthoringAdapter,
   createTeleportAuthoringAdapter,
   createWorldGlobeAuthoringAdapter,
 } = {}) {
@@ -51,6 +52,7 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "playShock",
       defaultBindTarget: "spell.shockwave",
       livePreset: Object.freeze({ buildKey: "shockwave", path: ["src", "vfx", "presets", "shockwave-default.js"], exportName: "SHOCKWAVE_PRESET_DEFAULT" }),
+      authoringAdapter: createShockwaveAuthoringAdapter,
     }),
     "teleport": Object.freeze({
       category: "spell",
