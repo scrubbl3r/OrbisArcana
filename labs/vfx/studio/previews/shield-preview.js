@@ -65,6 +65,7 @@ export function createShieldPreview({
     const ms = clamp(els.shieldMs.value, 80, 120000);
     const a = clamp(els.shieldAlpha.value, 0, 1);
     els.shieldMs.value = String(Math.round(ms));
+    if (els.vShieldMs) els.vShieldMs.textContent = String(Math.round(ms));
     els.vShieldAlpha.textContent = a.toFixed(2);
 
     setVar("--shield-alpha", a.toFixed(2));

@@ -861,7 +861,7 @@
           <span>Shield duration</span>
           <span class="inlineField">
             <input id="shieldMs" class="numField" type="number" min="80" max="120000" step="10" value="8000" />
-            <strong>ms</strong>
+            <strong><span id="vShieldMs">8000</span>ms</strong>
           </span>
         </div>
 
@@ -1386,14 +1386,14 @@
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
     } from "./studio/vfx-studio-theme-publish.js?v=20260418a";
+    import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260418a";
     import {
-      BUBBLE_SHIELD_PRESET_DEFAULT,
       SHOCKWAVE_PRESET_DEFAULT,
       FLAME_AOE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
       ORB_NOD_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260417b";
+    } from "../../src/vfx/presets/index.js?v=20260418a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260416b";
@@ -1487,6 +1487,7 @@
       bindingPanel: $("bindingPanel"),
       bindingGrid: $("bindingGrid"),
       shieldMs: $("shieldMs"),
+      vShieldMs: $("vShieldMs"),
       shieldAlpha: $("shieldAlpha"),
       vShieldAlpha: $("vShieldAlpha"),
       shieldD: $("shieldD"),
