@@ -270,6 +270,7 @@ export function buildPresetDraftRecordFromSelection({
   opt,
   draftStore,
   baseEffect,
+  settingsKey,
   category,
   captureCurrentEffectSettings,
 }) {
@@ -277,6 +278,7 @@ export function buildPresetDraftRecordFromSelection({
   const value = String(opt.value || "");
   if (!value) return null;
   const prev = draftStore.profilesByValue[value] || {};
+  const settingsStoreKey = String(settingsKey || baseEffect || "");
   return {
     value,
     label: String(opt.textContent || value),
@@ -286,7 +288,7 @@ export function buildPresetDraftRecordFromSelection({
     locked: String(opt.dataset.locked || "") === "true",
     settingsByBaseEffect: {
       ...(prev.settingsByBaseEffect && typeof prev.settingsByBaseEffect === "object" ? prev.settingsByBaseEffect : {}),
-      [baseEffect]: captureCurrentEffectSettings(baseEffect),
+      [settingsStoreKey]: captureCurrentEffectSettings(baseEffect),
     },
     savedAtMs: Date.now(),
   };
@@ -308,6 +310,7 @@ export function createCustomEffectProfile({
   effectSelect,
   selectedOption,
   baseEffect,
+  settingsKey,
   category,
   trimmedName,
   draftStore,
@@ -326,6 +329,7 @@ export function createCustomEffectProfile({
   if (selectedOption && selectedOption.dataset.registryId) opt.dataset.registryId = String(selectedOption.dataset.registryId);
   opt.textContent = trimmedName;
   ensureCategoryGroup(effectSelect, categoryLabels, category)?.appendChild(opt);
+  const settingsStoreKey = String(settingsKey || baseEffect || "");
 
   draftStore.profilesByValue[newValue] = {
     value: newValue,
@@ -335,7 +339,7 @@ export function createCustomEffectProfile({
     registryId: String((selectedOption && selectedOption.dataset.registryId) || ""),
     locked: false,
     settingsByBaseEffect: {
-      [baseEffect]: defaultSettings,
+      [settingsStoreKey]: defaultSettings,
     },
     savedAtMs: Date.now(),
   };
@@ -349,6 +353,7 @@ export function duplicateEffectProfile({
   effectSelect,
   selectedOption,
   baseEffect,
+  settingsKey,
   category,
   trimmedName,
   draftStore,
@@ -374,6 +379,7 @@ export function duplicateEffectProfile({
   const srcSettingsByBase = srcDraft && srcDraft.settingsByBaseEffect && typeof srcDraft.settingsByBaseEffect === "object"
     ? srcDraft.settingsByBaseEffect
     : null;
+  const settingsStoreKey = String(settingsKey || baseEffect || "");
   const isLockedBuiltinTemplate = (
     String(baseEffect || "") === "orb-template"
     && String((selectedOption && selectedOption.dataset.locked) || "") === "true"
@@ -389,8 +395,8 @@ export function duplicateEffectProfile({
     settingsByBaseEffect: srcSettingsByBase
       ? JSON.parse(JSON.stringify(srcSettingsByBase))
       : isLockedBuiltinTemplate
-      ? { [baseEffect]: defaultSettingsForBaseEffect(baseEffect) }
-      : { [baseEffect]: captureCurrentEffectSettings(baseEffect) },
+      ? { [settingsStoreKey]: defaultSettingsForBaseEffect(baseEffect) }
+      : { [settingsStoreKey]: captureCurrentEffectSettings(baseEffect) },
     savedAtMs: Date.now(),
   };
   draftStore.activeValue = newValue;

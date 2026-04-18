@@ -1357,7 +1357,7 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260416c";
+    } from "./studio/vfx-studio-state.js?v=20260417a";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1998,6 +1998,7 @@
         opt: selectedEffectOption(),
         draftStore,
         baseEffect: selectedBaseEffect(),
+        settingsKey: settingsKeyForBaseEffect(selectedBaseEffect()),
         category: selectedEffectCategory(),
         captureCurrentEffectSettings,
       });
@@ -2661,6 +2662,7 @@
         effectSelect: els.effectSelect,
         selectedOption: srcOpt,
         baseEffect,
+        settingsKey: settingsKeyForBaseEffect(baseEffect),
         category,
         trimmedName: trimmed,
         draftStore,
@@ -2687,6 +2689,7 @@
         effectSelect: els.effectSelect,
         selectedOption: srcOpt,
         baseEffect,
+        settingsKey: settingsKeyForBaseEffect(baseEffect),
         category,
         trimmedName: trimmed,
         draftStore,
