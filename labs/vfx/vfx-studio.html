@@ -844,25 +844,23 @@
         <div class="row">
           <button id="playElectric">Play</button>
         </div>
-        <div class="sliderRow">
-          <span>Duration</span>
-          <span class="inlineField">
-            <input id="electricMs" class="numField" type="number" min="200" max="60000" step="10" value="10000" />
-            <strong>ms</strong>
-          </span>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="electricMs">Duration ms</label>
+            <input id="electricMs" class="paramFieldInput" type="number" min="200" max="60000" step="10" value="10000" />
+            <button id="electricApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="electricStartR">Plasma start radius px</label>
+            <input id="electricStartR" class="paramFieldInput" type="number" min="2" max="500" value="83" step="1" />
+            <button id="electricApplyStartRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="electricEndR">Plasma end radius px</label>
+            <input id="electricEndR" class="paramFieldInput" type="number" min="8" max="1000" value="200" step="1" />
+            <button id="electricApplyEndRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
-
-        <div class="sliderRow">
-          <span>Plasma start radius</span>
-          <strong><span id="vElectricStartR">80</span>px</strong>
-        </div>
-        <input id="electricStartR" type="range" min="2" max="500" value="80" step="1" />
-
-        <div class="sliderRow">
-          <span>Plasma end radius</span>
-          <strong><span id="vElectricEndR">200</span>px</strong>
-        </div>
-        <input id="electricEndR" type="range" min="8" max="1000" value="200" step="1" />
       </div>
 
       <!-- Shield controls -->
@@ -1372,7 +1370,7 @@
     import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418b";
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260418a";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260418a";
-    import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260414-orbscale";
+    import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260418a";
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260417a";
@@ -1598,10 +1596,11 @@
 
       playElectric: $("playElectric"),
       electricMs: $("electricMs"),
+      electricApplyDurationBtn: $("electricApplyDurationBtn"),
       electricStartR: $("electricStartR"),
-      vElectricStartR: $("vElectricStartR"),
+      electricApplyStartRBtn: $("electricApplyStartRBtn"),
       electricEndR: $("electricEndR"),
-      vElectricEndR: $("vElectricEndR"),
+      electricApplyEndRBtn: $("electricApplyEndRBtn"),
       orbBaseD: $("orbBaseD"),
       orbBaseApplyDiameterBtn: $("orbBaseApplyDiameterBtn"),
       orbBaseStroke: $("orbBaseStroke"),

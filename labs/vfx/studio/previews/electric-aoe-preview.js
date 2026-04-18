@@ -50,8 +50,6 @@ export function createElectricAoePreview({
     if (els.electricMs) els.electricMs.value = String(durationMs);
     els.electricStartR.value = String(authoredStartR);
     els.electricEndR.value = String(authoredEndR);
-    els.vElectricStartR.textContent = String(authoredStartR);
-    els.vElectricEndR.textContent = String(authoredEndR);
 
     setVar("--electric-d", `${(Number(resolved.endR) * 2).toFixed(2)}px`);
     return {
@@ -299,9 +297,13 @@ export function createElectricAoePreview({
 
   function wire() {
     els.playElectric.addEventListener("click", play);
-    if (els.electricMs) els.electricMs.addEventListener("input", apply);
-    els.electricStartR.addEventListener("input", apply);
-    els.electricEndR.addEventListener("input", apply);
+    [
+      els.electricApplyDurationBtn,
+      els.electricApplyStartRBtn,
+      els.electricApplyEndRBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", apply);
+    });
     apply();
   }
 
