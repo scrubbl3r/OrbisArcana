@@ -1408,6 +1408,7 @@
       "electric-aoe": Object.freeze({
         category: "spell",
         settingsKey: "electric-aoe",
+        defaultSettingsKey: "electric-aoe",
         registryIds: Object.freeze(["spell.aoe_electric"]),
         previewRootKey: "electricPreviewRoot",
         autoPreviewKey: "playElectric",
@@ -1417,6 +1418,7 @@
       "flame-aoe": Object.freeze({
         category: "spell",
         settingsKey: "flame-aoe",
+        defaultSettingsKey: "flame-aoe",
         registryIds: Object.freeze(["spell.aoe_flame"]),
         previewRootKey: "flamePreviewRoot",
         autoPreviewKey: "playFlame",
@@ -1426,6 +1428,7 @@
       "bubble-shield": Object.freeze({
         category: "spell",
         settingsKey: "bubble-shield",
+        defaultSettingsKey: "bubble-shield",
         registryIds: Object.freeze(["spell.shield_bubble"]),
         previewRootKey: "shieldPreviewRoot",
         autoPreviewKey: "playShield",
@@ -1435,6 +1438,7 @@
       "shockwave": Object.freeze({
         category: "spell",
         settingsKey: "shockwave",
+        defaultSettingsKey: "shockwave",
         registryIds: Object.freeze(["spell.shockwave_ring"]),
         previewRootKey: "shockPreviewRoot",
         autoPreviewKey: "playShock",
@@ -1444,6 +1448,7 @@
       "teleport": Object.freeze({
         category: "spell",
         settingsKey: "teleport",
+        defaultSettingsKey: "teleport",
         registryIds: Object.freeze(["spell.teleport"]),
         previewRootKey: "orbTeleportPreviewRoot",
         autoPreviewKey: "applyOrbTeleport",
@@ -1460,6 +1465,7 @@
         label: "Orb Base",
         category: "orb",
         settingsKey: "orb-base",
+        defaultSettingsKey: "orb-base",
         builtinOption: true,
         previewRootKey: "orbBasePreviewRoot",
         autoPreviewKey: "applyOrbBase",
@@ -1469,6 +1475,7 @@
         label: "Orb Template",
         category: "orb",
         settingsKey: "orb-template",
+        defaultSettingsKey: "orb-template",
         builtinOption: true,
         previewRootKey: "orbTemplatePreviewRoot",
         autoPreviewKey: "applyOrbTemplate",
@@ -1476,6 +1483,7 @@
       "orb-nod": Object.freeze({
         category: "orb",
         settingsKey: "orb-nod",
+        defaultSettingsKey: "orb-nod",
         settingsParamPrefix: "orbTemplate",
         registryIds: Object.freeze(["orb.nod"]),
         previewRootKey: "orbNodPreviewRoot",
@@ -1487,6 +1495,7 @@
         label: "Orb Globe",
         category: "orb",
         settingsKey: "orb-globe",
+        defaultSettingsKey: "orb-globe",
         registryIds: Object.freeze(["orb.globe"]),
         omitRegistryOption: true,
         builtinOption: true,
@@ -1499,6 +1508,7 @@
         label: "Orb Lifecycle",
         category: "orb",
         settingsKey: "orb-lifecycle",
+        defaultSettingsKey: "orb-lifecycle",
         builtinOption: true,
         previewRootKey: "orbLifecyclePreviewRoot",
         autoPreviewKey: "applyOrbLifecycle",
@@ -1506,6 +1516,7 @@
       "orb-shatter": Object.freeze({
         category: "orb",
         settingsKey: "orb-shatter",
+        defaultSettingsKey: "orb-shatter",
         registryIds: Object.freeze(["orb.shatter_voronoi"]),
         omitRegistryOption: true,
         defaultBindTarget: "orb-state.shattered",
@@ -1513,6 +1524,7 @@
       "world-globe": Object.freeze({
         category: "world",
         settingsKey: "world-globe",
+        defaultSettingsKey: "world-globe",
         registryIds: Object.freeze(["world.globe"]),
         previewRootKey: "worldGlobePreviewRoot",
         autoPreviewKey: "applyWorldGlobe",
@@ -1542,6 +1554,10 @@
     const SETTINGS_KEY_BY_BASE_EFFECT = Object.freeze(
       Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
         .map(([baseEffect, surface]) => [baseEffect, surface.settingsKey || baseEffect]))
+    );
+    const DEFAULT_SETTINGS_KEY_BY_BASE_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
+        .map(([baseEffect, surface]) => [baseEffect, surface.defaultSettingsKey || surface.settingsKey || baseEffect]))
     );
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze(
       Object.entries(LAB_EFFECT_SURFACES)
@@ -1928,6 +1944,11 @@
       return SETTINGS_KEY_BY_BASE_EFFECT[key] || key;
     }
 
+    function defaultSettingsKeyForBaseEffect(baseEffect){
+      const key = String(baseEffect || "");
+      return DEFAULT_SETTINGS_KEY_BY_BASE_EFFECT[key] || settingsKeyForBaseEffect(key);
+    }
+
     function selectedEffectCategory(){
       return selectedEffectCategoryHelper(selectedEffectOption());
     }
@@ -2058,7 +2079,8 @@
     }
 
     function defaultSettingsForBaseEffect(baseEffect){
-      switch (String(baseEffect || "")) {
+      const defaultSettingsKey = defaultSettingsKeyForBaseEffect(baseEffect);
+      switch (String(defaultSettingsKey || "")) {
         case "orb-base":
           return {
             orbBaseD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
