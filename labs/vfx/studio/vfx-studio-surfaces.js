@@ -2,6 +2,7 @@ export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
   createBubbleShieldAuthoringAdapter,
   createElectricAoeAuthoringAdapter,
+  createFlameAoeAuthoringAdapter,
   createOrbBaseAuthoringAdapter,
   createOrbGlobeAuthoringAdapter,
   createOrbLifecycleAuthoringAdapter,
@@ -31,6 +32,7 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "playFlame",
       defaultBindTarget: "spell.aoe_flame",
       livePreset: Object.freeze({ buildKey: "flame-aoe", path: ["src", "vfx", "presets", "flame-aoe-default.js"], exportName: "FLAME_AOE_PRESET_DEFAULT" }),
+      authoringAdapter: createFlameAoeAuthoringAdapter,
     }),
     "bubble-shield": Object.freeze({
       category: "spell",

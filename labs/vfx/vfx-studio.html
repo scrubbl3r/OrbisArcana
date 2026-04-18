@@ -980,22 +980,41 @@
         <div class="row">
           <button id="playFlame">Play</button>
         </div>
-
-        <div class="sliderRow">
-          <span>Diameter</span>
-          <strong><span id="vFlameD">200</span>px</strong>
-        </div>
-        <input id="flameD" type="range" min="120" max="900" value="200" step="2" />
-        <div class="sliderRow">
-          <span>Duration</span>
-          <span class="inlineField">
-            <input id="flameMs" class="numField" type="number" min="200" max="60000" step="10" value="10000" />
-            <strong>ms</strong>
-          </span>
-        </div>
-        <div class="sliderRow">
-          <span>Fill alpha</span>
-          <strong>0.20</strong>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="flameD">Diameter px</label>
+            <input id="flameD" class="paramFieldInput" type="number" min="20" max="1200" value="124" step="2" />
+            <button id="flameApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="flameMs">Duration ms</label>
+            <input id="flameMs" class="paramFieldInput" type="number" min="200" max="60000" step="10" value="10000" />
+            <button id="flameApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Stroke RGBA</span>
+            <label for="flameStrokeR">r</label>
+            <input id="flameStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="flameStrokeG">g</label>
+            <input id="flameStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="96" step="1" />
+            <label for="flameStrokeB">b</label>
+            <input id="flameStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="24" step="1" />
+            <label for="flameStrokeA">a</label>
+            <input id="flameStrokeA" class="paramFieldInput" type="number" min="0" max="1" value="1.00" step="0.01" />
+            <button id="flameApplyStrokeColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Fill RGBA</span>
+            <label for="flameFillR">r</label>
+            <input id="flameFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="flameFillG">g</label>
+            <input id="flameFillG" class="paramFieldInput" type="number" min="0" max="255" value="96" step="1" />
+            <label for="flameFillB">b</label>
+            <input id="flameFillB" class="paramFieldInput" type="number" min="0" max="255" value="24" step="1" />
+            <label for="flameFillA">a</label>
+            <input id="flameFillA" class="paramFieldInput" type="number" min="0" max="1" value="0.20" step="0.01" />
+            <button id="flameApplyFillColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
         </div>
       </div>
 
@@ -1352,7 +1371,7 @@
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
     import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418b";
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260418a";
-    import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260414-orbscale";
+    import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260418a";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260414-orbscale";
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
@@ -1396,9 +1415,10 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418i";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418j";
     import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418c";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
+    import { createFlameAoeAuthoringAdapter } from "./studio/adapters/flame-aoe-authoring-adapter.js?v=20260418a";
     import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
     import { createOrbLifecycleAuthoringAdapter } from "./studio/adapters/orb-lifecycle-authoring-adapter.js?v=20260418a";
@@ -1418,9 +1438,9 @@
       saveTextToProjectFile,
     } from "./studio/vfx-studio-theme-publish.js?v=20260418a";
     import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260418a";
+    import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260418a";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
-      FLAME_AOE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
       ORB_NOD_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT
@@ -1451,6 +1471,7 @@
       buildTeleportBehaviorModule,
       createBubbleShieldAuthoringAdapter,
       createElectricAoeAuthoringAdapter,
+      createFlameAoeAuthoringAdapter,
       createOrbBaseAuthoringAdapter,
       createOrbGlobeAuthoringAdapter,
       createOrbLifecycleAuthoringAdapter,
@@ -1561,8 +1582,19 @@
 
       playFlame: $("playFlame"),
       flameD: $("flameD"),
-      vFlameD: $("vFlameD"),
+      flameApplyDiameterBtn: $("flameApplyDiameterBtn"),
       flameMs: $("flameMs"),
+      flameApplyDurationBtn: $("flameApplyDurationBtn"),
+      flameStrokeR: $("flameStrokeR"),
+      flameStrokeG: $("flameStrokeG"),
+      flameStrokeB: $("flameStrokeB"),
+      flameStrokeA: $("flameStrokeA"),
+      flameApplyStrokeColorBtn: $("flameApplyStrokeColorBtn"),
+      flameFillR: $("flameFillR"),
+      flameFillG: $("flameFillG"),
+      flameFillB: $("flameFillB"),
+      flameFillA: $("flameFillA"),
+      flameApplyFillColorBtn: $("flameApplyFillColorBtn"),
 
       playElectric: $("playElectric"),
       electricMs: $("electricMs"),
@@ -1661,6 +1693,7 @@
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
       bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+      flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
       shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
@@ -1888,6 +1921,9 @@
             case "shockwave":
               applyShock();
               break;
+            case "flame-aoe":
+              applyFlameControls();
+              break;
             case "orb-base":
               applyOrbBase();
               break;
@@ -2006,11 +2042,6 @@
       switch (String(defaultSettingsKey || "")) {
         case "orb-template":
           return {};
-        case "flame-aoe":
-          return {
-            flameD: evenPx(clamp(FLAME_AOE_PRESET_DEFAULT && FLAME_AOE_PRESET_DEFAULT.diameter, 120, 900), 2, 2000),
-            flameMs: Math.round(clamp(FLAME_AOE_PRESET_DEFAULT && FLAME_AOE_PRESET_DEFAULT.durationMs, 200, 60000)),
-          };
         default:
           return {};
       }
@@ -2232,11 +2263,6 @@
       switch (String(baseEffect || "")) {
         case "orb-template":
           return {};
-        case "flame-aoe":
-          return {
-            flameD: Number(els.flameD && els.flameD.value),
-            flameMs: Number(els.flameMs && els.flameMs.value),
-          };
         default:
           return {};
       }
@@ -2252,11 +2278,6 @@
         switch (String(baseEffect || "")) {
           case "orb-template":
             applyOrbLaneSsot(els.orbTemplatePreviewRoot);
-            break;
-          case "flame-aoe":
-            if (els.flameD && settings.flameD != null) els.flameD.value = String(settings.flameD);
-            if (els.flameMs && settings.flameMs != null) els.flameMs.value = String(settings.flameMs);
-            applyFlameControls();
             break;
           default:
             break;

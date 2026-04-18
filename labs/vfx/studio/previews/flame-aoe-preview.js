@@ -144,17 +144,54 @@ export function createFlameAoePreview({
     return Math.max(2, cssDiameter || 100);
   }
 
+  function clampByte(v, fallback = 255) {
+    const n = Math.round(Number(v));
+    const f = Math.round(Number(fallback));
+    return Math.max(0, Math.min(255, Number.isFinite(n) ? n : f));
+  }
+
+  function clampAlpha(v, fallback = 1) {
+    const n = Number(v);
+    const f = Number(fallback);
+    return Math.max(0, Math.min(1, Number.isFinite(n) ? n : f));
+  }
+
+  function rgbaValue(prefix, fallback) {
+    const rField = els[`${prefix}R`];
+    const gField = els[`${prefix}G`];
+    const bField = els[`${prefix}B`];
+    const aField = els[`${prefix}A`];
+    const color = {
+      r: clampByte(rField && rField.value, fallback.r),
+      g: clampByte(gField && gField.value, fallback.g),
+      b: clampByte(bField && bField.value, fallback.b),
+      a: clampAlpha(aField && aField.value, fallback.a),
+    };
+    if (rField) rField.value = String(color.r);
+    if (gField) gField.value = String(color.g);
+    if (bField) bField.value = String(color.b);
+    if (aField) aField.value = color.a.toFixed(2);
+    return color;
+  }
+
+  function rgbaText(color) {
+    return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a.toFixed(2)})`;
+  }
+
   function apply() {
-    const d = evenPx(clamp(els.flameD.value, 120, 900), 2, 2000);
+    const d = evenPx(clamp(els.flameD.value, 20, 1200), 2, 2000);
     const ms = Math.round(clamp(els.flameMs && els.flameMs.value, 200, 60000));
+    const stroke = rgbaValue("flameStroke", { r: 255, g: 96, b: 24, a: 1 });
+    const fill = rgbaValue("flameFill", { r: 255, g: 96, b: 24, a: 0.2 });
     const resolved = resolveFlameAoeGeometry({ diameter: d }, {
       orbDiameterPx: getOrbDiameterPx(),
     });
     els.flameD.value = String(d);
     if (els.flameMs) els.flameMs.value = String(ms);
-    els.vFlameD.textContent = String(d);
     setVar("--flame-d", `${Number(resolved.diameter).toFixed(2)}px`);
-    return { diameter: resolved.diameter, durationMs: ms };
+    setVar("--flame-stroke", rgbaText(stroke));
+    setVar("--flame-fill", rgbaText(fill));
+    return { diameter: resolved.diameter, durationMs: ms, stroke, fill };
   }
 
   function play() {
@@ -168,9 +205,13 @@ export function createFlameAoePreview({
         200,
         Number(flameCtl && flameCtl.durationMs) || Number(flamePresetDefault.durationMs) || 10000,
       ),
+      stroke: flameCtl && flameCtl.stroke,
+      fill: flameCtl && flameCtl.fill,
     };
     setVar("--flame-d", `${Number(cfg.diameter).toFixed(2)}px`);
     setVar("--flame-duration", `${cfg.durationMs}ms`);
+    setVar("--flame-stroke", rgbaText(cfg.stroke));
+    setVar("--flame-fill", rgbaText(cfg.fill));
     build(cfg);
     els.flameLayer.appendChild(flameSvg);
 
@@ -264,8 +305,14 @@ export function createFlameAoePreview({
 
   function wire() {
     els.playFlame.addEventListener("click", play);
-    els.flameD.addEventListener("input", apply);
-    if (els.flameMs) els.flameMs.addEventListener("input", apply);
+    [
+      els.flameApplyDiameterBtn,
+      els.flameApplyDurationBtn,
+      els.flameApplyStrokeColorBtn,
+      els.flameApplyFillColorBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", apply);
+    });
     apply();
   }
 

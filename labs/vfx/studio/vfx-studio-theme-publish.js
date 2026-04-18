@@ -129,8 +129,10 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "flame-aoe":
       return [
         "export const FLAME_AOE_PRESET_DEFAULT = Object.freeze({",
-        `  diameter: ${Math.round(toNum(p.flameD, 200))},`,
+        `  diameter: ${Math.round(toNum(p.flameD, 124))},`,
         `  durationMs: ${Math.round(toNum(p.flameMs, 10000))},`,
+        `  stroke: Object.freeze({ r: ${Math.round(clampNum(p.flameStrokeR, 0, 255, 255))}, g: ${Math.round(clampNum(p.flameStrokeG, 0, 255, 96))}, b: ${Math.round(clampNum(p.flameStrokeB, 0, 255, 24))}, a: ${clampNum(p.flameStrokeA, 0, 1, 1).toFixed(2)} }),`,
+        `  fill: Object.freeze({ r: ${Math.round(clampNum(p.flameFillR, 0, 255, 255))}, g: ${Math.round(clampNum(p.flameFillG, 0, 255, 96))}, b: ${Math.round(clampNum(p.flameFillB, 0, 255, 24))}, a: ${clampNum(p.flameFillA, 0, 1, 0.2).toFixed(2)} }),`,
         "});",
         "",
       ].join("\n");
@@ -335,10 +337,22 @@ export function applyLabThemeDefaults({
     if (els.shockA) els.shockA.value = String(clamp(shockColor.a, 0, 1).toFixed(2));
   }
   if (els.flameD && flameAoePresetDefault) {
-    els.flameD.value = String(evenPx(clamp(flameAoePresetDefault.diameter, 120, 900), 2, 2000));
+    els.flameD.value = String(evenPx(clamp(flameAoePresetDefault.diameter, 20, 1200), 2, 2000));
   }
   if (els.flameMs && flameAoePresetDefault) {
     els.flameMs.value = String(Math.round(clamp(flameAoePresetDefault.durationMs, 200, 60000)));
+  }
+  if (flameAoePresetDefault) {
+    const flameStroke = flameAoePresetDefault.stroke || {};
+    const flameFill = flameAoePresetDefault.fill || {};
+    if (els.flameStrokeR) els.flameStrokeR.value = String(Math.round(clampNum(flameStroke.r, 0, 255, 255)));
+    if (els.flameStrokeG) els.flameStrokeG.value = String(Math.round(clampNum(flameStroke.g, 0, 255, 96)));
+    if (els.flameStrokeB) els.flameStrokeB.value = String(Math.round(clampNum(flameStroke.b, 0, 255, 24)));
+    if (els.flameStrokeA) els.flameStrokeA.value = String(clampNum(flameStroke.a, 0, 1, 1).toFixed(2));
+    if (els.flameFillR) els.flameFillR.value = String(Math.round(clampNum(flameFill.r, 0, 255, 255)));
+    if (els.flameFillG) els.flameFillG.value = String(Math.round(clampNum(flameFill.g, 0, 255, 96)));
+    if (els.flameFillB) els.flameFillB.value = String(Math.round(clampNum(flameFill.b, 0, 255, 24)));
+    if (els.flameFillA) els.flameFillA.value = String(clampNum(flameFill.a, 0, 1, 0.2).toFixed(2));
   }
   if (els.electricMs && electricAoePresetDefault) {
     els.electricMs.value = String(Math.round(clamp(electricAoePresetDefault.durationMs, 200, 60000)));
