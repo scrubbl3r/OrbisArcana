@@ -1366,7 +1366,7 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260417b";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418a";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418a";
     import {
       applyLabThemeDefaults,
@@ -1409,7 +1409,10 @@
     let projectRootDirHandle = null;
     let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
-    const LAB_EFFECT_SURFACES = createLabEffectSurfaces({ buildTeleportBehaviorModule });
+    const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
+      buildTeleportBehaviorModule,
+      createTeleportAuthoringAdapter,
+    });
     const {
       studioBaseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
       studioOmitRegistryIds: STUDIO_OMIT_REGISTRY_IDS,
@@ -1420,6 +1423,7 @@
       livePresetModulesByBaseEffect: LIVE_PRESET_MODULES_BY_BASE_EFFECT,
       livePresetBuildersByBaseEffect: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT,
       labBehaviorSurfaces: LAB_BEHAVIOR_SURFACES,
+      labAuthoringAdapterFactoriesByBaseEffect: LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT,
       liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
       liveBehaviorBuildersByBaseEffect: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT,
       behaviorBaseEffectByTargetId: BEHAVIOR_BASE_EFFECT_BY_TARGET_ID,
@@ -1595,10 +1599,14 @@
       orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
       orbTeleportApplyFadeInBtn: $("orbTeleportApplyFadeInBtn"),
     };
-    const teleportAuthoringAdapter = createTeleportAuthoringAdapter({
+    const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
     });
+    const AUTHORING_ADAPTERS_BY_BASE_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT)
+        .map(([baseEffect, createAdapter]) => [baseEffect, createAdapter(AUTHORING_ADAPTER_CONTEXT)]))
+    );
 
     if (els.orbBaseD) els.orbBaseD.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx));
     if (els.orbBaseStroke) els.orbBaseStroke.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx));
@@ -1782,6 +1790,10 @@
       return DEFAULT_SETTINGS_KEY_BY_BASE_EFFECT[key] || settingsKeyForBaseEffect(key);
     }
 
+    function authoringAdapterForBaseEffect(baseEffect){
+      return AUTHORING_ADAPTERS_BY_BASE_EFFECT[String(baseEffect || "")] || null;
+    }
+
     function selectedEffectCategory(){
       return selectedEffectCategoryHelper(selectedEffectOption());
     }
@@ -1941,7 +1953,7 @@
             orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 2),
           };
         case "teleport":
-          return teleportAuthoringAdapter.defaultSettings();
+          return authoringAdapterForBaseEffect("teleport").defaultSettings();
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: 16,
@@ -2248,7 +2260,7 @@
             orbTemplateOscillationCount: Number(els.orbNodOscillationCount && els.orbNodOscillationCount.value),
           };
         case "teleport":
-          return teleportAuthoringAdapter.capture(els);
+          return authoringAdapterForBaseEffect("teleport").capture(els);
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
@@ -2359,7 +2371,7 @@
             applyOrbNod();
             break;
           case "teleport":
-            teleportAuthoringAdapter.apply(els, settings, { applyPreview: applyOrbTeleport });
+            authoringAdapterForBaseEffect("teleport").apply(els, settings, { applyPreview: applyOrbTeleport });
             break;
           case "orb-lifecycle":
             if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
@@ -2753,11 +2765,11 @@
     }
 
     function readTeleportBehaviorPreviewConfig(){
-      return teleportAuthoringAdapter.readBehaviorPreviewConfig(els);
+      return authoringAdapterForBaseEffect("teleport").readBehaviorPreviewConfig(els);
     }
 
     function updateTeleportBehaviorReadout(){
-      teleportAuthoringAdapter.updateBehaviorReadout(els);
+      authoringAdapterForBaseEffect("teleport").updateBehaviorReadout(els);
     }
 
     function updateBehaviorSections(){

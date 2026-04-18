@@ -1,4 +1,7 @@
-export function createLabEffectSurfaces({ buildTeleportBehaviorModule } = {}) {
+export function createLabEffectSurfaces({
+  buildTeleportBehaviorModule,
+  createTeleportAuthoringAdapter,
+} = {}) {
   return Object.freeze({
     "electric-aoe": Object.freeze({
       category: "spell",
@@ -55,6 +58,7 @@ export function createLabEffectSurfaces({ buildTeleportBehaviorModule } = {}) {
         exportName: "TELEPORT_BEHAVIOR_DEFAULT",
         buildModule: buildTeleportBehaviorModule,
       }),
+      authoringAdapter: createTeleportAuthoringAdapter,
     }),
     "orb-base": Object.freeze({
       label: "Orb Base",
@@ -191,6 +195,11 @@ export function deriveLabSurfaceMaps({ surfaces, buildLivePresetModuleForBaseEff
         ]))
     ),
     labBehaviorSurfaces,
+    labAuthoringAdapterFactoriesByBaseEffect: Object.freeze(
+      Object.fromEntries(Object.entries(labEffectSurfaces)
+        .filter(([, surface]) => typeof surface.authoringAdapter === "function")
+        .map(([baseEffect, surface]) => [baseEffect, surface.authoringAdapter]))
+    ),
     liveBehaviorModulesByBaseEffect: Object.freeze(
       Object.fromEntries(Object.entries(labBehaviorSurfaces).map(([baseEffect, surface]) => [
         baseEffect,
