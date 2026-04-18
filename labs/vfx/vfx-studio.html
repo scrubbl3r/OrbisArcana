@@ -2250,16 +2250,21 @@
       if (!draftHydrationDone || suspendDraftApply) return;
       const opt = selectedEffectOption();
       if (!opt) return;
+      const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
+      if (!isCustomEffectOption(opt)) {
+        applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
+        return;
+      }
       const profile = draftStore.profilesByValue[String(opt.value || "")];
       if (!profile) return;
-      const baseEffect = String(opt.dataset.baseEffect || profile.baseEffect || "");
+      const profileBaseEffect = String(opt.dataset.baseEffect || profile.baseEffect || "");
       const settingsByBase = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
         ? profile.settingsByBaseEffect
         : null;
       if (!settingsByBase) return;
-      const settingsKey = settingsKeyForBaseEffect(baseEffect);
-      const settings = settingsByBase[settingsKey] || settingsByBase[baseEffect];
-      if (settings) applyCurrentEffectSettings(baseEffect, settings);
+      const settingsKey = settingsKeyForBaseEffect(profileBaseEffect);
+      const settings = settingsByBase[settingsKey] || settingsByBase[profileBaseEffect];
+      if (settings) applyCurrentEffectSettings(profileBaseEffect, settings);
     }
 
     function saveDraft(){
