@@ -1367,7 +1367,7 @@
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
     } from "./studio/vfx-studio-surfaces.js?v=20260418a";
-    import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418a";
+    import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
     import {
       applyLabThemeDefaults,
       buildTeleportBehaviorModule,
@@ -1794,6 +1794,12 @@
       return AUTHORING_ADAPTERS_BY_BASE_EFFECT[String(baseEffect || "")] || null;
     }
 
+    function callAuthoringAdapter(baseEffect, methodName, args = []){
+      const adapter = authoringAdapterForBaseEffect(baseEffect);
+      const method = adapter && adapter[methodName];
+      return typeof method === "function" ? method(...args) : undefined;
+    }
+
     function selectedEffectCategory(){
       return selectedEffectCategoryHelper(selectedEffectOption());
     }
@@ -1926,6 +1932,8 @@
 
     function defaultSettingsForBaseEffect(baseEffect){
       const defaultSettingsKey = defaultSettingsKeyForBaseEffect(baseEffect);
+      const adapterDefaults = callAuthoringAdapter(defaultSettingsKey, "defaultSettings");
+      if (adapterDefaults !== undefined) return adapterDefaults;
       switch (String(defaultSettingsKey || "")) {
         case "orb-base":
           return {
@@ -1952,8 +1960,6 @@
             orbTemplateOscillationSpeedHz: Number(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationSpeedHz) || 12),
             orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 2),
           };
-        case "teleport":
-          return authoringAdapterForBaseEffect("teleport").defaultSettings();
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: 16,
@@ -2233,6 +2239,8 @@
     }
 
     function captureCurrentEffectSettings(baseEffect){
+      const adapterSettings = callAuthoringAdapter(baseEffect, "capture", [els]);
+      if (adapterSettings !== undefined) return adapterSettings;
       switch (String(baseEffect || "")) {
         case "orb-base":
           return {
@@ -2259,8 +2267,6 @@
             orbTemplateOscillationSpeedHz: Number(els.orbNodOscillationSpeedHz && els.orbNodOscillationSpeedHz.value),
             orbTemplateOscillationCount: Number(els.orbNodOscillationCount && els.orbNodOscillationCount.value),
           };
-        case "teleport":
-          return authoringAdapterForBaseEffect("teleport").capture(els);
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
@@ -2333,6 +2339,9 @@
       if (!settings || typeof settings !== "object") return;
       suspendDraftApply = true;
       try {
+        if (callAuthoringAdapter(baseEffect, "apply", [els, settings, { applyPreview: applyOrbTeleport }]) !== undefined) {
+          return;
+        }
         switch (String(baseEffect || "")) {
           case "orb-base":
             if (els.orbBaseD && settings.orbBaseD != null) els.orbBaseD.value = String(settings.orbBaseD);
@@ -2369,9 +2378,6 @@
             if (els.orbNodOscillationSpeedHz && settings.orbTemplateOscillationSpeedHz != null) els.orbNodOscillationSpeedHz.value = String(settings.orbTemplateOscillationSpeedHz);
             if (els.orbNodOscillationCount && settings.orbTemplateOscillationCount != null) els.orbNodOscillationCount.value = String(settings.orbTemplateOscillationCount);
             applyOrbNod();
-            break;
-          case "teleport":
-            authoringAdapterForBaseEffect("teleport").apply(els, settings, { applyPreview: applyOrbTeleport });
             break;
           case "orb-lifecycle":
             if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);

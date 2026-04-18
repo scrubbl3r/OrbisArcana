@@ -33,13 +33,14 @@ export function createTeleportAuthoringAdapter({
   }
 
   function apply(els, settings, { applyPreview = null } = {}) {
-    if (!els || !settings || typeof settings !== "object") return;
+    if (!els || !settings || typeof settings !== "object") return false;
     if (els.orbTeleportFlickerOnMs && settings.orbTeleportFlickerOnMs != null) els.orbTeleportFlickerOnMs.value = String(settings.orbTeleportFlickerOnMs);
     if (els.orbTeleportFlickerOffMs && settings.orbTeleportFlickerOffMs != null) els.orbTeleportFlickerOffMs.value = String(settings.orbTeleportFlickerOffMs);
     if (els.orbTeleportFadeOutMs && settings.orbTeleportFadeOutMs != null) els.orbTeleportFadeOutMs.value = String(settings.orbTeleportFadeOutMs);
     if (els.orbTeleportCameraTravelMs && settings.orbTeleportCameraTravelMs != null) els.orbTeleportCameraTravelMs.value = String(settings.orbTeleportCameraTravelMs);
     if (els.orbTeleportFadeInMs && settings.orbTeleportFadeInMs != null) els.orbTeleportFadeInMs.value = String(settings.orbTeleportFadeInMs);
     if (typeof applyPreview === "function") applyPreview();
+    return true;
   }
 
   function readBehaviorPreviewConfig(els) {
