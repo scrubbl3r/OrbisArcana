@@ -1407,6 +1407,7 @@
     const LAB_EFFECT_SURFACES = Object.freeze({
       "electric-aoe": Object.freeze({
         category: "spell",
+        settingsKey: "electric-aoe",
         registryIds: Object.freeze(["spell.aoe_electric"]),
         previewRootKey: "electricPreviewRoot",
         autoPreviewKey: "playElectric",
@@ -1415,6 +1416,7 @@
       }),
       "flame-aoe": Object.freeze({
         category: "spell",
+        settingsKey: "flame-aoe",
         registryIds: Object.freeze(["spell.aoe_flame"]),
         previewRootKey: "flamePreviewRoot",
         autoPreviewKey: "playFlame",
@@ -1423,6 +1425,7 @@
       }),
       "bubble-shield": Object.freeze({
         category: "spell",
+        settingsKey: "bubble-shield",
         registryIds: Object.freeze(["spell.shield_bubble"]),
         previewRootKey: "shieldPreviewRoot",
         autoPreviewKey: "playShield",
@@ -1431,6 +1434,7 @@
       }),
       "shockwave": Object.freeze({
         category: "spell",
+        settingsKey: "shockwave",
         registryIds: Object.freeze(["spell.shockwave_ring"]),
         previewRootKey: "shockPreviewRoot",
         autoPreviewKey: "playShock",
@@ -1439,6 +1443,7 @@
       }),
       "teleport": Object.freeze({
         category: "spell",
+        settingsKey: "teleport",
         registryIds: Object.freeze(["spell.teleport"]),
         previewRootKey: "orbTeleportPreviewRoot",
         autoPreviewKey: "applyOrbTeleport",
@@ -1454,6 +1459,7 @@
       "orb-base": Object.freeze({
         label: "Orb Base",
         category: "orb",
+        settingsKey: "orb-base",
         builtinOption: true,
         previewRootKey: "orbBasePreviewRoot",
         autoPreviewKey: "applyOrbBase",
@@ -1462,12 +1468,15 @@
       "orb-template": Object.freeze({
         label: "Orb Template",
         category: "orb",
+        settingsKey: "orb-template",
         builtinOption: true,
         previewRootKey: "orbTemplatePreviewRoot",
         autoPreviewKey: "applyOrbTemplate",
       }),
       "orb-nod": Object.freeze({
         category: "orb",
+        settingsKey: "orb-nod",
+        settingsParamPrefix: "orbTemplate",
         registryIds: Object.freeze(["orb.nod"]),
         previewRootKey: "orbNodPreviewRoot",
         autoPreviewKey: "applyOrbNod",
@@ -1477,6 +1486,7 @@
       "orb-globe": Object.freeze({
         label: "Orb Globe",
         category: "orb",
+        settingsKey: "orb-globe",
         registryIds: Object.freeze(["orb.globe"]),
         omitRegistryOption: true,
         builtinOption: true,
@@ -1488,18 +1498,21 @@
       "orb-lifecycle": Object.freeze({
         label: "Orb Lifecycle",
         category: "orb",
+        settingsKey: "orb-lifecycle",
         builtinOption: true,
         previewRootKey: "orbLifecyclePreviewRoot",
         autoPreviewKey: "applyOrbLifecycle",
       }),
       "orb-shatter": Object.freeze({
         category: "orb",
+        settingsKey: "orb-shatter",
         registryIds: Object.freeze(["orb.shatter_voronoi"]),
         omitRegistryOption: true,
         defaultBindTarget: "orb-state.shattered",
       }),
       "world-globe": Object.freeze({
         category: "world",
+        settingsKey: "world-globe",
         registryIds: Object.freeze(["world.globe"]),
         previewRootKey: "worldGlobePreviewRoot",
         autoPreviewKey: "applyWorldGlobe",
@@ -1526,6 +1539,10 @@
         .filter(([, surface]) => surface.defaultBindTarget)
         .map(([baseEffect, surface]) => [baseEffect, surface.defaultBindTarget])),
     });
+    const SETTINGS_KEY_BY_BASE_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
+        .map(([baseEffect, surface]) => [baseEffect, surface.settingsKey || baseEffect]))
+    );
     const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze(
       Object.entries(LAB_EFFECT_SURFACES)
         .filter(([, surface]) => surface.builtinOption)
@@ -1906,6 +1923,11 @@
       return selectedSpawnBaseEffectHelper(selectedEffectOption());
     }
 
+    function settingsKeyForBaseEffect(baseEffect){
+      const key = String(baseEffect || "");
+      return SETTINGS_KEY_BY_BASE_EFFECT[key] || key;
+    }
+
     function selectedEffectCategory(){
       return selectedEffectCategoryHelper(selectedEffectOption());
     }
@@ -2170,8 +2192,9 @@
         baseEffect,
       });
       const publishedBaseEffect = String(publishedIdentity.publishedBaseEffect || baseEffect || "unknown");
-      const settings = record.settingsByBaseEffect && record.settingsByBaseEffect[baseEffect]
-        ? record.settingsByBaseEffect[baseEffect]
+      const settingsKey = settingsKeyForBaseEffect(baseEffect);
+      const settings = record.settingsByBaseEffect && (record.settingsByBaseEffect[settingsKey] || record.settingsByBaseEffect[baseEffect])
+        ? record.settingsByBaseEffect[settingsKey] || record.settingsByBaseEffect[baseEffect]
         : captureCurrentEffectSettings(baseEffect);
       const registryEntry = (Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : [])
         .find((e) => String(e && e.id || "") === registryId) || null;
@@ -2194,6 +2217,7 @@
             studio: "vfx-studio.html",
             selectionLabel: String(opt.textContent || profileName),
             authoringBaseEffect: String(publishedIdentity.authoringBaseEffect || baseEffect || ""),
+            settingsKey,
             registryDefaultPresetId: registryEntry ? String(registryEntry.defaultPresetId || "") : "",
           },
           savedAtMs: Number(record.savedAtMs) || Date.now(),
@@ -2581,7 +2605,8 @@
         ? profile.settingsByBaseEffect
         : null;
       if (!settingsByBase) return;
-      const settings = settingsByBase[baseEffect];
+      const settingsKey = settingsKeyForBaseEffect(baseEffect);
+      const settings = settingsByBase[settingsKey] || settingsByBase[baseEffect];
       if (settings) applyCurrentEffectSettings(baseEffect, settings);
     }
 
