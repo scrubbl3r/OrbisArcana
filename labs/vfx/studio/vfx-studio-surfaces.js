@@ -127,3 +127,86 @@ export function createLabEffectSurfaces({ buildTeleportBehaviorModule } = {}) {
     }),
   });
 }
+
+export function deriveLabSurfaceMaps({ surfaces, buildLivePresetModuleForBaseEffect } = {}) {
+  const labEffectSurfaces = surfaces && typeof surfaces === "object" ? surfaces : {};
+  const labBehaviorSurfaces = Object.freeze(
+    Object.fromEntries(Object.entries(labEffectSurfaces)
+      .filter(([, surface]) => surface.behavior)
+      .map(([baseEffect, surface]) => [baseEffect, Object.freeze({ baseEffect, ...surface.behavior })]))
+  );
+
+  return Object.freeze({
+    studioBaseEffectByRegistryId: Object.freeze(
+      Object.fromEntries(Object.entries(labEffectSurfaces).flatMap(([baseEffect, surface]) => (
+        Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => [String(registryId), baseEffect]) : []
+      )))
+    ),
+    studioOmitRegistryIds: Object.freeze(
+      Object.entries(labEffectSurfaces).flatMap(([, surface]) => (
+        surface.omitRegistryOption && Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => String(registryId)) : []
+      ))
+    ),
+    defaultBindTargetByEffectId: Object.freeze({
+      ...Object.fromEntries(Object.entries(labEffectSurfaces).flatMap(([, surface]) => (
+        surface.defaultBindTarget && Array.isArray(surface.registryIds)
+          ? surface.registryIds.map((registryId) => [String(registryId), surface.defaultBindTarget])
+          : []
+      ))),
+      ...Object.fromEntries(Object.entries(labEffectSurfaces)
+        .filter(([, surface]) => surface.defaultBindTarget)
+        .map(([baseEffect, surface]) => [baseEffect, surface.defaultBindTarget])),
+    }),
+    settingsKeyByBaseEffect: Object.freeze(
+      Object.fromEntries(Object.entries(labEffectSurfaces)
+        .map(([baseEffect, surface]) => [baseEffect, surface.settingsKey || baseEffect]))
+    ),
+    defaultSettingsKeyByBaseEffect: Object.freeze(
+      Object.fromEntries(Object.entries(labEffectSurfaces)
+        .map(([baseEffect, surface]) => [baseEffect, surface.defaultSettingsKey || surface.settingsKey || baseEffect]))
+    ),
+    studioExtraBuiltinOptions: Object.freeze(
+      Object.entries(labEffectSurfaces)
+        .filter(([, surface]) => surface.builtinOption)
+        .map(([baseEffect, surface]) => ({
+          value: baseEffect,
+          label: surface.label || baseEffect,
+          baseEffect,
+          category: surface.category || "orb",
+          registryId: Array.isArray(surface.registryIds) ? surface.registryIds[0] || "" : "",
+          locked: true,
+        }))
+    ),
+    livePresetModulesByBaseEffect: Object.freeze(
+      Object.fromEntries(Object.entries(labEffectSurfaces)
+        .filter(([, surface]) => surface.livePreset)
+        .map(([baseEffect, surface]) => [baseEffect, surface.livePreset]))
+    ),
+    livePresetBuildersByBaseEffect: Object.freeze(
+      Object.fromEntries(Object.entries(labEffectSurfaces)
+        .filter(([, surface]) => surface.livePreset)
+        .map(([baseEffect, surface]) => [
+          baseEffect,
+          (params) => buildLivePresetModuleForBaseEffect(surface.livePreset.buildKey || baseEffect, params),
+        ]))
+    ),
+    labBehaviorSurfaces,
+    liveBehaviorModulesByBaseEffect: Object.freeze(
+      Object.fromEntries(Object.entries(labBehaviorSurfaces).map(([baseEffect, surface]) => [
+        baseEffect,
+        { path: surface.path, exportName: surface.exportName },
+      ]))
+    ),
+    liveBehaviorBuildersByBaseEffect: Object.freeze(
+      Object.fromEntries(Object.entries(labBehaviorSurfaces).map(([baseEffect, surface]) => [
+        baseEffect,
+        surface.buildModule,
+      ]))
+    ),
+    behaviorBaseEffectByTargetId: Object.freeze(
+      Object.fromEntries(Object.entries(labBehaviorSurfaces).flatMap(([baseEffect, surface]) => (
+        Array.isArray(surface.targetIds) ? surface.targetIds.map((targetId) => [String(targetId).trim().toLowerCase(), baseEffect]) : []
+      )))
+    ),
+  });
+}

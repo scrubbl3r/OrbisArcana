@@ -1363,7 +1363,10 @@
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
       refreshBindingPanel as refreshBindingPanelHelper,
     } from "./studio/vfx-studio-bindings.js?v=20260410b";
-    import { createLabEffectSurfaces } from "./studio/vfx-studio-surfaces.js?v=20260417a";
+    import {
+      createLabEffectSurfaces,
+      deriveLabSurfaceMaps,
+    } from "./studio/vfx-studio-surfaces.js?v=20260417b";
     import {
       applyLabThemeDefaults,
       buildTeleportBehaviorModule,
@@ -1406,81 +1409,23 @@
     let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({ buildTeleportBehaviorModule });
-    const STUDIO_BASE_EFFECT_BY_REGISTRY_ID = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES).flatMap(([baseEffect, surface]) => (
-        Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => [String(registryId), baseEffect]) : []
-      )))
-    );
-    const STUDIO_OMIT_REGISTRY_IDS = Object.freeze(
-      Object.entries(LAB_EFFECT_SURFACES).flatMap(([, surface]) => (
-        surface.omitRegistryOption && Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => String(registryId)) : []
-      ))
-    );
-    const DEFAULT_BIND_TARGET_BY_EFFECT_ID = Object.freeze({
-      ...Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES).flatMap(([, surface]) => (
-        surface.defaultBindTarget && Array.isArray(surface.registryIds)
-          ? surface.registryIds.map((registryId) => [String(registryId), surface.defaultBindTarget])
-          : []
-      ))),
-      ...Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
-        .filter(([, surface]) => surface.defaultBindTarget)
-        .map(([baseEffect, surface]) => [baseEffect, surface.defaultBindTarget])),
+    const {
+      studioBaseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
+      studioOmitRegistryIds: STUDIO_OMIT_REGISTRY_IDS,
+      defaultBindTargetByEffectId: DEFAULT_BIND_TARGET_BY_EFFECT_ID,
+      settingsKeyByBaseEffect: SETTINGS_KEY_BY_BASE_EFFECT,
+      defaultSettingsKeyByBaseEffect: DEFAULT_SETTINGS_KEY_BY_BASE_EFFECT,
+      studioExtraBuiltinOptions: STUDIO_EXTRA_BUILTIN_OPTIONS,
+      livePresetModulesByBaseEffect: LIVE_PRESET_MODULES_BY_BASE_EFFECT,
+      livePresetBuildersByBaseEffect: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT,
+      labBehaviorSurfaces: LAB_BEHAVIOR_SURFACES,
+      liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
+      liveBehaviorBuildersByBaseEffect: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT,
+      behaviorBaseEffectByTargetId: BEHAVIOR_BASE_EFFECT_BY_TARGET_ID,
+    } = deriveLabSurfaceMaps({
+      surfaces: LAB_EFFECT_SURFACES,
+      buildLivePresetModuleForBaseEffect,
     });
-    const SETTINGS_KEY_BY_BASE_EFFECT = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
-        .map(([baseEffect, surface]) => [baseEffect, surface.settingsKey || baseEffect]))
-    );
-    const DEFAULT_SETTINGS_KEY_BY_BASE_EFFECT = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
-        .map(([baseEffect, surface]) => [baseEffect, surface.defaultSettingsKey || surface.settingsKey || baseEffect]))
-    );
-    const STUDIO_EXTRA_BUILTIN_OPTIONS = Object.freeze(
-      Object.entries(LAB_EFFECT_SURFACES)
-        .filter(([, surface]) => surface.builtinOption)
-        .map(([baseEffect, surface]) => ({
-          value: baseEffect,
-          label: surface.label || baseEffect,
-          baseEffect,
-          category: surface.category || "orb",
-          registryId: Array.isArray(surface.registryIds) ? surface.registryIds[0] || "" : "",
-          locked: true,
-        }))
-    );
-    const LIVE_PRESET_MODULES_BY_BASE_EFFECT = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
-        .filter(([, surface]) => surface.livePreset)
-        .map(([baseEffect, surface]) => [baseEffect, surface.livePreset]))
-    );
-    const LIVE_PRESET_BUILDERS_BY_BASE_EFFECT = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
-        .filter(([, surface]) => surface.livePreset)
-        .map(([baseEffect, surface]) => [
-          baseEffect,
-          (params) => buildLivePresetModuleForBaseEffect(surface.livePreset.buildKey || baseEffect, params),
-        ]))
-    );
-    const LAB_BEHAVIOR_SURFACES = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
-        .filter(([, surface]) => surface.behavior)
-        .map(([baseEffect, surface]) => [baseEffect, Object.freeze({ baseEffect, ...surface.behavior })]))
-    );
-    const LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_BEHAVIOR_SURFACES).map(([baseEffect, surface]) => [
-        baseEffect,
-        { path: surface.path, exportName: surface.exportName },
-      ]))
-    );
-    const LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_BEHAVIOR_SURFACES).map(([baseEffect, surface]) => [
-        baseEffect,
-        surface.buildModule,
-      ]))
-    );
-    const BEHAVIOR_BASE_EFFECT_BY_TARGET_ID = Object.freeze(
-      Object.fromEntries(Object.entries(LAB_BEHAVIOR_SURFACES).flatMap(([baseEffect, surface]) => (
-        Array.isArray(surface.targetIds) ? surface.targetIds.map((targetId) => [String(targetId).trim().toLowerCase(), baseEffect]) : []
-      )))
-    );
 
     const els = {
       stage: $("stage"),
