@@ -1367,6 +1367,7 @@
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
     } from "./studio/vfx-studio-surfaces.js?v=20260417b";
+    import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418a";
     import {
       applyLabThemeDefaults,
       buildTeleportBehaviorModule,
@@ -1594,6 +1595,10 @@
       orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
       orbTeleportApplyFadeInBtn: $("orbTeleportApplyFadeInBtn"),
     };
+    const teleportAuthoringAdapter = createTeleportAuthoringAdapter({
+      teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
+      teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
+    });
 
     if (els.orbBaseD) els.orbBaseD.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx));
     if (els.orbBaseStroke) els.orbBaseStroke.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx));
@@ -1936,13 +1941,7 @@
             orbTemplateOscillationCount: Math.round(Number(ORB_NOD_PRESET_DEFAULT && ORB_NOD_PRESET_DEFAULT.orbTemplateOscillationCount) || 2),
           };
         case "teleport":
-          return {
-            orbTeleportFlickerOnMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOnMs) || 60),
-            orbTeleportFlickerOffMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFlickerOffMs) || 60),
-            orbTeleportFadeOutMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeOutMs) || 280),
-            orbTeleportCameraTravelMs: Math.round(Number(TELEPORT_BEHAVIOR_DEFAULT && TELEPORT_BEHAVIOR_DEFAULT.cameraTravelMs) || 1500),
-            orbTeleportFadeInMs: Math.round(Number(TELEPORT_PRESET_DEFAULT && TELEPORT_PRESET_DEFAULT.orbTeleportFadeInMs) || 280),
-          };
+          return teleportAuthoringAdapter.defaultSettings();
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: 16,
@@ -2249,13 +2248,7 @@
             orbTemplateOscillationCount: Number(els.orbNodOscillationCount && els.orbNodOscillationCount.value),
           };
         case "teleport":
-          return {
-            orbTeleportFlickerOnMs: Number(els.orbTeleportFlickerOnMs && els.orbTeleportFlickerOnMs.value),
-            orbTeleportFlickerOffMs: Number(els.orbTeleportFlickerOffMs && els.orbTeleportFlickerOffMs.value),
-            orbTeleportFadeOutMs: Number(els.orbTeleportFadeOutMs && els.orbTeleportFadeOutMs.value),
-            orbTeleportCameraTravelMs: Number(els.orbTeleportCameraTravelMs && els.orbTeleportCameraTravelMs.value),
-            orbTeleportFadeInMs: Number(els.orbTeleportFadeInMs && els.orbTeleportFadeInMs.value),
-          };
+          return teleportAuthoringAdapter.capture(els);
         case "orb-lifecycle":
           return {
             orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
@@ -2366,12 +2359,7 @@
             applyOrbNod();
             break;
           case "teleport":
-            if (els.orbTeleportFlickerOnMs && settings.orbTeleportFlickerOnMs != null) els.orbTeleportFlickerOnMs.value = String(settings.orbTeleportFlickerOnMs);
-            if (els.orbTeleportFlickerOffMs && settings.orbTeleportFlickerOffMs != null) els.orbTeleportFlickerOffMs.value = String(settings.orbTeleportFlickerOffMs);
-            if (els.orbTeleportFadeOutMs && settings.orbTeleportFadeOutMs != null) els.orbTeleportFadeOutMs.value = String(settings.orbTeleportFadeOutMs);
-            if (els.orbTeleportCameraTravelMs && settings.orbTeleportCameraTravelMs != null) els.orbTeleportCameraTravelMs.value = String(settings.orbTeleportCameraTravelMs);
-            if (els.orbTeleportFadeInMs && settings.orbTeleportFadeInMs != null) els.orbTeleportFadeInMs.value = String(settings.orbTeleportFadeInMs);
-            applyOrbTeleport();
+            teleportAuthoringAdapter.apply(els, settings, { applyPreview: applyOrbTeleport });
             break;
           case "orb-lifecycle":
             if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
@@ -2764,40 +2752,12 @@
       return BEHAVIOR_BASE_EFFECT_BY_TARGET_ID[targetId] || "";
     }
 
-    function readTeleportPreviewNumber(el, min, max, fallback){
-      const value = Number(el && el.value);
-      return Math.round(clamp(Number.isFinite(value) ? value : fallback, min, max));
-    }
-
     function readTeleportBehaviorPreviewConfig(){
-      return {
-        fadeOutMs: readTeleportPreviewNumber(
-          els.orbTeleportFadeOutMs,
-          40,
-          4000,
-          TELEPORT_PRESET_DEFAULT.orbTeleportFadeOutMs
-        ),
-        cameraTravelMs: readTeleportPreviewNumber(
-          els.orbTeleportCameraTravelMs,
-          0,
-          8000,
-          TELEPORT_BEHAVIOR_DEFAULT.cameraTravelMs
-        ),
-        fadeInMs: readTeleportPreviewNumber(
-          els.orbTeleportFadeInMs,
-          40,
-          4000,
-          TELEPORT_PRESET_DEFAULT.orbTeleportFadeInMs
-        ),
-        easing: String(TELEPORT_BEHAVIOR_DEFAULT.cameraEasing || "easeInOutExpo"),
-      };
+      return teleportAuthoringAdapter.readBehaviorPreviewConfig(els);
     }
 
     function updateTeleportBehaviorReadout(){
-      if (!els.teleportBehaviorReadout) return;
-      const cfg = readTeleportBehaviorPreviewConfig();
-      const totalMs = cfg.fadeOutMs + cfg.cameraTravelMs + cfg.fadeInMs;
-      els.teleportBehaviorReadout.textContent = `VFX fade-out ${cfg.fadeOutMs}ms -> camera travel ${cfg.cameraTravelMs}ms (${cfg.easing}) -> VFX fade-in ${cfg.fadeInMs}ms. Total ${totalMs}ms.`;
+      teleportAuthoringAdapter.updateBehaviorReadout(els);
     }
 
     function updateBehaviorSections(){
