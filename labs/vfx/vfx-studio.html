@@ -1366,8 +1366,9 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418d";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418e";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
+    import { createOrbLifecycleAuthoringAdapter } from "./studio/adapters/orb-lifecycle-authoring-adapter.js?v=20260418a";
     import { createOrbNodAuthoringAdapter } from "./studio/adapters/orb-nod-authoring-adapter.js?v=20260418a";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
     import { createWorldGlobeAuthoringAdapter } from "./studio/adapters/world-globe-authoring-adapter.js?v=20260418a";
@@ -1415,6 +1416,7 @@
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
       createOrbGlobeAuthoringAdapter,
+      createOrbLifecycleAuthoringAdapter,
       createOrbNodAuthoringAdapter,
       createTeleportAuthoringAdapter,
       createWorldGlobeAuthoringAdapter,
@@ -1608,6 +1610,10 @@
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
+      orbLifecycleDefaults: Object.freeze({
+        orbLifecycleShardTotal: 16,
+        orbLifecycleHitTotal: 3,
+      }),
       orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
       getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
       worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
@@ -1823,6 +1829,9 @@
             case "orb-globe":
               applyOrbGlobe();
               break;
+            case "orb-lifecycle":
+              applyOrbLifecycle();
+              break;
             case "orb-nod":
               applyOrbNod();
               break;
@@ -1942,11 +1951,6 @@
           };
         case "orb-template":
           return {};
-        case "orb-lifecycle":
-          return {
-            orbLifecycleShardTotal: 16,
-            orbLifecycleHitTotal: 3,
-          };
         case "bubble-shield":
           return {
             shieldMs: Math.round(clamp(BUBBLE_SHIELD_PRESET_DEFAULT && BUBBLE_SHIELD_PRESET_DEFAULT.durationMs, 80, 1200)),
@@ -2211,11 +2215,6 @@
           };
         case "orb-template":
           return {};
-        case "orb-lifecycle":
-          return {
-            orbLifecycleShardTotal: Number(els.orbLifecycleShardTotal && els.orbLifecycleShardTotal.value),
-            orbLifecycleHitTotal: Number(els.orbLifecycleHitTotal && els.orbLifecycleHitTotal.value),
-          };
         case "bubble-shield":
           return {
             shieldMs: Number(els.shieldMs && els.shieldMs.value),
@@ -2274,11 +2273,6 @@
             break;
           case "orb-template":
             applyOrbLaneSsot(els.orbTemplatePreviewRoot);
-            break;
-          case "orb-lifecycle":
-            if (els.orbLifecycleShardTotal && settings.orbLifecycleShardTotal != null) els.orbLifecycleShardTotal.value = String(settings.orbLifecycleShardTotal);
-            if (els.orbLifecycleHitTotal && settings.orbLifecycleHitTotal != null) els.orbLifecycleHitTotal.value = String(settings.orbLifecycleHitTotal);
-            applyOrbLifecycle();
             break;
           case "bubble-shield":
             if (els.shieldMs && settings.shieldMs != null) els.shieldMs.value = String(settings.shieldMs);

@@ -1,6 +1,7 @@
 export function createLabEffectSurfaces({
   buildTeleportBehaviorModule,
   createOrbGlobeAuthoringAdapter,
+  createOrbLifecycleAuthoringAdapter,
   createOrbNodAuthoringAdapter,
   createTeleportAuthoringAdapter,
   createWorldGlobeAuthoringAdapter,
@@ -116,6 +117,7 @@ export function createLabEffectSurfaces({
       builtinOption: true,
       previewRootKey: "orbLifecyclePreviewRoot",
       autoPreviewKey: "applyOrbLifecycle",
+      authoringAdapter: createOrbLifecycleAuthoringAdapter,
     }),
     "orb-shatter": Object.freeze({
       category: "orb",
