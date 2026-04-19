@@ -19,6 +19,7 @@ export function createOrbGlobePreview({ els, clamp }) {
   let nextPhaseGlobeId = 1;
   let rafId = 0;
   let lastTickMs = 0;
+  const field = (name) => (els && els[name]) || document.getElementById(name);
 
   function createGlobeElement(className) {
     const el = document.createElement("div");
@@ -94,57 +95,57 @@ export function createOrbGlobePreview({ els, clamp }) {
   function readWorldGlobeState(orbDiameterPx) {
     return buildWorldGlobeVisualState({
       idle: {
-        diameterRatio: clamp(els.worldGlobeIdleDiameterRatio && els.worldGlobeIdleDiameterRatio.value, 0, 10),
+        diameterRatio: clamp(field("worldGlobeIdleDiameterRatio") && field("worldGlobeIdleDiameterRatio").value, 0, 10),
         fillRgb: {
-          r: clamp(els.worldGlobeIdleFillR && els.worldGlobeIdleFillR.value, 0, 255),
-          g: clamp(els.worldGlobeIdleFillG && els.worldGlobeIdleFillG.value, 0, 255),
-          b: clamp(els.worldGlobeIdleFillB && els.worldGlobeIdleFillB.value, 0, 255),
+          r: clamp(field("worldGlobeIdleFillR") && field("worldGlobeIdleFillR").value, 0, 255),
+          g: clamp(field("worldGlobeIdleFillG") && field("worldGlobeIdleFillG").value, 0, 255),
+          b: clamp(field("worldGlobeIdleFillB") && field("worldGlobeIdleFillB").value, 0, 255),
         },
-        fillAlpha: clamp(els.worldGlobeIdleFillAlpha && els.worldGlobeIdleFillAlpha.value, 0, 1),
+        fillAlpha: clamp(field("worldGlobeIdleFillAlpha") && field("worldGlobeIdleFillAlpha").value, 0, 1),
         strokeRgb: {
-          r: clamp(els.worldGlobeIdleStrokeR && els.worldGlobeIdleStrokeR.value, 0, 255),
-          g: clamp(els.worldGlobeIdleStrokeG && els.worldGlobeIdleStrokeG.value, 0, 255),
-          b: clamp(els.worldGlobeIdleStrokeB && els.worldGlobeIdleStrokeB.value, 0, 255),
+          r: clamp(field("worldGlobeIdleStrokeR") && field("worldGlobeIdleStrokeR").value, 0, 255),
+          g: clamp(field("worldGlobeIdleStrokeG") && field("worldGlobeIdleStrokeG").value, 0, 255),
+          b: clamp(field("worldGlobeIdleStrokeB") && field("worldGlobeIdleStrokeB").value, 0, 255),
         },
-        strokeAlpha: clamp(els.worldGlobeIdleStrokeAlpha && els.worldGlobeIdleStrokeAlpha.value, 0, 1),
-        strokeWidthRatio: clamp(els.worldGlobeIdleStrokeWidthRatio && els.worldGlobeIdleStrokeWidthRatio.value, 0, 1),
-        driftRatio: clamp(els.worldGlobeIdleDriftRatio && els.worldGlobeIdleDriftRatio.value, 0, 10),
-        bobRatio: clamp(els.worldGlobeIdleBobRatio && els.worldGlobeIdleBobRatio.value, 0, 10),
-        bobHz: clamp(els.worldGlobeIdleBobHz && els.worldGlobeIdleBobHz.value, 0, 20),
-        pulseScale: clamp(els.worldGlobeIdlePulseScale && els.worldGlobeIdlePulseScale.value, 0, 1),
-        pulseHz: clamp(els.worldGlobeIdlePulseHz && els.worldGlobeIdlePulseHz.value, 0, 20),
+        strokeAlpha: clamp(field("worldGlobeIdleStrokeAlpha") && field("worldGlobeIdleStrokeAlpha").value, 0, 1),
+        strokeWidthRatio: clamp(field("worldGlobeIdleStrokeWidthRatio") && field("worldGlobeIdleStrokeWidthRatio").value, 0, 1),
+        driftRatio: clamp(field("worldGlobeIdleDriftRatio") && field("worldGlobeIdleDriftRatio").value, 0, 10),
+        bobRatio: clamp(field("worldGlobeIdleBobRatio") && field("worldGlobeIdleBobRatio").value, 0, 10),
+        bobHz: clamp(field("worldGlobeIdleBobHz") && field("worldGlobeIdleBobHz").value, 0, 20),
+        pulseScale: clamp(field("worldGlobeIdlePulseScale") && field("worldGlobeIdlePulseScale").value, 0, 1),
+        pulseHz: clamp(field("worldGlobeIdlePulseHz") && field("worldGlobeIdlePulseHz").value, 0, 20),
       },
       collected: {
-        diameterRatio: clamp(els.worldGlobeCollectedDiameterRatio && els.worldGlobeCollectedDiameterRatio.value, 0, 10),
+        diameterRatio: clamp(field("worldGlobeCollectedDiameterRatio") && field("worldGlobeCollectedDiameterRatio").value, 0, 10),
         fillRgb: {
-          r: clamp(els.worldGlobeCollectedFillR && els.worldGlobeCollectedFillR.value, 0, 255),
-          g: clamp(els.worldGlobeCollectedFillG && els.worldGlobeCollectedFillG.value, 0, 255),
-          b: clamp(els.worldGlobeCollectedFillB && els.worldGlobeCollectedFillB.value, 0, 255),
+          r: clamp(field("worldGlobeCollectedFillR") && field("worldGlobeCollectedFillR").value, 0, 255),
+          g: clamp(field("worldGlobeCollectedFillG") && field("worldGlobeCollectedFillG").value, 0, 255),
+          b: clamp(field("worldGlobeCollectedFillB") && field("worldGlobeCollectedFillB").value, 0, 255),
         },
-        fillAlpha: clamp(els.worldGlobeCollectedFillAlpha && els.worldGlobeCollectedFillAlpha.value, 0, 1),
+        fillAlpha: clamp(field("worldGlobeCollectedFillAlpha") && field("worldGlobeCollectedFillAlpha").value, 0, 1),
         strokeRgb: {
-          r: clamp(els.worldGlobeCollectedStrokeR && els.worldGlobeCollectedStrokeR.value, 0, 255),
-          g: clamp(els.worldGlobeCollectedStrokeG && els.worldGlobeCollectedStrokeG.value, 0, 255),
-          b: clamp(els.worldGlobeCollectedStrokeB && els.worldGlobeCollectedStrokeB.value, 0, 255),
+          r: clamp(field("worldGlobeCollectedStrokeR") && field("worldGlobeCollectedStrokeR").value, 0, 255),
+          g: clamp(field("worldGlobeCollectedStrokeG") && field("worldGlobeCollectedStrokeG").value, 0, 255),
+          b: clamp(field("worldGlobeCollectedStrokeB") && field("worldGlobeCollectedStrokeB").value, 0, 255),
         },
-        strokeAlpha: clamp(els.worldGlobeCollectedStrokeAlpha && els.worldGlobeCollectedStrokeAlpha.value, 0, 1),
-        strokeWidthRatio: clamp(els.worldGlobeCollectedStrokeWidthRatio && els.worldGlobeCollectedStrokeWidthRatio.value, 0, 1),
+        strokeAlpha: clamp(field("worldGlobeCollectedStrokeAlpha") && field("worldGlobeCollectedStrokeAlpha").value, 0, 1),
+        strokeWidthRatio: clamp(field("worldGlobeCollectedStrokeWidthRatio") && field("worldGlobeCollectedStrokeWidthRatio").value, 0, 1),
       },
       consumed: {
-        diameterRatio: clamp(els.worldGlobeConsumedDiameterRatio && els.worldGlobeConsumedDiameterRatio.value, 0, 10),
+        diameterRatio: clamp(field("worldGlobeConsumedDiameterRatio") && field("worldGlobeConsumedDiameterRatio").value, 0, 10),
         fillRgb: {
-          r: clamp(els.worldGlobeConsumedFillR && els.worldGlobeConsumedFillR.value, 0, 255),
-          g: clamp(els.worldGlobeConsumedFillG && els.worldGlobeConsumedFillG.value, 0, 255),
-          b: clamp(els.worldGlobeConsumedFillB && els.worldGlobeConsumedFillB.value, 0, 255),
+          r: clamp(field("worldGlobeConsumedFillR") && field("worldGlobeConsumedFillR").value, 0, 255),
+          g: clamp(field("worldGlobeConsumedFillG") && field("worldGlobeConsumedFillG").value, 0, 255),
+          b: clamp(field("worldGlobeConsumedFillB") && field("worldGlobeConsumedFillB").value, 0, 255),
         },
-        fillAlpha: clamp(els.worldGlobeConsumedFillAlpha && els.worldGlobeConsumedFillAlpha.value, 0, 1),
+        fillAlpha: clamp(field("worldGlobeConsumedFillAlpha") && field("worldGlobeConsumedFillAlpha").value, 0, 1),
         strokeRgb: {
-          r: clamp(els.worldGlobeConsumedStrokeR && els.worldGlobeConsumedStrokeR.value, 0, 255),
-          g: clamp(els.worldGlobeConsumedStrokeG && els.worldGlobeConsumedStrokeG.value, 0, 255),
-          b: clamp(els.worldGlobeConsumedStrokeB && els.worldGlobeConsumedStrokeB.value, 0, 255),
+          r: clamp(field("worldGlobeConsumedStrokeR") && field("worldGlobeConsumedStrokeR").value, 0, 255),
+          g: clamp(field("worldGlobeConsumedStrokeG") && field("worldGlobeConsumedStrokeG").value, 0, 255),
+          b: clamp(field("worldGlobeConsumedStrokeB") && field("worldGlobeConsumedStrokeB").value, 0, 255),
         },
-        strokeAlpha: clamp(els.worldGlobeConsumedStrokeAlpha && els.worldGlobeConsumedStrokeAlpha.value, 0, 1),
-        strokeWidthRatio: clamp(els.worldGlobeConsumedStrokeWidthRatio && els.worldGlobeConsumedStrokeWidthRatio.value, 0, 1),
+        strokeAlpha: clamp(field("worldGlobeConsumedStrokeAlpha") && field("worldGlobeConsumedStrokeAlpha").value, 0, 1),
+        strokeWidthRatio: clamp(field("worldGlobeConsumedStrokeWidthRatio") && field("worldGlobeConsumedStrokeWidthRatio").value, 0, 1),
       },
     }, {
       orbDiameterPx,
