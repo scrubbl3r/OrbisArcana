@@ -1381,6 +1381,10 @@
       supportsBindingPublish,
     } from "./studio/vfx-studio-publish.js?v=20260418a";
     import {
+      publishLabPreset,
+      writeRuntimeBindingModule,
+    } from "./studio/vfx-studio-publish-orchestrator.js?v=20260418a";
+    import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
     } from "./studio/vfx-studio-surfaces.js?v=20260418l";
@@ -2045,57 +2049,27 @@
         return;
       }
       void (async () => {
-      const built = buildPublishedPresetPayload();
-      if (!built) return;
-      try {
-        const payloadText = JSON.stringify(built.payload, null, 2);
-        let ok = false;
-        if (!projectRootDirHandle && window.showDirectoryPicker) {
-          const connected = await connectProjectFolder();
-          if (!connected) {
-            return;
-          }
-        }
-        if (projectRootDirHandle) {
-          const contract = publishContractForBaseEffect(String(built.payload.baseEffect || ""));
-          const liveTarget = contract && contract.livePreset ? contract.livePreset : null;
-          const buildLivePresetModule = LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
-          const behaviorTarget = contract && contract.behavior ? contract.behavior : null;
-          const buildBehaviorModule = LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
-          const canPublishBehavior = !!behaviorTarget && typeof buildBehaviorModule === "function";
-          if (liveTarget && typeof buildLivePresetModule === "function") {
-            const moduleText = buildLivePresetModule(built.payload.params);
-            if (moduleText) {
-              const publishedPaths = [];
-              ok = await saveTextToConnectedProjectPath(liveTarget.path, moduleText);
-              if (ok) publishedPaths.push(liveTarget.path);
-              if (ok && canPublishBehavior) {
-                const behaviorModuleText = buildBehaviorModule(built.payload.params);
-                ok = await saveTextToConnectedProjectPath(behaviorTarget.path, behaviorModuleText);
-                if (ok) publishedPaths.push(behaviorTarget.path);
-              }
-              if (ok) {
-                window.alert(describePublishSuccessHelper({ publishedPaths, contract }));
-                return;
-              }
-            }
-          }
-          ok = await saveTextToConnectedProjectDrafts(built.filename, payloadText);
-          if (ok) {
-            window.alert(`Published draft to ${VFX_PRESET_DRAFTS_PATH.join("/")}/${built.filename}`);
-            return;
-          }
-        }
-        ok = await saveTextToProjectFile(built.filename, payloadText);
-        if (ok) {
-          window.alert("Preset written.");
-          return;
-        }
-        downloadTextFile(built.filename, payloadText);
-      } catch (err) {
-        if (err && err.name === "AbortError") return;
-        downloadTextFile(built.filename, JSON.stringify(built.payload, null, 2));
-      }
+        const built = buildPublishedPresetPayload();
+        if (!built) return;
+        const contract = publishContractForBaseEffect(String(built.payload.baseEffect || ""));
+        const result = await publishLabPreset({
+          built,
+          contract,
+          buildLivePresetModule: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
+          buildBehaviorModule: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
+          ensureProjectConnected: async () => {
+            if (projectRootDirHandle || !window.showDirectoryPicker) return !!projectRootDirHandle;
+            return connectProjectFolder();
+          },
+          hasProjectConnection: !!projectRootDirHandle,
+          saveConnectedPath: saveTextToConnectedProjectPath,
+          saveConnectedDraft: saveTextToConnectedProjectDrafts,
+          saveProjectFile: saveTextToProjectFile,
+          downloadTextFile,
+          draftPathParts: VFX_PRESET_DRAFTS_PATH,
+          describePublishSuccess: describePublishSuccessHelper,
+        });
+        if (result && result.message) window.alert(result.message);
       })();
     }
 
@@ -2150,20 +2124,23 @@
       });
 
       (async () => {
-        try {
-          const ok = await saveTextToConnectedProjectPath(publishPlan.targetPath, publishPlan.moduleText);
-          if (ok) {
-            runtimeEffectBindingsState = publishPlan.nextBindings;
-            refreshBindingPanel();
-            window.alert(`Published binding to ${publishPlan.targetPath.join("/")}`);
-            return;
-          }
-          throw new Error("Binding write failed");
-        } catch (err) {
-          if (err && err.name === "AbortError") return;
-          console.error(err);
-          window.alert("Binding publish failed. No fallback export was created. Reconnect the project and try again.");
+        const result = await writeRuntimeBindingModule({
+          moduleText: publishPlan.moduleText,
+          targetPath: publishPlan.targetPath,
+          hasProjectConnection: !!projectRootDirHandle,
+          saveConnectedPath: saveTextToConnectedProjectPath,
+          missingConnectionMessage: `Connect Project first. Bind writes to the fixed repo path ${RUNTIME_BINDINGS_TARGET_PATH.join("/")}.`,
+          failureMessage: "Binding publish failed. No fallback export was created. Reconnect the project and try again.",
+        });
+        if (result && result.ok) {
+          runtimeEffectBindingsState = publishPlan.nextBindings;
+          refreshBindingPanel();
+          if (result.message) window.alert(result.message);
+          return;
         }
+        if (result && result.aborted) return;
+        if (result && result.error) console.error(result.error);
+        if (result && result.message) window.alert(result.message);
       })();
     }
 
@@ -2324,16 +2301,20 @@
             affectedBindings,
             buildRuntimeEffectBindingsModule,
           });
-          try {
-            const ok = await saveTextToConnectedProjectPath(cleanupPlan.targetPath, cleanupPlan.moduleText);
-            if (!ok) {
-              throw new Error("Binding cleanup write failed");
-            }
+          const result = await writeRuntimeBindingModule({
+            moduleText: cleanupPlan.moduleText,
+            targetPath: cleanupPlan.targetPath,
+            hasProjectConnection: !!projectRootDirHandle,
+            saveConnectedPath: saveTextToConnectedProjectPath,
+            missingConnectionMessage: `Connect Project first. This profile is bound in ${RUNTIME_BINDINGS_TARGET_PATH.join("/")} and deletion needs to clean that file.`,
+            failureMessage: "Delete aborted. Binding cleanup failed, so nothing was removed.",
+          });
+          if (result && result.ok) {
             runtimeEffectBindingsState = cleanupPlan.remainingBindings;
-          } catch (err) {
-            if (err && err.name === "AbortError") return;
-            console.error(err);
-            window.alert("Delete aborted. Binding cleanup failed, so nothing was removed.");
+          } else {
+            if (result && result.aborted) return;
+            if (result && result.error) console.error(result.error);
+            if (result && result.message) window.alert(result.message);
             return;
           }
         }
