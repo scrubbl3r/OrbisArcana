@@ -92,6 +92,7 @@ export function createLabEffectSurfaces({
       builtinOption: true,
       previewRootKey: "orbTemplatePreviewRoot",
       autoPreviewKey: "applyOrbTemplate",
+      publishNote: "Seed-only authoring lane; intentionally has no live runtime target.",
     }),
     "orb-nod": Object.freeze({
       category: "orb",
@@ -127,6 +128,7 @@ export function createLabEffectSurfaces({
       builtinOption: true,
       previewRootKey: "orbLifecyclePreviewRoot",
       autoPreviewKey: "applyOrbLifecycle",
+      livePreset: Object.freeze({ buildKey: "orb-lifecycle", path: ["src", "game-runtime", "orb", "orb-lifecycle-default.js"], exportName: "ORB_LIFECYCLE_DEFAULTS" }),
       authoringAdapter: createOrbLifecycleAuthoringAdapter,
     }),
     "orb-shatter": Object.freeze({
@@ -136,6 +138,7 @@ export function createLabEffectSurfaces({
       registryIds: Object.freeze(["orb.shatter_voronoi"]),
       omitRegistryOption: true,
       defaultBindTarget: "orb-state.shattered",
+      livePreset: Object.freeze({ buildKey: "orb-shatter", path: ["src", "vfx", "presets", "orb-shatter-default.js"], exportName: "ORB_SHATTER_PRESET_DEFAULT" }),
     }),
     "world-globe": Object.freeze({
       category: "world",

@@ -1377,7 +1377,7 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418j";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418k";
     import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418c";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createFlameAoeAuthoringAdapter } from "./studio/adapters/flame-aoe-authoring-adapter.js?v=20260418a";
@@ -1398,7 +1398,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260418a";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260418b";
     import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260418a";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260418a";
     import {
@@ -2018,6 +2018,15 @@
       return saveTextToConnectedProjectPathImported(pathParts, text);
     }
 
+    function describePublishedPath(pathParts){
+      const path = Array.isArray(pathParts) ? pathParts.join("/") : String(pathParts || "");
+      if (path.includes("/game-runtime/behaviors/")) return `behavior ${path}`;
+      if (path.includes("/game-runtime/orb/")) return `orb runtime defaults ${path}`;
+      if (path.includes("/game-runtime/world/")) return `world runtime defaults ${path}`;
+      if (path.includes("/vfx/presets/")) return `VFX preset ${path}`;
+      return path;
+    }
+
     function buildPublishedPresetPayload(){
       const opt = selectedEffectOption();
       if (!opt) return null;
@@ -2069,9 +2078,13 @@
     }
 
     function publishPreset(){
-      const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[String(selectedBaseEffect() || "")] || null;
+      const selectedBase = String(selectedBaseEffect() || "");
+      const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[selectedBase] || null;
       if (isSelectedEffectLocked() && !liveTarget) {
-        window.alert("This effect profile is locked. Unlock it to publish a preset.");
+        const surface = LAB_EFFECT_SURFACES[selectedBase] || null;
+        window.alert(surface && surface.publishNote
+          ? surface.publishNote
+          : "This effect profile is locked. Unlock it to publish a preset.");
         return;
       }
       void (async () => {
@@ -2095,15 +2108,16 @@
           if (liveTarget && typeof buildLivePresetModule === "function") {
             const moduleText = buildLivePresetModule(built.payload.params);
             if (moduleText) {
+              const publishedPaths = [];
               ok = await saveTextToConnectedProjectPath(liveTarget.path, moduleText);
+              if (ok) publishedPaths.push(liveTarget.path);
               if (ok && canPublishBehavior) {
                 const behaviorModuleText = buildBehaviorModule(built.payload.params);
                 ok = await saveTextToConnectedProjectPath(behaviorTarget.path, behaviorModuleText);
+                if (ok) publishedPaths.push(behaviorTarget.path);
               }
               if (ok) {
-                window.alert(canPublishBehavior
-                  ? `Published live preset and behavior to ${liveTarget.path.join("/")} + ${behaviorTarget.path.join("/")}`
-                  : `Published live preset to ${liveTarget.path.join("/")}`);
+                window.alert(`Published ${publishedPaths.map(describePublishedPath).join(" + ")}`);
                 return;
               }
             }

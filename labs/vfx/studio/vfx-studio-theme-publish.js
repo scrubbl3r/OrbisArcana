@@ -165,6 +165,14 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "export const ORB_SHATTER_PRESET_DEFAULT = Object.freeze({});",
         "",
       ].join("\n");
+    case "orb-lifecycle":
+      return [
+        "export const ORB_LIFECYCLE_DEFAULTS = Object.freeze({",
+        `  maxHits: ${Math.round(toNum(p.orbLifecycleHitTotal, 3))},`,
+        `  maxShards: ${Math.round(toNum(p.orbLifecycleShardTotal, 16))},`,
+        "});",
+        "",
+      ].join("\n");
     case "orb-base":
       return [
         "export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({",

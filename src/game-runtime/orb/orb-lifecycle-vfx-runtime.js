@@ -1,4 +1,5 @@
 import { getCanonicalOrbBaseRadiusPx } from "./orb-base-state.js";
+import { ORB_LIFECYCLE_DEFAULTS } from "./orb-lifecycle-default.js?v=20260418a";
 
 const CANONICAL_ORB_RADIUS_PX = 50;
 
@@ -258,9 +259,9 @@ export function createOrbLifecycleVfxRuntime({
     layout: null,
     lifeId: 1,
     fractureSeed: 1,
-    maxHits: 3,
+    maxHits: Math.max(1, Math.floor(Number(ORB_LIFECYCLE_DEFAULTS.maxHits) || 3)),
     hitsTaken: 0,
-    maxShards: 16,
+    maxShards: Math.max(3, Math.floor(Number(ORB_LIFECYCLE_DEFAULTS.maxShards) || 16)),
   };
 
   function getActiveShardCount(hitsTaken = state.hitsTaken, maxHits = state.maxHits) {

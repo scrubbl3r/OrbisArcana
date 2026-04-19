@@ -1,4 +1,5 @@
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../game-runtime/orb/orb-cast-policy.js";
+import { ORB_LIFECYCLE_DEFAULTS } from "../../game-runtime/orb/orb-lifecycle-default.js?v=20260418a";
 import { buildWorldGlobeVisualState } from "../../game-runtime/world/world-globe-state.js?v=20260417a";
 
 export function bootstrapStagingRuntimeContext({
@@ -45,6 +46,7 @@ export function bootstrapStagingRuntimeContext({
     orb: {
       maxHealth: 300,
       health: 300,
+      maxHits: Math.max(1, Math.round(Number(ORB_LIFECYCLE_DEFAULTS.maxHits) || 3)),
       collisionDamage: 100,
       collisionThreshold: IMPACT_TH,
       collisionCooldownMs: 250,
