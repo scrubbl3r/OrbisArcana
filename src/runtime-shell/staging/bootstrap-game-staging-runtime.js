@@ -121,7 +121,6 @@ export function bootstrapGameStagingRuntime({
         layerEl: els.flameLayer,
         getConfig: () => resolveFlameAoeGeometry({
           diameterRatio: VFX_DEFAULTS.flame.diameterRatio,
-          diameter: VFX_DEFAULTS.flame.diameter,
           durationMs: VFX_DEFAULTS.flame.durationMs,
           stroke: VFX_DEFAULTS.flame.stroke,
           fill: VFX_DEFAULTS.flame.fill,

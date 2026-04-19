@@ -145,10 +145,7 @@ export function resolveShockwaveGeometry(
 export function resolveFlameAoeGeometry(config = {}, { orbDiameterPx = null } = {}) {
   return {
     ...config,
-    diameter: resolveOrbRatioOrPx({
-      ratio: config.diameterRatio,
-      px: config.diameter,
-    }, { orbDiameterPx, min: 1 }),
+    diameter: resolveOrbRatioPx(config.diameterRatio, { orbDiameterPx, min: 1 }),
   };
 }
 
