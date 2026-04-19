@@ -1029,45 +1029,29 @@
             <input id="orbBaseStroke" class="paramFieldInput" type="number" min="2" max="20" step="1" value="2" />
             <button id="orbBaseApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
           </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseStrokeAlpha">Stroke alpha</label>
-            <input id="orbBaseStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
-            <button id="orbBaseApplyStrokeAlphaBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseFillAlpha">Fill alpha</label>
-            <input id="orbBaseFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.20" />
-            <button id="orbBaseApplyFillAlphaBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseStrokeR">Stroke red</label>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Stroke RGBA</span>
+            <label for="orbBaseStrokeR">r</label>
             <input id="orbBaseStrokeR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-            <button id="orbBaseApplyStrokeRBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseStrokeG">Stroke green</label>
+            <label for="orbBaseStrokeG">g</label>
             <input id="orbBaseStrokeG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-            <button id="orbBaseApplyStrokeGBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseStrokeB">Stroke blue</label>
+            <label for="orbBaseStrokeB">b</label>
             <input id="orbBaseStrokeB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-            <button id="orbBaseApplyStrokeBBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbBaseStrokeAlpha">a</label>
+            <input id="orbBaseStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
+            <button id="orbBaseApplyStrokeColorBtn" class="toolBtn" type="button">Apply</button>
           </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseFillR">Fill red</label>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Fill RGBA</span>
+            <label for="orbBaseFillR">r</label>
             <input id="orbBaseFillR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-            <button id="orbBaseApplyFillRBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseFillG">Fill green</label>
+            <label for="orbBaseFillG">g</label>
             <input id="orbBaseFillG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-            <button id="orbBaseApplyFillGBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbBaseFillB">Fill blue</label>
+            <label for="orbBaseFillB">b</label>
             <input id="orbBaseFillB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-            <button id="orbBaseApplyFillBBtn" class="toolBtn" type="button">Apply</button>
+            <label for="orbBaseFillAlpha">a</label>
+            <input id="orbBaseFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.20" />
+            <button id="orbBaseApplyFillColorBtn" class="toolBtn" type="button">Apply</button>
           </div>
         </div>
       </div>
@@ -1351,7 +1335,7 @@
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260418a";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260418a";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260418a";
-    import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260414-orbscale";
+    import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260418a";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260417a";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416g";
@@ -1584,21 +1568,15 @@
       orbBaseStroke: $("orbBaseStroke"),
       orbBaseApplyStrokeBtn: $("orbBaseApplyStrokeBtn"),
       orbBaseStrokeAlpha: $("orbBaseStrokeAlpha"),
-      orbBaseApplyStrokeAlphaBtn: $("orbBaseApplyStrokeAlphaBtn"),
       orbBaseFillAlpha: $("orbBaseFillAlpha"),
-      orbBaseApplyFillAlphaBtn: $("orbBaseApplyFillAlphaBtn"),
       orbBaseStrokeR: $("orbBaseStrokeR"),
-      orbBaseApplyStrokeRBtn: $("orbBaseApplyStrokeRBtn"),
       orbBaseStrokeG: $("orbBaseStrokeG"),
-      orbBaseApplyStrokeGBtn: $("orbBaseApplyStrokeGBtn"),
       orbBaseStrokeB: $("orbBaseStrokeB"),
-      orbBaseApplyStrokeBBtn: $("orbBaseApplyStrokeBBtn"),
+      orbBaseApplyStrokeColorBtn: $("orbBaseApplyStrokeColorBtn"),
       orbBaseFillR: $("orbBaseFillR"),
-      orbBaseApplyFillRBtn: $("orbBaseApplyFillRBtn"),
       orbBaseFillG: $("orbBaseFillG"),
-      orbBaseApplyFillGBtn: $("orbBaseApplyFillGBtn"),
       orbBaseFillB: $("orbBaseFillB"),
-      orbBaseApplyFillBBtn: $("orbBaseApplyFillBBtn"),
+      orbBaseApplyFillColorBtn: $("orbBaseApplyFillColorBtn"),
       previewOrbNod: $("previewOrbNod"),
       orbNodShrinkPct: $("orbNodShrinkPct"),
       orbNodApplyShrinkBtn: $("orbNodApplyShrinkBtn"),

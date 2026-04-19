@@ -60,14 +60,8 @@ export function createOrbBasePreview({ els, evenPx, clamp, clampByte }) {
     [
       els.orbBaseApplyDiameterBtn,
       els.orbBaseApplyStrokeBtn,
-      els.orbBaseApplyStrokeAlphaBtn,
-      els.orbBaseApplyFillAlphaBtn,
-      els.orbBaseApplyStrokeRBtn,
-      els.orbBaseApplyStrokeGBtn,
-      els.orbBaseApplyStrokeBBtn,
-      els.orbBaseApplyFillRBtn,
-      els.orbBaseApplyFillGBtn,
-      els.orbBaseApplyFillBBtn,
+      els.orbBaseApplyStrokeColorBtn,
+      els.orbBaseApplyFillColorBtn,
     ].forEach((el) => {
       if (el) el.addEventListener("click", apply);
     });
