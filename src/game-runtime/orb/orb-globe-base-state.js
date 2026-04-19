@@ -1,6 +1,6 @@
 import { ORB_GLOBE_VISUAL_DEFAULTS as ORB_GLOBE_VISUAL_DEFAULTS_FILE } from "./orb-globe-default.js?v=20260418a";
 import { ORB_BASE_SCALE_REFERENCE_DIAMETER_PX } from "./orb-base-state.js";
-import { resolveOrbRatioOrPx } from "./orb-spell-geometry.js";
+import { resolveOrbRatioPx } from "./orb-spell-geometry.js";
 
 function clamp01(v) {
   const n = Number(v);
@@ -26,36 +26,13 @@ function scaleOrbLinkedPx(value, orbRadiusPx) {
   return clampPx(value, 0) * orbScaleFactorFromRadius(orbRadiusPx);
 }
 
-function resolveOrbGlobeRatioOrPx(
-  {
-    ratio = null,
-    px = null,
-    fallbackRatio = 0,
-    fallbackPx = 0,
-  } = {},
-  {
-    orbRadiusPx = null,
-    min = 0,
-  } = {}
-) {
-  return resolveOrbRatioOrPx({
-    ratio,
-    px,
-    fallbackRatio,
-    fallbackPx,
-  }, {
-    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
-    min,
-  });
-}
-
 export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   innerDiameterRatio: clampRatio(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerDiameterRatio,
     0.2
   ),
   orbitDiameterRatio: clampRatio(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDiameterRatio ?? ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitRadiusRatio,
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDiameterRatio,
     0.13
   ),
   orbitDistanceOffsetPx: clampPx(
@@ -110,33 +87,17 @@ export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerPaddingRatio,
     0.06
   ),
-  innerPaddingPx: clampPx(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerPaddingPx,
-    6
-  ),
   pickupDiameterRatio: clampRatio(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.pickupDiameterRatio,
     0.50
-  ),
-  pickupDiameterPx: clampPx(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.pickupDiameterPx,
-    50
   ),
   innerStrokeWidthRatio: clampRatio(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerStrokeWidthRatio,
     0.02
   ),
-  innerStrokeWidthPx: clampPx(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerStrokeWidthPx,
-    2
-  ),
   releasedStrokeWidthRatio: clampRatio(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.releasedStrokeWidthRatio,
     0.02
-  ),
-  releasedStrokeWidthPx: clampPx(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.releasedStrokeWidthPx,
-    2
   ),
   orbitStrokeWidthPx: clampPx(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitStrokeWidthPx,
@@ -153,7 +114,7 @@ export function buildOrbGlobeVisualState(overrides = null) {
       ORB_GLOBE_VISUAL_DEFAULTS.innerDiameterRatio
     ),
     orbitDiameterRatio: clampRatio(
-      source.orbitDiameterRatio ?? source.orbitRadiusRatio,
+      source.orbitDiameterRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.orbitDiameterRatio
     ),
     orbitDistanceOffsetPx: clampPx(
@@ -208,33 +169,17 @@ export function buildOrbGlobeVisualState(overrides = null) {
       source.innerPaddingRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingRatio
     ),
-    innerPaddingPx: clampPx(
-      source.innerPaddingPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx
-    ),
     pickupDiameterRatio: clampRatio(
       source.pickupDiameterRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterRatio
-    ),
-    pickupDiameterPx: clampPx(
-      source.pickupDiameterPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterPx
     ),
     innerStrokeWidthRatio: clampRatio(
       source.innerStrokeWidthRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthRatio
     ),
-    innerStrokeWidthPx: clampPx(
-      source.innerStrokeWidthPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthPx
-    ),
     releasedStrokeWidthRatio: clampRatio(
       source.releasedStrokeWidthRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthRatio
-    ),
-    releasedStrokeWidthPx: clampPx(
-      source.releasedStrokeWidthPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthPx
     ),
     orbitStrokeWidthPx: clampPx(
       source.orbitStrokeWidthPx,
@@ -293,7 +238,7 @@ export function getOrbitGlobeRadiusPx(orbRadiusPx, orbGlobeVisualState = ORB_GLO
       orbRadiusPx
     ),
     Number(orbRadiusPx) * clampRatio(
-      orbGlobeVisualState && (orbGlobeVisualState.orbitDiameterRatio ?? orbGlobeVisualState.orbitRadiusRatio),
+      orbGlobeVisualState && orbGlobeVisualState.orbitDiameterRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.orbitDiameterRatio
     )
   );
@@ -316,49 +261,29 @@ export function getOrbitDistancePx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_
 }
 
 export function getPickupGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return resolveOrbGlobeRatioOrPx({
-    ratio: orbGlobeVisualState && orbGlobeVisualState.pickupDiameterRatio,
-    px: orbGlobeVisualState && orbGlobeVisualState.pickupDiameterPx,
-    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterRatio,
-    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterPx,
-  }, {
-    orbRadiusPx,
+  return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.pickupDiameterRatio, {
+    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
     min: 0,
   });
 }
 
 export function getInnerPaddingPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return resolveOrbGlobeRatioOrPx({
-    ratio: orbGlobeVisualState && orbGlobeVisualState.innerPaddingRatio,
-    px: orbGlobeVisualState && orbGlobeVisualState.innerPaddingPx,
-    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingRatio,
-    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx,
-  }, {
-    orbRadiusPx,
+  return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.innerPaddingRatio, {
+    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
     min: 0,
   });
 }
 
 export function getInnerGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return resolveOrbGlobeRatioOrPx({
-    ratio: orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthRatio,
-    px: orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthPx,
-    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthRatio,
-    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthPx,
-  }, {
-    orbRadiusPx,
+  return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthRatio, {
+    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
     min: 0,
   });
 }
 
 export function getReleasedGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return resolveOrbGlobeRatioOrPx({
-    ratio: orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthRatio,
-    px: orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthPx,
-    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthRatio,
-    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthPx,
-  }, {
-    orbRadiusPx,
+  return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthRatio, {
+    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
     min: 0,
   });
 }
