@@ -14,14 +14,16 @@ export async function publishLabPreset({
 } = {}) {
   if (!built || !built.payload) return { ok: false, aborted: true };
   const payloadText = JSON.stringify(built.payload, null, 2);
+  let projectConnected = !!hasProjectConnection;
 
   try {
-    if (!hasProjectConnection && typeof ensureProjectConnected === "function") {
+    if (!projectConnected && typeof ensureProjectConnected === "function") {
       const connected = await ensureProjectConnected();
       if (!connected) return { ok: false, aborted: true };
+      projectConnected = true;
     }
 
-    if (hasProjectConnection) {
+    if (projectConnected) {
       const liveTarget = contract && contract.livePreset ? contract.livePreset : null;
       const behaviorTarget = contract && contract.behavior ? contract.behavior : null;
       const canPublishBehavior = !!behaviorTarget && typeof buildBehaviorModule === "function";
