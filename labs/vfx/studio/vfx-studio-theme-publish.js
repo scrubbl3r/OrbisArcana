@@ -129,7 +129,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "flame-aoe":
       return [
         "export const FLAME_AOE_PRESET_DEFAULT = Object.freeze({",
-        `  diameter: ${Math.round(toNum(p.flameD, 124))},`,
+        `  diameterRatio: ${toNum(p.flameDiameterRatio ?? ((toNum(p.flameD, 124)) / 100), 1.24).toFixed(2)},`,
         `  durationMs: ${Math.round(toNum(p.flameMs, 10000))},`,
         `  stroke: Object.freeze({ r: ${Math.round(clampNum(p.flameStrokeR, 0, 255, 255))}, g: ${Math.round(clampNum(p.flameStrokeG, 0, 255, 96))}, b: ${Math.round(clampNum(p.flameStrokeB, 0, 255, 24))}, a: ${clampNum(p.flameStrokeA, 0, 1, 1).toFixed(2)} }),`,
         `  fill: Object.freeze({ r: ${Math.round(clampNum(p.flameFillR, 0, 255, 255))}, g: ${Math.round(clampNum(p.flameFillG, 0, 255, 96))}, b: ${Math.round(clampNum(p.flameFillB, 0, 255, 24))}, a: ${clampNum(p.flameFillA, 0, 1, 0.2).toFixed(2)} }),`,
@@ -348,8 +348,11 @@ export function applyLabThemeDefaults({
     if (els.shockB) els.shockB.value = String(Math.round(clamp(shockColor.b, 0, 255)));
     if (els.shockA) els.shockA.value = String(clamp(shockColor.a, 0, 1).toFixed(2));
   }
-  if (els.flameD && flameAoePresetDefault) {
-    els.flameD.value = String(evenPx(clamp(flameAoePresetDefault.diameter, 20, 1200), 2, 2000));
+  if (els.flameDiameterRatio && flameAoePresetDefault) {
+    const ratio = Number.isFinite(Number(flameAoePresetDefault.diameterRatio))
+      ? Number(flameAoePresetDefault.diameterRatio)
+      : (Number(flameAoePresetDefault.diameter) || 124) / 100;
+    els.flameDiameterRatio.value = String(clamp(ratio, 0.1, 12).toFixed(2));
   }
   if (els.flameMs && flameAoePresetDefault) {
     els.flameMs.value = String(Math.round(clamp(flameAoePresetDefault.durationMs, 200, 60000)));

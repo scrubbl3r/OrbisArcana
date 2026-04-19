@@ -1,3 +1,8 @@
+import {
+  resolveBubbleShieldGeometry,
+  resolveFlameAoeGeometry,
+} from "../../game-runtime/orb/orb-spell-geometry.js";
+
 export function bootstrapGameStagingRuntime({
   createVfxRuntimesBundle = null,
   createOrbShatterRuntimeController = null,
@@ -56,13 +61,16 @@ export function bootstrapGameStagingRuntime({
   let orbShatterController = null;
   let orbRuntimeState = null;
   let orbRuntimeLoop = existingOrbRuntimeLoop;
+  const readOrbDiameterPx = () => Math.max(1, Number(PHYS && PHYS.orbRadiusPx) || 0) * 2 || 100;
 
   if (typeof createVfxRuntimesBundle === "function") {
     vfxRuntimesBundle = createVfxRuntimesBundle({
       bubbleShield: {
         shieldEl: els.shield,
-        getConfig: () => ({
+        getConfig: () => resolveBubbleShieldGeometry({
           colorRgb: VFX_DEFAULTS.shield.colorRgb,
+          diameterRatio: VFX_DEFAULTS.shield.diameterRatio,
+          strokeWidthRatio: VFX_DEFAULTS.shield.strokeWidthRatio,
           diameterPx: VFX_DEFAULTS.shield.diameterPx,
           strokeWidthPx: VFX_DEFAULTS.shield.strokeWidthPx,
           durationMs: VFX_DEFAULTS.shield.durationMs,
@@ -70,6 +78,9 @@ export function bootstrapGameStagingRuntime({
           pulseMs: VFX_DEFAULTS.shield.pulseMs,
           pulseMin: VFX_DEFAULTS.shield.pulseMin,
           pulseMax: VFX_DEFAULTS.shield.pulseMax,
+        }, {
+          orbDiameterPx: readOrbDiameterPx(),
+          normalizeStroke: (value) => evenStroke(value, 1, 64),
         }),
         setCssVar: (name, value) => setVar(name, value),
         clamp,
@@ -100,11 +111,14 @@ export function bootstrapGameStagingRuntime({
       },
       flameAoe: {
         layerEl: els.flameLayer,
-        getConfig: () => ({
+        getConfig: () => resolveFlameAoeGeometry({
+          diameterRatio: VFX_DEFAULTS.flame.diameterRatio,
           diameter: VFX_DEFAULTS.flame.diameter,
           durationMs: VFX_DEFAULTS.flame.durationMs,
           stroke: VFX_DEFAULTS.flame.stroke,
           fill: VFX_DEFAULTS.flame.fill,
+        }, {
+          orbDiameterPx: readOrbDiameterPx(),
         }),
         clamp,
         evenPx,

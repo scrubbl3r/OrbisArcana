@@ -32,7 +32,7 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
       decayMs: 150,
     },
     flame: {
-      diameter: 200,
+      diameterRatio: 2.0,
       durationMs: 10000,
     },
     electric: {

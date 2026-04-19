@@ -179,14 +179,14 @@ export function createFlameAoePreview({
   }
 
   function apply() {
-    const d = evenPx(clamp(els.flameD.value, 20, 1200), 2, 2000);
+    const diameterRatio = clamp(els.flameDiameterRatio.value, 0.1, 12);
     const ms = Math.round(clamp(els.flameMs && els.flameMs.value, 200, 60000));
     const stroke = rgbaValue("flameStroke", { r: 255, g: 96, b: 24, a: 1 });
     const fill = rgbaValue("flameFill", { r: 255, g: 96, b: 24, a: 0.2 });
-    const resolved = resolveFlameAoeGeometry({ diameter: d }, {
+    const resolved = resolveFlameAoeGeometry({ diameterRatio }, {
       orbDiameterPx: getOrbDiameterPx(),
     });
-    els.flameD.value = String(d);
+    els.flameDiameterRatio.value = Number(diameterRatio).toFixed(2);
     if (els.flameMs) els.flameMs.value = String(ms);
     setVar("--flame-d", `${Number(resolved.diameter).toFixed(2)}px`);
     setVar("--flame-stroke", rgbaText(stroke));
@@ -304,7 +304,7 @@ export function createFlameAoePreview({
   }
 
   function wire() {
-    els.playFlame.addEventListener("click", play);
+      els.playFlame.addEventListener("click", play);
     [
       els.flameApplyDiameterBtn,
       els.flameApplyDurationBtn,

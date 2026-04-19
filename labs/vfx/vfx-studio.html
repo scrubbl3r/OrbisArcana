@@ -957,8 +957,8 @@
         </div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
-            <label for="flameD">Diameter px</label>
-            <input id="flameD" class="paramFieldInput" type="number" min="20" max="1200" value="124" step="2" />
+            <label for="flameDiameterRatio">Diameter ratio</label>
+            <input id="flameDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="12" value="1.24" step="0.01" />
             <button id="flameApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
@@ -1553,7 +1553,7 @@
       shockApplyColorBtn: $("shockApplyColorBtn"),
 
       playFlame: $("playFlame"),
-      flameD: $("flameD"),
+      flameDiameterRatio: $("flameDiameterRatio"),
       flameApplyDiameterBtn: $("flameApplyDiameterBtn"),
       flameMs: $("flameMs"),
       flameApplyDurationBtn: $("flameApplyDurationBtn"),

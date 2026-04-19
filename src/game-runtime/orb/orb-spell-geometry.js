@@ -96,9 +96,16 @@ export function resolveShockwaveGeometry(
 }
 
 export function resolveFlameAoeGeometry(config = {}, { orbDiameterPx = null } = {}) {
+  const resolvedOrbDiameterPx = Math.max(
+    1,
+    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
+  );
+  const diameterRatio = clampPositive(config.diameterRatio, 0);
   return {
     ...config,
-    diameter: resolveOrbLinkedPx(config.diameter, { orbDiameterPx, min: 1 }),
+    diameter: diameterRatio > 0
+      ? Math.max(1, diameterRatio * resolvedOrbDiameterPx)
+      : resolveOrbLinkedPx(config.diameter, { orbDiameterPx, min: 1 }),
   };
 }
 

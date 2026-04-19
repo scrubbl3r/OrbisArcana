@@ -1,5 +1,5 @@
 const FLAME_AOE_FIELDS = Object.freeze([
-  ["flameD", "flameD"],
+  ["flameDiameterRatio", "flameDiameterRatio"],
   ["flameMs", "flameMs"],
   ["flameStrokeR", "flameStrokeR"],
   ["flameStrokeG", "flameStrokeG"],
@@ -31,8 +31,11 @@ export function createFlameAoeAuthoringAdapter({
   function defaultSettings() {
     const stroke = flameAoePresetDefault.stroke || {};
     const fill = flameAoePresetDefault.fill || {};
+    const diameterRatio = Number.isFinite(Number(flameAoePresetDefault.diameterRatio))
+      ? Number(flameAoePresetDefault.diameterRatio)
+      : (Number(flameAoePresetDefault.diameter) || 124) / 100;
     return {
-      flameD: roundedNumber(clampNumber(flameAoePresetDefault.diameter, 20, 1200, 124)),
+      flameDiameterRatio: fixedNumber(clampNumber(diameterRatio, 0.1, 12, 1.24), 2, 1.24),
       flameMs: roundedNumber(clampNumber(flameAoePresetDefault.durationMs, 200, 60000, 10000)),
       flameStrokeR: roundedNumber(clampNumber(stroke.r, 0, 255, 255)),
       flameStrokeG: roundedNumber(clampNumber(stroke.g, 0, 255, 96)),
@@ -57,6 +60,9 @@ export function createFlameAoeAuthoringAdapter({
     FLAME_AOE_FIELDS.forEach(([fieldKey, settingsKey]) => {
       if (els[fieldKey] && settings[settingsKey] != null) els[fieldKey].value = String(settings[settingsKey]);
     });
+    if (els.flameDiameterRatio && settings.flameD != null && settings.flameDiameterRatio == null) {
+      els.flameDiameterRatio.value = String(((Number(settings.flameD) || 124) / 100).toFixed(2));
+    }
     if (typeof applyPreview === "function") applyPreview();
     return true;
   }
