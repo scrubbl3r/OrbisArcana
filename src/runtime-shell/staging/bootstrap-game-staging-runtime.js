@@ -134,8 +134,6 @@ export function bootstrapGameStagingRuntime({
         getConfig: () => resolveElectricAoeGeometry({
           startRatio: VFX_DEFAULTS.electric.startRatio,
           endRatio: VFX_DEFAULTS.electric.endRatio,
-          startR: VFX_DEFAULTS.electric.startR,
-          endR: VFX_DEFAULTS.electric.endR,
           durationMs: VFX_DEFAULTS.electric.durationMs,
           nodeCount: VFX_DEFAULTS.electric.nodeCount,
           particleCount: VFX_DEFAULTS.electric.particleCount,
