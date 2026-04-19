@@ -1,6 +1,6 @@
 export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   idle: Object.freeze({
-    diameterRatio: 0.25,
+    diameterRatio: 0.35,
     fillRgb: Object.freeze({
       r: 215,
       g: 215,
@@ -21,7 +21,7 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     pulseHz: 0.90,
   }),
   collected: Object.freeze({
-    diameterRatio: 0.12,
+    diameterRatio: 0.17,
     fillRgb: Object.freeze({
       r: 255,
       g: 255,
@@ -37,7 +37,7 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     strokeWidthRatio: 0.020,
   }),
   consumed: Object.freeze({
-    diameterRatio: 0.11,
+    diameterRatio: 0.10,
     fillRgb: Object.freeze({
       r: 255,
       g: 255,
