@@ -23,6 +23,7 @@ export function createStudioBootstrap({
   buildCurrentLabOrbBaseVisualState,
   updateTeleportBehaviorReadout,
   applyGeometryVars,
+  previewApplyMap,
   applyPreviewMap,
   previewRootsByEffect,
   geometry,
