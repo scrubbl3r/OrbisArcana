@@ -14,6 +14,7 @@ export function createLabEffectSurfaces({
   return Object.freeze({
     "electric-aoe": Object.freeze({
       category: "spell",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "electric-aoe",
       defaultSettingsKey: "electric-aoe",
       registryIds: Object.freeze(["spell.aoe_electric"]),
@@ -27,6 +28,7 @@ export function createLabEffectSurfaces({
     }),
     "flame-aoe": Object.freeze({
       category: "spell",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "flame-aoe",
       defaultSettingsKey: "flame-aoe",
       registryIds: Object.freeze(["spell.aoe_flame"]),
@@ -40,6 +42,7 @@ export function createLabEffectSurfaces({
     }),
     "bubble-shield": Object.freeze({
       category: "spell",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "bubble-shield",
       defaultSettingsKey: "bubble-shield",
       registryIds: Object.freeze(["spell.shield_bubble"]),
@@ -53,6 +56,7 @@ export function createLabEffectSurfaces({
     }),
     "shockwave": Object.freeze({
       category: "spell",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "shockwave",
       defaultSettingsKey: "shockwave",
       registryIds: Object.freeze(["spell.shockwave_ring"]),
@@ -66,6 +70,7 @@ export function createLabEffectSurfaces({
     }),
     "teleport": Object.freeze({
       category: "spell",
+      panes: Object.freeze(["vfx", "behavior"]),
       settingsKey: "teleport",
       defaultSettingsKey: "teleport",
       registryIds: Object.freeze(["spell.teleport"]),
@@ -86,6 +91,7 @@ export function createLabEffectSurfaces({
     "orb-base": Object.freeze({
       label: "Orb Base",
       category: "orb",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "orb-base",
       defaultSettingsKey: "orb-base",
       builtinOption: true,
@@ -99,6 +105,7 @@ export function createLabEffectSurfaces({
     "orb-template": Object.freeze({
       label: "Orb Template",
       category: "orb",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "orb-template",
       defaultSettingsKey: "orb-template",
       builtinOption: true,
@@ -109,6 +116,7 @@ export function createLabEffectSurfaces({
     }),
     "orb-nod": Object.freeze({
       category: "orb",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "orb-nod",
       defaultSettingsKey: "orb-nod",
       settingsParamPrefix: "orbTemplate",
@@ -124,6 +132,7 @@ export function createLabEffectSurfaces({
     "orb-globe": Object.freeze({
       label: "Orb Globe",
       category: "orb",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "orb-globe",
       defaultSettingsKey: "orb-globe",
       registryIds: Object.freeze(["orb.globe"]),
@@ -140,6 +149,7 @@ export function createLabEffectSurfaces({
     "orb-lifecycle": Object.freeze({
       label: "Orb Lifecycle",
       category: "orb",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "orb-lifecycle",
       defaultSettingsKey: "orb-lifecycle",
       builtinOption: true,
@@ -152,6 +162,7 @@ export function createLabEffectSurfaces({
     }),
     "orb-shatter": Object.freeze({
       category: "orb",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "orb-shatter",
       defaultSettingsKey: "orb-shatter",
       registryIds: Object.freeze(["orb.shatter_voronoi"]),
@@ -161,6 +172,7 @@ export function createLabEffectSurfaces({
     }),
     "world-globe": Object.freeze({
       category: "world",
+      panes: Object.freeze(["vfx"]),
       settingsKey: "world-globe",
       defaultSettingsKey: "world-globe",
       registryIds: Object.freeze(["world.globe"]),

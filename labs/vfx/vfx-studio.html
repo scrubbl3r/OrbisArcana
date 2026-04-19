@@ -1376,6 +1376,11 @@
     } from "./studio/vfx-studio-state.js?v=20260419a";
     import { LAB_STUDIO_CATEGORIES } from "./studio/vfx-studio-categories.js?v=20260419a";
     import {
+      getLabStudioPaneLabel,
+      listLabStudioSurfacePanes,
+      surfaceSupportsLabStudioPane,
+    } from "./studio/vfx-studio-panes.js?v=20260419a";
+    import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
       refreshBindingPanel as refreshBindingPanelHelper,
@@ -1440,6 +1445,7 @@
     const draftStore = createDraftStore();
     let draftHydrationDone = false;
     let suspendDraftApply = false;
+    let activeAuthoringPane = "vfx";
     const lastSelectedEffectValueRef = { value: "" };
     let projectRootDirHandle = null;
     let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
@@ -1863,6 +1869,14 @@
 
     function selectedBaseEffect(){
       return selectedBaseEffectHelper(selectedEffectOption());
+    }
+
+    function selectedEffectSurface(){
+      return LAB_EFFECT_SURFACES[String(selectedBaseEffect() || "")] || null;
+    }
+
+    function supportedPanesForSelectedEffect(){
+      return listLabStudioSurfacePanes(selectedEffectSurface());
     }
 
     function selectedSpawnBaseEffect(){
@@ -2469,18 +2483,37 @@
 
     shieldPreview.wire();
 
-    function setAuthoringTab(tabName){
-      const showBehavior = tabName === "behavior";
-      if (els.vfxAuthoringPanel) els.vfxAuthoringPanel.hidden = showBehavior;
-      if (els.behaviorAuthoringPanel) els.behaviorAuthoringPanel.hidden = !showBehavior;
+    function refreshAuthoringPaneUi(){
+      const supportedPanes = supportedPanesForSelectedEffect();
+      const nextPane = supportedPanes.includes(activeAuthoringPane) ? activeAuthoringPane : (supportedPanes[0] || "vfx");
+      activeAuthoringPane = nextPane;
+      const showBehavior = nextPane === "behavior";
+
       if (els.vfxTabBtn) {
-        els.vfxTabBtn.classList.toggle("active", !showBehavior);
-        els.vfxTabBtn.setAttribute("aria-selected", showBehavior ? "false" : "true");
+        const supportsVfx = supportedPanes.includes("vfx");
+        els.vfxTabBtn.hidden = !supportsVfx;
+        els.vfxTabBtn.disabled = !supportsVfx;
+        els.vfxTabBtn.textContent = getLabStudioPaneLabel("vfx");
+        els.vfxTabBtn.classList.toggle("active", supportsVfx && !showBehavior);
+        els.vfxTabBtn.setAttribute("aria-selected", supportsVfx && !showBehavior ? "true" : "false");
       }
       if (els.behaviorTabBtn) {
-        els.behaviorTabBtn.classList.toggle("active", showBehavior);
-        els.behaviorTabBtn.setAttribute("aria-selected", showBehavior ? "true" : "false");
+        const supportsBehavior = supportedPanes.includes("behavior");
+        els.behaviorTabBtn.hidden = !supportsBehavior;
+        els.behaviorTabBtn.disabled = !supportsBehavior;
+        els.behaviorTabBtn.textContent = getLabStudioPaneLabel("behavior");
+        els.behaviorTabBtn.classList.toggle("active", supportsBehavior && showBehavior);
+        els.behaviorTabBtn.setAttribute("aria-selected", supportsBehavior && showBehavior ? "true" : "false");
       }
+      if (els.vfxAuthoringPanel) els.vfxAuthoringPanel.hidden = !supportedPanes.includes("vfx") || showBehavior;
+      if (els.behaviorAuthoringPanel) els.behaviorAuthoringPanel.hidden = !supportedPanes.includes("behavior") || !showBehavior;
+    }
+
+    function setAuthoringTab(tabName){
+      const nextPane = String(tabName || "").trim().toLowerCase();
+      const supportedPanes = supportedPanesForSelectedEffect();
+      activeAuthoringPane = supportedPanes.includes(nextPane) ? nextPane : (supportedPanes[0] || "vfx");
+      refreshAuthoringPaneUi();
     }
 
     function selectedBehaviorEffect(){
@@ -2499,6 +2532,12 @@
     }
 
     function updateBehaviorSections(){
+      if (!surfaceSupportsLabStudioPane(selectedEffectSurface(), "behavior")) {
+        document.querySelectorAll(".behaviorSection[data-behavior-effect]").forEach((section) => {
+          section.hidden = section.getAttribute("data-behavior-effect") !== "default";
+        });
+        return;
+      }
       const effect = selectedBehaviorEffect();
       const hasBehaviorSurface = !!effect;
       document.querySelectorAll(".behaviorSection[data-behavior-effect]").forEach((section) => {
@@ -2526,6 +2565,7 @@
       });
       alignBindingTargetToSelectedEffect();
       refreshBindingPanel();
+      refreshAuthoringPaneUi();
       updateBehaviorSections();
       requestAnimationFrame(autoPreviewSelectedEffect);
       return result;
