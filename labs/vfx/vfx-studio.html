@@ -1142,6 +1142,23 @@
             <input id="orbLifecycleHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
             <button id="orbLifecycleApplyHitTotalBtn" class="toolBtn" type="button">Apply</button>
           </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Shard RGBA</span>
+            <label for="orbLifecycleShardR">r</label>
+            <input id="orbLifecycleShardR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbLifecycleShardG">g</label>
+            <input id="orbLifecycleShardG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbLifecycleShardB">b</label>
+            <input id="orbLifecycleShardB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbLifecycleShardA">a</label>
+            <input id="orbLifecycleShardA" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" />
+            <button id="orbLifecycleApplyShardColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbLifecycleShardStroke">Shard stroke width</label>
+            <input id="orbLifecycleShardStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1" />
+            <button id="orbLifecycleApplyShardStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
           <div class="paramFieldRow">
             <label for="orbLifecycleHitBtn">Damage flow</label>
             <input id="orbLifecycleStatus" class="paramFieldInput" type="text" value="Hits 0 / 3" readonly />
@@ -1337,7 +1354,7 @@
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260418a";
     import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260418a";
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
-    import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260417a";
+    import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260418a";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416g";
     import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260418a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260417b";
@@ -1383,7 +1400,7 @@
     import { createFlameAoeAuthoringAdapter } from "./studio/adapters/flame-aoe-authoring-adapter.js?v=20260418a";
     import { createOrbBaseAuthoringAdapter } from "./studio/adapters/orb-base-authoring-adapter.js?v=20260418a";
     import { createOrbGlobeAuthoringAdapter } from "./studio/adapters/orb-globe-authoring-adapter.js?v=20260418a";
-    import { createOrbLifecycleAuthoringAdapter } from "./studio/adapters/orb-lifecycle-authoring-adapter.js?v=20260418a";
+    import { createOrbLifecycleAuthoringAdapter } from "./studio/adapters/orb-lifecycle-authoring-adapter.js?v=20260418b";
     import { createOrbNodAuthoringAdapter } from "./studio/adapters/orb-nod-authoring-adapter.js?v=20260418a";
     import { createShockwaveAuthoringAdapter } from "./studio/adapters/shockwave-authoring-adapter.js?v=20260418a";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
@@ -1398,7 +1415,7 @@
       saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
       saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
       saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260418b";
+    } from "./studio/vfx-studio-theme-publish.js?v=20260418c";
     import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260418a";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260418a";
     import {
@@ -1410,6 +1427,7 @@
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260416b";
+    import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260418b";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260417a";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260416b";
@@ -1624,6 +1642,13 @@
       orbLifecycleApplyShardTotalBtn: $("orbLifecycleApplyShardTotalBtn"),
       orbLifecycleHitTotal: $("orbLifecycleHitTotal"),
       orbLifecycleApplyHitTotalBtn: $("orbLifecycleApplyHitTotalBtn"),
+      orbLifecycleShardR: $("orbLifecycleShardR"),
+      orbLifecycleShardG: $("orbLifecycleShardG"),
+      orbLifecycleShardB: $("orbLifecycleShardB"),
+      orbLifecycleShardA: $("orbLifecycleShardA"),
+      orbLifecycleApplyShardColorBtn: $("orbLifecycleApplyShardColorBtn"),
+      orbLifecycleShardStroke: $("orbLifecycleShardStroke"),
+      orbLifecycleApplyShardStrokeBtn: $("orbLifecycleApplyShardStrokeBtn"),
       orbLifecycleHitBtn: $("orbLifecycleHitBtn"),
       orbLifecycleHealBtn: $("orbLifecycleHealBtn"),
       orbLifecycleRegenerateBtn: $("orbLifecycleRegenerateBtn"),
@@ -1653,8 +1678,13 @@
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       orbLifecycleDefaults: Object.freeze({
-        orbLifecycleShardTotal: 16,
-        orbLifecycleHitTotal: 3,
+        orbLifecycleShardTotal: Number(ORB_LIFECYCLE_DEFAULTS.maxShards) || 16,
+        orbLifecycleHitTotal: Number(ORB_LIFECYCLE_DEFAULTS.maxHits) || 3,
+        orbLifecycleShardR: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb && ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.r)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.r) : 255,
+        orbLifecycleShardG: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb && ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.g)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.g) : 255,
+        orbLifecycleShardB: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb && ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.b)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.b) : 255,
+        orbLifecycleShardA: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeAlpha)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeAlpha) : 0.46,
+        orbLifecycleShardStroke: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeWidthPx)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeWidthPx) : 1,
       }),
       orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
       getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,

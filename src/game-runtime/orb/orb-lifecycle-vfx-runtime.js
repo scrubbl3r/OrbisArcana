@@ -1,10 +1,46 @@
 import { getCanonicalOrbBaseRadiusPx } from "./orb-base-state.js";
-import { ORB_LIFECYCLE_DEFAULTS } from "./orb-lifecycle-default.js?v=20260418a";
+import { ORB_LIFECYCLE_DEFAULTS } from "./orb-lifecycle-default.js?v=20260418b";
 
 const CANONICAL_ORB_RADIUS_PX = 50;
 
 function rand(rng, a, b) {
   return a + (b - a) * rng();
+}
+
+function clampByte(value, fallback = 255) {
+  const n = Math.round(Number(value));
+  const safe = Number.isFinite(n) ? n : fallback;
+  return Math.max(0, Math.min(255, safe));
+}
+
+function clamp01(value, fallback = 1) {
+  const n = Number(value);
+  const safe = Number.isFinite(n) ? n : fallback;
+  return Math.max(0, Math.min(1, safe));
+}
+
+function resolveShardStyle(defaults = ORB_LIFECYCLE_DEFAULTS) {
+  const rgb = defaults && defaults.shardStrokeRgb ? defaults.shardStrokeRgb : {};
+  return Object.freeze({
+    strokeRgb: Object.freeze({
+      r: clampByte(rgb.r, 255),
+      g: clampByte(rgb.g, 255),
+      b: clampByte(rgb.b, 255),
+    }),
+    strokeAlpha: clamp01(defaults && defaults.shardStrokeAlpha, 0.46),
+    strokeWidthPx: Math.max(0.25, Number(defaults && defaults.shardStrokeWidthPx) || 1),
+  });
+}
+
+export const ORB_LIFECYCLE_SHARD_STYLE_DEFAULT = resolveShardStyle();
+
+export function rgbaFromOrbLifecycleShardStyle(style = ORB_LIFECYCLE_SHARD_STYLE_DEFAULT) {
+  const rgb = style && style.strokeRgb ? style.strokeRgb : {};
+  const r = clampByte(rgb.r, 255);
+  const g = clampByte(rgb.g, 255);
+  const b = clampByte(rgb.b, 255);
+  const a = clamp01(style && style.strokeAlpha, 0.46);
+  return `rgba(${r},${g},${b},${a.toFixed(2)})`;
 }
 
 export function createRng(seed) {
@@ -262,6 +298,7 @@ export function createOrbLifecycleVfxRuntime({
     maxHits: Math.max(1, Math.floor(Number(ORB_LIFECYCLE_DEFAULTS.maxHits) || 3)),
     hitsTaken: 0,
     maxShards: Math.max(3, Math.floor(Number(ORB_LIFECYCLE_DEFAULTS.maxShards) || 16)),
+    shardStyle: ORB_LIFECYCLE_SHARD_STYLE_DEFAULT,
   };
 
   function getActiveShardCount(hitsTaken = state.hitsTaken, maxHits = state.maxHits) {
@@ -431,6 +468,7 @@ export function createOrbLifecycleVfxRuntime({
       fractureSeed: state.fractureSeed,
       maxHits: state.maxHits,
       hitsTaken: state.hitsTaken,
+      shardStyle: state.shardStyle,
     };
   }
 

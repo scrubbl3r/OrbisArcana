@@ -1,3 +1,7 @@
+import {
+  ORB_LIFECYCLE_SHARD_STYLE_DEFAULT,
+} from "./orb-lifecycle-vfx-runtime.js?v=20260418b";
+
 function defaultClamp01(v) {
   const n = Number(v);
   return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
@@ -19,6 +23,11 @@ function parseRgbLike(colorText, { clamp = defaultClamp, clamp01 = defaultClamp0
   };
 }
 
+function colorPart(value, fallback, clamp = defaultClamp) {
+  const n = Math.round(Number(value));
+  return clamp(Number.isFinite(n) ? n : fallback, 0, 255);
+}
+
 export function createOrbShatterRuntimeController({
   root = globalThis.document && globalThis.document.documentElement,
   getOrbEl,
@@ -36,7 +45,6 @@ export function createOrbShatterRuntimeController({
     const rootStyle = getComputedStyle(root);
     const orbStyle = orbEl ? getComputedStyle(orbEl) : null;
 
-    const strokeFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-stroke-color"), { clamp, clamp01 });
     const fillFromVar = parseRgbLike(rootStyle.getPropertyValue("--orb-fill"), { clamp, clamp01 });
     const orbColorState = typeof getOrbColorState === "function" ? getOrbColorState() : null;
     const fallbackR = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.r) * 255);
@@ -44,12 +52,15 @@ export function createOrbShatterRuntimeController({
     const fallbackB = Math.round(clamp01(orbColorState && orbColorState.current && orbColorState.current.b) * 255);
     const fallbackFillAlpha = clamp01(typeof getBaseFillAlpha === "function" ? getBaseFillAlpha() : 0.20);
 
-    const stroke = strokeFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: 1 };
+    const shardStyle = ORB_LIFECYCLE_SHARD_STYLE_DEFAULT;
     const fill = fillFromVar || { r: fallbackR, g: fallbackG, b: fallbackB, a: fallbackFillAlpha };
     const orbOpacity = orbStyle ? clamp01(Number(orbStyle.opacity) || 1) : 1;
+    const shardRgb = shardStyle.strokeRgb || {};
 
     return {
-      strokeRgb: `rgb(${stroke.r},${stroke.g},${stroke.b})`,
+      strokeRgb: `rgb(${colorPart(shardRgb.r, fallbackR, clamp)},${colorPart(shardRgb.g, fallbackG, clamp)},${colorPart(shardRgb.b, fallbackB, clamp)})`,
+      strokeAlpha: shardStyle.strokeAlpha,
+      strokeWidthPx: shardStyle.strokeWidthPx,
       fillRgb: `rgb(${fill.r},${fill.g},${fill.b})`,
       fillAlpha: clamp01(fill.a * orbOpacity),
     };

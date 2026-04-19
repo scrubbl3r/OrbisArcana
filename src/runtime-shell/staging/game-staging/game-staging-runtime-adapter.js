@@ -280,12 +280,31 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
       const shattered = !!(fx && fx.visualState === "shattered");
       stageRefs.orb.classList.toggle("shattered", shattered);
       stageRefs.orb.style.opacity = shattered ? "0" : "";
+      const shardStyle = fx && fx.shardStyle && typeof fx.shardStyle === "object" ? fx.shardStyle : null;
+      const shardRgb = shardStyle && shardStyle.strokeRgb ? shardStyle.strokeRgb : null;
+      const shardStroke = shardRgb
+        ? `rgb(${Math.round(Number(shardRgb.r) || 0)},${Math.round(Number(shardRgb.g) || 0)},${Math.round(Number(shardRgb.b) || 0)})`
+        : "";
+      const shardAlpha = shardStyle && Number.isFinite(Number(shardStyle.strokeAlpha))
+        ? Math.max(0, Math.min(1, Number(shardStyle.strokeAlpha)))
+        : null;
+      const shardStrokeWidth = shardStyle && Number.isFinite(Number(shardStyle.strokeWidthPx))
+        ? Math.max(0.25, Number(shardStyle.strokeWidthPx))
+        : null;
 
       const paths = [];
       if (!shattered && Array.isArray(fx && fx.crackSegments)) {
         for (const seg of fx.crackSegments) {
           const d = lineToPath(seg);
-          if (d) paths.push(`<path d="${d}" />`);
+          if (d) {
+            const style = [
+              shardStroke ? `stroke:${shardStroke}` : "",
+              shardAlpha != null ? `stroke-opacity:${shardAlpha.toFixed(3)}` : "",
+              shardStrokeWidth != null ? `stroke-width:${shardStrokeWidth.toFixed(2)}px` : "",
+            ].filter(Boolean).join(";");
+            const attrs = [`d="${d}"`, style ? `style="${style}"` : ""].filter(Boolean).join(" ");
+            paths.push(`<path ${attrs} />`);
+          }
         }
       }
       stageRefs.orbCracks.innerHTML = paths.join("");

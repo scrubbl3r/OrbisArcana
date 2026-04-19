@@ -170,6 +170,13 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "export const ORB_LIFECYCLE_DEFAULTS = Object.freeze({",
         `  maxHits: ${Math.round(toNum(p.orbLifecycleHitTotal, 3))},`,
         `  maxShards: ${Math.round(toNum(p.orbLifecycleShardTotal, 16))},`,
+        "  shardStrokeRgb: Object.freeze({",
+        `    r: ${Math.round(clampNum(p.orbLifecycleShardR, 0, 255, 255))},`,
+        `    g: ${Math.round(clampNum(p.orbLifecycleShardG, 0, 255, 255))},`,
+        `    b: ${Math.round(clampNum(p.orbLifecycleShardB, 0, 255, 255))},`,
+        "  }),",
+        `  shardStrokeAlpha: ${clampNum(p.orbLifecycleShardA, 0, 1, 0.46).toFixed(2)},`,
+        `  shardStrokeWidthPx: ${Math.max(0.25, toNum(p.orbLifecycleShardStroke, 1)).toFixed(2)},`,
         "});",
         "",
       ].join("\n");

@@ -1,6 +1,11 @@
 const ORB_LIFECYCLE_FIELDS = Object.freeze([
   ["orbLifecycleShardTotal", "orbLifecycleShardTotal"],
   ["orbLifecycleHitTotal", "orbLifecycleHitTotal"],
+  ["orbLifecycleShardR", "orbLifecycleShardR"],
+  ["orbLifecycleShardG", "orbLifecycleShardG"],
+  ["orbLifecycleShardB", "orbLifecycleShardB"],
+  ["orbLifecycleShardA", "orbLifecycleShardA"],
+  ["orbLifecycleShardStroke", "orbLifecycleShardStroke"],
 ]);
 
 function roundedNumber(value, fallback = 0) {
@@ -16,6 +21,11 @@ export function createOrbLifecycleAuthoringAdapter({
     return {
       orbLifecycleShardTotal: roundedNumber(orbLifecycleDefaults.orbLifecycleShardTotal, 16),
       orbLifecycleHitTotal: roundedNumber(orbLifecycleDefaults.orbLifecycleHitTotal, 3),
+      orbLifecycleShardR: roundedNumber(orbLifecycleDefaults.orbLifecycleShardR, 255),
+      orbLifecycleShardG: roundedNumber(orbLifecycleDefaults.orbLifecycleShardG, 255),
+      orbLifecycleShardB: roundedNumber(orbLifecycleDefaults.orbLifecycleShardB, 255),
+      orbLifecycleShardA: Number.isFinite(Number(orbLifecycleDefaults.orbLifecycleShardA)) ? Number(orbLifecycleDefaults.orbLifecycleShardA).toFixed(2) : "0.46",
+      orbLifecycleShardStroke: Number.isFinite(Number(orbLifecycleDefaults.orbLifecycleShardStroke)) ? Number(orbLifecycleDefaults.orbLifecycleShardStroke).toFixed(2) : "1.00",
     };
   }
 

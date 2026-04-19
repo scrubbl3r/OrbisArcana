@@ -3,7 +3,10 @@ import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
 } from "../../../../src/game-runtime/orb/orb-base-state.js";
-import { createRng, makeVoronoiLayout } from "../../../../src/game-runtime/orb/orb-lifecycle-vfx-runtime.js";
+import {
+  createRng,
+  makeVoronoiLayout,
+} from "../../../../src/game-runtime/orb/orb-lifecycle-vfx-runtime.js";
 import { createOrbShatterRuntime } from "../../../../src/vfx/effects/orb-states/orb-shatter-runtime.js";
 
 const AUTHORING_ORB_RADIUS_PX = ORB_BASE_SCALE_REFERENCE_DIAMETER_PX * 0.5;
@@ -12,10 +15,6 @@ function clampInt(value, min, max, fallback) {
   const n = Math.round(Number(value));
   const safe = Number.isFinite(n) ? n : fallback;
   return Math.max(min, Math.min(max, safe));
-}
-
-function buildStrokeColor(root) {
-  return getComputedStyle(root).getPropertyValue("--orb-stroke-color").trim() || "rgba(255,255,255,1)";
 }
 
 function buildFillParts(root) {
@@ -44,6 +43,30 @@ export function createOrbLifecyclePreview({ els } = {}) {
   const shatterRuntime = createOrbShatterRuntime({
     layerEl: els && els.orbShatterLayer,
   });
+
+  function clampNumber(value, min, max, fallback) {
+    const n = Number(value);
+    const safe = Number.isFinite(n) ? n : fallback;
+    return Math.max(min, Math.min(max, safe));
+  }
+
+  function readShardStyle() {
+    const style = {
+      strokeRgb: {
+        r: Math.round(clampNumber(els.orbLifecycleShardR && els.orbLifecycleShardR.value, 0, 255, 255)),
+        g: Math.round(clampNumber(els.orbLifecycleShardG && els.orbLifecycleShardG.value, 0, 255, 255)),
+        b: Math.round(clampNumber(els.orbLifecycleShardB && els.orbLifecycleShardB.value, 0, 255, 255)),
+      },
+      strokeAlpha: clampNumber(els.orbLifecycleShardA && els.orbLifecycleShardA.value, 0, 1, 0.46),
+      strokeWidthPx: clampNumber(els.orbLifecycleShardStroke && els.orbLifecycleShardStroke.value, 0.25, 12, 1),
+    };
+    if (els.orbLifecycleShardR) els.orbLifecycleShardR.value = String(style.strokeRgb.r);
+    if (els.orbLifecycleShardG) els.orbLifecycleShardG.value = String(style.strokeRgb.g);
+    if (els.orbLifecycleShardB) els.orbLifecycleShardB.value = String(style.strokeRgb.b);
+    if (els.orbLifecycleShardA) els.orbLifecycleShardA.value = style.strokeAlpha.toFixed(2);
+    if (els.orbLifecycleShardStroke) els.orbLifecycleShardStroke.value = style.strokeWidthPx.toFixed(2);
+    return style;
+  }
 
   function clearPatternLayer() {
     if (els && els.orbLifecyclePatternLayer) {
@@ -77,7 +100,8 @@ export function createOrbLifecyclePreview({ els } = {}) {
       return;
     }
 
-    const stroke = buildStrokeColor(els.previewRoot);
+    const shardStyle = readShardStyle();
+    const stroke = `rgb(${shardStyle.strokeRgb.r},${shardStyle.strokeRgb.g},${shardStyle.strokeRgb.b})`;
     const edgeMarkup = (currentLayout && currentLayout.edges || [])
       .map((edge) => (
         `<line x1="${edge.a.x.toFixed(3)}" y1="${edge.a.y.toFixed(3)}" x2="${edge.b.x.toFixed(3)}" y2="${edge.b.y.toFixed(3)}" />`
@@ -85,8 +109,8 @@ export function createOrbLifecyclePreview({ els } = {}) {
 
     els.orbLifecyclePatternLayer.setAttribute("fill", "none");
     els.orbLifecyclePatternLayer.setAttribute("stroke", stroke);
-    els.orbLifecyclePatternLayer.setAttribute("stroke-width", "1");
-    els.orbLifecyclePatternLayer.setAttribute("stroke-opacity", "0.46");
+    els.orbLifecyclePatternLayer.setAttribute("stroke-width", String(shardStyle.strokeWidthPx));
+    els.orbLifecyclePatternLayer.setAttribute("stroke-opacity", String(shardStyle.strokeAlpha.toFixed(3)));
     els.orbLifecyclePatternLayer.setAttribute("vector-effect", "non-scaling-stroke");
     els.orbLifecyclePatternLayer.innerHTML = edgeMarkup;
     els.orb.hidden = currentHits >= currentHitTotal;
@@ -126,7 +150,7 @@ export function createOrbLifecyclePreview({ els } = {}) {
     if (!currentLayout) return;
     shatterRuntime.clear();
     clearPatternLayer();
-    const strokeRgb = buildStrokeColor(els.previewRoot);
+    const shardStyle = readShardStyle();
     const fillParts = buildFillParts(els.previewRoot);
     const rng = createRng(currentSeed ^ 0x9e3779b9);
 
@@ -143,7 +167,9 @@ export function createOrbLifecyclePreview({ els } = {}) {
         angVel: (rng() - 0.5) * 8,
         ttlMs: 900 + Math.round(rng() * 500),
       }, {
-        strokeRgb,
+        strokeRgb: `rgb(${shardStyle.strokeRgb.r},${shardStyle.strokeRgb.g},${shardStyle.strokeRgb.b})`,
+        strokeAlpha: shardStyle.strokeAlpha,
+        strokeWidthPx: shardStyle.strokeWidthPx,
         fillRgb: fillParts.fillRgb,
         fillAlpha: fillParts.fillAlpha,
       });
@@ -193,6 +219,8 @@ export function createOrbLifecyclePreview({ els } = {}) {
   function wire() {
     if (els.orbLifecycleApplyShardTotalBtn) els.orbLifecycleApplyShardTotalBtn.addEventListener("click", applyShardTotal);
     if (els.orbLifecycleApplyHitTotalBtn) els.orbLifecycleApplyHitTotalBtn.addEventListener("click", applyHitTotal);
+    if (els.orbLifecycleApplyShardColorBtn) els.orbLifecycleApplyShardColorBtn.addEventListener("click", apply);
+    if (els.orbLifecycleApplyShardStrokeBtn) els.orbLifecycleApplyShardStrokeBtn.addEventListener("click", apply);
     if (els.orbLifecycleHitBtn) els.orbLifecycleHitBtn.addEventListener("click", hit);
     if (els.orbLifecycleHealBtn) els.orbLifecycleHealBtn.addEventListener("click", heal);
     if (els.orbLifecycleRegenerateBtn) els.orbLifecycleRegenerateBtn.addEventListener("click", regenerate);

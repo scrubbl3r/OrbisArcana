@@ -1,5 +1,5 @@
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../game-runtime/orb/orb-cast-policy.js";
-import { ORB_LIFECYCLE_DEFAULTS } from "../../game-runtime/orb/orb-lifecycle-default.js?v=20260418a";
+import { ORB_LIFECYCLE_DEFAULTS } from "../../game-runtime/orb/orb-lifecycle-default.js?v=20260418b";
 import { buildWorldGlobeVisualState } from "../../game-runtime/world/world-globe-state.js?v=20260417a";
 
 export function bootstrapStagingRuntimeContext({

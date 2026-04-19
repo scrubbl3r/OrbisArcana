@@ -1,6 +1,8 @@
 /**
  * @typedef {Object} OrbShardPalette
  * @property {string} strokeRgb
+ * @property {number} [strokeAlpha]
+ * @property {number} [strokeWidthPx]
  * @property {string} fillRgb
  * @property {number} fillAlpha
  */
@@ -87,13 +89,16 @@ export function createOrbShatterRuntime({
     el.setAttribute("fill", palette.fillRgb);
     el.setAttribute("fill-opacity", String(Number(palette.fillAlpha).toFixed(3)));
     el.setAttribute("stroke", palette.strokeRgb);
-    el.setAttribute("stroke-width", "1.2");
+    el.setAttribute("stroke-opacity", String(clamp(palette.strokeAlpha == null ? 1 : palette.strokeAlpha, 0, 1).toFixed(3)));
+    el.setAttribute("stroke-width", String(Math.max(0.25, Number(palette.strokeWidthPx) || 1.2)));
     el.setAttribute("stroke-linejoin", "round");
     el.setAttribute("stroke-linecap", "round");
     el.setAttribute("vector-effect", "non-scaling-stroke");
     el.style.fill = palette.fillRgb;
     el.style.fillOpacity = String(Number(palette.fillAlpha).toFixed(3));
     el.style.stroke = palette.strokeRgb;
+    el.style.strokeOpacity = String(clamp(palette.strokeAlpha == null ? 1 : palette.strokeAlpha, 0, 1).toFixed(3));
+    el.style.strokeWidth = `${Math.max(0.25, Number(palette.strokeWidthPx) || 1.2)}px`;
     layerEl.appendChild(el);
 
     const center = (p && p.center) || { x: 0, y: 0 };
