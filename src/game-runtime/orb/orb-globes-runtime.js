@@ -6,11 +6,12 @@ import {
   EVT_ORB_REVIVED,
 } from "../../contracts/events.js";
 import {
+  getInnerPaddingPx,
   getInnerGlobeDiameterPx,
   getOrbitDistancePx,
   getOrbitGlobeRadiusPx,
   ORB_GLOBE_VISUAL_DEFAULTS,
-} from "./orb-globe-base-state.js?v=20260416b";
+} from "./orb-globe-base-state.js?v=20260418a";
 
 export function createOrbGlobesRuntime({
   eventBus,
@@ -126,8 +127,7 @@ export function createOrbGlobesRuntime({
   }
 
   function innerPaddingPx() {
-    const n = Number(globeVisualState && globeVisualState.innerPaddingPx);
-    return Math.max(0, Number.isFinite(n) ? n : ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx);
+    return getInnerPaddingPx(readOrbRadiusPx(), globeVisualState || ORB_GLOBE_VISUAL_DEFAULTS);
   }
 
   function rotateVector(vx, vy, angle) {

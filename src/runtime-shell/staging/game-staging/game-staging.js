@@ -11,7 +11,7 @@ import {
 import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
-} from "../../../game-runtime/orb/orb-globe-base-state.js?v=20260416b";
+} from "../../../game-runtime/orb/orb-globe-base-state.js?v=20260418a";
 import {
   applyWorldGlobeVisualCssVars,
   buildWorldGlobeVisualState,
