@@ -1680,10 +1680,6 @@
       getElementById: $,
     });
 
-    function setVar(name, value){
-      document.documentElement.style.setProperty(name, value);
-    }
-
     function setRootVar(root, name, value){
       if (!root || !root.style) return;
       root.style.setProperty(name, value);
@@ -2349,7 +2345,6 @@
     const updateBehaviorSections = studioBootstrap.updateBehaviorSections;
     const updateEffectSections = studioBootstrap.updateEffectSections;
     const settleSelectedEffectState = studioBootstrap.settleSelectedEffectState;
-    const autoPreviewSelectedEffect = studioBootstrap.autoPreviewSelectedEffect;
     updateTeleportBehaviorReadout();
 
     bootStudioShell({
