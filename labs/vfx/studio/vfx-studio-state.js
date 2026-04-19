@@ -1,3 +1,8 @@
+import {
+  getLabStudioCategoryLabel,
+  listLabStudioCategoryIdsInOrder,
+} from "./vfx-studio-categories.js";
+
 export function createDraftStore() {
   return {
     profilesByValue: Object.create(null),
@@ -85,13 +90,13 @@ export function persistDraftStore(storageKey, draftStore) {
   }
 }
 
-export function ensureCategoryGroup(effectSelect, categoryLabels, category) {
+export function ensureCategoryGroup(effectSelect, category, categories = null) {
   if (!effectSelect) return null;
   const key = String(category || "spell");
   let group = effectSelect.querySelector(`optgroup[data-category="${key}"]`);
   if (group) return group;
   group = document.createElement("optgroup");
-  group.label = categoryLabels[key] || key;
+  group.label = getLabStudioCategoryLabel(key, categories) || key;
   group.dataset.kind = "builtin";
   group.dataset.category = key;
   effectSelect.appendChild(group);
@@ -101,7 +106,7 @@ export function ensureCategoryGroup(effectSelect, categoryLabels, category) {
 export function restoreDraftProfilesIntoSelect({
   effectSelect,
   draftStore,
-  categoryLabels,
+  categories = null,
 }) {
   if (!effectSelect) return;
   for (const profile of Object.values(draftStore.profilesByValue)) {
@@ -110,7 +115,7 @@ export function restoreDraftProfilesIntoSelect({
     if (!value || !value.startsWith("custom:")) continue;
     if (findEffectOptionByValue(effectSelect, value)) continue;
     const category = String(profile.category || "spell");
-    const targetGroup = ensureCategoryGroup(effectSelect, categoryLabels, category);
+    const targetGroup = ensureCategoryGroup(effectSelect, category, categories);
     const opt = document.createElement("option");
     opt.value = value;
     opt.textContent = String(profile.label || value);
@@ -129,7 +134,7 @@ export function buildEffectLibraryOptionsFromRegistry({
   draftStore,
   registry,
   baseEffectByRegistryId,
-  categoryLabels,
+  categories = null,
   extraBuiltinOptions = [],
   omitRegistryIds = [],
 }) {
@@ -147,7 +152,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     const category = String(entry.category || "spell");
     if (!groups.has(category)) {
       const optgroup = document.createElement("optgroup");
-      optgroup.label = categoryLabels[category] || category;
+      optgroup.label = getLabStudioCategoryLabel(category, categories) || category;
       optgroup.dataset.kind = "builtin";
       optgroup.dataset.category = category;
       groups.set(category, optgroup);
@@ -166,7 +171,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     groups.get(category).appendChild(opt);
   }
 
-  for (const category of ["spell", "orb", "world", "enemy"]) {
+  for (const category of listLabStudioCategoryIdsInOrder()) {
     const group = groups.get(category);
     if (group && group.children.length) effectSelect.appendChild(group);
   }
@@ -175,7 +180,7 @@ export function buildEffectLibraryOptionsFromRegistry({
   for (const optionDef of extraOptions.slice().reverse()) {
     if (!optionDef || typeof optionDef !== "object") continue;
     const category = String(optionDef.category || "orb");
-    const targetGroup = ensureCategoryGroup(effectSelect, categoryLabels, category);
+    const targetGroup = ensureCategoryGroup(effectSelect, category, categories);
     const opt = document.createElement("option");
     opt.value = String(optionDef.value || "");
     opt.textContent = String(optionDef.label || optionDef.value || "effect");
@@ -193,10 +198,10 @@ export function buildEffectLibraryOptionsFromRegistry({
 
   for (const opt of customOptions) {
     const category = String(opt.dataset.category || "spell");
-    ensureCategoryGroup(effectSelect, categoryLabels, category).appendChild(opt);
+    ensureCategoryGroup(effectSelect, category, categories).appendChild(opt);
   }
 
-  restoreDraftProfilesIntoSelect({ effectSelect, draftStore, categoryLabels });
+  restoreDraftProfilesIntoSelect({ effectSelect, draftStore, categories });
 
   const hasValue = (value) => Array.from(effectSelect.options).some((o) => o.value === value && !o.disabled);
   if (previousValue && hasValue(previousValue)) {
@@ -314,7 +319,7 @@ export function createCustomEffectProfile({
   category,
   trimmedName,
   draftStore,
-  categoryLabels,
+  categories = null,
   defaultSettings,
   updateEffectSections,
   persistDraftStore,
@@ -328,7 +333,7 @@ export function createCustomEffectProfile({
   opt.dataset.custom = "true";
   if (selectedOption && selectedOption.dataset.registryId) opt.dataset.registryId = String(selectedOption.dataset.registryId);
   opt.textContent = trimmedName;
-  ensureCategoryGroup(effectSelect, categoryLabels, category)?.appendChild(opt);
+  ensureCategoryGroup(effectSelect, category, categories)?.appendChild(opt);
   const settingsStoreKey = String(settingsKey || baseEffect || "");
 
   draftStore.profilesByValue[newValue] = {
@@ -357,7 +362,7 @@ export function duplicateEffectProfile({
   category,
   trimmedName,
   draftStore,
-  categoryLabels,
+  categories = null,
   captureCurrentEffectSettings,
   defaultSettingsForBaseEffect = null,
   updateEffectSections,
@@ -372,7 +377,7 @@ export function duplicateEffectProfile({
   opt.dataset.custom = "true";
   if (selectedOption && selectedOption.dataset.registryId) opt.dataset.registryId = String(selectedOption.dataset.registryId);
   opt.textContent = trimmedName;
-  ensureCategoryGroup(effectSelect, categoryLabels, category)?.appendChild(opt);
+  ensureCategoryGroup(effectSelect, category, categories)?.appendChild(opt);
 
   const srcValue = String((selectedOption && selectedOption.value) || "");
   const srcDraft = draftStore.profilesByValue[srcValue];

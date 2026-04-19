@@ -1373,7 +1373,8 @@
       selectedEffectOption as selectedEffectOptionHelper,
       slugifyEffectName as slugifyEffectNameHelper,
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260417a";
+    } from "./studio/vfx-studio-state.js?v=20260419a";
+    import { LAB_STUDIO_CATEGORIES } from "./studio/vfx-studio-categories.js?v=20260419a";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1435,12 +1436,6 @@
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260418a";
 
     const $ = (id) => document.getElementById(id);
-    const CATEGORY_LABELS = Object.freeze({
-      spell: "spell",
-      orb: "orb",
-      world: "world",
-      enemy: "enemy",
-    });
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
     const draftStore = createDraftStore();
     let draftHydrationDone = false;
@@ -1860,7 +1855,7 @@
         draftStore,
         registry: VFX_EFFECT_REGISTRY,
         baseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
-        categoryLabels: CATEGORY_LABELS,
+        categories: LAB_STUDIO_CATEGORIES,
         extraBuiltinOptions: STUDIO_EXTRA_BUILTIN_OPTIONS,
         omitRegistryIds: STUDIO_OMIT_REGISTRY_IDS,
       });
@@ -2221,7 +2216,7 @@
         category,
         trimmedName: trimmed,
         draftStore,
-        categoryLabels: CATEGORY_LABELS,
+        categories: LAB_STUDIO_CATEGORIES,
         defaultSettings: defaultSettingsForBaseEffect(baseEffect),
         updateEffectSections,
         persistDraftStore,
@@ -2248,7 +2243,7 @@
         category,
         trimmedName: trimmed,
         draftStore,
-        categoryLabels: CATEGORY_LABELS,
+        categories: LAB_STUDIO_CATEGORIES,
         captureCurrentEffectSettings,
         defaultSettingsForBaseEffect,
         updateEffectSections,
