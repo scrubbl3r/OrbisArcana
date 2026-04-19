@@ -1,7 +1,7 @@
 import {
   buildWorldGlobeVisualState,
   rgbaFromWorldGlobeColor,
-} from "../../../../src/game-runtime/world/world-globe-state.js?v=20260417a";
+} from "../../../../src/game-runtime/world/world-globe-state.js?v=20260418a";
 
 export function createWorldGlobePreview({ els, clamp }) {
   let samples = [];
@@ -42,27 +42,36 @@ export function createWorldGlobePreview({ els, clamp }) {
 
   function readStyle(prefix) {
     return {
-      diameterPx: clampValue(field(`${prefix}Size`) && field(`${prefix}Size`).value, 1, 400),
+      diameterRatio: clampValue(field(`${prefix}DiameterRatio`) && field(`${prefix}DiameterRatio`).value, 0, 10),
       fillRgb: readRgb(prefix),
       fillAlpha: clampValue(field(`${prefix}FillAlpha`) && field(`${prefix}FillAlpha`).value, 0, 1),
       strokeRgb: readStrokeRgb(prefix),
       strokeAlpha: clampValue(field(`${prefix}StrokeAlpha`) && field(`${prefix}StrokeAlpha`).value, 0, 1),
-      strokeWidthPx: clampValue(field(`${prefix}StrokeWidth`) && field(`${prefix}StrokeWidth`).value, 0, 40),
+      strokeWidthRatio: clampValue(field(`${prefix}StrokeWidthRatio`) && field(`${prefix}StrokeWidthRatio`).value, 0, 1),
     };
+  }
+
+  function readPreviewOrbDiameterPx() {
+    if (!els.previewRoot) return null;
+    const raw = getComputedStyle(els.previewRoot).getPropertyValue("--orb-d");
+    const n = Number.parseFloat(raw);
+    return Number.isFinite(n) && n > 0 ? n : null;
   }
 
   function readState() {
     return buildWorldGlobeVisualState({
       idle: {
         ...readStyle("worldGlobeIdle"),
-        driftPx: clampValue(field("worldGlobeIdleDrift") && field("worldGlobeIdleDrift").value, 0, 200),
-        bobPx: clampValue(field("worldGlobeIdleBob") && field("worldGlobeIdleBob").value, 0, 200),
+        driftRatio: clampValue(field("worldGlobeIdleDriftRatio") && field("worldGlobeIdleDriftRatio").value, 0, 10),
+        bobRatio: clampValue(field("worldGlobeIdleBobRatio") && field("worldGlobeIdleBobRatio").value, 0, 10),
         bobHz: clampValue(field("worldGlobeIdleBobHz") && field("worldGlobeIdleBobHz").value, 0, 20),
         pulseScale: clampValue(field("worldGlobeIdlePulseScale") && field("worldGlobeIdlePulseScale").value, 0, 1),
         pulseHz: clampValue(field("worldGlobeIdlePulseHz") && field("worldGlobeIdlePulseHz").value, 0, 20),
       },
       collected: readStyle("worldGlobeCollected"),
       consumed: readStyle("worldGlobeConsumed"),
+    }, {
+      orbDiameterPx: readPreviewOrbDiameterPx(),
     });
   }
 
@@ -113,10 +122,10 @@ export function createWorldGlobePreview({ els, clamp }) {
   function wire() {
     if (els.previewWorldGlobe) els.previewWorldGlobe.addEventListener("click", apply);
     [
-      "IdleSize", "IdleFillColor", "IdleStrokeColor", "IdleStrokeWidth",
-      "IdleDrift", "IdleBob", "IdleBobHz", "IdlePulseScale", "IdlePulseHz",
-      "CollectedSize", "CollectedFillColor", "CollectedStrokeColor", "CollectedStrokeWidth",
-      "ConsumedSize", "ConsumedFillColor", "ConsumedStrokeColor", "ConsumedStrokeWidth",
+      "IdleDiameterRatio", "IdleFillColor", "IdleStrokeColor", "IdleStrokeWidthRatio",
+      "IdleDriftRatio", "IdleBobRatio", "IdleBobHz", "IdlePulseScale", "IdlePulseHz",
+      "CollectedDiameterRatio", "CollectedFillColor", "CollectedStrokeColor", "CollectedStrokeWidthRatio",
+      "ConsumedDiameterRatio", "ConsumedFillColor", "ConsumedStrokeColor", "ConsumedStrokeWidthRatio",
     ].forEach((suffix) => {
       const btn = field(`worldGlobeApply${suffix}Btn`);
       if (btn) btn.addEventListener("click", apply);

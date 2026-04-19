@@ -1,6 +1,6 @@
 export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   idle: Object.freeze({
-    diameterPx: 25,
+    diameterRatio: 0.25,
     fillRgb: Object.freeze({
       r: 255,
       g: 225,
@@ -13,15 +13,15 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
       b: 64,
     }),
     strokeAlpha: 0.96,
-    strokeWidthPx: 0.0,
-    driftPx: 10,
-    bobPx: 7,
+    strokeWidthRatio: 0.0,
+    driftRatio: 0.10,
+    bobRatio: 0.07,
     bobHz: 0.65,
     pulseScale: 0.045,
     pulseHz: 0.90,
   }),
   collected: Object.freeze({
-    diameterPx: 14,
+    diameterRatio: 0.14,
     fillRgb: Object.freeze({
       r: 255,
       g: 255,
@@ -34,10 +34,10 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
       b: 255,
     }),
     strokeAlpha: 0.96,
-    strokeWidthPx: 2.0,
+    strokeWidthRatio: 0.02,
   }),
   consumed: Object.freeze({
-    diameterPx: 11,
+    diameterRatio: 0.11,
     fillRgb: Object.freeze({
       r: 255,
       g: 255,
@@ -50,6 +50,6 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
       b: 255,
     }),
     strokeAlpha: 0.96,
-    strokeWidthPx: 2.0,
+    strokeWidthRatio: 0.02,
   }),
 });

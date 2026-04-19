@@ -1,5 +1,5 @@
 const WORLD_GLOBE_STYLE_SUFFIXES = Object.freeze([
-  "Size",
+  "DiameterRatio",
   "FillR",
   "FillG",
   "FillB",
@@ -8,7 +8,7 @@ const WORLD_GLOBE_STYLE_SUFFIXES = Object.freeze([
   "StrokeG",
   "StrokeB",
   "StrokeAlpha",
-  "StrokeWidth",
+  "StrokeWidthRatio",
 ]);
 
 function fixedNumber(value, digits, fallback = 0) {
@@ -21,7 +21,7 @@ function readStyleDefaults(prefix, state = {}) {
   const fill = state.fillRgb || {};
   const stroke = state.strokeRgb || {};
   return {
-    [`${prefix}Size`]: Math.round(Number(state.diameterPx) || 0),
+    [`${prefix}DiameterRatio`]: fixedNumber(state.diameterRatio, 2),
     [`${prefix}FillR`]: Math.round(Number(fill.r) || 0),
     [`${prefix}FillG`]: Math.round(Number(fill.g) || 0),
     [`${prefix}FillB`]: Math.round(Number(fill.b) || 0),
@@ -30,8 +30,15 @@ function readStyleDefaults(prefix, state = {}) {
     [`${prefix}StrokeG`]: Math.round(Number(stroke.g) || 0),
     [`${prefix}StrokeB`]: Math.round(Number(stroke.b) || 0),
     [`${prefix}StrokeAlpha`]: fixedNumber(state.strokeAlpha, 2),
-    [`${prefix}StrokeWidth`]: fixedNumber(state.strokeWidthPx, 1),
+    [`${prefix}StrokeWidthRatio`]: fixedNumber(state.strokeWidthRatio, 3),
   };
+}
+
+function legacyStyleValue(settings, prefix, suffix) {
+  if (!settings || typeof settings !== "object") return undefined;
+  if (suffix === "DiameterRatio") return settings[`${prefix}Size`];
+  if (suffix === "StrokeWidthRatio") return settings[`${prefix}StrokeWidth`];
+  return undefined;
 }
 
 export function createWorldGlobeAuthoringAdapter({
@@ -49,7 +56,8 @@ export function createWorldGlobeAuthoringAdapter({
     WORLD_GLOBE_STYLE_SUFFIXES.forEach((suffix) => {
       const key = prefix + suffix;
       const el = field(key);
-      if (el && settings[key] != null) el.value = String(settings[key]);
+      const value = settings[key] != null ? settings[key] : legacyStyleValue(settings, prefix, suffix);
+      if (el && value != null) el.value = String(value);
     });
   }
 
@@ -57,8 +65,8 @@ export function createWorldGlobeAuthoringAdapter({
     const idle = worldGlobeVisualDefaults.idle || {};
     return {
       ...readStyleDefaults("worldGlobeIdle", idle),
-      worldGlobeIdleDrift: Math.round(Number(idle.driftPx) || 0),
-      worldGlobeIdleBob: Math.round(Number(idle.bobPx) || 0),
+      worldGlobeIdleDriftRatio: fixedNumber(idle.driftRatio, 2),
+      worldGlobeIdleBobRatio: fixedNumber(idle.bobRatio, 2),
       worldGlobeIdleBobHz: fixedNumber(idle.bobHz, 2),
       worldGlobeIdlePulseScale: fixedNumber(idle.pulseScale, 3),
       worldGlobeIdlePulseHz: fixedNumber(idle.pulseHz, 2),
@@ -70,8 +78,8 @@ export function createWorldGlobeAuthoringAdapter({
   function capture() {
     return {
       ...readStyleFields("worldGlobeIdle"),
-      worldGlobeIdleDrift: Number(field("worldGlobeIdleDrift") && field("worldGlobeIdleDrift").value),
-      worldGlobeIdleBob: Number(field("worldGlobeIdleBob") && field("worldGlobeIdleBob").value),
+      worldGlobeIdleDriftRatio: Number(field("worldGlobeIdleDriftRatio") && field("worldGlobeIdleDriftRatio").value),
+      worldGlobeIdleBobRatio: Number(field("worldGlobeIdleBobRatio") && field("worldGlobeIdleBobRatio").value),
       worldGlobeIdleBobHz: Number(field("worldGlobeIdleBobHz") && field("worldGlobeIdleBobHz").value),
       worldGlobeIdlePulseScale: Number(field("worldGlobeIdlePulseScale") && field("worldGlobeIdlePulseScale").value),
       worldGlobeIdlePulseHz: Number(field("worldGlobeIdlePulseHz") && field("worldGlobeIdlePulseHz").value),
@@ -83,8 +91,10 @@ export function createWorldGlobeAuthoringAdapter({
   function apply(els, settings, { applyPreview = null } = {}) {
     if (!settings || typeof settings !== "object") return false;
     applyStyleFields("worldGlobeIdle", settings);
-    if (field("worldGlobeIdleDrift") && settings.worldGlobeIdleDrift != null) field("worldGlobeIdleDrift").value = String(settings.worldGlobeIdleDrift);
-    if (field("worldGlobeIdleBob") && settings.worldGlobeIdleBob != null) field("worldGlobeIdleBob").value = String(settings.worldGlobeIdleBob);
+    const driftRatio = settings.worldGlobeIdleDriftRatio != null ? settings.worldGlobeIdleDriftRatio : settings.worldGlobeIdleDrift;
+    const bobRatio = settings.worldGlobeIdleBobRatio != null ? settings.worldGlobeIdleBobRatio : settings.worldGlobeIdleBob;
+    if (field("worldGlobeIdleDriftRatio") && driftRatio != null) field("worldGlobeIdleDriftRatio").value = String(driftRatio);
+    if (field("worldGlobeIdleBobRatio") && bobRatio != null) field("worldGlobeIdleBobRatio").value = String(bobRatio);
     if (field("worldGlobeIdleBobHz") && settings.worldGlobeIdleBobHz != null) field("worldGlobeIdleBobHz").value = String(settings.worldGlobeIdleBobHz);
     if (field("worldGlobeIdlePulseScale") && settings.worldGlobeIdlePulseScale != null) field("worldGlobeIdlePulseScale").value = String(settings.worldGlobeIdlePulseScale);
     if (field("worldGlobeIdlePulseHz") && settings.worldGlobeIdlePulseHz != null) field("worldGlobeIdlePulseHz").value = String(settings.worldGlobeIdlePulseHz);

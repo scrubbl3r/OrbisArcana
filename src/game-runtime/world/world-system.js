@@ -2,7 +2,7 @@ import {
   EVT_PICKUP_COLLECTED,
   EVT_RESOURCES_GLOBE_SPENT,
 } from "../../contracts/events.js";
-import { WORLD_GLOBE_VISUAL_DEFAULTS } from "./world-globe-state.js?v=20260417a";
+import { WORLD_GLOBE_VISUAL_DEFAULTS } from "./world-globe-state.js?v=20260418a";
 
 export function createWorldSystem({
   eventBus,
