@@ -34,6 +34,5 @@ export const GAME_THEME_DEFAULT = Object.freeze({
   },
   shockwave: {
     color: Object.freeze({ r: 255, g: 255, b: 255, a: 0.65 }),
-    strokeWidthPx: 4,
   },
 });

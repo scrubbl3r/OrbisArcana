@@ -306,8 +306,6 @@ export function applyLabThemeDefaults({
     if (theme.orb.strokeWidthPx != null) GEOM.orbStroke = evenPx(theme.orb.strokeWidthPx, 2, 40);
   }
   if (theme.shield) {
-    if (theme.shield.diameterPx != null) GEOM.shieldD = evenPx(theme.shield.diameterPx, 2, 2000);
-    if (theme.shield.strokeWidthPx != null) GEOM.shieldStroke = evenPx(theme.shield.strokeWidthPx, 2, 40);
     if (els.shieldAlpha && theme.shield.alpha != null) els.shieldAlpha.value = String(clamp(theme.shield.alpha, 0, 1));
     if (els.pulseMs && theme.shield.pulseMs != null) els.pulseMs.value = String(Math.round(clamp(theme.shield.pulseMs, 20, 700)));
     if (els.pulseMin && theme.shield.pulseMin != null) els.pulseMin.value = String(clamp(theme.shield.pulseMin, 0, 1).toFixed(2));
@@ -325,9 +323,6 @@ export function applyLabThemeDefaults({
     if (els.pulseMs) els.pulseMs.value = String(Math.round(clamp(bubbleShieldPresetDefault.pulseMs, 20, 700)));
     if (els.pulseMin) els.pulseMin.value = String(clamp(bubbleShieldPresetDefault.pulseMin, 0, 1).toFixed(2));
     if (els.pulseMax) els.pulseMax.value = String(clamp(bubbleShieldPresetDefault.pulseMax, 0, 1).toFixed(2));
-  }
-  if (theme.shockwave && els.stroke && theme.shockwave.strokeWidthPx != null) {
-    els.stroke.value = String(evenPx(theme.shockwave.strokeWidthPx, 2, 20));
   }
   if (shockwavePresetDefault) {
     const shockColor = shockwavePresetDefault.color || {};
