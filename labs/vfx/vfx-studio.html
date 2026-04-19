@@ -1371,9 +1371,14 @@
       refreshBindingPanel as refreshBindingPanelHelper,
     } from "./studio/vfx-studio-bindings.js?v=20260410b";
     import {
+      buildBindingCleanupPlan,
+      buildBindingPublishPlan,
       buildPublishedPresetPayload as buildPublishedPresetPayloadHelper,
+      collectBindingsForPresetId,
+      findRegistryEntry,
       describePublishSuccess as describePublishSuccessHelper,
-      replaceRuntimeBindingEntry,
+      RUNTIME_BINDINGS_TARGET_PATH,
+      supportsBindingPublish,
     } from "./studio/vfx-studio-publish.js?v=20260418a";
     import {
       createLabEffectSurfaces,
@@ -2119,14 +2124,13 @@
         window.alert("This profile is missing a registry effect id, so it cannot publish a runtime binding yet.");
         return;
       }
-      const registryEntry = (Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : [])
-        .find((entry) => String((entry && entry.id) || "") === registryId) || null;
-      if (!registryEntry || !Array.isArray(registryEntry.publishTargets) || !registryEntry.publishTargets.includes("binding")) {
+      const registryEntry = findRegistryEntry(VFX_EFFECT_REGISTRY, registryId);
+      if (!supportsBindingPublish(registryEntry)) {
         window.alert("This effect does not currently support binding publish.");
         return;
       }
       if (!projectRootDirHandle) {
-        window.alert("Connect Project first. Bind writes to the fixed repo path src/content/vfx/runtime-effect-bindings.js.");
+        window.alert(`Connect Project first. Bind writes to the fixed repo path ${RUNTIME_BINDINGS_TARGET_PATH.join("/")}.`);
         return;
       }
 
@@ -2136,24 +2140,22 @@
         return;
       }
 
-      const nextEntry = {
-        targetKind: String(runtimeTarget.targetKind || ""),
-        targetId: String(runtimeTarget.targetId || ""),
-        effectId: registryId,
-        presetId: String(built.payload.presetId || registryEntry.defaultPresetId || ""),
-      };
-
-      runtimeEffectBindingsState = replaceRuntimeBindingEntry(runtimeEffectBindingsState, nextEntry);
-
-      const moduleText = buildRuntimeEffectBindingsModule(runtimeEffectBindingsState);
-      const targetPath = ["src", "content", "vfx", "runtime-effect-bindings.js"];
+      const publishPlan = buildBindingPublishPlan({
+        runtimeEffectBindings: runtimeEffectBindingsState,
+        runtimeTarget,
+        registryId,
+        builtPayload: built,
+        registryEntry,
+        buildRuntimeEffectBindingsModule,
+      });
 
       (async () => {
         try {
-          const ok = await saveTextToConnectedProjectPath(targetPath, moduleText);
+          const ok = await saveTextToConnectedProjectPath(publishPlan.targetPath, publishPlan.moduleText);
           if (ok) {
+            runtimeEffectBindingsState = publishPlan.nextBindings;
             refreshBindingPanel();
-            window.alert(`Published binding to ${targetPath.join("/")}`);
+            window.alert(`Published binding to ${publishPlan.targetPath.join("/")}`);
             return;
           }
           throw new Error("Binding write failed");
@@ -2305,14 +2307,9 @@
       const label = String(opt.textContent || opt.value || "this effect");
       const built = buildPublishedPresetPayload();
       const presetId = String((built && built.payload && built.payload.presetId) || "").trim();
-      const affectedBindings = presetId
-        ? (Array.isArray(runtimeEffectBindingsState) ? runtimeEffectBindingsState : []).filter((entry) => {
-            const bindingPresetId = String((entry && entry.presetId) || "").trim();
-            return bindingPresetId === presetId;
-          })
-        : [];
+      const affectedBindings = collectBindingsForPresetId(runtimeEffectBindingsState, presetId);
       if (affectedBindings.length && !projectRootDirHandle) {
-        window.alert("Connect Project first. This profile is bound in src/content/vfx/runtime-effect-bindings.js and deletion needs to clean that file.");
+        window.alert(`Connect Project first. This profile is bound in ${RUNTIME_BINDINGS_TARGET_PATH.join("/")} and deletion needs to clean that file.`);
         return;
       }
       const bindingWarning = affectedBindings.length
@@ -2322,15 +2319,17 @@
 
       (async () => {
         if (affectedBindings.length) {
-          const targetPath = ["src", "content", "vfx", "runtime-effect-bindings.js"];
-          const remainingBindings = runtimeEffectBindingsState.filter((entry) => !affectedBindings.includes(entry));
-          const moduleText = buildRuntimeEffectBindingsModule(remainingBindings);
+          const cleanupPlan = buildBindingCleanupPlan({
+            runtimeEffectBindings: runtimeEffectBindingsState,
+            affectedBindings,
+            buildRuntimeEffectBindingsModule,
+          });
           try {
-            const ok = await saveTextToConnectedProjectPath(targetPath, moduleText);
+            const ok = await saveTextToConnectedProjectPath(cleanupPlan.targetPath, cleanupPlan.moduleText);
             if (!ok) {
               throw new Error("Binding cleanup write failed");
             }
-            runtimeEffectBindingsState = remainingBindings;
+            runtimeEffectBindingsState = cleanupPlan.remainingBindings;
           } catch (err) {
             if (err && err.name === "AbortError") return;
             console.error(err);

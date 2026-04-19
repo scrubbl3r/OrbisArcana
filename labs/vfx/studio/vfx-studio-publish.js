@@ -111,3 +111,71 @@ export function replaceRuntimeBindingEntry(runtimeEffectBindings, nextEntry) {
   });
   return [...otherEntries, nextEntry];
 }
+
+export const RUNTIME_BINDINGS_TARGET_PATH = Object.freeze(["src", "content", "vfx", "runtime-effect-bindings.js"]);
+
+export function findRegistryEntry(registryEntries, registryId) {
+  return (Array.isArray(registryEntries) ? registryEntries : [])
+    .find((entry) => String((entry && entry.id) || "") === String(registryId || "")) || null;
+}
+
+export function supportsBindingPublish(registryEntry) {
+  return !!(registryEntry
+    && Array.isArray(registryEntry.publishTargets)
+    && registryEntry.publishTargets.includes("binding"));
+}
+
+export function buildRuntimeBindingEntry({ runtimeTarget, registryId, builtPayload, registryEntry } = {}) {
+  return {
+    targetKind: String((runtimeTarget && runtimeTarget.targetKind) || ""),
+    targetId: String((runtimeTarget && runtimeTarget.targetId) || ""),
+    effectId: String(registryId || ""),
+    presetId: String((builtPayload && builtPayload.payload && builtPayload.payload.presetId) || (registryEntry && registryEntry.defaultPresetId) || ""),
+  };
+}
+
+export function buildBindingPublishPlan({
+  runtimeEffectBindings,
+  runtimeTarget,
+  registryId,
+  builtPayload,
+  registryEntry,
+  buildRuntimeEffectBindingsModule,
+} = {}) {
+  const nextEntry = buildRuntimeBindingEntry({ runtimeTarget, registryId, builtPayload, registryEntry });
+  const nextBindings = replaceRuntimeBindingEntry(runtimeEffectBindings, nextEntry);
+  return {
+    nextEntry,
+    nextBindings,
+    targetPath: RUNTIME_BINDINGS_TARGET_PATH,
+    moduleText: typeof buildRuntimeEffectBindingsModule === "function"
+      ? buildRuntimeEffectBindingsModule(nextBindings)
+      : "",
+  };
+}
+
+export function collectBindingsForPresetId(runtimeEffectBindings, presetId) {
+  const matchPresetId = String(presetId || "").trim();
+  if (!matchPresetId) return [];
+  return (Array.isArray(runtimeEffectBindings) ? runtimeEffectBindings : []).filter((entry) => {
+    const bindingPresetId = String((entry && entry.presetId) || "").trim();
+    return bindingPresetId === matchPresetId;
+  });
+}
+
+export function buildBindingCleanupPlan({
+  runtimeEffectBindings,
+  affectedBindings,
+  buildRuntimeEffectBindingsModule,
+} = {}) {
+  const removalSet = new Set(Array.isArray(affectedBindings) ? affectedBindings : []);
+  const remainingBindings = (Array.isArray(runtimeEffectBindings) ? runtimeEffectBindings : [])
+    .filter((entry) => !removalSet.has(entry));
+  return {
+    remainingBindings,
+    targetPath: RUNTIME_BINDINGS_TARGET_PATH,
+    moduleText: typeof buildRuntimeEffectBindingsModule === "function"
+      ? buildRuntimeEffectBindingsModule(remainingBindings)
+      : "",
+  };
+}
