@@ -2003,22 +2003,6 @@
       }
     }
 
-    function refreshProjectConnectUi(){
-      return refreshProjectConnectUiImported();
-    }
-
-    async function connectProjectFolder(){
-      return connectProjectFolderImported();
-    }
-
-    async function saveTextToConnectedProjectDrafts(filename, text){
-      return saveTextToConnectedProjectDraftsImported(filename, text);
-    }
-
-    async function saveTextToConnectedProjectPath(pathParts, text){
-      return saveTextToConnectedProjectPathImported(pathParts, text);
-    }
-
     function publishContractForBaseEffect(baseEffect){
       return PUBLISH_CONTRACTS_BY_BASE_EFFECT[String(baseEffect || "")] || null;
     }
@@ -2059,11 +2043,11 @@
           buildBehaviorModule: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
           ensureProjectConnected: async () => {
             if (projectRootDirHandle || !window.showDirectoryPicker) return !!projectRootDirHandle;
-            return connectProjectFolder();
+            return studioProjectIo.connect();
           },
           hasProjectConnection: !!projectRootDirHandle,
-          saveConnectedPath: saveTextToConnectedProjectPath,
-          saveConnectedDraft: saveTextToConnectedProjectDrafts,
+          saveConnectedPath: studioProjectIo.savePath,
+          saveConnectedDraft: studioProjectIo.saveDraft,
           saveProjectFile: saveTextToProjectFile,
           downloadTextFile,
           draftPathParts: VFX_PRESET_DRAFTS_PATH,
@@ -2128,7 +2112,7 @@
           moduleText: publishPlan.moduleText,
           targetPath: publishPlan.targetPath,
           hasProjectConnection: !!projectRootDirHandle,
-          saveConnectedPath: saveTextToConnectedProjectPath,
+          saveConnectedPath: studioProjectIo.savePath,
           missingConnectionMessage: `Connect Project first. Bind writes to the fixed repo path ${RUNTIME_BINDINGS_TARGET_PATH.join("/")}.`,
           failureMessage: "Binding publish failed. No fallback export was created. Reconnect the project and try again.",
         });
@@ -2305,7 +2289,7 @@
             moduleText: cleanupPlan.moduleText,
             targetPath: cleanupPlan.targetPath,
             hasProjectConnection: !!projectRootDirHandle,
-            saveConnectedPath: saveTextToConnectedProjectPath,
+            saveConnectedPath: studioProjectIo.savePath,
             missingConnectionMessage: `Connect Project first. This profile is bound in ${RUNTIME_BINDINGS_TARGET_PATH.join("/")} and deletion needs to clean that file.`,
             failureMessage: "Delete aborted. Binding cleanup failed, so nothing was removed.",
           });
@@ -2368,6 +2352,12 @@
       projectRootDirHandle,
       pathParts,
       text,
+    });
+    const studioProjectIo = Object.freeze({
+      refreshUi: refreshProjectConnectUiImported,
+      connect: connectProjectFolderImported,
+      saveDraft: saveTextToConnectedProjectDraftsImported,
+      savePath: saveTextToConnectedProjectPathImported,
     });
 
     // =========================================================================
@@ -2560,7 +2550,7 @@
       saveDraftBtn: els.saveDraftBtn,
       saveDraft,
       connectProjectBtn: els.connectProjectBtn,
-      connectProjectFolder,
+      connectProjectFolder: studioProjectIo.connect,
       publishPresetBtn: els.publishPresetBtn,
       publishPreset,
       bindBtn: els.bindBtn,
@@ -2575,7 +2565,7 @@
       deleteEffectProfile,
       lockEffectBtn: els.lockEffectBtn,
       toggleSelectedEffectLock,
-      refreshProjectConnectUi,
+      refreshProjectConnectUi: studioProjectIo.refreshUi,
       refreshLockUi,
       initEffectSections: false,
     });
