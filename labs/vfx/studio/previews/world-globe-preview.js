@@ -113,13 +113,10 @@ export function createWorldGlobePreview({ els, clamp }) {
   function wire() {
     if (els.previewWorldGlobe) els.previewWorldGlobe.addEventListener("click", apply);
     [
-      "IdleSize", "IdleFillR", "IdleFillG", "IdleFillB", "IdleFillAlpha",
-      "IdleStrokeR", "IdleStrokeG", "IdleStrokeB", "IdleStrokeAlpha", "IdleStrokeWidth",
+      "IdleSize", "IdleFillColor", "IdleStrokeColor", "IdleStrokeWidth",
       "IdleDrift", "IdleBob", "IdleBobHz", "IdlePulseScale", "IdlePulseHz",
-      "CollectedSize", "CollectedFillR", "CollectedFillG", "CollectedFillB", "CollectedFillAlpha",
-      "CollectedStrokeR", "CollectedStrokeG", "CollectedStrokeB", "CollectedStrokeAlpha", "CollectedStrokeWidth",
-      "ConsumedSize", "ConsumedFillR", "ConsumedFillG", "ConsumedFillB", "ConsumedFillAlpha",
-      "ConsumedStrokeR", "ConsumedStrokeG", "ConsumedStrokeB", "ConsumedStrokeAlpha", "ConsumedStrokeWidth",
+      "CollectedSize", "CollectedFillColor", "CollectedStrokeColor", "CollectedStrokeWidth",
+      "ConsumedSize", "ConsumedFillColor", "ConsumedStrokeColor", "ConsumedStrokeWidth",
     ].forEach((suffix) => {
       const btn = field(`worldGlobeApply${suffix}Btn`);
       if (btn) btn.addEventListener("click", apply);

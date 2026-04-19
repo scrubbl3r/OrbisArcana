@@ -168,9 +168,7 @@ export function createShieldPreview({
     [
       els.shieldApplyDurationBtn,
       els.shieldApplyAlphaBtn,
-      els.shieldApplyRedBtn,
-      els.shieldApplyGreenBtn,
-      els.shieldApplyBlueBtn,
+      els.shieldApplyColorBtn,
     ].forEach((btn) => {
       if (btn) btn.addEventListener("click", () => { apply(); applyPulse(); });
     });

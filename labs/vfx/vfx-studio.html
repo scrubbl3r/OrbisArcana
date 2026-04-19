@@ -396,9 +396,12 @@
     }
     .rgbaParamRow{
       display:grid;
-      grid-template-columns: auto auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto;
+      grid-template-columns: auto repeat(4, auto minmax(54px, 1fr)) auto;
       gap:8px;
       align-items:center;
+    }
+    .rgbaParamRow.rgbParamRow{
+      grid-template-columns: auto repeat(3, auto minmax(54px, 1fr)) auto;
     }
     .rgbaParamRow .rgbaLabel,
     .rgbaParamRow label{
@@ -904,20 +907,15 @@
             <input id="pulseMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
             <button id="shieldApplyPulseMaxBtn" class="toolBtn" type="button">Apply</button>
           </div>
-          <div class="paramFieldRow">
-            <label for="shieldR">Color red</label>
+          <div class="rgbaParamRow rgbParamRow">
+            <span class="rgbaLabel">RGB</span>
+            <label for="shieldR">r</label>
             <input id="shieldR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="120" />
-            <button id="shieldApplyRedBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="shieldG">Color green</label>
+            <label for="shieldG">g</label>
             <input id="shieldG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="210" />
-            <button id="shieldApplyGreenBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="shieldB">Color blue</label>
+            <label for="shieldB">b</label>
             <input id="shieldB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-            <button id="shieldApplyBlueBtn" class="toolBtn" type="button">Apply</button>
+            <button id="shieldApplyColorBtn" class="toolBtn" type="button">Apply</button>
           </div>
         </div>
       </div>
@@ -1266,14 +1264,8 @@
         <div class="behaviorTitle">Idle</div>
         <div class="paramGrid">
           <div class="paramField"><label for="worldGlobeIdleSize">Globe size</label><input id="worldGlobeIdleSize" class="paramFieldInput" type="number" min="1" max="400" value="50" step="1" /><button id="worldGlobeApplyIdleSizeBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleFillR">Fill red</label><input id="worldGlobeIdleFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyIdleFillRBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleFillG">Fill green</label><input id="worldGlobeIdleFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyIdleFillGBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleFillB">Fill blue</label><input id="worldGlobeIdleFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyIdleFillBBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleFillAlpha">Fill alpha</label><input id="worldGlobeIdleFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.42" step="0.01" /><button id="worldGlobeApplyIdleFillAlphaBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleStrokeR">Stroke red</label><input id="worldGlobeIdleStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyIdleStrokeRBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleStrokeG">Stroke green</label><input id="worldGlobeIdleStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyIdleStrokeGBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleStrokeB">Stroke blue</label><input id="worldGlobeIdleStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyIdleStrokeBBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeIdleStrokeAlpha">Stroke alpha</label><input id="worldGlobeIdleStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyIdleStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Fill RGBA</span><label for="worldGlobeIdleFillR">r</label><input id="worldGlobeIdleFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeIdleFillG">g</label><input id="worldGlobeIdleFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><label for="worldGlobeIdleFillB">b</label><input id="worldGlobeIdleFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><label for="worldGlobeIdleFillAlpha">a</label><input id="worldGlobeIdleFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.42" step="0.01" /><button id="worldGlobeApplyIdleFillColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Stroke RGBA</span><label for="worldGlobeIdleStrokeR">r</label><input id="worldGlobeIdleStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeIdleStrokeG">g</label><input id="worldGlobeIdleStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><label for="worldGlobeIdleStrokeB">b</label><input id="worldGlobeIdleStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><label for="worldGlobeIdleStrokeAlpha">a</label><input id="worldGlobeIdleStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyIdleStrokeColorBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeIdleStrokeWidth">Stroke size</label><input id="worldGlobeIdleStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyIdleStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeIdleDrift">Drift px</label><input id="worldGlobeIdleDrift" class="paramFieldInput" type="number" min="0" max="200" value="10" step="1" /><button id="worldGlobeApplyIdleDriftBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeIdleBob">Bob px</label><input id="worldGlobeIdleBob" class="paramFieldInput" type="number" min="0" max="200" value="7" step="1" /><button id="worldGlobeApplyIdleBobBtn" class="toolBtn" type="button">Apply</button></div>
@@ -1284,27 +1276,15 @@
         <div class="behaviorTitle">Collected</div>
         <div class="paramGrid" id="worldGlobeCollectedFields">
           <div class="paramField"><label for="worldGlobeCollectedSize">Globe size</label><input id="worldGlobeCollectedSize" class="paramFieldInput" type="number" min="1" max="400" value="14" step="1" /><button id="worldGlobeApplyCollectedSizeBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedFillR">Fill red</label><input id="worldGlobeCollectedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyCollectedFillRBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedFillG">Fill green</label><input id="worldGlobeCollectedFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyCollectedFillGBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedFillB">Fill blue</label><input id="worldGlobeCollectedFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyCollectedFillBBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedFillAlpha">Fill alpha</label><input id="worldGlobeCollectedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.42" step="0.01" /><button id="worldGlobeApplyCollectedFillAlphaBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedStrokeR">Stroke red</label><input id="worldGlobeCollectedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyCollectedStrokeRBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedStrokeG">Stroke green</label><input id="worldGlobeCollectedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyCollectedStrokeGBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedStrokeB">Stroke blue</label><input id="worldGlobeCollectedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyCollectedStrokeBBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeCollectedStrokeAlpha">Stroke alpha</label><input id="worldGlobeCollectedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyCollectedStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Fill RGBA</span><label for="worldGlobeCollectedFillR">r</label><input id="worldGlobeCollectedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedFillG">g</label><input id="worldGlobeCollectedFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><label for="worldGlobeCollectedFillB">b</label><input id="worldGlobeCollectedFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><label for="worldGlobeCollectedFillAlpha">a</label><input id="worldGlobeCollectedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.42" step="0.01" /><button id="worldGlobeApplyCollectedFillColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Stroke RGBA</span><label for="worldGlobeCollectedStrokeR">r</label><input id="worldGlobeCollectedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedStrokeG">g</label><input id="worldGlobeCollectedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><label for="worldGlobeCollectedStrokeB">b</label><input id="worldGlobeCollectedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><label for="worldGlobeCollectedStrokeAlpha">a</label><input id="worldGlobeCollectedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyCollectedStrokeColorBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeCollectedStrokeWidth">Stroke size</label><input id="worldGlobeCollectedStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyCollectedStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
         <div class="behaviorTitle">Consumed</div>
         <div class="paramGrid" id="worldGlobeConsumedFields">
           <div class="paramField"><label for="worldGlobeConsumedSize">Globe size</label><input id="worldGlobeConsumedSize" class="paramFieldInput" type="number" min="1" max="400" value="11" step="1" /><button id="worldGlobeApplyConsumedSizeBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedFillR">Fill red</label><input id="worldGlobeConsumedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyConsumedFillRBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedFillG">Fill green</label><input id="worldGlobeConsumedFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyConsumedFillGBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedFillB">Fill blue</label><input id="worldGlobeConsumedFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyConsumedFillBBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedFillAlpha">Fill alpha</label><input id="worldGlobeConsumedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="1" step="0.01" /><button id="worldGlobeApplyConsumedFillAlphaBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedStrokeR">Stroke red</label><input id="worldGlobeConsumedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobeApplyConsumedStrokeRBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedStrokeG">Stroke green</label><input id="worldGlobeConsumedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><button id="worldGlobeApplyConsumedStrokeGBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedStrokeB">Stroke blue</label><input id="worldGlobeConsumedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><button id="worldGlobeApplyConsumedStrokeBBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobeConsumedStrokeAlpha">Stroke alpha</label><input id="worldGlobeConsumedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyConsumedStrokeAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Fill RGBA</span><label for="worldGlobeConsumedFillR">r</label><input id="worldGlobeConsumedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedFillG">g</label><input id="worldGlobeConsumedFillG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><label for="worldGlobeConsumedFillB">b</label><input id="worldGlobeConsumedFillB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><label for="worldGlobeConsumedFillAlpha">a</label><input id="worldGlobeConsumedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="1" step="0.01" /><button id="worldGlobeApplyConsumedFillColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Stroke RGBA</span><label for="worldGlobeConsumedStrokeR">r</label><input id="worldGlobeConsumedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedStrokeG">g</label><input id="worldGlobeConsumedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><label for="worldGlobeConsumedStrokeB">b</label><input id="worldGlobeConsumedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><label for="worldGlobeConsumedStrokeAlpha">a</label><input id="worldGlobeConsumedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyConsumedStrokeColorBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobeConsumedStrokeWidth">Stroke size</label><input id="worldGlobeConsumedStrokeWidth" class="paramFieldInput" type="number" min="0" max="40" value="2" step="0.5" /><button id="worldGlobeApplyConsumedStrokeWidthBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
       </div>
@@ -1367,7 +1347,7 @@
     import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
-    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418b";
+    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418c";
     import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260418a";
     import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260418a";
     import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260418a";
@@ -1375,7 +1355,7 @@
     import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
     import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260417a";
     import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416g";
-    import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260417a";
+    import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260418a";
     import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260417b";
     import {
       bootStudioShell,
@@ -1546,11 +1526,9 @@
       shieldStroke: $("shieldStroke"),
       shieldApplyStrokeBtn: $("shieldApplyStrokeBtn"),
       shieldR: $("shieldR"),
-      shieldApplyRedBtn: $("shieldApplyRedBtn"),
       shieldG: $("shieldG"),
-      shieldApplyGreenBtn: $("shieldApplyGreenBtn"),
       shieldB: $("shieldB"),
-      shieldApplyBlueBtn: $("shieldApplyBlueBtn"),
+      shieldApplyColorBtn: $("shieldApplyColorBtn"),
 
       pulseMs: $("pulseMs"),
       shieldApplyPulseMsBtn: $("shieldApplyPulseMsBtn"),
