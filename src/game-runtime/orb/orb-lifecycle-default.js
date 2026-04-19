@@ -6,6 +6,6 @@ export const ORB_LIFECYCLE_DEFAULTS = Object.freeze({
     g: 255,
     b: 255,
   }),
-  shardStrokeAlpha: 0.46,
+  shardStrokeAlpha: 0.55,
   shardStrokeWidthPx: 1.00,
 });
