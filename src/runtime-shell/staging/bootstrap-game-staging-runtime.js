@@ -73,8 +73,6 @@ export function bootstrapGameStagingRuntime({
           colorRgb: VFX_DEFAULTS.shield.colorRgb,
           diameterRatio: VFX_DEFAULTS.shield.diameterRatio,
           strokeWidthRatio: VFX_DEFAULTS.shield.strokeWidthRatio,
-          diameterPx: VFX_DEFAULTS.shield.diameterPx,
-          strokeWidthPx: VFX_DEFAULTS.shield.strokeWidthPx,
           durationMs: VFX_DEFAULTS.shield.durationMs,
           alpha: VFX_DEFAULTS.shield.alpha,
           pulseMs: VFX_DEFAULTS.shield.pulseMs,

@@ -99,14 +99,8 @@ export function resolveBubbleShieldGeometry(
 ) {
   return {
     ...config,
-    diameterPx: resolveOrbRatioOrPx({
-      ratio: config.diameterRatio,
-      px: config.diameterPx,
-    }, { orbDiameterPx, min: 10 }),
-    strokeWidthPx: resolveOrbRatioOrPx({
-      ratio: config.strokeWidthRatio,
-      px: config.strokeWidthPx,
-    }, {
+    diameterPx: resolveOrbRatioPx(config.diameterRatio, { orbDiameterPx, min: 10 }),
+    strokeWidthPx: resolveOrbRatioPx(config.strokeWidthRatio, {
       orbDiameterPx,
       min: 1,
       normalize: normalizeStroke,
