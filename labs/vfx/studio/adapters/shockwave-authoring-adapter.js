@@ -1,9 +1,9 @@
 const SHOCKWAVE_FIELDS = Object.freeze([
-  ["startR", "startR"],
-  ["endR", "endR"],
+  ["shockStartRatio", "shockStartRatio"],
+  ["shockEndRatio", "shockEndRatio"],
   ["rings", "rings"],
   ["spawn", "spawn"],
-  ["stroke", "stroke"],
+  ["shockStrokeRatio", "shockStrokeRatio"],
   ["decay", "decay"],
   ["shockR", "shockR"],
   ["shockG", "shockG"],
@@ -30,12 +30,21 @@ export function createShockwaveAuthoringAdapter({
 } = {}) {
   function defaultSettings() {
     const color = shockwavePresetDefault.color || {};
+    const startRatio = Number.isFinite(Number(shockwavePresetDefault.startRatio))
+      ? Number(shockwavePresetDefault.startRatio)
+      : (Number(shockwavePresetDefault.startR) || 43) / 100;
+    const endRatio = Number.isFinite(Number(shockwavePresetDefault.endRatio))
+      ? Number(shockwavePresetDefault.endRatio)
+      : (Number(shockwavePresetDefault.endR) || 169) / 100;
+    const strokeRatio = Number.isFinite(Number(shockwavePresetDefault.strokeRatio))
+      ? Number(shockwavePresetDefault.strokeRatio)
+      : (Number(shockwavePresetDefault.stroke) || 4) / 100;
     return {
-      startR: roundedNumber(clampNumber(shockwavePresetDefault.startR, 1, 1000, 43)),
-      endR: roundedNumber(clampNumber(shockwavePresetDefault.endR, 1, 1000, 169)),
+      shockStartRatio: fixedNumber(clampNumber(startRatio, 0.01, 10, 0.43), 2, 0.43),
+      shockEndRatio: fixedNumber(clampNumber(endRatio, 0.01, 20, 1.69), 2, 1.69),
       rings: roundedNumber(clampNumber(shockwavePresetDefault.rings, 1, 6, 2)),
       spawn: roundedNumber(clampNumber(shockwavePresetDefault.spawnMs, 1, 700, 105)),
-      stroke: roundedNumber(clampNumber(shockwavePresetDefault.stroke, 1, 40, 4)),
+      shockStrokeRatio: fixedNumber(clampNumber(strokeRatio, 0.005, 1, 0.04), 3, 0.04),
       decay: roundedNumber(clampNumber(shockwavePresetDefault.decayMs, 40, 2000, 150)),
       shockR: roundedNumber(clampNumber(color.r, 0, 255, 255)),
       shockG: roundedNumber(clampNumber(color.g, 0, 255, 255)),
@@ -56,6 +65,15 @@ export function createShockwaveAuthoringAdapter({
     SHOCKWAVE_FIELDS.forEach(([fieldKey, settingsKey]) => {
       if (els[fieldKey] && settings[settingsKey] != null) els[fieldKey].value = String(settings[settingsKey]);
     });
+    if (els.shockStartRatio && settings.startR != null && settings.shockStartRatio == null) {
+      els.shockStartRatio.value = String(((Number(settings.startR) || 43) / 100).toFixed(2));
+    }
+    if (els.shockEndRatio && settings.endR != null && settings.shockEndRatio == null) {
+      els.shockEndRatio.value = String(((Number(settings.endR) || 169) / 100).toFixed(2));
+    }
+    if (els.shockStrokeRatio && settings.stroke != null && settings.shockStrokeRatio == null) {
+      els.shockStrokeRatio.value = String(((Number(settings.stroke) || 4) / 100).toFixed(3));
+    }
     if (typeof applyPreview === "function") applyPreview();
     return true;
   }

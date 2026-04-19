@@ -906,13 +906,13 @@
         </div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
-            <label for="startR">Start radius px</label>
-            <input id="startR" class="paramFieldInput" type="number" min="1" max="1000" value="43" step="1" />
+            <label for="shockStartRatio">Start ratio</label>
+            <input id="shockStartRatio" class="paramFieldInput" type="number" min="0.01" max="10" value="0.43" step="0.01" />
             <button id="shockApplyStartRBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="endR">End radius px</label>
-            <input id="endR" class="paramFieldInput" type="number" min="1" max="1000" value="169" step="1" />
+            <label for="shockEndRatio">End ratio</label>
+            <input id="shockEndRatio" class="paramFieldInput" type="number" min="0.01" max="20" value="1.69" step="0.01" />
             <button id="shockApplyEndRBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
@@ -926,8 +926,8 @@
             <button id="shockApplySpawnBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="stroke">Stroke width px</label>
-            <input id="stroke" class="paramFieldInput" type="number" min="1" max="40" value="4" step="1" />
+            <label for="shockStrokeRatio">Stroke ratio</label>
+            <input id="shockStrokeRatio" class="paramFieldInput" type="number" min="0.005" max="1" value="0.040" step="0.001" />
             <button id="shockApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
@@ -1534,15 +1534,15 @@
       shieldApplyPulseMaxBtn: $("shieldApplyPulseMaxBtn"),
 
       playShock: $("playShock"),
-      startR: $("startR"),
+      shockStartRatio: $("shockStartRatio"),
       shockApplyStartRBtn: $("shockApplyStartRBtn"),
-      endR: $("endR"),
+      shockEndRatio: $("shockEndRatio"),
       shockApplyEndRBtn: $("shockApplyEndRBtn"),
       rings: $("rings"),
       shockApplyRingsBtn: $("shockApplyRingsBtn"),
       spawn: $("spawn"),
       shockApplySpawnBtn: $("shockApplySpawnBtn"),
-      stroke: $("stroke"),
+      shockStrokeRatio: $("shockStrokeRatio"),
       shockApplyStrokeBtn: $("shockApplyStrokeBtn"),
       decay: $("decay"),
       shockApplyDecayBtn: $("shockApplyDecayBtn"),

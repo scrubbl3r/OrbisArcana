@@ -40,12 +40,12 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
   }
 
   function apply() {
-    const authoredStartR = clamp(els.startR.value, 1, 1000);
-    const authoredEndR = clamp(els.endR.value, 1, 1000);
+    const authoredStartRatio = Number(clamp(els.shockStartRatio.value, 0.01, 10).toFixed(2));
+    const authoredEndRatio = Number(clamp(els.shockEndRatio.value, 0.01, 20).toFixed(2));
     const rings = Math.round(clamp(els.rings.value, 1, 6));
     const spawnMs = Math.round(clamp(els.spawn.value, 1, 700));
     const decayMs = Math.round(clamp(els.decay.value, 40, 2000));
-    const authoredStroke = evenStroke(els.stroke.value, 2, 20);
+    const authoredStrokeRatio = Number(clamp(els.shockStrokeRatio.value, 0.005, 1).toFixed(3));
     const color = {
       r: clampByte(els.shockR && els.shockR.value, 255),
       g: clampByte(els.shockG && els.shockG.value, 255),
@@ -53,20 +53,20 @@ export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefa
       a: clampAlpha(els.shockA && els.shockA.value, 0.65),
     };
     const resolved = resolveShockwaveGeometry({
-      startR: authoredStartR,
-      endR: authoredEndR,
-      stroke: authoredStroke,
+      startRatio: authoredStartRatio,
+      endRatio: authoredEndRatio,
+      strokeRatio: authoredStrokeRatio,
     }, {
       orbDiameterPx: getOrbDiameterPx(),
       normalizeStroke: (value) => evenStroke(value, 2, 20),
     });
 
-    els.startR.value = String(Math.round(authoredStartR));
-    els.endR.value = String(Math.round(authoredEndR));
+    els.shockStartRatio.value = authoredStartRatio.toFixed(2);
+    els.shockEndRatio.value = authoredEndRatio.toFixed(2);
     els.rings.value = String(rings);
     els.spawn.value = String(spawnMs);
     els.decay.value = String(decayMs);
-    els.stroke.value = authoredStroke;
+    els.shockStrokeRatio.value = authoredStrokeRatio.toFixed(3);
     if (els.shockR) els.shockR.value = String(color.r);
     if (els.shockG) els.shockG.value = String(color.g);
     if (els.shockB) els.shockB.value = String(color.b);

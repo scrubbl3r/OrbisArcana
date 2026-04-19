@@ -2,6 +2,7 @@ import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
   resolveFlameAoeGeometry,
+  resolveShockwaveGeometry,
 } from "../../game-runtime/orb/orb-spell-geometry.js";
 
 export function bootstrapGameStagingRuntime({
@@ -94,7 +95,10 @@ export function bootstrapGameStagingRuntime({
       },
       shockwave: {
         layerEl: els.shockLayer,
-        getConfig: () => ({
+        getConfig: () => resolveShockwaveGeometry({
+          startRatio: VFX_DEFAULTS.shock.startRatio,
+          endRatio: VFX_DEFAULTS.shock.endRatio,
+          strokeRatio: VFX_DEFAULTS.shock.strokeRatio,
           color: VFX_DEFAULTS.shock.color,
           startR: VFX_DEFAULTS.shock.startR,
           endR: VFX_DEFAULTS.shock.endR,
@@ -102,6 +106,9 @@ export function bootstrapGameStagingRuntime({
           spawnMs: VFX_DEFAULTS.shock.spawnMs,
           decayMs: VFX_DEFAULTS.shock.decayMs,
           stroke: VFX_DEFAULTS.shock.stroke,
+        }, {
+          orbDiameterPx: readOrbDiameterPx(),
+          normalizeStroke: (value) => evenStroke(value, 1, 64),
         }),
         clamp,
         normalizeStroke: evenStroke,

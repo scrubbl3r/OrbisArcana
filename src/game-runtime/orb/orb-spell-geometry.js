@@ -83,11 +83,26 @@ export function resolveShockwaveGeometry(
     normalizeStroke = null,
   } = {}
 ) {
+  const resolvedOrbDiameterPx = Math.max(
+    1,
+    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
+  );
+  const startRatio = clampPositive(config.startRatio, 0);
+  const endRatio = clampPositive(config.endRatio, 0);
+  const strokeRatio = clampPositive(config.strokeRatio, 0);
   return {
     ...config,
-    startR: resolveOrbLinkedPx(config.startR, { orbDiameterPx, min: 1 }),
-    endR: resolveOrbLinkedPx(config.endR, { orbDiameterPx, min: 1 }),
-    stroke: resolveOrbLinkedPx(config.stroke, {
+    startR: startRatio > 0
+      ? Math.max(1, startRatio * resolvedOrbDiameterPx)
+      : resolveOrbLinkedPx(config.startR, { orbDiameterPx, min: 1 }),
+    endR: endRatio > 0
+      ? Math.max(1, endRatio * resolvedOrbDiameterPx)
+      : resolveOrbLinkedPx(config.endR, { orbDiameterPx, min: 1 }),
+    stroke: strokeRatio > 0
+      ? (typeof normalizeStroke === "function"
+          ? normalizeStroke(Math.max(1, strokeRatio * resolvedOrbDiameterPx))
+          : Math.max(1, strokeRatio * resolvedOrbDiameterPx))
+      : resolveOrbLinkedPx(config.stroke, {
       orbDiameterPx,
       min: 1,
       normalize: normalizeStroke,
