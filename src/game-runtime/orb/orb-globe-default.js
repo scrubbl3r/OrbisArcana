@@ -1,6 +1,6 @@
 export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   innerDiameterRatio: 0.15,
-  orbitRadiusRatio: 0.16,
+  orbitDiameterRatio: 0.16,
   orbitDistanceRatio: 1.30,
   orbitDistanceMinPx: 3,
   orbitRadiusMinPx: 5,

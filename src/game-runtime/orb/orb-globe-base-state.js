@@ -30,8 +30,8 @@ export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerDiameterRatio,
     0.2
   ),
-  orbitRadiusRatio: clampRatio(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitRadiusRatio,
+  orbitDiameterRatio: clampRatio(
+    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDiameterRatio ?? ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitRadiusRatio,
     0.13
   ),
   orbitDistanceOffsetPx: clampPx(
@@ -112,9 +112,9 @@ export function buildOrbGlobeVisualState(overrides = null) {
       source.innerDiameterRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.innerDiameterRatio
     ),
-    orbitRadiusRatio: clampRatio(
-      source.orbitRadiusRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusRatio
+    orbitDiameterRatio: clampRatio(
+      source.orbitDiameterRatio ?? source.orbitRadiusRatio,
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitDiameterRatio
     ),
     orbitDistanceOffsetPx: clampPx(
       source.orbitDistanceOffsetPx,
@@ -255,8 +255,8 @@ export function getOrbitGlobeRadiusPx(orbRadiusPx, orbGlobeVisualState = ORB_GLO
       orbRadiusPx
     ),
     Number(orbRadiusPx) * clampRatio(
-      orbGlobeVisualState && orbGlobeVisualState.orbitRadiusRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusRatio
+      orbGlobeVisualState && (orbGlobeVisualState.orbitDiameterRatio ?? orbGlobeVisualState.orbitRadiusRatio),
+      ORB_GLOBE_VISUAL_DEFAULTS.orbitDiameterRatio
     )
   );
 }

@@ -87,7 +87,7 @@ export function createOrbGlobePreview({ els, clamp }) {
   function readState() {
     return buildOrbGlobeVisualState({
       innerDiameterRatio: clamp(els.orbGlobeInnerDiameterRatio.value, 0.01, 1),
-      orbitRadiusRatio: clamp(els.orbGlobeOrbitRadiusRatio.value, 0.01, 1),
+      orbitDiameterRatio: clamp(els.orbGlobeOrbitDiameterRatio.value, 0.01, 1),
       orbitDistanceRatio: clamp(els.orbGlobeOrbitDistanceRatio.value, 0.1, 3),
       orbitDistanceMinPx: clamp(els.orbGlobeOrbitDistanceMin.value, 0, 200),
       orbitRadiusMinPx: clamp(els.orbGlobeOrbitRadiusMin.value, 0, 100),
@@ -303,7 +303,7 @@ export function createOrbGlobePreview({ els, clamp }) {
     if (els.orbGlobeClearBtn) els.orbGlobeClearBtn.addEventListener("click", clearPhaseGlobes);
     [
       els.orbGlobeApplyInnerDiameterRatioBtn,
-      els.orbGlobeApplyOrbitRadiusRatioBtn,
+      els.orbGlobeApplyOrbitDiameterRatioBtn,
       els.orbGlobeApplyOrbitDistanceRatioBtn,
       els.orbGlobeApplyOrbitDistanceMinBtn,
       els.orbGlobeApplyOrbitRadiusMinBtn,

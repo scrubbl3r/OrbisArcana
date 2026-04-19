@@ -1,6 +1,6 @@
 const ORB_GLOBE_FIELDS = Object.freeze([
   "orbGlobeInnerDiameterRatio",
-  "orbGlobeOrbitRadiusRatio",
+  "orbGlobeOrbitDiameterRatio",
   "orbGlobeOrbitDistanceRatio",
   "orbGlobeOrbitDistanceMin",
   "orbGlobeOrbitRadiusMin",
@@ -33,7 +33,7 @@ export function createOrbGlobeAuthoringAdapter({
   function defaultSettings() {
     return {
       orbGlobeInnerDiameterRatio: fixedNumber(orbGlobeVisualDefaults.innerDiameterRatio, 2),
-      orbGlobeOrbitRadiusRatio: fixedNumber(orbGlobeVisualDefaults.orbitRadiusRatio, 2),
+      orbGlobeOrbitDiameterRatio: fixedNumber(orbGlobeVisualDefaults.orbitDiameterRatio ?? orbGlobeVisualDefaults.orbitRadiusRatio, 2),
       orbGlobeOrbitDistanceRatio: fixedNumber(orbGlobeVisualDefaults.orbitDistanceRatio, 2),
       orbGlobeOrbitDistanceMin: roundedNumber(orbGlobeVisualDefaults.orbitDistanceMinPx),
       orbGlobeOrbitRadiusMin: roundedNumber(orbGlobeVisualDefaults.orbitRadiusMinPx),
@@ -61,6 +61,9 @@ export function createOrbGlobeAuthoringAdapter({
     ORB_GLOBE_FIELDS.forEach((key) => {
       if (els[key] && settings[key] != null) els[key].value = String(settings[key]);
     });
+    if (els.orbGlobeOrbitDiameterRatio && settings.orbGlobeOrbitRadiusRatio != null && settings.orbGlobeOrbitDiameterRatio == null) {
+      els.orbGlobeOrbitDiameterRatio.value = String(settings.orbGlobeOrbitRadiusRatio);
+    }
     if (typeof applyPreview === "function") applyPreview();
     return true;
   }
