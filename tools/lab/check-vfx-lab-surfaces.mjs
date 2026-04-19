@@ -93,6 +93,11 @@ function expectedModuleExport(moduleText, exportName) {
   return new RegExp(`export\\s+const\\s+${String(exportName).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(String(moduleText || ""));
 }
 
+function pathPartsToAbs(pathParts) {
+  if (!Array.isArray(pathParts) || !pathParts.length) return "";
+  return path.join(repoRoot, ...pathParts.map((part) => String(part || "")));
+}
+
 for (const [baseEffect, surface] of Object.entries(surfaces)) {
   const hasSection = htmlEffectSections.has(baseEffect);
   const hasPreviewRoot = surface.previewRootKey ? htmlPreviewRoots.has(surface.previewRootKey) : false;
@@ -116,6 +121,17 @@ for (const [baseEffect, surface] of Object.entries(surfaces)) {
   if (surface.previewRootKey && !hasPreviewRoot) {
     addError(`${baseEffect}: previewRootKey "${surface.previewRootKey}" has no [data-preview-root] element in vfx-studio.html`);
   }
+  if (surface.previewRootKey && !surface.previewFile) {
+    addError(`${baseEffect}: previewRootKey is set but previewFile is missing from surface registry`);
+  }
+  if (surface.previewFile) {
+    if (!previewFiles.has(surface.previewFile)) {
+      addError(`${baseEffect}: previewFile does not exist: ${surface.previewFile}`);
+    }
+    if (!importedPreviewFiles.has(surface.previewFile)) {
+      addError(`${baseEffect}: previewFile is not imported by vfx-studio.html: ${surface.previewFile}`);
+    }
+  }
   if (surface.previewRootKey && !hasSection) {
     addError(`${baseEffect}: has previewRootKey but no matching data-effect="${baseEffect}" section`);
   }
@@ -124,6 +140,20 @@ for (const [baseEffect, surface] of Object.entries(surfaces)) {
   }
   if (!hasSection && hasAdapter) {
     addError(`${baseEffect}: has authoring adapter but no matching data-effect section`);
+  }
+  if (hasAdapter && !surface.adapterFile) {
+    addError(`${baseEffect}: authoringAdapter is set but adapterFile is missing from surface registry`);
+  }
+  if (surface.adapterFile) {
+    if (!adapterFiles.has(surface.adapterFile)) {
+      addError(`${baseEffect}: adapterFile does not exist: ${surface.adapterFile}`);
+    }
+    if (!importedAdapterFiles.has(surface.adapterFile)) {
+      addError(`${baseEffect}: adapterFile is not imported by vfx-studio.html: ${surface.adapterFile}`);
+    }
+    if (!hasAdapter) {
+      addError(`${baseEffect}: adapterFile is set but authoringAdapter is missing`);
+    }
   }
   if (!hasLive && !hasBehavior && !hasNote) {
     addError(`${baseEffect}: has no livePreset, behavior, or publishNote explaining the exception`);
@@ -140,6 +170,8 @@ for (const [baseEffect, surface] of Object.entries(surfaces)) {
     }
     if (!Array.isArray(surface.livePreset.path) || !surface.livePreset.path.length) {
       addError(`${baseEffect}: livePreset path must be a non-empty pathParts array`);
+    } else if (!fs.existsSync(pathPartsToAbs(surface.livePreset.path))) {
+      addError(`${baseEffect}: livePreset target file does not exist: ${surface.livePreset.path.join("/")}`);
     }
   }
   if (hasBehavior) {
@@ -153,6 +185,8 @@ for (const [baseEffect, surface] of Object.entries(surfaces)) {
     }
     if (!Array.isArray(surface.behavior.path) || !surface.behavior.path.length) {
       addError(`${baseEffect}: behavior path must be a non-empty pathParts array`);
+    } else if (!fs.existsSync(pathPartsToAbs(surface.behavior.path))) {
+      addError(`${baseEffect}: behavior target file does not exist: ${surface.behavior.path.join("/")}`);
     }
     if (!Array.isArray(surface.behavior.targetIds) || !surface.behavior.targetIds.length) {
       addError(`${baseEffect}: behavior targetIds must be non-empty`);
