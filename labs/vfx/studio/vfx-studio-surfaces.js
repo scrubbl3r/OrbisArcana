@@ -181,6 +181,27 @@ export function deriveLabSurfaceMaps({ surfaces, buildLivePresetModuleForBaseEff
       .filter(([, surface]) => surface.behavior)
       .map(([baseEffect, surface]) => [baseEffect, Object.freeze({ baseEffect, ...surface.behavior })]))
   );
+  const publishContractsByBaseEffect = Object.freeze(
+    Object.fromEntries(Object.entries(labEffectSurfaces).map(([baseEffect, surface]) => [
+      baseEffect,
+      Object.freeze({
+        baseEffect,
+        publishNote: surface.publishNote || "",
+        livePreset: surface.livePreset
+          ? Object.freeze({
+              path: surface.livePreset.path,
+              exportName: surface.livePreset.exportName,
+            })
+          : null,
+        behavior: surface.behavior
+          ? Object.freeze({
+              path: surface.behavior.path,
+              exportName: surface.behavior.exportName,
+            })
+          : null,
+      }),
+    ]))
+  );
 
   return Object.freeze({
     studioBaseEffectByRegistryId: Object.freeze(
@@ -254,6 +275,7 @@ export function deriveLabSurfaceMaps({ surfaces, buildLivePresetModuleForBaseEff
         surface.buildModule,
       ]))
     ),
+    publishContractsByBaseEffect,
     behaviorBaseEffectByTargetId: Object.freeze(
       Object.fromEntries(Object.entries(labBehaviorSurfaces).flatMap(([baseEffect, surface]) => (
         Array.isArray(surface.targetIds) ? surface.targetIds.map((targetId) => [String(targetId).trim().toLowerCase(), baseEffect]) : []

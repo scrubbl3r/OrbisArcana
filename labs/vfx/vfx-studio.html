@@ -1373,7 +1373,7 @@
     import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418k";
+    } from "./studio/vfx-studio-surfaces.js?v=20260418l";
     import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418c";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createFlameAoeAuthoringAdapter } from "./studio/adapters/flame-aoe-authoring-adapter.js?v=20260418a";
@@ -1452,6 +1452,7 @@
       labAuthoringAdapterFactoriesByBaseEffect: LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT,
       liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
       liveBehaviorBuildersByBaseEffect: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT,
+      publishContractsByBaseEffect: PUBLISH_CONTRACTS_BY_BASE_EFFECT,
     } = deriveLabSurfaceMaps({
       surfaces: LAB_EFFECT_SURFACES,
       buildLivePresetModuleForBaseEffect,
@@ -2029,11 +2030,26 @@
 
     function describePublishedPath(pathParts){
       const path = Array.isArray(pathParts) ? pathParts.join("/") : String(pathParts || "");
-      if (path.includes("/game-runtime/behaviors/")) return `behavior ${path}`;
-      if (path.includes("/game-runtime/orb/")) return `orb runtime defaults ${path}`;
-      if (path.includes("/game-runtime/world/")) return `world runtime defaults ${path}`;
-      if (path.includes("/vfx/presets/")) return `VFX preset ${path}`;
       return path;
+    }
+
+    function publishContractForBaseEffect(baseEffect){
+      return PUBLISH_CONTRACTS_BY_BASE_EFFECT[String(baseEffect || "")] || null;
+    }
+
+    function describePublishSuccess({ publishedPaths = [], contract = null } = {}){
+      const paths = Array.isArray(publishedPaths) ? publishedPaths.filter(Boolean) : [];
+      if (!paths.length) return "Published.";
+      if (contract && contract.livePreset && contract.behavior && paths.length >= 2) {
+        return `Published live preset and behavior to ${paths.map(describePublishedPath).join(" + ")}`;
+      }
+      if (contract && contract.livePreset) {
+        return `Published live preset to ${describePublishedPath(paths[0])}`;
+      }
+      if (contract && contract.behavior) {
+        return `Published behavior to ${describePublishedPath(paths[0])}`;
+      }
+      return `Published to ${paths.map(describePublishedPath).join(" + ")}`;
     }
 
     function buildPublishedPresetPayload(){
@@ -2088,11 +2104,10 @@
 
     function publishPreset(){
       const selectedBase = String(selectedBaseEffect() || "");
-      const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[selectedBase] || null;
-      if (isSelectedEffectLocked() && !liveTarget) {
-        const surface = LAB_EFFECT_SURFACES[selectedBase] || null;
-        window.alert(surface && surface.publishNote
-          ? surface.publishNote
+      const publishContract = publishContractForBaseEffect(selectedBase);
+      if (isSelectedEffectLocked() && !(publishContract && publishContract.livePreset)) {
+        window.alert(publishContract && publishContract.publishNote
+          ? publishContract.publishNote
           : "This effect profile is locked. Unlock it to publish a preset.");
         return;
       }
@@ -2109,9 +2124,10 @@
           }
         }
         if (projectRootDirHandle) {
-          const liveTarget = LIVE_PRESET_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
+          const contract = publishContractForBaseEffect(String(built.payload.baseEffect || ""));
+          const liveTarget = contract && contract.livePreset ? contract.livePreset : null;
           const buildLivePresetModule = LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
-          const behaviorTarget = LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
+          const behaviorTarget = contract && contract.behavior ? contract.behavior : null;
           const buildBehaviorModule = LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null;
           const canPublishBehavior = !!behaviorTarget && typeof buildBehaviorModule === "function";
           if (liveTarget && typeof buildLivePresetModule === "function") {
@@ -2126,7 +2142,7 @@
                 if (ok) publishedPaths.push(behaviorTarget.path);
               }
               if (ok) {
-                window.alert(`Published ${publishedPaths.map(describePublishedPath).join(" + ")}`);
+                window.alert(describePublishSuccess({ publishedPaths, contract }));
                 return;
               }
             }
