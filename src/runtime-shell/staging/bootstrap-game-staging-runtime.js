@@ -1,5 +1,6 @@
 import {
   resolveBubbleShieldGeometry,
+  resolveElectricAoeGeometry,
   resolveFlameAoeGeometry,
 } from "../../game-runtime/orb/orb-spell-geometry.js";
 
@@ -126,7 +127,9 @@ export function bootstrapGameStagingRuntime({
       },
       electricAoe: {
         layerEl: els.electricLayer,
-        getConfig: () => ({
+        getConfig: () => resolveElectricAoeGeometry({
+          startRatio: VFX_DEFAULTS.electric.startRatio,
+          endRatio: VFX_DEFAULTS.electric.endRatio,
           startR: VFX_DEFAULTS.electric.startR,
           endR: VFX_DEFAULTS.electric.endR,
           durationMs: VFX_DEFAULTS.electric.durationMs,
@@ -135,6 +138,8 @@ export function bootstrapGameStagingRuntime({
           particleSpeed: VFX_DEFAULTS.electric.particleSpeed,
           maxBoltJumpSq: VFX_DEFAULTS.electric.maxBoltJumpSq,
           startJitterRatio: VFX_DEFAULTS.electric.startJitterRatio,
+        }, {
+          orbDiameterPx: readOrbDiameterPx(),
         }),
         clamp,
         evenPx,

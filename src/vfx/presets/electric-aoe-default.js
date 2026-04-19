@@ -1,6 +1,6 @@
 export const ELECTRIC_AOE_PRESET_DEFAULT = Object.freeze({
-  startR: 83,
-  endR: 200,
+  startRatio: 0.83,
+  endRatio: 2.0,
   durationMs: 10000,
   nodeCount: 13,
   particleCount: 340,

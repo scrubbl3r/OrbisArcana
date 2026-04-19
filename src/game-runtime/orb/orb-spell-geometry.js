@@ -110,10 +110,20 @@ export function resolveFlameAoeGeometry(config = {}, { orbDiameterPx = null } = 
 }
 
 export function resolveElectricAoeGeometry(config = {}, { orbDiameterPx = null } = {}) {
+  const resolvedOrbDiameterPx = Math.max(
+    1,
+    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
+  );
+  const startRatio = clampPositive(config.startRatio, 0);
+  const endRatio = clampPositive(config.endRatio, 0);
   return {
     ...config,
-    startR: resolveOrbLinkedPx(config.startR, { orbDiameterPx, min: 2 }),
-    endR: resolveOrbLinkedPx(config.endR, { orbDiameterPx, min: 8 }),
+    startR: startRatio > 0
+      ? Math.max(2, startRatio * resolvedOrbDiameterPx)
+      : resolveOrbLinkedPx(config.startR, { orbDiameterPx, min: 2 }),
+    endR: endRatio > 0
+      ? Math.max(8, endRatio * resolvedOrbDiameterPx)
+      : resolveOrbLinkedPx(config.endR, { orbDiameterPx, min: 8 }),
     maxBoltJumpSq: resolveOrbLinkedSq(config.maxBoltJumpSq, { orbDiameterPx, min: 100 }),
   };
 }

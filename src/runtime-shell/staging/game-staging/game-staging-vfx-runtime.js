@@ -36,8 +36,8 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
       durationMs: 10000,
     },
     electric: {
-      startR: 80,
-      endR: 200,
+      startRatio: 0.80,
+      endRatio: 2.0,
       durationMs: 10000,
       nodeCount: 13,
       particleCount: 340,

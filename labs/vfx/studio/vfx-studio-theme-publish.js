@@ -139,8 +139,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "electric-aoe":
       return [
         "export const ELECTRIC_AOE_PRESET_DEFAULT = Object.freeze({",
-        `  startR: ${Math.round(toNum(p.electricStartR, 80))},`,
-        `  endR: ${Math.round(toNum(p.electricEndR, 200))},`,
+        `  startRatio: ${toNum(p.electricStartRatio ?? ((toNum(p.electricStartR, 80)) / 100), 0.83).toFixed(2)},`,
+        `  endRatio: ${toNum(p.electricEndRatio ?? ((toNum(p.electricEndR, 200)) / 100), 2.0).toFixed(2)},`,
         `  durationMs: ${Math.round(toNum(p.electricMs, 10000))},`,
         `  nodeCount: ${Math.round(toNum(electricDefaults && electricDefaults.nodeCount, 13))},`,
         `  particleCount: ${Math.round(toNum(electricDefaults && electricDefaults.particleCount, 340))},`,
@@ -372,10 +372,16 @@ export function applyLabThemeDefaults({
   if (els.electricMs && electricAoePresetDefault) {
     els.electricMs.value = String(Math.round(clamp(electricAoePresetDefault.durationMs, 200, 60000)));
   }
-  if (els.electricStartR && electricAoePresetDefault) {
-    els.electricStartR.value = String(Math.round(clamp(electricAoePresetDefault.startR, 2, 500)));
+  if (els.electricStartRatio && electricAoePresetDefault) {
+    const ratio = Number.isFinite(Number(electricAoePresetDefault.startRatio))
+      ? Number(electricAoePresetDefault.startRatio)
+      : (Number(electricAoePresetDefault.startR) || 83) / 100;
+    els.electricStartRatio.value = String(clamp(ratio, 0.02, 5).toFixed(2));
   }
-  if (els.electricEndR && electricAoePresetDefault) {
-    els.electricEndR.value = String(Math.round(clamp(electricAoePresetDefault.endR, 8, 1000)));
+  if (els.electricEndRatio && electricAoePresetDefault) {
+    const ratio = Number.isFinite(Number(electricAoePresetDefault.endRatio))
+      ? Number(electricAoePresetDefault.endRatio)
+      : (Number(electricAoePresetDefault.endR) || 200) / 100;
+    els.electricEndRatio.value = String(clamp(ratio, 0.08, 12).toFixed(2));
   }
 }

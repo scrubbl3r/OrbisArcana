@@ -833,13 +833,13 @@
             <button id="electricApplyDurationBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="electricStartR">Plasma start radius px</label>
-            <input id="electricStartR" class="paramFieldInput" type="number" min="2" max="500" value="83" step="1" />
+            <label for="electricStartRatio">Plasma start ratio</label>
+            <input id="electricStartRatio" class="paramFieldInput" type="number" min="0.02" max="5" value="0.83" step="0.01" />
             <button id="electricApplyStartRBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="electricEndR">Plasma end radius px</label>
-            <input id="electricEndR" class="paramFieldInput" type="number" min="8" max="1000" value="200" step="1" />
+            <label for="electricEndRatio">Plasma end ratio</label>
+            <input id="electricEndRatio" class="paramFieldInput" type="number" min="0.08" max="12" value="2.00" step="0.01" />
             <button id="electricApplyEndRBtn" class="toolBtn" type="button">Apply</button>
           </div>
         </div>
@@ -1571,9 +1571,9 @@
       playElectric: $("playElectric"),
       electricMs: $("electricMs"),
       electricApplyDurationBtn: $("electricApplyDurationBtn"),
-      electricStartR: $("electricStartR"),
+      electricStartRatio: $("electricStartRatio"),
       electricApplyStartRBtn: $("electricApplyStartRBtn"),
-      electricEndR: $("electricEndR"),
+      electricEndRatio: $("electricEndRatio"),
       electricApplyEndRBtn: $("electricApplyEndRBtn"),
       orbBaseD: $("orbBaseD"),
       orbBaseApplyDiameterBtn: $("orbBaseApplyDiameterBtn"),

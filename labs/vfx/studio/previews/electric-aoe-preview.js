@@ -37,19 +37,19 @@ export function createElectricAoePreview({
 
   function apply() {
     const durationMs = Math.round(clamp(els.electricMs && els.electricMs.value, 200, 60000));
-    let authoredStartR = Math.round(clamp(els.electricStartR.value, 2, 500));
-    let authoredEndR = Math.round(clamp(els.electricEndR.value, 8, 1000));
-    if (authoredEndR <= authoredStartR + 4) authoredEndR = authoredStartR + 4;
+    let authoredStartRatio = Number(clamp(els.electricStartRatio.value, 0.02, 5).toFixed(2));
+    let authoredEndRatio = Number(clamp(els.electricEndRatio.value, 0.08, 12).toFixed(2));
+    if (authoredEndRatio <= authoredStartRatio + 0.04) authoredEndRatio = Number((authoredStartRatio + 0.04).toFixed(2));
     const resolved = resolveElectricAoeGeometry({
-      startR: authoredStartR,
-      endR: authoredEndR,
+      startRatio: authoredStartRatio,
+      endRatio: authoredEndRatio,
     }, {
       orbDiameterPx: getOrbDiameterPx(),
     });
 
     if (els.electricMs) els.electricMs.value = String(durationMs);
-    els.electricStartR.value = String(authoredStartR);
-    els.electricEndR.value = String(authoredEndR);
+    els.electricStartRatio.value = authoredStartRatio.toFixed(2);
+    els.electricEndRatio.value = authoredEndRatio.toFixed(2);
 
     setVar("--electric-d", `${(Number(resolved.endR) * 2).toFixed(2)}px`);
     return {
@@ -296,7 +296,7 @@ export function createElectricAoePreview({
   }
 
   function wire() {
-    els.playElectric.addEventListener("click", play);
+      els.playElectric.addEventListener("click", play);
     [
       els.electricApplyDurationBtn,
       els.electricApplyStartRBtn,
