@@ -2,18 +2,18 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   idle: Object.freeze({
     diameterRatio: 0.25,
     fillRgb: Object.freeze({
-      r: 255,
-      g: 225,
+      r: 215,
+      g: 215,
       b: 255,
     }),
-    fillAlpha: 0.75,
+    fillAlpha: 1.00,
     strokeRgb: Object.freeze({
       r: 255,
       g: 214,
       b: 64,
     }),
     strokeAlpha: 0.96,
-    strokeWidthRatio: 0.0,
+    strokeWidthRatio: 0.000,
     driftRatio: 0.10,
     bobRatio: 0.07,
     bobHz: 0.65,
@@ -21,7 +21,7 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     pulseHz: 0.90,
   }),
   collected: Object.freeze({
-    diameterRatio: 0.14,
+    diameterRatio: 0.12,
     fillRgb: Object.freeze({
       r: 255,
       g: 255,
@@ -34,7 +34,7 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
       b: 255,
     }),
     strokeAlpha: 0.96,
-    strokeWidthRatio: 0.02,
+    strokeWidthRatio: 0.020,
   }),
   consumed: Object.freeze({
     diameterRatio: 0.11,
@@ -50,6 +50,6 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
       b: 255,
     }),
     strokeAlpha: 0.96,
-    strokeWidthRatio: 0.02,
+    strokeWidthRatio: 0.020,
   }),
 });
