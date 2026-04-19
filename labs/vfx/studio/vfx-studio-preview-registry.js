@@ -154,7 +154,6 @@ export function createStudioPreviewRegistry({
   }
 
   if (typeof updateTeleportBehaviorReadout === "function") {
-    updateTeleportBehaviorReadout();
     if (els.applyTeleportBehaviorBtn) {
       els.applyTeleportBehaviorBtn.addEventListener("click", () => {
         updateTeleportBehaviorReadout();

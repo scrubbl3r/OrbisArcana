@@ -1342,8 +1342,7 @@
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
     } from "./studio/vfx-studio-shell.js?v=20260417a";
-    import { createStudioAuthoringAdapters } from "./studio/vfx-studio-adapters.js?v=20260419a";
-    import { createStudioPreviewRegistry } from "./studio/vfx-studio-preview-registry.js?v=20260419a";
+    import { createStudioBootstrap } from "./studio/vfx-studio-bootstrap.js?v=20260419a";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
@@ -1366,7 +1365,6 @@
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
     } from "./studio/vfx-studio-state.js?v=20260419a";
     import { LAB_STUDIO_CATEGORIES } from "./studio/vfx-studio-categories.js?v=20260419a";
-    import { createStudioSurfaceActivation } from "./studio/vfx-studio-activation.js?v=20260419a";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1680,95 +1678,6 @@
       getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
       worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
       getElementById: $,
-    });
-    if (els.orbBaseD) els.orbBaseD.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx));
-    if (els.orbBaseStroke) els.orbBaseStroke.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx));
-    if (els.orbBaseStrokeAlpha) els.orbBaseStrokeAlpha.value = String(Number(ORB_BASE_VISUAL_DEFAULTS.strokeAlpha).toFixed(2));
-    if (els.orbBaseFillAlpha) els.orbBaseFillAlpha.value = String(Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha).toFixed(2));
-    if (els.orbBaseStrokeR) els.orbBaseStrokeR.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.r));
-    if (els.orbBaseStrokeG) els.orbBaseStrokeG.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.g));
-    if (els.orbBaseStrokeB) els.orbBaseStrokeB.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb.b));
-    if (els.orbBaseFillR) els.orbBaseFillR.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.r));
-    if (els.orbBaseFillG) els.orbBaseFillG.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.g));
-    if (els.orbBaseFillB) els.orbBaseFillB.value = String(Math.round(ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb.b));
-    if (els.orbNodFillAlpha) els.orbNodFillAlpha.value = String(Number(ORB_NOD_PRESET_DEFAULT.orbTemplateFillAlpha).toFixed(2));
-
-    const shieldPreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.shieldPreviewRoot,
-      shield: $("shieldLaneShield"),
-      orb: $("shieldLaneOrb"),
-    });
-    const shockPreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.shockPreviewRoot,
-      shockLayer: $("shockLaneLayer"),
-      orb: $("shockLaneOrb"),
-    });
-    const flamePreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.flamePreviewRoot,
-      flameLayer: $("flameLaneLayer"),
-      orb: $("flameLaneOrb"),
-    });
-    const electricPreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.electricPreviewRoot,
-      electricLayer: $("electricLaneLayer"),
-      orb: $("electricLaneOrb"),
-    });
-    const orbBasePreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbBasePreviewRoot,
-      orb: $("orbBaseLaneOrb"),
-    });
-    const orbTemplatePreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbTemplatePreviewRoot,
-      orb: $("orbTemplateLaneOrb"),
-    });
-    const orbNodPreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbNodPreviewRoot,
-      orb: $("orbNodLaneOrb"),
-      previewOrbTemplate: els.previewOrbNod,
-      orbTemplateShrinkPct: els.orbNodShrinkPct,
-      orbTemplateApplyShrinkBtn: els.orbNodApplyShrinkBtn,
-      orbTemplateDurationMs: els.orbNodDurationMs,
-      orbTemplateApplyDurationBtn: els.orbNodApplyDurationBtn,
-      orbTemplateFillAlpha: els.orbNodFillAlpha,
-      orbTemplateApplyFillOpacityBtn: els.orbNodApplyFillOpacityBtn,
-      orbTemplateWaveCount: els.orbNodWaveCount,
-      orbTemplateApplyWaveCountBtn: els.orbNodApplyWaveCountBtn,
-      orbTemplateWaveDepthPx: els.orbNodWaveDepthPx,
-      orbTemplateApplyWaveDepthBtn: els.orbNodApplyWaveDepthBtn,
-      orbTemplateOscillationSpeedHz: els.orbNodOscillationSpeedHz,
-      orbTemplateApplyOscillationSpeedBtn: els.orbNodApplyOscillationSpeedBtn,
-      orbTemplateOscillationCount: els.orbNodOscillationCount,
-      orbTemplateApplyOscillationCountBtn: els.orbNodApplyOscillationCountBtn,
-    });
-    const orbLifecyclePreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbLifecyclePreviewRoot,
-      orb: $("orbLifecycleLaneOrb"),
-      orbShatterLayer: $("orbLifecycleShatterLayer"),
-    });
-    const orbGlobePreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbGlobePreviewRoot,
-      orb: $("orbGlobeLaneOrb"),
-      orbInterior: $("orbGlobeLaneInterior"),
-      orbGlobePreviewLayer: $("orbGlobeLaneLayer"),
-    });
-    const worldGlobePreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.worldGlobePreviewRoot,
-      worldGlobePreviewLayer: $("worldGlobeLaneLayer"),
-    });
-    const orbTeleportPreviewEls = Object.freeze({
-      ...els,
-      previewRoot: els.orbTeleportPreviewRoot,
-      orb: $("orbTeleportLaneOrb"),
     });
 
     function setVar(name, value){
@@ -2332,50 +2241,75 @@
     function updateTeleportBehaviorReadout(){
       authoringAdapterForBaseEffect("teleport").updateBehaviorReadout(els);
     }
-    const studioPreviewRegistry = createStudioPreviewRegistry({
+    const studioBootstrap = createStudioBootstrap({
       els,
-      GEOM,
+      getElementById: $,
+      adapterFactoriesByBaseEffect: LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT,
+      adapterContext: AUTHORING_ADAPTER_CONTEXT,
+      draftStore,
+      lastSelectedEffectValueRef,
+      surfaces: LAB_EFFECT_SURFACES,
+      liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
+      selectedEffectOption,
+      selectedBaseEffect,
+      settingsKeyForBaseEffect,
+      defaultSettingsKeyForBaseEffect,
+      refreshEffectMeta,
+      refreshBindingPanel,
+      alignBindingTargetToSelectedEffect,
+      persistDraftStore,
+      applyOrbLaneSsot,
+      buildCurrentLabOrbBaseVisualState,
+      updateTeleportBehaviorReadout,
+      applyGeometryVars,
+      previewApplyMap: Object.freeze({
+        "electric-aoe": () => applyElectricControls(),
+        "bubble-shield": () => applyShield(),
+        shockwave: () => applyShock(),
+        "flame-aoe": () => applyFlameControls(),
+        "orb-base": () => applyOrbBase(),
+        teleport: () => applyOrbTeleport(),
+        "orb-globe": () => applyOrbGlobe(),
+        "orb-lifecycle": () => applyOrbLifecycle(),
+        "orb-nod": () => applyOrbNod(),
+        "world-globe": () => applyWorldGlobe(),
+      }),
+      previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
+      geometry: GEOM,
+      defaults: Object.freeze({
+        orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
+        orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
+        shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
+        flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
+        electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+        onOrbBaseVisualStateApplied: (visualState, previewActions) => {
+          currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
+          GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
+          GEOM.orbStroke = evenPx(visualState && visualState.strokeWidthPx, 1, 40);
+          applyGeometryVars();
+          requestAnimationFrame(() => {
+            if (typeof previewActions.applyShieldGeometry === "function") previewActions.applyShieldGeometry();
+            if (typeof previewActions.applyShock === "function") previewActions.applyShock();
+            if (typeof previewActions.applyFlameControls === "function") previewActions.applyFlameControls();
+            if (typeof previewActions.applyElectricControls === "function") previewActions.applyElectricControls();
+            if (typeof previewActions.applyOrbTemplate === "function") previewActions.applyOrbTemplate();
+            if (typeof previewActions.applyOrbLifecycle === "function") previewActions.applyOrbLifecycle();
+            if (typeof previewActions.applyOrbGlobe === "function") previewActions.applyOrbGlobe();
+            if (typeof previewActions.applyWorldGlobe === "function") previewActions.applyWorldGlobe();
+          });
+        },
+        isDraftHydrationDone: () => draftHydrationDone,
+        isCustomEffectOption,
+      }),
       clamp,
       evenPx,
       clampByte,
       createScopedVarSetter,
-      previewEls: Object.freeze({
-        shield: shieldPreviewEls,
-        shock: shockPreviewEls,
-        flame: flamePreviewEls,
-        electric: electricPreviewEls,
-        orbBase: orbBasePreviewEls,
-        orbTemplate: orbTemplatePreviewEls,
-        orbNod: orbNodPreviewEls,
-        orbLifecycle: orbLifecyclePreviewEls,
-        orbGlobe: orbGlobePreviewEls,
-        worldGlobe: worldGlobePreviewEls,
-        orbTeleport: orbTeleportPreviewEls,
-      }),
-      defaults: Object.freeze({
-        shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
-        flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
-        electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
-      }),
-      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
-      onOrbBaseVisualStateApplied: (visualState, previewActions) => {
-        currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
-        GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
-        GEOM.orbStroke = evenPx(visualState && visualState.strokeWidthPx, 1, 40);
-        applyGeometryVars();
-        requestAnimationFrame(() => {
-          if (typeof previewActions.applyShieldGeometry === "function") previewActions.applyShieldGeometry();
-          if (typeof previewActions.applyShock === "function") previewActions.applyShock();
-          if (typeof previewActions.applyFlameControls === "function") previewActions.applyFlameControls();
-          if (typeof previewActions.applyElectricControls === "function") previewActions.applyElectricControls();
-          if (typeof previewActions.applyOrbTemplate === "function") previewActions.applyOrbTemplate();
-          if (typeof previewActions.applyOrbLifecycle === "function") previewActions.applyOrbLifecycle();
-          if (typeof previewActions.applyOrbGlobe === "function") previewActions.applyOrbGlobe();
-          if (typeof previewActions.applyWorldGlobe === "function") previewActions.applyWorldGlobe();
-        });
-      },
-      previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
-      updateTeleportBehaviorReadout,
+      requestAnimationFrame,
+    });
+    studioBootstrap.setSuspendDraftApplyRef({
+      get value() { return suspendDraftApply; },
+      set value(next) { suspendDraftApply = !!next; },
     });
     const {
       applyShieldGeometry,
@@ -2405,115 +2339,18 @@
       applyOrbTeleport,
       clearOrbTeleport,
       playOrbTeleport,
-    } = studioPreviewRegistry.actions;
-    const stopAllStudioEffects = studioPreviewRegistry.stopAllStudioEffects;
-    const studioAuthoringAdapters = createStudioAuthoringAdapters({
-      factoriesByBaseEffect: LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT,
-      context: AUTHORING_ADAPTER_CONTEXT,
-      previewApplyByBaseEffect: Object.freeze({
-        "electric-aoe": () => applyElectricControls(),
-        "bubble-shield": () => applyShield(),
-        shockwave: () => applyShock(),
-        "flame-aoe": () => applyFlameControls(),
-        "orb-base": () => applyOrbBase(),
-        teleport: () => applyOrbTeleport(),
-        "orb-globe": () => applyOrbGlobe(),
-        "orb-lifecycle": () => applyOrbLifecycle(),
-        "orb-nod": () => applyOrbNod(),
-        "world-globe": () => applyWorldGlobe(),
-      }),
-      applyOptionsByBaseEffect: Object.freeze({
-        "bubble-shield": Object.freeze({
-          applyGeometry: () => applyShieldGeometry(),
-          applyShield: () => applyShield(),
-          applyPulse: () => applyPulse(),
-        }),
-      }),
-    });
-    const authoringAdapterForBaseEffect = studioAuthoringAdapters.authoringAdapterForBaseEffect;
-    const callAuthoringAdapter = studioAuthoringAdapters.callAuthoringAdapter;
-    function defaultSettingsForBaseEffect(baseEffect){
-      return studioAuthoringAdapters.defaultSettingsForBaseEffect(baseEffect, {
-        defaultSettingsKeyForBaseEffect,
-        fallbackDefaultSettings: (defaultSettingsKey) => {
-          switch (String(defaultSettingsKey || "")) {
-            case "orb-template":
-              return {};
-            default:
-              return {};
-          }
-        },
-      });
-    }
-    function captureCurrentEffectSettings(baseEffect){
-      return studioAuthoringAdapters.captureCurrentEffectSettings(baseEffect, els, {
-        fallbackCapture: (effect) => {
-          switch (String(effect || "")) {
-            case "orb-template":
-              return {};
-            default:
-              return {};
-          }
-        },
-      });
-    }
-    function applyCurrentEffectSettings(baseEffect, settings){
-      if (!settings || typeof settings !== "object") return;
-      suspendDraftApply = true;
-      try {
-        studioAuthoringAdapters.applyCurrentEffectSettings(baseEffect, settings, els, {
-          fallbackApply: (effect) => {
-            switch (String(effect || "")) {
-              case "orb-template":
-                applyOrbLaneSsot(els.orbTemplatePreviewRoot);
-                break;
-              default:
-                break;
-            }
-          },
-        });
-      } finally {
-        suspendDraftApply = false;
-      }
-    }
-    const studioSurfaceActivation = createStudioSurfaceActivation({
-      els,
-      surfaces: LAB_EFFECT_SURFACES,
-      liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
-      autoPreviewActions: Object.freeze({
-        playShield: () => playShield(),
-        playShock: () => playShock(),
-        playFlame: () => playFlame(),
-        playElectric: () => playElectric(),
-        applyOrbBase: () => applyOrbBase(),
-        applyOrbTemplate: () => applyOrbTemplate(),
-        applyOrbNod: () => applyOrbNod(),
-        applyOrbLifecycle: () => applyOrbLifecycle(),
-        applyOrbGlobe: () => applyOrbGlobe(),
-        applyWorldGlobe: () => applyWorldGlobe(),
-        applyOrbTeleport: () => applyOrbTeleport(),
-      }),
-      selectedEffectOption,
-      selectedBaseEffect,
-      stopAllStudioEffects,
-      lastSelectedEffectValueRef,
-      draftStore,
-      applyDraftToSelectedProfile,
-      persistDraftStore,
-      refreshEffectMeta,
-      previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
-      alignBindingTargetToSelectedEffect,
-      refreshBindingPanel,
-      updateBehaviorReadout: (effect) => {
-        if (effect === "teleport") updateTeleportBehaviorReadout();
-      },
-      requestAnimationFrame,
-    });
-    const updateBehaviorSections = studioSurfaceActivation.updateBehaviorSections;
-    const updateEffectSections = studioSurfaceActivation.updateEffectSections;
-    const settleSelectedEffectState = studioSurfaceActivation.settleSelectedEffectState;
-    const autoPreviewSelectedEffect = studioSurfaceActivation.autoPreviewSelectedEffect;
-    studioSurfaceActivation.bindPaneEvents();
+    } = studioBootstrap.actions;
+    const stopAllStudioEffects = studioBootstrap.stopAllStudioEffects;
+    const authoringAdapterForBaseEffect = studioBootstrap.authoringAdapterForBaseEffect;
+    const callAuthoringAdapter = studioBootstrap.callAuthoringAdapter;
+    const defaultSettingsForBaseEffect = studioBootstrap.defaultSettingsForBaseEffect;
+    const captureCurrentEffectSettings = studioBootstrap.captureCurrentEffectSettings;
+    const applyCurrentEffectSettings = studioBootstrap.applyCurrentEffectSettings;
+    const updateBehaviorSections = studioBootstrap.updateBehaviorSections;
+    const updateEffectSections = studioBootstrap.updateEffectSections;
+    const settleSelectedEffectState = studioBootstrap.settleSelectedEffectState;
+    const autoPreviewSelectedEffect = studioBootstrap.autoPreviewSelectedEffect;
+    updateTeleportBehaviorReadout();
 
     bootStudioShell({
       effectSelect: els.effectSelect,
