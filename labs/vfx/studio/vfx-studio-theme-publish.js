@@ -160,11 +160,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
-    case "orb-shatter":
-      return [
-        "export const ORB_SHATTER_PRESET_DEFAULT = Object.freeze({});",
-        "",
-      ].join("\n");
     case "orb-lifecycle":
       return [
         "export const ORB_LIFECYCLE_DEFAULTS = Object.freeze({",
@@ -198,16 +193,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `    b: ${Math.round(toNum(p.orbBaseFillB, 255))},`,
         "  }),",
         `  fillAlpha: ${toNum(p.orbBaseFillAlpha, 0.20).toFixed(2)},`,
-        "});",
-        "",
-      ].join("\n");
-    case "orb-fracture":
-      return [
-        "export const ORB_FRACTURE_VISUAL_DEFAULTS = Object.freeze({",
-        `  crackStrokeWidthPx: ${toNum(p.orbFractureCrackStroke, 1.6).toFixed(1)},`,
-        `  shardStrokeWidthPx: ${toNum(p.orbFractureShardStroke, 1.2).toFixed(1)},`,
-        `  glowBlurPx: ${Math.round(toNum(p.orbFractureGlowBlur, 3))},`,
-        `  glowAlpha: ${toNum(p.orbFractureGlowAlpha, 1).toFixed(2)},`,
         "});",
         "",
       ].join("\n");

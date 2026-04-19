@@ -451,16 +451,6 @@
       transform: translate(-50%,-50%);
       pointer-events:none;
     }
-    .orbFractureLayer{
-      position:absolute;
-      left:0;
-      top:0;
-      width:140px;
-      height:140px;
-      overflow:visible;
-      transform: translate(-50%,-50%);
-      pointer-events:none;
-    }
     .orbTemplatePatternLayer{
       position:absolute;
       left:0;
@@ -564,17 +554,6 @@
       filter: drop-shadow(0 0 8px rgba(255,214,64,0.28));
       pointer-events:none;
       z-index:6;
-    }
-    .orbFractureLayer path{
-      fill:none;
-      stroke: var(--orb-stroke-color);
-      stroke-width: var(--orb-fracture-crack-stroke);
-      stroke-linecap:round;
-      stroke-linejoin:round;
-      filter: drop-shadow(
-        0 0 var(--orb-fracture-glow-blur)
-        color-mix(in srgb, var(--orb-stroke-color) calc(var(--orb-fracture-glow-alpha) * 100%), transparent)
-      );
     }
     .orbShard{
       fill: var(--orb-fill);

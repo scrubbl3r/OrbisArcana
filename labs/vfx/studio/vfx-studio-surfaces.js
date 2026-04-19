@@ -138,7 +138,7 @@ export function createLabEffectSurfaces({
       registryIds: Object.freeze(["orb.shatter_voronoi"]),
       omitRegistryOption: true,
       defaultBindTarget: "orb-state.shattered",
-      livePreset: Object.freeze({ buildKey: "orb-shatter", path: ["src", "vfx", "presets", "orb-shatter-default.js"], exportName: "ORB_SHATTER_PRESET_DEFAULT" }),
+      publishNote: "Runtime-only shatter effect; author shard/crack styling through Orb Lifecycle.",
     }),
     "world-globe": Object.freeze({
       category: "world",
