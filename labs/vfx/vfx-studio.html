@@ -1351,7 +1351,6 @@
       refreshEffectMeta as refreshEffectMetaHelper,
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
-      updateEffectSections as updateEffectSectionsHelper,
     } from "./studio/vfx-studio-shell.js?v=20260417a";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
@@ -1375,11 +1374,7 @@
       upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
     } from "./studio/vfx-studio-state.js?v=20260419a";
     import { LAB_STUDIO_CATEGORIES } from "./studio/vfx-studio-categories.js?v=20260419a";
-    import {
-      getLabStudioPaneLabel,
-      listLabStudioSurfacePanes,
-      surfaceSupportsLabStudioPane,
-    } from "./studio/vfx-studio-panes.js?v=20260419a";
+    import { createStudioSurfaceActivation } from "./studio/vfx-studio-activation.js?v=20260419a";
     import {
       buildRuntimeEffectBindingsModule,
       populateBindingTargetOptions as populateBindingTargetOptionsHelper,
@@ -1445,7 +1440,6 @@
     const draftStore = createDraftStore();
     let draftHydrationDone = false;
     let suspendDraftApply = false;
-    let activeAuthoringPane = "vfx";
     const lastSelectedEffectValueRef = { value: "" };
     let projectRootDirHandle = null;
     let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
@@ -1869,14 +1863,6 @@
 
     function selectedBaseEffect(){
       return selectedBaseEffectHelper(selectedEffectOption());
-    }
-
-    function selectedEffectSurface(){
-      return LAB_EFFECT_SURFACES[String(selectedBaseEffect() || "")] || null;
-    }
-
-    function supportedPanesForSelectedEffect(){
-      return listLabStudioSurfacePanes(selectedEffectSurface());
     }
 
     function selectedSpawnBaseEffect(){
@@ -2483,46 +2469,6 @@
 
     shieldPreview.wire();
 
-    function refreshAuthoringPaneUi(){
-      const supportedPanes = supportedPanesForSelectedEffect();
-      const nextPane = supportedPanes.includes(activeAuthoringPane) ? activeAuthoringPane : (supportedPanes[0] || "vfx");
-      activeAuthoringPane = nextPane;
-      const showBehavior = nextPane === "behavior";
-
-      if (els.vfxTabBtn) {
-        const supportsVfx = supportedPanes.includes("vfx");
-        els.vfxTabBtn.hidden = !supportsVfx;
-        els.vfxTabBtn.disabled = !supportsVfx;
-        els.vfxTabBtn.textContent = getLabStudioPaneLabel("vfx");
-        els.vfxTabBtn.classList.toggle("active", supportsVfx && !showBehavior);
-        els.vfxTabBtn.setAttribute("aria-selected", supportsVfx && !showBehavior ? "true" : "false");
-      }
-      if (els.behaviorTabBtn) {
-        const supportsBehavior = supportedPanes.includes("behavior");
-        els.behaviorTabBtn.hidden = !supportsBehavior;
-        els.behaviorTabBtn.disabled = !supportsBehavior;
-        els.behaviorTabBtn.textContent = getLabStudioPaneLabel("behavior");
-        els.behaviorTabBtn.classList.toggle("active", supportsBehavior && showBehavior);
-        els.behaviorTabBtn.setAttribute("aria-selected", supportsBehavior && showBehavior ? "true" : "false");
-      }
-      if (els.vfxAuthoringPanel) els.vfxAuthoringPanel.hidden = !supportedPanes.includes("vfx") || showBehavior;
-      if (els.behaviorAuthoringPanel) els.behaviorAuthoringPanel.hidden = !supportedPanes.includes("behavior") || !showBehavior;
-    }
-
-    function setAuthoringTab(tabName){
-      const nextPane = String(tabName || "").trim().toLowerCase();
-      const supportedPanes = supportedPanesForSelectedEffect();
-      activeAuthoringPane = supportedPanes.includes(nextPane) ? nextPane : (supportedPanes[0] || "vfx");
-      refreshAuthoringPaneUi();
-    }
-
-    function selectedBehaviorEffect(){
-      const opt = selectedEffectOption();
-      const baseEffect = String(opt && opt.dataset && opt.dataset.baseEffect || opt && opt.value || "").trim().toLowerCase();
-      if (LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT[baseEffect]) return baseEffect;
-      return "";
-    }
-
     function readTeleportBehaviorPreviewConfig(){
       return authoringAdapterForBaseEffect("teleport").readBehaviorPreviewConfig(els);
     }
@@ -2530,57 +2476,44 @@
     function updateTeleportBehaviorReadout(){
       authoringAdapterForBaseEffect("teleport").updateBehaviorReadout(els);
     }
-
-    function updateBehaviorSections(){
-      if (!surfaceSupportsLabStudioPane(selectedEffectSurface(), "behavior")) {
-        document.querySelectorAll(".behaviorSection[data-behavior-effect]").forEach((section) => {
-          section.hidden = section.getAttribute("data-behavior-effect") !== "default";
-        });
-        return;
-      }
-      const effect = selectedBehaviorEffect();
-      const hasBehaviorSurface = !!effect;
-      document.querySelectorAll(".behaviorSection[data-behavior-effect]").forEach((section) => {
-        const target = section.getAttribute("data-behavior-effect");
-        section.hidden = hasBehaviorSurface ? target !== effect : target !== "default";
-      });
-      if (effect === "teleport") updateTeleportBehaviorReadout();
-    }
-
-    if (els.vfxTabBtn) els.vfxTabBtn.addEventListener("click", () => setAuthoringTab("vfx"));
-    if (els.behaviorTabBtn) els.behaviorTabBtn.addEventListener("click", () => setAuthoringTab("behavior"));
-    if (els.bindingTargetSelect) els.bindingTargetSelect.addEventListener("change", updateBehaviorSections);
-
-    function updateEffectSections(){
-      const result = updateEffectSectionsHelper({
-        selectedEffectOption,
-        stopAllStudioEffects,
-        lastSelectedEffectValueRef,
-        selectedBaseEffect,
-        draftStore,
-        applyDraftToSelectedProfile,
-        persistDraftStore,
-        refreshEffectMeta,
-        previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
-      });
-      alignBindingTargetToSelectedEffect();
-      refreshBindingPanel();
-      refreshAuthoringPaneUi();
-      updateBehaviorSections();
-      requestAnimationFrame(autoPreviewSelectedEffect);
-      return result;
-    }
-
-    function settleSelectedEffectState(){
-      const result = updateEffectSections();
-      requestAnimationFrame(() => {
-        alignBindingTargetToSelectedEffect();
-        refreshBindingPanel();
-        updateBehaviorSections();
-        autoPreviewSelectedEffect();
-      });
-      return result;
-    }
+    const studioSurfaceActivation = createStudioSurfaceActivation({
+      els,
+      surfaces: LAB_EFFECT_SURFACES,
+      liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
+      autoPreviewActions: Object.freeze({
+        playShield: () => playShield(),
+        playShock: () => playShock(),
+        playFlame: () => playFlame(),
+        playElectric: () => playElectric(),
+        applyOrbBase: () => applyOrbBase(),
+        applyOrbTemplate: () => applyOrbTemplate(),
+        applyOrbNod: () => applyOrbNod(),
+        applyOrbLifecycle: () => applyOrbLifecycle(),
+        applyOrbGlobe: () => applyOrbGlobe(),
+        applyWorldGlobe: () => applyWorldGlobe(),
+        applyOrbTeleport: () => applyOrbTeleport(),
+      }),
+      selectedEffectOption,
+      selectedBaseEffect,
+      stopAllStudioEffects,
+      lastSelectedEffectValueRef,
+      draftStore,
+      applyDraftToSelectedProfile,
+      persistDraftStore,
+      refreshEffectMeta,
+      previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
+      alignBindingTargetToSelectedEffect,
+      refreshBindingPanel,
+      updateBehaviorReadout: (effect) => {
+        if (effect === "teleport") updateTeleportBehaviorReadout();
+      },
+      requestAnimationFrame,
+    });
+    const updateBehaviorSections = studioSurfaceActivation.updateBehaviorSections;
+    const updateEffectSections = studioSurfaceActivation.updateEffectSections;
+    const settleSelectedEffectState = studioSurfaceActivation.settleSelectedEffectState;
+    const autoPreviewSelectedEffect = studioSurfaceActivation.autoPreviewSelectedEffect;
+    studioSurfaceActivation.bindPaneEvents();
 
     bootStudioShell({
       effectSelect: els.effectSelect,
@@ -2757,30 +2690,7 @@
     ].forEach((btn) => {
       if (btn) btn.addEventListener("click", updateTeleportBehaviorReadout);
     });
-    const AUTO_PREVIEW_ACTIONS = Object.freeze({
-      playShield,
-      playShock,
-      playFlame,
-      playElectric,
-      applyOrbBase,
-      applyOrbTemplate,
-      applyOrbNod,
-      applyOrbLifecycle,
-      applyOrbGlobe,
-      applyWorldGlobe,
-      applyOrbTeleport,
-    });
     requestAnimationFrame(settleSelectedEffectState);
-
-    function autoPreviewSelectedEffect(){
-      try {
-        const surface = LAB_EFFECT_SURFACES[selectedBaseEffect()] || null;
-        const action = surface && surface.autoPreviewKey ? AUTO_PREVIEW_ACTIONS[surface.autoPreviewKey] : null;
-        if (typeof action === "function") action();
-      } catch (err) {
-        console.error("autoPreviewSelectedEffect failed", err);
-      }
-    }
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){
