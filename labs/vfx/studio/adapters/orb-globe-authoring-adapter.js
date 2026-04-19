@@ -12,7 +12,7 @@ const ORB_GLOBE_FIELDS = Object.freeze([
   "orbGlobeInnerSpeedMax",
   "orbGlobeInnerDriftMin",
   "orbGlobeInnerDriftMax",
-  "orbGlobeInnerPaddingPx",
+  "orbGlobeInnerPaddingRatio",
 ]);
 
 function fixedNumber(value, digits, fallback = 0) {
@@ -33,7 +33,7 @@ export function createOrbGlobeAuthoringAdapter({
   function defaultSettings() {
     return {
       orbGlobeInnerDiameterRatio: fixedNumber(orbGlobeVisualDefaults.innerDiameterRatio, 2),
-      orbGlobeOrbitDiameterRatio: fixedNumber(orbGlobeVisualDefaults.orbitDiameterRatio ?? orbGlobeVisualDefaults.orbitRadiusRatio, 2),
+      orbGlobeOrbitDiameterRatio: fixedNumber(orbGlobeVisualDefaults.orbitDiameterRatio, 2),
       orbGlobeOrbitDistanceRatio: fixedNumber(orbGlobeVisualDefaults.orbitDistanceRatio, 2),
       orbGlobeOrbitDistanceMin: roundedNumber(orbGlobeVisualDefaults.orbitDistanceMinPx),
       orbGlobeOrbitRadiusMin: roundedNumber(orbGlobeVisualDefaults.orbitRadiusMinPx),
@@ -45,7 +45,7 @@ export function createOrbGlobeAuthoringAdapter({
       orbGlobeInnerSpeedMax: roundedNumber(orbGlobeVisualDefaults.innerSpeedMaxPxPerSec),
       orbGlobeInnerDriftMin: fixedNumber(orbGlobeVisualDefaults.innerDriftMin, 2),
       orbGlobeInnerDriftMax: fixedNumber(orbGlobeVisualDefaults.innerDriftMax, 2),
-      orbGlobeInnerPaddingPx: roundedNumber(orbGlobeVisualDefaults.innerPaddingPx),
+      orbGlobeInnerPaddingRatio: fixedNumber(orbGlobeVisualDefaults.innerPaddingRatio, 2),
     };
   }
 
@@ -61,9 +61,6 @@ export function createOrbGlobeAuthoringAdapter({
     ORB_GLOBE_FIELDS.forEach((key) => {
       if (els[key] && settings[key] != null) els[key].value = String(settings[key]);
     });
-    if (els.orbGlobeOrbitDiameterRatio && settings.orbGlobeOrbitRadiusRatio != null && settings.orbGlobeOrbitDiameterRatio == null) {
-      els.orbGlobeOrbitDiameterRatio.value = String(settings.orbGlobeOrbitRadiusRatio);
-    }
     if (typeof applyPreview === "function") applyPreview();
     return true;
   }

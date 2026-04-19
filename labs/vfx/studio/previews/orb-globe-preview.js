@@ -5,6 +5,7 @@ import {
 import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
+  getInnerPaddingPx,
   getInnerGlobeDiameterPx,
   getOrbitDistancePx,
   getOrbitGlobeRadiusPx,
@@ -80,10 +81,6 @@ export function createOrbGlobePreview({ els, clamp }) {
     };
   }
 
-  function readInnerPaddingPx() {
-    return clamp(els.orbGlobeInnerPaddingPx && els.orbGlobeInnerPaddingPx.value, 0, 120);
-  }
-
   function readState() {
     return buildOrbGlobeVisualState({
       innerDiameterRatio: clamp(els.orbGlobeInnerDiameterRatio.value, 0.01, 1),
@@ -91,6 +88,7 @@ export function createOrbGlobePreview({ els, clamp }) {
       orbitDistanceRatio: clamp(els.orbGlobeOrbitDistanceRatio.value, 0.1, 3),
       orbitDistanceMinPx: clamp(els.orbGlobeOrbitDistanceMin.value, 0, 200),
       orbitRadiusMinPx: clamp(els.orbGlobeOrbitRadiusMin.value, 0, 100),
+      innerPaddingRatio: clamp(els.orbGlobeInnerPaddingRatio.value, 0, 0.5),
     });
   }
 
@@ -133,7 +131,7 @@ export function createOrbGlobePreview({ els, clamp }) {
     const orbDiameter = Number(getComputedStyle(els.previewRoot).getPropertyValue("--orb-d").replace("px", "")) || 100;
     const orbRadius = orbDiameter * 0.5;
     const innerD = getInnerGlobeDiameterPx(orbRadius, state);
-    const wallRadius = Math.max(0, orbRadius - (innerD * 0.5) - readInnerPaddingPx());
+    const wallRadius = Math.max(0, orbRadius - (innerD * 0.5) - getInnerPaddingPx(orbRadius, state));
 
     phaseGlobes
       .filter((g) => g.state === "bound")

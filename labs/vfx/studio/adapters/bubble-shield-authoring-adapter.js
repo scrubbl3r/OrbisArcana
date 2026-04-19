@@ -30,17 +30,11 @@ export function createBubbleShieldAuthoringAdapter({
 } = {}) {
   function defaultSettings() {
     const colorRgb = bubbleShieldPresetDefault.colorRgb || {};
-    const diameterRatio = Number.isFinite(Number(bubbleShieldPresetDefault.diameterRatio))
-      ? Number(bubbleShieldPresetDefault.diameterRatio)
-      : (Number(bubbleShieldPresetDefault.diameterPx) || 124) / 100;
-    const strokeWidthRatio = Number.isFinite(Number(bubbleShieldPresetDefault.strokeWidthRatio))
-      ? Number(bubbleShieldPresetDefault.strokeWidthRatio)
-      : (Number(bubbleShieldPresetDefault.strokeWidthPx) || 4) / 100;
     return {
       shieldMs: roundedNumber(clampNumber(bubbleShieldPresetDefault.durationMs, 80, 120000, 8000)),
       shieldAlpha: fixedNumber(clampNumber(bubbleShieldPresetDefault.alpha, 0, 1, 1), 2, 1),
-      shieldDiameterRatio: fixedNumber(clampNumber(diameterRatio, 0.1, 8, 1.24), 2, 1.24),
-      shieldStrokeRatio: fixedNumber(clampNumber(strokeWidthRatio, 0.005, 1, 0.04), 3, 0.04),
+      shieldDiameterRatio: fixedNumber(clampNumber(bubbleShieldPresetDefault.diameterRatio, 0.1, 8, 1.24), 2, 1.24),
+      shieldStrokeRatio: fixedNumber(clampNumber(bubbleShieldPresetDefault.strokeWidthRatio, 0.005, 1, 0.04), 3, 0.04),
       shieldR: roundedNumber(clampNumber(colorRgb.r, 0, 255, 120)),
       shieldG: roundedNumber(clampNumber(colorRgb.g, 0, 255, 210)),
       shieldB: roundedNumber(clampNumber(colorRgb.b, 0, 255, 255)),
@@ -66,12 +60,6 @@ export function createBubbleShieldAuthoringAdapter({
     BUBBLE_SHIELD_FIELDS.forEach(([fieldKey, settingsKey]) => {
       if (els[fieldKey] && settings[settingsKey] != null) els[fieldKey].value = String(settings[settingsKey]);
     });
-    if (els.shieldDiameterRatio && settings.shieldD != null && settings.shieldDiameterRatio == null) {
-      els.shieldDiameterRatio.value = String((Number(settings.shieldD) || 124) / 100);
-    }
-    if (els.shieldStrokeRatio && settings.shieldStroke != null && settings.shieldStrokeRatio == null) {
-      els.shieldStrokeRatio.value = String(((Number(settings.shieldStroke) || 4) / 100).toFixed(3));
-    }
     if (typeof applyGeometry === "function") applyGeometry();
     if (typeof applyShield === "function") applyShield();
     if (typeof applyPulse === "function") applyPulse();

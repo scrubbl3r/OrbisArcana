@@ -103,11 +103,11 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       return [
         "export const SHOCKWAVE_PRESET_DEFAULT = Object.freeze({",
         `  color: Object.freeze({ r: ${Math.round(clampNum(p.shockR, 0, 255, 255))}, g: ${Math.round(clampNum(p.shockG, 0, 255, 255))}, b: ${Math.round(clampNum(p.shockB, 0, 255, 255))}, a: ${clampNum(p.shockA, 0, 1, 0.65).toFixed(2)} }),`,
-        `  startRatio: ${toNum(p.shockStartRatio ?? ((toNum(p.startR, 43)) / 100), 0.43).toFixed(2)},`,
-        `  endRatio: ${toNum(p.shockEndRatio ?? ((toNum(p.endR, 169)) / 100), 1.69).toFixed(2)},`,
+        `  startRatio: ${toNum(p.shockStartRatio, 0.43).toFixed(2)},`,
+        `  endRatio: ${toNum(p.shockEndRatio, 1.69).toFixed(2)},`,
         `  rings: ${Math.round(toNum(p.rings, 2))},`,
         `  spawnMs: ${Math.round(toNum(p.spawn, 105))},`,
-        `  strokeRatio: ${toNum(p.shockStrokeRatio ?? ((toNum(p.stroke, 4)) / 100), 0.04).toFixed(3)},`,
+        `  strokeRatio: ${toNum(p.shockStrokeRatio, 0.04).toFixed(3)},`,
         `  decayMs: ${Math.round(toNum(p.decay, 150))},`,
         "});",
         "",
@@ -117,8 +117,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "export const BUBBLE_SHIELD_PRESET_DEFAULT = Object.freeze({",
         `  durationMs: ${Math.round(toNum(p.shieldMs, 8000))},`,
         `  colorRgb: Object.freeze({ r: ${Math.round(clampNum(p.shieldR, 0, 255, 120))}, g: ${Math.round(clampNum(p.shieldG, 0, 255, 210))}, b: ${Math.round(clampNum(p.shieldB, 0, 255, 255))} }),`,
-        `  diameterRatio: ${toNum(p.shieldDiameterRatio ?? ((toNum(p.shieldD, 124)) / 100), 1.24).toFixed(2)},`,
-        `  strokeWidthRatio: ${toNum(p.shieldStrokeRatio ?? ((toNum(p.shieldStroke, 4)) / 100), 0.04).toFixed(3)},`,
+        `  diameterRatio: ${toNum(p.shieldDiameterRatio, 1.24).toFixed(2)},`,
+        `  strokeWidthRatio: ${toNum(p.shieldStrokeRatio, 0.04).toFixed(3)},`,
         `  alpha: ${toNum(p.shieldAlpha, 1).toFixed(2)},`,
         `  pulseMs: ${Math.round(toNum(p.pulseMs, 80))},`,
         `  pulseMin: ${toNum(p.pulseMin, 0.3).toFixed(2)},`,
@@ -129,7 +129,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "flame-aoe":
       return [
         "export const FLAME_AOE_PRESET_DEFAULT = Object.freeze({",
-        `  diameterRatio: ${toNum(p.flameDiameterRatio ?? ((toNum(p.flameD, 124)) / 100), 1.24).toFixed(2)},`,
+        `  diameterRatio: ${toNum(p.flameDiameterRatio, 1.24).toFixed(2)},`,
         `  durationMs: ${Math.round(toNum(p.flameMs, 10000))},`,
         `  stroke: Object.freeze({ r: ${Math.round(clampNum(p.flameStrokeR, 0, 255, 255))}, g: ${Math.round(clampNum(p.flameStrokeG, 0, 255, 96))}, b: ${Math.round(clampNum(p.flameStrokeB, 0, 255, 24))}, a: ${clampNum(p.flameStrokeA, 0, 1, 1).toFixed(2)} }),`,
         `  fill: Object.freeze({ r: ${Math.round(clampNum(p.flameFillR, 0, 255, 255))}, g: ${Math.round(clampNum(p.flameFillG, 0, 255, 96))}, b: ${Math.round(clampNum(p.flameFillB, 0, 255, 24))}, a: ${clampNum(p.flameFillA, 0, 1, 0.2).toFixed(2)} }),`,
@@ -139,8 +139,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "electric-aoe":
       return [
         "export const ELECTRIC_AOE_PRESET_DEFAULT = Object.freeze({",
-        `  startRatio: ${toNum(p.electricStartRatio ?? ((toNum(p.electricStartR, 80)) / 100), 0.83).toFixed(2)},`,
-        `  endRatio: ${toNum(p.electricEndRatio ?? ((toNum(p.electricEndR, 200)) / 100), 2.0).toFixed(2)},`,
+        `  startRatio: ${toNum(p.electricStartRatio, 0.83).toFixed(2)},`,
+        `  endRatio: ${toNum(p.electricEndRatio, 2.0).toFixed(2)},`,
         `  durationMs: ${Math.round(toNum(p.electricMs, 10000))},`,
         `  nodeCount: ${Math.round(toNum(electricDefaults && electricDefaults.nodeCount, 13))},`,
         `  particleCount: ${Math.round(toNum(electricDefaults && electricDefaults.particleCount, 340))},`,
@@ -200,7 +200,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       return [
         "export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({",
         `  innerDiameterRatio: ${toNum(p.orbGlobeInnerDiameterRatio, 0.2).toFixed(2)},`,
-        `  orbitDiameterRatio: ${toNum(p.orbGlobeOrbitDiameterRatio ?? p.orbGlobeOrbitRadiusRatio, 0.13).toFixed(2)},`,
+        `  orbitDiameterRatio: ${toNum(p.orbGlobeOrbitDiameterRatio, 0.13).toFixed(2)},`,
         `  orbitDistanceRatio: ${toNum(p.orbGlobeOrbitDistanceRatio, 1.10).toFixed(2)},`,
         `  orbitDistanceMinPx: ${Math.round(toNum(p.orbGlobeOrbitDistanceMin, 14))},`,
         `  orbitRadiusMinPx: ${Math.round(toNum(p.orbGlobeOrbitRadiusMin, 5))},`,
@@ -212,10 +212,10 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  innerSpeedMaxPxPerSec: ${Math.round(toNum(p.orbGlobeInnerSpeedMax, 150))},`,
         `  innerDriftMin: ${toNum(p.orbGlobeInnerDriftMin, 0.08).toFixed(2)},`,
         `  innerDriftMax: ${toNum(p.orbGlobeInnerDriftMax, 0.28).toFixed(2)},`,
-        `  innerPaddingRatio: ${toNum(p.orbGlobeInnerPaddingRatio ?? ((toNum(p.orbGlobeInnerPaddingPx, 0)) / 100), 0.06).toFixed(2)},`,
-        `  pickupDiameterRatio: ${toNum(p.orbGlobePickupDiameterRatio ?? ((toNum(p.orbGlobePickupD, 0)) / 100), 0.50).toFixed(2)},`,
-        `  innerStrokeWidthRatio: ${toNum(p.orbGlobeInnerStrokeRatio ?? ((toNum(p.orbGlobeInnerStroke, 0)) / 100), 0.02).toFixed(3)},`,
-        `  releasedStrokeWidthRatio: ${toNum(p.orbGlobeReleasedStrokeRatio ?? ((toNum(p.orbGlobeReleasedStroke, 0)) / 100), 0.02).toFixed(3)},`,
+        `  innerPaddingRatio: ${toNum(p.orbGlobeInnerPaddingRatio, 0.06).toFixed(2)},`,
+        `  pickupDiameterRatio: ${toNum(p.orbGlobePickupDiameterRatio, 0.50).toFixed(2)},`,
+        `  innerStrokeWidthRatio: ${toNum(p.orbGlobeInnerStrokeRatio, 0.02).toFixed(3)},`,
+        `  releasedStrokeWidthRatio: ${toNum(p.orbGlobeReleasedStrokeRatio, 0.02).toFixed(3)},`,
         "});",
         "",
       ].join("\n");
@@ -235,7 +235,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "world-globe": {
       const styleBlock = (name, prefix, fallbacks) => [
         `  ${name}: Object.freeze({`,
-        `    diameterRatio: ${toNum(p[`${prefix}DiameterRatio`] ?? ((toNum(p[`${prefix}Size`], 0)) / 100), fallbacks.diameterRatio).toFixed(2)},`,
+        `    diameterRatio: ${toNum(p[`${prefix}DiameterRatio`], fallbacks.diameterRatio).toFixed(2)},`,
         "    fillRgb: Object.freeze({",
         `      r: ${Math.round(toNum(p[`${prefix}FillR`], 255))},`,
         `      g: ${Math.round(toNum(p[`${prefix}FillG`], 214))},`,
@@ -248,13 +248,13 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `      b: ${Math.round(toNum(p[`${prefix}StrokeB`], 64))},`,
         "    }),",
         `    strokeAlpha: ${toNum(p[`${prefix}StrokeAlpha`], 0.96).toFixed(2)},`,
-        `    strokeWidthRatio: ${toNum(p[`${prefix}StrokeWidthRatio`] ?? ((toNum(p[`${prefix}StrokeWidth`], 0)) / 100), fallbacks.strokeWidthRatio).toFixed(3)},`,
+        `    strokeWidthRatio: ${toNum(p[`${prefix}StrokeWidthRatio`], fallbacks.strokeWidthRatio).toFixed(3)},`,
       ];
       return [
         "export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({",
         ...styleBlock("idle", "worldGlobeIdle", { diameterRatio: 0.25, strokeWidthRatio: 0, fillAlpha: 0.42 }),
-        `    driftRatio: ${toNum(p.worldGlobeIdleDriftRatio ?? ((toNum(p.worldGlobeIdleDrift, 0)) / 100), 0.10).toFixed(2)},`,
-        `    bobRatio: ${toNum(p.worldGlobeIdleBobRatio ?? ((toNum(p.worldGlobeIdleBob, 0)) / 100), 0.07).toFixed(2)},`,
+        `    driftRatio: ${toNum(p.worldGlobeIdleDriftRatio, 0.10).toFixed(2)},`,
+        `    bobRatio: ${toNum(p.worldGlobeIdleBobRatio, 0.07).toFixed(2)},`,
         `    bobHz: ${toNum(p.worldGlobeIdleBobHz, 0.65).toFixed(2)},`,
         `    pulseScale: ${toNum(p.worldGlobeIdlePulseScale, 0.045).toFixed(3)},`,
         `    pulseHz: ${toNum(p.worldGlobeIdlePulseHz, 0.9).toFixed(2)},`,
@@ -317,16 +317,10 @@ export function applyLabThemeDefaults({
     if (els.shieldMs) els.shieldMs.value = String(Math.round(clamp(bubbleShieldPresetDefault.durationMs, 80, 120000)));
     if (els.shieldAlpha) els.shieldAlpha.value = String(clamp(bubbleShieldPresetDefault.alpha, 0, 1).toFixed(2));
     if (els.shieldDiameterRatio) {
-      const ratio = Number.isFinite(Number(bubbleShieldPresetDefault.diameterRatio))
-        ? Number(bubbleShieldPresetDefault.diameterRatio)
-        : (Number(bubbleShieldPresetDefault.diameterPx) || 124) / 100;
-      els.shieldDiameterRatio.value = String(clamp(ratio, 0.1, 8).toFixed(2));
+      els.shieldDiameterRatio.value = String(clamp(bubbleShieldPresetDefault.diameterRatio, 0.1, 8).toFixed(2));
     }
     if (els.shieldStrokeRatio) {
-      const ratio = Number.isFinite(Number(bubbleShieldPresetDefault.strokeWidthRatio))
-        ? Number(bubbleShieldPresetDefault.strokeWidthRatio)
-        : (Number(bubbleShieldPresetDefault.strokeWidthPx) || 4) / 100;
-      els.shieldStrokeRatio.value = String(clamp(ratio, 0.005, 1).toFixed(3));
+      els.shieldStrokeRatio.value = String(clamp(bubbleShieldPresetDefault.strokeWidthRatio, 0.005, 1).toFixed(3));
     }
     if (els.pulseMs) els.pulseMs.value = String(Math.round(clamp(bubbleShieldPresetDefault.pulseMs, 20, 700)));
     if (els.pulseMin) els.pulseMin.value = String(clamp(bubbleShieldPresetDefault.pulseMin, 0, 1).toFixed(2));
@@ -338,25 +332,16 @@ export function applyLabThemeDefaults({
   if (shockwavePresetDefault) {
     const shockColor = shockwavePresetDefault.color || {};
     if (els.shockStartRatio) {
-      const ratio = Number.isFinite(Number(shockwavePresetDefault.startRatio))
-        ? Number(shockwavePresetDefault.startRatio)
-        : (Number(shockwavePresetDefault.startR) || 43) / 100;
-      els.shockStartRatio.value = String(clamp(ratio, 0.01, 10).toFixed(2));
+      els.shockStartRatio.value = String(clamp(shockwavePresetDefault.startRatio, 0.01, 10).toFixed(2));
     }
     if (els.shockEndRatio) {
-      const ratio = Number.isFinite(Number(shockwavePresetDefault.endRatio))
-        ? Number(shockwavePresetDefault.endRatio)
-        : (Number(shockwavePresetDefault.endR) || 169) / 100;
-      els.shockEndRatio.value = String(clamp(ratio, 0.01, 20).toFixed(2));
+      els.shockEndRatio.value = String(clamp(shockwavePresetDefault.endRatio, 0.01, 20).toFixed(2));
     }
     if (els.rings) els.rings.value = String(Math.round(clamp(shockwavePresetDefault.rings, 1, 6)));
     if (els.spawn) els.spawn.value = String(Math.round(clamp(shockwavePresetDefault.spawnMs, 1, 700)));
     if (els.decay) els.decay.value = String(Math.round(clamp(shockwavePresetDefault.decayMs, 40, 2000)));
     if (els.shockStrokeRatio) {
-      const ratio = Number.isFinite(Number(shockwavePresetDefault.strokeRatio))
-        ? Number(shockwavePresetDefault.strokeRatio)
-        : (Number(shockwavePresetDefault.stroke) || 4) / 100;
-      els.shockStrokeRatio.value = String(clamp(ratio, 0.005, 1).toFixed(3));
+      els.shockStrokeRatio.value = String(clamp(shockwavePresetDefault.strokeRatio, 0.005, 1).toFixed(3));
     }
     if (els.shockR) els.shockR.value = String(Math.round(clamp(shockColor.r, 0, 255)));
     if (els.shockG) els.shockG.value = String(Math.round(clamp(shockColor.g, 0, 255)));
@@ -364,10 +349,7 @@ export function applyLabThemeDefaults({
     if (els.shockA) els.shockA.value = String(clamp(shockColor.a, 0, 1).toFixed(2));
   }
   if (els.flameDiameterRatio && flameAoePresetDefault) {
-    const ratio = Number.isFinite(Number(flameAoePresetDefault.diameterRatio))
-      ? Number(flameAoePresetDefault.diameterRatio)
-      : (Number(flameAoePresetDefault.diameter) || 124) / 100;
-    els.flameDiameterRatio.value = String(clamp(ratio, 0.1, 12).toFixed(2));
+    els.flameDiameterRatio.value = String(clamp(flameAoePresetDefault.diameterRatio, 0.1, 12).toFixed(2));
   }
   if (els.flameMs && flameAoePresetDefault) {
     els.flameMs.value = String(Math.round(clamp(flameAoePresetDefault.durationMs, 200, 60000)));
@@ -388,15 +370,9 @@ export function applyLabThemeDefaults({
     els.electricMs.value = String(Math.round(clamp(electricAoePresetDefault.durationMs, 200, 60000)));
   }
   if (els.electricStartRatio && electricAoePresetDefault) {
-    const ratio = Number.isFinite(Number(electricAoePresetDefault.startRatio))
-      ? Number(electricAoePresetDefault.startRatio)
-      : (Number(electricAoePresetDefault.startR) || 83) / 100;
-    els.electricStartRatio.value = String(clamp(ratio, 0.02, 5).toFixed(2));
+    els.electricStartRatio.value = String(clamp(electricAoePresetDefault.startRatio, 0.02, 5).toFixed(2));
   }
   if (els.electricEndRatio && electricAoePresetDefault) {
-    const ratio = Number.isFinite(Number(electricAoePresetDefault.endRatio))
-      ? Number(electricAoePresetDefault.endRatio)
-      : (Number(electricAoePresetDefault.endR) || 200) / 100;
-    els.electricEndRatio.value = String(clamp(ratio, 0.08, 12).toFixed(2));
+    els.electricEndRatio.value = String(clamp(electricAoePresetDefault.endRatio, 0.08, 12).toFixed(2));
   }
 }
