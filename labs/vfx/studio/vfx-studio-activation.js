@@ -43,7 +43,7 @@ export function createStudioSurfaceActivation({
 
     if (els && els.vfxTabBtn) {
       const supportsVfx = supportedPanes.includes("vfx");
-      els.vfxTabBtn.hidden = !supportsVfx;
+      els.vfxTabBtn.hidden = false;
       els.vfxTabBtn.disabled = !supportsVfx;
       els.vfxTabBtn.textContent = getLabStudioPaneLabel("vfx");
       els.vfxTabBtn.classList.toggle("active", supportsVfx && !showBehavior);
@@ -51,7 +51,7 @@ export function createStudioSurfaceActivation({
     }
     if (els && els.behaviorTabBtn) {
       const supportsBehavior = supportedPanes.includes("behavior");
-      els.behaviorTabBtn.hidden = !supportsBehavior;
+      els.behaviorTabBtn.hidden = false;
       els.behaviorTabBtn.disabled = !supportsBehavior;
       els.behaviorTabBtn.textContent = getLabStudioPaneLabel("behavior");
       els.behaviorTabBtn.classList.toggle("active", supportsBehavior && showBehavior);
