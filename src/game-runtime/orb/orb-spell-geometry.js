@@ -117,18 +117,9 @@ export function resolveShockwaveGeometry(
 ) {
   return {
     ...config,
-    startR: resolveOrbRatioOrPx({
-      ratio: config.startRatio,
-      px: config.startR,
-    }, { orbDiameterPx, min: 1 }),
-    endR: resolveOrbRatioOrPx({
-      ratio: config.endRatio,
-      px: config.endR,
-    }, { orbDiameterPx, min: 1 }),
-    stroke: resolveOrbRatioOrPx({
-      ratio: config.strokeRatio,
-      px: config.stroke,
-    }, {
+    startR: resolveOrbRatioPx(config.startRatio, { orbDiameterPx, min: 1 }),
+    endR: resolveOrbRatioPx(config.endRatio, { orbDiameterPx, min: 1 }),
+    stroke: resolveOrbRatioPx(config.strokeRatio, {
       orbDiameterPx,
       min: 1,
       normalize: normalizeStroke,

@@ -98,12 +98,9 @@ export function bootstrapGameStagingRuntime({
           endRatio: VFX_DEFAULTS.shock.endRatio,
           strokeRatio: VFX_DEFAULTS.shock.strokeRatio,
           color: VFX_DEFAULTS.shock.color,
-          startR: VFX_DEFAULTS.shock.startR,
-          endR: VFX_DEFAULTS.shock.endR,
           rings: VFX_DEFAULTS.shock.rings,
           spawnMs: VFX_DEFAULTS.shock.spawnMs,
           decayMs: VFX_DEFAULTS.shock.decayMs,
-          stroke: VFX_DEFAULTS.shock.stroke,
         }, {
           orbDiameterPx: readOrbDiameterPx(),
           normalizeStroke: (value) => evenStroke(value, 1, 64),

@@ -64,7 +64,6 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
       teleport: TELEPORT_BEHAVIOR_DEFAULT,
     },
   };
-  defaults.shock.stroke = evenStroke(defaults.shock.stroke, 2, 20);
   return defaults;
 }
 
