@@ -27,14 +27,6 @@ function scaleOrbLinkedPx(value, orbRadiusPx) {
 }
 
 export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
-  innerDiameterRatio: clampRatio(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerDiameterRatio,
-    0.2
-  ),
-  orbitDiameterRatio: clampRatio(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDiameterRatio,
-    0.13
-  ),
   orbitDistanceOffsetPx: clampPx(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDistanceOffsetPx,
     18
@@ -46,10 +38,6 @@ export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   orbitDistanceMinPx: clampPx(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitDistanceMinPx,
     14
-  ),
-  orbitRadiusMinPx: clampPx(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitRadiusMinPx,
-    5
   ),
   orbitSpeedMin: clampPx(
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitSpeedMin,
@@ -87,36 +75,12 @@ export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerPaddingRatio,
     0.06
   ),
-  pickupDiameterRatio: clampRatio(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.pickupDiameterRatio,
-    0.50
-  ),
-  innerStrokeWidthRatio: clampRatio(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.innerStrokeWidthRatio,
-    0.02
-  ),
-  releasedStrokeWidthRatio: clampRatio(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.releasedStrokeWidthRatio,
-    0.02
-  ),
-  orbitStrokeWidthPx: clampPx(
-    ORB_GLOBE_VISUAL_DEFAULTS_FILE.orbitStrokeWidthPx,
-    2
-  ),
 });
 
 export function buildOrbGlobeVisualState(overrides = null) {
   const source = (overrides && typeof overrides === "object") ? overrides : ORB_GLOBE_VISUAL_DEFAULTS;
 
   return Object.freeze({
-    innerDiameterRatio: clampRatio(
-      source.innerDiameterRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.innerDiameterRatio
-    ),
-    orbitDiameterRatio: clampRatio(
-      source.orbitDiameterRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitDiameterRatio
-    ),
     orbitDistanceOffsetPx: clampPx(
       source.orbitDistanceOffsetPx,
       ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceOffsetPx
@@ -128,10 +92,6 @@ export function buildOrbGlobeVisualState(overrides = null) {
     orbitDistanceMinPx: clampPx(
       source.orbitDistanceMinPx,
       ORB_GLOBE_VISUAL_DEFAULTS.orbitDistanceMinPx
-    ),
-    orbitRadiusMinPx: clampPx(
-      source.orbitRadiusMinPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitRadiusMinPx
     ),
     orbitSpeedMin: clampPx(
       source.orbitSpeedMin,
@@ -169,22 +129,6 @@ export function buildOrbGlobeVisualState(overrides = null) {
       source.innerPaddingRatio,
       ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingRatio
     ),
-    pickupDiameterRatio: clampRatio(
-      source.pickupDiameterRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterRatio
-    ),
-    innerStrokeWidthRatio: clampRatio(
-      source.innerStrokeWidthRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthRatio
-    ),
-    releasedStrokeWidthRatio: clampRatio(
-      source.releasedStrokeWidthRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthRatio
-    ),
-    orbitStrokeWidthPx: clampPx(
-      source.orbitStrokeWidthPx,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitStrokeWidthPx
-    ),
   });
 }
 
@@ -196,52 +140,6 @@ export function applyOrbGlobeVisualCssVars(
   } = {}
 ) {
   if (!root || !orbGlobeVisualState || typeof orbGlobeVisualState !== "object") return;
-
-  root.style.setProperty(
-    "--orb-globe-pickup-d",
-    `${getPickupGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState)}px`
-  );
-  root.style.setProperty(
-    "--orb-globe-inner-stroke",
-    `${getInnerGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState)}px`
-  );
-  root.style.setProperty(
-    "--orb-globe-released-stroke",
-    `${getReleasedGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState)}px`
-  );
-  root.style.setProperty(
-    "--orb-globe-orbit-stroke",
-    `${Math.max(
-      0,
-      scaleOrbLinkedPx(
-        clampPx(
-          orbGlobeVisualState.orbitStrokeWidthPx,
-          ORB_GLOBE_VISUAL_DEFAULTS.orbitStrokeWidthPx
-        ),
-        orbRadiusPx
-      )
-    )}px`
-  );
-}
-
-export function getInnerGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return Number(orbRadiusPx) * clampRatio(
-    orbGlobeVisualState && orbGlobeVisualState.innerDiameterRatio,
-    ORB_GLOBE_VISUAL_DEFAULTS.innerDiameterRatio
-  );
-}
-
-export function getOrbitGlobeRadiusPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return Math.max(
-    scaleOrbLinkedPx(
-      orbGlobeVisualState && orbGlobeVisualState.orbitRadiusMinPx,
-      orbRadiusPx
-    ),
-    Number(orbRadiusPx) * clampRatio(
-      orbGlobeVisualState && orbGlobeVisualState.orbitDiameterRatio,
-      ORB_GLOBE_VISUAL_DEFAULTS.orbitDiameterRatio
-    )
-  );
 }
 
 export function getOrbitDistancePx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
@@ -260,29 +158,8 @@ export function getOrbitDistancePx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_
   );
 }
 
-export function getPickupGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.pickupDiameterRatio, {
-    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
-    min: 0,
-  });
-}
-
 export function getInnerPaddingPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
   return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.innerPaddingRatio, {
-    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
-    min: 0,
-  });
-}
-
-export function getInnerGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthRatio, {
-    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
-    min: 0,
-  });
-}
-
-export function getReleasedGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  return resolveOrbRatioPx(orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthRatio, {
     orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
     min: 0,
   });

@@ -6,10 +6,12 @@ import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
   getInnerPaddingPx,
-  getInnerGlobeDiameterPx,
   getOrbitDistancePx,
-  getOrbitGlobeRadiusPx,
 } from "../../../../src/game-runtime/orb/orb-globe-base-state.js";
+import {
+  buildWorldGlobeVisualState,
+  rgbaFromWorldGlobeColor,
+} from "../../../../src/game-runtime/world/world-globe-state.js";
 
 export function createOrbGlobePreview({ els, clamp }) {
   let samples = [];
@@ -83,13 +85,85 @@ export function createOrbGlobePreview({ els, clamp }) {
 
   function readState() {
     return buildOrbGlobeVisualState({
-      innerDiameterRatio: clamp(els.orbGlobeInnerDiameterRatio.value, 0.01, 1),
-      orbitDiameterRatio: clamp(els.orbGlobeOrbitDiameterRatio.value, 0.01, 1),
       orbitDistanceRatio: clamp(els.orbGlobeOrbitDistanceRatio.value, 0.1, 3),
       orbitDistanceMinPx: clamp(els.orbGlobeOrbitDistanceMin.value, 0, 200),
-      orbitRadiusMinPx: clamp(els.orbGlobeOrbitRadiusMin.value, 0, 100),
       innerPaddingRatio: clamp(els.orbGlobeInnerPaddingRatio.value, 0, 0.5),
     });
+  }
+
+  function readWorldGlobeState(orbDiameterPx) {
+    return buildWorldGlobeVisualState({
+      idle: {
+        diameterRatio: clamp(els.worldGlobeIdleDiameterRatio && els.worldGlobeIdleDiameterRatio.value, 0, 10),
+        fillRgb: {
+          r: clamp(els.worldGlobeIdleFillR && els.worldGlobeIdleFillR.value, 0, 255),
+          g: clamp(els.worldGlobeIdleFillG && els.worldGlobeIdleFillG.value, 0, 255),
+          b: clamp(els.worldGlobeIdleFillB && els.worldGlobeIdleFillB.value, 0, 255),
+        },
+        fillAlpha: clamp(els.worldGlobeIdleFillAlpha && els.worldGlobeIdleFillAlpha.value, 0, 1),
+        strokeRgb: {
+          r: clamp(els.worldGlobeIdleStrokeR && els.worldGlobeIdleStrokeR.value, 0, 255),
+          g: clamp(els.worldGlobeIdleStrokeG && els.worldGlobeIdleStrokeG.value, 0, 255),
+          b: clamp(els.worldGlobeIdleStrokeB && els.worldGlobeIdleStrokeB.value, 0, 255),
+        },
+        strokeAlpha: clamp(els.worldGlobeIdleStrokeAlpha && els.worldGlobeIdleStrokeAlpha.value, 0, 1),
+        strokeWidthRatio: clamp(els.worldGlobeIdleStrokeWidthRatio && els.worldGlobeIdleStrokeWidthRatio.value, 0, 1),
+        driftRatio: clamp(els.worldGlobeIdleDriftRatio && els.worldGlobeIdleDriftRatio.value, 0, 10),
+        bobRatio: clamp(els.worldGlobeIdleBobRatio && els.worldGlobeIdleBobRatio.value, 0, 10),
+        bobHz: clamp(els.worldGlobeIdleBobHz && els.worldGlobeIdleBobHz.value, 0, 20),
+        pulseScale: clamp(els.worldGlobeIdlePulseScale && els.worldGlobeIdlePulseScale.value, 0, 1),
+        pulseHz: clamp(els.worldGlobeIdlePulseHz && els.worldGlobeIdlePulseHz.value, 0, 20),
+      },
+      collected: {
+        diameterRatio: clamp(els.worldGlobeCollectedDiameterRatio && els.worldGlobeCollectedDiameterRatio.value, 0, 10),
+        fillRgb: {
+          r: clamp(els.worldGlobeCollectedFillR && els.worldGlobeCollectedFillR.value, 0, 255),
+          g: clamp(els.worldGlobeCollectedFillG && els.worldGlobeCollectedFillG.value, 0, 255),
+          b: clamp(els.worldGlobeCollectedFillB && els.worldGlobeCollectedFillB.value, 0, 255),
+        },
+        fillAlpha: clamp(els.worldGlobeCollectedFillAlpha && els.worldGlobeCollectedFillAlpha.value, 0, 1),
+        strokeRgb: {
+          r: clamp(els.worldGlobeCollectedStrokeR && els.worldGlobeCollectedStrokeR.value, 0, 255),
+          g: clamp(els.worldGlobeCollectedStrokeG && els.worldGlobeCollectedStrokeG.value, 0, 255),
+          b: clamp(els.worldGlobeCollectedStrokeB && els.worldGlobeCollectedStrokeB.value, 0, 255),
+        },
+        strokeAlpha: clamp(els.worldGlobeCollectedStrokeAlpha && els.worldGlobeCollectedStrokeAlpha.value, 0, 1),
+        strokeWidthRatio: clamp(els.worldGlobeCollectedStrokeWidthRatio && els.worldGlobeCollectedStrokeWidthRatio.value, 0, 1),
+      },
+      consumed: {
+        diameterRatio: clamp(els.worldGlobeConsumedDiameterRatio && els.worldGlobeConsumedDiameterRatio.value, 0, 10),
+        fillRgb: {
+          r: clamp(els.worldGlobeConsumedFillR && els.worldGlobeConsumedFillR.value, 0, 255),
+          g: clamp(els.worldGlobeConsumedFillG && els.worldGlobeConsumedFillG.value, 0, 255),
+          b: clamp(els.worldGlobeConsumedFillB && els.worldGlobeConsumedFillB.value, 0, 255),
+        },
+        fillAlpha: clamp(els.worldGlobeConsumedFillAlpha && els.worldGlobeConsumedFillAlpha.value, 0, 1),
+        strokeRgb: {
+          r: clamp(els.worldGlobeConsumedStrokeR && els.worldGlobeConsumedStrokeR.value, 0, 255),
+          g: clamp(els.worldGlobeConsumedStrokeG && els.worldGlobeConsumedStrokeG.value, 0, 255),
+          b: clamp(els.worldGlobeConsumedStrokeB && els.worldGlobeConsumedStrokeB.value, 0, 255),
+        },
+        strokeAlpha: clamp(els.worldGlobeConsumedStrokeAlpha && els.worldGlobeConsumedStrokeAlpha.value, 0, 1),
+        strokeWidthRatio: clamp(els.worldGlobeConsumedStrokeWidthRatio && els.worldGlobeConsumedStrokeWidthRatio.value, 0, 1),
+      },
+    }, {
+      orbDiameterPx,
+    });
+  }
+
+  function axisStyle(phaseState, axis, { fillAlphaOverride = null } = {}) {
+    const colorMap = {
+      x: { r: 0, g: 100, b: 253 },
+      y: { r: 253, g: 78, b: 0 },
+      z: { r: 253, g: 241, b: 0 },
+    };
+    const rgb = colorMap[String(axis || "").toLowerCase()] || colorMap.y;
+    const fillAlpha = Number.isFinite(Number(fillAlphaOverride)) ? Number(fillAlphaOverride) : Number(phaseState && phaseState.fillAlpha);
+    return {
+      border: `${Number(phaseState && phaseState.strokeWidthPx || 0).toFixed(2)}px solid ${rgbaFromWorldGlobeColor(rgb, Number(phaseState && phaseState.strokeAlpha))}`,
+      background: rgbaFromWorldGlobeColor(rgb, fillAlpha),
+      boxShadow: `0 0 10px ${rgbaFromWorldGlobeColor(rgb, 0.28)}`,
+    };
   }
 
   function randomBetween(min, max) {
@@ -130,7 +204,8 @@ export function createOrbGlobePreview({ els, clamp }) {
 
     const orbDiameter = Number(getComputedStyle(els.previewRoot).getPropertyValue("--orb-d").replace("px", "")) || 100;
     const orbRadius = orbDiameter * 0.5;
-    const innerD = getInnerGlobeDiameterPx(orbRadius, state);
+    const worldState = readWorldGlobeState(orbDiameter);
+    const innerD = Number(worldState.consumed.diameterPx) || 1;
     const wallRadius = Math.max(0, orbRadius - (innerD * 0.5) - getInnerPaddingPx(orbRadius, state));
 
     phaseGlobes
@@ -172,9 +247,10 @@ export function createOrbGlobePreview({ els, clamp }) {
 
     const orbDiameter = Number(getComputedStyle(els.previewRoot).getPropertyValue("--orb-d").replace("px", "")) || 100;
     const orbRadius = orbDiameter * 0.5;
-    const innerD = getInnerGlobeDiameterPx(orbRadius, state);
+    const worldState = readWorldGlobeState(orbDiameter);
+    const innerD = Number(worldState.consumed.diameterPx) || 1;
     const orbitR = getOrbitDistancePx(orbRadius, state);
-    const orbitRadius = getOrbitGlobeRadiusPx(orbRadius, state);
+    const orbitRadius = (Number(worldState.collected.diameterPx) || 1) * 0.5;
     const t = performance.now() / 1000;
     const loaded = phaseGlobes.filter((g) => g.state === "loaded");
     const bound = phaseGlobes.filter((g) => g.state === "bound");
@@ -198,6 +274,10 @@ export function createOrbGlobePreview({ els, clamp }) {
       el.style.left = `${(x - orbitRadius).toFixed(2)}px`;
       el.style.top = `${(y - orbitRadius).toFixed(2)}px`;
       el.style.opacity = `${Math.max(0.55, 1 - (index * 0.08)).toFixed(3)}`;
+      const style = axisStyle(worldState.collected, globe.axisKey || "y");
+      el.style.border = style.border;
+      el.style.background = style.background;
+      el.style.boxShadow = style.boxShadow;
       els.orbGlobePreviewLayer.appendChild(el);
       samples.push(el);
     });
@@ -212,6 +292,10 @@ export function createOrbGlobePreview({ els, clamp }) {
       el.style.left = `${(orbRadius + globe.innerX - innerD * 0.5).toFixed(2)}px`;
       el.style.top = `${(orbRadius + globe.innerY - innerD * 0.5).toFixed(2)}px`;
       el.style.opacity = "1";
+      const style = axisStyle(worldState.consumed, globe.axisKey || "y", { fillAlphaOverride: 1 });
+      el.style.border = style.border;
+      el.style.background = style.background;
+      el.style.boxShadow = style.boxShadow;
       els.orbInterior.appendChild(el);
       samples.push(el);
     });
@@ -267,6 +351,7 @@ export function createOrbGlobePreview({ els, clamp }) {
       state: "loaded",
       phase: Math.random() * Math.PI * 2,
       axis: randomAxis(),
+      axisKey: ["x", "y", "z"][Math.floor(Math.random() * 3)] || "y",
       direction: Math.random() < 0.5 ? -1 : 1,
       drift: randomBetween(driftRange.min, driftRange.max),
       driftDirection: Math.random() < 0.5 ? -1 : 1,
@@ -300,11 +385,8 @@ export function createOrbGlobePreview({ els, clamp }) {
     if (els.orbGlobeBindBtn) els.orbGlobeBindBtn.addEventListener("click", bindGlobe);
     if (els.orbGlobeClearBtn) els.orbGlobeClearBtn.addEventListener("click", clearPhaseGlobes);
     [
-      els.orbGlobeApplyInnerDiameterRatioBtn,
-      els.orbGlobeApplyOrbitDiameterRatioBtn,
       els.orbGlobeApplyOrbitDistanceRatioBtn,
       els.orbGlobeApplyOrbitDistanceMinBtn,
-      els.orbGlobeApplyOrbitRadiusMinBtn,
       els.orbGlobeApplySpeedMinBtn,
       els.orbGlobeApplySpeedMaxBtn,
       els.orbGlobeApplyDriftMinBtn,

@@ -190,6 +190,9 @@ export function bootstrapStagingRuntimeContext({
       orbDiameterPx: getOrbFxRadiusPx() * 2,
     }),
   });
+  const orbFxWorldGlobeVisualState = buildWorldGlobeVisualState(null, {
+    orbDiameterPx: getOrbFxRadiusPx() * 2,
+  });
 
   const orbSystemsBundle = createOrbSystemsBundle({
     createOrbSystem,
@@ -203,6 +206,7 @@ export function bootstrapStagingRuntimeContext({
       orbRadiusPx: getOrbFxRadiusPx(),
       getOrbRadiusPx: getOrbFxRadiusPx,
       getAxisColor01: (axis) => axisToColor01(axis),
+      worldGlobeVisualState: orbFxWorldGlobeVisualState,
     },
   });
   const orbSystem = orbSystemsBundle && orbSystemsBundle.orbSystem;

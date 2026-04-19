@@ -7,11 +7,12 @@ import {
 } from "../../contracts/events.js";
 import {
   getInnerPaddingPx,
-  getInnerGlobeDiameterPx,
   getOrbitDistancePx,
-  getOrbitGlobeRadiusPx,
   ORB_GLOBE_VISUAL_DEFAULTS,
 } from "./orb-globe-base-state.js?v=20260418a";
+import {
+  WORLD_GLOBE_VISUAL_DEFAULTS,
+} from "../world/world-globe-state.js?v=20260418a";
 
 export function createOrbGlobesRuntime({
   eventBus,
@@ -22,6 +23,7 @@ export function createOrbGlobesRuntime({
   getOrbRadiusPx = null,
   getAxisColor01,
   globeVisualState = ORB_GLOBE_VISUAL_DEFAULTS,
+  worldGlobeVisualState = WORLD_GLOBE_VISUAL_DEFAULTS,
 }) {
   if (!eventBus || typeof eventBus.on !== 'function') {
     throw new Error('createOrbGlobesRuntime requires eventBus.on');
@@ -130,6 +132,36 @@ export function createOrbGlobesRuntime({
     return getInnerPaddingPx(readOrbRadiusPx(), globeVisualState || ORB_GLOBE_VISUAL_DEFAULTS);
   }
 
+  function collectedVisualState() {
+    return (worldGlobeVisualState && worldGlobeVisualState.collected) || WORLD_GLOBE_VISUAL_DEFAULTS.collected;
+  }
+
+  function consumedVisualState() {
+    return (worldGlobeVisualState && worldGlobeVisualState.consumed) || WORLD_GLOBE_VISUAL_DEFAULTS.consumed;
+  }
+
+  function collectedGlobeRadiusPx() {
+    return Math.max(0.5, Number(collectedVisualState().diameterPx) || 1) * 0.5;
+  }
+
+  function consumedGlobeRadiusPx() {
+    return Math.max(0.5, Number(consumedVisualState().diameterPx) || 1) * 0.5;
+  }
+
+  function phaseAxisStyle(phaseState, axis, { fillAlphaOverride = null } = {}) {
+    const axisRgb01 = axisColorProvider(axis);
+    const fillAlpha = Number.isFinite(Number(fillAlphaOverride))
+      ? Number(fillAlphaOverride)
+      : Number(phaseState && phaseState.fillAlpha);
+    const strokeAlpha = Number(phaseState && phaseState.strokeAlpha);
+    const strokeWidthPx = Math.max(0, Number(phaseState && phaseState.strokeWidthPx) || 0);
+    return {
+      border: `${strokeWidthPx.toFixed(2)}px solid ${color01ToRgba(axisRgb01, strokeAlpha)}`,
+      background: color01ToRgba(axisRgb01, fillAlpha),
+      boxShadow: `0 0 10px ${color01ToRgba(axisRgb01, 0.28)}`,
+    };
+  }
+
   function rotateVector(vx, vy, angle) {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
@@ -144,10 +176,6 @@ export function createOrbGlobesRuntime({
     const g = Math.round(clamp01(c && c.g) * 255);
     const b = Math.round(clamp01(c && c.b) * 255);
     return `rgba(${r},${g},${b},${clamp01(a).toFixed(3)})`;
-  }
-
-  function innerGlobeDiameterPx() {
-    return getInnerGlobeDiameterPx(readOrbRadiusPx(), globeVisualState);
   }
 
   function clearInnerGlobes() {
@@ -191,14 +219,15 @@ export function createOrbGlobesRuntime({
       p.el.style.top = `${(orbRadius + p.y - p.r).toFixed(2)}px`;
       p.el.style.opacity = "1";
       if (p.fill) p.el.style.backgroundColor = p.fill;
+      if (p.border) p.el.style.border = p.border;
       if (p.glow) p.el.style.boxShadow = p.glow;
     }
   }
 
   function spawnInnerGlobe(payload = {}) {
     const axis = String(payload.axis || "").toLowerCase();
-    const color = axis ? axisColor(axis, { fillAlpha: 1 }) : null;
-    const r = innerGlobeDiameterPx() * 0.5;
+    const style = phaseAxisStyle(consumedVisualState(), axis, { fillAlphaOverride: 1 });
+    const r = consumedGlobeRadiusPx();
     const speeds = innerSpeedRange();
     const drifts = innerDriftRange();
     const speed = randBetween(speeds.min, speeds.max);
@@ -219,8 +248,9 @@ export function createOrbGlobesRuntime({
       driftMin: drifts.min,
       driftMax: drifts.max,
       r,
-      fill: color ? color.fill : "",
-      glow: color ? color.glow : "",
+      fill: style.background,
+      border: style.border,
+      glow: style.boxShadow,
       el: null,
     });
     renderInnerGlobes();
@@ -250,7 +280,7 @@ export function createOrbGlobesRuntime({
     if (!g && !s) return;
     const existing = inner.particles.find((p) => (g && p.globeId === g) || (s && p.slot === s));
     const a = String(axis || "").toLowerCase() || (existing && existing.axis) || randomOrbitAxis();
-    const color = axisColor(a, { fillAlpha: 1 });
+    const style = phaseAxisStyle(consumedVisualState(), a, { fillAlphaOverride: 1 });
     if (existing) {
       existing.globeId = g || existing.globeId || "";
       existing.emitterId = String(emitterId || existing.emitterId || "");
@@ -259,8 +289,9 @@ export function createOrbGlobesRuntime({
       existing.slot = s || existing.slot || "";
       existing.wordId = String(wordId || existing.wordId || "");
       existing.spellId = String(wordId || existing.spellId || "");
-      existing.fill = color.fill;
-      existing.glow = color.glow;
+      existing.fill = style.background;
+      existing.border = style.border;
+      existing.glow = style.boxShadow;
       renderInnerGlobes();
       return;
     }
@@ -286,19 +317,6 @@ export function createOrbGlobesRuntime({
     renderInnerGlobes();
   }
 
-  function axisColor(axis, { fillAlpha = 0.28 } = {}) {
-    const c = axisColorProvider(axis);
-    const stroke = color01ToRgba(c, 0.98);
-    const fill = color01ToRgba(c, fillAlpha);
-    const glowOuter = color01ToRgba(c, 0.30);
-    const glowInner = color01ToRgba(c, 0.34);
-    return {
-      stroke,
-      fill,
-      glow: `0 0 12px ${glowOuter}, inset 0 0 0 1px ${glowInner}`,
-    };
-  }
-
   function upsertOrbitingGlobe({ axis, slot, wordId, globeId, emitterId, state }) {
     const s = String(slot || "").toUpperCase();
     const g = String(globeId || "");
@@ -307,7 +325,7 @@ export function createOrbGlobesRuntime({
     const existing = orbiting.particles.find((p) => (g && p.globeId === g) || (s && p.slot === s));
     const a = String(axis || "").toLowerCase() || (existing && existing.axis) || randomOrbitAxis();
     if (!a) return;
-    const color = axisColor(a);
+    const style = phaseAxisStyle(collectedVisualState(), a);
     if (existing) {
       existing.axis = a;
       existing.slot = s;
@@ -316,9 +334,9 @@ export function createOrbGlobesRuntime({
       existing.state = String(state || existing.state || "loaded");
       existing.wordId = tokenId;
       existing.spellId = tokenId;
-      existing.stroke = color.stroke;
-      existing.fill = color.fill;
-      existing.glow = color.glow;
+      existing.border = style.border;
+      existing.fill = style.background;
+      existing.glow = style.boxShadow;
       return;
     }
     const speeds = orbitSpeedRange();
@@ -338,11 +356,11 @@ export function createOrbGlobesRuntime({
       orbitPlane: randomOrbitPlane(),
       drift: randBetween(drifts.min, drifts.max),
       driftDirection: Math.random() < 0.5 ? -1 : 1,
-      radius: getOrbitGlobeRadiusPx(readOrbRadiusPx(), globeVisualState),
+      radius: collectedGlobeRadiusPx(),
       orbitR: getOrbitDistancePx(readOrbRadiusPx(), globeVisualState),
-      stroke: color.stroke,
-      fill: color.fill,
-      glow: color.glow,
+      border: style.border,
+      fill: style.background,
+      glow: style.boxShadow,
       el: null,
     });
     tickOrbitingGlobes(performance.now());
@@ -387,18 +405,15 @@ export function createOrbGlobesRuntime({
     const cx = (stageRect.width || 0) * 0.5;
     const cy = Number(getOrbScreenY()) || 0;
     for (const p of orbiting.particles) {
-      const liveColor = axisColor(p.axis);
-      p.radius = getOrbitGlobeRadiusPx(currentOrbRadius, globeVisualState);
+      const liveStyle = phaseAxisStyle(collectedVisualState(), p.axis);
+      p.radius = collectedGlobeRadiusPx();
       p.orbitR = getOrbitDistancePx(currentOrbRadius, globeVisualState);
-      p.stroke = liveColor.stroke;
-      p.fill = liveColor.fill;
-      p.glow = liveColor.glow;
+      p.border = liveStyle.border;
+      p.fill = liveStyle.background;
+      p.glow = liveStyle.boxShadow;
       if (!p.el) {
         const el = document.createElement("div");
         el.className = "orbitGlobe";
-        el.style.borderColor = p.stroke;
-        el.style.backgroundColor = p.fill;
-        el.style.boxShadow = p.glow;
         p.el = el;
         stageEl.appendChild(el);
       }
@@ -412,7 +427,7 @@ export function createOrbGlobesRuntime({
       p.el.style.left = `${(x - r).toFixed(2)}px`;
       p.el.style.top = `${(y - r).toFixed(2)}px`;
       p.el.style.opacity = clamp01(proj.opacity).toFixed(3);
-      p.el.style.borderColor = p.stroke;
+      p.el.style.border = p.border;
       p.el.style.backgroundColor = p.fill;
       p.el.style.boxShadow = p.glow;
       p.el.style.transform = `scale(${proj.scale.toFixed(3)})`;
@@ -521,8 +536,9 @@ export function createOrbGlobesRuntime({
         sinAmp: 10 + (fxRand01() * 22),
         sinFreq: 6 + (fxRand01() * 8),
         phase: fxRand01() * Math.PI * 2,
-        r0: Number(p.r) || innerGlobeDiameterPx() * 0.5,
-        r1: Number(p.r) || innerGlobeDiameterPx() * 0.5,
+        r0: Number(p.r) || consumedGlobeRadiusPx(),
+        r1: Number(p.r) || consumedGlobeRadiusPx(),
+        axis: String(p.axis || ""),
         el: null,
       });
     }
@@ -556,6 +572,10 @@ export function createOrbGlobesRuntime({
       p.el.style.left = `${(x - r).toFixed(2)}px`;
       p.el.style.top = `${(y - r).toFixed(2)}px`;
       p.el.style.opacity = clamp01(fade01).toFixed(3);
+      const releasedStyle = phaseAxisStyle(consumedVisualState(), p.axis || "y", { fillAlphaOverride: Number(consumedVisualState().fillAlpha) });
+      p.el.style.border = releasedStyle.border;
+      p.el.style.background = releasedStyle.background;
+      p.el.style.boxShadow = releasedStyle.boxShadow;
 
       if (ageMs >= p.ttlMs) {
         try { p.el.remove(); } catch (_) {}

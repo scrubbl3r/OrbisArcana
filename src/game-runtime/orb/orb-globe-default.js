@@ -1,9 +1,6 @@
 export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
-  innerDiameterRatio: 0.45,
-  orbitDiameterRatio: 0.15,
   orbitDistanceRatio: 1.70,
   orbitDistanceMinPx: 3,
-  orbitRadiusMinPx: 5,
   orbitSpeedMin: 25.00,
   orbitSpeedMax: 30.00,
   orbitDriftMin: 0.50,
@@ -13,7 +10,4 @@ export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   innerDriftMin: 0.10,
   innerDriftMax: 0.50,
   innerPaddingRatio: 0.22,
-  pickupDiameterRatio: 0.50,
-  innerStrokeWidthRatio: 0.020,
-  releasedStrokeWidthRatio: 0.020,
 });

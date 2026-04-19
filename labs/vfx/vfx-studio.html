@@ -534,6 +534,7 @@
       border-radius:999px;
       background: rgba(255,214,64,1);
       box-shadow: inset 0 0 0 var(--orb-globe-inner-stroke) rgba(255,214,64,0.96), 0 0 6px rgba(255,214,64,0.22);
+      box-sizing:border-box;
       pointer-events:none;
     }
     .releasedGlobe{
@@ -542,6 +543,7 @@
       border: var(--orb-globe-released-stroke) solid rgba(255,214,64,0.96);
       background: rgba(255,214,64,0.42);
       box-shadow: inset 0 0 0 1px rgba(255,239,168,0.38), 0 0 10px rgba(255,214,64,0.28);
+      box-sizing:border-box;
       pointer-events:none;
     }
     .orbitGlobe{
@@ -550,6 +552,7 @@
       border: var(--orb-globe-orbit-stroke) solid rgba(255,255,255,0.35);
       background: rgba(255,255,255,0.10);
       box-shadow:none;
+      box-sizing:border-box;
       pointer-events:none;
     }
     .pickupGlobe{
@@ -1174,16 +1177,6 @@
         </div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
-            <label for="orbGlobeInnerDiameterRatio">inner-diameter ratio</label>
-            <input id="orbGlobeInnerDiameterRatio" class="paramFieldInput" type="number" min="0.05" max="0.60" value="0.20" step="0.01" />
-            <button id="orbGlobeApplyInnerDiameterRatioBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbGlobeOrbitDiameterRatio">orbit-globe diameter ratio</label>
-            <input id="orbGlobeOrbitDiameterRatio" class="paramFieldInput" type="number" min="0.05" max="0.40" value="0.13" step="0.01" />
-            <button id="orbGlobeApplyOrbitDiameterRatioBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
             <label for="orbGlobeOrbitDistanceRatio">Orbit distance ratio</label>
             <input id="orbGlobeOrbitDistanceRatio" class="paramFieldInput" type="number" min="0.50" max="2.00" value="1.10" step="0.01" />
             <button id="orbGlobeApplyOrbitDistanceRatioBtn" class="toolBtn" type="button">Apply</button>
@@ -1192,11 +1185,6 @@
             <label for="orbGlobeOrbitDistanceMin">Orbit distance min px</label>
             <input id="orbGlobeOrbitDistanceMin" class="paramFieldInput" type="number" min="0" max="60" value="14" step="1" />
             <button id="orbGlobeApplyOrbitDistanceMinBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbGlobeOrbitRadiusMin">Orbit radius min px</label>
-            <input id="orbGlobeOrbitRadiusMin" class="paramFieldInput" type="number" min="0" max="30" value="5" step="1" />
-            <button id="orbGlobeApplyOrbitRadiusMinBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
             <label for="orbGlobeSpeedMin">Orbit speed min</label>
@@ -1651,16 +1639,10 @@
       orbNodApplyOscillationSpeedBtn: $("orbNodApplyOscillationSpeedBtn"),
       orbNodOscillationCount: $("orbNodOscillationCount"),
       orbNodApplyOscillationCountBtn: $("orbNodApplyOscillationCountBtn"),
-      orbGlobeInnerDiameterRatio: $("orbGlobeInnerDiameterRatio"),
-      orbGlobeApplyInnerDiameterRatioBtn: $("orbGlobeApplyInnerDiameterRatioBtn"),
-      orbGlobeOrbitDiameterRatio: $("orbGlobeOrbitDiameterRatio"),
-      orbGlobeApplyOrbitDiameterRatioBtn: $("orbGlobeApplyOrbitDiameterRatioBtn"),
       orbGlobeOrbitDistanceRatio: $("orbGlobeOrbitDistanceRatio"),
       orbGlobeApplyOrbitDistanceRatioBtn: $("orbGlobeApplyOrbitDistanceRatioBtn"),
       orbGlobeOrbitDistanceMin: $("orbGlobeOrbitDistanceMin"),
       orbGlobeApplyOrbitDistanceMinBtn: $("orbGlobeApplyOrbitDistanceMinBtn"),
-      orbGlobeOrbitRadiusMin: $("orbGlobeOrbitRadiusMin"),
-      orbGlobeApplyOrbitRadiusMinBtn: $("orbGlobeApplyOrbitRadiusMinBtn"),
       orbGlobeSpeedMin: $("orbGlobeSpeedMin"),
       orbGlobeApplySpeedMinBtn: $("orbGlobeApplySpeedMinBtn"),
       orbGlobeSpeedMax: $("orbGlobeSpeedMax"),

@@ -1,9 +1,6 @@
 const ORB_GLOBE_FIELDS = Object.freeze([
-  "orbGlobeInnerDiameterRatio",
-  "orbGlobeOrbitDiameterRatio",
   "orbGlobeOrbitDistanceRatio",
   "orbGlobeOrbitDistanceMin",
-  "orbGlobeOrbitRadiusMin",
   "orbGlobeSpeedMin",
   "orbGlobeSpeedMax",
   "orbGlobeDriftMin",
@@ -32,11 +29,8 @@ export function createOrbGlobeAuthoringAdapter({
 } = {}) {
   function defaultSettings() {
     return {
-      orbGlobeInnerDiameterRatio: fixedNumber(orbGlobeVisualDefaults.innerDiameterRatio, 2),
-      orbGlobeOrbitDiameterRatio: fixedNumber(orbGlobeVisualDefaults.orbitDiameterRatio, 2),
       orbGlobeOrbitDistanceRatio: fixedNumber(orbGlobeVisualDefaults.orbitDistanceRatio, 2),
       orbGlobeOrbitDistanceMin: roundedNumber(orbGlobeVisualDefaults.orbitDistanceMinPx),
-      orbGlobeOrbitRadiusMin: roundedNumber(orbGlobeVisualDefaults.orbitRadiusMinPx),
       orbGlobeSpeedMin: fixedNumber(orbGlobeVisualDefaults.orbitSpeedMin, 2),
       orbGlobeSpeedMax: fixedNumber(orbGlobeVisualDefaults.orbitSpeedMax, 2),
       orbGlobeDriftMin: fixedNumber(orbGlobeVisualDefaults.orbitDriftMin, 2),

@@ -199,11 +199,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "orb-globe":
       return [
         "export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({",
-        `  innerDiameterRatio: ${toNum(p.orbGlobeInnerDiameterRatio, 0.2).toFixed(2)},`,
-        `  orbitDiameterRatio: ${toNum(p.orbGlobeOrbitDiameterRatio, 0.13).toFixed(2)},`,
         `  orbitDistanceRatio: ${toNum(p.orbGlobeOrbitDistanceRatio, 1.10).toFixed(2)},`,
         `  orbitDistanceMinPx: ${Math.round(toNum(p.orbGlobeOrbitDistanceMin, 14))},`,
-        `  orbitRadiusMinPx: ${Math.round(toNum(p.orbGlobeOrbitRadiusMin, 5))},`,
         `  orbitSpeedMin: ${toNum(p.orbGlobeSpeedMin, 1.8).toFixed(2)},`,
         `  orbitSpeedMax: ${toNum(p.orbGlobeSpeedMax, 2.45).toFixed(2)},`,
         `  orbitDriftMin: ${toNum(p.orbGlobeDriftMin, 0.03).toFixed(2)},`,
@@ -213,9 +210,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  innerDriftMin: ${toNum(p.orbGlobeInnerDriftMin, 0.08).toFixed(2)},`,
         `  innerDriftMax: ${toNum(p.orbGlobeInnerDriftMax, 0.28).toFixed(2)},`,
         `  innerPaddingRatio: ${toNum(p.orbGlobeInnerPaddingRatio, 0.06).toFixed(2)},`,
-        `  pickupDiameterRatio: ${toNum(p.orbGlobePickupDiameterRatio, 0.50).toFixed(2)},`,
-        `  innerStrokeWidthRatio: ${toNum(p.orbGlobeInnerStrokeRatio, 0.02).toFixed(3)},`,
-        `  releasedStrokeWidthRatio: ${toNum(p.orbGlobeReleasedStrokeRatio, 0.02).toFixed(3)},`,
         "});",
         "",
       ].join("\n");
