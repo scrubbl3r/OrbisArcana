@@ -32,7 +32,7 @@ export const RUNTIME_WORDS = Object.freeze([
     slot: "LR",
     intent: "spell.azerith",
     cooldownMs: 900,
-    castActionId: "bubble_shield",
+    castActionId: "aoe_flame",
   },
 ]);
 

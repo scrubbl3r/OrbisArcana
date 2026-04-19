@@ -15,7 +15,7 @@ export const INTERACTION_GRAPH_V2 = {
     wake_main_words: ["echovar", "electrum", "pyro"],
     electrum_chain_words: ["rota"],
     wake_are_kay_nah_words: ["pyro"],
-    pyro_voice_chain_words: ["sanctum", "rota"],
+    pyro_voice_chain_words: ["sanctum"],
   },
   rules: [
     {
@@ -56,20 +56,13 @@ export const INTERACTION_GRAPH_V2 = {
       id: "pyro_voice_chain",
       on: { word: "pyro" },
       requires: "wake.are_kay_nah",
-      open: { id: "chain.pyro_voice", words: ["sanctum", "rota"], ttlMs: 1500 },
+      open: { id: "chain.pyro_voice", words: ["sanctum"], ttlMs: 1500 },
     },
     {
       id: "pyro_sanctum_cast",
       on: { word: "sanctum" },
       requires: "chain.pyro_voice",
       trigger: { spell: "bubble_shield" },
-      grace: {},
-    },
-    {
-      id: "pyro_rota_cast",
-      on: { word: "rota" },
-      requires: "chain.pyro_voice",
-      trigger: { spell: "aoe_flame" },
       grace: {},
     },
     // PYRO AOE CHAIN
@@ -88,7 +81,7 @@ export const INTERACTION_GRAPH_V2 = {
       id: "spin_y_pyro_azerith_bind_fb",
       on: { word: "azerith" },
       requires: "chain.spin_y_loaded",
-      bind: { spell: "bubble_shield", slot: "FB" },
+      bind: { spell: "aoe_flame", slot: "FB" },
     },
     // SHOCKWAVE
     {

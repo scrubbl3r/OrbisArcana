@@ -30,9 +30,9 @@ export const WORD_VFX_BINDINGS = Object.freeze([
     wordId: "azerith",
     spellId: "azerith",
     primary: Object.freeze({
-      castActionId: "bubble_shield",
-      effectId: "spell.shield_bubble",
-      presetId: "preset.bubble_shield.default",
+      castActionId: "aoe_flame",
+      effectId: "spell.aoe_flame",
+      presetId: "preset.flame_aoe.default",
     }),
   }),
   Object.freeze({
