@@ -11,6 +11,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 const studioHtmlPath = path.join(repoRoot, "labs/vfx/vfx-studio.html");
+const studioPreviewRegistryPath = path.join(repoRoot, "labs/vfx/studio/vfx-studio-preview-registry.js");
 const previewDir = path.join(repoRoot, "labs/vfx/studio/previews");
 const adapterDir = path.join(repoRoot, "labs/vfx/studio/adapters");
 
@@ -56,6 +57,7 @@ const surfaces = createLabEffectSurfaces({
 });
 
 const studioHtml = readText(studioHtmlPath);
+const studioPreviewRegistry = fs.existsSync(studioPreviewRegistryPath) ? readText(studioPreviewRegistryPath) : "";
 const htmlEffectSections = new Set(collectMatches(studioHtml, /data-effect="([^"]+)"/g));
 const htmlBehaviorSections = new Set(collectMatches(studioHtml, /data-behavior-effect="([^"]+)"/g));
 const htmlPreviewRoots = new Set(collectMatches(
@@ -66,10 +68,16 @@ const htmlBaseEffectOptions = new Set(collectMatches(
   studioHtml,
   /<option[^>]+data-base-effect="([^"]+)"/g
 ));
-const importedPreviewFiles = new Set(collectMatches(
-  studioHtml,
-  /from "\.\/studio\/previews\/([^"]+\.js)(?:\?[^"]*)?"/g
-));
+const importedPreviewFiles = new Set([
+  ...collectMatches(
+    studioHtml,
+    /from "\.\/studio\/previews\/([^"]+\.js)(?:\?[^"]*)?"/g
+  ),
+  ...collectMatches(
+    studioPreviewRegistry,
+    /from "\.\/previews\/([^"]+\.js)(?:\?[^"]*)?"/g
+  ),
+]);
 const importedAdapterFiles = new Set(collectMatches(
   studioHtml,
   /from "\.\/studio\/adapters\/([^"]+\.js)(?:\?[^"]*)?"/g
@@ -129,7 +137,7 @@ for (const [baseEffect, surface] of Object.entries(surfaces)) {
       addError(`${baseEffect}: previewFile does not exist: ${surface.previewFile}`);
     }
     if (!importedPreviewFiles.has(surface.previewFile)) {
-      addError(`${baseEffect}: previewFile is not imported by vfx-studio.html: ${surface.previewFile}`);
+      addError(`${baseEffect}: previewFile is not imported by vfx-studio.html or vfx-studio-preview-registry.js: ${surface.previewFile}`);
     }
   }
   if (surface.previewRootKey && !hasSection) {
@@ -218,7 +226,7 @@ for (const baseEffect of htmlBaseEffectOptions) {
 }
 
 for (const fileName of previewFiles) {
-  if (!importedPreviewFiles.has(fileName)) addWarning(`preview file is not imported by vfx-studio.html: ${fileName}`);
+  if (!importedPreviewFiles.has(fileName)) addWarning(`preview file is not imported by vfx-studio.html or vfx-studio-preview-registry.js: ${fileName}`);
 }
 
 for (const fileName of adapterFiles) {

@@ -1336,22 +1336,13 @@
     import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
-    import { createShieldPreview } from "./studio/previews/shield-preview.js?v=20260418c";
-    import { createShockwavePreview } from "./studio/previews/shockwave-preview.js?v=20260418a";
-    import { createFlameAoePreview } from "./studio/previews/flame-aoe-preview.js?v=20260418a";
-    import { createElectricAoePreview } from "./studio/previews/electric-aoe-preview.js?v=20260418a";
-    import { createOrbBasePreview } from "./studio/previews/orb-base-preview.js?v=20260418a";
-    import { createOrbTemplatePreview } from "./studio/previews/orb-template-preview.js?v=20260414-nod";
-    import { createOrbLifecyclePreview } from "./studio/previews/orb-lifecycle-preview.js?v=20260418a";
-    import { createOrbGlobePreview } from "./studio/previews/orb-globe-preview.js?v=20260416g";
-    import { createWorldGlobePreview } from "./studio/previews/world-globe-preview.js?v=20260418a";
-    import { createOrbTeleportPreview } from "./studio/previews/orb-teleport-preview.js?v=20260417b";
     import {
       bootStudioShell,
       refreshEffectMeta as refreshEffectMetaHelper,
       refreshLockUi as refreshLockUiHelper,
       toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
     } from "./studio/vfx-studio-shell.js?v=20260417a";
+    import { createStudioPreviewRegistry } from "./studio/vfx-studio-preview-registry.js?v=20260419a";
     import {
       buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
       buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
@@ -2433,42 +2424,6 @@
     }
     applyGeometryVars();
 
-    // =========================================================================
-    // Shield (pulse only while ON)
-    // =========================================================================
-    const shieldPreview = createShieldPreview({
-      els: shieldPreviewEls,
-      GEOM,
-      clamp,
-      evenPx,
-      setVar: createScopedVarSetter(els.shieldPreviewRoot),
-    });
-    const applyShieldGeometry = shieldPreview.applyGeometry;
-    const applyShield = shieldPreview.apply;
-    const applyPulse = shieldPreview.applyPulse;
-    const shieldOffNow = shieldPreview.clear;
-    const playShield = shieldPreview.play;
-
-    function stopAllStudioEffects(){
-      shieldOffNow();
-      clearShock();
-      clearFlame();
-      clearElectric();
-      clearOrbTemplate();
-      clearOrbNod();
-      clearOrbLifecycle();
-      clearOrbGlobe();
-      clearWorldGlobe();
-      clearOrbTeleport();
-      Object.values(PREVIEW_ROOTS_BY_EFFECT).forEach((root) => {
-        if (!root || typeof root.setAttribute !== "function") return;
-        root.setAttribute("aria-hidden", "true");
-        root.toggleAttribute("hidden", true);
-      });
-    }
-
-    shieldPreview.wire();
-
     function readTeleportBehaviorPreviewConfig(){
       return authoringAdapterForBaseEffect("teleport").readBehaviorPreviewConfig(els);
     }
@@ -2476,6 +2431,81 @@
     function updateTeleportBehaviorReadout(){
       authoringAdapterForBaseEffect("teleport").updateBehaviorReadout(els);
     }
+    const studioPreviewRegistry = createStudioPreviewRegistry({
+      els,
+      GEOM,
+      clamp,
+      evenPx,
+      clampByte,
+      createScopedVarSetter,
+      previewEls: Object.freeze({
+        shield: shieldPreviewEls,
+        shock: shockPreviewEls,
+        flame: flamePreviewEls,
+        electric: electricPreviewEls,
+        orbBase: orbBasePreviewEls,
+        orbTemplate: orbTemplatePreviewEls,
+        orbNod: orbNodPreviewEls,
+        orbLifecycle: orbLifecyclePreviewEls,
+        orbGlobe: orbGlobePreviewEls,
+        worldGlobe: worldGlobePreviewEls,
+        orbTeleport: orbTeleportPreviewEls,
+      }),
+      defaults: Object.freeze({
+        shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
+        flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
+        electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+      }),
+      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
+      onOrbBaseVisualStateApplied: (visualState, previewActions) => {
+        currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
+        GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
+        GEOM.orbStroke = evenPx(visualState && visualState.strokeWidthPx, 1, 40);
+        applyGeometryVars();
+        requestAnimationFrame(() => {
+          if (typeof previewActions.applyShieldGeometry === "function") previewActions.applyShieldGeometry();
+          if (typeof previewActions.applyShock === "function") previewActions.applyShock();
+          if (typeof previewActions.applyFlameControls === "function") previewActions.applyFlameControls();
+          if (typeof previewActions.applyElectricControls === "function") previewActions.applyElectricControls();
+          if (typeof previewActions.applyOrbTemplate === "function") previewActions.applyOrbTemplate();
+          if (typeof previewActions.applyOrbLifecycle === "function") previewActions.applyOrbLifecycle();
+          if (typeof previewActions.applyOrbGlobe === "function") previewActions.applyOrbGlobe();
+          if (typeof previewActions.applyWorldGlobe === "function") previewActions.applyWorldGlobe();
+        });
+      },
+      previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
+      updateTeleportBehaviorReadout,
+    });
+    const {
+      applyShieldGeometry,
+      applyShield,
+      applyPulse,
+      playShield,
+      applyShock,
+      clearShock,
+      playShock,
+      applyFlameControls,
+      clearFlame,
+      playFlame,
+      applyElectricControls,
+      clearElectric,
+      playElectric,
+      applyOrbBase,
+      applyOrbTemplate,
+      clearOrbTemplate,
+      applyOrbNod,
+      clearOrbNod,
+      applyOrbLifecycle,
+      clearOrbLifecycle,
+      applyOrbGlobe,
+      clearOrbGlobe,
+      applyWorldGlobe,
+      clearWorldGlobe,
+      applyOrbTeleport,
+      clearOrbTeleport,
+      playOrbTeleport,
+    } = studioPreviewRegistry.actions;
+    const stopAllStudioEffects = studioPreviewRegistry.stopAllStudioEffects;
     const studioSurfaceActivation = createStudioSurfaceActivation({
       els,
       surfaces: LAB_EFFECT_SURFACES,
@@ -2545,150 +2575,6 @@
       refreshProjectConnectUi: studioProjectIo.refreshUi,
       refreshLockUi,
       initEffectSections: false,
-    });
-
-    // =========================================================================
-    // Shockwave (spawned rings; plain circles)
-    // =========================================================================
-    const shockwavePreview = createShockwavePreview({
-      els: shockPreviewEls,
-      clamp,
-      setVar: createScopedVarSetter(els.shockPreviewRoot),
-      shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
-    });
-    const applyShock = shockwavePreview.apply;
-    const clearShock = shockwavePreview.clear;
-    const playShock = shockwavePreview.play;
-    shockwavePreview.wire();
-
-    // =========================================================================
-    // Flame AOE (solid ring + vector tendrils)
-    // =========================================================================
-    const flamePreview = createFlameAoePreview({
-      els: flamePreviewEls,
-      clamp,
-      evenPx,
-      setVar: createScopedVarSetter(els.flamePreviewRoot),
-      flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
-    });
-    const applyFlameControls = flamePreview.apply;
-    const clearFlame = flamePreview.clear;
-    const playFlame = flamePreview.play;
-    flamePreview.wire();
-
-    // =========================================================================
-    // Electric AOE (plasma ball)
-    // =========================================================================
-    const electricPreview = createElectricAoePreview({
-      els: electricPreviewEls,
-      clamp,
-      evenPx,
-      setVar: createScopedVarSetter(els.electricPreviewRoot),
-      electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
-    });
-    const applyElectricControls = electricPreview.apply;
-    const clearElectric = electricPreview.clear;
-    const playElectric = electricPreview.play;
-    electricPreview.wire();
-
-    const orbBasePreview = createOrbBasePreview({
-      els: {
-        ...orbBasePreviewEls,
-        onApply: (visualState) => {
-          currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
-          GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
-          GEOM.orbStroke = evenPx(visualState && visualState.strokeWidthPx, 1, 40);
-          applyGeometryVars();
-          requestAnimationFrame(() => {
-            if (typeof applyShieldGeometry === "function") applyShieldGeometry();
-            if (typeof applyShock === "function") applyShock();
-            if (typeof applyFlameControls === "function") applyFlameControls();
-            if (typeof applyElectricControls === "function") applyElectricControls();
-            if (typeof applyOrbTemplate === "function") applyOrbTemplate();
-            if (typeof applyOrbLifecycle === "function") applyOrbLifecycle();
-            if (typeof applyOrbGlobe === "function") applyOrbGlobe();
-            if (typeof applyWorldGlobe === "function") applyWorldGlobe();
-          });
-        },
-      },
-      evenPx,
-      clamp,
-      clampByte,
-    });
-    const applyOrbBase = orbBasePreview.apply;
-    orbBasePreview.wire();
-
-    const orbTemplatePreview = createOrbTemplatePreview({
-      els: orbTemplatePreviewEls,
-      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
-    });
-    const applyOrbTemplate = orbTemplatePreview.apply;
-    const clearOrbTemplate = orbTemplatePreview.clear;
-    void applyOrbTemplate;
-
-    const orbNodPreview = createOrbTemplatePreview({
-      els: orbNodPreviewEls,
-      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
-    });
-    const applyOrbNod = orbNodPreview.apply;
-    const clearOrbNod = orbNodPreview.clear;
-    orbNodPreview.wire();
-
-    const orbLifecyclePreview = createOrbLifecyclePreview({ els: orbLifecyclePreviewEls });
-    const applyOrbLifecycle = orbLifecyclePreview.apply;
-    const clearOrbLifecycle = orbLifecyclePreview.clear;
-    orbLifecyclePreview.wire();
-
-    const orbGlobePreview = createOrbGlobePreview({
-      els: orbGlobePreviewEls,
-      clamp,
-    });
-    const applyOrbGlobe = orbGlobePreview.apply;
-    const clearOrbGlobe = orbGlobePreview.clear;
-    orbGlobePreview.wire();
-
-    const worldGlobePreview = createWorldGlobePreview({
-      els: worldGlobePreviewEls,
-      clamp,
-    });
-    const applyWorldGlobe = worldGlobePreview.apply;
-    const clearWorldGlobe = worldGlobePreview.clear;
-    worldGlobePreview.wire();
-
-    const orbTeleportPreview = createOrbTeleportPreview({
-      els: orbTeleportPreviewEls,
-      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
-    });
-    const applyOrbTeleport = orbTeleportPreview.apply;
-    const clearOrbTeleport = orbTeleportPreview.clear;
-    const playOrbTeleport = orbTeleportPreview.play;
-    orbTeleportPreview.wire();
-    updateTeleportBehaviorReadout();
-    if (els.applyTeleportBehaviorBtn) {
-      els.applyTeleportBehaviorBtn.addEventListener("click", () => {
-        updateTeleportBehaviorReadout();
-        applyOrbTeleport();
-      });
-    }
-    if (els.previewTeleportBehaviorBtn) {
-      els.previewTeleportBehaviorBtn.addEventListener("click", () => {
-        updateTeleportBehaviorReadout();
-        playOrbTeleport();
-      });
-    }
-    [
-      els.orbTeleportFadeOutMs,
-      els.orbTeleportCameraTravelMs,
-      els.orbTeleportFadeInMs,
-    ].forEach((field) => {
-      if (field) field.addEventListener("input", updateTeleportBehaviorReadout);
-    });
-    [
-      els.orbTeleportApplyFadeOutBtn,
-      els.orbTeleportApplyCameraTravelBtn,
-      els.orbTeleportApplyFadeInBtn,
-    ].forEach((btn) => {
-      if (btn) btn.addEventListener("click", updateTeleportBehaviorReadout);
     });
     requestAnimationFrame(settleSelectedEffectState);
 
