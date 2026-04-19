@@ -2278,21 +2278,11 @@
         shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
         flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
         electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
-        onOrbBaseVisualStateApplied: (visualState, previewActions) => {
+        onOrbBaseVisualStateApplied: (visualState) => {
           currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
           GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
           GEOM.orbStroke = evenPx(visualState && visualState.strokeWidthPx, 1, 40);
           applyGeometryVars();
-          requestAnimationFrame(() => {
-            if (typeof previewActions.applyShieldGeometry === "function") previewActions.applyShieldGeometry();
-            if (typeof previewActions.applyShock === "function") previewActions.applyShock();
-            if (typeof previewActions.applyFlameControls === "function") previewActions.applyFlameControls();
-            if (typeof previewActions.applyElectricControls === "function") previewActions.applyElectricControls();
-            if (typeof previewActions.applyOrbTemplate === "function") previewActions.applyOrbTemplate();
-            if (typeof previewActions.applyOrbLifecycle === "function") previewActions.applyOrbLifecycle();
-            if (typeof previewActions.applyOrbGlobe === "function") previewActions.applyOrbGlobe();
-            if (typeof previewActions.applyWorldGlobe === "function") previewActions.applyWorldGlobe();
-          });
         },
         isDraftHydrationDone: () => draftHydrationDone,
         isCustomEffectOption,
@@ -2345,6 +2335,16 @@
     const updateBehaviorSections = studioBootstrap.updateBehaviorSections;
     const updateEffectSections = studioBootstrap.updateEffectSections;
     const settleSelectedEffectState = studioBootstrap.settleSelectedEffectState;
+    requestAnimationFrame(() => {
+      if (typeof applyShieldGeometry === "function") applyShieldGeometry();
+      if (typeof applyShock === "function") applyShock();
+      if (typeof applyFlameControls === "function") applyFlameControls();
+      if (typeof applyElectricControls === "function") applyElectricControls();
+      if (typeof applyOrbTemplate === "function") applyOrbTemplate();
+      if (typeof applyOrbLifecycle === "function") applyOrbLifecycle();
+      if (typeof applyOrbGlobe === "function") applyOrbGlobe();
+      if (typeof applyWorldGlobe === "function") applyWorldGlobe();
+    });
     updateTeleportBehaviorReadout();
 
     bootStudioShell({
