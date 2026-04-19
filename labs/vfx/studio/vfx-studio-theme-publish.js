@@ -117,8 +117,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "export const BUBBLE_SHIELD_PRESET_DEFAULT = Object.freeze({",
         `  durationMs: ${Math.round(toNum(p.shieldMs, 8000))},`,
         `  colorRgb: Object.freeze({ r: ${Math.round(clampNum(p.shieldR, 0, 255, 120))}, g: ${Math.round(clampNum(p.shieldG, 0, 255, 210))}, b: ${Math.round(clampNum(p.shieldB, 0, 255, 255))} }),`,
-        `  diameterPx: ${Math.round(toNum(p.shieldD, 124))},`,
-        `  strokeWidthPx: ${Math.round(toNum(p.shieldStroke, 4))},`,
+        `  diameterRatio: ${toNum(p.shieldDiameterRatio ?? ((toNum(p.shieldD, 124)) / 100), 1.24).toFixed(2)},`,
+        `  strokeWidthRatio: ${toNum(p.shieldStrokeRatio ?? ((toNum(p.shieldStroke, 4)) / 100), 0.04).toFixed(3)},`,
         `  alpha: ${toNum(p.shieldAlpha, 1).toFixed(2)},`,
         `  pulseMs: ${Math.round(toNum(p.pulseMs, 80))},`,
         `  pulseMin: ${toNum(p.pulseMin, 0.3).toFixed(2)},`,
@@ -316,6 +316,18 @@ export function applyLabThemeDefaults({
   if (bubbleShieldPresetDefault) {
     if (els.shieldMs) els.shieldMs.value = String(Math.round(clamp(bubbleShieldPresetDefault.durationMs, 80, 120000)));
     if (els.shieldAlpha) els.shieldAlpha.value = String(clamp(bubbleShieldPresetDefault.alpha, 0, 1).toFixed(2));
+    if (els.shieldDiameterRatio) {
+      const ratio = Number.isFinite(Number(bubbleShieldPresetDefault.diameterRatio))
+        ? Number(bubbleShieldPresetDefault.diameterRatio)
+        : (Number(bubbleShieldPresetDefault.diameterPx) || 124) / 100;
+      els.shieldDiameterRatio.value = String(clamp(ratio, 0.1, 8).toFixed(2));
+    }
+    if (els.shieldStrokeRatio) {
+      const ratio = Number.isFinite(Number(bubbleShieldPresetDefault.strokeWidthRatio))
+        ? Number(bubbleShieldPresetDefault.strokeWidthRatio)
+        : (Number(bubbleShieldPresetDefault.strokeWidthPx) || 4) / 100;
+      els.shieldStrokeRatio.value = String(clamp(ratio, 0.005, 1).toFixed(3));
+    }
     if (els.pulseMs) els.pulseMs.value = String(Math.round(clamp(bubbleShieldPresetDefault.pulseMs, 20, 700)));
     if (els.pulseMin) els.pulseMin.value = String(clamp(bubbleShieldPresetDefault.pulseMin, 0, 1).toFixed(2));
     if (els.pulseMax) els.pulseMax.value = String(clamp(bubbleShieldPresetDefault.pulseMax, 0, 1).toFixed(2));

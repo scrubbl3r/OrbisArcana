@@ -857,13 +857,13 @@
             <button id="shieldApplyDurationBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="shieldD">Diameter px</label>
-            <input id="shieldD" class="paramFieldInput" type="number" min="10" max="1000" step="1" value="124" />
+            <label for="shieldDiameterRatio">Diameter ratio</label>
+            <input id="shieldDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="8" step="0.01" value="1.24" />
             <button id="shieldApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
-            <label for="shieldStroke">Stroke width px</label>
-            <input id="shieldStroke" class="paramFieldInput" type="number" min="1" max="40" step="1" value="4" />
+            <label for="shieldStrokeRatio">Stroke ratio</label>
+            <input id="shieldStrokeRatio" class="paramFieldInput" type="number" min="0.005" max="1" step="0.001" value="0.040" />
             <button id="shieldApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
           </div>
           <div class="paramFieldRow">
@@ -1517,9 +1517,9 @@
       shieldApplyDurationBtn: $("shieldApplyDurationBtn"),
       shieldAlpha: $("shieldAlpha"),
       shieldApplyAlphaBtn: $("shieldApplyAlphaBtn"),
-      shieldD: $("shieldD"),
+      shieldDiameterRatio: $("shieldDiameterRatio"),
       shieldApplyDiameterBtn: $("shieldApplyDiameterBtn"),
-      shieldStroke: $("shieldStroke"),
+      shieldStrokeRatio: $("shieldStrokeRatio"),
       shieldApplyStrokeBtn: $("shieldApplyStrokeBtn"),
       shieldR: $("shieldR"),
       shieldG: $("shieldG"),
@@ -2366,8 +2366,8 @@
     const GEOM = {
       orbD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
       orbStroke: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
-      shieldD: Math.round(BUBBLE_SHIELD_PRESET_DEFAULT.diameterPx),
-      shieldStroke: Math.round(BUBBLE_SHIELD_PRESET_DEFAULT.strokeWidthPx),
+      shieldD: Math.round((Number(BUBBLE_SHIELD_PRESET_DEFAULT.diameterRatio) || 1.24) * Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx || 100)),
+      shieldStroke: Math.max(1, Math.round((Number(BUBBLE_SHIELD_PRESET_DEFAULT.strokeWidthRatio) || 0.04) * Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx || 100))),
     };
     let currentLabOrbBaseVisualState = buildOrbBaseVisualState({
       theme: {

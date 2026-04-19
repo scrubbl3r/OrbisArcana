@@ -14,8 +14,8 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
   const defaults = {
     shield: {
       colorRgb: { r: 120, g: 210, b: 255 },
-      diameterPx: 124,
-      strokeWidthPx: 4,
+      diameterRatio: 1.24,
+      strokeWidthRatio: 0.04,
       durationMs: 8000,
       alpha: 1.0,
       pulseMs: 80,

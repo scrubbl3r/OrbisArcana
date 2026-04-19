@@ -22,18 +22,19 @@ export function createShieldPreview({
   }
 
   function applyGeometry() {
-    GEOM.shieldD = Math.max(10, Math.round(Number(els.shieldD.value) || 124));
-    GEOM.shieldStroke = Math.max(1, Math.round(Number(els.shieldStroke.value) || 4));
+    const diameterRatio = clamp(els.shieldDiameterRatio.value, 0.1, 8);
+    const strokeWidthRatio = clamp(els.shieldStrokeRatio.value, 0.005, 1);
     const resolved = resolveBubbleShieldGeometry({
-      diameterPx: GEOM.shieldD,
-      strokeWidthPx: GEOM.shieldStroke,
+      diameterRatio,
+      strokeWidthRatio,
     }, {
       orbDiameterPx: getOrbDiameterPx(),
       normalizeStroke: (value) => Math.max(1, Math.round(value)),
     });
-
-    els.shieldD.value = String(GEOM.shieldD);
-    els.shieldStroke.value = String(GEOM.shieldStroke);
+    GEOM.shieldD = Math.max(10, Math.round(Number(resolved.diameterPx) || 124));
+    GEOM.shieldStroke = Math.max(1, Math.round(Number(resolved.strokeWidthPx) || 4));
+    els.shieldDiameterRatio.value = Number(diameterRatio).toFixed(2);
+    els.shieldStrokeRatio.value = Number(strokeWidthRatio).toFixed(3);
 
     setVar("--shield-d", `${Number(resolved.diameterPx).toFixed(2)}px`);
     setVar("--shield-stroke", `${Number(resolved.strokeWidthPx).toFixed(2)}px`);

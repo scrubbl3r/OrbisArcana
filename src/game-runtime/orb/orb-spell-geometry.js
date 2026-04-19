@@ -53,10 +53,22 @@ export function resolveBubbleShieldGeometry(
     normalizeStroke = null,
   } = {}
 ) {
+  const resolvedOrbDiameterPx = Math.max(
+    1,
+    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
+  );
+  const diameterRatio = clampPositive(config.diameterRatio, 0);
+  const strokeWidthRatio = clampPositive(config.strokeWidthRatio, 0);
   return {
     ...config,
-    diameterPx: resolveOrbLinkedPx(config.diameterPx, { orbDiameterPx, min: 10 }),
-    strokeWidthPx: resolveOrbLinkedPx(config.strokeWidthPx, {
+    diameterPx: diameterRatio > 0
+      ? Math.max(10, diameterRatio * resolvedOrbDiameterPx)
+      : resolveOrbLinkedPx(config.diameterPx, { orbDiameterPx, min: 10 }),
+    strokeWidthPx: strokeWidthRatio > 0
+      ? (typeof normalizeStroke === "function"
+          ? normalizeStroke(Math.max(1, strokeWidthRatio * resolvedOrbDiameterPx))
+          : Math.max(1, strokeWidthRatio * resolvedOrbDiameterPx))
+      : resolveOrbLinkedPx(config.strokeWidthPx, {
       orbDiameterPx,
       min: 1,
       normalize: normalizeStroke,
