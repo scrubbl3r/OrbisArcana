@@ -1331,63 +1331,127 @@
   </div>
 
   <script type="module">
+    const showLabBootError = (message) => {
+      try {
+        const stage = document.getElementById("stage");
+        if (!stage) return;
+        let card = document.getElementById("labBootError");
+        if (!card) {
+          card = document.createElement("div");
+          card.id = "labBootError";
+          card.style.position = "absolute";
+          card.style.left = "16px";
+          card.style.right = "16px";
+          card.style.bottom = "16px";
+          card.style.padding = "12px 14px";
+          card.style.border = "1px solid rgba(255,80,80,0.5)";
+          card.style.background = "rgba(24,0,0,0.92)";
+          card.style.color = "#ffb3b3";
+          card.style.fontFamily = "ui-monospace, SFMono-Regular, Menlo, monospace";
+          card.style.fontSize = "12px";
+          card.style.lineHeight = "1.4";
+          card.style.whiteSpace = "pre-wrap";
+          card.style.zIndex = "20";
+          card.style.pointerEvents = "auto";
+          stage.appendChild(card);
+        }
+        card.textContent = `LAB BOOT ERROR\n${String(message || "unknown error")}`;
+      } catch (_) {
+        // Last-ditch debug path; avoid recursive failure.
+      }
+    };
+    window.addEventListener("error", (event) => {
+      const error = event && event.error;
+      showLabBootError(error && error.stack ? error.stack : (event && event.message) || "unknown error");
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      const reason = event && event.reason;
+      showLabBootError(reason && reason.stack ? reason.stack : String(reason || "unhandled rejection"));
+    });
+
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410b";
     import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260416a";
     import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
-    import {
-      bootStudioShell,
-      refreshEffectMeta as refreshEffectMetaHelper,
-      refreshLockUi as refreshLockUiHelper,
-      toggleSelectedEffectLock as toggleSelectedEffectLockHelper,
-    } from "./studio/vfx-studio-shell.js?v=20260417a";
-    import { createStudioBootstrap } from "./studio/vfx-studio-bootstrap.js?v=20260419b";
-    import {
-      buildEffectLibraryOptionsFromRegistry as buildEffectLibraryOptionsFromRegistryHelper,
-      buildPresetDraftRecordFromSelection as buildPresetDraftRecordFromSelectionHelper,
-      createCustomEffectProfile as createCustomEffectProfileHelper,
-      createDraftStore,
-      deleteEffectProfile as deleteEffectProfileHelper,
-      duplicateEffectProfile as duplicateEffectProfileHelper,
-      findEffectOptionByValue as findEffectOptionByValueHelper,
-      isCoreEffectOption as isCoreEffectOptionHelper,
-      isCustomEffectOption as isCustomEffectOptionHelper,
-      isSelectedEffectLocked as isSelectedEffectLockedHelper,
-      loadDraftStore as loadDraftStoreHelper,
-      persistDraftStore as persistDraftStoreHelper,
-      renameEffectProfile as renameEffectProfileHelper,
-      selectedBaseEffect as selectedBaseEffectHelper,
-      selectedSpawnBaseEffect as selectedSpawnBaseEffectHelper,
-      selectedEffectCategory as selectedEffectCategoryHelper,
-      selectedEffectOption as selectedEffectOptionHelper,
-      slugifyEffectName as slugifyEffectNameHelper,
-      upsertCurrentDraftProfile as upsertCurrentDraftProfileHelper,
-    } from "./studio/vfx-studio-state.js?v=20260419a";
-    import { LAB_STUDIO_CATEGORIES } from "./studio/vfx-studio-categories.js?v=20260419a";
-    import {
-      buildRuntimeEffectBindingsModule,
-      populateBindingTargetOptions as populateBindingTargetOptionsHelper,
-      refreshBindingPanel as refreshBindingPanelHelper,
-    } from "./studio/vfx-studio-bindings.js?v=20260410b";
-    import {
-      buildBindingCleanupPlan,
-      buildBindingPublishPlan,
-      buildPublishedPresetPayload as buildPublishedPresetPayloadHelper,
-      collectBindingsForPresetId,
-      findRegistryEntry,
-      describePublishSuccess as describePublishSuccessHelper,
-      RUNTIME_BINDINGS_TARGET_PATH,
-      supportsBindingPublish,
-    } from "./studio/vfx-studio-publish.js?v=20260418a";
-    import {
-      publishLabPreset,
-      writeRuntimeBindingModule,
-    } from "./studio/vfx-studio-publish-orchestrator.js?v=20260418a";
-    import {
-      createLabEffectSurfaces,
-      deriveLabSurfaceMaps,
-    } from "./studio/vfx-studio-surfaces.js?v=20260418l";
+    const [
+      {
+        bootStudioShell,
+        refreshEffectMeta: refreshEffectMetaHelper,
+        refreshLockUi: refreshLockUiHelper,
+        toggleSelectedEffectLock: toggleSelectedEffectLockHelper,
+      },
+      { createStudioBootstrap },
+      {
+        buildEffectLibraryOptionsFromRegistry: buildEffectLibraryOptionsFromRegistryHelper,
+        buildPresetDraftRecordFromSelection: buildPresetDraftRecordFromSelectionHelper,
+        createCustomEffectProfile: createCustomEffectProfileHelper,
+        createDraftStore,
+        deleteEffectProfile: deleteEffectProfileHelper,
+        duplicateEffectProfile: duplicateEffectProfileHelper,
+        findEffectOptionByValue: findEffectOptionByValueHelper,
+        isCoreEffectOption: isCoreEffectOptionHelper,
+        isCustomEffectOption: isCustomEffectOptionHelper,
+        isSelectedEffectLocked: isSelectedEffectLockedHelper,
+        loadDraftStore: loadDraftStoreHelper,
+        persistDraftStore: persistDraftStoreHelper,
+        renameEffectProfile: renameEffectProfileHelper,
+        selectedBaseEffect: selectedBaseEffectHelper,
+        selectedSpawnBaseEffect: selectedSpawnBaseEffectHelper,
+        selectedEffectCategory: selectedEffectCategoryHelper,
+        selectedEffectOption: selectedEffectOptionHelper,
+        slugifyEffectName: slugifyEffectNameHelper,
+        upsertCurrentDraftProfile: upsertCurrentDraftProfileHelper,
+      },
+      { LAB_STUDIO_CATEGORIES },
+      {
+        buildRuntimeEffectBindingsModule,
+        populateBindingTargetOptions: populateBindingTargetOptionsHelper,
+        refreshBindingPanel: refreshBindingPanelHelper,
+      },
+      {
+        buildBindingCleanupPlan,
+        buildBindingPublishPlan,
+        buildPublishedPresetPayload: buildPublishedPresetPayloadHelper,
+        collectBindingsForPresetId,
+        findRegistryEntry,
+        describePublishSuccess: describePublishSuccessHelper,
+        RUNTIME_BINDINGS_TARGET_PATH,
+        supportsBindingPublish,
+      },
+      {
+        publishLabPreset,
+        writeRuntimeBindingModule,
+      },
+      {
+        createLabEffectSurfaces,
+        deriveLabSurfaceMaps,
+      },
+      {
+        applyLabThemeDefaults,
+        buildTeleportBehaviorModule,
+        buildLivePresetModuleForBaseEffect,
+        connectProjectFolder: connectProjectFolderHelper,
+        downloadTextFile,
+        refreshProjectConnectUi: refreshProjectConnectUiHelper,
+        saveTextToConnectedProjectDrafts: saveTextToConnectedProjectDraftsHelper,
+        saveTextToConnectedProjectPath: saveTextToConnectedProjectPathHelper,
+        saveTextToProjectFile,
+      },
+    ] = await Promise.all([
+      import("./studio/vfx-studio-shell.js?v=20260419c"),
+      import("./studio/vfx-studio-bootstrap.js?v=20260419c"),
+      import("./studio/vfx-studio-state.js?v=20260419c"),
+      import("./studio/vfx-studio-categories.js?v=20260419c"),
+      import("./studio/vfx-studio-bindings.js?v=20260419c"),
+      import("./studio/vfx-studio-publish.js?v=20260419c"),
+      import("./studio/vfx-studio-publish-orchestrator.js?v=20260419c"),
+      import("./studio/vfx-studio-surfaces.js?v=20260419c"),
+      import("./studio/vfx-studio-theme-publish.js?v=20260419c"),
+    ]).catch((err) => {
+      showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
+      throw err;
+    });
     import { createBubbleShieldAuthoringAdapter } from "./studio/adapters/bubble-shield-authoring-adapter.js?v=20260418c";
     import { createElectricAoeAuthoringAdapter } from "./studio/adapters/electric-aoe-authoring-adapter.js?v=20260418a";
     import { createFlameAoeAuthoringAdapter } from "./studio/adapters/flame-aoe-authoring-adapter.js?v=20260418a";
@@ -1398,17 +1462,6 @@
     import { createShockwaveAuthoringAdapter } from "./studio/adapters/shockwave-authoring-adapter.js?v=20260418a";
     import { createTeleportAuthoringAdapter } from "./studio/adapters/teleport-authoring-adapter.js?v=20260418b";
     import { createWorldGlobeAuthoringAdapter } from "./studio/adapters/world-globe-authoring-adapter.js?v=20260418a";
-    import {
-      applyLabThemeDefaults,
-      buildTeleportBehaviorModule,
-      buildLivePresetModuleForBaseEffect,
-      connectProjectFolder as connectProjectFolderHelper,
-      downloadTextFile,
-      refreshProjectConnectUi as refreshProjectConnectUiHelper,
-      saveTextToConnectedProjectDrafts as saveTextToConnectedProjectDraftsHelper,
-      saveTextToConnectedProjectPath as saveTextToConnectedProjectPathHelper,
-      saveTextToProjectFile,
-    } from "./studio/vfx-studio-theme-publish.js?v=20260418c";
     import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260418a";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260418a";
     import {
