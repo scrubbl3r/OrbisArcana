@@ -155,7 +155,7 @@ export function createFlameAoeRuntime({
 
     const raw = getConfig() || {};
     const cfg = {
-      diameter: evenPx(clamp(raw.diameter, 120, 900), 2, 2000),
+      diameter: evenPx(clamp(raw.diameter, 1, 2000), 2, 2000),
       durationMs: Math.max(200, Number(raw.durationMs) || 10000),
       stroke: raw.stroke,
       fill: raw.fill,

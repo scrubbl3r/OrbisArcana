@@ -141,12 +141,22 @@ export function buildOrbBaseVisualState({ theme = null, physics = null } = {}) {
         : {}),
     },
   };
-  const physicsOrb = (physics && typeof physics === "object")
-    ? physics
-    : ORB_RUNTIME_PHYSICS_DEFAULT;
-
-  const radiusPx = Math.max(1, Number(physicsOrb.orbRadiusPx) || ORB_BASE_VISUAL_DEFAULTS.radiusPx);
-  const diameterPx = Math.max(2, Math.round(Number(themeOrb.diameterPx) || (radiusPx * 2)));
+  const themedDiameterPx = Number(themeOrb.diameterPx);
+  const themedRadiusPx = Number(themeOrb.radiusPx);
+  const diameterPx = Math.max(
+    2,
+    Math.round(
+      Number.isFinite(themedDiameterPx) && themedDiameterPx > 0
+        ? themedDiameterPx
+        : ((Number.isFinite(themedRadiusPx) && themedRadiusPx > 0 ? themedRadiusPx : ORB_BASE_VISUAL_DEFAULTS.radiusPx) * 2)
+    )
+  );
+  const radiusPx = Math.max(
+    1,
+    Number.isFinite(themedRadiusPx) && themedRadiusPx > 0
+      ? themedRadiusPx
+      : (diameterPx * 0.5)
+  );
   const strokeWidthPx = Math.max(
     1,
     Math.round(Number(themeOrb.strokeWidthPx) || ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx)
