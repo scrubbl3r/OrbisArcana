@@ -1345,17 +1345,9 @@
         }
         card.textContent = `LAB BOOT ERROR\n${String(message || "unknown error")}`;
       } catch (_) {
-        // Last-ditch debug path; avoid recursive failure.
+        // Avoid recursive boot failure.
       }
     };
-    window.addEventListener("error", (event) => {
-      const error = event && event.error;
-      showLabBootError(error && error.stack ? error.stack : (event && event.message) || "unknown error");
-    });
-    window.addEventListener("unhandledrejection", (event) => {
-      const reason = event && event.reason;
-      showLabBootError(reason && reason.stack ? reason.stack : String(reason || "unhandled rejection"));
-    });
 
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410b";
     import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260416a";

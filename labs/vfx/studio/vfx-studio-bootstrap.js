@@ -24,7 +24,6 @@ export function createStudioBootstrap({
   updateTeleportBehaviorReadout,
   applyGeometryVars,
   previewApplyMap,
-  applyPreviewMap,
   previewRootsByEffect,
   geometry,
   defaults,
