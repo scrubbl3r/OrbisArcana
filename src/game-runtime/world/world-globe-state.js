@@ -1,5 +1,5 @@
 import { getCanonicalOrbBaseDiameterPx } from "../orb/orb-base-state.js";
-import { resolveOrbRatioOrPx } from "../orb/orb-spell-geometry.js";
+import { resolveOrbRatioPx } from "../orb/orb-spell-geometry.js";
 import { WORLD_GLOBE_VISUAL_DEFAULTS as WORLD_GLOBE_VISUAL_DEFAULTS_FILE } from "./world-globe-default.js?v=20260418a";
 
 function clamp(v, lo, hi, fallback) {
@@ -16,38 +16,20 @@ function alpha(v, fallback) {
   return clamp(v, 0, 1, fallback);
 }
 
-function px(v, fallback) {
-  return clamp(v, 0, 1000, fallback);
-}
-
 function ratio(v, fallback) {
   return clamp(v, 0, 10, fallback);
-}
-
-function resolveRatioOrPx(ratioValue, pxValue, fallbackRatio, fallbackPx, { orbDiameterPx = null, min = 0 } = {}) {
-  return resolveOrbRatioOrPx({
-    ratio: ratioValue,
-    px: Number.isFinite(Number(pxValue)) ? Number(pxValue) : fallbackPx,
-    fallbackRatio,
-    fallbackPx,
-  }, {
-    orbDiameterPx: Math.max(1, Number(orbDiameterPx) || getCanonicalOrbBaseDiameterPx()),
-    min,
-  });
 }
 
 function styleState(source = {}, fallback = {}, { orbDiameterPx = null } = {}) {
   const fillFallback = fallback.fillRgb || {};
   const strokeFallback = fallback.strokeRgb || {};
+  const resolvedOrbDiameterPx = Math.max(1, Number(orbDiameterPx) || getCanonicalOrbBaseDiameterPx());
   return Object.freeze({
     diameterRatio: ratio(source.diameterRatio, fallback.diameterRatio),
-    diameterPx: resolveRatioOrPx(
-      source.diameterRatio,
-      source.diameterPx,
-      fallback.diameterRatio,
-      fallback.diameterPx,
-      { orbDiameterPx, min: 1 }
-    ),
+    diameterPx: resolveOrbRatioPx(ratio(source.diameterRatio, fallback.diameterRatio), {
+      orbDiameterPx: resolvedOrbDiameterPx,
+      min: 1,
+    }),
     fillRgb: Object.freeze({
       r: colorChannel(source.fillRgb && source.fillRgb.r, fillFallback.r),
       g: colorChannel(source.fillRgb && source.fillRgb.g, fillFallback.g),
@@ -61,13 +43,10 @@ function styleState(source = {}, fallback = {}, { orbDiameterPx = null } = {}) {
     }),
     strokeAlpha: alpha(source.strokeAlpha, fallback.strokeAlpha),
     strokeWidthRatio: ratio(source.strokeWidthRatio, fallback.strokeWidthRatio),
-    strokeWidthPx: resolveRatioOrPx(
-      source.strokeWidthRatio,
-      source.strokeWidthPx,
-      fallback.strokeWidthRatio,
-      fallback.strokeWidthPx,
-      { orbDiameterPx, min: 0 }
-    ),
+    strokeWidthPx: resolveOrbRatioPx(ratio(source.strokeWidthRatio, fallback.strokeWidthRatio), {
+      orbDiameterPx: resolvedOrbDiameterPx,
+      min: 0,
+    }),
   });
 }
 
@@ -76,18 +55,12 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     ...styleState(WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle, WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle),
     driftRatio: ratio(WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.driftRatio, 0.10),
     bobRatio: ratio(WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.bobRatio, 0.07),
-    driftPx: resolveRatioOrPx(
-      WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.driftRatio,
-      WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.driftPx,
-      0.10,
-      10,
+    driftPx: resolveOrbRatioPx(
+      ratio(WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.driftRatio, 0.10),
       { min: 0 }
     ),
-    bobPx: resolveRatioOrPx(
-      WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.bobRatio,
-      WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.bobPx,
-      0.07,
-      7,
+    bobPx: resolveOrbRatioPx(
+      ratio(WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.bobRatio, 0.07),
       { min: 0 }
     ),
     bobHz: clamp(WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle && WORLD_GLOBE_VISUAL_DEFAULTS_FILE.idle.bobHz, 0, 20, 0.65),
@@ -101,24 +74,19 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
 export function buildWorldGlobeVisualState(overrides = null, { orbDiameterPx = null } = {}) {
   const source = overrides && typeof overrides === "object" ? overrides : WORLD_GLOBE_VISUAL_DEFAULTS;
   const idle = styleState(source.idle, WORLD_GLOBE_VISUAL_DEFAULTS.idle, { orbDiameterPx });
+  const resolvedOrbDiameterPx = Math.max(1, Number(orbDiameterPx) || getCanonicalOrbBaseDiameterPx());
   return Object.freeze({
     idle: Object.freeze({
       ...idle,
       driftRatio: ratio(source.idle && source.idle.driftRatio, WORLD_GLOBE_VISUAL_DEFAULTS.idle.driftRatio),
       bobRatio: ratio(source.idle && source.idle.bobRatio, WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobRatio),
-      driftPx: resolveRatioOrPx(
-        source.idle && source.idle.driftRatio,
-        source.idle && source.idle.driftPx,
-        WORLD_GLOBE_VISUAL_DEFAULTS.idle.driftRatio,
-        WORLD_GLOBE_VISUAL_DEFAULTS.idle.driftPx,
-        { orbDiameterPx, min: 0 }
+      driftPx: resolveOrbRatioPx(
+        ratio(source.idle && source.idle.driftRatio, WORLD_GLOBE_VISUAL_DEFAULTS.idle.driftRatio),
+        { orbDiameterPx: resolvedOrbDiameterPx, min: 0 }
       ),
-      bobPx: resolveRatioOrPx(
-        source.idle && source.idle.bobRatio,
-        source.idle && source.idle.bobPx,
-        WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobRatio,
-        WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobPx,
-        { orbDiameterPx, min: 0 }
+      bobPx: resolveOrbRatioPx(
+        ratio(source.idle && source.idle.bobRatio, WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobRatio),
+        { orbDiameterPx: resolvedOrbDiameterPx, min: 0 }
       ),
       bobHz: clamp(source.idle && source.idle.bobHz, 0, 20, WORLD_GLOBE_VISUAL_DEFAULTS.idle.bobHz),
       pulseScale: clamp(source.idle && source.idle.pulseScale, 0, 1, WORLD_GLOBE_VISUAL_DEFAULTS.idle.pulseScale),

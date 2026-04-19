@@ -34,13 +34,6 @@ function readStyleDefaults(prefix, state = {}) {
   };
 }
 
-function legacyStyleValue(settings, prefix, suffix) {
-  if (!settings || typeof settings !== "object") return undefined;
-  if (suffix === "DiameterRatio") return settings[`${prefix}Size`];
-  if (suffix === "StrokeWidthRatio") return settings[`${prefix}StrokeWidth`];
-  return undefined;
-}
-
 export function createWorldGlobeAuthoringAdapter({
   worldGlobeVisualDefaults = {},
   getElementById = null,
@@ -56,7 +49,7 @@ export function createWorldGlobeAuthoringAdapter({
     WORLD_GLOBE_STYLE_SUFFIXES.forEach((suffix) => {
       const key = prefix + suffix;
       const el = field(key);
-      const value = settings[key] != null ? settings[key] : legacyStyleValue(settings, prefix, suffix);
+      const value = settings[key];
       if (el && value != null) el.value = String(value);
     });
   }
@@ -91,10 +84,8 @@ export function createWorldGlobeAuthoringAdapter({
   function apply(els, settings, { applyPreview = null } = {}) {
     if (!settings || typeof settings !== "object") return false;
     applyStyleFields("worldGlobeIdle", settings);
-    const driftRatio = settings.worldGlobeIdleDriftRatio != null ? settings.worldGlobeIdleDriftRatio : settings.worldGlobeIdleDrift;
-    const bobRatio = settings.worldGlobeIdleBobRatio != null ? settings.worldGlobeIdleBobRatio : settings.worldGlobeIdleBob;
-    if (field("worldGlobeIdleDriftRatio") && driftRatio != null) field("worldGlobeIdleDriftRatio").value = String(driftRatio);
-    if (field("worldGlobeIdleBobRatio") && bobRatio != null) field("worldGlobeIdleBobRatio").value = String(bobRatio);
+    if (field("worldGlobeIdleDriftRatio") && settings.worldGlobeIdleDriftRatio != null) field("worldGlobeIdleDriftRatio").value = String(settings.worldGlobeIdleDriftRatio);
+    if (field("worldGlobeIdleBobRatio") && settings.worldGlobeIdleBobRatio != null) field("worldGlobeIdleBobRatio").value = String(settings.worldGlobeIdleBobRatio);
     if (field("worldGlobeIdleBobHz") && settings.worldGlobeIdleBobHz != null) field("worldGlobeIdleBobHz").value = String(settings.worldGlobeIdleBobHz);
     if (field("worldGlobeIdlePulseScale") && settings.worldGlobeIdlePulseScale != null) field("worldGlobeIdlePulseScale").value = String(settings.worldGlobeIdlePulseScale);
     if (field("worldGlobeIdlePulseHz") && settings.worldGlobeIdlePulseHz != null) field("worldGlobeIdlePulseHz").value = String(settings.worldGlobeIdlePulseHz);
