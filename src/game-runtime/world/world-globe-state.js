@@ -1,5 +1,5 @@
 import { getCanonicalOrbBaseDiameterPx } from "../orb/orb-base-state.js";
-import { resolveOrbLinkedPx } from "../orb/orb-spell-geometry.js";
+import { resolveOrbRatioOrPx } from "../orb/orb-spell-geometry.js";
 import { WORLD_GLOBE_VISUAL_DEFAULTS as WORLD_GLOBE_VISUAL_DEFAULTS_FILE } from "./world-globe-default.js?v=20260418a";
 
 function clamp(v, lo, hi, fallback) {
@@ -25,17 +25,15 @@ function ratio(v, fallback) {
 }
 
 function resolveRatioOrPx(ratioValue, pxValue, fallbackRatio, fallbackPx, { orbDiameterPx = null, min = 0 } = {}) {
-  const resolvedOrbDiameterPx = Math.max(1, Number(orbDiameterPx) || getCanonicalOrbBaseDiameterPx());
-  const ratioCandidate = Number.isFinite(Number(ratioValue))
-    ? Number(ratioValue)
-    : (Number.isFinite(Number(fallbackRatio)) ? Number(fallbackRatio) : NaN);
-  if (Number.isFinite(ratioCandidate) && ratioCandidate > 0) {
-    return Math.max(min, ratioCandidate * resolvedOrbDiameterPx);
-  }
-  return resolveOrbLinkedPx(
-    Number.isFinite(Number(pxValue)) ? Number(pxValue) : fallbackPx,
-    { orbDiameterPx: resolvedOrbDiameterPx, min }
-  );
+  return resolveOrbRatioOrPx({
+    ratio: ratioValue,
+    px: Number.isFinite(Number(pxValue)) ? Number(pxValue) : fallbackPx,
+    fallbackRatio,
+    fallbackPx,
+  }, {
+    orbDiameterPx: Math.max(1, Number(orbDiameterPx) || getCanonicalOrbBaseDiameterPx()),
+    min,
+  });
 }
 
 function styleState(source = {}, fallback = {}, { orbDiameterPx = null } = {}) {

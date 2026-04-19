@@ -1,5 +1,6 @@
 import { ORB_GLOBE_VISUAL_DEFAULTS as ORB_GLOBE_VISUAL_DEFAULTS_FILE } from "./orb-globe-default.js?v=20260418a";
 import { ORB_BASE_SCALE_REFERENCE_DIAMETER_PX } from "./orb-base-state.js";
+import { resolveOrbRatioOrPx } from "./orb-spell-geometry.js";
 
 function clamp01(v) {
   const n = Number(v);
@@ -23,6 +24,29 @@ function orbScaleFactorFromRadius(orbRadiusPx) {
 
 function scaleOrbLinkedPx(value, orbRadiusPx) {
   return clampPx(value, 0) * orbScaleFactorFromRadius(orbRadiusPx);
+}
+
+function resolveOrbGlobeRatioOrPx(
+  {
+    ratio = null,
+    px = null,
+    fallbackRatio = 0,
+    fallbackPx = 0,
+  } = {},
+  {
+    orbRadiusPx = null,
+    min = 0,
+  } = {}
+) {
+  return resolveOrbRatioOrPx({
+    ratio,
+    px,
+    fallbackRatio,
+    fallbackPx,
+  }, {
+    orbDiameterPx: Math.max(0, Number(orbRadiusPx) || 0) * 2,
+    min,
+  });
 }
 
 export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
@@ -292,69 +316,49 @@ export function getOrbitDistancePx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_
 }
 
 export function getPickupGlobeDiameterPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  const pickupDiameterRatio = clampRatio(
-    orbGlobeVisualState && orbGlobeVisualState.pickupDiameterRatio,
-    ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterRatio
-  );
-  if (pickupDiameterRatio > 0) {
-    return Math.max(0, Number(orbRadiusPx) * 2 * pickupDiameterRatio);
-  }
-  return Math.max(
-    0,
-    scaleOrbLinkedPx(
-      orbGlobeVisualState && orbGlobeVisualState.pickupDiameterPx,
-      orbRadiusPx
-    )
-  );
+  return resolveOrbGlobeRatioOrPx({
+    ratio: orbGlobeVisualState && orbGlobeVisualState.pickupDiameterRatio,
+    px: orbGlobeVisualState && orbGlobeVisualState.pickupDiameterPx,
+    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterRatio,
+    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.pickupDiameterPx,
+  }, {
+    orbRadiusPx,
+    min: 0,
+  });
 }
 
 export function getInnerPaddingPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  const innerPaddingRatio = clampRatio(
-    orbGlobeVisualState && orbGlobeVisualState.innerPaddingRatio,
-    ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingRatio
-  );
-  if (innerPaddingRatio > 0) {
-    return Math.max(0, Number(orbRadiusPx) * 2 * innerPaddingRatio);
-  }
-  return Math.max(
-    0,
-    scaleOrbLinkedPx(
-      orbGlobeVisualState && orbGlobeVisualState.innerPaddingPx,
-      orbRadiusPx
-    )
-  );
+  return resolveOrbGlobeRatioOrPx({
+    ratio: orbGlobeVisualState && orbGlobeVisualState.innerPaddingRatio,
+    px: orbGlobeVisualState && orbGlobeVisualState.innerPaddingPx,
+    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingRatio,
+    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.innerPaddingPx,
+  }, {
+    orbRadiusPx,
+    min: 0,
+  });
 }
 
 export function getInnerGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  const innerStrokeWidthRatio = clampRatio(
-    orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthRatio,
-    ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthRatio
-  );
-  if (innerStrokeWidthRatio > 0) {
-    return Math.max(0, Number(orbRadiusPx) * 2 * innerStrokeWidthRatio);
-  }
-  return Math.max(
-    0,
-    scaleOrbLinkedPx(
-      orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthPx,
-      orbRadiusPx
-    )
-  );
+  return resolveOrbGlobeRatioOrPx({
+    ratio: orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthRatio,
+    px: orbGlobeVisualState && orbGlobeVisualState.innerStrokeWidthPx,
+    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthRatio,
+    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.innerStrokeWidthPx,
+  }, {
+    orbRadiusPx,
+    min: 0,
+  });
 }
 
 export function getReleasedGlobeStrokeWidthPx(orbRadiusPx, orbGlobeVisualState = ORB_GLOBE_VISUAL_DEFAULTS) {
-  const releasedStrokeWidthRatio = clampRatio(
-    orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthRatio,
-    ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthRatio
-  );
-  if (releasedStrokeWidthRatio > 0) {
-    return Math.max(0, Number(orbRadiusPx) * 2 * releasedStrokeWidthRatio);
-  }
-  return Math.max(
-    0,
-    scaleOrbLinkedPx(
-      orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthPx,
-      orbRadiusPx
-    )
-  );
+  return resolveOrbGlobeRatioOrPx({
+    ratio: orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthRatio,
+    px: orbGlobeVisualState && orbGlobeVisualState.releasedStrokeWidthPx,
+    fallbackRatio: ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthRatio,
+    fallbackPx: ORB_GLOBE_VISUAL_DEFAULTS.releasedStrokeWidthPx,
+  }, {
+    orbRadiusPx,
+    min: 0,
+  });
 }

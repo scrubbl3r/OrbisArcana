@@ -8,6 +8,50 @@ function clampPositive(n, fallback = 0) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+export function resolveOrbRatioPx(
+  ratio,
+  {
+    orbDiameterPx = null,
+    min = 0,
+    normalize = null,
+  } = {}
+) {
+  const resolvedOrbDiameterPx = Math.max(
+    1,
+    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
+  );
+  const resolved = Math.max(min, clampPositive(ratio, 0) * resolvedOrbDiameterPx);
+  return typeof normalize === "function" ? normalize(resolved) : resolved;
+}
+
+export function resolveOrbRatioOrPx(
+  {
+    ratio = null,
+    px = null,
+    fallbackRatio = 0,
+    fallbackPx = 0,
+  } = {},
+  {
+    orbDiameterPx = null,
+    min = 0,
+    normalize = null,
+  } = {}
+) {
+  const ratioCandidate = clampPositive(ratio, clampPositive(fallbackRatio, 0));
+  if (ratioCandidate > 0) {
+    return resolveOrbRatioPx(ratioCandidate, {
+      orbDiameterPx,
+      min,
+      normalize,
+    });
+  }
+  return resolveOrbLinkedPx(px, {
+    orbDiameterPx,
+    min,
+    normalize,
+  });
+}
+
 export function resolveOrbLinkedScale({
   orbDiameterPx = null,
   referenceDiameterPx = ORB_BASE_SCALE_REFERENCE_DIAMETER_PX,
@@ -53,22 +97,16 @@ export function resolveBubbleShieldGeometry(
     normalizeStroke = null,
   } = {}
 ) {
-  const resolvedOrbDiameterPx = Math.max(
-    1,
-    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
-  );
-  const diameterRatio = clampPositive(config.diameterRatio, 0);
-  const strokeWidthRatio = clampPositive(config.strokeWidthRatio, 0);
   return {
     ...config,
-    diameterPx: diameterRatio > 0
-      ? Math.max(10, diameterRatio * resolvedOrbDiameterPx)
-      : resolveOrbLinkedPx(config.diameterPx, { orbDiameterPx, min: 10 }),
-    strokeWidthPx: strokeWidthRatio > 0
-      ? (typeof normalizeStroke === "function"
-          ? normalizeStroke(Math.max(1, strokeWidthRatio * resolvedOrbDiameterPx))
-          : Math.max(1, strokeWidthRatio * resolvedOrbDiameterPx))
-      : resolveOrbLinkedPx(config.strokeWidthPx, {
+    diameterPx: resolveOrbRatioOrPx({
+      ratio: config.diameterRatio,
+      px: config.diameterPx,
+    }, { orbDiameterPx, min: 10 }),
+    strokeWidthPx: resolveOrbRatioOrPx({
+      ratio: config.strokeWidthRatio,
+      px: config.strokeWidthPx,
+    }, {
       orbDiameterPx,
       min: 1,
       normalize: normalizeStroke,
@@ -83,26 +121,20 @@ export function resolveShockwaveGeometry(
     normalizeStroke = null,
   } = {}
 ) {
-  const resolvedOrbDiameterPx = Math.max(
-    1,
-    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
-  );
-  const startRatio = clampPositive(config.startRatio, 0);
-  const endRatio = clampPositive(config.endRatio, 0);
-  const strokeRatio = clampPositive(config.strokeRatio, 0);
   return {
     ...config,
-    startR: startRatio > 0
-      ? Math.max(1, startRatio * resolvedOrbDiameterPx)
-      : resolveOrbLinkedPx(config.startR, { orbDiameterPx, min: 1 }),
-    endR: endRatio > 0
-      ? Math.max(1, endRatio * resolvedOrbDiameterPx)
-      : resolveOrbLinkedPx(config.endR, { orbDiameterPx, min: 1 }),
-    stroke: strokeRatio > 0
-      ? (typeof normalizeStroke === "function"
-          ? normalizeStroke(Math.max(1, strokeRatio * resolvedOrbDiameterPx))
-          : Math.max(1, strokeRatio * resolvedOrbDiameterPx))
-      : resolveOrbLinkedPx(config.stroke, {
+    startR: resolveOrbRatioOrPx({
+      ratio: config.startRatio,
+      px: config.startR,
+    }, { orbDiameterPx, min: 1 }),
+    endR: resolveOrbRatioOrPx({
+      ratio: config.endRatio,
+      px: config.endR,
+    }, { orbDiameterPx, min: 1 }),
+    stroke: resolveOrbRatioOrPx({
+      ratio: config.strokeRatio,
+      px: config.stroke,
+    }, {
       orbDiameterPx,
       min: 1,
       normalize: normalizeStroke,
@@ -111,34 +143,26 @@ export function resolveShockwaveGeometry(
 }
 
 export function resolveFlameAoeGeometry(config = {}, { orbDiameterPx = null } = {}) {
-  const resolvedOrbDiameterPx = Math.max(
-    1,
-    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
-  );
-  const diameterRatio = clampPositive(config.diameterRatio, 0);
   return {
     ...config,
-    diameter: diameterRatio > 0
-      ? Math.max(1, diameterRatio * resolvedOrbDiameterPx)
-      : resolveOrbLinkedPx(config.diameter, { orbDiameterPx, min: 1 }),
+    diameter: resolveOrbRatioOrPx({
+      ratio: config.diameterRatio,
+      px: config.diameter,
+    }, { orbDiameterPx, min: 1 }),
   };
 }
 
 export function resolveElectricAoeGeometry(config = {}, { orbDiameterPx = null } = {}) {
-  const resolvedOrbDiameterPx = Math.max(
-    1,
-    clampPositive(orbDiameterPx, getCanonicalOrbBaseDiameterPx())
-  );
-  const startRatio = clampPositive(config.startRatio, 0);
-  const endRatio = clampPositive(config.endRatio, 0);
   return {
     ...config,
-    startR: startRatio > 0
-      ? Math.max(2, startRatio * resolvedOrbDiameterPx)
-      : resolveOrbLinkedPx(config.startR, { orbDiameterPx, min: 2 }),
-    endR: endRatio > 0
-      ? Math.max(8, endRatio * resolvedOrbDiameterPx)
-      : resolveOrbLinkedPx(config.endR, { orbDiameterPx, min: 8 }),
+    startR: resolveOrbRatioOrPx({
+      ratio: config.startRatio,
+      px: config.startR,
+    }, { orbDiameterPx, min: 2 }),
+    endR: resolveOrbRatioOrPx({
+      ratio: config.endRatio,
+      px: config.endR,
+    }, { orbDiameterPx, min: 8 }),
     maxBoltJumpSq: resolveOrbLinkedSq(config.maxBoltJumpSq, { orbDiameterPx, min: 100 }),
   };
 }
