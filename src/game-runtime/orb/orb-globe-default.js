@@ -12,8 +12,8 @@ export const ORB_GLOBE_VISUAL_DEFAULTS = Object.freeze({
   innerSpeedMaxPxPerSec: 550,
   innerDriftMin: 0.10,
   innerDriftMax: 0.50,
-  innerPaddingRatio: 0.00,
-  pickupDiameterRatio: 0.00,
-  innerStrokeWidthRatio: 0.000,
-  releasedStrokeWidthRatio: 0.000,
+  innerPaddingRatio: 0.22,
+  pickupDiameterRatio: 0.50,
+  innerStrokeWidthRatio: 0.020,
+  releasedStrokeWidthRatio: 0.020,
 });
