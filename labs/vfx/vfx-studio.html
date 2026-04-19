@@ -1371,6 +1371,11 @@
       refreshBindingPanel as refreshBindingPanelHelper,
     } from "./studio/vfx-studio-bindings.js?v=20260410b";
     import {
+      buildPublishedPresetPayload as buildPublishedPresetPayloadHelper,
+      describePublishSuccess as describePublishSuccessHelper,
+      replaceRuntimeBindingEntry,
+    } from "./studio/vfx-studio-publish.js?v=20260418a";
+    import {
       createLabEffectSurfaces,
       deriveLabSurfaceMaps,
     } from "./studio/vfx-studio-surfaces.js?v=20260418l";
@@ -1977,29 +1982,6 @@
       });
     }
 
-    function sanitizePresetIdPart(text, fallback = "preset"){
-      const slug = slugifyEffectName(text);
-      return slug || fallback;
-    }
-
-    function derivePublishedEffectIdentity({ opt, record, profileName, baseEffect }) {
-      const authoringBaseEffect = String(baseEffect || "unknown");
-      const isCustomProfile = !!(opt && (String(opt.dataset.custom || "") === "true" || String(opt.value || "").startsWith("custom:")));
-      if (isCustomProfile && authoringBaseEffect === "orb-template") {
-        const stateSlug = sanitizePresetIdPart(profileName, "orb-state");
-        return {
-          authoringBaseEffect,
-          publishedBaseEffect: `orb-${stateSlug}`,
-          publishedEffectId: `orb-${stateSlug}`,
-        };
-      }
-      return {
-        authoringBaseEffect,
-        publishedBaseEffect: authoringBaseEffect,
-        publishedEffectId: String((record && record.registryId) || "").trim() || null,
-      };
-    }
-
     function defaultSettingsForBaseEffect(baseEffect){
       const defaultSettingsKey = defaultSettingsKeyForBaseEffect(baseEffect);
       const adapterDefaults = callAuthoringAdapter(defaultSettingsKey, "defaultSettings");
@@ -2028,28 +2010,8 @@
       return saveTextToConnectedProjectPathImported(pathParts, text);
     }
 
-    function describePublishedPath(pathParts){
-      const path = Array.isArray(pathParts) ? pathParts.join("/") : String(pathParts || "");
-      return path;
-    }
-
     function publishContractForBaseEffect(baseEffect){
       return PUBLISH_CONTRACTS_BY_BASE_EFFECT[String(baseEffect || "")] || null;
-    }
-
-    function describePublishSuccess({ publishedPaths = [], contract = null } = {}){
-      const paths = Array.isArray(publishedPaths) ? publishedPaths.filter(Boolean) : [];
-      if (!paths.length) return "Published.";
-      if (contract && contract.livePreset && contract.behavior && paths.length >= 2) {
-        return `Published live preset and behavior to ${paths.map(describePublishedPath).join(" + ")}`;
-      }
-      if (contract && contract.livePreset) {
-        return `Published live preset to ${describePublishedPath(paths[0])}`;
-      }
-      if (contract && contract.behavior) {
-        return `Published behavior to ${describePublishedPath(paths[0])}`;
-      }
-      return `Published to ${paths.map(describePublishedPath).join(" + ")}`;
     }
 
     function buildPublishedPresetPayload(){
@@ -2057,49 +2019,15 @@
       if (!opt) return null;
       const record = upsertCurrentDraftProfile();
       if (!record) return null;
-
-      const profileName = String(record.label || record.value || "effect");
-      const baseEffect = String(record.baseEffect || selectedBaseEffect() || "unknown");
-      const registryId = String(record.registryId || "");
-      const publishedIdentity = derivePublishedEffectIdentity({
+      return buildPublishedPresetPayloadHelper({
         opt,
         record,
-        profileName,
-        baseEffect,
+        selectedBaseEffect: selectedBaseEffect(),
+        settingsKeyForBaseEffect,
+        captureCurrentEffectSettings,
+        registryEntries: VFX_EFFECT_REGISTRY,
+        slugifyEffectName,
       });
-      const publishedBaseEffect = String(publishedIdentity.publishedBaseEffect || baseEffect || "unknown");
-      const settingsKey = settingsKeyForBaseEffect(baseEffect);
-      const settings = record.settingsByBaseEffect && (record.settingsByBaseEffect[settingsKey] || record.settingsByBaseEffect[baseEffect])
-        ? record.settingsByBaseEffect[settingsKey] || record.settingsByBaseEffect[baseEffect]
-        : captureCurrentEffectSettings(baseEffect);
-      const registryEntry = (Array.isArray(VFX_EFFECT_REGISTRY) ? VFX_EFFECT_REGISTRY : [])
-        .find((e) => String(e && e.id || "") === registryId) || null;
-      const generatedPresetId = registryId
-        ? `preset.${sanitizePresetIdPart(registryId.replace(/\./g, "-"), "effect")}.${sanitizePresetIdPart(profileName, "custom")}`
-        : `preset.${sanitizePresetIdPart(publishedBaseEffect, "effect")}.${sanitizePresetIdPart(profileName, "custom")}`;
-
-      return {
-        filename: `${sanitizePresetIdPart(publishedBaseEffect, "effect")}--${sanitizePresetIdPart(profileName, "preset")}.preset.json`,
-        payload: {
-          kind: "orbis-arcana.vfx-preset-draft",
-          version: 1,
-          profileName,
-          profileValue: String(record.value || ""),
-          effectId: registryId || publishedIdentity.publishedEffectId || null,
-          baseEffect: publishedBaseEffect,
-          presetId: generatedPresetId,
-          params: settings || {},
-          source: {
-            studio: "vfx-studio.html",
-            selectionLabel: String(opt.textContent || profileName),
-            authoringBaseEffect: String(publishedIdentity.authoringBaseEffect || baseEffect || ""),
-            settingsKey,
-            registryDefaultPresetId: registryEntry ? String(registryEntry.defaultPresetId || "") : "",
-          },
-          savedAtMs: Number(record.savedAtMs) || Date.now(),
-          exportedAtMs: Date.now(),
-        },
-      };
     }
 
     function publishPreset(){
@@ -2142,7 +2070,7 @@
                 if (ok) publishedPaths.push(behaviorTarget.path);
               }
               if (ok) {
-                window.alert(describePublishSuccess({ publishedPaths, contract }));
+                window.alert(describePublishSuccessHelper({ publishedPaths, contract }));
                 return;
               }
             }
@@ -2215,21 +2143,7 @@
         presetId: String(built.payload.presetId || registryEntry.defaultPresetId || ""),
       };
 
-      const existingEntry = (Array.isArray(runtimeEffectBindingsState) ? runtimeEffectBindingsState : []).find((entry) => {
-        const entryKind = String((entry && entry.targetKind) || "").trim().toLowerCase();
-        const entryId = String((entry && entry.targetId) || "").trim().toLowerCase();
-        return entryKind === String(runtimeTarget.targetKind || "").trim().toLowerCase()
-          && entryId === String(runtimeTarget.targetId || "").trim().toLowerCase();
-      }) || null;
-      void existingEntry;
-
-      const otherEntries = (Array.isArray(runtimeEffectBindingsState) ? runtimeEffectBindingsState : []).filter((entry) => {
-        const entryKind = String((entry && entry.targetKind) || "").trim().toLowerCase();
-        const entryId = String((entry && entry.targetId) || "").trim().toLowerCase();
-        return !(entryKind === String(runtimeTarget.targetKind || "").trim().toLowerCase()
-          && entryId === String(runtimeTarget.targetId || "").trim().toLowerCase());
-      });
-      runtimeEffectBindingsState = [...otherEntries, nextEntry];
+      runtimeEffectBindingsState = replaceRuntimeBindingEntry(runtimeEffectBindingsState, nextEntry);
 
       const moduleText = buildRuntimeEffectBindingsModule(runtimeEffectBindingsState);
       const targetPath = ["src", "content", "vfx", "runtime-effect-bindings.js"];
