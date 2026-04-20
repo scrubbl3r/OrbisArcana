@@ -231,7 +231,7 @@ It also supports future breadcrumb behavior:
 - parent consumption or spend can unlock child emitters
 - world routes can be taught through regenerative beacon rules
 
-## Part 8: MVP Direction Going Forward
+## Part 8: MVP Direction Going Forward 
 
 When implementation resumes, the MVP should likely separate into two tracks:
 
