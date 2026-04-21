@@ -174,7 +174,7 @@ export function createOrbNodRuntime({
     activePath.setAttribute("stroke", strokeColor);
     activePath.setAttribute("stroke-width", String(strokeWidth));
     activeSvg.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(4)})`;
-    activeSvg.style.filter = `drop-shadow(0 0 ${Math.max(2, Math.abs(signedWaveDepth) * 1.4).toFixed(2)}px ${strokeColor})`;
+    activeSvg.style.filter = "none";
 
     if (progress >= 1) {
       stop();

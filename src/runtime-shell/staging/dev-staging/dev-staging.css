@@ -126,25 +126,18 @@
   border-radius: 999px;
   border: 1px solid rgba(var(--frame-rgb), .42);
   background: rgba(var(--frame-rgb), .18);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
   flex: 0 0 auto;
 }
 
 .devStagingLamp.on {
   border-color: rgba(255,60,60,0.88);
   background: var(--lamp);
-  box-shadow:
-    0 0 12px var(--lampGlow),
-    0 0 28px rgba(255,60,60,0.26);
 }
 
 #dynLampStable.on,
 #dynLampVar.on {
   border-color: rgba(80,160,255,0.90);
   background: var(--dynLamp);
-  box-shadow:
-    0 0 12px var(--dynLampGlow),
-    0 0 28px rgba(80,160,255,0.30);
 }
 
 .devStagingDirRow {
@@ -311,9 +304,7 @@
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);
   color: rgba(122, 122, 128, 0.68);
-  box-shadow: none;
-  text-shadow: none;
-  transition: border-color 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
 }
 
 .logPopupTabs .logTabBtn:hover {
@@ -326,22 +317,17 @@
   border-color: rgba(240, 240, 244, 0.98);
   color: rgb(245, 245, 248);
   background: rgba(255, 255, 255, 0.10);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
-    0 0 18px rgba(255, 255, 255, 0.05);
 }
 
 .logPopupTabs .logTabBtn:not(.on) {
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);
   color: rgba(122, 122, 128, 0.68);
-  box-shadow: none;
 }
 
 .logPopupTabs .logTabBtn:focus,
 .logPopupTabs .logTabBtn:focus-visible {
   outline: none;
-  box-shadow: none;
 }
 
 .logPopupTabs .logTabBtn:focus-visible {
@@ -370,8 +356,7 @@
   gap: 6px;
   padding: 7px 10px;
   border-bottom: 1px solid rgba(var(--frame-rgb), 0.18);
-  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
-    rgba(10, 10, 12, 0.92);
+  background: rgba(10, 10, 12, 0.92);
 }
 
 .cameraInputMeta {
@@ -380,8 +365,7 @@
   gap: 6px;
   padding: 10px 12px;
   border-bottom: 1px solid rgba(var(--frame-rgb), 0.18);
-  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
-    rgba(10, 10, 12, 0.92);
+  background: rgba(10, 10, 12, 0.92);
 }
 
 .cameraInputMetaGrid {
@@ -437,9 +421,7 @@
   height: 48px;
   border-radius: 14px;
   border: 1px solid rgba(var(--frame-rgb), .30);
-  background:
-    linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
-    rgba(var(--frame-rgb), .10);
+  background: rgba(var(--frame-rgb), .10);
   overflow: hidden;
 }
 
@@ -459,12 +441,11 @@
   bottom: 8px;
   width: 0%;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(80,160,255,0.20), rgba(80,160,255,0.72));
-  box-shadow: 0 0 22px rgba(80,160,255,0.18);
+  background: rgba(80,160,255,0.56);
 }
 
 .cameraInputSignalFill[data-side="left"] {
-  background: linear-gradient(90deg, rgba(80,160,255,0.72), rgba(80,160,255,0.20));
+  background: rgba(80,160,255,0.56);
 }
 
 .cameraInputSignalDot {
@@ -475,9 +456,7 @@
   border-radius: 999px;
   transform: translate(-50%, -50%);
   background: rgba(255,255,255,.94);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,.24),
-    0 0 18px rgba(255,255,255,.18);
+  border: 1px solid rgba(0,0,0,.24);
 }
 
 .cameraInputSignalTrack[data-tracking-state="tracking"] .cameraInputSignalDot {
