@@ -1,5 +1,5 @@
-import { CAMERA_STEERING_CONFIG_DEFAULT } from "../../../content/input/camera-steering-config-default.js?v=20260420d";
-import { createCameraSteeringSystem } from "../../../game-runtime/input/camera-steering-system.js?v=20260420d";
+import { CAMERA_STEERING_CONFIG_DEFAULT } from "../../../content/input/camera-steering-config-default.js?v=20260420o";
+import { createCameraSteeringSystem } from "../../../game-runtime/input/camera-steering-system.js?v=20260420o";
 
 export function createCameraInputOrbBridge({
   cameraInputRuntime = null,

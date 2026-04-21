@@ -96,8 +96,8 @@ export function createCameraInputPopup({
       if (steering && typeof steering === "object") {
         const reason = String(steering.reason || "idle");
         const intentX = formatFixed(steering.intentX, 3, "0.000");
-        const targetVX = formatFixed(steering.targetVX, 1, "0.0");
-        els.cameraInputSteeringReadout.textContent = `${reason} intent:${intentX} vx:${targetVX}`;
+        const accelIntentX = formatFixed(steering.accelIntentX, 3, "0.000");
+        els.cameraInputSteeringReadout.textContent = `${reason} intent:${intentX} accel:${accelIntentX}`;
       } else {
         els.cameraInputSteeringReadout.textContent = "idle";
       }

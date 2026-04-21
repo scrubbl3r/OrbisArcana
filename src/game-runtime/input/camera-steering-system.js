@@ -19,12 +19,16 @@ export function createCameraSteeringSystem({
   const cfg = {
     preferredHand: String(config.preferredHand || "Left"),
     confidenceMin: clamp01(config.confidenceMin == null ? 0.55 : config.confidenceMin),
-    deadband01: clamp01(config.deadband01 == null ? 0.10 : config.deadband01),
+    deadbandEnter01: clamp01(config.deadbandEnter01 == null ? 0.08 : config.deadbandEnter01),
+    deadbandExit01: clamp01(config.deadbandExit01 == null ? 0.04 : config.deadbandExit01),
+    directionSwitch01: clamp01(config.directionSwitch01 == null ? 0.11 : config.directionSwitch01),
+    responseExponent: Math.max(0.1, Number(config.responseExponent) || 0.78),
     maxIntent01: Math.max(0.01, Number(config.maxIntent01) || 1),
-    maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 880),
-    accelPxPerSec2: Math.max(1, Number(config.accelPxPerSec2) || 3400),
-    decelPxPerSec2: Math.max(1, Number(config.decelPxPerSec2) || 4200),
-    inactiveDecelPxPerSec2: Math.max(1, Number(config.inactiveDecelPxPerSec2) || 5200),
+    maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 1120),
+    accelPxPerSec2: Math.max(1, Number(config.accelPxPerSec2) || 5600),
+    decelPxPerSec2: Math.max(1, Number(config.decelPxPerSec2) || 4600),
+    turnBrakePxPerSec2: Math.max(1, Number(config.turnBrakePxPerSec2) || 7600),
+    inactiveDecelPxPerSec2: Math.max(1, Number(config.inactiveDecelPxPerSec2) || 6200),
   };
 
   const steeringState = {
@@ -35,18 +39,41 @@ export function createCameraSteeringSystem({
     intentX: 0,
     targetVX: 0,
     accelX: 0,
+    accelIntentX: 0,
+    maxSpeedPxPerSec: cfg.maxSpeedPxPerSec,
+    turnBrakePxPerSec2: cfg.turnBrakePxPerSec2,
     handedness: "",
     trackingState: "idle",
     updatedAtMs: 0,
+    latchedDirection: 0,
   };
 
   function deriveIntentX(centeredX01) {
     const centered = clampSigned(centeredX01, 1);
-    const deadband = cfg.deadband01;
     const magnitude = Math.abs(centered);
-    if (magnitude <= deadband) return 0;
-    const normalized = clamp01((magnitude - deadband) / Math.max(1e-6, 1 - deadband));
-    return clampSigned(Math.sign(centered) * normalized, cfg.maxIntent01);
+    const direction = Math.sign(centered);
+    const exitDeadband = Math.min(cfg.deadbandEnter01, cfg.deadbandExit01);
+    if (direction === 0 || magnitude <= exitDeadband) {
+      return 0;
+    }
+
+    if (
+      steeringState.latchedDirection !== 0 &&
+      direction !== steeringState.latchedDirection &&
+      magnitude < cfg.directionSwitch01
+    ) {
+      return 0;
+    }
+
+    const activeDeadband = steeringState.latchedDirection === 0 ? cfg.deadbandEnter01 : exitDeadband;
+    if (magnitude <= activeDeadband) {
+      return 0;
+    }
+
+    const normalized = clamp01((magnitude - activeDeadband) / Math.max(1e-6, 1 - activeDeadband));
+    const curved = Math.pow(normalized, cfg.responseExponent);
+    steeringState.latchedDirection = direction;
+    return clampSigned(direction * curved, cfg.maxIntent01);
   }
 
   function updateFromCameraState(cameraState = null, atMs = Date.now()) {
@@ -77,6 +104,9 @@ export function createCameraSteeringSystem({
     }
 
     const intentX = active ? deriveIntentX(centeredX01) : 0;
+    if (!active) {
+      steeringState.latchedDirection = 0;
+    }
     steeringState.active = active;
     steeringState.reason = reason;
     steeringState.confidence = confidence;
@@ -86,6 +116,9 @@ export function createCameraSteeringSystem({
     steeringState.accelX = active
       ? (intentX !== 0 ? cfg.accelPxPerSec2 : cfg.decelPxPerSec2)
       : cfg.inactiveDecelPxPerSec2;
+    steeringState.accelIntentX = intentX;
+    steeringState.maxSpeedPxPerSec = cfg.maxSpeedPxPerSec;
+    steeringState.turnBrakePxPerSec2 = cfg.turnBrakePxPerSec2;
     steeringState.handedness = handedness;
     steeringState.trackingState = trackingState;
     steeringState.updatedAtMs = Number(atMs) || Date.now();
@@ -101,9 +134,13 @@ export function createCameraSteeringSystem({
       intentX: Number(steeringState.intentX) || 0,
       targetVX: Number(steeringState.targetVX) || 0,
       accelX: Number(steeringState.accelX) || 0,
+      accelIntentX: Number(steeringState.accelIntentX) || 0,
+      maxSpeedPxPerSec: Number(steeringState.maxSpeedPxPerSec) || 0,
+      turnBrakePxPerSec2: Number(steeringState.turnBrakePxPerSec2) || 0,
       handedness: String(steeringState.handedness || ""),
       trackingState: String(steeringState.trackingState || "idle"),
       updatedAtMs: Number(steeringState.updatedAtMs) || 0,
+      latchedDirection: Number(steeringState.latchedDirection) || 0,
     };
   }
 
@@ -112,4 +149,3 @@ export function createCameraSteeringSystem({
     getState,
   };
 }
-

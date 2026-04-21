@@ -13,6 +13,11 @@ function moveToward(current, target, maxDelta) {
   return c;
 }
 
+function clampSigned(value, maxMagnitude) {
+  const max = Math.max(0, Number(maxMagnitude) || 0);
+  return clamp(value, -max, max);
+}
+
 export function stepOrbLateralMotion({
   dt = 0,
   state = null,
@@ -24,12 +29,26 @@ export function stepOrbLateralMotion({
   const right = Number(bounds.right);
   if (!Number.isFinite(left) || !Number.isFinite(right) || right <= left) return;
 
-  const targetVX = Number(steering && steering.targetVX) || 0;
+  const frameDt = Math.max(0, Number(dt) || 0);
+  const accelIntentX = clampSigned(Number(steering && steering.accelIntentX) || 0, 1);
   const accelX = Math.max(1, Number(steering && steering.accelX) || 1);
-  const maxDeltaV = accelX * Math.max(0, Number(dt) || 0);
+  const turnBrakePxPerSec2 = Math.max(accelX, Number(steering && steering.turnBrakePxPerSec2) || accelX);
+  const maxSpeedPxPerSec = Math.max(1, Number(steering && steering.maxSpeedPxPerSec) || Math.max(Math.abs(Number(steering && steering.targetVX) || 0), 1));
+  const currentVx = Number(state.vx) || 0;
 
-  state.vx = moveToward(state.vx, targetVX, maxDeltaV);
-  state.xW += (Number(state.vx) || 0) * Math.max(0, Number(dt) || 0);
+  if (accelIntentX !== 0) {
+    const requestedAccel = accelIntentX * accelX;
+    let nextVx = currentVx;
+    if (currentVx !== 0 && Math.sign(currentVx) !== Math.sign(requestedAccel)) {
+      nextVx = moveToward(currentVx, 0, turnBrakePxPerSec2 * frameDt);
+    }
+    nextVx += requestedAccel * frameDt;
+    state.vx = clampSigned(nextVx, maxSpeedPxPerSec);
+  } else {
+    state.vx = moveToward(currentVx, 0, accelX * frameDt);
+  }
+
+  state.xW += (Number(state.vx) || 0) * frameDt;
 
   if (state.xW <= left) {
     state.xW = left;
@@ -42,4 +61,3 @@ export function stepOrbLateralMotion({
   state.steerIntentX = Number(steering && steering.intentX) || 0;
   state.steerActive = !!(steering && steering.active);
 }
-
