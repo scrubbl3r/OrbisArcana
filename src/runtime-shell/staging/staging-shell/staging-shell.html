@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Orbis Arcana Staging Shell</title>
   <link rel="stylesheet" href="../../ui/staging-ui.css?v=20260421a" />
-  <link rel="stylesheet" href="./staging-shell.css?v=20260421f" />
+  <link rel="stylesheet" href="./staging-shell.css?v=20260421g" />
   <link rel="stylesheet" href="../dev-staging/dev-staging.css?v=20260421i" />
   <link rel="stylesheet" href="../orb-stage/orb-stage.css?v=20260421a" />
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
@@ -32,9 +32,10 @@
   </div>
 
   <main class="stagingShell">
-    <section class="shellGrid shellGridSplit" aria-label="Composite staging surface">
+    <section id="shellSurface" class="shellGrid" aria-label="Composite staging surface">
       <div id="devStagingMount" class="shellMount shellMountDev" aria-label="Dev staging mount"></div>
       <div id="orbStageMount" class="shellMount shellMountOrb" aria-label="Orb stage mount"></div>
+      <div id="levelStageMount" class="shellMount shellMountLevel" aria-label="Level stage mount"></div>
     </section>
   </main>
 
@@ -46,6 +47,6 @@
     </div>
   </div>
 
-  <script type="module" src="./staging-shell.js?v=20260421d"></script>
+  <script type="module" src="./staging-shell.js?v=20260421e"></script>
 </body>
 </html>

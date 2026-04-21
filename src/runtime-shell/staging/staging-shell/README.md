@@ -4,9 +4,14 @@ Planned responsibilities:
 - own the top-level staging page
 - create shared runtime/session context for staging surfaces
 - mount `dev-staging` and `orb-stage`
-- control presentation modes such as overlay, dock, or split view
+- control presentation modes such as `split-lab` and `level-overlay`
 
 The shell should orchestrate staging surfaces, not own deep gameplay logic.
+
+Current shell mode policy:
+- `split-lab` is the default bounded workbench: `dev-stage` left, `orb-stage` right
+- `level-overlay` is the immersive shell mode: full-window main stage with toggleable dev-stage rail
+- shell hotkeys are guarded behind `Cmd+Shift+1`, `Cmd+Shift+2`, and `Cmd+Shift+D`
 
 Current testing policy:
 - `staging-shell.html` is now the default harness and default smoke target

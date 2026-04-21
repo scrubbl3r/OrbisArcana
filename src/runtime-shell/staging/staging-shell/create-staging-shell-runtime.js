@@ -19,6 +19,12 @@ import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runti
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260420g";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
+import {
+  createStagingShellModeController,
+  STAGING_DEV_STAGE_VISIBILITY,
+  STAGING_SHELL_MODE,
+} from "./staging-shell-mode-controller.js?v=20260421a";
+import { renderLevelOverlayPlaceholder } from "./level-overlay-placeholder.js?v=20260421a";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -29,7 +35,6 @@ import { createCameraInputPanelController } from "../../../ui/dev-console/camera
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
-  splitLab: "split-lab",
   booting: "booting",
   sharedModulesReady: "shared-modules-ready",
   localStageReady: "local-stage-ready",
@@ -1400,6 +1405,50 @@ function createShellSurfaceRefs({ devStagingView, orbStageView } = {}) {
   };
 }
 
+function isShellEditableTarget(target) {
+  const el = target && target.nodeType === 1 ? target : null;
+  if (!el) return false;
+  if (typeof el.closest === "function" && el.closest("input, textarea, select, [contenteditable='true']")) {
+    return true;
+  }
+  return !!(el.isContentEditable);
+}
+
+function bindShellModeHotkeys(shellContext) {
+  const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
+  const modeController = shellContext && shellContext.modeController ? shellContext.modeController : null;
+  if (!rootDocument || !modeController || !rootDocument.defaultView) return () => {};
+
+  const onKeyDown = (event) => {
+    if (!event || event.defaultPrevented) return;
+    if (!event.metaKey || !event.shiftKey || event.ctrlKey || event.altKey) return;
+    if (isShellEditableTarget(event.target)) return;
+    const key = String(event.key || "").toLowerCase();
+    const code = String(event.code || "");
+    if (code === "Digit1") {
+      event.preventDefault();
+      modeController.setMode(STAGING_SHELL_MODE.splitLab);
+      return;
+    }
+    if (code === "Digit2") {
+      event.preventDefault();
+      modeController.setMode(STAGING_SHELL_MODE.levelOverlay);
+      return;
+    }
+    if (key === "d") {
+      const state = modeController.getState();
+      if (state.mode !== STAGING_SHELL_MODE.levelOverlay) return;
+      event.preventDefault();
+      modeController.toggleDevStageVisibility();
+    }
+  };
+
+  rootDocument.defaultView.addEventListener("keydown", onKeyDown);
+  return () => {
+    rootDocument.defaultView.removeEventListener("keydown", onKeyDown);
+  };
+}
+
 function createLegacyLikeStageElements(surfaceRefs = {}) {
   const orb = surfaceRefs.orb || Object.create(null);
   return {
@@ -1630,8 +1679,10 @@ function createStagingShellContext({
   rootDocument,
   devStagingView,
   orbStageView,
+  levelOverlayView,
   currentLevel = LEVEL01,
   sharedModules,
+  modeController = null,
 } = {}) {
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView });
   const orbStageAdapter = createOrbStageAdapter(orbStageView);
@@ -1641,7 +1692,9 @@ function createStagingShellContext({
     views: {
       devStagingView,
       orbStageView,
+      levelOverlayView,
     },
+    modeController,
     currentLevel,
     refs: surfaceRefs,
     orbStageAdapter,
@@ -1665,6 +1718,8 @@ function createStagingShellContext({
       orbRuntimeLoop: null,
       orbRuntimeState: null,
       stage: null,
+      shellModeController: modeController,
+      shellModeHotkeyOff: null,
     },
   };
 }
@@ -2240,15 +2295,20 @@ export async function createStagingShellRuntime({
   const docEl = rootDocument.documentElement;
   const devRoot = rootDocument.getElementById("devStagingMount");
   const orbRoot = rootDocument.getElementById("orbStageMount");
+  const levelRoot = rootDocument.getElementById("levelStageMount");
+  const modeController = createStagingShellModeController({
+    rootDocument,
+    defaultMode: STAGING_SHELL_MODE.splitLab,
+    defaultDevStageVisibility: STAGING_DEV_STAGE_VISIBILITY.shown,
+  });
 
   if (docEl) {
-    docEl.dataset.stagingShell = STAGING_SHELL_STATUS.splitLab;
     docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.booting;
   }
   if (bootStatus && typeof bootStatus.setStatus === "function") {
     bootStatus.setStatus({
       phase: STAGING_SHELL_STATUS.booting,
-      detail: "Mounting dev-stage and orb-stage",
+      detail: "Mounting shell surfaces",
       state: "booting",
     });
   }
@@ -2256,6 +2316,7 @@ export async function createStagingShellRuntime({
   const currentLevel = LEVEL01;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: currentLevel }) : null;
+  const levelOverlayView = levelRoot ? renderLevelOverlayPlaceholder(levelRoot, { level: currentLevel }) : null;
 
   if (devStagingView && devStagingView.refs) {
     safeSetText(devStagingView.refs.rulesReadout, "boot:staging-shell");
@@ -2288,10 +2349,13 @@ export async function createStagingShellRuntime({
       rootDocument,
       devStagingView,
       orbStageView,
+      levelOverlayView,
       currentLevel,
       sharedModules,
+      modeController,
     });
     shellContext.bootStatus = bootStatus;
+    shellContext.runtime.shellModeHotkeyOff = bindShellModeHotkeys(shellContext);
     const createOrbColorRuntime =
       sharedModules.orbColorRuntimeModule &&
       sharedModules.orbColorRuntimeModule.createOrbColorRuntime;
