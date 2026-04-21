@@ -21,6 +21,7 @@ body {
 
 .devStagingCard,
 .gameStagingCard,
+.orbStageCard,
 .shellCalibCard,
 .deathCard,
 .logPanel,
@@ -37,7 +38,8 @@ body {
 }
 
 .devStagingCard,
-.gameStagingCard {
+.gameStagingCard,
+.orbStageCard {
   background: var(--surface);
 }
 
