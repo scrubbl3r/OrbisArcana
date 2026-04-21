@@ -179,6 +179,47 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
         }),
       }));
 
+      const starTileCanvas = rootDocument.createElement("canvas");
+      starTileCanvas.width = Math.floor(width * dpr);
+      starTileCanvas.height = Math.floor(height * dpr);
+      const starTileCtx = starTileCanvas.getContext("2d", { alpha: false });
+      if (starTileCtx) {
+        starTileCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        starTileCtx.fillStyle = "#000";
+        starTileCtx.fillRect(0, 0, width, height);
+        for (const layer of stageBackdrop.layers || []) {
+          for (const star of layer.stars || []) {
+            const tileY = ((Number(star.yW) || 0) % height + height) % height;
+            starTileCtx.fillStyle = `rgba(${star.rgb[0]},${star.rgb[1]},${star.rgb[2]},${star.a})`;
+            starTileCtx.beginPath();
+            starTileCtx.arc(star.x, tileY, star.r, 0, Math.PI * 2);
+            starTileCtx.fill();
+          }
+        }
+      }
+      stageBackdrop.starTileCanvas = starTileCanvas;
+
+      const vignetteCanvas = rootDocument.createElement("canvas");
+      vignetteCanvas.width = Math.floor(width * dpr);
+      vignetteCanvas.height = Math.floor(height * dpr);
+      const vignetteCtx = vignetteCanvas.getContext("2d", { alpha: true });
+      if (vignetteCtx) {
+        vignetteCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const vignette = vignetteCtx.createRadialGradient(
+          width * 0.5,
+          height * 0.42,
+          Math.min(width, height) * 0.10,
+          width * 0.5,
+          height * 0.42,
+          Math.max(width, height) * 0.75
+        );
+        vignette.addColorStop(0, "rgba(0,0,0,0)");
+        vignette.addColorStop(1, "rgba(0,0,0,0.55)");
+        vignetteCtx.fillStyle = vignette;
+        vignetteCtx.fillRect(0, 0, width, height);
+      }
+      stageBackdrop.vignetteCanvas = vignetteCanvas;
+
       stageBackdrop.mountainPoints = Array.isArray(terrainProfile) && terrainProfile.length
         ? terrainProfile.map((point = {}) => ({
             x: Math.round(clamp01(point.xNorm) * width),
@@ -191,6 +232,25 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
               yOff: [58, 74, 52, 96, 66, 84, 61, 98, 76, 88][i] || 60,
             };
           });
+      if (typeof Path2D === "function" && stageBackdrop.mountainPoints.length >= 2) {
+        const fillPath = new Path2D();
+        const strokePath = new Path2D();
+        const pts = stageBackdrop.mountainPoints;
+        fillPath.moveTo(pts[0].x, -pts[0].yOff);
+        strokePath.moveTo(pts[0].x, -pts[0].yOff);
+        for (const p of pts) {
+          fillPath.lineTo(p.x, -p.yOff);
+          strokePath.lineTo(p.x, -p.yOff);
+        }
+        fillPath.lineTo(pts[pts.length - 1].x, 0);
+        fillPath.lineTo(pts[0].x, 0);
+        fillPath.closePath();
+        stageBackdrop.mountainFillPath = fillPath;
+        stageBackdrop.mountainStrokePath = strokePath;
+      } else {
+        stageBackdrop.mountainFillPath = null;
+        stageBackdrop.mountainStrokePath = null;
+      }
     },
     drawStars({
       runtime = null,
@@ -207,25 +267,17 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
         return;
       }
       stageBackdrop.lastStarCamTop = nextCamTop;
-
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, w, h);
-
-      for (const layer of stageBackdrop.layers || []) {
-        for (const star of layer.stars || []) {
-          const y = ((star.yW - nextCamTop) % h + h) % h;
-          ctx.fillStyle = `rgba(${star.rgb[0]},${star.rgb[1]},${star.rgb[2]},${star.a})`;
-          ctx.beginPath();
-          ctx.arc(star.x, y, star.r, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      const offsetY = ((-nextCamTop % h) + h) % h;
+      if (stageBackdrop.starTileCanvas) {
+        ctx.drawImage(stageBackdrop.starTileCanvas, 0, offsetY - h, w, h);
+        ctx.drawImage(stageBackdrop.starTileCanvas, 0, offsetY, w, h);
+      } else {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, w, h);
       }
-
-      const vignette = ctx.createRadialGradient(w * 0.5, h * 0.42, Math.min(w, h) * 0.10, w * 0.5, h * 0.42, Math.max(w, h) * 0.75);
-      vignette.addColorStop(0, "rgba(0,0,0,0)");
-      vignette.addColorStop(1, "rgba(0,0,0,0.55)");
-      ctx.fillStyle = vignette;
-      ctx.fillRect(0, 0, w, h);
+      if (stageBackdrop.vignetteCanvas) {
+        ctx.drawImage(stageBackdrop.vignetteCanvas, 0, 0, w, h);
+      }
     },
     drawBackdrop({
       runtime = null,
@@ -247,26 +299,32 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
       ctx.clearRect(0, 0, w, h);
       if (pts.length < 2) return;
 
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, nextGroundY - pts[0].yOff);
-      for (const p of pts) ctx.lineTo(p.x, nextGroundY - p.yOff);
-      ctx.lineTo(pts[pts.length - 1].x, nextGroundY);
-      ctx.lineTo(pts[0].x, nextGroundY);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(0,0,0,1)";
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, nextGroundY - pts[0].yOff);
-      for (const p of pts) ctx.lineTo(p.x, nextGroundY - p.yOff);
+      ctx.save();
+      ctx.translate(0, nextGroundY);
       ctx.strokeStyle = "rgba(132, 232, 164, 0.92)";
       ctx.lineWidth = 2;
       ctx.lineJoin = "miter";
       ctx.lineCap = "round";
-      ctx.shadowColor = "rgba(132, 232, 164, 0.25)";
-      ctx.shadowBlur = 8;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
+      if (stageBackdrop.mountainFillPath && stageBackdrop.mountainStrokePath) {
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.fill(stageBackdrop.mountainFillPath);
+        ctx.stroke(stageBackdrop.mountainStrokePath);
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, -pts[0].yOff);
+        for (const p of pts) ctx.lineTo(p.x, -p.yOff);
+        ctx.lineTo(pts[pts.length - 1].x, 0);
+        ctx.lineTo(pts[0].x, 0);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, -pts[0].yOff);
+        for (const p of pts) ctx.lineTo(p.x, -p.yOff);
+        ctx.stroke();
+      }
+      ctx.restore();
     },
     applyGroundLine({
       top = 0,

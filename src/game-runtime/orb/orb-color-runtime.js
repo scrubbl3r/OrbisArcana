@@ -35,6 +35,8 @@ export function createOrbColorRuntime({
     spinFill: null,
     spinAlpha: 0.20,
     initialized: false,
+    lastStrokeCss: "",
+    lastFillCss: "",
   };
 
   function resolveBaseState() {
@@ -65,8 +67,16 @@ export function createOrbColorRuntime({
     const fillR = Math.round(clamp01(fillColor.r) * 255);
     const fillG = Math.round(clamp01(fillColor.g) * 255);
     const fillB = Math.round(clamp01(fillColor.b) * 255);
-    root.style.setProperty("--orb-stroke-color", `rgb(${strokeR},${strokeG},${strokeB})`);
-    root.style.setProperty("--orb-fill", `rgba(${fillR},${fillG},${fillB},${clamp01(alpha).toFixed(2)})`);
+    const nextStrokeCss = `rgb(${strokeR},${strokeG},${strokeB})`;
+    const nextFillCss = `rgba(${fillR},${fillG},${fillB},${clamp01(alpha).toFixed(2)})`;
+    if (nextStrokeCss !== state.lastStrokeCss) {
+      state.lastStrokeCss = nextStrokeCss;
+      root.style.setProperty("--orb-stroke-color", nextStrokeCss);
+    }
+    if (nextFillCss !== state.lastFillCss) {
+      state.lastFillCss = nextFillCss;
+      root.style.setProperty("--orb-fill", nextFillCss);
+    }
   }
 
   function syncToBase({ immediate = false } = {}) {

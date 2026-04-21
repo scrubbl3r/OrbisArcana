@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderGameStaging } from "../game-staging/game-staging.js?v=20260420k";
+import { renderGameStaging } from "../game-staging/game-staging.js?v=20260420n";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
 import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
 import { createGameStagingOrbActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
@@ -2259,7 +2259,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260420m",
+  moduleCacheBustV = "20260420n",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
