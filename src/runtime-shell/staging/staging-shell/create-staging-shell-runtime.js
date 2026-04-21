@@ -306,7 +306,8 @@ function shellStageRect(shellContext) {
   if (runtime && runtime.stageRectCache) {
     return runtime.stageRectCache;
   }
-  const physStage = shellContext && shellContext.stageEls ? shellContext.stageEls.physStage : null;
+  const activeStageEls = getActiveShellStageElements(shellContext);
+  const physStage = activeStageEls && activeStageEls.physStage ? activeStageEls.physStage : null;
   if (!physStage || typeof physStage.getBoundingClientRect !== "function") {
     return { width: 0, height: 0 };
   }
@@ -391,7 +392,8 @@ function shellOrbScreenY(shellContext) {
 
 function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const physStage = shellContext && shellContext.stageEls ? shellContext.stageEls.physStage : null;
+  const activeStageEls = getActiveShellStageElements(shellContext);
+  const physStage = activeStageEls && activeStageEls.physStage ? activeStageEls.physStage : null;
   if (!runtime || !physStage || typeof physStage.getBoundingClientRect !== "function") return null;
   const rect = physStage.getBoundingClientRect();
   const safeRect = {
@@ -421,8 +423,8 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
 
 function applyShellGroundLine(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
-  if (!stage || !stage.phys || !orbStageAdapter || typeof orbStageAdapter.applyGroundLine !== "function") return;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  if (!stage || !stage.phys || !activeStageAdapter || typeof activeStageAdapter.applyGroundLine !== "function") return;
   const rect = shellStageRect(shellContext);
   const groundLineWorldY = shellGroundCenterWorld(shellContext) +
     (Number(stage.phys.orbRadiusPx) || 50) +
@@ -430,7 +432,7 @@ function applyShellGroundLine(shellContext) {
   const camTop = shellCameraTopFor(shellContext, stage.orbRuntimeState.get().yW, rect.height || 0);
   const groundY = groundLineWorldY - camTop;
   const top = groundY - (((Number(stage.phys.groundLinePx) || 2) * 0.5));
-  orbStageAdapter.applyGroundLine({ top });
+  activeStageAdapter.applyGroundLine({ top });
 }
 
 function applyShellOrbTransform(shellContext) {
@@ -1232,10 +1234,9 @@ async function initShellReceiverHostRuntime(shellContext) {
     setLamp: setDevStagingLamp,
     stageAdapters: {
       normalizeWorldItemSpawn: (item) => (
-        shellContext &&
-        shellContext.orbStageAdapter &&
-        typeof shellContext.orbStageAdapter.normalizeWorldItemSpawn === "function"
-          ? shellContext.orbStageAdapter.normalizeWorldItemSpawn(item, {
+        getActiveShellStageAdapter(shellContext) &&
+        typeof getActiveShellStageAdapter(shellContext).normalizeWorldItemSpawn === "function"
+          ? getActiveShellStageAdapter(shellContext).normalizeWorldItemSpawn(item, {
               groundCenterWorld: () => shellGroundCenterWorld(shellContext),
               clamp,
             })
@@ -1247,10 +1248,9 @@ async function initShellReceiverHostRuntime(shellContext) {
         const rect = shellStageRect(shellContext);
         const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
         return (
-          shellContext &&
-          shellContext.orbStageAdapter &&
-          typeof shellContext.orbStageAdapter.pickupScreenY === "function"
-            ? shellContext.orbStageAdapter.pickupScreenY(yW, { camTop })
+          getActiveShellStageAdapter(shellContext) &&
+          typeof getActiveShellStageAdapter(shellContext).pickupScreenY === "function"
+            ? getActiveShellStageAdapter(shellContext).pickupScreenY(yW, { camTop })
             : (Number(yW || 0) - camTop)
         );
       },
@@ -1277,10 +1277,9 @@ async function initShellReceiverHostRuntime(shellContext) {
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
       getWorldItemSpawns: () => (
-        shellContext &&
-        shellContext.orbStageAdapter &&
-        typeof shellContext.orbStageAdapter.getWorldItemSpawns === "function"
-          ? shellContext.orbStageAdapter.getWorldItemSpawns()
+        getActiveShellStageAdapter(shellContext) &&
+        typeof getActiveShellStageAdapter(shellContext).getWorldItemSpawns === "function"
+          ? getActiveShellStageAdapter(shellContext).getWorldItemSpawns()
           : []
       ),
       getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,
@@ -1398,10 +1397,11 @@ function bindShellRuleActionRuntime({
   };
 }
 
-function createShellSurfaceRefs({ devStagingView, orbStageView } = {}) {
+function createShellSurfaceRefs({ devStagingView, orbStageView, levelOverlayView } = {}) {
   return {
     dev: devStagingView && devStagingView.refs ? devStagingView.refs : Object.create(null),
     orb: orbStageView && orbStageView.refs ? orbStageView.refs : Object.create(null),
+    level: levelOverlayView && levelOverlayView.refs ? levelOverlayView.refs : Object.create(null),
   };
 }
 
@@ -1482,6 +1482,55 @@ function createOrbStageAdapter(orbStageView = null) {
       return createLegacyLikeStageElements({ orb: refs });
     },
   });
+}
+
+function createLevelStageAdapter(levelOverlayView = null) {
+  if (levelOverlayView && levelOverlayView.adapter && typeof levelOverlayView.adapter.getStageElements === "function") {
+    return levelOverlayView.adapter;
+  }
+  const refs = levelOverlayView && levelOverlayView.refs ? levelOverlayView.refs : Object.create(null);
+  return Object.freeze({
+    refs,
+    getStageElements() {
+      return {
+        physStage: refs.physStage || null,
+        groundLine: refs.groundLine || null,
+      };
+    },
+  });
+}
+
+function getShellModeState(shellContext) {
+  const modeController = shellContext && shellContext.modeController ? shellContext.modeController : null;
+  return modeController && typeof modeController.getState === "function"
+    ? modeController.getState()
+    : { mode: STAGING_SHELL_MODE.splitLab };
+}
+
+function getActiveShellStageAdapter(shellContext) {
+  return shellContext && shellContext.activeStageAdapter ? shellContext.activeStageAdapter : null;
+}
+
+function getActiveShellStageElements(shellContext) {
+  const adapter = getActiveShellStageAdapter(shellContext);
+  return adapter && typeof adapter.getStageElements === "function"
+    ? adapter.getStageElements()
+    : {};
+}
+
+function syncActiveShellStage(shellContext) {
+  if (!shellContext) return null;
+  const modeState = getShellModeState(shellContext);
+  const activeStageAdapter = modeState.mode === STAGING_SHELL_MODE.levelOverlay
+    ? shellContext.levelStageAdapter
+    : shellContext.orbStageAdapter;
+  shellContext.activeStageAdapter = activeStageAdapter || shellContext.orbStageAdapter || null;
+  const runtime = shellContext.runtime || null;
+  if (runtime) {
+    runtime.stageRectCache = null;
+    runtime.frameMetrics = null;
+  }
+  return shellContext.activeStageAdapter;
 }
 
 function buildShellRootWakeWindowMap() {
@@ -1684,8 +1733,9 @@ function createStagingShellContext({
   sharedModules,
   modeController = null,
 } = {}) {
-  const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView });
+  const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, levelOverlayView });
   const orbStageAdapter = createOrbStageAdapter(orbStageView);
+  const levelStageAdapter = createLevelStageAdapter(levelOverlayView);
   const stageEls = orbStageAdapter.getStageElements();
   return {
     rootDocument,
@@ -1698,6 +1748,8 @@ function createStagingShellContext({
     currentLevel,
     refs: surfaceRefs,
     orbStageAdapter,
+    levelStageAdapter,
+    activeStageAdapter: orbStageAdapter,
     stageEls,
     sharedModules,
     runtime: {
@@ -1720,6 +1772,7 @@ function createStagingShellContext({
       stage: null,
       shellModeController: modeController,
       shellModeHotkeyOff: null,
+      shellModeOff: null,
     },
   };
 }
@@ -1804,14 +1857,14 @@ function formatPhoneImpulseLogLine(d) {
 function ensureShellStageBackdrop(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
-  if (!runtime || !orbStageAdapter || typeof orbStageAdapter.ensureBackdrop !== "function" || !rootDocument) return;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  if (!runtime || !activeStageAdapter || typeof activeStageAdapter.ensureBackdrop !== "function" || !rootDocument) return;
 
   const rect = shellStageRect(shellContext);
   const terrainProfile = Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.terrainProfile)
     ? shellContext.currentLevel.terrainProfile
     : [];
-  orbStageAdapter.ensureBackdrop({
+  activeStageAdapter.ensureBackdrop({
     runtime,
     rootDocument,
     rect,
@@ -1834,12 +1887,12 @@ function shellGroundLineScreenY(shellContext) {
 
 function drawShellStars(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!runtime || !orbStageAdapter || typeof orbStageAdapter.drawStars !== "function" || !stageBackdrop) return;
+  if (!runtime || !activeStageAdapter || typeof activeStageAdapter.drawStars !== "function" || !stageBackdrop) return;
   const h = stageBackdrop.height || 0;
   const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, h);
-  orbStageAdapter.drawStars({
+  activeStageAdapter.drawStars({
     runtime,
     camTop,
   });
@@ -1847,11 +1900,11 @@ function drawShellStars(shellContext) {
 
 function drawShellBackdrop(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!runtime || !orbStageAdapter || typeof orbStageAdapter.drawBackdrop !== "function" || !stageBackdrop) return;
+  if (!runtime || !activeStageAdapter || typeof activeStageAdapter.drawBackdrop !== "function" || !stageBackdrop) return;
   const groundY = shellGroundLineScreenY(shellContext);
-  orbStageAdapter.drawBackdrop({
+  activeStageAdapter.drawBackdrop({
     runtime,
     groundY,
   });
@@ -2355,6 +2408,12 @@ export async function createStagingShellRuntime({
       modeController,
     });
     shellContext.bootStatus = bootStatus;
+    syncActiveShellStage(shellContext);
+    if (modeController && typeof modeController.subscribe === "function") {
+      shellContext.runtime.shellModeOff = modeController.subscribe(() => {
+        syncActiveShellStage(shellContext);
+      });
+    }
     shellContext.runtime.shellModeHotkeyOff = bindShellModeHotkeys(shellContext);
     const createOrbColorRuntime =
       sharedModules.orbColorRuntimeModule &&

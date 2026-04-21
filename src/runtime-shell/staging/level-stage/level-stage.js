@@ -32,6 +32,34 @@ function buildTerrainPath(terrainProfile = []) {
   return d;
 }
 
+function normalizeLevelWorldItemSpawn(
+  item,
+  {
+    groundCenterWorld = () => 0,
+    clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
+  } = {}
+) {
+  const kind = String(item && item.kind || "");
+  if (!item || (kind !== "energy_globe" && kind !== "energy_globe_emitter")) return null;
+  const s = item.spawn || {};
+  const xNorm = clamp(Number(s.xNorm), 0, 1);
+  const r = Math.max(1, Number(s.r) || 25);
+  const yMode = String(s.yMode || "absolute");
+  const yValue = Number(s.yValue) || 0;
+  const yW = (yMode === "ground_center_offset")
+    ? (groundCenterWorld() + yValue)
+    : yValue;
+  return {
+    id: String(item.id || ""),
+    kind,
+    xNorm: Number.isFinite(xNorm) ? xNorm : 0.5,
+    yW,
+    r,
+    capacity: Math.max(1, Math.floor(Number(item.capacity) || 1)),
+    regenTrigger: String(item.regenTrigger || (kind === "energy_globe_emitter" ? "globe_spent" : "manual")),
+  };
+}
+
 export function renderLevelStage(root, { level = null } = {}) {
   if (!root) return null;
   const label = String(level && level.label || "Level Stage");
@@ -44,7 +72,7 @@ export function renderLevelStage(root, { level = null } = {}) {
           <path class="levelStageTerrainFill" d="${terrainPath}"></path>
           <path class="levelStageTerrainStroke" d="${terrainPath}"></path>
         </svg>
-        <div class="levelStageGround" aria-hidden="true"></div>
+        <div id="levelStageGround" class="levelStageGround" aria-hidden="true"></div>
         <div class="levelStageLabel">Level Stage</div>
         <div class="levelStageCenter">
           <div class="levelStageTitle">${label}</div>
@@ -52,8 +80,39 @@ export function renderLevelStage(root, { level = null } = {}) {
       </div>
     </section>
   `;
+  const refs = {
+    root,
+    physStage: root.querySelector(".levelStageViewport"),
+    groundLine: root.querySelector("#levelStageGround"),
+  };
   return {
     root,
+    refs,
+    adapter: Object.freeze({
+      refs,
+      level,
+      getStageElements() {
+        return {
+          physStage: refs.physStage || null,
+          groundLine: refs.groundLine || null,
+        };
+      },
+      getStageRect() {
+        if (!refs.physStage || typeof refs.physStage.getBoundingClientRect !== "function") {
+          return { width: 0, height: 0 };
+        }
+        return refs.physStage.getBoundingClientRect();
+      },
+      getWorldItemSpawns() {
+        return Array.isArray(level && level.worldItemSpawns) ? level.worldItemSpawns : [];
+      },
+      normalizeWorldItemSpawn(item, options = {}) {
+        return normalizeLevelWorldItemSpawn(item, options);
+      },
+      pickupScreenY(yW, { camTop = 0 } = {}) {
+        return Number(yW || 0) - Number(camTop || 0);
+      },
+    }),
     level,
   };
 }
