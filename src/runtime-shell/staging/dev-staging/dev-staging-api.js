@@ -2,9 +2,9 @@ import {
   setDevStagingDebugNote,
   setDevStagingFatal,
   setDevStagingStatus,
-} from "./dev-staging-surface-state.js";
-import { closeDevStagingTopmostPopup } from "./dev-staging-panel.js";
-import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js";
+} from "./dev-staging-surface-state.js?v=20260420g";
+import { closeDevStagingTopmostPopup } from "./dev-staging-panel.js?v=20260420g";
+import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260420g";
 
 export function createDevStagingApi(root, refs) {
   return {

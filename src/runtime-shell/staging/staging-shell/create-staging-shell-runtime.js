@@ -1,5 +1,5 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260420e";
-import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260420e";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260420g";
+import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260420g";
 import {
   allDevStagingDirectionLampsOff,
   clearDevStagingDirectionLampTimers,
@@ -17,7 +17,7 @@ import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
-import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js";
+import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260420g";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
@@ -25,7 +25,7 @@ import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
-import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260420e";
+import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260420g";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420d";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
@@ -1639,20 +1639,32 @@ function bindShellCameraInputPopup(shellContext) {
   const devRefs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const cameraInputRuntime = shellContext && shellContext.runtime ? shellContext.runtime.cameraInput : null;
   if (!devRefs || !cameraInputRuntime) return null;
+  let latestCameraState = typeof cameraInputRuntime.getState === "function"
+    ? cameraInputRuntime.getState()
+    : null;
+  let gameplayInterval = 0;
 
   const cameraInputPopup = createCameraInputPopup({
     els: devRefs,
+    onOpenChange: (isOpen) => {
+      if (isOpen) {
+        if (latestCameraState) cameraInputPopup.renderState(latestCameraState);
+        renderGameplayState();
+        if (!gameplayInterval) {
+          gameplayInterval = setInterval(renderGameplayState, 120);
+        }
+      } else if (gameplayInterval) {
+        clearInterval(gameplayInterval);
+        gameplayInterval = 0;
+      }
+    },
   });
   cameraInputPopup.bind();
-  if (typeof cameraInputRuntime.getState === "function") {
-    cameraInputPopup.renderState(cameraInputRuntime.getState());
+  if (latestCameraState && cameraInputPopup.isOpen()) {
+    cameraInputPopup.renderState(latestCameraState);
   }
-  const unsubscribe = typeof cameraInputRuntime.subscribe === "function"
-    ? cameraInputRuntime.subscribe((state) => {
-        cameraInputPopup.renderState(state);
-      })
-    : () => {};
-  const renderGameplayState = () => {
+  function renderGameplayState() {
+    if (!cameraInputPopup.isOpen()) return;
     const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
     cameraInputPopup.renderGameplayState({
       steering: runtime && runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
@@ -1662,14 +1674,20 @@ function bindShellCameraInputPopup(shellContext) {
         ? runtime.orbRuntimeState.get()
         : null,
     });
-  };
-  renderGameplayState();
-  const gameplayInterval = setInterval(renderGameplayState, 120);
+  }
+  const unsubscribe = typeof cameraInputRuntime.subscribe === "function"
+    ? cameraInputRuntime.subscribe((state) => {
+        latestCameraState = state;
+        if (cameraInputPopup.isOpen()) {
+          cameraInputPopup.renderState(state);
+        }
+      })
+    : () => {};
 
   return {
     cameraInputPopup,
     dispose() {
-      clearInterval(gameplayInterval);
+      if (gameplayInterval) clearInterval(gameplayInterval);
       try { unsubscribe(); } catch (_) {}
     },
   };
@@ -2176,7 +2194,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260420f",
+  moduleCacheBustV = "20260420g",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

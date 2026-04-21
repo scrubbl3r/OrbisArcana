@@ -1,7 +1,13 @@
 export function setDevStagingStatus(refs, html, cls = "devStagingDim") {
   if (!refs || !refs.status) return;
-  refs.status.className = cls;
-  refs.status.innerHTML = String(html || "");
+  const nextClass = String(cls || "");
+  const nextHtml = String(html || "");
+  if (refs.status.className !== nextClass) {
+    refs.status.className = nextClass;
+  }
+  if (refs.status.innerHTML !== nextHtml) {
+    refs.status.innerHTML = nextHtml;
+  }
 }
 
 export function setDevStagingFatal(refs, message = "") {

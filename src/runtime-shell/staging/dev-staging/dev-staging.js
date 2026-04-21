@@ -3,15 +3,15 @@ import {
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-state.js";
-import { createDevStagingApi } from "./dev-staging-api.js";
-import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js";
+import { createDevStagingApi } from "./dev-staging-api.js?v=20260420g";
+import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260420g";
 import {
   closeDevStagingTopmostPopup,
   createDevStagingPanelElementsFromView,
   projectDevStagingPanelRefs,
-} from "./dev-staging-panel.js?v=20260420e";
-import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260420e";
-import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260420e";
+} from "./dev-staging-panel.js?v=20260420g";
+import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260420g";
+import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260420g";
 
 export {
   closeDevStagingTopmostPopup,

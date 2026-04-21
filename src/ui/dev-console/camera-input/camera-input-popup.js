@@ -13,6 +13,7 @@ function formatFixed(value, digits = 3, fallback = "-") {
 
 export function createCameraInputPopup({
   els = {},
+  onOpenChange = null,
 } = {}) {
   let bound = false;
   let open = false;
@@ -113,6 +114,9 @@ export function createCameraInputPopup({
     if (els.cameraInputPopup) {
       els.cameraInputPopup.classList.toggle("on", open);
       els.cameraInputPopup.setAttribute("aria-hidden", open ? "false" : "true");
+    }
+    if (typeof onOpenChange === "function") {
+      try { onOpenChange(open); } catch (_) {}
     }
   }
 

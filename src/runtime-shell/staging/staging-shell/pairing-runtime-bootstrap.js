@@ -18,9 +18,16 @@ export async function bootstrapShellPairingRuntime({
   const cameraInputRuntime = shellContext.runtime && shellContext.runtime.cameraInput
     ? shellContext.runtime.cameraInput
     : null;
+  let lastStatusHtml = "";
+  let lastStatusClass = "";
   const statusSet = (html, cls = "devStagingDim") => {
+    const nextHtml = String(html || "");
+    const nextClass = String(cls || "devStagingDim");
+    if (nextHtml === lastStatusHtml && nextClass === lastStatusClass) return;
+    lastStatusHtml = nextHtml;
+    lastStatusClass = nextClass;
     if (devView && typeof devView.setStatus === "function") {
-      devView.setStatus(html, cls);
+      devView.setStatus(nextHtml, nextClass);
     }
   };
 
@@ -37,6 +44,7 @@ export async function bootstrapShellPairingRuntime({
   let uiOverlaysSystem = null;
   let mobileImpulseSystem = null;
   let lanSession = null;
+  let lastCalibStatus = "";
 
   updateBootUi(rootDocument, bootStatus.pairingBooting, "Loading pairing systems");
 
@@ -57,7 +65,12 @@ export async function bootstrapShellPairingRuntime({
 
   const openCalibOverlay = () => uiOverlaysSystem.openCalibOverlay(canRunCalibration());
   const closeCalibOverlay = () => uiOverlaysSystem.closeCalibOverlay();
-  const setCalibStatus = (msg) => uiOverlaysSystem.setCalibStatus(msg);
+  const setCalibStatus = (msg) => {
+    const next = String(msg || "");
+    if (next === lastCalibStatus) return;
+    lastCalibStatus = next;
+    uiOverlaysSystem.setCalibStatus(next);
+  };
   const hideStartScreen = () => uiOverlaysSystem.hideStartScreen();
   const showStartScreen = () => {
     if (!startScreenEl) return;
