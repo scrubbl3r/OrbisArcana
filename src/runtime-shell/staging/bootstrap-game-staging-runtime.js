@@ -5,7 +5,7 @@ import {
   resolveShockwaveGeometry,
 } from "../../game-runtime/orb/orb-spell-geometry.js";
 
-export function bootstrapGameStagingRuntime({
+export function bootstrapOrbStageRuntime({
   createVfxRuntimesBundle = null,
   createOrbShatterRuntimeController = null,
   createOrbRuntimeState = null,

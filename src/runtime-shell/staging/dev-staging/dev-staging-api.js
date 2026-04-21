@@ -3,7 +3,7 @@ import {
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-state.js?v=20260420g";
-import { closeDevStagingTopmostPopup } from "./dev-staging-panel.js?v=20260421h";
+import { closeDevStagingTopmostPanel } from "./dev-staging-panel.js?v=20260421j";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421h";
 
 export function createDevStagingApi(root, refs, panels = {}) {
@@ -20,8 +20,8 @@ export function createDevStagingApi(root, refs, panels = {}) {
     setDebugNote(text = "") {
       setDevStagingDebugNote(refs, text);
     },
-    closeTopmostPopup() {
-      return closeDevStagingTopmostPopup(refs);
+    closeTopmostPanel() {
+      return closeDevStagingTopmostPanel(refs);
     },
     openPanel(id) {
       return panels && panels.manager && typeof panels.manager.openPanel === "function"

@@ -10,7 +10,7 @@ import {
   resolveShockwaveGeometry,
 } from "../../../game-runtime/orb/orb-spell-geometry.js";
 
-export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => value } = {}) {
+export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => value } = {}) {
   const defaults = {
     shield: {
       colorRgb: { r: 120, g: 210, b: 255 },
@@ -67,7 +67,7 @@ export function createGameStagingReceiverVfxDefaults({ evenStroke = (value) => v
   return defaults;
 }
 
-export function initGameStagingReceiverVfxRuntime({
+export function initOrbStageReceiverVfxRuntime({
   runtime = null,
   stageEls = {},
   createVfxRuntimesBundle = null,

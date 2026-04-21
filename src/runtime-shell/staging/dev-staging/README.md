@@ -9,7 +9,7 @@ This is the home for:
 Use this area for staging-specific tooling, not for general-purpose shared UI
 unless it proves reusable outside dev-staging.
 
-Current transitional role in the legacy combined receiver page:
+Current transitional role during shell migration:
 - the left-hand status/meter/control surface
 - logs, flashboard, and tuning surfaces that will be extracted in later slices
 
@@ -23,8 +23,6 @@ Current low-risk integration seam:
 - `resetMeters()` mirrors the legacy zero-state HUD reset
 - `renderInputHud(vm)` mirrors the legacy left-side meter update contract
 
-Current mount-path seam in the legacy receiver:
-- `#devStagingLegacy` wraps the existing left-side DOM
-- `#devStagingMount` is the future mounted host for replacing that DOM
-- the legacy receiver now includes a disabled `maybeMountDevStagingSurface()`
-  seam so activation can happen in a later slice without changing layout first
+Current mount-path seam:
+- `#devStagingMount` is the active mounted host inside the staging shell
+- the remaining receiver-era references are historical and should continue to shrink over time

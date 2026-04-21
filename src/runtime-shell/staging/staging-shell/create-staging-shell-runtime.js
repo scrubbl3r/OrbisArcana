@@ -1,5 +1,5 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421i";
-import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421h";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421j";
+import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
   clearDevStagingDirectionLampTimers,
@@ -11,8 +11,8 @@ import {
 } from "../dev-staging/dev-staging-lamps.js";
 import { renderOrbStage } from "../game-staging/game-staging.js?v=20260421b";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
-import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
-import { createGameStagingOrbActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
+import { createOrbStageActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
@@ -29,7 +29,7 @@ import { createCameraInputPanelController } from "../../../ui/dev-console/camera
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
-  splitPrototype: "split-prototype",
+  splitLab: "split-lab",
   booting: "booting",
   sharedModulesReady: "shared-modules-ready",
   localStageReady: "local-stage-ready",
@@ -1102,11 +1102,11 @@ function resetShellInputProcessingState(shellContext, atMs = performance.now()) 
 
 function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 0) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
-  if (!gameStageActions || typeof gameStageActions.teleportOrbToSpawnNeutralizePhysics !== "function") {
+  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  if (!orbStageActions || typeof orbStageActions.teleportOrbToSpawnNeutralizePhysics !== "function") {
     return { handled: false };
   }
-  return gameStageActions.teleportOrbToSpawnNeutralizePhysics({
+  return orbStageActions.teleportOrbToSpawnNeutralizePhysics({
     aboveGroundPx,
     teleportOrbRuntimeToSpawn:
       runtime &&
@@ -1117,9 +1117,9 @@ function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 
 
 function shellGrantOrbGrace(shellContext, grace = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
-  if (!gameStageActions || typeof gameStageActions.grantOrbGrace !== "function") return;
-  gameStageActions.grantOrbGrace({
+  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  if (!orbStageActions || typeof orbStageActions.grantOrbGrace !== "function") return;
+  orbStageActions.grantOrbGrace({
     grace,
     grantOrbGraceRuntime:
       runtime &&
@@ -1129,7 +1129,7 @@ function shellGrantOrbGrace(shellContext, grace = {}) {
 }
 
 function createShellReceiverVfxDefaults() {
-  return createGameStagingReceiverVfxDefaults({ evenStroke });
+  return createOrbStageReceiverVfxDefaults({ evenStroke });
 }
 
 function initShellReceiverVfxRuntime(shellContext, mods = {}) {
@@ -1153,7 +1153,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     shellContext.rootDocument.documentElement.style
   ) || null;
   const vfxDefaults = runtime.vfxDefaults || createShellReceiverVfxDefaults();
-  return initGameStagingReceiverVfxRuntime({
+  return initOrbStageReceiverVfxRuntime({
     runtime,
     stageEls: shellContext.stageEls || {},
     createVfxRuntimesBundle,
@@ -1189,23 +1189,23 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
 
 function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
-  if (!gameStageActions || typeof gameStageActions.activateBubbleShield !== "function") return;
-  gameStageActions.activateBubbleShield({ durationMs });
+  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  if (!orbStageActions || typeof orbStageActions.activateBubbleShield !== "function") return;
+  orbStageActions.activateBubbleShield({ durationMs });
 }
 
 function shellApplyColorize(shellContext, payload = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
-  if (!gameStageActions || typeof gameStageActions.applyColorize !== "function") return;
-  gameStageActions.applyColorize(payload);
+  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  if (!orbStageActions || typeof orbStageActions.applyColorize !== "function") return;
+  orbStageActions.applyColorize(payload);
 }
 
 function shellClearColorize(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStageActions = runtime && runtime.gameStageActions ? runtime.gameStageActions : null;
-  if (!gameStageActions || typeof gameStageActions.clearColorize !== "function") return;
-  gameStageActions.clearColorize();
+  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  if (!orbStageActions || typeof orbStageActions.clearColorize !== "function") return;
+  orbStageActions.clearColorize();
 }
 
 async function initShellReceiverHostRuntime(shellContext) {
@@ -1967,7 +1967,7 @@ async function initShellKwsRuntime(shellContext) {
     playFlameAoeRuntime,
     triggerShockwaveRuntime,
   });
-  runtime.gameStageActions = createGameStagingOrbActionBridge({
+  runtime.orbStageActions = createOrbStageActionBridge({
     runtime,
     shieldEl: shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null,
     patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
@@ -2255,7 +2255,7 @@ export async function createStagingShellRuntime({
   const orbRoot = rootDocument.getElementById("orbStageMount");
 
   if (docEl) {
-    docEl.dataset.stagingShell = STAGING_SHELL_STATUS.splitPrototype;
+    docEl.dataset.stagingShell = STAGING_SHELL_STATUS.splitLab;
     docEl.dataset.stagingShellBoot = STAGING_SHELL_STATUS.booting;
   }
   if (bootStatus && typeof bootStatus.setStatus === "function") {

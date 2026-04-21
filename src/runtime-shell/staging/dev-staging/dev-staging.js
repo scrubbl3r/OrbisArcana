@@ -7,9 +7,9 @@ import { createDevStagingApi } from "./dev-staging-api.js?v=20260421h";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421h";
 import { createDevStagingPanelManager } from "./dev-staging-panel-manager.js?v=20260421h";
 import {
-  closeDevStagingTopmostPopup,
+  closeDevStagingTopmostPanel,
   createDevStagingPanelElementsFromView,
-} from "./dev-staging-panel.js?v=20260421h";
+} from "./dev-staging-panel.js?v=20260421j";
 import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260421h";
 import { mountCameraInputPanel } from "./camera-input-panel.js?v=20260421h";
 import { mountInputHudPanel } from "./input-hud-panel.js?v=20260421h";
@@ -18,7 +18,7 @@ import { mountPathBoardPanel } from "./path-board-panel.js?v=20260421h";
 import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260421h";
 
 export {
-  closeDevStagingTopmostPopup,
+  closeDevStagingTopmostPanel,
   createDevStagingPanelElementsFromView,
   renderDevStagingHud,
   resetDevStagingHud,

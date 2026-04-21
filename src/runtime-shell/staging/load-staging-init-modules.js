@@ -4,8 +4,8 @@ function withVersion(path, version = "") {
 }
 
 /**
- * Load the staging/runtime bootstrap modules shared by the legacy receiver and
- * the new staging shell.
+ * Load the staging/runtime bootstrap modules used by the staging shell and
+ * related hosted runtime surfaces.
  */
 export async function loadStagingInitModules(moduleCacheBustV = "") {
   const [
@@ -16,7 +16,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     cameraInputBootstrapModule,
     buildInputHudViewModelModule,
     bootstrapKwsStagingModule,
-    bootstrapGameStagingRuntimeModule,
+    bootstrapOrbStageRuntimeModule,
     bootstrapStagingRuntimeContextModule,
     bootstrapStagingMvpModule,
     bindStagingRuntimeEventsModule,
@@ -86,7 +86,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     cameraInputBootstrapModule,
     buildInputHudViewModelModule,
     bootstrapKwsStagingModule,
-    bootstrapGameStagingRuntimeModule,
+    bootstrapOrbStageRuntimeModule,
     bootstrapStagingRuntimeContextModule,
     bootstrapStagingMvpModule,
     bindStagingRuntimeEventsModule,

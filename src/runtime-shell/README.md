@@ -11,7 +11,7 @@ Key subdomains:
 - `receiver/` contains receiver-role runtime/session guts only.
 - `transmitter/` contains transmitter-role runtime/session guts only.
 - `staging/` contains hosted staging environments such as the composite staging shell,
-  dev-staging controls, and game-staging runtime harnesses.
+  dev-staging controls, and orb-stage runtime harnesses.
 
 This layer is intentionally above `game-runtime/` and separate from any future
 player-facing game UI surface.

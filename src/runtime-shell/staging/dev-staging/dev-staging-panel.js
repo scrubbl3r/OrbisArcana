@@ -1,4 +1,4 @@
-export function closeDevStagingTopmostPopup(refs) {
+export function closeDevStagingTopmostPanel(refs) {
   if (!refs) return false;
   if (refs.devPanelManager && typeof refs.devPanelManager.closeTopmostPanel === "function") {
     if (refs.devPanelManager.closeTopmostPanel()) return true;

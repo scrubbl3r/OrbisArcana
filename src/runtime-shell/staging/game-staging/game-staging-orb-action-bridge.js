@@ -1,6 +1,6 @@
 import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
 
-export function createGameStagingOrbActionBridge({
+export function createOrbStageActionBridge({
   runtime = null,
   shieldEl = null,
   patchOrbRuntime = () => {},
