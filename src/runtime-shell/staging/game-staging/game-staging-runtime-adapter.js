@@ -2,6 +2,9 @@ import { createOrbShatterRuntimeController } from "../../../game-runtime/orb/orb
 
 export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}) {
   let primaryGlobeEl = refs.testGlobe || null;
+  let lastGroundTop = "";
+  let lastOrbLeft = "";
+  let lastOrbTransform = "";
   const stageRefs = Object.freeze({
     root: refs.root || null,
     physStage: refs.physStage || null,
@@ -265,17 +268,28 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
       top = 0,
     } = {}) {
       if (!stageRefs.groundLine) return;
-      stageRefs.groundLine.style.top = `${Number(top || 0).toFixed(2)}px`;
+      const nextTop = `${Number(top || 0).toFixed(2)}px`;
+      if (nextTop === lastGroundTop) return;
+      lastGroundTop = nextTop;
+      stageRefs.groundLine.style.top = nextTop;
     },
     applyOrbTransform({
       top = 0,
       left = "50%",
     } = {}) {
       if (!stageRefs.orbWrap) return;
-      stageRefs.orbWrap.style.left = (typeof left === "number")
+      const nextLeft = (typeof left === "number")
         ? `${Number(left || 0).toFixed(2)}px`
         : String(left || "50%");
-      stageRefs.orbWrap.style.transform = `translate(-50%, ${Number(top || 0).toFixed(2)}px)`;
+      const nextTransform = `translate(-50%, ${Number(top || 0).toFixed(2)}px)`;
+      if (nextLeft !== lastOrbLeft) {
+        lastOrbLeft = nextLeft;
+        stageRefs.orbWrap.style.left = nextLeft;
+      }
+      if (nextTransform !== lastOrbTransform) {
+        lastOrbTransform = nextTransform;
+        stageRefs.orbWrap.style.transform = nextTransform;
+      }
     },
     renderOrbDamageVisuals({
       fx = null,

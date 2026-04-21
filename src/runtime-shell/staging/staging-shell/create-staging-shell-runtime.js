@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderGameStaging } from "../game-staging/game-staging.js?v=20260420e";
+import { renderGameStaging } from "../game-staging/game-staging.js?v=20260420i";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
 import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
 import { createGameStagingOrbActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
@@ -280,11 +280,25 @@ function getShellOrbScaleFactor(shellContext) {
 }
 
 function shellStageRect(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (runtime && runtime.frameMetrics && runtime.frameMetrics.rect) {
+    return runtime.frameMetrics.rect;
+  }
+  if (runtime && runtime.stageRectCache) {
+    return runtime.stageRectCache;
+  }
   const physStage = shellContext && shellContext.stageEls ? shellContext.stageEls.physStage : null;
   if (!physStage || typeof physStage.getBoundingClientRect !== "function") {
     return { width: 0, height: 0 };
   }
-  return physStage.getBoundingClientRect();
+  const rect = physStage.getBoundingClientRect();
+  if (runtime) {
+    runtime.stageRectCache = {
+      width: Number(rect.width) || 0,
+      height: Number(rect.height) || 0,
+    };
+  }
+  return rect;
 }
 
 function shellWorldHeight(shellContext) {
@@ -308,12 +322,19 @@ function shellGroundCenterWorld(shellContext) {
 }
 
 function shellStageCenterX(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (runtime && runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.centerX))) {
+    return Number(runtime.frameMetrics.centerX) || 0;
+  }
   const rect = shellStageRect(shellContext);
   return (Number(rect.width) || 0) * 0.5;
 }
 
 function shellLateralBounds(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (runtime && runtime.frameMetrics && runtime.frameMetrics.lateralBounds) {
+    return runtime.frameMetrics.lateralBounds;
+  }
   const stage = runtime && runtime.stage ? runtime.stage : null;
   const rect = shellStageRect(shellContext);
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
@@ -324,26 +345,59 @@ function shellLateralBounds(shellContext) {
   };
 }
 
-function shellCameraTopFor(shellContext, yW, stageH) {
+function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   const WORLD_H = Number(stage && stage.phys && stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
   const maxCam = Math.max(0, WORLD_H - stageH);
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const effectiveYW = cameraRuntime && typeof cameraRuntime.resolveWorldY === "function"
-    ? cameraRuntime.resolveWorldY({ baselineYW: yW, nowMs: performance.now() })
+    ? cameraRuntime.resolveWorldY({ baselineYW: yW, nowMs })
     : Number(yW || 0);
   return clamp((Number.isFinite(effectiveYW) ? effectiveYW : 0) - (stageH * 0.5), 0, maxCam);
 }
 
 function shellOrbScreenY(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (runtime && runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.orbScreenY))) {
+    return Number(runtime.frameMetrics.orbScreenY) || 0;
+  }
   const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
     ? runtime.orbRuntimeState.get()
     : null;
   const rect = shellStageRect(shellContext);
   const camTop = shellCameraTopFor(shellContext, orbState && orbState.yW, rect.height || 0);
   return Number(orbState && orbState.yW) - camTop;
+}
+
+function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const physStage = shellContext && shellContext.stageEls ? shellContext.stageEls.physStage : null;
+  if (!runtime || !physStage || typeof physStage.getBoundingClientRect !== "function") return null;
+  const rect = physStage.getBoundingClientRect();
+  const safeRect = {
+    width: Number(rect.width) || 0,
+    height: Number(rect.height) || 0,
+  };
+  runtime.stageRectCache = safeRect;
+  const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  const stage = runtime.stage ? runtime.stage : null;
+  const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
+  const camTop = shellCameraTopFor(shellContext, orbState && orbState.yW, safeRect.height || 0, nowMs);
+  runtime.frameMetrics = {
+    nowMs,
+    rect: safeRect,
+    centerX: safeRect.width * 0.5,
+    camTop,
+    orbScreenY: (Number(orbState && orbState.yW) || 0) - camTop,
+    lateralBounds: {
+      left: orbRadiusPx,
+      right: Math.max(orbRadiusPx, safeRect.width - orbRadiusPx),
+    },
+  };
+  return runtime.frameMetrics;
 }
 
 function applyShellGroundLine(shellContext) {
@@ -430,6 +484,7 @@ const SHELL_STAGE_FLOOR_CONTACT_EPSILON_PX = 0.25;
 const SHELL_STAGE_CEIL_CONTACT_EPSILON_PX = 0.25;
 
 function activateShellStageVisuals(shellContext) {
+  updateShellFrameMetrics(shellContext, performance.now());
   ensureShellStageBackdrop(shellContext);
   resetShellOrbToGround(shellContext);
   updateShellStageReadouts(shellContext);
@@ -791,6 +846,7 @@ function startShellStageLoop(shellContext) {
     isReady: () => true,
     clamp,
     runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
+      updateShellFrameMetrics(shellContext, nowMs);
       const receiverHostRuntime = runtime.receiverHostRuntime || null;
       const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || runtime.mvp || null;
       const orbFxSystem =
@@ -1620,6 +1676,8 @@ function createStagingShellContext({
       cameraInput: null,
       cameraInputOrbBridge: null,
       mvp: null,
+      frameMetrics: null,
+      stageRectCache: null,
       eventBus: null,
       worldSystem: null,
       orbRuntimeLoop: null,
@@ -2194,7 +2252,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260420h",
+  moduleCacheBustV = "20260420i",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
