@@ -1,20 +1,7 @@
 export function closeDevStagingTopmostPopup(refs) {
   if (!refs) return false;
-  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("camera-input")) {
-    refs.devPanelManager.closePanel("camera-input");
-    return true;
-  }
-  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("path-board")) {
-    refs.devPanelManager.closePanel("path-board");
-    return true;
-  }
-  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("log")) {
-    refs.devPanelManager.closePanel("log");
-    return true;
-  }
-  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("input-hud")) {
-    refs.devPanelManager.closePanel("input-hud");
-    return true;
+  if (refs.devPanelManager && typeof refs.devPanelManager.closeTopmostPanel === "function") {
+    if (refs.devPanelManager.closeTopmostPanel()) return true;
   }
   if (refs.pathBoardPopup && refs.pathBoardPopup.classList.contains("on") && refs.pathBoardPopupClose) {
     refs.pathBoardPopupClose.click();
@@ -33,6 +20,7 @@ export function projectDevStagingPanelRefs(refs = {}) {
     teleBtn: refs.teleBtn || null,
     cameraInputBtn: refs.cameraInputBtn || null,
     pathBoardBtn: refs.pathBoardBtn || null,
+    devPanelManager: refs.devPanelManager || null,
     kwsReadout: refs.kwsReadout || null,
     kwsLog: refs.kwsLog || null,
     logTabGeneral: refs.logTabGeneral || null,

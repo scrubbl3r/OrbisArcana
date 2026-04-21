@@ -5,6 +5,15 @@ export function createDevStagingPanelManager({
   const panelDefs = new Map();
   const panelHooks = new Map();
   const openPanels = new Map();
+  const panelOrder = [];
+  const listeners = new Set();
+
+  function notify() {
+    const snapshot = getState();
+    for (const listener of listeners) {
+      try { listener(snapshot); } catch (_) {}
+    }
+  }
 
   function mergePanelRefs(refs = {}) {
     if (!sharedRefs || !refs || typeof refs !== "object") return;
@@ -22,6 +31,7 @@ export function createDevStagingPanelManager({
     const panelId = String(id || "").trim();
     if (!panelId) return;
     panelDefs.set(panelId, { ...definition });
+    notify();
   }
 
   function registerPanelHooks(id, hooks = {}) {
@@ -38,10 +48,21 @@ export function createDevStagingPanelManager({
     return openPanels.has(String(id || "").trim());
   }
 
+  function promotePanel(panelId) {
+    const state = openPanels.get(panelId);
+    if (!state || !state.host || !stackHost) return state || null;
+    const existingIndex = panelOrder.indexOf(panelId);
+    if (existingIndex >= 0) panelOrder.splice(existingIndex, 1);
+    panelOrder.push(panelId);
+    stackHost.appendChild(state.host);
+    notify();
+    return state;
+  }
+
   function openPanel(id) {
     const panelId = String(id || "").trim();
     if (!panelId || !stackHost) return null;
-    if (openPanels.has(panelId)) return openPanels.get(panelId);
+    if (openPanels.has(panelId)) return promotePanel(panelId);
     const definition = panelDefs.get(panelId);
     if (!definition || typeof definition.mount !== "function") return null;
 
@@ -56,11 +77,13 @@ export function createDevStagingPanelManager({
 
     const state = { id: panelId, host, instance, refs };
     openPanels.set(panelId, state);
+    panelOrder.push(panelId);
 
     const hooks = getPanelHookSet(panelId);
     if (typeof hooks.onMount === "function") {
       try { hooks.onMount(state); } catch (_) {}
     }
+    notify();
     return state;
   }
 
@@ -81,9 +104,12 @@ export function createDevStagingPanelManager({
       state.host.parentNode.removeChild(state.host);
     }
     openPanels.delete(panelId);
+    const existingIndex = panelOrder.indexOf(panelId);
+    if (existingIndex >= 0) panelOrder.splice(existingIndex, 1);
     if (typeof hooks.onAfterClose === "function") {
       try { hooks.onAfterClose(state); } catch (_) {}
     }
+    notify();
     return true;
   }
 
@@ -91,9 +117,31 @@ export function createDevStagingPanelManager({
     return isOpen(id) ? !closePanel(id) : !!openPanel(id);
   }
 
+  function closeTopmostPanel() {
+    const topmostId = panelOrder.length ? panelOrder[panelOrder.length - 1] : "";
+    if (!topmostId) return false;
+    return closePanel(topmostId);
+  }
+
+  function subscribe(listener) {
+    if (typeof listener !== "function") return () => {};
+    listeners.add(listener);
+    try { listener(getState()); } catch (_) {}
+    return () => {
+      listeners.delete(listener);
+    };
+  }
+
   function getState() {
+    const openPanelIds = panelOrder.slice();
     return {
-      openPanelIds: Array.from(openPanels.keys()),
+      openPanelIds,
+      topmostPanelId: openPanelIds.length ? openPanelIds[openPanelIds.length - 1] : "",
+      panels: Array.from(panelDefs.entries()).map(([id, def]) => ({
+        id,
+        title: String(def.title || id),
+        open: openPanels.has(id),
+      })),
     };
   }
 
@@ -102,8 +150,10 @@ export function createDevStagingPanelManager({
     registerPanelHooks,
     openPanel,
     closePanel,
+    closeTopmostPanel,
     togglePanel,
     isOpen,
+    subscribe,
     getState,
   };
 }

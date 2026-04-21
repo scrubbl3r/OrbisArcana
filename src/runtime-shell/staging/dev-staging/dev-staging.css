@@ -64,6 +64,13 @@
   white-space: nowrap;
 }
 
+.devStagingStatusTools .devStagingButton.on,
+.devStagingStatusTools .devStagingButton[data-active="true"] {
+  border-color: rgba(240, 240, 244, 0.98);
+  color: rgb(245, 245, 248);
+  background: rgba(255, 255, 255, 0.10);
+}
+
 .devStagingPanelHost {
   min-width: 0;
 }

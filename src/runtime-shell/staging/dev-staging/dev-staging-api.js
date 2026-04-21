@@ -3,7 +3,7 @@ import {
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-state.js?v=20260420g";
-import { closeDevStagingTopmostPopup } from "./dev-staging-panel.js?v=20260421a";
+import { closeDevStagingTopmostPopup } from "./dev-staging-panel.js?v=20260421g";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421a";
 
 export function createDevStagingApi(root, refs, panels = {}) {
@@ -33,6 +33,16 @@ export function createDevStagingApi(root, refs, panels = {}) {
     },
     togglePanel(id) {
       return !!(panels && panels.manager && typeof panels.manager.togglePanel === "function" && panels.manager.togglePanel(id));
+    },
+    getPanelState() {
+      return panels && panels.manager && typeof panels.manager.getState === "function"
+        ? panels.manager.getState()
+        : { openPanelIds: [], topmostPanelId: "", panels: [] };
+    },
+    subscribePanelState(listener) {
+      return panels && panels.manager && typeof panels.manager.subscribe === "function"
+        ? panels.manager.subscribe(listener)
+        : (() => {});
     },
     resetMeters() {
       resetDevStagingHud(refs);
