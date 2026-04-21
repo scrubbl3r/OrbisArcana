@@ -74,6 +74,8 @@ export function mountDevStaging(root) {
     setActive(refs.cameraInputBtn, openIds.has("camera-input"));
   });
 
+  manager.openPanel("input-hud");
+
   const api = createDevStagingApi(root, refs, { manager });
   return api;
 }
