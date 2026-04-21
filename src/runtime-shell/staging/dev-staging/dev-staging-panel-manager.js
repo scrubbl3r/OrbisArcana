@@ -53,8 +53,8 @@ export function createDevStagingPanelManager({
     if (!state || !state.host || !stackHost) return state || null;
     const existingIndex = panelOrder.indexOf(panelId);
     if (existingIndex >= 0) panelOrder.splice(existingIndex, 1);
-    panelOrder.push(panelId);
-    stackHost.appendChild(state.host);
+    panelOrder.unshift(panelId);
+    stackHost.insertBefore(state.host, stackHost.firstChild || null);
     notify();
     return state;
   }
@@ -69,7 +69,7 @@ export function createDevStagingPanelManager({
     const host = document.createElement("section");
     host.className = "devStagingStackItem";
     host.dataset.panelId = panelId;
-    stackHost.appendChild(host);
+    stackHost.insertBefore(host, stackHost.firstChild || null);
 
     const instance = definition.mount(host) || {};
     const refs = instance.refs && typeof instance.refs === "object" ? instance.refs : {};
@@ -77,7 +77,7 @@ export function createDevStagingPanelManager({
 
     const state = { id: panelId, host, instance, refs };
     openPanels.set(panelId, state);
-    panelOrder.push(panelId);
+    panelOrder.unshift(panelId);
 
     const hooks = getPanelHookSet(panelId);
     if (typeof hooks.onMount === "function") {
@@ -118,7 +118,7 @@ export function createDevStagingPanelManager({
   }
 
   function closeTopmostPanel() {
-    const topmostId = panelOrder.length ? panelOrder[panelOrder.length - 1] : "";
+    const topmostId = panelOrder.length ? panelOrder[0] : "";
     if (!topmostId) return false;
     return closePanel(topmostId);
   }
@@ -136,7 +136,7 @@ export function createDevStagingPanelManager({
     const openPanelIds = panelOrder.slice();
     return {
       openPanelIds,
-      topmostPanelId: openPanelIds.length ? openPanelIds[openPanelIds.length - 1] : "",
+      topmostPanelId: openPanelIds.length ? openPanelIds[0] : "",
       panels: Array.from(panelDefs.entries()).map(([id, def]) => ({
         id,
         title: String(def.title || id),
