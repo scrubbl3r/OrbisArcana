@@ -231,19 +231,23 @@ body {
 
 .shellMount {
   display: flex;
+  align-self: stretch;
 }
 
 .shellMountDev,
 .shellMountOrb {
   display: flex;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  height: 100%;
 }
 
 .shellMountDev > *,
 .shellMountOrb > * {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 100%;
 }
 
 .shellMountDev {
@@ -251,10 +255,31 @@ body {
   overflow-x: hidden;
   overscroll-behavior: contain;
   padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(92, 92, 98, 0.82) rgba(18, 18, 22, 0.88);
 }
 
 .shellMountOrb {
   overflow: hidden;
+}
+
+.shellMountDev::-webkit-scrollbar {
+  width: 10px;
+}
+
+.shellMountDev::-webkit-scrollbar-track {
+  background: rgba(18, 18, 22, 0.88);
+  border-radius: 999px;
+}
+
+.shellMountDev::-webkit-scrollbar-thumb {
+  background: rgba(92, 92, 98, 0.82);
+  border-radius: 999px;
+  border: 2px solid rgba(18, 18, 22, 0.88);
+}
+
+.shellMountDev::-webkit-scrollbar-thumb:hover {
+  background: rgba(112, 112, 118, 0.9);
 }
 
 @media (max-width: 900px) {

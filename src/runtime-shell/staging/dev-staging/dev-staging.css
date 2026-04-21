@@ -10,6 +10,8 @@
 .devStaging {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
   min-height: 100%;
   gap: 14px;
 }
@@ -17,6 +19,8 @@
 .devStagingCard {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
   min-height: var(--dev-staging-panel-height);
   padding: 14px 14px 16px;
   overflow: visible;

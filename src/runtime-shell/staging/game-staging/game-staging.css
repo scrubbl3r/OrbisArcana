@@ -26,6 +26,8 @@ body {
 .orbStage {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
   min-height: 100%;
   box-sizing: border-box;
   padding: 0;
@@ -35,6 +37,7 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  height: 100%;
   min-height: var(--orb-stage-panel-height);
   padding: 14px 14px 16px;
   overflow: hidden;
@@ -43,7 +46,7 @@ body {
 .physStage {
   position: relative;
   flex: 1 1 auto;
-  min-height: calc(var(--orb-stage-level-box-height) + 34px);
+  min-height: 0;
   border: 1px solid var(--frame);
   border-radius: 14px;
   background: #000;
