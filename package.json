@@ -173,6 +173,7 @@
     "status:v2": "node tools/rule-engine-v2/status-v2.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.34",
     "onnxruntime-web": "1.22.0"
   }
 }

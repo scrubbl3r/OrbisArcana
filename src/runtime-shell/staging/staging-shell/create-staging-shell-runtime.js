@@ -25,6 +25,7 @@ import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
+import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   splitPrototype: "split-prototype",
@@ -1577,6 +1578,7 @@ function createStagingShellContext({
       cameraRuntime: createCameraRuntime({
         now: () => performance.now(),
       }),
+      cameraInput: null,
       mvp: null,
       eventBus: null,
       worldSystem: null,
@@ -1591,6 +1593,32 @@ function exposeShellContext(rootDocument, shellContext) {
   const win = rootDocument && rootDocument.defaultView;
   if (!win) return;
   win.__orbisStagingShell = shellContext;
+}
+
+function bindShellCameraInputPopup(shellContext) {
+  const devRefs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
+  const cameraInputRuntime = shellContext && shellContext.runtime ? shellContext.runtime.cameraInput : null;
+  if (!devRefs || !cameraInputRuntime) return null;
+
+  const cameraInputPopup = createCameraInputPopup({
+    els: devRefs,
+  });
+  cameraInputPopup.bind();
+  if (typeof cameraInputRuntime.getState === "function") {
+    cameraInputPopup.renderState(cameraInputRuntime.getState());
+  }
+  const unsubscribe = typeof cameraInputRuntime.subscribe === "function"
+    ? cameraInputRuntime.subscribe((state) => {
+        cameraInputPopup.renderState(state);
+      })
+    : () => {};
+
+  return {
+    cameraInputPopup,
+    dispose() {
+      try { unsubscribe(); } catch (_) {}
+    },
+  };
 }
 
 function formatPhoneImpulseLogLine(d) {
@@ -2094,7 +2122,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260417a",
+  moduleCacheBustV = "20260420b",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -2183,6 +2211,29 @@ export async function createStagingShellRuntime({
       ? window.createMotionStore()
       : null;
     renderShellHudFromMotionStore(shellContext);
+    if (bootStatus && typeof bootStatus.setStatus === "function") {
+      bootStatus.setStatus({
+        phase: STAGING_SHELL_STATUS.sharedModulesReady,
+        detail: "Preloading camera input runtime",
+        state: "booting",
+      });
+    }
+    if (devStagingView && typeof devStagingView.setStatus === "function") {
+      devStagingView.setStatus("Preloading camera input…", "devStagingDim");
+    }
+    const bootstrapCameraInput =
+      sharedModules.cameraInputBootstrapModule &&
+      sharedModules.cameraInputBootstrapModule.bootstrapCameraInput;
+    if (typeof bootstrapCameraInput !== "function") {
+      throw new Error("camera_input_bootstrap_missing");
+    }
+    shellContext.runtime.cameraInput = await bootstrapCameraInput({
+      rootWindow: rootDocument.defaultView,
+      rootDocument,
+      eventBus: shellContext.runtime.eventBus,
+      preferredHand: "Left",
+    });
+    shellContext.runtime.cameraInputDebug = bindShellCameraInputPopup(shellContext);
     if (bootStatus && typeof bootStatus.setStatus === "function") {
       bootStatus.setStatus({
         phase: STAGING_SHELL_STATUS.sharedModulesReady,

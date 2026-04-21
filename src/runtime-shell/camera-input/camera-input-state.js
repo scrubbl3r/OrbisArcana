@@ -1,0 +1,61 @@
+const DEFAULT_HAND_X01 = 0.5;
+
+export function createInitialCameraInputState({
+  preferredHand = "Left",
+  modelAssetUrl = "",
+  wasmRootUrl = "",
+} = {}) {
+  return {
+    updatedAtMs: 0,
+    config: {
+      preferredHand: String(preferredHand || "Left"),
+      modelAssetUrl: String(modelAssetUrl || ""),
+      wasmRootUrl: String(wasmRootUrl || ""),
+    },
+    lifecycle: {
+      preloadState: "idle",
+      runtimeState: "idle",
+      permissionState: "unknown",
+      streamState: "idle",
+      ready: false,
+    },
+    tracking: {
+      state: "idle",
+      handPresent: false,
+      handedness: null,
+      handednessScore: 0,
+      landmarksCount: 0,
+      confidence: 0,
+      rawX01: DEFAULT_HAND_X01,
+      filteredX01: DEFAULT_HAND_X01,
+      centeredX01: 0,
+      lastSeenAtMs: 0,
+    },
+    failures: {
+      code: "",
+      message: "",
+    },
+    debug: {
+      statusLine: "cam:idle",
+      preloadDetail: "",
+      frameMs: 0,
+      fps: 0,
+      lastError: "",
+    },
+  };
+}
+
+export function mergeCameraInputState(currentState, partialState = {}) {
+  const current = currentState || createInitialCameraInputState();
+  const patch = partialState && typeof partialState === "object" ? partialState : {};
+  return {
+    ...current,
+    ...patch,
+    config: { ...current.config, ...(patch.config || {}) },
+    lifecycle: { ...current.lifecycle, ...(patch.lifecycle || {}) },
+    tracking: { ...current.tracking, ...(patch.tracking || {}) },
+    failures: { ...current.failures, ...(patch.failures || {}) },
+    debug: { ...current.debug, ...(patch.debug || {}) },
+  };
+}
+

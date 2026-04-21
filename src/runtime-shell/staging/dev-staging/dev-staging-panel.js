@@ -1,5 +1,9 @@
 export function closeDevStagingTopmostPopup(refs) {
   if (!refs) return false;
+  if (refs.cameraInputPopup && refs.cameraInputPopup.classList.contains("on") && refs.cameraInputPopupClose) {
+    refs.cameraInputPopupClose.click();
+    return true;
+  }
   if (refs.pathBoardPopup && refs.pathBoardPopup.classList.contains("on") && refs.pathBoardPopupClose) {
     refs.pathBoardPopupClose.click();
     return true;
@@ -14,6 +18,7 @@ export function closeDevStagingTopmostPopup(refs) {
 export function projectDevStagingPanelRefs(refs = {}) {
   return {
     teleBtn: refs.teleBtn || null,
+    cameraInputBtn: refs.cameraInputBtn || null,
     pathBoardBtn: refs.pathBoardBtn || null,
     kwsReadout: refs.kwsReadout || null,
     kwsLog: refs.kwsLog || null,
@@ -31,6 +36,24 @@ export function projectDevStagingPanelRefs(refs = {}) {
     pathBoardPopupHeader: refs.pathBoardPopupHeader || null,
     pathBoardPopupClose: refs.pathBoardPopupClose || null,
     pathBoardBody: refs.pathBoardBody || null,
+    cameraInputPopup: refs.cameraInputPopup || null,
+    cameraInputPopupHeader: refs.cameraInputPopupHeader || null,
+    cameraInputPopupClose: refs.cameraInputPopupClose || null,
+    cameraInputStatusReadout: refs.cameraInputStatusReadout || null,
+    cameraInputLifecycleReadout: refs.cameraInputLifecycleReadout || null,
+    cameraInputPermissionReadout: refs.cameraInputPermissionReadout || null,
+    cameraInputTrackingReadout: refs.cameraInputTrackingReadout || null,
+    cameraInputHandReadout: refs.cameraInputHandReadout || null,
+    cameraInputFailureReadout: refs.cameraInputFailureReadout || null,
+    cameraInputSignalTrack: refs.cameraInputSignalTrack || null,
+    cameraInputSignalFill: refs.cameraInputSignalFill || null,
+    cameraInputSignalDot: refs.cameraInputSignalDot || null,
+    cameraInputSignalConfidence: refs.cameraInputSignalConfidence || null,
+    cameraInputRawXReadout: refs.cameraInputRawXReadout || null,
+    cameraInputFilteredXReadout: refs.cameraInputFilteredXReadout || null,
+    cameraInputCenteredXReadout: refs.cameraInputCenteredXReadout || null,
+    cameraInputConfidenceReadout: refs.cameraInputConfidenceReadout || null,
+    cameraInputFpsReadout: refs.cameraInputFpsReadout || null,
     pathBoardDebugPanel: refs.pathBoardDebugPanel || null,
     pathBoardDebugToggle: refs.pathBoardDebugToggle || null,
     pathBoardDebugBadge: refs.pathBoardDebugBadge || null,

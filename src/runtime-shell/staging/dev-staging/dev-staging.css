@@ -37,16 +37,25 @@
 
 .devStagingStatusLine {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.devStagingStatusLine > :first-child {
+  flex: 1 1 240px;
+  min-width: 0;
 }
 
 .devStagingStatusTools {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
   margin-left: auto;
+  flex: 0 1 auto;
 }
 
 .devStagingDim {
@@ -221,7 +230,8 @@
 }
 
 .logPopup,
-.pathBoardPopup {
+.pathBoardPopup,
+.cameraInputPopup {
   position: fixed;
   display: none;
   flex-direction: column;
@@ -244,13 +254,21 @@
   max-height: calc(100vh - 140px);
 }
 
+.cameraInputPopup {
+  left: 52px;
+  top: 168px;
+  width: 420px;
+}
+
 .logPopup.on,
-.pathBoardPopup.on {
+.pathBoardPopup.on,
+.cameraInputPopup.on {
   display: flex;
 }
 
 .logPopupHeader,
-.pathBoardPopupHeader {
+.pathBoardPopupHeader,
+.cameraInputPopupHeader {
   position: relative;
   z-index: 2;
   display: flex;
@@ -262,7 +280,8 @@
 }
 
 .logPopupTitle,
-.pathBoardPopupTitle {
+.pathBoardPopupTitle,
+.cameraInputPopupTitle {
   font-weight: 1000;
   letter-spacing: .3px;
   color: var(--text-strong);
@@ -353,6 +372,165 @@
   border-bottom: 1px solid rgba(var(--frame-rgb), 0.18);
   background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
     rgba(10, 10, 12, 0.92);
+}
+
+.cameraInputMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(var(--frame-rgb), 0.18);
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
+    rgba(10, 10, 12, 0.92);
+}
+
+.cameraInputMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 14px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.cameraInputMetaLine {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cameraInputMetaLabel {
+  display: inline-block;
+  min-width: 68px;
+  font-weight: 900;
+  color: var(--text-strong);
+}
+
+.cameraInputSignalPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(16, 16, 20, 0.52);
+}
+
+.cameraInputSignalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cameraInputSignalTitle {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-strong);
+}
+
+.cameraInputSignalConfidence {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cameraInputSignalTrack {
+  position: relative;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--frame-rgb), .30);
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+    rgba(var(--frame-rgb), .10);
+  overflow: hidden;
+}
+
+.cameraInputSignalCenter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,.22);
+}
+
+.cameraInputSignalFill {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(80,160,255,0.20), rgba(80,160,255,0.72));
+  box-shadow: 0 0 22px rgba(80,160,255,0.18);
+}
+
+.cameraInputSignalFill[data-side="left"] {
+  background: linear-gradient(90deg, rgba(80,160,255,0.72), rgba(80,160,255,0.20));
+}
+
+.cameraInputSignalDot {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,.94);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.24),
+    0 0 18px rgba(255,255,255,.18);
+}
+
+.cameraInputSignalTrack[data-tracking-state="tracking"] .cameraInputSignalDot {
+  background: rgba(253,241,0,.94);
+}
+
+.cameraInputSignalTrack[data-tracking-state="wrong_hand"] .cameraInputSignalDot,
+#cameraInputFailureReadout[data-state="bad"] {
+  color: #ff8a8a;
+}
+
+.cameraInputMetricRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cameraInputMetric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--frame-rgb), .20);
+  background: rgba(255,255,255,.03);
+}
+
+.cameraInputMetricLabel {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cameraInputMetricValue {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-strong);
+}
+
+@media (max-width: 900px) {
+  .cameraInputPopup {
+    width: min(420px, calc(100vw - 24px));
+    left: 12px;
+    top: 140px;
+  }
+
+  .cameraInputMetaGrid,
+  .cameraInputMetricRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .pathBoardMetaReadout {

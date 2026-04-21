@@ -15,6 +15,9 @@ export async function bootstrapShellPairingRuntime({
   const win = rootDocument.defaultView;
   const devView = shellContext.views && shellContext.views.devStagingView ? shellContext.views.devStagingView : null;
   const shellKws = shellContext.runtime && shellContext.runtime.kws ? shellContext.runtime.kws : null;
+  const cameraInputRuntime = shellContext.runtime && shellContext.runtime.cameraInput
+    ? shellContext.runtime.cameraInput
+    : null;
   const statusSet = (html, cls = "devStagingDim") => {
     if (devView && typeof devView.setStatus === "function") {
       devView.setStatus(html, cls);
@@ -52,7 +55,7 @@ export async function bootstrapShellPairingRuntime({
     },
   });
 
-  const openCalibOverlay = () => uiOverlaysSystem.openCalibOverlay(calibAvailable);
+  const openCalibOverlay = () => uiOverlaysSystem.openCalibOverlay(canRunCalibration());
   const closeCalibOverlay = () => uiOverlaysSystem.closeCalibOverlay();
   const setCalibStatus = (msg) => uiOverlaysSystem.setCalibStatus(msg);
   const hideStartScreen = () => uiOverlaysSystem.hideStartScreen();
@@ -168,16 +171,90 @@ export async function bootstrapShellPairingRuntime({
     return false;
   };
 
+  const isCameraReady = () => (
+    cameraInputRuntime && typeof cameraInputRuntime.isPreloadReady === "function"
+      ? cameraInputRuntime.isPreloadReady()
+      : false
+  );
+
+  const canRunCalibration = () => {
+    const phoneReady = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
+    return !!phoneReady && isCameraReady();
+  };
+
+  const syncCalibAvailability = () => {
+    if (calibBtnEl) calibBtnEl.disabled = !canRunCalibration() || calibInFlight;
+  };
+
+  const describeCameraState = (state = null) => {
+    const snapshot = state || (cameraInputRuntime && typeof cameraInputRuntime.getState === "function"
+      ? cameraInputRuntime.getState()
+      : null);
+    if (!snapshot) return "cam:unavailable";
+    return String(snapshot.debug && snapshot.debug.statusLine || "cam:idle");
+  };
+
+  const syncCameraReadout = (state = null) => {
+    const snapshot = state || (cameraInputRuntime && typeof cameraInputRuntime.getState === "function"
+      ? cameraInputRuntime.getState()
+      : null);
+    const phoneReady = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
+    syncCalibAvailability();
+    if (!snapshot) return;
+    if (calibInFlight && calibStatusEl) {
+      const trackingState = String(snapshot.tracking && snapshot.tracking.state || "");
+      if (trackingState === "tracking") {
+        setCalibStatus("Calibrating… phone live, camera hand tracked");
+      } else if (trackingState === "wrong_hand") {
+        setCalibStatus("Calibrating… show your left hand");
+      }
+    } else if (calibStatusEl && phoneReady) {
+      setCalibStatus(isCameraReady() ? "Ready" : "Loading camera input…");
+    }
+    if (phoneReady) {
+      statusSet(
+        `Phone ready <span class="devStagingDim">(${describeCameraState(snapshot)})</span>`,
+        "devStagingDim"
+      );
+    }
+  };
+
+  if (cameraInputRuntime && typeof cameraInputRuntime.subscribe === "function") {
+    cameraInputRuntime.subscribe((state) => {
+      syncCameraReadout(state);
+    });
+  }
+
   if (calibBtnEl) {
-    calibBtnEl.onclick = () => {
-      const canCalibrate = mobileImpulseSystem ? mobileImpulseSystem.isCalibAvailable() : calibAvailable;
-      if (!canCalibrate) return;
+    calibBtnEl.onclick = async () => {
+      if (!canRunCalibration()) return;
       if (calibInFlight) return;
-      const ok = sendCalibrationTrigger();
-      if (!ok) return;
       calibInFlight = true;
-      calibBtnEl.disabled = true;
-      setCalibStatus("Calibrating… (2s)");
+      syncCalibAvailability();
+      try {
+        if (cameraInputRuntime && typeof cameraInputRuntime.startCalibrationCapture === "function") {
+          setCalibStatus("Starting camera + phone calibration…");
+          await cameraInputRuntime.startCalibrationCapture();
+        }
+      } catch (error) {
+        calibInFlight = false;
+        syncCalibAvailability();
+        setCalibStatus("Camera access required");
+        statusSet(
+          `Camera input blocked <span class="devStagingDim">(${error && error.message ? String(error.message) : "unknown"})</span>`,
+          "devStagingFatal on"
+        );
+        return;
+      }
+      const ok = sendCalibrationTrigger();
+      if (!ok) {
+        calibInFlight = false;
+        setCalibStatus("Phone calibration unavailable");
+        syncCalibAvailability();
+        return;
+      }
+      syncCalibAvailability();
+      setCalibStatus("Calibrating… (2s) + camera live");
     };
   }
 
@@ -192,6 +269,7 @@ export async function bootstrapShellPairingRuntime({
     openCalibOverlay,
     closeCalibOverlay,
     setCalibStatus,
+    syncCalibAvailability,
   };
 
   syncStartQrSize(rootDocument);
