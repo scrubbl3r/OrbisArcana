@@ -38,24 +38,19 @@
 .devStagingStatusLine {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
-}
-
-.devStagingStatusLine > :first-child {
-  flex: 1 1 240px;
-  min-width: 0;
 }
 
 .devStagingStatusTools {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
   gap: 8px;
-  margin-left: auto;
-  flex: 0 1 auto;
+  margin-left: 0;
+  flex: 0 1 100%;
 }
 
 .devStagingDim {

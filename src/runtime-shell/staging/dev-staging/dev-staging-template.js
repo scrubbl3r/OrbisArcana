@@ -5,7 +5,6 @@ export const DEV_STAGING_TEMPLATE = `
 
       <div class="devStagingStat">
         <div class="devStagingStatusLine">
-          <div>Status: <span id="status" class="devStagingDim">Auto-connecting…</span></div>
           <div class="devStagingStatusTools">
             <button id="cameraInputBtn" class="devStagingButton" type="button">CAM INPUT</button>
             <button id="pathBoardBtn" class="devStagingButton" type="button">PATH BOARD</button>
