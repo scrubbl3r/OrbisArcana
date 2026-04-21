@@ -71,10 +71,6 @@
   background: rgba(255, 255, 255, 0.10);
 }
 
-.devStagingPanelHost {
-  min-width: 0;
-}
-
 .devStagingPanelStack {
   display: flex;
   flex-direction: column;
@@ -288,43 +284,6 @@
   background: rgba(var(--frame-rgb), 0.12);
   color: var(--text);
   font: inherit;
-}
-
-.logPopup,
-.pathBoardPopup,
-.cameraInputPopup {
-  position: fixed;
-  display: none;
-  flex-direction: column;
-  z-index: 1001;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.logPopup {
-  left: 28px;
-  top: 28px;
-  width: 550px;
-  height: 400px;
-}
-
-.pathBoardPopup {
-  left: 36px;
-  top: 110px;
-  width: 640px;
-  max-height: calc(100vh - 140px);
-}
-
-.cameraInputPopup {
-  left: 52px;
-  top: 168px;
-  width: 420px;
-}
-
-.logPopup.on,
-.pathBoardPopup.on,
-.cameraInputPopup.on {
-  display: flex;
 }
 
 .devStagingLogPanel[aria-hidden="false"] {
@@ -592,12 +551,6 @@
 }
 
 @media (max-width: 900px) {
-  .cameraInputPopup {
-    width: min(420px, calc(100vw - 24px));
-    left: 12px;
-    top: 140px;
-  }
-
   .cameraInputMetaGrid,
   .cameraInputMetricRow {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -1,5 +1,5 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421f";
-import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421f";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421h";
+import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421h";
 import {
   allDevStagingDirectionLampsOff,
   clearDevStagingDirectionLampTimers,
@@ -25,7 +25,7 @@ import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
-import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260420v";
+import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260421h";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
