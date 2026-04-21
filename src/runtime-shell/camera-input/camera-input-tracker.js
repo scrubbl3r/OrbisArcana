@@ -36,6 +36,10 @@ function averagePalmX01(landmarks = []) {
   return clamp01(total / points.length);
 }
 
+function toScreenSpaceX01(cameraX01) {
+  return clamp01(1 - clamp01(cameraX01));
+}
+
 function extractPrimaryHandObservation(result, preferredHand, observedAtMs) {
   const landmarksGroups = Array.isArray(result && result.landmarks) ? result.landmarks : [];
   const worldGroups = Array.isArray(result && result.worldLandmarks) ? result.worldLandmarks : [];
@@ -90,7 +94,7 @@ function extractPrimaryHandObservation(result, preferredHand, observedAtMs) {
     handedness: bestHandedness,
     handednessScore: bestScore,
     landmarksCount: landmarks.length,
-    x01: averagePalmX01(landmarks),
+    x01: toScreenSpaceX01(averagePalmX01(landmarks)),
     landmarks,
     worldLandmarks,
   };
