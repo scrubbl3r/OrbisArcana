@@ -3,6 +3,7 @@ export function createInputHudPanelRefs(root) {
   const $ = (id) => root.querySelector(`#${id}`);
   return {
     root,
+    dynamicsPanelClose: $("dynamicsPanelClose"),
     vLift: $("vLift"),
     vGroove: $("vGroove"),
     vSmooth: $("vSmooth"),

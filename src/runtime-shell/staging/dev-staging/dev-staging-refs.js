@@ -6,6 +6,7 @@ export function createDevStagingRefs(root) {
     status: $("status"),
     fatal: $("fatal"),
     devStagingPanelStack: $("devStagingPanelStack"),
+    dynamicsBtn: $("dynamicsBtn"),
     teleBtn: $("teleBtn"),
     cameraInputBtn: $("cameraInputBtn"),
     pathBoardBtn: $("pathBoardBtn"),

@@ -1,5 +1,5 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421e";
-import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421e";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421f";
+import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421f";
 import {
   allDevStagingDirectionLampsOff,
   clearDevStagingDirectionLampTimers,

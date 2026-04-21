@@ -112,6 +112,24 @@
   min-height: 0;
 }
 
+.devStagingDynamicsPanel {
+  min-height: 0;
+}
+
+.devStagingStackPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.devStagingStackPanelTitle {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .01em;
+  color: var(--text-strong);
+}
+
 .devStagingBars {
   margin-top: 10px;
 }

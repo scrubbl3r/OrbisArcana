@@ -3,20 +3,20 @@ import {
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-state.js";
-import { createDevStagingApi } from "./dev-staging-api.js?v=20260421e";
+import { createDevStagingApi } from "./dev-staging-api.js?v=20260421f";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421b";
-import { createDevStagingPanelManager } from "./dev-staging-panel-manager.js?v=20260421e";
+import { createDevStagingPanelManager } from "./dev-staging-panel-manager.js?v=20260421f";
 import {
   closeDevStagingTopmostPopup,
   createDevStagingPanelElementsFromView,
   projectDevStagingPanelRefs,
-} from "./dev-staging-panel.js?v=20260421e";
-import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260421e";
+} from "./dev-staging-panel.js?v=20260421f";
+import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260421f";
 import { mountCameraInputPanel } from "./camera-input-panel.js?v=20260421e";
-import { mountInputHudPanel } from "./input-hud-panel.js?v=20260421c";
+import { mountInputHudPanel } from "./input-hud-panel.js?v=20260421f";
 import { mountLogPanel } from "./log-panel.js?v=20260421c";
 import { mountPathBoardPanel } from "./path-board-panel.js?v=20260421d";
-import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260421e";
+import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260421f";
 
 export {
   closeDevStagingTopmostPopup,
@@ -40,7 +40,9 @@ export function mountDevStaging(root) {
   });
   refs.devPanelManager = manager;
   manager.registerPanel("input-hud", {
-    mount: (host) => mountInputHudPanel(host),
+    mount: (host) => mountInputHudPanel(host, {
+      onRequestClose: () => manager.closePanel("input-hud"),
+    }),
   });
   manager.registerPanel("log", {
     mount: (host) => mountLogPanel(host),
@@ -51,10 +53,12 @@ export function mountDevStaging(root) {
   manager.registerPanel("camera-input", {
     mount: (host) => mountCameraInputPanel(host),
   });
-  manager.openPanel("input-hud");
+  if (refs.dynamicsBtn) {
+    refs.dynamicsBtn.addEventListener("click", () => {
+      manager.togglePanel("input-hud");
+    });
+  }
   const api = createDevStagingApi(root, refs, { manager });
-
-  api.resetMeters();
   return api;
 }
 

@@ -1,5 +1,10 @@
 export const INPUT_HUD_PANEL_TEMPLATE = `
-  <div class="devStagingBars">
+  <div class="devStagingStackPanel devStagingDynamicsPanel" aria-hidden="false">
+    <div class="devStagingStackPanelHeader runtimeShellPopupHeader">
+      <div class="devStagingStackPanelTitle">Dynamics</div>
+      <button class="devStagingButton devStagingPopupClose" id="dynamicsPanelClose" aria-label="Close dynamics" type="button">Close</button>
+    </div>
+    <div class="devStagingBars">
     <div class="devStagingBarLabel"><div>Lift</div><span class="devStagingDim"> </span></div>
     <div class="devStagingMeterRow">
       <div class="devStagingBar"><div id="bLift" class="devStagingFill" style="width:0%"></div></div>
@@ -55,5 +60,6 @@ export const INPUT_HUD_PANEL_TEMPLATE = `
       <div class="devStagingDirItem"><div id="lampForward" class="devStagingLamp" aria-hidden="true"></div><div class="devStagingDirLabel">FWD</div></div>
       <div class="devStagingDirItem"><div id="lampBack" class="devStagingLamp" aria-hidden="true"></div><div class="devStagingDirLabel">BACK</div></div>
     </div>
+  </div>
   </div>
 `;

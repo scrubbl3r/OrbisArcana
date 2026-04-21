@@ -12,6 +12,10 @@ export function closeDevStagingTopmostPopup(refs) {
     refs.devPanelManager.closePanel("log");
     return true;
   }
+  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("input-hud")) {
+    refs.devPanelManager.closePanel("input-hud");
+    return true;
+  }
   if (refs.pathBoardPopup && refs.pathBoardPopup.classList.contains("on") && refs.pathBoardPopupClose) {
     refs.pathBoardPopupClose.click();
     return true;
@@ -25,6 +29,7 @@ export function closeDevStagingTopmostPopup(refs) {
 
 export function projectDevStagingPanelRefs(refs = {}) {
   return {
+    dynamicsBtn: refs.dynamicsBtn || null,
     teleBtn: refs.teleBtn || null,
     cameraInputBtn: refs.cameraInputBtn || null,
     pathBoardBtn: refs.pathBoardBtn || null,
