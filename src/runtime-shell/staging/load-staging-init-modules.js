@@ -73,9 +73,9 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import("../../game-runtime/orb/orb-base-state.js"),
     import("../../game-runtime/orb/orb-color-runtime.js"),
     import("../../game-runtime/orb/orb-shatter-runtime.js"),
-    import("../../game-runtime/orb/orb-runtime-state.js"),
+    import(withVersion("../../game-runtime/orb/orb-runtime-state.js", moduleCacheBustV)),
     import("../../game-runtime/orb/orb-runtime-loop.js"),
-    import("../../game-runtime/orb/orb-runtime-pipeline.js"),
+    import(withVersion("../../game-runtime/orb/orb-runtime-pipeline.js", moduleCacheBustV)),
   ]);
 
   return {

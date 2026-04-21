@@ -269,8 +269,12 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
     },
     applyOrbTransform({
       top = 0,
+      left = "50%",
     } = {}) {
       if (!stageRefs.orbWrap) return;
+      stageRefs.orbWrap.style.left = (typeof left === "number")
+        ? `${Number(left || 0).toFixed(2)}px`
+        : String(left || "50%");
       stageRefs.orbWrap.style.transform = `translate(-50%, ${Number(top || 0).toFixed(2)}px)`;
     },
     renderOrbDamageVisuals({

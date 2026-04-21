@@ -1,3 +1,5 @@
+import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420d";
+
 function clamp01(n){
   n = Number(n);
   if (!isFinite(n)) return 0;
@@ -64,10 +66,19 @@ export function runOrbRuntimePipeline({
   const updateOrbStrokeColor = hooks.updateOrbStrokeColor;
   const applyOrbTransform = hooks.applyOrbTransform;
   const updateDebugReadout = hooks.updateDebugReadout;
+  const getLateralBounds = hooks.getLateralBounds;
+  const getCameraSteeringState = hooks.getCameraSteeringState;
 
   if (mvp && mvp.orbSystem && typeof mvp.orbSystem.tick === "function") {
     mvp.orbSystem.tick(nowMs);
   }
+
+  stepOrbLateralMotion({
+    dt,
+    state,
+    steering: typeof getCameraSteeringState === "function" ? getCameraSteeringState() : null,
+    bounds: typeof getLateralBounds === "function" ? getLateralBounds() : null,
+  });
 
   if (state.teleportHoldActive) {
     const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;

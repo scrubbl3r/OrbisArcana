@@ -34,6 +34,8 @@ export function createDevStagingRefs(root) {
     cameraInputTrackingReadout: $("cameraInputTrackingReadout"),
     cameraInputHandReadout: $("cameraInputHandReadout"),
     cameraInputFailureReadout: $("cameraInputFailureReadout"),
+    cameraInputSteeringReadout: $("cameraInputSteeringReadout"),
+    cameraInputOrbReadout: $("cameraInputOrbReadout"),
     cameraInputSignalTrack: $("cameraInputSignalTrack"),
     cameraInputSignalFill: $("cameraInputSignalFill"),
     cameraInputSignalDot: $("cameraInputSignalDot"),

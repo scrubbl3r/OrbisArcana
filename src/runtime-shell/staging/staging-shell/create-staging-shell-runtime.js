@@ -1,5 +1,5 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js";
-import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260420e";
+import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260420e";
 import {
   allDevStagingDirectionLampsOff,
   clearDevStagingDirectionLampTimers,
@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderGameStaging } from "../game-staging/game-staging.js";
+import { renderGameStaging } from "../game-staging/game-staging.js?v=20260420e";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
 import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
 import { createGameStagingOrbActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
@@ -25,7 +25,8 @@ import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
-import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js";
+import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260420e";
+import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420d";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   splitPrototype: "split-prototype",
@@ -165,12 +166,16 @@ function buildShellStageInitialState(phys = {}) {
   const yW = WORLD_H - (groundFromBottomPx + groundLinePx + orbRadiusPx);
   return {
     yW,
+    xW: 0,
     v: 0,
+    vx: 0,
     lastTs: null,
     gravityMul: SHELL_STAGE_UI_DEFAULTS.gravityMul,
     lift01: 0,
     energy01: 0,
     dynamics01: 0,
+    steerIntentX: 0,
+    steerActive: false,
     onGround: true,
     descendMs: 0,
     shieldDescentBlocked: false,
@@ -252,6 +257,7 @@ function initializeShellStageRuntime(shellContext) {
   const impact = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.impact);
   const statusConfig = cloneJsonLike(ORB_STATUS_CONFIG_DEFAULT && ORB_STATUS_CONFIG_DEFAULT.grace);
   const initialState = buildShellStageInitialState(phys);
+  initialState.xW = shellStageCenterX(shellContext);
   const orbRuntimeState = createOrbRuntimeState({ initialState });
 
   runtime.stage = {
@@ -301,6 +307,23 @@ function shellGroundCenterWorld(shellContext) {
   );
 }
 
+function shellStageCenterX(shellContext) {
+  const rect = shellStageRect(shellContext);
+  return (Number(rect.width) || 0) * 0.5;
+}
+
+function shellLateralBounds(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const stage = runtime && runtime.stage ? runtime.stage : null;
+  const rect = shellStageRect(shellContext);
+  const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
+  const stageWidth = Number(rect.width) || 0;
+  return {
+    left: orbRadiusPx,
+    right: Math.max(orbRadiusPx, stageWidth - orbRadiusPx),
+  };
+}
+
 function shellCameraTopFor(shellContext, yW, stageH) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   const WORLD_H = Number(stage && stage.phys && stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
@@ -341,9 +364,14 @@ function applyShellOrbTransform(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
   if (!runtime || !runtime.stage || !gameStagingAdapter || typeof gameStagingAdapter.applyOrbTransform !== "function") return;
+  const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  const bounds = shellLateralBounds(shellContext);
+  const xW = clamp(Number(orbState && orbState.xW) || shellStageCenterX(shellContext), bounds.left, bounds.right);
   const y = shellOrbScreenY(shellContext);
   const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
-  gameStagingAdapter.applyOrbTransform({ top });
+  gameStagingAdapter.applyOrbTransform({ top, left: xW });
 }
 
 function resetShellOrbToGround(shellContext) {
@@ -351,9 +379,14 @@ function resetShellOrbToGround(shellContext) {
   const stage = runtime && runtime.stage;
   if (!stage || !stage.orbRuntimeState || typeof stage.orbRuntimeState.patch !== "function") return;
   const yW = shellGroundCenterWorld(shellContext);
+  const xW = shellStageCenterX(shellContext);
   stage.orbRuntimeState.patch({
     yW,
+    xW,
     v: 0,
+    vx: 0,
+    steerIntentX: 0,
+    steerActive: false,
     onGround: true,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
@@ -777,6 +810,12 @@ function startShellStageLoop(shellContext) {
         worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
         hooks: {
           clamp,
+          getLateralBounds: () => shellLateralBounds(shellContext),
+          getCameraSteeringState: () => (
+            runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
+              ? runtime.cameraInputOrbBridge.getState()
+              : null
+          ),
           liftToThrustAccel: (l01) => {
             const phys = runtime.stage ? runtime.stage.phys : null;
             return Math.max(0, Number(phys && phys.thrustMax) || 0) * clamp01(l01);
@@ -1579,6 +1618,7 @@ function createStagingShellContext({
         now: () => performance.now(),
       }),
       cameraInput: null,
+      cameraInputOrbBridge: null,
       mvp: null,
       eventBus: null,
       worldSystem: null,
@@ -1612,10 +1652,24 @@ function bindShellCameraInputPopup(shellContext) {
         cameraInputPopup.renderState(state);
       })
     : () => {};
+  const renderGameplayState = () => {
+    const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+    cameraInputPopup.renderGameplayState({
+      steering: runtime && runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
+        ? runtime.cameraInputOrbBridge.getState()
+        : null,
+      orb: runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+        ? runtime.orbRuntimeState.get()
+        : null,
+    });
+  };
+  renderGameplayState();
+  const gameplayInterval = setInterval(renderGameplayState, 120);
 
   return {
     cameraInputPopup,
     dispose() {
+      clearInterval(gameplayInterval);
       try { unsubscribe(); } catch (_) {}
     },
   };
@@ -2122,7 +2176,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260420c",
+  moduleCacheBustV = "20260420e",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -2232,6 +2286,9 @@ export async function createStagingShellRuntime({
       rootDocument,
       eventBus: shellContext.runtime.eventBus,
       preferredHand: "Left",
+    });
+    shellContext.runtime.cameraInputOrbBridge = createCameraInputOrbBridge({
+      cameraInputRuntime: shellContext.runtime.cameraInput,
     });
     shellContext.runtime.cameraInputDebug = bindShellCameraInputPopup(shellContext);
     if (bootStatus && typeof bootStatus.setStatus === "function") {

@@ -9,9 +9,9 @@ import {
   closeDevStagingTopmostPopup,
   createDevStagingPanelElementsFromView,
   projectDevStagingPanelRefs,
-} from "./dev-staging-panel.js";
-import { createDevStagingRefs } from "./dev-staging-refs.js";
-import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js";
+} from "./dev-staging-panel.js?v=20260420e";
+import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260420e";
+import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260420e";
 
 export {
   closeDevStagingTopmostPopup,

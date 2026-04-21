@@ -90,6 +90,24 @@ export function createCameraInputPopup({
     renderTrack(state);
   }
 
+  function renderGameplayState({ steering = null, orb = null } = {}) {
+    if (els.cameraInputSteeringReadout) {
+      if (steering && typeof steering === "object") {
+        const reason = String(steering.reason || "idle");
+        const intentX = formatFixed(steering.intentX, 3, "0.000");
+        const targetVX = formatFixed(steering.targetVX, 1, "0.0");
+        els.cameraInputSteeringReadout.textContent = `${reason} intent:${intentX} vx:${targetVX}`;
+      } else {
+        els.cameraInputSteeringReadout.textContent = "idle";
+      }
+    }
+    if (els.cameraInputOrbReadout) {
+      const xW = formatFixed(orb && orb.xW, 2, "0.00");
+      const vx = formatFixed(orb && orb.vx, 2, "0.00");
+      els.cameraInputOrbReadout.textContent = `x:${xW} vx:${vx}`;
+    }
+  }
+
   function setOpen(nextOpen) {
     open = !!nextOpen;
     if (els.cameraInputPopup) {
@@ -149,6 +167,7 @@ export function createCameraInputPopup({
   return {
     bind,
     renderState,
+    renderGameplayState,
     isOpen: () => open,
     open: () => setOpen(true),
     close: () => setOpen(false),

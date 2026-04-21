@@ -45,6 +45,8 @@ export function projectDevStagingPanelRefs(refs = {}) {
     cameraInputTrackingReadout: refs.cameraInputTrackingReadout || null,
     cameraInputHandReadout: refs.cameraInputHandReadout || null,
     cameraInputFailureReadout: refs.cameraInputFailureReadout || null,
+    cameraInputSteeringReadout: refs.cameraInputSteeringReadout || null,
+    cameraInputOrbReadout: refs.cameraInputOrbReadout || null,
     cameraInputSignalTrack: refs.cameraInputSignalTrack || null,
     cameraInputSignalFill: refs.cameraInputSignalFill || null,
     cameraInputSignalDot: refs.cameraInputSignalDot || null,

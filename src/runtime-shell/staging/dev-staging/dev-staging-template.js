@@ -120,6 +120,8 @@ export const DEV_STAGING_TEMPLATE = `
           <div class="cameraInputMetaLine"><span class="cameraInputMetaLabel">Tracking:</span> <span id="cameraInputTrackingReadout" class="devStagingDim">idle</span></div>
           <div class="cameraInputMetaLine"><span class="cameraInputMetaLabel">Hand:</span> <span id="cameraInputHandReadout" class="devStagingDim">-</span></div>
           <div class="cameraInputMetaLine"><span class="cameraInputMetaLabel">Failure:</span> <span id="cameraInputFailureReadout" class="devStagingDim" data-state="ok">none</span></div>
+          <div class="cameraInputMetaLine"><span class="cameraInputMetaLabel">Steering:</span> <span id="cameraInputSteeringReadout" class="devStagingDim">idle</span></div>
+          <div class="cameraInputMetaLine"><span class="cameraInputMetaLabel">Orb:</span> <span id="cameraInputOrbReadout" class="devStagingDim">x:0.00 vx:0.00</span></div>
         </div>
       </div>
       <div class="cameraInputSignalPanel">
