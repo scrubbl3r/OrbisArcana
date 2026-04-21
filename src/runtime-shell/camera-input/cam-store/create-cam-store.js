@@ -1,5 +1,9 @@
 import { EVT_CAMERA_INPUT_STATE_CHANGED } from "../camera-input-events.js";
-import { createInitialCameraInputState, mergeCameraInputState } from "../camera-input-state.js";
+import {
+  applyCameraInputStatePatch,
+  createInitialCameraInputState,
+  mergeCameraInputState,
+} from "../camera-input-state.js";
 
 export function createCamStore({
   initialState = createInitialCameraInputState(),
@@ -30,8 +34,13 @@ export function createCamStore({
     return state;
   }
 
-  function patch(partialState = {}) {
-    state = mergeCameraInputState(state, partialState);
+  function patch(partialState = {}, { silent = false } = {}) {
+    applyCameraInputStatePatch(state, partialState);
+    if (!silent) notify();
+    return state;
+  }
+
+  function flush() {
     notify();
     return state;
   }
@@ -58,8 +67,8 @@ export function createCamStore({
     getState,
     publish,
     patch,
+    flush,
     subscribe,
     reset,
   };
 }
-

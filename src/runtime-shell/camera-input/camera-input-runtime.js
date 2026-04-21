@@ -1,5 +1,5 @@
-import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420f";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260420f";
+import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260420h";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260420f";
 
@@ -59,38 +59,36 @@ export function createCameraInputRuntime({
     onObservation: handleObservation,
   });
 
-  function syncStatusLine(extraDebug = {}) {
+  function patchCameraState(partialState = {}) {
+    camStore.patch(partialState, { silent: true });
     const state = camStore.getState();
-    camStore.patch({
-      debug: {
-        ...extraDebug,
-        statusLine: buildStatusLine(state),
-      },
-    });
+    state.debug.statusLine = buildStatusLine(state);
+    camStore.flush();
+    return state;
   }
 
   function handleObservation(observation = {}) {
     const tracking = steering.processObservation(observation);
-    camStore.patch({
+    const state = camStore.getState();
+    patchCameraState({
       updatedAtMs: Number(observation.observedAtMs) || now(),
       lifecycle: {
-        runtimeState: camStore.getState().lifecycle.streamState === "active" ? "active" : camStore.getState().lifecycle.runtimeState,
-        ready: camStore.getState().lifecycle.preloadState === "ready",
+        runtimeState: state.lifecycle.streamState === "active" ? "active" : state.lifecycle.runtimeState,
+        ready: state.lifecycle.preloadState === "ready",
       },
       tracking,
       failures: tracking.state === "tracking"
         ? { code: "", message: "" }
-        : camStore.getState().failures,
+        : state.failures,
       debug: {
         frameMs: Number(observation.frameMs) || 0,
         fps: Number(observation.fps) || 0,
       },
     });
-    syncStatusLine();
   }
 
   async function preload() {
-    camStore.patch({
+    patchCameraState({
       updatedAtMs: now(),
       lifecycle: {
         preloadState: "loading",
@@ -106,11 +104,10 @@ export function createCameraInputRuntime({
         lastError: "",
       },
     });
-    syncStatusLine();
 
     try {
       await tracker.preload();
-      camStore.patch({
+      patchCameraState({
         updatedAtMs: now(),
         lifecycle: {
           preloadState: "ready",
@@ -121,10 +118,9 @@ export function createCameraInputRuntime({
           preloadDetail: "mediapipe_ready",
         },
       });
-      syncStatusLine();
       return camStore.getState();
     } catch (error) {
-      camStore.patch({
+      patchCameraState({
         updatedAtMs: now(),
         lifecycle: {
           preloadState: "failed",
@@ -140,7 +136,6 @@ export function createCameraInputRuntime({
           lastError: normalizeErrorMessage(error, "camera_input_preload_failed"),
         },
       });
-      syncStatusLine();
       throw error;
     }
   }
@@ -149,7 +144,7 @@ export function createCameraInputRuntime({
     if (camStore.getState().lifecycle.preloadState !== "ready") {
       await preload();
     }
-    camStore.patch({
+    patchCameraState({
       updatedAtMs: now(),
       lifecycle: {
         permissionState: "prompting",
@@ -164,11 +159,10 @@ export function createCameraInputRuntime({
         lastError: "",
       },
     });
-    syncStatusLine();
 
     try {
       await tracker.start();
-      camStore.patch({
+      patchCameraState({
         updatedAtMs: now(),
         lifecycle: {
           permissionState: "granted",
@@ -177,11 +171,10 @@ export function createCameraInputRuntime({
           ready: true,
         },
       });
-      syncStatusLine();
       return camStore.getState();
     } catch (error) {
       const code = deriveFailureCode(error);
-      camStore.patch({
+      patchCameraState({
         updatedAtMs: now(),
         lifecycle: {
           permissionState: code === "camera_denied" ? "denied" : "error",
@@ -197,7 +190,6 @@ export function createCameraInputRuntime({
           lastError: normalizeErrorMessage(error, "camera_input_start_failed"),
         },
       });
-      syncStatusLine();
       throw error;
     }
   }
@@ -205,7 +197,7 @@ export function createCameraInputRuntime({
   function stop() {
     tracker.stop();
     steering.reset();
-    camStore.patch({
+    patchCameraState({
       updatedAtMs: now(),
       lifecycle: {
         streamState: "idle",
@@ -220,7 +212,6 @@ export function createCameraInputRuntime({
         landmarksCount: 0,
       },
     });
-    syncStatusLine();
   }
 
   function destroy() {

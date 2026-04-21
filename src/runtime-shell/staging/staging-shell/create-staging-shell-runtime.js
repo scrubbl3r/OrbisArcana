@@ -2194,7 +2194,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260420g",
+  moduleCacheBustV = "20260420h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

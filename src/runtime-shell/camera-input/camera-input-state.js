@@ -59,3 +59,16 @@ export function mergeCameraInputState(currentState, partialState = {}) {
   };
 }
 
+export function applyCameraInputStatePatch(currentState, partialState = {}) {
+  const current = currentState || createInitialCameraInputState();
+  const patch = partialState && typeof partialState === "object" ? partialState : {};
+  for (const [key, value] of Object.entries(patch)) {
+    if (key === "config" || key === "lifecycle" || key === "tracking" || key === "failures" || key === "debug") {
+      if (!value || typeof value !== "object") continue;
+      Object.assign(current[key], value);
+      continue;
+    }
+    current[key] = value;
+  }
+  return current;
+}
