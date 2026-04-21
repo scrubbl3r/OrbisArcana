@@ -1,5 +1,9 @@
 export function closeDevStagingTopmostPopup(refs) {
   if (!refs) return false;
+  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("log")) {
+    refs.devPanelManager.closePanel("log");
+    return true;
+  }
   if (refs.cameraInputPopup && refs.cameraInputPopup.classList.contains("on") && refs.cameraInputPopupClose) {
     refs.cameraInputPopupClose.click();
     return true;
@@ -64,8 +68,6 @@ export function projectDevStagingPanelRefs(refs = {}) {
 }
 
 export function createDevStagingPanelElementsFromView(view = null) {
-  const refs = (view && view.refs)
-    ? view.refs
-    : (view && typeof view === "object" ? view : {});
-  return projectDevStagingPanelRefs(refs);
+  if (view && view.refs) return view.refs;
+  return (view && typeof view === "object") ? view : {};
 }

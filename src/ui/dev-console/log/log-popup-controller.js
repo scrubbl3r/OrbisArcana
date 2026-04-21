@@ -10,13 +10,15 @@ export function createLogPopupController({
   let kwsLastLogText = "";
   let kwsLastLogAtMs = 0;
   let kwsLogStartedAtMs = 0;
-  let logPopupBound = false;
+  let logTriggerBound = false;
   let logPopupOpen = false;
   let logPopupDrag = null;
+  let boundLogPanelRoot = null;
   let pathBoardDebugOpen = false;
   let pathBoardDebugBound = false;
   let pathBoardVisible = false;
   let activeLogChannel = "general";
+  let managedPanelHooksRegistered = false;
   const pathBoardDebugRows = [];
   const logChannelState = {
     general: { rows: [], lastText: "", lastAtMs: 0, startedAtMs: 0 },
@@ -235,8 +237,8 @@ export function createLogPopupController({
   function setLogPopupOpen(nextOpen) {
     logPopupOpen = !!nextOpen;
     if (els.logPopup) {
-      els.logPopup.classList.toggle("on", logPopupOpen);
       els.logPopup.setAttribute("aria-hidden", logPopupOpen ? "false" : "true");
+      els.logPopup.classList.toggle("on", logPopupOpen);
     }
     if (!logPopupOpen) {
       clearAllLogBuffers();
@@ -280,15 +282,29 @@ export function createLogPopupController({
   }
 
   function bindLogPopupButton() {
-    if (logPopupBound) return;
-    logPopupBound = true;
-    if (els.teleBtn) {
+    if (els.teleBtn && !logTriggerBound) {
+      logTriggerBound = true;
       els.teleBtn.addEventListener("click", () => {
+        const panelManager = els.devPanelManager;
+        if (panelManager && typeof panelManager.togglePanel === "function") {
+          panelManager.togglePanel("log");
+          return;
+        }
         setLogPopupOpen(!logPopupOpen);
       });
     }
+    if (!els.logPopup || boundLogPanelRoot === els.logPopup) return;
+    boundLogPanelRoot = els.logPopup;
+
     if (els.logPopupClose) {
-      els.logPopupClose.addEventListener("click", () => setLogPopupOpen(false));
+      els.logPopupClose.addEventListener("click", () => {
+        const panelManager = els.devPanelManager;
+        if (panelManager && typeof panelManager.closePanel === "function") {
+          panelManager.closePanel("log");
+          return;
+        }
+        setLogPopupOpen(false);
+      });
     }
     const bindLogTab = (el, channel) => {
       if (!el) return;
@@ -310,13 +326,32 @@ export function createLogPopupController({
     bindLogTab(els.logTabGeneral, "general");
     bindLogTab(els.logTabKws, "kws");
     bindLogTab(els.logTabPhone, "phone");
-    if (els.logPopupHeader) {
+    if (els.logPopupHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
       els.logPopupHeader.addEventListener("pointerdown", beginLogPopupDrag);
       els.logPopupHeader.addEventListener("pointermove", moveLogPopupDrag);
       els.logPopupHeader.addEventListener("pointerup", endLogPopupDrag);
       els.logPopupHeader.addEventListener("pointercancel", endLogPopupDrag);
     }
   }
+
+  function registerManagedPanelHooks() {
+    if (managedPanelHooksRegistered) return;
+    const panelManager = els.devPanelManager;
+    if (!panelManager || typeof panelManager.registerPanelHooks !== "function") return;
+    managedPanelHooksRegistered = true;
+    panelManager.registerPanelHooks("log", {
+      onMount() {
+        bindLogPopupButton();
+        setLogPopupOpen(true);
+      },
+      onBeforeClose() {
+        setLogPopupOpen(false);
+        boundLogPanelRoot = null;
+      },
+    });
+  }
+
+  registerManagedPanelHooks();
 
   function pushKwsLogLine(text, kind = "") {
     const line = String(text || "").trim();

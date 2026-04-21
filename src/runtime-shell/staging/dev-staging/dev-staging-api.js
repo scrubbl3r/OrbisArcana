@@ -23,6 +23,17 @@ export function createDevStagingApi(root, refs, panels = {}) {
     closeTopmostPopup() {
       return closeDevStagingTopmostPopup(refs);
     },
+    openPanel(id) {
+      return panels && panels.manager && typeof panels.manager.openPanel === "function"
+        ? panels.manager.openPanel(id)
+        : null;
+    },
+    closePanel(id) {
+      return !!(panels && panels.manager && typeof panels.manager.closePanel === "function" && panels.manager.closePanel(id));
+    },
+    togglePanel(id) {
+      return !!(panels && panels.manager && typeof panels.manager.togglePanel === "function" && panels.manager.togglePanel(id));
+    },
     resetMeters() {
       resetDevStagingHud(refs);
     },

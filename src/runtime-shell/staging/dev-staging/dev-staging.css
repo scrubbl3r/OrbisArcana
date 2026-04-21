@@ -68,6 +68,30 @@
   min-width: 0;
 }
 
+.devStagingPanelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.devStagingStackItem {
+  min-width: 0;
+}
+
+.devStagingStackPanel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--frame-rgb), .42);
+  background: rgba(var(--frame-rgb), .10);
+}
+
+.devStagingLogPanel {
+  min-height: 320px;
+}
+
 .devStagingBars {
   margin-top: 10px;
 }
@@ -256,6 +280,14 @@
 .pathBoardPopup.on,
 .cameraInputPopup.on {
   display: flex;
+}
+
+.devStagingLogPanel[aria-hidden="false"] {
+  display: flex;
+}
+
+.devStagingLogPanel[aria-hidden="true"] {
+  display: none;
 }
 
 .logPopupHeader,
