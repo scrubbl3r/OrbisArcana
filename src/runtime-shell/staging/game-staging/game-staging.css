@@ -195,10 +195,6 @@ body {
   stroke-opacity: 0.46;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(
-    0 0 var(--orb-fracture-glow-blur)
-    color-mix(in srgb, var(--orb-stroke-color) calc(var(--orb-fracture-glow-alpha) * 100%), transparent)
-  );
 }
 
 .orbShards {

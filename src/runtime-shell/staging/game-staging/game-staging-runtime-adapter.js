@@ -5,6 +5,10 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
   let lastGroundTop = "";
   let lastOrbLeft = "";
   let lastOrbTransform = "";
+  let lastOrbShattered = null;
+  let lastOrbOpacity = null;
+  let lastCrackRenderKey = "";
+  let lastCrackMarkup = "";
   const stageRefs = Object.freeze({
     root: refs.root || null,
     physStage: refs.physStage || null,
@@ -296,8 +300,15 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
     } = {}) {
       if (!stageRefs.orb || !stageRefs.orbCracks) return;
       const shattered = !!(fx && fx.visualState === "shattered");
-      stageRefs.orb.classList.toggle("shattered", shattered);
-      stageRefs.orb.style.opacity = shattered ? "0" : "";
+      if (shattered !== lastOrbShattered) {
+        lastOrbShattered = shattered;
+        stageRefs.orb.classList.toggle("shattered", shattered);
+      }
+      const nextOrbOpacity = shattered ? "0" : "";
+      if (nextOrbOpacity !== lastOrbOpacity) {
+        lastOrbOpacity = nextOrbOpacity;
+        stageRefs.orb.style.opacity = nextOrbOpacity;
+      }
       const shardStyle = fx && fx.shardStyle && typeof fx.shardStyle === "object" ? fx.shardStyle : null;
       const shardRgb = shardStyle && shardStyle.strokeRgb ? shardStyle.strokeRgb : null;
       const shardStroke = shardRgb
@@ -309,10 +320,26 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
       const shardStrokeWidth = shardStyle && Number.isFinite(Number(shardStyle.strokeWidthPx))
         ? Math.max(0.25, Number(shardStyle.strokeWidthPx))
         : null;
+      const crackSegments = (!shattered && Array.isArray(fx && fx.crackSegments))
+        ? fx.crackSegments
+        : [];
+      const crackRenderKey = [
+        shattered ? "1" : "0",
+        String(fx && fx.visualState || ""),
+        String(fx && fx.layoutSeed || ""),
+        String(fx && fx.lifeId || ""),
+        String(fx && fx.hitsTaken || ""),
+        String(crackSegments.length || 0),
+        shardStroke,
+        shardAlpha != null ? shardAlpha.toFixed(3) : "",
+        shardStrokeWidth != null ? shardStrokeWidth.toFixed(2) : "",
+      ].join("|");
+      if (crackRenderKey === lastCrackRenderKey) return;
+      lastCrackRenderKey = crackRenderKey;
 
       const paths = [];
-      if (!shattered && Array.isArray(fx && fx.crackSegments)) {
-        for (const seg of fx.crackSegments) {
+      if (crackSegments.length) {
+        for (const seg of crackSegments) {
           const d = lineToPath(seg);
           if (d) {
             const style = [
@@ -325,7 +352,11 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
           }
         }
       }
-      stageRefs.orbCracks.innerHTML = paths.join("");
+      const nextMarkup = paths.join("");
+      if (nextMarkup !== lastCrackMarkup) {
+        lastCrackMarkup = nextMarkup;
+        stageRefs.orbCracks.innerHTML = nextMarkup;
+      }
     },
     openDeathOverlay() {
       if (!stageRefs.deathPanel) return;
