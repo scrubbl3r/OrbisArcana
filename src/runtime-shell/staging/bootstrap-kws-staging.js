@@ -146,12 +146,6 @@ export function bootstrapKwsStaging({
   if (kwsPanelController && typeof kwsPanelController.bindTuneApplyButton === "function") {
     kwsPanelController.bindTuneApplyButton();
   }
-  if (kwsPanelController && typeof kwsPanelController.bindLogPopupButton === "function") {
-    kwsPanelController.bindLogPopupButton();
-  }
-  if (kwsPanelController && typeof kwsPanelController.bindPathBoardPopupButton === "function") {
-    kwsPanelController.bindPathBoardPopupButton();
-  }
   if (kwsPanelController && typeof kwsPanelController.bindPathBoardDebugToggle === "function") {
     kwsPanelController.bindPathBoardDebugToggle();
   }

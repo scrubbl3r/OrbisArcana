@@ -95,7 +95,7 @@
   min-height: 0;
 }
 
-.devStagingLogPanel .logPopupBody {
+.devStagingLogPanel .logPanelBody {
   flex: 0 0 auto;
   min-height: calc(10 * 1.35em + 16px);
   max-height: calc(10 * 1.35em + 16px);
@@ -105,7 +105,7 @@
   min-height: 0;
 }
 
-.devStagingPathBoardPanel .pathBoardPopupBody {
+.devStagingPathBoardPanel .pathBoardPanelBody {
   flex: 0 0 auto;
   min-height: 220px;
   max-height: 360px;
@@ -310,9 +310,9 @@
   display: none;
 }
 
-.logPopupHeader,
-.pathBoardPopupHeader,
-.cameraInputPopupHeader {
+.logPanelHeader,
+.pathBoardPanelHeader,
+.cameraInputPanelHeader {
   position: relative;
   z-index: 2;
   display: flex;
@@ -323,9 +323,9 @@
   user-select: none;
 }
 
-.logPopupTitle,
-.pathBoardPopupTitle,
-.cameraInputPopupTitle {
+.logPanelTitle,
+.pathBoardPanelTitle,
+.cameraInputPanelTitle {
   font-weight: 1000;
   letter-spacing: .3px;
   color: var(--text-strong);
@@ -335,7 +335,7 @@
   padding: 6px 10px;
 }
 
-.logPopupTabs {
+.logPanelTabs {
   position: relative;
   z-index: 3;
   display: flex;
@@ -344,11 +344,11 @@
   pointer-events: auto;
 }
 
-.logPopupTabs #logTabGeneral {
+.logPanelTabs #logTabGeneral {
   margin-right: 4px;
 }
 
-.logPopupTabs .logTabBtn {
+.logPanelTabs .logTabBtn {
   position: relative;
   z-index: 1;
   pointer-events: auto;
@@ -358,36 +358,36 @@
   transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
 }
 
-.logPopupTabs .logTabBtn:hover {
+.logPanelTabs .logTabBtn:hover {
   border-color: rgba(var(--frame-rgb), 0.38);
   background: rgba(var(--frame-rgb), 0.09);
   color: var(--text);
 }
 
-.logPopupTabs .logTabBtn.on {
+.logPanelTabs .logTabBtn.on {
   border-color: rgba(240, 240, 244, 0.98);
   color: rgb(245, 245, 248);
   background: rgba(255, 255, 255, 0.10);
 }
 
-.logPopupTabs .logTabBtn:not(.on) {
+.logPanelTabs .logTabBtn:not(.on) {
   border-color: rgba(var(--frame-rgb), 0.14);
   background: rgba(var(--frame-rgb), 0.02);
   color: rgba(122, 122, 128, 0.68);
 }
 
-.logPopupTabs .logTabBtn:focus,
-.logPopupTabs .logTabBtn:focus-visible {
+.logPanelTabs .logTabBtn:focus,
+.logPanelTabs .logTabBtn:focus-visible {
   outline: none;
 }
 
-.logPopupTabs .logTabBtn:focus-visible {
+.logPanelTabs .logTabBtn:focus-visible {
   border-color: rgba(var(--frame-rgb), 0.38);
   background: rgba(var(--frame-rgb), 0.09);
   color: var(--text);
 }
 
-.logPopupBody {
+.logPanelBody {
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
@@ -577,7 +577,7 @@
   color: var(--text-strong);
 }
 
-.pathBoardPopupBody {
+.pathBoardPanelBody {
   flex: 1 1 auto;
   padding: 16px 12px 18px;
   min-height: 0;

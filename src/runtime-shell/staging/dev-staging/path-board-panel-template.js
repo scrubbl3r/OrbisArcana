@@ -1,8 +1,8 @@
 export const PATH_BOARD_PANEL_TEMPLATE = `
-  <div id="pathBoardPopup" class="devStagingStackPanel devStagingPathBoardPanel" aria-hidden="true">
-    <div id="pathBoardPopupHeader" class="pathBoardPopupHeader runtimeShellPopupHeader">
-      <div class="pathBoardPopupTitle">Path Board</div>
-      <button class="devStagingButton devStagingPopupClose" id="pathBoardPopupClose" aria-label="Close path board" type="button">Close</button>
+  <div id="pathBoardPanel" class="devStagingStackPanel devStagingPathBoardPanel" aria-hidden="true">
+    <div id="pathBoardPanelHeader" class="pathBoardPanelHeader runtimeShellPopupHeader">
+      <div class="pathBoardPanelTitle">Path Board</div>
+      <button class="devStagingButton devStagingPopupClose" id="pathBoardPanelClose" aria-label="Close path board" type="button">Close</button>
     </div>
     <div class="pathBoardMeta" aria-label="KWS status and tuning">
       <div class="pathBoardMetaReadout">
@@ -15,6 +15,6 @@ export const PATH_BOARD_PANEL_TEMPLATE = `
         <button id="kwsApplyTuneBtn" class="devStagingButton" type="button">Apply</button>
       </div>
     </div>
-    <div id="pathBoardBody" class="pathBoardPopupBody" aria-label="Path board"></div>
+    <div id="pathBoardBody" class="pathBoardPanelBody" aria-label="Path board"></div>
   </div>
 `;

@@ -2,10 +2,10 @@ export function createLogPanelRefs(root) {
   if (!root) return null;
   const $ = (id) => root.querySelector(`#${id}`);
   return {
-    logPopup: $("logPopup"),
-    logPopupTabs: $("logPopupTabs"),
-    logPopupHeader: $("logPopupHeader"),
-    logPopupClose: $("logPopupClose"),
+    logPanel: $("logPanel"),
+    logPanelTabs: $("logPanelTabs"),
+    logPanelHeader: $("logPanelHeader"),
+    logPanelClose: $("logPanelClose"),
     logTabGeneral: $("logTabGeneral"),
     logTabKws: $("logTabKws"),
     logTabPhone: $("logTabPhone"),

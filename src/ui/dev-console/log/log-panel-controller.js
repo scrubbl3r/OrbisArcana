@@ -1,4 +1,4 @@
-export function createLogPopupController({
+export function createLogPanelController({
   els = {},
   dedupMs = 450,
   preopenBufferLimit = 80,
@@ -10,9 +10,8 @@ export function createLogPopupController({
   let kwsLastLogText = "";
   let kwsLastLogAtMs = 0;
   let kwsLogStartedAtMs = 0;
-  let logTriggerBound = false;
-  let logPopupOpen = false;
-  let logPopupDrag = null;
+  let logPanelOpen = false;
+  let logPanelDrag = null;
   let boundLogPanelRoot = null;
   let pathBoardDebugOpen = false;
   let pathBoardDebugBound = false;
@@ -175,7 +174,7 @@ export function createLogPopupController({
   }
 
   function appendLiveRowIfActive(channel, row) {
-    if (!row || !logPopupOpen) return;
+    if (!row || !logPanelOpen) return;
     if (String(channel || "").trim().toLowerCase() !== activeLogChannel) return;
     appendKwsLogRow(row);
   }
@@ -210,8 +209,8 @@ export function createLogPopupController({
   }
 
   function renderLogChannelTabs() {
-    if (els.logPopupTabs) {
-      els.logPopupTabs.dataset.activeChannel = activeLogChannel;
+    if (els.logPanelTabs) {
+      els.logPanelTabs.dataset.activeChannel = activeLogChannel;
     }
     const tabs = [
       { el: els.logTabGeneral, key: "general" },
@@ -234,13 +233,13 @@ export function createLogPopupController({
     renderCurrentLogChannel();
   }
 
-  function setLogPopupOpen(nextOpen) {
-    logPopupOpen = !!nextOpen;
-    if (els.logPopup) {
-      els.logPopup.setAttribute("aria-hidden", logPopupOpen ? "false" : "true");
-      els.logPopup.classList.toggle("on", logPopupOpen);
+  function setLogPanelOpen(nextOpen) {
+    logPanelOpen = !!nextOpen;
+    if (els.logPanel) {
+      els.logPanel.setAttribute("aria-hidden", logPanelOpen ? "false" : "true");
+      els.logPanel.classList.toggle("on", logPanelOpen);
     }
-    if (!logPopupOpen) {
+    if (!logPanelOpen) {
       clearAllLogBuffers();
     } else {
       seedLiveLogChannelFromPreopen("general");
@@ -252,58 +251,47 @@ export function createLogPopupController({
     }
   }
 
-  function beginLogPopupDrag(ev) {
-    if (!els.logPopup || !els.logPopupHeader) return;
+  function beginLogPanelDrag(ev) {
+    if (!els.logPanel || !els.logPanelHeader) return;
     if (ev.target && typeof ev.target.closest === "function" && ev.target.closest("button")) return;
-    const rect = els.logPopup.getBoundingClientRect();
-    logPopupDrag = {
+    const rect = els.logPanel.getBoundingClientRect();
+    logPanelDrag = {
       pointerId: ev.pointerId,
       offsetX: ev.clientX - rect.left,
       offsetY: ev.clientY - rect.top,
     };
-    try { els.logPopupHeader.setPointerCapture(ev.pointerId); } catch (_) {}
+    try { els.logPanelHeader.setPointerCapture(ev.pointerId); } catch (_) {}
     ev.preventDefault();
   }
 
-  function moveLogPopupDrag(ev) {
-    if (!logPopupDrag || !els.logPopup) return;
-    const maxLeft = Math.max(0, window.innerWidth - els.logPopup.offsetWidth);
-    const maxTop = Math.max(0, window.innerHeight - els.logPopup.offsetHeight);
-    const left = Math.max(0, Math.min(maxLeft, ev.clientX - logPopupDrag.offsetX));
-    const top = Math.max(0, Math.min(maxTop, ev.clientY - logPopupDrag.offsetY));
-    els.logPopup.style.left = `${left}px`;
-    els.logPopup.style.top = `${top}px`;
+  function moveLogPanelDrag(ev) {
+    if (!logPanelDrag || !els.logPanel) return;
+    const maxLeft = Math.max(0, window.innerWidth - els.logPanel.offsetWidth);
+    const maxTop = Math.max(0, window.innerHeight - els.logPanel.offsetHeight);
+    const left = Math.max(0, Math.min(maxLeft, ev.clientX - logPanelDrag.offsetX));
+    const top = Math.max(0, Math.min(maxTop, ev.clientY - logPanelDrag.offsetY));
+    els.logPanel.style.left = `${left}px`;
+    els.logPanel.style.top = `${top}px`;
   }
 
-  function endLogPopupDrag() {
-    if (!logPopupDrag || !els.logPopupHeader) return;
-    try { els.logPopupHeader.releasePointerCapture(logPopupDrag.pointerId); } catch (_) {}
-    logPopupDrag = null;
+  function endLogPanelDrag() {
+    if (!logPanelDrag || !els.logPanelHeader) return;
+    try { els.logPanelHeader.releasePointerCapture(logPanelDrag.pointerId); } catch (_) {}
+    logPanelDrag = null;
   }
 
-  function bindLogPopupButton() {
-    if (els.teleBtn && !logTriggerBound) {
-      logTriggerBound = true;
-      els.teleBtn.addEventListener("click", () => {
-        const panelManager = els.devPanelManager;
-        if (panelManager && typeof panelManager.togglePanel === "function") {
-          panelManager.togglePanel("log");
-          return;
-        }
-        setLogPopupOpen(!logPopupOpen);
-      });
-    }
-    if (!els.logPopup || boundLogPanelRoot === els.logPopup) return;
-    boundLogPanelRoot = els.logPopup;
+  function bindLogPanel() {
+    if (!els.logPanel || boundLogPanelRoot === els.logPanel) return;
+    boundLogPanelRoot = els.logPanel;
 
-    if (els.logPopupClose) {
-      els.logPopupClose.addEventListener("click", () => {
+    if (els.logPanelClose) {
+      els.logPanelClose.addEventListener("click", () => {
         const panelManager = els.devPanelManager;
         if (panelManager && typeof panelManager.closePanel === "function") {
           panelManager.closePanel("log");
           return;
         }
-        setLogPopupOpen(false);
+        setLogPanelOpen(false);
       });
     }
     const bindLogTab = (el, channel) => {
@@ -326,11 +314,11 @@ export function createLogPopupController({
     bindLogTab(els.logTabGeneral, "general");
     bindLogTab(els.logTabKws, "kws");
     bindLogTab(els.logTabPhone, "phone");
-    if (els.logPopupHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
-      els.logPopupHeader.addEventListener("pointerdown", beginLogPopupDrag);
-      els.logPopupHeader.addEventListener("pointermove", moveLogPopupDrag);
-      els.logPopupHeader.addEventListener("pointerup", endLogPopupDrag);
-      els.logPopupHeader.addEventListener("pointercancel", endLogPopupDrag);
+    if (els.logPanelHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
+      els.logPanelHeader.addEventListener("pointerdown", beginLogPanelDrag);
+      els.logPanelHeader.addEventListener("pointermove", moveLogPanelDrag);
+      els.logPanelHeader.addEventListener("pointerup", endLogPanelDrag);
+      els.logPanelHeader.addEventListener("pointercancel", endLogPanelDrag);
     }
   }
 
@@ -341,11 +329,11 @@ export function createLogPopupController({
     managedPanelHooksRegistered = true;
     panelManager.registerPanelHooks("log", {
       onMount() {
-        bindLogPopupButton();
-        setLogPopupOpen(true);
+        bindLogPanel();
+        setLogPanelOpen(true);
       },
       onBeforeClose() {
-        setLogPopupOpen(false);
+        setLogPanelOpen(false);
         boundLogPanelRoot = null;
       },
     });
@@ -356,14 +344,14 @@ export function createLogPopupController({
   function pushKwsLogLine(text, kind = "") {
     const line = String(text || "").trim();
     if (!line) return;
-    const row = logPopupOpen
+    const row = logPanelOpen
       ? appendLogRowToState(logChannelState.kws, line, kind)
       : appendLogRowToState(preopenLogChannelState.kws, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
     if (!row) return;
     appendPathBoardDebugRow(row);
     if (pathBoardVisible) renderPathBoardDebugBadge();
     if (shouldAutoOpenPathBoardDebug(line, kind)) setPathBoardDebugOpen(true);
-    if (!logPopupOpen) return;
+    if (!logPanelOpen) return;
     syncLegacyKwsLogState();
     appendLiveRowIfActive("kws", row);
   }
@@ -371,7 +359,7 @@ export function createLogPopupController({
   function pushGeneralLogLine(text, kind = "") {
     const line = String(text || "").trim();
     if (!line) return;
-    if (!logPopupOpen) {
+    if (!logPanelOpen) {
       appendLogRowToState(preopenLogChannelState.general, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
       return;
     }
@@ -383,7 +371,7 @@ export function createLogPopupController({
   function pushPhoneLogLine(text, kind = "") {
     const line = String(text || "").trim();
     if (!line) return;
-    if (!logPopupOpen) {
+    if (!logPanelOpen) {
       appendLogRowToState(preopenLogChannelState.phone, line, kind, KWS_PREOPEN_LOG_BUFFER_LIMIT);
       return;
     }
@@ -396,7 +384,6 @@ export function createLogPopupController({
     pushGeneralLogLine,
     pushKwsLogLine,
     pushPhoneLogLine,
-    bindLogPopupButton,
     bindPathBoardDebugToggle,
     setPathBoardVisible,
   };

@@ -1,5 +1,5 @@
-import { createPathBoardPopup } from "./path-board/path-board-popup.js";
-import { createLogPopupController } from "./log/log-popup-controller.js";
+import { createPathBoardPanelController } from "./path-board/path-board-panel-controller.js";
+import { createLogPanelController } from "./log/log-panel-controller.js";
 
 export function createKwsPanelController({
   els = {},
@@ -111,7 +111,7 @@ export function createKwsPanelController({
     return out;
   }
 
-  const pathBoardPopup = createPathBoardPopup({
+  const pathBoardPanel = createPathBoardPanelController({
     els,
     words: PATH_BOARD_WORDS,
     trailRows: PATH_BOARD_TRAIL_ROWS,
@@ -154,15 +154,15 @@ export function createKwsPanelController({
       };
     },
     onVisibilityChanged: (open) => {
-      if (typeof logPopupController.setPathBoardVisible === "function") {
-        logPopupController.setPathBoardVisible(open);
+      if (typeof logPanelController.setPathBoardVisible === "function") {
+        logPanelController.setPathBoardVisible(open);
       }
       if (!open) return;
       if (els.kwsReadout) els.kwsReadout.innerHTML = pendingKwsReadoutHtml || "idle";
-      pathBoardPopup.render();
+      pathBoardPanel.render();
     },
   });
-  const logPopupController = createLogPopupController({
+  const logPanelController = createLogPanelController({
     els,
     dedupMs: KWS_LOG_DEDUP_MS,
     preopenBufferLimit: KWS_PREOPEN_LOG_BUFFER_LIMIT,
@@ -264,7 +264,7 @@ export function createKwsPanelController({
   function flashKwsToken(token, ms = 360) {
     const t = String(token || "").trim().toLowerCase();
     if (!t) return;
-    if (!pathBoardPopup.isOpen()) return;
+    if (!pathBoardPanel.isOpen()) return;
     const until = Date.now() + Math.max(60, Number(ms) || 360);
     kwsTokenUiState.flashUntilMs[t] = until;
     const existing = kwsTokenUiState.flashTOByToken[t];
@@ -375,13 +375,9 @@ export function createKwsPanelController({
     }
     const meta = parts.length ? `<span class="kwsTokenMeta">${parts.join(" | ")}</span>` : "";
     pendingKwsReadoutHtml = meta || "idle";
-    if (!pathBoardPopup.isOpen()) return;
+    if (!pathBoardPanel.isOpen()) return;
     els.kwsReadout.innerHTML = pendingKwsReadoutHtml;
-    pathBoardPopup.render();
-  }
-
-  function bindPathBoardPopupButton() {
-    pathBoardPopup.bind();
+    pathBoardPanel.render();
   }
 
   function setManualListenableTokens(tokens = []) {
@@ -390,8 +386,8 @@ export function createKwsPanelController({
         .map((token) => canonicalKwsToken(token))
         .filter(Boolean)
     );
-    if (pathBoardPopup.isOpen()) {
-      pathBoardPopup.render();
+    if (pathBoardPanel.isOpen()) {
+      pathBoardPanel.render();
     }
   }
 
@@ -405,8 +401,8 @@ export function createKwsPanelController({
         .map((token) => canonicalKwsToken(token))
         .filter(Boolean)
     );
-    if (pathBoardPopup.isOpen()) {
-      pathBoardPopup.render();
+    if (pathBoardPanel.isOpen()) {
+      pathBoardPanel.render();
     }
   }
 
@@ -426,8 +422,8 @@ export function createKwsPanelController({
       });
     }
     manualWakeWindowsById = next;
-    if (pathBoardPopup.isOpen()) {
-      pathBoardPopup.render();
+    if (pathBoardPanel.isOpen()) {
+      pathBoardPanel.render();
     }
   }
 
@@ -436,8 +432,8 @@ export function createKwsPanelController({
   }
 
   function refreshPathBoard() {
-    if (pathBoardPopup.isOpen()) {
-      pathBoardPopup.render();
+    if (pathBoardPanel.isOpen()) {
+      pathBoardPanel.render();
     }
   }
 
@@ -490,14 +486,12 @@ export function createKwsPanelController({
     flashKwsToken,
     openKwsWakeHudGate,
     updateKwsReadout,
-    pushGeneralLogLine: logPopupController.pushGeneralLogLine,
-    pushKwsLogLine: logPopupController.pushKwsLogLine,
+    pushGeneralLogLine: logPanelController.pushGeneralLogLine,
+    pushKwsLogLine: logPanelController.pushKwsLogLine,
     syncKwsTuneUiFromStatus,
     bindTuneApplyButton,
-    bindLogPopupButton: logPopupController.bindLogPopupButton,
-    bindPathBoardDebugToggle: logPopupController.bindPathBoardDebugToggle,
-    bindPathBoardPopupButton,
-    pushPhoneLogLine: logPopupController.pushPhoneLogLine,
+    bindPathBoardDebugToggle: logPanelController.bindPathBoardDebugToggle,
+    pushPhoneLogLine: logPanelController.pushPhoneLogLine,
     setManualListenableTokens,
     getManualListenableTokens,
     setManualWakeWindowTokens,

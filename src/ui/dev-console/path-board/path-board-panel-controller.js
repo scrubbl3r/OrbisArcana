@@ -1,4 +1,4 @@
-export function createPathBoardPopup({
+export function createPathBoardPanelController({
   els = {},
   words = [],
   trailRows = [],
@@ -18,10 +18,9 @@ export function createPathBoardPopup({
     }))
     : [];
   let bound = false;
-  let triggerBound = false;
   let open = false;
   let drag = null;
-  let boundPathBoardRoot = null;
+  let boundPathBoardPanelRoot = null;
   let managedPanelHooksRegistered = false;
 
   function pathBoardChipHtml(displayText, lit, flash, kind = "word") {
@@ -90,9 +89,9 @@ export function createPathBoardPopup({
 
   function setOpen(nextOpen) {
     open = !!nextOpen;
-    if (els.pathBoardPopup) {
-      els.pathBoardPopup.setAttribute("aria-hidden", open ? "false" : "true");
-      els.pathBoardPopup.classList.toggle("on", open);
+    if (els.pathBoardPanel) {
+      els.pathBoardPanel.setAttribute("aria-hidden", open ? "false" : "true");
+      els.pathBoardPanel.classList.toggle("on", open);
     }
     if (!open) {
       if (els.pathBoardBody) els.pathBoardBody.textContent = "";
@@ -104,52 +103,41 @@ export function createPathBoardPopup({
   }
 
   function beginDrag(ev) {
-    if (!els.pathBoardPopup || !els.pathBoardPopupHeader) return;
+    if (!els.pathBoardPanel || !els.pathBoardPanelHeader) return;
     if (ev.target && typeof ev.target.closest === "function" && ev.target.closest("button")) return;
-    const rect = els.pathBoardPopup.getBoundingClientRect();
+    const rect = els.pathBoardPanel.getBoundingClientRect();
     drag = {
       pointerId: ev.pointerId,
       offsetX: ev.clientX - rect.left,
       offsetY: ev.clientY - rect.top,
     };
-    try { els.pathBoardPopupHeader.setPointerCapture(ev.pointerId); } catch (_) {}
+    try { els.pathBoardPanelHeader.setPointerCapture(ev.pointerId); } catch (_) {}
     ev.preventDefault();
   }
 
   function moveDrag(ev) {
-    if (!drag || !els.pathBoardPopup) return;
-    const maxLeft = Math.max(0, window.innerWidth - els.pathBoardPopup.offsetWidth);
-    const maxTop = Math.max(0, window.innerHeight - els.pathBoardPopup.offsetHeight);
+    if (!drag || !els.pathBoardPanel) return;
+    const maxLeft = Math.max(0, window.innerWidth - els.pathBoardPanel.offsetWidth);
+    const maxTop = Math.max(0, window.innerHeight - els.pathBoardPanel.offsetHeight);
     const left = Math.max(0, Math.min(maxLeft, ev.clientX - drag.offsetX));
     const top = Math.max(0, Math.min(maxTop, ev.clientY - drag.offsetY));
-    els.pathBoardPopup.style.left = `${left}px`;
-    els.pathBoardPopup.style.top = `${top}px`;
+    els.pathBoardPanel.style.left = `${left}px`;
+    els.pathBoardPanel.style.top = `${top}px`;
   }
 
   function endDrag() {
-    if (!drag || !els.pathBoardPopupHeader) return;
-    try { els.pathBoardPopupHeader.releasePointerCapture(drag.pointerId); } catch (_) {}
+    if (!drag || !els.pathBoardPanelHeader) return;
+    try { els.pathBoardPanelHeader.releasePointerCapture(drag.pointerId); } catch (_) {}
     drag = null;
   }
 
   function bind() {
-    if (els.pathBoardBtn && !triggerBound) {
-      triggerBound = true;
-      els.pathBoardBtn.addEventListener("click", () => {
-        const panelManager = els.devPanelManager;
-        if (panelManager && typeof panelManager.togglePanel === "function") {
-          panelManager.togglePanel("path-board");
-          return;
-        }
-        setOpen(!open);
-      });
-    }
-    if (!els.pathBoardPopup || boundPathBoardRoot === els.pathBoardPopup) return;
-    boundPathBoardRoot = els.pathBoardPopup;
+    if (!els.pathBoardPanel || boundPathBoardPanelRoot === els.pathBoardPanel) return;
+    boundPathBoardPanelRoot = els.pathBoardPanel;
     if (bound) return;
     bound = true;
-    if (els.pathBoardPopupClose) {
-      els.pathBoardPopupClose.addEventListener("click", () => {
+    if (els.pathBoardPanelClose) {
+      els.pathBoardPanelClose.addEventListener("click", () => {
         const panelManager = els.devPanelManager;
         if (panelManager && typeof panelManager.closePanel === "function") {
           panelManager.closePanel("path-board");
@@ -158,11 +146,11 @@ export function createPathBoardPopup({
         setOpen(false);
       });
     }
-    if (els.pathBoardPopupHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
-      els.pathBoardPopupHeader.addEventListener("pointerdown", beginDrag);
-      els.pathBoardPopupHeader.addEventListener("pointermove", moveDrag);
-      els.pathBoardPopupHeader.addEventListener("pointerup", endDrag);
-      els.pathBoardPopupHeader.addEventListener("pointercancel", endDrag);
+    if (els.pathBoardPanelHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
+      els.pathBoardPanelHeader.addEventListener("pointerdown", beginDrag);
+      els.pathBoardPanelHeader.addEventListener("pointermove", moveDrag);
+      els.pathBoardPanelHeader.addEventListener("pointerup", endDrag);
+      els.pathBoardPanelHeader.addEventListener("pointercancel", endDrag);
     }
   }
 
@@ -180,7 +168,7 @@ export function createPathBoardPopup({
       onBeforeClose() {
         setOpen(false);
         bound = false;
-        boundPathBoardRoot = null;
+        boundPathBoardPanelRoot = null;
       },
     });
   }

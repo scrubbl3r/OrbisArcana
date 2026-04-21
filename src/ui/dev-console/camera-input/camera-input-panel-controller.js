@@ -11,15 +11,14 @@ function formatFixed(value, digits = 3, fallback = "-") {
   return Number.isFinite(n) ? n.toFixed(digits) : String(fallback);
 }
 
-export function createCameraInputPopup({
+export function createCameraInputPanelController({
   els = {},
   onOpenChange = null,
 } = {}) {
-  let triggerBound = false;
   let bound = false;
   let open = false;
   let drag = null;
-  let boundCameraPanelRoot = null;
+  let boundCameraInputPanelRoot = null;
   let managedPanelHooksRegistered = false;
 
   function renderTrack(state = null) {
@@ -114,9 +113,9 @@ export function createCameraInputPopup({
 
   function setOpen(nextOpen) {
     open = !!nextOpen;
-    if (els.cameraInputPopup) {
-      els.cameraInputPopup.setAttribute("aria-hidden", open ? "false" : "true");
-      els.cameraInputPopup.classList.toggle("on", open);
+    if (els.cameraInputPanel) {
+      els.cameraInputPanel.setAttribute("aria-hidden", open ? "false" : "true");
+      els.cameraInputPanel.classList.toggle("on", open);
     }
     if (typeof onOpenChange === "function") {
       try { onOpenChange(open); } catch (_) {}
@@ -124,52 +123,41 @@ export function createCameraInputPopup({
   }
 
   function beginDrag(ev) {
-    if (!els.cameraInputPopup || !els.cameraInputPopupHeader) return;
+    if (!els.cameraInputPanel || !els.cameraInputPanelHeader) return;
     if (ev.target && typeof ev.target.closest === "function" && ev.target.closest("button")) return;
-    const rect = els.cameraInputPopup.getBoundingClientRect();
+    const rect = els.cameraInputPanel.getBoundingClientRect();
     drag = {
       pointerId: ev.pointerId,
       offsetX: ev.clientX - rect.left,
       offsetY: ev.clientY - rect.top,
     };
-    try { els.cameraInputPopupHeader.setPointerCapture(ev.pointerId); } catch (_) {}
+    try { els.cameraInputPanelHeader.setPointerCapture(ev.pointerId); } catch (_) {}
     ev.preventDefault();
   }
 
   function moveDrag(ev) {
-    if (!drag || !els.cameraInputPopup) return;
-    const maxLeft = Math.max(0, window.innerWidth - els.cameraInputPopup.offsetWidth);
-    const maxTop = Math.max(0, window.innerHeight - els.cameraInputPopup.offsetHeight);
+    if (!drag || !els.cameraInputPanel) return;
+    const maxLeft = Math.max(0, window.innerWidth - els.cameraInputPanel.offsetWidth);
+    const maxTop = Math.max(0, window.innerHeight - els.cameraInputPanel.offsetHeight);
     const left = Math.max(0, Math.min(maxLeft, ev.clientX - drag.offsetX));
     const top = Math.max(0, Math.min(maxTop, ev.clientY - drag.offsetY));
-    els.cameraInputPopup.style.left = `${left}px`;
-    els.cameraInputPopup.style.top = `${top}px`;
+    els.cameraInputPanel.style.left = `${left}px`;
+    els.cameraInputPanel.style.top = `${top}px`;
   }
 
   function endDrag() {
-    if (!drag || !els.cameraInputPopupHeader) return;
-    try { els.cameraInputPopupHeader.releasePointerCapture(drag.pointerId); } catch (_) {}
+    if (!drag || !els.cameraInputPanelHeader) return;
+    try { els.cameraInputPanelHeader.releasePointerCapture(drag.pointerId); } catch (_) {}
     drag = null;
   }
 
   function bind() {
-    if (els.cameraInputBtn && !triggerBound) {
-      triggerBound = true;
-      els.cameraInputBtn.addEventListener("click", () => {
-        const panelManager = els.devPanelManager;
-        if (panelManager && typeof panelManager.togglePanel === "function") {
-          panelManager.togglePanel("camera-input");
-          return;
-        }
-        setOpen(!open);
-      });
-    }
-    if (!els.cameraInputPopup || boundCameraPanelRoot === els.cameraInputPopup) return;
-    boundCameraPanelRoot = els.cameraInputPopup;
+    if (!els.cameraInputPanel || boundCameraInputPanelRoot === els.cameraInputPanel) return;
+    boundCameraInputPanelRoot = els.cameraInputPanel;
     if (bound) return;
     bound = true;
-    if (els.cameraInputPopupClose) {
-      els.cameraInputPopupClose.addEventListener("click", () => {
+    if (els.cameraInputPanelClose) {
+      els.cameraInputPanelClose.addEventListener("click", () => {
         const panelManager = els.devPanelManager;
         if (panelManager && typeof panelManager.closePanel === "function") {
           panelManager.closePanel("camera-input");
@@ -178,11 +166,11 @@ export function createCameraInputPopup({
         setOpen(false);
       });
     }
-    if (els.cameraInputPopupHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
-      els.cameraInputPopupHeader.addEventListener("pointerdown", beginDrag);
-      els.cameraInputPopupHeader.addEventListener("pointermove", moveDrag);
-      els.cameraInputPopupHeader.addEventListener("pointerup", endDrag);
-      els.cameraInputPopupHeader.addEventListener("pointercancel", endDrag);
+    if (els.cameraInputPanelHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
+      els.cameraInputPanelHeader.addEventListener("pointerdown", beginDrag);
+      els.cameraInputPanelHeader.addEventListener("pointermove", moveDrag);
+      els.cameraInputPanelHeader.addEventListener("pointerup", endDrag);
+      els.cameraInputPanelHeader.addEventListener("pointercancel", endDrag);
     }
   }
 
@@ -200,7 +188,7 @@ export function createCameraInputPopup({
       onBeforeClose() {
         setOpen(false);
         bound = false;
-        boundCameraPanelRoot = null;
+        boundCameraInputPanelRoot = null;
       },
     });
   }

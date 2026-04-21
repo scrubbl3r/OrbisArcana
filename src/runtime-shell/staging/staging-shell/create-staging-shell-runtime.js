@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421h";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421i";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421h";
 import {
   allDevStagingDirectionLampsOff,
@@ -25,7 +25,7 @@ import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
-import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260421h";
+import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
@@ -1700,7 +1700,7 @@ function exposeShellContext(rootDocument, shellContext) {
   win.__orbisStagingShell = shellContext;
 }
 
-function bindShellCameraInputPopup(shellContext) {
+function bindShellCameraInputPanel(shellContext) {
   const devRefs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const cameraInputRuntime = shellContext && shellContext.runtime ? shellContext.runtime.cameraInput : null;
   if (!devRefs || !cameraInputRuntime) return null;
@@ -1709,11 +1709,11 @@ function bindShellCameraInputPopup(shellContext) {
     : null;
   let gameplayInterval = 0;
 
-  const cameraInputPopup = createCameraInputPopup({
+  const cameraInputPanel = createCameraInputPanelController({
     els: devRefs,
     onOpenChange: (isOpen) => {
       if (isOpen) {
-        if (latestCameraState) cameraInputPopup.renderState(latestCameraState);
+        if (latestCameraState) cameraInputPanel.renderState(latestCameraState);
         renderGameplayState();
         if (!gameplayInterval) {
           gameplayInterval = setInterval(renderGameplayState, 120);
@@ -1724,14 +1724,14 @@ function bindShellCameraInputPopup(shellContext) {
       }
     },
   });
-  cameraInputPopup.bind();
-  if (latestCameraState && cameraInputPopup.isOpen()) {
-    cameraInputPopup.renderState(latestCameraState);
+  cameraInputPanel.bind();
+  if (latestCameraState && cameraInputPanel.isOpen()) {
+    cameraInputPanel.renderState(latestCameraState);
   }
   function renderGameplayState() {
-    if (!cameraInputPopup.isOpen()) return;
+    if (!cameraInputPanel.isOpen()) return;
     const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-    cameraInputPopup.renderGameplayState({
+    cameraInputPanel.renderGameplayState({
       steering: runtime && runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
         ? runtime.cameraInputOrbBridge.getState()
         : null,
@@ -1743,14 +1743,14 @@ function bindShellCameraInputPopup(shellContext) {
   const unsubscribe = typeof cameraInputRuntime.subscribe === "function"
     ? cameraInputRuntime.subscribe((state) => {
         latestCameraState = state;
-        if (cameraInputPopup.isOpen()) {
-          cameraInputPopup.renderState(state);
+        if (cameraInputPanel.isOpen()) {
+          cameraInputPanel.renderState(state);
         }
       })
     : () => {};
 
   return {
-    cameraInputPopup,
+    cameraInputPanel,
     dispose() {
       if (gameplayInterval) clearInterval(gameplayInterval);
       try { unsubscribe(); } catch (_) {}
@@ -2373,7 +2373,7 @@ export async function createStagingShellRuntime({
     shellContext.runtime.cameraInputOrbBridge = createCameraInputOrbBridge({
       cameraInputRuntime: shellContext.runtime.cameraInput,
     });
-    shellContext.runtime.cameraInputDebug = bindShellCameraInputPopup(shellContext);
+    shellContext.runtime.cameraInputDebug = bindShellCameraInputPanel(shellContext);
     if (bootStatus && typeof bootStatus.setStatus === "function") {
       bootStatus.setStatus({
         phase: STAGING_SHELL_STATUS.sharedModulesReady,

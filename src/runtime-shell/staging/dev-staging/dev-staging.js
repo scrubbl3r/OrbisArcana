@@ -62,6 +62,9 @@ export function mountDevStaging(root) {
     });
   }
   bindLauncher(refs.dynamicsBtn, "input-hud");
+  bindLauncher(refs.teleBtn, "log");
+  bindLauncher(refs.pathBoardBtn, "path-board");
+  bindLauncher(refs.cameraInputBtn, "camera-input");
 
   manager.subscribe((state) => {
     const openIds = new Set(Array.isArray(state && state.openPanelIds) ? state.openPanelIds : []);

@@ -1,8 +1,8 @@
 export const CAMERA_INPUT_PANEL_TEMPLATE = `
-  <div id="cameraInputPopup" class="devStagingStackPanel devStagingCameraInputPanel" aria-hidden="true">
-    <div id="cameraInputPopupHeader" class="cameraInputPopupHeader runtimeShellPopupHeader">
-      <div class="cameraInputPopupTitle">Camera Input</div>
-      <button class="devStagingButton devStagingPopupClose" id="cameraInputPopupClose" aria-label="Close camera input" type="button">Close</button>
+  <div id="cameraInputPanel" class="devStagingStackPanel devStagingCameraInputPanel" aria-hidden="true">
+    <div id="cameraInputPanelHeader" class="cameraInputPanelHeader runtimeShellPopupHeader">
+      <div class="cameraInputPanelTitle">Camera Input</div>
+      <button class="devStagingButton devStagingPopupClose" id="cameraInputPanelClose" aria-label="Close camera input" type="button">Close</button>
     </div>
     <div class="cameraInputMeta" aria-label="Camera input diagnostics">
       <div class="cameraInputMetaGrid">

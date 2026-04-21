@@ -2,9 +2,9 @@ export function createCameraInputPanelRefs(root) {
   if (!root) return null;
   const $ = (id) => root.querySelector(`#${id}`);
   return {
-    cameraInputPopup: $("cameraInputPopup"),
-    cameraInputPopupHeader: $("cameraInputPopupHeader"),
-    cameraInputPopupClose: $("cameraInputPopupClose"),
+    cameraInputPanel: $("cameraInputPanel"),
+    cameraInputPanelHeader: $("cameraInputPanelHeader"),
+    cameraInputPanelClose: $("cameraInputPanelClose"),
     cameraInputStatusReadout: $("cameraInputStatusReadout"),
     cameraInputLifecycleReadout: $("cameraInputLifecycleReadout"),
     cameraInputPermissionReadout: $("cameraInputPermissionReadout"),

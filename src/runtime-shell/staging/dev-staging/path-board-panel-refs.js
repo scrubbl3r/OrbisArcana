@@ -2,9 +2,9 @@ export function createPathBoardPanelRefs(root) {
   if (!root) return null;
   const $ = (id) => root.querySelector(`#${id}`);
   return {
-    pathBoardPopup: $("pathBoardPopup"),
-    pathBoardPopupHeader: $("pathBoardPopupHeader"),
-    pathBoardPopupClose: $("pathBoardPopupClose"),
+    pathBoardPanel: $("pathBoardPanel"),
+    pathBoardPanelHeader: $("pathBoardPanelHeader"),
+    pathBoardPanelClose: $("pathBoardPanelClose"),
     pathBoardBody: $("pathBoardBody"),
     kwsReadout: $("kwsReadout"),
     rulesReadout: $("rulesReadout"),
