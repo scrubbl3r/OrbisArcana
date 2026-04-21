@@ -1,5 +1,9 @@
 export function closeDevStagingTopmostPopup(refs) {
   if (!refs) return false;
+  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("path-board")) {
+    refs.devPanelManager.closePanel("path-board");
+    return true;
+  }
   if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("log")) {
     refs.devPanelManager.closePanel("log");
     return true;

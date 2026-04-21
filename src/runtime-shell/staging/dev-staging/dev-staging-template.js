@@ -18,25 +18,6 @@ export const DEV_STAGING_TEMPLATE = `
       <div id="fatal" class="devStagingFatal" aria-live="polite"></div>
     </div>
 
-    <div id="pathBoardPopup" class="pathBoardPopup" aria-hidden="true">
-      <div id="pathBoardPopupHeader" class="pathBoardPopupHeader runtimeShellPopupHeader">
-        <div class="pathBoardPopupTitle">Path Board</div>
-        <button class="devStagingButton devStagingPopupClose" id="pathBoardPopupClose" aria-label="Close path board" type="button">Close</button>
-      </div>
-      <div class="pathBoardMeta" aria-label="KWS status and tuning">
-        <div class="pathBoardMetaReadout">
-          <div class="pathBoardMetaLine"><span class="pathBoardMetaLabel">KWS::</span> <span id="kwsReadout" class="devStagingDim">idle</span></div>
-          <div class="pathBoardMetaLine"><span class="pathBoardMetaLabel">Rules:</span> <span id="rulesReadout" class="devStagingDim">unknown</span></div>
-        </div>
-        <div class="devStagingTuneRow pathBoardTuneRow" aria-label="KWS infer tuning">
-          <label>Infer TH <input id="kwsTokenThrInput" type="number" min="0" max="1" step="0.001" placeholder="0.150" /></label>
-          <label>Infer CD <input id="kwsCooldownMsInput" type="number" min="0" max="5000" step="25" placeholder="600" /></label>
-          <button id="kwsApplyTuneBtn" class="devStagingButton" type="button">Apply</button>
-        </div>
-      </div>
-      <div id="pathBoardBody" class="pathBoardPopupBody" aria-label="Path board"></div>
-    </div>
-
     <div id="cameraInputPopup" class="cameraInputPopup" aria-hidden="true">
       <div id="cameraInputPopupHeader" class="cameraInputPopupHeader runtimeShellPopupHeader">
         <div class="cameraInputPopupTitle">Camera Input</div>

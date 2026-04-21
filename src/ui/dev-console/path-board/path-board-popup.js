@@ -18,8 +18,11 @@ export function createPathBoardPopup({
     }))
     : [];
   let bound = false;
+  let triggerBound = false;
   let open = false;
   let drag = null;
+  let boundPathBoardRoot = null;
+  let managedPanelHooksRegistered = false;
 
   function pathBoardChipHtml(displayText, lit, flash, kind = "word") {
     const cls = `pathBoardChip${lit ? " on" : ""}${flash ? " flash" : ""}${kind === "signal" ? " signal" : ""}`;
@@ -88,8 +91,8 @@ export function createPathBoardPopup({
   function setOpen(nextOpen) {
     open = !!nextOpen;
     if (els.pathBoardPopup) {
-      els.pathBoardPopup.classList.toggle("on", open);
       els.pathBoardPopup.setAttribute("aria-hidden", open ? "false" : "true");
+      els.pathBoardPopup.classList.toggle("on", open);
     }
     if (!open) {
       if (els.pathBoardBody) els.pathBoardBody.textContent = "";
@@ -130,23 +133,59 @@ export function createPathBoardPopup({
   }
 
   function bind() {
-    if (bound) return;
-    bound = true;
-    if (els.pathBoardBtn) {
+    if (els.pathBoardBtn && !triggerBound) {
+      triggerBound = true;
       els.pathBoardBtn.addEventListener("click", () => {
+        const panelManager = els.devPanelManager;
+        if (panelManager && typeof panelManager.togglePanel === "function") {
+          panelManager.togglePanel("path-board");
+          return;
+        }
         setOpen(!open);
       });
     }
+    if (!els.pathBoardPopup || boundPathBoardRoot === els.pathBoardPopup) return;
+    boundPathBoardRoot = els.pathBoardPopup;
+    if (bound) return;
+    bound = true;
     if (els.pathBoardPopupClose) {
-      els.pathBoardPopupClose.addEventListener("click", () => setOpen(false));
+      els.pathBoardPopupClose.addEventListener("click", () => {
+        const panelManager = els.devPanelManager;
+        if (panelManager && typeof panelManager.closePanel === "function") {
+          panelManager.closePanel("path-board");
+          return;
+        }
+        setOpen(false);
+      });
     }
-    if (els.pathBoardPopupHeader) {
+    if (els.pathBoardPopupHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
       els.pathBoardPopupHeader.addEventListener("pointerdown", beginDrag);
       els.pathBoardPopupHeader.addEventListener("pointermove", moveDrag);
       els.pathBoardPopupHeader.addEventListener("pointerup", endDrag);
       els.pathBoardPopupHeader.addEventListener("pointercancel", endDrag);
     }
   }
+
+  function registerManagedPanelHooks() {
+    if (managedPanelHooksRegistered) return;
+    const panelManager = els.devPanelManager;
+    if (!panelManager || typeof panelManager.registerPanelHooks !== "function") return;
+    managedPanelHooksRegistered = true;
+    panelManager.registerPanelHooks("path-board", {
+      onMount() {
+        bound = false;
+        bind();
+        setOpen(true);
+      },
+      onBeforeClose() {
+        setOpen(false);
+        bound = false;
+        boundPathBoardRoot = null;
+      },
+    });
+  }
+
+  registerManagedPanelHooks();
 
   return {
     bind,

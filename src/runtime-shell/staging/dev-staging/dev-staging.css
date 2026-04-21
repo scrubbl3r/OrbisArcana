@@ -98,6 +98,16 @@
   max-height: calc(10 * 1.35em + 16px);
 }
 
+.devStagingPathBoardPanel {
+  min-height: 0;
+}
+
+.devStagingPathBoardPanel .pathBoardPopupBody {
+  flex: 0 0 auto;
+  min-height: 220px;
+  max-height: 360px;
+}
+
 .devStagingBars {
   margin-top: 10px;
 }
@@ -293,6 +303,14 @@
 }
 
 .devStagingLogPanel[aria-hidden="true"] {
+  display: none;
+}
+
+.devStagingPathBoardPanel[aria-hidden="false"] {
+  display: flex;
+}
+
+.devStagingPathBoardPanel[aria-hidden="true"] {
   display: none;
 }
 
