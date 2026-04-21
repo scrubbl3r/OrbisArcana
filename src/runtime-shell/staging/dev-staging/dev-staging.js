@@ -3,19 +3,20 @@ import {
   setDevStagingFatal,
   setDevStagingStatus,
 } from "./dev-staging-surface-state.js";
-import { createDevStagingApi } from "./dev-staging-api.js?v=20260421d";
+import { createDevStagingApi } from "./dev-staging-api.js?v=20260421e";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421b";
-import { createDevStagingPanelManager } from "./dev-staging-panel-manager.js?v=20260421d";
+import { createDevStagingPanelManager } from "./dev-staging-panel-manager.js?v=20260421e";
 import {
   closeDevStagingTopmostPopup,
   createDevStagingPanelElementsFromView,
   projectDevStagingPanelRefs,
-} from "./dev-staging-panel.js?v=20260421d";
-import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260421d";
+} from "./dev-staging-panel.js?v=20260421e";
+import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260421e";
+import { mountCameraInputPanel } from "./camera-input-panel.js?v=20260421e";
 import { mountInputHudPanel } from "./input-hud-panel.js?v=20260421c";
 import { mountLogPanel } from "./log-panel.js?v=20260421c";
 import { mountPathBoardPanel } from "./path-board-panel.js?v=20260421d";
-import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260421d";
+import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260421e";
 
 export {
   closeDevStagingTopmostPopup,
@@ -46,6 +47,9 @@ export function mountDevStaging(root) {
   });
   manager.registerPanel("path-board", {
     mount: (host) => mountPathBoardPanel(host),
+  });
+  manager.registerPanel("camera-input", {
+    mount: (host) => mountCameraInputPanel(host),
   });
   manager.openPanel("input-hud");
   const api = createDevStagingApi(root, refs, { manager });

@@ -15,9 +15,12 @@ export function createCameraInputPopup({
   els = {},
   onOpenChange = null,
 } = {}) {
+  let triggerBound = false;
   let bound = false;
   let open = false;
   let drag = null;
+  let boundCameraPanelRoot = null;
+  let managedPanelHooksRegistered = false;
 
   function renderTrack(state = null) {
     const tracking = state && state.tracking ? state.tracking : {};
@@ -112,8 +115,8 @@ export function createCameraInputPopup({
   function setOpen(nextOpen) {
     open = !!nextOpen;
     if (els.cameraInputPopup) {
-      els.cameraInputPopup.classList.toggle("on", open);
       els.cameraInputPopup.setAttribute("aria-hidden", open ? "false" : "true");
+      els.cameraInputPopup.classList.toggle("on", open);
     }
     if (typeof onOpenChange === "function") {
       try { onOpenChange(open); } catch (_) {}
@@ -150,23 +153,59 @@ export function createCameraInputPopup({
   }
 
   function bind() {
-    if (bound) return;
-    bound = true;
-    if (els.cameraInputBtn) {
+    if (els.cameraInputBtn && !triggerBound) {
+      triggerBound = true;
       els.cameraInputBtn.addEventListener("click", () => {
+        const panelManager = els.devPanelManager;
+        if (panelManager && typeof panelManager.togglePanel === "function") {
+          panelManager.togglePanel("camera-input");
+          return;
+        }
         setOpen(!open);
       });
     }
+    if (!els.cameraInputPopup || boundCameraPanelRoot === els.cameraInputPopup) return;
+    boundCameraPanelRoot = els.cameraInputPopup;
+    if (bound) return;
+    bound = true;
     if (els.cameraInputPopupClose) {
-      els.cameraInputPopupClose.addEventListener("click", () => setOpen(false));
+      els.cameraInputPopupClose.addEventListener("click", () => {
+        const panelManager = els.devPanelManager;
+        if (panelManager && typeof panelManager.closePanel === "function") {
+          panelManager.closePanel("camera-input");
+          return;
+        }
+        setOpen(false);
+      });
     }
-    if (els.cameraInputPopupHeader) {
+    if (els.cameraInputPopupHeader && !(els.devPanelManager && typeof els.devPanelManager.isOpen === "function")) {
       els.cameraInputPopupHeader.addEventListener("pointerdown", beginDrag);
       els.cameraInputPopupHeader.addEventListener("pointermove", moveDrag);
       els.cameraInputPopupHeader.addEventListener("pointerup", endDrag);
       els.cameraInputPopupHeader.addEventListener("pointercancel", endDrag);
     }
   }
+
+  function registerManagedPanelHooks() {
+    if (managedPanelHooksRegistered) return;
+    const panelManager = els.devPanelManager;
+    if (!panelManager || typeof panelManager.registerPanelHooks !== "function") return;
+    managedPanelHooksRegistered = true;
+    panelManager.registerPanelHooks("camera-input", {
+      onMount() {
+        bound = false;
+        bind();
+        setOpen(true);
+      },
+      onBeforeClose() {
+        setOpen(false);
+        bound = false;
+        boundCameraPanelRoot = null;
+      },
+    });
+  }
+
+  registerManagedPanelHooks();
 
   return {
     bind,

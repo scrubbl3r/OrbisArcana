@@ -1,15 +1,15 @@
 export function closeDevStagingTopmostPopup(refs) {
   if (!refs) return false;
+  if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("camera-input")) {
+    refs.devPanelManager.closePanel("camera-input");
+    return true;
+  }
   if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("path-board")) {
     refs.devPanelManager.closePanel("path-board");
     return true;
   }
   if (refs.devPanelManager && typeof refs.devPanelManager.isOpen === "function" && refs.devPanelManager.isOpen("log")) {
     refs.devPanelManager.closePanel("log");
-    return true;
-  }
-  if (refs.cameraInputPopup && refs.cameraInputPopup.classList.contains("on") && refs.cameraInputPopupClose) {
-    refs.cameraInputPopupClose.click();
     return true;
   }
   if (refs.pathBoardPopup && refs.pathBoardPopup.classList.contains("on") && refs.pathBoardPopupClose) {
@@ -44,26 +44,6 @@ export function projectDevStagingPanelRefs(refs = {}) {
     pathBoardPopupHeader: refs.pathBoardPopupHeader || null,
     pathBoardPopupClose: refs.pathBoardPopupClose || null,
     pathBoardBody: refs.pathBoardBody || null,
-    cameraInputPopup: refs.cameraInputPopup || null,
-    cameraInputPopupHeader: refs.cameraInputPopupHeader || null,
-    cameraInputPopupClose: refs.cameraInputPopupClose || null,
-    cameraInputStatusReadout: refs.cameraInputStatusReadout || null,
-    cameraInputLifecycleReadout: refs.cameraInputLifecycleReadout || null,
-    cameraInputPermissionReadout: refs.cameraInputPermissionReadout || null,
-    cameraInputTrackingReadout: refs.cameraInputTrackingReadout || null,
-    cameraInputHandReadout: refs.cameraInputHandReadout || null,
-    cameraInputFailureReadout: refs.cameraInputFailureReadout || null,
-    cameraInputSteeringReadout: refs.cameraInputSteeringReadout || null,
-    cameraInputOrbReadout: refs.cameraInputOrbReadout || null,
-    cameraInputSignalTrack: refs.cameraInputSignalTrack || null,
-    cameraInputSignalFill: refs.cameraInputSignalFill || null,
-    cameraInputSignalDot: refs.cameraInputSignalDot || null,
-    cameraInputSignalConfidence: refs.cameraInputSignalConfidence || null,
-    cameraInputRawXReadout: refs.cameraInputRawXReadout || null,
-    cameraInputFilteredXReadout: refs.cameraInputFilteredXReadout || null,
-    cameraInputCenteredXReadout: refs.cameraInputCenteredXReadout || null,
-    cameraInputConfidenceReadout: refs.cameraInputConfidenceReadout || null,
-    cameraInputFpsReadout: refs.cameraInputFpsReadout || null,
     pathBoardDebugPanel: refs.pathBoardDebugPanel || null,
     pathBoardDebugToggle: refs.pathBoardDebugToggle || null,
     pathBoardDebugBadge: refs.pathBoardDebugBadge || null,

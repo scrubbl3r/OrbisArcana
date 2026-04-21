@@ -108,6 +108,10 @@
   max-height: 360px;
 }
 
+.devStagingCameraInputPanel {
+  min-height: 0;
+}
+
 .devStagingBars {
   margin-top: 10px;
 }
@@ -311,6 +315,14 @@
 }
 
 .devStagingPathBoardPanel[aria-hidden="true"] {
+  display: none;
+}
+
+.devStagingCameraInputPanel[aria-hidden="false"] {
+  display: flex;
+}
+
+.devStagingCameraInputPanel[aria-hidden="true"] {
   display: none;
 }
 
