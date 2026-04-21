@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../game-staging/game-staging.js?v=20260421a";
+import { renderOrbStage } from "../game-staging/game-staging.js?v=20260421b";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
 import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
 import { createGameStagingOrbActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";

@@ -19,7 +19,7 @@
   flex-direction: column;
   min-height: var(--dev-staging-panel-height);
   padding: 14px 14px 16px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .devStagingHeader {

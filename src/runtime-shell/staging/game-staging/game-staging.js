@@ -20,9 +20,8 @@ import {
 const ORB_STAGE_TEMPLATE = `
   <section class="orbStage" aria-label="Orb stage">
     <div class="orbStageCard">
-      <div class="orbStageHeader">Orb Stage</div>
-
       <div id="physStage" class="physStage" aria-label="Physics test stage">
+        <div class="orbStageViewportLabel">Orb Stage</div>
         <canvas id="stars" class="starCanvas" aria-hidden="true"></canvas>
         <canvas id="terrain" class="terrainCanvas" aria-hidden="true"></canvas>
         <div id="groundLine" class="groundLine" aria-label="Ground"></div>
