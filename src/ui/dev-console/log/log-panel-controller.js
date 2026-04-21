@@ -165,7 +165,7 @@ export function createLogPanelController({
       const lineEl = document.createElement("div");
       lineEl.className = "kwsLogLine muted";
       lineEl.textContent = activeLogChannel === "general"
-        ? "No general log lines yet."
+        ? "...no traces running"
         : (activeLogChannel === "phone" ? "No phone log lines yet." : "No KWS log lines yet.");
       els.kwsLog.appendChild(lineEl);
       return;
