@@ -1,6 +1,6 @@
 import { createOrbShatterRuntimeController } from "../../../game-runtime/orb/orb-shatter-runtime.js";
 
-export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}) {
+export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
   let primaryGlobeEl = refs.testGlobe || null;
   let lastGroundTop = "";
   let lastOrbLeft = "";
@@ -27,10 +27,6 @@ export function createGameStagingRuntimeAdapter({ refs = {}, level = null } = {}
     electricLayer: refs.electricLayer || null,
     deathPanel: refs.deathPanel || null,
     tryAgainBtn: refs.tryAgainBtn || null,
-    gSlider: refs.gSlider || null,
-    gVal: refs.gVal || null,
-    dSlider: refs.dSlider || null,
-    dVal: refs.dVal || null,
   });
 
   function lineToPath(seg) {

@@ -1,4 +1,4 @@
-Game-staging is the playable runtime harness used during development.
+Orb-stage is the playable runtime harness used during development.
 
 This area should host:
 - the runtime play/test surface
@@ -9,11 +9,10 @@ Reusable gameplay systems and authored content should remain outside staging and
 be imported into this harness.
 
 Current extraction boundary from the legacy combined receiver page:
-- the right-hand "Game Physics" card
+- the right-hand orb-stage card
 - stage canvases and ground line
 - orb/VFX DOM stack
 - death overlay
-- gravity and fall-drag controls
 
 Still intentionally left behind in the legacy combined page for later slices:
 - meters and status readouts

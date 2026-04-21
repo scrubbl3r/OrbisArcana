@@ -1,5 +1,5 @@
 import { LEVEL01 } from "./levels/level01.js";
-import { createGameStagingRuntimeAdapter } from "./game-staging-runtime-adapter.js?v=20260420n";
+import { createOrbStageRuntimeAdapter } from "./game-staging-runtime-adapter.js?v=20260421a";
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
@@ -17,10 +17,10 @@ import {
   buildWorldGlobeVisualState,
 } from "../../../game-runtime/world/world-globe-state.js?v=20260418a";
 
-const GAME_STAGING_TEMPLATE = `
-  <section class="gameStaging" aria-label="Game staging">
-    <div class="gameStagingCard">
-      <div class="gameStagingHeader">Game Physics</div>
+const ORB_STAGE_TEMPLATE = `
+  <section class="orbStage" aria-label="Orb stage">
+    <div class="orbStageCard">
+      <div class="orbStageHeader">Orb Stage</div>
 
       <div id="physStage" class="physStage" aria-label="Physics test stage">
         <canvas id="stars" class="starCanvas" aria-hidden="true"></canvas>
@@ -49,29 +49,13 @@ const GAME_STAGING_TEMPLATE = `
           </div>
         </div>
       </div>
-
-      <div class="physControls">
-        <div class="sliderRow">
-          <span>Gravity</span>
-          <strong><span id="gVal">0.34</span>x</strong>
-        </div>
-        <input id="gSlider" type="range" min="0" max="3" value="0.34" step="0.01" />
-
-        <div style="height:10px"></div>
-
-        <div class="sliderRow">
-          <span>Fall Drag</span>
-          <strong><span id="dVal">-0.53</span></strong>
-        </div>
-        <input id="dSlider" type="range" min="-1" max="1" value="-0.53" step="0.01" />
-      </div>
     </div>
   </section>
 `;
 
-export function renderGameStaging(root, { level = LEVEL01 } = {}) {
+export function renderOrbStage(root, { level = LEVEL01 } = {}) {
   if (!root) return null;
-  root.innerHTML = GAME_STAGING_TEMPLATE;
+  root.innerHTML = ORB_STAGE_TEMPLATE;
   const stage = level && level.stage ? level.stage : {};
   const orbBaseVisualState = buildOrbBaseVisualState();
   const orbFractureVisualState = buildOrbFractureVisualState();
@@ -80,8 +64,8 @@ export function renderGameStaging(root, { level = LEVEL01 } = {}) {
     orbDiameterPx: orbBaseVisualState.diameterPx,
   });
   root.dataset.levelId = String(level && level.id || "level01");
-  root.style.setProperty("--game-staging-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
-  root.style.setProperty("--game-staging-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
+  root.style.setProperty("--orb-stage-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
+  root.style.setProperty("--orb-stage-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
   applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
   applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
   applyOrbGlobeVisualCssVars(orbGlobeVisualState, { root, orbRadiusPx: orbBaseVisualState.radiusPx });
@@ -105,25 +89,19 @@ export function renderGameStaging(root, { level = LEVEL01 } = {}) {
     electricLayer: root.querySelector("#electricLayer"),
     deathPanel: root.querySelector("#deathPanel"),
     tryAgainBtn: root.querySelector("#tryAgainBtn"),
-    gSlider: root.querySelector("#gSlider"),
-    gVal: root.querySelector("#gVal"),
-    dSlider: root.querySelector("#dSlider"),
-    dVal: root.querySelector("#dVal"),
   };
 
   return {
     root,
     refs,
-    adapter: createGameStagingRuntimeAdapter({ refs, level }),
+    adapter: createOrbStageRuntimeAdapter({ refs, level }),
     level,
     stageEl: refs.physStage,
-    gravitySliderEl: refs.gSlider,
-    dragSliderEl: refs.dSlider,
     tryAgainBtnEl: refs.tryAgainBtn,
   };
 }
 
 if (globalThis.document) {
-  const root = document.getElementById("gameStagingRoot");
-  if (root) renderGameStaging(root, { level: LEVEL01 });
+  const root = document.getElementById("orbStageRoot");
+  if (root) renderOrbStage(root, { level: LEVEL01 });
 }

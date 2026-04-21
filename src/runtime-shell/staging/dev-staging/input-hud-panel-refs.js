@@ -27,5 +27,9 @@ export function createInputHudPanelRefs(root) {
     lampRight: $("lampRight"),
     lampForward: $("lampForward"),
     lampBack: $("lampBack"),
+    gSlider: $("gSlider"),
+    gVal: $("gVal"),
+    dSlider: $("dSlider"),
+    dVal: $("dVal"),
   };
 }

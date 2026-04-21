@@ -61,6 +61,26 @@ export const INPUT_HUD_PANEL_TEMPLATE = `
       <div class="devStagingDirItem"><div id="lampForward" class="devStagingLamp" aria-hidden="true"></div><div class="devStagingDirLabel">FWD</div></div>
       <div class="devStagingDirItem"><div id="lampBack" class="devStagingLamp" aria-hidden="true"></div><div class="devStagingDirLabel">BACK</div></div>
     </div>
+
+    <div class="devStagingGroupGap"></div>
+
+    <div class="devStagingDynamicsControls runtimeShellPopupSubhead" aria-label="Orb stage tuning controls">
+      <div class="devStagingControlRow">
+        <div class="devStagingControlLabelRow">
+          <span>Gravity</span>
+          <strong><span id="gVal">0.34</span>x</strong>
+        </div>
+        <input id="gSlider" type="range" min="0" max="3" value="0.34" step="0.01" />
+      </div>
+
+      <div class="devStagingControlRow">
+        <div class="devStagingControlLabelRow">
+          <span>Fall Drag</span>
+          <strong><span id="dVal">-0.53</span></strong>
+        </div>
+        <input id="dSlider" type="range" min="-1" max="1" value="-0.53" step="0.01" />
+      </div>
+    </div>
   </div>
   </div>
   </div>

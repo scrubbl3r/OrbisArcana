@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderGameStaging } from "../game-staging/game-staging.js?v=20260420n";
+import { renderOrbStage } from "../game-staging/game-staging.js?v=20260421a";
 import { LEVEL01 } from "../game-staging/levels/level01.js";
 import { createGameStagingReceiverVfxDefaults, initGameStagingReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
 import { createGameStagingOrbActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
@@ -189,23 +189,28 @@ function buildShellStageInitialState(phys = {}) {
 }
 
 function bindShellStageControls(shellContext) {
-  const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   if (!refs || !runtime || !runtime.stage) return;
 
   const stage = runtime.stage;
-  const orbState = stage.orbRuntimeState && typeof stage.orbRuntimeState.get === "function"
-    ? stage.orbRuntimeState.get()
-    : null;
+  const stageControlRuntime = runtime.stageControlRuntime || (runtime.stageControlRuntime = {
+    boundGravityEl: null,
+    boundDragEl: null,
+  });
 
   const syncControls = () => {
+    const orbState = stage.orbRuntimeState && typeof stage.orbRuntimeState.get === "function"
+      ? stage.orbRuntimeState.get()
+      : null;
     if (refs.gSlider) refs.gSlider.value = String(Number(orbState && orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul);
     if (refs.gVal) refs.gVal.textContent = (Number(orbState && orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul).toFixed(2);
     if (refs.dSlider) refs.dSlider.value = String(Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag);
     if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag).toFixed(2);
   };
 
-  if (refs.gSlider) {
+  if (refs.gSlider && refs.gSlider !== stageControlRuntime.boundGravityEl) {
+    stageControlRuntime.boundGravityEl = refs.gSlider;
     refs.gSlider.addEventListener("input", () => {
       const next = clamp(refs.gSlider.value, SHELL_STAGE_UI_DEFAULTS.gravityMin, SHELL_STAGE_UI_DEFAULTS.gravityMax);
       if (stage.orbRuntimeState && typeof stage.orbRuntimeState.patch === "function") {
@@ -215,7 +220,8 @@ function bindShellStageControls(shellContext) {
     });
   }
 
-  if (refs.dSlider) {
+  if (refs.dSlider && refs.dSlider !== stageControlRuntime.boundDragEl) {
+    stageControlRuntime.boundDragEl = refs.dSlider;
     refs.dSlider.addEventListener("input", () => {
       const next = clamp(refs.dSlider.value, SHELL_STAGE_UI_DEFAULTS.downDragMin, SHELL_STAGE_UI_DEFAULTS.downDragMax);
       stage.phys.downDrag = next;
@@ -224,6 +230,14 @@ function bindShellStageControls(shellContext) {
   }
 
   syncControls();
+  const devStagingView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
+  if (devStagingView && typeof devStagingView.subscribePanelState === "function" && !stageControlRuntime.unsubscribePanelState) {
+    stageControlRuntime.unsubscribePanelState = devStagingView.subscribePanelState((state = {}) => {
+      const openPanelIds = Array.isArray(state.openPanelIds) ? state.openPanelIds : [];
+      if (!openPanelIds.includes("input-hud")) return;
+      bindShellStageControls(shellContext);
+    });
+  }
 }
 
 function initializeShellStageRuntime(shellContext) {
@@ -402,8 +416,8 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
 
 function applyShellGroundLine(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
-  if (!stage || !stage.phys || !gameStagingAdapter || typeof gameStagingAdapter.applyGroundLine !== "function") return;
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  if (!stage || !stage.phys || !orbStageAdapter || typeof orbStageAdapter.applyGroundLine !== "function") return;
   const rect = shellStageRect(shellContext);
   const groundLineWorldY = shellGroundCenterWorld(shellContext) +
     (Number(stage.phys.orbRadiusPx) || 50) +
@@ -411,13 +425,13 @@ function applyShellGroundLine(shellContext) {
   const camTop = shellCameraTopFor(shellContext, stage.orbRuntimeState.get().yW, rect.height || 0);
   const groundY = groundLineWorldY - camTop;
   const top = groundY - (((Number(stage.phys.groundLinePx) || 2) * 0.5));
-  gameStagingAdapter.applyGroundLine({ top });
+  orbStageAdapter.applyGroundLine({ top });
 }
 
 function applyShellOrbTransform(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
-  if (!runtime || !runtime.stage || !gameStagingAdapter || typeof gameStagingAdapter.applyOrbTransform !== "function") return;
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  if (!runtime || !runtime.stage || !orbStageAdapter || typeof orbStageAdapter.applyOrbTransform !== "function") return;
   const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
     ? runtime.orbRuntimeState.get()
     : null;
@@ -425,7 +439,7 @@ function applyShellOrbTransform(shellContext) {
   const xW = clamp(Number(orbState && orbState.xW) || shellStageCenterX(shellContext), bounds.left, bounds.right);
   const y = shellOrbScreenY(shellContext);
   const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
-  gameStagingAdapter.applyOrbTransform({ top, left: xW });
+  orbStageAdapter.applyOrbTransform({ top, left: xW });
 }
 
 function resetShellOrbToGround(shellContext) {
@@ -964,22 +978,22 @@ function updateShellOrbStrokeColor(shellContext, dt) {
 function renderShellOrbDamageVisuals(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const mvp = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime.mvp : (runtime && runtime.mvp ? runtime.mvp : null);
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
-  if (!mvp || !mvp.orbDamageVisualsRuntime || !gameStagingAdapter || typeof gameStagingAdapter.renderOrbDamageVisuals !== "function") return;
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  if (!mvp || !mvp.orbDamageVisualsRuntime || !orbStageAdapter || typeof orbStageAdapter.renderOrbDamageVisuals !== "function") return;
   const fx = mvp.orbDamageVisualsRuntime.getState();
-  gameStagingAdapter.renderOrbDamageVisuals({ fx });
+  orbStageAdapter.renderOrbDamageVisuals({ fx });
 }
 
 function openShellDeathOverlay(shellContext) {
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
-  if (!gameStagingAdapter || typeof gameStagingAdapter.openDeathOverlay !== "function") return;
-  gameStagingAdapter.openDeathOverlay();
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  if (!orbStageAdapter || typeof orbStageAdapter.openDeathOverlay !== "function") return;
+  orbStageAdapter.openDeathOverlay();
 }
 
 function closeShellDeathOverlay(shellContext) {
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
-  if (!gameStagingAdapter || typeof gameStagingAdapter.closeDeathOverlay !== "function") return;
-  gameStagingAdapter.closeDeathOverlay();
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  if (!orbStageAdapter || typeof orbStageAdapter.closeDeathOverlay !== "function") return;
+  orbStageAdapter.closeDeathOverlay();
 }
 
 function clearShellDeathOverlaySchedule(shellContext) {
@@ -1227,9 +1241,9 @@ async function initShellReceiverHostRuntime(shellContext) {
     stageAdapters: {
       normalizeWorldItemSpawn: (item) => (
         shellContext &&
-        shellContext.gameStagingAdapter &&
-        typeof shellContext.gameStagingAdapter.normalizeWorldItemSpawn === "function"
-          ? shellContext.gameStagingAdapter.normalizeWorldItemSpawn(item, {
+        shellContext.orbStageAdapter &&
+        typeof shellContext.orbStageAdapter.normalizeWorldItemSpawn === "function"
+          ? shellContext.orbStageAdapter.normalizeWorldItemSpawn(item, {
               groundCenterWorld: () => shellGroundCenterWorld(shellContext),
               clamp,
             })
@@ -1242,9 +1256,9 @@ async function initShellReceiverHostRuntime(shellContext) {
         const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
         return (
           shellContext &&
-          shellContext.gameStagingAdapter &&
-          typeof shellContext.gameStagingAdapter.pickupScreenY === "function"
-            ? shellContext.gameStagingAdapter.pickupScreenY(yW, { camTop })
+          shellContext.orbStageAdapter &&
+          typeof shellContext.orbStageAdapter.pickupScreenY === "function"
+            ? shellContext.orbStageAdapter.pickupScreenY(yW, { camTop })
             : (Number(yW || 0) - camTop)
         );
       },
@@ -1272,9 +1286,9 @@ async function initShellReceiverHostRuntime(shellContext) {
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
       getWorldItemSpawns: () => (
         shellContext &&
-        shellContext.gameStagingAdapter &&
-        typeof shellContext.gameStagingAdapter.getWorldItemSpawns === "function"
-          ? shellContext.gameStagingAdapter.getWorldItemSpawns()
+        shellContext.orbStageAdapter &&
+        typeof shellContext.orbStageAdapter.getWorldItemSpawns === "function"
+          ? shellContext.orbStageAdapter.getWorldItemSpawns()
           : []
       ),
       getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,
@@ -1392,48 +1406,44 @@ function bindShellRuleActionRuntime({
   };
 }
 
-function createShellSurfaceRefs({ devStagingView, gameStagingView } = {}) {
+function createShellSurfaceRefs({ devStagingView, orbStageView } = {}) {
   return {
     dev: devStagingView && devStagingView.refs ? devStagingView.refs : Object.create(null),
-    game: gameStagingView && gameStagingView.refs ? gameStagingView.refs : Object.create(null),
+    orb: orbStageView && orbStageView.refs ? orbStageView.refs : Object.create(null),
   };
 }
 
 function createLegacyLikeStageElements(surfaceRefs = {}) {
-  const game = surfaceRefs.game || Object.create(null);
+  const orb = surfaceRefs.orb || Object.create(null);
   return {
-    physStage: game.physStage || null,
-    stars: game.stars || null,
-    terrain: game.terrain || null,
-    groundLine: game.groundLine || null,
-    orbWrap: game.orbWrap || null,
-    orb: game.orb || null,
-    orbInterior: game.orbInterior || null,
-    orbCracks: game.orbCracks || null,
-    orbShards: game.orbShards || null,
-    testGlobe: game.testGlobe || null,
-    shield: game.shield || null,
-    shockLayer: game.shockLayer || null,
-    flameLayer: game.flameLayer || null,
-    electricLayer: game.electricLayer || null,
-    deathPanel: game.deathPanel || null,
-    tryAgainBtn: game.tryAgainBtn || null,
-    gSlider: game.gSlider || null,
-    gVal: game.gVal || null,
-    dSlider: game.dSlider || null,
-    dVal: game.dVal || null,
+    physStage: orb.physStage || null,
+    stars: orb.stars || null,
+    terrain: orb.terrain || null,
+    groundLine: orb.groundLine || null,
+    orbWrap: orb.orbWrap || null,
+    orb: orb.orb || null,
+    orbInterior: orb.orbInterior || null,
+    orbCracks: orb.orbCracks || null,
+    orbShards: orb.orbShards || null,
+    testGlobe: orb.testGlobe || null,
+    shield: orb.shield || null,
+    shockLayer: orb.shockLayer || null,
+    flameLayer: orb.flameLayer || null,
+    electricLayer: orb.electricLayer || null,
+    deathPanel: orb.deathPanel || null,
+    tryAgainBtn: orb.tryAgainBtn || null,
   };
 }
 
-function createGameStagingAdapter(gameStagingView = null) {
-  if (gameStagingView && gameStagingView.adapter && typeof gameStagingView.adapter.getStageElements === "function") {
-    return gameStagingView.adapter;
+function createOrbStageAdapter(orbStageView = null) {
+  if (orbStageView && orbStageView.adapter && typeof orbStageView.adapter.getStageElements === "function") {
+    return orbStageView.adapter;
   }
-  const refs = gameStagingView && gameStagingView.refs ? gameStagingView.refs : Object.create(null);
+  const refs = orbStageView && orbStageView.refs ? orbStageView.refs : Object.create(null);
   return Object.freeze({
     refs,
     getStageElements() {
-      return createLegacyLikeStageElements({ game: refs });
+      return createLegacyLikeStageElements({ orb: refs });
     },
   });
 }
@@ -1632,22 +1642,22 @@ function bindShellWakeWindowVisuals({ eventBus, kwsPanelController = null, kwsBr
 function createStagingShellContext({
   rootDocument,
   devStagingView,
-  gameStagingView,
+  orbStageView,
   currentLevel = LEVEL01,
   sharedModules,
 } = {}) {
-  const surfaceRefs = createShellSurfaceRefs({ devStagingView, gameStagingView });
-  const gameStagingAdapter = createGameStagingAdapter(gameStagingView);
-  const stageEls = gameStagingAdapter.getStageElements();
+  const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView });
+  const orbStageAdapter = createOrbStageAdapter(orbStageView);
+  const stageEls = orbStageAdapter.getStageElements();
   return {
     rootDocument,
     views: {
       devStagingView,
-      gameStagingView,
+      orbStageView,
     },
     currentLevel,
     refs: surfaceRefs,
-    gameStagingAdapter,
+    orbStageAdapter,
     stageEls,
     sharedModules,
     runtime: {
@@ -1752,14 +1762,14 @@ function formatPhoneImpulseLogLine(d) {
 function ensureShellStageBackdrop(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
-  if (!runtime || !gameStagingAdapter || typeof gameStagingAdapter.ensureBackdrop !== "function" || !rootDocument) return;
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
+  if (!runtime || !orbStageAdapter || typeof orbStageAdapter.ensureBackdrop !== "function" || !rootDocument) return;
 
   const rect = shellStageRect(shellContext);
   const terrainProfile = Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.terrainProfile)
     ? shellContext.currentLevel.terrainProfile
     : [];
-  gameStagingAdapter.ensureBackdrop({
+  orbStageAdapter.ensureBackdrop({
     runtime,
     rootDocument,
     rect,
@@ -1782,12 +1792,12 @@ function shellGroundLineScreenY(shellContext) {
 
 function drawShellStars(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!runtime || !gameStagingAdapter || typeof gameStagingAdapter.drawStars !== "function" || !stageBackdrop) return;
+  if (!runtime || !orbStageAdapter || typeof orbStageAdapter.drawStars !== "function" || !stageBackdrop) return;
   const h = stageBackdrop.height || 0;
   const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, h);
-  gameStagingAdapter.drawStars({
+  orbStageAdapter.drawStars({
     runtime,
     camTop,
   });
@@ -1795,11 +1805,11 @@ function drawShellStars(shellContext) {
 
 function drawShellBackdrop(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameStagingAdapter = shellContext && shellContext.gameStagingAdapter ? shellContext.gameStagingAdapter : null;
+  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!runtime || !gameStagingAdapter || typeof gameStagingAdapter.drawBackdrop !== "function" || !stageBackdrop) return;
+  if (!runtime || !orbStageAdapter || typeof orbStageAdapter.drawBackdrop !== "function" || !stageBackdrop) return;
   const groundY = shellGroundLineScreenY(shellContext);
-  gameStagingAdapter.drawBackdrop({
+  orbStageAdapter.drawBackdrop({
     runtime,
     groundY,
   });
@@ -2242,7 +2252,7 @@ export async function createStagingShellRuntime({
 } = {}) {
   const docEl = rootDocument.documentElement;
   const devRoot = rootDocument.getElementById("devStagingMount");
-  const gameRoot = rootDocument.getElementById("gameStagingMount");
+  const orbRoot = rootDocument.getElementById("orbStageMount");
 
   if (docEl) {
     docEl.dataset.stagingShell = STAGING_SHELL_STATUS.splitPrototype;
@@ -2251,14 +2261,14 @@ export async function createStagingShellRuntime({
   if (bootStatus && typeof bootStatus.setStatus === "function") {
     bootStatus.setStatus({
       phase: STAGING_SHELL_STATUS.booting,
-      detail: "Mounting dev-staging and game-staging",
+      detail: "Mounting dev-stage and orb-stage",
       state: "booting",
     });
   }
 
   const currentLevel = LEVEL01;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
-  const gameStagingView = gameRoot ? renderGameStaging(gameRoot, { level: currentLevel }) : null;
+  const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: currentLevel }) : null;
 
   if (devStagingView && typeof devStagingView.setStatus === "function") {
     devStagingView.setStatus("Booting staging shell…", "devStagingDim");
@@ -2299,7 +2309,7 @@ export async function createStagingShellRuntime({
     const shellContext = createStagingShellContext({
       rootDocument,
       devStagingView,
-      gameStagingView,
+      orbStageView,
       currentLevel,
       sharedModules,
     });
@@ -2307,12 +2317,12 @@ export async function createStagingShellRuntime({
     const createOrbColorRuntime =
       sharedModules.orbColorRuntimeModule &&
       sharedModules.orbColorRuntimeModule.createOrbColorRuntime;
-    const gameStagingRoot = gameStagingView && gameStagingView.root
-      ? gameStagingView.root
+    const orbStageRoot = orbStageView && orbStageView.root
+      ? orbStageView.root
       : null;
     shellContext.runtime.orbColorRuntime = (typeof createOrbColorRuntime === "function")
       ? createOrbColorRuntime({
-          root: gameStagingRoot,
+          root: orbStageRoot,
           getBaseVisualState: () => getShellOrbBaseVisualState(shellContext),
         })
       : null;
@@ -2361,15 +2371,15 @@ export async function createStagingShellRuntime({
     }
     await initShellKwsRuntime(shellContext);
     initializeShellStageRuntime(shellContext);
-    const gameStagingAdapter = shellContext.gameStagingAdapter || null;
+    const orbStageAdapter = shellContext.orbStageAdapter || null;
     shellContext.runtime.orbShatterController = (
-      gameStagingAdapter &&
-      typeof gameStagingAdapter.createOrbShatterController === "function" &&
+      orbStageAdapter &&
+      typeof orbStageAdapter.createOrbShatterController === "function" &&
       shellContext.runtime.vfx &&
       shellContext.runtime.vfx.orbShatterRuntime
     )
-      ? gameStagingAdapter.createOrbShatterController({
-          root: gameStagingRoot,
+      ? orbStageAdapter.createOrbShatterController({
+          root: orbStageRoot,
           getOrbShatterRuntime: () => (
             shellContext.runtime && shellContext.runtime.vfx
               ? shellContext.runtime.vfx.orbShatterRuntime
@@ -2395,7 +2405,7 @@ export async function createStagingShellRuntime({
     if (bootStatus && typeof bootStatus.setStatus === "function") {
       bootStatus.setStatus({
         phase: STAGING_SHELL_STATUS.localStageReady,
-        detail: "Local game-staging runtime active",
+        detail: "Local orb-stage runtime active",
         state: "booting",
       });
     }

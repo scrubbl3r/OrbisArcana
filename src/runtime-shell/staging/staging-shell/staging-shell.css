@@ -209,9 +209,10 @@ body {
 }
 
 .stagingShell {
-  min-height: 100vh;
+  height: 100vh;
   padding: 18px 18px 20px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .shellGrid {
@@ -225,6 +226,7 @@ body {
 .shellGridSplit {
   grid-template-columns: 1.2fr 1fr;
   align-items: stretch;
+  height: calc(100vh - 38px);
 }
 
 .shellMount {
@@ -232,15 +234,27 @@ body {
 }
 
 .shellMountDev,
-.shellMountGame {
+.shellMountOrb {
   display: flex;
   min-width: 0;
+  min-height: 0;
 }
 
 .shellMountDev > *,
-.shellMountGame > * {
+.shellMountOrb > * {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.shellMountDev {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
+.shellMountOrb {
+  overflow: hidden;
 }
 
 @media (max-width: 900px) {
@@ -256,10 +270,16 @@ body {
 
   .shellGridSplit {
     grid-template-columns: 1fr;
+    height: auto;
   }
 
   .shellMount {
     min-height: auto;
+  }
+
+  .shellMountDev,
+  .shellMountOrb {
+    overflow: visible;
   }
 
   .shellQrBox {

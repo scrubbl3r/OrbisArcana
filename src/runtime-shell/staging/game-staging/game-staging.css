@@ -1,6 +1,6 @@
 :root {
-  --game-staging-panel-height: 800px;
-  --game-staging-level-box-height: 640px;
+  --orb-stage-panel-height: 800px;
+  --orb-stage-level-box-height: 640px;
   --shield-r: 120;
   --shield-g: 210;
   --shield-b: 255;
@@ -23,20 +23,20 @@ body {
   min-height: 100vh;
 }
 
-.gameStaging {
+.orbStage {
   min-height: 100%;
   box-sizing: border-box;
   padding: 0;
 }
 
-.gameStagingCard {
+.orbStageCard {
   display: flex;
   flex-direction: column;
-  min-height: var(--game-staging-panel-height);
+  min-height: var(--orb-stage-panel-height);
   padding: 14px 14px 16px;
 }
 
-.gameStagingHeader {
+.orbStageHeader {
   font-weight: 900;
   margin-bottom: 10px;
   letter-spacing: .3px;
@@ -46,7 +46,7 @@ body {
 .physStage {
   position: relative;
   flex: 1 1 auto;
-  min-height: var(--game-staging-level-box-height);
+  min-height: var(--orb-stage-level-box-height);
   border: 1px solid var(--frame);
   border-radius: 14px;
   background: #000;
@@ -326,33 +326,6 @@ body {
   margin-bottom: 12px;
   font-size: 20px;
   color: var(--text-strong);
-}
-
-.physControls {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(var(--frame-rgb), .20);
-}
-
-.sliderRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 12px;
-  opacity: .92;
-}
-
-.sliderRow strong {
-  font-weight: 1000;
-  opacity: 1;
-  color: var(--text-strong);
-}
-
-.gameStaging input[type="range"] {
-  width: 100%;
-  margin-top: 8px;
-  accent-color: var(--emphasis);
 }
 
 .stageButton {
