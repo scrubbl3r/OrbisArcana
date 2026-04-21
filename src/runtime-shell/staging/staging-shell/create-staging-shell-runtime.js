@@ -10,7 +10,7 @@ import {
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
 import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260421a";
-import { LEVEL01 } from "../orb-stage/levels/level01.js";
+import { LEVEL01 } from "../../../content/levels/level01.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
