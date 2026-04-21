@@ -20,13 +20,9 @@ export function createCameraSteeringSystem({
     preferredHand: String(config.preferredHand || "Left"),
     confidenceMin: clamp01(config.confidenceMin == null ? 0.55 : config.confidenceMin),
     centerEpsilon01: clamp01(config.centerEpsilon01 == null ? 0.002 : config.centerEpsilon01),
-    steeringEaseFactor: clamp(Number(config.steeringEaseFactor == null ? 0.18 : config.steeringEaseFactor), 0.01, 1),
+    velocityEaseFactor: clamp(Number(config.velocityEaseFactor == null ? 0.16 : config.velocityEaseFactor), 0.01, 1),
     maxIntent01: Math.max(0.01, Number(config.maxIntent01) || 1),
-    maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 780),
-    maxAccelPxPerSec2: Math.max(1, Number(config.maxAccelPxPerSec2) || 300),
-    decelPxPerSec2: Math.max(1, Number(config.decelPxPerSec2) || 5200),
-    turnBrakePxPerSec2: Math.max(1, Number(config.turnBrakePxPerSec2) || 6800),
-    inactiveDecelPxPerSec2: Math.max(1, Number(config.inactiveDecelPxPerSec2) || 7000),
+    maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 300),
   };
 
   const steeringState = {
@@ -36,10 +32,8 @@ export function createCameraSteeringSystem({
     centeredX01: 0,
     intentX: 0,
     targetVX: 0,
-    accelX: 0,
-    accelIntentX: 0,
     maxSpeedPxPerSec: cfg.maxSpeedPxPerSec,
-    turnBrakePxPerSec2: cfg.turnBrakePxPerSec2,
+    velocityEaseFactor: cfg.velocityEaseFactor,
     handedness: "",
     trackingState: "idle",
     updatedAtMs: 0,
@@ -53,11 +47,6 @@ export function createCameraSteeringSystem({
       return 0;
     }
     return clampSigned(centered, cfg.maxIntent01);
-  }
-
-  function deriveAccelMagnitude(intentMagnitude01) {
-    const t = clamp01(intentMagnitude01);
-    return Math.max(0, cfg.maxAccelPxPerSec2 * t);
   }
 
   function updateFromCameraState(cameraState = null, atMs = Date.now()) {
@@ -88,9 +77,7 @@ export function createCameraSteeringSystem({
     }
 
     const rawIntentX = active ? deriveIntentX(centeredX01) : 0;
-    const easedIntentX = steeringState.intentX + ((rawIntentX - steeringState.intentX) * cfg.steeringEaseFactor);
-    const intentX = Math.abs(easedIntentX) <= cfg.centerEpsilon01 ? 0 : clampSigned(easedIntentX, cfg.maxIntent01);
-    const accelMagnitude = active ? deriveAccelMagnitude(Math.abs(intentX)) : 0;
+    const intentX = rawIntentX;
     steeringState.active = active;
     steeringState.reason = reason;
     steeringState.confidence = confidence;
@@ -98,12 +85,8 @@ export function createCameraSteeringSystem({
     steeringState.rawIntentX = rawIntentX;
     steeringState.intentX = intentX;
     steeringState.targetVX = intentX * cfg.maxSpeedPxPerSec;
-    steeringState.accelX = active
-      ? (intentX !== 0 ? accelMagnitude : cfg.decelPxPerSec2)
-      : cfg.inactiveDecelPxPerSec2;
-    steeringState.accelIntentX = intentX;
     steeringState.maxSpeedPxPerSec = cfg.maxSpeedPxPerSec;
-    steeringState.turnBrakePxPerSec2 = cfg.turnBrakePxPerSec2;
+    steeringState.velocityEaseFactor = cfg.velocityEaseFactor;
     steeringState.handedness = handedness;
     steeringState.trackingState = trackingState;
     steeringState.updatedAtMs = Number(atMs) || Date.now();
@@ -119,10 +102,8 @@ export function createCameraSteeringSystem({
       rawIntentX: Number(steeringState.rawIntentX) || 0,
       intentX: Number(steeringState.intentX) || 0,
       targetVX: Number(steeringState.targetVX) || 0,
-      accelX: Number(steeringState.accelX) || 0,
-      accelIntentX: Number(steeringState.accelIntentX) || 0,
       maxSpeedPxPerSec: Number(steeringState.maxSpeedPxPerSec) || 0,
-      turnBrakePxPerSec2: Number(steeringState.turnBrakePxPerSec2) || 0,
+      velocityEaseFactor: Number(steeringState.velocityEaseFactor) || 0,
       handedness: String(steeringState.handedness || ""),
       trackingState: String(steeringState.trackingState || "idle"),
       updatedAtMs: Number(steeringState.updatedAtMs) || 0,

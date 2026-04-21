@@ -18,6 +18,13 @@ function clampSigned(value, maxMagnitude) {
   return clamp(value, -max, max);
 }
 
+function lerp(current, target, alpha) {
+  const c = Number(current) || 0;
+  const t = Number(target) || 0;
+  const a = clamp(Number(alpha) || 0, 0, 1);
+  return c + ((t - c) * a);
+}
+
 export function stepOrbLateralMotion({
   dt = 0,
   state = null,
@@ -30,23 +37,14 @@ export function stepOrbLateralMotion({
   if (!Number.isFinite(left) || !Number.isFinite(right) || right <= left) return;
 
   const frameDt = Math.max(0, Number(dt) || 0);
-  const accelIntentX = clampSigned(Number(steering && steering.accelIntentX) || 0, 1);
-  const accelX = Math.max(1, Number(steering && steering.accelX) || 1);
-  const turnBrakePxPerSec2 = Math.max(accelX, Number(steering && steering.turnBrakePxPerSec2) || accelX);
-  const maxSpeedPxPerSec = Math.max(1, Number(steering && steering.maxSpeedPxPerSec) || Math.max(Math.abs(Number(steering && steering.targetVX) || 0), 1));
+  const targetVX = clampSigned(
+    Number(steering && steering.targetVX) || 0,
+    Math.max(1, Number(steering && steering.maxSpeedPxPerSec) || Math.abs(Number(steering && steering.targetVX) || 0) || 1)
+  );
+  const velocityEaseFactor = clamp(Number(steering && steering.velocityEaseFactor) || 0.16, 0.01, 1);
   const currentVx = Number(state.vx) || 0;
-
-  if (accelIntentX !== 0) {
-    const requestedAccel = accelIntentX * accelX;
-    let nextVx = currentVx;
-    if (currentVx !== 0 && Math.sign(currentVx) !== Math.sign(requestedAccel)) {
-      nextVx = moveToward(currentVx, 0, turnBrakePxPerSec2 * frameDt);
-    }
-    nextVx += requestedAccel * frameDt;
-    state.vx = clampSigned(nextVx, maxSpeedPxPerSec);
-  } else {
-    state.vx = moveToward(currentVx, 0, accelX * frameDt);
-  }
+  const frameAlpha = 1 - Math.pow(1 - velocityEaseFactor, Math.max(1, frameDt * 60));
+  state.vx = lerp(currentVx, targetVX, frameAlpha);
 
   state.xW += (Number(state.vx) || 0) * frameDt;
 
