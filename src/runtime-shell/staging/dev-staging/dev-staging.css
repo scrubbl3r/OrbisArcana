@@ -64,6 +64,10 @@
   white-space: nowrap;
 }
 
+.devStagingPanelHost {
+  min-width: 0;
+}
+
 .devStagingBars {
   margin-top: 10px;
 }

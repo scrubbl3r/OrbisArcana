@@ -6,10 +6,11 @@ import {
 import { closeDevStagingTopmostPopup } from "./dev-staging-panel.js?v=20260421a";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421a";
 
-export function createDevStagingApi(root, refs) {
+export function createDevStagingApi(root, refs, panels = {}) {
   return {
     root,
     refs,
+    panels,
     setStatus(html, cls = "devStagingDim") {
       setDevStagingStatus(refs, html, cls);
     },
