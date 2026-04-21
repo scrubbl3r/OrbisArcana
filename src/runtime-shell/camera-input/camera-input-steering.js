@@ -21,6 +21,7 @@ export function createCameraInputSteering({
     if (kind !== "hand") {
       if (kind === "wrong_hand") {
         return {
+          state: "wrong_hand",
           trackingState: "wrong_hand",
           handPresent: false,
           handedness: String(observation.handedness || ""),
@@ -34,6 +35,7 @@ export function createCameraInputSteering({
         };
       }
       return {
+        state: kind === "missing" ? "no_hand" : "idle",
         trackingState: kind === "missing" ? "no_hand" : "idle",
         handPresent: false,
         handedness: null,
@@ -51,6 +53,7 @@ export function createCameraInputSteering({
     filteredX01 += (rawX01 - filteredX01) * alpha;
     const handednessScore = clamp01(observation.handednessScore);
     return {
+      state: handednessScore >= 0.55 ? "tracking" : "unstable",
       trackingState: handednessScore >= 0.55 ? "tracking" : "unstable",
       handPresent: true,
       handedness: String(observation.handedness || ""),
@@ -69,4 +72,3 @@ export function createCameraInputSteering({
     reset,
   };
 }
-

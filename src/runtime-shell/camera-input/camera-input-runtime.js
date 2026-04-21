@@ -1,7 +1,7 @@
-import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420c";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260420c";
-import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420c";
-import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260420c";
+import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420f";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260420f";
+import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
+import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260420f";
 
 function normalizeErrorMessage(error, fallback = "camera_input_error") {
   if (error && error.message) return String(error.message);
@@ -78,7 +78,7 @@ export function createCameraInputRuntime({
         ready: camStore.getState().lifecycle.preloadState === "ready",
       },
       tracking,
-      failures: tracking.trackingState === "tracking"
+      failures: tracking.state === "tracking"
         ? { code: "", message: "" }
         : camStore.getState().failures,
       debug: {
