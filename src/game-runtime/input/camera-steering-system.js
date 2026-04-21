@@ -19,16 +19,17 @@ export function createCameraSteeringSystem({
   const cfg = {
     preferredHand: String(config.preferredHand || "Left"),
     confidenceMin: clamp01(config.confidenceMin == null ? 0.55 : config.confidenceMin),
-    deadbandEnter01: clamp01(config.deadbandEnter01 == null ? 0.08 : config.deadbandEnter01),
-    deadbandExit01: clamp01(config.deadbandExit01 == null ? 0.04 : config.deadbandExit01),
-    directionSwitch01: clamp01(config.directionSwitch01 == null ? 0.11 : config.directionSwitch01),
-    responseExponent: Math.max(0.1, Number(config.responseExponent) || 0.78),
+    neutralZone01: clamp01(config.neutralZone01 == null ? 0.12 : config.neutralZone01),
+    deadbandEnter01: clamp01(config.deadbandEnter01 == null ? 0.16 : config.deadbandEnter01),
+    deadbandExit01: clamp01(config.deadbandExit01 == null ? 0.10 : config.deadbandExit01),
+    directionSwitch01: clamp01(config.directionSwitch01 == null ? 0.18 : config.directionSwitch01),
+    responseExponent: Math.max(0.1, Number(config.responseExponent) || 1.6),
     maxIntent01: Math.max(0.01, Number(config.maxIntent01) || 1),
-    maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 1120),
-    accelPxPerSec2: Math.max(1, Number(config.accelPxPerSec2) || 5600),
-    decelPxPerSec2: Math.max(1, Number(config.decelPxPerSec2) || 4600),
-    turnBrakePxPerSec2: Math.max(1, Number(config.turnBrakePxPerSec2) || 7600),
-    inactiveDecelPxPerSec2: Math.max(1, Number(config.inactiveDecelPxPerSec2) || 6200),
+    maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 860),
+    accelPxPerSec2: Math.max(1, Number(config.accelPxPerSec2) || 3200),
+    decelPxPerSec2: Math.max(1, Number(config.decelPxPerSec2) || 5600),
+    turnBrakePxPerSec2: Math.max(1, Number(config.turnBrakePxPerSec2) || 6800),
+    inactiveDecelPxPerSec2: Math.max(1, Number(config.inactiveDecelPxPerSec2) || 7000),
   };
 
   const steeringState = {
@@ -52,11 +53,12 @@ export function createCameraSteeringSystem({
     const centered = clampSigned(centeredX01, 1);
     const magnitude = Math.abs(centered);
     const direction = Math.sign(centered);
-    const exitDeadband = Math.min(cfg.deadbandEnter01, cfg.deadbandExit01);
-    if (direction === 0 || magnitude <= exitDeadband) {
+    if (direction === 0 || magnitude <= cfg.neutralZone01) {
+      steeringState.latchedDirection = 0;
       return 0;
     }
 
+    const exitDeadband = Math.max(cfg.neutralZone01, Math.min(cfg.deadbandEnter01, cfg.deadbandExit01));
     if (
       steeringState.latchedDirection !== 0 &&
       direction !== steeringState.latchedDirection &&
