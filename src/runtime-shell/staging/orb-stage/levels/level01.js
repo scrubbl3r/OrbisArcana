@@ -34,7 +34,7 @@ export const LEVEL01 = Object.freeze({
     levelBoxHeightPx: 640,
   }),
   world: Object.freeze({
-    heightPx: 5000,
+    heightPx: 2000,
   }),
   terrainProfile: LEVEL01_TERRAIN_PROFILE,
   worldItemSpawns: LEVEL01_WORLD_ITEM_SPAWNS,

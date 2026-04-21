@@ -39,7 +39,7 @@
 }
 
 .levelStageTerrainFill {
-  fill: rgba(0, 0, 0, 0.98);
+  fill: rgba(3, 5, 7, 0.99);
 }
 
 .levelStageTerrainStroke {
@@ -60,6 +60,16 @@
   z-index: 2;
 }
 
+.levelStageGround::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  right: -16px;
+  top: 2px;
+  height: calc(100vh - 140px);
+  background: linear-gradient(180deg, rgba(7, 10, 12, 0.30) 0%, rgba(6, 8, 11, 0.94) 14%, rgba(5, 7, 9, 1) 100%);
+}
+
 .levelStageLabel {
   position: absolute;
   top: 22px;
@@ -71,21 +81,4 @@
   color: var(--text-strong);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
   pointer-events: none;
-}
-
-.levelStageCenter {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-
-.levelStageTitle {
-  font-size: clamp(28px, 4vw, 52px);
-  font-weight: 900;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: rgba(248, 248, 250, 0.20);
 }

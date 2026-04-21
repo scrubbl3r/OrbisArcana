@@ -62,7 +62,6 @@ function normalizeLevelWorldItemSpawn(
 
 export function renderLevelStage(root, { level = null } = {}) {
   if (!root) return null;
-  const label = String(level && level.label || "Level Stage");
   const terrainPath = buildTerrainPath(level && level.terrainProfile);
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
@@ -74,9 +73,6 @@ export function renderLevelStage(root, { level = null } = {}) {
         </svg>
         <div id="levelStageGround" class="levelStageGround" aria-hidden="true"></div>
         <div class="levelStageLabel">Level Stage</div>
-        <div class="levelStageCenter">
-          <div class="levelStageTitle">${label}</div>
-        </div>
       </div>
     </section>
   `;
