@@ -1,7 +1,7 @@
-import { createCamStore } from "./cam-store/create-cam-store.js";
-import { createInitialCameraInputState } from "./camera-input-state.js";
-import { createCameraInputSteering } from "./camera-input-steering.js";
-import { createCameraInputTracker } from "./camera-input-tracker.js";
+import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420c";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260420c";
+import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420c";
+import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260420c";
 
 function normalizeErrorMessage(error, fallback = "camera_input_error") {
   if (error && error.message) return String(error.message);

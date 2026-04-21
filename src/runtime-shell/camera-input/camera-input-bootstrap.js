@@ -1,4 +1,4 @@
-import { createCameraInputRuntime } from "./camera-input-runtime.js";
+import { createCameraInputRuntime } from "./camera-input-runtime.js?v=20260420c";
 
 export async function bootstrapCameraInput({
   rootWindow = window,
@@ -15,4 +15,3 @@ export async function bootstrapCameraInput({
   await cameraInputRuntime.preload();
   return cameraInputRuntime;
 }
-
