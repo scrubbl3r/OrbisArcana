@@ -49,6 +49,11 @@ export function createOrbGlobesRuntime({
     particles: [],
     nextId: 1,
   };
+  const nodePools = {
+    inner: [],
+    orbiting: [],
+    released: [],
+  };
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
@@ -195,21 +200,45 @@ export function createOrbGlobesRuntime({
     return `rgba(${r},${g},${b},${clamp01(a).toFixed(3)})`;
   }
 
+  function acquirePooledNode(kind, className, parentEl) {
+    const pool = nodePools[kind];
+    const el = (Array.isArray(pool) && pool.length)
+      ? pool.pop()
+      : document.createElement("div");
+    el.className = className;
+    if (parentEl && el.parentNode !== parentEl) parentEl.appendChild(el);
+    return el;
+  }
+
+  function releasePooledNode(kind, particle) {
+    if (!particle || !particle.el) return;
+    const el = particle.el;
+    try {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    } catch (_) {}
+    const pool = nodePools[kind];
+    if (Array.isArray(pool)) pool.push(el);
+    particle.el = null;
+    particle.renderCache = null;
+  }
+
   function clearInnerGlobes() {
+    for (const p of inner.particles) {
+      releasePooledNode("inner", p);
+    }
     inner.particles = [];
-    orbInteriorEl.innerHTML = '';
   }
 
   function clearOrbitingGlobes() {
     for (const p of orbiting.particles) {
-      try { if (p.el) p.el.remove(); } catch (_) {}
+      releasePooledNode("orbiting", p);
     }
     orbiting.particles = [];
   }
 
   function clearReleasedGlobes() {
     for (const p of released.particles) {
-      try { if (p.el) p.el.remove(); } catch (_) {}
+      releasePooledNode("released", p);
     }
     released.particles = [];
   }
@@ -223,15 +252,14 @@ export function createOrbGlobesRuntime({
   function renderInnerGlobes() {
     for (const p of inner.particles) {
       if (!p.el) {
-        const el = document.createElement('div');
-        el.className = 'innerGlobe';
+        const el = acquirePooledNode("inner", "innerGlobe", orbInteriorEl);
         p.el = el;
-        p.renderCache = Object.create(null);
-        orbInteriorEl.appendChild(el);
+        p.renderCache = el.__renderCache || (el.__renderCache = Object.create(null));
       }
       const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const d = p.r * 2;
       const orbRadius = readOrbRadiusPx();
+      setStyleIfChanged(renderCache, p.el, "display", "block");
       setStyleIfChanged(renderCache, p.el, "width", `${d.toFixed(2)}px`);
       setStyleIfChanged(renderCache, p.el, "height", `${d.toFixed(2)}px`);
       setStyleIfChanged(renderCache, p.el, "left", `${(orbRadius + p.x - p.r).toFixed(2)}px`);
@@ -277,7 +305,7 @@ export function createOrbGlobesRuntime({
   function consumeOneInnerGlobe() {
     if (!inner.particles.length) return null;
     const p = inner.particles.shift() || null;
-    try { if (p && p.el) p.el.remove(); } catch (_) {}
+    releasePooledNode("inner", p);
     renderInnerGlobes();
     return p;
   }
@@ -329,7 +357,7 @@ export function createOrbGlobesRuntime({
     const idx = inner.particles.findIndex((p) => (g && p.globeId === g) || (s && p.slot === s));
     if (idx < 0) return;
     const p = inner.particles[idx];
-    try { if (p.el) p.el.remove(); } catch (_) {}
+    releasePooledNode("inner", p);
     inner.particles.splice(idx, 1);
     renderInnerGlobes();
   }
@@ -389,7 +417,7 @@ export function createOrbGlobesRuntime({
     const idx = orbiting.particles.findIndex((p) => (g && p.globeId === g) || (s && p.slot === s));
     if (idx < 0) return;
     const p = orbiting.particles[idx];
-    try { if (p.el) p.el.remove(); } catch (_) {}
+    releasePooledNode("orbiting", p);
     orbiting.particles.splice(idx, 1);
   }
 
@@ -425,13 +453,10 @@ export function createOrbGlobesRuntime({
       p.orbitR = getOrbitDistancePx(currentOrbRadius, globeVisualState);
       p.border = liveStyle.border;
       p.fill = liveStyle.background;
-      p.glow = liveStyle.boxShadow;
       if (!p.el) {
-        const el = document.createElement("div");
-        el.className = "orbitGlobe";
+        const el = acquirePooledNode("orbiting", "orbitGlobe", stageEl);
         p.el = el;
-        p.renderCache = Object.create(null);
-        stageEl.appendChild(el);
+        p.renderCache = el.__renderCache || (el.__renderCache = Object.create(null));
       }
       const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const proj = orbitProjection(p, tS);
@@ -439,6 +464,7 @@ export function createOrbGlobesRuntime({
       const d = r * 2;
       const x = cx + proj.x;
       const y = cy + proj.y;
+      setStyleIfChanged(renderCache, p.el, "display", "block");
       setStyleIfChanged(renderCache, p.el, "width", `${d.toFixed(2)}px`);
       setStyleIfChanged(renderCache, p.el, "height", `${d.toFixed(2)}px`);
       setStyleIfChanged(renderCache, p.el, "left", `${(x - r).toFixed(2)}px`);
@@ -470,13 +496,13 @@ export function createOrbGlobesRuntime({
     for (let i = orbiting.particles.length - 1; i >= 0; i -= 1) {
       const p = orbiting.particles[i];
       if (p.globeId && loadedIds.has(p.globeId)) continue;
-      try { if (p.el) p.el.remove(); } catch (_) {}
+      releasePooledNode("orbiting", p);
       orbiting.particles.splice(i, 1);
     }
     for (let i = inner.particles.length - 1; i >= 0; i -= 1) {
       const p = inner.particles[i];
       if (p.globeId && boundIds.has(p.globeId)) continue;
-      try { if (p.el) p.el.remove(); } catch (_) {}
+      releasePooledNode("inner", p);
       inner.particles.splice(i, 1);
     }
     for (const g of loaded) {
@@ -566,11 +592,9 @@ export function createOrbGlobesRuntime({
     for (let i = released.particles.length - 1; i >= 0; i--) {
       const p = released.particles[i];
       if (!p.el) {
-        const el = document.createElement('div');
-        el.className = 'releasedGlobe';
+        const el = acquirePooledNode("released", "releasedGlobe", stageEl);
         p.el = el;
-        p.renderCache = Object.create(null);
-        stageEl.appendChild(el);
+        p.renderCache = el.__renderCache || (el.__renderCache = Object.create(null));
       }
       const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const ageMs = now - p.bornMs;
@@ -584,6 +608,7 @@ export function createOrbGlobesRuntime({
       const y = p.y0 + (p.ny * baseDist) + (p.ty * sinOffset);
       const fadeStart = 0.55;
       const fade01 = life01 <= fadeStart ? 1 : (1 - ((life01 - fadeStart) / (1 - fadeStart)));
+      setStyleIfChanged(renderCache, p.el, "display", "block");
       setStyleIfChanged(renderCache, p.el, "width", `${(r * 2).toFixed(2)}px`);
       setStyleIfChanged(renderCache, p.el, "height", `${(r * 2).toFixed(2)}px`);
       setStyleIfChanged(renderCache, p.el, "left", `${(x - r).toFixed(2)}px`);
@@ -594,7 +619,7 @@ export function createOrbGlobesRuntime({
       setStyleIfChanged(renderCache, p.el, "background", releasedStyle.background);
 
       if (ageMs >= p.ttlMs) {
-        try { p.el.remove(); } catch (_) {}
+        releasePooledNode("released", p);
         released.particles.splice(i, 1);
       }
     }
