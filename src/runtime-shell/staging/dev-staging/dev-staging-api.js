@@ -1,8 +1,4 @@
-import {
-  setDevStagingDebugNote,
-  setDevStagingFatal,
-  setDevStagingStatus,
-} from "./dev-staging-surface-state.js?v=20260420g";
+import { setDevStagingFatal } from "./dev-staging-surface-state.js?v=20260421a";
 import { closeDevStagingTopmostPanel } from "./dev-staging-panel.js?v=20260421j";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421h";
 
@@ -11,14 +7,8 @@ export function createDevStagingApi(root, refs, panels = {}) {
     root,
     refs,
     panels,
-    setStatus(html, cls = "devStagingDim") {
-      setDevStagingStatus(refs, html, cls);
-    },
     setFatal(message = "") {
       setDevStagingFatal(refs, message);
-    },
-    setDebugNote(text = "") {
-      setDevStagingDebugNote(refs, text);
     },
     closeTopmostPanel() {
       return closeDevStagingTopmostPanel(refs);

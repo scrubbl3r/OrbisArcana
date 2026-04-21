@@ -13,23 +13,11 @@ export async function bootstrapShellPairingRuntime({
   if (!rootDocument) return null;
 
   const win = rootDocument.defaultView;
-  const devView = shellContext.views && shellContext.views.devStagingView ? shellContext.views.devStagingView : null;
   const shellKws = shellContext.runtime && shellContext.runtime.kws ? shellContext.runtime.kws : null;
   const cameraInputRuntime = shellContext.runtime && shellContext.runtime.cameraInput
     ? shellContext.runtime.cameraInput
     : null;
-  let lastStatusHtml = "";
-  let lastStatusClass = "";
-  const statusSet = (html, cls = "devStagingDim") => {
-    const nextHtml = String(html || "");
-    const nextClass = String(cls || "devStagingDim");
-    if (nextHtml === lastStatusHtml && nextClass === lastStatusClass) return;
-    lastStatusHtml = nextHtml;
-    lastStatusClass = nextClass;
-    if (devView && typeof devView.setStatus === "function") {
-      devView.setStatus(nextHtml, nextClass);
-    }
-  };
+  const statusSet = () => {};
 
   const startScreenEl = rootDocument.getElementById("startScreen");
   const startQr = rootDocument.getElementById("startQr");
@@ -116,7 +104,6 @@ export async function bootstrapShellPairingRuntime({
       closeCalibOverlay();
       destroyCalibOverlay();
       destroyOnboardingOverlay();
-      statusSet('Phone calibrated <span class="devStagingDim">(staging shell)</span>', "devStagingDim");
       onVoiceModeOpenWorld();
     },
     onCalibAvailable: () => {

@@ -9,17 +9,18 @@ This is the home for:
 Use this area for staging-specific tooling, not for general-purpose shared UI
 unless it proves reusable outside dev-staging.
 
-Current transitional role during shell migration:
-- the left-hand status/meter/control surface
-- logs, flashboard, and tuning surfaces that will be extracted in later slices
+Current role in the staging shell:
+- the left-hand tool rail for tuning, logs, inspection, and debug boards
+- the home of the stack-managed dev panels used in split-lab and future overlay modes
 
 The current split layout is temporary. Dev-staging will eventually be able to
 act as a toggleable overlay within the staging shell.
 
 Current low-risk integration seam:
 - `mountDevStaging(root)` renders the surface and returns refs plus a small API
-- `setStatus(html, cls)` mirrors the legacy status line behavior
-- `setFatal(message)` mirrors the legacy fatal readout
+- `setFatal(message)` drives the shell-visible fatal readout
+- `openPanel(id)`, `closePanel(id)`, `togglePanel(id)` manage stack-owned panels
+- `getPanelState()` and `subscribePanelState(listener)` expose panel stack state
 - `resetMeters()` mirrors the legacy zero-state HUD reset
 - `renderInputHud(vm)` mirrors the legacy left-side meter update contract
 

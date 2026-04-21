@@ -1,5 +1,5 @@
 import { LEVEL01 } from "./levels/level01.js";
-import { createOrbStageRuntimeAdapter } from "./game-staging-runtime-adapter.js?v=20260421a";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260421a";
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,

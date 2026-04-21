@@ -9,7 +9,7 @@ export const DEV_STAGING_TEMPLATE = `
             <button id="dynamicsBtn" class="devStagingButton" type="button">DYNAMICS</button>
             <button id="cameraInputBtn" class="devStagingButton" type="button">CAM INPUT</button>
             <button id="pathBoardBtn" class="devStagingButton" type="button">PATH BOARD</button>
-            <button id="teleBtn" class="devStagingButton" type="button">LOG</button>
+            <button id="logBtn" class="devStagingButton" type="button">LOG</button>
           </div>
         </div>
       </div>

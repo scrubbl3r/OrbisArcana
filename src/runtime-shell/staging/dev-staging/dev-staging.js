@@ -1,8 +1,4 @@
-import {
-  setDevStagingDebugNote,
-  setDevStagingFatal,
-  setDevStagingStatus,
-} from "./dev-staging-surface-state.js";
+import { setDevStagingFatal } from "./dev-staging-surface-state.js?v=20260421a";
 import { createDevStagingApi } from "./dev-staging-api.js?v=20260421h";
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260421h";
 import { createDevStagingPanelManager } from "./dev-staging-panel-manager.js?v=20260421h";
@@ -22,9 +18,7 @@ export {
   createDevStagingPanelElementsFromView,
   renderDevStagingHud,
   resetDevStagingHud,
-  setDevStagingDebugNote,
   setDevStagingFatal,
-  setDevStagingStatus,
 };
 
 export function mountDevStaging(root) {
@@ -62,7 +56,7 @@ export function mountDevStaging(root) {
     });
   }
   bindLauncher(refs.dynamicsBtn, "input-hud");
-  bindLauncher(refs.teleBtn, "log");
+  bindLauncher(refs.logBtn, "log");
   bindLauncher(refs.pathBoardBtn, "path-board");
   bindLauncher(refs.cameraInputBtn, "camera-input");
 
@@ -75,7 +69,7 @@ export function mountDevStaging(root) {
       button.classList.toggle("on", active);
     };
     setActive(refs.dynamicsBtn, openIds.has("input-hud"));
-    setActive(refs.teleBtn, openIds.has("log"));
+    setActive(refs.logBtn, openIds.has("log"));
     setActive(refs.pathBoardBtn, openIds.has("path-board"));
     setActive(refs.cameraInputBtn, openIds.has("camera-input"));
   });

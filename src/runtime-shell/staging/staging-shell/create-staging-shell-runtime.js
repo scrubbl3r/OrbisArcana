@@ -9,10 +9,10 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../game-staging/game-staging.js?v=20260421b";
-import { LEVEL01 } from "../game-staging/levels/level01.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../game-staging/game-staging-vfx-runtime.js";
-import { createOrbStageActionBridge } from "../game-staging/game-staging-orb-action-bridge.js";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260421a";
+import { LEVEL01 } from "../orb-stage/levels/level01.js";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
+import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
@@ -692,16 +692,10 @@ function handleShellImpulseFrame(shellContext, data) {
   if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
     receiverHostRuntime.processIncomingImpulse(inputPayload);
     renderShellHudFromMotionStore(shellContext);
-    if (devView && typeof devView.setStatus === "function" && !runtime.liveInputStatusShown) {
-      devView.setStatus('Phone calibrated <span class="devStagingDim">(live shell input)</span>', "devStagingDim");
-      runtime.liveInputStatusShown = true;
-    }
+    runtime.liveInputStatusShown = true;
     return;
   }
-  if (devView && typeof devView.setStatus === "function" && !runtime.pendingInputStatusShown) {
-    devView.setStatus('Phone calibrated <span class="devStagingDim">(receiver host boot pending)</span>', "devStagingDim");
-    runtime.pendingInputStatusShown = true;
-  }
+  runtime.pendingInputStatusShown = true;
 }
 
 function updateShellSpinColorFromMotionState(shellContext, motionState) {
@@ -758,13 +752,6 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
   }
   if (typeof orbColorRuntime.clearSpinColor === "function") {
     orbColorRuntime.clearSpinColor();
-  }
-}
-
-function setShellDebugNote(shellContext, text = "") {
-  const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
-  if (devView && typeof devView.setDebugNote === "function") {
-    devView.setDebugNote(text);
   }
 }
 
@@ -2270,9 +2257,6 @@ export async function createStagingShellRuntime({
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: currentLevel }) : null;
 
-  if (devStagingView && typeof devStagingView.setStatus === "function") {
-    devStagingView.setStatus("Booting staging shell…", "devStagingDim");
-  }
   if (devStagingView && devStagingView.refs) {
     safeSetText(devStagingView.refs.rulesReadout, "boot:staging-shell");
   }
@@ -2295,12 +2279,6 @@ export async function createStagingShellRuntime({
         detail: "Shared staging modules loaded",
         state: "booting",
       });
-    }
-    if (devStagingView && typeof devStagingView.setStatus === "function") {
-      devStagingView.setStatus(
-        'Staging shell ready <span class="devStagingDim">(shared modules loaded)</span>',
-        "devStagingDim"
-      );
     }
     if (devStagingView && devStagingView.refs) {
       safeSetHtml(devStagingView.refs.kwsReadout, "shell:modules_ready");
@@ -2342,9 +2320,6 @@ export async function createStagingShellRuntime({
         detail: "Preloading camera input runtime",
         state: "booting",
       });
-    }
-    if (devStagingView && typeof devStagingView.setStatus === "function") {
-      devStagingView.setStatus("Preloading camera input…", "devStagingDim");
     }
     const bootstrapCameraInput =
       sharedModules.cameraInputBootstrapModule &&
@@ -2422,9 +2397,6 @@ export async function createStagingShellRuntime({
         detail: error && error.message ? String(error.message) : "Unknown staging shell boot error",
         state: "failed",
       });
-    }
-    if (devStagingView && typeof devStagingView.setStatus === "function") {
-      devStagingView.setStatus("Staging shell boot failed", "devStagingFatal on");
     }
     if (devStagingView && typeof devStagingView.setFatal === "function") {
       devStagingView.setFatal(

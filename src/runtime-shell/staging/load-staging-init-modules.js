@@ -50,7 +50,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import(withVersion("../../runtime-shell/camera-input/camera-input-bootstrap.js", moduleCacheBustV)),
     import("../../ui/build-input-hud-view-model.js"),
     import(withVersion("./bootstrap-kws-staging.js", moduleCacheBustV)),
-    import("./bootstrap-game-staging-runtime.js"),
+    import(withVersion("./bootstrap-orb-stage-runtime.js", moduleCacheBustV)),
     import(withVersion("./bootstrap-staging-runtime-context.js", moduleCacheBustV)),
     import("./bootstrap-staging-mvp.js"),
     import("./bind-staging-runtime-events.js"),

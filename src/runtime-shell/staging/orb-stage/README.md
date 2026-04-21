@@ -8,15 +8,14 @@ This area should host:
 Reusable gameplay systems and authored content should remain outside staging and
 be imported into this harness.
 
-Current extraction boundary from the pre-shell combined surface:
+Current extraction boundary inside the staging shell:
 - the right-hand orb-stage card
 - stage canvases and ground line
 - orb/VFX DOM stack
 - death overlay
 
-Still intentionally left behind in the older combined surface for later slices:
-- meters and status readouts
-- logs and word flashboard
-- pairing/session modals
-- calibration overlay orchestration
-- receiver/transmitter runtime guts
+Intentionally kept outside orb-stage:
+- dev-stage panels such as dynamics, log, and tuning surfaces
+- shell-owned pairing/session overlays
+- shell-owned calibration and onboarding flow
+- shared runtime systems and receiver/transmitter orchestration
