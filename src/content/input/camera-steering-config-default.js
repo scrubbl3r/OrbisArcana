@@ -2,7 +2,7 @@ export const CAMERA_STEERING_CONFIG_DEFAULT = Object.freeze({
   preferredHand: "Left",
   confidenceMin: 0.55,
   centerEpsilon01: 0.002,
-  directionSwitchHysteresis01: 0.08,
+  steeringEaseFactor: 0.18,
   maxIntent01: 1.0,
   maxSpeedPxPerSec: 780,
   maxAccelPxPerSec2: 300,
