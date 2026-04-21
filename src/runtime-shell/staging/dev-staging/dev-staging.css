@@ -89,7 +89,13 @@
 }
 
 .devStagingLogPanel {
-  min-height: 320px;
+  min-height: 0;
+}
+
+.devStagingLogPanel .logPopupBody {
+  flex: 0 0 auto;
+  min-height: calc(10 * 1.35em + 16px);
+  max-height: calc(10 * 1.35em + 16px);
 }
 
 .devStagingBars {
