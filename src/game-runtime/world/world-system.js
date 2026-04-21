@@ -37,6 +37,14 @@ export function createWorldSystem({
   const PICKUP_CONSUME_EDGE_GAP_PX = 15;
   const PICKUP_RESPAWN_FADE_MS = 2000;
 
+  function setStyleIfChanged(cache, el, key, value) {
+    if (!el || !cache) return;
+    const nextValue = String(value);
+    if (cache[key] === nextValue) return;
+    cache[key] = nextValue;
+    el.style[key] = nextValue;
+  }
+
   function readOrbRadiusPx() {
     const liveRadius = (typeof getOrbRadiusPx === "function") ? Number(getOrbRadiusPx()) : NaN;
     if (Number.isFinite(liveRadius) && liveRadius > 0) return liveRadius;
@@ -82,6 +90,7 @@ export function createWorldSystem({
       capacity: Math.max(1, Math.floor(Number(s && s.capacity) || 1)),
       regenTrigger: String((s && s.regenTrigger) || "globe_spent"),
       el: null,
+      renderCache: null,
     };
   }
 
@@ -97,6 +106,7 @@ export function createWorldSystem({
       const existing = getGlobeEl();
       if (existing) {
         pickup.el = existing;
+        pickup.renderCache = pickup.renderCache || Object.create(null);
         return existing;
       }
     }
@@ -109,6 +119,7 @@ export function createWorldSystem({
 
     if (index === 0 && typeof setGlobeEl === "function") setGlobeEl(el);
     pickup.el = el;
+    pickup.renderCache = Object.create(null);
     return el;
   }
 
@@ -136,8 +147,9 @@ export function createWorldSystem({
   function renderPickup(p, idx, nowMs) {
     const globeEl = ensureGlobeEl(p, idx);
     if (!globeEl || !p) return;
+    const renderCache = p.renderCache || (p.renderCache = Object.create(null));
     if (!p.active) {
-      globeEl.style.display = "none";
+      setStyleIfChanged(renderCache, globeEl, "display", "none");
       return;
     }
 
@@ -147,21 +159,21 @@ export function createWorldSystem({
     const pickupRadiusPx = getPickupRadiusPx(p);
     const top = y - pickupRadiusPx;
     const d = pickupRadiusPx * 2;
-    globeEl.style.display = "block";
-    globeEl.style.width = `${d.toFixed(2)}px`;
-    globeEl.style.height = `${d.toFixed(2)}px`;
+    setStyleIfChanged(renderCache, globeEl, "display", "block");
+    setStyleIfChanged(renderCache, globeEl, "width", `${d.toFixed(2)}px`);
+    setStyleIfChanged(renderCache, globeEl, "height", `${d.toFixed(2)}px`);
     const left = ((Number(pos.xNorm) || 0.5) * (rect.width || 0)) - pickupRadiusPx;
-    globeEl.style.left = `${left.toFixed(2)}px`;
-    globeEl.style.top = `${top.toFixed(2)}px`;
-    globeEl.style.transform = "none";
-    globeEl.style.zIndex = "40";
+    setStyleIfChanged(renderCache, globeEl, "left", `${left.toFixed(2)}px`);
+    setStyleIfChanged(renderCache, globeEl, "top", `${top.toFixed(2)}px`);
+    setStyleIfChanged(renderCache, globeEl, "transform", "none");
+    setStyleIfChanged(renderCache, globeEl, "zIndex", "40");
     const tNow = Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs();
     if ((Number(p.fadeInMs) || 0) > 0) {
       const age = Math.max(0, tNow - (Number(p.fadeInStartMs) || 0));
       const alpha = clamp01(age / Math.max(1, Number(p.fadeInMs) || 1));
-      globeEl.style.opacity = alpha.toFixed(3);
+      setStyleIfChanged(renderCache, globeEl, "opacity", alpha.toFixed(3));
     } else {
-      globeEl.style.opacity = "1";
+      setStyleIfChanged(renderCache, globeEl, "opacity", "1");
     }
   }
 

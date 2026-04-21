@@ -56,7 +56,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import("./bind-staging-runtime-events.js"),
     import("../../content/orb/orb-runtime-config-default.js"),
     import("../../content/orb/orb-status-config-default.js"),
-    import("../../game-runtime/world/world-system.js"),
+    import(withVersion("../../game-runtime/world/world-system.js", moduleCacheBustV)),
     import("../../content/world-items/default-world-items.js"),
     import("../../runtime/receiver-events.js"),
     import(withVersion("../../ui/dev-console/kws-panel-controller.js", moduleCacheBustV)),

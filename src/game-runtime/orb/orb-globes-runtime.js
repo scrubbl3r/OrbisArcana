@@ -75,6 +75,14 @@ export function createOrbGlobesRuntime({
   };
   const randBetween = (min, max) => Number(min) + (Math.random() * (Number(max) - Number(min)));
 
+  function setStyleIfChanged(cache, el, key, value) {
+    if (!el || !cache) return;
+    const nextValue = String(value);
+    if (cache[key] === nextValue) return;
+    cache[key] = nextValue;
+    el.style[key] = nextValue;
+  }
+
   function readOrbRadiusPx() {
     const liveRadius = (typeof getOrbRadiusPx === "function") ? Number(getOrbRadiusPx()) : NaN;
     if (Number.isFinite(liveRadius) && liveRadius > 0) return liveRadius;
@@ -168,7 +176,6 @@ export function createOrbGlobesRuntime({
     return {
       border: `${strokeWidthPx.toFixed(2)}px solid ${color01ToRgba(axisRgb01, strokeAlpha)}`,
       background: color01ToRgba(axisRgb01, fillAlpha),
-      boxShadow: `0 0 10px ${color01ToRgba(axisRgb01, 0.28)}`,
     };
   }
 
@@ -219,18 +226,19 @@ export function createOrbGlobesRuntime({
         const el = document.createElement('div');
         el.className = 'innerGlobe';
         p.el = el;
+        p.renderCache = Object.create(null);
         orbInteriorEl.appendChild(el);
       }
+      const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const d = p.r * 2;
       const orbRadius = readOrbRadiusPx();
-      p.el.style.width = `${d.toFixed(2)}px`;
-      p.el.style.height = `${d.toFixed(2)}px`;
-      p.el.style.left = `${(orbRadius + p.x - p.r).toFixed(2)}px`;
-      p.el.style.top = `${(orbRadius + p.y - p.r).toFixed(2)}px`;
-      p.el.style.opacity = "1";
-      if (p.fill) p.el.style.backgroundColor = p.fill;
-      if (p.border) p.el.style.border = p.border;
-      if (p.glow) p.el.style.boxShadow = p.glow;
+      setStyleIfChanged(renderCache, p.el, "width", `${d.toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "height", `${d.toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "left", `${(orbRadius + p.x - p.r).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "top", `${(orbRadius + p.y - p.r).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "opacity", "1");
+      if (p.fill) setStyleIfChanged(renderCache, p.el, "backgroundColor", p.fill);
+      if (p.border) setStyleIfChanged(renderCache, p.el, "border", p.border);
     }
   }
 
@@ -260,8 +268,8 @@ export function createOrbGlobesRuntime({
       r,
       fill: style.background,
       border: style.border,
-      glow: style.boxShadow,
       el: null,
+      renderCache: null,
     });
     renderInnerGlobes();
   }
@@ -301,7 +309,6 @@ export function createOrbGlobesRuntime({
       existing.spellId = String(wordId || existing.spellId || "");
       existing.fill = style.background;
       existing.border = style.border;
-      existing.glow = style.boxShadow;
       renderInnerGlobes();
       return;
     }
@@ -346,7 +353,6 @@ export function createOrbGlobesRuntime({
       existing.spellId = tokenId;
       existing.border = style.border;
       existing.fill = style.background;
-      existing.glow = style.boxShadow;
       return;
     }
     const speeds = orbitSpeedRange();
@@ -370,8 +376,8 @@ export function createOrbGlobesRuntime({
       orbitR: getOrbitDistancePx(readOrbRadiusPx(), globeVisualState),
       border: style.border,
       fill: style.background,
-      glow: style.boxShadow,
       el: null,
+      renderCache: null,
     });
     tickOrbitingGlobes(performance.now());
   }
@@ -424,23 +430,24 @@ export function createOrbGlobesRuntime({
         const el = document.createElement("div");
         el.className = "orbitGlobe";
         p.el = el;
+        p.renderCache = Object.create(null);
         stageEl.appendChild(el);
       }
+      const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const proj = orbitProjection(p, tS);
       const r = Math.max(2, Number(p.radius) || 4);
       const d = r * 2;
       const x = cx + proj.x;
       const y = cy + proj.y;
-      p.el.style.width = `${d.toFixed(2)}px`;
-      p.el.style.height = `${d.toFixed(2)}px`;
-      p.el.style.left = `${(x - r).toFixed(2)}px`;
-      p.el.style.top = `${(y - r).toFixed(2)}px`;
-      p.el.style.opacity = clamp01(proj.opacity).toFixed(3);
-      p.el.style.border = p.border;
-      p.el.style.backgroundColor = p.fill;
-      p.el.style.boxShadow = p.glow;
-      p.el.style.transform = `scale(${proj.scale.toFixed(3)})`;
-      p.el.style.zIndex = "30";
+      setStyleIfChanged(renderCache, p.el, "width", `${d.toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "height", `${d.toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "left", `${(x - r).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "top", `${(y - r).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "opacity", clamp01(proj.opacity).toFixed(3));
+      setStyleIfChanged(renderCache, p.el, "border", p.border);
+      setStyleIfChanged(renderCache, p.el, "backgroundColor", p.fill);
+      setStyleIfChanged(renderCache, p.el, "transform", `scale(${proj.scale.toFixed(3)})`);
+      setStyleIfChanged(renderCache, p.el, "zIndex", "30");
     }
   }
 
@@ -562,8 +569,10 @@ export function createOrbGlobesRuntime({
         const el = document.createElement('div');
         el.className = 'releasedGlobe';
         p.el = el;
+        p.renderCache = Object.create(null);
         stageEl.appendChild(el);
       }
+      const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const ageMs = now - p.bornMs;
       const ageS = Math.max(0, ageMs / 1000);
       const life01 = clamp01(ageMs / Math.max(1, p.ttlMs));
@@ -575,15 +584,14 @@ export function createOrbGlobesRuntime({
       const y = p.y0 + (p.ny * baseDist) + (p.ty * sinOffset);
       const fadeStart = 0.55;
       const fade01 = life01 <= fadeStart ? 1 : (1 - ((life01 - fadeStart) / (1 - fadeStart)));
-      p.el.style.width = `${(r * 2).toFixed(2)}px`;
-      p.el.style.height = `${(r * 2).toFixed(2)}px`;
-      p.el.style.left = `${(x - r).toFixed(2)}px`;
-      p.el.style.top = `${(y - r).toFixed(2)}px`;
-      p.el.style.opacity = clamp01(fade01).toFixed(3);
+      setStyleIfChanged(renderCache, p.el, "width", `${(r * 2).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "height", `${(r * 2).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "left", `${(x - r).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "top", `${(y - r).toFixed(2)}px`);
+      setStyleIfChanged(renderCache, p.el, "opacity", clamp01(fade01).toFixed(3));
       const releasedStyle = phaseAxisStyle(consumedVisualState(), p.axis || "y", { fillAlphaOverride: Number(consumedVisualState().fillAlpha) });
-      p.el.style.border = releasedStyle.border;
-      p.el.style.background = releasedStyle.background;
-      p.el.style.boxShadow = releasedStyle.boxShadow;
+      setStyleIfChanged(renderCache, p.el, "border", releasedStyle.border);
+      setStyleIfChanged(renderCache, p.el, "background", releasedStyle.background);
 
       if (ageMs >= p.ttlMs) {
         try { p.el.remove(); } catch (_) {}
