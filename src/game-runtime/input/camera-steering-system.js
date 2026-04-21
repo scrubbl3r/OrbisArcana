@@ -19,11 +19,13 @@ export function createCameraSteeringSystem({
   const cfg = {
     preferredHand: String(config.preferredHand || "Left"),
     confidenceMin: clamp01(config.confidenceMin == null ? 0.55 : config.confidenceMin),
-    centerEpsilon01: clamp01(config.centerEpsilon01 == null ? 0.003 : config.centerEpsilon01),
+    centerEpsilon01: clamp01(config.centerEpsilon01 == null ? 0.002 : config.centerEpsilon01),
+    directionSwitchHysteresis01: clamp01(
+      config.directionSwitchHysteresis01 == null ? 0.08 : config.directionSwitchHysteresis01
+    ),
     maxIntent01: Math.max(0.01, Number(config.maxIntent01) || 1),
     maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 780),
-    accelCurveExponent: Math.max(0.1, Number(config.accelCurveExponent) || 2),
-    maxAccelPxPerSec2: Math.max(1, Number(config.maxAccelPxPerSec2) || 255),
+    maxAccelPxPerSec2: Math.max(1, Number(config.maxAccelPxPerSec2) || 300),
     decelPxPerSec2: Math.max(1, Number(config.decelPxPerSec2) || 5200),
     turnBrakePxPerSec2: Math.max(1, Number(config.turnBrakePxPerSec2) || 6800),
     inactiveDecelPxPerSec2: Math.max(1, Number(config.inactiveDecelPxPerSec2) || 7000),
@@ -43,20 +45,31 @@ export function createCameraSteeringSystem({
     handedness: "",
     trackingState: "idle",
     updatedAtMs: 0,
+    latchedDirection: 0,
   };
 
   function deriveIntentX(centeredX01) {
     const centered = clampSigned(centeredX01, 1);
     const magnitude = Math.abs(centered);
     if (magnitude <= cfg.centerEpsilon01) {
+      steeringState.latchedDirection = 0;
       return 0;
     }
+    const direction = Math.sign(centered);
+    if (
+      steeringState.latchedDirection !== 0 &&
+      direction !== steeringState.latchedDirection &&
+      magnitude < cfg.directionSwitchHysteresis01
+    ) {
+      return 0;
+    }
+    steeringState.latchedDirection = direction;
     return clampSigned(centered, cfg.maxIntent01);
   }
 
   function deriveAccelMagnitude(intentMagnitude01) {
     const t = clamp01(intentMagnitude01);
-    return Math.max(0, cfg.maxAccelPxPerSec2 * Math.pow(t, cfg.accelCurveExponent));
+    return Math.max(0, cfg.maxAccelPxPerSec2 * t);
   }
 
   function updateFromCameraState(cameraState = null, atMs = Date.now()) {
@@ -87,6 +100,7 @@ export function createCameraSteeringSystem({
     }
 
     const intentX = active ? deriveIntentX(centeredX01) : 0;
+    if (!active) steeringState.latchedDirection = 0;
     const accelMagnitude = active ? deriveAccelMagnitude(Math.abs(intentX)) : 0;
     steeringState.active = active;
     steeringState.reason = reason;
@@ -121,6 +135,7 @@ export function createCameraSteeringSystem({
       handedness: String(steeringState.handedness || ""),
       trackingState: String(steeringState.trackingState || "idle"),
       updatedAtMs: Number(steeringState.updatedAtMs) || 0,
+      latchedDirection: Number(steeringState.latchedDirection) || 0,
     };
   }
 
