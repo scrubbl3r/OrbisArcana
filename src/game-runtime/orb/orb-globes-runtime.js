@@ -18,6 +18,7 @@ export function createOrbGlobesRuntime({
   eventBus,
   orbInteriorEl,
   stageEl,
+  getOrbScreenX = null,
   getOrbScreenY,
   orbRadiusPx,
   getOrbRadiusPx = null,
@@ -78,6 +79,15 @@ export function createOrbGlobesRuntime({
     const liveRadius = (typeof getOrbRadiusPx === "function") ? Number(getOrbRadiusPx()) : NaN;
     if (Number.isFinite(liveRadius) && liveRadius > 0) return liveRadius;
     return Math.max(1, Number(orbRadiusPx) || 1);
+  }
+
+  function readOrbScreenX() {
+    if (typeof getOrbScreenX === "function") {
+      const x = Number(getOrbScreenX());
+      if (Number.isFinite(x)) return x;
+    }
+    const stageRect = stageEl.getBoundingClientRect();
+    return (stageRect.width || 0) * 0.5;
   }
 
   function randomOrbitAxis() {
@@ -401,8 +411,7 @@ export function createOrbGlobesRuntime({
     const now = Number(nowMs) || performance.now();
     const tS = now / 1000;
     const currentOrbRadius = readOrbRadiusPx();
-    const stageRect = stageEl.getBoundingClientRect();
-    const cx = (stageRect.width || 0) * 0.5;
+    const cx = readOrbScreenX();
     const cy = Number(getOrbScreenY()) || 0;
     for (const p of orbiting.particles) {
       const liveStyle = phaseAxisStyle(collectedVisualState(), p.axis);
@@ -511,8 +520,7 @@ export function createOrbGlobesRuntime({
 
   function releaseInnerGlobesAtDeath(nowMs) {
     if (!inner.particles.length) return;
-    const stageRect = stageEl.getBoundingClientRect();
-    const baseX = (stageRect.width || 0) * 0.5;
+    const baseX = readOrbScreenX();
     const baseY = Number(getOrbScreenY()) || 0;
     for (const p of inner.particles) {
       const seedA = fxRand01() * Math.PI * 2;

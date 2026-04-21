@@ -36,6 +36,7 @@ export function bootstrapStagingRuntimeContext({
   stageRect = () => ({ height: 0 }),
   pickupScreenY = (value) => value,
   getOrbRuntime = () => ({ yW: 0 }),
+  getOrbScreenX = () => 0,
   getOrbScreenY = () => 0,
   getOrbVisualRadiusPx = null,
   axisToColor01 = () => 0,
@@ -202,6 +203,7 @@ export function bootstrapStagingRuntimeContext({
     orbFxOptions: {
       orbInteriorEl: els.orbInterior,
       stageEl: els.physStage,
+      getOrbScreenX,
       getOrbScreenY,
       orbRadiusPx: getOrbFxRadiusPx(),
       getOrbRadiusPx: getOrbFxRadiusPx,

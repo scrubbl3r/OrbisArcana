@@ -164,6 +164,11 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         ? stageAdapters.getOrbRuntime()
         : { yW: 0 }
     ),
+    getOrbScreenX: () => (
+      stageAdapters && typeof stageAdapters.getOrbScreenX === "function"
+        ? stageAdapters.getOrbScreenX()
+        : 0
+    ),
     getOrbScreenY: () => (
       stageAdapters && typeof stageAdapters.getOrbScreenY === "function"
         ? stageAdapters.getOrbScreenY()
