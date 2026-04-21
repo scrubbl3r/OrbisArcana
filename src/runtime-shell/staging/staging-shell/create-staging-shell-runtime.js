@@ -25,8 +25,8 @@ import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
-import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260420u";
-import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420u";
+import { createCameraInputPopup } from "../../../ui/dev-console/camera-input/camera-input-popup.js?v=20260420v";
+import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   splitPrototype: "split-prototype",
@@ -2259,7 +2259,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260420u",
+  moduleCacheBustV = "20260420v",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

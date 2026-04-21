@@ -5,5 +5,5 @@ export const CAMERA_STEERING_CONFIG_DEFAULT = Object.freeze({
   velocityEaseFactor: 0.16,
   maxIntent01: 1.0,
   maxSpeedPxPerSec: 300,
-  rampWindow01: 0.5,
+  rampWindow01: 0.75,
 });
