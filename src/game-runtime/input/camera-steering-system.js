@@ -13,37 +13,17 @@ function clampSigned(value, maxMagnitude = 1) {
   return clamp(value, -max, max);
 }
 
-function normalizeCurve(values = []) {
-  const nums = Array.isArray(values)
-    ? values.map((value) => Math.max(0, Number(value) || 0))
-    : [];
-  return nums.length >= 2 ? nums : [0, 3, 6, 12, 25, 50, 100, 200];
-}
-
-function sampleCurve(curve = [], t01 = 0) {
-  const samples = normalizeCurve(curve);
-  const t = clamp01(t01);
-  if (t <= 0) return samples[0] || 0;
-  if (t >= 1) return samples[samples.length - 1] || 0;
-  const scaled = t * (samples.length - 1);
-  const idx = Math.floor(scaled);
-  const nextIdx = Math.min(samples.length - 1, idx + 1);
-  const mix = scaled - idx;
-  const a = samples[idx] || 0;
-  const b = samples[nextIdx] || 0;
-  return a + ((b - a) * mix);
-}
-
 export function createCameraSteeringSystem({
   config = {},
 } = {}) {
   const cfg = {
     preferredHand: String(config.preferredHand || "Left"),
     confidenceMin: clamp01(config.confidenceMin == null ? 0.55 : config.confidenceMin),
-    centerEpsilon01: clamp01(config.centerEpsilon01 == null ? 0.006 : config.centerEpsilon01),
+    centerEpsilon01: clamp01(config.centerEpsilon01 == null ? 0.003 : config.centerEpsilon01),
     maxIntent01: Math.max(0.01, Number(config.maxIntent01) || 1),
     maxSpeedPxPerSec: Math.max(1, Number(config.maxSpeedPxPerSec) || 780),
-    accelCurvePxPerSec2: normalizeCurve(config.accelCurvePxPerSec2),
+    accelCurveExponent: Math.max(0.1, Number(config.accelCurveExponent) || 2),
+    maxAccelPxPerSec2: Math.max(1, Number(config.maxAccelPxPerSec2) || 255),
     decelPxPerSec2: Math.max(1, Number(config.decelPxPerSec2) || 5200),
     turnBrakePxPerSec2: Math.max(1, Number(config.turnBrakePxPerSec2) || 6800),
     inactiveDecelPxPerSec2: Math.max(1, Number(config.inactiveDecelPxPerSec2) || 7000),
@@ -75,7 +55,8 @@ export function createCameraSteeringSystem({
   }
 
   function deriveAccelMagnitude(intentMagnitude01) {
-    return Math.max(0, sampleCurve(cfg.accelCurvePxPerSec2, clamp01(intentMagnitude01)));
+    const t = clamp01(intentMagnitude01);
+    return Math.max(0, cfg.maxAccelPxPerSec2 * Math.pow(t, cfg.accelCurveExponent));
   }
 
   function updateFromCameraState(cameraState = null, atMs = Date.now()) {
