@@ -1,0 +1,91 @@
+.levelStage {
+  width: 100%;
+  height: 100%;
+}
+
+.levelStageViewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(34, 40, 58, 0.38), transparent 28%),
+    radial-gradient(circle at 74% 28%, rgba(48, 58, 88, 0.24), transparent 24%),
+    linear-gradient(180deg, #010204 0%, #020408 54%, #06080d 100%);
+}
+
+.levelStageStars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 8% 16%, rgba(255,255,255,0.76) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 18% 58%, rgba(196,216,255,0.64) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 26% 34%, rgba(255,236,186,0.76) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 38% 78%, rgba(255,255,255,0.58) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 52% 14%, rgba(255,255,255,0.72) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 64% 42%, rgba(203,223,255,0.60) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 74% 68%, rgba(255,236,186,0.70) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 88% 24%, rgba(255,255,255,0.62) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 92% 76%, rgba(255,255,255,0.52) 0 1px, transparent 1.2px);
+  opacity: 0.92;
+}
+
+.levelStageTerrain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.levelStageTerrainFill {
+  fill: rgba(0, 0, 0, 0.98);
+}
+
+.levelStageTerrainStroke {
+  fill: none;
+  stroke: rgba(132, 232, 164, 0.92);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.levelStageGround {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 140px;
+  height: 2px;
+  background: rgba(214, 219, 230, 0.86);
+  z-index: 2;
+}
+
+.levelStageLabel {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  z-index: 3;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .02em;
+  color: var(--text-strong);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+}
+
+.levelStageCenter {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.levelStageTitle {
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: rgba(248, 248, 250, 0.20);
+}
