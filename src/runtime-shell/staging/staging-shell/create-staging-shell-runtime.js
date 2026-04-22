@@ -1864,9 +1864,11 @@ function ensureShellStageBackdrop(shellContext) {
   if (!runtime || !activeStageAdapter || typeof activeStageAdapter.ensureBackdrop !== "function" || !rootDocument) return;
 
   const rect = shellStageRect(shellContext);
-  const terrainProfile = Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.terrainProfile)
-    ? shellContext.currentLevel.terrainProfile
-    : [];
+  const terrainProfile = Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.terrain && shellContext.currentLevel.terrain.profile)
+    ? shellContext.currentLevel.terrain.profile
+    : (Array.isArray(shellContext && shellContext.currentLevel && shellContext.currentLevel.terrainProfile)
+        ? shellContext.currentLevel.terrainProfile
+        : []);
   activeStageAdapter.ensureBackdrop({
     runtime,
     rootDocument,

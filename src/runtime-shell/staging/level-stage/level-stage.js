@@ -62,7 +62,10 @@ function normalizeLevelWorldItemSpawn(
 
 export function renderLevelStage(root, { level = null } = {}) {
   if (!root) return null;
-  const terrainPath = buildTerrainPath(level && level.terrainProfile);
+  const terrainProfile = Array.isArray(level && level.terrain && level.terrain.profile)
+    ? level.terrain.profile
+    : (Array.isArray(level && level.terrainProfile) ? level.terrainProfile : []);
+  const terrainPath = buildTerrainPath(terrainProfile);
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
@@ -100,6 +103,9 @@ export function renderLevelStage(root, { level = null } = {}) {
         return refs.physStage.getBoundingClientRect();
       },
       getWorldItemSpawns() {
+        if (Array.isArray(level && level.elements && level.elements.worldItemSpawns)) {
+          return level.elements.worldItemSpawns;
+        }
         return Array.isArray(level && level.worldItemSpawns) ? level.worldItemSpawns : [];
       },
       normalizeWorldItemSpawn(item, options = {}) {

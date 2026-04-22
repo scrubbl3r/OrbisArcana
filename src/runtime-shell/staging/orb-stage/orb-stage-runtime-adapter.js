@@ -55,6 +55,9 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
       return stageRefs.physStage.getBoundingClientRect();
     },
     getWorldItemSpawns() {
+      if (Array.isArray(level && level.elements && level.elements.worldItemSpawns)) {
+        return level.elements.worldItemSpawns;
+      }
       return Array.isArray(level && level.worldItemSpawns) ? level.worldItemSpawns : [];
     },
     normalizeWorldItemSpawn(
