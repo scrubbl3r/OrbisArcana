@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.28"
-     inkscape:cx="1131.6406"
-     inkscape:cy="1275.7813"
+     inkscape:cx="1168.75"
+     inkscape:cy="1550.7813"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="0"
@@ -75,13 +75,11 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="camera_01">
-    <rect
-       style="fill:#000000;stroke-width:0.386292"
-       id="rect2"
-       width="10"
-       height="10"
-       x="1881.5609"
-       y="41.669056"
-       transform="rotate(45)" />
+    <circle
+       style="fill:#000000;stroke-width:0.680124"
+       id="path3"
+       cx="1280"
+       cy="1385.4688"
+       r="5" />
   </g>
 </svg>
