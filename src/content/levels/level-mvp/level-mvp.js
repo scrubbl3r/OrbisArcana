@@ -36,6 +36,7 @@ export const LEVEL_MVP = Object.freeze({
   stage: Object.freeze({
     panelHeightPx: 900,
     levelBoxHeightPx: 760,
+    previewZoom: 0.25,
   }),
   world: Object.freeze({
     widthPx: 8192,

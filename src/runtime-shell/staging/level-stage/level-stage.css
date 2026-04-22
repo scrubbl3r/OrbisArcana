@@ -30,68 +30,82 @@
   opacity: 0.92;
 }
 
-.levelStageTerrain {
+.levelStageWorldDock {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.levelStageWorld {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--level-world-width, 2048px);
+  height: var(--level-world-height, 2048px);
+  transform-origin: 0 0;
+  transform:
+    translate3d(var(--level-world-x, 0px), var(--level-world-y, 0px), 0)
+    scale(var(--level-world-zoom, 0.25));
+  will-change: transform;
+}
+
+.levelStageWorld::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(146, 230, 168, 0.20);
+  box-shadow: 0 0 0 1px rgba(146, 230, 168, 0.05) inset;
+  pointer-events: none;
+}
+
+.levelStageWorldImage,
+.levelStageWorldOverlay {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
 }
 
-.levelStageMapTemplate {
-  position: absolute;
-  inset: 4%;
-  width: 92%;
-  height: 92%;
-  object-fit: contain;
-  opacity: 0.22;
+.levelStageWorldImage {
+  object-fit: fill;
+  opacity: 0.28;
   filter: invert(1) sepia(0.3) saturate(0.7) hue-rotate(155deg);
-  z-index: 1;
-  pointer-events: none;
 }
 
-.levelStageTerrainFill {
-  fill: url(#levelStageTerrainGradient);
+.levelStageWorldOverlay {
+  overflow: visible;
 }
 
-.levelStageTerrainStroke {
+.levelStageBoundaryPath {
   fill: none;
   stroke: rgba(146, 230, 168, 0.96);
-  stroke-width: 2;
+  stroke-width: 8;
   stroke-linejoin: round;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
 }
 
-.levelStageBoundaries {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
+.levelStageSpawnPulse {
+  fill: rgba(255, 60, 78, 0.10);
+  stroke: rgba(255, 90, 105, 0.65);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
 }
 
-.levelStageBoundaryGroundPlane {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: var(--level-boundary-bottom, 140px);
-  height: var(--level-boundary-stroke-w, 2px);
-  background: rgba(
-    var(--level-boundary-stroke-r, 214),
-    var(--level-boundary-stroke-g, 219),
-    var(--level-boundary-stroke-b, 230),
-    var(--level-boundary-stroke-a, 0.86)
-  );
+.levelStageSpawnDot {
+  fill: rgba(255, 40, 58, 0.96);
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
-.levelStageBoundaryGroundPlane::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--level-boundary-stroke-w, 2px);
-  bottom: calc(-1 * var(--level-boundary-bottom, 140px));
-  background: linear-gradient(180deg, rgba(7, 10, 12, 0.30) 0%, rgba(6, 8, 11, 0.94) 14%, rgba(5, 7, 9, 1) 100%);
+.levelStageSpawnOrbRing {
+  fill: none;
+  stroke: rgba(255, 210, 220, 0.84);
+  stroke-width: 3;
+  stroke-dasharray: 10 10;
+  vector-effect: non-scaling-stroke;
 }
 
 .levelStageLabel {
@@ -99,10 +113,26 @@
   top: 22px;
   left: 24px;
   z-index: 3;
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: .02em;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
   color: var(--text-strong);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
   pointer-events: none;
+}
+
+.levelStageLabelTitle {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
+.levelStageLabelMeta {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(226, 233, 242, 0.82);
+}
+
+.levelStage[data-level-stage-state="error"] .levelStageLabelMeta {
+  color: rgba(255, 118, 118, 0.92);
 }
