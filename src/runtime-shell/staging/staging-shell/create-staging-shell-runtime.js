@@ -292,6 +292,33 @@ function initializeShellStageRuntime(shellContext) {
     initialState.teleportHoldAnchorY = spawnPoint.yW;
   }
   const orbRuntimeState = createOrbRuntimeState({ initialState });
+  const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
+  if (cameraRuntime && typeof cameraRuntime.reset === "function") {
+    cameraRuntime.reset();
+  }
+  if (cameraRuntime && typeof cameraRuntime.resolveFrame === "function") {
+    const bootRect = shellStageRect(shellContext);
+    const cameraConfig = shellGameplayCameraConfig(shellContext);
+    const bootTarget = spawnPoint || shellGameplayCameraTarget(shellContext, initialState);
+    cameraRuntime.resolveFrame({
+      targetXW: bootTarget.xW,
+      targetYW: bootTarget.yW,
+      viewportWidthPx: bootRect.width || 0,
+      viewportHeightPx: bootRect.height || 0,
+      worldWidthPx: shellWorldWidth(shellContext),
+      worldHeightPx: shellWorldHeight(shellContext),
+      zoom: shellGameplayCameraZoom(shellContext),
+      followMode: shellGameplayCameraFollowMode(shellContext),
+      fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+      fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+      deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+      deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
+      deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
+      deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+      followLerpX: 1,
+      followLerpY: 1,
+    });
+  }
 
   runtime.stage = {
     phys,
@@ -433,21 +460,21 @@ function shellGameplayCameraTarget(shellContext, orbState = null) {
         }
       )
     : null;
-  if (initialTarget === "spawn" && spawnPoint) return spawnPoint;
-  if (anchorTarget && anchorTarget.point) return anchorTarget.point;
   if (initialTarget === "orb" && orbState) {
     return {
       xW: Number(orbState.xW) || shellStageCenterX(shellContext),
       yW: Number(orbState.yW) || shellGroundCenterWorld(shellContext),
     };
   }
-  if (spawnPoint) return spawnPoint;
   if (orbState) {
     return {
       xW: Number(orbState.xW) || shellStageCenterX(shellContext),
       yW: Number(orbState.yW) || shellGroundCenterWorld(shellContext),
     };
   }
+  if (initialTarget === "spawn" && spawnPoint) return spawnPoint;
+  if (anchorTarget && anchorTarget.point) return anchorTarget.point;
+  if (spawnPoint) return spawnPoint;
   return {
     xW: shellStageCenterX(shellContext),
     yW: shellGroundCenterWorld(shellContext),
@@ -600,8 +627,12 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
     rect: safeRect,
     centerX: safeRect.width * 0.5,
     camTop,
-    orbScreenX: Number(frame && frame.targetScreenX) || (safeRect.width * 0.5),
-    orbScreenY: Number(frame && frame.targetScreenY) || ((Number(orbState && orbState.yW) || 0) - camTop),
+    orbScreenX: frame
+      ? ((Number(orbState && orbState.xW) || 0) - Number(frame.camLeft || 0)) * Number(frame.zoom || 1)
+      : (safeRect.width * 0.5),
+    orbScreenY: frame
+      ? ((Number(orbState && orbState.yW) || 0) - Number(frame.camTop || 0)) * Number(frame.zoom || 1)
+      : ((Number(orbState && orbState.yW) || 0) - camTop),
     lateralBounds: {
       left: orbRadiusPx,
       right: Math.max(orbRadiusPx, safeRect.width - orbRadiusPx),

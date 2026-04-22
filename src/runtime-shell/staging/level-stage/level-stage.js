@@ -200,10 +200,11 @@ function updateLevelCamera(refs, state) {
       deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
       deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
       deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
-      followLerpX: cameraConfig.followLerpX,
-      followLerpY: cameraConfig.followLerpY,
+      followLerpX: state.bootCamera ? 1 : cameraConfig.followLerpX,
+      followLerpY: state.bootCamera ? 1 : cameraConfig.followLerpY,
     })
     : null;
+  state.bootCamera = false;
   const translateX = -frame.camLeft * frame.zoom;
   const translateY = -frame.camTop * frame.zoom;
   refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
@@ -270,6 +271,7 @@ async function hydrateSvgLevelPreview(refs, state, level) {
     if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
       state.cameraRuntime.reset();
     }
+    state.bootCamera = true;
     updateLevelCamera(refs, state);
   } catch (error) {
     if (refs.stage) refs.stage.dataset.levelStageState = "error";
@@ -338,6 +340,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     initialTarget: String(level && level.camera && level.camera.initialTarget || "spawn").trim().toLowerCase(),
     level,
     cameraRuntime: createCameraRuntime(),
+    bootCamera: true,
     cameraAnchors: [],
     spawn: null,
     summary: null,
