@@ -308,13 +308,13 @@ function initializeShellStageRuntime(shellContext) {
       worldWidthPx: shellWorldWidth(shellContext),
       worldHeightPx: shellWorldHeight(shellContext),
       zoom: shellGameplayCameraZoom(shellContext),
-      followMode: shellGameplayCameraFollowMode(shellContext),
+      followMode: "follow_target_center",
       fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
       fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
-      deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
-      deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
-      deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
-      deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+      deadzoneWidthPx: 0,
+      deadzoneHeightPx: 0,
+      deadzoneWidthRatio: 0,
+      deadzoneHeightRatio: 0,
       followLerpX: 1,
       followLerpY: 1,
     });
@@ -678,6 +678,7 @@ function resetShellOrbToGround(shellContext) {
   const spawnPoint = shellResolvedSpawnPoint(shellContext);
   const yW = spawnPoint ? spawnPoint.yW : shellGroundCenterWorld(shellContext);
   const xW = spawnPoint ? spawnPoint.xW : shellStageCenterX(shellContext);
+  const onGround = !spawnPoint;
   stage.orbRuntimeState.patch({
     yW,
     xW,
@@ -685,9 +686,10 @@ function resetShellOrbToGround(shellContext) {
     vx: 0,
     steerIntentX: 0,
     steerActive: false,
-    onGround: true,
+    onGround,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
+    teleportHoldAnchorY: yW,
     gravityMul: Number(stage.orbRuntimeState.get().gravityMul) || 0.34,
   });
   applyShellGroundLine(shellContext);
