@@ -10,7 +10,7 @@ import {
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
 import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260421a";
-import { LEVEL01 } from "../../../content/levels/level01.js";
+import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
@@ -42,6 +42,8 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   pairingReady: "pairing-ready",
   bootFailed: "boot-failed",
 });
+
+const DEFAULT_LEVEL = LEVELS_BY_ID.level01 || null;
 
 function safeSetText(el, value) {
   if (!el) return;
@@ -1729,7 +1731,7 @@ function createStagingShellContext({
   devStagingView,
   orbStageView,
   levelOverlayView,
-  currentLevel = LEVEL01,
+  currentLevel = DEFAULT_LEVEL,
   sharedModules,
   modeController = null,
 } = {}) {
@@ -2366,7 +2368,7 @@ export async function createStagingShellRuntime({
     });
   }
 
-  const currentLevel = LEVEL01;
+  const currentLevel = DEFAULT_LEVEL;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: currentLevel }) : null;
   const levelOverlayView = levelRoot ? renderLevelStage(levelRoot, { level: currentLevel }) : null;

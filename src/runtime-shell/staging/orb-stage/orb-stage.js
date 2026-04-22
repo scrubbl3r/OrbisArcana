@@ -1,4 +1,4 @@
-import { LEVEL01 } from "../../../content/levels/level01.js";
+import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260421a";
 import {
   applyOrbBaseVisualCssVars,
@@ -52,17 +52,20 @@ const ORB_STAGE_TEMPLATE = `
   </section>
 `;
 
-export function renderOrbStage(root, { level = LEVEL01 } = {}) {
+const DEFAULT_LEVEL = LEVELS_BY_ID.level01 || null;
+
+export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   if (!root) return null;
+  const resolvedLevel = level || DEFAULT_LEVEL;
   root.innerHTML = ORB_STAGE_TEMPLATE;
-  const stage = level && level.stage ? level.stage : {};
+  const stage = resolvedLevel && resolvedLevel.stage ? resolvedLevel.stage : {};
   const orbBaseVisualState = buildOrbBaseVisualState();
   const orbFractureVisualState = buildOrbFractureVisualState();
   const orbGlobeVisualState = buildOrbGlobeVisualState();
   const worldGlobeVisualState = buildWorldGlobeVisualState(null, {
     orbDiameterPx: orbBaseVisualState.diameterPx,
   });
-  root.dataset.levelId = String(level && level.id || "level01");
+  root.dataset.levelId = String(resolvedLevel && resolvedLevel.id || "level01");
   root.style.setProperty("--orb-stage-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
   root.style.setProperty("--orb-stage-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
   applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
@@ -93,8 +96,8 @@ export function renderOrbStage(root, { level = LEVEL01 } = {}) {
   return {
     root,
     refs,
-    adapter: createOrbStageRuntimeAdapter({ refs, level }),
-    level,
+    adapter: createOrbStageRuntimeAdapter({ refs, level: resolvedLevel }),
+    level: resolvedLevel,
     stageEl: refs.physStage,
     tryAgainBtnEl: refs.tryAgainBtn,
   };
@@ -102,5 +105,5 @@ export function renderOrbStage(root, { level = LEVEL01 } = {}) {
 
 if (globalThis.document) {
   const root = document.getElementById("orbStageRoot");
-  if (root) renderOrbStage(root, { level: LEVEL01 });
+  if (root) renderOrbStage(root, { level: DEFAULT_LEVEL });
 }
