@@ -133,6 +133,11 @@ export function createCameraRuntime({
   now = () => performance.now(),
   state = createCameraRuntimeState(),
 } = {}) {
+  function reset() {
+    state.reset();
+    return state.get();
+  }
+
   function clearTravel(result = { handled: false, canceled: true }) {
     const runtimeState = state.get();
     const travel = runtimeState.activeTravel;
@@ -234,6 +239,7 @@ export function createCameraRuntime({
 
   return {
     getState: () => state.get(),
+    reset,
     requestTravel,
     resolveWorldY,
     resolveFrame,

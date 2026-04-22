@@ -58,6 +58,10 @@ export const LEVEL_MVP = Object.freeze({
     widthPx: 8192,
     heightPx: 8192,
   }),
+  spawn: Object.freeze({
+    xW: 2172,
+    yW: 7568.4544,
+  }),
   mapSource: Object.freeze({
     kind: "svg_map_template",
     assetUrl: LEVEL_MVP_MAP_ASSET_URL,

@@ -267,6 +267,9 @@ async function hydrateSvgLevelPreview(refs, state, level) {
       ${buildSpawnOverlayMarkup(state.spawn)}
     `;
     if (refs.stage) refs.stage.dataset.levelStageState = "ready";
+    if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
+      state.cameraRuntime.reset();
+    }
     updateLevelCamera(refs, state);
   } catch (error) {
     if (refs.stage) refs.stage.dataset.levelStageState = "error";
