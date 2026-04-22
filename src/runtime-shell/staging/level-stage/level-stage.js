@@ -4,7 +4,7 @@ function clamp01(value) {
   return Math.max(0, Math.min(1, n));
 }
 
-function buildTerrainPath(terrainProfile = []) {
+function buildTerrainPath(terrainProfile = [], groundY = 860) {
   const points = Array.isArray(terrainProfile) && terrainProfile.length
     ? terrainProfile
     : [
@@ -20,7 +20,6 @@ function buildTerrainPath(terrainProfile = []) {
       ];
 
   const width = 1000;
-  const groundY = 860;
   const start = points[0] || { xNorm: 0, yOff: 80 };
   let d = `M ${(clamp01(start.xNorm) * width).toFixed(2)} ${(groundY - (Number(start.yOff) || 0)).toFixed(2)}`;
   for (const point of points) {
@@ -30,6 +29,12 @@ function buildTerrainPath(terrainProfile = []) {
   }
   d += ` L ${width} ${groundY.toFixed(2)} L 0 ${groundY.toFixed(2)} Z`;
   return d;
+}
+
+function findGroundPlaneBoundary(boundaries = []) {
+  return (Array.isArray(boundaries) ? boundaries : []).find((boundary = {}) => (
+    String(boundary.kind || "").trim().toLowerCase() === "ground_plane"
+  )) || null;
 }
 
 function normalizeLevelWorldItemSpawn(
@@ -106,16 +111,13 @@ export function renderLevelStage(root, { level = null } = {}) {
   const boundaries = Array.isArray(level && level.elements && level.elements.boundaries)
     ? level.elements.boundaries
     : (Array.isArray(level && level.boundaries) ? level.boundaries : []);
-  const terrainPath = buildTerrainPath(terrainProfile);
+  const groundPlaneBoundary = findGroundPlaneBoundary(boundaries);
   const boundaryMarkup = buildBoundaryMarkup(boundaries);
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
         <div class="levelStageStars" aria-hidden="true"></div>
-        <svg class="levelStageTerrain" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
-          <path class="levelStageTerrainFill" d="${terrainPath}"></path>
-          <path class="levelStageTerrainStroke" d="${terrainPath}"></path>
-        </svg>
+        <svg id="levelStageTerrain" class="levelStageTerrain" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="levelStageBoundaries" class="levelStageBoundaries" aria-hidden="true">${boundaryMarkup}</div>
         <div class="levelStageLabel">Level Stage</div>
       </div>
@@ -124,9 +126,29 @@ export function renderLevelStage(root, { level = null } = {}) {
   const refs = {
     root,
     physStage: root.querySelector(".levelStageViewport"),
+    terrain: root.querySelector("#levelStageTerrain"),
     groundLine: root.querySelector(".levelStageBoundaryGroundPlane"),
     boundaries: root.querySelector("#levelStageBoundaries"),
   };
+
+  const groundBottomPx = Math.max(0, Number(groundPlaneBoundary && groundPlaneBoundary.bottomPx) || 140);
+  const strokeWidthPx = Math.max(1, Number(groundPlaneBoundary && groundPlaneBoundary.stroke && groundPlaneBoundary.stroke.widthPx) || 2);
+  const viewportHeight = refs.physStage && Number(refs.physStage.clientHeight) > 0 ? Number(refs.physStage.clientHeight) : 1000;
+  const groundY = ((viewportHeight - groundBottomPx - (strokeWidthPx * 0.5)) / Math.max(1, viewportHeight)) * 1000;
+  const terrainPath = buildTerrainPath(
+    terrainProfile.map((point = {}) => ({
+      xNorm: point.xNorm,
+      yOff: point.yOff,
+    })),
+    groundY
+  );
+  if (refs.terrain) {
+    refs.terrain.innerHTML = `
+      <path class="levelStageTerrainFill" d="${terrainPath}"></path>
+      <path class="levelStageTerrainStroke" d="${terrainPath}"></path>
+    `;
+  }
+
   return {
     root,
     refs,
