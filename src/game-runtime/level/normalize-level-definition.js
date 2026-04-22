@@ -67,6 +67,7 @@ export function normalizeLevelDefinition(level = {}) {
   const world = cloneJsonLike(source.world, {});
   const stage = cloneJsonLike(source.stage, {});
   const camera = cloneJsonLike(source.camera, {});
+  const spawn = cloneJsonLike(source.spawn, {});
   const mapSource = cloneJsonLike(source.mapSource, {});
   const sourceElements = cloneJsonLike(source.elements, {});
   const terrainProfile = Array.isArray(source.terrainProfile) ? source.terrainProfile.slice() : [];
@@ -88,6 +89,13 @@ export function normalizeLevelDefinition(level = {}) {
     world: Object.freeze({
       widthPx: Number(world.widthPx) > 0 ? Number(world.widthPx) : 2000,
       heightPx: Number(world.heightPx) > 0 ? Number(world.heightPx) : 2000,
+    }),
+    spawn: Object.freeze({
+      xW: Number.isFinite(Number(spawn.xW)) ? Number(spawn.xW) : null,
+      xNorm: Number.isFinite(Number(spawn.xNorm)) ? Number(spawn.xNorm) : null,
+      yW: Number.isFinite(Number(spawn.yW)) ? Number(spawn.yW) : null,
+      yMode: String(spawn.yMode || "absolute").trim(),
+      yValue: Number.isFinite(Number(spawn.yValue)) ? Number(spawn.yValue) : null,
     }),
     mapSource: normalizeLevelMapSource(mapSource, world),
     terrain: Object.freeze({

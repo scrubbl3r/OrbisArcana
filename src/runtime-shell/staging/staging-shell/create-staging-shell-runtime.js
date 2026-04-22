@@ -34,6 +34,7 @@ import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
+import { resolveLevelSpawnPoint } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -280,7 +281,13 @@ function initializeShellStageRuntime(shellContext) {
   const impact = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.impact);
   const statusConfig = cloneJsonLike(ORB_STATUS_CONFIG_DEFAULT && ORB_STATUS_CONFIG_DEFAULT.grace);
   const initialState = buildShellStageInitialState(phys);
-  initialState.xW = shellStageCenterX(shellContext);
+  const spawnPoint = shellResolvedSpawnPoint(shellContext);
+  initialState.xW = spawnPoint ? spawnPoint.xW : shellStageCenterX(shellContext);
+  if (spawnPoint) {
+    initialState.yW = spawnPoint.yW;
+    initialState.floatGraceAnchorY = spawnPoint.yW;
+    initialState.teleportHoldAnchorY = spawnPoint.yW;
+  }
   const orbRuntimeState = createOrbRuntimeState({ initialState });
 
   runtime.stage = {
@@ -380,6 +387,39 @@ function shellGameplayCameraConfig(shellContext) {
   });
 }
 
+function shellResolvedSpawnPoint(shellContext) {
+  return resolveLevelSpawnPoint(shellContext && shellContext.currentLevel ? shellContext.currentLevel : null, {
+    worldWidthPx: shellWorldWidth(shellContext),
+    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+  });
+}
+
+function shellGameplayCameraTarget(shellContext, orbState = null) {
+  const camera = shellContext && shellContext.currentLevel && shellContext.currentLevel.camera
+    ? shellContext.currentLevel.camera
+    : null;
+  const initialTarget = String(camera && camera.initialTarget || "spawn").trim().toLowerCase();
+  const spawnPoint = shellResolvedSpawnPoint(shellContext);
+  if (initialTarget === "spawn" && spawnPoint) return spawnPoint;
+  if (initialTarget === "orb" && orbState) {
+    return {
+      xW: Number(orbState.xW) || shellStageCenterX(shellContext),
+      yW: Number(orbState.yW) || shellGroundCenterWorld(shellContext),
+    };
+  }
+  if (spawnPoint) return spawnPoint;
+  if (orbState) {
+    return {
+      xW: Number(orbState.xW) || shellStageCenterX(shellContext),
+      yW: Number(orbState.yW) || shellGroundCenterWorld(shellContext),
+    };
+  }
+  return {
+    xW: shellStageCenterX(shellContext),
+    yW: shellGroundCenterWorld(shellContext),
+  };
+}
+
 function shellGroundCenterWorld(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   if (!stage || !stage.phys) return 0;
@@ -420,10 +460,11 @@ function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) 
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const cameraConfig = shellGameplayCameraConfig(shellContext);
+  const target = shellGameplayCameraTarget(shellContext, { xW: shellStageCenterX(shellContext), yW });
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
-        targetXW: shellStageCenterX(shellContext),
-        targetYW: yW,
+        targetXW: target.xW,
+        targetYW: target.yW,
         viewportWidthPx: shellStageRect(shellContext).width || 0,
         viewportHeightPx: stageH,
         worldWidthPx: shellWorldWidth(shellContext),
@@ -451,10 +492,11 @@ function shellOrbScreenY(shellContext) {
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const rect = shellStageRect(shellContext);
   const cameraConfig = shellGameplayCameraConfig(shellContext);
+  const target = shellGameplayCameraTarget(shellContext, orbState);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
-        targetXW: shellStageCenterX(shellContext),
-        targetYW: orbState && orbState.yW,
+        targetXW: target.xW,
+        targetYW: target.yW,
         viewportWidthPx: rect.width || 0,
         viewportHeightPx: rect.height || 0,
         worldWidthPx: shellWorldWidth(shellContext),
@@ -488,10 +530,11 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const cameraConfig = shellGameplayCameraConfig(shellContext);
+  const target = shellGameplayCameraTarget(shellContext, orbState);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
-        targetXW: Number(orbState && orbState.xW) || shellStageCenterX(shellContext),
-        targetYW: orbState && orbState.yW,
+        targetXW: target.xW,
+        targetYW: target.yW,
         viewportWidthPx: safeRect.width || 0,
         viewportHeightPx: safeRect.height || 0,
         worldWidthPx: shellWorldWidth(shellContext),
@@ -556,8 +599,9 @@ function resetShellOrbToGround(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const stage = runtime && runtime.stage;
   if (!stage || !stage.orbRuntimeState || typeof stage.orbRuntimeState.patch !== "function") return;
-  const yW = shellGroundCenterWorld(shellContext);
-  const xW = shellStageCenterX(shellContext);
+  const spawnPoint = shellResolvedSpawnPoint(shellContext);
+  const yW = spawnPoint ? spawnPoint.yW : shellGroundCenterWorld(shellContext);
+  const xW = spawnPoint ? spawnPoint.xW : shellStageCenterX(shellContext);
   stage.orbRuntimeState.patch({
     yW,
     xW,

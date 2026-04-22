@@ -62,6 +62,11 @@ export const ORB_STAGE_LEVEL = Object.freeze({
     widthPx: 1000,
     heightPx: 2000,
   }),
+  spawn: Object.freeze({
+    xNorm: 0.50,
+    yMode: "ground_center_offset",
+    yValue: 0,
+  }),
   terrainProfile: ORB_STAGE_LEVEL_TERRAIN_PROFILE,
   elements: Object.freeze({
     boundaries: ORB_STAGE_LEVEL_BOUNDARIES,

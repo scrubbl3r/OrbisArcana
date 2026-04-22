@@ -1,5 +1,6 @@
 import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
 import { resolveCameraFrame } from "../../../game-runtime/camera/camera-runtime.js";
+import { resolveLevelSpawnPoint } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
@@ -136,13 +137,16 @@ function updateLevelCamera(refs, state) {
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
     ? refs.physStage.getBoundingClientRect()
     : { width: 0, height: 0 };
-  const spawn = state.spawn && state.spawn.worldCenter ? state.spawn.worldCenter : {
-    xW: state.worldWidthPx * 0.5,
-    yW: state.worldHeightPx * 0.5,
-  };
+  const spawn = state.spawn && state.spawn.worldCenter ? state.spawn.worldCenter : null;
+  const target = state.initialTarget === "spawn" && spawn
+    ? spawn
+    : {
+        xW: state.worldWidthPx * 0.5,
+        yW: state.worldHeightPx * 0.5,
+      };
   const frame = resolveCameraFrame({
-    targetXW: clampNumber(spawn.xW, 0),
-    targetYW: clampNumber(spawn.yW, 0),
+    targetXW: clampNumber(target.xW, 0),
+    targetYW: clampNumber(target.yW, 0),
     viewportWidthPx: Math.max(1, clampNumber(rect.width, 0)),
     viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
     worldWidthPx: state.worldWidthPx,
@@ -191,7 +195,23 @@ async function hydrateSvgLevelPreview(refs, state, level) {
     state.summary = summary;
     state.spawn = Array.isArray(summary.spawnMarkers) && summary.spawnMarkers.length
       ? summary.spawnMarkers[0]
-      : null;
+      : (() => {
+          const resolvedSpawn = resolveLevelSpawnPoint(level, {
+            worldWidthPx: state.worldWidthPx,
+            groundCenterWorld: () => state.worldHeightPx * 0.5,
+          });
+          return resolvedSpawn
+            ? {
+                id: "level_spawn",
+                authoredCenter: Object.freeze({
+                  x: resolvedSpawn.xW,
+                  y: resolvedSpawn.yW,
+                }),
+                worldCenter: resolvedSpawn,
+                authoredRadius: 0,
+              }
+            : null;
+        })();
     refs.worldImage.src = mapAssetUrl;
     refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
     refs.worldOverlay.innerHTML = `
@@ -265,6 +285,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     worldHeightPx: worldSize.heightPx,
     previewZoom,
     previewFollowMode,
+    initialTarget: String(level && level.camera && level.camera.initialTarget || "spawn").trim().toLowerCase(),
     cameraConfig,
     spawn: null,
     summary: null,
