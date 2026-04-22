@@ -11,8 +11,14 @@ export function normalizeLevelDefinition(level = {}) {
   const source = level && typeof level === "object" ? level : {};
   const world = cloneJsonLike(source.world, {});
   const stage = cloneJsonLike(source.stage, {});
+  const sourceElements = cloneJsonLike(source.elements, {});
   const terrainProfile = Array.isArray(source.terrainProfile) ? source.terrainProfile.slice() : [];
-  const worldItemSpawns = Array.isArray(source.worldItemSpawns) ? source.worldItemSpawns.slice() : [];
+  const worldItemSpawns = Array.isArray(sourceElements.worldItemSpawns)
+    ? sourceElements.worldItemSpawns.slice()
+    : (Array.isArray(source.worldItemSpawns) ? source.worldItemSpawns.slice() : []);
+  const boundaries = Array.isArray(sourceElements.boundaries)
+    ? sourceElements.boundaries.slice()
+    : (Array.isArray(source.boundaries) ? source.boundaries.slice() : []);
   return Object.freeze({
     id: String(source.id || "").trim(),
     label: String(source.label || source.id || "Untitled Level").trim(),
@@ -27,10 +33,12 @@ export function normalizeLevelDefinition(level = {}) {
       profile: Object.freeze(terrainProfile),
     }),
     elements: Object.freeze({
+      boundaries: Object.freeze(boundaries),
       worldItemSpawns: Object.freeze(worldItemSpawns),
     }),
     // Compatibility aliases while downstream callers migrate to normalized buckets.
     terrainProfile: Object.freeze(terrainProfile),
+    boundaries: Object.freeze(boundaries),
     worldItemSpawns: Object.freeze(worldItemSpawns),
   });
 }

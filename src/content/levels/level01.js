@@ -26,6 +26,26 @@ const LEVEL01_WORLD_ITEM_SPAWNS = Object.freeze([
   }),
 ]);
 
+const LEVEL01_BOUNDARIES = Object.freeze([
+  Object.freeze({
+    id: "level01_ground_plane_main",
+    kind: "ground_plane",
+    bottomPx: 140,
+    stroke: Object.freeze({
+      r: 214,
+      g: 219,
+      b: 230,
+      a: 0.86,
+      widthPx: 2,
+    }),
+  }),
+]);
+
+const LEVEL01_ELEMENTS = Object.freeze({
+  boundaries: LEVEL01_BOUNDARIES,
+  worldItemSpawns: LEVEL01_WORLD_ITEM_SPAWNS,
+});
+
 export const LEVEL01 = Object.freeze({
   id: "level01",
   label: "Level 01",
@@ -36,6 +56,8 @@ export const LEVEL01 = Object.freeze({
   world: Object.freeze({
     heightPx: 2000,
   }),
+  elements: LEVEL01_ELEMENTS,
   terrainProfile: LEVEL01_TERRAIN_PROFILE,
+  boundaries: LEVEL01_BOUNDARIES,
   worldItemSpawns: LEVEL01_WORLD_ITEM_SPAWNS,
 });

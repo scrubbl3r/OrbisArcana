@@ -60,12 +60,54 @@ function normalizeLevelWorldItemSpawn(
   };
 }
 
+function clampChannel(value, fallback = 255) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(0, Math.min(255, Math.round(n)));
+}
+
+function clampAlpha(value, fallback = 1) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(0, Math.min(1, n));
+}
+
+function buildBoundaryMarkup(boundaries = []) {
+  return boundaries
+    .map((boundary = {}) => {
+      const kind = String(boundary.kind || "").trim().toLowerCase();
+      if (kind !== "ground_plane") return "";
+      const stroke = boundary && typeof boundary.stroke === "object" ? boundary.stroke : {};
+      const r = clampChannel(stroke.r, 214);
+      const g = clampChannel(stroke.g, 219);
+      const b = clampChannel(stroke.b, 230);
+      const a = clampAlpha(stroke.a, 0.86);
+      const widthPx = Math.max(1, Number(stroke.widthPx) || 2);
+      const bottomPx = Math.max(0, Number(boundary.bottomPx) || 0);
+      const id = String(boundary.id || "");
+      return `
+        <div
+          class="levelStageBoundary levelStageBoundaryGroundPlane"
+          data-boundary-id="${id}"
+          style="--level-boundary-bottom:${bottomPx}px;--level-boundary-stroke-r:${r};--level-boundary-stroke-g:${g};--level-boundary-stroke-b:${b};--level-boundary-stroke-a:${a};--level-boundary-stroke-w:${widthPx}px;"
+          aria-hidden="true"
+        ></div>
+      `;
+    })
+    .filter(Boolean)
+    .join("");
+}
+
 export function renderLevelStage(root, { level = null } = {}) {
   if (!root) return null;
   const terrainProfile = Array.isArray(level && level.terrain && level.terrain.profile)
     ? level.terrain.profile
     : (Array.isArray(level && level.terrainProfile) ? level.terrainProfile : []);
+  const boundaries = Array.isArray(level && level.elements && level.elements.boundaries)
+    ? level.elements.boundaries
+    : (Array.isArray(level && level.boundaries) ? level.boundaries : []);
   const terrainPath = buildTerrainPath(terrainProfile);
+  const boundaryMarkup = buildBoundaryMarkup(boundaries);
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
@@ -74,7 +116,7 @@ export function renderLevelStage(root, { level = null } = {}) {
           <path class="levelStageTerrainFill" d="${terrainPath}"></path>
           <path class="levelStageTerrainStroke" d="${terrainPath}"></path>
         </svg>
-        <div id="levelStageGround" class="levelStageGround" aria-hidden="true"></div>
+        <div id="levelStageBoundaries" class="levelStageBoundaries" aria-hidden="true">${boundaryMarkup}</div>
         <div class="levelStageLabel">Level Stage</div>
       </div>
     </section>
@@ -82,7 +124,8 @@ export function renderLevelStage(root, { level = null } = {}) {
   const refs = {
     root,
     physStage: root.querySelector(".levelStageViewport"),
-    groundLine: root.querySelector("#levelStageGround"),
+    groundLine: root.querySelector(".levelStageBoundaryGroundPlane"),
+    boundaries: root.querySelector("#levelStageBoundaries"),
   };
   return {
     root,
