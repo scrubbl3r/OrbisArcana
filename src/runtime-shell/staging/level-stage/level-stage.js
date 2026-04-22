@@ -144,6 +144,13 @@ export function renderLevelStage(root, { level = null } = {}) {
   );
   if (refs.terrain) {
     refs.terrain.innerHTML = `
+      <defs>
+        <linearGradient id="levelStageTerrainGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgb(74, 116, 90)" stop-opacity="0.20"></stop>
+          <stop offset="62%" stop-color="rgb(40, 67, 50)" stop-opacity="0.72"></stop>
+          <stop offset="100%" stop-color="rgb(24, 40, 30)" stop-opacity="0.96"></stop>
+        </linearGradient>
+      </defs>
       <path class="levelStageTerrainFill" d="${terrainPath}"></path>
       <path class="levelStageTerrainStroke" d="${terrainPath}"></path>
     `;

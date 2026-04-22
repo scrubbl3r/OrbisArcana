@@ -39,12 +39,12 @@
 }
 
 .levelStageTerrainFill {
-  fill: rgba(16, 24, 20, 0.96);
+  fill: url(#levelStageTerrainGradient);
 }
 
 .levelStageTerrainStroke {
   fill: none;
-  stroke: rgba(132, 232, 164, 0.92);
+  stroke: rgba(146, 230, 168, 0.96);
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
