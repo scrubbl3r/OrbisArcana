@@ -65,6 +65,7 @@ export function normalizeLevelDefinition(level = {}) {
     stage: Object.freeze({
       panelHeightPx: Number(stage.panelHeightPx) || 800,
       levelBoxHeightPx: Number(stage.levelBoxHeightPx) || 640,
+      previewZoom: Number(stage.previewZoom) > 0 ? Number(stage.previewZoom) : 1,
     }),
     world: Object.freeze({
       widthPx: Number(world.widthPx) > 0 ? Number(world.widthPx) : 2000,
