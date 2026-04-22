@@ -1,5 +1,5 @@
 import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
-import { resolveCameraFrame } from "../../../game-runtime/camera/camera-runtime.js";
+import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import {
   resolveLevelCameraAnchor,
   resolveLevelSpawnPoint,
@@ -133,8 +133,12 @@ function resolvePreviewCameraConfig(level = null, {
     svgAnchors: cameraAnchors,
   });
   return Object.freeze({
-    deadzoneWidthPx: Math.max(0, clampNumber(camera && camera.deadzoneWidthPx, 0)),
-    deadzoneHeightPx: Math.max(0, clampNumber(camera && camera.deadzoneHeightPx, 0)),
+    deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : -1,
+    deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : -1,
+    deadzoneWidthRatio: Math.max(0, clampNumber(camera && camera.deadzoneWidthRatio, 0)),
+    deadzoneHeightRatio: Math.max(0, clampNumber(camera && camera.deadzoneHeightRatio, 0)),
+    followLerpX: Math.max(0, Math.min(1, clampNumber(camera && camera.followLerpX, 1))),
+    followLerpY: Math.max(0, Math.min(1, clampNumber(camera && camera.followLerpY, 1))),
     fixedFrameCenterXW: fixedFrameAnchor && fixedFrameAnchor.point
       ? fixedFrameAnchor.point.xW
       : (
@@ -180,20 +184,26 @@ function updateLevelCamera(refs, state) {
               yW: state.worldHeightPx * 0.5,
             }
       );
-  const frame = resolveCameraFrame({
-    targetXW: clampNumber(target.xW, 0),
-    targetYW: clampNumber(target.yW, 0),
-    viewportWidthPx: Math.max(1, clampNumber(rect.width, 0)),
-    viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
-    worldWidthPx: state.worldWidthPx,
-    worldHeightPx: state.worldHeightPx,
-    zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
-    followMode: state.previewFollowMode,
-    fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
-    fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
-    deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
-    deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
-  });
+  const frame = state.cameraRuntime && typeof state.cameraRuntime.resolveFrame === "function"
+    ? state.cameraRuntime.resolveFrame({
+      targetXW: clampNumber(target.xW, 0),
+      targetYW: clampNumber(target.yW, 0),
+      viewportWidthPx: Math.max(1, clampNumber(rect.width, 0)),
+      viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
+      worldWidthPx: state.worldWidthPx,
+      worldHeightPx: state.worldHeightPx,
+      zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
+      followMode: state.previewFollowMode,
+      fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+      fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+      deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+      deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
+      deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
+      deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+      followLerpX: cameraConfig.followLerpX,
+      followLerpY: cameraConfig.followLerpY,
+    })
+    : null;
   const translateX = -frame.camLeft * frame.zoom;
   const translateY = -frame.camTop * frame.zoom;
   refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
@@ -324,6 +334,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     previewFollowMode,
     initialTarget: String(level && level.camera && level.camera.initialTarget || "spawn").trim().toLowerCase(),
     level,
+    cameraRuntime: createCameraRuntime(),
     cameraAnchors: [],
     spawn: null,
     summary: null,

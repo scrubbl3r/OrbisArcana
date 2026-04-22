@@ -53,7 +53,7 @@ const ORB_STAGE_TEMPLATE = `
   </section>
 `;
 
-const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || LEVELS_BY_ID["level-mvp"] || null);
+const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || LEVELS_BY_ID["orb-stage-level"] || null);
 
 export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   if (!root) return null;

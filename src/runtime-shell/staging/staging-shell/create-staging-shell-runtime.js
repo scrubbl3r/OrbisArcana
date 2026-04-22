@@ -48,7 +48,7 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   bootFailed: "boot-failed",
 });
 
-const DEFAULT_ORB_STAGE_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || LEVELS_BY_ID["level-mvp"] || null);
+const DEFAULT_ORB_STAGE_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || LEVELS_BY_ID["orb-stage-level"] || null);
 const DEFAULT_LEVEL_OVERLAY = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || LEVELS_BY_ID["orb-stage-level"] || null);
 
 function safeSetText(el, value) {
@@ -401,8 +401,12 @@ function shellGameplayCameraConfig(shellContext) {
             ? Number(camera.fixedFrameCenterYW)
             : null
         ),
-    deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : 0,
-    deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : 0,
+    deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : -1,
+    deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : -1,
+    deadzoneWidthRatio: Number(camera && camera.deadzoneWidthRatio) >= 0 ? Number(camera.deadzoneWidthRatio) : 0,
+    deadzoneHeightRatio: Number(camera && camera.deadzoneHeightRatio) >= 0 ? Number(camera.deadzoneHeightRatio) : 0,
+    followLerpX: Number(camera && camera.followLerpX) >= 0 ? Number(camera.followLerpX) : 1,
+    followLerpY: Number(camera && camera.followLerpY) >= 0 ? Number(camera.followLerpY) : 1,
   });
 }
 
@@ -505,6 +509,10 @@ function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) 
         fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
         deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
         deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
+        deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
+        deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+        followLerpX: cameraConfig.followLerpX,
+        followLerpY: cameraConfig.followLerpY,
         nowMs,
       })
     : null;
@@ -537,6 +545,10 @@ function shellOrbScreenY(shellContext) {
         fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
         deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
         deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
+        deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
+        deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+        followLerpX: cameraConfig.followLerpX,
+        followLerpY: cameraConfig.followLerpY,
       })
     : null;
   return Number(frame && frame.targetScreenY) || 0;
@@ -575,6 +587,10 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
         deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
         deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
+        deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
+        deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+        followLerpX: cameraConfig.followLerpX,
+        followLerpY: cameraConfig.followLerpY,
         nowMs,
       })
     : null;
