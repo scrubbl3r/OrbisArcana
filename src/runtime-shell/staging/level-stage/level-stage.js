@@ -134,7 +134,9 @@ export function renderLevelStage(root, { level = null } = {}) {
   const groundBottomPx = Math.max(0, Number(groundPlaneBoundary && groundPlaneBoundary.bottomPx) || 140);
   const strokeWidthPx = Math.max(1, Number(groundPlaneBoundary && groundPlaneBoundary.stroke && groundPlaneBoundary.stroke.widthPx) || 2);
   const viewportHeight = refs.physStage && Number(refs.physStage.clientHeight) > 0 ? Number(refs.physStage.clientHeight) : 1000;
-  const groundY = ((viewportHeight - groundBottomPx - (strokeWidthPx * 0.5)) / Math.max(1, viewportHeight)) * 1000;
+  // Terrain mass should terminate on the top edge of the authored GP stroke.
+  const terrainGroundTopPx = Math.max(0, viewportHeight - groundBottomPx - strokeWidthPx);
+  const groundY = (terrainGroundTopPx / Math.max(1, viewportHeight)) * 1000;
   const terrainPath = buildTerrainPath(
     terrainProfile.map((point = {}) => ({
       xNorm: point.xNorm,
