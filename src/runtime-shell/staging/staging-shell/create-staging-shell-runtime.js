@@ -11,6 +11,7 @@ import {
 } from "../dev-staging/dev-staging-lamps.js";
 import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260421a";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
+import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js";
@@ -43,7 +44,7 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   bootFailed: "boot-failed",
 });
 
-const DEFAULT_LEVEL = LEVELS_BY_ID.level01 || null;
+const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID.level01 || null);
 
 function safeSetText(el, value) {
   if (!el) return;

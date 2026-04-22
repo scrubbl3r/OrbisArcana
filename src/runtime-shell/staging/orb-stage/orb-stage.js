@@ -1,4 +1,5 @@
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
+import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260421a";
 import {
   applyOrbBaseVisualCssVars,
@@ -52,11 +53,11 @@ const ORB_STAGE_TEMPLATE = `
   </section>
 `;
 
-const DEFAULT_LEVEL = LEVELS_BY_ID.level01 || null;
+const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID.level01 || null);
 
 export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   if (!root) return null;
-  const resolvedLevel = level || DEFAULT_LEVEL;
+  const resolvedLevel = normalizeLevelDefinition(level || DEFAULT_LEVEL);
   root.innerHTML = ORB_STAGE_TEMPLATE;
   const stage = resolvedLevel && resolvedLevel.stage ? resolvedLevel.stage : {};
   const orbBaseVisualState = buildOrbBaseVisualState();
