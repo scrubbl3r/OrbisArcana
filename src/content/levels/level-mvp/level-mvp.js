@@ -77,13 +77,6 @@ export const LEVEL_MVP = Object.freeze({
       id: "path2-9",
     }),
   }),
-  cameraAnchors: Object.freeze([
-    Object.freeze({
-      id: "level_mvp_preview_frame",
-      xW: 4096,
-      yW: 4096,
-    }),
-  ]),
   elements: Object.freeze({
     boundaries: LEVEL_MVP_BOUNDARIES,
     worldItemSpawns: LEVEL_MVP_WORLD_ITEM_SPAWNS,

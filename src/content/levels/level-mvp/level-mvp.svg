@@ -71,4 +71,15 @@
        cy="1892.1136"
        r="8.6518793" />
   </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="camera">
+    <circle
+       style="fill:#00c8ff;fill-opacity:0.35;stroke:#00c8ff;stroke-width:4;stroke-opacity:1"
+       id="level_mvp_preview_frame"
+       cx="1024"
+       cy="1024"
+       r="24" />
+  </g>
 </svg>
