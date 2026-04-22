@@ -1,14 +1,4 @@
-const ORB_STAGE_LEVEL_TERRAIN_PROFILE = Object.freeze([
-  { xNorm: 0.00, yOff: 72 },
-  { xNorm: 0.10, yOff: 96 },
-  { xNorm: 0.22, yOff: 58 },
-  { xNorm: 0.34, yOff: 118 },
-  { xNorm: 0.48, yOff: 70 },
-  { xNorm: 0.60, yOff: 108 },
-  { xNorm: 0.74, yOff: 62 },
-  { xNorm: 0.86, yOff: 102 },
-  { xNorm: 1.00, yOff: 80 },
-]);
+const ORB_STAGE_MAP_ASSET_URL = new URL("./orb-stage.svg", import.meta.url).toString();
 
 const ORB_STAGE_LEVEL_WORLD_ITEM_SPAWNS = Object.freeze([
   Object.freeze({
@@ -27,7 +17,7 @@ const ORB_STAGE_LEVEL_WORLD_ITEM_SPAWNS = Object.freeze([
 
 const ORB_STAGE_LEVEL_BOUNDARIES = Object.freeze([
   Object.freeze({
-    id: "orb_stage_level_ground_plane_main",
+    id: "orb_stage_level_ground_plane_fallback",
     kind: "ground_plane",
     bottomPx: 140,
     stroke: Object.freeze({
@@ -46,36 +36,55 @@ export const ORB_STAGE_LEVEL = Object.freeze({
   stage: Object.freeze({
     panelHeightPx: 800,
     levelBoxHeightPx: 640,
+    previewZoom: 1,
   }),
   camera: Object.freeze({
     previewZoom: 1,
     gameplayZoom: 1,
-    previewFollowMode: "fixed_frame",
+    previewFollowMode: "follow_target_soft",
     gameplayFollowMode: "follow_target_soft",
     initialTarget: "spawn",
-    deadzoneWidthPx: 180,
-    deadzoneHeightPx: 120,
-    fixedFrameAnchorId: "orb_stage_preview_frame",
+    deadzoneWidthPx: -1,
+    deadzoneHeightPx: -1,
+    deadzoneWidthRatio: 0.40,
+    deadzoneHeightRatio: 0.30,
+    followLerpX: 0.16,
+    followLerpY: 0.18,
+    fixedFrameAnchorId: "",
     fixedFrameCenterXW: null,
     fixedFrameCenterYW: null,
   }),
   world: Object.freeze({
-    widthPx: 1000,
-    heightPx: 2000,
+    widthPx: 8192,
+    heightPx: 8192,
   }),
   spawn: Object.freeze({
-    xNorm: 0.50,
-    yMode: "ground_center_offset",
-    yValue: 0,
+    xW: 4174,
+    yW: 6040,
   }),
-  cameraAnchors: Object.freeze([
-    Object.freeze({
-      id: "orb_stage_preview_frame",
-      xW: 500,
-      yW: 1000,
+  mapSource: Object.freeze({
+    kind: "svg_map_template",
+    assetUrl: ORB_STAGE_MAP_ASSET_URL,
+    authoringViewBox: Object.freeze({
+      x: 0,
+      y: 0,
+      width: 2048,
+      height: 2048,
     }),
-  ]),
-  terrainProfile: ORB_STAGE_LEVEL_TERRAIN_PROFILE,
+    scale: Object.freeze({
+      worldWidthPx: 8192,
+      worldHeightPx: 8192,
+      boundaryTileSizePx: 128,
+    }),
+    semanticLayers: Object.freeze({
+      boundary: Object.freeze(["bounds"]),
+      spawn: Object.freeze(["spawn"]),
+      camera: Object.freeze(["camera_01"]),
+    }),
+    spawnMarker: Object.freeze({
+      id: "path2-9",
+    }),
+  }),
   elements: Object.freeze({
     boundaries: ORB_STAGE_LEVEL_BOUNDARIES,
     worldItemSpawns: ORB_STAGE_LEVEL_WORLD_ITEM_SPAWNS,
