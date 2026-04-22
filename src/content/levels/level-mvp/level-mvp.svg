@@ -23,15 +23,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="3.6203867"
-     inkscape:cx="629.90508"
-     inkscape:cy="1841.516"
+     inkscape:zoom="1.28"
+     inkscape:cx="1131.6406"
+     inkscape:cy="1275.7813"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="0"
      inkscape:window-y="34"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer3"
      showgrid="true">
     <inkscape:grid
        id="grid1"
@@ -74,12 +74,14 @@
   <g
      inkscape:groupmode="layer"
      id="layer3"
-     inkscape:label="camera">
-    <circle
-       style="fill:#00c8ff;fill-opacity:0.35;stroke:#00c8ff;stroke-width:4;stroke-opacity:1"
-       id="level_mvp_preview_frame"
-       cx="1024"
-       cy="1024"
-       r="24" />
+     inkscape:label="camera_01">
+    <rect
+       style="fill:#000000;stroke-width:0.386292"
+       id="rect2"
+       width="10"
+       height="10"
+       x="1881.5609"
+       y="41.669056"
+       transform="rotate(45)" />
   </g>
 </svg>

@@ -46,7 +46,7 @@ export const LEVEL_MVP = Object.freeze({
     initialTarget: "spawn",
     deadzoneWidthPx: 240,
     deadzoneHeightPx: 160,
-    fixedFrameAnchorId: "level_mvp_preview_frame",
+    fixedFrameAnchorId: "rect2",
     fixedFrameCenterXW: null,
     fixedFrameCenterYW: null,
   }),
@@ -71,7 +71,7 @@ export const LEVEL_MVP = Object.freeze({
     semanticLayers: Object.freeze({
       boundary: Object.freeze(["bounds"]),
       spawn: Object.freeze(["spawn"]),
-      camera: Object.freeze(["camera"]),
+      camera: Object.freeze(["camera_01"]),
     }),
     spawnMarker: Object.freeze({
       id: "path2-9",

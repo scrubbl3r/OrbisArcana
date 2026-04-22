@@ -54,6 +54,24 @@ export function parseSvgCircleElements(svgText = "") {
   return Object.freeze(circles);
 }
 
+export function parseSvgRectElements(svgText = "") {
+  const matches = String(svgText || "").matchAll(/<rect\b([^>]*)\/?>/gi);
+  const rects = [];
+  for (const match of matches) {
+    const attrs = String(match && match[1] || "");
+    rects.push(Object.freeze({
+      id: readAttr(attrs, "id"),
+      x: clampNumber(readAttr(attrs, "x"), 0),
+      y: clampNumber(readAttr(attrs, "y"), 0),
+      width: clampNumber(readAttr(attrs, "width"), 0),
+      height: clampNumber(readAttr(attrs, "height"), 0),
+      transform: readAttr(attrs, "transform"),
+      style: readAttr(attrs, "style"),
+    }));
+  }
+  return Object.freeze(rects);
+}
+
 export function parseSvgLayerElements(svgText = "") {
   const matches = String(svgText || "").matchAll(/<g\b([^>]*)>([\s\S]*?)<\/g>/gi);
   const layers = [];
@@ -67,6 +85,7 @@ export function parseSvgLayerElements(svgText = "") {
       body,
       paths: parseSvgPathElements(body),
       circles: parseSvgCircleElements(body),
+      rects: parseSvgRectElements(body),
     }));
   }
   return Object.freeze(layers);
@@ -280,26 +299,54 @@ export function buildSvgCameraAnchors({
   const allowedLabels = new Set(
     (Array.isArray(cameraLayerLabels) ? cameraLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
-  let circles = parseSvgCircleElements(svgText);
-  if (allowedLabels.size) {
-    circles = authoredLayers
-      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
-      .flatMap((layer) => Array.isArray(layer.circles) ? layer.circles : []);
-  }
-  return Object.freeze(circles.map((circle, index) => {
-    const authoredCenter = Object.freeze({
+  let anchors = parseSvgCircleElements(svgText).map((circle) => Object.freeze({
+    id: String(circle && circle.id || "").trim(),
+    authoredCenter: Object.freeze({
       x: clampNumber(circle && circle.cx, 0),
       y: clampNumber(circle && circle.cy, 0),
-    });
+    }),
+    authoredRadius: clampNumber(circle && circle.r, 0),
+  }));
+  if (allowedLabels.size) {
+    anchors = authoredLayers
+      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
+      .flatMap((layer) => {
+        const circles = Array.isArray(layer.circles) ? layer.circles : [];
+        const rects = Array.isArray(layer.rects) ? layer.rects : [];
+        return [
+          ...circles.map((circle) => Object.freeze({
+            id: String(circle && circle.id || "").trim(),
+            authoredCenter: Object.freeze({
+              x: clampNumber(circle && circle.cx, 0),
+              y: clampNumber(circle && circle.cy, 0),
+            }),
+            authoredRadius: clampNumber(circle && circle.r, 0),
+          })),
+          ...rects.map((rect) => Object.freeze({
+            id: String(rect && rect.id || "").trim(),
+            authoredCenter: Object.freeze({
+              x: clampNumber(rect && rect.x, 0) + (clampNumber(rect && rect.width, 0) * 0.5),
+              y: clampNumber(rect && rect.y, 0) + (clampNumber(rect && rect.height, 0) * 0.5),
+            }),
+            authoredRadius: Math.max(
+              clampNumber(rect && rect.width, 0),
+              clampNumber(rect && rect.height, 0)
+            ) * 0.5,
+          })),
+        ];
+      });
+  }
+  return Object.freeze(anchors.map((anchor, index) => {
+    const authoredCenter = anchor && anchor.authoredCenter ? anchor.authoredCenter : Object.freeze({ x: 0, y: 0 });
     return Object.freeze({
-      id: String(circle && circle.id || `camera_anchor_${index + 1}`),
+      id: String(anchor && anchor.id || `camera_anchor_${index + 1}`),
       authoredCenter,
       worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
         viewBox,
         worldWidthPx,
         worldHeightPx,
       }),
-      authoredRadius: clampNumber(circle && circle.r, 0),
+      authoredRadius: clampNumber(anchor && anchor.authoredRadius, 0),
     });
   }));
 }
