@@ -269,6 +269,41 @@ export function buildSvgSpawnMarkers({
   }));
 }
 
+export function buildSvgCameraAnchors({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  cameraLayerLabels = [],
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(cameraLayerLabels) ? cameraLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  let circles = parseSvgCircleElements(svgText);
+  if (allowedLabels.size) {
+    circles = authoredLayers
+      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
+      .flatMap((layer) => Array.isArray(layer.circles) ? layer.circles : []);
+  }
+  return Object.freeze(circles.map((circle, index) => {
+    const authoredCenter = Object.freeze({
+      x: clampNumber(circle && circle.cx, 0),
+      y: clampNumber(circle && circle.cy, 0),
+    });
+    return Object.freeze({
+      id: String(circle && circle.id || `camera_anchor_${index + 1}`),
+      authoredCenter,
+      worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
+        viewBox,
+        worldWidthPx,
+        worldHeightPx,
+      }),
+      authoredRadius: clampNumber(circle && circle.r, 0),
+    });
+  }));
+}
+
 export function buildBoundaryTileMask({
   loops = [],
   worldWidthPx = 0,
@@ -318,6 +353,7 @@ export function summarizeSvgLevelSource({
   boundaryPathIds = [],
   boundaryLayerLabels = [],
   spawnLayerLabels = [],
+  cameraLayerLabels = [],
   spawnMarkerId = "",
   tileSizePx = 128,
 } = {}) {
@@ -336,6 +372,12 @@ export function summarizeSvgLevelSource({
     spawnLayerLabels,
     spawnMarkerId,
   });
+  const cameraAnchors = buildSvgCameraAnchors({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    cameraLayerLabels,
+  });
   const boundaryTileMask = buildBoundaryTileMask({
     loops,
     worldWidthPx,
@@ -347,6 +389,7 @@ export function summarizeSvgLevelSource({
     loopCount: loops.length,
     loops,
     spawnMarkers: Object.freeze(spawnMarkers),
+    cameraAnchors: Object.freeze(cameraAnchors),
     boundaryTileMask,
   });
 }

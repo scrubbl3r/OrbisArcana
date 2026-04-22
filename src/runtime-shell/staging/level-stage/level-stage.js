@@ -1,6 +1,9 @@
 import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
 import { resolveCameraFrame } from "../../../game-runtime/camera/camera-runtime.js";
-import { resolveLevelSpawnPoint } from "../../../game-runtime/level/resolve-level-spawn-point.js";
+import {
+  resolveLevelCameraAnchor,
+  resolveLevelSpawnPoint,
+} from "../../../game-runtime/level/resolve-level-spawn-point.js";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
@@ -118,17 +121,34 @@ function resolvePreviewFollowMode(level = null) {
   return String(camera && camera.previewFollowMode || "follow_target_center").trim();
 }
 
-function resolvePreviewCameraConfig(level = null) {
+function resolvePreviewCameraConfig(level = null, {
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  cameraAnchors = [],
+} = {}) {
   const camera = level && typeof level.camera === "object" ? level.camera : null;
+  const fixedFrameAnchor = resolveLevelCameraAnchor(level, camera && camera.fixedFrameAnchorId, {
+    worldWidthPx,
+    groundCenterWorld: () => Math.max(0, worldHeightPx) * 0.5,
+    svgAnchors: cameraAnchors,
+  });
   return Object.freeze({
     deadzoneWidthPx: Math.max(0, clampNumber(camera && camera.deadzoneWidthPx, 0)),
     deadzoneHeightPx: Math.max(0, clampNumber(camera && camera.deadzoneHeightPx, 0)),
-    fixedFrameCenterXW: Number.isFinite(Number(camera && camera.fixedFrameCenterXW))
-      ? Number(camera.fixedFrameCenterXW)
-      : null,
-    fixedFrameCenterYW: Number.isFinite(Number(camera && camera.fixedFrameCenterYW))
-      ? Number(camera.fixedFrameCenterYW)
-      : null,
+    fixedFrameCenterXW: fixedFrameAnchor && fixedFrameAnchor.point
+      ? fixedFrameAnchor.point.xW
+      : (
+          camera && camera.fixedFrameCenterXW != null && Number.isFinite(Number(camera.fixedFrameCenterXW))
+            ? Number(camera.fixedFrameCenterXW)
+            : null
+        ),
+    fixedFrameCenterYW: fixedFrameAnchor && fixedFrameAnchor.point
+      ? fixedFrameAnchor.point.yW
+      : (
+          camera && camera.fixedFrameCenterYW != null && Number.isFinite(Number(camera.fixedFrameCenterYW))
+            ? Number(camera.fixedFrameCenterYW)
+            : null
+        ),
   });
 }
 
@@ -137,13 +157,29 @@ function updateLevelCamera(refs, state) {
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
     ? refs.physStage.getBoundingClientRect()
     : { width: 0, height: 0 };
+  const cameraConfig = resolvePreviewCameraConfig(state.level, {
+    worldWidthPx: state.worldWidthPx,
+    worldHeightPx: state.worldHeightPx,
+    cameraAnchors: state.cameraAnchors,
+  });
   const spawn = state.spawn && state.spawn.worldCenter ? state.spawn.worldCenter : null;
+  const anchorTarget = state.initialTarget.startsWith("anchor:")
+    ? resolveLevelCameraAnchor(state.level, state.initialTarget.slice("anchor:".length), {
+        worldWidthPx: state.worldWidthPx,
+        groundCenterWorld: () => state.worldHeightPx * 0.5,
+        svgAnchors: state.cameraAnchors,
+      })
+    : null;
   const target = state.initialTarget === "spawn" && spawn
     ? spawn
-    : {
-        xW: state.worldWidthPx * 0.5,
-        yW: state.worldHeightPx * 0.5,
-      };
+    : (
+        anchorTarget && anchorTarget.point
+          ? anchorTarget.point
+          : {
+              xW: state.worldWidthPx * 0.5,
+              yW: state.worldHeightPx * 0.5,
+            }
+      );
   const frame = resolveCameraFrame({
     targetXW: clampNumber(target.xW, 0),
     targetYW: clampNumber(target.yW, 0),
@@ -153,10 +189,10 @@ function updateLevelCamera(refs, state) {
     worldHeightPx: state.worldHeightPx,
     zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
     followMode: state.previewFollowMode,
-    fixedFrameCenterXW: state.cameraConfig.fixedFrameCenterXW,
-    fixedFrameCenterYW: state.cameraConfig.fixedFrameCenterYW,
-    deadzoneWidthPx: state.cameraConfig.deadzoneWidthPx,
-    deadzoneHeightPx: state.cameraConfig.deadzoneHeightPx,
+    fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+    fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+    deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+    deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
   });
   const translateX = -frame.camLeft * frame.zoom;
   const translateY = -frame.camTop * frame.zoom;
@@ -189,10 +225,12 @@ async function hydrateSvgLevelPreview(refs, state, level) {
       worldHeightPx: state.worldHeightPx,
       boundaryLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.boundary,
       spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
+      cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
       spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
       tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
     });
     state.summary = summary;
+    state.cameraAnchors = Array.isArray(summary.cameraAnchors) ? summary.cameraAnchors : [];
     state.spawn = Array.isArray(summary.spawnMarkers) && summary.spawnMarkers.length
       ? summary.spawnMarkers[0]
       : (() => {
@@ -250,7 +288,6 @@ export function renderLevelStage(root, { level = null } = {}) {
   const worldSize = resolveLevelWorldSize(level, mapSource);
   const previewZoom = resolvePreviewZoom(level);
   const previewFollowMode = resolvePreviewFollowMode(level);
-  const cameraConfig = resolvePreviewCameraConfig(level);
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
@@ -286,7 +323,8 @@ export function renderLevelStage(root, { level = null } = {}) {
     previewZoom,
     previewFollowMode,
     initialTarget: String(level && level.camera && level.camera.initialTarget || "spawn").trim().toLowerCase(),
-    cameraConfig,
+    level,
+    cameraAnchors: [],
     spawn: null,
     summary: null,
   };

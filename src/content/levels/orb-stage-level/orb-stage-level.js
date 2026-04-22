@@ -50,13 +50,14 @@ export const ORB_STAGE_LEVEL = Object.freeze({
   camera: Object.freeze({
     previewZoom: 1,
     gameplayZoom: 1,
-    previewFollowMode: "follow_target_center",
+    previewFollowMode: "fixed_frame",
     gameplayFollowMode: "follow_target_soft",
     initialTarget: "spawn",
     deadzoneWidthPx: 180,
     deadzoneHeightPx: 120,
-    fixedFrameCenterXW: 500,
-    fixedFrameCenterYW: 1000,
+    fixedFrameAnchorId: "orb_stage_preview_frame",
+    fixedFrameCenterXW: null,
+    fixedFrameCenterYW: null,
   }),
   world: Object.freeze({
     widthPx: 1000,
@@ -67,6 +68,13 @@ export const ORB_STAGE_LEVEL = Object.freeze({
     yMode: "ground_center_offset",
     yValue: 0,
   }),
+  cameraAnchors: Object.freeze([
+    Object.freeze({
+      id: "orb_stage_preview_frame",
+      xW: 500,
+      yW: 1000,
+    }),
+  ]),
   terrainProfile: ORB_STAGE_LEVEL_TERRAIN_PROFILE,
   elements: Object.freeze({
     boundaries: ORB_STAGE_LEVEL_BOUNDARIES,

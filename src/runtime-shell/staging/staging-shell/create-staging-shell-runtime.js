@@ -34,7 +34,10 @@ import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
-import { resolveLevelSpawnPoint } from "../../../game-runtime/level/resolve-level-spawn-point.js";
+import {
+  resolveLevelCameraAnchor,
+  resolveLevelSpawnPoint,
+} from "../../../game-runtime/level/resolve-level-spawn-point.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -375,13 +378,29 @@ function shellGameplayCameraConfig(shellContext) {
   const camera = shellContext && shellContext.currentLevel && shellContext.currentLevel.camera
     ? shellContext.currentLevel.camera
     : null;
+  const fixedFrameAnchor = resolveLevelCameraAnchor(
+    shellContext && shellContext.currentLevel ? shellContext.currentLevel : null,
+    camera && camera.fixedFrameAnchorId,
+    {
+      worldWidthPx: shellWorldWidth(shellContext),
+      groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+    }
+  );
   return Object.freeze({
-    fixedFrameCenterXW: Number.isFinite(Number(camera && camera.fixedFrameCenterXW))
-      ? Number(camera.fixedFrameCenterXW)
-      : null,
-    fixedFrameCenterYW: Number.isFinite(Number(camera && camera.fixedFrameCenterYW))
-      ? Number(camera.fixedFrameCenterYW)
-      : null,
+    fixedFrameCenterXW: fixedFrameAnchor && fixedFrameAnchor.point
+      ? fixedFrameAnchor.point.xW
+      : (
+          camera && camera.fixedFrameCenterXW != null && Number.isFinite(Number(camera.fixedFrameCenterXW))
+            ? Number(camera.fixedFrameCenterXW)
+            : null
+        ),
+    fixedFrameCenterYW: fixedFrameAnchor && fixedFrameAnchor.point
+      ? fixedFrameAnchor.point.yW
+      : (
+          camera && camera.fixedFrameCenterYW != null && Number.isFinite(Number(camera.fixedFrameCenterYW))
+            ? Number(camera.fixedFrameCenterYW)
+            : null
+        ),
     deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : 0,
     deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : 0,
   });
@@ -400,7 +419,18 @@ function shellGameplayCameraTarget(shellContext, orbState = null) {
     : null;
   const initialTarget = String(camera && camera.initialTarget || "spawn").trim().toLowerCase();
   const spawnPoint = shellResolvedSpawnPoint(shellContext);
+  const anchorTarget = initialTarget.startsWith("anchor:")
+    ? resolveLevelCameraAnchor(
+        shellContext && shellContext.currentLevel ? shellContext.currentLevel : null,
+        initialTarget.slice("anchor:".length),
+        {
+          worldWidthPx: shellWorldWidth(shellContext),
+          groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+        }
+      )
+    : null;
   if (initialTarget === "spawn" && spawnPoint) return spawnPoint;
+  if (anchorTarget && anchorTarget.point) return anchorTarget.point;
   if (initialTarget === "orb" && orbState) {
     return {
       xW: Number(orbState.xW) || shellStageCenterX(shellContext),

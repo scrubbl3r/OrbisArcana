@@ -7,6 +7,12 @@ function cloneJsonLike(value, fallback = {}) {
   }
 }
 
+function normalizeOptionalNumber(value) {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function normalizeLevelMapSource(mapSource = {}, world = {}) {
   return Object.freeze({
     kind: String(mapSource.kind || "").trim(),
@@ -39,6 +45,11 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
           ? mapSource.semanticLayers.spawn.slice()
           : []
       ),
+      camera: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.camera)
+          ? mapSource.semanticLayers.camera.slice()
+          : []
+      ),
     }),
     spawnMarker: Object.freeze({
       id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),
@@ -57,8 +68,9 @@ function normalizeLevelCamera(camera = {}, stage = {}) {
     initialTarget: String(camera.initialTarget || "spawn").trim(),
     deadzoneWidthPx: Number(camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : 0,
     deadzoneHeightPx: Number(camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : 0,
-    fixedFrameCenterXW: Number.isFinite(Number(camera.fixedFrameCenterXW)) ? Number(camera.fixedFrameCenterXW) : null,
-    fixedFrameCenterYW: Number.isFinite(Number(camera.fixedFrameCenterYW)) ? Number(camera.fixedFrameCenterYW) : null,
+    fixedFrameAnchorId: String(camera.fixedFrameAnchorId || "").trim(),
+    fixedFrameCenterXW: normalizeOptionalNumber(camera.fixedFrameCenterXW),
+    fixedFrameCenterYW: normalizeOptionalNumber(camera.fixedFrameCenterYW),
   });
 }
 
@@ -68,6 +80,7 @@ export function normalizeLevelDefinition(level = {}) {
   const stage = cloneJsonLike(source.stage, {});
   const camera = cloneJsonLike(source.camera, {});
   const spawn = cloneJsonLike(source.spawn, {});
+  const cameraAnchors = Array.isArray(source.cameraAnchors) ? source.cameraAnchors.slice() : [];
   const mapSource = cloneJsonLike(source.mapSource, {});
   const sourceElements = cloneJsonLike(source.elements, {});
   const terrainProfile = Array.isArray(source.terrainProfile) ? source.terrainProfile.slice() : [];
@@ -91,12 +104,20 @@ export function normalizeLevelDefinition(level = {}) {
       heightPx: Number(world.heightPx) > 0 ? Number(world.heightPx) : 2000,
     }),
     spawn: Object.freeze({
-      xW: Number.isFinite(Number(spawn.xW)) ? Number(spawn.xW) : null,
-      xNorm: Number.isFinite(Number(spawn.xNorm)) ? Number(spawn.xNorm) : null,
-      yW: Number.isFinite(Number(spawn.yW)) ? Number(spawn.yW) : null,
+      xW: normalizeOptionalNumber(spawn.xW),
+      xNorm: normalizeOptionalNumber(spawn.xNorm),
+      yW: normalizeOptionalNumber(spawn.yW),
       yMode: String(spawn.yMode || "absolute").trim(),
-      yValue: Number.isFinite(Number(spawn.yValue)) ? Number(spawn.yValue) : null,
+      yValue: normalizeOptionalNumber(spawn.yValue),
     }),
+    cameraAnchors: Object.freeze(cameraAnchors.map((anchor = {}) => Object.freeze({
+      id: String(anchor.id || "").trim(),
+      xW: normalizeOptionalNumber(anchor.xW),
+      xNorm: normalizeOptionalNumber(anchor.xNorm),
+      yW: normalizeOptionalNumber(anchor.yW),
+      yMode: String(anchor.yMode || "absolute").trim(),
+      yValue: normalizeOptionalNumber(anchor.yValue),
+    }))),
     mapSource: normalizeLevelMapSource(mapSource, world),
     terrain: Object.freeze({
       profile: Object.freeze(terrainProfile),

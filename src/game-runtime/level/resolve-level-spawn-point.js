@@ -3,33 +3,33 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-export function resolveLevelSpawnPoint(
-  level = null,
+export function resolveLevelPointSpec(
+  pointSpec = null,
   {
     worldWidthPx = 0,
     groundCenterWorld = () => 0,
   } = {}
 ) {
-  const spawn = level && typeof level.spawn === "object" ? level.spawn : null;
-  if (!spawn) return null;
+  const point = pointSpec && typeof pointSpec === "object" ? pointSpec : null;
+  if (!point) return null;
 
-  const xW = Number.isFinite(Number(spawn.xW))
-    ? Number(spawn.xW)
+  const xW = Number.isFinite(Number(point.xW))
+    ? Number(point.xW)
     : (
-        Number.isFinite(Number(spawn.xNorm))
-          ? (Math.max(0, clampNumber(spawn.xNorm, 0)) * Math.max(0, clampNumber(worldWidthPx, 0)))
+        Number.isFinite(Number(point.xNorm))
+          ? (Math.max(0, clampNumber(point.xNorm, 0)) * Math.max(0, clampNumber(worldWidthPx, 0)))
           : null
       );
 
-  const yMode = String(spawn.yMode || "absolute").trim().toLowerCase();
+  const yMode = String(point.yMode || "absolute").trim().toLowerCase();
   let yW = null;
 
-  if (Number.isFinite(Number(spawn.yW))) {
-    yW = Number(spawn.yW);
+  if (Number.isFinite(Number(point.yW))) {
+    yW = Number(point.yW);
   } else if (yMode === "ground_center_offset") {
-    yW = Number(groundCenterWorld()) + clampNumber(spawn.yValue, 0);
-  } else if (Number.isFinite(Number(spawn.yValue))) {
-    yW = Number(spawn.yValue);
+    yW = Number(groundCenterWorld()) + clampNumber(point.yValue, 0);
+  } else if (Number.isFinite(Number(point.yValue))) {
+    yW = Number(point.yValue);
   }
 
   if (!Number.isFinite(xW) || !Number.isFinite(yW)) return null;
@@ -37,5 +37,51 @@ export function resolveLevelSpawnPoint(
   return Object.freeze({
     xW: Number(xW),
     yW: Number(yW),
+  });
+}
+
+export function resolveLevelSpawnPoint(level = null, options = {}) {
+  const spawn = level && typeof level.spawn === "object" ? level.spawn : null;
+  return resolveLevelPointSpec(spawn, options);
+}
+
+export function resolveLevelCameraAnchor(
+  level = null,
+  anchorId = "",
+  {
+    worldWidthPx = 0,
+    groundCenterWorld = () => 0,
+    svgAnchors = [],
+  } = {}
+) {
+  const normalizedAnchorId = String(anchorId || "").trim();
+  if (!normalizedAnchorId) return null;
+
+  const svgAnchor = Array.isArray(svgAnchors)
+    ? svgAnchors.find((anchor) => String(anchor && anchor.id || "").trim() === normalizedAnchorId)
+    : null;
+  if (svgAnchor && svgAnchor.worldCenter) {
+    return Object.freeze({
+      id: normalizedAnchorId,
+      point: Object.freeze({
+        xW: clampNumber(svgAnchor.worldCenter.xW, 0),
+        yW: clampNumber(svgAnchor.worldCenter.yW, 0),
+      }),
+      source: "svg",
+    });
+  }
+
+  const authoredAnchors = Array.isArray(level && level.cameraAnchors) ? level.cameraAnchors : [];
+  const authoredAnchor = authoredAnchors.find((anchor) => String(anchor && anchor.id || "").trim() === normalizedAnchorId);
+  const point = resolveLevelPointSpec(authoredAnchor, {
+    worldWidthPx,
+    groundCenterWorld,
+  });
+  if (!point) return null;
+
+  return Object.freeze({
+    id: normalizedAnchorId,
+    point,
+    source: "content",
   });
 }
