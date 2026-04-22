@@ -44,7 +44,8 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   bootFailed: "boot-failed",
 });
 
-const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || LEVELS_BY_ID.level01 || null);
+const DEFAULT_ORB_STAGE_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || LEVELS_BY_ID.level01 || null);
+const DEFAULT_LEVEL_OVERLAY = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || LEVELS_BY_ID.level01 || null);
 
 function safeSetText(el, value) {
   if (!el) return;
@@ -2439,10 +2440,10 @@ export async function createStagingShellRuntime({
     });
   }
 
-  const currentLevel = DEFAULT_LEVEL;
+  const currentLevel = DEFAULT_ORB_STAGE_LEVEL;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: currentLevel }) : null;
-  const levelOverlayView = levelRoot ? renderLevelStage(levelRoot, { level: currentLevel }) : null;
+  const levelOverlayView = levelRoot ? renderLevelStage(levelRoot, { level: DEFAULT_LEVEL_OVERLAY }) : null;
 
   if (devStagingView && devStagingView.refs) {
     safeSetText(devStagingView.refs.rulesReadout, "boot:staging-shell");
