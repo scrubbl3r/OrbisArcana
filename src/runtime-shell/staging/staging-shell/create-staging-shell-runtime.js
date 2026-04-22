@@ -734,6 +734,7 @@ function activateShellStageVisuals(shellContext) {
   updateShellStageReadouts(shellContext);
   drawShellStars(shellContext);
   drawShellBackdrop(shellContext);
+  traceShellBootSnapshot(shellContext, "activate");
 }
 
 function tickShellStageRuntime(shellContext, dt) {
@@ -1029,6 +1030,33 @@ function pushShellGeneralLog(shellContext, text = "", kind = "") {
   }
 }
 
+function traceShellBootSnapshot(shellContext, label = "trace") {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!runtime) return;
+  const traceState = runtime.debugTrace || (runtime.debugTrace = {
+    lastLine: "",
+    lastAtMs: 0,
+  });
+  const nowMs = performance.now();
+  const spawnPoint = shellResolvedSpawnPoint(shellContext);
+  const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  const frame = runtime.frameMetrics || null;
+  const line = [
+    label,
+    `level=${String(shellContext && shellContext.currentLevel && shellContext.currentLevel.id || "")}`,
+    `spawn=${spawnPoint ? `${Math.round(spawnPoint.xW)},${Math.round(spawnPoint.yW)}` : "none"}`,
+    `orbW=${orbState ? `${Math.round(Number(orbState.xW) || 0)},${Math.round(Number(orbState.yW) || 0)}` : "none"}`,
+    `orbS=${frame ? `${Math.round(Number(frame.orbScreenX) || 0)},${Math.round(Number(frame.orbScreenY) || 0)}` : "none"}`,
+    `camTop=${frame ? Math.round(Number(frame.camTop) || 0) : "none"}`,
+  ].join(" | ");
+  if (line === traceState.lastLine && (nowMs - Number(traceState.lastAtMs || 0)) < 250) return;
+  traceState.lastLine = line;
+  traceState.lastAtMs = nowMs;
+  pushShellGeneralLog(shellContext, line, "muted");
+}
+
 function startShellStageLoop(shellContext) {
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -1056,6 +1084,7 @@ function startShellStageLoop(shellContext) {
     clamp,
     runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
       updateShellFrameMetrics(shellContext, nowMs);
+      traceShellBootSnapshot(shellContext, "frame");
       const receiverHostRuntime = runtime.receiverHostRuntime || null;
       const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || runtime.mvp || null;
       const orbFxSystem =
