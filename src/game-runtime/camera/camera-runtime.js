@@ -11,6 +11,11 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+function toOptionalFiniteNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function resolveDeadzonePx(explicitPx, ratio, viewportPx) {
   const directPx = toFiniteNumber(explicitPx, -1);
   if (directPx >= 0) return directPx;
@@ -27,8 +32,8 @@ export function resolveCameraFrame({
   worldHeightPx = 0,
   zoom = 1,
   followMode = "follow_target_center",
-  camLeft = 0,
-  camTop = 0,
+  camLeft = null,
+  camTop = null,
   fixedFrameCenterXW = null,
   fixedFrameCenterYW = null,
   deadzoneWidthPx = 0,
@@ -61,8 +66,8 @@ export function resolveCameraFrame({
   const hasCurrentCamLeft = camLeft != null && Number.isFinite(Number(camLeft));
   const hasCurrentCamTop = camTop != null && Number.isFinite(Number(camTop));
 
-  let resolvedCamLeft = clamp(camLeft, 0, maxCamLeft);
-  let resolvedCamTop = clamp(camTop, 0, maxCamTop);
+  let resolvedCamLeft = clamp(toOptionalFiniteNumber(camLeft), 0, maxCamLeft);
+  let resolvedCamTop = clamp(toOptionalFiniteNumber(camTop), 0, maxCamTop);
   if (safeFollowMode === "fixed_frame") {
     resolvedCamLeft = clamp(safeFixedFrameCenterXW - (viewportWorldWidth * 0.5), 0, maxCamLeft);
     resolvedCamTop = clamp(safeFixedFrameCenterYW - (viewportWorldHeight * 0.5), 0, maxCamTop);
@@ -199,8 +204,8 @@ export function createCameraRuntime({
     worldHeightPx = 0,
     zoom = 1,
     followMode = "follow_target_center",
-    camLeft = 0,
-    camTop = 0,
+    camLeft = null,
+    camTop = null,
     fixedFrameCenterXW = null,
     fixedFrameCenterYW = null,
     deadzoneWidthPx = 0,

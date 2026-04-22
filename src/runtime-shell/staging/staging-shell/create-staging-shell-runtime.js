@@ -288,6 +288,7 @@ function initializeShellStageRuntime(shellContext) {
   initialState.xW = spawnPoint ? spawnPoint.xW : shellStageCenterX(shellContext);
   if (spawnPoint) {
     initialState.yW = spawnPoint.yW;
+    initialState.onGround = false;
     initialState.floatGraceAnchorY = spawnPoint.yW;
     initialState.teleportHoldAnchorY = spawnPoint.yW;
   }
