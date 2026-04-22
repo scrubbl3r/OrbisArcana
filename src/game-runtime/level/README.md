@@ -2,6 +2,7 @@ Level runtime owns the execution side of authored levels.
 
 This domain should grow to contain:
 - level definition normalization
+- authored asset import/parsing
 - level runtime state and lifecycle
 - element instantiation/update/query logic
 - boundary/collision processing

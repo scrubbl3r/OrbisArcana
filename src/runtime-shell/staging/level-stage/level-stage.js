@@ -105,6 +105,8 @@ function buildBoundaryMarkup(boundaries = []) {
 
 export function renderLevelStage(root, { level = null } = {}) {
   if (!root) return null;
+  const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : {};
+  const mapAssetUrl = String(mapSource.assetUrl || "").trim();
   const terrainProfile = Array.isArray(level && level.terrain && level.terrain.profile)
     ? level.terrain.profile
     : (Array.isArray(level && level.terrainProfile) ? level.terrainProfile : []);
@@ -117,6 +119,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
         <div class="levelStageStars" aria-hidden="true"></div>
+        ${mapAssetUrl ? `<img class="levelStageMapTemplate" src="${mapAssetUrl}" alt="" aria-hidden="true" />` : ""}
         <svg id="levelStageTerrain" class="levelStageTerrain" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="levelStageBoundaries" class="levelStageBoundaries" aria-hidden="true">${boundaryMarkup}</div>
         <div class="levelStageLabel">Level Stage</div>
@@ -126,6 +129,7 @@ export function renderLevelStage(root, { level = null } = {}) {
   const refs = {
     root,
     physStage: root.querySelector(".levelStageViewport"),
+    mapTemplate: root.querySelector(".levelStageMapTemplate"),
     terrain: root.querySelector("#levelStageTerrain"),
     groundLine: root.querySelector(".levelStageBoundaryGroundPlane"),
     boundaries: root.querySelector("#levelStageBoundaries"),

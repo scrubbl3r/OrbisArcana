@@ -38,6 +38,18 @@
   z-index: 1;
 }
 
+.levelStageMapTemplate {
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+  object-fit: contain;
+  opacity: 0.22;
+  filter: invert(1) sepia(0.3) saturate(0.7) hue-rotate(155deg);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .levelStageTerrainFill {
   fill: url(#levelStageTerrainGradient);
 }

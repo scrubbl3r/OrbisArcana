@@ -44,7 +44,7 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   bootFailed: "boot-failed",
 });
 
-const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID.level01 || null);
+const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || LEVELS_BY_ID.level01 || null);
 
 function safeSetText(el, value) {
   if (!el) return;
