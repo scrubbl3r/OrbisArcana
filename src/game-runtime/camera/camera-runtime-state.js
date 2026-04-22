@@ -1,6 +1,7 @@
 export function createCameraRuntimeState() {
   const state = {
     activeTravel: null,
+    lastResolvedFrame: null,
   };
 
   function get() {
@@ -9,6 +10,7 @@ export function createCameraRuntimeState() {
 
   function reset() {
     state.activeTravel = null;
+    state.lastResolvedFrame = null;
     return state;
   }
 

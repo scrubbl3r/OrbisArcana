@@ -1,4 +1,5 @@
 import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
+import { resolveCameraFrame } from "../../../game-runtime/camera/camera-runtime.js";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
@@ -110,25 +111,32 @@ function updateLevelCamera(refs, state) {
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
     ? refs.physStage.getBoundingClientRect()
     : { width: 0, height: 0 };
-  const viewportWidth = Math.max(1, clampNumber(rect.width, 0));
-  const viewportHeight = Math.max(1, clampNumber(rect.height, 0));
-  const zoom = Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM));
   const spawn = state.spawn && state.spawn.worldCenter ? state.spawn.worldCenter : {
     xW: state.worldWidthPx * 0.5,
     yW: state.worldHeightPx * 0.5,
   };
-  const translateX = (viewportWidth * 0.5) - (clampNumber(spawn.xW, 0) * zoom);
-  const translateY = (viewportHeight * 0.5) - (clampNumber(spawn.yW, 0) * zoom);
+  const frame = resolveCameraFrame({
+    targetXW: clampNumber(spawn.xW, 0),
+    targetYW: clampNumber(spawn.yW, 0),
+    viewportWidthPx: Math.max(1, clampNumber(rect.width, 0)),
+    viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
+    worldWidthPx: state.worldWidthPx,
+    worldHeightPx: state.worldHeightPx,
+    zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
+    followMode: "follow_target_center",
+  });
+  const translateX = -frame.camLeft * frame.zoom;
+  const translateY = -frame.camTop * frame.zoom;
   refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
   refs.world.style.setProperty("--level-world-height", `${state.worldHeightPx}px`);
-  refs.world.style.setProperty("--level-world-zoom", `${zoom}`);
+  refs.world.style.setProperty("--level-world-zoom", `${frame.zoom}`);
   refs.world.style.setProperty("--level-world-x", `${translateX}px`);
   refs.world.style.setProperty("--level-world-y", `${translateY}px`);
   if (refs.labelMeta) {
     const authoredSpawn = state.spawn && state.spawn.authoredCenter ? state.spawn.authoredCenter : null;
     refs.labelMeta.textContent = authoredSpawn
-      ? `zoom ${zoom.toFixed(2)} | spawn ${Math.round(authoredSpawn.x)}, ${Math.round(authoredSpawn.y)}`
-      : `zoom ${zoom.toFixed(2)} | spawn unresolved`;
+      ? `zoom ${frame.zoom.toFixed(2)} | spawn ${Math.round(authoredSpawn.x)}, ${Math.round(authoredSpawn.y)}`
+      : `zoom ${frame.zoom.toFixed(2)} | spawn unresolved`;
   }
 }
 

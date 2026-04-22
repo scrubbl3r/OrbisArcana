@@ -325,11 +325,27 @@ function shellStageRect(shellContext) {
 }
 
 function shellWorldHeight(shellContext) {
+  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+  const runtimeWorldHeight = Number(stage && stage.phys && stage.phys.worldHeightPx);
+  if (Number.isFinite(runtimeWorldHeight) && runtimeWorldHeight > 0) return runtimeWorldHeight;
   const levelWorld = shellContext && shellContext.currentLevel && shellContext.currentLevel.world
     ? shellContext.currentLevel.world
     : null;
   const heightPx = Number(levelWorld && levelWorld.heightPx);
   return Number.isFinite(heightPx) && heightPx > 0 ? heightPx : 5000;
+}
+
+function shellWorldWidth(shellContext) {
+  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+  const runtimeWorldWidth = Number(stage && stage.phys && stage.phys.worldWidthPx);
+  if (Number.isFinite(runtimeWorldWidth) && runtimeWorldWidth > 0) return runtimeWorldWidth;
+  const levelWorld = shellContext && shellContext.currentLevel && shellContext.currentLevel.world
+    ? shellContext.currentLevel.world
+    : null;
+  const widthPx = Number(levelWorld && levelWorld.widthPx);
+  if (Number.isFinite(widthPx) && widthPx > 0) return widthPx;
+  const rect = shellStageRect(shellContext);
+  return Math.max(1, Number(rect.width) || 0);
 }
 
 function shellGroundCenterWorld(shellContext) {
@@ -369,15 +385,22 @@ function shellLateralBounds(shellContext) {
 }
 
 function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) {
-  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
-  const WORLD_H = Number(stage && stage.phys && stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
-  const maxCam = Math.max(0, WORLD_H - stageH);
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
-  const effectiveYW = cameraRuntime && typeof cameraRuntime.resolveWorldY === "function"
-    ? cameraRuntime.resolveWorldY({ baselineYW: yW, nowMs })
-    : Number(yW || 0);
-  return clamp((Number.isFinite(effectiveYW) ? effectiveYW : 0) - (stageH * 0.5), 0, maxCam);
+  const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
+    ? cameraRuntime.resolveFrame({
+        targetXW: shellStageCenterX(shellContext),
+        targetYW: yW,
+        viewportWidthPx: shellStageRect(shellContext).width || 0,
+        viewportHeightPx: stageH,
+        worldWidthPx: shellWorldWidth(shellContext),
+        worldHeightPx: shellWorldHeight(shellContext),
+        zoom: 1,
+        followMode: "follow_target_center",
+        nowMs,
+      })
+    : null;
+  return Number(frame && frame.camTop) || 0;
 }
 
 function shellOrbScreenY(shellContext) {
@@ -388,9 +411,21 @@ function shellOrbScreenY(shellContext) {
   const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
     ? runtime.orbRuntimeState.get()
     : null;
+  const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const rect = shellStageRect(shellContext);
-  const camTop = shellCameraTopFor(shellContext, orbState && orbState.yW, rect.height || 0);
-  return Number(orbState && orbState.yW) - camTop;
+  const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
+    ? cameraRuntime.resolveFrame({
+        targetXW: shellStageCenterX(shellContext),
+        targetYW: orbState && orbState.yW,
+        viewportWidthPx: rect.width || 0,
+        viewportHeightPx: rect.height || 0,
+        worldWidthPx: shellWorldWidth(shellContext),
+        worldHeightPx: shellWorldHeight(shellContext),
+        zoom: 1,
+        followMode: "follow_target_center",
+      })
+    : null;
+  return Number(frame && frame.targetScreenY) || 0;
 }
 
 function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
@@ -409,13 +444,28 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
     : null;
   const stage = runtime.stage ? runtime.stage : null;
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
-  const camTop = shellCameraTopFor(shellContext, orbState && orbState.yW, safeRect.height || 0, nowMs);
+  const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
+  const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
+    ? cameraRuntime.resolveFrame({
+        targetXW: Number(orbState && orbState.xW) || shellStageCenterX(shellContext),
+        targetYW: orbState && orbState.yW,
+        viewportWidthPx: safeRect.width || 0,
+        viewportHeightPx: safeRect.height || 0,
+        worldWidthPx: shellWorldWidth(shellContext),
+        worldHeightPx: shellWorldHeight(shellContext),
+        zoom: 1,
+        followMode: "follow_target_center",
+        nowMs,
+      })
+    : null;
+  const camTop = Number(frame && frame.camTop) || 0;
   runtime.frameMetrics = {
     nowMs,
     rect: safeRect,
     centerX: safeRect.width * 0.5,
     camTop,
-    orbScreenY: (Number(orbState && orbState.yW) || 0) - camTop,
+    orbScreenX: Number(frame && frame.targetScreenX) || (safeRect.width * 0.5),
+    orbScreenY: Number(frame && frame.targetScreenY) || ((Number(orbState && orbState.yW) || 0) - camTop),
     lateralBounds: {
       left: orbRadiusPx,
       right: Math.max(orbRadiusPx, safeRect.width - orbRadiusPx),
@@ -445,11 +495,14 @@ function applyShellOrbTransform(shellContext) {
   const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
     ? runtime.orbRuntimeState.get()
     : null;
-  const bounds = shellLateralBounds(shellContext);
-  const xW = clamp(Number(orbState && orbState.xW) || shellStageCenterX(shellContext), bounds.left, bounds.right);
-  const y = shellOrbScreenY(shellContext);
+  const screenX = runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.orbScreenX))
+    ? Number(runtime.frameMetrics.orbScreenX)
+    : shellStageCenterX(shellContext);
+  const y = runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.orbScreenY))
+    ? Number(runtime.frameMetrics.orbScreenY)
+    : shellOrbScreenY(shellContext);
   const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
-  orbStageAdapter.applyOrbTransform({ top, left: xW });
+  orbStageAdapter.applyOrbTransform({ top, left: screenX });
 }
 
 function resetShellOrbToGround(shellContext) {
