@@ -46,7 +46,7 @@ export const LEVEL_MVP = Object.freeze({
     initialTarget: "spawn",
     deadzoneWidthPx: 240,
     deadzoneHeightPx: 160,
-    fixedFrameAnchorId: "rect2",
+    fixedFrameAnchorId: "path3",
     fixedFrameCenterXW: null,
     fixedFrameCenterYW: null,
   }),
