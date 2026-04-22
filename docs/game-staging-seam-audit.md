@@ -56,7 +56,7 @@ And they read as game-stage adapter logic, not shell logic:
 - `drawShellStars`
 - `drawShellBackdrop`
 - `ensureShellStageBackdrop`
-- mountain/terrain profile projection from `LEVEL01`
+- mountain/terrain profile projection from authored level content
 
 These should move toward a `game-staging` backdrop adapter.
 

@@ -41,7 +41,7 @@ Meaning:
 
 These use:
 
-- `energyBank.level01`
+- `energyBank.level01` (legacy naming residue)
 - `energyBank.points`
 
 for:
@@ -77,7 +77,7 @@ Energy is still patched into orb runtime state:
 - `game-receiver.js`
   - classic shadow orb patch also sets `energy01`
 - `src/runtime-shell/receiver/receiver-adapters.js`
-  - physics adapter sets `physState.energy01 = energyBank.level01`
+  - physics adapter sets `physState.energy01 = energyBank.level01` (legacy naming residue)
 
 Important nuance:
 

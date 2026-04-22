@@ -291,7 +291,7 @@ The current flow is roughly:
 
 Relevant current files:
 
-- `src/runtime-shell/staging/game-staging/levels/level01.js`
+- `src/content/levels/orb-stage-level/orb-stage-level.js`
 - `src/content/world-items/default-world-items.js`
 - `src/runtime-shell/staging/bootstrap-staging-runtime-context.js`
 - `src/game-runtime/world/world-system.js`
@@ -351,7 +351,7 @@ The clean architecture should separate world-side ecology from orb-side inventor
 Home:
 
 - `src/content/world-items/`
-- level-specific content such as `src/runtime-shell/staging/game-staging/levels/level01.js` while staging is still the exemplar level host
+- level-specific authored level packages such as `src/content/levels/orb-stage-level/`
 
 Responsibilities:
 
@@ -432,7 +432,7 @@ The first archetype/exemplar globe should prove the full seam without overbuildi
 
 One authored emitter:
 
-- `id: "level01_globe_emitter_01"`
+- `id: "orb_stage_level_globe_emitter_01"`
 - position data
 - `capacity: 1`
 - `regenTrigger: "globe_spent"`
@@ -483,7 +483,7 @@ The first implementation slice established the archetype seam in code.
 
 ### Content
 
-`level01` now authors the exemplar as an emitter:
+`orb-stage-level` now authors the orb-stage exemplar as an emitter:
 
 - `kind: "energy_globe_emitter"`
 - `capacity: 1`
