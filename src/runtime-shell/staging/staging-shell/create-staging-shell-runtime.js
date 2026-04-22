@@ -508,12 +508,11 @@ function shellLateralBounds(shellContext) {
     return runtime.frameMetrics.lateralBounds;
   }
   const stage = runtime && runtime.stage ? runtime.stage : null;
-  const rect = shellStageRect(shellContext);
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
-  const stageWidth = Number(rect.width) || 0;
+  const worldWidth = shellWorldWidth(shellContext);
   return {
     left: orbRadiusPx,
-    right: Math.max(orbRadiusPx, stageWidth - orbRadiusPx),
+    right: Math.max(orbRadiusPx, worldWidth - orbRadiusPx),
   };
 }
 
@@ -635,7 +634,7 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
       : ((Number(orbState && orbState.yW) || 0) - camTop),
     lateralBounds: {
       left: orbRadiusPx,
-      right: Math.max(orbRadiusPx, safeRect.width - orbRadiusPx),
+      right: Math.max(orbRadiusPx, shellWorldWidth(shellContext) - orbRadiusPx),
     },
   };
   return runtime.frameMetrics;
