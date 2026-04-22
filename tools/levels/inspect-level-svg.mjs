@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   summarizeSvgLevelSource,
 } from "../../src/game-runtime/level/svg-level-source.js";
+import { LEVEL_MVP } from "../../src/content/levels/level-mvp/level-mvp.js";
 
 const targetPath = process.argv[2]
   ? path.resolve(process.argv[2])
@@ -16,6 +17,9 @@ const summary = summarizeSvgLevelSource({
   svgText,
   worldWidthPx,
   worldHeightPx,
+  boundaryLayerLabels: LEVEL_MVP.mapSource.semanticLayers.boundary,
+  spawnLayerLabels: LEVEL_MVP.mapSource.semanticLayers.spawn,
+  spawnMarkerId: LEVEL_MVP.mapSource.spawnMarker.id,
   tileSizePx,
 });
 
@@ -35,6 +39,12 @@ console.log(JSON.stringify({
           maxY: Math.max(...loop.worldPoints.map((point) => Number(point.yW) || 0)),
         }
       : null,
+  })),
+  spawnMarkers: summary.spawnMarkers.map((spawn) => ({
+    id: spawn.id,
+    authoredCenter: spawn.authoredCenter,
+    authoredRadius: spawn.authoredRadius,
+    worldCenter: spawn.worldCenter,
   })),
   boundaryTileMask: {
     tileSizePx: summary.boundaryTileMask.tileSizePx,

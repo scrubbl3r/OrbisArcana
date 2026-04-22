@@ -28,7 +28,21 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
         ? Number(mapSource.scale.boundaryTileSizePx)
         : 128,
     }),
-    boundaryPathIds: Object.freeze(Array.isArray(mapSource.boundaryPathIds) ? mapSource.boundaryPathIds.slice() : []),
+    semanticLayers: Object.freeze({
+      boundary: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.boundary)
+          ? mapSource.semanticLayers.boundary.slice()
+          : []
+      ),
+      spawn: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.spawn)
+          ? mapSource.semanticLayers.spawn.slice()
+          : []
+      ),
+    }),
+    spawnMarker: Object.freeze({
+      id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),
+    }),
   });
 }
 

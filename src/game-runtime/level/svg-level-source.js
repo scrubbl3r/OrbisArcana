@@ -38,6 +38,40 @@ export function parseSvgPathElements(svgText = "") {
   return Object.freeze(paths);
 }
 
+export function parseSvgCircleElements(svgText = "") {
+  const matches = String(svgText || "").matchAll(/<circle\b([^>]*)\/?>/gi);
+  const circles = [];
+  for (const match of matches) {
+    const attrs = String(match && match[1] || "");
+    circles.push(Object.freeze({
+      id: readAttr(attrs, "id"),
+      cx: clampNumber(readAttr(attrs, "cx"), 0),
+      cy: clampNumber(readAttr(attrs, "cy"), 0),
+      r: clampNumber(readAttr(attrs, "r"), 0),
+      style: readAttr(attrs, "style"),
+    }));
+  }
+  return Object.freeze(circles);
+}
+
+export function parseSvgLayerElements(svgText = "") {
+  const matches = String(svgText || "").matchAll(/<g\b([^>]*)>([\s\S]*?)<\/g>/gi);
+  const layers = [];
+  for (const match of matches) {
+    const attrs = String(match && match[1] || "");
+    const body = String(match && match[2] || "");
+    if (String(readAttr(attrs, "inkscape:groupmode") || "").trim().toLowerCase() !== "layer") continue;
+    layers.push(Object.freeze({
+      id: readAttr(attrs, "id"),
+      label: readAttr(attrs, "inkscape:label"),
+      body,
+      paths: parseSvgPathElements(body),
+      circles: parseSvgCircleElements(body),
+    }));
+  }
+  return Object.freeze(layers);
+}
+
 function tokenizePathData(pathData = "") {
   const tokens = [];
   const rx = /([a-zA-Z])|(-?(?:\d*\.\d+|\d+)(?:e[-+]?\d+)?)/g;
@@ -161,13 +195,24 @@ export function buildSvgBoundaryLoops({
   worldWidthPx = 0,
   worldHeightPx = 0,
   boundaryPathIds = [],
+  boundaryLayerLabels = [],
 } = {}) {
   const viewBox = parseSvgViewBox(svgText);
   const authoredPaths = parseSvgPathElements(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
   const allowedIds = new Set((Array.isArray(boundaryPathIds) ? boundaryPathIds : []).map((id) => String(id || "")));
-  const selectedPaths = allowedIds.size
-    ? authoredPaths.filter((path) => allowedIds.has(String(path && path.id || "")))
-    : authoredPaths;
+  const allowedLabels = new Set(
+    (Array.isArray(boundaryLayerLabels) ? boundaryLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  let selectedPaths = authoredPaths;
+  if (allowedLabels.size) {
+    selectedPaths = authoredLayers
+      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
+      .flatMap((layer) => Array.isArray(layer.paths) ? layer.paths : []);
+  }
+  if (allowedIds.size) {
+    selectedPaths = selectedPaths.filter((path) => allowedIds.has(String(path && path.id || "")));
+  }
 
   return Object.freeze(selectedPaths.map((path, index) => {
     const authoredPoints = parseSvgPolylinePath(path.d) || [];
@@ -182,6 +227,46 @@ export function buildSvgBoundaryLoops({
       worldPoints: Object.freeze(worldPoints),
     });
   }).filter((loop) => Array.isArray(loop.worldPoints) && loop.worldPoints.length >= 2));
+}
+
+export function buildSvgSpawnMarkers({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  spawnLayerLabels = [],
+  spawnMarkerId = "",
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(spawnLayerLabels) ? spawnLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  let circles = parseSvgCircleElements(svgText);
+  if (allowedLabels.size) {
+    circles = authoredLayers
+      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
+      .flatMap((layer) => Array.isArray(layer.circles) ? layer.circles : []);
+  }
+  const markerId = String(spawnMarkerId || "").trim();
+  if (markerId) {
+    circles = circles.filter((circle) => String(circle && circle.id || "").trim() === markerId);
+  }
+  return Object.freeze(circles.map((circle, index) => {
+    const authoredCenter = Object.freeze({
+      x: clampNumber(circle && circle.cx, 0),
+      y: clampNumber(circle && circle.cy, 0),
+    });
+    return Object.freeze({
+      id: String(circle && circle.id || `spawn_${index + 1}`),
+      authoredCenter,
+      worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
+        viewBox,
+        worldWidthPx,
+        worldHeightPx,
+      }),
+      authoredRadius: clampNumber(circle && circle.r, 0),
+    });
+  }));
 }
 
 export function buildBoundaryTileMask({
@@ -231,6 +316,9 @@ export function summarizeSvgLevelSource({
   worldWidthPx = 0,
   worldHeightPx = 0,
   boundaryPathIds = [],
+  boundaryLayerLabels = [],
+  spawnLayerLabels = [],
+  spawnMarkerId = "",
   tileSizePx = 128,
 } = {}) {
   const viewBox = parseSvgViewBox(svgText);
@@ -239,6 +327,14 @@ export function summarizeSvgLevelSource({
     worldWidthPx,
     worldHeightPx,
     boundaryPathIds,
+    boundaryLayerLabels,
+  });
+  const spawnMarkers = buildSvgSpawnMarkers({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    spawnLayerLabels,
+    spawnMarkerId,
   });
   const boundaryTileMask = buildBoundaryTileMask({
     loops,
@@ -250,6 +346,7 @@ export function summarizeSvgLevelSource({
     viewBox,
     loopCount: loops.length,
     loops,
+    spawnMarkers: Object.freeze(spawnMarkers),
     boundaryTileMask,
   });
 }

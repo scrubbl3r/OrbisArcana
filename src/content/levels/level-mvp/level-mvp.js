@@ -55,9 +55,13 @@ export const LEVEL_MVP = Object.freeze({
       worldHeightPx: 8192,
       boundaryTileSizePx: 128,
     }),
-    boundaryPathIds: Object.freeze([
-      "path1",
-    ]),
+    semanticLayers: Object.freeze({
+      boundary: Object.freeze(["bounds"]),
+      spawn: Object.freeze(["spawn"]),
+    }),
+    spawnMarker: Object.freeze({
+      id: "path2-9",
+    }),
   }),
   elements: Object.freeze({
     boundaries: LEVEL_MVP_BOUNDARIES,
