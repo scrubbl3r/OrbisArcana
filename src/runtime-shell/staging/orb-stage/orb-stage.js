@@ -53,7 +53,7 @@ const ORB_STAGE_TEMPLATE = `
   </section>
 `;
 
-const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || LEVELS_BY_ID.level01 || null);
+const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || LEVELS_BY_ID["level-mvp"] || null);
 
 export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   if (!root) return null;
@@ -66,7 +66,7 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   const worldGlobeVisualState = buildWorldGlobeVisualState(null, {
     orbDiameterPx: orbBaseVisualState.diameterPx,
   });
-  root.dataset.levelId = String(resolvedLevel && resolvedLevel.id || "level01");
+  root.dataset.levelId = String(resolvedLevel && resolvedLevel.id || "orb-stage-level");
   root.style.setProperty("--orb-stage-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
   root.style.setProperty("--orb-stage-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
   applyOrbBaseVisualCssVars(orbBaseVisualState, { root });

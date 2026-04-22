@@ -1,9 +1,7 @@
-import { LEVEL01 } from "./level01.js";
 import { LEVEL_MVP } from "./level-mvp/level-mvp.js";
 import { ORB_STAGE_LEVEL } from "./orb-stage-level/orb-stage-level.js";
 
 export const LEVELS = Object.freeze([
-  LEVEL01,
   LEVEL_MVP,
   ORB_STAGE_LEVEL,
 ]);
