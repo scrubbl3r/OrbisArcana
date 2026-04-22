@@ -102,8 +102,19 @@ function resolveLevelWorldSize(level = null, mapSource = {}) {
 }
 
 function resolvePreviewZoom(level = null) {
+  const camera = level && typeof level.camera === "object" ? level.camera : null;
   const stage = level && typeof level.stage === "object" ? level.stage : {};
-  return Math.max(0.05, clampNumber(stage.previewZoom, 0) || LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM);
+  return Math.max(
+    0.05,
+    clampNumber(camera && camera.previewZoom, 0) ||
+    clampNumber(stage.previewZoom, 0) ||
+    LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM
+  );
+}
+
+function resolvePreviewFollowMode(level = null) {
+  const camera = level && typeof level.camera === "object" ? level.camera : null;
+  return String(camera && camera.previewFollowMode || "follow_target_center").trim();
 }
 
 function updateLevelCamera(refs, state) {
@@ -123,7 +134,7 @@ function updateLevelCamera(refs, state) {
     worldWidthPx: state.worldWidthPx,
     worldHeightPx: state.worldHeightPx,
     zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
-    followMode: "follow_target_center",
+    followMode: state.previewFollowMode,
   });
   const translateX = -frame.camLeft * frame.zoom;
   const translateY = -frame.camTop * frame.zoom;
@@ -135,8 +146,8 @@ function updateLevelCamera(refs, state) {
   if (refs.labelMeta) {
     const authoredSpawn = state.spawn && state.spawn.authoredCenter ? state.spawn.authoredCenter : null;
     refs.labelMeta.textContent = authoredSpawn
-      ? `zoom ${frame.zoom.toFixed(2)} | spawn ${Math.round(authoredSpawn.x)}, ${Math.round(authoredSpawn.y)}`
-      : `zoom ${frame.zoom.toFixed(2)} | spawn unresolved`;
+      ? `${state.previewFollowMode} | zoom ${frame.zoom.toFixed(2)} | spawn ${Math.round(authoredSpawn.x)}, ${Math.round(authoredSpawn.y)}`
+      : `${state.previewFollowMode} | zoom ${frame.zoom.toFixed(2)} | spawn unresolved`;
   }
 }
 
@@ -200,6 +211,7 @@ export function renderLevelStage(root, { level = null } = {}) {
   const mapAssetUrl = String(mapSource.assetUrl || "").trim();
   const worldSize = resolveLevelWorldSize(level, mapSource);
   const previewZoom = resolvePreviewZoom(level);
+  const previewFollowMode = resolvePreviewFollowMode(level);
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
@@ -233,6 +245,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     worldWidthPx: worldSize.widthPx,
     worldHeightPx: worldSize.heightPx,
     previewZoom,
+    previewFollowMode,
     spawn: null,
     summary: null,
   };
@@ -276,6 +289,9 @@ export function renderLevelStage(root, { level = null } = {}) {
       },
       getPreviewZoom() {
         return state.previewZoom;
+      },
+      getPreviewFollowMode() {
+        return state.previewFollowMode;
       },
       dispose() {
         unbindResize();

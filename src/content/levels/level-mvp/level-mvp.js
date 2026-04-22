@@ -38,6 +38,13 @@ export const LEVEL_MVP = Object.freeze({
     levelBoxHeightPx: 760,
     previewZoom: 1,
   }),
+  camera: Object.freeze({
+    previewZoom: 1,
+    gameplayZoom: 1,
+    previewFollowMode: "follow_target_center",
+    gameplayFollowMode: "follow_target_center",
+    initialTarget: "spawn",
+  }),
   world: Object.freeze({
     widthPx: 8192,
     heightPx: 8192,

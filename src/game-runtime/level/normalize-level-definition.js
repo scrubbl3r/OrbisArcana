@@ -46,10 +46,23 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
   });
 }
 
+function normalizeLevelCamera(camera = {}, stage = {}) {
+  return Object.freeze({
+    previewZoom: Number(camera.previewZoom) > 0
+      ? Number(camera.previewZoom)
+      : (Number(stage.previewZoom) > 0 ? Number(stage.previewZoom) : 1),
+    gameplayZoom: Number(camera.gameplayZoom) > 0 ? Number(camera.gameplayZoom) : 1,
+    previewFollowMode: String(camera.previewFollowMode || camera.followMode || "follow_target_center").trim(),
+    gameplayFollowMode: String(camera.gameplayFollowMode || camera.followMode || "follow_target_center").trim(),
+    initialTarget: String(camera.initialTarget || "spawn").trim(),
+  });
+}
+
 export function normalizeLevelDefinition(level = {}) {
   const source = level && typeof level === "object" ? level : {};
   const world = cloneJsonLike(source.world, {});
   const stage = cloneJsonLike(source.stage, {});
+  const camera = cloneJsonLike(source.camera, {});
   const mapSource = cloneJsonLike(source.mapSource, {});
   const sourceElements = cloneJsonLike(source.elements, {});
   const terrainProfile = Array.isArray(source.terrainProfile) ? source.terrainProfile.slice() : [];
@@ -67,6 +80,7 @@ export function normalizeLevelDefinition(level = {}) {
       levelBoxHeightPx: Number(stage.levelBoxHeightPx) || 640,
       previewZoom: Number(stage.previewZoom) > 0 ? Number(stage.previewZoom) : 1,
     }),
+    camera: normalizeLevelCamera(camera, stage),
     world: Object.freeze({
       widthPx: Number(world.widthPx) > 0 ? Number(world.widthPx) : 2000,
       heightPx: Number(world.heightPx) > 0 ? Number(world.heightPx) : 2000,

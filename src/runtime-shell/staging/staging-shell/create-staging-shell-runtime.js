@@ -348,6 +348,21 @@ function shellWorldWidth(shellContext) {
   return Math.max(1, Number(rect.width) || 0);
 }
 
+function shellGameplayCameraFollowMode(shellContext) {
+  const camera = shellContext && shellContext.currentLevel && shellContext.currentLevel.camera
+    ? shellContext.currentLevel.camera
+    : null;
+  return String(camera && camera.gameplayFollowMode || "follow_target_center").trim();
+}
+
+function shellGameplayCameraZoom(shellContext) {
+  const camera = shellContext && shellContext.currentLevel && shellContext.currentLevel.camera
+    ? shellContext.currentLevel.camera
+    : null;
+  const zoom = Number(camera && camera.gameplayZoom);
+  return Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+}
+
 function shellGroundCenterWorld(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   if (!stage || !stage.phys) return 0;
@@ -395,8 +410,8 @@ function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) 
         viewportHeightPx: stageH,
         worldWidthPx: shellWorldWidth(shellContext),
         worldHeightPx: shellWorldHeight(shellContext),
-        zoom: 1,
-        followMode: "follow_target_center",
+        zoom: shellGameplayCameraZoom(shellContext),
+        followMode: shellGameplayCameraFollowMode(shellContext),
         nowMs,
       })
     : null;
@@ -421,8 +436,8 @@ function shellOrbScreenY(shellContext) {
         viewportHeightPx: rect.height || 0,
         worldWidthPx: shellWorldWidth(shellContext),
         worldHeightPx: shellWorldHeight(shellContext),
-        zoom: 1,
-        followMode: "follow_target_center",
+        zoom: shellGameplayCameraZoom(shellContext),
+        followMode: shellGameplayCameraFollowMode(shellContext),
       })
     : null;
   return Number(frame && frame.targetScreenY) || 0;
@@ -453,8 +468,8 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         viewportHeightPx: safeRect.height || 0,
         worldWidthPx: shellWorldWidth(shellContext),
         worldHeightPx: shellWorldHeight(shellContext),
-        zoom: 1,
-        followMode: "follow_target_center",
+        zoom: shellGameplayCameraZoom(shellContext),
+        followMode: shellGameplayCameraFollowMode(shellContext),
         nowMs,
       })
     : null;
