@@ -478,7 +478,7 @@ function resetShellOrbToGround(shellContext) {
 }
 
 function updateShellStageReadouts(shellContext) {
-  const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
+  const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const stage = runtime && runtime.stage;
   const orbState = stage && stage.orbRuntimeState && typeof stage.orbRuntimeState.get === "function"
@@ -907,7 +907,7 @@ function bindShellStageResize(shellContext) {
 }
 
 function bindShellStageActions(shellContext) {
-  const refs = shellContext && shellContext.refs ? shellContext.refs.game : null;
+  const refs = shellContext && shellContext.refs ? shellContext.refs.orb : null;
   if (!refs || !refs.tryAgainBtn) return;
   refs.tryAgainBtn.addEventListener("click", () => {
     const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
