@@ -55,6 +55,10 @@ function normalizeLevelCamera(camera = {}, stage = {}) {
     previewFollowMode: String(camera.previewFollowMode || camera.followMode || "follow_target_center").trim(),
     gameplayFollowMode: String(camera.gameplayFollowMode || camera.followMode || "follow_target_center").trim(),
     initialTarget: String(camera.initialTarget || "spawn").trim(),
+    deadzoneWidthPx: Number(camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : 0,
+    deadzoneHeightPx: Number(camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : 0,
+    fixedFrameCenterXW: Number.isFinite(Number(camera.fixedFrameCenterXW)) ? Number(camera.fixedFrameCenterXW) : null,
+    fixedFrameCenterYW: Number.isFinite(Number(camera.fixedFrameCenterYW)) ? Number(camera.fixedFrameCenterYW) : null,
   });
 }
 

@@ -364,6 +364,22 @@ function shellGameplayCameraZoom(shellContext) {
   return Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
 }
 
+function shellGameplayCameraConfig(shellContext) {
+  const camera = shellContext && shellContext.currentLevel && shellContext.currentLevel.camera
+    ? shellContext.currentLevel.camera
+    : null;
+  return Object.freeze({
+    fixedFrameCenterXW: Number.isFinite(Number(camera && camera.fixedFrameCenterXW))
+      ? Number(camera.fixedFrameCenterXW)
+      : null,
+    fixedFrameCenterYW: Number.isFinite(Number(camera && camera.fixedFrameCenterYW))
+      ? Number(camera.fixedFrameCenterYW)
+      : null,
+    deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : 0,
+    deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : 0,
+  });
+}
+
 function shellGroundCenterWorld(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   if (!stage || !stage.phys) return 0;
@@ -403,6 +419,7 @@ function shellLateralBounds(shellContext) {
 function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
+  const cameraConfig = shellGameplayCameraConfig(shellContext);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
         targetXW: shellStageCenterX(shellContext),
@@ -413,6 +430,10 @@ function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) 
         worldHeightPx: shellWorldHeight(shellContext),
         zoom: shellGameplayCameraZoom(shellContext),
         followMode: shellGameplayCameraFollowMode(shellContext),
+        fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+        fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+        deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+        deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
         nowMs,
       })
     : null;
@@ -429,6 +450,7 @@ function shellOrbScreenY(shellContext) {
     : null;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const rect = shellStageRect(shellContext);
+  const cameraConfig = shellGameplayCameraConfig(shellContext);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
         targetXW: shellStageCenterX(shellContext),
@@ -439,6 +461,10 @@ function shellOrbScreenY(shellContext) {
         worldHeightPx: shellWorldHeight(shellContext),
         zoom: shellGameplayCameraZoom(shellContext),
         followMode: shellGameplayCameraFollowMode(shellContext),
+        fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+        fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+        deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+        deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
       })
     : null;
   return Number(frame && frame.targetScreenY) || 0;
@@ -461,6 +487,7 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const stage = runtime.stage ? runtime.stage : null;
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
+  const cameraConfig = shellGameplayCameraConfig(shellContext);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
         targetXW: Number(orbState && orbState.xW) || shellStageCenterX(shellContext),
@@ -471,6 +498,10 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         worldHeightPx: shellWorldHeight(shellContext),
         zoom: shellGameplayCameraZoom(shellContext),
         followMode: shellGameplayCameraFollowMode(shellContext),
+        fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+        fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+        deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+        deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
         nowMs,
       })
     : null;

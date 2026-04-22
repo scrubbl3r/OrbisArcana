@@ -51,8 +51,12 @@ export const ORB_STAGE_LEVEL = Object.freeze({
     previewZoom: 1,
     gameplayZoom: 1,
     previewFollowMode: "follow_target_center",
-    gameplayFollowMode: "follow_target_center",
+    gameplayFollowMode: "follow_target_soft",
     initialTarget: "spawn",
+    deadzoneWidthPx: 180,
+    deadzoneHeightPx: 120,
+    fixedFrameCenterXW: 500,
+    fixedFrameCenterYW: 1000,
   }),
   world: Object.freeze({
     widthPx: 1000,

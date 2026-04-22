@@ -117,6 +117,20 @@ function resolvePreviewFollowMode(level = null) {
   return String(camera && camera.previewFollowMode || "follow_target_center").trim();
 }
 
+function resolvePreviewCameraConfig(level = null) {
+  const camera = level && typeof level.camera === "object" ? level.camera : null;
+  return Object.freeze({
+    deadzoneWidthPx: Math.max(0, clampNumber(camera && camera.deadzoneWidthPx, 0)),
+    deadzoneHeightPx: Math.max(0, clampNumber(camera && camera.deadzoneHeightPx, 0)),
+    fixedFrameCenterXW: Number.isFinite(Number(camera && camera.fixedFrameCenterXW))
+      ? Number(camera.fixedFrameCenterXW)
+      : null,
+    fixedFrameCenterYW: Number.isFinite(Number(camera && camera.fixedFrameCenterYW))
+      ? Number(camera.fixedFrameCenterYW)
+      : null,
+  });
+}
+
 function updateLevelCamera(refs, state) {
   if (!refs || !refs.physStage || !refs.world) return;
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
@@ -135,6 +149,10 @@ function updateLevelCamera(refs, state) {
     worldHeightPx: state.worldHeightPx,
     zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
     followMode: state.previewFollowMode,
+    fixedFrameCenterXW: state.cameraConfig.fixedFrameCenterXW,
+    fixedFrameCenterYW: state.cameraConfig.fixedFrameCenterYW,
+    deadzoneWidthPx: state.cameraConfig.deadzoneWidthPx,
+    deadzoneHeightPx: state.cameraConfig.deadzoneHeightPx,
   });
   const translateX = -frame.camLeft * frame.zoom;
   const translateY = -frame.camTop * frame.zoom;
@@ -212,6 +230,7 @@ export function renderLevelStage(root, { level = null } = {}) {
   const worldSize = resolveLevelWorldSize(level, mapSource);
   const previewZoom = resolvePreviewZoom(level);
   const previewFollowMode = resolvePreviewFollowMode(level);
+  const cameraConfig = resolvePreviewCameraConfig(level);
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
@@ -246,6 +265,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     worldHeightPx: worldSize.heightPx,
     previewZoom,
     previewFollowMode,
+    cameraConfig,
     spawn: null,
     summary: null,
   };
