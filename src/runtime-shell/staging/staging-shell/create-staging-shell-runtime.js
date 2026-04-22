@@ -519,6 +519,9 @@ function shellLateralBounds(shellContext) {
 
 function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (runtime && runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.camTop))) {
+    return Number(runtime.frameMetrics.camTop) || 0;
+  }
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const cameraConfig = shellGameplayCameraConfig(shellContext);
   const target = shellGameplayCameraTarget(shellContext, { xW: shellStageCenterX(shellContext), yW });
