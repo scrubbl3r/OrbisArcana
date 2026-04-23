@@ -235,7 +235,7 @@ function updateLevelCamera(refs, state) {
       worldWidthPx: state.worldWidthPx,
       worldHeightPx: state.worldHeightPx,
       zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
-      followMode: state.previewFollowMode,
+      followMode: state.bootCamera ? "follow_target_center" : state.previewFollowMode,
       fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
       fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
       screenAnchorX: cameraConfig.screenAnchorX,
