@@ -751,17 +751,21 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         nowMs,
       })
     : null;
+  const camLeft = Number(frame && frame.camLeft) || 0;
   const camTop = Number(frame && frame.camTop) || 0;
+  const zoom = Number(frame && frame.zoom) || 1;
   runtime.frameMetrics = {
     nowMs,
     rect: safeRect,
     centerX: safeRect.width * 0.5,
+    camLeft,
     camTop,
+    zoom,
     orbScreenX: frame
-      ? ((Number(orbState && orbState.xW) || 0) - Number(frame.camLeft || 0)) * Number(frame.zoom || 1)
+      ? ((Number(orbState && orbState.xW) || 0) - camLeft) * zoom
       : (safeRect.width * 0.5),
     orbScreenY: frame
-      ? ((Number(orbState && orbState.yW) || 0) - Number(frame.camTop || 0)) * Number(frame.zoom || 1)
+      ? ((Number(orbState && orbState.yW) || 0) - camTop) * zoom
       : ((Number(orbState && orbState.yW) || 0) - camTop),
     lateralBounds: {
       left: collisionBox
