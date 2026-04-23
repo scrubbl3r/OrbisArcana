@@ -690,6 +690,7 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const cameraConfig = shellGameplayCameraConfig(shellContext);
   const clampBounds = shellGameplayCameraClampBounds(shellContext);
+  const collisionBox = shellResolvedCollisionBox(shellContext);
   const target = shellGameplayCameraTarget(shellContext, orbState);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
@@ -735,8 +736,12 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
       ? ((Number(orbState && orbState.yW) || 0) - Number(frame.camTop || 0)) * Number(frame.zoom || 1)
       : ((Number(orbState && orbState.yW) || 0) - camTop),
     lateralBounds: {
-      left: orbRadiusPx,
-      right: Math.max(orbRadiusPx, shellWorldWidth(shellContext) - orbRadiusPx),
+      left: collisionBox
+        ? Math.max(orbRadiusPx, Number(collisionBox.leftXW) + orbRadiusPx)
+        : orbRadiusPx,
+      right: collisionBox
+        ? Math.max(orbRadiusPx, Number(collisionBox.rightXW) - orbRadiusPx)
+        : Math.max(orbRadiusPx, shellWorldWidth(shellContext) - orbRadiusPx),
     },
   };
   return runtime.frameMetrics;
