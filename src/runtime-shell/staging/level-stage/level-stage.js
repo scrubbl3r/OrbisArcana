@@ -42,6 +42,22 @@ function buildBoundaryOverlayMarkup(loops = []) {
     .join("");
 }
 
+function buildLineArtOverlayMarkup(shapes = []) {
+  return (Array.isArray(shapes) ? shapes : [])
+    .map((shape = {}, index) => {
+      const pathData = buildLoopPathData(shape.worldPoints);
+      if (!pathData) return "";
+      const fill = String(shape.fill || "none").trim();
+      const stroke = String(shape.stroke || "none").trim();
+      const fillOpacity = Math.max(0, Math.min(1, clampNumber(shape.fillOpacity, 1)));
+      const strokeOpacity = Math.max(0, Math.min(1, clampNumber(shape.strokeOpacity, 1)));
+      const strokeWidth = Math.max(0, clampNumber(shape.worldStrokeWidth, 1));
+      return `<path class="levelStageLineArtPath" data-line-art-id="${String(shape.id || `line_art_${index + 1}`)}" d="${pathData}" style="fill:${fill};fill-opacity:${fillOpacity};stroke:${stroke};stroke-opacity:${strokeOpacity};stroke-width:${strokeWidth};"></path>`;
+    })
+    .filter(Boolean)
+    .join("");
+}
+
 function buildSpawnOverlayMarkup(spawn = null) {
   if (!spawn || !spawn.worldCenter) return "";
   const x = clampNumber(spawn.worldCenter.xW, 0);
@@ -55,6 +71,36 @@ function buildSpawnOverlayMarkup(spawn = null) {
       <circle class="levelStageSpawnOrbRing" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${orbRadius.toFixed(2)}"></circle>
     </g>
   `;
+}
+
+function buildWorldItemOverlayMarkup(spawns = []) {
+  return (Array.isArray(spawns) ? spawns : [])
+    .map((spawn = {}, index) => {
+      const worldCenter = spawn && spawn.worldCenter ? spawn.worldCenter : null;
+      if (!worldCenter) return "";
+      const x = clampNumber(worldCenter.xW, 0);
+      const y = clampNumber(spawn.yW, clampNumber(worldCenter.yW, 0));
+      const r = Math.max(6, clampNumber(spawn.r, 25));
+      return `
+        <g class="levelStageWorldItem" data-world-item-id="${String(spawn.id || `world_item_${index + 1}`)}">
+          <circle class="levelStageWorldItemHalo" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(r * 1.6).toFixed(2)}"></circle>
+          <circle class="levelStageWorldItemCore" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r.toFixed(2)}"></circle>
+        </g>
+      `;
+    })
+    .filter(Boolean)
+    .join("");
+}
+
+function buildViewFloorOverlayMarkup(guides = []) {
+  return (Array.isArray(guides) ? guides : [])
+    .map((guide = {}, index) => {
+      const pathData = buildLoopPathData(guide.worldPoints);
+      if (!pathData) return "";
+      return `<path class="levelStageViewFloorPath" data-view-floor-id="${String(guide.id || `view_floor_${index + 1}`)}" d="${pathData}"></path>`;
+    })
+    .filter(Boolean)
+    .join("");
 }
 
 function resolveLevelWorldSize(level = null, mapSource = {}) {
@@ -145,6 +191,10 @@ function updateLevelCamera(refs, state) {
     worldHeightPx: state.worldHeightPx,
     cameraAnchors: state.cameraAnchors,
   });
+  const boundaryBox = state.summary && state.summary.boundaryBox ? state.summary.boundaryBox : null;
+  const viewFloorGuide = state.summary && Array.isArray(state.summary.viewFloorGuides) && state.summary.viewFloorGuides.length
+    ? state.summary.viewFloorGuides[0]
+    : null;
   const spawn = state.spawn && state.spawn.worldCenter ? state.spawn.worldCenter : null;
   const anchorTarget = state.initialTarget.startsWith("anchor:")
     ? resolveLevelCameraAnchor(state.level, state.initialTarget.slice("anchor:".length), {
@@ -183,10 +233,13 @@ function updateLevelCamera(refs, state) {
       deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
       followLerpX: state.bootCamera ? 1 : cameraConfig.followLerpX,
       followLerpY: state.bootCamera ? 1 : cameraConfig.followLerpY,
-      clampLeftXW: 0,
-      clampRightXW: state.worldWidthPx,
-      clampTopYW: 0,
-      clampBottomYW: state.worldHeightPx,
+      clampLeftXW: boundaryBox ? clampNumber(boundaryBox.leftXW, 0) : 0,
+      clampRightXW: boundaryBox ? clampNumber(boundaryBox.rightXW, state.worldWidthPx) : state.worldWidthPx,
+      clampTopYW: boundaryBox ? clampNumber(boundaryBox.topYW, 0) : 0,
+      clampBottomYW: Math.max(
+        boundaryBox ? clampNumber(boundaryBox.bottomYW, state.worldHeightPx) : state.worldHeightPx,
+        viewFloorGuide ? clampNumber(viewFloorGuide.worldY, 0) : 0
+      ),
       clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
       clampInsetRightPx: cameraConfig.clampInsetRightPx,
       clampInsetTopPx: cameraConfig.clampInsetTopPx,
@@ -256,6 +309,9 @@ async function hydrateSvgLevelPreview(refs, state, level) {
     refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
     refs.worldOverlay.innerHTML = `
       ${buildBoundaryOverlayMarkup(summary.loops)}
+      ${buildLineArtOverlayMarkup(summary.lineArtShapes)}
+      ${buildViewFloorOverlayMarkup(summary.viewFloorGuides)}
+      ${buildWorldItemOverlayMarkup(summary.worldItemSpawns)}
       ${buildSpawnOverlayMarkup(state.spawn)}
     `;
     if (refs.stage) refs.stage.dataset.levelStageState = "ready";

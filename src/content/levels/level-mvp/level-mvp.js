@@ -80,6 +80,9 @@ export const LEVEL_MVP = Object.freeze({
       boundary: Object.freeze(["bounds"]),
       spawn: Object.freeze(["spawn"]),
       camera: Object.freeze(["camera_01"]),
+      viewFloor: Object.freeze(["view_floor"]),
+      worldItems: Object.freeze(["globe_1", "globe_2"]),
+      lineArt: Object.freeze(["line_art"]),
     }),
     spawnMarker: Object.freeze({
       id: "path2-9",

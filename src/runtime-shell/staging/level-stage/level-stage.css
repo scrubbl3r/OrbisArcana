@@ -86,6 +86,34 @@
   vector-effect: non-scaling-stroke;
 }
 
+.levelStageLineArtPath {
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.levelStageViewFloorPath {
+  fill: none;
+  stroke: rgba(216, 224, 236, 0.70);
+  stroke-width: 4;
+  stroke-dasharray: 12 10;
+  vector-effect: non-scaling-stroke;
+}
+
+.levelStageWorldItemHalo {
+  fill: rgba(150, 223, 255, 0.12);
+  stroke: rgba(162, 238, 255, 0.48);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.levelStageWorldItemCore {
+  fill: rgba(98, 214, 255, 0.88);
+  stroke: rgba(232, 251, 255, 0.92);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
 .levelStageSpawnPulse {
   fill: rgba(255, 60, 78, 0.10);
   stroke: rgba(255, 90, 105, 0.65);
