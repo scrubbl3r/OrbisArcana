@@ -215,6 +215,19 @@ function updateLevelCamera(refs, state) {
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
     ? refs.physStage.getBoundingClientRect()
     : { width: 0, height: 0 };
+  const viewportWidthPx = Math.max(0, clampNumber(rect.width, 0));
+  const viewportHeightPx = Math.max(0, clampNumber(rect.height, 0));
+  if (viewportWidthPx < 1 || viewportHeightPx < 1) {
+    traceLevelStage(
+      state,
+      [
+        "level_stage.frame_wait",
+        `boot=${state.bootCamera ? 1 : 0}`,
+        `rect=${formatLevelStageTracePair(rect.width, rect.height)}`,
+      ].join(" | ")
+    );
+    return;
+  }
   const cameraConfig = resolvePreviewCameraConfig(state.level, {
     worldWidthPx: state.worldWidthPx,
     worldHeightPx: state.worldHeightPx,
@@ -234,15 +247,15 @@ function updateLevelCamera(refs, state) {
     targetYW: target.yW,
     boundaryBox,
     viewFloorGuide,
-    viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
+    viewportHeightPx,
     zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
   });
   const frame = state.cameraRuntime && typeof state.cameraRuntime.resolveFrame === "function"
     ? state.cameraRuntime.resolveFrame({
       targetXW: clampNumber(target.xW, 0),
       targetYW: clampNumber(target.yW, 0) + bootOffsetYW,
-      viewportWidthPx: Math.max(1, clampNumber(rect.width, 0)),
-      viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
+      viewportWidthPx,
+      viewportHeightPx,
       worldWidthPx: state.worldWidthPx,
       worldHeightPx: state.worldHeightPx,
       zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
@@ -282,7 +295,7 @@ function updateLevelCamera(refs, state) {
       `viewFloorW=${viewFloorGuide ? Math.round(viewFloorGuide.worldY) : "none"}`,
       `cam=${formatLevelStageTracePair(frame.camLeft, frame.camTop)}`,
       `screen=${formatLevelStageTracePair(frame.targetScreenX, frame.targetScreenY)}`,
-      `rect=${formatLevelStageTracePair(rect.width, rect.height)}`,
+      `rect=${formatLevelStageTracePair(viewportWidthPx, viewportHeightPx)}`,
       `clamp=${boundaryBox
         ? `${formatLevelStageTracePair(boundaryBox.leftXW, boundaryBox.topYW)}>${formatLevelStageTracePair(boundaryBox.rightXW, Math.max(boundaryBox.bottomYW, viewFloorGuide ? clampNumber(viewFloorGuide.worldY, 0) : boundaryBox.bottomYW))}`
         : `0,0>${formatLevelStageTracePair(state.worldWidthPx, state.worldHeightPx)}`}`,
