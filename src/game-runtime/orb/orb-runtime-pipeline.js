@@ -9,6 +9,36 @@ function clamp01(n){
   return n;
 }
 
+function aggregateContactNormal(contacts = []) {
+  const safeContacts = Array.isArray(contacts) ? contacts : [];
+  let sumX = 0;
+  let sumY = 0;
+  let strongest = null;
+  for (const contact of safeContacts) {
+    if (!contact) continue;
+    const depth = Math.max(0, Number(contact.depth) || 0);
+    const nx = Number(contact.normalX) || 0;
+    const ny = Number(contact.normalY) || 0;
+    sumX += nx * depth;
+    sumY += ny * depth;
+    if (!strongest || depth > (Number(strongest.depth) || 0)) strongest = contact;
+  }
+  const length = Math.hypot(sumX, sumY);
+  if (length > 0.000001) {
+    return Object.freeze({
+      x: sumX / length,
+      y: sumY / length,
+    });
+  }
+  if (strongest) {
+    return Object.freeze({
+      x: Number(strongest.normalX) || 0,
+      y: Number(strongest.normalY) || -1,
+    });
+  }
+  return null;
+}
+
 const FLOOR_CONTACT_EPSILON_PX = 0.25;
 const CEIL_CONTACT_EPSILON_PX = 0.25;
 
@@ -172,13 +202,12 @@ export function runOrbRuntimePipeline({
   if (segmentCollision && segmentCollision.maxDepth > 0) {
     state.xW = Number(segmentCollision.xW) || state.xW;
     state.yW = Number(segmentCollision.yW) || state.yW;
-    for (const contact of Array.isArray(segmentCollision.contacts) ? segmentCollision.contacts : []) {
-      const nx = Number(contact && contact.normalX) || 0;
-      const ny = Number(contact && contact.normalY) || 0;
-      const inwardVelocity = (Number(state.vx) || 0) * nx + (Number(state.v) || 0) * ny;
+    const contactNormal = aggregateContactNormal(segmentCollision.contacts);
+    if (contactNormal) {
+      const inwardVelocity = (Number(state.vx) || 0) * contactNormal.x + (Number(state.v) || 0) * contactNormal.y;
       if (inwardVelocity < 0) {
-        state.vx -= inwardVelocity * nx;
-        state.v -= inwardVelocity * ny;
+        state.vx -= inwardVelocity * contactNormal.x;
+        state.v -= inwardVelocity * contactNormal.y;
       }
     }
     if (segmentCollision.grounded) {

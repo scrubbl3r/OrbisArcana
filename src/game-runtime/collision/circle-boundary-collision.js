@@ -24,6 +24,61 @@ function normalizeVector(x = 0, y = 0, fallback = { x: 0, y: -1 }) {
   });
 }
 
+function dot(ax = 0, ay = 0, bx = 0, by = 0) {
+  return (clampNumber(ax, 0) * clampNumber(bx, 0)) + (clampNumber(ay, 0) * clampNumber(by, 0));
+}
+
+function buildAggregateContactResponse(hits = []) {
+  const safeHits = Array.isArray(hits) ? hits : [];
+  if (!safeHits.length) return null;
+
+  let sumNormalX = 0;
+  let sumNormalY = 0;
+  let grounded = false;
+  let maxDepth = 0;
+  let strongest = safeHits[0] || null;
+  for (const hit of safeHits) {
+    if (!hit) continue;
+    const depth = Math.max(0, clampNumber(hit.depth, 0));
+    const nx = clampNumber(hit.normalX, 0);
+    const ny = clampNumber(hit.normalY, -1);
+    sumNormalX += nx * depth;
+    sumNormalY += ny * depth;
+    if (ny < -0.55) grounded = true;
+    if (depth > maxDepth) maxDepth = depth;
+    if (!strongest || depth > clampNumber(strongest.depth, 0)) strongest = hit;
+  }
+
+  const aggregateNormal = normalizeVector(
+    sumNormalX,
+    sumNormalY,
+    strongest
+      ? { x: strongest.normalX, y: strongest.normalY }
+      : { x: 0, y: -1 }
+  );
+
+  let requiredDepth = 0;
+  for (const hit of safeHits) {
+    if (!hit) continue;
+    const alignment = dot(
+      aggregateNormal.x,
+      aggregateNormal.y,
+      hit.normalX,
+      hit.normalY
+    );
+    const safeAlignment = Math.max(0.15, alignment);
+    requiredDepth = Math.max(requiredDepth, clampNumber(hit.depth, 0) / safeAlignment);
+  }
+
+  return Object.freeze({
+    normalX: clampNumber(aggregateNormal.x, 0),
+    normalY: clampNumber(aggregateNormal.y, -1),
+    depth: Math.max(requiredDepth, maxDepth),
+    grounded,
+    strongest,
+  });
+}
+
 export function closestPointOnSegment({
   pointXW = 0,
   pointYW = 0,
@@ -126,7 +181,7 @@ export function resolveCircleVsBoundarySegments({
   const safeSegments = Array.isArray(segments) ? segments : [];
 
   for (let iteration = 0; iteration < Math.max(1, clampNumber(maxIterations, 1)); iteration += 1) {
-    let best = null;
+    const hits = [];
     for (const segment of safeSegments) {
       if (!segment) continue;
       const minX = clampNumber(segment.minXW, 0) - safeRadius;
@@ -143,14 +198,16 @@ export function resolveCircleVsBoundarySegments({
         previousYW,
       });
       if (!hit) continue;
-      if (!best || hit.depth > best.depth) best = hit;
+      hits.push(hit);
     }
-    if (!best) break;
-    resolvedXW += best.normalX * best.depth;
-    resolvedYW += best.normalY * best.depth;
-    maxDepth = Math.max(maxDepth, best.depth);
-    if (best.normalY < -0.55) grounded = true;
-    contacts.push(best);
+    if (!hits.length) break;
+    const response = buildAggregateContactResponse(hits);
+    if (!response || response.depth <= 0) break;
+    resolvedXW += response.normalX * response.depth;
+    resolvedYW += response.normalY * response.depth;
+    maxDepth = Math.max(maxDepth, response.depth);
+    if (response.grounded) grounded = true;
+    contacts.push(...hits);
   }
 
   return Object.freeze({
