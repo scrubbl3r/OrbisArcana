@@ -133,12 +133,18 @@ function resolvePreviewCameraConfig(level = null, {
     svgAnchors: cameraAnchors,
   });
   return Object.freeze({
+    screenAnchorX: Number(camera && camera.screenAnchorX) >= 0 ? Number(camera.screenAnchorX) : 0.5,
+    screenAnchorY: Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5,
     deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : -1,
     deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : -1,
     deadzoneWidthRatio: Math.max(0, clampNumber(camera && camera.deadzoneWidthRatio, 0)),
     deadzoneHeightRatio: Math.max(0, clampNumber(camera && camera.deadzoneHeightRatio, 0)),
     followLerpX: Math.max(0, Math.min(1, clampNumber(camera && camera.followLerpX, 1))),
     followLerpY: Math.max(0, Math.min(1, clampNumber(camera && camera.followLerpY, 1))),
+    clampInsetLeftPx: Number(camera && camera.clampInsetLeftPx) >= 0 ? Number(camera.clampInsetLeftPx) : 0,
+    clampInsetRightPx: Number(camera && camera.clampInsetRightPx) >= 0 ? Number(camera.clampInsetRightPx) : 0,
+    clampInsetTopPx: Number(camera && camera.clampInsetTopPx) >= 0 ? Number(camera.clampInsetTopPx) : 0,
+    clampInsetBottomPx: Number(camera && camera.clampInsetBottomPx) >= 0 ? Number(camera.clampInsetBottomPx) : 0,
     fixedFrameCenterXW: fixedFrameAnchor && fixedFrameAnchor.point
       ? fixedFrameAnchor.point.xW
       : (
@@ -196,12 +202,22 @@ function updateLevelCamera(refs, state) {
       followMode: state.previewFollowMode,
       fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
       fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+      screenAnchorX: cameraConfig.screenAnchorX,
+      screenAnchorY: cameraConfig.screenAnchorY,
       deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
       deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
       deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
       deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
       followLerpX: state.bootCamera ? 1 : cameraConfig.followLerpX,
       followLerpY: state.bootCamera ? 1 : cameraConfig.followLerpY,
+      clampLeftXW: 0,
+      clampRightXW: state.worldWidthPx,
+      clampTopYW: 0,
+      clampBottomYW: state.worldHeightPx,
+      clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
+      clampInsetRightPx: cameraConfig.clampInsetRightPx,
+      clampInsetTopPx: cameraConfig.clampInsetTopPx,
+      clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
     })
     : null;
   state.bootCamera = false;

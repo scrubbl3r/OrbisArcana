@@ -301,6 +301,7 @@ function initializeShellStageRuntime(shellContext) {
   if (cameraRuntime && typeof cameraRuntime.resolveFrame === "function") {
     const bootRect = shellStageRect(shellContext);
     const cameraConfig = shellGameplayCameraConfig(shellContext);
+    const clampBounds = shellGameplayCameraClampBounds(shellContext);
     const bootTarget = spawnPoint || shellGameplayCameraTarget(shellContext, initialState);
     cameraRuntime.resolveFrame({
       targetXW: bootTarget.xW,
@@ -313,12 +314,22 @@ function initializeShellStageRuntime(shellContext) {
       followMode: "follow_target_center",
       fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
       fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+      screenAnchorX: cameraConfig.screenAnchorX,
+      screenAnchorY: cameraConfig.screenAnchorY,
       deadzoneWidthPx: 0,
       deadzoneHeightPx: 0,
       deadzoneWidthRatio: 0,
       deadzoneHeightRatio: 0,
       followLerpX: 1,
       followLerpY: 1,
+      clampLeftXW: clampBounds.leftXW,
+      clampRightXW: clampBounds.rightXW,
+      clampTopYW: clampBounds.topYW,
+      clampBottomYW: clampBounds.bottomYW,
+      clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
+      clampInsetRightPx: cameraConfig.clampInsetRightPx,
+      clampInsetTopPx: cameraConfig.clampInsetTopPx,
+      clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
     });
   }
 
@@ -436,6 +447,12 @@ function shellGameplayCameraConfig(shellContext) {
     deadzoneHeightRatio: Number(camera && camera.deadzoneHeightRatio) >= 0 ? Number(camera.deadzoneHeightRatio) : 0,
     followLerpX: Number(camera && camera.followLerpX) >= 0 ? Number(camera.followLerpX) : 1,
     followLerpY: Number(camera && camera.followLerpY) >= 0 ? Number(camera.followLerpY) : 1,
+    screenAnchorX: Number(camera && camera.screenAnchorX) >= 0 ? Number(camera.screenAnchorX) : 0.5,
+    screenAnchorY: Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5,
+    clampInsetLeftPx: Number(camera && camera.clampInsetLeftPx) >= 0 ? Number(camera.clampInsetLeftPx) : 0,
+    clampInsetRightPx: Number(camera && camera.clampInsetRightPx) >= 0 ? Number(camera.clampInsetRightPx) : 0,
+    clampInsetTopPx: Number(camera && camera.clampInsetTopPx) >= 0 ? Number(camera.clampInsetTopPx) : 0,
+    clampInsetBottomPx: Number(camera && camera.clampInsetBottomPx) >= 0 ? Number(camera.clampInsetBottomPx) : 0,
   });
 }
 
@@ -450,6 +467,24 @@ function shellResolvedCollisionBox(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
   return summary && summary.boundaryBox ? summary.boundaryBox : null;
+}
+
+function shellGameplayCameraClampBounds(shellContext) {
+  const collisionBox = shellResolvedCollisionBox(shellContext);
+  if (collisionBox) {
+    return Object.freeze({
+      leftXW: Number(collisionBox.leftXW) || 0,
+      rightXW: Number(collisionBox.rightXW) || shellWorldWidth(shellContext),
+      topYW: Number(collisionBox.topYW) || 0,
+      bottomYW: Number(collisionBox.bottomYW) || shellWorldHeight(shellContext),
+    });
+  }
+  return Object.freeze({
+    leftXW: 0,
+    rightXW: shellWorldWidth(shellContext),
+    topYW: 0,
+    bottomYW: shellWorldHeight(shellContext),
+  });
 }
 
 function shellGameplayCameraTarget(shellContext, orbState = null) {
@@ -554,6 +589,7 @@ function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) 
   }
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const cameraConfig = shellGameplayCameraConfig(shellContext);
+  const clampBounds = shellGameplayCameraClampBounds(shellContext);
   const target = shellGameplayCameraTarget(shellContext, { xW: shellStageCenterX(shellContext), yW });
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
@@ -567,12 +603,22 @@ function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) 
         followMode: shellGameplayCameraFollowMode(shellContext),
         fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
         fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+        screenAnchorX: cameraConfig.screenAnchorX,
+        screenAnchorY: cameraConfig.screenAnchorY,
         deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
         deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
         deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
         deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
         followLerpX: cameraConfig.followLerpX,
         followLerpY: cameraConfig.followLerpY,
+        clampLeftXW: clampBounds.leftXW,
+        clampRightXW: clampBounds.rightXW,
+        clampTopYW: clampBounds.topYW,
+        clampBottomYW: clampBounds.bottomYW,
+        clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
+        clampInsetRightPx: cameraConfig.clampInsetRightPx,
+        clampInsetTopPx: cameraConfig.clampInsetTopPx,
+        clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
         nowMs,
       })
     : null;
@@ -590,6 +636,7 @@ function shellOrbScreenY(shellContext) {
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const rect = shellStageRect(shellContext);
   const cameraConfig = shellGameplayCameraConfig(shellContext);
+  const clampBounds = shellGameplayCameraClampBounds(shellContext);
   const target = shellGameplayCameraTarget(shellContext, orbState);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
@@ -603,12 +650,22 @@ function shellOrbScreenY(shellContext) {
         followMode: shellGameplayCameraFollowMode(shellContext),
         fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
         fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+        screenAnchorX: cameraConfig.screenAnchorX,
+        screenAnchorY: cameraConfig.screenAnchorY,
         deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
         deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
         deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
         deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
         followLerpX: cameraConfig.followLerpX,
         followLerpY: cameraConfig.followLerpY,
+        clampLeftXW: clampBounds.leftXW,
+        clampRightXW: clampBounds.rightXW,
+        clampTopYW: clampBounds.topYW,
+        clampBottomYW: clampBounds.bottomYW,
+        clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
+        clampInsetRightPx: cameraConfig.clampInsetRightPx,
+        clampInsetTopPx: cameraConfig.clampInsetTopPx,
+        clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
       })
     : null;
   return Number(frame && frame.targetScreenY) || 0;
@@ -632,6 +689,7 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const cameraConfig = shellGameplayCameraConfig(shellContext);
+  const clampBounds = shellGameplayCameraClampBounds(shellContext);
   const target = shellGameplayCameraTarget(shellContext, orbState);
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? cameraRuntime.resolveFrame({
@@ -645,12 +703,22 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         followMode: shellGameplayCameraFollowMode(shellContext),
         fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
         fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+        screenAnchorX: cameraConfig.screenAnchorX,
+        screenAnchorY: cameraConfig.screenAnchorY,
         deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
         deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
         deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
         deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
         followLerpX: cameraConfig.followLerpX,
         followLerpY: cameraConfig.followLerpY,
+        clampLeftXW: clampBounds.leftXW,
+        clampRightXW: clampBounds.rightXW,
+        clampTopYW: clampBounds.topYW,
+        clampBottomYW: clampBounds.bottomYW,
+        clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
+        clampInsetRightPx: cameraConfig.clampInsetRightPx,
+        clampInsetTopPx: cameraConfig.clampInsetTopPx,
+        clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
         nowMs,
       })
     : null;

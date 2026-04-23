@@ -36,12 +36,22 @@ export function resolveCameraFrame({
   camTop = null,
   fixedFrameCenterXW = null,
   fixedFrameCenterYW = null,
+  screenAnchorX = 0.5,
+  screenAnchorY = 0.5,
   deadzoneWidthPx = 0,
   deadzoneHeightPx = 0,
   deadzoneWidthRatio = 0,
   deadzoneHeightRatio = 0,
   followLerpX = 1,
   followLerpY = 1,
+  clampLeftXW = 0,
+  clampRightXW = null,
+  clampTopYW = 0,
+  clampBottomYW = null,
+  clampInsetLeftPx = 0,
+  clampInsetRightPx = 0,
+  clampInsetTopPx = 0,
+  clampInsetBottomPx = 0,
 } = {}) {
   const resolvedZoom = Math.max(0.01, toFiniteNumber(zoom, 1));
   const safeViewportWidthPx = Math.max(1, toFiniteNumber(viewportWidthPx, 0));
@@ -50,8 +60,36 @@ export function resolveCameraFrame({
   const safeWorldHeightPx = Math.max(1, toFiniteNumber(worldHeightPx, safeViewportHeightPx));
   const viewportWorldWidth = safeViewportWidthPx / resolvedZoom;
   const viewportWorldHeight = safeViewportHeightPx / resolvedZoom;
-  const maxCamLeft = Math.max(0, safeWorldWidthPx - viewportWorldWidth);
-  const maxCamTop = Math.max(0, safeWorldHeightPx - viewportWorldHeight);
+  const safeScreenAnchorX = clamp(screenAnchorX, 0, 1);
+  const safeScreenAnchorY = clamp(screenAnchorY, 0, 1);
+  const safeClampLeftXW = toFiniteNumber(clampLeftXW, 0);
+  const safeClampRightXW = toFiniteNumber(clampRightXW, safeWorldWidthPx);
+  const safeClampTopYW = toFiniteNumber(clampTopYW, 0);
+  const safeClampBottomYW = toFiniteNumber(clampBottomYW, safeWorldHeightPx);
+  const safeClampInsetLeftW = Math.max(0, toFiniteNumber(clampInsetLeftPx, 0)) / resolvedZoom;
+  const safeClampInsetRightW = Math.max(0, toFiniteNumber(clampInsetRightPx, 0)) / resolvedZoom;
+  const safeClampInsetTopW = Math.max(0, toFiniteNumber(clampInsetTopPx, 0)) / resolvedZoom;
+  const safeClampInsetBottomW = Math.max(0, toFiniteNumber(clampInsetBottomPx, 0)) / resolvedZoom;
+  const minCamLeft = clamp(
+    safeClampLeftXW - safeClampInsetLeftW,
+    0,
+    Math.max(0, safeWorldWidthPx - viewportWorldWidth)
+  );
+  const maxCamLeft = clamp(
+    (safeClampRightXW + safeClampInsetRightW) - viewportWorldWidth,
+    minCamLeft,
+    Math.max(0, safeWorldWidthPx - viewportWorldWidth)
+  );
+  const minCamTop = clamp(
+    safeClampTopYW - safeClampInsetTopW,
+    0,
+    Math.max(0, safeWorldHeightPx - viewportWorldHeight)
+  );
+  const maxCamTop = clamp(
+    (safeClampBottomYW + safeClampInsetBottomW) - viewportWorldHeight,
+    minCamTop,
+    Math.max(0, safeWorldHeightPx - viewportWorldHeight)
+  );
   const safeTargetXW = toFiniteNumber(targetXW, 0);
   const safeTargetYW = toFiniteNumber(targetYW, 0);
   const safeFollowMode = String(followMode || "follow_target_center").trim().toLowerCase();
@@ -69,11 +107,11 @@ export function resolveCameraFrame({
   let resolvedCamLeft = clamp(toOptionalFiniteNumber(camLeft), 0, maxCamLeft);
   let resolvedCamTop = clamp(toOptionalFiniteNumber(camTop), 0, maxCamTop);
   if (safeFollowMode === "fixed_frame") {
-    resolvedCamLeft = clamp(safeFixedFrameCenterXW - (viewportWorldWidth * 0.5), 0, maxCamLeft);
-    resolvedCamTop = clamp(safeFixedFrameCenterYW - (viewportWorldHeight * 0.5), 0, maxCamTop);
+    resolvedCamLeft = clamp(safeFixedFrameCenterXW - (viewportWorldWidth * safeScreenAnchorX), minCamLeft, maxCamLeft);
+    resolvedCamTop = clamp(safeFixedFrameCenterYW - (viewportWorldHeight * safeScreenAnchorY), minCamTop, maxCamTop);
   } else if (safeFollowMode === "follow_target_soft") {
-    const currentCenterXW = resolvedCamLeft + (viewportWorldWidth * 0.5);
-    const currentCenterYW = resolvedCamTop + (viewportWorldHeight * 0.5);
+    const currentCenterXW = resolvedCamLeft + (viewportWorldWidth * safeScreenAnchorX);
+    const currentCenterYW = resolvedCamTop + (viewportWorldHeight * safeScreenAnchorY);
     const zoneHalfW = deadzoneWorldWidth * 0.5;
     const zoneHalfH = deadzoneWorldHeight * 0.5;
     let nextCenterXW = currentCenterXW;
@@ -91,21 +129,21 @@ export function resolveCameraFrame({
       nextCenterYW = safeTargetYW - zoneHalfH;
     }
 
-    const desiredCamLeft = clamp(nextCenterXW - (viewportWorldWidth * 0.5), 0, maxCamLeft);
-    const desiredCamTop = clamp(nextCenterYW - (viewportWorldHeight * 0.5), 0, maxCamTop);
+    const desiredCamLeft = clamp(nextCenterXW - (viewportWorldWidth * safeScreenAnchorX), minCamLeft, maxCamLeft);
+    const desiredCamTop = clamp(nextCenterYW - (viewportWorldHeight * safeScreenAnchorY), minCamTop, maxCamTop);
     resolvedCamLeft = hasCurrentCamLeft
-      ? clamp(resolvedCamLeft + ((desiredCamLeft - resolvedCamLeft) * safeFollowLerpX), 0, maxCamLeft)
+      ? clamp(resolvedCamLeft + ((desiredCamLeft - resolvedCamLeft) * safeFollowLerpX), minCamLeft, maxCamLeft)
       : desiredCamLeft;
     resolvedCamTop = hasCurrentCamTop
-      ? clamp(resolvedCamTop + ((desiredCamTop - resolvedCamTop) * safeFollowLerpY), 0, maxCamTop)
+      ? clamp(resolvedCamTop + ((desiredCamTop - resolvedCamTop) * safeFollowLerpY), minCamTop, maxCamTop)
       : desiredCamTop;
   } else {
-    resolvedCamLeft = clamp(safeTargetXW - (viewportWorldWidth * 0.5), 0, maxCamLeft);
-    resolvedCamTop = clamp(safeTargetYW - (viewportWorldHeight * 0.5), 0, maxCamTop);
+    resolvedCamLeft = clamp(safeTargetXW - (viewportWorldWidth * safeScreenAnchorX), minCamLeft, maxCamLeft);
+    resolvedCamTop = clamp(safeTargetYW - (viewportWorldHeight * safeScreenAnchorY), minCamTop, maxCamTop);
   }
 
-  const centerXW = resolvedCamLeft + (viewportWorldWidth * 0.5);
-  const centerYW = resolvedCamTop + (viewportWorldHeight * 0.5);
+  const centerXW = resolvedCamLeft + (viewportWorldWidth * safeScreenAnchorX);
+  const centerYW = resolvedCamTop + (viewportWorldHeight * safeScreenAnchorY);
   return Object.freeze({
     followMode: safeFollowMode,
     zoom: resolvedZoom,
@@ -123,12 +161,22 @@ export function resolveCameraFrame({
     centerYW,
     targetScreenX: (safeTargetXW - resolvedCamLeft) * resolvedZoom,
     targetScreenY: (safeTargetYW - resolvedCamTop) * resolvedZoom,
+    screenAnchorX: safeScreenAnchorX,
+    screenAnchorY: safeScreenAnchorY,
     deadzoneWidthPx: resolvedDeadzoneWidthPx,
     deadzoneHeightPx: resolvedDeadzoneHeightPx,
     deadzoneWidthRatio: clamp(deadzoneWidthRatio, 0, 1),
     deadzoneHeightRatio: clamp(deadzoneHeightRatio, 0, 1),
     followLerpX: safeFollowLerpX,
     followLerpY: safeFollowLerpY,
+    clampLeftXW: safeClampLeftXW,
+    clampRightXW: safeClampRightXW,
+    clampTopYW: safeClampTopYW,
+    clampBottomYW: safeClampBottomYW,
+    clampInsetLeftPx: toFiniteNumber(clampInsetLeftPx, 0),
+    clampInsetRightPx: toFiniteNumber(clampInsetRightPx, 0),
+    clampInsetTopPx: toFiniteNumber(clampInsetTopPx, 0),
+    clampInsetBottomPx: toFiniteNumber(clampInsetBottomPx, 0),
     fixedFrameCenterXW: safeFixedFrameCenterXW,
     fixedFrameCenterYW: safeFixedFrameCenterYW,
   });
@@ -208,12 +256,22 @@ export function createCameraRuntime({
     camTop = null,
     fixedFrameCenterXW = null,
     fixedFrameCenterYW = null,
+    screenAnchorX = 0.5,
+    screenAnchorY = 0.5,
     deadzoneWidthPx = 0,
     deadzoneHeightPx = 0,
     deadzoneWidthRatio = 0,
     deadzoneHeightRatio = 0,
     followLerpX = 1,
     followLerpY = 1,
+    clampLeftXW = 0,
+    clampRightXW = null,
+    clampTopYW = 0,
+    clampBottomYW = null,
+    clampInsetLeftPx = 0,
+    clampInsetRightPx = 0,
+    clampInsetTopPx = 0,
+    clampInsetBottomPx = 0,
     nowMs = now(),
   } = {}) {
     const previousFrame = state.get().lastResolvedFrame;
@@ -231,12 +289,22 @@ export function createCameraRuntime({
       camTop: camTop != null ? camTop : (previousFrame && previousFrame.camTop),
       fixedFrameCenterXW,
       fixedFrameCenterYW,
+      screenAnchorX,
+      screenAnchorY,
       deadzoneWidthPx,
       deadzoneHeightPx,
       deadzoneWidthRatio,
       deadzoneHeightRatio,
       followLerpX,
       followLerpY,
+      clampLeftXW,
+      clampRightXW,
+      clampTopYW,
+      clampBottomYW,
+      clampInsetLeftPx,
+      clampInsetRightPx,
+      clampInsetTopPx,
+      clampInsetBottomPx,
     });
     state.get().lastResolvedFrame = frame;
     return frame;
