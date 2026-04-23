@@ -35,7 +35,7 @@ export const ORB_STAGE_LEVEL = Object.freeze({
     screenAnchorY: 0.72,
     deadzoneWidthPx: -1,
     deadzoneHeightPx: -1,
-    deadzoneWidthRatio: 0,
+    deadzoneWidthRatio: 0.32,
     deadzoneHeightRatio: 0.22,
     followLerpX: 0.16,
     followLerpY: 0.18,
