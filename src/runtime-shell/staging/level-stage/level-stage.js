@@ -1,9 +1,13 @@
 import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
+import {
+  buildAuthoredLevelSceneModel,
+  resolveAuthoredLevelCameraTarget,
+  resolveViewFloorBootOffsetYW,
+} from "../../../game-runtime/level/authored-level-scene-model.js";
 import { normalizeLevelWorldItemSpawn } from "../../../game-runtime/level/normalize-level-world-item-spawn.js";
 import {
   resolveLevelCameraAnchor,
-  resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
@@ -204,32 +208,27 @@ function updateLevelCamera(refs, state) {
     worldHeightPx: state.worldHeightPx,
     cameraAnchors: state.cameraAnchors,
   });
-  const boundaryBox = state.summary && state.summary.boundaryBox ? state.summary.boundaryBox : null;
-  const viewFloorGuide = state.summary && Array.isArray(state.summary.viewFloorGuides) && state.summary.viewFloorGuides.length
-    ? state.summary.viewFloorGuides[0]
-    : null;
-  const spawn = state.spawn && state.spawn.worldCenter ? state.spawn.worldCenter : null;
-  const anchorTarget = state.initialTarget.startsWith("anchor:")
-    ? resolveLevelCameraAnchor(state.level, state.initialTarget.slice("anchor:".length), {
-        worldWidthPx: state.worldWidthPx,
-        groundCenterWorld: () => state.worldHeightPx * 0.5,
-        svgAnchors: state.cameraAnchors,
-      })
-    : null;
-  const target = state.initialTarget === "spawn" && spawn
-    ? spawn
-    : (
-        anchorTarget && anchorTarget.point
-          ? anchorTarget.point
-          : {
-              xW: state.worldWidthPx * 0.5,
-              yW: state.worldHeightPx * 0.5,
-            }
-      );
+  const sceneModel = state.sceneModel || null;
+  const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
+  const viewFloorGuide = sceneModel && sceneModel.viewFloorGuide ? sceneModel.viewFloorGuide : null;
+  const target = resolveAuthoredLevelCameraTarget({
+    level: state.level,
+    sceneModel,
+    initialTarget: state.initialTarget,
+    worldWidthPx: state.worldWidthPx,
+    worldHeightPx: state.worldHeightPx,
+  });
+  const bootOffsetYW = resolveViewFloorBootOffsetYW({
+    targetYW: target.yW,
+    boundaryBox,
+    viewFloorGuide,
+    viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
+    zoom: Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM)),
+  });
   const frame = state.cameraRuntime && typeof state.cameraRuntime.resolveFrame === "function"
     ? state.cameraRuntime.resolveFrame({
       targetXW: clampNumber(target.xW, 0),
-      targetYW: clampNumber(target.yW, 0),
+      targetYW: clampNumber(target.yW, 0) + bootOffsetYW,
       viewportWidthPx: Math.max(1, clampNumber(rect.width, 0)),
       viewportHeightPx: Math.max(1, clampNumber(rect.height, 0)),
       worldWidthPx: state.worldWidthPx,
@@ -239,15 +238,7 @@ function updateLevelCamera(refs, state) {
       fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
       fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
       screenAnchorX: cameraConfig.screenAnchorX,
-      screenAnchorY: (() => {
-        if (!boundaryBox || !viewFloorGuide) return cameraConfig.screenAnchorY;
-        const viewportHeightPx = Math.max(1, clampNumber(rect.height, 0));
-        const viewportWorldHeight = viewportHeightPx / Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM));
-        const desiredFloorRatio = clamp01(viewFloorGuide.authoredScreenYRatio);
-        const desiredCamTop = clampNumber(boundaryBox.bottomYW, state.worldHeightPx) - (desiredFloorRatio * viewportWorldHeight);
-        const derivedAnchorY = (clampNumber(target.yW, 0) - desiredCamTop) / Math.max(1, viewportWorldHeight);
-        return clamp01(derivedAnchorY);
-      })(),
+      screenAnchorY: cameraConfig.screenAnchorY,
       deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
       deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
       deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
@@ -307,33 +298,22 @@ async function hydrateSvgLevelPreview(refs, state, level) {
       tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
     });
     state.summary = summary;
-    state.cameraAnchors = Array.isArray(summary.cameraAnchors) ? summary.cameraAnchors : [];
-    state.spawn = Array.isArray(summary.spawnMarkers) && summary.spawnMarkers.length
-      ? summary.spawnMarkers[0]
-      : (() => {
-          const resolvedSpawn = resolveLevelSpawnPoint(level, {
-            worldWidthPx: state.worldWidthPx,
-            groundCenterWorld: () => state.worldHeightPx * 0.5,
-          });
-          return resolvedSpawn
-            ? {
-                id: "level_spawn",
-                authoredCenter: Object.freeze({
-                  x: resolvedSpawn.xW,
-                  y: resolvedSpawn.yW,
-                }),
-                worldCenter: resolvedSpawn,
-                authoredRadius: 0,
-              }
-            : null;
-        })();
+    state.sceneModel = buildAuthoredLevelSceneModel({
+      level,
+      summary,
+      worldWidthPx: state.worldWidthPx,
+      worldHeightPx: state.worldHeightPx,
+      groundCenterWorld: () => state.worldHeightPx * 0.5,
+    });
+    state.cameraAnchors = Array.isArray(state.sceneModel.cameraAnchors) ? state.sceneModel.cameraAnchors : [];
+    state.spawn = state.sceneModel.spawn;
     refs.worldImage.src = mapAssetUrl;
     refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
     refs.worldOverlay.innerHTML = `
-      ${buildBoundaryOverlayMarkup(summary.loops)}
-      ${buildLineArtOverlayMarkup(summary.lineArtShapes)}
-      ${buildViewFloorOverlayMarkup(summary.viewFloorGuides)}
-      ${buildWorldItemOverlayMarkup(summary.worldItemSpawns)}
+      ${buildBoundaryOverlayMarkup(state.sceneModel.loops)}
+      ${buildLineArtOverlayMarkup(state.sceneModel.lineArtShapes)}
+      ${buildViewFloorOverlayMarkup(state.sceneModel.viewFloorGuides)}
+      ${buildWorldItemOverlayMarkup(state.sceneModel.worldItemSpawns)}
       ${buildOrbReferenceMarkup(state.spawn)}
       ${buildSpawnOverlayMarkup(state.spawn)}
     `;
@@ -414,6 +394,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     cameraAnchors: [],
     spawn: null,
     summary: null,
+    sceneModel: null,
   };
 
   updateLevelCamera(refs, state);
