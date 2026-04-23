@@ -49,10 +49,16 @@ export function createOrbStageActionBridge({
         orbColorRuntime.clearColorize();
       }
     },
-    teleportOrbToSpawnNeutralizePhysics({
-      aboveGroundPx = 0,
-      teleportOrbRuntimeToSpawn = null,
-    } = {}) {
+    teleportOrbToSpawnNeutralizePhysics(options = {}) {
+      const payload = (typeof options === "number")
+        ? { aboveGroundPx: options }
+        : (options && typeof options === "object" ? options : {});
+      const {
+        aboveGroundPx = 0,
+        teleportOrbRuntimeToSpawn = null,
+        spawnPoint = null,
+        resolveSpawnPoint = null,
+      } = payload;
       const stage = runtime && runtime.stage;
       const orbState = getOrbRuntime();
       if (!stage || !orbState) return { handled: false };
@@ -61,6 +67,8 @@ export function createOrbStageActionBridge({
           patchOrbRuntime: (patch = {}) => patchOrbRuntime(patch),
           applyOrbTransform: () => applyOrbTransform(),
           worldSystem: stage.worldSystem || null,
+          spawnPoint,
+          resolveSpawnPoint,
           groundCenterWorld: () => groundCenterWorld(),
           phys: stage.phys || {},
           aboveGroundPx,
@@ -72,15 +80,33 @@ export function createOrbStageActionBridge({
       const yFloor = groundCenterWorld();
       const yCeil = Number(stage.phys && stage.phys.orbRadiusPx) || 50;
       const lift = Math.max(0, Number(aboveGroundPx) || 0);
-      const yTarget = Math.min(yFloor, Math.max(yCeil, yFloor - lift));
+      const resolvedSpawnPoint = (
+        spawnPoint && Number.isFinite(Number(spawnPoint.xW)) && Number.isFinite(Number(spawnPoint.yW))
+      )
+        ? {
+            xW: Number(spawnPoint.xW),
+            yW: Number(spawnPoint.yW),
+          }
+        : (typeof resolveSpawnPoint === "function" ? resolveSpawnPoint() : null);
+      const hasResolvedSpawn = resolvedSpawnPoint
+        && Number.isFinite(Number(resolvedSpawnPoint.xW))
+        && Number.isFinite(Number(resolvedSpawnPoint.yW));
+      const yTarget = hasResolvedSpawn
+        ? Math.max(yCeil, Number(resolvedSpawnPoint.yW) - lift)
+        : Math.min(yFloor, Math.max(yCeil, yFloor - lift));
       patchOrbRuntime({
+        ...(hasResolvedSpawn ? { xW: Number(resolvedSpawnPoint.xW) } : {}),
         yW: yTarget,
         v: 0,
-        onGround: !(yTarget < (yFloor - 0.5)),
+        vx: 0,
+        steerIntentX: 0,
+        steerActive: false,
+        onGround: hasResolvedSpawn ? false : !(yTarget < (yFloor - 0.5)),
         descendMs: 0,
         shieldDescentBlocked: false,
         floatGraceAnchorY: yTarget,
         floatGracePhase: 0,
+        teleportHoldAnchorY: yTarget,
       });
       applyGroundLine();
       applyOrbTransform();

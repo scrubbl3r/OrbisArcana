@@ -12,7 +12,7 @@ export function executeTeleport({
     if (typeof teleportOrbToSpawnNeutralizePhysics !== "function") {
       return { handled: false };
     }
-    teleportOrbToSpawnNeutralizePhysics(aboveGroundPx);
+    teleportOrbToSpawnNeutralizePhysics({ aboveGroundPx });
     return { handled: true };
   };
 
@@ -33,6 +33,8 @@ export function teleportOrbRuntimeToSpawn({
   patchOrbRuntime,
   applyOrbTransform,
   worldSystem,
+  spawnPoint = null,
+  resolveSpawnPoint = null,
   groundCenterWorld,
   phys,
   aboveGroundPx = 0,
@@ -42,26 +44,48 @@ export function teleportOrbRuntimeToSpawn({
   if (
     typeof patchOrbRuntime !== "function"
     || typeof applyOrbTransform !== "function"
-    || typeof groundCenterWorld !== "function"
     || !phys
   ) {
     return { handled: false };
   }
 
-  const yFloor = Number(groundCenterWorld()) || 0;
+  const resolvedSpawnPoint = (
+    spawnPoint && Number.isFinite(Number(spawnPoint.xW)) && Number.isFinite(Number(spawnPoint.yW))
+  )
+    ? {
+        xW: Number(spawnPoint.xW),
+        yW: Number(spawnPoint.yW),
+      }
+    : (
+        typeof resolveSpawnPoint === "function"
+          ? resolveSpawnPoint()
+          : null
+      );
+  const yFloor = typeof groundCenterWorld === "function" ? (Number(groundCenterWorld()) || 0) : 0;
   const yCeil = Number(phys.orbRadiusPx) || 0;
   const lift = Math.max(0, Number(aboveGroundPx) || 0);
-  const yTarget = Math.min(yFloor, Math.max(yCeil, yFloor - lift));
-  const onGround = !(yTarget < (yFloor - 0.5));
+  const hasResolvedSpawn = resolvedSpawnPoint
+    && Number.isFinite(Number(resolvedSpawnPoint.xW))
+    && Number.isFinite(Number(resolvedSpawnPoint.yW));
+  const xTarget = hasResolvedSpawn ? Number(resolvedSpawnPoint.xW) : null;
+  const yTarget = hasResolvedSpawn
+    ? Math.max(yCeil, Number(resolvedSpawnPoint.yW) - lift)
+    : Math.min(yFloor, Math.max(yCeil, yFloor - lift));
+  const onGround = hasResolvedSpawn ? false : !(yTarget < (yFloor - 0.5));
 
   patchOrbRuntime({
+    ...(xTarget == null ? {} : { xW: xTarget }),
     yW: yTarget,
     v: 0,
+    vx: 0,
+    steerIntentX: 0,
+    steerActive: false,
     onGround,
     descendMs: 0,
     shieldDescentBlocked: false,
     floatGraceAnchorY: yTarget,
     floatGracePhase: 0,
+    teleportHoldAnchorY: yTarget,
   });
   applyOrbTransform();
   if (worldSystem && typeof worldSystem.render === "function") {

@@ -1479,6 +1479,8 @@ function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 
   }
   return orbStageActions.teleportOrbToSpawnNeutralizePhysics({
     aboveGroundPx,
+    spawnPoint: shellResolvedSpawnPoint(shellContext),
+    resolveSpawnPoint: () => shellResolvedSpawnPoint(shellContext),
     teleportOrbRuntimeToSpawn:
       runtime &&
       runtime.receiverSpellRuntime &&
