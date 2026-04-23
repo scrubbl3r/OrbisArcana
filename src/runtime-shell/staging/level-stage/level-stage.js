@@ -546,6 +546,17 @@ export function renderLevelStage(root, { level = null } = {}) {
       getPreviewFollowMode() {
         return state.previewFollowMode;
       },
+      applyCameraFrame({
+        camLeft = 0,
+        camTop = 0,
+        zoom = state.previewZoom,
+      } = {}) {
+        refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
+        refs.world.style.setProperty("--level-world-height", `${state.worldHeightPx}px`);
+        refs.world.style.setProperty("--level-world-zoom", `${Number(zoom || state.previewZoom)}`);
+        refs.world.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
+        refs.world.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
+      },
       applyOrbTransform({
         top = 0,
         left = "50%",

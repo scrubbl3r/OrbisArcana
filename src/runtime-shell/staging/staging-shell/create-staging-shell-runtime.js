@@ -701,6 +701,7 @@ function shellOrbScreenY(shellContext) {
 
 function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
   const activeStageEls = getActiveShellStageElements(shellContext);
   const physStage = activeStageEls && activeStageEls.physStage ? activeStageEls.physStage : null;
   if (!runtime || !physStage || typeof physStage.getBoundingClientRect !== "function") return null;
@@ -776,6 +777,13 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         : Math.max(orbRadiusPx, shellWorldWidth(shellContext) - orbRadiusPx),
     },
   };
+  if (activeStageAdapter && typeof activeStageAdapter.applyCameraFrame === "function") {
+    activeStageAdapter.applyCameraFrame({
+      camLeft,
+      camTop,
+      zoom,
+    });
+  }
   return runtime.frameMetrics;
 }
 
