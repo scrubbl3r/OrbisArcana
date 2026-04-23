@@ -14,7 +14,7 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423a";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423b";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
@@ -39,6 +39,7 @@ import {
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
+import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -483,6 +484,13 @@ function shellResolvedCollisionBox(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
   return summary && summary.boundaryBox ? summary.boundaryBox : null;
+}
+
+function shellResolvedBoundarySegments(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  return Array.isArray(runtime && runtime.currentLevelBoundarySegments)
+    ? runtime.currentLevelBoundarySegments
+    : [];
 }
 
 function shellResolvedViewFloorGuide(shellContext) {
@@ -1253,6 +1261,7 @@ function startShellStageLoop(shellContext) {
             applyShellGroundLine(shellContext);
             applyShellOrbTransform(shellContext);
           },
+          getBoundarySegments: () => shellResolvedBoundarySegments(shellContext),
           updateDebugReadout: () => updateShellStageReadouts(shellContext),
         },
       });
@@ -2176,6 +2185,7 @@ function createStagingShellContext({
       orbRuntimeState: null,
       stage: null,
       currentLevelMapSummary: null,
+      currentLevelBoundarySegments: null,
       shellModeController: modeController,
       shellModeHotkeyOff: null,
       shellModeOff: null,
@@ -2189,7 +2199,10 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
   const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : null;
   const assetUrl = String(mapSource && mapSource.assetUrl || "").trim();
   if (!runtime || !mapSource || !assetUrl) {
-    if (runtime) runtime.currentLevelMapSummary = null;
+    if (runtime) {
+      runtime.currentLevelMapSummary = null;
+      runtime.currentLevelBoundarySegments = null;
+    }
     return null;
   }
   try {
@@ -2210,9 +2223,11 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
       tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
     });
     runtime.currentLevelMapSummary = summary;
+    runtime.currentLevelBoundarySegments = buildBoundarySegmentsFromLoops(summary && summary.loops);
     return summary;
   } catch (error) {
     runtime.currentLevelMapSummary = null;
+    runtime.currentLevelBoundarySegments = null;
     try { console.warn("[staging-shell] failed to hydrate level map summary", error); } catch (_) {}
     return null;
   }
@@ -2807,7 +2822,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260420v",
+  moduleCacheBustV = "20260423f",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

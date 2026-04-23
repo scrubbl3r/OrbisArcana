@@ -1,4 +1,5 @@
 import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420t";
+import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js";
 
 function clamp01(n){
   n = Number(n);
@@ -69,6 +70,7 @@ export function runOrbRuntimePipeline({
   const updateDebugReadout = hooks.updateDebugReadout;
   const getLateralBounds = hooks.getLateralBounds;
   const getCameraSteeringState = hooks.getCameraSteeringState;
+  const getBoundarySegments = hooks.getBoundarySegments;
 
   if (mvp && mvp.orbSystem && typeof mvp.orbSystem.tick === "function") {
     mvp.orbSystem.tick(nowMs);
@@ -154,8 +156,37 @@ export function runOrbRuntimePipeline({
   let impactSrc = "";
   const vyPreClamp = state.v;
   const wasAtCeil = (state.yW <= (yCeil + CEIL_CONTACT_EPSILON_PX));
+  const preBoundaryXW = Number(state.xW) || 0;
+  const preBoundaryYW = Number(state.yW) || 0;
+  const preBoundaryVX = Number(state.vx) || 0;
+  const preBoundaryVY = Number(state.v) || 0;
+  const segmentCollision = resolveCircleVsBoundarySegments({
+    circleXW: preBoundaryXW,
+    circleYW: preBoundaryYW,
+    radiusW: Number(phys.orbRadiusPx) || 0,
+    segments: typeof getBoundarySegments === "function" ? getBoundarySegments() : [],
+    previousXW: preBoundaryXW - (preBoundaryVX * dt),
+    previousYW: preBoundaryYW - (preBoundaryVY * dt),
+    maxIterations: 3,
+  });
+  if (segmentCollision && segmentCollision.maxDepth > 0) {
+    state.xW = Number(segmentCollision.xW) || state.xW;
+    state.yW = Number(segmentCollision.yW) || state.yW;
+    for (const contact of Array.isArray(segmentCollision.contacts) ? segmentCollision.contacts : []) {
+      const nx = Number(contact && contact.normalX) || 0;
+      const ny = Number(contact && contact.normalY) || 0;
+      const inwardVelocity = (Number(state.vx) || 0) * nx + (Number(state.v) || 0) * ny;
+      if (inwardVelocity < 0) {
+        state.vx -= inwardVelocity * nx;
+        state.v -= inwardVelocity * ny;
+      }
+    }
+    if (segmentCollision.grounded) {
+      state.onGround = true;
+    }
+  }
 
-  state.onGround = false;
+  state.onGround = !!(segmentCollision && segmentCollision.grounded);
 
   if (state.yW >= (yFloor - FLOOR_CONTACT_EPSILON_PX)) {
     if (!wasOnGround && vyPreClamp > 0) {
