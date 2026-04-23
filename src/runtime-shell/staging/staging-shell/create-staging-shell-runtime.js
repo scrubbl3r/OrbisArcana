@@ -49,8 +49,8 @@ export const STAGING_SHELL_STATUS = Object.freeze({
   bootFailed: "boot-failed",
 });
 
-const DEFAULT_ORB_STAGE_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || LEVELS_BY_ID["level-mvp"] || null);
-const DEFAULT_LEVEL_STAGE_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || LEVELS_BY_ID["orb-stage-level"] || null);
+const DEFAULT_ORB_STAGE_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || null);
+const DEFAULT_LEVEL_STAGE_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["level-mvp"] || null);
 
 function safeSetText(el, value) {
   if (!el) return;
@@ -875,8 +875,6 @@ function activateShellStageVisuals(shellContext) {
   updateShellStageReadouts(shellContext);
   drawShellStars(shellContext);
   drawShellBackdrop(shellContext);
-  traceShellBootSnapshot(shellContext, "activate");
-  traceShellLineArt(shellContext, "line_art.activate");
 }
 
 function tickShellStageRuntime(shellContext, dt) {
@@ -1164,116 +1162,6 @@ function renderShellHudFromMotionStore(shellContext) {
   devView.renderInputHud(vm);
 }
 
-function pushShellGeneralLog(shellContext, text = "", kind = "") {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const kwsPanelController = runtime && runtime.kws ? runtime.kws.kwsPanelController : null;
-  if (kwsPanelController && typeof kwsPanelController.pushGeneralLogLine === "function") {
-    kwsPanelController.pushGeneralLogLine(text, kind);
-  }
-}
-
-function clearShellGeneralLog(shellContext) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const kwsPanelController = runtime && runtime.kws ? runtime.kws.kwsPanelController : null;
-  if (kwsPanelController && typeof kwsPanelController.clearGeneralLogBuffer === "function") {
-    kwsPanelController.clearGeneralLogBuffer();
-  }
-}
-
-function resolveShellPolylineBounds(points = [], xKey = "xW", yKey = "yW") {
-  const safePoints = Array.isArray(points) ? points : [];
-  if (!safePoints.length) return null;
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  for (const point of safePoints) {
-    const x = Number(point && point[xKey]);
-    const y = Number(point && point[yKey]);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x);
-    maxY = Math.max(maxY, y);
-  }
-  if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
-    return null;
-  }
-  return Object.freeze({ minX, minY, maxX, maxY });
-}
-
-function traceShellLineArt(shellContext, label = "line_art") {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
-  if (!runtime) return;
-  const traceState = runtime.debugLineArtTrace || (runtime.debugLineArtTrace = {
-    lastLine: "",
-    lastAtMs: 0,
-  });
-  const nowMs = performance.now();
-  const lineArtShapes = Array.isArray(summary && summary.lineArtShapes) ? summary.lineArtShapes : [];
-  const frame = runtime.frameMetrics || null;
-  const zoom = Number(frame && frame.zoom) || 1;
-  const camLeft = Number(frame && frame.camLeft) || 0;
-  const camTop = Number(frame && frame.camTop) || 0;
-  const firstShape = lineArtShapes[0] || null;
-  const authoredBounds = resolveShellPolylineBounds(firstShape && firstShape.authoredPoints, "x", "y");
-  const worldBounds = resolveShellPolylineBounds(firstShape && firstShape.worldPoints, "xW", "yW");
-  const screenBounds = worldBounds
-    ? Object.freeze({
-        minX: (worldBounds.minX - camLeft) * zoom,
-        minY: (worldBounds.minY - camTop) * zoom,
-        maxX: (worldBounds.maxX - camLeft) * zoom,
-        maxY: (worldBounds.maxY - camTop) * zoom,
-      })
-    : null;
-  const line = [
-    label,
-    `count=${lineArtShapes.length}`,
-    `ids=${lineArtShapes.slice(0, 4).map((shape = {}) => String(shape.id || "")).filter(Boolean).join(",") || "none"}`,
-    `auth=${authoredBounds ? `${Math.round(authoredBounds.minX)},${Math.round(authoredBounds.minY)}>${Math.round(authoredBounds.maxX)},${Math.round(authoredBounds.maxY)}` : "none"}`,
-    `world=${worldBounds ? `${Math.round(worldBounds.minX)},${Math.round(worldBounds.minY)}>${Math.round(worldBounds.maxX)},${Math.round(worldBounds.maxY)}` : "none"}`,
-    `screen=${screenBounds ? `${Math.round(screenBounds.minX)},${Math.round(screenBounds.minY)}>${Math.round(screenBounds.maxX)},${Math.round(screenBounds.maxY)}` : "none"}`,
-    `cam=${Math.round(camLeft)},${Math.round(camTop)}`,
-    `zoom=${Number(zoom).toFixed(2)}`,
-  ].join(" | ");
-  if (line === traceState.lastLine && (nowMs - Number(traceState.lastAtMs || 0)) < 250) return;
-  traceState.lastLine = line;
-  traceState.lastAtMs = nowMs;
-  pushShellGeneralLog(shellContext, line, "muted");
-}
-
-function traceShellBootSnapshot(shellContext, label = "trace") {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  if (!runtime) return;
-  const traceState = runtime.debugTrace || (runtime.debugTrace = {
-    lastLine: "",
-    lastAtMs: 0,
-  });
-  const nowMs = performance.now();
-  const spawnPoint = shellResolvedSpawnPoint(shellContext);
-  const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
-    ? runtime.orbRuntimeState.get()
-    : null;
-  const frame = runtime.frameMetrics || null;
-  const line = [
-    label,
-    `level=${String(shellGameplayLevel(shellContext) && shellGameplayLevel(shellContext).id || "")}`,
-    `spawn=${spawnPoint ? `${Math.round(spawnPoint.xW)},${Math.round(spawnPoint.yW)}` : "none"}`,
-    `orbW=${orbState ? `${Math.round(Number(orbState.xW) || 0)},${Math.round(Number(orbState.yW) || 0)}` : "none"}`,
-    `orbS=${frame ? `${Math.round(Number(frame.orbScreenX) || 0)},${Math.round(Number(frame.orbScreenY) || 0)}` : "none"}`,
-    `camTop=${frame ? Math.round(Number(frame.camTop) || 0) : "none"}`,
-    `box=${(() => {
-      const box = shellResolvedCollisionBox(shellContext);
-      return box ? `${Math.round(Number(box.leftXW) || 0)},${Math.round(Number(box.topYW) || 0)}>${Math.round(Number(box.rightXW) || 0)},${Math.round(Number(box.bottomYW) || 0)}` : "none";
-    })()}`,
-  ].join(" | ");
-  if (line === traceState.lastLine && (nowMs - Number(traceState.lastAtMs || 0)) < 250) return;
-  traceState.lastLine = line;
-  traceState.lastAtMs = nowMs;
-  pushShellGeneralLog(shellContext, line, "muted");
-}
-
 function startShellStageLoop(shellContext) {
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -1301,8 +1189,6 @@ function startShellStageLoop(shellContext) {
     clamp,
     runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
       updateShellFrameMetrics(shellContext, nowMs);
-      traceShellBootSnapshot(shellContext, "frame");
-      traceShellLineArt(shellContext, "line_art.frame");
       const receiverHostRuntime = runtime.receiverHostRuntime || null;
       const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || runtime.mvp || null;
       const orbFxSystem =
@@ -2206,14 +2092,8 @@ function bindShellWakeWindowVisuals({ eventBus, kwsPanelController = null, kwsBr
 }
 
 function shellGameplayLevel(shellContext) {
-  return shellContext && (shellContext.gameplayLevel || shellContext.currentLevel)
-    ? (shellContext.gameplayLevel || shellContext.currentLevel)
-    : null;
-}
-
-function shellDesignLevel(shellContext) {
-  return shellContext && (shellContext.designLevel || shellContext.levelOverlayLevel)
-    ? (shellContext.designLevel || shellContext.levelOverlayLevel)
+  return shellContext && shellContext.gameplayLevel
+    ? shellContext.gameplayLevel
     : null;
 }
 
@@ -2241,7 +2121,6 @@ function createStagingShellContext({
     modeController,
     gameplayLevel,
     designLevel,
-    currentLevel: gameplayLevel,
     refs: surfaceRefs,
     orbStageAdapter,
     levelStageAdapter,
@@ -2301,18 +2180,6 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
       tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
     });
     runtime.currentLevelMapSummary = summary;
-    pushShellGeneralLog(
-      shellContext,
-      [
-        "map_summary",
-        `level=${String(level && level.id || "")}`,
-        `loops=${Number(summary && summary.loopCount) || 0}`,
-        `spawns=${Array.isArray(summary && summary.spawnMarkers) ? summary.spawnMarkers.length : 0}`,
-        `worldItems=${Array.isArray(summary && summary.worldItemSpawns) ? summary.worldItemSpawns.length : 0}`,
-        `lineArt=${Array.isArray(summary && summary.lineArtShapes) ? summary.lineArtShapes.length : 0}`,
-      ].join(" | "),
-      "muted"
-    );
     return summary;
   } catch (error) {
     runtime.currentLevelMapSummary = null;
@@ -2834,9 +2701,6 @@ async function initShellKwsRuntime(shellContext) {
     kwsDebugState,
     receiverEvents: RECEIVER_EVENTS,
   };
-
-  clearShellGeneralLog(shellContext);
-  pushShellGeneralLog(shellContext, "general log cleared for staging traces", "muted");
 
   try {
     if (typeof kwsRuntimeController.setKwsBackend === "function") {

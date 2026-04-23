@@ -380,16 +380,7 @@ export function createLogPanelController({
     appendLiveRowIfActive("phone", row);
   }
 
-  function clearGeneralLogBuffer() {
-    clearLogChannelBuffer("general");
-    clearPreopenLogChannelBuffer("general");
-    if (logPanelOpen && activeLogChannel === "general") {
-      renderCurrentLogChannel();
-    }
-  }
-
   return {
-    clearGeneralLogBuffer,
     pushGeneralLogLine,
     pushKwsLogLine,
     pushPhoneLogLine,

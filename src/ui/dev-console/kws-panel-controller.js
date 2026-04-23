@@ -486,7 +486,6 @@ export function createKwsPanelController({
     flashKwsToken,
     openKwsWakeHudGate,
     updateKwsReadout,
-    clearGeneralLogBuffer: logPanelController.clearGeneralLogBuffer,
     pushGeneralLogLine: logPanelController.pushGeneralLogLine,
     pushKwsLogLine: logPanelController.pushKwsLogLine,
     syncKwsTuneUiFromStatus,
