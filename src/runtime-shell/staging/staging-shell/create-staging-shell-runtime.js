@@ -448,13 +448,7 @@ function shellGameplayCameraConfig(shellContext) {
     followLerpX: Number(camera && camera.followLerpX) >= 0 ? Number(camera.followLerpX) : 1,
     followLerpY: Number(camera && camera.followLerpY) >= 0 ? Number(camera.followLerpY) : 1,
     screenAnchorX: Number(camera && camera.screenAnchorX) >= 0 ? Number(camera.screenAnchorX) : 0.5,
-    screenAnchorY: (() => {
-      const guide = shellResolvedViewFloorGuide(shellContext);
-      if (guide && Number.isFinite(Number(guide.authoredScreenYRatio))) {
-        return Math.max(0, Math.min(1, Number(guide.authoredScreenYRatio)));
-      }
-      return Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5;
-    })(),
+    screenAnchorY: Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5,
     clampInsetLeftPx: Number(camera && camera.clampInsetLeftPx) >= 0 ? Number(camera.clampInsetLeftPx) : 0,
     clampInsetRightPx: Number(camera && camera.clampInsetRightPx) >= 0 ? Number(camera.clampInsetRightPx) : 0,
     clampInsetTopPx: Number(camera && camera.clampInsetTopPx) >= 0 ? Number(camera.clampInsetTopPx) : 0,
@@ -484,12 +478,16 @@ function shellResolvedViewFloorGuide(shellContext) {
 
 function shellGameplayCameraClampBounds(shellContext) {
   const collisionBox = shellResolvedCollisionBox(shellContext);
+  const viewFloorGuide = shellResolvedViewFloorGuide(shellContext);
   if (collisionBox) {
     return Object.freeze({
       leftXW: Number(collisionBox.leftXW) || 0,
       rightXW: Number(collisionBox.rightXW) || shellWorldWidth(shellContext),
       topYW: Number(collisionBox.topYW) || 0,
-      bottomYW: Number(collisionBox.bottomYW) || shellWorldHeight(shellContext),
+      bottomYW: Math.max(
+        Number(collisionBox.bottomYW) || 0,
+        Number(viewFloorGuide && viewFloorGuide.worldY) || 0
+      ) || shellWorldHeight(shellContext),
     });
   }
   return Object.freeze({
