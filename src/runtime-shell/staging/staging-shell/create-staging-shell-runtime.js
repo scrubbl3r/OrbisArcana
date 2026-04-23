@@ -38,6 +38,7 @@ import {
   resolveLevelCameraAnchor,
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
+import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -445,6 +446,12 @@ function shellResolvedSpawnPoint(shellContext) {
   });
 }
 
+function shellResolvedCollisionBox(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
+  return summary && summary.boundaryBox ? summary.boundaryBox : null;
+}
+
 function shellGameplayCameraTarget(shellContext, orbState = null) {
   const camera = shellContext && shellContext.currentLevel && shellContext.currentLevel.camera
     ? shellContext.currentLevel.camera
@@ -484,6 +491,10 @@ function shellGameplayCameraTarget(shellContext, orbState = null) {
 
 function shellGroundCenterWorld(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+  const collisionBox = shellResolvedCollisionBox(shellContext);
+  if (collisionBox && stage && stage.phys) {
+    return Math.max(0, Number(collisionBox.bottomYW) - (Number(stage.phys.orbRadiusPx) || 50));
+  }
   if (!stage || !stage.phys) return 0;
   const WORLD_H = Number(stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
   const phys = stage.phys;
@@ -492,6 +503,15 @@ function shellGroundCenterWorld(shellContext) {
     (Number(phys.groundLinePx) || 2) +
     (Number(phys.orbRadiusPx) || 50)
   );
+}
+
+function shellCeilingWorld(shellContext) {
+  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+  const collisionBox = shellResolvedCollisionBox(shellContext);
+  if (collisionBox && stage && stage.phys) {
+    return Math.max(0, Number(collisionBox.topYW) + (Number(stage.phys.orbRadiusPx) || 50));
+  }
+  return Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
 }
 
 function shellStageCenterX(shellContext) {
@@ -510,6 +530,16 @@ function shellLateralBounds(shellContext) {
   }
   const stage = runtime && runtime.stage ? runtime.stage : null;
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
+  const collisionBox = shellResolvedCollisionBox(shellContext);
+  if (collisionBox) {
+    return {
+      left: Math.max(orbRadiusPx, Number(collisionBox.leftXW) + orbRadiusPx),
+      right: Math.max(
+        orbRadiusPx,
+        Number(collisionBox.rightXW) - orbRadiusPx
+      ),
+    };
+  }
   const worldWidth = shellWorldWidth(shellContext);
   return {
     left: orbRadiusPx,
@@ -1056,6 +1086,10 @@ function traceShellBootSnapshot(shellContext, label = "trace") {
     `orbW=${orbState ? `${Math.round(Number(orbState.xW) || 0)},${Math.round(Number(orbState.yW) || 0)}` : "none"}`,
     `orbS=${frame ? `${Math.round(Number(frame.orbScreenX) || 0)},${Math.round(Number(frame.orbScreenY) || 0)}` : "none"}`,
     `camTop=${frame ? Math.round(Number(frame.camTop) || 0) : "none"}`,
+    `box=${(() => {
+      const box = shellResolvedCollisionBox(shellContext);
+      return box ? `${Math.round(Number(box.leftXW) || 0)},${Math.round(Number(box.topYW) || 0)}>${Math.round(Number(box.rightXW) || 0)},${Math.round(Number(box.bottomYW) || 0)}` : "none";
+    })()}`,
   ].join(" | ");
   if (line === traceState.lastLine && (nowMs - Number(traceState.lastAtMs || 0)) < 250) return;
   traceState.lastLine = line;
@@ -1111,6 +1145,7 @@ function startShellStageLoop(shellContext) {
         hooks: {
           clamp,
           getLateralBounds: () => shellLateralBounds(shellContext),
+          getCeilingWorld: () => shellCeilingWorld(shellContext),
           getCameraSteeringState: () => (
             runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
               ? runtime.cameraInputOrbBridge.getState()
@@ -2028,11 +2063,44 @@ function createStagingShellContext({
       orbRuntimeLoop: null,
       orbRuntimeState: null,
       stage: null,
+      currentLevelMapSummary: null,
       shellModeController: modeController,
       shellModeHotkeyOff: null,
       shellModeOff: null,
     },
   };
+}
+
+async function hydrateShellCurrentLevelMapSummary(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const level = shellContext && shellContext.currentLevel ? shellContext.currentLevel : null;
+  const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : null;
+  const assetUrl = String(mapSource && mapSource.assetUrl || "").trim();
+  if (!runtime || !mapSource || !assetUrl) {
+    if (runtime) runtime.currentLevelMapSummary = null;
+    return null;
+  }
+  try {
+    const response = await fetch(assetUrl, { method: "GET" });
+    if (!response.ok) throw new Error(`Level SVG fetch failed: ${response.status}`);
+    const svgText = await response.text();
+    const summary = summarizeSvgLevelSource({
+      svgText,
+      worldWidthPx: shellWorldWidth(shellContext),
+      worldHeightPx: shellWorldHeight(shellContext),
+      boundaryLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.boundary,
+      spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
+      cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
+      spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
+      tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
+    });
+    runtime.currentLevelMapSummary = summary;
+    return summary;
+  } catch (error) {
+    runtime.currentLevelMapSummary = null;
+    try { console.warn("[staging-shell] failed to hydrate level map summary", error); } catch (_) {}
+    return null;
+  }
 }
 
 function exposeShellContext(rootDocument, shellContext) {
@@ -2728,6 +2796,7 @@ export async function createStagingShellRuntime({
       });
     }
     await initShellKwsRuntime(shellContext);
+    await hydrateShellCurrentLevelMapSummary(shellContext);
     initializeShellStageRuntime(shellContext);
     const orbStageAdapter = shellContext.orbStageAdapter || null;
     shellContext.runtime.orbShatterController = (

@@ -209,6 +209,21 @@ export function scaleAuthoringPointToWorld(
   });
 }
 
+function buildClosedRectPolyline(rect = {}) {
+  const x = clampNumber(rect && rect.x, 0);
+  const y = clampNumber(rect && rect.y, 0);
+  const width = Math.max(0, clampNumber(rect && rect.width, 0));
+  const height = Math.max(0, clampNumber(rect && rect.height, 0));
+  if (width <= 0 || height <= 0) return null;
+  return Object.freeze([
+    Object.freeze({ x, y }),
+    Object.freeze({ x: x + width, y }),
+    Object.freeze({ x: x + width, y: y + height }),
+    Object.freeze({ x, y: y + height }),
+    Object.freeze({ x, y }),
+  ]);
+}
+
 export function buildSvgBoundaryLoops({
   svgText = "",
   worldWidthPx = 0,
@@ -224,16 +239,21 @@ export function buildSvgBoundaryLoops({
     (Array.isArray(boundaryLayerLabels) ? boundaryLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   let selectedPaths = authoredPaths;
+  let selectedRects = parseSvgRectElements(svgText);
   if (allowedLabels.size) {
-    selectedPaths = authoredLayers
-      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
+    const matchingLayers = authoredLayers
+      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()));
+    selectedPaths = matchingLayers
       .flatMap((layer) => Array.isArray(layer.paths) ? layer.paths : []);
+    selectedRects = matchingLayers
+      .flatMap((layer) => Array.isArray(layer.rects) ? layer.rects : []);
   }
   if (allowedIds.size) {
     selectedPaths = selectedPaths.filter((path) => allowedIds.has(String(path && path.id || "")));
+    selectedRects = selectedRects.filter((rect) => allowedIds.has(String(rect && rect.id || "")));
   }
 
-  return Object.freeze(selectedPaths.map((path, index) => {
+  const pathLoops = selectedPaths.map((path, index) => {
     const authoredPoints = parseSvgPolylinePath(path.d) || [];
     const worldPoints = authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
       viewBox,
@@ -242,10 +262,63 @@ export function buildSvgBoundaryLoops({
     }));
     return Object.freeze({
       id: String(path && path.id || `svg_path_${index + 1}`),
+      kind: "path_loop",
       authoredPoints: Object.freeze(authoredPoints),
       worldPoints: Object.freeze(worldPoints),
     });
-  }).filter((loop) => Array.isArray(loop.worldPoints) && loop.worldPoints.length >= 2));
+  }).filter((loop) => Array.isArray(loop.worldPoints) && loop.worldPoints.length >= 2);
+
+  const rectLoops = selectedRects.map((rect, index) => {
+    const authoredPoints = buildClosedRectPolyline(rect) || [];
+    const worldPoints = authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+      viewBox,
+      worldWidthPx,
+      worldHeightPx,
+    }));
+    return Object.freeze({
+      id: String(rect && rect.id || `svg_rect_${index + 1}`),
+      kind: "rect_loop",
+      authoredPoints: Object.freeze(authoredPoints),
+      worldPoints: Object.freeze(worldPoints),
+    });
+  }).filter((loop) => Array.isArray(loop.worldPoints) && loop.worldPoints.length >= 4);
+
+  return Object.freeze([
+    ...pathLoops,
+    ...rectLoops,
+  ]);
+}
+
+export function resolveBoundaryBoxFromLoops(loops = []) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  for (const loop of Array.isArray(loops) ? loops : []) {
+    for (const point of Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : []) {
+      const x = clampNumber(point && point.xW, NaN);
+      const y = clampNumber(point && point.yW, NaN);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+
+  if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
+    return null;
+  }
+
+  return Object.freeze({
+    leftXW: minX,
+    topYW: minY,
+    rightXW: maxX,
+    bottomYW: maxY,
+    widthW: Math.max(0, maxX - minX),
+    heightW: Math.max(0, maxY - minY),
+  });
 }
 
 export function buildSvgSpawnMarkers({
@@ -431,12 +504,14 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     tileSizePx,
   });
+  const boundaryBox = resolveBoundaryBoxFromLoops(loops);
   return Object.freeze({
     viewBox,
     loopCount: loops.length,
     loops,
     spawnMarkers: Object.freeze(spawnMarkers),
     cameraAnchors: Object.freeze(cameraAnchors),
+    boundaryBox,
     boundaryTileMask,
   });
 }

@@ -60,6 +60,7 @@ export function runOrbRuntimePipeline({
   const isFloatGraceActive = hooks.isFloatGraceActive;
   const clearFloatGrace = hooks.clearFloatGrace;
   const groundCenterWorld = hooks.groundCenterWorld;
+  const getCeilingWorld = hooks.getCeilingWorld;
   const computeImpactMetric = hooks.computeImpactMetric;
   const drawStars = hooks.drawStars;
   const drawWorldBackdrop = hooks.drawWorldBackdrop;
@@ -82,7 +83,9 @@ export function runOrbRuntimePipeline({
 
   if (state.teleportHoldActive) {
     const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;
-    const yCeil  = Number(phys.orbRadiusPx) || 0;
+    const yCeil  = (typeof getCeilingWorld === "function")
+      ? Number(getCeilingWorld()) || 0
+      : (Number(phys.orbRadiusPx) || 0);
     const holdY = Number.isFinite(Number(state.teleportHoldAnchorY))
       ? Number(state.teleportHoldAnchorY)
       : Number(state.yW || yFloor);
@@ -144,7 +147,9 @@ export function runOrbRuntimePipeline({
   state.shieldDescentBlocked = (state.descendMs >= shieldDescent.graceMs);
 
   const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;
-  const yCeil  = Number(phys.orbRadiusPx) || 0;
+  const yCeil  = (typeof getCeilingWorld === "function")
+    ? Number(getCeilingWorld()) || 0
+    : (Number(phys.orbRadiusPx) || 0);
   let impactMag = 0;
   let impactSrc = "";
   const vyPreClamp = state.v;
