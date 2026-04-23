@@ -91,6 +91,6 @@ export function resolveViewFloorBootOffsetYW({
   const viewportWorldHeight = Math.max(1, clampNumber(viewportHeightPx, 0)) / Math.max(0.05, clampNumber(zoom, 1));
   const centeredCamTop = clampNumber(targetYW, 0) - (viewportWorldHeight * 0.5);
   const desiredFloorRatio = clamp01(viewFloorGuide.authoredScreenYRatio);
-  const desiredCamTop = clampNumber(boundaryBox.bottomYW, 0) - (desiredFloorRatio * viewportWorldHeight);
+  const desiredCamTop = clampNumber(viewFloorGuide.worldY, 0) - (desiredFloorRatio * viewportWorldHeight);
   return desiredCamTop - centeredCamTop;
 }

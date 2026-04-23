@@ -270,13 +270,17 @@ function updateLevelCamera(refs, state) {
       deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
       followLerpX: state.bootCamera ? 1 : cameraConfig.followLerpX,
       followLerpY: state.bootCamera ? 1 : cameraConfig.followLerpY,
-      clampLeftXW: boundaryBox ? clampNumber(boundaryBox.leftXW, 0) : 0,
-      clampRightXW: boundaryBox ? clampNumber(boundaryBox.rightXW, state.worldWidthPx) : state.worldWidthPx,
-      clampTopYW: boundaryBox ? clampNumber(boundaryBox.topYW, 0) : 0,
-      clampBottomYW: Math.max(
-        boundaryBox ? clampNumber(boundaryBox.bottomYW, state.worldHeightPx) : state.worldHeightPx,
-        viewFloorGuide ? clampNumber(viewFloorGuide.worldY, 0) : 0
-      ),
+      clampLeftXW: state.bootCamera ? 0 : (boundaryBox ? clampNumber(boundaryBox.leftXW, 0) : 0),
+      clampRightXW: state.bootCamera
+        ? state.worldWidthPx
+        : (boundaryBox ? clampNumber(boundaryBox.rightXW, state.worldWidthPx) : state.worldWidthPx),
+      clampTopYW: state.bootCamera ? 0 : (boundaryBox ? clampNumber(boundaryBox.topYW, 0) : 0),
+      clampBottomYW: state.bootCamera
+        ? state.worldHeightPx
+        : Math.max(
+            boundaryBox ? clampNumber(boundaryBox.bottomYW, state.worldHeightPx) : state.worldHeightPx,
+            viewFloorGuide ? clampNumber(viewFloorGuide.worldY, 0) : 0
+          ),
       clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
       clampInsetRightPx: cameraConfig.clampInsetRightPx,
       clampInsetTopPx: cameraConfig.clampInsetTopPx,
