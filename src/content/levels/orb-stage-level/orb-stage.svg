@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.8101934"
-     inkscape:cx="928.9063"
-     inkscape:cy="1461.1699"
+     inkscape:cx="934.70676"
+     inkscape:cy="1434.6533"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="0"
      inkscape:window-y="34"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer4"
      showgrid="true">
     <inkscape:grid
        id="grid1"
@@ -51,15 +51,26 @@
   <defs
      id="defs1" />
   <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="view_floor"
+     transform="translate(0,20)">
+    <path
+       style="fill:#00ffff;stroke:#000000"
+       d="m 864,1536 h 320"
+       id="path2" />
+  </g>
+  <g
      inkscape:label="bounds"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     style="display:inline">
     <rect
        style="fill:none;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
        id="rect1"
        width="166.85287"
        height="749.19476"
-       x="960.40265"
+       x="940.57355"
        y="786.40259" />
   </g>
   <g
@@ -69,7 +80,7 @@
     <circle
        style="fill:#ff0000;stroke:none;stroke-width:0.696242"
        id="path2-9"
-       cx="1043.5"
+       cx="1024"
        cy="1510"
        r="8.6518793" />
   </g>
