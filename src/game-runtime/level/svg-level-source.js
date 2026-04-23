@@ -8,6 +8,17 @@ function readAttr(attrText = "", name = "") {
   return match ? String(match[1] || "") : "";
 }
 
+function parseTranslateTransform(transformText = "") {
+  const match = String(transformText || "").match(/translate\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\s*\)/i);
+  if (!match) {
+    return Object.freeze({ x: 0, y: 0 });
+  }
+  return Object.freeze({
+    x: clampNumber(match[1], 0),
+    y: clampNumber(match[2], 0),
+  });
+}
+
 export function parseSvgViewBox(svgText = "") {
   const match = String(svgText || "").match(/viewBox="([^"]+)"/i);
   if (!match) {
@@ -79,9 +90,11 @@ export function parseSvgLayerElements(svgText = "") {
     const attrs = String(match && match[1] || "");
     const body = String(match && match[2] || "");
     if (String(readAttr(attrs, "inkscape:groupmode") || "").trim().toLowerCase() !== "layer") continue;
+    const translate = parseTranslateTransform(readAttr(attrs, "transform"));
     layers.push(Object.freeze({
       id: readAttr(attrs, "id"),
       label: readAttr(attrs, "inkscape:label"),
+      translate,
       body,
       paths: parseSvgPathElements(body),
       circles: parseSvgCircleElements(body),
@@ -191,6 +204,33 @@ export function parseSvgPolylinePath(pathData = "") {
   return points.length >= 2 ? Object.freeze(points.map((point) => Object.freeze(point))) : null;
 }
 
+function translatePoint(point = {}, translate = {}) {
+  return Object.freeze({
+    x: clampNumber(point && point.x, 0) + clampNumber(translate && translate.x, 0),
+    y: clampNumber(point && point.y, 0) + clampNumber(translate && translate.y, 0),
+  });
+}
+
+function translatePolylinePoints(points = [], translate = {}) {
+  return Object.freeze((Array.isArray(points) ? points : []).map((point) => translatePoint(point, translate)));
+}
+
+function translateRect(rect = {}, translate = {}) {
+  return Object.freeze({
+    ...rect,
+    x: clampNumber(rect && rect.x, 0) + clampNumber(translate && translate.x, 0),
+    y: clampNumber(rect && rect.y, 0) + clampNumber(translate && translate.y, 0),
+  });
+}
+
+function translateCircle(circle = {}, translate = {}) {
+  return Object.freeze({
+    ...circle,
+    cx: clampNumber(circle && circle.cx, 0) + clampNumber(translate && translate.x, 0),
+    cy: clampNumber(circle && circle.cy, 0) + clampNumber(translate && translate.y, 0),
+  });
+}
+
 export function scaleAuthoringPointToWorld(
   point = {},
   {
@@ -244,9 +284,15 @@ export function buildSvgBoundaryLoops({
     const matchingLayers = authoredLayers
       .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()));
     selectedPaths = matchingLayers
-      .flatMap((layer) => Array.isArray(layer.paths) ? layer.paths : []);
+      .flatMap((layer) => (Array.isArray(layer.paths) ? layer.paths : []).map((path) => Object.freeze({
+        ...path,
+        translatedAuthoredPoints: translatePolylinePoints(
+          parseSvgPolylinePath(path && path.d) || [],
+          layer && layer.translate
+        ),
+      })));
     selectedRects = matchingLayers
-      .flatMap((layer) => Array.isArray(layer.rects) ? layer.rects : []);
+      .flatMap((layer) => (Array.isArray(layer.rects) ? layer.rects : []).map((rect) => translateRect(rect, layer && layer.translate)));
   }
   if (allowedIds.size) {
     selectedPaths = selectedPaths.filter((path) => allowedIds.has(String(path && path.id || "")));
@@ -254,7 +300,9 @@ export function buildSvgBoundaryLoops({
   }
 
   const pathLoops = selectedPaths.map((path, index) => {
-    const authoredPoints = parseSvgPolylinePath(path.d) || [];
+    const authoredPoints = Array.isArray(path && path.translatedAuthoredPoints)
+      ? path.translatedAuthoredPoints
+      : (parseSvgPolylinePath(path && path.d) || []);
     const worldPoints = authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
       viewBox,
       worldWidthPx,
@@ -337,7 +385,7 @@ export function buildSvgSpawnMarkers({
   if (allowedLabels.size) {
     circles = authoredLayers
       .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
-      .flatMap((layer) => Array.isArray(layer.circles) ? layer.circles : []);
+      .flatMap((layer) => (Array.isArray(layer.circles) ? layer.circles : []).map((circle) => translateCircle(circle, layer && layer.translate)));
   }
   const markerId = String(spawnMarkerId || "").trim();
   if (markerId) {
@@ -387,15 +435,20 @@ export function buildSvgCameraAnchors({
         const circles = Array.isArray(layer.circles) ? layer.circles : [];
         const rects = Array.isArray(layer.rects) ? layer.rects : [];
         return [
-          ...circles.map((circle) => Object.freeze({
+          ...circles.map((circleSource) => {
+            const circle = translateCircle(circleSource, layer && layer.translate);
+            return Object.freeze({
             id: String(circle && circle.id || "").trim(),
             authoredCenter: Object.freeze({
               x: clampNumber(circle && circle.cx, 0),
               y: clampNumber(circle && circle.cy, 0),
             }),
             authoredRadius: clampNumber(circle && circle.r, 0),
-          })),
-          ...rects.map((rect) => Object.freeze({
+          });
+          }),
+          ...rects.map((rectSource) => {
+            const rect = translateRect(rectSource, layer && layer.translate);
+            return Object.freeze({
             id: String(rect && rect.id || "").trim(),
             authoredCenter: Object.freeze({
               x: clampNumber(rect && rect.x, 0) + (clampNumber(rect && rect.width, 0) * 0.5),
@@ -405,7 +458,8 @@ export function buildSvgCameraAnchors({
               clampNumber(rect && rect.width, 0),
               clampNumber(rect && rect.height, 0)
             ) * 0.5,
-          })),
+          });
+          }),
         ];
       });
   }
@@ -439,11 +493,19 @@ export function buildSvgViewFloorGuides({
   if (allowedLabels.size) {
     selectedPaths = authoredLayers
       .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
-      .flatMap((layer) => Array.isArray(layer.paths) ? layer.paths : []);
+      .flatMap((layer) => (Array.isArray(layer.paths) ? layer.paths : []).map((path) => Object.freeze({
+        ...path,
+        translatedAuthoredPoints: translatePolylinePoints(
+          parseSvgPolylinePath(path && path.d) || [],
+          layer && layer.translate
+        ),
+      })));
   }
 
   return Object.freeze(selectedPaths.map((path, index) => {
-    const authoredPoints = parseSvgPolylinePath(path && path.d) || [];
+    const authoredPoints = Array.isArray(path && path.translatedAuthoredPoints)
+      ? path.translatedAuthoredPoints
+      : (parseSvgPolylinePath(path && path.d) || []);
     if (authoredPoints.length < 2) return null;
     const authoredY = authoredPoints.reduce((sum, point) => sum + clampNumber(point && point.y, 0), 0) / authoredPoints.length;
     const worldPoints = authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
