@@ -8,6 +8,17 @@ function readAttr(attrText = "", name = "") {
   return match ? String(match[1] || "") : "";
 }
 
+function parseSvgInlineStyle(styleText = "") {
+  const style = Object.create(null);
+  for (const part of String(styleText || "").split(";")) {
+    const [rawKey, rawValue] = String(part || "").split(":");
+    const key = String(rawKey || "").trim();
+    if (!key) continue;
+    style[key] = String(rawValue || "").trim();
+  }
+  return Object.freeze(style);
+}
+
 function parseTranslateTransform(transformText = "") {
   const match = String(transformText || "").match(/translate\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\s*\)/i);
   if (!match) {
@@ -525,6 +536,96 @@ export function buildSvgViewFloorGuides({
   }).filter(Boolean));
 }
 
+export function buildSvgWorldItemSpawns({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  worldItemLayerLabels = [],
+  defaultKind = "energy_globe_emitter",
+  defaultRadiusPx = 25,
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(worldItemLayerLabels) ? worldItemLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  const matchingLayers = authoredLayers
+    .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()));
+  const spawns = [];
+  for (const layer of matchingLayers) {
+    const layerLabel = String(layer && layer.label || "").trim();
+    const circles = Array.isArray(layer && layer.circles) ? layer.circles : [];
+    for (let index = 0; index < circles.length; index += 1) {
+      const circle = translateCircle(circles[index], layer && layer.translate);
+      const authoredCenter = Object.freeze({
+        x: clampNumber(circle && circle.cx, 0),
+        y: clampNumber(circle && circle.cy, 0),
+      });
+      const worldCenter = scaleAuthoringPointToWorld(authoredCenter, {
+        viewBox,
+        worldWidthPx,
+        worldHeightPx,
+      });
+      spawns.push(Object.freeze({
+        id: String(layerLabel || circle && circle.id || `world_item_spawn_${spawns.length + 1}`),
+        kind: defaultKind,
+        xNorm: clampNumber(authoredCenter.x, 0) / Math.max(1, clampNumber(viewBox.width, 0)),
+        yW: clampNumber(worldCenter.yW, 0),
+        r: Math.max(1, Number(defaultRadiusPx) || 25),
+        capacity: 1,
+        regenTrigger: "globe_spent",
+        authoredCenter,
+        worldCenter,
+        authoredRadius: clampNumber(circle && circle.r, 0),
+      }));
+    }
+  }
+  return Object.freeze(spawns);
+}
+
+export function buildSvgLineArtShapes({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  lineArtLayerLabels = [],
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(lineArtLayerLabels) ? lineArtLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  const matchingLayers = authoredLayers
+    .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()));
+  const worldScaleX = Math.max(0, clampNumber(worldWidthPx, 0)) / Math.max(1, clampNumber(viewBox.width, 0));
+
+  return Object.freeze(matchingLayers.flatMap((layer) => {
+    const paths = Array.isArray(layer && layer.paths) ? layer.paths : [];
+    return paths.map((path, index) => {
+      const authoredPoints = translatePolylinePoints(
+        parseSvgPolylinePath(path && path.d) || [],
+        layer && layer.translate
+      );
+      if (authoredPoints.length < 2) return null;
+      const style = parseSvgInlineStyle(path && path.style);
+      return Object.freeze({
+        id: String(path && path.id || `${String(layer && layer.label || "line_art").trim()}_${index + 1}`),
+        authoredPoints,
+        worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+          viewBox,
+          worldWidthPx,
+          worldHeightPx,
+        }))),
+        fill: String(style.fill || "none"),
+        fillOpacity: clampNumber(style["fill-opacity"], 1),
+        stroke: String(style.stroke || "none"),
+        strokeOpacity: clampNumber(style["stroke-opacity"], 1),
+        authoredStrokeWidth: clampNumber(style["stroke-width"], 0),
+        worldStrokeWidth: clampNumber(style["stroke-width"], 0) * worldScaleX,
+      });
+    }).filter(Boolean);
+  }));
+}
+
 export function buildBoundaryTileMask({
   loops = [],
   worldWidthPx = 0,
@@ -576,6 +677,8 @@ export function summarizeSvgLevelSource({
   spawnLayerLabels = [],
   cameraLayerLabels = [],
   viewFloorLayerLabels = [],
+  worldItemLayerLabels = [],
+  lineArtLayerLabels = [],
   spawnMarkerId = "",
   tileSizePx = 128,
 } = {}) {
@@ -606,6 +709,18 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     viewFloorLayerLabels,
   });
+  const worldItemSpawns = buildSvgWorldItemSpawns({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    worldItemLayerLabels,
+  });
+  const lineArtShapes = buildSvgLineArtShapes({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    lineArtLayerLabels,
+  });
   const boundaryTileMask = buildBoundaryTileMask({
     loops,
     worldWidthPx,
@@ -620,6 +735,8 @@ export function summarizeSvgLevelSource({
     spawnMarkers: Object.freeze(spawnMarkers),
     cameraAnchors: Object.freeze(cameraAnchors),
     viewFloorGuides: Object.freeze(viewFloorGuides),
+    worldItemSpawns: Object.freeze(worldItemSpawns),
+    lineArtShapes: Object.freeze(lineArtShapes),
     boundaryBox,
     boundaryTileMask,
   });

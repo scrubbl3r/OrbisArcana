@@ -1,19 +1,6 @@
 const ORB_STAGE_MAP_ASSET_URL = new URL("./orb-stage.svg", import.meta.url).toString();
 
-const ORB_STAGE_LEVEL_WORLD_ITEM_SPAWNS = Object.freeze([
-  Object.freeze({
-    id: "orb_stage_level_globe_emitter_01",
-    kind: "energy_globe_emitter",
-    spawn: Object.freeze({
-      xNorm: 0.50,
-      yMode: "ground_center_offset",
-      yValue: -960,
-      r: 25,
-    }),
-    capacity: 1,
-    regenTrigger: "globe_spent",
-  }),
-]);
+const ORB_STAGE_LEVEL_WORLD_ITEM_SPAWNS = Object.freeze([]);
 
 const ORB_STAGE_LEVEL_BOUNDARIES = Object.freeze([
   Object.freeze({
@@ -87,6 +74,8 @@ export const ORB_STAGE_LEVEL = Object.freeze({
       spawn: Object.freeze(["spawn"]),
       camera: Object.freeze(["camera_01"]),
       viewFloor: Object.freeze(["view_floor"]),
+      worldItems: Object.freeze(["globe_1", "globe_2"]),
+      lineArt: Object.freeze(["line_art"]),
     }),
     spawnMarker: Object.freeze({
       id: "path2-9",

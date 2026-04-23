@@ -1656,10 +1656,19 @@ async function initShellReceiverHostRuntime(shellContext) {
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
       getWorldItemSpawns: () => (
-        getActiveShellStageAdapter(shellContext) &&
-        typeof getActiveShellStageAdapter(shellContext).getWorldItemSpawns === "function"
-          ? getActiveShellStageAdapter(shellContext).getWorldItemSpawns()
-          : []
+        (
+          runtime &&
+          runtime.currentLevelMapSummary &&
+          Array.isArray(runtime.currentLevelMapSummary.worldItemSpawns) &&
+          runtime.currentLevelMapSummary.worldItemSpawns.length
+        )
+          ? runtime.currentLevelMapSummary.worldItemSpawns
+          : (
+              getActiveShellStageAdapter(shellContext) &&
+              typeof getActiveShellStageAdapter(shellContext).getWorldItemSpawns === "function"
+                ? getActiveShellStageAdapter(shellContext).getWorldItemSpawns()
+                : []
+            )
       ),
       getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,
     },
@@ -2178,6 +2187,8 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
       spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
       cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
       viewFloorLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.viewFloor,
+      worldItemLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.worldItems,
+      lineArtLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.lineArt,
       spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
       tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
     });
@@ -2285,6 +2296,9 @@ function ensureShellStageBackdrop(shellContext) {
     rect,
     worldHeight: shellWorldHeight(shellContext),
     terrainProfile,
+    lineArtShapes: Array.isArray(runtime.currentLevelMapSummary && runtime.currentLevelMapSummary.lineArtShapes)
+      ? runtime.currentLevelMapSummary.lineArtShapes
+      : [],
     clamp01,
   });
 }

@@ -69,6 +69,17 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
     ) {
       const kind = String(item && item.kind || "");
       if (!item || (kind !== "energy_globe" && kind !== "energy_globe_emitter")) return null;
+      if (Number.isFinite(Number(item.xNorm)) && Number.isFinite(Number(item.yW))) {
+        return {
+          id: String(item.id || ""),
+          kind,
+          xNorm: clamp(Number(item.xNorm), 0, 1),
+          yW: Number(item.yW) || 0,
+          r: Math.max(1, Number(item.r) || 25),
+          capacity: Math.max(1, Math.floor(Number(item.capacity) || 1)),
+          regenTrigger: String(item.regenTrigger || (kind === "energy_globe_emitter" ? "globe_spent" : "manual")),
+        };
+      }
       const s = item.spawn || {};
       const xNorm = clamp(Number(s.xNorm), 0, 1);
       const r = Math.max(1, Number(s.r) || 25);
@@ -121,6 +132,7 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
       rect = null,
       worldHeight = 5000,
       terrainProfile = [],
+      lineArtShapes = [],
       clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
     } = {}) {
       const backdropRefs = {
@@ -134,6 +146,14 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
       const height = Math.max(1, Math.floor(Number(rect.height) || 0));
       const dpr = Math.max(1, Math.min(2.5, (rootDocument.defaultView && rootDocument.defaultView.devicePixelRatio) || 1));
       const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = Object.create(null));
+      const nextLineArtShapes = Array.isArray(lineArtShapes) ? lineArtShapes.slice() : [];
+      const nextLineArtKey = nextLineArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
+
+      if (stageBackdrop.lineArtKey !== nextLineArtKey) {
+        stageBackdrop.lineArtShapes = nextLineArtShapes;
+        stageBackdrop.lineArtKey = nextLineArtKey;
+        stageBackdrop.lastGroundY = NaN;
+      }
 
       if (stageBackdrop.width === width && stageBackdrop.height === height && stageBackdrop.starCtx && stageBackdrop.terrainCtx) {
         return;
@@ -218,7 +238,6 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
         vignetteCtx.fillRect(0, 0, width, height);
       }
       stageBackdrop.vignetteCanvas = vignetteCanvas;
-
       stageBackdrop.mountainPoints = Array.isArray(terrainProfile) && terrainProfile.length
         ? terrainProfile.map((point = {}) => ({
             x: Math.round(clamp01(point.xNorm) * width),
@@ -296,6 +315,44 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
       const pts = stageBackdrop.mountainPoints || [];
 
       ctx.clearRect(0, 0, w, h);
+      const lineArtShapes = Array.isArray(stageBackdrop.lineArtShapes) ? stageBackdrop.lineArtShapes : [];
+      if (lineArtShapes.length) {
+        const frame = runtime && runtime.frameMetrics ? runtime.frameMetrics : null;
+        const camLeft = Number(frame && frame.camLeft) || 0;
+        const camTop = Number(frame && frame.camTop) || 0;
+        const zoom = Number(frame && frame.zoom) || 1;
+        for (const shape of lineArtShapes) {
+          const worldPoints = Array.isArray(shape && shape.worldPoints) ? shape.worldPoints : [];
+          if (worldPoints.length < 2) continue;
+          ctx.beginPath();
+          for (let i = 0; i < worldPoints.length; i += 1) {
+            const point = worldPoints[i] || {};
+            const x = (Number(point.xW) - camLeft) * zoom;
+            const y = (Number(point.yW) - camTop) * zoom;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          const fill = String(shape && shape.fill || "none").trim().toLowerCase();
+          const fillOpacity = Number(shape && shape.fillOpacity);
+          if (fill && fill !== "none" && fillOpacity > 0) {
+            ctx.globalAlpha = Math.max(0, Math.min(1, fillOpacity));
+            ctx.fillStyle = String(shape.fill);
+            ctx.fill();
+          }
+          const stroke = String(shape && shape.stroke || "none").trim().toLowerCase();
+          const strokeOpacity = Number(shape && shape.strokeOpacity);
+          if (stroke && stroke !== "none" && strokeOpacity > 0) {
+            ctx.globalAlpha = Math.max(0, Math.min(1, strokeOpacity));
+            ctx.strokeStyle = String(shape.stroke);
+            ctx.lineWidth = Math.max(1, (Number(shape && shape.worldStrokeWidth) || 1) * zoom);
+            ctx.lineJoin = "miter";
+            ctx.lineCap = "round";
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+        }
+        return;
+      }
       if (pts.length < 2) return;
 
       ctx.save();

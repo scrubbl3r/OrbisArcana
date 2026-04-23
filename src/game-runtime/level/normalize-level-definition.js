@@ -55,6 +55,16 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
           ? mapSource.semanticLayers.viewFloor.slice()
           : []
       ),
+      worldItems: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.worldItems)
+          ? mapSource.semanticLayers.worldItems.slice()
+          : []
+      ),
+      lineArt: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.lineArt)
+          ? mapSource.semanticLayers.lineArt.slice()
+          : []
+      ),
     }),
     spawnMarker: Object.freeze({
       id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),
