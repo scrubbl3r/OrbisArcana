@@ -198,6 +198,18 @@ function resolvePreviewCameraConfig(level = null, {
   });
 }
 
+function formatLevelStageTracePair(x, y) {
+  return `${Math.round(Number(x) || 0)},${Math.round(Number(y) || 0)}`;
+}
+
+function traceLevelStage(state, message, kind = "muted") {
+  const traceLog = state && typeof state.traceLog === "function" ? state.traceLog : null;
+  if (!traceLog) return;
+  const line = String(message || "").trim();
+  if (!line) return;
+  traceLog(line, kind);
+}
+
 function updateLevelCamera(refs, state) {
   if (!refs || !refs.physStage || !refs.world) return;
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
@@ -258,6 +270,24 @@ function updateLevelCamera(refs, state) {
       clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
     })
     : null;
+  traceLevelStage(
+    state,
+    [
+      "level_stage.frame",
+      `boot=${state.bootCamera ? 1 : 0}`,
+      `mode=${state.previewFollowMode}`,
+      `spawnW=${state.spawn && state.spawn.worldCenter ? formatLevelStageTracePair(state.spawn.worldCenter.xW, state.spawn.worldCenter.yW) : "none"}`,
+      `targetW=${formatLevelStageTracePair(target.xW, clampNumber(target.yW, 0) + bootOffsetYW)}`,
+      `offsetY=${Math.round(bootOffsetYW)}`,
+      `viewFloorW=${viewFloorGuide ? Math.round(viewFloorGuide.worldY) : "none"}`,
+      `cam=${formatLevelStageTracePair(frame.camLeft, frame.camTop)}`,
+      `screen=${formatLevelStageTracePair(frame.targetScreenX, frame.targetScreenY)}`,
+      `rect=${formatLevelStageTracePair(rect.width, rect.height)}`,
+      `clamp=${boundaryBox
+        ? `${formatLevelStageTracePair(boundaryBox.leftXW, boundaryBox.topYW)}>${formatLevelStageTracePair(boundaryBox.rightXW, Math.max(boundaryBox.bottomYW, viewFloorGuide ? clampNumber(viewFloorGuide.worldY, 0) : boundaryBox.bottomYW))}`
+        : `0,0>${formatLevelStageTracePair(state.worldWidthPx, state.worldHeightPx)}`}`,
+    ].join(" | ")
+  );
   state.bootCamera = false;
   const translateX = -frame.camLeft * frame.zoom;
   const translateY = -frame.camTop * frame.zoom;
@@ -307,6 +337,21 @@ async function hydrateSvgLevelPreview(refs, state, level) {
     });
     state.cameraAnchors = Array.isArray(state.sceneModel.cameraAnchors) ? state.sceneModel.cameraAnchors : [];
     state.spawn = state.sceneModel.spawn;
+    traceLevelStage(
+      state,
+      [
+        "level_stage.activate",
+        `level=${String(level && level.id || "unknown")}`,
+        `spawnA=${state.spawn && state.spawn.authoredCenter ? formatLevelStageTracePair(state.spawn.authoredCenter.x, state.spawn.authoredCenter.y) : "none"}`,
+        `spawnW=${state.spawn && state.spawn.worldCenter ? formatLevelStageTracePair(state.spawn.worldCenter.xW, state.spawn.worldCenter.yW) : "none"}`,
+        `bounds=${state.sceneModel && state.sceneModel.boundaryBox
+          ? `${formatLevelStageTracePair(state.sceneModel.boundaryBox.leftXW, state.sceneModel.boundaryBox.topYW)}>${formatLevelStageTracePair(state.sceneModel.boundaryBox.rightXW, state.sceneModel.boundaryBox.bottomYW)}`
+          : "none"}`,
+        `viewFloorW=${state.sceneModel && state.sceneModel.viewFloorGuide ? Math.round(state.sceneModel.viewFloorGuide.worldY) : "none"}`,
+        `worldItems=${Array.isArray(state.sceneModel && state.sceneModel.worldItemSpawns) ? state.sceneModel.worldItemSpawns.length : 0}`,
+        `lineArt=${Array.isArray(state.sceneModel && state.sceneModel.lineArtShapes) ? state.sceneModel.lineArtShapes.length : 0}`,
+      ].join(" | ")
+    );
     refs.worldImage.src = mapAssetUrl;
     refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
     refs.worldOverlay.innerHTML = `
@@ -395,6 +440,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     spawn: null,
     summary: null,
     sceneModel: null,
+    traceLog: null,
   };
 
   updateLevelCamera(refs, state);
@@ -439,6 +485,23 @@ export function renderLevelStage(root, { level = null } = {}) {
       },
       getPreviewFollowMode() {
         return state.previewFollowMode;
+      },
+      setTraceLogger(fn) {
+        state.traceLog = typeof fn === "function" ? fn : null;
+        if (state.traceLog) {
+          traceLevelStage(state, "level_stage.trace logger attached");
+          if (state.sceneModel) {
+            traceLevelStage(
+              state,
+              [
+                "level_stage.trace snapshot",
+                `spawnW=${state.spawn && state.spawn.worldCenter ? formatLevelStageTracePair(state.spawn.worldCenter.xW, state.spawn.worldCenter.yW) : "none"}`,
+                `viewFloorW=${state.sceneModel && state.sceneModel.viewFloorGuide ? Math.round(state.sceneModel.viewFloorGuide.worldY) : "none"}`,
+              ].join(" | ")
+            );
+          }
+          updateLevelCamera(refs, state);
+        }
       },
       dispose() {
         unbindResize();

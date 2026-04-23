@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423a";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423b";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -2386,6 +2386,24 @@ async function initShellKwsRuntime(shellContext) {
     runtimeConfig,
     receiverEvents: RECEIVER_EVENTS,
   } = base;
+
+  if (kwsPanelController && typeof kwsPanelController.clearGeneralLog === "function") {
+    kwsPanelController.clearGeneralLog();
+  }
+  if (kwsPanelController && typeof kwsPanelController.pushGeneralLogLine === "function") {
+    kwsPanelController.pushGeneralLogLine("general log cleared for level-stage traces", "muted");
+  }
+  if (
+    shellContext &&
+    shellContext.levelStageAdapter &&
+    typeof shellContext.levelStageAdapter.setTraceLogger === "function" &&
+    kwsPanelController &&
+    typeof kwsPanelController.pushGeneralLogLine === "function"
+  ) {
+    shellContext.levelStageAdapter.setTraceLogger((line, kind = "muted") => {
+      kwsPanelController.pushGeneralLogLine(line, kind);
+    });
+  }
 
   const {
     createRuleEnginePreviewSystem,

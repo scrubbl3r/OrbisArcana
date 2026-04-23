@@ -381,6 +381,11 @@ export function createLogPanelController({
   }
 
   return {
+    clearGeneralLog() {
+      clearLogChannelBuffer("general");
+      clearPreopenLogChannelBuffer("general");
+      if (logPanelOpen && activeLogChannel === "general") renderCurrentLogChannel();
+    },
     pushGeneralLogLine,
     pushKwsLogLine,
     pushPhoneLogLine,
