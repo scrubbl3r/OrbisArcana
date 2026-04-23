@@ -1650,11 +1650,10 @@ async function initShellReceiverHostRuntime(shellContext) {
           : { yW: 0 }
       ),
       getOrbScreenX: () => {
-        const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
-          ? runtime.orbRuntimeState.get()
-          : null;
-        const bounds = shellLateralBounds(shellContext);
-        return clamp(Number(orbState && orbState.xW) || shellStageCenterX(shellContext), bounds.left, bounds.right);
+        if (runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.orbScreenX))) {
+          return Number(runtime.frameMetrics.orbScreenX);
+        }
+        return shellStageCenterX(shellContext);
       },
       getOrbScreenY: () => shellOrbScreenY(shellContext),
       getOrbVisualRadiusPx: () => {
