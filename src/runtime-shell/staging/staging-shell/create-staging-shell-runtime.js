@@ -448,7 +448,13 @@ function shellGameplayCameraConfig(shellContext) {
     followLerpX: Number(camera && camera.followLerpX) >= 0 ? Number(camera.followLerpX) : 1,
     followLerpY: Number(camera && camera.followLerpY) >= 0 ? Number(camera.followLerpY) : 1,
     screenAnchorX: Number(camera && camera.screenAnchorX) >= 0 ? Number(camera.screenAnchorX) : 0.5,
-    screenAnchorY: Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5,
+    screenAnchorY: (() => {
+      const guide = shellResolvedViewFloorGuide(shellContext);
+      if (guide && Number.isFinite(Number(guide.authoredScreenYRatio))) {
+        return Math.max(0, Math.min(1, Number(guide.authoredScreenYRatio)));
+      }
+      return Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5;
+    })(),
     clampInsetLeftPx: Number(camera && camera.clampInsetLeftPx) >= 0 ? Number(camera.clampInsetLeftPx) : 0,
     clampInsetRightPx: Number(camera && camera.clampInsetRightPx) >= 0 ? Number(camera.clampInsetRightPx) : 0,
     clampInsetTopPx: Number(camera && camera.clampInsetTopPx) >= 0 ? Number(camera.clampInsetTopPx) : 0,
@@ -467,6 +473,13 @@ function shellResolvedCollisionBox(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
   return summary && summary.boundaryBox ? summary.boundaryBox : null;
+}
+
+function shellResolvedViewFloorGuide(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
+  const guides = summary && Array.isArray(summary.viewFloorGuides) ? summary.viewFloorGuides : [];
+  return guides.length ? guides[0] : null;
 }
 
 function shellGameplayCameraClampBounds(shellContext) {
@@ -2164,6 +2177,7 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
       boundaryLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.boundary,
       spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
       cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
+      viewFloorLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.viewFloor,
       spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
       tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
     });

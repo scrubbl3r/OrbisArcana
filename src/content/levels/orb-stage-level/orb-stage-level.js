@@ -86,6 +86,7 @@ export const ORB_STAGE_LEVEL = Object.freeze({
       boundary: Object.freeze(["bounds"]),
       spawn: Object.freeze(["spawn"]),
       camera: Object.freeze(["camera_01"]),
+      viewFloor: Object.freeze(["view_floor"]),
     }),
     spawnMarker: Object.freeze({
       id: "path2-9",

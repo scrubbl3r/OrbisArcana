@@ -424,6 +424,45 @@ export function buildSvgCameraAnchors({
   }));
 }
 
+export function buildSvgViewFloorGuides({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  viewFloorLayerLabels = [],
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(viewFloorLayerLabels) ? viewFloorLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  let selectedPaths = parseSvgPathElements(svgText);
+  if (allowedLabels.size) {
+    selectedPaths = authoredLayers
+      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
+      .flatMap((layer) => Array.isArray(layer.paths) ? layer.paths : []);
+  }
+
+  return Object.freeze(selectedPaths.map((path, index) => {
+    const authoredPoints = parseSvgPolylinePath(path && path.d) || [];
+    if (authoredPoints.length < 2) return null;
+    const authoredY = authoredPoints.reduce((sum, point) => sum + clampNumber(point && point.y, 0), 0) / authoredPoints.length;
+    const worldPoints = authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+      viewBox,
+      worldWidthPx,
+      worldHeightPx,
+    }));
+    const worldY = worldPoints.reduce((sum, point) => sum + clampNumber(point && point.yW, 0), 0) / worldPoints.length;
+    return Object.freeze({
+      id: String(path && path.id || `view_floor_${index + 1}`),
+      authoredY,
+      worldY,
+      authoredScreenYRatio: Math.max(0, Math.min(1, authoredY / Math.max(1, clampNumber(viewBox.height, 0)))),
+      authoredPoints: Object.freeze(authoredPoints),
+      worldPoints: Object.freeze(worldPoints),
+    });
+  }).filter(Boolean));
+}
+
 export function buildBoundaryTileMask({
   loops = [],
   worldWidthPx = 0,
@@ -474,6 +513,7 @@ export function summarizeSvgLevelSource({
   boundaryLayerLabels = [],
   spawnLayerLabels = [],
   cameraLayerLabels = [],
+  viewFloorLayerLabels = [],
   spawnMarkerId = "",
   tileSizePx = 128,
 } = {}) {
@@ -498,6 +538,12 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     cameraLayerLabels,
   });
+  const viewFloorGuides = buildSvgViewFloorGuides({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    viewFloorLayerLabels,
+  });
   const boundaryTileMask = buildBoundaryTileMask({
     loops,
     worldWidthPx,
@@ -511,6 +557,7 @@ export function summarizeSvgLevelSource({
     loops,
     spawnMarkers: Object.freeze(spawnMarkers),
     cameraAnchors: Object.freeze(cameraAnchors),
+    viewFloorGuides: Object.freeze(viewFloorGuides),
     boundaryBox,
     boundaryTileMask,
   });

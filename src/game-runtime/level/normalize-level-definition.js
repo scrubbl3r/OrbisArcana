@@ -50,6 +50,11 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
           ? mapSource.semanticLayers.camera.slice()
           : []
       ),
+      viewFloor: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.viewFloor)
+          ? mapSource.semanticLayers.viewFloor.slice()
+          : []
+      ),
     }),
     spawnMarker: Object.freeze({
       id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),
