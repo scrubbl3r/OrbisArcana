@@ -457,6 +457,17 @@ function shellGameplayCameraConfig(shellContext) {
 }
 
 function shellResolvedSpawnPoint(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
+  const svgSpawn = summary && Array.isArray(summary.spawnMarkers) && summary.spawnMarkers.length
+    ? summary.spawnMarkers[0]
+    : null;
+  if (svgSpawn && svgSpawn.worldCenter) {
+    return Object.freeze({
+      xW: Number(svgSpawn.worldCenter.xW) || 0,
+      yW: Number(svgSpawn.worldCenter.yW) || 0,
+    });
+  }
   return resolveLevelSpawnPoint(shellContext && shellContext.currentLevel ? shellContext.currentLevel : null, {
     worldWidthPx: shellWorldWidth(shellContext),
     groundCenterWorld: () => shellGroundCenterWorld(shellContext),
