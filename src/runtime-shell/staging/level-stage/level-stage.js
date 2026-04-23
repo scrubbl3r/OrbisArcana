@@ -451,9 +451,9 @@ export function renderLevelStage(root, { level = null } = {}) {
           <div class="levelStageWorld">
             ${mapAssetUrl ? `<img class="levelStageWorldImage" src="${mapAssetUrl}" alt="" aria-hidden="true" />` : ""}
             <svg class="levelStageWorldOverlay" viewBox="0 0 ${worldSize.widthPx} ${worldSize.heightPx}" preserveAspectRatio="none" aria-hidden="true"></svg>
+            ${LEVEL_STAGE_ORB_MARKUP}
           </div>
         </div>
-        ${LEVEL_STAGE_ORB_MARKUP}
         <div class="levelStageLabel">
           <span class="levelStageLabelTitle">Level Stage</span>
           <span class="levelStageLabelMeta"></span>
@@ -549,8 +549,15 @@ export function renderLevelStage(root, { level = null } = {}) {
       applyOrbTransform({
         top = 0,
         left = "50%",
+        xW = null,
+        yW = null,
       } = {}) {
         if (!refs.orbWrap) return;
+        if (Number.isFinite(Number(xW)) && Number.isFinite(Number(yW))) {
+          refs.orbWrap.style.left = `${Number(xW).toFixed(2)}px`;
+          refs.orbWrap.style.transform = `translate(-50%, ${Math.max(0, Number(yW) - (LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS * 0.5)).toFixed(2)}px)`;
+          return;
+        }
         const nextLeft = (typeof left === "number")
           ? `${Number(left || 0).toFixed(2)}px`
           : String(left || "50%");

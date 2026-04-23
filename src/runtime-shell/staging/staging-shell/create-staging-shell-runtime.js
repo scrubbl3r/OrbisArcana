@@ -807,7 +807,12 @@ function applyShellOrbTransform(shellContext) {
     ? Number(runtime.frameMetrics.orbScreenY)
     : shellOrbScreenY(shellContext);
   const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
-  activeStageAdapter.applyOrbTransform({ top, left: screenX });
+  activeStageAdapter.applyOrbTransform({
+    top,
+    left: screenX,
+    xW: Number(orbState && orbState.xW),
+    yW: Number(orbState && orbState.yW),
+  });
 }
 
 function resetShellOrbToGround(shellContext) {
