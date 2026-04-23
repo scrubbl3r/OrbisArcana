@@ -1897,6 +1897,20 @@ function syncActiveShellStage(shellContext) {
     runtime.stageRectCache = null;
     runtime.frameMetrics = null;
   }
+  void hydrateShellCurrentLevelMapSummary(shellContext).then(() => {
+    const stage = runtime && runtime.stage ? runtime.stage : null;
+    if (stage && stage.phys) {
+      stage.phys.worldHeightPx = shellWorldHeight(shellContext);
+      stage.phys.worldWidthPx = shellWorldWidth(shellContext);
+    }
+    if (runtime && runtime.cameraRuntime && typeof runtime.cameraRuntime.reset === "function") {
+      runtime.cameraRuntime.reset();
+    }
+    if (runtime && runtime.stage) {
+      resetShellOrbToGround(shellContext);
+      activateShellStageVisuals(shellContext);
+    }
+  });
   return shellContext.activeStageAdapter;
 }
 
@@ -2092,9 +2106,12 @@ function bindShellWakeWindowVisuals({ eventBus, kwsPanelController = null, kwsBr
 }
 
 function shellGameplayLevel(shellContext) {
-  return shellContext && shellContext.gameplayLevel
-    ? shellContext.gameplayLevel
-    : null;
+  if (!shellContext) return null;
+  const modeState = getShellModeState(shellContext);
+  if (modeState.mode === STAGING_SHELL_MODE.levelOverlay) {
+    return shellContext.designLevel || shellContext.gameplayLevel || null;
+  }
+  return shellContext.gameplayLevel || shellContext.designLevel || null;
 }
 
 function createStagingShellContext({
