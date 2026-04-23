@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423b";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423c";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -795,8 +795,8 @@ function applyShellGroundLine(shellContext) {
 
 function applyShellOrbTransform(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
-  if (!runtime || !runtime.stage || !orbStageAdapter || typeof orbStageAdapter.applyOrbTransform !== "function") return;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  if (!runtime || !runtime.stage || !activeStageAdapter || typeof activeStageAdapter.applyOrbTransform !== "function") return;
   const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
     ? runtime.orbRuntimeState.get()
     : null;
@@ -807,7 +807,7 @@ function applyShellOrbTransform(shellContext) {
     ? Number(runtime.frameMetrics.orbScreenY)
     : shellOrbScreenY(shellContext);
   const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
-  orbStageAdapter.applyOrbTransform({ top, left: screenX });
+  activeStageAdapter.applyOrbTransform({ top, left: screenX });
 }
 
 function resetShellOrbToGround(shellContext) {
@@ -1329,22 +1329,22 @@ function updateShellOrbStrokeColor(shellContext, dt) {
 function renderShellOrbDamageVisuals(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const mvp = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime.mvp : (runtime && runtime.mvp ? runtime.mvp : null);
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
-  if (!mvp || !mvp.orbDamageVisualsRuntime || !orbStageAdapter || typeof orbStageAdapter.renderOrbDamageVisuals !== "function") return;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  if (!mvp || !mvp.orbDamageVisualsRuntime || !activeStageAdapter || typeof activeStageAdapter.renderOrbDamageVisuals !== "function") return;
   const fx = mvp.orbDamageVisualsRuntime.getState();
-  orbStageAdapter.renderOrbDamageVisuals({ fx });
+  activeStageAdapter.renderOrbDamageVisuals({ fx });
 }
 
 function openShellDeathOverlay(shellContext) {
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
-  if (!orbStageAdapter || typeof orbStageAdapter.openDeathOverlay !== "function") return;
-  orbStageAdapter.openDeathOverlay();
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  if (!activeStageAdapter || typeof activeStageAdapter.openDeathOverlay !== "function") return;
+  activeStageAdapter.openDeathOverlay();
 }
 
 function closeShellDeathOverlay(shellContext) {
-  const orbStageAdapter = shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null;
-  if (!orbStageAdapter || typeof orbStageAdapter.closeDeathOverlay !== "function") return;
-  orbStageAdapter.closeDeathOverlay();
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  if (!activeStageAdapter || typeof activeStageAdapter.closeDeathOverlay !== "function") return;
+  activeStageAdapter.closeDeathOverlay();
 }
 
 function clearShellDeathOverlaySchedule(shellContext) {

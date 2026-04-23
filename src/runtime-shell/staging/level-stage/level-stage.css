@@ -14,6 +14,17 @@
     linear-gradient(180deg, #010204 0%, #020408 54%, #06080d 100%);
 }
 
+.levelStageOrbLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.levelStageOrbWrap {
+  z-index: 4;
+}
+
 .levelStageStars {
   position: absolute;
   inset: 0;

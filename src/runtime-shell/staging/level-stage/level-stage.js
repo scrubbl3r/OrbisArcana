@@ -9,9 +9,30 @@ import { normalizeLevelWorldItemSpawn } from "../../../game-runtime/level/normal
 import {
   resolveLevelCameraAnchor,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
+import {
+  applyOrbBaseVisualCssVars,
+  buildOrbBaseVisualState,
+} from "../../../game-runtime/orb/orb-base-state.js";
+import {
+  applyOrbFractureVisualCssVars,
+  buildOrbFractureVisualState,
+} from "../../../game-runtime/orb/orb-fracture-base-state.js";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
+const LEVEL_STAGE_ORB_MARKUP = `
+  <div class="levelStageOrbLayer" aria-hidden="true">
+    <div class="orbWrap levelStageOrbWrap" data-level-stage-orb-wrap="true">
+      <div class="origin" aria-hidden="true">
+        <div class="shield atOrigin levelStageShield" data-level-stage-shield="true"></div>
+        <div class="orb atOrigin" data-level-stage-orb="true"></div>
+        <svg class="orbCracks atOrigin" data-level-stage-orb-cracks="true" viewBox="-50 -50 100 100"></svg>
+        <div class="orbInterior atOrigin" data-level-stage-orb-interior="true"></div>
+        <svg class="orbShards atOrigin" data-level-stage-orb-shards="true" viewBox="-80 -80 160 160"></svg>
+      </div>
+    </div>
+  </div>
+`;
 
 function clamp01(value) {
   const n = Number(value);
@@ -118,6 +139,11 @@ function buildViewFloorOverlayMarkup(guides = []) {
     })
     .filter(Boolean)
     .join("");
+}
+
+function lineToPath(seg) {
+  if (!seg || !seg.a || !seg.b) return "";
+  return `M ${Number(seg.a.x).toFixed(2)} ${Number(seg.a.y).toFixed(2)} L ${Number(seg.b.x).toFixed(2)} ${Number(seg.b.y).toFixed(2)}`;
 }
 
 function resolveLevelWorldSize(level = null, mapSource = {}) {
@@ -415,6 +441,8 @@ export function renderLevelStage(root, { level = null } = {}) {
   const worldSize = resolveLevelWorldSize(level, mapSource);
   const previewZoom = resolvePreviewZoom(level);
   const previewFollowMode = resolvePreviewFollowMode(level);
+  const orbBaseVisualState = buildOrbBaseVisualState();
+  const orbFractureVisualState = buildOrbFractureVisualState();
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
@@ -425,6 +453,7 @@ export function renderLevelStage(root, { level = null } = {}) {
             <svg class="levelStageWorldOverlay" viewBox="0 0 ${worldSize.widthPx} ${worldSize.heightPx}" preserveAspectRatio="none" aria-hidden="true"></svg>
           </div>
         </div>
+        ${LEVEL_STAGE_ORB_MARKUP}
         <div class="levelStageLabel">
           <span class="levelStageLabelTitle">Level Stage</span>
           <span class="levelStageLabelMeta"></span>
@@ -432,6 +461,8 @@ export function renderLevelStage(root, { level = null } = {}) {
       </div>
     </section>
   `;
+  applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
+  applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
 
   const refs = {
     root,
@@ -442,6 +473,12 @@ export function renderLevelStage(root, { level = null } = {}) {
     worldImage: root.querySelector(".levelStageWorldImage"),
     worldOverlay: root.querySelector(".levelStageWorldOverlay"),
     labelMeta: root.querySelector(".levelStageLabelMeta"),
+    orbWrap: root.querySelector("[data-level-stage-orb-wrap='true']"),
+    orb: root.querySelector("[data-level-stage-orb='true']"),
+    orbInterior: root.querySelector("[data-level-stage-orb-interior='true']"),
+    orbCracks: root.querySelector("[data-level-stage-orb-cracks='true']"),
+    orbShards: root.querySelector("[data-level-stage-orb-shards='true']"),
+    shield: root.querySelector("[data-level-stage-shield='true']"),
   };
 
   const state = {
@@ -474,6 +511,12 @@ export function renderLevelStage(root, { level = null } = {}) {
         return {
           physStage: refs.physStage || null,
           groundLine: null,
+          orbWrap: refs.orbWrap || null,
+          orb: refs.orb || null,
+          orbInterior: refs.orbInterior || null,
+          orbCracks: refs.orbCracks || null,
+          orbShards: refs.orbShards || null,
+          shield: refs.shield || null,
         };
       },
       getStageRect() {
@@ -503,6 +546,52 @@ export function renderLevelStage(root, { level = null } = {}) {
       getPreviewFollowMode() {
         return state.previewFollowMode;
       },
+      applyOrbTransform({
+        top = 0,
+        left = "50%",
+      } = {}) {
+        if (!refs.orbWrap) return;
+        const nextLeft = (typeof left === "number")
+          ? `${Number(left || 0).toFixed(2)}px`
+          : String(left || "50%");
+        refs.orbWrap.style.left = nextLeft;
+        refs.orbWrap.style.transform = `translate(-50%, ${Number(top || 0).toFixed(2)}px)`;
+      },
+      renderOrbDamageVisuals({
+        fx = null,
+      } = {}) {
+        if (!refs.orb || !refs.orbCracks) return;
+        const shattered = !!(fx && fx.visualState === "shattered");
+        refs.orb.classList.toggle("shattered", shattered);
+        refs.orb.style.opacity = shattered ? "0" : "";
+        const shardStyle = fx && fx.shardStyle && typeof fx.shardStyle === "object" ? fx.shardStyle : null;
+        const shardRgb = shardStyle && shardStyle.strokeRgb ? shardStyle.strokeRgb : null;
+        const shardStroke = shardRgb
+          ? `rgb(${Math.round(Number(shardRgb.r) || 0)},${Math.round(Number(shardRgb.g) || 0)},${Math.round(Number(shardRgb.b) || 0)})`
+          : "";
+        const shardAlpha = shardStyle && Number.isFinite(Number(shardStyle.strokeAlpha))
+          ? Math.max(0, Math.min(1, Number(shardStyle.strokeAlpha)))
+          : null;
+        const shardStrokeWidth = shardStyle && Number.isFinite(Number(shardStyle.strokeWidthPx))
+          ? Math.max(0.25, Number(shardStyle.strokeWidthPx))
+          : null;
+        const crackSegments = (!shattered && Array.isArray(fx && fx.crackSegments))
+          ? fx.crackSegments
+          : [];
+        refs.orbCracks.innerHTML = crackSegments.map((seg) => {
+          const d = lineToPath(seg);
+          if (!d) return "";
+          const style = [
+            shardStroke ? `stroke:${shardStroke}` : "",
+            shardAlpha != null ? `stroke-opacity:${shardAlpha.toFixed(3)}` : "",
+            shardStrokeWidth != null ? `stroke-width:${shardStrokeWidth.toFixed(2)}px` : "",
+          ].filter(Boolean).join(";");
+          const attrs = [`d="${d}"`, style ? `style="${style}"` : ""].filter(Boolean).join(" ");
+          return `<path ${attrs} />`;
+        }).join("");
+      },
+      openDeathOverlay() {},
+      closeDeathOverlay() {},
       setTraceLogger(fn) {
         state.traceLog = typeof fn === "function" ? fn : null;
         if (state.traceLog) {
