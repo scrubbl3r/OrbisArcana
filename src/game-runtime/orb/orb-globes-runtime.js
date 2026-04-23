@@ -357,6 +357,7 @@ export function createOrbGlobesRuntime({
     const idx = inner.particles.findIndex((p) => (g && p.globeId === g) || (s && p.slot === s));
     if (idx < 0) return;
     const p = inner.particles[idx];
+    spawnReleasedGlobeFromInnerParticle(p, performance.now());
     releasePooledNode("inner", p);
     inner.particles.splice(idx, 1);
     renderInnerGlobes();
@@ -417,6 +418,7 @@ export function createOrbGlobesRuntime({
     const idx = orbiting.particles.findIndex((p) => (g && p.globeId === g) || (s && p.slot === s));
     if (idx < 0) return;
     const p = orbiting.particles[idx];
+    spawnReleasedGlobeFromOrbitingParticle(p, performance.now());
     releasePooledNode("orbiting", p);
     orbiting.particles.splice(idx, 1);
   }
@@ -489,6 +491,7 @@ export function createOrbGlobesRuntime({
         axis: String(g.axis || g.spinAxis || "").toLowerCase(),
       }))
       .filter((g) => g.globeId);
+    const activeIds = new Set(active.map((g) => g.globeId));
     const loaded = active.filter((g) => String(g.state || "") === "loaded");
     const bound = active.filter((g) => String(g.state || "") === "bound");
     const loadedIds = new Set(loaded.map((g) => g.globeId));
@@ -496,12 +499,18 @@ export function createOrbGlobesRuntime({
     for (let i = orbiting.particles.length - 1; i >= 0; i -= 1) {
       const p = orbiting.particles[i];
       if (p.globeId && loadedIds.has(p.globeId)) continue;
+      if (!p.globeId || !activeIds.has(p.globeId)) {
+        spawnReleasedGlobeFromOrbitingParticle(p, performance.now());
+      }
       releasePooledNode("orbiting", p);
       orbiting.particles.splice(i, 1);
     }
     for (let i = inner.particles.length - 1; i >= 0; i -= 1) {
       const p = inner.particles[i];
       if (p.globeId && boundIds.has(p.globeId)) continue;
+      if (!p.globeId || !activeIds.has(p.globeId)) {
+        spawnReleasedGlobeFromInnerParticle(p, performance.now());
+      }
       releasePooledNode("inner", p);
       inner.particles.splice(i, 1);
     }
@@ -549,6 +558,69 @@ export function createOrbGlobesRuntime({
     } catch (_) {
       return Math.random();
     }
+  }
+
+  function spawnReleasedParticle({
+    x0 = 0,
+    y0 = 0,
+    axis = "y",
+    radiusPx = null,
+    nowMs = performance.now(),
+  } = {}) {
+    const seedA = fxRand01() * Math.PI * 2;
+    const nx = Math.cos(seedA);
+    const ny = Math.sin(seedA);
+    const tx = -ny;
+    const ty = nx;
+    const resolvedRadius = Math.max(1, Number(radiusPx) || consumedGlobeRadiusPx());
+    released.particles.push({
+      id: released.nextId++,
+      bornMs: Number(nowMs) || performance.now(),
+      ttlMs: Math.round(680 + (fxRand01() * 520)),
+      growMs: 0,
+      x0: Number(x0) || 0,
+      y0: Number(y0) || 0,
+      nx,
+      ny,
+      tx,
+      ty,
+      speed: 56 + (fxRand01() * 74),
+      sinAmp: 4 + (fxRand01() * 8),
+      sinFreq: 4 + (fxRand01() * 5),
+      phase: fxRand01() * Math.PI * 2,
+      r0: resolvedRadius,
+      r1: resolvedRadius,
+      axis: String(axis || "y"),
+      el: null,
+    });
+  }
+
+  function spawnReleasedGlobeFromInnerParticle(particle = null, nowMs = performance.now()) {
+    if (!particle) return;
+    const baseX = readOrbScreenX();
+    const baseY = Number(getOrbScreenY()) || 0;
+    spawnReleasedParticle({
+      x0: baseX + (Number(particle.x) || 0),
+      y0: baseY + (Number(particle.y) || 0),
+      axis: particle.axis,
+      radiusPx: Number(particle.r) || consumedGlobeRadiusPx(),
+      nowMs,
+    });
+  }
+
+  function spawnReleasedGlobeFromOrbitingParticle(particle = null, nowMs = performance.now()) {
+    if (!particle) return;
+    const tS = (Number(nowMs) || performance.now()) / 1000;
+    const proj = orbitProjection(particle, tS);
+    const baseX = readOrbScreenX();
+    const baseY = Number(getOrbScreenY()) || 0;
+    spawnReleasedParticle({
+      x0: baseX + (Number(proj && proj.x) || 0),
+      y0: baseY + (Number(proj && proj.y) || 0),
+      axis: particle.axis,
+      radiusPx: Number(particle.radius) || collectedGlobeRadiusPx(),
+      nowMs,
+    });
   }
 
   function releaseInnerGlobesAtDeath(nowMs) {
