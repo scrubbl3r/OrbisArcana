@@ -36,7 +36,7 @@ export async function bootstrapShellPairingRuntime({
 
   updateBootUi(rootDocument, bootStatus.pairingBooting, "Loading pairing systems");
 
-  const { createUiOverlaysSystem } = await import("../../../ui/game/ui-overlays-system.js");
+  const { createUiOverlaysSystem } = await import("../../../ui/game/ui-overlays-system.js?v=20260423a");
   const { createMobileImpulseSystem } = await import("../../receiver/mobile-impulse-runtime.js");
   const { createLanSessionSystem } = await import("../../session/lan-session.js");
 

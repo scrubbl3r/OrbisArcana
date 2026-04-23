@@ -18,7 +18,7 @@ import { loadStagingInitModules } from "../load-staging-init-modules.js";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
-import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260420g";
+import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import {
   createStagingShellModeController,
