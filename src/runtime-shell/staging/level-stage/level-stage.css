@@ -114,6 +114,20 @@
   vector-effect: non-scaling-stroke;
 }
 
+.levelStageOrbReferenceHalo {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.levelStageOrbReferenceRing {
+  fill: rgba(0, 0, 0, 0.22);
+  stroke: rgba(255, 255, 255, 0.94);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
 .levelStageSpawnPulse {
   fill: rgba(255, 60, 78, 0.10);
   stroke: rgba(255, 90, 105, 0.65);

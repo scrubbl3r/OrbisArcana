@@ -73,6 +73,19 @@ function buildSpawnOverlayMarkup(spawn = null) {
   `;
 }
 
+function buildOrbReferenceMarkup(spawn = null) {
+  if (!spawn || !spawn.worldCenter) return "";
+  const x = clampNumber(spawn.worldCenter.xW, 0);
+  const y = clampNumber(spawn.worldCenter.yW, 0);
+  const orbRadius = LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS * 0.5;
+  return `
+    <g class="levelStageOrbReference" data-orb-ref-id="${String(spawn.id || "spawn_orb")}">
+      <circle class="levelStageOrbReferenceHalo" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(orbRadius * 1.18).toFixed(2)}"></circle>
+      <circle class="levelStageOrbReferenceRing" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${orbRadius.toFixed(2)}"></circle>
+    </g>
+  `;
+}
+
 function buildWorldItemOverlayMarkup(spawns = []) {
   return (Array.isArray(spawns) ? spawns : [])
     .map((spawn = {}, index) => {
@@ -226,7 +239,15 @@ function updateLevelCamera(refs, state) {
       fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
       fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
       screenAnchorX: cameraConfig.screenAnchorX,
-      screenAnchorY: cameraConfig.screenAnchorY,
+      screenAnchorY: (() => {
+        if (!boundaryBox || !viewFloorGuide) return cameraConfig.screenAnchorY;
+        const viewportHeightPx = Math.max(1, clampNumber(rect.height, 0));
+        const viewportWorldHeight = viewportHeightPx / Math.max(0.05, clampNumber(state.previewZoom, LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM));
+        const desiredFloorRatio = clamp01(viewFloorGuide.authoredScreenYRatio);
+        const desiredCamTop = clampNumber(boundaryBox.bottomYW, state.worldHeightPx) - (desiredFloorRatio * viewportWorldHeight);
+        const derivedAnchorY = (clampNumber(target.yW, 0) - desiredCamTop) / Math.max(1, viewportWorldHeight);
+        return clamp01(derivedAnchorY);
+      })(),
       deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
       deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
       deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
@@ -312,6 +333,7 @@ async function hydrateSvgLevelPreview(refs, state, level) {
       ${buildLineArtOverlayMarkup(summary.lineArtShapes)}
       ${buildViewFloorOverlayMarkup(summary.viewFloorGuides)}
       ${buildWorldItemOverlayMarkup(summary.worldItemSpawns)}
+      ${buildOrbReferenceMarkup(state.spawn)}
       ${buildSpawnOverlayMarkup(state.spawn)}
     `;
     if (refs.stage) refs.stage.dataset.levelStageState = "ready";
