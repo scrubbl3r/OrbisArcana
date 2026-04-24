@@ -104,6 +104,12 @@ export function bindStagingRuntimeEvents({
     const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
     const castActionId = payloadCastActionId || (wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId));
     const result = executeWordCastAction(castActionId, { payload: p, intent });
+    if (RULE_CHAIN_TRACE_ENABLED && kwsBridge && typeof kwsBridge.pushLogLine === "function" && castActionId === "aoe_flame") {
+      kwsBridge.pushLogLine(
+        `TRACE voice_cast:aoe_flame:word:${wordId || "-"}:trigger:${String(p.trigger || "-").trim().toLowerCase() || "-"}:${result && result.handled ? "ok" : "miss"}`,
+        result && result.handled ? "ok" : "warn"
+      );
+    }
     if (result && result.handled && wordDef) {
       const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
       if (postCastActions) {
@@ -217,7 +223,7 @@ export function bindStagingRuntimeEvents({
         kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
       }
       if (RULE_CHAIN_TRACE_ENABLED && kwsBridge && typeof kwsBridge.pushLogLine === "function" && (
-        actionId === "teleport" || actionId === "aoe_electric" || actionId === "shockwave"
+        actionId === "teleport" || actionId === "aoe_electric" || actionId === "aoe_flame" || actionId === "shockwave"
       )) {
         const handled = !!(execResult && execResult.handled);
         kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
