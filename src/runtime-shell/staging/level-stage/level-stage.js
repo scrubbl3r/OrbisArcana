@@ -184,7 +184,7 @@ function updateLevelCamera(refs, state) {
 async function hydrateSvgLevelPreview(refs, state, level) {
   const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : {};
   const mapAssetUrl = String(mapSource.assetUrl || "").trim();
-  if (!mapAssetUrl || !refs || !refs.worldImage || !refs.worldOverlay) return;
+  if (!mapAssetUrl || !refs || !refs.worldOverlay) return;
   if (refs.stage) refs.stage.dataset.levelStageState = "loading";
   if (refs.labelMeta) refs.labelMeta.textContent = "loading svg";
   try {
@@ -198,7 +198,6 @@ async function hydrateSvgLevelPreview(refs, state, level) {
     state.sceneModel = authoredScene.sceneModel;
     state.cameraAnchors = Array.isArray(state.sceneModel.cameraAnchors) ? state.sceneModel.cameraAnchors : [];
     state.spawn = state.sceneModel.spawn;
-    refs.worldImage.src = mapAssetUrl;
     refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
     refs.worldOverlay.innerHTML = buildAuthoredLevelOverlayMarkup({
       loops: state.sceneModel.loops,
@@ -248,7 +247,6 @@ export function renderLevelStage(root, { level = null } = {}) {
       <div class="levelStageViewport">
         <div class="levelStageWorldDock" aria-hidden="true">
           <div class="levelStageWorld">
-            ${mapAssetUrl ? `<img class="levelStageWorldImage" src="${mapAssetUrl}" alt="" aria-hidden="true" />` : ""}
             <svg class="levelStageWorldOverlay" viewBox="0 0 ${worldSize.widthPx} ${worldSize.heightPx}" preserveAspectRatio="none" aria-hidden="true"></svg>
             ${LEVEL_STAGE_ORB_MARKUP}
             ${LEVEL_STAGE_GLOBE_MARKUP}
@@ -276,7 +274,6 @@ export function renderLevelStage(root, { level = null } = {}) {
     physStage: root.querySelector(".levelStageViewport"),
     worldDock: root.querySelector(".levelStageWorldDock"),
     world: root.querySelector(".levelStageWorld"),
-    worldImage: root.querySelector(".levelStageWorldImage"),
     worldOverlay: root.querySelector(".levelStageWorldOverlay"),
     labelMeta: root.querySelector(".levelStageLabelMeta"),
     orbWrap: root.querySelector("[data-level-stage-orb-wrap='true']"),
