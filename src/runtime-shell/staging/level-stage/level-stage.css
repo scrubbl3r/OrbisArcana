@@ -8,10 +8,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 18% 22%, rgba(34, 40, 58, 0.38), transparent 28%),
-    radial-gradient(circle at 74% 28%, rgba(48, 58, 88, 0.24), transparent 24%),
-    linear-gradient(180deg, #010204 0%, #020408 54%, #06080d 100%);
+  background: #000;
 }
 
 .levelStageOrbLayer {
@@ -23,22 +20,6 @@
 
 .levelStageOrbWrap {
   z-index: 4;
-}
-
-.levelStageStars {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 8% 16%, rgba(255,255,255,0.76) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 18% 58%, rgba(196,216,255,0.64) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 26% 34%, rgba(255,236,186,0.76) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 38% 78%, rgba(255,255,255,0.58) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 52% 14%, rgba(255,255,255,0.72) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 64% 42%, rgba(203,223,255,0.60) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 74% 68%, rgba(255,236,186,0.70) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 88% 24%, rgba(255,255,255,0.62) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 92% 76%, rgba(255,255,255,0.52) 0 1px, transparent 1.2px);
-  opacity: 0.92;
 }
 
 .levelStageWorldDock {
@@ -59,15 +40,6 @@
     translate3d(var(--level-world-x, 0px), var(--level-world-y, 0px), 0)
     scale(var(--level-world-zoom, 0.25));
   will-change: transform;
-}
-
-.levelStageWorld::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(146, 230, 168, 0.20);
-  box-shadow: 0 0 0 1px rgba(146, 230, 168, 0.05) inset;
-  pointer-events: none;
 }
 
 .levelStageWorldImage,
@@ -108,56 +80,6 @@
   stroke: rgba(216, 224, 236, 0.70);
   stroke-width: 4;
   stroke-dasharray: 12 10;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelStageWorldItemHalo {
-  fill: rgba(150, 223, 255, 0.12);
-  stroke: rgba(162, 238, 255, 0.48);
-  stroke-width: 3;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelStageWorldItemCore {
-  fill: rgba(98, 214, 255, 0.88);
-  stroke: rgba(232, 251, 255, 0.92);
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelStageOrbReferenceHalo {
-  fill: rgba(255, 255, 255, 0.06);
-  stroke: rgba(255, 255, 255, 0.18);
-  stroke-width: 3;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelStageOrbReferenceRing {
-  fill: rgba(0, 0, 0, 0.22);
-  stroke: rgba(255, 255, 255, 0.94);
-  stroke-width: 3;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelStageSpawnPulse {
-  fill: rgba(255, 60, 78, 0.10);
-  stroke: rgba(255, 90, 105, 0.65);
-  stroke-width: 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelStageSpawnDot {
-  fill: rgba(255, 40, 58, 0.96);
-  stroke: rgba(255, 255, 255, 0.82);
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelStageSpawnOrbRing {
-  fill: none;
-  stroke: rgba(255, 210, 220, 0.84);
-  stroke-width: 3;
-  stroke-dasharray: 10 10;
   vector-effect: non-scaling-stroke;
 }
 

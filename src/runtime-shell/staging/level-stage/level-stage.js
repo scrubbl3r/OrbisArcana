@@ -246,7 +246,6 @@ export function renderLevelStage(root, { level = null } = {}) {
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
-        <div class="levelStageStars" aria-hidden="true"></div>
         <div class="levelStageWorldDock" aria-hidden="true">
           <div class="levelStageWorld">
             ${mapAssetUrl ? `<img class="levelStageWorldImage" src="${mapAssetUrl}" alt="" aria-hidden="true" />` : ""}
