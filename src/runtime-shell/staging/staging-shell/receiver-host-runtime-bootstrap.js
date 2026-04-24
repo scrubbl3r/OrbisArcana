@@ -281,9 +281,13 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     runtimeSpellIndex: shellKws.runtimeSpellIndex,
     castActionForWordId,
     executeWordCastAction: (castActionId, context = {}) => (
-      shellKws.shellSpellCastExecutor && typeof shellKws.shellSpellCastExecutor.execute === "function"
-        ? shellKws.shellSpellCastExecutor.execute(castActionId, context)
-        : { handled: false }
+      shellHooks && typeof shellHooks.executeWordCastAction === "function"
+        ? shellHooks.executeWordCastAction(castActionId, context)
+        : (
+            shellKws.shellSpellCastExecutor && typeof shellKws.shellSpellCastExecutor.execute === "function"
+              ? shellKws.shellSpellCastExecutor.execute(castActionId, context)
+              : { handled: false }
+          )
     ),
     playElectricAoe: () => (
       shellHooks && typeof shellHooks.playElectricAoe === "function"

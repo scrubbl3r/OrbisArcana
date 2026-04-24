@@ -14,9 +14,9 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424e";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424f";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260424f";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -1595,6 +1595,17 @@ function shellClearColorize(shellContext) {
   orbStageActions.clearColorize();
 }
 
+function shellExecuteWordCastAction(shellContext, castActionId, context = {}) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const shellKws = runtime && runtime.kws ? runtime.kws : null;
+  const shellSpellCastExecutor = shellKws && shellKws.shellSpellCastExecutor ? shellKws.shellSpellCastExecutor : null;
+  if (!shellSpellCastExecutor || typeof shellSpellCastExecutor.execute !== "function") {
+    return { handled: false, skipped: "executor_unavailable" };
+  }
+  const result = shellSpellCastExecutor.execute(castActionId, context);
+  return result && typeof result === "object" ? result : { handled: !!result };
+}
+
 async function initShellReceiverHostRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
@@ -1715,6 +1726,7 @@ async function initShellReceiverHostRuntime(shellContext) {
         const shellVfx = runtime.vfx || null;
         return shellVfx && typeof shellVfx.playOrbNod === "function" ? shellVfx.playOrbNod(payload) : { handled: false };
       },
+      executeWordCastAction: (castActionId, context = {}) => shellExecuteWordCastAction(shellContext, castActionId, context),
       grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
       clearFloatGrace: () => {
         patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
@@ -2865,10 +2877,7 @@ async function initShellKwsRuntime(shellContext) {
     defaultGraceTtlMs: getShellDefaultGraceTtlMs(),
   });
   const executeShellWordCastAction = (castActionId, context = {}) => {
-    if (!shellSpellCastExecutor || typeof shellSpellCastExecutor.execute !== "function") {
-      return { handled: false, skipped: "executor_unavailable" };
-    }
-    const result = shellSpellCastExecutor.execute(castActionId, context);
+    const result = shellExecuteWordCastAction(shellContext, castActionId, context);
     if (String(castActionId || "").trim().toLowerCase() === "aoe_flame") {
       pushGeneralTrace(`TRACE exec:aoe_flame:cast:${result && result.handled ? "ok" : "miss"}`, result && result.handled ? "ok" : "warn");
     }
@@ -2973,7 +2982,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260424e",
+  moduleCacheBustV = "20260424f",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
