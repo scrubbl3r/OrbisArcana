@@ -4,9 +4,6 @@ import {
   resolveViewFloorBootOffsetYW,
 } from "../../../game-runtime/level/authored-level-scene-model.js";
 import {
-  resolveLevelCameraAnchor,
-} from "../../../game-runtime/level/resolve-level-spawn-point.js";
-import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
 } from "../../../game-runtime/orb/orb-base-state.js";
@@ -16,6 +13,12 @@ import {
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
 import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424b";
 import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424b";
+import {
+  resolveStageCameraClampBounds,
+  resolveStageCameraConfig,
+  resolveStageCameraFollowMode,
+  resolveStageCameraZoom,
+} from "../authored-level-camera.js?v=20260424b";
 
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
 const LEVEL_STAGE_ORB_MARKUP = `
@@ -121,19 +124,11 @@ function resolveLevelWorldSize(level = null, mapSource = {}) {
 }
 
 function resolvePreviewZoom(level = null) {
-  const camera = level && typeof level.camera === "object" ? level.camera : null;
-  const stage = level && typeof level.stage === "object" ? level.stage : {};
-  return Math.max(
-    0.05,
-    clampNumber(camera && camera.previewZoom, 0) ||
-    clampNumber(stage.previewZoom, 0) ||
-    LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM
-  );
+  return resolveStageCameraZoom(level, "preview", LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM);
 }
 
 function resolvePreviewFollowMode(level = null) {
-  const camera = level && typeof level.camera === "object" ? level.camera : null;
-  return String(camera && camera.previewFollowMode || "follow_target_center").trim();
+  return resolveStageCameraFollowMode(level, "preview", "follow_target_center");
 }
 
 function resolvePreviewCameraConfig(level = null, {
@@ -141,39 +136,12 @@ function resolvePreviewCameraConfig(level = null, {
   worldHeightPx = 0,
   cameraAnchors = [],
 } = {}) {
-  const camera = level && typeof level.camera === "object" ? level.camera : null;
-  const fixedFrameAnchor = resolveLevelCameraAnchor(level, camera && camera.fixedFrameAnchorId, {
+  return resolveStageCameraConfig(level, {
+    mode: "preview",
     worldWidthPx,
     groundCenterWorld: () => Math.max(0, worldHeightPx) * 0.5,
-    svgAnchors: cameraAnchors,
-  });
-  return Object.freeze({
-    screenAnchorX: Number(camera && camera.screenAnchorX) >= 0 ? Number(camera.screenAnchorX) : 0.5,
-    screenAnchorY: Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5,
-    deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : -1,
-    deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : -1,
-    deadzoneWidthRatio: Math.max(0, clampNumber(camera && camera.deadzoneWidthRatio, 0)),
-    deadzoneHeightRatio: Math.max(0, clampNumber(camera && camera.deadzoneHeightRatio, 0)),
-    followLerpX: Math.max(0, Math.min(1, clampNumber(camera && camera.followLerpX, 1))),
-    followLerpY: Math.max(0, Math.min(1, clampNumber(camera && camera.followLerpY, 1))),
-    clampInsetLeftPx: Number(camera && camera.clampInsetLeftPx) >= 0 ? Number(camera.clampInsetLeftPx) : 0,
-    clampInsetRightPx: Number(camera && camera.clampInsetRightPx) >= 0 ? Number(camera.clampInsetRightPx) : 0,
-    clampInsetTopPx: Number(camera && camera.clampInsetTopPx) >= 0 ? Number(camera.clampInsetTopPx) : 0,
-    clampInsetBottomPx: Number(camera && camera.clampInsetBottomPx) >= 0 ? Number(camera.clampInsetBottomPx) : 0,
-    fixedFrameCenterXW: fixedFrameAnchor && fixedFrameAnchor.point
-      ? fixedFrameAnchor.point.xW
-      : (
-          camera && camera.fixedFrameCenterXW != null && Number.isFinite(Number(camera.fixedFrameCenterXW))
-            ? Number(camera.fixedFrameCenterXW)
-            : null
-        ),
-    fixedFrameCenterYW: fixedFrameAnchor && fixedFrameAnchor.point
-      ? fixedFrameAnchor.point.yW
-      : (
-          camera && camera.fixedFrameCenterYW != null && Number.isFinite(Number(camera.fixedFrameCenterYW))
-            ? Number(camera.fixedFrameCenterYW)
-            : null
-        ),
+    worldHeightPx,
+    cameraAnchors,
   });
 }
 
@@ -215,6 +183,12 @@ function updateLevelCamera(refs, state) {
   const sceneModel = state.sceneModel || null;
   const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
   const viewFloorGuide = sceneModel && sceneModel.viewFloorGuide ? sceneModel.viewFloorGuide : null;
+  const clampBounds = resolveStageCameraClampBounds({
+    worldWidthPx: state.worldWidthPx,
+    worldHeightPx: state.worldHeightPx,
+    boundaryBox,
+    viewFloorGuide,
+  });
   const target = resolveAuthoredLevelCameraTarget({
     level: state.level,
     sceneModel,
@@ -250,16 +224,9 @@ function updateLevelCamera(refs, state) {
       followLerpX: state.bootCamera ? 1 : cameraConfig.followLerpX,
       followLerpY: state.bootCamera ? 1 : cameraConfig.followLerpY,
       clampLeftXW: state.bootCamera ? 0 : (boundaryBox ? clampNumber(boundaryBox.leftXW, 0) : 0),
-      clampRightXW: state.bootCamera
-        ? state.worldWidthPx
-        : (boundaryBox ? clampNumber(boundaryBox.rightXW, state.worldWidthPx) : state.worldWidthPx),
-      clampTopYW: state.bootCamera ? 0 : (boundaryBox ? clampNumber(boundaryBox.topYW, 0) : 0),
-      clampBottomYW: state.bootCamera
-        ? state.worldHeightPx
-        : Math.max(
-            boundaryBox ? clampNumber(boundaryBox.bottomYW, state.worldHeightPx) : state.worldHeightPx,
-            viewFloorGuide ? clampNumber(viewFloorGuide.worldY, 0) : 0
-          ),
+      clampRightXW: state.bootCamera ? state.worldWidthPx : clampBounds.rightXW,
+      clampTopYW: state.bootCamera ? 0 : clampBounds.topYW,
+      clampBottomYW: state.bootCamera ? state.worldHeightPx : clampBounds.bottomYW,
       clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
       clampInsetRightPx: cameraConfig.clampInsetRightPx,
       clampInsetTopPx: cameraConfig.clampInsetTopPx,

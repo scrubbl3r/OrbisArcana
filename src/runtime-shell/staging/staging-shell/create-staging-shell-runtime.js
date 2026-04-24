@@ -40,6 +40,12 @@ import {
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
 import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424b";
+import {
+  resolveStageCameraClampBounds,
+  resolveStageCameraConfig,
+  resolveStageCameraFollowMode,
+  resolveStageCameraZoom,
+} from "../authored-level-camera.js?v=20260424b";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -404,61 +410,21 @@ function shellWorldWidth(shellContext) {
 
 function shellGameplayCameraFollowMode(shellContext) {
   const gameplayLevel = shellGameplayLevel(shellContext);
-  const camera = gameplayLevel && gameplayLevel.camera
-    ? gameplayLevel.camera
-    : null;
-  return String(camera && camera.gameplayFollowMode || "follow_target_center").trim();
+  return resolveStageCameraFollowMode(gameplayLevel, "gameplay", "follow_target_center");
 }
 
 function shellGameplayCameraZoom(shellContext) {
   const gameplayLevel = shellGameplayLevel(shellContext);
-  const camera = gameplayLevel && gameplayLevel.camera
-    ? gameplayLevel.camera
-    : null;
-  const zoom = Number(camera && camera.gameplayZoom);
-  return Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  return resolveStageCameraZoom(gameplayLevel, "gameplay", 1);
 }
 
 function shellGameplayCameraConfig(shellContext) {
   const gameplayLevel = shellGameplayLevel(shellContext);
-  const camera = gameplayLevel && gameplayLevel.camera
-    ? gameplayLevel.camera
-    : null;
-  const fixedFrameAnchor = resolveLevelCameraAnchor(
-    gameplayLevel,
-    camera && camera.fixedFrameAnchorId,
-    {
-      worldWidthPx: shellWorldWidth(shellContext),
-      groundCenterWorld: () => shellGroundCenterWorld(shellContext),
-    }
-  );
-  return Object.freeze({
-    fixedFrameCenterXW: fixedFrameAnchor && fixedFrameAnchor.point
-      ? fixedFrameAnchor.point.xW
-      : (
-          camera && camera.fixedFrameCenterXW != null && Number.isFinite(Number(camera.fixedFrameCenterXW))
-            ? Number(camera.fixedFrameCenterXW)
-            : null
-        ),
-    fixedFrameCenterYW: fixedFrameAnchor && fixedFrameAnchor.point
-      ? fixedFrameAnchor.point.yW
-      : (
-          camera && camera.fixedFrameCenterYW != null && Number.isFinite(Number(camera.fixedFrameCenterYW))
-            ? Number(camera.fixedFrameCenterYW)
-            : null
-        ),
-    deadzoneWidthPx: Number(camera && camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : -1,
-    deadzoneHeightPx: Number(camera && camera.deadzoneHeightPx) >= 0 ? Number(camera.deadzoneHeightPx) : -1,
-    deadzoneWidthRatio: Number(camera && camera.deadzoneWidthRatio) >= 0 ? Number(camera.deadzoneWidthRatio) : 0,
-    deadzoneHeightRatio: Number(camera && camera.deadzoneHeightRatio) >= 0 ? Number(camera.deadzoneHeightRatio) : 0,
-    followLerpX: Number(camera && camera.followLerpX) >= 0 ? Number(camera.followLerpX) : 1,
-    followLerpY: Number(camera && camera.followLerpY) >= 0 ? Number(camera.followLerpY) : 1,
-    screenAnchorX: Number(camera && camera.screenAnchorX) >= 0 ? Number(camera.screenAnchorX) : 0.5,
-    screenAnchorY: Number(camera && camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5,
-    clampInsetLeftPx: Number(camera && camera.clampInsetLeftPx) >= 0 ? Number(camera.clampInsetLeftPx) : 0,
-    clampInsetRightPx: Number(camera && camera.clampInsetRightPx) >= 0 ? Number(camera.clampInsetRightPx) : 0,
-    clampInsetTopPx: Number(camera && camera.clampInsetTopPx) >= 0 ? Number(camera.clampInsetTopPx) : 0,
-    clampInsetBottomPx: Number(camera && camera.clampInsetBottomPx) >= 0 ? Number(camera.clampInsetBottomPx) : 0,
+  return resolveStageCameraConfig(gameplayLevel, {
+    mode: "gameplay",
+    worldWidthPx: shellWorldWidth(shellContext),
+    worldHeightPx: shellWorldHeight(shellContext),
+    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
   });
 }
 
@@ -501,24 +467,11 @@ function shellResolvedViewFloorGuide(shellContext) {
 }
 
 function shellGameplayCameraClampBounds(shellContext) {
-  const collisionBox = shellResolvedCollisionBox(shellContext);
-  const viewFloorGuide = shellResolvedViewFloorGuide(shellContext);
-  if (collisionBox) {
-    return Object.freeze({
-      leftXW: Number(collisionBox.leftXW) || 0,
-      rightXW: Number(collisionBox.rightXW) || shellWorldWidth(shellContext),
-      topYW: Number(collisionBox.topYW) || 0,
-      bottomYW: Math.max(
-        Number(collisionBox.bottomYW) || 0,
-        Number(viewFloorGuide && viewFloorGuide.worldY) || 0
-      ) || shellWorldHeight(shellContext),
-    });
-  }
-  return Object.freeze({
-    leftXW: 0,
-    rightXW: shellWorldWidth(shellContext),
-    topYW: 0,
-    bottomYW: shellWorldHeight(shellContext),
+  return resolveStageCameraClampBounds({
+    worldWidthPx: shellWorldWidth(shellContext),
+    worldHeightPx: shellWorldHeight(shellContext),
+    boundaryBox: shellResolvedCollisionBox(shellContext),
+    viewFloorGuide: shellResolvedViewFloorGuide(shellContext),
   });
 }
 
