@@ -1236,9 +1236,17 @@ function bindShellStageResize(shellContext) {
 }
 
 function bindShellStageActions(shellContext) {
-  const orbRefs = shellContext && shellContext.refs ? shellContext.refs.orb : null;
-  const levelRefs = shellContext && shellContext.refs ? shellContext.refs.level : null;
-  const buttons = [orbRefs && orbRefs.tryAgainBtn, levelRefs && levelRefs.tryAgainBtn].filter(Boolean);
+  const adapters = [
+    shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null,
+    shellContext && shellContext.levelStageAdapter ? shellContext.levelStageAdapter : null,
+  ].filter(Boolean);
+  const buttons = adapters
+    .map((adapter) => (
+      adapter && typeof adapter.getStageElements === "function"
+        ? adapter.getStageElements().tryAgainBtn
+        : null
+    ))
+    .filter(Boolean);
   if (!buttons.length) return;
   const onTryAgain = () => {
     const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -2243,9 +2251,10 @@ function createStagingShellContext({
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, levelOverlayView });
   const orbStageAdapter = createOrbStageAdapter(orbStageView);
   const levelStageAdapter = createLevelStageAdapter(levelOverlayView);
+  const activeStageAdapter = orbStageAdapter || levelStageAdapter || null;
   const stageEls = (
-    orbStageAdapter && typeof orbStageAdapter.getStageElements === "function"
-      ? { ...orbStageAdapter.getStageElements() }
+    activeStageAdapter && typeof activeStageAdapter.getStageElements === "function"
+      ? { ...activeStageAdapter.getStageElements() }
       : {}
   );
   return {
@@ -2261,7 +2270,7 @@ function createStagingShellContext({
     refs: surfaceRefs,
     orbStageAdapter,
     levelStageAdapter,
-    activeStageAdapter: orbStageAdapter || levelStageAdapter || null,
+    activeStageAdapter,
     stageEls,
     sharedModules,
     runtime: {
