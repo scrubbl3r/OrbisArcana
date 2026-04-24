@@ -36,6 +36,7 @@ export function bindStagingRuntimeEvents({
   closeDeathOverlay = () => {},
   setOrbInputSuppressed = () => {},
   getOrbAlive = () => true,
+  skipVoiceSpellCastBinding = false,
 } = {}) {
   let lastHeardNodToken = "";
   let lastHeardNodAtMs = 0;
@@ -97,37 +98,39 @@ export function bindStagingRuntimeEvents({
       stopShardSim();
     }
   });
-  eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
-    const intent = String(p.intent || "");
-    const wordId = String((p.sourceWordId || p.wordId || p.spellId) || "").toLowerCase();
-    const payloadCastActionId = String(p.castActionId || "").trim().toLowerCase();
-    const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
-    const castActionId = payloadCastActionId || (wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId));
-    const result = executeWordCastAction(castActionId, { payload: p, intent });
-    if (RULE_CHAIN_TRACE_ENABLED && kwsBridge && typeof kwsBridge.pushLogLine === "function" && castActionId === "aoe_flame") {
-      kwsBridge.pushLogLine(
-        `TRACE voice_cast:aoe_flame:word:${wordId || "-"}:trigger:${String(p.trigger || "-").trim().toLowerCase() || "-"}:${result && result.handled ? "ok" : "miss"}`,
-        result && result.handled ? "ok" : "warn"
-      );
-    }
-    if (result && result.handled && wordDef) {
-      const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
-      if (postCastActions) {
-        for (const action of postCastActions) {
-          const actionId = String(action && action.id || "");
-          if (!actionId) continue;
-          const payload = (action && typeof action.payload === "object" && action.payload)
-            ? { ...p, ...action.payload }
-            : p;
-          executeWordCastAction(actionId, { payload, intent });
-        }
-      } else if (Array.isArray(wordDef.postCastActionIds)) {
-        for (const actionId of wordDef.postCastActionIds) {
-          executeWordCastAction(String(actionId || ""), { payload: p, intent });
+  if (!skipVoiceSpellCastBinding) {
+    eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
+      const intent = String(p.intent || "");
+      const wordId = String((p.sourceWordId || p.wordId || p.spellId) || "").toLowerCase();
+      const payloadCastActionId = String(p.castActionId || "").trim().toLowerCase();
+      const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
+      const castActionId = payloadCastActionId || (wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId));
+      const result = executeWordCastAction(castActionId, { payload: p, intent });
+      if (RULE_CHAIN_TRACE_ENABLED && kwsBridge && typeof kwsBridge.pushLogLine === "function" && castActionId === "aoe_flame") {
+        kwsBridge.pushLogLine(
+          `TRACE voice_cast:aoe_flame:word:${wordId || "-"}:trigger:${String(p.trigger || "-").trim().toLowerCase() || "-"}:${result && result.handled ? "ok" : "miss"}`,
+          result && result.handled ? "ok" : "warn"
+        );
+      }
+      if (result && result.handled && wordDef) {
+        const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
+        if (postCastActions) {
+          for (const action of postCastActions) {
+            const actionId = String(action && action.id || "");
+            if (!actionId) continue;
+            const payload = (action && typeof action.payload === "object" && action.payload)
+              ? { ...p, ...action.payload }
+              : p;
+            executeWordCastAction(actionId, { payload, intent });
+          }
+        } else if (Array.isArray(wordDef.postCastActionIds)) {
+          for (const actionId of wordDef.postCastActionIds) {
+            executeWordCastAction(String(actionId || ""), { payload: p, intent });
+          }
         }
       }
-    }
-  });
+    });
+  }
   let lastRuleEngineActionKey = "";
   let lastRuleEngineActionAtMs = 0;
   eventBus.on(RULE_ENGINE_ACTION_EXECUTED_EVENT, (p = {}) => {

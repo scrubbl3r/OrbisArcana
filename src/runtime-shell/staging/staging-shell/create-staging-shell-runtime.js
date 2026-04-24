@@ -16,7 +16,7 @@ import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } fro
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424f";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260424f";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260424g";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -1606,6 +1606,50 @@ function shellExecuteWordCastAction(shellContext, castActionId, context = {}) {
   return result && typeof result === "object" ? result : { handled: !!result };
 }
 
+function shellHandleVoiceSpellCast(shellContext, payload = {}, { pushGeneralTrace = null } = {}) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const shellKws = runtime && runtime.kws ? runtime.kws : null;
+  if (!runtime || !shellKws) return { handled: false, skipped: "shell_kws_unavailable" };
+  const runtimeWordIndex = shellKws.runtimeWordIndex || Object.create(null);
+  const runtimeSpellIndex = shellKws.runtimeSpellIndex || runtimeWordIndex;
+  const intent = String(payload.intent || "");
+  const wordId = String((payload.sourceWordId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
+  const payloadCastActionId = String(payload.castActionId || "").trim().toLowerCase();
+  const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
+  const castActionId = payloadCastActionId || String((wordDef && wordDef.castActionId) || wordId || "");
+  const result = shellExecuteWordCastAction(shellContext, castActionId, { payload, intent });
+  if (
+    typeof pushGeneralTrace === "function" &&
+    String(castActionId || "").trim().toLowerCase() === "aoe_flame"
+  ) {
+    pushGeneralTrace(
+      `TRACE voice_cast:aoe_flame:word:${wordId || "-"}:trigger:${String(payload.trigger || "-").trim().toLowerCase() || "-"}:${result && result.handled ? "ok" : "miss"}`,
+      result && result.handled ? "ok" : "warn"
+    );
+    pushGeneralTrace(
+      `TRACE exec:aoe_flame:cast:${result && result.handled ? "ok" : "miss"}`,
+      result && result.handled ? "ok" : "warn"
+    );
+  }
+  if (!(result && result.handled) || !wordDef) return result;
+  const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
+  if (postCastActions) {
+    for (const action of postCastActions) {
+      const actionId = String(action && action.id || "");
+      if (!actionId) continue;
+      const nextPayload = (action && typeof action.payload === "object" && action.payload)
+        ? { ...payload, ...action.payload }
+        : payload;
+      shellExecuteWordCastAction(shellContext, actionId, { payload: nextPayload, intent });
+    }
+  } else if (Array.isArray(wordDef.postCastActionIds)) {
+    for (const actionId of wordDef.postCastActionIds) {
+      shellExecuteWordCastAction(shellContext, String(actionId || ""), { payload, intent });
+    }
+  }
+  return result;
+}
+
 async function initShellReceiverHostRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
@@ -2818,6 +2862,9 @@ async function initShellKwsRuntime(shellContext) {
       }
     }),
   ];
+  const shellVoiceSpellCastOff = eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (payload = {}) => {
+    shellHandleVoiceSpellCast(shellContext, payload, { pushGeneralTrace });
+  });
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
     grantOrbGraceRuntime: (typeof grantOrbGraceRuntime === "function") ? grantOrbGraceRuntime : null,
@@ -2919,6 +2966,7 @@ async function initShellKwsRuntime(shellContext) {
     shellSpellCastExecutor,
     shellRuleActionRuntime,
     directGeneralTraceOff,
+    shellVoiceSpellCastOff,
     receiverMods,
     kwsBackendKey,
     kwsDebugState,

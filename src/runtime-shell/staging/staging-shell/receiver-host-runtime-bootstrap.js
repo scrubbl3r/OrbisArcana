@@ -280,6 +280,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     runtimeWordIndex: shellKws.runtimeWordIndex,
     runtimeSpellIndex: shellKws.runtimeSpellIndex,
     castActionForWordId,
+    skipVoiceSpellCastBinding: true,
     executeWordCastAction: (castActionId, context = {}) => (
       shellHooks && typeof shellHooks.executeWordCastAction === "function"
         ? shellHooks.executeWordCastAction(castActionId, context)
