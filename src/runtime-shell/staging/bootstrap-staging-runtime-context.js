@@ -174,9 +174,18 @@ export function bootstrapStagingRuntimeContext({
   const worldSystem = createWorldSystem({
     eventBus,
     stageEl: els.physStage,
+    getStageEl: () => els.physStage,
     getStageRect: () => stageRect(),
     worldToScreenY: (yW) => pickupScreenY(yW),
-    getOrbWorldPosition: () => ({ xNorm: 0.5, yW: getOrbRuntime().yW }),
+    getOrbWorldPosition: () => {
+      const rect = stageRect();
+      const stageWidth = Math.max(1, Number(rect && rect.width) || 1);
+      const orbScreenX = Number(getOrbScreenX());
+      const xNorm = Number.isFinite(orbScreenX)
+        ? Math.max(0, Math.min(1, orbScreenX / stageWidth))
+        : 0.5;
+      return { xNorm, yW: getOrbRuntime().yW };
+    },
     orbRadiusPx: getOrbFxRadiusPx(),
     getOrbRadiusPx: getOrbFxRadiusPx,
     spawns: resolvedGlobeSpawns,

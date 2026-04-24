@@ -7,6 +7,7 @@ import { WORLD_GLOBE_VISUAL_DEFAULTS } from "./world-globe-state.js?v=20260418a"
 export function createWorldSystem({
   eventBus,
   stageEl,
+  getStageEl = null,
   getStageRect,
   worldToScreenY,
   getOrbWorldPosition,
@@ -32,6 +33,10 @@ export function createWorldSystem({
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const clamp01 = (x) => clamp(Number(x) || 0, 0, 1);
   const clockNowMs = () => performance.now();
+  const readStageEl = () => {
+    const dynamicStageEl = typeof getStageEl === "function" ? getStageEl() : null;
+    return dynamicStageEl || stageEl || null;
+  };
 
   const PICKUP_ATTRACT_START_EDGE_GAP_PX = 120;
   const PICKUP_CONSUME_EDGE_GAP_PX = 15;
@@ -100,11 +105,21 @@ export function createWorldSystem({
   };
 
   function ensureGlobeEl(pickup, index) {
-    if (pickup && pickup.el && pickup.el.isConnected) return pickup.el;
+    const activeStageEl = readStageEl();
+    if (!activeStageEl) return null;
+    if (pickup && pickup.el && pickup.el.isConnected) {
+      if (pickup.el.parentElement !== activeStageEl) {
+        activeStageEl.appendChild(pickup.el);
+      }
+      return pickup.el;
+    }
 
     if (index === 0 && typeof getGlobeEl === "function") {
       const existing = getGlobeEl();
       if (existing) {
+        if (existing.parentElement !== activeStageEl) {
+          activeStageEl.appendChild(existing);
+        }
         pickup.el = existing;
         pickup.renderCache = pickup.renderCache || Object.create(null);
         return existing;
@@ -115,7 +130,7 @@ export function createWorldSystem({
     el.id = (index === 0) ? "testGlobe" : `testGlobe${index + 1}`;
     el.className = "pickupGlobe";
     el.setAttribute("aria-label", "Energy globe");
-    stageEl.appendChild(el);
+    activeStageEl.appendChild(el);
 
     if (index === 0 && typeof setGlobeEl === "function") setGlobeEl(el);
     pickup.el = el;
