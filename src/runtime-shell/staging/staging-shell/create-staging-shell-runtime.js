@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423c";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423d";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -1283,9 +1283,11 @@ function bindShellStageResize(shellContext) {
 }
 
 function bindShellStageActions(shellContext) {
-  const refs = shellContext && shellContext.refs ? shellContext.refs.orb : null;
-  if (!refs || !refs.tryAgainBtn) return;
-  refs.tryAgainBtn.addEventListener("click", () => {
+  const orbRefs = shellContext && shellContext.refs ? shellContext.refs.orb : null;
+  const levelRefs = shellContext && shellContext.refs ? shellContext.refs.level : null;
+  const buttons = [orbRefs && orbRefs.tryAgainBtn, levelRefs && levelRefs.tryAgainBtn].filter(Boolean);
+  if (!buttons.length) return;
+  const onTryAgain = () => {
     const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
     const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
     const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || (runtime && runtime.mvp) || null;
@@ -1309,7 +1311,10 @@ function bindShellStageActions(shellContext) {
     }
     closeShellDeathOverlay(shellContext);
     renderShellOrbDamageVisuals(shellContext);
-  });
+  };
+  for (const button of buttons) {
+    button.addEventListener("click", onTryAgain);
+  }
 }
 
 function patchShellOrbRuntime(shellContext, patch = {}) {
@@ -1521,6 +1526,13 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     playFlameAoeRuntime,
     triggerShockwaveRuntime,
   } = mods || {};
+  if (runtime) {
+    runtime.shellVfxMods = {
+      playElectricAoeRuntime,
+      playFlameAoeRuntime,
+      triggerShockwaveRuntime,
+    };
+  }
   const rootStyle = (
     shellContext &&
     shellContext.rootDocument &&
@@ -1907,6 +1919,77 @@ function getActiveShellStageElements(shellContext) {
     : {};
 }
 
+function assignShellStageElements(shellContext, nextStageEls = {}) {
+  if (!shellContext) return {};
+  if (!shellContext.stageEls || typeof shellContext.stageEls !== "object") {
+    shellContext.stageEls = {};
+  }
+  const target = shellContext.stageEls;
+  for (const key of Object.keys(target)) {
+    if (!Object.prototype.hasOwnProperty.call(nextStageEls, key)) {
+      delete target[key];
+    }
+  }
+  for (const [key, value] of Object.entries(nextStageEls || {})) {
+    target[key] = value;
+  }
+  return target;
+}
+
+function refreshShellActiveStageRuntimeBindings(shellContext) {
+  if (!shellContext) return;
+  const runtime = shellContext.runtime || null;
+  const activeStageEls = getActiveShellStageElements(shellContext);
+  assignShellStageElements(shellContext, activeStageEls);
+  if (!runtime) return;
+
+  if (runtime.vfxDefaults && runtime.shellVfxMods) {
+    initShellReceiverVfxRuntime(shellContext, runtime.shellVfxMods);
+  }
+
+  runtime.orbStageActions = createOrbStageActionBridge({
+    runtime,
+    shieldEl: shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null,
+    patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
+    getOrbRuntime: () => getShellOrbRuntime(shellContext),
+    applyOrbTransform: () => applyShellOrbTransform(shellContext),
+    applyGroundLine: () => applyShellGroundLine(shellContext),
+    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+    updateDebugReadout: () => updateShellStageReadouts(shellContext),
+    resetInputProcessingState: (atMs) => resetShellInputProcessingState(shellContext, atMs),
+    performanceNow: () => performance.now(),
+    clamp,
+  });
+
+  const activeAdapter = getActiveShellStageAdapter(shellContext);
+  const activeRoot = activeAdapter && activeAdapter.refs ? activeAdapter.refs.root : null;
+  runtime.orbShatterController = (
+    activeAdapter &&
+    typeof activeAdapter.createOrbShatterController === "function" &&
+    runtime.vfx &&
+    runtime.vfx.orbShatterRuntime
+  )
+    ? activeAdapter.createOrbShatterController({
+        root: activeRoot,
+        getOrbShatterRuntime: () => (
+          runtime && runtime.vfx
+            ? runtime.vfx.orbShatterRuntime
+            : null
+        ),
+        getOrbColorState: () => (
+          runtime &&
+          runtime.orbColorRuntime &&
+          typeof runtime.orbColorRuntime.getCurrentState === "function"
+            ? runtime.orbColorRuntime.getCurrentState()
+            : null
+        ),
+        getBaseFillAlpha: () => 0.20,
+        clamp,
+        clamp01,
+      })
+    : null;
+}
+
 function syncActiveShellStage(shellContext) {
   if (!shellContext) return null;
   const modeState = getShellModeState(shellContext);
@@ -1914,6 +1997,7 @@ function syncActiveShellStage(shellContext) {
     ? shellContext.levelStageAdapter
     : shellContext.orbStageAdapter;
   shellContext.activeStageAdapter = activeStageAdapter || shellContext.orbStageAdapter || null;
+  refreshShellActiveStageRuntimeBindings(shellContext);
   const runtime = shellContext.runtime || null;
   if (runtime) {
     runtime.stageRectCache = null;
@@ -2165,7 +2249,7 @@ function createStagingShellContext({
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, levelOverlayView });
   const orbStageAdapter = createOrbStageAdapter(orbStageView);
   const levelStageAdapter = createLevelStageAdapter(levelOverlayView);
-  const stageEls = orbStageAdapter.getStageElements();
+  const stageEls = { ...orbStageAdapter.getStageElements() };
   return {
     rootDocument,
     views: {
@@ -2202,6 +2286,7 @@ function createStagingShellContext({
       stage: null,
       currentLevelMapSummary: null,
       currentLevelBoundarySegments: null,
+      shellVfxMods: null,
       shellModeController: modeController,
       shellModeHotkeyOff: null,
       shellModeOff: null,

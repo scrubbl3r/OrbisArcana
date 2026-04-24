@@ -17,6 +17,7 @@ import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
+import { createOrbShatterRuntimeController } from "../../../game-runtime/orb/orb-shatter-runtime.js";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
@@ -24,6 +25,9 @@ const LEVEL_STAGE_ORB_MARKUP = `
   <div class="levelStageOrbLayer" aria-hidden="true">
     <div class="orbWrap levelStageOrbWrap" data-level-stage-orb-wrap="true">
       <div class="origin" aria-hidden="true">
+        <div class="electricLayer" data-level-stage-electric-layer="true" aria-hidden="true"></div>
+        <div class="flameLayer" data-level-stage-flame-layer="true" aria-hidden="true"></div>
+        <div class="shockLayer" data-level-stage-shock-layer="true" aria-hidden="true"></div>
         <div class="shield atOrigin levelStageShield" data-level-stage-shield="true"></div>
         <div class="orb atOrigin" data-level-stage-orb="true"></div>
         <svg class="orbCracks atOrigin" data-level-stage-orb-cracks="true" viewBox="-50 -50 100 100"></svg>
@@ -458,6 +462,12 @@ export function renderLevelStage(root, { level = null } = {}) {
           <span class="levelStageLabelTitle">Level Stage</span>
           <span class="levelStageLabelMeta"></span>
         </div>
+        <div class="deathPanel off" data-level-stage-death-panel="true" aria-hidden="true">
+          <div class="deathCard" role="dialog" aria-label="You died">
+            <div class="deathTitle">YOU DIED</div>
+            <button class="stageButton" data-level-stage-try-again="true" type="button">TRY AGAIN</button>
+          </div>
+        </div>
       </div>
     </section>
   `;
@@ -479,6 +489,11 @@ export function renderLevelStage(root, { level = null } = {}) {
     orbCracks: root.querySelector("[data-level-stage-orb-cracks='true']"),
     orbShards: root.querySelector("[data-level-stage-orb-shards='true']"),
     shield: root.querySelector("[data-level-stage-shield='true']"),
+    shockLayer: root.querySelector("[data-level-stage-shock-layer='true']"),
+    flameLayer: root.querySelector("[data-level-stage-flame-layer='true']"),
+    electricLayer: root.querySelector("[data-level-stage-electric-layer='true']"),
+    deathPanel: root.querySelector("[data-level-stage-death-panel='true']"),
+    tryAgainBtn: root.querySelector("[data-level-stage-try-again='true']"),
   };
 
   const state = {
@@ -517,6 +532,11 @@ export function renderLevelStage(root, { level = null } = {}) {
           orbCracks: refs.orbCracks || null,
           orbShards: refs.orbShards || null,
           shield: refs.shield || null,
+          shockLayer: refs.shockLayer || null,
+          flameLayer: refs.flameLayer || null,
+          electricLayer: refs.electricLayer || null,
+          deathPanel: refs.deathPanel || null,
+          tryAgainBtn: refs.tryAgainBtn || null,
         };
       },
       getStageRect() {
@@ -608,8 +628,35 @@ export function renderLevelStage(root, { level = null } = {}) {
           return `<path ${attrs} />`;
         }).join("");
       },
-      openDeathOverlay() {},
-      closeDeathOverlay() {},
+      openDeathOverlay() {
+        if (!refs.deathPanel) return;
+        refs.deathPanel.classList.remove("off");
+        refs.deathPanel.setAttribute("aria-hidden", "false");
+      },
+      closeDeathOverlay() {
+        if (!refs.deathPanel) return;
+        refs.deathPanel.classList.add("off");
+        refs.deathPanel.setAttribute("aria-hidden", "true");
+      },
+      createOrbShatterController({
+        root = refs.root,
+        getOrbShatterRuntime = () => null,
+        getOrbColorState = () => null,
+        getBaseFillAlpha = () => 0.20,
+        clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
+        clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
+      } = {}) {
+        if (!refs.orb || typeof createOrbShatterRuntimeController !== "function") return null;
+        return createOrbShatterRuntimeController({
+          root,
+          getOrbEl: () => refs.orb,
+          getOrbShatterRuntime,
+          getOrbColorState,
+          getBaseFillAlpha,
+          clamp,
+          clamp01,
+        });
+      },
       setTraceLogger(fn) {
         state.traceLog = typeof fn === "function" ? fn : null;
         if (state.traceLog) {
