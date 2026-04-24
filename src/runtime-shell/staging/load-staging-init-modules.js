@@ -71,7 +71,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import("../../voice/kws/kws-receiver-bridge.js"),
     import("../../vfx/effects/vfx-runtimes-bundle.js"),
     import("../../game-runtime/orb/orb-base-state.js"),
-    import("../../game-runtime/orb/orb-color-runtime.js"),
+    import(withVersion("../../game-runtime/orb/orb-color-runtime.js", moduleCacheBustV)),
     import("../../game-runtime/orb/orb-shatter-runtime.js"),
     import(withVersion("../../game-runtime/orb/orb-runtime-state.js", moduleCacheBustV)),
     import("../../game-runtime/orb/orb-runtime-loop.js"),

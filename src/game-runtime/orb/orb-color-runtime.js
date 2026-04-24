@@ -15,6 +15,7 @@ function toChannel01(value, fallback) {
 
 export function createOrbColorRuntime({
   root = globalThis.document && globalThis.document.documentElement,
+  getRoot = null,
   getBaseVisualState,
   clamp01 = defaultClamp01,
   clamp = defaultClamp,
@@ -39,6 +40,11 @@ export function createOrbColorRuntime({
     lastFillCss: "",
   };
 
+  function readRoot() {
+    const dynamicRoot = typeof getRoot === "function" ? getRoot() : null;
+    return dynamicRoot || root || null;
+  }
+
   function resolveBaseState() {
     const next = (typeof getBaseVisualState === "function" ? getBaseVisualState() : null) || {};
     const strokeDefault01 = next.strokeDefault01 || { r: 1, g: 1, b: 1 };
@@ -60,7 +66,8 @@ export function createOrbColorRuntime({
   }
 
   function applyToCss(strokeColor, fillColor, alpha) {
-    if (!root) return;
+    const targetRoot = readRoot();
+    if (!targetRoot) return;
     const strokeR = Math.round(clamp01(strokeColor.r) * 255);
     const strokeG = Math.round(clamp01(strokeColor.g) * 255);
     const strokeB = Math.round(clamp01(strokeColor.b) * 255);
@@ -71,11 +78,11 @@ export function createOrbColorRuntime({
     const nextFillCss = `rgba(${fillR},${fillG},${fillB},${clamp01(alpha).toFixed(2)})`;
     if (nextStrokeCss !== state.lastStrokeCss) {
       state.lastStrokeCss = nextStrokeCss;
-      root.style.setProperty("--orb-stroke-color", nextStrokeCss);
+      targetRoot.style.setProperty("--orb-stroke-color", nextStrokeCss);
     }
     if (nextFillCss !== state.lastFillCss) {
       state.lastFillCss = nextFillCss;
-      root.style.setProperty("--orb-fill", nextFillCss);
+      targetRoot.style.setProperty("--orb-fill", nextFillCss);
     }
   }
 

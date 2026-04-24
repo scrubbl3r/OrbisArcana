@@ -91,53 +91,6 @@ function buildLineArtOverlayMarkup(shapes = []) {
     .join("");
 }
 
-function buildSpawnOverlayMarkup(spawn = null) {
-  if (!spawn || !spawn.worldCenter) return "";
-  const x = clampNumber(spawn.worldCenter.xW, 0);
-  const y = clampNumber(spawn.worldCenter.yW, 0);
-  const authoredRadius = Math.max(2, clampNumber(spawn.authoredRadius, 0));
-  const orbRadius = LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS * 0.5;
-  return `
-    <g class="levelStageSpawnMarker" data-spawn-id="${String(spawn.id || "spawn")}">
-      <circle class="levelStageSpawnPulse" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(authoredRadius * 4).toFixed(2)}"></circle>
-      <circle class="levelStageSpawnDot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${authoredRadius.toFixed(2)}"></circle>
-      <circle class="levelStageSpawnOrbRing" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${orbRadius.toFixed(2)}"></circle>
-    </g>
-  `;
-}
-
-function buildOrbReferenceMarkup(spawn = null) {
-  if (!spawn || !spawn.worldCenter) return "";
-  const x = clampNumber(spawn.worldCenter.xW, 0);
-  const y = clampNumber(spawn.worldCenter.yW, 0);
-  const orbRadius = LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS * 0.5;
-  return `
-    <g class="levelStageOrbReference" data-orb-ref-id="${String(spawn.id || "spawn_orb")}">
-      <circle class="levelStageOrbReferenceHalo" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(orbRadius * 1.18).toFixed(2)}"></circle>
-      <circle class="levelStageOrbReferenceRing" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${orbRadius.toFixed(2)}"></circle>
-    </g>
-  `;
-}
-
-function buildWorldItemOverlayMarkup(spawns = []) {
-  return (Array.isArray(spawns) ? spawns : [])
-    .map((spawn = {}, index) => {
-      const worldCenter = spawn && spawn.worldCenter ? spawn.worldCenter : null;
-      if (!worldCenter) return "";
-      const x = clampNumber(worldCenter.xW, 0);
-      const y = clampNumber(spawn.yW, clampNumber(worldCenter.yW, 0));
-      const r = Math.max(6, clampNumber(spawn.r, 25));
-      return `
-        <g class="levelStageWorldItem" data-world-item-id="${String(spawn.id || `world_item_${index + 1}`)}">
-          <circle class="levelStageWorldItemHalo" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(r * 1.6).toFixed(2)}"></circle>
-          <circle class="levelStageWorldItemCore" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r.toFixed(2)}"></circle>
-        </g>
-      `;
-    })
-    .filter(Boolean)
-    .join("");
-}
-
 function buildViewFloorOverlayMarkup(guides = []) {
   return (Array.isArray(guides) ? guides : [])
     .map((guide = {}, index) => {
@@ -409,9 +362,6 @@ async function hydrateSvgLevelPreview(refs, state, level) {
       ${buildBoundaryOverlayMarkup(state.sceneModel.loops)}
       ${buildLineArtOverlayMarkup(state.sceneModel.lineArtShapes)}
       ${buildViewFloorOverlayMarkup(state.sceneModel.viewFloorGuides)}
-      ${buildWorldItemOverlayMarkup(state.sceneModel.worldItemSpawns)}
-      ${buildOrbReferenceMarkup(state.spawn)}
-      ${buildSpawnOverlayMarkup(state.spawn)}
     `;
     if (refs.stage) refs.stage.dataset.levelStageState = "ready";
     if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
