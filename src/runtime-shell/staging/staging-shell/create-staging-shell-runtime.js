@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424c";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424d";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -1567,7 +1567,7 @@ function shellExecuteWordCastAction(shellContext, castActionId, context = {}) {
   return result && typeof result === "object" ? result : { handled: !!result };
 }
 
-function shellHandleVoiceSpellCast(shellContext, payload = {}, { pushGeneralTrace = null } = {}) {
+function shellHandleVoiceSpellCast(shellContext, payload = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const shellKws = runtime && runtime.kws ? runtime.kws : null;
   if (!runtime || !shellKws) return { handled: false, skipped: "shell_kws_unavailable" };
@@ -1579,19 +1579,6 @@ function shellHandleVoiceSpellCast(shellContext, payload = {}, { pushGeneralTrac
   const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
   const castActionId = payloadCastActionId || String((wordDef && wordDef.castActionId) || wordId || "");
   const result = shellExecuteWordCastAction(shellContext, castActionId, { payload, intent });
-  if (
-    typeof pushGeneralTrace === "function" &&
-    String(castActionId || "").trim().toLowerCase() === "aoe_flame"
-  ) {
-    pushGeneralTrace(
-      `TRACE voice_cast:aoe_flame:word:${wordId || "-"}:trigger:${String(payload.trigger || "-").trim().toLowerCase() || "-"}:${result && result.handled ? "ok" : "miss"}`,
-      result && result.handled ? "ok" : "warn"
-    );
-    pushGeneralTrace(
-      `TRACE exec:aoe_flame:cast:${result && result.handled ? "ok" : "miss"}`,
-      result && result.handled ? "ok" : "warn"
-    );
-  }
   if (!(result && result.handled) || !wordDef) return result;
   const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
   if (postCastActions) {
@@ -2530,16 +2517,6 @@ async function initShellKwsRuntime(shellContext) {
     receiverEvents: RECEIVER_EVENTS,
   } = base;
 
-  if (kwsPanelController && typeof kwsPanelController.clearGeneralLog === "function") {
-    kwsPanelController.clearGeneralLog();
-  }
-  if (kwsPanelController && typeof kwsPanelController.pushGeneralLogLine === "function") {
-    kwsPanelController.pushGeneralLogLine("general log cleared for spell cast traces", "muted");
-  }
-  if (shellContext && shellContext.levelStageAdapter && typeof shellContext.levelStageAdapter.setTraceLogger === "function") {
-    shellContext.levelStageAdapter.setTraceLogger(null);
-  }
-
   const {
     createRuleEnginePreviewSystem,
     createSpellCastExecutor,
@@ -2754,44 +2731,8 @@ async function initShellKwsRuntime(shellContext) {
   const orbShatterCompleteTraceOff = () => {};
   runtime.eventBus = eventBus;
 
-  const pushGeneralTrace = (line, kind = "muted") => {
-    if (!kwsPanelController || typeof kwsPanelController.pushGeneralLogLine !== "function") return;
-    const text = String(line || "").trim();
-    if (!text) return;
-    kwsPanelController.pushGeneralLogLine(text, kind);
-  };
-  const directGeneralTraceOff = [
-    eventBus.on("spell.slot_load_requested", (payload = {}) => {
-      const slot = String(payload.slot || "").trim().toUpperCase();
-      const spell = String((payload.spell || payload.castActionId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
-      pushGeneralTrace(`TRACE slot_load_req:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
-    }),
-    eventBus.on("voice.spell_loaded", (payload = {}) => {
-      const slot = String(payload.slot || "").trim().toUpperCase();
-      const spell = String((payload.castActionId || payload.sourceWordId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
-      pushGeneralTrace(`TRACE slot_loaded:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
-    }),
-    eventBus.on("spell.slot_cast_requested", (payload = {}) => {
-      const slot = String(payload.slot || "").trim().toUpperCase();
-      pushGeneralTrace(`TRACE slot_cast_req:${slot || "-"}`, slot ? "ok" : "warn");
-    }),
-    eventBus.on("voice.spell_cast", (payload = {}) => {
-      const castActionId = String(payload.castActionId || "").trim().toLowerCase();
-      if (castActionId !== "aoe_flame") return;
-      const wordId = String((payload.sourceWordId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
-      const trigger = String(payload.trigger || "").trim().toLowerCase();
-      pushGeneralTrace(`TRACE voice_cast:aoe_flame:word:${wordId || "-"}:trigger:${trigger || "-"}:seen`, "ok");
-    }),
-    eventBus.on("rule_engine.action_executed", (payload = {}) => {
-      const actionType = String(payload.actionType || "").trim().toLowerCase();
-      const actionId = String(payload.actionId || "").trim().toLowerCase();
-      if (actionType === "event" && actionId === "aoe_flame") {
-        pushGeneralTrace("TRACE action:event:aoe_flame", "ok");
-      }
-    }),
-  ];
   const shellVoiceSpellCastOff = eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (payload = {}) => {
-    shellHandleVoiceSpellCast(shellContext, payload, { pushGeneralTrace });
+    shellHandleVoiceSpellCast(shellContext, payload);
   });
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
@@ -2852,11 +2793,7 @@ async function initShellKwsRuntime(shellContext) {
     defaultGraceTtlMs: getShellDefaultGraceTtlMs(),
   });
   const executeShellWordCastAction = (castActionId, context = {}) => {
-    const result = shellExecuteWordCastAction(shellContext, castActionId, context);
-    if (String(castActionId || "").trim().toLowerCase() === "aoe_flame") {
-      pushGeneralTrace(`TRACE exec:aoe_flame:cast:${result && result.handled ? "ok" : "miss"}`, result && result.handled ? "ok" : "warn");
-    }
-    return result;
+    return shellExecuteWordCastAction(shellContext, castActionId, context);
   };
   const shellRuleActionRuntime = bindShellRuleActionRuntime({
     shellContext,
@@ -2893,7 +2830,6 @@ async function initShellKwsRuntime(shellContext) {
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
-    directGeneralTraceOff,
     shellVoiceSpellCastOff,
     receiverMods,
     kwsBackendKey,

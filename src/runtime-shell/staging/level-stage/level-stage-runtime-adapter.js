@@ -7,9 +7,6 @@ export function createLevelStageRuntimeAdapter({
   level = null,
   state = null,
   unbindResize = () => {},
-  traceLevelStage = () => {},
-  formatLevelStageTracePair = () => "0,0",
-  updateLevelCamera = () => {},
 } = {}) {
   const core = createStageRuntimeAdapterCore({
     refs,
@@ -28,21 +25,6 @@ export function createLevelStageRuntimeAdapter({
           : String(left || "50%"),
         transform: `translate(-50%, ${Number(top || 0).toFixed(2)}px)`,
       };
-    },
-    onTraceLoggerSet: (traceLog) => {
-      if (!traceLog) return;
-      traceLevelStage(state, "level_stage.trace logger attached");
-      if (state.sceneModel) {
-        traceLevelStage(
-          state,
-          [
-            "level_stage.trace snapshot",
-            `spawnW=${state.spawn && state.spawn.worldCenter ? formatLevelStageTracePair(state.spawn.worldCenter.xW, state.spawn.worldCenter.yW) : "none"}`,
-            `viewFloorW=${state.sceneModel && state.sceneModel.viewFloorGuide ? Math.round(state.sceneModel.viewFloorGuide.worldY) : "none"}`,
-          ].join(" | ")
-        );
-      }
-      updateLevelCamera(refs, state);
     },
   });
   return Object.freeze({
