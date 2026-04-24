@@ -14,7 +14,7 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424c";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424d";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
@@ -2769,6 +2769,43 @@ async function initShellKwsRuntime(shellContext) {
   const orbShatterStartTraceOff = () => {};
   const orbShatterCompleteTraceOff = () => {};
   runtime.eventBus = eventBus;
+
+  const pushGeneralTrace = (line, kind = "muted") => {
+    if (!kwsPanelController || typeof kwsPanelController.pushGeneralLogLine !== "function") return;
+    const text = String(line || "").trim();
+    if (!text) return;
+    kwsPanelController.pushGeneralLogLine(text, kind);
+  };
+  const directGeneralTraceOff = [
+    eventBus.on("spell.slot_load_requested", (payload = {}) => {
+      const slot = String(payload.slot || "").trim().toUpperCase();
+      const spell = String((payload.spell || payload.castActionId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
+      pushGeneralTrace(`TRACE slot_load_req:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
+    }),
+    eventBus.on("voice.spell_loaded", (payload = {}) => {
+      const slot = String(payload.slot || "").trim().toUpperCase();
+      const spell = String((payload.castActionId || payload.sourceWordId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
+      pushGeneralTrace(`TRACE slot_loaded:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
+    }),
+    eventBus.on("spell.slot_cast_requested", (payload = {}) => {
+      const slot = String(payload.slot || "").trim().toUpperCase();
+      pushGeneralTrace(`TRACE slot_cast_req:${slot || "-"}`, slot ? "ok" : "warn");
+    }),
+    eventBus.on("voice.spell_cast", (payload = {}) => {
+      const castActionId = String(payload.castActionId || "").trim().toLowerCase();
+      if (castActionId !== "aoe_flame") return;
+      const wordId = String((payload.sourceWordId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
+      const trigger = String(payload.trigger || "").trim().toLowerCase();
+      pushGeneralTrace(`TRACE voice_cast:aoe_flame:word:${wordId || "-"}:trigger:${trigger || "-"}:seen`, "ok");
+    }),
+    eventBus.on("rule_engine.action_executed", (payload = {}) => {
+      const actionType = String(payload.actionType || "").trim().toLowerCase();
+      const actionId = String(payload.actionId || "").trim().toLowerCase();
+      if (actionType === "event" && actionId === "aoe_flame") {
+        pushGeneralTrace("TRACE action:event:aoe_flame", "ok");
+      }
+    }),
+  ];
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
     grantOrbGraceRuntime: (typeof grantOrbGraceRuntime === "function") ? grantOrbGraceRuntime : null,
@@ -2868,6 +2905,7 @@ async function initShellKwsRuntime(shellContext) {
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
+    directGeneralTraceOff,
     receiverMods,
     kwsBackendKey,
     kwsDebugState,
@@ -2931,7 +2969,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260424c",
+  moduleCacheBustV = "20260424d",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
