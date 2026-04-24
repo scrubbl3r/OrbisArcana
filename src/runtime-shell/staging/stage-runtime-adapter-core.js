@@ -27,9 +27,6 @@ export function createStageRuntimeAdapterCore({
     getStageElements() {
       return {
         physStage: refs.physStage || null,
-        groundLine: refs.groundLine || null,
-        stars: refs.stars || null,
-        terrain: refs.terrain || null,
         orbWrap: refs.orbWrap || null,
         orb: refs.orb || null,
         orbInterior: refs.orbInterior || null,

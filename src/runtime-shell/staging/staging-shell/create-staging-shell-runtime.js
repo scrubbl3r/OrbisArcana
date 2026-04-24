@@ -1806,11 +1806,11 @@ function bindShellRuleActionRuntime({
   };
 }
 
-function createShellSurfaceRefs({ devStagingView, orbStageView, levelOverlayView } = {}) {
+function createShellSurfaceRefs({ devStagingView, orbStageView, levelStageView } = {}) {
   return {
     dev: devStagingView && devStagingView.refs ? devStagingView.refs : Object.create(null),
     orb: orbStageView && orbStageView.refs ? orbStageView.refs : Object.create(null),
-    level: levelOverlayView && levelOverlayView.refs ? levelOverlayView.refs : Object.create(null),
+    level: levelStageView && levelStageView.refs ? levelStageView.refs : Object.create(null),
   };
 }
 
@@ -1842,12 +1842,12 @@ function bindShellModeHotkeys(shellContext) {
     if (code === "Digit2") {
       event.preventDefault();
       modeController.setDevStageVisibility(STAGING_DEV_STAGE_VISIBILITY.hidden);
-      modeController.setMode(STAGING_SHELL_MODE.levelOverlay);
+      modeController.setMode(STAGING_SHELL_MODE.levelStage);
       return;
     }
     if (key === "d") {
       const state = modeController.getState();
-      if (state.mode !== STAGING_SHELL_MODE.levelOverlay) return;
+      if (state.mode !== STAGING_SHELL_MODE.levelStage) return;
       event.preventDefault();
       modeController.toggleDevStageVisibility();
     }
@@ -1869,13 +1869,13 @@ function createOrbStageAdapter(orbStageView = null) {
     : null;
 }
 
-function createLevelStageAdapter(levelOverlayView = null) {
+function createLevelStageAdapter(levelStageView = null) {
   return (
-    levelOverlayView &&
-    levelOverlayView.adapter &&
-    typeof levelOverlayView.adapter.getStageElements === "function"
+    levelStageView &&
+    levelStageView.adapter &&
+    typeof levelStageView.adapter.getStageElements === "function"
   )
-    ? levelOverlayView.adapter
+    ? levelStageView.adapter
     : null;
 }
 
@@ -1971,7 +1971,7 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
 function syncActiveShellStage(shellContext) {
   if (!shellContext) return null;
   const modeState = getShellModeState(shellContext);
-  const activeStageAdapter = modeState.mode === STAGING_SHELL_MODE.levelOverlay
+  const activeStageAdapter = modeState.mode === STAGING_SHELL_MODE.levelStage
     ? shellContext.levelStageAdapter
     : shellContext.orbStageAdapter;
   shellContext.activeStageAdapter = activeStageAdapter || shellContext.orbStageAdapter || null;
@@ -2223,7 +2223,7 @@ function bindShellWakeWindowVisuals({ eventBus, kwsPanelController = null, kwsBr
 function shellGameplayLevel(shellContext) {
   if (!shellContext) return null;
   const modeState = getShellModeState(shellContext);
-  if (modeState.mode === STAGING_SHELL_MODE.levelOverlay) {
+  if (modeState.mode === STAGING_SHELL_MODE.levelStage) {
     return shellContext.designLevel || shellContext.gameplayLevel || null;
   }
   return shellContext.gameplayLevel || shellContext.designLevel || null;
@@ -2233,15 +2233,15 @@ function createStagingShellContext({
   rootDocument,
   devStagingView,
   orbStageView,
-  levelOverlayView,
+  levelStageView,
   gameplayLevel = DEFAULT_ORB_STAGE_LEVEL,
   designLevel = DEFAULT_LEVEL_STAGE_LEVEL,
   sharedModules,
   modeController = null,
 } = {}) {
-  const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, levelOverlayView });
+  const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, levelStageView });
   const orbStageAdapter = createOrbStageAdapter(orbStageView);
-  const levelStageAdapter = createLevelStageAdapter(levelOverlayView);
+  const levelStageAdapter = createLevelStageAdapter(levelStageView);
   const activeStageAdapter = orbStageAdapter || levelStageAdapter || null;
   const stageEls = (
     activeStageAdapter && typeof activeStageAdapter.getStageElements === "function"
@@ -2253,7 +2253,7 @@ function createStagingShellContext({
     views: {
       devStagingView,
       orbStageView,
-      levelOverlayView,
+      levelStageView,
     },
     modeController,
     gameplayLevel,
@@ -2926,7 +2926,7 @@ export async function createStagingShellRuntime({
   const designLevel = DEFAULT_LEVEL_STAGE_LEVEL;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: gameplayLevel }) : null;
-  const levelOverlayView = levelRoot ? renderLevelStage(levelRoot, { level: designLevel }) : null;
+  const levelStageView = levelRoot ? renderLevelStage(levelRoot, { level: designLevel }) : null;
 
   if (devStagingView && devStagingView.refs) {
     safeSetText(devStagingView.refs.rulesReadout, "boot:staging-shell");
@@ -2959,7 +2959,7 @@ export async function createStagingShellRuntime({
       rootDocument,
       devStagingView,
       orbStageView,
-      levelOverlayView,
+      levelStageView,
       gameplayLevel,
       designLevel,
       sharedModules,

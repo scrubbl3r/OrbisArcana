@@ -230,11 +230,11 @@ html[data-staging-shell-mode="split-lab"] .shellGrid {
   height: calc(100vh - 38px);
 }
 
-html[data-staging-shell-mode="level-overlay"] .stagingShell {
+html[data-staging-shell-mode="level-stage"] .stagingShell {
   padding: 0;
 }
 
-html[data-staging-shell-mode="level-overlay"] .shellGrid {
+html[data-staging-shell-mode="level-stage"] .shellGrid {
   display: block;
   width: 100%;
   max-width: none;
@@ -286,18 +286,18 @@ html[data-staging-shell-mode="split-lab"] .shellMountLevel {
   display: none;
 }
 
-html[data-staging-shell-mode="level-overlay"] .shellMountOrb {
+html[data-staging-shell-mode="level-stage"] .shellMountOrb {
   display: none;
 }
 
-html[data-staging-shell-mode="level-overlay"] .shellMountLevel {
+html[data-staging-shell-mode="level-stage"] .shellMountLevel {
   display: flex;
   position: absolute;
   inset: 0;
   z-index: 2;
 }
 
-html[data-staging-shell-mode="level-overlay"] .shellMountDev {
+html[data-staging-shell-mode="level-stage"] .shellMountDev {
   position: absolute;
   top: 18px;
   left: 18px;
@@ -308,7 +308,7 @@ html[data-staging-shell-mode="level-overlay"] .shellMountDev {
   box-sizing: border-box;
 }
 
-html[data-staging-shell-mode="level-overlay"][data-dev-stage-visibility="hidden"] .shellMountDev {
+html[data-staging-shell-mode="level-stage"][data-dev-stage-visibility="hidden"] .shellMountDev {
   transform: translateX(calc(-100% - 24px));
   opacity: 0;
   pointer-events: none;
@@ -359,7 +359,7 @@ html[data-staging-shell-mode="level-overlay"][data-dev-stage-visibility="hidden"
     overflow: visible;
   }
 
-  html[data-staging-shell-mode="level-overlay"] .shellMountDev {
+  html[data-staging-shell-mode="level-stage"] .shellMountDev {
     top: 10px;
     left: 10px;
     right: 10px;
