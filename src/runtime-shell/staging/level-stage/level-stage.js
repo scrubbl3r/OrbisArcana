@@ -38,6 +38,10 @@ const LEVEL_STAGE_ORB_MARKUP = `
   </div>
 `;
 
+const LEVEL_STAGE_GLOBE_MARKUP = `
+  <div class="pickupGlobe" data-level-stage-test-globe="true" aria-label="Energy globe"></div>
+`;
+
 function clamp01(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
@@ -456,6 +460,7 @@ export function renderLevelStage(root, { level = null } = {}) {
             ${mapAssetUrl ? `<img class="levelStageWorldImage" src="${mapAssetUrl}" alt="" aria-hidden="true" />` : ""}
             <svg class="levelStageWorldOverlay" viewBox="0 0 ${worldSize.widthPx} ${worldSize.heightPx}" preserveAspectRatio="none" aria-hidden="true"></svg>
             ${LEVEL_STAGE_ORB_MARKUP}
+            ${LEVEL_STAGE_GLOBE_MARKUP}
           </div>
         </div>
         <div class="levelStageLabel">
@@ -488,6 +493,7 @@ export function renderLevelStage(root, { level = null } = {}) {
     orbInterior: root.querySelector("[data-level-stage-orb-interior='true']"),
     orbCracks: root.querySelector("[data-level-stage-orb-cracks='true']"),
     orbShards: root.querySelector("[data-level-stage-orb-shards='true']"),
+    testGlobe: root.querySelector("[data-level-stage-test-globe='true']"),
     shield: root.querySelector("[data-level-stage-shield='true']"),
     shockLayer: root.querySelector("[data-level-stage-shock-layer='true']"),
     flameLayer: root.querySelector("[data-level-stage-flame-layer='true']"),
@@ -531,6 +537,7 @@ export function renderLevelStage(root, { level = null } = {}) {
           orbInterior: refs.orbInterior || null,
           orbCracks: refs.orbCracks || null,
           orbShards: refs.orbShards || null,
+          testGlobe: refs.testGlobe || null,
           shield: refs.shield || null,
           shockLayer: refs.shockLayer || null,
           flameLayer: refs.flameLayer || null,
@@ -550,6 +557,12 @@ export function renderLevelStage(root, { level = null } = {}) {
           return level.elements.worldItemSpawns;
         }
         return Array.isArray(level && level.worldItemSpawns) ? level.worldItemSpawns : [];
+      },
+      getPrimaryGlobeEl() {
+        return refs.testGlobe || null;
+      },
+      setPrimaryGlobeEl(el) {
+        refs.testGlobe = el || null;
       },
       normalizeWorldItemSpawn(item, options = {}) {
         return normalizeLevelWorldItemSpawn(item, options);

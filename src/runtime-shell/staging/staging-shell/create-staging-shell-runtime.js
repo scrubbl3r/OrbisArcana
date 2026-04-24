@@ -14,7 +14,7 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423d";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423e";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423d";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423e";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -2009,6 +2009,21 @@ function syncActiveShellStage(shellContext) {
       stage.phys.worldHeightPx = shellWorldHeight(shellContext);
       stage.phys.worldWidthPx = shellWorldWidth(shellContext);
     }
+    if (stage && stage.worldSystem && typeof stage.worldSystem.setSpawns === "function") {
+      const nextSpawns = (
+        runtime &&
+        runtime.currentLevelMapSummary &&
+        Array.isArray(runtime.currentLevelMapSummary.worldItemSpawns)
+      )
+        ? runtime.currentLevelMapSummary.worldItemSpawns
+        : (
+            shellContext.activeStageAdapter &&
+            typeof shellContext.activeStageAdapter.getWorldItemSpawns === "function"
+              ? shellContext.activeStageAdapter.getWorldItemSpawns()
+              : []
+          );
+      stage.worldSystem.setSpawns(nextSpawns, performance.now());
+    }
     if (runtime && runtime.cameraRuntime && typeof runtime.cameraRuntime.reset === "function") {
       runtime.cameraRuntime.reset();
     }
@@ -2923,7 +2938,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260423g",
+  moduleCacheBustV = "20260423h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

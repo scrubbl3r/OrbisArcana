@@ -104,6 +104,33 @@ export function createWorldSystem({
     pickups: spawnList.map((s, i) => buildPickupFromSpawn(s, i)),
   };
 
+  function replacePickupsFromSpawns(nextSpawns = [], nowMs = clockNowMs()) {
+    const normalizedSpawns = Array.isArray(nextSpawns) && nextSpawns.length ? nextSpawns : [spawn];
+    const nextPickups = normalizedSpawns.map((s, i) => {
+      const existing = state.pickups[i] || null;
+      const nextPickup = buildPickupFromSpawn(s, i);
+      if (existing && existing.el) {
+        nextPickup.el = existing.el;
+        nextPickup.renderCache = existing.renderCache || Object.create(null);
+      }
+      nextPickup.spawnedAtMs = nowMs;
+      return nextPickup;
+    });
+
+    for (let i = nextPickups.length; i < state.pickups.length; i += 1) {
+      const stale = state.pickups[i];
+      if (stale && stale.el && stale.el.parentElement) {
+        stale.el.parentElement.removeChild(stale.el);
+      }
+    }
+
+    state.pickups = nextPickups;
+    if (typeof setGlobeEl === "function") {
+      setGlobeEl(nextPickups[0] && nextPickups[0].el ? nextPickups[0].el : null);
+    }
+    render(nowMs);
+  }
+
   function ensureGlobeEl(pickup, index) {
     const activeStageEl = readStageEl();
     if (!activeStageEl) return null;
@@ -318,6 +345,9 @@ export function createWorldSystem({
     tick,
     render,
     reset,
+    setSpawns(spawnItems = [], nowMs) {
+      replacePickupsFromSpawns(spawnItems, Number.isFinite(Number(nowMs)) ? Number(nowMs) : clockNowMs());
+    },
     getState,
     stop() {
       while (unsub.length) {
