@@ -38,8 +38,8 @@ import {
   resolveLevelCameraAnchor,
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
-import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
+import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424b";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2352,22 +2352,12 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
     return null;
   }
   try {
-    const response = await fetch(assetUrl, { method: "GET" });
-    if (!response.ok) throw new Error(`Level SVG fetch failed: ${response.status}`);
-    const svgText = await response.text();
-    const summary = summarizeSvgLevelSource({
-      svgText,
+    const authoredScene = await loadAuthoredLevelScene({
+      level,
       worldWidthPx: shellWorldWidth(shellContext),
       worldHeightPx: shellWorldHeight(shellContext),
-      boundaryLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.boundary,
-      spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
-      cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
-      viewFloorLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.viewFloor,
-      worldItemLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.worldItems,
-      lineArtLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.lineArt,
-      spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
-      tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
     });
+    const summary = authoredScene ? authoredScene.summary : null;
     runtime.currentLevelMapSummary = summary;
     runtime.currentLevelBoundarySegments = buildBoundarySegmentsFromLoops(summary && summary.loops);
     return summary;

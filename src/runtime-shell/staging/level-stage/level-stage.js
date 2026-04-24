@@ -1,7 +1,5 @@
-import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import {
-  buildAuthoredLevelSceneModel,
   resolveAuthoredLevelCameraTarget,
   resolveViewFloorBootOffsetYW,
 } from "../../../game-runtime/level/authored-level-scene-model.js";
@@ -17,6 +15,7 @@ import {
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
 import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424b";
+import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424b";
 
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
 const LEVEL_STAGE_ORB_MARKUP = `
@@ -308,30 +307,14 @@ async function hydrateSvgLevelPreview(refs, state, level) {
   if (refs.stage) refs.stage.dataset.levelStageState = "loading";
   if (refs.labelMeta) refs.labelMeta.textContent = "loading svg";
   try {
-    const response = await fetch(mapAssetUrl, { method: "GET" });
-    if (!response.ok) throw new Error(`Level SVG fetch failed: ${response.status}`);
-    const svgText = await response.text();
-    const summary = summarizeSvgLevelSource({
-      svgText,
-      worldWidthPx: state.worldWidthPx,
-      worldHeightPx: state.worldHeightPx,
-      boundaryLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.boundary,
-      spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
-      cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
-      viewFloorLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.viewFloor,
-      worldItemLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.worldItems,
-      lineArtLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.lineArt,
-      spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
-      tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
-    });
-    state.summary = summary;
-    state.sceneModel = buildAuthoredLevelSceneModel({
+    const authoredScene = await loadAuthoredLevelScene({
       level,
-      summary,
       worldWidthPx: state.worldWidthPx,
       worldHeightPx: state.worldHeightPx,
-      groundCenterWorld: () => state.worldHeightPx * 0.5,
     });
+    if (!authoredScene) throw new Error("Level scene load failed");
+    state.summary = authoredScene.summary;
+    state.sceneModel = authoredScene.sceneModel;
     state.cameraAnchors = Array.isArray(state.sceneModel.cameraAnchors) ? state.sceneModel.cameraAnchors : [];
     state.spawn = state.sceneModel.spawn;
     traceLevelStage(
