@@ -16,7 +16,7 @@ import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
-import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424a";
+import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424b";
 
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
 const LEVEL_STAGE_ORB_MARKUP = `
