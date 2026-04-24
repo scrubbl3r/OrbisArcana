@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423g";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424a";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -1907,55 +1907,24 @@ function bindShellModeHotkeys(shellContext) {
   };
 }
 
-function createLegacyLikeStageElements(surfaceRefs = {}) {
-  const orb = surfaceRefs.orb || Object.create(null);
-  return {
-    physStage: orb.physStage || null,
-    stars: orb.stars || null,
-    terrain: orb.terrain || null,
-    groundLine: orb.groundLine || null,
-    orbWrap: orb.orbWrap || null,
-    orb: orb.orb || null,
-    orbInterior: orb.orbInterior || null,
-    orbCracks: orb.orbCracks || null,
-    orbShards: orb.orbShards || null,
-    testGlobe: orb.testGlobe || null,
-    shield: orb.shield || null,
-    shockLayer: orb.shockLayer || null,
-    flameLayer: orb.flameLayer || null,
-    electricLayer: orb.electricLayer || null,
-    deathPanel: orb.deathPanel || null,
-    tryAgainBtn: orb.tryAgainBtn || null,
-  };
-}
-
 function createOrbStageAdapter(orbStageView = null) {
-  if (orbStageView && orbStageView.adapter && typeof orbStageView.adapter.getStageElements === "function") {
-    return orbStageView.adapter;
-  }
-  const refs = orbStageView && orbStageView.refs ? orbStageView.refs : Object.create(null);
-  return Object.freeze({
-    refs,
-    getStageElements() {
-      return createLegacyLikeStageElements({ orb: refs });
-    },
-  });
+  return (
+    orbStageView &&
+    orbStageView.adapter &&
+    typeof orbStageView.adapter.getStageElements === "function"
+  )
+    ? orbStageView.adapter
+    : null;
 }
 
 function createLevelStageAdapter(levelOverlayView = null) {
-  if (levelOverlayView && levelOverlayView.adapter && typeof levelOverlayView.adapter.getStageElements === "function") {
-    return levelOverlayView.adapter;
-  }
-  const refs = levelOverlayView && levelOverlayView.refs ? levelOverlayView.refs : Object.create(null);
-  return Object.freeze({
-    refs,
-    getStageElements() {
-      return {
-        physStage: refs.physStage || null,
-        groundLine: refs.groundLine || null,
-      };
-    },
-  });
+  return (
+    levelOverlayView &&
+    levelOverlayView.adapter &&
+    typeof levelOverlayView.adapter.getStageElements === "function"
+  )
+    ? levelOverlayView.adapter
+    : null;
 }
 
 function getShellModeState(shellContext) {
@@ -2321,7 +2290,11 @@ function createStagingShellContext({
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, levelOverlayView });
   const orbStageAdapter = createOrbStageAdapter(orbStageView);
   const levelStageAdapter = createLevelStageAdapter(levelOverlayView);
-  const stageEls = { ...orbStageAdapter.getStageElements() };
+  const stageEls = (
+    orbStageAdapter && typeof orbStageAdapter.getStageElements === "function"
+      ? { ...orbStageAdapter.getStageElements() }
+      : {}
+  );
   return {
     rootDocument,
     views: {
@@ -2335,7 +2308,7 @@ function createStagingShellContext({
     refs: surfaceRefs,
     orbStageAdapter,
     levelStageAdapter,
-    activeStageAdapter: orbStageAdapter,
+    activeStageAdapter: orbStageAdapter || levelStageAdapter || null,
     stageEls,
     sharedModules,
     runtime: {
