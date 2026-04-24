@@ -69,7 +69,7 @@ export function createOrbGlobesRuntime({
     });
   const ORBIT_AXES = Object.freeze(["x", "y", "z"]);
   const readWordIdFromPayload = (payload = {}) =>
-    String((payload.wordId ?? payload.spellId) || "");
+    String((payload.sourceWordId ?? payload.wordId ?? payload.spellId ?? payload.castActionId) || "");
   const readRange = (minValue, maxValue, fallbackMin, fallbackMax) => {
     const rawMin = Math.max(0, Number(minValue));
     const rawMax = Math.max(0, Number(maxValue));

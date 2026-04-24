@@ -99,7 +99,7 @@ export function bindStagingRuntimeEvents({
   });
   eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
     const intent = String(p.intent || "");
-    const wordId = String((p.wordId || p.spellId) || "").toLowerCase();
+    const wordId = String((p.sourceWordId || p.wordId || p.spellId) || "").toLowerCase();
     const payloadCastActionId = String(p.castActionId || "").trim().toLowerCase();
     const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
     const castActionId = payloadCastActionId || (wordDef ? String(wordDef.castActionId || "") : castActionForWordId(wordId));
@@ -264,7 +264,7 @@ export function bindStagingRuntimeEvents({
   });
   eventBus.on("voice.spell_loaded", (p = {}) => {
     const slot = String(p.slot || "").trim().toUpperCase();
-    const spell = String((p.castActionId || p.wordId || p.spellId) || "").trim().toLowerCase();
+    const spell = String((p.castActionId || p.sourceWordId || p.wordId || p.spellId) || "").trim().toLowerCase();
     kwsBridge.pushLogLine(`TRACE slot_loaded:${slot || "-"}:${spell || "-"}`, slot && spell ? "ok" : "warn");
   });
   eventBus.on("spell.slot_cast_requested", (p = {}) => {

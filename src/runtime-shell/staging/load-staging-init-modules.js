@@ -53,7 +53,7 @@ export async function loadStagingInitModules(moduleCacheBustV = "") {
     import(withVersion("./bootstrap-orb-stage-runtime.js", moduleCacheBustV)),
     import(withVersion("./bootstrap-staging-runtime-context.js", moduleCacheBustV)),
     import("./bootstrap-staging-mvp.js"),
-    import("./bind-staging-runtime-events.js"),
+    import(withVersion("./bind-staging-runtime-events.js", moduleCacheBustV)),
     import("../../content/orb/orb-runtime-config-default.js"),
     import("../../content/orb/orb-status-config-default.js"),
     import(withVersion("../../game-runtime/world/world-system.js", moduleCacheBustV)),

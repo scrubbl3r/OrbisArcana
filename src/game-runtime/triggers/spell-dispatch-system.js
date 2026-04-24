@@ -63,6 +63,19 @@ export function createSpellDispatchSystem({
   let lastVoiceDetectDedupeKey = "";
   let lastVoiceDetectDedupeAtMs = 0;
 
+  function normalizeWordId(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function isKnownRuntimeWordId(value) {
+    const wordId = normalizeWordId(value);
+    return !!wordId && Object.prototype.hasOwnProperty.call(ACTIVE_WORDS_BY_ID, wordId);
+  }
+
+  function resolveEntryIdentity(entry = {}) {
+    return normalizeWordId(entry.sourceWordId || entry.wordId || entry.castActionId || "");
+  }
+
   function legacyFallbacksEnabled() {
     return !ruleEngineEnabled && allowLegacyFallbacks === true;
   }
@@ -140,8 +153,8 @@ export function createSpellDispatchSystem({
       const result = consumeStoredGlobe({
         ...payload,
         reason: String(payload.reason || "spell_cast"),
-        wordId: String(entry.wordId || ""),
-        spellId: String(entry.spellId || entry.wordId || ""),
+        wordId: String(entry.sourceWordId || entry.wordId || ""),
+        spellId: String(entry.sourceWordId || entry.spellId || entry.wordId || ""),
         slot: String(entry.slot || payload.slot || ""),
         axis: String(entry.axis || payload.axis || ""),
       });
@@ -169,8 +182,8 @@ export function createSpellDispatchSystem({
       const result = bindLoadedGlobe({
         ...payload,
         reason: String(payload.reason || "slot_load"),
-        wordId: String(entry.wordId || ""),
-        spellId: String(entry.spellId || entry.wordId || ""),
+        wordId: String(entry.sourceWordId || entry.wordId || ""),
+        spellId: String(entry.sourceWordId || entry.spellId || entry.wordId || ""),
         slot: String(entry.slot || payload.slot || ""),
         axis: String(entry.axis || payload.axis || ""),
       });
@@ -208,7 +221,7 @@ export function createSpellDispatchSystem({
   }
 
   function canCastSpellNow(spell, now) {
-    const wordId = String(spell.id || "");
+    const wordId = resolveEntryIdentity(spell);
     const cooldownMs = Math.max(0, Number(spell.cooldownMs) || 0);
     const last = Number(lastCastByWordId.get(wordId) || 0);
     const elapsed = now - last;
@@ -261,6 +274,7 @@ export function createSpellDispatchSystem({
     const routed = withRuntimeRouting(ACTIVE_WORDS_BY_ID[wordId] || { id: wordId });
     return {
       wordId,
+      sourceWordId: wordId,
       spellId: wordId,
       castActionId: String((payload.castActionId || routed.castActionId || wordId) || "").trim().toLowerCase(),
       intent: String((payload.intent || routed.intent) || ""),
@@ -286,15 +300,27 @@ export function createSpellDispatchSystem({
 
   function buildLoadedEntryFromPayload(payload = {}, slotOverride = "") {
     const slot = normGroup(slotOverride || payload.slot);
-    const wordId = String((payload.wordId || payload.spellId || payload.spell) || "").trim().toLowerCase();
-    if (!slot || !wordId) return null;
-    const routed = withRuntimeRouting(ACTIVE_WORDS_BY_ID[wordId] || { id: wordId });
+    const explicitSourceWordId = normalizeWordId(payload.sourceWordId || payload.wordId || payload.spellId || "");
+    const rawSpellToken = normalizeWordId(payload.spell || payload.castActionId || explicitSourceWordId);
+    const sourceWordId = isKnownRuntimeWordId(explicitSourceWordId)
+      ? explicitSourceWordId
+      : isKnownRuntimeWordId(rawSpellToken)
+        ? rawSpellToken
+        : "";
+    const routed = sourceWordId
+      ? withRuntimeRouting(ACTIVE_WORDS_BY_ID[sourceWordId] || { id: sourceWordId })
+      : Object.create(null);
+    const castActionId = String(
+      (payload.castActionId || routed.castActionId || rawSpellToken || sourceWordId) || ""
+    ).trim().toLowerCase();
+    if (!slot || !castActionId) return null;
     return {
-      wordId,
-      spellId: wordId,
-      castActionId: String((payload.castActionId || payload.spell || routed.castActionId || wordId) || "").trim().toLowerCase(),
+      wordId: sourceWordId || castActionId,
+      sourceWordId,
+      spellId: sourceWordId || castActionId,
+      castActionId,
       intent: String((payload.intent || routed.intent) || ""),
-      phrase: String((payload.phrase || routed.phrase || wordId) || ""),
+      phrase: String((payload.phrase || routed.phrase || sourceWordId || castActionId) || ""),
       cooldownMs: Math.max(0, Number(payload.cooldownMs ?? routed.cooldownMs) || 0),
       confidence: Number(payload.confidence) || 0,
       loadedAtMs: Number(payload.atMs) || nowMs(),
@@ -309,6 +335,7 @@ export function createSpellDispatchSystem({
   function emitSpellLoadedFromEntry(entry, trigger = "rule_engine.event") {
     eventBus.emit(EVT_VOICE_SPELL_LOADED, {
       wordId: entry.wordId,
+      sourceWordId: entry.sourceWordId || "",
       spellId: entry.spellId,
       castActionId: entry.castActionId,
       intent: entry.intent,
@@ -328,6 +355,7 @@ export function createSpellDispatchSystem({
     const now = Number(payload.atMs) || nowMs();
     const castPayload = {
       wordId: entry.wordId,
+      sourceWordId: entry.sourceWordId || "",
       spellId: entry.spellId,
       castActionId: entry.castActionId,
       intent: entry.intent,
@@ -381,6 +409,7 @@ export function createSpellDispatchSystem({
     entry.emitterId = String(costResult.globe && costResult.globe.emitterId || "");
     loadedBySlot[entry.slot] = {
       wordId: entry.wordId,
+      sourceWordId: entry.sourceWordId || "",
       spellId: entry.spellId,
       castActionId: entry.castActionId,
       intent: entry.intent,
@@ -406,11 +435,14 @@ export function createSpellDispatchSystem({
     const slot = normGroup(slotRaw);
     if (!slot) return null;
     const loaded = mostRecentLoadedForGroup(slot);
-    const entry = (loaded && loaded.wordId) ? loaded : buildBaseEntryForSlot(slot, payload);
-    if (!entry || !entry.wordId) return null;
+    const entry = (loaded && (loaded.wordId || loaded.castActionId)) ? loaded : buildBaseEntryForSlot(slot, payload);
+    if (!entry || !(entry.wordId || entry.castActionId)) return null;
     const now = Number(payload.atMs) || nowMs();
     const spell = {
-      id: String(entry.wordId || ""),
+      id: resolveEntryIdentity(entry),
+      sourceWordId: String(entry.sourceWordId || ""),
+      wordId: String(entry.wordId || ""),
+      castActionId: String(entry.castActionId || ""),
       cooldownMs: Math.max(0, Number(entry.cooldownMs) || 0),
     };
     const castCheck = canCastSpellNow(spell, now);
@@ -430,8 +462,8 @@ export function createSpellDispatchSystem({
         ...payload,
         atMs: now,
         reason: String(payload.reason || "spell_cast"),
-        wordId: String(entry.wordId || ""),
-        spellId: String(entry.spellId || entry.wordId || ""),
+        wordId: String(entry.sourceWordId || entry.wordId || ""),
+        spellId: String(entry.sourceWordId || entry.spellId || entry.wordId || ""),
         slot: String(entry.slot || slot || ""),
         axis: String(entry.axis || payload.axis || ""),
         boundGlobeId: String(entry.boundGlobeId || ""),
@@ -443,7 +475,7 @@ export function createSpellDispatchSystem({
       }
       loadedBySlot[entry.slot] = null;
     }
-    lastCastByWordId.set(spell.id, now);
+    lastCastByWordId.set(resolveEntryIdentity(entry), now);
     emitSpellCastFromEntry(entry, {
       ...payload,
       atMs: now,
@@ -595,7 +627,10 @@ export function createSpellDispatchSystem({
       if (!loadedWordId) return;
 
       const spell = {
-        id: loadedWordId,
+        id: resolveEntryIdentity(entry),
+        sourceWordId: String(entry.sourceWordId || ""),
+        wordId: loadedWordId,
+        castActionId: String(entry.castActionId || ""),
         cooldownMs: Math.max(0, Number(entry.cooldownMs) || 0),
       };
       const castCheck = canCastSpellNow(spell, now);
@@ -634,8 +669,8 @@ export function createSpellDispatchSystem({
           directionGroup: group || String(entry.slot || ""),
           atMs: now,
           reason: "shake_detonation",
-          wordId: String(entry.wordId || ""),
-          spellId: String(entry.spellId || entry.wordId || ""),
+          wordId: String(entry.sourceWordId || entry.wordId || ""),
+          spellId: String(entry.sourceWordId || entry.spellId || entry.wordId || ""),
           slot: String(entry.slot || group || ""),
           axis: String(entry.axis || payload.axis || ""),
           boundGlobeId: String(entry.boundGlobeId || ""),
@@ -651,7 +686,7 @@ export function createSpellDispatchSystem({
         }
         loadedBySlot[entry.slot] = null;
       }
-      lastCastByWordId.set(loadedWordId, now);
+      lastCastByWordId.set(resolveEntryIdentity(entry), now);
       emitSpellCastFromEntry(entry, {
         trigger: "shake_detonation",
         directionGroup: group || String(entry.slot || ""),
