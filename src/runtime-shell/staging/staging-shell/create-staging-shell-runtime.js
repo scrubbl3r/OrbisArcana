@@ -16,7 +16,7 @@ import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } fro
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424f";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260424g";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260424h";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -2707,6 +2707,9 @@ async function initShellKwsRuntime(shellContext) {
     playFlameAoeRuntime,
     triggerShockwaveRuntime,
   });
+  const getRuntimeVfx = () => (
+    runtime && runtime.vfx ? runtime.vfx : shellVfx || null
+  );
   runtime.orbStageActions = createOrbStageActionBridge({
     runtime,
     shieldEl: shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null,
@@ -2872,18 +2875,18 @@ async function initShellKwsRuntime(shellContext) {
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
     playElectricAoe: () => (
-      shellVfx && typeof shellVfx.playElectricAoe === "function"
-        ? shellVfx.playElectricAoe()
+      getRuntimeVfx() && typeof getRuntimeVfx().playElectricAoe === "function"
+        ? getRuntimeVfx().playElectricAoe()
         : { handled: false }
     ),
     playFlameAoe: () => (
-      shellVfx && typeof shellVfx.playFlameAoe === "function"
-        ? shellVfx.playFlameAoe()
+      getRuntimeVfx() && typeof getRuntimeVfx().playFlameAoe === "function"
+        ? getRuntimeVfx().playFlameAoe()
         : { handled: false }
     ),
     playTeleport: (payload = {}) => (
-      shellVfx && typeof shellVfx.playTeleport === "function"
-        ? shellVfx.playTeleport(payload)
+      getRuntimeVfx() && typeof getRuntimeVfx().playTeleport === "function"
+        ? getRuntimeVfx().playTeleport(payload)
         : { handled: false }
     ),
     playFrostAoe: null,
@@ -2895,8 +2898,8 @@ async function initShellKwsRuntime(shellContext) {
     executeBubbleShield,
     executeColorize,
     triggerShockwave: () => (
-      shellVfx && typeof shellVfx.triggerShockwave === "function"
-        ? shellVfx.triggerShockwave()
+      getRuntimeVfx() && typeof getRuntimeVfx().triggerShockwave === "function"
+        ? getRuntimeVfx().triggerShockwave()
         : { handled: false }
     ),
     teleportOrbToSpawnNeutralizePhysics: (aboveGroundPx) => shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx),
