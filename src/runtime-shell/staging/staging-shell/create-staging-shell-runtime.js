@@ -1936,6 +1936,22 @@ function syncActiveShellStage(shellContext) {
   return shellContext.activeStageAdapter;
 }
 
+function refreshShellOverlayLayout(shellContext) {
+  if (!shellContext) return;
+  const runtime = shellContext.runtime || null;
+  if (runtime) {
+    runtime.stageRectCache = null;
+    runtime.frameMetrics = null;
+  }
+  updateShellFrameMetrics(shellContext, performance.now());
+  ensureShellStageBackdrop(shellContext);
+  updateShellStageReadouts(shellContext);
+  drawShellStars(shellContext);
+  drawShellBackdrop(shellContext);
+  applyShellGroundLine(shellContext);
+  applyShellOrbTransform(shellContext);
+}
+
 function buildShellRootWakeWindowMap() {
   const rules = Array.isArray(INTERACTION_GRAPH_V2 && INTERACTION_GRAPH_V2.rules)
     ? INTERACTION_GRAPH_V2.rules
@@ -2892,8 +2908,22 @@ export async function createStagingShellRuntime({
     shellContext.bootStatus = bootStatus;
     syncActiveShellStage(shellContext);
     if (modeController && typeof modeController.subscribe === "function") {
-      shellContext.runtime.shellModeOff = modeController.subscribe(() => {
-        syncActiveShellStage(shellContext);
+      let previousModeState = modeController.getState();
+      shellContext.runtime.shellModeOff = modeController.subscribe((nextModeState) => {
+        const previousMode = previousModeState && previousModeState.mode;
+        const nextMode = nextModeState && nextModeState.mode;
+        const previousVisibility = previousModeState && previousModeState.devStageVisibility;
+        const nextVisibility = nextModeState && nextModeState.devStageVisibility;
+        previousModeState = nextModeState;
+
+        if (previousMode !== nextMode) {
+          syncActiveShellStage(shellContext);
+          return;
+        }
+
+        if (previousVisibility !== nextVisibility) {
+          refreshShellOverlayLayout(shellContext);
+        }
       });
     }
     shellContext.runtime.shellModeHotkeyOff = bindShellModeHotkeys(shellContext);
