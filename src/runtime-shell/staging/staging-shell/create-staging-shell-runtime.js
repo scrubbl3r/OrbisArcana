@@ -14,7 +14,7 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424d";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424e";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
@@ -2868,7 +2868,11 @@ async function initShellKwsRuntime(shellContext) {
     if (!shellSpellCastExecutor || typeof shellSpellCastExecutor.execute !== "function") {
       return { handled: false, skipped: "executor_unavailable" };
     }
-    return shellSpellCastExecutor.execute(castActionId, context);
+    const result = shellSpellCastExecutor.execute(castActionId, context);
+    if (String(castActionId || "").trim().toLowerCase() === "aoe_flame") {
+      pushGeneralTrace(`TRACE exec:aoe_flame:cast:${result && result.handled ? "ok" : "miss"}`, result && result.handled ? "ok" : "warn");
+    }
+    return result;
   };
   const shellRuleActionRuntime = bindShellRuleActionRuntime({
     shellContext,
@@ -2969,7 +2973,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260424d",
+  moduleCacheBustV = "20260424e",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
