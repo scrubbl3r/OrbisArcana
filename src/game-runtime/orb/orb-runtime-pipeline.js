@@ -1,5 +1,5 @@
 import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420t";
-import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js";
+import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js?v=20260423g";
 
 function clamp01(n){
   n = Number(n);

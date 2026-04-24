@@ -14,7 +14,7 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423b";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423c";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
@@ -39,7 +39,7 @@ import {
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { summarizeSvgLevelSource } from "../../../game-runtime/level/svg-level-source.js";
-import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js";
+import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2822,7 +2822,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260423f",
+  moduleCacheBustV = "20260423g",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
