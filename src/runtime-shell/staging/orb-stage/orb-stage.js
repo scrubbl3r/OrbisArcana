@@ -1,6 +1,6 @@
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
-import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424a";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424b";
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
@@ -23,9 +23,7 @@ const ORB_STAGE_TEMPLATE = `
     <div class="orbStageCard">
       <div id="physStage" class="physStage" aria-label="Physics test stage">
         <div class="orbStageViewportLabel">Orb Stage</div>
-        <canvas id="stars" class="starCanvas" aria-hidden="true"></canvas>
         <canvas id="terrain" class="terrainCanvas" aria-hidden="true"></canvas>
-        <div id="groundLine" class="groundLine" aria-label="Ground"></div>
 
         <div id="orbWrap" class="orbWrap" aria-hidden="true">
           <div id="origin" class="origin" aria-hidden="true">
@@ -77,9 +75,7 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   const refs = {
     root,
     physStage: root.querySelector("#physStage"),
-    stars: root.querySelector("#stars"),
     terrain: root.querySelector("#terrain"),
-    groundLine: root.querySelector("#groundLine"),
     orbWrap: root.querySelector("#orbWrap"),
     orb: root.querySelector("#orb"),
     orbInterior: root.querySelector("#orbInterior"),

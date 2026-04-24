@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260424a";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260424b";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
