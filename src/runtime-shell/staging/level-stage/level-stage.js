@@ -13,6 +13,7 @@ import {
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
 import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424b";
 import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424b";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424a";
 import {
   resolveStageCameraClampBounds,
   resolveStageCameraConfig,
@@ -51,55 +52,6 @@ function clamp01(value) {
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
-}
-
-function buildLoopPathData(points = []) {
-  if (!Array.isArray(points) || !points.length) return "";
-  const start = points[0] || { xW: 0, yW: 0 };
-  let d = `M ${clampNumber(start.xW, 0).toFixed(2)} ${clampNumber(start.yW, 0).toFixed(2)}`;
-  for (let i = 1; i < points.length; i += 1) {
-    const point = points[i] || {};
-    d += ` L ${clampNumber(point.xW, 0).toFixed(2)} ${clampNumber(point.yW, 0).toFixed(2)}`;
-  }
-  return d;
-}
-
-function buildBoundaryOverlayMarkup(loops = []) {
-  return (Array.isArray(loops) ? loops : [])
-    .map((loop = {}, index) => {
-      const pathData = buildLoopPathData(loop.worldPoints);
-      if (!pathData) return "";
-      return `<path class="levelStageBoundaryPath" data-loop-id="${String(loop.id || `loop_${index + 1}`)}" d="${pathData}"></path>`;
-    })
-    .filter(Boolean)
-    .join("");
-}
-
-function buildLineArtOverlayMarkup(shapes = []) {
-  return (Array.isArray(shapes) ? shapes : [])
-    .map((shape = {}, index) => {
-      const pathData = buildLoopPathData(shape.worldPoints);
-      if (!pathData) return "";
-      const fill = String(shape.fill || "none").trim();
-      const stroke = String(shape.stroke || "none").trim();
-      const fillOpacity = Math.max(0, Math.min(1, clampNumber(shape.fillOpacity, 1)));
-      const strokeOpacity = Math.max(0, Math.min(1, clampNumber(shape.strokeOpacity, 1)));
-      const strokeWidth = Math.max(0, clampNumber(shape.worldStrokeWidth, 1));
-      return `<path class="levelStageLineArtPath" data-line-art-id="${String(shape.id || `line_art_${index + 1}`)}" d="${pathData}" style="fill:${fill};fill-opacity:${fillOpacity};stroke:${stroke};stroke-opacity:${strokeOpacity};stroke-width:${strokeWidth};"></path>`;
-    })
-    .filter(Boolean)
-    .join("");
-}
-
-function buildViewFloorOverlayMarkup(guides = []) {
-  return (Array.isArray(guides) ? guides : [])
-    .map((guide = {}, index) => {
-      const pathData = buildLoopPathData(guide.worldPoints);
-      if (!pathData) return "";
-      return `<path class="levelStageViewFloorPath" data-view-floor-id="${String(guide.id || `view_floor_${index + 1}`)}" d="${pathData}"></path>`;
-    })
-    .filter(Boolean)
-    .join("");
 }
 
 function resolveLevelWorldSize(level = null, mapSource = {}) {
@@ -301,11 +253,11 @@ async function hydrateSvgLevelPreview(refs, state, level) {
     );
     refs.worldImage.src = mapAssetUrl;
     refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
-    refs.worldOverlay.innerHTML = `
-      ${buildBoundaryOverlayMarkup(state.sceneModel.loops)}
-      ${buildLineArtOverlayMarkup(state.sceneModel.lineArtShapes)}
-      ${buildViewFloorOverlayMarkup(state.sceneModel.viewFloorGuides)}
-    `;
+    refs.worldOverlay.innerHTML = buildAuthoredLevelOverlayMarkup({
+      loops: state.sceneModel.loops,
+      lineArtShapes: state.sceneModel.lineArtShapes,
+      viewFloorGuides: state.sceneModel.viewFloorGuides,
+    });
     if (refs.stage) refs.stage.dataset.levelStageState = "ready";
     if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
       state.cameraRuntime.reset();
