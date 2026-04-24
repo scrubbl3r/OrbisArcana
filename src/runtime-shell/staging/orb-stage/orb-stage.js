@@ -1,6 +1,6 @@
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
-import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424b";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424c";
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
@@ -17,13 +17,18 @@ import {
   applyWorldGlobeVisualCssVars,
   buildWorldGlobeVisualState,
 } from "../../../game-runtime/world/world-globe-state.js?v=20260418a";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424a";
 
 const ORB_STAGE_TEMPLATE = `
   <section class="orbStage" aria-label="Orb stage">
     <div class="orbStageCard">
       <div id="physStage" class="physStage" aria-label="Physics test stage">
         <div class="orbStageViewportLabel">Orb Stage</div>
-        <canvas id="terrain" class="terrainCanvas" aria-hidden="true"></canvas>
+        <div class="orbStageWorldDock" aria-hidden="true">
+          <div class="orbStageWorld">
+            <svg id="orbStageWorldOverlay" class="orbStageWorldOverlay" viewBox="0 0 2048 2048" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </div>
 
         <div id="orbWrap" class="orbWrap" aria-hidden="true">
           <div id="origin" class="origin" aria-hidden="true">
@@ -75,7 +80,9 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   const refs = {
     root,
     physStage: root.querySelector("#physStage"),
-    terrain: root.querySelector("#terrain"),
+    worldDock: root.querySelector(".orbStageWorldDock"),
+    world: root.querySelector(".orbStageWorld"),
+    worldOverlay: root.querySelector("#orbStageWorldOverlay"),
     orbWrap: root.querySelector("#orbWrap"),
     orb: root.querySelector("#orb"),
     orbInterior: root.querySelector("#orbInterior"),
@@ -93,7 +100,15 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   return {
     root,
     refs,
-    adapter: createOrbStageRuntimeAdapter({ refs, level: resolvedLevel }),
+    adapter: createOrbStageRuntimeAdapter({
+      refs,
+      level: resolvedLevel,
+      buildOverlayMarkup: (lineArtShapes = []) => buildAuthoredLevelOverlayMarkup({
+        loops: [],
+        lineArtShapes,
+        viewFloorGuides: [],
+      }),
+    }),
     level: resolvedLevel,
     stageEl: refs.physStage,
     tryAgainBtnEl: refs.tryAgainBtn,

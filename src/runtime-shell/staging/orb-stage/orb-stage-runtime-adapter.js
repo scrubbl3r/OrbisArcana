@@ -1,10 +1,11 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
 
-export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
+export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const stageRefs = Object.freeze({
     root: refs.root || null,
     physStage: refs.physStage || null,
-    terrain: refs.terrain || null,
+    world: refs.world || null,
+    worldOverlay: refs.worldOverlay || null,
     orbWrap: refs.orbWrap || null,
     orb: refs.orb || null,
     orbInterior: refs.orbInterior || null,
@@ -48,92 +49,43 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null } = {}) {
     },
     ensureBackdrop({
       runtime = null,
-      rootDocument = null,
       rect = null,
       lineArtShapes = [],
     } = {}) {
-      const terrainEl = stageRefs.terrain;
-      if (!runtime || !terrainEl || !rootDocument || !rect) return;
-
+      if (!runtime || !stageRefs.world || !stageRefs.worldOverlay || !rect) return;
       const width = Math.max(1, Math.floor(Number(rect.width) || 0));
       const height = Math.max(1, Math.floor(Number(rect.height) || 0));
-      const dpr = Math.max(1, Math.min(2.5, (rootDocument.defaultView && rootDocument.defaultView.devicePixelRatio) || 1));
       const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = Object.create(null));
       const nextLineArtShapes = Array.isArray(lineArtShapes) ? lineArtShapes.slice() : [];
       const nextLineArtKey = nextLineArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
+      const worldWidth = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldWidthPx) || 2048);
+      const worldHeight = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldHeightPx) || 2048);
 
       if (stageBackdrop.lineArtKey !== nextLineArtKey) {
         stageBackdrop.lineArtShapes = nextLineArtShapes;
         stageBackdrop.lineArtKey = nextLineArtKey;
-        stageBackdrop.lastBackdropKey = "";
+        stageRefs.worldOverlay.innerHTML = buildOverlayMarkup(nextLineArtShapes);
       }
 
-      if (stageBackdrop.width === width && stageBackdrop.height === height && stageBackdrop.terrainCtx) {
-        return;
+      if (stageBackdrop.width !== width || stageBackdrop.height !== height) {
+        stageBackdrop.width = width;
+        stageBackdrop.height = height;
       }
-
-      stageBackdrop.width = width;
-      stageBackdrop.height = height;
-      terrainEl.width = Math.floor(width * dpr);
-      terrainEl.height = Math.floor(height * dpr);
-      terrainEl.style.width = `${width}px`;
-      terrainEl.style.height = `${height}px`;
-
-      stageBackdrop.terrainCtx = terrainEl.getContext("2d", { alpha: true });
-      if (stageBackdrop.terrainCtx) stageBackdrop.terrainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      stageRefs.worldOverlay.setAttribute("viewBox", `0 0 ${worldWidth} ${worldHeight}`);
     },
-    drawBackdrop({
-      runtime = null,
+    applyCameraFrame({
+      camLeft = 0,
+      camTop = 0,
+      zoom = 1,
+      worldWidthPx = 2048,
+      worldHeightPx = 2048,
     } = {}) {
-      const stageBackdrop = runtime && runtime.stageBackdrop;
-      if (!stageBackdrop || !stageBackdrop.terrainCtx) return;
-      const ctx = stageBackdrop.terrainCtx;
-      const w = stageBackdrop.width || 0;
-      const h = stageBackdrop.height || 0;
-      const frame = runtime && runtime.frameMetrics ? runtime.frameMetrics : null;
-      const camLeft = Number(frame && frame.camLeft) || 0;
-      const camTop = Number(frame && frame.camTop) || 0;
-      const zoom = Number(frame && frame.zoom) || 1;
-      const lineArtShapes = Array.isArray(stageBackdrop.lineArtShapes) ? stageBackdrop.lineArtShapes : [];
-      const nextBackdropKey = `${camLeft.toFixed(2)}|${camTop.toFixed(2)}|${zoom.toFixed(4)}|${stageBackdrop.lineArtKey || ""}`;
-      if (nextBackdropKey === stageBackdrop.lastBackdropKey) {
-        return;
-      }
-      stageBackdrop.lastBackdropKey = nextBackdropKey;
-
-      ctx.clearRect(0, 0, w, h);
-      if (lineArtShapes.length) {
-        for (const shape of lineArtShapes) {
-          const worldPoints = Array.isArray(shape && shape.worldPoints) ? shape.worldPoints : [];
-          if (worldPoints.length < 2) continue;
-          ctx.beginPath();
-          for (let i = 0; i < worldPoints.length; i += 1) {
-            const point = worldPoints[i] || {};
-            const x = (Number(point.xW) - camLeft) * zoom;
-            const y = (Number(point.yW) - camTop) * zoom;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          const fill = String(shape && shape.fill || "none").trim().toLowerCase();
-          const fillOpacity = Number(shape && shape.fillOpacity);
-          if (fill && fill !== "none" && fillOpacity > 0) {
-            ctx.globalAlpha = Math.max(0, Math.min(1, fillOpacity));
-            ctx.fillStyle = String(shape.fill);
-            ctx.fill();
-          }
-          const stroke = String(shape && shape.stroke || "none").trim().toLowerCase();
-          const strokeOpacity = Number(shape && shape.strokeOpacity);
-          if (stroke && stroke !== "none" && strokeOpacity > 0) {
-            ctx.globalAlpha = Math.max(0, Math.min(1, strokeOpacity));
-            ctx.strokeStyle = String(shape.stroke);
-            ctx.lineWidth = Math.max(1, (Number(shape && shape.worldStrokeWidth) || 1) * zoom);
-            ctx.lineJoin = "miter";
-            ctx.lineCap = "round";
-            ctx.stroke();
-          }
-          ctx.globalAlpha = 1;
-        }
-      }
+      if (!stageRefs.world) return;
+      stageRefs.world.style.setProperty("--orb-stage-world-width", `${Math.max(1, Number(worldWidthPx) || 2048)}px`);
+      stageRefs.world.style.setProperty("--orb-stage-world-height", `${Math.max(1, Number(worldHeightPx) || 2048)}px`);
+      stageRefs.world.style.setProperty("--orb-stage-world-x", `${(-Number(camLeft || 0) * Number(zoom || 1)).toFixed(2)}px`);
+      stageRefs.world.style.setProperty("--orb-stage-world-y", `${(-Number(camTop || 0) * Number(zoom || 1)).toFixed(2)}px`);
+      stageRefs.world.style.setProperty("--orb-stage-world-zoom", `${Number(zoom || 1)}`);
     },
   });
 }

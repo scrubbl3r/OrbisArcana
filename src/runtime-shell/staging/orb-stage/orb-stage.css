@@ -65,16 +65,33 @@ body {
   pointer-events: none;
 }
 
-.terrainCanvas {
+.orbStageWorldDock {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.orbStageWorld {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--orb-stage-world-width, 8192px);
+  height: var(--orb-stage-world-height, 8192px);
+  transform-origin: 0 0;
+  transform:
+    translate3d(var(--orb-stage-world-x, 0px), var(--orb-stage-world-y, 0px), 0)
+    scale(var(--orb-stage-world-zoom, 1));
+  will-change: transform;
+}
+
+.orbStageWorldOverlay {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-}
-
-.terrainCanvas {
-  z-index: 1;
+  overflow: visible;
 }
 
 .orbWrap {

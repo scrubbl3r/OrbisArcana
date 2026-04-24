@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260424b";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260424c";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
@@ -723,6 +723,8 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
     camLeft,
     camTop,
     zoom,
+    worldWidthPx: shellWorldWidth(shellContext),
+    worldHeightPx: shellWorldHeight(shellContext),
     orbScreenX: frame
       ? ((Number(orbState && orbState.xW) || 0) - camLeft) * zoom
       : (safeRect.width * 0.5),
@@ -743,6 +745,8 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
       camLeft,
       camTop,
       zoom,
+      worldWidthPx: runtime.frameMetrics.worldWidthPx,
+      worldHeightPx: runtime.frameMetrics.worldHeightPx,
     });
   }
   return runtime.frameMetrics;
