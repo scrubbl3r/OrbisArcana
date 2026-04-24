@@ -17,7 +17,9 @@ import {
 export function createOrbGlobesRuntime({
   eventBus,
   orbInteriorEl,
+  getOrbInteriorEl = null,
   stageEl,
+  getStageEl = null,
   getOrbScreenX = null,
   getOrbScreenY,
   orbRadiusPx,
@@ -29,8 +31,8 @@ export function createOrbGlobesRuntime({
   if (!eventBus || typeof eventBus.on !== 'function') {
     throw new Error('createOrbGlobesRuntime requires eventBus.on');
   }
-  if (!orbInteriorEl) throw new Error('createOrbGlobesRuntime requires orbInteriorEl');
-  if (!stageEl) throw new Error('createOrbGlobesRuntime requires stageEl');
+  if (!orbInteriorEl && typeof getOrbInteriorEl !== "function") throw new Error('createOrbGlobesRuntime requires orbInteriorEl');
+  if (!stageEl && typeof getStageEl !== "function") throw new Error('createOrbGlobesRuntime requires stageEl');
   if (typeof getOrbScreenY !== 'function') throw new Error('createOrbGlobesRuntime requires getOrbScreenY');
   if (!(Number(orbRadiusPx) > 0) && typeof getOrbRadiusPx !== "function") {
     throw new Error('createOrbGlobesRuntime requires orbRadiusPx or getOrbRadiusPx');
@@ -101,6 +103,16 @@ export function createOrbGlobesRuntime({
     }
     const stageRect = stageEl.getBoundingClientRect();
     return (stageRect.width || 0) * 0.5;
+  }
+
+  function readStageEl() {
+    const dynamicStageEl = typeof getStageEl === "function" ? getStageEl() : null;
+    return dynamicStageEl || stageEl || null;
+  }
+
+  function readOrbInteriorEl() {
+    const dynamicOrbInteriorEl = typeof getOrbInteriorEl === "function" ? getOrbInteriorEl() : null;
+    return dynamicOrbInteriorEl || orbInteriorEl || null;
   }
 
   function randomOrbitAxis() {
@@ -252,9 +264,14 @@ export function createOrbGlobesRuntime({
   function renderInnerGlobes() {
     for (const p of inner.particles) {
       if (!p.el) {
-        const el = acquirePooledNode("inner", "innerGlobe", orbInteriorEl);
+        const el = acquirePooledNode("inner", "innerGlobe", readOrbInteriorEl());
         p.el = el;
         p.renderCache = el.__renderCache || (el.__renderCache = Object.create(null));
+      } else {
+        const activeOrbInteriorEl = readOrbInteriorEl();
+        if (activeOrbInteriorEl && p.el.parentNode !== activeOrbInteriorEl) {
+          activeOrbInteriorEl.appendChild(p.el);
+        }
       }
       const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const d = p.r * 2;
@@ -456,9 +473,14 @@ export function createOrbGlobesRuntime({
       p.border = liveStyle.border;
       p.fill = liveStyle.background;
       if (!p.el) {
-        const el = acquirePooledNode("orbiting", "orbitGlobe", stageEl);
+        const el = acquirePooledNode("orbiting", "orbitGlobe", readStageEl());
         p.el = el;
         p.renderCache = el.__renderCache || (el.__renderCache = Object.create(null));
+      } else {
+        const activeStageEl = readStageEl();
+        if (activeStageEl && p.el.parentNode !== activeStageEl) {
+          activeStageEl.appendChild(p.el);
+        }
       }
       const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const proj = orbitProjection(p, tS);
@@ -664,9 +686,14 @@ export function createOrbGlobesRuntime({
     for (let i = released.particles.length - 1; i >= 0; i--) {
       const p = released.particles[i];
       if (!p.el) {
-        const el = acquirePooledNode("released", "releasedGlobe", stageEl);
+        const el = acquirePooledNode("released", "releasedGlobe", readStageEl());
         p.el = el;
         p.renderCache = el.__renderCache || (el.__renderCache = Object.create(null));
+      } else {
+        const activeStageEl = readStageEl();
+        if (activeStageEl && p.el.parentNode !== activeStageEl) {
+          activeStageEl.appendChild(p.el);
+        }
       }
       const renderCache = p.renderCache || (p.renderCache = Object.create(null));
       const ageMs = now - p.bornMs;

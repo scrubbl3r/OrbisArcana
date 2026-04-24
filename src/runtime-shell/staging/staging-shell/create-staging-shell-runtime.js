@@ -14,7 +14,7 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423e";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260423f";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423e";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260423f";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -1833,6 +1833,7 @@ function bindShellModeHotkeys(shellContext) {
     }
     if (code === "Digit2") {
       event.preventDefault();
+      modeController.setDevStageVisibility(STAGING_DEV_STAGE_VISIBILITY.hidden);
       modeController.setMode(STAGING_SHELL_MODE.levelOverlay);
       return;
     }
@@ -2938,7 +2939,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260423h",
+  moduleCacheBustV = "20260423i",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

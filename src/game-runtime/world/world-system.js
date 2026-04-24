@@ -9,8 +9,11 @@ export function createWorldSystem({
   stageEl,
   getStageEl = null,
   getStageRect,
+  worldToScreenX = null,
   worldToScreenY,
   getOrbWorldPosition,
+  getOrbScreenX = null,
+  getOrbScreenY = null,
   orbRadiusPx,
   getOrbRadiusPx = null,
   spawn,
@@ -76,7 +79,21 @@ export function createWorldSystem({
       emitterId,
       kind: String((s && s.kind) || "energy_globe_emitter"),
       xNorm,
+      xW: Number.isFinite(Number(s && s.xW))
+        ? Number(s.xW)
+        : (
+            s && s.worldCenter && Number.isFinite(Number(s.worldCenter.xW))
+              ? Number(s.worldCenter.xW)
+              : null
+          ),
       yW,
+      anchorXW: Number.isFinite(Number(s && s.xW))
+        ? Number(s.xW)
+        : (
+            s && s.worldCenter && Number.isFinite(Number(s.worldCenter.xW))
+              ? Number(s.worldCenter.xW)
+              : null
+          ),
       anchorXNorm: xNorm,
       anchorYW: yW,
       r,
@@ -170,6 +187,7 @@ export function createWorldSystem({
     if (p.attracting) {
       return {
         xNorm: Number(p.xNorm) || 0.5,
+        xW: Number.isFinite(Number(p.xW)) ? Number(p.xW) : null,
         yW: Number(p.yW) || 0,
       };
     }
@@ -181,9 +199,51 @@ export function createWorldSystem({
         Math.sin((t * (Number(p.driftFreqXHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseX) || 0)) *
         ((Number(p.driftAmpPx) || 0) / stageW)
       );
+    const xW = Number.isFinite(Number(p.anchorXW))
+      ? (
+          Number(p.anchorXW) +
+          (
+            Math.sin((t * (Number(p.driftFreqXHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseX) || 0)) *
+            (Number(p.driftAmpPx) || 0)
+          )
+        )
+      : null;
     const yW = (Number(p.anchorYW) || 0) +
       (Math.sin((t * (Number(p.bobHz) || 0) * Math.PI * 2) + (Number(p.driftPhaseY) || 0)) * (Number(p.bobAmpY) || 0));
-    return { xNorm, yW };
+    return { xNorm, xW, yW };
+  }
+
+  function pickupScreenPos(p, nowMs) {
+    const pos = pickupWorldPos(p, nowMs);
+    const rect = getStageRect();
+    const x = Number.isFinite(Number(pos.xW)) && typeof worldToScreenX === "function"
+      ? Number(worldToScreenX(pos.xW))
+      : ((Number(pos.xNorm) || 0.5) * (rect.width || 0));
+    const y = Number(worldToScreenY(pos.yW)) || 0;
+    return {
+      ...pos,
+      x,
+      y,
+    };
+  }
+
+  function readOrbScreenPosition() {
+    const orb = getOrbWorldPosition();
+    const rect = getStageRect();
+    const x = typeof getOrbScreenX === "function"
+      ? Number(getOrbScreenX())
+      : (
+          Number.isFinite(Number(orb && orb.xW)) && typeof worldToScreenX === "function"
+            ? Number(worldToScreenX(Number(orb.xW)))
+            : ((Number(orb && orb.xNorm) || 0.5) * (rect.width || 0))
+        );
+    const y = typeof getOrbScreenY === "function"
+      ? Number(getOrbScreenY())
+      : Number(worldToScreenY(Number(orb && orb.yW) || 0));
+    return {
+      x: Number.isFinite(x) ? x : 0,
+      y: Number.isFinite(y) ? y : 0,
+    };
   }
 
   function renderPickup(p, idx, nowMs) {
@@ -195,16 +255,14 @@ export function createWorldSystem({
       return;
     }
 
-    const pos = pickupWorldPos(p, nowMs);
-    const rect = getStageRect();
-    const y = worldToScreenY(pos.yW);
+    const pos = pickupScreenPos(p, nowMs);
     const pickupRadiusPx = getPickupRadiusPx(p);
-    const top = y - pickupRadiusPx;
+    const top = Number(pos.y || 0) - pickupRadiusPx;
     const d = pickupRadiusPx * 2;
     setStyleIfChanged(renderCache, globeEl, "display", "block");
     setStyleIfChanged(renderCache, globeEl, "width", `${d.toFixed(2)}px`);
     setStyleIfChanged(renderCache, globeEl, "height", `${d.toFixed(2)}px`);
-    const left = ((Number(pos.xNorm) || 0.5) * (rect.width || 0)) - pickupRadiusPx;
+    const left = Number(pos.x || 0) - pickupRadiusPx;
     setStyleIfChanged(renderCache, globeEl, "left", `${left.toFixed(2)}px`);
     setStyleIfChanged(renderCache, globeEl, "top", `${top.toFixed(2)}px`);
     setStyleIfChanged(renderCache, globeEl, "transform", "none");
@@ -238,32 +296,34 @@ export function createWorldSystem({
       type: "energy_globe",
       atMs: Number(nowMs) || performance.now(),
       xNorm: Number(p.xNorm) || Number(p.anchorXNorm) || 0.5,
+      xW: Number.isFinite(Number(p.xW)) ? Number(p.xW) : Number(p.anchorXW),
       yW: Number(p.yW) || Number(p.anchorYW) || 0,
     };
     eventBus.emit(EVT_PICKUP_COLLECTED, payload);
   }
 
   function tick(nowMs, _dt) {
-    const stageW = getStageRect().width || 0;
     const orb = getOrbWorldPosition();
-    const orbXNorm = Number(orb && orb.xNorm) || 0.5;
+    const orbXW = Number.isFinite(Number(orb && orb.xW)) ? Number(orb.xW) : null;
     const orbYW = Number(orb && orb.yW) || 0;
+    const orbScreen = readOrbScreenPosition();
     const currentOrbRadiusPx = readOrbRadiusPx();
 
     for (let i = 0; i < state.pickups.length; i++) {
       const p = state.pickups[i];
       if (!p || !p.active) continue;
 
-      const pos = pickupWorldPos(p, nowMs);
+      const pos = pickupScreenPos(p, nowMs);
       const pickupRadiusPx = getPickupRadiusPx(p);
-      const dxPx = ((orbXNorm - pos.xNorm) * stageW);
-      const dyPx = (orbYW - pos.yW);
+      const dxPx = orbScreen.x - Number(pos.x || 0);
+      const dyPx = orbScreen.y - Number(pos.y || 0);
       let centerDist = Math.hypot(dxPx, dyPx);
       let edgeGapPx = centerDist - (currentOrbRadiusPx + pickupRadiusPx);
 
       if (edgeGapPx <= PICKUP_ATTRACT_START_EDGE_GAP_PX) {
         if (!p.attracting) {
           p.xNorm = pos.xNorm;
+          p.xW = Number.isFinite(Number(pos.xW)) ? Number(pos.xW) : p.xW;
           p.yW = pos.yW;
         }
         p.attracting = true;
@@ -278,11 +338,18 @@ export function createWorldSystem({
         const k = 2 + (10 * prox01 * prox01);
         const alpha = 1 - Math.exp(-k * dt);
 
-        p.xNorm += (orbXNorm - p.xNorm) * alpha;
+        if (Number.isFinite(orbXW) && Number.isFinite(Number(p.xW))) {
+          p.xW += (orbXW - p.xW) * alpha;
+        } else {
+          const rect = getStageRect();
+          const orbXNorm = (Number(orbScreen.x) || 0) / Math.max(1, Number(rect.width) || 1);
+          p.xNorm += (orbXNorm - p.xNorm) * alpha;
+        }
         p.yW += (orbYW - p.yW) * alpha;
 
-        const dx2 = ((orbXNorm - p.xNorm) * stageW);
-        const dy2 = (orbYW - p.yW);
+        const pos2 = pickupScreenPos(p, nowMs);
+        const dx2 = orbScreen.x - Number(pos2.x || 0);
+        const dy2 = orbScreen.y - Number(pos2.y || 0);
         centerDist = Math.hypot(dx2, dy2);
         edgeGapPx = centerDist - (currentOrbRadiusPx + pickupRadiusPx);
       } else {
@@ -302,6 +369,7 @@ export function createWorldSystem({
     for (let i = 0; i < state.pickups.length; i++) {
       const p = state.pickups[i];
       p.xNorm = p.anchorXNorm;
+      p.xW = Number.isFinite(Number(p.anchorXW)) ? Number(p.anchorXW) : p.xW;
       p.yW = p.anchorYW;
       p.active = true;
       p.spawnedAtMs = tNow;
@@ -322,6 +390,7 @@ export function createWorldSystem({
       if (!p || p.active) return;
       if (String(p.regenTrigger || "") !== "globe_spent") return;
       p.xNorm = p.anchorXNorm;
+      p.xW = Number.isFinite(Number(p.anchorXW)) ? Number(p.anchorXW) : p.xW;
       p.yW = p.anchorYW;
       p.active = true;
       p.spawnedAtMs = clockNowMs();

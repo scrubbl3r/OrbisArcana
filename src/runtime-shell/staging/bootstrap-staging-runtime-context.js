@@ -176,6 +176,16 @@ export function bootstrapStagingRuntimeContext({
     stageEl: els.physStage,
     getStageEl: () => els.physStage,
     getStageRect: () => stageRect(),
+    worldToScreenX: (xW) => {
+      const orb = getOrbRuntime();
+      const rect = stageRect();
+      const orbScreenX = Number(getOrbScreenX());
+      const orbWorldX = Number(orb && orb.xW);
+      if (Number.isFinite(orbScreenX) && Number.isFinite(orbWorldX)) {
+        return orbScreenX + (Number(xW || 0) - orbWorldX);
+      }
+      return Number(xW || 0);
+    },
     worldToScreenY: (yW) => pickupScreenY(yW),
     getOrbWorldPosition: () => {
       const rect = stageRect();
@@ -184,8 +194,10 @@ export function bootstrapStagingRuntimeContext({
       const xNorm = Number.isFinite(orbScreenX)
         ? Math.max(0, Math.min(1, orbScreenX / stageWidth))
         : 0.5;
-      return { xNorm, yW: getOrbRuntime().yW };
+      return { xNorm, xW: getOrbRuntime().xW, yW: getOrbRuntime().yW };
     },
+    getOrbScreenX,
+    getOrbScreenY,
     orbRadiusPx: getOrbFxRadiusPx(),
     getOrbRadiusPx: getOrbFxRadiusPx,
     spawns: resolvedGlobeSpawns,
@@ -211,7 +223,9 @@ export function bootstrapStagingRuntimeContext({
     eventBus,
     orbFxOptions: {
       orbInteriorEl: els.orbInterior,
+      getOrbInteriorEl: () => els.orbInterior,
       stageEl: els.physStage,
+      getStageEl: () => els.physStage,
       getOrbScreenX,
       getOrbScreenY,
       orbRadiusPx: getOrbFxRadiusPx(),

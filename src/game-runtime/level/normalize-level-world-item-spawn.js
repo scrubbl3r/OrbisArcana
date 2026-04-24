@@ -12,6 +12,13 @@ export function normalizeLevelWorldItemSpawn(
       id: String(item.id || ""),
       kind,
       xNorm: clamp(Number(item.xNorm), 0, 1),
+      xW: Number.isFinite(Number(item.xW))
+        ? Number(item.xW)
+        : (
+            item.worldCenter && Number.isFinite(Number(item.worldCenter.xW))
+              ? Number(item.worldCenter.xW)
+              : null
+          ),
       yW: Number(item.yW) || 0,
       r: Math.max(1, Number(item.r) || 25),
       capacity: Math.max(1, Math.floor(Number(item.capacity) || 1)),
@@ -30,6 +37,7 @@ export function normalizeLevelWorldItemSpawn(
     id: String(item.id || ""),
     kind,
     xNorm: Number.isFinite(xNorm) ? xNorm : 0.5,
+    xW: Number.isFinite(Number(item.xW)) ? Number(item.xW) : null,
     yW,
     r,
     capacity: Math.max(1, Math.floor(Number(item.capacity) || 1)),
