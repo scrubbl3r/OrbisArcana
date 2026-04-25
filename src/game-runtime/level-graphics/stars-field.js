@@ -102,7 +102,7 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
   const sourceWidthW = Math.max(1, clampNumber(boundaryBox.widthW, 1));
   const sourceHeightW = Math.max(1, clampNumber(boundaryBox.heightW, 1));
   const parallaxRatio = clamp01(layer && layer.parallaxRatio);
-  const overscanScale = Math.max(0, clampNumber(config.overscanScale, 1));
+  const overscanScale = Math.max(0, clampNumber(layer && layer.overscanScale, config.overscanScale));
   const cameraBox = cameraBoundaryBox && typeof cameraBoundaryBox === "object" ? cameraBoundaryBox : boundaryBox;
   const leftGapW = Math.max(0, clampNumber(boundaryBox.leftXW, 0) - clampNumber(cameraBox.leftXW, boundaryBox.leftXW));
   const rightGapW = Math.max(0, clampNumber(cameraBox.rightXW, boundaryBox.rightXW) - clampNumber(boundaryBox.rightXW, 0));
@@ -119,6 +119,7 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     ...region,
     layerId: String(layer && layer.id || "layer"),
     parallaxRatio,
+    stroke: String(layer && layer.stroke || "#ffffff"),
     sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
     worldPoints: expandedWorldPoints,
     boundaryBox: expandedBoundaryBox,
@@ -345,78 +346,23 @@ export function buildStarsFieldModel({
 } = {}) {
   const safeRegions = Array.isArray(regions) ? regions : [];
   const safeLayers = Array.isArray(config && config.parallaxLayers) ? config.parallaxLayers : [];
-  const activeLayers = safeLayers.filter((layer = {}) => clampNumber(layer && layer.starCountRatio, 0) > 0);
-  const layerRegions = activeLayers.flatMap((layer = {}) => safeRegions.map((region = {}) => deriveLayerRegion(region, layer, cameraBoundaryBox, config)).filter(Boolean));
-  const regionAreas = layerRegions.map((region = {}) => {
-    const box = region && region.boundaryBox ? region.boundaryBox : null;
-    return Math.max(1, clampNumber(box && box.widthW, 0) * clampNumber(box && box.heightW, 0));
-  });
-  const totalArea = regionAreas.reduce((sum, area) => sum + area, 0) || 1;
-  const selectedStars = [];
-  for (const region of layerRegions) {
-    const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
-    const worldPoints = Array.isArray(region && region.worldPoints) ? region.worldPoints : [];
-    if (!boundaryBox || worldPoints.length < 3) continue;
-    const area = Math.max(0, clampNumber(boundaryBox.widthW, 0) * clampNumber(boundaryBox.heightW, 0));
-    if (area < Math.max(1, clampNumber(config.minRegionAreaW2, 64000))) continue;
-    const generationBox = Object.freeze({
-      leftXW: clampNumber(boundaryBox.leftXW, 0),
-      topYW: clampNumber(boundaryBox.topYW, 0),
-      rightXW: clampNumber(boundaryBox.rightXW, 0),
-      bottomYW: clampNumber(boundaryBox.bottomYW, 0),
-      widthW: Math.max(1, clampNumber(boundaryBox.widthW, 0)),
-      heightW: Math.max(1, clampNumber(boundaryBox.heightW, 0)),
-    });
-    if (!generationBox) continue;
-    const generationRegion = Object.freeze({
-      ...region,
-      generationBox,
-    });
-    const regionArea = Math.max(1, clampNumber(boundaryBox.widthW, 0) * clampNumber(boundaryBox.heightW, 0));
-    const regionTargetCount = Math.max(
-      1,
-      Math.round(
-        (Math.max(1, clampNumber(config.targetStarCount, 3000))
-          * clamp01(clampNumber(activeLayers.find((layer = {}) => String(layer.id || "") === String(region.layerId || ""))?.starCountRatio, 1))
-          * regionArea)
-        / totalArea
-      )
-    );
-    const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
-    const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, 0) / cellSize));
-    const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, 0) / cellSize));
-    const candidates = [];
-    const candidateOrdinals = Math.max(1, Math.floor(clampNumber(config.candidateOrdinals, 4)));
-    for (let cy = 0; cy < rows; cy += 1) {
-      for (let cx = 0; cx < cols; cx += 1) {
-        for (let ordinal = 0; ordinal < candidateOrdinals; ordinal += 1) {
-          const star = buildStarCandidate(generationRegion, cx, cy, ordinal, config);
-          if (!star) continue;
-          candidates.push(star);
-        }
-      }
-    }
-    selectedStars.push(...selectStratifiedCandidates(candidates, regionTargetCount));
-  }
+  const activeLayers = safeLayers.filter((layer = {}) => clampNumber(layer && layer.parallaxRatio, 0) >= 0);
+  const layerRegions = activeLayers.flatMap((layer = {}) =>
+    safeRegions.map((region = {}) => deriveLayerRegion(region, layer, cameraBoundaryBox, config)).filter(Boolean)
+  );
 
   return Object.freeze({
     kind: "stars_field",
     config,
     regions: Object.freeze(safeRegions),
-    stars: Object.freeze(selectedStars.map((star) => Object.freeze({
-      id: star.id,
-      regionId: star.regionId,
-      xW: star.xW,
-      yW: star.yW,
-      radiusPx: star.radiusPx,
-      opacity: star.opacity,
-      color: star.color,
-      depthBand: star.depthBand,
-      parallaxRatio: star.parallaxRatio,
-      isHighlight: star.isHighlight,
-      haloOpacity: star.haloOpacity,
-      haloRadiusPx: star.haloRadiusPx,
+    layers: Object.freeze(layerRegions.map((region = {}) => Object.freeze({
+      id: `${String(region.id || "stars_field")}__${String(region.layerId || "layer")}`,
+      layerId: String(region.layerId || "layer"),
+      parallaxRatio: clamp01(region.parallaxRatio),
+      stroke: String(region.stroke || "#ffffff"),
+      boundaryBox: region.boundaryBox,
     }))),
+    stars: Object.freeze([]),
   });
 }
 

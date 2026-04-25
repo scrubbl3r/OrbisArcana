@@ -12,9 +12,22 @@ export const STARS_FIELD_CONFIG = Object.freeze({
   seedSalt: "stars-field-v1",
   parallaxLayers: Object.freeze([
     Object.freeze({
-      id: "layer_1",
+      id: "far",
       parallaxRatio: 0.18,
-      starCountRatio: 1.0,
+      overscanScale: 1.0,
+      stroke: "#ff9f2f",
+    }),
+    Object.freeze({
+      id: "mid",
+      parallaxRatio: 0.48,
+      overscanScale: 1.0,
+      stroke: "#38d66b",
+    }),
+    Object.freeze({
+      id: "near",
+      parallaxRatio: 0.72,
+      overscanScale: 1.0,
+      stroke: "#4aa3ff",
     }),
   ]),
   spawnChances: Object.freeze({

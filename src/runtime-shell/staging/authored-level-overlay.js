@@ -72,23 +72,6 @@ function formatSvgTranslate(x = 0, y = 0) {
   return `translate(${clampNumber(x, 0).toFixed(2)} ${clampNumber(y, 0).toFixed(2)})`;
 }
 
-function starWithinRenderRegion(star = {}, regions = [], marginW = 0) {
-  const xW = clampNumber(star.xW, 0);
-  const yW = clampNumber(star.yW, 0);
-  const margin = Math.max(0, clampNumber(marginW, 0));
-  const safeRegions = Array.isArray(regions) ? regions : [];
-  return safeRegions.some((region = {}) => {
-    const box = region && region.boundaryBox ? region.boundaryBox : null;
-    if (!box) return false;
-    return (
-      xW >= (clampNumber(box.leftXW, 0) - margin) &&
-      xW <= (clampNumber(box.rightXW, 0) + margin) &&
-      yW >= (clampNumber(box.topYW, 0) - margin) &&
-      yW <= (clampNumber(box.bottomYW, 0) + margin)
-    );
-  });
-}
-
 export function buildAuthoredLevelOverlayMarkup({
   starsField = null,
   loops = [],
@@ -98,12 +81,26 @@ export function buildAuthoredLevelOverlayMarkup({
   worldHeightPx = 0,
 } = {}) {
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
+  const layerBoxes = Array.isArray(starsField && starsField.layers) ? starsField.layers : [];
   const starsFieldMarkup = clipRegions
     .map((region = {}, index) => {
-      const expandedPoints = expandPolygonFromCentroid(region.worldPoints, 1.10);
-      const pathData = buildClosedLoopPathData(expandedPoints);
+      const pathData = buildClosedLoopPathData(region.worldPoints);
       if (!pathData) return "";
       return `<path class="authoredStarsFieldDebugOutline" data-stars-field-path="${String(region.id || `stars_field_${index + 1}`)}" d="${pathData}" style="fill:none;stroke:rgba(255,32,32,0.98);stroke-width:16;stroke-dasharray:28 20;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;"></path>`;
+    })
+    .filter(Boolean)
+    .join("");
+  const layerBoxMarkup = layerBoxes
+    .map((layer = {}, index) => {
+      const box = layer && layer.boundaryBox ? layer.boundaryBox : null;
+      if (!box) return "";
+      const x = clampNumber(box.leftXW, 0).toFixed(2);
+      const y = clampNumber(box.topYW, 0).toFixed(2);
+      const width = Math.max(1, clampNumber(box.widthW, 1)).toFixed(2);
+      const height = Math.max(1, clampNumber(box.heightW, 1)).toFixed(2);
+      const ratio = Math.max(0, Math.min(1, clampNumber(layer.parallaxRatio, 0)));
+      const stroke = String(layer.stroke || ["#ff9f2f", "#38d66b", "#4aa3ff"][index] || "#ffffff");
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${String(layer.layerId || `layer_${index + 1}`)}" data-stars-band="${String(layer.layerId || `layer_${index + 1}`)}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="none" stroke="${stroke}" stroke-width="10" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect></g>`;
     })
     .filter(Boolean)
     .join("");
@@ -122,11 +119,17 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${lineArtMarkup}${starsFieldMarkup}`;
+  return `${lineArtMarkup}${starsFieldMarkup}${layerBoxMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
-  return Object.freeze([]);
+  if (!overlayEl || typeof overlayEl.querySelectorAll !== "function") return Object.freeze([]);
+  return Object.freeze(Array.from(overlayEl.querySelectorAll("[data-stars-band]")).map((el) => ({
+    el,
+    ratio: Math.max(0, Math.min(1, clampNumber(el.getAttribute("data-parallax-ratio"), 0))),
+    baseCamLeft: null,
+    baseCamTop: null,
+  })));
 }
 
 export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
