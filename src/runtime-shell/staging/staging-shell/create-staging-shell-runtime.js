@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424u";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424v";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -939,25 +939,6 @@ function clearShellDirectionLampTimers(shellContext) {
 function allShellDirectionLampsOff(shellContext) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   allDevStagingDirectionLampsOff(refs);
-}
-
-function bindShellStarsTrace(shellContext) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const shellKws = runtime && runtime.kws ? runtime.kws : null;
-  const kwsPanelController = shellKws && shellKws.kwsPanelController ? shellKws.kwsPanelController : null;
-  const levelStageView = shellContext && shellContext.views ? shellContext.views.levelStageView : null;
-  const levelStageAdapter = levelStageView && levelStageView.adapter ? levelStageView.adapter : null;
-  if (!kwsPanelController || typeof kwsPanelController.pushGeneralLogLine !== "function") return;
-  if (!levelStageAdapter || typeof levelStageAdapter.setTraceLogger !== "function") return;
-  if (typeof kwsPanelController.clearGeneralLog === "function") {
-    kwsPanelController.clearGeneralLog();
-  }
-  kwsPanelController.pushGeneralLogLine("general log cleared for stars visibility traces");
-  levelStageAdapter.setTraceLogger((line) => {
-    const text = String(line || "").trim();
-    if (!text) return;
-    kwsPanelController.pushGeneralLogLine(text);
-  });
 }
 
 function flashShellDirectionLampPair(shellContext, a, b, ms = 380) {
@@ -3068,7 +3049,6 @@ export async function createStagingShellRuntime({
       });
     }
     await initShellKwsRuntime(shellContext);
-    bindShellStarsTrace(shellContext);
     await hydrateShellCurrentLevelMapSummary(shellContext);
     initializeShellStageRuntime(shellContext);
     const orbStageAdapter = shellContext.orbStageAdapter || null;

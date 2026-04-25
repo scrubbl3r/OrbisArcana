@@ -42,7 +42,7 @@ export const STARS_FIELD_CONFIG = Object.freeze({
       weight: 0.60,
       radiusRangePx: Object.freeze([0.9, 1.75]),
       opacityRange: Object.freeze([0.28, 0.56]),
-      parallaxRatio: 0.14,
+      parallaxRatio: 0.18,
       palette: Object.freeze([
         "#9fbfff",
         "#8dd6ff",
@@ -59,7 +59,7 @@ export const STARS_FIELD_CONFIG = Object.freeze({
       weight: 0.28,
       radiusRangePx: Object.freeze([1.55, 2.8]),
       opacityRange: Object.freeze([0.58, 0.90]),
-      parallaxRatio: 0.22,
+      parallaxRatio: 0.48,
       palette: Object.freeze([
         "#f8fbff",
         "#d1efff",
@@ -76,7 +76,7 @@ export const STARS_FIELD_CONFIG = Object.freeze({
       weight: 0.12,
       radiusRangePx: Object.freeze([2.2, 4.4]),
       opacityRange: Object.freeze([0.82, 1.00]),
-      parallaxRatio: 0.32,
+      parallaxRatio: 0.72,
       palette: Object.freeze([
         "#ffffff",
         "#e0f7ff",
