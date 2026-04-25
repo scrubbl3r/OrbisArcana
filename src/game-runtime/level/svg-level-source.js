@@ -598,6 +598,27 @@ export function buildSvgLineArtShapes({
   }));
 }
 
+export function buildSvgStarsFieldRegions({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  starsFieldLayerLabels = [],
+} = {}) {
+  const loops = buildSvgBoundaryLoops({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    boundaryLayerLabels: starsFieldLayerLabels,
+  });
+  return Object.freeze((Array.isArray(loops) ? loops : []).map((loop, index) => Object.freeze({
+    id: String(loop && loop.id || `stars_field_${index + 1}`),
+    kind: String(loop && loop.kind || "path_loop"),
+    authoredPoints: Array.isArray(loop && loop.authoredPoints) ? loop.authoredPoints : [],
+    worldPoints: Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [],
+    boundaryBox: resolveBoundaryBoxFromLoops([loop]),
+  })));
+}
+
 export function buildBoundaryTileMask({
   loops = [],
   worldWidthPx = 0,
@@ -651,6 +672,7 @@ export function summarizeSvgLevelSource({
   cameraBoundaryLayerLabels = [],
   worldItemLayerLabels = [],
   lineArtLayerLabels = [],
+  starsFieldLayerLabels = [],
   spawnMarkerId = "",
   tileSizePx = 128,
 } = {}) {
@@ -693,6 +715,12 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     lineArtLayerLabels,
   });
+  const starsFieldRegions = buildSvgStarsFieldRegions({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    starsFieldLayerLabels,
+  });
   const boundaryTileMask = buildBoundaryTileMask({
     loops,
     worldWidthPx,
@@ -711,6 +739,7 @@ export function summarizeSvgLevelSource({
     cameraBoundaryBox,
     worldItemSpawns: Object.freeze(worldItemSpawns),
     lineArtShapes: Object.freeze(lineArtShapes),
+    starsFieldRegions: Object.freeze(starsFieldRegions),
     boundaryBox,
     boundaryTileMask,
   });

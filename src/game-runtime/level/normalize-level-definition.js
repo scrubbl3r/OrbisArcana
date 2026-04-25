@@ -65,6 +65,11 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
           ? mapSource.semanticLayers.lineArt.slice()
           : []
       ),
+      starsField: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.starsField)
+          ? mapSource.semanticLayers.starsField.slice()
+          : []
+      ),
       // Compatibility aliases while callers migrate from older field names.
       boundsCam: Object.freeze(
         Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds)

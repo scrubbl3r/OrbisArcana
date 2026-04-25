@@ -1,5 +1,6 @@
 import { summarizeSvgLevelSource } from "../../game-runtime/level/svg-level-source.js";
 import { buildAuthoredLevelSceneModel } from "../../game-runtime/level/authored-level-scene-model.js";
+import { buildLevelGraphicsModel } from "../../game-runtime/level-graphics/build-level-graphics-model.js";
 
 export async function loadAuthoredLevelScene({
   level = null,
@@ -29,6 +30,7 @@ export async function loadAuthoredLevelScene({
       (mapSource.semanticLayers && mapSource.semanticLayers.boundsCam),
     worldItemLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.worldItems,
     lineArtLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.lineArt,
+    starsFieldLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.starsField,
     spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
     tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
   });
@@ -40,11 +42,15 @@ export async function loadAuthoredLevelScene({
     worldHeightPx,
     groundCenterWorld: () => worldHeightPx * 0.5,
   });
+  const levelGraphicsModel = buildLevelGraphicsModel({
+    sceneModel,
+  });
 
   return Object.freeze({
     assetUrl,
     svgText,
     summary,
     sceneModel,
+    levelGraphicsModel,
   });
 }
