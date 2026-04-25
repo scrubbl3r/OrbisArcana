@@ -57,26 +57,6 @@
   pointer-events: none;
 }
 
-.authoredStarsFieldStar,
-.authoredStarsFieldHalo {
-  pointer-events: none;
-  stroke: none;
-}
-
-.authoredStarsFieldStarHighlight {
-  filter: saturate(1.12) brightness(1.08);
-}
-
-.authoredStarsFieldDebugOutline {
-  fill: none;
-  stroke: rgba(255, 64, 64, 0.96);
-  stroke-width: 6;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-  pointer-events: none;
-}
-
 .levelStageBoundaryPath {
   fill: none;
   stroke: rgba(146, 230, 168, 0.96);

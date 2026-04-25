@@ -65,10 +65,7 @@ export function buildAuthoredLevelOverlayMarkup({
       const cameraBox = layer && layer.cameraBoundaryBox ? layer.cameraBoundaryBox : sourceBox;
       const x = formatNumberAttr(clampNumber(sourceBox.leftXW, 0), 0);
       const y = formatNumberAttr(clampNumber(sourceBox.topYW, 0), 0);
-      const width = formatNumberAttr(Math.max(1, clampNumber(sourceBox.widthW, 1)), 1);
-      const height = formatNumberAttr(Math.max(1, clampNumber(sourceBox.heightW, 1)), 1);
       const ratio = Math.max(0, Math.min(1, clampNumber(layer.parallaxRatio, 0)));
-      const stroke = String(layer.stroke || ["#ff9f2f", "#38d66b", "#4aa3ff"][index] || "#ffffff");
       const layerId = String(layer.layerId || `layer_${index + 1}`);
       const layerStarsMarkup = stars
         .filter((star = {}) => String(star.depthBand || "") === layerId)

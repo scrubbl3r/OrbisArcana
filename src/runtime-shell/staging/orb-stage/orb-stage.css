@@ -98,16 +98,6 @@ body {
   pointer-events: none;
 }
 
-.authoredStarsFieldStar,
-.authoredStarsFieldHalo {
-  pointer-events: none;
-  stroke: none;
-}
-
-.authoredStarsFieldStarHighlight {
-  filter: saturate(1.12) brightness(1.08);
-}
-
 .orbWrap {
   position: absolute;
   left: 50%;
