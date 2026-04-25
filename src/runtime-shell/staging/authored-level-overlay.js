@@ -83,7 +83,7 @@ export function buildAuthoredLevelOverlayMarkup({
       .map((region = {}, index) => {
         const pathData = buildClosedLoopPathData(region.worldPoints);
         if (!pathData) return "";
-        return `<path class="authoredStarsFieldDebugOutline" data-stars-debug-outline="${String(region.id || `stars_outline_${index + 1}`)}" d="${pathData}"></path>`;
+        return `<path class="authoredStarsFieldDebugOutline" data-stars-debug-outline="${String(region.id || `stars_outline_${index + 1}`)}" d="${pathData}" style="fill:none;stroke:rgba(255,64,64,0.96);stroke-width:6;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;"></path>`;
       })
       .filter(Boolean)
       .join("")
