@@ -69,9 +69,9 @@ export function buildAuthoredLevelOverlayMarkup({
         const haloRadius = Math.max(r, clampNumber(star.haloRadiusPx, Number(r))).toFixed(2);
         const starId = String(star.id || `${bandId}_star_${index + 1}`);
         const haloMarkup = clampNumber(star.haloOpacity, 0) > 0
-          ? `<circle class="authoredStarsFieldHalo" data-star-halo-id="${starId}" data-depth-band="${bandId}" cx="${x}" cy="${y}" r="${haloRadius}" style="fill:${color};fill-opacity:${haloOpacity};stroke:none;"></circle>`
+          ? `<circle class="authoredStarsFieldHalo" data-star-halo-id="${starId}" data-depth-band="${bandId}" data-star-origin="${star.insideCore ? "core" : "margin"}" cx="${x}" cy="${y}" r="${haloRadius}" style="fill:${color};fill-opacity:${haloOpacity};stroke:none;"></circle>`
           : "";
-        return `${haloMarkup}<circle class="authoredStarsFieldStar${star.isHighlight ? " authoredStarsFieldStarHighlight" : ""}" data-star-id="${starId}" data-depth-band="${bandId}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
+        return `${haloMarkup}<circle class="authoredStarsFieldStar${star.isHighlight ? " authoredStarsFieldStarHighlight" : ""}" data-star-id="${starId}" data-depth-band="${bandId}" data-star-origin="${star.insideCore ? "core" : "margin"}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
       }).join("");
       return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-stars-band="${bandId}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}">${bandMarkup}</g>`;
     })

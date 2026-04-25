@@ -6,9 +6,9 @@ import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
-import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424m";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424m";
-import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260424m";
+import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424n";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424n";
+import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260424n";
 import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
@@ -73,6 +73,7 @@ function resolvePreviewFollowMode(level = null) {
 export function renderLevelStage(root, {
   level = null,
   externalCameraAuthority = false,
+  pushLogLine = null,
 } = {}) {
   if (!root) return null;
   const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : {};
@@ -145,6 +146,7 @@ export function renderLevelStage(root, {
   });
   const state = controller.state;
   state.externalCameraAuthority = !!externalCameraAuthority;
+  state.pushLogLine = (typeof pushLogLine === "function") ? pushLogLine : null;
 
   if (!state.externalCameraAuthority) {
     controller.updateCamera();

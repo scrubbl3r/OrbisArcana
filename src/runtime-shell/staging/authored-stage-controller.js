@@ -10,7 +10,7 @@ import {
 import {
   applyAuthoredStarsFieldParallax,
   captureAuthoredStarsFieldParallaxRefs,
-} from "./authored-level-overlay.js?v=20260424m";
+} from "./authored-level-overlay.js?v=20260424n";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
