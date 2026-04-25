@@ -1,6 +1,7 @@
 export const STARS_FIELD_CONFIG = Object.freeze({
   targetStarCount: 3000,
   enableClipMask: false,
+  showDebugOutline: true,
   targetCellSizeW: 76,
   minRegionAreaW2: 64000,
   renderCullMarginW: 0,

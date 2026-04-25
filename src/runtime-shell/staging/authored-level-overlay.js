@@ -78,6 +78,16 @@ export function buildAuthoredLevelOverlayMarkup({
         .filter(Boolean)
         .join("")}</mask></defs>`
     : "";
+  const debugOutlineMarkup = (starsField && starsField.config && starsField.config.showDebugOutline)
+    ? clipRegions
+      .map((region = {}, index) => {
+        const pathData = buildClosedLoopPathData(region.worldPoints);
+        if (!pathData) return "";
+        return `<path class="authoredStarsFieldDebugOutline" data-stars-debug-outline="${String(region.id || `stars_outline_${index + 1}`)}" d="${pathData}"></path>`;
+      })
+      .filter(Boolean)
+      .join("")
+    : "";
   const starsMarkup = Array.from(starsByBand.entries())
     .map(([bandId, bandStars]) => {
       const ratio = Math.max(0, Math.min(1, clampNumber(bandStars[0] && bandStars[0].parallaxRatio, 1)));
@@ -116,7 +126,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${clipMarkup}${starsRootMarkup}${lineArtMarkup}`;
+  return `${clipMarkup}${starsRootMarkup}${debugOutlineMarkup}${lineArtMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
