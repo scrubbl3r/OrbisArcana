@@ -70,7 +70,10 @@ function resolvePreviewFollowMode(level = null) {
   return resolveStageCameraFollowMode(level, "preview", "follow_target_center");
 }
 
-export function renderLevelStage(root, { level = null } = {}) {
+export function renderLevelStage(root, {
+  level = null,
+  externalCameraAuthority = false,
+} = {}) {
   if (!root) return null;
   const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : {};
   const worldSize = resolveLevelWorldSize(level, mapSource);
@@ -138,8 +141,11 @@ export function renderLevelStage(root, { level = null } = {}) {
     previewZoomFallback: LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM,
   });
   const state = controller.state;
+  state.externalCameraAuthority = !!externalCameraAuthority;
 
-  controller.updateCamera();
+  if (!state.externalCameraAuthority) {
+    controller.updateCamera();
+  }
   void controller.hydrateScene();
 
   return {

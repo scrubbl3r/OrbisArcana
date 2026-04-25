@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424r";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424s";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -2925,7 +2925,12 @@ export async function createStagingShellRuntime({
   const designLevel = DEFAULT_LEVEL_STAGE_LEVEL;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: gameplayLevel }) : null;
-  const levelStageView = levelRoot ? renderLevelStage(levelRoot, { level: designLevel }) : null;
+  const levelStageView = levelRoot
+    ? renderLevelStage(levelRoot, {
+        level: designLevel,
+        externalCameraAuthority: true,
+      })
+    : null;
 
   if (devStagingView && devStagingView.refs) {
     safeSetText(devStagingView.refs.rulesReadout, "boot:staging-shell");
