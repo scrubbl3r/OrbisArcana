@@ -7,6 +7,10 @@ import {
   resolveStageCameraClampBounds,
   resolveStageCameraConfig,
 } from "./authored-level-camera.js";
+import {
+  applyAuthoredStarsFieldParallax,
+  captureAuthoredStarsFieldParallaxRefs,
+} from "./authored-level-overlay.js?v=20260424g";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -84,6 +88,10 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   refs.world.style.setProperty("--level-world-zoom", `${frame.zoom}`);
   refs.world.style.setProperty("--level-world-x", `${-frame.camLeft * frame.zoom}px`);
   refs.world.style.setProperty("--level-world-y", `${-frame.camTop * frame.zoom}px`);
+  applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
+    camLeft: frame.camLeft,
+    camTop: frame.camTop,
+  });
 
   if (refs.labelMeta) {
     const authoredSpawn = state.spawn && state.spawn.authoredCenter ? state.spawn.authoredCenter : null;
@@ -133,6 +141,7 @@ export function createAuthoredStageController({
     summary: null,
     sceneModel: null,
     levelGraphicsModel: null,
+    starsParallaxRefs: Object.freeze([]),
   };
 
   const updateCamera = () => updateAuthoredStageCamera(refs, state, previewZoomFallback);
@@ -164,6 +173,7 @@ export function createAuthoredStageController({
         loops: state.sceneModel.loops,
         lineArtShapes: state.sceneModel.lineArtShapes,
       });
+      state.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(refs.worldOverlay);
       if (refs.stage) refs.stage.dataset.levelStageState = "ready";
       if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
         state.cameraRuntime.reset();

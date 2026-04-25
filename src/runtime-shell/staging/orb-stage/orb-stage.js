@@ -1,6 +1,6 @@
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
-import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424e";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424f";
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
@@ -17,7 +17,7 @@ import {
   applyWorldGlobeVisualCssVars,
   buildWorldGlobeVisualState,
 } from "../../../game-runtime/world/world-globe-state.js?v=20260418a";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424f";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424g";
 
 const ORB_STAGE_TEMPLATE = `
   <section class="orbStage" aria-label="Orb stage">

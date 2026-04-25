@@ -1,4 +1,5 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
+import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260424g";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
@@ -49,6 +50,10 @@ export function createLevelStageRuntimeAdapter({
       refs.world.style.setProperty("--level-world-zoom", `${Number(zoom || state.previewZoom)}`);
       refs.world.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
       refs.world.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
+      applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
+        camLeft: Number(camLeft || 0),
+        camTop: Number(camTop || 0),
+      });
     },
     dispose() {
       unbindResize();
