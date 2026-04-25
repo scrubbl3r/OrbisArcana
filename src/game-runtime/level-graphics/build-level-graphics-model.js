@@ -1,4 +1,4 @@
-import { buildStarsFieldModel } from "./stars-field.js?v=20260425h";
+import { buildStarsFieldModel } from "./stars-field.js?v=20260425i";
 
 export function buildLevelGraphicsModel({
   sceneModel = null,

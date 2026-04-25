@@ -157,8 +157,8 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
     }
     const deltaLeft = left - clampNumber(ref.baseCamLeft, left);
     const deltaTop = top - clampNumber(ref.baseCamTop, top);
-    const tx = deltaLeft * (1 - ratio) * boost;
-    const ty = deltaTop * (1 - ratio) * boost;
+    const tx = deltaLeft * ratio * boost;
+    const ty = deltaTop * ratio * boost;
     const next = formatSvgTranslate(tx, ty);
     if (ref.el.__authoredParallaxTransform === next) continue;
     ref.el.__authoredParallaxTransform = next;

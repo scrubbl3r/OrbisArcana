@@ -104,24 +104,27 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
   const parallaxRatio = clamp01(layer && layer.parallaxRatio);
   const overscanScale = Math.max(0, clampNumber(layer && layer.overscanScale, config.overscanScale));
   const cameraBox = cameraBoundaryBox && typeof cameraBoundaryBox === "object" ? cameraBoundaryBox : boundaryBox;
-  const leftGapW = Math.max(0, clampNumber(boundaryBox.leftXW, 0) - clampNumber(cameraBox.leftXW, boundaryBox.leftXW));
-  const rightGapW = Math.max(0, clampNumber(cameraBox.rightXW, boundaryBox.rightXW) - clampNumber(boundaryBox.rightXW, 0));
-  const topGapW = Math.max(0, clampNumber(boundaryBox.topYW, 0) - clampNumber(cameraBox.topYW, boundaryBox.topYW));
-  const bottomGapW = Math.max(0, clampNumber(cameraBox.bottomYW, boundaryBox.bottomYW) - clampNumber(boundaryBox.bottomYW, 0));
-  const marginXW = Math.max(leftGapW, rightGapW) * (1 - parallaxRatio) * overscanScale;
-  const marginYW = Math.max(topGapW, bottomGapW) * (1 - parallaxRatio) * overscanScale;
-  const scaleX = 1 + ((marginXW * 2) / sourceWidthW);
-  const scaleY = 1 + ((marginYW * 2) / sourceHeightW);
-  const expandedWorldPoints = expandPolygonFromCentroid(region.worldPoints, { scaleX, scaleY });
-  const expandedBoundaryBox = resolveBoundaryBoxFromPoints(expandedWorldPoints);
-  if (!expandedBoundaryBox) return null;
+  const travelXW = Math.max(0, clampNumber(cameraBox.widthW, sourceWidthW) - sourceWidthW);
+  const travelYW = Math.max(0, clampNumber(cameraBox.heightW, sourceHeightW) - sourceHeightW);
+  const extraWidthW = travelXW * parallaxRatio * overscanScale;
+  const extraHeightW = travelYW * parallaxRatio * overscanScale;
+  const marginXW = extraWidthW * 0.5;
+  const marginYW = extraHeightW * 0.5;
+  const expandedBoundaryBox = Object.freeze({
+    leftXW: clampNumber(boundaryBox.leftXW, 0) - marginXW,
+    rightXW: clampNumber(boundaryBox.rightXW, 0) + marginXW,
+    topYW: clampNumber(boundaryBox.topYW, 0) - marginYW,
+    bottomYW: clampNumber(boundaryBox.bottomYW, 0) + marginYW,
+    widthW: sourceWidthW + extraWidthW,
+    heightW: sourceHeightW + extraHeightW,
+  });
   return Object.freeze({
     ...region,
     layerId: String(layer && layer.id || "layer"),
     parallaxRatio,
     stroke: String(layer && layer.stroke || "#ffffff"),
     sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
-    worldPoints: expandedWorldPoints,
+    worldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
     boundaryBox: expandedBoundaryBox,
     generationBox: expandedBoundaryBox,
     overscanMarginXW: marginXW,
