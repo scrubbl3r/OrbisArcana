@@ -97,14 +97,15 @@ export function buildAuthoredLevelOverlayMarkup({
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
   const layerBoxes = Array.isArray(starsField && starsField.layers) ? starsField.layers : [];
   const stars = Array.isArray(starsField && starsField.stars) ? starsField.stars : [];
-  const starsFieldMarkup = clipRegions
+  const clipPathMarkup = clipRegions
     .map((region = {}, index) => {
       const pathData = buildClosedLoopPathData(region.worldPoints);
       if (!pathData) return "";
-      return `<path class="authoredStarsFieldDebugOutline" data-stars-field-path="${String(region.id || `stars_field_${index + 1}`)}" d="${pathData}" style="fill:none;stroke:rgba(255,48,48,0.55);stroke-width:6;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;"></path>`;
+      return `<path d="${pathData}"></path>`;
     })
     .filter(Boolean)
     .join("");
+  const clipId = `${overlayId}__stars_field_clip`;
   const layerBoxMarkup = layerBoxes
     .map((layer = {}, index) => {
       const box = layer && layer.boundaryBox ? layer.boundaryBox : null;
@@ -151,7 +152,11 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${lineArtMarkup}${starsFieldMarkup}${layerBoxMarkup}`;
+  const clippedStarsMarkup = clipPathMarkup
+    ? `<defs><clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">${clipPathMarkup}</clipPath></defs><g data-stars-field-root="true" clip-path="url(#${clipId})">${layerBoxMarkup}</g>`
+    : layerBoxMarkup;
+
+  return `${lineArtMarkup}${clippedStarsMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
