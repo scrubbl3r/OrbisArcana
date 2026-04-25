@@ -53,7 +53,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .map((region = {}, index) => {
       const pathData = buildClosedLoopPathData(region.worldPoints);
       if (!pathData) return "";
-      return `<path class="authoredStarsFieldDebugOutline" data-stars-field-path="${String(region.id || `stars_field_${index + 1}`)}" d="${pathData}" style="fill:none;stroke:rgba(255,64,64,0.96);stroke-width:6;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;"></path>`;
+      return `<path class="authoredStarsFieldDebugOutline" data-stars-field-path="${String(region.id || `stars_field_${index + 1}`)}" d="${pathData}" style="fill:none;stroke:rgba(255,32,32,0.98);stroke-width:16;stroke-dasharray:28 20;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;"></path>`;
     })
     .filter(Boolean)
     .join("");
@@ -72,7 +72,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${starsFieldMarkup}${lineArtMarkup}`;
+  return `${lineArtMarkup}${starsFieldMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
