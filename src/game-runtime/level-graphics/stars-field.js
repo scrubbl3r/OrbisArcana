@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424f";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424g";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -191,6 +191,9 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
   return Object.freeze({
     id: `${region.id}:star:${cellX}:${cellY}:${ordinal}`,
     regionId: region.id,
+    cellX,
+    cellY,
+    ordinal,
     xW,
     yW,
     radiusPx: baseRadius * radiusMultiplier,
@@ -207,10 +210,53 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
   });
 }
 
-function selectTopCandidates(candidates = [], targetCount = 0) {
-  const safeCandidates = Array.isArray(candidates) ? candidates.slice() : [];
-  safeCandidates.sort((a, b) => Number(b && b.score) - Number(a && a.score));
-  return safeCandidates.slice(0, Math.max(0, Math.floor(Number(targetCount) || 0)));
+function compareSpatialCandidateOrder(a = {}, b = {}) {
+  const rowA = Math.floor(clampNumber(a.cellY, 0));
+  const rowB = Math.floor(clampNumber(b.cellY, 0));
+  if (rowA !== rowB) return rowA - rowB;
+  const colA = Math.floor(clampNumber(a.cellX, 0));
+  const colB = Math.floor(clampNumber(b.cellX, 0));
+  const serpentineA = (rowA % 2 === 0) ? colA : -colA;
+  const serpentineB = (rowB % 2 === 0) ? colB : -colB;
+  if (serpentineA !== serpentineB) return serpentineA - serpentineB;
+  return String(a.id || "").localeCompare(String(b.id || ""));
+}
+
+function sampleEvenlyOrdered(items = [], targetCount = 0) {
+  const safeItems = Array.isArray(items) ? items.slice() : [];
+  const target = Math.max(0, Math.floor(Number(targetCount) || 0));
+  if (!safeItems.length || target <= 0) return [];
+  if (safeItems.length <= target) return safeItems;
+  const selected = [];
+  const stride = safeItems.length / target;
+  for (let i = 0; i < target; i += 1) {
+    const index = Math.min(safeItems.length - 1, Math.floor((i + 0.5) * stride));
+    selected.push(safeItems[index]);
+  }
+  return selected;
+}
+
+function selectStratifiedCandidates(candidates = [], targetCount = 0) {
+  const target = Math.max(0, Math.floor(Number(targetCount) || 0));
+  if (target <= 0) return [];
+  const buckets = new Map();
+  for (const candidate of Array.isArray(candidates) ? candidates : []) {
+    const ordinal = Math.max(0, Math.floor(clampNumber(candidate && candidate.ordinal, 0)));
+    const bucket = buckets.get(ordinal) || [];
+    bucket.push(candidate);
+    buckets.set(ordinal, bucket);
+  }
+  const ordinals = Array.from(buckets.keys()).sort((a, b) => a - b);
+  const selected = [];
+  let remaining = target;
+  for (const ordinal of ordinals) {
+    if (remaining <= 0) break;
+    const bucket = (buckets.get(ordinal) || []).slice().sort(compareSpatialCandidateOrder);
+    const takeCount = Math.min(remaining, bucket.length);
+    selected.push(...sampleEvenlyOrdered(bucket, takeCount));
+    remaining = target - selected.length;
+  }
+  return selected;
 }
 
 export function buildStarsFieldModel({
@@ -255,7 +301,7 @@ export function buildStarsFieldModel({
         }
       }
     }
-    const selectedRegionStars = selectTopCandidates(candidates, regionTargetCount);
+    const selectedRegionStars = selectStratifiedCandidates(candidates, regionTargetCount);
     selectedStars.push(...selectedRegionStars);
   }
 
