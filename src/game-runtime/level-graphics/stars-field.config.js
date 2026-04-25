@@ -4,6 +4,8 @@ export const STARS_FIELD_CONFIG = Object.freeze({
   minRegionAreaW2: 64000,
   parallaxMarginW: 200,
   renderCullMarginW: 200,
+  coreSpendRatio: 0.88,
+  marginSpendRatioMax: 0.12,
   candidateOrdinals: 4,
   jitterRatio: 0.42,
   maxJitterW: 54,

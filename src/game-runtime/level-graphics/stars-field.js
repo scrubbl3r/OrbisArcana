@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424k";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424l";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -290,19 +290,51 @@ export function buildStarsFieldModel({
     const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
     const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, 0) / cellSize));
     const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, 0) / cellSize));
-    const candidates = [];
+    const coreCandidates = [];
+    const marginCandidates = [];
     const candidateOrdinals = Math.max(1, Math.floor(clampNumber(config.candidateOrdinals, 4)));
     for (let cy = 0; cy < rows; cy += 1) {
       for (let cx = 0; cx < cols; cx += 1) {
         for (let ordinal = 0; ordinal < candidateOrdinals; ordinal += 1) {
           const star = buildStarCandidate(generationRegion, cx, cy, ordinal, config);
           if (!star) continue;
-          candidates.push(star);
+          if (star.insideCore) {
+            coreCandidates.push(star);
+          } else {
+            marginCandidates.push(star);
+          }
         }
       }
     }
-    const selectedRegionStars = selectStratifiedCandidates(candidates, regionTargetCount);
-    selectedStars.push(...selectedRegionStars);
+    const coreTargetCount = Math.min(
+      coreCandidates.length,
+      Math.round(regionTargetCount * clamp01(clampNumber(config.coreSpendRatio, 0.88)))
+    );
+    const marginCapCount = Math.min(
+      marginCandidates.length,
+      Math.round(regionTargetCount * clamp01(clampNumber(config.marginSpendRatioMax, 0.12)))
+    );
+    const selectedCore = selectStratifiedCandidates(coreCandidates, coreTargetCount);
+    const selectedMargin = selectStratifiedCandidates(
+      marginCandidates,
+      Math.min(marginCapCount, Math.max(0, regionTargetCount - selectedCore.length))
+    );
+    const remainingCount = Math.max(0, regionTargetCount - selectedCore.length - selectedMargin.length);
+    if (remainingCount > 0) {
+      const selectedIds = new Set([...selectedCore, ...selectedMargin].map((star) => star.id));
+      const remainingCore = coreCandidates.filter((star) => !selectedIds.has(star.id));
+      const supplementalCore = selectStratifiedCandidates(remainingCore, remainingCount);
+      const remainingAfterCore = Math.max(0, remainingCount - supplementalCore.length);
+      const supplementalMargin = remainingAfterCore > 0
+        ? selectStratifiedCandidates(
+          marginCandidates.filter((star) => !selectedIds.has(star.id) && !supplementalCore.some((extra) => extra.id === star.id)),
+          remainingAfterCore
+        )
+        : [];
+      selectedStars.push(...selectedCore, ...selectedMargin, ...supplementalCore, ...supplementalMargin);
+    } else {
+      selectedStars.push(...selectedCore, ...selectedMargin);
+    }
   }
 
   return Object.freeze({
