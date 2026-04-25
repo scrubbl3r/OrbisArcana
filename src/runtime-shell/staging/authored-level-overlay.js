@@ -104,7 +104,7 @@ export function buildAuthoredLevelOverlayMarkup({
       const height = formatNumberAttr(Math.max(1, clampNumber(box.heightW, 1)), 1);
       const ratio = Math.max(0, Math.min(1, clampNumber(layer.parallaxRatio, 0)));
       const stroke = String(layer.stroke || ["#ff9f2f", "#38d66b", "#4aa3ff"][index] || "#ffffff");
-      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${String(layer.layerId || `layer_${index + 1}`)}" data-stars-band="${String(layer.layerId || `layer_${index + 1}`)}" data-parallax-ratio="${ratio.toFixed(3)}" data-parallax-boost="3.00" transform="${formatSvgTranslate(0, 0)}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${stroke}" fill-opacity="0.10" stroke="${stroke}" stroke-opacity="1" stroke-width="28" stroke-dasharray="44 16" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect></g>`;
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${String(layer.layerId || `layer_${index + 1}`)}" transform="${formatSvgTranslate(0, 0)}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${stroke}" fill-opacity="0.10" stroke="${stroke}" stroke-opacity="1" stroke-width="28" stroke-dasharray="44 16" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect></g>`;
     })
     .filter(Boolean)
     .join("");
