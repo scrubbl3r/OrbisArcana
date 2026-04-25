@@ -2924,30 +2924,13 @@ export async function createStagingShellRuntime({
   const gameplayLevel = DEFAULT_ORB_STAGE_LEVEL;
   const designLevel = DEFAULT_LEVEL_STAGE_LEVEL;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
-  function pushGeneralTraceLine(text = "", _kind = "muted") {
-    if (!devStagingView || typeof devStagingView.openPanel !== "function") return;
-    devStagingView.openPanel("log");
-    const logEl = devStagingView.refs && devStagingView.refs.kwsLog ? devStagingView.refs.kwsLog : null;
-    if (!logEl) return;
-    const line = rootDocument.createElement("div");
-    line.textContent = String(text || "");
-    logEl.appendChild(line);
-    logEl.scrollTop = logEl.scrollHeight;
-  }
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: gameplayLevel }) : null;
   const levelStageView = levelRoot
     ? renderLevelStage(levelRoot, {
         level: designLevel,
         externalCameraAuthority: true,
-        pushLogLine: pushGeneralTraceLine,
       })
     : null;
-  if (levelStageView && levelStageView.controller && levelStageView.controller.state) {
-    levelStageView.controller.state.__starsClipTraceDone = false;
-  }
-  if (levelStageView && levelStageView.adapter && typeof levelStageView.adapter.applyCameraFrame === "function") {
-    levelStageView.adapter.applyCameraFrame({ camLeft: 0, camTop: 0, zoom: 1 });
-  }
 
   if (devStagingView && devStagingView.refs) {
     safeSetText(devStagingView.refs.rulesReadout, "boot:staging-shell");

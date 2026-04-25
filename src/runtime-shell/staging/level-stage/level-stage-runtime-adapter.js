@@ -1,23 +1,7 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
-import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260425c";
+import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260425d";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
-
-function traceStarsClipOnce(refs = {}, state = null) {
-  const pushLogLine = state && typeof state.pushLogLine === "function" ? state.pushLogLine : null;
-  if (!pushLogLine || !refs || !refs.worldOverlay || state.__starsClipTraceDone) return;
-  const clipRoot = refs.worldOverlay.querySelector(".authoredStarsFieldRoot");
-  const clipDefs = refs.worldOverlay.querySelectorAll("clipPath");
-  const clipRegionPaths = refs.worldOverlay.querySelectorAll("[data-stars-clip-region]");
-  const clipAttr = clipRoot && typeof clipRoot.getAttribute === "function"
-    ? String(clipRoot.getAttribute("clip-path") || "")
-    : "";
-  pushLogLine(
-    `TRACE stars.clip root:${clipRoot ? "yes" : "no"} attr:${clipAttr || "-"} defs:${clipDefs.length} regions:${clipRegionPaths.length}`,
-    "warn"
-  );
-  state.__starsClipTraceDone = true;
-}
 
 export function createLevelStageRuntimeAdapter({
   refs = {},
@@ -71,7 +55,6 @@ export function createLevelStageRuntimeAdapter({
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),
       });
-      traceStarsClipOnce(refs, state);
     },
     dispose() {
       unbindResize();

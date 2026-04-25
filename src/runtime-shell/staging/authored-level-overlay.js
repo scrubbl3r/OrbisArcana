@@ -45,10 +45,14 @@ export function buildAuthoredLevelOverlayMarkup({
   loops = [],
   lineArtShapes = [],
   overlayId = "authoredOverlay",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
 } = {}) {
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
   const safeOverlayId = String(overlayId || "authoredOverlay").replace(/[^a-zA-Z0-9_-]/g, "_");
-  const clipId = clipRegions.length ? `${safeOverlayId}__starsFieldClip` : "";
+  const maskId = clipRegions.length ? `${safeOverlayId}__starsFieldMask` : "";
+  const maskWidth = Math.max(1, clampNumber(worldWidthPx, 0));
+  const maskHeight = Math.max(1, clampNumber(worldHeightPx, 0));
   const renderCullMarginW = clampNumber(
     starsField && starsField.config && starsField.config.renderCullMarginW,
     starsField && starsField.config && starsField.config.parallaxMarginW
@@ -63,15 +67,15 @@ export function buildAuthoredLevelOverlayMarkup({
     bandStars.push(star);
     starsByBand.set(bandId, bandStars);
   }
-  const clipMarkup = clipId
-    ? `<defs><clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">${clipRegions
+  const clipMarkup = maskId
+    ? `<defs><mask id="${maskId}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse"><rect x="0" y="0" width="${maskWidth}" height="${maskHeight}" fill="black"></rect>${clipRegions
         .map((region = {}, index) => {
           const pathData = buildClosedLoopPathData(region.worldPoints);
           if (!pathData) return "";
-          return `<path d="${pathData}" data-stars-clip-region="${String(region.id || `stars_clip_${index + 1}`)}"></path>`;
+          return `<path d="${pathData}" data-stars-clip-region="${String(region.id || `stars_clip_${index + 1}`)}" fill="white"></path>`;
         })
         .filter(Boolean)
-        .join("")}</clipPath></defs>`
+        .join("")}</mask></defs>`
     : "";
   const starsMarkup = Array.from(starsByBand.entries())
     .map(([bandId, bandStars]) => {
@@ -94,7 +98,7 @@ export function buildAuthoredLevelOverlayMarkup({
     })
     .join("");
   const starsRootMarkup = starsMarkup
-    ? `<g class="authoredStarsFieldRoot"${clipId ? ` clip-path="url(#${clipId})"` : ""}>${starsMarkup}</g>`
+    ? `<g class="authoredStarsFieldRoot"${maskId ? ` mask="url(#${maskId})"` : ""}>${starsMarkup}</g>`
     : "";
 
   const lineArtMarkup = (Array.isArray(lineArtShapes) ? lineArtShapes : [])

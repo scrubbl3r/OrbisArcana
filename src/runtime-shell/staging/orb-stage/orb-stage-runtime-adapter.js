@@ -2,7 +2,7 @@ import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js"
 import {
   applyAuthoredStarsFieldParallax,
   captureAuthoredStarsFieldParallaxRefs,
-} from "../authored-level-overlay.js?v=20260425c";
+} from "../authored-level-overlay.js?v=20260425d";
 
 export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const localBackdropState = Object.create(null);
@@ -69,7 +69,10 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       if (stageBackdrop.lineArtKey !== nextLineArtKey) {
         stageBackdrop.lineArtShapes = nextLineArtShapes;
         stageBackdrop.lineArtKey = nextLineArtKey;
-        stageRefs.worldOverlay.innerHTML = buildOverlayMarkup(nextLineArtShapes);
+        stageRefs.worldOverlay.innerHTML = buildOverlayMarkup(nextLineArtShapes, null, {
+          worldWidthPx: worldWidth,
+          worldHeightPx: worldHeight,
+        });
         stageBackdrop.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(stageRefs.worldOverlay);
       }
 

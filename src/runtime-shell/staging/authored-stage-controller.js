@@ -10,7 +10,7 @@ import {
 import {
   applyAuthoredStarsFieldParallax,
   captureAuthoredStarsFieldParallaxRefs,
-} from "./authored-level-overlay.js?v=20260425c";
+} from "./authored-level-overlay.js?v=20260425d";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -174,6 +174,8 @@ export function createAuthoredStageController({
           : null,
         loops: state.sceneModel.loops,
         lineArtShapes: state.sceneModel.lineArtShapes,
+        worldWidthPx: state.worldWidthPx,
+        worldHeightPx: state.worldHeightPx,
       });
       state.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(refs.worldOverlay);
       if (refs.stage) refs.stage.dataset.levelStageState = "ready";
