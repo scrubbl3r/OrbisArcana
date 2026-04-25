@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425a";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425b";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
