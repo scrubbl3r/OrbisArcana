@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425h";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425i";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -125,6 +125,11 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     stroke: String(layer && layer.stroke || "#ffffff"),
     fillOpacity: Math.max(0, Math.min(1, clampNumber(layer && layer.fillOpacity, 0))),
     patternKind: String(layer && layer.patternKind || "diagonal"),
+    starCountWeight: Math.max(0, clampNumber(layer && layer.starCountWeight, 0)),
+    radiusRangePx: Array.isArray(layer && layer.radiusRangePx) ? layer.radiusRangePx : Object.freeze([1, 2]),
+    opacityRange: Array.isArray(layer && layer.opacityRange) ? layer.opacityRange : Object.freeze([0.2, 0.5]),
+    palette: Array.isArray(layer && layer.palette) ? layer.palette : Object.freeze(["#ffffff"]),
+    highlightChance: clamp01(layer && layer.highlightChance),
     sourceBoundaryBox: boundaryBox,
     cameraBoundaryBox: cameraBox,
     sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
@@ -213,8 +218,7 @@ function chooseDepthBand(seed = "", depthBands = []) {
 }
 
 function buildStarCandidate(region, cellX, cellY, ordinal, config) {
-  const band = chooseDepthBand(`${region.id}:${cellX}:${cellY}:${ordinal}:${config.seedSalt}`, config.depthBands);
-  if (!band) return null;
+  const layerPalette = Array.isArray(region && region.palette) ? region.palette : [];
   const generationBox = region && region.generationBox ? region.generationBox : null;
   if (!generationBox) return null;
   const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
@@ -226,56 +230,33 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
   const jitterY = lerp(-maxJitter, maxJitter, hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:jy`));
   const xW = baseX + jitterX;
   const yW = baseY + jitterY;
-  const insideLayer = pointInPolygon(xW, yW, region.worldPoints);
+  const insideLayer = (
+    xW >= clampNumber(generationBox.leftXW, 0)
+    && xW <= clampNumber(generationBox.rightXW, 0)
+    && yW >= clampNumber(generationBox.topYW, 0)
+    && yW <= clampNumber(generationBox.bottomYW, 0)
+  );
   if (!insideLayer) return null;
-  const radiusRange = Array.isArray(band.radiusRangePx) ? band.radiusRangePx : [1, 2];
-  const opacityRange = Array.isArray(band.opacityRange) ? band.opacityRange : [0.2, 0.5];
-  const palette = Array.isArray(band.palette) ? band.palette : ["#ffffff"];
+  const radiusRange = Array.isArray(region && region.radiusRangePx) ? region.radiusRangePx : [1, 2];
+  const opacityRange = Array.isArray(region && region.opacityRange) ? region.opacityRange : [0.2, 0.5];
+  const palette = layerPalette.length ? layerPalette : ["#ffffff"];
   const paletteIndex = Math.min(
     palette.length - 1,
     Math.floor(hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:palette`) * palette.length)
   );
-  const highlightConfig = config && config.highlight ? config.highlight : {};
-  const baseHighlightChance = lerp(
-    clamp01(highlightConfig.chanceRange && highlightConfig.chanceRange[0]),
-    clamp01(highlightConfig.chanceRange && highlightConfig.chanceRange[1]),
-    hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:highlight-weight`)
-  );
-  const highlightChance = clamp01(baseHighlightChance);
+  const highlightChance = clamp01(region && region.highlightChance);
   const isHighlight = hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:highlight`) < highlightChance;
   const baseRadius = lerp(radiusRange[0], radiusRange[1], hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:radius`));
   const baseOpacity = lerp(opacityRange[0], opacityRange[1], hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:opacity`));
-  const radiusMultiplier = isHighlight
-    ? lerp(
-      clampNumber(highlightConfig.radiusMultiplierRange && highlightConfig.radiusMultiplierRange[0], 1.8),
-      clampNumber(highlightConfig.radiusMultiplierRange && highlightConfig.radiusMultiplierRange[1], 3.0),
-      hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:highlight-radius`)
-    )
-    : 1;
-  const opacityBoost = isHighlight
-    ? lerp(
-      clampNumber(highlightConfig.opacityBoostRange && highlightConfig.opacityBoostRange[0], 0.08),
-      clampNumber(highlightConfig.opacityBoostRange && highlightConfig.opacityBoostRange[1], 0.22),
-      hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:highlight-opacity`)
-    )
-    : 0;
-  const haloOpacity = isHighlight
-    ? lerp(
-      clampNumber(highlightConfig.haloOpacityRange && highlightConfig.haloOpacityRange[0], 0.06),
-      clampNumber(highlightConfig.haloOpacityRange && highlightConfig.haloOpacityRange[1], 0.18),
-      hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:halo-opacity`)
-    )
-    : 0;
-  const haloRadiusMultiplier = isHighlight
-    ? lerp(
-      clampNumber(highlightConfig.haloRadiusMultiplierRange && highlightConfig.haloRadiusMultiplierRange[0], 2.8),
-      clampNumber(highlightConfig.haloRadiusMultiplierRange && highlightConfig.haloRadiusMultiplierRange[1], 5.2),
-      hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:halo-radius`)
-    )
-    : 0;
+  const radiusMultiplier = isHighlight ? 1.8 : 1;
+  const opacityBoost = isHighlight ? 0.18 : 0;
+  const haloOpacity = isHighlight ? 0.10 : 0;
+  const haloRadiusMultiplier = isHighlight ? 3.4 : 0;
   const scoreBase = hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:score`);
   const ordinalPenalty = ordinal * 0.11;
   const score = Math.max(0, scoreBase - ordinalPenalty);
+  const localWidth = Math.max(1, clampNumber(generationBox.widthW, 1));
+  const localHeight = Math.max(1, clampNumber(generationBox.heightW, 1));
   return Object.freeze({
     id: `${region.id}:star:${cellX}:${cellY}:${ordinal}`,
     regionId: region.id,
@@ -284,6 +265,10 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
     ordinal,
     xW,
     yW,
+    localXW: xW - clampNumber(generationBox.leftXW, 0),
+    localYW: yW - clampNumber(generationBox.topYW, 0),
+    localWidthW: localWidth,
+    localHeightW: localHeight,
     radiusPx: baseRadius * radiusMultiplier,
     opacity: clamp01(baseOpacity + opacityBoost),
     color: String(palette[paletteIndex] || palette[0] || "#ffffff"),
@@ -358,6 +343,29 @@ export function buildStarsFieldModel({
   const layerRegions = activeLayers.flatMap((layer = {}) =>
     safeRegions.map((region = {}) => deriveLayerRegion(region, layer, cameraBoundaryBox, config)).filter(Boolean)
   );
+  const totalWeight = activeLayers.reduce((sum, layer = {}) => sum + Math.max(0, clampNumber(layer.starCountWeight, 0)), 0) || 1;
+  const targetStarCount = Math.max(0, Math.floor(clampNumber(config && config.targetStarCount, 0)));
+  const stars = [];
+  for (let regionIndex = 0; regionIndex < layerRegions.length; regionIndex += 1) {
+    const region = layerRegions[regionIndex];
+    const generationBox = region && region.generationBox ? region.generationBox : null;
+    if (!generationBox) continue;
+    const layerWeight = Math.max(0, clampNumber(region.starCountWeight, 0));
+    const targetForRegion = Math.max(0, Math.round(targetStarCount * (layerWeight / totalWeight)));
+    const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 76));
+    const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, cellSize) / cellSize));
+    const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, cellSize) / cellSize));
+    const candidates = [];
+    for (let cellY = 0; cellY < rows; cellY += 1) {
+      for (let cellX = 0; cellX < cols; cellX += 1) {
+        for (let ordinal = 0; ordinal < Math.max(1, Math.floor(clampNumber(config.candidateOrdinals, 1))); ordinal += 1) {
+          const candidate = buildStarCandidate(region, cellX, cellY, ordinal, config);
+          if (candidate) candidates.push(candidate);
+        }
+      }
+    }
+    stars.push(...selectStratifiedCandidates(candidates, targetForRegion));
+  }
 
   return Object.freeze({
     kind: "stars_field",
@@ -370,11 +378,16 @@ export function buildStarsFieldModel({
       stroke: String(region.stroke || "#ffffff"),
       fillOpacity: Math.max(0, Math.min(1, clampNumber(region.fillOpacity, 0))),
       patternKind: String(region.patternKind || "diagonal"),
+      starCountWeight: Math.max(0, clampNumber(region.starCountWeight, 0)),
+      radiusRangePx: Array.isArray(region.radiusRangePx) ? region.radiusRangePx : Object.freeze([1, 2]),
+      opacityRange: Array.isArray(region.opacityRange) ? region.opacityRange : Object.freeze([0.2, 0.5]),
+      palette: Array.isArray(region.palette) ? region.palette : Object.freeze(["#ffffff"]),
+      highlightChance: clamp01(region.highlightChance),
       boundaryBox: region.boundaryBox,
       sourceBoundaryBox: region.sourceBoundaryBox || null,
       cameraBoundaryBox: region.cameraBoundaryBox || null,
     }))),
-    stars: Object.freeze([]),
+    stars: Object.freeze(stars),
   });
 }
 
