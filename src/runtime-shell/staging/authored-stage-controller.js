@@ -17,6 +17,13 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function traceAuthoredStage(state, line) {
+  if (!state || typeof state.traceLog !== "function") return;
+  const text = String(line || "").trim();
+  if (!text) return;
+  state.traceLog(text);
+}
+
 function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   if (!refs || !refs.physStage || !refs.world) return;
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
@@ -92,6 +99,20 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
     camLeft: frame.camLeft,
     camTop: frame.camTop,
   });
+  if (!state.traceFrameLogged && refs.worldOverlay) {
+    state.traceFrameLogged = true;
+    traceAuthoredStage(
+      state,
+      [
+        "stars.trace frame",
+        `cam=${Math.round(Number(frame.camLeft) || 0)},${Math.round(Number(frame.camTop) || 0)}`,
+        `zoom=${Number(frame.zoom || 1).toFixed(2)}`,
+        `parallaxRefs=${Array.isArray(state.starsParallaxRefs) ? state.starsParallaxRefs.length : 0}`,
+        `domBands=${refs.worldOverlay.querySelectorAll("[data-stars-band]").length}`,
+        `domStars=${refs.worldOverlay.querySelectorAll("[data-star-id]").length}`,
+      ].join(" | ")
+    );
+  }
 
   if (refs.labelMeta) {
     const authoredSpawn = state.spawn && state.spawn.authoredCenter ? state.spawn.authoredCenter : null;
@@ -142,6 +163,8 @@ export function createAuthoredStageController({
     sceneModel: null,
     levelGraphicsModel: null,
     starsParallaxRefs: Object.freeze([]),
+    traceLog: null,
+    traceFrameLogged: false,
   };
 
   const updateCamera = () => updateAuthoredStageCamera(refs, state, previewZoomFallback);
@@ -165,15 +188,47 @@ export function createAuthoredStageController({
       state.levelGraphicsModel = authoredScene.levelGraphicsModel || null;
       state.cameraAnchors = Array.isArray(state.sceneModel.cameraAnchors) ? state.sceneModel.cameraAnchors : [];
       state.spawn = state.sceneModel.spawn;
+      const starsFieldModel = state.levelGraphicsModel && state.levelGraphicsModel.starsField
+        ? state.levelGraphicsModel.starsField
+        : null;
+      traceAuthoredStage(
+        state,
+        [
+          "stars.trace model",
+          `regions=${Array.isArray(starsFieldModel && starsFieldModel.regions) ? starsFieldModel.regions.length : 0}`,
+          `stars=${Array.isArray(starsFieldModel && starsFieldModel.stars) ? starsFieldModel.stars.length : 0}`,
+        ].join(" | ")
+      );
       refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
-      refs.worldOverlay.innerHTML = buildOverlayMarkup({
+      const overlayMarkup = buildOverlayMarkup({
         starsField: state.levelGraphicsModel && state.levelGraphicsModel.starsField
           ? state.levelGraphicsModel.starsField
           : null,
         loops: state.sceneModel.loops,
         lineArtShapes: state.sceneModel.lineArtShapes,
       });
+      traceAuthoredStage(
+        state,
+        [
+          "stars.trace markup",
+          `bands=${(overlayMarkup.match(/data-stars-band=/g) || []).length}`,
+          `stars=${(overlayMarkup.match(/data-star-id=/g) || []).length}`,
+          `halos=${(overlayMarkup.match(/data-star-halo=/g) || []).length}`,
+        ].join(" | ")
+      );
+      refs.worldOverlay.innerHTML = overlayMarkup;
       state.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(refs.worldOverlay);
+      state.traceFrameLogged = false;
+      traceAuthoredStage(
+        state,
+        [
+          "stars.trace dom",
+          `bands=${refs.worldOverlay.querySelectorAll("[data-stars-band]").length}`,
+          `stars=${refs.worldOverlay.querySelectorAll("[data-star-id]").length}`,
+          `halos=${refs.worldOverlay.querySelectorAll("[data-star-halo]").length}`,
+          `parallaxRefs=${Array.isArray(state.starsParallaxRefs) ? state.starsParallaxRefs.length : 0}`,
+        ].join(" | ")
+      );
       if (refs.stage) refs.stage.dataset.levelStageState = "ready";
       if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
         state.cameraRuntime.reset();
