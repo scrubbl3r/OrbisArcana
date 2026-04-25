@@ -20,7 +20,7 @@ export const STARS_FIELD_CONFIG = Object.freeze({
       patternKind: "diagonal",
     }),
     Object.freeze({
-      id: "mid",
+      id: "medium",
       parallaxRatio: 0.36,
       overscanScale: 1.0,
       stroke: "#42d98c",
@@ -28,7 +28,7 @@ export const STARS_FIELD_CONFIG = Object.freeze({
       patternKind: "cross",
     }),
     Object.freeze({
-      id: "near",
+      id: "close",
       parallaxRatio: 0.56,
       overscanScale: 1.0,
       stroke: "#49a8ff",
