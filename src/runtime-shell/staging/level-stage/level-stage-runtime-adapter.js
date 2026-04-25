@@ -3,6 +3,11 @@ import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
+function clampNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export function createLevelStageRuntimeAdapter({
   refs = {},
   level = null,
