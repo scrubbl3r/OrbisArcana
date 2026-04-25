@@ -6,9 +6,9 @@ import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
-import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260425a";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425a";
-import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260425a";
+import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260425b";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425b";
+import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260425b";
 import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,

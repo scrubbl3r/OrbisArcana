@@ -90,10 +90,12 @@ export function buildAuthoredLevelOverlayMarkup({
           : "";
         return `${haloMarkup}<circle class="authoredStarsFieldStar${star.isHighlight ? " authoredStarsFieldStarHighlight" : ""}" data-star-id="${starId}" data-depth-band="${bandId}" data-star-origin="${star.insideCore ? "core" : "margin"}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
       }).join("");
-      const clipAttr = clipId ? ` clip-path="url(#${clipId})"` : "";
-      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-stars-band="${bandId}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}"${clipAttr}>${bandMarkup}</g>`;
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-stars-band="${bandId}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}">${bandMarkup}</g>`;
     })
     .join("");
+  const starsRootMarkup = starsMarkup
+    ? `<g class="authoredStarsFieldRoot"${clipId ? ` clip-path="url(#${clipId})"` : ""}>${starsMarkup}</g>`
+    : "";
 
   const lineArtMarkup = (Array.isArray(lineArtShapes) ? lineArtShapes : [])
     .map((shape = {}, index) => {
@@ -109,7 +111,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${clipMarkup}${starsMarkup}${lineArtMarkup}`;
+  return `${clipMarkup}${starsRootMarkup}${lineArtMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
