@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425d";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425e";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -101,12 +101,15 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
   if (!boundaryBox) return null;
   const sourceWidthW = Math.max(1, clampNumber(boundaryBox.widthW, 1));
   const sourceHeightW = Math.max(1, clampNumber(boundaryBox.heightW, 1));
-  const cameraWidthW = Math.max(sourceWidthW, clampNumber(cameraBoundaryBox && cameraBoundaryBox.widthW, sourceWidthW));
-  const cameraHeightW = Math.max(sourceHeightW, clampNumber(cameraBoundaryBox && cameraBoundaryBox.heightW, sourceHeightW));
   const parallaxRatio = clamp01(layer && layer.parallaxRatio);
   const overscanScale = Math.max(0, clampNumber(config.overscanScale, 1));
-  const marginXW = (cameraWidthW * (1 - parallaxRatio) * 0.5) * overscanScale;
-  const marginYW = (cameraHeightW * (1 - parallaxRatio) * 0.5) * overscanScale;
+  const cameraBox = cameraBoundaryBox && typeof cameraBoundaryBox === "object" ? cameraBoundaryBox : boundaryBox;
+  const leftGapW = Math.max(0, clampNumber(boundaryBox.leftXW, 0) - clampNumber(cameraBox.leftXW, boundaryBox.leftXW));
+  const rightGapW = Math.max(0, clampNumber(cameraBox.rightXW, boundaryBox.rightXW) - clampNumber(boundaryBox.rightXW, 0));
+  const topGapW = Math.max(0, clampNumber(boundaryBox.topYW, 0) - clampNumber(cameraBox.topYW, boundaryBox.topYW));
+  const bottomGapW = Math.max(0, clampNumber(cameraBox.bottomYW, boundaryBox.bottomYW) - clampNumber(boundaryBox.bottomYW, 0));
+  const marginXW = Math.max(leftGapW, rightGapW) * (1 - parallaxRatio) * overscanScale;
+  const marginYW = Math.max(topGapW, bottomGapW) * (1 - parallaxRatio) * overscanScale;
   const scaleX = 1 + ((marginXW * 2) / sourceWidthW);
   const scaleY = 1 + ((marginYW * 2) / sourceHeightW);
   const expandedWorldPoints = expandPolygonFromCentroid(region.worldPoints, { scaleX, scaleY });
