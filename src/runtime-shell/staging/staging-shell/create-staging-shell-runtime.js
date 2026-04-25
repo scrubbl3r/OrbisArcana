@@ -2865,19 +2865,6 @@ async function initShellKwsRuntime(shellContext) {
   if (devRefs.rulesReadout) devRefs.rulesReadout.textContent = "boot:kws_ready";
   if (typeof kwsBridge.updateReadout === "function") kwsBridge.updateReadout();
   if (typeof kwsBridge.pushLogLine === "function") kwsBridge.pushLogLine("kws runtime active", "ok");
-  const activeLevelStageView = shellContext && shellContext.levelStageView ? shellContext.levelStageView : null;
-  if (activeLevelStageView && activeLevelStageView.controller && activeLevelStageView.controller.state && typeof kwsBridge.pushLogLine === "function") {
-    activeLevelStageView.controller.state.pushLogLine = (text, kind) => kwsBridge.pushLogLine(text, kind);
-    activeLevelStageView.controller.state.__starsClipTraceDone = false;
-    if (activeLevelStageView.adapter && typeof activeLevelStageView.adapter.applyCameraFrame === "function") {
-      const frame = runtime && runtime.frameMetrics ? runtime.frameMetrics : null;
-      activeLevelStageView.adapter.applyCameraFrame({
-        camLeft: Number(frame && frame.camLeft) || 0,
-        camTop: Number(frame && frame.camTop) || 0,
-        zoom: Number(frame && frame.zoom) || 1,
-      });
-    }
-  }
 
   return runtime.kws;
 }
@@ -2937,14 +2924,30 @@ export async function createStagingShellRuntime({
   const gameplayLevel = DEFAULT_ORB_STAGE_LEVEL;
   const designLevel = DEFAULT_LEVEL_STAGE_LEVEL;
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
+  function pushGeneralTraceLine(text = "", _kind = "muted") {
+    if (!devStagingView || typeof devStagingView.openPanel !== "function") return;
+    devStagingView.openPanel("log");
+    const logEl = devStagingView.refs && devStagingView.refs.kwsLog ? devStagingView.refs.kwsLog : null;
+    if (!logEl) return;
+    const line = rootDocument.createElement("div");
+    line.textContent = String(text || "");
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: gameplayLevel }) : null;
   const levelStageView = levelRoot
     ? renderLevelStage(levelRoot, {
         level: designLevel,
         externalCameraAuthority: true,
-        pushLogLine: null,
+        pushLogLine: pushGeneralTraceLine,
       })
     : null;
+  if (levelStageView && levelStageView.controller && levelStageView.controller.state) {
+    levelStageView.controller.state.__starsClipTraceDone = false;
+  }
+  if (levelStageView && levelStageView.adapter && typeof levelStageView.adapter.applyCameraFrame === "function") {
+    levelStageView.adapter.applyCameraFrame({ camLeft: 0, camTop: 0, zoom: 1 });
+  }
 
   if (devStagingView && devStagingView.refs) {
     safeSetText(devStagingView.refs.rulesReadout, "boot:staging-shell");
