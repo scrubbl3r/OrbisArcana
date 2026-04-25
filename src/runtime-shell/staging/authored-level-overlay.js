@@ -86,6 +86,17 @@ function resolveTravelRange(cameraMin = 0, cameraMax = 0, viewportSpan = 0, fall
   });
 }
 
+function buildStarsBoxPatternMarkup(patternId = "", stroke = "#ffffff", patternKind = "diagonal") {
+  const kind = String(patternKind || "diagonal").trim().toLowerCase();
+  if (kind === "cross") {
+    return `<pattern id="${patternId}" patternUnits="userSpaceOnUse" width="132" height="132"><path d="M 0 66 L 132 66" fill="none" stroke="${stroke}" stroke-opacity="0.16" stroke-width="8"></path><path d="M 66 0 L 66 132" fill="none" stroke="${stroke}" stroke-opacity="0.16" stroke-width="8"></path><circle cx="66" cy="66" r="7" fill="${stroke}" fill-opacity="0.24"></circle></pattern>`;
+  }
+  if (kind === "dots") {
+    return `<pattern id="${patternId}" patternUnits="userSpaceOnUse" width="136" height="136"><circle cx="28" cy="28" r="7" fill="${stroke}" fill-opacity="0.22"></circle><circle cx="104" cy="54" r="5" fill="${stroke}" fill-opacity="0.20"></circle><circle cx="54" cy="108" r="6" fill="${stroke}" fill-opacity="0.18"></circle></pattern>`;
+  }
+  return `<pattern id="${patternId}" patternUnits="userSpaceOnUse" width="120" height="120"><path d="M 0 120 L 120 0" fill="none" stroke="${stroke}" stroke-opacity="0.18" stroke-width="10"></path><circle cx="24" cy="24" r="6" fill="${stroke}" fill-opacity="0.30"></circle><circle cx="84" cy="72" r="4" fill="${stroke}" fill-opacity="0.22"></circle></pattern>`;
+}
+
 export function buildAuthoredLevelOverlayMarkup({
   starsField = null,
   loops = [],
@@ -116,9 +127,10 @@ export function buildAuthoredLevelOverlayMarkup({
       const height = formatNumberAttr(Math.max(1, clampNumber(sourceBox.heightW, 1)), 1);
       const ratio = Math.max(0, Math.min(1, clampNumber(layer.parallaxRatio, 0)));
       const stroke = String(layer.stroke || ["#ff9f2f", "#38d66b", "#4aa3ff"][index] || "#ffffff");
+      const fillOpacity = Math.max(0, Math.min(1, clampNumber(layer.fillOpacity, index === 0 ? 0.10 : 0)));
       const layerId = String(layer.layerId || `layer_${index + 1}`);
       const patternId = `${overlayId}__stars_box_pattern__${layerId}`;
-      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${layerId}" data-stars-band="${layerId}" data-parallax-ratio="${ratio.toFixed(3)}" data-field-left="${formatNumberAttr(sourceBox.leftXW, 0)}" data-field-top="${formatNumberAttr(sourceBox.topYW, 0)}" data-field-width="${formatNumberAttr(sourceBox.widthW, 1)}" data-field-height="${formatNumberAttr(sourceBox.heightW, 1)}" data-camera-left="${formatNumberAttr(cameraBox.leftXW, 0)}" data-camera-top="${formatNumberAttr(cameraBox.topYW, 0)}" data-camera-right="${formatNumberAttr(cameraBox.rightXW, 0)}" data-camera-bottom="${formatNumberAttr(cameraBox.bottomYW, 0)}" transform="${formatSvgTranslate(0, 0)}"><defs><pattern id="${patternId}" patternUnits="userSpaceOnUse" width="120" height="120"><path d="M 0 120 L 120 0" fill="none" stroke="${stroke}" stroke-opacity="0.18" stroke-width="10"></path><circle cx="24" cy="24" r="6" fill="${stroke}" fill-opacity="0.30"></circle><circle cx="84" cy="72" r="4" fill="${stroke}" fill-opacity="0.22"></circle></pattern></defs><rect data-stars-box-stroke="true" x="${x}" y="${y}" width="${width}" height="${height}" fill="${stroke}" fill-opacity="0.10" stroke="${stroke}" stroke-opacity="1" stroke-width="28" stroke-dasharray="44 16" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect><rect data-stars-box-pattern="true" x="${x}" y="${y}" width="${width}" height="${height}" fill="url(#${patternId})" stroke="none"></rect></g>`;
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${layerId}" data-stars-band="${layerId}" data-parallax-ratio="${ratio.toFixed(3)}" data-field-left="${formatNumberAttr(sourceBox.leftXW, 0)}" data-field-top="${formatNumberAttr(sourceBox.topYW, 0)}" data-field-width="${formatNumberAttr(sourceBox.widthW, 1)}" data-field-height="${formatNumberAttr(sourceBox.heightW, 1)}" data-camera-left="${formatNumberAttr(cameraBox.leftXW, 0)}" data-camera-top="${formatNumberAttr(cameraBox.topYW, 0)}" data-camera-right="${formatNumberAttr(cameraBox.rightXW, 0)}" data-camera-bottom="${formatNumberAttr(cameraBox.bottomYW, 0)}" transform="${formatSvgTranslate(0, 0)}"><defs>${buildStarsBoxPatternMarkup(patternId, stroke, layer.patternKind)}</defs><rect data-stars-box-stroke="true" x="${x}" y="${y}" width="${width}" height="${height}" fill="${stroke}" fill-opacity="${fillOpacity.toFixed(3)}" stroke="${stroke}" stroke-opacity="1" stroke-width="28" stroke-dasharray="44 16" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect><rect data-stars-box-pattern="true" x="${x}" y="${y}" width="${width}" height="${height}" fill="url(#${patternId})" stroke="none"></rect></g>`;
     })
     .filter(Boolean)
     .join("");

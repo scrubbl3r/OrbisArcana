@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425f";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425g";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -123,6 +123,8 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     layerId: String(layer && layer.id || "layer"),
     parallaxRatio,
     stroke: String(layer && layer.stroke || "#ffffff"),
+    fillOpacity: Math.max(0, Math.min(1, clampNumber(layer && layer.fillOpacity, 0))),
+    patternKind: String(layer && layer.patternKind || "diagonal"),
     sourceBoundaryBox: boundaryBox,
     cameraBoundaryBox: cameraBox,
     sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
@@ -366,6 +368,8 @@ export function buildStarsFieldModel({
       layerId: String(region.layerId || "layer"),
       parallaxRatio: clamp01(region.parallaxRatio),
       stroke: String(region.stroke || "#ffffff"),
+      fillOpacity: Math.max(0, Math.min(1, clampNumber(region.fillOpacity, 0))),
+      patternKind: String(region.patternKind || "diagonal"),
       boundaryBox: region.boundaryBox,
       sourceBoundaryBox: region.sourceBoundaryBox || null,
       cameraBoundaryBox: region.cameraBoundaryBox || null,

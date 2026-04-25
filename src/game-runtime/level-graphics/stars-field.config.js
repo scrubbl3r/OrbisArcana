@@ -14,8 +14,26 @@ export const STARS_FIELD_CONFIG = Object.freeze({
     Object.freeze({
       id: "far",
       parallaxRatio: 0.18,
-      overscanScale: 0.0,
+      overscanScale: 1.0,
       stroke: "#ff9f2f",
+      fillOpacity: 0.10,
+      patternKind: "diagonal",
+    }),
+    Object.freeze({
+      id: "mid",
+      parallaxRatio: 0.36,
+      overscanScale: 1.0,
+      stroke: "#42d98c",
+      fillOpacity: 0.0,
+      patternKind: "cross",
+    }),
+    Object.freeze({
+      id: "near",
+      parallaxRatio: 0.56,
+      overscanScale: 1.0,
+      stroke: "#49a8ff",
+      fillOpacity: 0.0,
+      patternKind: "dots",
     }),
   ]),
   spawnChances: Object.freeze({
