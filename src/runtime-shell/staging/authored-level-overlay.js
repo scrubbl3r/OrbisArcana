@@ -15,9 +15,23 @@ function buildLoopPathData(points = []) {
 }
 
 export function buildAuthoredLevelOverlayMarkup({
+  starsField = null,
   loops = [],
   lineArtShapes = [],
 } = {}) {
+  const stars = Array.isArray(starsField && starsField.stars) ? starsField.stars : [];
+  const starsMarkup = stars
+    .map((star = {}, index) => {
+      const x = clampNumber(star.xW, 0).toFixed(2);
+      const y = clampNumber(star.yW, 0).toFixed(2);
+      const r = Math.max(0.25, clampNumber(star.radiusPx, 1)).toFixed(2);
+      const opacity = Math.max(0, Math.min(1, clampNumber(star.opacity, 0.4))).toFixed(3);
+      const color = String(star.color || "#ffffff").trim() || "#ffffff";
+      const depthBand = String(star.depthBand || "mid").trim() || "mid";
+      return `<circle class="levelStageStarsFieldStar" data-star-id="${String(star.id || `star_${index + 1}`)}" data-depth-band="${depthBand}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};"></circle>`;
+    })
+    .join("");
+
   const boundaryMarkup = (Array.isArray(loops) ? loops : [])
     .map((loop = {}, index) => {
       const pathData = buildLoopPathData(loop.worldPoints);
@@ -41,5 +55,5 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${boundaryMarkup}${lineArtMarkup}`;
+  return `${starsMarkup}${boundaryMarkup}${lineArtMarkup}`;
 }

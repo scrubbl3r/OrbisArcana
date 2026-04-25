@@ -132,6 +132,7 @@ export function createAuthoredStageController({
     spawn: null,
     summary: null,
     sceneModel: null,
+    levelGraphicsModel: null,
   };
 
   const updateCamera = () => updateAuthoredStageCamera(refs, state, previewZoomFallback);
@@ -152,10 +153,14 @@ export function createAuthoredStageController({
       if (!authoredScene) throw new Error("Level scene load failed");
       state.summary = authoredScene.summary;
       state.sceneModel = authoredScene.sceneModel;
+      state.levelGraphicsModel = authoredScene.levelGraphicsModel || null;
       state.cameraAnchors = Array.isArray(state.sceneModel.cameraAnchors) ? state.sceneModel.cameraAnchors : [];
       state.spawn = state.sceneModel.spawn;
       refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
       refs.worldOverlay.innerHTML = buildOverlayMarkup({
+        starsField: state.levelGraphicsModel && state.levelGraphicsModel.starsField
+          ? state.levelGraphicsModel.starsField
+          : null,
         loops: state.sceneModel.loops,
         lineArtShapes: state.sceneModel.lineArtShapes,
       });

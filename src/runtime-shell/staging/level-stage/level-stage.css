@@ -53,6 +53,10 @@
   overflow: visible;
 }
 
+.levelStageStarsFieldStar {
+  pointer-events: none;
+}
+
 .levelStageBoundaryPath {
   fill: none;
   stroke: rgba(146, 230, 168, 0.96);
