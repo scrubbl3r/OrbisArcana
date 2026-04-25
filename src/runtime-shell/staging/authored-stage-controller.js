@@ -84,8 +84,6 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   refs.world.style.setProperty("--level-world-zoom", `${frame.zoom}`);
   refs.world.style.setProperty("--level-world-x", `${-frame.camLeft * frame.zoom}px`);
   refs.world.style.setProperty("--level-world-y", `${-frame.camTop * frame.zoom}px`);
-  refs.world.style.setProperty("--stage-camera-shift-x", `${frame.camLeft * frame.zoom}px`);
-  refs.world.style.setProperty("--stage-camera-shift-y", `${frame.camTop * frame.zoom}px`);
 
   if (refs.labelMeta) {
     const authoredSpawn = state.spawn && state.spawn.authoredCenter ? state.spawn.authoredCenter : null;

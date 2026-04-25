@@ -54,12 +54,7 @@
 }
 
 .authoredStarsFieldLayer {
-  transform:
-    translate(
-      calc(var(--stage-camera-shift-x, 0px) * var(--authored-stars-parallax-comp, 0.78)),
-      calc(var(--stage-camera-shift-y, 0px) * var(--authored-stars-parallax-comp, 0.78))
-    );
-  will-change: transform;
+  pointer-events: none;
 }
 
 .authoredStarsFieldStar,

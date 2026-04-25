@@ -45,9 +45,7 @@ export function buildAuthoredLevelOverlayMarkup({
           return `${haloMarkup}<circle class="authoredStarsFieldStar${star.isHighlight ? " authoredStarsFieldStarHighlight" : ""}" data-star-id="${starId}" data-depth-band="${bandId}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
         })
         .join("");
-      const parallaxRatio = Math.max(0, Math.min(0.95, clampNumber(bandStars[0] && bandStars[0].parallaxRatio, 0.22)));
-      const compensation = (1 - parallaxRatio).toFixed(3);
-      return `<g class="authoredStarsFieldLayer" data-depth-band="${bandId}" style="--authored-stars-parallax-comp:${compensation};">${bandMarkup}</g>`;
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-depth-band="${bandId}">${bandMarkup}</g>`;
     })
     .join("");
 

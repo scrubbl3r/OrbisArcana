@@ -86,8 +86,6 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       stageRefs.world.style.setProperty("--orb-stage-world-x", `${(-Number(camLeft || 0) * Number(zoom || 1)).toFixed(2)}px`);
       stageRefs.world.style.setProperty("--orb-stage-world-y", `${(-Number(camTop || 0) * Number(zoom || 1)).toFixed(2)}px`);
       stageRefs.world.style.setProperty("--orb-stage-world-zoom", `${Number(zoom || 1)}`);
-      stageRefs.world.style.setProperty("--stage-camera-shift-x", `${(Number(camLeft || 0) * Number(zoom || 1)).toFixed(2)}px`);
-      stageRefs.world.style.setProperty("--stage-camera-shift-y", `${(Number(camTop || 0) * Number(zoom || 1)).toFixed(2)}px`);
     },
   });
 }
