@@ -10,7 +10,7 @@ import {
 import {
   applyAuthoredStarsFieldParallax,
   captureAuthoredStarsFieldParallaxRefs,
-} from "./authored-level-overlay.js?v=20260424h";
+} from "./authored-level-overlay.js?v=20260424i";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -95,10 +95,23 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   refs.world.style.setProperty("--level-world-zoom", `${frame.zoom}`);
   refs.world.style.setProperty("--level-world-x", `${-frame.camLeft * frame.zoom}px`);
   refs.world.style.setProperty("--level-world-y", `${-frame.camTop * frame.zoom}px`);
-  applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
+  const parallaxSummary = applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
     camLeft: frame.camLeft,
     camTop: frame.camTop,
   });
+  if ((state.traceControllerCount || 0) < 3) {
+    state.traceControllerCount = (state.traceControllerCount || 0) + 1;
+    const firstBand = parallaxSummary && parallaxSummary.firstBand ? parallaxSummary.firstBand : null;
+    traceAuthoredStage(
+      state,
+      [
+        "stars.trace controller",
+        `cam=${Math.round(Number(frame.camLeft) || 0)},${Math.round(Number(frame.camTop) || 0)}`,
+        `refs=${parallaxSummary && Number.isFinite(Number(parallaxSummary.count)) ? parallaxSummary.count : 0}`,
+        `first=${firstBand ? `${firstBand.transform}:${firstBand.ratio.toFixed(2)}:base=${Math.round(firstBand.baseCamLeft)},${Math.round(firstBand.baseCamTop)}` : "none"}`,
+      ].join(" | ")
+    );
+  }
   if (!state.traceFrameLogged && refs.worldOverlay) {
     state.traceFrameLogged = true;
     traceAuthoredStage(
@@ -165,6 +178,8 @@ export function createAuthoredStageController({
     starsParallaxRefs: Object.freeze([]),
     traceLog: null,
     traceFrameLogged: false,
+    traceControllerCount: 0,
+    traceAdapterCount: 0,
   };
 
   const updateCamera = () => updateAuthoredStageCamera(refs, state, previewZoomFallback);
@@ -219,6 +234,8 @@ export function createAuthoredStageController({
       refs.worldOverlay.innerHTML = overlayMarkup;
       state.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(refs.worldOverlay);
       state.traceFrameLogged = false;
+      state.traceControllerCount = 0;
+      state.traceAdapterCount = 0;
       traceAuthoredStage(
         state,
         [

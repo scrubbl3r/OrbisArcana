@@ -1,5 +1,5 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
-import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260424h";
+import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260424i";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
@@ -50,10 +50,22 @@ export function createLevelStageRuntimeAdapter({
       refs.world.style.setProperty("--level-world-zoom", `${Number(zoom || state.previewZoom)}`);
       refs.world.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
       refs.world.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
-      applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
+      const parallaxSummary = applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),
       });
+      if (state && typeof state.traceLog === "function" && (state.traceAdapterCount || 0) < 3) {
+        state.traceAdapterCount = (state.traceAdapterCount || 0) + 1;
+        const firstBand = parallaxSummary && parallaxSummary.firstBand ? parallaxSummary.firstBand : null;
+        state.traceLog(
+          [
+            "stars.trace adapter",
+            `cam=${Math.round(Number(camLeft) || 0)},${Math.round(Number(camTop) || 0)}`,
+            `refs=${parallaxSummary && Number.isFinite(Number(parallaxSummary.count)) ? parallaxSummary.count : 0}`,
+            `first=${firstBand ? `${firstBand.transform}:${firstBand.ratio.toFixed(2)}:base=${Math.round(firstBand.baseCamLeft)},${Math.round(firstBand.baseCamTop)}` : "none"}`,
+          ].join(" | ")
+        );
+      }
     },
     dispose() {
       unbindResize();

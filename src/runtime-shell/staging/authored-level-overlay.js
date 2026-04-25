@@ -88,6 +88,10 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
   const safeRefs = Array.isArray(parallaxRefs) ? parallaxRefs : [];
   const left = clampNumber(camLeft, 0);
   const top = clampNumber(camTop, 0);
+  const summary = {
+    count: safeRefs.length,
+    firstBand: null,
+  };
   for (const ref of safeRefs) {
     if (!ref || !ref.el || typeof ref.el.setAttribute !== "function") continue;
     const ratio = Math.max(0, Math.min(1, clampNumber(ref.ratio, 1)));
@@ -105,5 +109,16 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
     if (ref.el.__authoredParallaxTransform === next) continue;
     ref.el.__authoredParallaxTransform = next;
     ref.el.setAttribute("transform", next);
+    if (!summary.firstBand) {
+      summary.firstBand = {
+        ratio,
+        baseCamLeft: clampNumber(ref.baseCamLeft, 0),
+        baseCamTop: clampNumber(ref.baseCamTop, 0),
+        tx,
+        ty,
+        transform: next,
+      };
+    }
   }
+  return Object.freeze(summary);
 }
