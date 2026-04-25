@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424d";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424e";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -114,11 +114,11 @@ function sampleDensityField(region, cellX, cellY, config) {
 function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {
   const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
   if (!boundaryBox) return null;
-  const overscanW = Math.max(0, clampNumber(config.generationOverscanW, 2048));
-  const leftXW = clampNumber(boundaryBox.leftXW, 0) - overscanW;
-  const topYW = clampNumber(boundaryBox.topYW, 0) - overscanW;
-  const rightXW = clampNumber(boundaryBox.rightXW, 0) + overscanW;
-  const bottomYW = clampNumber(boundaryBox.bottomYW, 0) + overscanW;
+  const marginW = Math.max(0, clampNumber(config.parallaxMarginW, 1536));
+  const leftXW = clampNumber(boundaryBox.leftXW, 0) - marginW;
+  const topYW = clampNumber(boundaryBox.topYW, 0) - marginW;
+  const rightXW = clampNumber(boundaryBox.rightXW, 0) + marginW;
+  const bottomYW = clampNumber(boundaryBox.bottomYW, 0) + marginW;
   return Object.freeze({
     leftXW,
     topYW,
@@ -127,6 +127,53 @@ function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {
     widthW: Math.max(1, rightXW - leftXW),
     heightW: Math.max(1, bottomYW - topYW),
   });
+}
+
+function distancePointToSegmentSquared(px = 0, py = 0, ax = 0, ay = 0, bx = 0, by = 0) {
+  const abx = bx - ax;
+  const aby = by - ay;
+  if (Math.abs(abx) < 1e-9 && Math.abs(aby) < 1e-9) {
+    const dx = px - ax;
+    const dy = py - ay;
+    return (dx * dx) + (dy * dy);
+  }
+  const apx = px - ax;
+  const apy = py - ay;
+  const t = Math.max(0, Math.min(1, ((apx * abx) + (apy * aby)) / ((abx * abx) + (aby * aby))));
+  const closestX = ax + (abx * t);
+  const closestY = ay + (aby * t);
+  const dx = px - closestX;
+  const dy = py - closestY;
+  return (dx * dx) + (dy * dy);
+}
+
+function distanceToPolygonEdges(x = 0, y = 0, points = []) {
+  const safePoints = Array.isArray(points) ? points : [];
+  if (safePoints.length < 2) return Number.POSITIVE_INFINITY;
+  let minDistanceSq = Number.POSITIVE_INFINITY;
+  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
+    const pi = safePoints[i] || {};
+    const pj = safePoints[j] || {};
+    const distanceSq = distancePointToSegmentSquared(
+      x,
+      y,
+      clampNumber(pj.xW, 0),
+      clampNumber(pj.yW, 0),
+      clampNumber(pi.xW, 0),
+      clampNumber(pi.yW, 0)
+    );
+    if (distanceSq < minDistanceSq) {
+      minDistanceSq = distanceSq;
+    }
+  }
+  return Math.sqrt(minDistanceSq);
+}
+
+function pointInExpandedPolygon(x = 0, y = 0, points = [], marginW = 0) {
+  if (pointInPolygon(x, y, points)) return true;
+  const safeMargin = Math.max(0, clampNumber(marginW, 0));
+  if (safeMargin <= 0) return false;
+  return distanceToPolygonEdges(x, y, points) <= safeMargin;
 }
 
 function pointInPolygon(x = 0, y = 0, points = []) {
@@ -172,7 +219,10 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
   const jitterY = lerp(-maxJitter, maxJitter, hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:jy`));
   const xW = baseX + jitterX;
   const yW = baseY + jitterY;
+  const marginW = Math.max(0, clampNumber(config.parallaxMarginW, 1536));
   const insideCore = pointInPolygon(xW, yW, region.worldPoints);
+  const insideEnvelope = pointInExpandedPolygon(xW, yW, region.worldPoints, marginW);
+  if (!insideEnvelope) return null;
   const radiusRange = Array.isArray(band.radiusRangePx) ? band.radiusRangePx : [1, 2];
   const opacityRange = Array.isArray(band.opacityRange) ? band.opacityRange : [0.2, 0.5];
   const palette = Array.isArray(band.palette) ? band.palette : ["#ffffff"];
@@ -222,7 +272,7 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
     : 0;
   const scoreBase = (densityFieldStrength * 0.76) + (hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:score`) * 0.24);
   const ordinalPenalty = ordinal * 0.11;
-  const score = Math.max(0, scoreBase - ordinalPenalty) * (insideCore ? 1 : Math.max(0.01, clampNumber(config.bleedScorePenalty, 0.38)));
+  const score = Math.max(0, scoreBase - ordinalPenalty);
   return Object.freeze({
     id: `${region.id}:star:${cellX}:${cellY}:${ordinal}`,
     regionId: region.id,
@@ -237,6 +287,7 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
     haloOpacity,
     haloRadiusPx: isHighlight ? (baseRadius * haloRadiusMultiplier) : 0,
     insideCore,
+    insideEnvelope,
     score,
   });
 }
@@ -275,30 +326,22 @@ export function buildStarsFieldModel({
       1,
       Math.round((Math.max(1, clampNumber(config.targetStarCount, 3000)) * regionArea) / totalArea)
     );
-    const coreTargetCount = Math.round(regionTargetCount * clamp01(clampNumber(config.coreTargetRatio, 0.84)));
-    const bleedTargetCount = Math.max(0, regionTargetCount - coreTargetCount);
     const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
     const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, 0) / cellSize));
     const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, 0) / cellSize));
-    const coreCandidates = [];
-    const bleedCandidates = [];
+    const candidates = [];
     const candidateOrdinals = Math.max(1, Math.floor(clampNumber(config.candidateOrdinals, 4)));
     for (let cy = 0; cy < rows; cy += 1) {
       for (let cx = 0; cx < cols; cx += 1) {
         for (let ordinal = 0; ordinal < candidateOrdinals; ordinal += 1) {
           const star = buildStarCandidate(generationRegion, cx, cy, ordinal, config);
           if (!star) continue;
-          if (star.insideCore) {
-            coreCandidates.push(star);
-          } else {
-            bleedCandidates.push(star);
-          }
+          candidates.push(star);
         }
       }
     }
-    const selectedCore = selectTopCandidates(coreCandidates, coreTargetCount);
-    const selectedBleed = selectTopCandidates(bleedCandidates, bleedTargetCount);
-    selectedStars.push(...selectedCore, ...selectedBleed);
+    const selectedRegionStars = selectTopCandidates(candidates, regionTargetCount);
+    selectedStars.push(...selectedRegionStars);
   }
 
   return Object.freeze({

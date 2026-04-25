@@ -1,11 +1,9 @@
 export const STARS_FIELD_CONFIG = Object.freeze({
   targetStarCount: 3000,
-  coreTargetRatio: 0.84,
   targetCellSizeW: 76,
   minRegionAreaW2: 64000,
-  generationOverscanW: 1536,
+  parallaxMarginW: 1536,
   renderCullMarginW: 1536,
-  bleedScorePenalty: 0.38,
   candidateOrdinals: 4,
   jitterRatio: 0.42,
   maxJitterW: 54,
