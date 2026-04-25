@@ -45,6 +45,9 @@ export function createLevelStageRuntimeAdapter({
       zoom = state && state.previewZoom,
     } = {}) {
       if (!refs.world || !state) return;
+      const rect = refs.physStage && typeof refs.physStage.getBoundingClientRect === "function"
+        ? refs.physStage.getBoundingClientRect()
+        : { width: 0, height: 0 };
       state.externalCameraAuthority = true;
       refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
       refs.world.style.setProperty("--level-world-height", `${state.worldHeightPx}px`);
@@ -54,6 +57,9 @@ export function createLevelStageRuntimeAdapter({
       applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),
+        zoom: Number(zoom || state.previewZoom),
+        viewportWidthPx: clampNumber(rect.width, 0),
+        viewportHeightPx: clampNumber(rect.height, 0),
       });
     },
     dispose() {

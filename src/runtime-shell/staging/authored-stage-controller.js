@@ -92,6 +92,9 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
     camLeft: frame.camLeft,
     camTop: frame.camTop,
+    zoom: frame.zoom,
+    viewportWidthPx,
+    viewportHeightPx,
   });
 
   if (refs.labelMeta) {

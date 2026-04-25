@@ -98,6 +98,9 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       applyAuthoredStarsFieldParallax(localBackdropState.starsParallaxRefs, {
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),
+        zoom: Number(zoom || 1),
+        viewportWidthPx: Math.max(0, Number(localBackdropState.width) || 0),
+        viewportHeightPx: Math.max(0, Number(localBackdropState.height) || 0),
       });
     },
   });

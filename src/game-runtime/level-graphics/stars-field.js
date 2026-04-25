@@ -123,6 +123,8 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     layerId: String(layer && layer.id || "layer"),
     parallaxRatio,
     stroke: String(layer && layer.stroke || "#ffffff"),
+    sourceBoundaryBox: boundaryBox,
+    cameraBoundaryBox: cameraBox,
     sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
     worldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
     boundaryBox: expandedBoundaryBox,
@@ -365,6 +367,8 @@ export function buildStarsFieldModel({
       parallaxRatio: clamp01(region.parallaxRatio),
       stroke: String(region.stroke || "#ffffff"),
       boundaryBox: region.boundaryBox,
+      sourceBoundaryBox: region.sourceBoundaryBox || null,
+      cameraBoundaryBox: region.cameraBoundaryBox || null,
     }))),
     stars: Object.freeze([]),
   });
