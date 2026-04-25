@@ -1,6 +1,6 @@
 import { summarizeSvgLevelSource } from "../../game-runtime/level/svg-level-source.js";
 import { buildAuthoredLevelSceneModel } from "../../game-runtime/level/authored-level-scene-model.js";
-import { buildLevelGraphicsModel } from "../../game-runtime/level-graphics/build-level-graphics-model.js?v=20260424g";
+import { buildLevelGraphicsModel } from "../../game-runtime/level-graphics/build-level-graphics-model.js?v=20260424h";
 
 export async function loadAuthoredLevelScene({
   level = null,
