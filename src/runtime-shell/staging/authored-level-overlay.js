@@ -72,9 +72,11 @@ export function buildAuthoredLevelOverlayMarkup({
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
   if (!overlayEl || typeof overlayEl.querySelectorAll !== "function") return Object.freeze([]);
   const refs = Array.from(overlayEl.querySelectorAll("[data-stars-band]"))
-    .map((el) => Object.freeze({
+    .map((el) => ({
       el,
       ratio: Math.max(0, Math.min(1, clampNumber(el.getAttribute("data-parallax-ratio"), 1))),
+      baseCamLeft: null,
+      baseCamTop: null,
     }));
   return Object.freeze(refs);
 }
@@ -89,8 +91,16 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
   for (const ref of safeRefs) {
     if (!ref || !ref.el || typeof ref.el.setAttribute !== "function") continue;
     const ratio = Math.max(0, Math.min(1, clampNumber(ref.ratio, 1)));
-    const tx = left * (1 - ratio);
-    const ty = top * (1 - ratio);
+    if (!Number.isFinite(ref.baseCamLeft)) {
+      ref.baseCamLeft = left;
+    }
+    if (!Number.isFinite(ref.baseCamTop)) {
+      ref.baseCamTop = top;
+    }
+    const deltaLeft = left - clampNumber(ref.baseCamLeft, left);
+    const deltaTop = top - clampNumber(ref.baseCamTop, top);
+    const tx = deltaLeft * (1 - ratio);
+    const ty = deltaTop * (1 - ratio);
     const next = formatSvgTranslate(tx, ty);
     if (ref.el.__authoredParallaxTransform === next) continue;
     ref.el.__authoredParallaxTransform = next;
