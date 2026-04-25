@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424c";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424d";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -108,7 +108,25 @@ function sampleDensityField(region, cellX, cellY, config) {
     + (sampleValueNoise2D(warpedX / smallScaleW, warpedY / smallScaleW, `${config.seedSalt}:${region.id}:cluster-small`) * smallWeight)
   ) / Math.max(0.0001, largeWeight + smallWeight);
   const clusterInfluence = clamp01(clusterField.influence);
-  return clamp01((shaped * (1 - clusterInfluence)) + (clusterNoise * clusterInfluence));
+  const density = clamp01((shaped * (1 - clusterInfluence)) + (clusterNoise * clusterInfluence));
+
+  const clipBox = region && region.boundaryBox ? region.boundaryBox : null;
+  const overscanW = Math.max(1, clampNumber(config.generationOverscanW, 2048));
+  const overscanDensityRatio = clamp01(clampNumber(config.overscanDensityRatio, 0.22));
+  if (!clipBox) return density;
+  const dx = Math.max(
+    0,
+    clampNumber(clipBox.leftXW, 0) - sampleX,
+    sampleX - clampNumber(clipBox.rightXW, 0)
+  );
+  const dy = Math.max(
+    0,
+    clampNumber(clipBox.topYW, 0) - sampleY,
+    sampleY - clampNumber(clipBox.bottomYW, 0)
+  );
+  const distanceOutside = Math.max(dx, dy);
+  const outsideT = smoothstep(clamp01(distanceOutside / overscanW));
+  return clamp01(density * lerp(1, overscanDensityRatio, outsideT));
 }
 
 function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {

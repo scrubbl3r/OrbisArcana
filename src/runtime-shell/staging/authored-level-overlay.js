@@ -24,13 +24,37 @@ function formatSvgTranslate(x = 0, y = 0) {
   return `translate(${clampNumber(x, 0).toFixed(2)} ${clampNumber(y, 0).toFixed(2)})`;
 }
 
+function starWithinRenderRegion(star = {}, regions = [], marginW = 0) {
+  const xW = clampNumber(star.xW, 0);
+  const yW = clampNumber(star.yW, 0);
+  const margin = Math.max(0, clampNumber(marginW, 0));
+  const safeRegions = Array.isArray(regions) ? regions : [];
+  return safeRegions.some((region = {}) => {
+    const box = region && region.boundaryBox ? region.boundaryBox : null;
+    if (!box) return false;
+    return (
+      xW >= (clampNumber(box.leftXW, 0) - margin) &&
+      xW <= (clampNumber(box.rightXW, 0) + margin) &&
+      yW >= (clampNumber(box.topYW, 0) - margin) &&
+      yW <= (clampNumber(box.bottomYW, 0) + margin)
+    );
+  });
+}
+
 export function buildAuthoredLevelOverlayMarkup({
   starsField = null,
   loops = [],
   lineArtShapes = [],
+  overlayId = "authoredOverlay",
 } = {}) {
-  const stars = Array.isArray(starsField && starsField.stars) ? starsField.stars : [];
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
+  const renderCullMarginW = clampNumber(
+    starsField && starsField.config && starsField.config.renderCullMarginW,
+    starsField && starsField.config && starsField.config.generationOverscanW
+  );
+  const stars = Array.isArray(starsField && starsField.stars)
+    ? starsField.stars.filter((star) => starWithinRenderRegion(star, clipRegions, renderCullMarginW))
+    : [];
   const starsByBand = new Map();
   for (const star of stars) {
     const bandId = String(star && star.depthBand || "mid").trim() || "mid";
@@ -38,7 +62,8 @@ export function buildAuthoredLevelOverlayMarkup({
     bandStars.push(star);
     starsByBand.set(bandId, bandStars);
   }
-  const clipId = clipRegions.length ? "authoredStarsFieldClip" : "";
+  const safeOverlayId = String(overlayId || "authoredOverlay").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const clipId = clipRegions.length ? `${safeOverlayId}__starsFieldClip` : "";
   const clipMarkup = clipRegions.length
     ? `<defs><clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">${clipRegions
         .map((region = {}, index) => {

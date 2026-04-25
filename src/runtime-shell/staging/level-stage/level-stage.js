@@ -6,9 +6,9 @@ import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
-import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424l";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424k";
-import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260424k";
+import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424m";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424l";
+import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260424l";
 import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
@@ -137,7 +137,10 @@ export function renderLevelStage(root, {
     previewZoom,
     previewFollowMode,
     initialTarget: String(level && level.camera && level.camera.initialTarget || "spawn").trim().toLowerCase(),
-    buildOverlayMarkup: buildAuthoredLevelOverlayMarkup,
+    buildOverlayMarkup: (args = {}) => buildAuthoredLevelOverlayMarkup({
+      ...args,
+      overlayId: "levelStageWorldOverlay",
+    }),
     previewZoomFallback: LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM,
   });
   const state = controller.state;

@@ -2,6 +2,8 @@ export const STARS_FIELD_CONFIG = Object.freeze({
   targetCellSizeW: 76,
   minRegionAreaW2: 64000,
   generationOverscanW: 2048,
+  renderCullMarginW: 1536,
+  overscanDensityRatio: 0.22,
   jitterRatio: 0.42,
   maxJitterW: 54,
   seedSalt: "stars-field-v1",
