@@ -49,8 +49,9 @@ export function buildAuthoredLevelOverlayMarkup({
   worldHeightPx = 0,
 } = {}) {
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
+  const clipEnabled = !!(starsField && starsField.config && starsField.config.enableClipMask);
   const safeOverlayId = String(overlayId || "authoredOverlay").replace(/[^a-zA-Z0-9_-]/g, "_");
-  const maskId = clipRegions.length ? `${safeOverlayId}__starsFieldMask` : "";
+  const maskId = clipEnabled && clipRegions.length ? `${safeOverlayId}__starsFieldMask` : "";
   const maskWidth = Math.max(1, clampNumber(worldWidthPx, 0));
   const maskHeight = Math.max(1, clampNumber(worldHeightPx, 0));
   const renderCullMarginW = clampNumber(

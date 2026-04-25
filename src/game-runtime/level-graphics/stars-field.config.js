@@ -1,15 +1,21 @@
 export const STARS_FIELD_CONFIG = Object.freeze({
   targetStarCount: 3000,
+  enableClipMask: false,
   targetCellSizeW: 76,
   minRegionAreaW2: 64000,
-  parallaxMarginW: 200,
-  renderCullMarginW: 200,
-  coreSpendRatio: 1.0,
-  marginSpendRatioMax: 0.0,
+  renderCullMarginW: 0,
+  overscanScale: 1.0,
   candidateOrdinals: 4,
   jitterRatio: 0.42,
   maxJitterW: 54,
   seedSalt: "stars-field-v1",
+  parallaxLayers: Object.freeze([
+    Object.freeze({
+      id: "layer_1",
+      parallaxRatio: 0.18,
+      starCountRatio: 1.0,
+    }),
+  ]),
   spawnChances: Object.freeze({
     primary: Object.freeze([0.28, 0.97]),
     secondary: Object.freeze([0.01, 0.72]),

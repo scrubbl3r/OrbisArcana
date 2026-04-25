@@ -1,4 +1,4 @@
-import { buildStarsFieldModel } from "./stars-field.js?v=20260425b";
+import { buildStarsFieldModel } from "./stars-field.js?v=20260425d";
 
 export function buildLevelGraphicsModel({
   sceneModel = null,
@@ -9,6 +9,7 @@ export function buildLevelGraphicsModel({
   return Object.freeze({
     starsField: buildStarsFieldModel({
       regions: starsFieldRegions,
+      cameraBoundaryBox: sceneModel && sceneModel.cameraBoundaryBox ? sceneModel.cameraBoundaryBox : null,
     }),
   });
 }

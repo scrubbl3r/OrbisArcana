@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425b";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425d";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -28,21 +28,99 @@ function clamp01(value) {
   return Math.max(0, Math.min(1, clampNumber(value, 0)));
 }
 
-function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {
-  const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
-  if (!boundaryBox) return null;
-  const marginW = Math.max(0, clampNumber(config.parallaxMarginW, 1536));
-  const leftXW = clampNumber(boundaryBox.leftXW, 0) - marginW;
-  const topYW = clampNumber(boundaryBox.topYW, 0) - marginW;
-  const rightXW = clampNumber(boundaryBox.rightXW, 0) + marginW;
-  const bottomYW = clampNumber(boundaryBox.bottomYW, 0) + marginW;
+function resolveBoundaryBoxFromPoints(points = []) {
+  const safePoints = Array.isArray(points) ? points : [];
+  if (!safePoints.length) return null;
+  let leftXW = Number.POSITIVE_INFINITY;
+  let rightXW = Number.NEGATIVE_INFINITY;
+  let topYW = Number.POSITIVE_INFINITY;
+  let bottomYW = Number.NEGATIVE_INFINITY;
+  for (const point of safePoints) {
+    const xW = clampNumber(point && point.xW, 0);
+    const yW = clampNumber(point && point.yW, 0);
+    leftXW = Math.min(leftXW, xW);
+    rightXW = Math.max(rightXW, xW);
+    topYW = Math.min(topYW, yW);
+    bottomYW = Math.max(bottomYW, yW);
+  }
   return Object.freeze({
     leftXW,
-    topYW,
     rightXW,
+    topYW,
     bottomYW,
     widthW: Math.max(1, rightXW - leftXW),
     heightW: Math.max(1, bottomYW - topYW),
+  });
+}
+
+function computePolygonCentroid(points = []) {
+  const safePoints = Array.isArray(points) ? points : [];
+  if (safePoints.length < 3) {
+    const count = Math.max(1, safePoints.length);
+    const sum = safePoints.reduce((acc, point = {}) => ({
+      x: acc.x + clampNumber(point.xW, 0),
+      y: acc.y + clampNumber(point.yW, 0),
+    }), { x: 0, y: 0 });
+    return Object.freeze({ xW: sum.x / count, yW: sum.y / count });
+  }
+  let areaTwice = 0;
+  let cx = 0;
+  let cy = 0;
+  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
+    const pi = safePoints[i] || {};
+    const pj = safePoints[j] || {};
+    const xi = clampNumber(pi.xW, 0);
+    const yi = clampNumber(pi.yW, 0);
+    const xj = clampNumber(pj.xW, 0);
+    const yj = clampNumber(pj.yW, 0);
+    const cross = (xj * yi) - (xi * yj);
+    areaTwice += cross;
+    cx += (xj + xi) * cross;
+    cy += (yj + yi) * cross;
+  }
+  if (Math.abs(areaTwice) < 1e-9) {
+    return computePolygonCentroid(safePoints.slice(0, 2));
+  }
+  return Object.freeze({
+    xW: cx / (3 * areaTwice),
+    yW: cy / (3 * areaTwice),
+  });
+}
+
+function expandPolygonFromCentroid(points = [], { scaleX = 1, scaleY = 1 } = {}) {
+  const safePoints = Array.isArray(points) ? points : [];
+  const centroid = computePolygonCentroid(safePoints);
+  return Object.freeze(safePoints.map((point = {}) => Object.freeze({
+    xW: centroid.xW + ((clampNumber(point.xW, centroid.xW) - centroid.xW) * clampNumber(scaleX, 1)),
+    yW: centroid.yW + ((clampNumber(point.yW, centroid.yW) - centroid.yW) * clampNumber(scaleY, 1)),
+  })));
+}
+
+function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null, config = STARS_FIELD_CONFIG) {
+  const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
+  if (!boundaryBox) return null;
+  const sourceWidthW = Math.max(1, clampNumber(boundaryBox.widthW, 1));
+  const sourceHeightW = Math.max(1, clampNumber(boundaryBox.heightW, 1));
+  const cameraWidthW = Math.max(sourceWidthW, clampNumber(cameraBoundaryBox && cameraBoundaryBox.widthW, sourceWidthW));
+  const cameraHeightW = Math.max(sourceHeightW, clampNumber(cameraBoundaryBox && cameraBoundaryBox.heightW, sourceHeightW));
+  const parallaxRatio = clamp01(layer && layer.parallaxRatio);
+  const overscanScale = Math.max(0, clampNumber(config.overscanScale, 1));
+  const marginXW = (cameraWidthW * (1 - parallaxRatio) * 0.5) * overscanScale;
+  const marginYW = (cameraHeightW * (1 - parallaxRatio) * 0.5) * overscanScale;
+  const scaleX = 1 + ((marginXW * 2) / sourceWidthW);
+  const scaleY = 1 + ((marginYW * 2) / sourceHeightW);
+  const expandedWorldPoints = expandPolygonFromCentroid(region.worldPoints, { scaleX, scaleY });
+  const expandedBoundaryBox = resolveBoundaryBoxFromPoints(expandedWorldPoints);
+  if (!expandedBoundaryBox) return null;
+  return Object.freeze({
+    ...region,
+    layerId: String(layer && layer.id || "layer"),
+    parallaxRatio,
+    sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
+    worldPoints: expandedWorldPoints,
+    boundaryBox: expandedBoundaryBox,
+    overscanMarginXW: marginXW,
+    overscanMarginYW: marginYW,
   });
 }
 
@@ -136,10 +214,8 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
   const jitterY = lerp(-maxJitter, maxJitter, hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:jy`));
   const xW = baseX + jitterX;
   const yW = baseY + jitterY;
-  const marginW = Math.max(0, clampNumber(config.parallaxMarginW, 1536));
-  const insideCore = pointInPolygon(xW, yW, region.worldPoints);
-  const insideEnvelope = pointInExpandedPolygon(xW, yW, region.worldPoints, marginW);
-  if (!insideEnvelope) return null;
+  const insideLayer = pointInPolygon(xW, yW, region.worldPoints);
+  if (!insideLayer) return null;
   const radiusRange = Array.isArray(band.radiusRangePx) ? band.radiusRangePx : [1, 2];
   const opacityRange = Array.isArray(band.opacityRange) ? band.opacityRange : [0.2, 0.5];
   const palette = Array.isArray(band.palette) ? band.palette : ["#ffffff"];
@@ -199,13 +275,13 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
     radiusPx: baseRadius * radiusMultiplier,
     opacity: clamp01(baseOpacity + opacityBoost),
     color: String(palette[paletteIndex] || palette[0] || "#ffffff"),
-    depthBand: String(band.id || "mid"),
-    parallaxRatio: clamp01(clampNumber(band.parallaxRatio, 0.22)),
+    depthBand: String(region.layerId || "layer_1"),
+    parallaxRatio: clamp01(clampNumber(region.parallaxRatio, 0.22)),
     isHighlight,
     haloOpacity,
     haloRadiusPx: isHighlight ? (baseRadius * haloRadiusMultiplier) : 0,
-    insideCore,
-    insideEnvelope,
+    insideCore: true,
+    insideEnvelope: true,
     score,
   });
 }
@@ -261,22 +337,33 @@ function selectStratifiedCandidates(candidates = [], targetCount = 0) {
 
 export function buildStarsFieldModel({
   regions = [],
+  cameraBoundaryBox = null,
   config = STARS_FIELD_CONFIG,
 } = {}) {
   const safeRegions = Array.isArray(regions) ? regions : [];
-  const regionAreas = safeRegions.map((region = {}) => {
+  const safeLayers = Array.isArray(config && config.parallaxLayers) ? config.parallaxLayers : [];
+  const activeLayers = safeLayers.filter((layer = {}) => clampNumber(layer && layer.starCountRatio, 0) > 0);
+  const layerRegions = activeLayers.flatMap((layer = {}) => safeRegions.map((region = {}) => deriveLayerRegion(region, layer, cameraBoundaryBox, config)).filter(Boolean));
+  const regionAreas = layerRegions.map((region = {}) => {
     const box = region && region.boundaryBox ? region.boundaryBox : null;
     return Math.max(1, clampNumber(box && box.widthW, 0) * clampNumber(box && box.heightW, 0));
   });
   const totalArea = regionAreas.reduce((sum, area) => sum + area, 0) || 1;
   const selectedStars = [];
-  for (const region of safeRegions) {
+  for (const region of layerRegions) {
     const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
     const worldPoints = Array.isArray(region && region.worldPoints) ? region.worldPoints : [];
     if (!boundaryBox || worldPoints.length < 3) continue;
     const area = Math.max(0, clampNumber(boundaryBox.widthW, 0) * clampNumber(boundaryBox.heightW, 0));
     if (area < Math.max(1, clampNumber(config.minRegionAreaW2, 64000))) continue;
-    const generationBox = buildGenerationBox(region, config);
+    const generationBox = Object.freeze({
+      leftXW: clampNumber(boundaryBox.leftXW, 0),
+      topYW: clampNumber(boundaryBox.topYW, 0),
+      rightXW: clampNumber(boundaryBox.rightXW, 0),
+      bottomYW: clampNumber(boundaryBox.bottomYW, 0),
+      widthW: Math.max(1, clampNumber(boundaryBox.widthW, 0)),
+      heightW: Math.max(1, clampNumber(boundaryBox.heightW, 0)),
+    });
     if (!generationBox) continue;
     const generationRegion = Object.freeze({
       ...region,
@@ -285,56 +372,28 @@ export function buildStarsFieldModel({
     const regionArea = Math.max(1, clampNumber(boundaryBox.widthW, 0) * clampNumber(boundaryBox.heightW, 0));
     const regionTargetCount = Math.max(
       1,
-      Math.round((Math.max(1, clampNumber(config.targetStarCount, 3000)) * regionArea) / totalArea)
+      Math.round(
+        (Math.max(1, clampNumber(config.targetStarCount, 3000))
+          * clamp01(clampNumber(activeLayers.find((layer = {}) => String(layer.id || "") === String(region.layerId || ""))?.starCountRatio, 1))
+          * regionArea)
+        / totalArea
+      )
     );
     const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
     const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, 0) / cellSize));
     const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, 0) / cellSize));
-    const coreCandidates = [];
-    const marginCandidates = [];
+    const candidates = [];
     const candidateOrdinals = Math.max(1, Math.floor(clampNumber(config.candidateOrdinals, 4)));
     for (let cy = 0; cy < rows; cy += 1) {
       for (let cx = 0; cx < cols; cx += 1) {
         for (let ordinal = 0; ordinal < candidateOrdinals; ordinal += 1) {
           const star = buildStarCandidate(generationRegion, cx, cy, ordinal, config);
           if (!star) continue;
-          if (star.insideCore) {
-            coreCandidates.push(star);
-          } else {
-            marginCandidates.push(star);
-          }
+          candidates.push(star);
         }
       }
     }
-    const coreTargetCount = Math.min(
-      coreCandidates.length,
-      Math.round(regionTargetCount * clamp01(clampNumber(config.coreSpendRatio, 0.88)))
-    );
-    const marginCapCount = Math.min(
-      marginCandidates.length,
-      Math.round(regionTargetCount * clamp01(clampNumber(config.marginSpendRatioMax, 0.12)))
-    );
-    const selectedCore = selectStratifiedCandidates(coreCandidates, coreTargetCount);
-    const selectedMargin = selectStratifiedCandidates(
-      marginCandidates,
-      Math.min(marginCapCount, Math.max(0, regionTargetCount - selectedCore.length))
-    );
-    const remainingCount = Math.max(0, regionTargetCount - selectedCore.length - selectedMargin.length);
-    if (remainingCount > 0) {
-      const selectedIds = new Set([...selectedCore, ...selectedMargin].map((star) => star.id));
-      const remainingCore = coreCandidates.filter((star) => !selectedIds.has(star.id));
-      const supplementalCore = selectStratifiedCandidates(remainingCore, remainingCount);
-      const remainingAfterCore = Math.max(0, remainingCount - supplementalCore.length);
-      const supplementalMargin = remainingAfterCore > 0
-        ? selectStratifiedCandidates(
-          marginCandidates.filter((star) => !selectedIds.has(star.id) && !supplementalCore.some((extra) => extra.id === star.id)),
-          remainingAfterCore
-        )
-        : [];
-      selectedStars.push(...selectedCore, ...selectedMargin, ...supplementalCore, ...supplementalMargin);
-    } else {
-      selectedStars.push(...selectedCore, ...selectedMargin);
-    }
+    selectedStars.push(...selectStratifiedCandidates(candidates, regionTargetCount));
   }
 
   return Object.freeze({
