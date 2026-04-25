@@ -39,7 +39,7 @@ import {
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
-import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424i";
+import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424j";
 import {
   resolveStageCameraClampBounds,
   resolveStageCameraConfig,
