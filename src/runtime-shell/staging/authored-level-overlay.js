@@ -19,55 +19,6 @@ function buildClosedLoopPathData(points = []) {
   return d ? `${d} Z` : "";
 }
 
-function computePolygonCentroid(points = []) {
-  const safePoints = Array.isArray(points) ? points : [];
-  if (safePoints.length < 3) {
-    const count = Math.max(1, safePoints.length);
-    const sum = safePoints.reduce((acc, point = {}) => ({
-      x: acc.x + clampNumber(point.xW, 0),
-      y: acc.y + clampNumber(point.yW, 0),
-    }), { x: 0, y: 0 });
-    return Object.freeze({ xW: sum.x / count, yW: sum.y / count });
-  }
-  let areaTwice = 0;
-  let cx = 0;
-  let cy = 0;
-  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
-    const pi = safePoints[i] || {};
-    const pj = safePoints[j] || {};
-    const xi = clampNumber(pi.xW, 0);
-    const yi = clampNumber(pi.yW, 0);
-    const xj = clampNumber(pj.xW, 0);
-    const yj = clampNumber(pj.yW, 0);
-    const cross = (xj * yi) - (xi * yj);
-    areaTwice += cross;
-    cx += (xj + xi) * cross;
-    cy += (yj + yi) * cross;
-  }
-  if (Math.abs(areaTwice) < 1e-9) {
-    const count = Math.max(1, safePoints.length);
-    const sum = safePoints.reduce((acc, point = {}) => ({
-      x: acc.x + clampNumber(point.xW, 0),
-      y: acc.y + clampNumber(point.yW, 0),
-    }), { x: 0, y: 0 });
-    return Object.freeze({ xW: sum.x / count, yW: sum.y / count });
-  }
-  return Object.freeze({
-    xW: cx / (3 * areaTwice),
-    yW: cy / (3 * areaTwice),
-  });
-}
-
-function expandPolygonFromCentroid(points = [], scale = 1) {
-  const safePoints = Array.isArray(points) ? points : [];
-  const centroid = computePolygonCentroid(safePoints);
-  const nextScale = Math.max(0, clampNumber(scale, 1));
-  return Object.freeze(safePoints.map((point = {}) => Object.freeze({
-    xW: centroid.xW + ((clampNumber(point.xW, centroid.xW) - centroid.xW) * nextScale),
-    yW: centroid.yW + ((clampNumber(point.yW, centroid.yW) - centroid.yW) * nextScale),
-  })));
-}
-
 function formatSvgTranslate(x = 0, y = 0) {
   return `translate(${clampNumber(x, 0).toFixed(2)} ${clampNumber(y, 0).toFixed(2)})`;
 }

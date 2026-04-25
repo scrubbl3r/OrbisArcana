@@ -53,49 +53,6 @@ function resolveBoundaryBoxFromPoints(points = []) {
   });
 }
 
-function computePolygonCentroid(points = []) {
-  const safePoints = Array.isArray(points) ? points : [];
-  if (safePoints.length < 3) {
-    const count = Math.max(1, safePoints.length);
-    const sum = safePoints.reduce((acc, point = {}) => ({
-      x: acc.x + clampNumber(point.xW, 0),
-      y: acc.y + clampNumber(point.yW, 0),
-    }), { x: 0, y: 0 });
-    return Object.freeze({ xW: sum.x / count, yW: sum.y / count });
-  }
-  let areaTwice = 0;
-  let cx = 0;
-  let cy = 0;
-  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
-    const pi = safePoints[i] || {};
-    const pj = safePoints[j] || {};
-    const xi = clampNumber(pi.xW, 0);
-    const yi = clampNumber(pi.yW, 0);
-    const xj = clampNumber(pj.xW, 0);
-    const yj = clampNumber(pj.yW, 0);
-    const cross = (xj * yi) - (xi * yj);
-    areaTwice += cross;
-    cx += (xj + xi) * cross;
-    cy += (yj + yi) * cross;
-  }
-  if (Math.abs(areaTwice) < 1e-9) {
-    return computePolygonCentroid(safePoints.slice(0, 2));
-  }
-  return Object.freeze({
-    xW: cx / (3 * areaTwice),
-    yW: cy / (3 * areaTwice),
-  });
-}
-
-function expandPolygonFromCentroid(points = [], { scaleX = 1, scaleY = 1 } = {}) {
-  const safePoints = Array.isArray(points) ? points : [];
-  const centroid = computePolygonCentroid(safePoints);
-  return Object.freeze(safePoints.map((point = {}) => Object.freeze({
-    xW: centroid.xW + ((clampNumber(point.xW, centroid.xW) - centroid.xW) * clampNumber(scaleX, 1)),
-    yW: centroid.yW + ((clampNumber(point.yW, centroid.yW) - centroid.yW) * clampNumber(scaleY, 1)),
-  })));
-}
-
 function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null, config = STARS_FIELD_CONFIG) {
   const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
   if (!boundaryBox) return null;
@@ -123,8 +80,6 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     layerId: String(layer && layer.id || "layer"),
     parallaxRatio,
     stroke: String(layer && layer.stroke || "#ffffff"),
-    fillOpacity: Math.max(0, Math.min(1, clampNumber(layer && layer.fillOpacity, 0))),
-    patternKind: String(layer && layer.patternKind || "diagonal"),
     starCountWeight: Math.max(0, clampNumber(layer && layer.starCountWeight, 0)),
     radiusRangePx: Array.isArray(layer && layer.radiusRangePx) ? layer.radiusRangePx : Object.freeze([1, 2]),
     opacityRange: Array.isArray(layer && layer.opacityRange) ? layer.opacityRange : Object.freeze([0.2, 0.5]),
@@ -139,82 +94,6 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     overscanMarginXW: marginXW,
     overscanMarginYW: marginYW,
   });
-}
-
-function distancePointToSegmentSquared(px = 0, py = 0, ax = 0, ay = 0, bx = 0, by = 0) {
-  const abx = bx - ax;
-  const aby = by - ay;
-  if (Math.abs(abx) < 1e-9 && Math.abs(aby) < 1e-9) {
-    const dx = px - ax;
-    const dy = py - ay;
-    return (dx * dx) + (dy * dy);
-  }
-  const apx = px - ax;
-  const apy = py - ay;
-  const t = Math.max(0, Math.min(1, ((apx * abx) + (apy * aby)) / ((abx * abx) + (aby * aby))));
-  const closestX = ax + (abx * t);
-  const closestY = ay + (aby * t);
-  const dx = px - closestX;
-  const dy = py - closestY;
-  return (dx * dx) + (dy * dy);
-}
-
-function distanceToPolygonEdges(x = 0, y = 0, points = []) {
-  const safePoints = Array.isArray(points) ? points : [];
-  if (safePoints.length < 2) return Number.POSITIVE_INFINITY;
-  let minDistanceSq = Number.POSITIVE_INFINITY;
-  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
-    const pi = safePoints[i] || {};
-    const pj = safePoints[j] || {};
-    const distanceSq = distancePointToSegmentSquared(
-      x,
-      y,
-      clampNumber(pj.xW, 0),
-      clampNumber(pj.yW, 0),
-      clampNumber(pi.xW, 0),
-      clampNumber(pi.yW, 0)
-    );
-    if (distanceSq < minDistanceSq) {
-      minDistanceSq = distanceSq;
-    }
-  }
-  return Math.sqrt(minDistanceSq);
-}
-
-function pointInExpandedPolygon(x = 0, y = 0, points = [], marginW = 0) {
-  if (pointInPolygon(x, y, points)) return true;
-  const safeMargin = Math.max(0, clampNumber(marginW, 0));
-  if (safeMargin <= 0) return false;
-  return distanceToPolygonEdges(x, y, points) <= safeMargin;
-}
-
-function pointInPolygon(x = 0, y = 0, points = []) {
-  let inside = false;
-  const safePoints = Array.isArray(points) ? points : [];
-  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
-    const pi = safePoints[i] || {};
-    const pj = safePoints[j] || {};
-    const xi = clampNumber(pi.xW, 0);
-    const yi = clampNumber(pi.yW, 0);
-    const xj = clampNumber(pj.xW, 0);
-    const yj = clampNumber(pj.yW, 0);
-    const intersects = ((yi > y) !== (yj > y))
-      && (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-9) + xi);
-    if (intersects) inside = !inside;
-  }
-  return inside;
-}
-
-function chooseDepthBand(seed = "", depthBands = []) {
-  const unit = hashToUnit(`${seed}:depth`);
-  let cursor = 0;
-  const safeBands = Array.isArray(depthBands) ? depthBands : [];
-  const totalWeight = safeBands.reduce((sum, band) => sum + Math.max(0, clampNumber(band && band.weight, 0)), 0) || 1;
-  for (const band of safeBands) {
-    cursor += Math.max(0, clampNumber(band && band.weight, 0)) / totalWeight;
-    if (unit <= cursor) return band;
-  }
-  return safeBands[safeBands.length - 1] || null;
 }
 
 function buildStarCandidate(region, cellX, cellY, ordinal, config) {
@@ -376,8 +255,6 @@ export function buildStarsFieldModel({
       layerId: String(region.layerId || "layer"),
       parallaxRatio: clamp01(region.parallaxRatio),
       stroke: String(region.stroke || "#ffffff"),
-      fillOpacity: Math.max(0, Math.min(1, clampNumber(region.fillOpacity, 0))),
-      patternKind: String(region.patternKind || "diagonal"),
       starCountWeight: Math.max(0, clampNumber(region.starCountWeight, 0)),
       radiusRangePx: Array.isArray(region.radiusRangePx) ? region.radiusRangePx : Object.freeze([1, 2]),
       opacityRange: Array.isArray(region.opacityRange) ? region.opacityRange : Object.freeze([0.2, 0.5]),
@@ -389,18 +266,4 @@ export function buildStarsFieldModel({
     }))),
     stars: Object.freeze(stars),
   });
-}
-
-export function selectVisibleStars(starsFieldModel = null, viewport = {}) {
-  const stars = Array.isArray(starsFieldModel && starsFieldModel.stars) ? starsFieldModel.stars : [];
-  const leftXW = clampNumber(viewport.leftXW, 0);
-  const rightXW = clampNumber(viewport.rightXW, 0);
-  const topYW = clampNumber(viewport.topYW, 0);
-  const bottomYW = clampNumber(viewport.bottomYW, 0);
-  if (!(rightXW > leftXW) || !(bottomYW > topYW)) return Object.freeze(stars.slice());
-  return Object.freeze(stars.filter((star = {}) => {
-    const xW = clampNumber(star.xW, 0);
-    const yW = clampNumber(star.yW, 0);
-    return xW >= leftXW && xW <= rightXW && yW >= topYW && yW <= bottomYW;
-  }));
 }
