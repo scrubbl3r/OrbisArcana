@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260424p";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260425a";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424z";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260425a";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -2865,24 +2865,6 @@ async function initShellKwsRuntime(shellContext) {
   if (devRefs.rulesReadout) devRefs.rulesReadout.textContent = "boot:kws_ready";
   if (typeof kwsBridge.updateReadout === "function") kwsBridge.updateReadout();
   if (typeof kwsBridge.pushLogLine === "function") kwsBridge.pushLogLine("kws runtime active", "ok");
-  const activeLevelStageView = shellContext && shellContext.levelStageView ? shellContext.levelStageView : null;
-  if (activeLevelStageView && activeLevelStageView.controller && activeLevelStageView.controller.state && typeof kwsBridge.pushLogLine === "function") {
-    activeLevelStageView.controller.state.pushLogLine = (text, kind) => kwsBridge.pushLogLine(text, kind);
-    activeLevelStageView.controller.state.starsVisibleTraceCount = 0;
-    activeLevelStageView.controller.state.starsVisibleTraceLastAtMs = 0;
-    kwsBridge.pushLogLine("stars visible trace armed", "muted");
-    if (
-      activeLevelStageView.adapter &&
-      typeof activeLevelStageView.adapter.applyCameraFrame === "function"
-    ) {
-      const frame = runtime && runtime.frameMetrics ? runtime.frameMetrics : null;
-      activeLevelStageView.adapter.applyCameraFrame({
-        camLeft: Number(frame && frame.camLeft) || 0,
-        camTop: Number(frame && frame.camTop) || 0,
-        zoom: Number(frame && frame.zoom) || 1,
-      });
-    }
-  }
 
   return runtime.kws;
 }

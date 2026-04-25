@@ -1,45 +1,7 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
-import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260424n";
+import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260425a";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
-
-function intersectsRect(a = {}, b = {}) {
-  return (
-    Number(a.left || 0) < Number(b.right || 0) &&
-    Number(a.right || 0) > Number(b.left || 0) &&
-    Number(a.top || 0) < Number(b.bottom || 0) &&
-    Number(a.bottom || 0) > Number(b.top || 0)
-  );
-}
-
-function traceVisibleStars(refs = {}, state = null, { camLeft = 0, camTop = 0 } = {}) {
-  const pushLogLine = state && typeof state.pushLogLine === "function" ? state.pushLogLine : null;
-  if (!pushLogLine || !refs || !refs.physStage || !refs.worldOverlay) return;
-  const now = Date.now();
-  if (Number(state.starsVisibleTraceCount || 0) >= 8) return;
-  if (Number(state.starsVisibleTraceLastAtMs || 0) && (now - Number(state.starsVisibleTraceLastAtMs || 0)) < 500) return;
-  const stageRect = typeof refs.physStage.getBoundingClientRect === "function"
-    ? refs.physStage.getBoundingClientRect()
-    : null;
-  if (!stageRect || !(stageRect.width > 0) || !(stageRect.height > 0)) return;
-  const starEls = Array.from(refs.worldOverlay.querySelectorAll("[data-star-id][data-star-origin]"));
-  let visibleCore = 0;
-  let visibleMargin = 0;
-  for (const starEl of starEls) {
-    if (!starEl || typeof starEl.getBoundingClientRect !== "function") continue;
-    const rect = starEl.getBoundingClientRect();
-    if (!intersectsRect(rect, stageRect)) continue;
-    const origin = String(starEl.getAttribute("data-star-origin") || "").trim().toLowerCase();
-    if (origin === "margin") visibleMargin += 1;
-    else visibleCore += 1;
-  }
-  state.starsVisibleTraceLastAtMs = now;
-  state.starsVisibleTraceCount = Number(state.starsVisibleTraceCount || 0) + 1;
-  pushLogLine(
-    `TRACE stars.visible core:${visibleCore} margin:${visibleMargin} total:${visibleCore + visibleMargin} cam:${Math.round(Number(camLeft || 0))},${Math.round(Number(camTop || 0))}`,
-    "warn"
-  );
-}
 
 export function createLevelStageRuntimeAdapter({
   refs = {},
@@ -90,10 +52,6 @@ export function createLevelStageRuntimeAdapter({
       refs.world.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
       refs.world.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
       applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
-        camLeft: Number(camLeft || 0),
-        camTop: Number(camTop || 0),
-      });
-      traceVisibleStars(refs, state, {
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),
       });

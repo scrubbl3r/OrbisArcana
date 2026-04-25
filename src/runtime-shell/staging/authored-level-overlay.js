@@ -14,6 +14,11 @@ function buildLoopPathData(points = []) {
   return d;
 }
 
+function buildClosedLoopPathData(points = []) {
+  const d = buildLoopPathData(points);
+  return d ? `${d} Z` : "";
+}
+
 function formatSvgTranslate(x = 0, y = 0) {
   return `translate(${clampNumber(x, 0).toFixed(2)} ${clampNumber(y, 0).toFixed(2)})`;
 }
@@ -42,6 +47,8 @@ export function buildAuthoredLevelOverlayMarkup({
   overlayId = "authoredOverlay",
 } = {}) {
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
+  const safeOverlayId = String(overlayId || "authoredOverlay").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const clipId = clipRegions.length ? `${safeOverlayId}__starsFieldClip` : "";
   const renderCullMarginW = clampNumber(
     starsField && starsField.config && starsField.config.renderCullMarginW,
     starsField && starsField.config && starsField.config.parallaxMarginW
@@ -56,6 +63,16 @@ export function buildAuthoredLevelOverlayMarkup({
     bandStars.push(star);
     starsByBand.set(bandId, bandStars);
   }
+  const clipMarkup = clipId
+    ? `<defs><clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">${clipRegions
+        .map((region = {}, index) => {
+          const pathData = buildClosedLoopPathData(region.worldPoints);
+          if (!pathData) return "";
+          return `<path d="${pathData}" data-stars-clip-region="${String(region.id || `stars_clip_${index + 1}`)}"></path>`;
+        })
+        .filter(Boolean)
+        .join("")}</clipPath></defs>`
+    : "";
   const starsMarkup = Array.from(starsByBand.entries())
     .map(([bandId, bandStars]) => {
       const ratio = Math.max(0, Math.min(1, clampNumber(bandStars[0] && bandStars[0].parallaxRatio, 1)));
@@ -73,7 +90,8 @@ export function buildAuthoredLevelOverlayMarkup({
           : "";
         return `${haloMarkup}<circle class="authoredStarsFieldStar${star.isHighlight ? " authoredStarsFieldStarHighlight" : ""}" data-star-id="${starId}" data-depth-band="${bandId}" data-star-origin="${star.insideCore ? "core" : "margin"}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
       }).join("");
-      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-stars-band="${bandId}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}">${bandMarkup}</g>`;
+      const clipAttr = clipId ? ` clip-path="url(#${clipId})"` : "";
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-stars-band="${bandId}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}"${clipAttr}>${bandMarkup}</g>`;
     })
     .join("");
 
@@ -91,7 +109,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${starsMarkup}${lineArtMarkup}`;
+  return `${clipMarkup}${starsMarkup}${lineArtMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
