@@ -2871,6 +2871,17 @@ async function initShellKwsRuntime(shellContext) {
     activeLevelStageView.controller.state.starsVisibleTraceCount = 0;
     activeLevelStageView.controller.state.starsVisibleTraceLastAtMs = 0;
     kwsBridge.pushLogLine("stars visible trace armed", "muted");
+    if (
+      activeLevelStageView.adapter &&
+      typeof activeLevelStageView.adapter.applyCameraFrame === "function"
+    ) {
+      const frame = runtime && runtime.frameMetrics ? runtime.frameMetrics : null;
+      activeLevelStageView.adapter.applyCameraFrame({
+        camLeft: Number(frame && frame.camLeft) || 0,
+        camTop: Number(frame && frame.camTop) || 0,
+        zoom: Number(frame && frame.zoom) || 1,
+      });
+    }
   }
 
   return runtime.kws;
