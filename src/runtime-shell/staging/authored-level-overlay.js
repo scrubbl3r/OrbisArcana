@@ -28,7 +28,7 @@ export function buildAuthoredLevelOverlayMarkup({
       const opacity = Math.max(0, Math.min(1, clampNumber(star.opacity, 0.4))).toFixed(3);
       const color = String(star.color || "#ffffff").trim() || "#ffffff";
       const depthBand = String(star.depthBand || "mid").trim() || "mid";
-      return `<circle class="levelStageStarsFieldStar" data-star-id="${String(star.id || `star_${index + 1}`)}" data-depth-band="${depthBand}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};"></circle>`;
+      return `<circle class="levelStageStarsFieldStar" data-star-id="${String(star.id || `star_${index + 1}`)}" data-depth-band="${depthBand}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
     })
     .join("");
 

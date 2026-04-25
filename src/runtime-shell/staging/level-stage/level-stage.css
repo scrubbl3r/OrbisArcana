@@ -55,6 +55,7 @@
 
 .levelStageStarsFieldStar {
   pointer-events: none;
+  stroke: none;
 }
 
 .levelStageBoundaryPath {
