@@ -1,5 +1,5 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
-import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260424i";
+import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260424j";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
@@ -45,27 +45,16 @@ export function createLevelStageRuntimeAdapter({
       zoom = state && state.previewZoom,
     } = {}) {
       if (!refs.world || !state) return;
+      state.externalCameraAuthority = true;
       refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
       refs.world.style.setProperty("--level-world-height", `${state.worldHeightPx}px`);
       refs.world.style.setProperty("--level-world-zoom", `${Number(zoom || state.previewZoom)}`);
       refs.world.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
       refs.world.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
-      const parallaxSummary = applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
+      applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),
       });
-      if (state && typeof state.traceLog === "function" && (state.traceAdapterCount || 0) < 3) {
-        state.traceAdapterCount = (state.traceAdapterCount || 0) + 1;
-        const firstBand = parallaxSummary && parallaxSummary.firstBand ? parallaxSummary.firstBand : null;
-        state.traceLog(
-          [
-            "stars.trace adapter",
-            `cam=${Math.round(Number(camLeft) || 0)},${Math.round(Number(camTop) || 0)}`,
-            `refs=${parallaxSummary && Number.isFinite(Number(parallaxSummary.count)) ? parallaxSummary.count : 0}`,
-            `first=${firstBand ? `${firstBand.transform}:${firstBand.ratio.toFixed(2)}:base=${Math.round(firstBand.baseCamLeft)},${Math.round(firstBand.baseCamTop)}` : "none"}`,
-          ].join(" | ")
-        );
-      }
     },
     dispose() {
       unbindResize();

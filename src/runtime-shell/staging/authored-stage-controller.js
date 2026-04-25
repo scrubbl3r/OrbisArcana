@@ -10,22 +10,16 @@ import {
 import {
   applyAuthoredStarsFieldParallax,
   captureAuthoredStarsFieldParallaxRefs,
-} from "./authored-level-overlay.js?v=20260424i";
+} from "./authored-level-overlay.js?v=20260424j";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
 
-function traceAuthoredStage(state, line) {
-  if (!state || typeof state.traceLog !== "function") return;
-  const text = String(line || "").trim();
-  if (!text) return;
-  state.traceLog(text);
-}
-
 function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   if (!refs || !refs.physStage || !refs.world) return;
+  if (state && state.externalCameraAuthority) return;
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
     ? refs.physStage.getBoundingClientRect()
     : { width: 0, height: 0 };
@@ -95,37 +89,10 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   refs.world.style.setProperty("--level-world-zoom", `${frame.zoom}`);
   refs.world.style.setProperty("--level-world-x", `${-frame.camLeft * frame.zoom}px`);
   refs.world.style.setProperty("--level-world-y", `${-frame.camTop * frame.zoom}px`);
-  const parallaxSummary = applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
+  applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
     camLeft: frame.camLeft,
     camTop: frame.camTop,
   });
-  if ((state.traceControllerCount || 0) < 3) {
-    state.traceControllerCount = (state.traceControllerCount || 0) + 1;
-    const firstBand = parallaxSummary && parallaxSummary.firstBand ? parallaxSummary.firstBand : null;
-    traceAuthoredStage(
-      state,
-      [
-        "stars.trace controller",
-        `cam=${Math.round(Number(frame.camLeft) || 0)},${Math.round(Number(frame.camTop) || 0)}`,
-        `refs=${parallaxSummary && Number.isFinite(Number(parallaxSummary.count)) ? parallaxSummary.count : 0}`,
-        `first=${firstBand ? `${firstBand.transform}:${firstBand.ratio.toFixed(2)}:base=${Math.round(firstBand.baseCamLeft)},${Math.round(firstBand.baseCamTop)}` : "none"}`,
-      ].join(" | ")
-    );
-  }
-  if (!state.traceFrameLogged && refs.worldOverlay) {
-    state.traceFrameLogged = true;
-    traceAuthoredStage(
-      state,
-      [
-        "stars.trace frame",
-        `cam=${Math.round(Number(frame.camLeft) || 0)},${Math.round(Number(frame.camTop) || 0)}`,
-        `zoom=${Number(frame.zoom || 1).toFixed(2)}`,
-        `parallaxRefs=${Array.isArray(state.starsParallaxRefs) ? state.starsParallaxRefs.length : 0}`,
-        `domBands=${refs.worldOverlay.querySelectorAll("[data-stars-band]").length}`,
-        `domStars=${refs.worldOverlay.querySelectorAll("[data-star-id]").length}`,
-      ].join(" | ")
-    );
-  }
 
   if (refs.labelMeta) {
     const authoredSpawn = state.spawn && state.spawn.authoredCenter ? state.spawn.authoredCenter : null;
@@ -176,10 +143,7 @@ export function createAuthoredStageController({
     sceneModel: null,
     levelGraphicsModel: null,
     starsParallaxRefs: Object.freeze([]),
-    traceLog: null,
-    traceFrameLogged: false,
-    traceControllerCount: 0,
-    traceAdapterCount: 0,
+    externalCameraAuthority: false,
   };
 
   const updateCamera = () => updateAuthoredStageCamera(refs, state, previewZoomFallback);
@@ -203,49 +167,15 @@ export function createAuthoredStageController({
       state.levelGraphicsModel = authoredScene.levelGraphicsModel || null;
       state.cameraAnchors = Array.isArray(state.sceneModel.cameraAnchors) ? state.sceneModel.cameraAnchors : [];
       state.spawn = state.sceneModel.spawn;
-      const starsFieldModel = state.levelGraphicsModel && state.levelGraphicsModel.starsField
-        ? state.levelGraphicsModel.starsField
-        : null;
-      traceAuthoredStage(
-        state,
-        [
-          "stars.trace model",
-          `regions=${Array.isArray(starsFieldModel && starsFieldModel.regions) ? starsFieldModel.regions.length : 0}`,
-          `stars=${Array.isArray(starsFieldModel && starsFieldModel.stars) ? starsFieldModel.stars.length : 0}`,
-        ].join(" | ")
-      );
       refs.worldOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
-      const overlayMarkup = buildOverlayMarkup({
+      refs.worldOverlay.innerHTML = buildOverlayMarkup({
         starsField: state.levelGraphicsModel && state.levelGraphicsModel.starsField
           ? state.levelGraphicsModel.starsField
           : null,
         loops: state.sceneModel.loops,
         lineArtShapes: state.sceneModel.lineArtShapes,
       });
-      traceAuthoredStage(
-        state,
-        [
-          "stars.trace markup",
-          `bands=${(overlayMarkup.match(/data-stars-band=/g) || []).length}`,
-          `stars=${(overlayMarkup.match(/data-star-id=/g) || []).length}`,
-          `halos=${(overlayMarkup.match(/data-star-halo=/g) || []).length}`,
-        ].join(" | ")
-      );
-      refs.worldOverlay.innerHTML = overlayMarkup;
       state.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(refs.worldOverlay);
-      state.traceFrameLogged = false;
-      state.traceControllerCount = 0;
-      state.traceAdapterCount = 0;
-      traceAuthoredStage(
-        state,
-        [
-          "stars.trace dom",
-          `bands=${refs.worldOverlay.querySelectorAll("[data-stars-band]").length}`,
-          `stars=${refs.worldOverlay.querySelectorAll("[data-star-id]").length}`,
-          `halos=${refs.worldOverlay.querySelectorAll("[data-star-halo]").length}`,
-          `parallaxRefs=${Array.isArray(state.starsParallaxRefs) ? state.starsParallaxRefs.length : 0}`,
-        ].join(" | ")
-      );
       if (refs.stage) refs.stage.dataset.levelStageState = "ready";
       if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
         state.cameraRuntime.reset();
