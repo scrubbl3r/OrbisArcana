@@ -72,6 +72,10 @@ function formatSvgTranslate(x = 0, y = 0) {
   return `translate(${clampNumber(x, 0).toFixed(2)} ${clampNumber(y, 0).toFixed(2)})`;
 }
 
+function formatNumberAttr(value, fallback = 0) {
+  return clampNumber(value, fallback).toFixed(2);
+}
+
 export function buildAuthoredLevelOverlayMarkup({
   starsField = null,
   loops = [],
@@ -86,7 +90,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .map((region = {}, index) => {
       const pathData = buildClosedLoopPathData(region.worldPoints);
       if (!pathData) return "";
-      return `<path class="authoredStarsFieldDebugOutline" data-stars-field-path="${String(region.id || `stars_field_${index + 1}`)}" d="${pathData}" style="fill:none;stroke:rgba(255,32,32,0.98);stroke-width:16;stroke-dasharray:28 20;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;"></path>`;
+      return `<path class="authoredStarsFieldDebugOutline" data-stars-field-path="${String(region.id || `stars_field_${index + 1}`)}" d="${pathData}" style="fill:none;stroke:rgba(255,48,48,0.55);stroke-width:6;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;"></path>`;
     })
     .filter(Boolean)
     .join("");
@@ -94,13 +98,15 @@ export function buildAuthoredLevelOverlayMarkup({
     .map((layer = {}, index) => {
       const box = layer && layer.boundaryBox ? layer.boundaryBox : null;
       if (!box) return "";
-      const x = clampNumber(box.leftXW, 0).toFixed(2);
-      const y = clampNumber(box.topYW, 0).toFixed(2);
-      const width = Math.max(1, clampNumber(box.widthW, 1)).toFixed(2);
-      const height = Math.max(1, clampNumber(box.heightW, 1)).toFixed(2);
+      const debugOffsetX = 420;
+      const debugOffsetY = -280;
+      const x = formatNumberAttr(clampNumber(box.leftXW, 0) + debugOffsetX, 0);
+      const y = formatNumberAttr(clampNumber(box.topYW, 0) + debugOffsetY, 0);
+      const width = formatNumberAttr(Math.max(1, clampNumber(box.widthW, 1)), 1);
+      const height = formatNumberAttr(Math.max(1, clampNumber(box.heightW, 1)), 1);
       const ratio = Math.max(0, Math.min(1, clampNumber(layer.parallaxRatio, 0)));
       const stroke = String(layer.stroke || ["#ff9f2f", "#38d66b", "#4aa3ff"][index] || "#ffffff");
-      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${String(layer.layerId || `layer_${index + 1}`)}" data-stars-band="${String(layer.layerId || `layer_${index + 1}`)}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="none" stroke="${stroke}" stroke-width="10" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect></g>`;
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${String(layer.layerId || `layer_${index + 1}`)}" data-stars-band="${String(layer.layerId || `layer_${index + 1}`)}" data-parallax-ratio="${ratio.toFixed(3)}" data-parallax-boost="3.00" transform="${formatSvgTranslate(0, 0)}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="none" stroke="${stroke}" stroke-opacity="1" stroke-width="28" stroke-dasharray="44 16" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect></g>`;
     })
     .filter(Boolean)
     .join("");
@@ -142,6 +148,7 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
   for (const ref of safeRefs) {
     if (!ref || !ref.el || typeof ref.el.setAttribute !== "function") continue;
     const ratio = Math.max(0, Math.min(1, clampNumber(ref.ratio, 1)));
+    const boost = Math.max(1, clampNumber(ref.el.getAttribute("data-parallax-boost"), 1));
     if (!Number.isFinite(ref.baseCamLeft)) {
       ref.baseCamLeft = left;
     }
@@ -150,8 +157,8 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
     }
     const deltaLeft = left - clampNumber(ref.baseCamLeft, left);
     const deltaTop = top - clampNumber(ref.baseCamTop, top);
-    const tx = deltaLeft * (1 - ratio);
-    const ty = deltaTop * (1 - ratio);
+    const tx = deltaLeft * (1 - ratio) * boost;
+    const ty = deltaTop * (1 - ratio) * boost;
     const next = formatSvgTranslate(tx, ty);
     if (ref.el.__authoredParallaxTransform === next) continue;
     ref.el.__authoredParallaxTransform = next;
