@@ -20,15 +20,34 @@ export function buildAuthoredLevelOverlayMarkup({
   lineArtShapes = [],
 } = {}) {
   const stars = Array.isArray(starsField && starsField.stars) ? starsField.stars : [];
-  const starsMarkup = stars
-    .map((star = {}, index) => {
-      const x = clampNumber(star.xW, 0).toFixed(2);
-      const y = clampNumber(star.yW, 0).toFixed(2);
-      const r = Math.max(0.25, clampNumber(star.radiusPx, 1)).toFixed(2);
-      const opacity = Math.max(0, Math.min(1, clampNumber(star.opacity, 0.4))).toFixed(3);
-      const color = String(star.color || "#ffffff").trim() || "#ffffff";
-      const depthBand = String(star.depthBand || "mid").trim() || "mid";
-      return `<circle class="levelStageStarsFieldStar" data-star-id="${String(star.id || `star_${index + 1}`)}" data-depth-band="${depthBand}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
+  const starsByBand = new Map();
+  for (const star of stars) {
+    const bandId = String(star && star.depthBand || "mid").trim() || "mid";
+    const bandStars = starsByBand.get(bandId) || [];
+    bandStars.push(star);
+    starsByBand.set(bandId, bandStars);
+  }
+  const starsMarkup = Array.from(starsByBand.entries())
+    .map(([bandId, bandStars]) => {
+      const bandMarkup = bandStars
+        .map((star = {}, index) => {
+          const x = clampNumber(star.xW, 0).toFixed(2);
+          const y = clampNumber(star.yW, 0).toFixed(2);
+          const r = Math.max(0.25, clampNumber(star.radiusPx, 1)).toFixed(2);
+          const opacity = Math.max(0, Math.min(1, clampNumber(star.opacity, 0.4))).toFixed(3);
+          const color = String(star.color || "#ffffff").trim() || "#ffffff";
+          const haloOpacity = Math.max(0, Math.min(1, clampNumber(star.haloOpacity, 0))).toFixed(3);
+          const haloRadius = Math.max(r, clampNumber(star.haloRadiusPx, Number(r))).toFixed(2);
+          const starId = String(star.id || `${bandId}_star_${index + 1}`);
+          const haloMarkup = clampNumber(star.haloOpacity, 0) > 0
+            ? `<circle class="authoredStarsFieldHalo" data-star-halo-id="${starId}" cx="${x}" cy="${y}" r="${haloRadius}" style="fill:${color};fill-opacity:${haloOpacity};stroke:none;"></circle>`
+            : "";
+          return `${haloMarkup}<circle class="authoredStarsFieldStar${star.isHighlight ? " authoredStarsFieldStarHighlight" : ""}" data-star-id="${starId}" data-depth-band="${bandId}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
+        })
+        .join("");
+      const parallaxRatio = Math.max(0, Math.min(0.95, clampNumber(bandStars[0] && bandStars[0].parallaxRatio, 0.22)));
+      const compensation = (1 - parallaxRatio).toFixed(3);
+      return `<g class="authoredStarsFieldLayer" data-depth-band="${bandId}" style="--authored-stars-parallax-comp:${compensation};">${bandMarkup}</g>`;
     })
     .join("");
 

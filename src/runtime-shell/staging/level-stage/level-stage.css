@@ -53,9 +53,23 @@
   overflow: visible;
 }
 
-.levelStageStarsFieldStar {
+.authoredStarsFieldLayer {
+  transform:
+    translate(
+      calc(var(--stage-camera-shift-x, 0px) * var(--authored-stars-parallax-comp, 0.78)),
+      calc(var(--stage-camera-shift-y, 0px) * var(--authored-stars-parallax-comp, 0.78))
+    );
+  will-change: transform;
+}
+
+.authoredStarsFieldStar,
+.authoredStarsFieldHalo {
   pointer-events: none;
   stroke: none;
+}
+
+.authoredStarsFieldStarHighlight {
+  filter: saturate(1.12) brightness(1.08);
 }
 
 .levelStageBoundaryPath {

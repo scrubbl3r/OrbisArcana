@@ -49,6 +49,8 @@ export function createLevelStageRuntimeAdapter({
       refs.world.style.setProperty("--level-world-zoom", `${Number(zoom || state.previewZoom)}`);
       refs.world.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
       refs.world.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
+      refs.world.style.setProperty("--stage-camera-shift-x", `${(Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
+      refs.world.style.setProperty("--stage-camera-shift-y", `${(Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
     },
     dispose() {
       unbindResize();
