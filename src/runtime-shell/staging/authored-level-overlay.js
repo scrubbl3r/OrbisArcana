@@ -32,15 +32,6 @@ export function buildAuthoredLevelOverlayMarkup({
     })
     .join("");
 
-  const boundaryMarkup = (Array.isArray(loops) ? loops : [])
-    .map((loop = {}, index) => {
-      const pathData = buildLoopPathData(loop.worldPoints);
-      if (!pathData) return "";
-      return `<path class="levelStageBoundaryPath" data-loop-id="${String(loop.id || `loop_${index + 1}`)}" d="${pathData}"></path>`;
-    })
-    .filter(Boolean)
-    .join("");
-
   const lineArtMarkup = (Array.isArray(lineArtShapes) ? lineArtShapes : [])
     .map((shape = {}, index) => {
       const pathData = buildLoopPathData(shape.worldPoints);
@@ -55,5 +46,5 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${starsMarkup}${boundaryMarkup}${lineArtMarkup}`;
+  return `${starsMarkup}${lineArtMarkup}`;
 }
