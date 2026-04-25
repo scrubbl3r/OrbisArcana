@@ -3,8 +3,13 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function escapeRegExp(value = "") {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function readAttr(attrText = "", name = "") {
-  const match = String(attrText || "").match(new RegExp(`${name}="([^"]*)"`, "i"));
+  const attrName = escapeRegExp(name);
+  const match = String(attrText || "").match(new RegExp(`(?:^|\\s)${attrName}="([^"]*)"`, "i"));
   return match ? String(match[1] || "") : "";
 }
 
@@ -489,51 +494,18 @@ export function buildSvgCameraAnchors({
   }));
 }
 
-export function buildSvgViewFloorGuides({
+export function buildSvgCameraBoundaryLoops({
   svgText = "",
   worldWidthPx = 0,
   worldHeightPx = 0,
-  viewFloorLayerLabels = [],
+  cameraBoundaryLayerLabels = [],
 } = {}) {
-  const viewBox = parseSvgViewBox(svgText);
-  const authoredLayers = parseSvgLayerElements(svgText);
-  const allowedLabels = new Set(
-    (Array.isArray(viewFloorLayerLabels) ? viewFloorLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
-  );
-  let selectedPaths = parseSvgPathElements(svgText);
-  if (allowedLabels.size) {
-    selectedPaths = authoredLayers
-      .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
-      .flatMap((layer) => (Array.isArray(layer.paths) ? layer.paths : []).map((path) => Object.freeze({
-        ...path,
-        translatedAuthoredPoints: translatePolylinePoints(
-          parseSvgPolylinePath(path && path.d) || [],
-          layer && layer.translate
-        ),
-      })));
-  }
-
-  return Object.freeze(selectedPaths.map((path, index) => {
-    const authoredPoints = Array.isArray(path && path.translatedAuthoredPoints)
-      ? path.translatedAuthoredPoints
-      : (parseSvgPolylinePath(path && path.d) || []);
-    if (authoredPoints.length < 2) return null;
-    const authoredY = authoredPoints.reduce((sum, point) => sum + clampNumber(point && point.y, 0), 0) / authoredPoints.length;
-    const worldPoints = authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
-      viewBox,
-      worldWidthPx,
-      worldHeightPx,
-    }));
-    const worldY = worldPoints.reduce((sum, point) => sum + clampNumber(point && point.yW, 0), 0) / worldPoints.length;
-    return Object.freeze({
-      id: String(path && path.id || `view_floor_${index + 1}`),
-      authoredY,
-      worldY,
-      authoredScreenYRatio: Math.max(0, Math.min(1, authoredY / Math.max(1, clampNumber(viewBox.height, 0)))),
-      authoredPoints: Object.freeze(authoredPoints),
-      worldPoints: Object.freeze(worldPoints),
-    });
-  }).filter(Boolean));
+  return buildSvgBoundaryLoops({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    boundaryLayerLabels: cameraBoundaryLayerLabels,
+  });
 }
 
 export function buildSvgWorldItemSpawns({
@@ -676,7 +648,7 @@ export function summarizeSvgLevelSource({
   boundaryLayerLabels = [],
   spawnLayerLabels = [],
   cameraLayerLabels = [],
-  viewFloorLayerLabels = [],
+  cameraBoundaryLayerLabels = [],
   worldItemLayerLabels = [],
   lineArtLayerLabels = [],
   spawnMarkerId = "",
@@ -703,11 +675,11 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     cameraLayerLabels,
   });
-  const viewFloorGuides = buildSvgViewFloorGuides({
+  const cameraBoundaryLoops = buildSvgCameraBoundaryLoops({
     svgText,
     worldWidthPx,
     worldHeightPx,
-    viewFloorLayerLabels,
+    cameraBoundaryLayerLabels,
   });
   const worldItemSpawns = buildSvgWorldItemSpawns({
     svgText,
@@ -728,13 +700,15 @@ export function summarizeSvgLevelSource({
     tileSizePx,
   });
   const boundaryBox = resolveBoundaryBoxFromLoops(loops);
+  const cameraBoundaryBox = resolveBoundaryBoxFromLoops(cameraBoundaryLoops);
   return Object.freeze({
     viewBox,
     loopCount: loops.length,
     loops,
     spawnMarkers: Object.freeze(spawnMarkers),
     cameraAnchors: Object.freeze(cameraAnchors),
-    viewFloorGuides: Object.freeze(viewFloorGuides),
+    cameraBoundaryLoops: Object.freeze(cameraBoundaryLoops),
+    cameraBoundaryBox,
     worldItemSpawns: Object.freeze(worldItemSpawns),
     lineArtShapes: Object.freeze(lineArtShapes),
     boundaryBox,

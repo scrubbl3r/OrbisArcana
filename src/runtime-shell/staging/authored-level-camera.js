@@ -70,18 +70,23 @@ export function resolveStageCameraConfig(level = null, {
 export function resolveStageCameraClampBounds({
   worldWidthPx = 0,
   worldHeightPx = 0,
+  cameraBoundaryBox = null,
   boundaryBox = null,
-  viewFloorGuide = null,
 } = {}) {
+  if (cameraBoundaryBox) {
+    return Object.freeze({
+      leftXW: clampNumber(cameraBoundaryBox.leftXW, 0),
+      rightXW: clampNumber(cameraBoundaryBox.rightXW, worldWidthPx),
+      topYW: clampNumber(cameraBoundaryBox.topYW, 0),
+      bottomYW: clampNumber(cameraBoundaryBox.bottomYW, worldHeightPx) || worldHeightPx,
+    });
+  }
   if (boundaryBox) {
     return Object.freeze({
       leftXW: clampNumber(boundaryBox.leftXW, 0),
       rightXW: clampNumber(boundaryBox.rightXW, worldWidthPx),
       topYW: clampNumber(boundaryBox.topYW, 0),
-      bottomYW: Math.max(
-        clampNumber(boundaryBox.bottomYW, 0),
-        clampNumber(viewFloorGuide && viewFloorGuide.worldY, 0)
-      ) || worldHeightPx,
+      bottomYW: clampNumber(boundaryBox.bottomYW, worldHeightPx) || worldHeightPx,
     });
   }
   return Object.freeze({

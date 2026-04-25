@@ -50,9 +50,9 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
           ? mapSource.semanticLayers.camera.slice()
           : []
       ),
-      viewFloor: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.viewFloor)
-          ? mapSource.semanticLayers.viewFloor.slice()
+      cameraBounds: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds)
+          ? mapSource.semanticLayers.cameraBounds.slice()
           : []
       ),
       worldItems: Object.freeze(
@@ -63,6 +63,22 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
       lineArt: Object.freeze(
         Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.lineArt)
           ? mapSource.semanticLayers.lineArt.slice()
+          : []
+      ),
+      // Compatibility aliases while callers migrate from older field names.
+      boundsCam: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds)
+          ? mapSource.semanticLayers.cameraBounds.slice()
+          : (
+              Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.boundsCam)
+                ? mapSource.semanticLayers.boundsCam.slice()
+                : []
+            )
+      ),
+      // Compatibility alias while authored content migrates.
+      camera_boundary: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds)
+          ? mapSource.semanticLayers.cameraBounds.slice()
           : []
       ),
     }),

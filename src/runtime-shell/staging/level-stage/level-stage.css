@@ -68,14 +68,6 @@
   stroke-linecap: round;
 }
 
-.levelStageViewFloorPath {
-  fill: none;
-  stroke: rgba(216, 224, 236, 0.70);
-  stroke-width: 4;
-  stroke-dasharray: 12 10;
-  vector-effect: non-scaling-stroke;
-}
-
 .levelStageLabel {
   position: absolute;
   top: 22px;

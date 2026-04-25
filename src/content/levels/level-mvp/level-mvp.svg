@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.45254834"
-     inkscape:cx="950.17474"
-     inkscape:cy="1681.5883"
+     inkscape:zoom="0.33950369"
+     inkscape:cx="1390.2647"
+     inkscape:cy="1319.5733"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="0"
@@ -63,6 +63,28 @@
   </g>
   <g
      inkscape:groupmode="layer"
+     id="layer8"
+     inkscape:label="bounds_cam"
+     style="fill:none;stroke:#ff0000;stroke-opacity:1">
+    <path
+       id="path1-4-1"
+       style="fill:none;stroke:#f90000;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1"
+       d="M 1050.4961,586.22656 906.61133,1469.1914 1244.3164,1466.2871 1378.1465,1734 H 762 V 1414 H 266 v 564 H 1858.2402 V 582.9768 Z"
+       sodipodi:nodetypes="ccccccccccc" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer11"
+     inkscape:label="line_art"
+     sodipodi:insensitive="true">
+    <path
+       style="fill:none;stroke:#3398b5;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1"
+       d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
+       id="path1-4"
+       sodipodi:nodetypes="ccccccccccc" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="spawn"
      sodipodi:insensitive="true">
@@ -87,16 +109,6 @@
   </g>
   <g
      inkscape:groupmode="layer"
-     id="layer8"
-     inkscape:label="view_floor"
-     sodipodi:insensitive="true">
-    <path
-       style="fill:#1a1a1a;stroke:#000000;stroke-width:0.944882;stroke-dasharray:none"
-       d="M 458,1959.4724 H 625.6864"
-       id="path2" />
-  </g>
-  <g
-     inkscape:groupmode="layer"
      id="layer9"
      inkscape:label="globe_1"
      sodipodi:insensitive="true">
@@ -118,15 +130,5 @@
        cx="1585.5"
        cy="1844.5"
        r="2.5" />
-  </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer11"
-     inkscape:label="line_art">
-    <path
-       style="fill:none;stroke:#3398b5;stroke-opacity:1;stroke-width:1.88976378;stroke-dasharray:none"
-       d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
-       id="path1-4"
-       sodipodi:nodetypes="ccccccccccc" />
   </g>
 </svg>

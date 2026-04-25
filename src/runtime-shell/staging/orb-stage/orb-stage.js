@@ -17,7 +17,7 @@ import {
   applyWorldGlobeVisualCssVars,
   buildWorldGlobeVisualState,
 } from "../../../game-runtime/world/world-globe-state.js?v=20260418a";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424a";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424b";
 
 const ORB_STAGE_TEMPLATE = `
   <section class="orbStage" aria-label="Orb stage">
@@ -106,7 +106,6 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
       buildOverlayMarkup: (lineArtShapes = []) => buildAuthoredLevelOverlayMarkup({
         loops: [],
         lineArtShapes,
-        viewFloorGuides: [],
       }),
     }),
     level: resolvedLevel,

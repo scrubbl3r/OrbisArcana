@@ -7,12 +7,12 @@ import {
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
 import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260424c";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424a";
-import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260424b";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260424b";
+import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260424c";
 import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
-} from "../authored-level-camera.js?v=20260424b";
+} from "../authored-level-camera.js?v=20260424c";
 
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
 const LEVEL_STAGE_ORB_MARKUP = `

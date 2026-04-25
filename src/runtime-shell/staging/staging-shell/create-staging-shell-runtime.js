@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260424c";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260424d";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424g";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260424h";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -39,13 +39,13 @@ import {
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
-import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424b";
+import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260424c";
 import {
   resolveStageCameraClampBounds,
   resolveStageCameraConfig,
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
-} from "../authored-level-camera.js?v=20260424b";
+} from "../authored-level-camera.js?v=20260424c";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -459,19 +459,18 @@ function shellResolvedBoundarySegments(shellContext) {
     : [];
 }
 
-function shellResolvedViewFloorGuide(shellContext) {
+function shellResolvedCameraBoundaryBox(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
-  const guides = summary && Array.isArray(summary.viewFloorGuides) ? summary.viewFloorGuides : [];
-  return guides.length ? guides[0] : null;
+  return summary && summary.cameraBoundaryBox ? summary.cameraBoundaryBox : null;
 }
 
 function shellGameplayCameraClampBounds(shellContext) {
   return resolveStageCameraClampBounds({
     worldWidthPx: shellWorldWidth(shellContext),
     worldHeightPx: shellWorldHeight(shellContext),
+    cameraBoundaryBox: shellResolvedCameraBoundaryBox(shellContext),
     boundaryBox: shellResolvedCollisionBox(shellContext),
-    viewFloorGuide: shellResolvedViewFloorGuide(shellContext),
   });
 }
 

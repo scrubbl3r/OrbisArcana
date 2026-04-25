@@ -17,7 +17,6 @@ function buildLoopPathData(points = []) {
 export function buildAuthoredLevelOverlayMarkup({
   loops = [],
   lineArtShapes = [],
-  viewFloorGuides = [],
 } = {}) {
   const boundaryMarkup = (Array.isArray(loops) ? loops : [])
     .map((loop = {}, index) => {
@@ -42,14 +41,5 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  const viewFloorMarkup = (Array.isArray(viewFloorGuides) ? viewFloorGuides : [])
-    .map((guide = {}, index) => {
-      const pathData = buildLoopPathData(guide.worldPoints);
-      if (!pathData) return "";
-      return `<path class="levelStageViewFloorPath" data-view-floor-id="${String(guide.id || `view_floor_${index + 1}`)}" d="${pathData}"></path>`;
-    })
-    .filter(Boolean)
-    .join("");
-
-  return `${boundaryMarkup}${lineArtMarkup}${viewFloorMarkup}`;
+  return `${boundaryMarkup}${lineArtMarkup}`;
 }

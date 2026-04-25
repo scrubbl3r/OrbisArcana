@@ -5,10 +5,6 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function clamp01(value) {
-  return Math.max(0, Math.min(1, clampNumber(value, 0)));
-}
-
 export function buildAuthoredLevelSceneModel({
   level = null,
   summary = null,
@@ -43,13 +39,11 @@ export function buildAuthoredLevelSceneModel({
     summary: safeSummary,
     loops: Array.isArray(safeSummary && safeSummary.loops) ? safeSummary.loops : [],
     boundaryBox: safeSummary && safeSummary.boundaryBox ? safeSummary.boundaryBox : null,
+    cameraBoundaryLoops: Array.isArray(safeSummary && safeSummary.cameraBoundaryLoops) ? safeSummary.cameraBoundaryLoops : [],
+    cameraBoundaryBox: safeSummary && safeSummary.cameraBoundaryBox ? safeSummary.cameraBoundaryBox : null,
     spawn,
     spawnMarkers: spawnMarkers,
     cameraAnchors,
-    viewFloorGuides: Array.isArray(safeSummary && safeSummary.viewFloorGuides) ? safeSummary.viewFloorGuides : [],
-    viewFloorGuide: Array.isArray(safeSummary && safeSummary.viewFloorGuides) && safeSummary.viewFloorGuides.length
-      ? safeSummary.viewFloorGuides[0]
-      : null,
     worldItemSpawns: Array.isArray(safeSummary && safeSummary.worldItemSpawns) ? safeSummary.worldItemSpawns : [],
     lineArtShapes: Array.isArray(safeSummary && safeSummary.lineArtShapes) ? safeSummary.lineArtShapes : [],
   });
@@ -78,19 +72,4 @@ export function resolveAuthoredLevelCameraTarget({
     xW: Math.max(0, clampNumber(worldWidthPx, 0)) * 0.5,
     yW: Math.max(0, clampNumber(worldHeightPx, 0)) * 0.5,
   });
-}
-
-export function resolveViewFloorBootOffsetYW({
-  targetYW = 0,
-  boundaryBox = null,
-  viewFloorGuide = null,
-  viewportHeightPx = 0,
-  zoom = 1,
-} = {}) {
-  if (!boundaryBox || !viewFloorGuide) return 0;
-  const viewportWorldHeight = Math.max(1, clampNumber(viewportHeightPx, 0)) / Math.max(0.05, clampNumber(zoom, 1));
-  const centeredCamTop = clampNumber(targetYW, 0) - (viewportWorldHeight * 0.5);
-  const desiredFloorRatio = clamp01(viewFloorGuide.authoredScreenYRatio);
-  const desiredCamTop = clampNumber(viewFloorGuide.worldY, 0) - (desiredFloorRatio * viewportWorldHeight);
-  return desiredCamTop - centeredCamTop;
 }

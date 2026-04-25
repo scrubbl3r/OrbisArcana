@@ -1,7 +1,6 @@
 import { createCameraRuntime } from "../../game-runtime/camera/camera-runtime.js";
 import {
   resolveAuthoredLevelCameraTarget,
-  resolveViewFloorBootOffsetYW,
 } from "../../game-runtime/level/authored-level-scene-model.js";
 import { loadAuthoredLevelScene } from "./load-authored-level-scene.js";
 import {
@@ -32,12 +31,12 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
   });
   const sceneModel = state.sceneModel || null;
   const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
-  const viewFloorGuide = sceneModel && sceneModel.viewFloorGuide ? sceneModel.viewFloorGuide : null;
+  const cameraBoundaryBox = sceneModel && sceneModel.cameraBoundaryBox ? sceneModel.cameraBoundaryBox : null;
   const clampBounds = resolveStageCameraClampBounds({
     worldWidthPx: state.worldWidthPx,
     worldHeightPx: state.worldHeightPx,
+    cameraBoundaryBox,
     boundaryBox,
-    viewFloorGuide,
   });
   const target = resolveAuthoredLevelCameraTarget({
     level: state.level,
@@ -47,17 +46,10 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
     worldHeightPx: state.worldHeightPx,
   });
   const zoom = Math.max(0.05, clampNumber(state.previewZoom, previewZoomFallback));
-  const bootOffsetYW = resolveViewFloorBootOffsetYW({
-    targetYW: target.yW,
-    boundaryBox,
-    viewFloorGuide,
-    viewportHeightPx,
-    zoom,
-  });
   const frame = state.cameraRuntime && typeof state.cameraRuntime.resolveFrame === "function"
     ? state.cameraRuntime.resolveFrame({
       targetXW: clampNumber(target.xW, 0),
-      targetYW: clampNumber(target.yW, 0) + bootOffsetYW,
+      targetYW: clampNumber(target.yW, 0),
       viewportWidthPx,
       viewportHeightPx,
       worldWidthPx: state.worldWidthPx,
@@ -166,7 +158,6 @@ export function createAuthoredStageController({
       refs.worldOverlay.innerHTML = buildOverlayMarkup({
         loops: state.sceneModel.loops,
         lineArtShapes: state.sceneModel.lineArtShapes,
-        viewFloorGuides: state.sceneModel.viewFloorGuides,
       });
       if (refs.stage) refs.stage.dataset.levelStageState = "ready";
       if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {

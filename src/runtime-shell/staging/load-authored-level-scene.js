@@ -24,7 +24,9 @@ export async function loadAuthoredLevelScene({
     boundaryLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.boundary,
     spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
     cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
-    viewFloorLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.viewFloor,
+    cameraBoundaryLayerLabels:
+      (mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds) ||
+      (mapSource.semanticLayers && mapSource.semanticLayers.boundsCam),
     worldItemLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.worldItems,
     lineArtLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.lineArt,
     spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
