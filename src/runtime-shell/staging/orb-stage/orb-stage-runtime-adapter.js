@@ -2,7 +2,7 @@ import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js"
 import {
   applyAuthoredStarsFieldParallax,
   captureAuthoredStarsFieldParallaxRefs,
-} from "../authored-level-overlay.js?v=20260425d";
+} from "../authored-level-overlay.js?v=20260425e";
 
 export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const localBackdropState = Object.create(null);
