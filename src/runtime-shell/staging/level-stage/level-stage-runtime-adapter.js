@@ -28,6 +28,16 @@ function formatSvgBox(box = null) {
   ].join(",");
 }
 
+function rectsIntersect(a = null, b = null) {
+  if (!a || !b) return false;
+  return !(
+    safeNum(a.right, 0) <= safeNum(b.left, 0) ||
+    safeNum(a.left, 0) >= safeNum(b.right, 0) ||
+    safeNum(a.bottom, 0) <= safeNum(b.top, 0) ||
+    safeNum(a.top, 0) >= safeNum(b.bottom, 0)
+  );
+}
+
 function traceStarsVisibility(state, refs, { camLeft = 0, camTop = 0, zoom = 1 } = {}) {
   if (!state || typeof state.traceLog !== "function" || !refs || !refs.worldOverlay) return;
   if ((state.traceStarsVisibilityCount || 0) >= 3) return;
@@ -38,6 +48,9 @@ function traceStarsVisibility(state, refs, { camLeft = 0, camTop = 0, zoom = 1 }
   const firstStar = overlayEl.querySelector("[data-star-id]");
   const overlayRect = typeof overlayEl.getBoundingClientRect === "function"
     ? overlayEl.getBoundingClientRect()
+    : null;
+  const stageRect = refs.physStage && typeof refs.physStage.getBoundingClientRect === "function"
+    ? refs.physStage.getBoundingClientRect()
     : null;
   const bandRect = firstBand && typeof firstBand.getBoundingClientRect === "function"
     ? firstBand.getBoundingClientRect()
@@ -54,6 +67,17 @@ function traceStarsVisibility(state, refs, { camLeft = 0, camTop = 0, zoom = 1 }
   const overlayStyle = overlayEl && globalThis.window && typeof globalThis.window.getComputedStyle === "function"
     ? globalThis.window.getComputedStyle(overlayEl)
     : null;
+  const starEls = Array.from(overlayEl.querySelectorAll("[data-star-id]"));
+  let visibleStars = 0;
+  let firstVisibleRect = null;
+  for (const starEl of starEls) {
+    if (!starEl || typeof starEl.getBoundingClientRect !== "function") continue;
+    const rect = starEl.getBoundingClientRect();
+    if (rectsIntersect(rect, stageRect)) {
+      visibleStars += 1;
+      if (!firstVisibleRect) firstVisibleRect = rect;
+    }
+  }
 
   state.traceLog([
     "stars.trace visibility",
@@ -63,10 +87,13 @@ function traceStarsVisibility(state, refs, { camLeft = 0, camTop = 0, zoom = 1 }
     `stars=${overlayEl.querySelectorAll("[data-star-id]").length}`,
     `bandTransform=${firstBand ? String(firstBand.getAttribute("transform") || "") : "none"}`,
     `star=${firstStar ? `${firstStar.getAttribute("cx")},${firstStar.getAttribute("cy")},r=${firstStar.getAttribute("r")}` : "none"}`,
+    `stageRect=${formatRect(stageRect)}`,
     `overlayRect=${formatRect(overlayRect)}`,
     `bandRect=${formatRect(bandRect)}`,
     `starRect=${formatRect(starRect)}`,
     `bandBox=${formatSvgBox(bandBox)}`,
+    `visibleStars=${visibleStars}`,
+    `firstVisibleRect=${formatRect(firstVisibleRect)}`,
     `starStyle=${firstStar ? `${starStyle ? starStyle.display : "na"}/${starStyle ? starStyle.visibility : "na"}/${starStyle ? starStyle.opacity : "na"}` : "none"}`,
     `overlayStyle=${overlayStyle ? `${overlayStyle.display}/${overlayStyle.visibility}/${overlayStyle.opacity}` : "na"}`,
   ].join(" | "));
