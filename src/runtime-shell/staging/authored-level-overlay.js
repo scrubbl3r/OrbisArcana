@@ -88,6 +88,9 @@ export function buildAuthoredLevelOverlayMarkup({
       .filter(Boolean)
       .join("")
     : "";
+  const debugSentinelMarkup = (starsField && starsField.config && starsField.config.showDebugOutline)
+    ? `<text x="96" y="140" fill="#ff4040" font-size="72" font-weight="900" data-stars-debug-sentinel="20260425n">STARS DEBUG 20260425n</text>`
+    : "";
   const starsMarkup = Array.from(starsByBand.entries())
     .map(([bandId, bandStars]) => {
       const ratio = Math.max(0, Math.min(1, clampNumber(bandStars[0] && bandStars[0].parallaxRatio, 1)));
@@ -126,7 +129,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${clipMarkup}${starsRootMarkup}${debugOutlineMarkup}${lineArtMarkup}`;
+  return `${clipMarkup}${starsRootMarkup}${debugOutlineMarkup}${debugSentinelMarkup}${lineArtMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {

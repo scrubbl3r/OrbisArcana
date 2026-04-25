@@ -1,5 +1,5 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
-import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260425e";
+import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260425n";
 
 const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
