@@ -86,6 +86,7 @@ export function buildAuthoredLevelOverlayMarkup({
 } = {}) {
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
   const layerBoxes = Array.isArray(starsField && starsField.layers) ? starsField.layers : [];
+  const layerStars = Array.isArray(starsField && starsField.stars) ? starsField.stars : [];
   const starsFieldMarkup = clipRegions
     .map((region = {}, index) => {
       const pathData = buildClosedLoopPathData(region.worldPoints);
@@ -104,7 +105,19 @@ export function buildAuthoredLevelOverlayMarkup({
       const height = formatNumberAttr(Math.max(1, clampNumber(box.heightW, 1)), 1);
       const ratio = Math.max(0, Math.min(1, clampNumber(layer.parallaxRatio, 0)));
       const stroke = String(layer.stroke || ["#ff9f2f", "#38d66b", "#4aa3ff"][index] || "#ffffff");
-      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${String(layer.layerId || `layer_${index + 1}`)}" data-stars-band="${String(layer.layerId || `layer_${index + 1}`)}" data-parallax-ratio="${ratio.toFixed(3)}" data-parallax-boost="1.00" transform="${formatSvgTranslate(0, 0)}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${stroke}" fill-opacity="0.10" stroke="${stroke}" stroke-opacity="1" stroke-width="28" stroke-dasharray="44 16" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect></g>`;
+      const layerId = String(layer.layerId || `layer_${index + 1}`);
+      const starMarkup = layerStars
+        .filter((star = {}) => String(star.depthBand || "") === layerId)
+        .map((star = {}, starIndex) => {
+          const cx = formatNumberAttr(star.xW, 0);
+          const cy = formatNumberAttr(star.yW, 0);
+          const r = formatNumberAttr(Math.max(0.6, clampNumber(star.radiusPx, 1.2)), 1.2);
+          const fill = String(star.color || "#ffffff");
+          const opacity = clampNumber(star.opacity, 1);
+          return `<circle data-stars-debug-star="${layerId}:${starIndex}" cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" fill-opacity="${opacity.toFixed(3)}" stroke="none"></circle>`;
+        })
+        .join("");
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${layerId}" data-stars-band="${layerId}" data-parallax-ratio="${ratio.toFixed(3)}" data-parallax-boost="1.00" transform="${formatSvgTranslate(0, 0)}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${stroke}" fill-opacity="0.10" stroke="${stroke}" stroke-opacity="1" stroke-width="28" stroke-dasharray="44 16" stroke-linejoin="round" vector-effect="non-scaling-stroke"></rect>${starMarkup}</g>`;
     })
     .filter(Boolean)
     .join("");

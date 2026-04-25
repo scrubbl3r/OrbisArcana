@@ -123,6 +123,7 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
     worldPoints: expandedWorldPoints,
     boundaryBox: expandedBoundaryBox,
+    generationBox: expandedBoundaryBox,
     overscanMarginXW: marginXW,
     overscanMarginYW: marginYW,
   });
@@ -350,6 +351,33 @@ export function buildStarsFieldModel({
   const layerRegions = activeLayers.flatMap((layer = {}) =>
     safeRegions.map((region = {}) => deriveLayerRegion(region, layer, cameraBoundaryBox, config)).filter(Boolean)
   );
+  const targetStarCount = Math.max(0, Math.floor(clampNumber(config && config.targetStarCount, 0)));
+  const layerTargetCount = layerRegions.length
+    ? Math.floor(targetStarCount / layerRegions.length)
+    : 0;
+  const remainder = layerRegions.length
+    ? (targetStarCount - (layerTargetCount * layerRegions.length))
+    : 0;
+  const stars = [];
+  for (let regionIndex = 0; regionIndex < layerRegions.length; regionIndex += 1) {
+    const region = layerRegions[regionIndex];
+    const generationBox = region && region.generationBox ? region.generationBox : null;
+    if (!generationBox) continue;
+    const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 76));
+    const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, cellSize) / cellSize));
+    const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, cellSize) / cellSize));
+    const candidates = [];
+    for (let cellY = 0; cellY < rows; cellY += 1) {
+      for (let cellX = 0; cellX < cols; cellX += 1) {
+        for (let ordinal = 0; ordinal < Math.max(1, Math.floor(clampNumber(config.candidateOrdinals, 1))); ordinal += 1) {
+          const candidate = buildStarCandidate(region, cellX, cellY, ordinal, config);
+          if (candidate) candidates.push(candidate);
+        }
+      }
+    }
+    const targetForRegion = layerTargetCount + (regionIndex < remainder ? 1 : 0);
+    stars.push(...selectStratifiedCandidates(candidates, targetForRegion));
+  }
 
   return Object.freeze({
     kind: "stars_field",
@@ -362,7 +390,7 @@ export function buildStarsFieldModel({
       stroke: String(region.stroke || "#ffffff"),
       boundaryBox: region.boundaryBox,
     }))),
-    stars: Object.freeze([]),
+    stars: Object.freeze(stars),
   });
 }
 
