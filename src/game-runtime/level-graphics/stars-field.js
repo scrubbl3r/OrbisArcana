@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424b";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424c";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -48,7 +48,9 @@ function sampleValueNoise2D(x = 0, y = 0, seed = "") {
 }
 
 function sampleDensityField(region, cellX, cellY, config) {
-  const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
+  const boundaryBox = region && region.generationBox
+    ? region.generationBox
+    : (region && region.boundaryBox ? region.boundaryBox : null);
   const densityField = config && config.densityField ? config.densityField : {};
   const clusterField = config && config.clusterField ? config.clusterField : {};
   if (!boundaryBox) return 0.5;
@@ -109,21 +111,22 @@ function sampleDensityField(region, cellX, cellY, config) {
   return clamp01((shaped * (1 - clusterInfluence)) + (clusterNoise * clusterInfluence));
 }
 
-function pointInPolygon(x = 0, y = 0, points = []) {
-  let inside = false;
-  const safePoints = Array.isArray(points) ? points : [];
-  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
-    const pi = safePoints[i] || {};
-    const pj = safePoints[j] || {};
-    const xi = clampNumber(pi.xW, 0);
-    const yi = clampNumber(pi.yW, 0);
-    const xj = clampNumber(pj.xW, 0);
-    const yj = clampNumber(pj.yW, 0);
-    const intersects = ((yi > y) !== (yj > y))
-      && (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-9) + xi);
-    if (intersects) inside = !inside;
-  }
-  return inside;
+function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {
+  const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
+  if (!boundaryBox) return null;
+  const overscanW = Math.max(0, clampNumber(config.generationOverscanW, 2048));
+  const leftXW = clampNumber(boundaryBox.leftXW, 0) - overscanW;
+  const topYW = clampNumber(boundaryBox.topYW, 0) - overscanW;
+  const rightXW = clampNumber(boundaryBox.rightXW, 0) + overscanW;
+  const bottomYW = clampNumber(boundaryBox.bottomYW, 0) + overscanW;
+  return Object.freeze({
+    leftXW,
+    topYW,
+    rightXW,
+    bottomYW,
+    widthW: Math.max(1, rightXW - leftXW),
+    heightW: Math.max(1, bottomYW - topYW),
+  });
 }
 
 function chooseDepthBand(seed = "", depthBands = []) {
@@ -141,18 +144,17 @@ function chooseDepthBand(seed = "", depthBands = []) {
 function buildStar(region, cellX, cellY, ordinal, config) {
   const band = chooseDepthBand(`${region.id}:${cellX}:${cellY}:${ordinal}:${config.seedSalt}`, config.depthBands);
   if (!band) return null;
-  const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
-  if (!boundaryBox) return null;
+  const generationBox = region && region.generationBox ? region.generationBox : null;
+  if (!generationBox) return null;
   const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
   const jitterRatio = Math.max(0, Math.min(1, clampNumber(config.jitterRatio, 0.42)));
   const maxJitter = Math.min(cellSize * jitterRatio, Math.max(0, clampNumber(config.maxJitterW, 140)));
-  const baseX = clampNumber(boundaryBox.leftXW, 0) + ((cellX + 0.5) * cellSize);
-  const baseY = clampNumber(boundaryBox.topYW, 0) + ((cellY + 0.5) * cellSize);
+  const baseX = clampNumber(generationBox.leftXW, 0) + ((cellX + 0.5) * cellSize);
+  const baseY = clampNumber(generationBox.topYW, 0) + ((cellY + 0.5) * cellSize);
   const jitterX = lerp(-maxJitter, maxJitter, hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:jx`));
   const jitterY = lerp(-maxJitter, maxJitter, hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:jy`));
   const xW = baseX + jitterX;
   const yW = baseY + jitterY;
-  if (!pointInPolygon(xW, yW, region.worldPoints)) return null;
   const radiusRange = Array.isArray(band.radiusRangePx) ? band.radiusRangePx : [1, 2];
   const opacityRange = Array.isArray(band.opacityRange) ? band.opacityRange : [0.2, 0.5];
   const palette = Array.isArray(band.palette) ? band.palette : ["#ffffff"];
@@ -228,13 +230,19 @@ export function buildStarsFieldModel({
     if (!boundaryBox || worldPoints.length < 3) continue;
     const area = Math.max(0, clampNumber(boundaryBox.widthW, 0) * clampNumber(boundaryBox.heightW, 0));
     if (area < Math.max(1, clampNumber(config.minRegionAreaW2, 64000))) continue;
+    const generationBox = buildGenerationBox(region, config);
+    if (!generationBox) continue;
+    const generationRegion = Object.freeze({
+      ...region,
+      generationBox,
+    });
     const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
-    const cols = Math.max(1, Math.ceil(clampNumber(boundaryBox.widthW, 0) / cellSize));
-    const rows = Math.max(1, Math.ceil(clampNumber(boundaryBox.heightW, 0) / cellSize));
+    const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, 0) / cellSize));
+    const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, 0) / cellSize));
     for (let cy = 0; cy < rows; cy += 1) {
       for (let cx = 0; cx < cols; cx += 1) {
-        const density = sampleDensityField(region, cx, cy, config);
-        const densitySeed = `${config.seedSalt}:${region.id}:${cx}:${cy}:density`;
+        const density = sampleDensityField(generationRegion, cx, cy, config);
+        const densitySeed = `${config.seedSalt}:${generationRegion.id}:${cx}:${cy}:density`;
         const spawnChances = config && config.spawnChances ? config.spawnChances : {};
         const primaryChance = lerp(
           clamp01(spawnChances.primary && spawnChances.primary[0]),
@@ -242,7 +250,7 @@ export function buildStarsFieldModel({
           density
         );
         if (hashToUnit(`${densitySeed}:primary`) < primaryChance) {
-          const star = buildStar(region, cx, cy, 0, config);
+          const star = buildStar(generationRegion, cx, cy, 0, config);
           if (star) stars.push(star);
         }
         const secondaryChance = lerp(
@@ -251,7 +259,7 @@ export function buildStarsFieldModel({
           density
         );
         if (hashToUnit(`${densitySeed}:secondary`) < secondaryChance) {
-          const extraStar = buildStar(region, cx, cy, 1, config);
+          const extraStar = buildStar(generationRegion, cx, cy, 1, config);
           if (extraStar) stars.push(extraStar);
         }
         const tertiaryChance = lerp(
@@ -260,7 +268,7 @@ export function buildStarsFieldModel({
           density
         );
         if (hashToUnit(`${densitySeed}:tertiary`) < tertiaryChance) {
-          const tertiaryStar = buildStar(region, cx, cy, 2, config);
+          const tertiaryStar = buildStar(generationRegion, cx, cy, 2, config);
           if (tertiaryStar) stars.push(tertiaryStar);
         }
         const quaternaryChance = lerp(
@@ -269,7 +277,7 @@ export function buildStarsFieldModel({
           density
         );
         if (hashToUnit(`${densitySeed}:quaternary`) < quaternaryChance) {
-          const quaternaryStar = buildStar(region, cx, cy, 3, config);
+          const quaternaryStar = buildStar(generationRegion, cx, cy, 3, config);
           if (quaternaryStar) stars.push(quaternaryStar);
         }
       }

@@ -14,6 +14,12 @@ function buildLoopPathData(points = []) {
   return d;
 }
 
+function buildClosedLoopPathData(points = []) {
+  const d = buildLoopPathData(points);
+  if (!d) return "";
+  return `${d} Z`;
+}
+
 function formatSvgTranslate(x = 0, y = 0) {
   return `translate(${clampNumber(x, 0).toFixed(2)} ${clampNumber(y, 0).toFixed(2)})`;
 }
@@ -24,6 +30,7 @@ export function buildAuthoredLevelOverlayMarkup({
   lineArtShapes = [],
 } = {}) {
   const stars = Array.isArray(starsField && starsField.stars) ? starsField.stars : [];
+  const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
   const starsByBand = new Map();
   for (const star of stars) {
     const bandId = String(star && star.depthBand || "mid").trim() || "mid";
@@ -31,6 +38,17 @@ export function buildAuthoredLevelOverlayMarkup({
     bandStars.push(star);
     starsByBand.set(bandId, bandStars);
   }
+  const clipId = clipRegions.length ? "authoredStarsFieldClip" : "";
+  const clipMarkup = clipRegions.length
+    ? `<defs><clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">${clipRegions
+        .map((region = {}, index) => {
+          const pathData = buildClosedLoopPathData(region.worldPoints);
+          if (!pathData) return "";
+          return `<path d="${pathData}" data-stars-clip-region="${String(region.id || `stars_clip_${index + 1}`)}"></path>`;
+        })
+        .filter(Boolean)
+        .join("")}</clipPath></defs>`
+    : "";
   const starsMarkup = Array.from(starsByBand.entries())
     .map(([bandId, bandStars]) => {
       const ratio = Math.max(0, Math.min(1, clampNumber(bandStars[0] && bandStars[0].parallaxRatio, 1)));
@@ -48,7 +66,8 @@ export function buildAuthoredLevelOverlayMarkup({
           : "";
         return `${haloMarkup}<circle class="authoredStarsFieldStar${star.isHighlight ? " authoredStarsFieldStarHighlight" : ""}" data-star-id="${starId}" data-depth-band="${bandId}" cx="${x}" cy="${y}" r="${r}" style="fill:${color};fill-opacity:${opacity};stroke:none;"></circle>`;
       }).join("");
-      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-stars-band="${bandId}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}">${bandMarkup}</g>`;
+      const clipAttr = clipId ? ` clip-path="url(#${clipId})"` : "";
+      return `<g class="authoredStarsFieldLayer authoredStarsFieldLayer--${bandId}" data-stars-band="${bandId}" data-parallax-ratio="${ratio.toFixed(3)}" transform="${formatSvgTranslate(0, 0)}"${clipAttr}>${bandMarkup}</g>`;
     })
     .join("");
 
@@ -66,7 +85,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  return `${starsMarkup}${lineArtMarkup}`;
+  return `${clipMarkup}${starsMarkup}${lineArtMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {
