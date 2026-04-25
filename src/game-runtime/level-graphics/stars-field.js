@@ -1,4 +1,4 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424e";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260424f";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -26,89 +26,6 @@ function lerp(a, b, t) {
 
 function clamp01(value) {
   return Math.max(0, Math.min(1, clampNumber(value, 0)));
-}
-
-function smoothstep(t) {
-  const safeT = clamp01(t);
-  return safeT * safeT * (3 - (2 * safeT));
-}
-
-function sampleValueNoise2D(x = 0, y = 0, seed = "") {
-  const cellX = Math.floor(Number(x) || 0);
-  const cellY = Math.floor(Number(y) || 0);
-  const localX = smoothstep((Number(x) || 0) - cellX);
-  const localY = smoothstep((Number(y) || 0) - cellY);
-  const s00 = hashToUnit(`${seed}:${cellX}:${cellY}`);
-  const s10 = hashToUnit(`${seed}:${cellX + 1}:${cellY}`);
-  const s01 = hashToUnit(`${seed}:${cellX}:${cellY + 1}`);
-  const s11 = hashToUnit(`${seed}:${cellX + 1}:${cellY + 1}`);
-  const top = lerp(s00, s10, localX);
-  const bottom = lerp(s01, s11, localX);
-  return lerp(top, bottom, localY);
-}
-
-function sampleDensityField(region, cellX, cellY, config) {
-  const boundaryBox = region && region.generationBox
-    ? region.generationBox
-    : (region && region.boundaryBox ? region.boundaryBox : null);
-  const densityField = config && config.densityField ? config.densityField : {};
-  const clusterField = config && config.clusterField ? config.clusterField : {};
-  if (!boundaryBox) return 0.5;
-  const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 76));
-  const sampleX = clampNumber(boundaryBox.leftXW, 0) + ((cellX + 0.5) * cellSize);
-  const sampleY = clampNumber(boundaryBox.topYW, 0) + ((cellY + 0.5) * cellSize);
-  const warpScaleW = Math.max(1, clampNumber(densityField.warpScaleW, 1280));
-  const warpAmplitudeW = Math.max(0, clampNumber(densityField.warpAmplitudeW, 180));
-  const warpX = lerp(
-    -warpAmplitudeW,
-    warpAmplitudeW,
-    sampleValueNoise2D(
-      sampleX / warpScaleW,
-      sampleY / warpScaleW,
-      `${config.seedSalt}:${region.id}:warp-x`
-    )
-  );
-  const warpY = lerp(
-    -warpAmplitudeW,
-    warpAmplitudeW,
-    sampleValueNoise2D(
-      sampleX / warpScaleW,
-      sampleY / warpScaleW,
-      `${config.seedSalt}:${region.id}:warp-y`
-    )
-  );
-  const warpedX = sampleX + warpX;
-  const warpedY = sampleY + warpY;
-  const lowScaleW = Math.max(1, clampNumber(densityField.lowFrequencyScaleW, 960));
-  const midScaleW = Math.max(1, clampNumber(densityField.midFrequencyScaleW, 420));
-  const lowWeight = clamp01(densityField.lowFrequencyWeight);
-  const midWeight = clamp01(densityField.midFrequencyWeight);
-  const lowNoise = sampleValueNoise2D(
-    warpedX / lowScaleW,
-    warpedY / lowScaleW,
-    `${config.seedSalt}:${region.id}:density-low`
-  );
-  const midNoise = sampleValueNoise2D(
-    warpedX / midScaleW,
-    warpedY / midScaleW,
-    `${config.seedSalt}:${region.id}:density-mid`
-  );
-  const combined = ((lowNoise * lowWeight) + (midNoise * midWeight)) / Math.max(0.0001, lowWeight + midWeight);
-  const contrast = Math.max(0.1, clampNumber(densityField.contrast, 1.55));
-  const floor = clamp01(densityField.floor);
-  const ceiling = Math.max(floor, clamp01(densityField.ceiling || 1));
-  const shaped = floor + ((ceiling - floor) * Math.pow(clamp01(combined), contrast));
-
-  const largeScaleW = Math.max(1, clampNumber(clusterField.largeScaleW, 1680));
-  const smallScaleW = Math.max(1, clampNumber(clusterField.smallScaleW, 760));
-  const largeWeight = clamp01(clusterField.largeWeight);
-  const smallWeight = clamp01(clusterField.smallWeight);
-  const clusterNoise = (
-    (sampleValueNoise2D(warpedX / largeScaleW, warpedY / largeScaleW, `${config.seedSalt}:${region.id}:cluster-large`) * largeWeight)
-    + (sampleValueNoise2D(warpedX / smallScaleW, warpedY / smallScaleW, `${config.seedSalt}:${region.id}:cluster-small`) * smallWeight)
-  ) / Math.max(0.0001, largeWeight + smallWeight);
-  const clusterInfluence = clamp01(clusterField.influence);
-  return clamp01((shaped * (1 - clusterInfluence)) + (clusterNoise * clusterInfluence));
 }
 
 function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {
@@ -231,14 +148,12 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
     Math.floor(hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:palette`) * palette.length)
   );
   const highlightConfig = config && config.highlight ? config.highlight : {};
-  const densityFieldStrength = sampleDensityField(region, cellX, cellY, config);
   const baseHighlightChance = lerp(
     clamp01(highlightConfig.chanceRange && highlightConfig.chanceRange[0]),
     clamp01(highlightConfig.chanceRange && highlightConfig.chanceRange[1]),
-    densityFieldStrength
+    hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:highlight-weight`)
   );
-  const denseAreaMultiplier = Math.max(1, clampNumber(highlightConfig.denseAreaMultiplier, 1.9));
-  const highlightChance = clamp01(baseHighlightChance * lerp(1, denseAreaMultiplier, densityFieldStrength));
+  const highlightChance = clamp01(baseHighlightChance);
   const isHighlight = hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:highlight`) < highlightChance;
   const baseRadius = lerp(radiusRange[0], radiusRange[1], hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:radius`));
   const baseOpacity = lerp(opacityRange[0], opacityRange[1], hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:opacity`));
@@ -270,7 +185,7 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
       hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:halo-radius`)
     )
     : 0;
-  const scoreBase = (densityFieldStrength * 0.76) + (hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:score`) * 0.24);
+  const scoreBase = hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:score`);
   const ordinalPenalty = ordinal * 0.11;
   const score = Math.max(0, scoreBase - ordinalPenalty);
   return Object.freeze({
