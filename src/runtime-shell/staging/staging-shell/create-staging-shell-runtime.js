@@ -2865,10 +2865,11 @@ async function initShellKwsRuntime(shellContext) {
   if (devRefs.rulesReadout) devRefs.rulesReadout.textContent = "boot:kws_ready";
   if (typeof kwsBridge.updateReadout === "function") kwsBridge.updateReadout();
   if (typeof kwsBridge.pushLogLine === "function") kwsBridge.pushLogLine("kws runtime active", "ok");
-  if (levelStageView && levelStageView.controller && levelStageView.controller.state && typeof kwsBridge.pushLogLine === "function") {
-    levelStageView.controller.state.pushLogLine = (text, kind) => kwsBridge.pushLogLine(text, kind);
-    levelStageView.controller.state.starsVisibleTraceCount = 0;
-    levelStageView.controller.state.starsVisibleTraceLastAtMs = 0;
+  const activeLevelStageView = shellContext && shellContext.levelStageView ? shellContext.levelStageView : null;
+  if (activeLevelStageView && activeLevelStageView.controller && activeLevelStageView.controller.state && typeof kwsBridge.pushLogLine === "function") {
+    activeLevelStageView.controller.state.pushLogLine = (text, kind) => kwsBridge.pushLogLine(text, kind);
+    activeLevelStageView.controller.state.starsVisibleTraceCount = 0;
+    activeLevelStageView.controller.state.starsVisibleTraceLastAtMs = 0;
     kwsBridge.pushLogLine("stars visible trace armed", "muted");
   }
 
