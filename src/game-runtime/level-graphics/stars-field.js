@@ -108,25 +108,7 @@ function sampleDensityField(region, cellX, cellY, config) {
     + (sampleValueNoise2D(warpedX / smallScaleW, warpedY / smallScaleW, `${config.seedSalt}:${region.id}:cluster-small`) * smallWeight)
   ) / Math.max(0.0001, largeWeight + smallWeight);
   const clusterInfluence = clamp01(clusterField.influence);
-  const density = clamp01((shaped * (1 - clusterInfluence)) + (clusterNoise * clusterInfluence));
-
-  const clipBox = region && region.boundaryBox ? region.boundaryBox : null;
-  const overscanW = Math.max(1, clampNumber(config.generationOverscanW, 2048));
-  const overscanDensityRatio = clamp01(clampNumber(config.overscanDensityRatio, 0.22));
-  if (!clipBox) return density;
-  const dx = Math.max(
-    0,
-    clampNumber(clipBox.leftXW, 0) - sampleX,
-    sampleX - clampNumber(clipBox.rightXW, 0)
-  );
-  const dy = Math.max(
-    0,
-    clampNumber(clipBox.topYW, 0) - sampleY,
-    sampleY - clampNumber(clipBox.bottomYW, 0)
-  );
-  const distanceOutside = Math.max(dx, dy);
-  const outsideT = smoothstep(clamp01(distanceOutside / overscanW));
-  return clamp01(density * lerp(1, overscanDensityRatio, outsideT));
+  return clamp01((shaped * (1 - clusterInfluence)) + (clusterNoise * clusterInfluence));
 }
 
 function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {
@@ -147,6 +129,23 @@ function buildGenerationBox(region = null, config = STARS_FIELD_CONFIG) {
   });
 }
 
+function pointInPolygon(x = 0, y = 0, points = []) {
+  let inside = false;
+  const safePoints = Array.isArray(points) ? points : [];
+  for (let i = 0, j = safePoints.length - 1; i < safePoints.length; j = i, i += 1) {
+    const pi = safePoints[i] || {};
+    const pj = safePoints[j] || {};
+    const xi = clampNumber(pi.xW, 0);
+    const yi = clampNumber(pi.yW, 0);
+    const xj = clampNumber(pj.xW, 0);
+    const yj = clampNumber(pj.yW, 0);
+    const intersects = ((yi > y) !== (yj > y))
+      && (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-9) + xi);
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
 function chooseDepthBand(seed = "", depthBands = []) {
   const unit = hashToUnit(`${seed}:depth`);
   let cursor = 0;
@@ -159,7 +158,7 @@ function chooseDepthBand(seed = "", depthBands = []) {
   return safeBands[safeBands.length - 1] || null;
 }
 
-function buildStar(region, cellX, cellY, ordinal, config) {
+function buildStarCandidate(region, cellX, cellY, ordinal, config) {
   const band = chooseDepthBand(`${region.id}:${cellX}:${cellY}:${ordinal}:${config.seedSalt}`, config.depthBands);
   if (!band) return null;
   const generationBox = region && region.generationBox ? region.generationBox : null;
@@ -173,6 +172,7 @@ function buildStar(region, cellX, cellY, ordinal, config) {
   const jitterY = lerp(-maxJitter, maxJitter, hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:jy`));
   const xW = baseX + jitterX;
   const yW = baseY + jitterY;
+  const insideCore = pointInPolygon(xW, yW, region.worldPoints);
   const radiusRange = Array.isArray(band.radiusRangePx) ? band.radiusRangePx : [1, 2];
   const opacityRange = Array.isArray(band.opacityRange) ? band.opacityRange : [0.2, 0.5];
   const palette = Array.isArray(band.palette) ? band.palette : ["#ffffff"];
@@ -220,6 +220,9 @@ function buildStar(region, cellX, cellY, ordinal, config) {
       hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:halo-radius`)
     )
     : 0;
+  const scoreBase = (densityFieldStrength * 0.76) + (hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:score`) * 0.24);
+  const ordinalPenalty = ordinal * 0.11;
+  const score = Math.max(0, scoreBase - ordinalPenalty) * (insideCore ? 1 : Math.max(0.01, clampNumber(config.bleedScorePenalty, 0.38)));
   return Object.freeze({
     id: `${region.id}:star:${cellX}:${cellY}:${ordinal}`,
     regionId: region.id,
@@ -233,7 +236,15 @@ function buildStar(region, cellX, cellY, ordinal, config) {
     isHighlight,
     haloOpacity,
     haloRadiusPx: isHighlight ? (baseRadius * haloRadiusMultiplier) : 0,
+    insideCore,
+    score,
   });
+}
+
+function selectTopCandidates(candidates = [], targetCount = 0) {
+  const safeCandidates = Array.isArray(candidates) ? candidates.slice() : [];
+  safeCandidates.sort((a, b) => Number(b && b.score) - Number(a && a.score));
+  return safeCandidates.slice(0, Math.max(0, Math.floor(Number(targetCount) || 0)));
 }
 
 export function buildStarsFieldModel({
@@ -241,7 +252,12 @@ export function buildStarsFieldModel({
   config = STARS_FIELD_CONFIG,
 } = {}) {
   const safeRegions = Array.isArray(regions) ? regions : [];
-  const stars = [];
+  const regionAreas = safeRegions.map((region = {}) => {
+    const box = region && region.boundaryBox ? region.boundaryBox : null;
+    return Math.max(1, clampNumber(box && box.widthW, 0) * clampNumber(box && box.heightW, 0));
+  });
+  const totalArea = regionAreas.reduce((sum, area) => sum + area, 0) || 1;
+  const selectedStars = [];
   for (const region of safeRegions) {
     const boundaryBox = region && region.boundaryBox ? region.boundaryBox : null;
     const worldPoints = Array.isArray(region && region.worldPoints) ? region.worldPoints : [];
@@ -254,59 +270,55 @@ export function buildStarsFieldModel({
       ...region,
       generationBox,
     });
+    const regionArea = Math.max(1, clampNumber(boundaryBox.widthW, 0) * clampNumber(boundaryBox.heightW, 0));
+    const regionTargetCount = Math.max(
+      1,
+      Math.round((Math.max(1, clampNumber(config.targetStarCount, 3000)) * regionArea) / totalArea)
+    );
+    const coreTargetCount = Math.round(regionTargetCount * clamp01(clampNumber(config.coreTargetRatio, 0.84)));
+    const bleedTargetCount = Math.max(0, regionTargetCount - coreTargetCount);
     const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 420));
     const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, 0) / cellSize));
     const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, 0) / cellSize));
+    const coreCandidates = [];
+    const bleedCandidates = [];
+    const candidateOrdinals = Math.max(1, Math.floor(clampNumber(config.candidateOrdinals, 4)));
     for (let cy = 0; cy < rows; cy += 1) {
       for (let cx = 0; cx < cols; cx += 1) {
-        const density = sampleDensityField(generationRegion, cx, cy, config);
-        const densitySeed = `${config.seedSalt}:${generationRegion.id}:${cx}:${cy}:density`;
-        const spawnChances = config && config.spawnChances ? config.spawnChances : {};
-        const primaryChance = lerp(
-          clamp01(spawnChances.primary && spawnChances.primary[0]),
-          clamp01(spawnChances.primary && spawnChances.primary[1]),
-          density
-        );
-        if (hashToUnit(`${densitySeed}:primary`) < primaryChance) {
-          const star = buildStar(generationRegion, cx, cy, 0, config);
-          if (star) stars.push(star);
-        }
-        const secondaryChance = lerp(
-          clamp01(spawnChances.secondary && spawnChances.secondary[0]),
-          clamp01(spawnChances.secondary && spawnChances.secondary[1]),
-          density
-        );
-        if (hashToUnit(`${densitySeed}:secondary`) < secondaryChance) {
-          const extraStar = buildStar(generationRegion, cx, cy, 1, config);
-          if (extraStar) stars.push(extraStar);
-        }
-        const tertiaryChance = lerp(
-          clamp01(spawnChances.tertiary && spawnChances.tertiary[0]),
-          clamp01(spawnChances.tertiary && spawnChances.tertiary[1]),
-          density
-        );
-        if (hashToUnit(`${densitySeed}:tertiary`) < tertiaryChance) {
-          const tertiaryStar = buildStar(generationRegion, cx, cy, 2, config);
-          if (tertiaryStar) stars.push(tertiaryStar);
-        }
-        const quaternaryChance = lerp(
-          clamp01(spawnChances.quaternary && spawnChances.quaternary[0]),
-          clamp01(spawnChances.quaternary && spawnChances.quaternary[1]),
-          density
-        );
-        if (hashToUnit(`${densitySeed}:quaternary`) < quaternaryChance) {
-          const quaternaryStar = buildStar(generationRegion, cx, cy, 3, config);
-          if (quaternaryStar) stars.push(quaternaryStar);
+        for (let ordinal = 0; ordinal < candidateOrdinals; ordinal += 1) {
+          const star = buildStarCandidate(generationRegion, cx, cy, ordinal, config);
+          if (!star) continue;
+          if (star.insideCore) {
+            coreCandidates.push(star);
+          } else {
+            bleedCandidates.push(star);
+          }
         }
       }
     }
+    const selectedCore = selectTopCandidates(coreCandidates, coreTargetCount);
+    const selectedBleed = selectTopCandidates(bleedCandidates, bleedTargetCount);
+    selectedStars.push(...selectedCore, ...selectedBleed);
   }
 
   return Object.freeze({
     kind: "stars_field",
     config,
     regions: Object.freeze(safeRegions),
-    stars: Object.freeze(stars),
+    stars: Object.freeze(selectedStars.map((star) => Object.freeze({
+      id: star.id,
+      regionId: star.regionId,
+      xW: star.xW,
+      yW: star.yW,
+      radiusPx: star.radiusPx,
+      opacity: star.opacity,
+      color: star.color,
+      depthBand: star.depthBand,
+      parallaxRatio: star.parallaxRatio,
+      isHighlight: star.isHighlight,
+      haloOpacity: star.haloOpacity,
+      haloRadiusPx: star.haloRadiusPx,
+    }))),
   });
 }
 
