@@ -98,10 +98,8 @@ export function buildAuthoredLevelOverlayMarkup({
     .map((layer = {}, index) => {
       const box = layer && layer.boundaryBox ? layer.boundaryBox : null;
       if (!box) return "";
-      const debugOffsetX = 420;
-      const debugOffsetY = -280;
-      const x = formatNumberAttr(clampNumber(box.leftXW, 0) + debugOffsetX, 0);
-      const y = formatNumberAttr(clampNumber(box.topYW, 0) + debugOffsetY, 0);
+      const x = formatNumberAttr(clampNumber(box.leftXW, 0), 0);
+      const y = formatNumberAttr(clampNumber(box.topYW, 0), 0);
       const width = formatNumberAttr(Math.max(1, clampNumber(box.widthW, 1)), 1);
       const height = formatNumberAttr(Math.max(1, clampNumber(box.heightW, 1)), 1);
       const ratio = Math.max(0, Math.min(1, clampNumber(layer.parallaxRatio, 0)));
