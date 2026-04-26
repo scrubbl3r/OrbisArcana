@@ -1,3 +1,4 @@
+import { PLINTH_MATERIAL_CONFIG } from "../configs/plinth-material-config.js?v=20260426a";
 import { createOrbSpawnPlinthModel } from "../generators/orb-spawn-plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import {
@@ -19,13 +20,17 @@ export function renderIonicPlinthPreview({
   });
   if (!inspector) return null;
 
-  const faceMaterial = createWorldFaceMaterial();
+  const faceMaterial = createWorldFaceMaterial({
+    color: PLINTH_MATERIAL_CONFIG.faceColor,
+  });
   const { model, metrics } = createOrbSpawnPlinthModel({
     bo,
     material: faceMaterial,
     decorateMesh: (mesh) => {
       addLineEdges(mesh, {
-        linewidth: 2,
+        color: PLINTH_MATERIAL_CONFIG.edgeColor,
+        linewidth: PLINTH_MATERIAL_CONFIG.edgeWidth,
+        thresholdAngle: PLINTH_MATERIAL_CONFIG.edgeThresholdAngle,
         edgeMaterials: inspector.edgeMaterials,
       });
     },
@@ -34,6 +39,7 @@ export function renderIonicPlinthPreview({
   addOrbScaleGuide(model, {
     bo,
     y: metrics.plinthHeight + bo * 0.5,
+    color: PLINTH_MATERIAL_CONFIG.guideColor,
   });
 
   inspector.scene.add(model);
