@@ -1433,44 +1433,44 @@
       },
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
-      import("./vfx-studio-shell.js?v=20260419c"),
-      import("./vfx-studio-bootstrap.js?v=20260419c"),
-      import("./vfx-studio-state.js?v=20260419c"),
-      import("./vfx-studio-categories.js?v=20260419c"),
-      import("./vfx-studio-bindings.js?v=20260419c"),
-      import("./vfx-studio-publish.js?v=20260419c"),
-      import("./vfx-studio-publish-orchestrator.js?v=20260419c"),
-      import("./vfx-studio-surfaces.js?v=20260419c"),
-      import("./vfx-studio-theme-publish.js?v=20260419c"),
+      import("./vfx-studio-shell.js?v=20260425b"),
+      import("./vfx-studio-bootstrap.js?v=20260425b"),
+      import("./vfx-studio-state.js?v=20260425b"),
+      import("./vfx-studio-categories.js?v=20260425b"),
+      import("./vfx-studio-bindings.js?v=20260425b"),
+      import("./vfx-studio-publish.js?v=20260425b"),
+      import("./vfx-studio-publish-orchestrator.js?v=20260425b"),
+      import("./vfx-studio-surfaces.js?v=20260425b"),
+      import("./vfx-studio-theme-publish.js?v=20260425b"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
     });
-    import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260418c";
-    import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260418a";
-    import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260418a";
-    import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260418a";
-    import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260418a";
-    import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260418b";
-    import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260418a";
-    import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260418a";
-    import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260418b";
-    import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260418a";
-    import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260418a";
-    import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260418a";
+    import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425b";
+    import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425b";
+    import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425b";
+    import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425b";
+    import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260425b";
+    import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260425b";
+    import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260425b";
+    import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425b";
+    import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425b";
+    import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425b";
+    import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260425b";
+    import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425b";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
       ORB_NOD_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260418a";
+    } from "../../src/vfx/presets/index.js?v=20260425b";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
-    import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260418a";
-    import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260418b";
-    import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260418a";
+    import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425b";
+    import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425b";
+    import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425b";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
-    import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260418a";
+    import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260425b";
 
     renderLabWorkspaceNav({ currentWorkspaceId: "vfx-studio" });
 
