@@ -16,7 +16,6 @@ export function renderIonicPlinthPreview({
   const inspector = createWorldObjectInspector({
     root,
     bo,
-    canvasClassName: "worldObjectInspectorCanvas ionicPlinthCanvas",
   });
   if (!inspector) return null;
 
@@ -41,4 +40,3 @@ export function renderIonicPlinthPreview({
   inspector.render();
   return metrics;
 }
-

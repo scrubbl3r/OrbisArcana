@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { clearPreviewHost, setPreviewHostCleanup } from "../preview-host.js";
 import { disposeObject } from "../rendering/world-render-utils.js";
 
 function resizeInspector({ renderer, camera, root, edgeMaterials = [] }) {
@@ -26,8 +27,7 @@ export function createWorldObjectInspector({
 } = {}) {
   if (!root) return null;
 
-  if (root.__worldWorkshopPreviewCleanup) root.__worldWorkshopPreviewCleanup();
-  root.innerHTML = "";
+  clearPreviewHost(root);
 
   const baseOrb = Number(bo) || 72;
   const edgeMaterials = [];
@@ -58,9 +58,10 @@ export function createWorldObjectInspector({
   camera.lookAt(controls.target);
   controls.update();
 
+  resizeInspector({ renderer, camera, root, edgeMaterials });
+
   let animationFrame = 0;
   const render = () => {
-    resizeInspector({ renderer, camera, root, edgeMaterials });
     renderer.render(scene, camera);
   };
   const tick = () => {
@@ -71,7 +72,10 @@ export function createWorldObjectInspector({
   tick();
 
   const resizeObserver = typeof ResizeObserver !== "undefined"
-    ? new ResizeObserver(render)
+    ? new ResizeObserver(() => {
+        resizeInspector({ renderer, camera, root, edgeMaterials });
+        render();
+      })
     : null;
   if (resizeObserver) resizeObserver.observe(root);
 
@@ -84,9 +88,9 @@ export function createWorldObjectInspector({
     if (renderer.domElement && renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);
     }
-    root.__worldWorkshopPreviewCleanup = null;
+    setPreviewHostCleanup(root, null);
   };
-  root.__worldWorkshopPreviewCleanup = cleanup;
+  setPreviewHostCleanup(root, cleanup);
 
   return Object.freeze({
     scene,
@@ -98,4 +102,3 @@ export function createWorldObjectInspector({
     cleanup,
   });
 }
-

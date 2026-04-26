@@ -9,6 +9,7 @@ authored world items.
 ## Intended Structure
 
 - `world-item-surfaces.js` declares workshop-visible object surfaces.
+- `preview-host.js` owns preview cleanup and DOM host reset conventions.
 - `world-workshop-preview-registry.js` maps surface preview keys to preview renderers.
 - `world-workshop-readouts.js` formats metadata and inspection readouts.
 - `inspectors/` owns reusable viewport, camera, controls, resize, and cleanup behavior.
