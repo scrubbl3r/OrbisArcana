@@ -33,7 +33,7 @@ export function formatWorldWorkshopMaterialReadout(surface = null) {
       if (String(surface.generator || "") === "orb-spawn-assembly") {
         return "Shadowed opalescent orb point light / postprocess bloom / graphite plinth faces / layered faux-glow Line2 edges";
       }
-      return "World object inspector / opaque black faces / 2px white Line2 edges";
+      return "World object inspector / graphite plinth material / 2px white Line2 edges";
     default:
       return "No material readout available.";
   }

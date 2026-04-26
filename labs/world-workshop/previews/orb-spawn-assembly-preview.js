@@ -1,11 +1,11 @@
 import * as THREE from "three";
-import { ORB_MATERIAL_CONFIG } from "../configs/orb-material-config.js?v=20260426a";
-import { PLINTH_MATERIAL_CONFIG } from "../configs/plinth-material-config.js?v=20260426a";
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
 import { createOrbSpawnPlinthModel } from "../generators/orb-spawn-plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
-import { createLitBlackPlinthMaterial } from "../rendering/plinth-materials.js?v=20260426a";
+import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260426a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260426a";
+import { PLINTH_MATERIAL_CONFIG } from "../materials/plinth/graphite-plinth-config.js?v=20260426a";
+import { createGraphitePlinthMaterial } from "../materials/plinth/graphite-plinth-material.js?v=20260426a";
 import { addLineEdges } from "../rendering/world-render-utils.js?v=20260426a";
 
 export function renderOrbSpawnAssemblyPreview({
@@ -56,7 +56,7 @@ export function renderOrbSpawnAssemblyPreview({
   if (!inspector) return null;
 
   const plinthBo = bo * PLINTH_MATERIAL_CONFIG.assemblyScale;
-  const plinthMaterial = createLitBlackPlinthMaterial(PLINTH_MATERIAL_CONFIG);
+  const plinthMaterial = createGraphitePlinthMaterial(PLINTH_MATERIAL_CONFIG);
   const { model: plinthModel, metrics: plinthMetrics } = createOrbSpawnPlinthModel({
     bo: plinthBo,
     material: plinthMaterial,
@@ -88,7 +88,7 @@ export function renderOrbSpawnAssemblyPreview({
   const groundPlaneSize = bo * (Number(PLINTH_MATERIAL_CONFIG.assemblyGroundPlaneSizeBO) || 4.8);
   const groundPlane = new THREE.Mesh(
     new THREE.PlaneGeometry(groundPlaneSize, groundPlaneSize),
-    createLitBlackPlinthMaterial(PLINTH_MATERIAL_CONFIG)
+    createGraphitePlinthMaterial(PLINTH_MATERIAL_CONFIG)
   );
   groundPlane.rotation.x = -Math.PI * 0.5;
   groundPlane.position.y = -plinthMetrics.columnCenterY - bo * 0.015;

@@ -1,7 +1,7 @@
-import { ORB_MATERIAL_CONFIG } from "../configs/orb-material-config.js?v=20260426a";
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
+import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260426a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260426a";
 
 export function renderOrbPreview({
   root,

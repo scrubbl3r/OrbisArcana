@@ -1,10 +1,11 @@
-import { PLINTH_MATERIAL_CONFIG } from "../configs/plinth-material-config.js?v=20260426a";
+import * as THREE from "three";
 import { createOrbSpawnPlinthModel } from "../generators/orb-spawn-plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
+import { PLINTH_MATERIAL_CONFIG } from "../materials/plinth/graphite-plinth-config.js?v=20260426a";
+import { createGraphitePlinthMaterial } from "../materials/plinth/graphite-plinth-material.js?v=20260426a";
 import {
   addLineEdges,
   addOrbScaleGuide,
-  createWorldFaceMaterial,
 } from "../rendering/world-render-utils.js?v=20260426a";
 
 export function renderIonicPlinthPreview({
@@ -20,9 +21,7 @@ export function renderIonicPlinthPreview({
   });
   if (!inspector) return null;
 
-  const faceMaterial = createWorldFaceMaterial({
-    color: PLINTH_MATERIAL_CONFIG.faceColor,
-  });
+  const faceMaterial = createGraphitePlinthMaterial(PLINTH_MATERIAL_CONFIG);
   const { model, metrics } = createOrbSpawnPlinthModel({
     bo,
     material: faceMaterial,
@@ -42,6 +41,8 @@ export function renderIonicPlinthPreview({
     color: PLINTH_MATERIAL_CONFIG.guideColor,
   });
 
+  inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+  inspector.scene.add(new THREE.HemisphereLight(0xcfefff, 0x050507, 0.45));
   inspector.scene.add(model);
   inspector.render();
   return metrics;
