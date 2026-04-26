@@ -141,27 +141,76 @@ body::before {
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
 }
 
-.viewportHud {
+.worldModelPreviewRoot {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
+  padding: 24px;
+}
+
+.ionicPlinthPreview {
+  width: min(78%, 680px);
+  height: min(90%, 560px);
+  display: block;
+  overflow: visible;
+}
+
+.plinthFace {
+  fill: #000;
+  stroke: rgba(255,255,255,.96);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.plinthEdge {
+  fill: none;
+  stroke: rgba(255,255,255,.96);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plinthVolute {
+  stroke-width: 2.2px;
+}
+
+.plinthScaleGuide circle {
+  fill: rgba(255,255,255,.025);
+  stroke: rgba(255,255,255,.18);
+  stroke-width: 2px;
+  stroke-dasharray: 5 7;
+}
+
+.viewportHud {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: start center;
   color: var(--text-muted);
   pointer-events: none;
+  padding: 18px;
 }
 
 .viewportHud strong {
   display: block;
   color: var(--text-strong);
-  font-size: 22px;
+  font-size: 12px;
   line-height: 1.05;
   text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
 }
 
 .viewportHud span {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.62;
 }
 
 .workshopControls {

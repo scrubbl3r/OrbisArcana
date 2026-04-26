@@ -6,7 +6,7 @@
   <title>World Workshop</title>
   <link rel="stylesheet" href="../shell/lab-workspaces.css?v=20260425a" />
   <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-semantics" />
-  <link rel="stylesheet" href="./world-workshop.css" />
+  <link rel="stylesheet" href="./world-workshop.css?v=20260426a" />
 </head>
 <body>
   <main class="workshopShell wrap">
@@ -22,6 +22,7 @@
 
     <section class="card workshopViewportCard" aria-label="World object viewport">
       <div class="workshopViewport stage">
+        <div class="worldModelPreviewRoot" data-world-workshop-preview-root></div>
         <div class="viewportHud">
           <div>
             <strong data-world-workshop-viewport-label>World Object</strong>
@@ -34,18 +35,18 @@
     <section class="card workshopControls" aria-label="World object controls">
       <article class="controlPane">
         <h2>Geometry</h2>
-        <p>Pending</p>
+        <p data-world-workshop-geometry-readout>Pending</p>
       </article>
       <article class="controlPane">
         <h2>Material</h2>
-        <p>Pending</p>
+        <p data-world-workshop-material-readout>Pending</p>
       </article>
       <article class="controlPane">
         <h2>Runtime</h2>
-        <p>Pending</p>
+        <p data-world-workshop-runtime-readout>Pending</p>
       </article>
     </section>
   </main>
-  <script type="module" src="./world-workshop.js"></script>
+  <script type="module" src="./world-workshop.js?v=20260426a"></script>
 </body>
 </html>

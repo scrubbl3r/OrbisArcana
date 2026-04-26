@@ -6,7 +6,6 @@ export const WORLD_WORKSHOP_SURFACES = Object.freeze([
     category: "spawn-anchor",
     generator: "ionic-plinth",
     preview: "world-object-inspector",
-    status: "planned",
+    status: "draft",
   }),
 ]);
-
