@@ -45,20 +45,20 @@ function addBox(group, {
   return mesh;
 }
 
-function addCylinder(group, {
-  radius,
+function addNonagonColumn(group, {
+  width,
   depth,
+  height,
   x = 0,
   y = 0,
   z = 0,
-  radialSegments = 48,
   material,
 }) {
-  const mesh = new THREE.Mesh(
-    new THREE.CylinderGeometry(radius, radius, depth, radialSegments, 1, false),
-    material
-  );
-  mesh.rotation.x = Math.PI * 0.5;
+  const radiusX = width * 0.5;
+  const radiusZ = depth * 0.5;
+  const geometry = new THREE.CylinderGeometry(1, 1, height, 9, 1, false, Math.PI * -0.5);
+  geometry.scale(radiusX, 1, radiusZ);
+  const mesh = new THREE.Mesh(geometry, material);
   mesh.position.set(x, y, z);
   group.add(mesh);
   addEdges(mesh);
@@ -95,11 +95,11 @@ export function renderIonicPlinthPreview({
   const baseDepth = bo * 1.35;
   const baseLowerHeight = bo * 0.18;
   const baseUpperHeight = bo * 0.14;
-  const capVoluteHeight = bo * 0.34;
+  const capCenterHeight = bo * 0.34;
   const capBandHeight = bo * 0.13;
   const capSlabHeight = bo * 0.12;
-  const plinthHeight = baseLowerHeight + baseUpperHeight + columnHeight + capVoluteHeight + capBandHeight + capSlabHeight;
-  const frontZ = capitalDepth * 0.5;
+  const plinthHeight = baseLowerHeight + baseUpperHeight + columnHeight + capCenterHeight + capBandHeight + capSlabHeight;
+  const columnCenterY = baseLowerHeight + baseUpperHeight + columnHeight * 0.5;
 
   if (root.__worldWorkshopPreviewCleanup) root.__worldWorkshopPreviewCleanup();
   root.innerHTML = "";
@@ -123,9 +123,10 @@ export function renderIonicPlinthPreview({
   });
 
   const model = new THREE.Group();
+  model.position.y = -columnCenterY;
   scene.add(model);
 
-  let y = plinthHeight * -0.5;
+  let y = 0;
   addBox(model, {
     width: baseWidth,
     height: baseLowerHeight,
@@ -142,7 +143,7 @@ export function renderIonicPlinthPreview({
     material: faceMaterial,
   });
   y += baseUpperHeight;
-  addBox(model, {
+  addNonagonColumn(model, {
     width: columnWidth,
     height: columnHeight,
     depth: columnDepth,
@@ -152,37 +153,13 @@ export function renderIonicPlinthPreview({
   y += columnHeight;
   addBox(model, {
     width: capitalWidth * 0.86,
-    height: capVoluteHeight,
+    height: capCenterHeight,
     depth: capitalDepth * 0.72,
-    y: y + capVoluteHeight * 0.5,
+    y: y + capCenterHeight * 0.5,
     material: faceMaterial,
   });
 
-  const voluteY = y + capVoluteHeight * 0.5;
-  const voluteX = capitalWidth * 0.31;
-  const voluteDepthStep = 0.65;
-  [1, 0.66, 0.36].forEach((scale, index) => {
-    const z = frontZ + 0.25 + index * voluteDepthStep;
-    const radius = bo * 0.17 * scale;
-    addCylinder(model, {
-      radius,
-      depth: bo * 0.035,
-      x: -voluteX,
-      y: voluteY,
-      z,
-      material: faceMaterial,
-    });
-    addCylinder(model, {
-      radius,
-      depth: bo * 0.035,
-      x: voluteX,
-      y: voluteY,
-      z,
-      material: faceMaterial,
-    });
-  });
-
-  y += capVoluteHeight;
+  y += capCenterHeight;
   addBox(model, {
     width: capitalWidth,
     height: capBandHeight,
@@ -209,19 +186,23 @@ export function renderIonicPlinthPreview({
       opacity: 0.22,
     })
   );
-  orbGuide.position.set(0, plinthHeight * 0.5 + bo * 0.5, 0);
+  orbGuide.position.set(0, plinthHeight + bo * 0.5, 0);
   orbGuide.computeLineDistances();
-  scene.add(orbGuide);
+  model.add(orbGuide);
 
-  model.rotation.x = -0.08;
-  model.rotation.y = 0.18;
-  model.position.y = -bo * 0.18;
-
+  let animationFrame = 0;
+  const startedAt = performance.now();
   const render = () => {
     resizeRenderer({ renderer, camera, root });
     renderer.render(scene, camera);
   };
-  render();
+  const tick = () => {
+    const elapsed = (performance.now() - startedAt) * 0.001;
+    model.rotation.y = Math.sin(elapsed * 0.7) * 0.28;
+    render();
+    animationFrame = requestAnimationFrame(tick);
+  };
+  tick();
 
   const resizeObserver = typeof ResizeObserver !== "undefined"
     ? new ResizeObserver(render)
@@ -229,6 +210,7 @@ export function renderIonicPlinthPreview({
   if (resizeObserver) resizeObserver.observe(root);
 
   root.__worldWorkshopPreviewCleanup = () => {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
     if (resizeObserver) resizeObserver.disconnect();
     disposeObject(scene);
     faceMaterial.dispose();

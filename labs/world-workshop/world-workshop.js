@@ -1,6 +1,6 @@
 import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js";
 import { WORLD_WORKSHOP_SURFACES } from "./world-item-surfaces.js";
-import { renderIonicPlinthPreview } from "./previews/ionic-plinth-preview.js?v=20260426c";
+import { renderIonicPlinthPreview } from "./previews/ionic-plinth-preview.js?v=20260426d";
 
 function surfaceOptionMarkup(surface = {}) {
   return `<option value="${String(surface.id || "")}">${String(surface.label || surface.id || "World item")}</option>`;
@@ -81,10 +81,10 @@ function renderSurfacePreview({
     orbDiameterPx: ORB_BASE_VISUAL_DEFAULTS.diameterPx,
   });
   if (geometryReadout && metrics) {
-    geometryReadout.textContent = `BO ${metrics.bo}px / column ${metrics.columnWidth}px x ${metrics.columnDepth}px x ${metrics.columnHeight}px / cap ${metrics.capitalWidth}px / base ${metrics.baseWidth}px`;
+    geometryReadout.textContent = `BO ${metrics.bo}px / nonagon column ${metrics.columnWidth}px x ${metrics.columnDepth}px x ${metrics.columnHeight}px / cap ${metrics.capitalWidth}px / base ${metrics.baseWidth}px`;
   }
   if (materialReadout) {
-    materialReadout.textContent = "Three.js mesh / opaque black faces / 1px white vector edges";
+    materialReadout.textContent = "Rotating Three.js mesh / opaque black faces / 1px white vector edges";
   }
   if (runtimeReadout && surface) {
     runtimeReadout.textContent = `${String(surface.kind || "world_item")} / ${String(surface.category || "world")} / ${String(surface.status || "draft")}`;
