@@ -24,6 +24,7 @@ export function createWorldObjectInspector({
   cameraPositionBo = Object.freeze({ x: 1.2, y: 0.24, z: 4.1 }),
   minDistanceBo = 1.2,
   maxDistanceBo = 32,
+  onFrame = null,
 } = {}) {
   if (!root) return null;
 
@@ -65,6 +66,9 @@ export function createWorldObjectInspector({
     renderer.render(scene, camera);
   };
   const tick = () => {
+    if (typeof onFrame === "function") {
+      onFrame({ camera, controls, renderer, scene });
+    }
     controls.update();
     render();
     animationFrame = requestAnimationFrame(tick);

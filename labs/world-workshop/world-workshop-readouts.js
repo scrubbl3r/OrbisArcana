@@ -26,7 +26,7 @@ export function formatWorldWorkshopMaterialReadout(surface = null) {
   switch (String(surface.preview || "")) {
     case "world-object-inspector":
       if (String(surface.generator || "") === "orb") {
-        return "World object inspector / translucent black shell / luminous core / 2px white Line2 ribs";
+        return "World object inspector / translucent opalescent shell / luminous core / 2px white Line2 ribs";
       }
       return "World object inspector / opaque black faces / 2px white Line2 edges";
     default:
