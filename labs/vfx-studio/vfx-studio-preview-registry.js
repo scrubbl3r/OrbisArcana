@@ -1,13 +1,13 @@
-import { createShieldPreview } from "./previews/shield-preview.js?v=20260425c";
-import { createShockwavePreview } from "./previews/shockwave-preview.js?v=20260425c";
-import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425c";
-import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425c";
-import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425c";
-import { createOrbTemplatePreview } from "./previews/orb-template-preview.js?v=20260425c";
-import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425c";
-import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425c";
-import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425c";
-import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425c";
+import { createShieldPreview } from "./previews/shield-preview.js?v=20260425d";
+import { createShockwavePreview } from "./previews/shockwave-preview.js?v=20260425d";
+import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425d";
+import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
+import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425d";
+import { createOrbTemplatePreview } from "./previews/orb-template-preview.js?v=20260425d";
+import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
+import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425d";
+import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
+import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
 
 export function createStudioPreviewRegistry({
   els,

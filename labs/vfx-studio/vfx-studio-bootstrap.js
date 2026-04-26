@@ -1,6 +1,6 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260425c";
-import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425c";
-import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425c";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260425d";
+import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
+import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
 export function createStudioBootstrap({
   els,
