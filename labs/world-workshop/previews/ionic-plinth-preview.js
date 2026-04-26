@@ -103,7 +103,7 @@ export function renderIonicPlinthPreview({
   const columnDepth = bo * 0.8;
   const columnHeight = bo * 1.5;
   const capitalWidth = bo * 1.35;
-  const capitalDepth = bo * 0.82;
+  const capitalDepth = capitalWidth;
   const baseWidth = bo * 1.35;
   const baseDepth = bo * 1.35;
   const baseLowerHeight = bo * 0.36;
@@ -134,9 +134,13 @@ export function renderIonicPlinthPreview({
   });
   const edgeMaterials = [];
 
+  const yawGroup = new THREE.Group();
+  const pitchGroup = new THREE.Group();
   const model = new THREE.Group();
   model.position.y = -columnCenterY;
-  scene.add(model);
+  pitchGroup.add(model);
+  yawGroup.add(pitchGroup);
+  scene.add(yawGroup);
 
   let y = 0;
   addBox(model, {
@@ -167,9 +171,9 @@ export function renderIonicPlinthPreview({
   });
   y += columnHeight;
   addBox(model, {
-    width: capitalWidth * 0.86,
+    width: capitalWidth,
     height: capCenterHeight,
-    depth: capitalDepth * 0.72,
+    depth: capitalDepth,
     y: y + capCenterHeight * 0.5,
     material: faceMaterial,
     edgeMaterials,
@@ -199,8 +203,8 @@ export function renderIonicPlinthPreview({
   let lastPointer = null;
   const render = () => {
     resizeRenderer({ renderer, camera, root, edgeMaterials });
-    model.rotation.x = rotation.x;
-    model.rotation.y = rotation.y;
+    pitchGroup.rotation.x = rotation.x;
+    yawGroup.rotation.y = rotation.y;
     renderer.render(scene, camera);
   };
   const pointerDown = (event) => {
