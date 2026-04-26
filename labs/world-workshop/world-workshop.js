@@ -1,4 +1,3 @@
-import { renderLabWorkspaceNav } from "../shell/lab-workspaces.js";
 import { WORLD_WORKSHOP_SURFACES } from "./world-item-surfaces.js";
 
 function surfaceOptionMarkup(surface = {}) {
@@ -6,7 +5,6 @@ function surfaceOptionMarkup(surface = {}) {
 }
 
 export function bootWorldWorkshop({ root = document } = {}) {
-  renderLabWorkspaceNav({ root, currentWorkspaceId: "world-workshop" });
   const select = root.querySelector("[data-world-workshop-item-select]");
   const meta = root.querySelector("[data-world-workshop-meta]");
   const viewportLabel = root.querySelector("[data-world-workshop-viewport-label]");
