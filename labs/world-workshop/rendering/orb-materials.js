@@ -73,6 +73,15 @@ export function createOrbPointLight({
     Number(config.lightDecay) || 1
   );
   light.position.set(0, 0, baseOrb * (Number(config.lightOffsetZBO) || 0));
+  light.castShadow = Boolean(config.lightCastShadow);
+  if (light.castShadow) {
+    light.shadow.mapSize.width = Number(config.lightShadowMapSize) || 512;
+    light.shadow.mapSize.height = Number(config.lightShadowMapSize) || 512;
+    light.shadow.bias = Number(config.lightShadowBias) || 0;
+    light.shadow.normalBias = Number(config.lightShadowNormalBias) || 0;
+    light.shadow.camera.near = baseOrb * (Number(config.lightShadowNearBO) || 0.08);
+    light.shadow.camera.far = baseOrb * (Number(config.lightShadowFarBO) || Number(config.lightDistanceBO) || 1);
+  }
   return light;
 }
 
