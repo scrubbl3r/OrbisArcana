@@ -41,14 +41,23 @@ export function renderOrbSpawnAssemblyPreview({
   });
   if (!inspector) return null;
 
+  const plinthBo = bo * PLINTH_MATERIAL_CONFIG.assemblyScale;
   const plinthMaterial = createLitBlackPlinthMaterial(PLINTH_MATERIAL_CONFIG);
   const { model: plinthModel, metrics: plinthMetrics } = createOrbSpawnPlinthModel({
-    bo,
+    bo: plinthBo,
     material: plinthMaterial,
     decorateMesh: (mesh) => {
       addLineEdges(mesh, {
+        color: PLINTH_MATERIAL_CONFIG.edgeHaloColor,
+        linewidth: PLINTH_MATERIAL_CONFIG.edgeHaloWidth,
+        opacity: PLINTH_MATERIAL_CONFIG.edgeHaloOpacity,
+        thresholdAngle: PLINTH_MATERIAL_CONFIG.edgeThresholdAngle,
+        edgeMaterials: inspector.edgeMaterials,
+      });
+      addLineEdges(mesh, {
         color: PLINTH_MATERIAL_CONFIG.edgeColor,
         linewidth: PLINTH_MATERIAL_CONFIG.edgeWidth,
+        opacity: PLINTH_MATERIAL_CONFIG.edgeOpacity,
         thresholdAngle: PLINTH_MATERIAL_CONFIG.edgeThresholdAngle,
         edgeMaterials: inspector.edgeMaterials,
       });
@@ -74,12 +83,14 @@ export function renderOrbSpawnAssemblyPreview({
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.035);
   inspector.scene.add(ambient);
+  const fill = new THREE.HemisphereLight(0xbfdfff, 0x050507, 0.16);
+  inspector.scene.add(fill);
 
   inspector.render();
   return Object.freeze({
     ...plinthMetrics,
     orbDiameter: orbMetrics.diameter,
     orbRadius: orbMetrics.radius,
+    assemblyScale: PLINTH_MATERIAL_CONFIG.assemblyScale,
   });
 }
-

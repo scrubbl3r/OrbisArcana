@@ -27,6 +27,7 @@ export function disposeObject(object) {
 export function addLineEdges(mesh, {
   color = WORLD_EDGE_COLOR,
   linewidth = 2,
+  opacity = 1,
   thresholdAngle = 16,
   edgeMaterials = [],
 } = {}) {
@@ -40,6 +41,8 @@ export function addLineEdges(mesh, {
   const material = new LineMaterial({
     color,
     linewidth,
+    transparent: opacity < 1,
+    opacity,
     worldUnits: false,
   });
   edgeMaterials.push(material);
