@@ -1,5 +1,11 @@
 import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425i";
 
+// Exemplar contract for future generative graphics:
+// - authored SVG semantics define the visible/meaningful region
+// - model generation is deterministic and scene-load-only
+// - output is stable data for layer-based renderers
+// - runtime motion should operate on layer groups, not individual generated items
+
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -215,6 +221,8 @@ export function buildStarsFieldModel({
   cameraBoundaryBox = null,
   config = STARS_FIELD_CONFIG,
 } = {}) {
+  // This model is intentionally static after build. Camera motion, culling,
+  // clipping, and parallax belong to the renderer/runtime lane.
   const safeRegions = Array.isArray(regions) ? regions : [];
   const safeLayers = Array.isArray(config && config.parallaxLayers) ? config.parallaxLayers : [];
   const activeLayers = safeLayers.filter((layer = {}) => clampNumber(layer && layer.parallaxRatio, 0) >= 0);

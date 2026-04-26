@@ -153,6 +153,11 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
   viewportWidthPx = 0,
   viewportHeightPx = 0,
 } = {}) {
+  // Runtime performance contract for generative overlay layers:
+  // - never regenerate or remount generated items during camera motion
+  // - cull whole layer groups before considering any finer-grained work
+  // - write DOM only when visibility or transform meaningfully changes
+  // - avoid hot-path allocations so more generative layers can share this lane
   const safeRefs = Array.isArray(parallaxRefs) ? parallaxRefs : [];
   const left = clampNumber(camLeft, 0);
   const top = clampNumber(camTop, 0);
