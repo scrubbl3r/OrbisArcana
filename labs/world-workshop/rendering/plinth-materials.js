@@ -1,4 +1,5 @@
 export {
+  createGraphiteMaterial,
   createGraphitePlinthMaterial,
   createLitBlackPlinthMaterial,
-} from "../materials/plinth/graphite-plinth-material.js?v=20260426a";
+} from "../materials/graphite/graphite-material.js?v=20260426a";

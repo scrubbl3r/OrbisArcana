@@ -16,6 +16,7 @@ export function formatWorldWorkshopGeometryReadout(surface = null, metrics = nul
       return `BO ${roundMetric(metrics.bo)}px / translucent sphere diameter ${roundMetric(metrics.diameter)}px / radius ${roundMetric(metrics.radius)}px / shader shell`;
     case "orb-spawn-assembly":
       return `BO ${roundMetric(metrics.bo)}px / orb ${roundMetric(metrics.orbDiameter)}px / clearance ${roundMetric(metrics.orbClearance)}px / ground ${roundMetric(metrics.groundPlaneSize)}px / plinth scale ${roundMetric((metrics.assemblyScale || 1) * 100)}% / lit assembly`;
+    case "plinth":
     case "orb-spawn-plinth":
       return `BO ${roundMetric(metrics.bo)}px / nonagon column ${roundMetric(metrics.columnWidth)}px x ${roundMetric(metrics.columnDepth)}px x ${roundMetric(metrics.columnHeight)}px / cap ${roundMetric(metrics.capitalWidth)}px / base ${roundMetric(metrics.baseWidth)}px`;
     default:
@@ -31,9 +32,9 @@ export function formatWorldWorkshopMaterialReadout(surface = null) {
         return "World object inspector / translucent opalescent shell / postprocess bloom / saturated pastel drift";
       }
       if (String(surface.generator || "") === "orb-spawn-assembly") {
-        return "Shadowed opalescent orb point light / postprocess bloom / graphite plinth faces / layered faux-glow Line2 edges";
+        return "Shadowed opalescent orb point light / postprocess bloom / graphite faces / layered faux-glow Line2 edges";
       }
-      return "World object inspector / graphite plinth material / 2px white Line2 edges";
+      return "World object inspector / graphite material / Line2 edges";
     default:
       return "No material readout available.";
   }

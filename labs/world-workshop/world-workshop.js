@@ -13,7 +13,9 @@ function surfaceOptionMarkup(surface = {}) {
 function surfaceIdFromHash({ location = globalThis.location } = {}) {
   const hash = String(location && location.hash || "").replace(/^#/, "");
   if (!hash) return "";
-  return decodeURIComponent(hash);
+  const surfaceId = decodeURIComponent(hash);
+  if (surfaceId === "orb-spawn-plinth") return "plinth";
+  return surfaceId;
 }
 
 export function bootWorldWorkshop({ root = globalThis.document } = {}) {

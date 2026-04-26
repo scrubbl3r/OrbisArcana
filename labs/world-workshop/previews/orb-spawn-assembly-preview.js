@@ -1,11 +1,11 @@
 import * as THREE from "three";
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
-import { createOrbSpawnPlinthModel } from "../generators/orb-spawn-plinth-generator.js?v=20260426a";
+import { createPlinthModel } from "../generators/plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260426a";
 import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260426a";
-import { PLINTH_MATERIAL_CONFIG } from "../materials/plinth/graphite-plinth-config.js?v=20260426a";
-import { createGraphitePlinthMaterial } from "../materials/plinth/graphite-plinth-material.js?v=20260426a";
+import { GRAPHITE_CONFIG } from "../materials/graphite/graphite-config.js?v=20260426a";
+import { createGraphiteMaterial } from "../materials/graphite/graphite-material.js?v=20260426a";
 import { addLineEdges } from "../rendering/world-render-utils.js?v=20260426a";
 
 export function renderOrbSpawnAssemblyPreview({
@@ -55,24 +55,24 @@ export function renderOrbSpawnAssemblyPreview({
   });
   if (!inspector) return null;
 
-  const plinthBo = bo * PLINTH_MATERIAL_CONFIG.assemblyScale;
-  const plinthMaterial = createGraphitePlinthMaterial(PLINTH_MATERIAL_CONFIG);
-  const { model: plinthModel, metrics: plinthMetrics } = createOrbSpawnPlinthModel({
+  const plinthBo = bo * GRAPHITE_CONFIG.assemblyScale;
+  const plinthMaterial = createGraphiteMaterial(GRAPHITE_CONFIG);
+  const { model: plinthModel, metrics: plinthMetrics } = createPlinthModel({
     bo: plinthBo,
     material: plinthMaterial,
     decorateMesh: (mesh) => {
       addLineEdges(mesh, {
-        color: PLINTH_MATERIAL_CONFIG.edgeHaloColor,
-        linewidth: PLINTH_MATERIAL_CONFIG.edgeHaloWidth,
-        opacity: PLINTH_MATERIAL_CONFIG.edgeHaloOpacity,
-        thresholdAngle: PLINTH_MATERIAL_CONFIG.edgeThresholdAngle,
+        color: GRAPHITE_CONFIG.edgeHaloColor,
+        linewidth: GRAPHITE_CONFIG.edgeHaloWidth,
+        opacity: GRAPHITE_CONFIG.edgeHaloOpacity,
+        thresholdAngle: GRAPHITE_CONFIG.edgeThresholdAngle,
         edgeMaterials: inspector.edgeMaterials,
       });
       addLineEdges(mesh, {
-        color: PLINTH_MATERIAL_CONFIG.edgeColor,
-        linewidth: PLINTH_MATERIAL_CONFIG.edgeWidth,
-        opacity: PLINTH_MATERIAL_CONFIG.edgeOpacity,
-        thresholdAngle: PLINTH_MATERIAL_CONFIG.edgeThresholdAngle,
+        color: GRAPHITE_CONFIG.edgeColor,
+        linewidth: GRAPHITE_CONFIG.edgeWidth,
+        opacity: GRAPHITE_CONFIG.edgeOpacity,
+        thresholdAngle: GRAPHITE_CONFIG.edgeThresholdAngle,
         edgeMaterials: inspector.edgeMaterials,
       });
     },
@@ -85,10 +85,10 @@ export function renderOrbSpawnAssemblyPreview({
   });
   inspector.scene.add(plinthModel);
 
-  const groundPlaneSize = bo * (Number(PLINTH_MATERIAL_CONFIG.assemblyGroundPlaneSizeBO) || 4.8);
+  const groundPlaneSize = bo * (Number(GRAPHITE_CONFIG.assemblyGroundPlaneSizeBO) || 4.8);
   const groundPlane = new THREE.Mesh(
     new THREE.PlaneGeometry(groundPlaneSize, groundPlaneSize),
-    createGraphitePlinthMaterial(PLINTH_MATERIAL_CONFIG)
+    createGraphiteMaterial(GRAPHITE_CONFIG)
   );
   groundPlane.rotation.x = -Math.PI * 0.5;
   groundPlane.position.y = -plinthMetrics.columnCenterY - bo * 0.015;
@@ -143,6 +143,6 @@ export function renderOrbSpawnAssemblyPreview({
     orbClearance,
     shadowSpot: Boolean(shadowSpot),
     groundPlaneSize,
-    assemblyScale: PLINTH_MATERIAL_CONFIG.assemblyScale,
+    assemblyScale: GRAPHITE_CONFIG.assemblyScale,
   });
 }

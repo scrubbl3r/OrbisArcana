@@ -13,17 +13,17 @@ This directory is the canonical material library for World Workshop authored obj
 
 The `Orb` workshop entry should be the source-of-truth preview for this material before it is adapted into game-facing orb states.
 
-## Plinth
+## Graphite
 
-`plinth/graphite-plinth-config.js` and `plinth/graphite-plinth-material.js` own the first plinth/world-object surface:
+`graphite/graphite-config.js` and `graphite/graphite-material.js` own the reusable graphite surface look:
 
 - graphite/eggshell face material
 - procedural roughness/bump texture
 - vector edge styling controls
 - assembly-scale test controls
 
-The `Orb Spawn Plinth` workshop entry should be the source-of-truth preview for this material and geometry. Assemblies should compose it rather than redefining it.
+The `Plinth` workshop entry is the first world-furniture object applying this graphite look. Assemblies should compose the plinth and graphite material rather than redefining either.
 
 ## Compatibility
 
-The older `configs/*-material-config.js` and `rendering/*-materials.js` modules re-export this library during the transition. New World Workshop code should import from `materials/*` directly.
+The older `materials/plinth/*`, `configs/*-material-config.js`, and `rendering/*-materials.js` modules re-export this library during the transition. New World Workshop code should import from `materials/graphite/*` directly.
