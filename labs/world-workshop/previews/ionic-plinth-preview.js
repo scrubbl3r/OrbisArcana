@@ -196,7 +196,7 @@ export function renderIonicPlinthPreview({
   controls.enablePan = false;
   controls.autoRotate = false;
   controls.minDistance = bo * 1.2;
-  controls.maxDistance = bo * 7;
+  controls.maxDistance = bo * 32;
   controls.target.set(0, 0, 0);
   camera.position.set(bo * 1.2, bo * 0.24, bo * 4.1);
   camera.lookAt(controls.target);

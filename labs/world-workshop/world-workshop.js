@@ -1,6 +1,6 @@
 import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js";
 import { WORLD_WORKSHOP_SURFACES } from "./world-item-surfaces.js";
-import { renderIonicPlinthPreview } from "./previews/ionic-plinth-preview.js?v=20260426g";
+import { renderIonicPlinthPreview } from "./previews/ionic-plinth-preview.js?v=20260426h";
 
 function surfaceOptionMarkup(surface = {}) {
   return `<option value="${String(surface.id || "")}">${String(surface.label || surface.id || "World item")}</option>`;
