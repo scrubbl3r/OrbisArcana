@@ -15,7 +15,7 @@ export function formatWorldWorkshopGeometryReadout(surface = null, metrics = nul
     case "orb":
       return `BO ${roundMetric(metrics.bo)}px / translucent sphere diameter ${roundMetric(metrics.diameter)}px / radius ${roundMetric(metrics.radius)}px / shader shell`;
     case "orb-spawn-assembly":
-      return `BO ${roundMetric(metrics.bo)}px / orb ${roundMetric(metrics.orbDiameter)}px / plinth scale ${roundMetric((metrics.assemblyScale || 1) * 100)}% / plinth height ${roundMetric(metrics.plinthHeight)}px / lit assembly`;
+      return `BO ${roundMetric(metrics.bo)}px / orb ${roundMetric(metrics.orbDiameter)}px / clearance ${roundMetric(metrics.orbClearance)}px / plinth scale ${roundMetric((metrics.assemblyScale || 1) * 100)}% / plinth height ${roundMetric(metrics.plinthHeight)}px / lit assembly`;
     case "orb-spawn-plinth":
       return `BO ${roundMetric(metrics.bo)}px / nonagon column ${roundMetric(metrics.columnWidth)}px x ${roundMetric(metrics.columnDepth)}px x ${roundMetric(metrics.columnHeight)}px / cap ${roundMetric(metrics.capitalWidth)}px / base ${roundMetric(metrics.baseWidth)}px`;
     default:

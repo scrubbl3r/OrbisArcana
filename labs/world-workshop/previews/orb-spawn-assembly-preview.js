@@ -30,11 +30,10 @@ export function renderOrbSpawnAssemblyPreview({
         if (material.uniforms && material.uniforms.uTime) material.uniforms.uTime.value = time;
       });
       animatedNodes.forEach(({ node, baseY }) => {
-        const orbit = Math.sin(time * 0.72) * bo * 0.18;
         node.position.set(
-          Math.sin(time * 0.52) * bo * 0.12,
+          0,
           baseY + Math.sin(time * 1.04) * bo * 0.045,
-          orbit
+          0
         );
       });
     },
@@ -75,7 +74,8 @@ export function renderOrbSpawnAssemblyPreview({
     includeRibs: false,
   });
 
-  const orbBaseY = plinthMetrics.plinthHeight + orbMetrics.radius - plinthMetrics.columnCenterY;
+  const orbClearance = bo * 0.15;
+  const orbBaseY = plinthMetrics.plinthHeight + orbMetrics.radius + orbClearance - plinthMetrics.columnCenterY;
   orbModel.position.set(0, orbBaseY, 0);
   orbModel.add(createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG }));
   inspector.scene.add(orbModel);
@@ -91,6 +91,7 @@ export function renderOrbSpawnAssemblyPreview({
     ...plinthMetrics,
     orbDiameter: orbMetrics.diameter,
     orbRadius: orbMetrics.radius,
+    orbClearance,
     assemblyScale: PLINTH_MATERIAL_CONFIG.assemblyScale,
   });
 }
