@@ -149,7 +149,7 @@ body::before {
   padding: 24px;
 }
 
-.ionicPlinthCanvas {
+.worldObjectInspectorCanvas {
   width: 100%;
   height: 100%;
   display: block;
@@ -157,7 +157,7 @@ body::before {
   touch-action: none;
 }
 
-.ionicPlinthCanvas:active {
+.worldObjectInspectorCanvas:active {
   cursor: grabbing;
 }
 
