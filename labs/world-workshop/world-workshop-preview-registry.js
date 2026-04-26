@@ -1,10 +1,12 @@
 import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js";
 import { clearPreviewHost } from "./preview-host.js";
+import { renderOrbSpawnAssemblyPreview } from "./previews/orb-spawn-assembly-preview.js?v=20260426a";
 import { renderOrbPreview } from "./previews/orb-preview.js?v=20260426a";
 import { renderIonicPlinthPreview } from "./previews/ionic-plinth-preview.js?v=20260426a";
 
 const PREVIEW_RENDERERS = Object.freeze({
   "orb": renderOrbPreview,
+  "orb-spawn-assembly": renderOrbSpawnAssemblyPreview,
   "orb-spawn-plinth": renderIonicPlinthPreview,
 });
 

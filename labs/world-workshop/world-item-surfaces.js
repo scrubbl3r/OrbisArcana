@@ -19,4 +19,14 @@ export const WORLD_WORKSHOP_SURFACES = Object.freeze([
     preview: "world-object-inspector",
     status: "draft",
   }),
+  Object.freeze({
+    id: "orb-spawn-assembly",
+    label: "Orb Spawn Assembly",
+    kind: "orb_spawn_assembly",
+    category: "spawn-anchor",
+    generator: "orb-spawn-assembly",
+    previewKey: "orb-spawn-assembly",
+    preview: "world-object-inspector",
+    status: "experiment",
+  }),
 ]);

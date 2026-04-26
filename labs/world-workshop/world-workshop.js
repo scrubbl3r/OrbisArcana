@@ -10,6 +10,12 @@ function surfaceOptionMarkup(surface = {}) {
   return `<option value="${String(surface.id || "")}">${String(surface.label || surface.id || "World item")}</option>`;
 }
 
+function surfaceIdFromHash({ location = globalThis.location } = {}) {
+  const hash = String(location && location.hash || "").replace(/^#/, "");
+  if (!hash) return "";
+  return decodeURIComponent(hash);
+}
+
 export function bootWorldWorkshop({ root = globalThis.document } = {}) {
   if (!root) return;
   const previewRegistry = createWorldWorkshopPreviewRegistry();
@@ -22,6 +28,10 @@ export function bootWorldWorkshop({ root = globalThis.document } = {}) {
   const runtimeReadout = root.querySelector("[data-world-workshop-runtime-readout]");
   if (select) {
     select.innerHTML = WORLD_WORKSHOP_SURFACES.map(surfaceOptionMarkup).join("");
+    const hashSurfaceId = surfaceIdFromHash();
+    if (hashSurfaceId && WORLD_WORKSHOP_SURFACES.some((surface) => surface.id === hashSurfaceId)) {
+      select.value = hashSurfaceId;
+    }
     select.addEventListener("change", () => updateSelection({
       select,
       meta,
