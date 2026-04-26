@@ -1,7 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "check:vfx-lab": "node tools/lab/check-vfx-lab-surfaces.mjs",
+    "check:labs": "npm run check:vfx-studio",
+    "check:vfx-studio": "node tools/lab/check-vfx-lab-surfaces.mjs",
+    "check:vfx-lab": "npm run check:vfx-studio",
     "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs",
     "write:master-control-doc:v2": "node tools/rule-engine-v2/write-master-control-doc-v2.mjs",
     "check:tele-home-regression:v2": "node tools/rule-engine-v2/check-tele-home-regression-v2.mjs",

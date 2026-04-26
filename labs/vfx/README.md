@@ -1,13 +1,6 @@
-# vfx labs
+# vfx legacy route
 
-Visual effect workshops live here.
+VFX Studio now lives in `labs/vfx-studio/`.
 
-## Naming
-
-- Use lower kebab-case for every file.
-- Prefer broad studio names for multi-effect tools (for example `vfx-studio.html`).
-- Use `<effect-name>-vfx.html` only for single-effect standalone workshops.
-
-## Current workshops
-
-- `vfx-studio.html`
+This directory remains only for compatibility links such as
+`labs/vfx/vfx-studio.html`, which redirects to the new first-class workspace.

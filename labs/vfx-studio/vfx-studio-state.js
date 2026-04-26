@@ -2,92 +2,84 @@ import {
   getLabStudioCategoryLabel,
   listLabStudioCategoryIdsInOrder,
 } from "./vfx-studio-categories.js";
+import {
+  createLabProfileStore,
+  loadLabProfileStore,
+  persistLabProfileStore,
+} from "../shell/lab-profile-store.js";
+import {
+  findSelectOptionByValue,
+  listSelectOptions,
+  nextCustomProfileValue,
+  selectedSelectOption,
+  slugifyProfileName,
+} from "../shell/lab-profile-actions.js";
 
 export function createDraftStore() {
-  return {
-    profilesByValue: Object.create(null),
-    activeValue: "",
-  };
+  return createLabProfileStore();
 }
 
 export function selectedEffectOption(effectSelect) {
-  if (!effectSelect) return null;
-  const idx = effectSelect.selectedIndex;
-  return idx >= 0 ? effectSelect.options[idx] : null;
+  return selectedSelectOption(effectSelect);
 }
 
 export function listEffectOptions(effectSelect) {
-  return effectSelect ? Array.from(effectSelect.options) : [];
+  return listSelectOptions(effectSelect);
 }
 
 export function findEffectOptionByValue(effectSelect, value) {
-  return listEffectOptions(effectSelect).find((o) => o.value === value) || null;
+  return findSelectOptionByValue(effectSelect, value);
 }
 
 export function loadDraftStore(storageKey, draftStore) {
-  let parsed = null;
-  try {
-    parsed = JSON.parse(window.localStorage.getItem(storageKey) || "null");
-  } catch (_err) {
-    parsed = null;
-  }
-  const profiles = parsed && typeof parsed === "object" && parsed.profilesByValue && typeof parsed.profilesByValue === "object"
-    ? parsed.profilesByValue
-    : {};
-  for (const [value, profile] of Object.entries(profiles)) {
-    if (!profile || typeof profile !== "object") continue;
-    const resolvedValue = String(profile.value || value);
-    let resolvedBaseEffect = String(profile.baseEffect || "bubble-shield");
-    const resolvedLabel = String(profile.label || value);
-    const duplicateBuiltinOrb = resolvedValue.startsWith("custom:")
-      && (
-        (resolvedBaseEffect === "orb-nod" && slugifyEffectName(resolvedLabel) === "orb-nod")
-        || (resolvedBaseEffect === "orb-lifecycle" && slugifyEffectName(resolvedLabel) === "orb-lifecycle")
-      );
-    if (duplicateBuiltinOrb) continue;
-    const lifecycleLike = resolvedValue.startsWith("custom:")
-      && resolvedBaseEffect === "orb-template"
-      && (
-        resolvedValue.startsWith("custom:orb-lifecycle:")
-        || /:lifecycle(?:-\d+)?$/i.test(resolvedValue)
-      );
-    if (lifecycleLike) {
-      resolvedBaseEffect = "orb-lifecycle";
-    }
-    const isTemplateClone = resolvedValue.startsWith("custom:") && resolvedBaseEffect === "orb-template";
-    const settingsByBaseEffect = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
-      ? { ...profile.settingsByBaseEffect }
-      : {};
-    if (lifecycleLike && settingsByBaseEffect["orb-template"] && !settingsByBaseEffect["orb-lifecycle"]) {
-      const prev = settingsByBaseEffect["orb-template"];
-      settingsByBaseEffect["orb-lifecycle"] = {
-        orbLifecycleShardTotal: Number(prev.orbTemplateShardTotal) || 16,
-        orbLifecycleHitTotal: Number(prev.orbTemplateHitTotal) || 3,
+  loadLabProfileStore(storageKey, draftStore, {
+    normalizeProfile: ({ value, profile }) => {
+      const resolvedValue = String(profile.value || value);
+      let resolvedBaseEffect = String(profile.baseEffect || "bubble-shield");
+      const resolvedLabel = String(profile.label || value);
+      const duplicateBuiltinOrb = resolvedValue.startsWith("custom:")
+        && (
+          (resolvedBaseEffect === "orb-nod" && slugifyEffectName(resolvedLabel) === "orb-nod")
+          || (resolvedBaseEffect === "orb-lifecycle" && slugifyEffectName(resolvedLabel) === "orb-lifecycle")
+        );
+      if (duplicateBuiltinOrb) return null;
+      const lifecycleLike = resolvedValue.startsWith("custom:")
+        && resolvedBaseEffect === "orb-template"
+        && (
+          resolvedValue.startsWith("custom:orb-lifecycle:")
+          || /:lifecycle(?:-\d+)?$/i.test(resolvedValue)
+        );
+      if (lifecycleLike) {
+        resolvedBaseEffect = "orb-lifecycle";
+      }
+      const isTemplateClone = resolvedValue.startsWith("custom:") && resolvedBaseEffect === "orb-template";
+      const settingsByBaseEffect = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
+        ? { ...profile.settingsByBaseEffect }
+        : {};
+      if (lifecycleLike && settingsByBaseEffect["orb-template"] && !settingsByBaseEffect["orb-lifecycle"]) {
+        const prev = settingsByBaseEffect["orb-template"];
+        settingsByBaseEffect["orb-lifecycle"] = {
+          orbLifecycleShardTotal: Number(prev.orbTemplateShardTotal) || 16,
+          orbLifecycleHitTotal: Number(prev.orbTemplateHitTotal) || 3,
+        };
+      }
+      return {
+        storeValue: value,
+        value: resolvedValue,
+        label: resolvedLabel,
+        baseEffect: resolvedBaseEffect,
+        category: String(profile.category || "spell"),
+        registryId: String(profile.registryId || ""),
+        locked: isTemplateClone ? false : !!profile.locked,
+        settingsByBaseEffect,
+        savedAtMs: Number(profile.savedAtMs) || Date.now(),
       };
-    }
-    draftStore.profilesByValue[value] = {
-      value: resolvedValue,
-      label: resolvedLabel,
-      baseEffect: resolvedBaseEffect,
-      category: String(profile.category || "spell"),
-      registryId: String(profile.registryId || ""),
-      locked: isTemplateClone ? false : !!profile.locked,
-      settingsByBaseEffect,
-      savedAtMs: Number(profile.savedAtMs) || Date.now(),
-    };
-  }
-  draftStore.activeValue = parsed && typeof parsed.activeValue === "string" ? parsed.activeValue : "";
+    },
+  });
 }
 
 export function persistDraftStore(storageKey, draftStore) {
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify({
-      profilesByValue: draftStore.profilesByValue,
-      activeValue: draftStore.activeValue || "",
-    }));
-  } catch (_err) {
-    // Ignore localStorage write failures.
-  }
+  persistLabProfileStore(storageKey, draftStore);
 }
 
 export function ensureCategoryGroup(effectSelect, category, categories = null) {
@@ -250,25 +242,15 @@ export function isCoreEffectOption(opt) {
 }
 
 export function slugifyEffectName(text) {
-  return String(text || "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  return slugifyProfileName(text);
 }
 
 export function nextCustomEffectValue(effectSelect, baseEffect, name) {
-  const base = slugifyEffectName(baseEffect) || "effect";
-  const slug = slugifyEffectName(name) || "custom";
-  let i = 1;
-  let value = `custom:${base}:${slug}`;
-  if (!effectSelect) return value;
-  const exists = () => Array.from(effectSelect.options).some((o) => o.value === value);
-  while (exists()) {
-    i += 1;
-    value = `custom:${base}:${slug}-${i}`;
-  }
-  return value;
+  return nextCustomProfileValue(effectSelect, baseEffect, name, {
+    namespace: "custom",
+    fallbackBase: "effect",
+    fallbackName: "custom",
+  });
 }
 
 export function buildPresetDraftRecordFromSelection({

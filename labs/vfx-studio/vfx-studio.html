@@ -1,0 +1,2443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Orb VFX Tester — Electric AOE + Shield + Shockwave</title>
+  <link rel="stylesheet" href="../shell/lab-workspaces.css?v=20260425a" />
+  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-semantics" />
+  <style>
+    :root{
+      --g: var(--text-strong);
+      --bg: rgb(5, 5, 6);
+      --panel: rgba(10,10,12,.92);
+      --border: var(--frame);
+      --shield-r: 120;
+      --shield-g: 210;
+      --shield-b: 255;
+
+      /* Orb (receiver orb size) */
+      --orb-d: 100px;
+      --orb-stroke: 2px;
+      --orb-stroke-color: rgb(255,255,255);
+      --orb-fill: rgba(255,255,255,0.20);
+
+      /* Shield */
+      --shield-d: 124px;
+      --shield-stroke: 4px;
+
+      /* Shield alpha (also used to clamp pulse max) */
+      --shield-alpha: 1.00;
+      --shield-fade: 1;
+
+      /* Pulse controls (only active while shield is ON) — screenshot defaults */
+      --shield-pulse-ms: 80ms;
+      --shield-pulse-min: 0.30;
+      --shield-pulse-max: 1.00;
+
+      /* Shockwave */
+      --shock-color: rgba(255, 255, 255, 0.65);
+      --shock-stroke: 4px;
+
+      /* Flame AOE */
+      --flame-d: 200px;
+      --flame-duration: 10000ms;
+      --flame-stroke: rgba(255, 96, 24, 1);
+      --flame-fill: rgba(255, 96, 24, 0.20);
+
+      /* Electric AOE */
+      --electric-d: 240px;
+      --electric-duration: 10000ms;
+      --electric-glow: rgba(120, 215, 255, 1);
+      --lab-workspace-nav-muted: var(--text-muted);
+      --lab-workspace-nav-active: var(--text-strong);
+    }
+
+    *, *::before, *::after{ box-sizing: border-box; }
+
+    html,body{
+      min-height:100%;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      overflow-x:hidden;
+      overflow-y:auto;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(1200px 700px at 50% 35%, rgba(0,0,0,.0) 0%, rgba(0,0,0,.45) 55%, rgba(0,0,0,.75) 100%);
+      opacity:0.95;
+      mix-blend-mode:multiply;
+      z-index:0;
+    }
+
+    .wrap{
+      position:relative;
+      z-index:1;
+      max-width:1080px;
+      margin:22px auto;
+      padding:0 16px 48px;
+      display:grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap:16px;
+      align-items:start;
+    }
+    .studioBar{
+      grid-column:1 / -1;
+      background:var(--panel);
+      border:1px solid var(--frame);
+      border-radius:16px;
+      padding:10px 12px;
+      box-shadow: 0 18px 80px rgba(0,0,0,.45);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .studioBarGroup{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .studioWorkspaceGroup{
+      min-width:100%;
+      justify-content:space-between;
+    }
+    .studioBarLabel{
+      font-size:12px;
+      color: var(--text-muted);
+      font-weight:800;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--frame);
+      border-radius:16px;
+      padding:14px 14px 16px;
+      box-shadow: 0 18px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+
+    .title{
+      font-weight:1000;
+      letter-spacing:.3px;
+      margin-bottom:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:10px;
+    }
+    .title .dim{opacity:.7; font-weight:800; font-size:12px;}
+    .titleTools{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .titleTools label{
+      font-size:12px;
+      opacity:.8;
+      font-weight:800;
+    }
+    .effectSelect{
+      background: rgba(var(--frame-rgb), 0.12);
+      color: var(--text);
+      border:1px solid var(--frame);
+      border-radius:10px;
+      padding:6px 8px;
+      font: inherit;
+      font-size:12px;
+      font-weight:800;
+    }
+    .toolBtn{
+      background: rgba(var(--frame-rgb), 0.12);
+      color: var(--text);
+      border:1px solid var(--frame);
+      border-radius:10px;
+      padding:6px 8px;
+      font: inherit;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .toolBtn:hover{
+      border-color: var(--frame-strong);
+      color: var(--text-strong);
+    }
+    .toolBtn.secondary{
+      opacity:.9;
+    }
+    .toolBtn[disabled]{
+      opacity:.38;
+      cursor:not-allowed;
+    }
+    .lockBtn{
+      min-width:44px;
+      min-height:34px;
+      padding:4px 8px;
+      font-size:0;
+      line-height:1;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-left:4px;
+      position:relative;
+      overflow:visible;
+      color: var(--text);
+      text-shadow: none;
+    }
+    .lockBtn::before{
+      content:"";
+      position:absolute;
+      width:14px;
+      height:10px;
+      left:50%;
+      top:58%;
+      transform:translate(-50%,-50%);
+      border:2px solid currentColor;
+      border-radius:3px;
+      box-shadow: inset 0 0 8px rgba(255,255,255,.04);
+      background: rgba(255,255,255,.02);
+      z-index:2;
+    }
+    .lockBtn::after{
+      content:"";
+      position:absolute;
+      width:12px;
+      height:9px;
+      left:50%;
+      top:22%;
+      border:2px solid currentColor;
+      border-bottom:none;
+      border-radius:10px 10px 0 0;
+      transform:translateX(-50%);
+      transform-origin: 2px 100%;
+      z-index:1;
+    }
+    .lockBtn.unlocked::after{
+      transform:translateX(-58%) rotate(-42deg);
+    }
+    .lockBtn.locked::after{
+      transform:translateX(-50%) rotate(0deg);
+    }
+    .numField{
+      width:120px;
+      background: rgba(0,0,0,.45);
+      color: var(--text);
+      border:1px solid var(--frame);
+      border-radius:8px;
+      padding:6px 8px;
+      font: inherit;
+      font-size:12px;
+      font-weight:800;
+    }
+    .inlineField{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .authoringTabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      border-radius: 12px;
+      border: 1px solid var(--frame);
+      background: rgba(0,0,0,.18);
+      padding:6px;
+      margin:0 0 12px;
+    }
+    .authoringTab{
+      cursor:pointer;
+      border-radius:9px;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--text-muted);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      padding:9px 10px;
+    }
+    .authoringTab.active{
+      border-color:rgba(var(--frame-rgb), .36);
+      background:rgba(var(--frame-rgb), .14);
+      color: var(--text-strong);
+    }
+    .authoringPanel{
+      display:block;
+    }
+    .authoringPanel[hidden]{
+      display:none;
+    }
+    .behaviorSection{
+      border-top:1px solid rgba(var(--frame-rgb), .18);
+      padding-top:12px;
+      margin-top:12px;
+    }
+    .behaviorSection:first-child{
+      border-top:none;
+      padding-top:0;
+      margin-top:0;
+    }
+    .behaviorSection[hidden]{ display:none; }
+    .behaviorTitle{
+      margin:0 0 10px;
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--text-strong);
+    }
+    .behaviorReadout{
+      margin-top:10px;
+      border:1px solid rgba(var(--frame-rgb), .18);
+      border-radius:10px;
+      background:rgba(0,0,0,.22);
+      color:var(--text-muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.35;
+      padding:9px 10px;
+    }
+    .bindingPanel{
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px solid rgba(var(--frame-rgb), 0.18);
+      border-radius:12px;
+      background: rgba(0,0,0,.25);
+      display:grid;
+      gap:8px;
+    }
+    .bindingEditor{
+      display:grid;
+      gap:8px;
+      margin:0 0 4px;
+      padding:0 0 10px;
+      border-bottom:1px solid rgba(var(--frame-rgb), 0.16);
+    }
+    .bindingEditorRow{
+      display:grid;
+      gap:6px;
+    }
+    .bindingEditorLabel{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color: var(--text-muted);
+    }
+    .bindingEditorHelp{
+      font-size:12px;
+      line-height:1.35;
+      color: var(--text-muted);
+    }
+    .bindingEditorHelp:empty{
+      display:none;
+    }
+    .bindingSelect{
+      width:100%;
+      min-height:36px;
+      border-radius:10px;
+      border:1px solid var(--frame);
+      background: rgba(0,0,0,.45);
+      color: var(--text);
+      padding:6px 10px;
+      font: inherit;
+      font-size:12px;
+      font-weight:800;
+    }
+    .bindingPanel h3{
+      margin:0;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.06em;
+      color: var(--text-strong);
+      text-transform:uppercase;
+    }
+    .bindingGrid{
+      display:grid;
+      grid-template-columns: 118px 1fr;
+      gap:6px 8px;
+      font-size:12px;
+      line-height:1.35;
+    }
+    .bindingGrid .k{ color: var(--text-muted); font-weight:800; }
+    .bindingGrid .v{ color: var(--text-strong); word-break: break-word; }
+    .paramFieldRows,
+    .paramGrid{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    .paramFieldRow,
+    .paramField{
+      display:grid;
+      grid-template-columns: minmax(110px, auto) 1fr auto;
+      gap:8px;
+      align-items:center;
+    }
+    .paramFieldRow label,
+    .paramField label{
+      font-size:12px;
+      font-weight:900;
+      color: var(--text-strong);
+    }
+    .paramFieldInput{
+      width:100%;
+      min-height:34px;
+      background: rgba(0,0,0,.45);
+      color: var(--text);
+      border:1px solid var(--frame);
+      border-radius:8px;
+      padding:6px 8px;
+      font: inherit;
+      font-size:12px;
+      font-weight:800;
+    }
+    .rgbaParamRow{
+      display:grid;
+      grid-template-columns: auto repeat(4, auto minmax(54px, 1fr)) auto;
+      gap:8px;
+      align-items:center;
+    }
+    .rgbaParamRow.rgbParamRow{
+      grid-template-columns: auto repeat(3, auto minmax(54px, 1fr)) auto;
+    }
+    .rgbaParamRow .rgbaLabel,
+    .rgbaParamRow label{
+      font-size:12px;
+      font-weight:900;
+      color: var(--text-strong);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .stage{
+      height:min(50vh, 520px);
+      border:1px solid var(--frame);
+      border-radius:14px;
+      background:#000;
+      position:relative;
+      overflow:hidden;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
+    }
+
+    .previewLane{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:0;
+      height:0;
+      pointer-events:none;
+    }
+    [data-preview-root][hidden]{
+      display:none;
+    }
+
+    .atOrigin{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      pointer-events:none;
+    }
+    .orbShatterLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:240px;
+      height:240px;
+      overflow:visible;
+      transform: translate(-50%,-50%);
+      pointer-events:none;
+    }
+    .orbTemplatePatternLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:var(--orb-d);
+      height:var(--orb-d);
+      overflow:visible;
+      transform: translate(-50%,-50%);
+      pointer-events:none;
+    }
+
+    .orb{
+      width: var(--orb-d);
+      height: var(--orb-d);
+      border-radius: 999px;
+      border: 0;
+      background: var(--orb-fill);
+      box-shadow: none;
+      position: relative;
+    }
+    .orb::after{
+      content:"";
+      position:absolute;
+      inset: calc(-1 * var(--orb-stroke));
+      border-radius:999px;
+      border: var(--orb-stroke) solid var(--orb-stroke-color);
+      pointer-events:none;
+    }
+    .orbInterior{
+      position:absolute;
+      left:0;
+      top:0;
+      width: var(--orb-d);
+      height: var(--orb-d);
+      transform: translate(-50%,-50%);
+      border-radius:999px;
+      overflow:hidden;
+      pointer-events:none;
+    }
+    .orbGlobePreviewLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:0;
+      height:0;
+      pointer-events:none;
+      overflow:visible;
+    }
+    .worldGlobeSamples{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:44px;
+      pointer-events:none;
+    }
+    .worldGlobeSample{
+      min-width:86px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .worldGlobeSample > div:first-child{
+      position:relative;
+      left:auto;
+      top:auto;
+      box-sizing:border-box;
+    }
+    .worldGlobeSampleLabel{
+      opacity:.78;
+    }
+    .innerGlobe{
+      position:absolute;
+      border-radius:999px;
+      background: rgba(255,214,64,1);
+      box-shadow: inset 0 0 0 var(--orb-globe-inner-stroke) rgba(255,214,64,0.96), 0 0 6px rgba(255,214,64,0.22);
+      box-sizing:border-box;
+      pointer-events:none;
+    }
+    .releasedGlobe{
+      position:absolute;
+      border-radius:999px;
+      border: var(--orb-globe-released-stroke) solid rgba(255,214,64,0.96);
+      background: rgba(255,214,64,0.42);
+      box-shadow: inset 0 0 0 1px rgba(255,239,168,0.38), 0 0 10px rgba(255,214,64,0.28);
+      box-sizing:border-box;
+      pointer-events:none;
+    }
+    .orbitGlobe{
+      position:absolute;
+      border-radius:999px;
+      border: var(--orb-globe-orbit-stroke) solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      box-shadow:none;
+      box-sizing:border-box;
+      pointer-events:none;
+    }
+    .pickupGlobe{
+      position:absolute;
+      width: var(--orb-globe-pickup-d);
+      height: var(--orb-globe-pickup-d);
+      border-radius:999px;
+      border: 2px solid rgba(255,214,64,0.96);
+      background: rgba(255,214,64,0.42);
+      box-sizing:border-box;
+      filter: drop-shadow(0 0 8px rgba(255,214,64,0.28));
+      pointer-events:none;
+      z-index:6;
+    }
+    .orbShard{
+      fill: var(--orb-fill);
+      stroke: var(--orb-stroke-color);
+      stroke-width: var(--orb-fracture-shard-stroke);
+      vector-effect: non-scaling-stroke;
+      stroke-linejoin:round;
+      stroke-linecap:round;
+      filter: drop-shadow(
+        0 0 var(--orb-fracture-glow-blur)
+        color-mix(in srgb, var(--orb-stroke-color) calc(var(--orb-fracture-glow-alpha) * 100%), transparent)
+      );
+    }
+
+    .shield{
+      width: var(--shield-d);
+      height: var(--shield-d);
+      border-radius: 999px;
+
+      opacity:0;
+      filter: opacity(var(--shield-fade));
+      transform: translate(-50%,-50%) scale(0.96);
+      transform-origin: 50% 50%;
+
+      border: var(--shield-stroke) solid rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.0);
+      background: radial-gradient(circle at 45% 35%,
+        rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.12) 0%,
+        rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.05) 40%,
+        rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.00) 75%);
+      transition:
+        opacity 120ms linear,
+        transform 120ms ease-out,
+        border-color 120ms linear;
+      box-shadow:none;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes shieldPulseAlpha {
+      0%   { opacity: var(--shield-pulse-min); }
+      50%  { opacity: var(--shield-pulse-max); }
+      100% { opacity: var(--shield-pulse-min); }
+    }
+
+    /* Pulse only while ON */
+    .shield.on{
+      transform: translate(-50%,-50%) scale(1.02);
+      border-color: rgba(var(--shield-r), var(--shield-g), var(--shield-b), 0.85);
+      transition: none;
+      animation: shieldPulseAlpha var(--shield-pulse-ms) linear infinite;
+    }
+
+    .shockLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:0;
+      height:0;
+      pointer-events:none;
+      overflow:visible;
+    }
+    .shockSvg{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      overflow:visible;
+      pointer-events:none;
+    }
+    .flameLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:0;
+      height:0;
+      pointer-events:none;
+      overflow:visible;
+      z-index: 3;
+      mix-blend-mode: screen;
+    }
+    .flameSvg{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      overflow:visible;
+      pointer-events:none;
+    }
+    .electricLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:0;
+      height:0;
+      pointer-events:none;
+      overflow:visible;
+      z-index: 4;
+      mix-blend-mode: screen;
+    }
+    .electricSvg{
+      position:absolute;
+      left:0;
+      top:0;
+      transform: translate(-50%,-50%);
+      overflow:visible;
+      pointer-events:none;
+    }
+
+    .section{
+      border-top:1px solid rgba(var(--frame-rgb), .18);
+      padding-top:12px;
+      margin-top:12px;
+    }
+    .section:first-child{
+      border-top:none;
+      padding-top:0;
+      margin-top:0;
+    }
+    .section[hidden]{ display:none; }
+    [data-preview-layer][hidden]{ display:none !important; }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .orbGlobeActions{
+      flex-wrap:nowrap;
+      gap:6px;
+    }
+    .orbGlobeActions button{
+      flex:1 1 0;
+      min-width:0;
+      padding:8px 8px;
+      white-space:nowrap;
+    }
+
+    button{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--frame);
+      background:rgba(var(--frame-rgb), .12);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+    button:hover{border-color:var(--frame-strong); color:var(--text-strong)}
+    button:disabled{ opacity:.55; cursor:default; }
+
+    .sliderRow{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+      opacity:.92;
+      margin-top:10px;
+    }
+    .sliderRow strong{ font-weight: 1000; opacity:1; }
+    input[type="range"]{
+      width:100%;
+      margin-top:8px;
+      accent-color: var(--emphasis);
+    }
+
+    .hint{
+      margin-top:10px;
+      font-size:11px;
+      opacity:.75;
+      line-height:1.35;
+    }
+
+    @media (max-width: 960px){
+      .wrap{ grid-template-columns: 1fr; }
+      .studioBar{
+        align-items:stretch;
+      }
+      .studioBarGroup{
+        width:100%;
+      }
+      .effectSelect{
+        flex:1;
+        min-width:180px;
+      }
+      .stage{ height:min(50vh, 520px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="studioBar" role="toolbar" aria-label="VFX studio effect library and profile actions">
+      <div class="studioBarGroup studioWorkspaceGroup">
+        <nav data-lab-workspace-nav></nav>
+      </div>
+      <div class="studioBarGroup">
+        <label class="studioBarLabel" for="effectSelect">Effect</label>
+        <select id="effectSelect" class="effectSelect" aria-label="Select effect controls">
+          <option value="bubble-shield" data-registry-id="spell.shield_bubble" data-base-effect="bubble-shield" data-category="spell" data-locked="true" selected>Bubble Shield</option>
+          <option value="electric-aoe" data-registry-id="spell.aoe_electric" data-base-effect="electric-aoe" data-category="spell" data-locked="true">Electric AOE</option>
+          <option value="flame-aoe" data-registry-id="spell.aoe_flame" data-base-effect="flame-aoe" data-category="spell" data-locked="true">Flame AOE</option>
+          <option value="shockwave" data-registry-id="spell.shockwave_ring" data-base-effect="shockwave" data-category="spell" data-locked="true">Shockwave</option>
+        </select>
+      </div>
+      <div class="studioBarGroup">
+        <button id="newEffectBtn" class="toolBtn" type="button">New</button>
+        <button id="renameEffectBtn" class="toolBtn" type="button">Rename</button>
+        <button id="duplicateEffectBtn" class="toolBtn" type="button">Duplicate</button>
+        <button id="deleteEffectBtn" class="toolBtn" type="button">Delete</button>
+        <button id="saveDraftBtn" class="toolBtn secondary" type="button">Save</button>
+        <button id="connectProjectBtn" class="toolBtn secondary" type="button">Connect Project</button>
+        <button id="publishPresetBtn" class="toolBtn secondary" type="button">Publish</button>
+        <button id="lockEffectBtn" class="toolBtn lockBtn unlocked" type="button" aria-label="Lock effect profile" title="Lock effect profile"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage" id="stage" aria-label="Preview stage">
+        <div class="previewLane" id="shieldPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="shield atOrigin" id="shieldLaneShield"></div>
+          <div class="orb atOrigin" id="shieldLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="shockPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="shockLayer" id="shockLaneLayer"></div>
+          <div class="orb atOrigin" id="shockLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="flamePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="flameLayer" id="flameLaneLayer"></div>
+          <div class="orb atOrigin" id="flameLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="electricPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="electricLayer" id="electricLaneLayer"></div>
+          <div class="orb atOrigin" id="electricLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbBasePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbBaseLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbTemplatePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbTemplateLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbNodPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbNodLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbLifecyclePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <svg class="orbShatterLayer" id="orbLifecycleShatterLayer" viewBox="-120 -120 240 240"></svg>
+          <svg class="orbTemplatePatternLayer" id="orbLifecyclePatternLayer" viewBox="-50 -50 100 100"></svg>
+          <div class="orb atOrigin" id="orbLifecycleLaneOrb"></div>
+        </div>
+        <div class="previewLane" id="orbGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orbGlobePreviewLayer" id="orbGlobeLaneLayer"></div>
+          <div class="orb atOrigin" id="orbGlobeLaneOrb"></div>
+          <div class="orbInterior" id="orbGlobeLaneInterior"></div>
+        </div>
+        <div class="previewLane" id="worldGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="worldGlobeSamples" id="worldGlobeLaneLayer"></div>
+        </div>
+        <div class="previewLane" id="orbTeleportPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <div class="orb atOrigin" id="orbTeleportLaneOrb"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="authoringTabs" role="tablist" aria-label="Authoring surface">
+        <button id="vfxTabBtn" class="authoringTab active" type="button" role="tab" aria-selected="true" aria-controls="vfxAuthoringPanel">VFX</button>
+        <button id="behaviorTabBtn" class="authoringTab" type="button" role="tab" aria-selected="false" aria-controls="behaviorAuthoringPanel">Behavior</button>
+      </div>
+
+      <div id="vfxAuthoringPanel" class="authoringPanel" role="tabpanel" aria-labelledby="vfxTabBtn">
+
+      <!-- Electric AOE controls -->
+      <div class="section" data-effect="electric-aoe" hidden>
+        <div class="row">
+          <button id="playElectric">Play</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="electricMs">Duration ms</label>
+            <input id="electricMs" class="paramFieldInput" type="number" min="200" max="60000" step="10" value="10000" />
+            <button id="electricApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="electricStartRatio">Plasma start ratio</label>
+            <input id="electricStartRatio" class="paramFieldInput" type="number" min="0.02" max="5" value="0.83" step="0.01" />
+            <button id="electricApplyStartRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="electricEndRatio">Plasma end ratio</label>
+            <input id="electricEndRatio" class="paramFieldInput" type="number" min="0.08" max="12" value="2.00" step="0.01" />
+            <button id="electricApplyEndRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shield controls -->
+      <div class="section" data-effect="bubble-shield">
+        <div class="row">
+          <button id="playShield">Play</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="shieldMs">Duration ms</label>
+            <input id="shieldMs" class="paramFieldInput" type="number" min="80" max="120000" step="10" value="8000" />
+            <button id="shieldApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldDiameterRatio">Diameter ratio</label>
+            <input id="shieldDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="8" step="0.01" value="1.24" />
+            <button id="shieldApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldStrokeRatio">Stroke ratio</label>
+            <input id="shieldStrokeRatio" class="paramFieldInput" type="number" min="0.005" max="1" step="0.001" value="0.040" />
+            <button id="shieldApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shieldAlpha">Opacity</label>
+            <input id="shieldAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
+            <button id="shieldApplyAlphaBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="pulseMs">Pulse rate ms</label>
+            <input id="pulseMs" class="paramFieldInput" type="number" min="20" max="700" step="5" value="80" />
+            <button id="shieldApplyPulseMsBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="pulseMin">Pulse min alpha</label>
+            <input id="pulseMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.30" />
+            <button id="shieldApplyPulseMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="pulseMax">Pulse max alpha</label>
+            <input id="pulseMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
+            <button id="shieldApplyPulseMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow rgbParamRow">
+            <span class="rgbaLabel">RGB</span>
+            <label for="shieldR">r</label>
+            <input id="shieldR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="120" />
+            <label for="shieldG">g</label>
+            <input id="shieldG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="210" />
+            <label for="shieldB">b</label>
+            <input id="shieldB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="shieldApplyColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shockwave controls -->
+      <div class="section" data-effect="shockwave" hidden>
+        <div class="row">
+          <button id="playShock">Play</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="shockStartRatio">Start ratio</label>
+            <input id="shockStartRatio" class="paramFieldInput" type="number" min="0.01" max="10" value="0.43" step="0.01" />
+            <button id="shockApplyStartRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shockEndRatio">End ratio</label>
+            <input id="shockEndRatio" class="paramFieldInput" type="number" min="0.01" max="20" value="1.69" step="0.01" />
+            <button id="shockApplyEndRBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="rings">Ring count</label>
+            <input id="rings" class="paramFieldInput" type="number" min="1" max="6" value="2" step="1" />
+            <button id="shockApplyRingsBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="spawn">Spawn rate ms</label>
+            <input id="spawn" class="paramFieldInput" type="number" min="1" max="700" value="105" step="1" />
+            <button id="shockApplySpawnBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="shockStrokeRatio">Stroke ratio</label>
+            <input id="shockStrokeRatio" class="paramFieldInput" type="number" min="0.005" max="1" value="0.040" step="0.001" />
+            <button id="shockApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="decay">Decay ms</label>
+            <input id="decay" class="paramFieldInput" type="number" min="40" max="2000" value="150" step="10" />
+            <button id="shockApplyDecayBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">RGBA</span>
+            <label for="shockR">r</label>
+            <input id="shockR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="shockG">g</label>
+            <input id="shockG" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="shockB">b</label>
+            <input id="shockB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="shockA">a</label>
+            <input id="shockA" class="paramFieldInput" type="number" min="0" max="1" value="0.65" step="0.01" />
+            <button id="shockApplyColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flame AOE controls -->
+      <div class="section" data-effect="flame-aoe" hidden>
+        <div class="row">
+          <button id="playFlame">Play</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="flameDiameterRatio">Diameter ratio</label>
+            <input id="flameDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="12" value="1.24" step="0.01" />
+            <button id="flameApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="flameMs">Duration ms</label>
+            <input id="flameMs" class="paramFieldInput" type="number" min="200" max="60000" step="10" value="10000" />
+            <button id="flameApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Stroke RGBA</span>
+            <label for="flameStrokeR">r</label>
+            <input id="flameStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="flameStrokeG">g</label>
+            <input id="flameStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="96" step="1" />
+            <label for="flameStrokeB">b</label>
+            <input id="flameStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="24" step="1" />
+            <label for="flameStrokeA">a</label>
+            <input id="flameStrokeA" class="paramFieldInput" type="number" min="0" max="1" value="1.00" step="0.01" />
+            <button id="flameApplyStrokeColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Fill RGBA</span>
+            <label for="flameFillR">r</label>
+            <input id="flameFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+            <label for="flameFillG">g</label>
+            <input id="flameFillG" class="paramFieldInput" type="number" min="0" max="255" value="96" step="1" />
+            <label for="flameFillB">b</label>
+            <input id="flameFillB" class="paramFieldInput" type="number" min="0" max="255" value="24" step="1" />
+            <label for="flameFillA">a</label>
+            <input id="flameFillA" class="paramFieldInput" type="number" min="0" max="1" value="0.20" step="0.01" />
+            <button id="flameApplyFillColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="orb-base" hidden>
+        <div class="row">
+          <button id="previewOrbBase">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbBaseD">Diameter</label>
+            <input id="orbBaseD" class="paramFieldInput" type="number" min="20" max="400" step="2" value="100" />
+            <button id="orbBaseApplyDiameterBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbBaseStroke">Stroke width</label>
+            <input id="orbBaseStroke" class="paramFieldInput" type="number" min="2" max="20" step="1" value="2" />
+            <button id="orbBaseApplyStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Stroke RGBA</span>
+            <label for="orbBaseStrokeR">r</label>
+            <input id="orbBaseStrokeR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbBaseStrokeG">g</label>
+            <input id="orbBaseStrokeG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbBaseStrokeB">b</label>
+            <input id="orbBaseStrokeB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbBaseStrokeAlpha">a</label>
+            <input id="orbBaseStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
+            <button id="orbBaseApplyStrokeColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Fill RGBA</span>
+            <label for="orbBaseFillR">r</label>
+            <input id="orbBaseFillR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbBaseFillG">g</label>
+            <input id="orbBaseFillG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbBaseFillB">b</label>
+            <input id="orbBaseFillB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbBaseFillAlpha">a</label>
+            <input id="orbBaseFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.20" />
+            <button id="orbBaseApplyFillColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="orb-template" hidden>
+      </div>
+
+      <div class="section" data-effect="orb-nod" hidden>
+        <div class="row">
+          <button id="previewOrbNod" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbNodShrinkPct">Size dip (%)</label>
+            <input id="orbNodShrinkPct" class="paramFieldInput" type="number" min="0" max="40" step="1" value="6" />
+            <button id="orbNodApplyShrinkBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNodDurationMs">Duration (ms)</label>
+            <input id="orbNodDurationMs" class="paramFieldInput" type="number" min="80" max="3000" step="10" value="200" />
+            <button id="orbNodApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNodFillAlpha">Fill opacity</label>
+            <input id="orbNodFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.07" />
+            <button id="orbNodApplyFillOpacityBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNodWaveCount">Wave count</label>
+            <input id="orbNodWaveCount" class="paramFieldInput" type="number" min="2" max="32" step="1" value="10" />
+            <button id="orbNodApplyWaveCountBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNodWaveDepthPx">Wave depth</label>
+            <input id="orbNodWaveDepthPx" class="paramFieldInput" type="number" min="0" max="32" step="0.5" value="10" />
+            <button id="orbNodApplyWaveDepthBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNodOscillationSpeedHz">Oscillation speed (Hz)</label>
+            <input id="orbNodOscillationSpeedHz" class="paramFieldInput" type="number" min="1" max="40" step="0.5" value="12" />
+            <button id="orbNodApplyOscillationSpeedBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNodOscillationCount">Oscillation count</label>
+            <input id="orbNodOscillationCount" class="paramFieldInput" type="number" min="0" max="12" step="1" value="2" />
+            <button id="orbNodApplyOscillationCountBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="teleport" hidden>
+        <div class="row">
+          <button id="previewOrbTeleport" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbTeleportFlickerOnMs">Flicker on (ms)</label>
+            <input id="orbTeleportFlickerOnMs" class="paramFieldInput" type="number" min="10" max="1000" step="5" value="60" />
+            <button id="orbTeleportApplyFlickerOnBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleportFlickerOffMs">Flicker off (ms)</label>
+            <input id="orbTeleportFlickerOffMs" class="paramFieldInput" type="number" min="10" max="1000" step="5" value="60" />
+            <button id="orbTeleportApplyFlickerOffBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleportFadeOutMs">Fade-out (ms)</label>
+            <input id="orbTeleportFadeOutMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="280" />
+            <button id="orbTeleportApplyFadeOutBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleportFadeInMs">Fade-in (ms)</label>
+            <input id="orbTeleportFadeInMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="280" />
+            <button id="orbTeleportApplyFadeInBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="orb-lifecycle" hidden>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbLifecycleShardTotal">Shards total</label>
+            <input id="orbLifecycleShardTotal" class="paramFieldInput" type="number" min="3" max="64" step="1" value="16" />
+            <button id="orbLifecycleApplyShardTotalBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbLifecycleHitTotal">Hit total</label>
+            <input id="orbLifecycleHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
+            <button id="orbLifecycleApplyHitTotalBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Shard RGBA</span>
+            <label for="orbLifecycleShardR">r</label>
+            <input id="orbLifecycleShardR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbLifecycleShardG">g</label>
+            <input id="orbLifecycleShardG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbLifecycleShardB">b</label>
+            <input id="orbLifecycleShardB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orbLifecycleShardA">a</label>
+            <input id="orbLifecycleShardA" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" />
+            <button id="orbLifecycleApplyShardColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbLifecycleShardStroke">Shard stroke width</label>
+            <input id="orbLifecycleShardStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1" />
+            <button id="orbLifecycleApplyShardStrokeBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbLifecycleHitBtn">Damage flow</label>
+            <input id="orbLifecycleStatus" class="paramFieldInput" type="text" value="Hits 0 / 3" readonly />
+            <button id="orbLifecycleHitBtn" class="toolBtn" type="button">Hit</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbLifecycleHealBtn">Recovery</label>
+            <input class="paramFieldInput" type="text" value="Reverse one hit while preserving the same fracture map" readonly />
+            <button id="orbLifecycleHealBtn" class="toolBtn" type="button">Heal</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbLifecycleRegenerateBtn">Regenerate</label>
+            <input class="paramFieldInput" type="text" value="Rebuild the orb with a fresh Voronoi seed" readonly />
+            <button id="orbLifecycleRegenerateBtn" class="toolBtn" type="button">Regenerate</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="orb-globe" hidden>
+        <div class="row orbGlobeActions">
+          <button id="previewOrbGlobe">Preview</button>
+          <button id="orbGlobeAddBtn" type="button">Add Globe</button>
+          <button id="orbGlobeBindBtn" type="button">Bind Globe</button>
+          <button id="orbGlobeClearBtn" type="button">Clear</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitDistanceRatio">Orbit distance ratio</label>
+            <input id="orbGlobeOrbitDistanceRatio" class="paramFieldInput" type="number" min="0.50" max="2.00" value="1.10" step="0.01" />
+            <button id="orbGlobeApplyOrbitDistanceRatioBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeOrbitDistanceMin">Orbit distance min px</label>
+            <input id="orbGlobeOrbitDistanceMin" class="paramFieldInput" type="number" min="0" max="60" value="14" step="1" />
+            <button id="orbGlobeApplyOrbitDistanceMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeSpeedMin">Orbit speed min</label>
+            <input id="orbGlobeSpeedMin" class="paramFieldInput" type="number" min="0" max="12" value="1.80" step="0.05" />
+            <button id="orbGlobeApplySpeedMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeSpeedMax">Orbit speed max</label>
+            <input id="orbGlobeSpeedMax" class="paramFieldInput" type="number" min="0" max="12" value="2.45" step="0.05" />
+            <button id="orbGlobeApplySpeedMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeDriftMin">Orbit drift min</label>
+            <input id="orbGlobeDriftMin" class="paramFieldInput" type="number" min="0" max="2" value="0.03" step="0.01" />
+            <button id="orbGlobeApplyDriftMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeDriftMax">Orbit drift max</label>
+            <input id="orbGlobeDriftMax" class="paramFieldInput" type="number" min="0" max="2" value="0.18" step="0.01" />
+            <button id="orbGlobeApplyDriftMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerSpeedMin">inner-speed min px/s</label>
+            <input id="orbGlobeInnerSpeedMin" class="paramFieldInput" type="number" min="0" max="600" value="80" step="1" />
+            <button id="orbGlobeApplyInnerSpeedMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerSpeedMax">inner-speed max px/s</label>
+            <input id="orbGlobeInnerSpeedMax" class="paramFieldInput" type="number" min="0" max="600" value="150" step="1" />
+            <button id="orbGlobeApplyInnerSpeedMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerDriftMin">inner-drift min</label>
+            <input id="orbGlobeInnerDriftMin" class="paramFieldInput" type="number" min="0" max="1.5" value="0.08" step="0.01" />
+            <button id="orbGlobeApplyInnerDriftMinBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerDriftMax">inner-drift max</label>
+            <input id="orbGlobeInnerDriftMax" class="paramFieldInput" type="number" min="0" max="1.5" value="0.28" step="0.01" />
+            <button id="orbGlobeApplyInnerDriftMaxBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbGlobeInnerPaddingRatio">inner-padding ratio</label>
+            <input id="orbGlobeInnerPaddingRatio" class="paramFieldInput" type="number" min="0" max="0.50" value="0.06" step="0.01" />
+            <button id="orbGlobeApplyInnerPaddingBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="world-globe" hidden>
+        <div class="row">
+          <button id="previewWorldGlobe">Preview</button>
+        </div>
+        <div class="behaviorTitle">Idle</div>
+        <div class="paramGrid">
+          <div class="paramField"><label for="worldGlobeIdleDiameterRatio">Diameter ratio</label><input id="worldGlobeIdleDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.25" step="0.01" /><button id="worldGlobeApplyIdleDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Fill RGBA</span><label for="worldGlobeIdleFillR">r</label><input id="worldGlobeIdleFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeIdleFillG">g</label><input id="worldGlobeIdleFillG" class="paramFieldInput" type="number" min="0" max="255" value="225" step="1" /><label for="worldGlobeIdleFillB">b</label><input id="worldGlobeIdleFillB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeIdleFillAlpha">a</label><input id="worldGlobeIdleFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.75" step="0.01" /><button id="worldGlobeApplyIdleFillColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Stroke RGBA</span><label for="worldGlobeIdleStrokeR">r</label><input id="worldGlobeIdleStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeIdleStrokeG">g</label><input id="worldGlobeIdleStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="214" step="1" /><label for="worldGlobeIdleStrokeB">b</label><input id="worldGlobeIdleStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="64" step="1" /><label for="worldGlobeIdleStrokeAlpha">a</label><input id="worldGlobeIdleStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyIdleStrokeColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleStrokeWidthRatio">Stroke ratio</label><input id="worldGlobeIdleStrokeWidthRatio" class="paramFieldInput" type="number" min="0" max="1" value="0" step="0.001" /><button id="worldGlobeApplyIdleStrokeWidthRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleDriftRatio">Drift ratio</label><input id="worldGlobeIdleDriftRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.10" step="0.01" /><button id="worldGlobeApplyIdleDriftRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleBobRatio">Bob ratio</label><input id="worldGlobeIdleBobRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.07" step="0.01" /><button id="worldGlobeApplyIdleBobRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdleBobHz">Bob hz</label><input id="worldGlobeIdleBobHz" class="paramFieldInput" type="number" min="0" max="20" value="0.65" step="0.05" /><button id="worldGlobeApplyIdleBobHzBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdlePulseScale">Pulse scale</label><input id="worldGlobeIdlePulseScale" class="paramFieldInput" type="number" min="0" max="1" value="0.045" step="0.005" /><button id="worldGlobeApplyIdlePulseScaleBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeIdlePulseHz">Pulse hz</label><input id="worldGlobeIdlePulseHz" class="paramFieldInput" type="number" min="0" max="20" value="0.9" step="0.05" /><button id="worldGlobeApplyIdlePulseHzBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+        <div class="behaviorTitle">Collected</div>
+        <div class="paramGrid" id="worldGlobeCollectedFields">
+          <div class="paramField"><label for="worldGlobeCollectedDiameterRatio">Diameter ratio</label><input id="worldGlobeCollectedDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.14" step="0.01" /><button id="worldGlobeApplyCollectedDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Fill RGBA</span><label for="worldGlobeCollectedFillR">r</label><input id="worldGlobeCollectedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedFillG">g</label><input id="worldGlobeCollectedFillG" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedFillB">b</label><input id="worldGlobeCollectedFillB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedFillAlpha">a</label><input id="worldGlobeCollectedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.42" step="0.01" /><button id="worldGlobeApplyCollectedFillColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Stroke RGBA</span><label for="worldGlobeCollectedStrokeR">r</label><input id="worldGlobeCollectedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedStrokeG">g</label><input id="worldGlobeCollectedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedStrokeB">b</label><input id="worldGlobeCollectedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeCollectedStrokeAlpha">a</label><input id="worldGlobeCollectedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyCollectedStrokeColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeCollectedStrokeWidthRatio">Stroke ratio</label><input id="worldGlobeCollectedStrokeWidthRatio" class="paramFieldInput" type="number" min="0" max="1" value="0.02" step="0.001" /><button id="worldGlobeApplyCollectedStrokeWidthRatioBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+        <div class="behaviorTitle">Consumed</div>
+        <div class="paramGrid" id="worldGlobeConsumedFields">
+          <div class="paramField"><label for="worldGlobeConsumedDiameterRatio">Diameter ratio</label><input id="worldGlobeConsumedDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.11" step="0.01" /><button id="worldGlobeApplyConsumedDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Fill RGBA</span><label for="worldGlobeConsumedFillR">r</label><input id="worldGlobeConsumedFillR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedFillG">g</label><input id="worldGlobeConsumedFillG" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedFillB">b</label><input id="worldGlobeConsumedFillB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedFillAlpha">a</label><input id="worldGlobeConsumedFillAlpha" class="paramFieldInput" type="number" min="0" max="1" value="1" step="0.01" /><button id="worldGlobeApplyConsumedFillColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Stroke RGBA</span><label for="worldGlobeConsumedStrokeR">r</label><input id="worldGlobeConsumedStrokeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedStrokeG">g</label><input id="worldGlobeConsumedStrokeG" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedStrokeB">b</label><input id="worldGlobeConsumedStrokeB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobeConsumedStrokeAlpha">a</label><input id="worldGlobeConsumedStrokeAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.96" step="0.01" /><button id="worldGlobeApplyConsumedStrokeColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobeConsumedStrokeWidthRatio">Stroke ratio</label><input id="worldGlobeConsumedStrokeWidthRatio" class="paramFieldInput" type="number" min="0" max="1" value="0.02" step="0.001" /><button id="worldGlobeApplyConsumedStrokeWidthRatioBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+      </div>
+      </div>
+
+      <div id="behaviorAuthoringPanel" class="authoringPanel" role="tabpanel" aria-labelledby="behaviorTabBtn" hidden>
+        <div class="bindingPanel" id="bindingPanel" aria-live="polite">
+          <div class="bindingEditor">
+            <div class="bindingEditorRow">
+              <label class="bindingEditorLabel" for="bindingTargetSelect">Runtime target</label>
+              <select id="bindingTargetSelect" class="bindingSelect" aria-label="Bind effect to runtime target"></select>
+              <button id="bindBtn" class="toolBtn secondary" type="button">Bind</button>
+            </div>
+            <div class="bindingEditorHelp" id="bindingEditorHelp"></div>
+          </div>
+          <h3>Binding Readout</h3>
+          <div class="bindingGrid" id="bindingGrid"></div>
+        </div>
+        <div class="behaviorSection" data-behavior-effect="teleport" hidden>
+          <h3 class="behaviorTitle">Teleport Behavior</h3>
+          <div class="row">
+            <button id="applyTeleportBehaviorBtn" class="toolBtn" type="button">Apply Behavior</button>
+            <button id="previewTeleportBehaviorBtn" class="toolBtn" type="button">Preview Behavior</button>
+          </div>
+          <div id="teleportBehaviorReadout" class="behaviorReadout" aria-live="polite"></div>
+          <div class="paramFieldRows">
+            <div class="paramFieldRow">
+              <label for="orbTeleportCameraTravelMs">Camera travel (ms)</label>
+              <input id="orbTeleportCameraTravelMs" class="paramFieldInput" type="number" min="0" max="8000" value="1500" step="10" />
+              <button id="orbTeleportApplyCameraTravelBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleportBehaviorEasing">Travel easing</label>
+              <input id="teleportBehaviorEasing" class="paramFieldInput" type="text" value="easeInOutExpo" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleportBehaviorFreeze">Freeze orb</label>
+              <input id="teleportBehaviorFreeze" class="paramFieldInput" type="text" value="true" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleportBehaviorGrace">Grace starts after travel</label>
+              <input id="teleportBehaviorGrace" class="paramFieldInput" type="text" value="true" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="behaviorSection" data-behavior-effect="default">
+          <h3 class="behaviorTitle">No Behavior Surface</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    const showLabBootError = (message) => {
+      try {
+        const stage = document.getElementById("stage");
+        if (!stage) return;
+        let card = document.getElementById("labBootError");
+        if (!card) {
+          card = document.createElement("div");
+          card.id = "labBootError";
+          card.style.position = "absolute";
+          card.style.left = "16px";
+          card.style.right = "16px";
+          card.style.bottom = "16px";
+          card.style.padding = "12px 14px";
+          card.style.border = "1px solid rgba(255,80,80,0.5)";
+          card.style.background = "rgba(24,0,0,0.92)";
+          card.style.color = "#ffb3b3";
+          card.style.fontFamily = "ui-monospace, SFMono-Regular, Menlo, monospace";
+          card.style.fontSize = "12px";
+          card.style.lineHeight = "1.4";
+          card.style.whiteSpace = "pre-wrap";
+          card.style.zIndex = "20";
+          card.style.pointerEvents = "auto";
+          stage.appendChild(card);
+        }
+        card.textContent = `LAB BOOT ERROR\n${String(message || "unknown error")}`;
+      } catch (_) {
+        // Avoid recursive boot failure.
+      }
+    };
+
+    import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410b";
+    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260416a";
+    import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
+    import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
+    import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
+    const [
+      {
+        renderLabWorkspaceNav,
+      },
+      {
+        bootStudioShell,
+        refreshEffectMeta: refreshEffectMetaHelper,
+        refreshLockUi: refreshLockUiHelper,
+        toggleSelectedEffectLock: toggleSelectedEffectLockHelper,
+      },
+      { createStudioBootstrap },
+      {
+        buildEffectLibraryOptionsFromRegistry: buildEffectLibraryOptionsFromRegistryHelper,
+        buildPresetDraftRecordFromSelection: buildPresetDraftRecordFromSelectionHelper,
+        createCustomEffectProfile: createCustomEffectProfileHelper,
+        createDraftStore,
+        deleteEffectProfile: deleteEffectProfileHelper,
+        duplicateEffectProfile: duplicateEffectProfileHelper,
+        findEffectOptionByValue: findEffectOptionByValueHelper,
+        isCoreEffectOption: isCoreEffectOptionHelper,
+        isCustomEffectOption: isCustomEffectOptionHelper,
+        isSelectedEffectLocked: isSelectedEffectLockedHelper,
+        loadDraftStore: loadDraftStoreHelper,
+        persistDraftStore: persistDraftStoreHelper,
+        renameEffectProfile: renameEffectProfileHelper,
+        selectedBaseEffect: selectedBaseEffectHelper,
+        selectedSpawnBaseEffect: selectedSpawnBaseEffectHelper,
+        selectedEffectCategory: selectedEffectCategoryHelper,
+        selectedEffectOption: selectedEffectOptionHelper,
+        slugifyEffectName: slugifyEffectNameHelper,
+        upsertCurrentDraftProfile: upsertCurrentDraftProfileHelper,
+      },
+      { LAB_STUDIO_CATEGORIES },
+      {
+        buildRuntimeEffectBindingsModule,
+        populateBindingTargetOptions: populateBindingTargetOptionsHelper,
+        refreshBindingPanel: refreshBindingPanelHelper,
+      },
+      {
+        buildBindingCleanupPlan,
+        buildBindingPublishPlan,
+        buildPublishedPresetPayload: buildPublishedPresetPayloadHelper,
+        collectBindingsForPresetId,
+        findRegistryEntry,
+        describePublishSuccess: describePublishSuccessHelper,
+        RUNTIME_BINDINGS_TARGET_PATH,
+        supportsBindingPublish,
+      },
+      {
+        publishLabPreset,
+        writeRuntimeBindingModule,
+      },
+      {
+        createLabEffectSurfaces,
+        deriveLabSurfaceMaps,
+      },
+      {
+        applyLabThemeDefaults,
+        buildTeleportBehaviorModule,
+        buildLivePresetModuleForBaseEffect,
+        connectProjectFolder: connectProjectFolderHelper,
+        downloadTextFile,
+        refreshProjectConnectUi: refreshProjectConnectUiHelper,
+        saveTextToConnectedProjectDrafts: saveTextToConnectedProjectDraftsHelper,
+        saveTextToConnectedProjectPath: saveTextToConnectedProjectPathHelper,
+        saveTextToProjectFile,
+      },
+    ] = await Promise.all([
+      import("../shell/lab-workspaces.js?v=20260425a"),
+      import("./vfx-studio-shell.js?v=20260419c"),
+      import("./vfx-studio-bootstrap.js?v=20260419c"),
+      import("./vfx-studio-state.js?v=20260419c"),
+      import("./vfx-studio-categories.js?v=20260419c"),
+      import("./vfx-studio-bindings.js?v=20260419c"),
+      import("./vfx-studio-publish.js?v=20260419c"),
+      import("./vfx-studio-publish-orchestrator.js?v=20260419c"),
+      import("./vfx-studio-surfaces.js?v=20260419c"),
+      import("./vfx-studio-theme-publish.js?v=20260419c"),
+    ]).catch((err) => {
+      showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
+      throw err;
+    });
+    import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260418c";
+    import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260418a";
+    import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260418a";
+    import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260418a";
+    import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260418a";
+    import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260418b";
+    import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260418a";
+    import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260418a";
+    import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260418b";
+    import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260418a";
+    import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260418a";
+    import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260418a";
+    import {
+      SHOCKWAVE_PRESET_DEFAULT,
+      ELECTRIC_AOE_PRESET_DEFAULT,
+      ORB_NOD_PRESET_DEFAULT,
+      TELEPORT_PRESET_DEFAULT
+    } from "../../src/vfx/presets/index.js?v=20260418a";
+    import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
+    import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
+    import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260418a";
+    import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260418b";
+    import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260418a";
+    import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
+    import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260418a";
+
+    renderLabWorkspaceNav({ currentWorkspaceId: "vfx-studio" });
+
+    const $ = (id) => document.getElementById(id);
+    const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
+    const draftStore = createDraftStore();
+    let draftHydrationDone = false;
+    let suspendDraftApply = false;
+    const lastSelectedEffectValueRef = { value: "" };
+    let projectRootDirHandle = null;
+    let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
+    const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
+    const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
+      buildTeleportBehaviorModule,
+      createBubbleShieldAuthoringAdapter,
+      createElectricAoeAuthoringAdapter,
+      createFlameAoeAuthoringAdapter,
+      createOrbBaseAuthoringAdapter,
+      createOrbGlobeAuthoringAdapter,
+      createOrbLifecycleAuthoringAdapter,
+      createOrbNodAuthoringAdapter,
+      createShockwaveAuthoringAdapter,
+      createTeleportAuthoringAdapter,
+      createWorldGlobeAuthoringAdapter,
+    });
+    const {
+      studioBaseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
+      studioOmitRegistryIds: STUDIO_OMIT_REGISTRY_IDS,
+      defaultBindTargetByEffectId: DEFAULT_BIND_TARGET_BY_EFFECT_ID,
+      settingsKeyByBaseEffect: SETTINGS_KEY_BY_BASE_EFFECT,
+      defaultSettingsKeyByBaseEffect: DEFAULT_SETTINGS_KEY_BY_BASE_EFFECT,
+      studioExtraBuiltinOptions: STUDIO_EXTRA_BUILTIN_OPTIONS,
+      livePresetModulesByBaseEffect: LIVE_PRESET_MODULES_BY_BASE_EFFECT,
+      livePresetBuildersByBaseEffect: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT,
+      labBehaviorSurfaces: LAB_BEHAVIOR_SURFACES,
+      labAuthoringAdapterFactoriesByBaseEffect: LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT,
+      liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
+      liveBehaviorBuildersByBaseEffect: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT,
+      publishContractsByBaseEffect: PUBLISH_CONTRACTS_BY_BASE_EFFECT,
+    } = deriveLabSurfaceMaps({
+      surfaces: LAB_EFFECT_SURFACES,
+      buildLivePresetModuleForBaseEffect,
+    });
+
+    const els = {
+      stage: $("stage"),
+      shieldPreviewRoot: $("shieldPreviewRoot"),
+      shockPreviewRoot: $("shockPreviewRoot"),
+      flamePreviewRoot: $("flamePreviewRoot"),
+      electricPreviewRoot: $("electricPreviewRoot"),
+      orbBasePreviewRoot: $("orbBasePreviewRoot"),
+      orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
+      orbNodPreviewRoot: $("orbNodPreviewRoot"),
+      orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
+      orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
+      worldGlobePreviewRoot: $("worldGlobePreviewRoot"),
+      orbTeleportPreviewRoot: $("orbTeleportPreviewRoot"),
+      orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
+      orbLifecycleShatterLayer: $("orbLifecycleShatterLayer"),
+
+      playShield: $("playShield"),
+      previewOrbTemplate: $("previewOrbTemplate"),
+      previewOrbBase: $("previewOrbBase"),
+      previewOrbGlobe: $("previewOrbGlobe"),
+      orbGlobeAddBtn: $("orbGlobeAddBtn"),
+      orbGlobeBindBtn: $("orbGlobeBindBtn"),
+      orbGlobeClearBtn: $("orbGlobeClearBtn"),
+      previewWorldGlobe: $("previewWorldGlobe"),
+      effectSelect: $("effectSelect"),
+      newEffectBtn: $("newEffectBtn"),
+      saveDraftBtn: $("saveDraftBtn"),
+      connectProjectBtn: $("connectProjectBtn"),
+      publishPresetBtn: $("publishPresetBtn"),
+      bindBtn: $("bindBtn"),
+      vfxTabBtn: $("vfxTabBtn"),
+      behaviorTabBtn: $("behaviorTabBtn"),
+      vfxAuthoringPanel: $("vfxAuthoringPanel"),
+      behaviorAuthoringPanel: $("behaviorAuthoringPanel"),
+      bindingTargetSelect: $("bindingTargetSelect"),
+      lockEffectBtn: $("lockEffectBtn"),
+      renameEffectBtn: $("renameEffectBtn"),
+      duplicateEffectBtn: $("duplicateEffectBtn"),
+      deleteEffectBtn: $("deleteEffectBtn"),
+      bindingPanel: $("bindingPanel"),
+      bindingGrid: $("bindingGrid"),
+      shieldMs: $("shieldMs"),
+      shieldApplyDurationBtn: $("shieldApplyDurationBtn"),
+      shieldAlpha: $("shieldAlpha"),
+      shieldApplyAlphaBtn: $("shieldApplyAlphaBtn"),
+      shieldDiameterRatio: $("shieldDiameterRatio"),
+      shieldApplyDiameterBtn: $("shieldApplyDiameterBtn"),
+      shieldStrokeRatio: $("shieldStrokeRatio"),
+      shieldApplyStrokeBtn: $("shieldApplyStrokeBtn"),
+      shieldR: $("shieldR"),
+      shieldG: $("shieldG"),
+      shieldB: $("shieldB"),
+      shieldApplyColorBtn: $("shieldApplyColorBtn"),
+
+      pulseMs: $("pulseMs"),
+      shieldApplyPulseMsBtn: $("shieldApplyPulseMsBtn"),
+      pulseMin: $("pulseMin"),
+      shieldApplyPulseMinBtn: $("shieldApplyPulseMinBtn"),
+      pulseMax: $("pulseMax"),
+      shieldApplyPulseMaxBtn: $("shieldApplyPulseMaxBtn"),
+
+      playShock: $("playShock"),
+      shockStartRatio: $("shockStartRatio"),
+      shockApplyStartRBtn: $("shockApplyStartRBtn"),
+      shockEndRatio: $("shockEndRatio"),
+      shockApplyEndRBtn: $("shockApplyEndRBtn"),
+      rings: $("rings"),
+      shockApplyRingsBtn: $("shockApplyRingsBtn"),
+      spawn: $("spawn"),
+      shockApplySpawnBtn: $("shockApplySpawnBtn"),
+      shockStrokeRatio: $("shockStrokeRatio"),
+      shockApplyStrokeBtn: $("shockApplyStrokeBtn"),
+      decay: $("decay"),
+      shockApplyDecayBtn: $("shockApplyDecayBtn"),
+      shockR: $("shockR"),
+      shockG: $("shockG"),
+      shockB: $("shockB"),
+      shockA: $("shockA"),
+      shockApplyColorBtn: $("shockApplyColorBtn"),
+
+      playFlame: $("playFlame"),
+      flameDiameterRatio: $("flameDiameterRatio"),
+      flameApplyDiameterBtn: $("flameApplyDiameterBtn"),
+      flameMs: $("flameMs"),
+      flameApplyDurationBtn: $("flameApplyDurationBtn"),
+      flameStrokeR: $("flameStrokeR"),
+      flameStrokeG: $("flameStrokeG"),
+      flameStrokeB: $("flameStrokeB"),
+      flameStrokeA: $("flameStrokeA"),
+      flameApplyStrokeColorBtn: $("flameApplyStrokeColorBtn"),
+      flameFillR: $("flameFillR"),
+      flameFillG: $("flameFillG"),
+      flameFillB: $("flameFillB"),
+      flameFillA: $("flameFillA"),
+      flameApplyFillColorBtn: $("flameApplyFillColorBtn"),
+
+      playElectric: $("playElectric"),
+      electricMs: $("electricMs"),
+      electricApplyDurationBtn: $("electricApplyDurationBtn"),
+      electricStartRatio: $("electricStartRatio"),
+      electricApplyStartRBtn: $("electricApplyStartRBtn"),
+      electricEndRatio: $("electricEndRatio"),
+      electricApplyEndRBtn: $("electricApplyEndRBtn"),
+      orbBaseD: $("orbBaseD"),
+      orbBaseApplyDiameterBtn: $("orbBaseApplyDiameterBtn"),
+      orbBaseStroke: $("orbBaseStroke"),
+      orbBaseApplyStrokeBtn: $("orbBaseApplyStrokeBtn"),
+      orbBaseStrokeAlpha: $("orbBaseStrokeAlpha"),
+      orbBaseFillAlpha: $("orbBaseFillAlpha"),
+      orbBaseStrokeR: $("orbBaseStrokeR"),
+      orbBaseStrokeG: $("orbBaseStrokeG"),
+      orbBaseStrokeB: $("orbBaseStrokeB"),
+      orbBaseApplyStrokeColorBtn: $("orbBaseApplyStrokeColorBtn"),
+      orbBaseFillR: $("orbBaseFillR"),
+      orbBaseFillG: $("orbBaseFillG"),
+      orbBaseFillB: $("orbBaseFillB"),
+      orbBaseApplyFillColorBtn: $("orbBaseApplyFillColorBtn"),
+      previewOrbNod: $("previewOrbNod"),
+      orbNodShrinkPct: $("orbNodShrinkPct"),
+      orbNodApplyShrinkBtn: $("orbNodApplyShrinkBtn"),
+      orbNodDurationMs: $("orbNodDurationMs"),
+      orbNodApplyDurationBtn: $("orbNodApplyDurationBtn"),
+      orbNodFillAlpha: $("orbNodFillAlpha"),
+      orbNodApplyFillOpacityBtn: $("orbNodApplyFillOpacityBtn"),
+      orbNodWaveCount: $("orbNodWaveCount"),
+      orbNodApplyWaveCountBtn: $("orbNodApplyWaveCountBtn"),
+      orbNodWaveDepthPx: $("orbNodWaveDepthPx"),
+      orbNodApplyWaveDepthBtn: $("orbNodApplyWaveDepthBtn"),
+      orbNodOscillationSpeedHz: $("orbNodOscillationSpeedHz"),
+      orbNodApplyOscillationSpeedBtn: $("orbNodApplyOscillationSpeedBtn"),
+      orbNodOscillationCount: $("orbNodOscillationCount"),
+      orbNodApplyOscillationCountBtn: $("orbNodApplyOscillationCountBtn"),
+      orbGlobeOrbitDistanceRatio: $("orbGlobeOrbitDistanceRatio"),
+      orbGlobeApplyOrbitDistanceRatioBtn: $("orbGlobeApplyOrbitDistanceRatioBtn"),
+      orbGlobeOrbitDistanceMin: $("orbGlobeOrbitDistanceMin"),
+      orbGlobeApplyOrbitDistanceMinBtn: $("orbGlobeApplyOrbitDistanceMinBtn"),
+      orbGlobeSpeedMin: $("orbGlobeSpeedMin"),
+      orbGlobeApplySpeedMinBtn: $("orbGlobeApplySpeedMinBtn"),
+      orbGlobeSpeedMax: $("orbGlobeSpeedMax"),
+      orbGlobeApplySpeedMaxBtn: $("orbGlobeApplySpeedMaxBtn"),
+      orbGlobeDriftMin: $("orbGlobeDriftMin"),
+      orbGlobeApplyDriftMinBtn: $("orbGlobeApplyDriftMinBtn"),
+      orbGlobeDriftMax: $("orbGlobeDriftMax"),
+      orbGlobeApplyDriftMaxBtn: $("orbGlobeApplyDriftMaxBtn"),
+      orbGlobeInnerSpeedMin: $("orbGlobeInnerSpeedMin"),
+      orbGlobeApplyInnerSpeedMinBtn: $("orbGlobeApplyInnerSpeedMinBtn"),
+      orbGlobeInnerSpeedMax: $("orbGlobeInnerSpeedMax"),
+      orbGlobeApplyInnerSpeedMaxBtn: $("orbGlobeApplyInnerSpeedMaxBtn"),
+      orbGlobeInnerDriftMin: $("orbGlobeInnerDriftMin"),
+      orbGlobeApplyInnerDriftMinBtn: $("orbGlobeApplyInnerDriftMinBtn"),
+      orbGlobeInnerDriftMax: $("orbGlobeInnerDriftMax"),
+      orbGlobeApplyInnerDriftMaxBtn: $("orbGlobeApplyInnerDriftMaxBtn"),
+      orbGlobeInnerPaddingRatio: $("orbGlobeInnerPaddingRatio"),
+      orbGlobeApplyInnerPaddingBtn: $("orbGlobeApplyInnerPaddingBtn"),
+      orbLifecycleShardTotal: $("orbLifecycleShardTotal"),
+      orbLifecycleApplyShardTotalBtn: $("orbLifecycleApplyShardTotalBtn"),
+      orbLifecycleHitTotal: $("orbLifecycleHitTotal"),
+      orbLifecycleApplyHitTotalBtn: $("orbLifecycleApplyHitTotalBtn"),
+      orbLifecycleShardR: $("orbLifecycleShardR"),
+      orbLifecycleShardG: $("orbLifecycleShardG"),
+      orbLifecycleShardB: $("orbLifecycleShardB"),
+      orbLifecycleShardA: $("orbLifecycleShardA"),
+      orbLifecycleApplyShardColorBtn: $("orbLifecycleApplyShardColorBtn"),
+      orbLifecycleShardStroke: $("orbLifecycleShardStroke"),
+      orbLifecycleApplyShardStrokeBtn: $("orbLifecycleApplyShardStrokeBtn"),
+      orbLifecycleHitBtn: $("orbLifecycleHitBtn"),
+      orbLifecycleHealBtn: $("orbLifecycleHealBtn"),
+      orbLifecycleRegenerateBtn: $("orbLifecycleRegenerateBtn"),
+      orbLifecycleStatus: $("orbLifecycleStatus"),
+      previewOrbTeleport: $("previewOrbTeleport"),
+      orbTeleportFlickerOnMs: $("orbTeleportFlickerOnMs"),
+      orbTeleportApplyFlickerOnBtn: $("orbTeleportApplyFlickerOnBtn"),
+      orbTeleportFlickerOffMs: $("orbTeleportFlickerOffMs"),
+      orbTeleportApplyFlickerOffBtn: $("orbTeleportApplyFlickerOffBtn"),
+      orbTeleportFadeOutMs: $("orbTeleportFadeOutMs"),
+      orbTeleportApplyFadeOutBtn: $("orbTeleportApplyFadeOutBtn"),
+      applyTeleportBehaviorBtn: $("applyTeleportBehaviorBtn"),
+      previewTeleportBehaviorBtn: $("previewTeleportBehaviorBtn"),
+      teleportBehaviorReadout: $("teleportBehaviorReadout"),
+      orbTeleportCameraTravelMs: $("orbTeleportCameraTravelMs"),
+      orbTeleportApplyCameraTravelBtn: $("orbTeleportApplyCameraTravelBtn"),
+      orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
+      orbTeleportApplyFadeInBtn: $("orbTeleportApplyFadeInBtn"),
+    };
+    const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
+      teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
+      teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
+      bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
+      electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+      flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
+      shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
+      orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
+      orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
+      orbLifecycleDefaults: Object.freeze({
+        orbLifecycleShardTotal: Number(ORB_LIFECYCLE_DEFAULTS.maxShards) || 16,
+        orbLifecycleHitTotal: Number(ORB_LIFECYCLE_DEFAULTS.maxHits) || 3,
+        orbLifecycleShardR: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb && ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.r)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.r) : 255,
+        orbLifecycleShardG: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb && ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.g)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.g) : 255,
+        orbLifecycleShardB: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb && ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.b)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeRgb.b) : 255,
+        orbLifecycleShardA: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeAlpha)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeAlpha) : 0.46,
+        orbLifecycleShardStroke: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeWidthPx)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeWidthPx) : 1,
+      }),
+      orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
+      getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
+      worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
+      getElementById: $,
+    });
+
+    function setRootVar(root, name, value){
+      if (!root || !root.style) return;
+      root.style.setProperty(name, value);
+    }
+
+    function createScopedVarSetter(root){
+      return (name, value) => setRootVar(root, name, value);
+    }
+
+    function selectedEffectOption(){
+      return selectedEffectOptionHelper(els.effectSelect);
+    }
+
+    function findEffectOptionByValue(value){
+      return findEffectOptionByValueHelper(els.effectSelect, value);
+    }
+
+    function loadDraftStore(){
+      return loadDraftStoreHelper(DRAFT_STORAGE_KEY, draftStore);
+    }
+
+    function persistDraftStore(){
+      return persistDraftStoreHelper(DRAFT_STORAGE_KEY, draftStore);
+    }
+
+    function refreshBindingPanel(){
+      return refreshBindingPanelHelper({
+        bindingGrid: els.bindingGrid,
+        bindingTargetSelect: els.bindingTargetSelect,
+        selectedEffectOption,
+        selectedEffectCategory,
+        getRuntimeEffectTarget,
+        runtimeEffectBindings: runtimeEffectBindingsState,
+      });
+    }
+
+    function populateBindingTargetOptions(){
+      return populateBindingTargetOptionsHelper(els.bindingTargetSelect, RUNTIME_EFFECT_TARGET_REGISTRY);
+    }
+
+    function defaultBindTargetForEffect(opt = selectedEffectOption()){
+      if (!opt) return "";
+      const registryId = String(opt.dataset.registryId || "").trim().toLowerCase();
+      const baseEffect = String(opt.dataset.baseEffect || opt.value || "").trim().toLowerCase();
+      return DEFAULT_BIND_TARGET_BY_EFFECT_ID[registryId] || DEFAULT_BIND_TARGET_BY_EFFECT_ID[baseEffect] || "";
+    }
+
+    function alignBindingTargetToSelectedEffect(){
+      const opt = selectedEffectOption();
+      if (!opt || !els.bindingTargetSelect) return;
+      const desiredTargetId = defaultBindTargetForEffect(opt);
+      if (!desiredTargetId) {
+        els.bindingTargetSelect.selectedIndex = -1;
+        return;
+      }
+      const hasTarget = Array.from(els.bindingTargetSelect.options).some((entry) => String(entry.value || "").trim().toLowerCase() === desiredTargetId);
+      if (!hasTarget) return;
+      if (String(els.bindingTargetSelect.value || "").trim().toLowerCase() === desiredTargetId) return;
+      els.bindingTargetSelect.value = desiredTargetId;
+    }
+
+    function buildEffectLibraryOptionsFromRegistry(){
+      return buildEffectLibraryOptionsFromRegistryHelper({
+        effectSelect: els.effectSelect,
+        draftStore,
+        registry: VFX_EFFECT_REGISTRY,
+        baseEffectByRegistryId: STUDIO_BASE_EFFECT_BY_REGISTRY_ID,
+        categories: LAB_STUDIO_CATEGORIES,
+        extraBuiltinOptions: STUDIO_EXTRA_BUILTIN_OPTIONS,
+        omitRegistryIds: STUDIO_OMIT_REGISTRY_IDS,
+      });
+    }
+
+    function selectedBaseEffect(){
+      return selectedBaseEffectHelper(selectedEffectOption());
+    }
+
+    function selectedSpawnBaseEffect(){
+      return selectedSpawnBaseEffectHelper(selectedEffectOption());
+    }
+
+    function settingsKeyForBaseEffect(baseEffect){
+      const key = String(baseEffect || "");
+      return SETTINGS_KEY_BY_BASE_EFFECT[key] || key;
+    }
+
+    function defaultSettingsKeyForBaseEffect(baseEffect){
+      const key = String(baseEffect || "");
+      return DEFAULT_SETTINGS_KEY_BY_BASE_EFFECT[key] || settingsKeyForBaseEffect(key);
+    }
+
+    function selectedEffectCategory(){
+      return selectedEffectCategoryHelper(selectedEffectOption());
+    }
+
+    function isSelectedEffectLocked(){
+      return isSelectedEffectLockedHelper(selectedEffectOption());
+    }
+
+    function isCustomEffectOption(opt){
+      return isCustomEffectOptionHelper(opt);
+    }
+
+    function isCoreEffectOption(opt){
+      return isCoreEffectOptionHelper(opt);
+    }
+
+    function refreshLockUi(){
+      return refreshLockUiHelper({
+        lockEffectBtn: els.lockEffectBtn,
+        saveDraftBtn: els.saveDraftBtn,
+        publishPresetBtn: els.publishPresetBtn,
+        bindBtn: els.bindBtn,
+        deleteEffectBtn: els.deleteEffectBtn,
+        selectedEffectOption,
+        isSelectedEffectLocked,
+        isCoreEffectOption,
+      });
+    }
+
+    function toggleSelectedEffectLock(){
+      return toggleSelectedEffectLockHelper({
+        selectedEffectOption,
+        refreshLockUi,
+        buildPresetDraftRecordFromSelection,
+        draftStore,
+        persistDraftStore,
+        refreshBindingPanel,
+      });
+    }
+
+    function slugifyEffectName(text){
+      return slugifyEffectNameHelper(text);
+    }
+
+    function buildPresetDraftRecordFromSelection(){
+      return buildPresetDraftRecordFromSelectionHelper({
+        opt: selectedEffectOption(),
+        draftStore,
+        baseEffect: selectedBaseEffect(),
+        settingsKey: settingsKeyForBaseEffect(selectedBaseEffect()),
+        category: selectedEffectCategory(),
+        captureCurrentEffectSettings,
+      });
+    }
+
+    function upsertCurrentDraftProfile(){
+      return upsertCurrentDraftProfileHelper({
+        draftStore,
+        record: buildPresetDraftRecordFromSelection(),
+        persistDraftStore,
+      });
+    }
+
+    function publishContractForBaseEffect(baseEffect){
+      return PUBLISH_CONTRACTS_BY_BASE_EFFECT[String(baseEffect || "")] || null;
+    }
+
+    function buildPublishedPresetPayload(){
+      const opt = selectedEffectOption();
+      if (!opt) return null;
+      const record = upsertCurrentDraftProfile();
+      if (!record) return null;
+      return buildPublishedPresetPayloadHelper({
+        opt,
+        record,
+        selectedBaseEffect: selectedBaseEffect(),
+        settingsKeyForBaseEffect,
+        captureCurrentEffectSettings,
+        registryEntries: VFX_EFFECT_REGISTRY,
+        slugifyEffectName,
+      });
+    }
+
+    function publishPreset(){
+      const selectedBase = String(selectedBaseEffect() || "");
+      const publishContract = publishContractForBaseEffect(selectedBase);
+      if (isSelectedEffectLocked() && !(publishContract && publishContract.livePreset)) {
+        window.alert(publishContract && publishContract.publishNote
+          ? publishContract.publishNote
+          : "This effect profile is locked. Unlock it to publish a preset.");
+        return;
+      }
+      void (async () => {
+        const built = buildPublishedPresetPayload();
+        if (!built) return;
+        const contract = publishContractForBaseEffect(String(built.payload.baseEffect || ""));
+        const result = await publishLabPreset({
+          built,
+          contract,
+          buildLivePresetModule: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
+          buildBehaviorModule: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
+          ensureProjectConnected: async () => {
+            if (projectRootDirHandle || !window.showDirectoryPicker) return !!projectRootDirHandle;
+            return studioProjectIo.connect();
+          },
+          hasProjectConnection: !!projectRootDirHandle,
+          saveConnectedPath: studioProjectIo.savePath,
+          saveConnectedDraft: studioProjectIo.saveDraft,
+          saveProjectFile: saveTextToProjectFile,
+          downloadTextFile,
+          draftPathParts: VFX_PRESET_DRAFTS_PATH,
+          describePublishSuccess: describePublishSuccessHelper,
+        });
+        if (result && result.message) window.alert(result.message);
+      })();
+    }
+
+    function publishBinding(){
+      if (isSelectedEffectLocked()) {
+        window.alert("This effect profile is locked. Unlock it to publish a binding.");
+        return;
+      }
+      const opt = selectedEffectOption();
+      if (!opt) {
+        window.alert("Select an effect profile before publishing a binding.");
+        return;
+      }
+      const selectedTargetRegistryId = String((els.bindingTargetSelect && els.bindingTargetSelect.value) || "").trim().toLowerCase();
+      if (!selectedTargetRegistryId) {
+        window.alert("Choose a runtime target to bind first.");
+        return;
+      }
+      const runtimeTarget = getRuntimeEffectTarget(selectedTargetRegistryId);
+      if (!runtimeTarget) {
+        window.alert("The selected runtime target could not be resolved.");
+        return;
+      }
+      const registryId = String(opt.dataset.registryId || "").trim();
+      if (!registryId) {
+        window.alert("This profile is missing a registry effect id, so it cannot publish a runtime binding yet.");
+        return;
+      }
+      const registryEntry = findRegistryEntry(VFX_EFFECT_REGISTRY, registryId);
+      if (!supportsBindingPublish(registryEntry)) {
+        window.alert("This effect does not currently support binding publish.");
+        return;
+      }
+      if (!projectRootDirHandle) {
+        window.alert(`Connect Project first. Bind writes to the fixed repo path ${RUNTIME_BINDINGS_TARGET_PATH.join("/")}.`);
+        return;
+      }
+
+      const built = buildPublishedPresetPayload();
+      if (!built || !built.payload) {
+        window.alert("Could not build the selected preset payload for binding publish.");
+        return;
+      }
+
+      const publishPlan = buildBindingPublishPlan({
+        runtimeEffectBindings: runtimeEffectBindingsState,
+        runtimeTarget,
+        registryId,
+        builtPayload: built,
+        registryEntry,
+        buildRuntimeEffectBindingsModule,
+      });
+
+      (async () => {
+        const result = await writeRuntimeBindingModule({
+          moduleText: publishPlan.moduleText,
+          targetPath: publishPlan.targetPath,
+          hasProjectConnection: !!projectRootDirHandle,
+          saveConnectedPath: studioProjectIo.savePath,
+          missingConnectionMessage: `Connect Project first. Bind writes to the fixed repo path ${RUNTIME_BINDINGS_TARGET_PATH.join("/")}.`,
+          failureMessage: "Binding publish failed. No fallback export was created. Reconnect the project and try again.",
+        });
+        if (result && result.ok) {
+          runtimeEffectBindingsState = publishPlan.nextBindings;
+          refreshBindingPanel();
+          if (result.message) window.alert(result.message);
+          return;
+        }
+        if (result && result.aborted) return;
+        if (result && result.error) console.error(result.error);
+        if (result && result.message) window.alert(result.message);
+      })();
+    }
+
+    function applyDraftToSelectedProfile(){
+      if (!draftHydrationDone || suspendDraftApply) return;
+      const opt = selectedEffectOption();
+      if (!opt) return;
+      const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
+      if (!isCustomEffectOption(opt)) {
+        applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
+        return;
+      }
+      const profile = draftStore.profilesByValue[String(opt.value || "")];
+      if (!profile) return;
+      const profileBaseEffect = String(opt.dataset.baseEffect || profile.baseEffect || "");
+      const settingsByBase = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
+        ? profile.settingsByBaseEffect
+        : null;
+      if (!settingsByBase) return;
+      const settingsKey = settingsKeyForBaseEffect(profileBaseEffect);
+      const settings = settingsByBase[settingsKey] || settingsByBase[profileBaseEffect];
+      if (settings) applyCurrentEffectSettings(profileBaseEffect, settings);
+    }
+
+    function saveDraft(){
+      if (isSelectedEffectLocked()) {
+        window.alert("This effect profile is locked. Unlock it to save changes.");
+        return;
+      }
+      const record = upsertCurrentDraftProfile();
+      if (!record) return;
+      refreshBindingPanel();
+      window.alert(`Draft saved: ${record.label}`);
+    }
+
+    function refreshEffectMeta(){
+      return refreshEffectMetaHelper({ refreshBindingPanel, refreshLockUi });
+    }
+
+    function createCustomEffectProfile(){
+      if (!els.effectSelect) return;
+      const baseEffect = selectedSpawnBaseEffect();
+      const baseLabel = (selectedEffectOption() && selectedEffectOption().textContent) || baseEffect;
+      const name = window.prompt("New effect profile name", `${baseLabel} new`);
+      if (!name) return;
+      const trimmed = String(name).trim();
+      if (!trimmed) return;
+      const category = selectedEffectCategory();
+      const srcOpt = selectedEffectOption();
+      return createCustomEffectProfileHelper({
+        effectSelect: els.effectSelect,
+        selectedOption: srcOpt,
+        baseEffect,
+        settingsKey: settingsKeyForBaseEffect(baseEffect),
+        category,
+        trimmedName: trimmed,
+        draftStore,
+        categories: LAB_STUDIO_CATEGORIES,
+        defaultSettings: defaultSettingsForBaseEffect(baseEffect),
+        updateEffectSections,
+        persistDraftStore,
+      });
+    }
+
+    function duplicateEffectProfile(){
+      if (!els.effectSelect) return;
+      const srcOpt = selectedEffectOption();
+      if (!srcOpt) return;
+      const baseEffect = selectedSpawnBaseEffect();
+      const category = selectedEffectCategory();
+      const srcLabel = String(srcOpt.textContent || baseEffect || "effect");
+      const name = window.prompt("Duplicate effect profile as", `${srcLabel} copy`);
+      if (!name) return;
+      const trimmed = String(name).trim();
+      if (!trimmed) return;
+
+      return duplicateEffectProfileHelper({
+        effectSelect: els.effectSelect,
+        selectedOption: srcOpt,
+        baseEffect,
+        settingsKey: settingsKeyForBaseEffect(baseEffect),
+        category,
+        trimmedName: trimmed,
+        draftStore,
+        categories: LAB_STUDIO_CATEGORIES,
+        captureCurrentEffectSettings,
+        defaultSettingsForBaseEffect,
+        updateEffectSections,
+        persistDraftStore,
+      });
+    }
+
+    function renameEffectProfile(){
+      const opt = selectedEffectOption();
+      if (!opt) return;
+      const next = window.prompt("Rename effect profile", String(opt.textContent || ""));
+      if (!next) return;
+      const trimmed = String(next).trim();
+      if (!trimmed) return;
+      renameEffectProfileHelper({ opt, trimmedName: trimmed, draftStore, persistDraftStore });
+      refreshEffectMeta();
+    }
+
+    function deleteEffectProfile(){
+      const opt = selectedEffectOption();
+      if (!opt || !els.effectSelect) return;
+      if (String(opt.dataset.locked || "") === "true") {
+        window.alert("This effect profile is locked. Unlock it to delete.");
+        return;
+      }
+      const label = String(opt.textContent || opt.value || "this effect");
+      const built = buildPublishedPresetPayload();
+      const presetId = String((built && built.payload && built.payload.presetId) || "").trim();
+      const affectedBindings = collectBindingsForPresetId(runtimeEffectBindingsState, presetId);
+      if (affectedBindings.length && !projectRootDirHandle) {
+        window.alert(`Connect Project first. This profile is bound in ${RUNTIME_BINDINGS_TARGET_PATH.join("/")} and deletion needs to clean that file.`);
+        return;
+      }
+      const bindingWarning = affectedBindings.length
+        ? `\n\nThis will also remove ${affectedBindings.length} runtime target binding${affectedBindings.length === 1 ? "" : "s"} that point at preset ${presetId}.`
+        : "";
+      if (!window.confirm(`Delete effect profile \"${label}\"?${bindingWarning}`)) return;
+
+      (async () => {
+        if (affectedBindings.length) {
+          const cleanupPlan = buildBindingCleanupPlan({
+            runtimeEffectBindings: runtimeEffectBindingsState,
+            affectedBindings,
+            buildRuntimeEffectBindingsModule,
+          });
+          const result = await writeRuntimeBindingModule({
+            moduleText: cleanupPlan.moduleText,
+            targetPath: cleanupPlan.targetPath,
+            hasProjectConnection: !!projectRootDirHandle,
+            saveConnectedPath: studioProjectIo.savePath,
+            missingConnectionMessage: `Connect Project first. This profile is bound in ${RUNTIME_BINDINGS_TARGET_PATH.join("/")} and deletion needs to clean that file.`,
+            failureMessage: "Delete aborted. Binding cleanup failed, so nothing was removed.",
+          });
+          if (result && result.ok) {
+            runtimeEffectBindingsState = cleanupPlan.remainingBindings;
+          } else {
+            if (result && result.aborted) return;
+            if (result && result.error) console.error(result.error);
+            if (result && result.message) window.alert(result.message);
+            return;
+          }
+        }
+
+        deleteEffectProfileHelper({
+          opt,
+          effectSelect: els.effectSelect,
+          draftStore,
+          persistDraftStore,
+          updateEffectSections,
+        });
+      })();
+    }
+
+    function clamp(v, lo, hi){
+      v = Number(v);
+      if (!isFinite(v)) v = lo;
+      return Math.max(lo, Math.min(hi, v));
+    }
+
+    function evenPx(n, min = 0, max = 9999){
+      n = Math.round(Number(n) || 0);
+      n = Math.max(min, Math.min(max, n));
+      if (n % 2 === 1) n += 1;
+      return n;
+    }
+
+    function clampByte(v){
+      return Math.max(0, Math.min(255, Math.round(Number(v) || 0)));
+    }
+
+    const refreshProjectConnectUiImported = () => refreshProjectConnectUiHelper({
+      connectProjectBtn: els.connectProjectBtn,
+      projectRootDirHandle,
+    });
+
+    const connectProjectFolderImported = () => connectProjectFolderHelper({
+      showDirectoryPicker: window.showDirectoryPicker ? window.showDirectoryPicker.bind(window) : null,
+      onConnected: (dirHandle) => { projectRootDirHandle = dirHandle; },
+      refreshProjectConnectUi: refreshProjectConnectUiImported,
+    });
+
+    const saveTextToConnectedProjectDraftsImported = (filename, text) => saveTextToConnectedProjectDraftsHelper({
+      projectRootDirHandle,
+      draftPathParts: VFX_PRESET_DRAFTS_PATH,
+      filename,
+      text,
+    });
+
+    const saveTextToConnectedProjectPathImported = (pathParts, text) => saveTextToConnectedProjectPathHelper({
+      projectRootDirHandle,
+      pathParts,
+      text,
+    });
+    const studioProjectIo = Object.freeze({
+      refreshUi: refreshProjectConnectUiImported,
+      connect: connectProjectFolderImported,
+      saveDraft: saveTextToConnectedProjectDraftsImported,
+      savePath: saveTextToConnectedProjectPathImported,
+    });
+
+    // =========================================================================
+    // GEOMETRY (forced even)
+    // =========================================================================
+    const GEOM = {
+      orbD: Math.round(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
+      orbStroke: Math.round(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
+      shieldD: Math.round((Number(BUBBLE_SHIELD_PRESET_DEFAULT.diameterRatio) || 1.24) * Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx || 100)),
+      shieldStroke: Math.max(1, Math.round((Number(BUBBLE_SHIELD_PRESET_DEFAULT.strokeWidthRatio) || 0.04) * Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx || 100))),
+    };
+    let currentLabOrbBaseVisualState = buildOrbBaseVisualState({
+      theme: {
+        orb: {
+          diameterPx: Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx),
+          strokeWidthPx: Number(ORB_BASE_VISUAL_DEFAULTS.strokeWidthPx),
+          strokeDefaultRgb: ORB_BASE_VISUAL_DEFAULTS.strokeDefaultRgb,
+          strokeAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.strokeAlpha),
+          fillDefaultRgb: ORB_BASE_VISUAL_DEFAULTS.fillDefaultRgb,
+          fillAlpha: Number(ORB_BASE_VISUAL_DEFAULTS.fillAlpha),
+        },
+      },
+      physics: {
+        orbRadiusPx: Number(ORB_BASE_VISUAL_DEFAULTS.radiusPx) || (Number(ORB_BASE_VISUAL_DEFAULTS.diameterPx) * 0.5),
+      },
+    });
+    const PREVIEW_ROOTS_BY_EFFECT = Object.freeze(
+      Object.fromEntries(Object.entries(LAB_EFFECT_SURFACES)
+        .filter(([, surface]) => surface.previewRootKey && els[surface.previewRootKey])
+        .map(([baseEffect, surface]) => [baseEffect, els[surface.previewRootKey]]))
+    );
+    applyLabThemeDefaults(GAME_THEME_DEFAULT);
+
+    function buildCurrentLabOrbBaseVisualState(){
+      return currentLabOrbBaseVisualState || buildOrbBaseVisualState();
+    }
+
+    function applyOrbLaneSsot(root, { includeGlobe = false } = {}){
+      if (!root) return;
+      const orbBaseVisualState = buildCurrentLabOrbBaseVisualState();
+      applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
+      if (includeGlobe) {
+        applyOrbGlobeVisualCssVars(buildOrbGlobeVisualState(), {
+          root,
+          orbRadiusPx: orbBaseVisualState.radiusPx,
+        });
+      }
+    }
+
+    function applyGeometryVars(){
+      GEOM.orbD = evenPx(GEOM.orbD, 2, 2000);
+      GEOM.orbStroke = evenPx(GEOM.orbStroke, 2, 40);
+      GEOM.shieldD = evenPx(GEOM.shieldD, 2, 2000);
+      GEOM.shieldStroke = evenPx(GEOM.shieldStroke, 2, 40);
+
+      applyOrbLaneSsot(els.shieldPreviewRoot);
+      applyOrbLaneSsot(els.shockPreviewRoot);
+      applyOrbLaneSsot(els.flamePreviewRoot);
+      applyOrbLaneSsot(els.electricPreviewRoot);
+      setRootVar(els.shieldPreviewRoot, "--shield-d", GEOM.shieldD + "px");
+      setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
+      applyOrbLaneSsot(els.orbBasePreviewRoot);
+      applyOrbLaneSsot(els.orbTemplatePreviewRoot);
+      applyOrbLaneSsot(els.orbNodPreviewRoot);
+      applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
+      applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
+      applyOrbLaneSsot(els.worldGlobePreviewRoot, { includeGlobe: true });
+      applyOrbLaneSsot(els.orbTeleportPreviewRoot);
+    }
+    applyGeometryVars();
+
+    function readTeleportBehaviorPreviewConfig(){
+      return authoringAdapterForBaseEffect("teleport").readBehaviorPreviewConfig(els);
+    }
+
+    function updateTeleportBehaviorReadout(){
+      authoringAdapterForBaseEffect("teleport").updateBehaviorReadout(els);
+    }
+    const studioBootstrap = createStudioBootstrap({
+      els,
+      getElementById: $,
+      adapterFactoriesByBaseEffect: LAB_AUTHORING_ADAPTER_FACTORIES_BY_BASE_EFFECT,
+      adapterContext: AUTHORING_ADAPTER_CONTEXT,
+      draftStore,
+      lastSelectedEffectValueRef,
+      surfaces: LAB_EFFECT_SURFACES,
+      liveBehaviorModulesByBaseEffect: LIVE_BEHAVIOR_MODULES_BY_BASE_EFFECT,
+      selectedEffectOption,
+      selectedBaseEffect,
+      settingsKeyForBaseEffect,
+      defaultSettingsKeyForBaseEffect,
+      refreshEffectMeta,
+      refreshBindingPanel,
+      alignBindingTargetToSelectedEffect,
+      persistDraftStore,
+      applyOrbLaneSsot,
+      buildCurrentLabOrbBaseVisualState,
+      updateTeleportBehaviorReadout,
+      applyGeometryVars,
+      previewApplyMap: Object.freeze({
+        "electric-aoe": () => applyElectricControls(),
+        "bubble-shield": () => applyShield(),
+        shockwave: () => applyShock(),
+        "flame-aoe": () => applyFlameControls(),
+        "orb-base": () => applyOrbBase(),
+        teleport: () => applyOrbTeleport(),
+        "orb-globe": () => applyOrbGlobe(),
+        "orb-lifecycle": () => applyOrbLifecycle(),
+        "orb-nod": () => applyOrbNod(),
+        "world-globe": () => applyWorldGlobe(),
+      }),
+      previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
+      geometry: GEOM,
+      defaults: Object.freeze({
+        orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
+        orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
+        shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
+        flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
+        electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+        onOrbBaseVisualStateApplied: (visualState) => {
+          currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
+          GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
+          GEOM.orbStroke = evenPx(visualState && visualState.strokeWidthPx, 1, 40);
+          applyGeometryVars();
+        },
+        isDraftHydrationDone: () => draftHydrationDone,
+        isCustomEffectOption,
+      }),
+      clamp,
+      evenPx,
+      clampByte,
+      createScopedVarSetter,
+      requestAnimationFrame,
+    });
+    studioBootstrap.setSuspendDraftApplyRef({
+      get value() { return suspendDraftApply; },
+      set value(next) { suspendDraftApply = !!next; },
+    });
+    const {
+      applyShieldGeometry,
+      applyShield,
+      applyPulse,
+      playShield,
+      applyShock,
+      clearShock,
+      playShock,
+      applyFlameControls,
+      clearFlame,
+      playFlame,
+      applyElectricControls,
+      clearElectric,
+      playElectric,
+      applyOrbBase,
+      applyOrbTemplate,
+      clearOrbTemplate,
+      applyOrbNod,
+      clearOrbNod,
+      applyOrbLifecycle,
+      clearOrbLifecycle,
+      applyOrbGlobe,
+      clearOrbGlobe,
+      applyWorldGlobe,
+      clearWorldGlobe,
+      applyOrbTeleport,
+      clearOrbTeleport,
+      playOrbTeleport,
+    } = studioBootstrap.actions;
+    const stopAllStudioEffects = studioBootstrap.stopAllStudioEffects;
+    const authoringAdapterForBaseEffect = studioBootstrap.authoringAdapterForBaseEffect;
+    const callAuthoringAdapter = studioBootstrap.callAuthoringAdapter;
+    const defaultSettingsForBaseEffect = studioBootstrap.defaultSettingsForBaseEffect;
+    const captureCurrentEffectSettings = studioBootstrap.captureCurrentEffectSettings;
+    const applyCurrentEffectSettings = studioBootstrap.applyCurrentEffectSettings;
+    const updateBehaviorSections = studioBootstrap.updateBehaviorSections;
+    const updateEffectSections = studioBootstrap.updateEffectSections;
+    const settleSelectedEffectState = studioBootstrap.settleSelectedEffectState;
+    requestAnimationFrame(() => {
+      if (typeof applyShieldGeometry === "function") applyShieldGeometry();
+      if (typeof applyShock === "function") applyShock();
+      if (typeof applyFlameControls === "function") applyFlameControls();
+      if (typeof applyElectricControls === "function") applyElectricControls();
+      if (typeof applyOrbTemplate === "function") applyOrbTemplate();
+      if (typeof applyOrbLifecycle === "function") applyOrbLifecycle();
+      if (typeof applyOrbGlobe === "function") applyOrbGlobe();
+      if (typeof applyWorldGlobe === "function") applyWorldGlobe();
+    });
+    updateTeleportBehaviorReadout();
+
+    bootStudioShell({
+      effectSelect: els.effectSelect,
+      loadDraftStore,
+      buildEffectLibraryOptionsFromRegistry,
+      populateBindingWordOptions: populateBindingTargetOptions,
+      setDraftHydrationDone: (value) => { draftHydrationDone = !!value; },
+      updateEffectSections,
+      newEffectBtn: els.newEffectBtn,
+      createCustomEffectProfile,
+      saveDraftBtn: els.saveDraftBtn,
+      saveDraft,
+      connectProjectBtn: els.connectProjectBtn,
+      connectProjectFolder: studioProjectIo.connect,
+      publishPresetBtn: els.publishPresetBtn,
+      publishPreset,
+      bindBtn: els.bindBtn,
+      publishBinding,
+      bindingWordSelect: els.bindingTargetSelect,
+      refreshBindingPanel,
+      renameEffectBtn: els.renameEffectBtn,
+      renameEffectProfile,
+      duplicateEffectBtn: els.duplicateEffectBtn,
+      duplicateEffectProfile,
+      deleteEffectBtn: els.deleteEffectBtn,
+      deleteEffectProfile,
+      lockEffectBtn: els.lockEffectBtn,
+      toggleSelectedEffectLock,
+      refreshProjectConnectUi: studioProjectIo.refreshUi,
+      refreshLockUi,
+      initEffectSections: false,
+    });
+    requestAnimationFrame(settleSelectedEffectState);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space"){
+        e.preventDefault();
+        playShock();
+      }
+      if (e.key.toLowerCase() === "b"){
+        playShield();
+      }
+      if (e.key.toLowerCase() === "f"){
+        playFlame();
+      }
+      if (e.key.toLowerCase() === "e"){
+        playElectric();
+      }
+    });
+  </script>
+</body>
+</html>

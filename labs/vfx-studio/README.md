@@ -1,10 +1,10 @@
-# VFX Studio Lab
+# VFX Studio
 
-This directory is the Lab platform for authoring runtime-linked visual surfaces in Orbis Arcana.
+This workspace authors runtime-linked visual surfaces in Orbis Arcana.
 
 ## Core Contract
 
-The Lab is surface-driven.
+VFX Studio is surface-driven.
 
 - `vfx-studio-surfaces.js`
   Declares the authoring surfaces. A surface defines its category, supported panes, preview root, adapter, live preset target, and optional behavior target.
@@ -71,6 +71,8 @@ Collected and consumed globe size/style should not be re-authored in `Orb Globe`
 6. Run `npm run check:vfx-lab`.
 7. Smoke preview, save, publish, and bind flows as appropriate for that surface.
 
-## Future Direction
+## Workspace Boundary
 
-The next major expansion lane is expected to be `sfx`, as a pane sibling to `vfx` and `behavior`, not a one-off exception. Future domains like `hazard` and `enemy` should enter through the same surface/category contract rather than custom page logic.
+VFX Studio owns effect-like authoring only. World objects such as props, spawn
+anchors, scenery pieces, room pieces, and tunnel pieces belong in
+`labs/world-workshop/`.

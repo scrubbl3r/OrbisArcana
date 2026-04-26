@@ -1,0 +1,135 @@
+:root {
+  --world-workshop-bg: #08090b;
+  --world-workshop-panel: #11161c;
+  --world-workshop-panel-2: #151b22;
+  --world-workshop-text: #edf2f5;
+  --world-workshop-muted: #98a8b5;
+  --world-workshop-accent: #79e0ff;
+  --world-workshop-line: #2b3844;
+  --lab-workspace-nav-muted: var(--world-workshop-muted);
+  --lab-workspace-nav-active: var(--world-workshop-text);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--world-workshop-bg);
+  color: var(--world-workshop-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.workshopShell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(420px, 1fr) auto;
+}
+
+.workshopTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--world-workshop-line);
+  background: var(--world-workshop-panel);
+}
+
+.itemSelect {
+  min-width: 220px;
+  color: var(--world-workshop-text);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--world-workshop-line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.workshopViewport {
+  position: relative;
+  min-height: 420px;
+  background:
+    linear-gradient(transparent 95%, rgba(255, 255, 255, 0.08) 95%),
+    linear-gradient(90deg, transparent 95%, rgba(255, 255, 255, 0.08) 95%),
+    radial-gradient(circle at 50% 36%, #26313b 0%, #11161c 45%, #07090b 100%);
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.viewportPlaceholder {
+  width: min(520px, 70vw);
+  aspect-ratio: 1.6;
+  border: 1px solid rgba(121, 224, 255, 0.32);
+  display: grid;
+  place-items: center;
+  color: var(--world-workshop-muted);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.viewportPlaceholder strong {
+  display: block;
+  color: var(--world-workshop-text);
+  font-size: 32px;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.viewportPlaceholder span {
+  display: block;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.workshopControls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-top: 1px solid var(--world-workshop-line);
+  background: var(--world-workshop-line);
+}
+
+.controlPane {
+  min-height: 160px;
+  padding: 16px;
+  background: var(--world-workshop-panel-2);
+}
+
+.controlPane h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.controlPane p {
+  margin: 0;
+  color: var(--world-workshop-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  .workshopTopbar,
+  .labWorkspaceNav {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workshopControls {
+    grid-template-columns: 1fr;
+  }
+
+  .viewportPlaceholder strong {
+    font-size: 24px;
+  }
+}

@@ -1,0 +1,22 @@
+.labWorkspaceNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.labWorkspaceNavLink {
+  color: var(--lab-workspace-nav-muted, currentColor);
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.labWorkspaceNavLink:hover,
+.labWorkspaceNavLink[aria-current="page"] {
+  color: var(--lab-workspace-nav-active, currentColor);
+  opacity: 1;
+}

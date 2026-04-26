@@ -2,18 +2,18 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createLabEffectSurfaces } from "../../labs/vfx/studio/vfx-studio-surfaces.js";
+import { createLabEffectSurfaces } from "../../labs/vfx-studio/vfx-studio-surfaces.js";
 import {
   buildLivePresetModuleForBaseEffect,
   buildTeleportBehaviorModule,
-} from "../../labs/vfx/studio/vfx-studio-theme-publish.js";
+} from "../../labs/vfx-studio/vfx-studio-theme-publish.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
-const studioHtmlPath = path.join(repoRoot, "labs/vfx/vfx-studio.html");
-const studioPreviewRegistryPath = path.join(repoRoot, "labs/vfx/studio/vfx-studio-preview-registry.js");
-const previewDir = path.join(repoRoot, "labs/vfx/studio/previews");
-const adapterDir = path.join(repoRoot, "labs/vfx/studio/adapters");
+const studioHtmlPath = path.join(repoRoot, "labs/vfx-studio/vfx-studio.html");
+const studioPreviewRegistryPath = path.join(repoRoot, "labs/vfx-studio/vfx-studio-preview-registry.js");
+const previewDir = path.join(repoRoot, "labs/vfx-studio/previews");
+const adapterDir = path.join(repoRoot, "labs/vfx-studio/adapters");
 
 function readText(filePath) {
   return fs.readFileSync(filePath, "utf8");
@@ -71,7 +71,7 @@ const htmlBaseEffectOptions = new Set(collectMatches(
 const importedPreviewFiles = new Set([
   ...collectMatches(
     studioHtml,
-    /from "\.\/studio\/previews\/([^"]+\.js)(?:\?[^"]*)?"/g
+    /from "\.\/previews\/([^"]+\.js)(?:\?[^"]*)?"/g
   ),
   ...collectMatches(
     studioPreviewRegistry,
@@ -80,7 +80,7 @@ const importedPreviewFiles = new Set([
 ]);
 const importedAdapterFiles = new Set(collectMatches(
   studioHtml,
-  /from "\.\/studio\/adapters\/([^"]+\.js)(?:\?[^"]*)?"/g
+  /from "\.\/adapters\/([^"]+\.js)(?:\?[^"]*)?"/g
 ));
 const previewFiles = new Set(fs.readdirSync(previewDir).filter((name) => name.endsWith(".js")));
 const adapterFiles = new Set(fs.readdirSync(adapterDir).filter((name) => name.endsWith(".js")));

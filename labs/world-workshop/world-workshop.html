@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>World Workshop</title>
+  <link rel="stylesheet" href="../shell/lab-workspaces.css" />
+  <link rel="stylesheet" href="./world-workshop.css" />
+</head>
+<body>
+  <main class="workshopShell">
+    <header class="workshopTopbar">
+      <nav data-lab-workspace-nav></nav>
+      <select class="itemSelect" data-world-workshop-item-select aria-label="World item"></select>
+    </header>
+
+    <section class="workshopViewport" aria-label="World object viewport">
+      <div class="viewportPlaceholder">
+        <div>
+          <strong data-world-workshop-viewport-label>World Object</strong>
+          <span data-world-workshop-meta></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="workshopControls" aria-label="World object controls">
+      <article class="controlPane">
+        <h2>Geometry</h2>
+        <p>Pending</p>
+      </article>
+      <article class="controlPane">
+        <h2>Material</h2>
+        <p>Pending</p>
+      </article>
+      <article class="controlPane">
+        <h2>Runtime</h2>
+        <p>Pending</p>
+      </article>
+    </section>
+  </main>
+  <script type="module" src="./world-workshop.js"></script>
+</body>
+</html>
