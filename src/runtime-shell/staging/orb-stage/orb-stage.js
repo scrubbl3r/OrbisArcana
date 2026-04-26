@@ -17,7 +17,7 @@ import {
   applyWorldGlobeVisualCssVars,
   buildWorldGlobeVisualState,
 } from "../../../game-runtime/world/world-globe-state.js?v=20260418a";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425u";
+import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425v";
 
 const ORB_STAGE_TEMPLATE = `
   <section class="orbStage" aria-label="Orb stage">
