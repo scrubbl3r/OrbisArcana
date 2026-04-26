@@ -24,6 +24,8 @@ export function createWorldObjectInspector({
   cameraPositionBo = Object.freeze({ x: 1.2, y: 0.24, z: 4.1 }),
   minDistanceBo = 1.2,
   maxDistanceBo = 32,
+  enableShadows = false,
+  shadowMapType = THREE.PCFSoftShadowMap,
   onFrame = null,
 } = {}) {
   if (!root) return null;
@@ -38,6 +40,8 @@ export function createWorldObjectInspector({
   });
   renderer.domElement.className = canvasClassName;
   renderer.setClearColor(0x000000, 0);
+  renderer.shadowMap.enabled = Boolean(enableShadows);
+  renderer.shadowMap.type = shadowMapType;
   root.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();

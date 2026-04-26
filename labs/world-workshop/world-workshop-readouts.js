@@ -31,7 +31,7 @@ export function formatWorldWorkshopMaterialReadout(surface = null) {
         return "World object inspector / translucent opalescent shell / saturated pastel drift / opaque rim";
       }
       if (String(surface.generator || "") === "orb-spawn-assembly") {
-        return "Opalescent orb point light / black semigloss plinth faces / layered faux-glow Line2 edges";
+        return "Opalescent orb point light / soft shadow SpotLight / graphite plinth faces / layered faux-glow Line2 edges";
       }
       return "World object inspector / opaque black faces / 2px white Line2 edges";
     default:

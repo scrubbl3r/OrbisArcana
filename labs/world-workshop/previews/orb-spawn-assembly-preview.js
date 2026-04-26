@@ -4,7 +4,7 @@ import { PLINTH_MATERIAL_CONFIG } from "../configs/plinth-material-config.js?v=2
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
 import { createOrbSpawnPlinthModel } from "../generators/orb-spawn-plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
 import { createLitBlackPlinthMaterial } from "../rendering/plinth-materials.js?v=20260426a";
 import { addLineEdges } from "../rendering/world-render-utils.js?v=20260426a";
 
@@ -19,12 +19,14 @@ export function renderOrbSpawnAssemblyPreview({
   const animatedMaterials = [];
   const animatedLights = [];
   const animatedNodes = [];
+  const shadowRigs = [];
   const inspector = createWorldObjectInspector({
     root,
     bo,
     cameraPositionBo: Object.freeze({ x: 1.26, y: 0.42, z: 4.25 }),
     minDistanceBo: 1.1,
     maxDistanceBo: 32,
+    enableShadows: true,
     onFrame: () => {
       const time = (performance.now() - startedAt) / 1000;
       animatedMaterials.forEach((material) => {
@@ -37,6 +39,10 @@ export function renderOrbSpawnAssemblyPreview({
           baseY + Math.sin(time * 1.04) * bo * 0.045,
           0
         );
+      });
+      shadowRigs.forEach(({ light, target, source, targetY }) => {
+        light.position.copy(source.position);
+        target.position.set(0, targetY, 0);
       });
     },
   });
@@ -64,6 +70,12 @@ export function renderOrbSpawnAssemblyPreview({
       });
     },
   });
+  plinthModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
   inspector.scene.add(plinthModel);
 
   const shellMaterial = createOpalescentOrbShellMaterial(ORB_MATERIAL_CONFIG);
@@ -86,9 +98,24 @@ export function renderOrbSpawnAssemblyPreview({
   inspector.scene.add(orbModel);
   animatedNodes.push({ node: orbModel, baseY: orbBaseY });
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.035);
+  const shadowSpot = createOrbShadowSpotLight({ bo, config: ORB_MATERIAL_CONFIG });
+  if (shadowSpot) {
+    const shadowTarget = new THREE.Object3D();
+    shadowSpot.position.copy(orbModel.position);
+    shadowTarget.position.set(0, plinthMetrics.plinthHeight - plinthMetrics.columnCenterY, 0);
+    shadowSpot.target = shadowTarget;
+    inspector.scene.add(shadowSpot, shadowTarget);
+    shadowRigs.push({
+      light: shadowSpot,
+      target: shadowTarget,
+      source: orbModel,
+      targetY: plinthMetrics.plinthHeight - plinthMetrics.columnCenterY,
+    });
+  }
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.018);
   inspector.scene.add(ambient);
-  const fill = new THREE.HemisphereLight(0xbfdfff, 0x050507, 0.16);
+  const fill = new THREE.HemisphereLight(0xbfdfff, 0x050507, 0.055);
   inspector.scene.add(fill);
 
   inspector.render();
@@ -97,6 +124,7 @@ export function renderOrbSpawnAssemblyPreview({
     orbDiameter: orbMetrics.diameter,
     orbRadius: orbMetrics.radius,
     orbClearance,
+    shadowSpot: Boolean(shadowSpot),
     assemblyScale: PLINTH_MATERIAL_CONFIG.assemblyScale,
   });
 }
