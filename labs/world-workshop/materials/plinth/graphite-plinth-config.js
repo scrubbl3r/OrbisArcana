@@ -1,8 +1,8 @@
 export const GRAPHITE_PLINTH_MATERIAL_CONFIG = Object.freeze({
   faceColor: 0x000000,
   edgeColor: 0xffffff,
-  edgeWidth: 2,
-  edgeOpacity: 0.96,
+  edgeWidth: 1.5,
+  edgeOpacity: 0.50,
   edgeHaloColor: 0xbfeeff,
   edgeHaloWidth: 5,
   edgeHaloOpacity: 0.22,
