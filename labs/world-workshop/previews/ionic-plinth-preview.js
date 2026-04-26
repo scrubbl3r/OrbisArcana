@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
@@ -124,9 +125,7 @@ export function renderIonicPlinthPreview({
   root.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 2000);
-  camera.position.set(0, 0, 500);
-  camera.lookAt(0, 0, 0);
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
 
   const faceMaterial = new THREE.MeshBasicMaterial({
     color: FACE_COLOR,
@@ -134,13 +133,9 @@ export function renderIonicPlinthPreview({
   });
   const edgeMaterials = [];
 
-  const yawGroup = new THREE.Group();
-  const pitchGroup = new THREE.Group();
   const model = new THREE.Group();
   model.position.y = -columnCenterY;
-  pitchGroup.add(model);
-  yawGroup.add(pitchGroup);
-  scene.add(yawGroup);
+  scene.add(model);
 
   let y = 0;
   addBox(model, {
@@ -195,56 +190,31 @@ export function renderIonicPlinthPreview({
   orbGuide.computeLineDistances();
   model.add(orbGuide);
 
-  const rotation = {
-    x: -0.08,
-    y: 0.18,
-  };
-  let dragging = false;
-  let lastPointer = null;
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.enablePan = false;
+  controls.autoRotate = false;
+  controls.minDistance = bo * 1.2;
+  controls.maxDistance = bo * 7;
+  controls.target.set(0, 0, 0);
+  camera.position.set(bo * 1.2, bo * 0.24, bo * 4.1);
+  camera.lookAt(controls.target);
+  controls.update();
+
+  let animationFrame = 0;
   const render = () => {
-    resizeRenderer({ renderer, camera, root, edgeMaterials });
-    pitchGroup.rotation.x = rotation.x;
-    yawGroup.rotation.y = rotation.y;
+    const { width, height } = resizeRenderer({ renderer, camera, root, edgeMaterials });
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
     renderer.render(scene, camera);
   };
-  const pointerDown = (event) => {
-    dragging = true;
-    lastPointer = {
-      x: event.clientX,
-      y: event.clientY,
-    };
-    renderer.domElement.setPointerCapture(event.pointerId);
-  };
-  const pointerMove = (event) => {
-    if (!dragging || !lastPointer) return;
-    const dx = event.clientX - lastPointer.x;
-    const dy = event.clientY - lastPointer.y;
-    rotation.y += dx * 0.01;
-    rotation.x = Math.max(-0.9, Math.min(0.9, rotation.x + dy * 0.01));
-    lastPointer = {
-      x: event.clientX,
-      y: event.clientY,
-    };
+  const tick = () => {
+    controls.update();
     render();
+    animationFrame = requestAnimationFrame(tick);
   };
-  const pointerUp = (event) => {
-    dragging = false;
-    lastPointer = null;
-    if (renderer.domElement.hasPointerCapture(event.pointerId)) {
-      renderer.domElement.releasePointerCapture(event.pointerId);
-    }
-  };
-  const wheel = (event) => {
-    event.preventDefault();
-    rotation.y += (event.deltaX || event.deltaY) * 0.004;
-    render();
-  };
-  renderer.domElement.addEventListener("pointerdown", pointerDown);
-  renderer.domElement.addEventListener("pointermove", pointerMove);
-  renderer.domElement.addEventListener("pointerup", pointerUp);
-  renderer.domElement.addEventListener("pointercancel", pointerUp);
-  renderer.domElement.addEventListener("wheel", wheel, { passive: false });
-  render();
+  tick();
 
   const resizeObserver = typeof ResizeObserver !== "undefined"
     ? new ResizeObserver(render)
@@ -252,12 +222,9 @@ export function renderIonicPlinthPreview({
   if (resizeObserver) resizeObserver.observe(root);
 
   root.__worldWorkshopPreviewCleanup = () => {
-    renderer.domElement.removeEventListener("pointerdown", pointerDown);
-    renderer.domElement.removeEventListener("pointermove", pointerMove);
-    renderer.domElement.removeEventListener("pointerup", pointerUp);
-    renderer.domElement.removeEventListener("pointercancel", pointerUp);
-    renderer.domElement.removeEventListener("wheel", wheel);
+    if (animationFrame) cancelAnimationFrame(animationFrame);
     if (resizeObserver) resizeObserver.disconnect();
+    controls.dispose();
     disposeObject(scene);
     faceMaterial.dispose();
     renderer.dispose();
