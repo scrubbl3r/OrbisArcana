@@ -31,6 +31,24 @@ function nearlyEqual(a = 0, b = 0, epsilon = 0.001) {
   return Math.abs(clampNumber(a, 0) - clampNumber(b, 0)) <= epsilon;
 }
 
+function contentMetricsChanged(ref = null, translateX = 0, translateY = 0, scaleX = 1, scaleY = 1, translateEpsilonW = 0.05, scaleEpsilon = 0.0005) {
+  if (!ref) return true;
+  return (
+    !nearlyEqual(ref.__authoredParallaxContentTranslateX, translateX, translateEpsilonW)
+    || !nearlyEqual(ref.__authoredParallaxContentTranslateY, translateY, translateEpsilonW)
+    || !nearlyEqual(ref.__authoredParallaxContentScaleX, scaleX, scaleEpsilon)
+    || !nearlyEqual(ref.__authoredParallaxContentScaleY, scaleY, scaleEpsilon)
+  );
+}
+
+function layerMetricsChanged(ref = null, translateX = 0, translateY = 0, translateEpsilonW = 0.05) {
+  if (!ref) return true;
+  return (
+    !nearlyEqual(ref.__authoredParallaxLayerTranslateX, translateX, translateEpsilonW)
+    || !nearlyEqual(ref.__authoredParallaxLayerTranslateY, translateY, translateEpsilonW)
+  );
+}
+
 function resolveTravelRange(cameraMin = 0, cameraMax = 0, viewportSpan = 0, fallback = 0) {
   const min = clampNumber(cameraMin, 0);
   const max = clampNumber(cameraMax, min);
@@ -180,33 +198,19 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
       const contentTranslateY = ref.fieldTop - (driftY * 0.5);
       const contentScaleX = boxWidth / Math.max(1, ref.fieldWidth);
       const contentScaleY = boxHeight / Math.max(1, ref.fieldHeight);
-      const previousContentMetrics = ref.contentGroup.__authoredParallaxMetrics || null;
-      const contentMetricsChanged = !previousContentMetrics
-        || !nearlyEqual(previousContentMetrics.translateX, contentTranslateX, translateEpsilonW)
-        || !nearlyEqual(previousContentMetrics.translateY, contentTranslateY, translateEpsilonW)
-        || !nearlyEqual(previousContentMetrics.scaleX, contentScaleX, scaleEpsilon)
-        || !nearlyEqual(previousContentMetrics.scaleY, contentScaleY, scaleEpsilon);
-      if (contentMetricsChanged) {
+      if (contentMetricsChanged(ref.contentGroup, contentTranslateX, contentTranslateY, contentScaleX, contentScaleY, translateEpsilonW, scaleEpsilon)) {
         const nextContentTransform = `translate(${formatNumberAttr(contentTranslateX, ref.fieldLeft)} ${formatNumberAttr(contentTranslateY, ref.fieldTop)}) scale(${contentScaleX.toFixed(4)} ${contentScaleY.toFixed(4)})`;
-        ref.contentGroup.__authoredParallaxMetrics = Object.freeze({
-          translateX: contentTranslateX,
-          translateY: contentTranslateY,
-          scaleX: contentScaleX,
-          scaleY: contentScaleY,
-        });
+        ref.contentGroup.__authoredParallaxContentTranslateX = contentTranslateX;
+        ref.contentGroup.__authoredParallaxContentTranslateY = contentTranslateY;
+        ref.contentGroup.__authoredParallaxContentScaleX = contentScaleX;
+        ref.contentGroup.__authoredParallaxContentScaleY = contentScaleY;
         ref.contentGroup.setAttribute("transform", nextContentTransform);
       }
     }
-    const previousLayerMetrics = ref.el.__authoredParallaxMetrics || null;
-    const layerMetricsChanged = !previousLayerMetrics
-      || !nearlyEqual(previousLayerMetrics.translateX, tx, translateEpsilonW)
-      || !nearlyEqual(previousLayerMetrics.translateY, ty, translateEpsilonW);
-    if (!layerMetricsChanged) continue;
+    if (!layerMetricsChanged(ref.el, tx, ty, translateEpsilonW)) continue;
     const next = formatSvgTranslate(tx, ty);
-    ref.el.__authoredParallaxMetrics = Object.freeze({
-      translateX: tx,
-      translateY: ty,
-    });
+    ref.el.__authoredParallaxLayerTranslateX = tx;
+    ref.el.__authoredParallaxLayerTranslateY = ty;
     ref.el.setAttribute("transform", next);
   }
 }
