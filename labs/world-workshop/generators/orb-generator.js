@@ -41,6 +41,8 @@ function circlePoints({
 export function createOrbModel({
   bo = 72,
   shellMaterial,
+  glowMaterial = null,
+  glowScale = 1,
   coreMaterial = null,
   edgeMaterials = [],
   edgeColor = 0xffffff,
@@ -50,6 +52,14 @@ export function createOrbModel({
 } = {}) {
   const metrics = getOrbMetrics({ bo });
   const model = new THREE.Group();
+
+  if (glowMaterial) {
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(metrics.radius * Number(glowScale || 1), metrics.shellSegments, metrics.shellSegments * 0.5),
+      glowMaterial
+    );
+    model.add(glow);
+  }
 
   const shell = new THREE.Mesh(
     new THREE.SphereGeometry(metrics.radius, metrics.shellSegments, metrics.shellSegments * 0.5),
