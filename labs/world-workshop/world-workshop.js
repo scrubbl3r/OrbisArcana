@@ -1,6 +1,6 @@
 import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js";
 import { WORLD_WORKSHOP_SURFACES } from "./world-item-surfaces.js";
-import { renderIonicPlinthPreview } from "./previews/ionic-plinth-preview.js";
+import { renderIonicPlinthPreview } from "./previews/ionic-plinth-preview.js?v=20260426b";
 
 function surfaceOptionMarkup(surface = {}) {
   return `<option value="${String(surface.id || "")}">${String(surface.label || surface.id || "World item")}</option>`;
@@ -84,7 +84,7 @@ function renderSurfacePreview({
     geometryReadout.textContent = `BO ${metrics.bo}px / column ${metrics.columnWidth}px x ${metrics.columnHeight}px / cap ${metrics.capitalWidth}px / base ${metrics.baseWidth}px`;
   }
   if (materialReadout) {
-    materialReadout.textContent = "Opaque black faces / 2px white vector edges";
+    materialReadout.textContent = "Opaque black faces / 1px white vector edges";
   }
   if (runtimeReadout && surface) {
     runtimeReadout.textContent = `${String(surface.kind || "world_item")} / ${String(surface.category || "world")} / ${String(surface.status || "draft")}`;
