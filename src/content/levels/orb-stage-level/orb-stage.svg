@@ -23,15 +23,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="1.9625695"
-     inkscape:cx="938.05595"
-     inkscape:cy="1551.5374"
+     inkscape:zoom="3.925139"
+     inkscape:cx="990.79293"
+     inkscape:cy="1474.8522"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="24"
      inkscape:window-y="55"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer12"
+     inkscape:current-layer="layer7"
      showgrid="true">
     <inkscape:grid
        id="grid1"
@@ -49,18 +49,33 @@
        visible="true" />
   </sodipodi:namedview>
   <defs
-     id="defs1" />
+     id="defs1">
+    <linearGradient
+       id="swatch3"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop3" />
+    </linearGradient>
+  </defs>
   <g
      inkscape:groupmode="layer"
      id="layer7"
      inkscape:label="line_art"
-     sodipodi:insensitive="true"
      style="display:inline">
     <path
-       style="fill:#003301;fill-opacity:1;stroke:#08fe00;stroke-width:0.25;stroke-dasharray:none;stroke-opacity:1"
-       d="m 1107.4219,1497.9531 -15.8204,15.8203 -11.5234,-11.5234 -9.5703,9.5703 -34.7656,-34.7656 -19.1407,19.1406 -11.2183,-11.2183 -18.82147,18.8214 -3.35863,-1.9391 -7.8125,7.8125 -19.53125,-19.5312 -18.55469,18.7499 v 27.3438 h 173.63284 v -42.3828 z"
+       style="fill:#003301;fill-opacity:1;stroke:#08fe00;stroke-width:0.240548;stroke-dasharray:none;stroke-opacity:1"
+       d="m 1104.0566,1498.6326 -15.1679,15.2765 -11.0483,-11.1273 -9.1756,9.2414 -33.3321,-33.571 -18.3514,18.483 -10.7556,-10.8329 -18.04544,18.1747 -3.22014,-1.8725 -7.49034,7.544 -18.72587,-18.8601 -17.78958,18.1057 v 26.4042 h 166.47297 v -40.9264 z"
        id="path3"
        sodipodi:nodetypes="cccccccccccccccc" />
+    <rect
+       style="display:inline;fill:#55d400;stroke:#20f219;stroke-width:0.805239;stroke-opacity:1;fill-opacity:0.00392157"
+       id="rect1-24"
+       width="166.85287"
+       height="749.19476"
+       x="940.57355"
+       y="786.40259" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -91,7 +106,7 @@
      inkscape:label="bounds"
      inkscape:groupmode="layer"
      id="layer1"
-     style="display:inline"
+     style="display:none"
      sodipodi:insensitive="true">
     <rect
        style="fill:none;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
@@ -99,7 +114,8 @@
        width="166.85287"
        height="749.19476"
        x="940.57355"
-       y="786.40259" />
+       y="786.40259"
+       sodipodi:insensitive="true" />
   </g>
   <g
      inkscape:groupmode="layer"
