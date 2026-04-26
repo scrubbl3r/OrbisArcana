@@ -38,13 +38,13 @@ body::before {
 
 .workshopShell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .wrap {
   position: relative;
   z-index: 1;
-  max-width: 1080px;
+  max-width: 1180px;
   margin: 22px auto;
   padding: 0 16px 48px;
   gap: 16px;
@@ -105,14 +105,20 @@ body::before {
 }
 
 .workshopViewportCard {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   min-width: 0;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  padding: 14px 16px 16px;
 }
 
 .workshopViewport {
   position: relative;
-  height: min(50vh, 520px);
+  height: clamp(420px, 62vh, 720px);
   border: 1px solid var(--frame);
-  border-radius: 14px;
+  border-radius: 16px;
   background: #000;
   display: grid;
   place-items: center;
@@ -149,6 +155,7 @@ body::before {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  width: 100%;
 }
 
 .controlPane {
@@ -177,10 +184,6 @@ body::before {
 }
 
 @media (max-width: 960px) {
-  .workshopShell {
-    grid-template-columns: 1fr;
-  }
-
   .studioBar {
     align-items: stretch;
   }
@@ -196,5 +199,21 @@ body::before {
 
   .workshopControls {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    margin-top: 12px;
+    padding-inline: 10px;
+  }
+
+  .workshopViewportCard {
+    padding-inline: 10px;
+  }
+
+  .workshopViewport {
+    height: clamp(360px, 66vh, 620px);
+    border-radius: 12px;
   }
 }
