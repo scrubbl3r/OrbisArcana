@@ -1,14 +1,18 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { clearPreviewHost, setPreviewHostCleanup } from "../preview-host.js";
 import { disposeObject } from "../rendering/world-render-utils.js";
 
-function resizeInspector({ renderer, camera, root, edgeMaterials = [] }) {
+function resizeInspector({ renderer, composer = null, camera, root, edgeMaterials = [] }) {
   const bounds = root.getBoundingClientRect();
   const width = Math.max(1, Math.round(bounds.width));
   const height = Math.max(1, Math.round(bounds.height));
   renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 2));
   renderer.setSize(width, height, false);
+  if (composer) composer.setSize(width, height);
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   edgeMaterials.forEach((material) => {
@@ -26,6 +30,7 @@ export function createWorldObjectInspector({
   maxDistanceBo = 32,
   enableShadows = false,
   shadowMapType = THREE.PCFSoftShadowMap,
+  bloom = null,
   onFrame = null,
 } = {}) {
   if (!root) return null;
@@ -46,6 +51,20 @@ export function createWorldObjectInspector({
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+  const composer = bloom
+    ? new EffectComposer(renderer)
+    : null;
+  let bloomPass = null;
+  if (composer) {
+    composer.addPass(new RenderPass(scene, camera));
+    bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(1, 1),
+      Number(bloom.strength) || 1.5,
+      Number(bloom.radius) || 0.4,
+      Number(bloom.threshold) || 0
+    );
+    composer.addPass(bloomPass);
+  }
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
@@ -63,11 +82,12 @@ export function createWorldObjectInspector({
   camera.lookAt(controls.target);
   controls.update();
 
-  resizeInspector({ renderer, camera, root, edgeMaterials });
+  resizeInspector({ renderer, composer, camera, root, edgeMaterials });
 
   let animationFrame = 0;
   const render = () => {
-    renderer.render(scene, camera);
+    if (composer) composer.render();
+    else renderer.render(scene, camera);
   };
   const tick = () => {
     if (typeof onFrame === "function") {
@@ -81,7 +101,7 @@ export function createWorldObjectInspector({
 
   const resizeObserver = typeof ResizeObserver !== "undefined"
     ? new ResizeObserver(() => {
-        resizeInspector({ renderer, camera, root, edgeMaterials });
+        resizeInspector({ renderer, composer, camera, root, edgeMaterials });
         render();
       })
     : null;
@@ -92,6 +112,7 @@ export function createWorldObjectInspector({
     if (resizeObserver) resizeObserver.disconnect();
     controls.dispose();
     disposeObject(scene);
+    if (composer) composer.dispose();
     renderer.dispose();
     if (renderer.domElement && renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);
@@ -105,6 +126,8 @@ export function createWorldObjectInspector({
     camera,
     controls,
     renderer,
+    composer,
+    bloomPass,
     edgeMaterials,
     render,
     cleanup,

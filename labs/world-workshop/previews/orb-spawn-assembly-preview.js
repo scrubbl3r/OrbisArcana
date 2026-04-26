@@ -4,7 +4,7 @@ import { PLINTH_MATERIAL_CONFIG } from "../configs/plinth-material-config.js?v=2
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
 import { createOrbSpawnPlinthModel } from "../generators/orb-spawn-plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
-import { createOpalescentOrbGlowMaterial, createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
 import { createLitBlackPlinthMaterial } from "../rendering/plinth-materials.js?v=20260426a";
 import { addLineEdges } from "../rendering/world-render-utils.js?v=20260426a";
 
@@ -27,6 +27,13 @@ export function renderOrbSpawnAssemblyPreview({
     minDistanceBo: 1.1,
     maxDistanceBo: 32,
     enableShadows: true,
+    bloom: ORB_MATERIAL_CONFIG.bloomEnabled
+      ? Object.freeze({
+          strength: ORB_MATERIAL_CONFIG.bloomStrength,
+          radius: ORB_MATERIAL_CONFIG.bloomRadius,
+          threshold: ORB_MATERIAL_CONFIG.bloomThreshold,
+        })
+      : null,
     onFrame: () => {
       const time = (performance.now() - startedAt) / 1000;
       animatedMaterials.forEach((material) => {
@@ -89,16 +96,10 @@ export function renderOrbSpawnAssemblyPreview({
   inspector.scene.add(groundPlane);
 
   const shellMaterial = createOpalescentOrbShellMaterial(ORB_MATERIAL_CONFIG);
-  const glowMaterial = ORB_MATERIAL_CONFIG.glowEnabled
-    ? createOpalescentOrbGlowMaterial(ORB_MATERIAL_CONFIG)
-    : null;
   animatedMaterials.push(shellMaterial);
-  if (glowMaterial) animatedMaterials.push(glowMaterial);
   const { model: orbModel, metrics: orbMetrics } = createOrbModel({
     bo,
     shellMaterial,
-    glowMaterial,
-    glowScale: ORB_MATERIAL_CONFIG.glowScale,
     edgeMaterials: inspector.edgeMaterials,
     includeCore: false,
     includeRibs: false,

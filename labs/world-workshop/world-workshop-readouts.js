@@ -28,10 +28,10 @@ export function formatWorldWorkshopMaterialReadout(surface = null) {
   switch (String(surface.preview || "")) {
     case "world-object-inspector":
       if (String(surface.generator || "") === "orb") {
-        return "World object inspector / translucent opalescent shell / additive emissive glow / saturated pastel drift";
+        return "World object inspector / translucent opalescent shell / postprocess bloom / saturated pastel drift";
       }
       if (String(surface.generator || "") === "orb-spawn-assembly") {
-        return "Shadowed opalescent orb point light / additive emissive glow / graphite plinth faces / layered faux-glow Line2 edges";
+        return "Shadowed opalescent orb point light / postprocess bloom / graphite plinth faces / layered faux-glow Line2 edges";
       }
       return "World object inspector / opaque black faces / 2px white Line2 edges";
     default:
