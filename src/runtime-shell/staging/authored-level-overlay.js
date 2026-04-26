@@ -137,6 +137,8 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
   const nextZoom = Math.max(0.05, clampNumber(zoom, 1));
   const viewportWidthW = Math.max(0, clampNumber(viewportWidthPx, 0) / nextZoom);
   const viewportHeightW = Math.max(0, clampNumber(viewportHeightPx, 0) / nextZoom);
+  const viewportRightW = left + viewportWidthW;
+  const viewportBottomW = top + viewportHeightW;
   for (const ref of safeRefs) {
     if (!ref || !ref.el || typeof ref.el.setAttribute !== "function") continue;
     const ratio = Math.max(0, Math.min(1, clampNumber(ref.ratio, 1)));
@@ -152,11 +154,27 @@ export function applyAuthoredStarsFieldParallax(parallaxRefs = [], {
     const ty = (0.5 - progressY) * driftY;
     const boxWidth = ref.fieldWidth + driftX;
     const boxHeight = ref.fieldHeight + driftY;
+    const boxLeft = (ref.fieldLeft - (driftX * 0.5)) + tx;
+    const boxTop = (ref.fieldTop - (driftY * 0.5)) + ty;
+    const boxRight = boxLeft + boxWidth;
+    const boxBottom = boxTop + boxHeight;
+    const isVisible = !(
+      boxRight < left
+      || boxLeft > viewportRightW
+      || boxBottom < top
+      || boxTop > viewportBottomW
+    );
+    if (ref.el.__authoredParallaxVisible !== isVisible) {
+      ref.el.__authoredParallaxVisible = isVisible;
+      ref.el.style.display = isVisible ? "" : "none";
+    }
+    if (!isVisible) continue;
     if (ref.contentGroup && typeof ref.contentGroup.setAttribute === "function") {
-      ref.contentGroup.setAttribute(
-        "transform",
-        `translate(${formatNumberAttr(ref.fieldLeft - (driftX * 0.5), ref.fieldLeft)} ${formatNumberAttr(ref.fieldTop - (driftY * 0.5), ref.fieldTop)}) scale(${(boxWidth / Math.max(1, ref.fieldWidth)).toFixed(4)} ${(boxHeight / Math.max(1, ref.fieldHeight)).toFixed(4)})`
-      );
+      const nextContentTransform = `translate(${formatNumberAttr(ref.fieldLeft - (driftX * 0.5), ref.fieldLeft)} ${formatNumberAttr(ref.fieldTop - (driftY * 0.5), ref.fieldTop)}) scale(${(boxWidth / Math.max(1, ref.fieldWidth)).toFixed(4)} ${(boxHeight / Math.max(1, ref.fieldHeight)).toFixed(4)})`;
+      if (ref.contentGroup.__authoredParallaxTransform !== nextContentTransform) {
+        ref.contentGroup.__authoredParallaxTransform = nextContentTransform;
+        ref.contentGroup.setAttribute("transform", nextContentTransform);
+      }
     }
     const next = formatSvgTranslate(tx, ty);
     if (ref.el.__authoredParallaxTransform === next) continue;
