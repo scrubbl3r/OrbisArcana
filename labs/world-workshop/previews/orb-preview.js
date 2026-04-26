@@ -42,9 +42,9 @@ function createOpalescentOrbShellMaterial() {
       void main() {
         vec3 viewDir = normalize(vViewPosition);
         float fresnel = pow(1.0 - max(dot(normalize(vNormal), viewDir), 0.0), 2.15);
-        float driftA = sin((vWorldPosition.x * 0.030) + uTime * 0.42) * 0.5 + 0.5;
-        float driftB = sin((vWorldPosition.y * 0.036) - uTime * 0.31 + 1.7) * 0.5 + 0.5;
-        float driftC = sin((vWorldPosition.z * 0.028) + uTime * 0.24 + 3.1) * 0.5 + 0.5;
+        float driftA = sin((vWorldPosition.x * 0.030) + uTime * 1.26) * 0.5 + 0.5;
+        float driftB = sin((vWorldPosition.y * 0.036) - uTime * 0.93 + 1.7) * 0.5 + 0.5;
+        float driftC = sin((vWorldPosition.z * 0.028) + uTime * 0.72 + 3.1) * 0.5 + 0.5;
         vec3 pastel = mix(uCyan, uViolet, driftA);
         pastel = mix(pastel, uGold, driftB * 0.34);
         vec3 pearl = mix(uBase, pastel, 0.34 + fresnel * 0.36 + driftC * 0.08);
