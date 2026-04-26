@@ -1,40 +1,82 @@
-function n(value) {
-  return Number(value).toFixed(2);
+import * as THREE from "https://unpkg.com/three@0.164.1/build/three.module.js";
+
+const EDGE_COLOR = 0xffffff;
+const FACE_COLOR = 0x000000;
+
+function disposeObject(object) {
+  object.traverse((child) => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose());
+      else child.material.dispose();
+    }
+  });
 }
 
-function rect({ x, y, width, height, className = "" }) {
-  return `<rect class="plinthFace ${className}" x="${n(x)}" y="${n(y)}" width="${n(width)}" height="${n(height)}" />`;
+function addEdges(mesh, { color = EDGE_COLOR } = {}) {
+  const edges = new THREE.EdgesGeometry(mesh.geometry, 16);
+  const lines = new THREE.LineSegments(
+    edges,
+    new THREE.LineBasicMaterial({
+      color,
+      linewidth: 1,
+    })
+  );
+  lines.position.copy(mesh.position);
+  lines.rotation.copy(mesh.rotation);
+  lines.scale.copy(mesh.scale);
+  mesh.parent.add(lines);
+  return lines;
 }
 
-function line({ x1, y1, x2, y2, className = "" }) {
-  return `<line class="plinthEdge ${className}" x1="${n(x1)}" y1="${n(y1)}" x2="${n(x2)}" y2="${n(y2)}" />`;
+function addBox(group, {
+  width,
+  height,
+  depth,
+  x = 0,
+  y = 0,
+  z = 0,
+  material,
+}) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
+  mesh.position.set(x, y, z);
+  group.add(mesh);
+  addEdges(mesh);
+  return mesh;
 }
 
-function buildVolutePath({ cx, cy, outerRadius, inward = 1 }) {
-  const samples = 52;
-  const turns = 1.72;
-  const points = [];
-  for (let i = 0; i <= samples; i += 1) {
-    const t = i / samples;
-    const angle = inward * (Math.PI * 2 * turns * t);
-    const radius = outerRadius * (1 - t * 0.78);
-    points.push([
-      cx + Math.cos(angle) * radius,
-      cy + Math.sin(angle) * radius,
-    ]);
-  }
-  return points.map(([x, y], index) => `${index ? "L" : "M"}${n(x)} ${n(y)}`).join(" ");
+function addCylinder(group, {
+  radius,
+  depth,
+  x = 0,
+  y = 0,
+  z = 0,
+  radialSegments = 48,
+  material,
+}) {
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(radius, radius, depth, radialSegments, 1, false),
+    material
+  );
+  mesh.rotation.x = Math.PI * 0.5;
+  mesh.position.set(x, y, z);
+  group.add(mesh);
+  addEdges(mesh);
+  return mesh;
 }
 
-function columnFacetLines({ centerX, topY, bottomY, width }) {
-  const xs = [-0.36, -0.18, 0, 0.18, 0.36].map((ratio) => centerX + width * ratio);
-  return xs.map((x) => line({
-    x1: x,
-    y1: topY,
-    x2: x,
-    y2: bottomY,
-    className: "plinthColumnFacet",
-  })).join("");
+function resizeRenderer({ renderer, camera, root }) {
+  const bounds = root.getBoundingClientRect();
+  const width = Math.max(1, Math.round(bounds.width));
+  const height = Math.max(1, Math.round(bounds.height));
+  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 2));
+  renderer.setSize(width, height, false);
+  camera.left = width * -0.5;
+  camera.right = width * 0.5;
+  camera.top = height * 0.5;
+  camera.bottom = height * -0.5;
+  camera.updateProjectionMatrix();
+  return { width, height };
 }
 
 export function renderIonicPlinthPreview({
@@ -44,113 +86,163 @@ export function renderIonicPlinthPreview({
   if (!root) return null;
 
   const bo = Number(orbDiameterPx) || 72;
-  const columnWidth = bo;
+  const columnWidth = bo * 0.8;
+  const columnDepth = bo * 0.8;
   const columnHeight = bo * 2;
   const capitalWidth = bo * 1.35;
+  const capitalDepth = bo * 0.82;
   const baseWidth = bo * 1.35;
+  const baseDepth = bo * 1.35;
   const baseLowerHeight = bo * 0.18;
   const baseUpperHeight = bo * 0.14;
   const capVoluteHeight = bo * 0.34;
   const capBandHeight = bo * 0.13;
   const capSlabHeight = bo * 0.12;
-  const viewWidth = bo * 2.2;
-  const topMargin = bo * 0.72;
-  const centerX = viewWidth * 0.5;
-  const capTopY = topMargin;
-  const capSlabY = capTopY;
-  const capBandY = capSlabY + capSlabHeight;
-  const capVoluteY = capBandY + capBandHeight;
-  const columnTopY = capVoluteY + capVoluteHeight;
-  const columnBottomY = columnTopY + columnHeight;
-  const baseUpperY = columnBottomY;
-  const baseLowerY = baseUpperY + baseUpperHeight;
-  const bottomY = baseLowerY + baseLowerHeight;
-  const viewHeight = bottomY + bo * 0.2;
-  const columnX = centerX - columnWidth * 0.5;
-  const capX = centerX - capitalWidth * 0.5;
-  const baseX = centerX - baseWidth * 0.5;
-  const capInnerX = centerX - capitalWidth * 0.43;
-  const capInnerW = capitalWidth * 0.86;
-  const baseUpperX = centerX - baseWidth * 0.43;
-  const baseUpperW = baseWidth * 0.86;
-  const voluteRadius = bo * 0.18;
-  const voluteY = capVoluteY + capVoluteHeight * 0.5;
-  const leftVoluteX = centerX - capitalWidth * 0.31;
-  const rightVoluteX = centerX + capitalWidth * 0.31;
+  const plinthHeight = baseLowerHeight + baseUpperHeight + columnHeight + capVoluteHeight + capBandHeight + capSlabHeight;
+  const frontZ = capitalDepth * 0.5;
 
-  root.innerHTML = `
-    <svg class="ionicPlinthPreview" viewBox="0 0 ${n(viewWidth)} ${n(viewHeight)}" role="img" aria-label="Front elevation of minimal ionic orb spawn plinth">
-      <g class="plinthScaleGuide" aria-hidden="true">
-        <circle cx="${n(centerX)}" cy="${n(capTopY - bo * 0.5)}" r="${n(bo * 0.5)}" />
-      </g>
-      <g class="plinthObject" vector-effect="non-scaling-stroke">
-        ${rect({
-          x: capX,
-          y: capSlabY,
-          width: capitalWidth,
-          height: capSlabHeight,
-          className: "plinthCapitalSlab",
-        })}
-        ${rect({
-          x: capX,
-          y: capBandY,
-          width: capitalWidth,
-          height: capBandHeight,
-          className: "plinthCapitalBand",
-        })}
-        ${rect({
-          x: capInnerX,
-          y: capVoluteY,
-          width: capInnerW,
-          height: capVoluteHeight,
-          className: "plinthCapitalVoluteBlock",
-        })}
-        <path class="plinthEdge plinthVolute" d="${buildVolutePath({
-          cx: leftVoluteX,
-          cy: voluteY,
-          outerRadius: voluteRadius,
-          inward: -1,
-        })}" />
-        <path class="plinthEdge plinthVolute" d="${buildVolutePath({
-          cx: rightVoluteX,
-          cy: voluteY,
-          outerRadius: voluteRadius,
-          inward: 1,
-        })}" />
-        ${rect({
-          x: columnX,
-          y: columnTopY,
-          width: columnWidth,
-          height: columnHeight,
-          className: "plinthColumn",
-        })}
-        ${columnFacetLines({
-          centerX,
-          topY: columnTopY,
-          bottomY: columnBottomY,
-          width: columnWidth,
-        })}
-        ${rect({
-          x: baseUpperX,
-          y: baseUpperY,
-          width: baseUpperW,
-          height: baseUpperHeight,
-          className: "plinthBaseUpper",
-        })}
-        ${rect({
-          x: baseX,
-          y: baseLowerY,
-          width: baseWidth,
-          height: baseLowerHeight,
-          className: "plinthBaseLower",
-        })}
-      </g>
-    </svg>
-  `;
+  if (root.__worldWorkshopPreviewCleanup) root.__worldWorkshopPreviewCleanup();
+  root.innerHTML = "";
+
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+  });
+  renderer.domElement.className = "ionicPlinthCanvas";
+  renderer.setClearColor(0x000000, 0);
+  root.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 2000);
+  camera.position.set(0, 0, 500);
+  camera.lookAt(0, 0, 0);
+
+  const faceMaterial = new THREE.MeshBasicMaterial({
+    color: FACE_COLOR,
+    side: THREE.DoubleSide,
+  });
+
+  const model = new THREE.Group();
+  scene.add(model);
+
+  let y = plinthHeight * -0.5;
+  addBox(model, {
+    width: baseWidth,
+    height: baseLowerHeight,
+    depth: baseDepth,
+    y: y + baseLowerHeight * 0.5,
+    material: faceMaterial,
+  });
+  y += baseLowerHeight;
+  addBox(model, {
+    width: baseWidth * 0.86,
+    height: baseUpperHeight,
+    depth: baseDepth * 0.86,
+    y: y + baseUpperHeight * 0.5,
+    material: faceMaterial,
+  });
+  y += baseUpperHeight;
+  addBox(model, {
+    width: columnWidth,
+    height: columnHeight,
+    depth: columnDepth,
+    y: y + columnHeight * 0.5,
+    material: faceMaterial,
+  });
+  y += columnHeight;
+  addBox(model, {
+    width: capitalWidth * 0.86,
+    height: capVoluteHeight,
+    depth: capitalDepth * 0.72,
+    y: y + capVoluteHeight * 0.5,
+    material: faceMaterial,
+  });
+
+  const voluteY = y + capVoluteHeight * 0.5;
+  const voluteX = capitalWidth * 0.31;
+  const voluteDepthStep = 0.65;
+  [1, 0.66, 0.36].forEach((scale, index) => {
+    const z = frontZ + 0.25 + index * voluteDepthStep;
+    const radius = bo * 0.17 * scale;
+    addCylinder(model, {
+      radius,
+      depth: bo * 0.035,
+      x: -voluteX,
+      y: voluteY,
+      z,
+      material: faceMaterial,
+    });
+    addCylinder(model, {
+      radius,
+      depth: bo * 0.035,
+      x: voluteX,
+      y: voluteY,
+      z,
+      material: faceMaterial,
+    });
+  });
+
+  y += capVoluteHeight;
+  addBox(model, {
+    width: capitalWidth,
+    height: capBandHeight,
+    depth: capitalDepth,
+    y: y + capBandHeight * 0.5,
+    material: faceMaterial,
+  });
+  y += capBandHeight;
+  addBox(model, {
+    width: capitalWidth,
+    height: capSlabHeight,
+    depth: capitalDepth,
+    y: y + capSlabHeight * 0.5,
+    material: faceMaterial,
+  });
+
+  const orbGuide = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.SphereGeometry(bo * 0.5, 32, 16), 16),
+    new THREE.LineDashedMaterial({
+      color: EDGE_COLOR,
+      dashSize: 4,
+      gapSize: 6,
+      transparent: true,
+      opacity: 0.22,
+    })
+  );
+  orbGuide.position.set(0, plinthHeight * 0.5 + bo * 0.5, 0);
+  orbGuide.computeLineDistances();
+  scene.add(orbGuide);
+
+  model.rotation.x = -0.08;
+  model.rotation.y = 0.18;
+  model.position.y = -bo * 0.18;
+
+  const render = () => {
+    resizeRenderer({ renderer, camera, root });
+    renderer.render(scene, camera);
+  };
+  render();
+
+  const resizeObserver = typeof ResizeObserver !== "undefined"
+    ? new ResizeObserver(render)
+    : null;
+  if (resizeObserver) resizeObserver.observe(root);
+
+  root.__worldWorkshopPreviewCleanup = () => {
+    if (resizeObserver) resizeObserver.disconnect();
+    disposeObject(scene);
+    faceMaterial.dispose();
+    renderer.dispose();
+    if (renderer.domElement && renderer.domElement.parentNode) {
+      renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
+    root.__worldWorkshopPreviewCleanup = null;
+  };
 
   return {
     bo,
     columnWidth,
+    columnDepth,
     columnHeight,
     capitalWidth,
     baseWidth,
