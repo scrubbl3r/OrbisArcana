@@ -103,13 +103,13 @@ export function renderIonicPlinthPreview({
   const columnWidth = bo * 0.8;
   const columnDepth = bo * 0.8;
   const columnHeight = bo * 1.5;
-  const capitalWidth = bo * 1.35;
+  const capitalWidth = bo * 1.1;
   const capitalDepth = capitalWidth;
   const baseWidth = bo * 1.35;
   const baseDepth = bo * 1.35;
-  const baseLowerHeight = bo * 0.36;
-  const baseUpperHeight = bo * 0.28;
-  const capCenterHeight = bo * 0.34;
+  const baseLowerHeight = bo * 0.27;
+  const baseUpperHeight = bo * 0.21;
+  const capCenterHeight = bo * 0.15;
   const plinthHeight = baseLowerHeight + baseUpperHeight + columnHeight + capCenterHeight;
   const columnCenterY = baseLowerHeight + baseUpperHeight + columnHeight * 0.5;
 
