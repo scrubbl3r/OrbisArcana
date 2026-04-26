@@ -6,13 +6,13 @@ function createOpalescentOrbShellMaterial() {
   return new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
-    side: THREE.DoubleSide,
+    side: THREE.FrontSide,
     uniforms: {
       uTime: { value: 0 },
-      uBase: { value: new THREE.Color(0xf8fbff) },
-      uCyan: { value: new THREE.Color(0xbff8ff) },
-      uViolet: { value: new THREE.Color(0xe8d8ff) },
-      uGold: { value: new THREE.Color(0xfff1c7) },
+      uBase: { value: new THREE.Color(0xfbfdff) },
+      uCyan: { value: new THREE.Color(0x8ff4ff) },
+      uViolet: { value: new THREE.Color(0xd0b8ff) },
+      uGold: { value: new THREE.Color(0xffdf86) },
     },
     vertexShader: `
       varying vec3 vNormal;
@@ -47,50 +47,9 @@ function createOpalescentOrbShellMaterial() {
         float driftC = sin((vWorldPosition.z * 0.028) + uTime * 0.24 + 3.1) * 0.5 + 0.5;
         vec3 pastel = mix(uCyan, uViolet, driftA);
         pastel = mix(pastel, uGold, driftB * 0.34);
-        vec3 pearl = mix(uBase, pastel, 0.20 + fresnel * 0.28 + driftC * 0.06);
-        float alpha = 0.34 + fresnel * 0.38;
+        vec3 pearl = mix(uBase, pastel, 0.34 + fresnel * 0.36 + driftC * 0.08);
+        float alpha = 0.025 + pow(fresnel, 0.72) * 0.84;
         gl_FragColor = vec4(pearl, alpha);
-      }
-    `,
-  });
-}
-
-function createOrbCoreMaterial() {
-  return new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    uniforms: {
-      uTime: { value: 0 },
-      uCyan: { value: new THREE.Color(0x9beaff) },
-      uViolet: { value: new THREE.Color(0xd8c6ff) },
-    },
-    vertexShader: `
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
-
-      void main() {
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        vNormal = normalize(normalMatrix * normal);
-        vViewPosition = -mvPosition.xyz;
-        gl_Position = projectionMatrix * mvPosition;
-      }
-    `,
-    fragmentShader: `
-      uniform float uTime;
-      uniform vec3 uCyan;
-      uniform vec3 uViolet;
-
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
-
-      void main() {
-        vec3 viewDir = normalize(vViewPosition);
-        float center = max(dot(normalize(vNormal), viewDir), 0.0);
-        float pulse = sin(uTime * 1.2) * 0.5 + 0.5;
-        vec3 color = mix(uCyan, uViolet, pulse * 0.42);
-        float alpha = pow(center, 1.7) * (0.18 + pulse * 0.08);
-        gl_FragColor = vec4(color, alpha);
       }
     `,
   });
@@ -123,15 +82,14 @@ export function renderOrbPreview({
   if (!inspector) return null;
 
   const shellMaterial = createOpalescentOrbShellMaterial();
-  const coreMaterial = createOrbCoreMaterial();
-  animatedMaterials.push(shellMaterial, coreMaterial);
+  animatedMaterials.push(shellMaterial);
 
   const { model, metrics } = createOrbModel({
     bo,
     shellMaterial,
-    coreMaterial,
     edgeMaterials: inspector.edgeMaterials,
-    edgeColor: 0xf7fbff,
+    includeCore: false,
+    includeRibs: false,
   });
 
   const orbLight = new THREE.PointLight(0xcfefff, 1.25, bo * 4.5, 1.7);

@@ -41,10 +41,12 @@ function circlePoints({
 export function createOrbModel({
   bo = 72,
   shellMaterial,
-  coreMaterial,
+  coreMaterial = null,
   edgeMaterials = [],
   edgeColor = 0xffffff,
   edgeWidth = 2,
+  includeCore = true,
+  includeRibs = true,
 } = {}) {
   const metrics = getOrbMetrics({ bo });
   const model = new THREE.Group();
@@ -55,25 +57,28 @@ export function createOrbModel({
   );
   model.add(shell);
 
-  const core = new THREE.Mesh(
-    new THREE.SphereGeometry(metrics.radius * 0.36, 32, 16),
-    coreMaterial
-  );
-  model.add(core);
+  if (includeCore && coreMaterial) {
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(metrics.radius * 0.36, 32, 16),
+      coreMaterial
+    );
+    model.add(core);
+  }
 
-  ["xy", "xz", "yz"].forEach((plane) => {
-    addLineLoop(model, {
-      points: circlePoints({
-        radius: metrics.radius,
-        segments: metrics.ringSegments,
-        plane,
-      }),
-      color: edgeColor,
-      linewidth: edgeWidth,
-      edgeMaterials,
+  if (includeRibs) {
+    ["xy", "xz", "yz"].forEach((plane) => {
+      addLineLoop(model, {
+        points: circlePoints({
+          radius: metrics.radius,
+          segments: metrics.ringSegments,
+          plane,
+        }),
+        color: edgeColor,
+        linewidth: edgeWidth,
+        edgeMaterials,
+      });
     });
-  });
+  }
 
   return Object.freeze({ model, metrics });
 }
-
