@@ -1,7 +1,7 @@
 import {
   buildWorldGlobeVisualState,
   rgbaFromWorldGlobeColor,
-} from "../../../../src/game-runtime/world/world-globe-state.js?v=20260418a";
+} from "../../../src/game-runtime/world/world-globe-state.js?v=20260418a";
 
 export function createWorldGlobePreview({ els, clamp }) {
   let samples = [];

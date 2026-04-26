@@ -1,5 +1,5 @@
-import { applyOrbBaseVisualCssVars } from "../../../../src/game-runtime/orb/orb-base-state.js";
-import { resolveOrbLinkedPx } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+import { applyOrbBaseVisualCssVars } from "../../../src/game-runtime/orb/orb-base-state.js";
+import { resolveOrbLinkedPx } from "../../../src/game-runtime/orb/orb-spell-geometry.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

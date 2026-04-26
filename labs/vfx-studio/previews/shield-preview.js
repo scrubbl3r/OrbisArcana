@@ -1,4 +1,4 @@
-import { resolveBubbleShieldGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+import { resolveBubbleShieldGeometry } from "../../../src/game-runtime/orb/orb-spell-geometry.js";
 
 export function createShieldPreview({
   els,

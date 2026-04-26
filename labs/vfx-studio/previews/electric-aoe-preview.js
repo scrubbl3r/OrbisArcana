@@ -1,4 +1,4 @@
-import { resolveElectricAoeGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+import { resolveElectricAoeGeometry } from "../../../src/game-runtime/orb/orb-spell-geometry.js";
 
 export function createElectricAoePreview({
   els,

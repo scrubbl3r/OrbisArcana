@@ -1,7 +1,7 @@
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
-} from "../../../../src/game-runtime/orb/orb-base-state.js";
+} from "../../../src/game-runtime/orb/orb-base-state.js";
 
 export function createOrbBasePreview({ els, evenPx, clamp, clampByte }) {
   function apply() {

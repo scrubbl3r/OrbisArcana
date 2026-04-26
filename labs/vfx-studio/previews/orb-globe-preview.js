@@ -1,17 +1,17 @@
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
-} from "../../../../src/game-runtime/orb/orb-base-state.js";
+} from "../../../src/game-runtime/orb/orb-base-state.js";
 import {
   applyOrbGlobeVisualCssVars,
   buildOrbGlobeVisualState,
   getInnerPaddingPx,
   getOrbitDistancePx,
-} from "../../../../src/game-runtime/orb/orb-globe-base-state.js";
+} from "../../../src/game-runtime/orb/orb-globe-base-state.js";
 import {
   buildWorldGlobeVisualState,
   rgbaFromWorldGlobeColor,
-} from "../../../../src/game-runtime/world/world-globe-state.js";
+} from "../../../src/game-runtime/world/world-globe-state.js";
 
 export function createOrbGlobePreview({ els, clamp }) {
   let samples = [];

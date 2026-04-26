@@ -1,4 +1,4 @@
-import { applyOrbBaseVisualCssVars } from "../../../../src/game-runtime/orb/orb-base-state.js";
+import { applyOrbBaseVisualCssVars } from "../../../src/game-runtime/orb/orb-base-state.js";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);

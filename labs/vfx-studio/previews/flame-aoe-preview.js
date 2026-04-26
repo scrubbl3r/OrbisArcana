@@ -1,4 +1,4 @@
-import { resolveFlameAoeGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+import { resolveFlameAoeGeometry } from "../../../src/game-runtime/orb/orb-spell-geometry.js";
 
 export function createFlameAoePreview({
   els,

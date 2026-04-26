@@ -1,4 +1,4 @@
-import { resolveShockwaveGeometry } from "../../../../src/game-runtime/orb/orb-spell-geometry.js";
+import { resolveShockwaveGeometry } from "../../../src/game-runtime/orb/orb-spell-geometry.js";
 
 export function createShockwavePreview({ els, clamp, setVar, shockwavePresetDefault }) {
   const SHOCK = {

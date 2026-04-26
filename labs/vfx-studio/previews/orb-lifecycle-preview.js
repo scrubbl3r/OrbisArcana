@@ -2,12 +2,12 @@ import {
   ORB_BASE_SCALE_REFERENCE_DIAMETER_PX,
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
-} from "../../../../src/game-runtime/orb/orb-base-state.js";
+} from "../../../src/game-runtime/orb/orb-base-state.js";
 import {
   createRng,
   makeVoronoiLayout,
-} from "../../../../src/game-runtime/orb/orb-lifecycle-vfx-runtime.js";
-import { createOrbShatterRuntime } from "../../../../src/vfx/effects/orb-states/orb-shatter-runtime.js";
+} from "../../../src/game-runtime/orb/orb-lifecycle-vfx-runtime.js";
+import { createOrbShatterRuntime } from "../../../src/vfx/effects/orb-states/orb-shatter-runtime.js";
 
 const AUTHORING_ORB_RADIUS_PX = ORB_BASE_SCALE_REFERENCE_DIAMETER_PX * 0.5;
 
