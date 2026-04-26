@@ -1,5 +1,15 @@
 export const WORLD_WORKSHOP_SURFACES = Object.freeze([
   Object.freeze({
+    id: "orb",
+    label: "Orb",
+    kind: "orb",
+    category: "protagonist",
+    generator: "orb",
+    previewKey: "orb",
+    preview: "world-object-inspector",
+    status: "experiment",
+  }),
+  Object.freeze({
     id: "orb-spawn-plinth",
     label: "Orb Spawn Plinth",
     kind: "orb_spawn_plinth",

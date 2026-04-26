@@ -53,6 +53,34 @@ export function addLineEdges(mesh, {
   return lines;
 }
 
+export function addLineLoop(group, {
+  points = [],
+  color = WORLD_EDGE_COLOR,
+  linewidth = 2,
+  edgeMaterials = [],
+} = {}) {
+  if (!group || !Array.isArray(points) || points.length < 2) return null;
+  const positions = [];
+  for (let index = 0; index < points.length; index += 1) {
+    const current = points[index];
+    const next = points[(index + 1) % points.length];
+    positions.push(current.x, current.y, current.z, next.x, next.y, next.z);
+  }
+  const lineGeometry = new LineSegmentsGeometry();
+  lineGeometry.setPositions(positions);
+  const material = new LineMaterial({
+    color,
+    linewidth,
+    worldUnits: false,
+  });
+  edgeMaterials.push(material);
+
+  const lines = new LineSegments2(lineGeometry, material);
+  lines.computeLineDistances();
+  group.add(lines);
+  return lines;
+}
+
 export function addOrbScaleGuide(group, {
   bo,
   y,
@@ -74,4 +102,3 @@ export function addOrbScaleGuide(group, {
   group.add(orbGuide);
   return orbGuide;
 }
-
