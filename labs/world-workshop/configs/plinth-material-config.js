@@ -9,6 +9,7 @@ export const PLINTH_MATERIAL_CONFIG = Object.freeze({
   edgeThresholdAngle: 16,
   guideColor: 0xffffff,
   assemblyScale: 0.85,
+  assemblyGroundPlaneSizeBO: 4.8,
   litFaceColor: 0x707680,
   litRoughness: 0.58,
   litMetalness: 0.0,

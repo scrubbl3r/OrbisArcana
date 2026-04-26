@@ -78,6 +78,16 @@ export function renderOrbSpawnAssemblyPreview({
   });
   inspector.scene.add(plinthModel);
 
+  const groundPlaneSize = bo * (Number(PLINTH_MATERIAL_CONFIG.assemblyGroundPlaneSizeBO) || 4.8);
+  const groundPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(groundPlaneSize, groundPlaneSize),
+    createLitBlackPlinthMaterial(PLINTH_MATERIAL_CONFIG)
+  );
+  groundPlane.rotation.x = -Math.PI * 0.5;
+  groundPlane.position.y = -plinthMetrics.columnCenterY - bo * 0.015;
+  groundPlane.receiveShadow = true;
+  inspector.scene.add(groundPlane);
+
   const shellMaterial = createOpalescentOrbShellMaterial(ORB_MATERIAL_CONFIG);
   animatedMaterials.push(shellMaterial);
   const { model: orbModel, metrics: orbMetrics } = createOrbModel({
@@ -125,6 +135,7 @@ export function renderOrbSpawnAssemblyPreview({
     orbRadius: orbMetrics.radius,
     orbClearance,
     shadowSpot: Boolean(shadowSpot),
+    groundPlaneSize,
     assemblyScale: PLINTH_MATERIAL_CONFIG.assemblyScale,
   });
 }
