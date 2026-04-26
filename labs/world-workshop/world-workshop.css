@@ -1,13 +1,10 @@
 :root {
-  --world-workshop-bg: #08090b;
-  --world-workshop-panel: #11161c;
-  --world-workshop-panel-2: #151b22;
-  --world-workshop-text: #edf2f5;
-  --world-workshop-muted: #98a8b5;
-  --world-workshop-accent: #79e0ff;
-  --world-workshop-line: #2b3844;
-  --lab-workspace-nav-muted: var(--world-workshop-muted);
-  --lab-workspace-nav-active: var(--world-workshop-text);
+  --g: var(--text-strong);
+  --bg: rgb(5, 5, 6);
+  --panel: rgba(10,10,12,.92);
+  --border: var(--frame);
+  --lab-workspace-nav-muted: var(--text-muted);
+  --lab-workspace-nav-active: var(--text-strong);
 }
 
 *,
@@ -20,66 +17,124 @@ html,
 body {
   min-height: 100%;
   margin: 0;
-  background: var(--world-workshop-bg);
-  color: var(--world-workshop-text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 700px at 50% 35%, rgba(0,0,0,.0) 0%, rgba(0,0,0,.45) 55%, rgba(0,0,0,.75) 100%);
+  opacity: 0.95;
+  mix-blend-mode: multiply;
+  z-index: 0;
 }
 
 .workshopShell {
-  min-height: 100vh;
   display: grid;
-  grid-template-rows: auto minmax(420px, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
-.workshopTopbar {
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1080px;
+  margin: 22px auto;
+  padding: 0 16px 48px;
+  gap: 16px;
+  align-items: start;
+}
+
+.studioBar,
+.card {
+  background: var(--panel);
+  border: 1px solid var(--frame);
+  border-radius: 16px;
+  box-shadow: 0 18px 80px rgba(0,0,0,.45);
+}
+
+.studioBar {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--world-workshop-line);
-  background: var(--world-workshop-panel);
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+}
+
+.studioBarGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.studioWorkspaceGroup {
+  min-width: 100%;
+  justify-content: space-between;
+}
+
+.studioBarLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.card {
+  padding: 14px 14px 16px;
+  overflow: hidden;
 }
 
 .itemSelect {
   min-width: 220px;
-  color: var(--world-workshop-text);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--world-workshop-line);
-  border-radius: 8px;
-  padding: 8px 10px;
+  color: var(--text);
+  background: rgba(var(--frame-rgb), 0.12);
+  border: 1px solid var(--frame);
+  border-radius: 10px;
+  padding: 6px 8px;
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workshopViewportCard {
+  min-width: 0;
 }
 
 .workshopViewport {
   position: relative;
-  min-height: 420px;
-  background:
-    linear-gradient(transparent 95%, rgba(255, 255, 255, 0.08) 95%),
-    linear-gradient(90deg, transparent 95%, rgba(255, 255, 255, 0.08) 95%),
-    radial-gradient(circle at 50% 36%, #26313b 0%, #11161c 45%, #07090b 100%);
-  background-size: 100% 100%, 100% 100%, 100% 100%;
+  height: min(50vh, 520px);
+  border: 1px solid var(--frame);
+  border-radius: 14px;
+  background: #000;
   display: grid;
   place-items: center;
   overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
 }
 
 .viewportPlaceholder {
   width: min(520px, 70vw);
   aspect-ratio: 1.6;
-  border: 1px solid rgba(121, 224, 255, 0.32);
+  border: 1px solid rgba(var(--frame-rgb), .36);
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  color: var(--world-workshop-muted);
+  color: var(--text-muted);
   background: rgba(0, 0, 0, 0.18);
 }
 
 .viewportPlaceholder strong {
   display: block;
-  color: var(--world-workshop-text);
-  font-size: 32px;
+  color: var(--text-strong);
+  font-size: 24px;
   line-height: 1.05;
   text-align: center;
 }
@@ -93,43 +148,53 @@ body {
 .workshopControls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  border-top: 1px solid var(--world-workshop-line);
-  background: var(--world-workshop-line);
+  gap: 12px;
 }
 
 .controlPane {
-  min-height: 160px;
-  padding: 16px;
-  background: var(--world-workshop-panel-2);
+  min-height: 130px;
+  padding: 12px;
+  border: 1px solid rgba(var(--frame-rgb), .18);
+  border-radius: 12px;
+  background: rgba(0,0,0,.25);
 }
 
 .controlPane h2 {
   margin: 0 0 10px;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 1000;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  color: var(--text-strong);
 }
 
 .controlPane p {
   margin: 0;
-  color: var(--world-workshop-muted);
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: 12px;
   line-height: 1.45;
+  font-weight: 800;
 }
 
-@media (max-width: 760px) {
-  .workshopTopbar,
-  .labWorkspaceNav {
+@media (max-width: 960px) {
+  .workshopShell {
+    grid-template-columns: 1fr;
+  }
+
+  .studioBar {
     align-items: stretch;
-    flex-direction: column;
+  }
+
+  .studioBarGroup {
+    width: 100%;
+  }
+
+  .itemSelect {
+    flex: 1;
+    min-width: 180px;
   }
 
   .workshopControls {
     grid-template-columns: 1fr;
-  }
-
-  .viewportPlaceholder strong {
-    font-size: 24px;
   }
 }
