@@ -4,7 +4,7 @@ import { PLINTH_MATERIAL_CONFIG } from "../configs/plinth-material-config.js?v=2
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
 import { createOrbSpawnPlinthModel } from "../generators/orb-spawn-plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../rendering/orb-materials.js?v=20260426a";
 import { createLitBlackPlinthMaterial } from "../rendering/plinth-materials.js?v=20260426a";
 import { addLineEdges } from "../rendering/world-render-utils.js?v=20260426a";
 
@@ -17,6 +17,7 @@ export function renderOrbSpawnAssemblyPreview({
   const bo = Number(orbDiameterPx) || 72;
   const startedAt = performance.now();
   const animatedMaterials = [];
+  const animatedLights = [];
   const animatedNodes = [];
   const inspector = createWorldObjectInspector({
     root,
@@ -29,6 +30,7 @@ export function renderOrbSpawnAssemblyPreview({
       animatedMaterials.forEach((material) => {
         if (material.uniforms && material.uniforms.uTime) material.uniforms.uTime.value = time;
       });
+      animatedLights.forEach((light) => updateOrbPointLight(light, time, ORB_MATERIAL_CONFIG));
       animatedNodes.forEach(({ node, baseY }) => {
         node.position.set(
           0,
@@ -77,7 +79,10 @@ export function renderOrbSpawnAssemblyPreview({
   const orbClearance = bo * 0.15;
   const orbBaseY = plinthMetrics.plinthHeight + orbMetrics.radius + orbClearance - plinthMetrics.columnCenterY;
   orbModel.position.set(0, orbBaseY, 0);
-  orbModel.add(createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG }));
+  const orbLight = createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG });
+  updateOrbPointLight(orbLight, 0, ORB_MATERIAL_CONFIG);
+  orbModel.add(orbLight);
+  animatedLights.push(orbLight);
   inspector.scene.add(orbModel);
   animatedNodes.push({ node: orbModel, baseY: orbBaseY });
 

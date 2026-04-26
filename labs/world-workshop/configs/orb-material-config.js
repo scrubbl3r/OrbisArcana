@@ -21,9 +21,9 @@ export const ORB_MATERIAL_CONFIG = Object.freeze({
   driftPhaseC: 3.1,
   goldMix: 0.34,
   lightColor: 0xcfefff,
-  lightIntensity: 1.25,
-  lightDistanceBO: 4.5,
-  lightDecay: 1.7,
+  lightIntensity: 6.0,
+  lightDistanceBO: 10,
+  lightDecay: 2,
+  lightPastelMix: 0.72,
   lightOffsetZBO: 0.25,
 });
-

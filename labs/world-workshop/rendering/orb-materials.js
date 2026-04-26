@@ -1,6 +1,12 @@
 import * as THREE from "three";
 import { ORB_MATERIAL_CONFIG } from "../configs/orb-material-config.js?v=20260426a";
 
+const scratchBaseLight = new THREE.Color();
+const scratchCyan = new THREE.Color();
+const scratchViolet = new THREE.Color();
+const scratchGold = new THREE.Color();
+const scratchPastel = new THREE.Color();
+
 export function createOpalescentOrbShellMaterial(config = ORB_MATERIAL_CONFIG) {
   const opalescenceSpeed = Number(config.opalescenceSpeed) || 1;
   return new THREE.ShaderMaterial({
@@ -70,3 +76,19 @@ export function createOrbPointLight({
   return light;
 }
 
+export function updateOrbPointLight(light, time = 0, config = ORB_MATERIAL_CONFIG) {
+  if (!light) return;
+
+  const opalescenceSpeed = Number(config.opalescenceSpeed) || 1;
+  const driftA = Math.sin(time * (Number(config.driftRateA) || 0) * opalescenceSpeed) * 0.5 + 0.5;
+  const driftB = Math.sin(time * (Number(config.driftRateB) || 0) * opalescenceSpeed + (Number(config.driftPhaseB) || 0)) * 0.5 + 0.5;
+
+  scratchBaseLight.set(config.lightColor);
+  scratchCyan.set(config.shellCyanColor);
+  scratchViolet.set(config.shellVioletColor);
+  scratchGold.set(config.shellGoldColor);
+
+  scratchPastel.copy(scratchCyan).lerp(scratchViolet, driftA);
+  scratchPastel.lerp(scratchGold, driftB * (Number(config.goldMix) || 0));
+  light.color.copy(scratchBaseLight).lerp(scratchPastel, Number(config.lightPastelMix) || 0);
+}

@@ -15,11 +15,35 @@ export function createWorldFaceMaterial({
 
 export function disposeObject(object) {
   if (!object || typeof object.traverse !== "function") return;
+  const disposedTextures = new Set();
+  const disposeMaterial = (material) => {
+    if (!material) return;
+    [
+      "map",
+      "alphaMap",
+      "aoMap",
+      "bumpMap",
+      "displacementMap",
+      "emissiveMap",
+      "envMap",
+      "lightMap",
+      "metalnessMap",
+      "normalMap",
+      "roughnessMap",
+    ].forEach((key) => {
+      const texture = material[key];
+      if (texture && typeof texture.dispose === "function" && !disposedTextures.has(texture)) {
+        texture.dispose();
+        disposedTextures.add(texture);
+      }
+    });
+    material.dispose();
+  };
   object.traverse((child) => {
     if (child.geometry) child.geometry.dispose();
     if (child.material) {
-      if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose());
-      else child.material.dispose();
+      if (Array.isArray(child.material)) child.material.forEach(disposeMaterial);
+      else disposeMaterial(child.material);
     }
   });
 }
