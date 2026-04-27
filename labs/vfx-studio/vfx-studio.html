@@ -6,6 +6,14 @@
   <title>Orb VFX Tester — Electric AOE + Shield + Shockwave</title>
   <link rel="stylesheet" href="../shell/lab-workspaces.css?v=20260425a" />
   <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-semantics" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+      }
+    }
+  </script>
   <style>
     :root{
       --g: var(--text-strong);
@@ -440,6 +448,24 @@
     [data-preview-root][hidden]{
       display:none;
     }
+    .previewLane.orbNod3dPreviewLane{
+      inset:0;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      pointer-events:auto;
+    }
+    .orbNod3dCanvas{
+      width:100%;
+      height:100%;
+      display:block;
+      cursor:grab;
+      touch-action:none;
+    }
+    .orbNod3dCanvas:active{
+      cursor:grabbing;
+    }
 
     .atOrigin{
       position:absolute;
@@ -816,6 +842,7 @@
         <div class="previewLane" id="orbNodPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbNodLaneOrb"></div>
         </div>
+        <div class="previewLane orbNod3dPreviewLane" id="orbNod3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
         <div class="previewLane" id="orbLifecyclePreviewRoot" data-preview-root hidden aria-hidden="true">
           <svg class="orbShatterLayer" id="orbLifecycleShatterLayer" viewBox="-120 -120 240 240"></svg>
           <svg class="orbTemplatePatternLayer" id="orbLifecyclePatternLayer" viewBox="-50 -50 100 100"></svg>
@@ -1103,6 +1130,64 @@
         </div>
       </div>
 
+      <div class="section" data-effect="orb-nod3d" hidden>
+        <div class="row">
+          <button id="previewOrbNod3d" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbNod3dShrinkPct">Size dip (%)</label>
+            <input id="orbNod3dShrinkPct" class="paramFieldInput" type="number" min="0" max="40" step="1" value="2" />
+            <button id="orbNod3dApplyShrinkBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dDurationMs">Duration (ms)</label>
+            <input id="orbNod3dDurationMs" class="paramFieldInput" type="number" min="80" max="3000" step="10" value="520" />
+            <button id="orbNod3dApplyDurationBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dFillAlpha">Fill opacity</label>
+            <input id="orbNod3dFillAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.07" />
+            <button id="orbNod3dApplyFillOpacityBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dWaveCount">Wave count</label>
+            <input id="orbNod3dWaveCount" class="paramFieldInput" type="number" min="1" max="32" step="1" value="4" />
+            <button id="orbNod3dApplyWaveCountBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dLatitudinalBands">Latitudinal bands</label>
+            <input id="orbNod3dLatitudinalBands" class="paramFieldInput" type="number" min="1" max="32" step="1" value="4" />
+            <button id="orbNod3dApplyLatitudinalBandsBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dWaveDepthBO">Wave depth (BO)</label>
+            <input id="orbNod3dWaveDepthBO" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.024" />
+            <button id="orbNod3dApplyWaveDepthBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dOscillationSpeedHz">Oscillation speed (Hz)</label>
+            <input id="orbNod3dOscillationSpeedHz" class="paramFieldInput" type="number" min="0.1" max="40" step="0.1" value="4.8" />
+            <button id="orbNod3dApplyOscillationSpeedBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dOscillationCount">Oscillation count</label>
+            <input id="orbNod3dOscillationCount" class="paramFieldInput" type="number" min="0" max="12" step="1" value="2" />
+            <button id="orbNod3dApplyOscillationCountBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dEquatorFalloff">Equator falloff</label>
+            <input id="orbNod3dEquatorFalloff" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0" />
+            <button id="orbNod3dApplyEquatorFalloffBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbNod3dRippleSoftness">Ripple softness</label>
+            <input id="orbNod3dRippleSoftness" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.82" />
+            <button id="orbNod3dApplyRippleSoftnessBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
       <div class="section" data-effect="teleport" hidden>
         <div class="row">
           <button id="previewOrbTeleport" class="toolBtn" type="button">Preview</button>
@@ -1360,7 +1445,7 @@
     };
 
     import { GAME_THEME_DEFAULT } from "../../src/content/theme/game-theme-default.js?v=20260410b";
-    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260416a";
+    import { VFX_EFFECT_REGISTRY } from "../../src/content/vfx/effect-registry.js?v=20260427a";
     import { RUNTIME_EFFECT_TARGET_REGISTRY, getRuntimeEffectTarget } from "../../src/content/vfx/runtime-effect-target-registry.js?v=20260410b";
     import { RUNTIME_EFFECT_BINDINGS } from "../../src/content/vfx/runtime-effect-bindings.js?v=20260410b";
     import { applyGameThemeCssVars } from "../../src/ui/theme/apply-game-theme-css-vars.js?v=20260410b";
@@ -1434,14 +1519,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260425d"),
+      import("./vfx-studio-bootstrap.js?v=20260427a"),
       import("./vfx-studio-state.js?v=20260425d"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
-      import("./vfx-studio-surfaces.js?v=20260425d"),
-      import("./vfx-studio-theme-publish.js?v=20260425d"),
+      import("./vfx-studio-surfaces.js?v=20260427a"),
+      import("./vfx-studio-theme-publish.js?v=20260427a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -1453,6 +1538,7 @@
     import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260425d";
     import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260425d";
     import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260425d";
+    import { createOrbNod3dAuthoringAdapter } from "./adapters/orb-nod3d-authoring-adapter.js?v=20260427a";
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
@@ -1461,9 +1547,10 @@
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
+      ORB_NOD_3D_PRESET_DEFAULT,
       ORB_NOD_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260425d";
+    } from "../../src/vfx/presets/index.js?v=20260427a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
@@ -1492,6 +1579,7 @@
       createOrbGlobeAuthoringAdapter,
       createOrbLifecycleAuthoringAdapter,
       createOrbNodAuthoringAdapter,
+      createOrbNod3dAuthoringAdapter,
       createShockwaveAuthoringAdapter,
       createTeleportAuthoringAdapter,
       createWorldGlobeAuthoringAdapter,
@@ -1524,6 +1612,7 @@
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
       orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
       orbNodPreviewRoot: $("orbNodPreviewRoot"),
+      orbNod3dPreviewRoot: $("orbNod3dPreviewRoot"),
       orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
       worldGlobePreviewRoot: $("worldGlobePreviewRoot"),
@@ -1647,6 +1736,27 @@
       orbNodApplyOscillationSpeedBtn: $("orbNodApplyOscillationSpeedBtn"),
       orbNodOscillationCount: $("orbNodOscillationCount"),
       orbNodApplyOscillationCountBtn: $("orbNodApplyOscillationCountBtn"),
+      previewOrbNod3d: $("previewOrbNod3d"),
+      orbNod3dShrinkPct: $("orbNod3dShrinkPct"),
+      orbNod3dApplyShrinkBtn: $("orbNod3dApplyShrinkBtn"),
+      orbNod3dDurationMs: $("orbNod3dDurationMs"),
+      orbNod3dApplyDurationBtn: $("orbNod3dApplyDurationBtn"),
+      orbNod3dFillAlpha: $("orbNod3dFillAlpha"),
+      orbNod3dApplyFillOpacityBtn: $("orbNod3dApplyFillOpacityBtn"),
+      orbNod3dWaveCount: $("orbNod3dWaveCount"),
+      orbNod3dApplyWaveCountBtn: $("orbNod3dApplyWaveCountBtn"),
+      orbNod3dLatitudinalBands: $("orbNod3dLatitudinalBands"),
+      orbNod3dApplyLatitudinalBandsBtn: $("orbNod3dApplyLatitudinalBandsBtn"),
+      orbNod3dWaveDepthBO: $("orbNod3dWaveDepthBO"),
+      orbNod3dApplyWaveDepthBtn: $("orbNod3dApplyWaveDepthBtn"),
+      orbNod3dOscillationSpeedHz: $("orbNod3dOscillationSpeedHz"),
+      orbNod3dApplyOscillationSpeedBtn: $("orbNod3dApplyOscillationSpeedBtn"),
+      orbNod3dOscillationCount: $("orbNod3dOscillationCount"),
+      orbNod3dApplyOscillationCountBtn: $("orbNod3dApplyOscillationCountBtn"),
+      orbNod3dEquatorFalloff: $("orbNod3dEquatorFalloff"),
+      orbNod3dApplyEquatorFalloffBtn: $("orbNod3dApplyEquatorFalloffBtn"),
+      orbNod3dRippleSoftness: $("orbNod3dRippleSoftness"),
+      orbNod3dApplyRippleSoftnessBtn: $("orbNod3dApplyRippleSoftnessBtn"),
       orbGlobeOrbitDistanceRatio: $("orbGlobeOrbitDistanceRatio"),
       orbGlobeApplyOrbitDistanceRatioBtn: $("orbGlobeApplyOrbitDistanceRatioBtn"),
       orbGlobeOrbitDistanceMin: $("orbGlobeOrbitDistanceMin"),
@@ -1718,6 +1828,7 @@
         orbLifecycleShardStroke: Number.isFinite(Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeWidthPx)) ? Number(ORB_LIFECYCLE_DEFAULTS.shardStrokeWidthPx) : 1,
       }),
       orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
+      orbNod3dPresetDefault: ORB_NOD_3D_PRESET_DEFAULT,
       getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
       worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
       getElementById: $,
@@ -2266,6 +2377,7 @@
       applyOrbLaneSsot(els.orbBasePreviewRoot);
       applyOrbLaneSsot(els.orbTemplatePreviewRoot);
       applyOrbLaneSsot(els.orbNodPreviewRoot);
+      applyOrbLaneSsot(els.orbNod3dPreviewRoot);
       applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.worldGlobePreviewRoot, { includeGlobe: true });
@@ -2311,6 +2423,7 @@
         "orb-globe": () => applyOrbGlobe(),
         "orb-lifecycle": () => applyOrbLifecycle(),
         "orb-nod": () => applyOrbNod(),
+        "orb-nod3d": () => applyOrbNod3d(),
         "world-globe": () => applyWorldGlobe(),
       }),
       previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
@@ -2321,6 +2434,7 @@
         shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
         flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
         electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+        orbNod3dPresetDefault: ORB_NOD_3D_PRESET_DEFAULT,
         onOrbBaseVisualStateApplied: (visualState) => {
           currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
           GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
@@ -2359,6 +2473,8 @@
       clearOrbTemplate,
       applyOrbNod,
       clearOrbNod,
+      applyOrbNod3d,
+      clearOrbNod3d,
       applyOrbLifecycle,
       clearOrbLifecycle,
       applyOrbGlobe,

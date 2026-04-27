@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260425d";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260427a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -46,6 +46,7 @@ export function createStudioBootstrap({
   if (els.orbBaseFillG) els.orbBaseFillG.value = String(Math.round(defaults.orbBaseVisualDefaults.fillDefaultRgb.g));
   if (els.orbBaseFillB) els.orbBaseFillB.value = String(Math.round(defaults.orbBaseVisualDefaults.fillDefaultRgb.b));
   if (els.orbNodFillAlpha) els.orbNodFillAlpha.value = String(Number(defaults.orbNodPresetDefault.orbTemplateFillAlpha).toFixed(2));
+  if (els.orbNod3dFillAlpha) els.orbNod3dFillAlpha.value = String(Number(defaults.orbNod3dPresetDefault.orbNod3dFillAlpha).toFixed(2));
 
   const previewEls = Object.freeze({
     shield: Object.freeze({
@@ -102,6 +103,10 @@ export function createStudioBootstrap({
       orbTemplateOscillationCount: els.orbNodOscillationCount,
       orbTemplateApplyOscillationCountBtn: els.orbNodApplyOscillationCountBtn,
     }),
+    orbNod3d: Object.freeze({
+      ...els,
+      previewRoot: els.orbNod3dPreviewRoot,
+    }),
     orbLifecycle: Object.freeze({
       ...els,
       previewRoot: els.orbLifecyclePreviewRoot,
@@ -139,6 +144,7 @@ export function createStudioBootstrap({
       shockwavePresetDefault: defaults.shockwavePresetDefault,
       flamePresetDefault: defaults.flamePresetDefault,
       electricPresetDefault: defaults.electricPresetDefault,
+      orbNod3dPresetDefault: defaults.orbNod3dPresetDefault,
     }),
     getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
     onOrbBaseVisualStateApplied: (visualState, previewActions) => {
@@ -249,6 +255,7 @@ export function createStudioBootstrap({
       applyOrbBase: () => studioPreviewRegistry.actions.applyOrbBase(),
       applyOrbTemplate: () => studioPreviewRegistry.actions.applyOrbTemplate(),
       applyOrbNod: () => studioPreviewRegistry.actions.applyOrbNod(),
+      applyOrbNod3d: () => studioPreviewRegistry.actions.applyOrbNod3d(),
       applyOrbLifecycle: () => studioPreviewRegistry.actions.applyOrbLifecycle(),
       applyOrbGlobe: () => studioPreviewRegistry.actions.applyOrbGlobe(),
       applyWorldGlobe: () => studioPreviewRegistry.actions.applyWorldGlobe(),

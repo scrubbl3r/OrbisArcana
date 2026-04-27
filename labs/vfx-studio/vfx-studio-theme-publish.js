@@ -226,6 +226,22 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "orb-nod3d":
+      return [
+        "export const ORB_NOD_3D_PRESET_DEFAULT = Object.freeze({",
+        `  orbNod3dShrinkPct: ${toNum(p.orbNod3dShrinkPct, 2).toFixed(0)},`,
+        `  orbNod3dDurationMs: ${Math.round(toNum(p.orbNod3dDurationMs, 520))},`,
+        `  orbNod3dFillAlpha: ${toNum(p.orbNod3dFillAlpha, 0.07).toFixed(2)},`,
+        `  orbNod3dWaveCount: ${toNum(p.orbNod3dWaveCount, 4).toFixed(0)},`,
+        `  orbNod3dLatitudinalBands: ${toNum(p.orbNod3dLatitudinalBands, 4).toFixed(0)},`,
+        `  orbNod3dWaveDepthBO: ${toNum(p.orbNod3dWaveDepthBO, 0.024).toFixed(3)},`,
+        `  orbNod3dOscillationSpeedHz: ${toNum(p.orbNod3dOscillationSpeedHz, 4.8).toFixed(1)},`,
+        `  orbNod3dOscillationCount: ${toNum(p.orbNod3dOscillationCount, 2).toFixed(0)},`,
+        `  orbNod3dEquatorFalloff: ${toNum(p.orbNod3dEquatorFalloff, 0).toFixed(2)},`,
+        `  orbNod3dRippleSoftness: ${toNum(p.orbNod3dRippleSoftness, 0.82).toFixed(2)},`,
+        "});",
+        "",
+      ].join("\n");
     case "world-globe": {
       const styleBlock = (name, prefix, fallbacks) => [
         `  ${name}: Object.freeze({`,

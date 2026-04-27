@@ -4,6 +4,7 @@ import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=2026042
 import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
 import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425d";
 import { createOrbTemplatePreview } from "./previews/orb-template-preview.js?v=20260425d";
+import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260427a";
 import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
 import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425d";
 import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
@@ -105,6 +106,15 @@ export function createStudioPreviewRegistry({
   actions.clearOrbNod = orbNodPreview.clear;
   orbNodPreview.wire();
 
+  const orbNod3dPreview = createOrbNod3dPreview({
+    els: previewEls.orbNod3d,
+    getOrbBaseVisualState,
+  });
+  actions.applyOrbNod3d = orbNod3dPreview.apply;
+  actions.clearOrbNod3d = orbNod3dPreview.clear;
+  actions.playOrbNod3d = orbNod3dPreview.play;
+  orbNod3dPreview.wire();
+
   const orbLifecyclePreview = createOrbLifecyclePreview({ els: previewEls.orbLifecycle });
   actions.applyOrbLifecycle = orbLifecyclePreview.apply;
   actions.clearOrbLifecycle = orbLifecyclePreview.clear;
@@ -142,6 +152,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearElectric === "function") actions.clearElectric();
     if (typeof actions.clearOrbTemplate === "function") actions.clearOrbTemplate();
     if (typeof actions.clearOrbNod === "function") actions.clearOrbNod();
+    if (typeof actions.clearOrbNod3d === "function") actions.clearOrbNod3d();
     if (typeof actions.clearOrbLifecycle === "function") actions.clearOrbLifecycle();
     if (typeof actions.clearOrbGlobe === "function") actions.clearOrbGlobe();
     if (typeof actions.clearWorldGlobe === "function") actions.clearWorldGlobe();
