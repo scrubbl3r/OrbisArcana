@@ -1,8 +1,5 @@
 import * as THREE from "three";
-import {
-  createOrbSurfaceDisplacementUniforms,
-  createOrbSurfaceDisplacementVertexShaderChunk,
-} from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427a";
+import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427b";
 import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
 
 const scratchBaseLight = new THREE.Color();
@@ -15,6 +12,8 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
   bo = 72,
   surfaceDisplacement = null,
 } = {}) {
+  if (!surfaceDisplacement) return createBaseOpalescentOrbShellMaterial(config);
+
   const opalescenceSpeed = Number(config.opalescenceSpeed) || 1;
   const displacementUniforms = createOrbSurfaceDisplacementUniforms(surfaceDisplacement || { enabled: false }, { bo });
   return new THREE.ShaderMaterial({
@@ -30,16 +29,87 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
       ...displacementUniforms,
     },
     vertexShader: `
-      ${createOrbSurfaceDisplacementVertexShaderChunk()}
+      uniform float uTime;
+      uniform float uDisplacementEnabled;
+      uniform float uDisplacementDepth;
+      uniform float uDisplacementWaveCount;
+      uniform float uDisplacementOscillationHz;
+      uniform float uDisplacementLatitudinalMix;
+      uniform float uDisplacementLatitudinalBands;
+      uniform float uDisplacementPhaseOffset;
+      uniform float uDisplacementShrink;
 
       varying vec3 vNormal;
       varying vec3 vViewPosition;
       varying vec3 vWorldPosition;
 
       void main() {
-        vec3 displacedPosition = displaceOrbSurface(position, normal, uTime);
+        vec3 n = normalize(normal);
+        float longitude = atan(n.z, n.x);
+        float latitude = asin(clamp(n.y, -1.0, 1.0));
+        float oscillation = sin((uTime * 6.2831853 * uDisplacementOscillationHz) + uDisplacementPhaseOffset);
+        float radialWave = sin(longitude * uDisplacementWaveCount);
+        float latitudinalWave = cos(latitude * uDisplacementLatitudinalBands);
+        float standingWave = mix(radialWave, radialWave * latitudinalWave, uDisplacementLatitudinalMix);
+        float displacement = standingWave * uDisplacementDepth * oscillation * uDisplacementEnabled;
+        float shrink = 1.0 - (uDisplacementShrink * abs(oscillation) * uDisplacementEnabled);
+        vec3 displacedPosition = (position * shrink) + (n * displacement);
         vec4 worldPosition = modelMatrix * vec4(displacedPosition, 1.0);
         vec4 mvPosition = modelViewMatrix * vec4(displacedPosition, 1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vViewPosition = -mvPosition.xyz;
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uBase;
+      uniform vec3 uCyan;
+      uniform vec3 uViolet;
+      uniform vec3 uGold;
+
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      varying vec3 vWorldPosition;
+
+      void main() {
+        vec3 viewDir = normalize(vViewPosition);
+        float fresnel = pow(1.0 - max(dot(normalize(vNormal), viewDir), 0.0), ${Number(config.shellFresnelPower).toFixed(3)});
+        float driftA = sin((vWorldPosition.x * ${Number(config.driftScaleX).toFixed(4)}) + uTime * ${(Number(config.driftRateA) * opalescenceSpeed).toFixed(4)}) * 0.5 + 0.5;
+        float driftB = sin((vWorldPosition.y * ${Number(config.driftScaleY).toFixed(4)}) + uTime * ${(Number(config.driftRateB) * opalescenceSpeed).toFixed(4)} + ${Number(config.driftPhaseB).toFixed(4)}) * 0.5 + 0.5;
+        float driftC = sin((vWorldPosition.z * ${Number(config.driftScaleZ).toFixed(4)}) + uTime * ${(Number(config.driftRateC) * opalescenceSpeed).toFixed(4)} + ${Number(config.driftPhaseC).toFixed(4)}) * 0.5 + 0.5;
+        vec3 pastel = mix(uCyan, uViolet, driftA);
+        pastel = mix(pastel, uGold, driftB * ${Number(config.goldMix).toFixed(3)});
+        vec3 pearl = mix(uBase, pastel, ${Number(config.shellPastelMix).toFixed(3)} + fresnel * ${Number(config.shellRimPastelMix).toFixed(3)} + driftC * ${Number(config.shellDriftPastelMix).toFixed(3)});
+        float alpha = ${Number(config.shellCenterAlpha).toFixed(4)} + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
+        gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha);
+      }
+    `,
+  });
+}
+
+function createBaseOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIAL_CONFIG) {
+  const opalescenceSpeed = Number(config.opalescenceSpeed) || 1;
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    uniforms: {
+      uTime: { value: 0 },
+      uBase: { value: new THREE.Color(config.shellBaseColor) },
+      uCyan: { value: new THREE.Color(config.shellCyanColor) },
+      uViolet: { value: new THREE.Color(config.shellVioletColor) },
+      uGold: { value: new THREE.Color(config.shellGoldColor) },
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      varying vec3 vWorldPosition;
+
+      void main() {
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         vNormal = normalize(normalMatrix * normal);
         vViewPosition = -mvPosition.xyz;
         vWorldPosition = worldPosition.xyz;

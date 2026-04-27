@@ -2,9 +2,9 @@ import * as THREE from "three";
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
-import { ORB_SURFACE_DISPLACEMENT_CONFIG } from "../effects/orb-surface-displacement/orb-surface-displacement-config.js?v=20260427a";
+import { ORB_SURFACE_DISPLACEMENT_CONFIG } from "../effects/orb-surface-displacement/orb-surface-displacement-config.js?v=20260427b";
 import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427b";
 
 export function renderOrbDisplacementPreview({
   root,
