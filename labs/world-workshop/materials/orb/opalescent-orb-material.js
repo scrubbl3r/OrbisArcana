@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427d";
+import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427e";
 import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
 
 const scratchBaseLight = new THREE.Color();
@@ -45,19 +45,27 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
       varying vec3 vViewPosition;
       varying vec3 vWorldPosition;
 
+      float orbDisplacementHash(float value) {
+        return fract(sin(value * 12.9898) * 43758.5453);
+      }
+
       void main() {
         vec3 n = normalize(normal);
-        float oscillation = sin((uTime * 6.2831853 * uDisplacementOscillationHz) + uDisplacementPhaseOffset);
-        float phase = uDisplacementPhaseOffset;
+        float cycleClock = (uTime * uDisplacementOscillationHz) + (uDisplacementPhaseOffset * 0.15915494);
+        float cycleIndex = floor(cycleClock);
+        float cycleProgress = fract(cycleClock);
+        float oscillation = sin(cycleProgress * 6.2831853);
+        float cycleSeed = cycleIndex + 1.0;
+        float phase = uDisplacementPhaseOffset + orbDisplacementHash(cycleSeed) * 6.2831853;
         float sphericalScale = uDisplacementWaveCount * 1.5707963;
         float w0 = sin(dot(n, normalize(vec3(1.0, 1.0, 1.0))) * sphericalScale + phase);
-        float w1 = sin(dot(n, normalize(vec3(1.0, -1.0, 1.0))) * sphericalScale + phase * 1.117);
-        float w2 = sin(dot(n, normalize(vec3(-1.0, 1.0, 1.0))) * sphericalScale + phase * 0.871);
-        float w3 = sin(dot(n, normalize(vec3(1.0, 1.0, -1.0))) * sphericalScale + phase * 1.293);
-        float w4 = sin(dot(n, normalize(vec3(0.0, 1.0, 0.618))) * sphericalScale + phase * 0.733);
-        float w5 = sin(dot(n, normalize(vec3(0.618, 0.0, 1.0))) * sphericalScale + phase * 1.487);
-        float w6 = sin(dot(n, normalize(vec3(1.0, 0.618, 0.0))) * sphericalScale + phase * 0.519);
-        float w7 = sin(dot(n, normalize(vec3(-0.618, 1.0, 0.0))) * sphericalScale + phase * 1.691);
+        float w1 = sin(dot(n, normalize(vec3(1.0, -1.0, 1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 1.0) * 6.2831853);
+        float w2 = sin(dot(n, normalize(vec3(-1.0, 1.0, 1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 2.0) * 6.2831853);
+        float w3 = sin(dot(n, normalize(vec3(1.0, 1.0, -1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 3.0) * 6.2831853);
+        float w4 = sin(dot(n, normalize(vec3(0.0, 1.0, 0.618))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 4.0) * 6.2831853);
+        float w5 = sin(dot(n, normalize(vec3(0.618, 0.0, 1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 5.0) * 6.2831853);
+        float w6 = sin(dot(n, normalize(vec3(1.0, 0.618, 0.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 6.0) * 6.2831853);
+        float w7 = sin(dot(n, normalize(vec3(-0.618, 1.0, 0.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 7.0) * 6.2831853);
         float harmonicWave = (w0 + w1 + w2 + w3 + w4 + w5 + w6 + w7) * 0.125;
         float cellularWave = harmonicWave * (abs(w0 * w1) + abs(w2 * w3) + abs(w4 * w5) + abs(w6 * w7)) * 0.5;
         float axisWave = sin(atan(n.z, n.x) * uDisplacementWaveCount) * cos(asin(clamp(n.y, -1.0, 1.0)) * uDisplacementLatitudinalBands);

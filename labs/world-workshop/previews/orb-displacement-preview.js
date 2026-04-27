@@ -4,7 +4,7 @@ import { createWorldObjectInspector } from "../inspectors/world-object-inspector
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
 import { ORB_SURFACE_DISPLACEMENT_CONFIG } from "../effects/orb-surface-displacement/orb-surface-displacement-config.js?v=20260427e";
 import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427d";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427e";
 
 export function renderOrbDisplacementPreview({
   root,
