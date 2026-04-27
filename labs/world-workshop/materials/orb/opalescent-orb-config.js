@@ -24,7 +24,7 @@ export const OPALESCENT_ORB_MATERIAL_CONFIG = Object.freeze({
   driftPhaseC: 3.1,
   goldMix: 0.34,
   lightColor: 0xcfefff,
-  lightIntensity: 27.0,
+  lightIntensity: 40.0,
   lightDistanceBO: 10,
   lightDecay: 2,
   lightPastelMix: 0.72,
