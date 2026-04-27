@@ -6,6 +6,8 @@ export function normalizeOrbSurfaceDisplacementConfig(config = {}) {
     waveCount,
     waveDepthBO,
     oscillationSpeedHz: Math.max(0, Number(config.oscillationSpeedHz) || 0),
+    equatorFalloff: Math.max(0.1, Number(config.equatorFalloff) || 1.6),
+    rippleSoftness: Math.max(0, Math.min(1, Number(config.rippleSoftness) || 0)),
     latitudinalMix: Math.max(0, Math.min(1, Number(config.latitudinalMix) || 0)),
     latitudinalBands: Math.max(1, Math.round(Number(config.latitudinalBands) || 1)),
     cellMix: Math.max(0, Math.min(1, Number(config.cellMix) || 0)),
@@ -23,6 +25,8 @@ export function createOrbSurfaceDisplacementUniforms(config = {}, { bo = 72 } = 
     uDisplacementDepth: { value: baseOrb * normalized.waveDepthBO },
     uDisplacementWaveCount: { value: normalized.waveCount },
     uDisplacementOscillationHz: { value: normalized.oscillationSpeedHz },
+    uDisplacementEquatorFalloff: { value: normalized.equatorFalloff },
+    uDisplacementRippleSoftness: { value: normalized.rippleSoftness },
     uDisplacementLatitudinalMix: { value: normalized.latitudinalMix },
     uDisplacementLatitudinalBands: { value: normalized.latitudinalBands },
     uDisplacementCellMix: { value: normalized.cellMix },
@@ -38,6 +42,8 @@ export function createOrbSurfaceDisplacementVertexShaderChunk() {
     uniform float uDisplacementDepth;
     uniform float uDisplacementWaveCount;
     uniform float uDisplacementOscillationHz;
+    uniform float uDisplacementEquatorFalloff;
+    uniform float uDisplacementRippleSoftness;
     uniform float uDisplacementLatitudinalMix;
     uniform float uDisplacementLatitudinalBands;
     uniform float uDisplacementCellMix;
@@ -45,32 +51,14 @@ export function createOrbSurfaceDisplacementVertexShaderChunk() {
     uniform float uDisplacementPhaseOffset;
     uniform float uDisplacementShrink;
 
-    float orbDisplacementHash(float value) {
-      return fract(sin(value * 12.9898) * 43758.5453123);
-    }
-
     vec3 displaceOrbSurface(vec3 sourcePosition, vec3 sourceNormal, float timeSeconds) {
       vec3 n = normalize(sourceNormal);
-      float cycleClock = (timeSeconds * uDisplacementOscillationHz) + (uDisplacementPhaseOffset * 0.15915494309);
-      float cycleIndex = floor(cycleClock);
-      float cycleProgress = fract(cycleClock);
-      float oscillation = sin(cycleProgress * 6.28318530718);
-      float cycleSeed = cycleIndex + 1.0;
-      float phase = uDisplacementPhaseOffset + orbDisplacementHash(cycleSeed) * 6.28318530718;
-      float sphericalScale = uDisplacementWaveCount * 1.57079632679;
-      float w0 = sin(dot(n, normalize(vec3(1.0, 1.0, 1.0))) * sphericalScale + phase);
-      float w1 = sin(dot(n, normalize(vec3(1.0, -1.0, 1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 1.0) * 6.28318530718);
-      float w2 = sin(dot(n, normalize(vec3(-1.0, 1.0, 1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 2.0) * 6.28318530718);
-      float w3 = sin(dot(n, normalize(vec3(1.0, 1.0, -1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 3.0) * 6.28318530718);
-      float w4 = sin(dot(n, normalize(vec3(0.0, 1.0, 0.618))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 4.0) * 6.28318530718);
-      float w5 = sin(dot(n, normalize(vec3(0.618, 0.0, 1.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 5.0) * 6.28318530718);
-      float w6 = sin(dot(n, normalize(vec3(1.0, 0.618, 0.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 6.0) * 6.28318530718);
-      float w7 = sin(dot(n, normalize(vec3(-0.618, 1.0, 0.0))) * sphericalScale + phase + orbDisplacementHash(cycleSeed + 7.0) * 6.28318530718);
-      float harmonicWave = (w0 + w1 + w2 + w3 + w4 + w5 + w6 + w7) * 0.125;
-      float cellularWave = harmonicWave * (abs(w0 * w1) + abs(w2 * w3) + abs(w4 * w5) + abs(w6 * w7)) * 0.5;
-      float axisWave = sin(atan(n.z, n.x) * uDisplacementWaveCount) * cos(asin(clamp(n.y, -1.0, 1.0)) * uDisplacementLatitudinalBands);
-      float standingWave = mix(harmonicWave, cellularWave, uDisplacementCellMix);
-      standingWave = mix(standingWave, axisWave, uDisplacementAxisMix);
+      float oscillation = sin((timeSeconds * 6.28318530718 * uDisplacementOscillationHz) + uDisplacementPhaseOffset);
+      float latitude = asin(clamp(n.y, -1.0, 1.0));
+      float equatorMask = pow(max(0.0, 1.0 - abs(n.y)), uDisplacementEquatorFalloff);
+      float ripple = sin(latitude * uDisplacementWaveCount);
+      float softenedRipple = mix(ripple, sin(ripple * 1.57079632679), uDisplacementRippleSoftness);
+      float standingWave = softenedRipple * equatorMask;
       float displacement = standingWave * uDisplacementDepth * oscillation * uDisplacementEnabled;
       float shrink = 1.0 - (uDisplacementShrink * abs(oscillation) * uDisplacementEnabled);
       return (sourcePosition * shrink) + (n * displacement);

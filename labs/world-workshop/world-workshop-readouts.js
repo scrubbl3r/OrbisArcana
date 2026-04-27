@@ -15,7 +15,7 @@ export function formatWorldWorkshopGeometryReadout(surface = null, metrics = nul
     case "orb":
       return `BO ${roundMetric(metrics.bo)}px / translucent sphere diameter ${roundMetric(metrics.diameter)}px / radius ${roundMetric(metrics.radius)}px / shader shell`;
     case "orb-displacement-test":
-      return `BO ${roundMetric(metrics.bo)}px / displaced orb ${roundMetric(metrics.diameter)}px / spherical waves ${roundMetric(metrics.displacementWaveCount)} / depth ${roundMetric(metrics.displacementWaveDepth)}px / cell mix ${roundMetric((metrics.displacementCellMix || 0) * 100)}% / speed ${roundMetric(metrics.displacementSpeedHz)}Hz`;
+      return `BO ${roundMetric(metrics.bo)}px / standing latitudinal ripple ${roundMetric(metrics.displacementWaveCount)} bands / depth ${roundMetric(metrics.displacementWaveDepth)}px / equator falloff ${roundMetric(metrics.displacementEquatorFalloff)} / speed ${roundMetric(metrics.displacementSpeedHz)}Hz`;
     case "orb-spawn-assembly":
       return `BO ${roundMetric(metrics.bo)}px / orb ${roundMetric(metrics.orbDiameter)}px / clearance ${roundMetric(metrics.orbClearance)}px / ground ${roundMetric(metrics.groundPlaneSize)}px / plinth scale ${roundMetric((metrics.assemblyScale || 1) * 100)}% / lit assembly`;
     case "plinth":
