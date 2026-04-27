@@ -5,7 +5,7 @@ export const OPALESCENT_ORB_MATERIAL_CONFIG = Object.freeze({
   shellCyanColor: 0x8ff4ff,
   shellVioletColor: 0xd0b8ff,
   shellGoldColor: 0xffdf86,
-  shellFresnelPower: 2.15,
+  shellFresnelPower: 1.15,
   shellRimAlphaPower: 0.92,
   shellCenterAlpha: 0.015,
   shellRimAlpha: 0.84,
