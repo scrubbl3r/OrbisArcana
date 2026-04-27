@@ -110,7 +110,7 @@ export function renderOrbSpawnAssemblyPreview({
     includeRibs: false,
   });
 
-  const orbClearance = bo * 0.15;
+  const orbClearance = bo * 0.4;
   const orbBaseY = plinthMetrics.plinthHeight + orbMetrics.radius + orbClearance - plinthMetrics.columnCenterY;
   orbModel.position.set(0, orbBaseY, 0);
   const orbLight = createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG });
