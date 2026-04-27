@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
+import { createOrbModel } from "../generators/orb-generator.js?v=20260427a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
-import { ORB_SURFACE_DISPLACEMENT_CONFIG } from "../effects/orb-surface-displacement/orb-surface-displacement-config.js?v=20260427c";
+import { ORB_SURFACE_DISPLACEMENT_CONFIG } from "../effects/orb-surface-displacement/orb-surface-displacement-config.js?v=20260427d";
 import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427c";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427d";
 
 export function renderOrbDisplacementPreview({
   root,
@@ -45,6 +45,8 @@ export function renderOrbDisplacementPreview({
     edgeMaterials: inspector.edgeMaterials,
     includeCore: false,
     includeRibs: false,
+    shellSegments: 96,
+    ringSegments: 192,
   });
 
   orbLight = createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG });

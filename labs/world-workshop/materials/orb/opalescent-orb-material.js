@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427c";
+import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427d";
 import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
 
 const scratchBaseLight = new THREE.Color();
@@ -49,12 +49,17 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
         vec3 n = normalize(normal);
         float oscillation = sin((uTime * 6.2831853 * uDisplacementOscillationHz) + uDisplacementPhaseOffset);
         float phase = uDisplacementPhaseOffset;
-        float sphericalScale = uDisplacementWaveCount * 3.1415927;
-        float sx = sin((n.x * sphericalScale) + phase);
-        float sy = sin((n.y * sphericalScale) + (phase * 1.173));
-        float sz = sin((n.z * sphericalScale) + (phase * 0.827));
-        float harmonicWave = (sx + sy + sz) * 0.3333333;
-        float cellularWave = sx * sy * sz;
+        float sphericalScale = uDisplacementWaveCount * 1.5707963;
+        float w0 = sin(dot(n, normalize(vec3(1.0, 1.0, 1.0))) * sphericalScale + phase);
+        float w1 = sin(dot(n, normalize(vec3(1.0, -1.0, 1.0))) * sphericalScale + phase * 1.117);
+        float w2 = sin(dot(n, normalize(vec3(-1.0, 1.0, 1.0))) * sphericalScale + phase * 0.871);
+        float w3 = sin(dot(n, normalize(vec3(1.0, 1.0, -1.0))) * sphericalScale + phase * 1.293);
+        float w4 = sin(dot(n, normalize(vec3(0.0, 1.0, 0.618))) * sphericalScale + phase * 0.733);
+        float w5 = sin(dot(n, normalize(vec3(0.618, 0.0, 1.0))) * sphericalScale + phase * 1.487);
+        float w6 = sin(dot(n, normalize(vec3(1.0, 0.618, 0.0))) * sphericalScale + phase * 0.519);
+        float w7 = sin(dot(n, normalize(vec3(-0.618, 1.0, 0.0))) * sphericalScale + phase * 1.691);
+        float harmonicWave = (w0 + w1 + w2 + w3 + w4 + w5 + w6 + w7) * 0.125;
+        float cellularWave = harmonicWave * (abs(w0 * w1) + abs(w2 * w3) + abs(w4 * w5) + abs(w6 * w7)) * 0.5;
         float axisWave = sin(atan(n.z, n.x) * uDisplacementWaveCount) * cos(asin(clamp(n.y, -1.0, 1.0)) * uDisplacementLatitudinalBands);
         float standingWave = mix(harmonicWave, cellularWave, uDisplacementCellMix);
         standingWave = mix(standingWave, axisWave, uDisplacementAxisMix);

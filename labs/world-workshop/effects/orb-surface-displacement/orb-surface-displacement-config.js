@@ -5,8 +5,8 @@ export const ORB_SURFACE_DISPLACEMENT_CONFIG = Object.freeze({
   oscillationSpeedHz: 1.6,
   latitudinalMix: 0.52,
   latitudinalBands: 3,
-  cellMix: 0.68,
-  axisMix: 0.08,
+  cellMix: 0.42,
+  axisMix: 0,
   phaseOffset: 0,
   shrinkPct: 0,
 });

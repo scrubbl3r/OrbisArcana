@@ -1,14 +1,19 @@
 import * as THREE from "three";
 import { addLineLoop } from "../rendering/world-render-utils.js?v=20260426b";
 
-export function getOrbMetrics({ bo = 72 } = {}) {
+export function getOrbMetrics({
+  bo = 72,
+  shellSegments = 48,
+  ringSegments = 96,
+} = {}) {
   const baseOrb = Number(bo) || 72;
+  const resolvedShellSegments = Math.max(16, Math.round(Number(shellSegments) || 48));
   return Object.freeze({
     bo: baseOrb,
     radius: baseOrb * 0.5,
     diameter: baseOrb,
-    shellSegments: 48,
-    ringSegments: 96,
+    shellSegments: resolvedShellSegments,
+    ringSegments: Math.max(24, Math.round(Number(ringSegments) || resolvedShellSegments * 2)),
   });
 }
 
@@ -47,8 +52,10 @@ export function createOrbModel({
   edgeWidth = 2,
   includeCore = true,
   includeRibs = true,
+  shellSegments = 48,
+  ringSegments = 96,
 } = {}) {
-  const metrics = getOrbMetrics({ bo });
+  const metrics = getOrbMetrics({ bo, shellSegments, ringSegments });
   const model = new THREE.Group();
 
   const shell = new THREE.Mesh(
