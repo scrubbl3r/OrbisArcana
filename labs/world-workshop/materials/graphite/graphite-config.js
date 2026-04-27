@@ -2,7 +2,7 @@ export const GRAPHITE_CONFIG = Object.freeze({
   faceColor: 0x000000,
   edgeColor: 0xff0000,
   edgeWidth: 1.5,
-  edgeOpacity: 0.70,
+  edgeOpacity: 0.20,
   edgeHaloColor: 0xbfeeff,
   edgeHaloWidth: 2.,
   edgeHaloOpacity: 0.1,
