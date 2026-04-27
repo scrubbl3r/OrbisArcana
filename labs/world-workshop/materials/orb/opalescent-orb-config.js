@@ -28,7 +28,7 @@ export const OPALESCENT_ORB_MATERIAL_CONFIG = Object.freeze({
   lightDistanceBO: 10,
   lightDecay: 1.35,
   lightPastelMix: 0.42,
-  lightOffsetZBO: 0.25,
+  lightOffsetZBO: 0,
   lightCastShadow: true,
   lightShadowMapSize: 512,
   lightShadowBias: -0.00025,
