@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427h";
+import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427i";
 import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
 
 const scratchBaseLight = new THREE.Color();
@@ -52,8 +52,9 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
       void main() {
         vec3 n = normalize(normal);
         float travelClock = (uTime * uDisplacementOscillationHz) + (uDisplacementPhaseOffset * 0.15915494);
-        float latitudeTravel = abs(n.y);
-        float equatorMask = pow(max(0.0, 1.0 - abs(n.y)), uDisplacementEquatorFalloff);
+        float polarAngle = acos(clamp(n.y, -1.0, 1.0));
+        float latitudeTravel = abs(polarAngle - 1.5707963) / 1.5707963;
+        float equatorMask = pow(max(0.0, 1.0 - latitudeTravel), uDisplacementEquatorFalloff);
         float latitudeAmplitude = mix(uDisplacementEquatorAmplitude, uDisplacementPoleAmplitude, latitudeTravel);
         float ripple = sin(((latitudeTravel * uDisplacementWaveCount) - travelClock) * 6.2831853);
         float softenedRipple = mix(ripple, sin(ripple * 1.5707963), uDisplacementRippleSoftness);

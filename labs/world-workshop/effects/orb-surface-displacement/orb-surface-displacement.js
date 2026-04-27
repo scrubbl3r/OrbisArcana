@@ -1,6 +1,7 @@
 export function normalizeOrbSurfaceDisplacementConfig(config = {}) {
   const waveCount = Math.max(2, Math.round(Number(config.waveCount) || 10));
   const waveDepthBO = Math.max(0, Number(config.waveDepthBO) || 0);
+  const equatorFalloff = Number(config.equatorFalloff);
   const equatorAmplitude = Number(config.equatorAmplitude);
   const poleAmplitude = Number(config.poleAmplitude);
   return Object.freeze({
@@ -8,7 +9,7 @@ export function normalizeOrbSurfaceDisplacementConfig(config = {}) {
     waveCount,
     waveDepthBO,
     oscillationSpeedHz: Math.max(0, Number(config.oscillationSpeedHz) || 0),
-    equatorFalloff: Math.max(0.1, Number(config.equatorFalloff) || 1.6),
+    equatorFalloff: Math.max(0, Number.isFinite(equatorFalloff) ? equatorFalloff : 1.6),
     equatorAmplitude: Math.max(0, Number.isFinite(equatorAmplitude) ? equatorAmplitude : 1),
     poleAmplitude: Math.max(0, Number.isFinite(poleAmplitude) ? poleAmplitude : 1),
     rippleSoftness: Math.max(0, Math.min(1, Number(config.rippleSoftness) || 0)),
@@ -62,8 +63,9 @@ export function createOrbSurfaceDisplacementVertexShaderChunk() {
     vec3 displaceOrbSurface(vec3 sourcePosition, vec3 sourceNormal, float timeSeconds) {
       vec3 n = normalize(sourceNormal);
       float travelClock = (timeSeconds * uDisplacementOscillationHz) + (uDisplacementPhaseOffset * 0.15915494309);
-      float latitudeTravel = abs(n.y);
-      float equatorMask = pow(max(0.0, 1.0 - abs(n.y)), uDisplacementEquatorFalloff);
+      float polarAngle = acos(clamp(n.y, -1.0, 1.0));
+      float latitudeTravel = abs(polarAngle - 1.57079632679) / 1.57079632679;
+      float equatorMask = pow(max(0.0, 1.0 - latitudeTravel), uDisplacementEquatorFalloff);
       float latitudeAmplitude = mix(uDisplacementEquatorAmplitude, uDisplacementPoleAmplitude, latitudeTravel);
       float ripple = sin(((latitudeTravel * uDisplacementWaveCount) - travelClock) * 6.28318530718);
       float softenedRipple = mix(ripple, sin(ripple * 1.57079632679), uDisplacementRippleSoftness);
