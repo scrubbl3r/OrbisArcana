@@ -30,7 +30,7 @@ export function createOrbSurfaceDisplacementUniforms(config = {}, { bo = 72 } = 
 
 export function createOrbSurfaceDisplacementVertexShaderChunk() {
   return `
-    uniform int uDisplacementEnabled;
+    uniform float uDisplacementEnabled;
     uniform float uDisplacementDepth;
     uniform float uDisplacementWaveCount;
     uniform float uDisplacementOscillationHz;
@@ -40,8 +40,6 @@ export function createOrbSurfaceDisplacementVertexShaderChunk() {
     uniform float uDisplacementShrink;
 
     vec3 displaceOrbSurface(vec3 sourcePosition, vec3 sourceNormal, float timeSeconds) {
-      if (uDisplacementEnabled == 0) return sourcePosition;
-
       vec3 n = normalize(sourceNormal);
       float longitude = atan(n.z, n.x);
       float latitude = asin(clamp(n.y, -1.0, 1.0));
@@ -49,10 +47,9 @@ export function createOrbSurfaceDisplacementVertexShaderChunk() {
       float radialWave = sin(longitude * uDisplacementWaveCount);
       float latitudinalWave = cos(latitude * uDisplacementLatitudinalBands);
       float standingWave = mix(radialWave, radialWave * latitudinalWave, uDisplacementLatitudinalMix);
-      float displacement = standingWave * uDisplacementDepth * oscillation;
-      float shrink = 1.0 - (uDisplacementShrink * abs(oscillation));
+      float displacement = standingWave * uDisplacementDepth * oscillation * uDisplacementEnabled;
+      float shrink = 1.0 - (uDisplacementShrink * abs(oscillation) * uDisplacementEnabled);
       return (sourcePosition * shrink) + (n * displacement);
     }
   `;
 }
-
