@@ -2,9 +2,9 @@ import * as THREE from "three";
 import { createOrbModel } from "../generators/orb-generator.js?v=20260427a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
-import { ORB_SURFACE_DISPLACEMENT_CONFIG } from "../effects/orb-surface-displacement/orb-surface-displacement-config.js?v=20260427l";
+import { ORB_SURFACE_DISPLACEMENT_CONFIG } from "../effects/orb-surface-displacement/orb-surface-displacement-config.js?v=20260427k";
 import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260426a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427h";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260427g";
 
 export function renderOrbDisplacementPreview({
   root,
@@ -62,6 +62,5 @@ export function renderOrbDisplacementPreview({
     displacementWaveDepth: bo * ORB_SURFACE_DISPLACEMENT_CONFIG.waveDepthBO,
     displacementSpeedHz: ORB_SURFACE_DISPLACEMENT_CONFIG.oscillationSpeedHz,
     displacementEquatorFalloff: ORB_SURFACE_DISPLACEMENT_CONFIG.equatorFalloff,
-    displacementPoleCompensation: ORB_SURFACE_DISPLACEMENT_CONFIG.poleCompensation,
   });
 }

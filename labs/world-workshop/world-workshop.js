@@ -1,10 +1,10 @@
 import { WORLD_WORKSHOP_SURFACES } from "./world-item-surfaces.js";
-import { createWorldWorkshopPreviewRegistry } from "./world-workshop-preview-registry.js?v=20260427m";
+import { createWorldWorkshopPreviewRegistry } from "./world-workshop-preview-registry.js?v=20260427l";
 import {
   formatWorldWorkshopGeometryReadout,
   formatWorldWorkshopMaterialReadout,
   formatWorldWorkshopMeta,
-} from "./world-workshop-readouts.js?v=20260427k";
+} from "./world-workshop-readouts.js?v=20260427j";
 
 function surfaceOptionMarkup(surface = {}) {
   return `<option value="${String(surface.id || "")}">${String(surface.label || surface.id || "World item")}</option>`;
