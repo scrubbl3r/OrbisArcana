@@ -67,7 +67,7 @@ export function createOrbSurfaceDisplacementVertexShaderChunk() {
       float latitudeTravel = abs(polarAngle - 1.57079632679) / 1.57079632679;
       float equatorMask = pow(max(0.0, 1.0 - latitudeTravel), uDisplacementEquatorFalloff);
       float latitudeAmplitude = mix(uDisplacementEquatorAmplitude, uDisplacementPoleAmplitude, latitudeTravel);
-      float ripple = sin(((latitudeTravel * uDisplacementWaveCount) - travelClock) * 6.28318530718);
+      float ripple = sin(((latitudeTravel * uDisplacementWaveCount) + travelClock) * 6.28318530718);
       float softenedRipple = mix(ripple, sin(ripple * 1.57079632679), uDisplacementRippleSoftness);
       float travelingWave = softenedRipple * equatorMask * latitudeAmplitude;
       float displacement = travelingWave * uDisplacementDepth * uDisplacementEnabled;

@@ -1,5 +1,5 @@
 import { WORLD_WORKSHOP_SURFACES } from "./world-item-surfaces.js";
-import { createWorldWorkshopPreviewRegistry } from "./world-workshop-preview-registry.js?v=20260427n";
+import { createWorldWorkshopPreviewRegistry } from "./world-workshop-preview-registry.js?v=20260427o";
 import {
   formatWorldWorkshopGeometryReadout,
   formatWorldWorkshopMaterialReadout,
