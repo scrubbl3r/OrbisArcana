@@ -35,7 +35,7 @@ export const OPALESCENT_ORB_MATERIAL_CONFIG = Object.freeze({
   lightShadowNormalBias: 0.018,
   lightShadowNearBO: 0.08,
   lightShadowFarBO: 10,
-  shadowSpotEnabled: false,
+  shadowSpotEnabled: true,
   shadowSpotColor: 0xdaf6ff,
   shadowSpotIntensity: 24.0,
   shadowSpotDistanceBO: 4.5,
