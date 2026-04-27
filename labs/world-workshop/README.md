@@ -14,6 +14,7 @@ authored world items.
 - `world-workshop-preview-registry.js` maps surface preview keys to preview renderers.
 - `world-workshop-readouts.js` formats metadata and inspection readouts.
 - `inspectors/` owns reusable viewport, camera, controls, resize, and cleanup behavior.
+- `effects/` owns reusable scene and post-processing effects such as bloom.
 - `rendering/` owns shared Three.js materials, edges, guides, and disposal helpers.
 - `previews/` owns isolated and in-level object previews.
 - `adapters/` owns settings capture/apply flow for object authoring.

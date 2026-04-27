@@ -8,7 +8,6 @@ This directory is the canonical material library for World Workshop authored obj
 
 - translucent opalescent shell shader
 - orb light configuration and color drift
-- bloom configuration used by World Workshop inspectors
 - optional shadow spot fallback hooks
 
 The `Orb` workshop entry should be the source-of-truth preview for this material before it is adapted into game-facing orb states.
@@ -23,6 +22,12 @@ The `Orb` workshop entry should be the source-of-truth preview for this material
 - assembly-scale test controls
 
 The `Plinth` workshop entry is the first world-furniture object applying this graphite look. Assemblies should compose the plinth and graphite material rather than redefining either.
+
+## Effects Boundary
+
+Bloom and other post-processing systems live in `../effects/`. Materials may
+carry emissive or lighting-response settings, but the viewport pipeline owns the
+actual effect pass.
 
 ## Compatibility
 

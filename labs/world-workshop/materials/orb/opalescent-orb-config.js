@@ -1,3 +1,5 @@
+export { ORB_BLOOM_CONFIG } from "../../effects/bloom/bloom-config.js?v=20260426a";
+
 export const OPALESCENT_ORB_MATERIAL_CONFIG = Object.freeze({
   shellBaseColor: 0xfbfdff,
   shellCyanColor: 0x8ff4ff,
@@ -21,10 +23,6 @@ export const OPALESCENT_ORB_MATERIAL_CONFIG = Object.freeze({
   driftPhaseB: 1.7,
   driftPhaseC: 3.1,
   goldMix: 0.34,
-  bloomEnabled: true,
-  bloomStrength: 0.58,
-  bloomRadius: 0.38,
-  bloomThreshold: 0.16,
   lightColor: 0xcfefff,
   lightIntensity: 27.0,
   lightDistanceBO: 10,

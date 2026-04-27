@@ -1,8 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { createBloomComposer } from "../effects/bloom/bloom-effect.js";
 import { clearPreviewHost, setPreviewHostCleanup } from "../preview-host.js";
 import { disposeObject } from "../rendering/world-render-utils.js";
 
@@ -51,20 +49,7 @@ export function createWorldObjectInspector({
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
-  const composer = bloom
-    ? new EffectComposer(renderer)
-    : null;
-  let bloomPass = null;
-  if (composer) {
-    composer.addPass(new RenderPass(scene, camera));
-    bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(1, 1),
-      Number(bloom.strength) || 1.5,
-      Number(bloom.radius) || 0.4,
-      Number(bloom.threshold) || 0
-    );
-    composer.addPass(bloomPass);
-  }
+  const { composer, bloomPass } = createBloomComposer({ renderer, scene, camera, bloom });
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
