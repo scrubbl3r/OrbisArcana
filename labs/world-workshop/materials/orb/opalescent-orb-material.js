@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427b";
+import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427c";
 import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
 
 const scratchBaseLight = new THREE.Color();
@@ -36,6 +36,8 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
       uniform float uDisplacementOscillationHz;
       uniform float uDisplacementLatitudinalMix;
       uniform float uDisplacementLatitudinalBands;
+      uniform float uDisplacementCellMix;
+      uniform float uDisplacementAxisMix;
       uniform float uDisplacementPhaseOffset;
       uniform float uDisplacementShrink;
 
@@ -45,12 +47,17 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
 
       void main() {
         vec3 n = normalize(normal);
-        float longitude = atan(n.z, n.x);
-        float latitude = asin(clamp(n.y, -1.0, 1.0));
         float oscillation = sin((uTime * 6.2831853 * uDisplacementOscillationHz) + uDisplacementPhaseOffset);
-        float radialWave = sin(longitude * uDisplacementWaveCount);
-        float latitudinalWave = cos(latitude * uDisplacementLatitudinalBands);
-        float standingWave = mix(radialWave, radialWave * latitudinalWave, uDisplacementLatitudinalMix);
+        float phase = uDisplacementPhaseOffset;
+        float sphericalScale = uDisplacementWaveCount * 3.1415927;
+        float sx = sin((n.x * sphericalScale) + phase);
+        float sy = sin((n.y * sphericalScale) + (phase * 1.173));
+        float sz = sin((n.z * sphericalScale) + (phase * 0.827));
+        float harmonicWave = (sx + sy + sz) * 0.3333333;
+        float cellularWave = sx * sy * sz;
+        float axisWave = sin(atan(n.z, n.x) * uDisplacementWaveCount) * cos(asin(clamp(n.y, -1.0, 1.0)) * uDisplacementLatitudinalBands);
+        float standingWave = mix(harmonicWave, cellularWave, uDisplacementCellMix);
+        standingWave = mix(standingWave, axisWave, uDisplacementAxisMix);
         float displacement = standingWave * uDisplacementDepth * oscillation * uDisplacementEnabled;
         float shrink = 1.0 - (uDisplacementShrink * abs(oscillation) * uDisplacementEnabled);
         vec3 displacedPosition = (position * shrink) + (n * displacement);
