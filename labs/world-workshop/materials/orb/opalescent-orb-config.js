@@ -12,7 +12,7 @@ export const OPALESCENT_ORB_MATERIAL_CONFIG = Object.freeze({
   shellPastelMix: 0.54,
   shellRimPastelMix: 0.36,
   shellDriftPastelMix: 0.08,
-  shellLuminanceBoost: 1.00,
+  shellLuminanceBoost: .50,
   opalescenceSpeed: 5.0,
   driftScaleX: 0.030,
   driftScaleY: 0.036,
