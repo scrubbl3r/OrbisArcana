@@ -53,14 +53,14 @@ export function createOrbSurfaceDisplacementVertexShaderChunk() {
 
     vec3 displaceOrbSurface(vec3 sourcePosition, vec3 sourceNormal, float timeSeconds) {
       vec3 n = normalize(sourceNormal);
-      float oscillation = sin((timeSeconds * 6.28318530718 * uDisplacementOscillationHz) + uDisplacementPhaseOffset);
-      float latitude = asin(clamp(n.y, -1.0, 1.0));
+      float travelClock = (timeSeconds * uDisplacementOscillationHz) + (uDisplacementPhaseOffset * 0.15915494309);
+      float latitudeTravel = abs(n.y);
       float equatorMask = pow(max(0.0, 1.0 - abs(n.y)), uDisplacementEquatorFalloff);
-      float ripple = sin(latitude * uDisplacementWaveCount);
+      float ripple = sin(((latitudeTravel * uDisplacementWaveCount) - travelClock) * 6.28318530718);
       float softenedRipple = mix(ripple, sin(ripple * 1.57079632679), uDisplacementRippleSoftness);
-      float standingWave = softenedRipple * equatorMask;
-      float displacement = standingWave * uDisplacementDepth * oscillation * uDisplacementEnabled;
-      float shrink = 1.0 - (uDisplacementShrink * abs(oscillation) * uDisplacementEnabled);
+      float travelingWave = softenedRipple * equatorMask;
+      float displacement = travelingWave * uDisplacementDepth * uDisplacementEnabled;
+      float shrink = 1.0 - (uDisplacementShrink * abs(sin(travelClock * 6.28318530718)) * uDisplacementEnabled);
       return (sourcePosition * shrink) + (n * displacement);
     }
   `;

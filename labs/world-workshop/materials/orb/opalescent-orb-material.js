@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427f";
+import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427g";
 import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
 
 const scratchBaseLight = new THREE.Color();
@@ -49,14 +49,14 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
 
       void main() {
         vec3 n = normalize(normal);
-        float oscillation = sin((uTime * 6.2831853 * uDisplacementOscillationHz) + uDisplacementPhaseOffset);
-        float latitude = asin(clamp(n.y, -1.0, 1.0));
+        float travelClock = (uTime * uDisplacementOscillationHz) + (uDisplacementPhaseOffset * 0.15915494);
+        float latitudeTravel = abs(n.y);
         float equatorMask = pow(max(0.0, 1.0 - abs(n.y)), uDisplacementEquatorFalloff);
-        float ripple = sin(latitude * uDisplacementWaveCount);
+        float ripple = sin(((latitudeTravel * uDisplacementWaveCount) - travelClock) * 6.2831853);
         float softenedRipple = mix(ripple, sin(ripple * 1.5707963), uDisplacementRippleSoftness);
-        float standingWave = softenedRipple * equatorMask;
-        float displacement = standingWave * uDisplacementDepth * oscillation * uDisplacementEnabled;
-        float shrink = 1.0 - (uDisplacementShrink * abs(oscillation) * uDisplacementEnabled);
+        float travelingWave = softenedRipple * equatorMask;
+        float displacement = travelingWave * uDisplacementDepth * uDisplacementEnabled;
+        float shrink = 1.0 - (uDisplacementShrink * abs(sin(travelClock * 6.2831853)) * uDisplacementEnabled);
         vec3 displacedPosition = (position * shrink) + (n * displacement);
         vec4 worldPosition = modelMatrix * vec4(displacedPosition, 1.0);
         vec4 mvPosition = modelViewMatrix * vec4(displacedPosition, 1.0);
