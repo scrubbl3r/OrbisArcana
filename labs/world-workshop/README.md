@@ -10,6 +10,7 @@ authored world items.
 
 - `world-item-surfaces.js` declares workshop-visible object surfaces.
 - `configs/` exposes meaningful art and material control parameters.
+- `behaviors/` owns reusable object motion and state-behavior configs.
 - `preview-host.js` owns preview cleanup and DOM host reset conventions.
 - `world-workshop-preview-registry.js` maps surface preview keys to preview renderers.
 - `world-workshop-readouts.js` formats metadata and inspection readouts.

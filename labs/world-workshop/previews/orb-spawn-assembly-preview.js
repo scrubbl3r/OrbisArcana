@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { ORB_IDLE_CONFIG } from "../behaviors/orb/orb-idle-config.js?v=20260426a";
 import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
 import { createPlinthModel } from "../generators/plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
@@ -35,11 +36,20 @@ export function renderOrbSpawnAssemblyPreview({
         if (material.uniforms && material.uniforms.uTime) material.uniforms.uTime.value = time;
       });
       animatedLights.forEach((light) => updateOrbPointLight(light, time, ORB_MATERIAL_CONFIG));
-      animatedNodes.forEach(({ node, baseY }) => {
+      animatedNodes.forEach(({ node, baseY, idle }) => {
+        const bobY =
+          Math.sin(time * idle.bobYRate) * bo * idle.bobYAmplitudeBO +
+          Math.sin(time * idle.bobYSecondaryRate) * bo * idle.bobYSecondaryAmplitudeBO;
+        const driftX =
+          Math.sin(time * idle.driftXRate) * bo * idle.driftXAmplitudeBO +
+          Math.sin(time * idle.driftSecondaryRate) * bo * idle.driftSecondaryAmplitudeBO;
+        const driftZ =
+          Math.sin(time * idle.driftZRate + idle.driftZPhase) * bo * idle.driftZAmplitudeBO +
+          Math.cos(time * idle.driftSecondaryRate * 0.87) * bo * idle.driftSecondaryAmplitudeBO;
         node.position.set(
-          0,
-          baseY + Math.sin(time * 1.04) * bo * 0.045,
-          0
+          driftX,
+          baseY + bobY,
+          driftZ
         );
       });
       shadowRigs.forEach(({ light, target, source, targetY }) => {
@@ -108,7 +118,7 @@ export function renderOrbSpawnAssemblyPreview({
   orbModel.add(orbLight);
   animatedLights.push(orbLight);
   inspector.scene.add(orbModel);
-  animatedNodes.push({ node: orbModel, baseY: orbBaseY });
+  animatedNodes.push({ node: orbModel, baseY: orbBaseY, idle: ORB_IDLE_CONFIG });
 
   const shadowSpot = createOrbShadowSpotLight({ bo, config: ORB_MATERIAL_CONFIG });
   if (shadowSpot) {
