@@ -4,7 +4,7 @@ export const GRAPHITE_CONFIG = Object.freeze({
   edgeWidth: 1.5,
   edgeOpacity: 0.20,
   edgeHaloColor: 0xbfeeff,
-  edgeHaloWidth: 3,
+  edgeHaloWidth: 0,
   edgeHaloOpacity: 0.12,
   edgeThresholdAngle: 16,
   guideColor: 0xffffff,
