@@ -1,4 +1,8 @@
 import * as THREE from "three";
+import {
+  createOrbSurfaceDisplacementUniforms,
+  createOrbSurfaceDisplacementVertexShaderChunk,
+} from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427a";
 import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
 
 const scratchBaseLight = new THREE.Color();
@@ -7,8 +11,12 @@ const scratchViolet = new THREE.Color();
 const scratchGold = new THREE.Color();
 const scratchPastel = new THREE.Color();
 
-export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIAL_CONFIG) {
+export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIAL_CONFIG, {
+  bo = 72,
+  surfaceDisplacement = null,
+} = {}) {
   const opalescenceSpeed = Number(config.opalescenceSpeed) || 1;
+  const displacementUniforms = createOrbSurfaceDisplacementUniforms(surfaceDisplacement || { enabled: false }, { bo });
   return new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
@@ -19,15 +27,19 @@ export function createOpalescentOrbShellMaterial(config = OPALESCENT_ORB_MATERIA
       uCyan: { value: new THREE.Color(config.shellCyanColor) },
       uViolet: { value: new THREE.Color(config.shellVioletColor) },
       uGold: { value: new THREE.Color(config.shellGoldColor) },
+      ...displacementUniforms,
     },
     vertexShader: `
+      ${createOrbSurfaceDisplacementVertexShaderChunk()}
+
       varying vec3 vNormal;
       varying vec3 vViewPosition;
       varying vec3 vWorldPosition;
 
       void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vec3 displacedPosition = displaceOrbSurface(position, normal, uTime);
+        vec4 worldPosition = modelMatrix * vec4(displacedPosition, 1.0);
+        vec4 mvPosition = modelViewMatrix * vec4(displacedPosition, 1.0);
         vNormal = normalize(normalMatrix * normal);
         vViewPosition = -mvPosition.xyz;
         vWorldPosition = worldPosition.xyz;

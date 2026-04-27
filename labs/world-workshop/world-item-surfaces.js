@@ -10,6 +10,16 @@ export const WORLD_WORKSHOP_SURFACES = Object.freeze([
     status: "experiment",
   }),
   Object.freeze({
+    id: "orb-displacement-test",
+    label: "Orb Displacement Test",
+    kind: "orb_displacement_test",
+    category: "effect-primitive",
+    generator: "orb-displacement-test",
+    previewKey: "orb-displacement-test",
+    preview: "world-object-inspector",
+    status: "experiment",
+  }),
+  Object.freeze({
     id: "plinth",
     label: "Plinth",
     kind: "plinth",

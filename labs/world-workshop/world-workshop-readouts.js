@@ -14,6 +14,8 @@ export function formatWorldWorkshopGeometryReadout(surface = null, metrics = nul
   switch (String(surface.generator || "")) {
     case "orb":
       return `BO ${roundMetric(metrics.bo)}px / translucent sphere diameter ${roundMetric(metrics.diameter)}px / radius ${roundMetric(metrics.radius)}px / shader shell`;
+    case "orb-displacement-test":
+      return `BO ${roundMetric(metrics.bo)}px / displaced orb ${roundMetric(metrics.diameter)}px / waves ${roundMetric(metrics.displacementWaveCount)} / depth ${roundMetric(metrics.displacementWaveDepth)}px / speed ${roundMetric(metrics.displacementSpeedHz)}Hz`;
     case "orb-spawn-assembly":
       return `BO ${roundMetric(metrics.bo)}px / orb ${roundMetric(metrics.orbDiameter)}px / clearance ${roundMetric(metrics.orbClearance)}px / ground ${roundMetric(metrics.groundPlaneSize)}px / plinth scale ${roundMetric((metrics.assemblyScale || 1) * 100)}% / lit assembly`;
     case "plinth":
@@ -30,6 +32,9 @@ export function formatWorldWorkshopMaterialReadout(surface = null) {
     case "world-object-inspector":
       if (String(surface.generator || "") === "orb") {
         return "World object inspector / translucent opalescent shell / postprocess bloom / saturated pastel drift";
+      }
+      if (String(surface.generator || "") === "orb-displacement-test") {
+        return "World object inspector / opalescent shell / vertex surface displacement / postprocess bloom";
       }
       if (String(surface.generator || "") === "orb-spawn-assembly") {
         return "Shadowed opalescent orb point light / postprocess bloom / graphite faces / layered faux-glow Line2 edges";
