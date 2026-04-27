@@ -3,7 +3,7 @@ export const ORB_SURFACE_DISPLACEMENT_CONFIG = Object.freeze({
   waveCount: 18,
   waveDepthBO: 0.048,
   oscillationSpeedHz: 4.8,
-  equatorFalloff: 0.85,
+  equatorFalloff: 0,
   rippleSoftness: 0.82,
   latitudinalMix: 1,
   latitudinalBands: 18,
