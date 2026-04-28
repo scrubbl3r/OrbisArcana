@@ -17,6 +17,21 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function applyCameraVarsToWorld(worldEl, {
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  zoom = 1,
+  camLeft = 0,
+  camTop = 0,
+} = {}) {
+  if (!worldEl) return;
+  worldEl.style.setProperty("--level-world-width", `${worldWidthPx}px`);
+  worldEl.style.setProperty("--level-world-height", `${worldHeightPx}px`);
+  worldEl.style.setProperty("--level-world-zoom", `${zoom}`);
+  worldEl.style.setProperty("--level-world-x", `${-camLeft * zoom}px`);
+  worldEl.style.setProperty("--level-world-y", `${-camTop * zoom}px`);
+}
+
 function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25, onCameraFrame = () => {}) {
   if (!refs || !refs.physStage || !refs.world) return;
   if (state && state.externalCameraAuthority) return;
@@ -84,11 +99,15 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25, onCa
   if (!frame) return;
 
   state.bootCamera = false;
-  refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
-  refs.world.style.setProperty("--level-world-height", `${state.worldHeightPx}px`);
-  refs.world.style.setProperty("--level-world-zoom", `${frame.zoom}`);
-  refs.world.style.setProperty("--level-world-x", `${-frame.camLeft * frame.zoom}px`);
-  refs.world.style.setProperty("--level-world-y", `${-frame.camTop * frame.zoom}px`);
+  const cameraVars = {
+    worldWidthPx: state.worldWidthPx,
+    worldHeightPx: state.worldHeightPx,
+    zoom: frame.zoom,
+    camLeft: frame.camLeft,
+    camTop: frame.camTop,
+  };
+  applyCameraVarsToWorld(refs.world, cameraVars);
+  applyCameraVarsToWorld(refs.actorWorld, cameraVars);
   applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
     camLeft: frame.camLeft,
     camTop: frame.camTop,

@@ -8,6 +8,21 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function applyCameraVarsToWorld(worldEl, {
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  zoom = 1,
+  camLeft = 0,
+  camTop = 0,
+} = {}) {
+  if (!worldEl) return;
+  worldEl.style.setProperty("--level-world-width", `${worldWidthPx}px`);
+  worldEl.style.setProperty("--level-world-height", `${worldHeightPx}px`);
+  worldEl.style.setProperty("--level-world-zoom", `${Number(zoom || 1)}`);
+  worldEl.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || 1)).toFixed(2)}px`);
+  worldEl.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || 1)).toFixed(2)}px`);
+}
+
 export function createLevelStageRuntimeAdapter({
   refs = {},
   level = null,
@@ -65,16 +80,21 @@ export function createLevelStageRuntimeAdapter({
       const rect = refs.physStage && typeof refs.physStage.getBoundingClientRect === "function"
         ? refs.physStage.getBoundingClientRect()
         : { width: 0, height: 0 };
+      const frameZoom = Number(zoom || state.previewZoom);
       state.externalCameraAuthority = true;
-      refs.world.style.setProperty("--level-world-width", `${state.worldWidthPx}px`);
-      refs.world.style.setProperty("--level-world-height", `${state.worldHeightPx}px`);
-      refs.world.style.setProperty("--level-world-zoom", `${Number(zoom || state.previewZoom)}`);
-      refs.world.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
-      refs.world.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || state.previewZoom)).toFixed(2)}px`);
+      const cameraVars = {
+        worldWidthPx: state.worldWidthPx,
+        worldHeightPx: state.worldHeightPx,
+        zoom: frameZoom,
+        camLeft,
+        camTop,
+      };
+      applyCameraVarsToWorld(refs.world, cameraVars);
+      applyCameraVarsToWorld(refs.actorWorld, cameraVars);
       applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),
-        zoom: Number(zoom || state.previewZoom),
+        zoom: frameZoom,
         viewportWidthPx: clampNumber(rect.width, 0),
         viewportHeightPx: clampNumber(rect.height, 0),
       });
@@ -82,7 +102,7 @@ export function createLevelStageRuntimeAdapter({
         depth3dRuntime.renderFrame({
           camLeft: Number(camLeft || 0),
           camTop: Number(camTop || 0),
-          zoom: Number(zoom || state.previewZoom),
+          zoom: frameZoom,
           viewportWidthPx: clampNumber(rect.width, 0),
           viewportHeightPx: clampNumber(rect.height, 0),
           worldWidthPx: state.worldWidthPx,

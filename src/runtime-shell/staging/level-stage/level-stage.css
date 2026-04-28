@@ -29,6 +29,14 @@
   z-index: 0;
 }
 
+.levelStageActorDock {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+
 .levelStageDepth3dLayer {
   position: absolute;
   inset: 0;
@@ -42,7 +50,8 @@
   height: 100%;
 }
 
-.levelStageWorld {
+.levelStageWorld,
+.levelStageActorWorld {
   position: absolute;
   left: 0;
   top: 0;

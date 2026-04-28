@@ -6,10 +6,10 @@ import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
-import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260428c";
+import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260428d";
 import { createLevelStageDepth3dLayer } from "./level-stage-depth3d.js?v=20260428o";
 import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425w";
-import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260425w";
+import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260428a";
 import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
@@ -89,6 +89,10 @@ export function renderLevelStage(root, {
         <div class="levelStageWorldDock" aria-hidden="true">
           <div class="levelStageWorld">
             <svg class="levelStageWorldOverlay" viewBox="0 0 ${worldSize.widthPx} ${worldSize.heightPx}" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </div>
+        <div class="levelStageActorDock" aria-hidden="true">
+          <div class="levelStageActorWorld">
             ${LEVEL_STAGE_ORB_MARKUP}
             ${LEVEL_STAGE_GLOBE_MARKUP}
           </div>
@@ -116,6 +120,7 @@ export function renderLevelStage(root, {
     depth3dLayer: root.querySelector("[data-level-stage-depth3d-layer='true']"),
     worldDock: root.querySelector(".levelStageWorldDock"),
     world: root.querySelector(".levelStageWorld"),
+    actorWorld: root.querySelector(".levelStageActorWorld"),
     worldOverlay: root.querySelector(".levelStageWorldOverlay"),
     labelMeta: root.querySelector(".levelStageLabelMeta"),
     orbWrap: root.querySelector("[data-level-stage-orb-wrap='true']"),
