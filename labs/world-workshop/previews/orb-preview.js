@@ -13,13 +13,14 @@ export function renderOrbPreview({
   const bo = Number(orbDiameterPx) || 72;
   const startedAt = performance.now();
   const animatedMaterials = [];
-  let orbLight = null;
+  const animatedLights = [];
   const inspector = createWorldObjectInspector({
     root,
     bo,
     cameraPositionBo: Object.freeze({ x: 0.82, y: 0.18, z: 3.15 }),
     minDistanceBo: 0.9,
     maxDistanceBo: 28,
+    enableShadows: true,
     bloom: ORB_BLOOM_CONFIG.enabled ? ORB_BLOOM_CONFIG : null,
     onFrame: () => {
       const time = (performance.now() - startedAt) / 1000;
@@ -28,12 +29,12 @@ export function renderOrbPreview({
           material.uniforms.uTime.value = time;
         }
       });
-      if (orbLight) updateOrbPointLight(orbLight, time, ORB_MATERIAL_CONFIG);
+      animatedLights.forEach((light) => updateOrbPointLight(light, time, ORB_MATERIAL_CONFIG));
     },
   });
   if (!inspector) return null;
 
-  orbLight = createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG });
+  const orbLight = createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG });
   const shellMaterial = createOpalescentOrbShellMaterial(ORB_MATERIAL_CONFIG);
   animatedMaterials.push(shellMaterial);
 
@@ -47,6 +48,7 @@ export function renderOrbPreview({
 
   updateOrbPointLight(orbLight, 0, ORB_MATERIAL_CONFIG);
   model.add(orbLight);
+  animatedLights.push(orbLight);
 
   inspector.scene.add(model);
   inspector.render();

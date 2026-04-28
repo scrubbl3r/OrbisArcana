@@ -2,7 +2,7 @@ import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-de
 import { clearPreviewHost } from "./preview-host.js";
 import { renderOrbSpawnAssemblyPreview } from "./previews/orb-spawn-assembly-preview.js?v=20260426a";
 import { renderOrbDisplacementPreview } from "./previews/orb-displacement-preview.js?v=20260427p";
-import { renderOrbPreview } from "./previews/orb-preview.js?v=20260426a";
+import { renderOrbPreview } from "./previews/orb-preview.js?v=20260428a";
 import { renderPlinthPreview } from "./previews/plinth-preview.js?v=20260426a";
 
 const PREVIEW_RENDERERS = Object.freeze({
