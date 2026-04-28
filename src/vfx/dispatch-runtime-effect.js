@@ -17,6 +17,7 @@ import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js
  * @param {Function} [options.runtime.activateBubbleShield]
  * @param {Function} [options.runtime.playOrbShatter]
  * @param {Function} [options.runtime.playOrbNod]
+ * @param {Function} [options.runtime.playOrbNod3d]
  * @param {Function} [options.runtime.playOrbGlobe]
  * @param {Function} [options.runtime.playTeleport]
  * @param {Object} [options.payload]
@@ -61,6 +62,10 @@ export function dispatchRuntimeEffect({
     case "orb.nod":
       return typeof runtime.playOrbNod === "function"
         ? { ...(runtime.playOrbNod(payload) || { handled: false }), binding }
+        : { handled: false, skipped: "runtime_missing", binding };
+    case "orb.nod3d":
+      return typeof runtime.playOrbNod3d === "function"
+        ? { ...(runtime.playOrbNod3d(payload) || { handled: false }), binding }
         : { handled: false, skipped: "runtime_missing", binding };
     case "orb.globe":
       if (typeof runtime.playOrbGlobe === "function") {

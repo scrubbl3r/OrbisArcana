@@ -8,6 +8,7 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
     electricAoe = null,
     teleport = null,
     orbNod = null,
+    orbNod3d = null,
   } = presets || {};
 
   if (bubbleShield && vfxDefaults.shield && typeof vfxDefaults.shield === "object") {
@@ -27,6 +28,9 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
   }
   if (orbNod && vfxDefaults.nod && typeof vfxDefaults.nod === "object") {
     Object.assign(vfxDefaults.nod, orbNod);
+  }
+  if (orbNod3d && vfxDefaults.nod3d && typeof vfxDefaults.nod3d === "object") {
+    Object.assign(vfxDefaults.nod3d, orbNod3d);
   }
 
   return vfxDefaults;

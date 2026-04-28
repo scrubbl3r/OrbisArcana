@@ -1,4 +1,5 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
+import { createOrbNod3dRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-runtime.js";
 import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js";
@@ -53,6 +54,18 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       orbTemplateWaveDepthPx: 4,
       orbTemplateOscillationSpeedHz: 12,
       orbTemplateOscillationCount: 4,
+    },
+    nod3d: {
+      orbNod3dShrinkPct: 2,
+      orbNod3dDurationMs: 520,
+      orbNod3dFillAlpha: 0.07,
+      orbNod3dWaveCount: 4,
+      orbNod3dLatitudinalBands: 4,
+      orbNod3dWaveDepthBO: 0.024,
+      orbNod3dOscillationSpeedHz: 4.8,
+      orbNod3dOscillationCount: 2,
+      orbNod3dEquatorFalloff: 0,
+      orbNod3dRippleSoftness: 0.82,
     },
     teleport: {
       orbTeleportFlickerOnMs: 60,
@@ -156,6 +169,17 @@ export function initOrbStageReceiverVfxRuntime({
       getOrbDiameterPx: readOrbDiameterPx,
       getConfig: () => (vfxDefaults && vfxDefaults.nod && typeof vfxDefaults.nod === "object")
         ? vfxDefaults.nod
+        : Object.create(null),
+    }),
+    orbNod3dRuntime: createOrbNod3dRuntime({
+      orbEl: stageEls.orb,
+      mountEl: stageEls.orb ? stageEls.orb.parentElement : null,
+      orbInteriorEl: stageEls.orbInterior,
+      orbCracksEl: stageEls.orbCracks,
+      orbShardsEl: stageEls.orbShards,
+      getOrbDiameterPx: readOrbDiameterPx,
+      getConfig: () => (vfxDefaults && vfxDefaults.nod3d && typeof vfxDefaults.nod3d === "object")
+        ? vfxDefaults.nod3d
         : Object.create(null),
     }),
     teleportRuntime: createTeleportRuntime({
@@ -277,6 +301,13 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
+  function directPlayOrbNod3d(payload = {}) {
+    if (stageVfx.orbNod3dRuntime && typeof stageVfx.orbNod3dRuntime.play === "function") {
+      return stageVfx.orbNod3dRuntime.play(payload);
+    }
+    return { handled: false };
+  }
+
   function directPlayTeleport(payload = {}) {
     if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.play === "function") {
       return stageVfx.teleportRuntime.play(payload);
@@ -376,11 +407,15 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "nod",
         runtime: {
           playOrbNod: (nextPayload = {}) => directPlayOrbNod(nextPayload),
+          playOrbNod3d: (nextPayload = {}) => directPlayOrbNod3d(nextPayload),
         },
         payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
       return directPlayOrbNod(payload);
+    },
+    playOrbNod3d(payload = {}) {
+      return directPlayOrbNod3d(payload);
     },
   };
 

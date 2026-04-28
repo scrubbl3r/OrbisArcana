@@ -140,6 +140,7 @@ export function createLabEffectSurfaces({
       previewRootKey: "orbNod3dPreviewRoot",
       previewFile: "orb-nod3d-preview.js",
       autoPreviewKey: "applyOrbNod3d",
+      defaultBindTarget: "orb-state.nod",
       livePreset: Object.freeze({ buildKey: "orb-nod3d", path: ["src", "vfx", "presets", "orb-nod3d-default.js"], exportName: "ORB_NOD_3D_PRESET_DEFAULT" }),
       adapterFile: "orb-nod3d-authoring-adapter.js",
       authoringAdapter: createOrbNod3dAuthoringAdapter,

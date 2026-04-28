@@ -2543,6 +2543,7 @@ async function initShellKwsRuntime(shellContext) {
     ELECTRIC_AOE_PRESET_DEFAULT,
     TELEPORT_PRESET_DEFAULT,
     ORB_NOD_PRESET_DEFAULT,
+    ORB_NOD_3D_PRESET_DEFAULT,
   } = receiverMods;
 
   if (
@@ -2604,6 +2605,7 @@ async function initShellKwsRuntime(shellContext) {
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
       teleport: TELEPORT_PRESET_DEFAULT,
       orbNod: ORB_NOD_PRESET_DEFAULT,
+      orbNod3d: ORB_NOD_3D_PRESET_DEFAULT,
     });
   }
   runtime.vfxDefaults = vfxDefaults;
