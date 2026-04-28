@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { createOrb3dRuntime } from "../../../game-runtime/orb/orb-3d-runtime.js";
 
 const BO_WORLD_UNITS = 72;
 const PREVIEW_RASTER_SIZE = 384;
@@ -26,6 +27,15 @@ function resolveDepthLayerLabel(depthLayers = []) {
   const layers = Array.isArray(depthLayers) ? depthLayers : [];
   if (!layers.length) return "no depth layer";
   return layers.map((layer) => String(layer && layer.label || layer && layer.id || "depth")).join(" / ");
+}
+
+function resolveDepthLayerOrbZBO(depthLayers = []) {
+  const layers = Array.isArray(depthLayers) ? depthLayers : [];
+  for (const layer of layers) {
+    const zBO = Number(layer && layer.orbZBO);
+    if (Number.isFinite(zBO) && zBO >= 0) return zBO;
+  }
+  return 4;
 }
 
 function buildLayerSvgMarkup(layer = {}, viewBox = {}) {
@@ -484,13 +494,18 @@ export function createLevelStageDepth3dLayer({
   key.position.set(-0.3, -0.5, 1.0);
   scene.add(key);
   const group = new THREE.Group();
+  const actorGroup = new THREE.Group();
   scene.add(group);
+  scene.add(actorGroup);
 
   let disposed = false;
   let worldWidthPx = 1;
   let worldHeightPx = 1;
   let depthLayerCount = 0;
   let lastFrame = null;
+  let orbRuntime = null;
+  let orbRuntimeBO = 0;
+  let currentOrbZBO = 4;
 
   function setLabel(text) {
     if (labelEl) {
@@ -507,6 +522,18 @@ export function createLevelStageDepth3dLayer({
         if (node.material && typeof node.material.dispose === "function") node.material.dispose();
       });
     }
+  }
+
+  function disposeOrbRuntime() {
+    if (orbRuntime && typeof orbRuntime.dispose === "function") {
+      orbRuntime.dispose();
+    }
+    orbRuntime = null;
+    orbRuntimeBO = 0;
+  }
+
+  function syncRootVisibility() {
+    root.hidden = depthLayerCount <= 0 && !orbRuntime;
   }
 
   function renderFrame({
@@ -544,6 +571,9 @@ export function createLevelStageDepth3dLayer({
     camera.position.set(cx, cy, cameraZ);
     camera.lookAt(cx, cy, 0);
     camera.updateProjectionMatrix();
+    if (orbRuntime && typeof orbRuntime.setTime === "function") {
+      orbRuntime.setTime(performance.now() / 1000);
+    }
     renderer.render(scene, camera);
   }
 
@@ -586,6 +616,7 @@ export function createLevelStageDepth3dLayer({
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
+      currentOrbZBO = resolveDepthLayerOrbZBO(layers);
       setLabel(resolveDepthLayerLabel(layers));
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({
@@ -596,16 +627,49 @@ export function createLevelStageDepth3dLayer({
         });
         if (mesh) group.add(mesh);
       }
-      root.hidden = depthLayerCount <= 0;
+      syncRootVisibility();
       root.dataset.depthLayerCount = String(group.children.length);
       root.dataset.depthStatus = group.children.length ? "ready" : "empty";
       if (group.children.length) {
         renderFrame(lastFrame || { ...resolveBootFrame(layers), isBootFrame: true });
       }
     },
+    setOrbWorldPosition({
+      xW = null,
+      yW = null,
+      bo = BO_WORLD_UNITS,
+      zBO = currentOrbZBO,
+    } = {}) {
+      if (disposed) return false;
+      const worldX = Number(xW);
+      const worldY = Number(yW);
+      if (!Number.isFinite(worldX) || !Number.isFinite(worldY)) return false;
+      const resolvedBO = Math.max(1, Number(bo) || BO_WORLD_UNITS);
+      if (!orbRuntime || Math.abs(resolvedBO - orbRuntimeBO) > 0.001) {
+        disposeOrbRuntime();
+        orbRuntime = createOrb3dRuntime({
+          bo: resolvedBO,
+          includeCore: false,
+          includeRibs: false,
+        });
+        orbRuntimeBO = resolvedBO;
+        actorGroup.add(orbRuntime.model);
+        if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
+      }
+      const resolvedZBO = Math.max(0, Number.isFinite(Number(zBO)) ? Number(zBO) : currentOrbZBO);
+      orbRuntime.setPosition({
+        x: toThreeX(worldX, worldWidthPx),
+        y: toThreeY(worldY, worldHeightPx),
+        z: -(resolvedZBO * resolvedBO),
+      });
+      syncRootVisibility();
+      if (lastFrame) renderFrame(lastFrame);
+      return true;
+    },
     renderFrame,
     dispose() {
       disposed = true;
+      disposeOrbRuntime();
       clearGroup();
       renderer.dispose();
       if (renderer.domElement && renderer.domElement.parentNode) {
