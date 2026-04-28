@@ -560,6 +560,8 @@ export function createLevelStageDepth3dLayer({
   let orbRuntimeBO = 0;
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbDepthPx = currentOrbZBO * BO_WORLD_UNITS;
+  let currentOrbWorldX = null;
+  let currentOrbWorldY = null;
 
   function setLabel(text) {
     if (labelEl) {
@@ -588,6 +590,20 @@ export function createLevelStageDepth3dLayer({
 
   function syncRootVisibility() {
     root.hidden = depthLayerCount <= 0 && !orbRuntime;
+  }
+
+  function applyOrbProjectedPosition({ cameraX = 0, cameraY = 0, cameraZ = 1 } = {}) {
+    if (!orbRuntime) return;
+    if (!Number.isFinite(Number(currentOrbWorldX)) || !Number.isFinite(Number(currentOrbWorldY))) return;
+    const safeCameraZ = Math.max(1, clampNumber(cameraZ, 1));
+    const targetX = toThreeX(currentOrbWorldX, worldWidthPx);
+    const targetY = toThreeY(currentOrbWorldY, worldHeightPx);
+    const depthScale = (safeCameraZ + Math.max(0, currentOrbDepthPx)) / safeCameraZ;
+    orbRuntime.setPosition({
+      x: clampNumber(cameraX, 0) + ((targetX - clampNumber(cameraX, 0)) * depthScale),
+      y: clampNumber(cameraY, 0) + ((targetY - clampNumber(cameraY, 0)) * depthScale),
+      z: -currentOrbDepthPx,
+    });
   }
 
   function renderFrame({
@@ -636,6 +652,7 @@ export function createLevelStageDepth3dLayer({
           depthPx: currentOrbDepthPx,
         }));
       }
+      applyOrbProjectedPosition({ cameraX: cx, cameraY: cy, cameraZ });
     }
     renderer.render(scene, camera);
   }
@@ -729,11 +746,8 @@ export function createLevelStageDepth3dLayer({
       }
       const resolvedZBO = Math.max(0, Number.isFinite(Number(zBO)) ? Number(zBO) : currentOrbZBO);
       currentOrbDepthPx = resolvedZBO * resolvedBO;
-      orbRuntime.setPosition({
-        x: toThreeX(worldX, worldWidthPx),
-        y: toThreeY(worldY, worldHeightPx),
-        z: -currentOrbDepthPx,
-      });
+      currentOrbWorldX = worldX;
+      currentOrbWorldY = worldY;
       syncRootVisibility();
       if (lastFrame) renderFrame(lastFrame);
       return true;
