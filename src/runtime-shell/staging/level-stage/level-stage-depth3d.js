@@ -115,13 +115,14 @@ function resolveDepthEnvironmentMode() {
 
 function buildGraphiteMaterial({
   opacity = 0.78,
-  color = 0x33383e,
+  color = 0x05070a,
   environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
 } = {}) {
   const runtimeMode = environmentMode !== DEPTH_ENVIRONMENT_MODE.debug;
   const resolvedOpacity = runtimeMode ? 1 : opacity;
   return new THREE.MeshStandardMaterial({
-    color,
+    color: runtimeMode ? 0x05070a : color,
+    emissive: runtimeMode ? 0x000000 : 0x020304,
     roughness: 0.88,
     metalness: 0.02,
     transparent: resolvedOpacity < 1,
@@ -313,9 +314,9 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environ
       const edges = new THREE.LineSegments(
         edgeGeometry,
         new THREE.LineBasicMaterial({
-          color: 0x66727d,
+          color: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0x66727d : 0xf4fbff,
           transparent: true,
-          opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.56 : 0.42,
+          opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.56 : 0.82,
           depthTest: true,
           depthWrite: false,
         })
@@ -511,9 +512,9 @@ async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(geometry, 18),
     new THREE.LineBasicMaterial({
-      color: 0x8f98a2,
+      color: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0x8f98a2 : 0xf4fbff,
       transparent: true,
-      opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.36 : 0.30,
+      opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.36 : 0.76,
       depthTest: true,
       depthWrite: false,
     })
@@ -547,8 +548,8 @@ export function createLevelStageDepth3dLayer({
   camera.up.set(0, 1, 0);
   const environmentMode = resolveDepthEnvironmentMode();
   root.dataset.depthEnvironmentMode = environmentMode;
-  scene.add(new THREE.AmbientLight(0xaeb9c5, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.25 : 0.08));
-  const key = new THREE.DirectionalLight(0xdfeeff, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 1.15 : 0.34);
+  scene.add(new THREE.AmbientLight(0xaeb9c5, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.25 : 0.0));
+  const key = new THREE.DirectionalLight(0xdfeeff, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 1.15 : 0.0);
   key.position.set(-0.3, -0.5, 1.0);
   key.castShadow = false;
   scene.add(key);
