@@ -3,6 +3,8 @@ import * as THREE from "three";
 const BO_WORLD_UNITS = 72;
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
+const DEPTH_OBLIQUE_X_RATIO = 0.18;
+const DEPTH_OBLIQUE_Y_RATIO = -0.14;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -217,16 +219,20 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
   if (!shape) return null;
   const depthPx = Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * BO_WORLD_UNITS;
   const depthOffset = Object.freeze({
-    x: depthPx * 0.18,
-    y: -depthPx * 0.14,
+    x: depthPx * DEPTH_OBLIQUE_X_RATIO,
+    y: depthPx * DEPTH_OBLIQUE_Y_RATIO,
   });
   const model = new THREE.Group();
   model.name = `depth:${String(layer && layer.id || "layer")}:vector_volume`;
+  model.userData.depthLayer = layer;
+  model.userData.worldWidthPx = worldWidthPx;
+  model.userData.worldHeightPx = worldHeightPx;
+  model.userData.depthPx = depthPx;
+  model.userData.baseDepthOffset = depthOffset;
+  model.userData.dynamicWallMeshes = [];
+  model.userData.dynamicEdgeMeshes = [];
 
-  const floorShape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx, {
-    offsetX: depthOffset.x,
-    offsetY: depthOffset.y,
-  });
+  const floorShape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
   const floorGeometry = new THREE.ShapeGeometry(floorShape || shape);
   floorGeometry.translate(0, 0, 0);
   const floorMaterial = buildGraphiteMaterial({ opacity: 0.58, color: 0x303941 });
@@ -234,6 +240,7 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
   floor.renderOrder = 1;
   floor.name = `${model.name}:floor`;
+  model.userData.floorMesh = floor;
   model.add(floor);
 
   const ceilingGeometry = new THREE.ShapeGeometry(shape);
@@ -255,6 +262,8 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
       const walls = new THREE.Mesh(wallGeometry, wallMaterial);
       walls.renderOrder = 2;
       walls.name = `${model.name}:walls`;
+      walls.userData.loop = loop;
+      model.userData.dynamicWallMeshes.push(walls);
       model.add(walls);
     }
     const edgeGeometry = buildVectorLoopEdges(loop, depthOffset, worldWidthPx, worldHeightPx);
@@ -268,11 +277,47 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
         })
       );
       edges.renderOrder = 4;
+      edges.userData.loop = loop;
+      model.userData.dynamicEdgeMeshes.push(edges);
       model.add(edges);
     }
   }
 
   return model;
+}
+
+function disposeGeometry(object = null) {
+  if (object && object.geometry && typeof object.geometry.dispose === "function") {
+    object.geometry.dispose();
+  }
+}
+
+function applyDepthModelOffset(model = null, depthOffset = {}) {
+  if (!model || !model.userData) return;
+  const worldWidthPx = Math.max(1, clampNumber(model.userData.worldWidthPx, 1));
+  const worldHeightPx = Math.max(1, clampNumber(model.userData.worldHeightPx, 1));
+  const dx = clampNumber(depthOffset && depthOffset.x, 0);
+  const dy = clampNumber(depthOffset && depthOffset.y, 0);
+  const floor = model.userData.floorMesh || null;
+  if (floor && floor.position) {
+    floor.position.set(dx, dy, 0);
+  }
+  for (const walls of Array.isArray(model.userData.dynamicWallMeshes) ? model.userData.dynamicWallMeshes : []) {
+    const loop = walls && walls.userData ? walls.userData.loop : null;
+    const geometry = buildVectorWallGeometry(loop, depthOffset, worldWidthPx, worldHeightPx);
+    if (!geometry) continue;
+    disposeGeometry(walls);
+    walls.geometry = geometry;
+  }
+  for (const edges of Array.isArray(model.userData.dynamicEdgeMeshes) ? model.userData.dynamicEdgeMeshes : []) {
+    const loop = edges && edges.userData ? edges.userData.loop : null;
+    const geometry = buildVectorLoopEdges(loop, depthOffset, worldWidthPx, worldHeightPx);
+    if (!geometry) continue;
+    disposeGeometry(edges);
+    edges.geometry = geometry;
+  }
+  model.userData.lastDepthOffsetX = dx;
+  model.userData.lastDepthOffsetY = dy;
 }
 
 function buildDepthGeometryFromSamples({ samples, cols, rows, layer, viewBox, rasterBox, rasterSize, worldWidthPx, worldHeightPx }) {
@@ -521,6 +566,23 @@ export function createLevelStageDepth3dLayer({
     }
   }
 
+  function resolveDynamicDepthOffset(centerXW = 0, centerYW = 0) {
+    const primary = group.children[0] || null;
+    const base = primary && primary.userData ? primary.userData.baseDepthOffset : null;
+    const depthPx = Math.max(0, clampNumber(primary && primary.userData && primary.userData.depthPx, BO_WORLD_UNITS * 10));
+    const baseX = Number.isFinite(Number(base && base.x)) ? Number(base.x) : depthPx * DEPTH_OBLIQUE_X_RATIO;
+    const baseY = Number.isFinite(Number(base && base.y)) ? Number(base.y) : depthPx * DEPTH_OBLIQUE_Y_RATIO;
+    if (!hasParallaxAnchor) {
+      return Object.freeze({ x: baseX, y: baseY });
+    }
+    const parallaxXW = (clampNumber(centerXW, 0) - parallaxAnchorXW) * (1 - parallaxRatio);
+    const parallaxYW = (clampNumber(centerYW, 0) - parallaxAnchorYW) * (1 - parallaxRatio);
+    return Object.freeze({
+      x: baseX + parallaxXW,
+      y: baseY - parallaxYW,
+    });
+  }
+
   function renderFrame({
     camLeft = 0,
     camTop = 0,
@@ -551,14 +613,12 @@ export function createLevelStageDepth3dLayer({
       parallaxAnchorYW = centerYW;
       hasParallaxAnchor = true;
     }
-    const pxW = hasParallaxAnchor
-      ? parallaxAnchorXW + ((centerXW - parallaxAnchorXW) * parallaxRatio)
-      : centerXW;
-    const pyW = hasParallaxAnchor
-      ? parallaxAnchorYW + ((centerYW - parallaxAnchorYW) * parallaxRatio)
-      : centerYW;
-    const cx = toThreeX(pxW, worldWidthPx);
-    const cy = toThreeY(pyW, worldHeightPx);
+    const depthOffset = resolveDynamicDepthOffset(centerXW, centerYW);
+    for (const child of group.children) {
+      applyDepthModelOffset(child, depthOffset);
+    }
+    const cx = toThreeX(centerXW, worldWidthPx);
+    const cy = toThreeY(centerYW, worldHeightPx);
     camera.left = -viewW * 0.5;
     camera.right = viewW * 0.5;
     camera.top = viewH * 0.5;
