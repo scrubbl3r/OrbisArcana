@@ -24,6 +24,13 @@ function parseSvgInlineStyle(styleText = "") {
   return Object.freeze(style);
 }
 
+function isSvgRenderLayerVisible(layer = {}) {
+  const style = parseSvgInlineStyle(layer && layer.style);
+  const display = String((layer && layer.display) || style.display || "").trim().toLowerCase();
+  const visibility = String((layer && layer.visibility) || style.visibility || "").trim().toLowerCase();
+  return display !== "none" && visibility !== "hidden" && visibility !== "collapse";
+}
+
 function parseTranslateTransform(transformText = "") {
   const match = String(transformText || "").match(/translate\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\s*\)/i);
   if (!match) {
@@ -156,6 +163,9 @@ export function parseSvgLayerElements(svgText = "") {
     layers.push(Object.freeze({
       id: readAttr(attrs, "id"),
       label: readAttr(attrs, "inkscape:label"),
+      style: readAttr(attrs, "style"),
+      display: readAttr(attrs, "display"),
+      visibility: readAttr(attrs, "visibility"),
       translate,
       body,
       paths: parseSvgPathElements(body),
@@ -578,7 +588,10 @@ export function buildSvgWorldItemSpawns({
     (Array.isArray(worldItemLayerLabels) ? worldItemLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   const matchingLayers = authoredLayers
-    .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()));
+    .filter((layer) => (
+      allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase())
+      && isSvgRenderLayerVisible(layer)
+    ));
   const spawns = [];
   for (const layer of matchingLayers) {
     const layerLabel = String(layer && layer.label || "").trim();
@@ -660,12 +673,51 @@ export function buildSvgStarsFieldRegions({
   worldHeightPx = 0,
   starsFieldLayerLabels = [],
 } = {}) {
-  const loops = buildSvgBoundaryLoops({
-    svgText,
-    worldWidthPx,
-    worldHeightPx,
-    boundaryLayerLabels: starsFieldLayerLabels,
-  });
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(starsFieldLayerLabels) ? starsFieldLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  const loops = authoredLayers
+    .filter((layer) => (
+      allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase())
+      && isSvgRenderLayerVisible(layer)
+    ))
+    .flatMap((layer) => {
+      const pathLoops = (Array.isArray(layer && layer.paths) ? layer.paths : []).map((path, index) => {
+        const authoredPoints = translatePolylinePoints(
+          parseSvgPolylinePath(path && path.d) || [],
+          layer && layer.translate
+        );
+        if (authoredPoints.length < 3) return null;
+        return Object.freeze({
+          id: String(path && path.id || `stars_field_path_${index + 1}`),
+          kind: "path_loop",
+          authoredPoints,
+          worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+            viewBox,
+            worldWidthPx,
+            worldHeightPx,
+          }))),
+        });
+      });
+      const rectLoops = (Array.isArray(layer && layer.rects) ? layer.rects : []).map((rect, index) => {
+        const authoredRect = translateRect(rect, layer && layer.translate);
+        const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
+        if (authoredPoints.length < 4) return null;
+        return Object.freeze({
+          id: String(rect && rect.id || `stars_field_rect_${index + 1}`),
+          kind: "rect_loop",
+          authoredPoints,
+          worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+            viewBox,
+            worldWidthPx,
+            worldHeightPx,
+          }))),
+        });
+      });
+      return [...pathLoops, ...rectLoops].filter(Boolean);
+    });
   return Object.freeze((Array.isArray(loops) ? loops : []).map((loop, index) => Object.freeze({
     id: String(loop && loop.id || `stars_field_${index + 1}`),
     kind: String(loop && loop.kind || "path_loop"),
@@ -686,6 +738,7 @@ export function buildSvgDepthLayers({
   return Object.freeze(authoredLayers.map((layer, index) => {
     const config = parseDepthLayerLabel(layer && layer.label);
     if (!config) return null;
+    if (!isSvgRenderLayerVisible(layer)) return null;
     const loops = [
       ...((Array.isArray(layer.paths) ? layer.paths : []).map((path, pathIndex) => {
         const authoredPoints = translatePolylinePoints(
