@@ -227,20 +227,26 @@ export function createStudioBootstrap({
     const opt = selectedEffectOption();
     if (!opt) return;
     const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
-    if (!defaults.isCustomEffectOption(opt)) {
+    const profile = draftStore.profilesByValue[String(opt.value || "")];
+    if (!profile) {
       applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
       return;
     }
-    const profile = draftStore.profilesByValue[String(opt.value || "")];
-    if (!profile) return;
     const profileBaseEffect = String(opt.dataset.baseEffect || profile.baseEffect || "");
     const settingsByBase = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
       ? profile.settingsByBaseEffect
       : null;
-    if (!settingsByBase) return;
+    if (!settingsByBase) {
+      applyCurrentEffectSettings(profileBaseEffect || baseEffect, defaultSettingsForBaseEffect(profileBaseEffect || baseEffect));
+      return;
+    }
     const settingsKey = settingsKeyForBaseEffect(profileBaseEffect);
     const settings = settingsByBase[settingsKey] || settingsByBase[profileBaseEffect];
-    if (settings) applyCurrentEffectSettings(profileBaseEffect, settings);
+    if (settings) {
+      applyCurrentEffectSettings(profileBaseEffect, settings);
+    } else {
+      applyCurrentEffectSettings(profileBaseEffect, defaultSettingsForBaseEffect(profileBaseEffect));
+    }
   }
 
   const studioSurfaceActivation = createStudioSurfaceActivation({

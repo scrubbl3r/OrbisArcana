@@ -138,6 +138,12 @@ export function buildEffectLibraryOptionsFromRegistry({
 
   const omitted = new Set((Array.isArray(omitRegistryIds) ? omitRegistryIds : []).map((id) => String(id || "")));
   const groups = new Map();
+  const applyStoredProfileMeta = (opt) => {
+    const profile = draftStore.profilesByValue[String((opt && opt.value) || "")];
+    if (!profile || typeof profile !== "object") return;
+    opt.dataset.locked = profile.locked ? "true" : "false";
+    if (profile.registryId) opt.dataset.registryId = String(profile.registryId);
+  };
   for (const entry of Array.isArray(registry) ? registry : []) {
     if (!entry) continue;
     if (omitted.has(String(entry.id || ""))) continue;
@@ -160,6 +166,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     opt.dataset.spawnBaseEffect = baseEffect;
     opt.dataset.category = category;
     opt.dataset.locked = "true";
+    applyStoredProfileMeta(opt);
     groups.get(category).appendChild(opt);
   }
 
@@ -181,6 +188,7 @@ export function buildEffectLibraryOptionsFromRegistry({
     opt.dataset.category = category;
     opt.dataset.locked = String(optionDef.locked ? "true" : "false");
     if (optionDef.registryId) opt.dataset.registryId = String(optionDef.registryId);
+    applyStoredProfileMeta(opt);
     if (category === "orb" && targetGroup.firstChild) {
       targetGroup.insertBefore(opt, targetGroup.firstChild);
     } else {

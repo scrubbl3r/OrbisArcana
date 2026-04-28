@@ -1519,8 +1519,8 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260427c"),
-      import("./vfx-studio-state.js?v=20260425d"),
+      import("./vfx-studio-bootstrap.js?v=20260428a"),
+      import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
@@ -2118,20 +2118,26 @@
       const opt = selectedEffectOption();
       if (!opt) return;
       const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
-      if (!isCustomEffectOption(opt)) {
+      const profile = draftStore.profilesByValue[String(opt.value || "")];
+      if (!profile) {
         applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
         return;
       }
-      const profile = draftStore.profilesByValue[String(opt.value || "")];
-      if (!profile) return;
       const profileBaseEffect = String(opt.dataset.baseEffect || profile.baseEffect || "");
       const settingsByBase = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
         ? profile.settingsByBaseEffect
         : null;
-      if (!settingsByBase) return;
+      if (!settingsByBase) {
+        applyCurrentEffectSettings(profileBaseEffect || baseEffect, defaultSettingsForBaseEffect(profileBaseEffect || baseEffect));
+        return;
+      }
       const settingsKey = settingsKeyForBaseEffect(profileBaseEffect);
       const settings = settingsByBase[settingsKey] || settingsByBase[profileBaseEffect];
-      if (settings) applyCurrentEffectSettings(profileBaseEffect, settings);
+      if (settings) {
+        applyCurrentEffectSettings(profileBaseEffect, settings);
+      } else {
+        applyCurrentEffectSettings(profileBaseEffect, defaultSettingsForBaseEffect(profileBaseEffect));
+      }
     }
 
     function saveDraft(){
