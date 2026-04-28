@@ -12,6 +12,7 @@ export function createLevelStageRuntimeAdapter({
   refs = {},
   level = null,
   state = null,
+  depth3dRuntime = null,
   unbindResize = () => {},
 } = {}) {
   const core = createStageRuntimeAdapterCore({
@@ -66,8 +67,22 @@ export function createLevelStageRuntimeAdapter({
         viewportWidthPx: clampNumber(rect.width, 0),
         viewportHeightPx: clampNumber(rect.height, 0),
       });
+      if (depth3dRuntime && typeof depth3dRuntime.renderFrame === "function") {
+        depth3dRuntime.renderFrame({
+          camLeft: Number(camLeft || 0),
+          camTop: Number(camTop || 0),
+          zoom: Number(zoom || state.previewZoom),
+          viewportWidthPx: clampNumber(rect.width, 0),
+          viewportHeightPx: clampNumber(rect.height, 0),
+          worldWidthPx: state.worldWidthPx,
+          worldHeightPx: state.worldHeightPx,
+        });
+      }
     },
     dispose() {
+      if (depth3dRuntime && typeof depth3dRuntime.dispose === "function") {
+        depth3dRuntime.dispose();
+      }
       unbindResize();
     },
   });

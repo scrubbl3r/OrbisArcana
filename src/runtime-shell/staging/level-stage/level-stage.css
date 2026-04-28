@@ -29,6 +29,19 @@
   z-index: 1;
 }
 
+.levelStageDepth3dLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.levelStageDepth3dLayer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .levelStageWorld {
   position: absolute;
   left: 0;

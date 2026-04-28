@@ -6,7 +6,8 @@ import {
   applyOrbFractureVisualCssVars,
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
-import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260425w";
+import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260428a";
+import { createLevelStageDepth3dLayer } from "./level-stage-depth3d.js?v=20260428a";
 import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425w";
 import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260425w";
 import {
@@ -84,6 +85,7 @@ export function renderLevelStage(root, {
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
+        <div class="levelStageDepth3dLayer" data-level-stage-depth3d-layer="true" aria-hidden="true" hidden></div>
         <div class="levelStageWorldDock" aria-hidden="true">
           <div class="levelStageWorld">
             <svg class="levelStageWorldOverlay" viewBox="0 0 ${worldSize.widthPx} ${worldSize.heightPx}" preserveAspectRatio="none" aria-hidden="true"></svg>
@@ -111,6 +113,7 @@ export function renderLevelStage(root, {
     root,
     stage: root.querySelector(".levelStage"),
     physStage: root.querySelector(".levelStageViewport"),
+    depth3dLayer: root.querySelector("[data-level-stage-depth3d-layer='true']"),
     worldDock: root.querySelector(".levelStageWorldDock"),
     world: root.querySelector(".levelStageWorld"),
     worldOverlay: root.querySelector(".levelStageWorldOverlay"),
@@ -128,6 +131,10 @@ export function renderLevelStage(root, {
     deathPanel: root.querySelector("[data-level-stage-death-panel='true']"),
     tryAgainBtn: root.querySelector("[data-level-stage-try-again='true']"),
   };
+  const depth3dRuntime = createLevelStageDepth3dLayer({
+    root: refs.depth3dLayer,
+    labelEl: refs.labelMeta,
+  });
 
   const controller = createAuthoredStageController({
     refs,
@@ -142,6 +149,16 @@ export function renderLevelStage(root, {
       overlayId: "levelStageWorldOverlay",
     }),
     previewZoomFallback: LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM,
+    onSceneHydrated: (authoredScene, state) => {
+      if (depth3dRuntime && typeof depth3dRuntime.loadScene === "function") {
+        void depth3dRuntime.loadScene(authoredScene, state);
+      }
+    },
+    onCameraFrame: (frame) => {
+      if (depth3dRuntime && typeof depth3dRuntime.renderFrame === "function") {
+        depth3dRuntime.renderFrame(frame);
+      }
+    },
   });
   const state = controller.state;
   state.externalCameraAuthority = !!externalCameraAuthority;
@@ -159,6 +176,7 @@ export function renderLevelStage(root, {
       refs,
       level,
       state,
+      depth3dRuntime,
       unbindResize: () => controller.dispose(),
     }),
     level,

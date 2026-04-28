@@ -17,7 +17,7 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
+function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25, onCameraFrame = () => {}) {
   if (!refs || !refs.physStage || !refs.world) return;
   if (state && state.externalCameraAuthority) return;
   const rect = typeof refs.physStage.getBoundingClientRect === "function"
@@ -96,6 +96,17 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25) {
     viewportWidthPx,
     viewportHeightPx,
   });
+  if (typeof onCameraFrame === "function") {
+    onCameraFrame({
+      camLeft: frame.camLeft,
+      camTop: frame.camTop,
+      zoom: frame.zoom,
+      viewportWidthPx,
+      viewportHeightPx,
+      worldWidthPx: state.worldWidthPx,
+      worldHeightPx: state.worldHeightPx,
+    });
+  }
 
   if (refs.labelMeta) {
     const authoredSpawn = state.spawn && state.spawn.authoredCenter ? state.spawn.authoredCenter : null;
@@ -130,6 +141,8 @@ export function createAuthoredStageController({
   initialTarget = "spawn",
   buildOverlayMarkup = () => "",
   previewZoomFallback = 0.25,
+  onSceneHydrated = () => {},
+  onCameraFrame = () => {},
 } = {}) {
   const state = {
     worldWidthPx,
@@ -149,7 +162,7 @@ export function createAuthoredStageController({
     externalCameraAuthority: false,
   };
 
-  const updateCamera = () => updateAuthoredStageCamera(refs, state, previewZoomFallback);
+  const updateCamera = () => updateAuthoredStageCamera(refs, state, previewZoomFallback, onCameraFrame);
   const unbindResize = bindAuthoredStageResize(refs, updateCamera);
 
   async function hydrateScene() {
@@ -181,6 +194,9 @@ export function createAuthoredStageController({
         worldHeightPx: state.worldHeightPx,
       });
       state.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(refs.worldOverlay);
+      if (typeof onSceneHydrated === "function") {
+        onSceneHydrated(authoredScene, state);
+      }
       if (refs.stage) refs.stage.dataset.levelStageState = "ready";
       if (state.cameraRuntime && typeof state.cameraRuntime.reset === "function") {
         state.cameraRuntime.reset();

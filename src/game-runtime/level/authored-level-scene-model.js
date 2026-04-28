@@ -47,6 +47,7 @@ export function buildAuthoredLevelSceneModel({
     worldItemSpawns: Array.isArray(safeSummary && safeSummary.worldItemSpawns) ? safeSummary.worldItemSpawns : [],
     lineArtShapes: Array.isArray(safeSummary && safeSummary.lineArtShapes) ? safeSummary.lineArtShapes : [],
     starsFieldRegions: Array.isArray(safeSummary && safeSummary.starsFieldRegions) ? safeSummary.starsFieldRegions : [],
+    depthLayers: Array.isArray(safeSummary && safeSummary.depthLayers) ? safeSummary.depthLayers : [],
   });
 }
 

@@ -35,6 +35,52 @@ function parseTranslateTransform(transformText = "") {
   });
 }
 
+function parseBoValue(value = "", fallback = 0) {
+  const raw = String(value || "").trim().toLowerCase();
+  const match = raw.match(/^(-?(?:\d*\.\d+|\d+))(?:\s*bo)?$/);
+  if (!match) return fallback;
+  const n = Number(match[1]);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function parseDepthLayerLabel(label = "") {
+  const text = String(label || "").trim();
+  if (!text.toLowerCase().startsWith("depth:")) return null;
+  const parts = text.split(/\s+/).filter(Boolean);
+  const name = String(parts.shift() || "").slice("depth:".length).trim();
+  if (!name) return null;
+  const config = {
+    id: name,
+    label: text,
+    maxDepthBO: 10,
+    orbZBO: 4,
+    material: "graphite",
+    tessellation: 24,
+  };
+  for (const part of parts) {
+    const [rawKey, ...rawValueParts] = String(part || "").split("=");
+    const key = String(rawKey || "").trim().toLowerCase();
+    const value = rawValueParts.join("=").trim();
+    if (!key || !value) continue;
+    if (key === "max" || key === "depth" || key === "maxdepth") {
+      config.maxDepthBO = Math.max(0, parseBoValue(value, config.maxDepthBO));
+      continue;
+    }
+    if (key === "z" || key === "orbz" || key === "orb_z") {
+      config.orbZBO = Math.max(0, parseBoValue(value, config.orbZBO));
+      continue;
+    }
+    if (key === "material" || key === "mat") {
+      config.material = String(value || config.material).trim().toLowerCase();
+      continue;
+    }
+    if (key === "tess" || key === "tessellation") {
+      config.tessellation = Math.max(2, Math.round(clampNumber(value, config.tessellation)));
+    }
+  }
+  return Object.freeze(config);
+}
+
 export function parseSvgViewBox(svgText = "") {
   const match = String(svgText || "").match(/viewBox="([^"]+)"/i);
   if (!match) {
@@ -118,6 +164,16 @@ export function parseSvgLayerElements(svgText = "") {
     }));
   }
   return Object.freeze(layers);
+}
+
+export function extractSvgDefsMarkup(svgText = "") {
+  const defs = [];
+  const matches = String(svgText || "").matchAll(/<defs\b[^>]*>[\s\S]*?<\/defs>/gi);
+  for (const match of matches) {
+    const markup = String(match && match[0] || "").trim();
+    if (markup) defs.push(markup);
+  }
+  return Object.freeze(defs);
 }
 
 function tokenizePathData(pathData = "") {
@@ -619,6 +675,63 @@ export function buildSvgStarsFieldRegions({
   })));
 }
 
+export function buildSvgDepthLayers({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const defsMarkup = extractSvgDefsMarkup(svgText);
+  return Object.freeze(authoredLayers.map((layer, index) => {
+    const config = parseDepthLayerLabel(layer && layer.label);
+    if (!config) return null;
+    const loops = [
+      ...((Array.isArray(layer.paths) ? layer.paths : []).map((path, pathIndex) => {
+        const authoredPoints = translatePolylinePoints(
+          parseSvgPolylinePath(path && path.d) || [],
+          layer && layer.translate
+        );
+        if (authoredPoints.length < 3) return null;
+        return Object.freeze({
+          id: String(path && path.id || `${config.id}_path_${pathIndex + 1}`),
+          kind: "path_loop",
+          authoredPoints,
+          worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+            viewBox,
+            worldWidthPx,
+            worldHeightPx,
+          }))),
+        });
+      })),
+      ...((Array.isArray(layer.rects) ? layer.rects : []).map((rect, rectIndex) => {
+        const authoredRect = translateRect(rect, layer && layer.translate);
+        const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
+        if (authoredPoints.length < 4) return null;
+        return Object.freeze({
+          id: String(rect && rect.id || `${config.id}_rect_${rectIndex + 1}`),
+          kind: "rect_loop",
+          authoredPoints,
+          worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+            viewBox,
+            worldWidthPx,
+            worldHeightPx,
+          }))),
+        });
+      })),
+    ].filter(Boolean);
+    return Object.freeze({
+      ...config,
+      sourceLayerId: String(layer && layer.id || `depth_layer_${index + 1}`),
+      translate: layer && layer.translate ? layer.translate : Object.freeze({ x: 0, y: 0 }),
+      authoredBody: String(layer && layer.body || ""),
+      defsMarkup,
+      boundaryBox: resolveBoundaryBoxFromLoops(loops),
+      loops: Object.freeze(loops),
+    });
+  }).filter(Boolean));
+}
+
 export function buildBoundaryTileMask({
   loops = [],
   worldWidthPx = 0,
@@ -721,6 +834,11 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     starsFieldLayerLabels,
   });
+  const depthLayers = buildSvgDepthLayers({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+  });
   const boundaryTileMask = buildBoundaryTileMask({
     loops,
     worldWidthPx,
@@ -740,6 +858,7 @@ export function summarizeSvgLevelSource({
     worldItemSpawns: Object.freeze(worldItemSpawns),
     lineArtShapes: Object.freeze(lineArtShapes),
     starsFieldRegions: Object.freeze(starsFieldRegions),
+    depthLayers: Object.freeze(depthLayers),
     boundaryBox,
     boundaryTileMask,
   });
