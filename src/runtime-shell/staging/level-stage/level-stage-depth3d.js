@@ -3,8 +3,7 @@ import * as THREE from "three";
 const BO_WORLD_UNITS = 72;
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
-const DEPTH_OBLIQUE_X_RATIO = 0.18;
-const DEPTH_OBLIQUE_Y_RATIO = -0.14;
+const DEPTH_CAMERA_FOV_DEG = 42;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -137,10 +136,7 @@ function toThreePointFromWorld(point = {}, worldWidthPx = 1, worldHeightPx = 1, 
   });
 }
 
-function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1, {
-  offsetX = 0,
-  offsetY = 0,
-} = {}) {
+function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
   const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
   const cleanPoints = points.length > 1
     ? points.filter((point, index) => {
@@ -153,33 +149,29 @@ function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1, {
       })
     : points;
   if (cleanPoints.length < 3) return null;
-  const startBase = toThreePointFromWorld(cleanPoints[0], worldWidthPx, worldHeightPx, 0);
-  const start = Object.freeze({ ...startBase, x: startBase.x + offsetX, y: startBase.y + offsetY });
+  const start = toThreePointFromWorld(cleanPoints[0], worldWidthPx, worldHeightPx, 0);
   const shape = new THREE.Shape();
   shape.moveTo(start.x, start.y);
   for (let i = 1; i < cleanPoints.length; i += 1) {
-    const base = toThreePointFromWorld(cleanPoints[i], worldWidthPx, worldHeightPx, 0);
-    const p = Object.freeze({ ...base, x: base.x + offsetX, y: base.y + offsetY });
+    const p = toThreePointFromWorld(cleanPoints[i], worldWidthPx, worldHeightPx, 0);
     shape.lineTo(p.x, p.y);
   }
   shape.closePath();
   return shape;
 }
 
-function buildVectorWallGeometry(loop = {}, depthOffset = {}, worldWidthPx = 1, worldHeightPx = 1) {
+function buildVectorWallGeometry(loop = {}, depthPx = 0, worldWidthPx = 1, worldHeightPx = 1) {
   const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
   const positions = [];
   const indices = [];
   const colors = [];
   const wallColor = new THREE.Color(0x2b3137);
-  const dx = clampNumber(depthOffset && depthOffset.x, 0);
-  const dy = clampNumber(depthOffset && depthOffset.y, 0);
   if (points.length < 3) return null;
   for (let i = 1; i < points.length; i += 1) {
-    const aTop = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 3);
-    const bTop = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 3);
-    const bBack = Object.freeze({ ...bTop, x: bTop.x + dx, y: bTop.y + dy, z: 1 });
-    const aBack = Object.freeze({ ...aTop, x: aTop.x + dx, y: aTop.y + dy, z: 1 });
+    const aTop = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 0);
+    const bTop = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 0);
+    const bBack = Object.freeze({ ...bTop, z: -depthPx });
+    const aBack = Object.freeze({ ...aTop, z: -depthPx });
     addQuad(positions, indices, colors, aTop, bTop, bBack, aBack, wallColor);
   }
   if (!positions.length) return null;
@@ -191,21 +183,19 @@ function buildVectorWallGeometry(loop = {}, depthOffset = {}, worldWidthPx = 1, 
   return geometry;
 }
 
-function buildVectorLoopEdges(loop = {}, depthOffset = {}, worldWidthPx = 1, worldHeightPx = 1) {
+function buildVectorLoopEdges(loop = {}, depthPx = 0, worldWidthPx = 1, worldHeightPx = 1) {
   const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
   const positions = [];
-  const dx = clampNumber(depthOffset && depthOffset.x, 0);
-  const dy = clampNumber(depthOffset && depthOffset.y, 0);
   if (points.length < 2) return null;
   for (let i = 1; i < points.length; i += 1) {
-    const a = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 5);
-    const b = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 5);
+    const a = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 1);
+    const b = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 1);
     positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
-    positions.push(a.x + dx, a.y + dy, 1, b.x + dx, b.y + dy, 1);
+    positions.push(a.x, a.y, -depthPx, b.x, b.y, -depthPx);
   }
   for (let i = 0; i < points.length; i += 1) {
-    const top = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 4);
-    positions.push(top.x, top.y, 4, top.x + dx, top.y + dy, 1);
+    const top = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 1);
+    positions.push(top.x, top.y, 1, top.x, top.y, -depthPx);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -218,23 +208,16 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
   const shape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
   if (!shape) return null;
   const depthPx = Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * BO_WORLD_UNITS;
-  const depthOffset = Object.freeze({
-    x: depthPx * DEPTH_OBLIQUE_X_RATIO,
-    y: depthPx * DEPTH_OBLIQUE_Y_RATIO,
-  });
   const model = new THREE.Group();
   model.name = `depth:${String(layer && layer.id || "layer")}:vector_volume`;
   model.userData.depthLayer = layer;
   model.userData.worldWidthPx = worldWidthPx;
   model.userData.worldHeightPx = worldHeightPx;
   model.userData.depthPx = depthPx;
-  model.userData.baseDepthOffset = depthOffset;
-  model.userData.dynamicWallMeshes = [];
-  model.userData.dynamicEdgeMeshes = [];
 
   const floorShape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
   const floorGeometry = new THREE.ShapeGeometry(floorShape || shape);
-  floorGeometry.translate(0, 0, 0);
+  floorGeometry.translate(0, 0, -depthPx);
   const floorMaterial = buildGraphiteMaterial({ opacity: 0.58, color: 0x303941 });
   floorMaterial.depthWrite = false;
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
@@ -244,7 +227,7 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
   model.add(floor);
 
   const ceilingGeometry = new THREE.ShapeGeometry(shape);
-  ceilingGeometry.translate(0, 0, 4);
+  ceilingGeometry.translate(0, 0, 0);
   const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.08, color: 0x6a7480 });
   ceilingMaterial.depthWrite = false;
   const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
@@ -253,7 +236,7 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
   model.add(ceiling);
 
   for (const loop of loops) {
-    const wallGeometry = buildVectorWallGeometry(loop, depthOffset, worldWidthPx, worldHeightPx);
+    const wallGeometry = buildVectorWallGeometry(loop, depthPx, worldWidthPx, worldHeightPx);
     if (wallGeometry) {
       const wallMaterial = buildGraphiteMaterial({ opacity: 0.80, color: 0x232a31 });
       wallMaterial.vertexColors = true;
@@ -263,10 +246,9 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
       walls.renderOrder = 2;
       walls.name = `${model.name}:walls`;
       walls.userData.loop = loop;
-      model.userData.dynamicWallMeshes.push(walls);
       model.add(walls);
     }
-    const edgeGeometry = buildVectorLoopEdges(loop, depthOffset, worldWidthPx, worldHeightPx);
+    const edgeGeometry = buildVectorLoopEdges(loop, depthPx, worldWidthPx, worldHeightPx);
     if (edgeGeometry) {
       const edges = new THREE.LineSegments(
         edgeGeometry,
@@ -278,46 +260,11 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
       );
       edges.renderOrder = 4;
       edges.userData.loop = loop;
-      model.userData.dynamicEdgeMeshes.push(edges);
       model.add(edges);
     }
   }
 
   return model;
-}
-
-function disposeGeometry(object = null) {
-  if (object && object.geometry && typeof object.geometry.dispose === "function") {
-    object.geometry.dispose();
-  }
-}
-
-function applyDepthModelOffset(model = null, depthOffset = {}) {
-  if (!model || !model.userData) return;
-  const worldWidthPx = Math.max(1, clampNumber(model.userData.worldWidthPx, 1));
-  const worldHeightPx = Math.max(1, clampNumber(model.userData.worldHeightPx, 1));
-  const dx = clampNumber(depthOffset && depthOffset.x, 0);
-  const dy = clampNumber(depthOffset && depthOffset.y, 0);
-  const floor = model.userData.floorMesh || null;
-  if (floor && floor.position) {
-    floor.position.set(dx, dy, 0);
-  }
-  for (const walls of Array.isArray(model.userData.dynamicWallMeshes) ? model.userData.dynamicWallMeshes : []) {
-    const loop = walls && walls.userData ? walls.userData.loop : null;
-    const geometry = buildVectorWallGeometry(loop, depthOffset, worldWidthPx, worldHeightPx);
-    if (!geometry) continue;
-    disposeGeometry(walls);
-    walls.geometry = geometry;
-  }
-  for (const edges of Array.isArray(model.userData.dynamicEdgeMeshes) ? model.userData.dynamicEdgeMeshes : []) {
-    const loop = edges && edges.userData ? edges.userData.loop : null;
-    const geometry = buildVectorLoopEdges(loop, depthOffset, worldWidthPx, worldHeightPx);
-    if (!geometry) continue;
-    disposeGeometry(edges);
-    edges.geometry = geometry;
-  }
-  model.userData.lastDepthOffsetX = dx;
-  model.userData.lastDepthOffsetY = dy;
 }
 
 function buildDepthGeometryFromSamples({ samples, cols, rows, layer, viewBox, rasterBox, rasterSize, worldWidthPx, worldHeightPx }) {
@@ -530,7 +477,7 @@ export function createLevelStageDepth3dLayer({
   root.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 12000);
+  const camera = new THREE.PerspectiveCamera(DEPTH_CAMERA_FOV_DEG, 1, 1, 24000);
   camera.up.set(0, 1, 0);
   scene.add(new THREE.AmbientLight(0xaeb9c5, 0.25));
   const key = new THREE.DirectionalLight(0xdfeeff, 1.15);
@@ -544,10 +491,6 @@ export function createLevelStageDepth3dLayer({
   let worldHeightPx = 1;
   let depthLayerCount = 0;
   let lastFrame = null;
-  let parallaxAnchorXW = 0;
-  let parallaxAnchorYW = 0;
-  let parallaxRatio = 0.82;
-  let hasParallaxAnchor = false;
 
   function setLabel(text) {
     if (labelEl) {
@@ -564,23 +507,6 @@ export function createLevelStageDepth3dLayer({
         if (node.material && typeof node.material.dispose === "function") node.material.dispose();
       });
     }
-  }
-
-  function resolveDynamicDepthOffset(centerXW = 0, centerYW = 0) {
-    const primary = group.children[0] || null;
-    const base = primary && primary.userData ? primary.userData.baseDepthOffset : null;
-    const depthPx = Math.max(0, clampNumber(primary && primary.userData && primary.userData.depthPx, BO_WORLD_UNITS * 10));
-    const baseX = Number.isFinite(Number(base && base.x)) ? Number(base.x) : depthPx * DEPTH_OBLIQUE_X_RATIO;
-    const baseY = Number.isFinite(Number(base && base.y)) ? Number(base.y) : depthPx * DEPTH_OBLIQUE_Y_RATIO;
-    if (!hasParallaxAnchor) {
-      return Object.freeze({ x: baseX, y: baseY });
-    }
-    const parallaxXW = (clampNumber(centerXW, 0) - parallaxAnchorXW) * (1 - parallaxRatio);
-    const parallaxYW = (clampNumber(centerYW, 0) - parallaxAnchorYW) * (1 - parallaxRatio);
-    return Object.freeze({
-      x: baseX + parallaxXW,
-      y: baseY - parallaxYW,
-    });
   }
 
   function renderFrame({
@@ -608,22 +534,14 @@ export function createLevelStageDepth3dLayer({
     const viewH = height / safeZoom;
     const centerXW = clampNumber(camLeft, 0) + (viewW * 0.5);
     const centerYW = clampNumber(camTop, 0) + (viewH * 0.5);
-    if (!hasParallaxAnchor && !isBootFrame) {
-      parallaxAnchorXW = centerXW;
-      parallaxAnchorYW = centerYW;
-      hasParallaxAnchor = true;
-    }
-    const depthOffset = resolveDynamicDepthOffset(centerXW, centerYW);
-    for (const child of group.children) {
-      applyDepthModelOffset(child, depthOffset);
-    }
     const cx = toThreeX(centerXW, worldWidthPx);
     const cy = toThreeY(centerYW, worldHeightPx);
-    camera.left = -viewW * 0.5;
-    camera.right = viewW * 0.5;
-    camera.top = viewH * 0.5;
-    camera.bottom = -viewH * 0.5;
-    camera.position.set(cx, cy, 1800);
+    const fovRad = THREE.MathUtils.degToRad(camera.fov);
+    const cameraZ = Math.max(64, viewH / (2 * Math.tan(fovRad * 0.5)));
+    camera.aspect = width / height;
+    camera.near = Math.max(1, cameraZ * 0.02);
+    camera.far = Math.max(24000, cameraZ + (BO_WORLD_UNITS * 32));
+    camera.position.set(cx, cy, cameraZ);
     camera.lookAt(cx, cy, 0);
     camera.updateProjectionMatrix();
     renderer.render(scene, camera);
@@ -668,13 +586,6 @@ export function createLevelStageDepth3dLayer({
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
-      hasParallaxAnchor = false;
-      parallaxAnchorXW = 0;
-      parallaxAnchorYW = 0;
-      const primaryLayer = layers[0] || null;
-      const depthBO = Math.max(0, clampNumber(primaryLayer && primaryLayer.orbZBO, 4));
-      const maxDepthBO = Math.max(1, clampNumber(primaryLayer && primaryLayer.maxDepthBO, 10));
-      parallaxRatio = Math.max(0.55, Math.min(0.95, 1 - ((depthBO / maxDepthBO) * 0.35)));
       setLabel(resolveDepthLayerLabel(layers));
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({
