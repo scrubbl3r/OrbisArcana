@@ -127,6 +127,129 @@ function addQuad(positions, indices, colors, a, b, c, d, color) {
   indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
 }
 
+function toThreePointFromWorld(point = {}, worldWidthPx = 1, worldHeightPx = 1, z = 0) {
+  return Object.freeze({
+    x: toThreeX(clampNumber(point && point.xW, 0), worldWidthPx),
+    y: toThreeY(clampNumber(point && point.yW, 0), worldHeightPx),
+    z,
+  });
+}
+
+function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
+  const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
+  const cleanPoints = points.length > 1
+    ? points.filter((point, index) => {
+        if (index <= 0) return true;
+        const prev = points[index - 1] || {};
+        return (
+          Math.abs(clampNumber(point && point.xW, 0) - clampNumber(prev && prev.xW, 0)) > 0.001
+          || Math.abs(clampNumber(point && point.yW, 0) - clampNumber(prev && prev.yW, 0)) > 0.001
+        );
+      })
+    : points;
+  if (cleanPoints.length < 3) return null;
+  const start = toThreePointFromWorld(cleanPoints[0], worldWidthPx, worldHeightPx, 0);
+  const shape = new THREE.Shape();
+  shape.moveTo(start.x, start.y);
+  for (let i = 1; i < cleanPoints.length; i += 1) {
+    const p = toThreePointFromWorld(cleanPoints[i], worldWidthPx, worldHeightPx, 0);
+    shape.lineTo(p.x, p.y);
+  }
+  shape.closePath();
+  return shape;
+}
+
+function buildVectorWallGeometry(loop = {}, depthPx = 0, worldWidthPx = 1, worldHeightPx = 1) {
+  const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
+  const positions = [];
+  const indices = [];
+  const colors = [];
+  const wallColor = new THREE.Color(0x2b3137);
+  if (points.length < 3) return null;
+  for (let i = 1; i < points.length; i += 1) {
+    const aTop = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 0);
+    const bTop = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 0);
+    const bBack = Object.freeze({ ...bTop, z: -depthPx });
+    const aBack = Object.freeze({ ...aTop, z: -depthPx });
+    addQuad(positions, indices, colors, aTop, bTop, bBack, aBack, wallColor);
+  }
+  if (!positions.length) return null;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function buildVectorLoopEdges(loop = {}, depthPx = 0, worldWidthPx = 1, worldHeightPx = 1) {
+  const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
+  const positions = [];
+  if (points.length < 2) return null;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 2);
+    const b = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 2);
+    positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
+  }
+  for (const point of points) {
+    const top = toThreePointFromWorld(point, worldWidthPx, worldHeightPx, 0);
+    positions.push(top.x, top.y, 0, top.x, top.y, -depthPx);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  return geometry;
+}
+
+function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
+  const loops = Array.isArray(layer && layer.loops) ? layer.loops : [];
+  const primaryLoop = loops[0] || null;
+  const shape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
+  if (!shape) return null;
+  const depthPx = Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * BO_WORLD_UNITS;
+  const model = new THREE.Group();
+  model.name = `depth:${String(layer && layer.id || "layer")}:vector_volume`;
+
+  const floorGeometry = new THREE.ShapeGeometry(shape);
+  floorGeometry.translate(0, 0, -depthPx);
+  const floorMaterial = buildGraphiteMaterial({ opacity: 0.72, color: 0x313941 });
+  floorMaterial.depthWrite = false;
+  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.name = `${model.name}:floor`;
+  model.add(floor);
+
+  const ceilingGeometry = new THREE.ShapeGeometry(shape);
+  const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.10, color: 0x58636d });
+  ceilingMaterial.depthWrite = false;
+  const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+  ceiling.name = `${model.name}:ceiling`;
+  model.add(ceiling);
+
+  for (const loop of loops) {
+    const wallGeometry = buildVectorWallGeometry(loop, depthPx, worldWidthPx, worldHeightPx);
+    if (wallGeometry) {
+      const wallMaterial = buildGraphiteMaterial({ opacity: 0.80, color: 0x232a31 });
+      wallMaterial.vertexColors = true;
+      wallMaterial.needsUpdate = true;
+      const walls = new THREE.Mesh(wallGeometry, wallMaterial);
+      walls.name = `${model.name}:walls`;
+      model.add(walls);
+    }
+    const edgeGeometry = buildVectorLoopEdges(loop, depthPx, worldWidthPx, worldHeightPx);
+    if (edgeGeometry) {
+      model.add(new THREE.LineSegments(
+        edgeGeometry,
+        new THREE.LineBasicMaterial({
+          color: 0x55616c,
+          transparent: true,
+          opacity: 0.48,
+        })
+      ));
+    }
+  }
+
+  return model;
+}
+
 function buildDepthGeometryFromSamples({ samples, cols, rows, layer, viewBox, rasterBox, rasterSize, worldWidthPx, worldHeightPx }) {
   const positions = [];
   const indices = [];
@@ -246,6 +369,9 @@ function buildCeilingGeometryFromSamples({ samples, cols, rows, viewBox, rasterB
 }
 
 async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx }) {
+  const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx });
+  if (vectorMesh) return vectorMesh;
+
   const aspect = Math.max(0.1, clampNumber(viewBox.width, 1) / Math.max(1, clampNumber(viewBox.height, 1)));
   const rasterWidth = aspect >= 1 ? PREVIEW_RASTER_SIZE : Math.max(64, Math.round(PREVIEW_RASTER_SIZE * aspect));
   const rasterHeight = aspect >= 1 ? Math.max(64, Math.round(PREVIEW_RASTER_SIZE / aspect)) : PREVIEW_RASTER_SIZE;
@@ -348,6 +474,9 @@ export function createLevelStageDepth3dLayer({
   let worldHeightPx = 1;
   let depthLayerCount = 0;
   let lastFrame = null;
+  let parallaxAnchorXW = 0;
+  let parallaxAnchorYW = 0;
+  let parallaxRatio = 0.82;
 
   function setLabel(text) {
     if (labelEl) {
@@ -389,14 +518,16 @@ export function createLevelStageDepth3dLayer({
     const viewH = height / safeZoom;
     const centerXW = clampNumber(camLeft, 0) + (viewW * 0.5);
     const centerYW = clampNumber(camTop, 0) + (viewH * 0.5);
-    const cx = toThreeX(centerXW, worldWidthPx);
-    const cy = toThreeY(centerYW, worldHeightPx);
+    const pxW = parallaxAnchorXW + ((centerXW - parallaxAnchorXW) * parallaxRatio);
+    const pyW = parallaxAnchorYW + ((centerYW - parallaxAnchorYW) * parallaxRatio);
+    const cx = toThreeX(pxW, worldWidthPx);
+    const cy = toThreeY(pyW, worldHeightPx);
     camera.left = -viewW * 0.5;
     camera.right = viewW * 0.5;
     camera.top = viewH * 0.5;
     camera.bottom = -viewH * 0.5;
-    camera.position.set(cx, cy - 180, 1800);
-    camera.lookAt(cx, cy, -360);
+    camera.position.set(cx, cy, 1800);
+    camera.lookAt(cx, cy, 0);
     camera.updateProjectionMatrix();
     renderer.render(scene, camera);
   }
@@ -440,6 +571,17 @@ export function createLevelStageDepth3dLayer({
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
+      const primaryBox = layers[0] && layers[0].boundaryBox ? layers[0].boundaryBox : null;
+      parallaxAnchorXW = primaryBox
+        ? (clampNumber(primaryBox.leftXW, 0) + clampNumber(primaryBox.rightXW, 0)) * 0.5
+        : worldWidthPx * 0.5;
+      parallaxAnchorYW = primaryBox
+        ? (clampNumber(primaryBox.topYW, 0) + clampNumber(primaryBox.bottomYW, 0)) * 0.5
+        : worldHeightPx * 0.5;
+      const primaryLayer = layers[0] || null;
+      const depthBO = Math.max(0, clampNumber(primaryLayer && primaryLayer.orbZBO, 4));
+      const maxDepthBO = Math.max(1, clampNumber(primaryLayer && primaryLayer.maxDepthBO, 10));
+      parallaxRatio = Math.max(0.55, Math.min(0.95, 1 - ((depthBO / maxDepthBO) * 0.35)));
       setLabel(resolveDepthLayerLabel(layers));
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({
