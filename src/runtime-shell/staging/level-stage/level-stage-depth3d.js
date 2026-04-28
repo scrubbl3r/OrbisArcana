@@ -1,10 +1,18 @@
 import * as THREE from "three";
 import { createOrb3dRuntime } from "../../../game-runtime/orb/orb-3d-runtime.js";
+import {
+  LEVEL_DEPTH_CAMERA_FOV_DEG,
+  LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
+  resolveApparentDepthScale,
+  resolveDepthCameraZ,
+  resolveOrbTravelZBO,
+} from "../../../game-runtime/level/depth-projection.js";
 
-const BO_WORLD_UNITS = 72;
+const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
-const DEPTH_CAMERA_FOV_DEG = 42;
+const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -27,15 +35,6 @@ function resolveDepthLayerLabel(depthLayers = []) {
   const layers = Array.isArray(depthLayers) ? depthLayers : [];
   if (!layers.length) return "no depth layer";
   return layers.map((layer) => String(layer && layer.label || layer && layer.id || "depth")).join(" / ");
-}
-
-function resolveDepthLayerOrbZBO(depthLayers = []) {
-  const layers = Array.isArray(depthLayers) ? depthLayers : [];
-  for (const layer of layers) {
-    const zBO = Number(layer && layer.orbZBO);
-    if (Number.isFinite(zBO) && zBO >= 0) return zBO;
-  }
-  return 4;
 }
 
 function buildLayerSvgMarkup(layer = {}, viewBox = {}) {
@@ -505,7 +504,8 @@ export function createLevelStageDepth3dLayer({
   let lastFrame = null;
   let orbRuntime = null;
   let orbRuntimeBO = 0;
-  let currentOrbZBO = 4;
+  let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
+  let currentOrbDepthPx = currentOrbZBO * BO_WORLD_UNITS;
 
   function setLabel(text) {
     if (labelEl) {
@@ -563,8 +563,11 @@ export function createLevelStageDepth3dLayer({
     const centerYW = clampNumber(camTop, 0) + (viewH * 0.5);
     const cx = toThreeX(centerXW, worldWidthPx);
     const cy = toThreeY(centerYW, worldHeightPx);
-    const fovRad = THREE.MathUtils.degToRad(camera.fov);
-    const cameraZ = Math.max(64, viewH / (2 * Math.tan(fovRad * 0.5)));
+    const cameraZ = resolveDepthCameraZ({
+      viewportHeightPx: height,
+      zoom: safeZoom,
+      fovDeg: camera.fov,
+    });
     camera.aspect = width / height;
     camera.near = Math.max(1, cameraZ * 0.02);
     camera.far = Math.max(24000, cameraZ + (BO_WORLD_UNITS * 32));
@@ -573,6 +576,12 @@ export function createLevelStageDepth3dLayer({
     camera.updateProjectionMatrix();
     if (orbRuntime && typeof orbRuntime.setTime === "function") {
       orbRuntime.setTime(performance.now() / 1000);
+      if (typeof orbRuntime.setScale === "function") {
+        orbRuntime.setScale(resolveApparentDepthScale({
+          cameraZ,
+          depthPx: currentOrbDepthPx,
+        }));
+      }
     }
     renderer.render(scene, camera);
   }
@@ -616,7 +625,7 @@ export function createLevelStageDepth3dLayer({
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
-      currentOrbZBO = resolveDepthLayerOrbZBO(layers);
+      currentOrbZBO = resolveOrbTravelZBO(summary, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
       setLabel(resolveDepthLayerLabel(layers));
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({
@@ -657,10 +666,11 @@ export function createLevelStageDepth3dLayer({
         if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
       }
       const resolvedZBO = Math.max(0, Number.isFinite(Number(zBO)) ? Number(zBO) : currentOrbZBO);
+      currentOrbDepthPx = resolvedZBO * resolvedBO;
       orbRuntime.setPosition({
         x: toThreeX(worldX, worldWidthPx),
         y: toThreeY(worldY, worldHeightPx),
-        z: -(resolvedZBO * resolvedBO),
+        z: -currentOrbDepthPx,
       });
       syncRootVisibility();
       if (lastFrame) renderFrame(lastFrame);

@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260428g";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260428h";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -40,6 +40,14 @@ import {
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
 import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260425l";
+import {
+  LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
+  projectBoundsToDepthPlane,
+  projectLoopsToDepthPlane,
+  resolveDepthCameraZ,
+  resolveOrbTravelZBO,
+} from "../../../game-runtime/level/depth-projection.js";
 import {
   resolveStageCameraClampBounds,
   resolveStageCameraConfig,
@@ -449,14 +457,89 @@ function shellResolvedSpawnPoint(shellContext) {
 function shellResolvedCollisionBox(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
-  return summary && summary.boundaryBox ? summary.boundaryBox : null;
+  const authoredBox = summary && summary.boundaryBox ? summary.boundaryBox : null;
+  if (!authoredBox) return null;
+  const projection = resolveShellDepthProjectionContext(shellContext, authoredBox);
+  if (!projection) return authoredBox;
+  return projectBoundsToDepthPlane({
+    boundaryBox: authoredBox,
+    depthPx: projection.depthPx,
+    cameraZ: projection.cameraZ,
+    originXW: projection.originXW,
+    originYW: projection.originYW,
+  }) || authoredBox;
 }
 
 function shellResolvedBoundarySegments(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
+  const authoredLoops = Array.isArray(summary && summary.loops) ? summary.loops : [];
+  const authoredBox = summary && summary.boundaryBox ? summary.boundaryBox : null;
+  const projection = authoredLoops.length && authoredBox
+    ? resolveShellDepthProjectionContext(shellContext, authoredBox)
+    : null;
+  if (projection) {
+    const cacheKey = [
+      "depth-projected",
+      projection.depthPx.toFixed(3),
+      projection.cameraZ.toFixed(3),
+      projection.originXW.toFixed(3),
+      projection.originYW.toFixed(3),
+      authoredLoops.length,
+    ].join("|");
+    if (!runtime.depthProjectedBoundaryCache || runtime.depthProjectedBoundaryCache.key !== cacheKey) {
+      const projectedLoops = projectLoopsToDepthPlane({
+        loops: authoredLoops,
+        depthPx: projection.depthPx,
+        cameraZ: projection.cameraZ,
+        originXW: projection.originXW,
+        originYW: projection.originYW,
+      });
+      runtime.depthProjectedBoundaryCache = Object.freeze({
+        key: cacheKey,
+        segments: buildBoundarySegmentsFromLoops(projectedLoops),
+      });
+    }
+    return Array.isArray(runtime.depthProjectedBoundaryCache.segments)
+      ? runtime.depthProjectedBoundaryCache.segments
+      : [];
+  }
   return Array.isArray(runtime && runtime.currentLevelBoundarySegments)
     ? runtime.currentLevelBoundarySegments
     : [];
+}
+
+function resolveShellDepthProjectionContext(shellContext, boundaryBox = null) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
+  if (!runtime || !summary || !boundaryBox) return null;
+  const rect = shellStageRect(shellContext);
+  const viewportHeightPx = Number(rect && rect.height) || 0;
+  if (viewportHeightPx <= 0) return null;
+  const zoom = shellGameplayCameraZoom(shellContext);
+  const stage = runtime.stage || null;
+  const bo = Math.max(
+    1,
+    (Number(stage && stage.phys && stage.phys.orbRadiusPx) || (LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS * 0.5)) * 2
+  );
+  const zBO = resolveOrbTravelZBO(summary, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
+  const depthPx = Math.max(0, zBO * bo);
+  if (depthPx <= 0) return null;
+  const left = Number(boundaryBox.leftXW) || 0;
+  const right = Number(boundaryBox.rightXW) || left;
+  const top = Number(boundaryBox.topYW) || 0;
+  const bottom = Number(boundaryBox.bottomYW) || top;
+  return Object.freeze({
+    bo,
+    zBO,
+    depthPx,
+    cameraZ: resolveDepthCameraZ({
+      viewportHeightPx,
+      zoom,
+    }),
+    originXW: (left + right) * 0.5,
+    originYW: (top + bottom) * 0.5,
+  });
 }
 
 function shellResolvedCameraBoundaryBox(shellContext) {
@@ -880,7 +963,7 @@ function tickShellStageRuntime(shellContext, dt) {
   );
 
   const yFloor = shellGroundCenterWorld(shellContext);
-  const yCeil = Number(phys.orbRadiusPx) || 50;
+  const yCeil = shellCeilingWorld(shellContext);
   const nowMs = performance.now();
 
   if (state.floatGraceActive) {
@@ -2283,6 +2366,7 @@ function createStagingShellContext({
       stage: null,
       currentLevelMapSummary: null,
       currentLevelBoundarySegments: null,
+      depthProjectedBoundaryCache: null,
       shellVfxMods: null,
       shellModeController: modeController,
       shellModeHotkeyOff: null,
@@ -2300,6 +2384,7 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
     if (runtime) {
       runtime.currentLevelMapSummary = null;
       runtime.currentLevelBoundarySegments = null;
+      runtime.depthProjectedBoundaryCache = null;
     }
     return null;
   }
@@ -2312,10 +2397,12 @@ async function hydrateShellCurrentLevelMapSummary(shellContext) {
     const summary = authoredScene ? authoredScene.summary : null;
     runtime.currentLevelMapSummary = summary;
     runtime.currentLevelBoundarySegments = buildBoundarySegmentsFromLoops(summary && summary.loops);
+    runtime.depthProjectedBoundaryCache = null;
     return summary;
   } catch (error) {
     runtime.currentLevelMapSummary = null;
     runtime.currentLevelBoundarySegments = null;
+    runtime.depthProjectedBoundaryCache = null;
     try { console.warn("[staging-shell] failed to hydrate level map summary", error); } catch (_) {}
     return null;
   }

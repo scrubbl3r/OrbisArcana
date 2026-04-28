@@ -48,6 +48,12 @@ export function createOrb3dRuntime({
     if (shadowSpot) shadowSpot.position.copy(model.position);
   }
 
+  function setScale(scale = 1) {
+    if (disposed) return;
+    const resolved = Math.max(0.001, Number(scale) || 1);
+    model.scale.setScalar(resolved);
+  }
+
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -65,6 +71,7 @@ export function createOrb3dRuntime({
     shadowSpot,
     setTime,
     setPosition,
+    setScale,
     dispose,
   });
 }
