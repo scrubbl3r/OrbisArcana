@@ -839,6 +839,7 @@
         <div class="previewLane" id="orbTemplatePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbTemplateLaneOrb"></div>
         </div>
+        <div class="previewLane orb3dPreviewLane" id="orb3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
         <div class="previewLane" id="orbNodPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbNodLaneOrb"></div>
         </div>
@@ -1085,6 +1086,100 @@
       </div>
 
       <div class="section" data-effect="orb-template" hidden>
+      </div>
+
+      <div class="section" data-effect="orb-3d" hidden>
+        <div class="row">
+          <button id="previewOrb3d" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Base RGB</span>
+            <label for="orb3dShellBaseR">r</label><input id="orb3dShellBaseR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="251" />
+            <label for="orb3dShellBaseG">g</label><input id="orb3dShellBaseG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="253" />
+            <label for="orb3dShellBaseB">b</label><input id="orb3dShellBaseB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orb3dApplyShellColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Cyan RGB</span>
+            <label for="orb3dShellCyanR">r</label><input id="orb3dShellCyanR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="143" />
+            <label for="orb3dShellCyanG">g</label><input id="orb3dShellCyanG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="244" />
+            <label for="orb3dShellCyanB">b</label><input id="orb3dShellCyanB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button class="toolBtn" type="button" id="orb3dApplyShellColorBtn2">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Violet RGB</span>
+            <label for="orb3dShellVioletR">r</label><input id="orb3dShellVioletR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="208" />
+            <label for="orb3dShellVioletG">g</label><input id="orb3dShellVioletG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="184" />
+            <label for="orb3dShellVioletB">b</label><input id="orb3dShellVioletB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button class="toolBtn" type="button" id="orb3dApplyShellColorBtn3">Apply</button>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Gold RGB</span>
+            <label for="orb3dShellGoldR">r</label><input id="orb3dShellGoldR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <label for="orb3dShellGoldG">g</label><input id="orb3dShellGoldG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="204" />
+            <label for="orb3dShellGoldB">b</label><input id="orb3dShellGoldB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="63" />
+            <button class="toolBtn" type="button" id="orb3dApplyShellColorBtn4">Apply</button>
+          </div>
+          <div class="paramFieldRow"><label for="orb3dOpalescenceSpeed">Color cycle speed</label><input id="orb3dOpalescenceSpeed" class="paramFieldInput" type="number" min="0" max="40" step="0.1" value="9.0" /><button id="orb3dApplyDriftBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellFresnelPower">Fresnel power</label><input id="orb3dShellFresnelPower" class="paramFieldInput" type="number" min="0.1" max="10" step="0.05" value="3.15" /><button id="orb3dApplyShellAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellRimAlphaPower">Rim alpha power</label><input id="orb3dShellRimAlphaPower" class="paramFieldInput" type="number" min="0.1" max="8" step="0.01" value="0.92" /><button class="toolBtn" type="button" id="orb3dApplyShellAlphaBtn2">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellCenterAlpha">Center alpha</label><input id="orb3dShellCenterAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.001" value="0.015" /><button class="toolBtn" type="button" id="orb3dApplyShellAlphaBtn3">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellRimAlpha">Rim alpha</label><input id="orb3dShellRimAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.84" /><button class="toolBtn" type="button" id="orb3dApplyShellAlphaBtn4">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellPastelMix">Pastel mix</label><input id="orb3dShellPastelMix" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.84" /><button id="orb3dApplyShellMixBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellRimPastelMix">Rim pastel mix</label><input id="orb3dShellRimPastelMix" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.36" /><button class="toolBtn" type="button" id="orb3dApplyShellMixBtn2">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellDriftPastelMix">Drift pastel mix</label><input id="orb3dShellDriftPastelMix" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.08" /><button class="toolBtn" type="button" id="orb3dApplyShellMixBtn3">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dShellLuminanceBoost">Luminance boost</label><input id="orb3dShellLuminanceBoost" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.50" /><button class="toolBtn" type="button" id="orb3dApplyShellMixBtn4">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dGoldMix">Gold mix</label><input id="orb3dGoldMix" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.34" /><button class="toolBtn" type="button" id="orb3dApplyDriftBtn2">Apply</button></div>
+          <div class="paramGrid">
+            <div class="paramField"><label for="orb3dDriftScaleX">Drift scale X</label><input id="orb3dDriftScaleX" class="paramFieldInput" type="number" min="0" max="1" step="0.001" value="0.030" /></div>
+            <div class="paramField"><label for="orb3dDriftScaleY">Drift scale Y</label><input id="orb3dDriftScaleY" class="paramFieldInput" type="number" min="0" max="1" step="0.001" value="0.036" /></div>
+            <div class="paramField"><label for="orb3dDriftScaleZ">Drift scale Z</label><input id="orb3dDriftScaleZ" class="paramFieldInput" type="number" min="0" max="1" step="0.001" value="0.028" /></div>
+            <div class="paramField"><label for="orb3dDriftRateA">Drift rate A</label><input id="orb3dDriftRateA" class="paramFieldInput" type="number" min="-4" max="4" step="0.01" value="0.42" /></div>
+            <div class="paramField"><label for="orb3dDriftRateB">Drift rate B</label><input id="orb3dDriftRateB" class="paramFieldInput" type="number" min="-4" max="4" step="0.01" value="-0.31" /></div>
+            <div class="paramField"><label for="orb3dDriftRateC">Drift rate C</label><input id="orb3dDriftRateC" class="paramFieldInput" type="number" min="-4" max="4" step="0.01" value="0.24" /></div>
+            <div class="paramField"><label for="orb3dDriftPhaseB">Drift phase B</label><input id="orb3dDriftPhaseB" class="paramFieldInput" type="number" min="0" max="12" step="0.01" value="1.70" /></div>
+            <div class="paramField"><label for="orb3dDriftPhaseC">Drift phase C</label><input id="orb3dDriftPhaseC" class="paramFieldInput" type="number" min="0" max="12" step="0.01" value="3.10" /></div>
+          </div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Light RGB</span>
+            <label for="orb3dLightR">r</label><input id="orb3dLightR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="207" />
+            <label for="orb3dLightG">g</label><input id="orb3dLightG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="239" />
+            <label for="orb3dLightB">b</label><input id="orb3dLightB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button id="orb3dApplyLightColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow"><label for="orb3dLightIntensity">Light intensity</label><input id="orb3dLightIntensity" class="paramFieldInput" type="number" min="0" max="1000" step="1" value="120" /><button id="orb3dApplyLightBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dLightDistanceBO">Light distance BO</label><input id="orb3dLightDistanceBO" class="paramFieldInput" type="number" min="0" max="40" step="0.1" value="10" /><button class="toolBtn" type="button" id="orb3dApplyLightBtn2">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dLightDecay">Light decay</label><input id="orb3dLightDecay" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.35" /><button class="toolBtn" type="button" id="orb3dApplyLightBtn3">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dLightPastelMix">Light pastel mix</label><input id="orb3dLightPastelMix" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.42" /><button class="toolBtn" type="button" id="orb3dApplyLightBtn4">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dLightOffsetZBO">Light Z offset BO</label><input id="orb3dLightOffsetZBO" class="paramFieldInput" type="number" min="-4" max="4" step="0.05" value="0" /><button class="toolBtn" type="button" id="orb3dApplyLightBtn5">Apply</button></div>
+          <div class="paramFieldRow"><label for="orb3dLightCastShadow">Cast shadows</label><input id="orb3dLightCastShadow" class="paramFieldInput" type="checkbox" checked /><button id="orb3dApplyShadowBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramGrid">
+            <div class="paramField"><label for="orb3dLightShadowMapSize">Shadow map</label><input id="orb3dLightShadowMapSize" class="paramFieldInput" type="number" min="128" max="2048" step="128" value="512" /></div>
+            <div class="paramField"><label for="orb3dLightShadowBias">Shadow bias</label><input id="orb3dLightShadowBias" class="paramFieldInput" type="number" min="-0.02" max="0.02" step="0.00001" value="-0.00025" /></div>
+            <div class="paramField"><label for="orb3dLightShadowNormalBias">Normal bias</label><input id="orb3dLightShadowNormalBias" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.018" /></div>
+            <div class="paramField"><label for="orb3dLightShadowNearBO">Shadow near BO</label><input id="orb3dLightShadowNearBO" class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" value="0.08" /></div>
+            <div class="paramField"><label for="orb3dLightShadowFarBO">Shadow far BO</label><input id="orb3dLightShadowFarBO" class="paramFieldInput" type="number" min="0.1" max="40" step="0.1" value="10" /></div>
+          </div>
+          <div class="paramFieldRow"><label for="orb3dShadowSpotEnabled">Shadow spot</label><input id="orb3dShadowSpotEnabled" class="paramFieldInput" type="checkbox" /><button id="orb3dApplyShadowSpotBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow">
+            <span class="rgbaLabel">Spot RGB</span>
+            <label for="orb3dShadowSpotR">r</label><input id="orb3dShadowSpotR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="218" />
+            <label for="orb3dShadowSpotG">g</label><input id="orb3dShadowSpotG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="246" />
+            <label for="orb3dShadowSpotB">b</label><input id="orb3dShadowSpotB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            <button class="toolBtn" type="button" id="orb3dApplyShadowSpotBtn2">Apply</button>
+          </div>
+          <div class="paramGrid">
+            <div class="paramField"><label for="orb3dShadowSpotIntensity">Spot intensity</label><input id="orb3dShadowSpotIntensity" class="paramFieldInput" type="number" min="0" max="1000" step="1" value="24" /></div>
+            <div class="paramField"><label for="orb3dShadowSpotDistanceBO">Spot distance BO</label><input id="orb3dShadowSpotDistanceBO" class="paramFieldInput" type="number" min="0" max="40" step="0.1" value="4.5" /></div>
+            <div class="paramField"><label for="orb3dShadowSpotAngle">Spot angle</label><input id="orb3dShadowSpotAngle" class="paramFieldInput" type="number" min="0.01" max="1.5" step="0.01" value="0.48" /></div>
+            <div class="paramField"><label for="orb3dShadowSpotPenumbra">Spot penumbra</label><input id="orb3dShadowSpotPenumbra" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.78" /></div>
+            <div class="paramField"><label for="orb3dShadowSpotDecay">Spot decay</label><input id="orb3dShadowSpotDecay" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.4" /></div>
+            <div class="paramField"><label for="orb3dShadowSpotMapSize">Spot map</label><input id="orb3dShadowSpotMapSize" class="paramFieldInput" type="number" min="128" max="2048" step="128" value="512" /></div>
+            <div class="paramField"><label for="orb3dShadowSpotBias">Spot bias</label><input id="orb3dShadowSpotBias" class="paramFieldInput" type="number" min="-0.02" max="0.02" step="0.00001" value="-0.00035" /></div>
+            <div class="paramField"><label for="orb3dShadowSpotNormalBias">Spot normal bias</label><input id="orb3dShadowSpotNormalBias" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.018" /></div>
+          </div>
+        </div>
       </div>
 
       <div class="section" data-effect="orb-nod" hidden>
@@ -1519,14 +1614,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260428a"),
+      import("./vfx-studio-bootstrap.js?v=20260428b"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
-      import("./vfx-studio-surfaces.js?v=20260427a"),
-      import("./vfx-studio-theme-publish.js?v=20260427a"),
+      import("./vfx-studio-surfaces.js?v=20260428a"),
+      import("./vfx-studio-theme-publish.js?v=20260428a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -1534,6 +1629,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
+    import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
     import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260425d";
     import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260425d";
@@ -1553,6 +1649,7 @@
     } from "../../src/vfx/presets/index.js?v=20260427a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
+    import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
@@ -1575,6 +1672,7 @@
       createBubbleShieldAuthoringAdapter,
       createElectricAoeAuthoringAdapter,
       createFlameAoeAuthoringAdapter,
+      createOrb3dAuthoringAdapter,
       createOrbBaseAuthoringAdapter,
       createOrbGlobeAuthoringAdapter,
       createOrbLifecycleAuthoringAdapter,
@@ -1611,6 +1709,7 @@
       electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
       orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
+      orb3dPreviewRoot: $("orb3dPreviewRoot"),
       orbNodPreviewRoot: $("orbNodPreviewRoot"),
       orbNod3dPreviewRoot: $("orbNod3dPreviewRoot"),
       orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
@@ -1721,6 +1820,63 @@
       orbBaseFillG: $("orbBaseFillG"),
       orbBaseFillB: $("orbBaseFillB"),
       orbBaseApplyFillColorBtn: $("orbBaseApplyFillColorBtn"),
+      previewOrb3d: $("previewOrb3d"),
+      orb3dShellBaseR: $("orb3dShellBaseR"),
+      orb3dShellBaseG: $("orb3dShellBaseG"),
+      orb3dShellBaseB: $("orb3dShellBaseB"),
+      orb3dShellCyanR: $("orb3dShellCyanR"),
+      orb3dShellCyanG: $("orb3dShellCyanG"),
+      orb3dShellCyanB: $("orb3dShellCyanB"),
+      orb3dShellVioletR: $("orb3dShellVioletR"),
+      orb3dShellVioletG: $("orb3dShellVioletG"),
+      orb3dShellVioletB: $("orb3dShellVioletB"),
+      orb3dShellGoldR: $("orb3dShellGoldR"),
+      orb3dShellGoldG: $("orb3dShellGoldG"),
+      orb3dShellGoldB: $("orb3dShellGoldB"),
+      orb3dShellFresnelPower: $("orb3dShellFresnelPower"),
+      orb3dShellRimAlphaPower: $("orb3dShellRimAlphaPower"),
+      orb3dShellCenterAlpha: $("orb3dShellCenterAlpha"),
+      orb3dShellRimAlpha: $("orb3dShellRimAlpha"),
+      orb3dShellPastelMix: $("orb3dShellPastelMix"),
+      orb3dShellRimPastelMix: $("orb3dShellRimPastelMix"),
+      orb3dShellDriftPastelMix: $("orb3dShellDriftPastelMix"),
+      orb3dShellLuminanceBoost: $("orb3dShellLuminanceBoost"),
+      orb3dOpalescenceSpeed: $("orb3dOpalescenceSpeed"),
+      orb3dDriftScaleX: $("orb3dDriftScaleX"),
+      orb3dDriftScaleY: $("orb3dDriftScaleY"),
+      orb3dDriftScaleZ: $("orb3dDriftScaleZ"),
+      orb3dDriftRateA: $("orb3dDriftRateA"),
+      orb3dDriftRateB: $("orb3dDriftRateB"),
+      orb3dDriftRateC: $("orb3dDriftRateC"),
+      orb3dDriftPhaseB: $("orb3dDriftPhaseB"),
+      orb3dDriftPhaseC: $("orb3dDriftPhaseC"),
+      orb3dGoldMix: $("orb3dGoldMix"),
+      orb3dLightR: $("orb3dLightR"),
+      orb3dLightG: $("orb3dLightG"),
+      orb3dLightB: $("orb3dLightB"),
+      orb3dLightIntensity: $("orb3dLightIntensity"),
+      orb3dLightDistanceBO: $("orb3dLightDistanceBO"),
+      orb3dLightDecay: $("orb3dLightDecay"),
+      orb3dLightPastelMix: $("orb3dLightPastelMix"),
+      orb3dLightOffsetZBO: $("orb3dLightOffsetZBO"),
+      orb3dLightCastShadow: $("orb3dLightCastShadow"),
+      orb3dLightShadowMapSize: $("orb3dLightShadowMapSize"),
+      orb3dLightShadowBias: $("orb3dLightShadowBias"),
+      orb3dLightShadowNormalBias: $("orb3dLightShadowNormalBias"),
+      orb3dLightShadowNearBO: $("orb3dLightShadowNearBO"),
+      orb3dLightShadowFarBO: $("orb3dLightShadowFarBO"),
+      orb3dShadowSpotEnabled: $("orb3dShadowSpotEnabled"),
+      orb3dShadowSpotR: $("orb3dShadowSpotR"),
+      orb3dShadowSpotG: $("orb3dShadowSpotG"),
+      orb3dShadowSpotB: $("orb3dShadowSpotB"),
+      orb3dShadowSpotIntensity: $("orb3dShadowSpotIntensity"),
+      orb3dShadowSpotDistanceBO: $("orb3dShadowSpotDistanceBO"),
+      orb3dShadowSpotAngle: $("orb3dShadowSpotAngle"),
+      orb3dShadowSpotPenumbra: $("orb3dShadowSpotPenumbra"),
+      orb3dShadowSpotDecay: $("orb3dShadowSpotDecay"),
+      orb3dShadowSpotMapSize: $("orb3dShadowSpotMapSize"),
+      orb3dShadowSpotBias: $("orb3dShadowSpotBias"),
+      orb3dShadowSpotNormalBias: $("orb3dShadowSpotNormalBias"),
       previewOrbNod: $("previewOrbNod"),
       orbNodShrinkPct: $("orbNodShrinkPct"),
       orbNodApplyShrinkBtn: $("orbNodApplyShrinkBtn"),
@@ -1817,6 +1973,7 @@
       flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
       shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
+      orb3dVisualDefaults: ORB_3D_VISUAL_DEFAULTS,
       orbGlobeVisualDefaults: ORB_GLOBE_VISUAL_DEFAULTS,
       orbLifecycleDefaults: Object.freeze({
         orbLifecycleShardTotal: Number(ORB_LIFECYCLE_DEFAULTS.maxShards) || 16,
@@ -2382,6 +2539,7 @@
       setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
       applyOrbLaneSsot(els.orbBasePreviewRoot);
       applyOrbLaneSsot(els.orbTemplatePreviewRoot);
+      applyOrbLaneSsot(els.orb3dPreviewRoot);
       applyOrbLaneSsot(els.orbNodPreviewRoot);
       applyOrbLaneSsot(els.orbNod3dPreviewRoot);
       applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
@@ -2425,6 +2583,7 @@
         shockwave: () => applyShock(),
         "flame-aoe": () => applyFlameControls(),
         "orb-base": () => applyOrbBase(),
+        "orb-3d": () => applyOrb3d(),
         teleport: () => applyOrbTeleport(),
         "orb-globe": () => applyOrbGlobe(),
         "orb-lifecycle": () => applyOrbLifecycle(),
@@ -2477,6 +2636,8 @@
       applyOrbBase,
       applyOrbTemplate,
       clearOrbTemplate,
+      applyOrb3d,
+      clearOrb3d,
       applyOrbNod,
       clearOrbNod,
       applyOrbNod3d,
@@ -2506,6 +2667,7 @@
       if (typeof applyFlameControls === "function") applyFlameControls();
       if (typeof applyElectricControls === "function") applyElectricControls();
       if (typeof applyOrbTemplate === "function") applyOrbTemplate();
+      if (typeof applyOrb3d === "function") applyOrb3d();
       if (typeof applyOrbLifecycle === "function") applyOrbLifecycle();
       if (typeof applyOrbGlobe === "function") applyOrbGlobe();
       if (typeof applyWorldGlobe === "function") applyWorldGlobe();

@@ -96,6 +96,11 @@ function clampNum(v, min, max, fallback = 0) {
   return Math.max(min, Math.min(max, toNum(v, fallback)));
 }
 
+function hexLiteral(v, fallback = 0xffffff) {
+  const n = Math.max(0, Math.min(0xffffff, Math.round(toNum(v, fallback))));
+  return `0x${n.toString(16).padStart(6, "0")}`;
+}
+
 export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricDefaults) {
   const p = params && typeof params === "object" ? params : {};
   switch (String(baseEffect || "")) {
@@ -210,6 +215,56 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  innerDriftMin: ${toNum(p.orbGlobeInnerDriftMin, 0.08).toFixed(2)},`,
         `  innerDriftMax: ${toNum(p.orbGlobeInnerDriftMax, 0.28).toFixed(2)},`,
         `  innerPaddingRatio: ${toNum(p.orbGlobeInnerPaddingRatio, 0.06).toFixed(2)},`,
+        "});",
+        "",
+      ].join("\n");
+    case "orb-3d":
+      return [
+        "export const ORB_3D_VISUAL_DEFAULTS = Object.freeze({",
+        `  shellBaseColor: ${hexLiteral(p.shellBaseColor, 0xfbfdff)},`,
+        `  shellCyanColor: ${hexLiteral(p.shellCyanColor, 0x8ff4ff)},`,
+        `  shellVioletColor: ${hexLiteral(p.shellVioletColor, 0xd0b8ff)},`,
+        `  shellGoldColor: ${hexLiteral(p.shellGoldColor, 0xffcc3f)},`,
+        `  shellFresnelPower: ${toNum(p.shellFresnelPower, 3.15).toFixed(2)},`,
+        `  shellRimAlphaPower: ${toNum(p.shellRimAlphaPower, 0.92).toFixed(2)},`,
+        `  shellCenterAlpha: ${toNum(p.shellCenterAlpha, 0.015).toFixed(3)},`,
+        `  shellRimAlpha: ${toNum(p.shellRimAlpha, 0.84).toFixed(2)},`,
+        `  shellPastelMix: ${toNum(p.shellPastelMix, 0.84).toFixed(2)},`,
+        `  shellRimPastelMix: ${toNum(p.shellRimPastelMix, 0.36).toFixed(2)},`,
+        `  shellDriftPastelMix: ${toNum(p.shellDriftPastelMix, 0.08).toFixed(2)},`,
+        `  shellLuminanceBoost: ${toNum(p.shellLuminanceBoost, 1.5).toFixed(2)},`,
+        `  opalescenceSpeed: ${toNum(p.opalescenceSpeed, 9).toFixed(1)},`,
+        `  driftScaleX: ${toNum(p.driftScaleX, 0.03).toFixed(3)},`,
+        `  driftScaleY: ${toNum(p.driftScaleY, 0.036).toFixed(3)},`,
+        `  driftScaleZ: ${toNum(p.driftScaleZ, 0.028).toFixed(3)},`,
+        `  driftRateA: ${toNum(p.driftRateA, 0.42).toFixed(2)},`,
+        `  driftRateB: ${toNum(p.driftRateB, -0.31).toFixed(2)},`,
+        `  driftRateC: ${toNum(p.driftRateC, 0.24).toFixed(2)},`,
+        `  driftPhaseB: ${toNum(p.driftPhaseB, 1.7).toFixed(2)},`,
+        `  driftPhaseC: ${toNum(p.driftPhaseC, 3.1).toFixed(2)},`,
+        `  goldMix: ${toNum(p.goldMix, 0.34).toFixed(2)},`,
+        `  lightColor: ${hexLiteral(p.lightColor, 0xcfefff)},`,
+        `  lightIntensity: ${toNum(p.lightIntensity, 120).toFixed(1)},`,
+        `  lightDistanceBO: ${toNum(p.lightDistanceBO, 10).toFixed(2)},`,
+        `  lightDecay: ${toNum(p.lightDecay, 1.35).toFixed(2)},`,
+        `  lightPastelMix: ${toNum(p.lightPastelMix, 0.42).toFixed(2)},`,
+        `  lightOffsetZBO: ${toNum(p.lightOffsetZBO, 0).toFixed(2)},`,
+        `  lightCastShadow: ${p.lightCastShadow === false ? "false" : "true"},`,
+        `  lightShadowMapSize: ${Math.round(toNum(p.lightShadowMapSize, 512))},`,
+        `  lightShadowBias: ${toNum(p.lightShadowBias, -0.00025).toFixed(5)},`,
+        `  lightShadowNormalBias: ${toNum(p.lightShadowNormalBias, 0.018).toFixed(3)},`,
+        `  lightShadowNearBO: ${toNum(p.lightShadowNearBO, 0.08).toFixed(2)},`,
+        `  lightShadowFarBO: ${toNum(p.lightShadowFarBO, 10).toFixed(2)},`,
+        `  shadowSpotEnabled: ${p.shadowSpotEnabled === true ? "true" : "false"},`,
+        `  shadowSpotColor: ${hexLiteral(p.shadowSpotColor, 0xdaf6ff)},`,
+        `  shadowSpotIntensity: ${toNum(p.shadowSpotIntensity, 24).toFixed(1)},`,
+        `  shadowSpotDistanceBO: ${toNum(p.shadowSpotDistanceBO, 4.5).toFixed(2)},`,
+        `  shadowSpotAngle: ${toNum(p.shadowSpotAngle, 0.48).toFixed(2)},`,
+        `  shadowSpotPenumbra: ${toNum(p.shadowSpotPenumbra, 0.78).toFixed(2)},`,
+        `  shadowSpotDecay: ${toNum(p.shadowSpotDecay, 1.4).toFixed(2)},`,
+        `  shadowSpotMapSize: ${Math.round(toNum(p.shadowSpotMapSize, 512))},`,
+        `  shadowSpotBias: ${toNum(p.shadowSpotBias, -0.00035).toFixed(5)},`,
+        `  shadowSpotNormalBias: ${toNum(p.shadowSpotNormalBias, 0.018).toFixed(3)},`,
         "});",
         "",
       ].join("\n");

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createOrbSurfaceDisplacementUniforms } from "../../effects/orb-surface-displacement/orb-surface-displacement.js?v=20260427k";
-import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260426a";
+import { OPALESCENT_ORB_MATERIAL_CONFIG } from "./opalescent-orb-config.js?v=20260428a";
 
 const scratchBaseLight = new THREE.Color();
 const scratchCyan = new THREE.Color();

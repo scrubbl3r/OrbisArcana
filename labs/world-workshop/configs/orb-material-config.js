@@ -3,4 +3,4 @@ export {
   OPALSCENT_ORB_MATERIAL_CONFIG,
   ORB_MATERIAL_CONFIG,
   ORB_BLOOM_CONFIG,
-} from "../materials/orb/opalescent-orb-config.js?v=20260426a";
+} from "../materials/orb/opalescent-orb-config.js?v=20260428a";

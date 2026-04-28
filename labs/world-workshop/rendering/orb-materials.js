@@ -3,4 +3,4 @@ export {
   createOrbPointLight,
   createOrbShadowSpotLight,
   updateOrbPointLight,
-} from "../materials/orb/opalescent-orb-material.js?v=20260426a";
+} from "../materials/orb/opalescent-orb-material.js?v=20260428a";

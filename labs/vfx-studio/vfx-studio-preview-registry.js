@@ -4,7 +4,11 @@ import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=2026042
 import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
 import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425d";
 import { createOrbTemplatePreview } from "./previews/orb-template-preview.js?v=20260425d";
-import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260427c";
+import {
+  createOrb3dPreview,
+  readOrb3dPreviewConfig,
+} from "./previews/orb-3d-preview.js?v=20260428a";
+import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260428a";
 import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
 import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425d";
 import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
@@ -20,6 +24,7 @@ export function createStudioPreviewRegistry({
   previewEls,
   defaults,
   getOrbBaseVisualState,
+  getOrb3dVisualSettings,
   onOrbBaseVisualStateApplied,
   previewRootsByEffect,
   updateTeleportBehaviorReadout = null,
@@ -98,6 +103,14 @@ export function createStudioPreviewRegistry({
   actions.applyOrbTemplate = orbTemplatePreview.apply;
   actions.clearOrbTemplate = orbTemplatePreview.clear;
 
+  const orb3dPreview = createOrb3dPreview({
+    els: previewEls.orb3d,
+    getOrbBaseVisualState,
+  });
+  actions.applyOrb3d = orb3dPreview.apply;
+  actions.clearOrb3d = orb3dPreview.clear;
+  orb3dPreview.wire();
+
   const orbNodPreview = createOrbTemplatePreview({
     els: previewEls.orbNod,
     getOrbBaseVisualState,
@@ -109,6 +122,7 @@ export function createStudioPreviewRegistry({
   const orbNod3dPreview = createOrbNod3dPreview({
     els: previewEls.orbNod3d,
     getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
   });
   actions.applyOrbNod3d = orbNod3dPreview.apply;
   actions.clearOrbNod3d = orbNod3dPreview.clear;
@@ -151,6 +165,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearFlame === "function") actions.clearFlame();
     if (typeof actions.clearElectric === "function") actions.clearElectric();
     if (typeof actions.clearOrbTemplate === "function") actions.clearOrbTemplate();
+    if (typeof actions.clearOrb3d === "function") actions.clearOrb3d();
     if (typeof actions.clearOrbNod === "function") actions.clearOrbNod();
     if (typeof actions.clearOrbNod3d === "function") actions.clearOrbNod3d();
     if (typeof actions.clearOrbLifecycle === "function") actions.clearOrbLifecycle();

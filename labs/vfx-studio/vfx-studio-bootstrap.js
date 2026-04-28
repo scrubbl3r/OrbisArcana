@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260427c";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260428b";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -82,6 +82,10 @@ export function createStudioBootstrap({
       ...els,
       previewRoot: els.orbTemplatePreviewRoot,
       orb: getElementById("orbTemplateLaneOrb"),
+    }),
+    orb3d: Object.freeze({
+      ...els,
+      previewRoot: els.orb3dPreviewRoot,
     }),
     orbNod: Object.freeze({
       ...els,
@@ -260,6 +264,7 @@ export function createStudioBootstrap({
       playElectric: () => studioPreviewRegistry.actions.playElectric(),
       applyOrbBase: () => studioPreviewRegistry.actions.applyOrbBase(),
       applyOrbTemplate: () => studioPreviewRegistry.actions.applyOrbTemplate(),
+      applyOrb3d: () => studioPreviewRegistry.actions.applyOrb3d(),
       applyOrbNod: () => studioPreviewRegistry.actions.applyOrbNod(),
       applyOrbNod3d: () => studioPreviewRegistry.actions.applyOrbNod3d(),
       applyOrbLifecycle: () => studioPreviewRegistry.actions.applyOrbLifecycle(),

@@ -6,8 +6,8 @@ import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
   updateOrbPointLight,
-} from "../../world-workshop/materials/orb/opalescent-orb-material.js?v=20260427k";
-import { ORB_MATERIAL_CONFIG } from "../../world-workshop/materials/orb/opalescent-orb-config.js?v=20260426a";
+} from "../../world-workshop/materials/orb/opalescent-orb-material.js?v=20260428a";
+import { ORB_MATERIAL_CONFIG } from "../../world-workshop/materials/orb/opalescent-orb-config.js?v=20260428a";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -84,12 +84,14 @@ function frameCameraToSsotOrbSize(inspector, root, bo) {
 export function createOrbNod3dPreview({
   els = {},
   getOrbBaseVisualState = null,
+  getOrb3dVisualSettings = null,
 } = {}) {
   let inspector = null;
   let shellMaterial = null;
   let orbLight = null;
   let model = null;
   let activeCfg = null;
+  let activeOrb3dConfig = ORB_MATERIAL_CONFIG;
   let createdAt = 0;
   let playStartedAt = 0;
   let isPlaying = false;
@@ -129,6 +131,7 @@ export function createOrbNod3dPreview({
     playStartedAt = 0;
     isPlaying = false;
     activeCfg = cfg;
+    activeOrb3dConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_MATERIAL_CONFIG;
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
       bo,
@@ -153,13 +156,13 @@ export function createOrbNod3dPreview({
           }
         }
         setNodEnvelope({ bo, envelope, shaderTime });
-        if (orbLight) updateOrbPointLight(orbLight, materialTime, ORB_MATERIAL_CONFIG);
+        if (orbLight) updateOrbPointLight(orbLight, materialTime, activeOrb3dConfig);
       },
     });
     if (!inspector) return cfg;
     frameCameraToSsotOrbSize(inspector, els.previewRoot, bo);
 
-    shellMaterial = createOpalescentOrbShellMaterial(ORB_MATERIAL_CONFIG, {
+    shellMaterial = createOpalescentOrbShellMaterial(activeOrb3dConfig, {
       bo,
       surfaceDisplacement: createSurfaceDisplacementConfig(cfg),
     });
@@ -174,8 +177,8 @@ export function createOrbNod3dPreview({
       ringSegments: 192,
     });
     model = created.model;
-    orbLight = createOrbPointLight({ bo, config: ORB_MATERIAL_CONFIG });
-    updateOrbPointLight(orbLight, 0, ORB_MATERIAL_CONFIG);
+    orbLight = createOrbPointLight({ bo, config: activeOrb3dConfig });
+    updateOrbPointLight(orbLight, 0, activeOrb3dConfig);
     model.add(orbLight);
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.04));
     inspector.scene.add(model);
