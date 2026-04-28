@@ -30,13 +30,6 @@ const DEPTH_GRAPHITE_RUNTIME = Object.freeze({
   textureRepeat: 5,
   bumpScale: 0.2,
 });
-const DEPTH_ORB_LANTERN_PROXY = Object.freeze({
-  color: 0xcfefff,
-  intensity: 180,
-  distanceBO: 10,
-  decay: 1.35,
-  zBO: 1.25,
-});
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -369,15 +362,6 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environ
   model.userData.floorMesh = floor;
   model.add(floor);
 
-  const ceilingGeometry = new THREE.ShapeGeometry(shape);
-  ceilingGeometry.translate(0, 0, 0);
-  const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.08, color: 0x6a7480, environmentMode });
-  if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) ceilingMaterial.depthWrite = false;
-  const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-  ceiling.renderOrder = 3;
-  ceiling.name = `${model.name}:ceiling`;
-  model.add(ceiling);
-
   for (const loop of loops) {
     const wallGeometry = buildVectorWallGeometry(loop, depthPx, worldWidthPx, worldHeightPx);
     if (wallGeometry) {
@@ -486,50 +470,6 @@ function buildDepthGeometryFromSamples({ samples, cols, rows, layer, viewBox, ra
   return geometry;
 }
 
-function buildCeilingGeometryFromSamples({ samples, cols, rows, viewBox, rasterBox, rasterSize, worldWidthPx, worldHeightPx }) {
-  const positions = [];
-  const indices = [];
-  const authorW = Math.max(1, clampNumber(viewBox.width, 1));
-  const authorH = Math.max(1, clampNumber(viewBox.height, 1));
-  const boxW = Math.max(1, rasterBox.maxX - rasterBox.minX + 1);
-  const boxH = Math.max(1, rasterBox.maxY - rasterBox.minY + 1);
-  const sampleAt = (x, y) => samples[(y * cols) + x] || Object.freeze({ alpha: 0 });
-  const vertexAt = (gx, gy) => {
-    const rx = rasterBox.minX + ((gx / cols) * boxW);
-    const ry = rasterBox.minY + ((gy / rows) * boxH);
-    const authorX = clampNumber(viewBox.x, 0) + ((rx / Math.max(1, rasterSize.width - 1)) * authorW);
-    const authorY = clampNumber(viewBox.y, 0) + ((ry / Math.max(1, rasterSize.height - 1)) * authorH);
-    const worldX = toWorldX(authorX, viewBox, worldWidthPx);
-    const worldY = toWorldY(authorY, viewBox, worldHeightPx);
-    return Object.freeze({
-      x: toThreeX(worldX, worldWidthPx),
-      y: toThreeY(worldY, worldHeightPx),
-      z: 0,
-    });
-  };
-  for (let row = 0; row < rows; row += 1) {
-    for (let col = 0; col < cols; col += 1) {
-      const sample = sampleAt(col, row);
-      if (sample.alpha <= 0.03) continue;
-      const base = positions.length / 3;
-      for (const point of [
-        vertexAt(col, row),
-        vertexAt(col + 1, row),
-        vertexAt(col + 1, row + 1),
-        vertexAt(col, row + 1),
-      ]) {
-        positions.push(point.x, point.y, point.z);
-      }
-      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-    }
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  return geometry;
-}
-
 async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx, environmentMode = DEPTH_ENVIRONMENT_MODE.runtime }) {
   const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode });
   if (vectorMesh) return vectorMesh;
@@ -577,20 +517,6 @@ async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx
   material.needsUpdate = true;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = `depth:${String(layer.id || "layer")}`;
-  const ceilingGeometry = buildCeilingGeometryFromSamples({
-    samples,
-    cols,
-    rows,
-    viewBox,
-    rasterBox,
-    rasterSize: { width: rasterWidth, height: rasterHeight },
-    worldWidthPx,
-    worldHeightPx,
-  });
-  const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.14, color: 0x59616a, environmentMode });
-  if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) ceilingMaterial.depthWrite = false;
-  const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-  ceiling.name = `depth:${String(layer.id || "layer")}:ceiling`;
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(geometry, 18),
     new THREE.LineBasicMaterial({
@@ -604,7 +530,6 @@ async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx
   const model = new THREE.Group();
   model.name = `depth:${String(layer.id || "layer")}:sealed_volume`;
   model.add(mesh);
-  model.add(ceiling);
   model.add(edges);
   return model;
 }
@@ -648,7 +573,6 @@ export function createLevelStageDepth3dLayer({
   let depthLayerCount = 0;
   let lastFrame = null;
   let orbRuntime = null;
-  let orbLanternLight = null;
   let orbRuntimeBO = 0;
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbDepthPx = currentOrbZBO * BO_WORLD_UNITS;
@@ -674,33 +598,8 @@ export function createLevelStageDepth3dLayer({
     if (orbRuntime && typeof orbRuntime.dispose === "function") {
       orbRuntime.dispose();
     }
-    if (orbLanternLight && orbLanternLight.parent) {
-      orbLanternLight.parent.remove(orbLanternLight);
-    }
     orbRuntime = null;
-    orbLanternLight = null;
     orbRuntimeBO = 0;
-  }
-
-  function ensureOrbLanternLight(bo = BO_WORLD_UNITS) {
-    const baseOrb = Math.max(1, Number(bo) || BO_WORLD_UNITS);
-    if (!orbLanternLight) {
-      orbLanternLight = new THREE.PointLight(
-        DEPTH_ORB_LANTERN_PROXY.color,
-        DEPTH_ORB_LANTERN_PROXY.intensity,
-        baseOrb * DEPTH_ORB_LANTERN_PROXY.distanceBO,
-        DEPTH_ORB_LANTERN_PROXY.decay
-      );
-      orbLanternLight.name = "depth3d:orb_lantern_projection";
-      orbLanternLight.castShadow = false;
-      scene.add(orbLanternLight);
-    }
-    orbLanternLight.intensity = environmentMode === DEPTH_ENVIRONMENT_MODE.debug
-      ? 0
-      : DEPTH_ORB_LANTERN_PROXY.intensity;
-    orbLanternLight.distance = baseOrb * DEPTH_ORB_LANTERN_PROXY.distanceBO;
-    orbLanternLight.decay = DEPTH_ORB_LANTERN_PROXY.decay;
-    return orbLanternLight;
   }
 
   function syncRootVisibility() {
@@ -844,7 +743,6 @@ export function createLevelStageDepth3dLayer({
         applyActorOverlayFlags(orbRuntime.model);
         actorGroup.add(orbRuntime.model);
         if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
-        ensureOrbLanternLight(resolvedBO);
       }
       const resolvedZBO = Math.max(0, Number.isFinite(Number(zBO)) ? Number(zBO) : currentOrbZBO);
       currentOrbDepthPx = resolvedZBO * resolvedBO;
@@ -853,12 +751,6 @@ export function createLevelStageDepth3dLayer({
         y: toThreeY(worldY, worldHeightPx),
         z: -currentOrbDepthPx,
       });
-      const lantern = ensureOrbLanternLight(resolvedBO);
-      lantern.position.set(
-        toThreeX(worldX, worldWidthPx),
-        toThreeY(worldY, worldHeightPx),
-        resolvedBO * DEPTH_ORB_LANTERN_PROXY.zBO
-      );
       syncRootVisibility();
       if (lastFrame) renderFrame(lastFrame);
       return true;
