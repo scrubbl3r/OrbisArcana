@@ -17,6 +17,19 @@ const DEPTH_ENVIRONMENT_MODE = Object.freeze({
   runtime: "runtime",
   debug: "debug",
 });
+const DEPTH_GRAPHITE_RUNTIME = Object.freeze({
+  faceColor: 0x707680,
+  roughness: 0.58,
+  metalness: 0.0,
+  envMapIntensity: 0.22,
+  clearcoat: 0.25,
+  clearcoatRoughness: 0.7,
+  specularIntensity: 0.28,
+  specularColor: 0xd8f5ff,
+  textureSize: 96,
+  textureRepeat: 5,
+  bumpScale: 0.2,
+});
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -113,6 +126,44 @@ function resolveDepthEnvironmentMode() {
   }
 }
 
+function createGraphiteSurfaceTexture() {
+  if (typeof document === "undefined") return null;
+  const size = Math.max(16, DEPTH_GRAPHITE_RUNTIME.textureSize);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+
+  const image = context.createImageData(size, size);
+  for (let index = 0; index < image.data.length; index += 4) {
+    const pixel = index / 4;
+    const x = pixel % size;
+    const y = Math.floor(pixel / size);
+    const grain = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+    const value = 112 + Math.round((grain - Math.floor(grain)) * 28);
+    image.data[index] = value;
+    image.data[index + 1] = value;
+    image.data[index + 2] = value;
+    image.data[index + 3] = 255;
+  }
+  context.putImageData(image, 0, 0);
+
+  context.globalAlpha = 0.22;
+  for (let y = 0; y < size; y += 3) {
+    context.fillStyle = y % 2 ? "#ffffff" : "#000000";
+    context.fillRect(0, y, size, 1);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(DEPTH_GRAPHITE_RUNTIME.textureRepeat, DEPTH_GRAPHITE_RUNTIME.textureRepeat);
+  texture.colorSpace = THREE.NoColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function buildGraphiteMaterial({
   opacity = 0.78,
   color = 0x05070a,
@@ -120,16 +171,40 @@ function buildGraphiteMaterial({
 } = {}) {
   const runtimeMode = environmentMode !== DEPTH_ENVIRONMENT_MODE.debug;
   const resolvedOpacity = runtimeMode ? 1 : opacity;
-  return new THREE.MeshStandardMaterial({
-    color: runtimeMode ? 0x05070a : color,
-    emissive: runtimeMode ? 0x000000 : 0x020304,
-    roughness: 0.88,
-    metalness: 0.02,
-    transparent: resolvedOpacity < 1,
-    opacity: resolvedOpacity,
+  if (!runtimeMode) {
+    return new THREE.MeshStandardMaterial({
+      color,
+      emissive: 0x020304,
+      roughness: 0.88,
+      metalness: 0.02,
+      transparent: resolvedOpacity < 1,
+      opacity: resolvedOpacity,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+  }
+
+  const surfaceTexture = createGraphiteSurfaceTexture();
+  const material = new THREE.MeshPhysicalMaterial({
+    color: DEPTH_GRAPHITE_RUNTIME.faceColor,
+    roughness: DEPTH_GRAPHITE_RUNTIME.roughness,
+    metalness: DEPTH_GRAPHITE_RUNTIME.metalness,
+    envMapIntensity: DEPTH_GRAPHITE_RUNTIME.envMapIntensity,
+    clearcoat: DEPTH_GRAPHITE_RUNTIME.clearcoat,
+    clearcoatRoughness: DEPTH_GRAPHITE_RUNTIME.clearcoatRoughness,
+    specularIntensity: DEPTH_GRAPHITE_RUNTIME.specularIntensity,
+    specularColor: DEPTH_GRAPHITE_RUNTIME.specularColor,
     side: THREE.DoubleSide,
-    depthWrite: runtimeMode,
+    transparent: false,
+    opacity: 1,
+    depthWrite: true,
   });
+  if (surfaceTexture) {
+    material.roughnessMap = surfaceTexture;
+    material.bumpMap = surfaceTexture;
+    material.bumpScale = DEPTH_GRAPHITE_RUNTIME.bumpScale;
+  }
+  return material;
 }
 
 function applyEnvironmentMeshFlags(object = null, {
@@ -548,7 +623,9 @@ export function createLevelStageDepth3dLayer({
   camera.up.set(0, 1, 0);
   const environmentMode = resolveDepthEnvironmentMode();
   root.dataset.depthEnvironmentMode = environmentMode;
-  scene.add(new THREE.AmbientLight(0xaeb9c5, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.25 : 0.0));
+  scene.add(new THREE.AmbientLight(0xffffff, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.25 : 0.018));
+  const fill = new THREE.HemisphereLight(0xbfdfff, 0x050507, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.0 : 0.055);
+  scene.add(fill);
   const key = new THREE.DirectionalLight(0xdfeeff, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 1.15 : 0.0);
   key.position.set(-0.3, -0.5, 1.0);
   key.castShadow = false;
