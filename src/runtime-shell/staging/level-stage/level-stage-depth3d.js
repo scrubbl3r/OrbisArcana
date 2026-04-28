@@ -722,7 +722,7 @@ export function createLevelStageDepth3dLayer({
         orbRuntimeBO = resolvedBO;
         applyEnvironmentMeshFlags(orbRuntime.model, {
           receiveShadow: false,
-          castShadow: true,
+          castShadow: false,
         });
         actorGroup.add(orbRuntime.model);
         if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
