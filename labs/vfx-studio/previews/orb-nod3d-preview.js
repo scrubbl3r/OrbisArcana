@@ -62,6 +62,25 @@ function createSurfaceDisplacementConfig(cfg) {
   });
 }
 
+function frameCameraToSsotOrbSize(inspector, root, bo) {
+  if (!inspector || !inspector.camera || !root) return;
+  const bounds = root.getBoundingClientRect();
+  const viewportHeight = Math.max(1, Number(bounds.height) || 1);
+  const camera = inspector.camera;
+  const fovRadians = (Number(camera.fov) || 45) * Math.PI / 180;
+  const distance = viewportHeight / (2 * Math.tan(fovRadians * 0.5));
+  camera.position.set(0, 0, distance);
+  camera.near = Math.max(0.1, bo * 0.05);
+  camera.far = Math.max(2000, distance + (bo * 20));
+  camera.updateProjectionMatrix();
+  if (inspector.controls) {
+    inspector.controls.target.set(0, 0, 0);
+    inspector.controls.minDistance = Math.max(bo * 0.75, distance * 0.35);
+    inspector.controls.maxDistance = Math.max(bo * 12, distance * 3);
+    inspector.controls.update();
+  }
+}
+
 export function createOrbNod3dPreview({
   els = {},
   getOrbBaseVisualState = null,
@@ -138,6 +157,7 @@ export function createOrbNod3dPreview({
       },
     });
     if (!inspector) return cfg;
+    frameCameraToSsotOrbSize(inspector, els.previewRoot, bo);
 
     shellMaterial = createOpalescentOrbShellMaterial(ORB_MATERIAL_CONFIG, {
       bo,
