@@ -219,22 +219,6 @@ function applyEnvironmentMeshFlags(object = null, {
   });
 }
 
-function applyActorOverlayFlags(object = null) {
-  if (!object || typeof object.traverse !== "function") return;
-  object.traverse((node) => {
-    if (!node || !node.isMesh) return;
-    node.frustumCulled = false;
-    node.renderOrder = 20;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((material) => {
-      if (!material) return;
-      material.depthTest = false;
-      material.depthWrite = false;
-      material.needsUpdate = true;
-    });
-  });
-}
-
 function toWorldX(authorX, viewBox, worldWidthPx) {
   const vbX = clampNumber(viewBox.x, 0);
   const vbW = Math.max(1, clampNumber(viewBox.width, 1));
@@ -740,7 +724,6 @@ export function createLevelStageDepth3dLayer({
           receiveShadow: false,
           castShadow: true,
         });
-        applyActorOverlayFlags(orbRuntime.model);
         actorGroup.add(orbRuntime.model);
         if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
       }

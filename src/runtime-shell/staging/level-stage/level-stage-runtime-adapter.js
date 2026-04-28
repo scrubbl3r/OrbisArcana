@@ -8,17 +8,6 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function setLegacyOrbVisualsHidden(refs = {}, hidden = false) {
-  [
-    refs.orb,
-    refs.orbInterior,
-    refs.orbCracks,
-    refs.orbShards,
-  ].forEach((el) => {
-    if (el) el.hidden = !!hidden;
-  });
-}
-
 export function createLevelStageRuntimeAdapter({
   refs = {},
   level = null,
@@ -27,7 +16,6 @@ export function createLevelStageRuntimeAdapter({
   orbDiameterWorldUnits = LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS,
   unbindResize = () => {},
 } = {}) {
-  let lastOrb3dMounted = null;
   const core = createStageRuntimeAdapterCore({
     refs,
     level,
@@ -50,16 +38,12 @@ export function createLevelStageRuntimeAdapter({
   return Object.freeze({
     ...core,
     applyOrbTransform(args = {}) {
-      const orb3dMounted = depth3dRuntime && typeof depth3dRuntime.setOrbWorldPosition === "function"
-        ? depth3dRuntime.setOrbWorldPosition({
-            xW: args.xW,
-            yW: args.yW,
-            bo: orbDiameterWorldUnits,
-          })
-        : false;
-      if (orb3dMounted !== lastOrb3dMounted) {
-        lastOrb3dMounted = orb3dMounted;
-        setLegacyOrbVisualsHidden(refs, !!orb3dMounted);
+      if (depth3dRuntime && typeof depth3dRuntime.setOrbWorldPosition === "function") {
+        depth3dRuntime.setOrbWorldPosition({
+          xW: args.xW,
+          yW: args.yW,
+          bo: orbDiameterWorldUnits,
+        });
       }
       core.applyOrbTransform(args);
     },
