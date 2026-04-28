@@ -26,13 +26,13 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  z-index: 1;
+  z-index: 0;
 }
 
 .levelStageDepth3dLayer {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
