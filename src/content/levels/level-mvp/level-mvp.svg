@@ -31,7 +31,7 @@
      inkscape:window-x="1"
      inkscape:window-y="112"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer17"
+     inkscape:current-layer="svg1"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -71,6 +71,16 @@
        id="path1-4-1"
        style="fill:none;stroke:#f90000;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1"
        d="M 1050.4961,586.22656 906.61133,1469.1914 1244.3164,1466.2871 1378.1465,1734 H 762 V 1414 H 266 v 564 H 1858.2402 V 582.9768 Z"
+       sodipodi:nodetypes="ccccccccccc" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer17"
+     inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24">
+    <path
+       style="display:inline;fill:#333333;stroke:none;stroke-opacity:1;fill-opacity:1"
+       d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
+       id="path1-3"
        sodipodi:nodetypes="ccccccccccc" />
   </g>
   <g
@@ -148,15 +158,5 @@
        cx="1585.5"
        cy="1844.5"
        r="2.5" />
-  </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer17"
-     inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24">
-    <path
-       style="display:inline;fill:#333333;stroke:none;stroke-opacity:1;fill-opacity:1"
-       d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
-       id="path1-3"
-       sodipodi:nodetypes="ccccccccccc" />
   </g>
 </svg>
