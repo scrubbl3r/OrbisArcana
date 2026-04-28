@@ -71,7 +71,9 @@ export function createOrbNod3dPreview({
   let orbLight = null;
   let model = null;
   let activeCfg = null;
+  let createdAt = 0;
   let playStartedAt = 0;
+  let isPlaying = false;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -84,6 +86,18 @@ export function createOrbNod3dPreview({
     shellMaterial = null;
     orbLight = null;
     model = null;
+    isPlaying = false;
+  }
+
+  function setNodEnvelope({ bo, envelope = 0, shaderTime = 0 } = {}) {
+    if (!shellMaterial || !shellMaterial.uniforms || !activeCfg) return;
+    if (shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = shaderTime;
+    if (shellMaterial.uniforms.uDisplacementDepth) {
+      shellMaterial.uniforms.uDisplacementDepth.value = bo * activeCfg.waveDepthBO * envelope;
+    }
+    if (shellMaterial.uniforms.uDisplacementShrink) {
+      shellMaterial.uniforms.uDisplacementShrink.value = activeCfg.shrinkPct * envelope;
+    }
   }
 
   function apply() {
@@ -92,8 +106,9 @@ export function createOrbNod3dPreview({
     hydrateFields(els, cfg);
     destroyInspector();
     const bo = readBo();
-    const startedAt = performance.now();
-    playStartedAt = startedAt;
+    createdAt = performance.now();
+    playStartedAt = 0;
+    isPlaying = false;
     activeCfg = cfg;
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
@@ -104,24 +119,22 @@ export function createOrbNod3dPreview({
       maxDistanceBo: 28,
       bloom: ORB_BLOOM_CONFIG.enabled ? ORB_BLOOM_CONFIG : null,
       onFrame: () => {
-        const elapsedSec = (performance.now() - playStartedAt) / 1000;
-        const progress = Math.max(0, Math.min(1, (elapsedSec * 1000) / activeCfg.durationMs));
-        const envelope = Math.sin(progress * Math.PI);
-        const oscillationLimit = activeCfg.oscillationCount / Math.max(0.001, activeCfg.oscillationSpeedHz);
-        const shaderTime = Math.min(elapsedSec, oscillationLimit);
-        if (shellMaterial && shellMaterial.uniforms) {
-          if (shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = shaderTime;
-          if (shellMaterial.uniforms.uDisplacementDepth) {
-            shellMaterial.uniforms.uDisplacementDepth.value = bo * activeCfg.waveDepthBO * envelope;
-          }
-          if (shellMaterial.uniforms.uDisplacementShrink) {
-            shellMaterial.uniforms.uDisplacementShrink.value = activeCfg.shrinkPct * envelope;
+        const materialTime = (performance.now() - createdAt) / 1000;
+        let shaderTime = materialTime;
+        let envelope = 0;
+        if (isPlaying) {
+          const elapsedSec = (performance.now() - playStartedAt) / 1000;
+          const progress = Math.max(0, Math.min(1, (elapsedSec * 1000) / activeCfg.durationMs));
+          envelope = Math.sin(progress * Math.PI);
+          const oscillationLimit = activeCfg.oscillationCount / Math.max(0.001, activeCfg.oscillationSpeedHz);
+          shaderTime = Math.min(elapsedSec, oscillationLimit);
+          if (progress >= 1) {
+            isPlaying = false;
+            envelope = 0;
           }
         }
-        if (orbLight) updateOrbPointLight(orbLight, shaderTime, ORB_MATERIAL_CONFIG);
-        if (model && progress >= 1) {
-          playStartedAt = performance.now();
-        }
+        setNodEnvelope({ bo, envelope, shaderTime });
+        if (orbLight) updateOrbPointLight(orbLight, materialTime, ORB_MATERIAL_CONFIG);
       },
     });
     if (!inspector) return cfg;
@@ -130,6 +143,7 @@ export function createOrbNod3dPreview({
       bo,
       surfaceDisplacement: createSurfaceDisplacementConfig(cfg),
     });
+    setNodEnvelope({ bo, envelope: 0, shaderTime: 0 });
     const created = createOrbModel({
       bo,
       shellMaterial,
@@ -154,6 +168,7 @@ export function createOrbNod3dPreview({
     hydrateFields(els, activeCfg);
     if (!inspector) apply();
     playStartedAt = performance.now();
+    isPlaying = true;
   }
 
   function clear() {
@@ -163,7 +178,6 @@ export function createOrbNod3dPreview({
   function wire() {
     apply();
     [
-      els.previewOrbNod3d,
       els.orbNod3dApplyShrinkBtn,
       els.orbNod3dApplyDurationBtn,
       els.orbNod3dApplyFillOpacityBtn,
