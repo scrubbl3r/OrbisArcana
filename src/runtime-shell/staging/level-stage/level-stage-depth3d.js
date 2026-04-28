@@ -36,7 +36,7 @@ function buildLayerSvgMarkup(layer = {}, viewBox = {}) {
   const tx = clampNumber(layer.translate && layer.translate.x, 0);
   const ty = clampNumber(layer.translate && layer.translate.y, 0);
   const body = String(layer.authoredBody || "");
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" width="${vbW}" height="${vbH}">${defs}<rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" fill="white" fill-opacity="0"></rect><g transform="translate(${tx} ${ty})">${body}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" width="${vbW}" height="${vbH}">${defs}<rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" fill="white" fill-opacity="0"></rect><g transform="translate(${tx} ${ty})">${body}</g></svg>`;
 }
 
 function loadImageFromSvgMarkup(markup = "") {
@@ -347,6 +347,7 @@ export function createLevelStageDepth3dLayer({
   let worldWidthPx = 1;
   let worldHeightPx = 1;
   let depthLayerCount = 0;
+  let lastFrame = null;
 
   function setLabel(text) {
     if (labelEl) {
@@ -373,6 +374,13 @@ export function createLevelStageDepth3dLayer({
     viewportHeightPx = 0,
   } = {}) {
     if (disposed) return;
+    lastFrame = {
+      camLeft,
+      camTop,
+      zoom,
+      viewportWidthPx,
+      viewportHeightPx,
+    };
     const width = Math.max(1, Math.round(clampNumber(viewportWidthPx, root.clientWidth || 1)));
     const height = Math.max(1, Math.round(clampNumber(viewportHeightPx, root.clientHeight || 1)));
     renderer.setSize(width, height, false);
@@ -391,6 +399,36 @@ export function createLevelStageDepth3dLayer({
     camera.lookAt(cx, cy, -360);
     camera.updateProjectionMatrix();
     renderer.render(scene, camera);
+  }
+
+  function resolveBootFrame(layers = []) {
+    const width = Math.max(1, Math.round(root.clientWidth || (globalThis.innerWidth || 1)));
+    const height = Math.max(1, Math.round(root.clientHeight || (globalThis.innerHeight || 1)));
+    const boxes = (Array.isArray(layers) ? layers : [])
+      .map((layer) => layer && layer.boundaryBox ? layer.boundaryBox : null)
+      .filter(Boolean);
+    if (!boxes.length) {
+      return Object.freeze({
+        camLeft: 0,
+        camTop: 0,
+        zoom: 1,
+        viewportWidthPx: width,
+        viewportHeightPx: height,
+      });
+    }
+    const left = Math.min(...boxes.map((box) => clampNumber(box.leftXW, 0)));
+    const top = Math.min(...boxes.map((box) => clampNumber(box.topYW, 0)));
+    const right = Math.max(...boxes.map((box) => clampNumber(box.rightXW, 0)));
+    const bottom = Math.max(...boxes.map((box) => clampNumber(box.bottomYW, 0)));
+    const centerX = (left + right) * 0.5;
+    const centerY = (top + bottom) * 0.5;
+    return Object.freeze({
+      camLeft: Math.max(0, centerX - (width * 0.5)),
+      camTop: Math.max(0, centerY - (height * 0.5)),
+      zoom: 1,
+      viewportWidthPx: width,
+      viewportHeightPx: height,
+    });
   }
 
   return Object.freeze({
@@ -413,6 +451,11 @@ export function createLevelStageDepth3dLayer({
         if (mesh) group.add(mesh);
       }
       root.hidden = depthLayerCount <= 0;
+      root.dataset.depthLayerCount = String(group.children.length);
+      root.dataset.depthStatus = group.children.length ? "ready" : "empty";
+      if (group.children.length) {
+        renderFrame(lastFrame || resolveBootFrame(layers));
+      }
     },
     renderFrame,
     dispose() {
