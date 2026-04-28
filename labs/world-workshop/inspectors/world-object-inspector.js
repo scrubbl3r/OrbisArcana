@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { createBloomComposer } from "../effects/bloom/bloom-effect.js";
 import { clearPreviewHost, setPreviewHostCleanup } from "../preview-host.js";
-import { disposeObject } from "../rendering/world-render-utils.js";
+import { disposeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js?v=20260428a";
 
 function resizeInspector({ renderer, composer = null, camera, root, edgeMaterials = [] }) {
   const bounds = root.getBoundingClientRect();

@@ -4,7 +4,7 @@ This directory is the canonical material library for World Workshop authored obj
 
 ## Orb
 
-`orb/opalescent-orb-config.js` and `orb/opalescent-orb-material.js` own the 3D orb visual material system:
+`src/game-runtime/orb/orb-3d-default.js` and `src/game-runtime/orb/orb-3d-material.js` own the 3D orb visual material system. The lab files under `orb/` are compatibility shims while older preview paths migrate:
 
 - translucent opalescent shell shader
 - orb light configuration and color drift

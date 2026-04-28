@@ -3,4 +3,4 @@ export {
   createOrbPointLight,
   createOrbShadowSpotLight,
   updateOrbPointLight,
-} from "../materials/orb/opalescent-orb-material.js?v=20260428a";
+} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";

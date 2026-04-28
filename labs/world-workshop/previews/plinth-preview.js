@@ -6,7 +6,7 @@ import { createGraphiteMaterial } from "../materials/graphite/graphite-material.
 import {
   addLineEdges,
   addOrbScaleGuide,
-} from "../rendering/world-render-utils.js?v=20260426a";
+} from "../../../src/game-runtime/rendering/three/three-line-utils.js?v=20260428a";
 
 export function renderPlinthPreview({
   root,

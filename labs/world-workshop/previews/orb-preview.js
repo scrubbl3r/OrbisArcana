@@ -1,8 +1,8 @@
-import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
+import { createOrbModel } from "../../../src/game-runtime/orb/orb-3d-model.js?v=20260428a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
-import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260428a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260428a";
+import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 
 export function renderOrbPreview({
   root,

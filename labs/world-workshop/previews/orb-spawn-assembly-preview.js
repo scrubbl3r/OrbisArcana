@@ -1,14 +1,14 @@
 import * as THREE from "three";
 import { ORB_IDLE_CONFIG } from "../behaviors/orb/orb-idle-config.js?v=20260426a";
-import { createOrbModel } from "../generators/orb-generator.js?v=20260426a";
+import { createOrbModel } from "../../../src/game-runtime/orb/orb-3d-model.js?v=20260428a";
 import { createPlinthModel } from "../generators/plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
-import { ORB_MATERIAL_CONFIG } from "../materials/orb/opalescent-orb-config.js?v=20260428a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../materials/orb/opalescent-orb-material.js?v=20260428a";
+import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { GRAPHITE_CONFIG } from "../materials/graphite/graphite-config.js?v=20260426a";
 import { createGraphiteMaterial } from "../materials/graphite/graphite-material.js?v=20260426a";
-import { addLineEdges } from "../rendering/world-render-utils.js?v=20260426a";
+import { addLineEdges } from "../../../src/game-runtime/rendering/three/three-line-utils.js?v=20260428a";
 
 export function renderOrbSpawnAssemblyPreview({
   root,

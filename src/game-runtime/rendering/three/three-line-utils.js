@@ -1,0 +1,96 @@
+import * as THREE from "three";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
+
+export const WORLD_FACE_COLOR = 0x000000;
+export const WORLD_EDGE_COLOR = 0xffffff;
+
+export function createWorldFaceMaterial({
+  color = WORLD_FACE_COLOR,
+  side = THREE.DoubleSide,
+} = {}) {
+  return new THREE.MeshBasicMaterial({ color, side });
+}
+
+export function addLineEdges(mesh, {
+  color = WORLD_EDGE_COLOR,
+  linewidth = 2,
+  opacity = 1,
+  thresholdAngle = 16,
+  edgeMaterials = [],
+} = {}) {
+  if (!mesh || !mesh.geometry || !mesh.parent) return null;
+  const edges = new THREE.EdgesGeometry(mesh.geometry, thresholdAngle);
+  const positions = Array.from(edges.getAttribute("position").array);
+  const lineGeometry = new LineSegmentsGeometry();
+  lineGeometry.setPositions(positions);
+  edges.dispose();
+
+  const material = new LineMaterial({
+    color,
+    linewidth,
+    transparent: opacity < 1,
+    opacity,
+    worldUnits: false,
+  });
+  edgeMaterials.push(material);
+
+  const lines = new LineSegments2(lineGeometry, material);
+  lines.computeLineDistances();
+  lines.position.copy(mesh.position);
+  lines.rotation.copy(mesh.rotation);
+  lines.scale.copy(mesh.scale);
+  mesh.parent.add(lines);
+  return lines;
+}
+
+export function addLineLoop(group, {
+  points = [],
+  color = WORLD_EDGE_COLOR,
+  linewidth = 2,
+  edgeMaterials = [],
+} = {}) {
+  if (!group || !Array.isArray(points) || points.length < 2) return null;
+  const positions = [];
+  for (let index = 0; index < points.length; index += 1) {
+    const current = points[index];
+    const next = points[(index + 1) % points.length];
+    positions.push(current.x, current.y, current.z, next.x, next.y, next.z);
+  }
+  const lineGeometry = new LineSegmentsGeometry();
+  lineGeometry.setPositions(positions);
+  const material = new LineMaterial({
+    color,
+    linewidth,
+    worldUnits: false,
+  });
+  edgeMaterials.push(material);
+
+  const lines = new LineSegments2(lineGeometry, material);
+  lines.computeLineDistances();
+  group.add(lines);
+  return lines;
+}
+
+export function addOrbScaleGuide(group, {
+  bo,
+  y,
+  color = WORLD_EDGE_COLOR,
+} = {}) {
+  if (!group) return null;
+  const orbGuide = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.SphereGeometry((Number(bo) || 72) * 0.5, 32, 16), 16),
+    new THREE.LineDashedMaterial({
+      color,
+      dashSize: 4,
+      gapSize: 6,
+      transparent: true,
+      opacity: 0.22,
+    })
+  );
+  orbGuide.position.set(0, Number(y) || 0, 0);
+  orbGuide.computeLineDistances();
+  group.add(orbGuide);
+  return orbGuide;
+}

@@ -1,0 +1,16 @@
+export const ORB_SURFACE_DISPLACEMENT_CONFIG = Object.freeze({
+  enabled: true,
+  waveCount: 4,
+  waveDepthBO: 0.024,
+  oscillationSpeedHz: 4.8,
+  equatorFalloff: 0,
+  equatorAmplitude: 1,
+  poleAmplitude: 1,
+  rippleSoftness: 0.82,
+  latitudinalMix: 1,
+  latitudinalBands: 4,
+  cellMix: 0,
+  axisMix: 0,
+  phaseOffset: 0,
+  shrinkPct: 0.02,
+});

@@ -1,13 +1,13 @@
 import * as THREE from "three";
 import { createWorldObjectInspector } from "../../world-workshop/inspectors/world-object-inspector.js?v=20260426a";
-import { createOrbModel } from "../../world-workshop/generators/orb-generator.js?v=20260427a";
+import { createOrbModel } from "../../../src/game-runtime/orb/orb-3d-model.js?v=20260428a";
 import { ORB_BLOOM_CONFIG } from "../../world-workshop/effects/bloom/bloom-config.js?v=20260426a";
 import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
   updateOrbPointLight,
-} from "../../world-workshop/materials/orb/opalescent-orb-material.js?v=20260428a";
-import { ORB_MATERIAL_CONFIG } from "../../world-workshop/materials/orb/opalescent-orb-config.js?v=20260428a";
+} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
+import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
