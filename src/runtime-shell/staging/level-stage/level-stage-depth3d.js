@@ -13,6 +13,10 @@ const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
+const DEPTH_ENVIRONMENT_MODE = Object.freeze({
+  runtime: "runtime",
+  debug: "debug",
+});
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -97,14 +101,45 @@ function samplePixel(imageData, width, height, x, y) {
   });
 }
 
-function buildGraphiteMaterial({ opacity = 0.78, color = 0x33383e } = {}) {
+function resolveDepthEnvironmentMode() {
+  try {
+    const params = new URLSearchParams(globalThis.location && globalThis.location.search || "");
+    const raw = String(params.get("depth3dEnv") || "").trim().toLowerCase();
+    return raw === DEPTH_ENVIRONMENT_MODE.debug
+      ? DEPTH_ENVIRONMENT_MODE.debug
+      : DEPTH_ENVIRONMENT_MODE.runtime;
+  } catch (_) {
+    return DEPTH_ENVIRONMENT_MODE.runtime;
+  }
+}
+
+function buildGraphiteMaterial({
+  opacity = 0.78,
+  color = 0x33383e,
+  environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
+} = {}) {
+  const runtimeMode = environmentMode !== DEPTH_ENVIRONMENT_MODE.debug;
+  const resolvedOpacity = runtimeMode ? 1 : opacity;
   return new THREE.MeshStandardMaterial({
     color,
     roughness: 0.88,
     metalness: 0.02,
-    transparent: opacity < 1,
-    opacity,
+    transparent: resolvedOpacity < 1,
+    opacity: resolvedOpacity,
     side: THREE.DoubleSide,
+    depthWrite: runtimeMode,
+  });
+}
+
+function applyEnvironmentMeshFlags(object = null, {
+  receiveShadow = true,
+  castShadow = true,
+} = {}) {
+  if (!object || typeof object.traverse !== "function") return;
+  object.traverse((node) => {
+    if (!node || !node.isMesh) return;
+    node.receiveShadow = !!receiveShadow;
+    node.castShadow = !!castShadow;
   });
 }
 
@@ -211,7 +246,7 @@ function buildVectorLoopEdges(loop = {}, depthPx = 0, worldWidthPx = 1, worldHei
   return geometry;
 }
 
-function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
+function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode = DEPTH_ENVIRONMENT_MODE.runtime }) {
   const loops = Array.isArray(layer && layer.loops) ? layer.loops : [];
   const primaryLoop = loops[0] || null;
   const shape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
@@ -227,8 +262,8 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
   const floorShape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
   const floorGeometry = new THREE.ShapeGeometry(floorShape || shape);
   floorGeometry.translate(0, 0, -depthPx);
-  const floorMaterial = buildGraphiteMaterial({ opacity: 0.58, color: 0x303941 });
-  floorMaterial.depthWrite = false;
+  const floorMaterial = buildGraphiteMaterial({ opacity: 0.58, color: 0x303941, environmentMode });
+  if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) floorMaterial.depthWrite = false;
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
   floor.renderOrder = 1;
   floor.name = `${model.name}:floor`;
@@ -237,8 +272,8 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
 
   const ceilingGeometry = new THREE.ShapeGeometry(shape);
   ceilingGeometry.translate(0, 0, 0);
-  const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.08, color: 0x6a7480 });
-  ceilingMaterial.depthWrite = false;
+  const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.08, color: 0x6a7480, environmentMode });
+  if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) ceilingMaterial.depthWrite = false;
   const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
   ceiling.renderOrder = 3;
   ceiling.name = `${model.name}:ceiling`;
@@ -247,10 +282,10 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
   for (const loop of loops) {
     const wallGeometry = buildVectorWallGeometry(loop, depthPx, worldWidthPx, worldHeightPx);
     if (wallGeometry) {
-      const wallMaterial = buildGraphiteMaterial({ opacity: 0.80, color: 0x232a31 });
+      const wallMaterial = buildGraphiteMaterial({ opacity: 0.80, color: 0x232a31, environmentMode });
       wallMaterial.vertexColors = true;
       wallMaterial.needsUpdate = true;
-      wallMaterial.depthWrite = false;
+      if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) wallMaterial.depthWrite = false;
       const walls = new THREE.Mesh(wallGeometry, wallMaterial);
       walls.renderOrder = 2;
       walls.name = `${model.name}:walls`;
@@ -264,7 +299,9 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx }) {
         new THREE.LineBasicMaterial({
           color: 0x66727d,
           transparent: true,
-          opacity: 0.56,
+          opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.56 : 0.42,
+          depthTest: true,
+          depthWrite: false,
         })
       );
       edges.renderOrder = 4;
@@ -394,8 +431,8 @@ function buildCeilingGeometryFromSamples({ samples, cols, rows, viewBox, rasterB
   return geometry;
 }
 
-async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx }) {
-  const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx });
+async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx, environmentMode = DEPTH_ENVIRONMENT_MODE.runtime }) {
+  const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode });
   if (vectorMesh) return vectorMesh;
 
   const aspect = Math.max(0.1, clampNumber(viewBox.width, 1) / Math.max(1, clampNumber(viewBox.height, 1)));
@@ -436,7 +473,7 @@ async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx
     worldWidthPx,
     worldHeightPx,
   });
-  const material = buildGraphiteMaterial({ opacity: 0.86 });
+  const material = buildGraphiteMaterial({ opacity: 0.86, environmentMode });
   material.vertexColors = true;
   material.needsUpdate = true;
   const mesh = new THREE.Mesh(geometry, material);
@@ -451,8 +488,8 @@ async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx
     worldWidthPx,
     worldHeightPx,
   });
-  const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.14, color: 0x59616a });
-  ceilingMaterial.depthWrite = false;
+  const ceilingMaterial = buildGraphiteMaterial({ opacity: 0.14, color: 0x59616a, environmentMode });
+  if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) ceilingMaterial.depthWrite = false;
   const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
   ceiling.name = `depth:${String(layer.id || "layer")}:ceiling`;
   const edges = new THREE.LineSegments(
@@ -460,7 +497,9 @@ async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx
     new THREE.LineBasicMaterial({
       color: 0x8f98a2,
       transparent: true,
-      opacity: 0.36,
+      opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.36 : 0.30,
+      depthTest: true,
+      depthWrite: false,
     })
   );
   const model = new THREE.Group();
@@ -483,14 +522,19 @@ export function createLevelStageDepth3dLayer({
   });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(2, globalThis.devicePixelRatio || 1));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   root.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(DEPTH_CAMERA_FOV_DEG, 1, 1, 24000);
   camera.up.set(0, 1, 0);
-  scene.add(new THREE.AmbientLight(0xaeb9c5, 0.25));
-  const key = new THREE.DirectionalLight(0xdfeeff, 1.15);
+  const environmentMode = resolveDepthEnvironmentMode();
+  root.dataset.depthEnvironmentMode = environmentMode;
+  scene.add(new THREE.AmbientLight(0xaeb9c5, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.25 : 0.08));
+  const key = new THREE.DirectionalLight(0xdfeeff, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 1.15 : 0.34);
   key.position.set(-0.3, -0.5, 1.0);
+  key.castShadow = false;
   scene.add(key);
   const group = new THREE.Group();
   const actorGroup = new THREE.Group();
@@ -633,8 +677,12 @@ export function createLevelStageDepth3dLayer({
           viewBox: summary.viewBox || { x: 0, y: 0, width: worldWidthPx, height: worldHeightPx },
           worldWidthPx,
           worldHeightPx,
+          environmentMode,
         });
-        if (mesh) group.add(mesh);
+        if (mesh) {
+          applyEnvironmentMeshFlags(mesh);
+          group.add(mesh);
+        }
       }
       syncRootVisibility();
       root.dataset.depthLayerCount = String(group.children.length);
@@ -662,6 +710,10 @@ export function createLevelStageDepth3dLayer({
           includeRibs: false,
         });
         orbRuntimeBO = resolvedBO;
+        applyEnvironmentMeshFlags(orbRuntime.model, {
+          receiveShadow: false,
+          castShadow: true,
+        });
         actorGroup.add(orbRuntime.model);
         if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
       }
