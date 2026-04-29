@@ -60,6 +60,11 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
           ? mapSource.semanticLayers.worldItems.slice()
           : []
       ),
+      props: Object.freeze(
+        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.props)
+          ? mapSource.semanticLayers.props.slice()
+          : []
+      ),
       lineArt: Object.freeze(
         Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.lineArt)
           ? mapSource.semanticLayers.lineArt.slice()

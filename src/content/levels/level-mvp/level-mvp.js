@@ -82,6 +82,7 @@ export const LEVEL_MVP = Object.freeze({
       spawn: Object.freeze(["spawn"]),
       camera: Object.freeze(["camera_01"]),
       worldItems: Object.freeze(["globe_1", "globe_2"]),
+      props: Object.freeze(["props"]),
       lineArt: Object.freeze(["line_art"]),
       starsField: Object.freeze(["stars_field"]),
     }),

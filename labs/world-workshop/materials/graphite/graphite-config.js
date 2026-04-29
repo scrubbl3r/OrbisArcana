@@ -1,27 +1,5 @@
-export const GRAPHITE_CONFIG = Object.freeze({
-  faceColor: 0x000000,
-  edgeColor: 0xfffffff,
-  edgeWidth: 2,
-  edgeOpacity: 0.01,
-  edgeHaloColor: 0xbfeeff,
-  edgeHaloWidth: 0.5,
-  edgeHaloOpacity: 0.01,
-  edgeThresholdAngle: 16,
-  guideColor: 0xffffff,
-  assemblyScale: 0.85,
-  assemblyGroundPlaneSizeBO: 4.8,
-  litFaceColor: 0x707680,
-  litRoughness: 0.58,
-  litMetalness: 0.0,
-  litEnvMapIntensity: 0.22,
-  litClearcoat: 0.25,
-  litClearcoatRoughness: 0.7,
-  litSpecularIntensity: 0.28,
-  litSpecularColor: 0xd8f5ff,
-  litTextureSize: 96,
-  litTextureRepeat: 5,
-  litBumpScale: 0.2,
-});
-
-export const GRAPHITE_PLINTH_MATERIAL_CONFIG = GRAPHITE_CONFIG;
-export const PLINTH_MATERIAL_CONFIG = GRAPHITE_CONFIG;
+export {
+  GRAPHITE_CONFIG,
+  GRAPHITE_PLINTH_MATERIAL_CONFIG,
+  PLINTH_MATERIAL_CONFIG,
+} from "../../../../src/game-runtime/rendering/three/materials/graphite-config.js?v=20260429a";

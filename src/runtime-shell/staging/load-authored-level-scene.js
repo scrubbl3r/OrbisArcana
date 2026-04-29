@@ -29,6 +29,7 @@ export async function loadAuthoredLevelScene({
       (mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds) ||
       (mapSource.semanticLayers && mapSource.semanticLayers.boundsCam),
     worldItemLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.worldItems,
+    propLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.props,
     lineArtLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.lineArt,
     starsFieldLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.starsField,
     spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,

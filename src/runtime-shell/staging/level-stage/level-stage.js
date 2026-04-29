@@ -149,6 +149,7 @@ export function renderLevelStage(root, {
     root: refs.depth3dLayer,
     labelEl: refs.labelMeta,
     debugEl: refs.depthReadout,
+    orbDiameterWorldUnits: orbBaseVisualState.diameterPx,
   });
 
   const controller = createAuthoredStageController({

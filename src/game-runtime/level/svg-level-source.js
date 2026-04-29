@@ -88,6 +88,66 @@ function parseDepthLayerLabel(label = "") {
   return Object.freeze(config);
 }
 
+function parsePropLabelText(label = "", fallbackId = "") {
+  const text = String(label || "").trim();
+  const config = {
+    id: String(fallbackId || "").trim(),
+    zBO: 4,
+    anchor: "center",
+    scale: 1,
+  };
+  const explicitIdMatch = text.match(/(?:^|\s)id\s*:\s*([^\s]+)/i);
+  if (explicitIdMatch) config.id = String(explicitIdMatch[1] || config.id).trim();
+
+  let metadataText = text;
+  const explicitLabelMatch = text.match(/(?:^|\s)label\s*:\s*([\s\S]+)$/i);
+  if (explicitLabelMatch) metadataText = String(explicitLabelMatch[1] || "").trim();
+
+  const parts = String(metadataText || "").split(/\s+/).filter(Boolean);
+  for (const part of parts) {
+    const [rawKey, ...rawValueParts] = String(part || "").split("=");
+    const key = String(rawKey || "").trim().toLowerCase();
+    const value = rawValueParts.join("=").trim();
+    if (!key || !value) continue;
+    if (key === "z" || key === "zbo" || key === "depth") {
+      config.zBO = Math.max(0, parseBoValue(value, config.zBO));
+      continue;
+    }
+    if (key === "anchor") {
+      const anchor = String(value || "").trim().toLowerCase();
+      config.anchor = anchor || config.anchor;
+      continue;
+    }
+    if (key === "scale") {
+      config.scale = Math.max(0.01, clampNumber(value, config.scale));
+    }
+  }
+
+  return Object.freeze(config);
+}
+
+function inferPropKind(id = "") {
+  const text = String(id || "").trim().toLowerCase();
+  if (!text) return "";
+  const match = text.match(/^([a-z][a-z0-9-]*)[_:-]/i);
+  return match ? String(match[1] || "").toLowerCase() : text;
+}
+
+function resolveRectPropAnchor(rect = {}, anchor = "center") {
+  const x = clampNumber(rect && rect.x, 0);
+  const y = clampNumber(rect && rect.y, 0);
+  const width = clampNumber(rect && rect.width, 0);
+  const height = clampNumber(rect && rect.height, 0);
+  const normalizedAnchor = String(anchor || "center").trim().toLowerCase();
+  if (normalizedAnchor === "top") {
+    return Object.freeze({ x: x + (width * 0.5), y });
+  }
+  if (normalizedAnchor === "bottom" || normalizedAnchor === "base") {
+    return Object.freeze({ x: x + (width * 0.5), y: y + height });
+  }
+  return Object.freeze({ x: x + (width * 0.5), y: y + (height * 0.5) });
+}
+
 export function parseSvgViewBox(svgText = "") {
   const match = String(svgText || "").match(/viewBox="([^"]+)"/i);
   if (!match) {
@@ -111,6 +171,7 @@ export function parseSvgPathElements(svgText = "") {
     if (!d) continue;
     paths.push(Object.freeze({
       id: readAttr(attrs, "id"),
+      label: readAttr(attrs, "inkscape:label"),
       d,
       style: readAttr(attrs, "style"),
     }));
@@ -125,6 +186,7 @@ export function parseSvgCircleElements(svgText = "") {
     const attrs = String(match && match[1] || "");
     circles.push(Object.freeze({
       id: readAttr(attrs, "id"),
+      label: readAttr(attrs, "inkscape:label"),
       cx: clampNumber(readAttr(attrs, "cx"), 0),
       cy: clampNumber(readAttr(attrs, "cy"), 0),
       r: clampNumber(readAttr(attrs, "r"), 0),
@@ -141,6 +203,7 @@ export function parseSvgRectElements(svgText = "") {
     const attrs = String(match && match[1] || "");
     rects.push(Object.freeze({
       id: readAttr(attrs, "id"),
+      label: readAttr(attrs, "inkscape:label"),
       x: clampNumber(readAttr(attrs, "x"), 0),
       y: clampNumber(readAttr(attrs, "y"), 0),
       width: clampNumber(readAttr(attrs, "width"), 0),
@@ -624,6 +687,105 @@ export function buildSvgWorldItemSpawns({
   return Object.freeze(spawns);
 }
 
+export function buildSvgPropInstances({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  propLayerLabels = [],
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(propLayerLabels) ? propLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  const matchingLayers = authoredLayers
+    .filter((layer) => (
+      allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase())
+      && isSvgRenderLayerVisible(layer)
+    ));
+  const props = [];
+  for (const layer of matchingLayers) {
+    const rects = Array.isArray(layer && layer.rects) ? layer.rects : [];
+    const circles = Array.isArray(layer && layer.circles) ? layer.circles : [];
+    for (const rectSource of rects) {
+      const rect = translateRect(rectSource, layer && layer.translate);
+      const rawId = String(rect && rect.id || "").trim();
+      const rawLabel = String(rect && rect.label || "").trim();
+      const config = parsePropLabelText(rawLabel, rawId);
+      const id = String(config.id || rawId || `prop_${props.length + 1}`).trim();
+      const authoredCenter = Object.freeze({
+        x: clampNumber(rect && rect.x, 0) + (clampNumber(rect && rect.width, 0) * 0.5),
+        y: clampNumber(rect && rect.y, 0) + (clampNumber(rect && rect.height, 0) * 0.5),
+      });
+      const authoredAnchor = resolveRectPropAnchor(rect, config.anchor);
+      props.push(Object.freeze({
+        id,
+        kind: inferPropKind(id),
+        zBO: config.zBO,
+        anchor: config.anchor,
+        scale: config.scale,
+        sourceShape: "rect",
+        authoredCenter,
+        authoredAnchor,
+        worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
+          viewBox,
+          worldWidthPx,
+          worldHeightPx,
+        }),
+        worldAnchor: scaleAuthoringPointToWorld(authoredAnchor, {
+          viewBox,
+          worldWidthPx,
+          worldHeightPx,
+        }),
+        authoredBox: Object.freeze({
+          x: clampNumber(rect && rect.x, 0),
+          y: clampNumber(rect && rect.y, 0),
+          width: clampNumber(rect && rect.width, 0),
+          height: clampNumber(rect && rect.height, 0),
+        }),
+        sourceId: rawId,
+        sourceLabel: rawLabel,
+      }));
+    }
+    for (const circleSource of circles) {
+      const circle = translateCircle(circleSource, layer && layer.translate);
+      const rawId = String(circle && circle.id || "").trim();
+      const rawLabel = String(circle && circle.label || "").trim();
+      const config = parsePropLabelText(rawLabel, rawId);
+      const id = String(config.id || rawId || `prop_${props.length + 1}`).trim();
+      const authoredCenter = Object.freeze({
+        x: clampNumber(circle && circle.cx, 0),
+        y: clampNumber(circle && circle.cy, 0),
+      });
+      const authoredAnchor = authoredCenter;
+      props.push(Object.freeze({
+        id,
+        kind: inferPropKind(id),
+        zBO: config.zBO,
+        anchor: config.anchor,
+        scale: config.scale,
+        sourceShape: "circle",
+        authoredCenter,
+        authoredAnchor,
+        worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
+          viewBox,
+          worldWidthPx,
+          worldHeightPx,
+        }),
+        worldAnchor: scaleAuthoringPointToWorld(authoredAnchor, {
+          viewBox,
+          worldWidthPx,
+          worldHeightPx,
+        }),
+        authoredRadius: clampNumber(circle && circle.r, 0),
+        sourceId: rawId,
+        sourceLabel: rawLabel,
+      }));
+    }
+  }
+  return Object.freeze(props);
+}
+
 export function buildSvgLineArtShapes({
   svgText = "",
   worldWidthPx = 0,
@@ -837,6 +999,7 @@ export function summarizeSvgLevelSource({
   cameraLayerLabels = [],
   cameraBoundaryLayerLabels = [],
   worldItemLayerLabels = [],
+  propLayerLabels = [],
   lineArtLayerLabels = [],
   starsFieldLayerLabels = [],
   spawnMarkerId = "",
@@ -875,6 +1038,12 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     worldItemLayerLabels,
   });
+  const props = buildSvgPropInstances({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    propLayerLabels,
+  });
   const lineArtShapes = buildSvgLineArtShapes({
     svgText,
     worldWidthPx,
@@ -909,6 +1078,7 @@ export function summarizeSvgLevelSource({
     cameraBoundaryLoops: Object.freeze(cameraBoundaryLoops),
     cameraBoundaryBox,
     worldItemSpawns: Object.freeze(worldItemSpawns),
+    props: Object.freeze(props),
     lineArtShapes: Object.freeze(lineArtShapes),
     starsFieldRegions: Object.freeze(starsFieldRegions),
     depthLayers: Object.freeze(depthLayers),

@@ -23,15 +23,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.33950369"
-     inkscape:cx="771.71474"
-     inkscape:cy="1434.4469"
+     inkscape:zoom="1.0069031"
+     inkscape:cx="370.44278"
+     inkscape:cy="1790.639"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="1"
-     inkscape:window-y="112"
+     inkscape:window-y="84"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer18"
+     inkscape:current-layer="layer2"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -99,6 +99,20 @@
   </g>
   <g
      inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="props"
+     sodipodi:insensitive="true">
+    <rect
+       style="fill:#d4aa00;stroke-width:6.10287"
+       id="rect2"
+       width="41"
+       height="56"
+       x="528.34814"
+       y="1864.1136"
+       inkscape:label="id: plinth_01  label: z=4bo anchor=bottom" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
      id="layer13"
      inkscape:label="stars_field"
      sodipodi:insensitive="true"
@@ -113,14 +127,14 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="spawn"
-     sodipodi:insensitive="true"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <circle
-       style="fill:#ff0000;stroke:none;stroke-width:0.696242"
+       style="fill:#ff0000;stroke:none;stroke-width:1.48875"
        id="path2-9"
-       cx="543"
-       cy="1892.1136"
-       r="8.6518793" />
+       cx="548.84814"
+       cy="1841.9618"
+       r="18.5" />
   </g>
   <g
      inkscape:groupmode="layer"
