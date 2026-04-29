@@ -1,5 +1,6 @@
 import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420t";
 import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js?v=20260423g";
+import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260428a";
 
 function clamp01(n){
   n = Number(n);
@@ -101,6 +102,7 @@ export function runOrbRuntimePipeline({
   const getLateralBounds = hooks.getLateralBounds;
   const getCameraSteeringState = hooks.getCameraSteeringState;
   const getBoundarySegments = hooks.getBoundarySegments;
+  const getCavityCollisionConfig = hooks.getCavityCollisionConfig;
 
   if (mvp && mvp.orbSystem && typeof mvp.orbSystem.tick === "function") {
     mvp.orbSystem.tick(nowMs);
@@ -190,15 +192,34 @@ export function runOrbRuntimePipeline({
   const preBoundaryYW = Number(state.yW) || 0;
   const preBoundaryVX = Number(state.vx) || 0;
   const preBoundaryVY = Number(state.v) || 0;
-  const segmentCollision = resolveCircleVsBoundarySegments({
-    circleXW: preBoundaryXW,
-    circleYW: preBoundaryYW,
-    radiusW: Number(phys.orbRadiusPx) || 0,
-    segments: typeof getBoundarySegments === "function" ? getBoundarySegments() : [],
-    previousXW: preBoundaryXW - (preBoundaryVX * dt),
-    previousYW: preBoundaryYW - (preBoundaryVY * dt),
-    maxIterations: 3,
-  });
+  const cavityCollisionConfig = typeof getCavityCollisionConfig === "function"
+    ? getCavityCollisionConfig()
+    : null;
+  const cavitySegments = Array.isArray(cavityCollisionConfig && cavityCollisionConfig.segments)
+    ? cavityCollisionConfig.segments
+    : [];
+  const segmentCollision = cavitySegments.length
+    ? resolveSphereVsExtrudedBoundarySegments({
+      sphereXW: preBoundaryXW,
+      sphereYW: preBoundaryYW,
+      sphereZBO: Number(cavityCollisionConfig && cavityCollisionConfig.orbZBO) || 0,
+      radiusW: Number(phys.orbRadiusPx) || 0,
+      segments: cavitySegments,
+      depthBO: Number(cavityCollisionConfig && cavityCollisionConfig.maxDepthBO) || 0,
+      boWorldUnits: Math.max(1, (Number(phys.orbRadiusPx) || 0) * 2),
+      previousXW: preBoundaryXW - (preBoundaryVX * dt),
+      previousYW: preBoundaryYW - (preBoundaryVY * dt),
+      maxIterations: 3,
+    })
+    : resolveCircleVsBoundarySegments({
+      circleXW: preBoundaryXW,
+      circleYW: preBoundaryYW,
+      radiusW: Number(phys.orbRadiusPx) || 0,
+      segments: typeof getBoundarySegments === "function" ? getBoundarySegments() : [],
+      previousXW: preBoundaryXW - (preBoundaryVX * dt),
+      previousYW: preBoundaryYW - (preBoundaryVY * dt),
+      maxIterations: 3,
+    });
   if (segmentCollision && segmentCollision.maxDepth > 0) {
     state.xW = Number(segmentCollision.xW) || state.xW;
     state.yW = Number(segmentCollision.yW) || state.yW;

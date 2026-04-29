@@ -14,7 +14,7 @@ import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260424f";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260424h";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
@@ -457,6 +457,20 @@ function shellResolvedBoundarySegments(shellContext) {
   return Array.isArray(runtime && runtime.currentLevelBoundarySegments)
     ? runtime.currentLevelBoundarySegments
     : [];
+}
+
+function shellResolvedCavityCollisionConfig(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const summary = runtime && runtime.currentLevelMapSummary ? runtime.currentLevelMapSummary : null;
+  const depthLayers = Array.isArray(summary && summary.depthLayers) ? summary.depthLayers : [];
+  const firstDepthLayer = depthLayers[0] || null;
+  const segments = shellResolvedBoundarySegments(shellContext);
+  if (!firstDepthLayer || !segments.length) return null;
+  return Object.freeze({
+    segments,
+    maxDepthBO: Math.max(0, Number(firstDepthLayer.maxDepthBO) || 0),
+    orbZBO: Math.max(0, Number(firstDepthLayer.orbZBO) || 0),
+  });
 }
 
 function shellResolvedCameraBoundaryBox(shellContext) {
@@ -1218,6 +1232,7 @@ function startShellStageLoop(shellContext) {
             applyShellOrbTransform(shellContext);
           },
           getBoundarySegments: () => shellResolvedBoundarySegments(shellContext),
+          getCavityCollisionConfig: () => shellResolvedCavityCollisionConfig(shellContext),
           updateDebugReadout: () => updateShellStageReadouts(shellContext),
         },
       });
@@ -2899,7 +2914,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260424f",
+  moduleCacheBustV = "20260428a",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
