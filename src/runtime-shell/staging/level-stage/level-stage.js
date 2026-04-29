@@ -97,6 +97,11 @@ export function renderLevelStage(root, {
             ${LEVEL_STAGE_GLOBE_MARKUP}
           </div>
         </div>
+        <div class="levelStageTopArtDock" aria-hidden="true">
+          <div class="levelStageTopArtWorld">
+            <svg class="levelStageTopArtOverlay" viewBox="0 0 ${worldSize.widthPx} ${worldSize.heightPx}" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </div>
         <div class="levelStageLabel">
           <span class="levelStageLabelTitle">Level Stage</span>
           <span class="levelStageLabelMeta"></span>
@@ -122,7 +127,9 @@ export function renderLevelStage(root, {
     worldDock: root.querySelector(".levelStageWorldDock"),
     world: root.querySelector(".levelStageWorld"),
     actorWorld: root.querySelector(".levelStageActorWorld"),
+    topArtWorld: root.querySelector(".levelStageTopArtWorld"),
     worldOverlay: root.querySelector(".levelStageWorldOverlay"),
+    topArtOverlay: root.querySelector(".levelStageTopArtOverlay"),
     labelMeta: root.querySelector(".levelStageLabelMeta"),
     depthReadout: root.querySelector("[data-level-stage-depth-readout='true']"),
     orbWrap: root.querySelector("[data-level-stage-orb-wrap='true']"),

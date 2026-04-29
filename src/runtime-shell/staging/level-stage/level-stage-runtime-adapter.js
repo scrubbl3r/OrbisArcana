@@ -97,6 +97,7 @@ export function createLevelStageRuntimeAdapter({
       };
       applyCameraVarsToWorld(refs.world, cameraVars);
       applyCameraVarsToWorld(refs.actorWorld, cameraVars);
+      applyCameraVarsToWorld(refs.topArtWorld, cameraVars);
       applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
         camLeft: Number(camLeft || 0),
         camTop: Number(camTop || 0),

@@ -108,6 +108,7 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25, onCa
   };
   applyCameraVarsToWorld(refs.world, cameraVars);
   applyCameraVarsToWorld(refs.actorWorld, cameraVars);
+  applyCameraVarsToWorld(refs.topArtWorld, cameraVars);
   applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
     camLeft: frame.camLeft,
     camTop: frame.camTop,
@@ -208,10 +209,20 @@ export function createAuthoredStageController({
           ? state.levelGraphicsModel.starsField
           : null,
         loops: state.sceneModel.loops,
-        lineArtShapes: state.sceneModel.lineArtShapes,
+        lineArtShapes: [],
         worldWidthPx: state.worldWidthPx,
         worldHeightPx: state.worldHeightPx,
       });
+      if (refs.topArtOverlay) {
+        refs.topArtOverlay.setAttribute("viewBox", `0 0 ${state.worldWidthPx} ${state.worldHeightPx}`);
+        refs.topArtOverlay.innerHTML = buildOverlayMarkup({
+          starsField: null,
+          loops: [],
+          lineArtShapes: state.sceneModel.lineArtShapes,
+          worldWidthPx: state.worldWidthPx,
+          worldHeightPx: state.worldHeightPx,
+        });
+      }
       state.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(refs.worldOverlay);
       if (typeof onSceneHydrated === "function") {
         onSceneHydrated(authoredScene, state);
