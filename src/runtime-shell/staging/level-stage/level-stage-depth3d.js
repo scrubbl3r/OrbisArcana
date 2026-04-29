@@ -576,6 +576,11 @@ export function createLevelStageDepth3dLayer({
   let orbRuntimeBO = 0;
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbDepthPx = currentOrbZBO * BO_WORLD_UNITS;
+  let lastTelemetryText = "";
+  let lastTelemetryBO = "";
+  let lastTelemetryRadius = "";
+  let lastTelemetryZBO = "";
+  let lastTelemetryDepthPx = "";
 
   function updateOrbTelemetry({
     bo = orbRuntimeBO,
@@ -583,18 +588,38 @@ export function createLevelStageDepth3dLayer({
     depthPx = currentOrbDepthPx,
   } = {}) {
     if (!root || !root.dataset) return;
-    root.dataset.depthOrbBo = Number(bo || 0).toFixed(2);
-    root.dataset.depthOrbRadius = (Math.max(1, Number(bo) || BO_WORLD_UNITS) * 0.5).toFixed(2);
-    root.dataset.depthOrbZbo = Number(zBO || 0).toFixed(2);
-    root.dataset.depthOrbDepthPx = Number(depthPx || 0).toFixed(2);
+    const nextBO = Number(bo || 0).toFixed(2);
+    const nextRadius = (Math.max(1, Number(bo) || BO_WORLD_UNITS) * 0.5).toFixed(2);
+    const nextZBO = Number(zBO || 0).toFixed(2);
+    const nextDepthPx = Number(depthPx || 0).toFixed(2);
+    if (
+      nextBO === lastTelemetryBO
+      && nextRadius === lastTelemetryRadius
+      && nextZBO === lastTelemetryZBO
+      && nextDepthPx === lastTelemetryDepthPx
+    ) {
+      return;
+    }
+    lastTelemetryBO = nextBO;
+    lastTelemetryRadius = nextRadius;
+    lastTelemetryZBO = nextZBO;
+    lastTelemetryDepthPx = nextDepthPx;
+    root.dataset.depthOrbBo = nextBO;
+    root.dataset.depthOrbRadius = nextRadius;
+    root.dataset.depthOrbZbo = nextZBO;
+    root.dataset.depthOrbDepthPx = nextDepthPx;
     if (labelEl && labelEl.dataset) {
-      labelEl.dataset.depthOrbBo = root.dataset.depthOrbBo;
-      labelEl.dataset.depthOrbRadius = root.dataset.depthOrbRadius;
-      labelEl.dataset.depthOrbZbo = root.dataset.depthOrbZbo;
-      labelEl.dataset.depthOrbDepthPx = root.dataset.depthOrbDepthPx;
+      labelEl.dataset.depthOrbBo = nextBO;
+      labelEl.dataset.depthOrbRadius = nextRadius;
+      labelEl.dataset.depthOrbZbo = nextZBO;
+      labelEl.dataset.depthOrbDepthPx = nextDepthPx;
     }
     if (debugEl) {
-      debugEl.textContent = `3d BO ${root.dataset.depthOrbBo} | r ${root.dataset.depthOrbRadius} | z ${root.dataset.depthOrbZbo}BO | depth ${root.dataset.depthOrbDepthPx}`;
+      const nextText = `3d BO ${nextBO} | r ${nextRadius} | z ${nextZBO}BO | depth ${nextDepthPx}`;
+      if (nextText !== lastTelemetryText) {
+        debugEl.textContent = nextText;
+        lastTelemetryText = nextText;
+      }
     }
   }
 
