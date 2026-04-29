@@ -466,11 +466,15 @@ function shellResolvedCavityCollisionConfig(shellContext) {
   const firstDepthLayer = depthLayers[0] || null;
   const segments = shellResolvedBoundarySegments(shellContext);
   if (!firstDepthLayer || !segments.length) return null;
-  return Object.freeze({
-    segments,
-    maxDepthBO: Math.max(0, Number(firstDepthLayer.maxDepthBO) || 0),
-    orbZBO: Math.max(0, Number(firstDepthLayer.orbZBO) || 0),
+  const config = runtime.cavityCollisionConfigCache || (runtime.cavityCollisionConfigCache = {
+    segments: [],
+    maxDepthBO: 0,
+    orbZBO: 0,
   });
+  config.segments = segments;
+  config.maxDepthBO = Math.max(0, Number(firstDepthLayer.maxDepthBO) || 0);
+  config.orbZBO = Math.max(0, Number(firstDepthLayer.orbZBO) || 0);
+  return config;
 }
 
 function shellResolvedCameraBoundaryBox(shellContext) {
@@ -680,10 +684,22 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const physStage = activeStageEls && activeStageEls.physStage ? activeStageEls.physStage : null;
   if (!runtime || !physStage || typeof physStage.getBoundingClientRect !== "function") return null;
   const rect = physStage.getBoundingClientRect();
-  const safeRect = {
-    width: Number(rect.width) || 0,
-    height: Number(rect.height) || 0,
-  };
+  const metrics = runtime.frameMetrics || (runtime.frameMetrics = {
+    nowMs: 0,
+    rect: { width: 0, height: 0 },
+    centerX: 0,
+    camLeft: 0,
+    camTop: 0,
+    zoom: 1,
+    worldWidthPx: 0,
+    worldHeightPx: 0,
+    orbScreenX: 0,
+    orbScreenY: 0,
+    lateralBounds: { left: 0, right: 0 },
+  });
+  const safeRect = metrics.rect || (metrics.rect = { width: 0, height: 0 });
+  safeRect.width = Number(rect.width) || 0;
+  safeRect.height = Number(rect.height) || 0;
   runtime.stageRectCache = safeRect;
   const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
     ? runtime.orbRuntimeState.get()
@@ -729,40 +745,36 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const camLeft = Number(frame && frame.camLeft) || 0;
   const camTop = Number(frame && frame.camTop) || 0;
   const zoom = Number(frame && frame.zoom) || 1;
-  runtime.frameMetrics = {
-    nowMs,
-    rect: safeRect,
-    centerX: safeRect.width * 0.5,
-    camLeft,
-    camTop,
-    zoom,
-    worldWidthPx: shellWorldWidth(shellContext),
-    worldHeightPx: shellWorldHeight(shellContext),
-    orbScreenX: frame
-      ? ((Number(orbState && orbState.xW) || 0) - camLeft) * zoom
-      : (safeRect.width * 0.5),
-    orbScreenY: frame
-      ? ((Number(orbState && orbState.yW) || 0) - camTop) * zoom
-      : ((Number(orbState && orbState.yW) || 0) - camTop),
-    lateralBounds: {
-      left: collisionBox
-        ? Math.max(orbRadiusPx, Number(collisionBox.leftXW) + orbRadiusPx)
-        : orbRadiusPx,
-      right: collisionBox
-        ? Math.max(orbRadiusPx, Number(collisionBox.rightXW) - orbRadiusPx)
-        : Math.max(orbRadiusPx, shellWorldWidth(shellContext) - orbRadiusPx),
-    },
-  };
+  metrics.nowMs = nowMs;
+  metrics.centerX = safeRect.width * 0.5;
+  metrics.camLeft = camLeft;
+  metrics.camTop = camTop;
+  metrics.zoom = zoom;
+  metrics.worldWidthPx = shellWorldWidth(shellContext);
+  metrics.worldHeightPx = shellWorldHeight(shellContext);
+  metrics.orbScreenX = frame
+    ? ((Number(orbState && orbState.xW) || 0) - camLeft) * zoom
+    : (safeRect.width * 0.5);
+  metrics.orbScreenY = frame
+    ? ((Number(orbState && orbState.yW) || 0) - camTop) * zoom
+    : ((Number(orbState && orbState.yW) || 0) - camTop);
+  const lateralBounds = metrics.lateralBounds || (metrics.lateralBounds = { left: 0, right: 0 });
+  lateralBounds.left = collisionBox
+    ? Math.max(orbRadiusPx, Number(collisionBox.leftXW) + orbRadiusPx)
+    : orbRadiusPx;
+  lateralBounds.right = collisionBox
+    ? Math.max(orbRadiusPx, Number(collisionBox.rightXW) - orbRadiusPx)
+    : Math.max(orbRadiusPx, metrics.worldWidthPx - orbRadiusPx);
   if (activeStageAdapter && typeof activeStageAdapter.applyCameraFrame === "function") {
     activeStageAdapter.applyCameraFrame({
       camLeft,
       camTop,
       zoom,
-      worldWidthPx: runtime.frameMetrics.worldWidthPx,
-      worldHeightPx: runtime.frameMetrics.worldHeightPx,
+      worldWidthPx: metrics.worldWidthPx,
+      worldHeightPx: metrics.worldHeightPx,
     });
   }
-  return runtime.frameMetrics;
+  return metrics;
 }
 
 function applyShellGroundLine(shellContext) {
