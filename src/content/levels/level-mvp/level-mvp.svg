@@ -23,15 +23,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.96026143"
-     inkscape:cx="762.29241"
-     inkscape:cy="1728.6959"
+     inkscape:zoom="0.33950369"
+     inkscape:cx="771.71474"
+     inkscape:cy="1434.4469"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="1"
      inkscape:window-y="112"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg1"
+     inkscape:current-layer="layer18"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -54,7 +54,7 @@
      inkscape:label="bounds"
      inkscape:groupmode="layer"
      id="layer1"
-     style="display:inline">
+     style="display:none">
     <path
        style="fill:none;stroke:#000000;stroke-opacity:1"
        d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
@@ -65,7 +65,7 @@
      inkscape:groupmode="layer"
      id="layer8"
      inkscape:label="bounds_cam"
-     style="display:inline;fill:none;stroke:#ff0000;stroke-opacity:1"
+     style="display:none;fill:none;stroke:#ff0000;stroke-opacity:1"
      sodipodi:insensitive="true">
     <path
        id="path1-4-1"
@@ -76,31 +76,32 @@
   <g
      inkscape:groupmode="layer"
      id="layer17"
-     inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24">
+     inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24"
+     style="display:none"
+     sodipodi:insensitive="true">
     <path
-       style="display:inline;fill:#333333;stroke:none;stroke-opacity:1;fill-opacity:1"
+       style="display:inline;fill:#333333;fill-opacity:1;stroke:none;stroke-opacity:1"
        d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path1-3"
        sodipodi:nodetypes="ccccccccccc" />
   </g>
   <g
      inkscape:groupmode="layer"
-     id="layer11"
-     inkscape:label="line_art"
-     sodipodi:insensitive="true"
-     style="display:inline">
+     id="layer18"
+     inkscape:label="line_art 1"
+     style="display:inline"
+     sodipodi:insensitive="true">
     <path
-       style="fill:none;stroke:#3398b5;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
-       d="M 384,1921.5118 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
-       id="path1-4"
-       sodipodi:nodetypes="ccccccccccc" />
+       id="rect1"
+       style="fill:#222222;fill-opacity:1;stroke:#5f5f5f;stroke-width:1.88976"
+       d="M 194.40234,571.42188 V 1982.3047 H 1902.7773 V 571.42188 Z M 1712.25,701.25 V 1921.5117 H 384 V 1472 h 320 v 320 h 768 L 1280,1408 974.75,1410.625 1088,704 Z" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer13"
      inkscape:label="stars_field"
      sodipodi:insensitive="true"
-     style="display:none">
+     style="display:inline">
     <path
        style="fill:none;stroke:#3398b5;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
        d="M 384,1921.5118 H 1712.25 V 701.25002 L 1088,704.00002 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
