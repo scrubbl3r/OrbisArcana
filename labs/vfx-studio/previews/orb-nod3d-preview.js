@@ -7,26 +7,25 @@ import {
   createOrbPointLight,
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
+import {
+  createOrbNod3dRuntime,
+  createOrbNod3dSurfaceDisplacementConfig,
+  normalizeOrbNod3dConfig,
+} from "../../../src/game-runtime/orb/orb-nod-3d-runtime.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
 
-function clampNumber(value, min, max, fallback) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.max(min, Math.min(max, n));
-}
-
-function readConfig(els = {}) {
+function readRawConfig(els = {}) {
   return Object.freeze({
-    shrinkPct: clampNumber(els.orbNod3dShrinkPct && els.orbNod3dShrinkPct.value, 0, 40, 2) / 100,
-    durationMs: Math.round(clampNumber(els.orbNod3dDurationMs && els.orbNod3dDurationMs.value, 80, 3000, 520)),
-    fillAlpha: clampNumber(els.orbNod3dFillAlpha && els.orbNod3dFillAlpha.value, 0, 1, 0.07),
-    waveCount: Math.round(clampNumber(els.orbNod3dWaveCount && els.orbNod3dWaveCount.value, 1, 32, 4)),
-    latitudinalBands: Math.round(clampNumber(els.orbNod3dLatitudinalBands && els.orbNod3dLatitudinalBands.value, 1, 32, 4)),
-    waveDepthBO: clampNumber(els.orbNod3dWaveDepthBO && els.orbNod3dWaveDepthBO.value, 0, 0.2, 0.024),
-    oscillationSpeedHz: clampNumber(els.orbNod3dOscillationSpeedHz && els.orbNod3dOscillationSpeedHz.value, 0.1, 40, 4.8),
-    oscillationCount: Math.round(clampNumber(els.orbNod3dOscillationCount && els.orbNod3dOscillationCount.value, 0, 12, 2)),
-    equatorFalloff: clampNumber(els.orbNod3dEquatorFalloff && els.orbNod3dEquatorFalloff.value, 0, 8, 0),
-    rippleSoftness: clampNumber(els.orbNod3dRippleSoftness && els.orbNod3dRippleSoftness.value, 0, 1, 0.82),
+    orbNod3dShrinkPct: els.orbNod3dShrinkPct && els.orbNod3dShrinkPct.value,
+    orbNod3dDurationMs: els.orbNod3dDurationMs && els.orbNod3dDurationMs.value,
+    orbNod3dFillAlpha: els.orbNod3dFillAlpha && els.orbNod3dFillAlpha.value,
+    orbNod3dWaveCount: els.orbNod3dWaveCount && els.orbNod3dWaveCount.value,
+    orbNod3dLatitudinalBands: els.orbNod3dLatitudinalBands && els.orbNod3dLatitudinalBands.value,
+    orbNod3dWaveDepthBO: els.orbNod3dWaveDepthBO && els.orbNod3dWaveDepthBO.value,
+    orbNod3dOscillationSpeedHz: els.orbNod3dOscillationSpeedHz && els.orbNod3dOscillationSpeedHz.value,
+    orbNod3dOscillationCount: els.orbNod3dOscillationCount && els.orbNod3dOscillationCount.value,
+    orbNod3dEquatorFalloff: els.orbNod3dEquatorFalloff && els.orbNod3dEquatorFalloff.value,
+    orbNod3dRippleSoftness: els.orbNod3dRippleSoftness && els.orbNod3dRippleSoftness.value,
   });
 }
 
@@ -41,25 +40,6 @@ function hydrateFields(els = {}, cfg = {}) {
   if (els.orbNod3dOscillationCount) els.orbNod3dOscillationCount.value = String(cfg.oscillationCount);
   if (els.orbNod3dEquatorFalloff) els.orbNod3dEquatorFalloff.value = Number(cfg.equatorFalloff).toFixed(2);
   if (els.orbNod3dRippleSoftness) els.orbNod3dRippleSoftness.value = Number(cfg.rippleSoftness).toFixed(2);
-}
-
-function createSurfaceDisplacementConfig(cfg) {
-  return Object.freeze({
-    enabled: true,
-    waveCount: cfg.waveCount,
-    waveDepthBO: cfg.waveDepthBO,
-    oscillationSpeedHz: cfg.oscillationSpeedHz,
-    equatorFalloff: cfg.equatorFalloff,
-    equatorAmplitude: 1,
-    poleAmplitude: 1,
-    rippleSoftness: cfg.rippleSoftness,
-    latitudinalMix: 1,
-    latitudinalBands: cfg.latitudinalBands,
-    cellMix: 0,
-    axisMix: 0,
-    phaseOffset: 0,
-    shrinkPct: cfg.shrinkPct,
-  });
 }
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
@@ -90,11 +70,10 @@ export function createOrbNod3dPreview({
   let shellMaterial = null;
   let orbLight = null;
   let model = null;
-  let activeCfg = null;
+  let nodRuntime = null;
+  let activeRawConfig = null;
   let activeOrb3dConfig = ORB_MATERIAL_CONFIG;
   let createdAt = 0;
-  let playStartedAt = 0;
-  let isPlaying = false;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -102,35 +81,23 @@ export function createOrbNod3dPreview({
   }
 
   function destroyInspector() {
+    if (nodRuntime && typeof nodRuntime.dispose === "function") nodRuntime.dispose();
     if (inspector && typeof inspector.cleanup === "function") inspector.cleanup();
     inspector = null;
     shellMaterial = null;
     orbLight = null;
     model = null;
-    isPlaying = false;
-  }
-
-  function setNodEnvelope({ bo, envelope = 0, shaderTime = 0 } = {}) {
-    if (!shellMaterial || !shellMaterial.uniforms || !activeCfg) return;
-    if (shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = shaderTime;
-    if (shellMaterial.uniforms.uDisplacementDepth) {
-      shellMaterial.uniforms.uDisplacementDepth.value = bo * activeCfg.waveDepthBO * envelope;
-    }
-    if (shellMaterial.uniforms.uDisplacementShrink) {
-      shellMaterial.uniforms.uDisplacementShrink.value = activeCfg.shrinkPct * envelope;
-    }
+    nodRuntime = null;
   }
 
   function apply() {
     if (!els.previewRoot) return null;
-    const cfg = readConfig(els);
+    activeRawConfig = readRawConfig(els);
+    const cfg = normalizeOrbNod3dConfig(activeRawConfig);
     hydrateFields(els, cfg);
     destroyInspector();
     const bo = readBo();
     createdAt = performance.now();
-    playStartedAt = 0;
-    isPlaying = false;
-    activeCfg = cfg;
     activeOrb3dConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_MATERIAL_CONFIG;
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
@@ -142,20 +109,10 @@ export function createOrbNod3dPreview({
       bloom: ORB_BLOOM_CONFIG.enabled ? ORB_BLOOM_CONFIG : null,
       onFrame: () => {
         const materialTime = (performance.now() - createdAt) / 1000;
-        let shaderTime = materialTime;
-        let envelope = 0;
-        if (isPlaying) {
-          const elapsedSec = (performance.now() - playStartedAt) / 1000;
-          const progress = Math.max(0, Math.min(1, (elapsedSec * 1000) / activeCfg.durationMs));
-          envelope = Math.sin(progress * Math.PI);
-          const oscillationLimit = activeCfg.oscillationCount / Math.max(0.001, activeCfg.oscillationSpeedHz);
-          shaderTime = Math.min(elapsedSec, oscillationLimit);
-          if (progress >= 1) {
-            isPlaying = false;
-            envelope = 0;
-          }
+        if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) {
+          shellMaterial.uniforms.uTime.value = materialTime;
         }
-        setNodEnvelope({ bo, envelope, shaderTime });
+        if (nodRuntime && typeof nodRuntime.update === "function") nodRuntime.update(materialTime);
         if (orbLight) updateOrbPointLight(orbLight, materialTime, activeOrb3dConfig);
       },
     });
@@ -164,9 +121,16 @@ export function createOrbNod3dPreview({
 
     shellMaterial = createOpalescentOrbShellMaterial(activeOrb3dConfig, {
       bo,
-      surfaceDisplacement: createSurfaceDisplacementConfig(cfg),
+      surfaceDisplacement: createOrbNod3dSurfaceDisplacementConfig(activeRawConfig, {
+        enabled: false,
+      }),
     });
-    setNodEnvelope({ bo, envelope: 0, shaderTime: 0 });
+    nodRuntime = createOrbNod3dRuntime({
+      getMaterial: () => shellMaterial,
+      getBo: () => bo,
+      getConfig: () => activeRawConfig,
+      now: () => performance.now() - createdAt,
+    });
     const created = createOrbModel({
       bo,
       shellMaterial,
@@ -187,11 +151,12 @@ export function createOrbNod3dPreview({
   }
 
   function play() {
-    activeCfg = readConfig(els);
-    hydrateFields(els, activeCfg);
+    activeRawConfig = readRawConfig(els);
+    hydrateFields(els, normalizeOrbNod3dConfig(activeRawConfig));
     if (!inspector) apply();
-    playStartedAt = performance.now();
-    isPlaying = true;
+    if (nodRuntime && typeof nodRuntime.play === "function") {
+      nodRuntime.play({ config: activeRawConfig });
+    }
   }
 
   function clear() {

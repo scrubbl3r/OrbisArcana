@@ -8,7 +8,7 @@ import {
   createOrb3dPreview,
   readOrb3dPreviewConfig,
 } from "./previews/orb-3d-preview.js?v=20260428a";
-import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260428a";
+import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260428b";
 import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
 import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425d";
 import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
