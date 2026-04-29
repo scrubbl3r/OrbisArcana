@@ -218,6 +218,50 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "orb-globe-3d": {
+      const colorHex = (prefix, fallback) => {
+        const r = Math.round(toNum(p[`${prefix}R`], (fallback >> 16) & 255));
+        const g = Math.round(toNum(p[`${prefix}G`], (fallback >> 8) & 255));
+        const b = Math.round(toNum(p[`${prefix}B`], fallback & 255));
+        return `0x${[r, g, b].map((channel) => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, "0")).join("")}`;
+      };
+      return [
+        "export const ORB_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({",
+        `  orbitDistanceRatio: ${toNum(p.orbGlobe3dOrbitDistanceRatio, 1.1).toFixed(2)},`,
+        `  orbitDistanceMinPx: ${Math.round(toNum(p.orbGlobe3dOrbitDistanceMin, 14))},`,
+        `  orbitSpeedMin: ${toNum(p.orbGlobe3dSpeedMin, 1.8).toFixed(2)},`,
+        `  orbitSpeedMax: ${toNum(p.orbGlobe3dSpeedMax, 2.45).toFixed(2)},`,
+        `  orbitDriftMin: ${toNum(p.orbGlobe3dDriftMin, 0.03).toFixed(2)},`,
+        `  orbitDriftMax: ${toNum(p.orbGlobe3dDriftMax, 0.18).toFixed(2)},`,
+        `  innerSpeedMinPxPerSec: ${Math.round(toNum(p.orbGlobe3dInnerSpeedMin, 80))},`,
+        `  innerSpeedMaxPxPerSec: ${Math.round(toNum(p.orbGlobe3dInnerSpeedMax, 150))},`,
+        `  innerDriftMin: ${toNum(p.orbGlobe3dInnerDriftMin, 0.08).toFixed(2)},`,
+        `  innerDriftMax: ${toNum(p.orbGlobe3dInnerDriftMax, 0.28).toFixed(2)},`,
+        `  innerPaddingRatio: ${toNum(p.orbGlobe3dInnerPaddingRatio, 0.06).toFixed(2)},`,
+        `  loadedDiameterRatio: ${toNum(p.orbGlobe3dLoadedDiameterRatio, 0.17).toFixed(2)},`,
+        `  consumedDiameterRatio: ${toNum(p.orbGlobe3dConsumedDiameterRatio, 0.10).toFixed(2)},`,
+        "  material: Object.freeze({",
+        `    shellBaseColor: ${colorHex("orbGlobe3dShellBase", 0xfbfdff)},`,
+        `    shellCyanColor: ${colorHex("orbGlobe3dShellCyan", 0x9af5ff)},`,
+        `    shellVioletColor: ${colorHex("orbGlobe3dShellViolet", 0xd9c6ff)},`,
+        `    shellGoldColor: ${colorHex("orbGlobe3dShellGold", 0xffd86a)},`,
+        `    shellFresnelPower: ${toNum(p.orbGlobe3dShellFresnelPower, 2.7).toFixed(3)},`,
+        `    shellRimAlphaPower: ${toNum(p.orbGlobe3dShellRimAlphaPower, 0.82).toFixed(3)},`,
+        `    shellCenterAlpha: ${toNum(p.orbGlobe3dShellCenterAlpha, 0.028).toFixed(4)},`,
+        `    shellRimAlpha: ${toNum(p.orbGlobe3dShellRimAlpha, 0.86).toFixed(3)},`,
+        `    shellPastelMix: ${toNum(p.orbGlobe3dShellPastelMix, 0.72).toFixed(3)},`,
+        `    shellRimPastelMix: ${toNum(p.orbGlobe3dShellRimPastelMix, 0.42).toFixed(3)},`,
+        `    shellLuminanceBoost: ${toNum(p.orbGlobe3dShellLuminanceBoost, 1.42).toFixed(3)},`,
+        `    lightColor: ${colorHex("orbGlobe3dLight", 0xdff6ff)},`,
+        `    lightIntensity: ${toNum(p.orbGlobe3dLightIntensity, 74).toFixed(1)},`,
+        `    lightDistanceBO: ${toNum(p.orbGlobe3dLightDistanceBO, 7).toFixed(2)},`,
+        `    lightDecay: ${toNum(p.orbGlobe3dLightDecay, 1.45).toFixed(2)},`,
+        `    lightOffsetZBO: ${toNum(p.orbGlobe3dLightOffsetZBO, 0.55).toFixed(2)},`,
+        "  }),",
+        "});",
+        "",
+      ].join("\n");
+    }
     case "orb-3d":
       return [
         "export const ORB_3D_VISUAL_DEFAULTS = Object.freeze({",
