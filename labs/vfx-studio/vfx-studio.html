@@ -450,7 +450,8 @@
     }
     .previewLane.orb3dPreviewLane,
     .previewLane.orbSpawnPreviewLane,
-    .previewLane.orbNod3dPreviewLane{
+    .previewLane.orbNod3dPreviewLane,
+    .previewLane.worldGlobe3dPreviewLane{
       inset:0;
       left:0;
       top:0;
@@ -460,7 +461,8 @@
     }
     .orb3dCanvas,
     .orbSpawnCanvas,
-    .orbNod3dCanvas{
+    .orbNod3dCanvas,
+    .worldGlobe3dCanvas{
       width:100%;
       height:100%;
       display:block;
@@ -469,7 +471,8 @@
     }
     .orb3dCanvas:active,
     .orbSpawnCanvas:active,
-    .orbNod3dCanvas:active{
+    .orbNod3dCanvas:active,
+    .worldGlobe3dCanvas:active{
       cursor:grabbing;
     }
 
@@ -864,6 +867,7 @@
         <div class="previewLane" id="worldGlobePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="worldGlobeSamples" id="worldGlobeLaneLayer"></div>
         </div>
+        <div class="previewLane worldGlobe3dPreviewLane" id="worldGlobe3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
         <div class="previewLane" id="orbTeleportPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbTeleportLaneOrb"></div>
         </div>
@@ -1475,6 +1479,42 @@
           <div class="paramField"><label for="worldGlobeConsumedStrokeWidthRatio">Stroke ratio</label><input id="worldGlobeConsumedStrokeWidthRatio" class="paramFieldInput" type="number" min="0" max="1" value="0.02" step="0.001" /><button id="worldGlobeApplyConsumedStrokeWidthRatioBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
       </div>
+
+      <div class="section" data-effect="world-globe-3d" hidden>
+        <div class="row">
+          <button id="previewWorldGlobe3d">Preview</button>
+        </div>
+        <div class="behaviorTitle">States</div>
+        <div class="paramGrid">
+          <div class="paramField"><label for="worldGlobe3dIdleDiameterRatio">Idle diameter ratio</label><input id="worldGlobe3dIdleDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.35" step="0.01" /><button id="worldGlobe3dApplyIdleDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dIdleDriftRatio">Idle drift ratio</label><input id="worldGlobe3dIdleDriftRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.10" step="0.01" /><button id="worldGlobe3dApplyIdleDriftRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dIdleBobRatio">Idle bob ratio</label><input id="worldGlobe3dIdleBobRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.07" step="0.01" /><button id="worldGlobe3dApplyIdleBobRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dIdleBobHz">Idle bob hz</label><input id="worldGlobe3dIdleBobHz" class="paramFieldInput" type="number" min="0" max="20" value="0.65" step="0.05" /><button id="worldGlobe3dApplyIdleBobHzBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dIdlePulseScale">Idle pulse scale</label><input id="worldGlobe3dIdlePulseScale" class="paramFieldInput" type="number" min="0" max="1" value="0.045" step="0.005" /><button id="worldGlobe3dApplyIdlePulseScaleBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dIdlePulseHz">Idle pulse hz</label><input id="worldGlobe3dIdlePulseHz" class="paramFieldInput" type="number" min="0" max="20" value="0.90" step="0.05" /><button id="worldGlobe3dApplyIdlePulseHzBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dCollectedDiameterRatio">Collected diameter ratio</label><input id="worldGlobe3dCollectedDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.17" step="0.01" /><button id="worldGlobe3dApplyCollectedDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dConsumedDiameterRatio">Consumed diameter ratio</label><input id="worldGlobe3dConsumedDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.10" step="0.01" /><button id="worldGlobe3dApplyConsumedDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+        <div class="behaviorTitle">Globe Material</div>
+        <div class="paramGrid">
+          <div class="rgbaParamRow"><span class="rgbaLabel">Base RGB</span><label for="worldGlobe3dShellBaseR">r</label><input id="worldGlobe3dShellBaseR" class="paramFieldInput" type="number" min="0" max="255" value="251" step="1" /><label for="worldGlobe3dShellBaseG">g</label><input id="worldGlobe3dShellBaseG" class="paramFieldInput" type="number" min="0" max="255" value="253" step="1" /><label for="worldGlobe3dShellBaseB">b</label><input id="worldGlobe3dShellBaseB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobe3dApplyShellBaseBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Cyan RGB</span><label for="worldGlobe3dShellCyanR">r</label><input id="worldGlobe3dShellCyanR" class="paramFieldInput" type="number" min="0" max="255" value="154" step="1" /><label for="worldGlobe3dShellCyanG">g</label><input id="worldGlobe3dShellCyanG" class="paramFieldInput" type="number" min="0" max="255" value="245" step="1" /><label for="worldGlobe3dShellCyanB">b</label><input id="worldGlobe3dShellCyanB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobe3dApplyShellCyanBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Violet RGB</span><label for="worldGlobe3dShellVioletR">r</label><input id="worldGlobe3dShellVioletR" class="paramFieldInput" type="number" min="0" max="255" value="217" step="1" /><label for="worldGlobe3dShellVioletG">g</label><input id="worldGlobe3dShellVioletG" class="paramFieldInput" type="number" min="0" max="255" value="198" step="1" /><label for="worldGlobe3dShellVioletB">b</label><input id="worldGlobe3dShellVioletB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobe3dApplyShellVioletBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Gold RGB</span><label for="worldGlobe3dShellGoldR">r</label><input id="worldGlobe3dShellGoldR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><label for="worldGlobe3dShellGoldG">g</label><input id="worldGlobe3dShellGoldG" class="paramFieldInput" type="number" min="0" max="255" value="216" step="1" /><label for="worldGlobe3dShellGoldB">b</label><input id="worldGlobe3dShellGoldB" class="paramFieldInput" type="number" min="0" max="255" value="106" step="1" /><button id="worldGlobe3dApplyShellGoldBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dShellCenterAlpha">Center alpha</label><input id="worldGlobe3dShellCenterAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.028" step="0.001" /><button id="worldGlobe3dApplyShellCenterAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dShellRimAlpha">Rim alpha</label><input id="worldGlobe3dShellRimAlpha" class="paramFieldInput" type="number" min="0" max="1" value="0.86" step="0.01" /><button id="worldGlobe3dApplyShellRimAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dShellFresnelPower">Fresnel power</label><input id="worldGlobe3dShellFresnelPower" class="paramFieldInput" type="number" min="0.1" max="10" value="2.7" step="0.05" /><button id="worldGlobe3dApplyShellFresnelPowerBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dShellRimAlphaPower">Rim alpha power</label><input id="worldGlobe3dShellRimAlphaPower" class="paramFieldInput" type="number" min="0.1" max="8" value="0.82" step="0.01" /><button id="worldGlobe3dApplyShellRimAlphaPowerBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dShellPastelMix">Pastel mix</label><input id="worldGlobe3dShellPastelMix" class="paramFieldInput" type="number" min="0" max="2" value="0.72" step="0.01" /><button id="worldGlobe3dApplyShellPastelMixBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dShellRimPastelMix">Rim pastel mix</label><input id="worldGlobe3dShellRimPastelMix" class="paramFieldInput" type="number" min="0" max="2" value="0.42" step="0.01" /><button id="worldGlobe3dApplyShellRimPastelMixBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dShellLuminanceBoost">Luminance boost</label><input id="worldGlobe3dShellLuminanceBoost" class="paramFieldInput" type="number" min="0" max="4" value="1.42" step="0.01" /><button id="worldGlobe3dApplyShellLuminanceBoostBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Light RGB</span><label for="worldGlobe3dLightR">r</label><input id="worldGlobe3dLightR" class="paramFieldInput" type="number" min="0" max="255" value="223" step="1" /><label for="worldGlobe3dLightG">g</label><input id="worldGlobe3dLightG" class="paramFieldInput" type="number" min="0" max="255" value="246" step="1" /><label for="worldGlobe3dLightB">b</label><input id="worldGlobe3dLightB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobe3dApplyLightColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dLightIntensity">Light intensity</label><input id="worldGlobe3dLightIntensity" class="paramFieldInput" type="number" min="0" max="1000" value="74" step="1" /><button id="worldGlobe3dApplyLightIntensityBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dLightDistanceBO">Light distance BO</label><input id="worldGlobe3dLightDistanceBO" class="paramFieldInput" type="number" min="0" max="40" value="7" step="0.1" /><button id="worldGlobe3dApplyLightDistanceBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dLightDecay">Light decay</label><input id="worldGlobe3dLightDecay" class="paramFieldInput" type="number" min="0" max="4" value="1.45" step="0.01" /><button id="worldGlobe3dApplyLightDecayBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="worldGlobe3dLightOffsetZBO">Light offset Z BO</label><input id="worldGlobe3dLightOffsetZBO" class="paramFieldInput" type="number" min="-4" max="4" value="0.55" step="0.05" /><button id="worldGlobe3dApplyLightOffsetZBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
+      </div>
       </div>
 
       <div id="behaviorAuthoringPanel" class="authoringPanel" role="tabpanel" aria-labelledby="behaviorTabBtn" hidden>
@@ -1658,6 +1698,7 @@
     import { createOrbSpawnAuthoringAdapter } from "./adapters/orb-spawn-authoring-adapter.js?v=20260429a";
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
+    import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260429a";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { BUBBLE_SHIELD_PRESET_DEFAULT } from "../../src/vfx/presets/bubble-shield-default.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -1675,6 +1716,7 @@
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
+    import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260429a";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260425d";
 
@@ -1703,6 +1745,7 @@
       createOrbSpawnAuthoringAdapter,
       createShockwaveAuthoringAdapter,
       createTeleportAuthoringAdapter,
+      createWorldGlobe3dAuthoringAdapter,
       createWorldGlobeAuthoringAdapter,
     });
     const {
@@ -1739,6 +1782,7 @@
       orbLifecyclePreviewRoot: $("orbLifecyclePreviewRoot"),
       orbGlobePreviewRoot: $("orbGlobePreviewRoot"),
       worldGlobePreviewRoot: $("worldGlobePreviewRoot"),
+      worldGlobe3dPreviewRoot: $("worldGlobe3dPreviewRoot"),
       orbTeleportPreviewRoot: $("orbTeleportPreviewRoot"),
       orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
       orbLifecycleShatterLayer: $("orbLifecycleShatterLayer"),
@@ -1751,6 +1795,7 @@
       orbGlobeBindBtn: $("orbGlobeBindBtn"),
       orbGlobeClearBtn: $("orbGlobeClearBtn"),
       previewWorldGlobe: $("previewWorldGlobe"),
+      previewWorldGlobe3d: $("previewWorldGlobe3d"),
       effectSelect: $("effectSelect"),
       newEffectBtn: $("newEffectBtn"),
       saveDraftBtn: $("saveDraftBtn"),
@@ -2023,6 +2068,7 @@
       orbNod3dPresetDefault: ORB_NOD_3D_PRESET_DEFAULT,
       getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
       worldGlobeVisualDefaults: WORLD_GLOBE_VISUAL_DEFAULTS,
+      worldGlobe3dVisualDefaults: WORLD_GLOBE_3D_VISUAL_DEFAULTS,
       orbSpawnPresetDefault: ORB_SPAWN_PRESET_DEFAULT,
       getElementById: $,
     });
@@ -2582,6 +2628,7 @@
       applyOrbLaneSsot(els.orbLifecyclePreviewRoot);
       applyOrbLaneSsot(els.orbGlobePreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.worldGlobePreviewRoot, { includeGlobe: true });
+      applyOrbLaneSsot(els.worldGlobe3dPreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.orbTeleportPreviewRoot);
     }
     applyGeometryVars();
@@ -2628,6 +2675,7 @@
         "orb-nod": () => applyOrbNod(),
         "orb-nod3d": () => applyOrbNod3d(),
         "world-globe": () => applyWorldGlobe(),
+        "world-globe-3d": () => applyWorldGlobe3d(),
       }),
       previewRootsByEffect: PREVIEW_ROOTS_BY_EFFECT,
       geometry: GEOM,
@@ -2689,6 +2737,8 @@
       clearOrbGlobe,
       applyWorldGlobe,
       clearWorldGlobe,
+      applyWorldGlobe3d,
+      clearWorldGlobe3d,
       applyOrbTeleport,
       clearOrbTeleport,
       playOrbTeleport,

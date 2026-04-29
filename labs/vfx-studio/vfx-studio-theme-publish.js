@@ -343,6 +343,51 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "",
       ].join("\n");
     }
+    case "world-globe-3d": {
+      const colorHex = (prefix, fallback) => {
+        const r = Math.round(toNum(p[`${prefix}R`], (fallback >> 16) & 255));
+        const g = Math.round(toNum(p[`${prefix}G`], (fallback >> 8) & 255));
+        const b = Math.round(toNum(p[`${prefix}B`], fallback & 255));
+        return `0x${[r, g, b].map((channel) => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, "0")).join("")}`;
+      };
+      return [
+        "export const WORLD_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({",
+        "  idle: Object.freeze({",
+        `    diameterRatio: ${toNum(p.worldGlobe3dIdleDiameterRatio, 0.35).toFixed(2)},`,
+        `    driftRatio: ${toNum(p.worldGlobe3dIdleDriftRatio, 0.10).toFixed(2)},`,
+        `    bobRatio: ${toNum(p.worldGlobe3dIdleBobRatio, 0.07).toFixed(2)},`,
+        `    bobHz: ${toNum(p.worldGlobe3dIdleBobHz, 0.65).toFixed(2)},`,
+        `    pulseScale: ${toNum(p.worldGlobe3dIdlePulseScale, 0.045).toFixed(3)},`,
+        `    pulseHz: ${toNum(p.worldGlobe3dIdlePulseHz, 0.9).toFixed(2)},`,
+        "  }),",
+        "  collected: Object.freeze({",
+        `    diameterRatio: ${toNum(p.worldGlobe3dCollectedDiameterRatio, 0.17).toFixed(2)},`,
+        "  }),",
+        "  consumed: Object.freeze({",
+        `    diameterRatio: ${toNum(p.worldGlobe3dConsumedDiameterRatio, 0.10).toFixed(2)},`,
+        "  }),",
+        "  material: Object.freeze({",
+        `    shellBaseColor: ${colorHex("worldGlobe3dShellBase", 0xfbfdff)},`,
+        `    shellCyanColor: ${colorHex("worldGlobe3dShellCyan", 0x9af5ff)},`,
+        `    shellVioletColor: ${colorHex("worldGlobe3dShellViolet", 0xd9c6ff)},`,
+        `    shellGoldColor: ${colorHex("worldGlobe3dShellGold", 0xffd86a)},`,
+        `    shellFresnelPower: ${toNum(p.worldGlobe3dShellFresnelPower, 2.7).toFixed(3)},`,
+        `    shellRimAlphaPower: ${toNum(p.worldGlobe3dShellRimAlphaPower, 0.82).toFixed(3)},`,
+        `    shellCenterAlpha: ${toNum(p.worldGlobe3dShellCenterAlpha, 0.028).toFixed(4)},`,
+        `    shellRimAlpha: ${toNum(p.worldGlobe3dShellRimAlpha, 0.86).toFixed(3)},`,
+        `    shellPastelMix: ${toNum(p.worldGlobe3dShellPastelMix, 0.72).toFixed(3)},`,
+        `    shellRimPastelMix: ${toNum(p.worldGlobe3dShellRimPastelMix, 0.42).toFixed(3)},`,
+        `    shellLuminanceBoost: ${toNum(p.worldGlobe3dShellLuminanceBoost, 1.42).toFixed(3)},`,
+        `    lightColor: ${colorHex("worldGlobe3dLight", 0xdff6ff)},`,
+        `    lightIntensity: ${toNum(p.worldGlobe3dLightIntensity, 74).toFixed(1)},`,
+        `    lightDistanceBO: ${toNum(p.worldGlobe3dLightDistanceBO, 7).toFixed(2)},`,
+        `    lightDecay: ${toNum(p.worldGlobe3dLightDecay, 1.45).toFixed(2)},`,
+        `    lightOffsetZBO: ${toNum(p.worldGlobe3dLightOffsetZBO, 0.55).toFixed(2)},`,
+        "  }),",
+        "});",
+        "",
+      ].join("\n");
+    }
     default:
       return "";
   }

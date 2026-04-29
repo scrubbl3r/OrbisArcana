@@ -133,6 +133,11 @@ export function createStudioBootstrap({
       previewRoot: els.worldGlobePreviewRoot,
       worldGlobePreviewLayer: getElementById("worldGlobeLaneLayer"),
     }),
+    worldGlobe3d: Object.freeze({
+      ...els,
+      previewRoot: els.worldGlobe3dPreviewRoot,
+      previewWorldGlobe3d: els.previewWorldGlobe3d,
+    }),
     orbTeleport: Object.freeze({
       ...els,
       previewRoot: els.orbTeleportPreviewRoot,
@@ -275,6 +280,7 @@ export function createStudioBootstrap({
       applyOrbLifecycle: () => studioPreviewRegistry.actions.applyOrbLifecycle(),
       applyOrbGlobe: () => studioPreviewRegistry.actions.applyOrbGlobe(),
       applyWorldGlobe: () => studioPreviewRegistry.actions.applyWorldGlobe(),
+      applyWorldGlobe3d: () => studioPreviewRegistry.actions.applyWorldGlobe3d(),
       applyOrbTeleport: () => studioPreviewRegistry.actions.applyOrbTeleport(),
     }),
     selectedEffectOption,

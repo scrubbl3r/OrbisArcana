@@ -12,6 +12,7 @@ export function createLabEffectSurfaces({
   createOrbSpawnAuthoringAdapter,
   createShockwaveAuthoringAdapter,
   createTeleportAuthoringAdapter,
+  createWorldGlobe3dAuthoringAdapter,
   createWorldGlobeAuthoringAdapter,
 } = {}) {
   return Object.freeze({
@@ -229,6 +230,20 @@ export function createLabEffectSurfaces({
       livePreset: Object.freeze({ buildKey: "world-globe", path: ["src", "game-runtime", "world", "world-globe-default.js"], exportName: "WORLD_GLOBE_VISUAL_DEFAULTS" }),
       adapterFile: "world-globe-authoring-adapter.js",
       authoringAdapter: createWorldGlobeAuthoringAdapter,
+    }),
+    "world-globe-3d": Object.freeze({
+      label: "World Globe 3D",
+      category: "world",
+      panes: Object.freeze(["vfx"]),
+      settingsKey: "world-globe-3d",
+      defaultSettingsKey: "world-globe-3d",
+      builtinOption: true,
+      previewRootKey: "worldGlobe3dPreviewRoot",
+      previewFile: "world-globe-3d-preview.js",
+      autoPreviewKey: "applyWorldGlobe3d",
+      livePreset: Object.freeze({ buildKey: "world-globe-3d", path: ["src", "game-runtime", "world", "world-globe-3d-default.js"], exportName: "WORLD_GLOBE_3D_VISUAL_DEFAULTS" }),
+      adapterFile: "world-globe-3d-authoring-adapter.js",
+      authoringAdapter: createWorldGlobe3dAuthoringAdapter,
     }),
   });
 }

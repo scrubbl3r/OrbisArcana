@@ -12,6 +12,7 @@ import { createOrbSpawnPreview } from "./previews/orb-spawn-preview.js?v=2026042
 import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260428b";
 import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
 import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425d";
+import { createWorldGlobe3dPreview } from "./previews/world-globe-3d-preview.js?v=20260429a";
 import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
 import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
 
@@ -160,6 +161,13 @@ export function createStudioPreviewRegistry({
   actions.clearWorldGlobe = worldGlobePreview.clear;
   worldGlobePreview.wire();
 
+  const worldGlobe3dPreview = createWorldGlobe3dPreview({
+    els: previewEls.worldGlobe3d,
+  });
+  actions.applyWorldGlobe3d = worldGlobe3dPreview.apply;
+  actions.clearWorldGlobe3d = worldGlobe3dPreview.clear;
+  worldGlobe3dPreview.wire();
+
   const orbTeleportPreview = createOrbTeleportPreview({
     els: previewEls.orbTeleport,
     getOrbBaseVisualState,
@@ -182,6 +190,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearOrbLifecycle === "function") actions.clearOrbLifecycle();
     if (typeof actions.clearOrbGlobe === "function") actions.clearOrbGlobe();
     if (typeof actions.clearWorldGlobe === "function") actions.clearWorldGlobe();
+    if (typeof actions.clearWorldGlobe3d === "function") actions.clearWorldGlobe3d();
     if (typeof actions.clearOrbTeleport === "function") actions.clearOrbTeleport();
     Object.values(previewRootsByEffect || {}).forEach((root) => {
       if (!root || typeof root.setAttribute !== "function") return;
