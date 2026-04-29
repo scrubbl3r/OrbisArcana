@@ -89,6 +89,7 @@ export function initOrbStageReceiverVfxRuntime({
   playElectricAoeRuntime = null,
   playFlameAoeRuntime = null,
   triggerShockwaveRuntime = null,
+  playOrbNod3dRuntime = null,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
   clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
   evenPx = (value) => value,
@@ -302,6 +303,15 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directPlayOrbNod3d(payload = {}) {
+    if (typeof playOrbNod3dRuntime === "function") {
+      const result = playOrbNod3dRuntime({
+        ...payload,
+        config: (vfxDefaults && vfxDefaults.nod3d && typeof vfxDefaults.nod3d === "object")
+          ? vfxDefaults.nod3d
+          : Object.create(null),
+      });
+      if (result && result.handled) return result;
+    }
     if (stageVfx.orbNod3dRuntime && typeof stageVfx.orbNod3dRuntime.play === "function") {
       return stageVfx.orbNod3dRuntime.play(payload);
     }

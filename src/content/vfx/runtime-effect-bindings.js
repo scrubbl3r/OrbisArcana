@@ -14,8 +14,8 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
   Object.freeze({
     targetKind: "orb-state",
     targetId: "nod",
-    effectId: "orb.nod",
-    presetId: "preset.orb-nod.default",
+    effectId: "orb.nod3d",
+    presetId: "preset.orb-nod3d.default",
   }),
   Object.freeze({
     targetKind: "orb-state",

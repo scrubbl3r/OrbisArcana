@@ -63,6 +63,11 @@ export function createLevelStageRuntimeAdapter({
       }
       core.applyOrbTransform(args);
     },
+    playOrbNod3d(payload = {}) {
+      return depth3dRuntime && typeof depth3dRuntime.playOrbNod3d === "function"
+        ? depth3dRuntime.playOrbNod3d(payload)
+        : { handled: false, skipped: "depth3d_runtime_missing" };
+    },
     getSpawnMarker() {
       return state && state.spawn ? state.spawn : null;
     },
