@@ -694,6 +694,7 @@ function ensureShellFrameScratch(runtime = null) {
       xW: 0,
       yW: 0,
     },
+    cameraResolvedFrame: {},
   });
 }
 
@@ -761,6 +762,7 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         clampInsetTopPx: cameraConfig.clampInsetTopPx,
         clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
         nowMs,
+        target: scratch.cameraResolvedFrame,
       })
     : null;
   const camLeft = Number(frame && frame.camLeft) || 0;
