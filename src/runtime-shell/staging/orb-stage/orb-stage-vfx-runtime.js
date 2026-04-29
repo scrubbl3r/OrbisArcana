@@ -72,6 +72,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       bobSpeedHz: 0.65,
       driftRangeBO: 0.2,
       driftSpeedHz: 0.23,
+      liftReleaseThreshold01: 0.15,
     },
     teleport: {
       orbTeleportFlickerOnMs: 60,

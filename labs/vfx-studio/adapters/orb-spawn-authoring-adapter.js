@@ -3,6 +3,7 @@ const ORB_SPAWN_FIELDS = Object.freeze([
   ["orbSpawnBobSpeedHz", "bobSpeedHz"],
   ["orbSpawnDriftRangeBO", "driftRangeBO"],
   ["orbSpawnDriftSpeedHz", "driftSpeedHz"],
+  ["orbSpawnLiftReleaseThreshold01", "liftReleaseThreshold01"],
 ]);
 
 function fixedNumber(value, digits, fallback = 0) {
@@ -20,6 +21,7 @@ export function createOrbSpawnAuthoringAdapter({
       bobSpeedHz: fixedNumber(orbSpawnPresetDefault.bobSpeedHz, 2, 0.65),
       driftRangeBO: fixedNumber(orbSpawnPresetDefault.driftRangeBO, 2, 0.2),
       driftSpeedHz: fixedNumber(orbSpawnPresetDefault.driftSpeedHz, 2, 0.23),
+      liftReleaseThreshold01: fixedNumber(orbSpawnPresetDefault.liftReleaseThreshold01, 2, 0.15),
     };
   }
 

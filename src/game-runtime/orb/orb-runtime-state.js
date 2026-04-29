@@ -20,6 +20,12 @@
  * @property {number} floatGracePhase
  * @property {boolean} teleportHoldActive
  * @property {number} teleportHoldAnchorY
+ * @property {boolean} spawnHoldActive
+ * @property {number} spawnHoldAnchorX
+ * @property {number} spawnHoldAnchorY
+ * @property {number} spawnHoldStartedAtMs
+ * @property {number} spawnVisualOffsetX
+ * @property {number} spawnVisualOffsetY
  */
 
 /**
@@ -48,6 +54,12 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     floatGracePhase: 0,
     teleportHoldActive: false,
     teleportHoldAnchorY: 0,
+    spawnHoldActive: false,
+    spawnHoldAnchorX: 0,
+    spawnHoldAnchorY: 0,
+    spawnHoldStartedAtMs: 0,
+    spawnVisualOffsetX: 0,
+    spawnVisualOffsetY: 0,
     ...(initialState || {}),
   };
 
@@ -81,6 +93,12 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.floatGracePhase = 0;
     state.teleportHoldActive = false;
     state.teleportHoldAnchorY = 0;
+    state.spawnHoldActive = false;
+    state.spawnHoldAnchorX = 0;
+    state.spawnHoldAnchorY = 0;
+    state.spawnHoldStartedAtMs = 0;
+    state.spawnVisualOffsetX = 0;
+    state.spawnVisualOffsetY = 0;
     if (next && typeof next === "object") Object.assign(state, next);
     return state;
   }

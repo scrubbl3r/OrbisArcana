@@ -115,9 +115,62 @@ export function runOrbRuntimePipeline({
   const getCameraSteeringState = hooks.getCameraSteeringState;
   const getBoundarySegments = hooks.getBoundarySegments;
   const getCavityCollisionConfig = hooks.getCavityCollisionConfig;
+  const getSpawnHoldConfig = hooks.getSpawnHoldConfig;
 
   if (mvp && mvp.orbSystem && typeof mvp.orbSystem.tick === "function") {
     mvp.orbSystem.tick(nowMs);
+  }
+
+  if (state.spawnHoldActive) {
+    const spawnConfig = typeof getSpawnHoldConfig === "function" ? (getSpawnHoldConfig() || {}) : {};
+    const releaseThreshold = clamp01(
+      Number.isFinite(Number(spawnConfig.liftReleaseThreshold01))
+        ? Number(spawnConfig.liftReleaseThreshold01)
+        : 0.15
+    );
+    if (clamp01(state.lift01) >= releaseThreshold) {
+      state.spawnHoldActive = false;
+      state.spawnVisualOffsetX = 0;
+      state.spawnVisualOffsetY = 0;
+      state.v = 0;
+      state.vx = 0;
+    } else {
+      const bo = Math.max(1, (Number(phys.orbRadiusPx) || 0) * 2);
+      const anchorX = Number.isFinite(Number(state.spawnHoldAnchorX))
+        ? Number(state.spawnHoldAnchorX)
+        : Number(state.xW || 0);
+      const anchorY = Number.isFinite(Number(state.spawnHoldAnchorY))
+        ? Number(state.spawnHoldAnchorY)
+        : Number(state.yW || 0);
+      const startedAtMs = Number.isFinite(Number(state.spawnHoldStartedAtMs))
+        ? Number(state.spawnHoldStartedAtMs)
+        : Number(nowMs || 0);
+      const t = Math.max(0, (Number(nowMs || 0) - startedAtMs) / 1000);
+      const driftRange = Math.max(0, Number(spawnConfig.driftRangeBO) || 0) * bo;
+      const driftHz = Math.max(0, Number(spawnConfig.driftSpeedHz) || 0);
+      const bobRange = Math.max(0, Number(spawnConfig.bobRangeBO) || 0) * bo;
+      const bobHz = Math.max(0, Number(spawnConfig.bobSpeedHz) || 0);
+      state.xW = anchorX;
+      state.yW = anchorY;
+      state.v = 0;
+      state.vx = 0;
+      state.steerIntentX = 0;
+      state.steerActive = false;
+      state.onGround = false;
+      state.descendMs = 0;
+      state.shieldDescentBlocked = false;
+      state.spawnVisualOffsetX = Math.sin(t * Math.PI * 2 * driftHz) * driftRange;
+      state.spawnVisualOffsetY = Math.sin(t * Math.PI * 2 * bobHz) * bobRange;
+
+      if (typeof drawStars === "function") drawStars();
+      if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
+      if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
+      if (typeof applyOrbTransform === "function") applyOrbTransform();
+      if (orbFxSystem && typeof orbFxSystem.tick === "function") orbFxSystem.tick(ts, dt);
+      if (worldSystem && typeof worldSystem.tick === "function") worldSystem.tick(ts, dt);
+      if (typeof updateDebugReadout === "function") updateDebugReadout();
+      return;
+    }
   }
 
   stepOrbLateralMotion({

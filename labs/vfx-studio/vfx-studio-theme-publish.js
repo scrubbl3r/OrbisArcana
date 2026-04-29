@@ -304,6 +304,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  bobSpeedHz: ${toNum(p.bobSpeedHz, 0.65).toFixed(2)},`,
         `  driftRangeBO: ${toNum(p.driftRangeBO, 0.2).toFixed(2)},`,
         `  driftSpeedHz: ${toNum(p.driftSpeedHz, 0.23).toFixed(2)},`,
+        `  liftReleaseThreshold01: ${toNum(p.liftReleaseThreshold01, 0.15).toFixed(2)},`,
         "});",
         "",
       ].join("\n");

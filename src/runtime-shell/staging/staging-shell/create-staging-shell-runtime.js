@@ -206,6 +206,12 @@ function buildShellStageInitialState(phys = {}) {
     floatGracePhase: 0,
     teleportHoldActive: false,
     teleportHoldAnchorY: yW,
+    spawnHoldActive: false,
+    spawnHoldAnchorX: 0,
+    spawnHoldAnchorY: yW,
+    spawnHoldStartedAtMs: 0,
+    spawnVisualOffsetX: 0,
+    spawnVisualOffsetY: 0,
   };
 }
 
@@ -299,6 +305,10 @@ function initializeShellStageRuntime(shellContext) {
     initialState.onGround = false;
     initialState.floatGraceAnchorY = spawnPoint.yW;
     initialState.teleportHoldAnchorY = spawnPoint.yW;
+    initialState.spawnHoldActive = true;
+    initialState.spawnHoldAnchorX = spawnPoint.xW;
+    initialState.spawnHoldAnchorY = spawnPoint.yW;
+    initialState.spawnHoldStartedAtMs = performance.now();
   }
   const orbRuntimeState = createOrbRuntimeState({ initialState });
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
@@ -834,10 +844,12 @@ function applyShellOrbTransform(shellContext) {
   const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
   const scratch = ensureShellFrameScratch(runtime);
   const args = scratch.orbTransformArgs;
+  const xW = Number(orbState && orbState.xW);
+  const yW = Number(orbState && orbState.yW);
   args.top = top;
   args.left = screenX;
-  args.xW = Number(orbState && orbState.xW);
-  args.yW = Number(orbState && orbState.yW);
+  args.xW = xW + Number(orbState && orbState.spawnVisualOffsetX || 0);
+  args.yW = yW + Number(orbState && orbState.spawnVisualOffsetY || 0);
   activeStageAdapter.applyOrbTransform(args);
 }
 
@@ -860,6 +872,12 @@ function resetShellOrbToGround(shellContext) {
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
     teleportHoldAnchorY: yW,
+    spawnHoldActive: !!spawnPoint,
+    spawnHoldAnchorX: xW,
+    spawnHoldAnchorY: yW,
+    spawnHoldStartedAtMs: performance.now(),
+    spawnVisualOffsetX: 0,
+    spawnVisualOffsetY: 0,
     gravityMul: Number(stage.orbRuntimeState.get().gravityMul) || 0.34,
   });
   applyShellGroundLine(shellContext);
@@ -1223,6 +1241,13 @@ function startShellStageLoop(shellContext) {
       const phys = runtime.stage ? runtime.stage.phys : null;
       return Math.max(0, Number(phys && phys.thrustMax) || 0) * clamp01(l01);
     },
+    getSpawnHoldConfig: () => (
+      runtime.vfxDefaults &&
+      runtime.vfxDefaults.spawn &&
+      typeof runtime.vfxDefaults.spawn === "object"
+        ? runtime.vfxDefaults.spawn
+        : Object.create(null)
+    ),
     isFloatGraceActive: (frameNowMs) => {
       const state = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
         ? runtime.orbRuntimeState.get()

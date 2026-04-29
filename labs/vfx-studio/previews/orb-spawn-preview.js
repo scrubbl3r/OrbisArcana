@@ -21,6 +21,12 @@ function readOrbSpawnPreviewConfig(els = {}) {
     bobSpeedHz: clampNumber(els.orbSpawnBobSpeedHz && els.orbSpawnBobSpeedHz.value, 0, 10, 0.65),
     driftRangeBO: clampNumber(els.orbSpawnDriftRangeBO && els.orbSpawnDriftRangeBO.value, 0, 4, 0.2),
     driftSpeedHz: clampNumber(els.orbSpawnDriftSpeedHz && els.orbSpawnDriftSpeedHz.value, 0, 10, 0.23),
+    liftReleaseThreshold01: clampNumber(
+      els.orbSpawnLiftReleaseThreshold01 && els.orbSpawnLiftReleaseThreshold01.value,
+      0,
+      1,
+      0.15
+    ),
   });
 }
 
