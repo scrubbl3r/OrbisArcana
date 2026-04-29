@@ -10,6 +10,16 @@ export const WORLD_WORKSHOP_SURFACES = Object.freeze([
     status: "experiment",
   }),
   Object.freeze({
+    id: "globe",
+    label: "Globe",
+    kind: "globe",
+    category: "world-pickup",
+    generator: "globe",
+    previewKey: "globe",
+    preview: "world-object-inspector",
+    status: "draft",
+  }),
+  Object.freeze({
     id: "orb-displacement-test",
     label: "Orb Displacement Test",
     kind: "orb_displacement_test",

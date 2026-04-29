@@ -12,6 +12,8 @@ export function formatWorldWorkshopMeta(surface = null) {
 export function formatWorldWorkshopGeometryReadout(surface = null, metrics = null) {
   if (!surface || !metrics) return "Pending";
   switch (String(surface.generator || "")) {
+    case "globe":
+      return `BO ${roundMetric(metrics.bo)}px / economical sphere diameter ${roundMetric(metrics.diameter)}px / radius ${roundMetric(metrics.radius)}px / static globe material`;
     case "orb":
       return `BO ${roundMetric(metrics.bo)}px / translucent sphere diameter ${roundMetric(metrics.diameter)}px / radius ${roundMetric(metrics.radius)}px / shader shell`;
     case "orb-displacement-test":
@@ -30,6 +32,9 @@ export function formatWorldWorkshopMaterialReadout(surface = null) {
   if (!surface) return "Pending";
   switch (String(surface.preview || "")) {
     case "world-object-inspector":
+      if (String(surface.generator || "") === "globe") {
+        return "World object inspector / globe material / static opalescent shell / postprocess bloom";
+      }
       if (String(surface.generator || "") === "orb") {
         return "World object inspector / translucent opalescent shell / postprocess bloom / saturated pastel drift";
       }

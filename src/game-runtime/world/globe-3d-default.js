@@ -1,0 +1,18 @@
+export const GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({
+  shellBaseColor: 0xfbfdff,
+  shellCyanColor: 0x9af5ff,
+  shellVioletColor: 0xd9c6ff,
+  shellGoldColor: 0xffd86a,
+  shellFresnelPower: 3.0,
+  shellRimAlphaPower: 0.95,
+  shellCenterAlpha: 0.18,
+  shellRimAlpha: 0.62,
+  shellPastelMix: 0.38,
+  shellRimPastelMix: 0.34,
+  shellLuminanceBoost: 1.24,
+  lightColor: 0xdff6ff,
+  lightIntensity: 48.0,
+  lightDistanceBO: 5.0,
+  lightDecay: 1.45,
+  lightOffsetZBO: 0.55,
+});
