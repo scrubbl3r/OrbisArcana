@@ -7,7 +7,7 @@ import {
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
 import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260428e";
-import { createLevelStageDepth3dLayer } from "./level-stage-depth3d.js?v=20260428t";
+import { createLevelStageDepth3dLayer } from "./level-stage-depth3d.js?v=20260428u";
 import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425w";
 import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260428a";
 import {
@@ -100,6 +100,7 @@ export function renderLevelStage(root, {
         <div class="levelStageLabel">
           <span class="levelStageLabelTitle">Level Stage</span>
           <span class="levelStageLabelMeta"></span>
+          <span class="levelStageDepthReadout" data-level-stage-depth-readout="true"></span>
         </div>
         <div class="deathPanel off" data-level-stage-death-panel="true" aria-hidden="true">
           <div class="deathCard" role="dialog" aria-label="You died">
@@ -123,6 +124,7 @@ export function renderLevelStage(root, {
     actorWorld: root.querySelector(".levelStageActorWorld"),
     worldOverlay: root.querySelector(".levelStageWorldOverlay"),
     labelMeta: root.querySelector(".levelStageLabelMeta"),
+    depthReadout: root.querySelector("[data-level-stage-depth-readout='true']"),
     orbWrap: root.querySelector("[data-level-stage-orb-wrap='true']"),
     orb: root.querySelector("[data-level-stage-orb='true']"),
     orbInterior: root.querySelector("[data-level-stage-orb-interior='true']"),
@@ -139,6 +141,7 @@ export function renderLevelStage(root, {
   const depth3dRuntime = createLevelStageDepth3dLayer({
     root: refs.depth3dLayer,
     labelEl: refs.labelMeta,
+    debugEl: refs.depthReadout,
   });
 
   const controller = createAuthoredStageController({

@@ -520,6 +520,7 @@ async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx
 export function createLevelStageDepth3dLayer({
   root = null,
   labelEl = null,
+  debugEl = null,
 } = {}) {
   if (!root) return null;
   const renderer = new THREE.WebGLRenderer({
@@ -570,6 +571,15 @@ export function createLevelStageDepth3dLayer({
     root.dataset.depthOrbRadius = (Math.max(1, Number(bo) || BO_WORLD_UNITS) * 0.5).toFixed(2);
     root.dataset.depthOrbZbo = Number(zBO || 0).toFixed(2);
     root.dataset.depthOrbDepthPx = Number(depthPx || 0).toFixed(2);
+    if (labelEl && labelEl.dataset) {
+      labelEl.dataset.depthOrbBo = root.dataset.depthOrbBo;
+      labelEl.dataset.depthOrbRadius = root.dataset.depthOrbRadius;
+      labelEl.dataset.depthOrbZbo = root.dataset.depthOrbZbo;
+      labelEl.dataset.depthOrbDepthPx = root.dataset.depthOrbDepthPx;
+    }
+    if (debugEl) {
+      debugEl.textContent = `3d BO ${root.dataset.depthOrbBo} | r ${root.dataset.depthOrbRadius} | z ${root.dataset.depthOrbZbo}BO | depth ${root.dataset.depthOrbDepthPx}`;
+    }
   }
 
   function setLabel(text) {
