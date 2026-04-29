@@ -1,6 +1,6 @@
 import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420t";
 import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js?v=20260423g";
-import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260428b";
+import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260428c";
 
 function clamp01(n){
   n = Number(n);
@@ -10,7 +10,18 @@ function clamp01(n){
   return n;
 }
 
-const SPHERE_COLLISION_SCRATCH = { contacts: [] };
+const SPHERE_COLLISION_SCRATCH = {
+  contacts: [],
+  hits: [],
+  hitPool: [],
+  response: {
+    normalX: 0,
+    normalY: -1,
+    depth: 0,
+    grounded: false,
+    strongest: null,
+  },
+};
 const CONTACT_NORMAL_SCRATCH = { x: 0, y: 0 };
 
 function aggregateContactNormal(contacts = [], target = CONTACT_NORMAL_SCRATCH) {
