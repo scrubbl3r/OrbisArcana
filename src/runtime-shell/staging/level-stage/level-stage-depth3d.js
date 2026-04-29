@@ -11,6 +11,7 @@ import {
   resolveDepthCameraZ,
   resolveOrbTravelZBO,
 } from "../../../game-runtime/level/depth-projection.js";
+import { disposeThreeObject } from "../../../game-runtime/rendering/three/three-object-utils.js";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const PREVIEW_RASTER_SIZE = 384;
@@ -633,10 +634,7 @@ export function createLevelStageDepth3dLayer({
     while (group.children.length) {
       const child = group.children[0];
       group.remove(child);
-      child.traverse((node) => {
-        if (node.geometry && typeof node.geometry.dispose === "function") node.geometry.dispose();
-        if (node.material && typeof node.material.dispose === "function") node.material.dispose();
-      });
+      disposeThreeObject(child);
     }
   }
 
