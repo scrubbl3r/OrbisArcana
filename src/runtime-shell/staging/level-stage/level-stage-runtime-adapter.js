@@ -36,10 +36,11 @@ export function createLevelStageRuntimeAdapter({
     level,
     state,
     getOrbWrapPosition: ({ top = 0, left = "50%", xW = null, yW = null } = {}) => {
+      const orbRadiusWorldUnits = Math.max(1, Number(orbDiameterWorldUnits) || LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS) * 0.5;
       if (Number.isFinite(Number(xW)) && Number.isFinite(Number(yW))) {
         return {
           left: `${Number(xW).toFixed(2)}px`,
-          transform: `translate(-50%, ${Math.max(0, Number(yW) - (LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS * 0.5)).toFixed(2)}px)`,
+          transform: `translate(-50%, ${Math.max(0, Number(yW) - orbRadiusWorldUnits).toFixed(2)}px)`,
         };
       }
       return {

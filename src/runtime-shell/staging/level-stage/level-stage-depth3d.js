@@ -560,6 +560,18 @@ export function createLevelStageDepth3dLayer({
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbDepthPx = currentOrbZBO * BO_WORLD_UNITS;
 
+  function updateOrbTelemetry({
+    bo = orbRuntimeBO,
+    zBO = currentOrbZBO,
+    depthPx = currentOrbDepthPx,
+  } = {}) {
+    if (!root || !root.dataset) return;
+    root.dataset.depthOrbBo = Number(bo || 0).toFixed(2);
+    root.dataset.depthOrbRadius = (Math.max(1, Number(bo) || BO_WORLD_UNITS) * 0.5).toFixed(2);
+    root.dataset.depthOrbZbo = Number(zBO || 0).toFixed(2);
+    root.dataset.depthOrbDepthPx = Number(depthPx || 0).toFixed(2);
+  }
+
   function setLabel(text) {
     if (labelEl) {
       labelEl.dataset.depth3d = text;
@@ -722,6 +734,11 @@ export function createLevelStageDepth3dLayer({
       }
       const resolvedZBO = Math.max(0, Number.isFinite(Number(zBO)) ? Number(zBO) : currentOrbZBO);
       currentOrbDepthPx = resolvedZBO * resolvedBO;
+      updateOrbTelemetry({
+        bo: resolvedBO,
+        zBO: resolvedZBO,
+        depthPx: currentOrbDepthPx,
+      });
       orbRuntime.setPosition({
         x: toThreeX(worldX, worldWidthPx),
         y: toThreeY(worldY, worldHeightPx),
