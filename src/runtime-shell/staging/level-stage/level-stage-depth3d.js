@@ -4,7 +4,6 @@ import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
   LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
-  resolveApparentDepthScale,
   resolveDepthCameraZ,
   resolveOrbTravelZBO,
 } from "../../../game-runtime/level/depth-projection.js";
@@ -630,12 +629,6 @@ export function createLevelStageDepth3dLayer({
     camera.updateProjectionMatrix();
     if (orbRuntime && typeof orbRuntime.setTime === "function") {
       orbRuntime.setTime(performance.now() / 1000);
-      if (typeof orbRuntime.setScale === "function") {
-        orbRuntime.setScale(resolveApparentDepthScale({
-          cameraZ,
-          depthPx: currentOrbDepthPx,
-        }));
-      }
     }
     renderer.render(scene, camera);
   }
