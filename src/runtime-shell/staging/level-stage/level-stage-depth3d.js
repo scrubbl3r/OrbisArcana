@@ -560,6 +560,7 @@ export function createLevelStageDepth3dLayer({
   let worldHeightPx = 1;
   let depthLayerCount = 0;
   let lastFrame = null;
+  let pendingRenderFrame = 0;
   let orbRuntime = null;
   let orbNod3dRuntime = null;
   let orbNod3dFrame = 0;
@@ -621,7 +622,7 @@ export function createLevelStageDepth3dLayer({
     root.hidden = depthLayerCount <= 0 && !orbRuntime;
   }
 
-  function renderFrame({
+  function doRenderFrame({
     camLeft = 0,
     camTop = 0,
     zoom = 1,
@@ -667,6 +668,28 @@ export function createLevelStageDepth3dLayer({
       }
     }
     renderer.render(scene, camera);
+  }
+
+  function renderFrame(frame = {}) {
+    if (disposed) return;
+    lastFrame = {
+      camLeft: clampNumber(frame.camLeft, 0),
+      camTop: clampNumber(frame.camTop, 0),
+      zoom: clampNumber(frame.zoom, 1),
+      viewportWidthPx: clampNumber(frame.viewportWidthPx, 0),
+      viewportHeightPx: clampNumber(frame.viewportHeightPx, 0),
+      isBootFrame: !!frame.isBootFrame,
+    };
+    if (pendingRenderFrame) return;
+    if (typeof requestAnimationFrame !== "function") {
+      doRenderFrame(lastFrame);
+      return;
+    }
+    pendingRenderFrame = requestAnimationFrame(() => {
+      pendingRenderFrame = 0;
+      if (disposed) return;
+      doRenderFrame(lastFrame || {});
+    });
   }
 
   function requestOrbNod3dFrames() {
@@ -809,7 +832,11 @@ export function createLevelStageDepth3dLayer({
       if (orbNod3dFrame && typeof cancelAnimationFrame === "function") {
         cancelAnimationFrame(orbNod3dFrame);
       }
+      if (pendingRenderFrame && typeof cancelAnimationFrame === "function") {
+        cancelAnimationFrame(pendingRenderFrame);
+      }
       orbNod3dFrame = 0;
+      pendingRenderFrame = 0;
       disposeOrbRuntime();
       clearGroup();
       renderer.dispose();
