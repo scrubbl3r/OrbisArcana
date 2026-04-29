@@ -67,6 +67,12 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       orbNod3dEquatorFalloff: 0,
       orbNod3dRippleSoftness: 0.82,
     },
+    spawn: {
+      bobRangeBO: 0.65,
+      bobSpeedHz: 0.65,
+      driftRangeBO: 0.2,
+      driftSpeedHz: 0.23,
+    },
     teleport: {
       orbTeleportFlickerOnMs: 60,
       orbTeleportFlickerOffMs: 60,

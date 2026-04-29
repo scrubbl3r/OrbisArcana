@@ -12,7 +12,15 @@ export async function loadAuthoredLevelScene({
   const assetUrl = String(mapSource && mapSource.assetUrl || "").trim();
   if (!mapSource || !assetUrl || typeof fetchImpl !== "function") return null;
 
-  const response = await fetchImpl(assetUrl, { method: "GET" });
+  let fetchUrl = assetUrl;
+  try {
+    const url = new URL(assetUrl, globalThis.location && globalThis.location.href || undefined);
+    url.searchParams.set("_oa_svg_v", String(Date.now()));
+    fetchUrl = url.toString();
+  } catch (_) {
+    fetchUrl = assetUrl;
+  }
+  const response = await fetchImpl(fetchUrl, { method: "GET", cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Level SVG fetch failed: ${response.status}`);
   }

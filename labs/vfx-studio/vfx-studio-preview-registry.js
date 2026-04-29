@@ -8,6 +8,7 @@ import {
   createOrb3dPreview,
   readOrb3dPreviewConfig,
 } from "./previews/orb-3d-preview.js?v=20260428a";
+import { createOrbSpawnPreview } from "./previews/orb-spawn-preview.js?v=20260429a";
 import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260428b";
 import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
 import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425d";
@@ -111,6 +112,15 @@ export function createStudioPreviewRegistry({
   actions.clearOrb3d = orb3dPreview.clear;
   orb3dPreview.wire();
 
+  const orbSpawnPreview = createOrbSpawnPreview({
+    els: previewEls.orbSpawn,
+    getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
+  });
+  actions.applyOrbSpawn = orbSpawnPreview.apply;
+  actions.clearOrbSpawn = orbSpawnPreview.clear;
+  orbSpawnPreview.wire();
+
   const orbNodPreview = createOrbTemplatePreview({
     els: previewEls.orbNod,
     getOrbBaseVisualState,
@@ -166,6 +176,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearElectric === "function") actions.clearElectric();
     if (typeof actions.clearOrbTemplate === "function") actions.clearOrbTemplate();
     if (typeof actions.clearOrb3d === "function") actions.clearOrb3d();
+    if (typeof actions.clearOrbSpawn === "function") actions.clearOrbSpawn();
     if (typeof actions.clearOrbNod === "function") actions.clearOrbNod();
     if (typeof actions.clearOrbNod3d === "function") actions.clearOrbNod3d();
     if (typeof actions.clearOrbLifecycle === "function") actions.clearOrbLifecycle();

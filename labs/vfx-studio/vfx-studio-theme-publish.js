@@ -297,6 +297,16 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "orb-spawn":
+      return [
+        "export const ORB_SPAWN_PRESET_DEFAULT = Object.freeze({",
+        `  bobRangeBO: ${toNum(p.bobRangeBO, 0.65).toFixed(2)},`,
+        `  bobSpeedHz: ${toNum(p.bobSpeedHz, 0.65).toFixed(2)},`,
+        `  driftRangeBO: ${toNum(p.driftRangeBO, 0.2).toFixed(2)},`,
+        `  driftSpeedHz: ${toNum(p.driftSpeedHz, 0.23).toFixed(2)},`,
+        "});",
+        "",
+      ].join("\n");
     case "world-globe": {
       const styleBlock = (name, prefix, fallbacks) => [
         `  ${name}: Object.freeze({`,

@@ -39,7 +39,7 @@ import {
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
-import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260425l";
+import { loadAuthoredLevelScene } from "../load-authored-level-scene.js?v=20260429a";
 import {
   resolveStageCameraClampBounds,
   resolveStageCameraConfig,
@@ -2606,6 +2606,7 @@ async function initShellKwsRuntime(shellContext) {
     TELEPORT_PRESET_DEFAULT,
     ORB_NOD_PRESET_DEFAULT,
     ORB_NOD_3D_PRESET_DEFAULT,
+    ORB_SPAWN_PRESET_DEFAULT,
   } = receiverMods;
 
   if (
@@ -2668,6 +2669,7 @@ async function initShellKwsRuntime(shellContext) {
       teleport: TELEPORT_PRESET_DEFAULT,
       orbNod: ORB_NOD_PRESET_DEFAULT,
       orbNod3d: ORB_NOD_3D_PRESET_DEFAULT,
+      orbSpawn: ORB_SPAWN_PRESET_DEFAULT,
     });
   }
   runtime.vfxDefaults = vfxDefaults;

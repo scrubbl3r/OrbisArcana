@@ -19,6 +19,12 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
   }),
   Object.freeze({
     targetKind: "orb-state",
+    targetId: "spawn",
+    effectId: "orb.spawn",
+    presetId: "preset.orb-spawn.default",
+  }),
+  Object.freeze({
+    targetKind: "orb-state",
     targetId: "globe_loaded",
     effectId: "orb.globe",
     presetId: "preset.orb-globe.default",
