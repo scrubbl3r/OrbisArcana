@@ -210,8 +210,6 @@ function buildShellStageInitialState(phys = {}) {
     spawnHoldAnchorX: 0,
     spawnHoldAnchorY: yW,
     spawnHoldStartedAtMs: 0,
-    spawnVisualOffsetX: 0,
-    spawnVisualOffsetY: 0,
   };
 }
 
@@ -848,8 +846,8 @@ function applyShellOrbTransform(shellContext) {
   const yW = Number(orbState && orbState.yW);
   args.top = top;
   args.left = screenX;
-  args.xW = xW + Number(orbState && orbState.spawnVisualOffsetX || 0);
-  args.yW = yW + Number(orbState && orbState.spawnVisualOffsetY || 0);
+  args.xW = xW;
+  args.yW = yW;
   activeStageAdapter.applyOrbTransform(args);
 }
 
@@ -876,8 +874,6 @@ function resetShellOrbToGround(shellContext) {
     spawnHoldAnchorX: xW,
     spawnHoldAnchorY: yW,
     spawnHoldStartedAtMs: performance.now(),
-    spawnVisualOffsetX: 0,
-    spawnVisualOffsetY: 0,
     gravityMul: Number(stage.orbRuntimeState.get().gravityMul) || 0.34,
   });
   applyShellGroundLine(shellContext);

@@ -130,8 +130,6 @@ export function runOrbRuntimePipeline({
     );
     if (clamp01(state.lift01) >= releaseThreshold) {
       state.spawnHoldActive = false;
-      state.spawnVisualOffsetX = 0;
-      state.spawnVisualOffsetY = 0;
       state.v = 0;
       state.vx = 0;
     } else {
@@ -150,8 +148,12 @@ export function runOrbRuntimePipeline({
       const driftHz = Math.max(0, Number(spawnConfig.driftSpeedHz) || 0);
       const bobRange = Math.max(0, Number(spawnConfig.bobRangeBO) || 0) * bo;
       const bobHz = Math.max(0, Number(spawnConfig.bobSpeedHz) || 0);
-      state.xW = anchorX;
-      state.yW = anchorY;
+      const targetX = anchorX + (Math.sin(t * Math.PI * 2 * driftHz) * driftRange);
+      const targetY = anchorY + (Math.sin(t * Math.PI * 2 * bobHz) * bobRange);
+      const holdHz = Math.max(1, Number(spawnConfig.holdEaseHz) || 12);
+      const alpha = 1 - Math.exp(-holdHz * dt);
+      state.xW += (targetX - state.xW) * alpha;
+      state.yW += (targetY - state.yW) * alpha;
       state.v = 0;
       state.vx = 0;
       state.steerIntentX = 0;
@@ -159,8 +161,6 @@ export function runOrbRuntimePipeline({
       state.onGround = false;
       state.descendMs = 0;
       state.shieldDescentBlocked = false;
-      state.spawnVisualOffsetX = Math.sin(t * Math.PI * 2 * driftHz) * driftRange;
-      state.spawnVisualOffsetY = Math.sin(t * Math.PI * 2 * bobHz) * bobRange;
 
       if (typeof drawStars === "function") drawStars();
       if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();

@@ -24,8 +24,6 @@
  * @property {number} spawnHoldAnchorX
  * @property {number} spawnHoldAnchorY
  * @property {number} spawnHoldStartedAtMs
- * @property {number} spawnVisualOffsetX
- * @property {number} spawnVisualOffsetY
  */
 
 /**
@@ -58,8 +56,6 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     spawnHoldAnchorX: 0,
     spawnHoldAnchorY: 0,
     spawnHoldStartedAtMs: 0,
-    spawnVisualOffsetX: 0,
-    spawnVisualOffsetY: 0,
     ...(initialState || {}),
   };
 
@@ -97,8 +93,6 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.spawnHoldAnchorX = 0;
     state.spawnHoldAnchorY = 0;
     state.spawnHoldStartedAtMs = 0;
-    state.spawnVisualOffsetX = 0;
-    state.spawnVisualOffsetY = 0;
     if (next && typeof next === "object") Object.assign(state, next);
     return state;
   }
