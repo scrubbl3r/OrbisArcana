@@ -100,8 +100,7 @@
   <g
      inkscape:groupmode="layer"
      id="layer4"
-     inkscape:label="props"
-     sodipodi:insensitive="true">
+     inkscape:label="props">
     <rect
        style="fill:#d4aa00;stroke-width:6.10287"
        id="rect2"
@@ -127,13 +126,12 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="spawn"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <circle
        style="fill:#ff0000;stroke:none;stroke-width:1.48875"
        id="path2-9"
        cx="548.84814"
-       cy="1841.9618"
+       cy="1801.9618"
        r="18.5" />
   </g>
   <g
