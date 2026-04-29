@@ -561,6 +561,15 @@ export function createLevelStageDepth3dLayer({
   let depthLayerCount = 0;
   let lastFrame = null;
   let pendingRenderFrame = 0;
+  let lastRenderWidth = 0;
+  let lastRenderHeight = 0;
+  let hasCameraFrame = false;
+  let lastCameraAspect = 0;
+  let lastCameraNear = 0;
+  let lastCameraFar = 0;
+  let lastCameraX = 0;
+  let lastCameraY = 0;
+  let lastCameraZ = 0;
   let orbRuntime = null;
   let orbNod3dRuntime = null;
   let orbNod3dFrame = 0;
@@ -641,7 +650,11 @@ export function createLevelStageDepth3dLayer({
     };
     const width = Math.max(1, Math.round(clampNumber(viewportWidthPx, root.clientWidth || 1)));
     const height = Math.max(1, Math.round(clampNumber(viewportHeightPx, root.clientHeight || 1)));
-    renderer.setSize(width, height, false);
+    if (width !== lastRenderWidth || height !== lastRenderHeight) {
+      renderer.setSize(width, height, false);
+      lastRenderWidth = width;
+      lastRenderHeight = height;
+    }
     const safeZoom = Math.max(0.05, clampNumber(zoom, 1));
     const viewW = width / safeZoom;
     const viewH = height / safeZoom;
@@ -654,12 +667,34 @@ export function createLevelStageDepth3dLayer({
       zoom: safeZoom,
       fovDeg: camera.fov,
     });
-    camera.aspect = width / height;
-    camera.near = Math.max(1, cameraZ * 0.02);
-    camera.far = Math.max(24000, cameraZ + (BO_WORLD_UNITS * 32));
-    camera.position.set(cx, cy, cameraZ);
-    camera.lookAt(cx, cy, 0);
-    camera.updateProjectionMatrix();
+    const nextAspect = width / height;
+    const nextNear = Math.max(1, cameraZ * 0.02);
+    const nextFar = Math.max(24000, cameraZ + (BO_WORLD_UNITS * 32));
+    const projectionChanged = !hasCameraFrame
+      || Math.abs(nextAspect - lastCameraAspect) > 0.000001
+      || Math.abs(nextNear - lastCameraNear) > 0.000001
+      || Math.abs(nextFar - lastCameraFar) > 0.000001;
+    const positionChanged = !hasCameraFrame
+      || Math.abs(cx - lastCameraX) > 0.000001
+      || Math.abs(cy - lastCameraY) > 0.000001
+      || Math.abs(cameraZ - lastCameraZ) > 0.000001;
+    if (projectionChanged) {
+      camera.aspect = nextAspect;
+      camera.near = nextNear;
+      camera.far = nextFar;
+      camera.updateProjectionMatrix();
+    }
+    if (positionChanged) {
+      camera.position.set(cx, cy, cameraZ);
+      camera.lookAt(cx, cy, 0);
+    }
+    hasCameraFrame = true;
+    lastCameraAspect = nextAspect;
+    lastCameraNear = nextNear;
+    lastCameraFar = nextFar;
+    lastCameraX = cx;
+    lastCameraY = cy;
+    lastCameraZ = cameraZ;
     if (orbRuntime && typeof orbRuntime.setTime === "function") {
       const timeSec = performance.now() / 1000;
       orbRuntime.setTime(timeSec);
