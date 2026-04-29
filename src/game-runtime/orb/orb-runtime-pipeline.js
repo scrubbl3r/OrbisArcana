@@ -1,6 +1,6 @@
 import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420t";
 import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js?v=20260423g";
-import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260428a";
+import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260428b";
 
 function clamp01(n){
   n = Number(n);
@@ -10,7 +10,10 @@ function clamp01(n){
   return n;
 }
 
-function aggregateContactNormal(contacts = []) {
+const SPHERE_COLLISION_SCRATCH = { contacts: [] };
+const CONTACT_NORMAL_SCRATCH = { x: 0, y: 0 };
+
+function aggregateContactNormal(contacts = [], target = CONTACT_NORMAL_SCRATCH) {
   const safeContacts = Array.isArray(contacts) ? contacts : [];
   let sumX = 0;
   let sumY = 0;
@@ -26,16 +29,14 @@ function aggregateContactNormal(contacts = []) {
   }
   const length = Math.hypot(sumX, sumY);
   if (length > 0.000001) {
-    return Object.freeze({
-      x: sumX / length,
-      y: sumY / length,
-    });
+    target.x = sumX / length;
+    target.y = sumY / length;
+    return target;
   }
   if (strongest) {
-    return Object.freeze({
-      x: Number(strongest.normalX) || 0,
-      y: Number(strongest.normalY) || -1,
-    });
+    target.x = Number(strongest.normalX) || 0;
+    target.y = Number(strongest.normalY) || -1;
+    return target;
   }
   return null;
 }
@@ -210,6 +211,7 @@ export function runOrbRuntimePipeline({
       previousXW: preBoundaryXW - (preBoundaryVX * dt),
       previousYW: preBoundaryYW - (preBoundaryVY * dt),
       maxIterations: 3,
+      target: SPHERE_COLLISION_SCRATCH,
     })
     : resolveCircleVsBoundarySegments({
       circleXW: preBoundaryXW,

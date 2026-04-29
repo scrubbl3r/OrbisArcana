@@ -177,12 +177,14 @@ export function resolveSphereVsExtrudedBoundarySegments({
   previousXW = null,
   previousYW = null,
   maxIterations = 3,
+  target = null,
 } = {}) {
   let resolvedXW = clampNumber(sphereXW, 0);
   let resolvedYW = clampNumber(sphereYW, 0);
   let grounded = false;
   let maxDepth = 0;
-  const contacts = [];
+  const contacts = target && Array.isArray(target.contacts) ? target.contacts : [];
+  contacts.length = 0;
   const safeRadius = Math.max(0, clampNumber(radiusW, 0));
   const safeSegments = Array.isArray(segments) ? segments : [];
 
@@ -219,14 +221,17 @@ export function resolveSphereVsExtrudedBoundarySegments({
     contacts.push(...hits);
   }
 
-  return Object.freeze({
-    xW: resolvedXW,
-    yW: resolvedYW,
-    zBO: Math.max(0, clampNumber(sphereZBO, 0)),
-    correctionXW: resolvedXW - clampNumber(sphereXW, 0),
-    correctionYW: resolvedYW - clampNumber(sphereYW, 0),
-    grounded,
-    maxDepth,
+  const result = target || {};
+  result.xW = resolvedXW;
+  result.yW = resolvedYW;
+  result.zBO = Math.max(0, clampNumber(sphereZBO, 0));
+  result.correctionXW = resolvedXW - clampNumber(sphereXW, 0);
+  result.correctionYW = resolvedYW - clampNumber(sphereYW, 0);
+  result.grounded = grounded;
+  result.maxDepth = maxDepth;
+  result.contacts = contacts;
+  return target ? result : Object.freeze({
+    ...result,
     contacts: Object.freeze(contacts),
   });
 }
