@@ -15,7 +15,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-globe-base-state.js?v=20260425d";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260429a";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TMP_A = new THREE.Vector3();
@@ -185,6 +185,7 @@ export function createOrbGlobe3dPreview({
 
   function rebuildScene() {
     if (!els.previewRoot) return null;
+    seedSamples();
     destroyInspector();
     config = readOrbGlobe3dPreviewConfig(els);
     config = Object.freeze({ ...config, els });
@@ -262,7 +263,7 @@ export function createOrbGlobe3dPreview({
     });
   }
 
-  function addGlobe(overrides = {}) {
+  function addGlobe(overrides = {}, { render = true } = {}) {
     const speeds = readRange(els, "orbGlobe3dSpeedMin", "orbGlobe3dSpeedMax", 1.8, 2.45);
     const drifts = readRange(els, "orbGlobe3dDriftMin", "orbGlobe3dDriftMax", 0.03, 0.18);
     samples.push({
@@ -276,13 +277,13 @@ export function createOrbGlobe3dPreview({
       plane: overrides.plane || createPlane(),
       model: null,
     });
-    rebuildScene();
+    if (render) rebuildScene();
   }
 
-  function bindGlobe() {
+  function bindGlobe({ render = true } = {}) {
     let globe = samples.find((entry) => entry.state === "loaded");
     if (!globe) {
-      addGlobe();
+      addGlobe({}, { render: false });
       globe = samples.find((entry) => entry.state === "loaded");
     }
     if (globe) {
@@ -290,26 +291,25 @@ export function createOrbGlobe3dPreview({
       globe.model = null;
       initializeInnerMotion(globe, config || Object.freeze({ els }));
     }
-    rebuildScene();
+    if (render) rebuildScene();
   }
 
   function clear() {
     samples = [];
     destroyInspector();
-    if (els.previewRoot) rebuildScene();
   }
 
-  function seed() {
+  function seedSamples() {
     if (samples.length) return;
     const frontPlane = {
       normal: new THREE.Vector3(0, 0, 1),
       u: new THREE.Vector3(1, 0, 0),
       v: new THREE.Vector3(0, 1, 0),
     };
-    addGlobe({ phase: 0, speed: 1.35, drift: 0.04, plane: frontPlane });
-    addGlobe({ phase: Math.PI * 0.72, speed: 1.9, direction: -1, drift: 0.08, plane: frontPlane });
-    addGlobe({ phase: Math.PI * 1.38, speed: 2.25, drift: 0.12, plane: createPlane() });
-    bindGlobe();
+    addGlobe({ phase: 0, speed: 1.35, drift: 0.04, plane: frontPlane }, { render: false });
+    addGlobe({ phase: Math.PI * 0.72, speed: 1.9, direction: -1, drift: 0.08, plane: frontPlane }, { render: false });
+    addGlobe({ phase: Math.PI * 1.38, speed: 2.25, drift: 0.12, plane: createPlane() }, { render: false });
+    bindGlobe({ render: false });
   }
 
   function wire() {
@@ -320,7 +320,7 @@ export function createOrbGlobe3dPreview({
     document.querySelectorAll('[id^="orbGlobe3dApply"]').forEach((btn) => {
       btn.addEventListener("click", rebuildScene);
     });
-    seed();
+    seedSamples();
   }
 
   return Object.freeze({
