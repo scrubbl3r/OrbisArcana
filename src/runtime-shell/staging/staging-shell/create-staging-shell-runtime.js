@@ -1170,6 +1170,45 @@ function startShellStageLoop(shellContext) {
     runtime.stageLoop.stop();
   }
 
+  const pipelineHooks = {
+    clamp,
+    getLateralBounds: () => shellLateralBounds(shellContext),
+    getCeilingWorld: () => shellCeilingWorld(shellContext),
+    getCameraSteeringState: () => (
+      runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
+        ? runtime.cameraInputOrbBridge.getState()
+        : null
+    ),
+    liftToThrustAccel: (l01) => {
+      const phys = runtime.stage ? runtime.stage.phys : null;
+      return Math.max(0, Number(phys && phys.thrustMax) || 0) * clamp01(l01);
+    },
+    isFloatGraceActive: (frameNowMs) => {
+      const state = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+        ? runtime.orbRuntimeState.get()
+        : null;
+      return !!(state && state.floatGraceActive && Number(state.floatGraceUntilMs) > Number(frameNowMs || 0));
+    },
+    clearFloatGrace: () => {
+      patchShellOrbRuntime(shellContext, {
+        floatGraceActive: false,
+        floatGraceUntilMs: 0,
+      });
+    },
+    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+    computeImpactMetric: (rawImpactV) => computeShellImpactMetric(shellContext, rawImpactV),
+    drawStars: () => drawShellStars(shellContext),
+    drawWorldBackdrop: () => drawShellBackdrop(shellContext),
+    updateOrbStrokeColor: (frameDt) => updateShellOrbStrokeColor(shellContext, frameDt),
+    applyOrbTransform: () => {
+      applyShellGroundLine(shellContext);
+      applyShellOrbTransform(shellContext);
+    },
+    getBoundarySegments: () => shellResolvedBoundarySegments(shellContext),
+    getCavityCollisionConfig: () => shellResolvedCavityCollisionConfig(shellContext),
+    updateDebugReadout: () => updateShellStageReadouts(shellContext),
+  };
+
   runtime.stageLoop = createOrbRuntimeLoop({
     getState: () => (
       runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
@@ -1197,44 +1236,7 @@ function startShellStageLoop(shellContext) {
         mvp,
         orbFxSystem,
         worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
-        hooks: {
-          clamp,
-          getLateralBounds: () => shellLateralBounds(shellContext),
-          getCeilingWorld: () => shellCeilingWorld(shellContext),
-          getCameraSteeringState: () => (
-            runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
-              ? runtime.cameraInputOrbBridge.getState()
-              : null
-          ),
-          liftToThrustAccel: (l01) => {
-            const phys = runtime.stage ? runtime.stage.phys : null;
-            return Math.max(0, Number(phys && phys.thrustMax) || 0) * clamp01(l01);
-          },
-          isFloatGraceActive: (frameNowMs) => {
-            const state = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
-              ? runtime.orbRuntimeState.get()
-              : null;
-            return !!(state && state.floatGraceActive && Number(state.floatGraceUntilMs) > Number(frameNowMs || 0));
-          },
-          clearFloatGrace: () => {
-            patchShellOrbRuntime(shellContext, {
-              floatGraceActive: false,
-              floatGraceUntilMs: 0,
-            });
-          },
-          groundCenterWorld: () => shellGroundCenterWorld(shellContext),
-          computeImpactMetric: (rawImpactV) => computeShellImpactMetric(shellContext, rawImpactV),
-          drawStars: () => drawShellStars(shellContext),
-          drawWorldBackdrop: () => drawShellBackdrop(shellContext),
-          updateOrbStrokeColor: (frameDt) => updateShellOrbStrokeColor(shellContext, frameDt),
-          applyOrbTransform: () => {
-            applyShellGroundLine(shellContext);
-            applyShellOrbTransform(shellContext);
-          },
-          getBoundarySegments: () => shellResolvedBoundarySegments(shellContext),
-          getCavityCollisionConfig: () => shellResolvedCavityCollisionConfig(shellContext),
-          updateDebugReadout: () => updateShellStageReadouts(shellContext),
-        },
+        hooks: pipelineHooks,
       });
       updateShellStageReadouts(shellContext);
     },
