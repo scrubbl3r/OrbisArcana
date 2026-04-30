@@ -55,6 +55,7 @@ export function createPerfTrace({
 } = {}) {
   const metrics = new Map();
   const events = [];
+  let longTaskObserver = null;
   let enabled = true;
   let frameIndex = 0;
   let lastReportAtMs = 0;
@@ -85,11 +86,27 @@ export function createPerfTrace({
     }
   }
 
+  function record(name, valueMs = 0, slowMs = slowStepMs, { event = true } = {}) {
+    if (!enabled) return null;
+    const duration = Math.max(0, Number(valueMs) || 0);
+    const metric = recordMetric(metrics, name, duration, slowMs);
+    if (event && duration >= slowMs) {
+      pushEvent({ kind: "slow-metric", name, ms: round(duration) });
+    }
+    return metric;
+  }
+
   function frameStart({ ts = nowMs(), xW = 0, yW = 0, camLeft = 0, camTop = 0 } = {}) {
     if (!enabled) return;
     frameIndex += 1;
     const deltaMs = lastFrameAtMs ? Math.max(0, Number(ts) - lastFrameAtMs) : 0;
     lastFrameAtMs = Number(ts) || nowMs();
+    if (deltaMs > 0) {
+      recordMetric(metrics, "frame.rafDelta", deltaMs, 40);
+      if (deltaMs >= 40) {
+        pushEvent({ kind: "raf-gap", ms: round(deltaMs), xW: round(xW, 1), yW: round(yW, 1) });
+      }
+    }
     latestFrame = {
       frame: frameIndex,
       startedAtMs: nowMs(),
@@ -165,6 +182,28 @@ export function createPerfTrace({
 
   function installGlobal(rootWindow = window) {
     if (!rootWindow) return;
+    if (
+      !longTaskObserver &&
+      typeof rootWindow.PerformanceObserver === "function"
+    ) {
+      try {
+        longTaskObserver = new rootWindow.PerformanceObserver((list) => {
+          const entries = typeof list.getEntries === "function" ? list.getEntries() : [];
+          for (const entry of entries) {
+            const duration = Number(entry && entry.duration) || 0;
+            recordMetric(metrics, "browser.longtask", duration, 50);
+            pushEvent({
+              kind: "longtask",
+              ms: round(duration),
+              name: String(entry && entry.name || "longtask"),
+            });
+          }
+        });
+        longTaskObserver.observe({ entryTypes: ["longtask"] });
+      } catch (_) {
+        longTaskObserver = null;
+      }
+    }
     rootWindow.__orbisPerfTrace = {
       snapshot,
       reset,
@@ -187,6 +226,7 @@ export function createPerfTrace({
 
   return Object.freeze({
     measure,
+    record,
     frameStart,
     frameEnd,
     mark,

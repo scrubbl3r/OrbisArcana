@@ -46,7 +46,7 @@ import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
 } from "../authored-level-camera.js?v=20260424c";
-import { createPerfTrace } from "../perf-trace.js?v=20260430a";
+import { createPerfTrace } from "../perf-trace.js?v=20260430b";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -847,6 +847,68 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   return metrics;
 }
 
+function traceShellCameraInput(shellContext, nowMs = performance.now()) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const perfTrace = runtime && runtime.perfTrace ? runtime.perfTrace : null;
+  const cameraInput = runtime && runtime.cameraInput ? runtime.cameraInput : null;
+  if (!runtime || !perfTrace || !cameraInput || typeof cameraInput.getState !== "function") return null;
+  const state = cameraInput.getState() || {};
+  const tracking = state.tracking || {};
+  const debug = state.debug || {};
+  const inputAgeMs = Math.max(0, nowMs - (Number(state.updatedAtMs) || nowMs));
+  const detectMs = Math.max(0, Number(debug.detectMs) || 0);
+  const inputFrameMs = Math.max(0, Number(debug.frameMs) || 0);
+  if (typeof perfTrace.record === "function") {
+    perfTrace.record("camera.inputAge", inputAgeMs, 80, { event: false });
+    perfTrace.record("camera.detectMs", detectMs, 20);
+    perfTrace.record("camera.inputFrameMs", inputFrameMs, 45);
+  }
+  const handPresent = Boolean(tracking.handPresent);
+  const scratch = runtime.perfCameraTrace || (runtime.perfCameraTrace = {
+    handPresent,
+    missingFrames: 0,
+    staleFrames: 0,
+  });
+  if (handPresent) {
+    scratch.missingFrames = 0;
+  } else {
+    scratch.missingFrames += 1;
+  }
+  if (inputAgeMs >= 80) {
+    scratch.staleFrames += 1;
+  } else {
+    scratch.staleFrames = 0;
+  }
+  if (scratch.handPresent !== handPresent) {
+    scratch.handPresent = handPresent;
+    if (typeof perfTrace.mark === "function") {
+      perfTrace.mark(handPresent ? "camera.hand_reacquired" : "camera.hand_lost", {
+        inputAgeMs: Math.round(inputAgeMs),
+        trackingState: String(tracking.state || ""),
+      });
+    }
+  }
+  if (scratch.staleFrames === 1 && typeof perfTrace.mark === "function") {
+    perfTrace.mark("camera.input_stale", {
+      inputAgeMs: Math.round(inputAgeMs),
+      trackingState: String(tracking.state || ""),
+    });
+  }
+  return {
+    status: String(debug.statusLine || ""),
+    trackingState: String(tracking.state || ""),
+    handPresent,
+    fps: Math.round(Number(debug.fps) || 0),
+    detectMs: Math.round(detectMs * 10) / 10,
+    inputFrameMs: Math.round(inputFrameMs * 10) / 10,
+    inputAgeMs: Math.round(inputAgeMs),
+    missingFrames: scratch.missingFrames,
+    staleFrames: scratch.staleFrames,
+    rawX01: Math.round((Number(tracking.rawX01) || 0) * 1000) / 1000,
+    filteredX01: Math.round((Number(tracking.filteredX01) || 0) * 1000) / 1000,
+  };
+}
+
 function applyShellGroundLine(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   const activeStageAdapter = getActiveShellStageAdapter(shellContext);
@@ -1339,6 +1401,7 @@ function startShellStageLoop(shellContext) {
         });
       }
       traceMeasure("frame.metrics", () => updateShellFrameMetrics(shellContext, nowMs));
+      const cameraTrace = traceShellCameraInput(shellContext, nowMs);
       const receiverHostRuntime = runtime.receiverHostRuntime || null;
       const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || runtime.mvp || null;
       const orbFxSystem =
@@ -1364,6 +1427,7 @@ function startShellStageLoop(shellContext) {
           camLeft: Number(metrics.camLeft) || 0,
           camTop: Number(metrics.camTop) || 0,
           zoom: Number(metrics.zoom) || 1,
+          camera: cameraTrace,
         });
       }
     },
@@ -1650,6 +1714,7 @@ function bindShellPerfTraceControls(shellContext) {
   if (resetBtn && typeof perfTrace.reset === "function") {
     resetBtn.addEventListener("click", () => {
       perfTrace.reset();
+      if (runtime) runtime.perfCameraTrace = null;
       setButtonText(resetBtn, "Reset OK", "Reset");
     });
   }
