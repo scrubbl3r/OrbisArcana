@@ -1,4 +1,4 @@
-import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260430e";
+import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260430f";
 import { createShellBootStatusController } from "./shell-boot-status.js?v=20260408a";
 
 const bootStatus = createShellBootStatusController({ rootDocument: document });

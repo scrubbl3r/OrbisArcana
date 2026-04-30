@@ -109,6 +109,19 @@ function resolveSvgMetadataId(source = {}, fallbackId = "") {
   return String(metadata.id || fallbackId || source && source.id || "").trim();
 }
 
+function resolveSvgSourceStack(layer = {}, sourceElementIndex = 0) {
+  const layerIndex = Number.isFinite(Number(layer && layer.sourceLayerIndex))
+    ? Number(layer.sourceLayerIndex)
+    : 0;
+  return Object.freeze({
+    sourceLayerId: String(layer && layer.id || ""),
+    sourceLayerLabel: String(layer && layer.label || ""),
+    sourceLayerIndex: layerIndex,
+    sourceStackIndex: layerIndex,
+    sourceElementIndex: Math.max(0, Math.round(clampNumber(sourceElementIndex, 0))),
+  });
+}
+
 function parseDepthLayerLabel(label = "") {
   const metadata = parseSvgLabelMetadata(label);
   const entries = metadata.entries || {};
@@ -236,9 +249,12 @@ export function parseSvgLayerElements(svgText = "") {
     const body = String(match && match[2] || "");
     if (String(readAttr(attrs, "inkscape:groupmode") || "").trim().toLowerCase() !== "layer") continue;
     const translate = parseTranslateTransform(readAttr(attrs, "transform"));
+    const sourceLayerIndex = layers.length;
     layers.push(Object.freeze({
       id: readAttr(attrs, "id"),
       label: readAttr(attrs, "inkscape:label"),
+      sourceLayerIndex,
+      sourceStackIndex: sourceLayerIndex,
       style: readAttr(attrs, "style"),
       display: readAttr(attrs, "display"),
       visibility: readAttr(attrs, "visibility"),
@@ -442,15 +458,19 @@ export function buildSvgBoundaryLoops({
     const matchingLayers = authoredLayers
       .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()));
     selectedPaths = matchingLayers
-      .flatMap((layer) => (Array.isArray(layer.paths) ? layer.paths : []).map((path) => Object.freeze({
+      .flatMap((layer) => (Array.isArray(layer.paths) ? layer.paths : []).map((path, index) => Object.freeze({
         ...path,
+        ...resolveSvgSourceStack(layer, index),
         translatedAuthoredPoints: translatePolylinePoints(
           parseSvgPolylinePath(path && path.d) || [],
           layer && layer.translate
         ),
       })));
     selectedRects = matchingLayers
-      .flatMap((layer) => (Array.isArray(layer.rects) ? layer.rects : []).map((rect) => translateRect(rect, layer && layer.translate)));
+      .flatMap((layer) => (Array.isArray(layer.rects) ? layer.rects : []).map((rect, index) => Object.freeze({
+        ...translateRect(rect, layer && layer.translate),
+        ...resolveSvgSourceStack(layer, index),
+      })));
   }
   if (allowedIds.size) {
     selectedPaths = selectedPaths.filter((path) => allowedIds.has(String(path && path.id || "")));
@@ -469,6 +489,11 @@ export function buildSvgBoundaryLoops({
     return Object.freeze({
       id: String(path && path.id || `svg_path_${index + 1}`),
       kind: "path_loop",
+      sourceLayerId: String(path && path.sourceLayerId || ""),
+      sourceLayerLabel: String(path && path.sourceLayerLabel || ""),
+      sourceLayerIndex: clampNumber(path && path.sourceLayerIndex, 0),
+      sourceStackIndex: clampNumber(path && path.sourceStackIndex, 0),
+      sourceElementIndex: clampNumber(path && path.sourceElementIndex, index),
       authoredPoints: Object.freeze(authoredPoints),
       worldPoints: Object.freeze(worldPoints),
     });
@@ -484,6 +509,11 @@ export function buildSvgBoundaryLoops({
     return Object.freeze({
       id: String(rect && rect.id || `svg_rect_${index + 1}`),
       kind: "rect_loop",
+      sourceLayerId: String(rect && rect.sourceLayerId || ""),
+      sourceLayerLabel: String(rect && rect.sourceLayerLabel || ""),
+      sourceLayerIndex: clampNumber(rect && rect.sourceLayerIndex, 0),
+      sourceStackIndex: clampNumber(rect && rect.sourceStackIndex, 0),
+      sourceElementIndex: clampNumber(rect && rect.sourceElementIndex, index),
       authoredPoints: Object.freeze(authoredPoints),
       worldPoints: Object.freeze(worldPoints),
     });
@@ -543,7 +573,10 @@ export function buildSvgSpawnMarkers({
   if (allowedLabels.size) {
     circles = authoredLayers
       .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
-      .flatMap((layer) => (Array.isArray(layer.circles) ? layer.circles : []).map((circle) => translateCircle(circle, layer && layer.translate)));
+      .flatMap((layer) => (Array.isArray(layer.circles) ? layer.circles : []).map((circle, index) => Object.freeze({
+        ...translateCircle(circle, layer && layer.translate),
+        ...resolveSvgSourceStack(layer, index),
+      })));
   }
   const markerId = String(spawnMarkerId || "").trim();
   if (markerId) {
@@ -562,6 +595,11 @@ export function buildSvgSpawnMarkers({
       id: String(metadata.id || circle && circle.id || `spawn_${index + 1}`),
       zMode: metadata.zMode,
       zBO: metadata.zBO,
+      sourceLayerId: String(circle && circle.sourceLayerId || ""),
+      sourceLayerLabel: String(circle && circle.sourceLayerLabel || ""),
+      sourceLayerIndex: clampNumber(circle && circle.sourceLayerIndex, 0),
+      sourceStackIndex: clampNumber(circle && circle.sourceStackIndex, 0),
+      sourceElementIndex: clampNumber(circle && circle.sourceElementIndex, index),
       authoredCenter,
       worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
         viewBox,
@@ -599,30 +637,46 @@ export function buildSvgCameraAnchors({
         const circles = Array.isArray(layer.circles) ? layer.circles : [];
         const rects = Array.isArray(layer.rects) ? layer.rects : [];
         return [
-          ...circles.map((circleSource) => {
-            const circle = translateCircle(circleSource, layer && layer.translate);
+          ...circles.map((circleSource, sourceElementIndex) => {
+            const circle = Object.freeze({
+              ...translateCircle(circleSource, layer && layer.translate),
+              ...resolveSvgSourceStack(layer, sourceElementIndex),
+            });
             return Object.freeze({
-            id: resolveSvgMetadataId(circle),
-            authoredCenter: Object.freeze({
-              x: clampNumber(circle && circle.cx, 0),
-              y: clampNumber(circle && circle.cy, 0),
-            }),
-            authoredRadius: clampNumber(circle && circle.r, 0),
-          });
+              id: resolveSvgMetadataId(circle),
+              sourceLayerId: String(circle && circle.sourceLayerId || ""),
+              sourceLayerLabel: String(circle && circle.sourceLayerLabel || ""),
+              sourceLayerIndex: clampNumber(circle && circle.sourceLayerIndex, 0),
+              sourceStackIndex: clampNumber(circle && circle.sourceStackIndex, 0),
+              sourceElementIndex: clampNumber(circle && circle.sourceElementIndex, 0),
+              authoredCenter: Object.freeze({
+                x: clampNumber(circle && circle.cx, 0),
+                y: clampNumber(circle && circle.cy, 0),
+              }),
+              authoredRadius: clampNumber(circle && circle.r, 0),
+            });
           }),
-          ...rects.map((rectSource) => {
-            const rect = translateRect(rectSource, layer && layer.translate);
+          ...rects.map((rectSource, sourceElementIndex) => {
+            const rect = Object.freeze({
+              ...translateRect(rectSource, layer && layer.translate),
+              ...resolveSvgSourceStack(layer, sourceElementIndex),
+            });
             return Object.freeze({
-            id: resolveSvgMetadataId(rect),
-            authoredCenter: Object.freeze({
-              x: clampNumber(rect && rect.x, 0) + (clampNumber(rect && rect.width, 0) * 0.5),
-              y: clampNumber(rect && rect.y, 0) + (clampNumber(rect && rect.height, 0) * 0.5),
-            }),
-            authoredRadius: Math.max(
-              clampNumber(rect && rect.width, 0),
-              clampNumber(rect && rect.height, 0)
-            ) * 0.5,
-          });
+              id: resolveSvgMetadataId(rect),
+              sourceLayerId: String(rect && rect.sourceLayerId || ""),
+              sourceLayerLabel: String(rect && rect.sourceLayerLabel || ""),
+              sourceLayerIndex: clampNumber(rect && rect.sourceLayerIndex, 0),
+              sourceStackIndex: clampNumber(rect && rect.sourceStackIndex, 0),
+              sourceElementIndex: clampNumber(rect && rect.sourceElementIndex, 0),
+              authoredCenter: Object.freeze({
+                x: clampNumber(rect && rect.x, 0) + (clampNumber(rect && rect.width, 0) * 0.5),
+                y: clampNumber(rect && rect.y, 0) + (clampNumber(rect && rect.height, 0) * 0.5),
+              }),
+              authoredRadius: Math.max(
+                clampNumber(rect && rect.width, 0),
+                clampNumber(rect && rect.height, 0)
+              ) * 0.5,
+            });
           }),
         ];
       });
@@ -680,6 +734,7 @@ export function buildSvgWorldItemSpawns({
     for (let index = 0; index < circles.length; index += 1) {
       const circle = translateCircle(circles[index], layer && layer.translate);
       const metadata = parseSvgLabelMetadata(circle && circle.label, circle && circle.id);
+      const sourceStack = resolveSvgSourceStack(layer, index);
       const authoredCenter = Object.freeze({
         x: clampNumber(circle && circle.cx, 0),
         y: clampNumber(circle && circle.cy, 0),
@@ -692,6 +747,7 @@ export function buildSvgWorldItemSpawns({
       spawns.push(Object.freeze({
         id: String(metadata.id || circle && circle.id || `world_item_spawn_${spawns.length + 1}`),
         kind: String(metadata.kind || defaultKind),
+        ...sourceStack,
         zMode: metadata.zMode,
         zBO: metadata.zBO,
         scaleMode: metadata.scaleMode,
@@ -738,6 +794,7 @@ export function buildSvgPropInstances({
       const rawLabel = String(rect && rect.label || "").trim();
       const config = parsePropLabelText(rawLabel, rawId);
       const id = String(config.id || rawId || `prop_${props.length + 1}`).trim();
+      const sourceStack = resolveSvgSourceStack(layer, props.length);
       const authoredCenter = Object.freeze({
         x: clampNumber(rect && rect.x, 0) + (clampNumber(rect && rect.width, 0) * 0.5),
         y: clampNumber(rect && rect.y, 0) + (clampNumber(rect && rect.height, 0) * 0.5),
@@ -746,6 +803,7 @@ export function buildSvgPropInstances({
       props.push(Object.freeze({
         id,
         kind: inferPropKind(id),
+        ...sourceStack,
         zMode: config.zMode,
         zBO: config.zBO,
         anchor: config.anchor,
@@ -780,6 +838,7 @@ export function buildSvgPropInstances({
       const rawLabel = String(circle && circle.label || "").trim();
       const config = parsePropLabelText(rawLabel, rawId);
       const id = String(config.id || rawId || `prop_${props.length + 1}`).trim();
+      const sourceStack = resolveSvgSourceStack(layer, props.length);
       const authoredCenter = Object.freeze({
         x: clampNumber(circle && circle.cx, 0),
         y: clampNumber(circle && circle.cy, 0),
@@ -788,6 +847,7 @@ export function buildSvgPropInstances({
       props.push(Object.freeze({
         id,
         kind: inferPropKind(id),
+        ...sourceStack,
         zMode: config.zMode,
         zBO: config.zBO,
         anchor: config.anchor,
@@ -834,6 +894,7 @@ export function buildSvgLineArtShapes({
     const paths = Array.isArray(layer && layer.paths) ? layer.paths : [];
     return paths.map((path, index) => {
       const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
+      const sourceStack = resolveSvgSourceStack(layer, index);
       const authoredPoints = translatePolylinePoints(
         parseSvgPolylinePath(path && path.d) || [],
         layer && layer.translate
@@ -842,6 +903,7 @@ export function buildSvgLineArtShapes({
       const style = parseSvgInlineStyle(path && path.style);
       return Object.freeze({
         id: String(metadata.id || path && path.id || `${String(layer && layer.label || "line_art").trim()}_${index + 1}`),
+        ...sourceStack,
         authoredPoints,
         worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
           viewBox,
@@ -875,6 +937,7 @@ export function buildSvgStarsFieldRegions({
     .flatMap((layer) => {
       const pathLoops = (Array.isArray(layer && layer.paths) ? layer.paths : []).map((path, index) => {
         const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
+        const sourceStack = resolveSvgSourceStack(layer, index);
         const authoredPoints = translatePolylinePoints(
           parseSvgPolylinePath(path && path.d) || [],
           layer && layer.translate
@@ -883,6 +946,7 @@ export function buildSvgStarsFieldRegions({
         return Object.freeze({
           id: String(metadata.id || path && path.id || `stars_field_path_${index + 1}`),
           kind: "path_loop",
+          ...sourceStack,
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
             viewBox,
@@ -893,12 +957,14 @@ export function buildSvgStarsFieldRegions({
       });
       const rectLoops = (Array.isArray(layer && layer.rects) ? layer.rects : []).map((rect, index) => {
         const metadata = parseSvgLabelMetadata(rect && rect.label, rect && rect.id);
+        const sourceStack = resolveSvgSourceStack(layer, index);
         const authoredRect = translateRect(rect, layer && layer.translate);
         const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
         if (authoredPoints.length < 4) return null;
         return Object.freeze({
           id: String(metadata.id || rect && rect.id || `stars_field_rect_${index + 1}`),
           kind: "rect_loop",
+          ...sourceStack,
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
             viewBox,
@@ -912,6 +978,11 @@ export function buildSvgStarsFieldRegions({
   return Object.freeze((Array.isArray(loops) ? loops : []).map((loop, index) => Object.freeze({
     id: String(loop && loop.id || `stars_field_${index + 1}`),
     kind: String(loop && loop.kind || "path_loop"),
+    sourceLayerId: String(loop && loop.sourceLayerId || ""),
+    sourceLayerLabel: String(loop && loop.sourceLayerLabel || ""),
+    sourceLayerIndex: clampNumber(loop && loop.sourceLayerIndex, 0),
+    sourceStackIndex: clampNumber(loop && loop.sourceStackIndex, 0),
+    sourceElementIndex: clampNumber(loop && loop.sourceElementIndex, index),
     authoredPoints: Array.isArray(loop && loop.authoredPoints) ? loop.authoredPoints : [],
     worldPoints: Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [],
     boundaryBox: resolveBoundaryBoxFromLoops([loop]),
@@ -938,65 +1009,73 @@ export function buildSvgDepthLayers({
           rects: Array.isArray(layer.rects) ? layer.rects : [],
         })]
       : [
-          ...(Array.isArray(layer.paths) ? layer.paths : []).map((path) => Object.freeze({
+          ...(Array.isArray(layer.paths) ? layer.paths : []).map((path, sourceElementIndex) => Object.freeze({
             config: parseDepthLayerLabel(path && path.label),
             paths: [path],
             rects: [],
+            sourceElementIndex,
           })),
-          ...(Array.isArray(layer.rects) ? layer.rects : []).map((rect) => Object.freeze({
+          ...(Array.isArray(layer.rects) ? layer.rects : []).map((rect, sourceElementIndex) => Object.freeze({
             config: parseDepthLayerLabel(rect && rect.label),
             paths: [],
             rects: [rect],
+            sourceElementIndex,
           })),
         ];
 
     for (const source of depthSources) {
       const config = source && source.config;
       if (!config) continue;
+      const sourceStack = resolveSvgSourceStack(layer, source && source.sourceElementIndex);
       const loops = [
         ...((Array.isArray(source.paths) ? source.paths : []).map((path, pathIndex) => {
-        const authoredPoints = translatePolylinePoints(
-          parseSvgPolylinePath(path && path.d) || [],
-          layer && layer.translate
-        );
-        if (authoredPoints.length < 3) return null;
-        const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
-        return Object.freeze({
-          id: String(metadata.id || path && path.id || `${config.id}_path_${pathIndex + 1}`),
-          kind: "path_loop",
-          authoredPoints,
-          worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
-            viewBox,
-            worldWidthPx,
-            worldHeightPx,
-          }))),
-        });
-      })),
-      ...((Array.isArray(source.rects) ? source.rects : []).map((rect, rectIndex) => {
-        const authoredRect = translateRect(rect, layer && layer.translate);
-        const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
-        if (authoredPoints.length < 4) return null;
-        const metadata = parseSvgLabelMetadata(rect && rect.label, rect && rect.id);
-        return Object.freeze({
-          id: String(metadata.id || rect && rect.id || `${config.id}_rect_${rectIndex + 1}`),
-          kind: "rect_loop",
-          authoredPoints,
-          worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
-            viewBox,
-            worldWidthPx,
-            worldHeightPx,
-          }))),
-        });
-      })),
-    ].filter(Boolean);
+          const authoredPoints = translatePolylinePoints(
+            parseSvgPolylinePath(path && path.d) || [],
+            layer && layer.translate
+          );
+          if (authoredPoints.length < 3) return null;
+          const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
+          return Object.freeze({
+            id: String(metadata.id || path && path.id || `${config.id}_path_${pathIndex + 1}`),
+            kind: "path_loop",
+            ...sourceStack,
+            sourceElementIndex: pathIndex,
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        })),
+        ...((Array.isArray(source.rects) ? source.rects : []).map((rect, rectIndex) => {
+          const authoredRect = translateRect(rect, layer && layer.translate);
+          const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
+          if (authoredPoints.length < 4) return null;
+          const metadata = parseSvgLabelMetadata(rect && rect.label, rect && rect.id);
+          return Object.freeze({
+            id: String(metadata.id || rect && rect.id || `${config.id}_rect_${rectIndex + 1}`),
+            kind: "rect_loop",
+            ...sourceStack,
+            sourceElementIndex: rectIndex,
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        })),
+      ].filter(Boolean);
       depthLayers.push(Object.freeze({
-      ...config,
-      sourceLayerId: String(layer && layer.id || `depth_layer_${index + 1}`),
-      translate: layer && layer.translate ? layer.translate : Object.freeze({ x: 0, y: 0 }),
-      authoredBody: String(layer && layer.body || ""),
-      defsMarkup,
-      boundaryBox: resolveBoundaryBoxFromLoops(loops),
-      loops: Object.freeze(loops),
+        ...config,
+        ...sourceStack,
+        sourceLayerId: String(layer && layer.id || `depth_layer_${index + 1}`),
+        translate: layer && layer.translate ? layer.translate : Object.freeze({ x: 0, y: 0 }),
+        authoredBody: String(layer && layer.body || ""),
+        defsMarkup,
+        boundaryBox: resolveBoundaryBoxFromLoops(loops),
+        loops: Object.freeze(loops),
       }));
     }
   }

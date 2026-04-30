@@ -1,4 +1,5 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
+import { resolveAuthoredRenderOrder } from "../level/authored-render-stack.js";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "./world-globe-3d-default.js";
 
 function clampNumber(value, fallback = 0) {
@@ -60,13 +61,14 @@ export function createWorldGlobe3dRuntime({
     const idle = config.idle || {};
     const baseOrb = currentBo();
     const bo = baseOrb * Math.max(0.01, clampNumber(idle.diameterRatio, 0.35));
+    const renderOrder = resolveAuthoredRenderOrder(spawn, { fallback: 40, offset: 0.7 });
     const model = typeof createGlobeObject === "function"
       ? createGlobeObject({
         bo,
         materialConfig: config.material,
         name: `world_globe3d:${globeId}`,
         depthTest: false,
-        renderOrder: 40,
+        renderOrder,
         includeVisibilityCore: true,
       })
       : null;

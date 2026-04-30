@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260430e";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260430f";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";

@@ -31,7 +31,7 @@
      inkscape:window-x="1"
      inkscape:window-y="84"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer18"
+     inkscape:current-layer="svg1"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -78,6 +78,19 @@
   </g>
   <g
      inkscape:groupmode="layer"
+     id="layer13"
+     inkscape:label="fields"
+     sodipodi:insensitive="true"
+     style="display:none">
+    <path
+       style="fill:none;stroke:#3398b5;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       d="M 384,1921.5118 H 1712.25 V 701.25002 L 1088,704.00002 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
+       id="path1-4-0"
+       sodipodi:nodetypes="ccccccccccc"
+       inkscape:label="id:stars_field" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
      id="layer17"
      inkscape:label="depths"
      style="display:inline"
@@ -113,19 +126,6 @@
        x="528.34814"
        y="1864.1136"
        inkscape:label="id: plinth_01  z:orb,  anchor:bottom" />
-  </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer13"
-     inkscape:label="fields"
-     sodipodi:insensitive="true"
-     style="display:none">
-    <path
-       style="fill:none;stroke:#3398b5;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
-       d="M 384,1921.5118 H 1712.25 V 701.25002 L 1088,704.00002 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
-       id="path1-4-0"
-       sodipodi:nodetypes="ccccccccccc"
-       inkscape:label="id:stars_field" />
   </g>
   <g
      inkscape:groupmode="layer"

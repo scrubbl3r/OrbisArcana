@@ -4,6 +4,7 @@ import {
   toDepthThreeX,
   toDepthThreeY,
 } from "./depth-runtime-coordinates.js";
+import { resolveAuthoredRenderOrder } from "./authored-render-stack.js";
 
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
@@ -313,6 +314,7 @@ function buildVectorDepthLayerMesh({
   model.userData.worldWidthPx = worldWidthPx;
   model.userData.worldHeightPx = worldHeightPx;
   model.userData.depthPx = depthPx;
+  const baseRenderOrder = resolveAuthoredRenderOrder(layer, { fallback: 1 });
 
   const floorShape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
   const floorGeometry = new THREE.ShapeGeometry(floorShape || shape);
@@ -320,7 +322,7 @@ function buildVectorDepthLayerMesh({
   const floorMaterial = buildGraphiteMaterial({ opacity: 0.58, color: 0x303941, environmentMode });
   if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) floorMaterial.depthWrite = false;
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-  floor.renderOrder = 1;
+  floor.renderOrder = baseRenderOrder;
   floor.name = `${model.name}:floor`;
   model.userData.floorMesh = floor;
   model.add(floor);
@@ -333,7 +335,7 @@ function buildVectorDepthLayerMesh({
       wallMaterial.needsUpdate = true;
       if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) wallMaterial.depthWrite = false;
       const walls = new THREE.Mesh(wallGeometry, wallMaterial);
-      walls.renderOrder = 2;
+      walls.renderOrder = baseRenderOrder + 0.1;
       walls.name = `${model.name}:walls`;
       walls.userData.loop = loop;
       model.add(walls);
@@ -350,7 +352,7 @@ function buildVectorDepthLayerMesh({
           depthWrite: false,
         })
       );
-      edges.renderOrder = 4;
+      edges.renderOrder = baseRenderOrder + 0.2;
       edges.userData.loop = loop;
       model.add(edges);
     }
@@ -499,6 +501,8 @@ export async function buildDepthLayerMesh({
   material.needsUpdate = true;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = `depth:${String(layer.id || "layer")}`;
+  const baseRenderOrder = resolveAuthoredRenderOrder(layer, { fallback: 1 });
+  mesh.renderOrder = baseRenderOrder;
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(geometry, 18),
     new THREE.LineBasicMaterial({
@@ -511,6 +515,8 @@ export async function buildDepthLayerMesh({
   );
   const model = new THREE.Group();
   model.name = `depth:${String(layer.id || "layer")}:sealed_volume`;
+  model.renderOrder = baseRenderOrder;
+  edges.renderOrder = baseRenderOrder + 0.2;
   model.add(mesh);
   model.add(edges);
   return model;

@@ -15,6 +15,12 @@ child `inkscape:label` metadata defines item identity and actor-depth behavior.
 - `cameras`: camera anchors.
 - `globes`: globe pickup/emitter actors.
 
+Layer order is authoritative for broad authored paint order. Lower SVG layers
+render behind higher SVG layers; child shapes inherit their parent layer's stack
+index. Runtime z metadata such as `z:orb` still controls physical 3D/gameplay
+placement, while SVG stack order controls draw priority within authored world
+content.
+
 ### Child Metadata
 
 Metadata supports comma or whitespace separators, `key:value`, and `key=value`.

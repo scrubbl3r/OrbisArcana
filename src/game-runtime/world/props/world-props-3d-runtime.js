@@ -1,4 +1,5 @@
 import { LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS, LEVEL_DEPTH_DEFAULT_ORB_Z_BO } from "../../level/depth-projection.js";
+import { applyAuthoredRenderOrder } from "../../level/authored-render-stack.js";
 import { createGraphiteMaterial } from "../../rendering/three/materials/graphite-material.js";
 import { GRAPHITE_CONFIG } from "../../rendering/three/materials/graphite-config.js";
 import { addLineEdges } from "../../rendering/three/three-line-utils.js";
@@ -104,6 +105,7 @@ export function createWorldProps3dRuntime({
     model.name = `prop:${String(prop && prop.id || kind)}`;
     model.userData.prop = prop;
     model.userData.authoredZBO = zBO;
+    applyAuthoredRenderOrder(model, prop, { fallback: 20, offset: 0.5 });
     model.traverse((child) => {
       if (!child || !child.isMesh) return;
       child.castShadow = true;
