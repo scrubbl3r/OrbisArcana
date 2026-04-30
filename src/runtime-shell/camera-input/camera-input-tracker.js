@@ -7,8 +7,8 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minHandPresenceConfidence: 0.5,
   minTrackingConfidence: 0.5,
   maxDetectionFps: 30,
-  videoWidth: 480,
-  videoHeight: 360,
+  videoWidth: 640,
+  videoHeight: 480,
   videoFps: 30,
 });
 
