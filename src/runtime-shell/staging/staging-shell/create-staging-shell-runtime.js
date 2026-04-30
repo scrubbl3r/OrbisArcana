@@ -2060,17 +2060,16 @@ function syncLevelStageGlobe3dRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const levelAdapter = shellContext && shellContext.levelStageAdapter ? shellContext.levelStageAdapter : null;
   if (!runtime || !levelAdapter || typeof levelAdapter.bindGlobe3dRuntime !== "function") return;
-  const spawns = (
+  const levelSpawns = typeof levelAdapter.getWorldItemSpawns === "function"
+    ? levelAdapter.getWorldItemSpawns()
+    : [];
+  const summarySpawns = (
     runtime.currentLevelMapSummary &&
-    Array.isArray(runtime.currentLevelMapSummary.worldItemSpawns) &&
-    runtime.currentLevelMapSummary.worldItemSpawns.length
+    Array.isArray(runtime.currentLevelMapSummary.worldItemSpawns)
   )
     ? runtime.currentLevelMapSummary.worldItemSpawns
-    : (
-        typeof levelAdapter.getWorldItemSpawns === "function"
-          ? levelAdapter.getWorldItemSpawns()
-          : []
-      );
+    : [];
+  const spawns = Array.isArray(levelSpawns) && levelSpawns.length ? levelSpawns : summarySpawns;
   levelAdapter.bindGlobe3dRuntime({
     eventBus: runtime.eventBus,
     spawns,
