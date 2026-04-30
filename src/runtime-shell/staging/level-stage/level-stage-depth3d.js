@@ -4,9 +4,13 @@ import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
   LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
-  resolveDepthCameraZ,
   resolveOrbTravelZBO,
 } from "../../../game-runtime/level/depth-projection.js";
+import {
+  normalizeDepthRenderFrame,
+  resolveDepthBootFrame,
+  resolveDepthCameraFrame,
+} from "../../../game-runtime/level/depth-stage-frame.js?v=20260430a";
 import {
   buildDepthLayerMesh,
   DEPTH_ENVIRONMENT_MODE,
@@ -348,54 +352,46 @@ export function createLevelStageDepth3dLayer({
       viewportHeightPx,
       isBootFrame,
     };
-    const width = Math.max(1, Math.round(clampNumber(viewportWidthPx, root.clientWidth || 1)));
-    const height = Math.max(1, Math.round(clampNumber(viewportHeightPx, root.clientHeight || 1)));
+    const cameraFrame = resolveDepthCameraFrame({
+      frame: { camLeft, camTop, zoom, viewportWidthPx, viewportHeightPx },
+      root,
+      worldWidthPx,
+      worldHeightPx,
+      fovDeg: camera.fov,
+      farPaddingWorldUnits: BO_WORLD_UNITS * 32,
+    });
+    const { width, height } = cameraFrame;
     if (width !== lastRenderWidth || height !== lastRenderHeight) {
       renderer.setSize(width, height, false);
       worldProps3dRuntime.updateResolution(width, height);
       lastRenderWidth = width;
       lastRenderHeight = height;
     }
-    const safeZoom = Math.max(0.05, clampNumber(zoom, 1));
-    const viewW = width / safeZoom;
-    const viewH = height / safeZoom;
-    const centerXW = clampNumber(camLeft, 0) + (viewW * 0.5);
-    const centerYW = clampNumber(camTop, 0) + (viewH * 0.5);
-    const cx = toThreeX(centerXW, worldWidthPx);
-    const cy = toThreeY(centerYW, worldHeightPx);
-    const cameraZ = resolveDepthCameraZ({
-      viewportHeightPx: height,
-      zoom: safeZoom,
-      fovDeg: camera.fov,
-    });
-    const nextAspect = width / height;
-    const nextNear = Math.max(1, cameraZ * 0.02);
-    const nextFar = Math.max(24000, cameraZ + (BO_WORLD_UNITS * 32));
     const projectionChanged = !hasCameraFrame
-      || Math.abs(nextAspect - lastCameraAspect) > 0.000001
-      || Math.abs(nextNear - lastCameraNear) > 0.000001
-      || Math.abs(nextFar - lastCameraFar) > 0.000001;
+      || Math.abs(cameraFrame.aspect - lastCameraAspect) > 0.000001
+      || Math.abs(cameraFrame.near - lastCameraNear) > 0.000001
+      || Math.abs(cameraFrame.far - lastCameraFar) > 0.000001;
     const positionChanged = !hasCameraFrame
-      || Math.abs(cx - lastCameraX) > 0.000001
-      || Math.abs(cy - lastCameraY) > 0.000001
-      || Math.abs(cameraZ - lastCameraZ) > 0.000001;
+      || Math.abs(cameraFrame.x - lastCameraX) > 0.000001
+      || Math.abs(cameraFrame.y - lastCameraY) > 0.000001
+      || Math.abs(cameraFrame.z - lastCameraZ) > 0.000001;
     if (projectionChanged) {
-      camera.aspect = nextAspect;
-      camera.near = nextNear;
-      camera.far = nextFar;
+      camera.aspect = cameraFrame.aspect;
+      camera.near = cameraFrame.near;
+      camera.far = cameraFrame.far;
       camera.updateProjectionMatrix();
     }
     if (positionChanged) {
-      camera.position.set(cx, cy, cameraZ);
-      camera.lookAt(cx, cy, 0);
+      camera.position.set(cameraFrame.x, cameraFrame.y, cameraFrame.z);
+      camera.lookAt(cameraFrame.x, cameraFrame.y, 0);
     }
     hasCameraFrame = true;
-    lastCameraAspect = nextAspect;
-    lastCameraNear = nextNear;
-    lastCameraFar = nextFar;
-    lastCameraX = cx;
-    lastCameraY = cy;
-    lastCameraZ = cameraZ;
+    lastCameraAspect = cameraFrame.aspect;
+    lastCameraNear = cameraFrame.near;
+    lastCameraFar = cameraFrame.far;
+    lastCameraX = cameraFrame.x;
+    lastCameraY = cameraFrame.y;
+    lastCameraZ = cameraFrame.z;
     orb3dActorRuntime.update(performance.now() / 1000);
     tickGlobe3dRuntime(performance.now());
     renderer.render(scene, camera);
@@ -403,14 +399,7 @@ export function createLevelStageDepth3dLayer({
 
   function renderFrame(frame = {}) {
     if (disposed) return;
-    lastFrame = {
-      camLeft: clampNumber(frame.camLeft, 0),
-      camTop: clampNumber(frame.camTop, 0),
-      zoom: clampNumber(frame.zoom, 1),
-      viewportWidthPx: clampNumber(frame.viewportWidthPx, 0),
-      viewportHeightPx: clampNumber(frame.viewportHeightPx, 0),
-      isBootFrame: !!frame.isBootFrame,
-    };
+    lastFrame = normalizeDepthRenderFrame(frame);
     if (pendingRenderFrame) return;
     if (typeof requestAnimationFrame !== "function") {
       doRenderFrame(lastFrame);
@@ -420,36 +409,6 @@ export function createLevelStageDepth3dLayer({
       pendingRenderFrame = 0;
       if (disposed) return;
       doRenderFrame(lastFrame || {});
-    });
-  }
-
-  function resolveBootFrame(layers = []) {
-    const width = Math.max(1, Math.round(root.clientWidth || (globalThis.innerWidth || 1)));
-    const height = Math.max(1, Math.round(root.clientHeight || (globalThis.innerHeight || 1)));
-    const boxes = (Array.isArray(layers) ? layers : [])
-      .map((layer) => layer && layer.boundaryBox ? layer.boundaryBox : null)
-      .filter(Boolean);
-    if (!boxes.length) {
-      return Object.freeze({
-        camLeft: 0,
-        camTop: 0,
-        zoom: 1,
-        viewportWidthPx: width,
-        viewportHeightPx: height,
-      });
-    }
-    const left = Math.min(...boxes.map((box) => clampNumber(box.leftXW, 0)));
-    const top = Math.min(...boxes.map((box) => clampNumber(box.topYW, 0)));
-    const right = Math.max(...boxes.map((box) => clampNumber(box.rightXW, 0)));
-    const bottom = Math.max(...boxes.map((box) => clampNumber(box.bottomYW, 0)));
-    const centerX = (left + right) * 0.5;
-    const centerY = (top + bottom) * 0.5;
-    return Object.freeze({
-      camLeft: Math.max(0, centerX - (width * 0.5)),
-      camTop: Math.max(0, centerY - (height * 0.5)),
-      zoom: 1,
-      viewportWidthPx: width,
-      viewportHeightPx: height,
     });
   }
 
@@ -490,7 +449,10 @@ export function createLevelStageDepth3dLayer({
       root.dataset.depthLayerCount = String(group.children.length);
       root.dataset.depthStatus = group.children.length ? "ready" : "empty";
       if (group.children.length) {
-        renderFrame(lastFrame || { ...resolveBootFrame(layers), isBootFrame: true });
+        renderFrame(lastFrame || {
+          ...resolveDepthBootFrame({ depthLayers: layers, root }),
+          isBootFrame: true,
+        });
       }
     },
     setOrbWorldPosition({

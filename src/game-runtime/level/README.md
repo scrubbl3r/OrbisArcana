@@ -19,8 +19,11 @@ inventing their own level ownership model.
 
 3D depth-layer rendering lives here as runtime rendering logic:
 - `depth-projection.js` owns camera/depth projection math.
+- `depth-stage-frame.js` owns reusable depth-stage frame normalization,
+  boot-frame resolution, and camera-frame values.
 - `depth-layer-3d-mesh.js` owns depth-layer SVG/vector rasterization and
   Three.js mesh construction.
 
 Stage shells may choose cameras, scene groups, and visibility policy, but should
-delegate reusable depth-layer geometry construction to this domain.
+delegate reusable depth-layer geometry and camera-frame calculations to this
+domain.
