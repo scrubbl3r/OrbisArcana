@@ -21,17 +21,7 @@ import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-glob
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260430a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430a";
-import {
-  EVT_ORB_DAMAGE_APPLIED,
-  EVT_ORB_DIED,
-  EVT_ORB_HEALED,
-  EVT_ORB_REVIVED,
-  EVT_PICKUP_COLLECTED,
-  EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
-  EVT_RESOURCES_GLOBE_SPENT,
-  EVT_VOICE_SPELL_CAST,
-  EVT_VOICE_SPELL_LOADED,
-} from "../../../contracts/events.js";
+import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260430a";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
@@ -202,6 +192,14 @@ export function createLevelStageDepth3dLayer({
     getBurstPosition: () => orb3dActorRuntime.getPosition(),
     onNeedsFrame: () => scheduleGlobe3dFrames(),
   });
+  const eventBindings = createLevelStageDepth3dEventBindings({
+    root,
+    worldGlobe3dRuntime,
+    orbGlobe3dRuntime,
+    orbLifecycle3dRuntime,
+    loadWorldSpawns: loadGlobe3dWorldSpawns,
+    scheduleFrame: scheduleGlobe3dFrames,
+  });
   const worldProps3dRuntime = createWorldProps3dRuntime({
     group: propsGroup,
     getBo: () => orb3dActorRuntime.getBo(),
@@ -213,7 +211,6 @@ export function createLevelStageDepth3dLayer({
       root.dataset.depthPropCount = String(Math.max(0, Number(count) || 0));
     },
   });
-  const globe3dUnsub = [];
   let lastTelemetryText = "";
   let lastTelemetryBO = "";
   let lastTelemetryRadius = "";
@@ -295,54 +292,6 @@ export function createLevelStageDepth3dLayer({
     worldGlobe3dRuntime.loadSpawns(spawns);
     syncRootVisibility();
     scheduleGlobe3dFrames();
-  }
-
-  function bindGlobe3dEvents({ eventBus = null, spawns = [] } = {}) {
-    root.dataset.depthGlobe3dBound = eventBus && typeof eventBus.on === "function" ? "true" : "false";
-    while (globe3dUnsub.length) {
-      const off = globe3dUnsub.pop();
-      try { off(); } catch (_) {}
-    }
-    loadGlobe3dWorldSpawns(spawns);
-    if (!eventBus || typeof eventBus.on !== "function") return;
-    globe3dUnsub.push(eventBus.on(EVT_PICKUP_COLLECTED, (payload = {}) => {
-      worldGlobe3dRuntime.collect(payload);
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_SPENT, (payload = {}) => {
-      worldGlobe3dRuntime.markSpent(payload);
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
-      orbGlobe3dRuntime.reconcileInventory(payload.globes || []);
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
-      orbLifecycle3dRuntime.applyDamage(payload);
-      scheduleGlobe3dFrames();
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_ORB_HEALED, (payload = {}) => {
-      orbLifecycle3dRuntime.heal(payload);
-      scheduleGlobe3dFrames();
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
-      orbGlobe3dRuntime.load(payload);
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
-      orbGlobe3dRuntime.consume(payload);
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_ORB_DIED, () => {
-      orbGlobe3dRuntime.setDead(true);
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_ORB_DIED, (payload = {}) => {
-      orbLifecycle3dRuntime.startDissolve(payload);
-      scheduleGlobe3dFrames();
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_ORB_REVIVED, () => {
-      orbGlobe3dRuntime.revive();
-      scheduleGlobe3dFrames();
-    }));
-    globe3dUnsub.push(eventBus.on(EVT_ORB_REVIVED, (payload = {}) => {
-      orbLifecycle3dRuntime.reset(payload);
-      scheduleGlobe3dFrames();
-    }));
   }
 
   function tickGlobe3dRuntime(nowMs = performance.now()) {
@@ -560,7 +509,7 @@ export function createLevelStageDepth3dLayer({
     },
     bindGlobe3dRuntime(args = {}) {
       if (disposed) return;
-      bindGlobe3dEvents(args);
+      eventBindings.bind(args);
     },
     playOrbNod3d(payload = {}) {
       if (disposed) {
@@ -584,11 +533,8 @@ export function createLevelStageDepth3dLayer({
       }
       globe3dFrame = 0;
       pendingRenderFrame = 0;
+      eventBindings.dispose();
       orbLifecycle3dRuntime.dispose();
-      while (globe3dUnsub.length) {
-        const off = globe3dUnsub.pop();
-        try { off(); } catch (_) {}
-      }
       clearGlobe3dObjects();
       orb3dActorRuntime.dispose();
       clearGroup();
