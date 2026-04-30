@@ -131,10 +131,11 @@ function createVoronoiShellMaterial({
         return k * pow(x, a) * pow(1.0 - x, b);
       }
 
-      vec2 voronoi(vec3 x) {
+      vec3 voronoi(vec3 x) {
         vec3 n = floor(x);
         vec3 f = fract(x);
         float nearest = 8.0;
+        float secondNearest = 8.0;
         float cellId = 0.0;
 
         for (int k = -1; k <= 1; k += 1) {
@@ -148,20 +149,23 @@ function createVoronoiShellMaterial({
               vec3 r = g + site - f;
               float d = dot(r, r);
               if (d < nearest) {
+                secondNearest = nearest;
                 nearest = d;
                 cellId = o.x + o.y + o.z;
+              } else if (d < secondNearest) {
+                secondNearest = d;
               }
             }
           }
         }
 
-        return vec2(nearest, cellId);
+        return vec3(nearest, cellId, max(0.0, secondNearest - nearest));
       }
 
       void main() {
         vec3 normal = normalize(vPos);
-        vec2 coarseCell = voronoi(normal * uBaseScale);
-        vec2 detailCell = voronoi((normal * uScale) + vec3(13.7, -8.1, 5.3));
+        vec3 coarseCell = voronoi(normal * uBaseScale);
+        vec3 detailCell = voronoi((normal * uScale) + vec3(13.7, -8.1, 5.3));
         float emergence = clamp(uDetailEmergence, 0.0, 1.0);
         float detailMix = smoothstep(max(0.0, emergence - 0.18), min(1.0, emergence + 0.18), uHitRatio);
         float coarseD = clamp(coarseCell.x, 0.0, 1.0);
@@ -171,21 +175,24 @@ function createVoronoiShellMaterial({
         float pulse = 0.88 + 0.12 * sin(uTime * (1.35 + damage) + coarseCell.y * 12.0);
 
         float sharpness = clamp(uCellSharpness, 0.0, 3.0);
-        float fieldPower = mix(1.08, 2.35, sharpness / 3.0);
-        float bandA = mix(2.4, 6.2, sharpness / 3.0);
-        float bandB = mix(1.05, 2.15, sharpness / 3.0);
-        float edgeStart = mix(0.44, 0.70, sharpness / 3.0);
-        float edgeEnd = mix(0.98, 0.84, sharpness / 3.0);
+        float sharpT = sharpness / 3.0;
+        float fieldPower = mix(1.08, 2.35, sharpT);
+        float bandA = mix(2.4, 6.2, sharpT);
+        float bandB = mix(1.05, 2.15, sharpT);
         float coarseField = pow(coarseD, fieldPower);
         float detailField = pow(detailD, fieldPower);
         float coarseDiffuse = smoothstep(0.03, 0.92, coarseField);
         float detailDiffuse = smoothstep(0.03, 0.92, detailField);
         float coarseBand = pcurve(clamp(coarseDiffuse, 0.0, 1.0), bandA, bandB);
         float detailBand = pcurve(clamp(detailDiffuse, 0.0, 1.0), bandA, bandB) * detailMix;
-        float diffuse = max(coarseDiffuse, detailDiffuse * detailMix * 0.86);
-        float brightBand = max(coarseBand, detailBand);
-        float hotEdge = smoothstep(edgeStart - uLineWidth, edgeEnd, diffuse)
-          * (1.0 - smoothstep(min(0.98, edgeEnd + 0.04), 1.0, diffuse));
+        float cloudyDiffuse = max(coarseDiffuse, detailDiffuse * detailMix * 0.86);
+        float cloudyBand = max(coarseBand, detailBand);
+        float coarseBorder = 1.0 - smoothstep(uLineWidth * mix(1.6, 0.42, sharpT), uLineWidth * mix(8.5, 2.0, sharpT), coarseCell.z);
+        float detailBorder = (1.0 - smoothstep(uLineWidth * mix(1.4, 0.36, sharpT), uLineWidth * mix(7.5, 1.8, sharpT), detailCell.z)) * detailMix;
+        float angularBorder = max(coarseBorder, detailBorder);
+        float diffuse = mix(cloudyDiffuse, max(cloudyDiffuse * 0.38, angularBorder), sharpT);
+        float brightBand = mix(cloudyBand, max(cloudyBand * 0.45, angularBorder), sharpT);
+        float hotEdge = max(cloudyBand * 0.22, angularBorder) * (0.45 + sharpT * 0.85);
         float cellCore = 1.0 - smoothstep(0.0, 0.48, diffuse);
         float facing = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0))), 1.5);
 
