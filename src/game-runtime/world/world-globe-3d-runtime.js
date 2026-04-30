@@ -23,6 +23,7 @@ export function createWorldGlobe3dRuntime({
     pickups: [],
     map: new Map(),
   };
+  let lastActiveCount = null;
 
   function currentBo() {
     return Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
@@ -39,6 +40,8 @@ export function createWorldGlobe3dRuntime({
 
   function publishActiveCount() {
     const count = state.pickups.filter((pickup) => pickup && pickup.active).length;
+    if (count === lastActiveCount) return;
+    lastActiveCount = count;
     if (typeof onActiveCountChange === "function") onActiveCountChange(count);
   }
 
@@ -150,7 +153,6 @@ export function createWorldGlobe3dRuntime({
         if (alpha >= 1) pickup.fadeInStartMs = 0;
       }
     }
-    publishActiveCount();
   }
 
   function clear() {
@@ -160,6 +162,16 @@ export function createWorldGlobe3dRuntime({
     publishActiveCount();
   }
 
+  function pickupNeedsAnimation(pickup) {
+    if (!pickup || !pickup.active) return false;
+    return (
+      Math.abs(Number(pickup.driftAmp) || 0) > 0.001
+      || Math.abs(Number(pickup.bobAmp) || 0) > 0.001
+      || Math.abs(Number(pickup.pulseScale) || 0) > 0.001
+      || !!pickup.fadeInStartMs
+    );
+  }
+
   return Object.freeze({
     loadSpawns,
     collect,
@@ -167,6 +179,9 @@ export function createWorldGlobe3dRuntime({
     update,
     hasActiveVisuals() {
       return state.pickups.some((pickup) => pickup && pickup.active);
+    },
+    hasAnimatingVisuals() {
+      return state.pickups.some(pickupNeedsAnimation);
     },
     clear,
     dispose() {

@@ -25,6 +25,7 @@ export function createRuntimeGlobe3dObject({
   depthTest = true,
   renderOrder = 0,
   includeVisibilityCore = false,
+  enablePointLight = false,
 } = {}) {
   const resolvedBo = Math.max(1, Number(bo) || 72);
   const material = createGlobeMaterial(materialConfig);
@@ -55,12 +56,14 @@ export function createRuntimeGlobe3dObject({
     core.renderOrder = model.renderOrder + 1;
     model.add(core);
   }
-  const light = createGlobePointLight({
-    bo: resolvedBo,
-    config: materialConfig,
-  });
-  light.name = `${name}:light`;
-  model.add(light);
+  if (enablePointLight) {
+    const light = createGlobePointLight({
+      bo: resolvedBo,
+      config: materialConfig,
+    });
+    light.name = `${name}:light`;
+    model.add(light);
+  }
   applyMeshFlags(model, { receiveShadow, castShadow });
   return model;
 }

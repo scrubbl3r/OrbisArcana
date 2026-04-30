@@ -4,6 +4,7 @@ export function createLevelStageDepth3dRenderLoop({
   isDisposed = () => false,
   hasActiveAnimation = () => false,
   renderNow = () => {},
+  allowInternalAnimationLoop = true,
 } = {}) {
   let lastFrame = null;
   let pendingRenderFrame = 0;
@@ -26,6 +27,10 @@ export function createLevelStageDepth3dRenderLoop({
 
   function scheduleAnimation() {
     if (isDisposed() || animationFrame || typeof requestAnimationFrame !== "function") return;
+    if (!allowInternalAnimationLoop) {
+      renderFrame(lastFrame || {});
+      return;
+    }
     const tick = (nowMs) => {
       animationFrame = 0;
       if (isDisposed() || !hasActiveAnimation()) return;

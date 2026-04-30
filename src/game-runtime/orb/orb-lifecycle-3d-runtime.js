@@ -7,6 +7,9 @@ import {
   updateOrbLifecycle3dDissolveBurst,
 } from "./orb-lifecycle-3d-vfx-runtime.js";
 
+const CRACK_UPDATE_FPS = 30;
+const CRACK_UPDATE_INTERVAL_MS = 1000 / CRACK_UPDATE_FPS;
+
 function readSeed(payload = {}, fallback = 1) {
   return Number(payload.fractureSeed || payload.seed || fallback) || 1;
 }
@@ -32,6 +35,7 @@ export function createOrbLifecycle3dRuntime({
     fractureSeed: 1,
     cracks: null,
     burst: null,
+    lastCrackUpdateMs: 0,
   };
 
   function currentConfig() {
@@ -61,6 +65,7 @@ export function createOrbLifecycle3dRuntime({
     }
     if (state.cracks) disposeThreeObject(state.cracks);
     state.cracks = null;
+    state.lastCrackUpdateMs = 0;
   }
 
   function clearBurst() {
@@ -88,6 +93,7 @@ export function createOrbLifecycle3dRuntime({
       config: currentConfig(),
     });
     model.add(state.cracks);
+    state.lastCrackUpdateMs = 0;
     requestFrame();
   }
 
@@ -136,7 +142,16 @@ export function createOrbLifecycle3dRuntime({
   }
 
   function update(nowMs = now()) {
-    if (state.cracks) updateOrbLifecycle3dCracks(state.cracks, nowMs);
+    if (
+      state.cracks &&
+      (
+        !state.lastCrackUpdateMs ||
+        Math.max(0, Number(nowMs) || 0) - state.lastCrackUpdateMs >= CRACK_UPDATE_INTERVAL_MS
+      )
+    ) {
+      state.lastCrackUpdateMs = Math.max(0, Number(nowMs) || 0);
+      updateOrbLifecycle3dCracks(state.cracks, nowMs);
+    }
     if (state.burst && !updateOrbLifecycle3dDissolveBurst(state.burst, nowMs)) {
       clearBurst();
       return false;

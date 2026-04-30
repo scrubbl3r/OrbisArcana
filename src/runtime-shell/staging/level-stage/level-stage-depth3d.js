@@ -22,15 +22,15 @@ import {
   disposeThreeObject,
 } from "../../../game-runtime/rendering/three/three-object-utils.js";
 import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430c";
-import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430b";
+import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430c";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
-import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260430d";
+import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260430e";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260430a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
-import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430a";
+import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430b";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260430a";
-import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430a";
+import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
 import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430b";
 
@@ -105,6 +105,7 @@ export function createLevelStageDepth3dLayer({
     isDisposed: () => disposed,
     hasActiveAnimation: hasActiveGlobe3dAnimation,
     renderNow: doRenderFrame,
+    allowInternalAnimationLoop: false,
   });
   const orb3dActorRuntime = createOrb3dActorRuntime({
     parent: actorGroup,
@@ -217,7 +218,7 @@ export function createLevelStageDepth3dLayer({
 
   function hasActiveGlobe3dAnimation() {
     return (
-      worldGlobe3dRuntime.hasActiveVisuals()
+      worldGlobe3dRuntime.hasAnimatingVisuals()
       || orbGlobe3dRuntime.hasActiveVisuals()
       || orbLifecycle3dRuntime.hasActiveVisuals()
       || orb3dActorRuntime.isNodActive()
