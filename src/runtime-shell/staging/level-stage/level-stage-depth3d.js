@@ -10,9 +10,17 @@ import {
   resolveDepthCameraFrame,
 } from "../../../game-runtime/level/depth-stage-frame.js?v=20260430a";
 import {
+  resolveDepthSpawnAnchor,
+  toDepthThreeX,
+  toDepthThreeY,
+} from "../../../game-runtime/level/depth-runtime-coordinates.js?v=20260430a";
+import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260430a";
-import { disposeThreeObject } from "../../../game-runtime/rendering/three/three-object-utils.js";
+import {
+  applyThreeMeshFlags,
+  disposeThreeObject,
+} from "../../../game-runtime/rendering/three/three-object-utils.js";
 import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430a";
 import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430a";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
@@ -32,50 +40,10 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function clamp01(value) {
-  return Math.max(0, Math.min(1, clampNumber(value, 0)));
-}
-
-function readSpawnWorldX(spawn = {}, worldWidthPx = 1) {
-  if (Number.isFinite(Number(spawn && spawn.xW))) return Number(spawn.xW);
-  if (spawn && spawn.worldCenter && Number.isFinite(Number(spawn.worldCenter.xW))) {
-    return Number(spawn.worldCenter.xW);
-  }
-  return Math.max(1, clampNumber(worldWidthPx, 1)) * clamp01(spawn && spawn.xNorm);
-}
-
-function readSpawnWorldY(spawn = {}) {
-  if (Number.isFinite(Number(spawn && spawn.yW))) return Number(spawn.yW);
-  if (spawn && spawn.worldCenter && Number.isFinite(Number(spawn.worldCenter.yW))) {
-    return Number(spawn.worldCenter.yW);
-  }
-  return 0;
-}
-
 function resolveDepthLayerLabel(depthLayers = []) {
   const layers = Array.isArray(depthLayers) ? depthLayers : [];
   if (!layers.length) return "no depth layer";
   return layers.map((layer) => String(layer && layer.label || layer && layer.id || "depth")).join(" / ");
-}
-
-function applyEnvironmentMeshFlags(object = null, {
-  receiveShadow = true,
-  castShadow = true,
-} = {}) {
-  if (!object || typeof object.traverse !== "function") return;
-  object.traverse((node) => {
-    if (!node || !node.isMesh) return;
-    node.receiveShadow = !!receiveShadow;
-    node.castShadow = !!castShadow;
-  });
-}
-
-function toThreeX(worldX, worldWidthPx) {
-  return clampNumber(worldX, 0) - (Math.max(1, clampNumber(worldWidthPx, 1)) * 0.5);
-}
-
-function toThreeY(worldY, worldHeightPx) {
-  return (Math.max(1, clampNumber(worldHeightPx, 1)) * 0.5) - clampNumber(worldY, 0);
 }
 
 export function createLevelStageDepth3dLayer({
@@ -127,11 +95,11 @@ export function createLevelStageDepth3dLayer({
     fallbackBo: baseOrbWorldUnits,
     getDefaultZBO: () => currentOrbZBO,
     toRuntimePosition: ({ x = 0, y = 0, z = 0 } = {}) => ({
-      x: toThreeX(x, worldWidthPx),
-      y: toThreeY(y, worldHeightPx),
+      x: toDepthThreeX(x, worldWidthPx),
+      y: toDepthThreeY(y, worldHeightPx),
       z,
     }),
-    applyMeshFlags: applyEnvironmentMeshFlags,
+    applyMeshFlags: applyThreeMeshFlags,
     onTelemetry: updateOrbTelemetry,
     onModelChanged: () => {
       orbLifecycle3dRuntime.attachOrbModel();
@@ -141,13 +109,10 @@ export function createLevelStageDepth3dLayer({
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
     group: globe3dGroup,
     createGlobeObject: createRuntimeGlobe3dObject,
-    resolveSpawnAnchor: (spawn) => ({
-      x: readSpawnWorldX(spawn, worldWidthPx),
-      y: readSpawnWorldY(spawn),
-    }),
+    resolveSpawnAnchor: (spawn) => resolveDepthSpawnAnchor(spawn, { worldWidthPx }),
     toRuntimePosition: ({ x = 0, y = 0 } = {}) => ({
-      x: toThreeX(x, worldWidthPx),
-      y: toThreeY(y, worldHeightPx),
+      x: toDepthThreeX(x, worldWidthPx),
+      y: toDepthThreeY(y, worldHeightPx),
       z: -orb3dActorRuntime.getDepthPx(),
     }),
     getBo: () => baseOrbWorldUnits,
@@ -191,8 +156,8 @@ export function createLevelStageDepth3dLayer({
     group: propsGroup,
     getBo: () => orb3dActorRuntime.getBo(),
     toRuntimePosition: ({ x = 0, y = 0 } = {}) => ({
-      x: toThreeX(x, worldWidthPx),
-      y: toThreeY(y, worldHeightPx),
+      x: toDepthThreeX(x, worldWidthPx),
+      y: toDepthThreeY(y, worldHeightPx),
     }),
     onCountChange: (count) => {
       root.dataset.depthPropCount = String(Math.max(0, Number(count) || 0));
@@ -387,7 +352,7 @@ export function createLevelStageDepth3dLayer({
           environmentMode,
         });
         if (mesh) {
-          applyEnvironmentMeshFlags(mesh);
+          applyThreeMeshFlags(mesh);
           group.add(mesh);
         }
       }

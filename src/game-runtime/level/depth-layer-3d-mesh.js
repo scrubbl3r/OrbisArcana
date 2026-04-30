@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS } from "./depth-projection.js";
+import {
+  toDepthThreeX,
+  toDepthThreeY,
+} from "./depth-runtime-coordinates.js";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const PREVIEW_RASTER_SIZE = 384;
@@ -205,14 +209,6 @@ function toWorldY(authorY, viewBox, worldHeightPx) {
   return ((authorY - vbY) / vbH) * Math.max(1, clampNumber(worldHeightPx, 1));
 }
 
-function toThreeX(worldX, worldWidthPx) {
-  return clampNumber(worldX, 0) - (Math.max(1, clampNumber(worldWidthPx, 1)) * 0.5);
-}
-
-function toThreeY(worldY, worldHeightPx) {
-  return (Math.max(1, clampNumber(worldHeightPx, 1)) * 0.5) - clampNumber(worldY, 0);
-}
-
 function addQuad(positions, indices, colors, a, b, c, d, color) {
   const base = positions.length / 3;
   for (const point of [a, b, c, d]) {
@@ -224,8 +220,8 @@ function addQuad(positions, indices, colors, a, b, c, d, color) {
 
 function toThreePointFromWorld(point = {}, worldWidthPx = 1, worldHeightPx = 1, z = 0) {
   return Object.freeze({
-    x: toThreeX(clampNumber(point && point.xW, 0), worldWidthPx),
-    y: toThreeY(clampNumber(point && point.yW, 0), worldHeightPx),
+    x: toDepthThreeX(clampNumber(point && point.xW, 0), worldWidthPx),
+    y: toDepthThreeY(clampNumber(point && point.yW, 0), worldHeightPx),
     z,
   });
 }
@@ -376,8 +372,8 @@ function buildDepthGeometryFromSamples({ samples, cols, rows, layer, viewBox, ra
     const worldX = toWorldX(authorX, viewBox, worldWidthPx);
     const worldY = toWorldY(authorY, viewBox, worldHeightPx);
     return Object.freeze({
-      x: toThreeX(worldX, worldWidthPx),
-      y: toThreeY(worldY, worldHeightPx),
+      x: toDepthThreeX(worldX, worldWidthPx),
+      y: toDepthThreeY(worldY, worldHeightPx),
       z: -Math.max(0, depthValue) * maxDepth,
     });
   };
@@ -491,4 +487,3 @@ export async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldH
   model.add(edges);
   return model;
 }
-

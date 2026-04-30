@@ -35,3 +35,15 @@ export function disposeThreeObject(object) {
 }
 
 export const disposeObject = disposeThreeObject;
+
+export function applyThreeMeshFlags(object = null, {
+  receiveShadow = true,
+  castShadow = true,
+} = {}) {
+  if (!object || typeof object.traverse !== "function") return;
+  object.traverse((node) => {
+    if (!node || !node.isMesh) return;
+    node.receiveShadow = !!receiveShadow;
+    node.castShadow = !!castShadow;
+  });
+}
