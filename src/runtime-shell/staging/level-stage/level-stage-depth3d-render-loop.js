@@ -3,7 +3,6 @@ import { normalizeDepthRenderFrame } from "../../../game-runtime/level/depth-sta
 export function createLevelStageDepth3dRenderLoop({
   isDisposed = () => false,
   hasActiveAnimation = () => false,
-  tickAnimation = () => {},
   renderNow = () => {},
 } = {}) {
   let lastFrame = null;
@@ -15,13 +14,13 @@ export function createLevelStageDepth3dRenderLoop({
     lastFrame = normalizeDepthRenderFrame(frame);
     if (pendingRenderFrame) return;
     if (typeof requestAnimationFrame !== "function") {
-      renderNow(lastFrame);
+      renderNow(lastFrame, performance.now());
       return;
     }
-    pendingRenderFrame = requestAnimationFrame(() => {
+    pendingRenderFrame = requestAnimationFrame((nowMs) => {
       pendingRenderFrame = 0;
       if (isDisposed()) return;
-      renderNow(lastFrame || {});
+      renderNow(lastFrame || {}, nowMs);
     });
   }
 
@@ -30,8 +29,11 @@ export function createLevelStageDepth3dRenderLoop({
     const tick = (nowMs) => {
       animationFrame = 0;
       if (isDisposed() || !hasActiveAnimation()) return;
-      tickAnimation(nowMs);
-      renderFrame(lastFrame || {});
+      if (pendingRenderFrame && typeof cancelAnimationFrame === "function") {
+        cancelAnimationFrame(pendingRenderFrame);
+        pendingRenderFrame = 0;
+      }
+      renderNow(lastFrame || {}, nowMs);
       animationFrame = requestAnimationFrame(tick);
     };
     animationFrame = requestAnimationFrame(tick);

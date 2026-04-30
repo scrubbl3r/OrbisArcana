@@ -88,7 +88,6 @@ export function createLevelStageDepth3dLayer({
   const renderLoop = createLevelStageDepth3dRenderLoop({
     isDisposed: () => disposed,
     hasActiveAnimation: hasActiveGlobe3dAnimation,
-    tickAnimation: tickGlobe3dRuntime,
     renderNow: doRenderFrame,
   });
   const orb3dActorRuntime = createOrb3dActorRuntime({
@@ -218,8 +217,9 @@ export function createLevelStageDepth3dLayer({
     viewportWidthPx = 0,
     viewportHeightPx = 0,
     isBootFrame = false,
-  } = {}) {
+  } = {}, nowMs = performance.now()) {
     if (disposed) return;
+    const frameNowMs = Number.isFinite(Number(nowMs)) ? Number(nowMs) : performance.now();
     const cameraFrame = resolveDepthCameraFrame({
       frame: { camLeft, camTop, zoom, viewportWidthPx, viewportHeightPx },
       root,
@@ -260,8 +260,8 @@ export function createLevelStageDepth3dLayer({
     lastCameraX = cameraFrame.x;
     lastCameraY = cameraFrame.y;
     lastCameraZ = cameraFrame.z;
-    orb3dActorRuntime.update(performance.now() / 1000);
-    tickGlobe3dRuntime(performance.now());
+    orb3dActorRuntime.update(frameNowMs / 1000);
+    tickGlobe3dRuntime(frameNowMs);
     renderer.render(scene, camera);
   }
 
