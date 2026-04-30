@@ -8,6 +8,16 @@ function resolveDepthLayerLabel(depthLayers = []) {
   return layers.map((layer) => String(layer && layer.label || layer && layer.id || "depth")).join(" / ");
 }
 
+function resolveMaxDepthBO(depthLayers = []) {
+  const layers = Array.isArray(depthLayers) ? depthLayers : [];
+  let maxDepthBO = 0;
+  for (const layer of layers) {
+    const nextDepthBO = Number(layer && layer.maxDepthBO);
+    if (Number.isFinite(nextDepthBO) && nextDepthBO > maxDepthBO) maxDepthBO = nextDepthBO;
+  }
+  return maxDepthBO;
+}
+
 export function createLevelStageDepth3dTelemetry({
   root = null,
   labelEl = null,
@@ -19,6 +29,8 @@ export function createLevelStageDepth3dTelemetry({
   let lastTelemetryRadius = "";
   let lastTelemetryZBO = "";
   let lastTelemetryDepthPx = "";
+  let currentMaxDepthBO = 0;
+  let currentMaxDepthPx = 0;
 
   function setDatasetValue(target = null, key = "", value = "") {
     if (!target || !target.dataset || !key) return;
@@ -27,6 +39,14 @@ export function createLevelStageDepth3dTelemetry({
 
   function setDepthLayerLabel(depthLayers = []) {
     setDatasetValue(labelEl, "depth3d", resolveDepthLayerLabel(depthLayers));
+    currentMaxDepthBO = resolveMaxDepthBO(depthLayers);
+    currentMaxDepthPx = currentMaxDepthBO * Math.max(1, Number(fallbackBo) || 1);
+    const nextMaxDepthBO = currentMaxDepthBO.toFixed(2);
+    const nextMaxDepthPx = currentMaxDepthPx.toFixed(2);
+    setDatasetValue(root, "depthMaxBo", nextMaxDepthBO);
+    setDatasetValue(root, "depthMaxPx", nextMaxDepthPx);
+    setDatasetValue(labelEl, "depthMaxBo", nextMaxDepthBO);
+    setDatasetValue(labelEl, "depthMaxPx", nextMaxDepthPx);
   }
 
   function setSceneStatus({
@@ -47,6 +67,8 @@ export function createLevelStageDepth3dTelemetry({
     const nextRadius = (Math.max(1, Number(bo) || fallbackBo) * 0.5).toFixed(2);
     const nextZBO = Number(zBO || 0).toFixed(2);
     const nextDepthPx = Number(depthPx || 0).toFixed(2);
+    const nextMaxDepthBO = Number(currentMaxDepthBO || 0).toFixed(2);
+    const nextMaxDepthPx = Number(currentMaxDepthPx || 0).toFixed(2);
     if (
       nextBO === lastTelemetryBO
       && nextRadius === lastTelemetryRadius
@@ -63,12 +85,16 @@ export function createLevelStageDepth3dTelemetry({
     setDatasetValue(root, "depthOrbRadius", nextRadius);
     setDatasetValue(root, "depthOrbZbo", nextZBO);
     setDatasetValue(root, "depthOrbDepthPx", nextDepthPx);
+    setDatasetValue(root, "depthMaxBo", nextMaxDepthBO);
+    setDatasetValue(root, "depthMaxPx", nextMaxDepthPx);
     setDatasetValue(labelEl, "depthOrbBo", nextBO);
     setDatasetValue(labelEl, "depthOrbRadius", nextRadius);
     setDatasetValue(labelEl, "depthOrbZbo", nextZBO);
     setDatasetValue(labelEl, "depthOrbDepthPx", nextDepthPx);
+    setDatasetValue(labelEl, "depthMaxBo", nextMaxDepthBO);
+    setDatasetValue(labelEl, "depthMaxPx", nextMaxDepthPx);
     if (debugEl) {
-      const nextText = `3d BO ${nextBO} | r ${nextRadius} | z ${nextZBO}BO | depth ${nextDepthPx}`;
+      const nextText = `3d BO ${nextBO} | r ${nextRadius} | z ${nextZBO}/${nextMaxDepthBO}BO | depth ${nextDepthPx}/${nextMaxDepthPx}px`;
       if (nextText !== lastTelemetryText) {
         debugEl.textContent = nextText;
         lastTelemetryText = nextText;
