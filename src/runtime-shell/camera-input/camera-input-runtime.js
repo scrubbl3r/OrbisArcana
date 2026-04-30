@@ -1,7 +1,7 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430a";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430b";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
-import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430d";
+import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430e";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
@@ -126,6 +126,11 @@ export function createCameraInputRuntime({
         frameMs: Number(observation.frameMs) || 0,
         fps: Number(observation.fps) || 0,
         detectMs: Number(observation.detectMs) || 0,
+        videoWidth: Number(observation.videoWidth) || 0,
+        videoHeight: Number(observation.videoHeight) || 0,
+        trackWidth: Number(observation.trackWidth) || 0,
+        trackHeight: Number(observation.trackHeight) || 0,
+        trackFrameRate: Number(observation.trackFrameRate) || 0,
       },
     }, {
       coalesceObservation: true,

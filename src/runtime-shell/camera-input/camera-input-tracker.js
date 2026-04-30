@@ -6,9 +6,9 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minHandDetectionConfidence: 0.5,
   minHandPresenceConfidence: 0.5,
   minTrackingConfidence: 0.5,
-  maxDetectionFps: 20,
-  videoWidth: 640,
-  videoHeight: 480,
+  maxDetectionFps: 30,
+  videoWidth: 480,
+  videoHeight: 360,
   videoFps: 30,
 });
 
@@ -142,6 +142,16 @@ function waitForVideoMetadata(videoEl) {
   });
 }
 
+function resolveStreamSettings(mediaStream) {
+  const tracks = mediaStream && typeof mediaStream.getVideoTracks === "function"
+    ? mediaStream.getVideoTracks()
+    : [];
+  const track = tracks[0] || null;
+  return track && typeof track.getSettings === "function"
+    ? track.getSettings() || {}
+    : {};
+}
+
 export function createCameraInputTracker({
   rootWindow = window,
   rootDocument = document,
@@ -219,11 +229,17 @@ export function createCameraInputTracker({
     const result = handLandmarker.detectForVideo(videoEl, observedAtMs);
     const detectMs = Math.max(0, now() - detectStartMs);
     const observation = extractPrimaryHandObservation(result, preferredHand, observedAtMs);
+    const streamSettings = resolveStreamSettings(mediaStream);
     onObservation({
       ...observation,
       frameMs,
       fps: frameMs > 0 ? (1000 / frameMs) : 0,
       detectMs,
+      videoWidth: Number(videoEl.videoWidth) || 0,
+      videoHeight: Number(videoEl.videoHeight) || 0,
+      trackWidth: Number(streamSettings.width) || 0,
+      trackHeight: Number(streamSettings.height) || 0,
+      trackFrameRate: Number(streamSettings.frameRate) || 0,
     });
   }
 
