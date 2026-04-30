@@ -16,6 +16,7 @@ import {
 } from "../authored-level-camera.js?v=20260424c";
 
 const LEVEL_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
+const LEVEL_STAGE_2D_ORB_FALLBACK_PARAM = "levelStage2dOrb";
 const LEVEL_STAGE_ORB_MARKUP = `
   <div class="levelStageOrbLayer" aria-hidden="true">
     <div class="orbWrap levelStageOrbWrap" data-level-stage-orb-wrap="true">
@@ -71,17 +72,37 @@ function resolvePreviewFollowMode(level = null) {
   return resolveStageCameraFollowMode(level, "preview", "follow_target_center");
 }
 
+function resolveLevelStage2dOrbEnabled({
+  level = null,
+  enable2dOrb = null,
+} = {}) {
+  if (typeof enable2dOrb === "boolean") return enable2dOrb;
+  const levelStage = level && typeof level.stage === "object" ? level.stage : null;
+  if (typeof (levelStage && levelStage.enable2dOrb) === "boolean") {
+    return levelStage.enable2dOrb;
+  }
+  try {
+    const params = new URLSearchParams(globalThis.location && globalThis.location.search || "");
+    const raw = String(params.get(LEVEL_STAGE_2D_ORB_FALLBACK_PARAM) || "").trim().toLowerCase();
+    return raw === "1" || raw === "true" || raw === "on" || raw === "yes";
+  } catch (_) {
+    return false;
+  }
+}
+
 export function renderLevelStage(root, {
   level = null,
   externalCameraAuthority = false,
+  enable2dOrb = null,
 } = {}) {
   if (!root) return null;
   const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : {};
   const worldSize = resolveLevelWorldSize(level, mapSource);
   const previewZoom = resolvePreviewZoom(level);
   const previewFollowMode = resolvePreviewFollowMode(level);
+  const enable2dOrbFallback = resolveLevelStage2dOrbEnabled({ level, enable2dOrb });
   const orbBaseVisualState = buildOrbBaseVisualState();
-  const orbFractureVisualState = buildOrbFractureVisualState();
+  const orbFractureVisualState = enable2dOrbFallback ? buildOrbFractureVisualState() : null;
   root.innerHTML = `
     <section class="levelStage" aria-label="Level stage">
       <div class="levelStageViewport">
@@ -93,7 +114,7 @@ export function renderLevelStage(root, {
         </div>
         <div class="levelStageActorDock" aria-hidden="true">
           <div class="levelStageActorWorld">
-            ${LEVEL_STAGE_ORB_MARKUP}
+            ${enable2dOrbFallback ? LEVEL_STAGE_ORB_MARKUP : ""}
             ${LEVEL_STAGE_GLOBE_MARKUP}
           </div>
         </div>
@@ -116,8 +137,11 @@ export function renderLevelStage(root, {
       </div>
     </section>
   `;
-  applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
-  applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
+  root.dataset.levelStage2dOrb = enable2dOrbFallback ? "true" : "false";
+  if (enable2dOrbFallback) {
+    applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
+    applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
+  }
 
   const refs = {
     root,
