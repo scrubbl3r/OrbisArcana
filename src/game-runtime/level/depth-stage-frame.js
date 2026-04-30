@@ -1,6 +1,6 @@
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
-  LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
   resolveDepthCameraZ,
 } from "./depth-projection.js";
 
@@ -59,7 +59,7 @@ export function resolveDepthCameraFrame({
   worldWidthPx = 1,
   worldHeightPx = 1,
   fovDeg = LEVEL_DEPTH_CAMERA_FOV_DEG,
-  farPaddingWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS * 32,
+  farPaddingWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS * 32,
 } = {}) {
   const width = Math.max(1, Math.round(clampNumber(frame.viewportWidthPx, root && root.clientWidth || 1)));
   const height = Math.max(1, Math.round(clampNumber(frame.viewportHeightPx, root && root.clientHeight || 1)));

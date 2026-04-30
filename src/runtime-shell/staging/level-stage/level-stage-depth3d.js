@@ -1,7 +1,7 @@
 import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260430a";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
-  LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
   LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
   resolveOrbTravelZBO,
 } from "../../../game-runtime/level/depth-projection.js";
@@ -34,7 +34,7 @@ import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
 import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430a";
 
-const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
+const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 function clampNumber(value, fallback = 0) {
   const n = Number(value);

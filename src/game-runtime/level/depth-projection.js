@@ -1,6 +1,7 @@
 export const LEVEL_DEPTH_CAMERA_FOV_DEG = 42;
 export const LEVEL_DEPTH_DEFAULT_ORB_Z_BO = 4;
-export const LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS = 72;
+// Fallback only. Live stage BO should come from Orb Base visual diameter.
+export const LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS = 72;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);

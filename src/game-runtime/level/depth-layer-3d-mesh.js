@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS } from "./depth-projection.js";
+import { LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS } from "./depth-projection.js";
 import {
   toDepthThreeX,
   toDepthThreeY,
@@ -291,8 +291,8 @@ function buildVectorLoopEdges(loop = {}, depthPx = 0, worldWidthPx = 1, worldHei
   return geometry;
 }
 
-function resolveBoWorldUnits(boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS) {
-  return Math.max(1, clampNumber(boWorldUnits, LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS));
+function resolveBoWorldUnits(boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS) {
+  return Math.max(1, clampNumber(boWorldUnits, LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS));
 }
 
 function buildVectorDepthLayerMesh({
@@ -300,7 +300,7 @@ function buildVectorDepthLayerMesh({
   worldWidthPx,
   worldHeightPx,
   environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
-  boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
 }) {
   const loops = Array.isArray(layer && layer.loops) ? layer.loops : [];
   const primaryLoop = loops[0] || null;
@@ -369,7 +369,7 @@ function buildDepthGeometryFromSamples({
   rasterSize,
   worldWidthPx,
   worldHeightPx,
-  boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
 }) {
   const positions = [];
   const indices = [];
@@ -450,7 +450,7 @@ export async function buildDepthLayerMesh({
   worldWidthPx,
   worldHeightPx,
   environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
-  boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
 }) {
   const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode, boWorldUnits });
   if (vectorMesh) return vectorMesh;

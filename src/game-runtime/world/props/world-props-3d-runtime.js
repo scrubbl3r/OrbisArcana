@@ -1,4 +1,4 @@
-import { LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS, LEVEL_DEPTH_DEFAULT_ORB_Z_BO } from "../../level/depth-projection.js";
+import { LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS, LEVEL_DEPTH_DEFAULT_ORB_Z_BO } from "../../level/depth-projection.js";
 import { createGraphiteMaterial } from "../../rendering/three/materials/graphite-material.js";
 import { GRAPHITE_CONFIG } from "../../rendering/three/materials/graphite-config.js";
 import { addLineEdges } from "../../rendering/three/three-line-utils.js";
@@ -27,19 +27,19 @@ function resolvePlinthYForAnchor(anchorY = 0, anchor = "center", metrics = {}) {
   return anchorY - clampNumber(metrics && metrics.columnCenterY, 0);
 }
 
-function resolveActorLanePropZ(zBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO, bo = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS, metrics = {}) {
-  const authoredDepth = Math.max(0, clampNumber(zBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO)) * Math.max(1, clampNumber(bo, LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS));
+function resolveActorLanePropZ(zBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO, bo = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS, metrics = {}) {
+  const authoredDepth = Math.max(0, clampNumber(zBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO)) * Math.max(1, clampNumber(bo, LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS));
   const propHalfDepth = Math.max(
     clampNumber(metrics && metrics.baseDepth, 0),
     clampNumber(metrics && metrics.capitalDepth, 0),
     clampNumber(metrics && metrics.columnDepth, 0)
   ) * 0.5;
-  return -(authoredDepth + propHalfDepth + (Math.max(1, clampNumber(bo, LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS)) * 0.05));
+  return -(authoredDepth + propHalfDepth + (Math.max(1, clampNumber(bo, LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS)) * 0.05));
 }
 
 export function createWorldProps3dRuntime({
   group = null,
-  getBo = () => LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+  getBo = () => LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
   toRuntimePosition = ({ x = 0, y = 0 } = {}) => ({ x, y }),
   onCountChange = () => {},
 } = {}) {
@@ -66,7 +66,7 @@ export function createWorldProps3dRuntime({
     const kind = String(prop && prop.kind || "").trim().toLowerCase();
     if (kind !== "plinth") return null;
     const scale = Math.max(0.01, clampNumber(prop && prop.scale, 1));
-    const bo = Math.max(1, Math.max(1, Number(getBo()) || LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS) * scale);
+    const bo = Math.max(1, Math.max(1, Number(getBo()) || LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS) * scale);
     const material = createGraphiteMaterial(GRAPHITE_CONFIG);
     const { model, metrics } = createPlinthModel({
       bo,
