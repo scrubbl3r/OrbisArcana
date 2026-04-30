@@ -5,6 +5,12 @@ const ORB_LIFECYCLE_3D_FIELDS = Object.freeze([
   "orbLifecycle3dCrackStroke",
   "orbLifecycle3dCrackLift",
   "orbLifecycle3dCriticalGlow",
+  "orbLifecycle3dMutationSpeed",
+  "orbLifecycle3dMutationAmount",
+  "orbLifecycle3dDiffuseWash",
+  "orbLifecycle3dEdgeBrightness",
+  "orbLifecycle3dCellDarkness",
+  "orbLifecycle3dDetailEmergence",
   "orbLifecycle3dParticleCount",
   "orbLifecycle3dParticleSize",
   "orbLifecycle3dParticleSpeedMin",
@@ -15,6 +21,7 @@ const ORB_LIFECYCLE_3D_FIELDS = Object.freeze([
 
 const ORB_LIFECYCLE_3D_COLOR_FIELDS = Object.freeze([
   ["crackColor", "orbLifecycle3dCrack"],
+  ["energyColor", "orbLifecycle3dEnergy"],
   ["particleColor", "orbLifecycle3dParticle"],
 ]);
 
@@ -53,6 +60,12 @@ function settingsFromDefaults(defaults = {}) {
     orbLifecycle3dCrackStroke: fixedNumber(defaults.crackWidthPx, 2, 1.25),
     orbLifecycle3dCrackLift: fixedNumber(defaults.crackLiftBO, 3, 0.012),
     orbLifecycle3dCriticalGlow: fixedNumber(defaults.criticalGlow, 2, 1.35),
+    orbLifecycle3dMutationSpeed: fixedNumber(defaults.mutationSpeed, 2, 0.12),
+    orbLifecycle3dMutationAmount: fixedNumber(defaults.mutationAmount, 2, 1),
+    orbLifecycle3dDiffuseWash: fixedNumber(defaults.diffuseWash, 2, 1),
+    orbLifecycle3dEdgeBrightness: fixedNumber(defaults.edgeBrightness, 2, 1),
+    orbLifecycle3dCellDarkness: fixedNumber(defaults.cellDarkness, 2, 1),
+    orbLifecycle3dDetailEmergence: fixedNumber(defaults.detailEmergence, 2, 0.58),
     orbLifecycle3dParticleCount: roundedNumber(defaults.particleCount, 72),
     orbLifecycle3dParticleSize: fixedNumber(defaults.particleSizePx, 2, 4.5),
     orbLifecycle3dParticleSpeedMin: fixedNumber(defaults.particleSpeedMinBO, 2, 1.35),

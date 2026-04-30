@@ -22,6 +22,13 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
     crackLiftBO: clampNumber(source.crackLiftBO, 0, 0.2, ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO),
     criticalGlow: clampNumber(source.criticalGlow, 0, 4, ORB_LIFECYCLE_3D_DEFAULTS.criticalGlow),
+    energyColor: Number(source.energyColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.energyColor,
+    mutationSpeed: clampNumber(source.mutationSpeed, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.mutationSpeed),
+    mutationAmount: clampNumber(source.mutationAmount, 0, 1.5, ORB_LIFECYCLE_3D_DEFAULTS.mutationAmount),
+    diffuseWash: clampNumber(source.diffuseWash, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.diffuseWash),
+    edgeBrightness: clampNumber(source.edgeBrightness, 0, 3, ORB_LIFECYCLE_3D_DEFAULTS.edgeBrightness),
+    cellDarkness: clampNumber(source.cellDarkness, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.cellDarkness),
+    detailEmergence: clampNumber(source.detailEmergence, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.detailEmergence),
     particleCount: clampInt(source.particleCount, 0, 512, ORB_LIFECYCLE_3D_DEFAULTS.particleCount),
     particleColor: Number(source.particleColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.particleColor,
     particleSizePx: clampNumber(source.particleSizePx, 0.5, 32, ORB_LIFECYCLE_3D_DEFAULTS.particleSizePx),
@@ -62,9 +69,15 @@ function createVoronoiShellMaterial({
       uLineWidth: { value: Math.max(0.018, Math.min(0.18, resolved.crackWidthPx * 0.032)) },
       uAlpha: { value: resolved.crackAlpha },
       uCriticalGlow: { value: resolved.criticalGlow },
+      uMutationSpeed: { value: resolved.mutationSpeed },
+      uMutationAmount: { value: resolved.mutationAmount },
+      uDiffuseWash: { value: resolved.diffuseWash },
+      uEdgeBrightness: { value: resolved.edgeBrightness },
+      uCellDarkness: { value: resolved.cellDarkness },
+      uDetailEmergence: { value: resolved.detailEmergence },
       uCrackColor: { value: colorToVector(resolved.crackColor) },
       uTroughColor: { value: new THREE.Vector3(0.008, 0.011, 0.014) },
-      uEnergyColor: { value: new THREE.Vector3(0.58, 0.72, 0.76) },
+      uEnergyColor: { value: colorToVector(resolved.energyColor) },
     },
     vertexShader: `
       varying vec3 vPos;
@@ -87,6 +100,12 @@ function createVoronoiShellMaterial({
       uniform float uLineWidth;
       uniform float uAlpha;
       uniform float uCriticalGlow;
+      uniform float uMutationSpeed;
+      uniform float uMutationAmount;
+      uniform float uDiffuseWash;
+      uniform float uEdgeBrightness;
+      uniform float uCellDarkness;
+      uniform float uDetailEmergence;
       uniform vec3 uCrackColor;
       uniform vec3 uTroughColor;
       uniform vec3 uEnergyColor;
@@ -120,8 +139,10 @@ function createVoronoiShellMaterial({
             for (int i = -1; i <= 1; i += 1) {
               vec3 g = vec3(float(i), float(j), float(k));
               vec3 o = hash3(n + g);
-              vec3 drift = 0.5 + 0.5 * sin(vec3(uTime * 0.12) + 6.2831853 * o);
-              vec3 r = g + drift - f;
+              vec3 staticPoint = o;
+              vec3 driftPoint = 0.5 + 0.5 * sin(vec3(uTime * uMutationSpeed) + 6.2831853 * o);
+              vec3 site = mix(staticPoint, driftPoint, uMutationAmount);
+              vec3 r = g + site - f;
               float d = dot(r, r);
               if (d < nearest) {
                 nearest = d;
@@ -138,7 +159,8 @@ function createVoronoiShellMaterial({
         vec3 normal = normalize(vPos);
         vec2 coarseCell = voronoi(normal * uBaseScale);
         vec2 detailCell = voronoi((normal * uScale) + vec3(13.7, -8.1, 5.3));
-        float detailMix = smoothstep(0.45, 0.82, uHitRatio);
+        float emergence = clamp(uDetailEmergence, 0.0, 1.0);
+        float detailMix = smoothstep(max(0.0, emergence - 0.18), min(1.0, emergence + 0.18), uHitRatio);
         float coarseD = clamp(coarseCell.x, 0.0, 1.0);
         float detailD = clamp(detailCell.x, 0.0, 1.0);
         float damage = pow(clamp(uHitRatio, 0.0, 1.0), 0.68);
@@ -159,10 +181,10 @@ function createVoronoiShellMaterial({
         float facing = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0))), 1.5);
 
         vec3 greyEnergy = mix(vec3(0.24), uCrackColor, 0.76);
-        vec3 shellWash = mix(vec3(0.035), uEnergyColor, 0.22) * diffuse;
+        vec3 shellWash = mix(vec3(0.035), uEnergyColor, 0.22) * diffuse * uDiffuseWash;
         vec3 color = mix(uTroughColor + shellWash, greyEnergy, brightBand * (0.82 + critical * 0.24));
-        color += uEnergyColor * hotEdge * damage * 0.36 * pulse;
-        color -= vec3(0.045) * cellCore * damage;
+        color += uEnergyColor * hotEdge * damage * 0.36 * pulse * uEdgeBrightness;
+        color -= vec3(0.045) * cellCore * damage * uCellDarkness;
         color += uEnergyColor * facing * damage * 0.16;
 
         float alpha = damage * uAlpha * (
