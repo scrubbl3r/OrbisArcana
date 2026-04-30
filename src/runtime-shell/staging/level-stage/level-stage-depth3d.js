@@ -83,7 +83,7 @@ export function createLevelStageDepth3dLayer({
     root,
     labelEl,
     debugEl,
-    fallbackBo: BO_WORLD_UNITS,
+    fallbackBo: baseOrbWorldUnits,
   });
   const renderLoop = createLevelStageDepth3dRenderLoop({
     isDisposed: () => disposed,
@@ -226,7 +226,7 @@ export function createLevelStageDepth3dLayer({
       worldWidthPx,
       worldHeightPx,
       fovDeg: camera.fov,
-      farPaddingWorldUnits: BO_WORLD_UNITS * 32,
+      farPaddingWorldUnits: baseOrbWorldUnits * 32,
     });
     const { width, height } = cameraFrame;
     if (width !== lastRenderWidth || height !== lastRenderHeight) {
@@ -291,6 +291,7 @@ export function createLevelStageDepth3dLayer({
           worldWidthPx,
           worldHeightPx,
           environmentMode,
+          boWorldUnits: baseOrbWorldUnits,
         });
         if (mesh) {
           applyThreeMeshFlags(mesh);
@@ -313,7 +314,7 @@ export function createLevelStageDepth3dLayer({
     setOrbWorldPosition({
       xW = null,
       yW = null,
-      bo = BO_WORLD_UNITS,
+      bo = baseOrbWorldUnits,
       zBO = currentOrbZBO,
     } = {}) {
       if (disposed) return false;

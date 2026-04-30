@@ -5,7 +5,6 @@ import {
   toDepthThreeY,
 } from "./depth-runtime-coordinates.js";
 
-const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
 const DEPTH_GRAPHITE_RUNTIME = Object.freeze({
@@ -292,12 +291,22 @@ function buildVectorLoopEdges(loop = {}, depthPx = 0, worldWidthPx = 1, worldHei
   return geometry;
 }
 
-function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode = DEPTH_ENVIRONMENT_MODE.runtime }) {
+function resolveBoWorldUnits(boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS) {
+  return Math.max(1, clampNumber(boWorldUnits, LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS));
+}
+
+function buildVectorDepthLayerMesh({
+  layer,
+  worldWidthPx,
+  worldHeightPx,
+  environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
+  boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+}) {
   const loops = Array.isArray(layer && layer.loops) ? layer.loops : [];
   const primaryLoop = loops[0] || null;
   const shape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
   if (!shape) return null;
-  const depthPx = Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * BO_WORLD_UNITS;
+  const depthPx = Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * resolveBoWorldUnits(boWorldUnits);
   const model = new THREE.Group();
   model.name = `depth:${String(layer && layer.id || "layer")}:vector_volume`;
   model.userData.depthLayer = layer;
@@ -350,12 +359,23 @@ function buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environ
   return model;
 }
 
-function buildDepthGeometryFromSamples({ samples, cols, rows, layer, viewBox, rasterBox, rasterSize, worldWidthPx, worldHeightPx }) {
+function buildDepthGeometryFromSamples({
+  samples,
+  cols,
+  rows,
+  layer,
+  viewBox,
+  rasterBox,
+  rasterSize,
+  worldWidthPx,
+  worldHeightPx,
+  boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+}) {
   const positions = [];
   const indices = [];
   const colors = [];
   const depthBO = Math.max(0, clampNumber(layer.maxDepthBO, 10));
-  const maxDepth = depthBO * BO_WORLD_UNITS;
+  const maxDepth = depthBO * resolveBoWorldUnits(boWorldUnits);
   const color = new THREE.Color(0x30363c);
   const wallColor = new THREE.Color(0x24292f);
   const floorColor = new THREE.Color(0x3b4248);
@@ -424,8 +444,15 @@ function buildDepthGeometryFromSamples({ samples, cols, rows, layer, viewBox, ra
   return geometry;
 }
 
-export async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldHeightPx, environmentMode = DEPTH_ENVIRONMENT_MODE.runtime }) {
-  const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode });
+export async function buildDepthLayerMesh({
+  layer,
+  viewBox,
+  worldWidthPx,
+  worldHeightPx,
+  environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
+  boWorldUnits = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
+}) {
+  const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode, boWorldUnits });
   if (vectorMesh) return vectorMesh;
 
   const aspect = Math.max(0.1, clampNumber(viewBox.width, 1) / Math.max(1, clampNumber(viewBox.height, 1)));
@@ -465,6 +492,7 @@ export async function buildDepthLayerMesh({ layer, viewBox, worldWidthPx, worldH
     rasterSize: { width: rasterWidth, height: rasterHeight },
     worldWidthPx,
     worldHeightPx,
+    boWorldUnits,
   });
   const material = buildGraphiteMaterial({ opacity: 0.86, environmentMode });
   material.vertexColors = true;
