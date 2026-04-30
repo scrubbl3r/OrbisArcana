@@ -142,6 +142,41 @@ function waitForVideoMetadata(videoEl) {
   });
 }
 
+function supportsWasmSimd() {
+  try {
+    return WebAssembly.validate(new Uint8Array([
+      0, 97, 115, 109, 1, 0, 0, 0,
+      1, 5, 1, 96, 0, 1, 123,
+      3, 2, 1, 0,
+      10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11,
+    ]));
+  } catch (_) {
+    return false;
+  }
+}
+
+function summarizeMediapipeResources(rootWindow, wasmRootUrl, modelAssetUrl) {
+  const perf = rootWindow && rootWindow.performance ? rootWindow.performance : null;
+  if (!perf || typeof perf.getEntriesByType !== "function") return "";
+  const root = String(wasmRootUrl || "");
+  const model = String(modelAssetUrl || "");
+  const entries = perf.getEntriesByType("resource") || [];
+  const names = [];
+  for (const entry of entries) {
+    const name = String(entry && entry.name || "");
+    if (!name) continue;
+    if (
+      name.indexOf(root) === 0 ||
+      name === model ||
+      name.indexOf("/mediapipe/tasks-vision/wasm/") >= 0 ||
+      name.indexOf("/camera-input/models/") >= 0
+    ) {
+      names.push(name.split("/").pop());
+    }
+  }
+  return Array.from(new Set(names)).join(",");
+}
+
 function resolveStreamSettings(mediaStream) {
   const tracks = mediaStream && typeof mediaStream.getVideoTracks === "function"
     ? mediaStream.getVideoTracks()
@@ -177,8 +212,12 @@ export function createCameraInputTracker({
       return {
         modelAssetUrl,
         wasmRootUrl,
+        preloadMs: 0,
+        wasmSimdSupported: supportsWasmSimd(),
+        loadedWasmAssets: summarizeMediapipeResources(rootWindow, wasmRootUrl, modelAssetUrl),
       };
     }
+    const preloadStartMs = now();
     wasmFileset = await FilesetResolver.forVisionTasks(wasmRootUrl);
     handLandmarker = await HandLandmarker.createFromOptions(wasmFileset, {
       baseOptions: {
@@ -193,6 +232,9 @@ export function createCameraInputTracker({
     return {
       modelAssetUrl,
       wasmRootUrl,
+      preloadMs: Math.max(0, now() - preloadStartMs),
+      wasmSimdSupported: supportsWasmSimd(),
+      loadedWasmAssets: summarizeMediapipeResources(rootWindow, wasmRootUrl, modelAssetUrl),
     };
   }
 

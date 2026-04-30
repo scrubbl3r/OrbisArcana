@@ -46,6 +46,11 @@ export function createInitialCameraInputState({
       trackWidth: 0,
       trackHeight: 0,
       trackFrameRate: 0,
+      preloadMs: 0,
+      wasmSimdSupported: false,
+      loadedWasmAssets: "",
+      modelAssetUrl: "",
+      wasmRootUrl: "",
       lastError: "",
     },
   };

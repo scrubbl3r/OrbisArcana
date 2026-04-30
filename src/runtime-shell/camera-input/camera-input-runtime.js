@@ -1,7 +1,7 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430b";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430c";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
-import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430f";
+import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430g";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
@@ -156,7 +156,7 @@ export function createCameraInputRuntime({
     });
 
     try {
-      await tracker.preload();
+      const preloadInfo = await tracker.preload();
       patchCameraState({
         updatedAtMs: now(),
         lifecycle: {
@@ -166,6 +166,11 @@ export function createCameraInputRuntime({
         },
         debug: {
           preloadDetail: "mediapipe_ready",
+          preloadMs: Number(preloadInfo && preloadInfo.preloadMs) || 0,
+          wasmSimdSupported: Boolean(preloadInfo && preloadInfo.wasmSimdSupported),
+          loadedWasmAssets: String(preloadInfo && preloadInfo.loadedWasmAssets || ""),
+          modelAssetUrl: String(preloadInfo && preloadInfo.modelAssetUrl || initialState.config.modelAssetUrl),
+          wasmRootUrl: String(preloadInfo && preloadInfo.wasmRootUrl || initialState.config.wasmRootUrl),
         },
       });
       return camStore.getState();

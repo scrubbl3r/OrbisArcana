@@ -860,15 +860,28 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
   const inputFrameMs = Math.max(0, Number(debug.frameMs) || 0);
   if (typeof perfTrace.record === "function") {
     perfTrace.record("camera.inputAge", inputAgeMs, 80, { event: false });
-    perfTrace.record("camera.detectMs", detectMs, 20);
-    perfTrace.record("camera.inputFrameMs", inputFrameMs, 45);
+    perfTrace.record("camera.detectMs", detectMs, 20, { event: false });
+    perfTrace.record("camera.inputFrameMs", inputFrameMs, 45, { event: false });
   }
   const handPresent = Boolean(tracking.handPresent);
   const scratch = runtime.perfCameraTrace || (runtime.perfCameraTrace = {
     handPresent,
     missingFrames: 0,
     staleFrames: 0,
+    runtimeMarked: false,
   });
+  if (!scratch.runtimeMarked && typeof perfTrace.mark === "function") {
+    scratch.runtimeMarked = true;
+    perfTrace.mark("camera.runtime", {
+      modelAssetUrl: String(debug.modelAssetUrl || ""),
+      wasmRootUrl: String(debug.wasmRootUrl || ""),
+      wasmSimdSupported: Boolean(debug.wasmSimdSupported),
+      preloadMs: Math.round((Number(debug.preloadMs) || 0) * 10) / 10,
+      loadedAssets: String(debug.loadedWasmAssets || ""),
+      video: `${Math.round(Number(debug.videoWidth) || 0)}x${Math.round(Number(debug.videoHeight) || 0)}`,
+      track: `${Math.round(Number(debug.trackWidth) || 0)}x${Math.round(Number(debug.trackHeight) || 0)}@${Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10}`,
+    });
+  }
   if (handPresent) {
     scratch.missingFrames = 0;
   } else {
@@ -907,6 +920,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     trackWidth: Math.round(Number(debug.trackWidth) || 0),
     trackHeight: Math.round(Number(debug.trackHeight) || 0),
     trackFrameRate: Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10,
+    wasmSimdSupported: Boolean(debug.wasmSimdSupported),
+    loadedWasmAssets: String(debug.loadedWasmAssets || ""),
     missingFrames: scratch.missingFrames,
     staleFrames: scratch.staleFrames,
     rawX01: Math.round((Number(tracking.rawX01) || 0) * 1000) / 1000,
@@ -3213,7 +3228,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260428a",
+  moduleCacheBustV = "20260430b",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
