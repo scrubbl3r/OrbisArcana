@@ -51,6 +51,7 @@ export function createInitialCameraInputState({
       loadedWasmAssets: "",
       modelAssetUrl: "",
       wasmRootUrl: "",
+      detectorLoop: "",
       lastError: "",
     },
   };

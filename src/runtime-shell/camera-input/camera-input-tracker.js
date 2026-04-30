@@ -200,7 +200,7 @@ export function createCameraInputTracker({
   let handLandmarker = null;
   let videoEl = null;
   let mediaStream = null;
-  let rafId = 0;
+  let tickTimer = 0;
   let running = false;
   let lastVideoTime = -1;
   let lastFrameAtMs = 0;
@@ -247,20 +247,35 @@ export function createCameraInputTracker({
     mediaStream = null;
   }
 
+  function scheduleTick(delayMs = 0) {
+    if (!running || tickTimer) return;
+    tickTimer = rootWindow.setTimeout(tick, Math.max(0, Number(delayMs) || 0));
+  }
+
   function stopLoop() {
-    if (!rafId) return;
-    rootWindow.cancelAnimationFrame(rafId);
-    rafId = 0;
+    if (!tickTimer) return;
+    rootWindow.clearTimeout(tickTimer);
+    tickTimer = 0;
   }
 
   function tick() {
+    tickTimer = 0;
     if (!running || !videoEl || !handLandmarker) return;
-    rafId = rootWindow.requestAnimationFrame(tick);
-    if (videoEl.readyState < 2) return;
-    if (videoEl.currentTime === lastVideoTime) return;
+    if (videoEl.readyState < 2) {
+      scheduleTick(16);
+      return;
+    }
+    if (videoEl.currentTime === lastVideoTime) {
+      scheduleTick(8);
+      return;
+    }
 
     const observedAtMs = now();
-    if (lastDetectionAtMs && observedAtMs - lastDetectionAtMs < minDetectionIntervalMs) return;
+    const sinceLastDetectionMs = lastDetectionAtMs ? observedAtMs - lastDetectionAtMs : minDetectionIntervalMs;
+    if (sinceLastDetectionMs < minDetectionIntervalMs) {
+      scheduleTick(minDetectionIntervalMs - sinceLastDetectionMs);
+      return;
+    }
 
     const frameMs = lastFrameAtMs ? Math.max(0, observedAtMs - lastFrameAtMs) : 0;
     lastFrameAtMs = observedAtMs;
@@ -282,7 +297,9 @@ export function createCameraInputTracker({
       trackWidth: Number(streamSettings.width) || 0,
       trackHeight: Number(streamSettings.height) || 0,
       trackFrameRate: Number(streamSettings.frameRate) || 0,
+      detectorLoop: "timeout",
     });
+    scheduleTick(Math.max(0, minDetectionIntervalMs - detectMs));
   }
 
   async function start() {
@@ -318,7 +335,7 @@ export function createCameraInputTracker({
     lastVideoTime = -1;
     lastFrameAtMs = 0;
     lastDetectionAtMs = 0;
-    rafId = rootWindow.requestAnimationFrame(tick);
+    scheduleTick(0);
   }
 
   function stop() {
