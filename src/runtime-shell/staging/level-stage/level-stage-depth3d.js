@@ -20,6 +20,7 @@ import { createGlobe3dModel } from "../../../game-runtime/world/globe-3d-model.j
 import { createGlobeMaterial, createGlobePointLight } from "../../../game-runtime/world/globe-3d-material.js";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
+import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260430a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430a";
 import {
@@ -62,13 +63,6 @@ function clampNumber(value, fallback = 0) {
 
 function clamp01(value) {
   return Math.max(0, Math.min(1, clampNumber(value, 0)));
-}
-
-function randRange(min, max, fallback = 0) {
-  const lo = clampNumber(min, fallback);
-  const hi = clampNumber(max, lo);
-  if (hi <= lo) return lo;
-  return lo + (Math.random() * (hi - lo));
 }
 
 function readSpawnWorldX(spawn = {}, worldWidthPx = 1) {
@@ -663,11 +657,17 @@ export function createLevelStageDepth3dLayer({
     pickups: [],
     map: new Map(),
   };
-  const globe3dOrb = {
-    orbiting: [],
-    inner: [],
-    dead: false,
-  };
+  const orbGlobe3dRuntime = createOrbGlobe3dRuntime({
+    group: globe3dGroup,
+    createGlobeObject: createGlobe3dObject,
+    getBo: () => baseOrbWorldUnits,
+    getCenterPosition: () => ({ x: currentOrbThreeX, y: currentOrbThreeY, z: -currentOrbDepthPx }),
+    getConfig: () => ORB_GLOBE_3D_VISUAL_DEFAULTS,
+    onCountChange: (count) => {
+      root.dataset.depthGlobe3dOrbCount = String(Math.max(0, Number(count) || 0));
+    },
+    onNeedsFrame: () => scheduleGlobe3dFrames(),
+  });
   const orbLifecycle3dRuntime = createOrbLifecycle3dRuntime({
     getOrbModel: () => orbRuntime && orbRuntime.model,
     getBurstParent: () => actorGroup,
@@ -761,6 +761,7 @@ export function createLevelStageDepth3dLayer({
   }
 
   function clearGlobe3dObjects() {
+    orbGlobe3dRuntime.dispose();
     while (globe3dGroup.children.length) {
       const child = globe3dGroup.children[0];
       globe3dGroup.remove(child);
@@ -768,8 +769,6 @@ export function createLevelStageDepth3dLayer({
     }
     globe3dWorld.pickups = [];
     globe3dWorld.map.clear();
-    globe3dOrb.orbiting = [];
-    globe3dOrb.inner = [];
     orbLifecycle3dRuntime.dispose();
   }
 
@@ -839,103 +838,6 @@ export function createLevelStageDepth3dLayer({
     scheduleGlobe3dFrames();
   }
 
-  function removeGlobe3dParticle(list, predicate) {
-    const index = list.findIndex(predicate);
-    if (index < 0) return null;
-    const [entry] = list.splice(index, 1);
-    if (entry && entry.model) {
-      globe3dGroup.remove(entry.model);
-      disposeThreeObject(entry.model);
-    }
-    return entry || null;
-  }
-
-  function makeOrbGlobe3dParticle(payload = {}, mode = "orbiting") {
-    const globeId = String(payload.globeId || payload.id || "");
-    const slot = String(payload.slot || "").toUpperCase();
-    const config = ORB_GLOBE_3D_VISUAL_DEFAULTS;
-    const ratioKey = mode === "inner" ? "loadedDiameterRatio" : "loadedDiameterRatio";
-    const bo = baseOrbWorldUnits * Math.max(0.01, clampNumber(config[ratioKey], 0.17));
-    const model = createGlobe3dObject({
-      bo,
-      materialConfig: config.material,
-      name: `orb_globe3d:${mode}:${globeId || slot || "globe"}`,
-    });
-    globe3dGroup.add(model);
-    const speedMin = mode === "inner" ? config.innerSpeedMinPxPerSec : config.orbitSpeedMin;
-    const speedMax = mode === "inner" ? config.innerSpeedMaxPxPerSec : config.orbitSpeedMax;
-    return {
-      globeId,
-      slot,
-      emitterId: String(payload.emitterId || ""),
-      axis: String(payload.axis || "").toLowerCase(),
-      model,
-      mode,
-      phase: Math.random() * Math.PI * 2,
-      tilt: randRange(-0.85, 0.85, 0),
-      drift: randRange(
-        mode === "inner" ? config.innerDriftMin : config.orbitDriftMin,
-        mode === "inner" ? config.innerDriftMax : config.orbitDriftMax,
-        0.2
-      ),
-      speed: randRange(speedMin, speedMax, speedMin),
-      velocity: new THREE.Vector3(randRange(-1, 1), randRange(-1, 1), randRange(-1, 1)).normalize(),
-      offset: new THREE.Vector3(randRange(-4, 4), randRange(-4, 4), randRange(-4, 4)),
-    };
-  }
-
-  function findOrbGlobe3dParticle(list, payload = {}) {
-    const globeId = String(payload.globeId || payload.boundGlobeId || payload.id || "");
-    const slot = String(payload.slot || "").toUpperCase();
-    return list.find((entry) => (
-      (globeId && String(entry.globeId || "") === globeId)
-      || (slot && String(entry.slot || "").toUpperCase() === slot)
-    )) || null;
-  }
-
-  function reconcileOrbGlobe3dInventory(globes = []) {
-    const active = (Array.isArray(globes) ? globes : [])
-      .map((globe) => ({
-        globeId: String(globe && (globe.globeId || globe.id) || ""),
-        slot: String(globe && globe.slot || "").toUpperCase(),
-        emitterId: String(globe && globe.emitterId || ""),
-        axis: String(globe && globe.axis || "").toLowerCase(),
-        state: String(globe && globe.state || "loaded"),
-      }))
-      .filter((globe) => globe.globeId && globe.state !== "spent");
-    const activeIds = new Set(active.map((globe) => globe.globeId));
-    for (let i = globe3dOrb.orbiting.length - 1; i >= 0; i -= 1) {
-      const entry = globe3dOrb.orbiting[i];
-      if (!entry.globeId || !activeIds.has(entry.globeId)) {
-        removeGlobe3dParticle(globe3dOrb.orbiting, (_, idx) => idx === i);
-      }
-    }
-    for (const globe of active) {
-      if (globe.state === "bound") continue;
-      if (!findOrbGlobe3dParticle(globe3dOrb.orbiting, globe) && !findOrbGlobe3dParticle(globe3dOrb.inner, globe)) {
-        globe3dOrb.orbiting.push(makeOrbGlobe3dParticle(globe, "orbiting"));
-      }
-    }
-    root.dataset.depthGlobe3dOrbCount = String(globe3dOrb.orbiting.length + globe3dOrb.inner.length);
-    scheduleGlobe3dFrames();
-  }
-
-  function loadOrbGlobe3d(payload = {}) {
-    const existingOrbit = removeGlobe3dParticle(globe3dOrb.orbiting, (entry) => entry === findOrbGlobe3dParticle(globe3dOrb.orbiting, payload));
-    const source = existingOrbit || payload;
-    if (!findOrbGlobe3dParticle(globe3dOrb.inner, payload)) {
-      globe3dOrb.inner.push(makeOrbGlobe3dParticle(source, "inner"));
-    }
-    root.dataset.depthGlobe3dOrbCount = String(globe3dOrb.orbiting.length + globe3dOrb.inner.length);
-    scheduleGlobe3dFrames();
-  }
-
-  function consumeOrbGlobe3d(payload = {}) {
-    removeGlobe3dParticle(globe3dOrb.orbiting, (entry) => entry === findOrbGlobe3dParticle(globe3dOrb.orbiting, payload));
-    removeGlobe3dParticle(globe3dOrb.inner, (entry) => entry === findOrbGlobe3dParticle(globe3dOrb.inner, payload));
-    root.dataset.depthGlobe3dOrbCount = String(globe3dOrb.orbiting.length + globe3dOrb.inner.length);
-  }
-
   function bindGlobe3dEvents({ eventBus = null, spawns = [] } = {}) {
     root.dataset.depthGlobe3dBound = eventBus && typeof eventBus.on === "function" ? "true" : "false";
     while (globe3dUnsub.length) {
@@ -959,7 +861,7 @@ export function createLevelStageDepth3dLayer({
       scheduleGlobe3dFrames();
     }));
     globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
-      reconcileOrbGlobe3dInventory(payload.globes || []);
+      orbGlobe3dRuntime.reconcileInventory(payload.globes || []);
     }));
     globe3dUnsub.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
       orbLifecycle3dRuntime.applyDamage(payload);
@@ -970,23 +872,20 @@ export function createLevelStageDepth3dLayer({
       scheduleGlobe3dFrames();
     }));
     globe3dUnsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
-      loadOrbGlobe3d(payload);
+      orbGlobe3dRuntime.load(payload);
     }));
     globe3dUnsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
-      consumeOrbGlobe3d(payload);
+      orbGlobe3dRuntime.consume(payload);
     }));
     globe3dUnsub.push(eventBus.on(EVT_ORB_DIED, () => {
-      globe3dOrb.dead = true;
-      while (globe3dOrb.orbiting.length) removeGlobe3dParticle(globe3dOrb.orbiting, () => true);
-      while (globe3dOrb.inner.length) removeGlobe3dParticle(globe3dOrb.inner, () => true);
-      root.dataset.depthGlobe3dOrbCount = "0";
+      orbGlobe3dRuntime.setDead(true);
     }));
     globe3dUnsub.push(eventBus.on(EVT_ORB_DIED, (payload = {}) => {
       orbLifecycle3dRuntime.startDissolve(payload);
       scheduleGlobe3dFrames();
     }));
     globe3dUnsub.push(eventBus.on(EVT_ORB_REVIVED, () => {
-      globe3dOrb.dead = false;
+      orbGlobe3dRuntime.revive();
       scheduleGlobe3dFrames();
     }));
     globe3dUnsub.push(eventBus.on(EVT_ORB_REVIVED, (payload = {}) => {
@@ -1020,67 +919,19 @@ export function createLevelStageDepth3dLayer({
     root.dataset.depthGlobe3dWorldCount = String(globe3dWorld.pickups.filter((pickup) => pickup && pickup.active).length);
   }
 
-  function updateOrbGlobe3dOrbiting(timeSec = 0) {
-    const config = ORB_GLOBE_3D_VISUAL_DEFAULTS;
-    const radius = Math.max(
-      baseOrbWorldUnits * Math.max(0.1, clampNumber(config.orbitDistanceRatio, 1.07)),
-      clampNumber(config.orbitDistanceMinPx, 3)
-    );
-    for (const entry of globe3dOrb.orbiting) {
-      if (!entry || !entry.model) continue;
-      const speed = clampNumber(entry.speed, 25) * 0.01;
-      const angle = entry.phase + (timeSec * speed * Math.PI * 2);
-      const driftAngle = entry.phase + (timeSec * Math.max(0.01, entry.drift) * Math.PI * 2);
-      const y = Math.sin(driftAngle) * radius * 0.35;
-      const z = Math.cos(angle + entry.tilt) * radius * 0.72;
-      const x = Math.sin(angle) * radius;
-      entry.model.visible = !globe3dOrb.dead;
-      entry.model.position.set(
-        currentOrbThreeX + x,
-        currentOrbThreeY + y,
-        -currentOrbDepthPx + z
-      );
-    }
-  }
-
-  function updateOrbGlobe3dInner(dtSec = 0.016) {
-    const config = ORB_GLOBE_3D_VISUAL_DEFAULTS;
-    const shellRadius = baseOrbWorldUnits * 0.5;
-    const padding = shellRadius * Math.max(0, clampNumber(config.innerPaddingRatio, 0.22));
-    const bound = Math.max(1, shellRadius - padding);
-    for (const entry of globe3dOrb.inner) {
-      if (!entry || !entry.model) continue;
-      const speed = Math.max(0, clampNumber(entry.speed, 80));
-      entry.offset.addScaledVector(entry.velocity, speed * dtSec);
-      if (entry.offset.length() > bound) {
-        entry.offset.setLength(bound);
-        const normal = entry.offset.clone().normalize();
-        entry.velocity.reflect(normal).normalize();
-      }
-      entry.model.visible = !globe3dOrb.dead;
-      entry.model.position.set(
-        currentOrbThreeX + entry.offset.x,
-        currentOrbThreeY + entry.offset.y,
-        -currentOrbDepthPx + entry.offset.z
-      );
-    }
-  }
-
   function tickGlobe3dRuntime(nowMs = performance.now()) {
     const timeSec = nowMs / 1000;
     const dtSec = lastGlobe3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastGlobe3dTickMs) / 1000)) : 0.016;
     lastGlobe3dTickMs = nowMs;
     updateWorldGlobe3dPickups(timeSec);
-    updateOrbGlobe3dOrbiting(timeSec);
-    updateOrbGlobe3dInner(dtSec);
+    orbGlobe3dRuntime.update({ timeSec, dtSec });
     orbLifecycle3dRuntime.update(nowMs);
   }
 
   function hasActiveGlobe3dAnimation() {
     return (
       globe3dWorld.pickups.some((pickup) => pickup && pickup.active)
-      || globe3dOrb.orbiting.length > 0
-      || globe3dOrb.inner.length > 0
+      || orbGlobe3dRuntime.hasActiveVisuals()
       || orbLifecycle3dRuntime.hasActiveVisuals()
     );
   }
