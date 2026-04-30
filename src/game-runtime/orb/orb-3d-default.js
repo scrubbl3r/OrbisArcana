@@ -24,7 +24,7 @@ export const ORB_3D_VISUAL_DEFAULTS = Object.freeze({
   lightColor: 0xcfefff,
   lightIntensity: 80.0,
   lightDistanceBO: 12,
-  lightDecay: 2.5,
+  lightDecay: .95,
   lightPastelMix: 0.42,
   lightOffsetZBO: 0,
   lightCastShadow: false,
