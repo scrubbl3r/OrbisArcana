@@ -86,6 +86,7 @@ export function createWorldGlobe3dRuntime({
       phase: Math.random() * Math.PI * 2,
       active: true,
       fadeInStartMs: 0,
+      spawn,
     };
     state.map.set(globeId, pickup);
     return pickup;
@@ -129,7 +130,7 @@ export function createWorldGlobe3dRuntime({
       const bob = Math.sin((phase * pickup.bobHz) + pickup.phase) * pickup.bobAmp;
       const pulse = 1 + (Math.sin((phase * Math.max(0, pickup.pulseHz)) + pickup.phase) * pickup.pulseScale);
       const position = typeof toRuntimePosition === "function"
-        ? (toRuntimePosition({ x: pickup.anchorXW, y: pickup.anchorYW }) || {})
+        ? (toRuntimePosition({ x: pickup.anchorXW, y: pickup.anchorYW, spawn: pickup.spawn }) || {})
         : {};
       pickup.model.position.set(
         (Number(position.x) || 0) + drift,
@@ -169,4 +170,3 @@ export function createWorldGlobe3dRuntime({
     },
   });
 }
-

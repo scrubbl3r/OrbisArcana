@@ -24,7 +24,7 @@ import {
 import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430a";
 import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430a";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
-import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260430a";
+import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260430b";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260430a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
@@ -36,9 +36,20 @@ import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetr
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
+const WORLD_GLOBE_FOREGROUND_Z_BO = 0.08;
+
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function resolveWorldGlobeDepthZ({
+  spawn = null,
+  bo = BO_WORLD_UNITS,
+} = {}) {
+  const authoredZBO = Number(spawn && (spawn.zBO ?? spawn.depthZBO));
+  if (Number.isFinite(authoredZBO)) return -Math.max(0, authoredZBO) * Math.max(1, Number(bo) || BO_WORLD_UNITS);
+  return Math.max(1, Number(bo) || BO_WORLD_UNITS) * WORLD_GLOBE_FOREGROUND_Z_BO;
 }
 
 export function createLevelStageDepth3dLayer({
@@ -111,10 +122,10 @@ export function createLevelStageDepth3dLayer({
     group: globe3dGroup,
     createGlobeObject: createRuntimeGlobe3dObject,
     resolveSpawnAnchor: (spawn) => resolveDepthSpawnAnchor(spawn, { worldWidthPx }),
-    toRuntimePosition: ({ x = 0, y = 0 } = {}) => ({
+    toRuntimePosition: ({ x = 0, y = 0, spawn = null } = {}) => ({
       x: toDepthThreeX(x, worldWidthPx),
       y: toDepthThreeY(y, worldHeightPx),
-      z: -orb3dActorRuntime.getDepthPx(),
+      z: resolveWorldGlobeDepthZ({ spawn, bo: baseOrbWorldUnits }),
     }),
     getBo: () => baseOrbWorldUnits,
     getConfig: () => WORLD_GLOBE_3D_VISUAL_DEFAULTS,
