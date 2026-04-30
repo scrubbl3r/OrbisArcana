@@ -14,8 +14,7 @@ import {
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260430a";
 import { disposeThreeObject } from "../../../game-runtime/rendering/three/three-object-utils.js";
 import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430a";
-import { createGlobe3dModel } from "../../../game-runtime/world/globe-3d-model.js";
-import { createGlobeMaterial, createGlobePointLight } from "../../../game-runtime/world/globe-3d-material.js";
+import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430a";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
 import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260430a";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
@@ -164,7 +163,7 @@ export function createLevelStageDepth3dLayer({
   });
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
     group: globe3dGroup,
-    createGlobeObject: createGlobe3dObject,
+    createGlobeObject: createRuntimeGlobe3dObject,
     resolveSpawnAnchor: (spawn) => ({
       x: readSpawnWorldX(spawn, worldWidthPx),
       y: readSpawnWorldY(spawn),
@@ -186,7 +185,7 @@ export function createLevelStageDepth3dLayer({
   });
   const orbGlobe3dRuntime = createOrbGlobe3dRuntime({
     group: globe3dGroup,
-    createGlobeObject: createGlobe3dObject,
+    createGlobeObject: createRuntimeGlobe3dObject,
     getBo: () => baseOrbWorldUnits,
     getCenterPosition: () => orb3dActorRuntime.getPosition(),
     getConfig: () => ORB_GLOBE_3D_VISUAL_DEFAULTS,
@@ -289,31 +288,6 @@ export function createLevelStageDepth3dLayer({
       disposeThreeObject(child);
     }
     orbLifecycle3dRuntime.dispose();
-  }
-
-  function createGlobe3dObject({
-    bo = baseOrbWorldUnits * 0.18,
-    materialConfig = WORLD_GLOBE_3D_VISUAL_DEFAULTS.material,
-    name = "globe3d:runtime",
-  } = {}) {
-    const material = createGlobeMaterial(materialConfig);
-    const { model } = createGlobe3dModel({
-      bo: Math.max(1, bo),
-      material,
-      shellSegments: 32,
-    });
-    model.name = name;
-    const light = createGlobePointLight({
-      bo: Math.max(1, bo),
-      config: materialConfig,
-    });
-    light.name = `${name}:light`;
-    model.add(light);
-    applyEnvironmentMeshFlags(model, {
-      receiveShadow: false,
-      castShadow: false,
-    });
-    return model;
   }
 
   function loadGlobe3dWorldSpawns(spawns = []) {
