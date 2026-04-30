@@ -18,6 +18,8 @@ The 3D orb should become the runtime truth for visual position, material respons
 - Orb Base owns the gameplay scale contract: radius, diameter, collision scale, spell scale, pickup/orbit relationships, and any system that needs orb-sized units.
 - Orb 3D owns material, shell, light, shadow, displacement, and render-tuning parameters.
 - A runtime orb should be understood as a sphere centered at `(xW, yW, zBO)` with radius `0.5 BO`.
+- SVG-authored BO fields, such as `max=10bo`, `z=4bo`, and prop depth labels, resolve through Orb Base at runtime rather than through a level-local unit.
+- Any fallback BO constant is fallback-only. Live stage code must pass the resolved Orb Base diameter into depth, prop, globe, and telemetry runtimes.
 
 The existing 2D orb can remain temporarily as a debug/ghost layer, but it should not define the future runtime truth.
 
@@ -112,4 +114,3 @@ This should remain separate from both `bounds` and `depth`:
 6. Move depth/lighting/material code out of staging-specific prototypes into first-class runtime modules.
 
 7. Later, add authored orb z lanes or z fields as a separate authoring source.
-

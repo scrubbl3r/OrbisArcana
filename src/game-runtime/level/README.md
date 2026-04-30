@@ -26,6 +26,16 @@ inventing their own level ownership model.
 - `depth-layer-3d-mesh.js` owns depth-layer SVG/vector rasterization and
   Three.js mesh construction.
 
+BO scale authority:
+- SVG depth labels such as `depth:reactor max=10bo z=4bo` are authored in BO
+  units.
+- Runtime BO is the canonical Orb Base visual diameter, supplied by the
+  stage/runtime owner. The level runtime should receive that value and thread it
+  into depth geometry, props, globes, and telemetry.
+- `LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS` exists only for isolated factory/default
+  fallback paths. It must not become the authoritative BO value for a live
+  stage.
+
 Stage shells may choose cameras, scene groups, and visibility policy, but should
 delegate reusable depth-layer geometry and camera-frame calculations to this
 domain.
