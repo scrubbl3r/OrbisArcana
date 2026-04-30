@@ -29,7 +29,7 @@
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="1"
-     inkscape:window-y="84"
+     inkscape:window-y="56"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg1"
      showgrid="false">
@@ -158,7 +158,7 @@
      inkscape:groupmode="layer"
      id="layer9"
      inkscape:label="globes"
-     style="display:inline"
+     style="display:none"
      sodipodi:insensitive="true">
     <circle
        style="fill:#0000ff;stroke:none;stroke-width:0.201182"
