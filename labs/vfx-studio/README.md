@@ -34,6 +34,25 @@ The page shell is intentionally thin. Most orchestration lives in studio modules
 - `vfx-studio-state.js`
   Owns effect-library and draft-profile state helpers.
 
+## Taxonomy
+
+VFX Studio owns authoring surfaces, preview adapters, preset publishing, and
+runtime binding metadata. It does not own production mesh/material internals.
+
+- A `surface` is a Lab-authorable control set.
+- An `effect id` is a registry identity such as `orb.nod3d` or
+  `spell.aoe_flame`.
+- A `binding target` is where an effect is attached at runtime, such as
+  `orb-state.nod` or `spell.teleport`.
+- A `dispatch runtime` is a short-lived receiver effect invoked through the VFX
+  binding system.
+- A `stateful orb attachment` is a live 3D orb visual owned by
+  `src/game-runtime/orb/` and updated by the stage each frame.
+
+For 3D orb states, the Lab may author the preset and show a preview, but the
+production runtime belongs to the orb runtime domain when it depends on orb
+mesh parenting, shader uniforms, or lifecycle state.
+
 ## Scale Contract
 
 Orb Base is the visual scale SSOT for the orb domain.

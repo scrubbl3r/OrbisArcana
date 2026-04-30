@@ -1,5 +1,5 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
-import { createOrbNod3dRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-runtime.js";
+import { createOrbNod3dDomFallbackRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-dom-fallback-runtime.js";
 import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js";
@@ -179,7 +179,7 @@ export function initOrbStageReceiverVfxRuntime({
         ? vfxDefaults.nod
         : Object.create(null),
     }),
-    orbNod3dRuntime: createOrbNod3dRuntime({
+    orbNod3dRuntime: createOrbNod3dDomFallbackRuntime({
       orbEl: stageEls.orb,
       mountEl: stageEls.orb ? stageEls.orb.parentElement : null,
       orbInteriorEl: stageEls.orbInterior,
