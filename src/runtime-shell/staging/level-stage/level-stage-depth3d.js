@@ -271,7 +271,6 @@ export function createLevelStageDepth3dLayer({
       globe3dGroup.remove(child);
       disposeThreeObject(child);
     }
-    orbLifecycle3dRuntime.dispose();
   }
 
   function loadGlobe3dWorldSpawns(spawns = []) {
