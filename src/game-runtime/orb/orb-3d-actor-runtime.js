@@ -9,7 +9,7 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-export function createOrbDepth3dRuntime({
+export function createOrb3dActorRuntime({
   parent = null,
   fallbackBo = 72,
   getDefaultZBO = () => 1,
@@ -153,4 +153,3 @@ export function createOrbDepth3dRuntime({
     dispose: disposeModel,
   });
 }
-

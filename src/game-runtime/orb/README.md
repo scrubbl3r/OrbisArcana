@@ -19,3 +19,12 @@ extracted out of the receiver and generic systems layer.
 - `*-material.js` builds materials, shaders, and material-owned lights.
 - `*-runtime.js` owns live state, update loops, playback APIs, and disposal.
 - `*-default.js` owns authorable default parameters for presets.
+
+## 3D Orb Runtime Layers
+
+- `orb-3d-runtime.js` is the base orb model/material/light runtime.
+- `orb-3d-actor-runtime.js` is the live actor wrapper used by stage-style
+  runtimes. It owns world placement, BO/depth state, material time, and
+  intrinsic shell controls such as nod displacement.
+- Separate attachment runtimes own additional meshes or particles around the
+  orb, such as lifecycle damage shells and orb globes.
