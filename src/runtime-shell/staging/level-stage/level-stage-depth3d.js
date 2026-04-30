@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260430a";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
@@ -13,8 +12,6 @@ import {
 } from "../../../game-runtime/level/depth-stage-frame.js?v=20260430a";
 import {
   buildDepthLayerMesh,
-  DEPTH_ENVIRONMENT_MODE,
-  resolveDepthEnvironmentMode,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260430a";
 import { disposeThreeObject } from "../../../game-runtime/rendering/three/three-object-utils.js";
 import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430a";
@@ -26,6 +23,7 @@ import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430a";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260430a";
+import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
@@ -87,35 +85,20 @@ export function createLevelStageDepth3dLayer({
   orbDiameterWorldUnits = BO_WORLD_UNITS,
 } = {}) {
   if (!root) return null;
-  const renderer = new THREE.WebGLRenderer({
-    alpha: true,
-    antialias: true,
-    powerPreference: "high-performance",
+  const sceneRuntime = createLevelStageDepth3dScene({
+    root,
+    fovDeg: DEPTH_CAMERA_FOV_DEG,
   });
-  renderer.setClearColor(0x000000, 0);
-  renderer.setPixelRatio(Math.min(2, globalThis.devicePixelRatio || 1));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  root.appendChild(renderer.domElement);
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(DEPTH_CAMERA_FOV_DEG, 1, 1, 24000);
-  camera.up.set(0, 1, 0);
-  const environmentMode = resolveDepthEnvironmentMode();
-  root.dataset.depthEnvironmentMode = environmentMode;
-  scene.add(new THREE.AmbientLight(0xffffff, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.25 : 0.018));
-  const fill = new THREE.HemisphereLight(0xbfdfff, 0x050507, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.0 : 0.055);
-  scene.add(fill);
-  const key = new THREE.DirectionalLight(0xdfeeff, environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 1.15 : 0.0);
-  key.position.set(-0.3, -0.5, 1.0);
-  key.castShadow = false;
-  scene.add(key);
-  const group = new THREE.Group();
-  const propsGroup = new THREE.Group();
-  const actorGroup = new THREE.Group();
-  scene.add(group);
-  scene.add(propsGroup);
-  scene.add(actorGroup);
+  const {
+    renderer,
+    scene,
+    camera,
+    environmentMode,
+    depthGroup: group,
+    propsGroup,
+    actorGroup,
+    globeGroup: globe3dGroup,
+  } = sceneRuntime;
 
   let disposed = false;
   let worldWidthPx = 1;
@@ -132,9 +115,6 @@ export function createLevelStageDepth3dLayer({
   let lastCameraX = 0;
   let lastCameraY = 0;
   let lastCameraZ = 0;
-  const globe3dGroup = new THREE.Group();
-  globe3dGroup.name = "globe3d:runtime_layer";
-  actorGroup.add(globe3dGroup);
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let globe3dFrame = 0;
