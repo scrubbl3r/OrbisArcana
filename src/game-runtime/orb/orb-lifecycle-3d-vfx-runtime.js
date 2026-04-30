@@ -32,62 +32,15 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   });
 }
 
-function randomUnitVector(rng) {
-  const theta = rng() * Math.PI * 2;
-  const z = (rng() * 2) - 1;
-  const radial = Math.sqrt(Math.max(0, 1 - (z * z)));
-  return new THREE.Vector3(
-    Math.cos(theta) * radial,
-    Math.sin(theta) * radial,
-    z
-  );
-}
-
-function tangentFor(normal, angle) {
-  const helper = Math.abs(normal.y) < 0.9
-    ? new THREE.Vector3(0, 1, 0)
-    : new THREE.Vector3(1, 0, 0);
-  const tangent = new THREE.Vector3().crossVectors(normal, helper).normalize();
-  const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
-  return tangent.multiplyScalar(Math.cos(angle)).add(bitangent.multiplyScalar(Math.sin(angle))).normalize();
-}
-
-function buildSurfaceCrawlPath({
-  rng,
-  radius,
-  lift,
-  startNormal,
-  steps,
-  stepRadians,
-  curl,
-} = {}) {
-  const points = [];
-  let normal = startNormal.clone().normalize();
-  let direction = tangentFor(normal, rng() * Math.PI * 2);
-  for (let i = 0; i < steps; i += 1) {
-    points.push(normal.clone().multiplyScalar(radius + lift));
-    const turn = (rng() - 0.5) * curl;
-    direction.applyAxisAngle(normal, turn).normalize();
-    const axis = new THREE.Vector3().crossVectors(normal, direction).normalize();
-    if (axis.lengthSq() > 0.0001) {
-      normal.applyAxisAngle(axis, stepRadians * (0.55 + rng() * 0.75)).normalize();
-    }
-    direction.projectOnPlane(normal).normalize();
-    if (direction.lengthSq() < 0.0001) direction = tangentFor(normal, rng() * Math.PI * 2);
-  }
-  return points;
-}
-
-function createVeinMesh(points, {
+function createCrackTube(points, {
   radius = 0.1,
   color = 0xffffff,
   opacity = 1,
-  emissive = 0x000000,
   additive = false,
-  name = "vein",
+  name = "crack",
 } = {}) {
   if (!Array.isArray(points) || points.length < 2) return null;
-  const curve = new THREE.CatmullRomCurve3(points, false, "centripetal", 0.35);
+  const curve = new THREE.CatmullRomCurve3(points, false, "centripetal", 0.08);
   const geometry = new THREE.TubeGeometry(curve, Math.max(6, points.length * 4), Math.max(0.01, radius), 6, false);
   const material = new THREE.MeshBasicMaterial({
     color,
@@ -97,25 +50,125 @@ function createVeinMesh(points, {
     depthTest: true,
     blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
   });
-  if (material.color && emissive) material.color.lerp(new THREE.Color(emissive), 0.08);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = name;
   return mesh;
 }
 
-function createOffsetSurfacePath(points, side = 1, offset = 0, radius = 1, lift = 0) {
-  if (!Array.isArray(points) || points.length < 2) return points;
-  const surfaceRadius = Math.max(1, radius + lift);
-  const angularOffset = offset / surfaceRadius;
-  return points.map((point, index) => {
-    const prev = points[Math.max(0, index - 1)] || point;
-    const next = points[Math.min(points.length - 1, index + 1)] || point;
-    const normal = point.clone().normalize();
-    const forward = next.clone().sub(prev).projectOnPlane(normal).normalize();
-    const lateral = new THREE.Vector3().crossVectors(normal, forward).normalize();
-    if (lateral.lengthSq() < 0.0001) return normal.multiplyScalar(radius + lift);
-    return normal.add(lateral.multiplyScalar(side * angularOffset)).normalize().multiplyScalar(surfaceRadius);
+function createSphereSeeds(rng, count) {
+  const points = [];
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const yaw = rng() * Math.PI * 2;
+  const pitch = (rng() - 0.5) * 0.5;
+  const roll = (rng() - 0.5) * 0.5;
+  const rotation = new THREE.Euler(pitch, yaw, roll, "YXZ");
+  for (let i = 0; i < count; i += 1) {
+    const y = 1 - ((i + 0.5) / count) * 2;
+    const r = Math.sqrt(Math.max(0, 1 - (y * y)));
+    const theta = (i * goldenAngle) + ((rng() - 0.5) * 0.22);
+    const point = new THREE.Vector3(
+      Math.cos(theta) * r,
+      y,
+      Math.sin(theta) * r
+    );
+    points.push(point.applyEuler(rotation).normalize());
+  }
+  return points;
+}
+
+function triangleKey(a, b, c) {
+  return [a, b, c].sort((x, y) => x - y).join(":");
+}
+
+function pairKey(a, b) {
+  return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
+function buildSphericalDelaunayFaces(points) {
+  const faces = [];
+  const seen = new Set();
+  const eps = 1e-6;
+  for (let i = 0; i < points.length - 2; i += 1) {
+    for (let j = i + 1; j < points.length - 1; j += 1) {
+      for (let k = j + 1; k < points.length; k += 1) {
+        const a = points[i];
+        const b = points[j];
+        const c = points[k];
+        const normal = new THREE.Vector3().crossVectors(
+          b.clone().sub(a),
+          c.clone().sub(a)
+        );
+        if (normal.lengthSq() < eps) continue;
+        let positive = false;
+        let negative = false;
+        for (let n = 0; n < points.length; n += 1) {
+          if (n === i || n === j || n === k) continue;
+          const side = normal.dot(points[n].clone().sub(a));
+          if (side > eps) positive = true;
+          if (side < -eps) negative = true;
+          if (positive && negative) break;
+        }
+        if (positive && negative) continue;
+        const key = triangleKey(i, j, k);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const center = normal.normalize();
+        const centroid = a.clone().add(b).add(c).normalize();
+        if (center.dot(centroid) < 0) center.multiplyScalar(-1);
+        faces.push(Object.freeze({ ids: Object.freeze([i, j, k]), center }));
+      }
+    }
+  }
+  return faces;
+}
+
+function slerpUnit(a, b, t) {
+  const dot = Math.max(-1, Math.min(1, a.dot(b)));
+  const theta = Math.acos(dot);
+  if (theta < 0.0001) return a.clone();
+  const sinTheta = Math.sin(theta);
+  return a.clone().multiplyScalar(Math.sin((1 - t) * theta) / sinTheta)
+    .add(b.clone().multiplyScalar(Math.sin(t * theta) / sinTheta))
+    .normalize();
+}
+
+function createGeodesicArc(a, b, radius, detail = 10) {
+  const dot = Math.max(-1, Math.min(1, a.dot(b)));
+  if (dot < -0.96 || dot > 0.9998) return null;
+  const steps = Math.max(3, Math.round(detail * Math.acos(dot)));
+  const points = [];
+  for (let i = 0; i <= steps; i += 1) {
+    points.push(slerpUnit(a, b, i / steps).multiplyScalar(radius));
+  }
+  return points;
+}
+
+function createSphericalVoronoiArcs(seedPoints, radius) {
+  const faces = buildSphericalDelaunayFaces(seedPoints);
+  const adjacentFacesByEdge = new Map();
+  faces.forEach((face, faceIndex) => {
+    const [a, b, c] = face.ids;
+    for (const key of [pairKey(a, b), pairKey(b, c), pairKey(c, a)]) {
+      const adjacent = adjacentFacesByEdge.get(key) || [];
+      adjacent.push(faceIndex);
+      adjacentFacesByEdge.set(key, adjacent);
+    }
   });
+
+  const arcs = [];
+  for (const [key, faceIndexes] of adjacentFacesByEdge.entries()) {
+    if (faceIndexes.length !== 2) continue;
+    const a = faces[faceIndexes[0]].center;
+    const b = faces[faceIndexes[1]].center;
+    const points = createGeodesicArc(a, b, radius, 13);
+    if (!points) continue;
+    const [seedA, seedB] = key.split(":").map((value) => Number(value));
+    const midpoint = points[Math.floor(points.length * 0.5)].clone().normalize();
+    const score = midpoint.z + (midpoint.x * 0.18) + (midpoint.y * 0.08);
+    arcs.push(Object.freeze({ points, score, seedA, seedB }));
+  }
+
+  return arcs.sort((a, b) => b.score - a.score || a.seedA - b.seedA || a.seedB - b.seedB);
 }
 
 export function createOrbLifecycle3dCracks({
@@ -140,89 +193,40 @@ export function createOrbLifecycle3dCracks({
   const rng = createRng(seed || 1);
   const ratio = Math.max(0, Math.min(1, hits / total));
   const glow = 1 + (ratio * Math.max(0, resolved.criticalGlow - 1));
-  const veinCount = Math.max(1, Math.min(16, Math.ceil(crackCount / 4)));
-  const baseWidth = Math.max(0.04, radius * 0.006 * resolved.crackWidthPx);
+  const surfaceRadius = radius + lift;
+  const seedCount = Math.max(8, Math.min(30, Math.round(8 + (resolved.maxCracks * 0.55))));
+  const visibleArcCount = Math.max(3, Math.min(72, Math.round(crackCount * 2.35)));
+  const baseWidth = Math.max(0.025, radius * 0.0032 * resolved.crackWidthPx);
   const coreColor = new THREE.Color(resolved.crackColor);
-  const darkColor = new THREE.Color(0x05070a).lerp(coreColor, 0.18).getHex();
+  const darkColor = new THREE.Color(0x010204).lerp(coreColor, 0.08).getHex();
   const glowColor = coreColor.getHex();
-  const rimCoolColor = coreColor.clone().lerp(new THREE.Color(0x63fff1), 0.42).getHex();
-  const rimWarmColor = coreColor.clone().lerp(new THREE.Color(0xff80da), 0.28).getHex();
 
-  for (let i = 0; i < veinCount; i += 1) {
-    const startNormal = randomUnitVector(rng);
-    const steps = Math.max(4, Math.min(11, Math.round(4 + (ratio * 5) + (rng() * 3))));
-    const path = buildSurfaceCrawlPath({
-      rng,
-      radius,
-      lift,
-      startNormal,
-      steps,
-      stepRadians: 0.09 + (ratio * 0.055),
-      curl: 1.35 + (ratio * 0.9),
-    });
-    const rimOffset = baseWidth * 1.65;
-    const leftRimPath = createOffsetSurfacePath(path, -1, rimOffset, radius, lift + (baseWidth * 0.34));
-    const rightRimPath = createOffsetSurfacePath(path, 1, rimOffset, radius, lift + (baseWidth * 0.34));
-    const underlay = createVeinMesh(path, {
-      radius: baseWidth * 3.15,
+  const seedPoints = createSphereSeeds(rng, seedCount);
+  const arcs = createSphericalVoronoiArcs(seedPoints, surfaceRadius);
+  for (const arc of arcs.slice(0, visibleArcCount)) {
+    const groove = createCrackTube(arc.points, {
+      radius: baseWidth * 2.8,
       color: darkColor,
-      opacity: Math.min(0.96, 0.68 + (ratio * 0.22)),
-      name: "orb_lifecycle3d:vein_underlay",
+      opacity: Math.min(0.86, 0.46 + (ratio * 0.26)),
+      name: "orb_lifecycle3d:voronoi_groove",
     });
-    const leftRim = createVeinMesh(leftRimPath, {
-      radius: baseWidth * 0.72,
-      color: rimCoolColor,
-      opacity: Math.max(0, Math.min(0.84, resolved.crackAlpha * 0.92 * glow)),
-      additive: true,
-      name: "orb_lifecycle3d:vein_rim_cool",
-    });
-    const rightRim = createVeinMesh(rightRimPath, {
-      radius: baseWidth * 0.58,
-      color: rimWarmColor,
-      opacity: Math.max(0, Math.min(0.68, resolved.crackAlpha * 0.72 * glow)),
-      additive: true,
-      name: "orb_lifecycle3d:vein_rim_warm",
-    });
-    const core = createVeinMesh(path, {
-      radius: baseWidth * 0.82,
+    const rim = createCrackTube(arc.points, {
+      radius: baseWidth * 1.18,
       color: glowColor,
-      opacity: Math.max(0, Math.min(1, resolved.crackAlpha * glow)),
+      opacity: Math.max(0, Math.min(0.72, resolved.crackAlpha * 0.72 * glow)),
       additive: true,
-      name: "orb_lifecycle3d:vein_core",
+      name: "orb_lifecycle3d:voronoi_rim",
     });
-    const halo = createVeinMesh(path, {
-      radius: baseWidth * 4.2,
+    const halo = createCrackTube(arc.points, {
+      radius: baseWidth * 4.1,
       color: glowColor,
-      opacity: Math.max(0, Math.min(0.42, resolved.crackAlpha * 0.26 * glow)),
+      opacity: Math.max(0, Math.min(0.26, resolved.crackAlpha * 0.14 * glow)),
       additive: true,
-      name: "orb_lifecycle3d:vein_halo",
+      name: "orb_lifecycle3d:voronoi_halo",
     });
-    if (underlay) group.add(underlay);
+    if (groove) group.add(groove);
     if (halo) group.add(halo);
-    if (leftRim) group.add(leftRim);
-    if (rightRim) group.add(rightRim);
-    if (core) group.add(core);
-
-    if (ratio >= 0.45 && rng() > 0.35) {
-      const branchStart = path[Math.max(1, Math.floor(path.length * (0.35 + rng() * 0.35)))] || path[1];
-      const branchPath = buildSurfaceCrawlPath({
-        rng,
-        radius,
-        lift,
-        startNormal: branchStart.clone().normalize(),
-        steps: Math.max(3, Math.round(3 + (ratio * 3))),
-        stepRadians: 0.065 + (ratio * 0.04),
-        curl: 1.8,
-      });
-      const branch = createVeinMesh(branchPath, {
-        radius: baseWidth * 0.76,
-        color: glowColor,
-        opacity: Math.max(0, Math.min(0.86, resolved.crackAlpha * 0.82 * glow)),
-        additive: true,
-        name: "orb_lifecycle3d:vein_branch",
-      });
-      if (branch) group.add(branch);
-    }
+    if (rim) group.add(rim);
   }
   return group;
 }
