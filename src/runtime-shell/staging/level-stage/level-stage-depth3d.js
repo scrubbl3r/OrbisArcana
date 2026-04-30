@@ -32,18 +32,13 @@ import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifec
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260430a";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430a";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
+import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430a";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
-}
-
-function resolveDepthLayerLabel(depthLayers = []) {
-  const layers = Array.isArray(depthLayers) ? depthLayers : [];
-  if (!layers.length) return "no depth layer";
-  return layers.map((layer) => String(layer && layer.label || layer && layer.id || "depth")).join(" / ");
 }
 
 export function createLevelStageDepth3dLayer({
@@ -84,6 +79,12 @@ export function createLevelStageDepth3dLayer({
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let lastGlobe3dTickMs = 0;
+  const telemetry = createLevelStageDepth3dTelemetry({
+    root,
+    labelEl,
+    debugEl,
+    fallbackBo: BO_WORLD_UNITS,
+  });
   const renderLoop = createLevelStageDepth3dRenderLoop({
     isDisposed: () => disposed,
     hasActiveAnimation: hasActiveGlobe3dAnimation,
@@ -100,7 +101,7 @@ export function createLevelStageDepth3dLayer({
       z,
     }),
     applyMeshFlags: applyThreeMeshFlags,
-    onTelemetry: updateOrbTelemetry,
+    onTelemetry: telemetry.updateOrbTelemetry,
     onModelChanged: () => {
       orbLifecycle3dRuntime.attachOrbModel();
     },
@@ -117,12 +118,8 @@ export function createLevelStageDepth3dLayer({
     }),
     getBo: () => baseOrbWorldUnits,
     getConfig: () => WORLD_GLOBE_3D_VISUAL_DEFAULTS,
-    onSpawnCountChange: (count) => {
-      root.dataset.depthGlobe3dWorldSpawnCount = String(Math.max(0, Number(count) || 0));
-    },
-    onActiveCountChange: (count) => {
-      root.dataset.depthGlobe3dWorldCount = String(Math.max(0, Number(count) || 0));
-    },
+    onSpawnCountChange: telemetry.setWorldGlobeSpawnCount,
+    onActiveCountChange: telemetry.setWorldGlobeActiveCount,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
   const orbGlobe3dRuntime = createOrbGlobe3dRuntime({
@@ -131,9 +128,7 @@ export function createLevelStageDepth3dLayer({
     getBo: () => baseOrbWorldUnits,
     getCenterPosition: () => orb3dActorRuntime.getPosition(),
     getConfig: () => ORB_GLOBE_3D_VISUAL_DEFAULTS,
-    onCountChange: (count) => {
-      root.dataset.depthGlobe3dOrbCount = String(Math.max(0, Number(count) || 0));
-    },
+    onCountChange: telemetry.setOrbGlobeCount,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
   const orbLifecycle3dRuntime = createOrbLifecycle3dRuntime({
@@ -159,62 +154,8 @@ export function createLevelStageDepth3dLayer({
       x: toDepthThreeX(x, worldWidthPx),
       y: toDepthThreeY(y, worldHeightPx),
     }),
-    onCountChange: (count) => {
-      root.dataset.depthPropCount = String(Math.max(0, Number(count) || 0));
-    },
+    onCountChange: telemetry.setPropCount,
   });
-  let lastTelemetryText = "";
-  let lastTelemetryBO = "";
-  let lastTelemetryRadius = "";
-  let lastTelemetryZBO = "";
-  let lastTelemetryDepthPx = "";
-
-  function updateOrbTelemetry({
-    bo = orb3dActorRuntime.getBo(),
-    zBO = currentOrbZBO,
-    depthPx = orb3dActorRuntime.getDepthPx(),
-  } = {}) {
-    if (!root || !root.dataset) return;
-    const nextBO = Number(bo || 0).toFixed(2);
-    const nextRadius = (Math.max(1, Number(bo) || BO_WORLD_UNITS) * 0.5).toFixed(2);
-    const nextZBO = Number(zBO || 0).toFixed(2);
-    const nextDepthPx = Number(depthPx || 0).toFixed(2);
-    if (
-      nextBO === lastTelemetryBO
-      && nextRadius === lastTelemetryRadius
-      && nextZBO === lastTelemetryZBO
-      && nextDepthPx === lastTelemetryDepthPx
-    ) {
-      return;
-    }
-    lastTelemetryBO = nextBO;
-    lastTelemetryRadius = nextRadius;
-    lastTelemetryZBO = nextZBO;
-    lastTelemetryDepthPx = nextDepthPx;
-    root.dataset.depthOrbBo = nextBO;
-    root.dataset.depthOrbRadius = nextRadius;
-    root.dataset.depthOrbZbo = nextZBO;
-    root.dataset.depthOrbDepthPx = nextDepthPx;
-    if (labelEl && labelEl.dataset) {
-      labelEl.dataset.depthOrbBo = nextBO;
-      labelEl.dataset.depthOrbRadius = nextRadius;
-      labelEl.dataset.depthOrbZbo = nextZBO;
-      labelEl.dataset.depthOrbDepthPx = nextDepthPx;
-    }
-    if (debugEl) {
-      const nextText = `3d BO ${nextBO} | r ${nextRadius} | z ${nextZBO}BO | depth ${nextDepthPx}`;
-      if (nextText !== lastTelemetryText) {
-        debugEl.textContent = nextText;
-        lastTelemetryText = nextText;
-      }
-    }
-  }
-
-  function setLabel(text) {
-    if (labelEl) {
-      labelEl.dataset.depth3d = text;
-    }
-  }
 
   function clearGroup() {
     while (group.children.length) {
@@ -342,7 +283,7 @@ export function createLevelStageDepth3dLayer({
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
       currentOrbZBO = resolveOrbTravelZBO(summary, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
-      setLabel(resolveDepthLayerLabel(layers));
+      telemetry.setDepthLayerLabel(layers);
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({
           layer,
@@ -358,8 +299,10 @@ export function createLevelStageDepth3dLayer({
       }
       loadProps(props);
       syncRootVisibility();
-      root.dataset.depthLayerCount = String(group.children.length);
-      root.dataset.depthStatus = group.children.length ? "ready" : "empty";
+      telemetry.setSceneStatus({
+        depthLayerCount: group.children.length,
+        depthStatus: group.children.length ? "ready" : "empty",
+      });
       if (group.children.length) {
         renderLoop.renderFrame(renderLoop.getLastFrame() || {
           ...resolveDepthBootFrame({ depthLayers: layers, root }),
