@@ -1,9 +1,5 @@
 import * as THREE from "three";
-import { createOrb3dRuntime } from "../../../game-runtime/orb/orb-3d-runtime.js";
-import {
-  createOrbNod3dRuntime,
-  createOrbNod3dSurfaceDisplacementConfig,
-} from "../../../game-runtime/orb/orb-nod-3d-runtime.js";
+import { createOrbDepth3dRuntime } from "../../../game-runtime/orb/orb-depth-3d-runtime.js?v=20260430a";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS,
@@ -639,21 +635,30 @@ export function createLevelStageDepth3dLayer({
   let lastCameraX = 0;
   let lastCameraY = 0;
   let lastCameraZ = 0;
-  let orbRuntime = null;
-  let orbNod3dRuntime = null;
-  let orbNod3dFrame = 0;
   let propEdgeMaterials = [];
   const globe3dGroup = new THREE.Group();
   globe3dGroup.name = "globe3d:runtime_layer";
   actorGroup.add(globe3dGroup);
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
-  let orbRuntimeBO = 0;
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
-  let currentOrbDepthPx = currentOrbZBO * BO_WORLD_UNITS;
-  let currentOrbThreeX = 0;
-  let currentOrbThreeY = 0;
   let globe3dFrame = 0;
   let lastGlobe3dTickMs = 0;
+  const orbDepth3dRuntime = createOrbDepth3dRuntime({
+    parent: actorGroup,
+    fallbackBo: baseOrbWorldUnits,
+    getDefaultZBO: () => currentOrbZBO,
+    toRuntimePosition: ({ x = 0, y = 0, z = 0 } = {}) => ({
+      x: toThreeX(x, worldWidthPx),
+      y: toThreeY(y, worldHeightPx),
+      z,
+    }),
+    applyMeshFlags: applyEnvironmentMeshFlags,
+    onTelemetry: updateOrbTelemetry,
+    onModelChanged: () => {
+      orbLifecycle3dRuntime.attachOrbModel();
+    },
+    onNeedsFrame: () => scheduleGlobe3dFrames(),
+  });
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
     group: globe3dGroup,
     createGlobeObject: createGlobe3dObject,
@@ -664,7 +669,7 @@ export function createLevelStageDepth3dLayer({
     toRuntimePosition: ({ x = 0, y = 0 } = {}) => ({
       x: toThreeX(x, worldWidthPx),
       y: toThreeY(y, worldHeightPx),
-      z: -currentOrbDepthPx,
+      z: -orbDepth3dRuntime.getDepthPx(),
     }),
     getBo: () => baseOrbWorldUnits,
     getConfig: () => WORLD_GLOBE_3D_VISUAL_DEFAULTS,
@@ -680,7 +685,7 @@ export function createLevelStageDepth3dLayer({
     group: globe3dGroup,
     createGlobeObject: createGlobe3dObject,
     getBo: () => baseOrbWorldUnits,
-    getCenterPosition: () => ({ x: currentOrbThreeX, y: currentOrbThreeY, z: -currentOrbDepthPx }),
+    getCenterPosition: () => orbDepth3dRuntime.getPosition(),
     getConfig: () => ORB_GLOBE_3D_VISUAL_DEFAULTS,
     onCountChange: (count) => {
       root.dataset.depthGlobe3dOrbCount = String(Math.max(0, Number(count) || 0));
@@ -688,11 +693,11 @@ export function createLevelStageDepth3dLayer({
     onNeedsFrame: () => scheduleGlobe3dFrames(),
   });
   const orbLifecycle3dRuntime = createOrbLifecycle3dRuntime({
-    getOrbModel: () => orbRuntime && orbRuntime.model,
+    getOrbModel: () => orbDepth3dRuntime.getModel(),
     getBurstParent: () => actorGroup,
-    getBo: () => orbRuntimeBO || baseOrbWorldUnits,
+    getBo: () => orbDepth3dRuntime.getBo(),
     getConfig: () => ORB_LIFECYCLE_3D_DEFAULTS,
-    getBurstPosition: () => ({ x: currentOrbThreeX, y: currentOrbThreeY, z: -currentOrbDepthPx }),
+    getBurstPosition: () => orbDepth3dRuntime.getPosition(),
     onNeedsFrame: () => scheduleGlobe3dFrames(),
   });
   const globe3dUnsub = [];
@@ -703,9 +708,9 @@ export function createLevelStageDepth3dLayer({
   let lastTelemetryDepthPx = "";
 
   function updateOrbTelemetry({
-    bo = orbRuntimeBO,
+    bo = orbDepth3dRuntime.getBo(),
     zBO = currentOrbZBO,
-    depthPx = currentOrbDepthPx,
+    depthPx = orbDepth3dRuntime.getDepthPx(),
   } = {}) {
     if (!root || !root.dataset) return;
     const nextBO = Number(bo || 0).toFixed(2);
@@ -764,19 +769,6 @@ export function createLevelStageDepth3dLayer({
       disposeThreeObject(child);
     }
     propEdgeMaterials = [];
-  }
-
-  function disposeOrbRuntime() {
-    if (orbNod3dRuntime && typeof orbNod3dRuntime.dispose === "function") {
-      orbNod3dRuntime.dispose();
-    }
-    orbNod3dRuntime = null;
-    orbLifecycle3dRuntime.detachOrbModel();
-    if (orbRuntime && typeof orbRuntime.dispose === "function") {
-      orbRuntime.dispose();
-    }
-    orbRuntime = null;
-    orbRuntimeBO = 0;
   }
 
   function clearGlobe3dObjects() {
@@ -884,6 +876,7 @@ export function createLevelStageDepth3dLayer({
       worldGlobe3dRuntime.hasActiveVisuals()
       || orbGlobe3dRuntime.hasActiveVisuals()
       || orbLifecycle3dRuntime.hasActiveVisuals()
+      || orbDepth3dRuntime.isNodActive()
     );
   }
 
@@ -902,7 +895,7 @@ export function createLevelStageDepth3dLayer({
   function syncRootVisibility() {
     root.hidden = depthLayerCount <= 0
       && propsGroup.children.length <= 0
-      && !orbRuntime
+      && !orbDepth3dRuntime.hasModel()
       && !globe3dGroup.children.length;
   }
 
@@ -973,13 +966,7 @@ export function createLevelStageDepth3dLayer({
     lastCameraX = cx;
     lastCameraY = cy;
     lastCameraZ = cameraZ;
-    if (orbRuntime && typeof orbRuntime.setTime === "function") {
-      const timeSec = performance.now() / 1000;
-      orbRuntime.setTime(timeSec);
-      if (orbNod3dRuntime && typeof orbNod3dRuntime.update === "function") {
-        orbNod3dRuntime.update(timeSec);
-      }
-    }
+    orbDepth3dRuntime.update(performance.now() / 1000);
     tickGlobe3dRuntime(performance.now());
     renderer.render(scene, camera);
   }
@@ -1004,19 +991,6 @@ export function createLevelStageDepth3dLayer({
       if (disposed) return;
       doRenderFrame(lastFrame || {});
     });
-  }
-
-  function requestOrbNod3dFrames() {
-    if (disposed || orbNod3dFrame || !orbNod3dRuntime || typeof requestAnimationFrame !== "function") return;
-    const tick = () => {
-      orbNod3dFrame = 0;
-      if (disposed || !orbNod3dRuntime || !orbNod3dRuntime.isActive()) return;
-      renderFrame(lastFrame || {});
-      if (orbNod3dRuntime.isActive()) {
-        orbNod3dFrame = requestAnimationFrame(tick);
-      }
-    };
-    orbNod3dFrame = requestAnimationFrame(tick);
   }
 
   function resolveBootFrame(layers = []) {
@@ -1053,7 +1027,7 @@ export function createLevelStageDepth3dLayer({
     const kind = String(prop && prop.kind || "").trim().toLowerCase();
     if (kind !== "plinth") return null;
     const scale = Math.max(0.01, clampNumber(prop && prop.scale, 1));
-    const bo = Math.max(1, (orbRuntimeBO || baseOrbWorldUnits) * scale);
+    const bo = Math.max(1, orbDepth3dRuntime.getBo() * scale);
     const material = createGraphiteMaterial(GRAPHITE_CONFIG);
     const { model, metrics } = createPlinthModel({
       bo,
@@ -1146,47 +1120,8 @@ export function createLevelStageDepth3dLayer({
       zBO = currentOrbZBO,
     } = {}) {
       if (disposed) return false;
-      const worldX = Number(xW);
-      const worldY = Number(yW);
-      if (!Number.isFinite(worldX) || !Number.isFinite(worldY)) return false;
-      const resolvedBO = Math.max(1, Number(bo) || BO_WORLD_UNITS);
-      if (!orbRuntime || Math.abs(resolvedBO - orbRuntimeBO) > 0.001) {
-        disposeOrbRuntime();
-        orbRuntime = createOrb3dRuntime({
-          bo: resolvedBO,
-          includeCore: false,
-          includeRibs: false,
-          surfaceDisplacement: createOrbNod3dSurfaceDisplacementConfig(Object.create(null), {
-            enabled: false,
-          }),
-        });
-        orbNod3dRuntime = createOrbNod3dRuntime({
-          getMaterial: () => orbRuntime && orbRuntime.shellMaterial,
-          getBo: () => orbRuntimeBO || resolvedBO,
-        });
-        orbRuntimeBO = resolvedBO;
-        applyEnvironmentMeshFlags(orbRuntime.model, {
-          receiveShadow: false,
-          castShadow: false,
-        });
-        actorGroup.add(orbRuntime.model);
-        if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
-        orbLifecycle3dRuntime.attachOrbModel();
-      }
-      const resolvedZBO = Math.max(0, Number.isFinite(Number(zBO)) ? Number(zBO) : currentOrbZBO);
-      currentOrbDepthPx = resolvedZBO * resolvedBO;
-      updateOrbTelemetry({
-        bo: resolvedBO,
-        zBO: resolvedZBO,
-        depthPx: currentOrbDepthPx,
-      });
-      orbRuntime.setPosition({
-        x: toThreeX(worldX, worldWidthPx),
-        y: toThreeY(worldY, worldHeightPx),
-        z: -currentOrbDepthPx,
-      });
-      currentOrbThreeX = toThreeX(worldX, worldWidthPx);
-      currentOrbThreeY = toThreeY(worldY, worldHeightPx);
+      const handled = orbDepth3dRuntime.setWorldPosition({ xW, yW, bo, zBO });
+      if (!handled) return false;
       syncRootVisibility();
       scheduleGlobe3dFrames();
       if (lastFrame) renderFrame(lastFrame);
@@ -1197,12 +1132,12 @@ export function createLevelStageDepth3dLayer({
       bindGlobe3dEvents(args);
     },
     playOrbNod3d(payload = {}) {
-      if (disposed || !orbNod3dRuntime || typeof orbNod3dRuntime.play !== "function") {
+      if (disposed) {
         return { handled: false, skipped: "orb_nod3d_runtime_missing" };
       }
-      const result = orbNod3dRuntime.play(payload);
+      const result = orbDepth3dRuntime.playNod(payload);
       if (result && result.handled) {
-        requestOrbNod3dFrames();
+        scheduleGlobe3dFrames();
         renderFrame(lastFrame || {});
       }
       return result || { handled: false };
@@ -1210,16 +1145,12 @@ export function createLevelStageDepth3dLayer({
     renderFrame,
     dispose() {
       disposed = true;
-      if (orbNod3dFrame && typeof cancelAnimationFrame === "function") {
-        cancelAnimationFrame(orbNod3dFrame);
-      }
       if (globe3dFrame && typeof cancelAnimationFrame === "function") {
         cancelAnimationFrame(globe3dFrame);
       }
       if (pendingRenderFrame && typeof cancelAnimationFrame === "function") {
         cancelAnimationFrame(pendingRenderFrame);
       }
-      orbNod3dFrame = 0;
       globe3dFrame = 0;
       pendingRenderFrame = 0;
       orbLifecycle3dRuntime.dispose();
@@ -1228,7 +1159,7 @@ export function createLevelStageDepth3dLayer({
         try { off(); } catch (_) {}
       }
       clearGlobe3dObjects();
-      disposeOrbRuntime();
+      orbDepth3dRuntime.dispose();
       clearGroup();
       clearPropsGroup();
       renderer.dispose();
