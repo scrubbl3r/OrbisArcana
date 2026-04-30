@@ -7,8 +7,8 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minHandPresenceConfidence: 0.5,
   minTrackingConfidence: 0.5,
   maxDetectionFps: 20,
-  videoWidth: 424,
-  videoHeight: 240,
+  videoWidth: 640,
+  videoHeight: 480,
   videoFps: 30,
 });
 
@@ -239,14 +239,8 @@ export function createCameraInputTracker({
       audio: false,
       video: {
         facingMode: "user",
-        width: {
-          ideal: DEFAULT_TRACKER_CONFIG.videoWidth,
-          max: DEFAULT_TRACKER_CONFIG.videoWidth,
-        },
-        height: {
-          ideal: DEFAULT_TRACKER_CONFIG.videoHeight,
-          max: DEFAULT_TRACKER_CONFIG.videoHeight,
-        },
+        width: { ideal: DEFAULT_TRACKER_CONFIG.videoWidth },
+        height: { ideal: DEFAULT_TRACKER_CONFIG.videoHeight },
         frameRate: {
           ideal: DEFAULT_TRACKER_CONFIG.videoFps,
           max: DEFAULT_TRACKER_CONFIG.videoFps,

@@ -1,7 +1,7 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
 import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430a";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
-import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430c";
+import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430d";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
