@@ -26,20 +26,23 @@ export async function loadAuthoredLevelScene({
   }
 
   const svgText = await response.text();
+  const semanticLayers = mapSource.semanticLayers && typeof mapSource.semanticLayers === "object"
+    ? mapSource.semanticLayers
+    : {};
   const summary = summarizeSvgLevelSource({
     svgText,
     worldWidthPx,
     worldHeightPx,
-    boundaryLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.boundary,
-    spawnLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.spawn,
-    cameraLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.camera,
+    boundaryLayerLabels: semanticLayers.boundary || semanticLayers.bounds,
+    spawnLayerLabels: semanticLayers.spawn || semanticLayers.spawns,
+    cameraLayerLabels: semanticLayers.camera || semanticLayers.cameras,
     cameraBoundaryLayerLabels:
-      (mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds) ||
-      (mapSource.semanticLayers && mapSource.semanticLayers.boundsCam),
-    worldItemLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.worldItems,
-    propLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.props,
-    lineArtLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.lineArt,
-    starsFieldLayerLabels: mapSource.semanticLayers && mapSource.semanticLayers.starsField,
+      semanticLayers.cameraBounds ||
+      semanticLayers.boundsCam,
+    worldItemLayerLabels: semanticLayers.worldItems || semanticLayers.actorItems || semanticLayers.globes,
+    propLayerLabels: semanticLayers.props,
+    lineArtLayerLabels: semanticLayers.lineArt || semanticLayers.art,
+    starsFieldLayerLabels: semanticLayers.starsField || semanticLayers.fields,
     spawnMarkerId: mapSource.spawnMarker && mapSource.spawnMarker.id,
     tileSizePx: mapSource.scale && mapSource.scale.boundaryTileSizePx,
   });

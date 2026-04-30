@@ -13,7 +13,37 @@ function normalizeOptionalNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function normalizeLayerLabels(...values) {
+  for (const value of values) {
+    if (Array.isArray(value)) return Object.freeze(value.slice());
+  }
+  return Object.freeze([]);
+}
+
 function normalizeLevelMapSource(mapSource = {}, world = {}) {
+  const semanticLayers = mapSource.semanticLayers && typeof mapSource.semanticLayers === "object"
+    ? mapSource.semanticLayers
+    : {};
+  const worldItemLayers = normalizeLayerLabels(
+    semanticLayers.worldItems,
+    semanticLayers.actorItems,
+    semanticLayers.globes
+  );
+  const actorItemLayers = normalizeLayerLabels(
+    semanticLayers.actorItems,
+    semanticLayers.worldItems,
+    semanticLayers.globes
+  );
+  const globeLayers = normalizeLayerLabels(
+    semanticLayers.globes,
+    semanticLayers.worldItems,
+    semanticLayers.actorItems
+  );
+  const lineArtLayers = normalizeLayerLabels(semanticLayers.lineArt, semanticLayers.art);
+  const artLayers = normalizeLayerLabels(semanticLayers.art, semanticLayers.lineArt);
+  const starsFieldLayers = normalizeLayerLabels(semanticLayers.starsField, semanticLayers.fields);
+  const fieldLayers = normalizeLayerLabels(semanticLayers.fields, semanticLayers.starsField);
+  const cameraBoundsLayers = normalizeLayerLabels(semanticLayers.cameraBounds, semanticLayers.boundsCam);
   return Object.freeze({
     kind: String(mapSource.kind || "").trim(),
     assetUrl: String(mapSource.assetUrl || "").trim(),
@@ -35,62 +65,27 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
         : 128,
     }),
     semanticLayers: Object.freeze({
-      boundary: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.boundary)
-          ? mapSource.semanticLayers.boundary.slice()
-          : []
-      ),
-      spawn: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.spawn)
-          ? mapSource.semanticLayers.spawn.slice()
-          : []
-      ),
-      camera: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.camera)
-          ? mapSource.semanticLayers.camera.slice()
-          : []
-      ),
-      cameraBounds: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds)
-          ? mapSource.semanticLayers.cameraBounds.slice()
-          : []
-      ),
-      worldItems: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.worldItems)
-          ? mapSource.semanticLayers.worldItems.slice()
-          : []
-      ),
-      props: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.props)
-          ? mapSource.semanticLayers.props.slice()
-          : []
-      ),
-      lineArt: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.lineArt)
-          ? mapSource.semanticLayers.lineArt.slice()
-          : []
-      ),
-      starsField: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.starsField)
-          ? mapSource.semanticLayers.starsField.slice()
-          : []
-      ),
+      boundary: normalizeLayerLabels(semanticLayers.boundary, semanticLayers.bounds),
+      bounds: normalizeLayerLabels(semanticLayers.bounds, semanticLayers.boundary),
+      spawn: normalizeLayerLabels(semanticLayers.spawn, semanticLayers.spawns),
+      spawns: normalizeLayerLabels(semanticLayers.spawns, semanticLayers.spawn),
+      camera: normalizeLayerLabels(semanticLayers.camera, semanticLayers.cameras),
+      cameras: normalizeLayerLabels(semanticLayers.cameras, semanticLayers.camera),
+      cameraBounds: cameraBoundsLayers,
+      depth: normalizeLayerLabels(semanticLayers.depth, semanticLayers.depths),
+      depths: normalizeLayerLabels(semanticLayers.depths, semanticLayers.depth),
+      worldItems: worldItemLayers,
+      actorItems: actorItemLayers,
+      globes: globeLayers,
+      props: normalizeLayerLabels(semanticLayers.props),
+      lineArt: lineArtLayers,
+      art: artLayers,
+      starsField: starsFieldLayers,
+      fields: fieldLayers,
       // Compatibility aliases while callers migrate from older field names.
-      boundsCam: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds)
-          ? mapSource.semanticLayers.cameraBounds.slice()
-          : (
-              Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.boundsCam)
-                ? mapSource.semanticLayers.boundsCam.slice()
-                : []
-            )
-      ),
+      boundsCam: cameraBoundsLayers,
       // Compatibility alias while authored content migrates.
-      camera_boundary: Object.freeze(
-        Array.isArray(mapSource.semanticLayers && mapSource.semanticLayers.cameraBounds)
-          ? mapSource.semanticLayers.cameraBounds.slice()
-          : []
-      ),
+      camera_boundary: cameraBoundsLayers,
     }),
     spawnMarker: Object.freeze({
       id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),

@@ -40,6 +40,7 @@ function resolveActorLanePropZ(zBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO, bo = LEVEL_DE
 export function createWorldProps3dRuntime({
   group = null,
   getBo = () => LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
+  getOrbZBO = () => LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
   toRuntimePosition = ({ x = 0, y = 0 } = {}) => ({ x, y }),
   onCountChange = () => {},
 } = {}) {
@@ -89,7 +90,9 @@ export function createWorldProps3dRuntime({
       },
     });
     const anchorPoint = resolvePropAnchorPoint(prop);
-    const zBO = Math.max(0, clampNumber(prop && prop.zBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO));
+    const zBO = String(prop && prop.zMode || "").trim().toLowerCase() === "orb"
+      ? Math.max(0, clampNumber(typeof getOrbZBO === "function" ? getOrbZBO() : getOrbZBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO))
+      : Math.max(0, clampNumber(prop && prop.zBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO));
     const anchor = typeof toRuntimePosition === "function"
       ? (toRuntimePosition({ x: anchorPoint.xW, y: anchorPoint.yW }) || {})
       : {};
@@ -138,4 +141,3 @@ export function createWorldProps3dRuntime({
     },
   });
 }
-

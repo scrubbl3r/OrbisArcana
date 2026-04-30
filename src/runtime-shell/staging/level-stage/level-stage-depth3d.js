@@ -21,7 +21,7 @@ import {
   applyThreeMeshFlags,
   disposeThreeObject,
 } from "../../../game-runtime/rendering/three/three-object-utils.js";
-import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430a";
+import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430b";
 import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430b";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
 import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260430c";
@@ -46,7 +46,11 @@ function clampNumber(value, fallback = 0) {
 function resolveWorldGlobeDepthZ({
   spawn = null,
   bo = BO_WORLD_UNITS,
+  orbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
 } = {}) {
+  if (String(spawn && spawn.zMode || "").trim().toLowerCase() === "orb") {
+    return -Math.max(0, clampNumber(orbZBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO)) * Math.max(1, Number(bo) || BO_WORLD_UNITS);
+  }
   const authoredZBO = Number(spawn && (spawn.zBO ?? spawn.depthZBO));
   if (Number.isFinite(authoredZBO)) return -Math.max(0, authoredZBO) * Math.max(1, Number(bo) || BO_WORLD_UNITS);
   return Math.max(1, Number(bo) || BO_WORLD_UNITS) * WORLD_GLOBE_FOREGROUND_Z_BO;
@@ -125,7 +129,7 @@ export function createLevelStageDepth3dLayer({
     toRuntimePosition: ({ x = 0, y = 0, spawn = null } = {}) => ({
       x: toDepthThreeX(x, worldWidthPx),
       y: toDepthThreeY(y, worldHeightPx),
-      z: resolveWorldGlobeDepthZ({ spawn, bo: baseOrbWorldUnits }),
+      z: resolveWorldGlobeDepthZ({ spawn, bo: baseOrbWorldUnits, orbZBO: currentOrbZBO }),
     }),
     getBo: () => baseOrbWorldUnits,
     getConfig: () => WORLD_GLOBE_3D_VISUAL_DEFAULTS,
@@ -161,6 +165,7 @@ export function createLevelStageDepth3dLayer({
   const worldProps3dRuntime = createWorldProps3dRuntime({
     group: propsGroup,
     getBo: () => orb3dActorRuntime.getBo(),
+    getOrbZBO: () => currentOrbZBO,
     toRuntimePosition: ({ x = 0, y = 0 } = {}) => ({
       x: toDepthThreeX(x, worldWidthPx),
       y: toDepthThreeY(y, worldHeightPx),

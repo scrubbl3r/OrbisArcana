@@ -50,80 +50,92 @@ function parseBoValue(value = "", fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function parseDepthLayerLabel(label = "") {
+function parseSvgLabelMetadata(label = "", fallbackId = "") {
   const text = String(label || "").trim();
-  if (!text.toLowerCase().startsWith("depth:")) return null;
-  const parts = text.split(/\s+/).filter(Boolean);
-  const name = String(parts.shift() || "").slice("depth:".length).trim();
+  const entries = Object.create(null);
+  const pairMatches = text.matchAll(/([a-zA-Z_][\w-]*)\s*(?::|=)\s*([^,\s]+)/g);
+  for (const match of pairMatches) {
+    const key = String(match && match[1] || "").trim().toLowerCase();
+    const value = String(match && match[2] || "").trim();
+    if (!key || !value) continue;
+    entries[key] = value.replace(/^["']|["']$/g, "");
+  }
+
+  const zRaw = String(entries.z || entries.zbo || entries.depth || "").trim();
+  const zNormalized = zRaw.toLowerCase();
+  let zMode = "fixed";
+  let zBO = parseBoValue(zRaw, 4);
+  if (zNormalized === "orb" || zNormalized === "orbz" || zNormalized === "orb_z") {
+    zMode = "orb";
+    zBO = null;
+  } else if (zNormalized === "world" || zNormalized === "map") {
+    zMode = "world";
+    zBO = null;
+  }
+
+  const scaleRaw = entries.scale || "";
+  const scaleNormalized = String(scaleRaw || "").trim().toLowerCase();
+  let scaleMode = "fixed";
+  let scale = Math.max(0.01, clampNumber(scaleRaw, 1));
+  if (scaleNormalized === "orb" || scaleNormalized === "bo") {
+    scaleMode = "orb";
+    scale = 1;
+  }
+
+  const depthRole = entries.depth && !/^[-+]?(?:\d*\.\d+|\d+)(?:\s*bo)?$/i.test(entries.depth)
+    ? String(entries.depth || "").trim()
+    : "";
+
+  return Object.freeze({
+    rawLabel: text,
+    entries: Object.freeze({ ...entries }),
+    id: String(entries.id || fallbackId || "").trim(),
+    role: depthRole ? "depth" : String(entries.role || entries.type || "").trim().toLowerCase(),
+    kind: String(entries.kind || entries.type || depthRole || "").trim().toLowerCase(),
+    zMode,
+    zBO,
+    anchor: String(entries.anchor || "center").trim().toLowerCase(),
+    scaleMode,
+    scale,
+    maxDepthBO: Math.max(0, parseBoValue(entries.max || entries.maxdepth || entries.depthmax || "", 10)),
+    material: String(entries.material || entries.mat || "graphite").trim().toLowerCase(),
+    tessellation: Math.max(2, Math.round(clampNumber(entries.tess || entries.tessellation, 24))),
+  });
+}
+
+function resolveSvgMetadataId(source = {}, fallbackId = "") {
+  const metadata = parseSvgLabelMetadata(source && source.label, source && source.id);
+  return String(metadata.id || fallbackId || source && source.id || "").trim();
+}
+
+function parseDepthLayerLabel(label = "") {
+  const metadata = parseSvgLabelMetadata(label);
+  const entries = metadata.entries || {};
+  const text = String(label || "").trim();
+  const legacyMatch = text.match(/^depth\s*:\s*([^,\s]+)/i);
+  const name = String(metadata.kind || (legacyMatch && legacyMatch[1]) || metadata.id || "").trim();
   if (!name) return null;
-  const config = {
+  if (metadata.role !== "depth" && !legacyMatch) return null;
+  return Object.freeze({
     id: name,
     label: text,
-    maxDepthBO: 10,
-    orbZBO: 4,
-    material: "graphite",
-    tessellation: 24,
-  };
-  for (const part of parts) {
-    const [rawKey, ...rawValueParts] = String(part || "").split("=");
-    const key = String(rawKey || "").trim().toLowerCase();
-    const value = rawValueParts.join("=").trim();
-    if (!key || !value) continue;
-    if (key === "max" || key === "depth" || key === "maxdepth") {
-      config.maxDepthBO = Math.max(0, parseBoValue(value, config.maxDepthBO));
-      continue;
-    }
-    if (key === "z" || key === "orbz" || key === "orb_z") {
-      config.orbZBO = Math.max(0, parseBoValue(value, config.orbZBO));
-      continue;
-    }
-    if (key === "material" || key === "mat") {
-      config.material = String(value || config.material).trim().toLowerCase();
-      continue;
-    }
-    if (key === "tess" || key === "tessellation") {
-      config.tessellation = Math.max(2, Math.round(clampNumber(value, config.tessellation)));
-    }
-  }
-  return Object.freeze(config);
+    maxDepthBO: metadata.maxDepthBO,
+    orbZBO: metadata.zMode === "fixed" ? Math.max(0, parseBoValue(entries.z || entries.orbz || entries.orb_z || "", 4)) : 4,
+    material: metadata.material,
+    tessellation: metadata.tessellation,
+  });
 }
 
 function parsePropLabelText(label = "", fallbackId = "") {
-  const text = String(label || "").trim();
-  const config = {
-    id: String(fallbackId || "").trim(),
-    zBO: 4,
-    anchor: "center",
-    scale: 1,
-  };
-  const explicitIdMatch = text.match(/(?:^|\s)id\s*:\s*([^\s]+)/i);
-  if (explicitIdMatch) config.id = String(explicitIdMatch[1] || config.id).trim();
-
-  let metadataText = text;
-  const explicitLabelMatch = text.match(/(?:^|\s)label\s*:\s*([\s\S]+)$/i);
-  if (explicitLabelMatch) metadataText = String(explicitLabelMatch[1] || "").trim();
-
-  const parts = String(metadataText || "").split(/\s+/).filter(Boolean);
-  for (const part of parts) {
-    const [rawKey, ...rawValueParts] = String(part || "").split("=");
-    const key = String(rawKey || "").trim().toLowerCase();
-    const value = rawValueParts.join("=").trim();
-    if (!key || !value) continue;
-    if (key === "z" || key === "zbo" || key === "depth") {
-      config.zBO = Math.max(0, parseBoValue(value, config.zBO));
-      continue;
-    }
-    if (key === "anchor") {
-      const anchor = String(value || "").trim().toLowerCase();
-      config.anchor = anchor || config.anchor;
-      continue;
-    }
-    if (key === "scale") {
-      config.scale = Math.max(0.01, clampNumber(value, config.scale));
-    }
-  }
-
-  return Object.freeze(config);
+  const metadata = parseSvgLabelMetadata(label, fallbackId);
+  return Object.freeze({
+    id: metadata.id,
+    zMode: metadata.zMode,
+    zBO: metadata.zBO == null ? 4 : metadata.zBO,
+    anchor: metadata.anchor,
+    scaleMode: metadata.scaleMode,
+    scale: metadata.scale,
+  });
 }
 
 function inferPropKind(id = "") {
@@ -534,15 +546,21 @@ export function buildSvgSpawnMarkers({
   }
   const markerId = String(spawnMarkerId || "").trim();
   if (markerId) {
-    circles = circles.filter((circle) => String(circle && circle.id || "").trim() === markerId);
+    circles = circles.filter((circle) => (
+      String(circle && circle.id || "").trim() === markerId ||
+      resolveSvgMetadataId(circle) === markerId
+    ));
   }
   return Object.freeze(circles.map((circle, index) => {
+    const metadata = parseSvgLabelMetadata(circle && circle.label, circle && circle.id);
     const authoredCenter = Object.freeze({
       x: clampNumber(circle && circle.cx, 0),
       y: clampNumber(circle && circle.cy, 0),
     });
     return Object.freeze({
-      id: String(circle && circle.id || `spawn_${index + 1}`),
+      id: String(metadata.id || circle && circle.id || `spawn_${index + 1}`),
+      zMode: metadata.zMode,
+      zBO: metadata.zBO,
       authoredCenter,
       worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
         viewBox,
@@ -566,7 +584,7 @@ export function buildSvgCameraAnchors({
     (Array.isArray(cameraLayerLabels) ? cameraLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   let anchors = parseSvgCircleElements(svgText).map((circle) => Object.freeze({
-    id: String(circle && circle.id || "").trim(),
+    id: resolveSvgMetadataId(circle),
     authoredCenter: Object.freeze({
       x: clampNumber(circle && circle.cx, 0),
       y: clampNumber(circle && circle.cy, 0),
@@ -583,7 +601,7 @@ export function buildSvgCameraAnchors({
           ...circles.map((circleSource) => {
             const circle = translateCircle(circleSource, layer && layer.translate);
             return Object.freeze({
-            id: String(circle && circle.id || "").trim(),
+            id: resolveSvgMetadataId(circle),
             authoredCenter: Object.freeze({
               x: clampNumber(circle && circle.cx, 0),
               y: clampNumber(circle && circle.cy, 0),
@@ -594,7 +612,7 @@ export function buildSvgCameraAnchors({
           ...rects.map((rectSource) => {
             const rect = translateRect(rectSource, layer && layer.translate);
             return Object.freeze({
-            id: String(rect && rect.id || "").trim(),
+            id: resolveSvgMetadataId(rect),
             authoredCenter: Object.freeze({
               x: clampNumber(rect && rect.x, 0) + (clampNumber(rect && rect.width, 0) * 0.5),
               y: clampNumber(rect && rect.y, 0) + (clampNumber(rect && rect.height, 0) * 0.5),
@@ -657,10 +675,10 @@ export function buildSvgWorldItemSpawns({
     ));
   const spawns = [];
   for (const layer of matchingLayers) {
-    const layerLabel = String(layer && layer.label || "").trim();
     const circles = Array.isArray(layer && layer.circles) ? layer.circles : [];
     for (let index = 0; index < circles.length; index += 1) {
       const circle = translateCircle(circles[index], layer && layer.translate);
+      const metadata = parseSvgLabelMetadata(circle && circle.label, circle && circle.id);
       const authoredCenter = Object.freeze({
         x: clampNumber(circle && circle.cx, 0),
         y: clampNumber(circle && circle.cy, 0),
@@ -671,8 +689,12 @@ export function buildSvgWorldItemSpawns({
         worldHeightPx,
       });
       spawns.push(Object.freeze({
-        id: String(layerLabel || circle && circle.id || `world_item_spawn_${spawns.length + 1}`),
-        kind: defaultKind,
+        id: String(metadata.id || circle && circle.id || `world_item_spawn_${spawns.length + 1}`),
+        kind: String(metadata.kind || defaultKind),
+        zMode: metadata.zMode,
+        zBO: metadata.zBO,
+        scaleMode: metadata.scaleMode,
+        scale: metadata.scale,
         xNorm: clampNumber(authoredCenter.x, 0) / Math.max(1, clampNumber(viewBox.width, 0)),
         yW: clampNumber(worldCenter.yW, 0),
         r: Math.max(1, Number(defaultRadiusPx) || 25),
@@ -681,6 +703,8 @@ export function buildSvgWorldItemSpawns({
         authoredCenter,
         worldCenter,
         authoredRadius: clampNumber(circle && circle.r, 0),
+        sourceId: String(circle && circle.id || ""),
+        sourceLabel: String(circle && circle.label || ""),
       }));
     }
   }
@@ -721,8 +745,10 @@ export function buildSvgPropInstances({
       props.push(Object.freeze({
         id,
         kind: inferPropKind(id),
+        zMode: config.zMode,
         zBO: config.zBO,
         anchor: config.anchor,
+        scaleMode: config.scaleMode,
         scale: config.scale,
         sourceShape: "rect",
         authoredCenter,
@@ -761,8 +787,10 @@ export function buildSvgPropInstances({
       props.push(Object.freeze({
         id,
         kind: inferPropKind(id),
+        zMode: config.zMode,
         zBO: config.zBO,
         anchor: config.anchor,
+        scaleMode: config.scaleMode,
         scale: config.scale,
         sourceShape: "circle",
         authoredCenter,
@@ -804,6 +832,7 @@ export function buildSvgLineArtShapes({
   return Object.freeze(matchingLayers.flatMap((layer) => {
     const paths = Array.isArray(layer && layer.paths) ? layer.paths : [];
     return paths.map((path, index) => {
+      const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
       const authoredPoints = translatePolylinePoints(
         parseSvgPolylinePath(path && path.d) || [],
         layer && layer.translate
@@ -811,7 +840,7 @@ export function buildSvgLineArtShapes({
       if (authoredPoints.length < 2) return null;
       const style = parseSvgInlineStyle(path && path.style);
       return Object.freeze({
-        id: String(path && path.id || `${String(layer && layer.label || "line_art").trim()}_${index + 1}`),
+        id: String(metadata.id || path && path.id || `${String(layer && layer.label || "line_art").trim()}_${index + 1}`),
         authoredPoints,
         worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
           viewBox,
@@ -841,19 +870,17 @@ export function buildSvgStarsFieldRegions({
     (Array.isArray(starsFieldLayerLabels) ? starsFieldLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   const loops = authoredLayers
-    .filter((layer) => (
-      allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase())
-      && isSvgRenderLayerVisible(layer)
-    ))
+    .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
     .flatMap((layer) => {
       const pathLoops = (Array.isArray(layer && layer.paths) ? layer.paths : []).map((path, index) => {
+        const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
         const authoredPoints = translatePolylinePoints(
           parseSvgPolylinePath(path && path.d) || [],
           layer && layer.translate
         );
         if (authoredPoints.length < 3) return null;
         return Object.freeze({
-          id: String(path && path.id || `stars_field_path_${index + 1}`),
+          id: String(metadata.id || path && path.id || `stars_field_path_${index + 1}`),
           kind: "path_loop",
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
@@ -864,11 +891,12 @@ export function buildSvgStarsFieldRegions({
         });
       });
       const rectLoops = (Array.isArray(layer && layer.rects) ? layer.rects : []).map((rect, index) => {
+        const metadata = parseSvgLabelMetadata(rect && rect.label, rect && rect.id);
         const authoredRect = translateRect(rect, layer && layer.translate);
         const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
         if (authoredPoints.length < 4) return null;
         return Object.freeze({
-          id: String(rect && rect.id || `stars_field_rect_${index + 1}`),
+          id: String(metadata.id || rect && rect.id || `stars_field_rect_${index + 1}`),
           kind: "rect_loop",
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
@@ -897,19 +925,43 @@ export function buildSvgDepthLayers({
   const viewBox = parseSvgViewBox(svgText);
   const authoredLayers = parseSvgLayerElements(svgText);
   const defsMarkup = extractSvgDefsMarkup(svgText);
-  return Object.freeze(authoredLayers.map((layer, index) => {
-    const config = parseDepthLayerLabel(layer && layer.label);
-    if (!config) return null;
-    if (!isSvgRenderLayerVisible(layer)) return null;
-    const loops = [
-      ...((Array.isArray(layer.paths) ? layer.paths : []).map((path, pathIndex) => {
+  const depthLayers = [];
+  for (let index = 0; index < authoredLayers.length; index += 1) {
+    const layer = authoredLayers[index];
+    if (!isSvgRenderLayerVisible(layer)) continue;
+    const layerConfig = parseDepthLayerLabel(layer && layer.label);
+    const depthSources = layerConfig
+      ? [Object.freeze({
+          config: layerConfig,
+          paths: Array.isArray(layer.paths) ? layer.paths : [],
+          rects: Array.isArray(layer.rects) ? layer.rects : [],
+        })]
+      : [
+          ...(Array.isArray(layer.paths) ? layer.paths : []).map((path) => Object.freeze({
+            config: parseDepthLayerLabel(path && path.label),
+            paths: [path],
+            rects: [],
+          })),
+          ...(Array.isArray(layer.rects) ? layer.rects : []).map((rect) => Object.freeze({
+            config: parseDepthLayerLabel(rect && rect.label),
+            paths: [],
+            rects: [rect],
+          })),
+        ];
+
+    for (const source of depthSources) {
+      const config = source && source.config;
+      if (!config) continue;
+      const loops = [
+        ...((Array.isArray(source.paths) ? source.paths : []).map((path, pathIndex) => {
         const authoredPoints = translatePolylinePoints(
           parseSvgPolylinePath(path && path.d) || [],
           layer && layer.translate
         );
         if (authoredPoints.length < 3) return null;
+        const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
         return Object.freeze({
-          id: String(path && path.id || `${config.id}_path_${pathIndex + 1}`),
+          id: String(metadata.id || path && path.id || `${config.id}_path_${pathIndex + 1}`),
           kind: "path_loop",
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
@@ -919,12 +971,13 @@ export function buildSvgDepthLayers({
           }))),
         });
       })),
-      ...((Array.isArray(layer.rects) ? layer.rects : []).map((rect, rectIndex) => {
+      ...((Array.isArray(source.rects) ? source.rects : []).map((rect, rectIndex) => {
         const authoredRect = translateRect(rect, layer && layer.translate);
         const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
         if (authoredPoints.length < 4) return null;
+        const metadata = parseSvgLabelMetadata(rect && rect.label, rect && rect.id);
         return Object.freeze({
-          id: String(rect && rect.id || `${config.id}_rect_${rectIndex + 1}`),
+          id: String(metadata.id || rect && rect.id || `${config.id}_rect_${rectIndex + 1}`),
           kind: "rect_loop",
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
@@ -935,7 +988,7 @@ export function buildSvgDepthLayers({
         });
       })),
     ].filter(Boolean);
-    return Object.freeze({
+      depthLayers.push(Object.freeze({
       ...config,
       sourceLayerId: String(layer && layer.id || `depth_layer_${index + 1}`),
       translate: layer && layer.translate ? layer.translate : Object.freeze({ x: 0, y: 0 }),
@@ -943,8 +996,10 @@ export function buildSvgDepthLayers({
       defsMarkup,
       boundaryBox: resolveBoundaryBoxFromLoops(loops),
       loops: Object.freeze(loops),
-    });
-  }).filter(Boolean));
+      }));
+    }
+  }
+  return Object.freeze(depthLayers);
 }
 
 export function buildBoundaryTileMask({

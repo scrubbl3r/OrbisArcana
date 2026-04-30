@@ -20,6 +20,8 @@ export function normalizeLevelWorldItemSpawn(
               : null
           ),
       yW: Number(item.yW) || 0,
+      zMode: String(item.zMode || "fixed"),
+      zBO: Number.isFinite(Number(item.zBO)) ? Number(item.zBO) : null,
       r: Math.max(1, Number(item.r) || 25),
       capacity: Math.max(1, Math.floor(Number(item.capacity) || 1)),
       regenTrigger: String(item.regenTrigger || (kind === "energy_globe_emitter" ? "globe_spent" : "manual")),
@@ -39,6 +41,8 @@ export function normalizeLevelWorldItemSpawn(
     xNorm: Number.isFinite(xNorm) ? xNorm : 0.5,
     xW: Number.isFinite(Number(item.xW)) ? Number(item.xW) : null,
     yW,
+    zMode: String(item.zMode || "fixed"),
+    zBO: Number.isFinite(Number(item.zBO)) ? Number(item.zBO) : null,
     r,
     capacity: Math.max(1, Math.floor(Number(item.capacity) || 1)),
     regenTrigger: String(item.regenTrigger || (kind === "energy_globe_emitter" ? "globe_spent" : "manual")),

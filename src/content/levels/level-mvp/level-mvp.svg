@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.0069031"
-     inkscape:cx="370.44278"
-     inkscape:cy="1790.639"
+     inkscape:cx="1242.4234"
+     inkscape:cy="1599.9553"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="1"
      inkscape:window-y="84"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer18"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -60,7 +60,8 @@
        style="fill:none;stroke:#000000;stroke-opacity:1"
        d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path1"
-       sodipodi:nodetypes="ccccccccccc" />
+       sodipodi:nodetypes="ccccccccccc"
+       inkscape:label="id:bounds_01" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -72,30 +73,33 @@
        id="path1-4-1"
        style="fill:none;stroke:#f90000;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1"
        d="M 1050.4961,586.22656 906.61133,1469.1914 1244.3164,1466.2871 1378.1465,1734 H 762 V 1414 H 266 v 564 H 1858.2402 V 582.9768 Z"
-       sodipodi:nodetypes="ccccccccccc" />
+       sodipodi:nodetypes="ccccccccccc"
+       inkscape:label="id:cam_bounds_01" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer17"
-     inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24"
+     inkscape:label="depths"
      style="display:inline"
      sodipodi:insensitive="true">
     <path
        style="display:inline;fill:#333333;fill-opacity:1;stroke:none;stroke-opacity:1"
        d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path1-3"
-       sodipodi:nodetypes="ccccccccccc" />
+       sodipodi:nodetypes="ccccccccccc"
+       inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer18"
-     inkscape:label="line_art"
+     inkscape:label="art"
      style="display:inline"
      sodipodi:insensitive="true">
     <path
        id="rect1"
        style="fill:#222222;fill-opacity:1;stroke:#5f5f5f;stroke-width:1.88976"
-       d="M 194.40234,571.42188 V 1982.3047 H 1902.7773 V 571.42188 Z M 1712.25,701.25 V 1921.5117 H 384 V 1472 h 320 v 320 h 768 L 1280,1408 974.75,1410.625 1088,704 Z" />
+       d="M 194.40234,571.42188 V 1982.3047 H 1902.7773 V 571.42188 Z M 1712.25,701.25 V 1921.5117 H 384 V 1472 h 320 v 320 h 768 L 1280,1408 974.75,1410.625 1088,704 Z"
+       inkscape:label="id:line_art_01" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -108,36 +112,38 @@
        height="56"
        x="528.34814"
        y="1864.1136"
-       inkscape:label="id: plinth_01  label: z=4bo anchor=bottom" />
+       inkscape:label="id: plinth_01  z:orb,  anchor:bottom" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer13"
-     inkscape:label="stars_field"
+     inkscape:label="fields"
      sodipodi:insensitive="true"
      style="display:none">
     <path
        style="fill:none;stroke:#3398b5;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
        d="M 384,1921.5118 H 1712.25 V 701.25002 L 1088,704.00002 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path1-4-0"
-       sodipodi:nodetypes="ccccccccccc" />
+       sodipodi:nodetypes="ccccccccccc"
+       inkscape:label="id:stars_field" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="spawn"
+     inkscape:label="spawns"
      style="display:inline">
     <circle
        style="fill:#ff0000;stroke:none;stroke-width:1.48875"
        id="path2-9"
        cx="548.84814"
        cy="1801.9618"
-       r="18.5" />
+       r="18.5"
+       inkscape:label="id: spawn_01, z:orb" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer3"
-     inkscape:label="camera_01"
+     inkscape:label="cameras"
      sodipodi:insensitive="true"
      style="display:inline">
     <circle
@@ -145,32 +151,28 @@
        id="path3"
        cx="1280"
        cy="1385.4688"
-       r="5" />
+       r="5"
+       inkscape:label="id:camera_01" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer9"
-     inkscape:label="globe_1"
-     sodipodi:insensitive="true"
-     style="display:inline">
+     inkscape:label="globes"
+     style="display:inline"
+     sodipodi:insensitive="true">
     <circle
        style="fill:#0000ff;stroke:none;stroke-width:0.201182"
        id="path2-9-6"
        cx="543.5"
        cy="1624.5"
-       r="2.5" />
-  </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer10"
-     inkscape:label="globe_2"
-     sodipodi:insensitive="true"
-     style="display:inline">
+       r="2.5"
+       inkscape:label="id: globe_02, z:orb" />
     <circle
-       style="fill:#0000ff;stroke:none;stroke-width:0.201182"
+       style="display:inline;fill:#0000ff;stroke:none;stroke-width:0.201182"
        id="path2-9-6-7"
        cx="1585.5"
        cy="1844.5"
-       r="2.5" />
+       r="2.5"
+       inkscape:label="id: globe_01, z:orb" />
   </g>
 </svg>

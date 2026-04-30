@@ -14,3 +14,6 @@ Current intended authored level shape:
 - optional metadata/debug annotations
 
 This folder is for schema guidance and adjacent helpers, not live runtime logic.
+
+See also:
+- [SVG map taxonomy](./svg-map-taxonomy.md)
