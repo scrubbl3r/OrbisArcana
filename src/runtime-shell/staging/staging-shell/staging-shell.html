@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Orbis Arcana Staging Shell</title>
   <link rel="stylesheet" href="../../ui/staging-ui.css?v=20260421a" />
-  <link rel="stylesheet" href="./staging-shell.css?v=20260421g" />
+  <link rel="stylesheet" href="./staging-shell.css?v=20260430a" />
   <link rel="stylesheet" href="../dev-staging/dev-staging.css?v=20260421i" />
   <link rel="stylesheet" href="../orb-stage/orb-stage.css?v=20260424b" />
   <link rel="stylesheet" href="../level-stage/level-stage.css?v=20260428d" />
@@ -47,6 +47,10 @@
       <div id="levelStageMount" class="shellMount shellMountLevel" aria-label="Level stage mount"></div>
     </section>
   </main>
+  <div id="shellPerfTraceControls" class="shellPerfTraceControls" aria-label="Performance trace controls">
+    <button id="shellPerfTraceReset" class="shellPerfTraceButton" type="button">Reset</button>
+    <button id="shellPerfTraceCapture" class="shellPerfTraceButton" type="button">Capture</button>
+  </div>
 
   <div id="calibOverlay" class="shellCalibOverlay off" aria-hidden="true">
     <div class="shellCalibCard" role="dialog" aria-label="Calibration">
@@ -56,6 +60,6 @@
     </div>
   </div>
 
-  <script type="module" src="./staging-shell.js?v=20260430a"></script>
+  <script type="module" src="./staging-shell.js?v=20260430b"></script>
 </body>
 </html>

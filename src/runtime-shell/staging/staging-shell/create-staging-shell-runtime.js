@@ -932,18 +932,6 @@ function updateShellStageReadouts(shellContext) {
   if (!refs || !stage || !orbState) return;
   if (refs.gVal) refs.gVal.textContent = (Number(orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul).toFixed(2);
   if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag).toFixed(2);
-  renderShellPerfTraceReadout(shellContext);
-}
-
-function renderShellPerfTraceReadout(shellContext) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const perfTrace = runtime && runtime.perfTrace ? runtime.perfTrace : null;
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  const debugEl = activeStageAdapter && activeStageAdapter.refs
-    ? activeStageAdapter.refs.depthReadout
-    : null;
-  if (!perfTrace || !debugEl || typeof perfTrace.shouldReport !== "function" || !perfTrace.shouldReport()) return;
-  debugEl.textContent = perfTrace.summaryLine();
 }
 
 function computeShellImpactMetric(shellContext, rawImpactV) {
@@ -1613,6 +1601,42 @@ function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 
       runtime.receiverSpellRuntime &&
       runtime.receiverSpellRuntime.teleportOrbRuntimeToSpawn,
   });
+}
+
+function bindShellPerfTraceControls(shellContext) {
+  const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const perfTrace = runtime && runtime.perfTrace ? runtime.perfTrace : null;
+  if (!rootDocument || !perfTrace) return;
+  const resetBtn = rootDocument.getElementById("shellPerfTraceReset");
+  const captureBtn = rootDocument.getElementById("shellPerfTraceCapture");
+
+  const setButtonText = (button, text, resetText) => {
+    if (!button) return;
+    button.textContent = text;
+    if (!resetText) return;
+    rootDocument.defaultView.setTimeout(() => {
+      button.textContent = resetText;
+    }, 900);
+  };
+
+  if (resetBtn && typeof perfTrace.reset === "function") {
+    resetBtn.addEventListener("click", () => {
+      perfTrace.reset();
+      setButtonText(resetBtn, "Reset OK", "Reset");
+    });
+  }
+
+  if (captureBtn && typeof perfTrace.copy === "function") {
+    captureBtn.addEventListener("click", async () => {
+      try {
+        await perfTrace.copy();
+        setButtonText(captureBtn, "Copied", "Capture");
+      } catch (_) {
+        setButtonText(captureBtn, "Failed", "Capture");
+      }
+    });
+  }
 }
 
 function shellGrantOrbGrace(shellContext, grace = {}) {
@@ -3281,6 +3305,7 @@ export async function createStagingShellRuntime({
     activateShellStageVisuals(shellContext);
     bindShellStageResize(shellContext);
     bindShellStageActions(shellContext);
+    bindShellPerfTraceControls(shellContext);
     startShellStageLoop(shellContext);
     if (bootStatus && typeof bootStatus.setStatus === "function") {
       bootStatus.setStatus({

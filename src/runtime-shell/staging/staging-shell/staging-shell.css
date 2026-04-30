@@ -208,6 +208,34 @@ body {
   color: var(--text-muted);
 }
 
+.shellPerfTraceControls {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1100;
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.shellPerfTraceButton {
+  min-width: 68px;
+  height: 30px;
+  border: 1px solid rgba(210, 230, 255, 0.34);
+  border-radius: 6px;
+  background: rgba(7, 12, 20, 0.78);
+  color: rgba(235, 246, 255, 0.96);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.shellPerfTraceButton:active {
+  transform: translateY(1px);
+}
+
 .stagingShell {
   height: 100vh;
   padding: 18px 18px 20px;
