@@ -43,8 +43,6 @@ const ORB_STAGE_TEMPLATE = `
           </div>
         </div>
 
-        <div id="testGlobe" class="pickupGlobe" aria-label="Energy globe"></div>
-
         <div id="deathPanel" class="deathPanel off" aria-hidden="true">
           <div class="deathCard" role="dialog" aria-label="You died">
             <div class="deathTitle">YOU DIED</div>

@@ -41,6 +41,7 @@ export function bootstrapStagingRuntimeContext({
   getOrbVisualRadiusPx = null,
   axisToColor01 = () => 0,
   bindGlobe3dRuntime = null,
+  enableLegacyOrbFxRuntime = null,
   gestureHooks = {},
 } = {}) {
   const eventBus = createEventBus();
@@ -225,10 +226,12 @@ export function bootstrapStagingRuntimeContext({
     });
   }
 
-  const enableLegacyOrbFxRuntime = !!(els.orbInterior && els.physStage);
+  const shouldCreateLegacyOrbFxRuntime = typeof enableLegacyOrbFxRuntime === "boolean"
+    ? enableLegacyOrbFxRuntime
+    : !!(els.orbInterior && els.physStage);
   const orbSystemsBundle = createOrbSystemsBundle({
     createOrbSystem,
-    createOrbFxSystem: enableLegacyOrbFxRuntime ? createOrbFxSystem : null,
+    createOrbFxSystem: shouldCreateLegacyOrbFxRuntime ? createOrbFxSystem : null,
     gameState,
     eventBus,
     orbFxOptions: {

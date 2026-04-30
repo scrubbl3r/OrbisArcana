@@ -189,6 +189,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         stageAdapters.bindGlobe3dRuntime(args);
       }
     },
+    enableLegacyOrbFxRuntime: false,
     gestureHooks: {
       isDiversityLampLit,
       flashShakeLamp: () => {
