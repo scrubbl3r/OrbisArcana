@@ -65,6 +65,9 @@ export function createWorldGlobe3dRuntime({
         bo,
         materialConfig: config.material,
         name: `world_globe3d:${globeId}`,
+        depthTest: false,
+        renderOrder: 40,
+        includeVisibilityCore: true,
       })
       : null;
     if (model && group && typeof group.add === "function") group.add(model);
