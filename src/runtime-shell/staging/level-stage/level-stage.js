@@ -7,7 +7,7 @@ import {
   buildOrbFractureVisualState,
 } from "../../../game-runtime/orb/orb-fracture-base-state.js";
 import { createLevelStageRuntimeAdapter } from "./level-stage-runtime-adapter.js?v=20260429c";
-import { createLevelStageDepth3dLayer } from "./level-stage-depth3d.js?v=20260430h";
+import { createLevelStageDepth3dLayer } from "./level-stage-depth3d.js?v=20260430i";
 import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425w";
 import { createAuthoredStageController } from "../authored-stage-controller.js?v=20260428a";
 import {
@@ -114,6 +114,7 @@ export function renderLevelStage(root, {
   externalCameraAuthority = false,
   enable2dOrb = null,
   enable2dGlobe = null,
+  perfTrace = null,
 } = {}) {
   if (!root) return null;
   const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : {};
@@ -196,6 +197,7 @@ export function renderLevelStage(root, {
     labelEl: refs.labelMeta,
     debugEl: refs.depthReadout,
     orbDiameterWorldUnits: orbBaseVisualState.diameterPx,
+    perfTrace,
   });
 
   const controller = createAuthoredStageController({

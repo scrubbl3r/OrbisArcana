@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260430h";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260430i";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -46,6 +46,7 @@ import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
 } from "../authored-level-camera.js?v=20260424c";
+import { createPerfTrace } from "../perf-trace.js?v=20260430a";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -741,8 +742,41 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const clampBounds = shellGameplayCameraClampBounds(shellContext);
   const collisionBox = shellResolvedCollisionBox(shellContext);
   const target = shellGameplayCameraTarget(shellContext, orbState);
+  const perfTrace = runtime.perfTrace || null;
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
-    ? cameraRuntime.resolveFrame({
+    ? (
+        perfTrace && typeof perfTrace.measure === "function"
+          ? perfTrace.measure("camera.resolve", () => cameraRuntime.resolveFrame({
+              targetXW: target.xW,
+              targetYW: target.yW,
+              viewportWidthPx: safeRect.width || 0,
+              viewportHeightPx: safeRect.height || 0,
+              worldWidthPx: shellWorldWidth(shellContext),
+              worldHeightPx: shellWorldHeight(shellContext),
+              zoom: shellGameplayCameraZoom(shellContext),
+              followMode: shellGameplayCameraFollowMode(shellContext),
+              fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+              fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+              screenAnchorX: cameraConfig.screenAnchorX,
+              screenAnchorY: cameraConfig.screenAnchorY,
+              deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+              deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
+              deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
+              deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+              followLerpX: cameraConfig.followLerpX,
+              followLerpY: cameraConfig.followLerpY,
+              clampLeftXW: clampBounds.leftXW,
+              clampRightXW: clampBounds.rightXW,
+              clampTopYW: clampBounds.topYW,
+              clampBottomYW: clampBounds.bottomYW,
+              clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
+              clampInsetRightPx: cameraConfig.clampInsetRightPx,
+              clampInsetTopPx: cameraConfig.clampInsetTopPx,
+              clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
+              nowMs,
+              target: scratch.cameraResolvedFrame,
+            }))
+          : cameraRuntime.resolveFrame({
         targetXW: target.xW,
         targetYW: target.yW,
         viewportWidthPx: safeRect.width || 0,
@@ -772,6 +806,7 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
         nowMs,
         target: scratch.cameraResolvedFrame,
       })
+      )
     : null;
   const camLeft = Number(frame && frame.camLeft) || 0;
   const camTop = Number(frame && frame.camTop) || 0;
@@ -803,7 +838,11 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
     args.zoom = zoom;
     args.worldWidthPx = metrics.worldWidthPx;
     args.worldHeightPx = metrics.worldHeightPx;
-    activeStageAdapter.applyCameraFrame(args);
+    if (perfTrace && typeof perfTrace.measure === "function") {
+      perfTrace.measure("stage.applyCameraFrame", () => activeStageAdapter.applyCameraFrame(args));
+    } else {
+      activeStageAdapter.applyCameraFrame(args);
+    }
   }
   return metrics;
 }
@@ -893,6 +932,18 @@ function updateShellStageReadouts(shellContext) {
   if (!refs || !stage || !orbState) return;
   if (refs.gVal) refs.gVal.textContent = (Number(orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul).toFixed(2);
   if (refs.dVal) refs.dVal.textContent = (Number(stage.phys.downDrag) || SHELL_STAGE_UI_DEFAULTS.downDrag).toFixed(2);
+  renderShellPerfTraceReadout(shellContext);
+}
+
+function renderShellPerfTraceReadout(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const perfTrace = runtime && runtime.perfTrace ? runtime.perfTrace : null;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  const debugEl = activeStageAdapter && activeStageAdapter.refs
+    ? activeStageAdapter.refs.depthReadout
+    : null;
+  if (!perfTrace || !debugEl || typeof perfTrace.shouldReport !== "function" || !perfTrace.shouldReport()) return;
+  debugEl.textContent = perfTrace.summaryLine();
 }
 
 function computeShellImpactMetric(shellContext, rawImpactV) {
@@ -1224,10 +1275,16 @@ function startShellStageLoop(shellContext) {
     runtime.stageLoop.stop();
   }
 
+  const perfTrace = runtime.perfTrace || null;
+  const traceMeasure = (name, fn) => (
+    perfTrace && typeof perfTrace.measure === "function"
+      ? perfTrace.measure(name, fn)
+      : (typeof fn === "function" ? fn() : undefined)
+  );
   const pipelineHooks = {
     clamp,
-    getLateralBounds: () => shellLateralBounds(shellContext),
-    getCeilingWorld: () => shellCeilingWorld(shellContext),
+    getLateralBounds: () => traceMeasure("bounds.lateral", () => shellLateralBounds(shellContext)),
+    getCeilingWorld: () => traceMeasure("bounds.ceiling", () => shellCeilingWorld(shellContext)),
     getCameraSteeringState: () => (
       runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
         ? runtime.cameraInputOrbBridge.getState()
@@ -1256,18 +1313,19 @@ function startShellStageLoop(shellContext) {
         floatGraceUntilMs: 0,
       });
     },
-    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
-    computeImpactMetric: (rawImpactV) => computeShellImpactMetric(shellContext, rawImpactV),
-    drawStars: () => drawShellStars(shellContext),
-    drawWorldBackdrop: () => drawShellBackdrop(shellContext),
-    updateOrbStrokeColor: (frameDt) => updateShellOrbStrokeColor(shellContext, frameDt),
-    applyOrbTransform: () => {
+    groundCenterWorld: () => traceMeasure("world.groundCenter", () => shellGroundCenterWorld(shellContext)),
+    computeImpactMetric: (rawImpactV) => traceMeasure("impact.metric", () => computeShellImpactMetric(shellContext, rawImpactV)),
+    drawStars: () => traceMeasure("draw.stars", () => drawShellStars(shellContext)),
+    drawWorldBackdrop: () => traceMeasure("draw.backdrop", () => drawShellBackdrop(shellContext)),
+    updateOrbStrokeColor: (frameDt) => traceMeasure("orb.stroke", () => updateShellOrbStrokeColor(shellContext, frameDt)),
+    applyOrbTransform: () => traceMeasure("orb.applyTransform", () => {
       applyShellGroundLine(shellContext);
       applyShellOrbTransform(shellContext);
-    },
-    getBoundarySegments: () => shellResolvedBoundarySegments(shellContext),
-    getCavityCollisionConfig: () => shellResolvedCavityCollisionConfig(shellContext),
-    updateDebugReadout: () => updateShellStageReadouts(shellContext),
+    }),
+    getBoundarySegments: () => traceMeasure("collision.segments", () => shellResolvedBoundarySegments(shellContext)),
+    getCavityCollisionConfig: () => traceMeasure("collision.config", () => shellResolvedCavityCollisionConfig(shellContext)),
+    updateDebugReadout: () => traceMeasure("debug.readout", () => updateShellStageReadouts(shellContext)),
+    traceMeasure,
   };
 
   runtime.stageLoop = createOrbRuntimeLoop({
@@ -1279,14 +1337,27 @@ function startShellStageLoop(shellContext) {
     isReady: () => true,
     clamp,
     runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
-      updateShellFrameMetrics(shellContext, nowMs);
+      const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+        ? runtime.orbRuntimeState.get()
+        : null;
+      if (perfTrace && typeof perfTrace.frameStart === "function") {
+        const metrics = runtime.frameMetrics || {};
+        perfTrace.frameStart({
+          ts,
+          xW: Number(orbState && orbState.xW) || 0,
+          yW: Number(orbState && orbState.yW) || 0,
+          camLeft: Number(metrics.camLeft) || 0,
+          camTop: Number(metrics.camTop) || 0,
+        });
+      }
+      traceMeasure("frame.metrics", () => updateShellFrameMetrics(shellContext, nowMs));
       const receiverHostRuntime = runtime.receiverHostRuntime || null;
       const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || runtime.mvp || null;
       const orbFxSystem =
         (receiverHostRuntime && receiverHostRuntime.runtimeContext && receiverHostRuntime.runtimeContext.orbFxSystem) ||
         (mvp && mvp.orbFxSystem) ||
         null;
-      runOrbRuntimePipeline({
+      traceMeasure("orb.pipeline", () => runOrbRuntimePipeline({
         ts,
         dt,
         nowMs,
@@ -1298,7 +1369,15 @@ function startShellStageLoop(shellContext) {
         orbFxSystem,
         worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
         hooks: pipelineHooks,
-      });
+      }));
+      if (perfTrace && typeof perfTrace.frameEnd === "function") {
+        const metrics = runtime.frameMetrics || {};
+        perfTrace.frameEnd({
+          camLeft: Number(metrics.camLeft) || 0,
+          camTop: Number(metrics.camTop) || 0,
+          zoom: Number(metrics.zoom) || 1,
+        });
+      }
     },
   });
   runtime.orbRuntimeLoop = runtime.stageLoop;
@@ -2347,6 +2426,7 @@ function createStagingShellContext({
   designLevel = DEFAULT_LEVEL_STAGE_LEVEL,
   sharedModules,
   modeController = null,
+  perfTrace = null,
 } = {}) {
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, levelStageView });
   const orbStageAdapter = createOrbStageAdapter(orbStageView);
@@ -2386,6 +2466,7 @@ function createStagingShellContext({
       mvp: null,
       frameMetrics: null,
       stageRectCache: null,
+      perfTrace,
       eventBus: null,
       worldSystem: null,
       orbRuntimeLoop: null,
@@ -3037,12 +3118,15 @@ export async function createStagingShellRuntime({
 
   const gameplayLevel = DEFAULT_ORB_STAGE_LEVEL;
   const designLevel = DEFAULT_LEVEL_STAGE_LEVEL;
+  const perfTrace = createPerfTrace();
+  perfTrace.installGlobal(rootDocument && rootDocument.defaultView ? rootDocument.defaultView : window);
   const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: gameplayLevel }) : null;
   const levelStageView = levelRoot
     ? renderLevelStage(levelRoot, {
         level: designLevel,
         externalCameraAuthority: true,
+        perfTrace,
       })
     : null;
 
@@ -3082,6 +3166,7 @@ export async function createStagingShellRuntime({
       designLevel,
       sharedModules,
       modeController,
+      perfTrace,
     });
     shellContext.bootStatus = bootStatus;
     syncActiveShellStage(shellContext);

@@ -40,6 +40,7 @@ export function createInitialCameraInputState({
       preloadDetail: "",
       frameMs: 0,
       fps: 0,
+      detectMs: 0,
       lastError: "",
     },
   };

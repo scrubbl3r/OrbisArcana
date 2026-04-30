@@ -61,6 +61,7 @@ export function createLevelStageDepth3dLayer({
   labelEl = null,
   debugEl = null,
   orbDiameterWorldUnits = BO_WORLD_UNITS,
+  perfTrace = null,
 } = {}) {
   if (!root) return null;
   const sceneRuntime = createLevelStageDepth3dScene({
@@ -282,9 +283,18 @@ export function createLevelStageDepth3dLayer({
     lastCameraX = cameraFrame.x;
     lastCameraY = cameraFrame.y;
     lastCameraZ = cameraFrame.z;
-    orb3dActorRuntime.update(frameNowMs / 1000);
-    tickGlobe3dRuntime(frameNowMs);
-    renderer.render(scene, camera);
+    const measure = perfTrace && typeof perfTrace.measure === "function"
+      ? perfTrace.measure
+      : null;
+    if (measure) {
+      measure("depth3d.orbUpdate", () => orb3dActorRuntime.update(frameNowMs / 1000));
+      measure("depth3d.globes", () => tickGlobe3dRuntime(frameNowMs));
+      measure("depth3d.renderer", () => renderer.render(scene, camera));
+    } else {
+      orb3dActorRuntime.update(frameNowMs / 1000);
+      tickGlobe3dRuntime(frameNowMs);
+      renderer.render(scene, camera);
+    }
   }
 
   function loadProps(props = []) {

@@ -215,12 +215,15 @@ export function createCameraInputTracker({
     lastDetectionAtMs = observedAtMs;
     lastVideoTime = videoEl.currentTime;
 
+    const detectStartMs = now();
     const result = handLandmarker.detectForVideo(videoEl, observedAtMs);
+    const detectMs = Math.max(0, now() - detectStartMs);
     const observation = extractPrimaryHandObservation(result, preferredHand, observedAtMs);
     onObservation({
       ...observation,
       frameMs,
       fps: frameMs > 0 ? (1000 / frameMs) : 0,
+      detectMs,
     });
   }
 

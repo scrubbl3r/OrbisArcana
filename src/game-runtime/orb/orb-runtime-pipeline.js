@@ -116,9 +116,12 @@ export function runOrbRuntimePipeline({
   const getBoundarySegments = hooks.getBoundarySegments;
   const getCavityCollisionConfig = hooks.getCavityCollisionConfig;
   const getSpawnHoldConfig = hooks.getSpawnHoldConfig;
+  const traceMeasure = typeof hooks.traceMeasure === "function"
+    ? hooks.traceMeasure
+    : (_name, fn) => (typeof fn === "function" ? fn() : undefined);
 
   if (mvp && mvp.orbSystem && typeof mvp.orbSystem.tick === "function") {
-    mvp.orbSystem.tick(nowMs);
+    traceMeasure("mvp.orbSystem", () => mvp.orbSystem.tick(nowMs));
   }
 
   if (state.spawnHoldActive) {
@@ -166,8 +169,8 @@ export function runOrbRuntimePipeline({
       if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
       if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
       if (typeof applyOrbTransform === "function") applyOrbTransform();
-      if (orbFxSystem && typeof orbFxSystem.tick === "function") orbFxSystem.tick(ts, dt);
-      if (worldSystem && typeof worldSystem.tick === "function") worldSystem.tick(ts, dt);
+      if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
+      if (worldSystem && typeof worldSystem.tick === "function") traceMeasure("world.tick", () => worldSystem.tick(ts, dt));
       if (typeof updateDebugReadout === "function") updateDebugReadout();
       return;
     }
@@ -198,8 +201,8 @@ export function runOrbRuntimePipeline({
     if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
     if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
     if (typeof applyOrbTransform === "function") applyOrbTransform();
-    if (orbFxSystem && typeof orbFxSystem.tick === "function") orbFxSystem.tick(ts, dt);
-    if (worldSystem && typeof worldSystem.tick === "function") worldSystem.tick(ts, dt);
+    if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
+    if (worldSystem && typeof worldSystem.tick === "function") traceMeasure("world.tick", () => worldSystem.tick(ts, dt));
     if (typeof updateDebugReadout === "function") updateDebugReadout();
     return;
   }
@@ -336,7 +339,7 @@ export function runOrbRuntimePipeline({
   if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
   if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
   if (typeof applyOrbTransform === "function") applyOrbTransform();
-  if (orbFxSystem && typeof orbFxSystem.tick === "function") orbFxSystem.tick(ts, dt);
-  if (worldSystem && typeof worldSystem.tick === "function") worldSystem.tick(ts, dt);
+  if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
+  if (worldSystem && typeof worldSystem.tick === "function") traceMeasure("world.tick", () => worldSystem.tick(ts, dt));
   if (typeof updateDebugReadout === "function") updateDebugReadout();
 }
