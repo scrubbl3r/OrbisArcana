@@ -225,9 +225,10 @@ export function bootstrapStagingRuntimeContext({
     });
   }
 
+  const enableLegacyOrbFxRuntime = !!(els.orbInterior && els.physStage);
   const orbSystemsBundle = createOrbSystemsBundle({
     createOrbSystem,
-    createOrbFxSystem,
+    createOrbFxSystem: enableLegacyOrbFxRuntime ? createOrbFxSystem : null,
     gameState,
     eventBus,
     orbFxOptions: {
