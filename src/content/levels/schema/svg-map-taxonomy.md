@@ -15,6 +15,10 @@ child `inkscape:label` metadata defines item identity and actor-depth behavior.
 - `cameras`: camera anchors.
 - `globes`: globe pickup/emitter actors.
 
+Hidden visual layers are not hydrated into runtime visual output. Hidden
+`fields` can remain in the SVG as authoring/data scaffolding, but they do not
+generate stars or allocate visual runtime resources unless made visible.
+
 Layer order is authoritative for broad authored paint order. Lower SVG layers
 render behind higher SVG layers; child shapes inherit their parent layer's stack
 index. Runtime z metadata such as `z:orb` still controls physical 3D/gameplay

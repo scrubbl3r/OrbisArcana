@@ -933,7 +933,10 @@ export function buildSvgStarsFieldRegions({
     (Array.isArray(starsFieldLayerLabels) ? starsFieldLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   const loops = authoredLayers
-    .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()))
+    .filter((layer) => (
+      allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase())
+      && isSvgRenderLayerVisible(layer)
+    ))
     .flatMap((layer) => {
       const pathLoops = (Array.isArray(layer && layer.paths) ? layer.paths : []).map((path, index) => {
         const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
