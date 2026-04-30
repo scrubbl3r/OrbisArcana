@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260429b";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260430a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -120,6 +120,10 @@ export function createStudioBootstrap({
       previewRoot: els.orbLifecyclePreviewRoot,
       orb: getElementById("orbLifecycleLaneOrb"),
       orbShatterLayer: getElementById("orbLifecycleShatterLayer"),
+    }),
+    orbLifecycle3d: Object.freeze({
+      ...els,
+      previewRoot: els.orbLifecycle3dPreviewRoot,
     }),
     orbGlobe: Object.freeze({
       ...els,

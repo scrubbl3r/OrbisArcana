@@ -1,0 +1,16 @@
+export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({
+  maxHits: 3,
+  maxCracks: 22,
+  crackColor: 0xf8fdff,
+  crackAlpha: 0.72,
+  crackWidthPx: 1.25,
+  crackLiftBO: 0.012,
+  criticalGlow: 1.35,
+  particleCount: 72,
+  particleColor: 0xdff7ff,
+  particleSizePx: 4.5,
+  particleSpeedMinBO: 1.35,
+  particleSpeedMaxBO: 4.25,
+  particleDrag: 2.8,
+  particleTtlMs: 1050,
+});

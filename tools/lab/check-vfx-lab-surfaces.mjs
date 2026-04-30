@@ -51,6 +51,7 @@ const surfaces = createLabEffectSurfaces({
   createOrbBaseAuthoringAdapter: createSentinelAdapter("orb-base"),
   createOrbGlobe3dAuthoringAdapter: createSentinelAdapter("orb-globe-3d"),
   createOrbGlobeAuthoringAdapter: createSentinelAdapter("orb-globe"),
+  createOrbLifecycle3dAuthoringAdapter: createSentinelAdapter("orb-lifecycle-3d"),
   createOrbLifecycleAuthoringAdapter: createSentinelAdapter("orb-lifecycle"),
   createOrbNodAuthoringAdapter: createSentinelAdapter("orb-nod"),
   createOrbNod3dAuthoringAdapter: createSentinelAdapter("orb-nod3d"),

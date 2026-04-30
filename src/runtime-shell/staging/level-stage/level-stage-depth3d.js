@@ -20,8 +20,16 @@ import { createGlobe3dModel } from "../../../game-runtime/world/globe-3d-model.j
 import { createGlobeMaterial, createGlobePointLight } from "../../../game-runtime/world/globe-3d-material.js";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
 import {
+  createOrbLifecycle3dCracks,
+  createOrbLifecycle3dDissolveBurst,
+  updateOrbLifecycle3dDissolveBurst,
+} from "../../../game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260430a";
+import {
+  EVT_ORB_DAMAGE_APPLIED,
   EVT_ORB_DIED,
+  EVT_ORB_HEALED,
   EVT_ORB_REVIVED,
   EVT_PICKUP_COLLECTED,
   EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
@@ -664,6 +672,13 @@ export function createLevelStageDepth3dLayer({
     inner: [],
     dead: false,
   };
+  const orbLifecycle3d = {
+    hitsTaken: 0,
+    maxHits: Math.max(1, Number(ORB_LIFECYCLE_3D_DEFAULTS.maxHits) || 3),
+    fractureSeed: 1,
+    cracks: null,
+    burst: null,
+  };
   const globe3dUnsub = [];
   let lastTelemetryText = "";
   let lastTelemetryBO = "";
@@ -745,6 +760,7 @@ export function createLevelStageDepth3dLayer({
     }
     orbRuntime = null;
     orbRuntimeBO = 0;
+    orbLifecycle3d.cracks = null;
   }
 
   function clearGlobe3dObjects() {
@@ -757,6 +773,66 @@ export function createLevelStageDepth3dLayer({
     globe3dWorld.map.clear();
     globe3dOrb.orbiting = [];
     globe3dOrb.inner = [];
+    removeOrbLifecycle3dCracks();
+    if (orbLifecycle3d.burst && orbLifecycle3d.burst.parent) {
+      orbLifecycle3d.burst.parent.remove(orbLifecycle3d.burst);
+    }
+    if (orbLifecycle3d.burst) disposeThreeObject(orbLifecycle3d.burst);
+    orbLifecycle3d.burst = null;
+  }
+
+  function removeOrbLifecycle3dCracks() {
+    if (orbLifecycle3d.cracks && orbLifecycle3d.cracks.parent) {
+      orbLifecycle3d.cracks.parent.remove(orbLifecycle3d.cracks);
+    }
+    if (orbLifecycle3d.cracks) disposeThreeObject(orbLifecycle3d.cracks);
+    orbLifecycle3d.cracks = null;
+  }
+
+  function rebuildOrbLifecycle3dCracks() {
+    if (!orbRuntime || !orbRuntime.model) return;
+    removeOrbLifecycle3dCracks();
+    if (orbLifecycle3d.hitsTaken <= 0) return;
+    orbLifecycle3d.cracks = createOrbLifecycle3dCracks({
+      bo: orbRuntimeBO || baseOrbWorldUnits,
+      hitsTaken: orbLifecycle3d.hitsTaken,
+      maxHits: orbLifecycle3d.maxHits,
+      seed: orbLifecycle3d.fractureSeed,
+      config: ORB_LIFECYCLE_3D_DEFAULTS,
+    });
+    orbRuntime.model.add(orbLifecycle3d.cracks);
+  }
+
+  function clearOrbLifecycle3dBurst() {
+    if (orbLifecycle3d.burst && orbLifecycle3d.burst.parent) {
+      orbLifecycle3d.burst.parent.remove(orbLifecycle3d.burst);
+    }
+    if (orbLifecycle3d.burst) disposeThreeObject(orbLifecycle3d.burst);
+    orbLifecycle3d.burst = null;
+  }
+
+  function startOrbLifecycle3dDissolve(payload = {}) {
+    clearOrbLifecycle3dBurst();
+    removeOrbLifecycle3dCracks();
+    if (orbRuntime && orbRuntime.model) orbRuntime.model.visible = false;
+    orbLifecycle3d.burst = createOrbLifecycle3dDissolveBurst({
+      bo: orbRuntimeBO || baseOrbWorldUnits,
+      seed: Number(payload.fractureSeed || payload.seed || orbLifecycle3d.fractureSeed) || 1,
+      config: ORB_LIFECYCLE_3D_DEFAULTS,
+      nowMs: Number(payload.atMs) || performance.now(),
+    });
+    orbLifecycle3d.burst.position.set(currentOrbThreeX, currentOrbThreeY, -currentOrbDepthPx);
+    actorGroup.add(orbLifecycle3d.burst);
+    scheduleGlobe3dFrames();
+  }
+
+  function resetOrbLifecycle3d(payload = {}) {
+    orbLifecycle3d.hitsTaken = 0;
+    orbLifecycle3d.maxHits = Math.max(1, Number(payload.maxHits) || Number(ORB_LIFECYCLE_3D_DEFAULTS.maxHits) || 3);
+    orbLifecycle3d.fractureSeed = Number(payload.fractureSeed || payload.seed || orbLifecycle3d.fractureSeed) || 1;
+    clearOrbLifecycle3dBurst();
+    removeOrbLifecycle3dCracks();
+    if (orbRuntime && orbRuntime.model) orbRuntime.model.visible = true;
   }
 
   function createGlobe3dObject({
@@ -947,6 +1023,24 @@ export function createLevelStageDepth3dLayer({
     globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
       reconcileOrbGlobe3dInventory(payload.globes || []);
     }));
+    globe3dUnsub.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
+      orbLifecycle3d.hitsTaken = Math.max(0, Number(payload.hitsTaken) || 0);
+      orbLifecycle3d.maxHits = Math.max(1, Number(payload.maxHits) || orbLifecycle3d.maxHits);
+      orbLifecycle3d.fractureSeed = Number(payload.fractureSeed || payload.seed || orbLifecycle3d.fractureSeed) || 1;
+      if (orbRuntime && orbRuntime.model) orbRuntime.model.visible = true;
+      clearOrbLifecycle3dBurst();
+      rebuildOrbLifecycle3dCracks();
+      scheduleGlobe3dFrames();
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_ORB_HEALED, (payload = {}) => {
+      orbLifecycle3d.hitsTaken = Math.max(0, Number(payload.hitsTaken) || 0);
+      orbLifecycle3d.maxHits = Math.max(1, Number(payload.maxHits) || orbLifecycle3d.maxHits);
+      orbLifecycle3d.fractureSeed = Number(payload.fractureSeed || payload.seed || orbLifecycle3d.fractureSeed) || 1;
+      if (orbRuntime && orbRuntime.model) orbRuntime.model.visible = true;
+      clearOrbLifecycle3dBurst();
+      rebuildOrbLifecycle3dCracks();
+      scheduleGlobe3dFrames();
+    }));
     globe3dUnsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       loadOrbGlobe3d(payload);
     }));
@@ -959,8 +1053,18 @@ export function createLevelStageDepth3dLayer({
       while (globe3dOrb.inner.length) removeGlobe3dParticle(globe3dOrb.inner, () => true);
       root.dataset.depthGlobe3dOrbCount = "0";
     }));
+    globe3dUnsub.push(eventBus.on(EVT_ORB_DIED, (payload = {}) => {
+      orbLifecycle3d.hitsTaken = Math.max(orbLifecycle3d.hitsTaken, Number(payload.hitsTaken) || orbLifecycle3d.maxHits);
+      orbLifecycle3d.maxHits = Math.max(1, Number(payload.maxHits) || orbLifecycle3d.maxHits);
+      orbLifecycle3d.fractureSeed = Number(payload.fractureSeed || payload.seed || orbLifecycle3d.fractureSeed) || 1;
+      startOrbLifecycle3dDissolve(payload);
+    }));
     globe3dUnsub.push(eventBus.on(EVT_ORB_REVIVED, () => {
       globe3dOrb.dead = false;
+      scheduleGlobe3dFrames();
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_ORB_REVIVED, (payload = {}) => {
+      resetOrbLifecycle3d(payload);
       scheduleGlobe3dFrames();
     }));
   }
@@ -1043,6 +1147,9 @@ export function createLevelStageDepth3dLayer({
     updateWorldGlobe3dPickups(timeSec);
     updateOrbGlobe3dOrbiting(timeSec);
     updateOrbGlobe3dInner(dtSec);
+    if (orbLifecycle3d.burst && !updateOrbLifecycle3dDissolveBurst(orbLifecycle3d.burst, nowMs)) {
+      clearOrbLifecycle3dBurst();
+    }
   }
 
   function hasActiveGlobe3dAnimation() {
@@ -1050,6 +1157,7 @@ export function createLevelStageDepth3dLayer({
       globe3dWorld.pickups.some((pickup) => pickup && pickup.active)
       || globe3dOrb.orbiting.length > 0
       || globe3dOrb.inner.length > 0
+      || !!orbLifecycle3d.burst
     );
   }
 
@@ -1337,6 +1445,12 @@ export function createLevelStageDepth3dLayer({
         });
         actorGroup.add(orbRuntime.model);
         if (orbRuntime.shadowSpot) actorGroup.add(orbRuntime.shadowSpot);
+        if (orbLifecycle3d.burst) {
+          orbRuntime.model.visible = false;
+        } else {
+          orbRuntime.model.visible = true;
+          rebuildOrbLifecycle3dCracks();
+        }
       }
       const resolvedZBO = Math.max(0, Number.isFinite(Number(zBO)) ? Number(zBO) : currentOrbZBO);
       currentOrbDepthPx = resolvedZBO * resolvedBO;

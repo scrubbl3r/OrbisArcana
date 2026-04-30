@@ -180,6 +180,33 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "orb-lifecycle-3d": {
+      const colorHex = (prefix, fallback) => {
+        const r = Math.round(toNum(p[`${prefix}R`], (fallback >> 16) & 255));
+        const g = Math.round(toNum(p[`${prefix}G`], (fallback >> 8) & 255));
+        const b = Math.round(toNum(p[`${prefix}B`], fallback & 255));
+        return `0x${[r, g, b].map((channel) => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, "0")).join("")}`;
+      };
+      return [
+        "export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({",
+        `  maxHits: ${Math.round(toNum(p.orbLifecycle3dHitTotal, 3))},`,
+        `  maxCracks: ${Math.round(toNum(p.orbLifecycle3dCrackTotal, 22))},`,
+        `  crackColor: ${colorHex("orbLifecycle3dCrack", 0xf8fdff)},`,
+        `  crackAlpha: ${clampNum(p.orbLifecycle3dCrackAlpha, 0, 1, 0.72).toFixed(2)},`,
+        `  crackWidthPx: ${Math.max(0.25, toNum(p.orbLifecycle3dCrackStroke, 1.25)).toFixed(2)},`,
+        `  crackLiftBO: ${clampNum(p.orbLifecycle3dCrackLift, 0, 0.2, 0.012).toFixed(3)},`,
+        `  criticalGlow: ${clampNum(p.orbLifecycle3dCriticalGlow, 0, 4, 1.35).toFixed(2)},`,
+        `  particleCount: ${Math.round(toNum(p.orbLifecycle3dParticleCount, 72))},`,
+        `  particleColor: ${colorHex("orbLifecycle3dParticle", 0xdff7ff)},`,
+        `  particleSizePx: ${Math.max(0.5, toNum(p.orbLifecycle3dParticleSize, 4.5)).toFixed(2)},`,
+        `  particleSpeedMinBO: ${clampNum(p.orbLifecycle3dParticleSpeedMin, 0, 16, 1.35).toFixed(2)},`,
+        `  particleSpeedMaxBO: ${clampNum(p.orbLifecycle3dParticleSpeedMax, 0, 16, 4.25).toFixed(2)},`,
+        `  particleDrag: ${clampNum(p.orbLifecycle3dParticleDrag, 0, 12, 2.8).toFixed(2)},`,
+        `  particleTtlMs: ${Math.round(toNum(p.orbLifecycle3dParticleTtl, 1050))},`,
+        "});",
+        "",
+      ].join("\n");
+    }
     case "orb-base":
       return [
         "export const ORB_BASE_VISUAL_DEFAULTS = Object.freeze({",
