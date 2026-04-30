@@ -184,6 +184,11 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         ? stageAdapters.axisToColor01(axis)
         : 0
     ),
+    bindGlobe3dRuntime: (args = {}) => {
+      if (stageAdapters && typeof stageAdapters.bindGlobe3dRuntime === "function") {
+        stageAdapters.bindGlobe3dRuntime(args);
+      }
+    },
     gestureHooks: {
       isDiversityLampLit,
       flashShakeLamp: () => {

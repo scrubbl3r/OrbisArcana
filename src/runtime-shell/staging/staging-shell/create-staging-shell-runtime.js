@@ -16,7 +16,7 @@ import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } fro
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260424h";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260429c";
 import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260428v";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260429d";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -1755,6 +1755,12 @@ async function initShellReceiverHostRuntime(shellContext) {
         return Number(runtime.stage && runtime.stage.phys && runtime.stage.phys.orbRadiusPx) || 0;
       },
       axisToColor01,
+      bindGlobe3dRuntime: (args = {}) => (
+        shellContext.levelStageAdapter &&
+        typeof shellContext.levelStageAdapter.bindGlobe3dRuntime === "function"
+          ? shellContext.levelStageAdapter.bindGlobe3dRuntime(args)
+          : null
+      ),
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
       getWorldItemSpawns: () => (
@@ -2050,6 +2056,27 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
     : null;
 }
 
+function syncLevelStageGlobe3dRuntime(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const levelAdapter = shellContext && shellContext.levelStageAdapter ? shellContext.levelStageAdapter : null;
+  if (!runtime || !levelAdapter || typeof levelAdapter.bindGlobe3dRuntime !== "function") return;
+  const spawns = (
+    runtime.currentLevelMapSummary &&
+    Array.isArray(runtime.currentLevelMapSummary.worldItemSpawns) &&
+    runtime.currentLevelMapSummary.worldItemSpawns.length
+  )
+    ? runtime.currentLevelMapSummary.worldItemSpawns
+    : (
+        typeof levelAdapter.getWorldItemSpawns === "function"
+          ? levelAdapter.getWorldItemSpawns()
+          : []
+      );
+  levelAdapter.bindGlobe3dRuntime({
+    eventBus: runtime.eventBus,
+    spawns,
+  });
+}
+
 function syncActiveShellStage(shellContext) {
   if (!shellContext) return null;
   const modeState = getShellModeState(shellContext);
@@ -2083,6 +2110,7 @@ function syncActiveShellStage(shellContext) {
               : []
           );
       stage.worldSystem.setSpawns(nextSpawns, performance.now());
+      syncLevelStageGlobe3dRuntime(shellContext);
     }
     if (runtime && runtime.cameraRuntime && typeof runtime.cameraRuntime.reset === "function") {
       runtime.cameraRuntime.reset();
@@ -2984,7 +3012,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260428a",
+  moduleCacheBustV = "20260429d",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -3138,6 +3166,7 @@ export async function createStagingShellRuntime({
     await initShellKwsRuntime(shellContext);
     await hydrateShellCurrentLevelMapSummary(shellContext);
     initializeShellStageRuntime(shellContext);
+    syncLevelStageGlobe3dRuntime(shellContext);
     const orbStageAdapter = shellContext.orbStageAdapter || null;
     shellContext.runtime.orbShatterController = (
       orbStageAdapter &&

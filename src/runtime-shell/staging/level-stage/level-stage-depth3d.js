@@ -16,6 +16,19 @@ import { GRAPHITE_CONFIG } from "../../../game-runtime/rendering/three/materials
 import { addLineEdges } from "../../../game-runtime/rendering/three/three-line-utils.js";
 import { disposeThreeObject } from "../../../game-runtime/rendering/three/three-object-utils.js";
 import { createPlinthModel } from "../../../game-runtime/world/props/plinth-model.js";
+import { createGlobe3dModel } from "../../../game-runtime/world/globe-3d-model.js";
+import { createGlobeMaterial, createGlobePointLight } from "../../../game-runtime/world/globe-3d-material.js";
+import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
+import {
+  EVT_ORB_DIED,
+  EVT_ORB_REVIVED,
+  EVT_PICKUP_COLLECTED,
+  EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
+  EVT_RESOURCES_GLOBE_SPENT,
+  EVT_VOICE_SPELL_CAST,
+  EVT_VOICE_SPELL_LOADED,
+} from "../../../contracts/events.js";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_DEFAULT_BO_WORLD_UNITS;
 const PREVIEW_RASTER_SIZE = 384;
@@ -38,7 +51,6 @@ const DEPTH_GRAPHITE_RUNTIME = Object.freeze({
   textureRepeat: 5,
   bumpScale: 0.2,
 });
-
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -46,6 +58,29 @@ function clampNumber(value, fallback = 0) {
 
 function clamp01(value) {
   return Math.max(0, Math.min(1, clampNumber(value, 0)));
+}
+
+function randRange(min, max, fallback = 0) {
+  const lo = clampNumber(min, fallback);
+  const hi = clampNumber(max, lo);
+  if (hi <= lo) return lo;
+  return lo + (Math.random() * (hi - lo));
+}
+
+function readSpawnWorldX(spawn = {}, worldWidthPx = 1) {
+  if (Number.isFinite(Number(spawn && spawn.xW))) return Number(spawn.xW);
+  if (spawn && spawn.worldCenter && Number.isFinite(Number(spawn.worldCenter.xW))) {
+    return Number(spawn.worldCenter.xW);
+  }
+  return Math.max(1, clampNumber(worldWidthPx, 1)) * clamp01(spawn && spawn.xNorm);
+}
+
+function readSpawnWorldY(spawn = {}) {
+  if (Number.isFinite(Number(spawn && spawn.yW))) return Number(spawn.yW);
+  if (spawn && spawn.worldCenter && Number.isFinite(Number(spawn.worldCenter.yW))) {
+    return Number(spawn.worldCenter.yW);
+  }
+  return 0;
 }
 
 function escapeXml(value = "") {
@@ -609,10 +644,27 @@ export function createLevelStageDepth3dLayer({
   let orbNod3dRuntime = null;
   let orbNod3dFrame = 0;
   let propEdgeMaterials = [];
+  const globe3dGroup = new THREE.Group();
+  globe3dGroup.name = "globe3d:runtime_layer";
+  actorGroup.add(globe3dGroup);
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
   let orbRuntimeBO = 0;
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbDepthPx = currentOrbZBO * BO_WORLD_UNITS;
+  let currentOrbThreeX = 0;
+  let currentOrbThreeY = 0;
+  let globe3dFrame = 0;
+  let lastGlobe3dTickMs = 0;
+  const globe3dWorld = {
+    pickups: [],
+    map: new Map(),
+  };
+  const globe3dOrb = {
+    orbiting: [],
+    inner: [],
+    dead: false,
+  };
+  const globe3dUnsub = [];
   let lastTelemetryText = "";
   let lastTelemetryBO = "";
   let lastTelemetryRadius = "";
@@ -695,8 +747,329 @@ export function createLevelStageDepth3dLayer({
     orbRuntimeBO = 0;
   }
 
+  function clearGlobe3dObjects() {
+    while (globe3dGroup.children.length) {
+      const child = globe3dGroup.children[0];
+      globe3dGroup.remove(child);
+      disposeThreeObject(child);
+    }
+    globe3dWorld.pickups = [];
+    globe3dWorld.map.clear();
+    globe3dOrb.orbiting = [];
+    globe3dOrb.inner = [];
+  }
+
+  function createGlobe3dObject({
+    bo = baseOrbWorldUnits * 0.18,
+    materialConfig = WORLD_GLOBE_3D_VISUAL_DEFAULTS.material,
+    name = "globe3d:runtime",
+  } = {}) {
+    const material = createGlobeMaterial(materialConfig);
+    const { model } = createGlobe3dModel({
+      bo: Math.max(1, bo),
+      material,
+      shellSegments: 32,
+    });
+    model.name = name;
+    const light = createGlobePointLight({
+      bo: Math.max(1, bo),
+      config: materialConfig,
+    });
+    light.name = `${name}:light`;
+    model.add(light);
+    applyEnvironmentMeshFlags(model, {
+      receiveShadow: false,
+      castShadow: false,
+    });
+    return model;
+  }
+
+  function makeGlobe3dWorldPickup(spawn = {}, index = 0) {
+    const emitterId = String((spawn && spawn.id) || `globe_emitter_${String(index + 1).padStart(2, "0")}`);
+    const globeId = `${emitterId}.globe.1`;
+    const idle = WORLD_GLOBE_3D_VISUAL_DEFAULTS.idle || {};
+    const bo = baseOrbWorldUnits * Math.max(0.01, clampNumber(idle.diameterRatio, 0.35));
+    const model = createGlobe3dObject({
+      bo,
+      materialConfig: WORLD_GLOBE_3D_VISUAL_DEFAULTS.material,
+      name: `world_globe3d:${globeId}`,
+    });
+    globe3dGroup.add(model);
+    const pickup = {
+      id: globeId,
+      globeId,
+      emitterId,
+      model,
+      anchorXW: readSpawnWorldX(spawn, worldWidthPx),
+      anchorYW: readSpawnWorldY(spawn),
+      driftAmp: baseOrbWorldUnits * Math.max(0, clampNumber(idle.driftRatio, 0.1)),
+      bobAmp: baseOrbWorldUnits * Math.max(0, clampNumber(idle.bobRatio, 0.07)),
+      bobHz: Math.max(0, clampNumber(idle.bobHz, 0.65)),
+      pulseScale: Math.max(0, clampNumber(idle.pulseScale, 0.045)),
+      pulseHz: Math.max(0, clampNumber(idle.pulseHz, 0.9)),
+      phase: Math.random() * Math.PI * 2,
+      active: true,
+      fadeInStartMs: 0,
+    };
+    globe3dWorld.map.set(globeId, pickup);
+    return pickup;
+  }
+
+  function loadGlobe3dWorldSpawns(spawns = []) {
+    const spawnList = Array.isArray(spawns) ? spawns : [];
+    root.dataset.depthGlobe3dWorldSpawnCount = String(spawnList.length);
+    clearGlobe3dObjects();
+    globe3dWorld.pickups = spawnList.map(makeGlobe3dWorldPickup);
+    root.dataset.depthGlobe3dWorldCount = String(globe3dWorld.pickups.length);
+    syncRootVisibility();
+    scheduleGlobe3dFrames();
+  }
+
+  function removeGlobe3dParticle(list, predicate) {
+    const index = list.findIndex(predicate);
+    if (index < 0) return null;
+    const [entry] = list.splice(index, 1);
+    if (entry && entry.model) {
+      globe3dGroup.remove(entry.model);
+      disposeThreeObject(entry.model);
+    }
+    return entry || null;
+  }
+
+  function makeOrbGlobe3dParticle(payload = {}, mode = "orbiting") {
+    const globeId = String(payload.globeId || payload.id || "");
+    const slot = String(payload.slot || "").toUpperCase();
+    const config = ORB_GLOBE_3D_VISUAL_DEFAULTS;
+    const ratioKey = mode === "inner" ? "loadedDiameterRatio" : "loadedDiameterRatio";
+    const bo = baseOrbWorldUnits * Math.max(0.01, clampNumber(config[ratioKey], 0.17));
+    const model = createGlobe3dObject({
+      bo,
+      materialConfig: config.material,
+      name: `orb_globe3d:${mode}:${globeId || slot || "globe"}`,
+    });
+    globe3dGroup.add(model);
+    const speedMin = mode === "inner" ? config.innerSpeedMinPxPerSec : config.orbitSpeedMin;
+    const speedMax = mode === "inner" ? config.innerSpeedMaxPxPerSec : config.orbitSpeedMax;
+    return {
+      globeId,
+      slot,
+      emitterId: String(payload.emitterId || ""),
+      axis: String(payload.axis || "").toLowerCase(),
+      model,
+      mode,
+      phase: Math.random() * Math.PI * 2,
+      tilt: randRange(-0.85, 0.85, 0),
+      drift: randRange(
+        mode === "inner" ? config.innerDriftMin : config.orbitDriftMin,
+        mode === "inner" ? config.innerDriftMax : config.orbitDriftMax,
+        0.2
+      ),
+      speed: randRange(speedMin, speedMax, speedMin),
+      velocity: new THREE.Vector3(randRange(-1, 1), randRange(-1, 1), randRange(-1, 1)).normalize(),
+      offset: new THREE.Vector3(randRange(-4, 4), randRange(-4, 4), randRange(-4, 4)),
+    };
+  }
+
+  function findOrbGlobe3dParticle(list, payload = {}) {
+    const globeId = String(payload.globeId || payload.boundGlobeId || payload.id || "");
+    const slot = String(payload.slot || "").toUpperCase();
+    return list.find((entry) => (
+      (globeId && String(entry.globeId || "") === globeId)
+      || (slot && String(entry.slot || "").toUpperCase() === slot)
+    )) || null;
+  }
+
+  function reconcileOrbGlobe3dInventory(globes = []) {
+    const active = (Array.isArray(globes) ? globes : [])
+      .map((globe) => ({
+        globeId: String(globe && (globe.globeId || globe.id) || ""),
+        slot: String(globe && globe.slot || "").toUpperCase(),
+        emitterId: String(globe && globe.emitterId || ""),
+        axis: String(globe && globe.axis || "").toLowerCase(),
+        state: String(globe && globe.state || "loaded"),
+      }))
+      .filter((globe) => globe.globeId && globe.state !== "spent");
+    const activeIds = new Set(active.map((globe) => globe.globeId));
+    for (let i = globe3dOrb.orbiting.length - 1; i >= 0; i -= 1) {
+      const entry = globe3dOrb.orbiting[i];
+      if (!entry.globeId || !activeIds.has(entry.globeId)) {
+        removeGlobe3dParticle(globe3dOrb.orbiting, (_, idx) => idx === i);
+      }
+    }
+    for (const globe of active) {
+      if (globe.state === "bound") continue;
+      if (!findOrbGlobe3dParticle(globe3dOrb.orbiting, globe) && !findOrbGlobe3dParticle(globe3dOrb.inner, globe)) {
+        globe3dOrb.orbiting.push(makeOrbGlobe3dParticle(globe, "orbiting"));
+      }
+    }
+    root.dataset.depthGlobe3dOrbCount = String(globe3dOrb.orbiting.length + globe3dOrb.inner.length);
+    scheduleGlobe3dFrames();
+  }
+
+  function loadOrbGlobe3d(payload = {}) {
+    const existingOrbit = removeGlobe3dParticle(globe3dOrb.orbiting, (entry) => entry === findOrbGlobe3dParticle(globe3dOrb.orbiting, payload));
+    const source = existingOrbit || payload;
+    if (!findOrbGlobe3dParticle(globe3dOrb.inner, payload)) {
+      globe3dOrb.inner.push(makeOrbGlobe3dParticle(source, "inner"));
+    }
+    root.dataset.depthGlobe3dOrbCount = String(globe3dOrb.orbiting.length + globe3dOrb.inner.length);
+    scheduleGlobe3dFrames();
+  }
+
+  function consumeOrbGlobe3d(payload = {}) {
+    removeGlobe3dParticle(globe3dOrb.orbiting, (entry) => entry === findOrbGlobe3dParticle(globe3dOrb.orbiting, payload));
+    removeGlobe3dParticle(globe3dOrb.inner, (entry) => entry === findOrbGlobe3dParticle(globe3dOrb.inner, payload));
+    root.dataset.depthGlobe3dOrbCount = String(globe3dOrb.orbiting.length + globe3dOrb.inner.length);
+  }
+
+  function bindGlobe3dEvents({ eventBus = null, spawns = [] } = {}) {
+    root.dataset.depthGlobe3dBound = eventBus && typeof eventBus.on === "function" ? "true" : "false";
+    while (globe3dUnsub.length) {
+      const off = globe3dUnsub.pop();
+      try { off(); } catch (_) {}
+    }
+    loadGlobe3dWorldSpawns(spawns);
+    if (!eventBus || typeof eventBus.on !== "function") return;
+    globe3dUnsub.push(eventBus.on(EVT_PICKUP_COLLECTED, (payload = {}) => {
+      const globeId = String(payload.globeId || payload.id || "");
+      const pickup = globe3dWorld.map.get(globeId);
+      if (pickup) pickup.active = false;
+      scheduleGlobe3dFrames();
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_SPENT, (payload = {}) => {
+      const emitterId = String(payload.emitterId || "");
+      const pickup = globe3dWorld.pickups.find((entry) => String(entry && entry.emitterId || "") === emitterId);
+      if (!pickup) return;
+      pickup.active = true;
+      pickup.fadeInStartMs = performance.now();
+      scheduleGlobe3dFrames();
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
+      reconcileOrbGlobe3dInventory(payload.globes || []);
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
+      loadOrbGlobe3d(payload);
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_VOICE_SPELL_CAST, (payload = {}) => {
+      consumeOrbGlobe3d(payload);
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_ORB_DIED, () => {
+      globe3dOrb.dead = true;
+      while (globe3dOrb.orbiting.length) removeGlobe3dParticle(globe3dOrb.orbiting, () => true);
+      while (globe3dOrb.inner.length) removeGlobe3dParticle(globe3dOrb.inner, () => true);
+      root.dataset.depthGlobe3dOrbCount = "0";
+    }));
+    globe3dUnsub.push(eventBus.on(EVT_ORB_REVIVED, () => {
+      globe3dOrb.dead = false;
+      scheduleGlobe3dFrames();
+    }));
+  }
+
+  function updateWorldGlobe3dPickups(timeSec = 0) {
+    for (const pickup of globe3dWorld.pickups) {
+      if (!pickup || !pickup.model) continue;
+      pickup.model.visible = !!pickup.active;
+      if (!pickup.active) continue;
+      const phase = timeSec * Math.PI * 2;
+      const drift = Math.sin((phase * 0.23) + pickup.phase) * pickup.driftAmp;
+      const bob = Math.sin((phase * pickup.bobHz) + pickup.phase) * pickup.bobAmp;
+      const pulse = 1 + (Math.sin((phase * Math.max(0, pickup.pulseHz)) + pickup.phase) * pickup.pulseScale);
+      pickup.model.position.set(
+        toThreeX(pickup.anchorXW, worldWidthPx) + drift,
+        toThreeY(pickup.anchorYW, worldHeightPx) + bob,
+        -currentOrbDepthPx
+      );
+      pickup.model.scale.setScalar(Math.max(0.01, pulse || 1));
+      if (pickup.fadeInStartMs) {
+        const age = Math.max(0, (performance.now() - pickup.fadeInStartMs) / 900);
+        const alpha = clamp01(age);
+        pickup.model.scale.multiplyScalar(0.65 + (alpha * 0.35));
+        if (alpha >= 1) pickup.fadeInStartMs = 0;
+      }
+    }
+    root.dataset.depthGlobe3dWorldCount = String(globe3dWorld.pickups.filter((pickup) => pickup && pickup.active).length);
+  }
+
+  function updateOrbGlobe3dOrbiting(timeSec = 0) {
+    const config = ORB_GLOBE_3D_VISUAL_DEFAULTS;
+    const radius = Math.max(
+      baseOrbWorldUnits * Math.max(0.1, clampNumber(config.orbitDistanceRatio, 1.07)),
+      clampNumber(config.orbitDistanceMinPx, 3)
+    );
+    for (const entry of globe3dOrb.orbiting) {
+      if (!entry || !entry.model) continue;
+      const speed = clampNumber(entry.speed, 25) * 0.01;
+      const angle = entry.phase + (timeSec * speed * Math.PI * 2);
+      const driftAngle = entry.phase + (timeSec * Math.max(0.01, entry.drift) * Math.PI * 2);
+      const y = Math.sin(driftAngle) * radius * 0.35;
+      const z = Math.cos(angle + entry.tilt) * radius * 0.72;
+      const x = Math.sin(angle) * radius;
+      entry.model.visible = !globe3dOrb.dead;
+      entry.model.position.set(
+        currentOrbThreeX + x,
+        currentOrbThreeY + y,
+        -currentOrbDepthPx + z
+      );
+    }
+  }
+
+  function updateOrbGlobe3dInner(dtSec = 0.016) {
+    const config = ORB_GLOBE_3D_VISUAL_DEFAULTS;
+    const shellRadius = baseOrbWorldUnits * 0.5;
+    const padding = shellRadius * Math.max(0, clampNumber(config.innerPaddingRatio, 0.22));
+    const bound = Math.max(1, shellRadius - padding);
+    for (const entry of globe3dOrb.inner) {
+      if (!entry || !entry.model) continue;
+      const speed = Math.max(0, clampNumber(entry.speed, 80));
+      entry.offset.addScaledVector(entry.velocity, speed * dtSec);
+      if (entry.offset.length() > bound) {
+        entry.offset.setLength(bound);
+        const normal = entry.offset.clone().normalize();
+        entry.velocity.reflect(normal).normalize();
+      }
+      entry.model.visible = !globe3dOrb.dead;
+      entry.model.position.set(
+        currentOrbThreeX + entry.offset.x,
+        currentOrbThreeY + entry.offset.y,
+        -currentOrbDepthPx + entry.offset.z
+      );
+    }
+  }
+
+  function tickGlobe3dRuntime(nowMs = performance.now()) {
+    const timeSec = nowMs / 1000;
+    const dtSec = lastGlobe3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastGlobe3dTickMs) / 1000)) : 0.016;
+    lastGlobe3dTickMs = nowMs;
+    updateWorldGlobe3dPickups(timeSec);
+    updateOrbGlobe3dOrbiting(timeSec);
+    updateOrbGlobe3dInner(dtSec);
+  }
+
+  function hasActiveGlobe3dAnimation() {
+    return (
+      globe3dWorld.pickups.some((pickup) => pickup && pickup.active)
+      || globe3dOrb.orbiting.length > 0
+      || globe3dOrb.inner.length > 0
+    );
+  }
+
+  function scheduleGlobe3dFrames() {
+    if (disposed || globe3dFrame || typeof requestAnimationFrame !== "function") return;
+    const tick = (nowMs) => {
+      globe3dFrame = 0;
+      if (disposed || !hasActiveGlobe3dAnimation()) return;
+      tickGlobe3dRuntime(nowMs);
+      renderFrame(lastFrame || {});
+      globe3dFrame = requestAnimationFrame(tick);
+    };
+    globe3dFrame = requestAnimationFrame(tick);
+  }
+
   function syncRootVisibility() {
-    root.hidden = depthLayerCount <= 0 && propsGroup.children.length <= 0 && !orbRuntime;
+    root.hidden = depthLayerCount <= 0
+      && propsGroup.children.length <= 0
+      && !orbRuntime
+      && !globe3dGroup.children.length;
   }
 
   function doRenderFrame({
@@ -773,6 +1146,7 @@ export function createLevelStageDepth3dLayer({
         orbNod3dRuntime.update(timeSec);
       }
     }
+    tickGlobe3dRuntime(performance.now());
     renderer.render(scene, camera);
   }
 
@@ -976,9 +1350,16 @@ export function createLevelStageDepth3dLayer({
         y: toThreeY(worldY, worldHeightPx),
         z: -currentOrbDepthPx,
       });
+      currentOrbThreeX = toThreeX(worldX, worldWidthPx);
+      currentOrbThreeY = toThreeY(worldY, worldHeightPx);
       syncRootVisibility();
+      scheduleGlobe3dFrames();
       if (lastFrame) renderFrame(lastFrame);
       return true;
+    },
+    bindGlobe3dRuntime(args = {}) {
+      if (disposed) return;
+      bindGlobe3dEvents(args);
     },
     playOrbNod3d(payload = {}) {
       if (disposed || !orbNod3dRuntime || typeof orbNod3dRuntime.play !== "function") {
@@ -997,11 +1378,20 @@ export function createLevelStageDepth3dLayer({
       if (orbNod3dFrame && typeof cancelAnimationFrame === "function") {
         cancelAnimationFrame(orbNod3dFrame);
       }
+      if (globe3dFrame && typeof cancelAnimationFrame === "function") {
+        cancelAnimationFrame(globe3dFrame);
+      }
       if (pendingRenderFrame && typeof cancelAnimationFrame === "function") {
         cancelAnimationFrame(pendingRenderFrame);
       }
       orbNod3dFrame = 0;
+      globe3dFrame = 0;
       pendingRenderFrame = 0;
+      while (globe3dUnsub.length) {
+        const off = globe3dUnsub.pop();
+        try { off(); } catch (_) {}
+      }
+      clearGlobe3dObjects();
       disposeOrbRuntime();
       clearGroup();
       clearPropsGroup();

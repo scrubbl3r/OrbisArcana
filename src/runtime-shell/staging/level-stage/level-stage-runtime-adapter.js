@@ -68,6 +68,11 @@ export function createLevelStageRuntimeAdapter({
         ? depth3dRuntime.playOrbNod3d(payload)
         : { handled: false, skipped: "depth3d_runtime_missing" };
     },
+    bindGlobe3dRuntime(args = {}) {
+      if (depth3dRuntime && typeof depth3dRuntime.bindGlobe3dRuntime === "function") {
+        depth3dRuntime.bindGlobe3dRuntime(args);
+      }
+    },
     getSpawnMarker() {
       return state && state.spawn ? state.spawn : null;
     },

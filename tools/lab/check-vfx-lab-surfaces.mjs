@@ -49,12 +49,15 @@ const surfaces = createLabEffectSurfaces({
   createFlameAoeAuthoringAdapter: createSentinelAdapter("flame-aoe"),
   createOrb3dAuthoringAdapter: createSentinelAdapter("orb-3d"),
   createOrbBaseAuthoringAdapter: createSentinelAdapter("orb-base"),
+  createOrbGlobe3dAuthoringAdapter: createSentinelAdapter("orb-globe-3d"),
   createOrbGlobeAuthoringAdapter: createSentinelAdapter("orb-globe"),
   createOrbLifecycleAuthoringAdapter: createSentinelAdapter("orb-lifecycle"),
   createOrbNodAuthoringAdapter: createSentinelAdapter("orb-nod"),
   createOrbNod3dAuthoringAdapter: createSentinelAdapter("orb-nod3d"),
+  createOrbSpawnAuthoringAdapter: createSentinelAdapter("orb-spawn"),
   createShockwaveAuthoringAdapter: createSentinelAdapter("shockwave"),
   createTeleportAuthoringAdapter: createSentinelAdapter("teleport"),
+  createWorldGlobe3dAuthoringAdapter: createSentinelAdapter("world-globe-3d"),
   createWorldGlobeAuthoringAdapter: createSentinelAdapter("world-globe"),
 });
 

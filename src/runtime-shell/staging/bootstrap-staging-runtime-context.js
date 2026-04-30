@@ -40,6 +40,7 @@ export function bootstrapStagingRuntimeContext({
   getOrbScreenY = () => 0,
   getOrbVisualRadiusPx = null,
   axisToColor01 = () => 0,
+  bindGlobe3dRuntime = null,
   gestureHooks = {},
 } = {}) {
   const eventBus = createEventBus();
@@ -215,6 +216,13 @@ export function bootstrapStagingRuntimeContext({
   const orbFxWorldGlobeVisualState = buildWorldGlobeVisualState(null, {
     orbDiameterPx: getOrbFxRadiusPx() * 2,
   });
+  if (typeof bindGlobe3dRuntime === "function") {
+    bindGlobe3dRuntime({
+      eventBus,
+      spawns: resolvedGlobeSpawns,
+      getOrbRadiusPx: getOrbFxRadiusPx,
+    });
+  }
 
   const orbSystemsBundle = createOrbSystemsBundle({
     createOrbSystem,
