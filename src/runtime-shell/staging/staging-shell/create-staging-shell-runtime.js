@@ -1620,6 +1620,33 @@ function bindShellPerfTraceControls(shellContext) {
     }, 900);
   };
 
+  async function copyTraceSnapshot() {
+    const text = JSON.stringify(
+      typeof perfTrace.snapshot === "function" ? perfTrace.snapshot() : {},
+      null,
+      2
+    );
+    const nav = rootDocument.defaultView && rootDocument.defaultView.navigator
+      ? rootDocument.defaultView.navigator
+      : null;
+    if (nav && nav.clipboard && typeof nav.clipboard.writeText === "function") {
+      await nav.clipboard.writeText(text);
+      return text;
+    }
+    const textarea = rootDocument.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "true");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "-9999px";
+    rootDocument.body.appendChild(textarea);
+    textarea.select();
+    const copied = rootDocument.execCommand && rootDocument.execCommand("copy");
+    textarea.parentNode.removeChild(textarea);
+    if (!copied) throw new Error("perf_trace_copy_failed");
+    return text;
+  }
+
   if (resetBtn && typeof perfTrace.reset === "function") {
     resetBtn.addEventListener("click", () => {
       perfTrace.reset();
@@ -1627,10 +1654,10 @@ function bindShellPerfTraceControls(shellContext) {
     });
   }
 
-  if (captureBtn && typeof perfTrace.copy === "function") {
+  if (captureBtn && typeof perfTrace.snapshot === "function") {
     captureBtn.addEventListener("click", async () => {
       try {
-        await perfTrace.copy();
+        await copyTraceSnapshot();
         setButtonText(captureBtn, "Copied", "Capture");
       } catch (_) {
         setButtonText(captureBtn, "Failed", "Capture");
