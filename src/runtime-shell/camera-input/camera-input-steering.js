@@ -7,9 +7,9 @@ function clamp01(value) {
 }
 
 export function createCameraInputSteering({
-  smoothingAlpha = 0.18,
+  smoothingAlpha = 0.25,
 } = {}) {
-  const alpha = clamp01(smoothingAlpha) || 0.18;
+  const alpha = clamp01(smoothingAlpha) || 0.25;
   let filteredX01 = 0.5;
 
   function reset() {
