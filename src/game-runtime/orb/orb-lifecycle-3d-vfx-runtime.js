@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
 function clampNumber(value, min, max, fallback) {
@@ -38,10 +39,14 @@ function colorToVector(color) {
 
 function createVoronoiShellMaterial({
   hitRatio = 0,
+  crackCount = 0,
+  baseCrackCount = 1,
   seed = 1,
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
+  const shards = Math.max(0, Number(crackCount) || 0);
+  const baseShards = Math.max(1, Number(baseCrackCount) || 1);
   return new THREE.ShaderMaterial({
     name: "orb_lifecycle3d:voronoi_shell_material",
     transparent: true,
@@ -52,13 +57,14 @@ function createVoronoiShellMaterial({
       uTime: { value: 0 },
       uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
       uSeed: { value: (Number(seed) || 1) * 0.0000137 },
-      uScale: { value: Math.max(2.2, Math.min(9.0, 2.6 + (resolved.maxCracks * 0.075))) },
-      uLineWidth: { value: Math.max(0.018, Math.min(0.18, resolved.crackWidthPx * 0.026)) },
+      uBaseScale: { value: Math.max(2.2, Math.min(4.8, 1.7 + (Math.sqrt(baseShards) * 0.55))) },
+      uScale: { value: Math.max(2.2, Math.min(7.6, 1.7 + (Math.sqrt(Math.max(1, shards)) * 0.55))) },
+      uLineWidth: { value: Math.max(0.018, Math.min(0.18, resolved.crackWidthPx * 0.032)) },
       uAlpha: { value: resolved.crackAlpha },
       uCriticalGlow: { value: resolved.criticalGlow },
       uCrackColor: { value: colorToVector(resolved.crackColor) },
-      uTroughColor: { value: new THREE.Vector3(0.005, 0.012, 0.018) },
-      uEnergyColor: { value: new THREE.Vector3(0.11, 0.82, 0.9) },
+      uTroughColor: { value: new THREE.Vector3(0.008, 0.011, 0.014) },
+      uEnergyColor: { value: new THREE.Vector3(0.58, 0.72, 0.76) },
     },
     vertexShader: `
       varying vec3 vPos;
@@ -76,6 +82,7 @@ function createVoronoiShellMaterial({
       uniform float uTime;
       uniform float uHitRatio;
       uniform float uSeed;
+      uniform float uBaseScale;
       uniform float uScale;
       uniform float uLineWidth;
       uniform float uAlpha;
@@ -88,67 +95,84 @@ function createVoronoiShellMaterial({
       varying vec3 vNormal;
 
       vec3 hash3(vec3 p) {
-        p = vec3(
-          dot(p, vec3(127.1, 311.7, 74.7)),
-          dot(p, vec3(269.5, 183.3, 246.1)),
-          dot(p, vec3(113.5, 271.9, 124.6))
+        return fract(
+          sin(vec3(
+            dot(p, vec3(1.0, 57.0, 113.0)),
+            dot(p, vec3(57.0, 113.0, 1.0)),
+            dot(p, vec3(113.0, 1.0, 57.0))
+          ) + uSeed) * 43758.5453
         );
-        return fract(sin(p + uSeed) * 43758.5453123);
       }
 
-      vec2 voronoiBorder(vec3 x) {
+      float pcurve(float x, float a, float b) {
+        float k = pow(a + b, a + b) / (pow(a, a) * pow(b, b));
+        return k * pow(x, a) * pow(1.0 - x, b);
+      }
+
+      vec2 voronoi(vec3 x) {
         vec3 n = floor(x);
         vec3 f = fract(x);
         float nearest = 8.0;
-        float secondNearest = 8.0;
+        float cellId = 0.0;
 
         for (int k = -1; k <= 1; k += 1) {
           for (int j = -1; j <= 1; j += 1) {
             for (int i = -1; i <= 1; i += 1) {
               vec3 g = vec3(float(i), float(j), float(k));
               vec3 o = hash3(n + g);
-              vec3 drift = 0.5 + 0.34 * sin((uTime * 0.32) + 6.2831853 * o);
-              vec3 r = g + mix(o, drift, 0.42) - f;
+              vec3 drift = 0.5 + 0.5 * sin(vec3(uTime * 0.12) + 6.2831853 * o);
+              vec3 r = g + drift - f;
               float d = dot(r, r);
               if (d < nearest) {
-                secondNearest = nearest;
                 nearest = d;
-              } else if (d < secondNearest) {
-                secondNearest = d;
+                cellId = o.x + o.y + o.z;
               }
             }
           }
         }
 
-        return vec2(nearest, secondNearest - nearest);
+        return vec2(nearest, cellId);
       }
 
       void main() {
         vec3 normal = normalize(vPos);
-        vec2 cell = voronoiBorder(normal * uScale);
-        float borderDistance = cell.y;
-        float damage = smoothstep(0.02, 1.0, uHitRatio);
+        vec2 coarseCell = voronoi(normal * uBaseScale);
+        vec2 detailCell = voronoi((normal * uScale) + vec3(13.7, -8.1, 5.3));
+        float detailMix = smoothstep(0.45, 0.82, uHitRatio);
+        float coarseD = clamp(coarseCell.x, 0.0, 1.0);
+        float detailD = clamp(detailCell.x, 0.0, 1.0);
+        float damage = pow(clamp(uHitRatio, 0.0, 1.0), 0.68);
         float critical = pow(damage, 2.0) * max(0.0, uCriticalGlow - 1.0);
-        float pulse = 0.78 + 0.22 * sin(uTime * (2.2 + damage * 2.0) + cell.x * 18.0);
+        float pulse = 0.88 + 0.12 * sin(uTime * (1.35 + damage) + coarseCell.y * 12.0);
 
-        float groove = 1.0 - smoothstep(uLineWidth * 0.38, uLineWidth * 1.15, borderDistance);
-        float rim = smoothstep(uLineWidth * 0.48, uLineWidth * 1.35, borderDistance)
-          * (1.0 - smoothstep(uLineWidth * 1.35, uLineWidth * 3.8, borderDistance));
-        float haze = 1.0 - smoothstep(uLineWidth * 2.2, uLineWidth * 8.2, borderDistance);
+        float coarseField = pow(coarseD, 1.45);
+        float detailField = pow(detailD, 1.45);
+        float coarseDiffuse = smoothstep(0.03, 0.92, coarseField);
+        float detailDiffuse = smoothstep(0.03, 0.92, detailField);
+        float coarseBand = pcurve(clamp(coarseDiffuse, 0.0, 1.0), 3.8, 1.55);
+        float detailBand = pcurve(clamp(detailDiffuse, 0.0, 1.0), 3.8, 1.55) * detailMix;
+        float diffuse = max(coarseDiffuse, detailDiffuse * detailMix * 0.86);
+        float brightBand = max(coarseBand, detailBand);
+        float hotEdge = smoothstep(0.58 - uLineWidth, 0.9, diffuse)
+          * (1.0 - smoothstep(0.93, 1.0, diffuse));
+        float cellCore = 1.0 - smoothstep(0.0, 0.48, diffuse);
         float facing = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0))), 1.5);
 
-        vec3 energy = mix(uEnergyColor, uCrackColor, 0.62);
-        vec3 color = mix(uTroughColor, energy, rim * (0.8 + critical));
-        color += uCrackColor * haze * damage * 0.18 * pulse;
+        vec3 greyEnergy = mix(vec3(0.24), uCrackColor, 0.76);
+        vec3 shellWash = mix(vec3(0.035), uEnergyColor, 0.22) * diffuse;
+        vec3 color = mix(uTroughColor + shellWash, greyEnergy, brightBand * (0.82 + critical * 0.24));
+        color += uEnergyColor * hotEdge * damage * 0.36 * pulse;
+        color -= vec3(0.045) * cellCore * damage;
         color += uEnergyColor * facing * damage * 0.16;
 
         float alpha = damage * uAlpha * (
-          groove * 0.48 +
-          rim * (0.42 + critical * 0.22) +
-          haze * 0.10
+          0.08 +
+          diffuse * 0.26 +
+          brightBand * (0.68 + critical * 0.20) +
+          hotEdge * 0.26
         );
 
-        if (alpha < 0.006) discard;
+        if (alpha < 0.008) discard;
         gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.9));
       }
     `,
@@ -175,7 +199,14 @@ export function createOrbLifecycle3dCracks({
   const radius = Math.max(1, Number(bo) || 72) * 0.5;
   const lift = Math.max(0, Number(resolved.crackLiftBO) || 0) * Math.max(1, Number(bo) || 72);
   const ratio = Math.max(0, Math.min(1, hits / total));
-  const material = createVoronoiShellMaterial({ hitRatio: ratio, seed, config: resolved });
+  const baseCrackCount = Math.max(1, Math.round(resolved.maxCracks / total));
+  const material = createVoronoiShellMaterial({
+    hitRatio: ratio,
+    crackCount,
+    baseCrackCount,
+    seed,
+    config: resolved,
+  });
   const shell = new THREE.Mesh(
     new THREE.SphereGeometry(radius + lift + 0.06, 72, 36),
     material
