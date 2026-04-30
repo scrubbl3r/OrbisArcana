@@ -12,11 +12,8 @@ import {
   DEPTH_ENVIRONMENT_MODE,
   resolveDepthEnvironmentMode,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260430a";
-import { createGraphiteMaterial } from "../../../game-runtime/rendering/three/materials/graphite-material.js";
-import { GRAPHITE_CONFIG } from "../../../game-runtime/rendering/three/materials/graphite-config.js";
-import { addLineEdges } from "../../../game-runtime/rendering/three/three-line-utils.js";
 import { disposeThreeObject } from "../../../game-runtime/rendering/three/three-object-utils.js";
-import { createPlinthModel } from "../../../game-runtime/world/props/plinth-model.js";
+import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430a";
 import { createGlobe3dModel } from "../../../game-runtime/world/globe-3d-model.js";
 import { createGlobeMaterial, createGlobePointLight } from "../../../game-runtime/world/globe-3d-material.js";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
@@ -90,33 +87,6 @@ function toThreeY(worldY, worldHeightPx) {
   return (Math.max(1, clampNumber(worldHeightPx, 1)) * 0.5) - clampNumber(worldY, 0);
 }
 
-function resolvePropAnchorPoint(prop = {}) {
-  return prop && prop.worldAnchor
-    ? prop.worldAnchor
-    : (prop && prop.worldCenter ? prop.worldCenter : Object.freeze({ xW: 0, yW: 0 }));
-}
-
-function resolvePlinthYForAnchor(anchorY = 0, anchor = "center", metrics = {}) {
-  const normalizedAnchor = String(anchor || "center").trim().toLowerCase();
-  if (normalizedAnchor === "top") {
-    return anchorY - clampNumber(metrics && metrics.plinthHeight, 0);
-  }
-  if (normalizedAnchor === "bottom" || normalizedAnchor === "base") {
-    return anchorY;
-  }
-  return anchorY - clampNumber(metrics && metrics.columnCenterY, 0);
-}
-
-function resolveActorLanePropZ(zBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO, bo = BO_WORLD_UNITS, metrics = {}) {
-  const authoredDepth = Math.max(0, clampNumber(zBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO)) * Math.max(1, clampNumber(bo, BO_WORLD_UNITS));
-  const propHalfDepth = Math.max(
-    clampNumber(metrics && metrics.baseDepth, 0),
-    clampNumber(metrics && metrics.capitalDepth, 0),
-    clampNumber(metrics && metrics.columnDepth, 0)
-  ) * 0.5;
-  return -(authoredDepth + propHalfDepth + (Math.max(1, clampNumber(bo, BO_WORLD_UNITS)) * 0.05));
-}
-
 export function createLevelStageDepth3dLayer({
   root = null,
   labelEl = null,
@@ -169,7 +139,6 @@ export function createLevelStageDepth3dLayer({
   let lastCameraX = 0;
   let lastCameraY = 0;
   let lastCameraZ = 0;
-  let propEdgeMaterials = [];
   const globe3dGroup = new THREE.Group();
   globe3dGroup.name = "globe3d:runtime_layer";
   actorGroup.add(globe3dGroup);
@@ -234,6 +203,17 @@ export function createLevelStageDepth3dLayer({
     getBurstPosition: () => orb3dActorRuntime.getPosition(),
     onNeedsFrame: () => scheduleGlobe3dFrames(),
   });
+  const worldProps3dRuntime = createWorldProps3dRuntime({
+    group: propsGroup,
+    getBo: () => orb3dActorRuntime.getBo(),
+    toRuntimePosition: ({ x = 0, y = 0 } = {}) => ({
+      x: toThreeX(x, worldWidthPx),
+      y: toThreeY(y, worldHeightPx),
+    }),
+    onCountChange: (count) => {
+      root.dataset.depthPropCount = String(Math.max(0, Number(count) || 0));
+    },
+  });
   const globe3dUnsub = [];
   let lastTelemetryText = "";
   let lastTelemetryBO = "";
@@ -297,12 +277,7 @@ export function createLevelStageDepth3dLayer({
   }
 
   function clearPropsGroup() {
-    while (propsGroup.children.length) {
-      const child = propsGroup.children[0];
-      propsGroup.remove(child);
-      disposeThreeObject(child);
-    }
-    propEdgeMaterials = [];
+    worldProps3dRuntime.clear();
   }
 
   function clearGlobe3dObjects() {
@@ -454,9 +429,7 @@ export function createLevelStageDepth3dLayer({
     const height = Math.max(1, Math.round(clampNumber(viewportHeightPx, root.clientHeight || 1)));
     if (width !== lastRenderWidth || height !== lastRenderHeight) {
       renderer.setSize(width, height, false);
-      propEdgeMaterials.forEach((material) => {
-        if (material && material.resolution) material.resolution.set(width, height);
-      });
+      worldProps3dRuntime.updateResolution(width, height);
       lastRenderWidth = width;
       lastRenderHeight = height;
     }
@@ -557,58 +530,8 @@ export function createLevelStageDepth3dLayer({
     });
   }
 
-  function buildPropModel(prop = {}) {
-    const kind = String(prop && prop.kind || "").trim().toLowerCase();
-    if (kind !== "plinth") return null;
-    const scale = Math.max(0.01, clampNumber(prop && prop.scale, 1));
-    const bo = Math.max(1, orb3dActorRuntime.getBo() * scale);
-    const material = createGraphiteMaterial(GRAPHITE_CONFIG);
-    const { model, metrics } = createPlinthModel({
-      bo,
-      material,
-      decorateMesh: (mesh) => {
-        addLineEdges(mesh, {
-          color: GRAPHITE_CONFIG.edgeHaloColor,
-          linewidth: GRAPHITE_CONFIG.edgeHaloWidth,
-          opacity: GRAPHITE_CONFIG.edgeHaloOpacity,
-          thresholdAngle: GRAPHITE_CONFIG.edgeThresholdAngle,
-          edgeMaterials: propEdgeMaterials,
-        });
-        addLineEdges(mesh, {
-          color: GRAPHITE_CONFIG.edgeColor,
-          linewidth: GRAPHITE_CONFIG.edgeWidth,
-          opacity: GRAPHITE_CONFIG.edgeOpacity,
-          thresholdAngle: GRAPHITE_CONFIG.edgeThresholdAngle,
-          edgeMaterials: propEdgeMaterials,
-        });
-      },
-    });
-    const anchorPoint = resolvePropAnchorPoint(prop);
-    const zBO = Math.max(0, clampNumber(prop && prop.zBO, LEVEL_DEPTH_DEFAULT_ORB_Z_BO));
-    model.position.set(
-      toThreeX(anchorPoint.xW, worldWidthPx),
-      resolvePlinthYForAnchor(toThreeY(anchorPoint.yW, worldHeightPx), prop && prop.anchor, metrics),
-      resolveActorLanePropZ(zBO, bo, metrics)
-    );
-    model.name = `prop:${String(prop && prop.id || kind)}`;
-    model.userData.prop = prop;
-    model.userData.authoredZBO = zBO;
-    model.traverse((child) => {
-      if (!child || !child.isMesh) return;
-      child.castShadow = true;
-      child.receiveShadow = true;
-    });
-    return model;
-  }
-
   function loadProps(props = []) {
-    clearPropsGroup();
-    const propList = Array.isArray(props) ? props : [];
-    for (const prop of propList) {
-      const model = buildPropModel(prop);
-      if (model) propsGroup.add(model);
-    }
-    root.dataset.depthPropCount = String(propsGroup.children.length);
+    worldProps3dRuntime.load(props);
   }
 
   return Object.freeze({
