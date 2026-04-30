@@ -6,6 +6,10 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minHandDetectionConfidence: 0.5,
   minHandPresenceConfidence: 0.5,
   minTrackingConfidence: 0.5,
+  maxDetectionFps: 30,
+  videoWidth: 640,
+  videoHeight: 480,
+  videoFps: 30,
 });
 
 function clamp01(value) {
@@ -155,6 +159,8 @@ export function createCameraInputTracker({
   let running = false;
   let lastVideoTime = -1;
   let lastFrameAtMs = 0;
+  let lastDetectionAtMs = 0;
+  const minDetectionIntervalMs = 1000 / DEFAULT_TRACKER_CONFIG.maxDetectionFps;
 
   async function preload() {
     if (handLandmarker) {
@@ -202,8 +208,11 @@ export function createCameraInputTracker({
     if (videoEl.currentTime === lastVideoTime) return;
 
     const observedAtMs = now();
+    if (lastDetectionAtMs && observedAtMs - lastDetectionAtMs < minDetectionIntervalMs) return;
+
     const frameMs = lastFrameAtMs ? Math.max(0, observedAtMs - lastFrameAtMs) : 0;
     lastFrameAtMs = observedAtMs;
+    lastDetectionAtMs = observedAtMs;
     lastVideoTime = videoEl.currentTime;
 
     const result = handLandmarker.detectForVideo(videoEl, observedAtMs);
@@ -227,6 +236,12 @@ export function createCameraInputTracker({
       audio: false,
       video: {
         facingMode: "user",
+        width: { ideal: DEFAULT_TRACKER_CONFIG.videoWidth },
+        height: { ideal: DEFAULT_TRACKER_CONFIG.videoHeight },
+        frameRate: {
+          ideal: DEFAULT_TRACKER_CONFIG.videoFps,
+          max: DEFAULT_TRACKER_CONFIG.videoFps,
+        },
       },
     });
 
@@ -241,6 +256,7 @@ export function createCameraInputTracker({
     running = true;
     lastVideoTime = -1;
     lastFrameAtMs = 0;
+    lastDetectionAtMs = 0;
     rafId = rootWindow.requestAnimationFrame(tick);
   }
 

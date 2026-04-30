@@ -1,7 +1,10 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
 import { createInitialCameraInputState } from "./camera-input-state.js?v=20260420h";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
-import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260420f";
+import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430a";
+
+const OBSERVATION_PUBLISH_FPS = 30;
+const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
 
 function normalizeErrorMessage(error, fallback = "camera_input_error") {
   if (error && error.message) return String(error.message);
@@ -49,6 +52,8 @@ export function createCameraInputRuntime({
     eventBus,
   });
   const steering = createCameraInputSteering();
+  let observationFlushTimer = 0;
+  let lastObservationFlushAtMs = 0;
   const tracker = createCameraInputTracker({
     rootWindow,
     rootDocument,
@@ -59,12 +64,49 @@ export function createCameraInputRuntime({
     onObservation: handleObservation,
   });
 
-  function patchCameraState(partialState = {}) {
-    camStore.patch(partialState, { silent: true });
+  function clearObservationFlushTimer() {
+    if (!observationFlushTimer) return;
+    rootWindow.clearTimeout(observationFlushTimer);
+    observationFlushTimer = 0;
+  }
+
+  function flushCameraState() {
     const state = camStore.getState();
     state.debug.statusLine = buildStatusLine(state);
     camStore.flush();
     return state;
+  }
+
+  function flushObservationState() {
+    clearObservationFlushTimer();
+    lastObservationFlushAtMs = now();
+    return flushCameraState();
+  }
+
+  function scheduleObservationFlush(observedAtMs) {
+    const timestamp = Number(observedAtMs) || now();
+    const elapsedMs = lastObservationFlushAtMs
+      ? timestamp - lastObservationFlushAtMs
+      : OBSERVATION_PUBLISH_INTERVAL_MS;
+    if (elapsedMs >= OBSERVATION_PUBLISH_INTERVAL_MS) {
+      return flushObservationState();
+    }
+    if (!observationFlushTimer) {
+      observationFlushTimer = rootWindow.setTimeout(
+        flushObservationState,
+        OBSERVATION_PUBLISH_INTERVAL_MS - elapsedMs
+      );
+    }
+    return camStore.getState();
+  }
+
+  function patchCameraState(partialState = {}, { coalesceObservation = false } = {}) {
+    camStore.patch(partialState, { silent: true });
+    if (coalesceObservation) {
+      return scheduleObservationFlush(partialState.updatedAtMs);
+    }
+    clearObservationFlushTimer();
+    return flushCameraState();
   }
 
   function handleObservation(observation = {}) {
@@ -84,6 +126,8 @@ export function createCameraInputRuntime({
         frameMs: Number(observation.frameMs) || 0,
         fps: Number(observation.fps) || 0,
       },
+    }, {
+      coalesceObservation: true,
     });
   }
 
@@ -215,6 +259,7 @@ export function createCameraInputRuntime({
   }
 
   function destroy() {
+    clearObservationFlushTimer();
     tracker.destroy();
     steering.reset();
   }
