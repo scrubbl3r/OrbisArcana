@@ -28,6 +28,7 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
     diffuseWash: clampNumber(source.diffuseWash, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.diffuseWash),
     edgeBrightness: clampNumber(source.edgeBrightness, 0, 3, ORB_LIFECYCLE_3D_DEFAULTS.edgeBrightness),
     cellDarkness: clampNumber(source.cellDarkness, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.cellDarkness),
+    cellSharpness: clampNumber(source.cellSharpness, 0, 3, ORB_LIFECYCLE_3D_DEFAULTS.cellSharpness),
     detailEmergence: clampNumber(source.detailEmergence, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.detailEmergence),
     particleCount: clampInt(source.particleCount, 0, 512, ORB_LIFECYCLE_3D_DEFAULTS.particleCount),
     particleColor: Number(source.particleColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.particleColor,
@@ -74,6 +75,7 @@ function createVoronoiShellMaterial({
       uDiffuseWash: { value: resolved.diffuseWash },
       uEdgeBrightness: { value: resolved.edgeBrightness },
       uCellDarkness: { value: resolved.cellDarkness },
+      uCellSharpness: { value: resolved.cellSharpness },
       uDetailEmergence: { value: resolved.detailEmergence },
       uCrackColor: { value: colorToVector(resolved.crackColor) },
       uTroughColor: { value: new THREE.Vector3(0.008, 0.011, 0.014) },
@@ -105,6 +107,7 @@ function createVoronoiShellMaterial({
       uniform float uDiffuseWash;
       uniform float uEdgeBrightness;
       uniform float uCellDarkness;
+      uniform float uCellSharpness;
       uniform float uDetailEmergence;
       uniform vec3 uCrackColor;
       uniform vec3 uTroughColor;
@@ -167,16 +170,22 @@ function createVoronoiShellMaterial({
         float critical = pow(damage, 2.0) * max(0.0, uCriticalGlow - 1.0);
         float pulse = 0.88 + 0.12 * sin(uTime * (1.35 + damage) + coarseCell.y * 12.0);
 
-        float coarseField = pow(coarseD, 1.45);
-        float detailField = pow(detailD, 1.45);
+        float sharpness = clamp(uCellSharpness, 0.0, 3.0);
+        float fieldPower = mix(1.08, 2.35, sharpness / 3.0);
+        float bandA = mix(2.4, 6.2, sharpness / 3.0);
+        float bandB = mix(1.05, 2.15, sharpness / 3.0);
+        float edgeStart = mix(0.44, 0.70, sharpness / 3.0);
+        float edgeEnd = mix(0.98, 0.84, sharpness / 3.0);
+        float coarseField = pow(coarseD, fieldPower);
+        float detailField = pow(detailD, fieldPower);
         float coarseDiffuse = smoothstep(0.03, 0.92, coarseField);
         float detailDiffuse = smoothstep(0.03, 0.92, detailField);
-        float coarseBand = pcurve(clamp(coarseDiffuse, 0.0, 1.0), 3.8, 1.55);
-        float detailBand = pcurve(clamp(detailDiffuse, 0.0, 1.0), 3.8, 1.55) * detailMix;
+        float coarseBand = pcurve(clamp(coarseDiffuse, 0.0, 1.0), bandA, bandB);
+        float detailBand = pcurve(clamp(detailDiffuse, 0.0, 1.0), bandA, bandB) * detailMix;
         float diffuse = max(coarseDiffuse, detailDiffuse * detailMix * 0.86);
         float brightBand = max(coarseBand, detailBand);
-        float hotEdge = smoothstep(0.58 - uLineWidth, 0.9, diffuse)
-          * (1.0 - smoothstep(0.93, 1.0, diffuse));
+        float hotEdge = smoothstep(edgeStart - uLineWidth, edgeEnd, diffuse)
+          * (1.0 - smoothstep(min(0.98, edgeEnd + 0.04), 1.0, diffuse));
         float cellCore = 1.0 - smoothstep(0.0, 0.48, diffuse);
         float facing = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0))), 1.5);
 

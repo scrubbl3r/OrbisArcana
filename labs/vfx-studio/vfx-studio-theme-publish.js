@@ -202,6 +202,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  diffuseWash: ${clampNum(p.orbLifecycle3dDiffuseWash, 0, 2, 1).toFixed(2)},`,
         `  edgeBrightness: ${clampNum(p.orbLifecycle3dEdgeBrightness, 0, 3, 1).toFixed(2)},`,
         `  cellDarkness: ${clampNum(p.orbLifecycle3dCellDarkness, 0, 2, 1).toFixed(2)},`,
+        `  cellSharpness: ${clampNum(p.orbLifecycle3dCellSharpness, 0, 3, 1).toFixed(2)},`,
         `  detailEmergence: ${clampNum(p.orbLifecycle3dDetailEmergence, 0, 1, 0.58).toFixed(2)},`,
         `  particleCount: ${Math.round(toNum(p.orbLifecycle3dParticleCount, 72))},`,
         `  particleColor: ${colorHex("orbLifecycle3dParticle", 0xdff7ff)},`,

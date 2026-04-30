@@ -50,6 +50,7 @@ function readLifecycle3dConfig(els = {}) {
     diffuseWash: clampNumber(els.orbLifecycle3dDiffuseWash && els.orbLifecycle3dDiffuseWash.value, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.diffuseWash),
     edgeBrightness: clampNumber(els.orbLifecycle3dEdgeBrightness && els.orbLifecycle3dEdgeBrightness.value, 0, 3, ORB_LIFECYCLE_3D_DEFAULTS.edgeBrightness),
     cellDarkness: clampNumber(els.orbLifecycle3dCellDarkness && els.orbLifecycle3dCellDarkness.value, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.cellDarkness),
+    cellSharpness: clampNumber(els.orbLifecycle3dCellSharpness && els.orbLifecycle3dCellSharpness.value, 0, 3, ORB_LIFECYCLE_3D_DEFAULTS.cellSharpness),
     detailEmergence: clampNumber(els.orbLifecycle3dDetailEmergence && els.orbLifecycle3dDetailEmergence.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.detailEmergence),
     particleCount: roundedNumber(els.orbLifecycle3dParticleCount && els.orbLifecycle3dParticleCount.value, ORB_LIFECYCLE_3D_DEFAULTS.particleCount),
     particleColor: colorFromFields(els, "orbLifecycle3dParticle", ORB_LIFECYCLE_3D_DEFAULTS.particleColor),

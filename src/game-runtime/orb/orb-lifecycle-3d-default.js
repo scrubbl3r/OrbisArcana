@@ -12,6 +12,7 @@ export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({
   diffuseWash: 1.0,
   edgeBrightness: 1.0,
   cellDarkness: 1.0,
+  cellSharpness: 1.0,
   detailEmergence: 0.58,
   particleCount: 72,
   particleColor: 0xdff7ff,
