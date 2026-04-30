@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
 function clampNumber(value, min, max, fallback) {
@@ -32,143 +31,128 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   });
 }
 
-function createCrackTube(points, {
-  radius = 0.1,
-  color = 0xffffff,
-  opacity = 1,
-  additive = false,
-  name = "crack",
+function colorToVector(color) {
+  const c = new THREE.Color(Number(color) >>> 0);
+  return new THREE.Vector3(c.r, c.g, c.b);
+}
+
+function createVoronoiShellMaterial({
+  hitRatio = 0,
+  seed = 1,
+  config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
-  if (!Array.isArray(points) || points.length < 2) return null;
-  const curve = new THREE.CatmullRomCurve3(points, false, "centripetal", 0.08);
-  const geometry = new THREE.TubeGeometry(curve, Math.max(6, points.length * 4), Math.max(0.01, radius), 6, false);
-  const material = new THREE.MeshBasicMaterial({
-    color,
-    transparent: opacity < 1,
-    opacity,
+  const resolved = resolveOrbLifecycle3dConfig(config);
+  return new THREE.ShaderMaterial({
+    name: "orb_lifecycle3d:voronoi_shell_material",
+    transparent: true,
     depthWrite: false,
     depthTest: true,
-    blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.name = name;
-  return mesh;
-}
+    blending: THREE.NormalBlending,
+    uniforms: {
+      uTime: { value: 0 },
+      uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
+      uSeed: { value: (Number(seed) || 1) * 0.0000137 },
+      uScale: { value: Math.max(2.2, Math.min(9.0, 2.6 + (resolved.maxCracks * 0.075))) },
+      uLineWidth: { value: Math.max(0.018, Math.min(0.18, resolved.crackWidthPx * 0.026)) },
+      uAlpha: { value: resolved.crackAlpha },
+      uCriticalGlow: { value: resolved.criticalGlow },
+      uCrackColor: { value: colorToVector(resolved.crackColor) },
+      uTroughColor: { value: new THREE.Vector3(0.005, 0.012, 0.018) },
+      uEnergyColor: { value: new THREE.Vector3(0.11, 0.82, 0.9) },
+    },
+    vertexShader: `
+      varying vec3 vPos;
+      varying vec3 vNormal;
 
-function createSphereSeeds(rng, count) {
-  const points = [];
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  const yaw = rng() * Math.PI * 2;
-  const pitch = (rng() - 0.5) * 0.5;
-  const roll = (rng() - 0.5) * 0.5;
-  const rotation = new THREE.Euler(pitch, yaw, roll, "YXZ");
-  for (let i = 0; i < count; i += 1) {
-    const y = 1 - ((i + 0.5) / count) * 2;
-    const r = Math.sqrt(Math.max(0, 1 - (y * y)));
-    const theta = (i * goldenAngle) + ((rng() - 0.5) * 0.22);
-    const point = new THREE.Vector3(
-      Math.cos(theta) * r,
-      y,
-      Math.sin(theta) * r
-    );
-    points.push(point.applyEuler(rotation).normalize());
-  }
-  return points;
-}
-
-function triangleKey(a, b, c) {
-  return [a, b, c].sort((x, y) => x - y).join(":");
-}
-
-function pairKey(a, b) {
-  return a < b ? `${a}:${b}` : `${b}:${a}`;
-}
-
-function buildSphericalDelaunayFaces(points) {
-  const faces = [];
-  const seen = new Set();
-  const eps = 1e-6;
-  for (let i = 0; i < points.length - 2; i += 1) {
-    for (let j = i + 1; j < points.length - 1; j += 1) {
-      for (let k = j + 1; k < points.length; k += 1) {
-        const a = points[i];
-        const b = points[j];
-        const c = points[k];
-        const normal = new THREE.Vector3().crossVectors(
-          b.clone().sub(a),
-          c.clone().sub(a)
-        );
-        if (normal.lengthSq() < eps) continue;
-        let positive = false;
-        let negative = false;
-        for (let n = 0; n < points.length; n += 1) {
-          if (n === i || n === j || n === k) continue;
-          const side = normal.dot(points[n].clone().sub(a));
-          if (side > eps) positive = true;
-          if (side < -eps) negative = true;
-          if (positive && negative) break;
-        }
-        if (positive && negative) continue;
-        const key = triangleKey(i, j, k);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        const center = normal.normalize();
-        const centroid = a.clone().add(b).add(c).normalize();
-        if (center.dot(centroid) < 0) center.multiplyScalar(-1);
-        faces.push(Object.freeze({ ids: Object.freeze([i, j, k]), center }));
+      void main() {
+        vPos = position;
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
-    }
-  }
-  return faces;
-}
+    `,
+    fragmentShader: `
+      precision highp float;
 
-function slerpUnit(a, b, t) {
-  const dot = Math.max(-1, Math.min(1, a.dot(b)));
-  const theta = Math.acos(dot);
-  if (theta < 0.0001) return a.clone();
-  const sinTheta = Math.sin(theta);
-  return a.clone().multiplyScalar(Math.sin((1 - t) * theta) / sinTheta)
-    .add(b.clone().multiplyScalar(Math.sin(t * theta) / sinTheta))
-    .normalize();
-}
+      uniform float uTime;
+      uniform float uHitRatio;
+      uniform float uSeed;
+      uniform float uScale;
+      uniform float uLineWidth;
+      uniform float uAlpha;
+      uniform float uCriticalGlow;
+      uniform vec3 uCrackColor;
+      uniform vec3 uTroughColor;
+      uniform vec3 uEnergyColor;
 
-function createGeodesicArc(a, b, radius, detail = 10) {
-  const dot = Math.max(-1, Math.min(1, a.dot(b)));
-  if (dot < -0.96 || dot > 0.9998) return null;
-  const steps = Math.max(3, Math.round(detail * Math.acos(dot)));
-  const points = [];
-  for (let i = 0; i <= steps; i += 1) {
-    points.push(slerpUnit(a, b, i / steps).multiplyScalar(radius));
-  }
-  return points;
-}
+      varying vec3 vPos;
+      varying vec3 vNormal;
 
-function createSphericalVoronoiArcs(seedPoints, radius) {
-  const faces = buildSphericalDelaunayFaces(seedPoints);
-  const adjacentFacesByEdge = new Map();
-  faces.forEach((face, faceIndex) => {
-    const [a, b, c] = face.ids;
-    for (const key of [pairKey(a, b), pairKey(b, c), pairKey(c, a)]) {
-      const adjacent = adjacentFacesByEdge.get(key) || [];
-      adjacent.push(faceIndex);
-      adjacentFacesByEdge.set(key, adjacent);
-    }
+      vec3 hash3(vec3 p) {
+        p = vec3(
+          dot(p, vec3(127.1, 311.7, 74.7)),
+          dot(p, vec3(269.5, 183.3, 246.1)),
+          dot(p, vec3(113.5, 271.9, 124.6))
+        );
+        return fract(sin(p + uSeed) * 43758.5453123);
+      }
+
+      vec2 voronoiBorder(vec3 x) {
+        vec3 n = floor(x);
+        vec3 f = fract(x);
+        float nearest = 8.0;
+        float secondNearest = 8.0;
+
+        for (int k = -1; k <= 1; k += 1) {
+          for (int j = -1; j <= 1; j += 1) {
+            for (int i = -1; i <= 1; i += 1) {
+              vec3 g = vec3(float(i), float(j), float(k));
+              vec3 o = hash3(n + g);
+              vec3 drift = 0.5 + 0.34 * sin((uTime * 0.32) + 6.2831853 * o);
+              vec3 r = g + mix(o, drift, 0.42) - f;
+              float d = dot(r, r);
+              if (d < nearest) {
+                secondNearest = nearest;
+                nearest = d;
+              } else if (d < secondNearest) {
+                secondNearest = d;
+              }
+            }
+          }
+        }
+
+        return vec2(nearest, secondNearest - nearest);
+      }
+
+      void main() {
+        vec3 normal = normalize(vPos);
+        vec2 cell = voronoiBorder(normal * uScale);
+        float borderDistance = cell.y;
+        float damage = smoothstep(0.02, 1.0, uHitRatio);
+        float critical = pow(damage, 2.0) * max(0.0, uCriticalGlow - 1.0);
+        float pulse = 0.78 + 0.22 * sin(uTime * (2.2 + damage * 2.0) + cell.x * 18.0);
+
+        float groove = 1.0 - smoothstep(uLineWidth * 0.38, uLineWidth * 1.15, borderDistance);
+        float rim = smoothstep(uLineWidth * 0.48, uLineWidth * 1.35, borderDistance)
+          * (1.0 - smoothstep(uLineWidth * 1.35, uLineWidth * 3.8, borderDistance));
+        float haze = 1.0 - smoothstep(uLineWidth * 2.2, uLineWidth * 8.2, borderDistance);
+        float facing = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0))), 1.5);
+
+        vec3 energy = mix(uEnergyColor, uCrackColor, 0.62);
+        vec3 color = mix(uTroughColor, energy, rim * (0.8 + critical));
+        color += uCrackColor * haze * damage * 0.18 * pulse;
+        color += uEnergyColor * facing * damage * 0.16;
+
+        float alpha = damage * uAlpha * (
+          groove * 0.48 +
+          rim * (0.42 + critical * 0.22) +
+          haze * 0.10
+        );
+
+        if (alpha < 0.006) discard;
+        gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.9));
+      }
+    `,
   });
-
-  const arcs = [];
-  for (const [key, faceIndexes] of adjacentFacesByEdge.entries()) {
-    if (faceIndexes.length !== 2) continue;
-    const a = faces[faceIndexes[0]].center;
-    const b = faces[faceIndexes[1]].center;
-    const points = createGeodesicArc(a, b, radius, 13);
-    if (!points) continue;
-    const [seedA, seedB] = key.split(":").map((value) => Number(value));
-    const midpoint = points[Math.floor(points.length * 0.5)].clone().normalize();
-    const score = midpoint.z + (midpoint.x * 0.18) + (midpoint.y * 0.08);
-    arcs.push(Object.freeze({ points, score, seedA, seedB }));
-  }
-
-  return arcs.sort((a, b) => b.score - a.score || a.seedA - b.seedA || a.seedB - b.seedB);
 }
 
 export function createOrbLifecycle3dCracks({
@@ -190,45 +174,24 @@ export function createOrbLifecycle3dCracks({
 
   const radius = Math.max(1, Number(bo) || 72) * 0.5;
   const lift = Math.max(0, Number(resolved.crackLiftBO) || 0) * Math.max(1, Number(bo) || 72);
-  const rng = createRng(seed || 1);
   const ratio = Math.max(0, Math.min(1, hits / total));
-  const glow = 1 + (ratio * Math.max(0, resolved.criticalGlow - 1));
-  const surfaceRadius = radius + lift;
-  const seedCount = Math.max(8, Math.min(30, Math.round(8 + (resolved.maxCracks * 0.55))));
-  const visibleArcCount = Math.max(3, Math.min(72, Math.round(crackCount * 2.35)));
-  const baseWidth = Math.max(0.025, radius * 0.0032 * resolved.crackWidthPx);
-  const coreColor = new THREE.Color(resolved.crackColor);
-  const darkColor = new THREE.Color(0x010204).lerp(coreColor, 0.08).getHex();
-  const glowColor = coreColor.getHex();
-
-  const seedPoints = createSphereSeeds(rng, seedCount);
-  const arcs = createSphericalVoronoiArcs(seedPoints, surfaceRadius);
-  for (const arc of arcs.slice(0, visibleArcCount)) {
-    const groove = createCrackTube(arc.points, {
-      radius: baseWidth * 2.8,
-      color: darkColor,
-      opacity: Math.min(0.86, 0.46 + (ratio * 0.26)),
-      name: "orb_lifecycle3d:voronoi_groove",
-    });
-    const rim = createCrackTube(arc.points, {
-      radius: baseWidth * 1.18,
-      color: glowColor,
-      opacity: Math.max(0, Math.min(0.72, resolved.crackAlpha * 0.72 * glow)),
-      additive: true,
-      name: "orb_lifecycle3d:voronoi_rim",
-    });
-    const halo = createCrackTube(arc.points, {
-      radius: baseWidth * 4.1,
-      color: glowColor,
-      opacity: Math.max(0, Math.min(0.26, resolved.crackAlpha * 0.14 * glow)),
-      additive: true,
-      name: "orb_lifecycle3d:voronoi_halo",
-    });
-    if (groove) group.add(groove);
-    if (halo) group.add(halo);
-    if (rim) group.add(rim);
-  }
+  const material = createVoronoiShellMaterial({ hitRatio: ratio, seed, config: resolved });
+  const shell = new THREE.Mesh(
+    new THREE.SphereGeometry(radius + lift + 0.06, 72, 36),
+    material
+  );
+  shell.name = "orb_lifecycle3d:voronoi_energy_shell";
+  group.add(shell);
   return group;
+}
+
+export function updateOrbLifecycle3dCracks(cracks, nowMs = performance.now()) {
+  if (!cracks || !cracks.traverse) return;
+  const t = Math.max(0, Number(nowMs) || performance.now()) / 1000;
+  cracks.traverse((child) => {
+    const uniforms = child && child.material && child.material.uniforms;
+    if (uniforms && uniforms.uTime) uniforms.uTime.value = t;
+  });
 }
 
 export function createOrbLifecycle3dDissolveBurst({

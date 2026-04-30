@@ -11,8 +11,9 @@ import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lif
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dDissolveBurst,
+  updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260430a";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260430b";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 function clampNumber(value, min, max, fallback) {
@@ -149,6 +150,7 @@ export function createOrbLifecycle3dPreview({
             shellMaterial.uniforms.uTime.value = t;
           }
           if (pointLight) updateOrbPointLight(pointLight, t, ORB_3D_VISUAL_DEFAULTS);
+          if (cracks) updateOrbLifecycle3dCracks(cracks, performance.now());
           if (burst && !updateOrbLifecycle3dDissolveBurst(burst, performance.now())) removeBurst();
         },
       });

@@ -24,8 +24,9 @@ import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecyc
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dDissolveBurst,
+  updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260430a";
+} from "../../../game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260430b";
 import {
   EVT_ORB_DAMAGE_APPLIED,
   EVT_ORB_DIED,
@@ -801,6 +802,7 @@ export function createLevelStageDepth3dLayer({
       config: ORB_LIFECYCLE_3D_DEFAULTS,
     });
     orbRuntime.model.add(orbLifecycle3d.cracks);
+    scheduleGlobe3dFrames();
   }
 
   function clearOrbLifecycle3dBurst() {
@@ -1147,6 +1149,7 @@ export function createLevelStageDepth3dLayer({
     updateWorldGlobe3dPickups(timeSec);
     updateOrbGlobe3dOrbiting(timeSec);
     updateOrbGlobe3dInner(dtSec);
+    if (orbLifecycle3d.cracks) updateOrbLifecycle3dCracks(orbLifecycle3d.cracks, nowMs);
     if (orbLifecycle3d.burst && !updateOrbLifecycle3dDissolveBurst(orbLifecycle3d.burst, nowMs)) {
       clearOrbLifecycle3dBurst();
     }
@@ -1157,6 +1160,7 @@ export function createLevelStageDepth3dLayer({
       globe3dWorld.pickups.some((pickup) => pickup && pickup.active)
       || globe3dOrb.orbiting.length > 0
       || globe3dOrb.inner.length > 0
+      || !!orbLifecycle3d.cracks
       || !!orbLifecycle3d.burst
     );
   }
