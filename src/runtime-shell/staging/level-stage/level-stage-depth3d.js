@@ -32,7 +32,7 @@ import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifec
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260430a";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430a";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
-import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430a";
+import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430b";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
@@ -79,6 +79,7 @@ export function createLevelStageDepth3dLayer({
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let lastGlobe3dTickMs = 0;
+  let boundGlobe3dSpawns = Object.freeze([]);
   const telemetry = createLevelStageDepth3dTelemetry({
     root,
     labelEl,
@@ -180,9 +181,13 @@ export function createLevelStageDepth3dLayer({
 
   function loadGlobe3dWorldSpawns(spawns = []) {
     clearGlobe3dObjects();
-    worldGlobe3dRuntime.loadSpawns(spawns);
+    boundGlobe3dSpawns = Object.freeze(Array.isArray(spawns) ? spawns.slice() : []);
+    worldGlobe3dRuntime.loadSpawns(boundGlobe3dSpawns);
+    tickGlobe3dRuntime();
     syncRootVisibility();
     renderLoop.scheduleAnimation();
+    const lastFrame = renderLoop.getLastFrame();
+    if (lastFrame) renderLoop.renderFrame(lastFrame);
   }
 
   function tickGlobe3dRuntime(nowMs = performance.now()) {
@@ -299,6 +304,10 @@ export function createLevelStageDepth3dLayer({
         }
       }
       loadProps(props);
+      if (boundGlobe3dSpawns.length) {
+        worldGlobe3dRuntime.loadSpawns(boundGlobe3dSpawns);
+        tickGlobe3dRuntime();
+      }
       syncRootVisibility();
       telemetry.setSceneStatus({
         depthLayerCount: group.children.length,

@@ -31,6 +31,9 @@ export function createLevelStageDepth3dTelemetry({
   let lastTelemetryDepthPx = "";
   let currentMaxDepthBO = 0;
   let currentMaxDepthPx = 0;
+  let worldGlobeSpawnCount = "0";
+  let worldGlobeActiveCount = "0";
+  let orbGlobeCount = "0";
 
   function setDatasetValue(target = null, key = "", value = "") {
     if (!target || !target.dataset || !key) return;
@@ -55,6 +58,21 @@ export function createLevelStageDepth3dTelemetry({
   } = {}) {
     setDatasetValue(root, "depthLayerCount", clampCount(depthLayerCount));
     setDatasetValue(root, "depthStatus", depthStatus);
+  }
+
+  function renderDebugText() {
+    if (!debugEl) return;
+    const nextBO = lastTelemetryBO || Number(fallbackBo || 0).toFixed(2);
+    const nextRadius = lastTelemetryRadius || (Math.max(1, Number(fallbackBo) || 1) * 0.5).toFixed(2);
+    const nextZBO = lastTelemetryZBO || "0.00";
+    const nextDepthPx = lastTelemetryDepthPx || "0.00";
+    const nextMaxDepthBO = Number(currentMaxDepthBO || 0).toFixed(2);
+    const nextMaxDepthPx = Number(currentMaxDepthPx || 0).toFixed(2);
+    const nextText = `3d BO ${nextBO} | r ${nextRadius} | z ${nextZBO}/${nextMaxDepthBO}BO | depth ${nextDepthPx}/${nextMaxDepthPx}px | globes ${worldGlobeActiveCount}/${worldGlobeSpawnCount} world ${orbGlobeCount} orb`;
+    if (nextText !== lastTelemetryText) {
+      debugEl.textContent = nextText;
+      lastTelemetryText = nextText;
+    }
   }
 
   function updateOrbTelemetry({
@@ -93,22 +111,28 @@ export function createLevelStageDepth3dTelemetry({
     setDatasetValue(labelEl, "depthOrbDepthPx", nextDepthPx);
     setDatasetValue(labelEl, "depthMaxBo", nextMaxDepthBO);
     setDatasetValue(labelEl, "depthMaxPx", nextMaxDepthPx);
-    if (debugEl) {
-      const nextText = `3d BO ${nextBO} | r ${nextRadius} | z ${nextZBO}/${nextMaxDepthBO}BO | depth ${nextDepthPx}/${nextMaxDepthPx}px`;
-      if (nextText !== lastTelemetryText) {
-        debugEl.textContent = nextText;
-        lastTelemetryText = nextText;
-      }
-    }
+    renderDebugText();
   }
 
   return Object.freeze({
     setDepthLayerLabel,
     setSceneStatus,
     updateOrbTelemetry,
-    setWorldGlobeSpawnCount: (count) => setDatasetValue(root, "depthGlobe3dWorldSpawnCount", clampCount(count)),
-    setWorldGlobeActiveCount: (count) => setDatasetValue(root, "depthGlobe3dWorldCount", clampCount(count)),
-    setOrbGlobeCount: (count) => setDatasetValue(root, "depthGlobe3dOrbCount", clampCount(count)),
+    setWorldGlobeSpawnCount: (count) => {
+      worldGlobeSpawnCount = clampCount(count);
+      setDatasetValue(root, "depthGlobe3dWorldSpawnCount", worldGlobeSpawnCount);
+      renderDebugText();
+    },
+    setWorldGlobeActiveCount: (count) => {
+      worldGlobeActiveCount = clampCount(count);
+      setDatasetValue(root, "depthGlobe3dWorldCount", worldGlobeActiveCount);
+      renderDebugText();
+    },
+    setOrbGlobeCount: (count) => {
+      orbGlobeCount = clampCount(count);
+      setDatasetValue(root, "depthGlobe3dOrbCount", orbGlobeCount);
+      renderDebugText();
+    },
     setPropCount: (count) => setDatasetValue(root, "depthPropCount", clampCount(count)),
   });
 }
