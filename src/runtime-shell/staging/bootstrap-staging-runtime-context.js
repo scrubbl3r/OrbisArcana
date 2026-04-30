@@ -209,6 +209,7 @@ export function bootstrapStagingRuntimeContext({
     },
     getGlobeEl: () => els.testGlobe,
     setGlobeEl: (el) => { els.testGlobe = el; },
+    renderDomGlobes: !!els.testGlobe,
     worldGlobeVisualState: buildWorldGlobeVisualState(null, {
       orbDiameterPx: getOrbFxRadiusPx() * 2,
     }),

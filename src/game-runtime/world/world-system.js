@@ -20,6 +20,7 @@ export function createWorldSystem({
   spawns,
   getGlobeEl,
   setGlobeEl,
+  renderDomGlobes = true,
   worldGlobeVisualState = WORLD_GLOBE_VISUAL_DEFAULTS,
 }) {
   if (!eventBus || typeof eventBus.emit !== "function") {
@@ -247,6 +248,7 @@ export function createWorldSystem({
   }
 
   function renderPickup(p, idx, nowMs) {
+    if (!renderDomGlobes) return;
     const globeEl = ensureGlobeEl(p, idx);
     if (!globeEl || !p) return;
     const renderCache = p.renderCache || (p.renderCache = Object.create(null));
