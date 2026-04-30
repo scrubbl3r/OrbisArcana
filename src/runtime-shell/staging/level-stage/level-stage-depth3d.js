@@ -19,6 +19,7 @@ import { createPlinthModel } from "../../../game-runtime/world/props/plinth-mode
 import { createGlobe3dModel } from "../../../game-runtime/world/globe-3d-model.js";
 import { createGlobeMaterial, createGlobePointLight } from "../../../game-runtime/world/globe-3d-material.js";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260429b";
+import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260430a";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260430a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
@@ -653,10 +654,28 @@ export function createLevelStageDepth3dLayer({
   let currentOrbThreeY = 0;
   let globe3dFrame = 0;
   let lastGlobe3dTickMs = 0;
-  const globe3dWorld = {
-    pickups: [],
-    map: new Map(),
-  };
+  const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
+    group: globe3dGroup,
+    createGlobeObject: createGlobe3dObject,
+    resolveSpawnAnchor: (spawn) => ({
+      x: readSpawnWorldX(spawn, worldWidthPx),
+      y: readSpawnWorldY(spawn),
+    }),
+    toRuntimePosition: ({ x = 0, y = 0 } = {}) => ({
+      x: toThreeX(x, worldWidthPx),
+      y: toThreeY(y, worldHeightPx),
+      z: -currentOrbDepthPx,
+    }),
+    getBo: () => baseOrbWorldUnits,
+    getConfig: () => WORLD_GLOBE_3D_VISUAL_DEFAULTS,
+    onSpawnCountChange: (count) => {
+      root.dataset.depthGlobe3dWorldSpawnCount = String(Math.max(0, Number(count) || 0));
+    },
+    onActiveCountChange: (count) => {
+      root.dataset.depthGlobe3dWorldCount = String(Math.max(0, Number(count) || 0));
+    },
+    onNeedsFrame: () => scheduleGlobe3dFrames(),
+  });
   const orbGlobe3dRuntime = createOrbGlobe3dRuntime({
     group: globe3dGroup,
     createGlobeObject: createGlobe3dObject,
@@ -761,14 +780,13 @@ export function createLevelStageDepth3dLayer({
   }
 
   function clearGlobe3dObjects() {
+    worldGlobe3dRuntime.dispose();
     orbGlobe3dRuntime.dispose();
     while (globe3dGroup.children.length) {
       const child = globe3dGroup.children[0];
       globe3dGroup.remove(child);
       disposeThreeObject(child);
     }
-    globe3dWorld.pickups = [];
-    globe3dWorld.map.clear();
     orbLifecycle3dRuntime.dispose();
   }
 
@@ -797,43 +815,9 @@ export function createLevelStageDepth3dLayer({
     return model;
   }
 
-  function makeGlobe3dWorldPickup(spawn = {}, index = 0) {
-    const emitterId = String((spawn && spawn.id) || `globe_emitter_${String(index + 1).padStart(2, "0")}`);
-    const globeId = `${emitterId}.globe.1`;
-    const idle = WORLD_GLOBE_3D_VISUAL_DEFAULTS.idle || {};
-    const bo = baseOrbWorldUnits * Math.max(0.01, clampNumber(idle.diameterRatio, 0.35));
-    const model = createGlobe3dObject({
-      bo,
-      materialConfig: WORLD_GLOBE_3D_VISUAL_DEFAULTS.material,
-      name: `world_globe3d:${globeId}`,
-    });
-    globe3dGroup.add(model);
-    const pickup = {
-      id: globeId,
-      globeId,
-      emitterId,
-      model,
-      anchorXW: readSpawnWorldX(spawn, worldWidthPx),
-      anchorYW: readSpawnWorldY(spawn),
-      driftAmp: baseOrbWorldUnits * Math.max(0, clampNumber(idle.driftRatio, 0.1)),
-      bobAmp: baseOrbWorldUnits * Math.max(0, clampNumber(idle.bobRatio, 0.07)),
-      bobHz: Math.max(0, clampNumber(idle.bobHz, 0.65)),
-      pulseScale: Math.max(0, clampNumber(idle.pulseScale, 0.045)),
-      pulseHz: Math.max(0, clampNumber(idle.pulseHz, 0.9)),
-      phase: Math.random() * Math.PI * 2,
-      active: true,
-      fadeInStartMs: 0,
-    };
-    globe3dWorld.map.set(globeId, pickup);
-    return pickup;
-  }
-
   function loadGlobe3dWorldSpawns(spawns = []) {
-    const spawnList = Array.isArray(spawns) ? spawns : [];
-    root.dataset.depthGlobe3dWorldSpawnCount = String(spawnList.length);
     clearGlobe3dObjects();
-    globe3dWorld.pickups = spawnList.map(makeGlobe3dWorldPickup);
-    root.dataset.depthGlobe3dWorldCount = String(globe3dWorld.pickups.length);
+    worldGlobe3dRuntime.loadSpawns(spawns);
     syncRootVisibility();
     scheduleGlobe3dFrames();
   }
@@ -847,18 +831,10 @@ export function createLevelStageDepth3dLayer({
     loadGlobe3dWorldSpawns(spawns);
     if (!eventBus || typeof eventBus.on !== "function") return;
     globe3dUnsub.push(eventBus.on(EVT_PICKUP_COLLECTED, (payload = {}) => {
-      const globeId = String(payload.globeId || payload.id || "");
-      const pickup = globe3dWorld.map.get(globeId);
-      if (pickup) pickup.active = false;
-      scheduleGlobe3dFrames();
+      worldGlobe3dRuntime.collect(payload);
     }));
     globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_SPENT, (payload = {}) => {
-      const emitterId = String(payload.emitterId || "");
-      const pickup = globe3dWorld.pickups.find((entry) => String(entry && entry.emitterId || "") === emitterId);
-      if (!pickup) return;
-      pickup.active = true;
-      pickup.fadeInStartMs = performance.now();
-      scheduleGlobe3dFrames();
+      worldGlobe3dRuntime.markSpent(payload);
     }));
     globe3dUnsub.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
       orbGlobe3dRuntime.reconcileInventory(payload.globes || []);
@@ -894,43 +870,18 @@ export function createLevelStageDepth3dLayer({
     }));
   }
 
-  function updateWorldGlobe3dPickups(timeSec = 0) {
-    for (const pickup of globe3dWorld.pickups) {
-      if (!pickup || !pickup.model) continue;
-      pickup.model.visible = !!pickup.active;
-      if (!pickup.active) continue;
-      const phase = timeSec * Math.PI * 2;
-      const drift = Math.sin((phase * 0.23) + pickup.phase) * pickup.driftAmp;
-      const bob = Math.sin((phase * pickup.bobHz) + pickup.phase) * pickup.bobAmp;
-      const pulse = 1 + (Math.sin((phase * Math.max(0, pickup.pulseHz)) + pickup.phase) * pickup.pulseScale);
-      pickup.model.position.set(
-        toThreeX(pickup.anchorXW, worldWidthPx) + drift,
-        toThreeY(pickup.anchorYW, worldHeightPx) + bob,
-        -currentOrbDepthPx
-      );
-      pickup.model.scale.setScalar(Math.max(0.01, pulse || 1));
-      if (pickup.fadeInStartMs) {
-        const age = Math.max(0, (performance.now() - pickup.fadeInStartMs) / 900);
-        const alpha = clamp01(age);
-        pickup.model.scale.multiplyScalar(0.65 + (alpha * 0.35));
-        if (alpha >= 1) pickup.fadeInStartMs = 0;
-      }
-    }
-    root.dataset.depthGlobe3dWorldCount = String(globe3dWorld.pickups.filter((pickup) => pickup && pickup.active).length);
-  }
-
   function tickGlobe3dRuntime(nowMs = performance.now()) {
     const timeSec = nowMs / 1000;
     const dtSec = lastGlobe3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastGlobe3dTickMs) / 1000)) : 0.016;
     lastGlobe3dTickMs = nowMs;
-    updateWorldGlobe3dPickups(timeSec);
+    worldGlobe3dRuntime.update(timeSec);
     orbGlobe3dRuntime.update({ timeSec, dtSec });
     orbLifecycle3dRuntime.update(nowMs);
   }
 
   function hasActiveGlobe3dAnimation() {
     return (
-      globe3dWorld.pickups.some((pickup) => pickup && pickup.active)
+      worldGlobe3dRuntime.hasActiveVisuals()
       || orbGlobe3dRuntime.hasActiveVisuals()
       || orbLifecycle3dRuntime.hasActiveVisuals()
     );
