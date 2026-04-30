@@ -73,10 +73,11 @@ function parseSvgLabelMetadata(label = "", fallbackId = "") {
     zBO = null;
   }
 
-  const scaleRaw = entries.scale || "";
+  const hasScale = Object.prototype.hasOwnProperty.call(entries, "scale");
+  const scaleRaw = hasScale ? entries.scale : "";
   const scaleNormalized = String(scaleRaw || "").trim().toLowerCase();
   let scaleMode = "fixed";
-  let scale = Math.max(0.01, clampNumber(scaleRaw, 1));
+  let scale = hasScale ? Math.max(0.01, clampNumber(scaleRaw, 1)) : 1;
   if (scaleNormalized === "orb" || scaleNormalized === "bo") {
     scaleMode = "orb";
     scale = 1;

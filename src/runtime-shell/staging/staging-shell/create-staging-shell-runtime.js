@@ -2069,7 +2069,7 @@ function syncLevelStageGlobe3dRuntime(shellContext) {
   )
     ? runtime.currentLevelMapSummary.worldItemSpawns
     : [];
-  const spawns = Array.isArray(levelSpawns) && levelSpawns.length ? levelSpawns : summarySpawns;
+  const spawns = Array.isArray(summarySpawns) && summarySpawns.length ? summarySpawns : levelSpawns;
   levelAdapter.bindGlobe3dRuntime({
     eventBus: runtime.eventBus,
     spawns,
