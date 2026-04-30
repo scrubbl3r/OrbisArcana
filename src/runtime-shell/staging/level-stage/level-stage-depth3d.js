@@ -13,7 +13,7 @@ import {
   resolveDepthSpawnAnchor,
   toDepthThreeX,
   toDepthThreeY,
-} from "../../../game-runtime/level/depth-runtime-coordinates.js?v=20260430a";
+} from "../../../game-runtime/level/depth-runtime-coordinates.js?v=20260430b";
 import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260430b";

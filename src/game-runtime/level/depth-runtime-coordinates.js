@@ -32,20 +32,33 @@ export function toDepthThreePoint({
 export function resolveDepthSpawnAnchor(spawn = {}, {
   worldWidthPx = 1,
 } = {}) {
-  if (Number.isFinite(Number(spawn && spawn.xW)) || Number.isFinite(Number(spawn && spawn.yW))) {
-    return Object.freeze({
-      x: Number.isFinite(Number(spawn && spawn.xW)) ? Number(spawn.xW) : 0,
-      y: Number.isFinite(Number(spawn && spawn.yW)) ? Number(spawn.yW) : 0,
-    });
-  }
   const worldCenter = spawn && spawn.worldCenter ? spawn.worldCenter : null;
   if (
-    worldCenter
-    && (Number.isFinite(Number(worldCenter.xW)) || Number.isFinite(Number(worldCenter.yW)))
+    Number.isFinite(Number(spawn && spawn.xW))
+    || Number.isFinite(Number(spawn && spawn.yW))
+    || (
+      worldCenter
+      && (
+        Number.isFinite(Number(worldCenter.xW))
+        || Number.isFinite(Number(worldCenter.yW))
+      )
+    )
   ) {
     return Object.freeze({
-      x: Number.isFinite(Number(worldCenter.xW)) ? Number(worldCenter.xW) : 0,
-      y: Number.isFinite(Number(worldCenter.yW)) ? Number(worldCenter.yW) : 0,
+      x: Number.isFinite(Number(spawn && spawn.xW))
+        ? Number(spawn.xW)
+        : (
+            worldCenter && Number.isFinite(Number(worldCenter.xW))
+              ? Number(worldCenter.xW)
+              : 0
+          ),
+      y: Number.isFinite(Number(spawn && spawn.yW))
+        ? Number(spawn.yW)
+        : (
+            worldCenter && Number.isFinite(Number(worldCenter.yW))
+              ? Number(worldCenter.yW)
+              : 0
+          ),
     });
   }
   return Object.freeze({
