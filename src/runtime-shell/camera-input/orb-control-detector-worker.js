@@ -1,5 +1,3 @@
-import { FilesetResolver, HandLandmarker } from "../../../vendor/mediapipe/tasks-vision/vision_bundle.mjs";
-
 const DEFAULT_DETECTOR_CONFIG = Object.freeze({
   numHands: 1,
   minHandDetectionConfidence: 0.5,
@@ -7,10 +5,42 @@ const DEFAULT_DETECTOR_CONFIG = Object.freeze({
   minTrackingConfidence: 0.5,
 });
 
+let FilesetResolver = null;
+let HandLandmarker = null;
+let visionBundlePromise = null;
 let wasmFileset = null;
 let handLandmarker = null;
 let activeModelAssetUrl = "";
 let activeWasmRootUrl = "";
+
+function installModuleWorkerImportShim() {
+  if (typeof self.import === "function") return;
+  self.import = async (url) => {
+    const scriptUrl = new URL(String(url || ""), self.location.href).toString();
+    const response = await fetch(scriptUrl);
+    if (!response.ok) {
+      throw new Error(`orb_control_worker_script_load_failed:${response.status}`);
+    }
+    const source = await response.text();
+    (0, eval)(`${source}\n//# sourceURL=${scriptUrl}`);
+  };
+}
+
+async function loadVisionBundle() {
+  if (FilesetResolver && HandLandmarker) {
+    return { FilesetResolver, HandLandmarker };
+  }
+  if (!visionBundlePromise) {
+    installModuleWorkerImportShim();
+    visionBundlePromise = import("../../../vendor/mediapipe/tasks-vision/vision_bundle.mjs")
+      .then((module) => {
+        FilesetResolver = module.FilesetResolver;
+        HandLandmarker = module.HandLandmarker;
+        return { FilesetResolver, HandLandmarker };
+      });
+  }
+  return visionBundlePromise;
+}
 
 function clamp01(value) {
   const n = Number(value);
@@ -137,8 +167,9 @@ async function preloadDetector({
   wasmFileset = null;
 
   const preloadStartMs = performance.now();
-  wasmFileset = await FilesetResolver.forVisionTasks(wasmRootUrl);
-  handLandmarker = await HandLandmarker.createFromOptions(wasmFileset, {
+  const vision = await loadVisionBundle();
+  wasmFileset = await vision.FilesetResolver.forVisionTasks(wasmRootUrl);
+  handLandmarker = await vision.HandLandmarker.createFromOptions(wasmFileset, {
     baseOptions: {
       modelAssetPath: modelAssetUrl,
     },

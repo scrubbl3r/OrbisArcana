@@ -1,10 +1,10 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501o";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501p";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
 import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430d";
-import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501o";
-import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260501o";
+import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501p";
+import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260501p";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
@@ -46,10 +46,11 @@ export function createCameraInputRuntime({
   cameraInputBackend = "hand",
   now = () => performance.now(),
 } = {}) {
-  const detectorBackend = String(cameraInputBackend || "hand").trim() || "hand";
+  const requestedDetectorBackend = String(cameraInputBackend || "hand").trim() || "hand";
+  let activeDetectorBackend = requestedDetectorBackend;
   const initialState = createInitialCameraInputState({
     preferredHand,
-    cameraInputBackend: detectorBackend,
+    cameraInputBackend: activeDetectorBackend,
     modelAssetUrl: new URL("../../../assets/camera-input/models/hand_landmarker.task", import.meta.url).toString(),
     wasmRootUrl: new URL("../../../vendor/mediapipe/tasks-vision/wasm/", import.meta.url).toString(),
   });
@@ -60,22 +61,44 @@ export function createCameraInputRuntime({
   const steering = createCameraInputSteering();
   let observationFlushTimer = 0;
   let lastObservationFlushAtMs = 0;
-  const trackerFactory = detectorBackend === "orb-control-worker"
-    ? createOrbControlWorkerTracker
-    : detectorBackend === "orb-control-lite"
-    ? createOrbControlLiteTracker
-    : detectorBackend === "orb-control"
-    ? createOrbControlTracker
-    : createCameraInputTracker;
-  const tracker = trackerFactory({
-    rootWindow,
-    rootDocument,
-    now,
-    preferredHand,
-    modelAssetUrl: initialState.config.modelAssetUrl,
-    wasmRootUrl: initialState.config.wasmRootUrl,
-    onObservation: handleObservation,
-  });
+
+  function createTrackerFor(detectorBackend) {
+    const trackerFactory = detectorBackend === "orb-control-worker"
+      ? createOrbControlWorkerTracker
+      : detectorBackend === "orb-control-lite"
+      ? createOrbControlLiteTracker
+      : detectorBackend === "orb-control"
+      ? createOrbControlTracker
+      : createCameraInputTracker;
+    return trackerFactory({
+      rootWindow,
+      rootDocument,
+      now,
+      preferredHand,
+      modelAssetUrl: initialState.config.modelAssetUrl,
+      wasmRootUrl: initialState.config.wasmRootUrl,
+      onObservation: handleObservation,
+    });
+  }
+
+  let tracker = createTrackerFor(activeDetectorBackend);
+
+  function switchTracker(detectorBackend) {
+    if (tracker && typeof tracker.destroy === "function") {
+      try { tracker.destroy(); } catch (_) {}
+    }
+    activeDetectorBackend = detectorBackend;
+    tracker = createTrackerFor(activeDetectorBackend);
+    patchCameraState({
+      updatedAtMs: now(),
+      config: {
+        cameraInputBackend: activeDetectorBackend,
+      },
+      debug: {
+        detectorBackend: activeDetectorBackend,
+      },
+    });
+  }
 
   function clearObservationFlushTimer() {
     if (!observationFlushTimer) return;
@@ -167,7 +190,7 @@ export function createCameraInputRuntime({
         trackHeight: Number(observation.trackHeight) || 0,
         trackFrameRate: Number(observation.trackFrameRate) || 0,
         detectorLoop: String(observation.detectorLoop || ""),
-        detectorBackend: String(observation.detectorBackend || detectorBackend),
+        detectorBackend: String(observation.detectorBackend || activeDetectorBackend),
         detectorTargetFps: Number(observation.detectorTargetFps) || 0,
         detectorDetectMsEma: Number(observation.detectorDetectMsEma) || 0,
       },
@@ -189,13 +212,25 @@ export function createCameraInputRuntime({
         message: "",
       },
       debug: {
-        preloadDetail: detectorBackend === "orb-control-lite" ? "loading_orb_control_lite" : "loading_mediapipe",
+        preloadDetail: activeDetectorBackend === "orb-control-lite" ? "loading_orb_control_lite" : "loading_mediapipe",
         lastError: "",
       },
     });
 
     try {
-      const preloadInfo = await tracker.preload();
+      let preloadInfo = null;
+      try {
+        preloadInfo = await tracker.preload();
+      } catch (error) {
+        if (activeDetectorBackend !== "orb-control-worker") throw error;
+        switchTracker("orb-control");
+        preloadInfo = await tracker.preload();
+        preloadInfo = {
+          ...preloadInfo,
+          fallbackFromDetectorBackend: "orb-control-worker",
+          fallbackReason: normalizeErrorMessage(error, "orb_control_worker_preload_failed"),
+        };
+      }
       patchCameraState({
         updatedAtMs: now(),
         lifecycle: {
@@ -204,17 +239,18 @@ export function createCameraInputRuntime({
           ready: true,
         },
         debug: {
-          preloadDetail: detectorBackend === "orb-control-lite" ? "orb_control_lite_ready" : "mediapipe_ready",
+          preloadDetail: activeDetectorBackend === "orb-control-lite" ? "orb_control_lite_ready" : "mediapipe_ready",
           preloadMs: Number(preloadInfo && preloadInfo.preloadMs) || 0,
           wasmSimdSupported: Boolean(preloadInfo && preloadInfo.wasmSimdSupported),
           loadedWasmAssets: String(preloadInfo && preloadInfo.loadedWasmAssets || ""),
-          modelAssetUrl: detectorBackend === "orb-control-lite"
+          modelAssetUrl: activeDetectorBackend === "orb-control-lite"
             ? ""
             : String(preloadInfo && preloadInfo.modelAssetUrl || initialState.config.modelAssetUrl),
-          wasmRootUrl: detectorBackend === "orb-control-lite"
+          wasmRootUrl: activeDetectorBackend === "orb-control-lite"
             ? ""
             : String(preloadInfo && preloadInfo.wasmRootUrl || initialState.config.wasmRootUrl),
-          detectorBackend: String(preloadInfo && preloadInfo.detectorBackend || detectorBackend),
+          detectorBackend: String(preloadInfo && preloadInfo.detectorBackend || activeDetectorBackend),
+          lastError: String(preloadInfo && preloadInfo.fallbackReason || ""),
         },
       });
       return camStore.getState();
