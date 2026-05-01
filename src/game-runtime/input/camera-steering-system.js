@@ -47,8 +47,8 @@ export function createCameraSteeringSystem({
     if (magnitude <= cfg.centerEpsilon01) {
       return 0;
     }
-    const halfRampWindow = Math.max(0.025, cfg.rampWindow01 * 0.5);
-    const normalized = clamp01(magnitude / halfRampWindow);
+    const rampWindow = Math.max(cfg.centerEpsilon01 + 0.001, cfg.rampWindow01);
+    const normalized = clamp01((magnitude - cfg.centerEpsilon01) / (rampWindow - cfg.centerEpsilon01));
     return clampSigned(Math.sign(centered) * normalized, cfg.maxIntent01);
   }
 
@@ -107,6 +107,8 @@ export function createCameraSteeringSystem({
       targetVX: Number(steeringState.targetVX) || 0,
       maxSpeedPxPerSec: Number(steeringState.maxSpeedPxPerSec) || 0,
       velocityEaseFactor: Number(steeringState.velocityEaseFactor) || 0,
+      centerEpsilon01: Number(cfg.centerEpsilon01) || 0,
+      rampWindow01: Number(cfg.rampWindow01) || 0,
       handedness: String(steeringState.handedness || ""),
       trackingState: String(steeringState.trackingState || "idle"),
       updatedAtMs: Number(steeringState.updatedAtMs) || 0,

@@ -33,7 +33,7 @@ import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
-import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260420v";
+import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260501e";
 import {
   resolveLevelCameraAnchor,
   resolveLevelSpawnPoint,
@@ -889,6 +889,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
       detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
       steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
+      steeringCenterEpsilon01: Math.round((Number(steering && steering.centerEpsilon01) || 0) * 10000) / 10000,
+      steeringRampWindow01: Math.round((Number(steering && steering.rampWindow01) || 0) * 1000) / 1000,
       video: `${Math.round(Number(debug.videoWidth) || 0)}x${Math.round(Number(debug.videoHeight) || 0)}`,
       detectorInput: `${Math.round(Number(debug.detectorInputWidth) || 0)}x${Math.round(Number(debug.detectorInputHeight) || 0)}`,
       track: `${Math.round(Number(debug.trackWidth) || 0)}x${Math.round(Number(debug.trackHeight) || 0)}@${Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10}`,
@@ -958,6 +960,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     steeringTargetVX: Math.round((Number(steering && steering.targetVX) || 0) * 10) / 10,
     steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
     steeringVelocityEaseFactor: Math.round((Number(steering && steering.velocityEaseFactor) || 0) * 1000) / 1000,
+    steeringCenterEpsilon01: Math.round((Number(steering && steering.centerEpsilon01) || 0) * 10000) / 10000,
+    steeringRampWindow01: Math.round((Number(steering && steering.rampWindow01) || 0) * 1000) / 1000,
   };
 }
 
@@ -3260,7 +3264,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501d",
+  moduleCacheBustV = "20260501e",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

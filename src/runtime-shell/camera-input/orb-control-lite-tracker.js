@@ -11,8 +11,8 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   motionFloor: 10,
   motionScale: 54,
   skinMotionBoost: 0.55,
-  outputCenterX01: 0.533,
-  outputGain: 1.65,
+  outputCenterX01: 0.5,
+  outputGain: 1,
   backgroundAlpha: 0.025,
 });
 
