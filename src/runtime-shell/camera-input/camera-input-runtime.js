@@ -1,10 +1,10 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501r";
-import { createCameraInputSteering } from "./camera-input-steering.js?v=20260501r";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501s";
+import { createCameraInputSteering } from "./camera-input-steering.js?v=20260501s";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
 import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430d";
-import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501r";
-import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260501r";
+import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501s";
+import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260501s";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
@@ -186,6 +186,15 @@ export function createCameraInputRuntime({
         detectorOutputX01: Number(observation.detectorOutputX01) || 0.5,
         detectorOutputCenterX01: Number(observation.detectorOutputCenterX01) || 0.5,
         detectorOutputGain: Number(observation.detectorOutputGain) || 1,
+        detectorResultReason: String(observation.detectorResultReason || ""),
+        detectorLandmarkGroups: Number(observation.detectorLandmarkGroups) || 0,
+        detectorHandednessGroups: Number(observation.detectorHandednessGroups) || 0,
+        detectorBestScore: Number(observation.detectorBestScore) || 0,
+        detectorBestLandmarks: Number(observation.detectorBestLandmarks) || 0,
+        detectorBestIndex: Number(observation.detectorBestIndex) || -1,
+        detectorPalmCameraX01: Number(observation.detectorPalmCameraX01) || 0.5,
+        detectorPalmScreenX01: Number(observation.detectorPalmScreenX01) || 0.5,
+        detectorDetectedHandedness: String(observation.detectorDetectedHandedness || observation.detectedHandedness || ""),
         trackWidth: Number(observation.trackWidth) || 0,
         trackHeight: Number(observation.trackHeight) || 0,
         trackFrameRate: Number(observation.trackFrameRate) || 0,

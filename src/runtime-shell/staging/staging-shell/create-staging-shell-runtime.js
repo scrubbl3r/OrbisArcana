@@ -899,6 +899,15 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorContinuityMultiplier: Math.round((Number(debug.detectorContinuityMultiplier) || 0) * 1000) / 1000,
       detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
       detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
+      detectorResultReason: String(debug.detectorResultReason || ""),
+      detectorLandmarkGroups: Math.round(Number(debug.detectorLandmarkGroups) || 0),
+      detectorHandednessGroups: Math.round(Number(debug.detectorHandednessGroups) || 0),
+      detectorBestScore: Math.round((Number(debug.detectorBestScore) || 0) * 1000) / 1000,
+      detectorBestLandmarks: Math.round(Number(debug.detectorBestLandmarks) || 0),
+      detectorBestIndex: Math.round(Number(debug.detectorBestIndex) || -1),
+      detectorPalmCameraX01: Math.round((Number(debug.detectorPalmCameraX01) || 0) * 1000) / 1000,
+      detectorPalmScreenX01: Math.round((Number(debug.detectorPalmScreenX01) || 0) * 1000) / 1000,
+      detectorDetectedHandedness: String(debug.detectorDetectedHandedness || ""),
       steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
       steeringCenterEpsilon01: Math.round((Number(steering && steering.centerEpsilon01) || 0) * 10000) / 10000,
       steeringRampWindow01: Math.round((Number(steering && steering.rampWindow01) || 0) * 1000) / 1000,
@@ -923,6 +932,10 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       perfTrace.mark(handPresent ? "camera.hand_reacquired" : "camera.hand_lost", {
         inputAgeMs: Math.round(inputAgeMs),
         trackingState: trackingLabel,
+        detectorResultReason: String(debug.detectorResultReason || ""),
+        detectorBestScore: Math.round((Number(debug.detectorBestScore) || 0) * 1000) / 1000,
+        detectorLandmarkGroups: Math.round(Number(debug.detectorLandmarkGroups) || 0),
+        detectorBestLandmarks: Math.round(Number(debug.detectorBestLandmarks) || 0),
       });
     }
   }
@@ -964,6 +977,15 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     detectorOutputX01: Math.round((Number(debug.detectorOutputX01) || 0) * 1000) / 1000,
     detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
     detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
+    detectorResultReason: String(debug.detectorResultReason || ""),
+    detectorLandmarkGroups: Math.round(Number(debug.detectorLandmarkGroups) || 0),
+    detectorHandednessGroups: Math.round(Number(debug.detectorHandednessGroups) || 0),
+    detectorBestScore: Math.round((Number(debug.detectorBestScore) || 0) * 1000) / 1000,
+    detectorBestLandmarks: Math.round(Number(debug.detectorBestLandmarks) || 0),
+    detectorBestIndex: Math.round(Number(debug.detectorBestIndex) || -1),
+    detectorPalmCameraX01: Math.round((Number(debug.detectorPalmCameraX01) || 0) * 1000) / 1000,
+    detectorPalmScreenX01: Math.round((Number(debug.detectorPalmScreenX01) || 0) * 1000) / 1000,
+    detectorDetectedHandedness: String(debug.detectorDetectedHandedness || ""),
     trackWidth: Math.round(Number(debug.trackWidth) || 0),
     trackHeight: Math.round(Number(debug.trackHeight) || 0),
     trackFrameRate: Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10,
@@ -3292,7 +3314,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501r",
+  moduleCacheBustV = "20260501s",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

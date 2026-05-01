@@ -81,11 +81,20 @@ function extractOrbControlObservation(result, observedAtMs) {
     : Array.isArray(result && result.handednesses)
     ? result.handednesses
     : [];
+  const detectorLandmarkGroups = landmarksGroups.length;
+  const detectorHandednessGroups = handednessGroups.length;
 
   if (!landmarksGroups.length) {
     return {
       kind: "missing",
       observedAtMs,
+      detectorResultReason: "no_landmarks",
+      detectorLandmarkGroups,
+      detectorHandednessGroups,
+      detectorBestScore: 0,
+      detectorBestLandmarks: 0,
+      detectorBestIndex: -1,
+      detectorPalmCameraX01: 0.5,
       detectorBackend: "orb-control-worker",
     };
   }
@@ -93,6 +102,7 @@ function extractOrbControlObservation(result, observedAtMs) {
   let bestIndex = -1;
   let bestScore = -1;
   let bestHandedness = "";
+  let bestLandmarksCount = 0;
 
   for (let index = 0; index < landmarksGroups.length; index += 1) {
     const landmarks = Array.isArray(landmarksGroups[index]) ? landmarksGroups[index] : [];
@@ -104,6 +114,7 @@ function extractOrbControlObservation(result, observedAtMs) {
       bestIndex = index;
       bestScore = score;
       bestHandedness = handedness;
+      bestLandmarksCount = landmarks.length;
     }
   }
 
@@ -111,11 +122,19 @@ function extractOrbControlObservation(result, observedAtMs) {
     return {
       kind: "missing",
       observedAtMs,
+      detectorResultReason: "no_valid_landmarks",
+      detectorLandmarkGroups,
+      detectorHandednessGroups,
+      detectorBestScore: 0,
+      detectorBestLandmarks: 0,
+      detectorBestIndex: -1,
+      detectorPalmCameraX01: 0.5,
       detectorBackend: "orb-control-worker",
     };
   }
 
   const landmarks = Array.isArray(landmarksGroups[bestIndex]) ? landmarksGroups[bestIndex] : [];
+  const palmCameraX01 = averagePalmX01(landmarks);
 
   return {
     kind: "hand",
@@ -124,7 +143,16 @@ function extractOrbControlObservation(result, observedAtMs) {
     detectedHandedness: bestHandedness,
     handednessScore: bestScore,
     landmarksCount: landmarks.length,
-    x01: toScreenSpaceX01(averagePalmX01(landmarks)),
+    x01: toScreenSpaceX01(palmCameraX01),
+    detectorResultReason: "hand",
+    detectorLandmarkGroups,
+    detectorHandednessGroups,
+    detectorBestScore: bestScore,
+    detectorBestLandmarks: bestLandmarksCount,
+    detectorBestIndex: bestIndex,
+    detectorPalmCameraX01: palmCameraX01,
+    detectorPalmScreenX01: toScreenSpaceX01(palmCameraX01),
+    detectorDetectedHandedness: bestHandedness,
     detectorBackend: "orb-control-worker",
   };
 }
