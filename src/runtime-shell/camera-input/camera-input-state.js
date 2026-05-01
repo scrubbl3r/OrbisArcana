@@ -55,6 +55,8 @@ export function createInitialCameraInputState({
       wasmRootUrl: "",
       detectorLoop: "",
       detectorBackend: String(cameraInputBackend || "hand"),
+      detectorTargetFps: 0,
+      detectorDetectMsEma: 0,
       lastError: "",
     },
   };

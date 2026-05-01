@@ -1,8 +1,8 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430e";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430f";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
-import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430a";
+import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430b";
 import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260430a";
 
 const OBSERVATION_PUBLISH_FPS = 30;
@@ -143,6 +143,8 @@ export function createCameraInputRuntime({
         trackFrameRate: Number(observation.trackFrameRate) || 0,
         detectorLoop: String(observation.detectorLoop || ""),
         detectorBackend: String(observation.detectorBackend || detectorBackend),
+        detectorTargetFps: Number(observation.detectorTargetFps) || 0,
+        detectorDetectMsEma: Number(observation.detectorDetectMsEma) || 0,
       },
     }, {
       coalesceObservation: true,

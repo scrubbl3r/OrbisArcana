@@ -6,6 +6,9 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minHandPresenceConfidence: 0.5,
   minTrackingConfidence: 0.5,
   maxDetectionFps: 30,
+  minDetectionFps: 20,
+  slowDetectMs: 28,
+  recoverDetectMs: 18,
   videoWidth: 640,
   videoHeight: 480,
   videoFps: 30,
@@ -198,7 +201,39 @@ export function createOrbControlTracker({
   let lastVideoTime = -1;
   let lastFrameAtMs = 0;
   let lastDetectionAtMs = 0;
-  const minDetectionIntervalMs = 1000 / DEFAULT_TRACKER_CONFIG.maxDetectionFps;
+  let targetDetectionFps = DEFAULT_TRACKER_CONFIG.maxDetectionFps;
+  let detectMsEma = 0;
+  let slowDetectStreak = 0;
+  let recoverDetectStreak = 0;
+
+  function getDetectionIntervalMs() {
+    return 1000 / Math.max(1, targetDetectionFps);
+  }
+
+  function updateAdaptiveCadence(detectMs) {
+    const sample = Math.max(0, Number(detectMs) || 0);
+    detectMsEma = detectMsEma ? (detectMsEma * 0.8) + (sample * 0.2) : sample;
+    if (detectMsEma >= DEFAULT_TRACKER_CONFIG.slowDetectMs) {
+      slowDetectStreak += 1;
+      recoverDetectStreak = 0;
+    } else if (detectMsEma <= DEFAULT_TRACKER_CONFIG.recoverDetectMs) {
+      recoverDetectStreak += 1;
+      slowDetectStreak = 0;
+    } else {
+      slowDetectStreak = 0;
+      recoverDetectStreak = 0;
+    }
+
+    if (slowDetectStreak >= 6 && targetDetectionFps > DEFAULT_TRACKER_CONFIG.minDetectionFps) {
+      targetDetectionFps = Math.max(DEFAULT_TRACKER_CONFIG.minDetectionFps, targetDetectionFps - 2);
+      slowDetectStreak = 0;
+      return;
+    }
+    if (recoverDetectStreak >= 24 && targetDetectionFps < DEFAULT_TRACKER_CONFIG.maxDetectionFps) {
+      targetDetectionFps = Math.min(DEFAULT_TRACKER_CONFIG.maxDetectionFps, targetDetectionFps + 2);
+      recoverDetectStreak = 0;
+    }
+  }
 
   async function preload() {
     if (handLandmarker) {
@@ -266,6 +301,7 @@ export function createOrbControlTracker({
     }
 
     const observedAtMs = now();
+    const minDetectionIntervalMs = getDetectionIntervalMs();
     const sinceLastDetectionMs = lastDetectionAtMs ? observedAtMs - lastDetectionAtMs : minDetectionIntervalMs;
     if (sinceLastDetectionMs < minDetectionIntervalMs) {
       scheduleTick(minDetectionIntervalMs - sinceLastDetectionMs);
@@ -280,6 +316,7 @@ export function createOrbControlTracker({
     const detectStartMs = now();
     const result = handLandmarker.detectForVideo(videoEl, observedAtMs);
     const detectMs = Math.max(0, now() - detectStartMs);
+    updateAdaptiveCadence(detectMs);
     const observation = extractOrbControlObservation(result, observedAtMs);
     const streamSettings = resolveStreamSettings(mediaStream);
     onObservation({
@@ -294,8 +331,10 @@ export function createOrbControlTracker({
       trackFrameRate: Number(streamSettings.frameRate) || 0,
       detectorLoop: "orb-control-timeout",
       detectorBackend: "orb-control",
+      detectorTargetFps: targetDetectionFps,
+      detectorDetectMsEma: detectMsEma,
     });
-    scheduleTick(Math.max(0, minDetectionIntervalMs - detectMs));
+    scheduleTick(Math.max(0, getDetectionIntervalMs() - detectMs));
   }
 
   async function start() {
@@ -331,6 +370,10 @@ export function createOrbControlTracker({
     lastVideoTime = -1;
     lastFrameAtMs = 0;
     lastDetectionAtMs = 0;
+    targetDetectionFps = DEFAULT_TRACKER_CONFIG.maxDetectionFps;
+    detectMsEma = 0;
+    slowDetectStreak = 0;
+    recoverDetectStreak = 0;
     scheduleTick(0);
   }
 
@@ -348,6 +391,8 @@ export function createOrbControlTracker({
       frameMs: 0,
       fps: 0,
       detectorBackend: "orb-control",
+      detectorTargetFps: targetDetectionFps,
+      detectorDetectMsEma: detectMsEma,
     });
   }
 
