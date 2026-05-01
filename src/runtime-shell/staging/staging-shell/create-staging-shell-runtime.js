@@ -886,6 +886,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorTargetFps: Math.round((Number(debug.detectorTargetFps) || 0) * 10) / 10,
       detectorDetectMsEma: Math.round((Number(debug.detectorDetectMsEma) || 0) * 10) / 10,
       detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
+      detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
+      detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
       steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
       video: `${Math.round(Number(debug.videoWidth) || 0)}x${Math.round(Number(debug.videoHeight) || 0)}`,
       detectorInput: `${Math.round(Number(debug.detectorInputWidth) || 0)}x${Math.round(Number(debug.detectorInputHeight) || 0)}`,
@@ -930,6 +932,10 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     detectorInputWidth: Math.round(Number(debug.detectorInputWidth) || 0),
     detectorInputHeight: Math.round(Number(debug.detectorInputHeight) || 0),
     detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
+    detectorRawX01: Math.round((Number(debug.detectorRawX01) || 0) * 1000) / 1000,
+    detectorOutputX01: Math.round((Number(debug.detectorOutputX01) || 0) * 1000) / 1000,
+    detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
+    detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
     trackWidth: Math.round(Number(debug.trackWidth) || 0),
     trackHeight: Math.round(Number(debug.trackHeight) || 0),
     trackFrameRate: Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10,
@@ -3254,7 +3260,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501c",
+  moduleCacheBustV = "20260501d",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

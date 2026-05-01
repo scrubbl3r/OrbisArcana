@@ -11,6 +11,8 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   motionFloor: 10,
   motionScale: 54,
   skinMotionBoost: 0.55,
+  outputCenterX01: 0.533,
+  outputGain: 1.65,
   backgroundAlpha: 0.025,
 });
 
@@ -96,6 +98,12 @@ function estimateSkinWeight(r, g, b) {
   if (rgbSkin && yCbCrSkin) return 0.75;
   if (rgbSkin || yCbCrSkin) return 0.38;
   return 0;
+}
+
+function calibrateOutputX01(rawScreenX01) {
+  return clamp01(
+    0.5 + ((clamp01(rawScreenX01) - DEFAULT_TRACKER_CONFIG.outputCenterX01) * DEFAULT_TRACKER_CONFIG.outputGain)
+  );
 }
 
 function analyzeFrame(imageData, background) {
@@ -258,13 +266,15 @@ export function createOrbControlLiteTracker({
     const analysis = analyzeFrame(imageData, background);
     const detectMs = Math.max(0, now() - detectStartMs);
     const streamSettings = resolveStreamSettings(mediaStream);
+    const rawScreenX01 = analysis.present ? clamp01(1 - analysis.x01) : 0.5;
+    const outputX01 = analysis.present ? calibrateOutputX01(rawScreenX01) : 0.5;
     const baseObservation = analysis.present
       ? {
           kind: "hand",
           handedness: "Any",
           handednessScore: Math.max(0.56, analysis.confidence),
           landmarksCount: Number(analysis.activePixels) || 0,
-          x01: 1 - analysis.x01,
+          x01: outputX01,
         }
       : {
           kind: "missing",
@@ -281,6 +291,10 @@ export function createOrbControlLiteTracker({
       detectorInputWidth: DEFAULT_TRACKER_CONFIG.detectorWidth,
       detectorInputHeight: DEFAULT_TRACKER_CONFIG.detectorHeight,
       detectorBlobWeight: Math.round((Number(analysis.totalWeight) || 0) * 10) / 10,
+      detectorRawX01: Math.round(rawScreenX01 * 1000) / 1000,
+      detectorOutputX01: Math.round(outputX01 * 1000) / 1000,
+      detectorOutputCenterX01: DEFAULT_TRACKER_CONFIG.outputCenterX01,
+      detectorOutputGain: DEFAULT_TRACKER_CONFIG.outputGain,
       trackWidth: Number(streamSettings.width) || 0,
       trackHeight: Number(streamSettings.height) || 0,
       trackFrameRate: Number(streamSettings.frameRate) || 0,
