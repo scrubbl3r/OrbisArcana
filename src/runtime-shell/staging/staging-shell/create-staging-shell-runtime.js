@@ -886,6 +886,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorTargetFps: Math.round((Number(debug.detectorTargetFps) || 0) * 10) / 10,
       detectorDetectMsEma: Math.round((Number(debug.detectorDetectMsEma) || 0) * 10) / 10,
       detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
+      detectorComponentCount: Math.round(Number(debug.detectorComponentCount) || 0),
+      detectorComponentPixels: Math.round(Number(debug.detectorComponentPixels) || 0),
       detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
       detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
       steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
@@ -936,6 +938,11 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
     detectorRawX01: Math.round((Number(debug.detectorRawX01) || 0) * 1000) / 1000,
     detectorWeightedX01: Math.round((Number(debug.detectorWeightedX01) || 0) * 1000) / 1000,
+    detectorComponentCount: Math.round(Number(debug.detectorComponentCount) || 0),
+    detectorComponentPixels: Math.round(Number(debug.detectorComponentPixels) || 0),
+    detectorComponentWidthPx: Math.round(Number(debug.detectorComponentWidthPx) || 0),
+    detectorComponentHeightPx: Math.round(Number(debug.detectorComponentHeightPx) || 0),
+    detectorComponentScore: Math.round((Number(debug.detectorComponentScore) || 0) * 10) / 10,
     detectorOutputX01: Math.round((Number(debug.detectorOutputX01) || 0) * 1000) / 1000,
     detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
     detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
@@ -3265,7 +3272,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501g",
+  moduleCacheBustV = "20260501h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

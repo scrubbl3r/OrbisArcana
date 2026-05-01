@@ -8,6 +8,7 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minWeight: 60,
   minConfidence: 0.22,
   minPixelWeight: 0.06,
+  minComponentPixels: 8,
   motionFloor: 10,
   motionScale: 54,
   skinMotionBoost: 0.55,
@@ -106,15 +107,139 @@ function calibrateOutputX01(rawScreenX01) {
   );
 }
 
-function analyzeFrame(imageData, background) {
+function createAnalysisScratch(width, height) {
+  const size = Math.max(1, width * height);
+  return {
+    width,
+    height,
+    mask: new Uint8Array(size),
+    visited: new Uint8Array(size),
+    weights: new Float32Array(size),
+    stack: new Int32Array(size),
+  };
+}
+
+function scoreComponent(component, frameWidth, frameHeight) {
+  const boxW = Math.max(1, component.maxX - component.minX + 1);
+  const boxH = Math.max(1, component.maxY - component.minY + 1);
+  const boxArea = boxW * boxH;
+  const fill = component.pixels / Math.max(1, boxArea);
+  const aspect = Math.max(boxW / boxH, boxH / boxW);
+  const compactness = clamp01(fill * 2.2);
+  const aspectPenalty = clamp01(1.35 / Math.max(1, aspect));
+  const hugePenalty = 1 - clamp01(Math.max(boxW / frameWidth, boxH / frameHeight) - 0.55);
+  return component.weight * Math.max(0.18, compactness) * Math.max(0.2, aspectPenalty) * Math.max(0.2, hugePenalty);
+}
+
+function analyzeComponents(mask, weights, visited, stack, width, height) {
+  visited.fill(0);
+  let componentCount = 0;
+  let best = null;
+  let bestScore = -1;
+
+  for (let start = 0; start < mask.length; start += 1) {
+    if (!mask[start] || visited[start]) continue;
+
+    componentCount += 1;
+    let top = 0;
+    stack[top] = start;
+    top += 1;
+    visited[start] = 1;
+
+    let pixels = 0;
+    let weight = 0;
+    let weightedX = 0;
+    let minX = width;
+    let maxX = -1;
+    let minY = height;
+    let maxY = -1;
+
+    while (top > 0) {
+      top -= 1;
+      const pixelIndex = stack[top];
+      const x = pixelIndex % width;
+      const y = (pixelIndex - x) / width;
+      const pixelWeight = weights[pixelIndex] || 0;
+
+      pixels += 1;
+      weight += pixelWeight;
+      weightedX += pixelWeight * (x + 0.5);
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+
+      const left = pixelIndex - 1;
+      const right = pixelIndex + 1;
+      const up = pixelIndex - width;
+      const down = pixelIndex + width;
+      if (x > 0 && mask[left] && !visited[left]) {
+        visited[left] = 1;
+        stack[top] = left;
+        top += 1;
+      }
+      if (x < width - 1 && mask[right] && !visited[right]) {
+        visited[right] = 1;
+        stack[top] = right;
+        top += 1;
+      }
+      if (y > 0 && mask[up] && !visited[up]) {
+        visited[up] = 1;
+        stack[top] = up;
+        top += 1;
+      }
+      if (y < height - 1 && mask[down] && !visited[down]) {
+        visited[down] = 1;
+        stack[top] = down;
+        top += 1;
+      }
+    }
+
+    if (pixels < DEFAULT_TRACKER_CONFIG.minComponentPixels || weight <= 0) continue;
+    const component = { pixels, weight, weightedX, minX, maxX, minY, maxY };
+    const score = scoreComponent(component, width, height);
+    if (score > bestScore) {
+      bestScore = score;
+      best = component;
+    }
+  }
+
+  if (!best) {
+    return {
+      componentCount,
+      pixels: 0,
+      weight: 0,
+      score: 0,
+      widthPx: 0,
+      heightPx: 0,
+      x01: 0.5,
+      weightedX01: 0.5,
+    };
+  }
+
+  const widthPx = Math.max(1, best.maxX - best.minX + 1);
+  const heightPx = Math.max(1, best.maxY - best.minY + 1);
+  return {
+    componentCount,
+    pixels: best.pixels,
+    weight: best.weight,
+    score: bestScore,
+    widthPx,
+    heightPx,
+    x01: clamp01(((best.minX + best.maxX + 1) * 0.5) / width),
+    weightedX01: clamp01(best.weightedX / Math.max(1, best.weight) / width),
+  };
+}
+
+function analyzeFrame(imageData, background, scratch) {
   const { data, width, height } = imageData;
+  const mask = scratch.mask;
+  const weights = scratch.weights;
   const bgAlpha = DEFAULT_TRACKER_CONFIG.backgroundAlpha;
   let totalWeight = 0;
   let weightedX = 0;
   let activePixels = 0;
   let maxWeight = 0;
-  let minX = width;
-  let maxX = -1;
 
   for (let y = 0; y < height; y += 1) {
     const rowOffset = y * width;
@@ -133,14 +258,18 @@ function analyzeFrame(imageData, background) {
 
       const adaptiveBgAlpha = weight > DEFAULT_TRACKER_CONFIG.minPixelWeight ? bgAlpha * 0.2 : bgAlpha;
       background[pixelIndex] = previous + ((luma - previous) * adaptiveBgAlpha);
-      if (weight <= DEFAULT_TRACKER_CONFIG.minPixelWeight) continue;
+      if (weight <= DEFAULT_TRACKER_CONFIG.minPixelWeight) {
+        mask[pixelIndex] = 0;
+        weights[pixelIndex] = 0;
+        continue;
+      }
 
+      mask[pixelIndex] = 1;
+      weights[pixelIndex] = weight;
       activePixels += 1;
       totalWeight += weight;
       weightedX += weight * (x + 0.5);
       if (weight > maxWeight) maxWeight = weight;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
     }
   }
 
@@ -149,14 +278,17 @@ function analyzeFrame(imageData, background) {
   const confidence = clamp01((coverage * 9) + (density * 0.55) + (maxWeight * 0.18));
   const present = totalWeight >= DEFAULT_TRACKER_CONFIG.minWeight &&
     confidence >= DEFAULT_TRACKER_CONFIG.minConfidence;
+  const component = analyzeComponents(mask, weights, scratch.visited, scratch.stack, width, height);
+  const selectedX01 = component.pixels > 0 ? component.x01 : 0.5;
 
   return {
     present,
     confidence,
     totalWeight,
     activePixels,
+    component,
     weightedX01: present ? clamp01(weightedX / Math.max(1, totalWeight) / width) : 0.5,
-    x01: present && maxX >= minX ? clamp01(((minX + maxX + 1) * 0.5) / width) : 0.5,
+    x01: present ? selectedX01 : 0.5,
   };
 }
 
@@ -171,6 +303,7 @@ export function createOrbControlLiteTracker({
   let detectorCanvas = null;
   let detectorContext = null;
   let background = null;
+  let analysisScratch = null;
   let backgroundReady = false;
   let tickTimer = 0;
   let running = false;
@@ -185,6 +318,7 @@ export function createOrbControlLiteTracker({
     detectorCanvas = detector.canvas;
     detectorContext = detector.context;
     background = new Float32Array(DEFAULT_TRACKER_CONFIG.detectorWidth * DEFAULT_TRACKER_CONFIG.detectorHeight);
+    analysisScratch = createAnalysisScratch(DEFAULT_TRACKER_CONFIG.detectorWidth, DEFAULT_TRACKER_CONFIG.detectorHeight);
     return Boolean(detectorContext);
   }
 
@@ -268,7 +402,7 @@ export function createOrbControlLiteTracker({
       }
       backgroundReady = true;
     }
-    const analysis = analyzeFrame(imageData, background);
+    const analysis = analyzeFrame(imageData, background, analysisScratch);
     const detectMs = Math.max(0, now() - detectStartMs);
     const streamSettings = resolveStreamSettings(mediaStream);
     const rawScreenX01 = analysis.present ? clamp01(1 - analysis.x01) : 0.5;
@@ -298,6 +432,11 @@ export function createOrbControlLiteTracker({
       detectorBlobWeight: Math.round((Number(analysis.totalWeight) || 0) * 10) / 10,
       detectorRawX01: Math.round(rawScreenX01 * 1000) / 1000,
       detectorWeightedX01: Math.round((analysis.present ? clamp01(1 - analysis.weightedX01) : 0.5) * 1000) / 1000,
+      detectorComponentCount: Number(analysis.component && analysis.component.componentCount) || 0,
+      detectorComponentPixels: Number(analysis.component && analysis.component.pixels) || 0,
+      detectorComponentWidthPx: Number(analysis.component && analysis.component.widthPx) || 0,
+      detectorComponentHeightPx: Number(analysis.component && analysis.component.heightPx) || 0,
+      detectorComponentScore: Math.round((Number(analysis.component && analysis.component.score) || 0) * 10) / 10,
       detectorOutputX01: Math.round(outputX01 * 1000) / 1000,
       detectorOutputCenterX01: DEFAULT_TRACKER_CONFIG.outputCenterX01,
       detectorOutputGain: DEFAULT_TRACKER_CONFIG.outputGain,
@@ -374,6 +513,7 @@ export function createOrbControlLiteTracker({
     detectorCanvas = null;
     detectorContext = null;
     background = null;
+    analysisScratch = null;
     backgroundReady = false;
     if (videoEl && videoEl.parentNode) {
       videoEl.parentNode.removeChild(videoEl);
