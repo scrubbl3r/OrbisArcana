@@ -12,6 +12,7 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   componentWeightMin: 0.12,
   minComponentPixels: 8,
   coreWindowPx: 28,
+  outerQuantile: 0.18,
   motionFloor: 10,
   motionScale: 54,
   skinMotionBoost: 0.55,
@@ -138,7 +139,7 @@ function scoreComponent(component, frameWidth, frameHeight, prior = null) {
   let continuityMultiplier = 1;
   let priorDistance01 = -1;
   if (prior && Number.isFinite(prior.x01)) {
-    priorDistance01 = Math.abs(component.coreX01 - prior.x01);
+    priorDistance01 = Math.abs(component.outerX01 - prior.x01);
     const near = 1 - clamp01(priorDistance01 / DEFAULT_TRACKER_CONFIG.continuityRadius01);
     continuityMultiplier = DEFAULT_TRACKER_CONFIG.continuityMinMultiplier +
       ((1 - DEFAULT_TRACKER_CONFIG.continuityMinMultiplier) * near);
@@ -152,6 +153,18 @@ function scoreComponent(component, frameWidth, frameHeight, prior = null) {
     continuityMultiplier,
     priorDistance01,
   };
+}
+
+function resolveColumnQuantileX01(columns, minX, maxX, width, targetWeight, fallbackX01) {
+  if (!(targetWeight > 0)) return fallbackX01;
+  let weight = 0;
+  for (let x = minX; x <= maxX; x += 1) {
+    weight += columns[x] || 0;
+    if (weight >= targetWeight) {
+      return clamp01((x + 0.5) / width);
+    }
+  }
+  return fallbackX01;
 }
 
 function resolveComponentCore(component, columns, width) {
@@ -182,12 +195,34 @@ function resolveComponentCore(component, columns, width) {
     weightedX += weight * (x + 0.5);
   }
 
+  const coreX01 = totalWeight > 0
+    ? clamp01(weightedX / totalWeight / width)
+    : clamp01((bestStart + (coreWindowPx * 0.5)) / width);
+  const outerQuantile = clamp01(DEFAULT_TRACKER_CONFIG.outerQuantile);
+  const leftEdgeX01 = resolveColumnQuantileX01(
+    columns,
+    component.minX,
+    component.maxX,
+    width,
+    component.weight * outerQuantile,
+    clamp01((component.minX + 0.5) / width)
+  );
+  const rightEdgeX01 = resolveColumnQuantileX01(
+    columns,
+    component.minX,
+    component.maxX,
+    width,
+    component.weight * (1 - outerQuantile),
+    clamp01((component.maxX + 0.5) / width)
+  );
+
   return {
     coreWidthPx: coreWindowPx,
     coreWeight: bestWeight,
-    coreX01: totalWeight > 0
-      ? clamp01(weightedX / totalWeight / width)
-      : clamp01((bestStart + (coreWindowPx * 0.5)) / width),
+    coreX01,
+    leftEdgeX01,
+    rightEdgeX01,
+    outerX01: coreX01 < 0.5 ? leftEdgeX01 : rightEdgeX01,
   };
 }
 
@@ -288,6 +323,8 @@ function analyzeComponents(mask, weights, visited, stack, columns, width, height
       continuityMultiplier: 1,
       priorDistance01: -1,
       x01: 0.5,
+      coreX01: 0.5,
+      outerX01: 0.5,
       weightedX01: 0.5,
     };
   }
@@ -305,7 +342,9 @@ function analyzeComponents(mask, weights, visited, stack, columns, width, height
     coreWeight: best.coreWeight,
     continuityMultiplier: bestContinuityMultiplier,
     priorDistance01: bestPriorDistance01,
-    x01: best.coreX01,
+    x01: best.outerX01,
+    coreX01: best.coreX01,
+    outerX01: best.outerX01,
     weightedX01: clamp01(best.weightedX / Math.max(1, best.weight) / width),
   };
 }
@@ -534,6 +573,8 @@ export function createOrbControlLiteTracker({
       detectorBlobWeight: Math.round((Number(analysis.totalWeight) || 0) * 10) / 10,
       detectorMaskPixels: Number(analysis.maskPixels) || 0,
       detectorRawX01: Math.round(rawScreenX01 * 1000) / 1000,
+      detectorCoreX01: Math.round((analysis.present ? clamp01(1 - Number(analysis.component && analysis.component.coreX01)) : 0.5) * 1000) / 1000,
+      detectorOuterX01: Math.round(rawScreenX01 * 1000) / 1000,
       detectorWeightedX01: Math.round((analysis.present ? clamp01(1 - analysis.weightedX01) : 0.5) * 1000) / 1000,
       detectorComponentCount: Number(analysis.component && analysis.component.componentCount) || 0,
       detectorComponentPixels: Number(analysis.component && analysis.component.pixels) || 0,
