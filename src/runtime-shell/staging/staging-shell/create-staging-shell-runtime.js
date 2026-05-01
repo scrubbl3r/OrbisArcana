@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260430i";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260501a";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -1341,7 +1341,10 @@ function handleShellImpulseFrame(shellContext, data) {
 function updateShellSpinColorFromMotionState(shellContext, motionState) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const orbColorRuntime = runtime && runtime.orbColorRuntime ? runtime.orbColorRuntime : null;
-  if (!orbColorRuntime) return;
+  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  const canApply3dSpin = !!(activeStageAdapter && typeof activeStageAdapter.applyOrbSpinColor === "function");
+  const canClear3dSpin = !!(activeStageAdapter && typeof activeStageAdapter.clearOrbSpinColor === "function");
+  if (!orbColorRuntime && !canApply3dSpin && !canClear3dSpin) return;
   const spin = motionState && motionState.spin ? motionState.spin : null;
   const axis = String(spin && spin.label || "").trim().toLowerCase();
   const direction = String(spin && spin.direction || "").trim().toLowerCase();
@@ -1351,6 +1354,7 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
     active: false,
     axis: "",
     direction: "",
+    applied3dColorKey: "",
   });
   const spinAcquire = !!axis && dominance >= 0.48 && gap >= 0.03;
   const spinHold = !!axis && dominance >= 0.38 && gap >= 0.015;
@@ -1371,8 +1375,12 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
   }
 
   if (!state.active) {
-    if (typeof orbColorRuntime.clearSpinColor === "function") {
+    if (orbColorRuntime && typeof orbColorRuntime.clearSpinColor === "function") {
       orbColorRuntime.clearSpinColor();
+    }
+    if (canClear3dSpin && state.applied3dColorKey) {
+      activeStageAdapter.clearOrbSpinColor();
+      state.applied3dColorKey = "";
     }
     return;
   }
@@ -1386,12 +1394,23 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
   }
 
   const color = resolveOrbSpinColor(state.axis, state.direction);
-  if (color && typeof orbColorRuntime.applySpinColor === "function") {
-    orbColorRuntime.applySpinColor(color);
+  if (color) {
+    if (orbColorRuntime && typeof orbColorRuntime.applySpinColor === "function") {
+      orbColorRuntime.applySpinColor(color);
+    }
+    const colorKey = `${state.axis}:${state.direction}`;
+    if (canApply3dSpin && state.applied3dColorKey !== colorKey) {
+      activeStageAdapter.applyOrbSpinColor(color);
+      state.applied3dColorKey = colorKey;
+    }
     return;
   }
-  if (typeof orbColorRuntime.clearSpinColor === "function") {
+  if (orbColorRuntime && typeof orbColorRuntime.clearSpinColor === "function") {
     orbColorRuntime.clearSpinColor();
+  }
+  if (canClear3dSpin && state.applied3dColorKey) {
+    activeStageAdapter.clearOrbSpinColor();
+    state.applied3dColorKey = "";
   }
 }
 
@@ -3331,7 +3350,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501u",
+  moduleCacheBustV = "20260501v",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

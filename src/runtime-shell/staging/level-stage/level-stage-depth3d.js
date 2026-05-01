@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260430a";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260501a";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
@@ -223,6 +223,7 @@ export function createLevelStageDepth3dLayer({
       || orbGlobe3dRuntime.hasActiveVisuals()
       || orbLifecycle3dRuntime.hasActiveVisuals()
       || orb3dActorRuntime.isNodActive()
+      || orb3dActorRuntime.isSpinColorActive()
     );
   }
 
@@ -376,6 +377,18 @@ export function createLevelStageDepth3dLayer({
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       }
       return result || { handled: false };
+    },
+    applyOrbSpinColor(color = {}) {
+      if (disposed) return;
+      orb3dActorRuntime.applySpinColor(color);
+      renderLoop.scheduleAnimation();
+      renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+    },
+    clearOrbSpinColor() {
+      if (disposed) return;
+      orb3dActorRuntime.clearSpinColor();
+      renderLoop.scheduleAnimation();
+      renderLoop.renderFrame(renderLoop.getLastFrame() || {});
     },
     renderFrame: renderLoop.renderFrame,
     dispose() {

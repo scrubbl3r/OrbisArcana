@@ -1,4 +1,4 @@
-import { createOrb3dRuntime } from "./orb-3d-runtime.js";
+import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260501a";
 import {
   createOrbNod3dRuntime,
   createOrbNod3dSurfaceDisplacementConfig,
@@ -132,9 +132,25 @@ export function createOrb3dActorRuntime({
     return result || { handled: false };
   }
 
+  function applySpinColor(color = {}) {
+    if (orbRuntime && typeof orbRuntime.applySpinColor === "function") {
+      orbRuntime.applySpinColor(color);
+      if (typeof onNeedsFrame === "function") onNeedsFrame();
+    }
+  }
+
+  function clearSpinColor() {
+    if (orbRuntime && typeof orbRuntime.clearSpinColor === "function") {
+      orbRuntime.clearSpinColor();
+      if (typeof onNeedsFrame === "function") onNeedsFrame();
+    }
+  }
+
   return Object.freeze({
     setWorldPosition,
     playNod,
+    applySpinColor,
+    clearSpinColor,
     update,
     getBo,
     getModel,
@@ -146,6 +162,9 @@ export function createOrb3dActorRuntime({
     },
     isNodActive() {
       return !!(nodRuntime && typeof nodRuntime.isActive === "function" && nodRuntime.isActive());
+    },
+    isSpinColorActive() {
+      return !!(orbRuntime && typeof orbRuntime.isSpinColorActive === "function" && orbRuntime.isSpinColorActive());
     },
     hasModel() {
       return !!getModel();
