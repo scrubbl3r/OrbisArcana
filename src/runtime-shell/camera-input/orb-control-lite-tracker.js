@@ -13,6 +13,8 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minComponentPixels: 8,
   coreWindowPx: 28,
   outerQuantile: 0.18,
+  outerBlend: 0.35,
+  outerMaxOffset01: 0.045,
   motionFloor: 10,
   motionScale: 54,
   skinMotionBoost: 0.55,
@@ -139,7 +141,7 @@ function scoreComponent(component, frameWidth, frameHeight, prior = null) {
   let continuityMultiplier = 1;
   let priorDistance01 = -1;
   if (prior && Number.isFinite(prior.x01)) {
-    priorDistance01 = Math.abs(component.outerX01 - prior.x01);
+    priorDistance01 = Math.abs(component.handX01 - prior.x01);
     const near = 1 - clamp01(priorDistance01 / DEFAULT_TRACKER_CONFIG.continuityRadius01);
     continuityMultiplier = DEFAULT_TRACKER_CONFIG.continuityMinMultiplier +
       ((1 - DEFAULT_TRACKER_CONFIG.continuityMinMultiplier) * near);
@@ -215,6 +217,10 @@ function resolveComponentCore(component, columns, width) {
     component.weight * (1 - outerQuantile),
     clamp01((component.maxX + 0.5) / width)
   );
+  const outerX01 = coreX01 < 0.5 ? leftEdgeX01 : rightEdgeX01;
+  const outwardOffset = outerX01 - coreX01;
+  const maxOffset = clamp01(DEFAULT_TRACKER_CONFIG.outerMaxOffset01);
+  const handX01 = clamp01(coreX01 + Math.max(-maxOffset, Math.min(maxOffset, outwardOffset * DEFAULT_TRACKER_CONFIG.outerBlend)));
 
   return {
     coreWidthPx: coreWindowPx,
@@ -222,7 +228,8 @@ function resolveComponentCore(component, columns, width) {
     coreX01,
     leftEdgeX01,
     rightEdgeX01,
-    outerX01: coreX01 < 0.5 ? leftEdgeX01 : rightEdgeX01,
+    outerX01,
+    handX01,
   };
 }
 
@@ -325,6 +332,7 @@ function analyzeComponents(mask, weights, visited, stack, columns, width, height
       x01: 0.5,
       coreX01: 0.5,
       outerX01: 0.5,
+      handX01: 0.5,
       weightedX01: 0.5,
     };
   }
@@ -342,9 +350,10 @@ function analyzeComponents(mask, weights, visited, stack, columns, width, height
     coreWeight: best.coreWeight,
     continuityMultiplier: bestContinuityMultiplier,
     priorDistance01: bestPriorDistance01,
-    x01: best.outerX01,
+    x01: best.handX01,
     coreX01: best.coreX01,
     outerX01: best.outerX01,
+    handX01: best.handX01,
     weightedX01: clamp01(best.weightedX / Math.max(1, best.weight) / width),
   };
 }
@@ -575,6 +584,7 @@ export function createOrbControlLiteTracker({
       detectorRawX01: Math.round(rawScreenX01 * 1000) / 1000,
       detectorCoreX01: Math.round((analysis.present ? clamp01(1 - Number(analysis.component && analysis.component.coreX01)) : 0.5) * 1000) / 1000,
       detectorOuterX01: Math.round(rawScreenX01 * 1000) / 1000,
+      detectorEdgeX01: Math.round((analysis.present ? clamp01(1 - Number(analysis.component && analysis.component.outerX01)) : 0.5) * 1000) / 1000,
       detectorWeightedX01: Math.round((analysis.present ? clamp01(1 - analysis.weightedX01) : 0.5) * 1000) / 1000,
       detectorComponentCount: Number(analysis.component && analysis.component.componentCount) || 0,
       detectorComponentPixels: Number(analysis.component && analysis.component.pixels) || 0,

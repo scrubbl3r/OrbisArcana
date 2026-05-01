@@ -52,6 +52,7 @@ export function createInitialCameraInputState({
       detectorRawX01: 0.5,
       detectorCoreX01: 0.5,
       detectorOuterX01: 0.5,
+      detectorEdgeX01: 0.5,
       detectorWeightedX01: 0.5,
       detectorComponentCount: 0,
       detectorComponentPixels: 0,
