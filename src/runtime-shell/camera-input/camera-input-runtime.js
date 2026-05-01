@@ -3,6 +3,7 @@ import { createInitialCameraInputState } from "./camera-input-state.js?v=2026043
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
 import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430a";
+import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260430a";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
@@ -58,7 +59,9 @@ export function createCameraInputRuntime({
   const steering = createCameraInputSteering();
   let observationFlushTimer = 0;
   let lastObservationFlushAtMs = 0;
-  const trackerFactory = detectorBackend === "orb-control"
+  const trackerFactory = detectorBackend === "orb-control-worker"
+    ? createOrbControlWorkerTracker
+    : detectorBackend === "orb-control"
     ? createOrbControlTracker
     : createCameraInputTracker;
   const tracker = trackerFactory({
