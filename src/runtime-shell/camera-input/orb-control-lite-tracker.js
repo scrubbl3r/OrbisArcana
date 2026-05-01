@@ -17,6 +17,9 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   skinMotionBoost: 0.55,
   outputCenterX01: 0.5,
   outputGain: 1,
+  continuityWindowMs: 900,
+  continuityRadius01: 0.22,
+  continuityMinMultiplier: 0.18,
   backgroundAlpha: 0.025,
 });
 
@@ -123,7 +126,7 @@ function createAnalysisScratch(width, height) {
   };
 }
 
-function scoreComponent(component, frameWidth, frameHeight) {
+function scoreComponent(component, frameWidth, frameHeight, prior = null) {
   const boxW = Math.max(1, component.maxX - component.minX + 1);
   const boxH = Math.max(1, component.maxY - component.minY + 1);
   const boxArea = boxW * boxH;
@@ -132,7 +135,23 @@ function scoreComponent(component, frameWidth, frameHeight) {
   const compactness = clamp01(fill * 2.2);
   const aspectPenalty = clamp01(1.35 / Math.max(1, aspect));
   const hugePenalty = 1 - clamp01(Math.max(boxW / frameWidth, boxH / frameHeight) - 0.55);
-  return component.weight * Math.max(0.18, compactness) * Math.max(0.2, aspectPenalty) * Math.max(0.2, hugePenalty);
+  let continuityMultiplier = 1;
+  let priorDistance01 = -1;
+  if (prior && Number.isFinite(prior.x01)) {
+    priorDistance01 = Math.abs(component.coreX01 - prior.x01);
+    const near = 1 - clamp01(priorDistance01 / DEFAULT_TRACKER_CONFIG.continuityRadius01);
+    continuityMultiplier = DEFAULT_TRACKER_CONFIG.continuityMinMultiplier +
+      ((1 - DEFAULT_TRACKER_CONFIG.continuityMinMultiplier) * near);
+  }
+  return {
+    score: component.weight *
+      Math.max(0.18, compactness) *
+      Math.max(0.2, aspectPenalty) *
+      Math.max(0.2, hugePenalty) *
+      continuityMultiplier,
+    continuityMultiplier,
+    priorDistance01,
+  };
 }
 
 function resolveComponentCore(component, columns, width) {
@@ -172,11 +191,13 @@ function resolveComponentCore(component, columns, width) {
   };
 }
 
-function analyzeComponents(mask, weights, visited, stack, columns, width, height) {
+function analyzeComponents(mask, weights, visited, stack, columns, width, height, prior = null) {
   visited.fill(0);
   let componentCount = 0;
   let best = null;
   let bestScore = -1;
+  let bestContinuityMultiplier = 1;
+  let bestPriorDistance01 = -1;
 
   for (let start = 0; start < mask.length; start += 1) {
     if (!mask[start] || visited[start]) continue;
@@ -241,9 +262,15 @@ function analyzeComponents(mask, weights, visited, stack, columns, width, height
     if (pixels < DEFAULT_TRACKER_CONFIG.minComponentPixels || weight <= 0) continue;
     const component = { pixels, weight, weightedX, minX, maxX, minY, maxY };
     Object.assign(component, resolveComponentCore(component, columns, width));
-    const score = scoreComponent(component, width, height);
+    const {
+      score,
+      continuityMultiplier,
+      priorDistance01,
+    } = scoreComponent(component, width, height, prior);
     if (score > bestScore) {
       bestScore = score;
+      bestContinuityMultiplier = continuityMultiplier;
+      bestPriorDistance01 = priorDistance01;
       best = component;
     }
   }
@@ -258,6 +285,8 @@ function analyzeComponents(mask, weights, visited, stack, columns, width, height
       heightPx: 0,
       coreWidthPx: 0,
       coreWeight: 0,
+      continuityMultiplier: 1,
+      priorDistance01: -1,
       x01: 0.5,
       weightedX01: 0.5,
     };
@@ -274,12 +303,14 @@ function analyzeComponents(mask, weights, visited, stack, columns, width, height
     heightPx,
     coreWidthPx: best.coreWidthPx,
     coreWeight: best.coreWeight,
+    continuityMultiplier: bestContinuityMultiplier,
+    priorDistance01: bestPriorDistance01,
     x01: best.coreX01,
     weightedX01: clamp01(best.weightedX / Math.max(1, best.weight) / width),
   };
 }
 
-function analyzeFrame(imageData, background, scratch) {
+function analyzeFrame(imageData, background, scratch, prior = null) {
   const { data, width, height } = imageData;
   const mask = scratch.mask;
   const weights = scratch.weights;
@@ -332,7 +363,7 @@ function analyzeFrame(imageData, background, scratch) {
   const coverage = activePixels / Math.max(1, width * height);
   const density = totalWeight / Math.max(1, activePixels);
   const confidence = clamp01((coverage * 9) + (density * 0.55) + (maxWeight * 0.18));
-  const component = analyzeComponents(mask, weights, scratch.visited, scratch.stack, scratch.columns, width, height);
+  const component = analyzeComponents(mask, weights, scratch.visited, scratch.stack, scratch.columns, width, height, prior);
   const present = totalWeight >= DEFAULT_TRACKER_CONFIG.minWeight &&
     confidence >= DEFAULT_TRACKER_CONFIG.minConfidence &&
     component.pixels > 0;
@@ -368,6 +399,8 @@ export function createOrbControlLiteTracker({
   let lastVideoTime = -1;
   let lastFrameAtMs = 0;
   let lastDetectionAtMs = 0;
+  let lastTrustedDetectorX01 = 0.5;
+  let lastTrustedAtMs = 0;
   const minDetectionIntervalMs = 1000 / DEFAULT_TRACKER_CONFIG.maxDetectionFps;
 
   function ensureDetector() {
@@ -460,11 +493,22 @@ export function createOrbControlLiteTracker({
       }
       backgroundReady = true;
     }
-    const analysis = analyzeFrame(imageData, background, analysisScratch);
+    const priorAgeMs = lastTrustedAtMs ? Math.max(0, observedAtMs - lastTrustedAtMs) : Infinity;
+    const prior = priorAgeMs <= DEFAULT_TRACKER_CONFIG.continuityWindowMs
+      ? {
+          x01: lastTrustedDetectorX01,
+          ageMs: priorAgeMs,
+        }
+      : null;
+    const analysis = analyzeFrame(imageData, background, analysisScratch, prior);
     const detectMs = Math.max(0, now() - detectStartMs);
     const streamSettings = resolveStreamSettings(mediaStream);
     const rawScreenX01 = analysis.present ? clamp01(1 - analysis.x01) : 0.5;
     const outputX01 = analysis.present ? calibrateOutputX01(rawScreenX01) : 0.5;
+    if (analysis.present) {
+      lastTrustedDetectorX01 = analysis.x01;
+      lastTrustedAtMs = observedAtMs;
+    }
     const baseObservation = analysis.present
       ? {
           kind: "hand",
@@ -497,6 +541,12 @@ export function createOrbControlLiteTracker({
       detectorComponentHeightPx: Number(analysis.component && analysis.component.heightPx) || 0,
       detectorCoreWidthPx: Number(analysis.component && analysis.component.coreWidthPx) || 0,
       detectorComponentScore: Math.round((Number(analysis.component && analysis.component.score) || 0) * 10) / 10,
+      detectorPriorX01: prior ? Math.round(clamp01(1 - prior.x01) * 1000) / 1000 : 0.5,
+      detectorPriorAgeMs: prior ? Math.round(prior.ageMs * 10) / 10 : 0,
+      detectorPriorDistance01: analysis.component && Number(analysis.component.priorDistance01) >= 0
+        ? Math.round(Number(analysis.component.priorDistance01) * 1000) / 1000
+        : -1,
+      detectorContinuityMultiplier: Math.round((Number(analysis.component && analysis.component.continuityMultiplier) || 1) * 1000) / 1000,
       detectorOutputX01: Math.round(outputX01 * 1000) / 1000,
       detectorOutputCenterX01: DEFAULT_TRACKER_CONFIG.outputCenterX01,
       detectorOutputGain: DEFAULT_TRACKER_CONFIG.outputGain,
@@ -544,6 +594,8 @@ export function createOrbControlLiteTracker({
     lastVideoTime = -1;
     lastFrameAtMs = 0;
     lastDetectionAtMs = 0;
+    lastTrustedDetectorX01 = 0.5;
+    lastTrustedAtMs = 0;
     if (background) background.fill(0);
     backgroundReady = false;
     scheduleTick(0);

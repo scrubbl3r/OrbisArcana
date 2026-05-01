@@ -889,6 +889,10 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorMaskPixels: Math.round(Number(debug.detectorMaskPixels) || 0),
       detectorComponentCount: Math.round(Number(debug.detectorComponentCount) || 0),
       detectorComponentPixels: Math.round(Number(debug.detectorComponentPixels) || 0),
+      detectorPriorX01: Math.round((Number(debug.detectorPriorX01) || 0) * 1000) / 1000,
+      detectorPriorAgeMs: Math.round((Number(debug.detectorPriorAgeMs) || 0) * 10) / 10,
+      detectorPriorDistance01: Math.round((Number(debug.detectorPriorDistance01) || 0) * 1000) / 1000,
+      detectorContinuityMultiplier: Math.round((Number(debug.detectorContinuityMultiplier) || 0) * 1000) / 1000,
       detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
       detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
       steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
@@ -946,6 +950,10 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     detectorComponentHeightPx: Math.round(Number(debug.detectorComponentHeightPx) || 0),
     detectorCoreWidthPx: Math.round(Number(debug.detectorCoreWidthPx) || 0),
     detectorComponentScore: Math.round((Number(debug.detectorComponentScore) || 0) * 10) / 10,
+    detectorPriorX01: Math.round((Number(debug.detectorPriorX01) || 0) * 1000) / 1000,
+    detectorPriorAgeMs: Math.round((Number(debug.detectorPriorAgeMs) || 0) * 10) / 10,
+    detectorPriorDistance01: Math.round((Number(debug.detectorPriorDistance01) || 0) * 1000) / 1000,
+    detectorContinuityMultiplier: Math.round((Number(debug.detectorContinuityMultiplier) || 0) * 1000) / 1000,
     detectorOutputX01: Math.round((Number(debug.detectorOutputX01) || 0) * 1000) / 1000,
     detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
     detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
@@ -3275,7 +3283,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501j",
+  moduleCacheBustV = "20260501k",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
