@@ -1,8 +1,9 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430h";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501a";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
 import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430d";
+import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501a";
 import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260430a";
 
 const OBSERVATION_PUBLISH_FPS = 30;
@@ -61,6 +62,8 @@ export function createCameraInputRuntime({
   let lastObservationFlushAtMs = 0;
   const trackerFactory = detectorBackend === "orb-control-worker"
     ? createOrbControlWorkerTracker
+    : detectorBackend === "orb-control-lite"
+    ? createOrbControlLiteTracker
     : detectorBackend === "orb-control"
     ? createOrbControlTracker
     : createCameraInputTracker;
@@ -138,6 +141,9 @@ export function createCameraInputRuntime({
         detectMs: Number(observation.detectMs) || 0,
         videoWidth: Number(observation.videoWidth) || 0,
         videoHeight: Number(observation.videoHeight) || 0,
+        detectorInputWidth: Number(observation.detectorInputWidth) || 0,
+        detectorInputHeight: Number(observation.detectorInputHeight) || 0,
+        detectorBlobWeight: Number(observation.detectorBlobWeight) || 0,
         trackWidth: Number(observation.trackWidth) || 0,
         trackHeight: Number(observation.trackHeight) || 0,
         trackFrameRate: Number(observation.trackFrameRate) || 0,
@@ -164,7 +170,7 @@ export function createCameraInputRuntime({
         message: "",
       },
       debug: {
-        preloadDetail: "loading_mediapipe",
+        preloadDetail: detectorBackend === "orb-control-lite" ? "loading_orb_control_lite" : "loading_mediapipe",
         lastError: "",
       },
     });
@@ -179,12 +185,16 @@ export function createCameraInputRuntime({
           ready: true,
         },
         debug: {
-          preloadDetail: "mediapipe_ready",
+          preloadDetail: detectorBackend === "orb-control-lite" ? "orb_control_lite_ready" : "mediapipe_ready",
           preloadMs: Number(preloadInfo && preloadInfo.preloadMs) || 0,
           wasmSimdSupported: Boolean(preloadInfo && preloadInfo.wasmSimdSupported),
           loadedWasmAssets: String(preloadInfo && preloadInfo.loadedWasmAssets || ""),
-          modelAssetUrl: String(preloadInfo && preloadInfo.modelAssetUrl || initialState.config.modelAssetUrl),
-          wasmRootUrl: String(preloadInfo && preloadInfo.wasmRootUrl || initialState.config.wasmRootUrl),
+          modelAssetUrl: detectorBackend === "orb-control-lite"
+            ? ""
+            : String(preloadInfo && preloadInfo.modelAssetUrl || initialState.config.modelAssetUrl),
+          wasmRootUrl: detectorBackend === "orb-control-lite"
+            ? ""
+            : String(preloadInfo && preloadInfo.wasmRootUrl || initialState.config.wasmRootUrl),
           detectorBackend: String(preloadInfo && preloadInfo.detectorBackend || detectorBackend),
         },
       });
