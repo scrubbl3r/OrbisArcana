@@ -855,6 +855,9 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
   const state = cameraInput.getState() || {};
   const tracking = state.tracking || {};
   const debug = state.debug || {};
+  const steering = runtime.cameraInputOrbBridge && typeof runtime.cameraInputOrbBridge.getState === "function"
+    ? runtime.cameraInputOrbBridge.getState()
+    : null;
   const inputAgeMs = Math.max(0, nowMs - (Number(state.updatedAtMs) || nowMs));
   const detectMs = Math.max(0, Number(debug.detectMs) || 0);
   const inputFrameMs = Math.max(0, Number(debug.frameMs) || 0);
@@ -883,6 +886,7 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorTargetFps: Math.round((Number(debug.detectorTargetFps) || 0) * 10) / 10,
       detectorDetectMsEma: Math.round((Number(debug.detectorDetectMsEma) || 0) * 10) / 10,
       detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
+      steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
       video: `${Math.round(Number(debug.videoWidth) || 0)}x${Math.round(Number(debug.videoHeight) || 0)}`,
       detectorInput: `${Math.round(Number(debug.detectorInputWidth) || 0)}x${Math.round(Number(debug.detectorInputHeight) || 0)}`,
       track: `${Math.round(Number(debug.trackWidth) || 0)}x${Math.round(Number(debug.trackHeight) || 0)}@${Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10}`,
@@ -939,6 +943,15 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     staleFrames: scratch.staleFrames,
     rawX01: Math.round((Number(tracking.rawX01) || 0) * 1000) / 1000,
     filteredX01: Math.round((Number(tracking.filteredX01) || 0) * 1000) / 1000,
+    centeredX01: Math.round((Number(tracking.centeredX01) || 0) * 1000) / 1000,
+    steeringActive: Boolean(steering && steering.active),
+    steeringReason: String(steering && steering.reason || ""),
+    steeringCenteredX01: Math.round((Number(steering && steering.centeredX01) || 0) * 1000) / 1000,
+    steeringRawIntentX: Math.round((Number(steering && steering.rawIntentX) || 0) * 1000) / 1000,
+    steeringIntentX: Math.round((Number(steering && steering.intentX) || 0) * 1000) / 1000,
+    steeringTargetVX: Math.round((Number(steering && steering.targetVX) || 0) * 10) / 10,
+    steeringMaxSpeedPxPerSec: Math.round(Number(steering && steering.maxSpeedPxPerSec) || 0),
+    steeringVelocityEaseFactor: Math.round((Number(steering && steering.velocityEaseFactor) || 0) * 1000) / 1000,
   };
 }
 
@@ -3241,7 +3254,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501b",
+  moduleCacheBustV = "20260501c",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
