@@ -8,6 +8,8 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minWeight: 60,
   minConfidence: 0.22,
   minPixelWeight: 0.06,
+  componentMotionMin: 0.22,
+  componentWeightMin: 0.12,
   minComponentPixels: 8,
   coreWindowPx: 28,
   motionFloor: 10,
@@ -285,6 +287,7 @@ function analyzeFrame(imageData, background, scratch) {
   let totalWeight = 0;
   let weightedX = 0;
   let activePixels = 0;
+  let maskPixels = 0;
   let maxWeight = 0;
 
   for (let y = 0; y < height; y += 1) {
@@ -310,21 +313,29 @@ function analyzeFrame(imageData, background, scratch) {
         continue;
       }
 
-      mask[pixelIndex] = 1;
-      weights[pixelIndex] = weight;
       activePixels += 1;
       totalWeight += weight;
       weightedX += weight * (x + 0.5);
       if (weight > maxWeight) maxWeight = weight;
+      if (motionWeight >= DEFAULT_TRACKER_CONFIG.componentMotionMin &&
+        weight >= DEFAULT_TRACKER_CONFIG.componentWeightMin) {
+        mask[pixelIndex] = 1;
+        weights[pixelIndex] = weight;
+        maskPixels += 1;
+      } else {
+        mask[pixelIndex] = 0;
+        weights[pixelIndex] = 0;
+      }
     }
   }
 
   const coverage = activePixels / Math.max(1, width * height);
   const density = totalWeight / Math.max(1, activePixels);
   const confidence = clamp01((coverage * 9) + (density * 0.55) + (maxWeight * 0.18));
-  const present = totalWeight >= DEFAULT_TRACKER_CONFIG.minWeight &&
-    confidence >= DEFAULT_TRACKER_CONFIG.minConfidence;
   const component = analyzeComponents(mask, weights, scratch.visited, scratch.stack, scratch.columns, width, height);
+  const present = totalWeight >= DEFAULT_TRACKER_CONFIG.minWeight &&
+    confidence >= DEFAULT_TRACKER_CONFIG.minConfidence &&
+    component.pixels > 0;
   const selectedX01 = component.pixels > 0 ? component.x01 : 0.5;
 
   return {
@@ -332,6 +343,7 @@ function analyzeFrame(imageData, background, scratch) {
     confidence,
     totalWeight,
     activePixels,
+    maskPixels,
     component,
     weightedX01: present ? clamp01(weightedX / Math.max(1, totalWeight) / width) : 0.5,
     x01: present ? selectedX01 : 0.5,
@@ -476,6 +488,7 @@ export function createOrbControlLiteTracker({
       detectorInputWidth: DEFAULT_TRACKER_CONFIG.detectorWidth,
       detectorInputHeight: DEFAULT_TRACKER_CONFIG.detectorHeight,
       detectorBlobWeight: Math.round((Number(analysis.totalWeight) || 0) * 10) / 10,
+      detectorMaskPixels: Number(analysis.maskPixels) || 0,
       detectorRawX01: Math.round(rawScreenX01 * 1000) / 1000,
       detectorWeightedX01: Math.round((analysis.present ? clamp01(1 - analysis.weightedX01) : 0.5) * 1000) / 1000,
       detectorComponentCount: Number(analysis.component && analysis.component.componentCount) || 0,

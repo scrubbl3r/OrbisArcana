@@ -886,6 +886,7 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorTargetFps: Math.round((Number(debug.detectorTargetFps) || 0) * 10) / 10,
       detectorDetectMsEma: Math.round((Number(debug.detectorDetectMsEma) || 0) * 10) / 10,
       detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
+      detectorMaskPixels: Math.round(Number(debug.detectorMaskPixels) || 0),
       detectorComponentCount: Math.round(Number(debug.detectorComponentCount) || 0),
       detectorComponentPixels: Math.round(Number(debug.detectorComponentPixels) || 0),
       detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
@@ -936,6 +937,7 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     detectorInputWidth: Math.round(Number(debug.detectorInputWidth) || 0),
     detectorInputHeight: Math.round(Number(debug.detectorInputHeight) || 0),
     detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
+    detectorMaskPixels: Math.round(Number(debug.detectorMaskPixels) || 0),
     detectorRawX01: Math.round((Number(debug.detectorRawX01) || 0) * 1000) / 1000,
     detectorWeightedX01: Math.round((Number(debug.detectorWeightedX01) || 0) * 1000) / 1000,
     detectorComponentCount: Math.round(Number(debug.detectorComponentCount) || 0),
@@ -3273,7 +3275,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501i",
+  moduleCacheBustV = "20260501j",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

@@ -48,6 +48,7 @@ export function createInitialCameraInputState({
       detectorInputWidth: 0,
       detectorInputHeight: 0,
       detectorBlobWeight: 0,
+      detectorMaskPixels: 0,
       detectorRawX01: 0.5,
       detectorWeightedX01: 0.5,
       detectorComponentCount: 0,
