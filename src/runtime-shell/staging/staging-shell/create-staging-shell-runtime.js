@@ -879,6 +879,7 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       preloadMs: Math.round((Number(debug.preloadMs) || 0) * 10) / 10,
       loadedAssets: String(debug.loadedWasmAssets || ""),
       detectorLoop: String(debug.detectorLoop || ""),
+      detectorBackend: String(debug.detectorBackend || ""),
       video: `${Math.round(Number(debug.videoWidth) || 0)}x${Math.round(Number(debug.videoHeight) || 0)}`,
       track: `${Math.round(Number(debug.trackWidth) || 0)}x${Math.round(Number(debug.trackHeight) || 0)}@${Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10}`,
     });
@@ -924,6 +925,7 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     wasmSimdSupported: Boolean(debug.wasmSimdSupported),
     loadedWasmAssets: String(debug.loadedWasmAssets || ""),
     detectorLoop: String(debug.detectorLoop || ""),
+    detectorBackend: String(debug.detectorBackend || ""),
     missingFrames: scratch.missingFrames,
     staleFrames: scratch.staleFrames,
     rawX01: Math.round((Number(tracking.rawX01) || 0) * 1000) / 1000,
@@ -3230,7 +3232,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260430b",
+  moduleCacheBustV = "20260430c",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -3373,6 +3375,7 @@ export async function createStagingShellRuntime({
       rootDocument,
       eventBus: shellContext.runtime.eventBus,
       preferredHand: "Left",
+      cameraInputBackend: "orb-control",
     });
     shellContext.runtime.cameraInputOrbBridge = createCameraInputOrbBridge({
       cameraInputRuntime: shellContext.runtime.cameraInput,

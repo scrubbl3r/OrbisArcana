@@ -2,6 +2,7 @@ const DEFAULT_HAND_X01 = 0.5;
 
 export function createInitialCameraInputState({
   preferredHand = "Left",
+  cameraInputBackend = "hand",
   modelAssetUrl = "",
   wasmRootUrl = "",
 } = {}) {
@@ -9,6 +10,7 @@ export function createInitialCameraInputState({
     updatedAtMs: 0,
     config: {
       preferredHand: String(preferredHand || "Left"),
+      cameraInputBackend: String(cameraInputBackend || "hand"),
       modelAssetUrl: String(modelAssetUrl || ""),
       wasmRootUrl: String(wasmRootUrl || ""),
     },
@@ -52,6 +54,7 @@ export function createInitialCameraInputState({
       modelAssetUrl: "",
       wasmRootUrl: "",
       detectorLoop: "",
+      detectorBackend: String(cameraInputBackend || "hand"),
       lastError: "",
     },
   };

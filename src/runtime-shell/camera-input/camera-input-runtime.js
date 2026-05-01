@@ -1,7 +1,8 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430d";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260430e";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
+import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430a";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
@@ -40,10 +41,13 @@ export function createCameraInputRuntime({
   rootDocument = document,
   eventBus = null,
   preferredHand = "Left",
+  cameraInputBackend = "hand",
   now = () => performance.now(),
 } = {}) {
+  const detectorBackend = String(cameraInputBackend || "hand").trim() || "hand";
   const initialState = createInitialCameraInputState({
     preferredHand,
+    cameraInputBackend: detectorBackend,
     modelAssetUrl: new URL("../../../assets/camera-input/models/hand_landmarker.task", import.meta.url).toString(),
     wasmRootUrl: new URL("../../../vendor/mediapipe/tasks-vision/wasm/", import.meta.url).toString(),
   });
@@ -54,7 +58,10 @@ export function createCameraInputRuntime({
   const steering = createCameraInputSteering();
   let observationFlushTimer = 0;
   let lastObservationFlushAtMs = 0;
-  const tracker = createCameraInputTracker({
+  const trackerFactory = detectorBackend === "orb-control"
+    ? createOrbControlTracker
+    : createCameraInputTracker;
+  const tracker = trackerFactory({
     rootWindow,
     rootDocument,
     now,
@@ -132,6 +139,7 @@ export function createCameraInputRuntime({
         trackHeight: Number(observation.trackHeight) || 0,
         trackFrameRate: Number(observation.trackFrameRate) || 0,
         detectorLoop: String(observation.detectorLoop || ""),
+        detectorBackend: String(observation.detectorBackend || detectorBackend),
       },
     }, {
       coalesceObservation: true,
@@ -172,6 +180,7 @@ export function createCameraInputRuntime({
           loadedWasmAssets: String(preloadInfo && preloadInfo.loadedWasmAssets || ""),
           modelAssetUrl: String(preloadInfo && preloadInfo.modelAssetUrl || initialState.config.modelAssetUrl),
           wasmRootUrl: String(preloadInfo && preloadInfo.wasmRootUrl || initialState.config.wasmRootUrl),
+          detectorBackend: String(preloadInfo && preloadInfo.detectorBackend || detectorBackend),
         },
       });
       return camStore.getState();

@@ -56,6 +56,7 @@ export function createCamStore({
   function reset() {
     state = createInitialCameraInputState({
       preferredHand: state.config && state.config.preferredHand,
+      cameraInputBackend: state.config && state.config.cameraInputBackend,
       modelAssetUrl: state.config && state.config.modelAssetUrl,
       wasmRootUrl: state.config && state.config.wasmRootUrl,
     });
