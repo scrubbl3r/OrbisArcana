@@ -867,6 +867,7 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     perfTrace.record("camera.inputFrameMs", inputFrameMs, 45, { event: false });
   }
   const handPresent = Boolean(tracking.handPresent);
+  const trackingLabel = String(tracking.trackingState || tracking.state || "");
   const scratch = runtime.perfCameraTrace || (runtime.perfCameraTrace = {
     handPresent,
     missingFrames: 0,
@@ -921,19 +922,19 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     if (typeof perfTrace.mark === "function") {
       perfTrace.mark(handPresent ? "camera.hand_reacquired" : "camera.hand_lost", {
         inputAgeMs: Math.round(inputAgeMs),
-        trackingState: String(tracking.state || ""),
+        trackingState: trackingLabel,
       });
     }
   }
   if (scratch.staleFrames === 1 && typeof perfTrace.mark === "function") {
     perfTrace.mark("camera.input_stale", {
       inputAgeMs: Math.round(inputAgeMs),
-      trackingState: String(tracking.state || ""),
+      trackingState: trackingLabel,
     });
   }
   return {
     status: String(debug.statusLine || ""),
-    trackingState: String(tracking.state || ""),
+    trackingState: trackingLabel,
     handPresent,
     fps: Math.round(Number(debug.fps) || 0),
     detectMs: Math.round(detectMs * 10) / 10,
@@ -977,6 +978,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     rawX01: Math.round((Number(tracking.rawX01) || 0) * 1000) / 1000,
     filteredX01: Math.round((Number(tracking.filteredX01) || 0) * 1000) / 1000,
     centeredX01: Math.round((Number(tracking.centeredX01) || 0) * 1000) / 1000,
+    holdAgeMs: Math.round((Number(tracking.holdAgeMs) || 0) * 10) / 10,
+    holdMissingMs: Math.round((Number(tracking.holdMissingMs) || 0) * 10) / 10,
     steeringActive: Boolean(steering && steering.active),
     steeringReason: String(steering && steering.reason || ""),
     steeringCenteredX01: Math.round((Number(steering && steering.centeredX01) || 0) * 1000) / 1000,
@@ -3289,7 +3292,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501p",
+  moduleCacheBustV = "20260501q",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

@@ -135,10 +135,15 @@ export function createOrbControlWorkerTracker({
     if (entry) pendingMessages.delete(id);
 
     if (message.type === "observation") {
+      const payload = {
+        detectorTargetFps: DEFAULT_TRACKER_CONFIG.maxDetectionFps,
+        detectorDetectMsEma: Number(message.payload && message.payload.detectMs) || 0,
+        ...(message.payload || {}),
+      };
       pendingFrame = false;
-      onObservation(message.payload || {});
+      onObservation(payload);
       if (entry && typeof entry.resolve === "function") {
-        entry.resolve(message.payload || {});
+        entry.resolve(payload);
       }
       if (running) scheduleTick(0);
       return;
@@ -255,6 +260,8 @@ export function createOrbControlWorkerTracker({
           observedAtMs: now(),
           frameMs: 0,
           fps: 0,
+          detectorTargetFps: DEFAULT_TRACKER_CONFIG.maxDetectionFps,
+          detectorDetectMsEma: 0,
           detectorLoop: "orb-control-worker",
           detectorBackend: "orb-control-worker",
           error: normalizeErrorMessage(error),
@@ -268,6 +275,8 @@ export function createOrbControlWorkerTracker({
         observedAtMs: now(),
         frameMs: 0,
         fps: 0,
+        detectorTargetFps: DEFAULT_TRACKER_CONFIG.maxDetectionFps,
+        detectorDetectMsEma: 0,
         detectorLoop: "orb-control-worker",
         detectorBackend: "orb-control-worker",
         error: normalizeErrorMessage(error),
@@ -327,6 +336,8 @@ export function createOrbControlWorkerTracker({
       observedAtMs: now(),
       frameMs: 0,
       fps: 0,
+      detectorTargetFps: DEFAULT_TRACKER_CONFIG.maxDetectionFps,
+      detectorDetectMsEma: 0,
       detectorLoop: "orb-control-worker",
       detectorBackend: "orb-control-worker",
     });
