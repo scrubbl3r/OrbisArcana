@@ -5,9 +5,13 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   videoFps: 30,
   detectorWidth: 160,
   detectorHeight: 120,
-  minWeight: 180,
-  minConfidence: 0.28,
-  backgroundAlpha: 0.04,
+  minWeight: 60,
+  minConfidence: 0.22,
+  minPixelWeight: 0.06,
+  motionFloor: 10,
+  motionScale: 54,
+  skinMotionBoost: 0.55,
+  backgroundAlpha: 0.025,
 });
 
 function clamp01(value) {
@@ -113,12 +117,13 @@ function analyzeFrame(imageData, background) {
       const luma = (r * 0.299) + (g * 0.587) + (b * 0.114);
       const previous = background[pixelIndex];
       const diff = Math.abs(luma - previous);
-      const motionWeight = clamp01((diff - 16) / 70);
+      const motionWeight = clamp01((diff - DEFAULT_TRACKER_CONFIG.motionFloor) / DEFAULT_TRACKER_CONFIG.motionScale);
       const skinWeight = estimateSkinWeight(r, g, b);
-      const weight = Math.max(motionWeight, skinWeight * 0.85);
+      const weight = clamp01(motionWeight * (0.65 + (skinWeight * DEFAULT_TRACKER_CONFIG.skinMotionBoost)));
 
-      background[pixelIndex] = previous + ((luma - previous) * bgAlpha);
-      if (weight <= 0.08) continue;
+      const adaptiveBgAlpha = weight > DEFAULT_TRACKER_CONFIG.minPixelWeight ? bgAlpha * 0.2 : bgAlpha;
+      background[pixelIndex] = previous + ((luma - previous) * adaptiveBgAlpha);
+      if (weight <= DEFAULT_TRACKER_CONFIG.minPixelWeight) continue;
 
       activePixels += 1;
       totalWeight += weight;
