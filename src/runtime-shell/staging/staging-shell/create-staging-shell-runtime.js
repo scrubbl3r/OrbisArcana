@@ -883,7 +883,6 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
       detectorTargetFps: Math.round((Number(debug.detectorTargetFps) || 0) * 10) / 10,
       detectorDetectMsEma: Math.round((Number(debug.detectorDetectMsEma) || 0) * 10) / 10,
       video: `${Math.round(Number(debug.videoWidth) || 0)}x${Math.round(Number(debug.videoHeight) || 0)}`,
-      detectorInput: `${Math.round(Number(debug.detectorInputWidth) || 0)}x${Math.round(Number(debug.detectorInputHeight) || 0)}`,
       track: `${Math.round(Number(debug.trackWidth) || 0)}x${Math.round(Number(debug.trackHeight) || 0)}@${Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10}`,
     });
   }
@@ -922,8 +921,6 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     inputAgeMs: Math.round(inputAgeMs),
     videoWidth: Math.round(Number(debug.videoWidth) || 0),
     videoHeight: Math.round(Number(debug.videoHeight) || 0),
-    detectorInputWidth: Math.round(Number(debug.detectorInputWidth) || 0),
-    detectorInputHeight: Math.round(Number(debug.detectorInputHeight) || 0),
     trackWidth: Math.round(Number(debug.trackWidth) || 0),
     trackHeight: Math.round(Number(debug.trackHeight) || 0),
     trackFrameRate: Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10,
@@ -3239,7 +3236,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260430g",
+  moduleCacheBustV = "20260430h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

@@ -45,8 +45,6 @@ export function createInitialCameraInputState({
       detectMs: 0,
       videoWidth: 0,
       videoHeight: 0,
-      detectorInputWidth: 0,
-      detectorInputHeight: 0,
       trackWidth: 0,
       trackHeight: 0,
       trackFrameRate: 0,

@@ -12,8 +12,6 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   videoWidth: 640,
   videoHeight: 480,
   videoFps: 30,
-  detectorInputWidth: 480,
-  detectorInputHeight: 360,
 });
 
 function clamp01(value) {
@@ -197,8 +195,6 @@ export function createOrbControlTracker({
   let wasmFileset = null;
   let handLandmarker = null;
   let videoEl = null;
-  let detectorCanvas = null;
-  let detectorContext = null;
   let mediaStream = null;
   let tickTimer = 0;
   let running = false;
@@ -292,34 +288,6 @@ export function createOrbControlTracker({
     tickTimer = 0;
   }
 
-  function getDetectorInput() {
-    if (!detectorCanvas) {
-      detectorCanvas = rootDocument.createElement("canvas");
-      detectorCanvas.width = DEFAULT_TRACKER_CONFIG.detectorInputWidth;
-      detectorCanvas.height = DEFAULT_TRACKER_CONFIG.detectorInputHeight;
-      detectorContext = detectorCanvas.getContext("2d", {
-        alpha: false,
-        desynchronized: true,
-      });
-    }
-    if (!detectorContext) return videoEl;
-    if (
-      detectorCanvas.width !== DEFAULT_TRACKER_CONFIG.detectorInputWidth ||
-      detectorCanvas.height !== DEFAULT_TRACKER_CONFIG.detectorInputHeight
-    ) {
-      detectorCanvas.width = DEFAULT_TRACKER_CONFIG.detectorInputWidth;
-      detectorCanvas.height = DEFAULT_TRACKER_CONFIG.detectorInputHeight;
-    }
-    detectorContext.drawImage(
-      videoEl,
-      0,
-      0,
-      DEFAULT_TRACKER_CONFIG.detectorInputWidth,
-      DEFAULT_TRACKER_CONFIG.detectorInputHeight
-    );
-    return detectorCanvas;
-  }
-
   function tick() {
     tickTimer = 0;
     if (!running || !videoEl || !handLandmarker) return;
@@ -344,10 +312,9 @@ export function createOrbControlTracker({
     lastFrameAtMs = observedAtMs;
     lastDetectionAtMs = observedAtMs;
     lastVideoTime = videoEl.currentTime;
-    const detectorInput = getDetectorInput();
 
     const detectStartMs = now();
-    const result = handLandmarker.detectForVideo(detectorInput, observedAtMs);
+    const result = handLandmarker.detectForVideo(videoEl, observedAtMs);
     const detectMs = Math.max(0, now() - detectStartMs);
     updateAdaptiveCadence(detectMs);
     const observation = extractOrbControlObservation(result, observedAtMs);
@@ -359,8 +326,6 @@ export function createOrbControlTracker({
       detectMs,
       videoWidth: Number(videoEl.videoWidth) || 0,
       videoHeight: Number(videoEl.videoHeight) || 0,
-      detectorInputWidth: Number(detectorInput && detectorInput.width) || Number(videoEl.videoWidth) || 0,
-      detectorInputHeight: Number(detectorInput && detectorInput.height) || Number(videoEl.videoHeight) || 0,
       trackWidth: Number(streamSettings.width) || 0,
       trackHeight: Number(streamSettings.height) || 0,
       trackFrameRate: Number(streamSettings.frameRate) || 0,
@@ -438,8 +403,6 @@ export function createOrbControlTracker({
     }
     handLandmarker = null;
     wasmFileset = null;
-    detectorCanvas = null;
-    detectorContext = null;
     if (videoEl && videoEl.parentNode) {
       videoEl.parentNode.removeChild(videoEl);
     }
