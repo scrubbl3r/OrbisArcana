@@ -1,10 +1,10 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501t";
-import { createCameraInputSteering } from "./camera-input-steering.js?v=20260501t";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501u";
+import { createCameraInputSteering } from "./camera-input-steering.js?v=20260501u";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
 import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430d";
-import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501t";
-import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260501t";
+import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501u";
+import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260501u";
 
 const OBSERVATION_PUBLISH_FPS = 30;
 const OBSERVATION_PUBLISH_INTERVAL_MS = 1000 / OBSERVATION_PUBLISH_FPS;
