@@ -3289,7 +3289,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501n",
+  moduleCacheBustV = "20260501o",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -3432,7 +3432,7 @@ export async function createStagingShellRuntime({
       rootDocument,
       eventBus: shellContext.runtime.eventBus,
       preferredHand: "Any",
-      cameraInputBackend: "orb-control-worker",
+      cameraInputBackend: "orb-control",
     });
     shellContext.runtime.cameraInputOrbBridge = createCameraInputOrbBridge({
       cameraInputRuntime: shellContext.runtime.cameraInput,
